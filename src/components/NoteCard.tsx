@@ -25,6 +25,7 @@ import { useTrashCountdown } from "@/hooks/useTrashCountdown";
 import { celebrate, sparkle } from "@/lib/celebrate";
 import { useViewPrefs, readingTimeMin } from "@/lib/viewPrefs";
 import { useNotesContext } from "@/hooks/NotesProvider";
+import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 
 interface NoteCardProps {
   note: Note;
@@ -37,8 +38,8 @@ interface NoteCardProps {
   onMoveToFolder?: (noteId: string, folderId: string | null) => void;
   index: number;
   isArchived?: boolean;
-  dragAttributes?: any;
-  dragListeners?: any;
+  dragAttributes?: DraggableAttributes;
+  dragListeners?: DraggableSyntheticListeners;
   noteVersions?: NoteVersion[];
   onSaveVersion?: (noteId: string, title: string, content: string) => void;
   onRestoreVersion?: (noteId: string, version: NoteVersion) => void;
@@ -142,7 +143,7 @@ export const NoteCard = memo(function NoteCard({ note, onUpdate, onDelete, onTog
   const trashOpacity = useTransform(swipeX, [0, -40, -110], [0, 0.5, 1]);
   const [swiping, setSwiping] = useState(false);
 
-  function handleSwipeEnd(_: any, info: { offset: { x: number }; velocity: { x: number } }) {
+  function handleSwipeEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
     setSwiping(false);
     const dx = info.offset.x;
     const fast = Math.abs(info.velocity.x) > 500;

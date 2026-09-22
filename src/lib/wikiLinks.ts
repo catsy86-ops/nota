@@ -1,6 +1,6 @@
 import type { Note } from "@/hooks/useNotes";
 
-const RX = /\[\[([^\[\]\n]+?)\]\]/g;
+const RX = /\[\[([^[\]\n]+?)\]\]/g;
 
 /** Extract note titles referenced via [[Title]] syntax. */
 export function extractWikiLinks(content: string): string[] {

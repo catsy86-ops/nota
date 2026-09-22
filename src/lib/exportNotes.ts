@@ -181,7 +181,7 @@ export function importFromJSON(): Promise<Note[]> {
         const text = await file.text();
         const data = JSON.parse(text);
         if (!Array.isArray(data)) throw new Error("Nieprawidłowy format");
-        const notes: Note[] = data.map((n: any) => ({
+        const notes: Note[] = data.map((n: Partial<Note> & Record<string, unknown>) => ({
           id: n.id || crypto.randomUUID(),
           title: n.title || "",
           content: n.content || "",

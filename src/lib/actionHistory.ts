@@ -137,6 +137,11 @@ export function useActionHistory(): ActionEntry[] {
   return useSyncExternalStore(subscribe, () => entries, () => EMPTY);
 }
 
+/** Non-hook snapshot of the current history, for use outside React (tests, other stores). */
+export function getActionHistorySnapshot(): ActionEntry[] {
+  return entries;
+}
+
 export function relativeTime(at: number, now = Date.now()): string {
   const s = Math.max(0, Math.round((now - at) / 1000));
   if (s < 10) return "przed chwilą";

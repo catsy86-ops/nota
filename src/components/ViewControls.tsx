@@ -2,7 +2,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { motion } from "framer-motion";
 import { ArrowDownAZ, ArrowUpAZ, Filter, LayoutGrid, List, Rows3, Columns2, SlidersHorizontal } from "lucide-react";
-import { type Layout, type SortKey, type SortDir, useViewPrefs, setViewPref } from "@/lib/viewPrefs";
+import { type Layout, type SortKey, type SortDir, type Density, useViewPrefs, setViewPref } from "@/lib/viewPrefs";
 import { colorClasses } from "@/components/ColorPicker";
 import { cn } from "@/lib/utils";
 import type { NoteColor } from "@/hooks/useNotes";
@@ -58,7 +58,7 @@ export function ViewControls({ allLabels }: Props) {
           </DropdownMenuRadioGroup>
           <DropdownMenuSeparator />
           <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">Gęstość</DropdownMenuLabel>
-          <DropdownMenuRadioGroup value={prefs.density} onValueChange={(v) => setViewPref("density", v as any)}>
+          <DropdownMenuRadioGroup value={prefs.density} onValueChange={(v) => setViewPref("density", v as Density)}>
             <DropdownMenuRadioItem value="compact">Kompakt</DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="cozy">Komfort</DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="comfy">Luźno</DropdownMenuRadioItem>

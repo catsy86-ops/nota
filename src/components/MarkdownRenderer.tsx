@@ -1,6 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
 
 interface MarkdownRendererProps {
   content: string;
@@ -9,7 +9,7 @@ interface MarkdownRendererProps {
   knownTitles?: Set<string>; // lowercase titles
 }
 
-const WIKI_RX = /\[\[([^\[\]\n]+?)\]\]/g;
+const WIKI_RX = /\[\[([^[\]\n]+?)\]\]/g;
 
 function renderWithWiki(text: string, onWikiClick?: (t: string) => void, known?: Set<string>) {
   if (!onWikiClick && !known) return text;
@@ -44,7 +44,7 @@ function renderWithWiki(text: string, onWikiClick?: (t: string) => void, known?:
 }
 
 export function MarkdownRenderer({ content, className, onWikiClick, knownTitles }: MarkdownRendererProps) {
-  const renderText = (children: any) => {
+  const renderText = (children: ReactNode) => {
     if (typeof children === "string") return renderWithWiki(children, onWikiClick, knownTitles);
     if (Array.isArray(children)) {
       return children.map((c, i) =>

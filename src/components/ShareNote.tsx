@@ -61,7 +61,7 @@ export function ShareNote({ note }: ShareNoteProps) {
           title: note.title || "Notatka KACZY",
           text: noteToText(),
         });
-      } catch {}
+      } catch { /* user cancelled the native share sheet */ }
     } else {
       copyText();
     }
