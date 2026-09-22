@@ -392,6 +392,9 @@ export const NoteCard = memo(function NoteCard({ note, onUpdate, onDelete, onTog
             />
           )}
           <ActionBtn icon={<Palette className="w-4 h-4" />} onClick={() => setShowColors(!showColors)} title="Kolor" />
+          {!isArchived && (
+            <ReminderPicker reminder={note.reminder} onSet={(r) => onUpdate?.(note.id, { reminder: r })} />
+          )}
           {isArchived && onUnarchive ? (
             <ActionBtn icon={<ArchiveRestore className="w-4 h-4" />} onClick={() => onUnarchive(note.id)} title="Przywróć" />
           ) : onArchive ? (
@@ -421,10 +424,7 @@ export const NoteCard = memo(function NoteCard({ note, onUpdate, onDelete, onTog
                 <ActionBtn icon={<ImagePlus className="w-4 h-4" />} onClick={() => fileInputRef.current?.click()} title="Dodaj obrazek" />
                 <ActionBtn icon={<PenTool className="w-4 h-4" />} onClick={() => setShowDrawing(true)} title="Rysuj" />
                 {!isArchived && (
-                  <>
-                    <LabelPicker allLabels={allLabels} selected={note.labels} onToggle={handleLabelToggle} onCreateLabel={onCreateLabel} />
-                    <ReminderPicker reminder={note.reminder} onSet={(r) => onUpdate?.(note.id, { reminder: r })} />
-                  </>
+                  <LabelPicker allLabels={allLabels} selected={note.labels} onToggle={handleLabelToggle} onCreateLabel={onCreateLabel} />
                 )}
                 {onMoveToFolder && folders && folders.length > 0 && (
                   <FolderPicker folders={folders} currentFolderId={note.folderId} onSelect={(fId) => onMoveToFolder(note.id, fId)} />
