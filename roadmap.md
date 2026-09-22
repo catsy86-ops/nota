@@ -20,7 +20,7 @@ Notatnik ("kaczy") to lokalna aplikacja PWA (React 18 + TypeScript + Vite + shad
 
 - [x] **`git init`** — repozytorium zainicjalizowane.
 - **Rozbicie `src/pages/Index.tsx` (1964 linie)** — wydzielić np.: logikę widoków/nawigacji (`view`, `activeLabel`, `activeFolder`) do własnego hooka, obsługę drag&drop (`DndContext`, sensory, `DroppableNavItem`) do osobnego pliku/komponentu, akcje eksportu/importu do hooka `useNotesExport`, panel ustawień/komend już częściowo wydzielony (`SettingsDialog`, `CommandPalette`) — kontynuować ten kierunek dla reszty.
-- **Pokrycie testami** — obecnie tylko `useTrashCountdown.test.ts` i przykładowy `example.test.ts`, mimo skonfigurowanych Vitest + Playwright. Priorytety: `offlineQueue.ts` (kolejka z logiką quota/retry — krytyczna dla nieutraty danych), `notesStore.ts` (migracja LS→IDB), `noteSync.ts` (`notesDiffer`/`describeDifference` — łatwe do przetestowania czystą funkcją), potem podstawowy e2e w Playwright na dodanie/edycję/usunięcie notatki.
+- [x] **Pokrycie testami** — dodano `offlineQueue.test.ts` (17 testów: kolejkowanie, potwierdzanie, replay, obcinanie obrazów przy quocie), `notesStore.test.ts` (5 testów: migracja LS→IDB, jednorazowość migracji, zapis/odczyt — wymagało dodania `fake-indexeddb` jako dev dependency), `noteSync.test.ts` (8 testów: `notesDiffer`/`describeDifference`). Wszystkie 42 testy (razem z istniejącymi) przechodzą (`npm test`). Zostaje: podstawowy e2e w Playwright na dodanie/edycję/usunięcie notatki.
 - **`.env.example` nie jest potrzebny** — po przejrzeniu `noteSync.ts`/`notesStore.ts` potwierdzone, że apka nie ma żadnego zewnętrznego API/backendu (wcześniejsze przypuszczenie z pierwszego przeglądu było błędne — "sync" to lokalny `BroadcastChannel`, nie sieć).
 
 ### Wdrożenie
