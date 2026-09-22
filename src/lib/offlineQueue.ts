@@ -25,6 +25,8 @@ let seqCounter = 0;
 export const QUEUE_EVENT = "kaczy:offline-queue";
 /** Dispatched by the queue panel to ask the store to retry persisting now. */
 export const RETRY_EVENT = "kaczy:offline-retry";
+/** Dispatched when queued-but-unsynced changes had to be dropped (storage quota). */
+export const QUEUE_DATA_LOST_EVENT = "kaczy:offline-queue-data-lost";
 
 export function requestRetry() {
   try { window.dispatchEvent(new CustomEvent(RETRY_EVENT)); } catch { /* ignore */ }
@@ -103,7 +105,11 @@ function writeQueue(ops: QueuedOp[]) {
     try {
       localStorage.setItem(QUEUE_KEY, JSON.stringify(slim));
     } catch {
+      const droppedCount = ops.length;
       try { localStorage.removeItem(QUEUE_KEY); } catch { /* ignore */ }
+      try {
+        window.dispatchEvent(new CustomEvent(QUEUE_DATA_LOST_EVENT, { detail: { droppedCount } }));
+      } catch { /* ignore */ }
     }
   }
 }

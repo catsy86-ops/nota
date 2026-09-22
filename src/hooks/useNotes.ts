@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { toast } from "sonner";
 import { loadAll, saveNotesIDB, saveLabelsIDB, saveFoldersIDB } from "@/lib/notesStore";
 import { applyQueue, enqueueDiff, confirmUpTo, getQueue, RETRY_EVENT } from "@/lib/offlineQueue";
+import { broadcastChanges, subscribeToChanges, notesDiffer, describeDifference, closeChannel } from "@/lib/noteSync";
 
 export type NoteColor = "default" | "coral" | "peach" | "sand" | "mint" | "sage" | "sky" | "lavender" | "rose";
 
@@ -45,6 +47,10 @@ const STORAGE_KEY = "kaczy-notes-data";
 const LABELS_KEY = "kaczy-notes-labels";
 const FOLDERS_KEY = "kaczy-notes-folders";
 
+// Read-only fallback for the very first paint, before IndexedDB hydration
+// resolves (see the `loadAll()` effect below). `notesStore.ts` is the sole
+// writer for this key — once migration runs it removes LS_NOTES, so this
+// only ever returns data on a pre-migration first load.
 function loadNotes(): Note[] {
   try {
     let raw = localStorage.getItem(STORAGE_KEY);
@@ -67,10 +73,6 @@ function loadNotes(): Note[] {
   } catch {
     return [];
   }
-}
-
-function saveNotes(notes: Note[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
 }
 
 export function loadLabels(): string[] {
@@ -176,15 +178,73 @@ export function useNotes() {
   // survives an offline session, a crash or a closed tab mid-write.
   useEffect(() => {
     if (!hydratedRef.current) return;
-    const seq = enqueueDiff(lastPersistedRef.current, notes);
+    const before = lastPersistedRef.current;
+    const seq = enqueueDiff(before, notes);
     const snapshot = notes;
     saveNotesIDB(snapshot)
       .then(() => {
         lastPersistedRef.current = snapshot;
         if (seq) confirmUpTo(seq);
+        // Tell other tabs/windows about what just changed so they can
+        // fast-forward instead of silently overwriting each other's edits.
+        const beforeMap = new Map(before.map((n) => [n.id, n]));
+        const snapshotIds = new Set(snapshot.map((n) => n.id));
+        const changed = snapshot.filter((n) => {
+          const prev = beforeMap.get(n.id);
+          return !prev || prev !== n;
+        });
+        const deleted = before.filter((n) => !snapshotIds.has(n.id)).map((n) => n.id);
+        broadcastChanges(changed, deleted);
       })
       .catch(() => { /* keep the queue: it will be replayed on next load */ });
   }, [notes]);
+
+  // Cross-tab sync: adopt remote changes that don't conflict with an unsaved
+  // local edit; warn (without overwriting) when they do.
+  useEffect(() => {
+    const unsubscribe = subscribeToChanges((msg) => {
+      if (!hydratedRef.current) return;
+      const basisMap = new Map(lastPersistedRef.current.map((n) => [n.id, n]));
+      setNotes((prev) => {
+        const map = new Map(prev.map((n) => [n.id, n]));
+        let touched = false;
+        for (const remote of msg.changed) {
+          const local = map.get(remote.id);
+          const basis = basisMap.get(remote.id);
+          if (!local) {
+            map.set(remote.id, remote);
+            touched = true;
+            continue;
+          }
+          if (!notesDiffer(local, remote)) continue; // already in sync
+          const localUnedited = !basis || !notesDiffer(local, basis);
+          if (localUnedited && remote.updatedAt >= local.updatedAt) {
+            map.set(remote.id, remote);
+            touched = true;
+          } else if (!localUnedited) {
+            const fields = describeDifference(local, remote).join(", ");
+            toast.warning(`Wykryto konflikt edycji notatki „${remote.title || "bez tytułu"}”`, {
+              description: `Różne zmiany w innej karcie (${fields}). Zachowano wersję z tej karty.`,
+              duration: 10000,
+            });
+          }
+        }
+        for (const id of msg.deleted) {
+          const local = map.get(id);
+          const basis = basisMap.get(id);
+          if (local && (!basis || !notesDiffer(local, basis))) {
+            map.delete(id);
+            touched = true;
+          }
+        }
+        return touched ? [...map.values()] : prev;
+      });
+    });
+    return () => {
+      unsubscribe();
+      closeChannel();
+    };
+  }, []);
   useEffect(() => { if (hydratedRef.current) saveLabelsIDB(allLabels); }, [allLabels]);
   useEffect(() => { if (hydratedRef.current) saveFoldersIDB(folders); }, [folders]);
 

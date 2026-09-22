@@ -34,6 +34,48 @@ async function unregisterAppSW() {
   }
 }
 
+/**
+ * Dispatched on window when a new service worker is installed and waiting
+ * to activate. The app should ask the user before reloading, since an
+ * unsaved edit could be sitting in memory (data itself is safe in
+ * IndexedDB regardless).
+ */
+export const SW_UPDATE_EVENT = "kaczy:sw-update-available";
+
+let reloadingAfterUpdate = false;
+
+/** Tell the waiting worker to take over. Reloads once it does. */
+export function applyServiceWorkerUpdate(registration: ServiceWorkerRegistration) {
+  const waiting = registration.waiting;
+  if (!waiting) return;
+  waiting.postMessage({ type: "SKIP_WAITING" });
+}
+
+function watchForUpdates(registration: ServiceWorkerRegistration) {
+  const notifyIfWaiting = () => {
+    if (registration.waiting) {
+      window.dispatchEvent(new CustomEvent(SW_UPDATE_EVENT, { detail: registration }));
+    }
+  };
+  notifyIfWaiting();
+
+  registration.addEventListener("updatefound", () => {
+    const installing = registration.installing;
+    if (!installing) return;
+    installing.addEventListener("statechange", () => {
+      if (installing.state === "installed" && navigator.serviceWorker.controller) {
+        notifyIfWaiting();
+      }
+    });
+  });
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (reloadingAfterUpdate) return;
+    reloadingAfterUpdate = true;
+    window.location.reload();
+  });
+}
+
 export function registerServiceWorker() {
   if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
 
@@ -46,8 +88,11 @@ export function registerServiceWorker() {
   }
 
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register(SW_URL, { scope: "/" }).catch(() => {
-      /* noop */
-    });
+    navigator.serviceWorker
+      .register(SW_URL, { scope: "/" })
+      .then((registration) => watchForUpdates(registration))
+      .catch(() => {
+        /* noop */
+      });
   });
 }

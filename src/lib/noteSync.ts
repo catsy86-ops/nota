@@ -51,6 +51,14 @@ export function subscribeToChanges(handler: (msg: SyncMessage) => void): () => v
   return () => ch.removeEventListener("message", listener);
 }
 
+/** Close the underlying BroadcastChannel. Call on app teardown only. */
+export function closeChannel() {
+  if (channel) {
+    try { channel.close(); } catch { /* ignore */ }
+    channel = null;
+  }
+}
+
 /** Fields whose divergence counts as a real edit conflict. */
 const FIELDS: (keyof Note)[] = [
   "title", "content", "color", "pinned", "archived", "trashed",
