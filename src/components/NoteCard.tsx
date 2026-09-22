@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, memo } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
 import { Pin, Trash2, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, MoreHorizontal } from "lucide-react";
@@ -11,7 +11,7 @@ import { MarkdownRenderer, FormatToolbar } from "./MarkdownRenderer";
 import { ShareNote } from "./ShareNote";
 import { FolderPicker } from "./FolderPicker";
 import { VersionHistory } from "./VersionHistory";
-import type { Note, NoteColor, ChecklistItem, Folder } from "@/hooks/useNotes";
+import type { Note, NoteColor, ChecklistItem } from "@/hooks/useNotes";
 import type { NoteVersion } from "@/hooks/useNoteVersions";
 import { fileToBase64 } from "@/hooks/useNotes";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -24,19 +24,17 @@ import { DrawingCanvas } from "./DrawingCanvas";
 import { useTrashCountdown } from "@/hooks/useTrashCountdown";
 import { celebrate, sparkle } from "@/lib/celebrate";
 import { useViewPrefs, readingTimeMin } from "@/lib/viewPrefs";
+import { useNotesContext } from "@/hooks/NotesProvider";
 
 interface NoteCardProps {
   note: Note;
-  onUpdate: (id: string, updates: Partial<Omit<Note, "id" | "createdAt">>) => void;
+  onUpdate?: (id: string, updates: Partial<Omit<Note, "id" | "createdAt">>) => void;
   onDelete: (id: string) => void;
-  onTogglePin: (id: string) => void;
+  onTogglePin?: (id: string) => void;
   onArchive?: (id: string) => void;
   onUnarchive?: (id: string) => void;
   onDuplicate?: (id: string) => void;
   onMoveToFolder?: (noteId: string, folderId: string | null) => void;
-  folders?: Folder[];
-  allLabels: string[];
-  onCreateLabel: (label: string) => void;
   index: number;
   isArchived?: boolean;
   dragAttributes?: any;
@@ -52,7 +50,8 @@ interface NoteCardProps {
   onToggleSelect?: (id: string, shiftKey: boolean) => void;
 }
 
-export function NoteCard({ note, onUpdate, onDelete, onTogglePin, onArchive, onUnarchive, onDuplicate, onMoveToFolder, folders, allLabels, onCreateLabel, index, isArchived, dragAttributes, dragListeners, noteVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, selected, selectionMode, onToggleSelect }: NoteCardProps) {
+export const NoteCard = memo(function NoteCard({ note, onUpdate, onDelete, onTogglePin, onArchive, onUnarchive, onDuplicate, onMoveToFolder, index, isArchived, dragAttributes, dragListeners, noteVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, selected, selectionMode, onToggleSelect }: NoteCardProps) {
+  const { folders, allLabels, addLabel: onCreateLabel } = useNotesContext();
   const [showColors, setShowColors] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -78,19 +77,19 @@ export function NoteCard({ note, onUpdate, onDelete, onTogglePin, onArchive, onU
     if (onSaveVersion && (note.title !== editTitle.trim() || note.content !== editContent.trim())) {
       onSaveVersion(note.id, note.title, note.content);
     }
-    onUpdate(note.id, { title: editTitle.trim(), content: editContent.trim(), checklist: editChecklist });
+    onUpdate?.(note.id, { title: editTitle.trim(), content: editContent.trim(), checklist: editChecklist });
     setIsEditing(false);
     setShowPreview(false);
   }
 
   function handleLabelToggle(label: string) {
     const labels = note.labels.includes(label) ? note.labels.filter((l) => l !== label) : [...note.labels, label];
-    onUpdate(note.id, { labels });
+    onUpdate?.(note.id, { labels });
   }
 
   function handleChecklistToggle(itemId: string) {
     const updated = (note.checklist || []).map((i) => (i.id === itemId ? { ...i, checked: !i.checked } : i));
-    onUpdate(note.id, { checklist: updated });
+    onUpdate?.(note.id, { checklist: updated });
   }
 
   function handleFormatInsert(before: string, after: string) {
@@ -116,14 +115,14 @@ export function NoteCard({ note, onUpdate, onDelete, onTogglePin, onArchive, onU
       const base64 = await fileToBase64(file);
       newImages.push(base64);
     }
-    onUpdate(note.id, { images: [...(note.images || []), ...newImages] });
+    onUpdate?.(note.id, { images: [...(note.images || []), ...newImages] });
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function removeImage(idx: number) {
     const updated = [...(note.images || [])];
     updated.splice(idx, 1);
-    onUpdate(note.id, { images: updated });
+    onUpdate?.(note.id, { images: updated });
   }
 
   // Subtle 3D hover tilt — disabled when user prefers reduced motion.
@@ -387,7 +386,7 @@ export function NoteCard({ note, onUpdate, onDelete, onTogglePin, onArchive, onU
                   const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
                   sparkle(r.left + r.width / 2, r.top + r.height / 2);
                 }
-                onTogglePin(note.id);
+                onTogglePin?.(note.id);
               }}
               title={note.pinned ? "Odepnij" : "Przypnij"}
             />
@@ -424,7 +423,7 @@ export function NoteCard({ note, onUpdate, onDelete, onTogglePin, onArchive, onU
                 {!isArchived && (
                   <>
                     <LabelPicker allLabels={allLabels} selected={note.labels} onToggle={handleLabelToggle} onCreateLabel={onCreateLabel} />
-                    <ReminderPicker reminder={note.reminder} onSet={(r) => onUpdate(note.id, { reminder: r })} />
+                    <ReminderPicker reminder={note.reminder} onSet={(r) => onUpdate?.(note.id, { reminder: r })} />
                   </>
                 )}
                 {onMoveToFolder && folders && folders.length > 0 && (
@@ -445,7 +444,7 @@ export function NoteCard({ note, onUpdate, onDelete, onTogglePin, onArchive, onU
 
         {showColors && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="px-4 pb-3">
-            <ColorPicker selected={note.color} onSelect={(c: NoteColor) => { onUpdate(note.id, { color: c }); setShowColors(false); }} />
+            <ColorPicker selected={note.color} onSelect={(c: NoteColor) => { onUpdate?.(note.id, { color: c }); setShowColors(false); }} />
           </motion.div>
         )}
       </motion.div>
@@ -472,10 +471,10 @@ export function NoteCard({ note, onUpdate, onDelete, onTogglePin, onArchive, onU
         </AlertDialogContent>
       </AlertDialog>
 
-      <DrawingCanvas open={showDrawing} onOpenChange={setShowDrawing} onSave={(dataUrl) => onUpdate(note.id, { images: [...(note.images || []), dataUrl] })} />
+      <DrawingCanvas open={showDrawing} onOpenChange={setShowDrawing} onSave={(dataUrl) => onUpdate?.(note.id, { images: [...(note.images || []), dataUrl] })} />
     </>
   );
-}
+});
 
 function ActionBtn({ icon, onClick, title, className = "" }: { icon: React.ReactNode; onClick: (e: React.MouseEvent<HTMLButtonElement>) => void; title: string; className?: string }) {
   return (

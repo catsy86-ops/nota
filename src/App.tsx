@@ -12,6 +12,7 @@ import { useMotionPref } from "./hooks/useMotionPref";
 import { useEffect } from "react";
 import { applySeasonAttr, useSeasonPref } from "./lib/seasonTheme";
 import { useEffectsSettings } from "./lib/effectsSettings";
+import { NotesProvider } from "./hooks/NotesProvider";
 
 const queryClient = new QueryClient();
 
@@ -38,11 +39,13 @@ const App = () => {
           <OfflineStatus />
           <BrowserRouter>
             <ErrorBoundary>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              <NotesProvider>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </NotesProvider>
             </ErrorBoundary>
           </BrowserRouter>
         </TooltipProvider>
