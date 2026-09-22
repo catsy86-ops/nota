@@ -1,0 +1,16 @@
+{
+  "name": "KACZY — Twoje notatki",
+  "short_name": "KACZY",
+  "description": "Notatki z etykietami, przypomnieniami i obrazkami — działa offline",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f0d10",
+  "theme_color": "#f0b429",
+  "lang": "pl",
+  "icons": [
+    { "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

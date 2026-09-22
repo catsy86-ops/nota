@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0f1115" />
+    <title>Brak połączenia — Kaczy Notatnik</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        background:
+          radial-gradient(900px 600px at 20% 0%, #1d2740 0%, transparent 60%),
+          radial-gradient(700px 500px at 90% 100%, #2a2038 0%, transparent 60%),
+          #0f1115;
+        color: #e8eaf0;
+      }
+      .card {
+        width: min(440px, 100%);
+        text-align: center;
+        padding: 32px 26px;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+      }
+      .emoji { font-size: 54px; line-height: 1; }
+      h1 { font-size: 22px; margin: 16px 0 8px; }
+      p { margin: 0 0 20px; color: #a9b0c0; font-size: 15px; line-height: 1.55; }
+      button {
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+        border: 0;
+        border-radius: 999px;
+        padding: 12px 22px;
+        color: #0f1115;
+        background: linear-gradient(135deg, #ffd66b, #ffb020);
+        transition: transform 0.15s ease, filter 0.15s ease;
+      }
+      button:hover { transform: translateY(-1px); filter: brightness(1.05); }
+      .status { margin-top: 16px; font-size: 13px; color: #7f879a; }
+      .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #ef6262; margin-right: 6px; }
+      .online .dot { background: #4ade80; }
+      @media (prefers-reduced-motion: reduce) { button { transition: none; } }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <div class="emoji">🦆</div>
+      <h1>Jesteś offline</h1>
+      <p>
+        Ta strona nie jest jeszcze zapisana w pamięci urządzenia.
+        Twoje notatki są bezpieczne — wrócą, gdy połączenie się odnowi.
+      </p>
+      <button type="button" onclick="location.reload()">Spróbuj ponownie</button>
+      <div class="status" id="status"><span class="dot"></span><span id="label">Brak połączenia z internetem</span></div>
+    </main>
+    <script>
+      var status = document.getElementById("status");
+      var label = document.getElementById("label");
+      function sync() {
+        var on = navigator.onLine;
+        status.className = "status" + (on ? " online" : "");
+        label.textContent = on ? "Połączenie wróciło — odświeżam…" : "Brak połączenia z internetem";
+        if (on) setTimeout(function () { location.reload(); }, 900);
+      }
+      window.addEventListener("online", sync);
+      window.addEventListener("offline", sync);
+      sync();
+    </script>
+  </body>
+</html>
