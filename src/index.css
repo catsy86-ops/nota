@@ -188,7 +188,7 @@
 }
 
 @layer utilities {
-  /* --- Calm ambient backdrop: two soft breathing blooms, no grain --- */
+  /* --- Animated mesh-gradient backdrop: three drifting color blooms --- */
   .backdrop-bloom {
     position: absolute;
     border-radius: 9999px;
@@ -197,27 +197,45 @@
     contain: strict;
   }
   .backdrop-bloom-1 {
-    top: -18rem; left: -12rem;
-    width: 46rem; height: 46rem;
+    top: -20rem; left: -14rem;
+    width: 50rem; height: 50rem;
   }
   .backdrop-bloom-2 {
-    bottom: -20rem; right: -14rem;
-    width: 42rem; height: 42rem;
+    bottom: -22rem; right: -16rem;
+    width: 46rem; height: 46rem;
   }
-  .dark .backdrop-bloom { opacity: 0.7; }
+  .backdrop-bloom-3 {
+    top: 20%; left: 35%;
+    width: 40rem; height: 40rem;
+  }
+  .dark .backdrop-bloom { opacity: 0.8; }
 
   .backdrop-bloom-animated {
-    will-change: opacity;
-    animation: bloom-breathe 14s ease-in-out infinite alternate;
+    will-change: transform;
+    animation: bloom-drift-1 26s ease-in-out infinite alternate;
   }
   .backdrop-bloom-2.backdrop-bloom-animated {
-    animation-duration: 18s;
-    animation-delay: -6s;
+    animation-name: bloom-drift-2;
+    animation-duration: 32s;
+    animation-delay: -8s;
+  }
+  .backdrop-bloom-3.backdrop-bloom-animated {
+    animation-name: bloom-drift-3;
+    animation-duration: 22s;
+    animation-delay: -4s;
   }
 
-  @keyframes bloom-breathe {
-    from { opacity: 0.7; }
-    to   { opacity: 1; }
+  @keyframes bloom-drift-1 {
+    from { transform: translate3d(0, 0, 0) scale(1); }
+    to   { transform: translate3d(6rem, 5rem, 0) scale(1.15); }
+  }
+  @keyframes bloom-drift-2 {
+    from { transform: translate3d(0, 0, 0) scale(1.1); }
+    to   { transform: translate3d(-5rem, -4rem, 0) scale(0.92); }
+  }
+  @keyframes bloom-drift-3 {
+    from { transform: translate3d(-3rem, 2rem, 0) scale(0.95); }
+    to   { transform: translate3d(4rem, -3rem, 0) scale(1.1); }
   }
 
   /* --- Seasonal light motes (replaces emoji leaves) --- */
