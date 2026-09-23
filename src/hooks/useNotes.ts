@@ -35,6 +35,7 @@ export interface Note {
   trashedAt: number | null;
   labels: string[];
   reminder: number | null;
+  reminderRepeat?: "none" | "daily" | "weekly" | "monthly";
   images: string[]; // base64 data URLs
   checklist: ChecklistItem[];
   folderId: string | null;

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import type { Note } from "./useNotes";
+import { getNextReminderTime } from "@/lib/reminderRepeat";
 
 const FIRED_KEY = "dash-notes-fired-reminders";
 
@@ -18,7 +19,7 @@ function saveFired(set: Set<string>) {
 
 export function useReminderNotifications(
   notes: Note[],
-  onClearReminder: (id: string) => void
+  onReminderFired: (id: string, nextReminder: number | null) => void
 ) {
   const firedRef = useRef(getFired());
 
@@ -36,25 +37,35 @@ export function useReminderNotifications(
 
       for (const note of notes) {
         if (note.reminder && note.reminder <= now && !fired.has(note.id)) {
-          fired.add(note.id);
-          saveFired(fired);
+          const repeat = note.reminderRepeat ?? "none";
+          // One-shot reminders are marked fired forever; repeating ones are
+          // rescheduled below, so the same id can fire again next cycle.
+          if (repeat === "none") {
+            fired.add(note.id);
+            saveFired(fired);
+          }
 
-          // Toast notification
           toast(`⏰ ${note.title || "Przypomnienie"}`, {
             description: note.content ? note.content.slice(0, 80) : "Czas na tę notatkę!",
             duration: 10000,
             action: {
               label: "OK",
-              onClick: () => onClearReminder(note.id),
+              // For repeating reminders the next occurrence is already
+              // scheduled below — OK here should just dismiss the toast.
+              onClick: repeat === "none" ? () => onReminderFired(note.id, null) : () => {},
             },
           });
 
-          // Browser notification
           if ("Notification" in window && Notification.permission === "granted") {
             new Notification(note.title || "Dash Notes — Przypomnienie", {
               body: note.content || "Czas na tę notatkę!",
               icon: "/placeholder.svg",
             });
+          }
+
+          if (repeat !== "none") {
+            const next = getNextReminderTime(note.reminder, repeat);
+            onReminderFired(note.id, next);
           }
         }
       }
@@ -63,5 +74,5 @@ export function useReminderNotifications(
     check();
     const interval = setInterval(check, 15000);
     return () => clearInterval(interval);
-  }, [notes, onClearReminder]);
+  }, [notes, onReminderFired]);
 }

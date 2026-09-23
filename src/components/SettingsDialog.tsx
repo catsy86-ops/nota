@@ -12,7 +12,7 @@ import { useViewPrefs, setViewPref, resetViewPrefs, type Density, type Layout } 
 import { colorClasses } from "@/components/ColorPicker";
 import { cn } from "@/lib/utils";
 import type { NoteColor } from "@/hooks/useNotes";
-import { exportToJSON } from "@/lib/exportNotes";
+import { exportFullBackup, importFullBackup } from "@/lib/exportNotes";
 import { daysSinceBackup } from "@/lib/backupReminder";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { useMotionPref, type MotionMode } from "@/hooks/useMotionPref";
@@ -89,15 +89,25 @@ export function SettingsDialog({ trigger, open, onOpenChange }: SettingsDialogPr
     }
   }
 
-  function exportNow() {
+  async function exportNow() {
     try {
-      const raw = localStorage.getItem("kaczy-notes-data");
-      const notes = raw ? JSON.parse(raw) : [];
-      exportToJSON(notes);
+      await exportFullBackup();
       try { localStorage.setItem("kaczy.lastAutoExport", String(Date.now())); } catch { /* ignore */ }
       toast.success("Backup pobrany 💾");
     } catch {
       toast.error("Nie udało się wygenerować backupu");
+    }
+  }
+
+  async function restoreNow() {
+    try {
+      const backup = await importFullBackup();
+      toast.success(`Backup wczytany — ${backup.notes.length} notatek. Odświeżam…`);
+      setTimeout(() => window.location.reload(), 1200);
+    } catch (err) {
+      if (err instanceof Error && err.message !== "Nie wybrano pliku") {
+        toast.error("Nie udało się wczytać backupu: " + err.message);
+      }
     }
   }
 
@@ -495,12 +505,15 @@ export function SettingsDialog({ trigger, open, onOpenChange }: SettingsDialogPr
               </Section>
 
               <Button onClick={exportNow} className="w-full gap-2">
-                <Download className="w-4 h-4" /> Pobierz backup teraz
+                <Download className="w-4 h-4" /> Pobierz pełny backup teraz
+              </Button>
+              <Button onClick={restoreNow} variant="outline" className="w-full gap-2">
+                <Database className="w-4 h-4" /> Przywróć z pliku backupu
               </Button>
 
               <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-1">
                 <p className="font-semibold text-foreground">💡 Wskazówka</p>
-                <p>Wszystkie dane KACZY (notatki, foldery, etykiety, osiągnięcia, ustawienia) są zapisane lokalnie w tej przeglądarce. Regularny backup chroni przed utratą po wyczyszczeniu danych witryny.</p>
+                <p>Pełny backup zawiera wszystkie notatki (w tym archiwum i kosz), etykiety i foldery. Przywrócenie z pliku zastąpi obecne dane w tej przeglądarce i odświeży aplikację.</p>
               </div>
             </TabsContent>
           </div>

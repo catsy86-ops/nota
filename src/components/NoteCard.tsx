@@ -331,7 +331,7 @@ export const NoteCard = memo(function NoteCard({ note, onUpdate, onDelete, onTog
                 <ChecklistPreview items={note.checklist} onToggle={handleChecklistToggle} />
               )}
               <LabelBadges labels={note.labels} />
-              <ReminderBadge reminder={note.reminder} />
+              <ReminderBadge reminder={note.reminder} reminderRepeat={note.reminderRepeat} />
               {trashCountdown && (
                 <div className="inline-flex items-center gap-1 mt-2">
                   <div className={cn(
@@ -394,7 +394,11 @@ export const NoteCard = memo(function NoteCard({ note, onUpdate, onDelete, onTog
           )}
           <ActionBtn icon={<Palette className="w-4 h-4" />} onClick={() => setShowColors(!showColors)} title="Kolor" />
           {!isArchived && (
-            <ReminderPicker reminder={note.reminder} onSet={(r) => onUpdate?.(note.id, { reminder: r })} />
+            <ReminderPicker
+              reminder={note.reminder}
+              reminderRepeat={note.reminderRepeat}
+              onSet={(r, repeat) => onUpdate?.(note.id, { reminder: r, reminderRepeat: repeat })}
+            />
           )}
           {isArchived && onUnarchive ? (
             <ActionBtn icon={<ArchiveRestore className="w-4 h-4" />} onClick={() => onUnarchive(note.id)} title="Przywróć" />

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, X } from "lucide-react";
+import { Bell, Repeat, X } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -7,31 +7,37 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { REMINDER_REPEAT_LABELS, type ReminderRepeat } from "@/lib/reminderRepeat";
 
 interface ReminderPickerProps {
   reminder: number | null;
-  onSet: (timestamp: number | null) => void;
+  reminderRepeat?: ReminderRepeat;
+  onSet: (timestamp: number | null, repeat: ReminderRepeat) => void;
 }
 
-export function ReminderPicker({ reminder, onSet }: ReminderPickerProps) {
+const REPEAT_OPTIONS: ReminderRepeat[] = ["none", "daily", "weekly", "monthly"];
+
+export function ReminderPicker({ reminder, reminderRepeat, onSet }: ReminderPickerProps) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(reminder ? new Date(reminder) : undefined);
   const [time, setTime] = useState(reminder ? format(new Date(reminder), "HH:mm") : "09:00");
+  const [repeat, setRepeat] = useState<ReminderRepeat>(reminderRepeat ?? "none");
 
   function handleSave() {
     if (date) {
       const [h, m] = time.split(":").map(Number);
       const d = new Date(date);
       d.setHours(h, m, 0, 0);
-      onSet(d.getTime());
+      onSet(d.getTime(), repeat);
       setOpen(false);
     }
   }
 
   function handleClear() {
-    onSet(null);
+    onSet(null, "none");
     setDate(undefined);
     setTime("09:00");
+    setRepeat("none");
     setOpen(false);
   }
 
@@ -68,6 +74,18 @@ export function ReminderPicker({ reminder, onSet }: ReminderPickerProps) {
             className="text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 text-foreground"
           />
         </div>
+        <div className="flex items-center gap-2">
+          <label className="text-xs text-muted-foreground flex items-center gap-1"><Repeat className="w-3 h-3" />Powtarzaj:</label>
+          <select
+            value={repeat}
+            onChange={(e) => setRepeat(e.target.value as ReminderRepeat)}
+            className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 text-foreground"
+          >
+            {REPEAT_OPTIONS.map((r) => (
+              <option key={r} value={r}>{REMINDER_REPEAT_LABELS[r]}</option>
+            ))}
+          </select>
+        </div>
         <div className="flex gap-2">
           <Button size="sm" onClick={handleSave} disabled={!date} className="flex-1">
             Zapisz
@@ -83,7 +101,7 @@ export function ReminderPicker({ reminder, onSet }: ReminderPickerProps) {
   );
 }
 
-export function ReminderBadge({ reminder }: { reminder: number | null }) {
+export function ReminderBadge({ reminder, reminderRepeat }: { reminder: number | null; reminderRepeat?: ReminderRepeat }) {
   if (!reminder) return null;
   const isPast = reminder < Date.now();
   return (
@@ -93,6 +111,7 @@ export function ReminderBadge({ reminder }: { reminder: number | null }) {
     )}>
       <Bell className="w-2.5 h-2.5" />
       {format(new Date(reminder), "d MMM, HH:mm", { locale: pl })}
+      {reminderRepeat && reminderRepeat !== "none" && <Repeat className="w-2.5 h-2.5" />}
     </div>
   );
 }

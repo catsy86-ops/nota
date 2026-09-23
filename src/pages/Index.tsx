@@ -90,7 +90,7 @@ const Index = () => {
     setSidebarOpen(!isMobile);
   }, [isMobile]);
 
-  useReminderNotifications([...notes, ...archivedNotes], (id) => updateNote(id, { reminder: null }));
+  useReminderNotifications([...notes, ...archivedNotes], (id, nextReminder) => updateNote(id, { reminder: nextReminder }));
 
   useAchievementTracker(notes, archivedNotes, allLabels, folders, (a) => {
     toast.success(`${a.emoji} Odznaka odblokowana: ${a.title}`, { description: a.description });

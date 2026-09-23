@@ -2,12 +2,84 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import jsPDF from "jspdf";
 import type { Note } from "@/hooks/useNotes";
+import { loadAll, saveNotesIDB, saveLabelsIDB, saveFoldersIDB } from "@/lib/notesStore";
+import { noteSchema, fullBackupSchema, looksLikeNoteArray, type FullBackup } from "@/lib/noteSchema";
 
 export function exportToJSON(notes: Note[], filename?: string): { filename: string; size: number } {
   const data = JSON.stringify(notes, null, 2);
   const name = filename || `kaczy-backup-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
   download(data, name, "application/json");
   return { filename: name, size: new Blob([data]).size };
+}
+
+/** Pełny backup: notatki + etykiety + foldery, wystarczający do odtworzenia całej bazy. */
+export async function exportFullBackup(filename?: string): Promise<{ filename: string; size: number }> {
+  const snapshot = await loadAll();
+  const backup: FullBackup = {
+    version: 1,
+    exportedAt: Date.now(),
+    notes: snapshot.notes,
+    labels: snapshot.labels,
+    folders: snapshot.folders,
+  };
+  const data = JSON.stringify(backup, null, 2);
+  const name = filename || `kaczy-full-backup-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
+  download(data, name, "application/json");
+  return { filename: name, size: new Blob([data]).size };
+}
+
+const MAX_IMPORT_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+
+/** Wczytuje i waliduje plik pełnego backupu, zapisuje bezpośrednio do IndexedDB. */
+export function importFullBackup(): Promise<FullBackup> {
+  return new Promise((resolve, reject) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return reject(new Error("Nie wybrano pliku"));
+      if (file.size > MAX_IMPORT_FILE_SIZE) {
+        return reject(new Error(`Plik jest zbyt duży (max ${MAX_IMPORT_FILE_SIZE / (1024 * 1024)} MB)`));
+      }
+      try {
+        const text = await file.text();
+        const raw = JSON.parse(text);
+        if (!raw || typeof raw !== "object" || !Array.isArray((raw as Record<string, unknown>).notes)) {
+          throw new Error("To nie jest plik pełnego backupu KACZY");
+        }
+        const backup = fullBackupSchema.parse(raw);
+        await Promise.all([
+          saveNotesIDB(backup.notes),
+          saveLabelsIDB(backup.labels),
+          saveFoldersIDB(backup.folders),
+        ]);
+        resolve(backup);
+      } catch (err) {
+        reject(err instanceof Error ? err : new Error("Nieprawidłowy plik backupu"));
+      }
+    };
+    input.click();
+  });
+}
+
+function addImagesToPDF(doc: jsPDF, images: string[], margin: number, contentW: number, y: number): number {
+  const maxImgHeight = 70;
+  for (const img of images) {
+    try {
+      const props = doc.getImageProperties(img);
+      const ratio = props.height / props.width;
+      let w = contentW;
+      let h = w * ratio;
+      if (h > maxImgHeight) { h = maxImgHeight; w = h / ratio; }
+      if (y + h > 275) { doc.addPage(); y = 20; }
+      doc.addImage(img, margin, y, w, h);
+      y += h + 4;
+    } catch {
+      // Nieznany/uszkodzony format obrazu — pomiń ten jeden obrazek, nie przerywaj eksportu.
+    }
+  }
+  return y;
 }
 
 export function exportToPDF(notes: Note[]) {
@@ -78,6 +150,11 @@ export function exportToPDF(notes: Note[]) {
       y += 2;
     }
 
+    // Images
+    if (note.images?.length) {
+      y = addImagesToPDF(doc, note.images, margin, contentW, y);
+    }
+
     // Separator
     doc.setDrawColor(220);
     doc.line(margin, y, pageW - margin, y);
@@ -114,6 +191,10 @@ export function exportToMarkdown(notes: Note[]) {
         lines.push(`- [${item.checked ? "x" : " "}] ${item.text}`);
       });
     }
+    if (note.images?.length) {
+      lines.push("");
+      note.images.forEach((img, i) => lines.push(`![obraz ${i + 1}](${img})`));
+    }
     lines.push("", "---", "");
   }
 
@@ -142,6 +223,8 @@ h1{font-size:1.8rem;margin-bottom:.2rem}
 .checklist{list-style:none;padding:0}
 .checklist li{padding:2px 0}
 .checked{text-decoration:line-through;color:#999}
+.images{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.5rem;margin-top:.6rem}
+.images img{width:100%;border-radius:8px;display:block}
 </style>
 </head>
 <body>
@@ -162,6 +245,11 @@ h1{font-size:1.8rem;margin-bottom:.2rem}
       });
       html += `</ul>`;
     }
+    if (note.images?.length) {
+      html += `<div class="images">`;
+      note.images.forEach((img) => { html += `<img src="${img}" alt="">`; });
+      html += `</div>`;
+    }
     html += `</div>\n`;
   }
 
@@ -177,31 +265,17 @@ export function importFromJSON(): Promise<Note[]> {
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return reject(new Error("Nie wybrano pliku"));
+      if (file.size > MAX_IMPORT_FILE_SIZE) {
+        return reject(new Error(`Plik jest zbyt duży (max ${MAX_IMPORT_FILE_SIZE / (1024 * 1024)} MB)`));
+      }
       try {
         const text = await file.text();
         const data = JSON.parse(text);
-        if (!Array.isArray(data)) throw new Error("Nieprawidłowy format");
-        const notes: Note[] = data.map((n: Partial<Note> & Record<string, unknown>) => ({
-          id: n.id || crypto.randomUUID(),
-          title: n.title || "",
-          content: n.content || "",
-          color: n.color || "default",
-          pinned: n.pinned ?? false,
-          archived: n.archived ?? false,
-          trashed: n.trashed ?? false,
-          trashedAt: n.trashedAt ?? null,
-          labels: n.labels ?? [],
-          reminder: n.reminder ?? null,
-          images: n.images ?? [],
-          checklist: n.checklist ?? [],
-          folderId: n.folderId ?? null,
-          order: n.order ?? 0,
-          createdAt: n.createdAt || Date.now(),
-          updatedAt: n.updatedAt || Date.now(),
-        }));
+        if (!looksLikeNoteArray(data)) throw new Error("Nieprawidłowy format — oczekiwano listy notatek");
+        const notes = data.map((n) => noteSchema.parse(n));
         resolve(notes);
       } catch (err) {
-        reject(err);
+        reject(err instanceof Error ? err : new Error("Nieprawidłowy plik"));
       }
     };
     input.click();

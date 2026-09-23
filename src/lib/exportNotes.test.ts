@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { exportToJSON, exportToMarkdown, exportToHTML } from "./exportNotes";
+import { noteSchema, looksLikeNoteArray } from "./noteSchema";
 import type { Note } from "@/hooks/useNotes";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
@@ -75,9 +76,6 @@ describe("exportToJSON", () => {
 
     const parsed = JSON.parse(capturedContent);
     expect(parsed).toEqual([note]);
-    // Unlike the HTML/Markdown/PDF exports, JSON keeps images — it's the
-    // only format that round-trips a note completely (see exportToHTML/
-    // exportToMarkdown tests below for the known limitation).
     expect(parsed[0].images).toEqual(["data:image/png;base64,AAA"]);
   });
 
@@ -104,11 +102,10 @@ describe("exportToMarkdown", () => {
     expect(capturedContent).toContain("- [ ] Chleb");
   });
 
-  it("KNOWN LIMITATION: does not include note images at all", () => {
+  it("embeds note images as markdown image links", () => {
     const note = makeNote({ images: ["data:image/png;base64,AAA"] });
     exportToMarkdown([note]);
-    expect(capturedContent).not.toContain("data:image");
-    expect(capturedContent).not.toContain("![");
+    expect(capturedContent).toContain("![obraz 1](data:image/png;base64,AAA)");
   });
 });
 
@@ -122,10 +119,47 @@ describe("exportToHTML", () => {
     expect(capturedContent).toContain("a &amp; b &lt; c");
   });
 
-  it("KNOWN LIMITATION: does not render note images at all", () => {
+  it("renders note images as <img> tags", () => {
     const note = makeNote({ images: ["data:image/png;base64,AAA"] });
     exportToHTML([note]);
-    expect(capturedContent).not.toContain("<img");
-    expect(capturedContent).not.toContain("data:image");
+    expect(capturedContent).toContain('<img src="data:image/png;base64,AAA"');
+  });
+});
+
+describe("noteSchema", () => {
+  it("accepts a well-formed note unchanged", () => {
+    const note = makeNote({ labels: ["dom"] });
+    expect(noteSchema.parse(note)).toEqual(note);
+  });
+
+  it("fills in fallbacks for missing/malformed fields", () => {
+    const parsed = noteSchema.parse({ id: "x", title: "T", color: "not-a-real-color" });
+    expect(parsed.id).toBe("x");
+    expect(parsed.title).toBe("T");
+    expect(parsed.content).toBe("");
+    expect(parsed.color).toBe("default");
+    expect(parsed.labels).toEqual([]);
+    expect(parsed.checklist).toEqual([]);
+    expect(typeof parsed.createdAt).toBe("number");
+  });
+
+  it("generates an id when missing", () => {
+    const parsed = noteSchema.parse({ title: "No id" });
+    expect(typeof parsed.id).toBe("string");
+    expect(parsed.id.length).toBeGreaterThan(0);
+  });
+});
+
+describe("looksLikeNoteArray", () => {
+  it("accepts an array of objects", () => {
+    expect(looksLikeNoteArray([{ id: "1" }])).toBe(true);
+    expect(looksLikeNoteArray([])).toBe(true);
+  });
+
+  it("rejects non-array or array of non-objects", () => {
+    expect(looksLikeNoteArray({ notes: [] })).toBe(false);
+    expect(looksLikeNoteArray(null)).toBe(false);
+    expect(looksLikeNoteArray(["a", "b"])).toBe(false);
+    expect(looksLikeNoteArray([1, 2])).toBe(false);
   });
 });
