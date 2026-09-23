@@ -188,48 +188,36 @@
 }
 
 @layer utilities {
-  /* --- Optimized static/animated backdrop --- */
-  .backdrop-blob {
+  /* --- Calm ambient backdrop: two soft breathing blooms, no grain --- */
+  .backdrop-bloom {
     position: absolute;
     border-radius: 9999px;
     transform: translateZ(0);
     backface-visibility: hidden;
     contain: strict;
   }
-  .backdrop-blob-1 {
-    top: -14rem; left: -14rem;
-    width: 38rem; height: 38rem;
+  .backdrop-bloom-1 {
+    top: -18rem; left: -12rem;
+    width: 46rem; height: 46rem;
   }
-  .backdrop-blob-2 {
-    bottom: -16rem; right: -12rem;
-    width: 34rem; height: 34rem;
+  .backdrop-bloom-2 {
+    bottom: -20rem; right: -14rem;
+    width: 42rem; height: 42rem;
   }
-  .dark .backdrop-blob { opacity: 0.55; }
+  .dark .backdrop-bloom { opacity: 0.7; }
 
-  .backdrop-blob-animated {
-    will-change: transform;
-    animation: blob-drift 32s ease-in-out infinite alternate;
+  .backdrop-bloom-animated {
+    will-change: opacity;
+    animation: bloom-breathe 14s ease-in-out infinite alternate;
   }
-  .backdrop-blob-2.backdrop-blob-animated {
-    animation-name: blob-drift-2;
-    animation-duration: 38s;
-  }
-
-  @keyframes blob-drift {
-    from { transform: translate3d(0, 0, 0) scale(1); }
-    to   { transform: translate3d(5rem, 3.5rem, 0) scale(1.1); }
-  }
-  @keyframes blob-drift-2 {
-    from { transform: translate3d(0, 0, 0) scale(1.06); }
-    to   { transform: translate3d(-4rem, -3rem, 0) scale(0.96); }
+  .backdrop-bloom-2.backdrop-bloom-animated {
+    animation-duration: 18s;
+    animation-delay: -6s;
   }
 
-  .backdrop-grain {
-    position: absolute;
-    inset: 0;
-    opacity: 0.035;
-    mix-blend-mode: overlay;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  @keyframes bloom-breathe {
+    from { opacity: 0.7; }
+    to   { opacity: 1; }
   }
 
   /* --- Seasonal light motes (replaces emoji leaves) --- */
