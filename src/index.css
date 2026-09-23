@@ -188,58 +188,40 @@
 }
 
 @layer utilities {
-  /* --- Optimized animated backdrop --- */
-  .backdrop-parallax {
-    position: absolute;
-    inset: 0;
-    transform: translate3d(0, calc(var(--scroll, 0px) * var(--depth, 0)), 0);
-    will-change: transform;
-  }
-  html[data-motion="reduced"] .backdrop-parallax {
-    transform: none !important;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .backdrop-parallax { transform: none !important; }
-  }
+  /* --- Optimized static/animated backdrop --- */
   .backdrop-blob {
     position: absolute;
     border-radius: 9999px;
-    will-change: transform;
     transform: translateZ(0);
     backface-visibility: hidden;
     contain: strict;
   }
   .backdrop-blob-1 {
     top: -14rem; left: -14rem;
-    width: 40rem; height: 40rem;
-    animation: blob-drift-1 28s ease-in-out infinite alternate;
+    width: 38rem; height: 38rem;
   }
   .backdrop-blob-2 {
-    top: 22%; right: -12rem;
+    bottom: -16rem; right: -12rem;
     width: 34rem; height: 34rem;
-    animation: blob-drift-2 34s ease-in-out infinite alternate;
-  }
-  .backdrop-blob-3 {
-    bottom: -14rem; left: 22%;
-    width: 36rem; height: 36rem;
-    animation: blob-drift-3 40s ease-in-out infinite alternate;
   }
   .dark .backdrop-blob { opacity: 0.55; }
 
-  @keyframes blob-drift-1 {
+  .backdrop-blob-animated {
+    will-change: transform;
+    animation: blob-drift 32s ease-in-out infinite alternate;
+  }
+  .backdrop-blob-2.backdrop-blob-animated {
+    animation-name: blob-drift-2;
+    animation-duration: 38s;
+  }
+
+  @keyframes blob-drift {
     from { transform: translate3d(0, 0, 0) scale(1); }
-    to   { transform: translate3d(6rem, 4rem, 0) scale(1.12); }
+    to   { transform: translate3d(5rem, 3.5rem, 0) scale(1.1); }
   }
   @keyframes blob-drift-2 {
-    from { transform: translate3d(0, 0, 0) scale(1.08); }
-    to   { transform: translate3d(-5rem, 3rem, 0) scale(0.95); }
-  }
-  @keyframes blob-drift-3 {
-    from { transform: translate3d(0, 0, 0) scale(1); }
-    to   { transform: translate3d(4rem, -3.5rem, 0) scale(1.1); }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .backdrop-blob { animation: none !important; }
+    from { transform: translate3d(0, 0, 0) scale(1.06); }
+    to   { transform: translate3d(-4rem, -3rem, 0) scale(0.96); }
   }
 
   .backdrop-grain {
