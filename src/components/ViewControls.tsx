@@ -29,8 +29,10 @@ const COLOR_OPTIONS: NoteColor[] = ["default", "coral", "peach", "sand", "mint",
 export function ViewControls({ allLabels }: Props) {
   const prefs = useViewPrefs();
 
+  const filtersActive = prefs.filterColor !== "all" || prefs.filterLabel !== "all" || prefs.filterHasReminder;
+
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-0.5 p-1 rounded-2xl bg-muted/40 border border-border/50">
       {/* Layout */}
       <DropdownMenu>
         <Tooltip>
@@ -39,7 +41,7 @@ export function ViewControls({ allLabels }: Props) {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground"
+                className="p-2 rounded-xl hover:bg-background hover:shadow-sm transition-colors text-muted-foreground data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm"
               >
                 {prefs.layout === "list" ? <List className="w-5 h-5" /> : prefs.layout === "grid" ? <Columns2 className="w-5 h-5" /> : <LayoutGrid className="w-5 h-5" />}
               </motion.button>
@@ -47,7 +49,7 @@ export function ViewControls({ allLabels }: Props) {
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-xs">Widok i kolumny</TooltipContent>
         </Tooltip>
-        <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuContent align="end" className="w-56 rounded-2xl p-1.5">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">Układ</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={prefs.layout} onValueChange={(v) => setViewPref("layout", v as Layout)}>
             {LAYOUTS.map((l) => (
@@ -97,7 +99,7 @@ export function ViewControls({ allLabels }: Props) {
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground"
+                className="p-2 rounded-xl hover:bg-background hover:shadow-sm transition-colors text-muted-foreground data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm"
               >
                 {prefs.sortDir === "asc" ? <ArrowUpAZ className="w-5 h-5" /> : <ArrowDownAZ className="w-5 h-5" />}
               </motion.button>
@@ -105,7 +107,7 @@ export function ViewControls({ allLabels }: Props) {
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-xs">Sortowanie</TooltipContent>
         </Tooltip>
-        <DropdownMenuContent align="end" className="w-52">
+        <DropdownMenuContent align="end" className="w-52 rounded-2xl p-1.5">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">Sortuj wg</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={prefs.sortKey} onValueChange={(v) => setViewPref("sortKey", v as SortKey)}>
             {SORTS.map((s) => (
@@ -129,24 +131,27 @@ export function ViewControls({ allLabels }: Props) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className={cn(
-                  "p-2 rounded-xl hover:bg-muted transition-colors",
-                  (prefs.filterColor !== "all" || prefs.filterLabel !== "all" || prefs.filterHasReminder)
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground"
+                  "relative p-2 rounded-xl transition-colors",
+                  filtersActive
+                    ? "text-primary bg-primary/10 shadow-sm"
+                    : "text-muted-foreground hover:bg-background hover:shadow-sm data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm"
                 )}
               >
                 <Filter className="w-5 h-5" />
+                {filtersActive && (
+                  <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-primary" />
+                )}
               </motion.button>
             </DropdownMenuTrigger>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-xs">Filtry</TooltipContent>
         </Tooltip>
-        <DropdownMenuContent align="end" className="w-60">
+        <DropdownMenuContent align="end" className="w-60 rounded-2xl p-1.5">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">Kolor</DropdownMenuLabel>
-          <div className="px-2 pb-2 flex items-center gap-1 flex-wrap">
+          <div className="px-2 pb-2 flex items-center gap-1.5 flex-wrap">
             <button
               onClick={() => setViewPref("filterColor", "all")}
-              className={cn("text-[10px] px-2 py-1 rounded-md", prefs.filterColor === "all" ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted text-muted-foreground")}
+              className={cn("text-[10px] px-2 py-1 rounded-md transition-colors", prefs.filterColor === "all" ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted text-muted-foreground")}
             >
               wszystkie
             </button>
@@ -155,9 +160,9 @@ export function ViewControls({ allLabels }: Props) {
                 key={c}
                 onClick={() => setViewPref("filterColor", c)}
                 className={cn(
-                  "w-6 h-6 rounded-full border-2 transition-transform",
+                  "w-6 h-6 rounded-full border-2 transition-all",
                   colorClasses[c],
-                  prefs.filterColor === c ? "border-primary scale-110" : "border-border/50"
+                  prefs.filterColor === c ? "border-primary scale-110 ring-2 ring-primary/20" : "border-border/50 hover:scale-105"
                 )}
                 title={c}
               />

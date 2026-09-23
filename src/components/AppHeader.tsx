@@ -127,14 +127,14 @@ export function AppHeader({
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground"
+                className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground data-[state=open]:bg-muted data-[state=open]:text-foreground"
                 aria-label="Import / Eksport"
                 title="Import / Eksport"
               >
                 <Download className="w-5 h-5" />
               </motion.button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
+            <DropdownMenuContent align="end" className="w-52 rounded-2xl p-1.5">
               <DropdownMenuItem onClick={() => { exportToJSON([...notes, ...archivedNotes]); markBackup(); }}>
                 <FileJson className="w-4 h-4 mr-2" />
                 Eksportuj jako JSON

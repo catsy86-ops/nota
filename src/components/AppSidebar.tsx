@@ -88,13 +88,22 @@ export function AppSidebar({
                 transition={{ delay: 0.1 }}
                 className="flex items-center gap-3 px-3 pb-6"
               >
-                <motion.img
-                  src={duckLogo}
-                  alt="KACZY"
-                  className="w-11 h-11 drop-shadow-lg cursor-pointer"
-                  whileHover={{ rotate: [0, -12, 12, -6, 0], transition: { duration: 0.5 } }}
+                <motion.button
+                  type="button"
                   onClick={onLogoClick}
-                />
+                  whileHover={{ scale: 1.06 }}
+                  whileTap={{ scale: 0.94 }}
+                  className="relative shrink-0 grid place-items-center w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 via-accent/10 to-transparent ring-1 ring-border/60"
+                  aria-label="KACZY"
+                >
+                  <div className="absolute inset-0 rounded-2xl bg-primary/20 blur-lg opacity-70 -z-10" />
+                  <motion.img
+                    src={duckLogo}
+                    alt="KACZY"
+                    className="w-8 h-8 drop-shadow-sm"
+                    whileHover={{ rotate: [0, -12, 12, -6, 0], transition: { duration: 0.5 } }}
+                  />
+                </motion.button>
                 <div>
                   <h1 className="text-xl font-display font-extrabold gradient-text leading-tight tracking-tight">KACZY</h1>
                   <p className="text-[10px] text-muted-foreground font-medium">Twoje notatki, Twój styl 🦆</p>
