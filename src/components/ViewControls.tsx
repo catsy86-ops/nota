@@ -33,9 +33,9 @@ export function ViewControls({ allLabels }: Props) {
     <div className="flex items-center gap-1">
       {/* Layout */}
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Tooltip>
-            <TooltipTrigger asChild>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -43,10 +43,10 @@ export function ViewControls({ allLabels }: Props) {
               >
                 {prefs.layout === "list" ? <List className="w-5 h-5" /> : prefs.layout === "grid" ? <Columns2 className="w-5 h-5" /> : <LayoutGrid className="w-5 h-5" />}
               </motion.button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs">Widok i kolumny</TooltipContent>
-          </Tooltip>
-        </DropdownMenuTrigger>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs">Widok i kolumny</TooltipContent>
+        </Tooltip>
         <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">Układ</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={prefs.layout} onValueChange={(v) => setViewPref("layout", v as Layout)}>
@@ -91,9 +91,9 @@ export function ViewControls({ allLabels }: Props) {
 
       {/* Sort */}
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Tooltip>
-            <TooltipTrigger asChild>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -101,10 +101,10 @@ export function ViewControls({ allLabels }: Props) {
               >
                 {prefs.sortDir === "asc" ? <ArrowUpAZ className="w-5 h-5" /> : <ArrowDownAZ className="w-5 h-5" />}
               </motion.button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs">Sortowanie</TooltipContent>
-          </Tooltip>
-        </DropdownMenuTrigger>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs">Sortowanie</TooltipContent>
+        </Tooltip>
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">Sortuj wg</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={prefs.sortKey} onValueChange={(v) => setViewPref("sortKey", v as SortKey)}>
@@ -122,9 +122,9 @@ export function ViewControls({ allLabels }: Props) {
 
       {/* Filter */}
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Tooltip>
-            <TooltipTrigger asChild>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -137,10 +137,10 @@ export function ViewControls({ allLabels }: Props) {
               >
                 <Filter className="w-5 h-5" />
               </motion.button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" className="text-xs">Filtry</TooltipContent>
-          </Tooltip>
-        </DropdownMenuTrigger>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="text-xs">Filtry</TooltipContent>
+        </Tooltip>
         <DropdownMenuContent align="end" className="w-60">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">Kolor</DropdownMenuLabel>
           <div className="px-2 pb-2 flex items-center gap-1 flex-wrap">
