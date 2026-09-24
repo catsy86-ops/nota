@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Tag, Bell, ImagePlus, Wand2, X, PenTool, ListChecks } from "lucide-react";
+import { Plus, Tag, Bell, ImagePlus, X, PenTool, ListChecks } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { ColorPicker } from "./ColorPicker";
@@ -16,7 +16,7 @@ import { ChecklistEditor } from "./ChecklistEditor";
 import { FormatToolbar } from "./MarkdownRenderer";
 import { PriorityPicker } from "./PriorityPicker";
 import type { NotePriority } from "@/lib/notePriority";
-import { parseNaturalDate } from "@/lib/parseNaturalDate";
+import { QuickReminderInput } from "./QuickReminderInput";
 
 interface AddNoteBarProps {
   onAdd: (title: string, content: string, color: NoteColor, labels: string[], reminder: number | null, images: string[], checklist: ChecklistItem[], priority: NotePriority) => void;
@@ -34,8 +34,6 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   const [priority, setPriority] = useState<NotePriority>("none");
   const [reminderDate, setReminderDate] = useState<Date | undefined>();
   const [reminderTime, setReminderTime] = useState("09:00");
-  const [quickReminderText, setQuickReminderText] = useState("");
-  const [quickReminderError, setQuickReminderError] = useState(false);
   const [newLabel, setNewLabel] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
@@ -96,16 +94,9 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
     }
   }
 
-  function handleQuickReminderParse() {
-    const parsed = parseNaturalDate(quickReminderText);
-    if (!parsed) {
-      setQuickReminderError(true);
-      return;
-    }
-    setQuickReminderError(false);
+  function handleQuickReminderParsed(parsed: Date) {
     setReminderDate(parsed);
     setReminderTime(format(parsed, "HH:mm"));
-    setQuickReminderText("");
   }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -238,27 +229,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-3 space-y-3" align="start">
                     <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Przypomnienie</p>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-1.5">
-                        <input
-                          type="text"
-                          value={quickReminderText}
-                          onChange={(e) => { setQuickReminderText(e.target.value); setQuickReminderError(false); }}
-                          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleQuickReminderParse(); } }}
-                          placeholder="np. jutro 15:00, za 2h"
-                          className={cn(
-                            "flex-1 text-xs bg-muted/60 border rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground/70",
-                            quickReminderError ? "border-destructive" : "border-border"
-                          )}
-                        />
-                        <Button size="sm" variant="outline" className="px-2" onClick={handleQuickReminderParse} title="Rozpoznaj datę">
-                          <Wand2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                      {quickReminderError && (
-                        <p className="text-[10px] text-destructive">Nie rozpoznano daty. Spróbuj np. "jutro 15:00" lub "za 2h".</p>
-                      )}
-                    </div>
+                    <QuickReminderInput onParsed={handleQuickReminderParsed} />
                     <Calendar mode="single" selected={reminderDate} onSelect={setReminderDate}
                       disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
                       className={cn("p-3 pointer-events-auto")} />
