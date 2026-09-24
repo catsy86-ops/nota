@@ -19,14 +19,14 @@ Notatnik ("kaczy") to lokalna aplikacja PWA (React 18 + TypeScript + Vite + shad
 ### Dług techniczny do dopracowania
 
 - [x] **`git init`** — repozytorium zainicjalizowane.
-- **Rozbicie `src/pages/Index.tsx` (1964 linie)** — wydzielić np.: logikę widoków/nawigacji (`view`, `activeLabel`, `activeFolder`) do własnego hooka, obsługę drag&drop (`DndContext`, sensory, `DroppableNavItem`) do osobnego pliku/komponentu, akcje eksportu/importu do hooka `useNotesExport`, panel ustawień/komend już częściowo wydzielony (`SettingsDialog`, `CommandPalette`) — kontynuować ten kierunek dla reszty.
-- [x] **Pokrycie testami** — dodano `offlineQueue.test.ts` (17 testów: kolejkowanie, potwierdzanie, replay, obcinanie obrazów przy quocie), `notesStore.test.ts` (5 testów: migracja LS→IDB, jednorazowość migracji, zapis/odczyt — wymagało dodania `fake-indexeddb` jako dev dependency), `noteSync.test.ts` (8 testów: `notesDiffer`/`describeDifference`). Wszystkie 42 testy (razem z istniejącymi) przechodzą (`npm test`). Zostaje: podstawowy e2e w Playwright na dodanie/edycję/usunięcie notatki.
+- [x] **Rozbicie `src/pages/Index.tsx`** — z 1964 linii do 416; logika widoków/nawigacji, drag&drop, eksport/import i panele (`SettingsDialog`, `CommandPalette`) wydzielone do osobnych hooków/komponentów.
+- [x] **Pokrycie testami** — dodano `offlineQueue.test.ts` (17 testów: kolejkowanie, potwierdzanie, replay, obcinanie obrazów przy quocie), `notesStore.test.ts` (5 testów: migracja LS→IDB, jednorazowość migracji, zapis/odczyt — wymagało dodania `fake-indexeddb` jako dev dependency), `noteSync.test.ts` (8 testów: `notesDiffer`/`describeDifference`). Wszystkie 42 testy (razem z istniejącymi) przechodzą (`npm test`). [x] Dodano też e2e w Playwright (`e2e/notes.spec.ts`): dodanie, edycja i usunięcie (kosz) notatki.
 - **`.env.example` nie jest potrzebny** — po przejrzeniu `noteSync.ts`/`notesStore.ts` potwierdzone, że apka nie ma żadnego zewnętrznego API/backendu (wcześniejsze przypuszczenie z pierwszego przeglądu było błędne — "sync" to lokalny `BroadcastChannel`, nie sieć).
 
 ### Wdrożenie
 
-- **Brak CI** — dodać prosty workflow GitHub Actions (`lint` + `test` + `build`) uruchamiany na push/PR, żeby błędy łapać przed mergem; wymaga najpierw `git init` + repo na GitHub.
-- **Brak `LICENSE`** — dodać, jeśli projekt ma być kiedykolwiek publiczny/udostępniany.
+- [x] **CI** — workflow GitHub Actions (`.github/workflows/ci.yml`): lint + typecheck + test (coverage) + build na push/PR do `master`/`main`.
+- [x] **`LICENSE`** — dodany (MIT).
 - **PWA/offline już działa** (`vite-plugin-pwa`, `offline.html`, manifest) — do wdrożenia produkcyjnego brakuje tylko hostingu statycznego (Vercel/Netlify/GitHub Pages) i `vite build` w CI.
 
 ### Propozycje rozbudowy funkcjonalnej
@@ -34,10 +34,10 @@ Notatnik ("kaczy") to lokalna aplikacja PWA (React 18 + TypeScript + Vite + shad
 Spójne z tym, że apka jest **lokalna, bez konta i bez backendu** — dwa naturalne kierunki:
 
 1. **Prawdziwa synchronizacja między urządzeniami** — obecny `noteSync.ts` działa tylko w obrębie jednej przeglądarki/urządzenia. Realne multi-device wymagałoby lekkiego backendu (np. sync przez plik w chmurze użytkownika — WebDAV/Google Drive/Dropbox API — zamiast pełnego serwera) lub rozwiązania end-to-end z biblioteką typu CRDT (Yjs/Automerge) synchronizowaną peer-to-peer.
-2. **Import/eksport całej bazy jako kopia zapasowa** — `exportNotes.ts` już eksportuje pojedyncze formaty (PDF/MD/HTML/JSON); rozszerzyć o pełny eksport/import całego stanu (notatki + etykiety + foldery + ustawienia) jako jeden plik `.json`, żeby wspomóc migrację między przeglądarkami/urządzeniami skoro nie ma sync w chmurze — częściowo już zasugerowane przez `backupReminder.ts`, ale warto rozszerzyć o pełne przywracanie stanu.
-3. **Przypomnienia cykliczne** — obecny `ReminderPicker`/`useReminderNotifications` wygląda na jednorazowe przypomnienia; dodać powtarzalność (codziennie/co tydzień) dla notatek typu "nawyki"/checklisty.
-4. **Dokończenie UI polish z `.lovable/plan.md`** — sekcje 1 i 3 (layout/hierarchia, mikrointerakcje) nie są jeszcze w pełni potwierdzone jako wdrożone; `BottomNav` już istnieje, ale warto zweryfikować resztę (sticky blur header, empty states, design tokens `--elevation-*`) i dokończyć jako osobną iterację.
-5. **Rozszerzenie statystyk/gamifikacji** (`StatsDialog`, `achievements.ts`) — np. passy (streaks) codziennego używania, wykresy aktywności (recharts już jest w zależnościach).
+2. [x] **Import/eksport całej bazy jako kopia zapasowa** — `exportFullBackup`/`importFullBackup` w `exportNotes.ts` (z walidacją `fullBackupSchema`).
+3. [x] **Przypomnienia cykliczne** — `reminderRepeat.ts` + testy, `QuickReminderInput`.
+4. [x] **UI polish z `.lovable/plan.md`** — `BottomNav`, sticky blur header (`AppHeader.tsx`) i `EmptyState` wdrożone; design tokens `--elevation-*` pominięte jako nieistotny kosmetyczny detal.
+5. [x] **Rozszerzenie statystyk/gamifikacji** (`StatsDialog`, `achievements.ts`) — dodano passy (streaki) codziennego używania, wykres aktywności z ostatnich 14 dni (recharts) i odznakę „Tydzień w ogniu”. Testy w `achievements.test.ts`.
 
 ### Priorytetyzacja
 

@@ -1,13 +1,23 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { ACHIEVEMENTS, computeStats, mergeWithPersisted, usePersistedAchievements, resetAchievements } from "@/lib/achievements";
+import {
+  ACHIEVEMENTS,
+  computeStats,
+  mergeWithPersisted,
+  usePersistedAchievements,
+  resetAchievements,
+  computeDailyActivityCounts,
+  activityLastNDays,
+  parseDayKey,
+} from "@/lib/achievements";
 import type { Note } from "@/hooks/useNotes";
-import { Trophy, StickyNote, Pin, Tag, FolderOpen, CheckSquare, RotateCcw } from "lucide-react";
+import { Trophy, StickyNote, Pin, Tag, FolderOpen, CheckSquare, RotateCcw, Flame } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { toast } from "sonner";
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
 
 interface Props {
   open: boolean;
@@ -24,6 +34,9 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
   const { effective } = mergeWithPersisted(live);
   const unlockedIds = persisted.unlockedAt;
   const unlocked = ACHIEVEMENTS.filter((a) => a.progress(effective) >= 1).length;
+
+  const dailyCounts = computeDailyActivityCounts(notes, archivedNotes);
+  const activity = activityLastNDays(dailyCounts, 14);
 
   const tiles = [
     { icon: StickyNote, label: "Notatki", value: effective.totalNotes },
@@ -58,6 +71,42 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{t.label}</p>
             </div>
           ))}
+        </div>
+
+        <div className="flex items-center gap-3 mt-3 rounded-xl border border-border/60 bg-muted/30 p-3">
+          <Flame className={`w-6 h-6 shrink-0 ${live.currentStreak > 0 ? "text-orange-500" : "text-muted-foreground"}`} />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold">
+              {live.currentStreak > 0
+                ? `${live.currentStreak} ${live.currentStreak === 1 ? "dzień" : "dni"} z rzędu`
+                : "Brak aktywnej passy"}
+            </p>
+            <p className="text-xs text-muted-foreground">Najdłuższa passa: {effective.longestStreak} dni</p>
+          </div>
+        </div>
+
+        <div className="pt-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Aktywność (14 dni)</p>
+          <div className="h-24 rounded-xl border border-border/60 bg-muted/20 p-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={activity}>
+                <XAxis
+                  dataKey="date"
+                  tickFormatter={(d: string) => format(parseDayKey(d), "d.MM")}
+                  tick={{ fontSize: 10 }}
+                  interval={2}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  labelFormatter={(d: string) => format(parseDayKey(d), "d MMM yyyy", { locale: pl })}
+                  formatter={(v: number) => [v, "aktywność"]}
+                  contentStyle={{ fontSize: 12, borderRadius: 8 }}
+                />
+                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
         <div className="pt-4 space-y-2">

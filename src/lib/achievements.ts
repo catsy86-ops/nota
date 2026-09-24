@@ -19,6 +19,8 @@ export interface AchievementStats {
   checklistsCompleted: number;
   totalChecklistItems: number;
   oldestNoteAgeDays: number;
+  currentStreak: number;
+  longestStreak: number;
 }
 
 export const ACHIEVEMENTS: Achievement[] = [
@@ -30,6 +32,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: "folder-fan", emoji: "📁", title: "Fan folderów", description: "Stwórz 3 foldery", progress: (s) => Math.min(1, s.totalFolders / 3) },
   { id: "checklist-hero", emoji: "✅", title: "Bohater list", description: "Ukończ 10 checklist", progress: (s) => Math.min(1, s.checklistsCompleted / 10) },
   { id: "veteran", emoji: "🦆", title: "Weteran KACZY", description: "Korzystaj 30 dni", progress: (s) => Math.min(1, s.oldestNoteAgeDays / 30) },
+  { id: "week-streak", emoji: "🔥", title: "Tydzień w ogniu", description: "7 dni z rzędu aktywności", progress: (s) => Math.min(1, s.longestStreak / 7) },
 ];
 
 export function computeStats(notes: Note[], archivedNotes: Note[], allLabels: string[], folders: { id: string }[]): AchievementStats {
@@ -38,6 +41,8 @@ export function computeStats(notes: Note[], archivedNotes: Note[], allLabels: st
   const totalChecklistItems = all.reduce((sum, n) => sum + (n.checklist?.length ?? 0), 0);
   const oldest = all.length > 0 ? all.reduce((min, n) => Math.min(min, n.createdAt), Date.now()) : Date.now();
   const oldestNoteAgeDays = (Date.now() - oldest) / (1000 * 60 * 60 * 24);
+  const dailyCounts = computeDailyActivityCounts(notes, archivedNotes);
+  const { current, longest } = computeStreak(new Set(dailyCounts.keys()));
   return {
     totalNotes: all.length,
     pinnedNotes: notes.filter((n) => n.pinned).length,
@@ -47,7 +52,86 @@ export function computeStats(notes: Note[], archivedNotes: Note[], allLabels: st
     checklistsCompleted,
     totalChecklistItems,
     oldestNoteAgeDays,
+    currentStreak: current,
+    longestStreak: longest,
   };
+}
+
+// ------------------ Activity streaks ------------------
+
+function dayKey(ts: number): string {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** Parses a `dayKey` string back into a local-midnight Date (avoids UTC-parsing off-by-one). */
+export function parseDayKey(key: string): Date {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+/** Per-day count of notes created or edited (deduped so a same-day create+edit counts once). */
+export function computeDailyActivityCounts(notes: Note[], archivedNotes: Note[]): Map<string, number> {
+  const all = [...notes, ...archivedNotes];
+  const counts = new Map<string, number>();
+  for (const n of all) {
+    const days = new Set([dayKey(n.createdAt), dayKey(n.updatedAt)]);
+    for (const d of days) counts.set(d, (counts.get(d) ?? 0) + 1);
+  }
+  return counts;
+}
+
+export interface ActivityStreak {
+  current: number;
+  longest: number;
+}
+
+/** Current streak counts back from today (or yesterday, if today has no activity yet). */
+export function computeStreak(activeDays: Set<string>): ActivityStreak {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const cursor = new Date(today);
+  if (!activeDays.has(dayKey(cursor.getTime()))) {
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  let current = 0;
+  while (activeDays.has(dayKey(cursor.getTime()))) {
+    current++;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+
+  const sorted = Array.from(activeDays).sort();
+  let longest = 0;
+  let run = 0;
+  let prevDay: Date | null = null;
+  for (const key of sorted) {
+    const date = parseDayKey(key);
+    if (prevDay) {
+      const expected = new Date(prevDay);
+      expected.setDate(expected.getDate() + 1);
+      run = expected.getTime() === date.getTime() ? run + 1 : 1;
+    } else {
+      run = 1;
+    }
+    longest = Math.max(longest, run);
+    prevDay = date;
+  }
+
+  return { current, longest: Math.max(longest, current) };
+}
+
+/** Daily activity counts for the last `days` days (oldest first), for a chart. */
+export function activityLastNDays(counts: Map<string, number>, days: number): { date: string; count: number }[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const result: { date: string; count: number }[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = dayKey(d.getTime());
+    result.push({ date: key, count: counts.get(key) ?? 0 });
+  }
+  return result;
 }
 
 // ------------------ Persistence ------------------
