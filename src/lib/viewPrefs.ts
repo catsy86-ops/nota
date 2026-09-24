@@ -1,6 +1,6 @@
-import { useSyncExternalStore } from "react";
 import type { NoteColor } from "@/hooks/useNotes";
 import type { NotePriority } from "@/lib/notePriority";
+import { createPersistedStore } from "@/lib/persistedStore";
 
 export type Density = "compact" | "cozy" | "comfy";
 export type Layout = "masonry" | "grid" | "list";
@@ -55,48 +55,24 @@ const DEFAULTS: ViewPrefs = {
   showBacklinks: true,
 };
 
-const KEY = "kaczy.viewPrefs.v1";
-
-function read(): ViewPrefs {
-  if (typeof window === "undefined") return DEFAULTS;
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return DEFAULTS;
-    return { ...DEFAULTS, ...JSON.parse(raw) };
-  } catch {
-    return DEFAULTS;
-  }
-}
-
-let state: ViewPrefs = read();
-const listeners = new Set<() => void>();
-function emit() {
-  for (const l of listeners) l();
-}
+const store = createPersistedStore<ViewPrefs>("kaczy.viewPrefs.v1", DEFAULTS, {
+  merge: (defaults, stored) => ({ ...defaults, ...stored }),
+});
 
 export function getViewPrefs(): ViewPrefs {
-  return state;
+  return store.get();
 }
 
 export function setViewPref<K extends keyof ViewPrefs>(key: K, value: ViewPrefs[K]) {
-  state = { ...state, [key]: value };
-  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* ignore */ }
-  emit();
+  store.set({ ...store.get(), [key]: value });
 }
 
 export function resetViewPrefs() {
-  state = { ...DEFAULTS };
-  try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* ignore */ }
-  emit();
-}
-
-function subscribe(l: () => void) {
-  listeners.add(l);
-  return () => { listeners.delete(l); };
+  store.set({ ...DEFAULTS });
 }
 
 export function useViewPrefs(): ViewPrefs {
-  return useSyncExternalStore(subscribe, getViewPrefs, getViewPrefs);
+  return store.use();
 }
 
 // --- helpers ---

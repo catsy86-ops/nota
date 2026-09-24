@@ -1,9 +1,7 @@
-import { useSyncExternalStore } from "react";
 import { getCurrentSeason, type Season } from "@/lib/season";
+import { createPersistedStore } from "@/lib/persistedStore";
 
 export type SeasonPref = "auto" | Season;
-
-const STORAGE_KEY = "kaczy.seasonTheme.v1";
 
 export const SEASON_META: Record<Season, { label: string; emoji: string }> = {
   spring: { label: "Wiosna", emoji: "🌸" },
@@ -12,37 +10,26 @@ export const SEASON_META: Record<Season, { label: string; emoji: string }> = {
   winter: { label: "Zima", emoji: "❄️" },
 };
 
-function read(): SeasonPref {
-  if (typeof window === "undefined") return "auto";
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw === "auto" || raw === "spring" || raw === "summer" || raw === "autumn" || raw === "winter") return raw;
-  } catch { /* ignore */ }
-  return "auto";
+function isValidPref(v: unknown): v is SeasonPref {
+  return v === "auto" || v === "spring" || v === "summer" || v === "autumn" || v === "winter";
 }
 
-let current: SeasonPref = read();
-const listeners = new Set<() => void>();
+const store = createPersistedStore<SeasonPref>("kaczy.seasonTheme.v1", "auto", {
+  merge: (defaults, stored) => (isValidPref(stored) ? stored : defaults),
+});
 
 export function getSeasonPref(): SeasonPref {
-  return current;
+  return store.get();
 }
 
 /** Resolves "auto" to the season derived from today's date. */
-export function resolveSeason(pref: SeasonPref = current): Season {
+export function resolveSeason(pref: SeasonPref = store.get()): Season {
   return pref === "auto" ? getCurrentSeason().season : pref;
 }
 
 export function setSeasonPref(pref: SeasonPref) {
-  current = pref;
-  try { localStorage.setItem(STORAGE_KEY, pref); } catch { /* ignore */ }
+  store.set(pref);
   applySeasonAttr();
-  for (const l of listeners) l();
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => { listeners.delete(listener); };
 }
 
 /** Writes <html data-season="..."> so CSS can theme background + accents. */
@@ -52,6 +39,6 @@ export function applySeasonAttr() {
 }
 
 export function useSeasonPref() {
-  const pref = useSyncExternalStore(subscribe, getSeasonPref, getSeasonPref);
+  const pref = store.use();
   return { pref, season: resolveSeason(pref), setPref: setSeasonPref };
 }

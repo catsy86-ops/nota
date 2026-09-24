@@ -1,27 +1,10 @@
 import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { createPersistedStore } from "@/lib/persistedStore";
 
 export type MotionMode = "system" | "reduced" | "full";
 
-const KEY = "kaczy.motion.v1";
-
-function read(): MotionMode {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (raw === "system" || raw === "reduced" || raw === "full") return raw;
-  } catch { /* ignore */ }
-  return "system";
-}
-
-let mode: MotionMode = read();
-const listeners = new Set<() => void>();
-
-function emit() {
-  listeners.forEach((l) => l());
-}
-
-function subscribe(cb: () => void) {
-  listeners.add(cb);
-  return () => { listeners.delete(cb); };
+function isValidMode(v: unknown): v is MotionMode {
+  return v === "system" || v === "reduced" || v === "full";
 }
 
 export function systemPrefersReduced(): boolean {
@@ -30,6 +13,7 @@ export function systemPrefersReduced(): boolean {
 }
 
 export function isMotionReduced(): boolean {
+  const mode = store.get();
   return mode === "reduced" || (mode === "system" && systemPrefersReduced());
 }
 
@@ -39,11 +23,13 @@ function applyToDom() {
   document.documentElement.setAttribute("data-motion", isMotionReduced() ? "reduced" : "full");
 }
 
+const store = createPersistedStore<MotionMode>("kaczy.motion.v1", "system", {
+  merge: (defaults, stored) => (isValidMode(stored) ? stored : defaults),
+  onChange: applyToDom,
+});
+
 export function setMotionMode(next: MotionMode) {
-  mode = next;
-  try { localStorage.setItem(KEY, next); } catch { /* ignore */ }
-  applyToDom();
-  emit();
+  store.set(next);
 }
 
 applyToDom();
@@ -51,13 +37,13 @@ applyToDom();
 /** Keep the DOM attribute in sync with OS-level changes. */
 if (typeof window !== "undefined") {
   const mql = window.matchMedia("(prefers-reduced-motion: reduce)");
-  mql.addEventListener?.("change", () => { applyToDom(); emit(); });
+  mql.addEventListener?.("change", () => { applyToDom(); store.notify(); });
 }
 
 export function useMotionPref() {
-  const currentMode = useSyncExternalStore(subscribe, () => mode, () => mode);
+  const currentMode = useSyncExternalStore(store.subscribe, store.get, () => "system" as MotionMode);
   const reduced = useSyncExternalStore(
-    subscribe,
+    store.subscribe,
     () => isMotionReduced(),
     () => false,
   );

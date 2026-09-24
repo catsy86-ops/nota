@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { createPersistedStore } from "@/lib/persistedStore";
 
 export type EffectKey =
   | "confetti"
@@ -25,8 +25,6 @@ export const EFFECT_LABELS: Record<EffectKey, { label: string; description: stri
   dailyQuote: { label: "Cytat dnia", description: "Inspiracja na górze ekranu", emoji: "💭" },
 };
 
-const STORAGE_KEY = "kaczy.effectsSettings.v1";
-
 export type EffectsSettings = Record<EffectKey, boolean>;
 
 const DEFAULTS: EffectsSettings = {
@@ -42,50 +40,22 @@ const DEFAULTS: EffectsSettings = {
   dailyQuote: true,
 };
 
-function read(): EffectsSettings {
-  if (typeof window === "undefined") return DEFAULTS;
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULTS;
-    const parsed = JSON.parse(raw);
-    return { ...DEFAULTS, ...parsed };
-  } catch {
-    return DEFAULTS;
-  }
-}
-
-let current: EffectsSettings = read();
-const listeners = new Set<() => void>();
-
-function emit() {
-  for (const l of listeners) l();
-}
+const store = createPersistedStore<EffectsSettings>("kaczy.effectsSettings.v1", DEFAULTS, {
+  merge: (defaults, stored) => ({ ...defaults, ...stored }),
+});
 
 export function getEffectsSettings(): EffectsSettings {
-  return current;
+  return store.get();
 }
 
 export function isEffectEnabled(key: EffectKey): boolean {
-  return current[key] !== false;
+  return store.get()[key] !== false;
 }
 
 export function setEffectEnabled(key: EffectKey, enabled: boolean) {
-  current = { ...current, [key]: enabled };
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
-  } catch {
-    /* ignore quota */
-  }
-  emit();
-}
-
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
+  store.set({ ...store.get(), [key]: enabled });
 }
 
 export function useEffectsSettings(): EffectsSettings {
-  return useSyncExternalStore(subscribe, getEffectsSettings, getEffectsSettings);
+  return store.use();
 }
