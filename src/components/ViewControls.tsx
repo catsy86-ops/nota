@@ -1,11 +1,12 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { motion } from "framer-motion";
-import { ArrowDownAZ, ArrowUpAZ, Filter, LayoutGrid, List, Rows3, Columns2, SlidersHorizontal } from "lucide-react";
+import { ArrowDownAZ, ArrowUpAZ, Filter, LayoutGrid, List, Rows3, Columns2, SlidersHorizontal, Flag } from "lucide-react";
 import { type Layout, type SortKey, type SortDir, type Density, useViewPrefs, setViewPref } from "@/lib/viewPrefs";
 import { colorClasses } from "@/components/ColorPicker";
 import { cn } from "@/lib/utils";
 import type { NoteColor } from "@/hooks/useNotes";
+import { PRIORITY_LABELS, PRIORITY_COLOR_CLASS, type NotePriority } from "@/lib/notePriority";
 
 interface Props {
   allLabels: string[];
@@ -22,14 +23,16 @@ const SORTS: { v: SortKey; label: string }[] = [
   { v: "created", label: "Data utworzenia" },
   { v: "title", label: "Tytuł (A-Z)" },
   { v: "color", label: "Kolor" },
+  { v: "priority", label: "Priorytet" },
 ];
 
 const COLOR_OPTIONS: NoteColor[] = ["default", "coral", "peach", "sand", "mint", "sage", "sky", "lavender", "rose"];
+const PRIORITY_OPTIONS: NotePriority[] = ["high", "medium", "low", "none"];
 
 export function ViewControls({ allLabels }: Props) {
   const prefs = useViewPrefs();
 
-  const filtersActive = prefs.filterColor !== "all" || prefs.filterLabel !== "all" || prefs.filterHasReminder;
+  const filtersActive = prefs.filterColor !== "all" || prefs.filterLabel !== "all" || prefs.filterHasReminder || prefs.filterPriority !== "all";
 
   return (
     <div className="flex items-center gap-0.5 p-1 rounded-2xl bg-muted/40 border border-border/50">
@@ -183,13 +186,36 @@ export function ViewControls({ allLabels }: Props) {
             </>
           )}
           <DropdownMenuSeparator />
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">Priorytet</DropdownMenuLabel>
+          <div className="px-2 pb-2 flex items-center gap-1.5 flex-wrap">
+            <button
+              onClick={() => setViewPref("filterPriority", "all")}
+              className={cn("text-[10px] px-2 py-1 rounded-md transition-colors", prefs.filterPriority === "all" ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted text-muted-foreground")}
+            >
+              wszystkie
+            </button>
+            {PRIORITY_OPTIONS.map((p) => (
+              <button
+                key={p}
+                onClick={() => setViewPref("filterPriority", p)}
+                className={cn(
+                  "flex items-center gap-1 text-[10px] px-2 py-1 rounded-md transition-colors",
+                  prefs.filterPriority === p ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted text-muted-foreground"
+                )}
+              >
+                {p !== "none" && <Flag className={cn("w-2.5 h-2.5 fill-current", PRIORITY_COLOR_CLASS[p])} />}
+                {PRIORITY_LABELS[p]}
+              </button>
+            ))}
+          </div>
+          <DropdownMenuSeparator />
           <DropdownMenuCheckboxItem
             checked={prefs.filterHasReminder}
             onCheckedChange={(v) => setViewPref("filterHasReminder", !!v)}
           >
             Tylko z przypomnieniem
           </DropdownMenuCheckboxItem>
-          {(prefs.filterColor !== "all" || prefs.filterLabel !== "all" || prefs.filterHasReminder) && (
+          {(prefs.filterColor !== "all" || prefs.filterLabel !== "all" || prefs.filterHasReminder || prefs.filterPriority !== "all") && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -197,6 +223,7 @@ export function ViewControls({ allLabels }: Props) {
                   setViewPref("filterColor", "all");
                   setViewPref("filterLabel", "all");
                   setViewPref("filterHasReminder", false);
+                  setViewPref("filterPriority", "all");
                 }}
               >
                 <SlidersHorizontal className="w-3.5 h-3.5 mr-2" /> Wyczyść filtry

@@ -188,54 +188,65 @@
 }
 
 @layer utilities {
-  /* --- Animated mesh-gradient backdrop: three drifting color blooms --- */
+  /* --- Aurora mesh-gradient backdrop: drifting + hue-cycling color blooms --- */
+  .backdrop-aurora {
+    position: absolute;
+    inset: -10%;
+    contain: strict;
+  }
+  .backdrop-aurora-animated {
+    will-change: filter;
+    animation: aurora-hue 40s linear infinite;
+  }
+  @keyframes aurora-hue {
+    from { filter: hue-rotate(0deg); }
+    to   { filter: hue-rotate(360deg); }
+  }
+
   .backdrop-bloom {
     position: absolute;
     border-radius: 9999px;
     transform: translateZ(0);
     backface-visibility: hidden;
-    contain: strict;
+    will-change: transform;
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
   }
   .backdrop-bloom-1 {
-    top: -20rem; left: -14rem;
-    width: 50rem; height: 50rem;
+    top: -18rem; left: -12rem;
+    width: 52rem; height: 52rem;
+    animation-name: bloom-drift-1;
+    animation-duration: 26s;
   }
   .backdrop-bloom-2 {
-    bottom: -22rem; right: -16rem;
-    width: 46rem; height: 46rem;
-  }
-  .backdrop-bloom-3 {
-    top: 20%; left: 35%;
-    width: 40rem; height: 40rem;
-  }
-  .dark .backdrop-bloom { opacity: 0.8; }
-
-  .backdrop-bloom-animated {
-    will-change: transform;
-    animation: bloom-drift-1 26s ease-in-out infinite alternate;
-  }
-  .backdrop-bloom-2.backdrop-bloom-animated {
+    bottom: -20rem; right: -14rem;
+    width: 48rem; height: 48rem;
     animation-name: bloom-drift-2;
     animation-duration: 32s;
     animation-delay: -8s;
   }
-  .backdrop-bloom-3.backdrop-bloom-animated {
+  .backdrop-bloom-3 {
+    top: 18%; left: 32%;
+    width: 42rem; height: 42rem;
     animation-name: bloom-drift-3;
     animation-duration: 22s;
     animation-delay: -4s;
   }
+  .dark .backdrop-bloom { opacity: 0.9; }
+  html[data-motion="reduced"] .backdrop-bloom { animation: none !important; }
 
   @keyframes bloom-drift-1 {
     from { transform: translate3d(0, 0, 0) scale(1); }
-    to   { transform: translate3d(6rem, 5rem, 0) scale(1.15); }
+    to   { transform: translate3d(7rem, 5rem, 0) scale(1.18); }
   }
   @keyframes bloom-drift-2 {
-    from { transform: translate3d(0, 0, 0) scale(1.1); }
-    to   { transform: translate3d(-5rem, -4rem, 0) scale(0.92); }
+    from { transform: translate3d(0, 0, 0) scale(1.12); }
+    to   { transform: translate3d(-6rem, -5rem, 0) scale(0.9); }
   }
   @keyframes bloom-drift-3 {
-    from { transform: translate3d(-3rem, 2rem, 0) scale(0.95); }
-    to   { transform: translate3d(4rem, -3rem, 0) scale(1.1); }
+    from { transform: translate3d(-4rem, 3rem, 0) scale(0.92); }
+    to   { transform: translate3d(5rem, -4rem, 0) scale(1.15); }
   }
 
   /* --- Seasonal light motes (replaces emoji leaves) --- */

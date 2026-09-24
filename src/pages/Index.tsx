@@ -30,7 +30,6 @@ import { glowPulse, glowStreak, centerOf, pointOfNote } from "@/lib/glowTrail";
 import { SearchBar } from "@/components/SearchBar";
 import { useAchievementTracker } from "@/lib/achievements";
 import { CommandPalette } from "@/components/CommandPalette";
-import { SeasonalBackdrop } from "@/components/SeasonalBackdrop";
 import { DailyQuote } from "@/components/DailyQuote";
 import { AnimatedBackdrop } from "@/components/AnimatedBackdrop";
 import { QuickTemplates } from "@/components/QuickTemplates";
@@ -233,7 +232,6 @@ const Index = () => {
   return (
     <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={(e) => setDraggingNoteId(e.active.id as string)} onDragEnd={handleDragEnd}>
     <AnimatedBackdrop />
-    <SeasonalBackdrop />
     <div className="min-h-screen flex relative">
       <AppSidebar
         open={sidebarOpen}

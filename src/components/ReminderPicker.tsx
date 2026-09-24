@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Bell, Repeat, X } from "lucide-react";
+import { Bell, Repeat, Wand2, X } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { REMINDER_REPEAT_LABELS, type ReminderRepeat } from "@/lib/reminderRepeat";
+import { parseNaturalDate } from "@/lib/parseNaturalDate";
 
 interface ReminderPickerProps {
   reminder: number | null;
@@ -22,6 +23,20 @@ export function ReminderPicker({ reminder, reminderRepeat, onSet }: ReminderPick
   const [date, setDate] = useState<Date | undefined>(reminder ? new Date(reminder) : undefined);
   const [time, setTime] = useState(reminder ? format(new Date(reminder), "HH:mm") : "09:00");
   const [repeat, setRepeat] = useState<ReminderRepeat>(reminderRepeat ?? "none");
+  const [quickText, setQuickText] = useState("");
+  const [quickError, setQuickError] = useState(false);
+
+  function handleQuickParse() {
+    const parsed = parseNaturalDate(quickText);
+    if (!parsed) {
+      setQuickError(true);
+      return;
+    }
+    setQuickError(false);
+    setDate(parsed);
+    setTime(format(parsed, "HH:mm"));
+    setQuickText("");
+  }
 
   function handleSave() {
     if (date) {
@@ -58,6 +73,35 @@ export function ReminderPicker({ reminder, reminderRepeat, onSet }: ReminderPick
       </PopoverTrigger>
       <PopoverContent className="w-auto p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
         <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Przypomnienie</p>
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5">
+            <input
+              type="text"
+              value={quickText}
+              onChange={(e) => {
+                setQuickText(e.target.value);
+                setQuickError(false);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleQuickParse();
+                }
+              }}
+              placeholder="np. jutro 15:00, za 2h"
+              className={cn(
+                "flex-1 text-xs bg-muted/60 border rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground/70",
+                quickError ? "border-destructive" : "border-border"
+              )}
+            />
+            <Button size="sm" variant="outline" className="px-2" onClick={handleQuickParse} title="Rozpoznaj datę">
+              <Wand2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
+          {quickError && (
+            <p className="text-[10px] text-destructive">Nie rozpoznano daty. Spróbuj np. "jutro 15:00" lub "za 2h".</p>
+          )}
+        </div>
         <Calendar
           mode="single"
           selected={date}

@@ -10,7 +10,7 @@ import { SidebarFolderItem } from "@/components/sidebar/SidebarFolderItem";
 import { SidebarAddFolderButton } from "@/components/sidebar/SidebarAddFolderButton";
 import { SettingsDialog } from "@/components/SettingsDialog";
 import { InstallAppButton } from "@/components/InstallAppButton";
-import duckLogo from "@/assets/duck-logo.png";
+import { BeerMugLogo } from "@/components/BeerMugLogo";
 import type { View } from "@/hooks/useFilteredNotes";
 
 function DroppableNavItem({ droppableId, children }: { droppableId?: string; children: React.ReactNode }) {
@@ -94,19 +94,16 @@ export function AppSidebar({
                   whileHover={{ scale: 1.06 }}
                   whileTap={{ scale: 0.94 }}
                   className="relative shrink-0 grid place-items-center w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 via-accent/10 to-transparent ring-1 ring-border/60"
-                  aria-label="KACZY"
+                  aria-label="Notatki Pijackie"
                 >
                   <div className="absolute inset-0 rounded-2xl bg-primary/20 blur-lg opacity-70 -z-10" />
-                  <motion.img
-                    src={duckLogo}
-                    alt="KACZY"
-                    className="w-8 h-8 drop-shadow-sm"
-                    whileHover={{ rotate: [0, -12, 12, -6, 0], transition: { duration: 0.5 } }}
-                  />
+                  <motion.div whileHover={{ rotate: [0, -12, 12, -6, 0], transition: { duration: 0.5 } }}>
+                    <BeerMugLogo />
+                  </motion.div>
                 </motion.button>
                 <div>
-                  <h1 className="text-xl font-display font-extrabold gradient-text leading-tight tracking-tight">KACZY</h1>
-                  <p className="text-[10px] text-muted-foreground font-medium">Twoje notatki, Twój styl 🦆</p>
+                  <h1 className="text-xl font-display font-extrabold gradient-text leading-tight tracking-tight">NOTATKI PIJACKIE</h1>
+                  <p className="text-[10px] text-muted-foreground font-medium">Notuj, zanim zapomnisz 🍺</p>
                 </div>
               </motion.div>
 
@@ -307,7 +304,7 @@ export function AppSidebar({
                   <span>Samouczek</span>
                 </motion.button>
                 <InstallAppButton />
-                <p className="text-[10px] text-muted-foreground/40 text-center font-medium">KACZY v1.0 • Made with 🦆</p>
+                <p className="text-[10px] text-muted-foreground/40 text-center font-medium">NOTATKI PIJACKIE v1.0 • Zrobione przy piwie 🍺</p>
               </div>
             </div>
           </motion.aside>

@@ -25,6 +25,7 @@ export const noteSchema = z.object({
   labels: z.array(z.string()).catch([]),
   reminder: z.number().nullable().catch(null),
   reminderRepeat: z.enum(["none", "daily", "weekly", "monthly"]).optional().catch(undefined),
+  priority: z.enum(["none", "low", "medium", "high"]).catch("none"),
   images: z.array(z.string()).catch([]),
   checklist: z.array(checklistItemSchema).catch([]),
   folderId: z.string().nullable().catch(null),

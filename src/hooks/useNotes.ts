@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { loadAll, saveNotesIDB, saveLabelsIDB, saveFoldersIDB } from "@/lib/notesStore";
 import { applyQueue, enqueueDiff, confirmUpTo, getQueue, RETRY_EVENT } from "@/lib/offlineQueue";
 import { broadcastChanges, subscribeToChanges, notesDiffer, describeDifference, closeChannel } from "@/lib/noteSync";
+import type { NotePriority } from "@/lib/notePriority";
 
 export type NoteColor = "default" | "coral" | "peach" | "sand" | "mint" | "sage" | "sky" | "lavender" | "rose";
 
@@ -36,6 +37,7 @@ export interface Note {
   labels: string[];
   reminder: number | null;
   reminderRepeat?: "none" | "daily" | "weekly" | "monthly";
+  priority: NotePriority;
   images: string[]; // base64 data URLs
   checklist: ChecklistItem[];
   folderId: string | null;
@@ -250,9 +252,9 @@ export function useNotes() {
   useEffect(() => { if (hydratedRef.current) saveFoldersIDB(folders); }, [folders]);
 
 
-  const addNote = useCallback((title: string, content: string, color: NoteColor = "default", labels: string[] = [], reminder: number | null = null, images: string[] = [], checklist: ChecklistItem[] = []) => {
+  const addNote = useCallback((title: string, content: string, color: NoteColor = "default", labels: string[] = [], reminder: number | null = null, images: string[] = [], checklist: ChecklistItem[] = [], priority: NotePriority = "none") => {
     const now = Date.now();
-    const note: Note = { id: crypto.randomUUID(), title, content, color, pinned: false, archived: false, trashed: false, trashedAt: null, labels, reminder, images, checklist, folderId: null, order: 0, createdAt: now, updatedAt: now };
+    const note: Note = { id: crypto.randomUUID(), title, content, color, pinned: false, archived: false, trashed: false, trashedAt: null, labels, reminder, priority, images, checklist, folderId: null, order: 0, createdAt: now, updatedAt: now };
     setNotes((prev) => [note, ...prev]);
   }, []);
 

@@ -1,6 +1,6 @@
 {
-  "name": "KACZY — Twoje notatki",
-  "short_name": "KACZY",
+  "name": "Notatki Pijackie",
+  "short_name": "Pijackie",
   "description": "Notatki z etykietami, przypomnieniami i obrazkami — działa offline",
   "start_url": "/",
   "scope": "/",

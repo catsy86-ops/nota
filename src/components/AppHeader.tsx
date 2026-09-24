@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { exportToJSON, exportToPDF, exportToMarkdown, exportToHTML } from "@/lib/exportNotes";
 import { markBackup } from "@/lib/backupReminder";
-import duckLogo from "@/assets/duck-logo.png";
+import { BeerMugLogo } from "@/components/BeerMugLogo";
 import type { View } from "@/hooks/useFilteredNotes";
 
 interface AppHeaderProps {
@@ -60,13 +60,12 @@ export function AppHeader({
             </TooltipContent>
           </Tooltip>
           {!sidebarOpen && (
-            <motion.img
+            <motion.div
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
-              src={duckLogo}
-              alt="KACZY"
-              className="w-7 h-7"
-            />
+            >
+              <BeerMugLogo className="w-7 h-7" />
+            </motion.div>
           )}
           <div>
             <h1 className="text-lg font-display font-extrabold leading-tight tracking-tight bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text text-transparent">

@@ -57,10 +57,24 @@ export function useReminderNotifications(
           });
 
           if ("Notification" in window && Notification.permission === "granted") {
-            new Notification(note.title || "Dash Notes — Przypomnienie", {
+            const title = note.title || "Dash Notes — Przypomnienie";
+            const options: NotificationOptions = {
               body: note.content || "Czas na tę notatkę!",
-              icon: "/placeholder.svg",
-            });
+              icon: "/pwa-192.png",
+              badge: "/pwa-192.png",
+              tag: note.id,
+              renotify: true,
+            };
+            // Powiadomienia przez rejestrację service workera działają też
+            // gdy karta jest w tle/zamknięta (PWA), w przeciwieństwie do
+            // gołego `new Notification()`, które wymaga żywej strony.
+            if ("serviceWorker" in navigator) {
+              navigator.serviceWorker.ready
+                .then((registration) => registration.showNotification(title, options))
+                .catch(() => new Notification(title, options));
+            } else {
+              new Notification(title, options);
+            }
           }
 
           if (repeat !== "none") {

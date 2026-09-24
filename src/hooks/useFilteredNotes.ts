@@ -3,6 +3,7 @@ import { getDescendantFolderIds } from "@/hooks/useNotes";
 import type { ViewPrefs } from "@/lib/viewPrefs";
 import { searchNotes } from "@/lib/searchNotes";
 import { getTodayRange, getWeekRange } from "@/lib/dateRanges";
+import { PRIORITY_ORDER } from "@/lib/notePriority";
 
 export type View = "notes" | "today" | "week" | "archive" | "label" | "reminders" | "folder" | "widget" | "trash";
 
@@ -52,6 +53,7 @@ function sortNotes(list: Note[], prefs: ViewPrefs): Note[] {
       case "title": return a.title.localeCompare(b.title) * dir;
       case "created": return (a.createdAt - b.createdAt) * dir;
       case "color": return a.color.localeCompare(b.color) * dir;
+      case "priority": return (PRIORITY_ORDER[a.priority ?? "none"] - PRIORITY_ORDER[b.priority ?? "none"]) * dir;
       case "updated":
       default: return (a.updatedAt - b.updatedAt) * dir;
     }
@@ -71,6 +73,7 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
     if (prefs.filterColor !== "all" && n.color !== prefs.filterColor) return false;
     if (prefs.filterLabel !== "all" && !n.labels.includes(prefs.filterLabel)) return false;
     if (prefs.filterHasReminder && !n.reminder) return false;
+    if (prefs.filterPriority !== "all" && (n.priority ?? "none") !== prefs.filterPriority) return false;
     return true;
   });
 

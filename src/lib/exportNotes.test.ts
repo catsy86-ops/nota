@@ -15,6 +15,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     trashedAt: null,
     labels: [],
     reminder: null,
+    priority: "none",
     images: [],
     checklist: [],
     folderId: null,

@@ -5,6 +5,7 @@ import { Pin, Trash2, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type
 import { ColorPicker, colorClasses } from "./ColorPicker";
 import { LabelPicker, LabelBadges } from "./LabelPicker";
 import { ReminderPicker, ReminderBadge } from "./ReminderPicker";
+import { PriorityPicker, PriorityBadge } from "./PriorityPicker";
 import { ChecklistPreview } from "./ChecklistEditor";
 import { ChecklistEditor } from "./ChecklistEditor";
 import { MarkdownRenderer, FormatToolbar } from "./MarkdownRenderer";
@@ -331,7 +332,10 @@ export const NoteCard = memo(function NoteCard({ note, onUpdate, onDelete, onTog
                 <ChecklistPreview items={note.checklist} onToggle={handleChecklistToggle} />
               )}
               <LabelBadges labels={note.labels} />
-              <ReminderBadge reminder={note.reminder} reminderRepeat={note.reminderRepeat} />
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <ReminderBadge reminder={note.reminder} reminderRepeat={note.reminderRepeat} />
+                <PriorityBadge priority={note.priority ?? "none"} />
+              </div>
               {trashCountdown && (
                 <div className="inline-flex items-center gap-1 mt-2">
                   <div className={cn(
@@ -398,6 +402,12 @@ export const NoteCard = memo(function NoteCard({ note, onUpdate, onDelete, onTog
               reminder={note.reminder}
               reminderRepeat={note.reminderRepeat}
               onSet={(r, repeat) => onUpdate?.(note.id, { reminder: r, reminderRepeat: repeat })}
+            />
+          )}
+          {!isArchived && (
+            <PriorityPicker
+              priority={note.priority ?? "none"}
+              onSet={(p) => onUpdate?.(note.id, { priority: p })}
             />
           )}
           {isArchived && onUnarchive ? (

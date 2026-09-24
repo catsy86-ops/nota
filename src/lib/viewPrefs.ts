@@ -1,9 +1,10 @@
 import { useSyncExternalStore } from "react";
 import type { NoteColor } from "@/hooks/useNotes";
+import type { NotePriority } from "@/lib/notePriority";
 
 export type Density = "compact" | "cozy" | "comfy";
 export type Layout = "masonry" | "grid" | "list";
-export type SortKey = "updated" | "created" | "title" | "color";
+export type SortKey = "updated" | "created" | "title" | "color" | "priority";
 export type SortDir = "desc" | "asc";
 
 export interface ViewPrefs {
@@ -16,6 +17,7 @@ export interface ViewPrefs {
   filterColor: NoteColor | "all";
   filterLabel: string | "all";
   filterHasReminder: boolean;
+  filterPriority: NotePriority | "all";
   defaultNoteColor: NoteColor;
   spellcheck: boolean;
   autosaveSeconds: number;
@@ -39,6 +41,7 @@ const DEFAULTS: ViewPrefs = {
   filterColor: "all",
   filterLabel: "all",
   filterHasReminder: false,
+  filterPriority: "all",
   defaultNoteColor: "default",
   spellcheck: true,
   autosaveSeconds: 0,
