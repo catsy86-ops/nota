@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, RotateCcw, Coffee, Brain, X } from "lucide-react";
 import { motion } from "framer-motion";
@@ -75,6 +75,7 @@ export function FocusMode({ open, onOpenChange, initialTitle = "", initialConten
   return (
     <Dialog open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
       <DialogContent className="max-w-none w-screen h-screen p-0 rounded-none border-0 bg-background flex flex-col gap-0 sm:rounded-none">
+        <DialogTitle className="sr-only">Tryb skupienia</DialogTitle>
         <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
           <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
             {mode === "work" ? <Brain className="w-4 h-4 text-primary" /> : <Coffee className="w-4 h-4 text-accent" />}

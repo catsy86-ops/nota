@@ -1,7 +1,7 @@
 import { useState, useRef, memo } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
-import { Pin, Trash2, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, MoreHorizontal } from "lucide-react";
+import { Pin, Trash2, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, MoreHorizontal, Maximize2 } from "lucide-react";
 import { ColorPicker, colorClasses } from "./ColorPicker";
 import { LabelPicker, LabelBadges } from "./LabelPicker";
 import { ReminderPicker, ReminderBadge } from "./ReminderPicker";
@@ -447,6 +447,9 @@ export const NoteCard = memo(function NoteCard({ note, onUpdate, onDelete, onTog
                 <ShareNote note={note} />
                 {noteVersions && onRestoreVersion && (
                   <VersionHistory versions={noteVersions} onRestore={(v) => onRestoreVersion(note.id, v)} />
+                )}
+                {onPresent && (
+                  <ActionBtn icon={<Maximize2 className="w-4 h-4" />} onClick={() => onPresent(note.id)} title="Prezentacja" />
                 )}
                 {onDuplicate && (
                   <ActionBtn icon={<Copy className="w-4 h-4" />} onClick={() => onDuplicate(note.id)} title="Duplikuj" />

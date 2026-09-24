@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Tag, Bell, ImagePlus, X, PenTool, ListChecks } from "lucide-react";
 import { format } from "date-fns";
@@ -46,6 +46,17 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
 
   useImperativeHandle(ref, () => ({ expand: () => setExpanded(true) }));
 
+  const reset = useCallback(() => {
+    setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderDate(undefined); setReminderTime("09:00"); setPriority("none"); setImages([]); setChecklist([]); setShowChecklist(false); setExpanded(false);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    if (title.trim() || content.trim() || images.length > 0 || checklist.length > 0) {
+      onAdd(title.trim(), content.trim(), color, labels, reminder, images, checklist, priority);
+    }
+    reset();
+  }, [title, content, images, checklist, color, labels, reminder, priority, onAdd, reset]);
+
   useEffect(() => {
     if (expanded && titleRef.current) titleRef.current.focus();
   }, [expanded]);
@@ -59,18 +70,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
     }
     if (expanded) document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [expanded, title, content, color, labels, reminder, images]);
-
-  function handleClose() {
-    if (title.trim() || content.trim() || images.length > 0 || checklist.length > 0) {
-      onAdd(title.trim(), content.trim(), color, labels, reminder, images, checklist, priority);
-    }
-    reset();
-  }
-
-  function reset() {
-    setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderDate(undefined); setReminderTime("09:00"); setPriority("none"); setImages([]); setChecklist([]); setShowChecklist(false); setExpanded(false);
-  }
+  }, [expanded, handleClose]);
 
   function toggleLabel(l: string) {
     setLabels((prev) => prev.includes(l) ? prev.filter((x) => x !== l) : [...prev, l]);

@@ -23,6 +23,7 @@ interface SortableNoteCardProps {
   noteVersions?: NoteVersion[];
   onSaveVersion?: (noteId: string, title: string, content: string) => void;
   onRestoreVersion?: (noteId: string, version: NoteVersion) => void;
+  onPresent?: (id: string) => void;
   knownTitles?: Set<string>;
   onWikiClick?: (title: string) => void;
   layout: Layout;
@@ -61,6 +62,7 @@ interface NoteGridProps {
   getVersions?: (noteId: string) => NoteVersion[];
   onSaveVersion?: (noteId: string, title: string, content: string) => void;
   onRestoreVersion?: (noteId: string, version: NoteVersion) => void;
+  onPresent?: (id: string) => void;
   knownTitles?: Set<string>;
   onWikiClick?: (title: string) => void;
   selectedIds?: Set<string>;
@@ -69,7 +71,7 @@ interface NoteGridProps {
 }
 
 export function NoteGrid({
-  notes, searchQuery, onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder, getVersions, onSaveVersion, onRestoreVersion, knownTitles, onWikiClick, selectedIds, selectionMode, onToggleSelect,
+  notes, searchQuery, onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder, getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, selectedIds, selectionMode, onToggleSelect,
 }: NoteGridProps) {
   const prefs = useViewPrefs();
   const noteIds = notes.map((n) => n.id);
@@ -297,6 +299,7 @@ export function NoteGrid({
                 noteVersions={getVersions ? getVersions(note.id) : undefined}
                 onSaveVersion={onSaveVersion}
                 onRestoreVersion={onRestoreVersion}
+                onPresent={onPresent}
                 knownTitles={knownTitles}
                 onWikiClick={onWikiClick}
                 layout={prefs.layout}

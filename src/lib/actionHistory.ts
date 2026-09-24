@@ -71,7 +71,7 @@ function persist() {
   try {
     localStorage.setItem(
       STORAGE_KEY,
-      JSON.stringify(entries.map(({ undo, ...rest }) => rest)),
+      JSON.stringify(entries.map(({ undo: _undo, ...rest }) => rest)),
     );
   } catch {
     /* quota / private mode — history stays in-memory */

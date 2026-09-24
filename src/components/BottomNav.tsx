@@ -68,7 +68,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             </li>
 
             {slotsRight.map(({ key, label, Icon }) => (
-              <NavItem key={key} active={view === key} label={label} onClick={() => onGo(key)}>
+              <NavItem key={key} active={view === key} label={label} onClick={() => onGo(key)} badge={key === "archive" ? archiveCount : undefined}>
                 <Icon className="w-5 h-5" />
               </NavItem>
             ))}
@@ -99,7 +99,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
   );
 }
 
-function NavItem({ active, label, onClick, children }: { active: boolean; label: string; onClick: () => void; children: React.ReactNode }) {
+function NavItem({ active, label, onClick, children, badge }: { active: boolean; label: string; onClick: () => void; children: React.ReactNode; badge?: number }) {
   return (
     <li className="relative">
       <motion.button
@@ -119,6 +119,11 @@ function NavItem({ active, label, onClick, children }: { active: boolean; label:
         )}
         <span className="relative z-10">{children}</span>
         <span className="relative z-10 leading-none">{label}</span>
+        {!!badge && (
+          <span className="absolute top-0.5 right-1/4 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-semibold flex items-center justify-center z-10">
+            {badge}
+          </span>
+        )}
       </motion.button>
     </li>
   );

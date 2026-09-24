@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { StickyNote, Archive, Bell, Trash, Plus, Moon, Sun, Sparkles, Target, Trophy, Pin, Calendar } from "lucide-react";
+import { StickyNote, Archive, Bell, Trash, Plus, Moon, Sparkles, Trophy, Calendar, Brain } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 
 export interface CommandAction {
@@ -21,6 +21,7 @@ interface Props {
   onToggleTheme: () => void;
   onOpenSettings: () => void;
   onOpenStats: () => void;
+  onOpenFocusMode: () => void;
 }
 
 export function CommandPalette({
@@ -33,6 +34,7 @@ export function CommandPalette({
   onToggleTheme,
   onOpenSettings,
   onOpenStats,
+  onOpenFocusMode,
 }: Props) {
   useEffect(() => {
     function handler(e: KeyboardEvent) {
@@ -64,6 +66,9 @@ export function CommandPalette({
           </CommandItem>
           <CommandItem onSelect={() => run(onOpenStats)}>
             <Trophy className="w-4 h-4 mr-2" /> Statystyki i osiągnięcia
+          </CommandItem>
+          <CommandItem onSelect={() => run(onOpenFocusMode)}>
+            <Brain className="w-4 h-4 mr-2" /> Tryb skupienia
           </CommandItem>
           <CommandItem onSelect={() => run(onToggleTheme)}>
             <Moon className="w-4 h-4 mr-2" /> Przełącz motyw jasny/ciemny

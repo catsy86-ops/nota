@@ -1,7 +1,7 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { motion } from "framer-motion";
-import { ArrowDownAZ, ArrowUpAZ, Filter, LayoutGrid, List, Rows3, Columns2, SlidersHorizontal, Flag } from "lucide-react";
+import { ArrowDownAZ, ArrowUpAZ, Filter, LayoutGrid, List, Columns2, SlidersHorizontal, Flag } from "lucide-react";
 import { type Layout, type SortKey, type SortDir, type Density, useViewPrefs, setViewPref } from "@/lib/viewPrefs";
 import { colorClasses } from "@/components/ColorPicker";
 import { cn } from "@/lib/utils";

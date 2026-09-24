@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { StickyNote, Archive, Bell, Trash, Calendar } from "lucide-react";
@@ -31,6 +31,8 @@ import { SearchBar } from "@/components/SearchBar";
 import { useAchievementTracker } from "@/lib/achievements";
 import { CommandPalette } from "@/components/CommandPalette";
 import { StatsDialog } from "@/components/StatsDialog";
+import { NotePresentation } from "@/components/NotePresentation";
+import { FocusMode } from "@/components/FocusMode";
 import { DailyQuote } from "@/components/DailyQuote";
 import { AnimatedBackdrop } from "@/components/AnimatedBackdrop";
 import { QuickTemplates } from "@/components/QuickTemplates";
@@ -65,6 +67,8 @@ const Index = () => {
   const [actionsOpen, setActionsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
+  const [presentingNoteId, setPresentingNoteId] = useState<string | null>(null);
+  const [focusModeOpen, setFocusModeOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const lastSelectedRef = useRef<string | null>(null);
   const selectionMode = selectedIds.size > 0;
@@ -144,7 +148,7 @@ const Index = () => {
     notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs,
   });
 
-  const allNotesForLinks = [...notes, ...archivedNotes];
+  const allNotesForLinks = useMemo(() => [...notes, ...archivedNotes], [notes, archivedNotes]);
   const knownTitles = new Set(allNotesForLinks.filter((n) => n.title.trim()).map((n) => n.title.trim().toLowerCase()));
   const handleWikiClick = useCallback((title: string) => {
     const target = allNotesForLinks.find((n) => n.title.trim().toLowerCase() === title.trim().toLowerCase());
@@ -213,7 +217,7 @@ const Index = () => {
   const remindersCount = notes.filter((n) => n.reminder).length;
   const handleDelete = view === "trash" ? deleteNote : handleTrashSingle;
 
-  const { sensors, draggingNoteId, setDraggingNoteId, handleDragEnd } = useNoteDnd({
+  const { sensors, setDraggingNoteId, handleDragEnd } = useNoteDnd({
     displayNoteIds: displayNotes.map((n) => n.id),
     folders,
     moveNoteToFolder: handleMoveToFolderGlow,
@@ -253,6 +257,7 @@ const Index = () => {
         onOpenPalette={() => setPaletteOpen(true)}
         onOpenActions={() => setActionsOpen(true)}
         onOpenStats={() => setStatsOpen(true)}
+        onOpenFocusMode={() => setFocusModeOpen(true)}
         settingsOpen={settingsOpen}
         onSettingsOpenChange={setSettingsOpen}
       />
@@ -333,7 +338,7 @@ const Index = () => {
                 📌 Przypięte
                 <span className="bg-primary/10 text-primary text-[10px] px-1.5 rounded-full">{pinned.length}</span>
               </motion.p>
-              <NoteGrid notes={pinned} searchQuery={search} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} knownTitles={knownTitles} onWikiClick={handleWikiClick} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
+              <NoteGrid notes={pinned} searchQuery={search} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} onPresent={setPresentingNoteId} knownTitles={knownTitles} onWikiClick={handleWikiClick} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
             </section>
           )}
 
@@ -362,6 +367,7 @@ const Index = () => {
                 getVersions={getVersions}
                 onSaveVersion={addVersion}
                 onRestoreVersion={handleRestoreVersion}
+                onPresent={setPresentingNoteId}
                 knownTitles={knownTitles}
                 onWikiClick={handleWikiClick}
                 selectedIds={selectedIds}
@@ -386,6 +392,7 @@ const Index = () => {
       onToggleTheme={toggleTheme}
       onOpenSettings={() => setSettingsOpen(true)}
       onOpenStats={() => setStatsOpen(true)}
+      onOpenFocusMode={() => setFocusModeOpen(true)}
     />
     <StatsDialog
       open={statsOpen}
@@ -394,6 +401,17 @@ const Index = () => {
       archivedNotes={archivedNotes}
       allLabels={allLabels}
       folders={folders}
+    />
+    <NotePresentation
+      noteId={presentingNoteId}
+      notes={allNotesForLinks}
+      onOpenChange={(v) => { if (!v) setPresentingNoteId(null); }}
+      onNavigate={setPresentingNoteId}
+    />
+    <FocusMode
+      open={focusModeOpen}
+      onOpenChange={setFocusModeOpen}
+      onSave={(title, content) => { addNote(title, content); toast.success("Zapisano notatkę 🧠"); }}
     />
     <BottomNav
       view={view}

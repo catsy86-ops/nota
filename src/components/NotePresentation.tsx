@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { Minus, Plus, X, Maximize2 } from "lucide-react";
@@ -46,6 +46,7 @@ export function NotePresentation({ noteId, notes, onOpenChange, onNavigate }: Pr
   return (
     <Dialog open={!!noteId} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl w-[95vw] h-[90vh] p-0 overflow-hidden flex flex-col">
+        <DialogTitle className="sr-only">{note.title || "Prezentacja notatki"}</DialogTitle>
         <div className="flex items-center justify-between gap-2 px-4 py-2 border-b border-border/50 bg-muted/20">
           <div className="flex items-center gap-2 min-w-0">
             <Maximize2 className="w-4 h-4 text-primary shrink-0" />

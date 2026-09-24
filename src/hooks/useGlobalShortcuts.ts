@@ -34,7 +34,7 @@ export function useGlobalShortcuts(handlers: GlobalShortcutHandlers) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [handlers.onNewNote]);
+  }, [handlers]);
 
   // Alt+S search, Alt+T today, Alt+W week, Alt+N new note
   useEffect(() => {
@@ -54,7 +54,7 @@ export function useGlobalShortcuts(handlers: GlobalShortcutHandlers) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [handlers.onGoToday, handlers.onGoWeek, handlers.onNewNote]);
+  }, [handlers]);
 
   // "/" focuses search
   useEffect(() => {
@@ -83,7 +83,7 @@ export function useGlobalShortcuts(handlers: GlobalShortcutHandlers) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [handlers.onEasterEgg]);
+  }, [handlers]);
 
   // Escape clears selection
   useEffect(() => {
@@ -92,7 +92,7 @@ export function useGlobalShortcuts(handlers: GlobalShortcutHandlers) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [handlers.hasSelection, handlers.onEscapeSelection]);
+  }, [handlers]);
 
   // Ctrl/Cmd+Z — undo the last trash/archive move
   useEffect(() => {
@@ -105,7 +105,7 @@ export function useGlobalShortcuts(handlers: GlobalShortcutHandlers) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [handlers.onUndo]);
+  }, [handlers]);
 
   // Esc — close the topmost open overlay (panels that are not Radix dialogs)
   useEffect(() => {
@@ -116,5 +116,5 @@ export function useGlobalShortcuts(handlers: GlobalShortcutHandlers) {
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [handlers.isSidebarOpen, handlers.onCloseSidebar]);
+  }, [handlers]);
 }

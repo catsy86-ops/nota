@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Pen, Eraser, Undo2, Trash2, Save, Minus, Plus, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { Pen, Eraser, Undo2, Trash2, Save, Minus, Plus } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -61,6 +61,30 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
     };
   }, [open]);
 
+  const drawAllStrokes = useCallback((ctx: CanvasRenderingContext2D) => {
+    const allStrokes = currentStroke ? [...strokes, currentStroke] : strokes;
+    for (const stroke of allStrokes) {
+      if (stroke.points.length < 2) continue;
+      ctx.beginPath();
+      ctx.strokeStyle = stroke.tool === "eraser" ? "#ffffff" : stroke.color;
+      ctx.lineWidth = stroke.tool === "eraser" ? stroke.width * 3 : stroke.width;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.globalCompositeOperation = stroke.tool === "eraser" ? "destination-out" : "source-over";
+
+      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+      for (let i = 1; i < stroke.points.length; i++) {
+        const prev = stroke.points[i - 1];
+        const curr = stroke.points[i];
+        const midX = (prev.x + curr.x) / 2;
+        const midY = (prev.y + curr.y) / 2;
+        ctx.quadraticCurveTo(prev.x, prev.y, midX, midY);
+      }
+      ctx.stroke();
+      ctx.globalCompositeOperation = "source-over";
+    }
+  }, [strokes, currentStroke]);
+
   // Redraw canvas when strokes or size change
   const redraw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -84,31 +108,10 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       drawAllStrokes(ctx);
     }
-  }, [strokes, currentStroke, canvasSize, initialImage]);
-
-  function drawAllStrokes(ctx: CanvasRenderingContext2D) {
-    const allStrokes = currentStroke ? [...strokes, currentStroke] : strokes;
-    for (const stroke of allStrokes) {
-      if (stroke.points.length < 2) continue;
-      ctx.beginPath();
-      ctx.strokeStyle = stroke.tool === "eraser" ? "#ffffff" : stroke.color;
-      ctx.lineWidth = stroke.tool === "eraser" ? stroke.width * 3 : stroke.width;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.globalCompositeOperation = stroke.tool === "eraser" ? "destination-out" : "source-over";
-
-      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
-      for (let i = 1; i < stroke.points.length; i++) {
-        const prev = stroke.points[i - 1];
-        const curr = stroke.points[i];
-        const midX = (prev.x + curr.x) / 2;
-        const midY = (prev.y + curr.y) / 2;
-        ctx.quadraticCurveTo(prev.x, prev.y, midX, midY);
-      }
-      ctx.stroke();
-      ctx.globalCompositeOperation = "source-over";
-    }
-  }
+    // canvasSize isn't read directly above, but changing the canvas width/height JSX attrs
+    // clears its pixel buffer, so a resize must still trigger a redraw.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canvasSize, initialImage, drawAllStrokes]);
 
   useEffect(() => {
     if (open) redraw();

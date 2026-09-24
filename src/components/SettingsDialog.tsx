@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
-import { Play, Sparkles, LayoutGrid, Pencil, Keyboard, Database, Download, Sun, Moon, Monitor, Zap, Accessibility, Wifi } from "lucide-react";
+import { Play, Sparkles, LayoutGrid, Pencil, Database, Download, Sun, Moon, Monitor, Zap, Accessibility, Wifi } from "lucide-react";
 import { motion } from "framer-motion";
 import { SyncSettings } from "@/components/SyncSettings";
 import { EFFECT_LABELS, EffectKey, setEffectEnabled, useEffectsSettings } from "@/lib/effectsSettings";
