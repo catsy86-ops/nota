@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
 import {
-  Settings as SettingsIcon, HelpCircle, Tag, Moon, Sun, Keyboard, FolderOpen, Command, History,
+  Settings as SettingsIcon, HelpCircle, Tag, Moon, Sun, Keyboard, FolderOpen, Command, History, Trophy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotesContext } from "@/hooks/NotesProvider";
@@ -48,6 +48,7 @@ interface AppSidebarProps {
   onToggleTheme: () => void;
   onOpenPalette: () => void;
   onOpenActions: () => void;
+  onOpenStats: () => void;
   settingsOpen: boolean;
   onSettingsOpenChange: (open: boolean) => void;
 }
@@ -55,7 +56,7 @@ interface AppSidebarProps {
 export function AppSidebar({
   open, onClose, view, activeLabel, activeFolder, onGoView, onGoLabel, onGoFolder,
   sidebarItems, totalNotes, remindersCount, onLogoClick, dark, onToggleTheme, onOpenPalette, onOpenActions,
-  settingsOpen, onSettingsOpenChange,
+  onOpenStats, settingsOpen, onSettingsOpenChange,
 }: AppSidebarProps) {
   const { allLabels, folders, renameLabel, removeLabel, addFolder, updateFolder, deleteFolder } = useNotesContext();
 
@@ -262,6 +263,15 @@ export function AppSidebar({
                 >
                   <History className="w-[18px] h-[18px]" />
                   <span>Ostatnie akcje</span>
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={onOpenStats}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
+                >
+                  <Trophy className="w-[18px] h-[18px]" />
+                  <span>Statystyki</span>
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}

@@ -20,6 +20,7 @@ interface Props {
   onGo: (view: "notes" | "today" | "week" | "archive" | "reminders" | "trash" | "widget") => void;
   onToggleTheme: () => void;
   onOpenSettings: () => void;
+  onOpenStats: () => void;
 }
 
 export function CommandPalette({
@@ -31,6 +32,7 @@ export function CommandPalette({
   onGo,
   onToggleTheme,
   onOpenSettings,
+  onOpenStats,
 }: Props) {
   useEffect(() => {
     function handler(e: KeyboardEvent) {
@@ -59,6 +61,9 @@ export function CommandPalette({
           </CommandItem>
           <CommandItem onSelect={() => run(onOpenSettings)}>
             <Sparkles className="w-4 h-4 mr-2" /> Ustawienia
+          </CommandItem>
+          <CommandItem onSelect={() => run(onOpenStats)}>
+            <Trophy className="w-4 h-4 mr-2" /> Statystyki i osiągnięcia
           </CommandItem>
           <CommandItem onSelect={() => run(onToggleTheme)}>
             <Moon className="w-4 h-4 mr-2" /> Przełącz motyw jasny/ciemny

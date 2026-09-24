@@ -30,6 +30,7 @@ import { glowPulse, glowStreak, centerOf, pointOfNote } from "@/lib/glowTrail";
 import { SearchBar } from "@/components/SearchBar";
 import { useAchievementTracker } from "@/lib/achievements";
 import { CommandPalette } from "@/components/CommandPalette";
+import { StatsDialog } from "@/components/StatsDialog";
 import { DailyQuote } from "@/components/DailyQuote";
 import { AnimatedBackdrop } from "@/components/AnimatedBackdrop";
 import { QuickTemplates } from "@/components/QuickTemplates";
@@ -63,6 +64,7 @@ const Index = () => {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const lastSelectedRef = useRef<string | null>(null);
   const selectionMode = selectedIds.size > 0;
@@ -250,6 +252,7 @@ const Index = () => {
         onToggleTheme={toggleTheme}
         onOpenPalette={() => setPaletteOpen(true)}
         onOpenActions={() => setActionsOpen(true)}
+        onOpenStats={() => setStatsOpen(true)}
         settingsOpen={settingsOpen}
         onSettingsOpenChange={setSettingsOpen}
       />
@@ -382,6 +385,15 @@ const Index = () => {
       onGo={(v) => { setView(v); setActiveLabel(null); }}
       onToggleTheme={toggleTheme}
       onOpenSettings={() => setSettingsOpen(true)}
+      onOpenStats={() => setStatsOpen(true)}
+    />
+    <StatsDialog
+      open={statsOpen}
+      onOpenChange={setStatsOpen}
+      notes={notes}
+      archivedNotes={archivedNotes}
+      allLabels={allLabels}
+      folders={folders}
     />
     <BottomNav
       view={view}
