@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { useNotes, type Note } from "./useNotes";
-import { loadAll, clearAllStorage, saveNotesIDB } from "@/lib/notesStore";
-import { enqueue, getQueue, clearQueue } from "@/lib/offlineQueue";
+import { clearAllStorage, saveNotesIDB } from "@/lib/notesStore";
+import { yjsStore, createYjsStore } from "@/lib/yjsStore";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
   return {
@@ -16,6 +16,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     trashedAt: null,
     labels: [],
     reminder: null,
+    priority: "none",
     images: [],
     checklist: [],
     folderId: null,
@@ -28,8 +29,8 @@ function makeNote(overrides: Partial<Note> = {}): Note {
 
 beforeEach(async () => {
   localStorage.clear();
-  clearQueue();
   await clearAllStorage();
+  await yjsStore.resetForTests();
 });
 
 describe("useNotes — CRUD", () => {
@@ -49,18 +50,6 @@ describe("useNotes — CRUD", () => {
     expect(result.current.notes).toEqual([]);
   });
 
-  it("persists changes to IndexedDB", async () => {
-    const { result } = renderHook(() => useNotes());
-    await waitFor(() => expect(result.current.notes).toEqual([]));
-
-    act(() => result.current.addNote("Persisted", ""));
-
-    await waitFor(async () => {
-      const snap = await loadAll();
-      expect(snap.notes.map((n) => n.title)).toEqual(["Persisted"]);
-    });
-  });
-
   it("moves a note to trash and can restore it", async () => {
     const { result } = renderHook(() => useNotes());
     await waitFor(() => expect(result.current.notes).toEqual([]));
@@ -78,6 +67,24 @@ describe("useNotes — CRUD", () => {
   });
 });
 
+describe("useNotes — persistence", () => {
+  it("persists changes so a fresh store reading the same IndexedDB database sees them", async () => {
+    const { result } = renderHook(() => useNotes());
+    await waitFor(() => expect(result.current.notes).toEqual([]));
+
+    act(() => result.current.addNote("Persisted", ""));
+    const id = result.current.notes[0].id;
+
+    // Simulate a page reload: an independent store instance pointed at the
+    // same y-indexeddb database should see the note without any extra wiring.
+    const reopened = createYjsStore("kaczy-yjs-v1");
+    await reopened.ready();
+    await waitFor(() => {
+      expect(reopened.projectNotes().map((n) => n.id)).toContain(id);
+    });
+  });
+});
+
 describe("useNotes — hydration / migration", () => {
   it("migrates legacy localStorage notes into IndexedDB on first hydration", async () => {
     localStorage.setItem("kaczy-notes-data", JSON.stringify([makeNote({ id: "legacy", title: "Stara notatka" })]));
@@ -89,7 +96,7 @@ describe("useNotes — hydration / migration", () => {
     });
   });
 
-  it("hydrates notes already stored in IndexedDB", async () => {
+  it("hydrates notes already stored in the legacy IndexedDB store", async () => {
     await saveNotesIDB([makeNote({ id: "idb-note", title: "Z bazy" })]);
 
     const { result } = renderHook(() => useNotes());
@@ -97,25 +104,6 @@ describe("useNotes — hydration / migration", () => {
     await waitFor(() => {
       expect(result.current.notes.map((n) => n.id)).toContain("idb-note");
     });
-  });
-});
-
-describe("useNotes — offline queue replay", () => {
-  it("replays a queued upsert that never made it to IndexedDB and confirms it", async () => {
-    const queuedNote = makeNote({ id: "queued", title: "Z kolejki offline" });
-    enqueue({ type: "upsert", noteId: queuedNote.id, note: queuedNote });
-    expect(getQueue()).toHaveLength(1);
-
-    const { result } = renderHook(() => useNotes());
-
-    await waitFor(() => {
-      expect(result.current.notes.map((n) => n.id)).toContain("queued");
-    });
-
-    // The replayed state is flushed straight back into IDB and the queue confirmed.
-    await waitFor(() => expect(getQueue()).toHaveLength(0));
-    const snap = await loadAll();
-    expect(snap.notes.map((n) => n.id)).toContain("queued");
   });
 });
 

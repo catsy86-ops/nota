@@ -1,8 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { toast } from "sonner";
-import { loadAll, saveNotesIDB, saveLabelsIDB, saveFoldersIDB } from "@/lib/notesStore";
-import { applyQueue, enqueueDiff, confirmUpTo, getQueue, RETRY_EVENT } from "@/lib/offlineQueue";
-import { broadcastChanges, subscribeToChanges, notesDiffer, describeDifference, closeChannel } from "@/lib/noteSync";
+import { yjsStore } from "@/lib/yjsStore";
 import type { NotePriority } from "@/lib/notePriority";
 
 export type NoteColor = "default" | "coral" | "peach" | "sand" | "mint" | "sage" | "sky" | "lavender" | "rose";
@@ -17,6 +14,7 @@ export interface Folder {
   parentId: string | null;
   order: number;
   createdAt: number;
+  updatedAt?: number;
 }
 
 export interface ChecklistItem {
@@ -38,72 +36,12 @@ export interface Note {
   reminder: number | null;
   reminderRepeat?: "none" | "daily" | "weekly" | "monthly";
   priority: NotePriority;
-  images: string[]; // base64 data URLs
+  images: string[]; // base64 data URLs — kept device-local, not synced via Yjs
   checklist: ChecklistItem[];
   folderId: string | null;
   order: number;
   createdAt: number;
   updatedAt: number;
-}
-
-const STORAGE_KEY = "kaczy-notes-data";
-const LABELS_KEY = "kaczy-notes-labels";
-const FOLDERS_KEY = "kaczy-notes-folders";
-
-// Read-only fallback for the very first paint, before IndexedDB hydration
-// resolves (see the `loadAll()` effect below). `notesStore.ts` is the sole
-// writer for this key — once migration runs it removes LS_NOTES, so this
-// only ever returns data on a pre-migration first load.
-function loadNotes(): Note[] {
-  try {
-    let raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      raw = localStorage.getItem("dash-notes-data");
-    }
-    const notes: Note[] = raw ? JSON.parse(raw) : [];
-    return notes.map((n, i) => ({
-      ...n,
-      archived: n.archived ?? false,
-      trashed: n.trashed ?? false,
-      trashedAt: n.trashedAt ?? null,
-      labels: n.labels ?? [],
-      reminder: n.reminder ?? null,
-      images: n.images ?? [],
-      checklist: n.checklist ?? [],
-      folderId: n.folderId ?? null,
-      order: n.order ?? i,
-    }));
-  } catch {
-    return [];
-  }
-}
-
-export function loadLabels(): string[] {
-  try {
-    let raw = localStorage.getItem(LABELS_KEY);
-    if (!raw) raw = localStorage.getItem("dash-notes-labels");
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveLabels(labels: string[]) {
-  localStorage.setItem(LABELS_KEY, JSON.stringify(labels));
-}
-
-function loadFolders(): Folder[] {
-  try {
-    const raw = localStorage.getItem(FOLDERS_KEY);
-    const folders: Folder[] = raw ? JSON.parse(raw) : [];
-    return folders.map((f) => ({ ...f, emoji: f.emoji ?? null }));
-  } catch {
-    return [];
-  }
-}
-
-function saveFolders(folders: Folder[]) {
-  localStorage.setItem(FOLDERS_KEY, JSON.stringify(folders));
 }
 
 export function fileToBase64(file: File): Promise<string> {
@@ -127,260 +65,154 @@ export function getDescendantFolderIds(folderId: string, folders: Folder[]): str
 }
 
 export function useNotes() {
-  // Synchronous initial state from localStorage for instant first paint.
-  // Then we async-hydrate from IndexedDB (which is the source of truth post-migration).
-  const [notes, setNotes] = useState<Note[]>(loadNotes);
-  const [allLabels, setAllLabels] = useState<string[]>(loadLabels);
-  const [folders, setFolders] = useState<Folder[]>(loadFolders);
-  const hydratedRef = useRef(false);
-  const lastPersistedRef = useRef<Note[]>([]);
-  const notesRef = useRef(notes);
-  notesRef.current = notes;
+  // Notes/folders/labels live in a Yjs doc (persisted via y-indexeddb); this
+  // React state is a projection of it, kept in sync via observeDeep. See
+  // src/lib/yjsStore.ts for the data layer and its one-time migration from
+  // the previous idb-keyval store (src/lib/notesStore.ts).
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [allLabels, setAllLabels] = useState<string[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const foldersRef = useRef<Folder[]>(folders);
+  foldersRef.current = folders;
 
-  // Manual retry from the queue panel: re-attempt the IDB write and confirm.
-  useEffect(() => {
-    const onRetry = () => {
-      if (!hydratedRef.current) return;
-      const pending = getQueue();
-      if (!pending.length) return;
-      const snapshot = notesRef.current;
-      saveNotesIDB(snapshot).then(() => {
-        lastPersistedRef.current = snapshot;
-        confirmUpTo(pending[pending.length - 1].seq);
-      });
-    };
-    window.addEventListener(RETRY_EVENT, onRetry);
-    return () => window.removeEventListener(RETRY_EVENT, onRetry);
-  }, []);
-
-  // One-shot IDB hydrate (also performs LS → IDB migration on first run).
   useEffect(() => {
     let cancelled = false;
-    loadAll().then((snap) => {
+
+    function project() {
+      setNotes(yjsStore.projectNotes());
+      setFolders(yjsStore.projectFolders());
+      setAllLabels(yjsStore.projectLabels());
+    }
+
+    yjsStore.notesMap.observeDeep(project);
+    yjsStore.foldersMap.observeDeep(project);
+    yjsStore.labelsMap.observeDeep(project);
+
+    yjsStore.ready().then(() => {
       if (cancelled) return;
-      // Replay any change queued offline / before the last IDB write resolved.
-      const pending = getQueue();
-      const merged = applyQueue(snap.notes, pending);
-      lastPersistedRef.current = snap.notes;
-      if (merged.length) setNotes(merged);
-      if (snap.labels.length) setAllLabels(snap.labels);
-      if (snap.folders.length) setFolders(snap.folders);
-      hydratedRef.current = true;
-      if (pending.length) {
-        // Flush the replayed state straight back into IDB.
-        const seq = pending[pending.length - 1].seq;
-        saveNotesIDB(merged).then(() => confirmUpTo(seq)).catch(() => {});
-        lastPersistedRef.current = merged;
-      }
-    }).catch(() => { hydratedRef.current = true; });
-    return () => { cancelled = true; };
-  }, []);
-
-  // Persist to IndexedDB (avoids the 5 MB localStorage cap for image-heavy notes).
-  // Every change first lands synchronously in the localStorage queue, so it
-  // survives an offline session, a crash or a closed tab mid-write.
-  useEffect(() => {
-    if (!hydratedRef.current) return;
-    const before = lastPersistedRef.current;
-    const seq = enqueueDiff(before, notes);
-    const snapshot = notes;
-    saveNotesIDB(snapshot)
-      .then(() => {
-        lastPersistedRef.current = snapshot;
-        if (seq) confirmUpTo(seq);
-        // Tell other tabs/windows about what just changed so they can
-        // fast-forward instead of silently overwriting each other's edits.
-        const beforeMap = new Map(before.map((n) => [n.id, n]));
-        const snapshotIds = new Set(snapshot.map((n) => n.id));
-        const changed = snapshot.filter((n) => {
-          const prev = beforeMap.get(n.id);
-          return !prev || prev !== n;
-        });
-        const deleted = before.filter((n) => !snapshotIds.has(n.id)).map((n) => n.id);
-        broadcastChanges(changed, deleted);
-      })
-      .catch(() => { /* keep the queue: it will be replayed on next load */ });
-  }, [notes]);
-
-  // Cross-tab sync: adopt remote changes that don't conflict with an unsaved
-  // local edit; warn (without overwriting) when they do.
-  useEffect(() => {
-    const unsubscribe = subscribeToChanges((msg) => {
-      if (!hydratedRef.current) return;
-      const basisMap = new Map(lastPersistedRef.current.map((n) => [n.id, n]));
-      setNotes((prev) => {
-        const map = new Map(prev.map((n) => [n.id, n]));
-        let touched = false;
-        for (const remote of msg.changed) {
-          const local = map.get(remote.id);
-          const basis = basisMap.get(remote.id);
-          if (!local) {
-            map.set(remote.id, remote);
-            touched = true;
-            continue;
-          }
-          if (!notesDiffer(local, remote)) continue; // already in sync
-          const localUnedited = !basis || !notesDiffer(local, basis);
-          if (localUnedited && remote.updatedAt >= local.updatedAt) {
-            map.set(remote.id, remote);
-            touched = true;
-          } else if (!localUnedited) {
-            const fields = describeDifference(local, remote).join(", ");
-            toast.warning(`Wykryto konflikt edycji notatki „${remote.title || "bez tytułu"}”`, {
-              description: `Różne zmiany w innej karcie (${fields}). Zachowano wersję z tej karty.`,
-              duration: 10000,
-            });
-          }
-        }
-        for (const id of msg.deleted) {
-          const local = map.get(id);
-          const basis = basisMap.get(id);
-          if (local && (!basis || !notesDiffer(local, basis))) {
-            map.delete(id);
-            touched = true;
-          }
-        }
-        return touched ? [...map.values()] : prev;
-      });
+      project();
     });
+
     return () => {
-      unsubscribe();
-      closeChannel();
+      cancelled = true;
+      yjsStore.notesMap.unobserveDeep(project);
+      yjsStore.foldersMap.unobserveDeep(project);
+      yjsStore.labelsMap.unobserveDeep(project);
     };
   }, []);
-  useEffect(() => { if (hydratedRef.current) saveLabelsIDB(allLabels); }, [allLabels]);
-  useEffect(() => { if (hydratedRef.current) saveFoldersIDB(folders); }, [folders]);
 
+  // Auto-cleanup: remove notes trashed more than 30 days ago. `removeNotes`
+  // uses a real Y.Map delete (tombstone), same path every other delete uses,
+  // so this stays sync-safe once a network transport is added later.
+  useEffect(() => {
+    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
+    const now = Date.now();
+    const expired = notes.filter((n) => n.trashed && n.trashedAt && now - n.trashedAt > THIRTY_DAYS).map((n) => n.id);
+    if (expired.length) yjsStore.removeNotes(expired);
+  }, [notes]);
 
   const addNote = useCallback((title: string, content: string, color: NoteColor = "default", labels: string[] = [], reminder: number | null = null, images: string[] = [], checklist: ChecklistItem[] = [], priority: NotePriority = "none") => {
     const now = Date.now();
     const note: Note = { id: crypto.randomUUID(), title, content, color, pinned: false, archived: false, trashed: false, trashedAt: null, labels, reminder, priority, images, checklist, folderId: null, order: 0, createdAt: now, updatedAt: now };
-    setNotes((prev) => [note, ...prev]);
+    yjsStore.upsertNote(note);
   }, []);
 
   const updateNote = useCallback((id: string, updates: Partial<Omit<Note, "id" | "createdAt">>) => {
-    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, ...updates, updatedAt: Date.now() } : n)));
+    yjsStore.patchNote(id, updates);
   }, []);
 
   const deleteNote = useCallback((id: string) => {
-    setNotes((prev) => prev.filter((n) => n.id !== id));
+    yjsStore.removeNote(id);
   }, []);
 
   const trashNote = useCallback((id: string) => {
-    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, trashed: true, trashedAt: Date.now(), pinned: false, archived: false, updatedAt: Date.now() } : n)));
+    yjsStore.patchNote(id, { trashed: true, trashedAt: Date.now(), pinned: false, archived: false });
   }, []);
 
   const restoreFromTrash = useCallback((id: string) => {
-    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, trashed: false, trashedAt: null, updatedAt: Date.now() } : n)));
+    yjsStore.patchNote(id, { trashed: false, trashedAt: null });
   }, []);
 
   const emptyTrash = useCallback(() => {
-    setNotes((prev) => prev.filter((n) => !n.trashed));
+    const trashedIds = yjsStore.projectNotes().filter((n) => n.trashed).map((n) => n.id);
+    if (trashedIds.length) yjsStore.removeNotes(trashedIds);
   }, []);
 
   const togglePin = useCallback((id: string) => {
-    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, pinned: !n.pinned, updatedAt: Date.now() } : n)));
+    const current = yjsStore.projectNotes().find((n) => n.id === id);
+    if (!current) return;
+    yjsStore.patchNote(id, { pinned: !current.pinned });
   }, []);
 
   const duplicateNote = useCallback((id: string) => {
-    setNotes((prev) => {
-      const original = prev.find((n) => n.id === id);
-      if (!original) return prev;
-      const now = Date.now();
-      const copy: Note = { ...original, id: crypto.randomUUID(), title: original.title ? `${original.title} (kopia)` : "", pinned: false, createdAt: now, updatedAt: now };
-      const idx = prev.indexOf(original);
-      const newNotes = [...prev];
-      newNotes.splice(idx + 1, 0, copy);
-      return newNotes;
-    });
+    const original = yjsStore.projectNotes().find((n) => n.id === id);
+    if (!original) return;
+    const now = Date.now();
+    const copy: Note = { ...original, id: crypto.randomUUID(), title: original.title ? `${original.title} (kopia)` : "", pinned: false, createdAt: now, updatedAt: now };
+    yjsStore.upsertNote(copy);
   }, []);
 
   const archiveNote = useCallback((id: string) => {
-    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, archived: true, pinned: false, updatedAt: Date.now() } : n)));
+    yjsStore.patchNote(id, { archived: true, pinned: false });
   }, []);
 
   const unarchiveNote = useCallback((id: string) => {
-    setNotes((prev) => prev.map((n) => (n.id === id ? { ...n, archived: false, updatedAt: Date.now() } : n)));
+    yjsStore.patchNote(id, { archived: false });
   }, []);
 
   const addLabel = useCallback((label: string) => {
-    setAllLabels((prev) => prev.includes(label) ? prev : [...prev, label]);
+    yjsStore.addLabel(label);
   }, []);
 
   const removeLabel = useCallback((label: string) => {
-    setAllLabels((prev) => prev.filter((l) => l !== label));
-    setNotes((prev) => prev.map((n) => ({ ...n, labels: n.labels.filter((l) => l !== label) })));
+    yjsStore.removeLabelEverywhere(label);
   }, []);
 
   const renameLabel = useCallback((oldLabel: string, newLabel: string) => {
     const trimmed = newLabel.trim();
     if (!trimmed || trimmed === oldLabel) return;
-    setAllLabels((prev) => prev.map((l) => (l === oldLabel ? trimmed : l)));
-    setNotes((prev) => prev.map((n) => ({ ...n, labels: n.labels.map((l) => (l === oldLabel ? trimmed : l)) })));
+    yjsStore.renameLabelEverywhere(oldLabel, trimmed);
   }, []);
 
   const importNotes = useCallback((imported: Note[]) => {
-    setNotes((prev) => {
-      const existingIds = new Set(prev.map((n) => n.id));
-      const newNotes = imported.filter((n) => !existingIds.has(n.id));
-      return [...newNotes, ...prev];
-    });
+    const existingIds = new Set(yjsStore.projectNotes().map((n) => n.id));
+    for (const note of imported) {
+      if (!existingIds.has(note.id)) yjsStore.upsertNote(note);
+    }
     const importedLabels = new Set(imported.flatMap((n) => n.labels));
-    setAllLabels((prev) => {
-      const all = new Set(prev);
-      importedLabels.forEach((l) => all.add(l));
-      return [...all];
-    });
+    importedLabels.forEach((l) => yjsStore.addLabel(l));
   }, []);
 
   const reorderNotes = useCallback((activeIds: string[]) => {
-    setNotes((prev) => {
-      const map = new Map(prev.map((n) => [n.id, n]));
-      const reordered = activeIds.map((id) => map.get(id)!).filter(Boolean);
-      const archived = prev.filter((n) => n.archived);
-      return [...reordered, ...archived];
-    });
+    // `order` isn't currently read by any sort — active/archived/trashed views
+    // are always re-sorted by pinned/updatedAt — so this just persists the
+    // dropped order for future use without touching notes outside activeIds.
+    yjsStore.setNoteOrder(activeIds);
   }, []);
 
   // Folder operations
   const addFolder = useCallback((name: string, parentId: string | null = null, color: FolderColor = "default") => {
-    const folder: Folder = { id: crypto.randomUUID(), name: name.trim(), color, emoji: null, parentId, order: 0, createdAt: Date.now() };
-    setFolders((prev) => [folder, ...prev]);
+    const now = Date.now();
+    const folder: Folder = { id: crypto.randomUUID(), name: name.trim(), color, emoji: null, parentId, order: 0, createdAt: now, updatedAt: now };
+    yjsStore.upsertFolder(folder);
     return folder.id;
   }, []);
 
   const updateFolder = useCallback((id: string, updates: Partial<Omit<Folder, "id" | "createdAt">>) => {
-    setFolders((prev) => prev.map((f) => (f.id === id ? { ...f, ...updates } : f)));
+    yjsStore.patchFolder(id, updates);
   }, []);
 
   const deleteFolder = useCallback((id: string) => {
-    setFolders((prev) => {
-      // Get all descendant IDs
-      const descendantIds = getDescendantFolderIds(id, prev);
-      const allRemoved = new Set([id, ...descendantIds]);
-      return prev.filter((f) => !allRemoved.has(f.id));
-    });
-    // Remove folder reference from notes
-    setNotes((prev) => {
-      const descendantIds = getDescendantFolderIds(id, folders);
-      const allRemoved = new Set([id, ...descendantIds]);
-      return prev.map((n) => (n.folderId && allRemoved.has(n.folderId) ? { ...n, folderId: null, updatedAt: Date.now() } : n));
-    });
-  }, [folders]);
-
-  const moveNoteToFolder = useCallback((noteId: string, folderId: string | null) => {
-    setNotes((prev) => prev.map((n) => (n.id === noteId ? { ...n, folderId, updatedAt: Date.now() } : n)));
+    const descendantIds = getDescendantFolderIds(id, foldersRef.current);
+    const allRemoved = new Set([id, ...descendantIds]);
+    allRemoved.forEach((folderId) => yjsStore.removeFolder(folderId));
+    const affectedNoteIds = yjsStore.projectNotes().filter((n) => n.folderId && allRemoved.has(n.folderId)).map((n) => n.id);
+    if (affectedNoteIds.length) yjsStore.patchNotes(affectedNoteIds, { folderId: null });
   }, []);
 
-  // Auto-cleanup: remove notes trashed more than 30 days ago
-  useEffect(() => {
-    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-    const now = Date.now();
-    const hasExpired = notes.some((n) => n.trashed && n.trashedAt && now - n.trashedAt > THIRTY_DAYS);
-    if (hasExpired) {
-      setNotes((prev) => prev.filter((n) => !(n.trashed && n.trashedAt && now - n.trashedAt > THIRTY_DAYS)));
-    }
-  }, [notes]);
+  const moveNoteToFolder = useCallback((noteId: string, folderId: string | null) => {
+    yjsStore.patchNote(noteId, { folderId });
+  }, []);
 
   const activeNotes = [...notes.filter((n) => !n.archived && !n.trashed)].sort((a, b) => {
     if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
@@ -392,20 +224,16 @@ export function useNotes() {
   const trashedNotes = [...notes.filter((n) => n.trashed)].sort((a, b) => b.updatedAt - a.updatedAt);
 
   const bulkTrash = useCallback((ids: string[]) => {
-    const set = new Set(ids); const now = Date.now();
-    setNotes((prev) => prev.map((n) => (set.has(n.id) ? { ...n, trashed: true, trashedAt: now, pinned: false, archived: false, updatedAt: now } : n)));
+    yjsStore.patchNotes(ids, { trashed: true, trashedAt: Date.now(), pinned: false, archived: false });
   }, []);
   const bulkArchive = useCallback((ids: string[]) => {
-    const set = new Set(ids); const now = Date.now();
-    setNotes((prev) => prev.map((n) => (set.has(n.id) ? { ...n, archived: true, pinned: false, updatedAt: now } : n)));
+    yjsStore.patchNotes(ids, { archived: true, pinned: false });
   }, []);
   const bulkSetColor = useCallback((ids: string[], color: NoteColor) => {
-    const set = new Set(ids); const now = Date.now();
-    setNotes((prev) => prev.map((n) => (set.has(n.id) ? { ...n, color, updatedAt: now } : n)));
+    yjsStore.patchNotes(ids, { color });
   }, []);
   const bulkRestore = useCallback((ids: string[]) => {
-    const set = new Set(ids); const now = Date.now();
-    setNotes((prev) => prev.map((n) => (set.has(n.id) ? { ...n, trashed: false, trashedAt: null, archived: false, updatedAt: now } : n)));
+    yjsStore.patchNotes(ids, { trashed: false, trashedAt: null, archived: false });
   }, []);
 
   return { notes: activeNotes, archivedNotes, trashedNotes, allLabels, folders, addNote, updateNote, deleteNote, trashNote, restoreFromTrash, emptyTrash, togglePin, duplicateNote, archiveNote, unarchiveNote, addLabel, removeLabel, renameLabel, importNotes, reorderNotes, addFolder, updateFolder, deleteFolder, moveNoteToFolder, bulkTrash, bulkArchive, bulkSetColor, bulkRestore };

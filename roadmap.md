@@ -33,11 +33,25 @@ Notatnik ("kaczy") to lokalna aplikacja PWA (React 18 + TypeScript + Vite + shad
 
 Spójne z tym, że apka jest **lokalna, bez konta i bez backendu** — dwa naturalne kierunki:
 
-1. **Prawdziwa synchronizacja między urządzeniami** — obecny `noteSync.ts` działa tylko w obrębie jednej przeglądarki/urządzenia. Realne multi-device wymagałoby lekkiego backendu (np. sync przez plik w chmurze użytkownika — WebDAV/Google Drive/Dropbox API — zamiast pełnego serwera) lub rozwiązania end-to-end z biblioteką typu CRDT (Yjs/Automerge) synchronizowaną peer-to-peer.
+1. **Prawdziwa synchronizacja między urządzeniami** — wybrane podejście: CRDT peer-to-peer przez **Yjs**.
+   - [x] **Faza 1 — wymiana warstwy danych na Yjs (bez sieci)**: `src/lib/yjsStore.ts` — `Y.Doc` z `notesMap`/`foldersMap`/`labelsMap`, `content` jako `Y.Text` (field-level merge zamiast whole-note LWW), persystencja przez `y-indexeddb` (baza `kaczy-yjs-v1`), jednorazowa migracja ze starego `notesStore.ts` (idb-keyval), `images` świadomie poza `Y.Doc` (osobny store urządzenie-lokalny, `kaczy.images.v1` — nie będą synchronizowane P2P w pierwszej wersji). `useNotes.ts` przepisany na projekcję z Yjs (`observeDeep`), publiczny kontrakt hooka bez zmian. Stary `BroadcastChannel` (`noteSync.ts`) i offline-queue (`offlineQueue.ts`) przestały być używane w ścieżce zapisu notatek (Yjs+IndexedDB sam daje trwałość i cross-tab sync) — oba pliki i ich testy zostają nietknięte, na wypadek przyszłego użycia gdzie indziej (np. store obrazów). Testy: `yjsStore.test.ts` (merge pól, merge tekstu, tombstone przy delete, migracja), `useNotes.test.ts` zaktualizowany pod nową architekturę. `exportFullBackup`/`importFullBackup` przepięte na projekcję Yjs.
+   - **Faza 2 (do zrobienia, osobna sesja) — transport `y-webrtc` + UI parowania urządzeń**: nowa zależność `y-webrtc`, domyślnie publiczne serwery sygnalizacyjne (z disclaimerem w UI), kod parowania (QR + krótki kod) w zakładce „Dane” (`SettingsDialog.tsx`), sync domyślnie wyłączony (opt-in). Pierwsza synchronizacja = suma notatek obu urządzeń (id to UUID, więc bez kolizji) — trzeba to jasno skomunikować w UI.
+   - Odłożone świadomie: sync obrazów między urządzeniami, item-level CRDT dla checklisty, self-hosted serwer sygnalizacyjny, kompresja/GC doc-a Yjs.
 2. [x] **Import/eksport całej bazy jako kopia zapasowa** — `exportFullBackup`/`importFullBackup` w `exportNotes.ts` (z walidacją `fullBackupSchema`).
 3. [x] **Przypomnienia cykliczne** — `reminderRepeat.ts` + testy, `QuickReminderInput`.
 4. [x] **UI polish z `.lovable/plan.md`** — `BottomNav`, sticky blur header (`AppHeader.tsx`) i `EmptyState` wdrożone; design tokens `--elevation-*` pominięte jako nieistotny kosmetyczny detal.
 5. [x] **Rozszerzenie statystyk/gamifikacji** (`StatsDialog`, `achievements.ts`) — dodano passy (streaki) codziennego używania, wykres aktywności z ostatnich 14 dni (recharts) i odznakę „Tydzień w ogniu”. Testy w `achievements.test.ts`.
+
+## Porządki w kodzie — audyt 2026-09-24
+
+Znaleziska z niezależnego audytu kodu (bez zmian w tej sesji — do zrobienia osobno):
+
+- **Martwy kod do usunięcia**: `src/components/ui/sidebar.tsx` (637 linii, zupełnie nieużywany — `AppSidebar.tsx` to własna implementacja, nie korzysta z tego pliku), ok. 20 innych nieużywanych komponentów `shadcn/ui` (accordion, card, table, select, drawer, carousel, itd. — zweryfikować listę przed usunięciem), oraz komponenty bez triggera w UI: `FocusMode.tsx`, `NotePresentation.tsx` (prop `onPresent` zadeklarowany w `NoteCard` ale nigdy nie przekazany), `SeasonalBackdrop.tsx`, `NavLink.tsx`. **Uwaga:** `StatsDialog.tsx`/`chart.tsx` były na liście martwego kodu w pierwotnym audycie — to było nieaktualne, `StatsDialog` już podpięto do UI (sidebar + Command Palette) w tej sesji.
+- **Duplikacja**: ~9 plików niezależnie reimplementuje ten sam wzorzec „localStorage-backed pub/sub store” (`confirmPrefs.ts`, `effectsSettings.ts`, `viewPrefs.ts`, `seasonTheme.ts`, `achievements.ts`, `actionHistory.ts`, `hourlyTicker.ts`, `useTheme.ts`, `useMotionPref.ts`) — kandydat do wspólnego `createPersistedStore<T>()`.
+- **Braki w testach**: `noteSchema.ts`, `useNoteActions.ts` (najpierw — bezpieczeństwo danych), potem `searchNotes.ts`, `wikiLinks.ts`, `useNoteVersions.ts`, `useImportExport.ts`.
+- **Realne ostrzeżenia lintera** (nie tylko `react-refresh` szum): `useGlobalShortcuts.ts` — 6× brak `handlers` w zależnościach `useEffect` (możliwe stale closures dla skrótów klawiszowych — do zbadania), `Index.tsx` — `allNotesForLinks` przeliczane co render zamiast `useMemo`.
+- **Duże komponenty do ewentualnego podziału**: `SettingsDialog.tsx` (545 linii), `NoteCard.tsx` (510 linii, 20 propsów przy jednoczesnym korzystaniu z kontekstu — niespójny wzorzec przepływu danych).
+- **Dormant po tej sesji**: `offlineQueue.ts`/`OfflineQueuePanel.tsx` (kolejka offline) przestały być zasilane po przejściu notatek na Yjs+IndexedDB — panel będzie zawsze pokazywał 0 oczekujących zmian. Plik i testy zostały celowo nietknięte; do decyzji: usunąć panel czy przepiąć go pod status Yjs.
 
 ### Priorytetyzacja
 

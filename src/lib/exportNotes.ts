@@ -2,7 +2,7 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import jsPDF from "jspdf";
 import type { Note } from "@/hooks/useNotes";
-import { loadAll, saveNotesIDB, saveLabelsIDB, saveFoldersIDB } from "@/lib/notesStore";
+import { yjsStore } from "@/lib/yjsStore";
 import { noteSchema, fullBackupSchema, looksLikeNoteArray, type FullBackup } from "@/lib/noteSchema";
 
 export function exportToJSON(notes: Note[], filename?: string): { filename: string; size: number } {
@@ -14,13 +14,13 @@ export function exportToJSON(notes: Note[], filename?: string): { filename: stri
 
 /** Pełny backup: notatki + etykiety + foldery, wystarczający do odtworzenia całej bazy. */
 export async function exportFullBackup(filename?: string): Promise<{ filename: string; size: number }> {
-  const snapshot = await loadAll();
+  await yjsStore.ready();
   const backup: FullBackup = {
     version: 1,
     exportedAt: Date.now(),
-    notes: snapshot.notes,
-    labels: snapshot.labels,
-    folders: snapshot.folders,
+    notes: yjsStore.projectNotes(),
+    labels: yjsStore.projectLabels(),
+    folders: yjsStore.projectFolders(),
   };
   const data = JSON.stringify(backup, null, 2);
   const name = filename || `kaczy-full-backup-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
@@ -49,11 +49,8 @@ export function importFullBackup(): Promise<FullBackup> {
           throw new Error("To nie jest plik pełnego backupu KACZY");
         }
         const backup = fullBackupSchema.parse(raw);
-        await Promise.all([
-          saveNotesIDB(backup.notes),
-          saveLabelsIDB(backup.labels),
-          saveFoldersIDB(backup.folders),
-        ]);
+        await yjsStore.ready();
+        yjsStore.replaceAll(backup.notes, backup.folders, backup.labels);
         resolve(backup);
       } catch (err) {
         reject(err instanceof Error ? err : new Error("Nieprawidłowy plik backupu"));

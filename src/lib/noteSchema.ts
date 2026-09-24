@@ -42,6 +42,7 @@ export const folderSchema = z.object({
   parentId: z.string().nullable().catch(null),
   order: z.number().catch(0),
   createdAt: z.number().catch(() => Date.now()),
+  updatedAt: z.number().optional().catch(undefined),
 }) satisfies z.ZodType<Folder, z.ZodTypeDef, unknown>;
 
 /** Rejects anything that isn't even a plausible array-of-note-like-objects. */
