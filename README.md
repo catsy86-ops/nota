@@ -2,25 +2,27 @@
 
 Lokalna aplikacja notatkowa (PWA) — React + TypeScript + Vite + shadcn/ui.
 
-Wszystkie dane żyją wyłącznie w przeglądarce (IndexedDB, z jednorazową migracją z localStorage). Aplikacja nie ma backendu ani konta użytkownika — "synchronizacja" działa tylko między kartami/oknami tej samej przeglądarki (`BroadcastChannel`), nie między urządzeniami.
+Dane żyją przede wszystkim w przeglądarce (IndexedDB, przez Yjs). Aplikacja nie ma backendu ani konta użytkownika, ale **ma prawdziwą synchronizację między urządzeniami**: CRDT (Yjs) + transport P2P przez WebRTC (`y-webrtc`), opt-in i wyłączony domyślnie — włącza się parowaniem kodem/QR w Ustawienia → Sync. Obrazy synchronizują się osobnym kanałem tego samego transportu. Domyślnie używane są publiczne serwery sygnalizacyjne `y-webrtc`; gotowy do podpięcia własny serwer jest w `signaling-server/`.
 
 ## Funkcje
 
-Notatki tekstowe i checklisty, rysowanie odręczne, etykiety/foldery/kolory, wyszukiwanie pełnotekstowe i command palette, linki wiki między notatkami, przypomnienia z powiadomieniami, historia wersji i historia akcji (undo), eksport do PDF/Markdown/HTML/JSON, tryb offline z kolejką zmian, instalacja jako aplikacja (PWA), gamifikacja (osiągnięcia, statystyki), motyw sezonowy.
+Notatki tekstowe i checklisty (z merge'em CRDT na poziomie pojedynczej pozycji), rysowanie odręczne, etykiety/foldery/kolory, ręczna kolejność notatek (drag & drop), wyszukiwanie pełnotekstowe i command palette, linki wiki między notatkami, przypomnienia (jednorazowe i cykliczne) z powiadomieniami przeglądarki, historia wersji i historia akcji (undo), eksport do PDF/Markdown/HTML/JSON, pełny backup/restore całej bazy (opcjonalnie do jednego, stale nadpisywanego pliku — File System Access API), instalacja jako aplikacja (PWA) ze skrótem „Nowa notatka" i odbieraniem udostępnionej treści z innych aplikacji (Web Share Target), gamifikacja (osiągnięcia, statystyki, passy), motyw sezonowy.
 
 ## Uruchomienie
 
 ```sh
 npm install
-npm run dev       # serwer deweloperski
-npm run build     # build produkcyjny
-npm run preview   # podgląd builda produkcyjnego
-npm run lint       # ESLint
-npm test           # testy jednostkowe (Vitest)
-npm run test:watch # testy w trybie watch
+npm run dev         # serwer deweloperski
+npm run build       # build produkcyjny
+npm run preview     # podgląd builda produkcyjnego
+npm run lint        # ESLint
+npm run typecheck   # tsc --noEmit
+npm test            # testy jednostkowe (Vitest)
+npm run test:watch  # testy jednostkowe w trybie watch
+npm run test:e2e    # testy e2e (Playwright) — buduje i odpala podgląd produkcyjny sam
 ```
 
-Testy e2e (Playwright) uruchamiane są osobno przez konfigurację w `playwright.config.ts`.
+`npm run test:e2e` wymaga pobranych przeglądarek Playwright — jednorazowo: `npx playwright install chromium`.
 
 ## Zarządzanie pakietami
 
@@ -28,4 +30,4 @@ Projekt używa **npm** (`package-lock.json`). Nie dodawać `bun.lock`/`bun.lockb
 
 ## Plan rozwoju
 
-Zobacz [`roadmap.md`](./roadmap.md) — lista zrobionych zadań oraz audyt z planem porządków i rozbudowy.
+Zobacz [`roadmap.md`](./roadmap.md) — lista zrobionych zadań oraz audyty z planami porządków i rozbudowy.

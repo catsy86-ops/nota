@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Download, CheckCircle2, Share, PlusSquare } from "lucide-react";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -25,7 +25,6 @@ interface InstallAppButtonProps {
  */
 export function InstallAppButton({ variant = "row", onDone, className }: InstallAppButtonProps) {
   const { canInstall, isInstalled, isIos, install } = usePwaInstall();
-  const { toast } = useToast();
   const [iosHelpOpen, setIosHelpOpen] = useState(false);
 
   if (isInstalled || !canInstall) return null;
@@ -37,7 +36,7 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
     }
     const outcome = await install();
     if (outcome === "accepted") {
-      toast({ title: "Zainstalowano! 🎉", description: "KACZY jest teraz na ekranie głównym." });
+      toast.success("Zainstalowano! 🎉", { description: "KACZY jest teraz na ekranie głównym." });
       onDone?.();
     }
   };
