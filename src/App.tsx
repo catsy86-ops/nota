@@ -13,6 +13,7 @@ import { useEffect } from "react";
 import { applySeasonAttr, useSeasonPref } from "./lib/seasonTheme";
 import { useEffectsSettings } from "./lib/effectsSettings";
 import { NotesProvider } from "./hooks/NotesProvider";
+import { SeasonalBackdrop } from "./components/SeasonalBackdrop";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +38,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <OfflineStatus />
+          <SeasonalBackdrop />
           <BrowserRouter>
             <ErrorBoundary>
               <NotesProvider>

@@ -26,6 +26,7 @@ import { useTrashCountdown } from "@/hooks/useTrashCountdown";
 import { celebrate, sparkle } from "@/lib/celebrate";
 import { useViewPrefs, readingTimeMin } from "@/lib/viewPrefs";
 import { useNotesContext } from "@/hooks/NotesProvider";
+import { toast } from "sonner";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 
 interface NoteCardProps {
@@ -112,10 +113,16 @@ export const NoteCard = memo(function NoteCard({ note, onUpdate, onDelete, onTog
     const files = e.target.files;
     if (!files) return;
     const newImages: string[] = [];
+    let skipped = 0;
     for (const file of Array.from(files)) {
-      if (file.size > 2 * 1024 * 1024) continue;
+      if (file.size > 2 * 1024 * 1024) { skipped++; continue; }
       const base64 = await fileToBase64(file);
       newImages.push(base64);
+    }
+    if (skipped > 0) {
+      toast.error(skipped === 1 ? "Obrazek jest za duży (max 2 MB)" : `${skipped} obrazków jest za dużych (max 2 MB)`, {
+        description: newImages.length > 0 ? "Pozostałe zostały dodane." : undefined,
+      });
     }
     onUpdate?.(note.id, { images: [...(note.images || []), ...newImages] });
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -255,6 +262,7 @@ export const NoteCard = memo(function NoteCard({ note, onUpdate, onDelete, onTog
                 {isEditing && (
                   <button
                     onClick={(e) => { e.stopPropagation(); removeImage(i); }}
+                    aria-label="Usuń obrazek"
                     className="absolute top-1 right-1 p-0.5 rounded-full bg-foreground/60 text-background opacity-0 group-hover/img:opacity-100 transition-opacity"
                   >
                     <X className="w-3 h-3" />
@@ -502,6 +510,7 @@ function ActionBtn({ icon, onClick, title, className = "" }: { icon: React.React
           whileHover={{ scale: 1.15 }}
           whileTap={{ scale: 0.9 }}
           onClick={(e) => { e.stopPropagation(); onClick(e); }}
+          aria-label={title}
           className={cn("p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5 transition-colors", className)}
         >
           {icon}

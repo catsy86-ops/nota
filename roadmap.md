@@ -51,7 +51,30 @@ Znaleziska z niezależnego audytu kodu. Zrealizowane w sesji porządkowej 2026-0
 - [x] **Braki w testach uzupełnione**: `noteSchema.test.ts` (folderSchema/fullBackupSchema — noteSchema sam już był pokryty w `exportNotes.test.ts`), `useNoteActions.test.ts`, `searchNotes.test.ts`, `wikiLinks.test.ts`, `useNoteVersions.test.ts`, `useImportExport.test.ts`, plus `persistedStore.test.ts` dla nowego modułu współdzielonego. 181/181 testów zielonych.
 - [x] **Realne ostrzeżenia lintera naprawione**: `useGlobalShortcuts.ts` (6 efektów), `allNotesForLinks` w `Index.tsx` (`useMemo`), stale closure w `AddNoteBar.tsx` (`handleClose` pomijał `checklist`/`priority` w zależnościach — realny bug), analogicznie `DrawingCanvas.tsx`. Lint: 41 → 9 ostrzeżeń (reszta to nieszkodliwy szum `react-refresh`/wendorowany `use-toast.ts`).
 - **Duże komponenty do ewentualnego podziału (nie zrobione)**: `SettingsDialog.tsx` (~600 linii po dodaniu zakładki Sync), `NoteCard.tsx` (510 linii, 20 propsów przy jednoczesnym korzystaniu z kontekstu — niespójny wzorzec przepływu danych). Odłożone — wyższe ryzyko/koszt niż pozostałe punkty, do osobnej sesji jeśli będzie potrzeba.
-- **Dormant**: `offlineQueue.ts`/`OfflineQueuePanel.tsx` (kolejka offline) przestały być zasilane po przejściu notatek na Yjs+IndexedDB (Faza 1 sync) — panel zawsze pokazuje 0 oczekujących zmian. Plik i testy nietknięte; do decyzji: usunąć panel czy przepiąć go pod status Yjs.
+- [x] **Dormant panel naprawiony** — `OfflineQueuePanel.tsx`/`OfflineStatus.tsx` przepięte z martwej kolejki (`offlineQueue.ts`, nieużywanej do zapisu notatek od Fazy 1 Yjs) na realny status: połączenie sieciowe, potwierdzenie że IndexedDB zapisuje natychmiast (bez kolejki) oraz status P2P sync (`yjsSync.ts` — status/liczba urządzeń). `offlineQueue.ts` i jego testy zostają nietknięte (moduł nieużywany, do ew. usunięcia w osobnej sesji).
+
+## Audyt agentowy — 2026-09-25 (architektura + UX)
+
+### Architektura / kod
+
+- [x] **Usunąć `offlineQueue.ts`** (+ test) — usunięty razem z jedynym żywym konsumentem (`QUEUE_DATA_LOST_EVENT` listener w `src/main.tsx`, sam nigdy nie wystrzeliwał bo queue nie było zasilane). Typecheck/lint/156 testów zielone.
+- [x] **Usunąć `noteSync.ts`** (BroadcastChannel cross-tab sync) — usunięty razem z własnym testem; był martwy poza tym testem.
+- [ ] **`NoteCard.tsx` (510 linii, 20 propsów)** — przenieść mutatory (`onUpdate`, `onDelete`, `onTogglePin`, `onArchive`, `onUnarchive`, `onDuplicate`, `onMoveToFolder`) z propsów na `useNotesContext()`, zostawić jako propsy tylko dane specyficzne dla renderu (index, dnd, selection, knownTitles, historia wersji).
+- [ ] **`SettingsDialog.tsx` (571 linii)** — podzielić na zakładki jako osobne pliki, kontynuując wzorzec z `SyncSettings.tsx`.
+- [x] **`SeasonalBackdrop.tsx`** — był w pełni gotowy (self-gating na `seasonalTheme`+`snow` z `effectsSettings.ts`), tylko niepodpięty. Zamontowany globalnie w `App.tsx` obok `OfflineStatus`, analogicznie do wcześniejszego FocusMode/NotePresentation.
+- [ ] **Widoczny sygnał, że obrazy nie synchronizują się P2P** między urządzeniami (asymetria: notatka syncuje się, obraz nie) — dodać info w `SyncSettings.tsx`/`NoteCard.tsx`.
+- Niżej priorytetowe: test integracyjny merge'a Yjs bez mocka WebRTC; jeden kanał na błędy sync/persist zamiast rozproszonych `console.error`/toastów; ESLint import-boundary żeby żaden komponent UI nie importował `yjs`/`y-indexeddb` bezpośrednio poza `useNotes`/`NotesProvider`.
+
+### UX / funkcjonalność
+
+- [x] **`aria-label` na przyciskach-ikonach** — naprawiono najgłośniejsze luki: wspólny `ActionBtn` w `NoteCard.tsx` (Pin/Kolor/Archiwizuj/Usuń/Więcej/Rysuj/Duplikuj/Prezentacja — 8+ użyć jednym miejscem), przyciski usuwania obrazka w `NoteCard.tsx`/`AddNoteBar.tsx`, przycisk usuwania przypomnienia w `AddNoteBar.tsx`. Reszta apki (inne komponenty) nietknięta — do ew. kolejnej sesji jeśli znajdą się kolejne luki.
+- [x] **Silent failure przy obrazach >2MB naprawiony** — w `NoteCard.tsx` i `AddNoteBar.tsx` pominięte pliki (za duże) teraz zgłaszają `toast.error` z liczbą pominiętych obrazków, zamiast cichego `continue`.
+- [ ] **`aria-live` dla zmian stanu** (dodanie/usunięcie notatki, zapis wersji, błąd importu) poza istniejącym `OfflineStatus.tsx`.
+- [ ] **Toast „Cofnij” bezpośrednio po usunięciu/archiwizacji** notatki, zamiast tylko przez kosz/historię akcji.
+- [ ] **Walidacja dat przeszłych w przypomnieniach** (`QuickReminderInput`/`ReminderPicker`) — ustawienie przypomnienia w przeszłości powinno być zablokowane/ostrzeżone.
+- [ ] **„Brak wyników” w wyszukiwarce/Command Palette z CTA** „utwórz notatkę o tej nazwie”.
+- [ ] **Jaśniejsza komunikacja P2P sync w UI** — że to peer-to-peer (nie chmura) i że oba urządzenia muszą być online jednocześnie.
+- Niżej priorytetowe: alternatywa dla drag&drop na mobile (menu „Przenieś w górę/dół”), widoczna lista skrótów klawiszowych (cheat-sheet), rozróżnienie pustego stanu „brak notatek” vs „brak wyników filtra” (zweryfikować czy już jest), focus trap/return w custom fullscreen (`DrawingCanvas`, `NotePresentation`).
 
 ### Priorytetyzacja
 

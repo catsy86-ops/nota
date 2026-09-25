@@ -17,6 +17,7 @@ import { FormatToolbar } from "./MarkdownRenderer";
 import { PriorityPicker } from "./PriorityPicker";
 import type { NotePriority } from "@/lib/notePriority";
 import { QuickReminderInput } from "./QuickReminderInput";
+import { toast } from "sonner";
 
 interface AddNoteBarProps {
   onAdd: (title: string, content: string, color: NoteColor, labels: string[], reminder: number | null, images: string[], checklist: ChecklistItem[], priority: NotePriority) => void;
@@ -102,10 +103,14 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files) return;
+    let skipped = 0;
     for (const file of Array.from(files)) {
-      if (file.size > 2 * 1024 * 1024) continue;
+      if (file.size > 2 * 1024 * 1024) { skipped++; continue; }
       const base64 = await fileToBase64(file);
       setImages((prev) => [...prev, base64]);
+    }
+    if (skipped > 0) {
+      toast.error(skipped === 1 ? "Obrazek jest za duży (max 2 MB)" : `${skipped} obrazków jest za dużych (max 2 MB)`);
     }
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
@@ -154,6 +159,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                     <img src={img} alt="" className="w-16 h-16 object-cover rounded-lg" />
                     <button
                       onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
+                      aria-label="Usuń obrazek"
                       className="absolute -top-1.5 -right-1.5 p-0.5 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover/img:opacity-100 transition-opacity"
                     >
                       <X className="w-2.5 h-2.5" />
@@ -177,7 +183,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
               <div className="flex items-center gap-1 text-xs text-primary">
                 <Bell className="w-3 h-3" />
                 {format(new Date(reminder), "d MMM, HH:mm", { locale: pl })}
-                <button onClick={() => setReminder(null)} className="ml-1 text-muted-foreground hover:text-foreground">×</button>
+                <button onClick={() => setReminder(null)} aria-label="Usuń przypomnienie" className="ml-1 text-muted-foreground hover:text-foreground">×</button>
               </div>
             )}
 
