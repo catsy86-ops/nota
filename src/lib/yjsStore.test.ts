@@ -167,6 +167,30 @@ describe("yjsStore — tombstones", () => {
   });
 });
 
+describe("yjsStore — garbage collection", () => {
+  it("deleting most notes shrinks the encoded doc size instead of retaining dead content forever", () => {
+    // Y.Doc defaults to gc:true (never overridden in createYjsStore) — this
+    // pins down that the default actually reclaims space for this app's data
+    // shape, so the "unbounded growth" backlog concern doesn't need a custom
+    // compaction routine on top of it. See roadmap.md.
+    const store = createYjsStore(`gc-${crypto.randomUUID()}`);
+    for (let i = 0; i < 200; i++) {
+      store.upsertNote(makeNote({ id: `n${i}`, content: "x".repeat(2000) }));
+    }
+    const sizeBefore = Y.encodeStateAsUpdate(store.doc).byteLength;
+
+    for (let i = 0; i < 190; i++) store.removeNote(`n${i}`);
+    const sizeAfterDelete = Y.encodeStateAsUpdate(store.doc).byteLength;
+    expect(sizeAfterDelete).toBeLessThan(sizeBefore / 5);
+
+    // Also holds for a fresh device merging in that already-trimmed state.
+    const peer = createYjsStore(`gc-peer-${crypto.randomUUID()}`);
+    Y.applyUpdate(peer.doc, Y.encodeStateAsUpdate(store.doc));
+    expect(Y.encodeStateAsUpdate(peer.doc).byteLength).toBeLessThanOrEqual(sizeAfterDelete);
+    expect(peer.projectNotes()).toHaveLength(10);
+  });
+});
+
 describe("yjsStore — migration from the legacy idb-keyval store", () => {
   it("copies existing notes/folders/labels into the Yjs doc without loss", async () => {
     await saveNotesIDB([
