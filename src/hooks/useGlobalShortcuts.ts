@@ -12,6 +12,7 @@ export interface GlobalShortcutHandlers {
   onCloseSidebar: () => void;
   isSidebarOpen: () => boolean;
   onOpenShortcuts: () => void;
+  onTogglePalette: () => void;
 }
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -103,6 +104,20 @@ export function useGlobalShortcuts(handlers: GlobalShortcutHandlers) {
       if (isTypingTarget(e.target)) return;
       e.preventDefault();
       handlers.onUndo();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [handlers]);
+
+  // Ctrl/Cmd+K — toggle the command palette. Kept here (rather than inside
+  // CommandPalette itself) so the shortcut works even before the palette's
+  // own lazy-loaded chunk has ever been mounted.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        handlers.onTogglePalette();
+      }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

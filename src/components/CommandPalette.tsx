@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { StickyNote, Archive, Bell, Trash, Plus, Moon, Sparkles, Trophy, Calendar, Brain, Keyboard } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
@@ -39,17 +39,6 @@ export function CommandPalette({
   onOpenShortcuts,
 }: Props) {
   const [search, setSearch] = useState("");
-
-  useEffect(() => {
-    function handler(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        onOpenChange(!open);
-      }
-    }
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [open, onOpenChange]);
 
   function run(fn: () => void) {
     onOpenChange(false);

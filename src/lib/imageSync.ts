@@ -1,5 +1,5 @@
 import * as Y from "yjs";
-import { WebrtcProvider } from "y-webrtc";
+import type { WebrtcProvider } from "y-webrtc";
 import { yjsStore } from "@/lib/yjsStore";
 import { roomNameFor } from "@/lib/yjsSync";
 
@@ -37,6 +37,9 @@ let provider: WebrtcProvider | null = null;
 let blobs: Y.Map<string> | null = null;
 let unobserveBlobs: (() => void) | null = null;
 let unobserveNotes: (() => void) | null = null;
+// Bumped on every startImageSync()/stopImageSync() so a dynamic
+// import("y-webrtc") still in flight from a superseded call backs off.
+let startToken = 0;
 
 function mirrorLocalImages() {
   if (!blobs) return;
@@ -75,30 +78,39 @@ function reconcileMissingImages() {
 /** Starts the image transport for a pairing code; safe to call if already started (restarts). */
 export function startImageSync(code: string): void {
   stopImageSync();
-  imagesDoc = new Y.Doc();
-  blobs = imagesDoc.getMap<string>("blobs");
-  provider = new WebrtcProvider(`${roomNameFor(code)}-img`, imagesDoc, { password: code });
+  const token = ++startToken;
+  const doc = new Y.Doc();
+  imagesDoc = doc;
+  const blobsMap = doc.getMap<string>("blobs");
+  blobs = blobsMap;
 
   const onBlobsChange = () => reconcileMissingImages();
-  blobs.observe(onBlobsChange);
-  unobserveBlobs = () => blobs?.unobserve(onBlobsChange);
+  blobsMap.observe(onBlobsChange);
+  unobserveBlobs = () => blobsMap.unobserve(onBlobsChange);
 
   const onNotesChange = () => { mirrorLocalImages(); reconcileMissingImages(); };
   yjsStore.notesMap.observeDeep(onNotesChange);
   unobserveNotes = () => yjsStore.notesMap.unobserveDeep(onNotesChange);
 
-  provider.on("peers", () => {
-    // A peer (re)joined — resend our full local set so it can backfill
-    // images it missed while offline, and check if it has ones we're missing.
-    mirrorLocalImages();
-    reconcileMissingImages();
-  });
-
   mirrorLocalImages();
   reconcileMissingImages();
+
+  // Same eager-bundle concern as yjsSync.ts's connect() — defer y-webrtc
+  // itself until a sync session is actually starting.
+  import("y-webrtc").then(({ WebrtcProvider }) => {
+    if (token !== startToken) return; // superseded by a later start/stop
+    provider = new WebrtcProvider(`${roomNameFor(code)}-img`, doc, { password: code });
+    provider.on("peers", () => {
+      // A peer (re)joined — resend our full local set so it can backfill
+      // images it missed while offline, and check if it has ones we're missing.
+      mirrorLocalImages();
+      reconcileMissingImages();
+    });
+  });
 }
 
 export function stopImageSync(): void {
+  startToken++;
   unobserveBlobs?.();
   unobserveBlobs = null;
   unobserveNotes?.();

@@ -41,6 +41,15 @@ const { MockProvider, providerInstances } = vi.hoisted(() => {
 
 vi.mock("y-webrtc", () => ({ WebrtcProvider: MockProvider }));
 
+// startImageSync() now loads y-webrtc via dynamic import() so it's out of the
+// eager main bundle — even mocked, that's still a real Promise tick before
+// the provider exists. Wait for it instead of asserting synchronously.
+async function waitForProvider(): Promise<void> {
+  await vi.waitFor(() => {
+    if (providerInstances.length === 0) throw new Error("provider not connected yet");
+  });
+}
+
 function makeNote(overrides: Partial<Note> = {}): Note {
   return {
     id: "1", title: "Tytuł", content: "Treść", color: "default",
@@ -61,18 +70,19 @@ beforeEach(async () => {
 });
 
 describe("imageSync", () => {
-  it("mirrors a locally-owned image into the transport doc's blobs map, keyed by content hash", () => {
+  it("mirrors a locally-owned image into the transport doc's blobs map, keyed by content hash", async () => {
     const base64 = "data:image/png;base64,AAAA";
     yjsStore.upsertNote(makeNote({ id: "n1", images: [base64] }));
 
     startImageSync("TESTCODE");
+    await waitForProvider();
     const transport = providerInstances[0];
     const blobs = transport.doc.getMap<string>("blobs");
 
     expect(blobs.get(hashImage(base64))).toBe(base64);
   });
 
-  it("fills in a note's missing image once a matching hash appears in the transport doc (simulated peer)", () => {
+  it("fills in a note's missing image once a matching hash appears in the transport doc (simulated peer)", async () => {
     const base64 = "data:image/png;base64,BBBB";
     const hash = hashImage(base64);
 
@@ -84,6 +94,7 @@ describe("imageSync", () => {
 
     startImageSync("TESTCODE");
     expect(yjsStore.getLocalImages("n1")).toEqual([]);
+    await waitForProvider();
 
     // A peer sends the blob — arrives as a change on the shared transport Y.Map.
     const transport = providerInstances[0];
@@ -92,11 +103,12 @@ describe("imageSync", () => {
     expect(yjsStore.getLocalImages("n1")).toEqual([base64]);
   });
 
-  it("does not touch notes whose local images already match their manifest", () => {
+  it("does not touch notes whose local images already match their manifest", async () => {
     const base64 = "data:image/png;base64,CCCC";
     yjsStore.upsertNote(makeNote({ id: "n1", images: [base64] }));
 
     startImageSync("TESTCODE");
+    await waitForProvider();
     const transport = providerInstances[0];
     // A (harmless, identical) blob arrives for the same hash — already have it.
     transport.doc.getMap<string>("blobs").set(hashImage(base64), base64);
@@ -104,13 +116,14 @@ describe("imageSync", () => {
     expect(yjsStore.getLocalImages("n1")).toEqual([base64]);
   });
 
-  it("stopImageSync destroys the transport and stops reacting to further changes", () => {
+  it("stopImageSync destroys the transport and stops reacting to further changes", async () => {
     const base64 = "data:image/png;base64,DDDD";
     const hash = hashImage(base64);
     yjsStore.upsertNote(makeNote({ id: "n1", images: [] }));
     yjsStore.notesMap.get("n1")!.set("imageHashes", [hash]);
 
     startImageSync("TESTCODE");
+    await waitForProvider();
     const transport = providerInstances[0];
     stopImageSync();
     expect(transport.destroyed).toBe(true);

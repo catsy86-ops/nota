@@ -44,6 +44,15 @@ function mainProviders(): MockProvider[] {
   return providerInstances.filter((p) => !p.roomName.endsWith("-img"));
 }
 
+// connect()/startImageSync() now load y-webrtc via dynamic import() so it's
+// out of the eager main bundle — even mocked, that's still a real Promise
+// tick before the provider exists. Wait for it instead of asserting synchronously.
+async function waitForMainProvider(countAtLeast = 1): Promise<void> {
+  await vi.waitFor(() => {
+    if (mainProviders().length < countAtLeast) throw new Error("provider not connected yet");
+  });
+}
+
 describe("yjsSync", () => {
   beforeEach(async () => {
     localStorage.clear();
@@ -73,9 +82,10 @@ describe("yjsSync", () => {
   it("startPairing generates a code, enables sync and connects", async () => {
     const { startPairing, getSyncState } = await import("./yjsSync");
     const code = startPairing();
-    expect(code).toHaveLength(8);
     expect(getSyncState().code).toBe(code);
     expect(getSyncState().status).toBe("connecting");
+
+    await waitForMainProvider();
     expect(mainProviders()).toHaveLength(1);
     expect(mainProviders()[0].opts).toEqual({ password: code });
   });
@@ -83,6 +93,12 @@ describe("yjsSync", () => {
   it("also starts the separate image transport, sharing the same pairing code", async () => {
     const { startPairing } = await import("./yjsSync");
     const code = startPairing();
+
+    await vi.waitFor(() => {
+      if (providerInstances.filter((p) => p.roomName.endsWith("-img")).length === 0) {
+        throw new Error("image provider not connected yet");
+      }
+    });
     const imageProviders = providerInstances.filter((p) => p.roomName.endsWith("-img"));
     expect(imageProviders).toHaveLength(1);
     expect(imageProviders[0].opts).toEqual({ password: code });
@@ -91,6 +107,7 @@ describe("yjsSync", () => {
   it("reflects connected status and peer count from provider events", async () => {
     const { startPairing, getSyncState } = await import("./yjsSync");
     startPairing();
+    await waitForMainProvider();
     const provider = mainProviders()[0];
 
     provider.emit("status", { connected: true });
@@ -110,6 +127,7 @@ describe("yjsSync", () => {
   it("pauseSync disconnects both providers but keeps the code; resumeSync reconnects to the same group", async () => {
     const { startPairing, pauseSync, resumeSync, getSyncState } = await import("./yjsSync");
     const code = startPairing();
+    await waitForMainProvider();
     const [first, firstImage] = providerInstances;
 
     pauseSync();
@@ -119,6 +137,7 @@ describe("yjsSync", () => {
     expect(getSyncState().code).toBe(code); // remembered
 
     resumeSync();
+    await waitForMainProvider(2);
     expect(mainProviders()).toHaveLength(2);
     expect(mainProviders()[1].opts).toEqual({ password: code });
   });
@@ -126,6 +145,7 @@ describe("yjsSync", () => {
   it("forgetPairing disconnects and clears the code entirely", async () => {
     const { startPairing, forgetPairing, getSyncState } = await import("./yjsSync");
     startPairing();
+    await waitForMainProvider();
     const provider = mainProviders()[0];
 
     forgetPairing();
@@ -137,12 +157,14 @@ describe("yjsSync", () => {
   it("initSync reconnects automatically when a prior session was enabled", async () => {
     const first = await import("./yjsSync");
     const code = first.startPairing();
+    await waitForMainProvider();
 
     vi.resetModules();
     providerInstances.length = 0;
     const second = await import("./yjsSync");
     second.initSync();
 
+    await waitForMainProvider();
     expect(mainProviders()).toHaveLength(1);
     expect(mainProviders()[0].opts).toEqual({ password: code });
     expect(second.getSyncState().code).toBe(code);

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { WebrtcProvider } from "y-webrtc";
+import type { WebrtcProvider } from "y-webrtc";
 import { yjsStore } from "@/lib/yjsStore";
 import { startImageSync, stopImageSync } from "@/lib/imageSync";
 
@@ -52,6 +52,9 @@ const DEFAULT_STATE: SyncState = { status: "disabled", peerCount: 0, code: null 
 
 let state: SyncState = { ...DEFAULT_STATE, code: readPrefs().code };
 let provider: WebrtcProvider | null = null;
+// Bumped on every connect()/disconnectProvider() so a dynamic import("y-webrtc")
+// still in flight from a superseded call can tell it's stale and back off.
+let connectToken = 0;
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -104,18 +107,26 @@ function setState(patch: Partial<SyncState>) {
 
 function connect(code: string) {
   disconnectProvider();
+  const token = ++connectToken;
   setState({ status: "connecting", peerCount: 0, code });
-  provider = new WebrtcProvider(roomNameFor(code), yjsStore.doc, { password: code });
-  provider.on("status", ({ connected }: { connected: boolean }) => {
-    setState({ status: connected ? "connected" : "connecting" });
-  });
-  provider.on("peers", ({ webrtcPeers, bcPeers }: { webrtcPeers: string[]; bcPeers: string[] }) => {
-    setState({ peerCount: webrtcPeers.length + bcPeers.length });
+  // y-webrtc is ~the heaviest dep in the app but sync is opt-in and off by
+  // default — load it only once a connection is actually requested, instead
+  // of forcing it into the eager main bundle for every visitor.
+  import("y-webrtc").then(({ WebrtcProvider }) => {
+    if (token !== connectToken) return; // superseded by a later connect()/disconnect()
+    provider = new WebrtcProvider(roomNameFor(code), yjsStore.doc, { password: code });
+    provider.on("status", ({ connected }: { connected: boolean }) => {
+      setState({ status: connected ? "connected" : "connecting" });
+    });
+    provider.on("peers", ({ webrtcPeers, bcPeers }: { webrtcPeers: string[]; bcPeers: string[] }) => {
+      setState({ peerCount: webrtcPeers.length + bcPeers.length });
+    });
   });
   startImageSync(code);
 }
 
 function disconnectProvider() {
+  connectToken++;
   provider?.destroy();
   provider = null;
   stopImageSync();

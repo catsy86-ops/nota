@@ -29,13 +29,7 @@ import { fireworks, megaCelebrate, celebrate } from "@/lib/celebrate";
 import { glowPulse, glowStreak, centerOf, pointOfNote } from "@/lib/glowTrail";
 import { SearchBar } from "@/components/SearchBar";
 import { useAchievementTracker } from "@/lib/achievements";
-import { CommandPalette } from "@/components/CommandPalette";
-// recharts (used only inside StatsDialog) is one of the heaviest deps in the
-// app but rarely opened — kept out of the eager main bundle.
-const StatsDialog = lazy(() => import("@/components/StatsDialog").then((m) => ({ default: m.StatsDialog })));
 import { ShortcutsDialog } from "@/components/ShortcutsDialog";
-import { NotePresentation } from "@/components/NotePresentation";
-import { FocusMode } from "@/components/FocusMode";
 import { DailyQuote } from "@/components/DailyQuote";
 import { AnimatedBackdrop } from "@/components/AnimatedBackdrop";
 import { QuickTemplates } from "@/components/QuickTemplates";
@@ -45,6 +39,14 @@ import { registerUndoHandlers, undoLastAction } from "@/lib/actionHistory";
 import { BottomNav } from "@/components/BottomNav";
 import { RecentActionsPanel } from "@/components/RecentActionsPanel";
 import { OnboardingTour } from "@/components/OnboardingTour";
+
+// Dialogs that aren't part of the initial view (opened via keyboard shortcut,
+// note action or explicit toggle) — kept out of the eager main bundle so
+// first load only pays for the code the note grid itself needs.
+const CommandPalette = lazy(() => import("@/components/CommandPalette").then((m) => ({ default: m.CommandPalette })));
+const StatsDialog = lazy(() => import("@/components/StatsDialog").then((m) => ({ default: m.StatsDialog })));
+const NotePresentation = lazy(() => import("@/components/NotePresentation").then((m) => ({ default: m.NotePresentation })));
+const FocusMode = lazy(() => import("@/components/FocusMode").then((m) => ({ default: m.FocusMode })));
 
 const Index = () => {
   const {
@@ -139,6 +141,7 @@ const Index = () => {
     onCloseSidebar: () => setSidebarOpen(false),
     isSidebarOpen: () => sidebarOpen,
     onOpenShortcuts: () => setShortcutsOpen(true),
+    onTogglePalette: () => setPaletteOpen((o) => !o),
   });
 
   const { handleImport } = useImportExport(importNotes, addNote);
@@ -408,19 +411,23 @@ const Index = () => {
       </div>
     </div>
 
-    <CommandPalette
-      open={paletteOpen}
-      onOpenChange={setPaletteOpen}
-      notes={[...notes, ...archivedNotes]}
-      onOpenNote={() => { setView("notes"); }}
-      onNewNote={expandAddNote}
-      onGo={(v) => { setView(v); setActiveLabel(null); }}
-      onToggleTheme={toggleTheme}
-      onOpenSettings={() => setSettingsOpen(true)}
-      onOpenStats={() => setStatsOpen(true)}
-      onOpenFocusMode={() => setFocusModeOpen(true)}
-      onOpenShortcuts={() => setShortcutsOpen(true)}
-    />
+    {paletteOpen && (
+      <Suspense fallback={null}>
+        <CommandPalette
+          open={paletteOpen}
+          onOpenChange={setPaletteOpen}
+          notes={[...notes, ...archivedNotes]}
+          onOpenNote={() => { setView("notes"); }}
+          onNewNote={expandAddNote}
+          onGo={(v) => { setView(v); setActiveLabel(null); }}
+          onToggleTheme={toggleTheme}
+          onOpenSettings={() => setSettingsOpen(true)}
+          onOpenStats={() => setStatsOpen(true)}
+          onOpenFocusMode={() => setFocusModeOpen(true)}
+          onOpenShortcuts={() => setShortcutsOpen(true)}
+        />
+      </Suspense>
+    )}
     {statsOpen && (
       <Suspense fallback={null}>
         <StatsDialog
@@ -434,17 +441,25 @@ const Index = () => {
       </Suspense>
     )}
     <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
-    <NotePresentation
-      noteId={presentingNoteId}
-      notes={allNotesForLinks}
-      onOpenChange={(v) => { if (!v) setPresentingNoteId(null); }}
-      onNavigate={setPresentingNoteId}
-    />
-    <FocusMode
-      open={focusModeOpen}
-      onOpenChange={setFocusModeOpen}
-      onSave={(title, content) => { addNote(title, content); toast.success("Zapisano notatkę 🧠"); }}
-    />
+    {presentingNoteId && (
+      <Suspense fallback={null}>
+        <NotePresentation
+          noteId={presentingNoteId}
+          notes={allNotesForLinks}
+          onOpenChange={(v) => { if (!v) setPresentingNoteId(null); }}
+          onNavigate={setPresentingNoteId}
+        />
+      </Suspense>
+    )}
+    {focusModeOpen && (
+      <Suspense fallback={null}>
+        <FocusMode
+          open={focusModeOpen}
+          onOpenChange={setFocusModeOpen}
+          onSave={(title, content) => { addNote(title, content); toast.success("Zapisano notatkę 🧠"); }}
+        />
+      </Suspense>
+    )}
     <BottomNav
       view={view}
       onGo={(v) => { setView(v); setActiveLabel(null); }}
