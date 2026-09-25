@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { StickyNote, Archive, Bell, Trash, Calendar } from "lucide-react";
@@ -30,7 +30,9 @@ import { glowPulse, glowStreak, centerOf, pointOfNote } from "@/lib/glowTrail";
 import { SearchBar } from "@/components/SearchBar";
 import { useAchievementTracker } from "@/lib/achievements";
 import { CommandPalette } from "@/components/CommandPalette";
-import { StatsDialog } from "@/components/StatsDialog";
+// recharts (used only inside StatsDialog) is one of the heaviest deps in the
+// app but rarely opened — kept out of the eager main bundle.
+const StatsDialog = lazy(() => import("@/components/StatsDialog").then((m) => ({ default: m.StatsDialog })));
 import { ShortcutsDialog } from "@/components/ShortcutsDialog";
 import { NotePresentation } from "@/components/NotePresentation";
 import { FocusMode } from "@/components/FocusMode";
@@ -216,6 +218,27 @@ const Index = () => {
     moveNoteToFolder(id, folderId);
   }, [moveNoteToFolder]);
 
+  // Entry points from manifest.webmanifest: home-screen "Nowa notatka" shortcut
+  // (?new=1) and Web Share Target (?share-title/-text/-url=, from "Share" on
+  // another app once KACZY is installed).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shareTitle = params.get("share-title");
+    const shareText = params.get("share-text");
+    const shareUrl = params.get("share-url");
+    if (shareTitle || shareText || shareUrl) {
+      const content = [shareText, shareUrl].filter(Boolean).join("\n");
+      handleAddNoteGlow(shareTitle ?? "", content);
+      toast.success("Notatka utworzona z udostępnionej treści");
+      window.history.replaceState(null, "", window.location.pathname);
+    } else if (params.get("new")) {
+      expandAddNote();
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+    // Intentionally once on mount: reads the URL this load started with.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const totalNotes = notes.length + archivedNotes.length;
   const remindersCount = notes.filter((n) => n.reminder).length;
   const handleDelete = view === "trash" ? deleteNote : handleTrashSingle;
@@ -398,14 +421,18 @@ const Index = () => {
       onOpenFocusMode={() => setFocusModeOpen(true)}
       onOpenShortcuts={() => setShortcutsOpen(true)}
     />
-    <StatsDialog
-      open={statsOpen}
-      onOpenChange={setStatsOpen}
-      notes={notes}
-      archivedNotes={archivedNotes}
-      allLabels={allLabels}
-      folders={folders}
-    />
+    {statsOpen && (
+      <Suspense fallback={null}>
+        <StatsDialog
+          open={statsOpen}
+          onOpenChange={setStatsOpen}
+          notes={notes}
+          archivedNotes={archivedNotes}
+          allLabels={allLabels}
+          folders={folders}
+        />
+      </Suspense>
+    )}
     <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     <NotePresentation
       noteId={presentingNoteId}

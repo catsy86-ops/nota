@@ -3,10 +3,12 @@ import { toast } from "sonner";
 import App from "./App.tsx";
 import "./index.css";
 import { registerServiceWorker, applyServiceWorkerUpdate, SW_UPDATE_EVENT } from "./lib/registerSW";
+import { requestPersistentStorage } from "./lib/storagePersistence";
 
 createRoot(document.getElementById("root")!).render(<App />);
 
 registerServiceWorker();
+void requestPersistentStorage();
 
 window.addEventListener(SW_UPDATE_EVENT, (e) => {
   const registration = (e as CustomEvent<ServiceWorkerRegistration>).detail;

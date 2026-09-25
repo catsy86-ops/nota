@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Sparkles, LayoutGrid, Pencil, Database, Wifi } from "lucide-react";
 import { motion } from "framer-motion";
-import { SyncSettings } from "@/components/SyncSettings";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
 import { BackupSettings } from "@/components/settings/BackupSettings";
+
+// qrcode.react (used only here, for device pairing) kept out of the eager
+// main bundle — TabsContent below only mounts this once the Sync tab is active.
+const SyncSettings = lazy(() => import("@/components/SyncSettings").then((m) => ({ default: m.SyncSettings })));
 
 interface SettingsDialogProps {
   trigger?: React.ReactNode;
@@ -82,7 +85,9 @@ export function SettingsDialog({ trigger, open, onOpenChange }: SettingsDialogPr
             </TabsContent>
 
             <TabsContent value="sync" className="mt-0">
-              <SyncSettings prefillCode={joinPrefill} />
+              <Suspense fallback={null}>
+                <SyncSettings prefillCode={joinPrefill} />
+              </Suspense>
             </TabsContent>
           </div>
         </Tabs>

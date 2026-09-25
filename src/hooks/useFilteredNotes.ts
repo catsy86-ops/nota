@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import type { Note, Folder } from "@/hooks/useNotes";
 import { getDescendantFolderIds } from "@/hooks/useNotes";
 import type { ViewPrefs } from "@/lib/viewPrefs";
@@ -64,23 +65,29 @@ function sortNotes(list: Note[], prefs: ViewPrefs): Note[] {
 
 /** Pure filter/sort pipeline: view + label/folder + prefs + search + sort, split into pinned/others. */
 export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs }: FilterArgs) {
-  const baseNotes = view === "archive"
-    ? filterNotes(archivedNotes, { view, activeLabel, activeFolder, folders, search })
-    : view === "trash"
-      ? trashedNotes
-      : filterNotes(notes, { view, activeLabel, activeFolder, folders, search });
+  // Search rebuilds a fresh Fuse index over the filtered pool on every call —
+  // fine for hundreds of notes, but worth memoizing so it only reruns when
+  // an input actually changes, not on every unrelated re-render (typing
+  // elsewhere, a note being edited, etc.).
+  return useMemo(() => {
+    const baseNotes = view === "archive"
+      ? filterNotes(archivedNotes, { view, activeLabel, activeFolder, folders, search })
+      : view === "trash"
+        ? trashedNotes
+        : filterNotes(notes, { view, activeLabel, activeFolder, folders, search });
 
-  const filteredByPrefs = view === "trash" ? baseNotes : baseNotes.filter((n) => {
-    if (prefs.filterColor !== "all" && n.color !== prefs.filterColor) return false;
-    if (prefs.filterLabel !== "all" && !n.labels.includes(prefs.filterLabel)) return false;
-    if (prefs.filterHasReminder && !n.reminder) return false;
-    if (prefs.filterPriority !== "all" && (n.priority ?? "none") !== prefs.filterPriority) return false;
-    return true;
-  });
+    const filteredByPrefs = view === "trash" ? baseNotes : baseNotes.filter((n) => {
+      if (prefs.filterColor !== "all" && n.color !== prefs.filterColor) return false;
+      if (prefs.filterLabel !== "all" && !n.labels.includes(prefs.filterLabel)) return false;
+      if (prefs.filterHasReminder && !n.reminder) return false;
+      if (prefs.filterPriority !== "all" && (n.priority ?? "none") !== prefs.filterPriority) return false;
+      return true;
+    });
 
-  const displayNotes = sortNotes(filteredByPrefs, prefs);
-  const pinned = view === "trash" ? [] : displayNotes.filter((n) => n.pinned);
-  const others = view === "trash" ? displayNotes : displayNotes.filter((n) => !n.pinned);
+    const displayNotes = sortNotes(filteredByPrefs, prefs);
+    const pinned = view === "trash" ? [] : displayNotes.filter((n) => n.pinned);
+    const others = view === "trash" ? displayNotes : displayNotes.filter((n) => !n.pinned);
 
-  return { displayNotes, pinned, others };
+    return { displayNotes, pinned, others };
+  }, [notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs]);
 }

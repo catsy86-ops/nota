@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { renderHook } from "@testing-library/react";
 import { useFilteredNotes } from "./useFilteredNotes";
 import type { Note, Folder } from "@/hooks/useNotes";
 import type { ViewPrefs } from "@/lib/viewPrefs";
@@ -64,30 +65,31 @@ describe("useFilteredNotes", () => {
       makeNote({ id: "new", updatedAt: 2 }),
       makeNote({ id: "pinned", pinned: true, updatedAt: 0 }),
     ];
-    const { pinned, others } = useFilteredNotes({
+    const { result } = renderHook(() => useFilteredNotes({
       notes, archivedNotes: [], trashedNotes: [], folders, view: "notes",
       activeLabel: null, activeFolder: null, search: "", prefs: basePrefs,
-    });
+    }));
+    const { pinned, others } = result.current;
     expect(pinned.map((n) => n.id)).toEqual(["pinned"]);
     expect(others.map((n) => n.id)).toEqual(["new", "old"]);
   });
 
   it("filters by label only in the 'label' view", () => {
     const notes = [makeNote({ id: "a", labels: ["dom"] }), makeNote({ id: "b", labels: [] })];
-    const { displayNotes } = useFilteredNotes({
+    const { result } = renderHook(() => useFilteredNotes({
       notes, archivedNotes: [], trashedNotes: [], folders, view: "label",
       activeLabel: "dom", activeFolder: null, search: "", prefs: basePrefs,
-    });
-    expect(displayNotes.map((n) => n.id)).toEqual(["a"]);
+    }));
+    expect(result.current.displayNotes.map((n) => n.id)).toEqual(["a"]);
   });
 
   it("filters to notes with a reminder in the 'reminders' view", () => {
     const notes = [makeNote({ id: "with", reminder: 123 }), makeNote({ id: "without" })];
-    const { displayNotes } = useFilteredNotes({
+    const { result } = renderHook(() => useFilteredNotes({
       notes, archivedNotes: [], trashedNotes: [], folders, view: "reminders",
       activeLabel: null, activeFolder: null, search: "", prefs: basePrefs,
-    });
-    expect(displayNotes.map((n) => n.id)).toEqual(["with"]);
+    }));
+    expect(result.current.displayNotes.map((n) => n.id)).toEqual(["with"]);
   });
 
   it("filters to today's notes in the 'today' view", () => {
@@ -95,20 +97,21 @@ describe("useFilteredNotes", () => {
       makeNote({ id: "today", createdAt: new Date(2026, 2, 10, 8).getTime() }),
       makeNote({ id: "yesterday", createdAt: new Date(2026, 2, 9, 8).getTime() }),
     ];
-    const { displayNotes } = useFilteredNotes({
+    const { result } = renderHook(() => useFilteredNotes({
       notes, archivedNotes: [], trashedNotes: [], folders, view: "today",
       activeLabel: null, activeFolder: null, search: "", prefs: basePrefs,
-    });
-    expect(displayNotes.map((n) => n.id)).toEqual(["today"]);
+    }));
+    expect(result.current.displayNotes.map((n) => n.id)).toEqual(["today"]);
   });
 
   it("uses trashedNotes as-is for the 'trash' view, ignoring pin/prefs filters", () => {
     const trashedNotes = [makeNote({ id: "t1", pinned: true, color: "coral" })];
-    const { pinned, others, displayNotes } = useFilteredNotes({
+    const { result } = renderHook(() => useFilteredNotes({
       notes: [], archivedNotes: [], trashedNotes, folders, view: "trash",
       activeLabel: null, activeFolder: null, search: "",
       prefs: { ...basePrefs, filterColor: "sky" }, // would exclude coral outside trash
-    });
+    }));
+    const { pinned, others, displayNotes } = result.current;
     expect(pinned).toEqual([]);
     expect(others.map((n) => n.id)).toEqual(["t1"]);
     expect(displayNotes.map((n) => n.id)).toEqual(["t1"]);
@@ -116,21 +119,21 @@ describe("useFilteredNotes", () => {
 
   it("applies the color filter pref outside of trash view", () => {
     const notes = [makeNote({ id: "coral", color: "coral" }), makeNote({ id: "sky", color: "sky" })];
-    const { displayNotes } = useFilteredNotes({
+    const { result } = renderHook(() => useFilteredNotes({
       notes, archivedNotes: [], trashedNotes: [], folders, view: "notes",
       activeLabel: null, activeFolder: null, search: "", prefs: { ...basePrefs, filterColor: "sky" },
-    });
-    expect(displayNotes.map((n) => n.id)).toEqual(["sky"]);
+    }));
+    expect(result.current.displayNotes.map((n) => n.id)).toEqual(["sky"]);
   });
 
   it("sorts by title ascending when configured", () => {
     const notes = [makeNote({ id: "b", title: "Banan" }), makeNote({ id: "a", title: "Ananas" })];
-    const { displayNotes } = useFilteredNotes({
+    const { result } = renderHook(() => useFilteredNotes({
       notes, archivedNotes: [], trashedNotes: [], folders, view: "notes",
       activeLabel: null, activeFolder: null, search: "",
       prefs: { ...basePrefs, sortKey: "title", sortDir: "asc" },
-    });
-    expect(displayNotes.map((n) => n.id)).toEqual(["a", "b"]);
+    }));
+    expect(result.current.displayNotes.map((n) => n.id)).toEqual(["a", "b"]);
   });
 
   it("sorts by manually dragged order when sortKey is 'manual', ignoring updatedAt", () => {
@@ -139,12 +142,12 @@ describe("useFilteredNotes", () => {
       makeNote({ id: "first", order: 0, updatedAt: 1 }),
       makeNote({ id: "second", order: 1, updatedAt: 50 }),
     ];
-    const { displayNotes } = useFilteredNotes({
+    const { result } = renderHook(() => useFilteredNotes({
       notes, archivedNotes: [], trashedNotes: [], folders, view: "notes",
       activeLabel: null, activeFolder: null, search: "",
       prefs: { ...basePrefs, sortKey: "manual", sortDir: "desc" },
-    });
-    expect(displayNotes.map((n) => n.id)).toEqual(["first", "second", "third"]);
+    }));
+    expect(result.current.displayNotes.map((n) => n.id)).toEqual(["first", "second", "third"]);
   });
 
   it("manual order stays ascending regardless of sortDir (direction doesn't apply to hand-dragged order)", () => {
@@ -152,11 +155,11 @@ describe("useFilteredNotes", () => {
       makeNote({ id: "first", order: 0 }),
       makeNote({ id: "second", order: 1 }),
     ];
-    const { displayNotes } = useFilteredNotes({
+    const { result } = renderHook(() => useFilteredNotes({
       notes, archivedNotes: [], trashedNotes: [], folders, view: "notes",
       activeLabel: null, activeFolder: null, search: "",
       prefs: { ...basePrefs, sortKey: "manual", sortDir: "asc" },
-    });
-    expect(displayNotes.map((n) => n.id)).toEqual(["first", "second"]);
+    }));
+    expect(result.current.displayNotes.map((n) => n.id)).toEqual(["first", "second"]);
   });
 });

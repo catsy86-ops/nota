@@ -65,9 +65,13 @@ export function useReminderNotifications(
               tag: note.id,
               renotify: true,
             };
-            // Powiadomienia przez rejestrację service workera działają też
-            // gdy karta jest w tle/zamknięta (PWA), w przeciwieństwie do
-            // gołego `new Notification()`, które wymaga żywej strony.
+            // Wyświetlenie samego powiadomienia idzie przez rejestrację SW
+            // (spójniejsze na Androidzie niż gołe `new Notification()`), ale
+            // to nie znaczy, że działa w tle: `check()` niżej to zwykły
+            // setInterval w JS strony — jeśli karta/appka jest zamknięta,
+            // nic go nie odpala, więc przypomnienie i tak nie wystrzeli o
+            // czasie (dogoni je dopiero `<= now` przy następnym otwarciu).
+            // Prawdziwe powiadomienia w tle wymagałyby Web Push + serwera.
             if ("serviceWorker" in navigator) {
               navigator.serviceWorker.ready
                 .then((registration) => registration.showNotification(title, options))

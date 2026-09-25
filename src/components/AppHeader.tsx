@@ -6,7 +6,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { ViewControls } from "@/components/ViewControls";
 import { cn } from "@/lib/utils";
 import { useNotesContext } from "@/hooks/NotesProvider";
-import { exportToJSON, exportToPDF, exportToMarkdown, exportToHTML } from "@/lib/exportNotes";
+import { exportToJSON, exportToMarkdown, exportToHTML } from "@/lib/exportNotes";
 import { markBackup } from "@/lib/backupReminder";
 import { BeerMugLogo } from "@/components/BeerMugLogo";
 import type { View } from "@/hooks/useFilteredNotes";
@@ -138,7 +138,7 @@ export function AppHeader({
                 <FileJson className="w-4 h-4 mr-2" />
                 Eksportuj jako JSON
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => exportToPDF(notes)}>
+              <DropdownMenuItem onClick={() => { import("@/lib/exportPdf").then((m) => m.exportToPDF(notes)); }}>
                 <FileText className="w-4 h-4 mr-2" />
                 Eksportuj jako PDF
               </DropdownMenuItem>

@@ -104,6 +104,9 @@ export function ReminderPicker({ reminder, reminderRepeat, onSet }: ReminderPick
         {pastTime && (
           <p className="text-[10px] text-destructive">Ta godzina już minęła. Wybierz godzinę w przyszłości.</p>
         )}
+        <p className="text-[10px] text-muted-foreground">
+          Działa najpewniej, gdy KACZY zostaje otwarte w tle — bez serwera powiadomień push, zamknięta karta może dostarczyć przypomnienie dopiero po ponownym otwarciu appki.
+        </p>
         <div className="flex gap-2">
           <Button size="sm" onClick={handleSave} disabled={!date || pastTime} className="flex-1">
             Zapisz
