@@ -184,9 +184,8 @@ export function useNotes() {
   }, []);
 
   const reorderNotes = useCallback((activeIds: string[]) => {
-    // `order` isn't currently read by any sort — active/archived/trashed views
-    // are always re-sorted by pinned/updatedAt — so this just persists the
-    // dropped order for future use without touching notes outside activeIds.
+    // Persists the dropped order as `order` on each note; only read back when
+    // the user has sortKey "manual" selected (see useFilteredNotes.ts).
     yjsStore.setNoteOrder(activeIds);
   }, []);
 

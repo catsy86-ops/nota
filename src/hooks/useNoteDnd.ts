@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import type { Folder } from "@/hooks/useNotes";
 import { glowStreak, glowPulse, pointOfNote } from "@/lib/glowTrail";
+import { getViewPrefs, setViewPref } from "@/lib/viewPrefs";
 
 export interface NoteDndDeps {
   displayNoteIds: string[];
@@ -61,6 +62,10 @@ export function useNoteDnd({ displayNoteIds, folders, moveNoteToFolder, reorderN
         newIds.splice(oldIndex, 1);
         newIds.splice(newIndex, 0, active.id as string);
         reorderNotes(newIds);
+        if (getViewPrefs().sortKey !== "manual") {
+          setViewPref("sortKey", "manual");
+          toast.message("Przełączono na sortowanie ręczne", { description: "Kolejność notatek ustalasz teraz przeciąganiem." });
+        }
       }
     }
   }

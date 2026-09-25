@@ -4,7 +4,7 @@ import { createPersistedStore } from "@/lib/persistedStore";
 
 export type Density = "compact" | "cozy" | "comfy";
 export type Layout = "masonry" | "grid" | "list";
-export type SortKey = "updated" | "created" | "title" | "color" | "priority";
+export type SortKey = "updated" | "created" | "title" | "color" | "priority" | "manual";
 export type SortDir = "desc" | "asc";
 
 export interface ViewPrefs {

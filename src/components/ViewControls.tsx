@@ -24,6 +24,7 @@ const SORTS: { v: SortKey; label: string }[] = [
   { v: "title", label: "Tytuł (A-Z)" },
   { v: "color", label: "Kolor" },
   { v: "priority", label: "Priorytet" },
+  { v: "manual", label: "Ręcznie (przeciągnij)" },
 ];
 
 const COLOR_OPTIONS: NoteColor[] = ["default", "coral", "peach", "sand", "mint", "sage", "sky", "lavender", "rose"];
@@ -117,11 +118,15 @@ export function ViewControls({ allLabels }: Props) {
               <DropdownMenuRadioItem key={s.v} value={s.v}>{s.label}</DropdownMenuRadioItem>
             ))}
           </DropdownMenuRadioGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuRadioGroup value={prefs.sortDir} onValueChange={(v) => setViewPref("sortDir", v as SortDir)}>
-            <DropdownMenuRadioItem value="desc">Malejąco</DropdownMenuRadioItem>
-            <DropdownMenuRadioItem value="asc">Rosnąco</DropdownMenuRadioItem>
-          </DropdownMenuRadioGroup>
+          {prefs.sortKey !== "manual" && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuRadioGroup value={prefs.sortDir} onValueChange={(v) => setViewPref("sortDir", v as SortDir)}>
+                <DropdownMenuRadioItem value="desc">Malejąco</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="asc">Rosnąco</DropdownMenuRadioItem>
+              </DropdownMenuRadioGroup>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

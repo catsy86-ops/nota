@@ -132,4 +132,31 @@ describe("useFilteredNotes", () => {
     });
     expect(displayNotes.map((n) => n.id)).toEqual(["a", "b"]);
   });
+
+  it("sorts by manually dragged order when sortKey is 'manual', ignoring updatedAt", () => {
+    const notes = [
+      makeNote({ id: "third", order: 2, updatedAt: 100 }),
+      makeNote({ id: "first", order: 0, updatedAt: 1 }),
+      makeNote({ id: "second", order: 1, updatedAt: 50 }),
+    ];
+    const { displayNotes } = useFilteredNotes({
+      notes, archivedNotes: [], trashedNotes: [], folders, view: "notes",
+      activeLabel: null, activeFolder: null, search: "",
+      prefs: { ...basePrefs, sortKey: "manual", sortDir: "desc" },
+    });
+    expect(displayNotes.map((n) => n.id)).toEqual(["first", "second", "third"]);
+  });
+
+  it("manual order stays ascending regardless of sortDir (direction doesn't apply to hand-dragged order)", () => {
+    const notes = [
+      makeNote({ id: "first", order: 0 }),
+      makeNote({ id: "second", order: 1 }),
+    ];
+    const { displayNotes } = useFilteredNotes({
+      notes, archivedNotes: [], trashedNotes: [], folders, view: "notes",
+      activeLabel: null, activeFolder: null, search: "",
+      prefs: { ...basePrefs, sortKey: "manual", sortDir: "asc" },
+    });
+    expect(displayNotes.map((n) => n.id)).toEqual(["first", "second"]);
+  });
 });

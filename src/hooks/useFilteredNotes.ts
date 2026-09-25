@@ -54,6 +54,7 @@ function sortNotes(list: Note[], prefs: ViewPrefs): Note[] {
       case "created": return (a.createdAt - b.createdAt) * dir;
       case "color": return a.color.localeCompare(b.color) * dir;
       case "priority": return (PRIORITY_ORDER[a.priority ?? "none"] - PRIORITY_ORDER[b.priority ?? "none"]) * dir;
+      case "manual": return (a.order ?? 0) - (b.order ?? 0); // direction doesn't apply to hand-dragged order
       case "updated":
       default: return (a.updatedAt - b.updatedAt) * dir;
     }
