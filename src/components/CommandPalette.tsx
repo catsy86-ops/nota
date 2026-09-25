@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { StickyNote, Archive, Bell, Trash, Plus, Moon, Sparkles, Trophy, Calendar, Brain } from "lucide-react";
+import { StickyNote, Archive, Bell, Trash, Plus, Moon, Sparkles, Trophy, Calendar, Brain, Keyboard } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 
 export interface CommandAction {
@@ -22,6 +22,7 @@ interface Props {
   onOpenSettings: () => void;
   onOpenStats: () => void;
   onOpenFocusMode: () => void;
+  onOpenShortcuts: () => void;
 }
 
 export function CommandPalette({
@@ -35,6 +36,7 @@ export function CommandPalette({
   onOpenSettings,
   onOpenStats,
   onOpenFocusMode,
+  onOpenShortcuts,
 }: Props) {
   const [search, setSearch] = useState("");
 
@@ -87,6 +89,9 @@ export function CommandPalette({
           </CommandItem>
           <CommandItem onSelect={() => run(onToggleTheme)}>
             <Moon className="w-4 h-4 mr-2" /> Przełącz motyw jasny/ciemny
+          </CommandItem>
+          <CommandItem onSelect={() => run(onOpenShortcuts)}>
+            <Keyboard className="w-4 h-4 mr-2" /> Skróty klawiszowe <span className="ml-auto text-xs text-muted-foreground">?</span>
           </CommandItem>
         </CommandGroup>
         <CommandSeparator />

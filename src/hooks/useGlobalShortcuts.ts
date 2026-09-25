@@ -11,6 +11,7 @@ export interface GlobalShortcutHandlers {
   onUndo: () => void;
   onCloseSidebar: () => void;
   isSidebarOpen: () => boolean;
+  onOpenShortcuts: () => void;
 }
 
 function isTypingTarget(target: EventTarget | null): boolean {
@@ -102,6 +103,18 @@ export function useGlobalShortcuts(handlers: GlobalShortcutHandlers) {
       if (isTypingTarget(e.target)) return;
       e.preventDefault();
       handlers.onUndo();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [handlers]);
+
+  // "?" opens the keyboard shortcuts cheat sheet
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "?" && !isTypingTarget(e.target)) {
+        e.preventDefault();
+        handlers.onOpenShortcuts();
+      }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

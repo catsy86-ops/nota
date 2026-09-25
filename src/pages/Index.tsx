@@ -31,6 +31,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { useAchievementTracker } from "@/lib/achievements";
 import { CommandPalette } from "@/components/CommandPalette";
 import { StatsDialog } from "@/components/StatsDialog";
+import { ShortcutsDialog } from "@/components/ShortcutsDialog";
 import { NotePresentation } from "@/components/NotePresentation";
 import { FocusMode } from "@/components/FocusMode";
 import { DailyQuote } from "@/components/DailyQuote";
@@ -67,6 +68,7 @@ const Index = () => {
   const [actionsOpen, setActionsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [statsOpen, setStatsOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [presentingNoteId, setPresentingNoteId] = useState<string | null>(null);
   const [focusModeOpen, setFocusModeOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -134,6 +136,7 @@ const Index = () => {
     },
     onCloseSidebar: () => setSidebarOpen(false),
     isSidebarOpen: () => sidebarOpen,
+    onOpenShortcuts: () => setShortcutsOpen(true),
   });
 
   const { handleImport } = useImportExport(importNotes, addNote);
@@ -393,6 +396,7 @@ const Index = () => {
       onOpenSettings={() => setSettingsOpen(true)}
       onOpenStats={() => setStatsOpen(true)}
       onOpenFocusMode={() => setFocusModeOpen(true)}
+      onOpenShortcuts={() => setShortcutsOpen(true)}
     />
     <StatsDialog
       open={statsOpen}
@@ -402,6 +406,7 @@ const Index = () => {
       allLabels={allLabels}
       folders={folders}
     />
+    <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     <NotePresentation
       noteId={presentingNoteId}
       notes={allNotesForLinks}
