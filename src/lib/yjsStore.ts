@@ -2,6 +2,7 @@ import * as Y from "yjs";
 import { IndexeddbPersistence } from "y-indexeddb";
 import { get as idbGet, set as idbSet } from "idb-keyval";
 import { loadAll as loadLegacySnapshot } from "@/lib/notesStore";
+import { hashImage } from "@/lib/imageHash";
 import type { Note, Folder, ChecklistItem } from "@/hooks/useNotes";
 
 /**
@@ -138,6 +139,7 @@ function yNoteFromPlain(note: Note): YNote {
   y.set("checklist", yChecklistFromPlain(note.checklist));
   y.set("folderId", note.folderId);
   y.set("order", note.order);
+  y.set("imageHashes", note.images.map(hashImage));
   y.set("createdAt", note.createdAt);
   y.set("updatedAt", note.updatedAt);
   return y;
@@ -292,6 +294,7 @@ export function createYjsStore(dbName: string) {
       if (field in updates) y.set(field, (updates as Record<string, unknown>)[field]);
     }
     if (updates.checklist !== undefined) applyChecklistDiff(y, updates.checklist);
+    if (updates.images !== undefined) y.set("imageHashes", updates.images.map(hashImage));
     if (!("updatedAt" in updates)) y.set("updatedAt", Date.now());
   }
 
@@ -314,6 +317,33 @@ export function createYjsStore(dbName: string) {
       }
     });
     if (touchedImages) persistImagesCache();
+  }
+
+  /** Content hashes of a note's images, in order — synced as part of the note
+   *  itself (unlike the base64 blobs, which stay device-local in `imagesCache`).
+   *  Lets a device that doesn't yet have an image locally know one is expected,
+   *  so `imageSync.ts` can fetch it from a connected peer once sync is on. */
+  function getImageHashes(id: string): string[] {
+    const y = notesMap.get(id);
+    if (!y) return [];
+    return (y.get("imageHashes") as string[] | undefined) ?? [];
+  }
+
+  /** This device's own local copy of a note's images (may lag `getImageHashes`
+   *  if some images haven't been fetched from a peer yet). */
+  function getLocalImages(id: string): string[] {
+    return imagesCache[id] ?? [];
+  }
+
+  /** Called by imageSync.ts once it has fetched a missing image blob from a
+   *  peer — merges it into the local device-local image cache and nudges
+   *  useNotes.ts's observeDeep so the UI re-renders with the new image. */
+  function setImagesLocal(id: string, images: string[]): void {
+    const y = notesMap.get(id);
+    if (!y) return;
+    setImagesSync(id, images);
+    persistImagesCache();
+    doc.transact(() => { y.set("_imgSyncTick", Date.now()); });
   }
 
   /** Persists a manual drag order (index per id) in one transaction. */
@@ -431,6 +461,7 @@ export function createYjsStore(dbName: string) {
     upsertFolder, patchFolder, removeFolder,
     addLabel, removeLabelEverywhere, renameLabelEverywhere,
     replaceAll, resetForTests,
+    getImageHashes, getLocalImages, setImagesLocal,
   };
 }
 

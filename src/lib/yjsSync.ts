@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { WebrtcProvider } from "y-webrtc";
 import { yjsStore } from "@/lib/yjsStore";
+import { startImageSync, stopImageSync } from "@/lib/imageSync";
 
 /**
  * Peer-to-peer transport for the Yjs doc (Phase 2 of the multi-device sync
@@ -9,7 +10,8 @@ import { yjsStore } from "@/lib/yjsStore";
  * doubles as the WebRTC signaling password; the room name is a hash of that
  * code so the (public, third-party) signaling servers never see it verbatim.
  *
- * Not synced here: images (deliberately kept device-local, see yjsStore.ts).
+ * Images sync too, but through a separate transport — see imageSync.ts,
+ * started/stopped alongside this provider in connect()/disconnectProvider().
  */
 
 const STORAGE_KEY = "kaczy.sync.v1";
@@ -110,11 +112,13 @@ function connect(code: string) {
   provider.on("peers", ({ webrtcPeers, bcPeers }: { webrtcPeers: string[]; bcPeers: string[] }) => {
     setState({ peerCount: webrtcPeers.length + bcPeers.length });
   });
+  startImageSync(code);
 }
 
 function disconnectProvider() {
   provider?.destroy();
   provider = null;
+  stopImageSync();
 }
 
 /** Generates a fresh pairing code, enables sync and connects. Returns the code. */

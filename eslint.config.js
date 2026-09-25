@@ -27,7 +27,7 @@ export default tseslint.config(
           paths: [
             { name: "yjs", message: "Nie importuj yjs bezpośrednio — użyj src/hooks/useNotes.ts / NotesProvider." },
             { name: "y-indexeddb", message: "Nie importuj y-indexeddb bezpośrednio — dozwolone tylko w src/lib/yjsStore.ts." },
-            { name: "y-webrtc", message: "Nie importuj y-webrtc bezpośrednio — dozwolone tylko w src/lib/yjsSync.ts." },
+            { name: "y-webrtc", message: "Nie importuj y-webrtc bezpośrednio — dozwolone tylko w src/lib/yjsSync.ts i src/lib/imageSync.ts." },
           ],
         },
       ],
@@ -40,6 +40,8 @@ export default tseslint.config(
       "src/lib/yjsStore.test.ts",
       "src/lib/yjsSync.ts",
       "src/lib/yjsSync.test.ts",
+      "src/lib/imageSync.ts",
+      "src/lib/imageSync.test.ts",
       "src/hooks/useNotes.ts",
       "src/hooks/useNotes.test.ts",
     ],

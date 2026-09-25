@@ -37,6 +37,13 @@ vi.mock("y-webrtc", () => ({
   WebrtcProvider: MockProvider,
 }));
 
+// connect() opens two providers per call: the main text/metadata doc, and
+// (via imageSync.ts) a separate transport for image blobs, room name suffixed
+// "-img". Filter to the main one so provider-count assertions stay meaningful.
+function mainProviders(): MockProvider[] {
+  return providerInstances.filter((p) => !p.roomName.endsWith("-img"));
+}
+
 describe("yjsSync", () => {
   beforeEach(async () => {
     localStorage.clear();
@@ -69,14 +76,22 @@ describe("yjsSync", () => {
     expect(code).toHaveLength(8);
     expect(getSyncState().code).toBe(code);
     expect(getSyncState().status).toBe("connecting");
-    expect(providerInstances).toHaveLength(1);
-    expect(providerInstances[0].opts).toEqual({ password: code });
+    expect(mainProviders()).toHaveLength(1);
+    expect(mainProviders()[0].opts).toEqual({ password: code });
+  });
+
+  it("also starts the separate image transport, sharing the same pairing code", async () => {
+    const { startPairing } = await import("./yjsSync");
+    const code = startPairing();
+    const imageProviders = providerInstances.filter((p) => p.roomName.endsWith("-img"));
+    expect(imageProviders).toHaveLength(1);
+    expect(imageProviders[0].opts).toEqual({ password: code });
   });
 
   it("reflects connected status and peer count from provider events", async () => {
     const { startPairing, getSyncState } = await import("./yjsSync");
     startPairing();
-    const provider = providerInstances[0];
+    const provider = mainProviders()[0];
 
     provider.emit("status", { connected: true });
     expect(getSyncState().status).toBe("connected");
@@ -92,25 +107,26 @@ describe("yjsSync", () => {
     expect(getSyncState().code).toBe("ABCDEFGH");
   });
 
-  it("pauseSync disconnects but keeps the code; resumeSync reconnects to the same group", async () => {
+  it("pauseSync disconnects both providers but keeps the code; resumeSync reconnects to the same group", async () => {
     const { startPairing, pauseSync, resumeSync, getSyncState } = await import("./yjsSync");
     const code = startPairing();
-    const first = providerInstances[0];
+    const [first, firstImage] = providerInstances;
 
     pauseSync();
     expect(first.destroyed).toBe(true);
+    expect(firstImage.destroyed).toBe(true);
     expect(getSyncState().status).toBe("disabled");
     expect(getSyncState().code).toBe(code); // remembered
 
     resumeSync();
-    expect(providerInstances).toHaveLength(2);
-    expect(providerInstances[1].opts).toEqual({ password: code });
+    expect(mainProviders()).toHaveLength(2);
+    expect(mainProviders()[1].opts).toEqual({ password: code });
   });
 
   it("forgetPairing disconnects and clears the code entirely", async () => {
     const { startPairing, forgetPairing, getSyncState } = await import("./yjsSync");
     startPairing();
-    const provider = providerInstances[0];
+    const provider = mainProviders()[0];
 
     forgetPairing();
     expect(provider.destroyed).toBe(true);
@@ -127,8 +143,8 @@ describe("yjsSync", () => {
     const second = await import("./yjsSync");
     second.initSync();
 
-    expect(providerInstances).toHaveLength(1);
-    expect(providerInstances[0].opts).toEqual({ password: code });
+    expect(mainProviders()).toHaveLength(1);
+    expect(mainProviders()[0].opts).toEqual({ password: code });
     expect(second.getSyncState().code).toBe(code);
   });
 

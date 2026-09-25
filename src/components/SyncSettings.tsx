@@ -136,8 +136,10 @@ export function SyncSettings({ prefillCode }: Props) {
           notatek nigdy przez nie nie przechodzi. Oba urządzenia muszą być online w tym samym
           momencie, żeby zmiany się wymieniły — jeśli jedno jest offline, zsynchronizuje się przy
           najbliższej okazji, gdy oba znów będą online razem. Pierwsza synchronizacja łączy
-          notatki z obu urządzeń, nic nie zostanie skasowane. Obrazy w notatkach na razie nie są
-          synchronizowane między urządzeniami.
+          notatki z obu urządzeń, nic nie zostanie skasowane. Obrazy w notatkach też się
+          synchronizują, ale osobnym kanałem — nowo dodany obrazek trafia na drugie urządzenie
+          tylko gdy oba są online jednocześnie w chwili dodania (albo przy najbliższym ponownym
+          połączeniu).
         </p>
       </div>
     </div>
