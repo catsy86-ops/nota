@@ -62,7 +62,7 @@ Znaleziska z niezależnego audytu kodu. Zrealizowane w sesji porządkowej 2026-0
 - [ ] **`NoteCard.tsx` (510 linii, 20 propsów)** — przenieść mutatory (`onUpdate`, `onDelete`, `onTogglePin`, `onArchive`, `onUnarchive`, `onDuplicate`, `onMoveToFolder`) z propsów na `useNotesContext()`, zostawić jako propsy tylko dane specyficzne dla renderu (index, dnd, selection, knownTitles, historia wersji).
 - [ ] **`SettingsDialog.tsx` (571 linii)** — podzielić na zakładki jako osobne pliki, kontynuując wzorzec z `SyncSettings.tsx`.
 - [x] **`SeasonalBackdrop.tsx`** — był w pełni gotowy (self-gating na `seasonalTheme`+`snow` z `effectsSettings.ts`), tylko niepodpięty. Zamontowany globalnie w `App.tsx` obok `OfflineStatus`, analogicznie do wcześniejszego FocusMode/NotePresentation.
-- [ ] **Widoczny sygnał, że obrazy nie synchronizują się P2P** między urządzeniami (asymetria: notatka syncuje się, obraz nie) — dodać info w `SyncSettings.tsx`/`NoteCard.tsx`.
+- [x] **Widoczny sygnał, że obrazy nie synchronizują się P2P** — `SyncSettings.tsx` już to wspominał w sekcji „Jak to działa”; dodano dodatkowo odznakę z tooltipem (`CloudOff`) na pierwszej miniaturze w `NoteCard.tsx`, widoczną tylko gdy sync jest aktywny.
 - Niżej priorytetowe: test integracyjny merge'a Yjs bez mocka WebRTC; jeden kanał na błędy sync/persist zamiast rozproszonych `console.error`/toastów; ESLint import-boundary żeby żaden komponent UI nie importował `yjs`/`y-indexeddb` bezpośrednio poza `useNotes`/`NotesProvider`.
 
 ### UX / funkcjonalność
@@ -71,9 +71,9 @@ Znaleziska z niezależnego audytu kodu. Zrealizowane w sesji porządkowej 2026-0
 - [x] **Silent failure przy obrazach >2MB naprawiony** — w `NoteCard.tsx` i `AddNoteBar.tsx` pominięte pliki (za duże) teraz zgłaszają `toast.error` z liczbą pominiętych obrazków, zamiast cichego `continue`.
 - [ ] **`aria-live` dla zmian stanu** (dodanie/usunięcie notatki, zapis wersji, błąd importu) poza istniejącym `OfflineStatus.tsx`.
 - [ ] **Toast „Cofnij” bezpośrednio po usunięciu/archiwizacji** notatki, zamiast tylko przez kosz/historię akcji.
-- [ ] **Walidacja dat przeszłych w przypomnieniach** (`QuickReminderInput`/`ReminderPicker`) — ustawienie przypomnienia w przeszłości powinno być zablokowane/ostrzeżone.
-- [ ] **„Brak wyników” w wyszukiwarce/Command Palette z CTA** „utwórz notatkę o tej nazwie”.
-- [ ] **Jaśniejsza komunikacja P2P sync w UI** — że to peer-to-peer (nie chmura) i że oba urządzenia muszą być online jednocześnie.
+- [x] **Walidacja dat przeszłych w przypomnieniach** — `ReminderPicker.tsx`: kalendarz już blokował przeszłe dni, ale nie godzinę tego samego dnia; dodano sprawdzenie `date+time < now`, blokadę przycisku „Zapisz” i komunikat ostrzegawczy.
+- [x] **„Brak wyników” w Command Palette z CTA** — `CommandPalette.tsx`: `CommandEmpty` pokazuje teraz „Utwórz notatkę „…”” (otwiera pasek dodawania notatki), gdy wpisane wyszukiwanie nic nie znajdzie. (Sam `SearchBar.tsx` nie ma tej luki w tym samym stopniu — filtrowanie listy notatek, nie paleta poleceń — pominięty.)
+- [x] **Jaśniejsza komunikacja P2P sync w UI** — `SyncSettings.tsx`: doprecyzowano, że oba urządzenia muszą być online jednocześnie i co się dzieje gdy jedno jest offline.
 - Niżej priorytetowe: alternatywa dla drag&drop na mobile (menu „Przenieś w górę/dół”), widoczna lista skrótów klawiszowych (cheat-sheet), rozróżnienie pustego stanu „brak notatek” vs „brak wyników filtra” (zweryfikować czy już jest), focus trap/return w custom fullscreen (`DrawingCanvas`, `NotePresentation`).
 
 ### Priorytetyzacja

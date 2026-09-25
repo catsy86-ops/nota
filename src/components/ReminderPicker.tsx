@@ -29,8 +29,16 @@ export function ReminderPicker({ reminder, reminderRepeat, onSet }: ReminderPick
     setTime(format(parsed, "HH:mm"));
   }
 
+  const pastTime = (() => {
+    if (!date) return false;
+    const [h, m] = time.split(":").map(Number);
+    const d = new Date(date);
+    d.setHours(h, m, 0, 0);
+    return d.getTime() < Date.now();
+  })();
+
   function handleSave() {
-    if (date) {
+    if (date && !pastTime) {
       const [h, m] = time.split(":").map(Number);
       const d = new Date(date);
       d.setHours(h, m, 0, 0);
@@ -93,8 +101,11 @@ export function ReminderPicker({ reminder, reminderRepeat, onSet }: ReminderPick
             ))}
           </select>
         </div>
+        {pastTime && (
+          <p className="text-[10px] text-destructive">Ta godzina już minęła. Wybierz godzinę w przyszłości.</p>
+        )}
         <div className="flex gap-2">
-          <Button size="sm" onClick={handleSave} disabled={!date} className="flex-1">
+          <Button size="sm" onClick={handleSave} disabled={!date || pastTime} className="flex-1">
             Zapisz
           </Button>
           {reminder && (

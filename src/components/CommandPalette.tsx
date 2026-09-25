@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { StickyNote, Archive, Bell, Trash, Plus, Moon, Sparkles, Trophy, Calendar, Brain } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
@@ -36,6 +36,8 @@ export function CommandPalette({
   onOpenStats,
   onOpenFocusMode,
 }: Props) {
+  const [search, setSearch] = useState("");
+
   useEffect(() => {
     function handler(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
@@ -54,9 +56,22 @@ export function CommandPalette({
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <CommandInput placeholder="Szukaj notatek lub akcji…" />
+      <CommandInput placeholder="Szukaj notatek lub akcji…" value={search} onValueChange={setSearch} />
       <CommandList>
-        <CommandEmpty>Brak wyników.</CommandEmpty>
+        <CommandEmpty>
+          <div className="flex flex-col items-center gap-2 py-2">
+            <span>Brak wyników.</span>
+            {search.trim() && (
+              <button
+                type="button"
+                onClick={() => run(onNewNote)}
+                className="flex items-center gap-1.5 text-xs text-primary hover:underline"
+              >
+                <Plus className="w-3.5 h-3.5" /> Utwórz notatkę „{search.trim()}”
+              </button>
+            )}
+          </div>
+        </CommandEmpty>
         <CommandGroup heading="Akcje">
           <CommandItem onSelect={() => run(onNewNote)}>
             <Plus className="w-4 h-4 mr-2" /> Nowa notatka <span className="ml-auto text-xs text-muted-foreground">Ctrl+N</span>

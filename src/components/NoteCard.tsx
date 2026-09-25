@@ -1,7 +1,7 @@
 import { useState, useRef, memo } from "react";
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useReducedMotion } from "framer-motion";
 import { Check } from "lucide-react";
-import { Pin, Trash2, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, MoreHorizontal, Maximize2 } from "lucide-react";
+import { Pin, Trash2, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, MoreHorizontal, Maximize2, CloudOff } from "lucide-react";
 import { ColorPicker, colorClasses } from "./ColorPicker";
 import { LabelPicker, LabelBadges } from "./LabelPicker";
 import { ReminderPicker, ReminderBadge } from "./ReminderPicker";
@@ -27,6 +27,7 @@ import { celebrate, sparkle } from "@/lib/celebrate";
 import { useViewPrefs, readingTimeMin } from "@/lib/viewPrefs";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { toast } from "sonner";
+import { useSyncState } from "@/lib/yjsSync";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 
 interface NoteCardProps {
@@ -55,6 +56,7 @@ interface NoteCardProps {
 
 export const NoteCard = memo(function NoteCard({ note, onUpdate, onDelete, onTogglePin, onArchive, onUnarchive, onDuplicate, onMoveToFolder, index, isArchived, dragAttributes, dragListeners, noteVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, selected, selectionMode, onToggleSelect }: NoteCardProps) {
   const { folders, allLabels, addLabel: onCreateLabel } = useNotesContext();
+  const syncState = useSyncState();
   const [showColors, setShowColors] = useState(false);
   const [showMore, setShowMore] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -254,6 +256,16 @@ export const NoteCard = memo(function NoteCard({ note, onUpdate, onDelete, onTog
             {note.images.slice(0, 4).map((img, i) => (
               <div key={i} className="relative group/img cursor-pointer overflow-hidden" onClick={() => setPreviewImage(img)}>
                 <img src={img} alt="" className="w-full h-32 object-cover transition-transform duration-300 group-hover/img:scale-105" loading="lazy" />
+                {i === 0 && syncState.status !== "disabled" && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <div className="absolute bottom-1 left-1 p-0.5 rounded-full bg-foreground/60 text-background" aria-label="Ten obrazek nie synchronizuje się między urządzeniami">
+                        <CloudOff className="w-3 h-3" />
+                      </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-xs">Obrazy nie synchronizują się między urządzeniami</TooltipContent>
+                  </Tooltip>
+                )}
                 {note.images.length > 4 && i === 3 && (
                   <div className="absolute inset-0 bg-foreground/40 flex items-center justify-center">
                     <span className="text-primary-foreground font-display font-bold text-lg">+{note.images.length - 4}</span>

@@ -131,11 +131,13 @@ export function SyncSettings({ prefillCode }: Props) {
       <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-1">
         <p className="font-semibold text-foreground">💡 Jak to działa</p>
         <p>
-          Synchronizacja łączy się bezpośrednio między urządzeniami (peer-to-peer), korzystając
-          z publicznych serwerów Yjs tylko do nawiązania połączenia — treść notatek nigdy przez
-          nie nie przechodzi. Pierwsza synchronizacja łączy notatki z obu urządzeń, nic nie
-          zostanie skasowane. Obrazy w notatkach na razie nie są synchronizowane między
-          urządzeniami.
+          Synchronizacja łączy się bezpośrednio między urządzeniami (peer-to-peer) — nie ma żadnej
+          chmury ani konta. Publiczne serwery Yjs służą tylko do nawiązania połączenia, treść
+          notatek nigdy przez nie nie przechodzi. Oba urządzenia muszą być online w tym samym
+          momencie, żeby zmiany się wymieniły — jeśli jedno jest offline, zsynchronizuje się przy
+          najbliższej okazji, gdy oba znów będą online razem. Pierwsza synchronizacja łączy
+          notatki z obu urządzeń, nic nie zostanie skasowane. Obrazy w notatkach na razie nie są
+          synchronizowane między urządzeniami.
         </p>
       </div>
     </div>
