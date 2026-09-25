@@ -2,7 +2,7 @@ import * as Y from "yjs";
 import { IndexeddbPersistence } from "y-indexeddb";
 import { get as idbGet, set as idbSet } from "idb-keyval";
 import { loadAll as loadLegacySnapshot } from "@/lib/notesStore";
-import type { Note, Folder } from "@/hooks/useNotes";
+import type { Note, Folder, ChecklistItem } from "@/hooks/useNotes";
 
 /**
  * Yjs-backed store for notes/folders/labels — the data layer that will let a
@@ -23,11 +23,12 @@ const IMAGES_KEY = "kaczy.images.v1";
 
 type YNote = Y.Map<unknown>;
 type YFolder = Y.Map<unknown>;
+type YChecklistItem = Y.Map<unknown>;
 type ImagesById = Record<string, string[]>;
 
 const NOTE_SCALAR_FIELDS = [
   "title", "color", "pinned", "archived", "trashed", "trashedAt",
-  "labels", "reminder", "reminderRepeat", "priority", "checklist",
+  "labels", "reminder", "reminderRepeat", "priority",
   "folderId", "order", "createdAt", "updatedAt",
 ] as const;
 
@@ -51,6 +52,74 @@ function applyTextDiff(ytext: Y.Text, next: string) {
   if (endNext > start) ytext.insert(start, next.slice(start, endNext));
 }
 
+/** Checklist is a Y.Map keyed by item id (like notesMap/foldersMap) so concurrent
+ *  edits to different items — or the same item's `checked`/`text` — merge
+ *  field-by-field instead of one whole-array write clobbering the other.
+ *  Item order is tracked via a per-item `order` field, same pattern as note order. */
+function yChecklistFromPlain(items: ChecklistItem[]): Y.Map<YChecklistItem> {
+  const map = new Y.Map<YChecklistItem>();
+  items.forEach((item, index) => {
+    const y: YChecklistItem = new Y.Map();
+    y.set("id", item.id);
+    y.set("text", item.text);
+    y.set("checked", item.checked);
+    y.set("order", index);
+    map.set(item.id, y);
+  });
+  return map;
+}
+
+function plainChecklistFromY(value: unknown): ChecklistItem[] {
+  if (value instanceof Y.Map) {
+    const items: (ChecklistItem & { order: number })[] = [];
+    value.forEach((v, id) => {
+      if (v instanceof Y.Map) {
+        items.push({
+          id,
+          text: (v.get("text") as string) ?? "",
+          checked: Boolean(v.get("checked")),
+          order: (v.get("order") as number) ?? 0,
+        });
+      }
+    });
+    items.sort((a, b) => a.order - b.order);
+    return items.map(({ order: _order, ...rest }) => rest);
+  }
+  // Legacy notes persisted before checklist became a Y.Map — self-heals on next patch.
+  if (Array.isArray(value)) return value as ChecklistItem[];
+  return [];
+}
+
+/** Reconciles the checklist Y.Map towards `next`, touching only items that changed
+ *  so unrelated concurrent edits (on other items) keep their own Yjs history. */
+function applyChecklistDiff(y: YNote, next: ChecklistItem[]) {
+  let map = y.get("checklist");
+  if (!(map instanceof Y.Map)) {
+    map = new Y.Map<YChecklistItem>();
+    y.set("checklist", map);
+  }
+  const checklistMap = map as Y.Map<YChecklistItem>;
+  const nextIds = new Set(next.map((i) => i.id));
+  for (const id of Array.from(checklistMap.keys())) {
+    if (!nextIds.has(id)) checklistMap.delete(id);
+  }
+  next.forEach((item, index) => {
+    const existing = checklistMap.get(item.id);
+    if (existing instanceof Y.Map) {
+      if (existing.get("text") !== item.text) existing.set("text", item.text);
+      if (existing.get("checked") !== item.checked) existing.set("checked", item.checked);
+      if (existing.get("order") !== index) existing.set("order", index);
+    } else {
+      const y2: YChecklistItem = new Y.Map();
+      y2.set("id", item.id);
+      y2.set("text", item.text);
+      y2.set("checked", item.checked);
+      y2.set("order", index);
+      checklistMap.set(item.id, y2);
+    }
+  });
+}
+
 function yNoteFromPlain(note: Note): YNote {
   const y: YNote = new Y.Map();
   const text = new Y.Text();
@@ -66,7 +135,7 @@ function yNoteFromPlain(note: Note): YNote {
   y.set("reminder", note.reminder);
   if (note.reminderRepeat !== undefined) y.set("reminderRepeat", note.reminderRepeat);
   y.set("priority", note.priority);
-  y.set("checklist", note.checklist.map((c) => ({ ...c })));
+  y.set("checklist", yChecklistFromPlain(note.checklist));
   y.set("folderId", note.folderId);
   y.set("order", note.order);
   y.set("createdAt", note.createdAt);
@@ -90,7 +159,7 @@ function plainFromYNote(id: string, y: YNote, images: string[]): Note {
     reminderRepeat: y.get("reminderRepeat") as Note["reminderRepeat"],
     priority: (y.get("priority") as Note["priority"]) ?? "none",
     images,
-    checklist: (y.get("checklist") as Note["checklist"] | undefined) ?? [],
+    checklist: plainChecklistFromY(y.get("checklist")),
     folderId: (y.get("folderId") as string | null) ?? null,
     order: (y.get("order") as number) ?? 0,
     createdAt: (y.get("createdAt") as number) ?? 0,
@@ -222,6 +291,7 @@ export function createYjsStore(dbName: string) {
     for (const field of NOTE_SCALAR_FIELDS) {
       if (field in updates) y.set(field, (updates as Record<string, unknown>)[field]);
     }
+    if (updates.checklist !== undefined) applyChecklistDiff(y, updates.checklist);
     if (!("updatedAt" in updates)) y.set("updatedAt", Date.now());
   }
 

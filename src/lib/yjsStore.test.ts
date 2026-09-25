@@ -75,6 +75,80 @@ describe("yjsStore — field-level CRDT merge", () => {
   });
 });
 
+describe("yjsStore — checklist item-level merge", () => {
+  it("merges concurrent toggles of different checklist items instead of one side clobbering the other", () => {
+    const a = createYjsStore(`merge-checklist-toggle-a-${crypto.randomUUID()}`);
+    const b = createYjsStore(`merge-checklist-toggle-b-${crypto.randomUUID()}`);
+    a.upsertNote(makeNote({
+      id: "n1",
+      checklist: [
+        { id: "i1", text: "Mleko", checked: false },
+        { id: "i2", text: "Chleb", checked: false },
+      ],
+    }));
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+
+    // a checks item 1, b (starting from the same synced state) checks item 2 — concurrently.
+    const aNote = a.projectNotes().find((n) => n.id === "n1")!;
+    a.patchNote("n1", { checklist: aNote.checklist.map((c) => (c.id === "i1" ? { ...c, checked: true } : c)) });
+    const bNote = b.projectNotes().find((n) => n.id === "n1")!;
+    b.patchNote("n1", { checklist: bNote.checklist.map((c) => (c.id === "i2" ? { ...c, checked: true } : c)) });
+
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+    Y.applyUpdate(a.doc, Y.encodeStateAsUpdate(b.doc));
+
+    for (const store of [a, b]) {
+      const merged = store.projectNotes().find((n) => n.id === "n1")!.checklist;
+      expect(merged.find((c) => c.id === "i1")?.checked).toBe(true);
+      expect(merged.find((c) => c.id === "i2")?.checked).toBe(true);
+    }
+  });
+
+  it("merges a new checklist item added on one side with a toggle made on the other", () => {
+    const a = createYjsStore(`merge-checklist-add-a-${crypto.randomUUID()}`);
+    const b = createYjsStore(`merge-checklist-add-b-${crypto.randomUUID()}`);
+    a.upsertNote(makeNote({ id: "n1", checklist: [{ id: "i1", text: "Mleko", checked: false }] }));
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+
+    // a adds a second item; b toggles the first item — concurrently, from the same starting state.
+    a.patchNote("n1", { checklist: [{ id: "i1", text: "Mleko", checked: false }, { id: "i2", text: "Jajka", checked: false }] });
+    const bNote = b.projectNotes().find((n) => n.id === "n1")!;
+    b.patchNote("n1", { checklist: bNote.checklist.map((c) => (c.id === "i1" ? { ...c, checked: true } : c)) });
+
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+    Y.applyUpdate(a.doc, Y.encodeStateAsUpdate(b.doc));
+
+    for (const store of [a, b]) {
+      const merged = store.projectNotes().find((n) => n.id === "n1")!.checklist;
+      expect(merged.map((c) => c.id).sort()).toEqual(["i1", "i2"]);
+      expect(merged.find((c) => c.id === "i1")?.checked).toBe(true);
+      expect(merged.find((c) => c.id === "i2")?.text).toBe("Jajka");
+    }
+  });
+
+  it("a checklist item deleted on one side stays deleted after merging with a peer that still edited it", () => {
+    const a = createYjsStore(`merge-checklist-delete-a-${crypto.randomUUID()}`);
+    const b = createYjsStore(`merge-checklist-delete-b-${crypto.randomUUID()}`);
+    a.upsertNote(makeNote({
+      id: "n1",
+      checklist: [{ id: "i1", text: "Mleko", checked: false }, { id: "i2", text: "Chleb", checked: false }],
+    }));
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+
+    a.patchNote("n1", { checklist: [{ id: "i2", text: "Chleb", checked: false }] }); // deletes i1
+    const bNote = b.projectNotes().find((n) => n.id === "n1")!;
+    b.patchNote("n1", { checklist: bNote.checklist.map((c) => (c.id === "i1" ? { ...c, checked: true } : c)) }); // stale edit to i1
+
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+    Y.applyUpdate(a.doc, Y.encodeStateAsUpdate(b.doc));
+
+    for (const store of [a, b]) {
+      const merged = store.projectNotes().find((n) => n.id === "n1")!.checklist;
+      expect(merged.map((c) => c.id)).toEqual(["i2"]);
+    }
+  });
+});
+
 describe("yjsStore — tombstones", () => {
   it("a deleted note stays deleted after merging with a peer that still has an older copy", () => {
     const a = createYjsStore(`tombstone-a-${crypto.randomUUID()}`);
