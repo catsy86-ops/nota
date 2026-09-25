@@ -1,0 +1,13 @@
+{
+  "name": "kaczy-signaling-server",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Self-hosted WebRTC signaling server for Notatnik's P2P device sync — the official y-webrtc server, run standalone so it isn't tied to the app's public default signaling servers.",
+  "type": "module",
+  "scripts": {
+    "start": "y-webrtc-signaling"
+  },
+  "dependencies": {
+    "y-webrtc": "^10.3.0"
+  }
+}
