@@ -435,7 +435,12 @@ export const NoteCard = memo(function NoteCard({ note, onUpdate, onDelete, onTog
           ) : onArchive ? (
             <ActionBtn icon={<Archive className="w-4 h-4" />} onClick={() => onArchive(note.id)} title="Archiwizuj" />
           ) : null}
-          <ActionBtn icon={<Trash2 className="w-4 h-4" />} onClick={() => setShowDeleteConfirm(true)} title="Usuń" className="hover:text-destructive" />
+          <ActionBtn
+            icon={<Trash2 className="w-4 h-4" />}
+            onClick={() => (note.trashed ? setShowDeleteConfirm(true) : onDelete(note.id))}
+            title="Usuń"
+            className="hover:text-destructive"
+          />
 
           <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
 
