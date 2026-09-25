@@ -15,7 +15,6 @@ const THROTTLE_MS: Record<EffectKey, number> = {
   hearts: 600,
   bubbles: 600,
   rainbow: 2500,
-  snow: 0,
   seasonalTheme: 0,
   dailyQuote: 0,
 };
@@ -28,7 +27,6 @@ const lastFiredAt: Record<EffectKey, number> = {
   hearts: 0,
   bubbles: 0,
   rainbow: 0,
-  snow: 0,
   seasonalTheme: 0,
   dailyQuote: 0,
 };

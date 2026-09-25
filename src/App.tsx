@@ -1,8 +1,6 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { MotionConfig } from "framer-motion";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -13,9 +11,6 @@ import { useEffect } from "react";
 import { applySeasonAttr, useSeasonPref } from "./lib/seasonTheme";
 import { useEffectsSettings } from "./lib/effectsSettings";
 import { NotesProvider } from "./hooks/NotesProvider";
-import { SeasonalBackdrop } from "./components/SeasonalBackdrop";
-
-const queryClient = new QueryClient();
 
 const App = () => {
   const { mode } = useMotionPref();
@@ -32,27 +27,23 @@ const App = () => {
   const reducedMotion = mode === "system" ? "user" : mode === "reduced" ? "always" : "never";
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <MotionConfig reducedMotion={reducedMotion}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <OfflineStatus />
-          <SeasonalBackdrop />
-          <BrowserRouter>
-            <ErrorBoundary>
-              <NotesProvider>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </NotesProvider>
-            </ErrorBoundary>
-          </BrowserRouter>
-        </TooltipProvider>
-      </MotionConfig>
-    </QueryClientProvider>
+    <MotionConfig reducedMotion={reducedMotion}>
+      <TooltipProvider>
+        <Sonner />
+        <OfflineStatus />
+        <BrowserRouter>
+          <ErrorBoundary>
+            <NotesProvider>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </NotesProvider>
+          </ErrorBoundary>
+        </BrowserRouter>
+      </TooltipProvider>
+    </MotionConfig>
   );
 };
 

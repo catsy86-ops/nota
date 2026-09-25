@@ -8,7 +8,6 @@ export type EffectKey =
   | "hearts"
   | "bubbles"
   | "rainbow"
-  | "snow"
   | "seasonalTheme"
   | "dailyQuote";
 
@@ -20,7 +19,6 @@ export const EFFECT_LABELS: Record<EffectKey, { label: string; description: stri
   hearts: { label: "Serduszka", description: "Lecące serca przy ulubionych akcjach", emoji: "❤️" },
   bubbles: { label: "Bąbelki", description: "Delikatne bąbelki unoszące się w górę", emoji: "🫧" },
   rainbow: { label: "Tęcza", description: "Kolorowy łuk po większych osiągnięciach", emoji: "🌈" },
-  snow: { label: "Śnieg / liście", description: "Akcent sezonowy w tle aplikacji", emoji: "❄️" },
   seasonalTheme: { label: "Motyw sezonowy", description: "Akcenty dopasowane do pory roku", emoji: "🍂" },
   dailyQuote: { label: "Cytat dnia", description: "Inspiracja na górze ekranu", emoji: "💭" },
 };
@@ -35,7 +33,6 @@ const DEFAULTS: EffectsSettings = {
   hearts: true,
   bubbles: true,
   rainbow: true,
-  snow: true,
   seasonalTheme: true,
   dailyQuote: true,
 };
