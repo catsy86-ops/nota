@@ -6,34 +6,18 @@ import { cn } from "@/lib/utils";
 import { useViewPrefs, type Layout } from "@/lib/viewPrefs";
 import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { NoteCard } from "@/components/NoteCard";
+import { NoteViewActionsProvider, type NoteViewActions } from "@/hooks/NoteViewActionsContext";
 import type { useNotes } from "@/hooks/useNotes";
-import type { NoteVersion } from "@/hooks/useNoteVersions";
 
 interface SortableNoteCardProps {
   note: ReturnType<typeof useNotes>["notes"][number];
-  onUpdate?: ReturnType<typeof useNotes>["updateNote"];
-  onDelete: ReturnType<typeof useNotes>["deleteNote"];
-  onTogglePin?: ReturnType<typeof useNotes>["togglePin"];
-  onDuplicate?: ReturnType<typeof useNotes>["duplicateNote"];
-  onArchive?: (id: string) => void;
-  onUnarchive?: ReturnType<typeof useNotes>["unarchiveNote"];
   index: number;
-  isArchived?: boolean;
-  onMoveToFolder?: (noteId: string, folderId: string | null) => void;
-  noteVersions?: NoteVersion[];
-  onSaveVersion?: (noteId: string, title: string, content: string) => void;
-  onRestoreVersion?: (noteId: string, version: NoteVersion) => void;
-  onPresent?: (id: string) => void;
-  knownTitles?: Set<string>;
-  onWikiClick?: (title: string) => void;
   layout: Layout;
   selected: boolean;
-  selectionMode?: boolean;
-  onToggleSelect?: (id: string, shiftKey: boolean) => void;
 }
 
-const SortableNoteCard = memo(function SortableNoteCard({ layout, ...props }: SortableNoteCardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: props.note.id });
+const SortableNoteCard = memo(function SortableNoteCard({ layout, note, index, selected }: SortableNoteCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: note.id });
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -43,28 +27,14 @@ const SortableNoteCard = memo(function SortableNoteCard({ layout, ...props }: So
 
   return (
     <div ref={setNodeRef} style={style} className={layout === "masonry" ? "break-inside-avoid mb-4" : layout === "grid" ? "h-full" : ""}>
-      <NoteCard {...props} dragAttributes={attributes} dragListeners={listeners} />
+      <NoteCard note={note} index={index} selected={selected} dragAttributes={attributes} dragListeners={listeners} />
     </div>
   );
 });
 
-interface NoteGridProps {
+interface NoteGridProps extends Omit<NoteViewActions, "selectionMode" | "onToggleSelect"> {
   notes: ReturnType<typeof useNotes>["notes"];
   searchQuery?: string;
-  onUpdate?: ReturnType<typeof useNotes>["updateNote"];
-  onDelete: ReturnType<typeof useNotes>["deleteNote"];
-  onTogglePin?: ReturnType<typeof useNotes>["togglePin"];
-  onDuplicate?: ReturnType<typeof useNotes>["duplicateNote"];
-  onArchive?: (id: string) => void;
-  onUnarchive?: ReturnType<typeof useNotes>["unarchiveNote"];
-  isArchived?: boolean;
-  onMoveToFolder?: (noteId: string, folderId: string | null) => void;
-  getVersions?: (noteId: string) => NoteVersion[];
-  onSaveVersion?: (noteId: string, title: string, content: string) => void;
-  onRestoreVersion?: (noteId: string, version: NoteVersion) => void;
-  onPresent?: (id: string) => void;
-  knownTitles?: Set<string>;
-  onWikiClick?: (title: string) => void;
   selectedIds?: Set<string>;
   selectionMode?: boolean;
   onToggleSelect?: (id: string, shiftKey: boolean) => void;
@@ -73,6 +43,10 @@ interface NoteGridProps {
 export function NoteGrid({
   notes, searchQuery, onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder, getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, selectedIds, selectionMode, onToggleSelect,
 }: NoteGridProps) {
+  const noteViewActions: NoteViewActions = {
+    onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder,
+    getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, selectionMode, onToggleSelect,
+  };
   const prefs = useViewPrefs();
   const noteIds = notes.map((n) => n.id);
   const [focusedIdx, setFocusedIdx] = useState<number>(-1);
@@ -271,6 +245,7 @@ export function NoteGrid({
   const titleMatches = previewNote && highlightTokens.length ? highlightTokens.some((t) => previewNote.title.toLowerCase().includes(t.toLowerCase())) : false;
 
   return (
+    <NoteViewActionsProvider value={noteViewActions}>
     <SortableContext items={noteIds} strategy={rectSortingStrategy}>
       <div ref={gridRef} className={containerClass}>
         <AnimatePresence mode="popLayout">
@@ -287,25 +262,9 @@ export function NoteGrid({
             >
               <SortableNoteCard
                 note={note}
-                onUpdate={onUpdate}
-                onDelete={onDelete}
-                onTogglePin={onTogglePin}
-                onDuplicate={onDuplicate}
-                onArchive={onArchive}
-                onUnarchive={onUnarchive}
                 index={i}
-                isArchived={isArchived}
-                onMoveToFolder={onMoveToFolder}
-                noteVersions={getVersions ? getVersions(note.id) : undefined}
-                onSaveVersion={onSaveVersion}
-                onRestoreVersion={onRestoreVersion}
-                onPresent={onPresent}
-                knownTitles={knownTitles}
-                onWikiClick={onWikiClick}
                 layout={prefs.layout}
                 selected={selectedIds?.has(note.id) ?? false}
-                selectionMode={selectionMode}
-                onToggleSelect={onToggleSelect}
               />
             </div>
           ))}
@@ -392,5 +351,6 @@ export function NoteGrid({
         )}
       </AnimatePresence>
     </SortableContext>
+    </NoteViewActionsProvider>
   );
 }

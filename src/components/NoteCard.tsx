@@ -13,7 +13,6 @@ import { ShareNote } from "./ShareNote";
 import { FolderPicker } from "./FolderPicker";
 import { VersionHistory } from "./VersionHistory";
 import type { Note, NoteColor, ChecklistItem } from "@/hooks/useNotes";
-import type { NoteVersion } from "@/hooks/useNoteVersions";
 import { fileToBase64 } from "@/hooks/useNotes";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -26,36 +25,27 @@ import { useTrashCountdown } from "@/hooks/useTrashCountdown";
 import { celebrate, sparkle } from "@/lib/celebrate";
 import { useViewPrefs, readingTimeMin } from "@/lib/viewPrefs";
 import { useNotesContext } from "@/hooks/NotesProvider";
+import { useNoteViewActions } from "@/hooks/NoteViewActionsContext";
 import { toast } from "sonner";
 import { useSyncState } from "@/lib/yjsSync";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 
 interface NoteCardProps {
   note: Note;
-  onUpdate?: (id: string, updates: Partial<Omit<Note, "id" | "createdAt">>) => void;
-  onDelete: (id: string) => void;
-  onTogglePin?: (id: string) => void;
-  onArchive?: (id: string) => void;
-  onUnarchive?: (id: string) => void;
-  onDuplicate?: (id: string) => void;
-  onMoveToFolder?: (noteId: string, folderId: string | null) => void;
   index: number;
-  isArchived?: boolean;
   dragAttributes?: DraggableAttributes;
   dragListeners?: DraggableSyntheticListeners;
-  noteVersions?: NoteVersion[];
-  onSaveVersion?: (noteId: string, title: string, content: string) => void;
-  onRestoreVersion?: (noteId: string, version: NoteVersion) => void;
-  onPresent?: (id: string) => void;
-  knownTitles?: Set<string>;
-  onWikiClick?: (title: string) => void;
   selected?: boolean;
-  selectionMode?: boolean;
-  onToggleSelect?: (id: string, shiftKey: boolean) => void;
 }
 
-export const NoteCard = memo(function NoteCard({ note, onUpdate, onDelete, onTogglePin, onArchive, onUnarchive, onDuplicate, onMoveToFolder, index, isArchived, dragAttributes, dragListeners, noteVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, selected, selectionMode, onToggleSelect }: NoteCardProps) {
+export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dragListeners, selected }: NoteCardProps) {
   const { folders, allLabels, addLabel: onCreateLabel } = useNotesContext();
+  const {
+    onUpdate, onDelete, onTogglePin, onArchive, onUnarchive, onDuplicate, onMoveToFolder,
+    isArchived, getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick,
+    selectionMode, onToggleSelect,
+  } = useNoteViewActions();
+  const noteVersions = getVersions?.(note.id);
   const syncState = useSyncState();
   const [showColors, setShowColors] = useState(false);
   const [showMore, setShowMore] = useState(false);
