@@ -22,9 +22,12 @@ export default defineConfig(({ mode }) => ({
       filename: "sw.js",
       devOptions: { enabled: false },
       manifest: false,
-      includeAssets: ["favicon.png", "apple-touch-icon.png", "pwa-192.png", "pwa-512.png", "offline.html"],
+      includeAssets: ["favicon.png", "apple-touch-icon.png", "pwa-192.png", "pwa-512.png", "pwa-512-maskable.png", "offline.html"],
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+        // Manifest-only asset: fetched by the OS install UI, never by the app
+        // itself — keep it out of the offline-critical precache.
+        globIgnores: ["**/screenshot-wide.png"],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,
