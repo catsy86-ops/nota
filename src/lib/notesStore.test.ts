@@ -18,6 +18,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
     checklist: [],
     folderId: null,
     order: 0,
+    priority: "none",
     createdAt: 0,
     updatedAt: 0,
     ...overrides,
