@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
 import type { Note } from "@/hooks/useNotes";
-import { exportToJSON } from "@/lib/exportNotes";
+import { exportFullBackup } from "@/lib/exportNotes";
 import { isBackupOverdue, markBackup, daysSinceBackup } from "@/lib/backupReminder";
 
 export interface BackupReminderPrefs {
@@ -20,12 +20,12 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
     if (!due) return;
     if (sessionStorage.getItem("kaczy.autoBackupDone") === "1") return;
     sessionStorage.setItem("kaczy.autoBackupDone", "1");
-    const t = setTimeout(() => {
+    const t = setTimeout(async () => {
       try {
-        const { filename, size } = exportToJSON([...notes, ...archivedNotes]);
+        const { filename, size, savedToFile } = await exportFullBackup();
         markBackup();
         const kb = Math.max(1, Math.round(size / 1024));
-        toast.success("📦 Auto-backup pobrany w tle", {
+        toast.success(savedToFile ? "📦 Auto-backup zapisany" : "📦 Auto-backup pobrany w tle", {
           description: `${filename} • ${kb} KB • ${notes.length + archivedNotes.length} notatek`,
           duration: 8000,
         });
@@ -51,12 +51,12 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
         description: desc,
         duration: 12000,
         action: {
-          label: "Pobierz JSON",
-          onClick: () => {
+          label: "Zrób backup",
+          onClick: async () => {
             try {
-              exportToJSON([...notes, ...archivedNotes]);
+              const { savedToFile } = await exportFullBackup();
               markBackup();
-              toast.success("Backup pobrany 💾");
+              toast.success(savedToFile ? "Backup zapisany 💾" : "Backup pobrany 💾");
             } catch {
               toast.error("Nie udało się wygenerować backupu");
             }

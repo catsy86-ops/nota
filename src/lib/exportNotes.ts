@@ -1,9 +1,9 @@
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import jsPDF from "jspdf";
 import type { Note } from "@/hooks/useNotes";
 import { yjsStore } from "@/lib/yjsStore";
 import { noteSchema, fullBackupSchema, looksLikeNoteArray, type FullBackup } from "@/lib/noteSchema";
+import { tryWriteBackupToFile } from "@/lib/backupFileHandle";
 
 export function exportToJSON(notes: Note[], filename?: string): { filename: string; size: number } {
   const data = JSON.stringify(notes, null, 2);
@@ -12,8 +12,12 @@ export function exportToJSON(notes: Note[], filename?: string): { filename: stri
   return { filename: name, size: new Blob([data]).size };
 }
 
-/** Pełny backup: notatki + etykiety + foldery, wystarczający do odtworzenia całej bazy. */
-export async function exportFullBackup(filename?: string): Promise<{ filename: string; size: number }> {
+/**
+ * Pełny backup: notatki + etykiety + foldery, wystarczający do odtworzenia całej bazy.
+ * Jeśli w Ustawieniach wybrano jeden, zapamiętany plik (File System Access API,
+ * desktop Chrome/Edge), nadpisuje go zamiast pobierać kolejny plik do Pobranych.
+ */
+export async function exportFullBackup(filename?: string): Promise<{ filename: string; size: number; savedToFile: boolean }> {
   await yjsStore.ready();
   const backup: FullBackup = {
     version: 1,
@@ -24,8 +28,9 @@ export async function exportFullBackup(filename?: string): Promise<{ filename: s
   };
   const data = JSON.stringify(backup, null, 2);
   const name = filename || `kaczy-full-backup-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
-  download(data, name, "application/json");
-  return { filename: name, size: new Blob([data]).size };
+  const savedToFile = await tryWriteBackupToFile(data);
+  if (!savedToFile) download(data, name, "application/json");
+  return { filename: name, size: new Blob([data]).size, savedToFile };
 }
 
 const MAX_IMPORT_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
@@ -58,107 +63,6 @@ export function importFullBackup(): Promise<FullBackup> {
     };
     input.click();
   });
-}
-
-function addImagesToPDF(doc: jsPDF, images: string[], margin: number, contentW: number, y: number): number {
-  const maxImgHeight = 70;
-  for (const img of images) {
-    try {
-      const props = doc.getImageProperties(img);
-      const ratio = props.height / props.width;
-      let w = contentW;
-      let h = w * ratio;
-      if (h > maxImgHeight) { h = maxImgHeight; w = h / ratio; }
-      if (y + h > 275) { doc.addPage(); y = 20; }
-      doc.addImage(img, margin, y, w, h);
-      y += h + 4;
-    } catch {
-      // Nieznany/uszkodzony format obrazu — pomiń ten jeden obrazek, nie przerywaj eksportu.
-    }
-  }
-  return y;
-}
-
-export function exportToPDF(notes: Note[]) {
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
-  const pageW = doc.internal.pageSize.getWidth();
-  const margin = 16;
-  const contentW = pageW - margin * 2;
-  let y = 20;
-
-  // Title
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(20);
-  doc.text("KACZY", margin, y);
-  y += 6;
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(120);
-  doc.text(`Eksport: ${format(new Date(), "d MMMM yyyy, HH:mm", { locale: pl })}`, margin, y);
-  doc.setTextColor(0);
-  y += 12;
-
-  for (const note of notes) {
-    // Check if we need a new page
-    if (y > 260) {
-      doc.addPage();
-      y = 20;
-    }
-
-    // Title
-    if (note.title) {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      const titleLines = doc.splitTextToSize(note.title, contentW);
-      doc.text(titleLines, margin, y);
-      y += titleLines.length * 5 + 2;
-    }
-
-    // Labels
-    if (note.labels.length > 0) {
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(8);
-      doc.setTextColor(100);
-      doc.text(`Etykiety: ${note.labels.join(", ")}`, margin, y);
-      doc.setTextColor(0);
-      y += 5;
-    }
-
-    // Reminder
-    if (note.reminder) {
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(8);
-      doc.setTextColor(100);
-      doc.text(`Przypomnienie: ${format(new Date(note.reminder), "d MMM yyyy, HH:mm", { locale: pl })}`, margin, y);
-      doc.setTextColor(0);
-      y += 5;
-    }
-
-    // Content
-    if (note.content) {
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      const lines = doc.splitTextToSize(note.content, contentW);
-      for (const line of lines) {
-        if (y > 275) { doc.addPage(); y = 20; }
-        doc.text(line, margin, y);
-        y += 4.5;
-      }
-      y += 2;
-    }
-
-    // Images
-    if (note.images?.length) {
-      y = addImagesToPDF(doc, note.images, margin, contentW, y);
-    }
-
-    // Separator
-    doc.setDrawColor(220);
-    doc.line(margin, y, pageW - margin, y);
-    y += 8;
-  }
-
-  doc.save("kaczy-export.pdf");
 }
 
 function download(content: string, filename: string, type: string) {

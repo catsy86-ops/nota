@@ -1,11 +1,121 @@
-import { Download, Database } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Download, Database, ShieldCheck, ShieldAlert, FileCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useViewPrefs, setViewPref } from "@/lib/viewPrefs";
 import { exportFullBackup, importFullBackup } from "@/lib/exportNotes";
 import { daysSinceBackup } from "@/lib/backupReminder";
+import { requestPersistentStorage, getStorageInfo, type StorageInfo } from "@/lib/storagePersistence";
+import { isFileSystemAccessSupported, pickBackupFile, clearBackupFile, getBackupFileName } from "@/lib/backupFileHandle";
 import { toast } from "sonner";
 import { Section } from "./SettingsShared";
+
+function formatBytes(bytes: number | null): string {
+  if (bytes === null) return "?";
+  if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/** "Czy przeglądarka może same wyczyścić dane" status + jednorazowa prośba o trwałość. */
+function StoragePersistenceStatus() {
+  const [info, setInfo] = useState<StorageInfo | null>(null);
+  const [requesting, setRequesting] = useState(false);
+
+  useEffect(() => {
+    getStorageInfo().then(setInfo);
+  }, []);
+
+  async function handleRequest() {
+    setRequesting(true);
+    const granted = await requestPersistentStorage();
+    const fresh = await getStorageInfo();
+    setInfo(fresh);
+    setRequesting(false);
+    if (granted) toast.success("Przeglądarka obiecała nie czyścić danych KACZY automatycznie");
+    else toast.error("Przeglądarka nie przyznała trwałego storage — spróbuj dodać appkę do ekranu głównego/zakładek");
+  }
+
+  if (!info) return null;
+
+  return (
+    <Section title="Trwałość danych w tej przeglądarce">
+      <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs space-y-2">
+        <div className="flex items-center gap-2">
+          {info.persisted ? (
+            <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+          ) : (
+            <ShieldAlert className="w-4 h-4 text-amber-500 shrink-0" />
+          )}
+          <p className="text-foreground">
+            {info.persisted
+              ? "Przeglądarka nie będzie automatycznie czyścić danych KACZY pod presją miejsca."
+              : "Przeglądarka MOŻE automatycznie wyczyścić dane KACZY, gdy zabraknie miejsca na dysku — to jedyna kopia notatek, jeśli nie robisz backupów."}
+          </p>
+        </div>
+        <p className="text-muted-foreground">
+          Zajęte: {formatBytes(info.usageBytes)} {info.quotaBytes !== null && `z ${formatBytes(info.quotaBytes)} dostępnych`}
+        </p>
+        {!info.persisted && (
+          <Button size="sm" variant="outline" onClick={handleRequest} disabled={requesting} className="w-full">
+            Poproś przeglądarkę o trwały storage
+          </Button>
+        )}
+      </div>
+    </Section>
+  );
+}
+
+/**
+ * Desktop Chrome/Edge only: remember one file on disk that every future
+ * backup overwrites, instead of a fresh download landing in Pobrane each
+ * time (auto-backup every N days adds up to dozens of files over a year).
+ */
+function BackupFileTarget() {
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    getBackupFileName().then((name) => { setFileName(name); setLoaded(true); });
+  }, []);
+
+  if (!isFileSystemAccessSupported()) return null;
+
+  async function handlePick() {
+    const ok = await pickBackupFile(`kaczy-full-backup-${new Date().toISOString().slice(0, 10)}.json`);
+    if (ok) {
+      setFileName(await getBackupFileName());
+      toast.success("Backupy będą teraz nadpisywać ten plik zamiast pobierać nowe");
+    }
+  }
+
+  async function handleForget() {
+    await clearBackupFile();
+    setFileName(null);
+    toast("Backup wróci do pobierania nowego pliku za każdym razem");
+  }
+
+  if (!loaded) return null;
+
+  return (
+    <Section title="Miejsce zapisu backupu">
+      <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs space-y-2">
+        <div className="flex items-center gap-2">
+          <FileCog className="w-4 h-4 text-muted-foreground shrink-0" />
+          <p className="text-foreground">
+            {fileName
+              ? <>Backupy nadpisują <span className="font-semibold">{fileName}</span> zamiast pobierać nowy plik.</>
+              : "Domyślnie każdy backup to nowy plik w Pobranych. Możesz zamiast tego wskazać jeden plik, który będzie nadpisywany."}
+          </p>
+        </div>
+        {fileName ? (
+          <Button size="sm" variant="outline" onClick={handleForget} className="w-full">Wróć do pobierania nowego pliku</Button>
+        ) : (
+          <Button size="sm" variant="outline" onClick={handlePick} className="w-full">Wybierz jeden plik do nadpisywania</Button>
+        )}
+      </div>
+    </Section>
+  );
+}
 
 function handleAutoExportChange(v: number) {
   setViewPref("autoExportDays", v);
@@ -16,9 +126,9 @@ function handleAutoExportChange(v: number) {
 
 async function exportNow() {
   try {
-    await exportFullBackup();
+    const { savedToFile } = await exportFullBackup();
     try { localStorage.setItem("kaczy.lastAutoExport", String(Date.now())); } catch { /* ignore */ }
-    toast.success("Backup pobrany 💾");
+    toast.success(savedToFile ? "Backup zapisany 💾" : "Backup pobrany 💾");
   } catch {
     toast.error("Nie udało się wygenerować backupu");
   }
@@ -42,6 +152,9 @@ export function BackupSettings() {
 
   return (
     <div className="space-y-4">
+      <StoragePersistenceStatus />
+      <BackupFileTarget />
+
       <Section title={`Auto-backup ${prefs.autoExportDays === 0 ? "(wyłączony)" : `co ${prefs.autoExportDays} dni`}`}>
         <Slider
           value={[prefs.autoExportDays]}
@@ -49,7 +162,7 @@ export function BackupSettings() {
           onValueChange={([v]) => handleAutoExportChange(v)}
         />
         <p className="text-[11px] text-muted-foreground mt-1.5">
-          Po przekroczeniu interwału aplikacja sama pobierze plik JSON z backupem (gdy otworzysz KACZY).
+          Po przekroczeniu interwału aplikacja sama zapisze backup (gdy otworzysz KACZY) — do Pobranych, albo do jednego wybranego pliku, jeśli go ustawiłeś niżej.
         </p>
       </Section>
 
