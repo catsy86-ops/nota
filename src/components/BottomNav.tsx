@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { motion, LayoutGroup } from "framer-motion";
-import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History } from "lucide-react";
+import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History, CalendarRange } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { cn } from "@/lib/utils";
 
-type View = "notes" | "today" | "week" | "archive" | "label" | "reminders" | "folder" | "widget" | "trash";
+import type { View } from "@/hooks/useFilteredNotes";
 
 interface BottomNavProps {
   view: View;
@@ -28,7 +28,7 @@ const slotsRight = [
 
 export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, archiveCount = 0 }: BottomNavProps) {
   const [moreOpen, setMoreOpen] = useState(false);
-  const isMoreActive = ["trash", "reminders", "folder", "label"].includes(view);
+  const isMoreActive = ["trash", "reminders", "calendar", "folder", "label"].includes(view);
 
   return (
     <>
@@ -91,6 +91,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             <SheetTile Icon={HelpCircle} label="Samouczek" onClick={() => { window.dispatchEvent(new CustomEvent("kaczy:tour")); setMoreOpen(false); }} />
             <SheetTile Icon={Trash2} label="Kosz" badge={trashCount || undefined} onClick={() => { onGo("trash"); setMoreOpen(false); }} />
             <SheetTile Icon={Bell} label="Przypomnienia" onClick={() => { onGo("reminders"); setMoreOpen(false); }} />
+            <SheetTile Icon={CalendarRange} label="Kalendarz" onClick={() => { onGo("calendar"); setMoreOpen(false); }} />
             <SheetTile Icon={SettingsIcon} label="Ustawienia" onClick={() => { onOpenSettings(); setMoreOpen(false); }} />
           </div>
         </SheetContent>

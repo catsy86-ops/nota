@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { StickyNote, Archive, Bell, Trash, Plus, Moon, Sparkles, Trophy, Calendar, Brain, Keyboard } from "lucide-react";
+import { StickyNote, Archive, Bell, Trash, Plus, Moon, Sparkles, Trophy, Calendar, CalendarRange, Brain, Keyboard } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 
 export interface CommandAction {
@@ -17,7 +17,7 @@ interface Props {
   notes: Note[];
   onOpenNote: (id: string) => void;
   onNewNote: () => void;
-  onGo: (view: "notes" | "today" | "week" | "archive" | "reminders" | "trash" | "widget") => void;
+  onGo: (view: "notes" | "today" | "week" | "archive" | "reminders" | "calendar" | "trash" | "widget") => void;
   onToggleTheme: () => void;
   onOpenSettings: () => void;
   onOpenStats: () => void;
@@ -93,6 +93,9 @@ export function CommandPalette({
           </CommandItem>
           <CommandItem onSelect={() => run(() => onGo("reminders"))}>
             <Bell className="w-4 h-4 mr-2" /> Przypomnienia
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => onGo("calendar"))}>
+            <CalendarRange className="w-4 h-4 mr-2" /> Kalendarz
           </CommandItem>
           <CommandItem onSelect={() => run(() => onGo("archive"))}>
             <Archive className="w-4 h-4 mr-2" /> Archiwum

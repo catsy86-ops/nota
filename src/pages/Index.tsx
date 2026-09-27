@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { motion } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { StickyNote, Archive, Bell, Trash, Calendar } from "lucide-react";
+import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange } from "lucide-react";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useNoteVersions } from "@/hooks/useNoteVersions";
 import type { NoteVersion } from "@/hooks/useNoteVersions";
@@ -47,6 +47,8 @@ const CommandPalette = lazy(() => import("@/components/CommandPalette").then((m)
 const StatsDialog = lazy(() => import("@/components/StatsDialog").then((m) => ({ default: m.StatsDialog })));
 const NotePresentation = lazy(() => import("@/components/NotePresentation").then((m) => ({ default: m.NotePresentation })));
 const FocusMode = lazy(() => import("@/components/FocusMode").then((m) => ({ default: m.FocusMode })));
+// Kalendarz wchodzi tylko po wejściu w swój widok — siatka notatek go nie potrzebuje.
+const ReminderCalendarView = lazy(() => import("@/components/calendar/ReminderCalendarView").then((m) => ({ default: m.ReminderCalendarView })));
 
 const Index = () => {
   const {
@@ -260,6 +262,7 @@ const Index = () => {
     { icon: StickyNote, label: "Notatki", view: "notes", count: notes.length, emoji: "📝" },
     { icon: Calendar, label: "Dziś", view: "today", count: todayNotesCount, emoji: "📅" },
     { icon: Bell, label: "Przypomnienia", view: "reminders", count: remindersCount, emoji: "🔔" },
+    { icon: CalendarRange, label: "Kalendarz", view: "calendar", count: remindersCount, emoji: "🗓️" },
     { icon: Archive, label: "Archiwum", view: "archive", count: archivedNotes.length, emoji: "📦" },
     { icon: Trash, label: "Kosz", view: "trash", count: trashedNotes.length, emoji: "🗑️" },
   ];
@@ -407,7 +410,13 @@ const Index = () => {
             </section>
           )}
 
-          {displayNotes.length === 0 && <EmptyState view={view} search={search} />}
+          {view === "calendar" && (
+            <Suspense fallback={null}>
+              <ReminderCalendarView notes={[...notes, ...archivedNotes]} />
+            </Suspense>
+          )}
+
+          {view !== "calendar" && displayNotes.length === 0 && <EmptyState view={view} search={search} />}
         </main>
       </div>
     </div>

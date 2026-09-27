@@ -272,7 +272,7 @@ Fakt z kodu, który rozstrzyga wszystko: model trzyma **jeden** timestamp, a `ge
 | # | Zakres | Nakład |
 |---|---|---|
 | ~~1~~ | ~~`reminderOccurrences.ts` + testy; `composeReminderTimestamp` wyciągnięte z `ReminderPicker`; uzdrowienie `FIRED_KEY`~~ — **zrobione 2026-09-27**, patrz niżej | **S** |
-| 2 | `View: "calendar"` + wpisy nawigacji (`Index.tsx`, `BottomNav`, `AppHeader`, `EmptyState`, `CommandPalette`) + pusty widok pod `lazy()` | **S** |
+| ~~2~~ | ~~`View: "calendar"` + wpisy nawigacji + pusty widok pod `lazy()`~~ — **zrobione 2026-09-27**, patrz niżej | **S** |
 | 3 | `MonthGrid` + `DayCell` + `ReminderChip` + panel dnia, read-only, obsługa klawiaturą (roving tabindex, `role="grid"`) | **M** |
 | 4 | `ReminderQuickAddDialog`: dodawanie (nowa notatka / przypnij do istniejącej) + edycja + usunięcie jednorazowego | **M** |
 | 5 | Semantyka serii: chipy read-only, „usuń wystąpienie vs serię" | **M** |
@@ -291,3 +291,13 @@ Uwagi wykonawcze: `expandOccurrences` memoizować po `[notes, archivedNotes, vis
 - Przy okazji: „KACZY” w tekście `ReminderPicker` zamienione na „aplikacja” (zaszłość sprzed rebrandingu).
 
 Zweryfikowane: `typecheck` / `lint` (0 błędów, 8 ostrzeżeń — bez zmian) / **227 testów jednostkowych** (190 + 37 nowych) / 10 e2e / `build`.
+
+### Etap 2 — wykonany (2026-09-27)
+
+- `View` poszerzony o `"calendar"` w `useFilteredNotes.ts`; `useFilteredNotes` zwraca dla niego puste listy i **nie buduje indeksu Fuse** — kalendarz rysuje własną projekcję.
+- `BottomNav` przestał duplikować union `View` i importuje go z `useFilteredNotes` (rozjazd typów był kwestią czasu). Wpis „Kalendarz" trafił do arkusza „Więcej", obok „Przypomnień": pasek ma sztywne 5 kolumn, a **świadomie nie degradowałem** „Archiwum" do arkusza, żeby zrobić miejsce — plan agenta to sugerował, ale to usunięcie istniejącej funkcji z paska w zamian za nową. `isMoreActive` obejmuje teraz `calendar`.
+- Wpisy w `Index.tsx` (sidebar), `AppHeader` (tytuł z ikoną), `CommandPalette` (union + pozycja nawigacji), `EmptyState` (dwa rekordy po `View`).
+- `ReminderCalendarView` pod `lazy()` — osobny chunk **3,19 kB**, pierwsze wejście w Notatki go nie pobiera. Na razie: nawigacja po miesiącach, „Dziś" (z `aria-label="Wróć do bieżącego miesiąca"`, bo „Dziś" koliduje z pozycją paska bocznego) i policzone wystąpienia z `expandOccurrences`. Widok mówi wprost, że siatka dojdzie w kolejnym kroku, zamiast udawać gotowy kalendarz.
+- Poprawka przy okazji: nagłówek pokazywał w kalendarzu „0 notatki", bo licznik liczy siatkę. Licznik jest tam teraz ukryty.
+
+Zweryfikowane: `typecheck` / `lint` (0 błędów, 8 ostrzeżeń — bez zmian) / 227 testów jednostkowych / **12 e2e** (10 + 2 nowe: wejście z paska bocznego z nawigacją po miesiącach oraz wejście z palety poleceń) / `build`.

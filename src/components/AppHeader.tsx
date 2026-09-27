@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ChevronLeft, Moon, Sun, Download, FileJson, FileText, Upload, FolderOpen, Tag, Calendar } from "lucide-react";
+import { ChevronLeft, Moon, Sun, Download, FileJson, FileText, Upload, FolderOpen, Tag, Calendar, CalendarRange } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SearchBar } from "@/components/SearchBar";
@@ -82,6 +82,12 @@ export function AppHeader({
                   Ten tydzień
                 </span>
               )}
+              {view === "calendar" && (
+                <span className="flex items-center gap-1.5">
+                  <CalendarRange className="w-4 h-4 text-primary" />
+                  Kalendarz
+                </span>
+              )}
               {view === "archive" && "Archiwum"}
               {view === "reminders" && "Przypomnienia"}
               {view === "folder" && (
@@ -97,9 +103,11 @@ export function AppHeader({
                 </span>
               )}
             </h1>
-            <p className="text-[11px] text-muted-foreground hidden sm:block">
-              {displayCount} {displayCount === 1 ? "notatka" : displayCount < 5 ? "notatki" : "notatek"}
-            </p>
+            {view !== "calendar" && (
+              <p className="text-[11px] text-muted-foreground hidden sm:block">
+                {displayCount} {displayCount === 1 ? "notatka" : displayCount < 5 ? "notatki" : "notatek"}
+              </p>
+            )}
           </div>
         </div>
 
