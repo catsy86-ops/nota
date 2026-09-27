@@ -273,7 +273,7 @@ Fakt z kodu, który rozstrzyga wszystko: model trzyma **jeden** timestamp, a `ge
 |---|---|---|
 | ~~1~~ | ~~`reminderOccurrences.ts` + testy; `composeReminderTimestamp` wyciągnięte z `ReminderPicker`; uzdrowienie `FIRED_KEY`~~ — **zrobione 2026-09-27**, patrz niżej | **S** |
 | ~~2~~ | ~~`View: "calendar"` + wpisy nawigacji + pusty widok pod `lazy()`~~ — **zrobione 2026-09-27**, patrz niżej | **S** |
-| 3 | `MonthGrid` + `DayCell` + `ReminderChip` + panel dnia, read-only, obsługa klawiaturą (roving tabindex, `role="grid"`) | **M** |
+| ~~3~~ | ~~`MonthGrid` + `DayCell` + `ReminderChip` + panel dnia, read-only, obsługa klawiaturą~~ — **zrobione 2026-09-27**, patrz niżej | **M** |
 | 4 | `ReminderQuickAddDialog`: dodawanie (nowa notatka / przypnij do istniejącej) + edycja + usunięcie jednorazowego | **M** |
 | 5 | Semantyka serii: chipy read-only, „usuń wystąpienie vs serię" | **M** |
 | 6 | E2E + mobile (kropki zamiast chipów poniżej ~380 px, safe-area) | **S** |
@@ -301,3 +301,18 @@ Zweryfikowane: `typecheck` / `lint` (0 błędów, 8 ostrzeżeń — bez zmian) /
 - Poprawka przy okazji: nagłówek pokazywał w kalendarzu „0 notatki", bo licznik liczy siatkę. Licznik jest tam teraz ukryty.
 
 Zweryfikowane: `typecheck` / `lint` (0 błędów, 8 ostrzeżeń — bez zmian) / 227 testów jednostkowych / **12 e2e** (10 + 2 nowe: wejście z paska bocznego z nawigacją po miesiącach oraz wejście z palety poleceń) / `build`.
+
+### Etap 3 — wykonany (2026-09-27)
+
+Siatka miesiąca, komórka dnia, chip terminu i panel dnia — na razie **tylko do czytania**.
+
+- `MonthGrid.tsx` — własna siatka na `date-fns`, tydzień od poniedziałku. Obsługa klawiaturą odtworzona świadomie (to cena rezygnacji z `react-day-picker`): `role="grid"`/`row`/`columnheader`/`gridcell`, **roving tabindex** (cała siatka to jeden przystanek tabulatora), strzałki po dniach, `Home`/`End` po tygodniu, `PageUp`/`PageDown` po miesiącach. Wyjście strzałką poza miesiąc przewija kalendarz zamiast blokować ruch. Fokus przenosi się dopiero po ruchu klawiaturą — inaczej samo wejście w widok przeskakiwałoby stronę do siatki.
+- `DayCell.tsx` — do 3 chipów i „+N więcej"; **poniżej `sm` same kropki**, bo chip z tekstem nie mieści się w 1/7 szerokości telefonu. Treść terminów siedzi w `aria-label` komórki (`„14 marca 2026, 2 terminy"`), a wizualna warstwa jest `aria-hidden` — czytnik ekranu nie czyta tych samych danych dwa razy.
+- `ReminderChip.tsx` — godzina, tytuł, ikona `Repeat`. **Wystąpienie serii, które nie jest najbliższe, rysuje się przerywanym obramowaniem i bez wypełnienia.** To wizualna zapowiedź semantyki z etapu 5: tylko `isNext` da się edytować.
+- `DayPanel.tsx` — pełne tytuły, których komórka nie pomieści, plus zdanie „Prognoza serii — zapisany jest tylko najbliższy termin" przy wystąpieniach dalszych.
+- Zakres liczenia wystąpień jest o tydzień szerszy z każdej strony miesiąca, bo siatka pokazuje też wiodące i zamykające dni sąsiednich miesięcy — inaczej skrajne komórki byłyby zawsze puste. Potwierdzone testem e2e: termin ustawiony na 3 października widać w siatce września.
+- Poprawka: `capitalize` na dacie podnosiło każde słowo („29 **W**rześnia") — zamienione na `first-letter:uppercase`.
+
+Chunk kalendarza: **8,78 kB** (gzip 3,61 kB), dalej poza pierwszym wejściem.
+
+Zweryfikowane: `typecheck` / `lint` (0 błędów, 8 ostrzeżeń — bez zmian) / 227 testów jednostkowych / **14 e2e** (12 + 2 nowe: termin w komórce i w panelu dnia oraz chodzenie strzałkami z `PageDown`) / `build` / zrzuty w układzie desktop i mobile.
