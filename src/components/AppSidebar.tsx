@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
 import {
-  Settings as SettingsIcon, HelpCircle, Tag, Moon, Sun, Keyboard, FolderOpen, Command, History, Trophy, Brain,
+  Settings as SettingsIcon, HelpCircle, Tag, Moon, Sun, FolderOpen, Command, History, Trophy, Brain, MoreHorizontal, ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotesContext } from "@/hooks/NotesProvider";
@@ -41,8 +42,6 @@ interface AppSidebarProps {
   onGoLabel: (label: string) => void;
   onGoFolder: (folderId: string) => void;
   sidebarItems: SidebarItem[];
-  totalNotes: number;
-  remindersCount: number;
   onLogoClick: () => void;
   dark: boolean;
   onToggleTheme: () => void;
@@ -56,9 +55,10 @@ interface AppSidebarProps {
 
 export function AppSidebar({
   open, onClose, view, activeLabel, activeFolder, onGoView, onGoLabel, onGoFolder,
-  sidebarItems, totalNotes, remindersCount, onLogoClick, dark, onToggleTheme, onOpenPalette, onOpenActions,
+  sidebarItems, onLogoClick, dark, onToggleTheme, onOpenPalette, onOpenActions,
   onOpenStats, onOpenFocusMode, settingsOpen, onSettingsOpenChange,
 }: AppSidebarProps) {
+  const [moreOpen, setMoreOpen] = useState(false);
   const { allLabels, folders, renameLabel, removeLabel, addFolder, updateFolder, deleteFolder } = useNotesContext();
 
   return (
@@ -109,23 +109,7 @@ export function AppSidebar({
                 </div>
               </motion.div>
 
-              <div className="grid grid-cols-3 gap-2 px-1 pb-4">
-                {[
-                  { value: totalNotes, label: "Notatek", color: "" },
-                  { value: allLabels.length, label: "Etykiet", color: "" },
-                  { value: remindersCount, label: "Przyp.", color: "text-primary" },
-                ].map((stat) => (
-                  <motion.div
-                    key={stat.label}
-                    whileHover={{ scale: 1.03 }}
-                    className="stats-card text-center"
-                  >
-                    <p className={cn("text-lg font-display font-bold", stat.color || "text-foreground")}>{stat.value}</p>
-                    <p className="text-2xs text-muted-foreground font-medium uppercase tracking-wider">{stat.label}</p>
-                  </motion.div>
-                ))}
-              </div>
-
+              {/* Kafle statystyk usunięte — liczniki są już przy pozycjach nawigacji. */}
               <div className="space-y-0.5">
                 {sidebarItems.map((item, i) => {
                   const isNotesItem = item.view === "notes";
@@ -136,8 +120,6 @@ export function AppSidebar({
                         initial={{ x: -20, opacity: 0 }}
                         animate={{ x: 0, opacity: 1 }}
                         transition={{ delay: 0.15 + i * 0.05 }}
-                        whileHover={{ x: 3 }}
-                        whileTap={{ scale: 0.98 }}
                         onClick={() => onGoView(item.view)}
                         aria-current={active ? "page" : undefined}
                         className={cn(
@@ -149,12 +131,7 @@ export function AppSidebar({
                           <>
                             <motion.span
                               layoutId="sidebar-active-pill"
-                              className="absolute inset-0 rounded-xl bg-primary/10 border border-primary/15 shadow-sm"
-                              transition={{ type: "spring", stiffness: 500, damping: 38 }}
-                            />
-                            <motion.span
-                              layoutId="sidebar-active-bar"
-                              className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-primary"
+                              className="absolute inset-0 rounded-lg bg-primary/10"
                               transition={{ type: "spring", stiffness: 500, damping: 38 }}
                             />
                           </>
@@ -242,87 +219,56 @@ export function AppSidebar({
               <div className="flex-1" />
 
               <div className="px-1 pb-2 pt-4 border-t border-border/50 space-y-0.5">
-                <div className="flex items-center gap-2 px-3 py-1.5 text-2xs text-muted-foreground/50">
-                  <Keyboard className="w-3 h-3" />
-                  <span>Ctrl+N • Ctrl+K — paleta</span>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={onOpenPalette}
-                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
-                >
+                <button onClick={onOpenPalette} className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors">
                   <Command className="w-[18px] h-[18px]" />
                   <span>Paleta poleceń</span>
-                  <span className="ml-auto text-2xs opacity-60">⌘K</span>
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={onOpenActions}
-                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
-                >
-                  <History className="w-[18px] h-[18px]" />
-                  <span>Ostatnie akcje</span>
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={onOpenStats}
-                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
-                >
-                  <Trophy className="w-[18px] h-[18px]" />
-                  <span>Statystyki</span>
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={onOpenFocusMode}
-                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
-                >
-                  <Brain className="w-[18px] h-[18px]" />
-                  <span>Tryb skupienia</span>
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
+                  <span className="ml-auto text-2xs opacity-70">⌘K</span>
+                </button>
+                <button
                   onClick={onToggleTheme}
                   aria-label={dark ? "Włącz tryb jasny" : "Włącz tryb ciemny"}
                   aria-pressed={dark}
-                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
+                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors"
                 >
-                  <AnimatePresence mode="wait">
-                    {dark ? (
-                      <motion.div key="sun" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.2 }}>
-                        <Sun className="w-[18px] h-[18px]" />
-                      </motion.div>
-                    ) : (
-                      <motion.div key="moon" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.2 }}>
-                        <Moon className="w-[18px] h-[18px]" />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                  {dark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
                   <span>{dark ? "Tryb jasny" : "Tryb ciemny"}</span>
-                </motion.button>
+                </button>
                 <SettingsDialog open={settingsOpen} onOpenChange={onSettingsOpenChange} />
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => onSettingsOpenChange(true)}
-                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
-                >
+                <button onClick={() => onSettingsOpenChange(true)} className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors">
                   <SettingsIcon className="w-[18px] h-[18px]" />
                   <span>Ustawienia</span>
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => window.dispatchEvent(new CustomEvent("kaczy:tour"))}
-                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
+                </button>
+
+                {/* Akcje drugorzędne zwinięte — sidebar ma się mieścić na 900 px. */}
+                <button
+                  onClick={() => setMoreOpen((v) => !v)}
+                  aria-expanded={moreOpen}
+                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors"
                 >
-                  <HelpCircle className="w-[18px] h-[18px]" />
-                  <span>Samouczek</span>
-                </motion.button>
+                  <MoreHorizontal className="w-[18px] h-[18px]" />
+                  <span>Narzędzia</span>
+                  <ChevronDown className={cn("ml-auto w-4 h-4 transition-transform", moreOpen && "rotate-180")} />
+                </button>
+                {moreOpen && (
+                  <div className="space-y-0.5 pl-2">
+                    <button onClick={onOpenActions} className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors">
+                      <History className="w-[18px] h-[18px]" />
+                      <span>Ostatnie akcje</span>
+                    </button>
+                    <button onClick={onOpenStats} className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors">
+                      <Trophy className="w-[18px] h-[18px]" />
+                      <span>Statystyki</span>
+                    </button>
+                    <button onClick={onOpenFocusMode} className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors">
+                      <Brain className="w-[18px] h-[18px]" />
+                      <span>Tryb skupienia</span>
+                    </button>
+                    <button onClick={() => window.dispatchEvent(new CustomEvent("kaczy:tour"))} className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors">
+                      <HelpCircle className="w-[18px] h-[18px]" />
+                      <span>Samouczek</span>
+                    </button>
+                  </div>
+                )}
                 <InstallAppButton />
                 <p className="text-2xs text-muted-foreground/40 text-center font-medium">NOTATKI PIJACKIE v1.0 • Zrobione przy piwie 🍺</p>
               </div>

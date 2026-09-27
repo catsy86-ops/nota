@@ -269,7 +269,6 @@ const Index = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const totalNotes = notes.length + archivedNotes.length;
   const remindersCount = notes.filter((n) => n.reminder).length;
   // Trwałe usunięcie zabiera ze sobą historię wersji — inaczej zostawałaby
   // w `localStorage` na zawsze i zjadała limit.
@@ -309,8 +308,6 @@ const Index = () => {
         onGoLabel={(label) => { setView("label"); setActiveLabel(label); if (isMobile) setSidebarOpen(false); }}
         onGoFolder={(id) => { setView("folder"); setActiveFolder(id); if (isMobile) setSidebarOpen(false); }}
         sidebarItems={sidebarItems}
-        totalNotes={totalNotes}
-        remindersCount={remindersCount}
         onLogoClick={handleLogoClick}
         dark={dark}
         onToggleTheme={toggleTheme}
@@ -340,7 +337,6 @@ const Index = () => {
         />
 
         <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 pb-safe">
-          {view === "notes" && <DailyQuote />}
           <div className="sm:hidden">
             <SearchBar value={search} onChange={setSearch} />
           </div>
@@ -454,6 +450,7 @@ const Index = () => {
           )}
 
           {view !== "calendar" && displayNotes.length === 0 && <EmptyState view={view} search={search} />}
+          {view === "notes" && displayNotes.length > 0 && !search && <DailyQuote />}
         </main>
       </div>
     </div>
@@ -515,6 +512,8 @@ const Index = () => {
       onOpenActions={() => setActionsOpen(true)}
       trashCount={trashedNotes.length}
       archiveCount={archivedNotes.length}
+      dark={dark}
+      onToggleTheme={toggleTheme}
     />
     <BulkActionBar
       count={selectedIds.size}

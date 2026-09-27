@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, LayoutGroup } from "framer-motion";
-import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History, CalendarRange } from "lucide-react";
+import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History, CalendarRange, Moon, Sun } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,8 @@ interface BottomNavProps {
   onOpenActions?: () => void;
   trashCount?: number;
   archiveCount?: number;
+  dark?: boolean;
+  onToggleTheme?: () => void;
 }
 
 const slots = [
@@ -26,7 +28,7 @@ const slotsRight = [
   { key: "archive" as View, label: "Archiwum", Icon: Archive },
 ] as const;
 
-export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, archiveCount = 0 }: BottomNavProps) {
+export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, archiveCount = 0, dark = false, onToggleTheme }: BottomNavProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const isMoreActive = ["trash", "reminders", "calendar", "folder", "label"].includes(view);
 
@@ -92,6 +94,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             <SheetTile Icon={Trash2} label="Kosz" badge={trashCount || undefined} onClick={() => { onGo("trash"); setMoreOpen(false); }} />
             <SheetTile Icon={Bell} label="Przypomnienia" onClick={() => { onGo("reminders"); setMoreOpen(false); }} />
             <SheetTile Icon={CalendarRange} label="Kalendarz" onClick={() => { onGo("calendar"); setMoreOpen(false); }} />
+            {onToggleTheme && <SheetTile Icon={dark ? Sun : Moon} label={dark ? "Tryb jasny" : "Tryb ciemny"} onClick={() => { onToggleTheme(); setMoreOpen(false); }} />}
             <SheetTile Icon={SettingsIcon} label="Ustawienia" onClick={() => { onOpenSettings(); setMoreOpen(false); }} />
           </div>
         </SheetContent>

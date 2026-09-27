@@ -81,7 +81,7 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
       className={cn(
         "relative flex flex-col gap-0.5 min-h-[4.5rem] sm:min-h-[6rem] p-1 sm:p-1.5 rounded-xl border text-left cursor-pointer transition-colors outline-none",
         "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-        inMonth ? "border-border/50 bg-card/40" : "border-transparent bg-transparent text-muted-foreground/50",
+        inMonth ? "border-border/50 bg-card/40 dark:border-transparent dark:bg-card/60" : "border-transparent bg-transparent text-muted-foreground/70",
         selected && "border-primary/60 bg-primary/5",
         isOver && "border-primary bg-primary/10",
       )}
@@ -90,7 +90,6 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
         className={cn(
           "text-xs font-medium tabular-nums w-5 h-5 flex items-center justify-center rounded-full shrink-0",
           today && "bg-primary text-primary-foreground",
-          !today && !inMonth && "opacity-60",
         )}
       >
         {format(day, "d")}

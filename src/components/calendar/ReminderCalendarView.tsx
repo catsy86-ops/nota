@@ -3,7 +3,7 @@ import {
   DndContext, PointerSensor, TouchSensor, pointerWithin, useSensor, useSensors, type DragEndEvent,
 } from "@dnd-kit/core";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Keyboard } from "lucide-react";
 import { buildIcs, exportableReminders } from "@/lib/icsExport";
 import { download } from "@/lib/exportNotes";
 import { addDays, format, isSameDay, isSameMonth } from "date-fns";
@@ -218,14 +218,19 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
           onClick={exportAll}
           aria-label="Eksportuj nadchodzące terminy do kalendarza (.ics)"
           title="Eksportuj nadchodzące terminy do kalendarza (.ics)"
-          className="ml-auto lg:ml-2 order-last shrink-0 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 rounded-lg transition-colors"
+          className="ml-auto sm:ml-0 order-last shrink-0 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 rounded-lg transition-colors"
         >
           <Download className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">.ics</span>
         </button>
-        <p className="ml-auto text-xs text-muted-foreground hidden lg:block">
-          ↑↓←→ — dni · PgUp/PgDn — miesiąc · przeciągnij termin lub Shift+←/→
-        </p>
+        {/* Ściągawka skrótów w podpowiedzi zamiast stałego tekstu w nagłówku. */}
+        <span
+          title="↑↓←→ — dni · PgUp/PgDn — miesiąc · Enter — dodaj termin · przeciągnij termin lub Shift+←/→"
+          className="ml-auto hidden sm:inline-flex p-2 text-muted-foreground"
+        >
+          <Keyboard className="w-4 h-4" aria-hidden />
+          <span className="sr-only">Skróty: strzałki — dni, PgUp/PgDn — miesiąc, Enter — dodaj termin, Shift+strzałki — przesuń termin</span>
+        </span>
       </header>
 
       <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>

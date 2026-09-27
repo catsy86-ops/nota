@@ -420,15 +420,21 @@ Audyt agentowy: kod + zrzuty Playwright 1440/768/375, jasny i ciemny motyw (Usta
 - [x] Przywrócić `--elevation-1/2/3` zamiast `.note-shadow*`, `.header-glow` i arbitralnych `shadow-[...]` (zmiana decyzji z 2026-09-25 — dziś cienie są niespójne). **S**
 - [x] Spacing 4/8, jedna wysokość pozycji nawigacji (`h-9`); weryfikacja AA (axe) w obu motywach. **S**
 
-**Faza 2 — komponenty, ~2–3 dni**
-- [ ] `NoteCard`: akcje `opacity-0 group-hover:opacity-100 focus-within:opacity-100` na desktopie, na dotyku menu „⋯”; cele 44 px; zwarta meta. **M**
-- [ ] `NoteGrid`: masonry na `columns-*` + `break-inside-avoid`. **M** — uwaga: roadmapa wyżej ostrzega, że masonry kłóci się z dnd-kit (reorder), `framer-motion layout` i nawigacją po `data-note-idx`; najpierw spike z przeciąganiem.
-- [ ] `AppSidebar`: bez kafli statystyk, akcje drugorzędne w grupie „Więcej”, jeden styl aktywnej pozycji. **M**
-- [ ] `AppHeader` mobile: 3–4 ikony, reszta w menu; tytuł jednokolorowy. **S**
-- [ ] `DailyQuote` zwijany / pod siatką; `QuickTemplates` — ikona albo emoji, fade na krawędzi przy scrollu. **S**
-- [ ] `EmptyState`: naprawa ucinania `NotatnikWordmark`, bez Konami i `gradient-text`. **S**
-- [ ] Kalendarz: dni spoza miesiąca `text-muted-foreground/60`, skróty do tooltipa, lżejsza siatka w ciemnym motywie. **S**
-- [ ] Ręczny przegląd dialogu Ustawień. **S**
+**Faza 2 — komponenty** — ✅ w większości zrobione 2026-09-27
+- [x] `NoteCard`: akcje ukryte do najechania/fokusu tylko na urządzeniach z hoverem (`@media (hover: hover)` w klasie `.card-actions`; wcześniej `md:opacity-0` było martwe, bo `animate={{opacity:1}}` framer-motion wstawiał styl inline). Na dotyku widoczne, cele 44 px (`.card-action`, `pointer: coarse`). Akcje zostają widoczne przy otwartym kolorze/„więcej” (`data-open`). Bez skalowania ikon przy hoverze (też w `ReminderPicker`/`PriorityPicker`). Meta bez `/60`. Karta `rounded-xl`. W ciemnym motywie na kolorowych notatkach `--muted-foreground: 220 10% 74%` (atrybut `data-note-color`).
+- [ ] **Na dotyku menu „⋯” zamiast paska ikon** — nie zrobione; dziś pasek zostaje, tylko z większymi celami.
+- [ ] `NoteGrid` masonry — **świadomie odłożone**: `columns-*` łamie dnd-kit (reorder), `framer-motion layout` i nawigację po `data-note-idx`. Wymaga osobnego spike'u z przeciąganiem.
+- [x] `AppSidebar`: bez kafli statystyk (propsy `totalNotes`/`remindersCount` usunięte), jeden styl aktywnej pozycji (sama pigułka `bg-primary/10`, bez paska z lewej), bez `whileHover`; akcje drugorzędne (Ostatnie akcje, Statystyki, Tryb skupienia, Samouczek) w zwijanej grupie „Narzędzia” (nie „Więcej” — kolidowało z przyciskiem „Więcej” dolnej nawigacji w e2e); usunięta zdublowana podpowiedź skrótów.
+- [x] `AppHeader`: tytuł jednokolorowy; przełącznik motywu ukryty poniżej `sm` i przeniesiony do arkusza „Więcej” w `BottomNav` (nowe propsy `dark`/`onToggleTheme`); bez skalowania przycisków.
+- [x] `DailyQuote`: z banera nad polem dodawania na cichy dopisek pod siatką (tylko widok Notatki, gdy są notatki i nie ma wyszukiwania). `QuickTemplates`: sama ikona (emoji zdjęte z etykiety), `rounded-lg`, fade na prawej krawędzi poniżej `sm`, bez skalowania.
+- [x] `EmptyState`: bez `gradient-text` i ✨, bez podpowiedzi Konami. **„Ucięty wordmark” z audytu to nie błąd** — zrzuty robione po 2,5 s, a animacja pisania trwa 3,1 s.
+- [x] Kalendarz: dni spoza miesiąca `text-muted-foreground/70` (bez dodatkowego `opacity-60`), w ciemnym motywie komórki bez obramowań (`dark:bg-card/60`), ściągawka skrótów jako ikona z `title` + `sr-only`.
+- [ ] Ręczny przegląd dialogu Ustawień — nie zrobiony (brak zrzutów).
+- Zweryfikowane: typecheck, lint (0 błędów), 250 testów jednostkowych, 22/22 e2e, build. Jeden przebieg e2e dał losowy pad (przy ponownym uruchomieniu zielono) — warto obserwować.
+
+**Uwaga do dalszej pracy nad UI (życzenie właściciela, 2026-09-27):** kolejne zmiany wizualne (reszta Fazy 2, Faza 3, decyzja o kolorze `--primary`) robić z użyciem skilla **`frontend-design`**.
+
+**Decyzja do właściciela:** biały tekst na `--primary` (25 95% 53%) ma 2,8:1 — poniżej AA. Opcje: ciemniejszy odcień dla przycisków albo ciemny tekst na pomarańczowym.
 
 **Faza 3 — dopieszczenie i ruch, ~1 dzień**
 - [ ] Budżet ruchu: `whileHover` tylko FAB/CTA (maks. `scale: 1.03`), wejścia kart fade 150–200 ms, stagger ≤ 30 ms. **S**

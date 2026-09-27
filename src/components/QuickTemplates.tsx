@@ -95,7 +95,9 @@ export function QuickTemplates({ onPick, onCreateLabel }: Props) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="flex items-center gap-2 overflow-x-auto scrollbar-thin pb-1 -mx-1 px-1"
+      // Fade na prawej krawędzi mówi, że pasek przewija się w bok (na telefonie
+      // chipy nie mieszczą się w szerokości).
+      className="flex items-center gap-2 overflow-x-auto scrollbar-thin pb-1 -mx-1 px-1 [mask-image:linear-gradient(to_right,#000_88%,transparent)] sm:[mask-image:none]"
     >
       <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground shrink-0 mr-1">
         Szablony
@@ -108,17 +110,15 @@ export function QuickTemplates({ onPick, onCreateLabel }: Props) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 + i * 0.04 }}
-            whileHover={{ scale: 1.06, y: -2 }}
-            whileTap={{ scale: 0.95 }}
             onClick={() => {
               const data = t.build();
               data.labels.forEach(onCreateLabel);
               onPick(data.title, data.content, t.color, data.labels, null, [], data.checklist);
             }}
-            className="group shrink-0 flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-full text-xs font-medium border border-border/60 bg-card/70 backdrop-blur hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all"
+            className="group shrink-0 flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-xs font-medium border border-border/60 bg-card/70 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-colors"
           >
             <Icon className="w-3.5 h-3.5" />
-            <span>{t.emoji} {t.label}</span>
+            <span>{t.label}</span>
           </motion.button>
         );
       })}

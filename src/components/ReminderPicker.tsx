@@ -55,10 +55,8 @@ export function ReminderPicker({ reminder, reminderRepeat, onSet }: ReminderPick
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <motion.button
-          whileHover={{ scale: 1.15 }}
-          whileTap={{ scale: 0.9 }}
           className={cn(
-            "p-1.5 rounded-full hover:bg-foreground/5 transition-colors",
+            "card-action",
             reminder ? "text-primary" : "text-muted-foreground"
           )}
           title="Przypomnienie"

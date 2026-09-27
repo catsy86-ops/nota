@@ -16,10 +16,8 @@ export function PriorityPicker({ priority, onSet }: PriorityPickerProps) {
     <Popover>
       <PopoverTrigger asChild>
         <motion.button
-          whileHover={{ scale: 1.15 }}
-          whileTap={{ scale: 0.9 }}
           className={cn(
-            "p-1.5 rounded-full hover:bg-foreground/5 transition-colors",
+            "card-action",
             priority !== "none" ? PRIORITY_COLOR_CLASS[priority] : "text-muted-foreground"
           )}
           title="Priorytet"

@@ -3,7 +3,7 @@ import { NotatnikWordmark } from "@/components/NotatnikWordmark";
 import type { View } from "@/hooks/useFilteredNotes";
 
 const HEADINGS: Record<View, string> = {
-  notes: "Zacznij tworzyć ✨",
+  notes: "Zacznij tworzyć",
   archive: "Archiwum puste",
   trash: "Kosz jest pusty",
   reminders: "Brak przypomnień",
@@ -11,8 +11,8 @@ const HEADINGS: Record<View, string> = {
   today: "Brak notatek z dzisiaj",
   week: "Brak notatek z tego tygodnia",
   label: "Brak notatek z tą etykietą",
-  folder: "Zacznij tworzyć ✨",
-  widget: "Zacznij tworzyć ✨",
+  folder: "Zacznij tworzyć",
+  widget: "Zacznij tworzyć",
 };
 
 const DESCRIPTIONS: Record<View, string> = {
@@ -44,7 +44,7 @@ export function EmptyState({ view, search }: { view: View; search: string }) {
         <div className="absolute inset-x-6 inset-y-2 rounded-full bg-gradient-to-br from-primary/15 to-accent/15 blur-2xl" />
         <NotatnikWordmark className="relative" />
       </div>
-      <h2 className="text-3xl font-display font-extrabold gradient-text mb-2">{HEADINGS[view]}</h2>
+      <h2 className="text-2xl font-display font-bold text-foreground mb-2">{HEADINGS[view]}</h2>
       <p className="text-muted-foreground max-w-sm mx-auto mb-6">{DESCRIPTIONS[view]}</p>
       {view === "notes" && (
         <motion.div
@@ -56,7 +56,6 @@ export function EmptyState({ view, search }: { view: View; search: string }) {
           {[
             { k: "⌘K", l: "paleta poleceń" },
             { k: "Ctrl+N", l: "nowa notatka" },
-            { k: "↑↑↓↓←→←→BA", l: "niespodzianka" },
           ].map((s) => (
             <span key={s.k} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/60 border border-border/40 rounded-full px-2.5 py-1">
               <kbd className="font-mono font-semibold text-foreground/80">{s.k}</kbd>

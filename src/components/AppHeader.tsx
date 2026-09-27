@@ -68,7 +68,7 @@ export function AppHeader({
             </motion.div>
           )}
           <div>
-            <h1 className="text-lg font-display font-extrabold leading-tight tracking-tight bg-gradient-to-r from-foreground via-foreground to-primary bg-clip-text text-transparent">
+            <h1 className="text-lg font-display font-extrabold leading-tight tracking-tight text-foreground">
               {view === "notes" && "Notatki"}
               {view === "today" && (
                 <span className="flex items-center gap-1.5">
@@ -118,12 +118,10 @@ export function AppHeader({
             <motion.button
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
               onClick={onToggleTheme}
               aria-label={dark ? "Włącz tryb jasny" : "Włącz tryb ciemny"}
               aria-pressed={dark}
-              className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground"
+              className="hidden sm:inline-flex p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
             >
               {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </motion.button>
@@ -132,9 +130,7 @@ export function AppHeader({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground data-[state=open]:bg-muted data-[state=open]:text-foreground"
+                className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground data-[state=open]:bg-muted data-[state=open]:text-foreground"
                 aria-label="Import / Eksport"
                 title="Import / Eksport"
               >
