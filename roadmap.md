@@ -434,7 +434,7 @@ Audyt agentowy: kod + zrzuty Playwright 1440/768/375, jasny i ciemny motyw (Usta
 
 **Uwaga do dalszej pracy nad UI (życzenie właściciela, 2026-09-27):** kolejne zmiany wizualne (reszta Fazy 2, Faza 3, decyzja o kolorze `--primary`) robić z użyciem skilla **`frontend-design`**.
 
-**Decyzja do właściciela:** biały tekst na `--primary` (25 95% 53%) ma 2,8:1 — poniżej AA. Opcje: ciemniejszy odcień dla przycisków albo ciemny tekst na pomarańczowym.
+**Decyzja (2026-09-27):** ciemny tekst na `--primary` — `--primary-foreground: 220 25% 10%`, kontrast ~6:1 (AA) na wszystkich kolorach pór roku.
 
 **Faza 3 — dopieszczenie i ruch, ~1 dzień**
 - [x] Budżet ruchu: `whileHover` tylko FAB/CTA (maks. `scale: 1.03`), wejścia kart fade 150–200 ms, stagger ≤ 30 ms. **S**
