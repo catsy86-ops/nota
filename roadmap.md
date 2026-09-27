@@ -242,3 +242,43 @@ Diagnoza: appka ma imponującą **szerokość** (rysowanie, gamifikacja, P2P CRD
 - **Automatyczne testy realnego WebRTC** — zamknięte z uzasadnieniem 2026-09-25, nie wracamy.
 - **Dalszy code-splitting** — wątek zamknięty 2026-09-27; 703 KB to już kod właściwy appki.
 - **Tabele/GFM, podświetlanie składni, edytor szablonów w UI, hierarchia etykiet, ładniejszy PDF, szyfrowanie IndexedDB** — kolejno: ciągną zależności do bundla dla funkcji bez miejsca w kaflu; CRUD dla sześciu presetów edytowanych i tak w kodzie; foldery są już zagnieżdżone (`parentId`), drugi system taksonomii to dublowanie pojęć; godziny za funkcję używaną raz na kwartał; bez konta i serwera klucz leżałby obok danych, czyli teatr bezpieczeństwa (hasło pokoju w P2P to inna sprawa i już jest).
+
+## Kalendarz przypomnień — plan (2026-09-27)
+
+Zamówiony przez użytkownika widok kalendarza, w którym da się **dodać, edytować i usunąć** przypomnienie. Plan powstał z audytu agentowego zweryfikowanego w kodzie; poniżej tylko rozstrzygnięcia, nie streszczenie.
+
+### Rozstrzygnięcia projektowe
+
+- [x] **Bez nowej encji — `reminder` zostaje polem notatki, kalendarz to widok projekcyjny.** Osobny „event" oznaczałby nowy `Y.Map` top-level, nowy observer, `FullBackup` v2 z migracją oraz integralność referencyjną event→notatka bez transakcji cross-map — czyli klasę błędów „event osierocony po usunięciu notatki", której dziś w ogóle nie ma. Eksporty (`exportNotes.ts:87,140`, `exportPdf.ts:77`) już drukują przypomnienie z notatki. Cena przyjęta świadomie: **jedna notatka = najwyżej jeden termin**; gdyby to kiedyś nie wystarczyło, właściwym krokiem jest `reminders: Reminder[]` w istniejącym `Y.Map`, nie osobna kolekcja.
+- [x] **Własna siatka miesiąca na `date-fns`, nie `react-day-picker`.** v8 ma `components.DayContent`, ale komórka to sztywny `h-9 w-9` `<button>` (`ui/calendar.tsx:293`) — chipy byłyby klikalnymi elementami wewnątrz przycisku (niepoprawny HTML, zepsuta obsługa klawiaturą), a drop na dzień wymaga własnego `useDroppable` na kontenerze. `ui/calendar.tsx` zostaje nietknięte i dalej obsługuje pickery.
+- [x] **Zakres: miesiąc + panel listy wybranego dnia. Widok tygodnia i dnia z osią godzin odpada.** Przypomnienia mają godzinę, ale **nie mają czasu trwania** — oś godzinowa rysowałaby punkty, nie bloki, czyli byłaby gorszą listą.
+
+### Serie (`reminderRepeat`) — najtrudniejszy punkt
+
+Fakt z kodu, który rozstrzyga wszystko: model trzyma **jeden** timestamp, a `getNextReminderTime` (`reminderRepeat.ts:11`) jest wołane dopiero w chwili odpalenia (`useReminderNotifications.ts:112`). Nie ma `dtstart`, `until`, ani listy wyjątków. **Jedyne wystąpienie, które naprawdę istnieje, to najbliższe**; cała reszta to prognoza liczona w locie.
+
+- [ ] Chip najbliższego wystąpienia: pełna interaktywność. Chipy dalszych wystąpień: **read-only**, wizualnie odmienne (przerywane obramowanie, ikona `Repeat`), klik prowadzi do najbliższego. Asymetria jest dziwna dopiero, dopóki nie zrozumie się modelu — alternatywa (udawanie, że wszystkie wystąpienia są równe) obiecuje operacje niemożliwe do zapisania.
+- [ ] „Usuń" na najbliższym wystąpieniu ma dwie opcje: **to wystąpienie** → `reminder = getNextReminderTime(at, repeat)` (seria trwa, pomija jeden termin; zwykły LWW, zero nowych pól), **cała seria** → `reminder = null, reminderRepeat = "none"`. Obie z Cofnij.
+- [x] **Świadomie NIE `reminderSkips: number[]`.** Kuszące, ale pole trafiłoby do `NOTE_SCALAR_FIELDS` (`yjsStore.ts:30`), a te są LWW na całej wartości: dwa urządzenia offline pomijające różne terminy → jedna lista wygrywa, druga zmiana znika bez śladu. Poprawnie wymagałoby `Y.Array` i rozszerzenia projekcji — nakład L i nowy wektor błędów sync dla funkcji, której wartość jest wątpliwa przy nieskończonej serii.
+- [ ] Brak „do kiedy" akceptowany w MVP (kalendarz przewinięty na 2030 dalej pokazuje chipy). Jeśli zaboli: **jedno** pole skalarne `reminderRepeatUntil`, bezpieczne dla LWW, bo to jedna liczba.
+
+### Znalezione przy okazji błędy (poza samym kalendarzem)
+
+- [ ] **`FIRED_KEY` nie jest czyszczony przy zmianie terminu** (`useReminderNotifications.ts:34-46`). Przesunięcie już odpalonego, jednorazowego przypomnienia na przyszłość **nie wystrzeli ponownie**, bo `note.id` zostaje w localStorage na zawsze. Dziś rzadkie, po kalendarzu z przeciąganiem — codzienne. Do tego zbiór rośnie w nieskończoność, bo nic nie usuwa wpisów po skasowanych notatkach.
+- [ ] **`monthly` 31. dnia miesiąca przeskakuje na 3 marca** — `d.setMonth(d.getMonth() + 1)` (`reminderRepeat.ts:21`) i przepełnienie `Date`. Istniejące zachowanie; najpierw udokumentować testem, potem decydować, czy to bug.
+
+### Etapy
+
+| # | Zakres | Nakład |
+|---|---|---|
+| 1 | `reminderOccurrences.ts` + testy; `composeReminderTimestamp` wyciągnięte z `ReminderPicker`; uzdrowienie `FIRED_KEY` | **S** |
+| 2 | `View: "calendar"` + wpisy nawigacji (`Index.tsx`, `BottomNav`, `AppHeader`, `EmptyState`, `CommandPalette`) + pusty widok pod `lazy()` | **S** |
+| 3 | `MonthGrid` + `DayCell` + `ReminderChip` + panel dnia, read-only, obsługa klawiaturą (roving tabindex, `role="grid"`) | **M** |
+| 4 | `ReminderQuickAddDialog`: dodawanie (nowa notatka / przypnij do istniejącej) + edycja + usunięcie jednorazowego | **M** |
+| 5 | Semantyka serii: chipy read-only, „usuń wystąpienie vs serię" | **M** |
+| 6 | E2E + mobile (kropki zamiast chipów poniżej ~380 px, safe-area) | **S** |
+| 7 | Drag&drop terminu + **obowiązkowy** `Shift+←/→` (WCAG 2.5.7) + Cofnij | **S** |
+
+Etapy 1–4 to wysyłalny produkt. **Etap 5 jest obowiązkowy** przed pokazaniem go komukolwiek, kto używa powtarzania.
+
+Uwagi wykonawcze: `expandOccurrences` memoizować po `[notes, archivedNotes, visibleMonth]`; zbiór to `[...notes, ...archivedNotes]` bez kosza (tak samo jak `Index.tsx:104` karmi powiadomienia); przy drag&drop obsługa `day-drop-*` musi mieć `return` **przed** fallbackiem reorderu w `useNoteDnd.ts:476`, inaczej przeciągnięcie przestawi globalny `sortKey` na `"manual"` za plecami użytkownika.
