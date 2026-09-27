@@ -139,3 +139,24 @@ Podmieniono logo kaczki na animowany kufel piwa (`src/components/BeerMugLogo.tsx
 SVG + framer-motion, pęcherzyki unoszące się w płynie) oraz nazwę aplikacji z "KACZY" na
 "NOTATKI PIJACKIE" w sidebarze, headerze, stopce, `index.html` i `manifest.webmanifest`.
 Drobne easter-eggi z kaczką (np. żarty w powiadomieniach, cytat dnia) pozostały bez zmian.
+
+---
+
+## Poza kolejką: koniec kaczki (na żądanie użytkownika, 2026-09-27)
+
+Rebranding z 2026-09-24 ominął pusty stan: `EmptyState.tsx` dalej ładował
+`src/assets/duck-logo.png` — ostatnie miejsce z kaczką w UI. PNG usunięty,
+a w jego miejsce wszedł `src/components/NotatnikWordmark.tsx`: słowo „Notatnik"
+wypisuje się odręcznie, litera po literze (osobne ścieżki SVG animowane przez
+`pathLength`), kropka nad „i" dochodzi sprężynką, na końcu jedno pociągnięcie
+podkreślenia w kolorze `--primary`, a za napisem mruga kursor tekstowy.
+
+Czyste SVG zamiast obrazka: ostre w każdej skali, kolory z motywu (sprawdzone
+zrzutami w trybie jasnym i ciemnym), zero wagi w bundlu, a przy
+`prefers-reduced-motion` renderuje od razu stan końcowy bez animacji.
+
+Pierwsza wersja miała jeszcze tło kartki w linie z czerwonym marginesem —
+usunięte, bo przy realnym kontraście i poświacie pod spodem było niewidoczne.
+
+Uwaga: aplikacja nazywa się „NOTATKI PIJACKIE”, więc wordmark „Notatnik” w pustym
+stanie jest świadomym wyborem użytkownika, nie spójną nazwą marki.

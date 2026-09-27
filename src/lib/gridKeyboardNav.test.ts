@@ -8,7 +8,8 @@ import {
   type GridNavHandlers,
 } from "./gridKeyboardNav";
 
-function handlers(overrides: Partial<GridNavHandlers> = {}) {
+/** Zestaw atrap z zachowanymi typami `Mock` — potrzebnymi do podglądu wywołań. */
+function probeHandlers(cols = 2) {
   return {
     onDelete: vi.fn(),
     onArchive: vi.fn(),
@@ -16,9 +17,12 @@ function handlers(overrides: Partial<GridNavHandlers> = {}) {
     onDuplicate: vi.fn(),
     openNote: vi.fn(),
     scrollToNote: vi.fn(),
-    colsCount: () => 2,
-    ...overrides,
+    colsCount: () => cols,
   };
+}
+
+function handlers(overrides: Partial<GridNavHandlers> = {}) {
+  return { ...probeHandlers(), ...overrides };
 }
 
 function key(k: string) {
@@ -34,7 +38,7 @@ function focusedIdAfter(k: string) {
 
 // Stan czytamy przez efekt uboczny na podświetleniu: prościej podejrzeć go
 // przez akcję niż eksportować getter tylko dla testów.
-let probe: ReturnType<typeof handlers>;
+let probe: ReturnType<typeof probeHandlers>;
 function currentFocus(): string | null {
   probe.onDelete.mockClear();
   key("Delete");
@@ -65,7 +69,7 @@ describe("gridKeyboardNav", () => {
   });
 
   it("strzałki przechodzą z sekcji przypiętych do pozostałych jak po jednej liście", () => {
-    probe = handlers();
+    probe = probeHandlers();
     registerGridNavSection(0, ["p1", "p2"], probe);
     registerGridNavSection(1, ["o1"], probe);
 
@@ -75,7 +79,7 @@ describe("gridKeyboardNav", () => {
   });
 
   it("kolejność sekcji wynika z navOrder, nie z kolejności montowania", () => {
-    probe = handlers();
+    probe = probeHandlers();
     registerGridNavSection(1, ["o1"], probe); // „Inne” zarejestrowane pierwsze
     registerGridNavSection(0, ["p1"], probe);
 
@@ -85,7 +89,7 @@ describe("gridKeyboardNav", () => {
   });
 
   it("↓ skacze o liczbę kolumn zgłoszoną przez sekcję", () => {
-    probe = handlers({ colsCount: () => 2 });
+    probe = probeHandlers(2);
     registerGridNavSection(0, ["a", "b", "c", "d"], probe);
     setGridNavFocus("a");
     expect(focusedIdAfter("ArrowDown")).toBe("c");
@@ -121,7 +125,7 @@ describe("gridKeyboardNav", () => {
   });
 
   it("odrejestrowanie sekcji zdejmuje fokus z notatki, której już nie ma", () => {
-    probe = handlers();
+    probe = probeHandlers();
     const unregister = registerGridNavSection(0, ["p1"], probe);
     registerGridNavSection(1, ["o1"], probe);
     setGridNavFocus("p1");

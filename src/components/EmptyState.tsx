@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import duckLogo from "@/assets/duck-logo.png";
+import { NotatnikWordmark } from "@/components/NotatnikWordmark";
 import type { View } from "@/hooks/useFilteredNotes";
 
 const HEADINGS: Record<View, string> = {
@@ -38,14 +38,10 @@ export function EmptyState({ view, search }: { view: View; search: string }) {
 
   return (
     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-center py-20 sm:py-24">
-      <motion.div
-        className="relative w-32 h-32 mx-auto mb-6"
-        animate={{ y: [0, -10, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <div className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/20 to-accent/20 blur-2xl" />
-        <img src={duckLogo} alt="" className="relative w-32 h-32 mx-auto drop-shadow-xl" />
-      </motion.div>
+      <div className="relative w-64 max-w-full mx-auto mb-6">
+        <div className="absolute inset-x-6 inset-y-2 rounded-full bg-gradient-to-br from-primary/15 to-accent/15 blur-2xl" />
+        <NotatnikWordmark className="relative" />
+      </div>
       <h2 className="text-3xl font-display font-extrabold gradient-text mb-2">{HEADINGS[view]}</h2>
       <p className="text-muted-foreground max-w-sm mx-auto mb-6">{DESCRIPTIONS[view]}</p>
       {view === "notes" && (
