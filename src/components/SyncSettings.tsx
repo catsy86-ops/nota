@@ -5,6 +5,8 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
+import { pl } from "date-fns/locale";
 import {
   useSyncState, startPairing, joinWithCode, pauseSync, resumeSync, forgetPairing,
 } from "@/lib/yjsSync";
@@ -87,6 +89,16 @@ export function SyncSettings({ prefillCode }: Props) {
           <div className="min-w-0">
             <p className="text-sm font-semibold">Synchronizacja między urządzeniami</p>
             <p className="text-xs text-muted-foreground mt-0.5">{statusLabel}</p>
+            {syncState.status !== "disabled" && (
+              <p className="text-2xs text-muted-foreground mt-0.5">
+                {syncState.lastSyncedAt
+                  ? `Ostatnia zmiana z innego urządzenia: ${formatDistanceToNow(syncState.lastSyncedAt, { addSuffix: true, locale: pl })}`
+                  : "W tej sesji nie przyszła jeszcze żadna zmiana z innego urządzenia"}
+              </p>
+            )}
+            {syncState.lastError && (
+              <p className="text-2xs text-destructive mt-0.5">Błąd połączenia: {syncState.lastError}</p>
+            )}
           </div>
         </div>
         <Switch checked={syncState.status !== "disabled"} onCheckedChange={handleToggle} />

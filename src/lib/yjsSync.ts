@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import type { WebrtcProvider } from "y-webrtc";
 import { yjsStore } from "@/lib/yjsStore";
 import { startImageSync, stopImageSync } from "@/lib/imageSync";
+import { logDiag } from "@/lib/diagnostics";
 
 /**
  * Peer-to-peer transport for the Yjs doc (Phase 2 of the multi-device sync
@@ -31,13 +32,14 @@ function readPrefs(): SyncPrefs {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PREFS;
     return { ...DEFAULT_PREFS, ...JSON.parse(raw) };
-  } catch {
+  } catch (err) {
+    logDiag("warn", "yjsSync", "unreadable sync prefs, using defaults", err);
     return DEFAULT_PREFS;
   }
 }
 
 function writePrefs(prefs: SyncPrefs) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs)); } catch { /* ignore */ }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs)); } catch (err) { logDiag("warn", "yjsSync", "cannot persist sync prefs", err); }
 }
 
 export type SyncStatus = "disabled" | "connecting" | "connected";
@@ -46,9 +48,16 @@ export interface SyncState {
   status: SyncStatus;
   peerCount: number;
   code: string | null;
+  /** Kiedy ostatnio przyszła zmiana od innego urządzenia (ms). Tylko w tej sesji. */
+  lastSyncedAt: number | null;
+  /** Ostatni błąd transportu — żeby „nie synchronizuje się” miało odpowiedź. */
+  lastError: string | null;
 }
 
-const DEFAULT_STATE: SyncState = { status: "disabled", peerCount: 0, code: null };
+const DEFAULT_STATE: SyncState = { status: "disabled", peerCount: 0, code: null, lastSyncedAt: null, lastError: null };
+// Zmiany od peerów potrafią przychodzić seriami; odświeżamy znacznik co najwyżej
+// raz na kilka sekund, żeby nie przerenderowywać Ustawień przy każdej.
+const SYNCED_AT_THROTTLE_MS = 5000;
 
 let state: SyncState = { ...DEFAULT_STATE, code: readPrefs().code };
 let provider: WebrtcProvider | null = null;
@@ -114,16 +123,34 @@ function connect(code: string) {
   // of forcing it into the eager main bundle for every visitor.
   import("y-webrtc").then(({ WebrtcProvider }) => {
     if (token !== connectToken) return; // superseded by a later connect()/disconnect()
-    provider = new WebrtcProvider(roomNameFor(code), yjsStore.doc, { password: code });
-    provider.on("status", ({ connected }: { connected: boolean }) => {
+    const p = new WebrtcProvider(roomNameFor(code), yjsStore.doc, { password: code });
+    provider = p;
+    logDiag("info", "yjsSync", "provider started");
+    p.on("status", ({ connected }: { connected: boolean }) => {
+      logDiag("info", "yjsSync", connected ? "signaling connected" : "signaling disconnected");
       setState({ status: connected ? "connected" : "connecting" });
     });
-    provider.on("peers", ({ webrtcPeers, bcPeers }: { webrtcPeers: string[]; bcPeers: string[] }) => {
-      setState({ peerCount: webrtcPeers.length + bcPeers.length });
+    p.on("peers", ({ webrtcPeers, bcPeers }: { webrtcPeers: string[]; bcPeers: string[] }) => {
+      const peerCount = webrtcPeers.length + bcPeers.length;
+      if (peerCount !== state.peerCount) logDiag("info", "yjsSync", `peers: ${peerCount}`);
+      setState({ peerCount });
     });
+  }).catch((err) => {
+    if (token !== connectToken) return;
+    logDiag("error", "yjsSync", "cannot load WebRTC transport", err);
+    setState({ lastError: err instanceof Error ? err.message : String(err) });
   });
   startImageSync(code);
 }
+
+// Zmiana przyszła od peera wtedy, gdy jej źródłem jest pokój y-webrtc —
+// `readSyncMessage(…, room)` nadaje go jako origin transakcji.
+yjsStore.doc.on("update", (_update: Uint8Array, origin: unknown) => {
+  if (!provider || !origin || origin !== provider.room) return;
+  const now = Date.now();
+  if (state.lastSyncedAt && now - state.lastSyncedAt < SYNCED_AT_THROTTLE_MS) return;
+  setState({ lastSyncedAt: now });
+});
 
 function disconnectProvider() {
   connectToken++;

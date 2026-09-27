@@ -4,6 +4,9 @@ import App from "./App.tsx";
 import "./index.css";
 import { registerServiceWorker, applyServiceWorkerUpdate, SW_UPDATE_EVENT } from "./lib/registerSW";
 import { requestPersistentStorage } from "./lib/storagePersistence";
+import { installGlobalDiagHandlers } from "./lib/diagnostics";
+
+installGlobalDiagHandlers();
 
 createRoot(document.getElementById("root")!).render(<App />);
 

@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { logDiag } from "@/lib/diagnostics";
 
 export interface PersistedStore<T> {
   get(): T;
@@ -50,7 +51,8 @@ export function createPersistedStore<T>(
         // unparsable JSON is real corruption — fall back to defaults.
         return hasCustomMerge ? merge(defaults, raw as T) : defaults;
       }
-    } catch {
+    } catch (err) {
+      logDiag("warn", "persistedStore", `cannot read ${key}, using defaults`, err);
       return defaults;
     }
   }
@@ -68,7 +70,7 @@ export function createPersistedStore<T>(
 
   function set(next: T): void {
     state = next;
-    try { localStorage.setItem(key, JSON.stringify(state)); } catch { /* ignore quota */ }
+    try { localStorage.setItem(key, JSON.stringify(state)); } catch (err) { logDiag("warn", "persistedStore", `cannot save ${key}`, err); }
     options.onChange?.(state);
     emit();
   }

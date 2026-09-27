@@ -5,6 +5,7 @@ import { get as idbGet, set as idbSet, del as idbDel, keys as idbKeys, getMany a
 import { loadAll as loadLegacySnapshot } from "@/lib/notesStore";
 import { hashImage } from "@/lib/imageHash";
 import type { Note, Folder, ChecklistItem } from "@/hooks/useNotes";
+import { logDiag } from "@/lib/diagnostics";
 
 /**
  * Yjs-backed store for notes/folders/labels — the data layer that will let a
@@ -271,9 +272,23 @@ export function createYjsStore(dbName: string) {
         try {
           if (imgs?.length) await idbSet(IMAGES_PREFIX + id, imgs);
           else await idbDel(IMAGES_PREFIX + id);
-        } catch { /* best-effort, same as old saveNotesIDB */ }
+        } catch (err) { logDiag("error", "imagesStore", `cannot persist images of note (${imgs?.length ?? 0} images)`, err); }
       }
     });
+  }
+
+  /** Liczniki do raportu diagnostycznego — tylko flagi, bez treści notatek. */
+  function diagStats() {
+    let notes = 0, archived = 0, trashed = 0;
+    notesMap.forEach((n) => {
+      if (n.get("trashed")) trashed++;
+      else if (n.get("archived")) archived++;
+      else notes++;
+    });
+    return {
+      counts: { notes, archived, trashed, folders: foldersMap.size, labels: labelsMap.size },
+      stateVectorBytes: Y.encodeStateVector(doc).byteLength,
+    };
   }
 
   /** Test-only: czeka na zakończenie zapisów obrazów. */
@@ -548,7 +563,7 @@ export function createYjsStore(dbName: string) {
     upsertNote, patchNote, patchNotes, setNoteOrder, removeNote, removeNotes,
     upsertFolder, patchFolder, removeFolder,
     addLabel, removeLabelEverywhere, renameLabelEverywhere,
-    replaceAll, resetForTests,
+    replaceAll, resetForTests, diagStats,
     getImageHashes, getLocalImages, setImagesLocal,
     beginTextEdit, endTextEdit, onLocalChange, flushImagesForTests,
   };

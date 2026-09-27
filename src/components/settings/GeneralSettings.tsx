@@ -1,4 +1,5 @@
-import { Play } from "lucide-react";
+import { Play, FileDown } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -163,6 +164,29 @@ export function GeneralSettings() {
           </div>
         ))}
       </div>
+
+      <div className="pt-2"><Section title="Diagnostyka">
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold">Raport diagnostyczny</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Plik tekstowy z wersją aplikacji, stanem pamięci i synchronizacji oraz ostatnimi błędami. Bez treści notatek i bez kodu parowania. Nic nie jest wysyłane.
+            </p>
+          </div>
+          <Button type="button" size="sm" variant="outline" onClick={handleDownloadReport} className="shrink-0 gap-1.5">
+            <FileDown className="w-3.5 h-3.5" />Pobierz
+          </Button>
+        </div>
+      </Section></div>
     </div>
   );
+}
+
+async function handleDownloadReport() {
+  try {
+    const { downloadDiagReport } = await import("@/lib/diagnosticsReport");
+    await downloadDiagReport();
+  } catch {
+    toast.error("Nie udało się przygotować raportu");
+  }
 }

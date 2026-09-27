@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from "react";
+import { logDiag } from "@/lib/diagnostics";
 
 export type ActionKind = "trash" | "archive";
 
@@ -73,8 +74,9 @@ function persist() {
       STORAGE_KEY,
       JSON.stringify(entries.map(({ undo: _undo, ...rest }) => rest)),
     );
-  } catch {
-    /* quota / private mode — history stays in-memory */
+  } catch (err) {
+    // quota / private mode — history stays in-memory
+    logDiag("warn", "actionHistory", "cannot persist history", err);
   }
 }
 
@@ -102,7 +104,8 @@ export function undoAction(id: string) {
   if (!run) return false;
   try {
     run();
-  } catch {
+  } catch (err) {
+    logDiag("error", "actionHistory", `undo failed (${entry.kind})`, err);
     return false;
   }
   entries = entries.map((e) => (e.id === id ? { ...e, undone: true } : e));
