@@ -441,4 +441,4 @@ Audyt agentowy: kod + zrzuty Playwright 1440/768/375, jasny i ciemny motyw (Usta
 - [x] Aurora/blooms domyślnie statyczne i przygaszone (opacity ~0.35 / 0.25), animacja jako opcja; usunąć `card-shine`. **S**
 - [x] Jednolite `focus-visible:ring-2 ring-ring ring-offset-2` na przyciskach-ikonach. **S**
 - [x] Wyciszyć gamifikację w głównym widoku (emoji w nagłówkach, niespodzianki) — do Statystyk. **S**
-- [ ] Zrzuty przed/po tym samym skryptem. **S**
+- [x] Zrzuty przed/po tym samym skryptem (`node scripts/screenshots.mjs <url> <katalog>`). **S**
