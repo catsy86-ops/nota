@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { CalendarPlus, Plus, Pencil, ArrowRight } from "lucide-react";
+import { CalendarPlus, Plus, Pencil, ArrowRight, Download } from "lucide-react";
 import { ReminderChip } from "./ReminderChip";
 import type { Occurrence } from "@/lib/reminderOccurrences";
 
@@ -23,11 +23,13 @@ interface DayPanelProps {
   onEdit: (occurrence: Occurrence) => void;
   /** Shift+←/→ na terminie — klawiaturowy odpowiednik przeciągania (WCAG 2.5.7). */
   onMoveByDays: (occurrence: Occurrence, days: number) => void;
+  /** Pobiera `.ics` z tym terminem — kalendarz systemowy przypomni przy zamkniętej aplikacji. */
+  onExport: (occurrence: Occurrence) => void;
   /** Klik w prognozę serii — prowadzi do najbliższego, zapisanego terminu. */
   onOpenSeriesSource: (occurrence: Occurrence) => void;
 }
 
-export function DayPanel({ day, occurrences, titleOf, onAdd, onEdit, onMoveByDays, onOpenSeriesSource }: DayPanelProps) {
+export function DayPanel({ day, occurrences, titleOf, onAdd, onEdit, onMoveByDays, onExport, onOpenSeriesSource }: DayPanelProps) {
   return (
     <section aria-live="polite" className="rounded-2xl border border-border/50 bg-card/40 p-4">
       <div className="flex items-center gap-2 mb-3">
@@ -70,6 +72,7 @@ export function DayPanel({ day, occurrences, titleOf, onAdd, onEdit, onMoveByDay
                     </p>
                   </>
                 ) : (
+                  <div className="flex items-center gap-1">
                   <button
                     onClick={() => onEdit(occ)}
                     onKeyDown={(e) => {
@@ -85,6 +88,15 @@ export function DayPanel({ day, occurrences, titleOf, onAdd, onEdit, onMoveByDay
                     <ReminderChip occurrence={occ} title={title} detailed className="min-w-0 flex-1" />
                     <Pencil className="w-3.5 h-3.5 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
                   </button>
+                  <button
+                    onClick={() => onExport(occ)}
+                    aria-label={`Dodaj do kalendarza systemowego: ${title.trim() || "Bez tytułu"}`}
+                    title="Pobierz .ics — dodaj do kalendarza Google, Apple lub Outlook"
+                    className="p-2 shrink-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                  </button>
+                  </div>
                 )}
               </li>
             );

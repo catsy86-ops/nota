@@ -3,7 +3,9 @@ import {
   DndContext, PointerSensor, TouchSensor, pointerWithin, useSensor, useSensors, type DragEndEvent,
 } from "@dnd-kit/core";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download } from "lucide-react";
+import { buildIcs, exportableReminders } from "@/lib/icsExport";
+import { download } from "@/lib/exportNotes";
 import { addDays, format, isSameDay, isSameMonth } from "date-fns";
 import { pl } from "date-fns/locale";
 import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences";
@@ -155,6 +157,28 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     if (occ && day) moveToDay(occ, day);
   }
 
+  function exportIcs(list: Note[], filename: string) {
+    download(buildIcs(list), filename, "text/calendar;charset=utf-8");
+  }
+
+  function exportOne(occ: Occurrence) {
+    const note = notes.find((n) => n.id === occ.noteId);
+    if (!note) return;
+    exportIcs([note], `przypomnienie-${format(new Date(occ.at), "yyyy-MM-dd")}.ics`);
+    toast("Pobrano plik .ics", { description: "Otwórz go, żeby dodać termin do kalendarza systemowego." });
+  }
+
+  function exportAll() {
+    const list = exportableReminders(notes);
+    if (list.length === 0) { toast.info("Brak nadchodzących terminów do eksportu"); return; }
+    exportIcs(list, `przypomnienia-${format(new Date(), "yyyy-MM-dd")}.ics`);
+    const n = list.length;
+    const word = n === 1 ? "termin" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "terminy" : "terminów";
+    toast(`Pobrano ${n} ${word} (.ics)`, {
+      description: "Ponowny import zaktualizuje wpisy zamiast je dublować.",
+    });
+  }
+
   const isThisMonth = isSameMonth(month, new Date());
   const selectedOccurrences = byDay.get(dayKey(selectedDay)) ?? [];
 
@@ -190,7 +214,16 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
             Dziś
           </button>
         )}
-        <p className="ml-auto text-[11px] text-muted-foreground hidden sm:block">
+        <button
+          onClick={exportAll}
+          aria-label="Eksportuj nadchodzące terminy do kalendarza (.ics)"
+          title="Eksportuj nadchodzące terminy do kalendarza (.ics)"
+          className="ml-auto lg:ml-2 order-last shrink-0 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 rounded-lg transition-colors"
+        >
+          <Download className="w-3.5 h-3.5" />
+          <span className="hidden sm:inline">.ics</span>
+        </button>
+        <p className="ml-auto text-[11px] text-muted-foreground hidden lg:block">
           ↑↓←→ — dni · PgUp/PgDn — miesiąc · przeciągnij termin lub Shift+←/→
         </p>
       </header>
@@ -213,6 +246,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
         titleOf={titleOf}
         onAdd={() => openAdd(selectedDay)}
         onEdit={openEdit}
+        onExport={exportOne}
         onMoveByDays={(occ, days) => moveToDay(occ, addDays(new Date(occ.at), days))}
         onOpenSeriesSource={openSeriesSource}
       />

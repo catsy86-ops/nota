@@ -379,7 +379,7 @@ Propozycje **spoza** istniejącego planu. Przed nimi nadal idą otwarte P0: auto
 
 | # | Funkcja | Nakład | Wartość | Gdzie się wpina |
 |---|---|---|---|---|
-| F1 | Eksport terminów do `.ics` (`VALARM` + `RRULE`) — kalendarz systemowy dostarcza powiadomienia przy zamkniętej aplikacji | S | wysoka | nowy `lib/icsExport.ts`, `DayPanel`, `ReminderCalendarView` |
+| ~~F1~~ ✅ | Eksport terminów do `.ics` (`VALARM` + `RRULE`) — kalendarz systemowy dostarcza powiadomienia przy zamkniętej aplikacji | S | wysoka | nowy `lib/icsExport.ts`, `DayPanel`, `ReminderCalendarView` |
 | F2 | Import z Google Keep (Takeout) i folderu Markdown z frontmatterem | M | wysoka | `lib/importers/{keep,markdown}.ts`, `BackupSettings.tsx`, `noteSchema.ts` |
 | F3 | Przypomnienie „zrobione” (`reminderDoneAt`, w serii = przesunięcie na kolejne) | S–M | średnia | `yjsStore.ts` (pole skalarne), `DayPanel`, `ReminderToast.tsx`, `achievements.ts` |
 | F4 | Plakietka z liczbą zaległych terminów (`navigator.setAppBadge`) | S | średnia | `useReminderNotifications.ts` |
@@ -399,3 +399,9 @@ Propozycje **spoza** istniejącego planu. Przed nimi nadal idą otwarte P0: auto
 **Fala 3 — później:** F9 (po stanie widoku w URL), F10 (domyślnie wyłączony), F11 (gdy po autouzupełnianiu `[[` przybędzie linków).
 
 Świadomie pominięte: szyfrowanie/blokada notatek, wiele terminów na notatkę, notatki audio i OCR, web clipper (wymaga serwera), edytor szablonów.
+
+### F1 — eksport `.ics` wykonany (2026-09-27)
+
+- `src/lib/icsExport.ts`: `buildIcs` (RFC 5545: CRLF, zawijanie linii po 75 bajtach UTF-8 bez cięcia znaków, ucieczka `\ ; ,` i nowych linii), `UID = <id notatki>@notatnik` — ponowny import aktualizuje wpis zamiast dublować. `VALARM` w chwili terminu, zdarzenie 15 min. Czas „pływający” (bez `Z`/`TZID`) — ta sama godzina ścienna co w aplikacji, także po zmianie czasu. Serie → `RRULE:FREQ=DAILY|WEEKLY|MONTHLY`. `exportableReminders`: przyszłe terminy + serie, bez kosza. 10 testów.
+- UI: przycisk pobrania przy każdym zapisanym terminie w panelu dnia; „.ics” w nagłówku kalendarza eksportuje wszystkie nadchodzące. Test e2e sprawdza oba pobrania i treść pliku.
+- Znana różnica: seria `monthly` od 31. dnia — kalendarz z `RRULE` pomija miesiące bez 31., aplikacja przeskakuje (31 stycznia → 3 marca). Do rozstrzygnięcia razem z pozycją o `monthly` wyżej.

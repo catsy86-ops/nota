@@ -321,3 +321,28 @@ test("termin da się przeciągnąć na inny dzień, przesunąć Shift+strzałką
   await page.locator("[data-sonner-toast][data-front=true]").getByRole("button", { name: "Cofnij" }).dispatchEvent("click");
   await expect(grid.getByRole("gridcell", { name: movedLabel })).toHaveCount(1);
 });
+
+test("terminy da się pobrać jako plik .ics", async ({ page }) => {
+  await page.getByRole("button", { name: /Kalendarz/ }).first().click();
+  await page.getByRole("button", { name: "Dodaj termin" }).click();
+  await page.getByLabel("Treść nowej notatki z terminem").fill("jutro wizyta u lekarza");
+  await page.getByLabel("Godzina przypomnienia").fill("08:15");
+  await page.getByRole("button", { name: /Utwórz notatkę z terminem/ }).click();
+  await page.getByRole("grid", { name: /Kalendarz przypomnień/ }).getByRole("gridcell", { name: /1 termin/ }).click();
+
+  const [one] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: /Dodaj do kalendarza systemowego/ }).click(),
+  ]);
+  expect(one.suggestedFilename()).toMatch(/^przypomnienie-\d{4}-\d{2}-\d{2}\.ics$/);
+  const ics = await (await one.createReadStream()).toArray().then((c) => Buffer.concat(c).toString("utf8"));
+  expect(ics).toContain("BEGIN:VEVENT");
+  expect(ics).toContain("SUMMARY:wizyta u lekarza");
+  expect(ics).toMatch(/DTSTART:\d{8}T081500\r\n/);
+
+  const [all] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("button", { name: /Eksportuj nadchodzące terminy/ }).click(),
+  ]);
+  expect(all.suggestedFilename()).toMatch(/^przypomnienia-.*\.ics$/);
+});
