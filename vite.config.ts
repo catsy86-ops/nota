@@ -74,7 +74,7 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-    dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"],
+    dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime"],
   },
 
   build: {
@@ -84,7 +84,12 @@ export default defineConfig(({ mode }) => ({
           "vendor-react": ["react", "react-dom", "react-router-dom"],
           "vendor-motion": ["framer-motion"],
           "vendor-dnd": ["@dnd-kit/core", "@dnd-kit/sortable", "@dnd-kit/utilities"],
-          "vendor-pdf": ["jspdf"],
+          // Deliberately no "vendor-pdf": jspdf is reachable only through the
+          // dynamic import() in exportPdf.ts, so Rollup isolates it in that
+          // async chunk on its own. Forcing it into a manual chunk made the
+          // shared __vitePreload helper land there too, which gave the main
+          // chunk a *static* import of vendor-pdf — the browser then
+          // modulepreloaded all 391 KB of jsPDF on every page load.
           "vendor-radix": [
             "@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu", "@radix-ui/react-popover",
             "@radix-ui/react-tooltip", "@radix-ui/react-alert-dialog",
