@@ -127,21 +127,24 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
 
   return (
     <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-      <header className="flex items-center gap-2">
+      <header className="flex items-center gap-1 sm:gap-2">
         <button
           onClick={() => shiftMonth(-1)}
           aria-label="Poprzedni miesiąc"
-          className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+          className="p-2 shrink-0 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
-        <h2 aria-live="polite" className="font-display font-bold text-lg capitalize min-w-[11ch] text-center">
+        <h2
+          aria-live="polite"
+          className="font-display font-bold text-base sm:text-lg capitalize text-center truncate sm:min-w-[11ch]"
+        >
           {format(month, "LLLL yyyy", { locale: pl })}
         </h2>
         <button
           onClick={() => shiftMonth(1)}
           aria-label="Następny miesiąc"
-          className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+          className="p-2 shrink-0 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -149,7 +152,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
           <button
             onClick={goToToday}
             aria-label="Wróć do bieżącego miesiąca"
-            className="ml-1 text-xs font-medium text-primary hover:bg-primary/10 px-2.5 py-1 rounded-lg transition-colors"
+            className="ml-1 shrink-0 text-xs font-medium text-primary hover:bg-primary/10 px-2 sm:px-2.5 py-1 rounded-lg transition-colors"
           >
             Dziś
           </button>

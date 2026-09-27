@@ -24,6 +24,16 @@ import { cn } from "@/lib/utils";
 const REPEAT_OPTIONS: ReminderRepeat[] = ["none", "daily", "weekly", "monthly"];
 const MAX_SUGGESTIONS = 6;
 
+/**
+ * Na telefonie dialog musi się przewijać: z otwartą klawiaturą ekranową treść
+ * przekracza wysokość okna, a bez `max-h` + `overflow-y-auto` przyciski
+ * zapisu i usuwania zostają poza widokiem — nieosiągalne, bo okno modalne
+ * nie przewija się razem ze stroną. `dvh` zamiast `vh`, bo pasek adresu
+ * przeglądarki mobilnej zmienia wysokość widoku w trakcie przewijania.
+ */
+const DIALOG_CLASS =
+  "sm:max-w-md max-h-[85dvh] overflow-y-auto pb-[calc(1.5rem+env(safe-area-inset-bottom))]";
+
 export interface ReminderEditTarget {
   noteId: string;
   at: number;
@@ -136,7 +146,10 @@ export function ReminderQuickAddDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
-      <DialogContent className="sm:max-w-md" onOpenAutoFocus={isEdit ? (e) => e.preventDefault() : undefined}>
+      <DialogContent
+        className={DIALOG_CLASS}
+        onOpenAutoFocus={isEdit ? (e) => e.preventDefault() : undefined}
+      >
         <DialogHeader>
           <DialogTitle className="font-display flex items-center gap-2">
             <Bell className="w-4 h-4 text-primary" />
@@ -213,7 +226,7 @@ export function ReminderQuickAddDialog({
             <Button size="sm" onClick={handleSaveEdit} disabled={timestamp === null} className="w-full">
               Zapisz termin
             </Button>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               {edit?.isSeries && (
                 <Button size="sm" variant="outline" onClick={handleSkip} className="flex-1">
                   <SkipForward className="w-3.5 h-3.5 mr-1" />

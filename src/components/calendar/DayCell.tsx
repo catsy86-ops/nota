@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 
 /** Ile chipów mieści się w komórce, zanim reszta zwinie się w „+N". */
 const MAX_CHIPS = 3;
+/** Kropka zajmuje ułamek szerokości chipa, więc na telefonie zmieści się ich więcej. */
+const MAX_DOTS = 4;
 
 function terminy(n: number): string {
   if (n === 1) return "1 termin";
@@ -29,6 +31,8 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
   const today = isSameDay(day, new Date());
   const shown = occurrences.slice(0, MAX_CHIPS);
   const hidden = occurrences.length - shown.length;
+  const dots = occurrences.slice(0, MAX_DOTS);
+  const hiddenDots = occurrences.length - dots.length;
 
   const label = `${format(day, "d MMMM yyyy", { locale: pl })}${today ? ", dzisiaj" : ""}, ${
     occurrences.length === 0 ? "brak terminów" : terminy(occurrences.length)
@@ -65,8 +69,8 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
           te same dane nie powtarzają się drugi raz. */}
       <div aria-hidden className="flex flex-col gap-0.5 overflow-hidden">
         {/* Wąski ekran: same kropki — chipy z tekstem nie mieszczą się w 1/7 szerokości. */}
-        <div className="flex gap-0.5 flex-wrap sm:hidden pl-0.5">
-          {shown.map((occ) => (
+        <div className="flex items-center gap-1 flex-wrap sm:hidden pl-0.5">
+          {dots.map((occ) => (
             <span
               key={`${occ.noteId}-${occ.at}`}
               className={cn(
@@ -75,7 +79,9 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
               )}
             />
           ))}
-          {hidden > 0 && <span className="text-[9px] leading-none text-muted-foreground">+{hidden}</span>}
+          {hiddenDots > 0 && (
+            <span className="text-[9px] leading-none text-muted-foreground">+{hiddenDots}</span>
+          )}
         </div>
 
         <div className="hidden sm:flex sm:flex-col gap-0.5">

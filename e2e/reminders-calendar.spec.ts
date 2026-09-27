@@ -198,6 +198,10 @@ test("pominięcie wystąpienia przesuwa serię na kolejny termin, dalsze zostaj�
   await seedWeeklySeries(page, "Podlac kwiaty");
 
   const grid = page.getByRole("grid", { name: /Kalendarz przypomnień/ });
+  // Liczymy dopiero, gdy siatka pokaże serię: `count()` nie czeka, więc bez
+  // tego zapewnienia licznik potrafił złapać jeszcze puste wystąpienia
+  // (chunk kalendarza dochodzi przez `lazy()`) i porównanie było bezsensowne.
+  await expect(grid.getByRole("gridcell", { name: /1 termin/ })).not.toHaveCount(0);
   const before = await grid.getByRole("gridcell", { name: /1 termin/ }).count();
 
   const first = grid.getByRole("gridcell", { name: /1 termin/ }).first();
@@ -222,4 +226,54 @@ test("usunięcie całej serii zdejmuje wszystkie jej wystąpienia", async ({ pag
 
   await expect(page.getByText("Termin usunięty")).toBeVisible();
   await expect(grid.getByRole("gridcell", { name: /\d+ termin/ })).toHaveCount(0);
+});
+
+test("na wąskim ekranie kalendarz nie rozpycha strony, a dialog terminu jest osiągalny", async ({ page }) => {
+  // Najwęższy telefon, jaki wciąż warto obsługiwać (iPhone SE 1. gen. / 320 px).
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.reload();
+
+  // Pasek boczny jest na telefonie ukryty — wejście idzie przez arkusz „Więcej".
+  await page.getByRole("button", { name: "Więcej" }).click();
+  await page.getByRole("button", { name: "Kalendarz" }).click();
+  await expect(page.getByRole("heading", { name: "Kalendarz", level: 1 })).toBeVisible();
+
+  // Nagłówek miesiąca z przyciskiem „Dziś" mieścił się wcześniej tylko przez
+  // przypadek: sztywne `min-w-[11ch]` przy dłuższej nazwie miesiąca rozpychało
+  // stronę w poziomie. Przewijanie w bok jest tu zawsze błędem układu.
+  await page.getByRole("button", { name: "Następny miesiąc" }).click();
+  await expect(page.getByRole("button", { name: "Wróć do bieżącego miesiąca" })).toBeVisible();
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(overflow).toBeLessThanOrEqual(0);
+  await page.getByRole("button", { name: "Wróć do bieżącego miesiąca" }).click();
+
+  // Dodanie terminu: dialog musi zmieścić się w 568 px wysokości razem
+  // z przyciskiem zapisu, inaczej na telefonie nie da się go dokończyć.
+  await page.getByRole("button", { name: "Dodaj termin" }).click();
+  await page.getByLabel("Treść nowej notatki z terminem").fill("jutro kupic mleko");
+  await page.getByLabel("Godzina przypomnienia").fill("18:30");
+  const create = page.getByRole("button", { name: /Utwórz notatkę z terminem/ });
+  await expect(create).toBeInViewport();
+  await create.click();
+
+  // Poniżej `sm` komórka rysuje kropki, nie chipy z godziną — ale treść dnia
+  // zostaje w `aria-label`, więc czytnik ekranu nic nie traci.
+  const grid = page.getByRole("grid", { name: /Kalendarz przypomnień/ });
+  const cell = grid.getByRole("gridcell", { name: /1 termin/ });
+  await expect(cell).toHaveCount(1);
+  // `toContainText` widziałoby chip ukryty CSS-em (jest w DOM), więc pytamy
+  // o widoczność: godzina na wąskim ekranie nie jest rysowana.
+  await expect(cell.getByText("18:30")).toBeHidden();
+  await cell.click();
+  await expect(page.getByRole("listitem").filter({ hasText: "kupic mleko" })).toContainText("18:30");
+
+  // Edycja na telefonie: „Usuń termin" bywało poza widokiem, bo dialog
+  // nie przewijał się wcale.
+  await page.getByRole("button", { name: /^Edytuj termin/ }).click();
+  const remove = page.getByRole("button", { name: "Usuń termin" });
+  await remove.scrollIntoViewIfNeeded();
+  await remove.click();
+  await expect(grid.getByRole("gridcell", { name: /1 termin/ })).toHaveCount(0);
 });

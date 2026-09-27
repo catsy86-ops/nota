@@ -276,7 +276,7 @@ Fakt z kodu, który rozstrzyga wszystko: model trzyma **jeden** timestamp, a `ge
 | ~~3~~ | ~~`MonthGrid` + `DayCell` + `ReminderChip` + panel dnia, read-only, obsługa klawiaturą~~ — **zrobione 2026-09-27**, patrz niżej | **M** |
 | ~~4~~ | ~~`ReminderQuickAddDialog`: dodawanie + edycja + usunięcie~~ — **zrobione 2026-09-27**, patrz niżej | **M** |
 | 5 | Semantyka serii: chipy read-only, „usuń wystąpienie vs serię" | **M** |
-| 6 | E2E + mobile (kropki zamiast chipów poniżej ~380 px, safe-area) | **S** |
+| ~~6~~ | ~~E2E + mobile (kropki zamiast chipów poniżej ~380 px, safe-area)~~ — **zrobione 2026-09-27**, patrz niżej | **S** |
 | 7 | Drag&drop terminu + **obowiązkowy** `Shift+←/→` (WCAG 2.5.7) + Cofnij | **S** |
 
 Etapy 1–4 to wysyłalny produkt. **Etap 5 jest obowiązkowy** przed pokazaniem go komukolwiek, kto używa powtarzania.
@@ -345,4 +345,19 @@ Chunk kalendarza: **17,19 kB** (gzip 6,11 kB).
 
 Zweryfikowane: `typecheck` / `lint` (0 błędów, 8 ostrzeżeń — bez zmian) / 227 testów jednostkowych / **19 e2e** (16 + 3 nowe) / `build`.
 
-**Kalendarz przypomnień jest funkcjonalnie kompletny** — zostały etapy 6 (e2e + dopieszczenie mobile) i 7 (przeciąganie terminów), oba **S** i oba opcjonalne.
+**Kalendarz przypomnień jest funkcjonalnie kompletny** — został etap 7 (przeciąganie terminów), **S** i opcjonalny.
+
+### Etap 6 — wykonany (2026-09-27)
+
+Kalendarz przeszedł test najwęższego ekranu, jaki warto obsługiwać (320 px).
+
+- **Dialog terminu przewija się** (`max-h-[85dvh]` + `overflow-y-auto` + `env(safe-area-inset-bottom)`). Wcześniej okno modalne nie przewijało się wcale, więc na niskim ekranie z otwartą klawiaturą „Zapisz termin" i „Usuń termin" zostawały poza widokiem — funkcji po prostu nie dało się dokończyć. `dvh`, nie `vh`, bo pasek adresu przeglądarki mobilnej zmienia wysokość widoku.
+- „Pomiń to wystąpienie" i „Usuń całą serię" **stają w kolumnie poniżej `sm`** — obok siebie w 288 px dostępnej szerokości nie mieściły się w czytelnej formie.
+- Nagłówek miesiąca: `min-w-[11ch]` tylko od `sm`, `truncate`, mniejszy stopień pisma na telefonie, przyciski `shrink-0`. Sztywna szerokość plus „Dziś" przy dłuższej nazwie miesiąca rozpychała stronę w poziomie.
+- **`ViewControls` zniknęły z nagłówka w widoku kalendarza** — układ, sortowanie i filtry notatek nie robią tam nic (kalendarz rysuje własną projekcję), a przy okazji to one dawały na 320 px **96 px przewijania w bok**. Kontrolki, które nie działają, i tak nie powinny tam stać.
+- Kropki na wąskim ekranie mają własny limit (`MAX_DOTS = 4` wobec `MAX_CHIPS = 3`): kropka zajmuje ułamek szerokości chipa, więc zwijanie w „+N" po trzech było przedwczesne.
+- Naprawiony wyścig w teście etapu 5: `count()` **nie czeka**, więc licznik wystąpień potrafił złapać jeszcze pustą siatkę (chunk kalendarza dochodzi przez `lazy()`) i porównanie „o jedno mniej" wychodziło z zera. Objawiało się losowym padem „pominięcie wystąpienia".
+
+Nowy test e2e chodzi całą ścieżką w 320×568: wejście przez arkusz „Więcej", brak przewijania w poziomie, dodanie terminu z przyciskiem zapisu w widoku, kropki bez godziny w komórce (godzina zostaje w panelu dnia i w `aria-label`), edycja i usunięcie.
+
+Zweryfikowane: `typecheck` / `lint` (0 błędów, 8 ostrzeżeń — bez zmian) / 227 testów jednostkowych / **20 e2e** (19 + 1 nowy) / `build` (chunk kalendarza 17,42 kB, gzip 6,20 kB).
