@@ -28,6 +28,24 @@ npm run test:e2e    # testy e2e (Playwright) — buduje i odpala podgląd produk
 
 Projekt używa **npm** (`package-lock.json`). Nie dodawać `bun.lock`/`bun.lockb` ani `yarn.lock`, żeby uniknąć rozjazdu wersji zależności.
 
+## Wdrożenie
+
+Appka jest w 100% statyczna (brak backendu), więc wystarczy dowolny hosting plików + poprawne nagłówki cache. W repo są gotowe configi pod dwa hostingi — **żaden nie jest jeszcze wdrożony**, trzeba tylko połączyć repo z kontem:
+
+| Hosting | Plik konfiguracyjny | Co trzeba zrobić |
+| --- | --- | --- |
+| Vercel | [`vercel.json`](./vercel.json) | Zaimportować repo na vercel.com — build i katalog wyjściowy są już w configu. |
+| Netlify | [`netlify.toml`](./netlify.toml) | „Add new site → Import an existing project" na netlify.com. |
+
+Oba configi robią dokładnie dwie rzeczy, których statyczny hosting sam z siebie nie zrobi poprawnie:
+
+1. **SPA fallback** — każda ścieżka, która nie jest realnym plikiem, dostaje `index.html` (bez tego odświeżenie na pod-ścieżce albo wejście z linku daje 404 zamiast aplikacji).
+2. **Nagłówki cache** — `/assets/*` ma nazwy z hashem, więc jest cache'owane na rok jako `immutable`; natomiast `sw.js` i `sw-notifications.js` (dociągany przez `importScripts()`, **bez** hasha w nazwie) mają `no-cache`. To nie jest kosmetyka: cache'owany service worker oznacza, że użytkownik, który raz zainstalował PWA, nigdy więcej nie dostanie aktualizacji.
+
+### GitHub Pages — dlaczego nie od razu
+
+GitHub Pages serwuje projekt pod ścieżką `/<nazwa-repo>/`, a nie pod rootem. Ta appka ma dziś zaszyty root w kilku miejscach: `base` w Vite nie jest ustawione, więc zostaje na domyślnym `/`; `start_url`/`id`/`scope` i ścieżki ikon w `public/manifest.webmanifest` są absolutne (`/`, `/pwa-192.png`, …); `navigateFallback: "/index.html"` w konfiguracji service workera (`vite.config.ts`); absolutne `href`/`src` w `index.html` (favicon, manifest, apple-touch-icon). Wdrożenie na Pages wymaga przestawienia ich wszystkich (albo własnej domeny podpiętej do Pages, która daje root) — **to nie jest zrobione**. Vercel i Netlify serwują pod rootem, więc nie potrzebują żadnej z tych zmian.
+
 ## Plan rozwoju
 
 Zobacz [`roadmap.md`](./roadmap.md) — lista zrobionych zadań oraz audyty z planami porządków i rozbudowy.

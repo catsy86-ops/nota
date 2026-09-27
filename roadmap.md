@@ -27,7 +27,9 @@ Notatnik ("kaczy") to lokalna aplikacja PWA (React 18 + TypeScript + Vite + shad
 
 - [x] **CI** — workflow GitHub Actions (`.github/workflows/ci.yml`): lint + typecheck + test (coverage) + build na push/PR do `master`/`main`.
 - [x] **`LICENSE`** — dodany (MIT).
-- **PWA/offline już działa** (`vite-plugin-pwa`, `offline.html`, manifest) — do wdrożenia produkcyjnego brakuje tylko hostingu statycznego (Vercel/Netlify/GitHub Pages) i `vite build` w CI.
+- [x] **`vite build` w CI** — dodany razem z resztą workflow (`.github/workflows/ci.yml` robi lint + typecheck + test + build + e2e).
+- [x] **Configi hostingu przygotowane (2026-09-27)** — `vercel.json` i `netlify.toml` w repo, opisane w README (sekcja „Wdrożenie"). Oba dają SPA fallback (bez niego wejście z linku na pod-ścieżkę daje 404) i nagłówki cache: `/assets/*` na rok jako `immutable` (nazwy z hashem), ale `sw.js` **i** `sw-notifications.js` na `no-cache` — ten drugi jest dociągany przez `importScripts()` i nie ma hasha w nazwie, więc scache'owany zablokowałby wszystkie przyszłe aktualizacje u kogoś, kto raz zainstalował PWA. Składnia obu plików zwalidowana (parser JSON / TOML).
+- **Samo wdrożenie: świadomie nie zrobione** — wymaga połączenia repo z kontem Vercel/Netlify, do czego nie ma dostępu z sesji; decyzja o hostingu po stronie użytkownika. **GitHub Pages celowo odrzucony na teraz**: serwuje pod `/<nazwa-repo>/`, a appka ma root zaszyty w `manifest.webmanifest` (`start_url`/`id`/`scope`/ikony), `navigateFallback` w `vite.config.ts` i absolutnych ścieżkach w `index.html` — powód i pełna lista miejsc do zmiany opisane w README.
 
 ### Propozycje rozbudowy funkcjonalnej
 
