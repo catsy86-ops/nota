@@ -30,11 +30,13 @@ interface MonthGridProps {
   titleOf: (noteId: string) => string;
   selectedDay: Date;
   onSelectDay: (day: Date) => void;
+  /** Enter/Spacja na dniu — klawiaturowy odpowiednik „dodaj termin”. */
+  onActivateDay: (day: Date) => void;
   /** Wyjście strzałką poza miesiąc przewija kalendarz, zamiast blokować ruch. */
   onMonthChange: (month: Date) => void;
 }
 
-export function MonthGrid({ month, byDay, titleOf, selectedDay, onSelectDay, onMonthChange }: MonthGridProps) {
+export function MonthGrid({ month, byDay, titleOf, selectedDay, onSelectDay, onActivateDay, onMonthChange }: MonthGridProps) {
   const cellRefs = useRef(new Map<string, HTMLDivElement>());
   // Fokus przenosimy dopiero po tym, jak użytkownik ruszył klawiaturą —
   // inaczej samo wejście w widok przeskakiwałoby stronę do siatki.
@@ -72,6 +74,10 @@ export function MonthGrid({ month, byDay, titleOf, selectedDay, onSelectDay, onM
       case "End": move(endOfWeek(selectedDay, { weekStartsOn: WEEK_STARTS_ON })); break;
       case "PageUp": move(addMonths(selectedDay, -1)); break;
       case "PageDown": move(addMonths(selectedDay, 1)); break;
+      case "Enter":
+      case " ":
+        onActivateDay(selectedDay);
+        break;
       default: return;
     }
     e.preventDefault();

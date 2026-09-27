@@ -111,10 +111,12 @@ export function useNotes() {
     if (expired.length) yjsStore.removeNotes(expired);
   }, [notes]);
 
-  const addNote = useCallback((title: string, content: string, color: NoteColor = "default", labels: string[] = [], reminder: number | null = null, images: string[] = [], checklist: ChecklistItem[] = [], priority: NotePriority = "none") => {
+  /** Zwraca id utworzonej notatki — potrzebne, gdy wywołujący musi ją zaraz dopatchować. */
+  const addNote = useCallback((title: string, content: string, color: NoteColor = "default", labels: string[] = [], reminder: number | null = null, images: string[] = [], checklist: ChecklistItem[] = [], priority: NotePriority = "none"): string => {
     const now = Date.now();
     const note: Note = { id: crypto.randomUUID(), title, content, color, pinned: false, archived: false, trashed: false, trashedAt: null, labels, reminder, priority, images, checklist, folderId: null, order: 0, createdAt: now, updatedAt: now };
     yjsStore.upsertNote(note);
+    return note.id;
   }, []);
 
   const updateNote = useCallback((id: string, updates: Partial<Omit<Note, "id" | "createdAt">>) => {

@@ -6,19 +6,25 @@ import { pl } from "date-fns/locale";
 import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences";
 import { MonthGrid } from "./MonthGrid";
 import { DayPanel } from "./DayPanel";
+import { ReminderQuickAddDialog, type ReminderEditTarget } from "./ReminderQuickAddDialog";
+import { toastWithUndo } from "@/lib/undoToast";
+import type { ReminderRepeat } from "@/lib/reminderRepeat";
+import type { Occurrence } from "@/lib/reminderOccurrences";
 import type { Note } from "@/hooks/useNotes";
 
 /**
  * Widok kalendarza przypomnień: siatka miesiąca + lista terminów wybranego dnia.
  *
- * Etap 3 jest celowo tylko do czytania — dodawanie, edycja i usuwanie terminów
- * dochodzą w kolejnych krokach. Wystąpienia liczy `expandOccurrences`, więc
- * serie są prognozą rysowaną w locie, nie danymi.
+ * Wystąpienia liczy `expandOccurrences`, więc serie są prognozą rysowaną
+ * w locie, nie danymi: edytować da się wyłącznie najbliższe wystąpienie,
+ * bo tylko ono istnieje w modelu.
  */
 
 interface ReminderCalendarViewProps {
   /** Notatki z terminami — bez kosza, tak samo jak karmione są powiadomienia. */
   notes: Note[];
+  onCreateNote: (title: string, reminder: number, repeat: ReminderRepeat) => void;
+  onSetReminder: (noteId: string, reminder: number | null, repeat: ReminderRepeat) => void;
 }
 
 function monthBounds(month: Date) {
@@ -28,9 +34,11 @@ function monthBounds(month: Date) {
   };
 }
 
-export function ReminderCalendarView({ notes }: ReminderCalendarViewProps) {
+export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: ReminderCalendarViewProps) {
   const [month, setMonth] = useState(() => new Date());
   const [selectedDay, setSelectedDay] = useState(() => new Date());
+  const [dialogDay, setDialogDay] = useState<Date | null>(null);
+  const [editTarget, setEditTarget] = useState<ReminderEditTarget | null>(null);
 
   // Siatka pokazuje też dni sąsiednich miesięcy, więc zakres jest o tydzień
   // szerszy z każdej strony — inaczej skrajne komórki byłyby zawsze puste.
@@ -53,6 +61,35 @@ export function ReminderCalendarView({ notes }: ReminderCalendarViewProps) {
     const today = new Date();
     setMonth(new Date(today.getFullYear(), today.getMonth(), 1));
     setSelectedDay(today);
+  }
+
+  function openAdd(day: Date) {
+    setSelectedDay(day);
+    setEditTarget(null);
+    setDialogDay(day);
+  }
+
+  function openEdit(occ: Occurrence) {
+    setEditTarget({ noteId: occ.noteId, at: occ.at, repeat: occ.repeat, isSeries: occ.isSeries });
+    setDialogDay(new Date(occ.at));
+  }
+
+  /** Cofnięcie przywraca poprzedni termin, więc zapamiętujemy go przed zmianą. */
+  function previousOf(noteId: string) {
+    const note = notes.find((n) => n.id === noteId);
+    return { reminder: note?.reminder ?? null, repeat: note?.reminderRepeat ?? "none" as ReminderRepeat };
+  }
+
+  function handleAttach(noteId: string, reminder: number, repeat: ReminderRepeat) {
+    const before = previousOf(noteId);
+    onSetReminder(noteId, reminder, repeat);
+    toastWithUndo("Termin zapisany", () => onSetReminder(noteId, before.reminder, before.repeat), { icon: "🔔" });
+  }
+
+  function handleClear(noteId: string) {
+    const before = previousOf(noteId);
+    onSetReminder(noteId, null, "none");
+    toastWithUndo("Termin usunięty", () => onSetReminder(noteId, before.reminder, before.repeat), { icon: "🔕" });
   }
 
   const isThisMonth = isSameMonth(month, new Date());
@@ -98,10 +135,30 @@ export function ReminderCalendarView({ notes }: ReminderCalendarViewProps) {
         titleOf={titleOf}
         selectedDay={selectedDay}
         onSelectDay={setSelectedDay}
+        onActivateDay={openAdd}
         onMonthChange={setMonth}
       />
 
-      <DayPanel day={selectedDay} occurrences={selectedOccurrences} titleOf={titleOf} />
+      <DayPanel
+        day={selectedDay}
+        occurrences={selectedOccurrences}
+        titleOf={titleOf}
+        onAdd={() => openAdd(selectedDay)}
+        onEdit={openEdit}
+      />
+
+      {dialogDay && (
+        <ReminderQuickAddDialog
+          open
+          onOpenChange={(v) => { if (!v) { setDialogDay(null); setEditTarget(null); } }}
+          day={dialogDay}
+          edit={editTarget}
+          notes={notes}
+          onCreateNote={onCreateNote}
+          onAttachReminder={handleAttach}
+          onClearReminder={handleClear}
+        />
+      )}
     </motion.section>
   );
 }

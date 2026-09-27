@@ -51,7 +51,7 @@ export function applyServiceWorkerUpdate(registration: ServiceWorkerRegistration
   waiting.postMessage({ type: "SKIP_WAITING" });
 }
 
-function watchForUpdates(registration: ServiceWorkerRegistration) {
+function watchForUpdates(registration: ServiceWorkerRegistration, hadControllerAtLoad: boolean) {
   const notifyIfWaiting = () => {
     if (registration.waiting) {
       window.dispatchEvent(new CustomEvent(SW_UPDATE_EVENT, { detail: registration }));
@@ -70,6 +70,13 @@ function watchForUpdates(registration: ServiceWorkerRegistration) {
   });
 
   navigator.serviceWorker.addEventListener("controllerchange", () => {
+    // Pierwsze wejście: strona startuje bez kontrolera, a `clientsClaim: true`
+    // sprawia, że świeżo aktywowany worker ją przejmuje — `controllerchange`
+    // leci więc także wtedy, gdy NIC się nie zaktualizowało. Przeładowanie
+    // w tym momencie wyrzucałoby użytkownika z aplikacji sekundę po wejściu.
+    // Reload ma sens wyłącznie przy podmianie workera, który już nas
+    // kontrolował, czyli przy prawdziwej aktualizacji.
+    if (!hadControllerAtLoad) return;
     if (reloadingAfterUpdate) return;
     reloadingAfterUpdate = true;
     window.location.reload();
@@ -87,10 +94,13 @@ export function registerServiceWorker() {
     return;
   }
 
+  // Zapamiętane przed rejestracją: po niej kontroler może się już pojawić.
+  const hadControllerAtLoad = !!navigator.serviceWorker.controller;
+
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register(SW_URL, { scope: "/" })
-      .then((registration) => watchForUpdates(registration))
+      .then((registration) => watchForUpdates(registration, hadControllerAtLoad))
       .catch(() => {
         /* noop */
       });

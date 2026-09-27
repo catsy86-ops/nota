@@ -412,7 +412,16 @@ const Index = () => {
 
           {view === "calendar" && (
             <Suspense fallback={null}>
-              <ReminderCalendarView notes={[...notes, ...archivedNotes]} />
+              <ReminderCalendarView
+                notes={[...notes, ...archivedNotes]}
+                onCreateNote={(title, reminder, repeat) => {
+                  const id = addNote(title, "", prefs.defaultNoteColor, [], reminder);
+                  // `addNote` nie przyjmuje powtarzania, więc serię dostawiamy
+                  // patchem po utworzeniu — stąd id zwracane przez `addNote`.
+                  if (repeat !== "none") updateNote(id, { reminderRepeat: repeat });
+                }}
+                onSetReminder={(id, reminder, repeat) => updateNote(id, { reminder, reminderRepeat: repeat })}
+              />
             </Suspense>
           )}
 

@@ -274,7 +274,7 @@ Fakt z kodu, który rozstrzyga wszystko: model trzyma **jeden** timestamp, a `ge
 | ~~1~~ | ~~`reminderOccurrences.ts` + testy; `composeReminderTimestamp` wyciągnięte z `ReminderPicker`; uzdrowienie `FIRED_KEY`~~ — **zrobione 2026-09-27**, patrz niżej | **S** |
 | ~~2~~ | ~~`View: "calendar"` + wpisy nawigacji + pusty widok pod `lazy()`~~ — **zrobione 2026-09-27**, patrz niżej | **S** |
 | ~~3~~ | ~~`MonthGrid` + `DayCell` + `ReminderChip` + panel dnia, read-only, obsługa klawiaturą~~ — **zrobione 2026-09-27**, patrz niżej | **M** |
-| 4 | `ReminderQuickAddDialog`: dodawanie (nowa notatka / przypnij do istniejącej) + edycja + usunięcie jednorazowego | **M** |
+| ~~4~~ | ~~`ReminderQuickAddDialog`: dodawanie + edycja + usunięcie~~ — **zrobione 2026-09-27**, patrz niżej | **M** |
 | 5 | Semantyka serii: chipy read-only, „usuń wystąpienie vs serię" | **M** |
 | 6 | E2E + mobile (kropki zamiast chipów poniżej ~380 px, safe-area) | **S** |
 | 7 | Drag&drop terminu + **obowiązkowy** `Shift+←/→` (WCAG 2.5.7) + Cofnij | **S** |
@@ -316,3 +316,18 @@ Siatka miesiąca, komórka dnia, chip terminu i panel dnia — na razie **tylko 
 Chunk kalendarza: **8,78 kB** (gzip 3,61 kB), dalej poza pierwszym wejściem.
 
 Zweryfikowane: `typecheck` / `lint` (0 błędów, 8 ostrzeżeń — bez zmian) / 227 testów jednostkowych / **14 e2e** (12 + 2 nowe: termin w komórce i w panelu dnia oraz chodzenie strzałkami z `PageDown`) / `build` / zrzuty w układzie desktop i mobile.
+
+### Etap 4 — wykonany (2026-09-27)
+
+Kalendarz robi wreszcie to, o co był proszony: **dodaj, edytuj, usuń termin**.
+
+- `ReminderQuickAddDialog.tsx` — dwie drogi bez trybów do przełączania: wpisany tekst tworzy nową notatkę z terminem (najczęstszy przypadek), a lista pod spodem przypina termin do notatki, która już istnieje. Notatki bez terminu są na górze listy, te z terminem oznaczone „ma już termin".
+- Język naturalny z **początku** wpisu: „jutro odebrać paczkę" → termin na jutro, tytuł „odebrać paczkę". Prefiks szukany od najkrótszego, bo `parseNaturalDate` znajduje datę także w dłuższym zdaniu — szukanie od najdłuższego zjadało cały wpis jako datę i zostawiało notatkę bez tytułu (złapane na zrzucie, nie w testach).
+- Akcje siedzą w panelu dnia, nie w komórkach siatki: siatka zostaje jednym przystankiem tabulatora z nawigacją strzałkami, a przyciski w komórkach rozbiłyby ten model. `Enter`/`Spacja` na dniu otwiera dodawanie — klawiaturowy odpowiednik „Dodaj termin".
+- Zmiana i usunięcie terminu idą z **Cofnij** (`toastWithUndo`), przywracającym poprzedni termin **i** poprzednie powtarzanie.
+- `addNote` zwraca teraz id utworzonej notatki. Bez tego ustawienie serii tuż po utworzeniu wymagałoby sięgnięcia z warstwy strony do `yjsStore` — czyli obejścia własnej warstwy danych.
+- Usunięcie na serii jest jawnie podpisane „Usuń serię". Opcja „usuń tylko to wystąpienie" należy do etapu 5 i **nie jest** tu udawana.
+
+**Naprawiony przy okazji realny błąd produkcyjny (nie testowy):** `registerSW.ts` przeładowywał stronę przy każdym `controllerchange`, a `clientsClaim: true` sprawia, że świeżo aktywowany worker przejmuje niekontrolowaną kartę — więc **każde pierwsze wejście do aplikacji kończyło się przeładowaniem sekundę po starcie**. Reload dzieje się teraz tylko wtedy, gdy worker już nas kontrolował, czyli przy prawdziwej aktualizacji. Objawiało się to jako „flaky" test palety poleceń: DOM znikał pod klikiem. Warto pamiętać, że to samo tłumaczy wcześniejsze losowe pady `e2e/pwa.spec.ts`.
+
+Zweryfikowane: `typecheck` / `lint` (0 błędów, 8 ostrzeżeń — bez zmian) / 227 testów jednostkowych / **16 e2e** (14 + 2 nowe: pełna ścieżka dodaj → edytuj → usuń oraz przypięcie do istniejącej notatki; test palety przepuszczony 3× pod rząd po naprawie) / `build`.
