@@ -257,8 +257,8 @@ Zamówiony przez użytkownika widok kalendarza, w którym da się **dodać, edyt
 
 Fakt z kodu, który rozstrzyga wszystko: model trzyma **jeden** timestamp, a `getNextReminderTime` (`reminderRepeat.ts:11`) jest wołane dopiero w chwili odpalenia (`useReminderNotifications.ts:112`). Nie ma `dtstart`, `until`, ani listy wyjątków. **Jedyne wystąpienie, które naprawdę istnieje, to najbliższe**; cała reszta to prognoza liczona w locie.
 
-- [ ] Chip najbliższego wystąpienia: pełna interaktywność. Chipy dalszych wystąpień: **read-only**, wizualnie odmienne (przerywane obramowanie, ikona `Repeat`), klik prowadzi do najbliższego. Asymetria jest dziwna dopiero, dopóki nie zrozumie się modelu — alternatywa (udawanie, że wszystkie wystąpienia są równe) obiecuje operacje niemożliwe do zapisania.
-- [ ] „Usuń" na najbliższym wystąpieniu ma dwie opcje: **to wystąpienie** → `reminder = getNextReminderTime(at, repeat)` (seria trwa, pomija jeden termin; zwykły LWW, zero nowych pól), **cała seria** → `reminder = null, reminderRepeat = "none"`. Obie z Cofnij.
+- [x] Chip najbliższego wystąpienia: pełna interaktywność. Chipy dalszych wystąpień: **read-only**, wizualnie odmienne (przerywane obramowanie, ikona `Repeat`), klik prowadzi do najbliższego. Asymetria jest dziwna dopiero, dopóki nie zrozumie się modelu — alternatywa (udawanie, że wszystkie wystąpienia są równe) obiecuje operacje niemożliwe do zapisania.
+- [x] „Usuń" na najbliższym wystąpieniu ma dwie opcje: **to wystąpienie** → `reminder = getNextReminderTime(at, repeat)` (seria trwa, pomija jeden termin; zwykły LWW, zero nowych pól), **cała seria** → `reminder = null, reminderRepeat = "none"`. Obie z Cofnij.
 - [x] **Świadomie NIE `reminderSkips: number[]`.** Kuszące, ale pole trafiłoby do `NOTE_SCALAR_FIELDS` (`yjsStore.ts:30`), a te są LWW na całej wartości: dwa urządzenia offline pomijające różne terminy → jedna lista wygrywa, druga zmiana znika bez śladu. Poprawnie wymagałoby `Y.Array` i rozszerzenia projekcji — nakład L i nowy wektor błędów sync dla funkcji, której wartość jest wątpliwa przy nieskończonej serii.
 - [ ] Brak „do kiedy" akceptowany w MVP (kalendarz przewinięty na 2030 dalej pokazuje chipy). Jeśli zaboli: **jedno** pole skalarne `reminderRepeatUntil`, bezpieczne dla LWW, bo to jedna liczba.
 
@@ -331,3 +331,18 @@ Kalendarz robi wreszcie to, o co był proszony: **dodaj, edytuj, usuń termin**.
 **Naprawiony przy okazji realny błąd produkcyjny (nie testowy):** `registerSW.ts` przeładowywał stronę przy każdym `controllerchange`, a `clientsClaim: true` sprawia, że świeżo aktywowany worker przejmuje niekontrolowaną kartę — więc **każde pierwsze wejście do aplikacji kończyło się przeładowaniem sekundę po starcie**. Reload dzieje się teraz tylko wtedy, gdy worker już nas kontrolował, czyli przy prawdziwej aktualizacji. Objawiało się to jako „flaky" test palety poleceń: DOM znikał pod klikiem. Warto pamiętać, że to samo tłumaczy wcześniejsze losowe pady `e2e/pwa.spec.ts`.
 
 Zweryfikowane: `typecheck` / `lint` (0 błędów, 8 ostrzeżeń — bez zmian) / 227 testów jednostkowych / **16 e2e** (14 + 2 nowe: pełna ścieżka dodaj → edytuj → usuń oraz przypięcie do istniejącej notatki; test palety przepuszczony 3× pod rząd po naprawie) / `build`.
+
+### Etap 5 — wykonany (2026-09-27)
+
+Najtrudniejszy etap planu: UI przestaje obiecywać operacje, których model nie potrafi zapisać.
+
+- **„Pomiń to wystąpienie"** przesuwa zapisany termin na kolejny w serii (`getNextReminderTime`). Zero nowych pól i zero nowych struktur — dokładnie ta sama operacja, którą robi `useReminderNotifications` po odpaleniu przypomnienia. **„Usuń całą serię"** zeruje termin i powtarzanie. Obie z „Cofnij" przywracającym termin **i** powtarzanie.
+- Edycja najbliższego terminu serii mówi wprost, co robi: „Zmiana godziny lub dnia przesuwa całą serię — model zapisuje jeden termin, a kolejne wylicza od niego". Bez tego zdania użytkownik nie ma skąd wiedzieć, dlaczego przesunięcie jednego wystąpienia rusza wszystkie.
+- **Prognozy serii przestały być ślepym zaułkiem.** Dalsze wystąpienia nadal są read-only (nie istnieją w danych), ale klik przenosi kalendarz na najbliższy **zapisany** termin, otwiera go do edycji i tłumaczy to toastem. Wcześniej klik nie robił nic.
+- Trzy nowe testy e2e pokrywają dokładnie te trzy ścieżki: że edytowalne jest tylko najbliższe wystąpienie, że pominięcie zdejmuje jedno wystąpienie a seria trwa, i że usunięcie serii czyści wszystkie jej wystąpienia.
+
+Chunk kalendarza: **17,19 kB** (gzip 6,11 kB).
+
+Zweryfikowane: `typecheck` / `lint` (0 błędów, 8 ostrzeżeń — bez zmian) / 227 testów jednostkowych / **19 e2e** (16 + 3 nowe) / `build`.
+
+**Kalendarz przypomnień jest funkcjonalnie kompletny** — zostały etapy 6 (e2e + dopieszczenie mobile) i 7 (przeciąganie terminów), oba **S** i oba opcjonalne.

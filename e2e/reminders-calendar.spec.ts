@@ -147,3 +147,79 @@ test("termin można przypiąć do istniejącej notatki zamiast tworzyć nową", 
   const row = page.getByRole("listitem").filter({ hasText: "Zadzwonic do ksiegowej" });
   await expect(row).toContainText("23:45");
 });
+
+/** Tworzy notatkę z cotygodniowym przypomnieniem i wchodzi w kalendarz. */
+async function seedWeeklySeries(page: import("@playwright/test").Page, title: string) {
+  await page.setViewportSize({ width: 1280, height: 1000 });
+  await page.getByText("Zapisz notatkę...").click();
+  await page.getByPlaceholder("Tytuł").fill(title);
+  await page.getByRole("button", { name: "Zamknij" }).click();
+
+  const card = page.locator("[data-note-id-wrap]", { hasText: title });
+  await card.hover();
+  await card.getByRole("button", { name: "Przypomnienie" }).click();
+  // Początek widocznego miesiąca w pickerze bywa w przeszłości — bierzemy
+  // pierwszy dozwolony dzień i późną godzinę, żeby termin był w przyszłości.
+  await page.getByRole("gridcell", { disabled: false }).first().click();
+  await page.locator('input[type="time"]').fill("23:30");
+  await page.locator("select").selectOption("weekly");
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
+
+  await page.getByRole("button", { name: /Kalendarz/ }).first().click();
+}
+
+test("seria pokazuje prognozy, a edytować da się tylko najbliższy termin", async ({ page }) => {
+  await seedWeeklySeries(page, "Przeglad tygodnia");
+
+  const grid = page.getByRole("grid", { name: /Kalendarz przypomnień/ });
+  // Cotygodniowa seria daje w miesiącu więcej niż jedno wystąpienie.
+  await expect(grid.getByRole("gridcell", { name: /1 termin/ })).not.toHaveCount(0);
+
+  // Najbliższe wystąpienie: pełna edycja.
+  const first = grid.getByRole("gridcell", { name: /1 termin/ }).first();
+  await first.click();
+  await page.getByRole("button", { name: /^Edytuj termin/ }).click();
+  await expect(page.getByRole("button", { name: "Pomiń to wystąpienie" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Usuń całą serię" })).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  // Dalsze wystąpienie: prognoza, bez edycji — klik prowadzi do zapisanego terminu.
+  const later = grid.getByRole("gridcell", { name: /1 termin/ }).nth(1);
+  await later.click();
+  const forecastRow = page.getByRole("button", { name: /Prognoza serii/ });
+  await expect(forecastRow).toHaveCount(1);
+  await expect(page.getByText("Prognoza serii — zapisany jest tylko najbliższy termin.")).toBeVisible();
+  await forecastRow.click();
+  await expect(page.getByText("To była prognoza serii")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Pomiń to wystąpienie" })).toBeVisible();
+});
+
+test("pominięcie wystąpienia przesuwa serię na kolejny termin, dalsze zostają", async ({ page }) => {
+  await seedWeeklySeries(page, "Podlac kwiaty");
+
+  const grid = page.getByRole("grid", { name: /Kalendarz przypomnień/ });
+  const before = await grid.getByRole("gridcell", { name: /1 termin/ }).count();
+
+  const first = grid.getByRole("gridcell", { name: /1 termin/ }).first();
+  const firstLabel = await first.getAttribute("aria-label");
+  await first.click();
+  await page.getByRole("button", { name: /^Edytuj termin/ }).click();
+  await page.getByRole("button", { name: "Pomiń to wystąpienie" }).click();
+
+  await expect(page.getByText("Wystąpienie pominięte")).toBeVisible();
+  // Pominięty dzień znika, ale seria trwa — zostaje o jedno wystąpienie mniej.
+  await expect(grid.getByRole("gridcell", { name: /1 termin/ })).toHaveCount(before - 1);
+  await expect(grid.getByRole("gridcell", { name: firstLabel! })).toHaveCount(0);
+});
+
+test("usunięcie całej serii zdejmuje wszystkie jej wystąpienia", async ({ page }) => {
+  await seedWeeklySeries(page, "Cotygodniowy raport");
+
+  const grid = page.getByRole("grid", { name: /Kalendarz przypomnień/ });
+  await grid.getByRole("gridcell", { name: /1 termin/ }).first().click();
+  await page.getByRole("button", { name: /^Edytuj termin/ }).click();
+  await page.getByRole("button", { name: "Usuń całą serię" }).click();
+
+  await expect(page.getByText("Termin usunięty")).toBeVisible();
+  await expect(grid.getByRole("gridcell", { name: /\d+ termin/ })).toHaveCount(0);
+});

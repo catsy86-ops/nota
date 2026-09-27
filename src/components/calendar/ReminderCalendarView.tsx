@@ -4,6 +4,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { format, isSameMonth } from "date-fns";
 import { pl } from "date-fns/locale";
 import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences";
+import { getNextReminderTime } from "@/lib/reminderRepeat";
+import { toast } from "sonner";
 import { MonthGrid } from "./MonthGrid";
 import { DayPanel } from "./DayPanel";
 import { ReminderQuickAddDialog, type ReminderEditTarget } from "./ReminderQuickAddDialog";
@@ -86,6 +88,34 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     toastWithUndo("Termin zapisany", () => onSetReminder(noteId, before.reminder, before.repeat), { icon: "🔔" });
   }
 
+  /**
+   * „Pomiń to wystąpienie” = przesuń zapisany termin na kolejny w serii.
+   * Zwykły zapis pola, zero nowych struktur — dokładnie to samo, co robi
+   * `useReminderNotifications` po odpaleniu przypomnienia.
+   */
+  function handleSkip(noteId: string, at: number, repeat: ReminderRepeat) {
+    const before = previousOf(noteId);
+    onSetReminder(noteId, getNextReminderTime(at, repeat), repeat);
+    toastWithUndo("Wystąpienie pominięte", () => onSetReminder(noteId, before.reminder, before.repeat), { icon: "⏭️" });
+  }
+
+  /**
+   * Prognozy serii nie da się edytować, bo nie istnieje w danych. Zamiast
+   * ślepego zaułka przenosimy użytkownika do terminu, który da się zapisać.
+   */
+  function openSeriesSource(occ: Occurrence) {
+    const note = notes.find((n) => n.id === occ.noteId);
+    if (!note?.reminder) return;
+    const source = new Date(note.reminder);
+    setMonth(new Date(source.getFullYear(), source.getMonth(), 1));
+    setSelectedDay(source);
+    setEditTarget({ noteId: note.id, at: note.reminder, repeat: note.reminderRepeat ?? "none", isSeries: true });
+    setDialogDay(source);
+    toast("To była prognoza serii", {
+      description: `Otwarty został najbliższy zapisany termin: ${format(source, "d MMMM, HH:mm", { locale: pl })}.`,
+    });
+  }
+
   function handleClear(noteId: string) {
     const before = previousOf(noteId);
     onSetReminder(noteId, null, "none");
@@ -145,6 +175,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
         titleOf={titleOf}
         onAdd={() => openAdd(selectedDay)}
         onEdit={openEdit}
+        onOpenSeriesSource={openSeriesSource}
       />
 
       {dialogDay && (
@@ -157,6 +188,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
           onCreateNote={onCreateNote}
           onAttachReminder={handleAttach}
           onClearReminder={handleClear}
+          onSkipOccurrence={handleSkip}
         />
       )}
     </motion.section>

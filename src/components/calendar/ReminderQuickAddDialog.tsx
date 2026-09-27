@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { Repeat, Trash2, StickyNote, Plus, Bell } from "lucide-react";
+import { Repeat, Trash2, StickyNote, Plus, Bell, SkipForward } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { searchNotes } from "@/lib/searchNotes";
@@ -42,10 +42,12 @@ interface ReminderQuickAddDialogProps {
   onCreateNote: (title: string, reminder: number, repeat: ReminderRepeat) => void;
   onAttachReminder: (noteId: string, reminder: number, repeat: ReminderRepeat) => void;
   onClearReminder: (noteId: string) => void;
+  /** Pomija najbliższe wystąpienie serii, przesuwając termin na kolejne. */
+  onSkipOccurrence: (noteId: string, at: number, repeat: ReminderRepeat) => void;
 }
 
 export function ReminderQuickAddDialog({
-  open, onOpenChange, day, edit, notes, onCreateNote, onAttachReminder, onClearReminder,
+  open, onOpenChange, day, edit, notes, onCreateNote, onAttachReminder, onClearReminder, onSkipOccurrence,
 }: ReminderQuickAddDialogProps) {
   const editedNote = edit ? notes.find((n) => n.id === edit.noteId) : undefined;
 
@@ -126,6 +128,12 @@ export function ReminderQuickAddDialog({
     close();
   }
 
+  function handleSkip() {
+    if (!edit) return;
+    onSkipOccurrence(edit.noteId, edit.at, edit.repeat);
+    close();
+  }
+
   return (
     <Dialog open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
       <DialogContent className="sm:max-w-md" onOpenAutoFocus={isEdit ? (e) => e.preventDefault() : undefined}>
@@ -194,14 +202,34 @@ export function ReminderQuickAddDialog({
         )}
 
         {isEdit ? (
-          <div className="flex gap-2">
-            <Button size="sm" onClick={handleSaveEdit} disabled={timestamp === null} className="flex-1">
+          <div className="space-y-2">
+            {edit?.isSeries && (
+              <p className="text-[11px] text-muted-foreground">
+                To najbliższy termin serii „{REMINDER_REPEAT_LABELS[edit.repeat].toLowerCase()}”.
+                Zmiana godziny lub dnia przesuwa całą serię — model zapisuje jeden termin,
+                a kolejne wylicza od niego.
+              </p>
+            )}
+            <Button size="sm" onClick={handleSaveEdit} disabled={timestamp === null} className="w-full">
               Zapisz termin
             </Button>
-            <Button size="sm" variant="outline" onClick={handleDelete} className="text-destructive hover:text-destructive">
-              <Trash2 className="w-3.5 h-3.5 mr-1" />
-              {edit?.isSeries ? "Usuń serię" : "Usuń termin"}
-            </Button>
+            <div className="flex gap-2">
+              {edit?.isSeries && (
+                <Button size="sm" variant="outline" onClick={handleSkip} className="flex-1">
+                  <SkipForward className="w-3.5 h-3.5 mr-1" />
+                  Pomiń to wystąpienie
+                </Button>
+              )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleDelete}
+                className="flex-1 text-destructive hover:text-destructive"
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-1" />
+                {edit?.isSeries ? "Usuń całą serię" : "Usuń termin"}
+              </Button>
+            </div>
           </div>
         ) : (
           <>
