@@ -405,3 +405,33 @@ Propozycje **spoza** istniejącego planu. Przed nimi nadal idą otwarte P0: auto
 - `src/lib/icsExport.ts`: `buildIcs` (RFC 5545: CRLF, zawijanie linii po 75 bajtach UTF-8 bez cięcia znaków, ucieczka `\ ; ,` i nowych linii), `UID = <id notatki>@notatnik` — ponowny import aktualizuje wpis zamiast dublować. `VALARM` w chwili terminu, zdarzenie 15 min. Czas „pływający” (bez `Z`/`TZID`) — ta sama godzina ścienna co w aplikacji, także po zmianie czasu. Serie → `RRULE:FREQ=DAILY|WEEKLY|MONTHLY`. `exportableReminders`: przyszłe terminy + serie, bez kosza. 10 testów.
 - UI: przycisk pobrania przy każdym zapisanym terminie w panelu dnia; „.ics” w nagłówku kalendarza eksportuje wszystkie nadchodzące. Test e2e sprawdza oba pobrania i treść pliku.
 - Znana różnica: seria `monthly` od 31. dnia — kalendarz z `RRULE` pomija miesiące bez 31., aplikacja przeskakuje (31 stycznia → 3 marca). Do rozstrzygnięcia razem z pozycją o `monthly` wyżej.
+
+## Audyt UI/UX i layoutu — plan upiększenia (2026-09-27)
+
+Audyt agentowy: kod + zrzuty Playwright 1440/768/375, jasny i ciemny motyw (Ustawień nie udało się sfotografować — do ręcznego przeglądu). Sprawdzone w kodzie: siatka to `grid-cols-*` (nie masonry), 79 użyć `text-[9–11px]`, `--muted-foreground` 50%/55%.
+
+**Główne problemy:** (1) za dużo efektów tła naraz — aurora + 3 blooms + glow + shine + sezonowe; (2) 94 `whileHover`/`whileTap`, m.in. skalowanie każdej ikony akcji karty; (3) zbyt mała typografia (`text-[9–11px]`) i `muted-foreground` ~4.3:1 — poniżej AA; (4) hierarchia Notatek: cytat dnia nad paskiem dodawania, szablony z ikoną **i** emoji, dwa konkurujące nagłówki; (5) przeładowany sidebar (statystyki + 6 widoków + foldery + 7 akcji, niespójny rytm, podwójny stan aktywny); (6) karty: zawsze widoczny pasek 6 akcji, dziury w siatce, ~170 px na jedną linijkę na mobile; (7) pusty stan z uciętym wordmarkiem i podpowiedzią Konami, ciemny `--destructive` o słabym kontraście, `--sidebar-*` z domyślnego shadcn.
+
+**Faza 1 — fundament (tokeny, typografia, spacing), ~1 dzień**
+- [ ] `--muted-foreground` 42% (jasny) / 64% (ciemny); ciemny `--destructive: 0 72% 51%`; `--sidebar-*` z tokenów aplikacji. **S**
+- [ ] Skala tekstu: zakaz `text-[9px]`, `text-[10/11px]` → `text-xs`; token `2xs` (11/16) tylko dla badge; `leading-relaxed` treść, `leading-tight` tytuły. **M**
+- [ ] `--radius: 0.75rem` + reguła: karty `rounded-xl`, kontrolki `rounded-lg`, `rounded-full` tylko badge/FAB/avatar. **M**
+- [ ] Przywrócić `--elevation-1/2/3` zamiast `.note-shadow*`, `.header-glow` i arbitralnych `shadow-[...]` (zmiana decyzji z 2026-09-25 — dziś cienie są niespójne). **S**
+- [ ] Spacing 4/8, jedna wysokość pozycji nawigacji (`h-9`); weryfikacja AA (axe) w obu motywach. **S**
+
+**Faza 2 — komponenty, ~2–3 dni**
+- [ ] `NoteCard`: akcje `opacity-0 group-hover:opacity-100 focus-within:opacity-100` na desktopie, na dotyku menu „⋯”; cele 44 px; zwarta meta. **M**
+- [ ] `NoteGrid`: masonry na `columns-*` + `break-inside-avoid`. **M** — uwaga: roadmapa wyżej ostrzega, że masonry kłóci się z dnd-kit (reorder), `framer-motion layout` i nawigacją po `data-note-idx`; najpierw spike z przeciąganiem.
+- [ ] `AppSidebar`: bez kafli statystyk, akcje drugorzędne w grupie „Więcej”, jeden styl aktywnej pozycji. **M**
+- [ ] `AppHeader` mobile: 3–4 ikony, reszta w menu; tytuł jednokolorowy. **S**
+- [ ] `DailyQuote` zwijany / pod siatką; `QuickTemplates` — ikona albo emoji, fade na krawędzi przy scrollu. **S**
+- [ ] `EmptyState`: naprawa ucinania `NotatnikWordmark`, bez Konami i `gradient-text`. **S**
+- [ ] Kalendarz: dni spoza miesiąca `text-muted-foreground/60`, skróty do tooltipa, lżejsza siatka w ciemnym motywie. **S**
+- [ ] Ręczny przegląd dialogu Ustawień. **S**
+
+**Faza 3 — dopieszczenie i ruch, ~1 dzień**
+- [ ] Budżet ruchu: `whileHover` tylko FAB/CTA (maks. `scale: 1.03`), wejścia kart fade 150–200 ms, stagger ≤ 30 ms. **S**
+- [ ] Aurora/blooms domyślnie statyczne i przygaszone (opacity ~0.35 / 0.25), animacja jako opcja; usunąć `card-shine`. **S**
+- [ ] Jednolite `focus-visible:ring-2 ring-ring ring-offset-2` na przyciskach-ikonach. **S**
+- [ ] Wyciszyć gamifikację w głównym widoku (emoji w nagłówkach, niespodzianki) — do Statystyk. **S**
+- [ ] Zrzuty przed/po tym samym skryptem. **S**
