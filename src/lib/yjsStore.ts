@@ -1,7 +1,7 @@
 import * as Y from "yjs";
 import { applyTextEdit, captureTextBase, type TextBase } from "./yTextEdit";
 import { IndexeddbPersistence } from "y-indexeddb";
-import { get as idbGet, set as idbSet } from "idb-keyval";
+import { get as idbGet, set as idbSet, del as idbDel, keys as idbKeys, getMany as idbGetMany, setMany as idbSetMany } from "idb-keyval";
 import { loadAll as loadLegacySnapshot } from "@/lib/notesStore";
 import { hashImage } from "@/lib/imageHash";
 import type { Note, Folder, ChecklistItem } from "@/hooks/useNotes";
@@ -21,7 +21,10 @@ import type { Note, Folder, ChecklistItem } from "@/hooks/useNotes";
  * meant to eventually sync.
  */
 
-const IMAGES_KEY = "kaczy.images.v1";
+/** Stary format: cały słownik obrazów pod jednym kluczem — tylko do migracji. */
+const LEGACY_IMAGES_KEY = "kaczy.images.v1";
+/** Obrazy jednej notatki pod własnym kluczem — zapis dotyka tylko zmienionych. */
+const IMAGES_PREFIX = "kaczy.images.v2:";
 
 type YNote = Y.Map<unknown>;
 type YFolder = Y.Map<unknown>;
@@ -214,19 +217,68 @@ export function createYjsStore(dbName: string) {
   let imagesCacheLoaded = false;
   let readyPromise: Promise<void> | null = null;
 
+  /** Notatki, których obrazy zmieniły się od ostatniego zapisu. */
+  const dirtyImages = new Set<string>();
+  /** Zapisy idą po kolei — inaczej starszy `set` mógłby wygrać z nowszym `del`. */
+  let imagesWriteChain: Promise<void> = Promise.resolve();
+
   async function ensureImagesCacheLoaded(): Promise<void> {
     if (imagesCacheLoaded) return;
-    imagesCache = (await idbGet<ImagesById>(IMAGES_KEY)) ?? {};
+    const imageKeys = (await idbKeys()).filter((k): k is string => typeof k === "string" && k.startsWith(IMAGES_PREFIX));
+    const values = await idbGetMany<string[]>(imageKeys);
+    const loaded: ImagesById = {};
+    imageKeys.forEach((k, i) => { if (values[i]?.length) loaded[k.slice(IMAGES_PREFIX.length)] = values[i]; });
+
+    // Migracja z jednego wielkiego klucza. Stary klucz kasujemy dopiero po
+    // udanym zapisie nowych — przerwana migracja powtórzy się przy starcie.
+    const legacy = await idbGet<ImagesById>(LEGACY_IMAGES_KEY);
+    if (legacy) {
+      const toWrite = Object.entries(legacy).filter(([id, imgs]) => !(id in loaded) && imgs?.length);
+      await idbSetMany(toWrite.map(([id, imgs]) => [IMAGES_PREFIX + id, imgs]));
+      for (const [id, imgs] of toWrite) loaded[id] = imgs;
+      await idbDel(LEGACY_IMAGES_KEY);
+    }
+
+    // Zmiany zrobione przed załadowaniem (rzadkie) mają pierwszeństwo.
+    imagesCache = { ...loaded, ...imagesCache };
     imagesCacheLoaded = true;
   }
 
   function setImagesSync(noteId: string, images: string[]) {
     if (images.length) imagesCache[noteId] = images;
     else delete imagesCache[noteId];
+    dirtyImages.add(noteId);
   }
 
+  function dropImages(noteId: string): boolean {
+    if (!(noteId in imagesCache)) return false;
+    delete imagesCache[noteId];
+    dirtyImages.add(noteId);
+    return true;
+  }
+
+  /**
+   * Zapisuje wyłącznie notatki oznaczone jako zmienione. Wcześniej każde
+   * dodanie obrazka przepisywało cały słownik obrazów wszystkich notatek
+   * (dziesiątki MB structured-clone na jedno kliknięcie).
+   */
   function persistImagesCache() {
-    void idbSet(IMAGES_KEY, imagesCache).catch(() => { /* best-effort, same as old saveNotesIDB */ });
+    if (!dirtyImages.size) return;
+    const batch = [...dirtyImages].map((id) => [id, imagesCache[id]] as const);
+    dirtyImages.clear();
+    imagesWriteChain = imagesWriteChain.then(async () => {
+      for (const [id, imgs] of batch) {
+        try {
+          if (imgs?.length) await idbSet(IMAGES_PREFIX + id, imgs);
+          else await idbDel(IMAGES_PREFIX + id);
+        } catch { /* best-effort, same as old saveNotesIDB */ }
+      }
+    });
+  }
+
+  /** Test-only: czeka na zakończenie zapisów obrazów. */
+  function flushImagesForTests(): Promise<void> {
+    return imagesWriteChain;
   }
 
   async function migrateFromLegacyIfNeeded(): Promise<void> {
@@ -396,10 +448,7 @@ export function createYjsStore(dbName: string) {
 
   function removeNote(id: string): void {
     doc.transact(() => { notesMap.delete(id); });
-    if (id in imagesCache) {
-      delete imagesCache[id];
-      persistImagesCache();
-    }
+    if (dropImages(id)) persistImagesCache();
   }
 
   function removeNotes(ids: string[]): void {
@@ -407,7 +456,7 @@ export function createYjsStore(dbName: string) {
     doc.transact(() => {
       for (const id of ids) {
         notesMap.delete(id);
-        if (id in imagesCache) { delete imagesCache[id]; touchedImages = true; }
+        if (dropImages(id)) touchedImages = true;
       }
     });
     if (touchedImages) persistImagesCache();
@@ -464,7 +513,7 @@ export function createYjsStore(dbName: string) {
 
   /** Destructive full replace (used by "restore from backup file") — not a merge. */
   function replaceAll(notes: Note[], folders: Folder[], labels: string[]): void {
-    imagesCache = {};
+    Object.keys(imagesCache).forEach(dropImages);
     doc.transact(() => {
       notesMap.forEach((_v, k) => notesMap.delete(k));
       foldersMap.forEach((_v, k) => foldersMap.delete(k));
@@ -486,6 +535,7 @@ export function createYjsStore(dbName: string) {
       labelsMap.forEach((_v, k) => labelsMap.delete(k));
     });
     imagesCache = {};
+    dirtyImages.clear();
     imagesCacheLoaded = false;
     readyPromise = null;
     try { localStorage.removeItem(migratedKey); } catch { /* ignore */ }
@@ -500,7 +550,7 @@ export function createYjsStore(dbName: string) {
     addLabel, removeLabelEverywhere, renameLabelEverywhere,
     replaceAll, resetForTests,
     getImageHashes, getLocalImages, setImagesLocal,
-    beginTextEdit, endTextEdit, onLocalChange,
+    beginTextEdit, endTextEdit, onLocalChange, flushImagesForTests,
   };
 }
 

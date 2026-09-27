@@ -265,3 +265,40 @@ describe("yjsStore — lokalne obrazy poza dokumentem (P0 #10)", () => {
     off();
   });
 });
+
+describe("yjsStore — obrazy per notatka (P0 #11)", () => {
+  it("zmiana obrazów jednej notatki zapisuje tylko jej klucz", async () => {
+    const idb = await import("idb-keyval");
+    const store = createYjsStore(`images-per-note-${crypto.randomUUID()}`);
+    await store.ready();
+    const a = `a-${crypto.randomUUID()}`;
+    const b = `b-${crypto.randomUUID()}`;
+    store.upsertNote(makeNote({ id: a, images: ["data:a"] }));
+    store.upsertNote(makeNote({ id: b, images: ["data:b"] }));
+    await store.flushImagesForTests();
+
+    await idb.set(`kaczy.images.v2:${b}`, ["znacznik"]); // gdyby b został przepisany, znacznik by zniknął
+    store.patchNote(a, { images: ["data:a", "data:a2"] });
+    await store.flushImagesForTests();
+
+    expect(await idb.get(`kaczy.images.v2:${a}`)).toEqual(["data:a", "data:a2"]);
+    expect(await idb.get(`kaczy.images.v2:${b}`)).toEqual(["znacznik"]);
+
+    store.removeNote(a);
+    await store.flushImagesForTests();
+    expect(await idb.get(`kaczy.images.v2:${a}`)).toBeUndefined();
+  });
+
+  it("migruje stary słownik obrazów do kluczy per notatka i usuwa stary klucz", async () => {
+    const idb = await import("idb-keyval");
+    const id = `legacy-${crypto.randomUUID()}`;
+    await idb.set("kaczy.images.v1", { [id]: ["data:old"] });
+
+    const store = createYjsStore(`images-migrate-${crypto.randomUUID()}`);
+    await store.ready();
+
+    expect(store.getLocalImages(id)).toEqual(["data:old"]);
+    expect(await idb.get(`kaczy.images.v2:${id}`)).toEqual(["data:old"]);
+    expect(await idb.get("kaczy.images.v1")).toBeUndefined();
+  });
+});
