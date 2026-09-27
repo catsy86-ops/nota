@@ -437,8 +437,8 @@ Audyt agentowy: kod + zrzuty Playwright 1440/768/375, jasny i ciemny motyw (Usta
 **Decyzja do właściciela:** biały tekst na `--primary` (25 95% 53%) ma 2,8:1 — poniżej AA. Opcje: ciemniejszy odcień dla przycisków albo ciemny tekst na pomarańczowym.
 
 **Faza 3 — dopieszczenie i ruch, ~1 dzień**
-- [ ] Budżet ruchu: `whileHover` tylko FAB/CTA (maks. `scale: 1.03`), wejścia kart fade 150–200 ms, stagger ≤ 30 ms. **S**
-- [ ] Aurora/blooms domyślnie statyczne i przygaszone (opacity ~0.35 / 0.25), animacja jako opcja; usunąć `card-shine`. **S**
-- [ ] Jednolite `focus-visible:ring-2 ring-ring ring-offset-2` na przyciskach-ikonach. **S**
-- [ ] Wyciszyć gamifikację w głównym widoku (emoji w nagłówkach, niespodzianki) — do Statystyk. **S**
+- [x] Budżet ruchu: `whileHover` tylko FAB/CTA (maks. `scale: 1.03`), wejścia kart fade 150–200 ms, stagger ≤ 30 ms. **S**
+- [x] Aurora/blooms domyślnie statyczne i przygaszone (opacity ~0.35 / 0.25), animacja jako opcja; usunąć `card-shine`. **S**
+- [x] Jednolite `focus-visible:ring-2 ring-ring ring-offset-2` na przyciskach-ikonach. **S**
+- [x] Wyciszyć gamifikację w głównym widoku (emoji w nagłówkach, niespodzianki) — do Statystyk. **S**
 - [ ] Zrzuty przed/po tym samym skryptem. **S**

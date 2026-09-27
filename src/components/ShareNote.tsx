@@ -84,7 +84,6 @@ export function ShareNote({ note }: ShareNoteProps) {
       <Tooltip>
         <TooltipTrigger asChild>
           <motion.button
-            whileHover={{ scale: 1.15 }}
             whileTap={{ scale: 0.9 }}
             onClick={(e) => { e.stopPropagation(); setOpen(true); }}
             className="p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5 transition-colors"

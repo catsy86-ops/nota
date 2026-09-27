@@ -52,7 +52,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             {/* Center FAB */}
             <li className="flex justify-center -mt-6">
               <motion.button
-                whileHover={{ scale: 1.06, rotate: 6 }}
+                whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.9, rotate: -4 }}
                 transition={{ type: "spring", stiffness: 380, damping: 18 }}
                 onClick={onNew}
@@ -136,7 +136,6 @@ function NavItem({ active, label, onClick, children, badge }: { active: boolean;
 function SheetTile({ Icon, label, onClick, badge }: { Icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void; badge?: number }) {
   return (
     <motion.button
-      whileHover={{ y: -2 }}
       whileTap={{ scale: 0.95 }}
       onClick={onClick}
       className="relative flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors border border-border/50"

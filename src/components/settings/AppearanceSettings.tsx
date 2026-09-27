@@ -97,7 +97,7 @@ export function AppearanceSettings() {
             ? `Zgodnie z ustawieniem systemu (teraz: ${motionReduced ? "ograniczony ruch" : "pełne animacje"}).`
             : motionMode === "reduced"
               ? "Animacje, przejścia i efekty ruchu są wyłączone."
-              : "Wszystkie animacje włączone, niezależnie od ustawień systemu."}
+              : "Wszystkie animacje włączone, łącznie z ruchomym tłem."}
         </p>
       </Section>
 

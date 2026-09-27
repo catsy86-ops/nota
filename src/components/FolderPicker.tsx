@@ -75,7 +75,6 @@ export function FolderPicker({ folders, currentFolderId, onSelect }: FolderPicke
         <TooltipTrigger asChild>
           <PopoverTrigger asChild>
             <motion.button
-              whileHover={{ scale: 1.15 }}
               whileTap={{ scale: 0.9 }}
               onClick={(e) => e.stopPropagation()}
               className={cn("p-1.5 rounded-full transition-colors", currentFolderId ? "text-primary hover:bg-primary/10" : "text-muted-foreground hover:bg-foreground/5")}

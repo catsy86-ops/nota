@@ -30,7 +30,6 @@ export function LabelPicker({ allLabels, selected, onToggle, onCreateLabel }: La
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <motion.button
-          whileHover={{ scale: 1.15 }}
           whileTap={{ scale: 0.9 }}
           className="p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5 transition-colors"
           title="Etykiety"
@@ -67,7 +66,6 @@ export function LabelPicker({ allLabels, selected, onToggle, onCreateLabel }: La
             className="flex-1 text-xs bg-muted/60 border border-border rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground"
           />
           <motion.button
-            whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={handleCreate}
             className="p-1.5 rounded-lg bg-primary text-primary-foreground"

@@ -44,7 +44,6 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
   const button =
     variant === "tile" ? (
       <motion.button
-        whileHover={{ y: -2 }}
         whileTap={{ scale: 0.95 }}
         onClick={handleClick}
         className={cn(
@@ -59,7 +58,6 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
       </motion.button>
     ) : (
       <motion.button
-        whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={handleClick}
         className={cn(

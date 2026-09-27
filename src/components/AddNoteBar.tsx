@@ -193,14 +193,14 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
               <div className="flex items-center gap-1 flex-wrap flex-1">
                 <ColorPicker selected={color} onSelect={setColor} />
                 {/* Image upload */}
-                <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}
+                <motion.button whileTap={{ scale: 0.9 }}
                   onClick={() => fileInputRef.current?.click()}
                   className="p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5" title="Dodaj obrazek">
                   <ImagePlus className="w-4 h-4" />
                 </motion.button>
                 <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
                 {/* Drawing */}
-                <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}
+                <motion.button whileTap={{ scale: 0.9 }}
                   onClick={() => setShowDrawing(true)}
                   className="p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5" title="Rysuj">
                   <PenTool className="w-4 h-4" />
@@ -208,7 +208,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                 {/* Label picker */}
                 <Popover>
                   <PopoverTrigger asChild>
-                    <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }} className="p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5" title="Etykiety">
+                    <motion.button whileTap={{ scale: 0.9 }} className="p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5" title="Etykiety">
                       <Tag className="w-4 h-4" />
                     </motion.button>
                   </PopoverTrigger>
@@ -222,7 +222,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                     <div className="flex gap-1.5">
                       <input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleCreateLabel()}
                         placeholder="Nowa etykieta..." className="flex-1 text-xs bg-muted/60 border border-border rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground" />
-                      <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={handleCreateLabel} className="p-1.5 rounded-lg bg-primary text-primary-foreground">
+                      <motion.button whileTap={{ scale: 0.9 }} onClick={handleCreateLabel} className="p-1.5 rounded-lg bg-primary text-primary-foreground">
                         <Plus className="w-3 h-3" />
                       </motion.button>
                     </div>
@@ -231,7 +231,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                 {/* Reminder picker */}
                 <Popover>
                   <PopoverTrigger asChild>
-                    <motion.button whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }} className={cn("p-1.5 rounded-full hover:bg-foreground/5", reminder ? "text-primary" : "text-muted-foreground")} title="Przypomnienie">
+                    <motion.button whileTap={{ scale: 0.9 }} className={cn("p-1.5 rounded-full hover:bg-foreground/5", reminder ? "text-primary" : "text-muted-foreground")} title="Przypomnienie">
                       <Bell className={cn("w-4 h-4", reminder && "fill-current")} />
                     </motion.button>
                   </PopoverTrigger>
@@ -252,7 +252,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                 {/* Priority picker */}
                 <PriorityPicker priority={priority} onSet={setPriority} />
               </div>
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleClose}
+              <motion.button whileTap={{ scale: 0.95 }} onClick={handleClose}
                 className="px-4 py-1.5 text-sm font-medium font-display text-primary hover:bg-primary/10 rounded-lg transition-colors shrink-0">
                 Zamknij
               </motion.button>

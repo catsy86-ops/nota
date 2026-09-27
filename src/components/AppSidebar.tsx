@@ -93,13 +93,12 @@ export function AppSidebar({
                 <motion.button
                   type="button"
                   onClick={onLogoClick}
-                  whileHover={{ scale: 1.06 }}
                   whileTap={{ scale: 0.94 }}
                   className="relative shrink-0 grid place-items-center w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 via-accent/10 to-transparent ring-1 ring-border/60"
                   aria-label="Notatki Pijackie"
                 >
                   <div className="absolute inset-0 rounded-2xl bg-primary/20 blur-lg opacity-70 -z-10" />
-                  <motion.div whileHover={{ rotate: [0, -12, 12, -6, 0], transition: { duration: 0.5 } }}>
+                  <motion.div>
                     <BeerMugLogo />
                   </motion.div>
                 </motion.button>

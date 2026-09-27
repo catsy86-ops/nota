@@ -45,7 +45,6 @@ export function AppHeader({
           <Tooltip>
             <TooltipTrigger asChild>
               <motion.button
-                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onToggleSidebar}
                 aria-label={sidebarOpen ? "Schowaj panel" : "Pokaż panel"}

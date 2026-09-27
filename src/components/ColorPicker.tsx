@@ -36,7 +36,6 @@ export function ColorPicker({ selected, onSelect }: ColorPickerProps) {
       {COLORS.map((c) => (
         <motion.button
           key={c.value}
-          whileHover={{ scale: 1.2 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => onSelect(c.value)}
           className={`w-7 h-7 rounded-full border-2 transition-colors ${colorClasses[c.value]} ${

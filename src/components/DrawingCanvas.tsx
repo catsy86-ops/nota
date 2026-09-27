@@ -252,7 +252,6 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
             {COLORS.map((c) => (
               <motion.button
                 key={c}
-                whileHover={{ scale: 1.15 }}
                 whileTap={{ scale: 0.9 }}
                 onClick={() => { setColor(c); setTool("pen"); }}
                 className={cn(
@@ -335,7 +334,6 @@ function ToolBtn({ icon, onClick, title, active, disabled, className }: {
 }) {
   return (
     <motion.button
-      whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
       onClick={onClick}
       disabled={disabled}

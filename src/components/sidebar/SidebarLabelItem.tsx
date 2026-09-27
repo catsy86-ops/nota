@@ -31,7 +31,6 @@ export function SidebarLabelItem({ label, isActive, onSelect, onRename, onDelete
 
   return (
     <motion.div
-      whileHover={{ x: 3 }}
       className={cn(
         "group flex items-center gap-3 px-3 h-9 rounded-lg text-sm transition-all duration-200 cursor-pointer",
         isActive ? "bg-primary/10 text-primary shadow-sm border border-primary/10" : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"

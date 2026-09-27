@@ -43,7 +43,6 @@ export function ViewControls({ allLabels }: Props) {
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
               <motion.button
-                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="p-2 rounded-xl hover:bg-background hover:shadow-sm transition-colors text-muted-foreground data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm"
               >
@@ -101,7 +100,6 @@ export function ViewControls({ allLabels }: Props) {
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
               <motion.button
-                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="p-2 rounded-xl hover:bg-background hover:shadow-sm transition-colors text-muted-foreground data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm"
               >
@@ -136,7 +134,6 @@ export function ViewControls({ allLabels }: Props) {
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
               <motion.button
-                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className={cn(
                   "relative p-2 rounded-xl transition-colors",

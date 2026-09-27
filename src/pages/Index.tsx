@@ -25,7 +25,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { DndContext, pointerWithin } from "@dnd-kit/core";
-import { fireworks, megaCelebrate, celebrate } from "@/lib/celebrate";
+import { fireworks, megaCelebrate } from "@/lib/celebrate";
 import { glowPulse, glowStreak, centerOf, pointOfNote } from "@/lib/glowTrail";
 import { SearchBar } from "@/components/SearchBar";
 import { useAchievementTracker } from "@/lib/achievements";
@@ -106,10 +106,8 @@ const Index = () => {
   useReminderNotifications([...notes, ...archivedNotes], (id, nextReminder) => updateNote(id, { reminder: nextReminder }));
 
   useAchievementTracker(notes, archivedNotes, allLabels, folders, (a) => {
-    toast.success(`${a.emoji} Odznaka odblokowana: ${a.title}`, { description: a.description });
-    try {
-      celebrate(window.innerWidth / 2, window.innerHeight / 3);
-    } catch { /* noop */ }
+    // Quiet in the main view: a plain toast; badges and celebrations live in Statystyki.
+    toast(`Odznaka odblokowana: ${a.title}`, { description: a.description });
   });
 
   useBackupReminders(prefs, notes, archivedNotes);

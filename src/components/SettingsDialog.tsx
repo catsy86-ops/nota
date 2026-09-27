@@ -44,7 +44,6 @@ export function SettingsDialog({ trigger, open, onOpenChange }: SettingsDialogPr
         <DialogTrigger asChild>
           {trigger ?? (
             <motion.button
-              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
             >

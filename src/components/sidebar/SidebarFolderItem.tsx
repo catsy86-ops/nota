@@ -65,7 +65,6 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
   return (
     <div ref={setDropRef} data-folder-drop={folder.id}>
       <motion.div
-        whileHover={{ x: 3 }}
         className={cn(
           "group flex items-center gap-2 px-3 h-9 rounded-lg text-sm transition-all duration-200 cursor-pointer",
           isActive ? "bg-primary/10 text-primary shadow-sm border border-primary/10" : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
