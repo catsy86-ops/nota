@@ -57,7 +57,7 @@ const Index = () => {
     archiveNote, unarchiveNote, addLabel, importNotes, reorderNotes, moveNoteToFolder,
     bulkTrash, bulkArchive, bulkSetColor, bulkRestore,
   } = useNotesContext();
-  const { addVersion, getVersions } = useNoteVersions();
+  const { addVersion, getVersions, deleteVersions } = useNoteVersions();
   const { confirmAction, confirmDialog } = useConfirmAction();
   const { dark, toggle: toggleTheme } = useTheme();
   const isMobile = useIsMobile();
@@ -160,14 +160,34 @@ const Index = () => {
 
   const allNotesForLinks = useMemo(() => [...notes, ...archivedNotes], [notes, archivedNotes]);
   const knownTitles = new Set(allNotesForLinks.filter((n) => n.title.trim()).map((n) => n.title.trim().toLowerCase()));
+  /**
+   * Jedno miejsce „pokaż tę notatkę”: przełącza na widok, w którym notatka
+   * faktycznie jest (Notatki / Archiwum / Kosz), zdejmuje filtry, które mogłyby
+   * ją ukryć, przewija do karty i na chwilę ją podświetla.
+   */
+  const openNote = useCallback((id: string) => {
+    const note = [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === id);
+    if (!note) { toast.info("Tej notatki już nie ma"); return; }
+    const target: View = note.trashed ? "trash" : note.archived ? "archive" : "notes";
+    setView(target);
+    setSearch("");
+    setActiveLabel(null);
+    setActiveFolder(null);
+    if (target !== "notes") toast.info(target === "trash" ? "Notatka jest w Koszu" : "Notatka jest w Archiwum");
+    setTimeout(() => {
+      const el = document.querySelector<HTMLElement>(`[data-note-id="${id}"]`);
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("note-flash");
+      setTimeout(() => el.classList.remove("note-flash"), 1600);
+    }, 150);
+  }, [notes, archivedNotes, trashedNotes]);
+
   const handleWikiClick = useCallback((title: string) => {
     const target = allNotesForLinks.find((n) => n.title.trim().toLowerCase() === title.trim().toLowerCase());
-    if (target) {
-      setView("notes");
-      setTimeout(() => document.querySelector(`[data-note-id="${target.id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 120);
-    }
+    if (target) openNote(target.id);
     else toast.info(`Notatka „${title}" nie istnieje`);
-  }, [allNotesForLinks]);
+  }, [allNotesForLinks, openNote]);
 
   const toggleSelect = useCallback((id: string, shiftKey: boolean) => {
     setSelectedIds((prev) => {
@@ -206,11 +226,16 @@ const Index = () => {
     bulkTrash, bulkArchive, bulkSetColor, bulkRestore, setSelectedIds, displayNotes,
   });
 
+  // Notatka tworzona w folderze albo w widoku etykiety ląduje tam, gdzie
+  // użytkownik patrzy — inaczej znika mu z oczu i wymaga przeciągnięcia.
   const handleAddNoteGlow = useCallback((...args: Parameters<typeof addNote>) => {
     const p = centerOf(document.querySelector("[data-add-note-bar]"));
     if (p) glowPulse(p, "create", 260);
-    return addNote(...args);
-  }, [addNote]);
+    const [title, content, color, labels = [], reminder, images, checklist, priority, folderId] = args;
+    const withLabel = activeLabel && !labels.includes(activeLabel) ? [...labels, activeLabel] : labels;
+    const inFolder = folderId ?? (view === "folder" ? activeFolder : null);
+    return addNote(title, content, color, withLabel, reminder, images, checklist, priority, inFolder);
+  }, [addNote, activeLabel, activeFolder, view]);
 
   const handleMoveToFolderGlow = useCallback((id: string, folderId: string | null) => {
     const from = pointOfNote(id);
@@ -246,7 +271,10 @@ const Index = () => {
 
   const totalNotes = notes.length + archivedNotes.length;
   const remindersCount = notes.filter((n) => n.reminder).length;
-  const handleDelete = view === "trash" ? deleteNote : handleTrashSingle;
+  // Trwałe usunięcie zabiera ze sobą historię wersji — inaczej zostawałaby
+  // w `localStorage` na zawsze i zjadała limit.
+  const deleteNoteForever = (id: string) => { deleteNote(id); deleteVersions(id); };
+  const handleDelete = view === "trash" ? deleteNoteForever : handleTrashSingle;
 
   const { sensors, setDraggingNoteId, handleDragEnd } = useNoteDnd({
     displayNoteIds: displayNotes.map((n) => n.id),
@@ -351,7 +379,7 @@ const Index = () => {
               <AlertDialogFooter>
                 <AlertDialogCancel>Anuluj</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={() => { emptyTrash(); toast.success("Kosz opróżniony"); setConfirmEmptyTrash(false); }}
+                  onClick={() => { deleteVersions(trashedNotes.map((n) => n.id)); emptyTrash(); toast.success("Kosz opróżniony"); setConfirmEmptyTrash(false); }}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
                   Opróżnij
@@ -436,7 +464,7 @@ const Index = () => {
           open={paletteOpen}
           onOpenChange={setPaletteOpen}
           notes={[...notes, ...archivedNotes]}
-          onOpenNote={() => { setView("notes"); }}
+          onOpenNote={openNote}
           onNewNote={expandAddNote}
           onGo={(v) => { setView(v); setActiveLabel(null); }}
           onToggleTheme={toggleTheme}

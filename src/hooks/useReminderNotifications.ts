@@ -10,13 +10,6 @@ export function useReminderNotifications(
 ) {
   const firedRef = useRef(loadFired());
 
-  // Request browser notification permission on mount
-  useEffect(() => {
-    if ("Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-  }, []);
-
   useEffect(() => {
     function check() {
       const now = Date.now();
@@ -53,7 +46,7 @@ export function useReminderNotifications(
           });
 
           if ("Notification" in window && Notification.permission === "granted") {
-            const title = note.title || "Dash Notes — Przypomnienie";
+            const title = note.title || "Notatnik — Przypomnienie";
             const options: NotificationOptions = {
               body: note.content || "Czas na tę notatkę!",
               icon: "/pwa-192.png",

@@ -47,7 +47,7 @@ const DEFAULTS: ViewPrefs = {
   autosaveSeconds: 0,
   autoExportDays: 7,
   backupReminderDays: 14,
-  todayReminderHours: 6,
+  todayReminderHours: 0,
   todayReminderTime: "",
   weekReminderTime: "",
   weekReminderDay: 1,

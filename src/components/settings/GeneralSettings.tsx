@@ -11,6 +11,25 @@ import { useConfirmPrefs, setConfirmPref } from "@/lib/confirmPrefs";
 import type { NoteColor } from "@/hooks/useNotes";
 import { cn } from "@/lib/utils";
 import { Section, ToggleRow } from "./SettingsShared";
+import { getNotificationPermission } from "@/lib/notificationPermission";
+
+const PERMISSION_TEXT = {
+  granted: "Włączone — przypomnienia pokażą się jako powiadomienia systemowe, gdy aplikacja jest otwarta.",
+  default: "Przeglądarka zapyta o zgodę przy ustawieniu pierwszego przypomnienia.",
+  denied: "Zablokowane w przeglądarce — przypomnienia pojawią się tylko w aplikacji. Zmienisz to w ustawieniach witryny (ikona kłódki przy adresie).",
+  unsupported: "Ta przeglądarka nie obsługuje powiadomień — przypomnienia pojawią się tylko w aplikacji.",
+} as const;
+
+function NotificationStatus() {
+  const state = getNotificationPermission();
+  return (
+    <Section title="Powiadomienia o przypomnieniach">
+      <p className={cn("text-xs", state === "denied" ? "text-destructive" : "text-muted-foreground")}>
+        {PERMISSION_TEXT[state]}
+      </p>
+    </Section>
+  );
+}
 
 const COLORS: NoteColor[] = ["default", "coral", "peach", "sand", "mint", "sage", "sky", "lavender", "rose"];
 
@@ -68,6 +87,8 @@ export function GeneralSettings() {
           ))}
         </div>
       </Section>
+
+      <NotificationStatus />
 
       <ToggleRow
         label="Sprawdzanie pisowni"

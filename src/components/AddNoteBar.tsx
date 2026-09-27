@@ -17,6 +17,7 @@ import { FormatToolbar } from "./MarkdownRenderer";
 import { PriorityPicker } from "./PriorityPicker";
 import type { NotePriority } from "@/lib/notePriority";
 import { QuickReminderInput } from "./QuickReminderInput";
+import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
 import { composeReminderTimestamp, toTimeInputValue, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
 import { toast } from "sonner";
 
@@ -90,7 +91,10 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   const reminderTimestamp = reminderDate ? composeReminderTimestamp(reminderDate, reminderTime) : null;
 
   function handleSetReminder() {
-    if (reminderTimestamp !== null) setReminder(reminderTimestamp);
+    if (reminderTimestamp !== null) {
+      requestNotificationPermissionOnIntent();
+      setReminder(reminderTimestamp);
+    }
   }
 
   function handleQuickReminderParsed(parsed: Date) {

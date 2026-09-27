@@ -83,3 +83,13 @@ describe("searchNotes", () => {
     expect(searchNotes(notes, "color:mint").map((n) => n.id)).toEqual(["a"]);
   });
 });
+
+describe("searchNotes — checklisty", () => {
+  it("znajduje notatkę po treści pozycji checklisty", () => {
+    const notes = [
+      makeNote({ id: "a", title: "Zakupy", checklist: [{ id: "i1", text: "kupić baterie", checked: false }] }),
+      makeNote({ id: "b", title: "Inne" }),
+    ];
+    expect(searchNotes(notes, "baterie").map((n) => n.id)).toEqual(["a"]);
+  });
+});

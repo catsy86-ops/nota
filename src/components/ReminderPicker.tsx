@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { REMINDER_REPEAT_LABELS, type ReminderRepeat } from "@/lib/reminderRepeat";
+import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
 import { composeReminderTimestamp, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
 import { QuickReminderInput } from "@/components/QuickReminderInput";
 
@@ -37,6 +38,7 @@ export function ReminderPicker({ reminder, reminderRepeat, onSet }: ReminderPick
 
   function handleSave() {
     if (timestamp === null || pastTime) return;
+    requestNotificationPermissionOnIntent();
     onSet(timestamp, repeat);
     setOpen(false);
   }

@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { searchNotes } from "@/lib/searchNotes";
 import { parseNaturalDate } from "@/lib/parseNaturalDate";
+import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
 import { composeReminderTimestamp, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
 import { REMINDER_REPEAT_LABELS, type ReminderRepeat } from "@/lib/reminderRepeat";
 import type { Note } from "@/hooks/useNotes";
@@ -116,18 +117,21 @@ export function ReminderQuickAddDialog({
 
   function handleCreate() {
     if (timestamp === null || !title) return;
+    requestNotificationPermissionOnIntent();
     onCreateNote(title, timestamp, repeat);
     close();
   }
 
   function handleAttach(noteId: string) {
     if (timestamp === null) return;
+    requestNotificationPermissionOnIntent();
     onAttachReminder(noteId, timestamp, repeat);
     close();
   }
 
   function handleSaveEdit() {
     if (!edit || timestamp === null) return;
+    requestNotificationPermissionOnIntent();
     onAttachReminder(edit.noteId, timestamp, repeat);
     close();
   }

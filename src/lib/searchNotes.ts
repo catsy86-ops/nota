@@ -3,7 +3,7 @@ import type { Note } from "@/hooks/useNotes";
 
 /**
  * Fuzzy search with simple operators: `label:Foo`, `color:peach`, `has:reminder`, `has:checklist`.
- * Free-text portion is matched fuzzily against title/content/labels.
+ * Free-text portion is matched fuzzily against title/content/labels/checklist items.
  */
 export function searchNotes(notes: Note[], query: string): Note[] {
   const q = query.trim();
@@ -48,6 +48,9 @@ export function searchNotes(notes: Note[], query: string): Note[] {
       { name: "title", weight: 0.5 },
       { name: "content", weight: 0.3 },
       { name: "labels", weight: 0.2 },
+      // Pozycje checklisty to treść jak każda inna — zadanie zapisane tylko
+      // w liście musi dać się znaleźć.
+      { name: "checklist.text", weight: 0.3 },
     ],
     threshold: 0.38,
     ignoreLocation: true,

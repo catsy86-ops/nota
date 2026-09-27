@@ -5,7 +5,7 @@ import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { Minus, Plus, X, Maximize2 } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 import { findBacklinks, resolveWikiTarget } from "@/lib/wikiLinks";
-import { readingTimeMin } from "@/lib/viewPrefs";
+import { readingTimeMin, useViewPrefs } from "@/lib/viewPrefs";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 
@@ -31,10 +31,12 @@ export function NotePresentation({ noteId, notes, onOpenChange, onNavigate }: Pr
     return () => window.removeEventListener("keydown", onKey);
   }, [note]);
 
+  const { showBacklinks } = useViewPrefs();
+
   if (!note) return null;
 
   const known = new Set(notes.filter((n) => n.title.trim()).map((n) => n.title.trim().toLowerCase()));
-  const backlinks = findBacklinks(note, notes);
+  const backlinks = showBacklinks ? findBacklinks(note, notes) : [];
   const words = note.content.trim() ? note.content.trim().split(/\s+/).length : 0;
   const minutes = readingTimeMin(note.content);
 

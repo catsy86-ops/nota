@@ -311,11 +311,13 @@ test("termin da się przeciągnąć na inny dzień, przesunąć Shift+strzałką
   // Klawiaturowy odpowiednik (WCAG 2.5.7): Shift+← w panelu dnia.
   await page.getByRole("button", { name: /Edytuj termin/ }).focus();
   await page.keyboard.press("Shift+ArrowLeft");
-  await expect(page.getByText(/Termin przeniesiony na/).first()).toBeVisible();
+  // Czekamy na drugi toast — dopiero wtedy „najnowszy” to ten od Shift+←.
+  await expect(page.getByText(/Termin przeniesiony na/)).toHaveCount(2);
   await expect(grid.getByRole("gridcell", { name: movedLabel })).toHaveCount(0);
 
   // Cofnij przywraca termin sprzed ostatniego przesunięcia.
-  // Toasty się nakładają — klikamy w ten na wierzchu, czyli najnowszy.
-  await page.locator("[data-sonner-toast][data-front=true]").getByRole("button", { name: "Cofnij" }).click();
+  // Toasty się nakładają i animują, więc Playwright widzi zasłonięty przycisk;
+  // zdarzenie kliknięcia wysyłamy wprost do „Cofnij” najnowszego toastu.
+  await page.locator("[data-sonner-toast][data-front=true]").getByRole("button", { name: "Cofnij" }).dispatchEvent("click");
   await expect(grid.getByRole("gridcell", { name: movedLabel })).toHaveCount(1);
 });

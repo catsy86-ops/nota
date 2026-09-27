@@ -1,7 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { StickyNote, Archive, Bell, Trash, Plus, Moon, Sparkles, Trophy, Calendar, CalendarRange, Brain, Keyboard } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
+import { searchNotes } from "@/lib/searchNotes";
+
+const NOTE_LIMIT = 30;
 
 export interface CommandAction {
   id: string;
@@ -39,6 +42,7 @@ export function CommandPalette({
   onOpenShortcuts,
 }: Props) {
   const [search, setSearch] = useState("");
+  const matched = useMemo(() => searchNotes(notes, search), [notes, search]);
 
   function run(fn: () => void) {
     onOpenChange(false);
@@ -104,12 +108,19 @@ export function CommandPalette({
             <Trash className="w-4 h-4 mr-2" /> Kosz
           </CommandItem>
         </CommandGroup>
-        {notes.length > 0 && (
+        {matched.length > 0 && (
           <>
             <CommandSeparator />
-            <CommandGroup heading="Notatki">
-              {notes.slice(0, 30).map((n) => (
-                <CommandItem key={n.id} value={`${n.title} ${n.content}`} onSelect={() => run(() => onOpenNote(n.id))}>
+            {/* Filtruje `searchNotes` (ten sam silnik co pasek wyszukiwania, z
+                checklistami i operatorami), a dopiero potem tniemy — inaczej
+                paleta widziałaby tylko 30 najnowszych notatek. `forceMount`, bo
+                wynik Fuse nie musi przejść wewnętrznego filtra cmdk. */}
+            <CommandGroup
+              heading={matched.length > NOTE_LIMIT ? `Notatki — pokazano ${NOTE_LIMIT} z ${matched.length}` : "Notatki"}
+              forceMount={matched.length > 0}
+            >
+              {matched.slice(0, NOTE_LIMIT).map((n) => (
+                <CommandItem key={n.id} forceMount value={`note-${n.id}`} onSelect={() => run(() => onOpenNote(n.id))}>
                   <StickyNote className="w-4 h-4 mr-2 text-muted-foreground" />
                   <span className="truncate">{n.title || n.content.slice(0, 60) || "(bez tytułu)"}</span>
                 </CommandItem>

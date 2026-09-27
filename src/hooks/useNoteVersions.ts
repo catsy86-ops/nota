@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
+import { toast } from "sonner";
 
 export interface NoteVersion {
   id: string;
@@ -20,14 +21,36 @@ function loadVersions(): NoteVersion[] {
   }
 }
 
-function saveVersions(versions: NoteVersion[]) {
-  localStorage.setItem(VERSIONS_KEY, JSON.stringify(versions));
+/**
+ * Zapis nie może rzucić: wołany z `useEffect`, więc `QuotaExceededError`
+ * poleciałby prosto do `ErrorBoundary` i położył całą aplikację. Przy braku
+ * miejsca zrzucamy najstarsze wersje, aż się zmieści; notatki (Yjs/IndexedDB)
+ * są od tego niezależne.
+ */
+export function saveVersions(versions: NoteVersion[], storage: Storage = localStorage): boolean {
+  let kept = versions;
+  while (true) {
+    try {
+      storage.setItem(VERSIONS_KEY, JSON.stringify(kept));
+      return kept.length === versions.length;
+    } catch {
+      if (kept.length === 0) return false;
+      kept = [...kept].sort((a, b) => b.timestamp - a.timestamp).slice(0, Math.floor(kept.length / 2));
+    }
+  }
 }
 
 export function useNoteVersions() {
   const [versions, setVersions] = useState<NoteVersion[]>(loadVersions);
 
-  useEffect(() => { saveVersions(versions); }, [versions]);
+  useEffect(() => {
+    if (!saveVersions(versions)) {
+      toast.warning("Brak miejsca na historię wersji", {
+        description: "Najstarsze wersje nie zostały zapisane. Notatki są bezpieczne.",
+        id: "versions-quota",
+      });
+    }
+  }, [versions]);
 
   const addVersion = useCallback((noteId: string, title: string, content: string) => {
     setVersions((prev) => {
@@ -56,8 +79,9 @@ export function useNoteVersions() {
       .sort((a, b) => b.timestamp - a.timestamp);
   }, [versions]);
 
-  const deleteVersions = useCallback((noteId: string) => {
-    setVersions((prev) => prev.filter((v) => v.noteId !== noteId));
+  const deleteVersions = useCallback((noteIds: string | string[]) => {
+    const ids = new Set(Array.isArray(noteIds) ? noteIds : [noteIds]);
+    setVersions((prev) => (prev.some((v) => ids.has(v.noteId)) ? prev.filter((v) => !ids.has(v.noteId)) : prev));
   }, []);
 
   return { addVersion, getVersions, deleteVersions };

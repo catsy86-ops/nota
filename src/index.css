@@ -395,3 +395,11 @@
   }
 }
 
+
+/* Chwilowe podświetlenie karty po „otwórz notatkę” (paleta, wikilink). */
+.note-flash {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 3px;
+  border-radius: 1rem;
+  transition: outline-color 0.3s;
+}

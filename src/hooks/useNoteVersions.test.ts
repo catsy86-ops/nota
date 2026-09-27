@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useNoteVersions } from "./useNoteVersions";
+import { useNoteVersions, saveVersions } from "./useNoteVersions";
 
 beforeEach(() => {
   localStorage.clear();
@@ -80,5 +80,36 @@ describe("useNoteVersions", () => {
     const { result: second } = renderHook(() => useNoteVersions());
     expect(second.current.getVersions("n1")).toHaveLength(1);
     expect(second.current.getVersions("n1")[0].title).toBe("Persisted");
+  });
+});
+
+describe("saveVersions przy przepełnionym localStorage", () => {
+  function quotaStorage(maxChars: number): Storage {
+    const data = new Map<string, string>();
+    return {
+      getItem: (k) => data.get(k) ?? null,
+      setItem: (k, v) => {
+        if (v.length > maxChars) throw new DOMException("full", "QuotaExceededError");
+        data.set(k, v);
+      },
+      removeItem: (k) => { data.delete(k); },
+      clear: () => data.clear(),
+      key: () => null,
+      get length() { return data.size; },
+    };
+  }
+  const v = (i: number) => ({ id: `v${i}`, noteId: "n", title: "t", content: "x".repeat(100), timestamp: i });
+
+  it("nie rzuca i zostawia najnowsze wersje, gdy całość się nie mieści", () => {
+    const storage = quotaStorage(700);
+    const all = Array.from({ length: 20 }, (_, i) => v(i));
+    expect(saveVersions(all, storage)).toBe(false);
+    const saved = JSON.parse(storage.getItem("kaczy-notes-versions")!);
+    expect(saved.length).toBeGreaterThan(0);
+    expect(saved[0].timestamp).toBe(19);
+  });
+
+  it("zwraca true, gdy wszystko się zmieściło", () => {
+    expect(saveVersions([v(1)], quotaStorage(10_000))).toBe(true);
   });
 });
