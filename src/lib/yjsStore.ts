@@ -363,15 +363,25 @@ export function createYjsStore(dbName: string) {
     return imagesCache[id] ?? [];
   }
 
+  /**
+   * Zmiany wyłącznie lokalne (dziś: dociągnięte obrazy) — poza `Y.Doc`.
+   * Wcześniej UI „szturchało się” zapisem `_imgSyncTick` do notatki, który
+   * leciał po WebRTC do wszystkich peerów i rósł w historii dokumentu.
+   */
+  const localListeners = new Set<() => void>();
+  function onLocalChange(listener: () => void): () => void {
+    localListeners.add(listener);
+    return () => { localListeners.delete(listener); };
+  }
+
   /** Called by imageSync.ts once it has fetched a missing image blob from a
-   *  peer — merges it into the local device-local image cache and nudges
-   *  useNotes.ts's observeDeep so the UI re-renders with the new image. */
+   *  peer — merges it into the device-local image cache and notifies
+   *  `onLocalChange` subscribers so the UI re-renders with the new image. */
   function setImagesLocal(id: string, images: string[]): void {
-    const y = notesMap.get(id);
-    if (!y) return;
+    if (!notesMap.has(id)) return;
     setImagesSync(id, images);
     persistImagesCache();
-    doc.transact(() => { y.set("_imgSyncTick", Date.now()); });
+    localListeners.forEach((l) => l());
   }
 
   /** Persists a manual drag order (index per id) in one transaction. */
@@ -490,7 +500,7 @@ export function createYjsStore(dbName: string) {
     addLabel, removeLabelEverywhere, renameLabelEverywhere,
     replaceAll, resetForTests,
     getImageHashes, getLocalImages, setImagesLocal,
-    beginTextEdit, endTextEdit,
+    beginTextEdit, endTextEdit, onLocalChange,
   };
 }
 

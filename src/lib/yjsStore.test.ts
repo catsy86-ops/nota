@@ -246,3 +246,22 @@ describe("yjsStore — migration from the legacy idb-keyval store", () => {
     expect(notes.map((n) => n.id).sort()).toEqual(["legacy-1", "local-only"]);
   });
 });
+
+describe("yjsStore — lokalne obrazy poza dokumentem (P0 #10)", () => {
+  it("setImagesLocal powiadamia UI, ale nie zapisuje nic do Y.Doc", () => {
+    const store = createYjsStore(`local-images-${crypto.randomUUID()}`);
+    store.upsertNote(makeNote({ id: "n1" }));
+    let docUpdates = 0;
+    store.doc.on("update", () => { docUpdates++; });
+    let notified = 0;
+    const off = store.onLocalChange(() => { notified++; });
+
+    store.setImagesLocal("n1", ["data:image/png;base64,AAAA"]);
+
+    expect(docUpdates).toBe(0);
+    expect(notified).toBe(1);
+    expect(store.getLocalImages("n1")).toEqual(["data:image/png;base64,AAAA"]);
+    expect(store.notesMap.get("n1")!.has("_imgSyncTick")).toBe(false);
+    off();
+  });
+});

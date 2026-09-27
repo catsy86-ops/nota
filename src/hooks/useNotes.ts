@@ -87,6 +87,7 @@ export function useNotes() {
     yjsStore.notesMap.observeDeep(project);
     yjsStore.foldersMap.observeDeep(project);
     yjsStore.labelsMap.observeDeep(project);
+    const offLocal = yjsStore.onLocalChange(project);
 
     yjsStore.ready().then(() => {
       if (cancelled) return;
@@ -98,6 +99,7 @@ export function useNotes() {
       yjsStore.notesMap.unobserveDeep(project);
       yjsStore.foldersMap.unobserveDeep(project);
       yjsStore.labelsMap.unobserveDeep(project);
+      offLocal();
     };
   }, []);
 
