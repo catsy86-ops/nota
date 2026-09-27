@@ -98,8 +98,8 @@ export function GeneralSettings() {
         />
         <p className="text-[11px] text-muted-foreground mt-1.5">
           {prefs.autosaveSeconds === 0
-            ? "Notatki zapisują się tylko po kliknięciu „Zapisz”."
-            : "Edycja będzie zapisywana automatycznie po przerwie w pisaniu."}
+            ? "Bez zapisu cyklicznego. Edycja i tak zapisuje się przy wyjściu z pola oraz gdy kafel zniknie z widoku."
+            : "Edycja będzie zapisywana automatycznie po przerwie w pisaniu — oraz zawsze przy wyjściu z pola."}
         </p>
       </Section>
 

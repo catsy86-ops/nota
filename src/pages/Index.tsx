@@ -367,7 +367,7 @@ const Index = () => {
                 📌 Przypięte
                 <span className="bg-primary/10 text-primary text-[10px] px-1.5 rounded-full">{pinned.length}</span>
               </motion.p>
-              <NoteGrid notes={pinned} searchQuery={search} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} onPresent={setPresentingNoteId} knownTitles={knownTitles} onWikiClick={handleWikiClick} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
+              <NoteGrid navOrder={0} notes={pinned} searchQuery={search} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} onPresent={setPresentingNoteId} knownTitles={knownTitles} onWikiClick={handleWikiClick} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
             </section>
           )}
 
@@ -383,6 +383,7 @@ const Index = () => {
                 </motion.p>
               )}
               <NoteGrid
+                navOrder={1}
                 notes={others}
                 searchQuery={search}
                 onUpdate={view === "trash" ? undefined : updateNote}

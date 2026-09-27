@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, Fragment, memo } from "react";
+import { useRef, useEffect, useCallback, Fragment, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSortable, SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -8,6 +8,7 @@ import { MarkdownRenderer } from "@/components/MarkdownRenderer";
 import { NoteCard } from "@/components/NoteCard";
 import { NoteViewActionsProvider, type NoteViewActions } from "@/hooks/NoteViewActionsContext";
 import type { useNotes } from "@/hooks/useNotes";
+import { registerGridNavSection, useGridNavState, setGridNavFocus, setGridNavPreview, setGridNavPreviewScrollEl } from "@/lib/gridKeyboardNav";
 
 interface SortableNoteCardProps {
   note: ReturnType<typeof useNotes>["notes"][number];
@@ -38,10 +39,16 @@ interface NoteGridProps extends Omit<NoteViewActions, "selectionMode" | "onToggl
   selectedIds?: Set<string>;
   selectionMode?: boolean;
   onToggleSelect?: (id: string, shiftKey: boolean) => void;
+  /**
+   * Pozycja tej siatki w nawigacji klawiaturą, gdy strona renderuje kilka
+   * (widok „Notatki”: 0 = Przypięte, 1 = Inne). Strzałki przechodzą między
+   * sekcjami w tej kolejności, jak po jednej liście.
+   */
+  navOrder?: number;
 }
 
 export function NoteGrid({
-  notes, searchQuery, onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder, getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, selectedIds, selectionMode, onToggleSelect,
+  notes, searchQuery, onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder, getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, selectedIds, selectionMode, onToggleSelect, navOrder = 0,
 }: NoteGridProps) {
   const noteViewActions: NoteViewActions = {
     onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder,
@@ -49,129 +56,42 @@ export function NoteGrid({
   };
   const prefs = useViewPrefs();
   const noteIds = notes.map((n) => n.id);
-  const [focusedIdx, setFocusedIdx] = useState<number>(-1);
-  const [quickPreviewId, setQuickPreviewId] = useState<string | null>(null);
+  const { focusedId, previewId } = useGridNavState();
   const gridRef = useRef<HTMLDivElement>(null);
-  const previewScrollRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    function isTyping() {
-      const a = document.activeElement as HTMLElement | null;
-      if (!a) return false;
-      const tag = a.tagName;
-      return tag === "INPUT" || tag === "TEXTAREA" || a.isContentEditable;
+  const colsCount = useCallback(() => {
+    if (prefs.layout === "list") return 1;
+    if (!gridRef.current) return 1;
+    const w = gridRef.current.clientWidth;
+    if (prefs.autoColumns) {
+      if (w >= 1280) return 4;
+      if (w >= 1024) return 3;
+      if (w >= 640) return 2;
+      return 1;
     }
-    function anyDialogOpen() {
-      return !!document.querySelector('[role="dialog"][data-state="open"]');
-    }
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "/" && !isTyping() && !anyDialogOpen()) {
-        const input = document.querySelector<HTMLInputElement>('input[placeholder="Szukaj notatek..."]');
-        if (input) { e.preventDefault(); input.focus(); input.select(); return; }
-      }
-      if (notes.length === 0) return;
-      if (isTyping()) return;
-      if (quickPreviewId) {
-        if (e.key === "Escape" || e.key === " ") { e.preventDefault(); setQuickPreviewId(null); return; }
-        if (e.key === "Enter") {
-          e.preventDefault();
-          const id = quickPreviewId;
-          setQuickPreviewId(null);
-          setTimeout(() => {
-            const target = gridRef.current?.querySelector(`[data-note-idx="${notes.findIndex(n => n.id === id)}"] .cursor-pointer`) as HTMLElement | null;
-            target?.click();
-          }, 50);
-          return;
-        }
-        const sc = previewScrollRef.current;
-        if (sc) {
-          const step = 80;
-          if (e.key === "ArrowDown" || e.key === "j") { e.preventDefault(); sc.scrollBy({ top: step, behavior: "smooth" }); return; }
-          if (e.key === "ArrowUp" || e.key === "k") { e.preventDefault(); sc.scrollBy({ top: -step, behavior: "smooth" }); return; }
-          if (e.key === "PageDown") { e.preventDefault(); sc.scrollBy({ top: sc.clientHeight * 0.9, behavior: "smooth" }); return; }
-          if (e.key === "PageUp") { e.preventDefault(); sc.scrollBy({ top: -sc.clientHeight * 0.9, behavior: "smooth" }); return; }
-          if (e.key === "Home") { e.preventDefault(); sc.scrollTo({ top: 0, behavior: "smooth" }); return; }
-          if (e.key === "End") { e.preventDefault(); sc.scrollTo({ top: sc.scrollHeight, behavior: "smooth" }); return; }
-        }
-        return;
-      }
-      if (anyDialogOpen()) return;
-      const cols = (() => {
-        if (prefs.layout === "list") return 1;
-        if (!gridRef.current) return 1;
-        const w = gridRef.current.clientWidth;
-        if (prefs.autoColumns) {
-          if (w >= 1280) return 4;
-          if (w >= 1024) return 3;
-          if (w >= 640) return 2;
-          return 1;
-        }
-        return Math.max(1, Math.min(prefs.columns || 1, 4));
-      })();
-      const cur = focusedIdx < 0 ? 0 : focusedIdx;
-      let next = cur;
-      switch (e.key) {
-        case "ArrowRight": next = Math.min(notes.length - 1, cur + 1); break;
-        case "ArrowLeft": next = Math.max(0, cur - 1); break;
-        case "ArrowDown": next = Math.min(notes.length - 1, cur + cols); break;
-        case "ArrowUp": next = Math.max(0, cur - cols); break;
-        case "Home": next = 0; break;
-        case "End": next = notes.length - 1; break;
-        case " ":
-          if (focusedIdx >= 0 && notes[focusedIdx]) {
-            e.preventDefault();
-            setQuickPreviewId(notes[focusedIdx].id);
-          }
-          return;
-        case "Enter":
-          if (focusedIdx >= 0 && notes[focusedIdx]) {
-            e.preventDefault();
-            const target = gridRef.current?.querySelector(`[data-note-idx="${focusedIdx}"] .cursor-pointer`) as HTMLElement | null;
-            target?.click();
-          }
-          return;
-        case "Delete":
-        case "Backspace":
-          if (focusedIdx >= 0 && notes[focusedIdx]) {
-            e.preventDefault();
-            onDelete(notes[focusedIdx].id);
-          }
-          return;
-        case "a":
-        case "A":
-          if (focusedIdx >= 0 && notes[focusedIdx] && !isArchived && onArchive) {
-            e.preventDefault();
-            onArchive(notes[focusedIdx].id);
-          }
-          return;
-        case "p":
-        case "P":
-          if (focusedIdx >= 0 && notes[focusedIdx] && onTogglePin) {
-            e.preventDefault();
-            onTogglePin(notes[focusedIdx].id);
-          }
-          return;
-        case "d":
-        case "D":
-          if (focusedIdx >= 0 && notes[focusedIdx] && onDuplicate) {
-            e.preventDefault();
-            onDuplicate(notes[focusedIdx].id);
-          }
-          return;
-        default: return;
-      }
-      e.preventDefault();
-      setFocusedIdx(next);
-      const el = gridRef.current?.querySelector(`[data-note-idx="${next}"]`) as HTMLElement | null;
-      el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [notes, focusedIdx, quickPreviewId, prefs.layout, prefs.autoColumns, prefs.columns, onDelete, onArchive, onTogglePin, onDuplicate, isArchived]);
+    return Math.max(1, Math.min(prefs.columns || 1, 4));
+  }, [prefs.layout, prefs.autoColumns, prefs.columns]);
 
+  // Ta siatka tylko zgłasza swoje notatki i akcje; klawiszy nasłuchuje jeden
+  // globalny właściciel w `gridKeyboardNav` — patrz komentarz w tym module.
+  const noteIdsKey = noteIds.join(",");
   useEffect(() => {
-    if (focusedIdx >= notes.length) setFocusedIdx(notes.length - 1);
-  }, [notes.length, focusedIdx]);
+    return registerGridNavSection(navOrder, noteIdsKey ? noteIdsKey.split(",") : [], {
+      onDelete,
+      onArchive: isArchived ? undefined : onArchive,
+      onTogglePin,
+      onDuplicate,
+      openNote: (id) => {
+        const target = gridRef.current?.querySelector(`[data-note-id-wrap="${id}"] .cursor-pointer`) as HTMLElement | null;
+        target?.click();
+      },
+      scrollToNote: (id) => {
+        const el = gridRef.current?.querySelector(`[data-note-id-wrap="${id}"]`) as HTMLElement | null;
+        el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      },
+      colsCount,
+    });
+  }, [navOrder, noteIdsKey, onDelete, onArchive, onTogglePin, onDuplicate, isArchived, colsCount]);
 
   const gap = prefs.density === "compact" ? "gap-2 space-y-2" : prefs.density === "comfy" ? "gap-6 space-y-6" : "gap-4 space-y-4";
 
@@ -196,7 +116,7 @@ export function NoteGrid({
     containerClass = `${cols} ${gap}`;
   }
 
-  const previewNote = quickPreviewId ? notes.find((n) => n.id === quickPreviewId) : null;
+  const previewNote = previewId ? notes.find((n) => n.id === previewId) ?? null : null;
 
   const highlightTokens = (() => {
     const q = (searchQuery || "").trim();
@@ -253,11 +173,12 @@ export function NoteGrid({
             <div
               key={note.id}
               data-note-idx={i}
-              onClickCapture={() => setFocusedIdx(i)}
+              data-note-id-wrap={note.id}
+              onClickCapture={() => setGridNavFocus(note.id)}
               className={cn(
                 "rounded-2xl transition-shadow",
                 prefs.layout === "masonry" ? "break-inside-avoid mb-4" : prefs.layout === "grid" ? "h-full" : "",
-                focusedIdx === i && "ring-2 ring-primary/60 ring-offset-2 ring-offset-background"
+                focusedId === note.id && "ring-2 ring-primary/60 ring-offset-2 ring-offset-background"
               )}
             >
               <SortableNoteCard
@@ -279,7 +200,7 @@ export function NoteGrid({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className="fixed inset-0 z-40 bg-background/20 backdrop-blur-[2px]"
-              onClick={() => setQuickPreviewId(null)}
+              onClick={() => setGridNavPreview(null)}
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -311,7 +232,7 @@ export function NoteGrid({
                   </div>
                 )}
               </div>
-              <div ref={previewScrollRef} className="overflow-y-auto px-6 py-4 overscroll-contain">
+              <div ref={setGridNavPreviewScrollEl} className="overflow-y-auto px-6 py-4 overscroll-contain">
                 {snippets.length > 0 && (
                   <div className="mb-4 space-y-1.5">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Dopasowania w treści</p>
