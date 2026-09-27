@@ -17,6 +17,7 @@ import { FormatToolbar } from "./MarkdownRenderer";
 import { PriorityPicker } from "./PriorityPicker";
 import type { NotePriority } from "@/lib/notePriority";
 import { QuickReminderInput } from "./QuickReminderInput";
+import { composeReminderTimestamp, toTimeInputValue, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
 import { toast } from "sonner";
 
 interface AddNoteBarProps {
@@ -34,7 +35,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   const [reminder, setReminder] = useState<number | null>(null);
   const [priority, setPriority] = useState<NotePriority>("none");
   const [reminderDate, setReminderDate] = useState<Date | undefined>();
-  const [reminderTime, setReminderTime] = useState("09:00");
+  const [reminderTime, setReminderTime] = useState(DEFAULT_REMINDER_TIME);
   const [newLabel, setNewLabel] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
@@ -48,7 +49,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   useImperativeHandle(ref, () => ({ expand: () => setExpanded(true) }));
 
   const reset = useCallback(() => {
-    setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderDate(undefined); setReminderTime("09:00"); setPriority("none"); setImages([]); setChecklist([]); setShowChecklist(false); setExpanded(false);
+    setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderDate(undefined); setReminderTime(DEFAULT_REMINDER_TIME); setPriority("none"); setImages([]); setChecklist([]); setShowChecklist(false); setExpanded(false);
   }, []);
 
   const handleClose = useCallback(() => {
@@ -86,18 +87,15 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
     }
   }
 
+  const reminderTimestamp = reminderDate ? composeReminderTimestamp(reminderDate, reminderTime) : null;
+
   function handleSetReminder() {
-    if (reminderDate) {
-      const [h, m] = reminderTime.split(":").map(Number);
-      const d = new Date(reminderDate);
-      d.setHours(h, m, 0, 0);
-      setReminder(d.getTime());
-    }
+    if (reminderTimestamp !== null) setReminder(reminderTimestamp);
   }
 
   function handleQuickReminderParsed(parsed: Date) {
     setReminderDate(parsed);
-    setReminderTime(format(parsed, "HH:mm"));
+    setReminderTime(toTimeInputValue(parsed.getTime()));
   }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -244,7 +242,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                       <input type="time" value={reminderTime} onChange={(e) => setReminderTime(e.target.value)}
                         className="text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 text-foreground" />
                     </div>
-                    <Button size="sm" onClick={handleSetReminder} disabled={!reminderDate} className="w-full">Ustaw</Button>
+                    <Button size="sm" onClick={handleSetReminder} disabled={reminderTimestamp === null} className="w-full">Ustaw</Button>
                   </PopoverContent>
                 </Popover>
                 {/* Priority picker */}

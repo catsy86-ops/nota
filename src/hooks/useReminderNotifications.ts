@@ -2,26 +2,13 @@ import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import type { Note } from "./useNotes";
 import { getNextReminderTime } from "@/lib/reminderRepeat";
-
-const FIRED_KEY = "dash-notes-fired-reminders";
-
-function getFired(): Set<string> {
-  try {
-    return new Set(JSON.parse(localStorage.getItem(FIRED_KEY) || "[]"));
-  } catch {
-    return new Set();
-  }
-}
-
-function saveFired(set: Set<string>) {
-  localStorage.setItem(FIRED_KEY, JSON.stringify([...set]));
-}
+import { loadFired, saveFired, reconcileFired } from "@/lib/firedReminders";
 
 export function useReminderNotifications(
   notes: Note[],
   onReminderFired: (id: string, nextReminder: number | null) => void
 ) {
-  const firedRef = useRef(getFired());
+  const firedRef = useRef(loadFired());
 
   // Request browser notification permission on mount
   useEffect(() => {
@@ -33,6 +20,15 @@ export function useReminderNotifications(
   useEffect(() => {
     function check() {
       const now = Date.now();
+
+      // Wpis „już odpalone” ma sens tylko dopóki termin jest w przeszłości.
+      // Przesunięcie go w przyszłość (edycja, przeciągnięcie w kalendarzu)
+      // musi pozwolić przypomnieniu wystrzelić ponownie.
+      const { next, changed } = reconcileFired(firedRef.current, notes, now);
+      if (changed) {
+        firedRef.current = next;
+        saveFired(next);
+      }
       const fired = firedRef.current;
 
       for (const note of notes) {

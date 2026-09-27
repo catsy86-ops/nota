@@ -271,7 +271,7 @@ Fakt z kodu, który rozstrzyga wszystko: model trzyma **jeden** timestamp, a `ge
 
 | # | Zakres | Nakład |
 |---|---|---|
-| 1 | `reminderOccurrences.ts` + testy; `composeReminderTimestamp` wyciągnięte z `ReminderPicker`; uzdrowienie `FIRED_KEY` | **S** |
+| ~~1~~ | ~~`reminderOccurrences.ts` + testy; `composeReminderTimestamp` wyciągnięte z `ReminderPicker`; uzdrowienie `FIRED_KEY`~~ — **zrobione 2026-09-27**, patrz niżej | **S** |
 | 2 | `View: "calendar"` + wpisy nawigacji (`Index.tsx`, `BottomNav`, `AppHeader`, `EmptyState`, `CommandPalette`) + pusty widok pod `lazy()` | **S** |
 | 3 | `MonthGrid` + `DayCell` + `ReminderChip` + panel dnia, read-only, obsługa klawiaturą (roving tabindex, `role="grid"`) | **M** |
 | 4 | `ReminderQuickAddDialog`: dodawanie (nowa notatka / przypnij do istniejącej) + edycja + usunięcie jednorazowego | **M** |
@@ -282,3 +282,12 @@ Fakt z kodu, który rozstrzyga wszystko: model trzyma **jeden** timestamp, a `ge
 Etapy 1–4 to wysyłalny produkt. **Etap 5 jest obowiązkowy** przed pokazaniem go komukolwiek, kto używa powtarzania.
 
 Uwagi wykonawcze: `expandOccurrences` memoizować po `[notes, archivedNotes, visibleMonth]`; zbiór to `[...notes, ...archivedNotes]` bez kosza (tak samo jak `Index.tsx:104` karmi powiadomienia); przy drag&drop obsługa `day-drop-*` musi mieć `return` **przed** fallbackiem reorderu w `useNoteDnd.ts:476`, inaczej przeciągnięcie przestawi globalny `sortKey` na `"manual"` za plecami użytkownika.
+
+### Etap 1 — wykonany (2026-09-27)
+
+- `src/lib/reminderOccurrences.ts` — `expandOccurrences` (jednorazowe + serie, tylko w przód od zapisanego terminu, limit 400 wystąpień na notatkę, kosz pominięty, archiwum nie), `groupByDay` i `dayKey` w czasie lokalnym. 16 testów, w tym utrwalone przeskakiwanie `monthly` z 31 stycznia na 3 marca i zachowanie godziny przy zmianie czasu na letni.
+- `src/lib/reminderTime.ts` — `composeReminderTimestamp` wyciągnięte z `ReminderPicker` i podpięte **w obu** pickerach (`ReminderPicker`, zduplikowany inline w `AddNoteBar`). Przy okazji naprawiony cichy błąd: wyczyszczone pole `type="time"` dawało `setHours(NaN)` i zapisywało `NaN` jako termin — teraz `null` blokuje przycisk zapisu. 11 testów.
+- `src/lib/firedReminders.ts` — `reconcileFired` zdejmuje z rejestru wpisy po notatkach, których termin wrócił w przyszłość albo został wyczyszczony, oraz po notatkach nieistniejących. Naprawia to, że przesunięty termin **nigdy nie wystrzeliwał ponownie**, i zatrzymuje nieskończony wzrost zbioru. 10 testów. Nazwa klucza `dash-notes-fired-reminders` celowo bez zmian — zmiana zgubiłaby stan „już wystrzelone”.
+- Przy okazji: „KACZY” w tekście `ReminderPicker` zamienione na „aplikacja” (zaszłość sprzed rebrandingu).
+
+Zweryfikowane: `typecheck` / `lint` (0 błędów, 8 ostrzeżeń — bez zmian) / **227 testów jednostkowych** (190 + 37 nowych) / 10 e2e / `build`.

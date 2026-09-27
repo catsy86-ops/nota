@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { REMINDER_REPEAT_LABELS, type ReminderRepeat } from "@/lib/reminderRepeat";
+import { composeReminderTimestamp, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
 import { QuickReminderInput } from "@/components/QuickReminderInput";
 
 interface ReminderPickerProps {
@@ -21,36 +22,29 @@ const REPEAT_OPTIONS: ReminderRepeat[] = ["none", "daily", "weekly", "monthly"];
 export function ReminderPicker({ reminder, reminderRepeat, onSet }: ReminderPickerProps) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(reminder ? new Date(reminder) : undefined);
-  const [time, setTime] = useState(reminder ? format(new Date(reminder), "HH:mm") : "09:00");
+  const [time, setTime] = useState(reminder ? toTimeInputValue(reminder) : DEFAULT_REMINDER_TIME);
   const [repeat, setRepeat] = useState<ReminderRepeat>(reminderRepeat ?? "none");
 
   function handleQuickParsed(parsed: Date) {
     setDate(parsed);
-    setTime(format(parsed, "HH:mm"));
+    setTime(toTimeInputValue(parsed.getTime()));
   }
 
-  const pastTime = (() => {
-    if (!date) return false;
-    const [h, m] = time.split(":").map(Number);
-    const d = new Date(date);
-    d.setHours(h, m, 0, 0);
-    return d.getTime() < Date.now();
-  })();
+  // `null` = godzina niepełna (pole `type="time"` da się wyczyścić); wtedy
+  // nie ma czego zapisać, a wcześniej szło w dane `NaN`.
+  const timestamp = date ? composeReminderTimestamp(date, time) : null;
+  const pastTime = isPastReminder(timestamp);
 
   function handleSave() {
-    if (date && !pastTime) {
-      const [h, m] = time.split(":").map(Number);
-      const d = new Date(date);
-      d.setHours(h, m, 0, 0);
-      onSet(d.getTime(), repeat);
-      setOpen(false);
-    }
+    if (timestamp === null || pastTime) return;
+    onSet(timestamp, repeat);
+    setOpen(false);
   }
 
   function handleClear() {
     onSet(null, "none");
     setDate(undefined);
-    setTime("09:00");
+    setTime(DEFAULT_REMINDER_TIME);
     setRepeat("none");
     setOpen(false);
   }
@@ -105,10 +99,10 @@ export function ReminderPicker({ reminder, reminderRepeat, onSet }: ReminderPick
           <p className="text-[10px] text-destructive">Ta godzina już minęła. Wybierz godzinę w przyszłości.</p>
         )}
         <p className="text-[10px] text-muted-foreground">
-          Działa najpewniej, gdy KACZY zostaje otwarte w tle — bez serwera powiadomień push, zamknięta karta może dostarczyć przypomnienie dopiero po ponownym otwarciu appki.
+          Działa najpewniej, gdy aplikacja zostaje otwarta w tle — bez serwera powiadomień push, zamknięta karta może dostarczyć przypomnienie dopiero po ponownym otwarciu appki.
         </p>
         <div className="flex gap-2">
-          <Button size="sm" onClick={handleSave} disabled={!date || pastTime} className="flex-1">
+          <Button size="sm" onClick={handleSave} disabled={timestamp === null || pastTime} className="flex-1">
             Zapisz
           </Button>
           {reminder && (
