@@ -277,7 +277,7 @@ Fakt z kodu, który rozstrzyga wszystko: model trzyma **jeden** timestamp, a `ge
 | ~~4~~ | ~~`ReminderQuickAddDialog`: dodawanie + edycja + usunięcie~~ — **zrobione 2026-09-27**, patrz niżej | **M** |
 | 5 | Semantyka serii: chipy read-only, „usuń wystąpienie vs serię" | **M** |
 | ~~6~~ | ~~E2E + mobile (kropki zamiast chipów poniżej ~380 px, safe-area)~~ — **zrobione 2026-09-27**, patrz niżej | **S** |
-| 7 | Drag&drop terminu + **obowiązkowy** `Shift+←/→` (WCAG 2.5.7) + Cofnij | **S** |
+| ~~7~~ | ~~Drag&drop terminu + **obowiązkowy** `Shift+←/→` (WCAG 2.5.7) + Cofnij~~ — **zrobione 2026-09-27**, patrz niżej | **S** |
 
 Etapy 1–4 to wysyłalny produkt. **Etap 5 jest obowiązkowy** przed pokazaniem go komukolwiek, kto używa powtarzania.
 
@@ -361,3 +361,41 @@ Kalendarz przeszedł test najwęższego ekranu, jaki warto obsługiwać (320 px)
 Nowy test e2e chodzi całą ścieżką w 320×568: wejście przez arkusz „Więcej", brak przewijania w poziomie, dodanie terminu z przyciskiem zapisu w widoku, kropki bez godziny w komórce (godzina zostaje w panelu dnia i w `aria-label`), edycja i usunięcie.
 
 Zweryfikowane: `typecheck` / `lint` (0 błędów, 8 ostrzeżeń — bez zmian) / 227 testów jednostkowych / **20 e2e** (19 + 1 nowy) / `build` (chunk kalendarza 17,42 kB, gzip 6,20 kB).
+
+### Etap 7 — wykonany (2026-09-27)
+
+- Chip terminu (widok od `sm`) da się przeciągnąć na inną komórkę; godzina zostaje, zmienia się dzień. Przeciągać można tylko termin zapisany w modelu — prognozy serii są `disabled`. Seria przesuwa się cała (liczy się od nowego terminu), toast to mówi.
+- **Własny, zagnieżdżony `DndContext`** w `ReminderCalendarView` zamiast obsługi `day-drop-*` w `useNoteDnd.ts`: przeciągnięcia chipów w ogóle nie docierają do globalnego handlera, więc ryzyko przestawienia `sortKey` na `"manual"` znika u źródła, a `useNoteDnd` zostaje nietknięty.
+- Alternatywa klawiaturowa (WCAG 2.5.7): `Shift+←/→` na terminie w panelu dnia przesuwa go o dzień (`aria-keyshortcuts`). Na telefonie (same kropki) alternatywą jednym palcem jest edycja w dialogu.
+- Każde przesunięcie ma „Cofnij” przez `toastWithUndo`.
+
+Zweryfikowane: `typecheck` / `lint` (0 błędów, 8 ostrzeżeń — bez zmian) / 227 testów jednostkowych / **21 e2e** (20 + 1 nowy: przeciągnięcie myszą, Shift+←, Cofnij) / `build` (chunk kalendarza 19,01 kB, gzip 6,85 kB).
+
+**Kalendarz przypomnień jest skończony (etapy 1–7).**
+
+## Audyt funkcji — 2026-09-27
+
+Propozycje **spoza** istniejącego planu. Przed nimi nadal idą otwarte P0: autosave (#2), podwójna nawigacja klawiaturą (#3), wersje w `localStorage` bez `try/catch` (#8), paleta poleceń (#5, #6), checklisty w wyszukiwarce (#7), nowa notatka w bieżącym folderze (#9).
+
+| # | Funkcja | Nakład | Wartość | Gdzie się wpina |
+|---|---|---|---|---|
+| F1 | Eksport terminów do `.ics` (`VALARM` + `RRULE`) — kalendarz systemowy dostarcza powiadomienia przy zamkniętej aplikacji | S | wysoka | nowy `lib/icsExport.ts`, `DayPanel`, `ReminderCalendarView` |
+| F2 | Import z Google Keep (Takeout) i folderu Markdown z frontmatterem | M | wysoka | `lib/importers/{keep,markdown}.ts`, `BackupSettings.tsx`, `noteSchema.ts` |
+| F3 | Przypomnienie „zrobione” (`reminderDoneAt`, w serii = przesunięcie na kolejne) | S–M | średnia | `yjsStore.ts` (pole skalarne), `DayPanel`, `ReminderToast.tsx`, `achievements.ts` |
+| F4 | Plakietka z liczbą zaległych terminów (`navigator.setAppBadge`) | S | średnia | `useReminderNotifications.ts` |
+| F5 | Zapisane wyszukiwania w pasku bocznym | S | średnia | `persistedStore.ts`, pasek boczny, `searchNotes.ts` |
+| F6 | Dyktowanie (Web Speech API, opt-in — w Chrome to serwery Google) | S | średnia | `AddNoteBar.tsx`, `useDictation.ts` |
+| F7 | Scalanie zaznaczonych notatek z „Cofnij” | S | średnia | `BulkActionBar.tsx`, `lib/mergeNotes.ts` |
+| F8 | Zmiana tytułu przepina `[[linki]]` | S | średnia | `lib/wikiLinks.ts` (`renameLinkTargets`) |
+| F9 | Udostępnianie notatki linkiem (treść skompresowana w `#fragmencie`) | M | średnia | `ShareNote.tsx`, parametry URL w `Index.tsx` |
+| F10 | Tygodniowy przegląd zamiast nudge'a co 6 h | M | średnia | `useDailyWeeklyNudges.tsx`, `dateRanges.ts` |
+| F11 | Graf powiązań wikilinków | M | niska–średnia | nowy widok pod `lazy()`, `wikiLinks.ts` |
+| F12 | Wklejanie obrazu ze schowka + aparat (`capture`) ze skalowaniem do 2 MB | S | średnia | `AddNoteBar.tsx`, `NoteCard.tsx` |
+
+**Fala 1 — szybkie wygrane:** F1 (a: `icsExport.ts` + testy RRULE/DST; b: przycisk w panelu dnia; c: eksport miesiąca; d: e2e z pobraniem) → F12 (wklejanie → `capture` → skalowanie) → F4 → F7 (czysta `mergeNotes` z testami → akcja w pasku zaznaczenia). Równolegle P0 #3, #5, #6, #7, #9.
+
+**Fala 2 — główne (po autosave i edytorze):** F2 (parser Keep z testami → podgląd importu z wykrywaniem duplikatów, bez `replaceAll` → Markdown → folder i obrazy), F3 (pole + schemat/backup → akcje → statystyki), F8 (po edytorze na `Y.Text`), F5 (po wyszukiwaniu globalnym), F6.
+
+**Fala 3 — później:** F9 (po stanie widoku w URL), F10 (domyślnie wyłączony), F11 (gdy po autouzupełnianiu `[[` przybędzie linków).
+
+Świadomie pominięte: szyfrowanie/blokada notatek, wiele terminów na notatkę, notatki audio i OCR, web clipper (wymaga serwera), edytor szablonów.

@@ -1,7 +1,10 @@
 import { useMemo, useState } from "react";
+import {
+  DndContext, PointerSensor, TouchSensor, pointerWithin, useSensor, useSensors, type DragEndEvent,
+} from "@dnd-kit/core";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { format, isSameMonth } from "date-fns";
+import { addDays, format, isSameDay, isSameMonth } from "date-fns";
 import { pl } from "date-fns/locale";
 import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences";
 import { getNextReminderTime } from "@/lib/reminderRepeat";
@@ -122,6 +125,36 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     toastWithUndo("Termin usunięty", () => onSetReminder(noteId, before.reminder, before.repeat), { icon: "🔕" });
   }
 
+  // Własny `DndContext`: zagnieżdżony kontekst przechwytuje przeciągnięcia
+  // chipów, więc `useNoteDnd` (reorder notatek, globalny `sortKey`) nigdy
+  // ich nie widzi.
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
+  );
+
+  /** Przeniesienie na inny dzień zachowuje godzinę; seria przesuwa się cała. */
+  function moveToDay(occ: Occurrence, day: Date) {
+    const from = new Date(occ.at);
+    if (isSameDay(from, day)) return;
+    const to = new Date(day.getFullYear(), day.getMonth(), day.getDate(), from.getHours(), from.getMinutes());
+    const before = previousOf(occ.noteId);
+    onSetReminder(occ.noteId, to.getTime(), occ.repeat);
+    setSelectedDay(to);
+    if (!isSameMonth(to, month)) setMonth(new Date(to.getFullYear(), to.getMonth(), 1));
+    toastWithUndo(
+      `Termin przeniesiony na ${format(to, "d MMMM", { locale: pl })}`,
+      () => onSetReminder(occ.noteId, before.reminder, before.repeat),
+      { icon: "📅", description: occ.isSeries ? "Cała seria liczy się od nowego terminu." : undefined },
+    );
+  }
+
+  function handleDragEnd({ active, over }: DragEndEvent) {
+    const occ = active.data.current?.occurrence as Occurrence | undefined;
+    const day = over?.data.current?.day as Date | undefined;
+    if (occ && day) moveToDay(occ, day);
+  }
+
   const isThisMonth = isSameMonth(month, new Date());
   const selectedOccurrences = byDay.get(dayKey(selectedDay)) ?? [];
 
@@ -158,10 +191,11 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
           </button>
         )}
         <p className="ml-auto text-[11px] text-muted-foreground hidden sm:block">
-          ↑↓←→ — dni · PgUp/PgDn — miesiąc
+          ↑↓←→ — dni · PgUp/PgDn — miesiąc · przeciągnij termin lub Shift+←/→
         </p>
       </header>
 
+      <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
       <MonthGrid
         month={month}
         byDay={byDay}
@@ -171,6 +205,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
         onActivateDay={openAdd}
         onMonthChange={setMonth}
       />
+      </DndContext>
 
       <DayPanel
         day={selectedDay}
@@ -178,6 +213,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
         titleOf={titleOf}
         onAdd={() => openAdd(selectedDay)}
         onEdit={openEdit}
+        onMoveByDays={(occ, days) => moveToDay(occ, addDays(new Date(occ.at), days))}
         onOpenSeriesSource={openSeriesSource}
       />
 

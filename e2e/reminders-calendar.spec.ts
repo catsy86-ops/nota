@@ -277,3 +277,45 @@ test("na wąskim ekranie kalendarz nie rozpycha strony, a dialog terminu jest os
   await remove.click();
   await expect(grid.getByRole("gridcell", { name: /1 termin/ })).toHaveCount(0);
 });
+
+test("termin da się przeciągnąć na inny dzień, przesunąć Shift+strzałką i cofnąć", async ({ page }) => {
+  await page.getByRole("button", { name: /Kalendarz/ }).first().click();
+  await page.getByRole("button", { name: "Dodaj termin" }).click();
+  await page.getByLabel("Treść nowej notatki z terminem").fill("jutro podlac kwiaty");
+  await page.getByLabel("Godzina przypomnienia").fill("18:30");
+  await page.getByRole("button", { name: /Utwórz notatkę z terminem/ }).click();
+
+  const grid = page.getByRole("grid", { name: /Kalendarz przypomnień/ });
+  const source = grid.getByRole("gridcell", { name: /1 termin/ });
+  await expect(source).toHaveCount(1);
+  const sourceLabel = (await source.getAttribute("aria-label"))!;
+
+  // Przeciągnięcie myszą o jedną komórkę w prawo (lub w lewo w niedzielę).
+  const chip = source.locator(".cursor-grab");
+  const from = (await chip.boundingBox())!;
+  const cellBox = (await source.boundingBox())!;
+  const dx = cellBox.x + cellBox.width * 1.5 < (page.viewportSize()!.width - 40) ? cellBox.width + 8 : -(cellBox.width + 8);
+  await page.mouse.move(from.x + 5, from.y + 5);
+  await page.mouse.down();
+  await page.mouse.move(from.x + 5 + dx / 2, from.y + 5, { steps: 5 });
+  await page.mouse.move(from.x + 5 + dx, from.y + 5, { steps: 5 });
+  await page.mouse.up();
+
+  await expect(page.getByText(/Termin przeniesiony na/)).toBeVisible();
+  await expect(grid.getByRole("gridcell", { name: sourceLabel })).toHaveCount(0);
+  const moved = grid.getByRole("gridcell", { name: /1 termin/ });
+  await expect(moved).toHaveCount(1);
+  const movedLabel = (await moved.getAttribute("aria-label"))!;
+  expect(movedLabel).not.toBe(sourceLabel);
+
+  // Klawiaturowy odpowiednik (WCAG 2.5.7): Shift+← w panelu dnia.
+  await page.getByRole("button", { name: /Edytuj termin/ }).focus();
+  await page.keyboard.press("Shift+ArrowLeft");
+  await expect(page.getByText(/Termin przeniesiony na/).first()).toBeVisible();
+  await expect(grid.getByRole("gridcell", { name: movedLabel })).toHaveCount(0);
+
+  // Cofnij przywraca termin sprzed ostatniego przesunięcia.
+  // Toasty się nakładają — klikamy w ten na wierzchu, czyli najnowszy.
+  await page.locator("[data-sonner-toast][data-front=true]").getByRole("button", { name: "Cofnij" }).click();
+  await expect(grid.getByRole("gridcell", { name: movedLabel })).toHaveCount(1);
+});

@@ -21,11 +21,13 @@ interface DayPanelProps {
   titleOf: (noteId: string) => string;
   onAdd: () => void;
   onEdit: (occurrence: Occurrence) => void;
+  /** Shift+←/→ na terminie — klawiaturowy odpowiednik przeciągania (WCAG 2.5.7). */
+  onMoveByDays: (occurrence: Occurrence, days: number) => void;
   /** Klik w prognozę serii — prowadzi do najbliższego, zapisanego terminu. */
   onOpenSeriesSource: (occurrence: Occurrence) => void;
 }
 
-export function DayPanel({ day, occurrences, titleOf, onAdd, onEdit, onOpenSeriesSource }: DayPanelProps) {
+export function DayPanel({ day, occurrences, titleOf, onAdd, onEdit, onMoveByDays, onOpenSeriesSource }: DayPanelProps) {
   return (
     <section aria-live="polite" className="rounded-2xl border border-border/50 bg-card/40 p-4">
       <div className="flex items-center gap-2 mb-3">
@@ -70,7 +72,14 @@ export function DayPanel({ day, occurrences, titleOf, onAdd, onEdit, onOpenSerie
                 ) : (
                   <button
                     onClick={() => onEdit(occ)}
+                    onKeyDown={(e) => {
+                      if (!e.shiftKey || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+                      e.preventDefault();
+                      onMoveByDays(occ, e.key === "ArrowRight" ? 1 : -1);
+                    }}
                     aria-label={`Edytuj termin: ${title.trim() || "Bez tytułu"}`}
+                    aria-keyshortcuts="Shift+ArrowLeft Shift+ArrowRight"
+                    title="Shift+←/→ — przesuń o dzień"
                     className="group w-full flex items-center gap-2 rounded-lg hover:bg-muted/60 transition-colors p-1 -m-1"
                   >
                     <ReminderChip occurrence={occ} title={title} detailed className="min-w-0 flex-1" />

@@ -1,7 +1,8 @@
+import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { format, isSameDay, isSameMonth } from "date-fns";
 import { pl } from "date-fns/locale";
 import { ReminderChip } from "./ReminderChip";
-import type { Occurrence } from "@/lib/reminderOccurrences";
+import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
 import { cn } from "@/lib/utils";
 
 /** Ile chipów mieści się w komórce, zanim reszta zwinie się w „+N". */
@@ -13,6 +14,34 @@ function terminy(n: number): string {
   if (n === 1) return "1 termin";
   if (n >= 2 && n <= 4) return `${n} terminy`;
   return `${n} terminów`;
+}
+
+/**
+ * Chip, który da się przeciągnąć na inny dzień. Tylko termin zapisany
+ * w modelu (jednorazowy albo najbliższy w serii) — prognozy nie istnieją
+ * w danych, więc nie ma czego przesuwać.
+ */
+function DraggableChip({ occurrence, title }: { occurrence: Occurrence; title: string }) {
+  const movable = !occurrence.isSeries || occurrence.isNext;
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `occ-${occurrence.noteId}`,
+    data: { occurrence },
+    disabled: !movable,
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      // Klawiatura przesuwa terminy przez Shift+←/→ w panelu dnia, a siatka
+      // ma zostać jednym przystankiem tabulatora — chip nie łapie fokusu.
+      tabIndex={-1}
+      role={undefined}
+      className={cn(movable && "cursor-grab touch-none", isDragging && "opacity-40")}
+    >
+      <ReminderChip occurrence={occurrence} title={title} />
+    </div>
+  );
 }
 
 interface DayCellProps {
@@ -27,6 +56,7 @@ interface DayCellProps {
 }
 
 export function DayCell({ day, month, occurrences, titleOf, selected, focused, onSelect, cellRef }: DayCellProps) {
+  const { setNodeRef, isOver } = useDroppable({ id: `day-drop-${dayKey(day)}`, data: { day } });
   const inMonth = isSameMonth(day, month);
   const today = isSameDay(day, new Date());
   const shown = occurrences.slice(0, MAX_CHIPS);
@@ -40,7 +70,7 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
 
   return (
     <div
-      ref={cellRef}
+      ref={(el) => { setNodeRef(el); cellRef?.(el); }}
       role="gridcell"
       aria-label={label}
       aria-selected={selected}
@@ -53,6 +83,7 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
         "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background",
         inMonth ? "border-border/50 bg-card/40" : "border-transparent bg-transparent text-muted-foreground/50",
         selected && "border-primary/60 bg-primary/5",
+        isOver && "border-primary bg-primary/10",
       )}
     >
       <span
@@ -86,7 +117,7 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
 
         <div className="hidden sm:flex sm:flex-col gap-0.5">
           {shown.map((occ) => (
-            <ReminderChip key={`${occ.noteId}-${occ.at}`} occurrence={occ} title={titleOf(occ.noteId)} />
+            <DraggableChip key={`${occ.noteId}-${occ.at}`} occurrence={occ} title={titleOf(occ.noteId)} />
           ))}
           {hidden > 0 && (
             <span className="text-[10px] text-muted-foreground pl-1">+{hidden} więcej</span>
