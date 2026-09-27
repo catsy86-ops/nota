@@ -118,7 +118,7 @@ export function NotePresentation({ noteId, notes, onOpenChange, onNavigate }: Pr
           </div>
         </div>
 
-        <div className="border-t border-border/50 bg-muted/20 px-4 py-1.5 text-[10px] text-center text-muted-foreground">
+        <div className="border-t border-border/50 bg-muted/20 px-4 py-1.5 text-2xs text-center text-muted-foreground">
           <kbd className="font-mono">+</kbd>/<kbd className="font-mono">-</kbd> zoom · <kbd className="font-mono">0</kbd> reset · <kbd className="font-mono">Esc</kbd> zamknij
         </div>
       </DialogContent>

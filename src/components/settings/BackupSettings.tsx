@@ -161,7 +161,7 @@ export function BackupSettings() {
           min={0} max={30} step={1}
           onValueChange={([v]) => handleAutoExportChange(v)}
         />
-        <p className="text-[11px] text-muted-foreground mt-1.5">
+        <p className="text-xs text-muted-foreground mt-1.5">
           Po przekroczeniu interwału aplikacja sama zapisze backup (gdy otworzysz KACZY) — do Pobranych, albo do jednego wybranego pliku, jeśli go ustawiłeś niżej.
         </p>
       </Section>
@@ -172,7 +172,7 @@ export function BackupSettings() {
           min={0} max={60} step={1}
           onValueChange={([v]) => setViewPref("backupReminderDays", v)}
         />
-        <p className="text-[11px] text-muted-foreground mt-1.5">
+        <p className="text-xs text-muted-foreground mt-1.5">
           {(() => {
             const d = daysSinceBackup();
             if (d === null) return "Jeszcze nie zrobiłeś backupu.";
@@ -200,11 +200,11 @@ export function BackupSettings() {
             <button
               type="button"
               onClick={() => setViewPref("todayReminderTime", "")}
-              className="text-[11px] text-muted-foreground hover:text-foreground underline"
+              className="text-xs text-muted-foreground hover:text-foreground underline"
             >wyczyść</button>
           )}
         </div>
-        <p className="text-[11px] text-muted-foreground mt-1.5">
+        <p className="text-xs text-muted-foreground mt-1.5">
           {prefs.todayReminderTime
             ? `Toast pojawi się raz dziennie o ${prefs.todayReminderTime} (gdy masz notatki z dzisiaj).`
             : prefs.todayReminderHours === 0
@@ -235,11 +235,11 @@ export function BackupSettings() {
             <button
               type="button"
               onClick={() => setViewPref("weekReminderTime", "")}
-              className="text-[11px] text-muted-foreground hover:text-foreground underline"
+              className="text-xs text-muted-foreground hover:text-foreground underline"
             >wyłącz</button>
           )}
         </div>
-        <p className="text-[11px] text-muted-foreground mt-1.5">
+        <p className="text-xs text-muted-foreground mt-1.5">
           {prefs.weekReminderTime
             ? "Raz w tygodniu, o wybranej porze, dostaniesz podsumowanie ostatnich 7 dni."
             : "Ustaw godzinę, aby otrzymywać cotygodniowe przypomnienie."}

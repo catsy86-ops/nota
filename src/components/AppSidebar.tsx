@@ -105,7 +105,7 @@ export function AppSidebar({
                 </motion.button>
                 <div>
                   <h1 className="text-xl font-display font-extrabold gradient-text leading-tight tracking-tight">NOTATKI PIJACKIE</h1>
-                  <p className="text-[10px] text-muted-foreground font-medium">Notuj, zanim zapomnisz 🍺</p>
+                  <p className="text-2xs text-muted-foreground font-medium">Notuj, zanim zapomnisz 🍺</p>
                 </div>
               </motion.div>
 
@@ -121,7 +121,7 @@ export function AppSidebar({
                     className="stats-card text-center"
                   >
                     <p className={cn("text-lg font-display font-bold", stat.color || "text-foreground")}>{stat.value}</p>
-                    <p className="text-[9px] text-muted-foreground font-medium uppercase tracking-wider">{stat.label}</p>
+                    <p className="text-2xs text-muted-foreground font-medium uppercase tracking-wider">{stat.label}</p>
                   </motion.div>
                 ))}
               </div>
@@ -141,7 +141,7 @@ export function AppSidebar({
                         onClick={() => onGoView(item.view)}
                         aria-current={active ? "page" : undefined}
                         className={cn(
-                          "relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors duration-200",
+                          "relative w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium transition-colors duration-200",
                           active ? "text-primary" : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
                         )}
                       >
@@ -167,7 +167,7 @@ export function AppSidebar({
                             initial={{ scale: 0.8 }}
                             animate={{ scale: 1 }}
                             className={cn(
-                              "relative z-10 text-[10px] font-semibold px-2 py-0.5 rounded-full min-w-[22px] text-center",
+                              "relative z-10 text-2xs font-semibold px-2 py-0.5 rounded-full min-w-[22px] text-center",
                               active ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
                             )}
                           >
@@ -187,7 +187,7 @@ export function AppSidebar({
                   transition={{ delay: 0.3 }}
                   className="pt-5"
                 >
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground px-3 mb-2 flex items-center gap-1.5">
+                  <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground px-3 mb-2 flex items-center gap-1.5">
                     <Tag className="w-3 h-3" />
                     Etykiety
                   </p>
@@ -213,7 +213,7 @@ export function AppSidebar({
                 className="pt-5"
               >
                 <div className="flex items-center justify-between px-3 mb-2">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                     <FolderOpen className="w-3 h-3" />
                     Foldery
                   </p>
@@ -241,8 +241,8 @@ export function AppSidebar({
 
               <div className="flex-1" />
 
-              <div className="px-1 pb-2 pt-4 border-t border-border/50 space-y-2">
-                <div className="flex items-center gap-2 px-3 py-1.5 text-[10px] text-muted-foreground/50">
+              <div className="px-1 pb-2 pt-4 border-t border-border/50 space-y-0.5">
+                <div className="flex items-center gap-2 px-3 py-1.5 text-2xs text-muted-foreground/50">
                   <Keyboard className="w-3 h-3" />
                   <span>Ctrl+N • Ctrl+K — paleta</span>
                 </div>
@@ -250,17 +250,17 @@ export function AppSidebar({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={onOpenPalette}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
+                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
                 >
                   <Command className="w-[18px] h-[18px]" />
                   <span>Paleta poleceń</span>
-                  <span className="ml-auto text-[10px] opacity-60">⌘K</span>
+                  <span className="ml-auto text-2xs opacity-60">⌘K</span>
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={onOpenActions}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
+                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
                 >
                   <History className="w-[18px] h-[18px]" />
                   <span>Ostatnie akcje</span>
@@ -269,7 +269,7 @@ export function AppSidebar({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={onOpenStats}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
+                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
                 >
                   <Trophy className="w-[18px] h-[18px]" />
                   <span>Statystyki</span>
@@ -278,7 +278,7 @@ export function AppSidebar({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={onOpenFocusMode}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
+                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
                 >
                   <Brain className="w-[18px] h-[18px]" />
                   <span>Tryb skupienia</span>
@@ -289,7 +289,7 @@ export function AppSidebar({
                   onClick={onToggleTheme}
                   aria-label={dark ? "Włącz tryb jasny" : "Włącz tryb ciemny"}
                   aria-pressed={dark}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
+                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
                 >
                   <AnimatePresence mode="wait">
                     {dark ? (
@@ -309,7 +309,7 @@ export function AppSidebar({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => onSettingsOpenChange(true)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
+                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
                 >
                   <SettingsIcon className="w-[18px] h-[18px]" />
                   <span>Ustawienia</span>
@@ -318,13 +318,13 @@ export function AppSidebar({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => window.dispatchEvent(new CustomEvent("kaczy:tour"))}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
+                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
                 >
                   <HelpCircle className="w-[18px] h-[18px]" />
                   <span>Samouczek</span>
                 </motion.button>
                 <InstallAppButton />
-                <p className="text-[10px] text-muted-foreground/40 text-center font-medium">NOTATKI PIJACKIE v1.0 • Zrobione przy piwie 🍺</p>
+                <p className="text-2xs text-muted-foreground/40 text-center font-medium">NOTATKI PIJACKIE v1.0 • Zrobione przy piwie 🍺</p>
               </div>
             </div>
           </motion.aside>

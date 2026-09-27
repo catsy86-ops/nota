@@ -60,7 +60,7 @@ export function AppearanceSettings() {
             );
           })}
         </div>
-        <p className="text-[11px] text-muted-foreground mt-1.5">
+        <p className="text-xs text-muted-foreground mt-1.5">
           {themeMode === "system"
             ? "Motyw dopasowuje się do ustawień Twojego systemu."
             : themeMode === "dark"
@@ -92,7 +92,7 @@ export function AppearanceSettings() {
             );
           })}
         </div>
-        <p className="text-[11px] text-muted-foreground mt-1.5">
+        <p className="text-xs text-muted-foreground mt-1.5">
           {motionMode === "system"
             ? `Zgodnie z ustawieniem systemu (teraz: ${motionReduced ? "ograniczony ruch" : "pełne animacje"}).`
             : motionMode === "reduced"
@@ -112,7 +112,7 @@ export function AppearanceSettings() {
                 onClick={() => setSeasonPref(s)}
                 aria-pressed={active}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 py-3 rounded-xl border text-[11px] font-semibold transition-colors",
+                  "flex flex-col items-center justify-center gap-1 py-3 rounded-xl border text-xs font-semibold transition-colors",
                   active
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
@@ -124,7 +124,7 @@ export function AppearanceSettings() {
             );
           })}
         </div>
-        <p className="text-[11px] text-muted-foreground mt-1.5">
+        <p className="text-xs text-muted-foreground mt-1.5">
           {settings.seasonalTheme
             ? seasonPref === "auto"
               ? `Kolory tła i akcentów dopasowują się do daty (teraz: ${SEASON_META[activeSeason].label.toLowerCase()}).`

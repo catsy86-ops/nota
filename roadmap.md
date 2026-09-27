@@ -412,12 +412,13 @@ Audyt agentowy: kod + zrzuty Playwright 1440/768/375, jasny i ciemny motyw (Usta
 
 **Główne problemy:** (1) za dużo efektów tła naraz — aurora + 3 blooms + glow + shine + sezonowe; (2) 94 `whileHover`/`whileTap`, m.in. skalowanie każdej ikony akcji karty; (3) zbyt mała typografia (`text-[9–11px]`) i `muted-foreground` ~4.3:1 — poniżej AA; (4) hierarchia Notatek: cytat dnia nad paskiem dodawania, szablony z ikoną **i** emoji, dwa konkurujące nagłówki; (5) przeładowany sidebar (statystyki + 6 widoków + foldery + 7 akcji, niespójny rytm, podwójny stan aktywny); (6) karty: zawsze widoczny pasek 6 akcji, dziury w siatce, ~170 px na jedną linijkę na mobile; (7) pusty stan z uciętym wordmarkiem i podpowiedzią Konami, ciemny `--destructive` o słabym kontraście, `--sidebar-*` z domyślnego shadcn.
 
-**Faza 1 — fundament (tokeny, typografia, spacing), ~1 dzień**
-- [ ] `--muted-foreground` 42% (jasny) / 64% (ciemny); ciemny `--destructive: 0 72% 51%`; `--sidebar-*` z tokenów aplikacji. **S**
-- [ ] Skala tekstu: zakaz `text-[9px]`, `text-[10/11px]` → `text-xs`; token `2xs` (11/16) tylko dla badge; `leading-relaxed` treść, `leading-tight` tytuły. **M**
-- [ ] `--radius: 0.75rem` + reguła: karty `rounded-xl`, kontrolki `rounded-lg`, `rounded-full` tylko badge/FAB/avatar. **M**
-- [ ] Przywrócić `--elevation-1/2/3` zamiast `.note-shadow*`, `.header-glow` i arbitralnych `shadow-[...]` (zmiana decyzji z 2026-09-25 — dziś cienie są niespójne). **S**
-- [ ] Spacing 4/8, jedna wysokość pozycji nawigacji (`h-9`); weryfikacja AA (axe) w obu motywach. **S**
+**Faza 1 — fundament (tokeny, typografia, spacing)** — ✅ zrobione 2026-09-27. Kontrast policzony wzorem WCAG: `muted-foreground` ≥4.6:1 na tle/karcie/muted/kolorowych notatkach w jasnym, ≥5.4:1 na neutralnych tłach w ciemnym (na ciemnych kolorowych notatkach ~3.7:1 — do Fazy 2). `destructive` 0 72% 51% w obu motywach (biały tekst 4.8:1). `shadow-sm/md/lg/xl/2xl` zmapowane w `tailwind.config.ts` na `--elevation-1..3`, więc także komponenty shadcn używają jednego systemu; kolorowa poświata FAB zostaje celowo. `text-[9/10px]` → `text-2xs` (11/16), `text-[11px]` → `text-xs`; `leading-relaxed` w treści, `leading-tight` w tytułach kart. Pozycje nawigacji `h-9 rounded-lg`, jeden rytm w obu grupach. Axe nie był uruchamiany — kontrast liczony skryptem, test 320 px bez przewijania w bok zielony. **Otwarte i poza fazą:** biały tekst na `--primary` (pomarańcz 25 95% 53%) ma tylko 2.8:1 — to kolor marki, decyzja do właściciela (ciemniejszy odcień przycisków albo ciemny tekst).
+
+- [x] `--muted-foreground` 42% (jasny) / 64% (ciemny); ciemny `--destructive: 0 72% 51%`; `--sidebar-*` z tokenów aplikacji. **S**
+- [x] Skala tekstu: zakaz `text-[9px]`, `text-[10/11px]` → `text-xs`; token `2xs` (11/16) tylko dla badge; `leading-relaxed` treść, `leading-tight` tytuły. **M**
+- [x] `--radius: 0.75rem` + reguła: karty `rounded-xl`, kontrolki `rounded-lg`, `rounded-full` tylko badge/FAB/avatar. **M**
+- [x] Przywrócić `--elevation-1/2/3` zamiast `.note-shadow*`, `.header-glow` i arbitralnych `shadow-[...]` (zmiana decyzji z 2026-09-25 — dziś cienie są niespójne). **S**
+- [x] Spacing 4/8, jedna wysokość pozycji nawigacji (`h-9`); weryfikacja AA (axe) w obu motywach. **S**
 
 **Faza 2 — komponenty, ~2–3 dni**
 - [ ] `NoteCard`: akcje `opacity-0 group-hover:opacity-100 focus-within:opacity-100` na desktopie, na dotyku menu „⋯”; cele 44 px; zwarta meta. **M**

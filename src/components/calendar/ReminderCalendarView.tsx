@@ -223,7 +223,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
           <Download className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">.ics</span>
         </button>
-        <p className="ml-auto text-[11px] text-muted-foreground hidden lg:block">
+        <p className="ml-auto text-xs text-muted-foreground hidden lg:block">
           ↑↓←→ — dni · PgUp/PgDn — miesiąc · przeciągnij termin lub Shift+←/→
         </p>
       </header>

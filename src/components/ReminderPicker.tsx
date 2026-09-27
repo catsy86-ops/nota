@@ -98,9 +98,9 @@ export function ReminderPicker({ reminder, reminderRepeat, onSet }: ReminderPick
           </select>
         </div>
         {pastTime && (
-          <p className="text-[10px] text-destructive">Ta godzina już minęła. Wybierz godzinę w przyszłości.</p>
+          <p className="text-2xs text-destructive">Ta godzina już minęła. Wybierz godzinę w przyszłości.</p>
         )}
-        <p className="text-[10px] text-muted-foreground">
+        <p className="text-2xs text-muted-foreground">
           Działa najpewniej, gdy aplikacja zostaje otwarta w tle — bez serwera powiadomień push, zamknięta karta może dostarczyć przypomnienie dopiero po ponownym otwarciu appki.
         </p>
         <div className="flex gap-2">
@@ -123,7 +123,7 @@ export function ReminderBadge({ reminder, reminderRepeat }: { reminder: number |
   const isPast = reminder < Date.now();
   return (
     <div className={cn(
-      "flex items-center gap-1 text-[10px] mt-2 px-2 py-0.5 rounded-full w-fit",
+      "flex items-center gap-1 text-2xs mt-2 px-2 py-0.5 rounded-full w-fit",
       isPast ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
     )}>
       <Bell className="w-2.5 h-2.5" />

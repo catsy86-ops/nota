@@ -97,7 +97,7 @@ export function MonthGrid({ month, byDay, titleOf, selectedDay, onSelectDay, onA
           <div
             key={i}
             role="columnheader"
-            className="text-[10px] uppercase tracking-wider text-muted-foreground text-center py-1"
+            className="text-2xs uppercase tracking-wider text-muted-foreground text-center py-1"
           >
             {name}
           </div>

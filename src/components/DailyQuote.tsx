@@ -19,7 +19,7 @@ export function DailyQuote() {
       <Quote className="w-4 h-4 text-primary shrink-0 mt-0.5" />
       <div className="min-w-0">
         <p className="text-sm italic text-foreground/90 leading-snug">"{quote.text}"</p>
-        <p className="text-[11px] text-muted-foreground mt-1">— {quote.author}</p>
+        <p className="text-xs text-muted-foreground mt-1">— {quote.author}</p>
       </div>
     </motion.div>
   );

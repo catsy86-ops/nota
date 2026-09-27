@@ -22,19 +22,21 @@
     --secondary-foreground: 220 20% 14%;
 
     --muted: 220 14% 95%;
-    --muted-foreground: 220 10% 50%;
+    /* ≥4.6:1 na tle, muted, karcie i kolorowych notatkach (WCAG AA). */
+    --muted-foreground: 220 10% 42%;
 
     --accent: 340 75% 55%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
+    /* Biały tekst 4.8:1 — poprzednie 0 84% 60% dawało 3.8:1. */
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 220 14% 90%;
     --input: 220 14% 90%;
     --ring: 25 95% 53%;
 
-    --radius: 1rem;
+    --radius: 0.75rem;
 
     /* Note colors */
     --note-default: 0 0% 100%;
@@ -50,14 +52,20 @@
     --font-display: 'Plus Jakarta Sans', sans-serif;
     --font-body: 'Inter', sans-serif;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Sidebar z tokenów aplikacji, nie z domyślnego (niebieskiego) shadcn. */
+    --sidebar-background: var(--background);
+    --sidebar-foreground: var(--foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-accent: var(--muted);
+    --sidebar-accent-foreground: var(--foreground);
+    --sidebar-border: var(--border);
+    --sidebar-ring: var(--ring);
+
+    /* Trzy poziomy uniesienia zamiast cieni ad hoc. */
+    --elevation-1: 0 1px 2px hsl(220 20% 14% / 0.05), 0 1px 3px hsl(220 20% 14% / 0.06);
+    --elevation-2: 0 4px 12px -2px hsl(220 20% 14% / 0.08), 0 2px 4px hsl(220 20% 14% / 0.04);
+    --elevation-3: 0 12px 32px -8px hsl(220 20% 14% / 0.16), 0 4px 8px hsl(220 20% 14% / 0.05);
 
     --success: 150 60% 45%;
     --success-foreground: 0 0% 100%;
@@ -82,12 +90,13 @@
     --secondary-foreground: 220 14% 92%;
 
     --muted: 220 20% 16%;
-    --muted-foreground: 220 10% 55%;
+    --muted-foreground: 220 10% 64%;
 
     --accent: 340 75% 55%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 62.8% 30.6%;
+    /* Było 0 62.8% 30.6% — ginęło na ciemnym tle (1.9:1). */
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 220 20% 18%;
@@ -104,14 +113,9 @@
     --note-lavender: 260 25% 22%;
     --note-rose: 340 30% 22%;
 
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --elevation-1: 0 1px 2px hsl(0 0% 0% / 0.3);
+    --elevation-2: 0 4px 12px -2px hsl(0 0% 0% / 0.4), 0 0 0 1px hsl(0 0% 100% / 0.03);
+    --elevation-3: 0 12px 32px -8px hsl(0 0% 0% / 0.55), 0 0 0 1px hsl(0 0% 100% / 0.04);
 
     --success: 150 50% 40%;
     --success-foreground: 0 0% 100%;
@@ -285,11 +289,10 @@
   html[data-motion="reduced"] .note-glow-active { animation: none !important; }
 
   .note-shadow {
-
-    box-shadow: 0 1px 3px hsl(220 20% 14% / 0.06), 0 4px 12px hsl(220 20% 14% / 0.04);
+    box-shadow: var(--elevation-1);
   }
   .note-shadow-hover {
-    box-shadow: 0 8px 25px hsl(220 20% 14% / 0.12), 0 4px 10px hsl(220 20% 14% / 0.06);
+    box-shadow: var(--elevation-3);
   }
   .glass {
     @apply bg-card/80 backdrop-blur-xl;
@@ -312,7 +315,7 @@
     background: linear-gradient(180deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%);
   }
   .header-glow {
-    box-shadow: 0 1px 0 hsl(var(--border)), 0 4px 20px hsl(220 20% 14% / 0.03);
+    box-shadow: 0 1px 0 hsl(var(--border)), var(--elevation-1);
   }
   .stats-card {
     @apply rounded-2xl border border-border/50 p-4;

@@ -67,7 +67,7 @@ export function DayPanel({ day, occurrences, titleOf, onAdd, onEdit, onMoveByDay
                       <ReminderChip occurrence={occ} title={title} detailed className="min-w-0 flex-1" />
                       <ArrowRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
                     </button>
-                    <p className="text-[10px] text-muted-foreground pl-2 mt-0.5">
+                    <p className="text-2xs text-muted-foreground pl-2 mt-0.5">
                       Prognoza serii — zapisany jest tylko najbliższy termin.
                     </p>
                   </>

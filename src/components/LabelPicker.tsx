@@ -90,7 +90,7 @@ export function LabelBadges({ labels, onRemove }: LabelBadgesProps) {
   return (
     <div className="flex gap-1 flex-wrap mt-2">
       {labels.map((label) => (
-        <Badge key={label} variant="secondary" className="text-[10px] px-1.5 py-0 gap-1">
+        <Badge key={label} variant="secondary" className="text-2xs px-1.5 py-0 gap-1">
           {label}
           {onRemove && (
             <button onClick={(e) => { e.stopPropagation(); onRemove(label); }}>

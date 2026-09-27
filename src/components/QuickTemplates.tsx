@@ -97,7 +97,7 @@ export function QuickTemplates({ onPick, onCreateLabel }: Props) {
       transition={{ delay: 0.2 }}
       className="flex items-center gap-2 overflow-x-auto scrollbar-thin pb-1 -mx-1 px-1"
     >
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground shrink-0 mr-1">
+      <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground shrink-0 mr-1">
         Szablony
       </span>
       {TEMPLATES.map((t, i) => {

@@ -107,7 +107,7 @@ function NavItem({ active, label, onClick, children, badge }: { active: boolean;
         whileTap={{ scale: 0.88 }}
         onClick={onClick}
         className={cn(
-          "relative w-full flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl text-[10px] font-medium font-display transition-colors",
+          "relative w-full flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl text-2xs font-medium font-display transition-colors",
           active ? "text-primary" : "text-muted-foreground hover:text-foreground"
         )}
       >
@@ -121,7 +121,7 @@ function NavItem({ active, label, onClick, children, badge }: { active: boolean;
         <span className="relative z-10">{children}</span>
         <span className="relative z-10 leading-none">{label}</span>
         {!!badge && (
-          <span className="absolute top-0.5 right-1/4 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-semibold flex items-center justify-center z-10">
+          <span className="absolute top-0.5 right-1/4 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-2xs font-semibold flex items-center justify-center z-10">
             {badge}
           </span>
         )}
@@ -143,7 +143,7 @@ function SheetTile({ Icon, label, onClick, badge }: { Icon: React.ComponentType<
       </span>
       <span className="text-xs font-medium font-display text-foreground">{label}</span>
       {badge !== undefined && (
-        <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold flex items-center justify-center">
+        <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-2xs font-semibold flex items-center justify-center">
           {badge}
         </span>
       )}

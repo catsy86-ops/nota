@@ -50,7 +50,7 @@ export function QuickReminderInput({ onParsed }: QuickReminderInputProps) {
         </Button>
       </div>
       {error && (
-        <p className="text-[10px] text-destructive">Nie rozpoznano daty. Spróbuj np. "jutro 15:00" lub "za 2h".</p>
+        <p className="text-2xs text-destructive">Nie rozpoznano daty. Spróbuj np. "jutro 15:00" lub "za 2h".</p>
       )}
     </div>
   );

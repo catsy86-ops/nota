@@ -396,7 +396,7 @@ const Index = () => {
                 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-1 flex items-center gap-1.5"
               >
                 📌 Przypięte
-                <span className="bg-primary/10 text-primary text-[10px] px-1.5 rounded-full">{pinned.length}</span>
+                <span className="bg-primary/10 text-primary text-2xs px-1.5 rounded-full">{pinned.length}</span>
               </motion.p>
               <NoteGrid navOrder={0} notes={pinned} searchQuery={search} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} onPresent={setPresentingNoteId} knownTitles={knownTitles} onWikiClick={handleWikiClick} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
             </section>

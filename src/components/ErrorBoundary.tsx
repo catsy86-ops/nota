@@ -70,7 +70,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </p>
           </div>
           {this.state.error.message && (
-            <pre className="text-left text-[11px] bg-muted/50 rounded-md p-2 overflow-auto max-h-32 text-muted-foreground">
+            <pre className="text-left text-xs bg-muted/50 rounded-md p-2 overflow-auto max-h-32 text-muted-foreground">
               {this.state.error.message}
             </pre>
           )}

@@ -54,7 +54,7 @@ export function ViewControls({ allLabels }: Props) {
           <TooltipContent side="bottom" className="text-xs">Widok i kolumny</TooltipContent>
         </Tooltip>
         <DropdownMenuContent align="end" className="w-56 rounded-2xl p-1.5">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">Układ</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Układ</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={prefs.layout} onValueChange={(v) => setViewPref("layout", v as Layout)}>
             {LAYOUTS.map((l) => (
               <DropdownMenuRadioItem key={l.v} value={l.v}>
@@ -63,7 +63,7 @@ export function ViewControls({ allLabels }: Props) {
             ))}
           </DropdownMenuRadioGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">Gęstość</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Gęstość</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={prefs.density} onValueChange={(v) => setViewPref("density", v as Density)}>
             <DropdownMenuRadioItem value="compact">Kompakt</DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="cozy">Komfort</DropdownMenuRadioItem>
@@ -72,7 +72,7 @@ export function ViewControls({ allLabels }: Props) {
           {prefs.layout !== "list" && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">Kolumny</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Kolumny</DropdownMenuLabel>
               <div className="px-2 pb-2 flex items-center gap-1">
                 <button
                   onClick={() => setViewPref("autoColumns", true)}
@@ -112,7 +112,7 @@ export function ViewControls({ allLabels }: Props) {
           <TooltipContent side="bottom" className="text-xs">Sortowanie</TooltipContent>
         </Tooltip>
         <DropdownMenuContent align="end" className="w-52 rounded-2xl p-1.5">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">Sortuj wg</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Sortuj wg</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={prefs.sortKey} onValueChange={(v) => setViewPref("sortKey", v as SortKey)}>
             {SORTS.map((s) => (
               <DropdownMenuRadioItem key={s.v} value={s.v}>{s.label}</DropdownMenuRadioItem>
@@ -155,11 +155,11 @@ export function ViewControls({ allLabels }: Props) {
           <TooltipContent side="bottom" className="text-xs">Filtry</TooltipContent>
         </Tooltip>
         <DropdownMenuContent align="end" className="w-60 rounded-2xl p-1.5">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">Kolor</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Kolor</DropdownMenuLabel>
           <div className="px-2 pb-2 flex items-center gap-1.5 flex-wrap">
             <button
               onClick={() => setViewPref("filterColor", "all")}
-              className={cn("text-[10px] px-2 py-1 rounded-md transition-colors", prefs.filterColor === "all" ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted text-muted-foreground")}
+              className={cn("text-2xs px-2 py-1 rounded-md transition-colors", prefs.filterColor === "all" ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted text-muted-foreground")}
             >
               wszystkie
             </button>
@@ -179,7 +179,7 @@ export function ViewControls({ allLabels }: Props) {
           {allLabels.length > 0 && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">Etykieta</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Etykieta</DropdownMenuLabel>
               <div className="max-h-40 overflow-y-auto">
                 <DropdownMenuRadioGroup value={prefs.filterLabel} onValueChange={(v) => setViewPref("filterLabel", v)}>
                   <DropdownMenuRadioItem value="all">Wszystkie</DropdownMenuRadioItem>
@@ -191,11 +191,11 @@ export function ViewControls({ allLabels }: Props) {
             </>
           )}
           <DropdownMenuSeparator />
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-wider">Priorytet</DropdownMenuLabel>
+          <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Priorytet</DropdownMenuLabel>
           <div className="px-2 pb-2 flex items-center gap-1.5 flex-wrap">
             <button
               onClick={() => setViewPref("filterPriority", "all")}
-              className={cn("text-[10px] px-2 py-1 rounded-md transition-colors", prefs.filterPriority === "all" ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted text-muted-foreground")}
+              className={cn("text-2xs px-2 py-1 rounded-md transition-colors", prefs.filterPriority === "all" ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted text-muted-foreground")}
             >
               wszystkie
             </button>
@@ -204,7 +204,7 @@ export function ViewControls({ allLabels }: Props) {
                 key={p}
                 onClick={() => setViewPref("filterPriority", p)}
                 className={cn(
-                  "flex items-center gap-1 text-[10px] px-2 py-1 rounded-md transition-colors",
+                  "flex items-center gap-1 text-2xs px-2 py-1 rounded-md transition-colors",
                   prefs.filterPriority === p ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted text-muted-foreground"
                 )}
               >

@@ -88,7 +88,7 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
     >
       <span
         className={cn(
-          "text-[11px] font-medium tabular-nums w-5 h-5 flex items-center justify-center rounded-full shrink-0",
+          "text-xs font-medium tabular-nums w-5 h-5 flex items-center justify-center rounded-full shrink-0",
           today && "bg-primary text-primary-foreground",
           !today && !inMonth && "opacity-60",
         )}
@@ -111,7 +111,7 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
             />
           ))}
           {hiddenDots > 0 && (
-            <span className="text-[9px] leading-none text-muted-foreground">+{hiddenDots}</span>
+            <span className="text-2xs leading-none text-muted-foreground">+{hiddenDots}</span>
           )}
         </div>
 
@@ -120,7 +120,7 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
             <DraggableChip key={`${occ.noteId}-${occ.at}`} occurrence={occ} title={titleOf(occ.noteId)} />
           ))}
           {hidden > 0 && (
-            <span className="text-[10px] text-muted-foreground pl-1">+{hidden} więcej</span>
+            <span className="text-2xs text-muted-foreground pl-1">+{hidden} więcej</span>
           )}
         </div>
       </div>

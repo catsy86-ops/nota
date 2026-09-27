@@ -50,7 +50,7 @@ export function PriorityPicker({ priority, onSet }: PriorityPickerProps) {
 export function PriorityBadge({ priority }: { priority: NotePriority }) {
   if (priority === "none") return null;
   return (
-    <div className={cn("flex items-center gap-1 text-[10px] mt-2 px-2 py-0.5 rounded-full w-fit bg-foreground/5", PRIORITY_COLOR_CLASS[priority])}>
+    <div className={cn("flex items-center gap-1 text-2xs mt-2 px-2 py-0.5 rounded-full w-fit bg-foreground/5", PRIORITY_COLOR_CLASS[priority])}>
       <Flag className="w-2.5 h-2.5 fill-current" />
       {PRIORITY_LABELS[priority]}
     </div>

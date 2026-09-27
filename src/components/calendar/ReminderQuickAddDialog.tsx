@@ -178,7 +178,7 @@ export function ReminderQuickAddDialog({
               className="w-full bg-muted/60 border border-border rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-primary/30"
             />
             {parsed && (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 Rozpoznano datę: <span className="text-primary font-medium">{format(parsed.date, "d MMMM", { locale: pl })}</span>
               </p>
             )}
@@ -213,7 +213,7 @@ export function ReminderQuickAddDialog({
         </div>
 
         {past && (
-          <p className="text-[11px] text-destructive">
+          <p className="text-xs text-destructive">
             Ten termin jest w przeszłości — przypomnienie odezwie się przy najbliższym otwarciu aplikacji.
           </p>
         )}
@@ -221,7 +221,7 @@ export function ReminderQuickAddDialog({
         {isEdit ? (
           <div className="space-y-2">
             {edit?.isSeries && (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-xs text-muted-foreground">
                 To najbliższy termin serii „{REMINDER_REPEAT_LABELS[edit.repeat].toLowerCase()}”.
                 Zmiana godziny lub dnia przesuwa całą serię — model zapisuje jeden termin,
                 a kolejne wylicza od niego.
@@ -257,7 +257,7 @@ export function ReminderQuickAddDialog({
 
             {suggestions.length > 0 && (
               <div className="space-y-1.5">
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">
                   albo przypnij do istniejącej
                 </p>
                 <ul className="space-y-1 max-h-44 overflow-y-auto">
@@ -274,7 +274,7 @@ export function ReminderQuickAddDialog({
                         <StickyNote className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
                         <span className="truncate">{n.title.trim() || n.content.slice(0, 40) || "Bez tytułu"}</span>
                         {n.reminder && (
-                          <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">
+                          <span className="ml-auto shrink-0 text-2xs text-muted-foreground">
                             ma już termin
                           </span>
                         )}

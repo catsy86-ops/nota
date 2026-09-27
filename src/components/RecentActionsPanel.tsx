@@ -143,7 +143,7 @@ export function RecentActionsPanel({ open, onOpenChange, getNote, onSaveNote }: 
                     title="Kliknij, aby zobaczyć i edytować notatkę"
                   >
                     <p className="text-sm font-medium truncate">{e.label}</p>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       {meta.verb} • {relativeTime(e.at)}
                       {e.count > 1 ? ` • ${e.count} notatek` : ""}
                     </p>
@@ -163,7 +163,7 @@ export function RecentActionsPanel({ open, onOpenChange, getNote, onSaveNote }: 
                     </Button>
                   )}
                   {!canUndo(e) ? (
-                    <span className="text-[11px] font-medium text-muted-foreground shrink-0">
+                    <span className="text-xs font-medium text-muted-foreground shrink-0">
                       {e.undone ? "Cofnięto" : "—"}
                     </span>
                   ) : (

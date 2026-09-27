@@ -117,7 +117,7 @@ export function GeneralSettings() {
           min={0} max={30} step={5}
           onValueChange={([v]) => setViewPref("autosaveSeconds", v)}
         />
-        <p className="text-[11px] text-muted-foreground mt-1.5">
+        <p className="text-xs text-muted-foreground mt-1.5">
           {prefs.autosaveSeconds === 0
             ? "Bez zapisu cyklicznego. Edycja i tak zapisuje się przy wyjściu z pola oraz gdy kafel zniknie z widoku."
             : "Edycja będzie zapisywana automatycznie po przerwie w pisaniu — oraz zawsze przy wyjściu z pola."}
@@ -159,7 +159,7 @@ export function GeneralSettings() {
         {SHORTCUTS.map((s) => (
           <div key={s.keys} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 px-4 py-2.5">
             <span className="text-sm text-foreground">{s.desc}</span>
-            <kbd className="font-mono text-[11px] bg-background border border-border/60 rounded-md px-2 py-1 text-foreground/80">{s.keys}</kbd>
+            <kbd className="font-mono text-xs bg-background border border-border/60 rounded-md px-2 py-1 text-foreground/80">{s.keys}</kbd>
           </div>
         ))}
       </div>

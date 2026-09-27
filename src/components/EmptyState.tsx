@@ -58,7 +58,7 @@ export function EmptyState({ view, search }: { view: View; search: string }) {
             { k: "Ctrl+N", l: "nowa notatka" },
             { k: "↑↑↓↓←→←→BA", l: "niespodzianka" },
           ].map((s) => (
-            <span key={s.k} className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground bg-muted/60 border border-border/40 rounded-full px-2.5 py-1">
+            <span key={s.k} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/60 border border-border/40 rounded-full px-2.5 py-1">
               <kbd className="font-mono font-semibold text-foreground/80">{s.k}</kbd>
               <span>— {s.l}</span>
             </span>

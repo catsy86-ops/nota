@@ -84,7 +84,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
 
       {checked.length > 0 && (
         <div className="pt-1 border-t border-border/30 mt-2">
-          <p className="text-[10px] text-muted-foreground/50 uppercase tracking-wider mb-1">
+          <p className="text-2xs text-muted-foreground/50 uppercase tracking-wider mb-1">
             {checked.length} ukończone
           </p>
           {checked.map((item) => (
@@ -148,14 +148,14 @@ export function ChecklistPreview({ items, onToggle }: { items: ChecklistItem[]; 
         </div>
       ))}
       {items.length > 5 && (
-        <p className="text-[10px] text-muted-foreground/50 pl-5">+{items.length - 5} więcej</p>
+        <p className="text-2xs text-muted-foreground/50 pl-5">+{items.length - 5} więcej</p>
       )}
       {done > 0 && (
         <div className="flex items-center gap-2 mt-1">
           <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
             <div className="h-full bg-primary/60 rounded-full transition-all" style={{ width: `${(done / items.length) * 100}%` }} />
           </div>
-          <span className="text-[10px] text-muted-foreground/50">{done}/{items.length}</span>
+          <span className="text-2xs text-muted-foreground/50">{done}/{items.length}</span>
         </div>
       )}
     </div>

@@ -39,7 +39,7 @@ export function ReminderChip({ occurrence, title, detailed = false, className }:
       title={occurrenceLabel(occurrence, title)}
       className={cn(
         "flex items-center gap-1 rounded-md border px-1 py-px text-left leading-tight",
-        detailed ? "text-xs px-2 py-1 gap-1.5" : "text-[10px]",
+        detailed ? "text-xs px-2 py-1 gap-1.5" : "text-2xs",
         isForecast
           ? "border-dashed border-primary/40 text-primary/70"
           : isPast

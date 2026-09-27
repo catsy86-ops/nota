@@ -119,7 +119,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
 
   return (
     <>
-    <motion.div ref={containerRef} layout className="w-full max-w-xl mx-auto rounded-2xl note-shadow bg-card border border-border overflow-hidden transition-shadow focus-ring-gradient hover:shadow-[0_10px_40px_-12px_hsl(var(--primary)/0.25)]">
+    <motion.div ref={containerRef} layout className="w-full max-w-xl mx-auto rounded-2xl note-shadow bg-card border border-border overflow-hidden transition-shadow focus-ring-gradient hover:shadow-elevation-3">
       <AnimatePresence mode="wait">
         {!expanded ? (
           <motion.button key="collapsed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -175,7 +175,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
             {labels.length > 0 && (
               <div className="flex gap-1 flex-wrap">
                 {labels.map((l) => (
-                  <Badge key={l} variant="secondary" className="text-[10px] cursor-pointer" onClick={() => toggleLabel(l)}>{l} ×</Badge>
+                  <Badge key={l} variant="secondary" className="text-2xs cursor-pointer" onClick={() => toggleLabel(l)}>{l} ×</Badge>
                 ))}
               </div>
             )}

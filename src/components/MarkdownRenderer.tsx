@@ -56,7 +56,7 @@ export function MarkdownRenderer({ content, className, onWikiClick, knownTitles 
 
   return (
     <ReactMarkdown
-      className={cn("prose-note", className)}
+      className={cn("prose-note leading-relaxed", className)}
       components={{
         h1: ({ children }) => <h1 className="text-base font-display font-bold text-foreground mb-1">{renderText(children)}</h1>,
         h2: ({ children }) => <h2 className="text-sm font-display font-bold text-foreground mb-1">{renderText(children)}</h2>,
@@ -106,7 +106,7 @@ export function FormatToolbar({ onInsert }: { onInsert: (before: string, after: 
           key={t.label}
           onClick={() => onInsert(t.before, t.after)}
           title={t.title}
-          className="px-1.5 py-0.5 text-[10px] font-mono font-bold text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded transition-colors"
+          className="px-1.5 py-0.5 text-2xs font-mono font-bold text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded transition-colors"
         >
           {t.label}
         </button>

@@ -61,7 +61,7 @@ export function VersionHistory({ versions, onRestore }: VersionHistoryProps) {
                     <p className="text-sm font-medium text-foreground">
                       {v.title || <span className="text-muted-foreground italic">Bez tytułu</span>}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">
+                    <p className="text-2xs text-muted-foreground">
                       {format(new Date(v.timestamp), "d MMM yyyy, HH:mm", { locale: pl })}
                     </p>
                   </div>

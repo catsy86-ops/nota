@@ -82,6 +82,22 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
         },
       },
+      fontSize: {
+        // Najmniejszy stopień w skali — tylko badge i liczniki. Niżej nie schodzimy.
+        "2xs": ["0.6875rem", { lineHeight: "1rem" }],
+      },
+      boxShadow: {
+        "elevation-1": "var(--elevation-1)",
+        "elevation-2": "var(--elevation-2)",
+        "elevation-3": "var(--elevation-3)",
+        // Domyślne stopnie Tailwinda (też w komponentach shadcn) mapujemy na
+        // trzy poziomy uniesienia — jeden system cieni w całej aplikacji.
+        sm: "var(--elevation-1)",
+        md: "var(--elevation-2)",
+        lg: "var(--elevation-3)",
+        xl: "var(--elevation-3)",
+        "2xl": "var(--elevation-3)",
+      },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",

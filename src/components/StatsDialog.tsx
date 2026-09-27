@@ -68,7 +68,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
             <div key={t.label} className="rounded-xl border border-border/60 bg-muted/30 p-3 text-center">
               <t.icon className="w-4 h-4 mx-auto text-primary mb-1" />
               <p className="text-lg font-display font-bold">{t.value}</p>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{t.label}</p>
+              <p className="text-2xs uppercase tracking-wider text-muted-foreground">{t.label}</p>
             </div>
           ))}
         </div>
@@ -134,12 +134,12 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
                   <p className="text-xs text-muted-foreground">{a.description}</p>
                   <Progress value={p * 100} className="h-1.5 mt-1.5" />
                   {done && unlockedAt && (
-                    <p className="text-[10px] text-primary/80 mt-1">
+                    <p className="text-2xs text-primary/80 mt-1">
                       Zdobyto {format(unlockedAt, "d MMM yyyy", { locale: pl })}
                     </p>
                   )}
                 </div>
-                {done && <span className="text-[10px] font-bold text-primary uppercase">✓</span>}
+                {done && <span className="text-2xs font-bold text-primary uppercase">✓</span>}
               </motion.div>
             );
           })}

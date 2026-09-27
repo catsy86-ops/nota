@@ -222,11 +222,11 @@ export function NoteGrid({
                 </p>
                 {highlightTokens.length > 0 && (
                   <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Pasuje do:</span>
+                    <span className="text-2xs uppercase tracking-wider text-muted-foreground">Pasuje do:</span>
                     {highlightTokens.map((t) => (
-                      <span key={t} className="text-[11px] px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">{t}</span>
+                      <span key={t} className="text-xs px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">{t}</span>
                     ))}
-                    <span className="text-[10px] text-muted-foreground ml-1">
+                    <span className="text-2xs text-muted-foreground ml-1">
                       {snippets.length + (titleMatches ? 1 : 0)} trafień{snippets.length >= 3 ? "+" : ""}
                     </span>
                   </div>
@@ -235,7 +235,7 @@ export function NoteGrid({
               <div ref={setGridNavPreviewScrollEl} className="overflow-y-auto px-6 py-4 overscroll-contain">
                 {snippets.length > 0 && (
                   <div className="mb-4 space-y-1.5">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Dopasowania w treści</p>
+                    <p className="text-2xs uppercase tracking-wider text-muted-foreground">Dopasowania w treści</p>
                     {snippets.map((s, i) => (
                       <div key={i} className="text-xs text-foreground/80 bg-muted/40 rounded-lg px-2.5 py-1.5 leading-relaxed">
                         {s.before}

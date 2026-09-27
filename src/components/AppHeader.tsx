@@ -104,7 +104,7 @@ export function AppHeader({
               )}
             </h1>
             {view !== "calendar" && (
-              <p className="text-[11px] text-muted-foreground hidden sm:block">
+              <p className="text-xs text-muted-foreground hidden sm:block">
                 {displayCount} {displayCount === 1 ? "notatka" : displayCount < 5 ? "notatki" : "notatek"}
               </p>
             )}

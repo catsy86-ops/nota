@@ -4,7 +4,7 @@ import { Switch } from "@/components/ui/switch";
 export function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
-      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
+      <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</p>
       {children}
     </div>
   );
