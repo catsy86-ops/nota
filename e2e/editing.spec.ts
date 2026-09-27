@@ -59,3 +59,21 @@ test("Delete wyrzuca do kosza dokładnie jedną notatkę, gdy inna jest przypię
   await expect(page.getByRole("heading", { name: pinnedTitle })).toBeVisible();
   await expect(page.getByRole("heading", { name: plainTitle })).toHaveCount(0);
 });
+
+test("pełnoekranowy edytor zapisuje treść po zamknięciu klawiszem Esc", async ({ page }) => {
+  const title = `E2E-full ${Date.now()}`;
+  await addNote(page, title);
+
+  await page.getByText(title).click();
+  await page.getByRole("button", { name: "Pełny ekran" }).click();
+
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  // Rozwinięcie przenosi szkic, a nie zaczyna od nowa.
+  await expect(dialog.getByPlaceholder("Tytuł")).toHaveValue(title);
+  await dialog.getByPlaceholder("Treść (obsługuje **Markdown**)...").fill("notatka ze spotkania w dużym oknie");
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByText("notatka ze spotkania w dużym oknie")).toBeVisible();
+});
