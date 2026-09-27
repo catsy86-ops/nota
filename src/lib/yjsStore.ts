@@ -1,4 +1,5 @@
 import * as Y from "yjs";
+import { applyTextEdit, captureTextBase, type TextBase } from "./yTextEdit";
 import { IndexeddbPersistence } from "y-indexeddb";
 import { get as idbGet, set as idbSet } from "idb-keyval";
 import { loadAll as loadLegacySnapshot } from "@/lib/notesStore";
@@ -37,7 +38,12 @@ const FOLDER_SCALAR_FIELDS = [
   "name", "color", "emoji", "parentId", "order", "createdAt", "updatedAt",
 ] as const;
 
-/** Common-prefix/suffix diff so unrelated surrounding text keeps stable Yjs positions. */
+/**
+ * Common-prefix/suffix diff so unrelated surrounding text keeps stable Yjs positions.
+ * Tylko dla zapisów **bez** otwartej sesji edycji (import, szablony, duplikaty):
+ * liczy diff od bieżącego stanu CRDT, więc nadpisałby współbieżne zmiany peera.
+ * Edytor idzie przez `beginTextEdit` → `applyTextEdit` (patrz `yTextEdit.ts`).
+ */
 function applyTextDiff(ytext: Y.Text, next: string) {
   const prev = ytext.toString();
   if (prev === next) return;
@@ -196,6 +202,8 @@ function plainFromYFolder(id: string, y: YFolder): Folder {
 
 export function createYjsStore(dbName: string) {
   const doc = new Y.Doc();
+  /** Otwarte sesje edycji: baza, którą widział edytor danej notatki. */
+  const textBases = new Map<string, TextBase>();
   const notesMap = doc.getMap<YNote>("notes");
   const foldersMap = doc.getMap<YFolder>("folders");
   const labelsMap = doc.getMap<boolean>("labels");
@@ -280,10 +288,12 @@ export function createYjsStore(dbName: string) {
     persistImagesCache();
   }
 
-  function applyPatch(y: YNote, updates: Partial<Omit<Note, "id" | "createdAt">>) {
+  function applyPatch(id: string, y: YNote, updates: Partial<Omit<Note, "id" | "createdAt">>) {
     if (updates.content !== undefined) {
       const text = y.get("content");
-      if (text instanceof Y.Text) applyTextDiff(text, updates.content);
+      const base = textBases.get(id);
+      if (text instanceof Y.Text && base) textBases.set(id, applyTextEdit(text, base, updates.content));
+      else if (text instanceof Y.Text) applyTextDiff(text, updates.content);
       else {
         const t = new Y.Text();
         if (updates.content) t.insert(0, updates.content);
@@ -302,7 +312,7 @@ export function createYjsStore(dbName: string) {
     const y = notesMap.get(id);
     if (!y) return;
     if (updates.images !== undefined) setImagesSync(id, updates.images);
-    doc.transact(() => applyPatch(y, updates));
+    doc.transact(() => applyPatch(id, y, updates));
     if (updates.images !== undefined) persistImagesCache();
   }
 
@@ -313,10 +323,28 @@ export function createYjsStore(dbName: string) {
         const y = notesMap.get(id);
         if (!y) continue;
         if (updates.images !== undefined) { setImagesSync(id, updates.images); touchedImages = true; }
-        applyPatch(y, updates);
+        applyPatch(id, y, updates);
       }
     });
     if (touchedImages) persistImagesCache();
+  }
+
+  /**
+   * Edytor otwiera sesję, zanim użytkownik zacznie pisać: zapamiętujemy treść
+   * i tożsamości znaków, które widzi. Zapisy treści tej notatki idą potem
+   * względem tej bazy, więc zmiany peera z czasu edycji nie są kasowane.
+   * Zwraca treść bazy — to ona powinna trafić do pola edycji.
+   */
+  function beginTextEdit(id: string): string | null {
+    const text = notesMap.get(id)?.get("content");
+    if (!(text instanceof Y.Text)) return null;
+    const base = captureTextBase(text);
+    textBases.set(id, base);
+    return base.text;
+  }
+
+  function endTextEdit(id: string): void {
+    textBases.delete(id);
   }
 
   /** Content hashes of a note's images, in order — synced as part of the note
@@ -462,6 +490,7 @@ export function createYjsStore(dbName: string) {
     addLabel, removeLabelEverywhere, renameLabelEverywhere,
     replaceAll, resetForTests,
     getImageHashes, getLocalImages, setImagesLocal,
+    beginTextEdit, endTextEdit,
   };
 }
 

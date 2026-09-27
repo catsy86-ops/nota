@@ -73,6 +73,33 @@ describe("yjsStore — field-level CRDT merge", () => {
       expect(merged.content).toContain("i chleb");
     }
   });
+
+  it("zapis z otwartej sesji edycji nie kasuje tekstu dopisanego przez peera w jej trakcie (P0 #1)", () => {
+    const a = createYjsStore(`edit-session-a-${crypto.randomUUID()}`);
+    const b = createYjsStore(`edit-session-b-${crypto.randomUUID()}`);
+    a.upsertNote(makeNote({ id: "n1", content: "Notatki ze spotkania." }));
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+
+    // A otwiera edytor, B w tym czasie dopisuje zdanie, które dociera do A.
+    const draftStart = a.beginTextEdit("n1");
+    expect(draftStart).toBe("Notatki ze spotkania.");
+    const peer = b.projectNotes()[0].content + " Ustalenie od peera.";
+    b.patchNote("n1", { content: peer });
+    Y.applyUpdate(a.doc, Y.encodeStateAsUpdate(b.doc));
+
+    // A zapisuje szkic, który zdania peera nie zawiera — dwa razy (autosave).
+    a.patchNote("n1", { content: "Notatki ze spotkania. Moja uwaga." });
+    a.patchNote("n1", { content: "Notatki ze spotkania. Moja uwaga, poprawiona." });
+    a.endTextEdit("n1");
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+
+    for (const store of [a, b]) {
+      const content = store.projectNotes()[0].content;
+      expect(content).toContain("Ustalenie od peera.");
+      expect(content).toContain("Moja uwaga, poprawiona.");
+      expect(content.match(/Moja uwaga/g)).toHaveLength(1);
+    }
+  });
 });
 
 describe("yjsStore — checklist item-level merge", () => {

@@ -38,6 +38,8 @@ export default tseslint.config(
     files: [
       "src/lib/yjsStore.ts",
       "src/lib/yjsStore.test.ts",
+      "src/lib/yTextEdit.ts",
+      "src/lib/yTextEdit.test.ts",
       "src/lib/yjsSync.ts",
       "src/lib/yjsSync.test.ts",
       "src/lib/imageSync.ts",

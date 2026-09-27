@@ -239,3 +239,16 @@ export function useNotes() {
 
   return { notes: activeNotes, archivedNotes, trashedNotes, allLabels, folders, addNote, updateNote, deleteNote, trashNote, restoreFromTrash, emptyTrash, togglePin, duplicateNote, archiveNote, unarchiveNote, addLabel, removeLabel, renameLabel, importNotes, reorderNotes, addFolder, updateFolder, deleteFolder, moveNoteToFolder, bulkTrash, bulkArchive, bulkSetColor, bulkRestore };
 }
+
+/**
+ * Sesja edycji treści notatki (patrz `yjsStore.beginTextEdit`). Zwraca treść,
+ * od której edytor ma zacząć — zapisy w trakcie sesji nie nadpiszą tego, co
+ * w międzyczasie dopisał inny peer.
+ */
+export function beginNoteTextEdit(id: string): string | null {
+  return yjsStore.beginTextEdit(id);
+}
+
+export function endNoteTextEdit(id: string): void {
+  yjsStore.endTextEdit(id);
+}
