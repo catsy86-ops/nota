@@ -15,7 +15,7 @@ interface Props {
 }
 
 const LAYOUTS: { v: Layout; label: string; icon: typeof LayoutGrid }[] = [
-  { v: "masonry", label: "Masonry", icon: LayoutGrid },
+  { v: "masonry", label: "Mozaika", icon: LayoutGrid },
   { v: "grid", label: "Siatka", icon: Columns2 },
   { v: "list", label: "Lista", icon: List },
 ];

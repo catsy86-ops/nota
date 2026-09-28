@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Tag, Bell, ImagePlus, X, PenTool, ListChecks } from "lucide-react";
-import { format } from "date-fns";
-import { pl } from "date-fns/locale";
+import { formatReminderShort } from "@/lib/reminderTime";
 import { ColorPicker } from "./ColorPicker";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -195,14 +194,18 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
             {reminder && (
               <div className="flex items-center gap-1 text-xs text-primary">
                 <Bell className="w-3 h-3" />
-                {format(new Date(reminder), "d MMM, HH:mm", { locale: pl })}
+                {formatReminderShort(reminder)}
                 <button onClick={() => setReminder(null)} aria-label="Usuń przypomnienie" className="ml-1 text-muted-foreground hover:text-foreground">×</button>
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-1 gap-2">
+            {/* Kolory w jednym rzędzie (na wąskim ekranie przewijanym), pod nimi narzędzia i „Zamknij”.
+                W jednym wierszu z narzędziami nie mieszczą się nawet na desktopie. */}
+            <div className="flex flex-col gap-2 pt-1">
+              <div className="-mx-4 px-4 py-1 overflow-x-auto">
+                <ColorPicker selected={color} onSelect={setColor} nowrap />
+              </div>
               <div className="flex items-center gap-1 flex-wrap flex-1">
-                <ColorPicker selected={color} onSelect={setColor} />
                 {/* Image upload */}
                 <motion.button whileTap={{ scale: 0.9 }}
                   onClick={() => fileInputRef.current?.click()}
@@ -262,11 +265,11 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                 </Popover>
                 {/* Priority picker */}
                 <PriorityPicker priority={priority} onSet={setPriority} />
+                <motion.button whileTap={{ scale: 0.95 }} onClick={handleClose}
+                  className="ml-auto px-4 py-1.5 text-sm font-medium font-display text-primary hover:bg-primary/10 rounded-lg transition-colors shrink-0">
+                  Zamknij
+                </motion.button>
               </div>
-              <motion.button whileTap={{ scale: 0.95 }} onClick={handleClose}
-                className="px-4 py-1.5 text-sm font-medium font-display text-primary hover:bg-primary/10 rounded-lg transition-colors shrink-0">
-                Zamknij
-              </motion.button>
             </div>
           </motion.div>
         )}

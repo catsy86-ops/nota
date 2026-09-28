@@ -61,7 +61,7 @@ function StoragePersistenceStatus() {
         </p>
         {!info.persisted && (
           <Button size="sm" variant="outline" onClick={handleRequest} disabled={requesting} className="w-full">
-            Poproś przeglądarkę o trwały storage
+            Poproś przeglądarkę o trwałe przechowywanie
           </Button>
         )}
       </div>
@@ -270,7 +270,7 @@ export function BackupSettings() {
         <p className="text-xs text-muted-foreground mt-1.5">
           {(() => {
             const d = daysSinceBackup();
-            if (d === null) return "Jeszcze nie zrobiłeś backupu.";
+            if (d === null) return "Nie ma jeszcze backupu.";
             return `Ostatni backup: ${d === 0 ? "dziś" : `${d} dni temu`}.`;
           })()}
         </p>

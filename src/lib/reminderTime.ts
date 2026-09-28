@@ -1,3 +1,5 @@
+import { addDays, format, isSameDay } from "date-fns";
+import { pl } from "date-fns/locale";
 /**
  * Składanie terminu przypomnienia z daty i godziny „HH:mm”.
  *
@@ -38,4 +40,14 @@ export function isPastReminder(timestamp: number | null, now: number = Date.now(
 export function toTimeInputValue(timestamp: number): string {
   const d = new Date(timestamp);
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+/** Krótki podpis terminu: „dziś, 19:10”, „jutro, 08:00”, dalej „3 paź, 19:10”. */
+export function formatReminderShort(timestamp: number, now: Date = new Date()): string {
+  const d = new Date(timestamp);
+  const time = format(d, "HH:mm");
+  if (isSameDay(d, now)) return `dziś, ${time}`;
+  if (isSameDay(d, addDays(now, 1))) return `jutro, ${time}`;
+  if (isSameDay(d, addDays(now, -1))) return `wczoraj, ${time}`;
+  return format(d, "d MMM, HH:mm", { locale: pl });
 }

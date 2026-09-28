@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { PanelLeftClose, PanelLeftOpen, Moon, Sun, Download, FileJson, FileText, Upload, FolderOpen, Tag, Calendar, CalendarRange } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Moon, Sun, Download, FileJson, FileText, Upload, FolderOpen, Tag } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SearchBar } from "@/components/SearchBar";
@@ -70,22 +70,13 @@ export function AppHeader({
             <h1 className="text-lg font-display font-extrabold leading-tight tracking-tight text-foreground">
               {view === "notes" && "Notatki"}
               {view === "today" && (
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  Dziś
-                </span>
+"Dziś"
               )}
               {view === "week" && (
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4 text-primary" />
-                  Ten tydzień
-                </span>
+"Ten tydzień"
               )}
               {view === "calendar" && (
-                <span className="flex items-center gap-1.5">
-                  <CalendarRange className="w-4 h-4 text-primary" />
-                  Kalendarz
-                </span>
+"Kalendarz"
               )}
               {view === "archive" && "Archiwum"}
               {view === "reminders" && "Przypomnienia"}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { composeReminderTimestamp, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME } from "./reminderTime";
+import { composeReminderTimestamp, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME, formatReminderShort } from "./reminderTime";
 
 describe("composeReminderTimestamp", () => {
   it("skleja dzień z godziną, zerując sekundy", () => {
@@ -66,5 +66,15 @@ describe("toTimeInputValue", () => {
     const date = new Date(2026, 2, 14);
     const ts = composeReminderTimestamp(date, "16:45") as number;
     expect(toTimeInputValue(ts)).toBe("16:45");
+  });
+});
+
+describe("formatReminderShort", () => {
+  const now = new Date(2026, 8, 28, 12, 0);
+  it("dziś / jutro / wczoraj z godziną, dalej data", () => {
+    expect(formatReminderShort(new Date(2026, 8, 28, 19, 10).getTime(), now)).toBe("dziś, 19:10");
+    expect(formatReminderShort(new Date(2026, 8, 29, 8, 0).getTime(), now)).toBe("jutro, 08:00");
+    expect(formatReminderShort(new Date(2026, 8, 27, 8, 0).getTime(), now)).toBe("wczoraj, 08:00");
+    expect(formatReminderShort(new Date(2026, 9, 3, 19, 10).getTime(), now)).toBe("3 paź, 19:10");
   });
 });

@@ -1,5 +1,4 @@
 import { Sun, Moon, Monitor, Zap, Accessibility } from "lucide-react";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useViewPrefs, setViewPref, resetViewPrefs, type Density, type Layout } from "@/lib/viewPrefs";
 import { useEffectsSettings } from "@/lib/effectsSettings";
@@ -33,7 +32,7 @@ export function AppearanceSettings() {
   return (
     <div className="space-y-4">
       <Section title="Motyw">
-        <div className="relative grid grid-cols-3 gap-2 p-1 rounded-2xl bg-muted/40 border border-border/60">
+        <div className="grid grid-cols-3 gap-2">
           {themeOptions.map((opt) => {
             const active = themeMode === opt.value;
             const Icon = opt.Icon;
@@ -41,21 +40,16 @@ export function AppearanceSettings() {
               <button
                 key={opt.value}
                 onClick={() => setThemeMode(opt.value)}
-                className={cn(
-                  "relative flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl text-xs font-semibold transition-colors",
-                  active ? "text-primary" : "text-muted-foreground hover:text-foreground"
-                )}
                 aria-pressed={active}
-              >
-                {active && (
-                  <motion.span
-                    layoutId="theme-pill"
-                    className="absolute inset-0 rounded-xl bg-background shadow-sm border border-border/60"
-                    transition={{ type: "spring", stiffness: 500, damping: 35 }}
-                  />
+                className={cn(
+                  "flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border text-xs font-semibold transition-colors",
+                  active
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
                 )}
-                <Icon className="w-4 h-4 relative z-10" />
-                <span className="relative z-10">{opt.label}</span>
+              >
+                <Icon className="w-4 h-4" />
+                <span>{opt.label}</span>
               </button>
             );
           })}
@@ -143,7 +137,7 @@ export function AppearanceSettings() {
                 "p-3 rounded-xl border text-xs font-medium transition-all capitalize",
                 prefs.layout === l ? "border-primary bg-primary/10 text-primary" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
               )}
-            >{l === "masonry" ? "Masonry" : l === "grid" ? "Siatka" : "Lista"}</button>
+            >{l === "masonry" ? "Mozaika" : l === "grid" ? "Siatka" : "Lista"}</button>
           ))}
         </div>
       </Section>

@@ -14,7 +14,6 @@ interface BottomNavProps {
   onOpenSettings: () => void;
   onOpenActions?: () => void;
   trashCount?: number;
-  archiveCount?: number;
   dark?: boolean;
   onToggleTheme?: () => void;
 }
@@ -28,7 +27,7 @@ const slotsRight = [
   { key: "archive" as View, label: "Archiwum", Icon: Archive },
 ] as const;
 
-export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, archiveCount = 0, dark = false, onToggleTheme }: BottomNavProps) {
+export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, dark = false, onToggleTheme }: BottomNavProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const isMoreActive = ["trash", "reminders", "calendar", "folder", "label"].includes(view);
 
@@ -70,7 +69,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             </li>
 
             {slotsRight.map(({ key, label, Icon }) => (
-              <NavItem key={key} active={view === key} label={label} onClick={() => onGo(key)} badge={key === "archive" ? archiveCount : undefined}>
+              <NavItem key={key} active={view === key} label={label} onClick={() => onGo(key)}>
                 <Icon className="w-5 h-5" />
               </NavItem>
             ))}

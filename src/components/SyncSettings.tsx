@@ -133,7 +133,8 @@ export function SyncSettings({ prefillCode }: Props) {
             value={joinInput}
             onChange={(e) => setJoinInput(e.target.value.toUpperCase())}
             placeholder="Kod z innego urządzenia"
-            className="font-mono tracking-widest"
+            // Rozstrzelony monospace tylko dla wpisanego kodu — placeholder w nim się nie mieścił.
+            className="font-mono tracking-widest placeholder:font-sans placeholder:tracking-normal"
             // 12 znaków, a przepisywane z ekranu bywają ze spacjami między grupami.
             maxLength={16}
           />
@@ -141,19 +142,14 @@ export function SyncSettings({ prefillCode }: Props) {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-1">
-        <p className="font-semibold text-foreground">💡 Jak to działa</p>
-        <p>
-          Synchronizacja łączy się bezpośrednio między urządzeniami (peer-to-peer) — nie ma żadnej
-          chmury ani konta. Publiczne serwery Yjs służą tylko do nawiązania połączenia, treść
-          notatek nigdy przez nie nie przechodzi. Oba urządzenia muszą być online w tym samym
-          momencie, żeby zmiany się wymieniły — jeśli jedno jest offline, zsynchronizuje się przy
-          najbliższej okazji, gdy oba znów będą online razem. Pierwsza synchronizacja łączy
-          notatki z obu urządzeń, nic nie zostanie skasowane. Obrazy w notatkach też się
-          synchronizują, ale osobnym kanałem — nowo dodany obrazek trafia na drugie urządzenie
-          tylko gdy oba są online jednocześnie w chwili dodania (albo przy najbliższym ponownym
-          połączeniu).
-        </p>
+      <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-2">
+        <p className="font-semibold text-foreground">Jak to działa</p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>Urządzenia łączą się bezpośrednio, bez chmury i konta. Publiczne serwery pomagają tylko nawiązać połączenie — treść notatek przez nie nie przechodzi.</li>
+          <li>Zmiany wymieniają się, gdy oba urządzenia są online w tym samym czasie. Jeśli jedno jest offline, dogoni przy najbliższym wspólnym połączeniu.</li>
+          <li>Pierwsza synchronizacja łączy notatki z obu urządzeń — nic nie jest kasowane.</li>
+          <li>Obrazy idą osobnym kanałem: nowy obrazek trafia na drugie urządzenie, gdy oba są online przy dodaniu albo przy kolejnym połączeniu.</li>
+        </ul>
       </div>
     </div>
   );

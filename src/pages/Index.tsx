@@ -642,7 +642,6 @@ const Index = () => {
       onOpenSettings={() => setSettingsOpen(true)}
       onOpenActions={() => setActionsOpen(true)}
       trashCount={trashedNotes.length}
-      archiveCount={archivedNotes.length}
       dark={dark}
       onToggleTheme={toggleTheme}
     />

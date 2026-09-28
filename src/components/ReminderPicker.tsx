@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Bell, Repeat, X } from "lucide-react";
-import { format } from "date-fns";
-import { pl } from "date-fns/locale";
+import { formatReminderShort } from "@/lib/reminderTime";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
@@ -125,7 +124,7 @@ export function ReminderBadge({ reminder, reminderRepeat }: { reminder: number |
       isPast ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
     )}>
       <Bell className="w-2.5 h-2.5" />
-      {format(new Date(reminder), "d MMM, HH:mm", { locale: pl })}
+      {formatReminderShort(reminder)}
       {reminderRepeat && reminderRepeat !== "none" && <Repeat className="w-2.5 h-2.5" />}
     </div>
   );

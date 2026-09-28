@@ -136,7 +136,8 @@ export function GeneralSettings() {
           const enabled = settings[key];
           const id = `effect-${key}`;
           return (
-            <div key={key} className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
+            // Przechył za kursorem nic nie robi na dotyku — tam go nie pokazujemy.
+            <div key={key} className={cn("flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/30 px-4 py-3", key === "cardTilt" && "[@media(pointer:coarse)]:hidden")}>
               <div className="flex items-start gap-3 min-w-0">
                 <span className="text-2xl leading-none shrink-0" aria-hidden>{meta.emoji}</span>
                 <div className="min-w-0">
@@ -157,7 +158,8 @@ export function GeneralSettings() {
         })}
       </div>
 
-      <div className="pt-2 space-y-2">
+      {/* Skróty klawiszowe są bezużyteczne na telefonie. */}
+      <div className="pt-2 space-y-2 [@media(pointer:coarse)]:hidden">
         <p className="text-xs text-muted-foreground mb-2">Lista skrótów dostępnych w aplikacji:</p>
         {SHORTCUTS.map((s) => (
           <div key={s.keys} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 px-4 py-2.5">
