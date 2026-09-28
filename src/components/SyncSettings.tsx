@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
 import {
-  useSyncState, startPairing, joinWithCode, pauseSync, resumeSync, forgetPairing,
+  useSyncState, startPairing, joinWithCode, pauseSync, resumeSync, forgetPairing, formatCode,
 } from "@/lib/yjsSync";
 
 interface Props {
@@ -115,7 +115,7 @@ export function SyncSettings({ prefillCode }: Props) {
             </div>
           </div>
           <div className="flex items-center justify-center gap-2">
-            <code className="text-lg font-mono font-bold tracking-widest">{syncState.code}</code>
+            <code className="text-lg font-mono font-bold tracking-widest">{formatCode(syncState.code)}</code>
             <Button type="button" size="sm" variant="ghost" onClick={handleCopy} className="h-7 px-2">
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             </Button>
@@ -134,7 +134,8 @@ export function SyncSettings({ prefillCode }: Props) {
             onChange={(e) => setJoinInput(e.target.value.toUpperCase())}
             placeholder="Kod z innego urządzenia"
             className="font-mono tracking-widest"
-            maxLength={8}
+            // 12 znaków, a przepisywane z ekranu bywają ze spacjami między grupami.
+            maxLength={16}
           />
           <Button type="button" onClick={handleJoin} disabled={!joinInput.trim()}>Dołącz</Button>
         </div>

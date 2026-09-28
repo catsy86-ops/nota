@@ -1,7 +1,7 @@
 import * as Y from "yjs";
 import type { WebrtcProvider } from "y-webrtc";
 import { yjsStore } from "@/lib/yjsStore";
-import { roomNameFor } from "@/lib/yjsSync";
+import { roomNamesFor } from "@/lib/yjsSync";
 
 /**
  * P2P image sync (follow-up to yjsSync.ts's Phase 2 text/metadata sync — see
@@ -33,7 +33,7 @@ import { roomNameFor } from "@/lib/yjsSync";
  */
 
 let imagesDoc: Y.Doc | null = null;
-let provider: WebrtcProvider | null = null;
+let providers: WebrtcProvider[] = [];
 let blobs: Y.Map<string> | null = null;
 let unobserveBlobs: (() => void) | null = null;
 let unobserveNotes: (() => void) | null = null;
@@ -97,14 +97,18 @@ export function startImageSync(code: string): void {
 
   // Same eager-bundle concern as yjsSync.ts's connect() — defer y-webrtc
   // itself until a sync session is actually starting.
-  import("y-webrtc").then(({ WebrtcProvider }) => {
+  // Te same pokoje co tekst (nowy + stary w okresie przejściowym), z sufiksem „-img”.
+  Promise.all([import("y-webrtc"), roomNamesFor(code)]).then(([{ WebrtcProvider }, rooms]) => {
     if (token !== startToken) return; // superseded by a later start/stop
-    provider = new WebrtcProvider(`${roomNameFor(code)}-img`, doc, { password: code });
-    provider.on("peers", () => {
-      // A peer (re)joined — resend our full local set so it can backfill
-      // images it missed while offline, and check if it has ones we're missing.
-      mirrorLocalImages();
-      reconcileMissingImages();
+    providers = rooms.map((room) => {
+      const p = new WebrtcProvider(`${room}-img`, doc, { password: code });
+      p.on("peers", () => {
+        // A peer (re)joined — resend our full local set so it can backfill
+        // images it missed while offline, and check if it has ones we're missing.
+        mirrorLocalImages();
+        reconcileMissingImages();
+      });
+      return p;
     });
   });
 }
@@ -115,8 +119,8 @@ export function stopImageSync(): void {
   unobserveBlobs = null;
   unobserveNotes?.();
   unobserveNotes = null;
-  provider?.destroy();
-  provider = null;
+  providers.forEach((p) => p.destroy());
+  providers = [];
   imagesDoc?.destroy();
   imagesDoc = null;
   blobs = null;

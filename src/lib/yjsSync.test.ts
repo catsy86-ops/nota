@@ -37,9 +37,12 @@ vi.mock("y-webrtc", () => ({
   WebrtcProvider: MockProvider,
 }));
 
-// connect() opens two providers per call: the main text/metadata doc, and
-// (via imageSync.ts) a separate transport for image blobs, room name suffixed
-// "-img". Filter to the main one so provider-count assertions stay meaningful.
+// connect() opens providers for the main text/metadata doc and (via imageSync.ts)
+// a separate transport for image blobs, room name suffixed "-img". During the
+// transition period each goes to TWO rooms: the new SHA-256 one ("kaczy2-…")
+// and the legacy FNV one ("kaczy-…"). Filter to the main ones.
+const ROOMS_PER_CONNECT = 2;
+
 function mainProviders(): MockProvider[] {
   return providerInstances.filter((p) => !p.roomName.endsWith("-img"));
 }
@@ -47,7 +50,7 @@ function mainProviders(): MockProvider[] {
 // connect()/startImageSync() now load y-webrtc via dynamic import() so it's
 // out of the eager main bundle — even mocked, that's still a real Promise
 // tick before the provider exists. Wait for it instead of asserting synchronously.
-async function waitForMainProvider(countAtLeast = 1): Promise<void> {
+async function waitForMainProvider(countAtLeast = ROOMS_PER_CONNECT): Promise<void> {
   await vi.waitFor(() => {
     if (mainProviders().length < countAtLeast) throw new Error("provider not connected yet");
   });
@@ -64,8 +67,8 @@ describe("yjsSync", () => {
     const { generateCode } = await import("./yjsSync");
     for (let i = 0; i < 20; i++) {
       const code = generateCode();
-      expect(code).toHaveLength(8);
-      expect(code).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{8}$/);
+      expect(code).toHaveLength(12);
+      expect(code).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{12}$/);
     }
   });
 
@@ -79,15 +82,32 @@ describe("yjsSync", () => {
     expect(a).not.toContain("ABCDEFGH");
   });
 
-  it("startPairing generates a code, enables sync and connects", async () => {
-    const { startPairing, getSyncState } = await import("./yjsSync");
+  it("derives the new SHA-256 room name: deterministic, 128-bit, without the code", async () => {
+    const { roomNameV2For, roomNameFor } = await import("./yjsSync");
+    const a = await roomNameV2For("ABCDEFGHJKMN");
+    expect(a).toBe(await roomNameV2For("ABCDEFGHJKMN"));
+    expect(a).not.toBe(await roomNameV2For("ABCDEFGHJKMP"));
+    expect(a).toMatch(/^kaczy2-[0-9a-f]{32}$/);
+    expect(a).not.toContain("ABCDEFGHJKMN");
+    expect(a).not.toBe(roomNameFor("ABCDEFGHJKMN"));
+  });
+
+  it("normalizes and groups codes for display", async () => {
+    const { normalizeCode, formatCode } = await import("./yjsSync");
+    expect(normalizeCode(" abcd-efgh jkmn ")).toBe("ABCDEFGHJKMN");
+    expect(formatCode("ABCDEFGHJKMN")).toBe("ABCD EFGH JKMN");
+    expect(formatCode("ABCDEFGH")).toBe("ABCD EFGH");
+  });
+
+  it("startPairing connects to the new room and, during the transition, the legacy one", async () => {
+    const { startPairing, getSyncState, roomNameFor, roomNameV2For } = await import("./yjsSync");
     const code = startPairing();
     expect(getSyncState().code).toBe(code);
     expect(getSyncState().status).toBe("connecting");
 
     await waitForMainProvider();
-    expect(mainProviders()).toHaveLength(1);
-    expect(mainProviders()[0].opts).toEqual({ password: code });
+    expect(mainProviders().map((p) => p.roomName)).toEqual([await roomNameV2For(code), roomNameFor(code)]);
+    for (const p of mainProviders()) expect(p.opts).toEqual({ password: code });
   });
 
   it("also starts the separate image transport, sharing the same pairing code", async () => {
@@ -99,57 +119,71 @@ describe("yjsSync", () => {
         throw new Error("image provider not connected yet");
       }
     });
+    await vi.waitFor(() => {
+      if (providerInstances.filter((p) => p.roomName.endsWith("-img")).length < ROOMS_PER_CONNECT) {
+        throw new Error("image providers not connected yet");
+      }
+    });
     const imageProviders = providerInstances.filter((p) => p.roomName.endsWith("-img"));
-    expect(imageProviders).toHaveLength(1);
-    expect(imageProviders[0].opts).toEqual({ password: code });
+    expect(imageProviders).toHaveLength(ROOMS_PER_CONNECT);
+    expect(imageProviders.map((p) => p.roomName.replace(/-img$/, ""))).toEqual(mainProviders().map((p) => p.roomName));
+    for (const p of imageProviders) expect(p.opts).toEqual({ password: code });
   });
 
-  it("reflects connected status and peer count from provider events", async () => {
+  it("is connected when any room is, and counts devices as the max over rooms", async () => {
     const { startPairing, getSyncState } = await import("./yjsSync");
     startPairing();
     await waitForMainProvider();
-    const provider = mainProviders()[0];
+    const [v2, legacy] = mainProviders();
 
-    provider.emit("status", { connected: true });
+    legacy.emit("status", { connected: true });
     expect(getSyncState().status).toBe("connected");
+    v2.emit("status", { connected: true });
+    legacy.emit("status", { connected: false });
+    expect(getSyncState().status).toBe("connected");
+    v2.emit("status", { connected: false });
+    expect(getSyncState().status).toBe("connecting");
 
-    provider.emit("peers", { webrtcPeers: ["a"], bcPeers: ["b", "c"] });
-    expect(getSyncState().peerCount).toBe(3);
+    // Nowe urządzenie jest w obu pokojach, stare tylko w starym: razem 2, nie 3.
+    v2.emit("peers", { webrtcPeers: ["new"], bcPeers: [] });
+    legacy.emit("peers", { webrtcPeers: ["new", "old"], bcPeers: [] });
+    expect(getSyncState().peerCount).toBe(2);
   });
 
-  it("joinWithCode normalizes casing/whitespace", async () => {
+  it("joinWithCode normalizes casing, whitespace and group separators", async () => {
     const { joinWithCode, getSyncState } = await import("./yjsSync");
-    const code = joinWithCode("  abcdefgh  ");
-    expect(code).toBe("ABCDEFGH");
-    expect(getSyncState().code).toBe("ABCDEFGH");
+    expect(joinWithCode("  abcdefgh  ")).toBe("ABCDEFGH");
+    const code = joinWithCode("abcd efgh-jkmn");
+    expect(code).toBe("ABCDEFGHJKMN");
+    expect(getSyncState().code).toBe("ABCDEFGHJKMN");
   });
 
   it("pauseSync disconnects both providers but keeps the code; resumeSync reconnects to the same group", async () => {
     const { startPairing, pauseSync, resumeSync, getSyncState } = await import("./yjsSync");
     const code = startPairing();
     await waitForMainProvider();
-    const [first, firstImage] = providerInstances;
+    await vi.waitFor(() => { if (providerInstances.length < 2 * ROOMS_PER_CONNECT) throw new Error("not all up"); });
+    const firstRound = providerInstances.slice();
 
     pauseSync();
-    expect(first.destroyed).toBe(true);
-    expect(firstImage.destroyed).toBe(true);
+    for (const p of firstRound) expect(p.destroyed).toBe(true);
     expect(getSyncState().status).toBe("disabled");
     expect(getSyncState().code).toBe(code); // remembered
 
     resumeSync();
-    await waitForMainProvider(2);
-    expect(mainProviders()).toHaveLength(2);
-    expect(mainProviders()[1].opts).toEqual({ password: code });
+    await waitForMainProvider(2 * ROOMS_PER_CONNECT);
+    const resumed = mainProviders().slice(ROOMS_PER_CONNECT);
+    expect(resumed).toHaveLength(ROOMS_PER_CONNECT);
+    for (const p of resumed) expect(p.opts).toEqual({ password: code });
   });
 
   it("forgetPairing disconnects and clears the code entirely", async () => {
     const { startPairing, forgetPairing, getSyncState } = await import("./yjsSync");
     startPairing();
     await waitForMainProvider();
-    const provider = mainProviders()[0];
 
     forgetPairing();
-    expect(provider.destroyed).toBe(true);
+    for (const p of mainProviders()) expect(p.destroyed).toBe(true);
     expect(getSyncState().code).toBeNull();
     expect(getSyncState().status).toBe("disabled");
   });
@@ -165,8 +199,8 @@ describe("yjsSync", () => {
     second.initSync();
 
     await waitForMainProvider();
-    expect(mainProviders()).toHaveLength(1);
-    expect(mainProviders()[0].opts).toEqual({ password: code });
+    expect(mainProviders()).toHaveLength(ROOMS_PER_CONNECT);
+    for (const p of mainProviders()) expect(p.opts).toEqual({ password: code });
     expect(second.getSyncState().code).toBe(code);
   });
 

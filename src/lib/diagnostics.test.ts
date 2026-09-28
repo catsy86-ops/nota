@@ -11,6 +11,7 @@ vi.mock("@/lib/yjsSync", () => ({
     status: "connecting", peerCount: 0, code: PAIRING_CODE, lastSyncedAt: null,
     lastError: `room for ${PAIRING_CODE} unreachable`,
   }),
+  formatCode: (code: string) => code.match(/.{1,4}/g)!.join(" "),
 }));
 
 import { collectDiagReport } from "@/lib/diagnosticsReport";
@@ -54,6 +55,7 @@ describe("raport diagnostyczny", () => {
     yjsStore.upsertNote(makeNote({ id: "b", archived: true }));
     yjsStore.upsertNote(makeNote({ id: "c", trashed: true, trashedAt: 1 }));
     logDiag("warn", "yjsSync", `connect ${PAIRING_CODE} failed`);
+    logDiag("info", "sync", "użytkownik wpisał QWER TY23"); // postać z Ustawień (grupy po 4)
 
     const report = await collectDiagReport();
 
@@ -63,6 +65,7 @@ describe("raport diagnostyczny", () => {
     expect(report).not.toContain("hasło do sejfu");
     expect(report).not.toContain("pierścionek");
     expect(report).not.toContain(PAIRING_CODE);
+    expect(report).not.toContain("QWER TY23");
     expect(report).toContain("[kod]");
   });
 });

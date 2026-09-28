@@ -257,5 +257,7 @@ pozycji (pliki, decyzje, testy). Poniżej tylko mapa: co powstało i gdzie szuka
 Otwarta jest **Runda 8** (roadmap: „Stan Rundy 8”): agenda przypomnień (Task 4 wyżej) i
 **notatka dnia** (chip „Notatka dnia” zamiast szablonu „Dziennik”, pole `dailyDate`,
 `src/lib/dailyNote.ts` — 2026-09-28) oraz **wikilinki** (podpowiedzi tytułów po `[[` przy
-karetce, „Linkują tu:” w karcie — `useWikiAutocomplete`, `buildWikiIndex`) są zrobione.
-Został **hardening parowania** (SHA-256 + 12-znakowy kod).
+karetce, „Linkują tu:” w karcie — `useWikiAutocomplete`, `buildWikiIndex`) i **hardening
+parowania** (pokój z SHA-256, 12-znakowe kody, okres przejściowy z dołączaniem także do
+starego pokoju) są zrobione — **Runda 8 zamknięta**. Następna w kolejce roadmapy jest
+runda „na końcu”: content-addressed store obrazów i upraszczanie.

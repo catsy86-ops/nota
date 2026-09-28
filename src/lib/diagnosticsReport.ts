@@ -1,5 +1,5 @@
 import { yjsStore } from "@/lib/yjsStore";
-import { getSyncState } from "@/lib/yjsSync";
+import { getSyncState, formatCode } from "@/lib/yjsSync";
 import { buildDiagReport, getDiagEntries, type DiagSnapshot } from "@/lib/diagnostics";
 
 declare const __APP_BUILD__: string | undefined;
@@ -44,7 +44,8 @@ export async function collectDiagReport(): Promise<string> {
       lastError: sync.lastError,
     },
   };
-  return buildDiagReport(snapshot, getDiagEntries(), sync.code ? [sync.code] : []);
+  // Kod także w postaci z Ustawień (grupy po 4) — gdyby trafił do dziennika przepisany z ekranu.
+  return buildDiagReport(snapshot, getDiagEntries(), sync.code ? [sync.code, formatCode(sync.code)] : []);
 }
 
 /** Zbiera raport i pobiera go jako plik .txt. Nic nie wysyła. */
