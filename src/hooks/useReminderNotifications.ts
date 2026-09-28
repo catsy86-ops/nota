@@ -1,4 +1,6 @@
-import { useEffect, useRef } from "react";
+import { createElement, useEffect, useRef } from "react";
+import { ReminderDueToast } from "@/components/ReminderDueToast";
+import { snoozeTimes } from "@/lib/reminderAgenda";
 import { notePath } from "@/lib/viewRoute";
 import { toast } from "sonner";
 import type { Note } from "./useNotes";
@@ -7,9 +9,12 @@ import { loadFired, saveFired, reconcileFired } from "@/lib/firedReminders";
 
 export function useReminderNotifications(
   notes: Note[],
-  onReminderFired: (id: string, nextReminder: number | null) => void
+  onReminderFired: (id: string, nextReminder: number | null) => void,
+  onOpen?: (id: string) => void,
 ) {
   const firedRef = useRef(loadFired());
+  const onOpenRef = useRef(onOpen);
+  onOpenRef.current = onOpen;
 
   useEffect(() => {
     function check() {
@@ -35,16 +40,20 @@ export function useReminderNotifications(
             saveFired(fired);
           }
 
-          toast(`⏰ ${note.title || "Przypomnienie"}`, {
-            description: note.content ? note.content.slice(0, 80) : "Czas na tę notatkę!",
-            duration: 10000,
-            action: {
-              label: "OK",
-              // For repeating reminders the next occurrence is already
-              // scheduled below — OK here should just dismiss the toast.
-              onClick: repeat === "none" ? () => onReminderFired(note.id, null) : () => {},
-            },
-          });
+          const times = snoozeTimes(now);
+          const onDone = () => onReminderFired(note.id, null);
+          toast.custom((id) => createElement(ReminderDueToast, {
+            toastId: id,
+            title: note.title || "Przypomnienie",
+            description: note.content ? note.content.slice(0, 120) : "Czas na tę notatkę!",
+            canSnooze: repeat === "none",
+            // Odłożenie przesuwa termin w przyszłość, więc `reconcileFired`
+            // zdejmie wpis „już odpalone” i przypomnienie wystrzeli ponownie.
+            onSnooze10: () => onReminderFired(note.id, times.in10min),
+            onSnoozeTomorrow: () => onReminderFired(note.id, times.tomorrow9),
+            onDone,
+            onOpen: () => onOpenRef.current?.(note.id),
+          }), { duration: 30000 });
 
           if ("Notification" in window && Notification.permission === "granted") {
             const title = note.title || "Notatnik — Przypomnienie";

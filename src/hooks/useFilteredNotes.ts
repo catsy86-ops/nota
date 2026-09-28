@@ -92,9 +92,15 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
       return true;
     });
 
-    const displayNotes = sortNotes(filteredByPrefs, prefs);
-    const pinned = view === "trash" ? [] : displayNotes.filter((n) => n.pinned);
-    const others = view === "trash" ? displayNotes : displayNotes.filter((n) => !n.pinned);
+    // Przypomnienia to agenda: po terminie, bez podziału na przypięte
+    // (grupy Zaległe/Dziś/… układa `groupReminders` w widoku).
+    const agenda = view === "reminders";
+    const displayNotes = agenda
+      ? [...filteredByPrefs].sort((a, b) => (a.reminder ?? 0) - (b.reminder ?? 0))
+      : sortNotes(filteredByPrefs, prefs);
+    const flat = view === "trash" || agenda;
+    const pinned = flat ? [] : displayNotes.filter((n) => n.pinned);
+    const others = flat ? displayNotes : displayNotes.filter((n) => !n.pinned);
 
     // Wyszukiwanie przeszukuje pulę bieżącego widoku — ale gdy trafienia są
     // gdzie indziej, mówimy o tym (i dajemy przejście), zamiast udawać, że nic nie ma.

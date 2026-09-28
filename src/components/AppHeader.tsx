@@ -164,7 +164,7 @@ export function AppHeader({
           {/* W kalendarzu układ, sortowanie i filtry notatek nie robią nic —
               kalendarz rysuje własną projekcję terminów. Poza tym, że kontrolki
               tam kłamią, na 320 px rozpychały nagłówek w poziomie. */}
-          {view !== "calendar" && <ViewControls allLabels={allLabels} />}
+          {view !== "calendar" && <ViewControls allLabels={allLabels} sortable={view !== "reminders"} />}
         </div>
       </div>
     </header>

@@ -12,6 +12,8 @@ import { useViewPrefs } from "@/lib/viewPrefs";
 import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
 import { useViewRoute } from "@/hooks/useViewRoute";
 import { parseViewRoute } from "@/lib/viewRoute";
+import { groupReminders } from "@/lib/reminderAgenda";
+import { cn } from "@/lib/utils";
 import { useNavigationType } from "react-router-dom";
 import { whenNotesReady } from "@/hooks/useNotes";
 import { useNoteActions } from "@/hooks/useNoteActions";
@@ -118,7 +120,12 @@ const Index = () => {
     setSidebarOpen(!isMobile);
   }, [isMobile]);
 
-  useReminderNotifications([...notes, ...archivedNotes], (id, nextReminder) => updateNote(id, { reminder: nextReminder }));
+  const openNoteRef = useRef<(id: string) => void>(() => {});
+  useReminderNotifications(
+    [...notes, ...archivedNotes],
+    (id, nextReminder) => updateNote(id, { reminder: nextReminder }),
+    (id) => openNoteRef.current(id),
+  );
 
   useAchievementTracker(notes, archivedNotes, allLabels, folders, (a) => {
     // Quiet in the main view: a plain toast; badges and celebrations live in Statystyki.
@@ -207,6 +214,8 @@ const Index = () => {
       setTimeout(() => el.classList.remove("note-flash"), 1600);
     }, 150);
   }, [notes, archivedNotes, trashedNotes, go, replaceWith]);
+  // Hooki wołane wyżej w komponencie (powiadomienia) sięgają po najnowsze `openNote` przez ref.
+  openNoteRef.current = openNote;
 
   // `/notatka/:id` (link, klik w powiadomienie): otwieramy dopiero po
   // wczytaniu bazy — wcześniej każda notatka wyglądałaby na usuniętą.
@@ -431,7 +440,20 @@ const Index = () => {
             </section>
           )}
 
-          {others.length > 0 && (
+          {view === "reminders" && groupReminders(others).map((group, i) => (
+            <section key={group.key} aria-label={group.label}>
+              <p className={cn(
+                "text-xs font-semibold uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5",
+                group.key === "overdue" ? "text-destructive" : "text-muted-foreground",
+              )}>
+                {group.label}
+                <span className="bg-muted text-foreground/80 text-2xs px-1.5 rounded-full">{group.notes.length}</span>
+              </p>
+              <NoteGrid navOrder={i} notes={group.notes} searchQuery={search} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} onPresent={setPresentingNoteId} knownTitles={knownTitles} onWikiClick={handleWikiClick} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
+            </section>
+          ))}
+
+          {view !== "reminders" && others.length > 0 && (
             <section>
               {pinned.length > 0 && view !== "archive" && view !== "trash" && (
                 <motion.p

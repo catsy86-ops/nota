@@ -10,6 +10,8 @@ import { PRIORITY_LABELS, PRIORITY_COLOR_CLASS, type NotePriority } from "@/lib/
 
 interface Props {
   allLabels: string[];
+  /** `false` chowa menu sortowania (widok z własnym, stałym porządkiem). */
+  sortable?: boolean;
 }
 
 const LAYOUTS: { v: Layout; label: string; icon: typeof LayoutGrid }[] = [
@@ -30,7 +32,7 @@ const SORTS: { v: SortKey; label: string }[] = [
 const COLOR_OPTIONS: NoteColor[] = ["default", "coral", "peach", "sand", "mint", "sage", "sky", "lavender", "rose"];
 const PRIORITY_OPTIONS: NotePriority[] = ["high", "medium", "low", "none"];
 
-export function ViewControls({ allLabels }: Props) {
+export function ViewControls({ allLabels, sortable = true }: Props) {
   const prefs = useViewPrefs();
 
   const filtersActive = prefs.filterColor !== "all" || prefs.filterLabel !== "all" || prefs.filterHasReminder || prefs.filterPriority !== "all";
@@ -43,6 +45,7 @@ export function ViewControls({ allLabels }: Props) {
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
               <motion.button
+                aria-label="Widok i kolumny"
                 whileTap={{ scale: 0.95 }}
                 className="p-2 rounded-xl hover:bg-background hover:shadow-sm transition-colors text-muted-foreground data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm"
               >
@@ -94,12 +97,14 @@ export function ViewControls({ allLabels }: Props) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Sort */}
+      {/* Sort — ukryte w agendzie przypomnień, która zawsze idzie po terminie */}
+      {sortable && (
       <DropdownMenu>
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
               <motion.button
+                aria-label="Sortowanie"
                 whileTap={{ scale: 0.95 }}
                 className="p-2 rounded-xl hover:bg-background hover:shadow-sm transition-colors text-muted-foreground data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm"
               >
@@ -127,6 +132,7 @@ export function ViewControls({ allLabels }: Props) {
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+      )}
 
       {/* Filter */}
       <DropdownMenu>
@@ -134,6 +140,7 @@ export function ViewControls({ allLabels }: Props) {
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
               <motion.button
+                aria-label="Filtry"
                 whileTap={{ scale: 0.95 }}
                 className={cn(
                   "relative p-2 rounded-xl transition-colors",

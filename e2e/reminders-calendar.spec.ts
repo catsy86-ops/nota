@@ -150,6 +150,11 @@ test("termin można przypiąć do istniejącej notatki zamiast tworzyć nową", 
 
 /** Tworzy notatkę z cotygodniowym przypomnieniem i wchodzi w kalendarz. */
 async function seedWeeklySeries(page: import("@playwright/test").Page, title: string) {
+  // Seria startuje „dziś”, więc pod koniec miesiąca mieściło się w nim tylko
+  // jedno wystąpienie i testy prognozy padały zależnie od daty. Środek
+  // miesiąca daje zawsze co najmniej dwa.
+  await page.clock.setFixedTime(new Date(2026, 8, 10, 12, 0));
+  await page.reload();
   await page.setViewportSize({ width: 1280, height: 1000 });
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
