@@ -423,3 +423,11 @@
 .dark [data-note-color]:not([data-note-color="default"]) {
   --muted-foreground: 220 10% 74%;
 }
+
+/* Dolna nawigacja (md:hidden) z wystającym FAB-em: toasty nad nią, nie na niej.
+   CSS, nie `mobileOffset` Sonnera — ten działa tylko do 600 px, a nawigacja do 768. */
+@media (max-width: 767px) {
+  [data-sonner-toaster][data-y-position="bottom"] {
+    bottom: calc(88px + env(safe-area-inset-bottom)) !important;
+  }
+}
