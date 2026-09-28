@@ -35,7 +35,9 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
         }
         toast("Czas na backup", {
           id: "auto-backup",
-          description: `Minęło ${prefs.autoExportDays} dni od ostatniego. Pobierz plik z ${count} notatkami.`,
+          description: last
+            ? `Minęło ${prefs.autoExportDays} dni od ostatniego. Pobierz plik z ${count} notatkami.`
+            : `Nie masz jeszcze kopii zapasowej. Pobierz plik z ${count} notatkami.`,
           duration: Infinity,
           action: {
             label: "Pobierz",
@@ -64,6 +66,8 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
     if (notes.length === 0 && archivedNotes.length === 0) return;
     if (!isBackupOverdue(prefs.backupReminderDays)) return;
     if (sessionStorage.getItem("kaczy.backupNudge") === "1") return;
+    // Auto-backup w tej sesji już o to poprosił — drugi toast o tym samym to szum.
+    if (sessionStorage.getItem("kaczy.autoBackupDone") === "1") return;
     sessionStorage.setItem("kaczy.backupNudge", "1");
     const t = setTimeout(() => {
       const days = daysSinceBackup();
