@@ -63,11 +63,12 @@ export function SettingsDialog({ trigger, open, onOpenChange }: SettingsDialogPr
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+          {/* Na telefonie same nazwy (ikona bez podpisu nie mówi, co jest w zakładce). */}
           <TabsList className="grid grid-cols-4 w-full">
-            <TabsTrigger value="appearance" className="gap-1.5"><LayoutGrid className="w-3.5 h-3.5" /><span className="hidden sm:inline">Wygląd</span></TabsTrigger>
-            <TabsTrigger value="general" className="gap-1.5"><Pencil className="w-3.5 h-3.5" /><span className="hidden sm:inline">Ogólne</span></TabsTrigger>
-            <TabsTrigger value="backup" className="gap-1.5"><Database className="w-3.5 h-3.5" /><span className="hidden sm:inline">Dane</span></TabsTrigger>
-            <TabsTrigger value="sync" className="gap-1.5"><Wifi className="w-3.5 h-3.5" /><span className="hidden sm:inline">Sync</span></TabsTrigger>
+            <TabsTrigger value="appearance" className="gap-1.5"><LayoutGrid className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Wygląd</span></TabsTrigger>
+            <TabsTrigger value="general" className="gap-1.5"><Pencil className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Ogólne</span></TabsTrigger>
+            <TabsTrigger value="backup" className="gap-1.5"><Database className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Dane</span></TabsTrigger>
+            <TabsTrigger value="sync" className="gap-1.5"><Wifi className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Sync</span></TabsTrigger>
           </TabsList>
 
           <div className="flex-1 overflow-y-auto pt-3 pr-1">

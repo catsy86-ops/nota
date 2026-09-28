@@ -9,7 +9,6 @@ import { useNotesContext } from "@/hooks/NotesProvider";
 import { SidebarLabelItem } from "@/components/sidebar/SidebarLabelItem";
 import { SidebarFolderItem } from "@/components/sidebar/SidebarFolderItem";
 import { SidebarAddFolderButton } from "@/components/sidebar/SidebarAddFolderButton";
-import { SettingsDialog } from "@/components/SettingsDialog";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { BeerMugLogo } from "@/components/BeerMugLogo";
 import type { View } from "@/hooks/useFilteredNotes";
@@ -49,14 +48,13 @@ interface AppSidebarProps {
   onOpenActions: () => void;
   onOpenStats: () => void;
   onOpenFocusMode: () => void;
-  settingsOpen: boolean;
   onSettingsOpenChange: (open: boolean) => void;
 }
 
 export function AppSidebar({
   open, onClose, view, activeLabel, activeFolder, onGoView, onGoLabel, onGoFolder,
   sidebarItems, onLogoClick, dark, onToggleTheme, onOpenPalette, onOpenActions,
-  onOpenStats, onOpenFocusMode, settingsOpen, onSettingsOpenChange,
+  onOpenStats, onOpenFocusMode, onSettingsOpenChange,
 }: AppSidebarProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const { allLabels, folders, renameLabel, removeLabel, addFolder, updateFolder, deleteFolder } = useNotesContext();
@@ -232,7 +230,6 @@ export function AppSidebar({
                   {dark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
                   <span>{dark ? "Tryb jasny" : "Tryb ciemny"}</span>
                 </button>
-                <SettingsDialog open={settingsOpen} onOpenChange={onSettingsOpenChange} />
                 <button onClick={() => onSettingsOpenChange(true)} className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors">
                   <SettingsIcon className="w-[18px] h-[18px]" />
                   <span>Ustawienia</span>

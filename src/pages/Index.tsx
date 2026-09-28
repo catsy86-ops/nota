@@ -16,6 +16,7 @@ import { groupReminders } from "@/lib/reminderAgenda";
 import { buildWikiIndex, resolveWikiTarget } from "@/lib/wikiLinks";
 import { useGridNavState, setGridNavPreview } from "@/lib/gridKeyboardNav";
 import { NoteReader, type ReaderMode } from "@/components/NoteReader";
+import { SettingsDialog } from "@/components/SettingsDialog";
 import { cn } from "@/lib/utils";
 import { useNavigationType } from "react-router-dom";
 import { whenNotesReady, isNoteTextEditOpen } from "@/hooks/useNotes";
@@ -404,7 +405,6 @@ const Index = () => {
         onOpenActions={() => setActionsOpen(true)}
         onOpenStats={() => setStatsOpen(true)}
         onOpenFocusMode={() => setFocusModeOpen(true)}
-        settingsOpen={settingsOpen}
         onSettingsOpenChange={setSettingsOpen}
       />
 
@@ -595,6 +595,9 @@ const Index = () => {
         />
       </Suspense>
     )}
+    {/* Tu, nie w pasku bocznym: pasek istnieje tylko gdy jest otwarty (na telefonie
+        domyślnie zamknięty), a Ustawienia otwiera też „Więcej” i paleta poleceń. */}
+    <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     <AnimatePresence>
       {readerNote && (
