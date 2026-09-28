@@ -46,14 +46,6 @@ export const TEMPLATES: Template[] = [
     }),
   },
   {
-    id: "journal", emoji: "📓", label: "Dziennik", icon: BookOpen, color: "lavender",
-    build: () => ({
-      title: today(),
-      content: "**3 rzeczy, za które jestem wdzięczny:**\n1. \n2. \n3. \n\n**Co dziś osiągnąłem:**\n\n**Co jutro:**",
-      checklist: [], labels: ["dziennik"],
-    }),
-  },
-  {
     id: "travel", emoji: "✈️", label: "Podróż", icon: Plane, color: "coral",
     build: () => ({
       title: "Plan podróży ✈️",
@@ -87,9 +79,13 @@ interface Props {
     checklist: ChecklistItem[],
   ) => void;
   onCreateLabel: (label: string) => void;
+  /** Notatka dnia nie jest szablonem: otwiera (albo tworzy) jedną notatkę na dzień. */
+  onDailyNote: () => void;
 }
 
-export function QuickTemplates({ onPick, onCreateLabel }: Props) {
+const chipClass = "group shrink-0 flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-xs font-medium border border-border/60 bg-card/70 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-colors";
+
+export function QuickTemplates({ onPick, onCreateLabel, onDailyNote }: Props) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -102,6 +98,17 @@ export function QuickTemplates({ onPick, onCreateLabel }: Props) {
       <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground shrink-0 mr-1">
         Szablony
       </span>
+      <motion.button
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        onClick={onDailyNote}
+        title="Jedna notatka na dzień — kolejne kliknięcie dopisuje do dzisiejszej"
+        className={chipClass}
+      >
+        <BookOpen className="w-3.5 h-3.5" />
+        <span>Notatka dnia</span>
+      </motion.button>
       {TEMPLATES.map((t, i) => {
         const Icon = t.icon;
         return (
@@ -109,13 +116,13 @@ export function QuickTemplates({ onPick, onCreateLabel }: Props) {
             key={t.id}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 + i * 0.04 }}
+            transition={{ delay: 0.25 + (i + 1) * 0.04 }}
             onClick={() => {
               const data = t.build();
               data.labels.forEach(onCreateLabel);
               onPick(data.title, data.content, t.color, data.labels, null, [], data.checklist);
             }}
-            className="group shrink-0 flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-xs font-medium border border-border/60 bg-card/70 hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-colors"
+            className={chipClass}
           >
             <Icon className="w-3.5 h-3.5" />
             <span>{t.label}</span>

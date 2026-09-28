@@ -15,7 +15,8 @@ import { parseViewRoute } from "@/lib/viewRoute";
 import { groupReminders } from "@/lib/reminderAgenda";
 import { cn } from "@/lib/utils";
 import { useNavigationType } from "react-router-dom";
-import { whenNotesReady } from "@/hooks/useNotes";
+import { whenNotesReady, isNoteTextEditOpen } from "@/hooks/useNotes";
+import { DAILY_LABEL, DAILY_TEMPLATE, appendTimestamp, dailyKey, dailyTitle, findDailyNote } from "@/lib/dailyNote";
 import { useNoteActions } from "@/hooks/useNoteActions";
 import { useNoteDnd } from "@/hooks/useNoteDnd";
 import { useImportExport } from "@/hooks/useImportExport";
@@ -195,7 +196,20 @@ const Index = () => {
    * faktycznie jest (Notatki / Archiwum / Kosz), zdejmuje filtry, które mogłyby
    * ją ukryć, przewija do karty i na chwilę ją podświetla.
    */
-  const openNote = useCallback((id: string, viaLink = false) => {
+  const revealNote = useCallback((id: string, target: View, viaLink: boolean, edit: boolean) => {
+    setSearch("");
+    if (viaLink) replaceWith(target); else go(target, { search: "" });
+    setTimeout(() => {
+      const el = document.querySelector<HTMLElement>(`[data-note-id="${id}"]`);
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("note-flash");
+      setTimeout(() => el.classList.remove("note-flash"), 1600);
+      // Ta sama ścieżka co klik w kartę (patrz `NoteGrid` → `openNote`).
+      if (edit) document.querySelector<HTMLElement>(`[data-note-id-wrap="${id}"] .cursor-pointer`)?.click();
+    }, 150);
+  }, [go, replaceWith]);
+  const openNote = useCallback((id: string, viaLink = false, edit = false) => {
     const note = [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === id);
     if (!note) {
       toast.info("Tej notatki już nie ma");
@@ -203,19 +217,31 @@ const Index = () => {
       return;
     }
     const target: View = note.trashed ? "trash" : note.archived ? "archive" : "notes";
-    setSearch("");
-    if (viaLink) replaceWith(target); else go(target, { search: "" });
     if (target !== "notes") toast.info(target === "trash" ? "Notatka jest w Koszu" : "Notatka jest w Archiwum");
-    setTimeout(() => {
-      const el = document.querySelector<HTMLElement>(`[data-note-id="${id}"]`);
-      if (!el) return;
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-      el.classList.add("note-flash");
-      setTimeout(() => el.classList.remove("note-flash"), 1600);
-    }, 150);
-  }, [notes, archivedNotes, trashedNotes, go, replaceWith]);
+    revealNote(id, target, viaLink, edit && target !== "trash");
+  }, [notes, archivedNotes, trashedNotes, replaceWith, revealNote]);
   // Hooki wołane wyżej w komponencie (powiadomienia) sięgają po najnowsze `openNote` przez ref.
   openNoteRef.current = openNote;
+
+  /**
+   * Notatka dnia: jest → otwórz ją w edytorze ze znacznikiem godziny na końcu;
+   * nie ma → utwórz z szablonem dziennika. Rozpoznanie po `dailyDate`, nie tytule.
+   */
+  const openDailyNote = useCallback(() => {
+    const now = Date.now();
+    const key = dailyKey(now);
+    const existing = findDailyNote([...notes, ...archivedNotes], key);
+    if (existing) {
+      // Przy otwartym edytorze szkic ma pierwszeństwo — nie dopisujemy mu pod ręką.
+      if (!isNoteTextEditOpen(existing.id)) updateNote(existing.id, { content: appendTimestamp(existing.content, now) });
+      openNote(existing.id, false, true);
+      return;
+    }
+    addLabel(DAILY_LABEL);
+    const id = addNote(dailyTitle(now), DAILY_TEMPLATE, "lavender", [DAILY_LABEL]);
+    updateNote(id, { dailyDate: key });
+    revealNote(id, "notes", false, true);
+  }, [notes, archivedNotes, updateNote, openNote, addLabel, addNote, revealNote]);
 
   // `/notatka/:id` (link, klik w powiadomienie): otwieramy dopiero po
   // wczytaniu bazy — wcześniej każda notatka wyglądałaby na usuniętą.
@@ -388,7 +414,7 @@ const Index = () => {
               <div data-add-note-bar>
                 <AddNoteBar ref={addNoteRef} onAdd={handleAddNoteGlow} allLabels={allLabels} onCreateLabel={addLabel} destination={composeDestination} />
               </div>
-              <QuickTemplates onPick={handleAddNoteGlow} onCreateLabel={addLabel} />
+              <QuickTemplates onPick={handleAddNoteGlow} onCreateLabel={addLabel} onDailyNote={openDailyNote} />
             </motion.div>
           )}
 
@@ -518,6 +544,7 @@ const Index = () => {
           notes={[...notes, ...archivedNotes]}
           onOpenNote={openNote}
           onNewNote={expandAddNote}
+          onDailyNote={openDailyNote}
           onGo={(v) => go(v)}
           onToggleTheme={toggleTheme}
           onOpenSettings={() => setSettingsOpen(true)}

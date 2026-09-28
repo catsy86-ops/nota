@@ -37,6 +37,8 @@ export interface Note {
   reminder: number | null;
   reminderRepeat?: "none" | "daily" | "weekly" | "monthly";
   priority: NotePriority;
+  /** Notatka dnia: lokalna data `YYYY-MM-DD` (patrz `lib/dailyNote.ts`); brak = zwykła notatka. */
+  dailyDate?: string;
   images: string[]; // base64 data URLs — kept device-local, not synced via Yjs
   checklist: ChecklistItem[];
   folderId: string | null;
@@ -159,7 +161,9 @@ export function useNotes() {
     const original = yjsStore.projectNotes().find((n) => n.id === id);
     if (!original) return;
     const now = Date.now();
-    const copy: Note = { ...original, id: crypto.randomUUID(), title: original.title ? `${original.title} (kopia)` : "", pinned: false, createdAt: now, updatedAt: now };
+    // Kopia notatki dnia jest zwykłą notatką — inaczej byłyby dwie „notatki dnia” na ten sam dzień.
+    const { dailyDate: _daily, ...rest } = original;
+    const copy: Note = { ...rest, id: crypto.randomUUID(), title: original.title ? `${original.title} (kopia)` : "", pinned: false, createdAt: now, updatedAt: now };
     yjsStore.upsertNote(copy);
   }, []);
 
@@ -264,6 +268,10 @@ export function beginNoteTextEdit(id: string): string | null {
 
 export function endNoteTextEdit(id: string): void {
   yjsStore.endTextEdit(id);
+}
+
+export function isNoteTextEditOpen(id: string): boolean {
+  return yjsStore.isTextEditOpen(id);
 }
 
 /** Scala szkic ze zmianami peera i zwraca tekst do pokazania + przeliczone zaznaczenie. */

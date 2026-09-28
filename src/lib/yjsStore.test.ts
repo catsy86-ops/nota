@@ -55,6 +55,22 @@ describe("yjsStore — field-level CRDT merge", () => {
     }
   });
 
+  it("keeps dailyDate through upsert, patch and sync, and omits it on ordinary notes", () => {
+    const a = createYjsStore(`daily-a-${crypto.randomUUID()}`);
+    const b = createYjsStore(`daily-b-${crypto.randomUUID()}`);
+    a.upsertNote(makeNote({ id: "d1", dailyDate: "2026-09-28" }));
+    a.upsertNote(makeNote({ id: "plain" }));
+    a.patchNote("plain", { dailyDate: "2026-09-29" });
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+
+    const byId = new Map(b.projectNotes().map((n) => [n.id, n]));
+    expect(byId.get("d1")?.dailyDate).toBe("2026-09-28");
+    expect(byId.get("plain")?.dailyDate).toBe("2026-09-29");
+    expect("dailyDate" in a.projectNotes().find((n) => n.id === "d1")!).toBe(true);
+    a.upsertNote(makeNote({ id: "other" }));
+    expect("dailyDate" in a.projectNotes().find((n) => n.id === "other")!).toBe(false);
+  });
+
   it("merges concurrent Y.Text edits to note content instead of one side clobbering the other", () => {
     const a = createYjsStore(`merge-text-a-${crypto.randomUUID()}`);
     const b = createYjsStore(`merge-text-b-${crypto.randomUUID()}`);

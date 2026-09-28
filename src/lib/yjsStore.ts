@@ -36,7 +36,7 @@ const NO_IMAGES: string[] = [];
 
 const NOTE_SCALAR_FIELDS = [
   "title", "color", "pinned", "archived", "trashed", "trashedAt",
-  "labels", "reminder", "reminderRepeat", "priority",
+  "labels", "reminder", "reminderRepeat", "priority", "dailyDate",
   "folderId", "order", "createdAt", "updatedAt",
 ] as const;
 
@@ -148,6 +148,7 @@ function yNoteFromPlain(note: Note): YNote {
   y.set("reminder", note.reminder);
   if (note.reminderRepeat !== undefined) y.set("reminderRepeat", note.reminderRepeat);
   y.set("priority", note.priority);
+  if (note.dailyDate !== undefined) y.set("dailyDate", note.dailyDate);
   y.set("checklist", yChecklistFromPlain(note.checklist));
   y.set("folderId", note.folderId);
   y.set("order", note.order);
@@ -159,7 +160,9 @@ function yNoteFromPlain(note: Note): YNote {
 
 function plainFromYNote(id: string, y: YNote, images: string[]): Note {
   const content = y.get("content");
+  const dailyDate = y.get("dailyDate");
   return {
+    ...(typeof dailyDate === "string" ? { dailyDate } : {}),
     id,
     title: (y.get("title") as string) ?? "",
     content: content instanceof Y.Text ? content.toString() : ((content as string) ?? ""),
@@ -442,6 +445,11 @@ export function createYjsStore(dbName: string) {
     textBases.delete(id);
   }
 
+  /** Czy edytor tej notatki jest teraz otwarty (trwa sesja edycji treści). */
+  function isTextEditOpen(id: string): boolean {
+    return textBases.has(id);
+  }
+
   /**
    * Wlewa do otwartego edytora zmiany, które peer zrobił w treści: najpierw
    * scala niezapisany szkic (bez ruszania `updatedAt` — to nie jest zapis
@@ -653,7 +661,7 @@ export function createYjsStore(dbName: string) {
     addLabel, removeLabelEverywhere, renameLabelEverywhere,
     replaceAll, resetForTests, diagStats, encodeSyncState, mergeSyncState,
     getImageHashes, getLocalImages, setImagesLocal,
-    beginTextEdit, endTextEdit, rebaseTextEdit, onRemoteTextChange, onLocalChange, flushImagesForTests,
+    beginTextEdit, endTextEdit, isTextEditOpen, rebaseTextEdit, onRemoteTextChange, onLocalChange, flushImagesForTests,
   };
 }
 

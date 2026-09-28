@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { StickyNote, Archive, Bell, Trash, Plus, Moon, Sparkles, Trophy, Calendar, CalendarRange, Brain, Keyboard } from "lucide-react";
+import { StickyNote, Archive, Bell, Trash, Plus, Moon, Sparkles, Trophy, Calendar, CalendarRange, Brain, Keyboard, BookOpen } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes } from "@/lib/searchNotes";
 
@@ -20,6 +20,7 @@ interface Props {
   notes: Note[];
   onOpenNote: (id: string) => void;
   onNewNote: () => void;
+  onDailyNote: () => void;
   onGo: (view: "notes" | "today" | "week" | "archive" | "reminders" | "calendar" | "trash" | "widget") => void;
   onToggleTheme: () => void;
   onOpenSettings: () => void;
@@ -34,6 +35,7 @@ export function CommandPalette({
   notes,
   onOpenNote,
   onNewNote,
+  onDailyNote,
   onGo,
   onToggleTheme,
   onOpenSettings,
@@ -70,6 +72,9 @@ export function CommandPalette({
         <CommandGroup heading="Akcje">
           <CommandItem onSelect={() => run(onNewNote)}>
             <Plus className="w-4 h-4 mr-2" /> Nowa notatka <span className="ml-auto text-xs text-muted-foreground">Ctrl+N</span>
+          </CommandItem>
+          <CommandItem onSelect={() => run(onDailyNote)}>
+            <BookOpen className="w-4 h-4 mr-2" /> Notatka dnia
           </CommandItem>
           <CommandItem onSelect={() => run(onOpenSettings)}>
             <Sparkles className="w-4 h-4 mr-2" /> Ustawienia
