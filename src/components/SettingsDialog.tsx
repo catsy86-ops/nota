@@ -72,7 +72,8 @@ export function SettingsDialog({ trigger, open, onOpenChange }: SettingsDialogPr
             <TabsTrigger value="sync" className="gap-1.5"><Wifi className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Sync</span></TabsTrigger>
           </TabsList>
 
-          <div className="flex-1 overflow-y-auto pt-3 pr-1">
+          {/* -mx-1 px-1: pierścień zaznaczenia przy lewej krawędzi nie jest przycinany. */}
+          <div className="flex-1 overflow-y-auto pt-3 -mx-1 px-1">
             <TabsContent value="appearance" className="mt-0">
               <AppearanceSettings />
             </TabsContent>

@@ -53,7 +53,7 @@ function StoragePersistenceStatus() {
           <p className="text-foreground">
             {info.persisted
               ? "Przeglądarka nie będzie automatycznie czyścić danych aplikacji pod presją miejsca."
-              : "Przeglądarka MOŻE automatycznie wyczyścić dane aplikacji, gdy zabraknie miejsca na dysku — to jedyna kopia notatek, jeśli nie robisz backupów."}
+              : "Przeglądarka może sama wyczyścić dane aplikacji, gdy zabraknie miejsca na dysku — to jedyna kopia notatek, jeśli nie robisz backupów."}
           </p>
         </div>
         <p className="text-muted-foreground">
@@ -257,7 +257,7 @@ export function BackupSettings() {
           onValueChange={([v]) => handleAutoExportChange(v)}
         />
         <p className="text-xs text-muted-foreground mt-1.5">
-          Po przekroczeniu interwału (gdy otworzysz aplikację) backup sam zapisze się do pliku wybranego niżej. Bez wybranego pliku pojawi się przycisk „Pobierz” — przeglądarki nie pozwalają pobierać plików bez kliknięcia.
+          Po przekroczeniu interwału (gdy otworzysz aplikację) backup sam zapisze się do pliku wybranego wyżej. Bez wybranego pliku pojawi się przycisk „Pobierz” — przeglądarki nie pozwalają pobierać plików bez kliknięcia.
         </p>
       </Section>
 

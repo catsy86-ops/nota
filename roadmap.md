@@ -441,7 +441,7 @@ Audyt agentowy: kod + zrzuty Playwright 1440/768/375, jasny i ciemny motyw (Usta
 - [x] `DailyQuote`: z banera nad polem dodawania na cichy dopisek pod siatką (tylko widok Notatki, gdy są notatki i nie ma wyszukiwania). `QuickTemplates`: sama ikona (emoji zdjęte z etykiety), `rounded-lg`, fade na prawej krawędzi poniżej `sm`, bez skalowania.
 - [x] `EmptyState`: bez `gradient-text` i ✨, bez podpowiedzi Konami. **„Ucięty wordmark” z audytu to nie błąd** — zrzuty robione po 2,5 s, a animacja pisania trwa 3,1 s.
 - [x] Kalendarz: dni spoza miesiąca `text-muted-foreground/70` (bez dodatkowego `opacity-60`), w ciemnym motywie komórki bez obramowań (`dark:bg-card/60`), ściągawka skrótów jako ikona z `title` + `sr-only`.
-- [ ] Ręczny przegląd dialogu Ustawień — nie zrobiony (brak zrzutów).
+- [x] Ręczny przegląd dialogu Ustawień — ✅ 2026-09-28: zrzuty wszystkich zakładek, desktop w obu motywach i telefon. Poprawione: „MOŻE” wersalikami, opis auto-backupu wskazywał plik „niżej” (wybór jest wyżej), przycięty pierścień zaznaczenia koloru przy lewej krawędzi. Reszta z audytu na zrzutach (wysokość, dotyk, Sync) zrobiona wcześniej tego dnia.
 - Zweryfikowane: typecheck, lint (0 błędów), 250 testów jednostkowych, 22/22 e2e, build. Jeden przebieg e2e dał losowy pad (przy ponownym uruchomieniu zielono) — warto obserwować.
 
 **Uwaga do dalszej pracy nad UI (życzenie właściciela, 2026-09-27):** kolejne zmiany wizualne (reszta Fazy 2, Faza 3, decyzja o kolorze `--primary`) robić z użyciem skilla **`frontend-design`**.
