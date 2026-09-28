@@ -345,3 +345,57 @@ describe("yjsStore — inkrementalna projekcja", () => {
     expect(after[0].images).toHaveLength(1);
   });
 });
+
+describe("yjsStore — tekst peera na żywo w otwartym edytorze", () => {
+  function pair() {
+    const a = createYjsStore(`live-a-${crypto.randomUUID()}`);
+    const b = createYjsStore(`live-b-${crypto.randomUUID()}`);
+    a.upsertNote(makeNote({ id: "n", content: "Ala ma kota" }));
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+    return { a, b };
+  }
+
+  it("merges the unsaved draft with the peer's text and keeps the caret at the same character", () => {
+    const { a, b } = pair();
+    b.beginTextEdit("n");
+    // Lokalnie: dopisane na końcu, karetka za „kota!”.
+    const draft = "Ala ma kota!";
+    // Peer wstawia słowo na początku.
+    a.patchNote("n", { content: "Dziś Ala ma kota" });
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+
+    const res = b.rebaseTextEdit("n", draft, [draft.length, draft.length])!;
+    expect(res.text).toBe("Dziś Ala ma kota!");
+    expect(res.selection).toEqual([res.text.length, res.text.length]);
+    // Kolejny zapis w tej sesji nie dubluje ani nie kasuje tekstu peera.
+    b.patchNote("n", { content: res.text + " I psa." });
+    expect(b.projectNotes()[0].content).toBe("Dziś Ala ma kota! I psa.");
+  });
+
+  it("moves the caret back when the character it followed was deleted by the peer", () => {
+    const { a, b } = pair();
+    b.beginTextEdit("n");
+    a.patchNote("n", { content: "Ala" });
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+    const res = b.rebaseTextEdit("n", "Ala ma kota", [11, 11])!;
+    expect(res.text).toBe("Ala");
+    expect(res.selection).toEqual([3, 3]);
+  });
+
+  it("notifies only about remote changes, not local ones", () => {
+    const { a, b } = pair();
+    let calls = 0;
+    const off = b.onRemoteTextChange("n", () => calls++);
+    b.patchNote("n", { content: "lokalnie" });
+    expect(calls).toBe(0);
+    a.patchNote("n", { content: "zdalnie" });
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+    expect(calls).toBe(1);
+    off();
+  });
+
+  it("returns null without an open session", () => {
+    const { b } = pair();
+    expect(b.rebaseTextEdit("n", "x", [0, 0])).toBeNull();
+  });
+});

@@ -1,5 +1,5 @@
 import * as Y from "yjs";
-import { applyTextEdit, captureTextBase, type TextBase } from "./yTextEdit";
+import { applyTextEdit, captureTextBase, mapOffset, type TextBase } from "./yTextEdit";
 import { IndexeddbPersistence } from "y-indexeddb";
 import { get as idbGet, set as idbSet, del as idbDel, keys as idbKeys, getMany as idbGetMany, setMany as idbSetMany } from "idb-keyval";
 import { loadAll as loadLegacySnapshot } from "@/lib/notesStore";
@@ -442,6 +442,32 @@ export function createYjsStore(dbName: string) {
     textBases.delete(id);
   }
 
+  /**
+   * Wlewa do otwartego edytora zmiany, które peer zrobił w treści: najpierw
+   * scala niezapisany szkic (bez ruszania `updatedAt` — to nie jest zapis
+   * użytkownika), potem zwraca aktualny tekst i przeliczone zaznaczenie.
+   * `null`, gdy dla tej notatki nie ma otwartej sesji.
+   */
+  function rebaseTextEdit(id: string, draft: string, selection: [number, number]): { text: string; selection: [number, number] } | null {
+    const text = notesMap.get(id)?.get("content");
+    const base = textBases.get(id);
+    if (!(text instanceof Y.Text) || !base) return null;
+    let local = base;
+    doc.transact(() => { local = applyTextEdit(text, base, draft); });
+    const next = captureTextBase(text);
+    textBases.set(id, next);
+    return { text: next.text, selection: [mapOffset(local, selection[0], next), mapOffset(local, selection[1], next)] };
+  }
+
+  /** Zmiany treści notatki przychodzące od peera (nie z tej karty). */
+  function onRemoteTextChange(id: string, listener: () => void): () => void {
+    const text = notesMap.get(id)?.get("content");
+    if (!(text instanceof Y.Text)) return () => {};
+    const handler = (_e: Y.YTextEvent, tr: Y.Transaction) => { if (!tr.local) listener(); };
+    text.observe(handler);
+    return () => text.unobserve(handler);
+  }
+
   /** Content hashes of a note's images, in order — synced as part of the note
    *  itself (unlike the base64 blobs, which stay device-local in `imagesCache`).
    *  Lets a device that doesn't yet have an image locally know one is expected,
@@ -627,7 +653,7 @@ export function createYjsStore(dbName: string) {
     addLabel, removeLabelEverywhere, renameLabelEverywhere,
     replaceAll, resetForTests, diagStats, encodeSyncState, mergeSyncState,
     getImageHashes, getLocalImages, setImagesLocal,
-    beginTextEdit, endTextEdit, onLocalChange, flushImagesForTests,
+    beginTextEdit, endTextEdit, rebaseTextEdit, onRemoteTextChange, onLocalChange, flushImagesForTests,
   };
 }
 

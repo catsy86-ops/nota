@@ -97,3 +97,18 @@ export function applyTextEdit(ytext: Y.Text, base: TextBase, next: string): Text
     ids: [...base.ids.slice(0, start), ...insertedIds, ...base.ids.slice(endPrev)],
   };
 }
+
+/**
+ * Przenosi pozycję (np. karetkę) z tekstu `from` na tekst `to` po
+ * tożsamościach znaków: karetka zostaje za tym samym znakiem, za którym
+ * stała, nawet jeśli peer wstawił albo usunął coś przed nią. Gdy tamten
+ * znak zniknął, cofa się do najbliższego wcześniejszego, który przetrwał.
+ */
+export function mapOffset(from: TextBase, offset: number, to: TextBase): number {
+  const indexOf = new Map(to.ids.map((id, i) => [key(id), i]));
+  for (let i = Math.min(offset, from.ids.length) - 1; i >= 0; i--) {
+    const idx = indexOf.get(key(from.ids[i]));
+    if (idx !== undefined) return idx + 1;
+  }
+  return 0;
+}

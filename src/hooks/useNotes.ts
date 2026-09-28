@@ -264,3 +264,12 @@ export function beginNoteTextEdit(id: string): string | null {
 export function endNoteTextEdit(id: string): void {
   yjsStore.endTextEdit(id);
 }
+
+/** Scala szkic ze zmianami peera i zwraca tekst do pokazania + przeliczone zaznaczenie. */
+export function rebaseNoteTextEdit(id: string, draft: string, selection: [number, number]) {
+  return yjsStore.rebaseTextEdit(id, draft, selection);
+}
+
+export function onRemoteNoteTextChange(id: string, listener: () => void): () => void {
+  return yjsStore.onRemoteTextChange(id, listener);
+}
