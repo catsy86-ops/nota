@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { yjsStore } from "@/lib/yjsStore";
 import type { NotePriority } from "@/lib/notePriority";
 
@@ -78,27 +78,33 @@ export function useNotes() {
   useEffect(() => {
     let cancelled = false;
 
-    function project() {
-      setNotes(yjsStore.projectNotes());
-      setFolders(yjsStore.projectFolders());
-      setAllLabels(yjsStore.projectLabels());
+    // Każda mapa ma własnego obserwatora: zmiana notatki nie przelicza
+    // folderów i etykiet (i odwrotnie). Tablica notatek zmienia tożsamość
+    // tylko wtedy, gdy zmieniła się któraś notatka albo ich kolejność.
+    function projectNotes() {
+      const next = yjsStore.projectNotes();
+      setNotes((prev) => (prev.length === next.length && prev.every((n, i) => n === next[i]) ? prev : next));
     }
+    const projectFolders = () => setFolders(yjsStore.projectFolders());
+    const projectLabels = () => setAllLabels(yjsStore.projectLabels());
 
-    yjsStore.notesMap.observeDeep(project);
-    yjsStore.foldersMap.observeDeep(project);
-    yjsStore.labelsMap.observeDeep(project);
-    const offLocal = yjsStore.onLocalChange(project);
+    yjsStore.notesMap.observeDeep(projectNotes);
+    yjsStore.foldersMap.observeDeep(projectFolders);
+    yjsStore.labelsMap.observeDeep(projectLabels);
+    const offLocal = yjsStore.onLocalChange(projectNotes);
 
     yjsStore.ready().then(() => {
       if (cancelled) return;
-      project();
+      projectNotes();
+      projectFolders();
+      projectLabels();
     });
 
     return () => {
       cancelled = true;
-      yjsStore.notesMap.unobserveDeep(project);
-      yjsStore.foldersMap.unobserveDeep(project);
-      yjsStore.labelsMap.unobserveDeep(project);
+      yjsStore.notesMap.unobserveDeep(projectNotes);
+      yjsStore.foldersMap.unobserveDeep(projectFolders);
+      yjsStore.labelsMap.unobserveDeep(projectLabels);
       offLocal();
     };
   }, []);
@@ -217,14 +223,14 @@ export function useNotes() {
     yjsStore.patchNote(noteId, { folderId });
   }, []);
 
-  const activeNotes = [...notes.filter((n) => !n.archived && !n.trashed)].sort((a, b) => {
+  const activeNotes = useMemo(() => notes.filter((n) => !n.archived && !n.trashed).sort((a, b) => {
     if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
     return b.updatedAt - a.updatedAt;
-  });
+  }), [notes]);
 
-  const archivedNotes = [...notes.filter((n) => n.archived && !n.trashed)].sort((a, b) => b.updatedAt - a.updatedAt);
+  const archivedNotes = useMemo(() => notes.filter((n) => n.archived && !n.trashed).sort((a, b) => b.updatedAt - a.updatedAt), [notes]);
 
-  const trashedNotes = [...notes.filter((n) => n.trashed)].sort((a, b) => b.updatedAt - a.updatedAt);
+  const trashedNotes = useMemo(() => notes.filter((n) => n.trashed).sort((a, b) => b.updatedAt - a.updatedAt), [notes]);
 
   const bulkTrash = useCallback((ids: string[]) => {
     yjsStore.patchNotes(ids, { trashed: true, trashedAt: Date.now(), pinned: false, archived: false });
@@ -239,7 +245,11 @@ export function useNotes() {
     yjsStore.patchNotes(ids, { trashed: false, trashedAt: null, archived: false });
   }, []);
 
-  return { notes: activeNotes, archivedNotes, trashedNotes, allLabels, folders, addNote, updateNote, deleteNote, trashNote, restoreFromTrash, emptyTrash, togglePin, duplicateNote, archiveNote, unarchiveNote, addLabel, removeLabel, renameLabel, importNotes, reorderNotes, addFolder, updateFolder, deleteFolder, moveNoteToFolder, bulkTrash, bulkArchive, bulkSetColor, bulkRestore };
+  const actions = useMemo(() => ({ addNote, updateNote, deleteNote, trashNote, restoreFromTrash, emptyTrash, togglePin, duplicateNote, archiveNote, unarchiveNote, addLabel, removeLabel, renameLabel, importNotes, reorderNotes, addFolder, updateFolder, deleteFolder, moveNoteToFolder, bulkTrash, bulkArchive, bulkSetColor, bulkRestore }),
+    [addNote, updateNote, deleteNote, trashNote, restoreFromTrash, emptyTrash, togglePin, duplicateNote, archiveNote, unarchiveNote, addLabel, removeLabel, renameLabel, importNotes, reorderNotes, addFolder, updateFolder, deleteFolder, moveNoteToFolder, bulkTrash, bulkArchive, bulkSetColor, bulkRestore]);
+
+  return useMemo(() => ({ notes: activeNotes, archivedNotes, trashedNotes, allLabels, folders, ...actions }),
+    [activeNotes, archivedNotes, trashedNotes, allLabels, folders, actions]);
 }
 
 /**

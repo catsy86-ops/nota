@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, Fragment, memo } from "react";
+import { useRef, useEffect, useCallback, Fragment, memo, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSortable, SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -50,10 +50,12 @@ interface NoteGridProps extends Omit<NoteViewActions, "selectionMode" | "onToggl
 export function NoteGrid({
   notes, searchQuery, onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder, getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, selectedIds, selectionMode, onToggleSelect, navOrder = 0,
 }: NoteGridProps) {
-  const noteViewActions: NoteViewActions = {
+  // Stabilna wartość kontekstu — inaczej każdy render siatki przerysowuje wszystkie karty mimo `memo`.
+  const noteViewActions = useMemo<NoteViewActions>(() => ({
     onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder,
     getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, selectionMode, onToggleSelect,
-  };
+  }), [onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder,
+    getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, selectionMode, onToggleSelect]);
   const prefs = useViewPrefs();
   const noteIds = notes.map((n) => n.id);
   const { focusedId, previewId } = useGridNavState();

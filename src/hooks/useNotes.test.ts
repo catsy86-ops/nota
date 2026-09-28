@@ -136,3 +136,34 @@ describe("useNotes — trash auto-cleanup", () => {
     });
   });
 });
+
+describe("useNotes — stabilne referencje", () => {
+  it("editing one note keeps the other note objects and folders untouched", async () => {
+    const { result } = renderHook(() => useNotes());
+    let a = "", b = "";
+    act(() => {
+      a = result.current.addNote("A", "a");
+      b = result.current.addNote("B", "b");
+    });
+    await waitFor(() => expect(result.current.notes).toHaveLength(2));
+    const before = result.current;
+    const noteB = before.notes.find((n) => n.id === b);
+
+    act(() => result.current.updateNote(a, { title: "A2" }));
+    await waitFor(() => expect(result.current.notes.find((n) => n.id === a)?.title).toBe("A2"));
+
+    expect(result.current.notes.find((n) => n.id === b)).toBe(noteB);
+    expect(result.current.folders).toBe(before.folders);
+    expect(result.current.addNote).toBe(before.addNote);
+  });
+
+  it("a folder change does not create a new notes array", async () => {
+    const { result } = renderHook(() => useNotes());
+    act(() => { result.current.addNote("A", "a"); });
+    await waitFor(() => expect(result.current.notes).toHaveLength(1));
+    const notes = result.current.notes;
+    act(() => { result.current.addFolder("Praca"); });
+    await waitFor(() => expect(result.current.folders).toHaveLength(1));
+    expect(result.current.notes).toBe(notes);
+  });
+});

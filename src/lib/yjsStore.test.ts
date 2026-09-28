@@ -302,3 +302,46 @@ describe("yjsStore — obrazy per notatka (P0 #11)", () => {
     expect(await idb.get("kaczy.images.v1")).toBeUndefined();
   });
 });
+
+describe("yjsStore — inkrementalna projekcja", () => {
+  it("keeps object identity of untouched notes and rebuilds only the changed one", () => {
+    const s = createYjsStore(`proj-${crypto.randomUUID()}`);
+    s.upsertNote(makeNote({ id: "a" }));
+    s.upsertNote(makeNote({ id: "b" }));
+    const first = s.projectNotes();
+    s.patchNote("a", { title: "Nowy" });
+    const second = s.projectNotes();
+    const byId = (list: Note[], id: string) => list.find((n) => n.id === id)!;
+    expect(byId(second, "b")).toBe(byId(first, "b"));
+    expect(byId(second, "a")).not.toBe(byId(first, "a"));
+    expect(byId(second, "a").title).toBe("Nowy");
+  });
+
+  it("sees nested edits (content, checklist) and remote updates", () => {
+    const a = createYjsStore(`proj-a-${crypto.randomUUID()}`);
+    const b = createYjsStore(`proj-b-${crypto.randomUUID()}`);
+    a.upsertNote(makeNote({ id: "n", checklist: [{ id: "c", text: "x", checked: false }] }));
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+    const before = b.projectNotes()[0];
+
+    a.patchNote("n", { content: "Treść peera", checklist: [{ id: "c", text: "x", checked: true }] });
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+    const after = b.projectNotes()[0];
+    expect(after).not.toBe(before);
+    expect(after.content).toBe("Treść peera");
+    expect(after.checklist[0].checked).toBe(true);
+  });
+
+  it("drops deleted notes and refreshes a note when only its local images change", () => {
+    const s = createYjsStore(`proj-img-${crypto.randomUUID()}`);
+    s.upsertNote(makeNote({ id: "a" }));
+    s.upsertNote(makeNote({ id: "b" }));
+    const before = s.projectNotes().find((n) => n.id === "a")!;
+    s.setImagesLocal("a", ["data:image/png;base64,AA"]);
+    s.removeNote("b");
+    const after = s.projectNotes();
+    expect(after.map((n) => n.id)).toEqual(["a"]);
+    expect(after[0]).not.toBe(before);
+    expect(after[0].images).toHaveLength(1);
+  });
+});

@@ -157,7 +157,10 @@ const Index = () => {
   });
 
   const allNotesForLinks = useMemo(() => [...notes, ...archivedNotes], [notes, archivedNotes]);
-  const knownTitles = new Set(allNotesForLinks.filter((n) => n.title.trim()).map((n) => n.title.trim().toLowerCase()));
+  const knownTitles = useMemo(
+    () => new Set(allNotesForLinks.filter((n) => n.title.trim()).map((n) => n.title.trim().toLowerCase())),
+    [allNotesForLinks],
+  );
   /**
    * Jedno miejsce „pokaż tę notatkę”: przełącza na widok, w którym notatka
    * faktycznie jest (Notatki / Archiwum / Kosz), zdejmuje filtry, które mogłyby

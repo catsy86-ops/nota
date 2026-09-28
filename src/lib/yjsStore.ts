@@ -31,6 +31,8 @@ type YNote = Y.Map<unknown>;
 type YFolder = Y.Map<unknown>;
 type YChecklistItem = Y.Map<unknown>;
 type ImagesById = Record<string, string[]>;
+/** Wspólna pusta lista — stabilna tożsamość dla notatek bez obrazów. */
+const NO_IMAGES: string[] = [];
 
 const NOTE_SCALAR_FIELDS = [
   "title", "color", "pinned", "archived", "trashed", "trashedAt",
@@ -211,6 +213,14 @@ export function createYjsStore(dbName: string) {
   const notesMap = doc.getMap<YNote>("notes");
   const foldersMap = doc.getMap<YFolder>("folders");
   const labelsMap = doc.getMap<boolean>("labels");
+  const noteCache = new Map<string, Note>();
+  const dirtyNotes = new Set<string>();
+  notesMap.observeDeep((events) => {
+    for (const e of events) {
+      if (e.target === notesMap) e.changes.keys.forEach((_c, k) => dirtyNotes.add(k));
+      else if (typeof e.path[0] === "string") dirtyNotes.add(e.path[0]);
+    }
+  });
   const migratedKey = `kaczy.yjs.migrated.v1.${dbName}`;
 
   let persistence = new IndexeddbPersistence(dbName, doc);
@@ -331,9 +341,27 @@ export function createYjsStore(dbName: string) {
     return readyPromise;
   }
 
+  /**
+   * Projekcja inkrementalna: notatki nietknięte od ostatniego wywołania
+   * zachowują tożsamość obiektu, więc `memo(NoteCard)` i memo filtrów
+   * mają co porównywać. Brudne id zbiera obserwator zarejestrowany
+   * przy tworzeniu store'a — przed obserwatorami UI.
+   */
   function projectNotes(): Note[] {
     const result: Note[] = [];
-    notesMap.forEach((y, id) => result.push(plainFromYNote(id, y, imagesCache[id] ?? [])));
+    notesMap.forEach((y, id) => {
+      const images = imagesCache[id] ?? NO_IMAGES;
+      let note = noteCache.get(id);
+      if (!note || dirtyNotes.has(id) || note.images !== images) {
+        note = plainFromYNote(id, y, images);
+        noteCache.set(id, note);
+      }
+      result.push(note);
+    });
+    dirtyNotes.clear();
+    if (noteCache.size > result.length) {
+      for (const id of noteCache.keys()) if (!notesMap.has(id)) noteCache.delete(id);
+    }
     return result;
   }
 
@@ -584,6 +612,7 @@ export function createYjsStore(dbName: string) {
     });
     imagesCache = {};
     dirtyImages.clear();
+    noteCache.clear();
     imagesCacheLoaded = false;
     readyPromise = null;
     try { localStorage.removeItem(migratedKey); } catch { /* ignore */ }
