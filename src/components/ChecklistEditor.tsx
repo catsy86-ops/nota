@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, X } from "lucide-react";
+import { Check, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { emojiShower } from "@/lib/celebrate";
 
@@ -14,6 +14,22 @@ interface ChecklistEditorProps {
   items: ChecklistItem[];
   onChange: (items: ChecklistItem[]) => void;
   readOnly?: boolean;
+}
+
+/** Wspólny wygląd pola wyboru listy: pusty kwadrat albo wypełniony z ✓. */
+function CheckMark({ checked, size = "md" }: { checked: boolean; size?: "sm" | "md" }) {
+  return (
+    <span
+      aria-hidden
+      className={cn(
+        "rounded flex items-center justify-center shrink-0 border-[1.5px] transition-colors",
+        size === "sm" ? "w-4 h-4" : "w-[18px] h-[18px]",
+        checked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/50 group-hover/check:border-primary",
+      )}
+    >
+      {checked && <Check className={size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5"} strokeWidth={3} />}
+    </span>
+  );
 }
 
 export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorProps) {
@@ -58,9 +74,15 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
             className="flex items-center gap-2 group/item"
           >
             <button
+              type="button"
+              role="checkbox"
+              aria-checked={false}
+              aria-label={`Odhacz: ${item.text || "element"}`}
               onClick={() => toggleItem(item.id)}
-              className="w-4 h-4 rounded border-2 border-muted-foreground/40 hover:border-primary transition-colors shrink-0"
-            />
+              className="group/check p-1 -m-1"
+            >
+              <CheckMark checked={false} />
+            </button>
             {readOnly ? (
               <span className="text-sm text-foreground flex-1">{item.text}</span>
             ) : (
@@ -90,12 +112,16 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
           {checked.map((item) => (
             <div key={item.id} className="flex items-center gap-2 group/item">
               <button
+                type="button"
+                role="checkbox"
+                aria-checked
+                aria-label={`Odznacz: ${item.text || "element"}`}
                 onClick={() => toggleItem(item.id)}
-                className="w-4 h-4 rounded border-2 border-primary bg-primary/20 flex items-center justify-center shrink-0"
+                className="group/check p-1 -m-1"
               >
-                <div className="w-2 h-2 rounded-sm bg-primary" />
+                <CheckMark checked />
               </button>
-              <span className="text-sm text-muted-foreground/50 line-through flex-1">{item.text}</span>
+              <span className="text-sm text-muted-foreground line-through decoration-muted-foreground/60 flex-1">{item.text}</span>
               {!readOnly && (
                 <button
                   onClick={() => removeItem(item.id)}
@@ -130,22 +156,23 @@ export function ChecklistPreview({ items, onToggle }: { items: ChecklistItem[]; 
   const done = items.filter((i) => i.checked).length;
   
   return (
-    <div className="space-y-1 mt-2">
+    <div className="mt-2">
       {items.slice(0, 5).map((item) => (
-        <div key={item.id} className="flex items-center gap-2">
-          <button
-            onClick={(e) => { e.stopPropagation(); onToggle?.(item.id); }}
-            className={cn(
-              "w-3.5 h-3.5 rounded border-[1.5px] shrink-0 transition-colors",
-              item.checked ? "border-primary bg-primary/20" : "border-muted-foreground/40"
-            )}
-          >
-            {item.checked && <div className="w-1.5 h-1.5 rounded-sm bg-primary mx-auto" />}
-          </button>
-          <span className={cn("text-xs", item.checked ? "text-muted-foreground/40 line-through" : "text-foreground/70")}>
+        // Cały wiersz jest polem wyboru: na dotyku cel ma szerokość kafla, nie 14 px.
+        <button
+          key={item.id}
+          type="button"
+          role="checkbox"
+          aria-checked={item.checked}
+          disabled={!onToggle}
+          onClick={(e) => { e.stopPropagation(); onToggle?.(item.id); }}
+          className="group/check flex w-full items-center gap-2 rounded-md py-1 [@media(pointer:coarse)]:py-1.5 text-left disabled:cursor-default"
+        >
+          <CheckMark checked={item.checked} size="sm" />
+          <span className={cn("text-xs", item.checked ? "text-muted-foreground line-through decoration-muted-foreground/60" : "text-foreground/80")}>
             {item.text}
           </span>
-        </div>
+        </button>
       ))}
       {items.length > 5 && (
         <p className="text-2xs text-muted-foreground/50 pl-5">+{items.length - 5} więcej</p>
