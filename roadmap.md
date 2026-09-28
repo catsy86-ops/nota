@@ -454,3 +454,30 @@ Audyt agentowy: kod + zrzuty Playwright 1440/768/375, jasny i ciemny motyw (Usta
 - [x] Jednolite `focus-visible:ring-2 ring-ring ring-offset-2` na przyciskach-ikonach. **S**
 - [x] Wyciszyć gamifikację w głównym widoku (emoji w nagłówkach, niespodzianki) — do Statystyk. **S**
 - [x] Zrzuty przed/po tym samym skryptem (`node scripts/screenshots.mjs <url> <katalog>`). **S**
+
+## Audyt UI/UX na zrzutach — 2026-09-28
+
+Zrzuty wszystkich widoków: telefon 390 px (dotyk) i desktop 1440 px, jasny i ciemny, na danych testowych (10 notatek: lista, przypomnienia, seria, etykiety, archiwum, kosz). Naprawione od razu:
+
+- [x] **Ustawienia nie otwierały się na telefonie.** `SettingsDialog` był zamontowany wewnątrz `AppSidebar`, a pasek istnieje tylko gdy jest otwarty — kafel „Ustawienia” w „Więcej” i akcja z palety przy zwiniętym pasku nie robiły nic. Okno przeniesione do `Index`. e2e `mobile.spec.ts`.
+- [x] **Zakładki Ustawień na telefonie były same ikony** (bez nazwy dostępnej). Teraz na telefonie same nazwy, ikony od `sm`.
+- [x] **„Czas na backup” na pustej appce** — toast 3,5 s po pierwszym uruchomieniu, bez żadnej notatki. Pomijany przy pustej bazie.
+
+Do zrobienia (od najważniejszych):
+
+- [ ] **Edycja w kaflu pokazuje 1–2 linie tekstu.** Textarea ma stałe `min-h` bez auto-wysokości — przy dłuższej notatce edytuje się „przez szparę” (desktop i telefon). Auto-grow do rozsądnego maksimum. **S**
+- [ ] **Pełnoekranowy edytor na telefonie nie jest pełnoekranowy** — marginesy, pod spodem widać dolną nawigację i kafle. Na `< sm` edge-to-edge (`100dvh`), z uwzględnieniem klawiatury ekranowej. **S**
+- [ ] **Toasty na telefonie zasłaniają dolną nawigację i FAB** (także odznaki i „Czas na backup”). Offset nad `nav` + safe-area. **S**
+- [ ] **Checkbox w podglądzie listy na kaflu** — zaznaczony wygląda jak radio (kropka zamiast ✓), cel 14 px na dotyku, brak `role="checkbox"`/`aria-checked`/etykiety, przekreślony tekst `/40` prawie niewidoczny. **S**
+- [ ] **Odznaki jako toasty w trakcie pracy** („Pierwszy krok”, „Porządkowicz” — po imporcie kilka naraz, stosem). Zgodnie z fazą 3 audytu: odznaki tylko w Statystykach, ewentualnie jeden dyskretny toast dla rzadkich. **S**
+- [ ] **Akcent palety poleceń jest różowy** (`--accent`?) zamiast pomarańczu marki — jedyne miejsce w tym kolorze. **S**
+- [ ] **Kropka przypięcia na kaflu** — dubluje sekcję „Przypięte” i wypełnioną pinezkę; wygląda jak „nieprzeczytane”. Usunąć. **S**
+- [ ] **„· 28 wrz” z wiszącą kropką** w stopce kafla, gdy nie ma liczby słów (notatka-lista). **S**
+- [ ] **Composer na telefonie** — kolory łamią się w dwa rzędy, „Zamknij” wisi w połowie wysokości, ikony pod spodem. Kolory w jednym przewijanym rzędzie, akcje w jednym pasku. **S–M**
+- [ ] **Przełącznik paska bocznego to strzałka `<`/`>`** — wygląda jak „wstecz”. Ikona panelu (`PanelLeft`) z etykietą. **S**
+- [ ] **Kalendarz na telefonie: dwie ikony obok tytułu** (logo + ikona kalendarza); inne widoki mają jedną. **S**
+- [ ] **Plakietka „1” na Archiwum w dolnej nawigacji** — wygląda jak powiadomienie, a to licznik archiwum. Liczniki tylko tam, gdzie wymagają uwagi (Kosz ma sens w „Więcej”, Archiwum nie). **S**
+- [ ] **„⌘K” przy palecie w pasku na Windowsie** — lista skrótów w Ustawieniach pokazuje „Ctrl/⌘”, pasek sam „⌘K”. Zależnie od platformy. **S**
+- [ ] **Ustawienia na telefonie:** okno zmienia wysokość przy każdej zakładce (skacze), lista skrótów klawiszowych i „Przechył kafli… za kursorem” pokazywane na dotyku, placeholder kodu w Sync ucięty (monospace z szerokim trackingiem), blok „Jak to działa” to ściana tekstu. Na telefonie pełnowysokościowy arkusz; skróty i tilt ukryte przy `pointer: coarse`. **M**
+- [ ] **Teksty:** „Poproś przeglądarkę o trwały storage” (→ „o trwałe przechowywanie”), „Jeszcze nie zrobiłeś backupu” (forma męska → „Nie ma jeszcze backupu”), „Masonry” (→ „Kafelki”/„Mozaika”). Przypomnienie na dziś jako „dziś, 19:10” zamiast „28 wrz, 19:10”. **S**
+- [ ] **Niespójny wybór w Ustawieniach → Wygląd** — „Motyw” zaznacza białą kartą, pozostałe grupy pomarańczową ramką. Jeden styl. **S**
