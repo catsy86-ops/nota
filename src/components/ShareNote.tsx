@@ -58,7 +58,7 @@ export function ShareNote({ note }: ShareNoteProps) {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: note.title || "Notatka KACZY",
+          title: note.title || "Notatka",
           text: noteToText(),
         });
       } catch { /* user cancelled the native share sheet */ }

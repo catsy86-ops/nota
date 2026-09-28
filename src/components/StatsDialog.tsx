@@ -60,7 +60,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
           <DialogTitle className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-primary" /> Statystyki i osiągnięcia
           </DialogTitle>
-          <DialogDescription>Twoje postępy w KACZY 🦆 — zapisywane lokalnie</DialogDescription>
+          <DialogDescription>Twoje postępy — zapisywane lokalnie</DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-3 gap-2 pt-2">

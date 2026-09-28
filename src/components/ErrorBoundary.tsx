@@ -30,7 +30,7 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   private handleClearAndReload = () => {
-    if (!confirm("Wyczyścić lokalne dane KACZY i odświeżyć? Notatki zostaną usunięte z tej przeglądarki.")) return;
+    if (!confirm("Wyczyścić lokalne dane Notatek Pijackich i odświeżyć? Notatki zostaną usunięte z tej przeglądarki.")) return;
     try {
       Object.keys(localStorage)
         .filter((k) => k.startsWith("kaczy") || k.startsWith("dash-notes"))
@@ -64,7 +64,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <AlertTriangle className="w-7 h-7 text-destructive" />
           </div>
           <div className="space-y-1">
-            <h1 className="text-xl font-display font-bold">Coś poszło nie tak 🦆</h1>
+            <h1 className="text-xl font-display font-bold">Coś poszło nie tak</h1>
             <p className="text-sm text-muted-foreground">
               Aplikacja napotkała nieoczekiwany błąd. Spróbuj ponownie lub odśwież stronę.
             </p>

@@ -227,7 +227,7 @@ export function megaCelebrate() {
   if (typeof window === "undefined") return;
   rainbow();
   setTimeout(() => fireworks(2500), 300);
-  setTimeout(() => emojiShower(["🎉", "✨", "⭐", "🥳", "🦆"]), 600);
+  setTimeout(() => emojiShower(["🎉", "✨", "⭐", "🥳", "🍺"]), 600);
   setTimeout(() => hearts(window.innerWidth / 2, window.innerHeight / 2), 900);
   setTimeout(() => bubbles(), 1200);
 }

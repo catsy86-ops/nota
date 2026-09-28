@@ -49,10 +49,10 @@ export function parseSyncFile(text: string): SyncFile {
   try { raw = JSON.parse(text); } catch { throw new Error("Plik nie jest poprawnym JSON-em"); }
   const r = raw as Partial<SyncFile> | null;
   if (!r || r.format !== SYNC_FILE_FORMAT) {
-    throw new Error("To nie jest plik synchronizacji KACZY (pełny backup przywraca się osobnym przyciskiem)");
+    throw new Error("To nie jest plik synchronizacji Notatek Pijackich (pełny backup przywraca się osobnym przyciskiem)");
   }
   if (typeof r.version !== "number" || r.version > SYNC_FILE_VERSION) {
-    throw new Error("Plik pochodzi z nowszej wersji aplikacji — zaktualizuj KACZY");
+    throw new Error("Plik pochodzi z nowszej wersji aplikacji — zaktualizuj aplikację");
   }
   if (typeof r.update !== "string") throw new Error("Uszkodzony plik synchronizacji");
   const images: Record<string, string[]> = {};

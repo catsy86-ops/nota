@@ -87,7 +87,7 @@ export function OnboardingTour() {
             {last ? "Zamknij" : "Pomiń"}
           </Button>
           <Button className="flex-1" onClick={() => (last ? finish() : setStep(step + 1))}>
-            {last ? "Zaczynamy 🦆" : "Dalej"}
+            {last ? "Zaczynamy 🍺" : "Dalej"}
           </Button>
         </div>
       </DialogContent>

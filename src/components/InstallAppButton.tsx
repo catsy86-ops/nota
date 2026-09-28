@@ -36,7 +36,7 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
     }
     const outcome = await install();
     if (outcome === "accepted") {
-      toast.success("Zainstalowano! 🎉", { description: "KACZY jest teraz na ekranie głównym." });
+      toast.success("Zainstalowano! 🎉", { description: "Notatki Pijackie są teraz na ekranie głównym." });
       onDone?.();
     }
   };
@@ -100,7 +100,7 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
               <span className="w-7 h-7 shrink-0 rounded-lg bg-muted flex items-center justify-center text-primary">
                 <CheckCircle2 className="w-4 h-4" />
               </span>
-              <span>3. Potwierdź przyciskiem <strong>Dodaj</strong> — gotowe! 🦆</span>
+              <span>3. Potwierdź przyciskiem <strong>Dodaj</strong> — gotowe! 🍺</span>
             </li>
           </ol>
         </DialogContent>

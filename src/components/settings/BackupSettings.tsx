@@ -35,7 +35,7 @@ function StoragePersistenceStatus() {
     const fresh = await getStorageInfo();
     setInfo(fresh);
     setRequesting(false);
-    if (granted) toast.success("Przeglądarka obiecała nie czyścić danych KACZY automatycznie");
+    if (granted) toast.success("Przeglądarka obiecała nie czyścić danych aplikacji automatycznie");
     else toast.error("Przeglądarka nie przyznała trwałego storage — spróbuj dodać appkę do ekranu głównego/zakładek");
   }
 
@@ -52,8 +52,8 @@ function StoragePersistenceStatus() {
           )}
           <p className="text-foreground">
             {info.persisted
-              ? "Przeglądarka nie będzie automatycznie czyścić danych KACZY pod presją miejsca."
-              : "Przeglądarka MOŻE automatycznie wyczyścić dane KACZY, gdy zabraknie miejsca na dysku — to jedyna kopia notatek, jeśli nie robisz backupów."}
+              ? "Przeglądarka nie będzie automatycznie czyścić danych aplikacji pod presją miejsca."
+              : "Przeglądarka MOŻE automatycznie wyczyścić dane aplikacji, gdy zabraknie miejsca na dysku — to jedyna kopia notatek, jeśli nie robisz backupów."}
           </p>
         </div>
         <p className="text-muted-foreground">
@@ -257,7 +257,7 @@ export function BackupSettings() {
           onValueChange={([v]) => handleAutoExportChange(v)}
         />
         <p className="text-xs text-muted-foreground mt-1.5">
-          Po przekroczeniu interwału (gdy otworzysz KACZY) backup sam zapisze się do pliku wybranego niżej. Bez wybranego pliku pojawi się przycisk „Pobierz” — przeglądarki nie pozwalają pobierać plików bez kliknięcia.
+          Po przekroczeniu interwału (gdy otworzysz aplikację) backup sam zapisze się do pliku wybranego niżej. Bez wybranego pliku pojawi się przycisk „Pobierz” — przeglądarki nie pozwalają pobierać plików bez kliknięcia.
         </p>
       </Section>
 

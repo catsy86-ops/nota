@@ -113,7 +113,7 @@ const Index = () => {
     if (state.count >= 3) {
       state.count = 0;
       fireworks();
-      toast.success("🦆 Kwa kwa! Niespodzianka!");
+      toast.success("🍺 Na zdrowie! Niespodzianka!");
     }
   }
 
@@ -155,7 +155,7 @@ const Index = () => {
     onNewNote: expandAddNote,
     onGoToday: () => go("today"),
     onGoWeek: () => go("week"),
-    onEasterEgg: () => { megaCelebrate(); toast.success("🦆 KONAMI! Pełen pokaz mocy!"); },
+    onEasterEgg: () => { megaCelebrate(); toast.success("🍺 KONAMI! Pełen pokaz mocy!"); },
     hasSelection: () => selectedIds.size > 0,
     onEscapeSelection: clearSelection,
     onUndo: () => {
@@ -166,7 +166,7 @@ const Index = () => {
           icon: "↩️",
         });
       } else {
-        toast("Nie ma czego cofać", { icon: "🦆" });
+        toast("Nie ma czego cofać", { icon: "🍺" });
       }
     },
     onCloseSidebar: () => setSidebarOpen(false),
@@ -320,7 +320,7 @@ const Index = () => {
 
   // Entry points from manifest.webmanifest: home-screen "Nowa notatka" shortcut
   // (?new=1) and Web Share Target (?share-title/-text/-url=, from "Share" on
-  // another app once KACZY is installed).
+  // another app once the app is installed).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shareTitle = params.get("share-title");

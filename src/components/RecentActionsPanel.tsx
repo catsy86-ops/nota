@@ -173,7 +173,7 @@ export function RecentActionsPanel({ open, onOpenChange, onOpenNote }: Props) {
 
           {filtered.length === 0 && (
             <div className="text-center text-sm text-muted-foreground py-16">
-              {entries.length === 0 ? "Brak akcji do pokazania 🦆" : "Nic nie pasuje do wyszukiwania"}
+              {entries.length === 0 ? "Brak akcji do pokazania" : "Nic nie pasuje do wyszukiwania"}
             </div>
           )}
         </div>

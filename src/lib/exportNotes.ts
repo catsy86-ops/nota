@@ -96,7 +96,7 @@ export function pickFullBackup(): Promise<FullBackup> {
 export function parseFullBackup(text: string): FullBackup {
   const raw = JSON.parse(text);
   if (!raw || typeof raw !== "object" || !Array.isArray((raw as Record<string, unknown>).notes)) {
-    throw new Error("To nie jest plik pełnego backupu KACZY");
+    throw new Error("To nie jest plik pełnego backupu Notatek Pijackich");
   }
   return fullBackupSchema.parse(raw);
 }
@@ -138,7 +138,7 @@ export function download(content: string, filename: string, type: string) {
 
 export function exportToMarkdown(notes: Note[]) {
   const lines: string[] = [];
-  lines.push(`# KACZY — Eksport`);
+  lines.push(`# Notatki Pijackie — eksport`);
   lines.push(`> ${format(new Date(), "d MMMM yyyy, HH:mm", { locale: pl })}`);
   lines.push("");
 
@@ -172,7 +172,7 @@ export function exportToHTML(notes: Note[]) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KACZY — Eksport</title>
+<title>Notatki Pijackie — eksport</title>
 <style>
 body{font-family:system-ui,sans-serif;max-width:720px;margin:2rem auto;padding:0 1rem;background:#fafafa;color:#1a1a1a}
 h1{font-size:1.8rem;margin-bottom:.2rem}
@@ -190,7 +190,7 @@ h1{font-size:1.8rem;margin-bottom:.2rem}
 </style>
 </head>
 <body>
-<h1>🦆 KACZY</h1>
+<h1>🍺 Notatki Pijackie</h1>
 <p class="date">Eksport: ${escape(dateStr)}</p>
 `;
 

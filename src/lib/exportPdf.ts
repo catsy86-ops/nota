@@ -38,7 +38,7 @@ export function exportToPDF(notes: Note[]) {
   // Title
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
-  doc.text("KACZY", margin, y);
+  doc.text("NOTATKI PIJACKIE", margin, y);
   y += 6;
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
