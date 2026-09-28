@@ -541,6 +541,39 @@ export function createYjsStore(dbName: string) {
     persistImagesCache();
   }
 
+  /** Pełny stan dokumentu (update V2) + lokalne obrazy — do pliku „sneakernet”. */
+  function encodeSyncState(): { update: Uint8Array; images: ImagesById } {
+    const images: ImagesById = {};
+    for (const [id, imgs] of Object.entries(imagesCache)) if (imgs.length && notesMap.has(id)) images[id] = imgs;
+    return { update: Y.encodeStateAsUpdateV2(doc), images };
+  }
+
+  /**
+   * Scala stan z pliku z bieżącym dokumentem — CRDT merge, nie nadpisanie.
+   * Obrazy są adresowane hashem: notatka dostaje obrazy, gdy każdy hash
+   * z manifestu da się znaleźć w lokalnej kopii albo w pliku.
+   */
+  function mergeSyncState(update: Uint8Array, images: ImagesById): { newNotes: number; imagesRestored: number } {
+    const before = new Set(notesMap.keys());
+    Y.applyUpdateV2(doc, update, "file-merge");
+    let newNotes = 0;
+    let imagesRestored = 0;
+    notesMap.forEach((_y, id) => {
+      if (!before.has(id)) newNotes++;
+      const hashes = getImageHashes(id);
+      const local = imagesCache[id] ?? [];
+      if (local.map(hashImage).join("|") === hashes.join("|")) return;
+      const pool = new Map<string, string>();
+      for (const img of [...local, ...(images[id] ?? [])]) pool.set(hashImage(img), img);
+      if (!hashes.every((h) => pool.has(h))) return;
+      setImagesSync(id, hashes.map((h) => pool.get(h)!));
+      imagesRestored++;
+    });
+    persistImagesCache();
+    if (imagesRestored) localListeners.forEach((l) => l());
+    return { newNotes, imagesRestored };
+  }
+
   /** Test-only: destroy this store's Yjs doc/IDB persistence and images, and start fresh. */
   async function resetForTests(): Promise<void> {
     await persistence.clearData();
@@ -563,7 +596,7 @@ export function createYjsStore(dbName: string) {
     upsertNote, patchNote, patchNotes, setNoteOrder, removeNote, removeNotes,
     upsertFolder, patchFolder, removeFolder,
     addLabel, removeLabelEverywhere, renameLabelEverywhere,
-    replaceAll, resetForTests, diagStats,
+    replaceAll, resetForTests, diagStats, encodeSyncState, mergeSyncState,
     getImageHashes, getLocalImages, setImagesLocal,
     beginTextEdit, endTextEdit, onLocalChange, flushImagesForTests,
   };

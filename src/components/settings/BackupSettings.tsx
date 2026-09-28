@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Download, Database, ShieldCheck, ShieldAlert, FileCog } from "lucide-react";
+import { Download, Database, ShieldCheck, ShieldAlert, FileCog, FileDown, GitMerge } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useViewPrefs, setViewPref } from "@/lib/viewPrefs";
 import { exportFullBackup, importFullBackup } from "@/lib/exportNotes";
+import { exportSyncFile, importSyncFile } from "@/lib/yjsFileSync";
 import { daysSinceBackup } from "@/lib/backupReminder";
 import { requestPersistentStorage, getStorageInfo, type StorageInfo } from "@/lib/storagePersistence";
 import { isFileSystemAccessSupported, pickBackupFile, clearBackupFile, getBackupFileName } from "@/lib/backupFileHandle";
@@ -146,6 +147,32 @@ async function restoreNow() {
   }
 }
 
+async function exportSyncNow() {
+  try {
+    await exportSyncFile();
+    toast.success("Plik synchronizacji pobrany — wczytaj go na drugim urządzeniu");
+  } catch {
+    toast.error("Nie udało się zapisać pliku synchronizacji");
+  }
+}
+
+function newNotesLabel(n: number): string {
+  if (n === 1) return "1 nowa notatka";
+  const few = n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14);
+  return `${n} ${few ? "nowe notatki" : "nowych notatek"}`;
+}
+
+async function mergeSyncNow() {
+  try {
+    const { newNotes } = await importSyncFile();
+    toast.success(newNotes ? `Scalono — ${newNotesLabel(newNotes)}` : "Scalono — zmiany z pliku są już w notatkach");
+  } catch (err) {
+    if (err instanceof Error && err.message !== "Nie wybrano pliku") {
+      toast.error("Nie udało się scalić pliku: " + err.message);
+    }
+  }
+}
+
 /** "Dane" tab: auto-backup, backup/today/week reminders, manual export/import. */
 export function BackupSettings() {
   const prefs = useViewPrefs();
@@ -252,6 +279,20 @@ export function BackupSettings() {
       <Button onClick={restoreNow} variant="outline" className="w-full gap-2">
         <Database className="w-4 h-4" /> Przywróć z pliku backupu
       </Button>
+
+      <Section title="Synchronizacja przez plik">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <Button onClick={exportSyncNow} variant="outline" className="gap-2">
+            <FileDown className="w-4 h-4" /> Zapisz plik synchronizacji
+          </Button>
+          <Button onClick={mergeSyncNow} variant="outline" className="gap-2">
+            <GitMerge className="w-4 h-4" /> Scal z pliku
+          </Button>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1.5">
+          Przenosi zmiany między urządzeniami bez połączenia na żywo. Scalanie łączy notatki z obu stron — nic nie usuwa i nie nadpisuje. Używaj świeżych plików: bardzo stary może przywrócić dawno usuniętą notatkę.
+        </p>
+      </Section>
 
       <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-1">
         <p className="font-semibold text-foreground">💡 Wskazówka</p>
