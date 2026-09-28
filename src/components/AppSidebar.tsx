@@ -12,6 +12,7 @@ import { SidebarAddFolderButton } from "@/components/sidebar/SidebarAddFolderBut
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { BeerMugLogo } from "@/components/BeerMugLogo";
 import type { View } from "@/hooks/useFilteredNotes";
+import { modShortcut } from "@/lib/platform";
 
 function DroppableNavItem({ droppableId, children }: { droppableId?: string; children: React.ReactNode }) {
   const { setNodeRef, isOver } = useDroppable({ id: droppableId || "noop", disabled: !droppableId });
@@ -219,7 +220,7 @@ export function AppSidebar({
                 <button onClick={onOpenPalette} className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors">
                   <Command className="w-[18px] h-[18px]" />
                   <span>Paleta poleceń</span>
-                  <span className="ml-auto text-2xs opacity-70">⌘K</span>
+                  <span className="ml-auto text-2xs opacity-70">{modShortcut("K")}</span>
                 </button>
                 <button
                   onClick={onToggleTheme}

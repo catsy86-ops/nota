@@ -1,4 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { MOD_KEY } from "@/lib/platform";
 
 interface ShortcutGroup {
   heading: string;
@@ -9,9 +10,9 @@ const GROUPS: ShortcutGroup[] = [
   {
     heading: "Ogólne",
     items: [
-      { keys: ["Ctrl", "N"], label: "Nowa notatka" },
-      { keys: ["Ctrl", "K"], label: "Paleta poleceń" },
-      { keys: ["Ctrl", "Z"], label: "Cofnij ostatnią akcję" },
+      { keys: [MOD_KEY, "N"], label: "Nowa notatka" },
+      { keys: [MOD_KEY, "K"], label: "Paleta poleceń" },
+      { keys: [MOD_KEY, "Z"], label: "Cofnij ostatnią akcję" },
       { keys: ["/"], label: "Fokus na wyszukiwarkę" },
       { keys: ["Alt", "S"], label: "Fokus na wyszukiwarkę" },
       { keys: ["Alt", "T"], label: "Przejdź do „Dziś”" },

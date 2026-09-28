@@ -13,6 +13,7 @@ import type { NoteColor } from "@/hooks/useNotes";
 import { cn } from "@/lib/utils";
 import { Section, ToggleRow } from "./SettingsShared";
 import { getNotificationPermission } from "@/lib/notificationPermission";
+import { MOD_KEY } from "@/lib/platform";
 
 const PERMISSION_TEXT = {
   granted: "Włączone — przypomnienia pokażą się jako powiadomienia systemowe, gdy aplikacja jest otwarta.",
@@ -35,9 +36,9 @@ function NotificationStatus() {
 const COLORS: NoteColor[] = ["default", "coral", "peach", "sand", "mint", "sage", "sky", "lavender", "rose"];
 
 const SHORTCUTS: { keys: string; desc: string }[] = [
-  { keys: "Ctrl/⌘ + N", desc: "Nowa notatka" },
+  { keys: `${MOD_KEY} + N`, desc: "Nowa notatka" },
   { keys: "Alt + N", desc: "Nowa notatka (alternatywnie)" },
-  { keys: "Ctrl/⌘ + K", desc: "Paleta poleceń" },
+  { keys: `${MOD_KEY} + K`, desc: "Paleta poleceń" },
   { keys: "/  •  Alt + S", desc: "Skup się na wyszukiwarce" },
   { keys: "Alt + T", desc: "Przejdź do trybu „Dziś”" },
   { keys: "Alt + W", desc: "Przejdź do trybu „Ten tydzień”" },

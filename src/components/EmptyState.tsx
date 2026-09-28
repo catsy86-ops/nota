@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { NotatnikWordmark } from "@/components/NotatnikWordmark";
 import type { View, Elsewhere } from "@/hooks/useFilteredNotes";
+import { modShortcut } from "@/lib/platform";
 
 const HEADINGS: Record<View, string> = {
   notes: "Zacznij tworzyć",
@@ -16,7 +17,7 @@ const HEADINGS: Record<View, string> = {
 };
 
 const DESCRIPTIONS: Record<View, string> = {
-  notes: "Stuknij w pasek powyżej (są tam też szablony) lub naciśnij Ctrl+N",
+  notes: "Stuknij w pasek powyżej (są tam też szablony) lub naciśnij " + modShortcut("N"),
   archive: "Zarchiwizowane notatki pojawią się tutaj",
   trash: "Usunięte notatki pojawią się tutaj",
   reminders: "Notatki z przypomnieniami pojawią się tutaj",
@@ -80,8 +81,8 @@ export function EmptyState({ view, search, elsewhere, onGo }: { view: View; sear
           className="flex flex-wrap items-center justify-center gap-2 max-w-md mx-auto"
         >
           {[
-            { k: "⌘K", l: "paleta poleceń" },
-            { k: "Ctrl+N", l: "nowa notatka" },
+            { k: modShortcut("K"), l: "paleta poleceń" },
+            { k: modShortcut("N"), l: "nowa notatka" },
           ].map((s) => (
             <span key={s.k} className="inline-flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/60 border border-border/40 rounded-full px-2.5 py-1">
               <kbd className="font-mono font-semibold text-foreground/80">{s.k}</kbd>

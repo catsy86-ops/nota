@@ -3,6 +3,7 @@ import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, C
 import { StickyNote, Archive, Bell, Trash, Plus, Moon, Sparkles, Trophy, Calendar, CalendarRange, Brain, Keyboard, BookOpen } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes } from "@/lib/searchNotes";
+import { modShortcut } from "@/lib/platform";
 
 const NOTE_LIMIT = 30;
 
@@ -71,7 +72,7 @@ export function CommandPalette({
         </CommandEmpty>
         <CommandGroup heading="Akcje">
           <CommandItem onSelect={() => run(onNewNote)}>
-            <Plus className="w-4 h-4 mr-2" /> Nowa notatka <span className="ml-auto text-xs text-muted-foreground">Ctrl+N</span>
+            <Plus className="w-4 h-4 mr-2" /> Nowa notatka <span className="ml-auto text-xs text-muted-foreground">{modShortcut("N")}</span>
           </CommandItem>
           <CommandItem onSelect={() => run(onDailyNote)}>
             <BookOpen className="w-4 h-4 mr-2" /> Notatka dnia

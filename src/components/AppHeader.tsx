@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { ChevronLeft, Moon, Sun, Download, FileJson, FileText, Upload, FolderOpen, Tag, Calendar, CalendarRange } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Moon, Sun, Download, FileJson, FileText, Upload, FolderOpen, Tag, Calendar, CalendarRange } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SearchBar } from "@/components/SearchBar";
@@ -51,7 +51,7 @@ export function AppHeader({
                 aria-pressed={sidebarOpen}
                 className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground"
               >
-                <ChevronLeft className={cn("w-5 h-5 transition-transform duration-300", !sidebarOpen && "rotate-180")} />
+                {sidebarOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
               </motion.button>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="text-xs">
