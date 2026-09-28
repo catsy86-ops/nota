@@ -621,8 +621,10 @@ const Index = () => {
     <RecentActionsPanel
       open={actionsOpen}
       onOpenChange={setActionsOpen}
-      getNote={(ids) => [...notes, ...archivedNotes, ...trashedNotes].find((n) => ids.includes(n.id))}
-      onSaveNote={(id, title, content) => updateNote(id, { title, content })}
+      onOpenNote={(ids) => {
+        const existing = [...notes, ...archivedNotes, ...trashedNotes].find((n) => ids.includes(n.id));
+        openNote(existing?.id ?? ids[0]);
+      }}
     />
     {confirmDialog}
     </DndContext>

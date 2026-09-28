@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
-import { Archive, History, Pencil, RotateCcw, Search, Trash2, X } from "lucide-react";
-import type { Note } from "@/hooks/useNotes";
-import { MarkdownRenderer } from "@/components/MarkdownRenderer";
+import { Archive, ArrowUpRight, History, RotateCcw, Search, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { canUndo, clearActions, relativeTime, undoAction, useActionHistory, type ActionKind } from "@/lib/actionHistory";
@@ -17,12 +15,14 @@ const META: Record<ActionKind, { icon: typeof Trash2; verb: string; tone: string
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  /** Zwraca notatkę do podglądu/edycji (pierwszą z wpisu) lub null, gdy nie istnieje. */
-  getNote?: (noteIds: string[]) => Note | undefined;
-  onSaveNote?: (id: string, title: string, content: string) => void;
+  /**
+   * Pokazuje notatkę z wpisu tam, gdzie teraz jest (Notatki / Archiwum / Kosz).
+   * Panel nie ma własnego edytora — edycja dzieje się w karcie, jak wszędzie.
+   */
+  onOpenNote?: (noteIds: string[]) => void;
 }
 
-export function RecentActionsPanel({ open, onOpenChange, getNote, onSaveNote }: Props) {
+export function RecentActionsPanel({ open, onOpenChange, onOpenNote }: Props) {
   const entries = useActionHistory();
   const [, setTick] = useState(0);
 
@@ -55,24 +55,10 @@ export function RecentActionsPanel({ open, onOpenChange, getNote, onSaveNote }: 
 
   const pending = entries.filter((e) => canUndo(e)).length;
 
-  const [editId, setEditId] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [editContent, setEditContent] = useState("");
-  const editorRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (editId) editorRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [editId]);
-
-  const editedNote = editId && getNote ? getNote([editId]) : undefined;
-
-  function openPreview(entry: { noteIds: string[]; label: string }) {
-    if (!getNote) return;
-    const note = getNote(entry.noteIds);
-    if (!note) { toast.info("Ta notatka nie istnieje już w aktywnym widoku"); return; }
-    setEditId(note.id);
-    setEditTitle(note.title);
-    setEditContent(note.content);
+  function showNote(noteIds: string[]) {
+    if (!onOpenNote) return;
+    onOpenChange(false);
+    onOpenNote(noteIds);
   }
 
   return (
@@ -138,9 +124,9 @@ export function RecentActionsPanel({ open, onOpenChange, getNote, onSaveNote }: 
                     className="min-w-0 flex-1 cursor-pointer"
                     role="button"
                     tabIndex={0}
-                    onClick={() => openPreview(e)}
-                    onKeyDown={(ev) => { if (ev.key === "Enter") openPreview(e); }}
-                    title="Kliknij, aby zobaczyć i edytować notatkę"
+                    onClick={() => showNote(e.noteIds)}
+                    onKeyDown={(ev) => { if (ev.key === "Enter") showNote(e.noteIds); }}
+                    title="Pokaż notatkę"
                   >
                     <p className="text-sm font-medium truncate">{e.label}</p>
                     <p className="text-xs text-muted-foreground">
@@ -151,15 +137,16 @@ export function RecentActionsPanel({ open, onOpenChange, getNote, onSaveNote }: 
                       <p className="mt-1 text-xs text-muted-foreground/90 line-clamp-2">{e.preview}</p>
                     )}
                   </div>
-                  {getNote && (
+                  {onOpenNote && (
                     <Button
                       size="sm"
                       variant="ghost"
                       className="shrink-0 h-8 w-8 p-0"
-                      title="Podgląd i edycja"
-                      onClick={() => openPreview(e)}
+                      title="Pokaż notatkę"
+                      aria-label="Pokaż notatkę"
+                      onClick={() => showNote(e.noteIds)}
                     >
-                      <Pencil className="w-3.5 h-3.5" />
+                      <ArrowUpRight className="w-3.5 h-3.5" />
                     </Button>
                   )}
                   {!canUndo(e) ? (
@@ -196,53 +183,7 @@ export function RecentActionsPanel({ open, onOpenChange, getNote, onSaveNote }: 
             Wyczyść historię
           </Button>
         )}
-        {/* Podgląd i edycja notatki */}
-      {editId && (
-        <div ref={editorRef} className="shrink-0 max-h-[50dvh] overflow-y-auto border-t border-border/60 bg-muted/30 -mx-6 px-6 p-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <Pencil className="w-3 h-3" /> Edycja notatki
-            </p>
-            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setEditId(null)}>
-              <X className="w-3.5 h-3.5" />
-            </Button>
-          </div>
-          {!editedNote ? (
-            <p className="text-sm text-muted-foreground">Notatka nie istnieje.</p>
-          ) : (
-            <>
-              <Input value={editTitle} onChange={(ev) => setEditTitle(ev.target.value)} placeholder="Tytuł" className="h-9 text-sm font-medium" />
-              <textarea
-                value={editContent}
-                onChange={(ev) => setEditContent(ev.target.value)}
-                placeholder="Treść…"
-                rows={5}
-                className="w-full resize-y rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              />
-              {editContent.trim() && (
-                <div className="rounded-md border border-border/50 bg-card p-2 max-h-32 overflow-y-auto">
-                  <MarkdownRenderer content={editContent} />
-                </div>
-              )}
-              <div className="flex gap-2 justify-end">
-                <Button size="sm" variant="ghost" onClick={() => setEditId(null)}>Anuluj</Button>
-                <Button
-                  size="sm"
-                  onClick={() => {
-                    onSaveNote?.(editedNote.id, editTitle.trim(), editContent.trim());
-                    toast.success("Notatka zapisana");
-                    setEditId(null);
-                  }}
-                >
-                  Zapisz
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
       </SheetContent>
-
     </Sheet>
   );
 }
