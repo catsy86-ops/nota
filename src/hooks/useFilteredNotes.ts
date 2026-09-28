@@ -8,6 +8,10 @@ import { PRIORITY_ORDER } from "@/lib/notePriority";
 
 export type View = "notes" | "today" | "week" | "archive" | "label" | "reminders" | "calendar" | "folder" | "widget" | "trash";
 
+/** Liczba trafień wyszukiwania poza bieżącym widokiem. */
+export interface Elsewhere { notes: number; archive: number; trash: number }
+const NO_ELSEWHERE: Elsewhere = { notes: 0, archive: 0, trash: 0 };
+
 interface FilterArgs {
   notes: Note[];
   archivedNotes: Note[];
@@ -72,12 +76,12 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
   return useMemo(() => {
     // Kalendarz rysuje własną projekcję (`expandOccurrences`) i nie korzysta
     // z siatki notatek — nie ma po co filtrować ani budować indeksu Fuse.
-    if (view === "calendar") return { displayNotes: [], pinned: [], others: [] };
+    if (view === "calendar") return { displayNotes: [], pinned: [], others: [], elsewhere: NO_ELSEWHERE };
 
     const baseNotes = view === "archive"
       ? filterNotes(archivedNotes, { view, activeLabel, activeFolder, folders, search })
       : view === "trash"
-        ? trashedNotes
+        ? filterNotes(trashedNotes, { view, activeLabel, activeFolder, folders, search })
         : filterNotes(notes, { view, activeLabel, activeFolder, folders, search });
 
     const filteredByPrefs = view === "trash" ? baseNotes : baseNotes.filter((n) => {
@@ -92,6 +96,14 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
     const pinned = view === "trash" ? [] : displayNotes.filter((n) => n.pinned);
     const others = view === "trash" ? displayNotes : displayNotes.filter((n) => !n.pinned);
 
-    return { displayNotes, pinned, others };
+    // Wyszukiwanie przeszukuje pulę bieżącego widoku — ale gdy trafienia są
+    // gdzie indziej, mówimy o tym (i dajemy przejście), zamiast udawać, że nic nie ma.
+    const elsewhere: Elsewhere = !search ? NO_ELSEWHERE : {
+      notes: view === "notes" ? 0 : searchNotes(notes, search).length,
+      archive: view === "archive" ? 0 : searchNotes(archivedNotes, search).length,
+      trash: view === "trash" ? 0 : searchNotes(trashedNotes, search).length,
+    };
+
+    return { displayNotes, pinned, others, elsewhere };
   }, [notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs]);
 }

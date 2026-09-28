@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Note, Folder, NoteColor, FolderColor, ChecklistItem } from "@/hooks/useNotes";
+import type { NoteVersion } from "@/lib/versionsStore";
 
 const COLORS = ["default", "coral", "peach", "sand", "mint", "sage", "sky", "lavender", "rose"] as const;
 
@@ -50,18 +51,40 @@ export function looksLikeNoteArray(value: unknown): value is Record<string, unkn
   return Array.isArray(value) && value.every((n) => n && typeof n === "object");
 }
 
+/**
+ * Pełny backup. v2 dokłada opcjonalne sekcje — plik v1 (bez nich) czyta się
+ * dalej, a przy przywracaniu brakująca sekcja po prostu nie jest ruszana.
+ */
 export interface FullBackup {
-  version: 1;
+  version: 1 | 2;
   exportedAt: number;
   notes: Note[];
   labels: string[];
   folders: Folder[];
+  /** Historia wersji notatek. */
+  versions?: NoteVersion[];
+  /** Surowe wartości ustawień z localStorage (tylko klucze z białej listy). */
+  settings?: Record<string, string>;
+  /** Surowy stan odznak i passy. */
+  achievements?: string;
 }
 
+const versionSchema = z.object({
+  id: z.string(),
+  noteId: z.string(),
+  title: z.string().catch(""),
+  content: z.string().catch(""),
+  timestamp: z.number(),
+});
+
 export const fullBackupSchema = z.object({
-  version: z.literal(1).catch(1),
+  version: z.union([z.literal(1), z.literal(2)]).catch(1),
   exportedAt: z.number().catch(() => Date.now()),
   notes: z.array(noteSchema).catch([]),
   labels: z.array(z.string()).catch([]),
   folders: z.array(folderSchema).catch([]),
+  // Uszkodzona sekcja opcjonalna = brak sekcji, nie odrzucenie całego pliku.
+  versions: z.array(versionSchema).optional().catch(undefined),
+  settings: z.record(z.string()).optional().catch(undefined),
+  achievements: z.string().optional().catch(undefined),
 }) satisfies z.ZodType<FullBackup, z.ZodTypeDef, unknown>;

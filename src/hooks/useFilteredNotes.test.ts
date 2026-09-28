@@ -163,3 +163,35 @@ describe("useFilteredNotes", () => {
     expect(result.current.displayNotes.map((n) => n.id)).toEqual(["first", "second"]);
   });
 });
+
+describe("useFilteredNotes — wyszukiwanie globalne", () => {
+  const notes = [makeNote({ id: "n", title: "Zakupy" })];
+  const archivedNotes = [makeNote({ id: "a", title: "Faktura", archived: true })];
+  const trashedNotes = [makeNote({ id: "t", title: "Faktura stara", trashed: true }), makeNote({ id: "t2", title: "Inne", trashed: true })];
+
+  it("searches in the Trash instead of ignoring the query", () => {
+    const { result } = renderHook(() => useFilteredNotes({
+      notes, archivedNotes, trashedNotes, folders, view: "trash",
+      activeLabel: null, activeFolder: null, search: "Faktura", prefs: basePrefs,
+    }));
+    expect(result.current.displayNotes.map((n) => n.id)).toEqual(["t"]);
+  });
+
+  it("counts hits outside the current view", () => {
+    const { result } = renderHook(() => useFilteredNotes({
+      notes, archivedNotes, trashedNotes, folders, view: "notes",
+      activeLabel: null, activeFolder: null, search: "Faktura", prefs: basePrefs,
+    }));
+    expect(result.current.displayNotes).toHaveLength(0);
+    expect(result.current.elsewhere).toEqual({ notes: 0, archive: 1, trash: 1 });
+  });
+
+  it("finds a task that exists only as a checklist item", () => {
+    const withTask = [makeNote({ id: "c", title: "Lista", content: "", checklist: [{ id: "i", text: "odebrać paczkę", checked: false }] })];
+    const { result } = renderHook(() => useFilteredNotes({
+      notes: withTask, archivedNotes: [], trashedNotes: [], folders, view: "notes",
+      activeLabel: null, activeFolder: null, search: "paczkę", prefs: basePrefs,
+    }));
+    expect(result.current.displayNotes.map((n) => n.id)).toEqual(["c"]);
+  });
+});

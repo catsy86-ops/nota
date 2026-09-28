@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { useNotes, type Note } from "./useNotes";
+import { useNotes, whenNotesReady, type Note } from "./useNotes";
 import { clearAllStorage, saveNotesIDB } from "@/lib/notesStore";
 import { yjsStore, createYjsStore } from "@/lib/yjsStore";
 
@@ -140,6 +140,8 @@ describe("useNotes — trash auto-cleanup", () => {
 describe("useNotes — stabilne referencje", () => {
   it("editing one note keeps the other note objects and folders untouched", async () => {
     const { result } = renderHook(() => useNotes());
+    // Po wczytaniu bazy następuje jednorazowa pełna projekcja — porównujemy dopiero po niej.
+    await act(() => whenNotesReady());
     let a = "", b = "";
     act(() => {
       a = result.current.addNote("A", "a");

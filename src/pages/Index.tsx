@@ -174,7 +174,7 @@ const Index = () => {
     toast.success("Przywrócono wersję");
   }, [notes, updateNote, addVersion]);
 
-  const { displayNotes, pinned, others } = useFilteredNotes({
+  const { displayNotes, pinned, others, elsewhere } = useFilteredNotes({
     notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs,
   });
 
@@ -482,7 +482,7 @@ const Index = () => {
             </Suspense>
           )}
 
-          {view !== "calendar" && displayNotes.length === 0 && <EmptyState view={view} search={search} />}
+          {view !== "calendar" && displayNotes.length === 0 && <EmptyState view={view} search={search} elsewhere={elsewhere} onGo={(v) => go(v)} />}
           {view === "notes" && displayNotes.length > 0 && !search && <DailyQuote />}
         </main>
       </div>

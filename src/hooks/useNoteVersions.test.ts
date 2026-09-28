@@ -1,115 +1,83 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useNoteVersions, saveVersions } from "./useNoteVersions";
+import { useNoteVersions } from "./useNoteVersions";
+import { createVersionsStore, LEGACY_VERSIONS_KEY, MAX_VERSIONS_PER_NOTE, type NoteVersion } from "@/lib/versionsStore";
+
+const fresh = () => createVersionsStore(`test.versions.${crypto.randomUUID()}.`);
 
 beforeEach(() => {
   localStorage.clear();
 });
 
-describe("useNoteVersions", () => {
-  it("records a version and returns it via getVersions, newest first", () => {
-    const { result } = renderHook(() => useNoteVersions());
-
-    act(() => result.current.addVersion("n1", "T1", "C1"));
-    act(() => result.current.addVersion("n1", "T2", "C2"));
-
-    const versions = result.current.getVersions("n1");
-    expect(versions).toHaveLength(2);
-    expect(versions[0].title).toBe("T2");
-    expect(versions[1].title).toBe("T1");
+describe("versionsStore", () => {
+  it("records versions newest first and skips an unchanged one", () => {
+    const s = fresh();
+    s.add("n1", "T1", "C1");
+    s.add("n1", "T1", "C1");
+    s.add("n1", "T2", "C1");
+    expect(s.get("n1").map((v) => v.title)).toEqual(["T2", "T1"]);
   });
 
-  it("does not record a version identical to the latest (title and content unchanged)", () => {
-    const { result } = renderHook(() => useNoteVersions());
-
-    act(() => result.current.addVersion("n1", "T1", "C1"));
-    act(() => result.current.addVersion("n1", "T1", "C1"));
-
-    expect(result.current.getVersions("n1")).toHaveLength(1);
+  it("keeps notes separate and caps each note", () => {
+    const s = fresh();
+    for (let i = 0; i < MAX_VERSIONS_PER_NOTE + 5; i++) s.add("n1", `T${i}`, "");
+    s.add("n2", "X", "");
+    expect(s.get("n1")).toHaveLength(MAX_VERSIONS_PER_NOTE);
+    expect(s.get("n1")[0].title).toBe(`T${MAX_VERSIONS_PER_NOTE + 4}`);
+    expect(s.get("n2")).toHaveLength(1);
   });
 
-  it("records a new version when either title or content changes", () => {
-    const { result } = renderHook(() => useNoteVersions());
+  it("persists per note to IndexedDB and reloads in a new instance", async () => {
+    const prefix = `test.versions.${crypto.randomUUID()}.`;
+    const a = createVersionsStore(prefix);
+    await a.load();
+    a.add("n1", "T1", "C1");
+    a.add("n2", "T2", "C2");
+    a.remove("n2");
+    await a.flush();
 
-    act(() => result.current.addVersion("n1", "T1", "C1"));
-    act(() => result.current.addVersion("n1", "T1 changed", "C1"));
-
-    expect(result.current.getVersions("n1")).toHaveLength(2);
+    const b = createVersionsStore(prefix);
+    await b.load();
+    expect(b.get("n1").map((v) => v.title)).toEqual(["T1"]);
+    expect(b.get("n2")).toEqual([]);
   });
 
-  it("keeps versions of different notes separate", () => {
-    const { result } = renderHook(() => useNoteVersions());
+  it("migrates the old localStorage array and removes it after writing", async () => {
+    const old: NoteVersion[] = [
+      { id: "a", noteId: "n1", title: "stara", content: "", timestamp: 1 },
+      { id: "b", noteId: "n1", title: "nowsza", content: "", timestamp: 2 },
+    ];
+    localStorage.setItem(LEGACY_VERSIONS_KEY, JSON.stringify(old));
+    const prefix = `test.versions.${crypto.randomUUID()}.`;
+    const s = createVersionsStore(prefix);
+    await s.load();
+    await s.flush();
+    expect(s.get("n1").map((v) => v.title)).toEqual(["nowsza", "stara"]);
+    expect(localStorage.getItem(LEGACY_VERSIONS_KEY)).toBeNull();
 
-    act(() => result.current.addVersion("n1", "A", "A"));
-    act(() => result.current.addVersion("n2", "B", "B"));
-
-    expect(result.current.getVersions("n1")).toHaveLength(1);
-    expect(result.current.getVersions("n2")).toHaveLength(1);
-    expect(result.current.getVersions("n1")[0].title).toBe("A");
+    const again = createVersionsStore(prefix);
+    await again.load();
+    expect(again.get("n1")).toHaveLength(2);
   });
 
-  it("caps stored versions per note at 20, dropping the oldest", () => {
-    const { result } = renderHook(() => useNoteVersions());
-
-    for (let i = 0; i < 25; i++) {
-      act(() => result.current.addVersion("n1", `T${i}`, `C${i}`));
-    }
-
-    const versions = result.current.getVersions("n1");
-    expect(versions).toHaveLength(20);
-    expect(versions[0].title).toBe("T24"); // newest kept
-    expect(versions.some((v) => v.title === "T0")).toBe(false); // oldest dropped
-  });
-
-  it("deleteVersions removes all versions for a note", () => {
-    const { result } = renderHook(() => useNoteVersions());
-
-    act(() => result.current.addVersion("n1", "A", "A"));
-    act(() => result.current.addVersion("n2", "B", "B"));
-    act(() => result.current.deleteVersions("n1"));
-
-    expect(result.current.getVersions("n1")).toHaveLength(0);
-    expect(result.current.getVersions("n2")).toHaveLength(1);
-  });
-
-  it("persists versions to localStorage and reloads them in a fresh hook instance", () => {
-    const { result, unmount } = renderHook(() => useNoteVersions());
-    act(() => result.current.addVersion("n1", "Persisted", "Body"));
-    unmount();
-
-    const { result: second } = renderHook(() => useNoteVersions());
-    expect(second.current.getVersions("n1")).toHaveLength(1);
-    expect(second.current.getVersions("n1")[0].title).toBe("Persisted");
+  it("replaceAll swaps the whole history (restore from backup)", () => {
+    const s = fresh();
+    s.add("gone", "x", "");
+    s.replaceAll([{ id: "v", noteId: "n", title: "z backupu", content: "", timestamp: 5 }]);
+    expect(s.get("gone")).toEqual([]);
+    expect(s.all().map((v) => v.title)).toEqual(["z backupu"]);
   });
 });
 
-describe("saveVersions przy przepełnionym localStorage", () => {
-  function quotaStorage(maxChars: number): Storage {
-    const data = new Map<string, string>();
-    return {
-      getItem: (k) => data.get(k) ?? null,
-      setItem: (k, v) => {
-        if (v.length > maxChars) throw new DOMException("full", "QuotaExceededError");
-        data.set(k, v);
-      },
-      removeItem: (k) => { data.delete(k); },
-      clear: () => data.clear(),
-      key: () => null,
-      get length() { return data.size; },
-    };
-  }
-  const v = (i: number) => ({ id: `v${i}`, noteId: "n", title: "t", content: "x".repeat(100), timestamp: i });
-
-  it("nie rzuca i zostawia najnowsze wersje, gdy całość się nie mieści", () => {
-    const storage = quotaStorage(700);
-    const all = Array.from({ length: 20 }, (_, i) => v(i));
-    expect(saveVersions(all, storage)).toBe(false);
-    const saved = JSON.parse(storage.getItem("kaczy-notes-versions")!);
-    expect(saved.length).toBeGreaterThan(0);
-    expect(saved[0].timestamp).toBe(19);
-  });
-
-  it("zwraca true, gdy wszystko się zmieściło", () => {
-    expect(saveVersions([v(1)], quotaStorage(10_000))).toBe(true);
+describe("useNoteVersions", () => {
+  it("re-renders with a new getVersions after a version is added or deleted", () => {
+    const { result } = renderHook(() => useNoteVersions());
+    const id = `hook-${crypto.randomUUID()}`;
+    const before = result.current.getVersions;
+    act(() => result.current.addVersion(id, "T", "C"));
+    expect(result.current.getVersions).not.toBe(before);
+    expect(result.current.getVersions(id)).toHaveLength(1);
+    act(() => result.current.deleteVersions(id));
+    expect(result.current.getVersions(id)).toEqual([]);
   });
 });

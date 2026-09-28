@@ -22,12 +22,33 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
     sessionStorage.setItem("kaczy.autoBackupDone", "1");
     const t = setTimeout(async () => {
       try {
-        const { filename, size, savedToFile } = await exportFullBackup();
-        markBackup();
-        const kb = Math.max(1, Math.round(size / 1024));
-        toast.success(savedToFile ? "📦 Auto-backup zapisany" : "📦 Auto-backup pobrany w tle", {
-          description: `${filename} • ${kb} KB • ${notes.length + archivedNotes.length} notatek`,
-          duration: 8000,
+        // Bez gestu użytkownika działa tylko zapis do wybranego pliku
+        // (File System Access). Inaczej nie udajemy pobrania „w tle” —
+        // prosimy o jedno kliknięcie, a backup liczy się dopiero wtedy.
+        const { filename, size, savedToFile } = await exportFullBackup(undefined, { allowDownload: false });
+        const count = notes.length + archivedNotes.length;
+        if (savedToFile) {
+          markBackup();
+          const kb = Math.max(1, Math.round(size / 1024));
+          toast.success("Auto-backup zapisany", { description: `${filename} • ${kb} KB • ${count} notatek`, duration: 8000 });
+          return;
+        }
+        toast("Czas na backup", {
+          id: "auto-backup",
+          description: `Minęło ${prefs.autoExportDays} dni od ostatniego. Pobierz plik z ${count} notatkami.`,
+          duration: Infinity,
+          action: {
+            label: "Pobierz",
+            onClick: async () => {
+              try {
+                const res = await exportFullBackup();
+                markBackup();
+                toast.success(res.savedToFile ? "Backup zapisany" : "Backup pobrany", { description: res.filename });
+              } catch {
+                toast.error("Nie udało się wygenerować backupu");
+              }
+            },
+          },
         });
       } catch {
         toast.error("Auto-backup nie powiódł się");

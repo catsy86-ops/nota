@@ -21,6 +21,17 @@ const GROUPS: ShortcutGroup[] = [
     ],
   },
   {
+    // Operatory łączą się ze sobą i ze zwykłym tekstem: „label:praca has:reminder raport”.
+    heading: "Wyszukiwanie",
+    items: [
+      { keys: ["label:praca"], label: "Notatki z etykietą" },
+      { keys: ["color:mint"], label: "Notatki w kolorze" },
+      { keys: ["has:reminder"], label: "Z przypomnieniem" },
+      { keys: ["has:checklist"], label: "Z listą zadań" },
+      { keys: ["has:image"], label: "Ze zdjęciem" },
+    ],
+  },
+  {
     heading: "Lista notatek",
     items: [
       { keys: ["←", "→", "↑", "↓"], label: "Nawigacja między notatkami" },

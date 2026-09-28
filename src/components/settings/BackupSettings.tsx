@@ -3,7 +3,10 @@ import { Download, Database, ShieldCheck, ShieldAlert, FileCog, FileDown, GitMer
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useViewPrefs, setViewPref } from "@/lib/viewPrefs";
-import { exportFullBackup, importFullBackup } from "@/lib/exportNotes";
+import { exportFullBackup, pickFullBackup, restoreFullBackup, type RestoreOptions } from "@/lib/exportNotes";
+import type { FullBackup } from "@/lib/noteSchema";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { exportSyncFile, importSyncFile } from "@/lib/yjsFileSync";
 import { daysSinceBackup } from "@/lib/backupReminder";
 import { requestPersistentStorage, getStorageInfo, type StorageInfo } from "@/lib/storagePersistence";
@@ -135,16 +138,81 @@ async function exportNow() {
   }
 }
 
-async function restoreNow() {
-  try {
-    const backup = await importFullBackup();
-    toast.success(`Backup wczytany — ${backup.notes.length} notatek. Odświeżam…`);
-    setTimeout(() => window.location.reload(), 1200);
-  } catch (err) {
-    if (err instanceof Error && err.message !== "Nie wybrano pliku") {
-      toast.error("Nie udało się wczytać backupu: " + err.message);
+/**
+ * Przywracanie w dwóch krokach: najpierw plik jest tylko czytany, potem
+ * użytkownik widzi, co w nim jest, i wybiera sekcje poza notatkami.
+ */
+function RestoreBackup() {
+  const [backup, setBackup] = useState<FullBackup | null>(null);
+  const [opts, setOpts] = useState<RestoreOptions>({ versions: true, settings: true, achievements: true });
+  const [busy, setBusy] = useState(false);
+
+  async function pick() {
+    try {
+      setBackup(await pickFullBackup());
+      setOpts({ versions: true, settings: true, achievements: true });
+    } catch (err) {
+      if (err instanceof Error && err.message !== "Nie wybrano pliku") {
+        toast.error("Nie udało się wczytać backupu: " + err.message);
+      }
     }
   }
+
+  async function restore() {
+    if (!backup) return;
+    setBusy(true);
+    try {
+      await restoreFullBackup(backup, opts);
+      toast.success(`Backup przywrócony — ${backup.notes.length} notatek. Odświeżam…`);
+      setTimeout(() => window.location.reload(), 1200);
+    } catch (err) {
+      setBusy(false);
+      toast.error("Nie udało się przywrócić backupu" + (err instanceof Error ? ": " + err.message : ""));
+    }
+  }
+
+  const sections: { key: keyof RestoreOptions; label: string; present: boolean }[] = backup ? [
+    { key: "versions", label: `Historia wersji (${backup.versions?.length ?? 0})`, present: backup.versions !== undefined },
+    { key: "settings", label: "Ustawienia (wygląd, motyw, efekty, potwierdzenia)", present: backup.settings !== undefined },
+    { key: "achievements", label: "Odznaki i passa", present: backup.achievements !== undefined },
+  ] : [];
+
+  return (
+    <>
+      <Button onClick={pick} variant="outline" className="w-full gap-2">
+        <Database className="w-4 h-4" /> Przywróć z pliku backupu
+      </Button>
+      <AlertDialog open={!!backup} onOpenChange={(o) => { if (!o && !busy) setBackup(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Przywrócić ten backup?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {backup && <>Z {new Date(backup.exportedAt).toLocaleString("pl-PL")}: {backup.notes.length} notatek, {backup.folders.length} folderów. </>}
+              Notatki, foldery i etykiety w tej przeglądarce zostaną zastąpione zawartością pliku.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-2">
+            {sections.map((sec) => (
+              <label key={sec.key} className="flex items-center gap-2 text-sm text-foreground">
+                <Checkbox
+                  checked={sec.present && opts[sec.key]}
+                  disabled={!sec.present}
+                  onCheckedChange={(v) => setOpts((o) => ({ ...o, [sec.key]: !!v }))}
+                />
+                <span className={sec.present ? "" : "text-muted-foreground"}>
+                  {sec.label}{!sec.present && " — brak w tym pliku"}
+                </span>
+              </label>
+            ))}
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={busy}>Anuluj</AlertDialogCancel>
+            <AlertDialogAction disabled={busy} onClick={(e) => { e.preventDefault(); void restore(); }}>Przywróć backup</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  );
 }
 
 async function exportSyncNow() {
@@ -189,7 +257,7 @@ export function BackupSettings() {
           onValueChange={([v]) => handleAutoExportChange(v)}
         />
         <p className="text-xs text-muted-foreground mt-1.5">
-          Po przekroczeniu interwału aplikacja sama zapisze backup (gdy otworzysz KACZY) — do Pobranych, albo do jednego wybranego pliku, jeśli go ustawiłeś niżej.
+          Po przekroczeniu interwału (gdy otworzysz KACZY) backup sam zapisze się do pliku wybranego niżej. Bez wybranego pliku pojawi się przycisk „Pobierz” — przeglądarki nie pozwalają pobierać plików bez kliknięcia.
         </p>
       </Section>
 
@@ -276,9 +344,7 @@ export function BackupSettings() {
       <Button onClick={exportNow} className="w-full gap-2">
         <Download className="w-4 h-4" /> Pobierz pełny backup teraz
       </Button>
-      <Button onClick={restoreNow} variant="outline" className="w-full gap-2">
-        <Database className="w-4 h-4" /> Przywróć z pliku backupu
-      </Button>
+      <RestoreBackup />
 
       <Section title="Synchronizacja przez plik">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -296,7 +362,7 @@ export function BackupSettings() {
 
       <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-1">
         <p className="font-semibold text-foreground">💡 Wskazówka</p>
-        <p>Pełny backup zawiera wszystkie notatki (w tym archiwum i kosz), etykiety i foldery. Przywrócenie z pliku zastąpi obecne dane w tej przeglądarce i odświeży aplikację.</p>
+        <p>Pełny backup zawiera wszystkie notatki (w tym archiwum i kosz), etykiety, foldery, historię wersji, ustawienia oraz odznaki. Nie zawiera kodu parowania urządzeń. Przywrócenie zastąpi notatki w tej przeglądarce i odświeży aplikację.</p>
       </div>
     </div>
   );

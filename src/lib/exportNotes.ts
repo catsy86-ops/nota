@@ -4,6 +4,8 @@ import type { Note } from "@/hooks/useNotes";
 import { yjsStore } from "@/lib/yjsStore";
 import { noteSchema, fullBackupSchema, looksLikeNoteArray, type FullBackup } from "@/lib/noteSchema";
 import { tryWriteBackupToFile } from "@/lib/backupFileHandle";
+import { versionsStore } from "@/lib/versionsStore";
+import { logDiag } from "@/lib/diagnostics";
 
 export function exportToJSON(notes: Note[], filename?: string): { filename: string; size: number } {
   const data = JSON.stringify(notes, null, 2);
@@ -12,31 +14,65 @@ export function exportToJSON(notes: Note[], filename?: string): { filename: stri
   return { filename: name, size: new Blob([data]).size };
 }
 
+/** Zawartość pełnego backupu v2 (bez zapisu do pliku). */
+export async function buildFullBackup(): Promise<FullBackup> {
+  await yjsStore.ready();
+  await versionsStore.load();
+  return {
+    version: 2,
+    exportedAt: Date.now(),
+    notes: yjsStore.projectNotes(),
+    labels: yjsStore.projectLabels(),
+    folders: yjsStore.projectFolders(),
+    versions: versionsStore.all(),
+    settings: readKeys(SETTINGS_KEYS),
+    achievements: readKeys([ACHIEVEMENTS_KEY])[ACHIEVEMENTS_KEY],
+  };
+}
+
 /**
  * Pełny backup: notatki + etykiety + foldery, wystarczający do odtworzenia całej bazy.
  * Jeśli w Ustawieniach wybrano jeden, zapamiętany plik (File System Access API,
  * desktop Chrome/Edge), nadpisuje go zamiast pobierać kolejny plik do Pobranych.
  */
-export async function exportFullBackup(filename?: string): Promise<{ filename: string; size: number; savedToFile: boolean }> {
-  await yjsStore.ready();
-  const backup: FullBackup = {
-    version: 1,
-    exportedAt: Date.now(),
-    notes: yjsStore.projectNotes(),
-    labels: yjsStore.projectLabels(),
-    folders: yjsStore.projectFolders(),
-  };
+export async function exportFullBackup(
+  filename?: string,
+  { allowDownload = true }: { allowDownload?: boolean } = {},
+): Promise<{ filename: string; size: number; savedToFile: boolean; downloaded: boolean }> {
+  const backup = await buildFullBackup();
   const data = JSON.stringify(backup, null, 2);
   const name = filename || `kaczy-full-backup-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
   const savedToFile = await tryWriteBackupToFile(data);
-  if (!savedToFile) download(data, name, "application/json");
-  return { filename: name, size: new Blob([data]).size, savedToFile };
+  // Pobranie bez gestu użytkownika przeglądarki blokują albo o nie pytają —
+  // auto-backup przekazuje `allowDownload: false` i prosi o kliknięcie.
+  const downloaded = !savedToFile && allowDownload;
+  if (downloaded) download(data, name, "application/json");
+  return { filename: name, size: new Blob([data]).size, savedToFile, downloaded };
 }
 
 const MAX_IMPORT_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
-/** Wczytuje i waliduje plik pełnego backupu, zapisuje bezpośrednio do IndexedDB. */
-export function importFullBackup(): Promise<FullBackup> {
+/**
+ * Ustawienia wchodzące do pełnego backupu. Świadomie **bez** `kaczy.sync.v1`
+ * (kod parowania to sekret, a na nowym urządzeniu paruje się od nowa) i bez
+ * znaczników „kiedy ostatnio przypominano”.
+ */
+export const SETTINGS_KEYS = [
+  "kaczy.viewPrefs.v1", "kaczy-theme", "kaczy.motion.v1", "kaczy.confirmPrefs.v1",
+  "kaczy.effectsSettings.v1", "kaczy.seasonTheme.v1",
+];
+export const ACHIEVEMENTS_KEY = "kaczy.achievements.v1";
+
+function readKeys(keys: string[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const k of keys) {
+    try { const v = localStorage.getItem(k); if (v !== null) out[k] = v; } catch { /* ignore */ }
+  }
+  return out;
+}
+
+/** Wybór i walidacja pliku pełnego backupu — jeszcze bez żadnych zmian w danych. */
+export function pickFullBackup(): Promise<FullBackup> {
   return new Promise((resolve, reject) => {
     const input = document.createElement("input");
     input.type = "file";
@@ -48,21 +84,46 @@ export function importFullBackup(): Promise<FullBackup> {
         return reject(new Error(`Plik jest zbyt duży (max ${MAX_IMPORT_FILE_SIZE / (1024 * 1024)} MB)`));
       }
       try {
-        const text = await file.text();
-        const raw = JSON.parse(text);
-        if (!raw || typeof raw !== "object" || !Array.isArray((raw as Record<string, unknown>).notes)) {
-          throw new Error("To nie jest plik pełnego backupu KACZY");
-        }
-        const backup = fullBackupSchema.parse(raw);
-        await yjsStore.ready();
-        yjsStore.replaceAll(backup.notes, backup.folders, backup.labels);
-        resolve(backup);
+        resolve(parseFullBackup(await file.text()));
       } catch (err) {
         reject(err instanceof Error ? err : new Error("Nieprawidłowy plik backupu"));
       }
     };
     input.click();
   });
+}
+
+export function parseFullBackup(text: string): FullBackup {
+  const raw = JSON.parse(text);
+  if (!raw || typeof raw !== "object" || !Array.isArray((raw as Record<string, unknown>).notes)) {
+    throw new Error("To nie jest plik pełnego backupu KACZY");
+  }
+  return fullBackupSchema.parse(raw);
+}
+
+export interface RestoreOptions { versions: boolean; settings: boolean; achievements: boolean }
+
+/**
+ * Przywraca backup: notatki, foldery i etykiety zawsze (destrukcyjnie),
+ * pozostałe sekcje tylko zaznaczone i obecne w pliku. Ustawienia działają
+ * po przeładowaniu strony, które i tak następuje po przywróceniu.
+ */
+export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions): Promise<void> {
+  await yjsStore.ready();
+  yjsStore.replaceAll(backup.notes, backup.folders, backup.labels);
+  if (opts.versions && backup.versions) {
+    await versionsStore.load();
+    versionsStore.replaceAll(backup.versions);
+    await versionsStore.flush();
+  }
+  const writes: Record<string, string> = {};
+  if (opts.settings && backup.settings) {
+    for (const k of SETTINGS_KEYS) if (k in backup.settings) writes[k] = backup.settings[k];
+  }
+  if (opts.achievements && backup.achievements !== undefined) writes[ACHIEVEMENTS_KEY] = backup.achievements;
+  for (const [k, v] of Object.entries(writes)) {
+    try { localStorage.setItem(k, v); } catch (err) { logDiag("warn", "backup", `cannot restore ${k}`, err); }
+  }
 }
 
 export function download(content: string, filename: string, type: string) {

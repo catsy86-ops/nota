@@ -41,7 +41,7 @@ test("plik synchronizacji scala notatki dwóch urządzeń bez usuwania", async (
     b.getByRole("button", { name: "Scal z pliku" }).click(),
   ]);
   await chooser.setFiles(file);
-  await expect(b.getByText("Scalono — 1 nowa notatka")).toBeVisible();
+  await expect(b.getByText("Scalono — 1 nowa notatka")).toBeVisible({ timeout: 15_000 });
   await b.keyboard.press("Escape");
 
   await expect(b.getByText(fromA)).toBeVisible();

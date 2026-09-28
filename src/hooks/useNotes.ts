@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { yjsStore } from "@/lib/yjsStore";
+import { versionsStore } from "@/lib/versionsStore";
 import type { NotePriority } from "@/lib/notePriority";
 
 export type NoteColor = "default" | "coral" | "peach" | "sand" | "mint" | "sage" | "sky" | "lavender" | "rose";
@@ -116,7 +117,7 @@ export function useNotes() {
     const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
     const now = Date.now();
     const expired = notes.filter((n) => n.trashed && n.trashedAt && now - n.trashedAt > THIRTY_DAYS).map((n) => n.id);
-    if (expired.length) yjsStore.removeNotes(expired);
+    if (expired.length) { yjsStore.removeNotes(expired); versionsStore.remove(expired); }
   }, [notes]);
 
   /** Zwraca id utworzonej notatki — potrzebne, gdy wywołujący musi ją zaraz dopatchować. */

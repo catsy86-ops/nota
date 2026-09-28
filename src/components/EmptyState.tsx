@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { NotatnikWordmark } from "@/components/NotatnikWordmark";
-import type { View } from "@/hooks/useFilteredNotes";
+import type { View, Elsewhere } from "@/hooks/useFilteredNotes";
 
 const HEADINGS: Record<View, string> = {
   notes: "Zacznij tworzyć",
@@ -28,12 +28,38 @@ const DESCRIPTIONS: Record<View, string> = {
   widget: "",
 };
 
-export function EmptyState({ view, search }: { view: View; search: string }) {
+const ELSEWHERE_LABELS: { key: keyof Elsewhere; view: View; name: string }[] = [
+  { key: "notes", view: "notes", name: "Notatkach" },
+  { key: "archive", view: "archive", name: "Archiwum" },
+  { key: "trash", view: "trash", name: "Koszu" },
+];
+
+const HERE: Partial<Record<View, string>> = { notes: "Notatkach", archive: "Archiwum", trash: "Koszu" };
+
+export function EmptyState({ view, search, elsewhere, onGo }: { view: View; search: string; elsewhere?: Elsewhere; onGo?: (view: View) => void }) {
   if (search) {
+    const hits = ELSEWHERE_LABELS.filter((e) => (elsewhere?.[e.key] ?? 0) > 0);
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
-        <p className="text-lg font-display font-semibold text-foreground mb-1">Brak wyników</p>
+        <p className="text-lg font-display font-semibold text-foreground mb-1">
+          Brak wyników{HERE[view] ? ` w ${HERE[view]}` : " w tym widoku"}
+        </p>
         <p className="text-muted-foreground">Nic nie znaleziono dla „{search}"</p>
+        {hits.length > 0 && onGo && (
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <span className="text-sm text-muted-foreground">Znaleziono gdzie indziej:</span>
+            {hits.map((e) => (
+              <button
+                key={e.key}
+                type="button"
+                onClick={() => onGo(e.view)}
+                className="text-sm font-medium rounded-full border border-border/60 bg-muted/40 px-3 py-1 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                {elsewhere![e.key]} w {e.name}
+              </button>
+            ))}
+          </div>
+        )}
       </motion.div>
     );
   }
