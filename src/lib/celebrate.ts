@@ -17,6 +17,7 @@ const THROTTLE_MS: Record<EffectKey, number> = {
   rainbow: 2500,
   seasonalTheme: 0,
   dailyQuote: 0,
+  cardTilt: 0,
 };
 
 const lastFiredAt: Record<EffectKey, number> = {
@@ -29,6 +30,7 @@ const lastFiredAt: Record<EffectKey, number> = {
   rainbow: 0,
   seasonalTheme: 0,
   dailyQuote: 0,
+  cardTilt: 0,
 };
 
 let fireworksActive = false;

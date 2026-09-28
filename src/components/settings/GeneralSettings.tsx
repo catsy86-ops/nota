@@ -59,7 +59,8 @@ function previewEffect(key: EffectKey) {
     case "bubbles": bubbles(cx, window.innerHeight - 40); break;
     case "rainbow": rainbow(); break;
     case "seasonalTheme":
-    case "dailyQuote": break;
+    case "dailyQuote":
+    case "cardTilt": break;
   }
 }
 
@@ -143,7 +144,7 @@ export function GeneralSettings() {
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                {key !== "seasonalTheme" && key !== "dailyQuote" && (
+                {key !== "seasonalTheme" && key !== "dailyQuote" && key !== "cardTilt" && (
                   <Button type="button" size="sm" variant="outline" disabled={!enabled} onClick={() => previewEffect(key)} className="h-8 px-2.5 gap-1.5">
                     <Play className="w-3.5 h-3.5" /><span className="text-xs">Test</span>
                   </Button>

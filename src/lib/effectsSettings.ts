@@ -9,7 +9,8 @@ export type EffectKey =
   | "bubbles"
   | "rainbow"
   | "seasonalTheme"
-  | "dailyQuote";
+  | "dailyQuote"
+  | "cardTilt";
 
 export const EFFECT_LABELS: Record<EffectKey, { label: string; description: string; emoji: string }> = {
   confetti: { label: "Konfetti", description: "Wystrzał przy przywracaniu z kosza", emoji: "🎉" },
@@ -21,6 +22,7 @@ export const EFFECT_LABELS: Record<EffectKey, { label: string; description: stri
   rainbow: { label: "Tęcza", description: "Kolorowy łuk po większych osiągnięciach", emoji: "🌈" },
   seasonalTheme: { label: "Motyw sezonowy", description: "Akcenty dopasowane do pory roku", emoji: "🍂" },
   dailyQuote: { label: "Cytat dnia", description: "Inspiracja na górze ekranu", emoji: "💭" },
+  cardTilt: { label: "Przechył kafli", description: "Kafel lekko przechyla się za kursorem", emoji: "🃏" },
 };
 
 export type EffectsSettings = Record<EffectKey, boolean>;
@@ -35,6 +37,8 @@ const DEFAULTS: EffectsSettings = {
   rainbow: true,
   seasonalTheme: true,
   dailyQuote: true,
+  // Domyślnie wyłączone: sprężyny na każdym kaflu kosztują render, a nic nie mówią.
+  cardTilt: false,
 };
 
 const store = createPersistedStore<EffectsSettings>("kaczy.effectsSettings.v1", DEFAULTS, {
