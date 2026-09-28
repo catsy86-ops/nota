@@ -131,9 +131,20 @@ const Index = () => {
     (id) => openNoteRef.current(id),
   );
 
+  // Odznaki w głównym widoku: jeden cichy toast na paczkę (import potrafi odblokować
+  // kilka naraz), stałe `id` podmienia go zamiast piętrzyć. Szczegóły są w Statystykach.
+  const unlockedBatchRef = useRef<string[]>([]);
   useAchievementTracker(notes, archivedNotes, allLabels, folders, (a) => {
-    // Quiet in the main view: a plain toast; badges and celebrations live in Statystyki.
-    toast(`Odznaka odblokowana: ${a.title}`, { description: a.description });
+    unlockedBatchRef.current.push(a.title);
+    const titles = unlockedBatchRef.current;
+    toast(titles.length === 1 ? `Nowa odznaka: ${titles[0]}` : `Nowe odznaki: ${titles.length}`, {
+      id: "achievements",
+      description: titles.length === 1 ? a.description : titles.join(", "),
+      duration: 4000,
+      action: { label: "Zobacz", onClick: () => setStatsOpen(true) },
+      onAutoClose: () => { unlockedBatchRef.current = []; },
+      onDismiss: () => { unlockedBatchRef.current = []; },
+    });
   });
 
   useBackupReminders(prefs, notes, archivedNotes);
