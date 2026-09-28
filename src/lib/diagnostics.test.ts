@@ -12,6 +12,7 @@ vi.mock("@/lib/yjsSync", () => ({
     lastError: `room for ${PAIRING_CODE} unreachable`,
   }),
   formatCode: (code: string) => code.match(/.{1,4}/g)!.join(" "),
+  getSignalingServers: () => ["wss://sig.example.com"],
 }));
 
 import { collectDiagReport } from "@/lib/diagnosticsReport";
@@ -61,6 +62,7 @@ describe("raport diagnostyczny", () => {
 
     expect(report).toContain("notatki: 1, archiwum: 1, kosz: 1");
     expect(report).toContain("sparowano: true");
+    expect(report).toContain("serwery sygnalizacyjne: wss://sig.example.com");
     expect(report).not.toContain("Tajny tytuł");
     expect(report).not.toContain("hasło do sejfu");
     expect(report).not.toContain("pierścionek");

@@ -75,6 +75,8 @@ export interface DiagSnapshot {
     paired: boolean;
     lastSyncedAt: number | null;
     lastError: string | null;
+    /** Własne serwery sygnalizacyjne (adresy to konfiguracja, nie sekret); puste = domyślne. */
+    signaling?: string[];
   };
 }
 
@@ -107,6 +109,7 @@ export function buildDiagReport(snapshot: DiagSnapshot, log: readonly DiagEntry[
     `sync: ${snapshot.sync.status}, urządzenia: ${snapshot.sync.peerCount}, sparowano: ${snapshot.sync.paired}`,
     `ostatnia synchronizacja: ${snapshot.sync.lastSyncedAt ? new Date(snapshot.sync.lastSyncedAt).toISOString() : "nigdy"}`,
     `ostatni błąd sync: ${snapshot.sync.lastError ?? "brak"}`,
+    `serwery sygnalizacyjne: ${snapshot.sync.signaling?.length ? snapshot.sync.signaling.join(", ") : "domyślne"}`,
     "",
     `dziennik (${log.length} ostatnich wpisów):`,
     ...log.map((e) => `${new Date(e.at).toISOString()} ${e.level.toUpperCase().padEnd(5)} [${e.source}] ${e.message}`),

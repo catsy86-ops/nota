@@ -1,7 +1,7 @@
 import * as Y from "yjs";
 import type { WebrtcProvider } from "y-webrtc";
 import { yjsStore } from "@/lib/yjsStore";
-import { roomNamesFor } from "@/lib/yjsSync";
+import { providerOptions, roomNamesFor } from "@/lib/yjsSync";
 
 /**
  * P2P image sync (follow-up to yjsSync.ts's Phase 2 text/metadata sync — see
@@ -101,7 +101,7 @@ export function startImageSync(code: string): void {
   Promise.all([import("y-webrtc"), roomNamesFor(code)]).then(([{ WebrtcProvider }, rooms]) => {
     if (token !== startToken) return; // superseded by a later start/stop
     providers = rooms.map((room) => {
-      const p = new WebrtcProvider(`${room}-img`, doc, { password: code });
+      const p = new WebrtcProvider(`${room}-img`, doc, providerOptions(code));
       p.on("peers", () => {
         // A peer (re)joined — resend our full local set so it can backfill
         // images it missed while offline, and check if it has ones we're missing.

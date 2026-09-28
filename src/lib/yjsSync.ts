@@ -31,16 +31,20 @@ const JOIN_LEGACY_ROOM = true;
 interface SyncPrefs {
   enabled: boolean;
   code: string | null;
+  /** Własne serwery sygnalizacyjne; pusta lista = domyślne publiczne z `y-webrtc`. */
+  signaling: string[];
 }
 
-const DEFAULT_PREFS: SyncPrefs = { enabled: false, code: null };
+const DEFAULT_PREFS: SyncPrefs = { enabled: false, code: null, signaling: [] };
 
 function readPrefs(): SyncPrefs {
   if (typeof window === "undefined") return DEFAULT_PREFS;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PREFS;
-    return { ...DEFAULT_PREFS, ...JSON.parse(raw) };
+    const parsed = { ...DEFAULT_PREFS, ...JSON.parse(raw) };
+    const signaling = Array.isArray(parsed.signaling) ? parseSignalingList(parsed.signaling.join(" ")).valid : [];
+    return { ...parsed, signaling };
   } catch (err) {
     logDiag("warn", "yjsSync", "unreadable sync prefs, using defaults", err);
     return DEFAULT_PREFS;
@@ -137,6 +141,47 @@ export async function roomNameV2For(code: string): Promise<string> {
   return `kaczy2-${hex}`;
 }
 
+/**
+ * Lista serwerów z pola tekstowego: po jednym w linii (albo po przecinku),
+ * tylko `ws://`/`wss://`, bez duplikatów. Zwraca też odrzucone wpisy do pokazania.
+ */
+export function parseSignalingList(raw: string): { valid: string[]; invalid: string[] } {
+  const valid: string[] = [];
+  const invalid: string[] = [];
+  for (const entry of raw.split(/[\s,]+/).map((e) => e.trim()).filter(Boolean)) {
+    let ok = false;
+    try {
+      const u = new URL(entry);
+      ok = (u.protocol === "ws:" || u.protocol === "wss:") && !!u.host;
+    } catch { /* nie URL */ }
+    if (!ok) invalid.push(entry);
+    else if (!valid.includes(entry)) valid.push(entry);
+  }
+  return { valid, invalid };
+}
+
+export function getSignalingServers(): string[] {
+  return readPrefs().signaling;
+}
+
+/**
+ * Opcje `WebrtcProvider` — **te same** dla tekstu i obrazów, inaczej trafiłyby
+ * na różne serwery i rozjechały się. Pusta lista = domyślne serwery `y-webrtc`.
+ */
+export function providerOptions(code: string): { password: string; signaling?: string[] } {
+  const { signaling } = readPrefs();
+  return signaling.length ? { password: code, signaling } : { password: code };
+}
+
+/** Zapisuje listę serwerów i — jeśli sync jest włączony — łączy się od nowa. */
+export function setSignalingServers(servers: string[]): void {
+  const prefs = readPrefs();
+  const signaling = parseSignalingList(servers.join(" ")).valid;
+  writePrefs({ ...prefs, signaling });
+  logDiag("info", "yjsSync", `signaling servers: ${signaling.length ? signaling.length + " custom" : "default"}`);
+  if (prefs.enabled && prefs.code) connect(prefs.code);
+}
+
 /** Pokoje, do których dołącza urządzenie: nowy zawsze, stary w okresie przejściowym. */
 export async function roomNamesFor(code: string): Promise<string[]> {
   const v2 = await roomNameV2For(code);
@@ -161,7 +206,7 @@ function connect(code: string) {
     const connected = rooms.map(() => false);
     const peers = rooms.map(() => 0);
     providers = rooms.map((room, i) => {
-      const p = new WebrtcProvider(room, yjsStore.doc, { password: code });
+      const p = new WebrtcProvider(room, yjsStore.doc, providerOptions(code));
       p.on("status", ({ connected: c }: { connected: boolean }) => {
         logDiag("info", "yjsSync", `${c ? "signaling connected" : "signaling disconnected"} (room ${i})`);
         connected[i] = c;
@@ -205,7 +250,7 @@ function disconnectProvider() {
 /** Generates a fresh pairing code, enables sync and connects. Returns the code. */
 export function startPairing(): string {
   const code = generateCode();
-  writePrefs({ enabled: true, code });
+  writePrefs({ ...readPrefs(), enabled: true, code });
   connect(code);
   return code;
 }
@@ -213,7 +258,7 @@ export function startPairing(): string {
 /** Joins (or switches to) an existing pairing group by code. */
 export function joinWithCode(rawCode: string): string {
   const code = normalizeCode(rawCode);
-  writePrefs({ enabled: true, code });
+  writePrefs({ ...readPrefs(), enabled: true, code });
   connect(code);
   return code;
 }
@@ -237,7 +282,8 @@ export function resumeSync(): void {
 
 /** Disconnects and forgets the pairing code entirely (leaves the group). */
 export function forgetPairing(): void {
-  writePrefs({ enabled: false, code: null });
+  // Serwery to konfiguracja, nie parowanie — zostają.
+  writePrefs({ ...readPrefs(), enabled: false, code: null });
   disconnectProvider();
   setState({ status: "disabled", peerCount: 0, code: null });
 }

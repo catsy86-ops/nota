@@ -9,6 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
 import {
   useSyncState, startPairing, joinWithCode, pauseSync, resumeSync, forgetPairing, formatCode,
+  getSignalingServers, setSignalingServers, parseSignalingList,
 } from "@/lib/yjsSync";
 
 interface Props {
@@ -142,6 +143,8 @@ export function SyncSettings({ prefillCode }: Props) {
         </div>
       </div>
 
+      <SignalingServers />
+
       <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-2">
         <p className="font-semibold text-foreground">Jak to działa</p>
         <ul className="list-disc pl-4 space-y-1">
@@ -152,5 +155,58 @@ export function SyncSettings({ prefillCode }: Props) {
         </ul>
       </div>
     </div>
+  );
+}
+
+/**
+ * Własne serwery sygnalizacyjne. Publiczne serwery `y-webrtc` to cudza
+ * infrastruktura — gdy znikną, sync cicho przestanie działać. Domyślnie puste.
+ */
+function SignalingServers() {
+  const [saved, setSaved] = useState(() => getSignalingServers());
+  const [draft, setDraft] = useState(() => saved.join("\n"));
+  const { valid, invalid } = parseSignalingList(draft);
+  const dirty = valid.join("\n") !== saved.join("\n");
+
+  function handleSave() {
+    setSignalingServers(valid);
+    setSaved(valid);
+    setDraft(valid.join("\n"));
+    toast.success(valid.length ? "Zapisano serwery sygnalizacyjne" : "Przywrócono domyślne serwery");
+  }
+
+  return (
+    <details className="group rounded-xl border border-border/60 bg-muted/20 p-3 text-xs" open={saved.length > 0 || undefined}>
+      <summary className="cursor-pointer font-semibold text-foreground select-none">
+        Serwery sygnalizacyjne {saved.length > 0 ? `(własne: ${saved.length})` : "(domyślne)"}
+      </summary>
+      <div className="mt-3 space-y-2">
+        <p className="text-muted-foreground">
+          Pomagają urządzeniom się odnaleźć — treść notatek przez nie nie przechodzi. Puste pole to
+          publiczne serwery Yjs. Wszystkie urządzenia w grupie muszą mieć tę samą listę.
+        </p>
+        <label htmlFor="signaling-servers" className="sr-only">Adresy serwerów, po jednym w linii</label>
+        <textarea
+          id="signaling-servers"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="wss://sygnalizacja.example.com"
+          rows={3}
+          spellCheck={false}
+          className="w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-base sm:text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        />
+        {invalid.length > 0 && (
+          <p className="text-destructive">
+            Nie zostanie zapisane (adres musi zaczynać się od wss:// albo ws://): {invalid.join(", ")}
+          </p>
+        )}
+        <div className="flex justify-end gap-2">
+          {saved.length > 0 && (
+            <Button type="button" size="sm" variant="ghost" onClick={() => setDraft("")}>Wyczyść</Button>
+          )}
+          <Button type="button" size="sm" onClick={handleSave} disabled={!dirty}>Zapisz serwery</Button>
+        </div>
+      </div>
+    </details>
   );
 }

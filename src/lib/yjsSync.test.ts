@@ -209,4 +209,43 @@ describe("yjsSync", () => {
     mod.initSync();
     expect(providerInstances).toHaveLength(0);
   });
+
+  it("parses the signaling list: ws/wss only, deduplicated, rejects the rest", async () => {
+    const { parseSignalingList } = await import("./yjsSync");
+    const r = parseSignalingList(["wss://a.example.com", " ws://localhost:4444, wss://a.example.com", "https://nope.example", "foo"].join("\n"));
+    expect(r.valid).toEqual(["wss://a.example.com", "ws://localhost:4444"]);
+    expect(r.invalid).toEqual(["https://nope.example", "foo"]);
+  });
+
+  it("passes no signaling option by default (y-webrtc public servers)", async () => {
+    const { startPairing } = await import("./yjsSync");
+    startPairing();
+    await waitForMainProvider();
+    for (const p of providerInstances) expect((p.opts as { signaling?: string[] }).signaling).toBeUndefined();
+  });
+
+  it("custom servers go to BOTH text and image providers and reconnect", async () => {
+    const { startPairing, setSignalingServers, getSignalingServers } = await import("./yjsSync");
+    const code = startPairing();
+    await waitForMainProvider();
+    const before = [...providerInstances];
+    setSignalingServers(["wss://sig.example.com", "not a url"]);
+    expect(getSignalingServers()).toEqual(["wss://sig.example.com"]);
+    await vi.waitFor(() => {
+      const fresh = providerInstances.filter((p) => !before.includes(p));
+      if (fresh.filter((p) => p.roomName.endsWith("-img")).length < ROOMS_PER_CONNECT) throw new Error("image providers not yet");
+      if (fresh.filter((p) => !p.roomName.endsWith("-img")).length < ROOMS_PER_CONNECT) throw new Error("main providers not yet");
+    });
+    expect(before.every((p) => p.destroyed)).toBe(true);
+    const fresh = providerInstances.filter((p) => !before.includes(p));
+    for (const p of fresh) expect(p.opts).toEqual({ password: code, signaling: ["wss://sig.example.com"] });
+  });
+
+  it("keeps the servers after forgetting the pairing", async () => {
+    const { setSignalingServers, forgetPairing, joinWithCode, getSignalingServers } = await import("./yjsSync");
+    setSignalingServers(["wss://sig.example.com"]);
+    joinWithCode("ABCDEFGHJKMN");
+    forgetPairing();
+    expect(getSignalingServers()).toEqual(["wss://sig.example.com"]);
+  });
 });
