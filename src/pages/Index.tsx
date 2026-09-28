@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo, useRef, lazy, Suspense } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange } from "lucide-react";
 import { useNotesContext } from "@/hooks/NotesProvider";
@@ -13,7 +13,9 @@ import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
 import { useViewRoute } from "@/hooks/useViewRoute";
 import { parseViewRoute } from "@/lib/viewRoute";
 import { groupReminders } from "@/lib/reminderAgenda";
-import { buildWikiIndex } from "@/lib/wikiLinks";
+import { buildWikiIndex, resolveWikiTarget } from "@/lib/wikiLinks";
+import { useGridNavState, setGridNavPreview } from "@/lib/gridKeyboardNav";
+import { NoteReader, type ReaderMode } from "@/components/NoteReader";
 import { cn } from "@/lib/utils";
 import { useNavigationType } from "react-router-dom";
 import { whenNotesReady, isNoteTextEditOpen } from "@/hooks/useNotes";
@@ -53,7 +55,6 @@ import { OnboardingTour } from "@/components/OnboardingTour";
 // first load only pays for the code the note grid itself needs.
 const CommandPalette = lazy(() => import("@/components/CommandPalette").then((m) => ({ default: m.CommandPalette })));
 const StatsDialog = lazy(() => import("@/components/StatsDialog").then((m) => ({ default: m.StatsDialog })));
-const NotePresentation = lazy(() => import("@/components/NotePresentation").then((m) => ({ default: m.NotePresentation })));
 const FocusMode = lazy(() => import("@/components/FocusMode").then((m) => ({ default: m.FocusMode })));
 // Kalendarz wchodzi tylko po wejściu w swój widok — siatka notatek go nie potrzebuje.
 const ReminderCalendarView = lazy(() => import("@/components/calendar/ReminderCalendarView").then((m) => ({ default: m.ReminderCalendarView })));
@@ -258,6 +259,24 @@ const Index = () => {
     if (target) openNote(target.id);
     else toast.info(`Notatka „${title}" nie istnieje`);
   }, [allNotesForLinks, openNote]);
+
+  // Czytnik: podgląd (Spacja na kaflu, stan w `gridKeyboardNav`) albo prezentacja.
+  const { previewId } = useGridNavState();
+  const readerId = presentingNoteId ?? previewId;
+  const readerNote = useMemo(
+    () => (readerId ? [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === readerId) ?? null : null),
+    [readerId, notes, archivedNotes, trashedNotes],
+  );
+  const closeReader = useCallback(() => { setPresentingNoteId(null); setGridNavPreview(null); }, []);
+  const showInReader = useCallback((id: string, mode: ReaderMode) => {
+    if (mode === "present") { setGridNavPreview(null); setPresentingNoteId(id); }
+    else { setPresentingNoteId(null); setGridNavPreview(id); }
+  }, []);
+  const editFromReader = useCallback((id: string) => {
+    closeReader();
+    // Kafel musi najpierw wrócić na wierzch po zamknięciu czytnika.
+    setTimeout(() => openNote(id, false, true), 50);
+  }, [closeReader, openNote]);
 
   const toggleSelect = useCallback((id: string, shiftKey: boolean) => {
     setSelectedIds((prev) => {
@@ -471,7 +490,7 @@ const Index = () => {
                 📌 Przypięte
                 <span className="bg-primary/10 text-primary text-2xs px-1.5 rounded-full">{pinned.length}</span>
               </motion.p>
-              <NoteGrid navOrder={0} notes={pinned} searchQuery={search} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} onPresent={setPresentingNoteId} knownTitles={knownTitles} onWikiClick={handleWikiClick} wikiIndex={wikiIndex} onOpenNote={openNote} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
+              <NoteGrid navOrder={0} notes={pinned} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} onPresent={setPresentingNoteId} knownTitles={knownTitles} onWikiClick={handleWikiClick} wikiIndex={wikiIndex} onOpenNote={openNote} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
             </section>
           )}
 
@@ -484,7 +503,7 @@ const Index = () => {
                 {group.label}
                 <span className="bg-muted text-foreground/80 text-2xs px-1.5 rounded-full">{group.notes.length}</span>
               </p>
-              <NoteGrid navOrder={i} notes={group.notes} searchQuery={search} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} onPresent={setPresentingNoteId} knownTitles={knownTitles} onWikiClick={handleWikiClick} wikiIndex={wikiIndex} onOpenNote={openNote} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
+              <NoteGrid navOrder={i} notes={group.notes} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} onPresent={setPresentingNoteId} knownTitles={knownTitles} onWikiClick={handleWikiClick} wikiIndex={wikiIndex} onOpenNote={openNote} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
             </section>
           ))}
 
@@ -502,7 +521,6 @@ const Index = () => {
               <NoteGrid
                 navOrder={1}
                 notes={others}
-                searchQuery={search}
                 onUpdate={view === "trash" ? undefined : updateNote}
                 onDelete={handleDelete}
                 onTogglePin={view === "trash" ? undefined : togglePin}
@@ -578,16 +596,22 @@ const Index = () => {
       </Suspense>
     )}
     <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
-    {presentingNoteId && (
-      <Suspense fallback={null}>
-        <NotePresentation
-          noteId={presentingNoteId}
-          notes={allNotesForLinks}
-          onOpenChange={(v) => { if (!v) setPresentingNoteId(null); }}
-          onNavigate={setPresentingNoteId}
+    <AnimatePresence>
+      {readerNote && (
+        <NoteReader
+          key="reader"
+          note={readerNote}
+          mode={presentingNoteId ? "present" : "preview"}
+          searchQuery={search}
+          knownTitles={knownTitles}
+          wikiIndex={wikiIndex}
+          onClose={closeReader}
+          onEdit={editFromReader}
+          onShow={showInReader}
+          resolveTitle={(title) => resolveWikiTarget(title, allNotesForLinks)?.id}
         />
-      </Suspense>
-    )}
+      )}
+    </AnimatePresence>
     {focusModeOpen && (
       <Suspense fallback={null}>
         <FocusMode

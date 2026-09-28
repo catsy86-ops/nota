@@ -13,15 +13,6 @@ export function extractWikiLinks(content: string): string[] {
   return Array.from(out);
 }
 
-/** Notes that mention this note's title via [[…]]. */
-export function findBacklinks(note: Note, all: Note[]): Note[] {
-  const title = note.title.trim().toLowerCase();
-  if (!title) return [];
-  return all.filter(
-    (n) => n.id !== note.id && extractWikiLinks(n.content).includes(title)
-  );
-}
-
 /** Resolve a wiki target title → note id (case-insensitive). */
 export function resolveWikiTarget(title: string, all: Note[]): Note | undefined {
   const t = title.trim().toLowerCase();
@@ -35,7 +26,7 @@ export interface WikiLinkRef {
 
 /**
  * Wszystko, czego karty potrzebują do linków, policzone raz dla całej bazy
- * (zamiast `findBacklinks` w każdej karcie — to byłoby N² przy każdym renderze).
+ * (zamiast skanowania wszystkich notatek w każdej karcie — to byłoby N² przy każdym renderze).
  */
 export interface WikiIndex {
   /** Tytuły do podpowiedzi, najświeżej edytowane pierwsze, bez duplikatów wielkości liter. */

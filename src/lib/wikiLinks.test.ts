@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  extractWikiLinks, findBacklinks, resolveWikiTarget,
+  extractWikiLinks, resolveWikiTarget,
   buildWikiIndex, backlinksOf, wikiQueryAt, suggestWikiTitles, completeWikiLink,
 } from "./wikiLinks";
 import type { Note } from "@/hooks/useNotes";
@@ -51,29 +51,6 @@ describe("extractWikiLinks", () => {
     for (let i = 0; i < 3; i++) {
       expect(extractWikiLinks("[[A]] middle [[B]]")).toEqual(["a", "b"]);
     }
-  });
-});
-
-describe("findBacklinks", () => {
-  it("finds notes that link to this note's title, excluding itself", () => {
-    const target = makeNote({ id: "t", title: "Zakupy" });
-    const linker = makeNote({ id: "l", title: "Lista", content: "Patrz [[Zakupy]]" });
-    const selfLinker = makeNote({ id: "t", title: "Zakupy", content: "[[Zakupy]] self-link" });
-    const unrelated = makeNote({ id: "u", title: "Coś innego", content: "brak linków" });
-
-    expect(findBacklinks(target, [target, linker, selfLinker, unrelated])).toEqual([linker]);
-  });
-
-  it("returns an empty array for a note with no title", () => {
-    const target = makeNote({ id: "t", title: "" });
-    const other = makeNote({ id: "o", content: "[[x]]" });
-    expect(findBacklinks(target, [target, other])).toEqual([]);
-  });
-
-  it("matches case-insensitively", () => {
-    const target = makeNote({ id: "t", title: "ZAKUPY" });
-    const linker = makeNote({ id: "l", content: "[[zakupy]]" });
-    expect(findBacklinks(target, [target, linker])).toEqual([linker]);
   });
 });
 
