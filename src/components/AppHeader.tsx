@@ -141,7 +141,7 @@ export function AppHeader({
                 <FileJson className="w-4 h-4 mr-2" />
                 Eksportuj jako JSON
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => { import("@/lib/exportPdf").then((m) => m.exportToPDF(notes)); }}>
+              <DropdownMenuItem onClick={() => { import("@/lib/exportPdf").then((m) => m.exportToPDF([...notes, ...archivedNotes])); }}>
                 <FileText className="w-4 h-4 mr-2" />
                 Eksportuj jako PDF
               </DropdownMenuItem>
