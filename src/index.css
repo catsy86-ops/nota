@@ -411,6 +411,8 @@
   /* 16 px ikona + 2×14 px = 44 px — minimalny cel dotyku. */
   .card-action { padding: 0.875rem; }
   .card-actions { gap: 0; padding-left: 0.25rem; padding-right: 0.25rem; padding-bottom: 0.25rem; }
+  /* Główne akcje dopiero po „⋯” — zwinięty kafel ma w stopce jeden przycisk. */
+  .card-actions:not([data-more]) .card-primary { display: none; }
 }
 @media (hover: hover) {
   .card-actions { opacity: 0; transition: opacity 150ms; }

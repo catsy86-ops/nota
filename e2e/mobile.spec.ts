@@ -31,3 +31,14 @@ test("Ustawienia na telefonie zajmują cały ekran i nie zmieniają wysokości p
   expect(new Set(heights).size).toBe(1);
   expect(heights[0]).toBe(844);
 });
+
+test("na dotyku akcje kafla są schowane za „Więcej opcji”", async ({ page }) => {
+  await page.getByText("Zapisz notatkę...").click();
+  await page.getByPlaceholder("Tytuł").fill("Kafel na telefonie");
+  await page.getByRole("button", { name: "Zamknij" }).click();
+  const card = page.locator("[data-note-idx]").filter({ hasText: "Kafel na telefonie" });
+  await expect(card.getByRole("button", { name: "Przypnij" })).toBeHidden();
+  await card.getByRole("button", { name: "Więcej opcji" }).click();
+  await expect(card.getByRole("button", { name: "Przypnij" })).toBeVisible();
+  await expect(card.getByRole("button", { name: "Duplikuj" })).toBeVisible();
+});
