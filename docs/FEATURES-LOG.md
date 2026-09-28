@@ -10,7 +10,7 @@ była zaimplementowana — poniższa lista to realne, brakujące luki.
 1. ✅ **Priorytety notatek** (niski/średni/wysoki + sortowanie/filtrowanie) — zrobione 2026-09-24
 2. ✅ **Szybkie wpisywanie dat językiem naturalnym w przypomnieniach** ("jutro 15:00", "za 2h") — zrobione 2026-09-24
 3. ✅ **Prawdziwsze powiadomienia przez Service Worker** (działają lepiej w tle/PWA) — zrobione 2026-09-24
-4. ⏳ Widok „Nadchodzące" — lista notatek z przypomnieniami posortowana chronologicznie
+4. ✅ **Widok „Nadchodzące"** — agenda przypomnień posortowana chronologicznie, w grupach — zrobione 2026-09-28
 
 ---
 
@@ -133,6 +133,43 @@ ale pełne powiadomienia w tle wymagałyby Push API + serwera wysyłającego pus
 
 ---
 
+## Task 4 — Widok „Nadchodzące" (agenda przypomnień)
+
+**Data:** 2026-09-28 (commit `552ef84`)
+**Status:** ✅ Ukończone (testy jednostkowe + e2e kalendarza)
+
+### Co zrobiono
+- Zamiast osobnego widoku istniejący widok „Przypomnienia” stał się agendą — nowy
+  `src/lib/reminderAgenda.ts` z `groupReminders()`: notatki z przypomnieniem sortowane
+  po terminie rosnąco i dzielone na grupy **Zaległe / Dziś / Najbliższe 7 dni / Później**
+  (puste grupy pomijane). Sortowanie z ustawień jest tu celowo ignorowane — po dacie
+  edycji jutrzejszy termin chowałby się pod zeszłomiesięcznym.
+- `useFilteredNotes.ts` — w widoku przypomnień lista jest płaska (bez podziału na
+  przypięte), jak w koszu; grupowanie robi `Index.tsx`, nagłówek „Zaległe” w kolorze
+  `destructive`.
+- Drzemka w toaście: nowy `src/components/ReminderDueToast.tsx` podpięty w
+  `useReminderNotifications.ts` — przyciski **Odłóż 10 min**, **Jutro 9:00**, **Gotowe**
+  i **Otwórz**. Terminy liczy `snoozeTimes()`. Odłożenie przesuwa termin w przyszłość,
+  więc `reconcileFired` zdejmuje wpis „już odpalone” i przypomnienie wystrzeli ponownie.
+  Dla przypomnień powtarzalnych drzemka jest ukryta (kolejny termin serii jest już ustawiony).
+- `e2e/reminders-calendar.spec.ts` — zegar zamrożony przez `page.clock.setFixedTime`,
+  więc test kalendarza nie zależy od dzisiejszej daty.
+
+### Pliki zmienione
+- `src/lib/reminderAgenda.ts` (nowy), `src/lib/reminderAgenda.test.ts` (nowy, 3 testy)
+- `src/components/ReminderDueToast.tsx` (nowy)
+- `src/hooks/useReminderNotifications.ts`
+- `src/hooks/useFilteredNotes.ts`
+- `src/pages/Index.tsx`
+- `e2e/reminders-calendar.spec.ts`
+
+### Uwaga
+`src/components/ReminderToast.tsx` („Nie teraz / Drzemka 10 min / Pokaż”) zostaje —
+używają go dzienne/tygodniowe podsumowania w `useDailyWeeklyNudges.tsx`, nie przypomnienia
+konkretnych notatek.
+
+---
+
 ## Poza kolejką: rebranding logo (na żądanie użytkownika, 2026-09-24)
 
 Podmieniono logo kaczki na animowany kufel piwa (`src/components/BeerMugLogo.tsx` — czyste
@@ -160,3 +197,64 @@ usunięte, bo przy realnym kontraście i poświacie pod spodem było niewidoczne
 
 Uwaga: aplikacja nazywa się „NOTATKI PIJACKIE”, więc wordmark „Notatnik” w pustym
 stanie jest świadomym wyborem użytkownika, nie spójną nazwą marki.
+
+---
+
+## Poza kolejką: praca 2026-09-25 – 2026-09-28 (skrót)
+
+Po zamknięciu kolejki prace szły według `roadmap.md` — tam jest pełny opis każdej
+pozycji (pliki, decyzje, testy). Poniżej tylko mapa: co powstało i gdzie szukać szczegółów.
+
+### Synchronizacja między urządzeniami (roadmap: „Propozycje rozbudowy” pkt 1, „Kierunki — architektura”)
+- **Yjs jako warstwa danych** (`yjsStore.ts`, `y-indexeddb`) + **P2P przez `y-webrtc`**
+  z parowaniem kodem/QR (`yjsSync.ts`, zakładka „Sync”).
+- **Item-level CRDT checklist**, **P2P sync obrazów** (`imageSync.ts`, manifest `imageHashes`),
+  gotowy **self-hosted serwer sygnalizacyjny** w `signaling-server/` (niewpięty domyślnie).
+- **Synchronizacja przez plik** (`yjsFileSync.ts`) — scalanie CRDT bez jednoczesnego online,
+  obok destrukcyjnego „Przywróć z backupu”.
+- **Edycja względem bazy po tożsamościach znaków** (`yTextEdit.ts`) — zapis nie kasuje
+  współbieżnych zmian peera; **tekst peera na żywo** w otwartym edytorze (`useLiveNoteText.ts`).
+- **Inkrementalna projekcja Yjs** — stabilne referencje notatek, `memo(NoteCard)` działa.
+
+### Kalendarz przypomnień (roadmap: „Kalendarz przypomnień — plan”, etapy 1–7)
+- Widok kalendarza pod `lazy()`: siatka miesiąca, panel dnia, dodawanie/edycja/usuwanie
+  terminu, uczciwa semantyka serii, przeciąganie terminów, test 320 px.
+- **Eksport `.ics`** (`icsExport.ts`, `RRULE` + `VALARM`) — kalendarz systemowy przypomni
+  także przy zamkniętej appce.
+
+### Edycja, nawigacja, wyszukiwanie (roadmap: „Plan rozbudowy — 2026-09-27”)
+- **Autosave** (`useDraftAutosave`, zapis przy odmontowaniu — suwak w Ustawieniach wreszcie działa)
+  i **pełnoekranowy edytor** notatki (ten sam szkic i sesja Yjs co kafel).
+- **Stan widoku w adresie** (`viewRoute.ts`: `/folder/:id`, `/etykieta/:nazwa`, `/notatka/:id`, `?q=`),
+  działający „wstecz”, **link do notatki**, powiadomienie otwiera konkretną notatkę.
+- **Command Palette** otwiera notatki i widzi całą bazę; **wyszukiwanie globalne**
+  („Brak wyników w Notatkach — 1 w Archiwum”), wyszukiwanie w Koszu i w checklistach,
+  ściągawka operatorów `label:`/`color:`/`has:`.
+- Nowa notatka w folderze/etykiecie trafia do tego folderu/etykiety.
+
+### Dane i niezawodność
+- **Wersje notatek w IndexedDB** (`versionsStore.ts`) zamiast `localStorage`.
+- **Pełny backup v2** (wersje, ustawienia bez kodu parowania, osiągnięcia) z wyborem sekcji
+  przy przywracaniu; **uczciwy auto-backup** (bez udawanego pobrania w tle).
+- **Backup do jednego nadpisywanego pliku** (File System Access API).
+- **Lokalna diagnostyka** (`diagnostics.ts`) — dziennik błędów w pamięci, raport do pobrania
+  bez treści notatek, `lastSyncedAt`/`lastError` w stanie synchronizacji.
+- Audyt PWA: `storage.persist()`, `shortcuts`/`share_target` w manifeście, ikony bez białego
+  tła, działające e2e (wcześniej cały pakiet się nie uruchamiał).
+
+### Wydajność i porządki
+- Code-splitting (StatsDialog, SyncSettings, CommandPalette, `y-webrtc`, jsPDF) — eager JS
+  z ~1,5 MB do ~1,1 MB; regresję pilnuje `e2e/bundle.spec.ts`.
+- Martwy kod i zależności usunięte, `Index.tsx` i `SettingsDialog.tsx` rozbite, `NoteCard`
+  z 20 do 5 propsów, toasty zunifikowane na Sonner, configi Vercel/Netlify (bez wdrożenia).
+
+### Wygląd (roadmap: „Audyt UI/UX i layoutu”, fazy 1–3)
+- Kontrast AA (`muted-foreground`, ciemny tekst na `--primary`), skala tekstu, jeden system
+  cieni i promieni, spokojniejsze tło i budżet ruchu, jeden focus ring, ciszsza gamifikacja,
+  skrypt zrzutów przed/po (`scripts/screenshots.mjs`).
+
+### Co dalej
+Otwarta jest **Runda 8** (roadmap: „Stan Rundy 8”): agenda przypomnień (Task 4 wyżej) i
+**notatka dnia** (chip „Notatka dnia” zamiast szablonu „Dziennik”, pole `dailyDate`,
+`src/lib/dailyNote.ts` — 2026-09-28) są zrobione. Zostały **autouzupełnianie `[[` +
+backlinki w karcie** oraz **hardening parowania** (SHA-256 + 12-znakowy kod).
