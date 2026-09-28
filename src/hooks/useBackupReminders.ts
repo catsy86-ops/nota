@@ -60,6 +60,8 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
   // Backup reminder: nudge if last backup is older than reminderDays
   useEffect(() => {
     if (!prefs.backupReminderDays || prefs.backupReminderDays <= 0) return;
+    // Pusta baza (np. pierwsze uruchomienie) nie ma czego backupować.
+    if (notes.length === 0 && archivedNotes.length === 0) return;
     if (!isBackupOverdue(prefs.backupReminderDays)) return;
     if (sessionStorage.getItem("kaczy.backupNudge") === "1") return;
     sessionStorage.setItem("kaczy.backupNudge", "1");
