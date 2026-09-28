@@ -1,13 +1,19 @@
-import { useState } from "react";
+import { useState, type ClipboardEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { emojiShower } from "@/lib/celebrate";
+import { linesToChecklistItems } from "@/lib/checklistText";
+import type { ChecklistItem } from "@/hooks/useNotes";
 
-export interface ChecklistItem {
-  id: string;
-  text: string;
-  checked: boolean;
+/** Pozycje z wklejonego tekstu, jeśli ma więcej niż jedną linię; inaczej null (zwykłe wklejenie). */
+function pastedItems(e: ClipboardEvent<HTMLInputElement>): ChecklistItem[] | null {
+  const text = e.clipboardData.getData("text/plain");
+  if (!/\r?\n/.test(text.trim())) return null;
+  const parsed = linesToChecklistItems(text);
+  if (!parsed.length) return null;
+  e.preventDefault();
+  return parsed;
 }
 
 interface ChecklistEditorProps {
@@ -89,6 +95,13 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
               <input
                 value={item.text}
                 onChange={(e) => updateText(item.id, e.target.value)}
+                onPaste={(e) => {
+                  // Wiele linii: nowe pozycje zaraz pod bieżącą.
+                  const pasted = pastedItems(e);
+                  if (!pasted) return;
+                  const at = items.findIndex((i) => i.id === item.id) + 1;
+                  onChange([...items.slice(0, at), ...pasted, ...items.slice(at)]);
+                }}
                 className="text-sm bg-transparent outline-none text-foreground flex-1 min-w-0"
               />
             )}
@@ -142,6 +155,11 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
             value={newItem}
             onChange={(e) => setNewItem(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addItem()}
+            onPaste={(e) => {
+              // Wiele linii: każda niepusta to osobna pozycja na końcu listy.
+              const pasted = pastedItems(e);
+              if (pasted) onChange([...items, ...pasted]);
+            }}
             placeholder="Dodaj element..."
             className="text-sm bg-transparent outline-none text-foreground placeholder:text-muted-foreground/40 flex-1 min-w-0"
           />

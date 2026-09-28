@@ -12,6 +12,7 @@ import type { NoteColor, ChecklistItem } from "@/hooks/useNotes";
 import { fileToBase64 } from "@/hooks/useNotes";
 import { DrawingCanvas } from "./DrawingCanvas";
 import { ChecklistEditor } from "./ChecklistEditor";
+import { contentToChecklist, checklistToContent } from "@/lib/checklistText";
 import { FormatToolbar } from "./MarkdownRenderer";
 import { PriorityPicker } from "./PriorityPicker";
 import type { NotePriority } from "@/lib/notePriority";
@@ -154,13 +155,33 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
             {templates && isDraftEmpty && templates(reset)}
 
             {/* Checklist */}
-            <button
-              onClick={() => setShowChecklist(!showChecklist)}
-              className={cn("flex items-center gap-1.5 text-xs transition-colors", showChecklist ? "text-primary" : "text-muted-foreground hover:text-foreground")}
-            >
-              <ListChecks className="w-3.5 h-3.5" />
-              {showChecklist ? "Lista zadań" : "Dodaj listę"}
-            </button>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <button
+                onClick={() => setShowChecklist(!showChecklist)}
+                className={cn("flex items-center gap-1.5 text-xs transition-colors", showChecklist ? "text-primary" : "text-muted-foreground hover:text-foreground")}
+              >
+                <ListChecks className="w-3.5 h-3.5" />
+                {showChecklist ? "Lista zadań" : "Dodaj listę"}
+              </button>
+              {content.trim() && (
+                <button
+                  type="button"
+                  onClick={() => { const r = contentToChecklist(content, checklist); setContent(r.content); setChecklist(r.checklist); setShowChecklist(true); }}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Zamień na listę
+                </button>
+              )}
+              {checklist.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => { const r = checklistToContent(content, checklist); setContent(r.content); setChecklist(r.checklist); setShowChecklist(false); }}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Zamień na tekst
+                </button>
+              )}
+            </div>
             {showChecklist && <ChecklistEditor items={checklist} onChange={setChecklist} />}
 
             {/* Image previews */}
