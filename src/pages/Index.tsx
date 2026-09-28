@@ -414,9 +414,16 @@ const Index = () => {
           {canCompose && (
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1, duration: 0.4 }} className="space-y-3">
               <div data-add-note-bar>
-                <AddNoteBar ref={addNoteRef} onAdd={handleAddNoteGlow} allLabels={allLabels} onCreateLabel={addLabel} destination={composeDestination} />
+                <AddNoteBar ref={addNoteRef} onAdd={handleAddNoteGlow} allLabels={allLabels} onCreateLabel={addLabel} destination={composeDestination}
+                  templates={(done) => (
+                    <QuickTemplates
+                      onPick={(...args) => { done(); handleAddNoteGlow(...args); }}
+                      onCreateLabel={addLabel}
+                      onDailyNote={() => { done(); openDailyNote(); }}
+                    />
+                  )}
+                />
               </div>
-              <QuickTemplates onPick={handleAddNoteGlow} onCreateLabel={addLabel} onDailyNote={openDailyNote} />
             </motion.div>
           )}
 

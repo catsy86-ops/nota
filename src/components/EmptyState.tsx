@@ -16,7 +16,7 @@ const HEADINGS: Record<View, string> = {
 };
 
 const DESCRIPTIONS: Record<View, string> = {
-  notes: "Stuknij w pasek powyżej, użyj szablonu lub naciśnij Ctrl+N",
+  notes: "Stuknij w pasek powyżej (są tam też szablony) lub naciśnij Ctrl+N",
   archive: "Zarchiwizowane notatki pojawią się tutaj",
   trash: "Usunięte notatki pojawią się tutaj",
   reminders: "Notatki z przypomnieniami pojawią się tutaj",

@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Lightbulb, ListChecks, Users, BookOpen, Plane, Coffee } from "lucide-react";
 import type { NoteColor, ChecklistItem } from "@/hooks/useNotes";
 
@@ -87,10 +86,7 @@ const chipClass = "group shrink-0 flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 r
 
 export function QuickTemplates({ onPick, onCreateLabel, onDailyNote }: Props) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
+    <div
       // Fade na prawej krawędzi mówi, że pasek przewija się w bok (na telefonie
       // chipy nie mieszczą się w szerokości).
       className="flex items-center gap-2 overflow-x-auto scrollbar-thin pb-1 -mx-1 px-1 [mask-image:linear-gradient(to_right,#000_88%,transparent)] sm:[mask-image:none]"
@@ -98,25 +94,21 @@ export function QuickTemplates({ onPick, onCreateLabel, onDailyNote }: Props) {
       <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground shrink-0 mr-1">
         Szablony
       </span>
-      <motion.button
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25 }}
+      <button
+        type="button"
         onClick={onDailyNote}
         title="Jedna notatka na dzień — kolejne kliknięcie dopisuje do dzisiejszej"
         className={chipClass}
       >
         <BookOpen className="w-3.5 h-3.5" />
         <span>Notatka dnia</span>
-      </motion.button>
-      {TEMPLATES.map((t, i) => {
+      </button>
+      {TEMPLATES.map((t) => {
         const Icon = t.icon;
         return (
-          <motion.button
+          <button
             key={t.id}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 + (i + 1) * 0.04 }}
+            type="button"
             onClick={() => {
               const data = t.build();
               data.labels.forEach(onCreateLabel);
@@ -126,9 +118,9 @@ export function QuickTemplates({ onPick, onCreateLabel, onDailyNote }: Props) {
           >
             <Icon className="w-3.5 h-3.5" />
             <span>{t.label}</span>
-          </motion.button>
+          </button>
         );
       })}
-    </motion.div>
+    </div>
   );
 }

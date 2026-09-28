@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
+import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Tag, Bell, ImagePlus, X, PenTool, ListChecks } from "lucide-react";
 import { format } from "date-fns";
@@ -27,9 +27,11 @@ interface AddNoteBarProps {
   onCreateLabel: (label: string) => void;
   /** Gdzie trafi notatka, gdy tworzona jest w folderze albo etykiecie (np. „Praca”, „#pomysły”). */
   destination?: string | null;
+  /** Szablony pokazywane w rozwiniętym, pustym szkicu. `done` zwija composer po wyborze. */
+  templates?: (done: () => void) => ReactNode;
 }
 
-export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(function AddNoteBar({ onAdd, allLabels, onCreateLabel, destination }, ref) {
+export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(function AddNoteBar({ onAdd, allLabels, onCreateLabel, destination, templates }, ref) {
   const [expanded, setExpanded] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -90,6 +92,8 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
     }
   }
 
+  const isDraftEmpty = !title.trim() && !content.trim() && images.length === 0 && checklist.length === 0;
+
   const reminderTimestamp = reminderDate ? composeReminderTimestamp(reminderDate, reminderTime) : null;
 
   function handleSetReminder() {
@@ -146,6 +150,9 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
             }} />
             <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Zapisz notatkę (obsługuje **Markdown**)..." rows={3}
               className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none" />
+
+            {/* Szablony tylko nad pustym szkicem — wybór tworzy osobną notatkę, więc nic by nie zastąpił. */}
+            {templates && isDraftEmpty && templates(reset)}
 
             {/* Checklist */}
             <button
