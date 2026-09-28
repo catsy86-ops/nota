@@ -273,3 +273,8 @@ export function rebaseNoteTextEdit(id: string, draft: string, selection: [number
 export function onRemoteNoteTextChange(id: string, listener: () => void): () => void {
   return yjsStore.onRemoteTextChange(id, listener);
 }
+
+/** Rozwiązuje się, gdy dokument jest wczytany z IndexedDB (i po migracji). */
+export function whenNotesReady(): Promise<void> {
+  return yjsStore.ready();
+}

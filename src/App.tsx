@@ -3,7 +3,6 @@ import { MotionConfig } from "framer-motion";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
-import NotFound from "./pages/NotFound.tsx";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { OfflineStatus } from "./components/OfflineStatus";
 import { useMotionPref } from "./hooks/useMotionPref";
@@ -35,9 +34,10 @@ const App = () => {
           <ErrorBoundary>
             <NotesProvider>
               <Routes>
-                <Route path="/" element={<Index />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
+                {/* Jedna trasa na całą aplikację: widok siedzi w adresie
+                    (src/lib/viewRoute.ts), a osobne <Route> przemontowałyby
+                    Index przy każdym przejściu. Nieznana ścieżka = Notatki. */}
+                <Route path="/*" element={<Index />} />
               </Routes>
             </NotesProvider>
           </ErrorBoundary>

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { notePath } from "@/lib/viewRoute";
 import { toast } from "sonner";
 import type { Note } from "./useNotes";
 import { getNextReminderTime } from "@/lib/reminderRepeat";
@@ -53,6 +54,8 @@ export function useReminderNotifications(
               badge: "/pwa-192.png",
               tag: note.id,
               renotify: true,
+              // Klik otwiera tę notatkę (public/sw-notifications.js).
+              data: { url: notePath(note.id) },
             };
             // Wyświetlenie samego powiadomienia idzie przez rejestrację SW
             // (spójniejsze na Androidzie niż gołe `new Notification()`), ale
@@ -66,7 +69,8 @@ export function useReminderNotifications(
                 .then((registration) => registration.showNotification(title, options))
                 .catch(() => new Notification(title, options));
             } else {
-              new Notification(title, options);
+              const n = new Notification(title, options);
+              n.onclick = () => { window.focus(); window.location.assign(notePath(note.id)); };
             }
           }
 

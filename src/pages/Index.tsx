@@ -10,6 +10,10 @@ import { useHideOnScroll } from "@/hooks/useHideOnScroll";
 import { useTheme } from "@/hooks/useTheme";
 import { useViewPrefs } from "@/lib/viewPrefs";
 import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
+import { useViewRoute } from "@/hooks/useViewRoute";
+import { parseViewRoute } from "@/lib/viewRoute";
+import { useNavigationType } from "react-router-dom";
+import { whenNotesReady } from "@/hooks/useNotes";
 import { useNoteActions } from "@/hooks/useNoteActions";
 import { useNoteDnd } from "@/hooks/useNoteDnd";
 import { useImportExport } from "@/hooks/useImportExport";
@@ -61,11 +65,22 @@ const Index = () => {
   const { confirmAction, confirmDialog } = useConfirmAction();
   const { dark, toggle: toggleTheme } = useTheme();
   const isMobile = useIsMobile();
-  const [search, setSearch] = useState("");
   const prefs = useViewPrefs();
-  const [view, setView] = useState<View>("notes");
-  const [activeLabel, setActiveLabel] = useState<string | null>(null);
-  const [activeFolder, setActiveFolder] = useState<string | null>(null);
+  // Widok, folder, etykieta i zapytanie żyją w adresie (patrz `lib/viewRoute.ts`).
+  const route = useViewRoute();
+  const { view, label: activeLabel, folder: activeFolder, go, replaceWith } = route;
+  const setView = useCallback((v: View) => go(v), [go]);
+  // Pole wyszukiwania ma własny stan (karetka nie może czekać na router);
+  // adres dostaje go z opóźnieniem zerowym, a „wstecz/dalej” wlewa z powrotem.
+  const [search, setSearch] = useState(route.search);
+  const navigationType = useNavigationType();
+  useEffect(() => {
+    if (navigationType === "POP") setSearch(route.search);
+  }, [route.search, navigationType]);
+  const setRouteSearch = route.setSearch;
+  useEffect(() => {
+    if (search !== parseViewRoute(window.location.pathname, window.location.search).search) setRouteSearch(search);
+  }, [search, setRouteSearch]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false);
   const addNoteRef = useRef<{ expand: () => void }>(null);
@@ -113,8 +128,15 @@ const Index = () => {
   useBackupReminders(prefs, notes, archivedNotes);
   useDailyWeeklyNudges(prefs, notes, setView);
 
+  // Pasek dodawania jest też w folderze i etykiecie — nowa notatka dziedziczy
+  // ten kontekst (`handleAddNoteGlow`), zamiast lądować poza widokiem.
+  const canCompose = view === "notes" || (view === "folder" && !!activeFolder) || (view === "label" && !!activeLabel);
+  const composeDestination = view === "folder"
+    ? folders.find((f) => f.id === activeFolder)?.name ?? null
+    : view === "label" ? `#${activeLabel}` : null;
+
   function expandAddNote() {
-    setView("notes");
+    if (!canCompose) setView("notes");
     setTimeout(() => addNoteRef.current?.expand(), 100);
   }
 
@@ -122,8 +144,8 @@ const Index = () => {
 
   useGlobalShortcuts({
     onNewNote: expandAddNote,
-    onGoToday: () => { setView("today"); setActiveLabel(null); },
-    onGoWeek: () => { setView("week"); setActiveLabel(null); },
+    onGoToday: () => go("today"),
+    onGoWeek: () => go("week"),
     onEasterEgg: () => { megaCelebrate(); toast.success("🦆 KONAMI! Pełen pokaz mocy!"); },
     hasSelection: () => selectedIds.size > 0,
     onEscapeSelection: clearSelection,
@@ -166,14 +188,16 @@ const Index = () => {
    * faktycznie jest (Notatki / Archiwum / Kosz), zdejmuje filtry, które mogłyby
    * ją ukryć, przewija do karty i na chwilę ją podświetla.
    */
-  const openNote = useCallback((id: string) => {
+  const openNote = useCallback((id: string, viaLink = false) => {
     const note = [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === id);
-    if (!note) { toast.info("Tej notatki już nie ma"); return; }
+    if (!note) {
+      toast.info("Tej notatki już nie ma");
+      if (viaLink) replaceWith("notes");
+      return;
+    }
     const target: View = note.trashed ? "trash" : note.archived ? "archive" : "notes";
-    setView(target);
     setSearch("");
-    setActiveLabel(null);
-    setActiveFolder(null);
+    if (viaLink) replaceWith(target); else go(target, { search: "" });
     if (target !== "notes") toast.info(target === "trash" ? "Notatka jest w Koszu" : "Notatka jest w Archiwum");
     setTimeout(() => {
       const el = document.querySelector<HTMLElement>(`[data-note-id="${id}"]`);
@@ -182,7 +206,15 @@ const Index = () => {
       el.classList.add("note-flash");
       setTimeout(() => el.classList.remove("note-flash"), 1600);
     }, 150);
-  }, [notes, archivedNotes, trashedNotes]);
+  }, [notes, archivedNotes, trashedNotes, go, replaceWith]);
+
+  // `/notatka/:id` (link, klik w powiadomienie): otwieramy dopiero po
+  // wczytaniu bazy — wcześniej każda notatka wyglądałaby na usuniętą.
+  const [notesLoaded, setNotesLoaded] = useState(false);
+  useEffect(() => { whenNotesReady().then(() => setNotesLoaded(true)); }, []);
+  useEffect(() => {
+    if (route.noteId && notesLoaded) openNote(route.noteId, true);
+  }, [route.noteId, notesLoaded, openNote]);
 
   const handleWikiClick = useCallback((title: string) => {
     const target = allNotesForLinks.find((n) => n.title.trim().toLowerCase() === title.trim().toLowerCase());
@@ -305,9 +337,9 @@ const Index = () => {
         view={view}
         activeLabel={activeLabel}
         activeFolder={activeFolder}
-        onGoView={(v) => { setView(v); setActiveLabel(null); if (isMobile) setSidebarOpen(false); }}
-        onGoLabel={(label) => { setView("label"); setActiveLabel(label); if (isMobile) setSidebarOpen(false); }}
-        onGoFolder={(id) => { setView("folder"); setActiveFolder(id); if (isMobile) setSidebarOpen(false); }}
+        onGoView={(v) => { go(v); if (isMobile) setSidebarOpen(false); }}
+        onGoLabel={(label) => { go("label", { label }); if (isMobile) setSidebarOpen(false); }}
+        onGoFolder={(id) => { go("folder", { folder: id }); if (isMobile) setSidebarOpen(false); }}
         sidebarItems={sidebarItems}
         onLogoClick={handleLogoClick}
         dark={dark}
@@ -342,10 +374,10 @@ const Index = () => {
             <SearchBar value={search} onChange={setSearch} />
           </div>
 
-          {view === "notes" && (
+          {canCompose && (
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1, duration: 0.4 }} className="space-y-3">
               <div data-add-note-bar>
-                <AddNoteBar ref={addNoteRef} onAdd={handleAddNoteGlow} allLabels={allLabels} onCreateLabel={addLabel} />
+                <AddNoteBar ref={addNoteRef} onAdd={handleAddNoteGlow} allLabels={allLabels} onCreateLabel={addLabel} destination={composeDestination} />
               </div>
               <QuickTemplates onPick={handleAddNoteGlow} onCreateLabel={addLabel} />
             </motion.div>
@@ -464,7 +496,7 @@ const Index = () => {
           notes={[...notes, ...archivedNotes]}
           onOpenNote={openNote}
           onNewNote={expandAddNote}
-          onGo={(v) => { setView(v); setActiveLabel(null); }}
+          onGo={(v) => go(v)}
           onToggleTheme={toggleTheme}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenStats={() => setStatsOpen(true)}
@@ -507,7 +539,7 @@ const Index = () => {
     )}
     <BottomNav
       view={view}
-      onGo={(v) => { setView(v); setActiveLabel(null); }}
+      onGo={(v) => go(v)}
       onNew={expandAddNote}
       onOpenSettings={() => setSettingsOpen(true)}
       onOpenActions={() => setActionsOpen(true)}

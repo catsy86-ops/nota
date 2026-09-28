@@ -25,9 +25,11 @@ interface AddNoteBarProps {
   onAdd: (title: string, content: string, color: NoteColor, labels: string[], reminder: number | null, images: string[], checklist: ChecklistItem[], priority: NotePriority) => void;
   allLabels: string[];
   onCreateLabel: (label: string) => void;
+  /** Gdzie trafi notatka, gdy tworzona jest w folderze albo etykiecie (np. „Praca”, „#pomysły”). */
+  destination?: string | null;
 }
 
-export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(function AddNoteBar({ onAdd, allLabels, onCreateLabel }, ref) {
+export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(function AddNoteBar({ onAdd, allLabels, onCreateLabel, destination }, ref) {
   const [expanded, setExpanded] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -128,9 +130,11 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
           >
             <Plus className="w-5 h-5" />
             <span className="font-medium font-display">Zapisz notatkę...</span>
+            {destination && <span className="ml-auto text-xs truncate max-w-[45%]">trafi do: {destination}</span>}
           </motion.button>
         ) : (
           <motion.div key="expanded" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 space-y-3">
+            {destination && <p className="text-xs text-muted-foreground">Trafi do: <span className="font-medium text-foreground">{destination}</span></p>}
             <input ref={titleRef} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Tytuł"
               className="w-full bg-transparent text-lg font-display font-semibold text-foreground placeholder:text-muted-foreground/50 outline-none" />
             <FormatToolbar onInsert={(before, after) => {
