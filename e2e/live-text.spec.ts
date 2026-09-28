@@ -24,10 +24,13 @@ async function exportSync(page: Page): Promise<string> {
 
 async function mergeSync(page: Page, file: string) {
   await dataTab(page);
+  // Toast z poprzedniego scalenia może jeszcze wisieć — niech zniknie, żeby niżej widzieć tylko nowy.
+  const toasts = page.getByText(/^Scalono/);
+  await expect(toasts).toHaveCount(0, { timeout: 15_000 });
   const [chooser] = await Promise.all([page.waitForEvent("filechooser"), page.getByRole("button", { name: "Scal z pliku" }).click()]);
   await chooser.setFiles(file);
   // Scalenie pod obciążeniem równoległych testów bywa wolniejsze niż domyślne 5 s.
-  await expect(page.getByText(/^Scalono/)).toBeVisible({ timeout: 15_000 });
+  await expect(toasts).toBeVisible({ timeout: 15_000 });
   await page.keyboard.press("Escape");
 }
 
