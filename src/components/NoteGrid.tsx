@@ -48,14 +48,14 @@ interface NoteGridProps extends Omit<NoteViewActions, "selectionMode" | "onToggl
 }
 
 export function NoteGrid({
-  notes, searchQuery, onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder, getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, selectedIds, selectionMode, onToggleSelect, navOrder = 0,
+  notes, searchQuery, onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder, getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectedIds, selectionMode, onToggleSelect, navOrder = 0,
 }: NoteGridProps) {
   // Stabilna wartość kontekstu — inaczej każdy render siatki przerysowuje wszystkie karty mimo `memo`.
   const noteViewActions = useMemo<NoteViewActions>(() => ({
     onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder,
-    getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, selectionMode, onToggleSelect,
+    getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectionMode, onToggleSelect,
   }), [onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder,
-    getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, selectionMode, onToggleSelect]);
+    getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectionMode, onToggleSelect]);
   const prefs = useViewPrefs();
   const noteIds = notes.map((n) => n.id);
   const { focusedId, previewId } = useGridNavState();

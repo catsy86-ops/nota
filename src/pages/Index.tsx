@@ -13,6 +13,7 @@ import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
 import { useViewRoute } from "@/hooks/useViewRoute";
 import { parseViewRoute } from "@/lib/viewRoute";
 import { groupReminders } from "@/lib/reminderAgenda";
+import { buildWikiIndex } from "@/lib/wikiLinks";
 import { cn } from "@/lib/utils";
 import { useNavigationType } from "react-router-dom";
 import { whenNotesReady, isNoteTextEditOpen } from "@/hooks/useNotes";
@@ -191,6 +192,7 @@ const Index = () => {
     () => new Set(allNotesForLinks.filter((n) => n.title.trim()).map((n) => n.title.trim().toLowerCase())),
     [allNotesForLinks],
   );
+  const wikiIndex = useMemo(() => buildWikiIndex(allNotesForLinks), [allNotesForLinks]);
   /**
    * Jedno miejsce „pokaż tę notatkę”: przełącza na widok, w którym notatka
    * faktycznie jest (Notatki / Archiwum / Kosz), zdejmuje filtry, które mogłyby
@@ -462,7 +464,7 @@ const Index = () => {
                 📌 Przypięte
                 <span className="bg-primary/10 text-primary text-2xs px-1.5 rounded-full">{pinned.length}</span>
               </motion.p>
-              <NoteGrid navOrder={0} notes={pinned} searchQuery={search} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} onPresent={setPresentingNoteId} knownTitles={knownTitles} onWikiClick={handleWikiClick} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
+              <NoteGrid navOrder={0} notes={pinned} searchQuery={search} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} onPresent={setPresentingNoteId} knownTitles={knownTitles} onWikiClick={handleWikiClick} wikiIndex={wikiIndex} onOpenNote={openNote} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
             </section>
           )}
 
@@ -475,7 +477,7 @@ const Index = () => {
                 {group.label}
                 <span className="bg-muted text-foreground/80 text-2xs px-1.5 rounded-full">{group.notes.length}</span>
               </p>
-              <NoteGrid navOrder={i} notes={group.notes} searchQuery={search} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} onPresent={setPresentingNoteId} knownTitles={knownTitles} onWikiClick={handleWikiClick} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
+              <NoteGrid navOrder={i} notes={group.notes} searchQuery={search} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} onPresent={setPresentingNoteId} knownTitles={knownTitles} onWikiClick={handleWikiClick} wikiIndex={wikiIndex} onOpenNote={openNote} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
             </section>
           ))}
 
@@ -508,6 +510,8 @@ const Index = () => {
                 onPresent={setPresentingNoteId}
                 knownTitles={knownTitles}
                 onWikiClick={handleWikiClick}
+                wikiIndex={wikiIndex}
+                onOpenNote={openNote}
                 selectedIds={selectedIds}
                 selectionMode={selectionMode}
                 onToggleSelect={toggleSelect}

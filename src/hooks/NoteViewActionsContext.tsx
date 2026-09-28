@@ -1,6 +1,7 @@
 import { createContext, useContext, type ReactNode } from "react";
 import type { Note } from "@/hooks/useNotes";
 import type { NoteVersion } from "@/hooks/useNoteVersions";
+import type { WikiIndex } from "@/lib/wikiLinks";
 
 /**
  * Per-note-list mutators/config for NoteCard, provided once by NoteGrid
@@ -24,6 +25,10 @@ export interface NoteViewActions {
   onPresent?: (id: string) => void;
   knownTitles?: Set<string>;
   onWikiClick?: (title: string) => void;
+  /** Tytuły do podpowiedzi `[[` i backlinki — liczone raz dla całej bazy. */
+  wikiIndex?: WikiIndex;
+  /** Pokaż notatkę po id (backlink bez tytułu nie da się otworzyć po tytule). */
+  onOpenNote?: (id: string) => void;
   selectionMode?: boolean;
   onToggleSelect?: (id: string, shiftKey: boolean) => void;
 }
