@@ -10,6 +10,7 @@ import { backlinksOf, type WikiIndex } from "@/lib/wikiLinks";
 import { readingTimeMin, useViewPrefs } from "@/lib/viewPrefs";
 import { setGridNavPreviewScrollEl } from "@/lib/gridKeyboardNav";
 import { cn } from "@/lib/utils";
+import { wordsPl } from "@/lib/plural";
 
 /**
  * Jedno miejsce czytania notatki (wcześniej: szybki podgląd w `NoteGrid`
@@ -163,7 +164,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
             )}
             <p className={cn("text-xs text-muted-foreground", !present && "mt-1")}>
               {format(new Date(note.updatedAt), "d MMM yyyy, HH:mm", { locale: pl })}
-              {" · "}{words} słów · ~{readingTimeMin(note.content)} min czytania
+              {" · "}{wordsPl(words)} · ~{readingTimeMin(note.content)} min czytania
             </p>
           </div>
           <div className="flex items-center gap-0.5 shrink-0">

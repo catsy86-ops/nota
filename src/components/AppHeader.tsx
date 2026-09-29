@@ -81,6 +81,7 @@ export function AppHeader({
               )}
               {view === "archive" && "Archiwum"}
               {view === "reminders" && "Przypomnienia"}
+              {view === "trash" && "Kosz"}
               {view === "folder" && (
                 <span className="flex items-center gap-1.5">
                   <FolderOpen className="w-4 h-4 text-primary" />

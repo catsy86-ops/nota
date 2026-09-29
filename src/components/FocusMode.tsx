@@ -5,6 +5,7 @@ import { Play, Pause, RotateCcw, Coffee, Brain, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { celebrate } from "@/lib/celebrate";
 import { toast } from "sonner";
+import { wordsPl } from "@/lib/plural";
 
 interface Props {
   open: boolean;
@@ -125,7 +126,7 @@ export function FocusMode({ open, onOpenChange, initialTitle = "", initialConten
         </div>
 
         <div className="px-6 py-3 border-t border-border/50 flex items-center justify-between text-xs text-muted-foreground">
-          <span>{content.trim() ? `${content.trim().split(/\s+/).length} słów` : "0 słów"}</span>
+          <span>{wordsPl(content.trim() ? content.trim().split(/\s+/).length : 0)}</span>
           <Button size="sm" onClick={close}>Zapisz i wyjdź</Button>
         </div>
       </DialogContent>

@@ -2,7 +2,7 @@ import { useEffect, useState, lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Sparkles, LayoutGrid, Pencil, Database, Wifi } from "lucide-react";
+import { Settings, LayoutGrid, Pencil, Database, Wifi } from "lucide-react";
 import { motion } from "framer-motion";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
@@ -47,7 +47,7 @@ export function SettingsDialog({ trigger, open, onOpenChange }: SettingsDialogPr
               whileTap={{ scale: 0.98 }}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
             >
-              <Sparkles className="w-[18px] h-[18px]" />
+              <Settings className="w-[18px] h-[18px]" />
               <span>Ustawienia</span>
             </motion.button>
           )}
@@ -57,7 +57,7 @@ export function SettingsDialog({ trigger, open, onOpenChange }: SettingsDialogPr
       <DialogContent className="h-[100dvh] border-0 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:h-[min(88vh,44rem)] sm:max-w-2xl sm:border sm:py-6 overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-primary" />
+            <Settings className="w-5 h-5 text-primary" />
             Ustawienia
           </DialogTitle>
           <DialogDescription>Wszystko zapisuje się automatycznie w tej przeglądarce.</DialogDescription>
