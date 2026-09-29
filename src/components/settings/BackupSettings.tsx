@@ -17,7 +17,9 @@ import { Section } from "./SettingsShared";
 function formatBytes(bytes: number | null): string {
   if (bytes === null) return "?";
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  const oneDecimal = (n: number) => n.toLocaleString("pl-PL", { maximumFractionDigits: 1 });
+  if (bytes < 1024 ** 3) return `${oneDecimal(bytes / 1024 ** 2)} MB`;
+  return `${oneDecimal(bytes / 1024 ** 3)} GB`;
 }
 
 /** "Czy przeglądarka może same wyczyścić dane" status + jednorazowa prośba o trwałość. */

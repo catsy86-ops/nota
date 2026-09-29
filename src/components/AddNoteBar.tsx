@@ -19,6 +19,7 @@ import { QuickReminderInput } from "./QuickReminderInput";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
 import { composeReminderTimestamp, toTimeInputValue, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
 import { toast } from "sonner";
+import { pluralPl } from "@/lib/plural";
 
 interface AddNoteBarProps {
   onAdd: (title: string, content: string, color: NoteColor, labels: string[], reminder: number | null, images: string[], checklist: ChecklistItem[], priority: NotePriority) => void;
@@ -117,7 +118,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
       setImages((prev) => [...prev, base64]);
     }
     if (skipped > 0) {
-      toast.error(skipped === 1 ? "Obrazek jest za duży (max 2 MB)" : `${skipped} obrazków jest za dużych (max 2 MB)`);
+      toast.error(skipped === 1 ? "Obrazek jest za duży (max 2 MB)" : `${skipped} ${pluralPl(skipped, ["obrazek jest za duży", "obrazki są za duże", "obrazków jest za dużych"])} (max 2 MB)`);
     }
     if (fileInputRef.current) fileInputRef.current.value = "";
   }

@@ -5,7 +5,7 @@ import { modShortcut } from "@/lib/platform";
 
 const HEADINGS: Record<View, string> = {
   notes: "Zacznij tworzyć",
-  archive: "Archiwum puste",
+  archive: "Archiwum jest puste",
   trash: "Kosz jest pusty",
   reminders: "Brak przypomnień",
   calendar: "Pusty miesiąc",
