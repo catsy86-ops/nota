@@ -9,7 +9,7 @@ import { download } from "@/lib/exportNotes";
 import { addDays, format, isSameDay, isSameMonth } from "date-fns";
 import { pl } from "date-fns/locale";
 import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences";
-import { getNextReminderTime } from "@/lib/reminderRepeat";
+import { getNextReminderTime, seriesDay } from "@/lib/reminderRepeat";
 import { toast } from "sonner";
 import { MonthGrid } from "./MonthGrid";
 import { DayPanel } from "./DayPanel";
@@ -31,7 +31,8 @@ interface ReminderCalendarViewProps {
   /** Notatki z terminami — bez kosza, tak samo jak karmione są powiadomienia. */
   notes: Note[];
   onCreateNote: (title: string, reminder: number, repeat: ReminderRepeat) => void;
-  onSetReminder: (noteId: string, reminder: number | null, repeat: ReminderRepeat) => void;
+  /** `reminderDay` podany = przesunięcie w obrębie serii (bez zmiany jej dnia); brak = nowy termin. */
+  onSetReminder: (noteId: string, reminder: number | null, repeat: ReminderRepeat, reminderDay?: number) => void;
 }
 
 function monthBounds(month: Date) {
@@ -84,13 +85,17 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
   /** Cofnięcie przywraca poprzedni termin, więc zapamiętujemy go przed zmianą. */
   function previousOf(noteId: string) {
     const note = notes.find((n) => n.id === noteId);
-    return { reminder: note?.reminder ?? null, repeat: note?.reminderRepeat ?? "none" as ReminderRepeat };
+    return {
+      reminder: note?.reminder ?? null,
+      repeat: note?.reminderRepeat ?? "none" as ReminderRepeat,
+      day: note ? seriesDay(note) : undefined,
+    };
   }
 
   function handleAttach(noteId: string, reminder: number, repeat: ReminderRepeat) {
     const before = previousOf(noteId);
     onSetReminder(noteId, reminder, repeat);
-    toastWithUndo("Termin zapisany", () => onSetReminder(noteId, before.reminder, before.repeat), { icon: "🔔" });
+    toastWithUndo("Termin zapisany", () => onSetReminder(noteId, before.reminder, before.repeat, before.day), { icon: "🔔" });
   }
 
   /**
@@ -100,8 +105,8 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
    */
   function handleSkip(noteId: string, at: number, repeat: ReminderRepeat) {
     const before = previousOf(noteId);
-    onSetReminder(noteId, getNextReminderTime(at, repeat), repeat);
-    toastWithUndo("Wystąpienie pominięte", () => onSetReminder(noteId, before.reminder, before.repeat), { icon: "⏭️" });
+    onSetReminder(noteId, getNextReminderTime(at, repeat, before.day), repeat, before.day);
+    toastWithUndo("Wystąpienie pominięte", () => onSetReminder(noteId, before.reminder, before.repeat, before.day), { icon: "⏭️" });
   }
 
   /**
@@ -124,7 +129,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
   function handleClear(noteId: string) {
     const before = previousOf(noteId);
     onSetReminder(noteId, null, "none");
-    toastWithUndo("Termin usunięty", () => onSetReminder(noteId, before.reminder, before.repeat), { icon: "🔕" });
+    toastWithUndo("Termin usunięty", () => onSetReminder(noteId, before.reminder, before.repeat, before.day), { icon: "🔕" });
   }
 
   // Własny `DndContext`: zagnieżdżony kontekst przechwytuje przeciągnięcia
@@ -146,7 +151,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     if (!isSameMonth(to, month)) setMonth(new Date(to.getFullYear(), to.getMonth(), 1));
     toastWithUndo(
       `Termin przeniesiony na ${format(to, "d MMMM", { locale: pl })}`,
-      () => onSetReminder(occ.noteId, before.reminder, before.repeat),
+      () => onSetReminder(occ.noteId, before.reminder, before.repeat, before.day),
       { icon: "📅", description: occ.isSeries ? "Cała seria liczy się od nowego terminu." : undefined },
     );
   }

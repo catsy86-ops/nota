@@ -92,13 +92,18 @@ describe("expandOccurrences", () => {
     expect(new Date(occ[0].at).getHours()).toBe(7);
   });
 
-  it("seria miesięczna 31. dnia przeskakuje na marzec — udokumentowane zachowanie Date, nie decyzja kalendarza", () => {
-    // `d.setMonth(d.getMonth() + 1)` z 31 stycznia daje 3 marca (luty ma 28 dni).
-    // Test utrwala ten fakt; maskowanie go w widoku byłoby kłamstwem o danych.
+  it("seria miesięczna od 31.: w krótszym miesiącu ostatni dzień, potem wraca na 31.", () => {
+    // Dawniej `setMonth` przepełniał datę: 31 stycznia → 3 marca → 3 kwietnia.
     const notes = [makeNote({ reminder: at(2026, 1, 31, 12), reminderRepeat: "monthly" })];
-    const occ = expandOccurrences(notes, at(2026, 1, 1, 0, 0), at(2026, 4, 30, 23, 59));
+    const occ = expandOccurrences(notes, at(2026, 1, 1, 0, 0), at(2026, 5, 31, 23, 59));
     const dates = occ.map((o) => dayKey(o.at));
-    expect(dates).toEqual(["2026-01-31", "2026-03-03", "2026-04-03"]);
+    expect(dates).toEqual(["2026-01-31", "2026-02-28", "2026-03-31", "2026-04-30", "2026-05-31"]);
+  });
+
+  it("zapisany termin już przycięty (28 lutego) wraca na dzień serii z `reminderDay`", () => {
+    const notes = [makeNote({ reminder: at(2026, 2, 28, 12), reminderRepeat: "monthly", reminderDay: 31 })];
+    const occ = expandOccurrences(notes, at(2026, 2, 1, 0, 0), at(2026, 4, 30, 23, 59));
+    expect(occ.map((o) => dayKey(o.at))).toEqual(["2026-02-28", "2026-03-31", "2026-04-30"]);
   });
 
   it("seria codzienna na zakresie pięciu lat nie wiesza się i jest przycięta limitem", () => {

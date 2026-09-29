@@ -35,6 +35,16 @@ describe("buildIcs", () => {
     expect(buildIcs([note({ reminderRepeat: repeat })], NOW)).toContain(`${rule}\r\n`);
   });
 
+  it("seria miesięczna od 29.–31. → ostatni dostępny dzień, jak w aplikacji", () => {
+    const jan31 = new Date(2026, 0, 31, 9, 0).getTime();
+    expect(buildIcs([note({ reminder: jan31, reminderRepeat: "monthly" })], NOW))
+      .toContain("RRULE:FREQ=MONTHLY;BYMONTHDAY=28,29,30,31;BYSETPOS=-1\r\n");
+    const feb28 = new Date(2026, 1, 28, 9, 0).getTime();
+    expect(buildIcs([note({ reminder: feb28, reminderRepeat: "monthly", reminderDay: 30 })], NOW))
+      .toContain("RRULE:FREQ=MONTHLY;BYMONTHDAY=28,29,30;BYSETPOS=-1\r\n");
+    expect(buildIcs([note({ reminder: feb28, reminderRepeat: "monthly" })], NOW)).toContain("RRULE:FREQ=MONTHLY\r\n");
+  });
+
   it("godzina ścienna przetrwa zmianę czasu (czas pływający, bez Z)", () => {
     // 29 marca 2026 w Polsce zmiana na czas letni — 9:00 zostaje 9:00.
     expect(formatLocal(new Date(2026, 2, 30, 9, 0).getTime())).toBe("20260330T090000");

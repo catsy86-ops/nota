@@ -36,6 +36,12 @@ export interface Note {
   labels: string[];
   reminder: number | null;
   reminderRepeat?: "none" | "daily" | "weekly" | "monthly";
+  /**
+   * Dzień miesiąca, na który użytkownik ustawił termin (1–31). Seria miesięczna
+   * od 31. trafia w krótszych miesiącach na ostatni dzień, a potem wraca na 31. —
+   * bez tego pola 28 lutego „zjadłoby” zamiar na zawsze. Ustawiane w `updateNote`.
+   */
+  reminderDay?: number;
   priority: NotePriority;
   /** Notatka dnia: lokalna data `YYYY-MM-DD` (patrz `lib/dailyNote.ts`); brak = zwykła notatka. */
   dailyDate?: string;
@@ -131,6 +137,11 @@ export function useNotes() {
   }, []);
 
   const updateNote = useCallback((id: string, updates: Partial<Omit<Note, "id" | "createdAt">>) => {
+    // Ręczne ustawienie terminu wyznacza dzień serii. Przesunięcie serii
+    // (odpalenie, „pomiń”) podaje `reminderDay` jawnie, żeby go nie nadpisać.
+    if ("reminder" in updates && !("reminderDay" in updates)) {
+      updates = { ...updates, reminderDay: updates.reminder ? new Date(updates.reminder).getDate() : undefined };
+    }
     yjsStore.patchNote(id, updates);
   }, []);
 

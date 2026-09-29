@@ -4,12 +4,13 @@ import { snoozeTimes } from "@/lib/reminderAgenda";
 import { notePath } from "@/lib/viewRoute";
 import { toast } from "sonner";
 import type { Note } from "./useNotes";
-import { getNextReminderTime } from "@/lib/reminderRepeat";
+import { getNextReminderTime, seriesDay } from "@/lib/reminderRepeat";
 import { loadFired, saveFired, reconcileFired } from "@/lib/firedReminders";
 
 export function useReminderNotifications(
   notes: Note[],
-  onReminderFired: (id: string, nextReminder: number | null) => void,
+  /** `reminderDay` zostaje z notatki — przesunięcie serii nie zmienia jej dnia. */
+  onReminderFired: (id: string, nextReminder: number | null, reminderDay?: number) => void,
   onOpen?: (id: string) => void,
 ) {
   const firedRef = useRef(loadFired());
@@ -49,8 +50,8 @@ export function useReminderNotifications(
             canSnooze: repeat === "none",
             // Odłożenie przesuwa termin w przyszłość, więc `reconcileFired`
             // zdejmie wpis „już odpalone” i przypomnienie wystrzeli ponownie.
-            onSnooze10: () => onReminderFired(note.id, times.in10min),
-            onSnoozeTomorrow: () => onReminderFired(note.id, times.tomorrow9),
+            onSnooze10: () => onReminderFired(note.id, times.in10min, seriesDay(note)),
+            onSnoozeTomorrow: () => onReminderFired(note.id, times.tomorrow9, seriesDay(note)),
             onDone,
             onOpen: () => onOpenRef.current?.(note.id),
           }), { duration: 30000 });
@@ -84,8 +85,8 @@ export function useReminderNotifications(
           }
 
           if (repeat !== "none") {
-            const next = getNextReminderTime(note.reminder, repeat);
-            onReminderFired(note.id, next);
+            const next = getNextReminderTime(note.reminder, repeat, seriesDay(note));
+            onReminderFired(note.id, next, seriesDay(note));
           }
         }
       }

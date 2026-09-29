@@ -127,7 +127,7 @@ const Index = () => {
   const openNoteRef = useRef<(id: string) => void>(() => {});
   useReminderNotifications(
     [...notes, ...archivedNotes],
-    (id, nextReminder) => updateNote(id, { reminder: nextReminder }),
+    (id, nextReminder, reminderDay) => updateNote(id, { reminder: nextReminder, reminderDay }),
     (id) => openNoteRef.current(id),
   );
 
@@ -565,7 +565,8 @@ const Index = () => {
                   // patchem po utworzeniu — stąd id zwracane przez `addNote`.
                   if (repeat !== "none") updateNote(id, { reminderRepeat: repeat });
                 }}
-                onSetReminder={(id, reminder, repeat) => updateNote(id, { reminder, reminderRepeat: repeat })}
+                onSetReminder={(id, reminder, repeat, reminderDay) =>
+                  updateNote(id, reminderDay === undefined ? { reminder, reminderRepeat: repeat } : { reminder, reminderRepeat: repeat, reminderDay })}
               />
             </Suspense>
           )}

@@ -1,5 +1,5 @@
 import type { Note } from "@/hooks/useNotes";
-import type { ReminderRepeat } from "@/lib/reminderRepeat";
+import { seriesDay, type ReminderRepeat } from "@/lib/reminderRepeat";
 
 /**
  * Eksport terminów do iCalendar (RFC 5545).
@@ -66,6 +66,17 @@ function titleOf(note: Note): string {
   return note.title.trim() || note.content.trim().split("\n")[0].slice(0, 60) || "Przypomnienie";
 }
 
+/**
+ * Seria miesięczna od 29.–31.: sam `FREQ=MONTHLY` pominąłby miesiące bez tego dnia,
+ * a aplikacja bierze wtedy ostatni dzień miesiąca. „Ostatni z dni 28…N” w każdym
+ * miesiącu (`BYSETPOS=-1`) daje dokładnie to samo.
+ */
+function rruleFor(repeat: Exclude<ReminderRepeat, "none">, day: number | undefined): string {
+  if (repeat !== "monthly" || !day || day <= 28) return RRULE[repeat];
+  const days = Array.from({ length: day - 27 }, (_, i) => 28 + i).join(",");
+  return `${RRULE.monthly};BYMONTHDAY=${days};BYSETPOS=-1`;
+}
+
 function eventLines(note: Note, now: number): string[] {
   const start = note.reminder!;
   const repeat = note.reminderRepeat ?? "none";
@@ -77,7 +88,7 @@ function eventLines(note: Note, now: number): string[] {
     `DTEND:${formatLocal(start + EVENT_MINUTES * 60_000)}`,
     `SUMMARY:${escapeText(titleOf(note))}`,
   ];
-  if (repeat !== "none") lines.push(`RRULE:${RRULE[repeat]}`);
+  if (repeat !== "none") lines.push(`RRULE:${rruleFor(repeat, seriesDay(note))}`);
   const body = note.content.trim();
   if (body) lines.push(`DESCRIPTION:${escapeText(body.slice(0, 1000))}`);
   lines.push(

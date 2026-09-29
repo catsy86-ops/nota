@@ -36,7 +36,7 @@ const NO_IMAGES: string[] = [];
 
 const NOTE_SCALAR_FIELDS = [
   "title", "color", "pinned", "archived", "trashed", "trashedAt",
-  "labels", "reminder", "reminderRepeat", "priority", "dailyDate",
+  "labels", "reminder", "reminderRepeat", "reminderDay", "priority", "dailyDate",
   "folderId", "order", "createdAt", "updatedAt",
 ] as const;
 
@@ -147,6 +147,7 @@ function yNoteFromPlain(note: Note): YNote {
   y.set("labels", note.labels.slice());
   y.set("reminder", note.reminder);
   if (note.reminderRepeat !== undefined) y.set("reminderRepeat", note.reminderRepeat);
+  if (note.reminderDay !== undefined) y.set("reminderDay", note.reminderDay);
   y.set("priority", note.priority);
   if (note.dailyDate !== undefined) y.set("dailyDate", note.dailyDate);
   y.set("checklist", yChecklistFromPlain(note.checklist));
@@ -174,6 +175,7 @@ function plainFromYNote(id: string, y: YNote, images: string[]): Note {
     labels: (y.get("labels") as string[] | undefined) ?? [],
     reminder: (y.get("reminder") as number | null) ?? null,
     reminderRepeat: y.get("reminderRepeat") as Note["reminderRepeat"],
+    reminderDay: (y.get("reminderDay") as number | undefined) ?? undefined,
     priority: (y.get("priority") as Note["priority"]) ?? "none",
     images,
     checklist: plainChecklistFromY(y.get("checklist")),
