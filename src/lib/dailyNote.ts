@@ -9,7 +9,7 @@ import type { Note } from "@/hooks/useNotes";
 export const DAILY_LABEL = "dziennik";
 
 export const DAILY_TEMPLATE =
-  "**3 rzeczy, za które jestem wdzięczny:**\n1. \n2. \n3. \n\n**Co dziś osiągnąłem:**\n\n**Co jutro:**";
+  "**3 rzeczy, za które dziękuję:**\n1. \n2. \n3. \n\n**Co dziś się udało:**\n\n**Co jutro:**";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 

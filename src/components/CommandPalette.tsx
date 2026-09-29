@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { StickyNote, Archive, Bell, Trash, Plus, Moon, Sparkles, Trophy, Calendar, CalendarRange, Brain, Keyboard, BookOpen } from "lucide-react";
+import { StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, Brain, Keyboard, BookOpen } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes } from "@/lib/searchNotes";
 import { modShortcut } from "@/lib/platform";
@@ -78,7 +78,7 @@ export function CommandPalette({
             <BookOpen className="w-4 h-4 mr-2" /> Notatka dnia
           </CommandItem>
           <CommandItem onSelect={() => run(onOpenSettings)}>
-            <Sparkles className="w-4 h-4 mr-2" /> Ustawienia
+            <Settings className="w-4 h-4 mr-2" /> Ustawienia
           </CommandItem>
           <CommandItem onSelect={() => run(onOpenStats)}>
             <Trophy className="w-4 h-4 mr-2" /> Statystyki i osiągnięcia
