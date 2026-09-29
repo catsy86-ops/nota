@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import type { Note } from "@/hooks/useNotes";
 import { getTodayRange, getWeekRange } from "@/lib/dateRanges";
 import { ReminderToast } from "@/components/ReminderToast";
+import { pluralPl } from "@/lib/plural";
 
 export interface DailyWeeklyNudgePrefs {
   todayReminderHours: number;
@@ -85,7 +86,7 @@ export function useDailyWeeklyNudges(prefs: DailyWeeklyNudgePrefs, notes: Note[]
         }
         return false;
       },
-      buildTitle: (count) => `📅 Masz ${count} ${count === 1 ? "notatkę" : count < 5 ? "notatki" : "notatek"} z dzisiaj`,
+      buildTitle: (count) => `📅 Masz ${count} ${pluralPl(count, ["notatkę", "notatki", "notatek"])} z dzisiaj`,
       description: "Wejdź w widok „Dziś”, aby je przejrzeć.",
       onShow: () => setView("today"),
       snoozeDescription: "Przypomnę o notatkach z „Dziś” za 10 minut.",
@@ -118,7 +119,7 @@ export function useDailyWeeklyNudges(prefs: DailyWeeklyNudgePrefs, notes: Note[]
         if (now < targetMs) return false;
         return lastNudge < targetMs;
       },
-      buildTitle: (count) => `🗓️ ${count} ${count === 1 ? "notatka" : count < 5 ? "notatki" : "notatek"} z tego tygodnia`,
+      buildTitle: (count) => `🗓️ ${count} ${pluralPl(count, ["notatka", "notatki", "notatek"])} z tego tygodnia`,
       description: "Zerknij na podsumowanie ostatnich 7 dni.",
       onShow: () => setView("week"),
       snoozeDescription: "Przypomnę o notatkach z tygodnia za 10 minut.",

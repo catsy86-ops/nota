@@ -36,8 +36,8 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
         toast("Czas na backup", {
           id: "auto-backup",
           description: last
-            ? `Minęło ${prefs.autoExportDays} dni od ostatniego. Pobierz plik z ${count} notatkami.`
-            : `Nie masz jeszcze kopii zapasowej. Pobierz plik z ${count} notatkami.`,
+            ? `Minęło ${prefs.autoExportDays} dni od ostatniego. Pobierz plik z ${count} ${count === 1 ? "notatką" : "notatkami"}.`
+            : `Nie masz jeszcze kopii zapasowej. Pobierz plik z ${count} ${count === 1 ? "notatką" : "notatkami"}.`,
           duration: Infinity,
           action: {
             label: "Pobierz",

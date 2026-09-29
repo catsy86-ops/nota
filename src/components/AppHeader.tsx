@@ -10,6 +10,7 @@ import { exportToJSON, exportToMarkdown, exportToHTML } from "@/lib/exportNotes"
 import { markBackup } from "@/lib/backupReminder";
 import { BeerMugLogo } from "@/components/BeerMugLogo";
 import type { View } from "@/hooks/useFilteredNotes";
+import { pluralPl } from "@/lib/plural";
 
 interface AppHeaderProps {
   hideHeader: boolean;
@@ -95,7 +96,7 @@ export function AppHeader({
             </h1>
             {view !== "calendar" && (
               <p className="text-xs text-muted-foreground hidden sm:block">
-                {displayCount} {displayCount === 1 ? "notatka" : displayCount < 5 ? "notatki" : "notatek"}
+                {displayCount} {pluralPl(displayCount, ["notatka", "notatki", "notatek"])}
               </p>
             )}
           </div>

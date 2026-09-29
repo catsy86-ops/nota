@@ -76,13 +76,13 @@ export function AppSidebar({
       <AnimatePresence>
         {open && (
           <motion.aside
-            initial={{ x: -280, opacity: 0 }}
-            animate={{ x: 0, width: 280, opacity: 1 }}
-            exit={{ x: -280, opacity: 0 }}
+            initial={{ x: "-100%", opacity: 0 }}
+            animate={{ x: 0, width: "17.5rem", opacity: 1 }}
+            exit={{ x: "-100%", opacity: 0 }}
             transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-            className="shrink-0 border-r border-border/50 sidebar-gradient overflow-hidden fixed left-0 top-0 bottom-0 z-50 shadow-2xl md:relative md:shadow-none"
+            className="shrink-0 max-w-[85vw] border-r border-border/50 sidebar-gradient overflow-hidden fixed left-0 top-0 bottom-0 z-50 shadow-2xl md:relative md:shadow-none"
           >
-            <div className="p-5 space-y-1 w-[280px] h-full flex flex-col scrollbar-thin overflow-y-auto">
+            <div className="p-5 space-y-1 w-[17.5rem] max-w-[85vw] h-full flex flex-col scrollbar-thin overflow-y-auto">
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -134,15 +134,15 @@ export function AppSidebar({
                             />
                           </>
                         )}
-                        <item.icon className="w-[18px] h-[18px] relative z-10" />
-                        <span className="flex-1 text-left relative z-10">{item.label}</span>
+                        <item.icon className="w-[18px] h-[18px] shrink-0 relative z-10" />
+                        <span className="flex-1 min-w-0 truncate text-left relative z-10">{item.label}</span>
                         {item.count !== undefined && item.count > 0 && (
                           <motion.span
                             key={item.count}
                             initial={{ scale: 0.8 }}
                             animate={{ scale: 1 }}
                             className={cn(
-                              "relative z-10 text-2xs font-semibold px-2 py-0.5 rounded-full min-w-[22px] text-center",
+                              "relative z-10 shrink-0 text-2xs font-semibold px-2 py-0.5 rounded-full min-w-[22px] text-center",
                               active ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
                             )}
                           >
@@ -218,9 +218,9 @@ export function AppSidebar({
 
               <div className="px-1 pb-2 pt-4 border-t border-border/50 space-y-0.5">
                 <button onClick={onOpenPalette} className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors">
-                  <Command className="w-[18px] h-[18px]" />
-                  <span>Paleta poleceń</span>
-                  <span className="ml-auto text-2xs opacity-70">{modShortcut("K")}</span>
+                  <Command className="w-[18px] h-[18px] shrink-0" />
+                  <span className="min-w-0 truncate">Paleta poleceń</span>
+                  <span className="ml-auto shrink-0 text-2xs opacity-70">{modShortcut("K")}</span>
                 </button>
                 <button
                   onClick={onToggleTheme}
