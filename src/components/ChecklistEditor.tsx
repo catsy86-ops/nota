@@ -3,12 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Check, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { emojiShower } from "@/lib/celebrate";
+import { parsePastedChecklist } from "@/lib/checklistPaste";
+import type { ChecklistItem } from "@/hooks/useNotes";
 
-export interface ChecklistItem {
-  id: string;
-  text: string;
-  checked: boolean;
-}
+export type { ChecklistItem };
 
 interface ChecklistEditorProps {
   items: ChecklistItem[];
@@ -50,6 +48,24 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
     }
   }
 
+  /** Wklejone kilka linii = kilka pozycji, wstawionych za `afterId` (albo na koniec). */
+  function handlePaste(e: React.ClipboardEvent<HTMLInputElement>, afterId?: string) {
+    const parsed = parsePastedChecklist(e.clipboardData.getData("text"));
+    if (!parsed) return;
+    e.preventDefault();
+    const added = parsed.map((p) => ({ ...p, id: crypto.randomUUID() }));
+    if (!afterId) {
+      // Tekst już wpisany w polu staje się początkiem pierwszej pozycji.
+      const typed = newItem.trim();
+      if (typed && added.length) added[0] = { ...added[0], text: `${typed} ${added[0].text}` };
+      onChange([...items, ...added]);
+      setNewItem("");
+      return;
+    }
+    const at = items.findIndex((i) => i.id === afterId) + 1;
+    onChange([...items.slice(0, at), ...added, ...items.slice(at)]);
+  }
+
   function removeItem(id: string) {
     onChange(items.filter((i) => i.id !== id));
   }
@@ -89,6 +105,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
               <input
                 value={item.text}
                 onChange={(e) => updateText(item.id, e.target.value)}
+                onPaste={(e) => handlePaste(e, item.id)}
                 className="text-sm bg-transparent outline-none text-foreground flex-1 min-w-0"
               />
             )}
@@ -142,6 +159,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
             value={newItem}
             onChange={(e) => setNewItem(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && addItem()}
+            onPaste={(e) => handlePaste(e)}
             placeholder="Dodaj element..."
             className="text-sm bg-transparent outline-none text-foreground placeholder:text-muted-foreground/40 flex-1 min-w-0"
           />
