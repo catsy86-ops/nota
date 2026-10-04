@@ -123,7 +123,8 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
                 <button
                   key={c.value}
                   onClick={(e) => { e.stopPropagation(); onSetColor(folder.id, c.value); setShowColorPicker(false); }}
-                  className={cn("w-5 h-5 rounded-full border-2 transition-all", folderColorDot[c.value], folder.color === c.value ? "border-primary scale-110" : "border-transparent hover:scale-110")}
+                  className={cn("pressable w-5 h-5 coarse:w-7 coarse:h-7 rounded-full ring-offset-2 ring-offset-background outline-none focus-visible:ring-2 focus-visible:ring-ring", folderColorDot[c.value], folder.color === c.value ? "ring-2 ring-primary" : "hover:ring-2 hover:ring-border")}
+                  aria-pressed={folder.color === c.value}
                   title={c.label}
                   aria-label={`Ustaw kolor: ${c.label}`}
                 />
@@ -140,7 +141,7 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
               {folder.emoji && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onSetEmoji(folder.id, null); setShowEmojiPicker(false); }}
-                  className="w-6 h-6 rounded text-xs flex items-center justify-center border border-dashed border-muted-foreground/30 hover:bg-muted/80 text-muted-foreground"
+                  className="pressable w-7 h-7 coarse:w-9 coarse:h-9 rounded-md text-xs flex items-center justify-center border border-dashed border-muted-foreground/30 hover:bg-muted/80 text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   title="Usuń emoji"
                   aria-label="Usuń emoji folderu"
                 >
@@ -151,7 +152,8 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
                 <button
                   key={emoji}
                   onClick={(e) => { e.stopPropagation(); onSetEmoji(folder.id, emoji); setShowEmojiPicker(false); }}
-                  className={cn("w-6 h-6 rounded text-sm flex items-center justify-center hover:bg-muted/80 transition-all", folder.emoji === emoji ? "bg-primary/10 ring-1 ring-primary scale-110" : "hover:scale-110")}
+                  className={cn("pressable w-7 h-7 coarse:w-9 coarse:h-9 rounded-md text-sm flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-ring", folder.emoji === emoji ? "bg-primary/10 ring-1 ring-primary" : "hover:bg-muted/80")}
+                  aria-pressed={folder.emoji === emoji}
                   aria-label={`Ustaw emoji: ${emoji}`}
                 >
                   {emoji}
