@@ -21,12 +21,21 @@ const SortableNoteCard = memo(function SortableNoteCard({ layout, note, index, s
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 50 : undefined,
   };
+  // „Uniesienie” przy przeciąganiu: cień i lekka przezroczystość, bez skali —
+  // transform należy do dnd-kit.
 
   return (
-    <div ref={setNodeRef} style={style} className={layout === "masonry" ? "break-inside-avoid mb-2.5 sm:mb-3" : layout === "grid" ? "h-full" : ""}>
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        "rounded-xl transition-[box-shadow,opacity] duration-fast",
+        layout === "masonry" ? "break-inside-avoid mb-2.5 sm:mb-3" : layout === "grid" ? "h-full" : "",
+        isDragging && "opacity-90 shadow-elevation-3",
+      )}
+    >
       <NoteCard note={note} index={index} selected={selected} dragAttributes={attributes} dragListeners={listeners} />
     </div>
   );
@@ -120,7 +129,8 @@ export function NoteGrid({
   return (
     <NoteViewActionsProvider value={noteViewActions}>
     <SortableContext items={noteIds} strategy={rectSortingStrategy}>
-      <div ref={gridRef} className={containerClass}>
+      {/* key = układ: przy zmianie widoku siatka pojawia się fade'em zamiast przeskoku. */}
+      <div ref={gridRef} key={prefs.layout} className={cn(containerClass, "animate-in fade-in-0 duration-base")}>
         <AnimatePresence mode="popLayout">
           {notes.map((note, i) => (
             <div
@@ -129,7 +139,7 @@ export function NoteGrid({
               data-note-id-wrap={note.id}
               onClickCapture={() => setGridNavFocus(note.id)}
               className={cn(
-                "rounded-2xl transition-shadow",
+                "rounded-xl transition-shadow",
                 prefs.layout === "masonry" ? "break-inside-avoid mb-2.5 sm:mb-3" : prefs.layout === "grid" ? "h-full" : "",
                 focusedId === note.id && "ring-2 ring-primary/60 ring-offset-2 ring-offset-background"
               )}

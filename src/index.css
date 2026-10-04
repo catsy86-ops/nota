@@ -421,7 +421,7 @@
 .note-flash {
   outline: 2px solid hsl(var(--primary));
   outline-offset: 3px;
-  border-radius: 1rem;
+  border-radius: 0.75rem; /* jak kafel (rounded-xl) */
   transition: outline-color 0.3s;
 }
 
