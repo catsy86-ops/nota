@@ -30,7 +30,7 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   private handleClearAndReload = () => {
-    if (!confirm("Wyczyścić lokalne dane Notatek Pijackich i odświeżyć? Notatki zostaną usunięte z tej przeglądarki.")) return;
+    if (!confirm("Wyczyścić lokalne dane aplikacji NOTKI i odświeżyć? Notatki zostaną usunięte z tej przeglądarki.")) return;
     try {
       Object.keys(localStorage)
         .filter((k) => k.startsWith("kaczy") || k.startsWith("dash-notes"))

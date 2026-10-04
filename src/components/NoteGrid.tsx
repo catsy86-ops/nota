@@ -26,7 +26,7 @@ const SortableNoteCard = memo(function SortableNoteCard({ layout, note, index, s
   };
 
   return (
-    <div ref={setNodeRef} style={style} className={layout === "masonry" ? "break-inside-avoid mb-4" : layout === "grid" ? "h-full" : ""}>
+    <div ref={setNodeRef} style={style} className={layout === "masonry" ? "break-inside-avoid mb-2.5 sm:mb-3" : layout === "grid" ? "h-full" : ""}>
       <NoteCard note={note} index={index} selected={selected} dragAttributes={attributes} dragListeners={listeners} />
     </div>
   );
@@ -62,12 +62,13 @@ export function NoteGrid({
   const colsCount = useCallback(() => {
     if (prefs.layout === "list") return 1;
     if (!gridRef.current) return 1;
-    const w = gridRef.current.clientWidth;
     if (prefs.autoColumns) {
-      if (w >= 1280) return 4;
-      if (w >= 1024) return 3;
-      if (w >= 640) return 2;
-      return 1;
+      // Te same progi co klasy Tailwind poniżej (liczone od szerokości okna).
+      const w = window.innerWidth;
+      if (w >= 1280) return 5;
+      if (w >= 1024) return 4;
+      if (w >= 768) return 3;
+      return 2;
     }
     return Math.max(1, Math.min(prefs.columns || 1, 4));
   }, [prefs.layout, prefs.autoColumns, prefs.columns]);
@@ -93,14 +94,14 @@ export function NoteGrid({
     });
   }, [navOrder, noteIdsKey, onDelete, onArchive, onTogglePin, onDuplicate, isArchived, colsCount]);
 
-  const gap = prefs.density === "compact" ? "gap-2 space-y-2" : prefs.density === "comfy" ? "gap-6 space-y-6" : "gap-4 space-y-4";
+  const gap = prefs.density === "compact" ? "gap-2 space-y-2" : prefs.density === "comfy" ? "gap-5 space-y-5" : "gap-2.5 sm:gap-3 space-y-2.5 sm:space-y-3";
 
   let containerClass: string;
   if (prefs.layout === "list") {
     containerClass = `max-w-2xl mx-auto ${gap.split(" ")[1]}`;
   } else if (prefs.layout === "grid") {
     const cols = prefs.autoColumns
-      ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
       : prefs.columns === 1 ? "grid-cols-1"
       : prefs.columns === 2 ? "grid-cols-1 sm:grid-cols-2"
       : prefs.columns === 3 ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
@@ -108,7 +109,7 @@ export function NoteGrid({
     containerClass = `grid ${cols} ${gap.split(" ")[0]} auto-rows-fr`;
   } else {
     const cols = prefs.autoColumns
-      ? "columns-1 sm:columns-2 lg:columns-3 xl:columns-4"
+      ? "columns-2 md:columns-3 lg:columns-4 xl:columns-5"
       : prefs.columns === 1 ? "columns-1"
       : prefs.columns === 2 ? "columns-1 sm:columns-2"
       : prefs.columns === 3 ? "columns-1 sm:columns-2 lg:columns-3"
@@ -129,7 +130,7 @@ export function NoteGrid({
               onClickCapture={() => setGridNavFocus(note.id)}
               className={cn(
                 "rounded-2xl transition-shadow",
-                prefs.layout === "masonry" ? "break-inside-avoid mb-4" : prefs.layout === "grid" ? "h-full" : "",
+                prefs.layout === "masonry" ? "break-inside-avoid mb-2.5 sm:mb-3" : prefs.layout === "grid" ? "h-full" : "",
                 focusedId === note.id && "ring-2 ring-primary/60 ring-offset-2 ring-offset-background"
               )}
             >

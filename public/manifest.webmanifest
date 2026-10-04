@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "Notatki Pijackie",
-  "short_name": "Pijackie",
+  "name": "NOTKI",
+  "short_name": "NOTKI",
   "description": "Notatki z etykietami, przypomnieniami i obrazkami — działa offline",
   "start_url": "/",
   "scope": "/",
@@ -39,7 +39,7 @@
       "sizes": "1241x698",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Widok notatek w Notatkach Pijackich"
+      "label": "Widok notatek w aplikacji NOTKI"
     }
   ]
 }

@@ -38,7 +38,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
   const filtersActive = prefs.filterColor !== "all" || prefs.filterLabel !== "all" || prefs.filterHasReminder || prefs.filterPriority !== "all";
 
   return (
-    <div className="flex items-center gap-0.5 p-1 rounded-2xl bg-muted/40 border border-border/50">
+    <div className="flex items-center gap-0.5 p-0.5 sm:p-1 rounded-2xl bg-muted/40 border border-border/50">
       {/* Layout */}
       <DropdownMenu>
         <Tooltip>
@@ -47,7 +47,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
               <motion.button
                 aria-label="Widok i kolumny"
                 whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-xl hover:bg-background hover:shadow-sm transition-colors text-muted-foreground data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm"
+                className="p-1.5 sm:p-2 rounded-xl hover:bg-background hover:shadow-sm transition-colors text-muted-foreground data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm"
               >
                 {prefs.layout === "list" ? <List className="w-5 h-5" /> : prefs.layout === "grid" ? <Columns2 className="w-5 h-5" /> : <LayoutGrid className="w-5 h-5" />}
               </motion.button>
@@ -106,7 +106,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
               <motion.button
                 aria-label="Sortowanie"
                 whileTap={{ scale: 0.95 }}
-                className="p-2 rounded-xl hover:bg-background hover:shadow-sm transition-colors text-muted-foreground data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm"
+                className="p-1.5 sm:p-2 rounded-xl hover:bg-background hover:shadow-sm transition-colors text-muted-foreground data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm"
               >
                 {prefs.sortDir === "asc" ? <ArrowUpAZ className="w-5 h-5" /> : <ArrowDownAZ className="w-5 h-5" />}
               </motion.button>
@@ -143,7 +143,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
                 aria-label="Filtry"
                 whileTap={{ scale: 0.95 }}
                 className={cn(
-                  "relative p-2 rounded-xl transition-colors",
+                  "relative p-1.5 sm:p-2 rounded-xl transition-colors",
                   filtersActive
                     ? "text-primary bg-primary/10 shadow-sm"
                     : "text-muted-foreground hover:bg-background hover:shadow-sm data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm"

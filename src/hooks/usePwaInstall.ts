@@ -17,6 +17,11 @@ function isIos(): boolean {
   return /iphone|ipad|ipod/i.test(navigator.userAgent);
 }
 
+function isAndroid(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /android/i.test(navigator.userAgent);
+}
+
 function isInStandaloneMode(): boolean {
   if (typeof window === "undefined") return false;
   return (
@@ -26,12 +31,19 @@ function isInStandaloneMode(): boolean {
 }
 
 export interface PwaInstallState {
-  /** True when the app can be installed (native prompt available or iOS manual flow). */
+  /**
+   * True whenever the app is not installed yet. Without a native prompt
+   * (iOS, Firefox, Chrome before it decides to offer one) the button shows
+   * manual steps instead — hiding it left phones with no way to install.
+   */
   canInstall: boolean;
+  /** True when the browser handed us a native install prompt. */
+  hasNativePrompt: boolean;
   /** True when the app is already installed / running standalone. */
   isInstalled: boolean;
   /** True on iOS where there is no programmatic prompt — show manual instructions. */
   isIos: boolean;
+  isAndroid: boolean;
   /** Trigger the native install prompt. Returns the user's choice, or null on iOS. */
   install: () => Promise<"accepted" | "dismissed" | null>;
 }
@@ -67,9 +79,11 @@ export function usePwaInstall(): PwaInstallState {
 
   const ios = isIos();
   return {
-    canInstall: !isInstalled && (deferredPrompt !== null || ios),
+    canInstall: !isInstalled,
+    hasNativePrompt: deferredPrompt !== null,
     isInstalled,
     isIos: ios,
+    isAndroid: isAndroid(),
     install,
   };
 }

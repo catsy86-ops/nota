@@ -11,6 +11,7 @@ import { SidebarFolderItem } from "@/components/sidebar/SidebarFolderItem";
 import { SidebarAddFolderButton } from "@/components/sidebar/SidebarAddFolderButton";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { BeerMugLogo } from "@/components/BeerMugLogo";
+import { NotkiLogo } from "@/components/NotkiLogo";
 import type { View } from "@/hooks/useFilteredNotes";
 import { modShortcut } from "@/lib/platform";
 
@@ -94,7 +95,7 @@ export function AppSidebar({
                   onClick={onLogoClick}
                   whileTap={{ scale: 0.94 }}
                   className="relative shrink-0 grid place-items-center w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 via-accent/10 to-transparent ring-1 ring-border/60"
-                  aria-label="Notatki Pijackie"
+                  aria-label="NOTKI"
                 >
                   <div className="absolute inset-0 rounded-2xl bg-primary/20 blur-lg opacity-70 -z-10" />
                   <motion.div>
@@ -102,8 +103,8 @@ export function AppSidebar({
                   </motion.div>
                 </motion.button>
                 <div>
-                  <h1 className="text-xl font-display font-extrabold gradient-text leading-tight tracking-tight">NOTATKI PIJACKIE</h1>
-                  <p className="text-2xs text-muted-foreground font-medium">Notuj, zanim zapomnisz 🍺</p>
+                  <h1 className="leading-none"><NotkiLogo /></h1>
+                  <p className="text-2xs text-muted-foreground font-medium mt-1.5">Notuj, zanim zapomnisz 🍺</p>
                 </div>
               </motion.div>
 
@@ -267,7 +268,7 @@ export function AppSidebar({
                   </div>
                 )}
                 <InstallAppButton />
-                <p className="text-2xs text-muted-foreground/40 text-center font-medium">NOTATKI PIJACKIE v1.0 • Zrobione przy piwie 🍺</p>
+                <p className="text-2xs text-muted-foreground/40 text-center font-medium">NOTKI v1.0 • Zrobione przy piwie 🍺</p>
               </div>
             </div>
           </motion.aside>

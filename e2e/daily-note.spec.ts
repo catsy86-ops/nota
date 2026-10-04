@@ -20,7 +20,7 @@ test("notatka dnia powstaje raz, a kolejne otwarcie dopisuje godzinę", async ({
   await openDailyNote(page);
   // Otwiera się od razu w edytorze, z szablonem dziennika.
   const editor = page.locator("[data-note-id] textarea").first();
-  await expect(editor).toHaveValue(/wdzięczny/);
+  await expect(editor).toHaveValue(/dziękuję/);
 
   await page.reload();
   await expect(cards).toHaveCount(1);

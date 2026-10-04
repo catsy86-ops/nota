@@ -29,6 +29,7 @@ import { useDailyWeeklyNudges } from "@/hooks/useDailyWeeklyNudges";
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
 import { getTodayRange } from "@/lib/dateRanges";
 import { AddNoteBar } from "@/components/AddNoteBar";
+import { InstallBanner } from "@/components/InstallBanner";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AppHeader } from "@/components/AppHeader";
 import { NoteGrid } from "@/components/NoteGrid";
@@ -440,6 +441,7 @@ const Index = () => {
           <div className="sm:hidden">
             <SearchBar value={search} onChange={setSearch} />
           </div>
+          {view === "notes" && <InstallBanner />}
 
           {canCompose && (
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1, duration: 0.4 }} className="space-y-3">

@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { exportToJSON, exportToMarkdown, exportToHTML } from "@/lib/exportNotes";
 import { markBackup } from "@/lib/backupReminder";
-import { BeerMugLogo } from "@/components/BeerMugLogo";
+import { NotkiLogo } from "@/components/NotkiLogo";
 import type { View } from "@/hooks/useFilteredNotes";
 import { pluralPl } from "@/lib/plural";
 
@@ -50,7 +50,7 @@ export function AppHeader({
                 onClick={onToggleSidebar}
                 aria-label={sidebarOpen ? "Schowaj panel" : "Pokaż panel"}
                 aria-pressed={sidebarOpen}
-                className="p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground"
+                className="p-1.5 sm:p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground"
               >
                 {sidebarOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
               </motion.button>
@@ -59,15 +59,19 @@ export function AppHeader({
               {sidebarOpen ? "Schowaj panel" : "Pokaż panel"}
             </TooltipContent>
           </Tooltip>
+          {/* Na telefonie brakuje miejsca na logo i tytuł naraz: w Notatkach
+              logo jest tytułem, w pozostałych widokach zostaje sam tytuł. */}
           {!sidebarOpen && (
             <motion.div
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
+              className={view === "notes" ? undefined : "hidden sm:block"}
             >
-              <BeerMugLogo className="w-7 h-7" />
+              <NotkiLogo size="sm" />
             </motion.div>
           )}
-          <div>
+          {!sidebarOpen && <span aria-hidden className="hidden sm:block h-5 w-px bg-border" />}
+          <div className={!sidebarOpen && view === "notes" ? "hidden sm:block" : undefined}>
             <h1 className="text-lg font-display font-extrabold leading-tight tracking-tight text-foreground">
               {view === "notes" && "Notatki"}
               {view === "today" && (
@@ -122,7 +126,7 @@ export function AppHeader({
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <motion.button
-                className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground data-[state=open]:bg-muted data-[state=open]:text-foreground"
+                className="p-1.5 sm:p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground data-[state=open]:bg-muted data-[state=open]:text-foreground"
                 aria-label="Import / Eksport"
                 title="Import / Eksport"
               >

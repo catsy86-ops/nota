@@ -15,8 +15,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['Plus Jakarta Sans', 'sans-serif'],
-        body: ['Inter', 'sans-serif'],
+        display: ['Plus Jakarta Sans Variable', 'Plus Jakarta Sans', 'sans-serif'],
+        logo: ['Unbounded Variable', 'Plus Jakarta Sans Variable', 'sans-serif'],
+        body: ['Inter Variable', 'Inter', 'sans-serif'],
       },
       colors: {
         note: {

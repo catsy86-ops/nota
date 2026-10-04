@@ -38,7 +38,9 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
         // Manifest-only asset: fetched by the OS install UI, never by the app
         // itself — keep it out of the offline-critical precache.
-        globIgnores: ["**/screenshot-wide.png"],
+        // Fonty: offline potrzebne są tylko podzbiory łacińskie (polski siedzi
+        // w latin-ext); cyrylica/greka/wietnamski i tak ładują się tylko na żądanie.
+        globIgnores: ["**/screenshot-wide.png", "**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*.woff2", "**/unbounded-latin-ext-*.woff2"],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,
