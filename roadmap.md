@@ -483,3 +483,18 @@ Do zrobienia (od najważniejszych):
 - [x] **Niespójny wybór w Ustawieniach → Wygląd** — „Motyw” zaznacza białą kartą, pozostałe grupy pomarańczową ramką. Jeden styl. **S** — ✅ 2026-09-28: „Motyw” ma teraz ten sam styl co reszta (ramka `border-primary`, tło `primary/10`), bez przesuwanej pigułki.
 - [x] **Uchwyt przeciągania nachodzi na tytuł w trybie edycji kafla** (kropki „⠿” na pierwszej literze). **S** — ✅ 2026-09-28: na zrzucie nachodził też przy zwykłym najechaniu. Uchwyt jest teraz poziomy (3×2 kropki) na środku górnej krawędzi, z etykietą „Przeciągnij, aby zmienić kolejność”, i schowany w trybie edycji.
 - [x] **Dwa toasty o backupie w pierwszej sesji** (auto-backup i przypomnienie) i tekst „Minęło 7 dni od ostatniego”, gdy backupu nigdy nie było. — ✅ 2026-09-28: przypomnienie pomijane, gdy auto-backup już poprosił w tej sesji; tekst „Nie masz jeszcze kopii zapasowej” przy braku backupu.
+
+## Plan upiększenia: menu, przyciski, animacje — 2026-10-04
+
+Kierunek „notes przy barze”: sygnaturą jest **dociśnięcie zamiast skalowania** (wciśnięty przycisk zjeżdża o 1 px, ciemnieje ~5% i dostaje wewnętrzny cień, jak klawisz kasy). Ruch krótki, „osiada” bez odbić (ease-out-quint). Aktywna pozycja nawigacji to pomarańczowa pigułka, reszta cicha.
+
+Znaleziska, które to uzasadniają: brak tokenów ruchu (ok. 10 różnych sprężyn, sheet 500 ms wobec dialogu 200 ms), 46 ręcznych `whileTap` ze skalą 0.85–0.98, ok. 120 surowych `<button>` z własnymi klasami, cele dotykowe 16–32 px (nagłówek, `AddNoteBar`, akcje folderów), ikony w 5 rozmiarach, podwójny stan aktywny folderów/etykiet (pigułka + cień + ramka), wiersze folderów/etykiet `role="button"` bez klawiatury, nieskończony puls FAB (mruga też przy reduced-motion), `transition-all` na `NoteCard`.
+
+- [x] **Runda 1 — tokeny** (✅ 2026-10-04) (`index.css`, `tailwind.config.ts`, `src/lib/motion.ts`): czasy `--dur-press 90ms / --dur-fast 150ms / --dur-base 220ms / --dur-slow 320ms`, krzywe `--ease-out cubic-bezier(.22,1,.36,1)`, `--ease-in`, `--ease-std`; `spring.snap {500,38}`, `spring.soft {320,30}`, `tween.enter`; `--elevation-up`, `--glow-primary`. Bez widocznych zmian.
+- [ ] **Runda 2 — komponenty `ui`**: button (stan wciśnięcia, rozmiary `icon-sm` 32 / `icon` 36, min. 44 px przy `pointer: coarse`), dropdown/popover/command `rounded-xl` + pozycje `rounded-sm`, dialog/sheet (220/165 ms, overlay `bg-foreground/30`, dialog fade + scale .97 zamiast wjazdu od 48%, „Zamknij” zamiast „Close”, `focus-visible`), sonner.
+- [ ] **Runda 3 — `IconButton` + `.pressable`**: migracja `AppHeader`, `ViewControls`, `AddNoteBar`, `BulkActionBar`; usunięcie `whileTap` (framer tylko na FAB). Ryzyko: selektory e2e.
+- [ ] **Runda 4 — pasek boczny**: `SidebarRow` zamiast 8 skopiowanych wierszy, jeden stan aktywny, klawiatura + `group-focus-within`, bez kaskady wejścia, szerokość animowana przy otwieraniu i zamykaniu.
+- [ ] **Runda 5 — BottomNav i „Więcej”**: `aria-current`, bez pulsu FAB, mocniejsza aktywna pozycja, arkusz w grupach „Przejdź do” / „Narzędzia”, uchwyt.
+- [ ] **Runda 6 — kafle**: `transition-[box-shadow,border-color]` zamiast `transition-all`, spójne promienie (wrapper, tła przesunięcia, `.note-flash`), „uniesienie” przy przeciąganiu (bez skali — transform należy do dnd-kit), fade przy zmianie widoku.
+
+Nie robimy: masonry, skali przy przeciąganiu, `backdrop-blur` na overlayach, View Transitions API, powrotu `whileHover` na ikonach, animowania `width`/`height` list kafli, drugiego mechanizmu reduced-motion (obecny działa), zmiany `--primary`.

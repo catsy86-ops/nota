@@ -37,8 +37,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ type: "spring", stiffness: 260, damping: 26 }}
-        className="fixed bottom-0 inset-x-0 z-40 md:hidden glass-strong border-t border-border/60 pb-[env(safe-area-inset-bottom)]"
-        style={{ boxShadow: "0 -8px 24px -12px hsl(var(--foreground) / 0.15)" }}
+        className="fixed bottom-0 inset-x-0 z-40 md:hidden glass-strong border-t border-border/60 pb-[env(safe-area-inset-bottom)] shadow-elevation-up"
       >
         <LayoutGroup id="bottom-nav">
           <ul className="relative grid grid-cols-5 items-end h-[64px] max-w-md mx-auto px-2">
@@ -56,7 +55,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
                 transition={{ type: "spring", stiffness: 380, damping: 18 }}
                 onClick={onNew}
                 aria-label="Nowa notatka"
-                className="relative w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-[0_10px_28px_-8px_hsl(var(--primary)/0.55)] ring-4 ring-background"
+                className="relative w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-glow-primary ring-4 ring-background"
               >
                 <motion.span
                   aria-hidden

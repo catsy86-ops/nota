@@ -91,6 +91,8 @@ export default {
         "elevation-1": "var(--elevation-1)",
         "elevation-2": "var(--elevation-2)",
         "elevation-3": "var(--elevation-3)",
+        "elevation-up": "var(--elevation-up)",
+        "glow-primary": "var(--glow-primary)",
         // Domyślne stopnie Tailwinda (też w komponentach shadcn) mapujemy na
         // trzy poziomy uniesienia — jeden system cieni w całej aplikacji.
         sm: "var(--elevation-1)",
@@ -103,6 +105,18 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      // Tokeny ruchu z index.css — `duration-fast`, `ease-out-soft` itd.
+      transitionDuration: {
+        press: "var(--dur-press)",
+        fast: "var(--dur-fast)",
+        base: "var(--dur-base)",
+        slow: "var(--dur-slow)",
+      },
+      transitionTimingFunction: {
+        "out-soft": "var(--ease-out)",
+        "in-soft": "var(--ease-in)",
+        std: "var(--ease-std)",
       },
       keyframes: {
         "accordion-down": {
@@ -137,8 +151,8 @@ export default {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fade-in 0.4s ease-out",
-        "scale-in": "scale-in 0.3s ease-out",
+        "fade-in": "fade-in var(--dur-base) var(--ease-out)",
+        "scale-in": "scale-in var(--dur-base) var(--ease-out)",
         "slide-in-left": "slide-in-left 0.3s ease-out",
         shimmer: "shimmer 2s infinite linear",
         float: "float 3s ease-in-out infinite",
