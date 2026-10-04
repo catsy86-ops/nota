@@ -5,6 +5,8 @@ import { ChevronRight, Palette, Smile, FolderPlus, Pencil, Trash2, Check, X } fr
 import { cn } from "@/lib/utils";
 import type { Folder, FolderColor } from "@/hooks/useNotes";
 import { folderColorDot } from "@/components/FolderPicker";
+import { SidebarRow, SidebarRowMenu } from "@/components/sidebar/SidebarRow";
+import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 const FOLDER_COLORS: { value: FolderColor; label: string }[] = [
   { value: "default", label: "Domyślny" },
@@ -34,6 +36,9 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
   const [subName, setSubName] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const subInputRef = useRef<HTMLInputElement>(null);
+  // Po „Zmień nazwę” / „Dodaj podfolder” fokus zostaje w polu, nie wraca do „⋯”.
+  const focusInput = useRef(false);
+  const keepInputFocus = (e: Event) => { if (focusInput.current) { e.preventDefault(); focusInput.current = false; } };
   const children = folders.filter((f) => f.parentId === folder.id);
 
   useEffect(() => { if (editing && inputRef.current) inputRef.current.focus(); }, [editing]);
@@ -63,43 +68,52 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
   }
 
   return (
-    <div ref={setDropRef} data-folder-drop={folder.id}>
-      <motion.div
-        className={cn(
-          "group flex items-center gap-2 px-3 h-9 rounded-lg text-sm transition-all duration-200 cursor-pointer",
-          isActive ? "bg-primary/10 text-primary shadow-sm border border-primary/10" : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
-          isOver && "bg-primary/20 ring-2 ring-primary/40 scale-[1.02]"
-        )}
+    <div data-folder-drop={folder.id}>
+      <SidebarRow
+        ref={setDropRef}
+        active={isActive}
+        dropActive={isOver}
         onClick={() => onSelect(folder.id)}
-        role="button"
-        aria-current={isActive ? "page" : undefined}
-      >
-        {children.length > 0 ? (
+        before={children.length > 0 ? (
           <button
-            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+            type="button"
+            onClick={() => setExpanded(!expanded)}
             aria-label={expanded ? "Zwiń podfoldery" : "Rozwiń podfoldery"}
             aria-expanded={expanded}
-            className="pressable p-0.5"
+            className="pressable grid h-6 w-6 place-items-center rounded-md outline-none hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <ChevronRight className={cn("w-3 h-3 transition-transform", expanded && "rotate-90")} />
+            <ChevronRight className={cn("w-3.5 h-3.5 transition-transform duration-[var(--dur-fast)]", expanded && "rotate-90")} />
           </button>
         ) : (
-          <span className="w-4" />
+          <span className="w-6" aria-hidden />
         )}
-        {folder.emoji ? (
-          <span className="text-sm shrink-0">{folder.emoji}</span>
+        icon={folder.emoji ? (
+          <span className="text-sm leading-none">{folder.emoji}</span>
         ) : (
-          <span className={cn("w-2.5 h-2.5 rounded-full shrink-0", folderColorDot[folder.color] || folderColorDot.default)} />
+          <span className={cn("w-2.5 h-2.5 rounded-full", folderColorDot[folder.color] || folderColorDot.default)} />
         )}
-        <span className="flex-1 text-left truncate">{folder.name}</span>
-        <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-opacity">
-          <button onClick={(e) => { e.stopPropagation(); setShowColorPicker(!showColorPicker); setShowEmojiPicker(false); }} aria-label="Zmień kolor folderu" className="pressable p-1 rounded-lg hover:bg-foreground/10"><Palette className="w-3 h-3" /></button>
-          <button onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); setShowColorPicker(false); }} aria-label="Zmień emoji folderu" className="pressable p-1 rounded-lg hover:bg-foreground/10"><Smile className="w-3 h-3" /></button>
-          <button onClick={(e) => { e.stopPropagation(); setAddingSub(true); }} aria-label="Dodaj podfolder" className="pressable p-1 rounded-lg hover:bg-foreground/10"><FolderPlus className="w-3 h-3" /></button>
-          <button onClick={(e) => { e.stopPropagation(); setEditing(true); }} aria-label={`Zmień nazwę folderu ${folder.name}`} className="pressable p-1 rounded-lg hover:bg-foreground/10"><Pencil className="w-3 h-3" /></button>
-          <button onClick={(e) => { e.stopPropagation(); onDelete(folder.id); }} aria-label={`Usuń folder ${folder.name}`} className="pressable p-1 rounded-lg hover:bg-destructive/10 hover:text-destructive"><Trash2 className="w-3 h-3" /></button>
-        </div>
-      </motion.div>
+        label={folder.name}
+        actions={
+            <SidebarRowMenu label={`folderu ${folder.name}`} onCloseAutoFocus={keepInputFocus}>
+              <DropdownMenuItem onSelect={() => { focusInput.current = true; setEditing(true); }}>
+                <Pencil className="w-4 h-4 mr-2" />Zmień nazwę
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => { setShowColorPicker(!showColorPicker); setShowEmojiPicker(false); }}>
+                <Palette className="w-4 h-4 mr-2" />Kolor
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => { setShowEmojiPicker(!showEmojiPicker); setShowColorPicker(false); }}>
+                <Smile className="w-4 h-4 mr-2" />Emoji
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => { focusInput.current = true; setAddingSub(true); setExpanded(true); }}>
+                <FolderPlus className="w-4 h-4 mr-2" />Dodaj podfolder
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={() => onDelete(folder.id)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+                <Trash2 className="w-4 h-4 mr-2" />Usuń folder
+              </DropdownMenuItem>
+            </SidebarRowMenu>
+        }
+      />
 
       <AnimatePresence>
         {showColorPicker && (

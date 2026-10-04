@@ -9,18 +9,30 @@ import { useNotesContext } from "@/hooks/NotesProvider";
 import { SidebarLabelItem } from "@/components/sidebar/SidebarLabelItem";
 import { SidebarFolderItem } from "@/components/sidebar/SidebarFolderItem";
 import { SidebarAddFolderButton } from "@/components/sidebar/SidebarAddFolderButton";
+import { SidebarRow, SidebarCount } from "@/components/sidebar/SidebarRow";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { BeerMugLogo } from "@/components/BeerMugLogo";
 import { NotkiLogo } from "@/components/NotkiLogo";
 import type { View } from "@/hooks/useFilteredNotes";
 import { modShortcut } from "@/lib/platform";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { dur, ease, tween } from "@/lib/motion";
 
-function DroppableNavItem({ droppableId, children }: { droppableId?: string; children: React.ReactNode }) {
-  const { setNodeRef, isOver } = useDroppable({ id: droppableId || "noop", disabled: !droppableId });
-  if (!droppableId) return <>{children}</>;
+// „Notatki” przyjmują upuszczoną notatkę (wyjęcie z folderu); pozostałe pozycje nie.
+function NavRow({ item, active, onClick }: { item: SidebarItem; active: boolean; onClick: () => void }) {
+  const droppableId = item.view === "notes" ? "notes-drop-root" : undefined;
+  const { setNodeRef, isOver } = useDroppable({ id: droppableId || `nav-${item.view}`, disabled: !droppableId });
   return (
-    <div ref={setNodeRef} data-folder-drop-root={droppableId === "notes-drop-root" ? "" : undefined} className={cn("rounded-xl transition-all duration-200", isOver && "ring-2 ring-primary/50 bg-primary/5 scale-[1.02]")}>
-      {children}
+    <div data-folder-drop-root={droppableId ? "" : undefined}>
+      <SidebarRow
+        ref={droppableId ? setNodeRef : undefined}
+        icon={<item.icon className="w-[18px] h-[18px]" />}
+        label={item.label}
+        active={active}
+        dropActive={isOver}
+        onClick={onClick}
+        trailing={item.count !== undefined && item.count > 0 ? <SidebarCount value={item.count} active={active} /> : undefined}
+      />
     </div>
   );
 }
@@ -59,6 +71,7 @@ export function AppSidebar({
   onOpenStats, onOpenFocusMode, onSettingsOpenChange,
 }: AppSidebarProps) {
   const [moreOpen, setMoreOpen] = useState(false);
+  const isMobile = useIsMobile();
   const { allLabels, folders, renameLabel, removeLabel, addFolder, updateFolder, deleteFolder } = useNotesContext();
 
   return (
@@ -67,9 +80,9 @@ export function AppSidebar({
         {open && (
           <motion.div
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm md:hidden"
+            animate={{ opacity: 1, transition: tween.enter }}
+            exit={{ opacity: 0, transition: tween.exit }}
+            className="fixed inset-0 z-40 bg-foreground/30 md:hidden"
             onClick={onClose}
           />
         )}
@@ -77,19 +90,15 @@ export function AppSidebar({
       <AnimatePresence>
         {open && (
           <motion.aside
-            initial={{ x: "-100%", opacity: 0 }}
-            animate={{ x: 0, width: "17.5rem", opacity: 1 }}
-            exit={{ x: "-100%", opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+            // Telefon: arkusz wjeżdża z krawędzi nad treścią. Desktop: pasek jest w układzie,
+            // więc animujemy szerokość — treść odsuwa się razem z nim, zamiast skakać na końcu.
+            initial={isMobile ? { x: "-100%" } : { width: 0 }}
+            animate={isMobile ? { x: 0, transition: tween.enter } : { width: "17.5rem", transition: { duration: dur.slow, ease: ease.out } }}
+            exit={isMobile ? { x: "-100%", transition: tween.exit } : { width: 0, transition: { duration: dur.base, ease: ease.in } }}
             className="shrink-0 max-w-[85vw] border-r border-border/50 sidebar-gradient overflow-hidden fixed left-0 top-0 bottom-0 z-50 shadow-2xl md:relative md:shadow-none"
           >
             <div className="p-5 space-y-1 w-[17.5rem] max-w-[85vw] h-full flex flex-col scrollbar-thin overflow-y-auto">
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.1 }}
-                className="flex items-center gap-3 px-3 pb-6"
-              >
+              <div className="flex items-center gap-3 px-3 pb-6">
                 <button
                   type="button"
                   onClick={onLogoClick}
@@ -97,71 +106,28 @@ export function AppSidebar({
                   aria-label="NOTKI"
                 >
                   <div className="absolute inset-0 rounded-2xl bg-primary/20 blur-lg opacity-70 -z-10" />
-                  <motion.div>
-                    <BeerMugLogo />
-                  </motion.div>
+                  <BeerMugLogo />
                 </button>
                 <div>
                   <h1 className="leading-none"><NotkiLogo /></h1>
                   <p className="text-2xs text-muted-foreground font-medium mt-1.5">Notuj, zanim zapomnisz 🍺</p>
                 </div>
-              </motion.div>
+              </div>
 
               {/* Kafle statystyk usunięte — liczniki są już przy pozycjach nawigacji. */}
               <div className="space-y-0.5">
-                {sidebarItems.map((item, i) => {
-                  const isNotesItem = item.view === "notes";
-                  const active = view === item.view && view !== "label";
-                  return (
-                    <DroppableNavItem key={item.view} droppableId={isNotesItem ? "notes-drop-root" : undefined}>
-                      <motion.button
-                        initial={{ x: -20, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.15 + i * 0.05 }}
-                        onClick={() => onGoView(item.view)}
-                        aria-current={active ? "page" : undefined}
-                        className={cn(
-                          "relative w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium transition-colors duration-200",
-                          active ? "text-primary" : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-                        )}
-                      >
-                        {active && (
-                          <>
-                            <motion.span
-                              layoutId="sidebar-active-pill"
-                              className="absolute inset-0 rounded-lg bg-primary/10"
-                              transition={{ type: "spring", stiffness: 500, damping: 38 }}
-                            />
-                          </>
-                        )}
-                        <item.icon className="w-[18px] h-[18px] shrink-0 relative z-10" />
-                        <span className="flex-1 min-w-0 truncate text-left relative z-10">{item.label}</span>
-                        {item.count !== undefined && item.count > 0 && (
-                          <motion.span
-                            key={item.count}
-                            initial={{ scale: 0.8 }}
-                            animate={{ scale: 1 }}
-                            className={cn(
-                              "relative z-10 shrink-0 text-2xs font-semibold px-2 py-0.5 rounded-full min-w-[22px] text-center",
-                              active ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"
-                            )}
-                          >
-                            {item.count}
-                          </motion.span>
-                        )}
-                      </motion.button>
-                    </DroppableNavItem>
-                  );
-                })}
+                {sidebarItems.map((item) => (
+                  <NavRow
+                    key={item.view}
+                    item={item}
+                    active={view === item.view && view !== "label"}
+                    onClick={() => onGoView(item.view)}
+                  />
+                ))}
               </div>
 
               {allLabels.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="pt-5"
-                >
+                <div className="pt-5">
                   <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground px-3 mb-2 flex items-center gap-1.5">
                     <Tag className="w-3 h-3" />
                     Etykiety
@@ -178,16 +144,11 @@ export function AppSidebar({
                       />
                     ))}
                   </div>
-                </motion.div>
+                </div>
               )}
 
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.35 }}
-                className="pt-5"
-              >
-                <div className="flex items-center justify-between px-3 mb-2">
+              <div className="pt-5">
+                <div className="flex items-center justify-between pl-3 pr-1 mb-1 min-h-7">
                   <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                     <FolderOpen className="w-3 h-3" />
                     Foldery
@@ -212,58 +173,39 @@ export function AppSidebar({
                     />
                   ))}
                 </div>
-              </motion.div>
+              </div>
 
               <div className="flex-1" />
 
               <div className="px-1 pb-2 pt-4 border-t border-border/50 space-y-0.5">
-                <button onClick={onOpenPalette} className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors">
-                  <Command className="w-[18px] h-[18px] shrink-0" />
-                  <span className="min-w-0 truncate">Paleta poleceń</span>
-                  <span className="ml-auto shrink-0 text-2xs opacity-70">{modShortcut("K")}</span>
-                </button>
-                <button
+                <SidebarRow
+                  icon={<Command className="w-[18px] h-[18px]" />}
+                  label="Paleta poleceń"
+                  onClick={onOpenPalette}
+                  trailing={<span className="shrink-0 text-2xs opacity-70">{modShortcut("K")}</span>}
+                />
+                <SidebarRow
+                  icon={dark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
+                  label={dark ? "Tryb jasny" : "Tryb ciemny"}
                   onClick={onToggleTheme}
-                  aria-label={dark ? "Włącz tryb jasny" : "Włącz tryb ciemny"}
-                  aria-pressed={dark}
-                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors"
-                >
-                  {dark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
-                  <span>{dark ? "Tryb jasny" : "Tryb ciemny"}</span>
-                </button>
-                <button onClick={() => onSettingsOpenChange(true)} className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors">
-                  <SettingsIcon className="w-[18px] h-[18px]" />
-                  <span>Ustawienia</span>
-                </button>
+                  buttonProps={{ "aria-label": dark ? "Włącz tryb jasny" : "Włącz tryb ciemny", "aria-pressed": dark }}
+                />
+                <SidebarRow icon={<SettingsIcon className="w-[18px] h-[18px]" />} label="Ustawienia" onClick={() => onSettingsOpenChange(true)} />
 
                 {/* Akcje drugorzędne zwinięte — sidebar ma się mieścić na 900 px. */}
-                <button
+                <SidebarRow
+                  icon={<MoreHorizontal className="w-[18px] h-[18px]" />}
+                  label="Narzędzia"
                   onClick={() => setMoreOpen((v) => !v)}
-                  aria-expanded={moreOpen}
-                  className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors"
-                >
-                  <MoreHorizontal className="w-[18px] h-[18px]" />
-                  <span>Narzędzia</span>
-                  <ChevronDown className={cn("ml-auto w-4 h-4 transition-transform", moreOpen && "rotate-180")} />
-                </button>
+                  buttonProps={{ "aria-expanded": moreOpen }}
+                  trailing={<ChevronDown className={cn("w-4 h-4 shrink-0 transition-transform duration-[var(--dur-fast)]", moreOpen && "rotate-180")} />}
+                />
                 {moreOpen && (
                   <div className="space-y-0.5 pl-2">
-                    <button onClick={onOpenActions} className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors">
-                      <History className="w-[18px] h-[18px]" />
-                      <span>Ostatnie akcje</span>
-                    </button>
-                    <button onClick={onOpenStats} className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors">
-                      <Trophy className="w-[18px] h-[18px]" />
-                      <span>Statystyki</span>
-                    </button>
-                    <button onClick={onOpenFocusMode} className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors">
-                      <Brain className="w-[18px] h-[18px]" />
-                      <span>Tryb skupienia</span>
-                    </button>
-                    <button onClick={() => window.dispatchEvent(new CustomEvent("kaczy:tour"))} className="w-full flex items-center gap-3 px-3 h-9 rounded-lg text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-colors">
-                      <HelpCircle className="w-[18px] h-[18px]" />
-                      <span>Samouczek</span>
-                    </button>
+                    <SidebarRow icon={<History className="w-[18px] h-[18px]" />} label="Ostatnie akcje" onClick={onOpenActions} />
+                    <SidebarRow icon={<Trophy className="w-[18px] h-[18px]" />} label="Statystyki" onClick={onOpenStats} />
+                    <SidebarRow icon={<Brain className="w-[18px] h-[18px]" />} label="Tryb skupienia" onClick={onOpenFocusMode} />
+                    <SidebarRow icon={<HelpCircle className="w-[18px] h-[18px]" />} label="Samouczek" onClick={() => window.dispatchEvent(new CustomEvent("kaczy:tour"))} />
                   </div>
                 )}
                 <InstallAppButton />

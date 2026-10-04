@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { motion } from "framer-motion";
 import { Tag, Pencil, Trash2, Check, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { SidebarRow, SidebarRowMenu } from "@/components/sidebar/SidebarRow";
+import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 export function SidebarLabelItem({ label, isActive, onSelect, onRename, onDelete }: {
   label: string; isActive: boolean; onSelect: () => void; onRename: (n: string) => void; onDelete: () => void;
@@ -9,6 +9,9 @@ export function SidebarLabelItem({ label, isActive, onSelect, onRename, onDelete
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(label);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Po „Zmień nazwę” fokus zostaje w polu, nie wraca do „⋯”.
+  const focusInput = useRef(false);
+  const keepInputFocus = (e: Event) => { if (focusInput.current) { e.preventDefault(); focusInput.current = false; } };
 
   useEffect(() => { if (editing && inputRef.current) inputRef.current.focus(); }, [editing]);
 
@@ -30,21 +33,22 @@ export function SidebarLabelItem({ label, isActive, onSelect, onRename, onDelete
   }
 
   return (
-    <motion.div
-      className={cn(
-        "group flex items-center gap-3 px-3 h-9 rounded-lg text-sm transition-all duration-200 cursor-pointer",
-        isActive ? "bg-primary/10 text-primary shadow-sm border border-primary/10" : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
-      )}
+    <SidebarRow
+      icon={<Tag className="w-3.5 h-3.5" />}
+      label={label}
+      active={isActive}
       onClick={onSelect}
-      role="button"
-      aria-current={isActive ? "page" : undefined}
-    >
-      <Tag className="w-3.5 h-3.5 shrink-0" />
-      <span className="flex-1 text-left truncate">{label}</span>
-      <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-opacity">
-        <button onClick={(e) => { e.stopPropagation(); setEditing(true); }} aria-label={`Zmień nazwę etykiety ${label}`} className="pressable p-1 rounded-lg hover:bg-foreground/10"><Pencil className="w-3 h-3" /></button>
-        <button onClick={(e) => { e.stopPropagation(); onDelete(); }} aria-label={`Usuń etykietę ${label}`} className="pressable p-1 rounded-lg hover:bg-destructive/10 hover:text-destructive"><Trash2 className="w-3 h-3" /></button>
-      </div>
-    </motion.div>
+      actions={
+        <SidebarRowMenu label={`etykiety ${label}`} onCloseAutoFocus={keepInputFocus}>
+          <DropdownMenuItem onSelect={() => { focusInput.current = true; setEditing(true); }}>
+            <Pencil className="w-4 h-4 mr-2" />Zmień nazwę
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={onDelete} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+            <Trash2 className="w-4 h-4 mr-2" />Usuń etykietę
+          </DropdownMenuItem>
+        </SidebarRowMenu>
+      }
+    />
   );
 }
