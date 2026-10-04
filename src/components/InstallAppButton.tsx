@@ -1,5 +1,4 @@
 import { useState, type ReactNode } from "react";
-import { motion } from "framer-motion";
 import { Download, CheckCircle2, Share, PlusSquare, MoreVertical, WifiOff, MonitorDown } from "lucide-react";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { toast } from "sonner";
@@ -79,19 +78,17 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
 
   const button =
     variant === "compact" ? (
-      <motion.button
-        whileTap={{ scale: 0.95 }}
+      <button
         onClick={handleClick}
-        className={cn("shrink-0 px-3 h-9 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors", className)}
+        className={cn("pressable shrink-0 px-3 h-9 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors", className)}
       >
         Zainstaluj
-      </motion.button>
+      </button>
     ) : variant === "tile" ? (
-      <motion.button
-        whileTap={{ scale: 0.95 }}
+      <button
         onClick={handleClick}
         className={cn(
-          "relative flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors border border-border/50",
+          "pressable relative flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors border border-border/50",
           className
         )}
       >
@@ -99,19 +96,18 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
           <Download className="w-5 h-5" />
         </span>
         <span className="text-xs font-medium font-display text-foreground">Zainstaluj</span>
-      </motion.button>
+      </button>
     ) : (
-      <motion.button
-        whileTap={{ scale: 0.98 }}
+      <button
         onClick={handleClick}
         className={cn(
-          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-primary bg-primary/10 hover:bg-primary/15 transition-all",
+          "pressable w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-primary bg-primary/10 hover:bg-primary/15 transition-all",
           className
         )}
       >
         <Download className="w-[18px] h-[18px]" />
         <span>Zainstaluj aplikację</span>
-      </motion.button>
+      </button>
     );
 
   return (

@@ -104,11 +104,10 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
 function NavItem({ active, label, onClick, children, badge }: { active: boolean; label: string; onClick: () => void; children: React.ReactNode; badge?: number }) {
   return (
     <li className="relative">
-      <motion.button
-        whileTap={{ scale: 0.88 }}
+      <button
         onClick={onClick}
         className={cn(
-          "relative w-full flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl text-2xs font-medium font-display transition-colors",
+          "pressable relative w-full flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl text-2xs font-medium font-display transition-colors",
           active ? "text-primary" : "text-muted-foreground hover:text-foreground"
         )}
       >
@@ -126,17 +125,16 @@ function NavItem({ active, label, onClick, children, badge }: { active: boolean;
             {badge}
           </span>
         )}
-      </motion.button>
+      </button>
     </li>
   );
 }
 
 function SheetTile({ Icon, label, onClick, badge }: { Icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void; badge?: number }) {
   return (
-    <motion.button
-      whileTap={{ scale: 0.95 }}
+    <button
       onClick={onClick}
-      className="relative flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors border border-border/50"
+      className="pressable relative flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors border border-border/50"
     >
       <span className="w-10 h-10 rounded-xl bg-background flex items-center justify-center text-primary">
         <Icon className="w-5 h-5" />
@@ -147,6 +145,6 @@ function SheetTile({ Icon, label, onClick, badge }: { Icon: React.ComponentType<
           {badge}
         </span>
       )}
-    </motion.button>
+    </button>
   );
 }

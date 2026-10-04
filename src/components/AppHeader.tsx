@@ -5,6 +5,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { SearchBar } from "@/components/SearchBar";
 import { ViewControls } from "@/components/ViewControls";
 import { cn } from "@/lib/utils";
+import { IconButton } from "@/components/ui/icon-button";
+import { tween } from "@/lib/motion";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { exportToJSON, exportToMarkdown, exportToHTML } from "@/lib/exportNotes";
 import { markBackup } from "@/lib/backupReminder";
@@ -45,15 +47,13 @@ export function AppHeader({
         <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
-              <motion.button
-                whileTap={{ scale: 0.95 }}
+              <IconButton
                 onClick={onToggleSidebar}
                 aria-label={sidebarOpen ? "Schowaj panel" : "Pokaż panel"}
                 aria-pressed={sidebarOpen}
-                className="p-1.5 sm:p-2 rounded-xl hover:bg-muted transition-colors text-muted-foreground"
               >
                 {sidebarOpen ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeftOpen className="w-5 h-5" />}
-              </motion.button>
+              </IconButton>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="text-xs">
               {sidebarOpen ? "Schowaj panel" : "Pokaż panel"}
@@ -111,27 +111,25 @@ export function AppHeader({
 
         <div className="flex items-center gap-1">
           {!sidebarOpen && (
-            <motion.button
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              onClick={onToggleTheme}
-              aria-label={dark ? "Włącz tryb jasny" : "Włącz tryb ciemny"}
-              aria-pressed={dark}
-              className="hidden sm:inline-flex p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
-            >
-              {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </motion.button>
+            <IconButton asChild className="hidden sm:inline-flex">
+              <motion.button
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={tween.enter}
+                onClick={onToggleTheme}
+                aria-label={dark ? "Włącz tryb jasny" : "Włącz tryb ciemny"}
+                aria-pressed={dark}
+              >
+                {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </motion.button>
+            </IconButton>
           )}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <motion.button
-                className="p-1.5 sm:p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground data-[state=open]:bg-muted data-[state=open]:text-foreground"
-                aria-label="Import / Eksport"
-                title="Import / Eksport"
-              >
+              <IconButton aria-label="Import / Eksport" title="Import / Eksport">
                 <Download className="w-5 h-5" />
-              </motion.button>
+              </IconButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuItem onClick={() => { void exportToJSON([...notes, ...archivedNotes]).then(markBackup); }}>

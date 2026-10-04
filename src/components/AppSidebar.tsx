@@ -90,18 +90,17 @@ export function AppSidebar({
                 transition={{ delay: 0.1 }}
                 className="flex items-center gap-3 px-3 pb-6"
               >
-                <motion.button
+                <button
                   type="button"
                   onClick={onLogoClick}
-                  whileTap={{ scale: 0.94 }}
-                  className="relative shrink-0 grid place-items-center w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 via-accent/10 to-transparent ring-1 ring-border/60"
+                  className="pressable relative shrink-0 grid place-items-center w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/15 via-accent/10 to-transparent ring-1 ring-border/60"
                   aria-label="NOTKI"
                 >
                   <div className="absolute inset-0 rounded-2xl bg-primary/20 blur-lg opacity-70 -z-10" />
                   <motion.div>
                     <BeerMugLogo />
                   </motion.div>
-                </motion.button>
+                </button>
                 <div>
                   <h1 className="leading-none"><NotkiLogo /></h1>
                   <p className="text-2xs text-muted-foreground font-medium mt-1.5">Notuj, zanim zapomnisz 🍺</p>

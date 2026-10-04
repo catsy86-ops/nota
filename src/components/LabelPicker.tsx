@@ -29,13 +29,12 @@ export function LabelPicker({ allLabels, selected, onToggle, onCreateLabel }: La
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          className="p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5 transition-colors"
+        <button
+          className="pressable p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5 transition-colors"
           title="Etykiety"
         >
           <Tag className="w-4 h-4" />
-        </motion.button>
+        </button>
       </PopoverTrigger>
       <PopoverContent className="w-56 p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
         <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Etykiety</p>
@@ -65,13 +64,12 @@ export function LabelPicker({ allLabels, selected, onToggle, onCreateLabel }: La
             placeholder="Nowa etykieta..."
             className="flex-1 text-xs bg-muted/60 border border-border rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground"
           />
-          <motion.button
-            whileTap={{ scale: 0.9 }}
+          <button
             onClick={handleCreate}
-            className="p-1.5 rounded-lg bg-primary text-primary-foreground"
+            className="pressable p-1.5 rounded-lg bg-primary text-primary-foreground"
           >
             <Plus className="w-3 h-3" />
-          </motion.button>
+          </button>
         </div>
       </PopoverContent>
     </Popover>

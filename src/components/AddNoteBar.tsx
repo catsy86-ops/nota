@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { IconButton } from "@/components/ui/icon-button";
 import type { NoteColor, ChecklistItem } from "@/hooks/useNotes";
 import { imageStore } from "@/lib/imageStore";
 import { NoteImage } from "./NoteImage";
@@ -213,24 +214,20 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
               </div>
               <div className="flex items-center gap-1 flex-wrap flex-1">
                 {/* Image upload */}
-                <motion.button whileTap={{ scale: 0.9 }}
-                  onClick={() => fileInputRef.current?.click()}
-                  className="p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5" title="Dodaj obrazek">
+                <IconButton size="sm" onClick={() => fileInputRef.current?.click()} title="Dodaj obrazek" aria-label="Dodaj obrazek">
                   <ImagePlus className="w-4 h-4" />
-                </motion.button>
+                </IconButton>
                 <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
                 {/* Drawing */}
-                <motion.button whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowDrawing(true)}
-                  className="p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5" title="Rysuj">
+                <IconButton size="sm" onClick={() => setShowDrawing(true)} title="Rysuj" aria-label="Rysuj">
                   <PenTool className="w-4 h-4" />
-                </motion.button>
+                </IconButton>
                 {/* Label picker */}
                 <Popover>
                   <PopoverTrigger asChild>
-                    <motion.button whileTap={{ scale: 0.9 }} className="p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5" title="Etykiety">
+                    <IconButton size="sm" title="Etykiety" aria-label="Etykiety">
                       <Tag className="w-4 h-4" />
-                    </motion.button>
+                    </IconButton>
                   </PopoverTrigger>
                   <PopoverContent className="w-56 p-3 space-y-3" align="start">
                     <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Etykiety</p>
@@ -242,18 +239,18 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                     <div className="flex gap-1.5">
                       <input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleCreateLabel()}
                         placeholder="Nowa etykieta..." className="flex-1 text-xs bg-muted/60 border border-border rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground" />
-                      <motion.button whileTap={{ scale: 0.9 }} onClick={handleCreateLabel} className="p-1.5 rounded-lg bg-primary text-primary-foreground">
-                        <Plus className="w-3 h-3" />
-                      </motion.button>
+                      <IconButton size="sm" tone="primary" onClick={handleCreateLabel} aria-label="Dodaj etykietę">
+                        <Plus className="w-3.5 h-3.5" />
+                      </IconButton>
                     </div>
                   </PopoverContent>
                 </Popover>
                 {/* Reminder picker */}
                 <Popover>
                   <PopoverTrigger asChild>
-                    <motion.button whileTap={{ scale: 0.9 }} className={cn("p-1.5 rounded-full hover:bg-foreground/5", reminder ? "text-primary" : "text-muted-foreground")} title="Przypomnienie">
+                    <IconButton size="sm" tone={reminder ? "active" : "muted"} title="Przypomnienie" aria-label="Przypomnienie">
                       <Bell className={cn("w-4 h-4", reminder && "fill-current")} />
-                    </motion.button>
+                    </IconButton>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-3 space-y-3" align="start">
                     <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Przypomnienie</p>
@@ -271,10 +268,10 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                 </Popover>
                 {/* Priority picker */}
                 <PriorityPicker priority={priority} onSet={setPriority} />
-                <motion.button whileTap={{ scale: 0.95 }} onClick={handleClose}
-                  className="ml-auto px-4 py-1.5 text-sm font-medium font-display text-primary hover:bg-primary/10 rounded-lg transition-colors shrink-0">
+                <button onClick={handleClose}
+                  className="pressable ml-auto px-4 py-1.5 text-sm font-medium font-display text-primary hover:bg-primary/10 rounded-lg transition-colors shrink-0">
                   Zamknij
-                </motion.button>
+                </button>
               </div>
             </div>
           </motion.div>

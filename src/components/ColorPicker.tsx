@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import type { NoteColor } from "@/hooks/useNotes";
 
 const COLORS: { value: NoteColor; label: string }[] = [
@@ -36,13 +35,12 @@ export function ColorPicker({ selected, onSelect, nowrap = false }: ColorPickerP
   return (
     <div className={`flex gap-1.5 ${nowrap ? "flex-nowrap" : "flex-wrap"}`}>
       {COLORS.map((c) => (
-        <motion.button
+        <button
           key={c.value}
-          whileTap={{ scale: 0.9 }}
           onClick={() => onSelect(c.value)}
           aria-label={c.label}
           aria-pressed={selected === c.value}
-          className={`w-7 h-7 shrink-0 rounded-full border-2 transition-colors ${colorClasses[c.value]} ${
+          className={`pressable w-7 h-7 shrink-0 rounded-full border-2 transition-colors ${colorClasses[c.value]} ${
             selected === c.value ? "border-primary ring-2 ring-primary/30" : "border-transparent hover:border-muted-foreground/30"
           }`}
           title={c.label}

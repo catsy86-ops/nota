@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Share2, Copy, Check, Download } from "lucide-react";
-import { motion } from "framer-motion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -83,13 +82,12 @@ export function ShareNote({ note }: ShareNoteProps) {
     <>
       <Tooltip>
         <TooltipTrigger asChild>
-          <motion.button
-            whileTap={{ scale: 0.9 }}
+          <button
             onClick={(e) => { e.stopPropagation(); setOpen(true); }}
-            className="p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5 transition-colors"
+            className="pressable p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5 transition-colors"
           >
             <Share2 className="w-4 h-4" />
-          </motion.button>
+          </button>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="text-xs">Udostępnij</TooltipContent>
       </Tooltip>

@@ -3,7 +3,6 @@ import { useSearchParams } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Settings, LayoutGrid, Pencil, Database, Wifi } from "lucide-react";
-import { motion } from "framer-motion";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
 import { BackupSettings } from "@/components/settings/BackupSettings";
@@ -43,13 +42,12 @@ export function SettingsDialog({ trigger, open, onOpenChange }: SettingsDialogPr
       {!controlled && (
         <DialogTrigger asChild>
           {trigger ?? (
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
+            <button
+              className="pressable w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
             >
               <Settings className="w-[18px] h-[18px]" />
               <span>Ustawienia</span>
-            </motion.button>
+            </button>
           )}
         </DialogTrigger>
       )}

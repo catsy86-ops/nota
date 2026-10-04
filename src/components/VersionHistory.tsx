@@ -24,13 +24,12 @@ export function VersionHistory({ versions, onRestore }: VersionHistoryProps) {
     <>
       <Tooltip>
         <TooltipTrigger asChild>
-          <motion.button
-            whileTap={{ scale: 0.9 }}
+          <button
             onClick={(e) => { e.stopPropagation(); setOpen(true); }}
-            className="p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5 transition-colors"
+            className="pressable p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5 transition-colors"
           >
             <History className="w-4 h-4" />
-          </motion.button>
+          </button>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="text-xs">Historia wersji ({versions.length})</TooltipContent>
       </Tooltip>

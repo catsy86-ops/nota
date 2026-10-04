@@ -23,8 +23,8 @@ export function SidebarLabelItem({ label, isActive, onSelect, onRename, onDelete
         <input ref={inputRef} value={name} onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setName(label); setEditing(false); } }}
           className="flex-1 text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 text-foreground min-w-0" />
-        <motion.button whileTap={{ scale: 0.9 }} onClick={save} aria-label="Zapisz nazwę etykiety" className="p-1 rounded-lg text-primary hover:bg-primary/10"><Check className="w-3.5 h-3.5" /></motion.button>
-        <motion.button whileTap={{ scale: 0.9 }} onClick={() => { setName(label); setEditing(false); }} aria-label="Anuluj edycję etykiety" className="p-1 rounded-lg text-muted-foreground hover:bg-muted"><X className="w-3.5 h-3.5" /></motion.button>
+        <button onClick={save} aria-label="Zapisz nazwę etykiety" className="pressable p-1 rounded-lg text-primary hover:bg-primary/10"><Check className="w-3.5 h-3.5" /></button>
+        <button onClick={() => { setName(label); setEditing(false); }} aria-label="Anuluj edycję etykiety" className="pressable p-1 rounded-lg text-muted-foreground hover:bg-muted"><X className="w-3.5 h-3.5" /></button>
       </div>
     );
   }
@@ -42,8 +42,8 @@ export function SidebarLabelItem({ label, isActive, onSelect, onRename, onDelete
       <Tag className="w-3.5 h-3.5 shrink-0" />
       <span className="flex-1 text-left truncate">{label}</span>
       <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-opacity">
-        <motion.button whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); setEditing(true); }} aria-label={`Zmień nazwę etykiety ${label}`} className="p-1 rounded-lg hover:bg-foreground/10"><Pencil className="w-3 h-3" /></motion.button>
-        <motion.button whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); onDelete(); }} aria-label={`Usuń etykietę ${label}`} className="p-1 rounded-lg hover:bg-destructive/10 hover:text-destructive"><Trash2 className="w-3 h-3" /></motion.button>
+        <button onClick={(e) => { e.stopPropagation(); setEditing(true); }} aria-label={`Zmień nazwę etykiety ${label}`} className="pressable p-1 rounded-lg hover:bg-foreground/10"><Pencil className="w-3 h-3" /></button>
+        <button onClick={(e) => { e.stopPropagation(); onDelete(); }} aria-label={`Usuń etykietę ${label}`} className="pressable p-1 rounded-lg hover:bg-destructive/10 hover:text-destructive"><Trash2 className="w-3 h-3" /></button>
       </div>
     </motion.div>
   );

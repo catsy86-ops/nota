@@ -367,18 +367,32 @@
     background: hsl(var(--muted));
     border-radius: 9999px;
   }
+  /* Dociśnięcie: sygnatura wciśnięcia w całej appce (zamiast skalowania
+     z framer-motion). `translate`, nie `transform` — składa się z pozycjonowaniem
+     typu `-translate-y-1/2` i z transformami framer-motion, zamiast je nadpisać. */
+  .pressable {
+    transition-property: color, background-color, border-color, box-shadow, translate, filter;
+    transition-duration: var(--dur-fast);
+    transition-timing-function: var(--ease-std);
+  }
+  .pressable:active:not(:disabled) {
+    translate: 0 1px;
+    filter: brightness(0.94);
+    transition-duration: var(--dur-press);
+  }
+
   /* Smooth theme switch: applied briefly on <html> when theme changes */
   .theme-transition,
   .theme-transition *,
   .theme-transition *::before,
   .theme-transition *::after {
     transition:
-      background-color 320ms ease,
-      color 320ms ease,
-      border-color 320ms ease,
-      fill 320ms ease,
-      stroke 320ms ease,
-      box-shadow 320ms ease !important;
+      background-color var(--dur-slow) var(--ease-std),
+      color var(--dur-slow) var(--ease-std),
+      border-color var(--dur-slow) var(--ease-std),
+      fill var(--dur-slow) var(--ease-std),
+      stroke var(--dur-slow) var(--ease-std),
+      box-shadow var(--dur-slow) var(--ease-std) !important;
   }
   @media (prefers-reduced-motion: reduce) {
     .theme-transition, .theme-transition * { transition: none !important; }

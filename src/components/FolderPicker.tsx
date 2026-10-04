@@ -2,7 +2,6 @@ import { useState } from "react";
 import { FolderOpen, ChevronRight, Check } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { Folder } from "@/hooks/useNotes";
 
@@ -74,13 +73,12 @@ export function FolderPicker({ folders, currentFolderId, onSelect }: FolderPicke
       <Tooltip>
         <TooltipTrigger asChild>
           <PopoverTrigger asChild>
-            <motion.button
-              whileTap={{ scale: 0.9 }}
+            <button
               onClick={(e) => e.stopPropagation()}
-              className={cn("p-1.5 rounded-full transition-colors", currentFolderId ? "text-primary hover:bg-primary/10" : "text-muted-foreground hover:bg-foreground/5")}
+              className={cn("pressable p-1.5 rounded-full transition-colors", currentFolderId ? "text-primary hover:bg-primary/10" : "text-muted-foreground hover:bg-foreground/5")}
             >
               <FolderOpen className="w-4 h-4" />
-            </motion.button>
+            </button>
           </PopoverTrigger>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="text-xs">Folder</TooltipContent>

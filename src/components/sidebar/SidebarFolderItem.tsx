@@ -56,8 +56,8 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
         <input ref={inputRef} value={name} onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setName(folder.name); setEditing(false); } }}
           className="flex-1 text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 text-foreground min-w-0" />
-        <motion.button whileTap={{ scale: 0.9 }} onClick={save} aria-label="Zapisz nazwę folderu" className="p-1 rounded-lg text-primary hover:bg-primary/10"><Check className="w-3.5 h-3.5" /></motion.button>
-        <motion.button whileTap={{ scale: 0.9 }} onClick={() => { setName(folder.name); setEditing(false); }} aria-label="Anuluj edycję folderu" className="p-1 rounded-lg text-muted-foreground hover:bg-muted"><X className="w-3.5 h-3.5" /></motion.button>
+        <button onClick={save} aria-label="Zapisz nazwę folderu" className="pressable p-1 rounded-lg text-primary hover:bg-primary/10"><Check className="w-3.5 h-3.5" /></button>
+        <button onClick={() => { setName(folder.name); setEditing(false); }} aria-label="Anuluj edycję folderu" className="pressable p-1 rounded-lg text-muted-foreground hover:bg-muted"><X className="w-3.5 h-3.5" /></button>
       </div>
     );
   }
@@ -75,15 +75,14 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
         aria-current={isActive ? "page" : undefined}
       >
         {children.length > 0 ? (
-          <motion.button
-            whileTap={{ scale: 0.9 }}
+          <button
             onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
             aria-label={expanded ? "Zwiń podfoldery" : "Rozwiń podfoldery"}
             aria-expanded={expanded}
-            className="p-0.5"
+            className="pressable p-0.5"
           >
             <ChevronRight className={cn("w-3 h-3 transition-transform", expanded && "rotate-90")} />
-          </motion.button>
+          </button>
         ) : (
           <span className="w-4" />
         )}
@@ -94,11 +93,11 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
         )}
         <span className="flex-1 text-left truncate">{folder.name}</span>
         <div className="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-opacity">
-          <motion.button whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); setShowColorPicker(!showColorPicker); setShowEmojiPicker(false); }} aria-label="Zmień kolor folderu" className="p-1 rounded-lg hover:bg-foreground/10"><Palette className="w-3 h-3" /></motion.button>
-          <motion.button whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); setShowColorPicker(false); }} aria-label="Zmień emoji folderu" className="p-1 rounded-lg hover:bg-foreground/10"><Smile className="w-3 h-3" /></motion.button>
-          <motion.button whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); setAddingSub(true); }} aria-label="Dodaj podfolder" className="p-1 rounded-lg hover:bg-foreground/10"><FolderPlus className="w-3 h-3" /></motion.button>
-          <motion.button whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); setEditing(true); }} aria-label={`Zmień nazwę folderu ${folder.name}`} className="p-1 rounded-lg hover:bg-foreground/10"><Pencil className="w-3 h-3" /></motion.button>
-          <motion.button whileTap={{ scale: 0.9 }} onClick={(e) => { e.stopPropagation(); onDelete(folder.id); }} aria-label={`Usuń folder ${folder.name}`} className="p-1 rounded-lg hover:bg-destructive/10 hover:text-destructive"><Trash2 className="w-3 h-3" /></motion.button>
+          <button onClick={(e) => { e.stopPropagation(); setShowColorPicker(!showColorPicker); setShowEmojiPicker(false); }} aria-label="Zmień kolor folderu" className="pressable p-1 rounded-lg hover:bg-foreground/10"><Palette className="w-3 h-3" /></button>
+          <button onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(!showEmojiPicker); setShowColorPicker(false); }} aria-label="Zmień emoji folderu" className="pressable p-1 rounded-lg hover:bg-foreground/10"><Smile className="w-3 h-3" /></button>
+          <button onClick={(e) => { e.stopPropagation(); setAddingSub(true); }} aria-label="Dodaj podfolder" className="pressable p-1 rounded-lg hover:bg-foreground/10"><FolderPlus className="w-3 h-3" /></button>
+          <button onClick={(e) => { e.stopPropagation(); setEditing(true); }} aria-label={`Zmień nazwę folderu ${folder.name}`} className="pressable p-1 rounded-lg hover:bg-foreground/10"><Pencil className="w-3 h-3" /></button>
+          <button onClick={(e) => { e.stopPropagation(); onDelete(folder.id); }} aria-label={`Usuń folder ${folder.name}`} className="pressable p-1 rounded-lg hover:bg-destructive/10 hover:text-destructive"><Trash2 className="w-3 h-3" /></button>
         </div>
       </motion.div>
 
@@ -154,8 +153,8 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
           <input ref={subInputRef} value={subName} onChange={(e) => setSubName(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") submitSub(); if (e.key === "Escape") { setSubName(""); setAddingSub(false); } }}
             className="flex-1 text-xs bg-muted/60 border border-border rounded-lg px-2 py-0.5 outline-none focus:ring-1 focus:ring-primary/30 text-foreground min-w-0" placeholder="Subfolder..." />
-          <motion.button whileTap={{ scale: 0.9 }} onClick={submitSub} aria-label="Dodaj podfolder" className="p-0.5 rounded text-primary hover:bg-primary/10"><Check className="w-3 h-3" /></motion.button>
-          <motion.button whileTap={{ scale: 0.9 }} onClick={() => { setSubName(""); setAddingSub(false); }} aria-label="Anuluj dodawanie podfolderu" className="p-0.5 rounded text-muted-foreground hover:bg-muted"><X className="w-3 h-3" /></motion.button>
+          <button onClick={submitSub} aria-label="Dodaj podfolder" className="pressable p-0.5 rounded text-primary hover:bg-primary/10"><Check className="w-3 h-3" /></button>
+          <button onClick={() => { setSubName(""); setAddingSub(false); }} aria-label="Anuluj dodawanie podfolderu" className="pressable p-0.5 rounded text-muted-foreground hover:bg-muted"><X className="w-3 h-3" /></button>
         </div>
       )}
 

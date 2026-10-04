@@ -1,10 +1,10 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { motion } from "framer-motion";
 import { ArrowDownAZ, ArrowUpAZ, Filter, LayoutGrid, List, Columns2, SlidersHorizontal, Flag } from "lucide-react";
 import { type Layout, type SortKey, type SortDir, type Density, useViewPrefs, setViewPref } from "@/lib/viewPrefs";
 import { colorClasses } from "@/components/ColorPicker";
 import { cn } from "@/lib/utils";
+import { IconButton } from "@/components/ui/icon-button";
 import type { NoteColor } from "@/hooks/useNotes";
 import { PRIORITY_LABELS, PRIORITY_COLOR_CLASS, type NotePriority } from "@/lib/notePriority";
 
@@ -44,13 +44,9 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
-              <motion.button
-                aria-label="Widok i kolumny"
-                whileTap={{ scale: 0.95 }}
-                className="p-1.5 sm:p-2 rounded-xl hover:bg-background hover:shadow-sm transition-colors text-muted-foreground data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm"
-              >
+              <IconButton tone="segment" aria-label="Widok i kolumny">
                 {prefs.layout === "list" ? <List className="w-5 h-5" /> : prefs.layout === "grid" ? <Columns2 className="w-5 h-5" /> : <LayoutGrid className="w-5 h-5" />}
-              </motion.button>
+              </IconButton>
             </DropdownMenuTrigger>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-xs">Widok i kolumny</TooltipContent>
@@ -103,13 +99,9 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
-              <motion.button
-                aria-label="Sortowanie"
-                whileTap={{ scale: 0.95 }}
-                className="p-1.5 sm:p-2 rounded-xl hover:bg-background hover:shadow-sm transition-colors text-muted-foreground data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm"
-              >
+              <IconButton tone="segment" aria-label="Sortowanie">
                 {prefs.sortDir === "asc" ? <ArrowUpAZ className="w-5 h-5" /> : <ArrowDownAZ className="w-5 h-5" />}
-              </motion.button>
+              </IconButton>
             </DropdownMenuTrigger>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-xs">Sortowanie</TooltipContent>
@@ -139,21 +131,12 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
-              <motion.button
-                aria-label="Filtry"
-                whileTap={{ scale: 0.95 }}
-                className={cn(
-                  "relative p-1.5 sm:p-2 rounded-xl transition-colors",
-                  filtersActive
-                    ? "text-primary bg-primary/10 shadow-sm"
-                    : "text-muted-foreground hover:bg-background hover:shadow-sm data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-sm"
-                )}
-              >
+              <IconButton tone={filtersActive ? "active" : "segment"} aria-label="Filtry">
                 <Filter className="w-5 h-5" />
                 {filtersActive && (
                   <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-primary" />
                 )}
-              </motion.button>
+              </IconButton>
             </DropdownMenuTrigger>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-xs">Filtry</TooltipContent>

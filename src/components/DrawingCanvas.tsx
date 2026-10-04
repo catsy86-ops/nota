@@ -252,10 +252,9 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
             {COLORS.map((c) => (
               <motion.button
                 key={c}
-                whileTap={{ scale: 0.9 }}
                 onClick={() => { setColor(c); setTool("pen"); }}
                 className={cn(
-                  "w-6 h-6 rounded-full border-2 transition-all",
+                  "pressable w-6 h-6 rounded-full border-2 transition-all",
                   color === c && tool === "pen" ? "border-primary ring-2 ring-primary/30 scale-110" : "border-border hover:border-muted-foreground/40"
                 )}
                 style={{ backgroundColor: c }}
@@ -333,12 +332,11 @@ function ToolBtn({ icon, onClick, title, active, disabled, className }: {
   icon: React.ReactNode; onClick: () => void; title: string; active?: boolean; disabled?: boolean; className?: string;
 }) {
   return (
-    <motion.button
-      whileTap={{ scale: 0.9 }}
+    <button
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "p-2 rounded-lg transition-colors",
+        "pressable p-2 rounded-lg transition-colors",
         active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted",
         disabled && "opacity-40 pointer-events-none",
         className
@@ -346,6 +344,6 @@ function ToolBtn({ icon, onClick, title, active, disabled, className }: {
       title={title}
     >
       {icon}
-    </motion.button>
+    </button>
   );
 }
