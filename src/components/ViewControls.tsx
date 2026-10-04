@@ -55,7 +55,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-xs">Widok i kolumny</TooltipContent>
         </Tooltip>
-        <DropdownMenuContent align="end" className="w-56 rounded-2xl p-1.5">
+        <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Układ</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={prefs.layout} onValueChange={(v) => setViewPref("layout", v as Layout)}>
             {LAYOUTS.map((l) => (
@@ -114,7 +114,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-xs">Sortowanie</TooltipContent>
         </Tooltip>
-        <DropdownMenuContent align="end" className="w-52 rounded-2xl p-1.5">
+        <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Sortuj wg</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={prefs.sortKey} onValueChange={(v) => setViewPref("sortKey", v as SortKey)}>
             {SORTS.map((s) => (
@@ -158,7 +158,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-xs">Filtry</TooltipContent>
         </Tooltip>
-        <DropdownMenuContent align="end" className="w-60 rounded-2xl p-1.5">
+        <DropdownMenuContent align="end" className="w-60">
           <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Kolor</DropdownMenuLabel>
           <div className="px-2 pb-2 flex items-center gap-1.5 flex-wrap">
             <button

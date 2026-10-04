@@ -133,7 +133,7 @@ export function AppHeader({
                 <Download className="w-5 h-5" />
               </motion.button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52 rounded-2xl p-1.5">
+            <DropdownMenuContent align="end" className="w-52">
               <DropdownMenuItem onClick={() => { void exportToJSON([...notes, ...archivedNotes]).then(markBackup); }}>
                 <FileJson className="w-4 h-4 mr-2" />
                 Eksportuj jako JSON
