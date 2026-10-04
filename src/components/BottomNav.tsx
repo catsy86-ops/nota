@@ -4,6 +4,7 @@ import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settin
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { cn } from "@/lib/utils";
+import { spring } from "@/lib/motion";
 
 import type { View } from "@/hooks/useFilteredNotes";
 
@@ -36,7 +37,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
       <motion.nav
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 260, damping: 26 }}
+        transition={spring.soft}
         className="fixed bottom-0 inset-x-0 z-40 md:hidden glass-strong border-t border-border/60 pb-[env(safe-area-inset-bottom)] shadow-elevation-up"
       >
         <LayoutGroup id="bottom-nav">
@@ -50,19 +51,12 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             {/* Center FAB */}
             <li className="flex justify-center -mt-6">
               <motion.button
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.9, rotate: -4 }}
-                transition={{ type: "spring", stiffness: 380, damping: 18 }}
+                whileTap={{ scale: 0.92 }}
+                transition={spring.snap}
                 onClick={onNew}
                 aria-label="Nowa notatka"
                 className="relative w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-glow-primary ring-4 ring-background"
               >
-                <motion.span
-                  aria-hidden
-                  className="absolute inset-0 rounded-full bg-primary/40"
-                  animate={{ scale: [1, 1.35, 1], opacity: [0.5, 0, 0.5] }}
-                  transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-                />
                 <Plus className="w-6 h-6 relative z-10" />
               </motion.button>
             </li>
@@ -73,7 +67,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
               </NavItem>
             ))}
 
-            <NavItem active={isMoreActive || moreOpen} label="Więcej" onClick={() => setMoreOpen(true)}>
+            <NavItem active={isMoreActive || moreOpen} current={false} label="Więcej" onClick={() => setMoreOpen(true)} buttonProps={{ "aria-haspopup": "dialog", "aria-expanded": moreOpen }}>
               <MoreHorizontal className="w-5 h-5" />
             </NavItem>
           </ul>
@@ -82,40 +76,49 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
 
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
         <SheetContent side="bottom" className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
+          <div aria-hidden className="mx-auto -mt-2 mb-3 h-1.5 w-10 rounded-full bg-muted-foreground/25" />
           <SheetHeader className="text-left">
             <SheetTitle className="font-display">Więcej</SheetTitle>
           </SheetHeader>
-          <div className="grid grid-cols-3 gap-3 pt-4">
-            <InstallAppButton variant="tile" onDone={() => setMoreOpen(false)} />
+          <SheetGroup title="Przejdź do">
+            <SheetTile Icon={Trash2} label="Kosz" active={view === "trash"} badge={trashCount || undefined} onClick={() => { onGo("trash"); setMoreOpen(false); }} />
+            <SheetTile Icon={Bell} label="Przypomnienia" active={view === "reminders"} onClick={() => { onGo("reminders"); setMoreOpen(false); }} />
+            <SheetTile Icon={CalendarRange} label="Kalendarz" active={view === "calendar"} onClick={() => { onGo("calendar"); setMoreOpen(false); }} />
+          </SheetGroup>
+          <SheetGroup title="Narzędzia">
             {onOpenActions && <SheetTile Icon={History} label="Ostatnie akcje" onClick={() => { onOpenActions(); setMoreOpen(false); }} />}
             <SheetTile Icon={HelpCircle} label="Samouczek" onClick={() => { window.dispatchEvent(new CustomEvent("kaczy:tour")); setMoreOpen(false); }} />
-            <SheetTile Icon={Trash2} label="Kosz" badge={trashCount || undefined} onClick={() => { onGo("trash"); setMoreOpen(false); }} />
-            <SheetTile Icon={Bell} label="Przypomnienia" onClick={() => { onGo("reminders"); setMoreOpen(false); }} />
-            <SheetTile Icon={CalendarRange} label="Kalendarz" onClick={() => { onGo("calendar"); setMoreOpen(false); }} />
             {onToggleTheme && <SheetTile Icon={dark ? Sun : Moon} label={dark ? "Tryb jasny" : "Tryb ciemny"} onClick={() => { onToggleTheme(); setMoreOpen(false); }} />}
             <SheetTile Icon={SettingsIcon} label="Ustawienia" onClick={() => { onOpenSettings(); setMoreOpen(false); }} />
-          </div>
+            <InstallAppButton variant="tile" onDone={() => setMoreOpen(false)} />
+          </SheetGroup>
         </SheetContent>
       </Sheet>
     </>
   );
 }
 
-function NavItem({ active, label, onClick, children, badge }: { active: boolean; label: string; onClick: () => void; children: React.ReactNode; badge?: number }) {
+function NavItem({ active, current = active, label, onClick, children, badge, buttonProps }: {
+  active: boolean; current?: boolean; label: string; onClick: () => void; children: React.ReactNode; badge?: number;
+  buttonProps?: React.ButtonHTMLAttributes<HTMLButtonElement>;
+}) {
   return (
     <li className="relative">
       <button
+        type="button"
         onClick={onClick}
+        aria-current={current ? "page" : undefined}
+        {...buttonProps}
         className={cn(
-          "pressable relative w-full flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl text-2xs font-medium font-display transition-colors",
-          active ? "text-primary" : "text-muted-foreground hover:text-foreground"
+          "pressable relative w-full flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl text-2xs font-display outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          active ? "text-primary font-semibold" : "text-muted-foreground font-medium hover:text-foreground"
         )}
       >
         {active && (
           <motion.span
             layoutId="bottom-nav-active"
-            className="absolute inset-x-3 top-1 h-8 rounded-xl bg-primary/10"
-            transition={{ type: "spring", stiffness: 380, damping: 30 }}
+            className="absolute inset-x-3 top-1 h-8 rounded-xl bg-primary/15"
+            transition={spring.snap}
           />
         )}
         <span className="relative z-10">{children}</span>
@@ -130,11 +133,25 @@ function NavItem({ active, label, onClick, children, badge }: { active: boolean;
   );
 }
 
-function SheetTile({ Icon, label, onClick, badge }: { Icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void; badge?: number }) {
+function SheetGroup({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="pt-4">
+      <h3 className="px-1 pb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h3>
+      <div className="grid grid-cols-3 gap-3">{children}</div>
+    </section>
+  );
+}
+
+function SheetTile({ Icon, label, onClick, badge, active = false }: { Icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void; badge?: number; active?: boolean }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="pressable relative flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors border border-border/50"
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "pressable relative flex flex-col items-center gap-1.5 p-3 rounded-2xl border outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        active ? "bg-primary/10 border-primary/40" : "bg-muted/50 hover:bg-muted border-border/50",
+      )}
     >
       <span className="w-10 h-10 rounded-xl bg-background flex items-center justify-center text-primary">
         <Icon className="w-5 h-5" />

@@ -496,7 +496,7 @@ Znaleziska, które to uzasadniają: brak tokenów ruchu (ok. 10 różnych sprę�
 - [x] **Runda 4 — pasek boczny** (✅ 2026-10-04; e2e 43/43): `SidebarRow` zamiast 8 skopiowanych wierszy, jeden stan aktywny, klawiatura + `group-focus-within`, bez kaskady wejścia, szerokość animowana przy otwieraniu i zamykaniu.
   - Zrobione: `sidebar/SidebarRow.tsx` (wiersz = prawdziwy `<button>`, wspólna pigułka `layoutId` dla widoków/etykiet/folderów, `coarse:h-11`), nawigacja/etykiety/foldery/stopka na nim, bez kaskady wejścia, overlay bez blur, desktop animuje `width`, telefon `x`; akcje folderu/etykiety w menu „⋯” (`SidebarRowMenu`, 5 ikon nie mieściło się — nazwy ucinało do „Pr…”), „Nowy folder” na `IconButton`. Lint/tsc/vitest zielone (przed menu „⋯”).
   - Na później: zrzuty z otwartym menu „⋯”, `InstallAppButton` (wariant `row`) pod `SidebarRow`.
-- [ ] **Runda 5 — BottomNav i „Więcej”**: `aria-current`, bez pulsu FAB, mocniejsza aktywna pozycja, arkusz w grupach „Przejdź do” / „Narzędzia”, uchwyt.
+- [x] **Runda 5 — BottomNav i „Więcej”** (✅ 2026-10-04; e2e 43/43, bez zrzutów): `aria-current`, bez pulsu FAB, mocniejsza aktywna pozycja, arkusz w grupach „Przejdź do” / „Narzędzia”, uchwyt.
 - [ ] **Runda 6 — kafle**: `transition-[box-shadow,border-color]` zamiast `transition-all`, spójne promienie (wrapper, tła przesunięcia, `.note-flash`), „uniesienie” przy przeciąganiu (bez skali — transform należy do dnd-kit), fade przy zmianie widoku.
 
 Nie robimy: masonry, skali przy przeciąganiu, `backdrop-blur` na overlayach, View Transitions API, powrotu `whileHover` na ikonach, animowania `width`/`height` list kafli, drugiego mechanizmu reduced-motion (obecny działa), zmiany `--primary`.
