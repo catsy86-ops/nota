@@ -236,6 +236,12 @@ test("usunięcie całej serii zdejmuje wszystkie jej wystąpienia", async ({ pag
 test("na wąskim ekranie kalendarz nie rozpycha strony, a dialog terminu jest osiągalny", async ({ page }) => {
   // Najwęższy telefon, jaki wciąż warto obsługiwać (iPhone SE 1. gen. / 320 px).
   await page.setViewportSize({ width: 320, height: 568 });
+  // Prośba o backup (`duration: Infinity`) zasłania na 568 px panel dnia —
+  // ten test nie dotyczy backupu, więc uznajemy, że w tej sesji już padła.
+  await page.addInitScript(() => {
+    sessionStorage.setItem("kaczy.autoBackupDone", "1");
+    sessionStorage.setItem("kaczy.backupNudge", "1");
+  });
   await page.reload();
 
   // Pasek boczny jest na telefonie ukryty — wejście idzie przez arkusz „Więcej".
@@ -273,6 +279,11 @@ test("na wąskim ekranie kalendarz nie rozpycha strony, a dialog terminu jest os
   await expect(cell.getByText("18:30")).toBeHidden();
   await cell.click();
   await expect(page.getByRole("listitem").filter({ hasText: "kupic mleko" })).toContainText("18:30");
+
+  // Toast odznaki za pierwszą notatkę leży na 568 px dokładnie na wierszu
+  // terminu, a najechanie kursorem wstrzymuje jego licznik — klik czekałby
+  // w nieskończoność. Czekamy, aż zniknie sam.
+  await expect(page.getByText(/^Nowa odznaka/)).toBeHidden({ timeout: 10_000 });
 
   // Edycja na telefonie: „Usuń termin" bywało poza widokiem, bo dialog
   // nie przewijał się wcale.
