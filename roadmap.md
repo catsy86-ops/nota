@@ -226,7 +226,7 @@ Diagnoza: appka ma imponującą **szerokość** (rysowanie, gamifikacja, P2P CRD
 - [x] Hardening parowania: `roomNameFor` na SHA-256 + 12-znakowy kod, z okresem przejściowym (oba pokoje).
 - **Runda 8 zamknięta 2026-09-28.** Pełny e2e po hardeningu: 35/35 (także `live-text.spec.ts`, wcześniej niestabilny).
 - Przy upraszczaniu (2026-09-28): `live-text.spec.ts` padał już deterministycznie — drugie scalenie pokazywało toast „Scalono…”, gdy pierwszy jeszcze wisiał, i `getByText(/^Scalono/)` łamał strict mode. To była przyczyna wcześniejszej „niestabilności”. `mergeSync` czeka teraz, aż stary toast zniknie. Pełny e2e: 35/35.
-- Otwarte bez decyzji: seria `monthly` 31. dnia (aplikacja przeskakuje na 3 marca, eksport `.ics` wg RFC 5545 pomija krótsze miesiące) — zachowanie udokumentowane testem, decyzja do właściciela.
+- ~~Otwarte bez decyzji: seria `monthly` 31. dnia~~ — ✅ rozstrzygnięte 2026-09-29 (`68ecfc1`): pole `reminderDay` zapamiętuje dzień zakotwiczenia, w krótszym miesiącu termin spada na ostatni dzień (31 sty → 28 lut → 31 mar), a `.ics` eksportuje to samo przez `BYMONTHDAY=28,29,30,31;BYSETPOS=-1`.
 - Pełny zestaw e2e puszczony 2026-09-28 po notatce dnia: 33/33 zielone. Po wikilinkach: 34/35 — `live-text.spec.ts` pada niedeterministycznie (2 z 5 powtórzeń, potem 3/3 i 1/1 zielone), błąd w kroku `mergeSync` (Ustawienia → „Scal z pliku”), nie w asercji tekstu. Nie sprawdzone jeszcze, czy pada tak samo bez zmian z wikilinków — do rozstrzygnięcia: `npx playwright test e2e/live-text.spec.ts --repeat-each=8` na poprzednim commicie.
 
 ### Rekomendowana kolejność
@@ -416,7 +416,7 @@ Propozycje **spoza** istniejącego planu. Przed nimi nadal idą otwarte P0: auto
 
 - `src/lib/icsExport.ts`: `buildIcs` (RFC 5545: CRLF, zawijanie linii po 75 bajtach UTF-8 bez cięcia znaków, ucieczka `\ ; ,` i nowych linii), `UID = <id notatki>@notatnik` — ponowny import aktualizuje wpis zamiast dublować. `VALARM` w chwili terminu, zdarzenie 15 min. Czas „pływający” (bez `Z`/`TZID`) — ta sama godzina ścienna co w aplikacji, także po zmianie czasu. Serie → `RRULE:FREQ=DAILY|WEEKLY|MONTHLY`. `exportableReminders`: przyszłe terminy + serie, bez kosza. 10 testów.
 - UI: przycisk pobrania przy każdym zapisanym terminie w panelu dnia; „.ics” w nagłówku kalendarza eksportuje wszystkie nadchodzące. Test e2e sprawdza oba pobrania i treść pliku.
-- Znana różnica: seria `monthly` od 31. dnia — kalendarz z `RRULE` pomija miesiące bez 31., aplikacja przeskakuje (31 stycznia → 3 marca). Do rozstrzygnięcia razem z pozycją o `monthly` wyżej.
+- ~~Znana różnica: seria `monthly` od 31. dnia~~ — ✅ usunięta 2026-09-29 (`68ecfc1`): aplikacja i `RRULE` zgodnie dają ostatni dzień krótszego miesiąca.
 
 ## Audyt UI/UX i layoutu — plan upiększenia (2026-09-27)
 
