@@ -42,3 +42,14 @@ test("na dotyku akcje kafla są schowane za „Więcej opcji”", async ({ page 
   await expect(card.getByRole("button", { name: "Przypnij" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Duplikuj" })).toBeVisible();
 });
+
+test("Przypomnienia mają własną zakładkę w dolnym pasku, Archiwum jest w „Więcej”", async ({ page }) => {
+  const nav = page.getByRole("navigation");
+  await nav.getByRole("button", { name: "Przypomnienia" }).click();
+  await expect(page.getByRole("heading", { name: "Przypomnienia", level: 1 })).toBeVisible();
+  await expect(nav.getByRole("button", { name: "Przypomnienia" })).toHaveAttribute("aria-current", "page");
+
+  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("button", { name: "Archiwum" }).last().click();
+  await expect(page.getByRole("heading", { name: "Archiwum", level: 1 })).toBeVisible();
+});

@@ -25,12 +25,12 @@ const slots = [
 ] as const;
 
 const slotsRight = [
-  { key: "archive" as View, label: "Archiwum", Icon: Archive },
+  { key: "reminders" as View, label: "Przypomnienia", Icon: Bell },
 ] as const;
 
 export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, dark = false, onToggleTheme }: BottomNavProps) {
   const [moreOpen, setMoreOpen] = useState(false);
-  const isMoreActive = ["trash", "reminders", "calendar", "folder", "label"].includes(view);
+  const isMoreActive = ["archive", "trash", "calendar", "folder", "label"].includes(view);
 
   return (
     <>
@@ -81,8 +81,8 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             <SheetTitle className="font-display">Więcej</SheetTitle>
           </SheetHeader>
           <SheetGroup title="Przejdź do">
+            <SheetTile Icon={Archive} label="Archiwum" active={view === "archive"} onClick={() => { onGo("archive"); setMoreOpen(false); }} />
             <SheetTile Icon={Trash2} label="Kosz" active={view === "trash"} badge={trashCount || undefined} onClick={() => { onGo("trash"); setMoreOpen(false); }} />
-            <SheetTile Icon={Bell} label="Przypomnienia" active={view === "reminders"} onClick={() => { onGo("reminders"); setMoreOpen(false); }} />
             <SheetTile Icon={CalendarRange} label="Kalendarz" active={view === "calendar"} onClick={() => { onGo("calendar"); setMoreOpen(false); }} />
           </SheetGroup>
           <SheetGroup title="Narzędzia">
@@ -122,7 +122,7 @@ function NavItem({ active, current = active, label, onClick, children, badge, bu
           />
         )}
         <span className="relative z-10">{children}</span>
-        <span className="relative z-10 leading-none">{label}</span>
+        <span className="relative z-10 max-w-full truncate px-0.5 leading-none tracking-tight">{label}</span>
         {!!badge && (
           <span className="absolute top-0.5 right-1/4 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-2xs font-semibold flex items-center justify-center z-10">
             {badge}
