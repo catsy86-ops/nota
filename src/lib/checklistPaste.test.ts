@@ -16,7 +16,7 @@ describe("parsePastedChecklist", () => {
   });
 
   it("zdejmuje punktory i numerację", () => {
-    expect(parsePastedChecklist("- a\n* b\n• c\n1. d\n2) e").map((i) => i.text)).toEqual(["a", "b", "c", "d", "e"]);
+    expect(parsePastedChecklist("- a\n* b\n• c\n1. d\n2) e")!.map((i) => i.text)).toEqual(["a", "b", "c", "d", "e"]);
   });
 
   it("rozpoznaje zadania Markdown", () => {
@@ -28,6 +28,6 @@ describe("parsePastedChecklist", () => {
   });
 
   it("nie rusza liczb, które nie są numeracją", () => {
-    expect(parsePastedChecklist("2025 rok\n-5 stopni").map((i) => i.text)).toEqual(["2025 rok", "-5 stopni"]);
+    expect(parsePastedChecklist("2025 rok\n-5 stopni")!.map((i) => i.text)).toEqual(["2025 rok", "-5 stopni"]);
   });
 });

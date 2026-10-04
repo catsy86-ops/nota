@@ -10,6 +10,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { SidebarRow } from "@/components/sidebar/SidebarRow";
 
 interface InstallAppButtonProps {
   /** "row" = sidebar-style row, "tile" = bottom-sheet tile, "compact" = small pill (banner) */
@@ -98,16 +99,13 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
         <span className="text-xs font-medium font-display text-foreground">Zainstaluj</span>
       </button>
     ) : (
-      <button
+      // Zwykły wiersz paska — cichy jak reszta; ikona w kolorze podpowiada akcję.
+      <SidebarRow
+        icon={<Download className="w-[18px] h-[18px] text-primary" />}
+        label="Zainstaluj aplikację"
         onClick={handleClick}
-        className={cn(
-          "pressable w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-primary bg-primary/10 hover:bg-primary/15 transition-all",
-          className
-        )}
-      >
-        <Download className="w-[18px] h-[18px]" />
-        <span>Zainstaluj aplikację</span>
-      </button>
+        className={className}
+      />
     );
 
   return (
