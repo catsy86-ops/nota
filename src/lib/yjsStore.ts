@@ -1,9 +1,10 @@
 import * as Y from "yjs";
 import { applyTextEdit, captureTextBase, mapOffset, type TextBase } from "./yTextEdit";
 import { IndexeddbPersistence } from "y-indexeddb";
-import { get as idbGet, set as idbSet, del as idbDel, keys as idbKeys, getMany as idbGetMany, setMany as idbSetMany } from "idb-keyval";
+import { get as idbGet, del as idbDel, keys as idbKeys, getMany as idbGetMany } from "idb-keyval";
 import { loadAll as loadLegacySnapshot } from "@/lib/notesStore";
 import { hashImage } from "@/lib/imageHash";
+import { imageStore as defaultImageStore, isDataUrl, type ImageStore } from "@/lib/imageStore";
 import type { Note, Folder, ChecklistItem } from "@/hooks/useNotes";
 import { logDiag } from "@/lib/diagnostics";
 
@@ -15,16 +16,14 @@ import { logDiag } from "@/lib/diagnostics";
  * (`notesStore.ts`) with a Y.Doc persisted via `y-indexeddb`, one-time
  * migrated from whatever `notesStore.ts` already had on disk.
  *
- * `images` (base64 data URLs) deliberately live OUTSIDE the Y.Doc, in a
- * separate device-local idb-keyval store — they can be large, and a future
- * peer-to-peer transport would otherwise ship them over the wire to every
- * peer. Each device keeps its own images; only note/folder/label metadata is
- * meant to eventually sync.
+ * Image bytes live OUTSIDE the Y.Doc, in the content-addressed `imageStore`
+ * (key = SHA-256). The doc only carries the `imageHashes` manifest — a small
+ * list of keys that syncs with the note — and that manifest IS `Note.images`
+ * in the projection. Bytes travel separately (`imageSync.ts`, sync file, backup).
  */
 
-/** Stary format: cały słownik obrazów pod jednym kluczem — tylko do migracji. */
+/** Stare formaty obrazów (data URL-e per notatka) — tylko do migracji. */
 const LEGACY_IMAGES_KEY = "kaczy.images.v1";
-/** Obrazy jednej notatki pod własnym kluczem — zapis dotyka tylko zmienionych. */
 const IMAGES_PREFIX = "kaczy.images.v2:";
 
 type YNote = Y.Map<unknown>;
@@ -33,6 +32,17 @@ type YChecklistItem = Y.Map<unknown>;
 type ImagesById = Record<string, string[]>;
 /** Wspólna pusta lista — stabilna tożsamość dla notatek bez obrazów. */
 const NO_IMAGES: string[] = [];
+
+/**
+ * Do dokumentu trafiają wyłącznie klucze. Data URL tutaj to błąd wołającego
+ * (powinien przejść przez `imageStore.ingest`) — wpisany do Y.Doc rozjechałby
+ * się do wszystkich peerów jako megabajty base64.
+ */
+function imageRefs(images: string[]): string[] {
+  if (!images.some(isDataUrl)) return images.slice();
+  logDiag("error", "yjsStore", "data URL passed as an image ref — dropped (caller must ingest first)");
+  return images.filter((img) => !isDataUrl(img));
+}
 
 const NOTE_SCALAR_FIELDS = [
   "title", "color", "pinned", "archived", "trashed", "trashedAt",
@@ -153,14 +163,15 @@ function yNoteFromPlain(note: Note): YNote {
   y.set("checklist", yChecklistFromPlain(note.checklist));
   y.set("folderId", note.folderId);
   y.set("order", note.order);
-  y.set("imageHashes", note.images.map(hashImage));
+  y.set("imageHashes", imageRefs(note.images));
   y.set("createdAt", note.createdAt);
   y.set("updatedAt", note.updatedAt);
   return y;
 }
 
-function plainFromYNote(id: string, y: YNote, images: string[]): Note {
+function plainFromYNote(id: string, y: YNote): Note {
   const content = y.get("content");
+  const images = y.get("imageHashes");
   const dailyDate = y.get("dailyDate");
   return {
     ...(typeof dailyDate === "string" ? { dailyDate } : {}),
@@ -177,7 +188,7 @@ function plainFromYNote(id: string, y: YNote, images: string[]): Note {
     reminderRepeat: y.get("reminderRepeat") as Note["reminderRepeat"],
     reminderDay: (y.get("reminderDay") as number | undefined) ?? undefined,
     priority: (y.get("priority") as Note["priority"]) ?? "none",
-    images,
+    images: Array.isArray(images) ? (images as string[]) : NO_IMAGES,
     checklist: plainChecklistFromY(y.get("checklist")),
     folderId: (y.get("folderId") as string | null) ?? null,
     order: (y.get("order") as number) ?? 0,
@@ -211,7 +222,7 @@ function plainFromYFolder(id: string, y: YFolder): Folder {
   };
 }
 
-export function createYjsStore(dbName: string) {
+export function createYjsStore(dbName: string, images: ImageStore = defaultImageStore) {
   const doc = new Y.Doc();
   /** Otwarte sesje edycji: baza, którą widział edytor danej notatki. */
   const textBases = new Map<string, TextBase>();
@@ -229,67 +240,73 @@ export function createYjsStore(dbName: string) {
   const migratedKey = `kaczy.yjs.migrated.v1.${dbName}`;
 
   let persistence = new IndexeddbPersistence(dbName, doc);
-  let imagesCache: ImagesById = {};
-  let imagesCacheLoaded = false;
   let readyPromise: Promise<void> | null = null;
 
-  /** Notatki, których obrazy zmieniły się od ostatniego zapisu. */
-  const dirtyImages = new Set<string>();
-  /** Zapisy idą po kolei — inaczej starszy `set` mógłby wygrać z nowszym `del`. */
-  let imagesWriteChain: Promise<void> = Promise.resolve();
-
-  async function ensureImagesCacheLoaded(): Promise<void> {
-    if (imagesCacheLoaded) return;
-    const imageKeys = (await idbKeys()).filter((k): k is string => typeof k === "string" && k.startsWith(IMAGES_PREFIX));
-    const values = await idbGetMany<string[]>(imageKeys);
-    const loaded: ImagesById = {};
-    imageKeys.forEach((k, i) => { if (values[i]?.length) loaded[k.slice(IMAGES_PREFIX.length)] = values[i]; });
-
-    // Migracja z jednego wielkiego klucza. Stary klucz kasujemy dopiero po
-    // udanym zapisie nowych — przerwana migracja powtórzy się przy starcie.
-    const legacy = await idbGet<ImagesById>(LEGACY_IMAGES_KEY);
-    if (legacy) {
-      const toWrite = Object.entries(legacy).filter(([id, imgs]) => !(id in loaded) && imgs?.length);
-      await idbSetMany(toWrite.map(([id, imgs]) => [IMAGES_PREFIX + id, imgs]));
-      for (const [id, imgs] of toWrite) loaded[id] = imgs;
-      await idbDel(LEGACY_IMAGES_KEY);
-    }
-
-    // Zmiany zrobione przed załadowaniem (rzadkie) mają pierwszeństwo.
-    imagesCache = { ...loaded, ...imagesCache };
-    imagesCacheLoaded = true;
-  }
-
-  function setImagesSync(noteId: string, images: string[]) {
-    if (images.length) imagesCache[noteId] = images;
-    else delete imagesCache[noteId];
-    dirtyImages.add(noteId);
-  }
-
-  function dropImages(noteId: string): boolean {
-    if (!(noteId in imagesCache)) return false;
-    delete imagesCache[noteId];
-    dirtyImages.add(noteId);
-    return true;
+  /**
+   * Podmienia klucze w manifestach (np. stary hash FNV → SHA-256), bez ruszania
+   * `updatedAt` — to nie jest zmiana użytkownika. Zwraca liczbę notatek.
+   */
+  function remapImageRefs(map: Map<string, string>): number {
+    if (!map.size) return 0;
+    let changed = 0;
+    doc.transact(() => {
+      notesMap.forEach((y) => {
+        const refs = y.get("imageHashes");
+        if (!Array.isArray(refs)) return;
+        const next = (refs as string[]).map((r) => map.get(r) ?? r);
+        if (next.some((r, i) => r !== refs[i])) { y.set("imageHashes", next); changed++; }
+      });
+    }, "image-migration");
+    return changed;
   }
 
   /**
-   * Zapisuje wyłącznie notatki oznaczone jako zmienione. Wcześniej każde
-   * dodanie obrazka przepisywało cały słownik obrazów wszystkich notatek
-   * (dziesiątki MB structured-clone na jedno kliknięcie).
+   * Data URL-e z `kaczy.images.v1`/`v2:*` → `imageStore`, manifesty FNV → SHA-256.
+   * Notatka bez manifestu (sprzed jego istnienia) dostaje go z lokalnych obrazów.
+   * Klucze FNV, których to urządzenie nie ma, zostają — peer, który ma obraz,
+   * podmieni je u siebie. Stare klucze kasowane dopiero po zapisaniu wszystkich
+   * obrazów; przerwana migracja powtórzy się przy następnym starcie.
    */
-  function persistImagesCache() {
-    if (!dirtyImages.size) return;
-    const batch = [...dirtyImages].map((id) => [id, imagesCache[id]] as const);
-    dirtyImages.clear();
-    imagesWriteChain = imagesWriteChain.then(async () => {
-      for (const [id, imgs] of batch) {
-        try {
-          if (imgs?.length) await idbSet(IMAGES_PREFIX + id, imgs);
-          else await idbDel(IMAGES_PREFIX + id);
-        } catch (err) { logDiag("error", "imagesStore", `cannot persist images of note (${imgs?.length ?? 0} images)`, err); }
+  async function migrateImagesToStore(): Promise<void> {
+    const oldKeys = (await idbKeys()).filter((k): k is string => typeof k === "string" && k.startsWith(IMAGES_PREFIX));
+    const legacy = await idbGet<ImagesById>(LEGACY_IMAGES_KEY);
+    if (!oldKeys.length && !legacy) return;
+
+    const byNote: ImagesById = { ...(legacy ?? {}) };
+    const values = await idbGetMany<string[] | undefined>(oldKeys);
+    oldKeys.forEach((k, i) => { if (values[i]?.length) byNote[k.slice(IMAGES_PREFIX.length)] = values[i]!; });
+
+    const fnvToSha = new Map<string, string>();
+    const localRefs: ImagesById = {};
+    try {
+      for (const [id, imgs] of Object.entries(byNote)) {
+        const refs: string[] = [];
+        for (const img of imgs ?? []) {
+          if (!isDataUrl(img)) continue;
+          const [ref] = await images.ingest([img]);
+          if (!ref) continue;
+          fnvToSha.set(hashImage(img), ref);
+          refs.push(ref);
+        }
+        localRefs[id] = refs;
       }
-    });
+    } catch (err) {
+      logDiag("error", "yjsStore", "image migration failed — old images kept, will retry", err);
+      return;
+    }
+
+    doc.transact(() => {
+      for (const [id, refs] of Object.entries(localRefs)) {
+        const y = notesMap.get(id);
+        if (y && !Array.isArray(y.get("imageHashes")) && refs.length) y.set("imageHashes", refs);
+      }
+    }, "image-migration");
+    remapImageRefs(fnvToSha);
+
+    try {
+      for (const k of oldKeys) await idbDel(k);
+      if (legacy) await idbDel(LEGACY_IMAGES_KEY);
+    } catch (err) { logDiag("warn", "yjsStore", "cannot delete migrated image keys", err); }
   }
 
   /** Liczniki do raportu diagnostycznego — tylko flagi, bez treści notatek. */
@@ -306,11 +323,6 @@ export function createYjsStore(dbName: string) {
     };
   }
 
-  /** Test-only: czeka na zakończenie zapisów obrazów. */
-  function flushImagesForTests(): Promise<void> {
-    return imagesWriteChain;
-  }
-
   async function migrateFromLegacyIfNeeded(): Promise<void> {
     let migrated = false;
     try { migrated = Boolean(localStorage.getItem(migratedKey)); } catch { /* ignore */ }
@@ -324,13 +336,12 @@ export function createYjsStore(dbName: string) {
 
     const snapshot = await loadLegacySnapshot();
     if (snapshot.notes.length || snapshot.folders.length || snapshot.labels.length) {
+      const notes = await Promise.all(snapshot.notes.map(async (n) => ({ ...n, images: await images.ingest(n.images ?? []) })));
       doc.transact(() => {
-        for (const note of snapshot.notes) notesMap.set(note.id, yNoteFromPlain(note));
+        for (const note of notes) notesMap.set(note.id, yNoteFromPlain(note));
         for (const folder of snapshot.folders) foldersMap.set(folder.id, yFolderFromPlain(folder));
         for (const label of snapshot.labels) labelsMap.set(label, true);
       });
-      for (const note of snapshot.notes) setImagesSync(note.id, note.images);
-      persistImagesCache();
     }
     try { localStorage.setItem(migratedKey, "1"); } catch { /* ignore */ }
   }
@@ -339,7 +350,8 @@ export function createYjsStore(dbName: string) {
     if (!readyPromise) {
       readyPromise = (async () => {
         await persistence.whenSynced;
-        await ensureImagesCacheLoaded();
+        await images.load();
+        await migrateImagesToStore();
         await migrateFromLegacyIfNeeded();
       })();
     }
@@ -355,10 +367,9 @@ export function createYjsStore(dbName: string) {
   function projectNotes(): Note[] {
     const result: Note[] = [];
     notesMap.forEach((y, id) => {
-      const images = imagesCache[id] ?? NO_IMAGES;
       let note = noteCache.get(id);
-      if (!note || dirtyNotes.has(id) || note.images !== images) {
-        note = plainFromYNote(id, y, images);
+      if (!note || dirtyNotes.has(id)) {
+        note = plainFromYNote(id, y);
         noteCache.set(id, note);
       }
       result.push(note);
@@ -381,11 +392,9 @@ export function createYjsStore(dbName: string) {
   }
 
   function upsertNote(note: Note): void {
-    setImagesSync(note.id, note.images);
     doc.transact(() => {
       notesMap.set(note.id, yNoteFromPlain(note));
     });
-    persistImagesCache();
   }
 
   function applyPatch(id: string, y: YNote, updates: Partial<Omit<Note, "id" | "createdAt">>) {
@@ -404,29 +413,23 @@ export function createYjsStore(dbName: string) {
       if (field in updates) y.set(field, (updates as Record<string, unknown>)[field]);
     }
     if (updates.checklist !== undefined) applyChecklistDiff(y, updates.checklist);
-    if (updates.images !== undefined) y.set("imageHashes", updates.images.map(hashImage));
+    if (updates.images !== undefined) y.set("imageHashes", imageRefs(updates.images));
     if (!("updatedAt" in updates)) y.set("updatedAt", Date.now());
   }
 
   function patchNote(id: string, updates: Partial<Omit<Note, "id" | "createdAt">>): void {
     const y = notesMap.get(id);
     if (!y) return;
-    if (updates.images !== undefined) setImagesSync(id, updates.images);
     doc.transact(() => applyPatch(id, y, updates));
-    if (updates.images !== undefined) persistImagesCache();
   }
 
   function patchNotes(ids: string[], updates: Partial<Omit<Note, "id" | "createdAt">>): void {
-    let touchedImages = false;
     doc.transact(() => {
       for (const id of ids) {
         const y = notesMap.get(id);
-        if (!y) continue;
-        if (updates.images !== undefined) { setImagesSync(id, updates.images); touchedImages = true; }
-        applyPatch(id, y, updates);
+        if (y) applyPatch(id, y, updates);
       }
     });
-    if (touchedImages) persistImagesCache();
   }
 
   /**
@@ -478,41 +481,14 @@ export function createYjsStore(dbName: string) {
     return () => text.unobserve(handler);
   }
 
-  /** Content hashes of a note's images, in order — synced as part of the note
-   *  itself (unlike the base64 blobs, which stay device-local in `imagesCache`).
-   *  Lets a device that doesn't yet have an image locally know one is expected,
-   *  so `imageSync.ts` can fetch it from a connected peer once sync is on. */
-  function getImageHashes(id: string): string[] {
-    const y = notesMap.get(id);
-    if (!y) return [];
-    return (y.get("imageHashes") as string[] | undefined) ?? [];
-  }
-
-  /** This device's own local copy of a note's images (may lag `getImageHashes`
-   *  if some images haven't been fetched from a peer yet). */
-  function getLocalImages(id: string): string[] {
-    return imagesCache[id] ?? [];
-  }
-
-  /**
-   * Zmiany wyłącznie lokalne (dziś: dociągnięte obrazy) — poza `Y.Doc`.
-   * Wcześniej UI „szturchało się” zapisem `_imgSyncTick` do notatki, który
-   * leciał po WebRTC do wszystkich peerów i rósł w historii dokumentu.
-   */
-  const localListeners = new Set<() => void>();
-  function onLocalChange(listener: () => void): () => void {
-    localListeners.add(listener);
-    return () => { localListeners.delete(listener); };
-  }
-
-  /** Called by imageSync.ts once it has fetched a missing image blob from a
-   *  peer — merges it into the device-local image cache and notifies
-   *  `onLocalChange` subscribers so the UI re-renders with the new image. */
-  function setImagesLocal(id: string, images: string[]): void {
-    if (!notesMap.has(id)) return;
-    setImagesSync(id, images);
-    persistImagesCache();
-    localListeners.forEach((l) => l());
+  /** Wszystkie klucze obrazów, do których odwołuje się jakakolwiek notatka (także w Koszu). */
+  function referencedImages(): Set<string> {
+    const refs = new Set<string>();
+    notesMap.forEach((y) => {
+      const list = y.get("imageHashes");
+      if (Array.isArray(list)) for (const r of list) if (typeof r === "string") refs.add(r);
+    });
+    return refs;
   }
 
   /** Persists a manual drag order (index per id) in one transaction. */
@@ -525,20 +501,15 @@ export function createYjsStore(dbName: string) {
     });
   }
 
+  /** Bajty obrazów zostają w `imageStore` — sprząta je GC po karencji. */
   function removeNote(id: string): void {
     doc.transact(() => { notesMap.delete(id); });
-    if (dropImages(id)) persistImagesCache();
   }
 
   function removeNotes(ids: string[]): void {
-    let touchedImages = false;
     doc.transact(() => {
-      for (const id of ids) {
-        notesMap.delete(id);
-        if (dropImages(id)) touchedImages = true;
-      }
+      for (const id of ids) notesMap.delete(id);
     });
-    if (touchedImages) persistImagesCache();
   }
 
   function upsertFolder(folder: Folder): void {
@@ -592,7 +563,6 @@ export function createYjsStore(dbName: string) {
 
   /** Destructive full replace (used by "restore from backup file") — not a merge. */
   function replaceAll(notes: Note[], folders: Folder[], labels: string[]): void {
-    Object.keys(imagesCache).forEach(dropImages);
     doc.transact(() => {
       notesMap.forEach((_v, k) => notesMap.delete(k));
       foldersMap.forEach((_v, k) => foldersMap.delete(k));
@@ -601,44 +571,23 @@ export function createYjsStore(dbName: string) {
       for (const folder of folders) foldersMap.set(folder.id, yFolderFromPlain(folder));
       for (const label of labels) labelsMap.set(label, true);
     });
-    for (const note of notes) setImagesSync(note.id, note.images);
-    persistImagesCache();
   }
 
-  /** Pełny stan dokumentu (update V2) + lokalne obrazy — do pliku „sneakernet”. */
-  function encodeSyncState(): { update: Uint8Array; images: ImagesById } {
-    const images: ImagesById = {};
-    for (const [id, imgs] of Object.entries(imagesCache)) if (imgs.length && notesMap.has(id)) images[id] = imgs;
-    return { update: Y.encodeStateAsUpdateV2(doc), images };
+  /** Pełny stan dokumentu (update V2) — do pliku „sneakernet”. Bajty obrazów dokłada `yjsFileSync`. */
+  function encodeSyncState(): Uint8Array {
+    return Y.encodeStateAsUpdateV2(doc);
   }
 
-  /**
-   * Scala stan z pliku z bieżącym dokumentem — CRDT merge, nie nadpisanie.
-   * Obrazy są adresowane hashem: notatka dostaje obrazy, gdy każdy hash
-   * z manifestu da się znaleźć w lokalnej kopii albo w pliku.
-   */
-  function mergeSyncState(update: Uint8Array, images: ImagesById): { newNotes: number; imagesRestored: number } {
+  /** Scala stan z pliku z bieżącym dokumentem — CRDT merge, nie nadpisanie. */
+  function mergeSyncState(update: Uint8Array): { newNotes: number } {
     const before = new Set(notesMap.keys());
     Y.applyUpdateV2(doc, update, "file-merge");
     let newNotes = 0;
-    let imagesRestored = 0;
-    notesMap.forEach((_y, id) => {
-      if (!before.has(id)) newNotes++;
-      const hashes = getImageHashes(id);
-      const local = imagesCache[id] ?? [];
-      if (local.map(hashImage).join("|") === hashes.join("|")) return;
-      const pool = new Map<string, string>();
-      for (const img of [...local, ...(images[id] ?? [])]) pool.set(hashImage(img), img);
-      if (!hashes.every((h) => pool.has(h))) return;
-      setImagesSync(id, hashes.map((h) => pool.get(h)!));
-      imagesRestored++;
-    });
-    persistImagesCache();
-    if (imagesRestored) localListeners.forEach((l) => l());
-    return { newNotes, imagesRestored };
+    notesMap.forEach((_y, id) => { if (!before.has(id)) newNotes++; });
+    return { newNotes };
   }
 
-  /** Test-only: destroy this store's Yjs doc/IDB persistence and images, and start fresh. */
+  /** Test-only: destroy this store's Yjs doc/IDB persistence, and start fresh. */
   async function resetForTests(): Promise<void> {
     await persistence.clearData();
     doc.transact(() => {
@@ -646,24 +595,21 @@ export function createYjsStore(dbName: string) {
       foldersMap.forEach((_v, k) => foldersMap.delete(k));
       labelsMap.forEach((_v, k) => labelsMap.delete(k));
     });
-    imagesCache = {};
-    dirtyImages.clear();
     noteCache.clear();
-    imagesCacheLoaded = false;
     readyPromise = null;
     try { localStorage.removeItem(migratedKey); } catch { /* ignore */ }
     persistence = new IndexeddbPersistence(dbName, doc);
   }
 
   return {
-    doc, notesMap, foldersMap, labelsMap,
+    doc, notesMap, foldersMap, labelsMap, images,
     ready, projectNotes, projectFolders, projectLabels,
     upsertNote, patchNote, patchNotes, setNoteOrder, removeNote, removeNotes,
     upsertFolder, patchFolder, removeFolder,
     addLabel, removeLabelEverywhere, renameLabelEverywhere,
     replaceAll, resetForTests, diagStats, encodeSyncState, mergeSyncState,
-    getImageHashes, getLocalImages, setImagesLocal,
-    beginTextEdit, endTextEdit, isTextEditOpen, rebaseTextEdit, onRemoteTextChange, onLocalChange, flushImagesForTests,
+    referencedImages, remapImageRefs,
+    beginTextEdit, endTextEdit, isTextEditOpen, rebaseTextEdit, onRemoteTextChange,
   };
 }
 

@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { exportToJSON, exportToMarkdown, exportToHTML } from "./exportNotes";
 import { noteSchema, looksLikeNoteArray } from "./noteSchema";
+import { imageStore } from "./imageStore";
 import type { Note } from "@/hooks/useNotes";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
@@ -66,34 +67,38 @@ beforeEach(() => {
   });
 });
 
+const IMG = "data:image/png;base64,AAAA";
+
 describe("exportToJSON", () => {
-  it("serializes the full note list, including images, and returns filename/size", () => {
-    const note = makeNote({ images: ["data:image/png;base64,AAA"] });
-    const { filename, size } = exportToJSON([note]);
+  it("serializes the full note list with images embedded as data URLs, and returns filename/size", async () => {
+    const ref = await imageStore.putDataUrl(IMG);
+    const missing = "f".repeat(64);
+    const note = makeNote({ images: [ref, missing] });
+    const { filename, size } = await exportToJSON([note]);
 
     expect(filename).toMatch(/^kaczy-backup-.*\.json$/);
     expect(size).toBeGreaterThan(0);
     expect(capturedType).toBe("application/json");
 
     const parsed = JSON.parse(capturedContent);
-    expect(parsed).toEqual([note]);
-    expect(parsed[0].images).toEqual(["data:image/png;base64,AAA"]);
+    // Obraz, którego nie ma na urządzeniu, zostaje kluczem — referencja nie ginie.
+    expect(parsed).toEqual([{ ...note, images: [IMG, missing] }]);
   });
 
-  it("uses a custom filename when provided", () => {
-    const { filename } = exportToJSON([makeNote()], "custom.json");
+  it("uses a custom filename when provided", async () => {
+    const { filename } = await exportToJSON([makeNote()], "custom.json");
     expect(filename).toBe("custom.json");
   });
 });
 
 describe("exportToMarkdown", () => {
-  it("includes title, labels, reminder and checklist", () => {
+  it("includes title, labels, reminder and checklist", async () => {
     const note = makeNote({
       labels: ["dom"],
       reminder: new Date(2026, 0, 1, 9, 0).getTime(),
       checklist: [{ id: "c1", text: "Mleko", checked: true }, { id: "c2", text: "Chleb", checked: false }],
     });
-    exportToMarkdown([note]);
+    await exportToMarkdown([note]);
 
     expect(capturedFilename).toBe("kaczy-export.md");
     expect(capturedContent).toContain("## Zakupy");
@@ -103,27 +108,28 @@ describe("exportToMarkdown", () => {
     expect(capturedContent).toContain("- [ ] Chleb");
   });
 
-  it("embeds note images as markdown image links", () => {
-    const note = makeNote({ images: ["data:image/png;base64,AAA"] });
-    exportToMarkdown([note]);
-    expect(capturedContent).toContain("![obraz 1](data:image/png;base64,AAA)");
+  it("embeds stored images as markdown image links and skips missing ones", async () => {
+    const note = makeNote({ images: [await imageStore.putDataUrl(IMG), "f".repeat(64)] });
+    await exportToMarkdown([note]);
+    expect(capturedContent).toContain(`![obraz 1](${IMG})`);
+    expect(capturedContent).not.toContain("obraz 2");
   });
 });
 
 describe("exportToHTML", () => {
-  it("escapes title/content to prevent HTML/script injection", () => {
+  it("escapes title/content to prevent HTML/script injection", async () => {
     const note = makeNote({ title: "<script>alert(1)</script>", content: "a & b < c" });
-    exportToHTML([note]);
+    await exportToHTML([note]);
 
     expect(capturedContent).not.toContain("<script>alert(1)</script>");
     expect(capturedContent).toContain("&lt;script&gt;");
     expect(capturedContent).toContain("a &amp; b &lt; c");
   });
 
-  it("renders note images as <img> tags", () => {
-    const note = makeNote({ images: ["data:image/png;base64,AAA"] });
-    exportToHTML([note]);
-    expect(capturedContent).toContain('<img src="data:image/png;base64,AAA"');
+  it("renders stored images as <img> tags", async () => {
+    const note = makeNote({ images: [await imageStore.putDataUrl(IMG)] });
+    await exportToHTML([note]);
+    expect(capturedContent).toContain(`<img src="${IMG}"`);
   });
 });
 

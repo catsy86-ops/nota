@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import jsPDF from "jspdf";
 import type { Note } from "@/hooks/useNotes";
+import { embeddableImages } from "@/lib/exportNotes";
 
 // Split out from exportNotes.ts: jsPDF (+ the html2canvas it dynamically
 // pulls in) is the single heaviest dependency in the app but only used by
@@ -28,7 +29,7 @@ function addImagesToPDF(doc: jsPDF, images: string[], margin: number, contentW: 
   return y;
 }
 
-export function exportToPDF(notes: Note[]) {
+export async function exportToPDF(notes: Note[]) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const margin = 16;
@@ -97,8 +98,9 @@ export function exportToPDF(notes: Note[]) {
     }
 
     // Images
-    if (note.images?.length) {
-      y = addImagesToPDF(doc, note.images, margin, contentW, y);
+    const images = await embeddableImages(note.images ?? []);
+    if (images.length) {
+      y = addImagesToPDF(doc, images, margin, contentW, y);
     }
 
     // Separator

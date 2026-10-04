@@ -11,6 +11,7 @@ import { readingTimeMin, useViewPrefs } from "@/lib/viewPrefs";
 import { setGridNavPreviewScrollEl } from "@/lib/gridKeyboardNav";
 import { cn } from "@/lib/utils";
 import { wordsPl } from "@/lib/plural";
+import { NoteImage } from "./NoteImage";
 
 /**
  * Jedno miejsce czytania notatki (wcześniej: szybki podgląd w `NoteGrid`
@@ -246,7 +247,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
             {note.images && note.images.length > 0 && (
               <div className={cn("grid gap-2 mt-4", present ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2")}>
                 {note.images.map((img, i) => (
-                  <img key={i} src={img} alt="" className="w-full rounded-lg" loading="lazy" />
+                  <NoteImage key={i} imageRef={img} className="w-full rounded-lg" placeholderClassName="aspect-video" />
                 ))}
               </div>
             )}

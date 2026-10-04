@@ -38,13 +38,13 @@ vi.mock("y-webrtc", () => ({
 }));
 
 // connect() opens providers for the main text/metadata doc and (via imageSync.ts)
-// a separate transport for image blobs, room name suffixed "-img". During the
+// a separate transport for image blobs, room name suffixed "-img2". During the
 // transition period each goes to TWO rooms: the new SHA-256 one ("kaczy2-…")
 // and the legacy FNV one ("kaczy-…"). Filter to the main ones.
 const ROOMS_PER_CONNECT = 2;
 
 function mainProviders(): MockProvider[] {
-  return providerInstances.filter((p) => !p.roomName.endsWith("-img"));
+  return providerInstances.filter((p) => !p.roomName.endsWith("-img2"));
 }
 
 // connect()/startImageSync() now load y-webrtc via dynamic import() so it's
@@ -115,18 +115,18 @@ describe("yjsSync", () => {
     const code = startPairing();
 
     await vi.waitFor(() => {
-      if (providerInstances.filter((p) => p.roomName.endsWith("-img")).length === 0) {
+      if (providerInstances.filter((p) => p.roomName.endsWith("-img2")).length === 0) {
         throw new Error("image provider not connected yet");
       }
     });
     await vi.waitFor(() => {
-      if (providerInstances.filter((p) => p.roomName.endsWith("-img")).length < ROOMS_PER_CONNECT) {
+      if (providerInstances.filter((p) => p.roomName.endsWith("-img2")).length < ROOMS_PER_CONNECT) {
         throw new Error("image providers not connected yet");
       }
     });
-    const imageProviders = providerInstances.filter((p) => p.roomName.endsWith("-img"));
+    const imageProviders = providerInstances.filter((p) => p.roomName.endsWith("-img2"));
     expect(imageProviders).toHaveLength(ROOMS_PER_CONNECT);
-    expect(imageProviders.map((p) => p.roomName.replace(/-img$/, ""))).toEqual(mainProviders().map((p) => p.roomName));
+    expect(imageProviders.map((p) => p.roomName.replace(/-img2$/, ""))).toEqual(mainProviders().map((p) => p.roomName));
     for (const p of imageProviders) expect(p.opts).toEqual({ password: code });
   });
 
@@ -233,8 +233,8 @@ describe("yjsSync", () => {
     expect(getSignalingServers()).toEqual(["wss://sig.example.com"]);
     await vi.waitFor(() => {
       const fresh = providerInstances.filter((p) => !before.includes(p));
-      if (fresh.filter((p) => p.roomName.endsWith("-img")).length < ROOMS_PER_CONNECT) throw new Error("image providers not yet");
-      if (fresh.filter((p) => !p.roomName.endsWith("-img")).length < ROOMS_PER_CONNECT) throw new Error("main providers not yet");
+      if (fresh.filter((p) => p.roomName.endsWith("-img2")).length < ROOMS_PER_CONNECT) throw new Error("image providers not yet");
+      if (fresh.filter((p) => !p.roomName.endsWith("-img2")).length < ROOMS_PER_CONNECT) throw new Error("main providers not yet");
     });
     expect(before.every((p) => p.destroyed)).toBe(true);
     const fresh = providerInstances.filter((p) => !before.includes(p));

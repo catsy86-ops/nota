@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import * as Y from "yjs";
 import { yjsStore } from "@/lib/yjsStore";
 import { clearAllStorage } from "@/lib/notesStore";
-import { hashImage } from "@/lib/imageHash";
+import { dataUrlToBytes, sha256Hex } from "@/lib/imageStore";
 import type { Note } from "@/hooks/useNotes";
 
 // NOTE: no vi.resetModules() in this file — imageSync.ts imports the yjsStore
@@ -10,7 +10,7 @@ import type { Note } from "@/hooks/useNotes";
 // imageSync.ts pick up a *different* yjsStore instance than the one these
 // tests call directly, silently decoupling them. yjsStore.resetForTests()
 // (in beforeEach) is what actually clears state between tests here.
-import { startImageSync, stopImageSync } from "@/lib/imageSync";
+import { startImageSync, stopImageSync, imageSyncSettledForTests } from "@/lib/imageSync";
 
 // Real WebRTC isn't testable in vitest/jsdom — same approach as yjsSync.test.ts:
 // mock the transport so the merge/reconcile logic (the actual thing worth
@@ -65,62 +65,65 @@ beforeEach(async () => {
   await clearAllStorage();
   stopImageSync();
   await yjsStore.resetForTests();
+  await yjsStore.images.resetForTests();
   await yjsStore.ready();
   providerInstances.length = 0;
 });
 
+const PNG = "data:image/png;base64,iVBORw0KGgo=";
+const GIF = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
+
+function wire(dataUrl: string) {
+  const { bytes, type } = dataUrlToBytes(dataUrl);
+  return { t: type, b: bytes };
+}
+
+async function refOf(dataUrl: string): Promise<string> {
+  return sha256Hex(dataUrlToBytes(dataUrl).bytes);
+}
+
 describe("imageSync", () => {
-  it("mirrors a locally-owned image into the transport doc's blobs map, keyed by content hash", async () => {
-    const base64 = "data:image/png;base64,AAAA";
-    yjsStore.upsertNote(makeNote({ id: "n1", images: [base64] }));
+  it("mirrors a locally-owned image into the transport doc, keyed by SHA-256, on the -img2 room", async () => {
+    const ref = await yjsStore.images.putDataUrl(PNG);
+    yjsStore.upsertNote(makeNote({ id: "n1", images: [ref] }));
 
     startImageSync("TESTCODE");
     await waitForProvider();
+    await imageSyncSettledForTests();
     const transport = providerInstances[0];
-    const blobs = transport.doc.getMap<string>("blobs");
-
-    expect(blobs.get(hashImage(base64))).toBe(base64);
+    expect(transport.roomName.endsWith("-img2")).toBe(true);
+    const sent = transport.doc.getMap<{ t: string; b: Uint8Array }>("blobs").get(ref)!;
+    expect(sent.t).toBe("image/png");
+    expect(Array.from(sent.b)).toEqual(Array.from(wire(PNG).b));
   });
 
-  it("fills in a note's missing image once a matching hash appears in the transport doc (simulated peer)", async () => {
-    const base64 = "data:image/png;base64,BBBB";
-    const hash = hashImage(base64);
-
-    // Simulates a note synced in from the main doc: the manifest (imageHashes)
-    // arrived, but this device never received the actual bytes (images travel
-    // through the separate transport, not the main doc).
-    yjsStore.upsertNote(makeNote({ id: "n1", images: [] }));
-    yjsStore.notesMap.get("n1")!.set("imageHashes", [hash]);
+  it("stores an image a manifest expects once a peer sends it (simulated peer)", async () => {
+    const ref = await refOf(GIF);
+    yjsStore.upsertNote(makeNote({ id: "n1", images: [ref] }));
 
     startImageSync("TESTCODE");
-    expect(yjsStore.getLocalImages("n1")).toEqual([]);
     await waitForProvider();
+    expect(yjsStore.images.has(ref)).toBe(false);
 
-    // A peer sends the blob — arrives as a change on the shared transport Y.Map.
-    const transport = providerInstances[0];
-    transport.doc.getMap<string>("blobs").set(hash, base64);
-
-    expect(yjsStore.getLocalImages("n1")).toEqual([base64]);
+    providerInstances[0].doc.getMap("blobs").set(ref, wire(GIF));
+    await vi.waitFor(() => { if (!yjsStore.images.has(ref)) throw new Error("not yet"); });
+    expect(await yjsStore.images.getDataUrl(ref)).toBe(GIF);
   });
 
-  it("does not touch notes whose local images already match their manifest", async () => {
-    const base64 = "data:image/png;base64,CCCC";
-    yjsStore.upsertNote(makeNote({ id: "n1", images: [base64] }));
+  it("rejects bytes that do not match the hash they were sent under", async () => {
+    const ref = await refOf(GIF);
+    yjsStore.upsertNote(makeNote({ id: "n1", images: [ref] }));
 
     startImageSync("TESTCODE");
     await waitForProvider();
-    const transport = providerInstances[0];
-    // A (harmless, identical) blob arrives for the same hash — already have it.
-    transport.doc.getMap<string>("blobs").set(hashImage(base64), base64);
-
-    expect(yjsStore.getLocalImages("n1")).toEqual([base64]);
+    providerInstances[0].doc.getMap("blobs").set(ref, wire(PNG));
+    await imageSyncSettledForTests();
+    expect(yjsStore.images.has(ref)).toBe(false);
   });
 
   it("stopImageSync destroys the transport and stops reacting to further changes", async () => {
-    const base64 = "data:image/png;base64,DDDD";
-    const hash = hashImage(base64);
-    yjsStore.upsertNote(makeNote({ id: "n1", images: [] }));
-    yjsStore.notesMap.get("n1")!.set("imageHashes", [hash]);
+    const ref = await refOf(GIF);
+    yjsStore.upsertNote(makeNote({ id: "n1", images: [ref] }));
 
     startImageSync("TESTCODE");
     await waitForProvider();
@@ -128,8 +131,9 @@ describe("imageSync", () => {
     stopImageSync();
     expect(transport.destroyed).toBe(true);
 
-    // Mutating the now-detached doc must not throw and must not reach yjsStore.
-    transport.doc.getMap<string>("blobs").set(hash, base64);
-    expect(yjsStore.getLocalImages("n1")).toEqual([]);
+    // Mutating the now-detached doc must not throw and must not reach the store.
+    transport.doc.getMap("blobs").set(ref, wire(GIF));
+    await imageSyncSettledForTests();
+    expect(yjsStore.images.has(ref)).toBe(false);
   });
 });

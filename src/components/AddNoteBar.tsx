@@ -9,7 +9,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { NoteColor, ChecklistItem } from "@/hooks/useNotes";
-import { fileToBase64 } from "@/hooks/useNotes";
+import { imageStore } from "@/lib/imageStore";
+import { NoteImage } from "./NoteImage";
 import { DrawingCanvas } from "./DrawingCanvas";
 import { ChecklistEditor } from "./ChecklistEditor";
 import { FormatToolbar } from "./MarkdownRenderer";
@@ -112,10 +113,14 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
     const files = e.target.files;
     if (!files) return;
     let skipped = 0;
-    for (const file of Array.from(files)) {
-      if (file.size > 2 * 1024 * 1024) { skipped++; continue; }
-      const base64 = await fileToBase64(file);
-      setImages((prev) => [...prev, base64]);
+    try {
+      for (const file of Array.from(files)) {
+        if (file.size > 2 * 1024 * 1024) { skipped++; continue; }
+        const ref = await imageStore.putBlob(file);
+        setImages((prev) => [...prev, ref]);
+      }
+    } catch {
+      toast.error("Nie udało się zapisać obrazka", { description: "Brakuje miejsca w pamięci przeglądarki. Usuń stare notatki z obrazkami i spróbuj ponownie." });
     }
     if (skipped > 0) {
       toast.error(skipped === 1 ? "Obrazek jest za duży (max 2 MB)" : `${skipped} ${pluralPl(skipped, ["obrazek jest za duży", "obrazki są za duże", "obrazków jest za dużych"])} (max 2 MB)`);
@@ -169,7 +174,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
               <div className="flex gap-2 flex-wrap">
                 {images.map((img, i) => (
                   <div key={i} className="relative group/img">
-                    <img src={img} alt="" className="w-16 h-16 object-cover rounded-lg" />
+                    <NoteImage imageRef={img} className="w-16 h-16 object-cover rounded-lg" />
                     <button
                       onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
                       aria-label="Usuń obrazek"
@@ -280,7 +285,11 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
     <DrawingCanvas
       open={showDrawing}
       onOpenChange={setShowDrawing}
-      onSave={(dataUrl) => setImages((prev) => [...prev, dataUrl])}
+      onSave={(dataUrl) => {
+        imageStore.putDataUrl(dataUrl)
+          .then((ref) => setImages((prev) => [...prev, ref]))
+          .catch(() => toast.error("Nie udało się zapisać rysunku", { description: "Brakuje miejsca w pamięci przeglądarki." }));
+      }}
     />
     </>
   );

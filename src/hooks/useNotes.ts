@@ -45,7 +45,8 @@ export interface Note {
   priority: NotePriority;
   /** Notatka dnia: lokalna data `YYYY-MM-DD` (patrz `lib/dailyNote.ts`); brak = zwykła notatka. */
   dailyDate?: string;
-  images: string[]; // base64 data URLs — kept device-local, not synced via Yjs
+  /** Klucze SHA-256 w `imageStore` (manifest `imageHashes` w Y.Doc). Bajty poza dokumentem — patrz `lib/imageStore.ts`. */
+  images: string[];
   checklist: ChecklistItem[];
   folderId: string | null;
   order: number;
@@ -53,14 +54,7 @@ export interface Note {
   updatedAt: number;
 }
 
-export function fileToBase64(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
+const IMAGE_GC_DELAY_MS = 10_000;
 
 /** Get all descendant folder IDs (recursive) */
 export function getDescendantFolderIds(folderId: string, folders: Folder[]): string[] {
@@ -100,21 +94,23 @@ export function useNotes() {
     yjsStore.notesMap.observeDeep(projectNotes);
     yjsStore.foldersMap.observeDeep(projectFolders);
     yjsStore.labelsMap.observeDeep(projectLabels);
-    const offLocal = yjsStore.onLocalChange(projectNotes);
+    let gcTimer: ReturnType<typeof setTimeout> | undefined;
 
     yjsStore.ready().then(() => {
       if (cancelled) return;
       projectNotes();
       projectFolders();
       projectLabels();
+      // Sprzątanie obrazów, do których nic się już nie odwołuje — po starcie, żeby nie spowalniać pierwszego renderu.
+      gcTimer = setTimeout(() => { void yjsStore.images.collectGarbage(yjsStore.referencedImages()); }, IMAGE_GC_DELAY_MS);
     });
 
     return () => {
       cancelled = true;
+      clearTimeout(gcTimer);
       yjsStore.notesMap.unobserveDeep(projectNotes);
       yjsStore.foldersMap.unobserveDeep(projectFolders);
       yjsStore.labelsMap.unobserveDeep(projectLabels);
-      offLocal();
     };
   }, []);
 

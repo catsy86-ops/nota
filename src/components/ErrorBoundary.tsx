@@ -38,8 +38,9 @@ export class ErrorBoundary extends Component<Props, State> {
     } catch {
       /* ignore */
     }
-    // Notes themselves live in IndexedDB (Yjs doc "kaczy-yjs-v1" + idb-keyval's
-    // default "keyval-store" for images), not localStorage — a corrupted IndexedDB
+    // Notes themselves live in IndexedDB (Yjs doc "kaczy-yjs-v1", image bytes in "kaczy-images-v1" — name
+    // hardcoded so this file does not open that DB by importing imageStore — and idb-keyval's default
+    // "keyval-store" for older data), not localStorage — a corrupted IndexedDB
     // state is the most likely real crash cause, so the "nuclear reset" has to
     // actually remove those databases or it fixes nothing.
     const deleteDb = (name: string) =>
@@ -49,7 +50,7 @@ export class ErrorBoundary extends Component<Props, State> {
         req.onerror = () => resolve();
         req.onblocked = () => resolve();
       });
-    Promise.all([deleteDb("kaczy-yjs-v1"), deleteDb("keyval-store")])
+    Promise.all([deleteDb("kaczy-yjs-v1"), deleteDb("keyval-store"), deleteDb("kaczy-images-v1")])
       .catch(() => { /* ignore */ })
       .finally(() => window.location.reload());
   };

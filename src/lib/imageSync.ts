@@ -2,77 +2,86 @@ import * as Y from "yjs";
 import type { WebrtcProvider } from "y-webrtc";
 import { yjsStore } from "@/lib/yjsStore";
 import { providerOptions, roomNamesFor } from "@/lib/yjsSync";
+import { logDiag } from "@/lib/diagnostics";
 
 /**
  * P2P image sync (follow-up to yjsSync.ts's Phase 2 text/metadata sync — see
- * roadmap.md). Images are deliberately kept OUT of the main Yjs doc (see the
- * big comment in yjsStore.ts): that doc is persisted to disk via y-indexeddb
- * for every user, sync-enabled or not, so eagerly mirroring every image's
- * binary data into it would bloat local storage for people who never turn
- * sync on. Instead this module owns a SEPARATE, in-memory-only Y.Doc used
- * purely as a sync transport buffer — it exists only while P2P sync is
- * connected and is never written to IndexedDB, so it can't accumulate
- * unbounded local storage the way the main doc eventually will (that's the
- * separate "kompresja/GC doc-a Yjs" backlog item).
+ * roadmap.md). Image bytes are deliberately kept OUT of the main Yjs doc (see
+ * yjsStore.ts): that doc is persisted to disk via y-indexeddb for every user,
+ * sync-enabled or not. Instead this module owns a SEPARATE, in-memory-only
+ * Y.Doc used purely as a sync transport buffer — it exists only while P2P
+ * sync is connected and is never written to IndexedDB.
  *
- * Each note's Y.Map (in the MAIN doc) already carries `imageHashes` — a tiny
- * list of content hashes, cheap to sync unconditionally (see yjsStore.ts).
- * That's the "manifest": it tells a device an image is expected even before
- * the actual bytes arrive. This module bridges the gap:
- *  - mirrors this device's own images into the transport doc's `blobs` map
- *    (hash -> base64), keyed by content hash so identical images already
- *    known to a peer are never resent (Yjs diffs by state vector anyway).
- *  - watches `blobs` for hashes appearing that a local note's manifest
- *    expects but this device doesn't have yet, and copies them in.
+ * Each note's Y.Map (in the MAIN doc) carries `imageHashes` — the SHA-256
+ * keys of its images, synced unconditionally with the note. That's the
+ * manifest: it tells a device an image is expected even before the bytes
+ * arrive. This module bridges the gap:
+ *  - mirrors every referenced image this device has in `imageStore` into the
+ *    transport doc's `blobs` map (hash -> {t: type, b: bytes}), so identical
+ *    images already known to a peer are never resent.
+ *  - watches `blobs` for hashes a manifest expects but `imageStore` lacks,
+ *    verifies the bytes against the hash and stores them. The UI picks them up
+ *    through `imageStore.onAdded` — notes themselves don't change.
  *
- * Known limitation (documented, not silently swallowed): only two devices
- * that are online with sync connected AT THE SAME TIME exchange images live.
- * A device that was offline when a peer added an image gets it on next
- * reconnect via the full local mirror `connect()` does — same requirement
- * SyncSettings.tsx already states for text/metadata sync.
+ * Room suffix `-img2`: the v1 transport carried base64 under FNV hashes; a
+ * peer still running it must not read binary values it doesn't understand.
+ *
+ * Known limitation: only two devices online with sync connected AT THE SAME
+ * TIME exchange images live — same requirement SyncSettings.tsx states for text.
  */
+
+interface WireImage { t: string; b: Uint8Array }
 
 let imagesDoc: Y.Doc | null = null;
 let providers: WebrtcProvider[] = [];
-let blobs: Y.Map<string> | null = null;
-let unobserveBlobs: (() => void) | null = null;
-let unobserveNotes: (() => void) | null = null;
+let blobs: Y.Map<WireImage> | null = null;
+let cleanups: (() => void)[] = [];
 // Bumped on every startImageSync()/stopImageSync() so a dynamic
 // import("y-webrtc") still in flight from a superseded call backs off.
 let startToken = 0;
+/** Jeden przebieg naraz; zmiana w trakcie = jeszcze jeden przebieg po nim. */
+let running: Promise<void> | null = null;
+let rerun = false;
 
-function mirrorLocalImages() {
-  if (!blobs) return;
-  const doc = imagesDoc;
-  if (!doc) return;
-  doc.transact(() => {
-    for (const note of yjsStore.projectNotes()) {
-      const hashes = yjsStore.getImageHashes(note.id);
-      const local = yjsStore.getLocalImages(note.id);
-      hashes.forEach((hash, i) => {
-        const base64 = local[i];
-        if (base64 && !blobs!.has(hash)) blobs!.set(hash, base64);
-      });
-    }
-  });
+function isWireImage(v: unknown): v is WireImage {
+  return !!v && typeof v === "object" && typeof (v as WireImage).t === "string" && (v as WireImage).b instanceof Uint8Array;
 }
 
-/** Fills in any images this device is missing but a connected peer already sent. */
-function reconcileMissingImages() {
-  if (!blobs) return;
-  for (const note of yjsStore.projectNotes()) {
-    const hashes = yjsStore.getImageHashes(note.id);
-    if (hashes.length === 0) continue;
-    const local = yjsStore.getLocalImages(note.id);
-    if (local.length >= hashes.length) continue; // nothing missing (position-level drift is a known v1 limitation)
-    const next = local.slice();
-    let changed = false;
-    for (let i = local.length; i < hashes.length; i++) {
-      const found = blobs.get(hashes[i]);
-      if (found) { next[i] = found; changed = true; }
-    }
-    if (changed) yjsStore.setImagesLocal(note.id, next.filter(Boolean));
+async function mirrorLocalImages(map: Y.Map<WireImage>, token: number): Promise<void> {
+  const images = yjsStore.images;
+  for (const ref of yjsStore.referencedImages()) {
+    if (token !== startToken) return;
+    if (map.has(ref) || !images.has(ref)) continue;
+    const rec = await images.get(ref);
+    if (rec && token === startToken && !map.has(ref)) map.set(ref, { t: rec.type, b: new Uint8Array(rec.bytes) });
   }
+}
+
+/** Fills in images a manifest expects, this device lacks and a connected peer already sent. */
+async function reconcileMissingImages(map: Y.Map<WireImage>, token: number): Promise<void> {
+  const images = yjsStore.images;
+  for (const ref of yjsStore.referencedImages()) {
+    if (token !== startToken) return;
+    if (images.has(ref)) continue;
+    const wire = map.get(ref);
+    if (!isWireImage(wire)) continue;
+    try { await images.putBytes(wire.b, wire.t, ref); }
+    catch (err) { logDiag("warn", "imageSync", "rejected image from peer", err); }
+  }
+}
+
+function sync(): void {
+  const map = blobs;
+  if (!map) return;
+  if (running) { rerun = true; return; }
+  const token = startToken;
+  running = (async () => {
+    await mirrorLocalImages(map, token);
+    await reconcileMissingImages(map, token);
+  })().finally(() => {
+    running = null;
+    if (rerun) { rerun = false; sync(); }
+  });
 }
 
 /** Starts the image transport for a pairing code; safe to call if already started (restarts). */
@@ -81,33 +90,30 @@ export function startImageSync(code: string): void {
   const token = ++startToken;
   const doc = new Y.Doc();
   imagesDoc = doc;
-  const blobsMap = doc.getMap<string>("blobs");
+  const blobsMap = doc.getMap<WireImage>("blobs");
   blobs = blobsMap;
 
-  const onBlobsChange = () => reconcileMissingImages();
-  blobsMap.observe(onBlobsChange);
-  unobserveBlobs = () => blobsMap.unobserve(onBlobsChange);
+  const onChange = () => sync();
+  blobsMap.observe(onChange);
+  yjsStore.notesMap.observeDeep(onChange);
+  const offAdded = yjsStore.images.onAdded(onChange);
+  cleanups = [
+    () => blobsMap.unobserve(onChange),
+    () => yjsStore.notesMap.unobserveDeep(onChange),
+    offAdded,
+  ];
 
-  const onNotesChange = () => { mirrorLocalImages(); reconcileMissingImages(); };
-  yjsStore.notesMap.observeDeep(onNotesChange);
-  unobserveNotes = () => yjsStore.notesMap.unobserveDeep(onNotesChange);
-
-  mirrorLocalImages();
-  reconcileMissingImages();
+  void yjsStore.images.load().then(() => { if (token === startToken) sync(); });
 
   // Same eager-bundle concern as yjsSync.ts's connect() — defer y-webrtc
   // itself until a sync session is actually starting.
-  // Te same pokoje co tekst (nowy + stary w okresie przejściowym), z sufiksem „-img”.
+  // Te same pokoje co tekst (nowy + stary w okresie przejściowym), z sufiksem „-img2”.
   Promise.all([import("y-webrtc"), roomNamesFor(code)]).then(([{ WebrtcProvider }, rooms]) => {
     if (token !== startToken) return; // superseded by a later start/stop
     providers = rooms.map((room) => {
-      const p = new WebrtcProvider(`${room}-img`, doc, providerOptions(code));
-      p.on("peers", () => {
-        // A peer (re)joined — resend our full local set so it can backfill
-        // images it missed while offline, and check if it has ones we're missing.
-        mirrorLocalImages();
-        reconcileMissingImages();
-      });
+      const p = new WebrtcProvider(`${room}-img2`, doc, providerOptions(code));
+      // A peer (re)joined — offer our images and check for ones we're missing.
+      p.on("peers", onChange);
       return p;
     });
   });
@@ -115,13 +121,16 @@ export function startImageSync(code: string): void {
 
 export function stopImageSync(): void {
   startToken++;
-  unobserveBlobs?.();
-  unobserveBlobs = null;
-  unobserveNotes?.();
-  unobserveNotes = null;
+  cleanups.forEach((c) => c());
+  cleanups = [];
   providers.forEach((p) => p.destroy());
   providers = [];
   imagesDoc?.destroy();
   imagesDoc = null;
   blobs = null;
+}
+
+/** Test-only: czeka na bieżący przebieg mirror/reconcile. */
+export async function imageSyncSettledForTests(): Promise<void> {
+  while (running) await running;
 }

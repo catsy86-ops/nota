@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach } from "vitest";
 import * as Y from "yjs";
 import { createYjsStore } from "./yjsStore";
 import { clearAllStorage, saveNotesIDB } from "@/lib/notesStore";
+import { createImageStore, imageStore as defaultImageStore, isImageRef } from "@/lib/imageStore";
+import { hashImage } from "@/lib/imageHash";
 import type { Note } from "@/hooks/useNotes";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
@@ -237,7 +239,7 @@ describe("yjsStore — garbage collection", () => {
 describe("yjsStore — migration from the legacy idb-keyval store", () => {
   it("copies existing notes/folders/labels into the Yjs doc without loss", async () => {
     await saveNotesIDB([
-      makeNote({ id: "legacy-1", title: "Stara notatka", images: ["data:image/png;base64,AAA"] }),
+      makeNote({ id: "legacy-1", title: "Stara notatka", images: ["data:image/png;base64,AAAA"] }),
       makeNote({ id: "legacy-2", title: "Druga notatka" }),
     ]);
 
@@ -246,7 +248,9 @@ describe("yjsStore — migration from the legacy idb-keyval store", () => {
 
     const notes = store.projectNotes();
     expect(notes.map((n) => n.id).sort()).toEqual(["legacy-1", "legacy-2"]);
-    expect(notes.find((n) => n.id === "legacy-1")?.images).toEqual(["data:image/png;base64,AAA"]);
+    const [ref] = notes.find((n) => n.id === "legacy-1")!.images;
+    expect(isImageRef(ref)).toBe(true);
+    expect(await defaultImageStore.getDataUrl(ref)).toBe("data:image/png;base64,AAAA");
   });
 
   it("is idempotent — calling ready() again does not duplicate or wipe data", async () => {
@@ -263,59 +267,79 @@ describe("yjsStore — migration from the legacy idb-keyval store", () => {
   });
 });
 
-describe("yjsStore — lokalne obrazy poza dokumentem (P0 #10)", () => {
-  it("setImagesLocal powiadamia UI, ale nie zapisuje nic do Y.Doc", () => {
-    const store = createYjsStore(`local-images-${crypto.randomUUID()}`);
-    store.upsertNote(makeNote({ id: "n1" }));
-    let docUpdates = 0;
-    store.doc.on("update", () => { docUpdates++; });
-    let notified = 0;
-    const off = store.onLocalChange(() => { notified++; });
+describe("yjsStore — obrazy w content-addressed store", () => {
+  const PNG = "data:image/png;base64,iVBORw0KGgo=";
+  const GIF = "data:image/gif;base64,R0lGODlhAQABAAAAACw=";
+  const freshImages = () => createImageStore(`yjs-images-${crypto.randomUUID()}`);
 
-    store.setImagesLocal("n1", ["data:image/png;base64,AAAA"]);
-
-    expect(docUpdates).toBe(0);
-    expect(notified).toBe(1);
-    expect(store.getLocalImages("n1")).toEqual(["data:image/png;base64,AAAA"]);
-    expect(store.notesMap.get("n1")!.has("_imgSyncTick")).toBe(false);
-    off();
-  });
-});
-
-describe("yjsStore — obrazy per notatka (P0 #11)", () => {
-  it("zmiana obrazów jednej notatki zapisuje tylko jej klucz", async () => {
-    const idb = await import("idb-keyval");
-    const store = createYjsStore(`images-per-note-${crypto.randomUUID()}`);
-    await store.ready();
-    const a = `a-${crypto.randomUUID()}`;
-    const b = `b-${crypto.randomUUID()}`;
-    store.upsertNote(makeNote({ id: a, images: ["data:a"] }));
-    store.upsertNote(makeNote({ id: b, images: ["data:b"] }));
-    await store.flushImagesForTests();
-
-    await idb.set(`kaczy.images.v2:${b}`, ["znacznik"]); // gdyby b został przepisany, znacznik by zniknął
-    store.patchNote(a, { images: ["data:a", "data:a2"] });
-    await store.flushImagesForTests();
-
-    expect(await idb.get(`kaczy.images.v2:${a}`)).toEqual(["data:a", "data:a2"]);
-    expect(await idb.get(`kaczy.images.v2:${b}`)).toEqual(["znacznik"]);
-
-    store.removeNote(a);
-    await store.flushImagesForTests();
-    expect(await idb.get(`kaczy.images.v2:${a}`)).toBeUndefined();
+  it("keeps only the ref list in the doc and projects it as note.images", async () => {
+    const images = freshImages();
+    const store = createYjsStore(`refs-${crypto.randomUUID()}`, images);
+    const ref = await images.putDataUrl(PNG);
+    store.upsertNote(makeNote({ id: "n1", images: [ref] }));
+    expect(store.notesMap.get("n1")!.get("imageHashes")).toEqual([ref]);
+    expect(store.projectNotes()[0].images).toEqual([ref]);
+    expect(store.referencedImages()).toEqual(new Set([ref]));
   });
 
-  it("migruje stary słownik obrazów do kluczy per notatka i usuwa stary klucz", async () => {
-    const idb = await import("idb-keyval");
-    const id = `legacy-${crypto.randomUUID()}`;
-    await idb.set("kaczy.images.v1", { [id]: ["data:old"] });
+  it("never writes a data URL into the doc", () => {
+    const store = createYjsStore(`no-data-url-${crypto.randomUUID()}`, freshImages());
+    const ref = "a".repeat(64);
+    store.upsertNote(makeNote({ id: "n1", images: [ref, PNG] }));
+    store.patchNote("n1", { images: [PNG, ref] });
+    expect(JSON.stringify(Y.encodeStateAsUpdate(store.doc))).not.toContain("base64");
+    expect(store.projectNotes()[0].images).toEqual([ref]);
+  });
 
-    const store = createYjsStore(`images-migrate-${crypto.randomUUID()}`);
+  it("a peer's image change reaches the projection (the manifest is the only source)", () => {
+    const a = createYjsStore(`peer-img-a-${crypto.randomUUID()}`, freshImages());
+    const b = createYjsStore(`peer-img-b-${crypto.randomUUID()}`, freshImages());
+    a.upsertNote(makeNote({ id: "n", images: ["a".repeat(64), "b".repeat(64)] }));
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+    a.patchNote("n", { images: ["b".repeat(64)] });
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+    expect(b.projectNotes()[0].images).toEqual(["b".repeat(64)]);
+  });
+
+  it("migrates per-note data URLs into the store, rewrites FNV manifests and deletes old keys", async () => {
+    const idb = await import("idb-keyval");
+    const name = `images-migrate-${crypto.randomUUID()}`;
+    // Stan sprzed migracji: dokument z manifestem FNV + bajty pod kaczy.images.v2:<id>.
+    const before = createYjsStore(name, freshImages());
+    await before.ready();
+    const unknownFnv = hashImage("data:image/png;base64,TEGO-NIE-MA");
+    before.upsertNote(makeNote({ id: "n1" }));
+    before.upsertNote(makeNote({ id: "n2" }));
+    before.notesMap.get("n1")!.set("imageHashes", [hashImage(PNG), unknownFnv]);
+    before.notesMap.get("n2")!.delete("imageHashes"); // notatka sprzed manifestu
+    await idb.set("kaczy.images.v2:n1", [PNG]);
+    await idb.set("kaczy.images.v1", { n2: [GIF] });
+    const update = Y.encodeStateAsUpdate(before.doc);
+
+    const images = freshImages();
+    const store = createYjsStore(`${name}-after`, images);
+    Y.applyUpdate(store.doc, update);
     await store.ready();
 
-    expect(store.getLocalImages(id)).toEqual(["data:old"]);
-    expect(await idb.get(`kaczy.images.v2:${id}`)).toEqual(["data:old"]);
+    const byId = (id: string) => store.projectNotes().find((n) => n.id === id)!;
+    const pngRef = await images.putDataUrl(PNG);
+    const gifRef = await images.putDataUrl(GIF);
+    expect(byId("n1").images).toEqual([pngRef, unknownFnv]);
+    expect(byId("n2").images).toEqual([gifRef]);
+    expect(byId("n1").updatedAt).toBe(0);
+    expect(await images.getDataUrl(pngRef)).toBe(PNG);
+    expect(await idb.get("kaczy.images.v2:n1")).toBeUndefined();
     expect(await idb.get("kaczy.images.v1")).toBeUndefined();
+  });
+
+  it("keeps the old image keys when the store cannot save (migration retries on next start)", async () => {
+    const idb = await import("idb-keyval");
+    const images = freshImages();
+    images.ingest = async () => { throw new Error("QuotaExceededError"); };
+    await idb.set("kaczy.images.v2:n1", [PNG]);
+    const store = createYjsStore(`images-migrate-fail-${crypto.randomUUID()}`, images);
+    await store.ready();
+    expect(await idb.get("kaczy.images.v2:n1")).toEqual([PNG]);
   });
 });
 
@@ -348,12 +372,12 @@ describe("yjsStore — inkrementalna projekcja", () => {
     expect(after.checklist[0].checked).toBe(true);
   });
 
-  it("drops deleted notes and refreshes a note when only its local images change", () => {
+  it("drops deleted notes and refreshes a note when only its images change", () => {
     const s = createYjsStore(`proj-img-${crypto.randomUUID()}`);
     s.upsertNote(makeNote({ id: "a" }));
     s.upsertNote(makeNote({ id: "b" }));
     const before = s.projectNotes().find((n) => n.id === "a")!;
-    s.setImagesLocal("a", ["data:image/png;base64,AA"]);
+    s.patchNote("a", { images: ["c".repeat(64)] });
     s.removeNote("b");
     const after = s.projectNotes();
     expect(after.map((n) => n.id)).toEqual(["a"]);

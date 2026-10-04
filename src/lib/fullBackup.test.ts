@@ -1,8 +1,9 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { buildFullBackup, parseFullBackup, restoreFullBackup, SETTINGS_KEYS, ACHIEVEMENTS_KEY } from "./exportNotes";
 import { yjsStore } from "./yjsStore";
 import { versionsStore } from "./versionsStore";
 import { clearAllStorage } from "./notesStore";
+import { imageStore } from "./imageStore";
 import type { Note } from "@/hooks/useNotes";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
@@ -79,5 +80,30 @@ describe("pełny backup v2", () => {
   it("drops a corrupted optional section instead of rejecting the file", () => {
     const backup = parseFullBackup(JSON.stringify({ version: 2, exportedAt: 1, notes: [], labels: [], folders: [], versions: "zepsute" }));
     expect(backup.versions).toBeUndefined();
+  });
+});
+
+describe("pełny backup — obrazy", () => {
+  const IMG = "data:image/png;base64,AAAA";
+
+  it("embeds image bytes in the file and restores them into the store on another device", async () => {
+    const ref = await imageStore.putDataUrl(IMG);
+    yjsStore.upsertNote(makeNote({ images: [ref] }));
+    const text = JSON.stringify(await buildFullBackup());
+    expect(text).toContain(IMG);
+
+    await imageStore.resetForTests(); // „inne urządzenie”: obrazu jeszcze nie ma
+    await restoreFullBackup(parseFullBackup(text), ALL);
+    expect(yjsStore.projectNotes()[0].images).toEqual([ref]);
+    expect(await imageStore.getDataUrl(ref)).toBe(IMG);
+  });
+
+  it("keeps the current notes when the images cannot be saved", async () => {
+    yjsStore.upsertNote(makeNote({ id: "local" }));
+    const backup = parseFullBackup(JSON.stringify({ version: 2, exportedAt: 1, notes: [makeNote({ id: "z-pliku", images: [IMG] })], labels: [], folders: [] }));
+    const spy = vi.spyOn(imageStore, "ingest").mockRejectedValue(new Error("QuotaExceededError"));
+    await expect(restoreFullBackup(backup, ALL)).rejects.toThrow();
+    spy.mockRestore();
+    expect(yjsStore.projectNotes().map((n) => n.id)).toEqual(["local"]);
   });
 });

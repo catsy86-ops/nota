@@ -6,9 +6,29 @@ import { noteSchema, fullBackupSchema, looksLikeNoteArray, type FullBackup } fro
 import { tryWriteBackupToFile } from "@/lib/backupFileHandle";
 import { versionsStore } from "@/lib/versionsStore";
 import { logDiag } from "@/lib/diagnostics";
+import { imageStore, isDataUrl } from "@/lib/imageStore";
 
-export function exportToJSON(notes: Note[], filename?: string): { filename: string; size: number } {
-  const data = JSON.stringify(notes, null, 2);
+/**
+ * Granica plików: na zewnątrz obrazy jadą jako data URL-e (plik ma działać
+ * samodzielnie, także w starszej wersji aplikacji). Obraz, którego to
+ * urządzenie nie ma, zostaje kluczem — referencja nie ginie.
+ */
+export async function withEmbeddedImages(notes: Note[]): Promise<Note[]> {
+  return Promise.all(notes.map(async (n) => (n.images.length ? { ...n, images: await imageStore.resolve(n.images) } : n)));
+}
+
+/** Odwrotnie: data URL-e z pliku → `imageStore`, w notatkach zostają klucze. */
+export async function withStoredImages(notes: Note[]): Promise<Note[]> {
+  return Promise.all(notes.map(async (n) => (n.images.length ? { ...n, images: await imageStore.ingest(n.images) } : n)));
+}
+
+/** Do Markdown/HTML/PDF: tylko obrazy, które da się osadzić. */
+export async function embeddableImages(images: string[]): Promise<string[]> {
+  return (await imageStore.resolve(images)).filter(isDataUrl);
+}
+
+export async function exportToJSON(notes: Note[], filename?: string): Promise<{ filename: string; size: number }> {
+  const data = JSON.stringify(await withEmbeddedImages(notes), null, 2);
   const name = filename || `kaczy-backup-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
   download(data, name, "application/json");
   return { filename: name, size: new Blob([data]).size };
@@ -21,7 +41,7 @@ export async function buildFullBackup(): Promise<FullBackup> {
   return {
     version: 2,
     exportedAt: Date.now(),
-    notes: yjsStore.projectNotes(),
+    notes: await withEmbeddedImages(yjsStore.projectNotes()),
     labels: yjsStore.projectLabels(),
     folders: yjsStore.projectFolders(),
     versions: versionsStore.all(),
@@ -110,7 +130,9 @@ export interface RestoreOptions { versions: boolean; settings: boolean; achievem
  */
 export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions): Promise<void> {
   await yjsStore.ready();
-  yjsStore.replaceAll(backup.notes, backup.folders, backup.labels);
+  // Obrazy najpierw: błąd zapisu (brak miejsca) przerywa przed destrukcyjnym replaceAll.
+  const notes = await withStoredImages(backup.notes);
+  yjsStore.replaceAll(notes, backup.folders, backup.labels);
   if (opts.versions && backup.versions) {
     await versionsStore.load();
     versionsStore.replaceAll(backup.versions);
@@ -136,7 +158,7 @@ export function download(content: string, filename: string, type: string) {
   URL.revokeObjectURL(url);
 }
 
-export function exportToMarkdown(notes: Note[]) {
+export async function exportToMarkdown(notes: Note[]) {
   const lines: string[] = [];
   lines.push(`# NOTKI — eksport`);
   lines.push(`> ${format(new Date(), "d MMMM yyyy, HH:mm", { locale: pl })}`);
@@ -153,9 +175,10 @@ export function exportToMarkdown(notes: Note[]) {
         lines.push(`- [${item.checked ? "x" : " "}] ${item.text}`);
       });
     }
-    if (note.images?.length) {
+    const images = await embeddableImages(note.images ?? []);
+    if (images.length) {
       lines.push("");
-      note.images.forEach((img, i) => lines.push(`![obraz ${i + 1}](${img})`));
+      images.forEach((img, i) => lines.push(`![obraz ${i + 1}](${img})`));
     }
     lines.push("", "---", "");
   }
@@ -163,7 +186,7 @@ export function exportToMarkdown(notes: Note[]) {
   download(lines.join("\n"), "kaczy-export.md", "text/markdown");
 }
 
-export function exportToHTML(notes: Note[]) {
+export async function exportToHTML(notes: Note[]) {
   const escape = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const dateStr = format(new Date(), "d MMMM yyyy, HH:mm", { locale: pl });
 
@@ -207,9 +230,10 @@ h1{font-size:1.8rem;margin-bottom:.2rem}
       });
       html += `</ul>`;
     }
-    if (note.images?.length) {
+    const images = await embeddableImages(note.images ?? []);
+    if (images.length) {
       html += `<div class="images">`;
-      note.images.forEach((img) => { html += `<img src="${img}" alt="">`; });
+      images.forEach((img) => { html += `<img src="${img}" alt="">`; });
       html += `</div>`;
     }
     html += `</div>\n`;
@@ -234,8 +258,7 @@ export function importFromJSON(): Promise<Note[]> {
         const text = await file.text();
         const data = JSON.parse(text);
         if (!looksLikeNoteArray(data)) throw new Error("Nieprawidłowy format — oczekiwano listy notatek");
-        const notes = data.map((n) => noteSchema.parse(n));
-        resolve(notes);
+        resolve(await withStoredImages(data.map((n) => noteSchema.parse(n))));
       } catch (err) {
         reject(err instanceof Error ? err : new Error("Nieprawidłowy plik"));
       }
