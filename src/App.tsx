@@ -2,6 +2,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { MotionConfig } from "framer-motion";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { HoverTip } from "@/components/HoverTip";
 import Index from "./pages/Index.tsx";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { OfflineStatus } from "./components/OfflineStatus";
@@ -29,6 +30,7 @@ const App = () => {
     <MotionConfig reducedMotion={reducedMotion}>
       <TooltipProvider>
         <Sonner />
+        <HoverTip />
         <OfflineStatus />
         <BrowserRouter>
           <ErrorBoundary>

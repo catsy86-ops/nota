@@ -41,6 +41,9 @@ const SortableNoteCard = memo(function SortableNoteCard({ layout, note, index, s
   );
 });
 
+/** Powyżej tylu kart siatka nie animuje przesunięć — pomiar każdej karty kosztuje więcej, niż daje płynność. */
+const LAYOUT_ANIMATION_LIMIT = 40;
+
 interface NoteGridProps extends Omit<NoteViewActions, "selectionMode" | "onToggleSelect"> {
   notes: ReturnType<typeof useNotes>["notes"];
   selectedIds?: Set<string>;
@@ -58,11 +61,12 @@ export function NoteGrid({
   notes, onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder, getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectedIds, selectionMode, onToggleSelect, navOrder = 0,
 }: NoteGridProps) {
   // Stabilna wartość kontekstu — inaczej każdy render siatki przerysowuje wszystkie karty mimo `memo`.
+  const animateLayout = notes.length <= LAYOUT_ANIMATION_LIMIT;
   const noteViewActions = useMemo<NoteViewActions>(() => ({
     onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder,
-    getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectionMode, onToggleSelect,
+    getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectionMode, onToggleSelect, animateLayout,
   }), [onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder,
-    getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectionMode, onToggleSelect]);
+    getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectionMode, onToggleSelect, animateLayout]);
   const prefs = useViewPrefs();
   const noteIds = useMemo(() => notes.map((n) => n.id), [notes]);
   const gridRef = useRef<HTMLDivElement>(null);

@@ -31,6 +31,11 @@ export interface NoteViewActions {
   onOpenNote?: (id: string) => void;
   selectionMode?: boolean;
   onToggleSelect?: (id: string, shiftKey: boolean) => void;
+  /**
+   * Animacja układu (`layout`) kart. Przy długiej liście framer-motion mierzy
+   * każdą kartę przy każdej zmianie listy — wtedy wyłączona.
+   */
+  animateLayout?: boolean;
 }
 
 const NoteViewActionsContext = createContext<NoteViewActions | null>(null);
