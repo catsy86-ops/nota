@@ -688,6 +688,7 @@ const Index = () => {
       view={view}
       onGo={(v) => go(v)}
       onNew={expandAddNote}
+      onImport={handleImport}
       onOpenSettings={() => setSettingsOpen(true)}
       onOpenActions={() => setActionsOpen(true)}
       trashCount={trashedNotes.length}

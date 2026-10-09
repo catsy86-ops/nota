@@ -1,15 +1,13 @@
 import { motion } from "framer-motion";
-import { PanelLeftClose, PanelLeftOpen, Moon, Sun, Download, FileJson, FileText, Upload, FolderOpen, Tag } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Moon, Sun, FileDown, FolderOpen, Tag } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { SearchBar } from "@/components/SearchBar";
 import { ViewControls } from "@/components/ViewControls";
 import { cn } from "@/lib/utils";
 import { IconButton } from "@/components/ui/icon-button";
 import { tween } from "@/lib/motion";
 import { useNotesContext } from "@/hooks/NotesProvider";
-import { exportToJSON, exportToMarkdown, exportToHTML } from "@/lib/exportNotes";
-import { markBackup } from "@/lib/backupReminder";
+import { ImportExportMenu } from "@/components/ImportExportMenu";
 import { NotkiLogo } from "@/components/NotkiLogo";
 import type { View } from "@/hooks/useFilteredNotes";
 import { pluralPl } from "@/lib/plural";
@@ -36,7 +34,7 @@ export function AppHeader({
 }: AppHeaderProps) {
   // Stan tutaj, nie w Index: schowanie nagłówka przerysowuje tylko nagłówek, a nie całą stronę z kartami.
   const hideHeader = useHideOnScroll(96);
-  const { notes, archivedNotes, folders, allLabels } = useNotesContext();
+  const { folders, allLabels } = useNotesContext();
 
   return (
     <header
@@ -130,36 +128,12 @@ export function AppHeader({
             </IconButton>
           )}
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <IconButton aria-label="Import / Eksport" title="Import / Eksport">
-                <Download className="w-5 h-5" />
-              </IconButton>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem onClick={() => { void exportToJSON([...notes, ...archivedNotes]).then(markBackup); }}>
-                <FileJson className="w-4 h-4 mr-2" />
-                Eksportuj jako JSON
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => { import("@/lib/exportPdf").then((m) => m.exportToPDF([...notes, ...archivedNotes])); }}>
-                <FileText className="w-4 h-4 mr-2" />
-                Eksportuj jako PDF
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => exportToMarkdown([...notes, ...archivedNotes])}>
-                <FileText className="w-4 h-4 mr-2" />
-                Eksportuj jako Markdown
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => exportToHTML([...notes, ...archivedNotes])}>
-                <FileText className="w-4 h-4 mr-2" />
-                Eksportuj jako HTML
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onImport}>
-                <Upload className="w-4 h-4 mr-2" />
-                Importuj z JSON
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Na telefonie Import/Eksport jest w „Więcej” — nagłówek miał tam pięć ikon. */}
+          <ImportExportMenu onImport={onImport}>
+            <IconButton aria-label="Import / Eksport" title="Import / Eksport" className="hidden sm:inline-flex">
+              <FileDown className="w-5 h-5" />
+            </IconButton>
+          </ImportExportMenu>
 
           {/* W kalendarzu układ, sortowanie i filtry notatek nie robią nic —
               kalendarz rysuje własną projekcję terminów. Poza tym, że kontrolki

@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { forwardRef, useState } from "react";
 import { motion, LayoutGroup } from "framer-motion";
-import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History, CalendarRange, BriefcaseBusiness, Moon, Sun } from "lucide-react";
+import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History, CalendarRange, BriefcaseBusiness, Moon, Sun, FileDown } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { InstallAppButton } from "@/components/InstallAppButton";
+import { ImportExportMenu } from "@/components/ImportExportMenu";
 import { cn } from "@/lib/utils";
 import { spring } from "@/lib/motion";
 
@@ -17,6 +18,8 @@ interface BottomNavProps {
   trashCount?: number;
   dark?: boolean;
   onToggleTheme?: () => void;
+  /** Import z JSON — eksport i import są na telefonie tutaj, nie w nagłówku. */
+  onImport?: () => void;
 }
 
 const slots = [
@@ -28,7 +31,7 @@ const slotsRight = [
   { key: "reminders" as View, label: "Przypomnienia", Icon: Bell },
 ] as const;
 
-export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, dark = false, onToggleTheme }: BottomNavProps) {
+export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, dark = false, onToggleTheme, onImport }: BottomNavProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const isMoreActive = ["archive", "trash", "calendar", "shifts", "folder", "label"].includes(view);
 
@@ -90,6 +93,11 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             {onOpenActions && <SheetTile Icon={History} label="Ostatnie akcje" onClick={() => { onOpenActions(); setMoreOpen(false); }} />}
             <SheetTile Icon={HelpCircle} label="Samouczek" onClick={() => { window.dispatchEvent(new CustomEvent("kaczy:tour")); setMoreOpen(false); }} />
             {onToggleTheme && <SheetTile Icon={dark ? Sun : Moon} label={dark ? "Tryb jasny" : "Tryb ciemny"} onClick={() => { onToggleTheme(); setMoreOpen(false); }} />}
+            {onImport && (
+              <ImportExportMenu onImport={onImport} onDone={() => setMoreOpen(false)} align="start">
+                <SheetTile Icon={FileDown} label="Import i eksport" />
+              </ImportExportMenu>
+            )}
             <SheetTile Icon={SettingsIcon} label="Ustawienia" onClick={() => { onOpenSettings(); setMoreOpen(false); }} />
             <InstallAppButton variant="tile" onDone={() => setMoreOpen(false)} />
           </SheetGroup>
@@ -144,11 +152,15 @@ function SheetGroup({ title, children }: { title: string; children: React.ReactN
   );
 }
 
-function SheetTile({ Icon, label, onClick, badge, active = false }: { Icon: React.ComponentType<{ className?: string }>; label: string; onClick: () => void; badge?: number; active?: boolean }) {
+type SheetTileProps = { Icon: React.ComponentType<{ className?: string }>; label: string; badge?: number; active?: boolean } & React.ButtonHTMLAttributes<HTMLButtonElement>;
+
+// forwardRef: kafel bywa wyzwalaczem menu (Import i eksport), a Radix podaje mu ref i własne propsy.
+const SheetTile = forwardRef<HTMLButtonElement, SheetTileProps>(function SheetTile({ Icon, label, badge, active = false, ...rest }, ref) {
   return (
     <button
+      ref={ref}
       type="button"
-      onClick={onClick}
+      {...rest}
       aria-current={active ? "page" : undefined}
       className={cn(
         "pressable relative flex flex-col items-center gap-1.5 p-3 rounded-2xl border outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -166,4 +178,4 @@ function SheetTile({ Icon, label, onClick, badge, active = false }: { Icon: Reac
       )}
     </button>
   );
-}
+});
