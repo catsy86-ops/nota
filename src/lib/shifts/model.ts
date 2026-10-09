@@ -62,6 +62,18 @@ export interface ShiftData {
 
 export const SHIFT_COLORS = ["#f59e0b", "#3b82f6", "#4f46e5", "#10b981", "#ef4444", "#ec4899", "#14b8a6", "#64748b"] as const;
 
+/** Nazwy kolorów palety dla czytników ekranu — „#f59e0b” nic nie mówi. */
+export const SHIFT_COLOR_NAMES: Record<(typeof SHIFT_COLORS)[number], string> = {
+  "#f59e0b": "bursztynowy",
+  "#3b82f6": "niebieski",
+  "#4f46e5": "indygo",
+  "#10b981": "szmaragdowy",
+  "#ef4444": "czerwony",
+  "#ec4899": "różowy",
+  "#14b8a6": "morski",
+  "#64748b": "grafitowy",
+};
+
 export const DEFAULT_SHIFT_TYPES: ShiftType[] = [
   { id: "d", name: "Dzień", short: "D", color: "#f59e0b", start: "06:00", end: "14:00", breakMin: 0, kind: "work" },
   { id: "p", name: "Popołudnie", short: "P", color: "#3b82f6", start: "14:00", end: "22:00", breakMin: 0, kind: "work" },

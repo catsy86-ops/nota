@@ -48,7 +48,7 @@ test("własna zmiana z przerwą", async ({ page }) => {
   await dialog.getByLabel("Do", { exact: true }).fill("19:00");
   await dialog.getByLabel("Przerwa", { exact: true }).fill("30");
   await expect(dialog).toContainText("11 h 30 min");
-  await page.getByRole("button", { name: "Zapisz zmianę" }).click();
+  await page.getByRole("button", { name: "Zapisz rodzaj" }).click();
 
   await expect(page.getByRole("radio", { name: /Dwunastka/ })).toHaveAttribute("aria-checked", "true");
   await page.getByRole("button", { name: /^10 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
@@ -109,7 +109,7 @@ test("usunięcie rodzaju zmiany wymaga potwierdzenia i da się cofnąć", async 
   await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
   await page.getByRole("button", { name: /^2 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
 
-  await page.getByRole("button", { name: "Edytuj zmianę Dzień" }).click();
+  await page.getByRole("button", { name: "Edytuj rodzaj Dzień" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("button", { name: "Usuń rodzaj" }).click();
   // Pierwsze kliknięcie tylko pyta (z liczbą dni) — okno zostaje otwarte.

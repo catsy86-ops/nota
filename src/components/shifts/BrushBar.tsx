@@ -121,7 +121,7 @@ function BrushChip({ type, active, radio, onClick, onEdit }: { type: ShiftType; 
           <span className="block text-2xs text-muted-foreground tabular-nums">{absence ? "nieobecność" : `${type.start}–${type.end}`}</span>
         </span>
       </button>
-      <button type="button" onClick={onEdit} aria-label={`Edytuj zmianę ${type.name}`}
+      <button type="button" onClick={onEdit} aria-label={`Edytuj rodzaj ${type.name}`}
         className={cn("pressable h-12 px-2 coarse:px-[15px] rounded-r-2xl text-muted-foreground hover:text-foreground hover:bg-foreground/5", focusRing)}>
         <Pencil className="w-3.5 h-3.5" />
       </button>

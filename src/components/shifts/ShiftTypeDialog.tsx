@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SHIFT_COLORS, deleteShiftType, formatDuration, restoreShifts, saveShiftType, shiftMinutes, shiftSpan, shiftStore, type ShiftType } from "@/lib/shifts";
+import { SHIFT_COLORS, SHIFT_COLOR_NAMES, deleteShiftType, formatDuration, restoreShifts, saveShiftType, shiftMinutes, shiftSpan, shiftStore, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -78,7 +78,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
   return (
     <>
       <DialogHeader>
-        <DialogTitle className="font-display">{type ? "Edytuj zmianę" : "Nowa zmiana"}</DialogTitle>
+        <DialogTitle className="font-display">{type ? "Edytuj rodzaj zmiany" : "Nowy rodzaj zmiany"}</DialogTitle>
       </DialogHeader>
       <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); save(); }}>
         <div className="grid grid-cols-[1fr_5rem] gap-3">
@@ -135,7 +135,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
           <legend className="text-sm font-medium">Kolor</legend>
           <div className="flex gap-2 flex-wrap pt-1">
             {SHIFT_COLORS.map((c) => (
-              <button key={c} type="button" onClick={() => patch({ color: c })} aria-label={`Kolor ${c}`} aria-pressed={draft.color === c}
+              <button key={c} type="button" onClick={() => patch({ color: c })} aria-label={SHIFT_COLOR_NAMES[c]} aria-pressed={draft.color === c}
                 className={cn("pressable w-8 h-8 coarse:w-10 coarse:h-10 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring ring-offset-2 ring-offset-background",
                   draft.color === c && "ring-2 ring-foreground")}
                 style={{ backgroundColor: c }} />
@@ -149,7 +149,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
               {confirmDays === null ? "Usuń rodzaj" : `Usunąć z ${confirmDays} ${pluralPl(confirmDays, ["dniem", "dniami", "dniami"])}?`}
             </Button>
           ) : <span />}
-          <Button type="submit" disabled={!valid}>Zapisz zmianę</Button>
+          <Button type="submit" disabled={!valid}>Zapisz rodzaj</Button>
         </DialogFooter>
       </form>
     </>
