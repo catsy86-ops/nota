@@ -6,6 +6,8 @@ import {
 import { pl } from "date-fns/locale";
 import { DayCell } from "./DayCell";
 import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
+import { monthEnterClass, useMonthDirection } from "@/hooks/useMonthDirection";
+import { cn } from "@/lib/utils";
 
 /**
  * Siatka miesiąca — własna, nie `react-day-picker`.
@@ -41,6 +43,7 @@ export function MonthGrid({ month, byDay, titleOf, selectedDay, onSelectDay, onA
   // Fokus przenosimy dopiero po tym, jak użytkownik ruszył klawiaturą —
   // inaczej samo wejście w widok przeskakiwałoby stronę do siatki.
   const shouldFocus = useRef(false);
+  const direction = useMonthDirection(month);
 
   const days = eachDayOfInterval({
     start: startOfWeek(startOfMonth(month), { weekStartsOn: WEEK_STARTS_ON }),
@@ -104,7 +107,8 @@ export function MonthGrid({ month, byDay, titleOf, selectedDay, onSelectDay, onA
         ))}
       </div>
 
-      <div className="flex flex-col gap-1 sm:gap-1.5">
+      {/* key = miesiąc: nowa siatka gra wejście z kierunku nawigacji. */}
+      <div key={`${month.getFullYear()}-${month.getMonth()}`} className={cn("flex flex-col gap-1 sm:gap-1.5", monthEnterClass(direction))}>
         {weeks.map((week) => (
           <div key={dayKey(week[0])} role="row" className="grid grid-cols-7 gap-1 sm:gap-1.5">
             {week.map((day) => {

@@ -4,6 +4,7 @@ import { pl } from "date-fns/locale";
 import { dayKey } from "@/lib/reminderOccurrences";
 import { dayType, entryMinutes, formatDuration, formatHoursShort, holidayName, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
+import { monthEnterClass, useMonthDirection } from "@/hooks/useMonthDirection";
 
 interface ShiftMonthGridProps {
   month: Date;
@@ -39,6 +40,7 @@ function useToday(): Date {
  */
 export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesById, onDay, onMonthChange, describedBy }: ShiftMonthGridProps) {
   const today = useToday();
+  const direction = useMonthDirection(month);
   const weeks = useMemo(() => {
     const all = eachDayOfInterval({ start: startOfWeek(month, WEEK), end: endOfWeek(endOfMonth(month), WEEK) });
     const out: Date[][] = [];
@@ -94,7 +96,8 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
           </div>
         ))}
       </div>
-      <div className="space-y-1 sm:space-y-1.5">
+      {/* key = miesiąc: nowa siatka gra wejście z kierunku nawigacji. */}
+      <div key={`${month.getFullYear()}-${month.getMonth()}`} className={cn("space-y-1 sm:space-y-1.5", monthEnterClass(direction))}>
         {weeks.map((week) => (
           <div key={dayKey(week[0])} role="row" className="grid grid-cols-7 gap-1 sm:gap-1.5">
             {week.map((day) => {

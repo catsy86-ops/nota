@@ -430,6 +430,15 @@
 }
 
 
+/* Zmiana miesiąca (Kalendarz, Grafik): nowa siatka wjeżdża 12 px od strony,
+   w którą idzie nawigacja — „dalej” z prawej, „wstecz” z lewej. Tylko
+   transform/opacity; 12 px mieści się w paddingu <main>, więc bez paska
+   przewijania. Reduced motion skraca to regułą `html[data-motion]` wyżej. */
+@keyframes month-in-next { from { opacity: 0; transform: translateX(12px); } }
+@keyframes month-in-prev { from { opacity: 0; transform: translateX(-12px); } }
+.month-in-next { animation: month-in-next var(--dur-base) var(--ease-out); }
+.month-in-prev { animation: month-in-prev var(--dur-base) var(--ease-out); }
+
 /* Chwilowe podświetlenie karty po „otwórz notatkę” (paleta, wikilink). */
 .note-flash {
   outline: 2px solid hsl(var(--primary));
