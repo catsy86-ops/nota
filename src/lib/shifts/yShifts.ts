@@ -15,7 +15,7 @@ import { DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, shiftHours, type DayEnt
  * od razu, mogłoby przy scaleniu nadpisać czyjeś poprawki tych samych id.
  */
 
-type Meta = "hourlyRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "overtimeFrom" | "sundayFrom" | "nightFrom" | "typesInit" | "patternsInit" | "presetBudowa";
+type Meta = "hourlyRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "overtimeFrom" | "sundayFrom" | "nightFrom" | "typesInit" | "patternsInit" | "presetBudowa" | "presetDniowka";
 
 /** Origin transakcji Grafiku — odróżnia lokalne zmiany od tych z sieci i z migracji. */
 export const SHIFTS_ORIGIN = "shifts";
@@ -181,7 +181,7 @@ export function createYShifts(doc: Y.Doc) {
    * nie wraca, a dwa urządzenia dodają ten sam wpis (to samo id). Pusty zestaw
    * rodzajów (ktoś usunął wszystkie) zostaje pusty.
    */
-  function addPresetOnce(marker: Extract<Meta, "presetBudowa">, id: string): void {
+  function addPresetOnce(marker: Extract<Meta, "presetBudowa" | "presetDniowka">, id: string): void {
     if (meta.get(marker)) return;
     const preset = DEFAULT_SHIFT_TYPES.find((t) => t.id === id);
     transact(() => {

@@ -49,6 +49,8 @@ const readyPromise = yjsStore.ready().then(() => {
   migrateFromLocalStorage();
   // Praca na budowie (10 h) — dodana do rodzajów startowych 2026-10-09.
   yShifts.addPresetOnce("presetBudowa", "b");
+  // Dniówka 8–16 — dodana 2026-10-09.
+  yShifts.addPresetOnce("presetDniowka", "e");
   ready = true;
   readyListeners.forEach((l) => l());
 });

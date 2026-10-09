@@ -34,6 +34,10 @@ describe("Grafik w Yjs", () => {
     withTypes.addPresetOnce("presetBudowa", "b");
     expect(withTypes.get().types.some((t) => t.id === "b")).toBe(false);
 
+    withTypes.deleteShiftType("e");
+    withTypes.addPresetOnce("presetDniowka", "e");
+    expect(withTypes.get().types.at(-1)).toMatchObject({ id: "e", name: "Dniówka", short: "8", start: "08:00", end: "16:00" });
+
     const empty = createYShifts(new Y.Doc());
     empty.replaceAll({ ...EMPTY_SHIFT_DATA, types: [] });
     empty.addPresetOnce("presetBudowa", "b");
