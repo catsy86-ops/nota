@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange } from "lucide-react";
+import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange, BriefcaseBusiness } from "lucide-react";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useNoteVersions } from "@/hooks/useNoteVersions";
 import type { NoteVersion } from "@/hooks/useNoteVersions";
@@ -59,6 +59,8 @@ const CommandPalette = lazy(() => import("@/components/CommandPalette").then((m)
 const StatsDialog = lazy(() => import("@/components/StatsDialog").then((m) => ({ default: m.StatsDialog })));
 const FocusMode = lazy(() => import("@/components/FocusMode").then((m) => ({ default: m.FocusMode })));
 // Kalendarz wchodzi tylko po wejściu w swój widok — siatka notatek go nie potrzebuje.
+// Grafik zmian — osobny dział, ładowany dopiero po wejściu.
+const ShiftsView = lazy(() => import("@/components/shifts/ShiftsView").then((m) => ({ default: m.ShiftsView })));
 const ReminderCalendarView = lazy(() => import("@/components/calendar/ReminderCalendarView").then((m) => ({ default: m.ReminderCalendarView })));
 
 const Index = () => {
@@ -392,6 +394,7 @@ const Index = () => {
     { icon: Calendar, label: "Dziś", view: "today", count: todayNotesCount, emoji: "📅" },
     { icon: Bell, label: "Przypomnienia", view: "reminders", count: remindersCount, emoji: "🔔" },
     { icon: CalendarRange, label: "Kalendarz", view: "calendar", count: remindersCount, emoji: "🗓️" },
+    { icon: BriefcaseBusiness, label: "Grafik", view: "shifts", emoji: "🗂️" },
     { icon: Archive, label: "Archiwum", view: "archive", count: archivedNotes.length, emoji: "📦" },
     { icon: Trash, label: "Kosz", view: "trash", count: trashedNotes.length, emoji: "🗑️" },
   ];
@@ -437,10 +440,13 @@ const Index = () => {
           onImport={handleImport}
         />
 
-        <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8 pb-safe">
-          <div className="sm:hidden">
-            <SearchBar value={search} onChange={setSearch} />
-          </div>
+        {/* `flex gap`, nie `space-y`: ukryta na sm+ wyszukiwarka nie dokłada marginesu nad treścią. */}
+        <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-6 sm:gap-8 pb-safe">
+          {view !== "shifts" && (
+            <div className="sm:hidden">
+              <SearchBar value={search} onChange={setSearch} />
+            </div>
+          )}
           {view === "notes" && <InstallBanner />}
 
           {canCompose && (
@@ -571,7 +577,13 @@ const Index = () => {
             </Suspense>
           )}
 
-          {view !== "calendar" && displayNotes.length === 0 && <EmptyState view={view} search={search} elsewhere={elsewhere} onGo={(v) => go(v)} />}
+          {view === "shifts" && (
+            <Suspense fallback={null}>
+              <ShiftsView />
+            </Suspense>
+          )}
+
+          {view !== "calendar" && view !== "shifts" && displayNotes.length === 0 && <EmptyState view={view} search={search} elsewhere={elsewhere} onGo={(v) => go(v)} />}
           {view === "notes" && displayNotes.length > 0 && !search && <DailyQuote />}
         </main>
       </div>

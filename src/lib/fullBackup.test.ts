@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { buildFullBackup, parseFullBackup, restoreFullBackup, SETTINGS_KEYS, ACHIEVEMENTS_KEY } from "./exportNotes";
+import { buildFullBackup, parseFullBackup, restoreFullBackup, SETTINGS_KEYS, ACHIEVEMENTS_KEY, SHIFTS_KEY } from "./exportNotes";
+import { SHIFTS_STORAGE_KEY } from "./shifts/store";
 import { yjsStore } from "./yjsStore";
 import { versionsStore } from "./versionsStore";
 import { clearAllStorage } from "./notesStore";
@@ -14,7 +15,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
   };
 }
 
-const ALL = { versions: true, settings: true, achievements: true };
+const ALL = { versions: true, settings: true, achievements: true, shifts: true };
 
 beforeEach(async () => {
   localStorage.clear();
@@ -24,6 +25,23 @@ beforeEach(async () => {
 });
 
 describe("pełny backup v2", () => {
+  it("niesie i przywraca Grafik zmian", async () => {
+    const grafik = JSON.stringify({ version: 2, days: { "2026-10-01": { type: "d" } } });
+    localStorage.setItem(SHIFTS_KEY, grafik);
+    const backup = parseFullBackup(JSON.stringify(await buildFullBackup()));
+    expect(backup.shifts).toBe(grafik);
+
+    localStorage.setItem(SHIFTS_KEY, "lokalny");
+    await restoreFullBackup(backup, { ...ALL, shifts: false });
+    expect(localStorage.getItem(SHIFTS_KEY)).toBe("lokalny");
+    await restoreFullBackup(backup, ALL);
+    expect(localStorage.getItem(SHIFTS_KEY)).toBe(grafik);
+  });
+
+  it("klucz Grafiku w backupie to ten sam, którego używa store", () => {
+    expect(SHIFTS_KEY).toBe(SHIFTS_STORAGE_KEY);
+  });
+
   it("carries versions, settings and achievements — but never the pairing code", async () => {
     yjsStore.upsertNote(makeNote());
     versionsStore.add("n1", "stara wersja", "…");
@@ -49,7 +67,7 @@ describe("pełny backup v2", () => {
     versionsStore.replaceAll([]);
     localStorage.setItem("kaczy-theme", "light");
     localStorage.setItem(ACHIEVEMENTS_KEY, "lokalne");
-    await restoreFullBackup(backup, { versions: true, settings: true, achievements: false });
+    await restoreFullBackup(backup, { versions: true, settings: true, achievements: false, shifts: false });
 
     expect(versionsStore.get("n1").map((v) => v.title)).toEqual(["z pliku"]);
     expect(localStorage.getItem("kaczy-theme")).toBe("dark");

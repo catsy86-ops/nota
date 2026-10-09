@@ -1,0 +1,127 @@
+/**
+ * Model danych Grafiku. Zapisywany w localStorage jako jeden dokument
+ * z polem `version` — `migrate()` podnosi każdą starszą postać do bieżącej,
+ * więc reszta kodu widzi zawsze tylko `ShiftData`.
+ */
+
+export type ShiftKind = "work" | "absence";
+
+export interface ShiftType {
+  id: string;
+  name: string;
+  /** Skrót w komórce kalendarza, 1–3 znaki. */
+  short: string;
+  color: string;
+  /** „HH:MM”. */
+  start: string;
+  end: string;
+  /** Niepłatna przerwa w minutach. */
+  breakMin: number;
+  /** Stawka za godzinę tej zmiany; brak = stawka domyślna. */
+  rate?: number;
+  /**
+   * `work` liczy się do przepracowanych godzin; `absence` (urlop, L4)
+   * nie jest pracą, ale obniża normę miesiąca o swój czas.
+   * Brak pola = `work` (dane sprzed wprowadzenia nieobecności).
+   */
+  kind?: ShiftKind;
+}
+
+export interface DayEntry {
+  /** Id rodzaju zmiany. */
+  type: string;
+  note?: string;
+  /** Odchylenie od planu w minutach: + zostałem dłużej, − wyszedłem wcześniej. */
+  extraMin?: number;
+}
+
+/** Cykl zmian powtarzany od wybranej daty; `null` = dzień wolny. */
+export interface ShiftPattern {
+  id: string;
+  name: string;
+  steps: (string | null)[];
+}
+
+export interface ShiftData {
+  version: 2;
+  types: ShiftType[];
+  /** dayKey („2026-10-09”) → wpis dnia. */
+  days: Record<string, DayEntry>;
+  /** Domyślna stawka za godzinę (zł). 0 = nie licz zarobku. */
+  hourlyRate: number;
+  /** Mnożnik stawki za nadgodziny (Kodeks pracy: 1,5 lub 2). */
+  overtimeMultiplier: number;
+  patterns: ShiftPattern[];
+}
+
+export const SHIFT_COLORS = ["#f59e0b", "#3b82f6", "#6366f1", "#10b981", "#ef4444", "#ec4899", "#14b8a6", "#64748b"] as const;
+
+export const DEFAULT_SHIFT_TYPES: ShiftType[] = [
+  { id: "d", name: "Dzień", short: "D", color: "#f59e0b", start: "06:00", end: "14:00", breakMin: 0, kind: "work" },
+  { id: "p", name: "Popołudnie", short: "P", color: "#3b82f6", start: "14:00", end: "22:00", breakMin: 0, kind: "work" },
+  { id: "n", name: "Noc", short: "N", color: "#6366f1", start: "22:00", end: "06:00", breakMin: 0, kind: "work" },
+  { id: "u", name: "Urlop", short: "U", color: "#10b981", start: "08:00", end: "16:00", breakMin: 0, kind: "absence" },
+  { id: "l4", name: "L4", short: "L4", color: "#64748b", start: "08:00", end: "16:00", breakMin: 0, kind: "absence" },
+];
+
+export const DEFAULT_PATTERNS: ShiftPattern[] = [
+  { id: "4b", name: "Czterobrygadowy (2D 2N 4W)", steps: ["d", "d", "n", "n", null, null, null, null] },
+  { id: "3z", name: "Trzyzmianowy tydzień po tygodniu", steps: [
+    "d", "d", "d", "d", "d", null, null,
+    "p", "p", "p", "p", "p", null, null,
+    "n", "n", "n", "n", "n", null, null,
+  ] },
+];
+
+export const EMPTY_SHIFT_DATA: ShiftData = {
+  version: 2,
+  types: DEFAULT_SHIFT_TYPES,
+  days: {},
+  hourlyRate: 0,
+  overtimeMultiplier: 1.5,
+  patterns: DEFAULT_PATTERNS,
+};
+
+export const isAbsence = (t: Pick<ShiftType, "kind">) => t.kind === "absence";
+
+function isShiftType(t: unknown): t is ShiftType {
+  const o = t as ShiftType;
+  return !!o && typeof o.id === "string" && typeof o.name === "string" && typeof o.start === "string" && typeof o.end === "string";
+}
+
+function isPattern(p: unknown): p is ShiftPattern {
+  const o = p as ShiftPattern;
+  return !!o && typeof o.id === "string" && typeof o.name === "string" && Array.isArray(o.steps);
+}
+
+function toEntry(v: unknown): DayEntry | null {
+  // v1 trzymało w dniu sam identyfikator zmiany.
+  if (typeof v === "string") return { type: v };
+  const o = v as DayEntry;
+  if (!o || typeof o.type !== "string") return null;
+  const entry: DayEntry = { type: o.type };
+  if (typeof o.note === "string" && o.note.trim()) entry.note = o.note;
+  if (typeof o.extraMin === "number" && Number.isFinite(o.extraMin) && o.extraMin !== 0) entry.extraMin = Math.round(o.extraMin);
+  return entry;
+}
+
+/** Dowolna zapisana postać (v1, v2, śmieci) → poprawne `ShiftData`. */
+export function migrate(stored: unknown): ShiftData {
+  const s = (stored ?? {}) as Record<string, unknown>;
+  const days: Record<string, DayEntry> = {};
+  if (s.days && typeof s.days === "object") {
+    for (const [key, v] of Object.entries(s.days as Record<string, unknown>)) {
+      const entry = toEntry(v);
+      if (entry) days[key] = entry;
+    }
+  }
+  const num = (v: unknown, fallback: number) => (typeof v === "number" && Number.isFinite(v) ? v : fallback);
+  return {
+    version: 2,
+    types: Array.isArray(s.types) ? s.types.filter(isShiftType) : EMPTY_SHIFT_DATA.types,
+    days,
+    hourlyRate: Math.max(0, num(s.hourlyRate, 0)),
+    overtimeMultiplier: Math.max(1, num(s.overtimeMultiplier, EMPTY_SHIFT_DATA.overtimeMultiplier)),
+    patterns: Array.isArray(s.patterns) ? s.patterns.filter(isPattern) : EMPTY_SHIFT_DATA.patterns,
+  };
+}

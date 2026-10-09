@@ -4,7 +4,7 @@ import type { View } from "@/hooks/useFilteredNotes";
 
 describe("viewRoute", () => {
   it("round-trips every simple view", () => {
-    const views: View[] = ["notes", "today", "week", "archive", "reminders", "calendar", "widget", "trash"];
+    const views: View[] = ["notes", "today", "week", "archive", "reminders", "calendar", "shifts", "widget", "trash"];
     for (const v of views) expect(parseViewRoute(viewPath(v), "").view).toBe(v);
   });
 

@@ -43,7 +43,8 @@ export function AppHeader({
         hideHeader && !selectionMode ? "-translate-y-full" : "translate-y-0"
       )}
     >
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
+      {/* Stała wysokość: bez kontrolek widoku (kalendarz, grafik) nagłówek nie skacze przy przejściu. */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 min-h-[66px] sm:min-h-[70px] flex items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -83,6 +84,7 @@ export function AppHeader({
               {view === "calendar" && (
 "Kalendarz"
               )}
+              {view === "shifts" && "Grafik"}
               {view === "archive" && "Archiwum"}
               {view === "reminders" && "Przypomnienia"}
               {view === "trash" && "Kosz"}
@@ -99,7 +101,7 @@ export function AppHeader({
                 </span>
               )}
             </h1>
-            {view !== "calendar" && (
+            {view !== "calendar" && view !== "shifts" && (
               <p className="text-xs text-muted-foreground hidden sm:block">
                 {displayCount} {pluralPl(displayCount, ["notatka", "notatki", "notatek"])}
               </p>
@@ -107,7 +109,8 @@ export function AppHeader({
           </div>
         </div>
 
-        <SearchBar value={search} onChange={onSearchChange} className="hidden sm:block" />
+        {/* Grafik nie przeszukuje notatek — pole tylko by udawało, że działa. */}
+        {view !== "shifts" && <SearchBar value={search} onChange={onSearchChange} className="hidden sm:block" />}
 
         <div className="flex items-center gap-1">
           {!sidebarOpen && (
@@ -159,7 +162,7 @@ export function AppHeader({
           {/* W kalendarzu układ, sortowanie i filtry notatek nie robią nic —
               kalendarz rysuje własną projekcję terminów. Poza tym, że kontrolki
               tam kłamią, na 320 px rozpychały nagłówek w poziomie. */}
-          {view !== "calendar" && <ViewControls allLabels={allLabels} sortable={view !== "reminders"} />}
+          {view !== "calendar" && view !== "shifts" && <ViewControls allLabels={allLabels} sortable={view !== "reminders"} />}
         </div>
       </div>
     </header>

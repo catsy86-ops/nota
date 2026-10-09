@@ -146,13 +146,13 @@ async function exportNow() {
  */
 function RestoreBackup() {
   const [backup, setBackup] = useState<FullBackup | null>(null);
-  const [opts, setOpts] = useState<RestoreOptions>({ versions: true, settings: true, achievements: true });
+  const [opts, setOpts] = useState<RestoreOptions>({ versions: true, settings: true, achievements: true, shifts: true });
   const [busy, setBusy] = useState(false);
 
   async function pick() {
     try {
       setBackup(await pickFullBackup());
-      setOpts({ versions: true, settings: true, achievements: true });
+      setOpts({ versions: true, settings: true, achievements: true, shifts: true });
     } catch (err) {
       if (err instanceof Error && err.message !== "Nie wybrano pliku") {
         toast.error("Nie udało się wczytać backupu: " + err.message);
@@ -177,6 +177,7 @@ function RestoreBackup() {
     { key: "versions", label: `Historia wersji (${backup.versions?.length ?? 0})`, present: backup.versions !== undefined },
     { key: "settings", label: "Ustawienia (wygląd, motyw, efekty, potwierdzenia)", present: backup.settings !== undefined },
     { key: "achievements", label: "Odznaki i passa", present: backup.achievements !== undefined },
+    { key: "shifts", label: "Grafik zmian", present: backup.shifts !== undefined },
   ] : [];
 
   return (

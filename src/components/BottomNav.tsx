@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, LayoutGroup } from "framer-motion";
-import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History, CalendarRange, Moon, Sun } from "lucide-react";
+import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History, CalendarRange, BriefcaseBusiness, Moon, Sun } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { cn } from "@/lib/utils";
@@ -30,7 +30,7 @@ const slotsRight = [
 
 export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, dark = false, onToggleTheme }: BottomNavProps) {
   const [moreOpen, setMoreOpen] = useState(false);
-  const isMoreActive = ["archive", "trash", "calendar", "folder", "label"].includes(view);
+  const isMoreActive = ["archive", "trash", "calendar", "shifts", "folder", "label"].includes(view);
 
   return (
     <>
@@ -55,7 +55,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
                 transition={spring.snap}
                 onClick={onNew}
                 aria-label="Nowa notatka"
-                className="relative w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-glow-primary ring-4 ring-background"
+                className="relative w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-glow-primary ring-4 ring-background outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               >
                 <Plus className="w-6 h-6 relative z-10" />
               </motion.button>
@@ -84,6 +84,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             <SheetTile Icon={Archive} label="Archiwum" active={view === "archive"} onClick={() => { onGo("archive"); setMoreOpen(false); }} />
             <SheetTile Icon={Trash2} label="Kosz" active={view === "trash"} badge={trashCount || undefined} onClick={() => { onGo("trash"); setMoreOpen(false); }} />
             <SheetTile Icon={CalendarRange} label="Kalendarz" active={view === "calendar"} onClick={() => { onGo("calendar"); setMoreOpen(false); }} />
+            <SheetTile Icon={BriefcaseBusiness} label="Grafik" active={view === "shifts"} onClick={() => { onGo("shifts"); setMoreOpen(false); }} />
           </SheetGroup>
           <SheetGroup title="Narzędzia">
             {onOpenActions && <SheetTile Icon={History} label="Ostatnie akcje" onClick={() => { onOpenActions(); setMoreOpen(false); }} />}
@@ -156,7 +157,7 @@ function SheetTile({ Icon, label, onClick, badge, active = false }: { Icon: Reac
       <span className="w-10 h-10 rounded-xl bg-background flex items-center justify-center text-primary">
         <Icon className="w-5 h-5" />
       </span>
-      <span className="text-xs font-medium font-display text-foreground">{label}</span>
+      <span className="text-xs font-medium font-display leading-tight text-center text-foreground">{label}</span>
       {badge !== undefined && (
         <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-2xs font-semibold flex items-center justify-center">
           {badge}

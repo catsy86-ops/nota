@@ -69,6 +69,8 @@ export interface FullBackup {
   settings?: Record<string, string>;
   /** Surowy stan odznak i passy. */
   achievements?: string;
+  /** Surowy dokument Grafiku zmian (`lib/shifts`); kształt waliduje `migrate()` przy odczycie. */
+  shifts?: string;
 }
 
 const versionSchema = z.object({
@@ -89,4 +91,5 @@ export const fullBackupSchema = z.object({
   versions: z.array(versionSchema).optional().catch(undefined),
   settings: z.record(z.string()).optional().catch(undefined),
   achievements: z.string().optional().catch(undefined),
+  shifts: z.string().optional().catch(undefined),
 }) satisfies z.ZodType<FullBackup, z.ZodTypeDef, unknown>;

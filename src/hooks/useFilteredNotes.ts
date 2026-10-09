@@ -6,7 +6,7 @@ import { searchNotes } from "@/lib/searchNotes";
 import { getTodayRange, getWeekRange } from "@/lib/dateRanges";
 import { PRIORITY_ORDER } from "@/lib/notePriority";
 
-export type View = "notes" | "today" | "week" | "archive" | "label" | "reminders" | "calendar" | "folder" | "widget" | "trash";
+export type View = "notes" | "today" | "week" | "archive" | "label" | "reminders" | "calendar" | "shifts" | "folder" | "widget" | "trash";
 
 /** Liczba trafień wyszukiwania poza bieżącym widokiem. */
 export interface Elsewhere { notes: number; archive: number; trash: number }
@@ -76,7 +76,7 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
   return useMemo(() => {
     // Kalendarz rysuje własną projekcję (`expandOccurrences`) i nie korzysta
     // z siatki notatek — nie ma po co filtrować ani budować indeksu Fuse.
-    if (view === "calendar") return { displayNotes: [], pinned: [], others: [], elsewhere: NO_ELSEWHERE };
+    if (view === "calendar" || view === "shifts") return { displayNotes: [], pinned: [], others: [], elsewhere: NO_ELSEWHERE };
 
     const baseNotes = view === "archive"
       ? filterNotes(archivedNotes, { view, activeLabel, activeFolder, folders, search })

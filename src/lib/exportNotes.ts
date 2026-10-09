@@ -47,6 +47,7 @@ export async function buildFullBackup(): Promise<FullBackup> {
     versions: versionsStore.all(),
     settings: readKeys(SETTINGS_KEYS),
     achievements: readKeys([ACHIEVEMENTS_KEY])[ACHIEVEMENTS_KEY],
+    shifts: readKeys([SHIFTS_KEY])[SHIFTS_KEY],
   };
 }
 
@@ -82,6 +83,8 @@ export const SETTINGS_KEYS = [
   "kaczy.effectsSettings.v1", "kaczy.seasonTheme.v1",
 ];
 export const ACHIEVEMENTS_KEY = "kaczy.achievements.v1";
+/** Grafik zmian — klucz `shiftStore` z `lib/shifts/store.ts`. */
+export const SHIFTS_KEY = "kaczy:shifts";
 
 function readKeys(keys: string[]): Record<string, string> {
   const out: Record<string, string> = {};
@@ -121,7 +124,7 @@ export function parseFullBackup(text: string): FullBackup {
   return fullBackupSchema.parse(raw);
 }
 
-export interface RestoreOptions { versions: boolean; settings: boolean; achievements: boolean }
+export interface RestoreOptions { versions: boolean; settings: boolean; achievements: boolean; shifts: boolean }
 
 /**
  * Przywraca backup: notatki, foldery i etykiety zawsze (destrukcyjnie),
@@ -143,6 +146,7 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
     for (const k of SETTINGS_KEYS) if (k in backup.settings) writes[k] = backup.settings[k];
   }
   if (opts.achievements && backup.achievements !== undefined) writes[ACHIEVEMENTS_KEY] = backup.achievements;
+  if (opts.shifts && backup.shifts !== undefined) writes[SHIFTS_KEY] = backup.shifts;
   for (const [k, v] of Object.entries(writes)) {
     try { localStorage.setItem(k, v); } catch (err) { logDiag("warn", "backup", `cannot restore ${k}`, err); }
   }
