@@ -10,14 +10,6 @@ import { installGlobalDiagHandlers } from "./lib/diagnostics";
 
 installGlobalDiagHandlers();
 
-// TYMCZASOWE: pomiar kosztu rozmycia tła na telefonie. `?noblur` wyłącza, `?noblur=0` przywraca;
-// wybór trwa do zamknięcia karty, bo nawigacja w aplikacji gubi parametr.
-try {
-  const param = new URLSearchParams(location.search).get("noblur");
-  if (param !== null) sessionStorage.setItem("kaczy:noblur", param === "0" ? "0" : "1");
-  if (sessionStorage.getItem("kaczy:noblur") === "1") document.documentElement.classList.add("noblur");
-} catch { /* bez sessionStorage — zostaje rozmycie */ }
-
 createRoot(document.getElementById("root")!).render(<App />);
 
 registerServiceWorker();
