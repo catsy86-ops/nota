@@ -132,26 +132,28 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                     className={cn(
                       "relative w-full flex flex-col items-stretch min-h-[3.75rem] sm:min-h-[5rem] p-1 rounded-xl border text-left transition-colors outline-none",
                       "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-                      inMonth ? "border-border/50 bg-card/40 dark:border-transparent dark:bg-card/60 [@media(hover:hover)]:hover:border-primary/40" : "border-transparent opacity-40",
+                      inMonth ? "border-border/50 bg-card/40 dark:border-transparent dark:bg-card/60 [@media(hover:hover)]:hover:border-primary/40"
+                        // Szary tekst zamiast przezroczystości — czerwone święto przy opacity 40% znikało w ciemnym motywie.
+                        : "border-transparent text-muted-foreground",
                     )}
                   >
                     <span className="flex items-center justify-between">
                       <span className={cn("text-xs font-medium tabular-nums w-5 h-5 flex items-center justify-center rounded-full",
-                        isToday ? "bg-primary text-primary-foreground" : holiday && "text-destructive font-bold")}>
+                        isToday ? "bg-primary text-primary-foreground" : holiday && cn("font-bold", inMonth && "text-destructive"))}>
                         {format(day, "d")}
                       </span>
                       <span className="flex gap-0.5 mr-0.5" aria-hidden>
                         {/* Na telefonie nazwa święta i godziny się nie mieszczą — zostaje znacznik, nie sam kolor. */}
-                        {holiday && <span className="sm:hidden w-1.5 h-1.5 rounded-full bg-destructive" />}
+                        {holiday && <span className={cn("sm:hidden w-1.5 h-1.5 rounded-full", inMonth ? "bg-destructive" : "bg-muted-foreground")} />}
                         {entry?.extraMin ? <span className="sm:hidden text-[0.5625rem] leading-none font-bold">{entry.extraMin > 0 ? "↑" : "↓"}</span> : null}
                         {entry?.note && <span className="w-1.5 h-1.5 rounded-full bg-foreground/50" />}
                       </span>
                     </span>
-                    {holiday && <span aria-hidden className="hidden sm:block text-2xs leading-tight text-destructive/80 truncate">{holiday}</span>}
+                    {holiday && <span aria-hidden className={cn("hidden sm:block text-2xs leading-tight truncate", inMonth && "text-destructive/80")}>{holiday}</span>}
                     {type && (
                       <span
                         aria-hidden
-                        className={cn("mt-auto rounded-lg px-1 py-0.5 text-center leading-tight", absence ? "border-2 border-dashed" : "shadow-sm")}
+                        className={cn("mt-auto rounded-lg px-1 py-0.5 text-center leading-tight", absence ? "border-2 border-dashed" : "shadow-sm", !inMonth && "opacity-50")}
                         style={absence ? { borderColor: type.color, color: shiftTextOnCard(type.color) } : { backgroundColor: type.color, color: shiftInk(type.color) }}
                       >
                         <span className="block font-display font-bold text-sm">{type.short}</span>
