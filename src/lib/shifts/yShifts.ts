@@ -1,5 +1,5 @@
 import * as Y from "yjs";
-import { DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, type DayEntry, type SettlementMonths, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
+import { DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, shiftHours, type DayEntry, type SettlementMonths, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
 
 /**
  * Grafik w Y.Doc — tym samym, który niosą synchronizacja P2P i plik, więc
@@ -130,8 +130,8 @@ export function createYShifts(doc: Y.Doc) {
       const before = get().types.find((t) => t.id === type.id);
       ensureTypes();
       const prev = types.get(type.id);
-      if (before && (before.start !== type.start || before.end !== type.end || before.breakMin !== type.breakMin)) {
-        const hours = { start: before.start, end: before.end, breakMin: before.breakMin };
+      if (before && (before.start !== type.start || before.end !== type.end || before.breakMin !== type.breakMin || before.breakAt !== type.breakAt)) {
+        const hours = shiftHours(before);
         days.forEach((e, k) => { if (e.type === type.id && k < todayKey && !e.hours) days.set(k, { ...e, hours }); });
       }
       types.set(type.id, { ...type, order: prev?.order ?? type.order ?? nextOrder(types) });

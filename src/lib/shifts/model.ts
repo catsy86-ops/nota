@@ -23,6 +23,11 @@ export interface ShiftType {
   end: string;
   /** Niepłatna przerwa w minutach. */
   breakMin: number;
+  /**
+   * Początek przerwy „HH:MM”. Brak = przerwa nieumiejscowiona, liczona tak,
+   * jakby skracała koniec zmiany.
+   */
+  breakAt?: string;
   /** Stawka za godzinę tej zmiany; brak = stawka domyślna. */
   rate?: number;
   /**
@@ -54,7 +59,7 @@ export interface DayEntry {
   hours?: ShiftHours;
 }
 
-export type ShiftHours = Pick<ShiftType, "start" | "end" | "breakMin">;
+export type ShiftHours = Pick<ShiftType, "start" | "end" | "breakMin" | "breakAt">;
 
 /** Rodzaj zmiany z godzinami, które obowiązywały w danym dniu. */
 export function dayType(type: ShiftType, entry: Pick<DayEntry, "hours"> | undefined): ShiftType {
@@ -65,8 +70,14 @@ const HM = /^\d{1,2}:\d{2}$/;
 const isHours = (h: unknown): h is ShiftHours => {
   const o = h as ShiftHours;
   return !!o && typeof o.start === "string" && HM.test(o.start) && typeof o.end === "string" && HM.test(o.end)
-    && typeof o.breakMin === "number" && Number.isFinite(o.breakMin) && o.breakMin >= 0;
+    && typeof o.breakMin === "number" && Number.isFinite(o.breakMin) && o.breakMin >= 0
+    && (o.breakAt === undefined || (typeof o.breakAt === "string" && HM.test(o.breakAt)));
 };
+
+/** Godziny rodzaju do zapamiętania w dniu — `breakAt` tylko, gdy jest. */
+export function shiftHours(t: ShiftHours): ShiftHours {
+  return t.breakAt ? { start: t.start, end: t.end, breakMin: t.breakMin, breakAt: t.breakAt } : { start: t.start, end: t.end, breakMin: t.breakMin };
+}
 
 /** Cykl zmian powtarzany od wybranej daty; `null` = dzień wolny. */
 export interface ShiftPattern {
@@ -164,6 +175,7 @@ function cleanType(t: ShiftType): ShiftType {
     kind: t.kind === "absence" ? "absence" : "work",
   };
   if (!(typeof t.rate === "number" && Number.isFinite(t.rate) && t.rate > 0)) delete out.rate;
+  if (!(typeof t.breakAt === "string" && HM.test(t.breakAt))) delete out.breakAt;
   return out;
 }
 
@@ -186,7 +198,7 @@ function toEntry(v: unknown): DayEntry | null {
   else delete entry.extraMin;
   if (o.offSchedule === true) entry.offSchedule = true;
   else delete entry.offSchedule;
-  if (isHours(o.hours)) entry.hours = { start: o.hours.start, end: o.hours.end, breakMin: o.hours.breakMin };
+  if (isHours(o.hours)) entry.hours = shiftHours(o.hours);
   else delete entry.hours;
   return entry;
 }

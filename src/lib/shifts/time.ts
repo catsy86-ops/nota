@@ -51,23 +51,67 @@ export function dstShiftMinutes(type: Pick<ShiftType, "start" | "end">, dayKey: 
   return Math.round((end - start) / 60_000) - (span.to + extraMin - span.from);
 }
 
+type BreakFields = Pick<ShiftType, "start" | "end" | "breakMin" | "breakAt">;
+
+/**
+ * Początek przerwy w minutach od początku zmiany; `null`, gdy przerwa nie ma
+ * godziny albo nie mieści się w zmianie — wtedy liczymy ją jak dotąd, na końcu.
+ */
+export function breakOffset(type: BreakFields): number | null {
+  if (!type.breakAt || !(type.breakMin > 0)) return null;
+  const span = shiftSpan(type);
+  let at = parseHm(type.breakAt);
+  if (!span || Number.isNaN(at)) return null;
+  if (at < span.from) at += DAY_MIN;
+  const off = at - span.from;
+  return off + type.breakMin <= span.to - span.from ? off : null;
+}
+
+/**
+ * Odcinek [a, z) minut pracy od początku zmiany → odcinki czasu ściennego
+ * (minuty od początku zmiany). Przerwa w środku rozcina odcinek i przesuwa
+ * resztę o swoją długość.
+ */
+export function workToWall(type: BreakFields, a: number, z: number): [number, number][] {
+  const b = breakOffset(type);
+  if (b === null || z <= b) return [[a, z]];
+  if (a >= b) return [[a + type.breakMin, z + type.breakMin]];
+  return [[a, b], [b + type.breakMin, z + type.breakMin]];
+}
+
+/** Minuty pracy od początku zmiany do chwili `wall` (minuty ścienne od początku zmiany). */
+export function wallToWork(type: BreakFields, wall: number): number {
+  const b = breakOffset(type);
+  if (b === null || wall <= b) return wall;
+  return Math.max(b, wall - type.breakMin);
+}
+
 /** Jak `entryMinutes`, ale z rzeczywistą długością doby w dniu zmiany czasu. */
 export function entryMinutesOn(type: Pick<ShiftType, "start" | "end" | "breakMin">, entry: Pick<DayEntry, "extraMin"> | undefined, dayKey: string): number {
   return Math.max(0, entryMinutes(type, entry) + dstShiftMinutes(type, dayKey, entry?.extraMin ?? 0));
 }
 
-/** Minuty zmiany w porze nocnej. Przerwy nie odejmujemy — nie wiemy, kiedy była. */
-export function nightMinutes(type: Pick<ShiftType, "start" | "end">): number {
-  const span = shiftSpan(type);
-  if (!span) return 0;
-  // Zmiana trwa najwyżej dobę, więc wystarczą trzy kolejne okna nocne.
+/** Minuty odcinka [from, to) (od północy dnia startu, najwyżej dwie doby) w porze nocnej. */
+function nightOverlap(from: number, to: number): number {
   let total = 0;
   for (let k = -1; k <= 1; k++) {
     const a = NIGHT_START + k * DAY_MIN;
     const b = NIGHT_END + (k + 1) * DAY_MIN;
-    total += Math.max(0, Math.min(span.to, b) - Math.max(span.from, a));
+    total += Math.max(0, Math.min(to, b) - Math.max(from, a));
   }
   return total;
+}
+
+/**
+ * Minuty zmiany w porze nocnej, bez przerwy, jeśli ma godzinę (`breakAt`).
+ * Przerwy bez godziny nie odejmujemy — nie wiemy, kiedy była.
+ */
+export function nightMinutes(type: Pick<ShiftType, "start" | "end"> & Partial<Pick<ShiftType, "breakMin" | "breakAt">>): number {
+  const span = shiftSpan(type);
+  if (!span) return 0;
+  const b = breakOffset({ breakMin: 0, ...type });
+  const inBreak = b === null ? 0 : nightOverlap(span.from + b, span.from + b + (type.breakMin ?? 0));
+  return nightOverlap(span.from, span.to) - inBreak;
 }
 
 /** 510 → „8 h 30 min”, 480 → „8 h”, 45 → „45 min”, −30 → „−30 min”. */

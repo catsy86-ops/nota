@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, applyPattern, currentAndNextShift, daysUntilMonthEnd, easterSunday,
   entryMinutes, formatDuration, formatHoursShort, holidayName, migrate, monthSummary, nightMinutes, parseHm,
-  shiftMinutes, workNormMinutes, buildShiftsIcs, shortRests, settlementPeriod, isNormDay, cancelledShiftDays, exportedAfter, exportableShiftDays, SHIFT_COLORS, shiftInk, contrastRatio, dstShiftMinutes, restoreShifts, setDayShift, shiftStore, type ShiftData,
+  shiftMinutes, workNormMinutes, breakOffset, buildShiftsIcs, shortRests, settlementPeriod, isNormDay, cancelledShiftDays, exportedAfter, exportableShiftDays, SHIFT_COLORS, shiftInk, contrastRatio, dstShiftMinutes, restoreShifts, setDayShift, shiftStore, type ShiftData,
 } from "./index";
 
 const [day, afternoon, night, leave] = DEFAULT_SHIFT_TYPES;
@@ -35,6 +35,17 @@ describe("czas zmian", () => {
     expect(nightMinutes(night)).toBe(480);
     expect(nightMinutes({ start: "04:00", end: "12:00" })).toBe(120);
     expect(nightMinutes({ start: "19:00", end: "07:00" })).toBe(480);
+  });
+
+  it("przerwa z godziną odejmuje się od pory nocnej, bez godziny — nie", () => {
+    expect(nightMinutes({ ...night, breakMin: 30 })).toBe(480);
+    expect(nightMinutes({ ...night, breakMin: 30, breakAt: "02:00" })).toBe(450);
+    expect(nightMinutes({ start: "18:00", end: "06:00", breakMin: 60, breakAt: "20:00" })).toBe(480);
+    // Przerwa poza zmianą jest ignorowana.
+    expect(nightMinutes({ ...night, breakMin: 30, breakAt: "05:45" })).toBe(480);
+    expect(breakOffset({ ...night, breakMin: 30, breakAt: "02:00" })).toBe(240);
+    expect(breakOffset({ ...night, breakMin: 30, breakAt: "05:45" })).toBeNull();
+    expect(migrate({ types: [{ ...night, breakAt: "zła" }] }).types[0].breakAt).toBeUndefined();
   });
 
   it("formatuje czas", () => {
@@ -139,6 +150,24 @@ describe("podsumowanie miesiąca", () => {
     // Codziennie ta sama zmiana — doby się nie nakładają.
     const same = monthSummary(data({ days: { "2026-10-05": { type: "d" }, "2026-10-06": { type: "d" } } }), 2026, 9);
     expect(same.dailyOvertimeMinutes).toBe(0);
+  });
+
+  it("przerwa z godziną przesuwa nadgodziny w czasie", () => {
+    // 14:00–23:00 z godzinną przerwą: 8 h pracy, 0 nadgodzin.
+    const late = { ...afternoon, id: "x", end: "23:00", breakMin: 60 };
+    const at = (t: typeof late) => monthSummary(data({ types: [t], hourlyRate: 60, days: { "2026-10-05": { type: "x", extraMin: 60 } } }), 2026, 9);
+    // Przerwa bez godziny skraca koniec: nadgodzina to 22–23 → w nocy.
+    expect(at(late).overtime100Minutes).toBe(60);
+    // Przerwa o 22:00 — praca kończy się o 24:00, nadgodzina 23–24 i tak w nocy.
+    expect(at({ ...late, breakAt: "22:00" }).overtime100Minutes).toBe(60);
+    // Przerwa o 18:00 — tak samo: ostatnia godzina pracy to 23–24.
+    expect(at({ ...late, breakAt: "18:00" }).overtime100Minutes).toBe(60);
+    // Doba pracownicza: P pon. 14–22 i ranna wt. 6–14 z przerwą 9–10 — w dobie poniedziałkowej
+    // wtorek wnosi 6:00–14:00 minus przerwę = 7 h nadgodzin; bez godziny przerwy — 8 h.
+    const morning = { ...day, id: "m", end: "15:00", breakMin: 60 };
+    const doba = (t: typeof morning) => monthSummary(data({ types: [afternoon, t], days: { "2026-10-05": { type: "p" }, "2026-10-06": { type: "m" } } }), 2026, 9).dailyOvertimeMinutes;
+    expect(doba({ ...morning, breakAt: "09:00" })).toBe(7 * 60);
+    expect(doba(morning)).toBe(8 * 60);
   });
 
   it("w systemie równoważnym dwunastki z grafiku nie są nadgodzinami", () => {

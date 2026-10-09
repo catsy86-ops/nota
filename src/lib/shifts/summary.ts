@@ -1,5 +1,5 @@
 import { dayType, isAbsence, type DayEntry, type SettlementMonths, type ShiftData, type ShiftType } from "./model";
-import { dstShiftMinutes, entryMinutesOn, nightMinutes, shiftMinutes, shiftSpan } from "./time";
+import { dstShiftMinutes, entryMinutesOn, nightMinutes, shiftMinutes, shiftSpan, wallToWork, workToWall } from "./time";
 import { holidayName, isNormDay, workNormMinutes } from "./holidays";
 
 export interface ShiftTypeTotal {
@@ -69,6 +69,8 @@ interface WorkSpan {
   len: number;
   /** Dobowy limit tej zmiany w minutach. */
   limit: number;
+  /** Godziny zmiany tego dnia — do umieszczenia przerwy w czasie. */
+  type: ShiftType;
 }
 
 /** Odcinek nadgodzin dobowych: zmiana, do której należy, i czas ścienny (ms). */
@@ -86,8 +88,8 @@ export interface OvertimeSpan {
  * popołudniówka 14–22 i ranna 6–14 następnego dnia to 8 h nadgodzin —
  * mimo że każda zmiana ma tylko 8 h. Minuty uznane za nadgodziny w jednej
  * dobie nie liczą się już w następnej. Nadwyżka własnej zmiany to jej
- * koniec, a wniesiona do cudzej doby — początek następnej zmiany. Przerwy
- * nie umiemy umieścić w czasie, więc zmiana jest liczona jako ciągła.
+ * koniec, a wniesiona do cudzej doby — początek następnej zmiany. Przerwa
+ * z godziną (`breakAt`) rozcina zmianę; bez godziny skraca jej koniec.
  */
 export function dailyOvertimeSpans(data: ShiftData): OvertimeSpan[] {
   const typesById = new Map(data.types.map((t) => [t.id, t]));
@@ -102,7 +104,7 @@ export function dailyOvertimeSpans(data: ShiftData): OvertimeSpan[] {
     const planned = shiftMinutes(type);
     // Równoważny: norma dobowa to godziny z grafiku, najwyżej 12 h; podstawowy: 8 h.
     const limit = data.workSystem === "equivalent" ? Math.min(12 * 60, Math.max(8 * 60, planned)) : 8 * 60;
-    spans.push({ key, start: new Date(y, m - 1, d, 0, span.from).getTime(), len: entryMinutesOn(type, entry, key), limit, rate: type.rate ?? data.hourlyRate });
+    spans.push({ key, start: new Date(y, m - 1, d, 0, span.from).getTime(), len: entryMinutesOn(type, entry, key), limit, type, rate: type.rate ?? data.hourlyRate });
   }
   spans.sort((a, b) => a.start - b.start);
 
@@ -110,15 +112,17 @@ export function dailyOvertimeSpans(data: ShiftData): OvertimeSpan[] {
   const headOt = new Array<number>(spans.length).fill(0);
   const result: OvertimeSpan[] = [];
   const push = (i: number, fromMin: number, minutes: number) => {
-    const from = spans[i].start + fromMin * 60_000;
-    result.push({ key: spans[i].key, from, to: from + minutes * 60_000, rate: spans[i].rate });
+    const s = spans[i];
+    for (const [a, z] of workToWall(s.type, fromMin, fromMin + minutes)) {
+      result.push({ key: s.key, from: s.start + a * 60_000, to: s.start + z * 60_000, rate: s.rate });
+    }
   };
   for (let i = 0; i < spans.length; i++) {
     const own = Math.max(0, spans[i].len - headOt[i]);
     const dobaEnd = spans[i].start + DAY_MS;
     const later: { j: number; counted: number }[] = [];
     for (let j = i + 1; j < spans.length && spans[j].start < dobaEnd; j++) {
-      const inDoba = Math.min(spans[j].len, (dobaEnd - spans[j].start) / 60_000);
+      const inDoba = Math.min(spans[j].len, wallToWork(spans[j].type, (dobaEnd - spans[j].start) / 60_000));
       later.push({ j, counted: Math.max(0, inDoba - headOt[j]) });
     }
     let over = own + later.reduce((sum, l) => sum + l.counted, 0) - spans[i].limit;

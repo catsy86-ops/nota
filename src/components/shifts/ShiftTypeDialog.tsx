@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SHIFT_COLORS, SHIFT_COLOR_NAMES, deleteShiftType, formatDuration, newShiftId, restoreShiftType, saveShiftType, shiftMinutes, shiftSpan, shiftStore, type ShiftType } from "@/lib/shifts";
+import { SHIFT_COLORS, SHIFT_COLOR_NAMES, breakOffset, deleteShiftType, formatDuration, newShiftId, restoreShiftType, saveShiftType, shiftMinutes, shiftSpan, shiftStore, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -41,7 +41,10 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
   const [confirmDays, setConfirmDays] = useState<number | null>(null);
 
   const patch = (p: Partial<ShiftType>) => setDraft((d) => ({ ...d, ...p }));
-  const valid = draft.name.trim() !== "" && shiftSpan(draft) !== null;
+  // Godzina przerwy liczy się tylko przy przerwie dłuższej niż 0 i musi mieścić się w zmianie.
+  const placedBreak = draft.kind !== "absence" && draft.breakMin > 0 && !!draft.breakAt;
+  const breakOutside = placedBreak && breakOffset(draft) === null;
+  const valid = draft.name.trim() !== "" && shiftSpan(draft) !== null && !breakOutside;
   const parsedRate = parseFloat(rate.replace(",", "."));
   const absence = draft.kind === "absence";
 
@@ -68,6 +71,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
       name: draft.name.trim(),
       short: (draft.short.trim() || draft.name.trim()[0]).slice(0, 3).toUpperCase(),
       breakMin: Math.max(0, Math.round(draft.breakMin) || 0),
+      breakAt: placedBreak ? draft.breakAt : undefined,
       kind: draft.kind ?? "work",
       rate: !absence && Number.isFinite(parsedRate) && parsedRate > 0 ? parsedRate : undefined,
     };
@@ -125,10 +129,23 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
             <span id="shift-break-unit" className="sr-only">minut</span>
           </div>
         </div>
+        {!absence && draft.breakMin > 0 && (
+          <div className="space-y-1.5 -mt-1">
+            <Label htmlFor="shift-break-at">Przerwa od (opcjonalnie)</Label>
+            <Input id="shift-break-at" type="time" value={draft.breakAt ?? ""} className="w-32"
+              onChange={(e) => patch({ breakAt: e.target.value || undefined })}
+              aria-invalid={breakOutside} aria-describedby="shift-break-at-hint" />
+            <p id="shift-break-at-hint" className={cn("text-xs", breakOutside ? "text-destructive" : "text-muted-foreground")}>
+              {breakOutside
+                ? "Przerwa musi się zmieścić w godzinach zmiany."
+                : "Z godziną przerwa nie liczy się do pory nocnej i dokładniej wyznacza nadgodziny. Bez niej skraca koniec zmiany."}
+            </p>
+          </div>
+        )}
         <p className="text-sm text-muted-foreground">
           {absence ? "Obniża normę o:" : "Czas pracy:"} <span className="font-semibold text-foreground">{formatDuration(shiftMinutes(draft))}</span>
         </p>
-        {type && (type.start !== draft.start || type.end !== draft.end || type.breakMin !== draft.breakMin) && (
+        {type && (type.start !== draft.start || type.end !== draft.end || type.breakMin !== draft.breakMin || (type.breakAt ?? "") !== (placedBreak ? draft.breakAt : "")) && (
           <p className="text-xs text-muted-foreground -mt-2">Nowe godziny od dziś — dni wcześniejsze zachowają dotychczasowe.</p>
         )}
         {!absence && <div className="space-y-1.5">
