@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { yjsStore } from "@/lib/yjsStore";
 import { logDiag } from "@/lib/diagnostics";
-import { migrate, type DayEntry, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
+import { migrate, type DayEntry, type SettlementMonths, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
 import { applyPattern } from "./pattern";
 import { createYShifts, type DeletedShiftType } from "./yShifts";
 
@@ -111,6 +111,10 @@ export function setHourlyRate(rate: number): void {
 
 export function setWorkSystem(workSystem: WorkSystem): void {
   yShifts.setMeta("workSystem", workSystem);
+}
+
+export function setSettlementMonths(months: SettlementMonths): void {
+  yShifts.setMeta("settlementMonths", months);
 }
 
 /** Losowe id — `Date.now()` z dwóch telefonów w tej samej milisekundzie dałby kolizję po scaleniu. */

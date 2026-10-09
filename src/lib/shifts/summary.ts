@@ -1,4 +1,4 @@
-import { isAbsence, type DayEntry, type ShiftData, type ShiftType } from "./model";
+import { isAbsence, type DayEntry, type SettlementMonths, type ShiftData, type ShiftType } from "./model";
 import { dstShiftMinutes, entryMinutesOn, nightMinutes, shiftMinutes, shiftSpan } from "./time";
 import { holidayName, isNormDay, workNormMinutes } from "./holidays";
 
@@ -27,6 +27,20 @@ export interface MonthSummary {
   byType: ShiftTypeTotal[];
   /** Zmiany tego miesiąca zaczynające się po odpoczynku krótszym niż 11 h. */
   shortRests: ShortRest[];
+  /** Okres rozliczeniowy dłuższy niż miesiąc; `null` przy miesięcznym. */
+  period: PeriodSummary | null;
+}
+
+export interface PeriodSummary {
+  year: number;
+  startMonth: number;
+  months: SettlementMonths;
+  /** Wymiar całego okresu po odjęciu nieobecności. */
+  normMinutes: number;
+  /** Przepracowane od początku okresu do tego miesiąca włącznie. */
+  minutes: number;
+  /** Ostatni miesiąc okresu — wtedy liczy się przekroczenie normy. */
+  isLast: boolean;
 }
 
 export interface ShortRest {
@@ -167,23 +181,25 @@ export function shortRests(data: ShiftData): ShortRest[] {
   return out;
 }
 
-/**
- * Podsumowanie miesiąca (`month` od 0). Dzień należy do miesiąca, w którym
- * zmiana się zaczęła. Nadgodziny = dobowe (`dailyOvertimeByDay`) plus
- * przekroczenie normy miesiąca przez pozostałe godziny (art. 151 § 1 KP,
- * okres rozliczeniowy = miesiąc). Dodatek (art. 151¹ KP) do stawki, którą
- * każda godzina dostała już w podstawie: 100% w nocy, w niedzielę i święto
- * oraz za przekroczenie normy okresu, 50% za pozostałe nadgodziny dobowe.
- */
-export function monthSummary(data: ShiftData, year: number, month: number): MonthSummary {
-  const prefix = `${year}-${String(month + 1).padStart(2, "0")}-`;
+interface MonthCore {
+  minutes: number;
+  night: number;
+  base: number;
+  daysWorked: number;
+  absenceDays: number;
+  normMinutes: number;
+  totals: Map<string, ShiftTypeTotal>;
+  dailyOvertime: number;
+  daily100: number;
+  dailyPremium: number;
+}
+
+const monthPrefix = (year: number, month: number) => `${year}-${String(month + 1).padStart(2, "0")}-`;
+
+function monthCore(data: ShiftData, year: number, month: number, otSpans: OvertimeSpan[]): MonthCore {
+  const prefix = monthPrefix(year, month);
   const typesById = new Map(data.types.map((t) => [t.id, t]));
-  const totals = new Map<string, ShiftTypeTotal>();
-  let minutes = 0;
-  let night = 0;
-  let base = 0;
-  let daysWorked = 0;
-  let absenceDays = 0;
+  const c: MonthCore = { minutes: 0, night: 0, base: 0, daysWorked: 0, absenceDays: 0, normMinutes: 0, totals: new Map(), dailyOvertime: 0, daily100: 0, dailyPremium: 0 };
   let absenceMinutes = 0;
 
   for (const [key, entry] of Object.entries(data.days)) {
@@ -191,54 +207,84 @@ export function monthSummary(data: ShiftData, year: number, month: number): Mont
     const type = typesById.get(entry.type);
     if (!type) continue;
     const m = entryMinutesOn(type, entry, key);
-    const t = totals.get(type.id) ?? { type, count: 0, minutes: 0 };
+    const t = c.totals.get(type.id) ?? { type, count: 0, minutes: 0 };
     t.count += 1;
     t.minutes += m;
-    totals.set(type.id, t);
+    c.totals.set(type.id, t);
     if (isAbsence(type)) {
-      absenceDays += 1;
+      c.absenceDays += 1;
       // L4 czy urlop w sobotę, niedzielę albo święto nie zmniejsza normy — tego dnia jej nie ma.
       if (isNormDay(key)) absenceMinutes += m;
       continue;
     }
-    daysWorked += 1;
-    minutes += m;
+    c.daysWorked += 1;
+    c.minutes += m;
     const nightPlan = nightMinutes(type);
     // Zmiana czasu wypada o 2–3 w nocy, więc dodatkowa/brakująca godzina jest godziną nocną.
-    night += nightPlan > 0 ? Math.max(0, nightPlan + dstShiftMinutes(type, key)) : 0;
-    base += (m / 60) * (type.rate ?? data.hourlyRate);
+    c.night += nightPlan > 0 ? Math.max(0, nightPlan + dstShiftMinutes(type, key)) : 0;
+    c.base += (m / 60) * (type.rate ?? data.hourlyRate);
   }
 
-  const normMinutes = Math.max(0, workNormMinutes(year, month) - absenceMinutes);
-  let dailyOvertimeMinutes = 0;
-  let daily100 = 0;
-  let premium = 0;
-  for (const span of dailyOvertimeSpans(data)) {
+  c.normMinutes = Math.max(0, workNormMinutes(year, month) - absenceMinutes);
+  for (const span of otSpans) {
     if (!span.key.startsWith(prefix)) continue;
     const all = (span.to - span.from) / 60_000;
     const full = premium100Minutes(span);
-    dailyOvertimeMinutes += all;
-    daily100 += full;
-    premium += (span.rate / 60) * (full + (all - full) * 0.5);
+    c.dailyOvertime += all;
+    c.daily100 += full;
+    c.dailyPremium += (span.rate / 60) * (full + (all - full) * 0.5);
   }
+  return c;
+}
+
+/** Okres rozliczeniowy, w który wpada miesiąc (`month` od 0); okresy liczone od stycznia. */
+export function settlementPeriod(year: number, month: number, months: SettlementMonths): { year: number; startMonth: number; months: SettlementMonths } {
+  return { year, startMonth: Math.floor(month / months) * months, months };
+}
+
+/**
+ * Podsumowanie miesiąca (`month` od 0). Dzień należy do miesiąca, w którym
+ * zmiana się zaczęła. Nadgodziny = dobowe (`dailyOvertimeSpans`) plus
+ * przekroczenie normy okresu rozliczeniowego przez pozostałe godziny
+ * (art. 151 § 1 KP) — to drugie wykazane w ostatnim miesiącu okresu, bo
+ * dopiero wtedy wiadomo, czy norma została przekroczona. Dodatek
+ * (art. 151¹ KP) do stawki, którą każda godzina dostała już w podstawie:
+ * 100% w nocy, w niedzielę i święto oraz za przekroczenie normy okresu,
+ * 50% za pozostałe nadgodziny dobowe.
+ */
+export function monthSummary(data: ShiftData, year: number, month: number): MonthSummary {
+  const otSpans = dailyOvertimeSpans(data);
+  const c = monthCore(data, year, month, otSpans);
+  const p = settlementPeriod(year, month, data.settlementMonths);
+  const cores = Array.from({ length: p.months }, (_, i) => (p.startMonth + i === month ? c : monthCore(data, year, p.startMonth + i, otSpans)));
+  const sum = (f: (m: MonthCore) => number, upTo: number = p.months) => cores.slice(0, upTo).reduce((acc, m) => acc + f(m), 0);
+  const periodNorm = sum((m) => m.normMinutes);
+  const isLast = month === p.startMonth + p.months - 1;
   // Godziny już uznane za nadgodziny dobowe nie liczą się drugi raz do normy.
-  const periodOvertime = Math.max(0, minutes - dailyOvertimeMinutes - normMinutes);
-  const overtimeMinutes = dailyOvertimeMinutes + periodOvertime;
+  const periodOvertime = isLast ? Math.max(0, sum((m) => m.minutes - m.dailyOvertime) - periodNorm) : 0;
   // Przekroczenie normy okresu zawsze 100% (art. 151¹ § 2 KP).
-  premium += (periodOvertime / 60) * data.hourlyRate;
+  const premium = c.dailyPremium + (periodOvertime / 60) * data.hourlyRate;
+  const prefix = monthPrefix(year, month);
 
   return {
-    daysWorked,
-    minutes,
-    nightMinutes: night,
-    normMinutes,
-    overtimeMinutes,
-    dailyOvertimeMinutes,
-    overtime100Minutes: daily100 + periodOvertime,
-    absenceDays,
-    earnings: round2(base + premium),
-    byType: data.types.map((t) => totals.get(t.id)).filter((t): t is ShiftTypeTotal => !!t),
+    daysWorked: c.daysWorked,
+    minutes: c.minutes,
+    nightMinutes: c.night,
+    normMinutes: c.normMinutes,
+    overtimeMinutes: c.dailyOvertime + periodOvertime,
+    dailyOvertimeMinutes: c.dailyOvertime,
+    overtime100Minutes: c.daily100 + periodOvertime,
+    absenceDays: c.absenceDays,
+    earnings: round2(c.base + premium),
+    byType: data.types.map((t) => c.totals.get(t.id)).filter((t): t is ShiftTypeTotal => !!t),
     shortRests: shortRests(data).filter((r) => r.dayKey.startsWith(prefix)),
+    period: p.months === 1 ? null : {
+      ...p,
+      normMinutes: periodNorm,
+      // Do bieżącego miesiąca włącznie — tyle, ile już wiadomo.
+      minutes: sum((m) => m.minutes, month - p.startMonth + 1),
+      isLast,
+    },
   };
 }
 

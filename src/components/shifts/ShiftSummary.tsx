@@ -3,14 +3,24 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { AlertTriangle } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
-import { formatDuration, formatHoursShort, formatMoney, setHourlyRate, setWorkSystem, type MonthSummary, type WorkSystem } from "@/lib/shifts";
+import { SETTLEMENT_MONTHS, formatDuration, formatHoursShort, formatMoney, setHourlyRate, setSettlementMonths, setWorkSystem, type MonthSummary, type PeriodSummary, type SettlementMonths, type WorkSystem } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
 interface ShiftSummaryProps {
   summary: MonthSummary;
   hourlyRate: number;
   workSystem: WorkSystem;
+  settlementMonths: SettlementMonths;
 }
+
+const PERIOD_LABELS: Record<SettlementMonths, string> = {
+  1: "1 miesiąc", 2: "2 miesiące", 3: "3 miesiące (kwartał)", 4: "4 miesiące", 6: "6 miesięcy", 12: "12 miesięcy",
+};
+
+/** Miejscownik („w marcu”) — date-fns go nie zna. */
+const IN_MONTH = ["styczniu", "lutym", "marcu", "kwietniu", "maju", "czerwcu", "lipcu", "sierpniu", "wrześniu", "październiku", "listopadzie", "grudniu"];
+
+const monthName = (year: number, month: number, pattern = "LLLL") => format(new Date(year, month, 1), pattern, { locale: pl });
 
 const parseNum = (s: string) => parseFloat(s.replace(",", "."));
 
@@ -18,7 +28,7 @@ const parseNum = (s: string) => parseFloat(s.replace(",", "."));
  * Podsumowanie miesiąca. Sercem jest pasek normy: wypełnia się do wymiaru
  * czasu pracy, a nadwyżka (nadgodziny) dosuwa się za nim w kolorze akcentu.
  */
-export function ShiftSummary({ summary, hourlyRate, workSystem }: ShiftSummaryProps) {
+export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths }: ShiftSummaryProps) {
   const { minutes, normMinutes, overtimeMinutes, dailyOvertimeMinutes, overtime100Minutes } = summary;
   const scale = Math.max(normMinutes, minutes, 1);
   // Nadgodziny dobowe mogą być i poniżej normy miesiąca — pasek dzieli faktycznie przepracowane godziny.
@@ -58,6 +68,8 @@ export function ShiftSummary({ summary, hourlyRate, workSystem }: ShiftSummaryPr
         <Stat label="W nocy" value={formatDuration(summary.nightMinutes)} />
         <Stat label="Do normy" value={minutes >= normMinutes ? "—" : formatDuration(normMinutes - minutes)} />
       </dl>
+
+      {summary.period && <PeriodProgress period={summary.period} />}
 
       {summary.shortRests.length > 0 && (
         <div role="note" className="flex gap-2.5 rounded-2xl bg-destructive/10 px-3 py-2.5 text-sm">
@@ -99,12 +111,49 @@ export function ShiftSummary({ summary, hourlyRate, workSystem }: ShiftSummaryPr
             <option value="equivalent">Równoważny — do 12 h wg grafiku</option>
           </select>
         </label>
+        <label className="flex items-center gap-2 sm:col-span-2">
+          <span className="text-muted-foreground flex-1">Okres rozliczeniowy</span>
+          <select value={settlementMonths} onChange={(e) => setSettlementMonths(Number(e.target.value) as SettlementMonths)}
+            className={cn(FIELD, "w-auto pr-1 text-left")}>
+            {SETTLEMENT_MONTHS.map((m) => <option key={m} value={m}>{PERIOD_LABELS[m]}</option>)}
+          </select>
+        </label>
       </div>
       <p className="text-2xs text-muted-foreground">
-        Norma wg art. 130 Kodeksu pracy dla pełnego etatu, pomniejszona o nieobecności w dni robocze.
+        Norma wg art. 130 Kodeksu pracy dla pełnego etatu, pomniejszona o nieobecności w dni robocze. Okresy rozliczeniowe liczone od stycznia.
         Nadgodziny dobowe liczone w dobie pracowniczej (24 h od początku zmiany). Dodatek za nadgodziny wg art. 151¹ KP: 100% w nocy (22:00–6:00), w niedziele i święta oraz za przekroczenie normy, 50% za pozostałe. Odpoczynek dobowy 11 h (art. 132 KP).
       </p>
     </section>
+  );
+}
+
+/**
+ * Okres dłuższy niż miesiąc: ile z normy całego okresu już jest. Nadgodziny
+ * ponad normę okresu wychodzą dopiero w jego ostatnim miesiącu — wcześniej
+ * nadwyżkę może jeszcze wyrównać krótszy miesiąc.
+ */
+function PeriodProgress({ period }: { period: PeriodSummary }) {
+  const last = period.startMonth + period.months - 1;
+  const range = `${monthName(period.year, period.startMonth, "LLL")}–${monthName(period.year, last, "LLL yyyy")}`;
+  const share = Math.min(1, period.minutes / Math.max(1, period.normMinutes));
+  return (
+    <div className="rounded-2xl bg-muted/50 px-3 py-2.5 space-y-1.5 text-sm">
+      <p className="flex justify-between gap-3 flex-wrap">
+        <span className="text-muted-foreground">Okres {range}</span>
+        <span className="tabular-nums font-semibold">
+          {formatHoursShort(period.minutes)} / {formatHoursShort(period.normMinutes)} h
+        </span>
+      </p>
+      <div className="h-1.5 rounded-full bg-background overflow-hidden" role="img"
+        aria-label={`W okresie ${formatDuration(period.minutes)} z ${formatDuration(period.normMinutes)} normy`}>
+        <div className="h-full bg-primary/70" style={{ width: `${share * 100}%` }} />
+      </div>
+      <p className="text-2xs text-muted-foreground">
+        {period.isLast
+          ? "Ostatni miesiąc okresu — nadgodziny ponad normę całego okresu są w tym miesiącu."
+          : `Nadgodziny ponad normę okresu policzymy w ${IN_MONTH[last]}, w ostatnim miesiącu okresu.`}
+      </p>
+    </div>
   );
 }
 

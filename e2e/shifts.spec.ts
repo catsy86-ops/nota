@@ -225,3 +225,12 @@ test("ostrzega o odpoczynku krótszym niż 11 h", async ({ page }) => {
   await expect(page.getByRole("note")).toContainText("Za krótki odpoczynek");
   await expect(page.getByRole("note")).toContainText("6 października — 8 h");
 });
+
+test("okres rozliczeniowy kwartał: postęp okresu i nadgodziny w ostatnim miesiącu", async ({ page }) => {
+  const summary = page.getByRole("region", { name: "Podsumowanie miesiąca" });
+  await summary.getByLabel("Okres rozliczeniowy").selectOption({ label: "3 miesiące (kwartał)" });
+  await expect(summary).toContainText(/Okres paź–gru 2026/);
+  await expect(summary).toContainText("Nadgodziny ponad normę okresu policzymy w grudniu");
+  await page.reload();
+  await expect(page.getByRole("region", { name: "Podsumowanie miesiąca" }).getByLabel("Okres rozliczeniowy")).toHaveValue("3");
+});

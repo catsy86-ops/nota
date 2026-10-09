@@ -6,6 +6,9 @@
 
 export type ShiftKind = "work" | "absence";
 export type WorkSystem = "basic" | "equivalent";
+/** Długość okresu rozliczeniowego w miesiącach (art. 129 KP). */
+export type SettlementMonths = 1 | 2 | 3 | 4 | 6 | 12;
+export const SETTLEMENT_MONTHS: SettlementMonths[] = [1, 2, 3, 4, 6, 12];
 
 export interface ShiftType {
   id: string;
@@ -58,6 +61,8 @@ export interface ShiftData {
    * `basic` 8 h (art. 129 KP), `equivalent` do 12 h wg grafiku (art. 135 KP).
    */
   workSystem: WorkSystem;
+  /** Okres rozliczeniowy liczony od stycznia; nadgodziny ponad normę rozlicza się w jego ostatnim miesiącu. */
+  settlementMonths: SettlementMonths;
   patterns: ShiftPattern[];
 }
 
@@ -98,6 +103,7 @@ export const EMPTY_SHIFT_DATA: ShiftData = {
   days: {},
   hourlyRate: 0,
   workSystem: "basic",
+  settlementMonths: 1,
   patterns: DEFAULT_PATTERNS,
 };
 
@@ -164,6 +170,7 @@ export function migrate(stored: unknown): ShiftData {
     days,
     hourlyRate: Math.max(0, num(s.hourlyRate, 0)),
     workSystem: s.workSystem === "equivalent" ? "equivalent" : "basic",
+    settlementMonths: SETTLEMENT_MONTHS.includes(s.settlementMonths as SettlementMonths) ? (s.settlementMonths as SettlementMonths) : 1,
     patterns: Array.isArray(s.patterns) ? s.patterns.filter(isPattern) : EMPTY_SHIFT_DATA.patterns,
   };
 }

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, applyPattern, currentAndNextShift, daysUntilMonthEnd, easterSunday,
   entryMinutes, formatDuration, formatHoursShort, holidayName, migrate, monthSummary, nightMinutes, parseHm,
-  shiftMinutes, workNormMinutes, buildShiftsIcs, shortRests, cancelledShiftDays, exportedAfter, exportableShiftDays, SHIFT_COLORS, shiftInk, contrastRatio, dstShiftMinutes, restoreShifts, setDayShift, shiftStore, type ShiftData,
+  shiftMinutes, workNormMinutes, buildShiftsIcs, shortRests, settlementPeriod, isNormDay, cancelledShiftDays, exportedAfter, exportableShiftDays, SHIFT_COLORS, shiftInk, contrastRatio, dstShiftMinutes, restoreShifts, setDayShift, shiftStore, type ShiftData,
 } from "./index";
 
 const [day, afternoon, night, leave] = DEFAULT_SHIFT_TYPES;
@@ -176,6 +176,49 @@ describe("podsumowanie miesiąca", () => {
     expect(at({ "2026-10-05": { type: "p" }, "2026-10-06": { type: "d" } }).overtime100Minutes).toBe(0);
     // Wszystkich Świętych 1.11 (niedziela 2026) i 11.11 (środa).
     expect(monthSummary(data({ days: { "2026-11-11": { type: "d", extraMin: 30 } } }), 2026, 10).overtime100Minutes).toBe(30);
+  });
+});
+
+describe("okres rozliczeniowy", () => {
+  /** Wszystkie dni normy miesiąca jako zmiana „Dzień”, bez `skip` pierwszych. */
+  const normDays = (year: number, month: number, skip = 0) => {
+    const keys: string[] = [];
+    for (let d = 1; d <= new Date(year, month + 1, 0).getDate(); d++) {
+      const key = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+      if (isNormDay(key)) keys.push(key);
+    }
+    return Object.fromEntries(keys.slice(skip).map((k) => [k, { type: "d" }]));
+  };
+
+  it("nadwyżkę z jednego miesiąca wyrównuje niedobór w innym, rozlicza ostatni", () => {
+    // Styczeń–marzec 2026: dwie soboty ponad normę w styczniu, luty o dwa dni krótszy.
+    const days = { ...normDays(2026, 0), "2026-01-10": { type: "d" }, "2026-01-17": { type: "d" }, ...normDays(2026, 1, 2), ...normDays(2026, 2) };
+    const q = data({ settlementMonths: 3, hourlyRate: 30, days });
+    expect(monthSummary(q, 2026, 0).overtimeMinutes).toBe(0);
+    const mar = monthSummary(q, 2026, 2);
+    expect(mar.overtimeMinutes).toBe(0);
+    expect(mar.period).toMatchObject({ startMonth: 0, months: 3, isLast: true });
+    expect(mar.period!.minutes).toBe(mar.period!.normMinutes);
+    // Ten sam grafik przy okresie miesięcznym: styczeń ma 16 h nadgodzin.
+    expect(monthSummary(data({ days }), 2026, 0).overtimeMinutes).toBe(16 * 60);
+  });
+
+  it("przekroczenie normy okresu wychodzi w ostatnim miesiącu, ze 100%", () => {
+    const days = { ...normDays(2026, 0), "2026-01-10": { type: "d" }, ...normDays(2026, 1), ...normDays(2026, 2) };
+    const q = data({ settlementMonths: 3, hourlyRate: 30, days });
+    const jan = monthSummary(q, 2026, 0);
+    expect(jan.overtimeMinutes).toBe(0);
+    expect(jan.period?.isLast).toBe(false);
+    const mar = monthSummary(q, 2026, 2);
+    expect(mar.overtimeMinutes).toBe(8 * 60);
+    expect(mar.overtime100Minutes).toBe(8 * 60);
+    expect(mar.earnings).toBe(mar.minutes / 60 * 30 + 8 * 30);
+  });
+
+  it("okresy liczą się od stycznia", () => {
+    expect(settlementPeriod(2026, 4, 4)).toEqual({ year: 2026, startMonth: 4, months: 4 });
+    expect(settlementPeriod(2026, 11, 6)).toEqual({ year: 2026, startMonth: 6, months: 6 });
+    expect(migrate({ settlementMonths: 5 }).settlementMonths).toBe(1);
   });
 });
 

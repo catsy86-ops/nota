@@ -1,5 +1,5 @@
 import * as Y from "yjs";
-import { DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, type DayEntry, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
+import { DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, type DayEntry, type SettlementMonths, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
 
 /**
  * Grafik w Y.Doc — tym samym, który niosą synchronizacja P2P i plik, więc
@@ -15,7 +15,7 @@ import { DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, type DayEntry, type Shi
  * od razu, mogłoby przy scaleniu nadpisać czyjeś poprawki tych samych id.
  */
 
-type Meta = "hourlyRate" | "workSystem" | "typesInit" | "patternsInit";
+type Meta = "hourlyRate" | "workSystem" | "settlementMonths" | "typesInit" | "patternsInit";
 
 /** Origin transakcji Grafiku — odróżnia lokalne zmiany od tych z sieci i z migracji. */
 export const SHIFTS_ORIGIN = "shifts";
@@ -49,7 +49,7 @@ export function createYShifts(doc: Y.Doc) {
   function get(): ShiftData {
     if (snapshot) return snapshot;
     const settings: Record<string, unknown> = {};
-    for (const k of ["hourlyRate", "workSystem"] as const) if (meta.has(k)) settings[k] = meta.get(k);
+    for (const k of ["hourlyRate", "workSystem", "settlementMonths"] as const) if (meta.has(k)) settings[k] = meta.get(k);
     snapshot = migrate({
       version: 2,
       ...settings,
@@ -175,7 +175,7 @@ export function createYShifts(doc: Y.Doc) {
     transact(() => { ensurePatterns(); patterns.delete(id); });
   }
 
-  function setMeta(key: Meta, value: number | WorkSystem | boolean): void {
+  function setMeta(key: Meta, value: number | WorkSystem | SettlementMonths | boolean): void {
     transact(() => { if (meta.get(key) !== value) meta.set(key, value); });
   }
 
@@ -188,6 +188,7 @@ export function createYShifts(doc: Y.Doc) {
       for (const [k, e] of Object.entries(data.days)) days.set(k, e);
       meta.set("hourlyRate", data.hourlyRate);
       meta.set("workSystem", data.workSystem);
+      meta.set("settlementMonths", data.settlementMonths);
       meta.set("typesInit", true);
       meta.set("patternsInit", true);
     });
@@ -220,6 +221,7 @@ export function createYShifts(doc: Y.Doc) {
       for (const [k, e] of Object.entries(data.days)) if (!days.has(k)) days.set(k, e);
       if (!meta.has("hourlyRate") && data.hourlyRate) meta.set("hourlyRate", data.hourlyRate);
       if (!meta.has("workSystem")) meta.set("workSystem", data.workSystem);
+      if (!meta.has("settlementMonths") && data.settlementMonths !== 1) meta.set("settlementMonths", data.settlementMonths);
     }, "shifts-migration");
   }
 

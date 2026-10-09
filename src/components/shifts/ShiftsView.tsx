@@ -153,7 +153,7 @@ function ShiftsScreen() {
         </button>
       </div>
 
-      <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} workSystem={data.workSystem} />
+      <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} workSystem={data.workSystem} settlementMonths={data.settlementMonths} />
 
       <ShiftTypeDialog
         type={editingType === "new" ? null : editingType}
