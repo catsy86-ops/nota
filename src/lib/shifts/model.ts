@@ -88,6 +88,12 @@ export interface ShiftData {
   settlementStart: number;
   /** Wymiar etatu, (0, 1]; norma okresu jest proporcjonalna. */
   fte: number;
+  /**
+   * Niepełny etat: od jakiego wymiaru praca jest już nadgodzinami z dodatkiem
+   * (art. 151 § 5 KP — strony ustalają to w umowie). 1 = dopiero ponad pełny
+   * etat; poniżej `fte` nie schodzi.
+   */
+  overtimeFrom: number;
   patterns: ShiftPattern[];
 }
 
@@ -131,6 +137,7 @@ export const EMPTY_SHIFT_DATA: ShiftData = {
   settlementMonths: 1,
   settlementStart: 0,
   fte: 1,
+  overtimeFrom: 1,
   patterns: DEFAULT_PATTERNS,
 };
 
@@ -200,6 +207,7 @@ export function migrate(stored: unknown): ShiftData {
     hourlyRate: Math.max(0, num(s.hourlyRate, 0)),
     workSystem: s.workSystem === "equivalent" ? "equivalent" : "basic",
     fte: typeof s.fte === "number" && s.fte > 0 && s.fte <= 1 ? s.fte : 1,
+    overtimeFrom: typeof s.overtimeFrom === "number" && s.overtimeFrom > 0 && s.overtimeFrom <= 1 ? s.overtimeFrom : 1,
     settlementMonths: SETTLEMENT_MONTHS.includes(s.settlementMonths as SettlementMonths) ? (s.settlementMonths as SettlementMonths) : 1,
     settlementStart: Number.isInteger(s.settlementStart) && (s.settlementStart as number) >= 0 && (s.settlementStart as number) < 12 ? (s.settlementStart as number) : 0,
     patterns: Array.isArray(s.patterns) ? s.patterns.filter(isPattern) : EMPTY_SHIFT_DATA.patterns,

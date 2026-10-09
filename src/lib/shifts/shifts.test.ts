@@ -262,6 +262,18 @@ describe("niepełny etat", () => {
     expect(monthSummary(data({ days: feb(21) }), 2026, 1).extraTimeMinutes).toBe(0);
   });
 
+  it("umowna granica nadgodzin (art. 151 § 5 KP)", () => {
+    // Pół etatu, nadgodziny ponad 3/4 etatu: luty 2026 = 80 h normy, granica 120 h; 17 dni = 136 h.
+    const days = Object.fromEntries(Array.from({ length: 17 }, (_, i) => [`2026-02-${String(i + 1).padStart(2, "0")}`, { type: "d" }]));
+    const s = monthSummary(data({ fte: 1 / 2, overtimeFrom: 3 / 4, hourlyRate: 30, days }), 2026, 1);
+    expect(s.extraTimeMinutes).toBe(40 * 60);
+    expect(s.overtimeMinutes).toBe(16 * 60);
+    expect(s.earnings).toBe(136 * 30 + 16 * 30);
+    // Granica poniżej etatu nie ma sensu — liczy się etat.
+    expect(monthSummary(data({ fte: 3 / 4, overtimeFrom: 1 / 2, days }), 2026, 1).overtimeMinutes).toBe(16 * 60);
+    expect(migrate({ overtimeFrom: 2 }).overtimeFrom).toBe(1);
+  });
+
   it("odrzuca wymiar spoza (0, 1]", () => {
     expect(migrate({ fte: 0 }).fte).toBe(1);
     expect(migrate({ fte: 1.5 }).fte).toBe(1);

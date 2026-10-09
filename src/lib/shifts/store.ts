@@ -126,6 +126,11 @@ export function setFte(fte: number): void {
   yShifts.setMeta("fte", fte > 0 && fte <= 1 ? fte : 1);
 }
 
+/** Umowna granica nadgodzin przy niepełnym etacie (art. 151 § 5 KP) jako wymiar etatu. */
+export function setOvertimeFrom(fte: number): void {
+  yShifts.setMeta("overtimeFrom", fte > 0 && fte <= 1 ? fte : 1);
+}
+
 /** Losowe id — `Date.now()` z dwóch telefonów w tej samej milisekundzie dałby kolizję po scaleniu. */
 export function newShiftId(prefix: string): string {
   return `${prefix}${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;

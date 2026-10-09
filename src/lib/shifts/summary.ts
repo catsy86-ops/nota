@@ -196,8 +196,8 @@ interface MonthCore {
   daysWorked: number;
   absenceDays: number;
   normMinutes: number;
-  /** Norma pełnego etatu po odjęciu nieobecności — granica nadgodzin przy niepełnym etacie. */
-  fullNormMinutes: number;
+  /** Granica nadgodzin przy niepełnym etacie (pełny etat albo umowna) po odjęciu nieobecności. */
+  overtimeNormMinutes: number;
   totals: Map<string, ShiftTypeTotal>;
   dailyOvertime: number;
   daily100: number;
@@ -209,7 +209,7 @@ const monthPrefix = (year: number, month: number) => `${year}-${String(month + 1
 function monthCore(data: ShiftData, year: number, month: number, otSpans: OvertimeSpan[]): MonthCore {
   const prefix = monthPrefix(year, month);
   const typesById = new Map(data.types.map((t) => [t.id, t]));
-  const c: MonthCore = { minutes: 0, night: 0, base: 0, daysWorked: 0, absenceDays: 0, normMinutes: 0, fullNormMinutes: 0, totals: new Map(), dailyOvertime: 0, daily100: 0, dailyPremium: 0 };
+  const c: MonthCore = { minutes: 0, night: 0, base: 0, daysWorked: 0, absenceDays: 0, normMinutes: 0, overtimeNormMinutes: 0, totals: new Map(), dailyOvertime: 0, daily100: 0, dailyPremium: 0 };
   let absenceMinutes = 0;
 
   for (const [key, entry] of Object.entries(data.days)) {
@@ -239,7 +239,7 @@ function monthCore(data: ShiftData, year: number, month: number, otSpans: Overti
   // Niepełny etat: norma proporcjonalna (art. 130 KP), nieobecność zdejmuje swoje godziny z obu.
   const full = workNormMinutes(year, month);
   c.normMinutes = Math.max(0, Math.round(full * data.fte) - absenceMinutes);
-  c.fullNormMinutes = Math.max(0, full - absenceMinutes);
+  c.overtimeNormMinutes = Math.max(0, Math.round(full * Math.max(data.fte, data.overtimeFrom)) - absenceMinutes);
   for (const span of otSpans) {
     if (!span.key.startsWith(prefix)) continue;
     const all = (span.to - span.from) / 60_000;
@@ -287,9 +287,9 @@ export function monthSummary(data: ShiftData, year: number, month: number): Mont
   const isLast = index === p.months - 1;
   // Godziny już uznane za nadgodziny dobowe nie liczą się drugi raz do normy.
   const worked = sum((m) => m.minutes - m.dailyOvertime);
-  // Przy niepełnym etacie nadgodziny zaczynają się dopiero ponad normę pełnego etatu (art. 151 § 5 KP
-  // pozwala umówić niższą granicę — tego nie znamy); między normami są godziny ponadwymiarowe.
-  const periodOvertime = isLast ? Math.max(0, worked - sum((m) => m.fullNormMinutes)) : 0;
+  // Przy niepełnym etacie nadgodziny zaczynają się ponad normę pełnego etatu albo ponad granicę
+  // z umowy (art. 151 § 5 KP); między normą etatu a tą granicą są godziny ponadwymiarowe.
+  const periodOvertime = isLast ? Math.max(0, worked - sum((m) => m.overtimeNormMinutes)) : 0;
   const extraTime = isLast ? Math.max(0, worked - periodNorm) - periodOvertime : 0;
   // Przekroczenie normy okresu zawsze 100% (art. 151¹ § 2 KP).
   const premium = c.dailyPremium + (periodOvertime / 60) * data.hourlyRate;
