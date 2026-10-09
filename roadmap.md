@@ -571,3 +571,11 @@ Odrzucone:
 - [x] Krok 2 (`0ed08cf`): Plus Jakarta Sans w całej aplikacji (bez Inter), JetBrains Mono do cyfr w rachunku, treść do 88 rem, pole dodawania wyrównane do siatki.
 - [x] Krok 3: liczniki w pasku bocznym tylko przy zaległych przypomnieniach i Koszu, papierowy (ciepły) cień kart, puste stany bez poświaty za odręcznym napisem.
 - [x] Dalsze kroki (2026-10-09): Import i eksport w „Więcej” na telefonie (`ImportExportMenu`, ikona pliku zamiast strzałki jak „Zainstaluj”), pełne tło zaznaczonego dnia w Kalendarzu, puste widoki z rysunkiem długopisem (Notatki zostają przy napisie), sezony zmieniają tylko akcent — bursztyn marki przez cały rok.
+
+## Przegląd na zrzutach — 2026-10-09 (po „zeszycie”)
+
+- [x] Edycja notatki na telefonie od razu na pełnym ekranie (w wąskim kaflu ucinała tytuł, ikony w kolumnie); bez przycisku powrotu do kafla poniżej `sm`.
+- [x] Edycja w kaflu na komputerze: formatowanie w jednym przewijanym rzędzie, licznik same słowa.
+- [x] Okno dnia w Grafiku: „piątek, 9 października” tylko z wielką pierwszą literą (`first-letter:uppercase` zamiast `capitalize`).
+- [x] Opis motywu sezonowego bez „tła”; czerwony licznik zaległych przypomnień.
+- [x] Na prośbę: Grafik — „Budowa” 07–17 (10 h) i „Dniówka” 08–16 (skrót 8) jako rodzaje startowe, dokładane raz do istniejącego grafiku; pora nocna i doba niedzieli w zwiniętej sekcji „Opcjonalne”.
