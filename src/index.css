@@ -204,6 +204,10 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
   }
+  /* Spacja w Plus Jakarta Sans ma 0,17 em — „Spotkanie z zespołem” czytało się jak „zzespołem”. */
+  h1, h2, h3, h4, h5, h6, .font-display {
+    word-spacing: 0.06em;
+  }
 }
 
 @layer base {
