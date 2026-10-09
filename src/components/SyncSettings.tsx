@@ -150,7 +150,7 @@ export function SyncSettings({ prefillCode }: Props) {
         <ul className="list-disc pl-4 space-y-1">
           <li>Urządzenia łączą się bezpośrednio, bez chmury i konta. Publiczne serwery pomagają tylko nawiązać połączenie — treść notatek przez nie nie przechodzi.</li>
           <li>Zmiany wymieniają się, gdy oba urządzenia są online w tym samym czasie. Jeśli jedno jest offline, dogoni przy najbliższym wspólnym połączeniu.</li>
-          <li>Pierwsza synchronizacja łączy notatki z obu urządzeń — nic nie jest kasowane.</li>
+          <li>Pierwsza synchronizacja łączy notatki i Grafik zmian z obu urządzeń — nic nie jest kasowane. Ten sam dzień grafiku zmieniony na obu urządzeniach zostaje w jednej wersji.</li>
           <li>Obrazy idą osobnym kanałem: nowy obrazek trafia na drugie urządzenie, gdy oba są online przy dodaniu albo przy kolejnym połączeniu.</li>
         </ul>
       </div>

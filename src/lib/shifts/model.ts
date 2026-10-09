@@ -26,6 +26,8 @@ export interface ShiftType {
    * Brak pola = `work` (dane sprzed wprowadzenia nieobecności).
    */
   kind?: ShiftKind;
+  /** Pozycja na pasku — kolejność kluczy Y.Map nie jest wspólna dla urządzeń. */
+  order?: number;
 }
 
 export interface DayEntry {
@@ -41,6 +43,7 @@ export interface ShiftPattern {
   id: string;
   name: string;
   steps: (string | null)[];
+  order?: number;
 }
 
 export interface ShiftData {

@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { daysUntilMonthEnd, deletePattern, savePattern, shiftInk, shiftTextOnCard, type ShiftPattern, type ShiftType } from "@/lib/shifts";
+import { daysUntilMonthEnd, deletePattern, newShiftId, savePattern, shiftInk, shiftTextOnCard, type ShiftPattern, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
 interface PatternDialogProps {
@@ -59,7 +59,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
 
   function apply() {
     if (!valid) return;
-    if (name.trim()) savePattern({ id: `c${Date.now().toString(36)}`, name: name.trim(), steps });
+    if (name.trim()) savePattern({ id: newShiftId("c"), name: name.trim(), steps });
     onApply(steps, start, length);
     onOpenChange(false);
   }

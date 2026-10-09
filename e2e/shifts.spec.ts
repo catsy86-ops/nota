@@ -164,17 +164,32 @@ test("usunięcie zapisanego cyklu nie kasuje układanych kroków", async ({ page
   await expect(dialog.getByRole("button", { name: /^Usuń cykl/ })).toHaveCount(1);
 });
 
+/** Stary zapis Grafiku (sprzed Yjs) — trafia do dokumentu przy pierwszym wczytaniu. */
+async function withLegacyShifts(page: import("@playwright/test").Page, data: object) {
+  await page.addInitScript((json) => {
+    if (sessionStorage.getItem("legacy-seeded")) return;
+    sessionStorage.setItem("legacy-seeded", "1");
+    localStorage.setItem("kaczy:shifts", json);
+  }, JSON.stringify({ version: 2, ...data }));
+  await page.goto("/grafik");
+}
+
 test("bez rodzajów zmian widać, jak zacząć", async ({ page }) => {
-  await page.evaluate(() => {
-    const d = JSON.parse(localStorage.getItem("kaczy:shifts") ?? "{}");
-    localStorage.setItem("kaczy:shifts", JSON.stringify({ ...d, version: 2, types: [] }));
-  });
-  await page.reload();
+  await withLegacyShifts(page, { types: [] });
   const empty = page.getByRole("region", { name: "Brak rodzajów zmian" });
   await expect(empty).toBeVisible();
   await empty.getByRole("button", { name: "Przywróć startowe" }).click();
   await expect(empty).toHaveCount(0);
   await expect(page.getByRole("radio", { name: /Dzień/ })).toHaveAttribute("aria-checked", "true");
+});
+
+test("stary grafik z localStorage przechodzi do nowego zapisu i przeżywa odświeżenie", async ({ page }) => {
+  await withLegacyShifts(page, { days: { "2026-10-05": { type: "n", note: "stare" } }, hourlyRate: 40 });
+  const day = page.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Noc.*notatka: stare/ }).first();
+  await expect(day).toBeVisible();
+  await page.reload();
+  await expect(day).toBeVisible();
+  await expect(page.getByRole("region", { name: "Podsumowanie miesiąca" }).getByLabel("Stawka za godzinę")).toHaveValue("40");
 });
 
 test("wyczyszczenie dnia z notatką da się cofnąć", async ({ page }) => {

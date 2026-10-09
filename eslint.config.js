@@ -44,6 +44,8 @@ export default tseslint.config(
       "src/lib/yjsSync.test.ts",
       "src/lib/imageSync.ts",
       "src/lib/imageSync.test.ts",
+      "src/lib/shifts/yShifts.ts",
+      "src/lib/shifts/yShifts.test.ts",
       "src/hooks/useNotes.ts",
       "src/hooks/useNotes.test.ts",
     ],

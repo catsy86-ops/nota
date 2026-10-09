@@ -47,3 +47,40 @@ test("plik synchronizacji scala notatki dwóch urządzeń bez usuwania", async (
   await expect(b.getByText(fromA)).toBeVisible();
   await expect(b.getByText(fromB)).toBeVisible();
 });
+
+test("plik synchronizacji niesie też Grafik — dni z obu urządzeń zostają", async ({ browser }) => {
+  const day = (page: Page, d: number, what: string) =>
+    page.getByRole("button", { name: new RegExp(`^${d} [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, ${what}`) }).first();
+  const openShifts = async (page: Page) => {
+    await page.clock.setFixedTime(new Date("2026-10-07T10:00:00"));
+    await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
+    await page.goto("/grafik");
+  };
+
+  const a = await (await browser.newContext()).newPage();
+  await openShifts(a);
+  await day(a, 5, "wolne").click(); // pędzel „Dzień”
+  await expect(day(a, 5, "Dzień")).toBeVisible();
+  await openDataTab(a);
+  const [download] = await Promise.all([
+    a.waitForEvent("download"),
+    a.getByRole("button", { name: "Zapisz plik synchronizacji" }).click(),
+  ]);
+  const file = (await download.path())!;
+
+  const b = await (await browser.newContext()).newPage();
+  await openShifts(b);
+  await b.getByRole("radio", { name: /Noc/ }).click();
+  await day(b, 6, "wolne").click();
+  await openDataTab(b);
+  const [chooser] = await Promise.all([
+    b.waitForEvent("filechooser"),
+    b.getByRole("button", { name: "Scal z pliku" }).click(),
+  ]);
+  await chooser.setFiles(file);
+  await expect(b.getByText(/^Scalono/)).toBeVisible({ timeout: 15_000 });
+  await b.keyboard.press("Escape");
+
+  await expect(day(b, 5, "Dzień")).toBeVisible();
+  await expect(day(b, 6, "Noc")).toBeVisible();
+});

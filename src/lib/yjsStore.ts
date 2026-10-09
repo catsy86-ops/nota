@@ -590,10 +590,11 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   /** Test-only: destroy this store's Yjs doc/IDB persistence, and start fresh. */
   async function resetForTests(): Promise<void> {
     await persistence.clearData();
+    // Wszystkie mapy dokumentu — także te, które dokładają inne moduły (Grafik).
     doc.transact(() => {
-      notesMap.forEach((_v, k) => notesMap.delete(k));
-      foldersMap.forEach((_v, k) => foldersMap.delete(k));
-      labelsMap.forEach((_v, k) => labelsMap.delete(k));
+      doc.share.forEach((type) => {
+        if (type instanceof Y.Map) Array.from(type.keys()).forEach((k) => type.delete(k));
+      });
     });
     noteCache.clear();
     readyPromise = null;

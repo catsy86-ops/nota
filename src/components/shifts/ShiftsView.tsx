@@ -4,7 +4,7 @@ import { pl } from "date-fns/locale";
 import { CalendarArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { dayKey } from "@/lib/reminderOccurrences";
-import { DEFAULT_SHIFT_TYPES, addDefaultShiftTypes, SHIFTS_EXPORTED_KEY, applyPatternToStore, buildShiftsIcs, cancelledShiftDays, exportableShiftDays, exportedAfter, monthSummary, restoreDays, setDayEntry, setDayShift, shiftStore, useShifts, type ShiftType } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, addDefaultShiftTypes, SHIFTS_EXPORTED_KEY, applyPatternToStore, buildShiftsIcs, cancelledShiftDays, exportableShiftDays, exportedAfter, monthSummary, restoreDays, setDayEntry, setDayShift, shiftStore, useShifts, useShiftsReady, type ShiftType } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { createPersistedStore } from "@/lib/persistedStore";
 import { pluralPl } from "@/lib/plural";
@@ -37,6 +37,11 @@ const navButton = "pressable shrink-0 w-10 h-10 coarse:w-11 coarse:h-11 rounded-
  * a tutaj zostaje to, co lokalne dla ekranu — miesiąc, pędzel i otwarte okna.
  */
 export function ShiftsView() {
+  // Do wczytania dokumentu nic — pusty grafik mignąłby i ustawił zły pędzel startowy.
+  return useShiftsReady() ? <ShiftsScreen /> : null;
+}
+
+function ShiftsScreen() {
   const data = useShifts();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [brush, setBrush] = useState<Brush>(() => (data.types[0] ? { kind: "type", id: data.types[0].id } : { kind: "inspect" }));

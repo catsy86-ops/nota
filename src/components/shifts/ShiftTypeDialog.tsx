@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SHIFT_COLORS, SHIFT_COLOR_NAMES, deleteShiftType, formatDuration, restoreShifts, saveShiftType, shiftMinutes, shiftSpan, shiftStore, type ShiftType } from "@/lib/shifts";
+import { SHIFT_COLORS, SHIFT_COLOR_NAMES, deleteShiftType, formatDuration, newShiftId, restoreShiftType, saveShiftType, shiftMinutes, shiftSpan, shiftStore, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -50,10 +50,11 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
     const used = Object.values(shiftStore.get().days).filter((e) => e.type === type.id).length;
     // Pierwsze kliknięcie tylko uzbraja przycisk — usuwa się cała historia tego rodzaju.
     if (used > 0 && confirmDays === null) { setConfirmDays(used); return; }
-    const before = deleteShiftType(type.id);
+    const removed = deleteShiftType(type.id);
     onDeleted();
     onOpenChange(false);
-    toastWithUndo(`Usunięto „${type.name}”`, () => restoreShifts(before), {
+    if (!removed) return;
+    toastWithUndo(`Usunięto „${type.name}”`, () => restoreShiftType(removed), {
       description: used > 0 ? `Razem z ${used} ${pluralPl(used, ["dniem", "dniami", "dniami"])} w grafiku` : undefined,
       icon: "🗑️",
     });
@@ -63,7 +64,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
     if (!valid) return;
     const saved: ShiftType = {
       ...draft,
-      id: draft.id || `s${Date.now().toString(36)}`,
+      id: draft.id || newShiftId("s"),
       name: draft.name.trim(),
       short: (draft.short.trim() || draft.name.trim()[0]).slice(0, 3).toUpperCase(),
       breakMin: Math.max(0, Math.round(draft.breakMin) || 0),

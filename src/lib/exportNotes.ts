@@ -9,6 +9,8 @@ import { tryWriteBackupToFile } from "@/lib/backupFileHandle";
 import { versionsStore } from "@/lib/versionsStore";
 import { logDiag } from "@/lib/diagnostics";
 import { imageStore, isDataUrl } from "@/lib/imageStore";
+import { restoreShifts, shiftStore, shiftsReady } from "@/lib/shifts/store";
+import { migrate } from "@/lib/shifts/model";
 
 /**
  * Granica plików: na zewnątrz obrazy jadą jako data URL-e (plik ma działać
@@ -40,6 +42,7 @@ export async function exportToJSON(notes: Note[], filename?: string): Promise<{ 
 export async function buildFullBackup(): Promise<FullBackup> {
   await yjsStore.ready();
   await versionsStore.load();
+  await shiftsReady();
   return {
     version: 2,
     exportedAt: Date.now(),
@@ -49,7 +52,8 @@ export async function buildFullBackup(): Promise<FullBackup> {
     versions: versionsStore.all(),
     settings: readKeys(SETTINGS_KEYS),
     achievements: readKeys([ACHIEVEMENTS_KEY])[ACHIEVEMENTS_KEY],
-    shifts: readKeys([SHIFTS_KEY])[SHIFTS_KEY],
+    // Ten sam JSON co dawny zapis w localStorage — starsze wersje aplikacji go odczytają.
+    shifts: JSON.stringify(shiftStore.get()),
   };
 }
 
@@ -85,8 +89,6 @@ export const SETTINGS_KEYS = [
   "kaczy.effectsSettings.v1", "kaczy.seasonTheme.v1",
 ];
 export const ACHIEVEMENTS_KEY = "kaczy.achievements.v1";
-/** Grafik zmian — klucz `shiftStore` z `lib/shifts/store.ts`. */
-export const SHIFTS_KEY = "kaczy:shifts";
 
 function readKeys(keys: string[]): Record<string, string> {
   const out: Record<string, string> = {};
@@ -149,7 +151,12 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
     for (const k of SETTINGS_KEYS) if (k in backup.settings) writes[k] = backup.settings[k];
   }
   if (opts.achievements && backup.achievements !== undefined) writes[ACHIEVEMENTS_KEY] = backup.achievements;
-  if (opts.shifts && backup.shifts !== undefined) writes[SHIFTS_KEY] = backup.shifts;
+  if (opts.shifts && backup.shifts !== undefined) {
+    try {
+      await shiftsReady();
+      restoreShifts(migrate(JSON.parse(backup.shifts)));
+    } catch (err) { logDiag("warn", "backup", "cannot restore shifts", err); }
+  }
   for (const [k, v] of Object.entries(writes)) {
     try { localStorage.setItem(k, v); } catch (err) { logDiag("warn", "backup", `cannot restore ${k}`, err); }
   }

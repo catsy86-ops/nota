@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { buildFullBackup, parseFullBackup, restoreFullBackup, SETTINGS_KEYS, ACHIEVEMENTS_KEY, SHIFTS_KEY } from "./exportNotes";
-import { SHIFTS_STORAGE_KEY } from "./shifts/store";
+import { buildFullBackup, parseFullBackup, restoreFullBackup, SETTINGS_KEYS, ACHIEVEMENTS_KEY } from "./exportNotes";
+import { setDayShift, shiftStore } from "./shifts/store";
 import { yjsStore } from "./yjsStore";
 import { versionsStore } from "./versionsStore";
 import { clearAllStorage } from "./notesStore";
@@ -26,20 +26,15 @@ beforeEach(async () => {
 
 describe("pełny backup v2", () => {
   it("niesie i przywraca Grafik zmian", async () => {
-    const grafik = JSON.stringify({ version: 2, days: { "2026-10-01": { type: "d" } } });
-    localStorage.setItem(SHIFTS_KEY, grafik);
+    setDayShift("2026-10-01", "d");
     const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
-    expect(backup.shifts).toBe(grafik);
+    expect(JSON.parse(backup.shifts!).days).toEqual({ "2026-10-01": { type: "d" } });
 
-    localStorage.setItem(SHIFTS_KEY, "lokalny");
+    setDayShift("2026-10-01", "n");
     await restoreFullBackup(backup, { ...ALL, shifts: false });
-    expect(localStorage.getItem(SHIFTS_KEY)).toBe("lokalny");
+    expect(shiftStore.get().days["2026-10-01"].type).toBe("n");
     await restoreFullBackup(backup, ALL);
-    expect(localStorage.getItem(SHIFTS_KEY)).toBe(grafik);
-  });
-
-  it("klucz Grafiku w backupie to ten sam, którego używa store", () => {
-    expect(SHIFTS_KEY).toBe(SHIFTS_STORAGE_KEY);
+    expect(shiftStore.get().days["2026-10-01"].type).toBe("d");
   });
 
   it("carries versions, settings and achievements — but never the pairing code", async () => {

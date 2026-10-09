@@ -359,7 +359,7 @@ export function BackupSettings() {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-1.5">
-          Przenosi zmiany między urządzeniami bez połączenia na żywo. Scalanie łączy notatki z obu stron — nic nie usuwa i nie nadpisuje. Używaj świeżych plików: bardzo stary może przywrócić dawno usuniętą notatkę.
+          Przenosi zmiany między urządzeniami bez połączenia na żywo. Scalanie łączy notatki i Grafik zmian z obu stron — nic nie usuwa i nie nadpisuje. Używaj świeżych plików: bardzo stary może przywrócić dawno usuniętą notatkę.
         </p>
       </Section>
 
