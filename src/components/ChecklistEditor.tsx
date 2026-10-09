@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { emojiShower } from "@/lib/celebrate";
-import { parsePastedChecklist } from "@/lib/checklistPaste";
+import { checklistToContent, contentToChecklist, parsePastedChecklist } from "@/lib/checklistPaste";
 import type { ChecklistItem } from "@/hooks/useNotes";
 
 export type { ChecklistItem };
@@ -240,5 +240,28 @@ export function ChecklistPreview({ items, onToggle, showProgress = true }: { ite
         </div>
       )}
     </div>
+  );
+}
+
+/** „Zamień na listę” (gdy jest treść) i „Zamień na tekst” (gdy są pozycje). `toList` mówi, czy pokazać listę. */
+export function ChecklistConvertButtons({ content, checklist, onConvert }: {
+  content: string;
+  checklist: ChecklistItem[];
+  onConvert: (result: { content: string; checklist: ChecklistItem[] }, toList: boolean) => void;
+}) {
+  const cls = "text-xs text-muted-foreground hover:text-foreground transition-colors";
+  return (
+    <>
+      {content.trim() && (
+        <button type="button" className={cls} onClick={() => onConvert(contentToChecklist(content, checklist), true)}>
+          Zamień na listę
+        </button>
+      )}
+      {checklist.length > 0 && (
+        <button type="button" className={cls} onClick={() => onConvert(checklistToContent(content, checklist), false)}>
+          Zamień na tekst
+        </button>
+      )}
+    </>
   );
 }

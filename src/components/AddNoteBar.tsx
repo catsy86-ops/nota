@@ -13,7 +13,7 @@ import type { NoteColor, ChecklistItem } from "@/hooks/useNotes";
 import { imageStore } from "@/lib/imageStore";
 import { NoteImage } from "./NoteImage";
 import { DrawingCanvas } from "./DrawingCanvas";
-import { ChecklistEditor } from "./ChecklistEditor";
+import { ChecklistConvertButtons, ChecklistEditor } from "./ChecklistEditor";
 import { FormatToolbar } from "./MarkdownRenderer";
 import { PriorityPicker } from "./PriorityPicker";
 import type { NotePriority } from "@/lib/notePriority";
@@ -164,6 +164,15 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
             {/* Szablony tylko nad pustym szkicem — wybór tworzy osobną notatkę, więc nic by nie zastąpił. */}
             {templates && isDraftEmpty && templates(reset)}
 
+            {(content.trim() || checklist.length > 0) && (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <ChecklistConvertButtons
+                  content={content}
+                  checklist={checklist}
+                  onConvert={(r, toList) => { setContent(r.content); setChecklist(r.checklist); setShowChecklist(toList); }}
+                />
+              </div>
+            )}
             {showChecklist && <ChecklistEditor items={checklist} onChange={setChecklist} />}
 
             {/* Image previews */}
