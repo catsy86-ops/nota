@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, applyPattern, currentAndNextShift, daysUntilMonthEnd, easterSunday,
   entryMinutes, formatDuration, formatHoursShort, holidayName, migrate, monthSummary, nightMinutes, parseHm,
-  shiftMinutes, workNormMinutes, buildShiftsIcs, exportableShiftDays, SHIFT_COLORS, shiftInk, contrastRatio, dstShiftMinutes, restoreShifts, setDayShift, shiftStore, type ShiftData,
+  shiftMinutes, workNormMinutes, buildShiftsIcs, cancelledShiftDays, exportedAfter, exportableShiftDays, SHIFT_COLORS, shiftInk, contrastRatio, dstShiftMinutes, restoreShifts, setDayShift, shiftStore, type ShiftData,
 } from "./index";
 
 const [day, afternoon, night, leave] = DEFAULT_SHIFT_TYPES;
@@ -272,6 +272,14 @@ describe("eksport .ics", () => {
     const b = buildShiftsIcs(d, ["2026-10-09"], { now: Date.UTC(2026, 9, 2) });
     expect(seq(b)).toBeGreaterThan(seq(a));
     expect(a).toContain("LAST-MODIFIED:20261001T000000Z");
+  });
+
+  it("odwołuje wyeksportowane wcześniej dni, których już nie ma", () => {
+    const exported = ["2026-09-30", "2026-10-05", "2026-10-09"];
+    expect(cancelledShiftDays(d, exported, "2026-10-01")).toEqual(["2026-10-05"]);
+    const ics = buildShiftsIcs(d, ["2026-10-09"], { cancelled: ["2026-10-05"] });
+    expect(ics).toMatch(/UID:shift-2026-10-05@notatnik[\s\S]*STATUS:CANCELLED/);
+    expect(exportedAfter(exported, ["2026-10-09", "2026-10-10"], "2026-10-01")).toEqual(["2026-09-30", "2026-10-09", "2026-10-10"]);
   });
 
   it("samotne CR w notatce nie łamie linii", () => {

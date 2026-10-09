@@ -4,8 +4,9 @@ import { pl } from "date-fns/locale";
 import { CalendarArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { dayKey } from "@/lib/reminderOccurrences";
-import { DEFAULT_SHIFT_TYPES, addDefaultShiftTypes, applyPatternToStore, buildShiftsIcs, exportableShiftDays, monthSummary, restoreDays, setDayEntry, setDayShift, shiftStore, useShifts, type ShiftType } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, addDefaultShiftTypes, SHIFTS_EXPORTED_KEY, applyPatternToStore, buildShiftsIcs, cancelledShiftDays, exportableShiftDays, exportedAfter, monthSummary, restoreDays, setDayEntry, setDayShift, shiftStore, useShifts, type ShiftType } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
+import { createPersistedStore } from "@/lib/persistedStore";
 import { pluralPl } from "@/lib/plural";
 import { toastWithUndo } from "@/lib/undoToast";
 import { NowCard } from "./NowCard";
@@ -23,6 +24,10 @@ function brushHint(brush: Brush, typesById: Map<string, ShiftType>): string {
   const name = typesById.get(brush.id)?.name ?? "zmianę";
   return `Stuknij dzień, żeby nanieść: ${name}. Drugie stuknięcie zdejmuje.`;
 }
+
+const exportedStore = createPersistedStore<string[]>(SHIFTS_EXPORTED_KEY, [], {
+  merge: (defaults, stored) => (Array.isArray(stored) ? stored.filter((k): k is string => typeof k === "string") : defaults),
+});
 
 const navButton = "pressable shrink-0 w-10 h-10 coarse:w-11 coarse:h-11 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
@@ -65,16 +70,23 @@ export function ShiftsView() {
     });
   }
 
-  /** Od oglądanego miesiąca w przód — tyle, ile ktoś zwykle chce mieć w telefonie. */
+  /**
+   * Od oglądanego miesiąca w przód — tyle, ile ktoś zwykle chce mieć w telefonie.
+   * Dni wysłane wcześniej, a teraz wyczyszczone, idą jako odwołane.
+   */
   function exportIcs() {
-    const keys = exportableShiftDays(data, dayKey(month));
-    if (keys.length === 0) {
+    const from = dayKey(month);
+    const keys = exportableShiftDays(data, from);
+    const cancelled = cancelledShiftDays(data, exportedStore.get(), from);
+    if (keys.length === 0 && cancelled.length === 0) {
       toast("Brak zmian do eksportu", { description: "Nanieś zmiany w tym lub kolejnych miesiącach." });
       return;
     }
-    download(buildShiftsIcs(data, keys), `grafik-${format(month, "yyyy-MM")}.ics`, "text/calendar;charset=utf-8");
+    download(buildShiftsIcs(data, keys, { cancelled }), `grafik-${format(month, "yyyy-MM")}.ics`, "text/calendar;charset=utf-8");
+    exportedStore.set(exportedAfter(exportedStore.get(), keys, from));
+    const removed = cancelled.length ? ` Odwołuje ${cancelled.length} ${pluralPl(cancelled.length, ["wyczyszczony dzień", "wyczyszczone dni", "wyczyszczonych dni"])}.` : "";
     toast.success(`Pobrano ${keys.length} ${pluralPl(keys.length, ["dzień", "dni", "dni"])} grafiku (.ics)`, {
-      description: "Otwórz plik, żeby dodać zmiany do kalendarza telefonu. Ponowny import aktualizuje wpisy; dni wyczyszczone w grafiku usuń z kalendarza ręcznie.",
+      description: `Otwórz plik, żeby dodać zmiany do kalendarza telefonu. Ponowny import aktualizuje wpisy.${removed}`,
     });
   }
 

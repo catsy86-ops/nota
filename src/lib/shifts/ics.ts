@@ -10,6 +10,9 @@ import { shiftSpan } from "./time";
  * Nieobecności idą jako wydarzenia całodniowe, bez alarmu.
  */
 
+/** Dni wysłane do kalendarza z tego urządzenia — żeby przy następnym eksporcie odwołać wyczyszczone. */
+export const SHIFTS_EXPORTED_KEY = "kaczy:shifts.icsExported";
+
 /** Minuty od 2020 r. jako SEQUENCE — mieści się w liczbie 32-bitowej przez ~4000 lat. */
 const SEQUENCE_EPOCH = Date.UTC(2020, 0, 1);
 
@@ -30,7 +33,21 @@ export function exportableShiftDays(data: ShiftData, fromKey: string): string[] 
   return Object.keys(data.days).filter((k) => k >= fromKey).sort();
 }
 
-export function buildShiftsIcs(data: ShiftData, dayKeys: string[], { alarmMinutes = 60, now = Date.now() } = {}): string {
+/**
+ * Dni wysłane wcześniejszym eksportem (od `fromKey`), których w grafiku już
+ * nie ma — idą jako `STATUS:CANCELLED`, żeby kalendarz je zdjął.
+ */
+export function cancelledShiftDays(data: ShiftData, exported: string[], fromKey: string): string[] {
+  const typeIds = new Set(data.types.map((t) => t.id));
+  return exported.filter((k) => k >= fromKey && !typeIds.has(data.days[k]?.type)).sort();
+}
+
+/** Zbiór wyeksportowanych dni po eksporcie od `fromKey`: wcześniejsze zostają, reszta = to, co poszło teraz. */
+export function exportedAfter(prev: string[], sent: string[], fromKey: string): string[] {
+  return [...prev.filter((k) => k < fromKey), ...sent].sort();
+}
+
+export function buildShiftsIcs(data: ShiftData, dayKeys: string[], { alarmMinutes = 60, now = Date.now(), cancelled = [] as string[] } = {}): string {
   const typesById = new Map(data.types.map((t) => [t.id, t]));
   const events: string[] = [];
   const sequence = Math.max(0, Math.floor((now - SEQUENCE_EPOCH) / 60_000));
@@ -62,6 +79,11 @@ export function buildShiftsIcs(data: ShiftData, dayKeys: string[], { alarmMinute
     }
     lines.push("END:VEVENT");
     events.push(...lines);
+  }
+
+  for (const key of cancelled) {
+    events.push("BEGIN:VEVENT", `UID:shift-${key}@notatnik`, `DTSTAMP:${utcStamp(now)}`, `LAST-MODIFIED:${utcStamp(now)}`, `SEQUENCE:${sequence}`,
+      `DTSTART;VALUE=DATE:${dateOnly(key)}`, `DTEND;VALUE=DATE:${dateOnly(key, 1)}`, "SUMMARY:Wolne", "STATUS:CANCELLED", "TRANSP:TRANSPARENT", "END:VEVENT");
   }
 
   const all = [
