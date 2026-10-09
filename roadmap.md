@@ -500,3 +500,36 @@ Znaleziska, które to uzasadniają: brak tokenów ruchu (ok. 10 różnych sprę�
 - [x] **Runda 6 — kafle** (✅ 2026-10-04; e2e 43/43; „fade przy zmianie widoku” = zmiana układu lista/siatka/mozaika): `transition-[box-shadow,border-color]` zamiast `transition-all`, spójne promienie (wrapper, tła przesunięcia, `.note-flash`), „uniesienie” przy przeciąganiu (bez skali — transform należy do dnd-kit), fade przy zmianie widoku.
 
 Nie robimy: masonry, skali przy przeciąganiu, `backdrop-blur` na overlayach, View Transitions API, powrotu `whileHover` na ikonach, animowania `width`/`height` list kafli, drugiego mechanizmu reduced-motion (obecny działa), zmiany `--primary`.
+
+## Plan dopracowania UI — 2026-10-09
+
+Zrzuty wszystkich widoków (390/1440 px, jasny/ciemny, realistyczne dane). Robione po kolei, z `frontend-design`.
+
+**Faza 0 — błędy widoczne gołym okiem**
+- [x] 1. Ściśnięte spacje w kroju tytułów (Plus Jakarta Sans: spacja 0,17 em → „Spotkanie zzespołem”). `word-spacing` dla `.font-display`/h1–h6. **S**
+- [x] 2. Stopka kafla na telefonie łamie się na 3 linie („9 / słów · ~1 / min”) obok „⋯”. **S** — ✅ liczba słów tylko w czytniku, stopka w jednej linii.
+- [x] 3. „Przypomnie…” ucięte w dolnej nawigacji przy 390 px. **S** — ✅ nazwa bez zmian, podpis bez ucinania (obok wąskie „Więcej” i FAB).
+- [x] 4. Dwa kafle z pomarańczową obwódką naraz (zaznaczenie + fokus klawiatury?). **S** — ✅ to był link zwrotny: fokus siatki zostawał na kaflu z linkiem; `revealNote` przenosi go na cel.
+- [x] 5. Święto spoza miesiąca w Grafiku nieczytelne w ciemnym motywie. **S**
+
+**Faza 1 — lżejsze Notatki**
+- [ ] 6. Na kaflu tylko data; liczba słów i „Linkują tu” do czytnika. **S**
+- [ ] 7. Przypomnienie i priorytet w jednym rzędzie na telefonie. **S**
+- [ ] 8. Ciemny motyw: kolory notatek jako delikatny odcień + kolorowy pasek zamiast „brudnych” teł. **M**
+- [ ] 9. Telefon: ~380 px nad pierwszą notatką; instalacja proponowana 3 razy (ikona w nagłówku, pasek, baner). **S**
+- [ ] 10. Composer: 5 rzędów kontrolek → stopniowe odsłanianie (kolory pod ikoną palety, szablony w pustym polu, ikony formatowania). **M**
+
+**Faza 2 — Grafik**
+- [ ] 11. Ustawienia z podsumowania do okna „Ustawienia grafiku”. **M**
+- [ ] 12. Tekst prawny jako zwijane „Jak liczymy?” w punktach. **S**
+- [ ] 13. Natywne `<select>` → komponent aplikacji. **M**
+- [ ] 14. „Kliknij” na komputerze, urlop pełnym tłem zamiast przerywanej ramki, nadgodziny w kolorze marki zamiast różu. **S**
+- [ ] 15. Pasek pędzli na telefonie mieści 1,5 rodzaju — kompaktowe pędzle. **M**
+
+**Faza 3 — spójność**
+- [ ] 16. Jeden wygląd siatki miesiąca (Kalendarz i Grafik). **M**
+- [ ] 17. Stały układ nagłówka między widokami. **S**
+- [ ] 18. Rola kolorów: pomarańcz = akcja, czerwony = pilne, róż tylko dekoracja; plama poświaty na pustych widokach. **S**
+
+**Faza 4 — opcjonalnie**
+- [ ] 19. Podsumowanie Grafiku jako rachunek z baru (kropki prowadzące, cyfry o stałej szerokości, „Razem brutto”). **M**
