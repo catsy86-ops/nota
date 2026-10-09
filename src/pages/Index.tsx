@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo, useRef, lazy, Suspense } from "react";
+import { useState, useCallback, useDeferredValue, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
@@ -87,10 +87,13 @@ const Index = () => {
   useEffect(() => {
     if (navigationType === "POP") setSearch(route.search);
   }, [route.search, navigationType]);
+  // Pole dostaje każdy znak od razu; filtrowanie kart i adres idą odroczonym
+  // renderem, który React przerywa przy kolejnym znaku — pisanie nie czeka na 150 kart.
+  const deferredSearch = useDeferredValue(search);
   const setRouteSearch = route.setSearch;
   useEffect(() => {
-    if (search !== parseViewRoute(window.location.pathname, window.location.search).search) setRouteSearch(search);
-  }, [search, setRouteSearch]);
+    if (deferredSearch !== parseViewRoute(window.location.pathname, window.location.search).search) setRouteSearch(deferredSearch);
+  }, [deferredSearch, setRouteSearch]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false);
   const addNoteRef = useRef<{ expand: () => void }>(null);
@@ -206,7 +209,7 @@ const Index = () => {
   }, [notesRef, updateNote, addVersion]);
 
   const { displayNotes, pinned, others, elsewhere } = useFilteredNotes({
-    notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs,
+    notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search: deferredSearch, prefs,
   });
 
   const allNotesForLinks = useMemo(() => [...notes, ...archivedNotes], [notes, archivedNotes]);
@@ -599,8 +602,8 @@ const Index = () => {
             </ViewErrorBoundary>
           )}
 
-          {view !== "calendar" && view !== "shifts" && displayNotes.length === 0 && <EmptyState view={view} search={search} elsewhere={elsewhere} onGo={(v) => go(v)} />}
-          {view === "notes" && displayNotes.length > 0 && !search && <DailyQuote />}
+          {view !== "calendar" && view !== "shifts" && displayNotes.length === 0 && <EmptyState view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} />}
+          {view === "notes" && displayNotes.length > 0 && !deferredSearch && <DailyQuote />}
         </main>
       </div>
     </div>
