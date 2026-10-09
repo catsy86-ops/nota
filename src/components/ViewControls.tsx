@@ -154,6 +154,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
               <button
                 key={c}
                 onClick={() => setViewPref("filterColor", c)}
+                data-swatch={c}
                 className={cn(
                   "w-6 h-6 rounded-full border-2 transition-all",
                   colorClasses[c],

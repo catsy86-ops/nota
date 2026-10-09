@@ -39,6 +39,7 @@ export function ColorPicker({ selected, onSelect, nowrap = false }: ColorPickerP
           key={c.value}
           onClick={() => onSelect(c.value)}
           aria-label={c.label}
+          data-swatch={c.value}
           aria-pressed={selected === c.value}
           className={`pressable w-7 h-7 shrink-0 rounded-full border-2 transition-colors ${colorClasses[c.value]} ${
             selected === c.value ? "border-primary ring-2 ring-primary/30" : "border-transparent hover:border-muted-foreground/30"

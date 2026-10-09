@@ -80,6 +80,7 @@ export function GeneralSettings() {
             <button
               key={c}
               onClick={() => setViewPref("defaultNoteColor", c)}
+              data-swatch={c}
               className={cn(
                 "w-9 h-9 rounded-full border-2 transition-transform",
                 colorClasses[c],

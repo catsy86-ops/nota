@@ -116,15 +116,17 @@
     --input: 220 20% 18%;
     --ring: 25 95% 53%;
 
+    /* Ciemne notatki: odcień przygaszony (40% nasycenia przy 22% jasności dawało oliwkę
+       i brąz), a kolor niesie pasek u góry kafla (`--note-ink`, reguła niżej). */
     --note-default: 220 20% 14%;
-    --note-coral: 14 40% 22%;
-    --note-peach: 30 40% 22%;
-    --note-sand: 45 40% 22%;
-    --note-mint: 150 25% 20%;
-    --note-sage: 160 15% 20%;
-    --note-sky: 200 30% 22%;
-    --note-lavender: 260 25% 22%;
-    --note-rose: 340 30% 22%;
+    --note-coral: 14 22% 16%;
+    --note-peach: 30 22% 16%;
+    --note-sand: 45 18% 16%;
+    --note-mint: 150 18% 15%;
+    --note-sage: 160 12% 15%;
+    --note-sky: 200 24% 16%;
+    --note-lavender: 260 20% 17%;
+    --note-rose: 340 20% 16%;
 
     --elevation-1: 0 1px 2px hsl(0 0% 0% / 0.3);
     --elevation-2: 0 4px 12px -2px hsl(0 0% 0% / 0.4), 0 0 0 1px hsl(0 0% 100% / 0.03);
@@ -474,6 +476,26 @@
   }
   .card-actions:not([data-open]):not([data-editing]) .card-action { padding: 0.3125rem; }
 }
+
+/* Pasek koloru u góry ciemnej kolorowej notatki — tło samo jest już prawie neutralne.
+   Obraz tła zamiast cienia: nie gryzie się z cieniami uniesienia i zaznaczenia. */
+.dark [data-note-color="coral"], .dark [data-swatch="coral"] { --note-ink: 14 85% 66%; }
+.dark [data-note-color="peach"], .dark [data-swatch="peach"] { --note-ink: 30 90% 62%; }
+.dark [data-note-color="sand"], .dark [data-swatch="sand"] { --note-ink: 45 90% 58%; }
+.dark [data-note-color="mint"], .dark [data-swatch="mint"] { --note-ink: 150 55% 55%; }
+.dark [data-note-color="sage"], .dark [data-swatch="sage"] { --note-ink: 160 25% 58%; }
+.dark [data-note-color="sky"], .dark [data-swatch="sky"] { --note-ink: 200 80% 64%; }
+.dark [data-note-color="lavender"], .dark [data-swatch="lavender"] { --note-ink: 260 70% 74%; }
+.dark [data-note-color="rose"], .dark [data-swatch="rose"] { --note-ink: 340 75% 70%; }
+.dark [data-note-color]:not([data-note-color="default"]) {
+  background-image: linear-gradient(hsl(var(--note-ink)), hsl(var(--note-ink)));
+  background-size: 100% 3px;
+  background-repeat: no-repeat;
+}
+/* Próbki koloru w ciemnym motywie pokazują kolor paska — przygaszone tła są do siebie zbyt podobne. */
+.dark [data-swatch]:not([data-swatch="default"]) { background-color: hsl(var(--note-ink)); }
+/* Pasek akcji dziedziczy tło karty (`background: inherit`) — bez drugiego paska. */
+.dark [data-note-color] .card-actions { background-image: none; }
 
 /* Ciemne kolorowe notatki: tekst pomocniczy jaśniej, żeby utrzymać ~4.5:1. */
 .dark [data-note-color]:not([data-note-color="default"]) {
