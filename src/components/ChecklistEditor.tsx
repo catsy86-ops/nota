@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { emojiShower } from "@/lib/celebrate";
 import { parsePastedChecklist } from "@/lib/checklistPaste";
@@ -14,24 +14,43 @@ interface ChecklistEditorProps {
   readOnly?: boolean;
 }
 
-/** Wspólny wygląd pola wyboru listy: pusty kwadrat albo wypełniony z ✓. */
-function CheckMark({ checked, size = "md" }: { checked: boolean; size?: "sm" | "md" }) {
+/**
+ * Wspólny wygląd pola wyboru listy: pusty kwadrat albo wypełniony z ptaszkiem.
+ * Ptaszek jest rysowany (stroke-dashoffset, klasy `check-tick` w index.css):
+ * przy przełączeniu w miejscu gra przejście CSS, a `drawIn` — gdy wiersz
+ * dopiero się zamontował po odhaczeniu (edytor przenosi go do „ukończonych”).
+ * Bez animacji przy zwykłym montażu, więc 150 kafli nie rysuje ptaszków naraz.
+ */
+function CheckMark({ checked, size = "md", drawIn }: { checked: boolean; size?: "sm" | "md"; drawIn?: boolean }) {
   return (
     <span
       aria-hidden
       className={cn(
-        "rounded flex items-center justify-center shrink-0 border-[1.5px] transition-colors",
+        "rounded flex items-center justify-center shrink-0 border-[1.5px] transition-colors duration-fast",
         size === "sm" ? "w-4 h-4" : "w-[18px] h-[18px]",
         checked ? "border-primary bg-primary text-primary-foreground" : "border-muted-foreground/50 group-hover/check:border-primary",
       )}
     >
-      {checked && <Check className={size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5"} strokeWidth={3} />}
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round"
+        className={cn(size === "sm" ? "w-3 h-3" : "w-3.5 h-3.5", "check-tick", drawIn && "check-tick-in")} data-on={checked}>
+        {/* Od krótkiego ramienia — ptaszek „pisany” jak długopisem. */}
+        <path d="M4 12l5 5L20 6" pathLength={1} />
+      </svg>
     </span>
   );
 }
 
+/** Tekst pozycji z przekreśleniem, które przesuwa się przez tekst przy odhaczeniu. */
+function StrikeText({ checked, drawIn, children }: { checked: boolean; drawIn?: boolean; children: React.ReactNode }) {
+  // Wewnętrzny inline span: każda linia zawiniętego tekstu dostaje własną kreskę.
+  return <span className={cn("check-strike", drawIn && "check-strike-in")} data-on={checked}>{children}</span>;
+}
+
 export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorProps) {
   const [newItem, setNewItem] = useState("");
+  // Ostatnio odhaczona pozycja: jej wiersz w „ukończonych” montuje się na nowo,
+  // więc ptaszek i kreskę gra animacja wejścia, nie przejście.
+  const [justChecked, setJustChecked] = useState<string | null>(null);
 
   function addItem() {
     const text = newItem.trim();
@@ -42,6 +61,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
 
   function toggleItem(id: string) {
     const next = items.map((i) => (i.id === id ? { ...i, checked: !i.checked } : i));
+    setJustChecked(next.find((i) => i.id === id)?.checked ? id : null);
     onChange(next);
     if (next.length > 0 && next.every((i) => i.checked) && items.some((i) => !i.checked)) {
       emojiShower(["🎉", "✅", "✨", "🥳"]);
@@ -136,9 +156,11 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                 onClick={() => toggleItem(item.id)}
                 className="group/check p-1 -m-1"
               >
-                <CheckMark checked />
+                <CheckMark checked drawIn={item.id === justChecked} />
               </button>
-              <span className="text-sm text-muted-foreground line-through decoration-muted-foreground/60 flex-1">{item.text}</span>
+              <span className="text-sm text-muted-foreground flex-1">
+                <StrikeText checked drawIn={item.id === justChecked}>{item.text}</StrikeText>
+              </span>
               {!readOnly && (
                 <button
                   onClick={() => removeItem(item.id)}
@@ -190,8 +212,8 @@ export function ChecklistPreview({ items, onToggle }: { items: ChecklistItem[]; 
           className="group/check flex w-full items-center gap-2 rounded-md py-0.5 [@media(pointer:coarse)]:py-1 text-left disabled:cursor-default"
         >
           <CheckMark checked={item.checked} size="sm" />
-          <span className={cn("text-xs", item.checked ? "text-muted-foreground line-through decoration-muted-foreground/60" : "text-foreground/80")}>
-            {item.text}
+          <span className={cn("text-xs transition-colors duration-base", item.checked ? "text-muted-foreground" : "text-foreground/80")}>
+            <StrikeText checked={item.checked}>{item.text}</StrikeText>
           </span>
         </button>
       ))}

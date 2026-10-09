@@ -439,6 +439,47 @@
 .month-in-next { animation: month-in-next var(--dur-base) var(--ease-out); }
 .month-in-prev { animation: month-in-prev var(--dur-base) var(--ease-out); }
 
+/* Odhaczanie pozycji listy (ChecklistEditor). Ptaszek się rysuje
+   (pathLength=1 → dasharray/dashoffset w jednostkach 0..1), kreska przesuwa
+   się przez tekst od lewej. Odhaczenie: 220–320 ms ease-out, odznaczenie:
+   szybkie 150 ms ease-in. Świadomy wyjątek od „tylko transform/opacity”:
+   dashoffset 14-pikselowej ikony i background-size jednego wiersza to
+   malowanie małego prostokąta, a zawinięty tekst nie da się przekreślić
+   transformem pseudoelementu. Przejścia grają tylko przy zmianie —
+   zwykły montaż kafli niczego nie animuje. */
+.check-tick path {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset var(--dur-fast) var(--ease-in);
+}
+.check-tick[data-on="true"] path {
+  stroke-dashoffset: 0;
+  /* Najpierw wypełnia się kwadrat (150 ms), potem pióro. */
+  transition: stroke-dashoffset var(--dur-base) var(--ease-out) 60ms;
+}
+.check-tick-in[data-on="true"] path { animation: check-tick-in var(--dur-base) var(--ease-out) 60ms both; }
+@keyframes check-tick-in { from { stroke-dashoffset: 1; } }
+
+.check-strike {
+  background-image: linear-gradient(hsl(var(--muted-foreground) / 0.6), hsl(var(--muted-foreground) / 0.6));
+  background-repeat: no-repeat;
+  background-position: 0 58%;
+  background-size: 0% 1px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  transition: background-size var(--dur-fast) var(--ease-in);
+}
+.check-strike[data-on="true"] {
+  background-size: 100% 1px;
+  transition: background-size var(--dur-slow) var(--ease-out) 60ms;
+}
+.check-strike-in[data-on="true"] { animation: check-strike-in var(--dur-slow) var(--ease-out) 60ms both; }
+@keyframes check-strike-in { from { background-size: 0% 1px; } }
+/* Tryb wysokiego kontrastu wycina tła — wtedy zwykłe przekreślenie. */
+@media (forced-colors: active) {
+  .check-strike[data-on="true"] { text-decoration: line-through; }
+}
+
 /* Chwilowe podświetlenie karty po „otwórz notatkę” (paleta, wikilink). */
 .note-flash {
   outline: 2px solid hsl(var(--primary));
