@@ -2,6 +2,10 @@ import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 
+// Grafik liczy dni i zmianę czasu w strefie lokalnej — testy mają ją stałą,
+// także na CI w UTC.
+process.env.TZ = "Europe/Warsaw";
+
 export default defineConfig({
   plugins: [react()],
   test: {

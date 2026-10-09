@@ -61,6 +61,11 @@ describe("święta i wymiar czasu pracy", () => {
     expect(holidayName("2026-10-09")).toBeUndefined();
   });
 
+  it("Trzech Króli jest wolne dopiero od 2011", () => {
+    expect(holidayName("2011-01-06")).toBe("Trzech Króli");
+    expect(holidayName("2010-01-06")).toBeUndefined();
+  });
+
   it("liczy wymiar zgodnie z art. 130 KP", () => {
     expect(workNormMinutes(2026, 9)).toBe(176 * 60); // październik 2026
     expect(workNormMinutes(2026, 10)).toBe(160 * 60); // listopad: 11.11 w środę, 1.11 w niedzielę
@@ -110,6 +115,15 @@ describe("podsumowanie miesiąca", () => {
     expect(s.overtimeMinutes).toBe(0);
     expect(s.earnings).toBe(17 * 30 + 8 * 40);
     expect(s.byType.map((t) => [t.type.id, t.count])).toEqual([["d", 2], ["n", 1], ["u", 1]]);
+  });
+
+  it("nieobecność w sobotę, niedzielę i święto nie obniża normy", () => {
+    // L4 zaznaczone ciągiem 1–14.10.2026: 10 dni roboczych, 4 dni weekendu.
+    const days = Object.fromEntries(Array.from({ length: 14 }, (_, i) => [`2026-10-${String(i + 1).padStart(2, "0")}`, { type: "u" }]));
+    expect(monthSummary(data({ types: [leave], days }), 2026, 9).normMinutes).toBe((176 - 10 * 8) * 60);
+    // Urlop w Wigilię (święto od 2025 r.) — norma grudnia już ją pomija.
+    const xmas = monthSummary(data({ types: [leave], days: { "2026-12-24": { type: "u" } } }), 2026, 11);
+    expect(xmas.normMinutes).toBe(workNormMinutes(2026, 11));
   });
 
   it("dolicza dopłatę za nadgodziny ponad normę", () => {

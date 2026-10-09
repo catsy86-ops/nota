@@ -1,6 +1,9 @@
 import { test, expect } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
+  // Stały miesiąc bez świąt: w święto etykieta dnia zawiera jego nazwę
+  // („1 listopada, Wszystkich Świętych, wolne”) i selektory nic by nie znalazły.
+  await page.clock.setFixedTime(new Date("2026-10-07T10:00:00"));
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
   await page.goto("/grafik");
 });

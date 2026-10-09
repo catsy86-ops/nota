@@ -1,6 +1,6 @@
 import { isAbsence, type DayEntry, type ShiftData, type ShiftType } from "./model";
 import { entryMinutes, nightMinutes, shiftSpan } from "./time";
-import { workNormMinutes } from "./holidays";
+import { isNormDay, workNormMinutes } from "./holidays";
 
 export interface ShiftTypeTotal {
   type: ShiftType;
@@ -53,7 +53,8 @@ export function monthSummary(data: ShiftData, year: number, month: number): Mont
     totals.set(type.id, t);
     if (isAbsence(type)) {
       absenceDays += 1;
-      absenceMinutes += m;
+      // L4 czy urlop w sobotę, niedzielę albo święto nie zmniejsza normy — tego dnia jej nie ma.
+      if (isNormDay(key)) absenceMinutes += m;
       continue;
     }
     daysWorked += 1;

@@ -37,7 +37,6 @@ export function polishHolidays(year: number): Map<string, string> {
   };
   const list: [string, string][] = [
     [key(year, 1, 1), "Nowy Rok"],
-    [key(year, 1, 6), "Trzech Króli"],
     [fromEaster(0), "Wielkanoc"],
     [fromEaster(1), "Poniedziałek Wielkanocny"],
     [key(year, 5, 1), "Święto Pracy"],
@@ -50,6 +49,7 @@ export function polishHolidays(year: number): Map<string, string> {
     [key(year, 12, 25), "Boże Narodzenie"],
     [key(year, 12, 26), "Drugi dzień Bożego Narodzenia"],
   ];
+  if (year >= 2011) list.push([key(year, 1, 6), "Trzech Króli"]);
   // Wigilia jest dniem wolnym od 2025 r.
   if (year >= 2025) list.push([key(year, 12, 24), "Wigilia"]);
   const map = new Map(list);
@@ -59,6 +59,16 @@ export function polishHolidays(year: number): Map<string, string> {
 
 export function holidayName(dayKey: string): string | undefined {
   return polishHolidays(Number(dayKey.slice(0, 4))).get(dayKey);
+}
+
+/**
+ * Czy dzień wlicza się do wymiaru czasu pracy: poniedziałek–piątek i nie święto.
+ * Tylko nieobecność w taki dzień obniża normę (art. 130 § 3 KP).
+ */
+export function isNormDay(dayKey: string): boolean {
+  const [y, m, d] = dayKey.split("-").map(Number);
+  const dow = new Date(y, m - 1, d).getDay();
+  return dow >= 1 && dow <= 5 && !polishHolidays(y).has(dayKey);
 }
 
 /**
