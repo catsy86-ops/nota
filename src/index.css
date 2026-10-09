@@ -276,6 +276,9 @@
   /* Default: static and muted — the backdrop is atmosphere, not content. */
   .backdrop-aurora-static .backdrop-bloom { animation: none; opacity: 0.35; }
   .dark .backdrop-aurora-static .backdrop-bloom { opacity: 0.25; }
+  /* Statycznie środkowa poświata stała za treścią jak przebarwienie (widać ją na pustych
+     i krótkich widokach) — zostają dwie w rogach. W pełnym ruchu dryfuje, więc zostaje. */
+  .backdrop-aurora-static .backdrop-bloom-3 { display: none; }
   html[data-motion="reduced"] .backdrop-bloom { animation: none !important; }
 
   @keyframes bloom-drift-1 {

@@ -527,9 +527,9 @@ Zrzuty wszystkich widoków (390/1440 px, jasny/ciemny, realistyczne dane). Robio
 - [x] 15. Pasek pędzli na telefonie mieści 1,5 rodzaju — kompaktowe pędzle. **M** — ✅ poniżej 640 px sam skrót (nazwa `sr-only`), ołówek tylko przy wybranym; mieści się ok. 3,5 rodzaju. Przy okazji: `sr-only` bez `relative` poszerzało stronę do 581 px.
 
 **Faza 3 — spójność**
-- [ ] 16. Jeden wygląd siatki miesiąca (Kalendarz i Grafik). **M**
-- [ ] 17. Stały układ nagłówka między widokami. **S**
-- [ ] 18. Rola kolorów: pomarańcz = akcja, czerwony = pilne, róż tylko dekoracja; plama poświaty na pustych widokach. **S**
+- [x] 16. Jeden wygląd siatki miesiąca (Kalendarz i Grafik). **M** — ✅ `calendar/dayCellStyles.ts`; Kalendarz dostał weekendy w kolorze marki i święta (nazwa od `sm`, kropka na telefonie, w `aria-label`).
+- [x] 17. Stały układ nagłówka między widokami. **S** — ✅ wyszukiwarka schowana też w Kalendarzu (nic tam nie filtrowała); podpis z liczbą tylko przy listach notatek.
+- [x] 18. Rola kolorów: pomarańcz = akcja, czerwony = pilne, róż tylko dekoracja; plama poświaty na pustych widokach. **S** — ✅ róż został tylko w tłach/gradientach (nadgodziny przeszły na pomarańcz w pkt 14); środkowa poświata wyłączona w trybie statycznym.
 
 **Faza 4 — opcjonalnie**
 - [ ] 19. Podsumowanie Grafiku jako rachunek z baru (kropki prowadzące, cyfry o stałej szerokości, „Razem brutto”). **M**
