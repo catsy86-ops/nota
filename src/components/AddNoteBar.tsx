@@ -133,7 +133,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
     <>
     {/* Na telefonie zwinięty pasek dublował „+” z dolnej nawigacji i zabierał ~90 px nad notatkami — „+” rozwija ten sam edytor. */}
     <motion.div ref={containerRef} layout data-note-color={expanded && color !== "default" ? color : undefined}
-      className={cn("w-full max-w-xl mx-auto rounded-2xl note-shadow border border-border overflow-hidden transition-[box-shadow,background-color] focus-ring-gradient hover:shadow-elevation-3",
+      className={cn("w-full max-w-xl rounded-2xl note-shadow border border-border overflow-hidden transition-[box-shadow,background-color] focus-ring-gradient hover:shadow-elevation-3",
         // Kolor schowany pod ikoną palety — edytor przyjmuje go od razu, żeby było widać wybór.
         expanded && color !== "default" ? colorClasses[color] : "bg-card", !expanded && "max-md:hidden")}>
       <AnimatePresence mode="wait">

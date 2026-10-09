@@ -59,7 +59,7 @@
     --note-rose: 340 75% 96.5%;
 
     --font-display: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif;
-    --font-body: 'Inter Variable', 'Inter', sans-serif;
+    --font-body: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif;
 
     /* Sidebar z tokenów aplikacji, nie z domyślnego (niebieskiego) shadcn. */
     --sidebar-background: var(--background);
@@ -228,9 +228,13 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
   }
-  /* Spacja w Plus Jakarta Sans ma 0,17 em — „Spotkanie z zespołem” czytało się jak „zzespołem”. */
-  h1, h2, h3, h4, h5, h6, .font-display {
+  /* Spacja w Plus Jakarta Sans ma 0,17 em — „Spotkanie z zespołem” czytało się jak „zzespołem”.
+     Krój jest teraz w całej aplikacji, więc poprawka na body; pola formularzy jej nie dziedziczą same. */
+  body {
     word-spacing: 0.06em;
+  }
+  input, textarea, select, button {
+    word-spacing: inherit;
   }
 }
 

@@ -472,7 +472,7 @@ const Index = () => {
         />
 
         {/* `flex gap`, nie `space-y`: ukryta na sm+ wyszukiwarka nie dokłada marginesu nad treścią. */}
-        <main ref={mainRef} className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-6 sm:gap-8 pb-safe">
+        <main ref={mainRef} className="flex-1 max-w-[88rem] mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-6 sm:gap-8 pb-safe">
           {view !== "shifts" && view !== "calendar" && (
             <div data-view-static className="sm:hidden">
               <SearchBar value={search} onChange={setSearch} />

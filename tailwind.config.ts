@@ -18,7 +18,9 @@ export default {
       fontFamily: {
         display: ['Plus Jakarta Sans Variable', 'Plus Jakarta Sans', 'sans-serif'],
         logo: ['Unbounded NOTKI', 'Plus Jakarta Sans Variable', 'sans-serif'],
-        body: ['Inter Variable', 'Inter', 'sans-serif'],
+        // Jeden krój interfejsu — Inter był drugim, prawie takim samym.
+        body: ['Plus Jakarta Sans Variable', 'Plus Jakarta Sans', 'sans-serif'],
+        mono: ['JetBrains Mono Variable', 'ui-monospace', 'monospace'],
       },
       colors: {
         note: {

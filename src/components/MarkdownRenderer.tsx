@@ -62,11 +62,11 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content, classN
         h1: ({ children }) => <h1 className="text-base font-display font-bold text-foreground mb-1">{renderText(children)}</h1>,
         h2: ({ children }) => <h2 className="text-sm font-display font-bold text-foreground mb-1">{renderText(children)}</h2>,
         h3: ({ children }) => <h3 className="text-sm font-display font-semibold text-foreground mb-0.5">{renderText(children)}</h3>,
-        p: ({ children }) => <p className="text-sm text-foreground/70 leading-relaxed mb-1 last:mb-0">{renderText(children)}</p>,
+        p: ({ children }) => <p className="text-sm text-foreground/80 leading-relaxed mb-1 last:mb-0">{renderText(children)}</p>,
         strong: ({ children }) => <strong className="font-semibold text-foreground">{renderText(children)}</strong>,
         em: ({ children }) => <em className="italic">{renderText(children)}</em>,
-        ul: ({ children }) => <ul className="text-sm text-foreground/70 list-disc pl-4 mb-1 space-y-0.5">{children}</ul>,
-        ol: ({ children }) => <ol className="text-sm text-foreground/70 list-decimal pl-4 mb-1 space-y-0.5">{children}</ol>,
+        ul: ({ children }) => <ul className="text-sm text-foreground/80 list-disc pl-4 mb-1 space-y-0.5">{children}</ul>,
+        ol: ({ children }) => <ol className="text-sm text-foreground/80 list-decimal pl-4 mb-1 space-y-0.5">{children}</ol>,
         li: ({ children }) => <li>{renderText(children)}</li>,
         code: ({ children, className }) => {
           const isInline = !className;

@@ -2,7 +2,8 @@ import { createRoot } from "react-dom/client";
 import { toast } from "sonner";
 import App from "./App.tsx";
 import "@fontsource-variable/plus-jakarta-sans";
-import "@fontsource-variable/inter";
+// Cyfry o stałej szerokości (rachunek w Grafiku); `wght.css` bez kursywy.
+import "@fontsource-variable/jetbrains-mono/wght.css";
 import "./index.css";
 import { registerServiceWorker, applyServiceWorkerUpdate, SW_UPDATE_EVENT, SW_OFFLINE_READY_EVENT } from "./lib/registerSW";
 import { requestPersistentStorage } from "./lib/storagePersistence";
