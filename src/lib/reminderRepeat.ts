@@ -38,6 +38,21 @@ export function getNextReminderTime(current: number, repeat: ReminderRepeat, anc
 }
 
 /**
+ * Następny termin serii albo `null`, gdy wypadłby po końcu serii (`until`).
+ * Jedyne miejsce, które decyduje, czy seria jeszcze trwa — powiadomienia,
+ * kalendarz i „pomiń” liczą to samo.
+ */
+export function nextInSeries(current: number, repeat: ReminderRepeat, anchorDay?: number, until?: number): number | null {
+  const next = getNextReminderTime(current, repeat, anchorDay);
+  return until !== undefined && next > until ? null : next;
+}
+
+/** Koniec wybranego dnia (czas lokalny) — wartość `reminderRepeatUntil`. */
+export function endOfDay(date: Date): number {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999).getTime();
+}
+
+/**
  * Dzień serii notatki. Notatki sprzed pola `reminderDay` (albo utworzone od razu
  * z terminem) go nie mają — wtedy dzień zapisanego terminu, zanim cokolwiek go przytnie.
  */

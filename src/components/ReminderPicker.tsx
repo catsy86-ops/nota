@@ -6,7 +6,7 @@ import { LazyCalendar as Calendar } from "@/components/ui/lazy-calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { REMINDER_REPEAT_LABELS, type ReminderRepeat } from "@/lib/reminderRepeat";
+import { REMINDER_REPEAT_LABELS, endOfDay, type ReminderRepeat } from "@/lib/reminderRepeat";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
 import { composeReminderTimestamp, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
 import { QuickReminderInput } from "@/components/QuickReminderInput";
@@ -14,16 +14,25 @@ import { QuickReminderInput } from "@/components/QuickReminderInput";
 interface ReminderPickerProps {
   reminder: number | null;
   reminderRepeat?: ReminderRepeat;
-  onSet: (timestamp: number | null, repeat: ReminderRepeat) => void;
+  reminderRepeatUntil?: number;
+  /** `until` — koniec serii (koniec dnia) albo `undefined` = bez końca. */
+  onSet: (timestamp: number | null, repeat: ReminderRepeat, until?: number) => void;
 }
+
+/** `YYYY-MM-DD` dla `<input type="date">` w czasie lokalnym. */
+const dateInputValue = (ts: number) => {
+  const d = new Date(ts);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
 
 const REPEAT_OPTIONS: ReminderRepeat[] = ["none", "daily", "weekly", "monthly"];
 
-export function ReminderPicker({ reminder, reminderRepeat, onSet }: ReminderPickerProps) {
+export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, onSet }: ReminderPickerProps) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(reminder ? new Date(reminder) : undefined);
   const [time, setTime] = useState(reminder ? toTimeInputValue(reminder) : DEFAULT_REMINDER_TIME);
   const [repeat, setRepeat] = useState<ReminderRepeat>(reminderRepeat ?? "none");
+  const [untilText, setUntilText] = useState(reminderRepeatUntil !== undefined ? dateInputValue(reminderRepeatUntil) : "");
 
   function handleQuickParsed(parsed: Date) {
     setDate(parsed);
@@ -34,16 +43,21 @@ export function ReminderPicker({ reminder, reminderRepeat, onSet }: ReminderPick
   // nie ma czego zapisać, a wcześniej szło w dane `NaN`.
   const timestamp = date ? composeReminderTimestamp(date, time) : null;
   const pastTime = isPastReminder(timestamp);
+  const [uy, um, ud] = untilText.split("-").map(Number);
+  const until = repeat !== "none" && untilText ? endOfDay(new Date(uy, um - 1, ud)) : undefined;
+  // Koniec serii przed pierwszym terminem nie ma sensu — seria nie miałaby żadnego wystąpienia.
+  const untilTooEarly = until !== undefined && timestamp !== null && until < timestamp;
 
   function handleSave() {
-    if (timestamp === null || pastTime) return;
+    if (timestamp === null || pastTime || untilTooEarly) return;
     requestNotificationPermissionOnIntent();
-    onSet(timestamp, repeat);
+    onSet(timestamp, repeat, until);
     setOpen(false);
   }
 
   function handleClear() {
-    onSet(null, "none");
+    onSet(null, "none", undefined);
+    setUntilText("");
     setDate(undefined);
     setTime(DEFAULT_REMINDER_TIME);
     setRepeat("none");
@@ -94,6 +108,30 @@ export function ReminderPicker({ reminder, reminderRepeat, onSet }: ReminderPick
             ))}
           </select>
         </div>
+        {repeat !== "none" && (
+          <div className="flex items-center gap-2">
+            <label htmlFor="reminder-until" className="text-xs text-muted-foreground">Do kiedy:</label>
+            <input
+              id="reminder-until"
+              type="date"
+              value={untilText}
+              min={timestamp !== null ? dateInputValue(timestamp) : undefined}
+              onChange={(e) => setUntilText(e.target.value)}
+              aria-describedby="reminder-until-hint"
+              className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 text-foreground"
+            />
+            {untilText && (
+              <button type="button" onClick={() => setUntilText("")} aria-label="Bez końca serii" className="p-1 rounded text-muted-foreground hover:text-foreground">
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        )}
+        {repeat !== "none" && (
+          <p id="reminder-until-hint" className={cn("text-2xs -mt-1", untilTooEarly ? "text-destructive" : "text-muted-foreground")}>
+            {untilTooEarly ? "Koniec serii musi być po pierwszym terminie." : untilText ? "Ostatni termin serii najpóźniej tego dnia." : "Puste pole — seria bez końca."}
+          </p>
+        )}
         {pastTime && (
           <p className="text-2xs text-destructive">Ta godzina już minęła. Wybierz godzinę w przyszłości.</p>
         )}
@@ -101,7 +139,7 @@ export function ReminderPicker({ reminder, reminderRepeat, onSet }: ReminderPick
           Działa najpewniej, gdy aplikacja zostaje otwarta w tle — bez serwera powiadomień push, zamknięta karta może dostarczyć przypomnienie dopiero po ponownym otwarciu appki.
         </p>
         <div className="flex gap-2">
-          <Button size="sm" onClick={handleSave} disabled={timestamp === null || pastTime} className="flex-1">
+          <Button size="sm" onClick={handleSave} disabled={timestamp === null || pastTime || untilTooEarly} className="flex-1">
             Zapisz
           </Button>
           {reminder && (

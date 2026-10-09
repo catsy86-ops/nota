@@ -4,7 +4,7 @@ import { snoozeTimes } from "@/lib/reminderAgenda";
 import { notePath } from "@/lib/viewRoute";
 import { toast } from "sonner";
 import type { Note } from "./useNotes";
-import { getNextReminderTime, seriesDay } from "@/lib/reminderRepeat";
+import { nextInSeries, seriesDay } from "@/lib/reminderRepeat";
 import { loadFired, saveFired, reconcileFired } from "@/lib/firedReminders";
 
 export function useReminderNotifications(
@@ -12,6 +12,8 @@ export function useReminderNotifications(
   /** `reminderDay` zostaje z notatki — przesunięcie serii nie zmienia jej dnia. */
   onReminderFired: (id: string, nextReminder: number | null, reminderDay?: number) => void,
   onOpen?: (id: string) => void,
+  /** Ostatni termin serii właśnie wystrzelił — seria staje się jednorazowa. */
+  onSeriesEnded?: (id: string) => void,
 ) {
   const firedRef = useRef(loadFired());
   const onOpenRef = useRef(onOpen);
@@ -85,8 +87,14 @@ export function useReminderNotifications(
           }
 
           if (repeat !== "none") {
-            const next = getNextReminderTime(note.reminder, repeat, seriesDay(note));
-            onReminderFired(note.id, next, seriesDay(note));
+            const next = nextInSeries(note.reminder, repeat, seriesDay(note), note.reminderRepeatUntil);
+            if (next !== null) onReminderFired(note.id, next, seriesDay(note));
+            else {
+              // Ostatni termin: zostaje jak odpalone jednorazowe przypomnienie.
+              fired.add(note.id);
+              saveFired(fired);
+              onSeriesEnded?.(note.id);
+            }
           }
         }
       }
@@ -95,5 +103,5 @@ export function useReminderNotifications(
     check();
     const interval = setInterval(check, 15000);
     return () => clearInterval(interval);
-  }, [notes, onReminderFired]);
+  }, [notes, onReminderFired, onSeriesEnded]);
 }

@@ -42,6 +42,11 @@ export interface Note {
    * bez tego pola 28 lutego „zjadłoby” zamiar na zawsze. Ustawiane w `updateNote`.
    */
   reminderDay?: number;
+  /**
+   * Koniec serii: ostatni moment, w którym seria może mieć termin (koniec wybranego
+   * dnia, czas lokalny). Brak = seria bez końca. Jedna liczba — bezpieczna dla LWW.
+   */
+  reminderRepeatUntil?: number;
   priority: NotePriority;
   /** Notatka dnia: lokalna data `YYYY-MM-DD` (patrz `lib/dailyNote.ts`); brak = zwykła notatka. */
   dailyDate?: string;

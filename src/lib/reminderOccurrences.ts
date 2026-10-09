@@ -1,4 +1,4 @@
-import { getNextReminderTime, seriesDay, type ReminderRepeat } from "@/lib/reminderRepeat";
+import { nextInSeries, seriesDay, type ReminderRepeat } from "@/lib/reminderRepeat";
 import type { Note } from "@/hooks/useNotes";
 
 /**
@@ -67,9 +67,9 @@ export function expandOccurrences(notes: Note[], rangeStart: number, rangeEnd: n
       if (at >= rangeStart) {
         out.push({ noteId: note.id, at, isSeries: true, index, isNext: index === 0, repeat });
       }
-      const next = getNextReminderTime(at, repeat, seriesDay(note));
-      // Zabezpieczenie przed nieruchomym krokiem — inaczej pętla stałaby w miejscu.
-      if (next <= at) break;
+      const next = nextInSeries(at, repeat, seriesDay(note), note.reminderRepeatUntil);
+      // Koniec serii albo nieruchomy krok — inaczej pętla stałaby w miejscu.
+      if (next === null || next <= at) break;
       at = next;
     }
   }

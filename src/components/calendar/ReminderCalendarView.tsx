@@ -10,7 +10,7 @@ import { download } from "@/lib/exportNotes";
 import { addDays, format, isSameDay, isSameMonth } from "date-fns";
 import { pl } from "date-fns/locale";
 import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences";
-import { getNextReminderTime, seriesDay } from "@/lib/reminderRepeat";
+import { nextInSeries, seriesDay } from "@/lib/reminderRepeat";
 import { toast } from "sonner";
 import { MonthGrid } from "./MonthGrid";
 import { DayPanel } from "./DayPanel";
@@ -90,6 +90,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
       reminder: note?.reminder ?? null,
       repeat: note?.reminderRepeat ?? "none" as ReminderRepeat,
       day: note ? seriesDay(note) : undefined,
+      until: note?.reminderRepeatUntil,
     };
   }
 
@@ -106,7 +107,10 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
    */
   function handleSkip(noteId: string, at: number, repeat: ReminderRepeat) {
     const before = previousOf(noteId);
-    onSetReminder(noteId, getNextReminderTime(at, repeat, before.day), repeat, before.day);
+    const next = nextInSeries(at, repeat, before.day, before.until);
+    // Pominięcie ostatniego terminu serii kończy ją — nie ma już czego przypominać.
+    if (next === null) onSetReminder(noteId, null, "none");
+    else onSetReminder(noteId, next, repeat, before.day);
     toastWithUndo("Wystąpienie pominięte", () => onSetReminder(noteId, before.reminder, before.repeat, before.day), { icon: "⏭️" });
   }
 

@@ -148,6 +148,7 @@ const Index = () => {
     [...notes, ...archivedNotes],
     (id, nextReminder, reminderDay) => updateNote(id, { reminder: nextReminder, reminderDay }),
     (id) => openNoteRef.current(id),
+    (id) => updateNote(id, { reminderRepeat: "none", reminderRepeatUntil: undefined }),
   );
 
   // Odznaki w głównym widoku: jeden cichy toast na paczkę (import potrafi odblokować

@@ -46,7 +46,7 @@ function imageRefs(images: string[]): string[] {
 
 const NOTE_SCALAR_FIELDS = [
   "title", "color", "pinned", "archived", "trashed", "trashedAt",
-  "labels", "reminder", "reminderRepeat", "reminderDay", "priority", "dailyDate",
+  "labels", "reminder", "reminderRepeat", "reminderDay", "reminderRepeatUntil", "priority", "dailyDate",
   "folderId", "order", "createdAt", "updatedAt",
 ] as const;
 
@@ -158,6 +158,7 @@ function yNoteFromPlain(note: Note): YNote {
   y.set("reminder", note.reminder);
   if (note.reminderRepeat !== undefined) y.set("reminderRepeat", note.reminderRepeat);
   if (note.reminderDay !== undefined) y.set("reminderDay", note.reminderDay);
+  if (note.reminderRepeatUntil !== undefined) y.set("reminderRepeatUntil", note.reminderRepeatUntil);
   y.set("priority", note.priority);
   if (note.dailyDate !== undefined) y.set("dailyDate", note.dailyDate);
   y.set("checklist", yChecklistFromPlain(note.checklist));
@@ -187,6 +188,7 @@ function plainFromYNote(id: string, y: YNote): Note {
     reminder: (y.get("reminder") as number | null) ?? null,
     reminderRepeat: y.get("reminderRepeat") as Note["reminderRepeat"],
     reminderDay: (y.get("reminderDay") as number | undefined) ?? undefined,
+    reminderRepeatUntil: (y.get("reminderRepeatUntil") as number | undefined) ?? undefined,
     priority: (y.get("priority") as Note["priority"]) ?? "none",
     images: Array.isArray(images) ? (images as string[]) : NO_IMAGES,
     checklist: plainChecklistFromY(y.get("checklist")),

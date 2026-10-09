@@ -272,7 +272,7 @@ Fakt z kodu, który rozstrzyga wszystko: model trzyma **jeden** timestamp, a `ge
 - [x] Chip najbliższego wystąpienia: pełna interaktywność. Chipy dalszych wystąpień: **read-only**, wizualnie odmienne (przerywane obramowanie, ikona `Repeat`), klik prowadzi do najbliższego. Asymetria jest dziwna dopiero, dopóki nie zrozumie się modelu — alternatywa (udawanie, że wszystkie wystąpienia są równe) obiecuje operacje niemożliwe do zapisania.
 - [x] „Usuń" na najbliższym wystąpieniu ma dwie opcje: **to wystąpienie** → `reminder = getNextReminderTime(at, repeat)` (seria trwa, pomija jeden termin; zwykły LWW, zero nowych pól), **cała seria** → `reminder = null, reminderRepeat = "none"`. Obie z Cofnij.
 - [x] **Świadomie NIE `reminderSkips: number[]`.** Kuszące, ale pole trafiłoby do `NOTE_SCALAR_FIELDS` (`yjsStore.ts:30`), a te są LWW na całej wartości: dwa urządzenia offline pomijające różne terminy → jedna lista wygrywa, druga zmiana znika bez śladu. Poprawnie wymagałoby `Y.Array` i rozszerzenia projekcji — nakład L i nowy wektor błędów sync dla funkcji, której wartość jest wątpliwa przy nieskończonej serii.
-- [ ] Brak „do kiedy" akceptowany w MVP (kalendarz przewinięty na 2030 dalej pokazuje chipy). Jeśli zaboli: **jedno** pole skalarne `reminderRepeatUntil`, bezpieczne dla LWW, bo to jedna liczba.
+- [x] ✅ 2026-10-09: `reminderRepeatUntil` (koniec dnia, jedna liczba, LWW) — `nextInSeries` w powiadomieniach, kalendarzu i „pomiń”, `UNTIL` w .ics, pole „Do kiedy” w oknie przypomnienia. Było: Brak „do kiedy" akceptowany w MVP (kalendarz przewinięty na 2030 dalej pokazuje chipy). Jeśli zaboli: **jedno** pole skalarne `reminderRepeatUntil`, bezpieczne dla LWW, bo to jedna liczba.
 
 ### Znalezione przy okazji błędy (poza samym kalendarzem)
 

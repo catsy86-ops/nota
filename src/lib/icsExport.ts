@@ -88,7 +88,11 @@ function eventLines(note: Note, now: number): string[] {
     `DTEND:${formatLocal(start + EVENT_MINUTES * 60_000)}`,
     `SUMMARY:${escapeText(titleOf(note))}`,
   ];
-  if (repeat !== "none") lines.push(`RRULE:${rruleFor(repeat, seriesDay(note))}`);
+  if (repeat !== "none") {
+    // UNTIL w UTC (RFC 5545, gdy DTSTART ma czas) — koniec serii z `reminderRepeatUntil`.
+    const until = note.reminderRepeatUntil !== undefined ? `;UNTIL=${formatUtc(note.reminderRepeatUntil)}` : "";
+    lines.push(`RRULE:${rruleFor(repeat, seriesDay(note))}${until}`);
+  }
   const body = note.content.trim();
   if (body) lines.push(`DESCRIPTION:${escapeText(body.slice(0, 1000))}`);
   lines.push(

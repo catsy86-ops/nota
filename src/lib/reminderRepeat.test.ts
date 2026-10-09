@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getNextReminderTime, seriesDay } from "./reminderRepeat";
+import { endOfDay, getNextReminderTime, nextInSeries, seriesDay } from "./reminderRepeat";
 
 describe("getNextReminderTime", () => {
   const base = new Date(2026, 0, 15, 9, 30).getTime(); // 15 Jan 2026, 09:30
@@ -62,5 +62,16 @@ describe("seria miesięczna na końcu miesiąca", () => {
     expect(seriesDay({ reminder: at(2026, 2, 28), reminderDay: 31 })).toBe(31);
     expect(seriesDay({ reminder: at(2026, 1, 31) })).toBe(31);
     expect(seriesDay({ reminder: null })).toBeUndefined();
+  });
+});
+
+describe("koniec serii", () => {
+  it("nextInSeries zwraca null po dniu końca, a w ostatnim dniu jeszcze termin", () => {
+    const start = new Date(2026, 9, 5, 9, 0).getTime();
+    const until = endOfDay(new Date(2026, 9, 7));
+    expect(nextInSeries(start, "daily", undefined, until)).toBe(new Date(2026, 9, 6, 9, 0).getTime());
+    expect(nextInSeries(new Date(2026, 9, 6, 9, 0).getTime(), "daily", undefined, until)).toBe(new Date(2026, 9, 7, 9, 0).getTime());
+    expect(nextInSeries(new Date(2026, 9, 7, 9, 0).getTime(), "daily", undefined, until)).toBeNull();
+    expect(nextInSeries(start, "weekly")).toBe(new Date(2026, 9, 12, 9, 0).getTime());
   });
 });

@@ -90,3 +90,10 @@ describe("exportableReminders", () => {
     expect(ids).toEqual(["future", "past-series"]);
   });
 });
+
+describe("koniec serii w .ics", () => {
+  it("RRULE dostaje UNTIL w UTC", () => {
+    const until = new Date(Date.UTC(2026, 11, 31, 22, 59, 59)).getTime();
+    expect(buildIcs([note({ reminderRepeat: "weekly", reminderRepeatUntil: until })], NOW)).toContain("RRULE:FREQ=WEEKLY;UNTIL=20261231T225959Z\r\n");
+  });
+});

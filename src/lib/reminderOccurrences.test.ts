@@ -156,3 +156,11 @@ describe("groupByDay", () => {
     expect(groupByDay([]).size).toBe(0);
   });
 });
+
+describe("seria z końcem", () => {
+  it("kalendarz nie pokazuje wystąpień po reminderRepeatUntil", () => {
+    const note = makeNote({ reminder: at(2026, 3, 2), reminderRepeat: "weekly", reminderRepeatUntil: at(2026, 3, 16, 23, 59) });
+    const occ = expandOccurrences([note], MARCH.start, MARCH.end);
+    expect(occ.map((o) => new Date(o.at).getDate())).toEqual([2, 9, 16]);
+  });
+});
