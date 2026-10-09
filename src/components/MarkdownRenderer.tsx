@@ -89,7 +89,8 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content, classN
   );
 });
 
-export function FormatToolbar({ onInsert }: { onInsert: (before: string, after: string) => void }) {
+/** `nowrap` — jeden przewijany rząd (wąski kafel), zamiast łamania na dwa. */
+export function FormatToolbar({ onInsert, nowrap = false }: { onInsert: (before: string, after: string) => void; nowrap?: boolean }) {
   // Ikony zamiast znaków Markdown („B I H • > </> [[ ]]” w 11 px były nieczytelne).
   const tools = [
     { Icon: Bold, before: "**", after: "**", title: "Pogrubienie" },
@@ -102,7 +103,7 @@ export function FormatToolbar({ onInsert }: { onInsert: (before: string, after: 
   ];
 
   return (
-    <div role="toolbar" aria-label="Formatowanie" className="flex items-center gap-0.5 flex-wrap -ml-1.5">
+    <div role="toolbar" aria-label="Formatowanie" className={cn("flex items-center gap-0.5 -ml-1.5", nowrap ? "flex-nowrap overflow-x-auto min-w-0 scrollbar-none" : "flex-wrap")}>
       {tools.map(({ Icon, ...t }) => (
         <button
           key={t.title}
