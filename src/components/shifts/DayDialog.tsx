@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Minus, Plus } from "lucide-react";
@@ -17,27 +17,27 @@ interface DayDialogProps {
 
 const STEP = 15;
 
-/** Szczegóły jednego dnia: rodzaj zmiany, odchylenie od planu i notatka. */
+/**
+ * Szczegóły jednego dnia: rodzaj zmiany, odchylenie od planu i notatka.
+ * Formularz startuje od wpisu z chwili otwarcia (`key` = dzień) — zmiana
+ * z innej karty nie nadpisuje tego, co ktoś akurat pisze.
+ */
 export function DayDialog({ dayKey, entry, types, onOpenChange }: DayDialogProps) {
-  const [typeId, setTypeId] = useState<string | null>(null);
-  const [extra, setExtra] = useState(0);
-  const [note, setNote] = useState("");
-
-  useEffect(() => {
-    if (!dayKey) return;
-    setTypeId(entry?.type ?? null);
-    setExtra(entry?.extraMin ?? 0);
-    setNote(entry?.note ?? "");
-  }, [dayKey, entry]);
-
   if (!dayKey) return null;
+  return <DayForm key={dayKey} dayKey={dayKey} entry={entry} types={types} onOpenChange={onOpenChange} />;
+}
+
+function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayKey: string }) {
+  const [typeId, setTypeId] = useState<string | null>(entry?.type ?? null);
+  const [extra, setExtra] = useState(entry?.extraMin ?? 0);
+  const [note, setNote] = useState(entry?.note ?? "");
+
   const [y, m, d] = dayKey.split("-").map(Number);
   const date = new Date(y, m - 1, d);
   const holiday = holidayName(dayKey);
   const type = types.find((t) => t.id === typeId);
 
   function save() {
-    if (!dayKey) return;
     setDayEntry(dayKey, typeId ? { type: typeId, ...(extra && !(type && isAbsence(type)) ? { extraMin: extra } : {}), ...(note.trim() ? { note: note.trim() } : {}) } : null);
     onOpenChange(false);
   }

@@ -153,3 +153,13 @@ test("pędzle: strzałki wybierają sąsiedni, Cykl i + widoczne na telefonie", 
   await expect(page.getByText("Stuknij dzień, żeby nanieść: Popołudnie.")).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
+
+test("usunięcie zapisanego cyklu nie kasuje układanych kroków", async ({ page }) => {
+  await page.getByRole("button", { name: "Cykl" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toContainText("Kolejne dni cyklu (8)");
+  await dialog.getByRole("button", { name: "Dodaj do cyklu: Popołudnie" }).click();
+  await dialog.getByRole("button", { name: /^Usuń cykl Trzyzmianowy/ }).click();
+  await expect(dialog).toContainText("Kolejne dni cyklu (9)");
+  await expect(dialog.getByRole("button", { name: /^Usuń cykl/ })).toHaveCount(1);
+});
