@@ -37,6 +37,25 @@ export function entryMinutes(type: Pick<ShiftType, "start" | "end" | "breakMin">
   return Math.max(0, shiftMinutes(type) + (entry?.extraMin ?? 0));
 }
 
+/**
+ * Różnica między czasem rzeczywistym a ściennym zmiany zaczynającej się
+ * w `dayKey` (czas lokalny): +60 w noc zmiany czasu na zimowy (22–6 trwa 9 h),
+ * −60 przy zmianie na letni (7 h), poza tym 0.
+ */
+export function dstShiftMinutes(type: Pick<ShiftType, "start" | "end">, dayKey: string, extraMin = 0): number {
+  const span = shiftSpan(type);
+  if (!span) return 0;
+  const [y, m, d] = dayKey.split("-").map(Number);
+  const start = new Date(y, m - 1, d, 0, span.from).getTime();
+  const end = new Date(y, m - 1, d, 0, span.to + extraMin).getTime();
+  return Math.round((end - start) / 60_000) - (span.to + extraMin - span.from);
+}
+
+/** Jak `entryMinutes`, ale z rzeczywistą długością doby w dniu zmiany czasu. */
+export function entryMinutesOn(type: Pick<ShiftType, "start" | "end" | "breakMin">, entry: Pick<DayEntry, "extraMin"> | undefined, dayKey: string): number {
+  return Math.max(0, entryMinutes(type, entry) + dstShiftMinutes(type, dayKey, entry?.extraMin ?? 0));
+}
+
 /** Minuty zmiany w porze nocnej. Przerwy nie odejmujemy — nie wiemy, kiedy była. */
 export function nightMinutes(type: Pick<ShiftType, "start" | "end">): number {
   const span = shiftSpan(type);

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, applyPattern, currentAndNextShift, daysUntilMonthEnd, easterSunday,
   entryMinutes, formatDuration, formatHoursShort, holidayName, migrate, monthSummary, nightMinutes, parseHm,
-  shiftMinutes, workNormMinutes, buildShiftsIcs, exportableShiftDays, SHIFT_COLORS, shiftInk, contrastRatio, type ShiftData,
+  shiftMinutes, workNormMinutes, buildShiftsIcs, exportableShiftDays, SHIFT_COLORS, shiftInk, contrastRatio, dstShiftMinutes, restoreShifts, setDayShift, shiftStore, type ShiftData,
 } from "./index";
 
 const [day, afternoon, night, leave] = DEFAULT_SHIFT_TYPES;
@@ -163,11 +163,52 @@ describe("migracja", () => {
   });
 
   it("odrzuca śmieci", () => {
-    const m = migrate({ types: [{ nope: 1 }], days: { a: 5, b: { type: "d", extraMin: "x" } }, hourlyRate: -3 });
+    const m = migrate({ types: [{ nope: 1 }], days: { "2026-10-01": 5, "2026-10-02": { type: "d", extraMin: "x" } }, hourlyRate: -3 });
     expect(m.types).toEqual([]);
-    expect(m.days).toEqual({ b: { type: "d" } });
+    expect(m.days).toEqual({ "2026-10-02": { type: "d" } });
     expect(m.hourlyRate).toBe(0);
     expect(migrate(null).types.length).toBe(DEFAULT_SHIFT_TYPES.length);
+  });
+
+  it("odrzuca złe klucze dni, także __proto__", () => {
+    const m = migrate(JSON.parse('{"days":{"__proto__":{"type":"d"},"wczoraj":{"type":"d"},"2026-10-01":{"type":"d"}}}'));
+    expect(Object.keys(m.days)).toEqual(["2026-10-01"]);
+    expect(Object.getPrototypeOf(m.days)).toBe(Object.prototype);
+  });
+
+  it("naprawia stawkę i przerwę, zostawia pola nowszej wersji", () => {
+    const m = migrate({
+      types: [{ ...day, rate: "abc", breakMin: null, przyszłość: 1 }],
+      days: { "2026-10-01": { type: "d", tag: "x" } },
+      nowePole: [1],
+    });
+    expect(m.types[0].rate).toBeUndefined();
+    expect(m.types[0].breakMin).toBe(0);
+    expect((m.types[0] as unknown as Record<string, unknown>).przyszłość).toBe(1);
+    expect(m.days["2026-10-01"]).toEqual({ type: "d", tag: "x" });
+    expect((m as unknown as Record<string, unknown>).nowePole).toEqual([1]);
+    expect(monthSummary(data({ types: m.types, hourlyRate: 30, days: m.days }), 2026, 9).earnings).toBe(8 * 30);
+  });
+});
+
+describe("zmiana czasu", () => {
+  it("noc przy zmianie na czas zimowy trwa 9 h, na letni 7 h", () => {
+    expect(dstShiftMinutes(night, "2026-10-24")).toBe(60);
+    expect(dstShiftMinutes(night, "2026-03-28")).toBe(-60);
+    expect(dstShiftMinutes(night, "2026-10-09")).toBe(0);
+    const oct = monthSummary(data({ types: [night], days: { "2026-10-24": { type: "n" } } }), 2026, 9);
+    expect(oct.minutes).toBe(540);
+    expect(oct.nightMinutes).toBe(540);
+    const mar = monthSummary(data({ types: [night], days: { "2026-03-28": { type: "n" } } }), 2026, 2);
+    expect(mar.minutes).toBe(420);
+  });
+});
+
+describe("akcje grafiku", () => {
+  it("inny rodzaj zmiany zachowuje notatkę, ale nie odchylenie", () => {
+    restoreShifts(data({ types: [day, night], days: { "2026-10-01": { type: "d", note: "zastępstwo", extraMin: 120 } } }));
+    setDayShift("2026-10-01", "n");
+    expect(shiftStore.get().days["2026-10-01"]).toEqual({ type: "n", note: "zastępstwo" });
   });
 });
 
@@ -200,6 +241,20 @@ describe("eksport .ics", () => {
     expect(ics).toContain("DTSTART;VALUE=DATE:20261010");
     expect(ics).toContain("DTEND;VALUE=DATE:20261011");
     expect(ics).not.toContain("VALARM");
+  });
+
+  it("notatka przed VALARM, SEQUENCE rośnie z czasem eksportu", () => {
+    const a = buildShiftsIcs(d, ["2026-10-09"], { now: Date.UTC(2026, 9, 1) });
+    expect(a.indexOf("DESCRIPTION:zastępstwo")).toBeLessThan(a.indexOf("BEGIN:VALARM"));
+    const seq = (ics: string) => Number(/SEQUENCE:(\d+)/.exec(ics)?.[1]);
+    const b = buildShiftsIcs(d, ["2026-10-09"], { now: Date.UTC(2026, 9, 2) });
+    expect(seq(b)).toBeGreaterThan(seq(a));
+    expect(a).toContain("LAST-MODIFIED:20261001T000000Z");
+  });
+
+  it("samotne CR w notatce nie łamie linii", () => {
+    const ics = buildShiftsIcs(data({ days: { "2026-10-09": { type: "d", note: "a\rb" } } }), ["2026-10-09"]);
+    expect(ics).toContain("DESCRIPTION:a\\nb");
   });
 });
 

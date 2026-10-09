@@ -57,7 +57,7 @@ export function ShiftsView() {
     }
     download(buildShiftsIcs(data, keys), `grafik-${format(month, "yyyy-MM")}.ics`, "text/calendar;charset=utf-8");
     toast.success(`Pobrano ${keys.length} ${pluralPl(keys.length, ["dzień", "dni", "dni"])} grafiku (.ics)`, {
-      description: "Otwórz plik, żeby dodać zmiany do kalendarza telefonu. Ponowny import aktualizuje wpisy.",
+      description: "Otwórz plik, żeby dodać zmiany do kalendarza telefonu. Ponowny import aktualizuje wpisy; dni wyczyszczone w grafiku usuń z kalendarza ręcznie.",
     });
   }
 

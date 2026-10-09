@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { logDiag } from "@/lib/diagnostics";
 import { EMPTY_SHIFT_DATA, migrate, type DayEntry, type ShiftData, type ShiftPattern, type ShiftType } from "./model";
 import { applyPattern } from "./pattern";
 
@@ -11,19 +12,36 @@ import { applyPattern } from "./pattern";
 export const SHIFTS_STORAGE_KEY = "kaczy:shifts";
 
 export const shiftStore = createPersistedStore<ShiftData>(SHIFTS_STORAGE_KEY, EMPTY_SHIFT_DATA, {
-  merge: (_defaults, stored) => migrate(stored),
+  merge: (defaults, stored) => {
+    // Nie-JSON (persistedStore oddaje wtedy surowy tekst): odkładamy kopię,
+    // zanim pierwsza edycja zapisze w tym miejscu pusty grafik.
+    if (typeof stored === "string") {
+      const backupKey = `${SHIFTS_STORAGE_KEY}.corrupt-${Date.now()}`;
+      try { localStorage.setItem(backupKey, stored); } catch { /* brak miejsca — zostaje log */ }
+      logDiag("error", "shifts", `uszkodzony grafik, kopia w ${backupKey}`);
+      return defaults;
+    }
+    return migrate(stored);
+  },
 });
 
 export const useShifts = () => shiftStore.use();
 
 const update = (fn: (d: ShiftData) => ShiftData) => shiftStore.set(fn(shiftStore.get()));
 
-/** Ustawia zmianę na dzień; `null` czyści dzień. Ta sama zmiana zachowuje notatkę i odchylenie. */
+/**
+ * Ustawia zmianę na dzień; `null` czyści dzień. Ta sama zmiana zachowuje
+ * notatkę i odchylenie; inna zachowuje tylko notatkę — odchylenie dotyczyło
+ * poprzedniej zmiany i po cichu zmieniałoby godziny albo normę.
+ */
 export function setDayShift(dayKey: string, typeId: string | null): void {
   update((d) => {
     const days = { ...d.days };
     if (!typeId) delete days[dayKey];
-    else if (days[dayKey]?.type !== typeId) days[dayKey] = { ...days[dayKey], type: typeId };
+    else if (days[dayKey]?.type !== typeId) {
+      const note = days[dayKey]?.note;
+      days[dayKey] = note ? { type: typeId, note } : { type: typeId };
+    }
     return { ...d, days };
   });
 }

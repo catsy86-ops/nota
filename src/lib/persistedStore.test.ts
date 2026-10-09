@@ -80,4 +80,16 @@ describe("createPersistedStore", () => {
     expect(calls).toBe(1);
     expect(store.get()).toEqual({ n: 0 });
   });
+
+  it("picks up a write from another tab (storage event)", () => {
+    const store = createPersistedStore("test.crossTab", { n: 0 });
+    let calls = 0;
+    store.subscribe(() => { calls++; });
+    localStorage.setItem("test.crossTab", JSON.stringify({ n: 7 }));
+    window.dispatchEvent(new StorageEvent("storage", { key: "test.crossTab" }));
+    expect(store.get()).toEqual({ n: 7 });
+    expect(calls).toBe(1);
+    window.dispatchEvent(new StorageEvent("storage", { key: "other.key" }));
+    expect(calls).toBe(1);
+  });
 });

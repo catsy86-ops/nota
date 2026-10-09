@@ -1,5 +1,5 @@
 import { isAbsence, type DayEntry, type ShiftData, type ShiftType } from "./model";
-import { entryMinutes, nightMinutes, shiftSpan } from "./time";
+import { dstShiftMinutes, entryMinutesOn, nightMinutes, shiftSpan } from "./time";
 import { isNormDay, workNormMinutes } from "./holidays";
 
 export interface ShiftTypeTotal {
@@ -46,7 +46,7 @@ export function monthSummary(data: ShiftData, year: number, month: number): Mont
     if (!key.startsWith(prefix)) continue;
     const type = typesById.get(entry.type);
     if (!type) continue;
-    const m = entryMinutes(type, entry);
+    const m = entryMinutesOn(type, entry, key);
     const t = totals.get(type.id) ?? { type, count: 0, minutes: 0 };
     t.count += 1;
     t.minutes += m;
@@ -59,7 +59,9 @@ export function monthSummary(data: ShiftData, year: number, month: number): Mont
     }
     daysWorked += 1;
     minutes += m;
-    night += nightMinutes(type);
+    const nightPlan = nightMinutes(type);
+    // Zmiana czasu wypada o 2–3 w nocy, więc dodatkowa/brakująca godzina jest godziną nocną.
+    night += nightPlan > 0 ? Math.max(0, nightPlan + dstShiftMinutes(type, key)) : 0;
     base += (m / 60) * (type.rate ?? data.hourlyRate);
   }
 

@@ -89,6 +89,21 @@ function isShiftType(t: unknown): t is ShiftType {
   return !!o && typeof o.id === "string" && typeof o.name === "string" && typeof o.start === "string" && typeof o.end === "string";
 }
 
+/** Naprawia pola liczbowe i znakowe; nieznane pola (z nowszej wersji aplikacji) zostają. */
+function cleanType(t: ShiftType): ShiftType {
+  const out: ShiftType = {
+    ...t,
+    short: typeof t.short === "string" && t.short ? t.short : t.name.slice(0, 1).toUpperCase(),
+    color: typeof t.color === "string" ? t.color : SHIFT_COLORS[0],
+    breakMin: typeof t.breakMin === "number" && Number.isFinite(t.breakMin) ? Math.max(0, t.breakMin) : 0,
+    kind: t.kind === "absence" ? "absence" : "work",
+  };
+  if (!(typeof t.rate === "number" && Number.isFinite(t.rate) && t.rate > 0)) delete out.rate;
+  return out;
+}
+
+const DAY_KEY = /^\d{4}-\d{2}-\d{2}$/;
+
 function isPattern(p: unknown): p is ShiftPattern {
   const o = p as ShiftPattern;
   return !!o && typeof o.id === "string" && typeof o.name === "string" && Array.isArray(o.steps);
@@ -98,27 +113,35 @@ function toEntry(v: unknown): DayEntry | null {
   // v1 trzymało w dniu sam identyfikator zmiany.
   if (typeof v === "string") return { type: v };
   const o = v as DayEntry;
-  if (!o || typeof o.type !== "string") return null;
-  const entry: DayEntry = { type: o.type };
-  if (typeof o.note === "string" && o.note.trim()) entry.note = o.note;
+  if (!o || typeof o !== "object" || typeof o.type !== "string") return null;
+  // Nieznane pola (np. z nowszej wersji na innym urządzeniu) przechodzą dalej.
+  const entry: DayEntry = { ...o, type: o.type };
+  if (!(typeof o.note === "string" && o.note.trim())) delete entry.note;
   if (typeof o.extraMin === "number" && Number.isFinite(o.extraMin) && o.extraMin !== 0) entry.extraMin = Math.round(o.extraMin);
+  else delete entry.extraMin;
   return entry;
 }
 
-/** Dowolna zapisana postać (v1, v2, śmieci) → poprawne `ShiftData`. */
+/**
+ * Dowolna zapisana postać (v1, v2, śmieci) → poprawne `ShiftData`.
+ * Pola, których ta wersja nie zna, zostają — zapis ze starszej aplikacji
+ * nie kasuje danych dopisanych przez nowszą.
+ */
 export function migrate(stored: unknown): ShiftData {
-  const s = (stored ?? {}) as Record<string, unknown>;
+  const s = (stored && typeof stored === "object" ? stored : {}) as Record<string, unknown>;
   const days: Record<string, DayEntry> = {};
   if (s.days && typeof s.days === "object") {
     for (const [key, v] of Object.entries(s.days as Record<string, unknown>)) {
+      if (!DAY_KEY.test(key)) continue;
       const entry = toEntry(v);
       if (entry) days[key] = entry;
     }
   }
   const num = (v: unknown, fallback: number) => (typeof v === "number" && Number.isFinite(v) ? v : fallback);
   return {
+    ...s,
     version: 2,
-    types: Array.isArray(s.types) ? s.types.filter(isShiftType) : EMPTY_SHIFT_DATA.types,
+    types: Array.isArray(s.types) ? s.types.filter(isShiftType).map(cleanType) : EMPTY_SHIFT_DATA.types,
     days,
     hourlyRate: Math.max(0, num(s.hourlyRate, 0)),
     overtimeMultiplier: Math.max(1, num(s.overtimeMultiplier, EMPTY_SHIFT_DATA.overtimeMultiplier)),

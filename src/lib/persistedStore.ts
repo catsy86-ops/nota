@@ -75,6 +75,17 @@ export function createPersistedStore<T>(
     emit();
   }
 
+  // Inna karta zapisała ten klucz — bez tego zapis z tej karty nadpisałby
+  // tamte zmiany starym stanem z pamięci.
+  if (typeof window !== "undefined") {
+    window.addEventListener("storage", (e) => {
+      if (e.key !== key && e.key !== null) return;
+      state = read();
+      options.onChange?.(state);
+      emit();
+    });
+  }
+
   function subscribe(listener: () => void): () => void {
     listeners.add(listener);
     return () => { listeners.delete(listener); };

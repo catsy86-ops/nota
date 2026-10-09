@@ -38,7 +38,7 @@ function formatUtc(ts: number): string {
 }
 
 export function escapeText(s: string): string {
-  return s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  return s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r\n|\r|\n/g, "\\n");
 }
 
 /** Linie dłuższe niż 75 bajtów UTF-8 zawijamy (CRLF + spacja), nie tnąc znaków. */

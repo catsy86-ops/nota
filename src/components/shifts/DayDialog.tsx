@@ -5,7 +5,7 @@ import { Minus, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { entryMinutes, formatDuration, holidayName, setDayEntry, shiftInk, type DayEntry, type ShiftType } from "@/lib/shifts";
+import { entryMinutes, formatDuration, holidayName, isAbsence, setDayEntry, shiftInk, type DayEntry, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
 interface DayDialogProps {
@@ -38,7 +38,7 @@ export function DayDialog({ dayKey, entry, types, onOpenChange }: DayDialogProps
 
   function save() {
     if (!dayKey) return;
-    setDayEntry(dayKey, typeId ? { type: typeId, ...(extra ? { extraMin: extra } : {}), ...(note.trim() ? { note: note.trim() } : {}) } : null);
+    setDayEntry(dayKey, typeId ? { type: typeId, ...(extra && !(type && isAbsence(type)) ? { extraMin: extra } : {}), ...(note.trim() ? { note: note.trim() } : {}) } : null);
     onOpenChange(false);
   }
 
