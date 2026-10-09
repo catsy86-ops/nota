@@ -11,6 +11,9 @@ async function addNote(page: Page, title: string, content: string) {
   await page.getByPlaceholder("Tytuł").fill(title);
   await page.getByPlaceholder("Zapisz notatkę (obsługuje **Markdown**)...").fill(content);
   await page.getByRole("button", { name: "Zamknij" }).click();
+  // Rozwinięty pasek wygasa z animacją, wciąż z polem „Tytuł” i starym tytułem —
+  // bez czekania następne `getByPlaceholder("Tytuł")` trafia czasem na dwa pola.
+  await expect(page.getByText("Zapisz notatkę...")).toBeVisible();
   await expect(page.getByRole("heading", { name: title })).toBeVisible();
 }
 
