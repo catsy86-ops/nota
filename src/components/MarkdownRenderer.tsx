@@ -1,6 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
-import { Fragment, type ReactNode } from "react";
+import { Fragment, memo, type ReactNode } from "react";
 
 interface MarkdownRendererProps {
   content: string;
@@ -43,7 +43,7 @@ function renderWithWiki(text: string, onWikiClick?: (t: string) => void, known?:
   return parts.length > 1 ? <>{parts.map((p, i) => <Fragment key={i}>{p}</Fragment>)}</> : text;
 }
 
-export function MarkdownRenderer({ content, className, onWikiClick, knownTitles }: MarkdownRendererProps) {
+export const MarkdownRenderer = memo(function MarkdownRenderer({ content, className, onWikiClick, knownTitles }: MarkdownRendererProps) {
   const renderText = (children: ReactNode) => {
     if (typeof children === "string") return renderWithWiki(children, onWikiClick, knownTitles);
     if (Array.isArray(children)) {
@@ -86,7 +86,7 @@ export function MarkdownRenderer({ content, className, onWikiClick, knownTitles 
       {content}
     </ReactMarkdown>
   );
-}
+});
 
 export function FormatToolbar({ onInsert }: { onInsert: (before: string, after: string) => void }) {
   const tools = [

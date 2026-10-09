@@ -53,6 +53,12 @@ export function buildWikiIndex(notes: Note[]): WikiIndex {
   return { titles, backlinks };
 }
 
+/** Odcisk indeksu: zmienia się tylko, gdy zmienią się tytuły albo linki. */
+export function wikiIndexKey(index: WikiIndex): string {
+  const links = [...index.backlinks].map(([target, refs]) => `${target}\t${refs.map((r) => `${r.id}:${r.title}`).join(",")}`);
+  return `${index.titles.join("\n")}\n--\n${links.sort().join("\n")}`;
+}
+
 /** Notatki linkujące do tej (bez niej samej). */
 export function backlinksOf(note: Pick<Note, "id" | "title">, index: WikiIndex): WikiLinkRef[] {
   const title = note.title.trim().toLowerCase();

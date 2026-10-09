@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface BeerMugLogoProps {
@@ -7,7 +6,8 @@ interface BeerMugLogoProps {
 
 /**
  * Animowany kufel piwa — pęcherzyki wznoszące się w płynie i lekko
- * kołysząca się piana. Czysty SVG + framer-motion, bez zasobów graficznych.
+ * kołysząca się piana. Czysty SVG + animacje CSS na `transform`/`opacity`
+ * (kompozytor, bez przeliczania SVG co klatkę) — style w `index.css`.
  */
 export function BeerMugLogo({ className }: BeerMugLogoProps) {
   return (
@@ -48,27 +48,26 @@ export function BeerMugLogo({ className }: BeerMugLogoProps) {
           { cx: 13.5, r: 0.55, delay: 1.1 },
           { cx: 9, r: 0.35, delay: 1.7 },
         ].map((b, i) => (
-          <motion.circle
+          <circle
             key={i}
+            className="beer-bubble"
             cx={b.cx}
+            cy={18}
             r={b.r}
             fill="#fff7ed"
             fillOpacity={0.8}
-            initial={{ cy: 18, opacity: 0 }}
-            animate={{ cy: [18, 9.5], opacity: [0, 0.9, 0] }}
-            transition={{ duration: 2.2, repeat: Infinity, delay: b.delay, ease: "easeIn" }}
+            style={{ animationDelay: `${b.delay}s` }}
           />
         ))}
       </g>
 
       {/* piana */}
-      <motion.path
+      <path
+        className="beer-foam"
         d="M4 7.2c0-1.5 1.3-2.7 2.9-2.7.6 0 1.1.2 1.6.5.4-.9 1.3-1.5 2.4-1.5s2 .6 2.4 1.5c.5-.3 1-.5 1.6-.5 1.6 0 2.9 1.2 2.9 2.7 0 .2 0 .4-.1.6H4.1c0-.2-.1-.4-.1-.6Z"
         fill="#fffbeb"
         stroke="#e7d8a8"
         strokeWidth="0.4"
-        animate={{ y: [0, -0.3, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
       />
     </svg>
   );

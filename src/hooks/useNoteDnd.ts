@@ -12,11 +12,16 @@ export interface NoteDndDeps {
   reorderNotes: (activeIds: string[]) => void;
 }
 
+// Stałe modułu: nowy literał opcji w każdym renderze daje nowe `sensors`,
+// a to przerysowuje każdą kartę mimo `memo`.
+const POINTER_OPTIONS = { activationConstraint: { distance: 8 } };
+const TOUCH_OPTIONS = { activationConstraint: { delay: 200, tolerance: 5 } };
+
 /** @dnd-kit sensors + drop handling: reorder within the grid, or drop onto a folder/root. */
 export function useNoteDnd({ displayNoteIds, folders, moveNoteToFolder, reorderNotes }: NoteDndDeps) {
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } })
+    useSensor(PointerSensor, POINTER_OPTIONS),
+    useSensor(TouchSensor, TOUCH_OPTIONS)
   );
 
   const [draggingNoteId, setDraggingNoteId] = useState<string | null>(null);

@@ -13,7 +13,8 @@ import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
 import { useViewRoute } from "@/hooks/useViewRoute";
 import { parseViewRoute } from "@/lib/viewRoute";
 import { groupReminders } from "@/lib/reminderAgenda";
-import { buildWikiIndex, resolveWikiTarget } from "@/lib/wikiLinks";
+import { buildWikiIndex, resolveWikiTarget, wikiIndexKey } from "@/lib/wikiLinks";
+import { useLatestRef, useStableByKey } from "@/hooks/useLatestRef";
 import { useGridNavState, setGridNavPreview } from "@/lib/gridKeyboardNav";
 import { NoteReader, type ReaderMode } from "@/components/NoteReader";
 import { SettingsDialog } from "@/components/SettingsDialog";
@@ -193,22 +194,34 @@ const Index = () => {
 
   const { handleImport } = useImportExport(importNotes, addNote);
 
+  // Callbacki podawane kartom czytają notatki przez ref — patrz `useLatestRef`.
+  const notesRef = useLatestRef(notes);
+  const archivedRef = useLatestRef(archivedNotes);
+  const trashedRef = useLatestRef(trashedNotes);
+
   const handleRestoreVersion = useCallback((noteId: string, version: NoteVersion) => {
-    addVersion(noteId, notes.find(n => n.id === noteId)?.title || "", notes.find(n => n.id === noteId)?.content || "");
+    const current = notesRef.current.find((n) => n.id === noteId);
+    addVersion(noteId, current?.title || "", current?.content || "");
     updateNote(noteId, { title: version.title, content: version.content });
     toast.success("Przywrócono wersję");
-  }, [notes, updateNote, addVersion]);
+  }, [notesRef, updateNote, addVersion]);
 
   const { displayNotes, pinned, others, elsewhere } = useFilteredNotes({
     notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs,
   });
 
   const allNotesForLinks = useMemo(() => [...notes, ...archivedNotes], [notes, archivedNotes]);
-  const knownTitles = useMemo(
-    () => new Set(allNotesForLinks.filter((n) => n.title.trim()).map((n) => n.title.trim().toLowerCase())),
+  // `knownTitles` i `wikiIndex` idą do każdej karty: zostawiamy ten sam obiekt,
+  // dopóki tytuły i linki się nie zmienią (np. odhaczenie checklisty ich nie rusza).
+  const titlesList = useMemo(
+    () => [...new Set(allNotesForLinks.map((n) => n.title.trim().toLowerCase()).filter(Boolean))].sort(),
     [allNotesForLinks],
   );
-  const wikiIndex = useMemo(() => buildWikiIndex(allNotesForLinks), [allNotesForLinks]);
+  const freshKnownTitles = useMemo(() => new Set(titlesList), [titlesList]);
+  const knownTitles = useStableByKey(freshKnownTitles, titlesList.join("\n"));
+  const freshWikiIndex = useMemo(() => buildWikiIndex(allNotesForLinks), [allNotesForLinks]);
+  const wikiIndex = useStableByKey(freshWikiIndex, wikiIndexKey(freshWikiIndex));
+  const allNotesForLinksRef = useLatestRef(allNotesForLinks);
   /**
    * Jedno miejsce „pokaż tę notatkę”: przełącza na widok, w którym notatka
    * faktycznie jest (Notatki / Archiwum / Kosz), zdejmuje filtry, które mogłyby
@@ -228,7 +241,7 @@ const Index = () => {
     }, 150);
   }, [go, replaceWith]);
   const openNote = useCallback((id: string, viaLink = false, edit = false) => {
-    const note = [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === id);
+    const note = [...notesRef.current, ...archivedRef.current, ...trashedRef.current].find((n) => n.id === id);
     if (!note) {
       toast.info("Tej notatki już nie ma");
       if (viaLink) replaceWith("notes");
@@ -237,7 +250,7 @@ const Index = () => {
     const target: View = note.trashed ? "trash" : note.archived ? "archive" : "notes";
     if (target !== "notes") toast.info(target === "trash" ? "Notatka jest w Koszu" : "Notatka jest w Archiwum");
     revealNote(id, target, viaLink, edit && target !== "trash");
-  }, [notes, archivedNotes, trashedNotes, replaceWith, revealNote]);
+  }, [notesRef, archivedRef, trashedRef, replaceWith, revealNote]);
   // Hooki wołane wyżej w komponencie (powiadomienia) sięgają po najnowsze `openNote` przez ref.
   openNoteRef.current = openNote;
 
@@ -270,10 +283,10 @@ const Index = () => {
   }, [route.noteId, notesLoaded, openNote]);
 
   const handleWikiClick = useCallback((title: string) => {
-    const target = allNotesForLinks.find((n) => n.title.trim().toLowerCase() === title.trim().toLowerCase());
+    const target = allNotesForLinksRef.current.find((n) => n.title.trim().toLowerCase() === title.trim().toLowerCase());
     if (target) openNote(target.id);
     else toast.info(`Notatka „${title}" nie istnieje`);
-  }, [allNotesForLinks, openNote]);
+  }, [allNotesForLinksRef, openNote]);
 
   // Czytnik: podgląd (Spacja na kaflu, stan w `gridKeyboardNav`) albo prezentacja.
   const { previewId } = useGridNavState();
@@ -293,11 +306,12 @@ const Index = () => {
     setTimeout(() => openNote(id, false, true), 50);
   }, [closeReader, openNote]);
 
+  const displayNotesRef = useLatestRef(displayNotes);
   const toggleSelect = useCallback((id: string, shiftKey: boolean) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (shiftKey && lastSelectedRef.current && lastSelectedRef.current !== id) {
-        const ids = displayNotes.map((n) => n.id);
+        const ids = displayNotesRef.current.map((n) => n.id);
         const a = ids.indexOf(lastSelectedRef.current);
         const b = ids.indexOf(id);
         if (a !== -1 && b !== -1) {
@@ -312,7 +326,7 @@ const Index = () => {
       lastSelectedRef.current = id;
       return next;
     });
-  }, [displayNotes]);
+  }, [displayNotesRef]);
 
   // Undo fallbacks so history restored from localStorage stays actionable after reload
   useEffect(() => {
@@ -376,7 +390,7 @@ const Index = () => {
   const remindersCount = notes.filter((n) => n.reminder).length;
   // Trwałe usunięcie zabiera ze sobą historię wersji — inaczej zostawałaby
   // w `localStorage` na zawsze i zjadała limit.
-  const deleteNoteForever = (id: string) => { deleteNote(id); deleteVersions(id); };
+  const deleteNoteForever = useCallback((id: string) => { deleteNote(id); deleteVersions(id); }, [deleteNote, deleteVersions]);
   const handleDelete = view === "trash" ? deleteNoteForever : handleTrashSingle;
 
   const { sensors, setDraggingNoteId, handleDragEnd } = useNoteDnd({

@@ -5,6 +5,7 @@ import { pushAction } from "@/lib/actionHistory";
 import { toastWithUndo } from "@/lib/undoToast";
 import { glowAtNote, glowPulse, pointOfNote } from "@/lib/glowTrail";
 import type { useConfirmAction } from "@/components/ConfirmActionDialog";
+import { useLatestRef } from "@/hooks/useLatestRef";
 
 export interface NoteActionsDeps {
   notes: Note[];
@@ -30,6 +31,10 @@ export function useNoteActions({
   trashNote, restoreFromTrash, archiveNote, unarchiveNote,
   bulkTrash, bulkArchive, bulkSetColor, bulkRestore, setSelectedIds, displayNotes,
 }: NoteActionsDeps) {
+  // Pojedyncze akcje trafiają do każdej karty — czytają notatki przez ref,
+  // żeby zmiana jednej notatki nie dawała nowych callbacków dla wszystkich.
+  const notesRef = useLatestRef(notes);
+  const archivedRef = useLatestRef(archivedNotes);
   const bulkPreview = useCallback((ids: string[]) => {
     const all = [...notes, ...archivedNotes];
     return ids
@@ -43,7 +48,7 @@ export function useNoteActions({
   }, [notes, archivedNotes]);
 
   const handleTrashSingle = useCallback((id: string) => {
-    const note = notes.find((n) => n.id === id) || archivedNotes.find((n) => n.id === id);
+    const note = notesRef.current.find((n) => n.id === id) || archivedRef.current.find((n) => n.id === id);
     const title = note?.title?.trim() || note?.content?.trim().slice(0, 60) || "Bez tytułu";
     const preview = note?.content?.trim().replace(/\s+/g, " ").slice(0, 140) || "";
     confirmAction({
@@ -61,10 +66,10 @@ export function useNoteActions({
         });
       },
     });
-  }, [trashNote, restoreFromTrash, notes, archivedNotes, confirmAction]);
+  }, [trashNote, restoreFromTrash, notesRef, archivedRef, confirmAction]);
 
   const handleArchiveSingle = useCallback((id: string) => {
-    const note = notes.find((n) => n.id === id);
+    const note = notesRef.current.find((n) => n.id === id);
     const title = note?.title?.trim() || note?.content?.trim().slice(0, 60) || "Bez tytułu";
     const preview = note?.content?.trim().replace(/\s+/g, " ").slice(0, 140) || "";
     confirmAction({
@@ -82,7 +87,7 @@ export function useNoteActions({
         });
       },
     });
-  }, [archiveNote, unarchiveNote, notes, confirmAction]);
+  }, [archiveNote, unarchiveNote, notesRef, confirmAction]);
 
   const handleBulkTrash = useCallback(() => {
     const ids = Array.from(selectedIds);

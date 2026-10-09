@@ -64,7 +64,7 @@ export function NoteGrid({
   }), [onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder,
     getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectionMode, onToggleSelect]);
   const prefs = useViewPrefs();
-  const noteIds = notes.map((n) => n.id);
+  const noteIds = useMemo(() => notes.map((n) => n.id), [notes]);
   const { focusedId } = useGridNavState();
   const gridRef = useRef<HTMLDivElement>(null);
 
