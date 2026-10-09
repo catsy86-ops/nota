@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format, formatDistanceStrict, isToday, isTomorrow } from "date-fns";
 import { pl } from "date-fns/locale";
-import { currentAndNextShift, type ShiftData, type ShiftOccurrence } from "@/lib/shifts";
+import { currentAndNextShift, shiftInk, type ShiftData, type ShiftOccurrence } from "@/lib/shifts";
 
 /** Minutowy zegar — karta ma pokazywać „za 3 h”, nie stan sprzed godziny. */
 function useNow(intervalMs = 60_000): Date {
@@ -32,7 +32,7 @@ export function NowCard({ data }: { data: ShiftData }) {
   return (
     <section aria-label="Bieżąca zmiana" className="relative overflow-hidden rounded-3xl border border-border/60 bg-card/60 p-4 flex items-center gap-4">
       <span aria-hidden className="absolute inset-y-0 left-0 w-1.5" style={{ backgroundColor: main.type.color }} />
-      <span className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center text-white font-display font-bold text-lg" style={{ backgroundColor: main.type.color }}>
+      <span className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center font-display font-bold text-lg" style={{ backgroundColor: main.type.color, color: shiftInk(main.type.color) }}>
         {main.type.short}
       </span>
       <div className="min-w-0 flex-1">

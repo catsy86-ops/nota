@@ -2,7 +2,7 @@ import { memo } from "react";
 import { eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, startOfWeek } from "date-fns";
 import { pl } from "date-fns/locale";
 import { dayKey } from "@/lib/reminderOccurrences";
-import { entryMinutes, formatDuration, formatHoursShort, holidayName, type DayEntry, type ShiftType } from "@/lib/shifts";
+import { entryMinutes, formatDuration, formatHoursShort, holidayName, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
 interface ShiftMonthGridProps {
@@ -69,8 +69,8 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
               {type && (
                 <span
                   aria-hidden
-                  className={cn("mt-auto rounded-lg px-1 py-0.5 text-center leading-tight", absence ? "border-2 border-dashed" : "text-white shadow-sm")}
-                  style={absence ? { borderColor: type.color, color: type.color } : { backgroundColor: type.color }}
+                  className={cn("mt-auto rounded-lg px-1 py-0.5 text-center leading-tight", absence ? "border-2 border-dashed" : "shadow-sm")}
+                  style={absence ? { borderColor: type.color, color: shiftTextOnCard(type.color) } : { backgroundColor: type.color, color: shiftInk(type.color) }}
                 >
                   <span className="block font-display font-bold text-sm">{type.short}</span>
                   {!absence && (

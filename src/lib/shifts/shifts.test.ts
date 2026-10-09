@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, applyPattern, currentAndNextShift, daysUntilMonthEnd, easterSunday,
   entryMinutes, formatDuration, formatHoursShort, holidayName, migrate, monthSummary, nightMinutes, parseHm,
-  shiftMinutes, workNormMinutes, buildShiftsIcs, exportableShiftDays, type ShiftData,
+  shiftMinutes, workNormMinutes, buildShiftsIcs, exportableShiftDays, SHIFT_COLORS, shiftInk, contrastRatio, type ShiftData,
 } from "./index";
 
 const [day, afternoon, night, leave] = DEFAULT_SHIFT_TYPES;
@@ -200,5 +200,17 @@ describe("eksport .ics", () => {
     expect(ics).toContain("DTSTART;VALUE=DATE:20261010");
     expect(ics).toContain("DTEND;VALUE=DATE:20261011");
     expect(ics).not.toContain("VALARM");
+  });
+});
+
+describe("kolory zmian", () => {
+  it("skrót na każdym kolorze palety ma kontrast co najmniej 4,5:1", () => {
+    for (const c of SHIFT_COLORS) expect(contrastRatio(c, shiftInk(c)), c).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("na jasnym kolorze daje ciemny odcień tego samego koloru, na ciemnym biel", () => {
+    expect(shiftInk("#f59e0b")).not.toBe("#fff");
+    expect(shiftInk("#1e293b")).toBe("#fff");
+    expect(shiftInk("zepsuty")).toBe("#fff");
   });
 });

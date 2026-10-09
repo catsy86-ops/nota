@@ -1,5 +1,5 @@
 import { Eraser, MousePointerClick, Pencil, Plus, Repeat } from "lucide-react";
-import type { ShiftType } from "@/lib/shifts";
+import { shiftInk, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
 /** Co robi stuknięcie w dzień: nanosi zmianę, czyści dzień albo otwiera jego szczegóły. */
@@ -59,8 +59,8 @@ function BrushChip({ type, active, onClick, onEdit }: { type: ShiftType; active:
       <button type="button" role="radio" aria-checked={active} onClick={onClick}
         className={cn("pressable flex items-center gap-2 pl-1.5 pr-2 h-12 rounded-l-2xl", focusRing)}>
         <span className={cn("w-9 h-9 rounded-xl flex items-center justify-center font-display font-bold",
-          absence ? "border-2 bg-transparent" : "text-white")}
-          style={absence ? { borderColor: type.color, color: type.color } : { backgroundColor: type.color }}>
+          absence && "border-2 bg-transparent")}
+          style={absence ? { borderColor: type.color, color: shiftTextOnCard(type.color) } : { backgroundColor: type.color, color: shiftInk(type.color) }}>
           {type.short}
         </span>
         <span className="text-left leading-tight">

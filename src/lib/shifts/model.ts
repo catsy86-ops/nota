@@ -54,12 +54,12 @@ export interface ShiftData {
   patterns: ShiftPattern[];
 }
 
-export const SHIFT_COLORS = ["#f59e0b", "#3b82f6", "#6366f1", "#10b981", "#ef4444", "#ec4899", "#14b8a6", "#64748b"] as const;
+export const SHIFT_COLORS = ["#f59e0b", "#3b82f6", "#4f46e5", "#10b981", "#ef4444", "#ec4899", "#14b8a6", "#64748b"] as const;
 
 export const DEFAULT_SHIFT_TYPES: ShiftType[] = [
   { id: "d", name: "Dzień", short: "D", color: "#f59e0b", start: "06:00", end: "14:00", breakMin: 0, kind: "work" },
   { id: "p", name: "Popołudnie", short: "P", color: "#3b82f6", start: "14:00", end: "22:00", breakMin: 0, kind: "work" },
-  { id: "n", name: "Noc", short: "N", color: "#6366f1", start: "22:00", end: "06:00", breakMin: 0, kind: "work" },
+  { id: "n", name: "Noc", short: "N", color: "#4f46e5", start: "22:00", end: "06:00", breakMin: 0, kind: "work" },
   { id: "u", name: "Urlop", short: "U", color: "#10b981", start: "08:00", end: "16:00", breakMin: 0, kind: "absence" },
   { id: "l4", name: "L4", short: "L4", color: "#64748b", start: "08:00", end: "16:00", breakMin: 0, kind: "absence" },
 ];

@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { daysUntilMonthEnd, deletePattern, savePattern, type ShiftPattern, type ShiftType } from "@/lib/shifts";
+import { daysUntilMonthEnd, deletePattern, savePattern, shiftInk, shiftTextOnCard, type ShiftPattern, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
 interface PatternDialogProps {
@@ -94,8 +94,8 @@ export function PatternDialog({ open, onOpenChange, types, patterns, defaultStar
               {steps.map((s, i) => {
                 const t = s ? typesById.get(s) : undefined;
                 return (
-                  <span key={i} className={cn("w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold font-display", t ? "text-white" : "border border-dashed border-border text-muted-foreground")}
-                    style={t ? { backgroundColor: t.color } : undefined}>
+                  <span key={i} className={cn("w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold font-display", !t && "border border-dashed border-border text-muted-foreground")}
+                    style={t ? { backgroundColor: t.color, color: shiftInk(t.color) } : undefined}>
                     {t?.short ?? "–"}
                   </span>
                 );
@@ -104,8 +104,8 @@ export function PatternDialog({ open, onOpenChange, types, patterns, defaultStar
             <div className="flex flex-wrap gap-1.5 mt-2">
               {types.filter((t) => t.kind !== "absence").map((t) => (
                 <button key={t.id} type="button" onClick={() => setSteps((s) => [...s, t.id])} aria-label={`Dodaj do cyklu: ${t.name}`}
-                  className="pressable h-9 coarse:h-11 px-3 rounded-xl text-white text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  style={{ backgroundColor: t.color }}>
+                  className="pressable h-9 coarse:h-11 px-3 rounded-xl text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  style={{ backgroundColor: t.color, color: shiftInk(t.color) }}>
                   + {t.short}
                 </button>
               ))}
@@ -143,7 +143,7 @@ export function PatternDialog({ open, onOpenChange, types, patterns, defaultStar
                   return (
                     <div key={i} className="rounded-lg bg-muted/50 p-1 text-center">
                       <span className="block text-2xs text-muted-foreground">{format(date, "EEEEEE d", { locale: pl })}</span>
-                      <span className="block text-xs font-bold font-display" style={t ? { color: t.color } : undefined}>{t?.short ?? "–"}</span>
+                      <span className="block text-xs font-bold font-display" style={t ? { color: shiftTextOnCard(t.color) } : undefined}>{t?.short ?? "–"}</span>
                     </div>
                   );
                 })}

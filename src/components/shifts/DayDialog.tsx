@@ -5,7 +5,7 @@ import { Minus, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { entryMinutes, formatDuration, holidayName, setDayEntry, type DayEntry, type ShiftType } from "@/lib/shifts";
+import { entryMinutes, formatDuration, holidayName, setDayEntry, shiftInk, type DayEntry, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
 interface DayDialogProps {
@@ -59,8 +59,9 @@ export function DayDialog({ dayKey, entry, types, onOpenChange }: DayDialogProps
                 return (
                   <button key={id ?? "free"} type="button" role="radio" aria-checked={active} onClick={() => setTypeId(id)}
                     className={cn("pressable h-10 coarse:h-11 px-3 rounded-xl border text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      active ? "border-transparent text-white" : "border-border/60 bg-card/50 hover:bg-muted")}
-                    style={active ? { backgroundColor: t?.color ?? "hsl(var(--muted-foreground))" } : undefined}>
+                      active ? "border-transparent" : "border-border/60 bg-card/50 hover:bg-muted",
+                      active && !t && "bg-foreground text-background")}
+                    style={active && t ? { backgroundColor: t.color, color: shiftInk(t.color) } : undefined}>
                     {t?.name ?? "Wolne"}
                   </button>
                 );
