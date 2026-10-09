@@ -47,6 +47,8 @@ export default tseslint.config(
       "src/lib/imageSync.test.ts",
       "src/lib/shifts/yShifts.ts",
       "src/lib/shifts/yShifts.test.ts",
+      "src/lib/tabSync.ts",
+      "src/lib/tabSync.test.ts",
       // Buduje plik synchronizacji w starym formacie jako dane testowe.
       "e2e/images.spec.ts",
       "src/hooks/useNotes.ts",

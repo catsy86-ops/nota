@@ -8,8 +8,13 @@ import "./index.css";
 import { registerServiceWorker, applyServiceWorkerUpdate, SW_UPDATE_EVENT, SW_OFFLINE_READY_EVENT } from "./lib/registerSW";
 import { requestPersistentStorage } from "./lib/storagePersistence";
 import { installGlobalDiagHandlers } from "./lib/diagnostics";
+import { startTabSync } from "./lib/tabSync";
+import { yjsStore } from "./lib/yjsStore";
 
 installGlobalDiagHandlers();
+
+// Zmiany notatek i Grafiku od razu w innych kartach tej przeglądarki, także bez P2P.
+startTabSync(yjsStore.doc, "kaczy-yjs-v1", yjsStore.ready(), yjsStore.isPersistenceOrigin);
 
 createRoot(document.getElementById("root")!).render(<App />);
 

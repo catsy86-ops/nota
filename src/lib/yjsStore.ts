@@ -602,8 +602,11 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     persistence = new IndexeddbPersistence(dbName, doc);
   }
 
+  /** Czy transakcja to wczytanie z IndexedDB (origin y-indexeddb) — dla synchronizacji kart. */
+  const isPersistenceOrigin = (origin: unknown) => origin === persistence;
+
   return {
-    doc, notesMap, foldersMap, labelsMap, images,
+    doc, notesMap, foldersMap, labelsMap, images, isPersistenceOrigin,
     ready, projectNotes, projectFolders, projectLabels,
     upsertNote, patchNote, patchNotes, setNoteOrder, removeNote, removeNotes,
     upsertFolder, patchFolder, removeFolder,
