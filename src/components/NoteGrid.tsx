@@ -8,9 +8,8 @@ import { NoteCard } from "@/components/NoteCard";
 import { NoteViewActionsProvider, type NoteViewActions } from "@/hooks/NoteViewActionsContext";
 import type { useNotes } from "@/hooks/useNotes";
 import { registerGridNavSection, useIsGridNavFocused, setGridNavFocus } from "@/lib/gridKeyboardNav";
+import { useMasonrySpans } from "@/hooks/useMasonrySpans";
 
-/** Docelowa szerokość kolumny przy automatycznej liczbie kolumn — na szerokim ekranie przybywa kolumn, karty się nie rozciągają. */
-const AUTO_COLUMN_REM = 13;
 
 interface SortableNoteCardProps {
   note: ReturnType<typeof useNotes>["notes"][number];
@@ -35,7 +34,7 @@ const SortableNoteCard = memo(function SortableNoteCard({ layout, note, index, s
       style={style}
       className={cn(
         "rounded-xl transition-[box-shadow,opacity] duration-fast",
-        layout === "masonry" ? "break-inside-avoid mb-2.5 sm:mb-3" : layout === "grid" ? "h-full" : "",
+        layout === "grid" && "h-full",
         isDragging && "opacity-90 shadow-elevation-3",
       )}
     >
@@ -77,17 +76,11 @@ export function NoteGrid({
   const colsCount = useCallback(() => {
     if (prefs.layout === "list") return 1;
     if (!gridRef.current) return 1;
-    if (prefs.autoColumns) {
-      // Ten sam rachunek co CSS (`columns: 13rem` / `auto-fill minmax(13rem)`): ile kolumn
-      // o szerokości AUTO_COLUMN mieści siatka; na telefonie zawsze dwie.
-      if (window.innerWidth < 640) return 2;
-      const el = gridRef.current;
-      const gapPx = parseFloat(getComputedStyle(el).columnGap) || 0;
-      const colPx = AUTO_COLUMN_REM * parseFloat(getComputedStyle(document.documentElement).fontSize);
-      return Math.max(1, Math.floor((el.clientWidth + gapPx) / (colPx + gapPx)));
-    }
-    return Math.max(1, Math.min(prefs.columns || 1, 4));
-  }, [prefs.layout, prefs.autoColumns, prefs.columns]);
+    // Siatka i mozaika to siatki CSS — liczba kolumn wprost z wyliczonego szablonu.
+    return Math.max(1, getComputedStyle(gridRef.current).gridTemplateColumns.split(" ").filter(Boolean).length);
+  }, [prefs.layout]);
+
+  useMasonrySpans(gridRef, prefs.layout === "masonry", "[data-note-id-wrap]");
 
   // Ta siatka tylko zgłasza swoje notatki i akcje; klawiszy nasłuchuje jeden
   // globalny właściciel w `gridKeyboardNav` — patrz komentarz w tym module.
@@ -111,26 +104,23 @@ export function NoteGrid({
   }, [navOrder, noteIdsKey, onDelete, onArchive, onTogglePin, onDuplicate, isArchived, colsCount]);
 
   const gap = prefs.density === "compact" ? "gap-2 space-y-2" : prefs.density === "comfy" ? "gap-5 space-y-5" : "gap-2.5 sm:gap-3 space-y-2.5 sm:space-y-3";
+  const columnGap = prefs.density === "compact" ? "gap-x-2" : prefs.density === "comfy" ? "gap-x-5" : "gap-x-2.5 sm:gap-x-3";
+  const rowGap = prefs.density === "compact" ? "mb-2" : prefs.density === "comfy" ? "mb-5" : "mb-2.5 sm:mb-3";
 
   let containerClass: string;
   if (prefs.layout === "list") {
     containerClass = `max-w-2xl mx-auto ${gap.split(" ")[1]}`;
-  } else if (prefs.layout === "grid") {
+  } else {
     const cols = prefs.autoColumns
       ? "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(13rem,1fr))]"
       : prefs.columns === 1 ? "grid-cols-1"
       : prefs.columns === 2 ? "grid-cols-1 sm:grid-cols-2"
       : prefs.columns === 3 ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
       : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
-    containerClass = `grid ${cols} ${gap.split(" ")[0]} auto-rows-fr`;
-  } else {
-    const cols = prefs.autoColumns
-      ? "columns-2 sm:columns-[13rem]"
-      : prefs.columns === 1 ? "columns-1"
-      : prefs.columns === 2 ? "columns-1 sm:columns-2"
-      : prefs.columns === 3 ? "columns-1 sm:columns-2 lg:columns-3"
-      : "columns-1 sm:columns-2 lg:columns-3 xl:columns-4";
-    containerClass = `${cols} ${gap}`;
+    // Mozaika: ta sama siatka kolumn, wiersze po 4 px i odstęp pionowy jako margines karty (`useMasonrySpans`).
+    containerClass = prefs.layout === "grid"
+      ? `grid ${cols} ${gap.split(" ")[0]} auto-rows-fr`
+      : `grid ${cols} ${columnGap} auto-rows-[4px] items-start`;
   }
 
   return (
@@ -140,7 +130,7 @@ export function NoteGrid({
       <div ref={gridRef} key={prefs.layout} className={cn(containerClass, "animate-in fade-in-0 duration-base")}>
         <AnimatePresence mode="popLayout">
           {notes.map((note, i) => (
-            <GridItem key={note.id} note={note} index={i} layout={prefs.layout} selected={selectedIds?.has(note.id) ?? false} />
+            <GridItem key={note.id} note={note} index={i} layout={prefs.layout} rowGap={rowGap} selected={selectedIds?.has(note.id) ?? false} />
           ))}
         </AnimatePresence>
       </div>
@@ -155,7 +145,7 @@ export function NoteGrid({
  * strzałka przerysowuje tylko kafel, który go stracił, i ten, który dostał.
  */
 // forwardRef: `AnimatePresence mode="popLayout"` mierzy bezpośrednie dziecko przez ref.
-const GridItem = memo(forwardRef<HTMLDivElement, SortableNoteCardProps>(function GridItem({ note, index, layout, selected }, ref) {
+const GridItem = memo(forwardRef<HTMLDivElement, SortableNoteCardProps & { rowGap: string }>(function GridItem({ note, index, layout, rowGap, selected }, ref) {
   const focused = useIsGridNavFocused(note.id);
   return (
     <div
@@ -165,7 +155,8 @@ const GridItem = memo(forwardRef<HTMLDivElement, SortableNoteCardProps>(function
       onClickCapture={() => setGridNavFocus(note.id)}
       className={cn(
         "rounded-xl transition-shadow",
-        layout === "masonry" ? "break-inside-avoid mb-2.5 sm:mb-3" : layout === "grid" ? "h-full" : "",
+        // Odstęp pionowy mozaiki jako margines opakowania — `useMasonrySpans` wlicza go w wysokość.
+        layout === "masonry" ? rowGap : layout === "grid" ? "h-full" : "",
         focused && "ring-2 ring-primary/60 ring-offset-2 ring-offset-background"
       )}
     >
