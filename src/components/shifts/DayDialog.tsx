@@ -5,6 +5,7 @@ import { Minus, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { dayType, entryMinutes, formatDuration, holidayName, isAbsence, setDayEntry, shiftInk, type DayEntry, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
@@ -31,6 +32,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
   const [typeId, setTypeId] = useState<string | null>(entry?.type ?? null);
   const [extra, setExtra] = useState(entry?.extraMin ?? 0);
   const [note, setNote] = useState(entry?.note ?? "");
+  const [offSchedule, setOffSchedule] = useState(entry?.offSchedule === true);
 
   const [y, m, d] = dayKey.split("-").map(Number);
   const date = new Date(y, m - 1, d);
@@ -39,12 +41,15 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
   // Ten sam rodzaj co w zapisie: godziny z tamtego dnia (jeśli rodzaj później zmienił godziny).
   const keepHours = typeId === entry?.type ? entry?.hours : undefined;
   const type = base && dayType(base, { hours: keepHours });
+  // Tylko w niedzielę i święto „poza grafikiem” zmienia dodatek za nadgodziny.
+  const askOffSchedule = !!type && !isAbsence(type) && (date.getDay() === 0 || !!holiday);
 
   function save() {
     setDayEntry(dayKey, typeId ? {
       type: typeId,
       ...(extra && !(type && isAbsence(type)) ? { extraMin: extra } : {}),
       ...(note.trim() ? { note: note.trim() } : {}),
+      ...(askOffSchedule && offSchedule ? { offSchedule: true as const } : {}),
       ...(keepHours ? { hours: keepHours } : {}),
     } : null);
     onOpenChange(false);
@@ -94,6 +99,19 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
               <p className="text-xs text-muted-foreground">
                 Czas tego dnia: <span className="font-semibold text-foreground">{formatDuration(entryMinutes(type, { extraMin: extra }))}</span>
               </p>
+            </div>
+          )}
+
+          {askOffSchedule && (
+            <div className="flex gap-2.5">
+              <Checkbox id="day-off-schedule" checked={offSchedule} onCheckedChange={(v) => setOffSchedule(v === true)}
+                aria-describedby="day-off-schedule-hint" className="mt-0.5" />
+              <div className="space-y-0.5">
+                <Label htmlFor="day-off-schedule">Poza grafikiem</Label>
+                <p id="day-off-schedule-hint" className="text-xs text-muted-foreground">
+                  Ten dzień miał być wolny. Nadgodziny w niedzielę lub święto wolne wg grafiku mają dodatek 100%, w zaplanowane — 50%.
+                </p>
+              </div>
             </div>
           )}
 

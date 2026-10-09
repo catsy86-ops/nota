@@ -147,18 +147,31 @@ export function dailyOvertimeByDay(data: ShiftData): Map<string, number> {
 
 const localKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
+/** Dni ze zmianą `work` z grafiku — w nie niedziela czy święto są dniem pracy. */
+export function scheduledWorkDays(data: ShiftData): Set<string> {
+  const typesById = new Map(data.types.map((t) => [t.id, t]));
+  const out = new Set<string>();
+  for (const [key, entry] of Object.entries(data.days)) {
+    const type = typesById.get(entry.type);
+    if (type && !isAbsence(type) && !entry.offSchedule) out.add(key);
+  }
+  return out;
+}
+
 /**
  * Minuty odcinka z dodatkiem 100% (art. 151¹ § 1 pkt 1 KP): w porze nocnej
- * (22–6), w niedzielę i w święto. Uproszczenie: niedziela i święto liczą
- * się zawsze, także gdy grafik przewiduje w nie pracę — nie wiemy, jaki
- * dzień wolny pracodawca dał w zamian.
+ * (22–6) zawsze, w niedzielę i w święto — gdy wg grafiku to dzień wolny,
+ * czyli nie ma w nim zaplanowanej zmiany (`scheduled`). Niedziela i święto
+ * to doba kalendarzowa (art. 151¹⁰ pozwala ustalić je od innej godziny).
  */
-export function premium100Minutes({ from, to }: Pick<OvertimeSpan, "from" | "to">): number {
+export function premium100Minutes({ from, to }: Pick<OvertimeSpan, "from" | "to">, scheduled: ReadonlySet<string> = new Set()): number {
   let total = 0;
   for (let t = from; t < to; t += 60_000) {
     const d = new Date(t);
     const h = d.getHours();
-    if (h >= 22 || h < 6 || d.getDay() === 0 || holidayName(localKey(d))) total++;
+    if (h >= 22 || h < 6) { total++; continue; }
+    const key = localKey(d);
+    if ((d.getDay() === 0 || holidayName(key)) && !scheduled.has(key)) total++;
   }
   return total;
 }
@@ -206,7 +219,7 @@ interface MonthCore {
 
 const monthPrefix = (year: number, month: number) => `${year}-${String(month + 1).padStart(2, "0")}-`;
 
-function monthCore(data: ShiftData, year: number, month: number, otSpans: OvertimeSpan[]): MonthCore {
+function monthCore(data: ShiftData, year: number, month: number, otSpans: OvertimeSpan[], scheduled: ReadonlySet<string>): MonthCore {
   const prefix = monthPrefix(year, month);
   const typesById = new Map(data.types.map((t) => [t.id, t]));
   const c: MonthCore = { minutes: 0, night: 0, base: 0, daysWorked: 0, absenceDays: 0, normMinutes: 0, overtimeNormMinutes: 0, totals: new Map(), dailyOvertime: 0, daily100: 0, dailyPremium: 0 };
@@ -243,7 +256,7 @@ function monthCore(data: ShiftData, year: number, month: number, otSpans: Overti
   for (const span of otSpans) {
     if (!span.key.startsWith(prefix)) continue;
     const all = (span.to - span.from) / 60_000;
-    const full = premium100Minutes(span);
+    const full = premium100Minutes(span, scheduled);
     c.dailyOvertime += all;
     c.daily100 += full;
     c.dailyPremium += (span.rate / 60) * (full + (all - full) * 0.5);
@@ -269,18 +282,19 @@ export function settlementPeriod(year: number, month: number, months: Settlement
  * (art. 151 § 1 KP) — to drugie wykazane w ostatnim miesiącu okresu, bo
  * dopiero wtedy wiadomo, czy norma została przekroczona. Dodatek
  * (art. 151¹ KP) do stawki, którą każda godzina dostała już w podstawie:
- * 100% w nocy, w niedzielę i święto oraz za przekroczenie normy okresu,
- * 50% za pozostałe nadgodziny dobowe.
+ * 100% w nocy, w niedzielę i święto wolne wg grafiku oraz za przekroczenie
+ * normy okresu, 50% za pozostałe nadgodziny dobowe.
  */
 export function monthSummary(data: ShiftData, year: number, month: number): MonthSummary {
   const otSpans = dailyOvertimeSpans(data);
-  const c = monthCore(data, year, month, otSpans);
+  const scheduled = scheduledWorkDays(data);
+  const c = monthCore(data, year, month, otSpans, scheduled);
   const p = settlementPeriod(year, month, data.settlementMonths, data.settlementStart);
   // Miesiąc liczony od początku okresu — okres może przechodzić przez Nowy Rok.
   const index = (year - p.year) * 12 + month - p.startMonth;
   const cores = Array.from({ length: p.months }, (_, i) => {
     const abs = p.year * 12 + p.startMonth + i;
-    return i === index ? c : monthCore(data, Math.floor(abs / 12), abs % 12, otSpans);
+    return i === index ? c : monthCore(data, Math.floor(abs / 12), abs % 12, otSpans, scheduled);
   });
   const sum = (f: (m: MonthCore) => number, upTo: number = p.months) => cores.slice(0, upTo).reduce((acc, m) => acc + f(m), 0);
   const periodNorm = sum((m) => m.normMinutes);

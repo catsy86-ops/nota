@@ -168,14 +168,19 @@ describe("podsumowanie miesiąca", () => {
     const plain = at({ "2026-10-05": { type: "d", extraMin: 60 } });
     expect(plain.overtime100Minutes).toBe(0);
     expect(plain.earnings).toBe(9 * 60 + 30);
-    // Niedziela 4.10.
-    expect(at({ "2026-10-04": { type: "d", extraMin: 60 } }).overtime100Minutes).toBe(60);
+    // Niedziela 4.10. wolna wg grafiku (zmiana dopisana poza planem) — 100%; zaplanowana — 50%.
+    expect(at({ "2026-10-04": { type: "d", extraMin: 60, offSchedule: true } }).overtime100Minutes).toBe(60);
+    expect(at({ "2026-10-04": { type: "d", extraMin: 60 } }).overtime100Minutes).toBe(0);
+    // Sobotnia noc przedłużona do 8:00 wchodzi w niedzielę, w której nie ma zmiany.
+    expect(at({ "2026-10-03": { type: "n", extraMin: 120 } }).overtime100Minutes).toBe(120);
     // Noc pon.→wt. przedłużona do 7:00: ostatnia godzina już poza porą nocną.
     expect(at({ "2026-10-05": { type: "n", extraMin: 60 } }).overtime100Minutes).toBe(0);
     // Nadgodziny wniesione do cudzej doby to początek następnej zmiany: P pon., D wt. 6–14 → 6:00–14:00 w dzień.
     expect(at({ "2026-10-05": { type: "p" }, "2026-10-06": { type: "d" } }).overtime100Minutes).toBe(0);
     // Wszystkich Świętych 1.11 (niedziela 2026) i 11.11 (środa).
-    expect(monthSummary(data({ days: { "2026-11-11": { type: "d", extraMin: 30 } } }), 2026, 10).overtime100Minutes).toBe(30);
+    expect(monthSummary(data({ days: { "2026-11-11": { type: "d", extraMin: 30, offSchedule: true } } }), 2026, 10).overtime100Minutes).toBe(30);
+    expect(monthSummary(data({ days: { "2026-11-11": { type: "d", extraMin: 30 } } }), 2026, 10).overtime100Minutes).toBe(0);
+    expect(migrate({ days: { "2026-11-11": { type: "d", offSchedule: "tak" } } }).days["2026-11-11"]).toEqual({ type: "d" });
   });
 });
 

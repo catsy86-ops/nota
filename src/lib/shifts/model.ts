@@ -42,6 +42,12 @@ export interface DayEntry {
   /** Odchylenie od planu w minutach: + zostałem dłużej, − wyszedłem wcześniej. */
   extraMin?: number;
   /**
+   * Praca w dzień wolny według grafiku (dopisana poza planem). Ma znaczenie
+   * w niedzielę i święto: nadgodziny w taki dzień mają dodatek 100%,
+   * a w zaplanowany — 50% (art. 151¹ § 1 KP).
+   */
+  offSchedule?: true;
+  /**
    * Godziny rodzaju z dnia, w którym była ta zmiana — zapisywane, gdy ktoś
    * później zmieni godziny rodzaju. Brak = bieżące godziny rodzaju.
    */
@@ -178,6 +184,8 @@ function toEntry(v: unknown): DayEntry | null {
   if (!(typeof o.note === "string" && o.note.trim())) delete entry.note;
   if (typeof o.extraMin === "number" && Number.isFinite(o.extraMin) && o.extraMin !== 0) entry.extraMin = Math.round(o.extraMin);
   else delete entry.extraMin;
+  if (o.offSchedule === true) entry.offSchedule = true;
+  else delete entry.offSchedule;
   if (isHours(o.hours)) entry.hours = { start: o.hours.start, end: o.hours.end, breakMin: o.hours.breakMin };
   else delete entry.hours;
   return entry;

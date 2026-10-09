@@ -156,7 +156,7 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
       </div>
       <p className="text-2xs text-muted-foreground">
         Norma wg art. 130 Kodeksu pracy, proporcjonalna do etatu, pomniejszona o nieobecności w dni robocze. Przy niepełnym etacie nadgodziny liczą się ponad 8 h na dobę i ponad normę pełnego etatu albo granicę z umowy (art. 151 § 5 KP). Kolejne okresy rozliczeniowe liczone od wybranego miesiąca.
-        Nadgodziny dobowe liczone w dobie pracowniczej (24 h od początku zmiany). Dodatek za nadgodziny wg art. 151¹ KP: 100% w nocy (22:00–6:00), w niedziele i święta oraz za przekroczenie normy, 50% za pozostałe. Odpoczynek dobowy 11 h (art. 132 KP).
+        Nadgodziny dobowe liczone w dobie pracowniczej (24 h od początku zmiany). Dodatek za nadgodziny wg art. 151¹ KP: 100% w nocy (22:00–6:00), w niedziele i święta wolne wg grafiku (dzień oznaczony „poza grafikiem”) oraz za przekroczenie normy, 50% za pozostałe. Dnia wolnego udzielonego w zamian za niedzielę nie rozpoznajemy. Odpoczynek dobowy 11 h (art. 132 KP).
       </p>
     </section>
   );

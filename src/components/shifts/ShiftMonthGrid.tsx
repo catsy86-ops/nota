@@ -113,6 +113,7 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                 holiday,
                 type ? (absence ? type.name : `${type.name} ${type.start}–${type.end}`) : "wolne",
                 entry?.extraMin ? `odchylenie ${formatDuration(entry.extraMin)}` : undefined,
+                entry?.offSchedule ? "poza grafikiem" : undefined,
                 entry?.note ? `notatka: ${entry.note}` : undefined,
               ].filter(Boolean).join(", ");
 
