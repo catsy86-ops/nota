@@ -532,7 +532,7 @@ Zrzuty wszystkich widoków (390/1440 px, jasny/ciemny, realistyczne dane). Robio
 - [x] 18. Rola kolorów: pomarańcz = akcja, czerwony = pilne, róż tylko dekoracja; plama poświaty na pustych widokach. **S** — ✅ róż został tylko w tłach/gradientach (nadgodziny przeszły na pomarańcz w pkt 14); środkowa poświata wyłączona w trybie statycznym.
 
 **Faza 4 — opcjonalnie**
-- [ ] 19. Podsumowanie Grafiku jako rachunek z baru (kropki prowadzące, cyfry o stałej szerokości, „Razem brutto”). **M**
+- [x] 19. Podsumowanie Grafiku jako rachunek z baru (kropki prowadzące, cyfry o stałej szerokości, „Razem brutto”). **M** — ✅ `Receipt` w `ShiftSummary`: pozycje rodzajów z kwotą (stawka rodzaju albo domyślna), urlop „—”, „Dodatek za nadgodziny” = zarobek − podstawa, „Razem brutto” pod podwójną kreską, ząbkowana krawędź (maska `.receipt`). Bez stawki same godziny. Zarobek zniknął z nagłówka podsumowania (jest w rachunku).
 
 ## Animacje i przejścia — 2026-10-09
 

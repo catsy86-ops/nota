@@ -1,4 +1,3 @@
-import { TAP } from "@/lib/platform";
 import { useCallback, useMemo, useState } from "react";
 import { addMonths, format, startOfMonth } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -7,6 +6,7 @@ import { toast } from "sonner";
 import { dayKey } from "@/lib/reminderOccurrences";
 import { DEFAULT_SHIFT_TYPES, addDefaultShiftTypes, SHIFTS_EXPORTED_KEY, applyPatternToStore, buildShiftsIcs, cancelledShiftDays, exportableShiftDays, exportedAfter, monthSummary, restoreDays, setDayEntry, setDayShift, shiftStore, useShifts, useShiftsReady, type ShiftType } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
+import { TAP } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
 import { pluralPl } from "@/lib/plural";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -156,7 +156,7 @@ function ShiftsScreen() {
         </button>
       </div>
 
-      <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} onOpenSettings={() => setSettingsOpen(true)} />
+      <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(month, "LLLL yyyy", { locale: pl })} onOpenSettings={() => setSettingsOpen(true)} />
       <ShiftSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} settings={data} />
 
       <ShiftTypeDialog

@@ -540,6 +540,18 @@
   .card-actions:not([data-open]):not([data-editing]) .card-action { padding: 0.3125rem; }
 }
 
+/* Rachunek w podsumowaniu Grafiku: papier odrobinę jaśniejszy od karty i ząbkowana dolna krawędź (maska). */
+.receipt {
+  margin-inline: -0.25rem;
+  padding: 0.875rem 0.875rem 1.375rem;
+  background: hsl(var(--background));
+  border-radius: 0.75rem 0.75rem 0 0;
+  --tooth: 0.625rem;
+  -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / var(--tooth) 100%;
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / var(--tooth) 100%;
+}
+.dark .receipt { background: hsl(var(--muted) / 0.6); }
+
 /* Pasek koloru u góry kolorowej notatki — tło samo jest już prawie neutralne.
    Obraz tła zamiast cienia: nie gryzie się z cieniami uniesienia i zaznaczenia. */
 [data-note-color="coral"], [data-swatch="coral"] { --note-ink: 14 80% 58%; }

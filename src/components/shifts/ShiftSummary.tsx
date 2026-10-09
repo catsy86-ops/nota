@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { AlertTriangle, Settings2 } from "lucide-react";
@@ -12,6 +13,8 @@ interface ShiftSummaryProps {
   workSystem: WorkSystem;
   settlementMonths: SettlementMonths;
   fte: number;
+  /** „październik 2026” — nagłówek rachunku. */
+  monthLabel: string;
   onOpenSettings: () => void;
 }
 
@@ -25,7 +28,7 @@ const monthName = (year: number, month: number, pattern = "LLLL") => format(new 
  * Podsumowanie miesiąca. Sercem jest pasek normy: wypełnia się do wymiaru
  * czasu pracy, a nadwyżka (nadgodziny) dosuwa się za nim w kolorze akcentu.
  */
-export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths, fte, onOpenSettings }: ShiftSummaryProps) {
+export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths, fte, monthLabel, onOpenSettings }: ShiftSummaryProps) {
   const { minutes, normMinutes, overtimeMinutes, dailyOvertimeMinutes, overtime100Minutes } = summary;
   const scale = Math.max(normMinutes, minutes, 1);
   // Nadgodziny dobowe mogą być i poniżej normy miesiąca — pasek dzieli faktycznie przepracowane godziny.
@@ -42,12 +45,6 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
             <span className="text-base font-semibold text-muted-foreground ml-2">/ {formatHoursShort(normMinutes)} h normy</span>
           </p>
         </div>
-        {summary.earnings > 0 && (
-          <div className="text-right">
-            <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Zarobek brutto</p>
-            <p className="font-display font-bold text-xl text-primary tabular-nums">{formatMoney(summary.earnings)}</p>
-          </div>
-        )}
       </div>
 
       <div className="h-2.5 rounded-full bg-muted overflow-hidden flex" role="img"
@@ -88,21 +85,7 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
         </div>
       )}
 
-      {summary.byType.length > 0 && (
-        <ul className="space-y-1.5 border-t border-border/50 pt-3">
-          {summary.byType.map(({ type, count, minutes: m }) => (
-            <li key={type.id} className="flex items-center gap-2 text-sm">
-              <span className={cn("w-2.5 h-2.5 rounded-full shrink-0", type.kind === "absence" && "ring-2 ring-inset bg-transparent")}
-                style={type.kind === "absence" ? { ["--tw-ring-color" as string]: type.color } : { backgroundColor: type.color }} />
-              <span className="flex-1 truncate">{type.name}</span>
-              <span className="text-muted-foreground tabular-nums">
-                {type.kind === "absence" ? `${count} ${pluralPl(count, ["dzień", "dni", "dni"])}` : `${count} ${pluralPl(count, ["zmiana", "zmiany", "zmian"])}`}
-              </span>
-              <span className="w-24 text-right tabular-nums font-medium">{formatDuration(m)}</span>
-            </li>
-          ))}
-        </ul>
-      )}
+      {summary.byType.length > 0 && <Receipt summary={summary} hourlyRate={hourlyRate} monthLabel={monthLabel} />}
 
       {/* Bieżące ustawienia w jednej linii — pola są w oknie „Ustawienia grafiku”. */}
       <button type="button" onClick={onOpenSettings} aria-label="Ustawienia grafiku"
@@ -160,5 +143,71 @@ function Stat({ label, value, accent = false, hint }: { label: string; value: st
       <dd className={cn("tabular-nums font-semibold", accent && "text-primary")}>{value}</dd>
       {hint && <dd className="text-2xs text-muted-foreground tabular-nums">{hint}</dd>}
     </div>
+  );
+}
+
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/**
+ * Rozliczenie miesiąca jako rachunek z baru („Zrobione przy piwie”): pozycje
+ * z kropkami prowadzącymi do kwot, cyfry o stałej szerokości, dodatek za
+ * nadgodziny osobną pozycją i „Razem brutto” pod podwójną kreską. Kwoty tylko,
+ * gdy jest stawka — bez niej rachunek liczy same godziny.
+ */
+function Receipt({ summary, hourlyRate, monthLabel }: { summary: MonthSummary; hourlyRate: number; monthLabel: string }) {
+  const paid = summary.earnings > 0;
+  const lines = summary.byType.map(({ type, count, minutes }) => {
+    const absence = type.kind === "absence";
+    return {
+      key: type.id, type, absence,
+      qty: absence ? `${count} ${pluralPl(count, ["dzień", "dni", "dni"])}` : `${count} ${pluralPl(count, ["zmiana", "zmiany", "zmian"])}`,
+      minutes,
+      // Nieobecność nie jest pracą w tym rachunku — jej wynagrodzenie liczy kadra.
+      amount: absence ? null : round2((minutes / 60) * (type.rate ?? hourlyRate)),
+    };
+  });
+  const base = lines.reduce((sum, l) => sum + (l.amount ?? 0), 0);
+  // Reszta zarobku to dodatek za nadgodziny (50/100%) — w podstawie każda godzina już jest.
+  const premium = round2(summary.earnings - base);
+
+  return (
+    <div className="receipt font-mono text-xs sm:text-[0.8125rem] tabular-nums">
+      <p className="flex justify-between gap-2 pb-2 text-2xs uppercase tracking-[0.2em] text-muted-foreground">
+        <span>Rachunek</span><span>{monthLabel}</span>
+      </p>
+      <ul className="space-y-1.5">
+        {lines.map((l) => (
+          <ReceiptLine key={l.key} label={
+            <span className="flex items-center gap-1.5 min-w-0">
+              <span aria-hidden className={cn("w-2 h-2 rounded-full shrink-0", l.absence && "ring-[1.5px] ring-inset bg-transparent")}
+                style={l.absence ? { ["--tw-ring-color" as string]: l.type.color } : { backgroundColor: l.type.color }} />
+              <span className="truncate font-body font-medium">{l.type.name}</span>
+              <span className="text-muted-foreground shrink-0">{l.qty}</span>
+            </span>
+          } hours={formatDuration(l.minutes)} amount={paid ? (l.amount === null ? "—" : formatMoney(l.amount)) : undefined} />
+        ))}
+        {paid && premium > 0 && (
+          <ReceiptLine label={<span className="font-body font-medium">Dodatek za nadgodziny</span>}
+            hours={formatDuration(summary.overtimeMinutes)} amount={formatMoney(premium)} />
+        )}
+      </ul>
+      {paid && (
+        <p className="mt-3 pt-2 border-t-[3px] border-double border-foreground/40 flex items-baseline justify-between gap-3">
+          <span className="font-body text-2xs font-semibold uppercase tracking-[0.2em]">Razem brutto</span>
+          <span className="font-display font-extrabold text-xl sm:text-2xl text-primary">{formatMoney(summary.earnings)}</span>
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ReceiptLine({ label, hours, amount }: { label: ReactNode; hours: string; amount?: string }) {
+  return (
+    <li className="flex items-baseline gap-2">
+      <span className="min-w-0 shrink">{label}</span>
+      <span aria-hidden className="flex-1 min-w-4 translate-y-[-0.2em] border-b border-dotted border-muted-foreground/50" />
+      <span className="shrink-0">{hours}</span>
+      {amount !== undefined && <span className="shrink-0 w-[6.5rem] text-right font-semibold">{amount}</span>}
+    </li>
   );
 }
