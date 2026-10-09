@@ -5,7 +5,8 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", "coverage"] },
+  // .claude/ trzyma worktree agentów (osobne kopie repo) — lintuje się je w ich własnym katalogu.
+  { ignores: ["dist", "coverage", ".claude"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
@@ -46,6 +47,8 @@ export default tseslint.config(
       "src/lib/imageSync.test.ts",
       "src/lib/shifts/yShifts.ts",
       "src/lib/shifts/yShifts.test.ts",
+      // Buduje plik synchronizacji w starym formacie jako dane testowe.
+      "e2e/images.spec.ts",
       "src/hooks/useNotes.ts",
       "src/hooks/useNotes.test.ts",
     ],
