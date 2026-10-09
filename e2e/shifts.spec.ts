@@ -104,3 +104,21 @@ test("eksport grafiku do kalendarza pobiera plik .ics", async ({ page }) => {
   const text = Buffer.concat(body).toString("utf8");
   expect(text).toContain("SUMMARY:Zmiana: Dzień");
 });
+
+test("usunięcie rodzaju zmiany wymaga potwierdzenia i da się cofnąć", async ({ page }) => {
+  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  await page.getByRole("button", { name: /^2 [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+
+  await page.getByRole("button", { name: "Edytuj zmianę Dzień" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("button", { name: "Usuń rodzaj" }).click();
+  // Pierwsze kliknięcie tylko pyta (z liczbą dni) — okno zostaje otwarte.
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Usunąć z 2 dniami?" }).click();
+
+  await expect(page.getByRole("radio", { name: /Dzień/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, wolne$/ }).first()).toBeVisible();
+  await page.getByRole("button", { name: "Cofnij" }).click();
+  await expect(page.getByRole("radio", { name: /Dzień/ })).toHaveCount(1);
+  await expect(page.getByRole("button", { name: /^2 [a-ząćęłńóśźż]+, Dzień/ }).first()).toBeVisible();
+});

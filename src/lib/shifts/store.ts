@@ -56,14 +56,23 @@ export function saveShiftType(type: ShiftType): void {
   }));
 }
 
-/** Usuwa rodzaj zmiany razem z jego dniami i krokami w cyklach. */
-export function deleteShiftType(id: string): void {
+/**
+ * Usuwa rodzaj zmiany razem z jego dniami i krokami w cyklach.
+ * Zwraca cały poprzedni stan — dla „Cofnij” (`restoreShifts`).
+ */
+export function deleteShiftType(id: string): ShiftData {
+  const before = shiftStore.get();
   update((d) => ({
     ...d,
     types: d.types.filter((t) => t.id !== id),
     days: Object.fromEntries(Object.entries(d.days).filter(([, e]) => e.type !== id)),
     patterns: d.patterns.map((p) => ({ ...p, steps: p.steps.map((s) => (s === id ? null : s)) })),
   }));
+  return before;
+}
+
+export function restoreShifts(data: ShiftData): void {
+  shiftStore.set(data);
 }
 
 export function savePattern(pattern: ShiftPattern): void {

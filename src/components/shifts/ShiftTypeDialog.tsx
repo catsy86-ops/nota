@@ -3,8 +3,10 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SHIFT_COLORS, deleteShiftType, formatDuration, saveShiftType, shiftMinutes, shiftSpan, type ShiftType } from "@/lib/shifts";
+import { SHIFT_COLORS, deleteShiftType, formatDuration, restoreShifts, saveShiftType, shiftMinutes, shiftSpan, shiftStore, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
+import { pluralPl } from "@/lib/plural";
+import { toastWithUndo } from "@/lib/undoToast";
 
 interface ShiftTypeDialogProps {
   /** `null` = nowa zmiana. */
@@ -20,9 +22,12 @@ const BLANK: ShiftType = { id: "", name: "", short: "", color: SHIFT_COLORS[3], 
 export function ShiftTypeDialog({ type, open, onOpenChange, onSaved, onDeleted }: ShiftTypeDialogProps) {
   const [draft, setDraft] = useState<ShiftType>(BLANK);
   const [rate, setRate] = useState("");
+  /** Liczba dni do skasowania, gdy czekamy na drugie kliknięcie „Usuń”. */
+  const [confirmDays, setConfirmDays] = useState<number | null>(null);
 
   useEffect(() => {
     if (!open) return;
+    setConfirmDays(null);
     setDraft(type ?? BLANK);
     setRate(type?.rate ? String(type.rate) : "");
   }, [open, type]);
@@ -31,6 +36,20 @@ export function ShiftTypeDialog({ type, open, onOpenChange, onSaved, onDeleted }
   const valid = draft.name.trim() !== "" && shiftSpan(draft) !== null;
   const parsedRate = parseFloat(rate.replace(",", "."));
   const absence = draft.kind === "absence";
+
+  function remove() {
+    if (!type) return;
+    const used = Object.values(shiftStore.get().days).filter((e) => e.type === type.id).length;
+    // Pierwsze kliknięcie tylko uzbraja przycisk — usuwa się cała historia tego rodzaju.
+    if (used > 0 && confirmDays === null) { setConfirmDays(used); return; }
+    const before = deleteShiftType(type.id);
+    onDeleted();
+    onOpenChange(false);
+    toastWithUndo(`Usunięto „${type.name}”`, () => restoreShifts(before), {
+      description: used > 0 ? `Razem z ${used} ${pluralPl(used, ["dniem", "dniami", "dniami"])} w grafiku` : undefined,
+      icon: "🗑️",
+    });
+  }
 
   function save() {
     if (!valid) return;
@@ -118,9 +137,9 @@ export function ShiftTypeDialog({ type, open, onOpenChange, onSaved, onDeleted }
           </fieldset>
           <DialogFooter className="gap-2 sm:justify-between">
             {type ? (
-              <Button type="button" variant="ghost" className="text-destructive hover:text-destructive"
-                onClick={() => { deleteShiftType(type.id); onDeleted(); onOpenChange(false); }}>
-                Usuń zmianę
+              <Button type="button" variant={confirmDays === null ? "ghost" : "destructive"}
+                className={cn(confirmDays === null && "text-destructive hover:text-destructive")} onClick={remove}>
+                {confirmDays === null ? "Usuń rodzaj" : `Usunąć z ${confirmDays} ${pluralPl(confirmDays, ["dniem", "dniami", "dniami"])}?`}
               </Button>
             ) : <span />}
             <Button type="submit" disabled={!valid}>Zapisz zmianę</Button>
