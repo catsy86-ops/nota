@@ -5,7 +5,7 @@ import { Minus, Plus } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { entryMinutes, formatDuration, holidayName, isAbsence, setDayEntry, shiftInk, type DayEntry, type ShiftType } from "@/lib/shifts";
+import { dayType, entryMinutes, formatDuration, holidayName, isAbsence, setDayEntry, shiftInk, type DayEntry, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
 interface DayDialogProps {
@@ -35,10 +35,18 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
   const [y, m, d] = dayKey.split("-").map(Number);
   const date = new Date(y, m - 1, d);
   const holiday = holidayName(dayKey);
-  const type = types.find((t) => t.id === typeId);
+  const base = types.find((t) => t.id === typeId);
+  // Ten sam rodzaj co w zapisie: godziny z tamtego dnia (jeśli rodzaj później zmienił godziny).
+  const keepHours = typeId === entry?.type ? entry?.hours : undefined;
+  const type = base && dayType(base, { hours: keepHours });
 
   function save() {
-    setDayEntry(dayKey, typeId ? { type: typeId, ...(extra && !(type && isAbsence(type)) ? { extraMin: extra } : {}), ...(note.trim() ? { note: note.trim() } : {}) } : null);
+    setDayEntry(dayKey, typeId ? {
+      type: typeId,
+      ...(extra && !(type && isAbsence(type)) ? { extraMin: extra } : {}),
+      ...(note.trim() ? { note: note.trim() } : {}),
+      ...(keepHours ? { hours: keepHours } : {}),
+    } : null);
     onOpenChange(false);
   }
 

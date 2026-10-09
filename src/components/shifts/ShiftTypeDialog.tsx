@@ -128,6 +128,9 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
         <p className="text-sm text-muted-foreground">
           {absence ? "Obniża normę o:" : "Czas pracy:"} <span className="font-semibold text-foreground">{formatDuration(shiftMinutes(draft))}</span>
         </p>
+        {type && (type.start !== draft.start || type.end !== draft.end || type.breakMin !== draft.breakMin) && (
+          <p className="text-xs text-muted-foreground -mt-2">Nowe godziny od dziś — dni wcześniejsze zachowają dotychczasowe.</p>
+        )}
         {!absence && <div className="space-y-1.5">
           <Label htmlFor="shift-rate">Stawka za godzinę (opcjonalnie)</Label>
           <Input id="shift-rate" inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} placeholder="jak domyślna" />

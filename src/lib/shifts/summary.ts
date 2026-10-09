@@ -1,4 +1,4 @@
-import { isAbsence, type DayEntry, type SettlementMonths, type ShiftData, type ShiftType } from "./model";
+import { dayType, isAbsence, type DayEntry, type SettlementMonths, type ShiftData, type ShiftType } from "./model";
 import { dstShiftMinutes, entryMinutesOn, nightMinutes, shiftMinutes, shiftSpan } from "./time";
 import { holidayName, isNormDay, workNormMinutes } from "./holidays";
 
@@ -93,8 +93,9 @@ export function dailyOvertimeSpans(data: ShiftData): OvertimeSpan[] {
   const typesById = new Map(data.types.map((t) => [t.id, t]));
   const spans: (WorkSpan & { rate: number })[] = [];
   for (const [key, entry] of Object.entries(data.days)) {
-    const type = typesById.get(entry.type);
-    if (!type || isAbsence(type)) continue;
+    const base = typesById.get(entry.type);
+    if (!base || isAbsence(base)) continue;
+    const type = dayType(base, entry);
     const span = shiftSpan(type);
     if (!span) continue;
     const [y, m, d] = key.split("-").map(Number);
@@ -171,8 +172,9 @@ export function shortRests(data: ShiftData): ShortRest[] {
   const typesById = new Map(data.types.map((t) => [t.id, t]));
   const spans: { key: string; start: number; end: number }[] = [];
   for (const [key, entry] of Object.entries(data.days)) {
-    const type = typesById.get(entry.type);
-    if (!type || isAbsence(type)) continue;
+    const base = typesById.get(entry.type);
+    if (!base || isAbsence(base)) continue;
+    const type = dayType(base, entry);
     const span = shiftSpan(type);
     if (!span) continue;
     const [y, m, d] = key.split("-").map(Number);
@@ -212,13 +214,14 @@ function monthCore(data: ShiftData, year: number, month: number, otSpans: Overti
 
   for (const [key, entry] of Object.entries(data.days)) {
     if (!key.startsWith(prefix)) continue;
-    const type = typesById.get(entry.type);
-    if (!type) continue;
+    const base = typesById.get(entry.type);
+    if (!base) continue;
+    const type = dayType(base, entry);
     const m = entryMinutesOn(type, entry, key);
-    const t = c.totals.get(type.id) ?? { type, count: 0, minutes: 0 };
+    const t = c.totals.get(base.id) ?? { type: base, count: 0, minutes: 0 };
     t.count += 1;
     t.minutes += m;
-    c.totals.set(type.id, t);
+    c.totals.set(base.id, t);
     if (isAbsence(type)) {
       c.absenceDays += 1;
       // L4 czy urlop w sobotę, niedzielę albo święto nie zmniejsza normy — tego dnia jej nie ma.
@@ -314,8 +317,9 @@ export interface ShiftOccurrence {
 
 function occurrence(data: ShiftData, dayKey: string, typesById: Map<string, ShiftType>): ShiftOccurrence | null {
   const entry = data.days[dayKey];
-  const type = entry && typesById.get(entry.type);
-  if (!type || isAbsence(type)) return null;
+  const base = entry && typesById.get(entry.type);
+  if (!base || isAbsence(base)) return null;
+  const type = dayType(base, entry);
   const span = shiftSpan(type);
   if (!span) return null;
   const [y, m, d] = dayKey.split("-").map(Number);

@@ -27,6 +27,8 @@ export interface DeletedShiftType {
   patterns: ShiftPattern[];
 }
 
+const localDayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
 const byOrder = <T extends { order?: number }>(a: T, b: T) => (a.order ?? 0) - (b.order ?? 0);
 
 export function createYShifts(doc: Y.Doc) {
@@ -118,10 +120,20 @@ export function createYShifts(doc: Y.Doc) {
     return before;
   }
 
-  function saveShiftType(type: ShiftType): void {
+  /**
+   * Zapisuje rodzaj. Gdy zmieniają się jego godziny, dni sprzed `todayKey`
+   * dostają kopię dotychczasowych — wrzesień nie przelicza się po tym, jak
+   * „Dzień” od października zaczyna się godzinę później.
+   */
+  function saveShiftType(type: ShiftType, todayKey = localDayKey(new Date())): void {
     transact(() => {
+      const before = get().types.find((t) => t.id === type.id);
       ensureTypes();
       const prev = types.get(type.id);
+      if (before && (before.start !== type.start || before.end !== type.end || before.breakMin !== type.breakMin)) {
+        const hours = { start: before.start, end: before.end, breakMin: before.breakMin };
+        days.forEach((e, k) => { if (e.type === type.id && k < todayKey && !e.hours) days.set(k, { ...e, hours }); });
+      }
       types.set(type.id, { ...type, order: prev?.order ?? type.order ?? nextOrder(types) });
     });
   }

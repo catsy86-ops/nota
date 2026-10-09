@@ -83,6 +83,22 @@ describe("Grafik w Yjs", () => {
     expect(s.get().types).toHaveLength(DEFAULT_SHIFT_TYPES.length);
   });
 
+  it("zmiana godzin rodzaju nie przelicza dni sprzed dziś", () => {
+    const s = createYShifts(new Y.Doc());
+    s.setDayShift("2026-10-01", "d");
+    s.setDayShift("2026-10-20", "d");
+    s.saveShiftType({ ...DEFAULT_SHIFT_TYPES[0], start: "07:00", end: "15:30" }, "2026-10-09");
+    expect(s.get().days["2026-10-01"].hours).toEqual({ start: "06:00", end: "14:00", breakMin: 0 });
+    expect(s.get().days["2026-10-20"].hours).toBeUndefined();
+    // Druga zmiana godzin nie nadpisuje już zapamiętanych.
+    s.saveShiftType({ ...DEFAULT_SHIFT_TYPES[0], start: "08:00", end: "16:00" }, "2026-10-09");
+    expect(s.get().days["2026-10-01"].hours?.start).toBe("06:00");
+    // Zmiana nazwy czy koloru nie rusza dni.
+    s.setDayShift("2026-10-02", "d");
+    s.saveShiftType({ ...s.get().types[0], color: "#000000" }, "2026-10-09");
+    expect(s.get().days["2026-10-02"].hours).toBeUndefined();
+  });
+
   it("migawka ma stałą tożsamość, dopóki nic się nie zmieni", () => {
     const s = createYShifts(new Y.Doc());
     const first = s.get();

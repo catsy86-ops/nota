@@ -244,3 +244,17 @@ test("pół etatu: niższa norma i godziny ponadwymiarowe", async ({ page }) => 
   await page.reload();
   await expect(page.getByRole("region", { name: "Podsumowanie miesiąca" }).getByLabel("Wymiar etatu")).toHaveValue("0.5");
 });
+
+test("nowe godziny rodzaju obowiązują od dziś, przeszłe dni zostają przy starych", async ({ page }) => {
+  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  await page.getByRole("button", { name: /^20 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  await page.getByRole("button", { name: "Edytuj rodzaj Dzień" }).click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Od", { exact: true }).fill("07:00");
+  await dialog.getByLabel("Do", { exact: true }).fill("17:00");
+  await expect(dialog).toContainText("dni wcześniejsze zachowają dotychczasowe");
+  await dialog.getByRole("button", { name: "Zapisz rodzaj" }).click();
+
+  await expect(page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dzień 06:00–14:00/ }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /^20 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dzień 07:00–17:00/ }).first()).toBeVisible();
+});

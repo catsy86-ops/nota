@@ -246,6 +246,28 @@ describe("niepełny etat", () => {
   });
 });
 
+describe("godziny z dnia zmiany", () => {
+  it("dzień z zapamiętanymi godzinami liczy się z nich, nie z bieżących godzin rodzaju", () => {
+    const later = { ...day, start: "07:00", end: "17:00" }; // dziś 10 h
+    const s = monthSummary(data({ types: [later], days: {
+      "2026-10-01": { type: "d", hours: { start: "06:00", end: "14:00", breakMin: 0 } },
+      "2026-10-02": { type: "d" },
+    } }), 2026, 9);
+    expect(s.minutes).toBe(8 * 60 + 10 * 60);
+    expect(s.dailyOvertimeMinutes).toBe(2 * 60);
+    expect(s.byType[0].type.start).toBe("07:00");
+  });
+
+  it("migracja odrzuca zepsute godziny dnia", () => {
+    const m = migrate({ days: {
+      "2026-10-01": { type: "d", hours: { start: "6", end: "14:00", breakMin: 0 } },
+      "2026-10-02": { type: "d", hours: { start: "06:00", end: "14:00", breakMin: 30 } },
+    } });
+    expect(m.days["2026-10-01"].hours).toBeUndefined();
+    expect(m.days["2026-10-02"].hours).toEqual({ start: "06:00", end: "14:00", breakMin: 30 });
+  });
+});
+
 describe("odpoczynek dobowy", () => {
   it("wskazuje zmianę po mniej niż 11 h przerwy, z odchyleniem", () => {
     const d = data({ days: {

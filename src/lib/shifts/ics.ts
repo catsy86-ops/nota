@@ -1,5 +1,5 @@
 import { escapeText, foldLine, formatLocal } from "@/lib/icsExport";
-import { isAbsence, type ShiftData } from "./model";
+import { dayType, isAbsence, type ShiftData } from "./model";
 import { shiftSpan } from "./time";
 
 /**
@@ -54,8 +54,9 @@ export function buildShiftsIcs(data: ShiftData, dayKeys: string[], { alarmMinute
 
   for (const key of dayKeys) {
     const entry = data.days[key];
-    const type = entry && typesById.get(entry.type);
-    if (!type) continue;
+    const base = entry && typesById.get(entry.type);
+    if (!base) continue;
+    const type = dayType(base, entry);
     // SEQUENCE rośnie z każdym eksportem — kalendarze, które znają już ten UID,
     // traktują wpis jako nowszą wersję zamiast go pomijać.
     const lines = ["BEGIN:VEVENT", `UID:shift-${key}@notatnik`, `DTSTAMP:${utcStamp(now)}`, `LAST-MODIFIED:${utcStamp(now)}`, `SEQUENCE:${sequence}`];

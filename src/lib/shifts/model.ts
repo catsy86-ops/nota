@@ -41,7 +41,26 @@ export interface DayEntry {
   note?: string;
   /** Odchylenie od planu w minutach: + zostałem dłużej, − wyszedłem wcześniej. */
   extraMin?: number;
+  /**
+   * Godziny rodzaju z dnia, w którym była ta zmiana — zapisywane, gdy ktoś
+   * później zmieni godziny rodzaju. Brak = bieżące godziny rodzaju.
+   */
+  hours?: ShiftHours;
 }
+
+export type ShiftHours = Pick<ShiftType, "start" | "end" | "breakMin">;
+
+/** Rodzaj zmiany z godzinami, które obowiązywały w danym dniu. */
+export function dayType(type: ShiftType, entry: Pick<DayEntry, "hours"> | undefined): ShiftType {
+  return entry?.hours ? { ...type, ...entry.hours } : type;
+}
+
+const HM = /^\d{1,2}:\d{2}$/;
+const isHours = (h: unknown): h is ShiftHours => {
+  const o = h as ShiftHours;
+  return !!o && typeof o.start === "string" && HM.test(o.start) && typeof o.end === "string" && HM.test(o.end)
+    && typeof o.breakMin === "number" && Number.isFinite(o.breakMin) && o.breakMin >= 0;
+};
 
 /** Cykl zmian powtarzany od wybranej daty; `null` = dzień wolny. */
 export interface ShiftPattern {
@@ -149,6 +168,8 @@ function toEntry(v: unknown): DayEntry | null {
   if (!(typeof o.note === "string" && o.note.trim())) delete entry.note;
   if (typeof o.extraMin === "number" && Number.isFinite(o.extraMin) && o.extraMin !== 0) entry.extraMin = Math.round(o.extraMin);
   else delete entry.extraMin;
+  if (isHours(o.hours)) entry.hours = { start: o.hours.start, end: o.hours.end, breakMin: o.hours.breakMin };
+  else delete entry.hours;
   return entry;
 }
 
