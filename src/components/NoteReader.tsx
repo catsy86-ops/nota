@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Maximize2, Minimize2, Minus, Pencil, Plus, X } from "lucide-react";
 import { format } from "date-fns";
@@ -10,6 +10,7 @@ import { backlinksOf, type WikiIndex } from "@/lib/wikiLinks";
 import { readingTimeMin, useViewPrefs } from "@/lib/viewPrefs";
 import { setGridNavPreviewScrollEl } from "@/lib/gridKeyboardNav";
 import { cn } from "@/lib/utils";
+import { tween } from "@/lib/motion";
 import { wordsPl } from "@/lib/plural";
 import { NoteImage } from "./NoteImage";
 
@@ -42,6 +43,34 @@ interface Props {
 }
 
 const ZOOM_DEFAULT = 1.1;
+
+/** Skala wejścia/wyjścia — przy origin w kaflu daje kilkadziesiąt px drogi „z kafla”. */
+const ENTER_SCALE = 0.94;
+
+/**
+ * Czytnik rośnie z kafla, z którego go otwarto, i do niego wraca: origin
+ * transformacji = środek kafla we współrzędnych panelu. Tylko transform
+ * (bez `layoutId` — wspólny układ z kartą gryzłby się z dnd-kit i kosztował
+ * pomiar przy każdym otwarciu). Kafel poza ekranem lub brak kafla (paleta,
+ * inny widok) — zostaje środek panelu.
+ */
+function useOriginFromTile(panelRef: React.RefObject<HTMLDivElement>, noteId: string) {
+  useLayoutEffect(() => {
+    const panel = panelRef.current;
+    const tile = document.querySelector(`[data-note-id-wrap="${CSS.escape(noteId)}"]`);
+    if (!panel) return;
+    const t = tile?.getBoundingClientRect();
+    if (!t || t.bottom < 0 || t.top > window.innerHeight) {
+      panel.style.transformOrigin = "";
+      return;
+    }
+    // Środek panelu nie zależy od skali wokół środka, więc pomiar w trakcie wejścia jest wierny.
+    const p = panel.getBoundingClientRect();
+    const x = t.left + t.width / 2 - (p.left + p.width / 2) + panel.offsetWidth / 2;
+    const y = t.top + t.height / 2 - (p.top + p.height / 2) + panel.offsetHeight / 2;
+    panel.style.transformOrigin = `${Math.round(x)}px ${Math.round(y)}px`;
+  }, [panelRef, noteId]);
+}
 
 function escRx(s: string) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
@@ -76,6 +105,8 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
   const present = mode === "present";
   const [zoom, setZoom] = useState(ZOOM_DEFAULT);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  useOriginFromTile(panelRef, note.id);
   const { showBacklinks } = useViewPrefs();
   const canEdit = !note.trashed;
 
@@ -132,18 +163,21 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
+        exit={{ opacity: 0, transition: tween.exit }}
+        transition={tween.enter}
         className={cn("fixed inset-0 z-50", present ? "bg-background/70 backdrop-blur-sm" : "bg-background/20 backdrop-blur-[2px]")}
         onClick={onClose}
       />
       {/* Centrowanie flexem, nie translate — framer-motion nadpisuje `transform`. */}
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
       <motion.div
+        ref={panelRef}
         layout
-        initial={{ opacity: 0, scale: 0.96, y: 8 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.96, y: 8 }}
-        transition={{ type: "spring", stiffness: 320, damping: 28 }}
+        // Osiada bez odbicia (wcześniej sprężyna z lekkim przestrzeleniem).
+        initial={{ opacity: 0, scale: ENTER_SCALE }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: ENTER_SCALE, transition: tween.exit }}
+        transition={tween.enter}
         role="dialog"
         aria-modal="true"
         aria-label={note.title || "Notatka bez tytułu"}
