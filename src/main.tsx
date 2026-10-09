@@ -3,7 +3,6 @@ import { toast } from "sonner";
 import App from "./App.tsx";
 import "@fontsource-variable/plus-jakarta-sans";
 import "@fontsource-variable/inter";
-import "@fontsource-variable/unbounded/wght.css";
 import "./index.css";
 import { registerServiceWorker, applyServiceWorkerUpdate, SW_UPDATE_EVENT, SW_OFFLINE_READY_EVENT } from "./lib/registerSW";
 import { requestPersistentStorage } from "./lib/storagePersistence";

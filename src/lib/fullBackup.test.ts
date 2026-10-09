@@ -28,7 +28,7 @@ describe("pełny backup v2", () => {
   it("niesie i przywraca Grafik zmian", async () => {
     const grafik = JSON.stringify({ version: 2, days: { "2026-10-01": { type: "d" } } });
     localStorage.setItem(SHIFTS_KEY, grafik);
-    const backup = parseFullBackup(JSON.stringify(await buildFullBackup()));
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
     expect(backup.shifts).toBe(grafik);
 
     localStorage.setItem(SHIFTS_KEY, "lokalny");
@@ -51,7 +51,7 @@ describe("pełny backup v2", () => {
 
     const text = JSON.stringify(await buildFullBackup());
     expect(text).not.toContain("TAJNYKOD");
-    const backup = parseFullBackup(text);
+    const backup = await parseFullBackup(text);
     expect(backup.version).toBe(2);
     expect(backup.versions?.map((v) => v.title)).toEqual(["stara wersja"]);
     expect(backup.settings?.["kaczy.viewPrefs.v1"]).toContain("list");
@@ -62,7 +62,7 @@ describe("pełny backup v2", () => {
     versionsStore.add("n1", "z pliku", "");
     localStorage.setItem("kaczy-theme", "dark");
     localStorage.setItem(ACHIEVEMENTS_KEY, "odznaki-z-pliku");
-    const backup = parseFullBackup(JSON.stringify(await buildFullBackup()));
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
 
     versionsStore.replaceAll([]);
     localStorage.setItem("kaczy-theme", "light");
@@ -78,7 +78,7 @@ describe("pełny backup v2", () => {
     versionsStore.add("x", "lokalna", "");
     localStorage.setItem("kaczy-theme", "light");
     const v1 = { version: 1, exportedAt: 1, notes: [makeNote({ id: "old" })], labels: [], folders: [] };
-    const backup = parseFullBackup(JSON.stringify(v1));
+    const backup = await parseFullBackup(JSON.stringify(v1));
     await restoreFullBackup(backup, ALL);
     expect(yjsStore.projectNotes().map((n) => n.id)).toEqual(["old"]);
     expect(versionsStore.get("x")).toHaveLength(1);
@@ -86,7 +86,7 @@ describe("pełny backup v2", () => {
   });
 
   it("ignores unknown setting keys smuggled into the file", async () => {
-    const backup = parseFullBackup(JSON.stringify({
+    const backup = await parseFullBackup(JSON.stringify({
       version: 2, exportedAt: 1, notes: [], labels: [], folders: [],
       settings: { "kaczy.sync.v1": "podmieniony", [SETTINGS_KEYS[0]]: "{}" },
     }));
@@ -95,8 +95,8 @@ describe("pełny backup v2", () => {
     expect(localStorage.getItem(SETTINGS_KEYS[0])).toBe("{}");
   });
 
-  it("drops a corrupted optional section instead of rejecting the file", () => {
-    const backup = parseFullBackup(JSON.stringify({ version: 2, exportedAt: 1, notes: [], labels: [], folders: [], versions: "zepsute" }));
+  it("drops a corrupted optional section instead of rejecting the file", async () => {
+    const backup = await parseFullBackup(JSON.stringify({ version: 2, exportedAt: 1, notes: [], labels: [], folders: [], versions: "zepsute" }));
     expect(backup.versions).toBeUndefined();
   });
 });
@@ -111,14 +111,14 @@ describe("pełny backup — obrazy", () => {
     expect(text).toContain(IMG);
 
     await imageStore.resetForTests(); // „inne urządzenie”: obrazu jeszcze nie ma
-    await restoreFullBackup(parseFullBackup(text), ALL);
+    await restoreFullBackup(await parseFullBackup(text), ALL);
     expect(yjsStore.projectNotes()[0].images).toEqual([ref]);
     expect(await imageStore.getDataUrl(ref)).toBe(IMG);
   });
 
   it("keeps the current notes when the images cannot be saved", async () => {
     yjsStore.upsertNote(makeNote({ id: "local" }));
-    const backup = parseFullBackup(JSON.stringify({ version: 2, exportedAt: 1, notes: [makeNote({ id: "z-pliku", images: [IMG] })], labels: [], folders: [] }));
+    const backup = await parseFullBackup(JSON.stringify({ version: 2, exportedAt: 1, notes: [makeNote({ id: "z-pliku", images: [IMG] })], labels: [], folders: [] }));
     const spy = vi.spyOn(imageStore, "ingest").mockRejectedValue(new Error("QuotaExceededError"));
     await expect(restoreFullBackup(backup, ALL)).rejects.toThrow();
     spy.mockRestore();

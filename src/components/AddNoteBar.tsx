@@ -5,7 +5,7 @@ import { formatReminderShort } from "@/lib/reminderTime";
 import { ColorPicker } from "./ColorPicker";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { LazyCalendar as Calendar } from "@/components/ui/lazy-calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { IconButton } from "@/components/ui/icon-button";

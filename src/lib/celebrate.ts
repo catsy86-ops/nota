@@ -1,6 +1,20 @@
-import confetti from "canvas-confetti";
+import type confettiFn from "canvas-confetti";
 import { isEffectEnabled, type EffectKey } from "./effectsSettings";
 import { isMotionReduced } from "@/hooks/useMotionPref";
+
+type Confetti = typeof confettiFn;
+let confettiLib: Confetti | null = null;
+let confettiLoading: Promise<Confetti> | null = null;
+
+/**
+ * canvas-confetti ładuje się dopiero przy pierwszym efekcie — nie ma go
+ * w startowym bundlu. Kolejne efekty odpalają się już synchronicznie.
+ */
+function withConfetti(run: (confetti: Confetti) => void) {
+  if (confettiLib) { run(confettiLib); return; }
+  confettiLoading ??= import("canvas-confetti").then((m) => (confettiLib = m.default));
+  confettiLoading.then(run, () => { confettiLoading = null; });
+}
 
 /**
  * Per-effect throttle (minimum ms between triggers) to prevent spam from
@@ -65,7 +79,7 @@ function originFrom(x: number, y: number) {
 
 export function celebrate(originX: number, originY: number) {
   if (!canFire("confetti")) return;
-  confetti({
+  withConfetti((confetti) => confetti({
     particleCount: 60,
     spread: 65,
     startVelocity: 35,
@@ -74,12 +88,12 @@ export function celebrate(originX: number, originY: number) {
     origin: originFrom(originX, originY),
     colors: themeColors(),
     disableForReducedMotion: true,
-  });
+  }));
 }
 
 export function sparkle(originX: number, originY: number) {
   if (!canFire("sparkle")) return;
-  confetti({
+  withConfetti((confetti) => confetti({
     particleCount: 18,
     spread: 360,
     startVelocity: 14,
@@ -90,26 +104,28 @@ export function sparkle(originX: number, originY: number) {
     origin: originFrom(originX, originY),
     colors: themeColors(),
     disableForReducedMotion: true,
-  });
+  }));
 }
 
 export function emojiShower(emojis: string[] = ["🎉", "✨", "⭐", "💫"]) {
   if (typeof window === "undefined") return;
   if (!canFire("emojiShower")) return;
-  const shapeFromText = (confetti as unknown as {
-    shapeFromText: (opts: { text: string; scalar?: number }) => unknown;
-  }).shapeFromText;
-  const shapes = emojis.map((e) => shapeFromText({ text: e, scalar: 2 }) as never);
-  confetti({
-    particleCount: 40,
-    spread: 100,
-    startVelocity: 25,
-    ticks: 200,
-    gravity: 0.7,
-    scalar: 2,
-    shapes,
-    origin: { x: 0.5, y: 0 },
-    disableForReducedMotion: true,
+  withConfetti((confetti) => {
+    const shapeFromText = (confetti as unknown as {
+      shapeFromText: (opts: { text: string; scalar?: number }) => unknown;
+    }).shapeFromText;
+    const shapes = emojis.map((e) => shapeFromText({ text: e, scalar: 2 }) as never);
+    confetti({
+      particleCount: 40,
+      spread: 100,
+      startVelocity: 25,
+      ticks: 200,
+      gravity: 0.7,
+      scalar: 2,
+      shapes,
+      origin: { x: 0.5, y: 0 },
+      disableForReducedMotion: true,
+    });
   });
 }
 
@@ -120,7 +136,7 @@ export function fireworks(durationMs = 1500) {
   fireworksActive = true;
   const end = Date.now() + durationMs;
   const colors = themeColors();
-  (function frame() {
+  withConfetti((confetti) => (function frame() {
     confetti({
       particleCount: 4,
       angle: 60,
@@ -142,30 +158,32 @@ export function fireworks(durationMs = 1500) {
     } else {
       fireworksActive = false;
     }
-  })();
+  })());
 }
 
 /** Floating hearts (emoji shapes rising up). */
 export function hearts(originX?: number, originY?: number) {
   if (typeof window === "undefined") return;
   if (!canFire("hearts")) return;
-  const shapeFromText = (confetti as unknown as {
-    shapeFromText: (opts: { text: string; scalar?: number }) => unknown;
-  }).shapeFromText;
-  const shapes = ["❤️", "💖", "💗", "💕"].map((e) => shapeFromText({ text: e, scalar: 1.6 }) as never);
-  const origin = originX != null && originY != null
-    ? originFrom(originX, originY)
-    : { x: 0.5, y: 0.7 };
-  confetti({
-    particleCount: 22,
-    spread: 70,
-    startVelocity: 28,
-    gravity: 0.45,
-    ticks: 180,
-    scalar: 1.6,
-    shapes,
-    origin,
-    disableForReducedMotion: true,
+  withConfetti((confetti) => {
+    const shapeFromText = (confetti as unknown as {
+      shapeFromText: (opts: { text: string; scalar?: number }) => unknown;
+    }).shapeFromText;
+    const shapes = ["❤️", "💖", "💗", "💕"].map((e) => shapeFromText({ text: e, scalar: 1.6 }) as never);
+    const origin = originX != null && originY != null
+      ? originFrom(originX, originY)
+      : { x: 0.5, y: 0.7 };
+    confetti({
+      particleCount: 22,
+      spread: 70,
+      startVelocity: 28,
+      gravity: 0.45,
+      ticks: 180,
+      scalar: 1.6,
+      shapes,
+      origin,
+      disableForReducedMotion: true,
+    });
   });
 }
 
@@ -176,7 +194,7 @@ export function bubbles(originX?: number, originY?: number) {
   const origin = originX != null && originY != null
     ? originFrom(originX, originY)
     : { x: 0.5, y: 1 };
-  confetti({
+  withConfetti((confetti) => confetti({
     particleCount: 30,
     spread: 50,
     startVelocity: 20,
@@ -187,7 +205,7 @@ export function bubbles(originX?: number, originY?: number) {
     colors: ["#a5f3fc", "#bae6fd", "#e0f2fe", "#ffffff"],
     origin,
     disableForReducedMotion: true,
-  });
+  }));
 }
 
 /** Rainbow arc burst across the screen. */
@@ -196,30 +214,32 @@ export function rainbow() {
   if (!canFire("rainbow")) return;
   const colors = ["#ef4444", "#f97316", "#eab308", "#22c55e", "#3b82f6", "#8b5cf6", "#ec4899"];
   // Fire from left and right with arching trajectories
-  for (let i = 0; i < 7; i++) {
-    setTimeout(() => {
-      confetti({
-        particleCount: 40,
-        angle: 60 + i * 8,
-        spread: 30,
-        startVelocity: 55,
-        origin: { x: 0, y: 1 },
-        colors,
-        ticks: 200,
-        disableForReducedMotion: true,
-      });
-      confetti({
-        particleCount: 40,
-        angle: 120 - i * 8,
-        spread: 30,
-        startVelocity: 55,
-        origin: { x: 1, y: 1 },
-        colors,
-        ticks: 200,
-        disableForReducedMotion: true,
-      });
-    }, i * 80);
-  }
+  withConfetti((confetti) => {
+    for (let i = 0; i < 7; i++) {
+      setTimeout(() => {
+        confetti({
+          particleCount: 40,
+          angle: 60 + i * 8,
+          spread: 30,
+          startVelocity: 55,
+          origin: { x: 0, y: 1 },
+          colors,
+          ticks: 200,
+          disableForReducedMotion: true,
+        });
+        confetti({
+          particleCount: 40,
+          angle: 120 - i * 8,
+          spread: 30,
+          startVelocity: 55,
+          origin: { x: 1, y: 1 },
+          colors,
+          ticks: 200,
+          disableForReducedMotion: true,
+        });
+      }, i * 80);
+    }
+  });
 }
 
 /** Mega easter-egg show: combine everything for ~3s. */

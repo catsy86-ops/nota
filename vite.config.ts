@@ -40,7 +40,7 @@ export default defineConfig(({ mode }) => ({
         // itself — keep it out of the offline-critical precache.
         // Fonty: offline potrzebne są tylko podzbiory łacińskie (polski siedzi
         // w latin-ext); cyrylica/greka/wietnamski i tak ładują się tylko na żądanie.
-        globIgnores: ["**/screenshot-wide.png", "**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*.woff2", "**/unbounded-latin-ext-*.woff2"],
+        globIgnores: ["**/screenshot-wide.png", "**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*.woff2"],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,

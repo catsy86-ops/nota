@@ -2,7 +2,9 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import type { Note } from "@/hooks/useNotes";
 import { yjsStore } from "@/lib/yjsStore";
-import { noteSchema, fullBackupSchema, looksLikeNoteArray, type FullBackup } from "@/lib/noteSchema";
+// Schematy (zod) ładują się dopiero przy imporcie/backupie — nie ma ich w startowym bundlu.
+import type { FullBackup } from "@/lib/noteSchema";
+const loadSchemas = () => import("@/lib/noteSchema");
 import { tryWriteBackupToFile } from "@/lib/backupFileHandle";
 import { versionsStore } from "@/lib/versionsStore";
 import { logDiag } from "@/lib/diagnostics";
@@ -107,7 +109,7 @@ export function pickFullBackup(): Promise<FullBackup> {
         return reject(new Error(`Plik jest zbyt duży (max ${MAX_IMPORT_FILE_SIZE / (1024 * 1024)} MB)`));
       }
       try {
-        resolve(parseFullBackup(await file.text()));
+        resolve(await parseFullBackup(await file.text()));
       } catch (err) {
         reject(err instanceof Error ? err : new Error("Nieprawidłowy plik backupu"));
       }
@@ -116,11 +118,12 @@ export function pickFullBackup(): Promise<FullBackup> {
   });
 }
 
-export function parseFullBackup(text: string): FullBackup {
+export async function parseFullBackup(text: string): Promise<FullBackup> {
   const raw = JSON.parse(text);
   if (!raw || typeof raw !== "object" || !Array.isArray((raw as Record<string, unknown>).notes)) {
     throw new Error("To nie jest plik pełnego backupu aplikacji NOTKI");
   }
+  const { fullBackupSchema } = await loadSchemas();
   return fullBackupSchema.parse(raw);
 }
 
@@ -261,6 +264,7 @@ export function importFromJSON(): Promise<Note[]> {
       try {
         const text = await file.text();
         const data = JSON.parse(text);
+        const { noteSchema, looksLikeNoteArray } = await loadSchemas();
         if (!looksLikeNoteArray(data)) throw new Error("Nieprawidłowy format — oczekiwano listy notatek");
         resolve(await withStoredImages(data.map((n) => noteSchema.parse(n))));
       } catch (err) {

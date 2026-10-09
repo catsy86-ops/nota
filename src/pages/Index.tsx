@@ -17,7 +17,6 @@ import { buildWikiIndex, resolveWikiTarget, wikiIndexKey } from "@/lib/wikiLinks
 import { useLatestRef, useStableByKey } from "@/hooks/useLatestRef";
 import { useGridNavState, setGridNavPreview } from "@/lib/gridKeyboardNav";
 import { NoteReader, type ReaderMode } from "@/components/NoteReader";
-import { SettingsDialog } from "@/components/SettingsDialog";
 import { cn } from "@/lib/utils";
 import { useNavigationType } from "react-router-dom";
 import { whenNotesReady, isNoteTextEditOpen } from "@/hooks/useNotes";
@@ -57,6 +56,7 @@ import { OnboardingTour } from "@/components/OnboardingTour";
 // note action or explicit toggle) — kept out of the eager main bundle so
 // first load only pays for the code the note grid itself needs.
 const CommandPalette = lazy(() => import("@/components/CommandPalette").then((m) => ({ default: m.CommandPalette })));
+const SettingsDialog = lazy(() => import("@/components/SettingsDialog").then((m) => ({ default: m.SettingsDialog })));
 const StatsDialog = lazy(() => import("@/components/StatsDialog").then((m) => ({ default: m.StatsDialog })));
 const FocusMode = lazy(() => import("@/components/FocusMode").then((m) => ({ default: m.FocusMode })));
 // Kalendarz wchodzi tylko po wejściu w swój widok — siatka notatek go nie potrzebuje.
@@ -635,7 +635,11 @@ const Index = () => {
     )}
     {/* Tu, nie w pasku bocznym: pasek istnieje tylko gdy jest otwarty (na telefonie
         domyślnie zamknięty), a Ustawienia otwiera też „Więcej” i paleta poleceń. */}
-    <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+    {settingsOpen && (
+      <Suspense fallback={null}>
+        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      </Suspense>
+    )}
     <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
     <AnimatePresence>
       {readerNote && (

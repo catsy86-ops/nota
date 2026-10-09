@@ -50,6 +50,9 @@ test("heavy optional libraries stay out of the eager page load", async () => {
   // Same shape of bug for the other lazily-used heavyweights.
   expect(chunksMatching(eager, /html2canvas/), "html2canvas must stay lazy").toEqual([]);
   expect(chunksMatching(eager, /recharts/i), "recharts (StatsDialog) must stay lazy").toEqual([]);
+  expect(chunksMatching(eager, /ZodError/), "zod (noteSchema) only loads for import/backup").toEqual([]);
+  expect(chunksMatching(eager, /transferControlToOffscreen/), "canvas-confetti loads on the first effect").toEqual([]);
+  expect(chunksMatching(eager, /rdp-months/), "react-day-picker loads with the date picker").toEqual([]);
 
   // And jsPDF must actually still be *somewhere* — otherwise this test would
   // also pass if PDF export had silently been dropped from the build.
