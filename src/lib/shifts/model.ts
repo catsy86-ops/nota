@@ -121,6 +121,8 @@ export interface ShiftData {
    * godziny następnego dnia (art. 151¹⁰ KP: 6:00, chyba że pracodawca ustalił inną).
    */
   sundayFrom: number;
+  /** Początek pory nocnej: 21, 22 albo 23 — trwa 8 h, między 21 a 7 (art. 151⁷ KP). */
+  nightFrom: number;
   patterns: ShiftPattern[];
 }
 
@@ -166,6 +168,7 @@ export const EMPTY_SHIFT_DATA: ShiftData = {
   fte: 1,
   overtimeFrom: 1,
   sundayFrom: 6,
+  nightFrom: 22,
   patterns: DEFAULT_PATTERNS,
 };
 
@@ -244,6 +247,7 @@ export function migrate(stored: unknown): ShiftData {
     settlementMonths: SETTLEMENT_MONTHS.includes(s.settlementMonths as SettlementMonths) ? (s.settlementMonths as SettlementMonths) : 1,
     settlementStart: Number.isInteger(s.settlementStart) && (s.settlementStart as number) >= 0 && (s.settlementStart as number) < 12 ? (s.settlementStart as number) : 0,
     sundayFrom: Number.isInteger(s.sundayFrom) && (s.sundayFrom as number) >= 0 && (s.sundayFrom as number) < 24 ? (s.sundayFrom as number) : 6,
+    nightFrom: s.nightFrom === 21 || s.nightFrom === 23 ? s.nightFrom : 22,
     patterns: Array.isArray(s.patterns) ? s.patterns.filter(isPattern) : EMPTY_SHIFT_DATA.patterns,
   };
 }

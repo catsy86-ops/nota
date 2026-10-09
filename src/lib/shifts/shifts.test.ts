@@ -220,6 +220,19 @@ describe("podsumowanie miesiąca", () => {
     expect(migrate({ days: { "2026-10-06": { type: "d", inLieu: "tak" } } }).days["2026-10-06"]).toEqual({ type: "d" });
   });
 
+  it("pora nocna wg regulaminu (art. 151⁷)", () => {
+    expect(nightMinutes(afternoon, 21)).toBe(60);
+    expect(nightMinutes(day, 23)).toBe(60);
+    expect(nightMinutes(night, 21)).toBe(420);
+    // Pon. popołudnie do 23:00 — przy nocy 23–7 nadgodzina 22–23 to już zwykłe 50%.
+    const days = { "2026-10-05": { type: "p", extraMin: 60 } };
+    expect(monthSummary(data({ days }), 2026, 9).overtime100Minutes).toBe(60);
+    expect(monthSummary(data({ days, nightFrom: 23 }), 2026, 9).overtime100Minutes).toBe(0);
+    expect(monthSummary(data({ days, nightFrom: 23 }), 2026, 9).nightMinutes).toBe(0);
+    expect(migrate({ nightFrom: 20 }).nightFrom).toBe(22);
+    expect(migrate({ nightFrom: 21 }).nightFrom).toBe(21);
+  });
+
   it("niedziela liczy się od ustalonej godziny (art. 151¹⁰)", () => {
     // Sobotnia noc 3.10. przedłużona do 9:00: nadgodziny 6–9 w niedzielę rano.
     const days = { "2026-10-03": { type: "n", extraMin: 180 } };

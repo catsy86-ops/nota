@@ -15,7 +15,7 @@ import { DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, shiftHours, type DayEnt
  * od razu, mogłoby przy scaleniu nadpisać czyjeś poprawki tych samych id.
  */
 
-type Meta = "hourlyRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "overtimeFrom" | "sundayFrom" | "typesInit" | "patternsInit";
+type Meta = "hourlyRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "overtimeFrom" | "sundayFrom" | "nightFrom" | "typesInit" | "patternsInit";
 
 /** Origin transakcji Grafiku — odróżnia lokalne zmiany od tych z sieci i z migracji. */
 export const SHIFTS_ORIGIN = "shifts";
@@ -51,7 +51,7 @@ export function createYShifts(doc: Y.Doc) {
   function get(): ShiftData {
     if (snapshot) return snapshot;
     const settings: Record<string, unknown> = {};
-    for (const k of ["hourlyRate", "workSystem", "settlementMonths", "settlementStart", "fte", "overtimeFrom", "sundayFrom"] as const) if (meta.has(k)) settings[k] = meta.get(k);
+    for (const k of ["hourlyRate", "workSystem", "settlementMonths", "settlementStart", "fte", "overtimeFrom", "sundayFrom", "nightFrom"] as const) if (meta.has(k)) settings[k] = meta.get(k);
     snapshot = migrate({
       version: 2,
       ...settings,
@@ -205,6 +205,7 @@ export function createYShifts(doc: Y.Doc) {
       meta.set("fte", data.fte);
       meta.set("overtimeFrom", data.overtimeFrom);
       meta.set("sundayFrom", data.sundayFrom);
+      meta.set("nightFrom", data.nightFrom);
       meta.set("typesInit", true);
       meta.set("patternsInit", true);
     });
@@ -242,6 +243,7 @@ export function createYShifts(doc: Y.Doc) {
       if (!meta.has("fte") && data.fte !== 1) meta.set("fte", data.fte);
       if (!meta.has("overtimeFrom") && data.overtimeFrom !== 1) meta.set("overtimeFrom", data.overtimeFrom);
       if (!meta.has("sundayFrom") && data.sundayFrom !== 6) meta.set("sundayFrom", data.sundayFrom);
+      if (!meta.has("nightFrom") && data.nightFrom !== 22) meta.set("nightFrom", data.nightFrom);
     }, "shifts-migration");
   }
 

@@ -136,6 +136,11 @@ export function setSundayFrom(hour: number): void {
   yShifts.setMeta("sundayFrom", Number.isInteger(hour) && hour >= 0 && hour < 24 ? hour : 6);
 }
 
+/** Początek pory nocnej (art. 151⁷ KP): 21, 22 albo 23. */
+export function setNightFrom(hour: number): void {
+  yShifts.setMeta("nightFrom", hour === 21 || hour === 23 ? hour : 22);
+}
+
 /** Losowe id — `Date.now()` z dwóch telefonów w tej samej milisekundzie dałby kolizję po scaleniu. */
 export function newShiftId(prefix: string): string {
   return `${prefix}${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;

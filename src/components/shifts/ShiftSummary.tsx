@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { AlertTriangle } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
-import { FTE_OPTIONS, SETTLEMENT_MONTHS, formatDuration, formatHoursShort, formatMoney, setFte, setHourlyRate, setOvertimeFrom, setSettlementMonths, setSettlementStart, setSundayFrom, setWorkSystem, type MonthSummary, type PeriodSummary, type SettlementMonths, type WorkSystem } from "@/lib/shifts";
+import { FTE_OPTIONS, NIGHT_HOURS, NIGHT_STARTS, SETTLEMENT_MONTHS, formatDuration, formatHoursShort, formatMoney, setFte, setHourlyRate, setNightFrom, setOvertimeFrom, setSettlementMonths, setSettlementStart, setSundayFrom, setWorkSystem, type MonthSummary, type PeriodSummary, type SettlementMonths, type WorkSystem } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
 interface ShiftSummaryProps {
@@ -15,6 +15,7 @@ interface ShiftSummaryProps {
   fte: number;
   overtimeFrom: number;
   sundayFrom: number;
+  nightFrom: number;
 }
 
 const PERIOD_LABELS: Record<SettlementMonths, string> = {
@@ -32,7 +33,7 @@ const parseNum = (s: string) => parseFloat(s.replace(",", "."));
  * Podsumowanie miesiąca. Sercem jest pasek normy: wypełnia się do wymiaru
  * czasu pracy, a nadwyżka (nadgodziny) dosuwa się za nim w kolorze akcentu.
  */
-export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths, settlementStart, fte, overtimeFrom, sundayFrom }: ShiftSummaryProps) {
+export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths, settlementStart, fte, overtimeFrom, sundayFrom, nightFrom }: ShiftSummaryProps) {
   const { minutes, normMinutes, overtimeMinutes, dailyOvertimeMinutes, overtime100Minutes } = summary;
   const scale = Math.max(normMinutes, minutes, 1);
   // Nadgodziny dobowe mogą być i poniżej normy miesiąca — pasek dzieli faktycznie przepracowane godziny.
@@ -155,6 +156,13 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
           </label>
         )}
         <label className="flex items-center gap-2 sm:col-span-2">
+          <span className="text-muted-foreground flex-1">Pora nocna</span>
+          <select value={nightFrom} onChange={(e) => setNightFrom(Number(e.target.value))}
+            className={cn(FIELD, "w-auto pr-1 text-left")}>
+            {NIGHT_STARTS.map((h) => <option key={h} value={h}>{`${h}:00–${(h + NIGHT_HOURS) % 24}:00`}</option>)}
+          </select>
+        </label>
+        <label className="flex items-center gap-2 sm:col-span-2">
           <span className="text-muted-foreground flex-1">Niedziela i święto od godziny</span>
           <select value={sundayFrom} onChange={(e) => setSundayFrom(Number(e.target.value))}
             className={cn(FIELD, "w-auto pr-1 text-left")}>
@@ -164,7 +172,7 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
       </div>
       <p className="text-2xs text-muted-foreground">
         Norma wg art. 130 Kodeksu pracy, proporcjonalna do etatu, pomniejszona o nieobecności w dni robocze. Przy niepełnym etacie nadgodziny liczą się ponad 8 h na dobę i ponad normę pełnego etatu albo granicę z umowy (art. 151 § 5 KP). Kolejne okresy rozliczeniowe liczone od wybranego miesiąca.
-        Nadgodziny dobowe liczone w dobie pracowniczej (24 h od początku zmiany); przerwa bez godziny skraca koniec zmiany. Dodatek za nadgodziny wg art. 151¹ KP: 100% w nocy (22:00–6:00), w niedziele i święta wolne wg grafiku (dzień oznaczony „poza grafikiem”), w dzień wolny za niedzielę lub święto (oznaczony w oknie dnia) oraz za przekroczenie normy, 50% za pozostałe. Niedziela i święto trwają od wybranej godziny do tej samej godziny następnego dnia (art. 151¹⁰ KP). Odpoczynek dobowy 11 h (art. 132 KP).
+        Nadgodziny dobowe liczone w dobie pracowniczej (24 h od początku zmiany); przerwa bez godziny skraca koniec zmiany. Dodatek za nadgodziny wg art. 151¹ KP: 100% w porze nocnej (8 h między 21 a 7, wg regulaminu — art. 151⁷ KP), w niedziele i święta wolne wg grafiku (dzień oznaczony „poza grafikiem”), w dzień wolny za niedzielę lub święto (oznaczony w oknie dnia) oraz za przekroczenie normy, 50% za pozostałe. Niedziela i święto trwają od wybranej godziny do tej samej godziny następnego dnia (art. 151¹⁰ KP). Odpoczynek dobowy 11 h (art. 132 KP).
       </p>
     </section>
   );

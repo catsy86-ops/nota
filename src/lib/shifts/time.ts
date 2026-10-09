@@ -2,9 +2,9 @@ import type { DayEntry, ShiftType } from "./model";
 
 /** Czas trzymamy w minutach od północy dnia, w którym zmiana się zaczyna. */
 const DAY_MIN = 24 * 60;
-/** Pora nocna — przyjmujemy 22:00–6:00 (Kodeks pracy pozwala wybrać 8 h między 21 a 7). */
-const NIGHT_START = 22 * 60;
-const NIGHT_END = 6 * 60;
+/** Pora nocna trwa 8 h między 21 a 7 (art. 151⁷ KP); domyślnie 22:00–6:00. */
+export const NIGHT_HOURS = 8;
+export const NIGHT_STARTS = [21, 22, 23] as const;
 
 /** „HH:MM” → minuty od północy; śmieci → NaN. */
 export function parseHm(hm: string): number {
@@ -91,12 +91,15 @@ export function entryMinutesOn(type: Pick<ShiftType, "start" | "end" | "breakMin
   return Math.max(0, entryMinutes(type, entry) + dstShiftMinutes(type, dayKey, entry?.extraMin ?? 0));
 }
 
+/** Czy pełna godzina `h` (0–23) leży w porze nocnej zaczynającej się o `nightFrom`. */
+export const isNightHour = (h: number, nightFrom = 22) => (h - nightFrom + 24) % 24 < NIGHT_HOURS;
+
 /** Minuty odcinka [from, to) (od północy dnia startu, najwyżej dwie doby) w porze nocnej. */
-function nightOverlap(from: number, to: number): number {
+function nightOverlap(from: number, to: number, nightFrom: number): number {
   let total = 0;
   for (let k = -1; k <= 1; k++) {
-    const a = NIGHT_START + k * DAY_MIN;
-    const b = NIGHT_END + (k + 1) * DAY_MIN;
+    const a = nightFrom * 60 + k * DAY_MIN;
+    const b = a + NIGHT_HOURS * 60;
     total += Math.max(0, Math.min(to, b) - Math.max(from, a));
   }
   return total;
@@ -106,12 +109,12 @@ function nightOverlap(from: number, to: number): number {
  * Minuty zmiany w porze nocnej, bez przerwy, jeśli ma godzinę (`breakAt`).
  * Przerwy bez godziny nie odejmujemy — nie wiemy, kiedy była.
  */
-export function nightMinutes(type: Pick<ShiftType, "start" | "end"> & Partial<Pick<ShiftType, "breakMin" | "breakAt">>): number {
+export function nightMinutes(type: Pick<ShiftType, "start" | "end"> & Partial<Pick<ShiftType, "breakMin" | "breakAt">>, nightFrom = 22): number {
   const span = shiftSpan(type);
   if (!span) return 0;
   const b = breakOffset({ breakMin: 0, ...type });
-  const inBreak = b === null ? 0 : nightOverlap(span.from + b, span.from + b + (type.breakMin ?? 0));
-  return nightOverlap(span.from, span.to) - inBreak;
+  const inBreak = b === null ? 0 : nightOverlap(span.from + b, span.from + b + (type.breakMin ?? 0), nightFrom);
+  return nightOverlap(span.from, span.to, nightFrom) - inBreak;
 }
 
 /** 510 → „8 h 30 min”, 480 → „8 h”, 45 → „45 min”, −30 → „−30 min”. */

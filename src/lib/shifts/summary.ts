@@ -1,5 +1,5 @@
 import { dayType, isAbsence, type DayEntry, type SettlementMonths, type ShiftData, type ShiftType } from "./model";
-import { dstShiftMinutes, entryMinutesOn, nightMinutes, shiftMinutes, shiftSpan, wallToWork, workToWall } from "./time";
+import { dstShiftMinutes, entryMinutesOn, isNightHour, nightMinutes, shiftMinutes, shiftSpan, wallToWork, workToWall } from "./time";
 import { holidayName, isNormDay, workNormMinutes } from "./holidays";
 
 export interface ShiftTypeTotal {
@@ -151,17 +151,19 @@ export function dailyOvertimeByDay(data: ShiftData): Map<string, number> {
 
 const localKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-/** Dni, które decydują o dodatku 100% poza porą nocną (art. 151¹ § 1 pkt 1 KP). */
-export interface PremiumDays {
+/** Co decyduje o dodatku 100% (art. 151¹ § 1 pkt 1 KP): pora nocna i dni wolne. */
+export interface PremiumRules {
   /** Dni ze zmianą z grafiku — niedziela czy święto są wtedy dniem pracy. */
   scheduled: ReadonlySet<string>;
   /** Dni wolne udzielone w zamian za pracę w niedzielę lub święto. */
   inLieu: ReadonlySet<string>;
   /** Godzina, od której liczy się niedziela i święto (art. 151¹⁰ KP). */
   sundayFrom: number;
+  /** Początek pory nocnej (art. 151⁷ KP). */
+  nightFrom: number;
 }
 
-export function premiumDays(data: ShiftData): PremiumDays {
+export function premiumRules(data: ShiftData): PremiumRules {
   const typesById = new Map(data.types.map((t) => [t.id, t]));
   const scheduled = new Set<string>();
   const inLieu = new Set<string>();
@@ -171,24 +173,24 @@ export function premiumDays(data: ShiftData): PremiumDays {
     if (entry.inLieu) inLieu.add(key);
     else if (!entry.offSchedule) scheduled.add(key);
   }
-  return { scheduled, inLieu, sundayFrom: data.sundayFrom };
+  return { scheduled, inLieu, sundayFrom: data.sundayFrom, nightFrom: data.nightFrom };
 }
 
-const NO_PREMIUM_DAYS: PremiumDays = { scheduled: new Set(), inLieu: new Set(), sundayFrom: 6 };
+const DEFAULT_RULES: PremiumRules = { scheduled: new Set(), inLieu: new Set(), sundayFrom: 6, nightFrom: 22 };
 
 /**
  * Minuty odcinka z dodatkiem 100% (art. 151¹ § 1 pkt 1 KP): w porze nocnej
- * (22–6) zawsze; w niedzielę i w święto — gdy wg grafiku to dzień wolny,
+ * (`nightFrom`, 8 h) zawsze; w niedzielę i w święto — gdy wg grafiku to dzień wolny,
  * czyli nie ma w nim zaplanowanej zmiany; w dzień wolny udzielony w zamian
  * za pracę w niedzielę lub święto. Doba takiego dnia biegnie od godziny
  * `sundayFrom` (art. 151¹⁰ KP: domyślnie 6:00 do 6:00 następnego dnia).
  */
-export function premium100Minutes({ from, to }: Pick<OvertimeSpan, "from" | "to">, days: PremiumDays = NO_PREMIUM_DAYS): number {
+export function premium100Minutes({ from, to }: Pick<OvertimeSpan, "from" | "to">, days: PremiumRules = DEFAULT_RULES): number {
   let total = 0;
   for (let t = from; t < to; t += 60_000) {
     const d = new Date(t);
     const h = d.getHours();
-    if (h >= 22 || h < 6) { total++; continue; }
+    if (isNightHour(h, days.nightFrom)) { total++; continue; }
     // Dzień, do którego należy ta minuta, gdy doba zaczyna się o `sundayFrom`.
     const day = new Date(d.getFullYear(), d.getMonth(), d.getDate(), h - days.sundayFrom, d.getMinutes());
     const key = localKey(day);
@@ -240,7 +242,7 @@ interface MonthCore {
 
 const monthPrefix = (year: number, month: number) => `${year}-${String(month + 1).padStart(2, "0")}-`;
 
-function monthCore(data: ShiftData, year: number, month: number, otSpans: OvertimeSpan[], days: PremiumDays): MonthCore {
+function monthCore(data: ShiftData, year: number, month: number, otSpans: OvertimeSpan[], days: PremiumRules): MonthCore {
   const prefix = monthPrefix(year, month);
   const typesById = new Map(data.types.map((t) => [t.id, t]));
   const c: MonthCore = { minutes: 0, night: 0, base: 0, daysWorked: 0, absenceDays: 0, normMinutes: 0, overtimeNormMinutes: 0, totals: new Map(), dailyOvertime: 0, daily100: 0, dailyPremium: 0 };
@@ -264,7 +266,7 @@ function monthCore(data: ShiftData, year: number, month: number, otSpans: Overti
     }
     c.daysWorked += 1;
     c.minutes += m;
-    const nightPlan = nightMinutes(type);
+    const nightPlan = nightMinutes(type, data.nightFrom);
     // Zmiana czasu wypada o 2–3 w nocy, więc dodatkowa/brakująca godzina jest godziną nocną.
     c.night += nightPlan > 0 ? Math.max(0, nightPlan + dstShiftMinutes(type, key)) : 0;
     c.base += (m / 60) * (type.rate ?? data.hourlyRate);
@@ -308,7 +310,7 @@ export function settlementPeriod(year: number, month: number, months: Settlement
  */
 export function monthSummary(data: ShiftData, year: number, month: number): MonthSummary {
   const otSpans = dailyOvertimeSpans(data);
-  const days = premiumDays(data);
+  const days = premiumRules(data);
   const c = monthCore(data, year, month, otSpans, days);
   const p = settlementPeriod(year, month, data.settlementMonths, data.settlementStart);
   // Miesiąc liczony od początku okresu — okres może przechodzić przez Nowy Rok.
