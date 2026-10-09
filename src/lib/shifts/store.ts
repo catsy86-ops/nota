@@ -1,6 +1,6 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import { logDiag } from "@/lib/diagnostics";
-import { EMPTY_SHIFT_DATA, migrate, type DayEntry, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
+import { DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, migrate, type DayEntry, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
 import { applyPattern } from "./pattern";
 
 /**
@@ -87,6 +87,11 @@ export function deleteShiftType(id: string): ShiftData {
     patterns: d.patterns.map((p) => ({ ...p, steps: p.steps.map((s) => (s === id ? null : s)) })),
   }));
   return before;
+}
+
+/** Dokłada startowe rodzaje (Dzień, Popołudnie…), których brakuje — np. po usunięciu wszystkich. */
+export function addDefaultShiftTypes(): void {
+  update((d) => ({ ...d, types: [...d.types, ...DEFAULT_SHIFT_TYPES.filter((t) => !d.types.some((x) => x.id === t.id))] }));
 }
 
 export function restoreShifts(data: ShiftData): void {

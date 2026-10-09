@@ -4,7 +4,7 @@ import { pl } from "date-fns/locale";
 import { CalendarArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { dayKey } from "@/lib/reminderOccurrences";
-import { applyPatternToStore, buildShiftsIcs, exportableShiftDays, monthSummary, restoreDays, setDayShift, shiftStore, useShifts, type ShiftType } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, addDefaultShiftTypes, applyPatternToStore, buildShiftsIcs, exportableShiftDays, monthSummary, restoreDays, setDayShift, shiftStore, useShifts, type ShiftType } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { pluralPl } from "@/lib/plural";
 import { NowCard } from "./NowCard";
@@ -96,6 +96,25 @@ export function ShiftsView() {
         onAddType={() => setEditingType("new")}
         onPattern={() => setPatternOpen(true)}
       />
+
+      {data.types.length === 0 && (
+        <section aria-label="Brak rodzajów zmian" className="rounded-3xl border border-dashed border-border p-4 space-y-3">
+          <p className="text-sm">
+            <span className="font-display font-bold">Nie ma żadnego rodzaju zmiany.</span>{" "}
+            <span className="text-muted-foreground">Dodaj własny albo przywróć startowe ({DEFAULT_SHIFT_TYPES.map((t) => t.name).join(", ")}), żeby nanosić je na dni.</span>
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => setEditingType("new")}
+              className="pressable h-10 coarse:h-11 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              Dodaj rodzaj zmiany
+            </button>
+            <button type="button" onClick={() => { addDefaultShiftTypes(); setBrush({ kind: "type", id: DEFAULT_SHIFT_TYPES[0].id }); }}
+              className="pressable h-10 coarse:h-11 px-4 rounded-xl border border-border/60 hover:bg-muted text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              Przywróć startowe
+            </button>
+          </div>
+        </section>
+      )}
 
       <p id="shift-brush-hint" className="-mt-3 text-xs text-muted-foreground px-1">{brushHint(brush, typesById)}</p>
 

@@ -163,3 +163,16 @@ test("usunięcie zapisanego cyklu nie kasuje układanych kroków", async ({ page
   await expect(dialog).toContainText("Kolejne dni cyklu (9)");
   await expect(dialog.getByRole("button", { name: /^Usuń cykl/ })).toHaveCount(1);
 });
+
+test("bez rodzajów zmian widać, jak zacząć", async ({ page }) => {
+  await page.evaluate(() => {
+    const d = JSON.parse(localStorage.getItem("kaczy:shifts") ?? "{}");
+    localStorage.setItem("kaczy:shifts", JSON.stringify({ ...d, version: 2, types: [] }));
+  });
+  await page.reload();
+  const empty = page.getByRole("region", { name: "Brak rodzajów zmian" });
+  await expect(empty).toBeVisible();
+  await empty.getByRole("button", { name: "Przywróć startowe" }).click();
+  await expect(empty).toHaveCount(0);
+  await expect(page.getByRole("radio", { name: /Dzień/ })).toHaveAttribute("aria-checked", "true");
+});
