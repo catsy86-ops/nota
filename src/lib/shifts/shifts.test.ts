@@ -211,6 +211,25 @@ describe("podsumowanie miesiąca", () => {
     expect(monthSummary(data({ days: { "2026-11-11": { type: "d", extraMin: 30 } } }), 2026, 10).overtime100Minutes).toBe(0);
     expect(migrate({ days: { "2026-11-11": { type: "d", offSchedule: "tak" } } }).days["2026-11-11"]).toEqual({ type: "d" });
   });
+
+  it("dzień wolny za niedzielę ma 100%", () => {
+    const at = (days: ShiftData["days"]) => monthSummary(data({ days }), 2026, 9).overtime100Minutes;
+    // Wtorek 6.10. wolny w zamian za niedzielę — nadgodzina 14–15 ma 100%; zwykły wtorek — 50%.
+    expect(at({ "2026-10-06": { type: "d", extraMin: 60, offSchedule: true, inLieu: true } })).toBe(60);
+    expect(at({ "2026-10-06": { type: "d", extraMin: 60 } })).toBe(0);
+    expect(migrate({ days: { "2026-10-06": { type: "d", inLieu: "tak" } } }).days["2026-10-06"]).toEqual({ type: "d" });
+  });
+
+  it("niedziela liczy się od ustalonej godziny (art. 151¹⁰)", () => {
+    // Sobotnia noc 3.10. przedłużona do 9:00: nadgodziny 6–9 w niedzielę rano.
+    const days = { "2026-10-03": { type: "n", extraMin: 180 } };
+    expect(monthSummary(data({ days }), 2026, 9).overtime100Minutes).toBe(180);
+    // Niedziela od 8:00 — 6–8 to jeszcze sobota (50%), 8–9 już niedziela.
+    expect(monthSummary(data({ days, sundayFrom: 8 }), 2026, 9).overtime100Minutes).toBe(60);
+    expect(migrate({}).sundayFrom).toBe(6);
+    expect(migrate({ sundayFrom: 24 }).sundayFrom).toBe(6);
+    expect(migrate({ sundayFrom: 0 }).sundayFrom).toBe(0);
+  });
 });
 
 describe("okres rozliczeniowy", () => {

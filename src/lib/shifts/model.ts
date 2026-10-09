@@ -53,6 +53,11 @@ export interface DayEntry {
    */
   offSchedule?: true;
   /**
+   * Praca w dzień wolny udzielony w zamian za pracę w niedzielę lub święto —
+   * nadgodziny w taki dzień mają dodatek 100% (art. 151¹ § 1 pkt 1 lit. c KP).
+   */
+  inLieu?: true;
+  /**
    * Godziny rodzaju z dnia, w którym była ta zmiana — zapisywane, gdy ktoś
    * później zmieni godziny rodzaju. Brak = bieżące godziny rodzaju.
    */
@@ -111,6 +116,11 @@ export interface ShiftData {
    * etat; poniżej `fte` nie schodzi.
    */
   overtimeFrom: number;
+  /**
+   * Godzina (0–23), od której liczy się doba niedzieli i święta — do tej
+   * godziny następnego dnia (art. 151¹⁰ KP: 6:00, chyba że pracodawca ustalił inną).
+   */
+  sundayFrom: number;
   patterns: ShiftPattern[];
 }
 
@@ -155,6 +165,7 @@ export const EMPTY_SHIFT_DATA: ShiftData = {
   settlementStart: 0,
   fte: 1,
   overtimeFrom: 1,
+  sundayFrom: 6,
   patterns: DEFAULT_PATTERNS,
 };
 
@@ -198,6 +209,8 @@ function toEntry(v: unknown): DayEntry | null {
   else delete entry.extraMin;
   if (o.offSchedule === true) entry.offSchedule = true;
   else delete entry.offSchedule;
+  if (o.inLieu === true) entry.inLieu = true;
+  else delete entry.inLieu;
   if (isHours(o.hours)) entry.hours = shiftHours(o.hours);
   else delete entry.hours;
   return entry;
@@ -230,6 +243,7 @@ export function migrate(stored: unknown): ShiftData {
     overtimeFrom: typeof s.overtimeFrom === "number" && s.overtimeFrom > 0 && s.overtimeFrom <= 1 ? s.overtimeFrom : 1,
     settlementMonths: SETTLEMENT_MONTHS.includes(s.settlementMonths as SettlementMonths) ? (s.settlementMonths as SettlementMonths) : 1,
     settlementStart: Number.isInteger(s.settlementStart) && (s.settlementStart as number) >= 0 && (s.settlementStart as number) < 12 ? (s.settlementStart as number) : 0,
+    sundayFrom: Number.isInteger(s.sundayFrom) && (s.sundayFrom as number) >= 0 && (s.sundayFrom as number) < 24 ? (s.sundayFrom as number) : 6,
     patterns: Array.isArray(s.patterns) ? s.patterns.filter(isPattern) : EMPTY_SHIFT_DATA.patterns,
   };
 }

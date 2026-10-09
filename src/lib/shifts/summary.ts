@@ -151,31 +151,48 @@ export function dailyOvertimeByDay(data: ShiftData): Map<string, number> {
 
 const localKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
-/** Dni ze zmianą `work` z grafiku — w nie niedziela czy święto są dniem pracy. */
-export function scheduledWorkDays(data: ShiftData): Set<string> {
+/** Dni, które decydują o dodatku 100% poza porą nocną (art. 151¹ § 1 pkt 1 KP). */
+export interface PremiumDays {
+  /** Dni ze zmianą z grafiku — niedziela czy święto są wtedy dniem pracy. */
+  scheduled: ReadonlySet<string>;
+  /** Dni wolne udzielone w zamian za pracę w niedzielę lub święto. */
+  inLieu: ReadonlySet<string>;
+  /** Godzina, od której liczy się niedziela i święto (art. 151¹⁰ KP). */
+  sundayFrom: number;
+}
+
+export function premiumDays(data: ShiftData): PremiumDays {
   const typesById = new Map(data.types.map((t) => [t.id, t]));
-  const out = new Set<string>();
+  const scheduled = new Set<string>();
+  const inLieu = new Set<string>();
   for (const [key, entry] of Object.entries(data.days)) {
     const type = typesById.get(entry.type);
-    if (type && !isAbsence(type) && !entry.offSchedule) out.add(key);
+    if (!type || isAbsence(type)) continue;
+    if (entry.inLieu) inLieu.add(key);
+    else if (!entry.offSchedule) scheduled.add(key);
   }
-  return out;
+  return { scheduled, inLieu, sundayFrom: data.sundayFrom };
 }
+
+const NO_PREMIUM_DAYS: PremiumDays = { scheduled: new Set(), inLieu: new Set(), sundayFrom: 6 };
 
 /**
  * Minuty odcinka z dodatkiem 100% (art. 151¹ § 1 pkt 1 KP): w porze nocnej
- * (22–6) zawsze, w niedzielę i w święto — gdy wg grafiku to dzień wolny,
- * czyli nie ma w nim zaplanowanej zmiany (`scheduled`). Niedziela i święto
- * to doba kalendarzowa (art. 151¹⁰ pozwala ustalić je od innej godziny).
+ * (22–6) zawsze; w niedzielę i w święto — gdy wg grafiku to dzień wolny,
+ * czyli nie ma w nim zaplanowanej zmiany; w dzień wolny udzielony w zamian
+ * za pracę w niedzielę lub święto. Doba takiego dnia biegnie od godziny
+ * `sundayFrom` (art. 151¹⁰ KP: domyślnie 6:00 do 6:00 następnego dnia).
  */
-export function premium100Minutes({ from, to }: Pick<OvertimeSpan, "from" | "to">, scheduled: ReadonlySet<string> = new Set()): number {
+export function premium100Minutes({ from, to }: Pick<OvertimeSpan, "from" | "to">, days: PremiumDays = NO_PREMIUM_DAYS): number {
   let total = 0;
   for (let t = from; t < to; t += 60_000) {
     const d = new Date(t);
     const h = d.getHours();
     if (h >= 22 || h < 6) { total++; continue; }
-    const key = localKey(d);
-    if ((d.getDay() === 0 || holidayName(key)) && !scheduled.has(key)) total++;
+    // Dzień, do którego należy ta minuta, gdy doba zaczyna się o `sundayFrom`.
+    const day = new Date(d.getFullYear(), d.getMonth(), d.getDate(), h - days.sundayFrom, d.getMinutes());
+    const key = localKey(day);
+    if (days.inLieu.has(key) || ((day.getDay() === 0 || holidayName(key)) && !days.scheduled.has(key))) total++;
   }
   return total;
 }
@@ -223,7 +240,7 @@ interface MonthCore {
 
 const monthPrefix = (year: number, month: number) => `${year}-${String(month + 1).padStart(2, "0")}-`;
 
-function monthCore(data: ShiftData, year: number, month: number, otSpans: OvertimeSpan[], scheduled: ReadonlySet<string>): MonthCore {
+function monthCore(data: ShiftData, year: number, month: number, otSpans: OvertimeSpan[], days: PremiumDays): MonthCore {
   const prefix = monthPrefix(year, month);
   const typesById = new Map(data.types.map((t) => [t.id, t]));
   const c: MonthCore = { minutes: 0, night: 0, base: 0, daysWorked: 0, absenceDays: 0, normMinutes: 0, overtimeNormMinutes: 0, totals: new Map(), dailyOvertime: 0, daily100: 0, dailyPremium: 0 };
@@ -260,7 +277,7 @@ function monthCore(data: ShiftData, year: number, month: number, otSpans: Overti
   for (const span of otSpans) {
     if (!span.key.startsWith(prefix)) continue;
     const all = (span.to - span.from) / 60_000;
-    const full = premium100Minutes(span, scheduled);
+    const full = premium100Minutes(span, days);
     c.dailyOvertime += all;
     c.daily100 += full;
     c.dailyPremium += (span.rate / 60) * (full + (all - full) * 0.5);
@@ -286,19 +303,19 @@ export function settlementPeriod(year: number, month: number, months: Settlement
  * (art. 151 § 1 KP) — to drugie wykazane w ostatnim miesiącu okresu, bo
  * dopiero wtedy wiadomo, czy norma została przekroczona. Dodatek
  * (art. 151¹ KP) do stawki, którą każda godzina dostała już w podstawie:
- * 100% w nocy, w niedzielę i święto wolne wg grafiku oraz za przekroczenie
- * normy okresu, 50% za pozostałe nadgodziny dobowe.
+ * 100% w nocy, w niedzielę i święto wolne wg grafiku, w dzień wolny za
+ * niedzielę lub święto oraz za przekroczenie normy okresu, 50% za pozostałe nadgodziny dobowe.
  */
 export function monthSummary(data: ShiftData, year: number, month: number): MonthSummary {
   const otSpans = dailyOvertimeSpans(data);
-  const scheduled = scheduledWorkDays(data);
-  const c = monthCore(data, year, month, otSpans, scheduled);
+  const days = premiumDays(data);
+  const c = monthCore(data, year, month, otSpans, days);
   const p = settlementPeriod(year, month, data.settlementMonths, data.settlementStart);
   // Miesiąc liczony od początku okresu — okres może przechodzić przez Nowy Rok.
   const index = (year - p.year) * 12 + month - p.startMonth;
   const cores = Array.from({ length: p.months }, (_, i) => {
     const abs = p.year * 12 + p.startMonth + i;
-    return i === index ? c : monthCore(data, Math.floor(abs / 12), abs % 12, otSpans, scheduled);
+    return i === index ? c : monthCore(data, Math.floor(abs / 12), abs % 12, otSpans, days);
   });
   const sum = (f: (m: MonthCore) => number, upTo: number = p.months) => cores.slice(0, upTo).reduce((acc, m) => acc + f(m), 0);
   const periodNorm = sum((m) => m.normMinutes);

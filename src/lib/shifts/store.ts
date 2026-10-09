@@ -131,6 +131,11 @@ export function setOvertimeFrom(fte: number): void {
   yShifts.setMeta("overtimeFrom", fte > 0 && fte <= 1 ? fte : 1);
 }
 
+/** Godzina początku doby niedzieli i święta (art. 151¹⁰ KP), 0–23. */
+export function setSundayFrom(hour: number): void {
+  yShifts.setMeta("sundayFrom", Number.isInteger(hour) && hour >= 0 && hour < 24 ? hour : 6);
+}
+
 /** Losowe id — `Date.now()` z dwóch telefonów w tej samej milisekundzie dałby kolizję po scaleniu. */
 export function newShiftId(prefix: string): string {
   return `${prefix}${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
