@@ -123,7 +123,8 @@ function NavItem({ active, current = active, label, onClick, children, badge, bu
           />
         )}
         <span className="relative z-10">{children}</span>
-        <span className="relative z-10 max-w-full truncate px-0.5 leading-none tracking-tight">{label}</span>
+        {/* Bez ucinania: „Przypomnienia” jest o kilka px szersze niż kolumna, ale obok są wąskie „Więcej” i FAB bez podpisu. */}
+        <span className="relative z-10 whitespace-nowrap leading-none tracking-tight">{label}</span>
         {!!badge && (
           <span className="absolute top-0.5 right-1/4 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-2xs font-semibold flex items-center justify-center z-10">
             {badge}
