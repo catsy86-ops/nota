@@ -579,3 +579,19 @@ Odrzucone:
 - [x] Okno dnia w Grafiku: „piątek, 9 października” tylko z wielką pierwszą literą (`first-letter:uppercase` zamiast `capitalize`).
 - [x] Opis motywu sezonowego bez „tła”; czerwony licznik zaległych przypomnień.
 - [x] Na prośbę: Grafik — „Budowa” 07–17 (10 h) i „Dniówka” 08–16 (skrót 8) jako rodzaje startowe, dokładane raz do istniejącego grafiku; pora nocna i doba niedzieli w zwiniętej sekcji „Opcjonalne”.
+
+## Przegląd UX na zrzutach — 2026-10-09 (wieczór)
+
+Zrzuty z realistycznymi danymi (12 notatek, grafik, zaległe przypomnienie), 1440 i 390 px, oba motywy — `shots/ux*` (lokalnie).
+
+- [x] 1. Tytuł w edytorze ucięty od lewej (kafel, telefon), na telefonie pod ✕ — `TitleField` (zawijana textarea, Enter → treść). `635d275`
+- [x] 2. Notatka z listą na pełnym ekranie: lista zaraz pod treścią, wypełnia okno. `98dabda`
+- [x] 3. Mniej komunikatów na starcie: backup liczony od najstarszej notatki i 20 s zamiast „na zawsze”, bez dymka „działają offline”, baner instalacji od 3 notatek. `750dbf3`
+- [x] 4. Przypomnienie w jednym rzędzie (Gotowe · Odłóż ▾ · Otwórz, termin zamiast „Czas na tę notatkę!”), na telefonie u góry. Przy okazji: dymki nad otwartym oknem były nieklikalne (także „Cofnij”) — naprawione w `index.css` i `ui/dialog.tsx`. `6d8d180`
+- [ ] Zrzuty po punktach 2–4 zrobione (`shots/ux2`), ale jeszcze nieobejrzane.
+- [ ] 5. „+” na telefonie otwiera pole w środku listy, a edycja — pełny ekran; ujednolicić (pełny ekran).
+- [ ] 6. Edycja w kaflu na komputerze ciasna (~210 px) — okno edycji jako domyślne albo kafel na 2 kolumny.
+- [ ] 7. Kalendarz na telefonie: wysokie komórki z samą kropką, plan dnia pod zgięciem — niższe komórki.
+- [ ] 8. Pasek rodzajów zmian w Grafiku ucięty bez sygnału — zanikająca krawędź, na komputerze zawijanie.
+- [ ] 9. Drobne: „~1 min” na każdej krótkiej notatce (pokazywać od 2 min), samotny „Średni” w osobnym rzędzie, przewodnik mówi „pole Nowa notatka”, a pole to „Zapisz notatkę...”; odznaka „Pierwszy krok” też wyskakuje nad edytorem.
+- [ ] Pomysł: zmiany z Grafiku w komórkach Kalendarza.
