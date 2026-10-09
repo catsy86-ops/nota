@@ -470,7 +470,8 @@
      Otwarte „więcej”/kolory wracają do przepływu, żeby niczego nie zasłaniać. */
   .card-actions:not([data-open]):not([data-editing]) {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 5;
-    flex-wrap: nowrap; padding-top: 0.25rem;
+    /* Niski pasek — na zwartym kaflu zakrywa tylko stopkę z datą, nie linki zwrotne nad nią. */
+    flex-wrap: nowrap; padding-top: 0.25rem; padding-bottom: 0.25rem;
     background: inherit;
     box-shadow: 0 -10px 12px -10px hsl(var(--foreground) / 0.18);
   }

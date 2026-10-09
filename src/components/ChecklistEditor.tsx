@@ -169,13 +169,16 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
   );
 }
 
+/** Na kaflu cztery pozycje — reszta w czytniku i edytorze. */
+const PREVIEW_ITEMS = 4;
+
 export function ChecklistPreview({ items, onToggle }: { items: ChecklistItem[]; onToggle?: (id: string) => void }) {
   if (!items.length) return null;
   const done = items.filter((i) => i.checked).length;
   
   return (
-    <div className="mt-2">
-      {items.slice(0, 5).map((item) => (
+    <div className="mt-1">
+      {items.slice(0, PREVIEW_ITEMS).map((item) => (
         // Cały wiersz jest polem wyboru: na dotyku cel ma szerokość kafla, nie 14 px.
         <button
           key={item.id}
@@ -184,7 +187,7 @@ export function ChecklistPreview({ items, onToggle }: { items: ChecklistItem[]; 
           aria-checked={item.checked}
           disabled={!onToggle}
           onClick={(e) => { e.stopPropagation(); onToggle?.(item.id); }}
-          className="group/check flex w-full items-center gap-2 rounded-md py-1 [@media(pointer:coarse)]:py-1.5 text-left disabled:cursor-default"
+          className="group/check flex w-full items-center gap-2 rounded-md py-0.5 [@media(pointer:coarse)]:py-1 text-left disabled:cursor-default"
         >
           <CheckMark checked={item.checked} size="sm" />
           <span className={cn("text-xs", item.checked ? "text-muted-foreground line-through decoration-muted-foreground/60" : "text-foreground/80")}>
@@ -192,8 +195,8 @@ export function ChecklistPreview({ items, onToggle }: { items: ChecklistItem[]; 
           </span>
         </button>
       ))}
-      {items.length > 5 && (
-        <p className="text-2xs text-muted-foreground/50 pl-5">+{items.length - 5} więcej</p>
+      {items.length > PREVIEW_ITEMS && (
+        <p className="text-2xs text-muted-foreground pl-5">+{items.length - PREVIEW_ITEMS} więcej</p>
       )}
       {done > 0 && (
         <div className="flex items-center gap-2 mt-1">
