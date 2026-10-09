@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Settings2 } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
-import { FTE_OPTIONS, NIGHT_HOURS, NIGHT_STARTS, SETTLEMENT_MONTHS, formatDuration, formatHoursShort, formatMoney, setFte, setHourlyRate, setNightFrom, setOvertimeFrom, setSettlementMonths, setSettlementStart, setSundayFrom, setWorkSystem, type MonthSummary, type PeriodSummary, type SettlementMonths, type WorkSystem } from "@/lib/shifts";
+import { FTE_OPTIONS, formatDuration, formatHoursShort, formatMoney, type MonthSummary, type PeriodSummary, type SettlementMonths, type WorkSystem } from "@/lib/shifts";
+import { PERIOD_LABELS } from "./labels";
 import { cn } from "@/lib/utils";
 
 interface ShiftSummaryProps {
@@ -11,29 +11,21 @@ interface ShiftSummaryProps {
   hourlyRate: number;
   workSystem: WorkSystem;
   settlementMonths: SettlementMonths;
-  settlementStart: number;
   fte: number;
-  overtimeFrom: number;
-  sundayFrom: number;
-  nightFrom: number;
+  onOpenSettings: () => void;
 }
-
-const PERIOD_LABELS: Record<SettlementMonths, string> = {
-  1: "1 miesiąc", 2: "2 miesiące", 3: "3 miesiące (kwartał)", 4: "4 miesiące", 6: "6 miesięcy", 12: "12 miesięcy",
-};
 
 /** Miejscownik („w marcu”) — date-fns go nie zna. */
 const IN_MONTH = ["styczniu", "lutym", "marcu", "kwietniu", "maju", "czerwcu", "lipcu", "sierpniu", "wrześniu", "październiku", "listopadzie", "grudniu"];
 
 const monthName = (year: number, month: number, pattern = "LLLL") => format(new Date(year, month, 1), pattern, { locale: pl });
 
-const parseNum = (s: string) => parseFloat(s.replace(",", "."));
 
 /**
  * Podsumowanie miesiąca. Sercem jest pasek normy: wypełnia się do wymiaru
  * czasu pracy, a nadwyżka (nadgodziny) dosuwa się za nim w kolorze akcentu.
  */
-export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths, settlementStart, fte, overtimeFrom, sundayFrom, nightFrom }: ShiftSummaryProps) {
+export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths, fte, onOpenSettings }: ShiftSummaryProps) {
   const { minutes, normMinutes, overtimeMinutes, dailyOvertimeMinutes, overtime100Minutes } = summary;
   const scale = Math.max(normMinutes, minutes, 1);
   // Nadgodziny dobowe mogą być i poniżej normy miesiąca — pasek dzieli faktycznie przepracowane godziny.
@@ -62,7 +54,8 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
         aria-label={`${formatDuration(minutes)} z ${formatDuration(normMinutes)} normy${extra ? `, ${formatDuration(extra)} ponadwymiarowych` : ""}${overtimeMinutes ? `, ${formatDuration(overtimeMinutes)} nadgodzin` : ""}`}>
         <div className="h-full bg-primary transition-[width] duration-500" style={{ width: `${(within / scale) * 100}%` }} />
         {extra > 0 && <div className="h-full bg-primary/40 transition-[width] duration-500" style={{ width: `${(extra / scale) * 100}%` }} />}
-        {overtimeMinutes > 0 && <div className="h-full bg-accent transition-[width] duration-500" style={{ width: `${(overtimeMinutes / scale) * 100}%` }} />}
+        {/* Nadgodziny w kolorze marki w paski — róż był jedynym miejscem, gdzie akcent coś znaczył. */}
+        {overtimeMinutes > 0 && <div className="h-full transition-[width] duration-500" style={{ width: `${(overtimeMinutes / scale) * 100}%`, backgroundImage: "repeating-linear-gradient(-45deg, hsl(var(--primary)) 0 4px, hsl(var(--primary) / 0.45) 4px 8px)" }} />}
       </div>
 
       <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
@@ -111,69 +104,21 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
         </ul>
       )}
 
-      <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 border-t border-border/50 pt-3 text-sm">
-        <NumberField label="Stawka za godzinę" unit="zł" min={0} value={hourlyRate} empty={0} onCommit={setHourlyRate} />
-        <label className="flex items-center gap-2 sm:col-span-2">
-          <span className="text-muted-foreground flex-1">System czasu pracy</span>
-          <select value={workSystem} onChange={(e) => setWorkSystem(e.target.value as WorkSystem)}
-            className={cn(FIELD, "w-auto pr-1 text-left")}>
-            <option value="basic">Podstawowy — 8 h na dobę</option>
-            <option value="equivalent">Równoważny — do 12 h wg grafiku</option>
-          </select>
-        </label>
-        <label className="flex items-center gap-2 sm:col-span-2">
-          <span className="text-muted-foreground flex-1">Wymiar etatu</span>
-          <select value={FTE_OPTIONS.some(([v]) => v === fte) ? fte : 1} onChange={(e) => setFte(Number(e.target.value))}
-            className={cn(FIELD, "w-auto pr-1 text-left")}>
-            {FTE_OPTIONS.map(([v, label]) => <option key={label} value={v}>{label}</option>)}
-          </select>
-        </label>
-        {fte < 1 && (
-          <label className="flex items-center gap-2 sm:col-span-2">
-            <span className="text-muted-foreground flex-1">Nadgodziny ponad</span>
-            <select value={Math.max(fte, overtimeFrom)} onChange={(e) => setOvertimeFrom(Number(e.target.value))}
-              className={cn(FIELD, "w-auto pr-1 text-left")}>
-              {FTE_OPTIONS.filter(([v]) => v >= fte).map(([v, label]) => (
-                <option key={label} value={v}>{v === 1 ? "pełny etat (ustawowo)" : `${label} etatu (z umowy)`}</option>
-              ))}
-            </select>
-          </label>
-        )}
-        <label className="flex items-center gap-2 sm:col-span-2">
-          <span className="text-muted-foreground flex-1">Okres rozliczeniowy</span>
-          <select value={settlementMonths} onChange={(e) => setSettlementMonths(Number(e.target.value) as SettlementMonths)}
-            className={cn(FIELD, "w-auto pr-1 text-left")}>
-            {SETTLEMENT_MONTHS.map((m) => <option key={m} value={m}>{PERIOD_LABELS[m]}</option>)}
-          </select>
-        </label>
-        {settlementMonths > 1 && (
-          <label className="flex items-center gap-2 sm:col-span-2">
-            <span className="text-muted-foreground flex-1">Okresy zaczynają się od</span>
-            <select value={settlementStart} onChange={(e) => setSettlementStart(Number(e.target.value))}
-              className={cn(FIELD, "w-auto pr-1 text-left")}>
-              {Array.from({ length: 12 }, (_, m) => <option key={m} value={m}>{monthName(2026, m)}</option>)}
-            </select>
-          </label>
-        )}
-        <label className="flex items-center gap-2 sm:col-span-2">
-          <span className="text-muted-foreground flex-1">Pora nocna</span>
-          <select value={nightFrom} onChange={(e) => setNightFrom(Number(e.target.value))}
-            className={cn(FIELD, "w-auto pr-1 text-left")}>
-            {NIGHT_STARTS.map((h) => <option key={h} value={h}>{`${h}:00–${(h + NIGHT_HOURS) % 24}:00`}</option>)}
-          </select>
-        </label>
-        <label className="flex items-center gap-2 sm:col-span-2">
-          <span className="text-muted-foreground flex-1">Niedziela i święto od godziny</span>
-          <select value={sundayFrom} onChange={(e) => setSundayFrom(Number(e.target.value))}
-            className={cn(FIELD, "w-auto pr-1 text-left")}>
-            {Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{`${h}:00`}{h === 6 ? " (ustawowo)" : ""}</option>)}
-          </select>
-        </label>
-      </div>
-      <p className="text-2xs text-muted-foreground">
-        Norma wg art. 130 Kodeksu pracy, proporcjonalna do etatu, pomniejszona o nieobecności w dni robocze. Przy niepełnym etacie nadgodziny liczą się ponad 8 h na dobę i ponad normę pełnego etatu albo granicę z umowy (art. 151 § 5 KP). Kolejne okresy rozliczeniowe liczone od wybranego miesiąca.
-        Nadgodziny dobowe liczone w dobie pracowniczej (24 h od początku zmiany); przerwa bez godziny skraca koniec zmiany. Dodatek za nadgodziny wg art. 151¹ KP: 100% w porze nocnej (8 h między 21 a 7, wg regulaminu — art. 151⁷ KP), w niedziele i święta wolne wg grafiku (dzień oznaczony „poza grafikiem”), w dzień wolny za niedzielę lub święto (oznaczony w oknie dnia) oraz za przekroczenie normy, 50% za pozostałe. Niedziela i święto trwają od wybranej godziny do tej samej godziny następnego dnia (art. 151¹⁰ KP). Odpoczynek dobowy 11 h (art. 132 KP).
-      </p>
+      {/* Bieżące ustawienia w jednej linii — pola są w oknie „Ustawienia grafiku”. */}
+      <button type="button" onClick={onOpenSettings} aria-label="Ustawienia grafiku"
+        className="pressable w-full flex items-center gap-2 border-t border-border/50 pt-3 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+        <span className="flex-1 min-w-0 text-muted-foreground truncate">
+          {[
+            hourlyRate > 0 ? `${formatMoney(hourlyRate)}/h` : "bez stawki",
+            workSystem === "basic" ? "system podstawowy" : "system równoważny",
+            (FTE_OPTIONS.find(([v]) => v === fte)?.[1] ?? "pełny etat").toLowerCase(),
+            `okres ${PERIOD_LABELS[settlementMonths].replace(/ \(.*\)/, "")}`,
+          ].join(" · ")}
+        </span>
+        <span className="shrink-0 flex items-center gap-1.5 font-medium text-foreground">
+          <Settings2 className="w-4 h-4" aria-hidden /> Zmień
+        </span>
+      </button>
     </section>
   );
 }
@@ -212,41 +157,8 @@ function Stat({ label, value, accent = false, hint }: { label: string; value: st
   return (
     <div className="rounded-2xl bg-muted/50 px-3 py-2">
       <dt className="text-2xs uppercase tracking-wider text-muted-foreground">{label}</dt>
-      <dd className={cn("tabular-nums font-semibold", accent && "text-accent")}>{value}</dd>
+      <dd className={cn("tabular-nums font-semibold", accent && "text-primary")}>{value}</dd>
       {hint && <dd className="text-2xs text-muted-foreground tabular-nums">{hint}</dd>}
     </div>
-  );
-}
-
-const FIELD = "w-24 h-9 coarse:h-11 rounded-lg border border-input bg-background px-2 text-right tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
-interface NumberFieldProps {
-  label: string;
-  unit: string;
-  min: number;
-  value: number;
-  /** Wartość pokazywana jako puste pole (np. stawka 0 = „nie licz”). */
-  empty?: number;
-  onCommit: (n: number) => void;
-}
-
-/**
- * Pole liczby zapisywane na bieżąco, ale też odświeżane, gdy wartość zmieni
- * się z zewnątrz (inna karta, przywrócona kopia) — o ile użytkownik akurat w nim nie pisze.
- */
-function NumberField({ label, unit, min, value, empty, onCommit }: NumberFieldProps) {
-  const shown = (v: number) => (v === empty ? "" : String(v));
-  const [text, setText] = useState(() => shown(value));
-  const [editing, setEditing] = useState(false);
-  useEffect(() => { if (!editing) setText(value === empty ? "" : String(value)); }, [value, editing, empty]);
-  return (
-    <label className="flex items-center gap-2">
-      <span className="text-muted-foreground flex-1">{label}</span>
-      <input type="number" inputMode="decimal" min={min} step={0.5} value={text} placeholder={String(empty ?? min)}
-        onFocus={() => setEditing(true)} onBlur={() => setEditing(false)}
-        onChange={(e) => { setText(e.target.value); onCommit(parseNum(e.target.value)); }}
-        className={FIELD} />
-      <span className="text-muted-foreground w-4">{unit}</span>
-    </label>
   );
 }

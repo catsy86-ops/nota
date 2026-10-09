@@ -89,6 +89,8 @@
   }
 
   .dark {
+    /* Natywne listy wyboru, kalendarze i paski przewijania też w ciemnym motywie. */
+    color-scheme: dark;
     --background: 220 20% 8%;
     --foreground: 220 14% 92%;
 

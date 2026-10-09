@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { NotatnikWordmark } from "@/components/NotatnikWordmark";
 import type { View, Elsewhere } from "@/hooks/useFilteredNotes";
-import { modShortcut } from "@/lib/platform";
+import { modShortcut, TAP } from "@/lib/platform";
 
 const HEADINGS: Record<View, string> = {
   notes: "Zacznij tworzyć",
@@ -18,12 +18,15 @@ const HEADINGS: Record<View, string> = {
 };
 
 const DESCRIPTIONS: Record<View, string> = {
-  notes: "Stuknij w pasek powyżej (są tam też szablony) lub naciśnij " + modShortcut("N"),
+  // Poniżej 768 px pasek „Zapisz notatkę…” jest schowany — nową notatkę robi „+” w dolnej nawigacji.
+  notes: typeof matchMedia !== "undefined" && matchMedia("(max-width: 767px)").matches
+    ? "Stuknij „+” na dole ekranu — są tam też szablony"
+    : `${TAP} „Zapisz notatkę…” powyżej (są tam też szablony) lub naciśnij ` + modShortcut("N"),
   archive: "Zarchiwizowane notatki pojawią się tutaj",
   trash: "Usunięte notatki pojawią się tutaj",
   reminders: "Notatki z przypomnieniami pojawią się tutaj",
-  calendar: "Stuknij w dzień, aby dodać przypomnienie",
-  shifts: "Wybierz zmianę i stuknij w dni",
+  calendar: `${TAP} dzień, aby dodać przypomnienie`,
+  shifts: `Wybierz zmianę i ${TAP.toLowerCase()} dni`,
   today: "Notatki utworzone lub edytowane dzisiaj pojawią się tutaj",
   week: "Notatki z ostatnich 7 dni pojawią się tutaj",
   label: "Dodaj etykietę do notatki, aby zobaczyć ją tutaj",

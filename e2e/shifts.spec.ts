@@ -24,7 +24,9 @@ test("nanoszenie zmian liczy godziny, nocne i zarobek", async ({ page }) => {
   await expect(summary).toContainText("Dni pracy3");
   await expect(summary).toContainText("W nocy8 h");
 
-  await summary.getByLabel("Stawka za godzinę").fill("30");
+  const settings = await openSettings(page);
+  await settings.getByLabel("Stawka za godzinę").fill("30");
+  await page.keyboard.press("Escape");
   await expect(summary).toContainText("720,00");
 
   // Grafik przeżywa odświeżenie.
@@ -150,7 +152,7 @@ test("pędzle: strzałki wybierają sąsiedni, Cykl i + widoczne na telefonie", 
   await page.keyboard.press("ArrowRight");
   await expect(page.getByRole("radio", { name: /Popołudnie/ })).toBeFocused();
   await expect(page.getByRole("radio", { name: /Popołudnie/ })).toHaveAttribute("aria-checked", "true");
-  await expect(page.getByText("Stuknij dzień, żeby nanieść: Popołudnie.")).toBeVisible();
+  await expect(page.getByText(/^(Stuknij|Kliknij) dzień, żeby nanieść: Popołudnie./)).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
 
@@ -163,6 +165,14 @@ test("usunięcie zapisanego cyklu nie kasuje układanych kroków", async ({ page
   await expect(dialog).toContainText("Kolejne dni cyklu (9)");
   await expect(dialog.getByRole("button", { name: /^Usuń cykl/ })).toHaveCount(1);
 });
+
+/** Okno „Ustawienia grafiku” — pola rozliczenia nie siedzą już w podsumowaniu. */
+async function openSettings(page: import("@playwright/test").Page) {
+  await page.getByRole("button", { name: "Ustawienia grafiku" }).click();
+  const dialog = page.getByRole("dialog", { name: "Ustawienia grafiku" });
+  await expect(dialog).toBeVisible();
+  return dialog;
+}
 
 /** Stary zapis Grafiku (sprzed Yjs) — trafia do dokumentu przy pierwszym wczytaniu. */
 async function withLegacyShifts(page: import("@playwright/test").Page, data: object) {
@@ -189,7 +199,7 @@ test("stary grafik z localStorage przechodzi do nowego zapisu i przeżywa odświ
   await expect(day).toBeVisible();
   await page.reload();
   await expect(day).toBeVisible();
-  await expect(page.getByRole("region", { name: "Podsumowanie miesiąca" }).getByLabel("Stawka za godzinę")).toHaveValue("40");
+  await expect((await openSettings(page)).getByLabel("Stawka za godzinę")).toHaveValue("40");
 });
 
 test("wyczyszczenie dnia z notatką da się cofnąć", async ({ page }) => {
@@ -228,21 +238,23 @@ test("ostrzega o odpoczynku krótszym niż 11 h", async ({ page }) => {
 
 test("okres rozliczeniowy kwartał: postęp okresu i nadgodziny w ostatnim miesiącu", async ({ page }) => {
   const summary = page.getByRole("region", { name: "Podsumowanie miesiąca" });
-  await summary.getByLabel("Okres rozliczeniowy").selectOption({ label: "3 miesiące (kwartał)" });
+  await (await openSettings(page)).getByLabel("Okres rozliczeniowy").selectOption({ label: "3 miesiące (kwartał)" });
+  await page.keyboard.press("Escape");
   await expect(summary).toContainText(/Okres paź–gru 2026/);
   await expect(summary).toContainText("Nadgodziny ponad normę okresu policzymy w grudniu");
   await page.reload();
-  await expect(page.getByRole("region", { name: "Podsumowanie miesiąca" }).getByLabel("Okres rozliczeniowy")).toHaveValue("3");
+  await expect((await openSettings(page)).getByLabel("Okres rozliczeniowy")).toHaveValue("3");
 });
 
 test("pół etatu: niższa norma i godziny ponadwymiarowe", async ({ page }) => {
   const summary = page.getByRole("region", { name: "Podsumowanie miesiąca" });
   const normFull = await summary.getByText(/h normy/).textContent();
-  await summary.getByLabel("Wymiar etatu").selectOption({ label: "1/2" });
+  await (await openSettings(page)).getByLabel("Wymiar etatu").selectOption({ label: "1/2" });
+  await page.keyboard.press("Escape");
   await expect(summary.getByText(/h normy/)).not.toHaveText(normFull!);
   await expect(summary).toContainText("/ 88 h normy");
   await page.reload();
-  await expect(page.getByRole("region", { name: "Podsumowanie miesiąca" }).getByLabel("Wymiar etatu")).toHaveValue("0.5");
+  await expect((await openSettings(page)).getByLabel("Wymiar etatu")).toHaveValue("0.5");
 });
 
 test("nowe godziny rodzaju obowiązują od dziś, przeszłe dni zostają przy starych", async ({ page }) => {

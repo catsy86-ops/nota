@@ -1,3 +1,4 @@
+import { TAP } from "@/lib/platform";
 import { useCallback, useMemo, useState } from "react";
 import { addMonths, format, startOfMonth } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -13,16 +14,17 @@ import { NowCard } from "./NowCard";
 import { BrushBar, type Brush } from "./BrushBar";
 import { ShiftMonthGrid } from "./ShiftMonthGrid";
 import { ShiftSummary } from "./ShiftSummary";
+import { ShiftSettingsDialog } from "./ShiftSettingsDialog";
 import { ShiftTypeDialog } from "./ShiftTypeDialog";
 import { DayDialog } from "./DayDialog";
 import { PatternDialog } from "./PatternDialog";
 
 /** Co zrobi stuknięcie w dzień — widoczne pod paskiem i czytane przy siatce. */
 function brushHint(brush: Brush, typesById: Map<string, ShiftType>): string {
-  if (brush.kind === "inspect") return "Stuknij dzień, żeby zobaczyć i edytować szczegóły.";
-  if (brush.kind === "erase") return "Stuknij dzień, żeby go wyczyścić.";
+  if (brush.kind === "inspect") return `${TAP} dzień, żeby zobaczyć i edytować szczegóły.`;
+  if (brush.kind === "erase") return `${TAP} dzień, żeby go wyczyścić.`;
   const name = typesById.get(brush.id)?.name ?? "zmianę";
-  return `Stuknij dzień, żeby nanieść: ${name}. Drugie stuknięcie zdejmuje.`;
+  return `${TAP} dzień, żeby nanieść: ${name}. Ponownie — zdejmuje.`;
 }
 
 const exportedStore = createPersistedStore<string[]>(SHIFTS_EXPORTED_KEY, [], {
@@ -47,6 +49,7 @@ function ShiftsScreen() {
   const [brush, setBrush] = useState<Brush>(() => (data.types[0] ? { kind: "type", id: data.types[0].id } : { kind: "inspect" }));
   const [editingType, setEditingType] = useState<ShiftType | "new" | null>(null);
   const [openDay, setOpenDay] = useState<string | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [patternOpen, setPatternOpen] = useState(false);
 
   const typesById = useMemo(() => new Map(data.types.map((t) => [t.id, t])), [data.types]);
@@ -153,7 +156,8 @@ function ShiftsScreen() {
         </button>
       </div>
 
-      <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} workSystem={data.workSystem} settlementMonths={data.settlementMonths} settlementStart={data.settlementStart} fte={data.fte} overtimeFrom={data.overtimeFrom} sundayFrom={data.sundayFrom} nightFrom={data.nightFrom} />
+      <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} onOpenSettings={() => setSettingsOpen(true)} />
+      <ShiftSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} settings={data} />
 
       <ShiftTypeDialog
         type={editingType === "new" ? null : editingType}

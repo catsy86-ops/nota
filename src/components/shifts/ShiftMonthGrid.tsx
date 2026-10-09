@@ -156,8 +156,11 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                     {type && (
                       <span
                         aria-hidden
-                        className={cn("mt-auto rounded-lg px-1 py-0.5 text-center leading-tight", absence ? "border-2 border-dashed" : "shadow-sm", !inMonth && "opacity-50")}
-                        style={absence ? { borderColor: type.color, color: shiftTextOnCard(type.color) } : { backgroundColor: type.color, color: shiftInk(type.color) }}
+                        // Nieobecność: jasne tło w kolorze rodzaju i cienka ramka. Przerywana ramka wyglądała jak puste miejsce do wypełnienia.
+                        className={cn("mt-auto rounded-lg px-1 py-0.5 text-center leading-tight", absence ? "border-[1.5px]" : "shadow-sm", !inMonth && "opacity-50")}
+                        style={absence
+                          ? { borderColor: type.color, backgroundColor: `color-mix(in srgb, ${type.color} 16%, transparent)`, color: shiftTextOnCard(type.color) }
+                          : { backgroundColor: type.color, color: shiftInk(type.color) }}
                       >
                         <span className="block font-display font-bold text-sm">{type.short}</span>
                         {!absence && (

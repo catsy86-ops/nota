@@ -13,3 +13,9 @@ export const MOD_KEY = isApplePlatform() ? "⌘" : "Ctrl";
 export function modShortcut(key: string): string {
   return MOD_KEY === "⌘" ? `⌘${key}` : `Ctrl+${key}`;
 }
+
+/** Główny wskaźnik to palec — do słów w podpowiedziach („Stuknij” zamiast „Kliknij”). */
+export const IS_TOUCH = typeof matchMedia !== "undefined" && matchMedia("(pointer: coarse)").matches;
+
+/** „Stuknij”/„Kliknij” zależnie od urządzenia. */
+export const TAP = IS_TOUCH ? "Stuknij" : "Kliknij";
