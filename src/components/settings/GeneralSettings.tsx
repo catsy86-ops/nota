@@ -129,7 +129,7 @@ export function GeneralSettings() {
       </Section>
 
       <div className="pt-2"><Section title="Efekty i zabawa">
-        <p className="text-xs text-muted-foreground mb-2">Małe mikrointerakcje i sezonowe tło. Wszystko respektuje tryb ograniczonego ruchu.</p>
+        <p className="text-xs text-muted-foreground mb-2">Małe mikrointerakcje i sezonowe kolory. Wszystko respektuje tryb ograniczonego ruchu.</p>
       </Section></div>
       <div className="space-y-3">
         {keys.map((key) => {

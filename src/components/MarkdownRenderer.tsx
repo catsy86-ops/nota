@@ -30,7 +30,7 @@ function renderWithWiki(text: string, onWikiClick?: (t: string) => void, known?:
         className={cn(
           "inline px-1 rounded transition-colors font-medium",
           exists
-            ? "text-primary bg-primary/10 hover:bg-primary/20"
+            ? "text-accent bg-accent/10 hover:bg-accent/20"
             : "text-muted-foreground bg-muted/40 hover:bg-muted/60 italic"
         )}
         title={exists ? `Otwórz „${title}"` : `Notatka „${title}" nie istnieje`}
@@ -79,7 +79,7 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content, classN
           <blockquote className="border-l-2 border-primary/40 pl-3 italic text-foreground/60 text-sm mb-1">{children}</blockquote>
         ),
         a: ({ children, href }) => (
-          <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:text-primary/80">{children}</a>
+          <a href={href} target="_blank" rel="noopener noreferrer" className="text-accent underline underline-offset-2 hover:text-accent/80">{children}</a>
         ),
         hr: () => <hr className="border-border/30 my-2" />,
       }}

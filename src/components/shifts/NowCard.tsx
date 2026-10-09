@@ -30,7 +30,7 @@ export function NowCard({ data }: { data: ShiftData }) {
   const progress = current ? (now.getTime() - current.start.getTime()) / (current.end.getTime() - current.start.getTime()) : 0;
 
   return (
-    <section aria-label="Bieżąca zmiana" className="relative overflow-hidden rounded-3xl border border-border/60 bg-card/60 p-4 flex items-center gap-4">
+    <section aria-label="Bieżąca zmiana" className="relative overflow-hidden rounded-3xl border border-border/60 bg-card p-4 flex items-center gap-4">
       <span aria-hidden className="absolute inset-y-0 left-0 w-1.5" style={{ backgroundColor: main.type.color }} />
       <span className="w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center font-display font-bold text-lg" style={{ backgroundColor: main.type.color, color: shiftInk(main.type.color) }}>
         {main.type.short}

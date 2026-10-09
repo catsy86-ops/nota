@@ -9,12 +9,12 @@ import { cn } from "@/lib/utils";
 export const weekdayHeadClass = (i: number) =>
   cn("text-2xs uppercase tracking-wider text-center py-1", i >= 5 ? "text-primary/80" : "text-muted-foreground");
 
-/** Komórka dnia bez rozmiaru — wysokość zależy od tego, co komórka pokazuje. */
+/** Komórka dnia bez rozmiaru — wysokość zależy od tego, co komórka pokazuje. Pełne tło: kratka tła nie prześwituje. */
 export const dayCellClass = (inMonth: boolean) => cn(
   "relative rounded-xl border text-left transition-colors outline-none",
   "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background",
   // Dzień spoza miesiąca: szary tekst, nie przezroczystość — przy opacity czerwone święto znikało w ciemnym motywie.
-  inMonth ? "border-border/50 bg-card/40 dark:border-transparent dark:bg-card/60" : "border-transparent text-muted-foreground",
+  inMonth ? "border-border/50 bg-card dark:border-transparent" : "border-transparent text-muted-foreground",
 );
 
 /** Numer dnia: „dziś” w kółku marki, święto pogrubione (czerwone w bieżącym miesiącu). */

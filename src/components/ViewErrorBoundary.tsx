@@ -34,7 +34,7 @@ export class ViewErrorBoundary extends Component<Props, State> {
     // `lazy` pamięta odrzucony import, więc po błędzie ładowania pomaga tylko odświeżenie.
     const chunk = /dynamically imported module|Loading chunk|Failed to fetch/i.test(this.state.error.message);
     return (
-      <div role="alert" className="rounded-3xl border border-border/60 bg-card/60 p-5 flex gap-4 items-start">
+      <div role="alert" className="rounded-3xl border border-border/60 bg-card p-5 flex gap-4 items-start">
         <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
         <div className="space-y-3 min-w-0">
           <div className="space-y-1">

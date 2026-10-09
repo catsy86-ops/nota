@@ -31,7 +31,7 @@ interface DayPanelProps {
 
 export function DayPanel({ day, occurrences, titleOf, onAdd, onEdit, onMoveByDays, onExport, onOpenSeriesSource }: DayPanelProps) {
   return (
-    <section aria-live="polite" className="rounded-2xl border border-border/50 bg-card/40 p-4">
+    <section aria-live="polite" className="rounded-2xl border border-border/50 bg-card p-4">
       <div className="flex items-center gap-2 mb-3">
         <h3 className="font-display font-semibold text-sm first-letter:uppercase">
           {format(day, "EEEE, d MMMM", { locale: pl })}

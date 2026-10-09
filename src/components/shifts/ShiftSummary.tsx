@@ -36,7 +36,7 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
   const within = Math.max(0, minutes - overtimeMinutes - extra);
 
   return (
-    <section aria-label="Podsumowanie miesiąca" className="rounded-3xl border border-border/60 bg-card/60 p-4 sm:p-5 space-y-4">
+    <section aria-label="Podsumowanie miesiąca" className="rounded-3xl border border-border/60 bg-card p-4 sm:p-5 space-y-4">
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
           <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Przepracowane</p>

@@ -68,7 +68,7 @@ export function BrushBar({ types, brush, onBrush, onEditType, onAddType, onPatte
       className={cn("flex gap-2 overflow-x-auto py-1.5 -mx-4 px-4 sm:-mx-1 sm:px-1",
         moreRight && "[mask-image:linear-gradient(to_right,black_calc(100%-2.5rem),transparent)]")}>
       <button type="button" onClick={onPattern}
-        className={cn("pressable shrink-0 flex items-center gap-1.5 px-3 h-12 rounded-2xl border border-border/60 bg-card/50 hover:bg-muted text-sm font-medium font-display", focusRing)}>
+        className={cn("pressable shrink-0 flex items-center gap-1.5 px-3 h-12 rounded-2xl border border-border/60 bg-card hover:bg-muted text-sm font-medium font-display", focusRing)}>
         <Repeat className="w-4 h-4" /> Cykl
       </button>
       <button type="button" onClick={onAddType} aria-label="Dodaj rodzaj zmiany"
@@ -97,7 +97,7 @@ function ToolButton({ active, radio, onClick, Icon, label }: { active: boolean; 
   return (
     <button type="button" role="radio" aria-checked={active} onClick={onClick} ref={radio.ref} tabIndex={radio.tabIndex}
       className={cn("pressable relative shrink-0 flex items-center justify-center gap-1.5 px-3 max-sm:px-0 max-sm:w-12 h-12 rounded-2xl border text-sm font-medium font-display", focusRing,
-        active ? "border-foreground/50 bg-muted" : "border-border/60 bg-card/50 hover:bg-muted")}>
+        active ? "border-foreground/50 bg-muted" : "border-border/60 bg-card hover:bg-muted")}>
       <Icon className="w-4 h-4" /> <span className="max-sm:sr-only">{label}</span>
     </button>
   );
@@ -107,7 +107,7 @@ function BrushChip({ type, active, radio, onClick, onEdit }: { type: ShiftType; 
   const absence = type.kind === "absence";
   return (
     <div className={cn("shrink-0 flex items-center rounded-2xl border transition-colors",
-      active ? "border-transparent ring-2 ring-offset-2 ring-offset-background" : "border-border/60 bg-card/50")}
+      active ? "border-transparent ring-2 ring-offset-2 ring-offset-background" : "border-border/60 bg-card")}
       style={active ? { backgroundColor: `${type.color}22`, ["--tw-ring-color" as string]: type.color } : undefined}>
       <button type="button" role="radio" aria-checked={active} onClick={onClick} ref={radio.ref} tabIndex={radio.tabIndex}
         className={cn("pressable relative flex items-center gap-2 pl-1.5 pr-2 max-sm:pr-1.5 h-12 rounded-l-2xl", focusRing, !active && "max-sm:rounded-r-2xl")}>

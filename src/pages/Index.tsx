@@ -44,7 +44,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { useAchievementTracker } from "@/lib/achievements";
 import { ShortcutsDialog } from "@/components/ShortcutsDialog";
 import { DailyQuote } from "@/components/DailyQuote";
-import { AnimatedBackdrop } from "@/components/AnimatedBackdrop";
+import { PaperBackdrop } from "@/components/PaperBackdrop";
 import { QuickTemplates } from "@/components/QuickTemplates";
 import { useConfirmAction } from "@/components/ConfirmActionDialog";
 import { BulkActionBar } from "@/components/BulkActionBar";
@@ -433,7 +433,7 @@ const Index = () => {
 
   return (
     <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={(e) => setDraggingNoteId(e.active.id as string)} onDragEnd={handleDragEnd}>
-    <AnimatedBackdrop />
+    <PaperBackdrop />
     <div className="min-h-screen flex relative">
       <AppSidebar
         open={sidebarOpen}
