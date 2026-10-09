@@ -176,3 +176,18 @@ test("bez rodzajów zmian widać, jak zacząć", async ({ page }) => {
   await expect(empty).toHaveCount(0);
   await expect(page.getByRole("radio", { name: /Dzień/ })).toHaveAttribute("aria-checked", "true");
 });
+
+test("wyczyszczenie dnia z notatką da się cofnąć", async ({ page }) => {
+  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  await page.getByRole("radio", { name: "Szczegóły" }).click();
+  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dzień/ }).first().click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByLabel("Notatka").fill("zastępstwo");
+  await dialog.getByRole("button", { name: "Zapisz dzień" }).click();
+
+  await page.getByRole("radio", { name: "Wolne" }).click();
+  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dzień/ }).first().click();
+  await expect(page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first()).toBeVisible();
+  await page.getByRole("button", { name: "Cofnij" }).click();
+  await expect(page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dzień.*notatka: zastępstwo/ }).first()).toBeVisible();
+});

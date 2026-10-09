@@ -4,9 +4,10 @@ import { pl } from "date-fns/locale";
 import { CalendarArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { dayKey } from "@/lib/reminderOccurrences";
-import { DEFAULT_SHIFT_TYPES, addDefaultShiftTypes, applyPatternToStore, buildShiftsIcs, exportableShiftDays, monthSummary, restoreDays, setDayShift, shiftStore, useShifts, type ShiftType } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, addDefaultShiftTypes, applyPatternToStore, buildShiftsIcs, exportableShiftDays, monthSummary, restoreDays, setDayEntry, setDayShift, shiftStore, useShifts, type ShiftType } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { pluralPl } from "@/lib/plural";
+import { toastWithUndo } from "@/lib/undoToast";
 import { NowCard } from "./NowCard";
 import { BrushBar, type Brush } from "./BrushBar";
 import { ShiftMonthGrid } from "./ShiftMonthGrid";
@@ -44,9 +45,17 @@ export function ShiftsView() {
   // Stabilna referencja — siatka jest `memo` i nie musi się przerysowywać przy otwieraniu okien.
   const onDay = useCallback((key: string) => {
     if (brush.kind === "inspect") return setOpenDay(key);
-    if (brush.kind === "erase") return setDayShift(key, null);
+    const entry = shiftStore.get().days[key];
     // Ta sama zmiana drugi raz = zdejmij ją — szybka poprawka bez sięgania po gumkę.
-    setDayShift(key, shiftStore.get().days[key]?.type === brush.id ? null : brush.id);
+    const clear = brush.kind === "erase" || entry?.type === brush.id;
+    setDayShift(key, clear ? null : brush.id);
+    // Notatki i odchylenia nie da się odtworzyć jednym stuknięciem — stąd „Cofnij”.
+    if (clear && entry && (entry.note || entry.extraMin)) {
+      const [y, m, d] = key.split("-").map(Number);
+      toastWithUndo(`Wyczyszczono ${format(new Date(y, m - 1, d), "d MMMM", { locale: pl })}`, () => setDayEntry(key, entry), {
+        description: entry.note ? `Razem z notatką „${entry.note}”` : "Razem z odchyleniem od planu",
+      });
+    }
   }, [brush]);
 
   function applyPattern(steps: (string | null)[], startKey: string, length: number) {
