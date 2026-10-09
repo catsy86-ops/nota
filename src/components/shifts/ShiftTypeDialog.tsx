@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SHIFT_COLORS, SHIFT_COLOR_NAMES, breakOffset, deleteShiftType, formatDuration, newShiftId, restoreShiftType, saveShiftType, shiftMinutes, shiftSpan, shiftStore, type ShiftType } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, SHIFT_COLORS, SHIFT_COLOR_NAMES, breakOffset, deleteShiftType, formatDuration, newShiftId, restoreShiftType, saveShiftType, shiftMinutes, shiftSpan, shiftStore, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -47,6 +47,8 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
   const valid = draft.name.trim() !== "" && shiftSpan(draft) !== null && !breakOutside;
   const parsedRate = parseFloat(rate.replace(",", "."));
   const absence = draft.kind === "absence";
+  // Nowy rodzaj: gotowe rodzaje startowe, których nie ma w grafiku (np. usunięte albo „Budowa” z nowszej wersji).
+  const presets = type ? [] : DEFAULT_SHIFT_TYPES.filter((p) => !shiftStore.get().types.some((t) => t.id === p.id));
 
   function remove() {
     if (!type) return;
@@ -86,6 +88,21 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
         <DialogTitle className="font-display">{type ? "Edytuj rodzaj zmiany" : "Nowy rodzaj zmiany"}</DialogTitle>
       </DialogHeader>
       <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); save(); }}>
+        {presets.length > 0 && (
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-muted-foreground">Gotowe</p>
+            <div className="flex flex-wrap gap-1.5">
+              {presets.map((p) => (
+                <button key={p.id} type="button" onClick={() => { setDraft({ ...p }); setRate(""); }}
+                  className="pressable flex items-center gap-1.5 h-8 coarse:h-11 px-2.5 rounded-lg border border-border/60 bg-card hover:bg-muted text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  <span aria-hidden className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }} />
+                  {p.name}
+                  <span className="text-muted-foreground tabular-nums">{p.kind === "absence" ? "nieobecność" : `${p.start}–${p.end}`}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-[1fr_5rem] gap-3">
           <div className="space-y-1.5">
             <Label htmlFor="shift-name">Nazwa</Label>

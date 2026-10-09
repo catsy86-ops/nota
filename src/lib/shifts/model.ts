@@ -146,6 +146,8 @@ export const DEFAULT_SHIFT_TYPES: ShiftType[] = [
   { id: "n", name: "Noc", short: "N", color: "#4f46e5", start: "22:00", end: "06:00", breakMin: 0, kind: "work" },
   { id: "u", name: "Urlop", short: "U", color: "#10b981", start: "08:00", end: "16:00", breakMin: 0, kind: "absence" },
   { id: "l4", name: "L4", short: "L4", color: "#64748b", start: "08:00", end: "16:00", breakMin: 0, kind: "absence" },
+  // Na końcu: testy i stare dane zakładają kolejność czterech pierwszych.
+  { id: "b", name: "Budowa", short: "B", color: "#14b8a6", start: "07:00", end: "17:00", breakMin: 0, kind: "work" },
 ];
 
 export const DEFAULT_PATTERNS: ShiftPattern[] = [

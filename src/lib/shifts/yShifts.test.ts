@@ -22,6 +22,24 @@ describe("Grafik w Yjs", () => {
     expect(doc.getMap("shiftTypes").size).toBe(0);
   });
 
+  it("Budowa dochodzi raz do istniejących rodzajów, nie wraca po usunięciu, pusty zestaw zostaje pusty", () => {
+    const withTypes = createYShifts(new Y.Doc());
+    withTypes.saveShiftType({ ...DEFAULT_SHIFT_TYPES[0], name: "Ranna" });
+    withTypes.deleteShiftType("b");
+    // Zapis bez „b” — jak grafik sprzed dodania Budowy.
+    expect(withTypes.get().types.some((t) => t.id === "b")).toBe(false);
+    withTypes.addPresetOnce("presetBudowa", "b");
+    expect(withTypes.get().types.at(-1)).toMatchObject({ id: "b", name: "Budowa", start: "07:00", end: "17:00" });
+    withTypes.deleteShiftType("b");
+    withTypes.addPresetOnce("presetBudowa", "b");
+    expect(withTypes.get().types.some((t) => t.id === "b")).toBe(false);
+
+    const empty = createYShifts(new Y.Doc());
+    empty.replaceAll({ ...EMPTY_SHIFT_DATA, types: [] });
+    empty.addPresetOnce("presetBudowa", "b");
+    expect(empty.get().types).toEqual([]);
+  });
+
   it("dni malowane na dwóch urządzeniach scalają się", () => {
     const { a, b, sync } = pair();
     a.setDayShift("2026-10-01", "d");

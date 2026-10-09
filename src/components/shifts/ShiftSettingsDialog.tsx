@@ -68,16 +68,25 @@ export function ShiftSettingsDialog({ open, onOpenChange, settings: s }: ShiftSe
               </select>
             </Field>
           )}
-          <Field label="Pora nocna" hint="8 godzin między 21 a 7 — tak, jak ustala regulamin pracy (art. 151⁷ KP).">
-            <select value={s.nightFrom} onChange={(e) => setNightFrom(Number(e.target.value))} className={CONTROL}>
-              {NIGHT_STARTS.map((h) => <option key={h} value={h}>{`${h}:00–${(h + NIGHT_HOURS) % 24}:00`}</option>)}
-            </select>
-          </Field>
-          <Field label="Niedziela i święto od godziny" hint="Do tej samej godziny następnego dnia (art. 151¹⁰ KP).">
-            <select value={s.sundayFrom} onChange={(e) => setSundayFrom(Number(e.target.value))} className={CONTROL}>
-              {Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{`${h}:00`}{h === 6 ? " (ustawowo)" : ""}</option>)}
-            </select>
-          </Field>
+          {/* Pora nocna i doba niedzieli zwykle zostają ustawowe — zmienia się je tylko, gdy regulamin pracy mówi inaczej. */}
+          <details open={s.nightFrom !== 22 || s.sundayFrom !== 6 || undefined} className="group rounded-2xl border border-border/60 px-3 py-2.5">
+            <summary className="cursor-pointer text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md">
+              Opcjonalne <span className="font-normal text-muted-foreground">— pora nocna, niedziela i święto</span>
+            </summary>
+            <p className="mt-2 text-xs text-muted-foreground">Zostaw ustawowe, jeśli regulamin pracy nie ustala inaczej.</p>
+            <div className="mt-3 space-y-4">
+              <Field label="Pora nocna" hint="8 godzin między 21 a 7 — tak, jak ustala regulamin pracy (art. 151⁷ KP).">
+                <select value={s.nightFrom} onChange={(e) => setNightFrom(Number(e.target.value))} className={CONTROL}>
+                  {NIGHT_STARTS.map((h) => <option key={h} value={h}>{`${h}:00–${(h + NIGHT_HOURS) % 24}:00`}</option>)}
+                </select>
+              </Field>
+              <Field label="Niedziela i święto od godziny" hint="Do tej samej godziny następnego dnia (art. 151¹⁰ KP).">
+                <select value={s.sundayFrom} onChange={(e) => setSundayFrom(Number(e.target.value))} className={CONTROL}>
+                  {Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{`${h}:00`}{h === 6 ? " (ustawowo)" : ""}</option>)}
+                </select>
+              </Field>
+            </div>
+          </details>
         </div>
 
         <details className="group rounded-2xl bg-muted/50 px-3 py-2.5 text-sm">

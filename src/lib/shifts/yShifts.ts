@@ -15,7 +15,7 @@ import { DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, shiftHours, type DayEnt
  * od razu, mogłoby przy scaleniu nadpisać czyjeś poprawki tych samych id.
  */
 
-type Meta = "hourlyRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "overtimeFrom" | "sundayFrom" | "nightFrom" | "typesInit" | "patternsInit";
+type Meta = "hourlyRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "overtimeFrom" | "sundayFrom" | "nightFrom" | "typesInit" | "patternsInit" | "presetBudowa";
 
 /** Origin transakcji Grafiku — odróżnia lokalne zmiany od tych z sieci i z migracji. */
 export const SHIFTS_ORIGIN = "shifts";
@@ -175,6 +175,21 @@ export function createYShifts(doc: Y.Doc) {
     });
   }
 
+  /**
+   * Jednorazowo dokłada rodzaj startowy dodany w nowszej wersji (np. „Budowa”) do
+   * grafiku, który ma już własne rodzaje. Znacznik w dokumencie: usunięty rodzaj
+   * nie wraca, a dwa urządzenia dodają ten sam wpis (to samo id). Pusty zestaw
+   * rodzajów (ktoś usunął wszystkie) zostaje pusty.
+   */
+  function addPresetOnce(marker: Extract<Meta, "presetBudowa">, id: string): void {
+    if (meta.get(marker)) return;
+    const preset = DEFAULT_SHIFT_TYPES.find((t) => t.id === id);
+    transact(() => {
+      if (preset && meta.get("typesInit") && types.size > 0 && !types.has(id)) types.set(id, { ...preset, order: nextOrder(types) });
+      meta.set(marker, true);
+    }, "shifts-migration");
+  }
+
   function savePattern(pattern: ShiftPattern): void {
     transact(() => {
       ensurePatterns();
@@ -252,7 +267,7 @@ export function createYShifts(doc: Y.Doc) {
   return {
     get, subscribe, isMerged,
     setDayShift, setDayEntry, writeDays,
-    saveShiftType, deleteShiftType, restoreShiftType, addDefaultShiftTypes,
+    saveShiftType, deleteShiftType, restoreShiftType, addDefaultShiftTypes, addPresetOnce,
     savePattern, deletePattern, setMeta, replaceAll, mergeIn,
   };
 }

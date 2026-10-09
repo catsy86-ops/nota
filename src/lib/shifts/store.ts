@@ -47,6 +47,8 @@ let ready = false;
 const readyListeners = new Set<() => void>();
 const readyPromise = yjsStore.ready().then(() => {
   migrateFromLocalStorage();
+  // Praca na budowie (10 h) — dodana do rodzajów startowych 2026-10-09.
+  yShifts.addPresetOnce("presetBudowa", "b");
   ready = true;
   readyListeners.forEach((l) => l());
 });
