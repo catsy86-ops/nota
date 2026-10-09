@@ -77,7 +77,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
           <Bell className={cn("w-4 h-4", reminder && "fill-current")} />
         </motion.button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
+      <PopoverContent className="w-auto max-w-[18.5rem] p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
         <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Przypomnienie</p>
         <QuickReminderInput onParsed={handleQuickParsed} />
         <Calendar
