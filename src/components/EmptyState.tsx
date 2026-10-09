@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { Archive, Bell, CalendarDays, CalendarRange, FolderOpen, Tag, Trash2, type LucideIcon } from "lucide-react";
 import { NotatnikWordmark } from "@/components/NotatnikWordmark";
 import type { View, Elsewhere } from "@/hooks/useFilteredNotes";
 import { modShortcut, TAP } from "@/lib/platform";
@@ -32,6 +33,20 @@ const DESCRIPTIONS: Record<View, string> = {
   label: "Dodaj etykietę do notatki, aby zobaczyć ją tutaj",
   folder: "Dodaj notatkę do tego folderu, aby zobaczyć ją tutaj",
   widget: "",
+};
+
+/**
+ * Rysunek kreską „długopisem” (cienka linia w kolorze akcentu, lekko przekrzywiona)
+ * w pustych widokach. Notatki mają zamiast niego odręczny napis „Notatnik”.
+ */
+const SKETCHES: Partial<Record<View, LucideIcon>> = {
+  archive: Archive,
+  trash: Trash2,
+  reminders: Bell,
+  today: CalendarDays,
+  week: CalendarRange,
+  label: Tag,
+  folder: FolderOpen,
 };
 
 const ELSEWHERE_LABELS: { key: keyof Elsewhere; view: View; name: string }[] = [
@@ -70,11 +85,16 @@ export function EmptyState({ view, search, elsewhere, onGo }: { view: View; sear
     );
   }
 
+  const Sketch = SKETCHES[view];
   return (
     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-center py-20 sm:py-24">
-      <div className="relative w-64 max-w-full mx-auto mb-6">
-        <NotatnikWordmark className="relative" />
-      </div>
+      {Sketch ? (
+        <Sketch aria-hidden strokeWidth={1.1} className="w-20 h-20 mx-auto mb-5 text-accent -rotate-6" />
+      ) : (
+        <div className="relative w-64 max-w-full mx-auto mb-6">
+          <NotatnikWordmark className="relative" />
+        </div>
+      )}
       <h2 className="text-2xl font-display font-bold text-foreground mb-2">{HEADINGS[view]}</h2>
       <p className="text-muted-foreground max-w-sm mx-auto mb-6">{DESCRIPTIONS[view]}</p>
       {view === "notes" && (
