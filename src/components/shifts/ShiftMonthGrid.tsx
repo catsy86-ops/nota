@@ -5,6 +5,7 @@ import { dayKey } from "@/lib/reminderOccurrences";
 import { dayType, entryMinutes, formatDuration, formatHoursShort, holidayName, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 import { monthEnterClass, useMonthDirection } from "@/hooks/useMonthDirection";
+import { dayCellClass, dayNumberClass, holidayDotClass, holidayNameClass, weekdayHeadClass } from "@/components/calendar/dayCellStyles";
 
 interface ShiftMonthGridProps {
   month: Date;
@@ -91,7 +92,7 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
       <div role="row" className="grid grid-cols-7 gap-1 sm:gap-1.5 mb-1">
         {weeks[0].map((d, i) => (
           <div key={i} role="columnheader" aria-label={format(d, "EEEE", { locale: pl })}
-            className={cn("text-2xs uppercase tracking-wider text-center py-1", i >= 5 ? "text-primary/80" : "text-muted-foreground")}>
+            className={weekdayHeadClass(i)}>
             {format(d, "EEEEEE", { locale: pl })}
           </div>
         ))}
@@ -133,26 +134,22 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                     aria-current={isToday ? "date" : undefined}
                     title={holiday ?? entry?.note}
                     className={cn(
-                      "relative w-full flex flex-col items-stretch min-h-[3.75rem] sm:min-h-[5rem] p-1 rounded-xl border text-left transition-colors outline-none",
-                      "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-                      inMonth ? "border-border/50 bg-card/40 dark:border-transparent dark:bg-card/60 [@media(hover:hover)]:hover:border-primary/40"
-                        // Szary tekst zamiast przezroczystości — czerwone święto przy opacity 40% znikało w ciemnym motywie.
-                        : "border-transparent text-muted-foreground",
+                      dayCellClass(inMonth), "w-full flex flex-col items-stretch min-h-[3.75rem] sm:min-h-[5rem] p-1",
+                      inMonth && "[@media(hover:hover)]:hover:border-primary/40",
                     )}
                   >
                     <span className="flex items-center justify-between">
-                      <span className={cn("text-xs font-medium tabular-nums w-5 h-5 flex items-center justify-center rounded-full",
-                        isToday ? "bg-primary text-primary-foreground" : holiday && cn("font-bold", inMonth && "text-destructive"))}>
+                      <span className={dayNumberClass({ today: isToday, holiday: !!holiday, inMonth })}>
                         {format(day, "d")}
                       </span>
                       <span className="flex gap-0.5 mr-0.5" aria-hidden>
                         {/* Na telefonie nazwa święta i godziny się nie mieszczą — zostaje znacznik, nie sam kolor. */}
-                        {holiday && <span className={cn("sm:hidden w-1.5 h-1.5 rounded-full", inMonth ? "bg-destructive" : "bg-muted-foreground")} />}
+                        {holiday && <span className={holidayDotClass(inMonth)} />}
                         {entry?.extraMin ? <span className="sm:hidden text-[0.5625rem] leading-none font-bold">{entry.extraMin > 0 ? "↑" : "↓"}</span> : null}
                         {entry?.note && <span className="w-1.5 h-1.5 rounded-full bg-foreground/50" />}
                       </span>
                     </span>
-                    {holiday && <span aria-hidden className={cn("hidden sm:block text-2xs leading-tight truncate", inMonth && "text-destructive/80")}>{holiday}</span>}
+                    {holiday && <span aria-hidden className={holidayNameClass(inMonth)}>{holiday}</span>}
                     {type && (
                       <span
                         aria-hidden

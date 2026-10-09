@@ -8,6 +8,7 @@ import { DayCell } from "./DayCell";
 import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
 import { monthEnterClass, useMonthDirection } from "@/hooks/useMonthDirection";
 import { cn } from "@/lib/utils";
+import { weekdayHeadClass } from "./dayCellStyles";
 
 /**
  * Siatka miesiąca — własna, nie `react-day-picker`.
@@ -100,7 +101,7 @@ export function MonthGrid({ month, byDay, titleOf, selectedDay, onSelectDay, onA
           <div
             key={i}
             role="columnheader"
-            className="text-2xs uppercase tracking-wider text-muted-foreground text-center py-1"
+            className={weekdayHeadClass(i)}
           >
             {name}
           </div>

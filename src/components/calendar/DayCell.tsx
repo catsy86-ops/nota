@@ -4,6 +4,8 @@ import { pl } from "date-fns/locale";
 import { ReminderChip } from "./ReminderChip";
 import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
 import { cn } from "@/lib/utils";
+import { holidayName } from "@/lib/shifts/holidays";
+import { dayCellClass, dayNumberClass, holidayDotClass, holidayNameClass } from "./dayCellStyles";
 
 /** Ile chipów mieści się w komórce, zanim reszta zwinie się w „+N". */
 const MAX_CHIPS = 3;
@@ -64,7 +66,8 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
   const dots = occurrences.slice(0, MAX_DOTS);
   const hiddenDots = occurrences.length - dots.length;
 
-  const label = `${format(day, "d MMMM yyyy", { locale: pl })}${today ? ", dzisiaj" : ""}, ${
+  const holiday = holidayName(dayKey(day));
+  const label = `${format(day, "d MMMM yyyy", { locale: pl })}${today ? ", dzisiaj" : ""}${holiday ? `, ${holiday}` : ""}, ${
     occurrences.length === 0 ? "brak terminów" : terminy(occurrences.length)
   }`;
 
@@ -79,23 +82,19 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
       tabIndex={focused ? 0 : -1}
       onClick={() => onSelect(day)}
       className={cn(
-        "relative flex flex-col gap-0.5 min-h-[4.5rem] sm:min-h-[6rem] p-1 sm:p-1.5 rounded-xl border text-left cursor-pointer transition-colors outline-none",
-        "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-        inMonth ? "border-border/50 bg-card/40 dark:border-transparent dark:bg-card/60" : "border-transparent bg-transparent text-muted-foreground/70",
+        dayCellClass(inMonth), "flex flex-col gap-0.5 min-h-[4.5rem] sm:min-h-[6rem] p-1 sm:p-1.5 cursor-pointer",
         // Warianty `dark:` z linii wyżej są silniejsze od zwykłych klas —
         // bez własnych `dark:` zaznaczenie w ciemnym motywie byłoby niewidoczne.
         selected && "border-primary/60 bg-primary/5 dark:border-primary/60 dark:bg-primary/10",
         isOver && "border-primary bg-primary/10 dark:border-primary dark:bg-primary/15",
       )}
     >
-      <span
-        className={cn(
-          "text-xs font-medium tabular-nums w-5 h-5 flex items-center justify-center rounded-full shrink-0",
-          today && "bg-primary text-primary-foreground",
-        )}
-      >
-        {format(day, "d")}
+      {/* Numer, święto (kropka na telefonie, nazwa od `sm`) — tak samo jak w Grafiku. */}
+      <span className="flex items-center justify-between">
+        <span className={dayNumberClass({ today, holiday: !!holiday, inMonth })}>{format(day, "d")}</span>
+        {holiday && <span aria-hidden className={cn(holidayDotClass(inMonth), "mr-0.5")} />}
       </span>
+      {holiday && <span aria-hidden className={holidayNameClass(inMonth)}>{holiday}</span>}
 
       {/* Treść terminów jest w `aria-label` komórki, więc dla czytnika ekranu
           te same dane nie powtarzają się drugi raz. */}
