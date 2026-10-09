@@ -541,11 +541,22 @@
   --muted-foreground: 220 10% 74%;
 }
 
+/* Otwarte okno Radix wyłącza kliknięcia poza sobą (`pointer-events: none` na body),
+   a dymki to dziedziczyły — „Cofnij” czy „Gotowe” nad edytorem nie działały.
+   Ukryte dymki ze stosu (`data-visible=false`) zostają nieklikalne. */
+[data-sonner-toast]:not([data-visible="false"]) {
+  pointer-events: auto;
+}
+
 /* Dolna nawigacja (md:hidden) z wystającym FAB-em: toasty nad nią, nie na niej.
    CSS, nie `mobileOffset` Sonnera — ten działa tylko do 600 px, a nawigacja do 768. */
 @media (max-width: 767px) {
   [data-sonner-toaster][data-y-position="bottom"] {
     bottom: calc(88px + env(safe-area-inset-bottom)) !important;
+  }
+  /* Przypomnienia u góry: pod paskiem stanu (viewport-fit=cover). */
+  [data-sonner-toaster][data-y-position="top"] {
+    top: calc(12px + env(safe-area-inset-top)) !important;
   }
 }
 

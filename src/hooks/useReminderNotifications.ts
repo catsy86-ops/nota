@@ -1,6 +1,7 @@
 import { createElement, useEffect, useRef } from "react";
 import { ReminderDueToast } from "@/components/ReminderDueToast";
 import { snoozeTimes } from "@/lib/reminderAgenda";
+import { formatReminderShort } from "@/lib/reminderTime";
 import { notePath } from "@/lib/viewRoute";
 import { toast } from "sonner";
 import type { Note } from "./useNotes";
@@ -44,11 +45,13 @@ export function useReminderNotifications(
           }
 
           const times = snoozeTimes(now);
+          const when = formatReminderShort(note.reminder);
           const onDone = () => onReminderFired(note.id, null);
           toast.custom((id) => createElement(ReminderDueToast, {
             toastId: id,
             title: note.title || "Przypomnienie",
-            description: note.content ? note.content.slice(0, 120) : "Czas na tę notatkę!",
+            when,
+            description: note.content.slice(0, 120),
             canSnooze: repeat === "none",
             // Odłożenie przesuwa termin w przyszłość, więc `reconcileFired`
             // zdejmie wpis „już odpalone” i przypomnienie wystrzeli ponownie.
@@ -56,7 +59,12 @@ export function useReminderNotifications(
             onSnoozeTomorrow: () => onReminderFired(note.id, times.tomorrow9, seriesDay(note)),
             onDone,
             onOpen: () => onOpenRef.current?.(note.id),
-          }), { duration: 30000 });
+          }), {
+            duration: 30000,
+            // Telefon: u góry, jak powiadomienia systemu — na dole zasłaniało
+            // „Zapisz” w edytorze, dolną nawigację i bywało pod klawiaturą.
+            position: window.matchMedia("(max-width: 767px)").matches ? "top-center" : undefined,
+          });
 
           if ("Notification" in window && Notification.permission === "granted") {
             const title = note.title || "Notatnik — Przypomnienie";
