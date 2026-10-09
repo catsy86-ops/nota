@@ -121,7 +121,7 @@ export function AppearanceSettings() {
         <p className="text-xs text-muted-foreground mt-1.5">
           {settings.seasonalTheme
             ? seasonPref === "auto"
-              ? `Kolory tła i akcentów dopasowują się do daty (teraz: ${SEASON_META[activeSeason].label.toLowerCase()}).`
+              ? `Kolory akcentów dopasowują się do daty (teraz: ${SEASON_META[activeSeason].label.toLowerCase()}).`
               : `Wymuszona kolorystyka: ${SEASON_META[activeSeason].label.toLowerCase()}.`
             : "Włącz „Motyw sezonowy” w zakładce Efekty, aby zobaczyć zmiany kolorów."}
         </p>

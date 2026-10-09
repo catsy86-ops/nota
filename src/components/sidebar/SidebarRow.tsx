@@ -111,12 +111,13 @@ export function SidebarRowMenu({ label, children, onCloseAutoFocus }: {
 }
 
 /** Licznik przy pozycji nawigacji. */
-export function SidebarCount({ value, active }: { value: number; active?: boolean }) {
+/** `alert` — coś wymaga uwagi (zaległe przypomnienia): czerwony zamiast szarego. */
+export function SidebarCount({ value, active, alert = false }: { value: number; active?: boolean; alert?: boolean }) {
   return (
     <span
       className={cn(
         "shrink-0 min-w-[22px] rounded-full px-2 py-0.5 text-center text-2xs font-semibold tabular-nums",
-        active ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground",
+        alert ? "bg-destructive/15 text-destructive" : active ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground",
       )}
     >
       {value}

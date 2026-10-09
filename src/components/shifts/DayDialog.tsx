@@ -63,7 +63,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
     <Dialog open onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="font-display capitalize">{format(date, "EEEE, d MMMM", { locale: pl })}</DialogTitle>
+          <DialogTitle className="font-display first-letter:uppercase">{format(date, "EEEE, d MMMM", { locale: pl })}</DialogTitle>
           {holiday && <DialogDescription className="text-destructive">{holiday} — dzień ustawowo wolny</DialogDescription>}
         </DialogHeader>
         <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); save(); }}>

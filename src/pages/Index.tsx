@@ -418,10 +418,10 @@ const Index = () => {
     reorderNotes,
   });
 
-  const sidebarItems: { icon: React.ElementType; label: string; view: View; count?: number; emoji: string }[] = [
+  const sidebarItems: { icon: React.ElementType; label: string; view: View; count?: number; alert?: boolean; emoji: string }[] = [
     { icon: StickyNote, label: "Notatki", view: "notes", emoji: "📝" },
     { icon: Calendar, label: "Dziś", view: "today", emoji: "📅" },
-    { icon: Bell, label: "Przypomnienia", view: "reminders", count: overdueCount, emoji: "🔔" },
+    { icon: Bell, label: "Przypomnienia", view: "reminders", count: overdueCount, alert: true, emoji: "🔔" },
     { icon: CalendarRange, label: "Kalendarz", view: "calendar", emoji: "🗓️" },
     { icon: BriefcaseBusiness, label: "Grafik", view: "shifts", emoji: "🗂️" },
     { icon: Archive, label: "Archiwum", view: "archive", emoji: "📦" },

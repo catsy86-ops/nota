@@ -31,7 +31,7 @@ function NavRow({ item, active, onClick }: { item: SidebarItem; active: boolean;
         active={active}
         dropActive={isOver}
         onClick={onClick}
-        trailing={item.count !== undefined && item.count > 0 ? <SidebarCount value={item.count} active={active} /> : undefined}
+        trailing={item.count !== undefined && item.count > 0 ? <SidebarCount value={item.count} active={active} alert={item.alert} /> : undefined}
       />
     </div>
   );
@@ -42,6 +42,8 @@ interface SidebarItem {
   label: string;
   view: View;
   count?: number;
+  /** Licznik oznacza coś pilnego (np. zaległe przypomnienia). */
+  alert?: boolean;
   emoji: string;
 }
 
