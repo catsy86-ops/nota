@@ -16,7 +16,7 @@ import { parseViewRoute } from "@/lib/viewRoute";
 import { groupReminders } from "@/lib/reminderAgenda";
 import { buildWikiIndex, resolveWikiTarget, wikiIndexKey } from "@/lib/wikiLinks";
 import { useLatestRef, useStableByKey } from "@/hooks/useLatestRef";
-import { useGridNavState, setGridNavPreview } from "@/lib/gridKeyboardNav";
+import { useGridNavPreviewId, setGridNavPreview } from "@/lib/gridKeyboardNav";
 import { NoteReader, type ReaderMode } from "@/components/NoteReader";
 import { cn } from "@/lib/utils";
 import { useNavigationType } from "react-router-dom";
@@ -290,7 +290,7 @@ const Index = () => {
   }, [allNotesForLinksRef, openNote]);
 
   // Czytnik: podgląd (Spacja na kaflu, stan w `gridKeyboardNav`) albo prezentacja.
-  const { previewId } = useGridNavState();
+  const previewId = useGridNavPreviewId();
   const readerId = presentingNoteId ?? previewId;
   const readerNote = useMemo(
     () => (readerId ? [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === readerId) ?? null : null),

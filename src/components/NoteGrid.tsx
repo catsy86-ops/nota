@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, memo, useMemo } from "react";
+import { useRef, useEffect, useCallback, memo, useMemo, forwardRef } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useSortable, SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -7,7 +7,7 @@ import { useViewPrefs, type Layout } from "@/lib/viewPrefs";
 import { NoteCard } from "@/components/NoteCard";
 import { NoteViewActionsProvider, type NoteViewActions } from "@/hooks/NoteViewActionsContext";
 import type { useNotes } from "@/hooks/useNotes";
-import { registerGridNavSection, useGridNavState, setGridNavFocus } from "@/lib/gridKeyboardNav";
+import { registerGridNavSection, useIsGridNavFocused, setGridNavFocus } from "@/lib/gridKeyboardNav";
 
 interface SortableNoteCardProps {
   note: ReturnType<typeof useNotes>["notes"][number];
@@ -65,7 +65,6 @@ export function NoteGrid({
     getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectionMode, onToggleSelect]);
   const prefs = useViewPrefs();
   const noteIds = useMemo(() => notes.map((n) => n.id), [notes]);
-  const { focusedId } = useGridNavState();
   const gridRef = useRef<HTMLDivElement>(null);
 
   const colsCount = useCallback(() => {
@@ -133,24 +132,7 @@ export function NoteGrid({
       <div ref={gridRef} key={prefs.layout} className={cn(containerClass, "animate-in fade-in-0 duration-base")}>
         <AnimatePresence mode="popLayout">
           {notes.map((note, i) => (
-            <div
-              key={note.id}
-              data-note-idx={i}
-              data-note-id-wrap={note.id}
-              onClickCapture={() => setGridNavFocus(note.id)}
-              className={cn(
-                "rounded-xl transition-shadow",
-                prefs.layout === "masonry" ? "break-inside-avoid mb-2.5 sm:mb-3" : prefs.layout === "grid" ? "h-full" : "",
-                focusedId === note.id && "ring-2 ring-primary/60 ring-offset-2 ring-offset-background"
-              )}
-            >
-              <SortableNoteCard
-                note={note}
-                index={i}
-                layout={prefs.layout}
-                selected={selectedIds?.has(note.id) ?? false}
-              />
-            </div>
+            <GridItem key={note.id} note={note} index={i} layout={prefs.layout} selected={selectedIds?.has(note.id) ?? false} />
           ))}
         </AnimatePresence>
       </div>
@@ -159,3 +141,27 @@ export function NoteGrid({
     </NoteViewActionsProvider>
   );
 }
+
+/**
+ * Kafel w siatce z pierścieniem fokusu klawiatury. Sam pyta, czy ma fokus —
+ * strzałka przerysowuje tylko kafel, który go stracił, i ten, który dostał.
+ */
+// forwardRef: `AnimatePresence mode="popLayout"` mierzy bezpośrednie dziecko przez ref.
+const GridItem = memo(forwardRef<HTMLDivElement, SortableNoteCardProps>(function GridItem({ note, index, layout, selected }, ref) {
+  const focused = useIsGridNavFocused(note.id);
+  return (
+    <div
+      ref={ref}
+      data-note-idx={index}
+      data-note-id-wrap={note.id}
+      onClickCapture={() => setGridNavFocus(note.id)}
+      className={cn(
+        "rounded-xl transition-shadow",
+        layout === "masonry" ? "break-inside-avoid mb-2.5 sm:mb-3" : layout === "grid" ? "h-full" : "",
+        focused && "ring-2 ring-primary/60 ring-offset-2 ring-offset-background"
+      )}
+    >
+      <SortableNoteCard note={note} index={index} layout={layout} selected={selected} />
+    </div>
+  );
+}));

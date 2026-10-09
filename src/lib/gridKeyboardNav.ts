@@ -107,6 +107,21 @@ export function useGridNavState(): NavState {
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 }
 
+/**
+ * Selektory: komponent przerysowuje się tylko, gdy zmieni się jego kawałek
+ * stanu. Strzałka zmienia fokus — bez nich przerysowywała całą stronę
+ * (Index czyta tylko podgląd) i wszystkie kafle (każdy pyta tylko o siebie).
+ */
+export function useGridNavPreviewId(): string | null {
+  const get = () => state.previewId;
+  return useSyncExternalStore(subscribe, get, get);
+}
+
+export function useIsGridNavFocused(id: string): boolean {
+  const get = () => state.focusedId === id;
+  return useSyncExternalStore(subscribe, get, get);
+}
+
 // --- obsługa klawiatury ---
 
 function isTyping() {
