@@ -82,8 +82,10 @@ export interface ShiftData {
    * `basic` 8 h (art. 129 KP), `equivalent` do 12 h wg grafiku (art. 135 KP).
    */
   workSystem: WorkSystem;
-  /** Okres rozliczeniowy liczony od stycznia; nadgodziny ponad normę rozlicza się w jego ostatnim miesiącu. */
+  /** Okres rozliczeniowy; nadgodziny ponad normę rozlicza się w jego ostatnim miesiącu. */
   settlementMonths: SettlementMonths;
+  /** Miesiąc (0–11), od którego liczą się kolejne okresy — np. kwartały od lutego. */
+  settlementStart: number;
   /** Wymiar etatu, (0, 1]; norma okresu jest proporcjonalna. */
   fte: number;
   patterns: ShiftPattern[];
@@ -127,6 +129,7 @@ export const EMPTY_SHIFT_DATA: ShiftData = {
   hourlyRate: 0,
   workSystem: "basic",
   settlementMonths: 1,
+  settlementStart: 0,
   fte: 1,
   patterns: DEFAULT_PATTERNS,
 };
@@ -198,6 +201,7 @@ export function migrate(stored: unknown): ShiftData {
     workSystem: s.workSystem === "equivalent" ? "equivalent" : "basic",
     fte: typeof s.fte === "number" && s.fte > 0 && s.fte <= 1 ? s.fte : 1,
     settlementMonths: SETTLEMENT_MONTHS.includes(s.settlementMonths as SettlementMonths) ? (s.settlementMonths as SettlementMonths) : 1,
+    settlementStart: Number.isInteger(s.settlementStart) && (s.settlementStart as number) >= 0 && (s.settlementStart as number) < 12 ? (s.settlementStart as number) : 0,
     patterns: Array.isArray(s.patterns) ? s.patterns.filter(isPattern) : EMPTY_SHIFT_DATA.patterns,
   };
 }

@@ -15,7 +15,7 @@ import { DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, type DayEntry, type Set
  * od razu, mogłoby przy scaleniu nadpisać czyjeś poprawki tych samych id.
  */
 
-type Meta = "hourlyRate" | "workSystem" | "settlementMonths" | "fte" | "typesInit" | "patternsInit";
+type Meta = "hourlyRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "typesInit" | "patternsInit";
 
 /** Origin transakcji Grafiku — odróżnia lokalne zmiany od tych z sieci i z migracji. */
 export const SHIFTS_ORIGIN = "shifts";
@@ -51,7 +51,7 @@ export function createYShifts(doc: Y.Doc) {
   function get(): ShiftData {
     if (snapshot) return snapshot;
     const settings: Record<string, unknown> = {};
-    for (const k of ["hourlyRate", "workSystem", "settlementMonths", "fte"] as const) if (meta.has(k)) settings[k] = meta.get(k);
+    for (const k of ["hourlyRate", "workSystem", "settlementMonths", "settlementStart", "fte"] as const) if (meta.has(k)) settings[k] = meta.get(k);
     snapshot = migrate({
       version: 2,
       ...settings,
@@ -201,6 +201,7 @@ export function createYShifts(doc: Y.Doc) {
       meta.set("hourlyRate", data.hourlyRate);
       meta.set("workSystem", data.workSystem);
       meta.set("settlementMonths", data.settlementMonths);
+      meta.set("settlementStart", data.settlementStart);
       meta.set("fte", data.fte);
       meta.set("typesInit", true);
       meta.set("patternsInit", true);
@@ -235,6 +236,7 @@ export function createYShifts(doc: Y.Doc) {
       if (!meta.has("hourlyRate") && data.hourlyRate) meta.set("hourlyRate", data.hourlyRate);
       if (!meta.has("workSystem")) meta.set("workSystem", data.workSystem);
       if (!meta.has("settlementMonths") && data.settlementMonths !== 1) meta.set("settlementMonths", data.settlementMonths);
+      if (!meta.has("settlementStart") && data.settlementStart !== 0) meta.set("settlementStart", data.settlementStart);
       if (!meta.has("fte") && data.fte !== 1) meta.set("fte", data.fte);
     }, "shifts-migration");
   }

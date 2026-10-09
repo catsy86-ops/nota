@@ -251,9 +251,15 @@ function monthCore(data: ShiftData, year: number, month: number, otSpans: Overti
   return c;
 }
 
-/** Okres rozliczeniowy, w który wpada miesiąc (`month` od 0); okresy liczone od stycznia. */
-export function settlementPeriod(year: number, month: number, months: SettlementMonths): { year: number; startMonth: number; months: SettlementMonths } {
-  return { year, startMonth: Math.floor(month / months) * months, months };
+/**
+ * Okres rozliczeniowy, w który wpada miesiąc (`month` od 0). Okresy idą po
+ * sobie od miesiąca `start` — kwartał od lutego to luty–kwiecień, maj–lipiec,
+ * sierpień–październik, listopad–styczeń; ostatni zaczyna się rok wcześniej.
+ */
+export function settlementPeriod(year: number, month: number, months: SettlementMonths, start = 0): { year: number; startMonth: number; months: SettlementMonths } {
+  const abs = year * 12 + month;
+  const first = abs - ((((month - start) % months) + months) % months);
+  return { year: Math.floor(first / 12), startMonth: first % 12, months };
 }
 
 /**
@@ -269,11 +275,16 @@ export function settlementPeriod(year: number, month: number, months: Settlement
 export function monthSummary(data: ShiftData, year: number, month: number): MonthSummary {
   const otSpans = dailyOvertimeSpans(data);
   const c = monthCore(data, year, month, otSpans);
-  const p = settlementPeriod(year, month, data.settlementMonths);
-  const cores = Array.from({ length: p.months }, (_, i) => (p.startMonth + i === month ? c : monthCore(data, year, p.startMonth + i, otSpans)));
+  const p = settlementPeriod(year, month, data.settlementMonths, data.settlementStart);
+  // Miesiąc liczony od początku okresu — okres może przechodzić przez Nowy Rok.
+  const index = (year - p.year) * 12 + month - p.startMonth;
+  const cores = Array.from({ length: p.months }, (_, i) => {
+    const abs = p.year * 12 + p.startMonth + i;
+    return i === index ? c : monthCore(data, Math.floor(abs / 12), abs % 12, otSpans);
+  });
   const sum = (f: (m: MonthCore) => number, upTo: number = p.months) => cores.slice(0, upTo).reduce((acc, m) => acc + f(m), 0);
   const periodNorm = sum((m) => m.normMinutes);
-  const isLast = month === p.startMonth + p.months - 1;
+  const isLast = index === p.months - 1;
   // Godziny już uznane za nadgodziny dobowe nie liczą się drugi raz do normy.
   const worked = sum((m) => m.minutes - m.dailyOvertime);
   // Przy niepełnym etacie nadgodziny zaczynają się dopiero ponad normę pełnego etatu (art. 151 § 5 KP
@@ -301,7 +312,7 @@ export function monthSummary(data: ShiftData, year: number, month: number): Mont
       ...p,
       normMinutes: periodNorm,
       // Do bieżącego miesiąca włącznie — tyle, ile już wiadomo.
-      minutes: sum((m) => m.minutes, month - p.startMonth + 1),
+      minutes: sum((m) => m.minutes, index + 1),
       isLast,
     },
   };

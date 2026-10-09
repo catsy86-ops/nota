@@ -117,6 +117,11 @@ export function setSettlementMonths(months: SettlementMonths): void {
   yShifts.setMeta("settlementMonths", months);
 }
 
+/** Pierwszy miesiąc okresów rozliczeniowych (0–11). */
+export function setSettlementStart(month: number): void {
+  yShifts.setMeta("settlementStart", Number.isInteger(month) && month >= 0 && month < 12 ? month : 0);
+}
+
 export function setFte(fte: number): void {
   yShifts.setMeta("fte", fte > 0 && fte <= 1 ? fte : 1);
 }

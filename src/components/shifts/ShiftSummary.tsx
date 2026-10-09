@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { AlertTriangle } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
-import { FTE_OPTIONS, SETTLEMENT_MONTHS, formatDuration, formatHoursShort, formatMoney, setFte, setHourlyRate, setSettlementMonths, setWorkSystem, type MonthSummary, type PeriodSummary, type SettlementMonths, type WorkSystem } from "@/lib/shifts";
+import { FTE_OPTIONS, SETTLEMENT_MONTHS, formatDuration, formatHoursShort, formatMoney, setFte, setHourlyRate, setSettlementMonths, setSettlementStart, setWorkSystem, type MonthSummary, type PeriodSummary, type SettlementMonths, type WorkSystem } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
 interface ShiftSummaryProps {
@@ -11,6 +11,7 @@ interface ShiftSummaryProps {
   hourlyRate: number;
   workSystem: WorkSystem;
   settlementMonths: SettlementMonths;
+  settlementStart: number;
   fte: number;
 }
 
@@ -29,7 +30,7 @@ const parseNum = (s: string) => parseFloat(s.replace(",", "."));
  * Podsumowanie miesiąca. Sercem jest pasek normy: wypełnia się do wymiaru
  * czasu pracy, a nadwyżka (nadgodziny) dosuwa się za nim w kolorze akcentu.
  */
-export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths, fte }: ShiftSummaryProps) {
+export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths, settlementStart, fte }: ShiftSummaryProps) {
   const { minutes, normMinutes, overtimeMinutes, dailyOvertimeMinutes, overtime100Minutes } = summary;
   const scale = Math.max(normMinutes, minutes, 1);
   // Nadgodziny dobowe mogą być i poniżej normy miesiąca — pasek dzieli faktycznie przepracowane godziny.
@@ -131,9 +132,18 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
             {SETTLEMENT_MONTHS.map((m) => <option key={m} value={m}>{PERIOD_LABELS[m]}</option>)}
           </select>
         </label>
+        {settlementMonths > 1 && (
+          <label className="flex items-center gap-2 sm:col-span-2">
+            <span className="text-muted-foreground flex-1">Okresy zaczynają się od</span>
+            <select value={settlementStart} onChange={(e) => setSettlementStart(Number(e.target.value))}
+              className={cn(FIELD, "w-auto pr-1 text-left")}>
+              {Array.from({ length: 12 }, (_, m) => <option key={m} value={m}>{monthName(2026, m)}</option>)}
+            </select>
+          </label>
+        )}
       </div>
       <p className="text-2xs text-muted-foreground">
-        Norma wg art. 130 Kodeksu pracy, proporcjonalna do etatu, pomniejszona o nieobecności w dni robocze. Przy niepełnym etacie nadgodziny liczą się dopiero ponad normę pełnego etatu albo 8 h na dobę, chyba że umowa ustala niższą granicę. Okresy rozliczeniowe liczone od stycznia.
+        Norma wg art. 130 Kodeksu pracy, proporcjonalna do etatu, pomniejszona o nieobecności w dni robocze. Przy niepełnym etacie nadgodziny liczą się dopiero ponad normę pełnego etatu albo 8 h na dobę, chyba że umowa ustala niższą granicę. Kolejne okresy rozliczeniowe liczone od wybranego miesiąca.
         Nadgodziny dobowe liczone w dobie pracowniczej (24 h od początku zmiany). Dodatek za nadgodziny wg art. 151¹ KP: 100% w nocy (22:00–6:00), w niedziele i święta oraz za przekroczenie normy, 50% za pozostałe. Odpoczynek dobowy 11 h (art. 132 KP).
       </p>
     </section>
@@ -164,7 +174,7 @@ function PeriodProgress({ period }: { period: PeriodSummary }) {
       <p className="text-2xs text-muted-foreground">
         {period.isLast
           ? "Ostatni miesiąc okresu — nadgodziny ponad normę całego okresu są w tym miesiącu."
-          : `Nadgodziny ponad normę okresu policzymy w ${IN_MONTH[last]}, w ostatnim miesiącu okresu.`}
+          : `Nadgodziny ponad normę okresu policzymy w ${IN_MONTH[last % 12]}, w ostatnim miesiącu okresu.`}
       </p>
     </div>
   );

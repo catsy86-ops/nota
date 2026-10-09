@@ -220,6 +220,29 @@ describe("okres rozliczeniowy", () => {
     expect(settlementPeriod(2026, 11, 6)).toEqual({ year: 2026, startMonth: 6, months: 6 });
     expect(migrate({ settlementMonths: 5 }).settlementMonths).toBe(1);
   });
+
+  it("okresy od innego miesiąca, także przez Nowy Rok", () => {
+    // Kwartały od lutego: lut–kwi, maj–lip, sie–paź, lis–sty.
+    expect(settlementPeriod(2026, 1, 3, 1)).toEqual({ year: 2026, startMonth: 1, months: 3 });
+    expect(settlementPeriod(2026, 3, 3, 1)).toEqual({ year: 2026, startMonth: 1, months: 3 });
+    expect(settlementPeriod(2027, 0, 3, 1)).toEqual({ year: 2026, startMonth: 10, months: 3 });
+    expect(settlementPeriod(2026, 0, 12, 6)).toEqual({ year: 2025, startMonth: 6, months: 12 });
+    expect(migrate({ settlementStart: 12 }).settlementStart).toBe(0);
+    expect(migrate({ settlementStart: 1.5 }).settlementStart).toBe(0);
+    expect(migrate({ settlementStart: 10 }).settlementStart).toBe(10);
+  });
+
+  it("okres przez Nowy Rok rozlicza się w styczniu", () => {
+    // Listopad 2026 – styczeń 2027, jedna sobota ponad normę w listopadzie. Święto 26.12 w sobotę
+    // obniża normę grudnia o 8 h (art. 130 § 2), więc grudzień ma o jeden dzień mniej.
+    const days = { ...normDays(2026, 10), "2026-11-07": { type: "d" }, ...normDays(2026, 11, 1), ...normDays(2027, 0) };
+    const q = data({ settlementMonths: 3, settlementStart: 1, days });
+    expect(monthSummary(q, 2026, 11).overtimeMinutes).toBe(0);
+    const jan = monthSummary(q, 2027, 0);
+    expect(jan.period).toMatchObject({ year: 2026, startMonth: 10, isLast: true });
+    expect(jan.overtimeMinutes).toBe(8 * 60);
+    expect(jan.period!.minutes - jan.period!.normMinutes).toBe(8 * 60);
+  });
 });
 
 describe("niepełny etat", () => {
