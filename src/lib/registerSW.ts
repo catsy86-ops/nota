@@ -42,9 +42,6 @@ async function unregisterAppSW() {
  */
 export const SW_UPDATE_EVENT = "kaczy:sw-update-available";
 
-/** Dispatched on window the first time a worker finishes installing — the app shell is now cached for offline use. */
-export const SW_OFFLINE_READY_EVENT = "kaczy:sw-offline-ready";
-
 let reloadingAfterUpdate = false;
 
 /** Tell the waiting worker to take over. Reloads once it does. */
@@ -66,10 +63,10 @@ function watchForUpdates(registration: ServiceWorkerRegistration, hadControllerA
     const installing = registration.installing;
     if (!installing) return;
     installing.addEventListener("statechange", () => {
+      // Pierwsza instalacja (gotowość offline) przechodzi po cichu — to był
+      // kolejny dymek w chwili, gdy ktoś dopiero poznaje aplikację.
       if (installing.state === "installed" && navigator.serviceWorker.controller) {
         notifyIfWaiting();
-      } else if (installing.state === "activated" && !hadControllerAtLoad) {
-        window.dispatchEvent(new CustomEvent(SW_OFFLINE_READY_EVENT));
       }
     });
   });

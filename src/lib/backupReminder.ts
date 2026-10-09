@@ -15,10 +15,21 @@ export function daysSinceBackup(): number | null {
   return Math.floor((Date.now() - last) / (24 * 60 * 60 * 1000));
 }
 
-export function isBackupOverdue(reminderDays: number): boolean {
-  if (!reminderDays || reminderDays <= 0) return false;
-  const last = getLastBackup();
-  // No backup yet → overdue only if user has had the app for a while; we just trigger.
-  if (!last) return true;
-  return Date.now() - last > reminderDays * 24 * 60 * 60 * 1000;
+/**
+ * Zaległość liczona od ostatniego backupu, a bez niego — od najstarszej
+ * notatki: pierwszego dnia z aplikacją nie ma jeszcze czego tracić,
+ * więc prośba o kopię przychodzi dopiero po `days` dniach notowania.
+ */
+export function isBackupDue(days: number, oldestNoteAt: number | null): boolean {
+  if (!days || days <= 0) return false;
+  const since = getLastBackup() || oldestNoteAt;
+  if (!since) return false;
+  return Date.now() - since > days * 24 * 60 * 60 * 1000;
+}
+
+/** Najstarsza data utworzenia albo `null` dla pustej bazy. */
+export function oldestCreatedAt(...lists: { createdAt: number }[][]): number | null {
+  let min = Infinity;
+  for (const list of lists) for (const n of list) if (n.createdAt < min) min = n.createdAt;
+  return Number.isFinite(min) ? min : null;
 }

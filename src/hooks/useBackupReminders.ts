@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { toast } from "sonner";
 import type { Note } from "@/hooks/useNotes";
 import { exportFullBackup } from "@/lib/exportNotes";
-import { isBackupOverdue, markBackup, daysSinceBackup } from "@/lib/backupReminder";
+import { isBackupDue, markBackup, daysSinceBackup, getLastBackup, oldestCreatedAt } from "@/lib/backupReminder";
 
 export interface BackupReminderPrefs {
   autoExportDays: number;
@@ -13,11 +13,8 @@ export interface BackupReminderPrefs {
 export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], archivedNotes: Note[]) {
   // Auto-backup: trigger JSON download in background if interval has passed
   useEffect(() => {
-    if (!prefs.autoExportDays || prefs.autoExportDays <= 0) return;
-    if (notes.length === 0 && archivedNotes.length === 0) return;
-    const last = Number(localStorage.getItem("kaczy.lastAutoExport") || 0);
-    const due = Date.now() - last > prefs.autoExportDays * 24 * 60 * 60 * 1000;
-    if (!due) return;
+    if (!isBackupDue(prefs.autoExportDays, oldestCreatedAt(notes, archivedNotes))) return;
+    const last = getLastBackup();
     if (sessionStorage.getItem("kaczy.autoBackupDone") === "1") return;
     sessionStorage.setItem("kaczy.autoBackupDone", "1");
     const t = setTimeout(async () => {
@@ -38,7 +35,8 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
           description: last
             ? `Minęło ${prefs.autoExportDays} dni od ostatniego. Pobierz plik z ${count} ${count === 1 ? "notatką" : "notatkami"}.`
             : `Nie masz jeszcze kopii zapasowej. Pobierz plik z ${count} ${count === 1 ? "notatką" : "notatkami"}.`,
-          duration: Infinity,
+          // Nie wisi bez końca nad notatkami — wróci przy następnym otwarciu.
+          duration: 20000,
           action: {
             label: "Pobierz",
             onClick: async () => {
@@ -61,10 +59,8 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
 
   // Backup reminder: nudge if last backup is older than reminderDays
   useEffect(() => {
-    if (!prefs.backupReminderDays || prefs.backupReminderDays <= 0) return;
     // Pusta baza (np. pierwsze uruchomienie) nie ma czego backupować.
-    if (notes.length === 0 && archivedNotes.length === 0) return;
-    if (!isBackupOverdue(prefs.backupReminderDays)) return;
+    if (!isBackupDue(prefs.backupReminderDays, oldestCreatedAt(notes, archivedNotes))) return;
     if (sessionStorage.getItem("kaczy.backupNudge") === "1") return;
     // Auto-backup w tej sesji już o to poprosił — drugi toast o tym samym to szum.
     if (sessionStorage.getItem("kaczy.autoBackupDone") === "1") return;

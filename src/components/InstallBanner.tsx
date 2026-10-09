@@ -13,9 +13,10 @@ function readDismissed(): boolean {
 /**
  * Zaproszenie do instalacji na telefonie (tylko wąskie ekrany). Przycisk
  * w menu „Więcej” jest za mało widoczny; baner znika po instalacji albo
- * po zamknięciu — wtedy instalacja zostaje w „Więcej”.
+ * po zamknięciu — wtedy instalacja zostaje w „Więcej”. `ready`: dopiero
+ * gdy ktoś już notuje — przy pierwszym wejściu konkurował z pustym widokiem.
  */
-export function InstallBanner() {
+export function InstallBanner({ ready }: { ready: boolean }) {
   const { canInstall } = usePwaInstall();
   const [dismissed, setDismissed] = useState(readDismissed);
 
@@ -26,7 +27,7 @@ export function InstallBanner() {
 
   return (
     <AnimatePresence>
-      {canInstall && !dismissed && (
+      {ready && canInstall && !dismissed && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}

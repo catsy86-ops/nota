@@ -5,7 +5,7 @@ import "@fontsource-variable/plus-jakarta-sans";
 // Cyfry o stałej szerokości (rachunek w Grafiku); `wght.css` bez kursywy.
 import "@fontsource-variable/jetbrains-mono/wght.css";
 import "./index.css";
-import { registerServiceWorker, applyServiceWorkerUpdate, SW_UPDATE_EVENT, SW_OFFLINE_READY_EVENT } from "./lib/registerSW";
+import { registerServiceWorker, applyServiceWorkerUpdate, SW_UPDATE_EVENT } from "./lib/registerSW";
 import { requestPersistentStorage } from "./lib/storagePersistence";
 import { installGlobalDiagHandlers } from "./lib/diagnostics";
 import { startTabSync } from "./lib/tabSync";
@@ -33,8 +33,3 @@ window.addEventListener(SW_UPDATE_EVENT, (e) => {
   });
 });
 
-window.addEventListener(SW_OFFLINE_READY_EVENT, () => {
-  toast.success("NOTKI działają teraz offline", {
-    description: "Aplikacja jest zapisana na urządzeniu — otworzysz ją także bez internetu.",
-  });
-});
