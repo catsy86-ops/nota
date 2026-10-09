@@ -15,7 +15,7 @@ import { parseViewRoute } from "@/lib/viewRoute";
 import { groupReminders } from "@/lib/reminderAgenda";
 import { buildWikiIndex, resolveWikiTarget, wikiIndexKey } from "@/lib/wikiLinks";
 import { useLatestRef, useStableByKey } from "@/hooks/useLatestRef";
-import { useGridNavPreviewId, setGridNavPreview } from "@/lib/gridKeyboardNav";
+import { useGridNavPreviewId, setGridNavPreview, setGridNavFocus } from "@/lib/gridKeyboardNav";
 import { NoteReader, type ReaderMode } from "@/components/NoteReader";
 import { cn } from "@/lib/utils";
 import { useNavigationType } from "react-router-dom";
@@ -236,6 +236,8 @@ const Index = () => {
       const el = document.querySelector<HTMLElement>(`[data-note-id="${id}"]`);
       if (!el) return;
       el.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Pierścień fokusu idzie za notatką — inaczej zostaje na kaflu z linkiem i świecą dwa naraz.
+      setGridNavFocus(id);
       el.classList.add("note-flash");
       setTimeout(() => el.classList.remove("note-flash"), 1600);
       // Ta sama ścieżka co klik w kartę (patrz `NoteGrid` → `openNote`).
