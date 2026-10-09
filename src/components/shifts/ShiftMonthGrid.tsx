@@ -1,5 +1,5 @@
-import { memo } from "react";
-import { eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, startOfWeek } from "date-fns";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { addDays, addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, startOfMonth, startOfWeek } from "date-fns";
 import { pl } from "date-fns/locale";
 import { dayKey } from "@/lib/reminderOccurrences";
 import { entryMinutes, formatDuration, formatHoursShort, holidayName, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType } from "@/lib/shifts";
@@ -10,79 +10,161 @@ interface ShiftMonthGridProps {
   days: Record<string, DayEntry>;
   typesById: Map<string, ShiftType>;
   onDay: (dayKey: string) => void;
+  /** Klik w dzień spoza miesiąca albo wyjście strzałką poza miesiąc. */
+  onMonthChange: (month: Date) => void;
+  /** Id tekstu opisującego, co zrobi stuknięcie (wybrany pędzel). */
+  describedBy?: string;
 }
 
-/** Miesiąc w siatce 7 kolumn, od poniedziałku. Każdy dzień to przycisk — stuknięcie robi to, co wybrany pędzel. */
-export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesById, onDay }: ShiftMonthGridProps) {
-  const grid = eachDayOfInterval({
-    start: startOfWeek(month, { weekStartsOn: 1 }),
-    end: endOfWeek(endOfMonth(month), { weekStartsOn: 1 }),
-  });
-  const weekdays = grid.slice(0, 7).map((d) => format(d, "EEEEEE", { locale: pl }));
-  const now = new Date();
+const WEEK = { weekStartsOn: 1 } as const;
+
+/** Odświeża „dziś” po północy — PWA bywa otwarta całą noc. */
+function useToday(): Date {
+  const [today, setToday] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      const now = new Date();
+      setToday((t) => (isSameDay(t, now) ? t : now));
+    }, 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+  return today;
+}
+
+/**
+ * Miesiąc w siatce 7 kolumn, od poniedziałku. Każdy dzień to przycisk —
+ * stuknięcie robi to, co wybrany pędzel. Klawiatura jak w `calendar/MonthGrid`:
+ * siatka to jeden przystanek tabulatora, strzałki po dniach, PageUp/PageDown
+ * po miesiącach, Home/End po tygodniu; Enter/Spacja = stuknięcie.
+ */
+export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesById, onDay, onMonthChange, describedBy }: ShiftMonthGridProps) {
+  const today = useToday();
+  const weeks = useMemo(() => {
+    const all = eachDayOfInterval({ start: startOfWeek(month, WEEK), end: endOfWeek(endOfMonth(month), WEEK) });
+    const out: Date[][] = [];
+    for (let i = 0; i < all.length; i += 7) out.push(all.slice(i, i + 7));
+    return out;
+  }, [month]);
+
+  // Dzień z fokusem tabulatora: dziś w bieżącym miesiącu, inaczej pierwszy dzień.
+  const [focused, setFocused] = useState<Date>(() => (isSameMonth(today, month) ? today : startOfMonth(month)));
+  useEffect(() => {
+    setFocused((f) => (isSameMonth(f, month) ? f : isSameMonth(today, month) ? today : startOfMonth(month)));
+  }, [month, today]);
+
+  const cellRefs = useRef(new Map<string, HTMLButtonElement>());
+  const shouldFocus = useRef(false);
+  useEffect(() => {
+    if (!shouldFocus.current) return;
+    shouldFocus.current = false;
+    cellRefs.current.get(dayKey(focused))?.focus();
+  }, [focused, month]);
+
+  function move(to: Date) {
+    shouldFocus.current = true;
+    setFocused(to);
+    if (!isSameMonth(to, month)) onMonthChange(startOfMonth(to));
+  }
+
+  function onKeyDown(e: React.KeyboardEvent) {
+    const moves: Record<string, () => Date> = {
+      ArrowRight: () => addDays(focused, 1),
+      ArrowLeft: () => addDays(focused, -1),
+      ArrowDown: () => addDays(focused, 7),
+      ArrowUp: () => addDays(focused, -7),
+      Home: () => startOfWeek(focused, WEEK),
+      End: () => endOfWeek(focused, WEEK),
+      PageUp: () => addMonths(focused, -1),
+      PageDown: () => addMonths(focused, 1),
+    };
+    const to = moves[e.key];
+    if (!to) return;
+    e.preventDefault();
+    move(to());
+  }
 
   return (
-    <div className="select-none">
-      <div className="grid grid-cols-7 gap-1 sm:gap-1.5 mb-1" aria-hidden>
-        {weekdays.map((name, i) => (
-          <div key={i} className={cn("text-2xs uppercase tracking-wider text-center py-1", i >= 5 ? "text-primary/80" : "text-muted-foreground")}>{name}</div>
+    <div role="grid" aria-label={format(month, "LLLL yyyy", { locale: pl })} aria-describedby={describedBy}
+      className="select-none" onKeyDown={onKeyDown}>
+      <div role="row" className="grid grid-cols-7 gap-1 sm:gap-1.5 mb-1">
+        {weeks[0].map((d, i) => (
+          <div key={i} role="columnheader" aria-label={format(d, "EEEE", { locale: pl })}
+            className={cn("text-2xs uppercase tracking-wider text-center py-1", i >= 5 ? "text-primary/80" : "text-muted-foreground")}>
+            {format(d, "EEEEEE", { locale: pl })}
+          </div>
         ))}
       </div>
-      <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
-        {grid.map((day) => {
-          const key = dayKey(day);
-          const entry = days[key];
-          const type = entry && typesById.get(entry.type);
-          const holiday = holidayName(key);
-          const inMonth = isSameMonth(day, month);
-          const today = isSameDay(day, now);
-          const absence = type?.kind === "absence";
-          const label = [
-            format(day, "d MMMM", { locale: pl }),
-            holiday,
-            type ? (absence ? type.name : `${type.name} ${type.start}–${type.end}`) : "wolne",
-            entry?.extraMin ? `odchylenie ${formatDuration(entry.extraMin)}` : undefined,
-            entry?.note ? `notatka: ${entry.note}` : undefined,
-          ].filter(Boolean).join(", ");
+      <div className="space-y-1 sm:space-y-1.5">
+        {weeks.map((week) => (
+          <div key={dayKey(week[0])} role="row" className="grid grid-cols-7 gap-1 sm:gap-1.5">
+            {week.map((day) => {
+              const key = dayKey(day);
+              const entry = days[key];
+              const type = entry && typesById.get(entry.type);
+              const holiday = holidayName(key);
+              const inMonth = isSameMonth(day, month);
+              const isToday = isSameDay(day, today);
+              const absence = type?.kind === "absence";
+              const label = [
+                format(day, "d MMMM", { locale: pl }),
+                format(day, "EEEE", { locale: pl }),
+                isToday ? "dziś" : undefined,
+                holiday,
+                type ? (absence ? type.name : `${type.name} ${type.start}–${type.end}`) : "wolne",
+                entry?.extraMin ? `odchylenie ${formatDuration(entry.extraMin)}` : undefined,
+                entry?.note ? `notatka: ${entry.note}` : undefined,
+              ].filter(Boolean).join(", ");
 
-          return (
-            <button
-              key={key}
-              type="button"
-              onClick={() => onDay(key)}
-              aria-label={label}
-              title={holiday ?? entry?.note}
-              className={cn(
-                "relative flex flex-col items-stretch min-h-[3.75rem] sm:min-h-[5rem] p-1 rounded-xl border text-left transition-colors outline-none",
-                "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background",
-                inMonth ? "border-border/50 bg-card/40 dark:border-transparent dark:bg-card/60 [@media(hover:hover)]:hover:border-primary/40" : "border-transparent opacity-40",
-              )}
-            >
-              <span className="flex items-center justify-between">
-                <span className={cn("text-xs font-medium tabular-nums w-5 h-5 flex items-center justify-center rounded-full",
-                  today ? "bg-primary text-primary-foreground" : holiday && "text-destructive font-bold")}>
-                  {format(day, "d")}
-                </span>
-                {entry?.note && <span aria-hidden className="w-1.5 h-1.5 mr-0.5 rounded-full bg-foreground/50" />}
-              </span>
-              {holiday && <span aria-hidden className="hidden sm:block text-2xs leading-tight text-destructive/80 truncate">{holiday}</span>}
-              {type && (
-                <span
-                  aria-hidden
-                  className={cn("mt-auto rounded-lg px-1 py-0.5 text-center leading-tight", absence ? "border-2 border-dashed" : "shadow-sm")}
-                  style={absence ? { borderColor: type.color, color: shiftTextOnCard(type.color) } : { backgroundColor: type.color, color: shiftInk(type.color) }}
-                >
-                  <span className="block font-display font-bold text-sm">{type.short}</span>
-                  {!absence && (
-                    <span className="hidden sm:block text-2xs opacity-90 tabular-nums">
-                      {formatHoursShort(entryMinutes(type, entry))} h{entry?.extraMin ? (entry.extraMin > 0 ? " ↑" : " ↓") : ""}
+              return (
+                <div key={key} role="gridcell" className="flex">
+                  <button
+                    ref={(el) => { if (el) cellRefs.current.set(key, el); else cellRefs.current.delete(key); }}
+                    type="button"
+                    tabIndex={isSameDay(day, focused) ? 0 : -1}
+                    // Dzień spoza miesiąca przełącza miesiąc — malowanie go było ledwo widoczne.
+                    onClick={() => { setFocused(day); if (inMonth) onDay(key); else onMonthChange(startOfMonth(day)); }}
+                    aria-label={inMonth ? label : `${label} — przejdź do miesiąca`}
+                    aria-current={isToday ? "date" : undefined}
+                    title={holiday ?? entry?.note}
+                    className={cn(
+                      "relative w-full flex flex-col items-stretch min-h-[3.75rem] sm:min-h-[5rem] p-1 rounded-xl border text-left transition-colors outline-none",
+                      "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background",
+                      inMonth ? "border-border/50 bg-card/40 dark:border-transparent dark:bg-card/60 [@media(hover:hover)]:hover:border-primary/40" : "border-transparent opacity-40",
+                    )}
+                  >
+                    <span className="flex items-center justify-between">
+                      <span className={cn("text-xs font-medium tabular-nums w-5 h-5 flex items-center justify-center rounded-full",
+                        isToday ? "bg-primary text-primary-foreground" : holiday && "text-destructive font-bold")}>
+                        {format(day, "d")}
+                      </span>
+                      <span className="flex gap-0.5 mr-0.5" aria-hidden>
+                        {/* Na telefonie nazwa święta i godziny się nie mieszczą — zostaje znacznik, nie sam kolor. */}
+                        {holiday && <span className="sm:hidden w-1.5 h-1.5 rounded-full bg-destructive" />}
+                        {entry?.extraMin ? <span className="sm:hidden text-[0.5625rem] leading-none font-bold">{entry.extraMin > 0 ? "↑" : "↓"}</span> : null}
+                        {entry?.note && <span className="w-1.5 h-1.5 rounded-full bg-foreground/50" />}
+                      </span>
                     </span>
-                  )}
-                </span>
-              )}
-            </button>
-          );
-        })}
+                    {holiday && <span aria-hidden className="hidden sm:block text-2xs leading-tight text-destructive/80 truncate">{holiday}</span>}
+                    {type && (
+                      <span
+                        aria-hidden
+                        className={cn("mt-auto rounded-lg px-1 py-0.5 text-center leading-tight", absence ? "border-2 border-dashed" : "shadow-sm")}
+                        style={absence ? { borderColor: type.color, color: shiftTextOnCard(type.color) } : { backgroundColor: type.color, color: shiftInk(type.color) }}
+                      >
+                        <span className="block font-display font-bold text-sm">{type.short}</span>
+                        {!absence && (
+                          <span className="hidden sm:block text-2xs opacity-90 tabular-nums">
+                            {formatHoursShort(entryMinutes(type, entry))} h{entry?.extraMin ? (entry.extraMin > 0 ? " ↑" : " ↓") : ""}
+                          </span>
+                        )}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        ))}
       </div>
     </div>
   );

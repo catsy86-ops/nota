@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { pluralPl } from "@/lib/plural";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Delete, Trash2 } from "lucide-react";
@@ -136,7 +137,7 @@ export function PatternDialog({ open, onOpenChange, types, patterns, defaultStar
 
           {valid && (
             <div>
-              <p className="text-xs text-muted-foreground mb-1.5">Podgląd pierwszych {PREVIEW_DAYS} dni · razem {length} dni</p>
+              <p className="text-xs text-muted-foreground mb-1.5">Podgląd pierwszych {PREVIEW_DAYS} dni · razem {length} {pluralPl(length, ["dzień", "dni", "dni"])}</p>
               <div className="grid grid-cols-7 gap-1">
                 {preview.map(({ date, step }, i) => {
                   const t = step ? typesById.get(step) : undefined;

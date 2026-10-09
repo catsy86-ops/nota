@@ -14,11 +14,11 @@ test("nanoszenie zmian liczy godziny, nocne i zarobek", async ({ page }) => {
   await expect(summary).toContainText("0");
 
   // Pędzel „Dzień” jest domyślny — dwa dni po 8 h.
-  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, wolne$/ }).first().click();
-  await page.getByRole("button", { name: /^2 [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  await page.getByRole("button", { name: /^2 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
   // Noc na trzeci dzień.
   await page.getByRole("radio", { name: /Noc/ }).click();
-  await page.getByRole("button", { name: /^3 [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  await page.getByRole("button", { name: /^3 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
 
   await expect(summary.getByText("24", { exact: false }).first()).toBeVisible();
   await expect(summary).toContainText("Dni pracy3");
@@ -33,11 +33,11 @@ test("nanoszenie zmian liczy godziny, nocne i zarobek", async ({ page }) => {
 });
 
 test("ponowne stuknięcie tą samą zmianą czyści dzień", async ({ page }) => {
-  const day = page.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, wolne$/ }).first();
+  const day = page.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first();
   await day.click();
-  await expect(page.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, Dzień/ }).first()).toBeVisible();
-  await page.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, Dzień/ }).first().click();
-  await expect(page.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, wolne$/ }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dzień/ }).first()).toBeVisible();
+  await page.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dzień/ }).first().click();
+  await expect(page.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first()).toBeVisible();
 });
 
 test("własna zmiana z przerwą", async ({ page }) => {
@@ -51,7 +51,7 @@ test("własna zmiana z przerwą", async ({ page }) => {
   await page.getByRole("button", { name: "Zapisz zmianę" }).click();
 
   await expect(page.getByRole("radio", { name: /Dwunastka/ })).toHaveAttribute("aria-checked", "true");
-  await page.getByRole("button", { name: /^10 [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  await page.getByRole("button", { name: /^10 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
   await expect(page.getByRole("region", { name: "Podsumowanie miesiąca" })).toContainText("11 h 30 min");
 });
 
@@ -69,9 +69,9 @@ test("cykl nakłada się na miesiąc i da się go cofnąć", async ({ page }) =>
 });
 
 test("szczegóły dnia: dłużej niż w planie i notatka", async ({ page }) => {
-  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
   await page.getByRole("radio", { name: "Szczegóły" }).click();
-  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, Dzień/ }).first().click();
+  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dzień/ }).first().click();
 
   const dialog = page.getByRole("dialog");
   await dialog.getByRole("button", { name: "Dodaj 15 minut" }).click();
@@ -80,7 +80,7 @@ test("szczegóły dnia: dłużej niż w planie i notatka", async ({ page }) => {
   await dialog.getByLabel("Notatka").fill("zastępstwo");
   await dialog.getByRole("button", { name: "Zapisz dzień" }).click();
 
-  await expect(page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, Dzień.*odchylenie 30 min, notatka: zastępstwo/ }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dzień.*odchylenie 30 min, notatka: zastępstwo/ }).first()).toBeVisible();
   await expect(page.getByRole("region", { name: "Podsumowanie miesiąca" })).toContainText("8 h 30 min");
 });
 
@@ -88,13 +88,13 @@ test("nieobecność obniża normę zamiast dodawać godziny", async ({ page }) =
   const summary = page.getByRole("region", { name: "Podsumowanie miesiąca" });
   const normBefore = await summary.getByText(/h normy/).textContent();
   await page.getByRole("radio", { name: /Urlop/ }).click();
-  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
   await expect(summary).toContainText("Dni pracy0");
   await expect(summary.getByText(/h normy/)).not.toHaveText(normBefore!);
 });
 
 test("eksport grafiku do kalendarza pobiera plik .ics", async ({ page }) => {
-  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
   const [download] = await Promise.all([
     page.waitForEvent("download"),
     page.getByRole("button", { name: "Do kalendarza (.ics)" }).click(),
@@ -106,8 +106,8 @@ test("eksport grafiku do kalendarza pobiera plik .ics", async ({ page }) => {
 });
 
 test("usunięcie rodzaju zmiany wymaga potwierdzenia i da się cofnąć", async ({ page }) => {
-  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, wolne$/ }).first().click();
-  await page.getByRole("button", { name: /^2 [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  await page.getByRole("button", { name: /^2 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
 
   await page.getByRole("button", { name: "Edytuj zmianę Dzień" }).click();
   const dialog = page.getByRole("dialog");
@@ -117,8 +117,39 @@ test("usunięcie rodzaju zmiany wymaga potwierdzenia i da się cofnąć", async 
   await dialog.getByRole("button", { name: "Usunąć z 2 dniami?" }).click();
 
   await expect(page.getByRole("radio", { name: /Dzień/ })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, wolne$/ }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first()).toBeVisible();
   await page.getByRole("button", { name: "Cofnij" }).click();
   await expect(page.getByRole("radio", { name: /Dzień/ })).toHaveCount(1);
-  await expect(page.getByRole("button", { name: /^2 [a-ząćęłńóśźż]+, Dzień/ }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: /^2 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dzień/ }).first()).toBeVisible();
+});
+
+test("siatka obsługuje klawiaturę: jeden przystanek Tab, strzałki, Enter nanosi", async ({ page }) => {
+  const grid = page.getByRole("grid");
+  // Dziś (zegar zamrożony na 7.10.2026) ma fokus tabulatora.
+  const today = grid.getByRole("button", { name: /^7 października, środa, dziś, wolne$/ });
+  await expect(today).toHaveAttribute("tabindex", "0");
+  await expect(today).toHaveAttribute("aria-current", "date");
+  await today.focus();
+  await page.keyboard.press("ArrowRight");
+  const next = grid.getByRole("button", { name: /^8 października, czwartek, wolne$/ });
+  await expect(next).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(grid.getByRole("button", { name: /^8 października, czwartek, Dzień/ })).toBeFocused();
+
+  await page.keyboard.press("PageDown");
+  await expect(page.getByRole("heading", { level: 2 })).toContainText(/listopad 2026/i);
+  await expect(grid.getByRole("button", { name: /^8 listopada/ })).toBeFocused();
+});
+
+test("pędzle: strzałki wybierają sąsiedni, Cykl i + widoczne na telefonie", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 780 });
+  await expect(page.getByRole("button", { name: "Cykl" })).toBeInViewport();
+  await expect(page.getByRole("button", { name: "Dodaj rodzaj zmiany" })).toBeInViewport();
+  const first = page.getByRole("radio", { name: /Dzień/ });
+  await first.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(page.getByRole("radio", { name: /Popołudnie/ })).toBeFocused();
+  await expect(page.getByRole("radio", { name: /Popołudnie/ })).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByText("Stuknij dzień, żeby nanieść: Popołudnie.")).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });

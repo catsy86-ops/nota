@@ -15,6 +15,14 @@ import { ShiftTypeDialog } from "./ShiftTypeDialog";
 import { DayDialog } from "./DayDialog";
 import { PatternDialog } from "./PatternDialog";
 
+/** Co zrobi stuknięcie w dzień — widoczne pod paskiem i czytane przy siatce. */
+function brushHint(brush: Brush, typesById: Map<string, ShiftType>): string {
+  if (brush.kind === "inspect") return "Stuknij dzień, żeby zobaczyć i edytować szczegóły.";
+  if (brush.kind === "erase") return "Stuknij dzień, żeby go wyczyścić.";
+  const name = typesById.get(brush.id)?.name ?? "zmianę";
+  return `Stuknij dzień, żeby nanieść: ${name}. Drugie stuknięcie zdejmuje.`;
+}
+
 const navButton = "pressable shrink-0 w-10 h-10 coarse:w-11 coarse:h-11 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 /**
@@ -43,7 +51,7 @@ export function ShiftsView() {
 
   function applyPattern(steps: (string | null)[], startKey: string, length: number) {
     const before = applyPatternToStore(steps, startKey, length);
-    toast.success(`Nałożono cykl na ${length} dni`, {
+    toast.success(`Nałożono cykl na ${length} ${pluralPl(length, ["dzień", "dni", "dni"])}`, {
       action: { label: "Cofnij", onClick: () => restoreDays(before) },
     });
   }
@@ -69,7 +77,7 @@ export function ShiftsView() {
         <button type="button" onClick={() => setMonth((m) => addMonths(m, -1))} aria-label="Poprzedni miesiąc" className={navButton}>
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <h2 className="min-w-0 sm:min-w-[12rem] text-center">
+        <h2 className="min-w-0 sm:min-w-[12rem] text-center" aria-live="polite">
           <button type="button" onClick={() => setMonth(startOfMonth(new Date()))} title="Wróć do bieżącego miesiąca"
             className="pressable w-full h-10 coarse:h-11 truncate font-display font-bold text-lg capitalize px-3 rounded-xl hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring">
             {format(month, "LLLL yyyy", { locale: pl })}
@@ -89,7 +97,9 @@ export function ShiftsView() {
         onPattern={() => setPatternOpen(true)}
       />
 
-      <ShiftMonthGrid month={month} days={data.days} typesById={typesById} onDay={onDay} />
+      <p id="shift-brush-hint" className="-mt-3 text-xs text-muted-foreground px-1">{brushHint(brush, typesById)}</p>
+
+      <ShiftMonthGrid month={month} days={data.days} typesById={typesById} onDay={onDay} onMonthChange={setMonth} describedBy="shift-brush-hint" />
 
       <div className="flex justify-end -mt-2">
         <button type="button" onClick={exportIcs}
