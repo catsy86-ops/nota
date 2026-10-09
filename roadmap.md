@@ -562,3 +562,5 @@ Odrzucone:
 - [x] Zdjęcia: poza edycją jedna miniatura 16:9 i „+N”.
 - [x] Kolumny liczone od szerokości 13 rem (CSS `columns`/`auto-fill`), na telefonie zawsze 2. Treść ma `max-width`, więc na 1920 px dalej 5 kolumn.
 - [ ] Hierarchia tytuł/treść — po zagęszczeniu czytelna, bez zmian.
+
+**Decyzja (2026-10-09):** okna potwierdzeń (AlertDialog) zostają z mocno przyciemnionym tłem (`bg-black/80`), zwykłe okna z lżejszym (`bg-foreground/30`) — świadoma różnica, potwierdzenie ma się wyróżniać.
