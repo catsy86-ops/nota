@@ -83,10 +83,11 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
       onClick={() => onSelect(day)}
       className={cn(
         dayCellClass(inMonth), "flex flex-col gap-0.5 min-h-[4.5rem] sm:min-h-[6rem] p-1 sm:p-1.5 cursor-pointer",
+        // Pełne tło z domieszką marki (nie przezroczystość) — inaczej prześwituje kratka tła.
         // Warianty `dark:` z linii wyżej są silniejsze od zwykłych klas —
         // bez własnych `dark:` zaznaczenie w ciemnym motywie byłoby niewidoczne.
-        selected && "border-primary/60 bg-primary/5 dark:border-primary/60 dark:bg-primary/10",
-        isOver && "border-primary bg-primary/10 dark:border-primary dark:bg-primary/15",
+        selected && "border-primary/60 bg-[color-mix(in_srgb,hsl(var(--primary))_7%,hsl(var(--card)))] dark:border-primary/60 dark:bg-[color-mix(in_srgb,hsl(var(--primary))_12%,hsl(var(--card)))]",
+        isOver && "border-primary bg-[color-mix(in_srgb,hsl(var(--primary))_12%,hsl(var(--card)))] dark:border-primary dark:bg-[color-mix(in_srgb,hsl(var(--primary))_18%,hsl(var(--card)))]",
       )}
     >
       {/* Numer, święto (kropka na telefonie, nazwa od `sm`) — tak samo jak w Grafiku. */}
