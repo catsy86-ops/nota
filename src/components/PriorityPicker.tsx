@@ -48,9 +48,10 @@ export function PriorityPicker({ priority, onSet }: PriorityPickerProps) {
 export function PriorityBadge({ priority }: { priority: NotePriority }) {
   if (priority === "none") return null;
   return (
-    <div className={cn("flex items-center gap-1 text-2xs mt-2 px-2 py-0.5 rounded-full w-fit bg-foreground/5", PRIORITY_COLOR_CLASS[priority])}>
-      <Flag className="w-2.5 h-2.5 fill-current" />
-      {PRIORITY_LABELS[priority]}
+    <div title={`Priorytet: ${PRIORITY_LABELS[priority].toLowerCase()}`} className={cn("flex items-center gap-1 text-2xs mt-2 px-2 py-0.5 max-sm:py-1 rounded-full w-fit bg-foreground/5", PRIORITY_COLOR_CLASS[priority])}>
+      <Flag className="w-2.5 h-2.5 fill-current" aria-hidden />
+      {/* Na telefonie sama flaga w kolorze priorytetu — z nazwą nie mieściła się obok przypomnienia. */}
+      <span className="max-sm:sr-only">{PRIORITY_LABELS[priority]}</span>
     </div>
   );
 }
