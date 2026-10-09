@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Tag, Bell, ImagePlus, X, PenTool, ListChecks } from "lucide-react";
+import { Plus, Tag, Bell, ImagePlus, X, PenTool, ListChecks, Palette } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
-import { ColorPicker } from "./ColorPicker";
+import { ColorPicker, colorClasses } from "./ColorPicker";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { LazyCalendar as Calendar } from "@/components/ui/lazy-calendar";
@@ -131,7 +131,11 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
 
   return (
     <>
-    <motion.div ref={containerRef} layout className="w-full max-w-xl mx-auto rounded-2xl note-shadow bg-card border border-border overflow-hidden transition-shadow focus-ring-gradient hover:shadow-elevation-3">
+    {/* Na telefonie zwinięty pasek dublował „+” z dolnej nawigacji i zabierał ~90 px nad notatkami — „+” rozwija ten sam edytor. */}
+    <motion.div ref={containerRef} layout data-note-color={expanded && color !== "default" ? color : undefined}
+      className={cn("w-full max-w-xl mx-auto rounded-2xl note-shadow border border-border overflow-hidden transition-[box-shadow,background-color] focus-ring-gradient hover:shadow-elevation-3",
+        // Kolor schowany pod ikoną palety — edytor przyjmuje go od razu, żeby było widać wybór.
+        expanded && color !== "default" ? colorClasses[color] : "bg-card", !expanded && "max-md:hidden")}>
       <AnimatePresence mode="wait">
         {!expanded ? (
           <motion.button key="collapsed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -154,20 +158,12 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
               const sel = content.slice(s, e2);
               setContent(content.slice(0, s) + before + sel + after + content.slice(e2));
             }} />
-            <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Zapisz notatkę (obsługuje **Markdown**)..." rows={3}
+            <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Treść notatki..." rows={3}
               className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none" />
 
             {/* Szablony tylko nad pustym szkicem — wybór tworzy osobną notatkę, więc nic by nie zastąpił. */}
             {templates && isDraftEmpty && templates(reset)}
 
-            {/* Checklist */}
-            <button
-              onClick={() => setShowChecklist(!showChecklist)}
-              className={cn("flex items-center gap-1.5 text-xs transition-colors", showChecklist ? "text-primary" : "text-muted-foreground hover:text-foreground")}
-            >
-              <ListChecks className="w-3.5 h-3.5" />
-              {showChecklist ? "Lista zadań" : "Dodaj listę"}
-            </button>
             {showChecklist && <ChecklistEditor items={checklist} onChange={setChecklist} />}
 
             {/* Image previews */}
@@ -206,13 +202,23 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
               </div>
             )}
 
-            {/* Kolory w jednym rzędzie (na wąskim ekranie przewijanym), pod nimi narzędzia i „Zamknij”.
-                W jednym wierszu z narzędziami nie mieszczą się nawet na desktopie. */}
-            <div className="flex flex-col gap-2 pt-1">
-              <div className="-mx-4 px-4 py-1 overflow-x-auto">
-                <ColorPicker selected={color} onSelect={setColor} nowrap />
-              </div>
+            {/* Jeden rząd narzędzi z „Zamknij” — kolory pod ikoną palety, lista zadań jako przełącznik. */}
+            <div className="pt-1">
               <div className="flex items-center gap-1 flex-wrap flex-1">
+                <IconButton size="sm" tone={showChecklist ? "active" : "muted"} onClick={() => setShowChecklist(!showChecklist)}
+                  title="Lista zadań" aria-label="Lista zadań" aria-pressed={showChecklist}>
+                  <ListChecks className="w-4 h-4" />
+                </IconButton>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <IconButton size="sm" tone={color !== "default" ? "active" : "muted"} title="Kolor" aria-label="Kolor">
+                      <Palette className="w-4 h-4" />
+                    </IconButton>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-2.5" align="start">
+                    <ColorPicker selected={color} onSelect={setColor} />
+                  </PopoverContent>
+                </Popover>
                 {/* Image upload */}
                 <IconButton size="sm" onClick={() => fileInputRef.current?.click()} title="Dodaj obrazek" aria-label="Dodaj obrazek">
                   <ImagePlus className="w-4 h-4" />

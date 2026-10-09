@@ -513,11 +513,11 @@ Zrzuty wszystkich widoków (390/1440 px, jasny/ciemny, realistyczne dane). Robio
 - [x] 5. Święto spoza miesiąca w Grafiku nieczytelne w ciemnym motywie. **S**
 
 **Faza 1 — lżejsze Notatki**
-- [ ] 6. Na kaflu tylko data; liczba słów i „Linkują tu” do czytnika. **S**
-- [ ] 7. Przypomnienie i priorytet w jednym rzędzie na telefonie. **S**
-- [ ] 8. Ciemny motyw: kolory notatek jako delikatny odcień + kolorowy pasek zamiast „brudnych” teł. **M**
-- [ ] 9. Telefon: ~380 px nad pierwszą notatką; instalacja proponowana 3 razy (ikona w nagłówku, pasek, baner). **S**
-- [ ] 10. Composer: 5 rzędów kontrolek → stopniowe odsłanianie (kolory pod ikoną palety, szablony w pustym polu, ikony formatowania). **M**
+- [x] 6. Na kaflu tylko data; liczba słów i „Linkują tu” do czytnika. **S** — ✅ linki zwrotne w jednej linii (1 + „+N”), etykieta tylko dla czytników ekranu.
+- [x] 7. Przypomnienie i priorytet w jednym rzędzie na telefonie. **S**
+- [x] 8. Ciemny motyw: kolory notatek jako delikatny odcień + kolorowy pasek zamiast „brudnych” teł. **M** — ✅ `--note-ink`, próbki koloru (`data-swatch`) w kolorze paska.
+- [x] 9. Telefon: ~380 px nad pierwszą notatką. **S** — ✅ ikona w nagłówku to Import/Eksport, nie instalacja (błąd audytu). Zamiast tego na telefonie schowany zwinięty pasek „Zapisz notatkę…” — dublował „+” z dolnej nawigacji.
+- [x] 10. Composer: 5 rzędów kontrolek → stopniowe odsłanianie (kolory pod ikoną palety, szablony w pustym polu, ikony formatowania). **M** — ✅ formatowanie ikonami (też w edytorze kafla), lista i paleta w rzędzie narzędzi, kolor barwi edytor, podpowiedź „Treść notatki...”.
 
 **Faza 2 — Grafik**
 - [ ] 11. Ustawienia z podsumowania do okna „Ustawienia grafiku”. **M**

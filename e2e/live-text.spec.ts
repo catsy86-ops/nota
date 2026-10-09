@@ -1,6 +1,6 @@
 import { test, expect, type Page } from "@playwright/test";
 
-const CONTENT = "Treść (obsługuje **Markdown**)...";
+const CONTENT = "Treść notatki...";
 
 async function open(page: Page) {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
@@ -40,7 +40,7 @@ test("tekst z innego urządzenia pojawia się w otwartym edytorze bez utraty szk
   await open(a);
   await a.getByText("Zapisz notatkę...").click();
   await a.getByPlaceholder("Tytuł").fill(title);
-  await a.getByPlaceholder("Zapisz notatkę (obsługuje **Markdown**)...").fill("środek");
+  await a.getByPlaceholder("Treść notatki...").fill("środek");
   await a.getByRole("button", { name: "Zamknij" }).click();
   await expect(a.getByText(title)).toBeVisible();
 

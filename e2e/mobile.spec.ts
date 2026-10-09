@@ -33,7 +33,7 @@ test("Ustawienia na telefonie zajmują cały ekran i nie zmieniają wysokości p
 });
 
 test("na dotyku akcje kafla są schowane za „Więcej opcji”", async ({ page }) => {
-  await page.getByText("Zapisz notatkę...").click();
+  await page.getByRole("button", { name: "Nowa notatka" }).click();
   await page.getByPlaceholder("Tytuł").fill("Kafel na telefonie");
   await page.getByRole("button", { name: "Zamknij" }).click();
   const card = page.locator("[data-note-idx]").filter({ hasText: "Kafel na telefonie" });

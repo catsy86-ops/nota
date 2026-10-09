@@ -19,7 +19,7 @@ test("edycja nie ginie, gdy kafel wypada z filtra wyszukiwania", async ({ page }
   await addNote(page, title);
 
   await page.getByText(title).click();
-  const body = page.getByPlaceholder("Treść (obsługuje **Markdown**)...");
+  const body = page.getByPlaceholder("Treść notatki...");
   await body.fill("akapit, którego nikt nie zapisał ręcznie");
 
   // Wpisanie czegoś w wyszukiwanie odmontowuje kafel bez kliknięcia „Zapisz”.
@@ -74,7 +74,7 @@ test("pełnoekranowy edytor zapisuje treść po zamknięciu klawiszem Esc", asyn
   await expect(dialog).toBeVisible();
   // Rozwinięcie przenosi szkic, a nie zaczyna od nowa.
   await expect(dialog.getByPlaceholder("Tytuł")).toHaveValue(title);
-  await dialog.getByPlaceholder("Treść (obsługuje **Markdown**)...").fill("notatka ze spotkania w dużym oknie");
+  await dialog.getByPlaceholder("Treść notatki...").fill("notatka ze spotkania w dużym oknie");
 
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);

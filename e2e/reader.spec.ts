@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 async function addNote(page: Page, title: string, content: string) {
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
-  await page.getByPlaceholder("Zapisz notatkę (obsługuje **Markdown**)...").fill(content);
+  await page.getByPlaceholder("Treść notatki...").fill(content);
   await page.getByRole("button", { name: "Zamknij" }).click();
   // Rozwinięty pasek wygasa z animacją, wciąż z polem „Tytuł” i starym tytułem —
   // bez czekania następne `getByPlaceholder("Tytuł")` trafia czasem na dwa pola.

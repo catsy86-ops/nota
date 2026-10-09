@@ -1,6 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 import { Fragment, memo, type ReactNode } from "react";
+import { Bold, Code, Heading2, Italic, Link2, List, Quote } from "lucide-react";
 
 interface MarkdownRendererProps {
   content: string;
@@ -89,26 +90,29 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content, classN
 });
 
 export function FormatToolbar({ onInsert }: { onInsert: (before: string, after: string) => void }) {
+  // Ikony zamiast znaków Markdown („B I H • > </> [[ ]]” w 11 px były nieczytelne).
   const tools = [
-    { label: "B", before: "**", after: "**", title: "Pogrubienie" },
-    { label: "I", before: "_", after: "_", title: "Kursywa" },
-    { label: "H", before: "## ", after: "", title: "Nagłówek" },
-    { label: "•", before: "- ", after: "", title: "Lista" },
-    { label: ">", before: "> ", after: "", title: "Cytat" },
-    { label: "</>", before: "`", after: "`", title: "Kod" },
-    { label: "[[ ]]", before: "[[", after: "]]", title: "Link do notatki" },
+    { Icon: Bold, before: "**", after: "**", title: "Pogrubienie" },
+    { Icon: Italic, before: "_", after: "_", title: "Kursywa" },
+    { Icon: Heading2, before: "## ", after: "", title: "Nagłówek" },
+    { Icon: List, before: "- ", after: "", title: "Lista punktowana" },
+    { Icon: Quote, before: "> ", after: "", title: "Cytat" },
+    { Icon: Code, before: "`", after: "`", title: "Kod" },
+    { Icon: Link2, before: "[[", after: "]]", title: "Link do notatki" },
   ];
 
   return (
-    <div className="flex items-center gap-0.5 flex-wrap">
-      {tools.map((t) => (
+    <div role="toolbar" aria-label="Formatowanie" className="flex items-center gap-0.5 flex-wrap -ml-1.5">
+      {tools.map(({ Icon, ...t }) => (
         <button
-          key={t.label}
+          key={t.title}
+          type="button"
           onClick={() => onInsert(t.before, t.after)}
           title={t.title}
-          className="px-1.5 py-0.5 text-2xs font-mono font-bold text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded transition-colors"
+          aria-label={t.title}
+          className="pressable p-1.5 coarse:p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          {t.label}
+          <Icon className="w-3.5 h-3.5" aria-hidden />
         </button>
       ))}
     </div>
