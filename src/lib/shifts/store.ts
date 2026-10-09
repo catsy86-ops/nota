@@ -1,6 +1,6 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import { logDiag } from "@/lib/diagnostics";
-import { EMPTY_SHIFT_DATA, migrate, type DayEntry, type ShiftData, type ShiftPattern, type ShiftType } from "./model";
+import { EMPTY_SHIFT_DATA, migrate, type DayEntry, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
 import { applyPattern } from "./pattern";
 
 /**
@@ -112,4 +112,8 @@ export function setHourlyRate(rate: number): void {
 
 export function setOvertimeMultiplier(m: number): void {
   update((d) => ({ ...d, overtimeMultiplier: Math.max(1, positive(m) || 1) }));
+}
+
+export function setWorkSystem(workSystem: WorkSystem): void {
+  update((d) => ({ ...d, workSystem }));
 }

@@ -1,5 +1,5 @@
 import { isAbsence, type DayEntry, type ShiftData, type ShiftType } from "./model";
-import { dstShiftMinutes, entryMinutesOn, nightMinutes, shiftSpan } from "./time";
+import { dstShiftMinutes, entryMinutesOn, nightMinutes, shiftMinutes, shiftSpan } from "./time";
 import { isNormDay, workNormMinutes } from "./holidays";
 
 export interface ShiftTypeTotal {
@@ -15,8 +15,10 @@ export interface MonthSummary {
   nightMinutes: number;
   /** Wymiar czasu pracy po odjęciu nieobecności. */
   normMinutes: number;
-  /** Ponad normę; 0 gdy poniżej. */
+  /** Wszystkie nadgodziny: dobowe + ponad normę okresu (już bez dobowych). */
   overtimeMinutes: number;
+  /** Z tego nadgodziny dobowe (ponad limit w dobie pracowniczej). */
+  dailyOvertimeMinutes: number;
   absenceDays: number;
   /** Zarobek brutto w zł (z dopłatą za nadgodziny); 0 gdy brak stawek. */
   earnings: number;
@@ -25,9 +27,73 @@ export interface MonthSummary {
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
+const DAY_MS = 24 * 60 * 60_000;
+
+interface WorkSpan {
+  key: string;
+  start: number;
+  /** Minuty pracy (z odchyleniem i zmianą czasu); przerwa skraca koniec. */
+  len: number;
+  /** Dobowy limit tej zmiany w minutach. */
+  limit: number;
+}
+
+/**
+ * Nadgodziny dobowe (art. 151 § 1 pkt 1 KP) per dzień startu zmiany.
+ * Doba pracownicza to 24 h od początku zmiany (art. 128 § 3), więc np.
+ * popołudniówka 14–22 i ranna 6–14 następnego dnia to 8 h nadgodzin —
+ * mimo że każda zmiana ma tylko 8 h. Minuty uznane za nadgodziny w jednej
+ * dobie nie liczą się już w następnej.
+ */
+export function dailyOvertimeByDay(data: ShiftData): Map<string, number> {
+  const typesById = new Map(data.types.map((t) => [t.id, t]));
+  const spans: WorkSpan[] = [];
+  for (const [key, entry] of Object.entries(data.days)) {
+    const type = typesById.get(entry.type);
+    if (!type || isAbsence(type)) continue;
+    const span = shiftSpan(type);
+    if (!span) continue;
+    const [y, m, d] = key.split("-").map(Number);
+    const planned = shiftMinutes(type);
+    // Równoważny: norma dobowa to godziny z grafiku, najwyżej 12 h; podstawowy: 8 h.
+    const limit = data.workSystem === "equivalent" ? Math.min(12 * 60, Math.max(8 * 60, planned)) : 8 * 60;
+    spans.push({ key, start: new Date(y, m - 1, d, 0, span.from).getTime(), len: entryMinutesOn(type, entry, key), limit });
+  }
+  spans.sort((a, b) => a.start - b.start);
+
+  // Minuty od początku zmiany, które już poszły jako nadgodziny poprzedniej doby.
+  const headOt = new Array<number>(spans.length).fill(0);
+  const result = new Map<string, number>();
+  for (let i = 0; i < spans.length; i++) {
+    const own = Math.max(0, spans[i].len - headOt[i]);
+    const dobaEnd = spans[i].start + DAY_MS;
+    const later: { j: number; counted: number }[] = [];
+    for (let j = i + 1; j < spans.length && spans[j].start < dobaEnd; j++) {
+      const inDoba = Math.min(spans[j].len, (dobaEnd - spans[j].start) / 60_000);
+      later.push({ j, counted: Math.max(0, inDoba - headOt[j]) });
+    }
+    let over = own + later.reduce((sum, l) => sum + l.counted, 0) - spans[i].limit;
+    if (over <= 0) continue;
+    // Nadwyżka własnej zmiany ponad limit, potem to, co następne zmiany wniosły do tej doby.
+    const ownOver = Math.min(over, Math.max(0, own - spans[i].limit));
+    if (ownOver > 0) result.set(spans[i].key, (result.get(spans[i].key) ?? 0) + ownOver);
+    over -= ownOver;
+    for (const { j, counted } of later) {
+      if (over <= 0) break;
+      const take = Math.min(over, counted);
+      headOt[j] += take;
+      result.set(spans[j].key, (result.get(spans[j].key) ?? 0) + take);
+      over -= take;
+    }
+  }
+  return result;
+}
+
 /**
  * Podsumowanie miesiąca (`month` od 0). Dzień należy do miesiąca, w którym
- * zmiana się zaczęła. Nadgodziny liczone w okresie rozliczeniowym = miesiąc;
+ * zmiana się zaczęła. Nadgodziny = dobowe (`dailyOvertimeByDay`) plus
+ * przekroczenie normy miesiąca przez pozostałe godziny (art. 151 § 1 KP,
+ * okres rozliczeniowy = miesiąc);
  * dopłata za nie = stawka domyślna × (mnożnik − 1), bo podstawę każda
  * godzina dostała już w swojej stawce.
  */
@@ -66,7 +132,10 @@ export function monthSummary(data: ShiftData, year: number, month: number): Mont
   }
 
   const normMinutes = Math.max(0, workNormMinutes(year, month) - absenceMinutes);
-  const overtimeMinutes = Math.max(0, minutes - normMinutes);
+  let dailyOvertimeMinutes = 0;
+  for (const [key, ot] of dailyOvertimeByDay(data)) if (key.startsWith(prefix)) dailyOvertimeMinutes += ot;
+  // Godziny już uznane za nadgodziny dobowe nie liczą się drugi raz do normy.
+  const overtimeMinutes = dailyOvertimeMinutes + Math.max(0, minutes - dailyOvertimeMinutes - normMinutes);
   const premium = (overtimeMinutes / 60) * data.hourlyRate * (data.overtimeMultiplier - 1);
 
   return {
@@ -75,6 +144,7 @@ export function monthSummary(data: ShiftData, year: number, month: number): Mont
     nightMinutes: night,
     normMinutes,
     overtimeMinutes,
+    dailyOvertimeMinutes,
     absenceDays,
     earnings: round2(base + premium),
     byType: data.types.map((t) => totals.get(t.id)).filter((t): t is ShiftTypeTotal => !!t),

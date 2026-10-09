@@ -98,7 +98,7 @@ export function ShiftsView() {
         </button>
       </div>
 
-      <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} overtimeMultiplier={data.overtimeMultiplier} />
+      <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} overtimeMultiplier={data.overtimeMultiplier} workSystem={data.workSystem} />
 
       <ShiftTypeDialog
         type={editingType === "new" ? null : editingType}

@@ -112,8 +112,10 @@ describe("podsumowanie miesiąca", () => {
     expect(s.nightMinutes).toBe(480);
     expect(s.absenceDays).toBe(1);
     expect(s.normMinutes).toBe((176 - 8) * 60);
-    expect(s.overtimeMinutes).toBe(0);
-    expect(s.earnings).toBe(17 * 30 + 8 * 40);
+    // 2.10 z odchyleniem +60 min: 9 h w dobie = 1 h nadgodzin dobowych.
+    expect(s.overtimeMinutes).toBe(60);
+    expect(s.dailyOvertimeMinutes).toBe(60);
+    expect(s.earnings).toBe(17 * 30 + 8 * 40 + 30 * 0.5);
     expect(s.byType.map((t) => [t.type.id, t.count])).toEqual([["d", 2], ["n", 1], ["u", 1]]);
   });
 
@@ -124,6 +126,26 @@ describe("podsumowanie miesiąca", () => {
     // Urlop w Wigilię (święto od 2025 r.) — norma grudnia już ją pomija.
     const xmas = monthSummary(data({ types: [leave], days: { "2026-12-24": { type: "u" } } }), 2026, 11);
     expect(xmas.normMinutes).toBe(workNormMinutes(2026, 11));
+  });
+
+  it("liczy nadgodziny dobowe w dobie pracowniczej", () => {
+    // P pon. 14–22, D wt. 6–14: wtorkowe 8 h mieszczą się w dobie poniedziałkowej.
+    const s = monthSummary(data({ days: { "2026-10-05": { type: "p" }, "2026-10-06": { type: "d" } } }), 2026, 9);
+    expect(s.dailyOvertimeMinutes).toBe(480);
+    expect(s.overtimeMinutes).toBe(480);
+    // Jeden dzień 10 h.
+    const ten = monthSummary(data({ days: { "2026-10-05": { type: "d", extraMin: 120 } } }), 2026, 9);
+    expect(ten.dailyOvertimeMinutes).toBe(120);
+    // Codziennie ta sama zmiana — doby się nie nakładają.
+    const same = monthSummary(data({ days: { "2026-10-05": { type: "d" }, "2026-10-06": { type: "d" } } }), 2026, 9);
+    expect(same.dailyOvertimeMinutes).toBe(0);
+  });
+
+  it("w systemie równoważnym dwunastki z grafiku nie są nadgodzinami", () => {
+    const twelve = { ...day, id: "x", start: "07:00", end: "19:00" };
+    const days = { "2026-10-05": { type: "x" }, "2026-10-07": { type: "x", extraMin: 60 } };
+    expect(monthSummary(data({ types: [twelve], days }), 2026, 9).dailyOvertimeMinutes).toBe(4 * 60 + 5 * 60);
+    expect(monthSummary(data({ types: [twelve], days, workSystem: "equivalent" }), 2026, 9).dailyOvertimeMinutes).toBe(60);
   });
 
   it("dolicza dopłatę za nadgodziny ponad normę", () => {
