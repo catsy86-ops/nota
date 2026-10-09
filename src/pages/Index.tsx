@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
 import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange, BriefcaseBusiness } from "lucide-react";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useNoteVersions } from "@/hooks/useNoteVersions";
@@ -576,25 +577,29 @@ const Index = () => {
           )}
 
           {view === "calendar" && (
-            <Suspense fallback={null}>
-              <ReminderCalendarView
-                notes={[...notes, ...archivedNotes]}
-                onCreateNote={(title, reminder, repeat) => {
-                  const id = addNote(title, "", prefs.defaultNoteColor, [], reminder);
-                  // `addNote` nie przyjmuje powtarzania, więc serię dostawiamy
-                  // patchem po utworzeniu — stąd id zwracane przez `addNote`.
-                  if (repeat !== "none") updateNote(id, { reminderRepeat: repeat });
-                }}
-                onSetReminder={(id, reminder, repeat, reminderDay) =>
-                  updateNote(id, reminderDay === undefined ? { reminder, reminderRepeat: repeat } : { reminder, reminderRepeat: repeat, reminderDay })}
-              />
-            </Suspense>
+            <ViewErrorBoundary name="Kalendarz">
+              <Suspense fallback={null}>
+                <ReminderCalendarView
+                  notes={[...notes, ...archivedNotes]}
+                  onCreateNote={(title, reminder, repeat) => {
+                    const id = addNote(title, "", prefs.defaultNoteColor, [], reminder);
+                    // `addNote` nie przyjmuje powtarzania, więc serię dostawiamy
+                    // patchem po utworzeniu — stąd id zwracane przez `addNote`.
+                    if (repeat !== "none") updateNote(id, { reminderRepeat: repeat });
+                  }}
+                  onSetReminder={(id, reminder, repeat, reminderDay) =>
+                    updateNote(id, reminderDay === undefined ? { reminder, reminderRepeat: repeat } : { reminder, reminderRepeat: repeat, reminderDay })}
+                />
+              </Suspense>
+            </ViewErrorBoundary>
           )}
 
           {view === "shifts" && (
-            <Suspense fallback={null}>
-              <ShiftsView />
-            </Suspense>
+            <ViewErrorBoundary name="Grafik">
+              <Suspense fallback={null}>
+                <ShiftsView />
+              </Suspense>
+            </ViewErrorBoundary>
           )}
 
           {view !== "calendar" && view !== "shifts" && displayNotes.length === 0 && <EmptyState view={view} search={search} elsewhere={elsewhere} onGo={(v) => go(v)} />}

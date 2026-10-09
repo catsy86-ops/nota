@@ -191,3 +191,13 @@ test("wyczyszczenie dnia z notatką da się cofnąć", async ({ page }) => {
   await page.getByRole("button", { name: "Cofnij" }).click();
   await expect(page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dzień.*notatka: zastępstwo/ }).first()).toBeVisible();
 });
+
+test("awaria widoku Grafiku nie zabiera reszty aplikacji", async ({ page }) => {
+  await page.route(/ShiftsView/, (route) => route.abort());
+  await page.goto("/grafik");
+  await expect(page.getByRole("alert")).toContainText("Grafik: nie udało się wyświetlić widoku");
+  await expect(page.getByRole("button", { name: "Odśwież stronę" })).toBeVisible();
+  // Reszta aplikacji działa: można przejść do notatek.
+  await page.getByRole("button", { name: "Notatki" }).first().click();
+  await expect(page.getByRole("alert")).toHaveCount(0);
+});
