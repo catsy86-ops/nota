@@ -19,7 +19,7 @@ test("notatka dnia powstaje raz, a kolejne otwarcie dopisuje godzinę", async ({
 
   await openDailyNote(page);
   // Otwiera się od razu w edytorze, z szablonem dziennika.
-  const editor = page.locator("[data-note-id] textarea").first();
+  const editor = page.locator("[data-note-id]").getByPlaceholder("Treść notatki...");
   await expect(editor).toHaveValue(/dziękuję/);
 
   await page.reload();

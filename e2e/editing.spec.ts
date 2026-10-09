@@ -80,3 +80,20 @@ test("pełnoekranowy edytor zapisuje treść po zamknięciu klawiszem Esc", asyn
   await expect(dialog).toHaveCount(0);
   await expect(page.getByText("notatka ze spotkania w dużym oknie")).toBeVisible();
 });
+
+test("długi tytuł w edytorze kafla jest widoczny w całości, Enter przechodzi do treści", async ({ page }) => {
+  const title = `E2E-długi tytuł notatki, który nie mieści się w jednej linii kafla ${Date.now()}`;
+  await addNote(page, title);
+
+  await page.getByText(title).click();
+  const field = page.locator("[data-note-id]").getByPlaceholder("Tytuł");
+  await expect(field).toHaveValue(title);
+  // Zawija się zamiast przewijać: nic nie wystaje poza pole.
+  const fits = await field.evaluate((el) => el.scrollHeight <= el.clientHeight + 1 && el.scrollWidth <= el.clientWidth + 1 && el.clientHeight > 30);
+  expect(fits).toBe(true);
+
+  await field.press("End");
+  await field.press("Enter");
+  await expect(field).toHaveValue(title);
+  await expect(page.locator("[data-note-id]").getByPlaceholder("Treść notatki...")).toBeFocused();
+});

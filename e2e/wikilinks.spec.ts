@@ -23,7 +23,7 @@ test("[[ podpowiada tytuły, a notatka docelowa pokazuje backlink", async ({ pag
   await addNote(page, source);
 
   await page.getByText(source).click();
-  const editor = page.locator("[data-note-id] textarea").first();
+  const editor = page.locator("[data-note-id]").getByPlaceholder("Treść notatki...");
   await editor.click();
   await editor.pressSequentially("Patrz [[zak");
   const option = page.getByRole("option", { name: target });
@@ -45,7 +45,7 @@ test("Esc chowa podpowiedzi bez zamykania edytora", async ({ page }) => {
   await addNote(page, `Źródło ${stamp}`);
 
   await page.getByText(`Źródło ${stamp}`).click();
-  const editor = page.locator("[data-note-id] textarea").first();
+  const editor = page.locator("[data-note-id]").getByPlaceholder("Treść notatki...");
   await editor.click();
   await editor.pressSequentially("[[Cel");
   await expect(page.getByRole("option", { name: `Cel ${stamp}` })).toBeVisible();

@@ -44,7 +44,7 @@ test("podgląd → wikilink → pełny ekran → edycja w karcie", async ({ page
 
   await targetReader.getByRole("button", { name: /Edytuj/ }).click();
   await expect(page.getByRole("dialog", { name: target })).toHaveCount(0);
-  await expect(page.locator("[data-note-id] textarea").first()).toHaveValue("Treść celu do przeczytania");
+  await expect(page.locator("[data-note-id]").getByPlaceholder("Treść notatki...")).toHaveValue("Treść celu do przeczytania");
 });
 
 test("Esc zamyka prezentację", async ({ page }) => {
