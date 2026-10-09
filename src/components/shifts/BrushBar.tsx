@@ -96,9 +96,9 @@ interface RadioProps {
 function ToolButton({ active, radio, onClick, Icon, label }: { active: boolean; radio: RadioProps; onClick: () => void; Icon: React.ComponentType<{ className?: string }>; label: string }) {
   return (
     <button type="button" role="radio" aria-checked={active} onClick={onClick} ref={radio.ref} tabIndex={radio.tabIndex}
-      className={cn("pressable shrink-0 flex items-center gap-1.5 px-3 h-12 rounded-2xl border text-sm font-medium font-display", focusRing,
+      className={cn("pressable relative shrink-0 flex items-center justify-center gap-1.5 px-3 max-sm:px-0 max-sm:w-12 h-12 rounded-2xl border text-sm font-medium font-display", focusRing,
         active ? "border-foreground/50 bg-muted" : "border-border/60 bg-card/50 hover:bg-muted")}>
-      <Icon className="w-4 h-4" /> {label}
+      <Icon className="w-4 h-4" /> <span className="max-sm:sr-only">{label}</span>
     </button>
   );
 }
@@ -110,19 +110,21 @@ function BrushChip({ type, active, radio, onClick, onEdit }: { type: ShiftType; 
       active ? "border-transparent ring-2 ring-offset-2 ring-offset-background" : "border-border/60 bg-card/50")}
       style={active ? { backgroundColor: `${type.color}22`, ["--tw-ring-color" as string]: type.color } : undefined}>
       <button type="button" role="radio" aria-checked={active} onClick={onClick} ref={radio.ref} tabIndex={radio.tabIndex}
-        className={cn("pressable flex items-center gap-2 pl-1.5 pr-2 h-12 rounded-l-2xl", focusRing)}>
+        className={cn("pressable relative flex items-center gap-2 pl-1.5 pr-2 max-sm:pr-1.5 h-12 rounded-l-2xl", focusRing, !active && "max-sm:rounded-r-2xl")}>
         <span className={cn("w-9 h-9 rounded-xl flex items-center justify-center font-display font-bold",
           absence && "border-2 bg-transparent")}
           style={absence ? { borderColor: type.color, color: shiftTextOnCard(type.color) } : { backgroundColor: type.color, color: shiftInk(type.color) }}>
           {type.short}
         </span>
-        <span className="text-left leading-tight">
+        {/* Na telefonie sam skrót — nazwa i godziny zostają dla czytników. `relative` na przycisku trzyma
+            `sr-only` (absolute) w środku przewijanego paska, inaczej poszerzało stronę. */}
+        <span className="text-left leading-tight max-sm:sr-only">
           <span className="block text-sm font-semibold font-display">{type.name}</span>
           <span className="block text-2xs text-muted-foreground tabular-nums">{absence ? "nieobecność" : `${type.start}–${type.end}`}</span>
         </span>
       </button>
       <button type="button" onClick={onEdit} aria-label={`Edytuj rodzaj ${type.name}`}
-        className={cn("pressable h-12 px-2 coarse:px-[15px] rounded-r-2xl text-muted-foreground hover:text-foreground hover:bg-foreground/5", focusRing)}>
+        className={cn("pressable h-12 px-2 coarse:px-[15px] rounded-r-2xl text-muted-foreground hover:text-foreground hover:bg-foreground/5", focusRing, !active && "max-sm:hidden")}>
         <Pencil className="w-3.5 h-3.5" />
       </button>
     </div>

@@ -520,11 +520,11 @@ Zrzuty wszystkich widoków (390/1440 px, jasny/ciemny, realistyczne dane). Robio
 - [x] 10. Composer: 5 rzędów kontrolek → stopniowe odsłanianie (kolory pod ikoną palety, szablony w pustym polu, ikony formatowania). **M** — ✅ formatowanie ikonami (też w edytorze kafla), lista i paleta w rzędzie narzędzi, kolor barwi edytor, podpowiedź „Treść notatki...”.
 
 **Faza 2 — Grafik**
-- [ ] 11. Ustawienia z podsumowania do okna „Ustawienia grafiku”. **M**
-- [ ] 12. Tekst prawny jako zwijane „Jak liczymy?” w punktach. **S**
-- [ ] 13. Natywne `<select>` → komponent aplikacji. **M**
-- [ ] 14. „Kliknij” na komputerze, urlop pełnym tłem zamiast przerywanej ramki, nadgodziny w kolorze marki zamiast różu. **S**
-- [ ] 15. Pasek pędzli na telefonie mieści 1,5 rodzaju — kompaktowe pędzle. **M**
+- [x] 11. Ustawienia z podsumowania do okna „Ustawienia grafiku”. **M** — ✅ `ShiftSettingsDialog`, w podsumowaniu jedna linia z bieżącymi ustawieniami i „Zmień”; fokus na okno (bez klawiatury na telefonie).
+- [x] 12. Tekst prawny jako zwijane „Jak liczymy?” w punktach. **S** — ✅ w oknie ustawień.
+- [x] 13. Natywne `<select>` → komponent aplikacji. **M** — ✅ zamiast nowego komponentu: pola jedno pod drugim (etykieta nad polem) i `color-scheme: dark`, więc natywne listy są ciemne w ciemnym motywie.
+- [x] 14. „Kliknij” na komputerze, urlop pełnym tłem zamiast przerywanej ramki, nadgodziny w kolorze marki zamiast różu. **S**
+- [x] 15. Pasek pędzli na telefonie mieści 1,5 rodzaju — kompaktowe pędzle. **M** — ✅ poniżej 640 px sam skrót (nazwa `sr-only`), ołówek tylko przy wybranym; mieści się ok. 3,5 rodzaju. Przy okazji: `sr-only` bez `relative` poszerzało stronę do 581 px.
 
 **Faza 3 — spójność**
 - [ ] 16. Jeden wygląd siatki miesiąca (Kalendarz i Grafik). **M**
