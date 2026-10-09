@@ -111,8 +111,8 @@ export function AppHeader({
           </div>
         </div>
 
-        {/* Grafik nie przeszukuje notatek — pole tylko by udawało, że działa. */}
-        {view !== "shifts" && <SearchBar value={search} onChange={onSearchChange} className="hidden sm:block" />}
+        {/* Grafik i Kalendarz nie przeszukują notatek — pole tylko by udawało, że działa. */}
+        {view !== "shifts" && view !== "calendar" && <SearchBar value={search} onChange={onSearchChange} className="hidden sm:block" />}
 
         <div className="flex items-center gap-1">
           {!sidebarOpen && (
