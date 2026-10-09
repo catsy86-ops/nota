@@ -177,7 +177,7 @@ export function AppSidebar({
 
               <div className="flex-1" />
 
-              <div className="px-1 pb-2 pt-4 border-t border-border/50 space-y-0.5">
+              <div className="pb-2 pt-4 border-t border-border/50 space-y-0.5">
                 <SidebarRow
                   icon={<Command className="w-[18px] h-[18px]" />}
                   label="Paleta poleceń"
