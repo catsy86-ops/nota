@@ -23,7 +23,18 @@ export interface MonthSummary {
   /** Zarobek brutto w zł (z dopłatą za nadgodziny); 0 gdy brak stawek. */
   earnings: number;
   byType: ShiftTypeTotal[];
+  /** Zmiany tego miesiąca zaczynające się po odpoczynku krótszym niż 11 h. */
+  shortRests: ShortRest[];
 }
+
+export interface ShortRest {
+  /** Dzień zmiany, przed którą zabrakło odpoczynku. */
+  dayKey: string;
+  restMinutes: number;
+}
+
+/** Odpoczynek dobowy — art. 132 § 1 KP. */
+export const MIN_REST_MINUTES = 11 * 60;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -90,6 +101,31 @@ export function dailyOvertimeByDay(data: ShiftData): Map<string, number> {
 }
 
 /**
+ * Zmiany, przed którymi od końca poprzedniej (z odchyleniem) minęło mniej
+ * niż 11 h. Uproszczenie: art. 132 KP liczy odpoczynek w dobie pracowniczej,
+ * ale przy jednej zmianie na dzień to ta sama przerwa między zmianami.
+ */
+export function shortRests(data: ShiftData): ShortRest[] {
+  const typesById = new Map(data.types.map((t) => [t.id, t]));
+  const spans: { key: string; start: number; end: number }[] = [];
+  for (const [key, entry] of Object.entries(data.days)) {
+    const type = typesById.get(entry.type);
+    if (!type || isAbsence(type)) continue;
+    const span = shiftSpan(type);
+    if (!span) continue;
+    const [y, m, d] = key.split("-").map(Number);
+    spans.push({ key, start: new Date(y, m - 1, d, 0, span.from).getTime(), end: new Date(y, m - 1, d, 0, span.to + (entry.extraMin ?? 0)).getTime() });
+  }
+  spans.sort((a, b) => a.start - b.start);
+  const out: ShortRest[] = [];
+  for (let i = 1; i < spans.length; i++) {
+    const rest = Math.round((spans[i].start - spans[i - 1].end) / 60_000);
+    if (rest < MIN_REST_MINUTES) out.push({ dayKey: spans[i].key, restMinutes: Math.max(0, rest) });
+  }
+  return out;
+}
+
+/**
  * Podsumowanie miesiąca (`month` od 0). Dzień należy do miesiąca, w którym
  * zmiana się zaczęła. Nadgodziny = dobowe (`dailyOvertimeByDay`) plus
  * przekroczenie normy miesiąca przez pozostałe godziny (art. 151 § 1 KP,
@@ -148,6 +184,7 @@ export function monthSummary(data: ShiftData, year: number, month: number): Mont
     absenceDays,
     earnings: round2(base + premium),
     byType: data.types.map((t) => totals.get(t.id)).filter((t): t is ShiftTypeTotal => !!t),
+    shortRests: shortRests(data).filter((r) => r.dayKey.startsWith(prefix)),
   };
 }
 

@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import { format } from "date-fns";
+import { pl } from "date-fns/locale";
+import { AlertTriangle } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
 import { formatDuration, formatHoursShort, formatMoney, setHourlyRate, setOvertimeMultiplier, setWorkSystem, type MonthSummary, type WorkSystem } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
@@ -54,6 +57,20 @@ export function ShiftSummary({ summary, hourlyRate, overtimeMultiplier, workSyst
         <Stat label="Do normy" value={minutes >= normMinutes ? "—" : formatDuration(normMinutes - minutes)} />
       </dl>
 
+      {summary.shortRests.length > 0 && (
+        <div role="note" className="flex gap-2.5 rounded-2xl bg-destructive/10 px-3 py-2.5 text-sm">
+          <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" aria-hidden />
+          <p>
+            <span className="font-semibold">Za krótki odpoczynek</span>{" "}
+            <span className="text-muted-foreground">(mniej niż 11 h przed zmianą): </span>
+            {summary.shortRests.map((r) => {
+              const [y, m, d] = r.dayKey.split("-").map(Number);
+              return `${format(new Date(y, m - 1, d), "d MMMM", { locale: pl })} — ${formatDuration(r.restMinutes)}`;
+            }).join(", ")}
+          </p>
+        </div>
+      )}
+
       {summary.byType.length > 0 && (
         <ul className="space-y-1.5 border-t border-border/50 pt-3">
           {summary.byType.map(({ type, count, minutes: m }) => (
@@ -84,7 +101,7 @@ export function ShiftSummary({ summary, hourlyRate, overtimeMultiplier, workSyst
       </div>
       <p className="text-2xs text-muted-foreground">
         Norma wg art. 130 Kodeksu pracy dla pełnego etatu, pomniejszona o nieobecności w dni robocze.
-        Nadgodziny dobowe liczone w dobie pracowniczej (24 h od początku zmiany). Pora nocna 22:00–6:00.
+        Nadgodziny dobowe liczone w dobie pracowniczej (24 h od początku zmiany). Pora nocna 22:00–6:00. Odpoczynek dobowy 11 h (art. 132 KP).
       </p>
     </section>
   );

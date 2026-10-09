@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, applyPattern, currentAndNextShift, daysUntilMonthEnd, easterSunday,
   entryMinutes, formatDuration, formatHoursShort, holidayName, migrate, monthSummary, nightMinutes, parseHm,
-  shiftMinutes, workNormMinutes, buildShiftsIcs, cancelledShiftDays, exportedAfter, exportableShiftDays, SHIFT_COLORS, shiftInk, contrastRatio, dstShiftMinutes, restoreShifts, setDayShift, shiftStore, type ShiftData,
+  shiftMinutes, workNormMinutes, buildShiftsIcs, shortRests, cancelledShiftDays, exportedAfter, exportableShiftDays, SHIFT_COLORS, shiftInk, contrastRatio, dstShiftMinutes, restoreShifts, setDayShift, shiftStore, type ShiftData,
 } from "./index";
 
 const [day, afternoon, night, leave] = DEFAULT_SHIFT_TYPES;
@@ -155,6 +155,26 @@ describe("podsumowanie miesiąca", () => {
     expect(s.normMinutes).toBe(160 * 60);
     expect(s.overtimeMinutes).toBe(8 * 60);
     expect(s.earnings).toBe(168 * 30 + 8 * 15);
+  });
+});
+
+describe("odpoczynek dobowy", () => {
+  it("wskazuje zmianę po mniej niż 11 h przerwy, z odchyleniem", () => {
+    const d = data({ days: {
+      "2026-09-30": { type: "p" }, // 14–22
+      "2026-10-01": { type: "d" }, // 6–14: 8 h przerwy
+      "2026-10-05": { type: "p" },
+      "2026-10-06": { type: "n" }, // 22:00, 24 h po popołudniówce
+      "2026-10-08": { type: "p", extraMin: 60 }, // do 23:00
+      "2026-10-09": { type: "d" }, // 6:00: 7 h przerwy
+      "2026-11-02": { type: "d" },
+    } });
+    expect(shortRests(d)).toEqual([
+      { dayKey: "2026-10-01", restMinutes: 480 },
+      { dayKey: "2026-10-09", restMinutes: 420 },
+    ]);
+    expect(monthSummary(d, 2026, 9).shortRests.map((r) => r.dayKey)).toEqual(["2026-10-01", "2026-10-09"]);
+    expect(monthSummary(d, 2026, 8).shortRests).toEqual([]);
   });
 });
 

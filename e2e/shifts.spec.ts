@@ -201,3 +201,12 @@ test("awaria widoku Grafiku nie zabiera reszty aplikacji", async ({ page }) => {
   await page.getByRole("button", { name: "Notatki" }).first().click();
   await expect(page.getByRole("alert")).toHaveCount(0);
 });
+
+test("ostrzega o odpoczynku krótszym niż 11 h", async ({ page }) => {
+  await page.getByRole("radio", { name: /Popołudnie/ }).click();
+  await page.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  await page.getByRole("radio", { name: /Dzień/ }).click();
+  await page.getByRole("button", { name: /^6 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  await expect(page.getByRole("note")).toContainText("Za krótki odpoczynek");
+  await expect(page.getByRole("note")).toContainText("6 października — 8 h");
+});
