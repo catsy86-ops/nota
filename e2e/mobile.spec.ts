@@ -53,3 +53,19 @@ test("Przypomnienia mają własną zakładkę w dolnym pasku, Archiwum jest w �
   await page.getByRole("button", { name: "Archiwum" }).last().click();
   await expect(page.getByRole("heading", { name: "Archiwum", level: 1 })).toBeVisible();
 });
+
+test("notatka z listą na pełnym ekranie: pozycje zaraz pod tytułem, nie na dole", async ({ page }) => {
+  const title = `E2E-lista ${Date.now()}`;
+  await page.getByRole("button", { name: "Nowa notatka" }).click();
+  await page.getByPlaceholder("Tytuł").fill(title);
+  await page.getByPlaceholder("Treść notatki...").fill("mleko\nchleb\njajka");
+  await page.getByRole("button", { name: "Zamień na listę" }).click();
+  await page.getByRole("button", { name: "Zamknij" }).click();
+
+  await page.getByText(title).click();
+  const dialog = page.getByRole("dialog");
+  const first = dialog.getByLabel("Odhacz: mleko");
+  await expect(first).toBeVisible();
+  const box = (await first.boundingBox())!;
+  expect(box.y).toBeLessThan(844 / 2);
+});
