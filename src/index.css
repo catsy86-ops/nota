@@ -40,14 +40,16 @@
 
     /* Note colors */
     --note-default: 0 0% 100%;
-    --note-coral: 14 100% 93%;
-    --note-peach: 30 100% 92%;
-    --note-sand: 45 100% 90%;
-    --note-mint: 150 60% 90%;
-    --note-sage: 160 30% 88%;
-    --note-sky: 200 80% 92%;
-    --note-lavender: 260 60% 93%;
-    --note-rose: 340 70% 93%;
+    /* Jasne notatki: lekki odcień zamiast pełnego pastelu (wyglądało jak karteczki samoprzylepne);
+       kolor niesie pasek u góry kafla (`--note-ink`), tak samo jak w ciemnym motywie. */
+    --note-coral: 14 100% 96%;
+    --note-peach: 30 100% 95.5%;
+    --note-sand: 45 100% 94%;
+    --note-mint: 150 55% 94.5%;
+    --note-sage: 160 30% 94%;
+    --note-sky: 200 85% 95.5%;
+    --note-lavender: 260 70% 96.5%;
+    --note-rose: 340 75% 96.5%;
 
     --font-display: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif;
     --font-body: 'Inter Variable', 'Inter', sans-serif;
@@ -521,15 +523,28 @@
   .card-actions:not([data-open]):not([data-editing]) {
     position: absolute; left: 0; right: 0; bottom: 0; z-index: 5;
     /* Niski pasek — na zwartym kaflu zakrywa tylko stopkę z datą, nie linki zwrotne nad nią. */
-    flex-wrap: nowrap; padding-top: 0.25rem; padding-bottom: 0.25rem;
+    flex-wrap: nowrap; padding-top: 0.625rem; padding-bottom: 0.25rem;
     background: inherit;
-    box-shadow: 0 -10px 12px -10px hsl(var(--foreground) / 0.18);
+    /* Górne 8 px paska wtapia się w kartę zamiast twardej kreski cienia. Ta przezroczysta
+       część nie łapie kliknięć — linki zwrotne tuż nad stopką zostają klikalne. */
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 0.5rem);
+    mask-image: linear-gradient(to bottom, transparent, #000 0.5rem);
+    pointer-events: none;
   }
+  .card-actions:not([data-open]):not([data-editing]) :is(button, [role="button"], a) { pointer-events: auto; }
   .card-actions:not([data-open]):not([data-editing]) .card-action { padding: 0.3125rem; }
 }
 
-/* Pasek koloru u góry ciemnej kolorowej notatki — tło samo jest już prawie neutralne.
+/* Pasek koloru u góry kolorowej notatki — tło samo jest już prawie neutralne.
    Obraz tła zamiast cienia: nie gryzie się z cieniami uniesienia i zaznaczenia. */
+[data-note-color="coral"], [data-swatch="coral"] { --note-ink: 14 80% 58%; }
+[data-note-color="peach"], [data-swatch="peach"] { --note-ink: 28 90% 55%; }
+[data-note-color="sand"], [data-swatch="sand"] { --note-ink: 42 90% 48%; }
+[data-note-color="mint"], [data-swatch="mint"] { --note-ink: 150 50% 40%; }
+[data-note-color="sage"], [data-swatch="sage"] { --note-ink: 160 20% 46%; }
+[data-note-color="sky"], [data-swatch="sky"] { --note-ink: 200 75% 48%; }
+[data-note-color="lavender"], [data-swatch="lavender"] { --note-ink: 260 55% 62%; }
+[data-note-color="rose"], [data-swatch="rose"] { --note-ink: 340 65% 58%; }
 .dark [data-note-color="coral"], .dark [data-swatch="coral"] { --note-ink: 14 85% 66%; }
 .dark [data-note-color="peach"], .dark [data-swatch="peach"] { --note-ink: 30 90% 62%; }
 .dark [data-note-color="sand"], .dark [data-swatch="sand"] { --note-ink: 45 90% 58%; }
@@ -538,15 +553,15 @@
 .dark [data-note-color="sky"], .dark [data-swatch="sky"] { --note-ink: 200 80% 64%; }
 .dark [data-note-color="lavender"], .dark [data-swatch="lavender"] { --note-ink: 260 70% 74%; }
 .dark [data-note-color="rose"], .dark [data-swatch="rose"] { --note-ink: 340 75% 70%; }
-.dark [data-note-color]:not([data-note-color="default"]) {
+[data-note-color]:not([data-note-color="default"]) {
   background-image: linear-gradient(hsl(var(--note-ink)), hsl(var(--note-ink)));
   background-size: 100% 3px;
   background-repeat: no-repeat;
 }
-/* Próbki koloru w ciemnym motywie pokazują kolor paska — przygaszone tła są do siebie zbyt podobne. */
-.dark [data-swatch]:not([data-swatch="default"]) { background-color: hsl(var(--note-ink)); }
+/* Próbki koloru pokazują kolor paska — przygaszone tła są do siebie zbyt podobne. */
+[data-swatch]:not([data-swatch="default"]) { background-color: hsl(var(--note-ink)); }
 /* Pasek akcji dziedziczy tło karty (`background: inherit`) — bez drugiego paska. */
-.dark [data-note-color] .card-actions { background-image: none; }
+[data-note-color] .card-actions { background-image: none; }
 
 /* Ciemne kolorowe notatki: tekst pomocniczy jaśniej, żeby utrzymać ~4.5:1. */
 .dark [data-note-color]:not([data-note-color="default"]) {

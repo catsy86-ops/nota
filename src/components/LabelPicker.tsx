@@ -83,6 +83,15 @@ interface LabelBadgesProps {
 
 export function LabelBadges({ labels, onRemove }: LabelBadgesProps) {
   if (labels.length === 0) return null;
+  // Na kaflu (bez usuwania) etykiety to cichy „#dom” — pigułki zostają dla terminu i priorytetu.
+  // „#” z CSS, więc tekst etykiety zostaje taki sam dla czytników i wyszukiwania.
+  if (!onRemove) {
+    return (
+      <div className="flex gap-x-1.5 gap-y-0.5 flex-wrap mt-2 text-2xs font-medium text-muted-foreground">
+        {labels.map((label) => <span key={label} className="before:content-['#'] before:opacity-60">{label}</span>)}
+      </div>
+    );
+  }
   return (
     <div className="flex gap-1 flex-wrap mt-2">
       {labels.map((label) => (

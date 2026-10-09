@@ -551,3 +551,14 @@ Odrzucone:
 - Crossfade starego i nowego widoku — wymagałby trzymania starej treści (150 kart) w DOM przez czas wyjścia.
 - Osobne animacje BottomNav/paska bocznego/toastów — już spójne (spring.snap/soft, sonner), dokładanie efektów rozproszyłoby uwagę.
 - Kolor tła AlertDialog (`bg-black/80` vs `bg-foreground/30` w Dialog) — to zmiana wyglądu, nie ruchu; do decyzji.
+
+## Upiększenie kafli notatek — 2026-10-09
+
+- [x] Zwartsze kafle: treść 4 linie (telefon 3), etykiety/termin/priorytet w jednym rzędzie, 4 pozycje listy. Suma wysokości 8 kart −12% (komputer), −17% (telefon).
+- [x] Jasne notatki jak ciemne: lekki odcień + kolorowy pasek u góry (`--note-ink` w obu motywach); próbki koloru w kolorze paska.
+- [x] Etykiety na kaflu jako cichy `#dom` (pigułki z usuwaniem zostają w edytorze).
+- [x] Postęp listy „2/5” obok tytułu zamiast paska pod listą (bez tytułu — pasek zostaje).
+- [x] Pasek akcji po najechaniu wtapia się w kartę (maska zamiast cienia), przezroczysta część nie łapie kliknięć.
+- [x] Zdjęcia: poza edycją jedna miniatura 16:9 i „+N”.
+- [x] Kolumny liczone od szerokości 13 rem (CSS `columns`/`auto-fill`), na telefonie zawsze 2. Treść ma `max-width`, więc na 1920 px dalej 5 kolumn.
+- [ ] Hierarchia tytuł/treść — po zagęszczeniu czytelna, bez zmian.

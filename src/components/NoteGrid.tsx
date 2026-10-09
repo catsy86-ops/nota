@@ -9,6 +9,9 @@ import { NoteViewActionsProvider, type NoteViewActions } from "@/hooks/NoteViewA
 import type { useNotes } from "@/hooks/useNotes";
 import { registerGridNavSection, useIsGridNavFocused, setGridNavFocus } from "@/lib/gridKeyboardNav";
 
+/** Docelowa szerokość kolumny przy automatycznej liczbie kolumn — na szerokim ekranie przybywa kolumn, karty się nie rozciągają. */
+const AUTO_COLUMN_REM = 13;
+
 interface SortableNoteCardProps {
   note: ReturnType<typeof useNotes>["notes"][number];
   index: number;
@@ -75,12 +78,13 @@ export function NoteGrid({
     if (prefs.layout === "list") return 1;
     if (!gridRef.current) return 1;
     if (prefs.autoColumns) {
-      // Te same progi co klasy Tailwind poniżej (liczone od szerokości okna).
-      const w = window.innerWidth;
-      if (w >= 1280) return 5;
-      if (w >= 1024) return 4;
-      if (w >= 768) return 3;
-      return 2;
+      // Ten sam rachunek co CSS (`columns: 13rem` / `auto-fill minmax(13rem)`): ile kolumn
+      // o szerokości AUTO_COLUMN mieści siatka; na telefonie zawsze dwie.
+      if (window.innerWidth < 640) return 2;
+      const el = gridRef.current;
+      const gapPx = parseFloat(getComputedStyle(el).columnGap) || 0;
+      const colPx = AUTO_COLUMN_REM * parseFloat(getComputedStyle(document.documentElement).fontSize);
+      return Math.max(1, Math.floor((el.clientWidth + gapPx) / (colPx + gapPx)));
     }
     return Math.max(1, Math.min(prefs.columns || 1, 4));
   }, [prefs.layout, prefs.autoColumns, prefs.columns]);
@@ -113,7 +117,7 @@ export function NoteGrid({
     containerClass = `max-w-2xl mx-auto ${gap.split(" ")[1]}`;
   } else if (prefs.layout === "grid") {
     const cols = prefs.autoColumns
-      ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+      ? "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(13rem,1fr))]"
       : prefs.columns === 1 ? "grid-cols-1"
       : prefs.columns === 2 ? "grid-cols-1 sm:grid-cols-2"
       : prefs.columns === 3 ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
@@ -121,7 +125,7 @@ export function NoteGrid({
     containerClass = `grid ${cols} ${gap.split(" ")[0]} auto-rows-fr`;
   } else {
     const cols = prefs.autoColumns
-      ? "columns-2 md:columns-3 lg:columns-4 xl:columns-5"
+      ? "columns-2 sm:columns-[13rem]"
       : prefs.columns === 1 ? "columns-1"
       : prefs.columns === 2 ? "columns-1 sm:columns-2"
       : prefs.columns === 3 ? "columns-1 sm:columns-2 lg:columns-3"

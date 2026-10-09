@@ -194,7 +194,18 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
 /** Na kaflu cztery pozycje — reszta w czytniku i edytorze. */
 const PREVIEW_ITEMS = 4;
 
-export function ChecklistPreview({ items, onToggle }: { items: ChecklistItem[]; onToggle?: (id: string) => void }) {
+/** Postęp listy „2/5” — kafel z tytułem pokazuje go obok tytułu zamiast paska pod listą. */
+export function ChecklistCount({ items }: { items: ChecklistItem[] }) {
+  if (!items.length) return null;
+  const done = items.filter((i) => i.checked).length;
+  return (
+    <span className="ml-1.5 align-baseline font-body text-2xs font-medium tabular-nums text-muted-foreground" aria-label={`Zrobione ${done} z ${items.length}`}>
+      {done}/{items.length}
+    </span>
+  );
+}
+
+export function ChecklistPreview({ items, onToggle, showProgress = true }: { items: ChecklistItem[]; onToggle?: (id: string) => void; showProgress?: boolean }) {
   if (!items.length) return null;
   const done = items.filter((i) => i.checked).length;
   
@@ -220,7 +231,7 @@ export function ChecklistPreview({ items, onToggle }: { items: ChecklistItem[]; 
       {items.length > PREVIEW_ITEMS && (
         <p className="text-2xs text-muted-foreground pl-5">+{items.length - PREVIEW_ITEMS} więcej</p>
       )}
-      {done > 0 && (
+      {showProgress && done > 0 && (
         <div className="flex items-center gap-2 mt-1">
           <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
             <div className="h-full bg-primary/60 rounded-full transition-all" style={{ width: `${(done / items.length) * 100}%` }} />
