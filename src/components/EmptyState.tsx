@@ -73,7 +73,6 @@ export function EmptyState({ view, search, elsewhere, onGo }: { view: View; sear
   return (
     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-center py-20 sm:py-24">
       <div className="relative w-64 max-w-full mx-auto mb-6">
-        <div className="absolute inset-x-6 inset-y-2 rounded-full bg-gradient-to-br from-primary/15 to-accent/15 blur-2xl" />
         <NotatnikWordmark className="relative" />
       </div>
       <h2 className="text-2xl font-display font-bold text-foreground mb-2">{HEADINGS[view]}</h2>

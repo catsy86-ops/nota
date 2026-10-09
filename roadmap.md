@@ -564,3 +564,9 @@ Odrzucone:
 - [ ] Hierarchia tytuł/treść — po zagęszczeniu czytelna, bez zmian.
 
 **Decyzja (2026-10-09):** okna potwierdzeń (AlertDialog) zostają z mocno przyciemnionym tłem (`bg-black/80`), zwykłe okna z lżejszym (`bg-foreground/30`) — świadoma różnica, potwierdzenie ma się wyróżniać.
+
+## Kierunek „zeszyt w kratkę przy barze” — 2026-10-09
+
+- [x] Krok 1 (`6bce5ec`): tło w kratkę (`PaperBackdrop`, `--grid`) zamiast poświat, nagłówek i dolny pasek bez rozmycia, czerwony margines przy pasku bocznym (`--margin`), bursztyn zamiast orange-500, niebieski długopis zamiast różu (linki), ciepły ciemny motyw, pełne tło powierzchni. Porównania: `shots/zeszyt/porownanie-*.png` (lokalnie, `shots/` w .gitignore).
+- [x] Krok 2 (`0ed08cf`): Plus Jakarta Sans w całej aplikacji (bez Inter), JetBrains Mono do cyfr w rachunku, treść do 88 rem, pole dodawania wyrównane do siatki.
+- [x] Krok 3: liczniki w pasku bocznym tylko przy zaległych przypomnieniach i Koszu, papierowy (ciepły) cień kart, puste stany bez poświaty za odręcznym napisem.

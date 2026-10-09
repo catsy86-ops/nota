@@ -28,7 +28,6 @@ import { useImportExport } from "@/hooks/useImportExport";
 import { useBackupReminders } from "@/hooks/useBackupReminders";
 import { useDailyWeeklyNudges } from "@/hooks/useDailyWeeklyNudges";
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
-import { getTodayRange } from "@/lib/dateRanges";
 import { AddNoteBar } from "@/components/AddNoteBar";
 import { InstallBanner } from "@/components/InstallBanner";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -405,7 +404,8 @@ const Index = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const remindersCount = notes.filter((n) => n.reminder).length;
+  // Licznik w pasku bocznym tylko przy tym, co wymaga uwagi: zaległe przypomnienia i Kosz.
+  const overdueCount = notes.filter((n) => n.reminder && n.reminder < Date.now()).length;
   // Trwałe usunięcie zabiera ze sobą historię wersji — inaczej zostawałaby
   // w `localStorage` na zawsze i zjadała limit.
   const deleteNoteForever = useCallback((id: string) => { deleteNote(id); deleteVersions(id); }, [deleteNote, deleteVersions]);
@@ -418,16 +418,13 @@ const Index = () => {
     reorderNotes,
   });
 
-  const { start: todayStart, end: todayEnd } = getTodayRange();
-  const todayNotesCount = notes.filter((n) => (n.createdAt >= todayStart && n.createdAt <= todayEnd) || (n.updatedAt >= todayStart && n.updatedAt <= todayEnd)).length;
-
   const sidebarItems: { icon: React.ElementType; label: string; view: View; count?: number; emoji: string }[] = [
-    { icon: StickyNote, label: "Notatki", view: "notes", count: notes.length, emoji: "📝" },
-    { icon: Calendar, label: "Dziś", view: "today", count: todayNotesCount, emoji: "📅" },
-    { icon: Bell, label: "Przypomnienia", view: "reminders", count: remindersCount, emoji: "🔔" },
-    { icon: CalendarRange, label: "Kalendarz", view: "calendar", count: remindersCount, emoji: "🗓️" },
+    { icon: StickyNote, label: "Notatki", view: "notes", emoji: "📝" },
+    { icon: Calendar, label: "Dziś", view: "today", emoji: "📅" },
+    { icon: Bell, label: "Przypomnienia", view: "reminders", count: overdueCount, emoji: "🔔" },
+    { icon: CalendarRange, label: "Kalendarz", view: "calendar", emoji: "🗓️" },
     { icon: BriefcaseBusiness, label: "Grafik", view: "shifts", emoji: "🗂️" },
-    { icon: Archive, label: "Archiwum", view: "archive", count: archivedNotes.length, emoji: "📦" },
+    { icon: Archive, label: "Archiwum", view: "archive", emoji: "📦" },
     { icon: Trash, label: "Kosz", view: "trash", count: trashedNotes.length, emoji: "🗑️" },
   ];
 
