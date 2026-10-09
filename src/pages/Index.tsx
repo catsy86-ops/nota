@@ -7,7 +7,6 @@ import { useNotesContext } from "@/hooks/NotesProvider";
 import { useNoteVersions } from "@/hooks/useNoteVersions";
 import type { NoteVersion } from "@/hooks/useNoteVersions";
 import { useReminderNotifications } from "@/hooks/useReminderNotifications";
-import { useHideOnScroll } from "@/hooks/useHideOnScroll";
 import { useTheme } from "@/hooks/useTheme";
 import { useViewPrefs } from "@/lib/viewPrefs";
 import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
@@ -106,7 +105,6 @@ const Index = () => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const lastSelectedRef = useRef<string | null>(null);
   const selectionMode = selectedIds.size > 0;
-  const hideHeader = useHideOnScroll(96);
 
   // Reset selection whenever the view or active label/folder changes.
   useEffect(() => { setSelectedIds(new Set()); lastSelectedRef.current = null; }, [view, activeLabel, activeFolder]);
@@ -440,7 +438,6 @@ const Index = () => {
 
       <div className="flex-1 min-w-0 flex flex-col">
         <AppHeader
-          hideHeader={hideHeader}
           selectionMode={selectionMode}
           sidebarOpen={sidebarOpen}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}

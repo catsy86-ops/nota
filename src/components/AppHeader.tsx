@@ -13,9 +13,9 @@ import { markBackup } from "@/lib/backupReminder";
 import { NotkiLogo } from "@/components/NotkiLogo";
 import type { View } from "@/hooks/useFilteredNotes";
 import { pluralPl } from "@/lib/plural";
+import { useHideOnScroll } from "@/hooks/useHideOnScroll";
 
 interface AppHeaderProps {
-  hideHeader: boolean;
   selectionMode: boolean;
   sidebarOpen: boolean;
   onToggleSidebar: () => void;
@@ -31,9 +31,11 @@ interface AppHeaderProps {
 }
 
 export function AppHeader({
-  hideHeader, selectionMode, sidebarOpen, onToggleSidebar, dark, onToggleTheme,
+  selectionMode, sidebarOpen, onToggleSidebar, dark, onToggleTheme,
   view, activeFolder, activeLabel, displayCount, search, onSearchChange, onImport,
 }: AppHeaderProps) {
+  // Stan tutaj, nie w Index: schowanie nagłówka przerysowuje tylko nagłówek, a nie całą stronę z kartami.
+  const hideHeader = useHideOnScroll(96);
   const { notes, archivedNotes, folders, allLabels } = useNotesContext();
 
   return (
