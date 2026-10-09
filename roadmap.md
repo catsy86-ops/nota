@@ -533,3 +533,21 @@ Zrzuty wszystkich widoków (390/1440 px, jasny/ciemny, realistyczne dane). Robio
 
 **Faza 4 — opcjonalnie**
 - [ ] 19. Podsumowanie Grafiku jako rachunek z baru (kropki prowadzące, cyfry o stałej szerokości, „Razem brutto”). **M**
+
+## Animacje i przejścia — 2026-10-09
+
+Wszystko na istniejących tokenach (`--dur-*`, `--ease-*`, `lib/motion.ts`), tylko `transform`/`opacity` (wyjątek opisany przy odhaczaniu), bez pętli, reduced motion przez `html[data-motion]` / MotionConfig.
+
+- [x] Przejście między widokami (także folder/etykieta): treść osiada fade'em z 6 px, 220 ms ease-out-quint, przez Web Animations API bez przemontowania — szkic w pasku nowej notatki zostaje, pole wyszukiwania stoi (`playEnter` w `lib/motion.ts`). Wejście Kalendarza i paska nowej notatki na tych samych wartościach.
+- [x] Zmiana miesiąca w Kalendarzu i Grafiku: siatka wjeżdża 12 px od strony nawigacji (dalej z prawej, wstecz z lewej), 220 ms (`useMonthDirection`, `.month-in-*`).
+- [x] Czytnik notatki rośnie z kafla i do niego wraca (origin transformacji w środku kafla, skala 0.94 → 1); sprężyna z przestrzeleniem zastąpiona tokenami 220/150 ms.
+- [x] Odhaczanie: ptaszek się rysuje, kreska przesuwa się przez tekst (każda linia osobno). Świadomy wyjątek: `stroke-dashoffset` i `background-size` jednego wiersza — malowanie małego prostokąta, gra tylko przy zmianie.
+- [x] Kafle: wyjście gaśnie z dociśnięciem o 2 px zamiast `scale 0.98`; stagger wejścia ≤ 6 kroków po 30 ms; opóźnienie staggeru nie obejmuje już `layout` (wcześniej po dodaniu/usunięciu notatki kafle dojeżdżały falą do 360 ms).
+- [x] AlertDialog z tym samym ruchem co Dialog (220/150 ms, skala 0.97).
+
+Odrzucone:
+- Rozwijanie paska nowej notatki „bez skoku” — `layout` framer-motion skaluje zawartość podczas zmiany wysokości, a poprawka wymaga animowania wysokości albo przebudowy edytora; zysk mały wobec ryzyka dla szkicu i fokusu.
+- Wspólny `layoutId` kafel ↔ czytnik — gryzie się z transformami dnd-kit i mierzy kartę przy każdym otwarciu; origin od kafla daje kierunek za ułamek kosztu.
+- Crossfade starego i nowego widoku — wymagałby trzymania starej treści (150 kart) w DOM przez czas wyjścia.
+- Osobne animacje BottomNav/paska bocznego/toastów — już spójne (spring.snap/soft, sonner), dokładanie efektów rozproszyłoby uwagę.
+- Kolor tła AlertDialog (`bg-black/80` vs `bg-foreground/30` w Dialog) — to zmiana wyglądu, nie ruchu; do decyzji.
