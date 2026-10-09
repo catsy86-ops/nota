@@ -330,6 +330,13 @@
     backdrop-filter: saturate(1.4) blur(20px);
     -webkit-backdrop-filter: saturate(1.4) blur(20px);
   }
+  /* TYMCZASOWE: `?noblur` (src/main.tsx) — pomiar kosztu rozmycia na telefonie. */
+  .noblur .glass,
+  .noblur .glass-strong,
+  .noblur [class*="backdrop-blur"] {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
   .pb-safe {
     padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
   }
