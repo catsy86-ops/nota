@@ -15,7 +15,7 @@ import { DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, type DayEntry, type Shi
  * od razu, mogłoby przy scaleniu nadpisać czyjeś poprawki tych samych id.
  */
 
-type Meta = "hourlyRate" | "overtimeMultiplier" | "workSystem" | "typesInit" | "patternsInit";
+type Meta = "hourlyRate" | "workSystem" | "typesInit" | "patternsInit";
 
 /** Origin transakcji Grafiku — odróżnia lokalne zmiany od tych z sieci i z migracji. */
 export const SHIFTS_ORIGIN = "shifts";
@@ -49,7 +49,7 @@ export function createYShifts(doc: Y.Doc) {
   function get(): ShiftData {
     if (snapshot) return snapshot;
     const settings: Record<string, unknown> = {};
-    for (const k of ["hourlyRate", "overtimeMultiplier", "workSystem"] as const) if (meta.has(k)) settings[k] = meta.get(k);
+    for (const k of ["hourlyRate", "workSystem"] as const) if (meta.has(k)) settings[k] = meta.get(k);
     snapshot = migrate({
       version: 2,
       ...settings,
@@ -187,7 +187,6 @@ export function createYShifts(doc: Y.Doc) {
       data.patterns.forEach((p, i) => patterns.set(p.id, { ...p, order: i }));
       for (const [k, e] of Object.entries(data.days)) days.set(k, e);
       meta.set("hourlyRate", data.hourlyRate);
-      meta.set("overtimeMultiplier", data.overtimeMultiplier);
       meta.set("workSystem", data.workSystem);
       meta.set("typesInit", true);
       meta.set("patternsInit", true);
@@ -220,7 +219,6 @@ export function createYShifts(doc: Y.Doc) {
       }
       for (const [k, e] of Object.entries(data.days)) if (!days.has(k)) days.set(k, e);
       if (!meta.has("hourlyRate") && data.hourlyRate) meta.set("hourlyRate", data.hourlyRate);
-      if (!meta.has("overtimeMultiplier")) meta.set("overtimeMultiplier", data.overtimeMultiplier);
       if (!meta.has("workSystem")) meta.set("workSystem", data.workSystem);
     }, "shifts-migration");
   }

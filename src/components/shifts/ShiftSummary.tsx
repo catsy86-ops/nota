@@ -3,13 +3,12 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { AlertTriangle } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
-import { formatDuration, formatHoursShort, formatMoney, setHourlyRate, setOvertimeMultiplier, setWorkSystem, type MonthSummary, type WorkSystem } from "@/lib/shifts";
+import { formatDuration, formatHoursShort, formatMoney, setHourlyRate, setWorkSystem, type MonthSummary, type WorkSystem } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
 interface ShiftSummaryProps {
   summary: MonthSummary;
   hourlyRate: number;
-  overtimeMultiplier: number;
   workSystem: WorkSystem;
 }
 
@@ -19,8 +18,8 @@ const parseNum = (s: string) => parseFloat(s.replace(",", "."));
  * Podsumowanie miesiąca. Sercem jest pasek normy: wypełnia się do wymiaru
  * czasu pracy, a nadwyżka (nadgodziny) dosuwa się za nim w kolorze akcentu.
  */
-export function ShiftSummary({ summary, hourlyRate, overtimeMultiplier, workSystem }: ShiftSummaryProps) {
-  const { minutes, normMinutes, overtimeMinutes, dailyOvertimeMinutes } = summary;
+export function ShiftSummary({ summary, hourlyRate, workSystem }: ShiftSummaryProps) {
+  const { minutes, normMinutes, overtimeMinutes, dailyOvertimeMinutes, overtime100Minutes } = summary;
   const scale = Math.max(normMinutes, minutes, 1);
   // Nadgodziny dobowe mogą być i poniżej normy miesiąca — pasek dzieli faktycznie przepracowane godziny.
   const within = Math.max(0, minutes - overtimeMinutes);
@@ -52,7 +51,10 @@ export function ShiftSummary({ summary, hourlyRate, overtimeMultiplier, workSyst
       <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
         <Stat label="Dni pracy" value={`${summary.daysWorked}`} />
         <Stat label="Nadgodziny" value={overtimeMinutes ? formatDuration(overtimeMinutes) : "—"} accent={overtimeMinutes > 0}
-          hint={dailyOvertimeMinutes > 0 ? `w tym dobowe ${formatDuration(dailyOvertimeMinutes)}` : undefined} />
+          hint={overtimeMinutes > 0 ? [
+            dailyOvertimeMinutes > 0 ? `dobowe ${formatDuration(dailyOvertimeMinutes)}` : null,
+            overtime100Minutes > 0 ? `z dodatkiem 100% ${formatDuration(overtime100Minutes)}` : null,
+          ].filter(Boolean).join(" · ") || undefined : undefined} />
         <Stat label="W nocy" value={formatDuration(summary.nightMinutes)} />
         <Stat label="Do normy" value={minutes >= normMinutes ? "—" : formatDuration(normMinutes - minutes)} />
       </dl>
@@ -89,7 +91,6 @@ export function ShiftSummary({ summary, hourlyRate, overtimeMultiplier, workSyst
 
       <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2 border-t border-border/50 pt-3 text-sm">
         <NumberField label="Stawka za godzinę" unit="zł" min={0} value={hourlyRate} empty={0} onCommit={setHourlyRate} />
-        <NumberField label="Mnożnik nadgodzin" unit="×" min={1} value={overtimeMultiplier} onCommit={setOvertimeMultiplier} />
         <label className="flex items-center gap-2 sm:col-span-2">
           <span className="text-muted-foreground flex-1">System czasu pracy</span>
           <select value={workSystem} onChange={(e) => setWorkSystem(e.target.value as WorkSystem)}
@@ -101,7 +102,7 @@ export function ShiftSummary({ summary, hourlyRate, overtimeMultiplier, workSyst
       </div>
       <p className="text-2xs text-muted-foreground">
         Norma wg art. 130 Kodeksu pracy dla pełnego etatu, pomniejszona o nieobecności w dni robocze.
-        Nadgodziny dobowe liczone w dobie pracowniczej (24 h od początku zmiany). Pora nocna 22:00–6:00. Odpoczynek dobowy 11 h (art. 132 KP).
+        Nadgodziny dobowe liczone w dobie pracowniczej (24 h od początku zmiany). Dodatek za nadgodziny wg art. 151¹ KP: 100% w nocy (22:00–6:00), w niedziele i święta oraz za przekroczenie normy, 50% za pozostałe. Odpoczynek dobowy 11 h (art. 132 KP).
       </p>
     </section>
   );

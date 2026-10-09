@@ -109,10 +109,6 @@ export function setHourlyRate(rate: number): void {
   yShifts.setMeta("hourlyRate", positive(rate));
 }
 
-export function setOvertimeMultiplier(m: number): void {
-  yShifts.setMeta("overtimeMultiplier", Math.max(1, positive(m) || 1));
-}
-
 export function setWorkSystem(workSystem: WorkSystem): void {
   yShifts.setMeta("workSystem", workSystem);
 }

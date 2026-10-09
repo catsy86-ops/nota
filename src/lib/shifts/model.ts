@@ -53,8 +53,6 @@ export interface ShiftData {
   days: Record<string, DayEntry>;
   /** Domyślna stawka za godzinę (zł). 0 = nie licz zarobku. */
   hourlyRate: number;
-  /** Mnożnik stawki za nadgodziny (Kodeks pracy: 1,5 lub 2). */
-  overtimeMultiplier: number;
   /**
    * System czasu pracy — od niego zależy dobowy limit przed nadgodzinami:
    * `basic` 8 h (art. 129 KP), `equivalent` do 12 h wg grafiku (art. 135 KP).
@@ -99,7 +97,6 @@ export const EMPTY_SHIFT_DATA: ShiftData = {
   types: DEFAULT_SHIFT_TYPES,
   days: {},
   hourlyRate: 0,
-  overtimeMultiplier: 1.5,
   workSystem: "basic",
   patterns: DEFAULT_PATTERNS,
 };
@@ -166,7 +163,6 @@ export function migrate(stored: unknown): ShiftData {
     types: Array.isArray(s.types) ? s.types.filter(isShiftType).map(cleanType) : EMPTY_SHIFT_DATA.types,
     days,
     hourlyRate: Math.max(0, num(s.hourlyRate, 0)),
-    overtimeMultiplier: Math.max(1, num(s.overtimeMultiplier, EMPTY_SHIFT_DATA.overtimeMultiplier)),
     workSystem: s.workSystem === "equivalent" ? "equivalent" : "basic",
     patterns: Array.isArray(s.patterns) ? s.patterns.filter(isPattern) : EMPTY_SHIFT_DATA.patterns,
   };

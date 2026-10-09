@@ -148,13 +148,34 @@ describe("podsumowanie miesiąca", () => {
     expect(monthSummary(data({ types: [twelve], days, workSystem: "equivalent" }), 2026, 9).dailyOvertimeMinutes).toBe(60);
   });
 
-  it("dolicza dopłatę za nadgodziny ponad normę", () => {
+  it("ponad normę okresu dodatek 100%", () => {
     // Luty 2026: 20 dni roboczych = 160 h; 21 dni po 8 h = 8 h nadgodzin.
     const days = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [`2026-02-${String(i + 1).padStart(2, "0")}`, { type: "d" }]));
-    const s = monthSummary(data({ types: [day], hourlyRate: 30, overtimeMultiplier: 1.5, days }), 2026, 1);
+    const s = monthSummary(data({ types: [day], hourlyRate: 30, days }), 2026, 1);
     expect(s.normMinutes).toBe(160 * 60);
     expect(s.overtimeMinutes).toBe(8 * 60);
-    expect(s.earnings).toBe(168 * 30 + 8 * 15);
+    expect(s.overtime100Minutes).toBe(8 * 60);
+    expect(s.earnings).toBe(168 * 30 + 8 * 30);
+  });
+
+  it("nadgodziny dobowe w nocy, w niedzielę i w święto mają 100%, pozostałe 50%", () => {
+    const at = (days: ShiftData["days"]) => monthSummary(data({ hourlyRate: 60, days }), 2026, 9);
+    // Pon. popołudnie do północy: 22–24 to pora nocna.
+    const night = at({ "2026-10-05": { type: "p", extraMin: 120 } });
+    expect(night.overtime100Minutes).toBe(120);
+    expect(night.earnings).toBe(10 * 60 + 2 * 60);
+    // Pon. ranna do 15:00 — zwykłe 50%.
+    const plain = at({ "2026-10-05": { type: "d", extraMin: 60 } });
+    expect(plain.overtime100Minutes).toBe(0);
+    expect(plain.earnings).toBe(9 * 60 + 30);
+    // Niedziela 4.10.
+    expect(at({ "2026-10-04": { type: "d", extraMin: 60 } }).overtime100Minutes).toBe(60);
+    // Noc pon.→wt. przedłużona do 7:00: ostatnia godzina już poza porą nocną.
+    expect(at({ "2026-10-05": { type: "n", extraMin: 60 } }).overtime100Minutes).toBe(0);
+    // Nadgodziny wniesione do cudzej doby to początek następnej zmiany: P pon., D wt. 6–14 → 6:00–14:00 w dzień.
+    expect(at({ "2026-10-05": { type: "p" }, "2026-10-06": { type: "d" } }).overtime100Minutes).toBe(0);
+    // Wszystkich Świętych 1.11 (niedziela 2026) i 11.11 (środa).
+    expect(monthSummary(data({ days: { "2026-11-11": { type: "d", extraMin: 30 } } }), 2026, 10).overtime100Minutes).toBe(30);
   });
 });
 
@@ -200,7 +221,6 @@ describe("migracja", () => {
     expect(m.version).toBe(2);
     expect(m.days["2026-10-01"]).toEqual({ type: "d" });
     expect(m.hourlyRate).toBe(25);
-    expect(m.overtimeMultiplier).toBe(1.5);
     expect(m.patterns.length).toBeGreaterThan(0);
   });
 
