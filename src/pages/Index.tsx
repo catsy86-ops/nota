@@ -1,4 +1,4 @@
-import { useState, useCallback, useDeferredValue, useEffect, useMemo, useRef, lazy, Suspense } from "react";
+import { useState, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
@@ -18,6 +18,7 @@ import { useLatestRef, useStableByKey } from "@/hooks/useLatestRef";
 import { useGridNavPreviewId, setGridNavPreview, setGridNavFocus } from "@/lib/gridKeyboardNav";
 import { NoteReader, type ReaderMode } from "@/components/NoteReader";
 import { cn } from "@/lib/utils";
+import { playEnter, tween } from "@/lib/motion";
 import { useNavigationType } from "react-router-dom";
 import { whenNotesReady, isNoteTextEditOpen } from "@/hooks/useNotes";
 import { DAILY_LABEL, DAILY_TEMPLATE, appendTimestamp, dailyKey, dailyTitle, findDailyNote } from "@/lib/dailyNote";
@@ -94,6 +95,19 @@ const Index = () => {
   useEffect(() => {
     if (deferredSearch !== parseViewRoute(window.location.pathname, window.location.search).search) setRouteSearch(deferredSearch);
   }, [deferredSearch, setRouteSearch]);
+  // Zmiana widoku (także folderu i etykiety): treść osiada fade'em z 6 px,
+  // zamiast podmienić się skokiem. Bez przemontowania — szkic w pasku nowej
+  // notatki i stan siatek przetrwają; pole wyszukiwania (data-view-static) stoi.
+  const mainRef = useRef<HTMLElement>(null);
+  const viewKey = `${view}|${activeFolder ?? ""}|${activeLabel ?? ""}`;
+  const prevViewKey = useRef(viewKey);
+  useLayoutEffect(() => {
+    if (prevViewKey.current === viewKey) return;
+    prevViewKey.current = viewKey;
+    for (const el of mainRef.current?.children ?? []) {
+      if (!el.hasAttribute("data-view-static")) playEnter(el, { opacity: 0, transform: "translateY(6px)" });
+    }
+  }, [viewKey]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false);
   const addNoteRef = useRef<{ expand: () => void }>(null);
@@ -458,16 +472,16 @@ const Index = () => {
         />
 
         {/* `flex gap`, nie `space-y`: ukryta na sm+ wyszukiwarka nie dokłada marginesu nad treścią. */}
-        <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-6 sm:gap-8 pb-safe">
+        <main ref={mainRef} className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-6 sm:gap-8 pb-safe">
           {view !== "shifts" && (
-            <div className="sm:hidden">
+            <div data-view-static className="sm:hidden">
               <SearchBar value={search} onChange={setSearch} />
             </div>
           )}
           {view === "notes" && <InstallBanner />}
 
           {canCompose && (
-            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1, duration: 0.4 }} className="space-y-3">
+            <motion.div initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={tween.enter} className="space-y-3">
               <div data-add-note-bar>
                 <AddNoteBar ref={addNoteRef} onAdd={handleAddNoteGlow} allLabels={allLabels} onCreateLabel={addLabel} destination={composeDestination}
                   templates={(done) => (

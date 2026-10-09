@@ -29,3 +29,19 @@ export const tween = {
   /** Wyjście: krótsze od wejścia (~0.75×). */
   exit: { duration: dur.fast, ease: ease.in },
 } satisfies Record<string, Transition>;
+
+/** Krzywa w zapisie CSS — dla Web Animations API, które nie zna tablic framer-motion. */
+export const cssEase = (curve: readonly number[]) => `cubic-bezier(${curve.join(", ")})`;
+
+/**
+ * Jednorazowe wejście elementu bez przemontowania (Web Animations API):
+ * osiada z `from` do stanu z CSS. Dla miejsc, gdzie `key` zgubiłby stan
+ * (np. szkic w pasku nowej notatki). Reduced motion czyta ten sam atrybut
+ * `html[data-motion]`, którym steruje `useMotionPref` — WAAPI nie podlega
+ * regule CSS z index.css, więc sprawdzamy go tutaj.
+ */
+export function playEnter(el: Element, from: Keyframe, duration = dur.base) {
+  if (document.documentElement.dataset.motion === "reduced" || typeof el.animate !== "function") return;
+  // Jedna klatka z `offset: 0` — koniec przeglądarka bierze z bieżącego stylu.
+  el.animate([{ ...from, offset: 0 }], { duration: duration * 1000, easing: cssEase(ease.out) });
+}

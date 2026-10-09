@@ -3,6 +3,7 @@ import {
   DndContext, PointerSensor, TouchSensor, pointerWithin, useSensor, useSensors, type DragEndEvent,
 } from "@dnd-kit/core";
 import { motion } from "framer-motion";
+import { tween } from "@/lib/motion";
 import { ChevronLeft, ChevronRight, Download, Keyboard } from "lucide-react";
 import { buildIcs, exportableReminders } from "@/lib/icsExport";
 import { download } from "@/lib/exportNotes";
@@ -188,7 +189,9 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
   const selectedOccurrences = byDay.get(dayKey(selectedDay)) ?? [];
 
   return (
-    <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+    // Pierwsze wejście (leniwy moduł dochodzi po zmianie widoku) — te same 6 px
+    // i krzywa co przejście między widokami w Index.
+    <motion.section initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={tween.enter} className="space-y-4">
       <header className="flex items-center gap-1 sm:gap-2">
         <button
           onClick={() => shiftMonth(-1)}
