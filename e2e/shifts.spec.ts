@@ -234,3 +234,13 @@ test("okres rozliczeniowy kwartał: postęp okresu i nadgodziny w ostatnim miesi
   await page.reload();
   await expect(page.getByRole("region", { name: "Podsumowanie miesiąca" }).getByLabel("Okres rozliczeniowy")).toHaveValue("3");
 });
+
+test("pół etatu: niższa norma i godziny ponadwymiarowe", async ({ page }) => {
+  const summary = page.getByRole("region", { name: "Podsumowanie miesiąca" });
+  const normFull = await summary.getByText(/h normy/).textContent();
+  await summary.getByLabel("Wymiar etatu").selectOption({ label: "1/2" });
+  await expect(summary.getByText(/h normy/)).not.toHaveText(normFull!);
+  await expect(summary).toContainText("/ 88 h normy");
+  await page.reload();
+  await expect(page.getByRole("region", { name: "Podsumowanie miesiąca" }).getByLabel("Wymiar etatu")).toHaveValue("0.5");
+});

@@ -9,6 +9,8 @@ export type WorkSystem = "basic" | "equivalent";
 /** Długość okresu rozliczeniowego w miesiącach (art. 129 KP). */
 export type SettlementMonths = 1 | 2 | 3 | 4 | 6 | 12;
 export const SETTLEMENT_MONTHS: SettlementMonths[] = [1, 2, 3, 4, 6, 12];
+/** Typowe wymiary etatu: [ułamek, etykieta]. */
+export const FTE_OPTIONS: [number, string][] = [[1, "Pełny etat"], [7 / 8, "7/8"], [4 / 5, "4/5"], [3 / 4, "3/4"], [3 / 5, "3/5"], [1 / 2, "1/2"], [2 / 5, "2/5"], [1 / 4, "1/4"]];
 
 export interface ShiftType {
   id: string;
@@ -63,6 +65,8 @@ export interface ShiftData {
   workSystem: WorkSystem;
   /** Okres rozliczeniowy liczony od stycznia; nadgodziny ponad normę rozlicza się w jego ostatnim miesiącu. */
   settlementMonths: SettlementMonths;
+  /** Wymiar etatu, (0, 1]; norma okresu jest proporcjonalna. */
+  fte: number;
   patterns: ShiftPattern[];
 }
 
@@ -104,6 +108,7 @@ export const EMPTY_SHIFT_DATA: ShiftData = {
   hourlyRate: 0,
   workSystem: "basic",
   settlementMonths: 1,
+  fte: 1,
   patterns: DEFAULT_PATTERNS,
 };
 
@@ -170,6 +175,7 @@ export function migrate(stored: unknown): ShiftData {
     days,
     hourlyRate: Math.max(0, num(s.hourlyRate, 0)),
     workSystem: s.workSystem === "equivalent" ? "equivalent" : "basic",
+    fte: typeof s.fte === "number" && s.fte > 0 && s.fte <= 1 ? s.fte : 1,
     settlementMonths: SETTLEMENT_MONTHS.includes(s.settlementMonths as SettlementMonths) ? (s.settlementMonths as SettlementMonths) : 1,
     patterns: Array.isArray(s.patterns) ? s.patterns.filter(isPattern) : EMPTY_SHIFT_DATA.patterns,
   };

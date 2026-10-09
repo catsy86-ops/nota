@@ -3,7 +3,7 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { AlertTriangle } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
-import { SETTLEMENT_MONTHS, formatDuration, formatHoursShort, formatMoney, setHourlyRate, setSettlementMonths, setWorkSystem, type MonthSummary, type PeriodSummary, type SettlementMonths, type WorkSystem } from "@/lib/shifts";
+import { FTE_OPTIONS, SETTLEMENT_MONTHS, formatDuration, formatHoursShort, formatMoney, setFte, setHourlyRate, setSettlementMonths, setWorkSystem, type MonthSummary, type PeriodSummary, type SettlementMonths, type WorkSystem } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
 interface ShiftSummaryProps {
@@ -11,6 +11,7 @@ interface ShiftSummaryProps {
   hourlyRate: number;
   workSystem: WorkSystem;
   settlementMonths: SettlementMonths;
+  fte: number;
 }
 
 const PERIOD_LABELS: Record<SettlementMonths, string> = {
@@ -28,11 +29,12 @@ const parseNum = (s: string) => parseFloat(s.replace(",", "."));
  * Podsumowanie miesiąca. Sercem jest pasek normy: wypełnia się do wymiaru
  * czasu pracy, a nadwyżka (nadgodziny) dosuwa się za nim w kolorze akcentu.
  */
-export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths }: ShiftSummaryProps) {
+export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths, fte }: ShiftSummaryProps) {
   const { minutes, normMinutes, overtimeMinutes, dailyOvertimeMinutes, overtime100Minutes } = summary;
   const scale = Math.max(normMinutes, minutes, 1);
   // Nadgodziny dobowe mogą być i poniżej normy miesiąca — pasek dzieli faktycznie przepracowane godziny.
-  const within = Math.max(0, minutes - overtimeMinutes);
+  const extra = summary.extraTimeMinutes;
+  const within = Math.max(0, minutes - overtimeMinutes - extra);
 
   return (
     <section aria-label="Podsumowanie miesiąca" className="rounded-3xl border border-border/60 bg-card/60 p-4 sm:p-5 space-y-4">
@@ -53,8 +55,9 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
       </div>
 
       <div className="h-2.5 rounded-full bg-muted overflow-hidden flex" role="img"
-        aria-label={`${formatDuration(minutes)} z ${formatDuration(normMinutes)} normy${overtimeMinutes ? `, ${formatDuration(overtimeMinutes)} nadgodzin` : ""}`}>
+        aria-label={`${formatDuration(minutes)} z ${formatDuration(normMinutes)} normy${extra ? `, ${formatDuration(extra)} ponadwymiarowych` : ""}${overtimeMinutes ? `, ${formatDuration(overtimeMinutes)} nadgodzin` : ""}`}>
         <div className="h-full bg-primary transition-[width] duration-500" style={{ width: `${(within / scale) * 100}%` }} />
+        {extra > 0 && <div className="h-full bg-primary/40 transition-[width] duration-500" style={{ width: `${(extra / scale) * 100}%` }} />}
         {overtimeMinutes > 0 && <div className="h-full bg-accent transition-[width] duration-500" style={{ width: `${(overtimeMinutes / scale) * 100}%` }} />}
       </div>
 
@@ -67,6 +70,9 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
           ].filter(Boolean).join(" · ") || undefined : undefined} />
         <Stat label="W nocy" value={formatDuration(summary.nightMinutes)} />
         <Stat label="Do normy" value={minutes >= normMinutes ? "—" : formatDuration(normMinutes - minutes)} />
+        {extra > 0 && (
+          <Stat label="Ponadwymiarowe" value={formatDuration(extra)} hint="ponad etat, bez dodatku" />
+        )}
       </dl>
 
       {summary.period && <PeriodProgress period={summary.period} />}
@@ -112,6 +118,13 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
           </select>
         </label>
         <label className="flex items-center gap-2 sm:col-span-2">
+          <span className="text-muted-foreground flex-1">Wymiar etatu</span>
+          <select value={FTE_OPTIONS.some(([v]) => v === fte) ? fte : 1} onChange={(e) => setFte(Number(e.target.value))}
+            className={cn(FIELD, "w-auto pr-1 text-left")}>
+            {FTE_OPTIONS.map(([v, label]) => <option key={label} value={v}>{label}</option>)}
+          </select>
+        </label>
+        <label className="flex items-center gap-2 sm:col-span-2">
           <span className="text-muted-foreground flex-1">Okres rozliczeniowy</span>
           <select value={settlementMonths} onChange={(e) => setSettlementMonths(Number(e.target.value) as SettlementMonths)}
             className={cn(FIELD, "w-auto pr-1 text-left")}>
@@ -120,7 +133,7 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
         </label>
       </div>
       <p className="text-2xs text-muted-foreground">
-        Norma wg art. 130 Kodeksu pracy dla pełnego etatu, pomniejszona o nieobecności w dni robocze. Okresy rozliczeniowe liczone od stycznia.
+        Norma wg art. 130 Kodeksu pracy, proporcjonalna do etatu, pomniejszona o nieobecności w dni robocze. Przy niepełnym etacie nadgodziny liczą się dopiero ponad normę pełnego etatu albo 8 h na dobę, chyba że umowa ustala niższą granicę. Okresy rozliczeniowe liczone od stycznia.
         Nadgodziny dobowe liczone w dobie pracowniczej (24 h od początku zmiany). Dodatek za nadgodziny wg art. 151¹ KP: 100% w nocy (22:00–6:00), w niedziele i święta oraz za przekroczenie normy, 50% za pozostałe. Odpoczynek dobowy 11 h (art. 132 KP).
       </p>
     </section>

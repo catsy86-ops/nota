@@ -117,6 +117,10 @@ export function setSettlementMonths(months: SettlementMonths): void {
   yShifts.setMeta("settlementMonths", months);
 }
 
+export function setFte(fte: number): void {
+  yShifts.setMeta("fte", fte > 0 && fte <= 1 ? fte : 1);
+}
+
 /** Losowe id — `Date.now()` z dwóch telefonów w tej samej milisekundzie dałby kolizję po scaleniu. */
 export function newShiftId(prefix: string): string {
   return `${prefix}${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;

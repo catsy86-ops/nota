@@ -222,6 +222,30 @@ describe("okres rozliczeniowy", () => {
   });
 });
 
+describe("niepełny etat", () => {
+  it("norma proporcjonalna, ponad nią godziny ponadwymiarowe, ponad pełny etat nadgodziny", () => {
+    // Luty 2026: 160 h normy pełnego etatu, pół etatu = 80 h.
+    const feb = (n: number) => Object.fromEntries(Array.from({ length: n }, (_, i) => [`2026-02-${String(i + 1).padStart(2, "0")}`, { type: "d" }]));
+    const half = (days: ShiftData["days"]) => monthSummary(data({ fte: 1 / 2, hourlyRate: 30, days }), 2026, 1);
+    expect(half({}).normMinutes).toBe(80 * 60);
+    const twelve = half(feb(12)); // 96 h
+    expect(twelve.extraTimeMinutes).toBe(16 * 60);
+    expect(twelve.overtimeMinutes).toBe(0);
+    expect(twelve.earnings).toBe(96 * 30);
+    const twentyOne = half(feb(21)); // 168 h
+    expect(twentyOne.extraTimeMinutes).toBe(80 * 60);
+    expect(twentyOne.overtimeMinutes).toBe(8 * 60);
+    // Pełny etat bez zmian: brak godzin ponadwymiarowych.
+    expect(monthSummary(data({ days: feb(21) }), 2026, 1).extraTimeMinutes).toBe(0);
+  });
+
+  it("odrzuca wymiar spoza (0, 1]", () => {
+    expect(migrate({ fte: 0 }).fte).toBe(1);
+    expect(migrate({ fte: 1.5 }).fte).toBe(1);
+    expect(migrate({ fte: 0.75 }).fte).toBe(0.75);
+  });
+});
+
 describe("odpoczynek dobowy", () => {
   it("wskazuje zmianę po mniej niż 11 h przerwy, z odchyleniem", () => {
     const d = data({ days: {
