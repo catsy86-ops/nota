@@ -1,3 +1,4 @@
+import { useLatestRef } from "@/hooks/useLatestRef";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import type { Note } from "@/hooks/useNotes";
@@ -60,6 +61,9 @@ function createNudgeScheduler({
 
 /** Nudge for "Dziś" — either at a fixed daily time ("HH:mm") or every X hours. */
 export function useDailyWeeklyNudges(prefs: DailyWeeklyNudgePrefs, notes: Note[], setView: (v: "today" | "week") => void) {
+  // Notatki i `setView` czytane z refów: edycja notatki nie może restartować 5-s opóźnienia i interwału.
+  const notesRef = useLatestRef(notes);
+  const setViewRef = useLatestRef(setView);
   useEffect(() => {
     const intervalHours = prefs.todayReminderHours;
     const fixedTime = prefs.todayReminderTime;
@@ -70,7 +74,7 @@ export function useDailyWeeklyNudges(prefs: DailyWeeklyNudgePrefs, notes: Note[]
       snoozeKey: "kaczy.todaySnoozeUntil",
       getCount: () => {
         const { start, end } = getTodayRange();
-        return notes.filter((n) => (n.createdAt >= start && n.createdAt <= end) || (n.updatedAt >= start && n.updatedAt <= end)).length;
+        return notesRef.current.filter((n) => (n.createdAt >= start && n.createdAt <= end) || (n.updatedAt >= start && n.updatedAt <= end)).length;
       },
       isDue: (lastNudge, now) => {
         if (fixedTime && /^\d{1,2}:\d{2}$/.test(fixedTime)) {
@@ -88,7 +92,7 @@ export function useDailyWeeklyNudges(prefs: DailyWeeklyNudgePrefs, notes: Note[]
       },
       buildTitle: (count) => `📅 Masz ${count} ${pluralPl(count, ["notatkę", "notatki", "notatek"])} z dzisiaj`,
       description: "Wejdź w widok „Dziś”, aby je przejrzeć.",
-      onShow: () => setView("today"),
+      onShow: () => setViewRef.current("today"),
       snoozeDescription: "Przypomnę o notatkach z „Dziś” za 10 minut.",
       duration: 10000,
     });
@@ -96,7 +100,7 @@ export function useDailyWeeklyNudges(prefs: DailyWeeklyNudgePrefs, notes: Note[]
     const initial = setTimeout(check, 5000);
     const poll = setInterval(check, 60_000);
     return () => { clearTimeout(initial); clearInterval(poll); };
-  }, [notes, prefs.todayReminderHours, prefs.todayReminderTime, setView]);
+  }, [notesRef, setViewRef, prefs.todayReminderHours, prefs.todayReminderTime]);
 
   // Weekly reminder for "Ten tydzień" — fires at a fixed time on a chosen weekday.
   useEffect(() => {
@@ -108,7 +112,7 @@ export function useDailyWeeklyNudges(prefs: DailyWeeklyNudgePrefs, notes: Note[]
       snoozeKey: "kaczy.weekSnoozeUntil",
       getCount: () => {
         const { start, end } = getWeekRange();
-        return notes.filter((n) => (n.createdAt >= start && n.createdAt <= end) || (n.updatedAt >= start && n.updatedAt <= end)).length;
+        return notesRef.current.filter((n) => (n.createdAt >= start && n.createdAt <= end) || (n.updatedAt >= start && n.updatedAt <= end)).length;
       },
       isDue: (lastNudge, now) => {
         const nowDate = new Date(now);
@@ -121,7 +125,7 @@ export function useDailyWeeklyNudges(prefs: DailyWeeklyNudgePrefs, notes: Note[]
       },
       buildTitle: (count) => `🗓️ ${count} ${pluralPl(count, ["notatka", "notatki", "notatek"])} z tego tygodnia`,
       description: "Zerknij na podsumowanie ostatnich 7 dni.",
-      onShow: () => setView("week"),
+      onShow: () => setViewRef.current("week"),
       snoozeDescription: "Przypomnę o notatkach z tygodnia za 10 minut.",
       duration: 12000,
     });
@@ -129,5 +133,5 @@ export function useDailyWeeklyNudges(prefs: DailyWeeklyNudgePrefs, notes: Note[]
     const initial = setTimeout(check, 6000);
     const poll = setInterval(check, 60_000);
     return () => { clearTimeout(initial); clearInterval(poll); };
-  }, [notes, prefs.weekReminderTime, prefs.weekReminderDay, setView]);
+  }, [notesRef, setViewRef, prefs.weekReminderTime, prefs.weekReminderDay]);
 }
