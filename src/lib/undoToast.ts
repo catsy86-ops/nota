@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { toast } from "sonner";
 
 export interface UndoToastOptions {
@@ -19,10 +20,14 @@ export function toastWithUndo(
   opts: UndoToastOptions = {}
 ) {
   let called = false;
+  const duration = opts.duration ?? 5000;
   const id = toast(message, {
     description: opts.description,
     icon: opts.icon,
-    duration: opts.duration ?? 5000,
+    duration,
+    // Cienki pasek upływu czasu na dole dymka (patrz `.toast-undo` w index.css).
+    className: "toast-undo",
+    style: { "--toast-ms": `${duration}ms` } as CSSProperties,
     action: {
       label: "Cofnij",
       onClick: () => {

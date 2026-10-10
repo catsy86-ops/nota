@@ -145,11 +145,6 @@ export default {
           from: { clipPath: "inset(0 100% 0 0)" },
           to: { clipPath: "inset(0 0 0 0)" },
         },
-        // Pasek upływu czasu toastu „Cofnij”.
-        "toast-timer": {
-          from: { transform: "scaleX(1)" },
-          to: { transform: "scaleX(0)" },
-        },
         shimmer: {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
