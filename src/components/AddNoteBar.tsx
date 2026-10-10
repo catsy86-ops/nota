@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Tag, Bell, ImagePlus, X, PenTool, ListChecks, Palette, Folder, Flag, Hash } from "lucide-react";
+import { Plus, Tag, Bell, ImagePlus, Paperclip, X, PenTool, ListChecks, Palette, Folder, Flag, Hash } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { ColorPicker, colorClasses } from "./ColorPicker";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,8 @@ import { IconButton } from "@/components/ui/icon-button";
 import type { NoteColor, ChecklistItem } from "@/hooks/useNotes";
 import { imageStore } from "@/lib/imageStore";
 import { NoteImage } from "./NoteImage";
+import { AttachmentsPanel, type AttachmentsPanelHandle } from "./AttachmentsPanel";
+import type { Attachment } from "@/lib/attachments";
 import { DrawingCanvas } from "./DrawingCanvas";
 import { ChecklistConvertButtons, ChecklistEditor } from "./ChecklistEditor";
 import { FormatToolbar } from "./MarkdownRenderer";
@@ -28,7 +30,7 @@ import { pluralPl } from "@/lib/plural";
 import { parsePastedUrl } from "@/lib/urlTitle";
 
 interface AddNoteBarProps {
-  onAdd: (title: string, content: string, color: NoteColor, labels: string[], reminder: number | null, images: string[], checklist: ChecklistItem[], priority: NotePriority, folderId?: string | null) => void;
+  onAdd: (title: string, content: string, color: NoteColor, labels: string[], reminder: number | null, images: string[], checklist: ChecklistItem[], priority: NotePriority, folderId?: string | null, attachments?: Attachment[]) => void;
   /** Foldery, do których można wskazać `@folder` w treści. */
   folders?: { id: string; name: string }[];
   allLabels: string[];
@@ -51,6 +53,8 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   const [reminderTime, setReminderTime] = useState(DEFAULT_REMINDER_TIME);
   const [newLabel, setNewLabel] = useState("");
   const [images, setImages] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const attachmentsRef = useRef<AttachmentsPanelHandle>(null);
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [showChecklist, setShowChecklist] = useState(false);
   const [showDrawing, setShowDrawing] = useState(false);
@@ -64,7 +68,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   useImperativeHandle(ref, () => ({ expand: () => setExpanded(true) }));
 
   const reset = useCallback(() => {
-    setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderDate(undefined); setReminderTime(DEFAULT_REMINDER_TIME); setPriority("none"); setImages([]); setChecklist([]); setShowChecklist(false); setIgnored(new Set()); setExpanded(false);
+    setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderDate(undefined); setReminderTime(DEFAULT_REMINDER_TIME); setPriority("none"); setImages([]); setAttachments([]); setChecklist([]); setShowChecklist(false); setIgnored(new Set()); setExpanded(false);
   }, []);
 
   // Tokeny z tekstu (`#etykieta`, `@folder`, `!`, „jutro 9:00”) — pokazywane jako chipy, zanim cokolwiek się zapisze.
@@ -79,17 +83,17 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   }, [expanded, title, content, allLabels, folders, reminder, priority]);
 
   const handleClose = useCallback(() => {
-    if (title.trim() || content.trim() || images.length > 0 || checklist.length > 0) {
-      const r = applyCapture({ title, content }, capture, ignored, images.length > 0 || checklist.length > 0);
+    if (title.trim() || content.trim() || images.length > 0 || attachments.length > 0 || checklist.length > 0) {
+      const r = applyCapture({ title, content }, capture, ignored, images.length > 0 || attachments.length > 0 || checklist.length > 0);
       r.newLabels.forEach((l) => onCreateLabel(l));
       const allNoteLabels = [...labels];
       for (const l of r.labels) if (!allNoteLabels.includes(l)) allNoteLabels.push(l);
       const remindAt = r.reminder ? r.reminder.getTime() : reminder;
       if (r.reminder) requestNotificationPermissionOnIntent();
-      onAdd(r.title, r.content, color, allNoteLabels, remindAt, images, checklist, r.priority ?? priority, r.folderId);
+      onAdd(r.title, r.content, color, allNoteLabels, remindAt, images, checklist, r.priority ?? priority, r.folderId, attachments);
     }
     reset();
-  }, [title, content, images, checklist, color, labels, reminder, priority, capture, ignored, onAdd, onCreateLabel, reset]);
+  }, [title, content, images, attachments, checklist, color, labels, reminder, priority, capture, ignored, onAdd, onCreateLabel, reset]);
 
   useEffect(() => {
     if (expanded && titleRef.current) titleRef.current.focus();
@@ -119,7 +123,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
     }
   }
 
-  const isDraftEmpty = !title.trim() && !content.trim() && images.length === 0 && checklist.length === 0;
+  const isDraftEmpty = !title.trim() && !content.trim() && images.length === 0 && attachments.length === 0 && checklist.length === 0;
 
   const reminderTimestamp = reminderDate ? composeReminderTimestamp(reminderDate, reminderTime) : null;
 
@@ -274,6 +278,8 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
               </div>
             )}
 
+            <AttachmentsPanel ref={attachmentsRef} attachments={attachments} onChange={setAttachments} />
+
             {/* Labels display */}
             {labels.length > 0 && (
               <div className="flex gap-1 flex-wrap">
@@ -314,6 +320,10 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                   <ImagePlus className="w-4 h-4" />
                 </IconButton>
                 <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
+                {/* Attachments: PDF, tekst, dokumenty */}
+                <IconButton size="sm" onClick={() => attachmentsRef.current?.pick()} title="Dodaj plik" aria-label="Dodaj plik">
+                  <Paperclip className="w-4 h-4" />
+                </IconButton>
                 {/* Drawing */}
                 <IconButton size="sm" onClick={() => setShowDrawing(true)} title="Rysuj" aria-label="Rysuj">
                   <PenTool className="w-4 h-4" />

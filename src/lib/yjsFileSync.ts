@@ -47,7 +47,7 @@ export function base64ToBytes(b64: string): Uint8Array {
 export async function buildSyncFile(store: YjsStore = yjsStore): Promise<SyncFile> {
   const update = store.encodeSyncState();
   const blobs: Record<string, string> = {};
-  for (const ref of store.referencedImages()) {
+  for (const ref of store.syncableRefs()) {
     const dataUrl = await store.images.getDataUrl(ref);
     if (dataUrl) blobs[ref] = dataUrl;
   }

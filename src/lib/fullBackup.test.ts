@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { buildFullBackup, parseFullBackup, restoreFullBackup, SETTINGS_KEYS, ACHIEVEMENTS_KEY } from "./exportNotes";
+import { buildFullBackup, buildFullBackupWithReport, describeSkippedAttachments, parseFullBackup, restoreFullBackup, SETTINGS_KEYS, ACHIEVEMENTS_KEY } from "./exportNotes";
 import { setDayShift, shiftStore } from "./shifts/store";
 import { yjsStore } from "./yjsStore";
 import { versionsStore } from "./versionsStore";
@@ -47,7 +47,7 @@ describe("pełny backup v2", () => {
     const text = JSON.stringify(await buildFullBackup());
     expect(text).not.toContain("TAJNYKOD");
     const backup = await parseFullBackup(text);
-    expect(backup.version).toBe(2);
+    expect(backup.version).toBe(3);
     expect(backup.versions?.map((v) => v.title)).toEqual(["stara wersja"]);
     expect(backup.settings?.["kaczy.viewPrefs.v1"]).toContain("list");
     expect(backup.achievements).toContain("7");
@@ -118,5 +118,55 @@ describe("pełny backup — obrazy", () => {
     await expect(restoreFullBackup(backup, ALL)).rejects.toThrow();
     spy.mockRestore();
     expect(yjsStore.projectNotes().map((n) => n.id)).toEqual(["local"]);
+  });
+});
+
+describe("pełny backup v3 — załączniki", () => {
+  async function addFile(name: string, text: string, type = "text/plain") {
+    const bytes = new TextEncoder().encode(text);
+    const hash = await imageStore.putBytes(bytes, type);
+    return { hash, name, size: bytes.length, type };
+  }
+
+  it("embeds attachment bytes once and restores them on another device", async () => {
+    const att = await addFile("notatki.txt", "treść pliku");
+    yjsStore.upsertNote(makeNote({ id: "a", attachments: [att] }));
+    yjsStore.upsertNote(makeNote({ id: "b", attachments: [att] }));
+    const { backup, attachments } = await buildFullBackupWithReport();
+    expect(backup.version).toBe(3);
+    expect(Object.keys(backup.attachmentBlobs ?? {})).toEqual([att.hash]);
+    expect(describeSkippedAttachments(attachments)).toBeNull();
+
+    const text = JSON.stringify(backup);
+    await imageStore.resetForTests();
+    await restoreFullBackup(await parseFullBackup(text), ALL);
+    expect(imageStore.has(att.hash)).toBe(true);
+    const note = yjsStore.projectNotes().find((n) => n.id === "a")!;
+    expect(note.attachments).toEqual([att]);
+  });
+
+  it("reads a v2 file without attachments (notes get no manifest)", async () => {
+    const v2 = { version: 2, exportedAt: 1, notes: [makeNote({ id: "old" })], labels: [], folders: [] };
+    const backup = await parseFullBackup(JSON.stringify(v2));
+    expect(backup.attachmentBlobs).toBeUndefined();
+    expect(backup.notes[0].attachments).toBeUndefined();
+    await restoreFullBackup(backup, ALL);
+    expect(yjsStore.projectNotes()[0].attachments).toBeUndefined();
+  });
+
+  it("drops malformed manifest entries instead of rejecting the note", async () => {
+    const raw = { version: 3, exportedAt: 1, labels: [], folders: [], notes: [{
+      ...makeNote({ id: "x" }),
+      attachments: [{ hash: "nie-hash", name: "a", size: 1, type: "" }, { hash: "c".repeat(64), name: "plik.txt", size: 5, type: "text/plain" }, 7],
+    }] };
+    const backup = await parseFullBackup(JSON.stringify(raw));
+    expect(backup.notes[0].attachments).toEqual([{ hash: "c".repeat(64), name: "plik.txt", size: 5, type: "text/plain" }]);
+  });
+
+  it("reports attachments whose bytes are not on this device", async () => {
+    yjsStore.upsertNote(makeNote({ id: "m", attachments: [{ hash: "d".repeat(64), name: "obcy.pdf", size: 10, type: "application/pdf" }] }));
+    const { attachments } = await buildFullBackupWithReport();
+    expect(attachments.missing.map((a) => a.name)).toEqual(["obcy.pdf"]);
+    expect(describeSkippedAttachments(attachments)).toContain("nieobecne");
   });
 });

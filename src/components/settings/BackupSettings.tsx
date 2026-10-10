@@ -3,7 +3,7 @@ import { Download, Database, ShieldCheck, ShieldAlert, FileCog, FileDown, GitMer
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useViewPrefs, setViewPref } from "@/lib/viewPrefs";
-import { exportFullBackup, pickFullBackup, restoreFullBackup, type RestoreOptions } from "@/lib/exportNotes";
+import { describeSkippedAttachments, exportFullBackup, pickFullBackup, restoreFullBackup, type RestoreOptions } from "@/lib/exportNotes";
 import type { FullBackup } from "@/lib/noteSchema";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -132,9 +132,10 @@ function handleAutoExportChange(v: number) {
 
 async function exportNow() {
   try {
-    const { savedToFile } = await exportFullBackup();
+    const { savedToFile, attachments } = await exportFullBackup();
     try { localStorage.setItem("kaczy.lastAutoExport", String(Date.now())); } catch { /* ignore */ }
-    toast.success(savedToFile ? "Backup zapisany 💾" : "Backup pobrany 💾");
+    const skipped = describeSkippedAttachments(attachments);
+    toast.success(savedToFile ? "Backup zapisany 💾" : "Backup pobrany 💾", skipped ? { description: skipped, duration: 12000 } : undefined);
   } catch {
     toast.error("Nie udało się wygenerować backupu");
   }

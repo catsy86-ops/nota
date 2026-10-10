@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { Note, Folder, NoteColor, FolderColor, ChecklistItem } from "@/hooks/useNotes";
 import type { NoteVersion } from "@/lib/versionsStore";
+import { normalizeAttachments } from "@/lib/attachments";
 
 const COLORS = ["default", "coral", "peach", "sand", "mint", "sage", "sky", "lavender", "rose"] as const;
 
@@ -31,6 +32,8 @@ export const noteSchema = z.object({
   priority: z.enum(["none", "low", "medium", "high"]).catch("none"),
   dailyDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().catch(undefined),
   images: z.array(z.string()).catch([]),
+  // Starsze pliki nie mają pola; zły wpis jest pomijany, nie unieważnia notatki.
+  attachments: z.unknown().transform((v) => normalizeAttachments(v)).optional(),
   checklist: z.array(checklistItemSchema).catch([]),
   folderId: z.string().nullable().catch(null),
   order: z.number().catch(0),
@@ -59,7 +62,7 @@ export function looksLikeNoteArray(value: unknown): value is Record<string, unkn
  * dalej, a przy przywracaniu brakująca sekcja po prostu nie jest ruszana.
  */
 export interface FullBackup {
-  version: 1 | 2;
+  version: 1 | 2 | 3;
   exportedAt: number;
   notes: Note[];
   labels: string[];
@@ -72,6 +75,12 @@ export interface FullBackup {
   achievements?: string;
   /** Surowy dokument Grafiku zmian (`lib/shifts`); kształt waliduje `migrate()` przy odczycie. */
   shifts?: string;
+  /**
+   * v3: bajty załączników (hash SHA-256 → data URL), każdy raz. Manifesty są
+   * w `notes[].attachments`; plik większy niż budżet backupu jest pominięty —
+   * wpis w notatce zostaje, ale bez bajtów.
+   */
+  attachmentBlobs?: Record<string, string>;
 }
 
 const versionSchema = z.object({
@@ -83,7 +92,7 @@ const versionSchema = z.object({
 });
 
 export const fullBackupSchema = z.object({
-  version: z.union([z.literal(1), z.literal(2)]).catch(1),
+  version: z.union([z.literal(1), z.literal(2), z.literal(3)]).catch(1),
   exportedAt: z.number().catch(() => Date.now()),
   notes: z.array(noteSchema).catch([]),
   labels: z.array(z.string()).catch([]),
@@ -93,4 +102,5 @@ export const fullBackupSchema = z.object({
   settings: z.record(z.string()).optional().catch(undefined),
   achievements: z.string().optional().catch(undefined),
   shifts: z.string().optional().catch(undefined),
+  attachmentBlobs: z.record(z.string()).optional().catch(undefined),
 }) satisfies z.ZodType<FullBackup, z.ZodTypeDef, unknown>;
