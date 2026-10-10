@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
 import {
-  Settings as SettingsIcon, HelpCircle, Tag, Moon, Sun, FolderOpen, Command, History, Trophy, Brain, MoreHorizontal, ChevronDown,
+  Settings as SettingsIcon, HelpCircle, Tag, Moon, Sun, FolderOpen, Command, History, Trophy, Brain, MoreHorizontal, ChevronDown, Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { SidebarLabelItem } from "@/components/sidebar/SidebarLabelItem";
 import { SidebarFolderItem } from "@/components/sidebar/SidebarFolderItem";
+import { SidebarFilterItem } from "@/components/sidebar/SidebarFilterItem";
 import { SidebarAddFolderButton } from "@/components/sidebar/SidebarAddFolderButton";
 import { SidebarRow, SidebarCount } from "@/components/sidebar/SidebarRow";
 import { InstallAppButton } from "@/components/InstallAppButton";
@@ -17,6 +18,8 @@ import type { View } from "@/hooks/useFilteredNotes";
 import { modShortcut } from "@/lib/platform";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { dur, ease, tween } from "@/lib/motion";
+import { useSavedFilters, sameQuery } from "@/lib/savedFilters";
+import { searchNotes } from "@/lib/searchNotes";
 
 // „Notatki” przyjmują upuszczoną notatkę (wyjęcie z folderu); pozostałe pozycje nie.
 function NavRow({ item, active, onClick }: { item: SidebarItem; active: boolean; onClick: () => void }) {
@@ -56,6 +59,10 @@ interface AppSidebarProps {
   onGoView: (view: View) => void;
   onGoLabel: (label: string) => void;
   onGoFolder: (folderId: string) => void;
+  /** Zapisany filtr: widok Notatki z tym zapytaniem. */
+  onGoFilter: (query: string) => void;
+  /** Bieżące zapytanie wyszukiwarki — wyznacza aktywny filtr. */
+  search: string;
   sidebarItems: SidebarItem[];
   onLogoClick: () => void;
   dark: boolean;
@@ -68,13 +75,20 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({
-  open, onClose, view, activeLabel, activeFolder, onGoView, onGoLabel, onGoFolder,
+  open, onClose, view, activeLabel, activeFolder, onGoView, onGoLabel, onGoFolder, onGoFilter, search,
   sidebarItems, onLogoClick, dark, onToggleTheme, onOpenPalette, onOpenActions,
   onOpenStats, onOpenFocusMode, onSettingsOpenChange,
 }: AppSidebarProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const isMobile = useIsMobile();
-  const { allLabels, folders, renameLabel, removeLabel, addFolder, updateFolder, deleteFolder } = useNotesContext();
+  const { notes, allLabels, folders, renameLabel, removeLabel, addFolder, updateFolder, deleteFolder } = useNotesContext();
+  const { filters, rename: renameFilter, remove: removeFilter } = useSavedFilters();
+  const counts = useMemo(
+    () => filters.map((f) => searchNotes(notes, f.query, { folders }).length),
+    [filters, notes, folders],
+  );
+  // Jedna pigułka aktywna naraz: gdy zapytanie jest zapisanym filtrem, „Notatki” gasną.
+  const activeFilterId = view === "notes" ? filters.find((f) => sameQuery(search, f.query))?.id ?? null : null;
 
   return (
     <>
@@ -124,11 +138,34 @@ export function AppSidebar({
                   <NavRow
                     key={item.view}
                     item={item}
-                    active={view === item.view && view !== "label"}
+                    active={view === item.view && view !== "label" && !(item.view === "notes" && activeFilterId)}
                     onClick={() => onGoView(item.view)}
                   />
                 ))}
               </div>
+
+              {filters.length > 0 && (
+                <div className="pt-5">
+                  <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground px-3 mb-2 flex items-center gap-1.5">
+                    <Filter className="w-3 h-3" />
+                    Filtry
+                  </p>
+                  <div className="space-y-0.5" data-saved-filters>
+                    {filters.map((f, i) => (
+                      <SidebarFilterItem
+                        key={f.id}
+                        name={f.name}
+                        query={f.query}
+                        count={counts[i]}
+                        isActive={activeFilterId === f.id}
+                        onSelect={() => onGoFilter(f.query)}
+                        onRename={(n) => renameFilter(f.id, n)}
+                        onDelete={() => removeFilter(f.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {allLabels.length > 0 && (
                 <div className="pt-5">

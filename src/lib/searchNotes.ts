@@ -1,46 +1,25 @@
 import Fuse from "fuse.js";
 import type { Note } from "@/hooks/useNotes";
+import { parseSearchQuery, matchesClauses, type MatchFolder } from "@/lib/searchQuery";
+
+export interface SearchContext {
+  /** Potrzebne operatorowi `folder:` (nazwa → id, z podfolderami). */
+  folders?: MatchFolder[];
+  now?: number;
+}
 
 /**
- * Fuzzy search with simple operators: `label:Foo`, `color:peach`, `has:reminder`, `has:checklist`.
- * Free-text portion is matched fuzzily against title/content/labels/checklist items.
+ * Wyszukiwanie: operatory (patrz `searchQuery.ts`) zawężają pulę, a reszta
+ * tekstu jest dopasowywana rozmyto do tytułu/treści/etykiet/pozycji listy.
  */
-export function searchNotes(notes: Note[], query: string): Note[] {
+export function searchNotes(notes: Note[], query: string, ctx: SearchContext = {}): Note[] {
   const q = query.trim();
   if (!q) return notes;
 
-  const operators: { label: string[]; color: string[]; has: string[] } = { label: [], color: [], has: [] };
-  const freeParts: string[] = [];
+  const { clauses, text } = parseSearchQuery(q);
+  const pool = clauses.length ? notes.filter((n) => matchesClauses(n, clauses, ctx)) : notes;
 
-  for (const tok of q.split(/\s+/)) {
-    const m = tok.match(/^(label|color|has):(.+)$/i);
-    if (m) {
-      const key = m[1].toLowerCase() as keyof typeof operators;
-      operators[key].push(m[2].toLowerCase());
-    } else {
-      freeParts.push(tok);
-    }
-  }
-
-  let pool = notes;
-  if (operators.label.length) {
-    pool = pool.filter((n) => operators.label.every((l) => n.labels.some((nl) => nl.toLowerCase() === l)));
-  }
-  if (operators.color.length) {
-    pool = pool.filter((n) => operators.color.includes(n.color.toLowerCase()));
-  }
-  if (operators.has.length) {
-    pool = pool.filter((n) =>
-      operators.has.every((h) =>
-        h === "reminder" ? !!n.reminder :
-        h === "checklist" ? (n.checklist || []).length > 0 :
-        h === "image" || h === "images" ? (n.images || []).length > 0 :
-        true
-      )
-    );
-  }
-
-  const free = freeParts.join(" ").trim();
+  const free = text.trim();
   if (!free) return pool;
 
   const fuse = new Fuse(pool, {

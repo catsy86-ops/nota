@@ -1,11 +1,13 @@
 import { useMemo, useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, Brain, Keyboard, BookOpen, History } from "lucide-react";
+import { StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, Brain, Keyboard, BookOpen, History, Bookmark } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes } from "@/lib/searchNotes";
 import { loadRecentSearches, saveRecentSearch } from "@/lib/recentSearches";
 import { requestShiftDay, searchShiftDays, useShifts } from "@/lib/shifts";
 import { modShortcut } from "@/lib/platform";
+import { useNotesContext } from "@/hooks/NotesProvider";
+import { useSavedFilters } from "@/lib/savedFilters";
 
 const NOTE_LIMIT = 30;
 
@@ -30,6 +32,7 @@ interface Props {
   onOpenStats: () => void;
   onOpenFocusMode: () => void;
   onOpenShortcuts: () => void;
+  onGoFilter: (query: string) => void;
 }
 
 export function CommandPalette({
@@ -45,11 +48,14 @@ export function CommandPalette({
   onOpenStats,
   onOpenFocusMode,
   onOpenShortcuts,
+  onGoFilter,
 }: Props) {
+  const { folders } = useNotesContext();
+  const { filters } = useSavedFilters();
   const [search, setSearch] = useState("");
   // Ostatnie zapytania, które zakończyły się otwarciem notatki (max 5, localStorage).
   const [recent, setRecent] = useState<string[]>(loadRecentSearches);
-  const matched = useMemo(() => searchNotes(notes, search), [notes, search]);
+  const matched = useMemo(() => searchNotes(notes, search, { folders }), [notes, search, folders]);
   const shifts = useShifts();
   const shiftHits = useMemo(() => {
     const types = new Map(shifts.types.map((x) => [x.id, x]));
@@ -86,6 +92,20 @@ export function CommandPalette({
                 <CommandItem key={q} value={`recent-${q}`} onSelect={() => setSearch(q)}>
                   <History className="w-4 h-4 mr-2 text-muted-foreground" />
                   <span className="truncate">{q}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
+        {filters.length > 0 && (
+          <>
+            <CommandGroup heading="Filtry">
+              {filters.map((f) => (
+                <CommandItem key={f.id} value={`filtr ${f.name}`} onSelect={() => run(() => onGoFilter(f.query))}>
+                  <Bookmark className="w-4 h-4 mr-2" />
+                  <span className="truncate">{f.name}</span>
+                  <span className="ml-auto pl-3 text-xs text-muted-foreground truncate max-w-[40%]">{f.query}</span>
                 </CommandItem>
               ))}
             </CommandGroup>
