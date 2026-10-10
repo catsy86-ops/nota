@@ -590,7 +590,7 @@ Zrzuty z realistycznymi danymi (12 notatek, grafik, zaległe przypomnienie), 144
 - [x] 4. Przypomnienie w jednym rzędzie (Gotowe · Odłóż ▾ · Otwórz, termin zamiast „Czas na tę notatkę!”), na telefonie u góry. Przy okazji: dymki nad otwartym oknem były nieklikalne (także „Cofnij”) — naprawione w `index.css` i `ui/dialog.tsx`. `6d8d180`
 - [x] Zrzuty po punktach 2–4 (`shots/ux2`) obejrzane — bez uwag.
 - [x] 5. „+” na telefonie otwiera edytor na pełnym ekranie (portal w `AddNoteBar`).
-- [ ] 6. Edycja w kaflu na komputerze ciasna (~210 px) — okno edycji jako domyślne łamie e2e (`daily-note`, `live-text` zakładają edycję w kaflu); zostaje kafel na 2 kolumny albo poprawa testów.
+- [x] 6. Edycja w kaflu na komputerze: kafel w edycji zajmuje dwie kolumny (`sm:has-[[data-tile-editing]]:col-span-2` w `NoteGrid`), poza układem listy i jedną kolumną.
 - [x] 7. Kalendarz na telefonie: wysokie komórki z samą kropką, plan dnia pod zgięciem — niższe komórki.
 - [x] 8. Pasek rodzajów zmian w Grafiku ucięty bez sygnału — zanikająca krawędź, na komputerze zawijanie.
 - [x] 9. Drobne (czas czytania od 2 min, przewodnik „Zapisz notatkę…”; zostały samotny „Średni” i odznaka nad edytorem): „~1 min” na każdej krótkiej notatce (pokazywać od 2 min), samotny „Średni” w osobnym rzędzie, przewodnik mówi „pole Nowa notatka”, a pole to „Zapisz notatkę...”; odznaka „Pierwszy krok” też wyskakuje nad edytorem.

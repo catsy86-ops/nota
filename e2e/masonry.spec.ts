@@ -46,3 +46,13 @@ test("przeciągnięcie karty zmienia kolejność i przełącza na sortowanie rę
   const order = await page.locator("[data-note-id-wrap]").evaluateAll((els) => els.map((e) => e.getAttribute("data-note-id-wrap")));
   expect(order.indexOf("m1")).toBeGreaterThan(order.indexOf("m3"));
 });
+
+test("edycja w kaflu na komputerze zajmuje dwie kolumny i wraca po zapisie", async ({ page }) => {
+  const wrap = page.locator('[data-note-id-wrap="m3"]');
+  const before = (await wrap.boundingBox())!;
+  await wrap.getByText("Mozaika 3").click();
+  await expect(wrap.getByPlaceholder("Treść notatki...")).toBeVisible();
+  await expect.poll(async () => (await wrap.boundingBox())!.width).toBeGreaterThan(before.width * 1.8);
+  await wrap.getByRole("button", { name: "Zapisz" }).click();
+  await expect.poll(async () => (await wrap.boundingBox())!.width).toBeLessThan(before.width * 1.2);
+});

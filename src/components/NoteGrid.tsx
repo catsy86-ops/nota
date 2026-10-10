@@ -123,6 +123,9 @@ export function NoteGrid({
       : `grid ${cols} ${columnGap} auto-rows-[4px] items-start`;
   }
 
+  // Edycja w kaflu ma ~210 px w wąskiej kolumnie — przy 2+ kolumnach zajmuje dwie (jedna kolumna: bez niejawnej drugiej).
+  const wideEditing = prefs.layout !== "list" && (prefs.autoColumns || prefs.columns !== 1);
+
   return (
     <NoteViewActionsProvider value={noteViewActions}>
     <SortableContext items={noteIds} strategy={rectSortingStrategy}>
@@ -130,7 +133,7 @@ export function NoteGrid({
       <div ref={gridRef} key={prefs.layout} className={cn(containerClass, "animate-in fade-in-0 duration-base")}>
         <AnimatePresence mode="popLayout">
           {notes.map((note, i) => (
-            <GridItem key={note.id} note={note} index={i} layout={prefs.layout} rowGap={rowGap} selected={selectedIds?.has(note.id) ?? false} />
+            <GridItem key={note.id} note={note} index={i} layout={prefs.layout} rowGap={rowGap} wideEditing={wideEditing} selected={selectedIds?.has(note.id) ?? false} />
           ))}
         </AnimatePresence>
       </div>
@@ -145,7 +148,7 @@ export function NoteGrid({
  * strzałka przerysowuje tylko kafel, który go stracił, i ten, który dostał.
  */
 // forwardRef: `AnimatePresence mode="popLayout"` mierzy bezpośrednie dziecko przez ref.
-const GridItem = memo(forwardRef<HTMLDivElement, SortableNoteCardProps & { rowGap: string }>(function GridItem({ note, index, layout, rowGap, selected }, ref) {
+const GridItem = memo(forwardRef<HTMLDivElement, SortableNoteCardProps & { rowGap: string; wideEditing: boolean }>(function GridItem({ note, index, layout, rowGap, wideEditing, selected }, ref) {
   const focused = useIsGridNavFocused(note.id);
   return (
     <div
@@ -155,6 +158,7 @@ const GridItem = memo(forwardRef<HTMLDivElement, SortableNoteCardProps & { rowGa
       onClickCapture={() => setGridNavFocus(note.id)}
       className={cn(
         "rounded-xl transition-shadow",
+        wideEditing && "sm:has-[[data-tile-editing]]:col-span-2",
         // Odstęp pionowy mozaiki jako margines opakowania — `useMasonrySpans` wlicza go w wysokość.
         layout === "masonry" ? rowGap : layout === "grid" ? "h-full" : "",
         focused && "ring-2 ring-primary/60 ring-offset-2 ring-offset-background"
