@@ -596,3 +596,15 @@ Zrzuty z realistycznymi danymi (12 notatek, grafik, zaległe przypomnienie), 144
 - [x] 9. Drobne (czas czytania od 2 min, przewodnik „Zapisz notatkę…”; zostały samotny „Średni” i odznaka nad edytorem): „~1 min” na każdej krótkiej notatce (pokazywać od 2 min), samotny „Średni” w osobnym rzędzie, przewodnik mówi „pole Nowa notatka”, a pole to „Zapisz notatkę...”; odznaka „Pierwszy krok” też wyskakuje nad edytorem.
 - [x] Resztki z 9: filtr priorytetu w siatce 3 kolumn (bez samotnego „Średni”), odznaka czeka, aż zamknie się otwarte okno.
 - [x] Zmiany z Grafiku w Kalendarzu: skrót zmiany (kolor rodzaju) w komórce dnia, pełna zmiana z godzinami nad terminami w panelu dnia, w `aria-label` komórki. Bez osobnego widoku „Jutro”.
+
+## Ruch, efekty i QoL — 2026-10-10
+
+Zrobione przez agentów w osobnych worktree, scalone do master (445 testów jednostkowych, 86 e2e).
+
+- [x] Mikrointerakcje: jedna reguła `.pressable`, przełączniki i checkbox z „rysowanym” ptaszkiem, obrót „+” w FAB, pasek czasu w toaście „Cofnij”.
+- [x] Karty: kaskada wejścia (6 kart), wyjście do kosza/archiwum, pinezka, przeciąganie z uniesieniem, hover tylko myszą, pieczątka „gotowe” (`lib/cardMotion.ts`).
+- [x] Grafik/Kalendarz: pieczątka zmiany, liczniki podsumowania, pasek „trwa teraz”, stagger kart dnia, odbicie po upuszczeniu terminu, „oddech” dnia dziś.
+- [x] Efekty: pieczątka odznaki, rysowane puste stany, płynna zmiana motywu (View Transitions), nagroda za zamknięty dzień (klucze `badgeStamp`, `themeFade`, `doneReward`).
+- [x] QoL: skróty `g` + litera, tytuł z domeny po wklejeniu URL, „Ostatnio szukane” w palecie.
+- [x] Funkcje: „Dziś i jutro” w Kalendarzu, wieczorne przypomnienie o zmianie (ustawienie na urządzeniu), dni grafiku w palecie poleceń.
+
