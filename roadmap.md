@@ -654,3 +654,11 @@ Scalone do master (519 testów jednostkowych, 103 e2e).
 - [x] **Notatki:** wklejanie obrazu ze schowka w `AddNoteBar`, dyktowanie (Web Speech, zgoda przy pierwszym użyciu).
 - Do zrobienia (z audytów): react-router 7 (podatności runtime), CSP w trybie egzekwowania po tygodniu bez zgłoszeń, walidacja metadanych skarbca i hasło ≥ 12 znaków, limity w schemacie backupu, ZIP z nakładającymi się wpisami, a11y Kalendarza (cele dotykowe, radiogroup w dialogach, „Cofnij” przy usuwaniu cyklu), wydzielenie hooków tła z `Index.tsx`.
 - Do zrobienia (z porównania z konkurencją): Share Target dla plików, podzadania w listach, „znajdź i zamień”, eksport bazy do `.md`, udostępnienie grafiku jako obraz, premie w rachunku, wiele grafików.
+
+## Dział Notatki — fala 1 i 2 (2026-10-10, szósta runda)
+
+- [x] Zaznaczanie myszą/dotykiem, pasek zbiorczy zależny od widoku (Kosz: przywróć/usuń trwale; Archiwum: przywróć), obrazy w edycji bez limitu 4 z „Cofnij”.
+- [x] Wyszukiwanie: bez ogonków, wiele słów (AND), operatory `priorytet:`, `ma:zalacznik`, `brak:etykiety|folderu`, negacja `-`; podświetlanie w czytniku wg parsera zapytania; liczniki „gdzie indziej” tylko przy pustym wyniku.
+- [x] Podgląd listy: otwarte najpierw; „Cofnij” przy usuwaniu etykiety; etykiety w kreatorze jako przyciski; przepinanie `[[linków]]` po zmianie tytułu; trwały szkic nowej notatki.
+- [x] Grafik: szybkie −/+ 15 min przy godzinach dnia i pędzla (przytrzymanie powtarza).
+- Zostaje z planu: skalowanie obrazów >2 MB + wklejanie w edytorze istniejącej notatki (#8), edytor listy (#11), interaktywny czytnik (#12), dostępność kafla (#9), eksport zaznaczonych do ZIP z `.md` (#16), trafienia w kaflach (#17). Powiadomienia Android — odłożone do decyzji (Capacitor vs Web Push).
