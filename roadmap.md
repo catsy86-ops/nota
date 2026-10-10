@@ -628,3 +628,10 @@ Scalone do master (519 testów jednostkowych, 103 e2e).
 - [x] **Przegląd tygodnia** w „Dziś” (`lib/weeklyReview.ts`): zaległe przypomnienia, listy do dokończenia, nietknięte ≥30 dni, do posegregowania; tryb „po kolei” (K/A/D).
 - ✅ Przegląd wizualny 2026-10-10 (desktop 1440 i telefon 390): poprawione podpisy i szerokość wierszy karty przeglądu, zwarty graf dla małych zbiorów, pieczątka odznaki czeka na zamknięcie edytora (`data-composer-open`).
 - Do sprawdzenia na żywo: glow przy przenoszeniu wielu notatek naraz, „Niepołączone wzmianki” tylko w czytniku (nie w rozwiniętej karcie), motyw ciemny nowych elementów.
+
+## Załączniki i QoL — 2026-10-10 (czwarta runda agentów)
+
+- [x] **Załączniki plików** (`lib/attachments.ts`, `AttachmentsPanel/List`): wspólny magazyn z obrazami (hash treści), `Note.attachments`, limity 10 MB / 100 MB / 20 plików, backup v3 (budżet 40 MB), P2P do 2 MB (większe lokalne, z adnotacją), eksport Markdown/HTML tylko z adnotacją. HTML/SVG/JS pobierane jako octet-stream. Punkty wpięcia dla szyfrowania: `addAttachmentFiles`, `readAttachment`, `syncableRefs()`, `collectAttachmentBlobs()`, `referencedImages()`.
+- [x] **Edytor** (`lib/editorKeys.ts`): `Ctrl+B/I/K`, `Ctrl+Enter`, kontynuacja listy, `Tab`/`Shift+Tab`, `Alt+↑/↓`, `Shift+Alt+↓`; licznik słów/znaków/czasu czytania i zaznaczenia; haptyka (`lib/haptics.ts`, przełącznik w efektach). `Ctrl+K` w polu treści = link (zamiast palety).
+- [x] **PWA i czas:** znaczek aplikacji + „(N) NOTKI” z liczbą zaległych, odświeżanie „dziś” po północy i po wznowieniu (`lib/dayClock.ts`), skróty ikony, Web Share Target (tekst i linki), Wake Lock w skupieniu i prezentacji, „Kopiuj jako Markdown/tekst” (czytnik, paleta).
+- Do zrobienia: Share Target dla plików/obrazów (POST multipart), akcja „Kopiuj” w menu „⋯” kafla, refaktor `exportToMarkdown` na `noteToMarkdown`, prywatne notatki (blokada hasłem).
