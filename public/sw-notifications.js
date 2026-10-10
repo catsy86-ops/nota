@@ -9,7 +9,8 @@
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const data = event.notification.data || {};
-  const url = data.url || "/";
+  // Tylko ścieżka w obrębie aplikacji — `//host` i `/\host` wychodziłyby poza nią.
+  const url = typeof data.url === "string" && /^\/(?![/\\])/.test(data.url) ? data.url : "/";
   const action = event.action || "";
   event.waitUntil(
     self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {

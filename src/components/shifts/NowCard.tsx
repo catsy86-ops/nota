@@ -1,7 +1,21 @@
 import { useEffect, useMemo, useState } from "react";
 import { format, formatDistanceStrict, isToday, isTomorrow } from "date-fns";
 import { pl } from "date-fns/locale";
-import { currentAndNextShift, shiftInk, type ShiftData, type ShiftOccurrence } from "@/lib/shifts";
+import { toast } from "sonner";
+import { currentAndNextShift, formatDuration, setDayEntry, shiftInk, type ShiftData, type ShiftOccurrence } from "@/lib/shifts";
+import { toastWithUndo } from "@/lib/undoToast";
+
+/** Kończy zmianę „teraz”: odchylenie od planu = różnica między teraz a planowanym końcem. */
+function finishNow(occ: ShiftOccurrence): void {
+  const plannedEnd = occ.end.getTime() - (occ.entry.extraMin ?? 0) * 60_000;
+  const extra = Math.round((Date.now() - plannedEnd) / 60_000);
+  if (extra === (occ.entry.extraMin ?? 0)) { toast("Zmiana już ma taki koniec"); return; }
+  const before = occ.entry;
+  const { extraMin: _drop, ...rest } = before;
+  setDayEntry(occ.dayKey, extra === 0 ? rest : { ...rest, extraMin: extra });
+  const label = extra === 0 ? "zgodnie z planem" : `${extra > 0 ? "+" : "−"}${formatDuration(Math.abs(extra))} względem planu`;
+  toastWithUndo(`Zakończono zmianę: ${label}`, () => setDayEntry(occ.dayKey, before));
+}
 
 /** Minutowy zegar — karta ma pokazywać „za 3 h”, nie stan sprzed godziny. */
 function useNow(intervalMs = 60_000): Date {
@@ -60,6 +74,12 @@ export function NowCard({ data }: { data: ShiftData }) {
           <p className="text-xs text-muted-foreground">za {formatDistanceStrict(main.start, now, { locale: pl })}</p>
         )}
       </div>
+      {current && (
+        <button type="button" onClick={() => finishNow(current)}
+          className="pressable shrink-0 h-10 coarse:h-11 px-3 rounded-xl border border-border/60 text-sm font-medium hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          Skończyłem teraz
+        </button>
+      )}
       {current && next && (
         <p className="hidden sm:block text-xs text-muted-foreground text-right shrink-0">
           Potem: <span className="text-foreground font-medium">{next.type.name}</span><br />{when(next)}

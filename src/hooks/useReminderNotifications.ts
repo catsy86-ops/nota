@@ -39,7 +39,7 @@ export function useReminderNotifications(
       const d = e.data as { type?: string; action?: string; noteId?: string } | null;
       if (d?.type !== "notification-action" || typeof d.noteId !== "string") return;
       const note = notesRef.current.find((n) => n.id === d.noteId);
-      if (!note) return;
+      if (!note || note.locked) return;
       if (d.action === "snooze10") {
         firedCbRef.current(note.id, snoozeTimes(Date.now()).in10min, seriesDay(note));
         toast("Odłożono o 10 minut");

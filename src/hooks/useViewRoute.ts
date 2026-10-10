@@ -33,7 +33,7 @@ export function useViewRoute() {
     if (!sw) return;
     const onMessage = (e: MessageEvent) => {
       const data = e.data as { type?: string; url?: unknown } | null;
-      if (data?.type === "open-url" && typeof data.url === "string" && data.url.startsWith("/")) navigate(data.url);
+      if (data?.type === "open-url" && typeof data.url === "string" && /^\/(?![/\\])/.test(data.url)) navigate(data.url);
     };
     sw.addEventListener("message", onMessage);
     return () => sw.removeEventListener("message", onMessage);

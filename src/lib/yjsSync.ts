@@ -107,8 +107,15 @@ export function useSyncState(): SyncState {
 
 /** Random human-typable pairing code. */
 export function generateCode(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(CODE_LENGTH));
-  return Array.from(bytes).map((b) => CODE_ALPHABET[b % CODE_ALPHABET.length]).join("");
+  // Odrzucanie bajtów z „ogona” — samo `% długość` faworyzowałoby pierwsze znaki alfabetu.
+  const limit = 256 - (256 % CODE_ALPHABET.length);
+  let out = "";
+  while (out.length < CODE_LENGTH) {
+    for (const b of crypto.getRandomValues(new Uint8Array(CODE_LENGTH * 2))) {
+      if (b < limit && out.length < CODE_LENGTH) out += CODE_ALPHABET[b % CODE_ALPHABET.length];
+    }
+  }
+  return out;
 }
 
 /** Kod z pola lub linku: wielkie litery, bez spacji i myślników (kod jest wyświetlany w grupach). */
