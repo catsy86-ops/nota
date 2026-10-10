@@ -608,3 +608,13 @@ Zrobione przez agentów w osobnych worktree, scalone do master (445 testów jedn
 - [x] QoL: skróty `g` + litera, tytuł z domeny po wklejeniu URL, „Ostatnio szukane” w palecie.
 - [x] Funkcje: „Dziś i jutro” w Kalendarzu, wieczorne przypomnienie o zmianie (ustawienie na urządzeniu), dni grafiku w palecie poleceń.
 
+## Grafik i import — 2026-10-10 (druga runda agentów)
+
+Scalone do master (519 testów jednostkowych, 103 e2e).
+
+- [x] Licznik urlopu: roczny wymiar (domyślnie 20/26), wykorzystany/planowany/pozostały, rodzaj nieobecności (`absenceKind`), podsumowanie roku (`YearSummaryDialog`). **Do decyzji:** urlop w weekend/święto nie ubywa z puli (liczone jak norma, `isNormDay`) — dla systemu zmianowego może niedoliczać; zmiana w `lib/shifts/leave.ts`.
+- [x] Widok tygodnia w Grafiku (z terminami z Kalendarza), przenoszenie/kopiowanie zmian (mysz, Alt, dotyk, klawiatura), „skopiuj tydzień na następny”, pasek tygodnia w Kalendarzu.
+- [x] Import z Google Keep (JSON/HTML/ZIP) i Markdown/Obsidian z podsumowaniem i „Cofnij”.
+- [x] Poprawki z przeglądu na żywo: CLS od paska bocznego, zawijanie akcji kafla w wąskim oknie, skróty `g` po kliknięciu notatki.
+- Nie przetestowane na żywo: ścieżka dotykowa przenoszenia zmian, import na prawdziwym Takeout.
+
