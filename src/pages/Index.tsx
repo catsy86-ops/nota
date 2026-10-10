@@ -174,6 +174,7 @@ const Index = () => {
     onNewNote: expandAddNote,
     onGoToday: () => go("today"),
     onGoWeek: () => go("week"),
+    onGoView: (v) => go(v),
     onEasterEgg: () => { megaCelebrate(); toast.success("🍺 KONAMI! Pełen pokaz mocy!"); },
     hasSelection: () => selectedIds.size > 0,
     onEscapeSelection: clearSelection,

@@ -1,10 +1,15 @@
 import { useEffect } from "react";
+import type { View } from "@/hooks/useFilteredNotes";
+import { hasGridNavFocus } from "@/lib/gridKeyboardNav";
+import { GO_CHORD_WINDOW_MS, viewForChord } from "@/lib/goChord";
 
 export interface GlobalShortcutHandlers {
   onNewNote: () => void;
   onFocusSearch?: () => void;
   onGoToday: () => void;
   onGoWeek: () => void;
+  /** Sekwencja „g” + litera (zob. goChord.ts). */
+  onGoView?: (view: View) => void;
   onEasterEgg: () => void;
   onEscapeSelection: () => void;
   hasSelection: () => boolean;
@@ -69,6 +74,27 @@ export function useGlobalShortcuts(handlers: GlobalShortcutHandlers) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  // „g”, a po nim litera - przejście do widoku (g n, g d, g k ...). Nie działa
+  // w polach tekstowych, z modyfikatorami, przy otwartym dialogu ani gdy kafel
+  // ma fokus siatki (tam A/P/D to akcje na notatce).
+  useEffect(() => {
+    let armedAt = 0;
+    function onKey(e: KeyboardEvent) {
+      if (e.ctrlKey || e.metaKey || e.altKey || isTypingTarget(e.target)) { armedAt = 0; return; }
+      if (e.key.length !== 1) return; // same modyfikatory (Shift) nie rozbrajają
+      const blocked = hasGridNavFocus() || !!document.querySelector('[role="dialog"][data-state="open"]');
+      if (armedAt && Date.now() - armedAt <= GO_CHORD_WINDOW_MS) {
+        armedAt = 0;
+        const view = viewForChord(e.key);
+        if (view && !blocked) { e.preventDefault(); handlers.onGoView?.(view); }
+        return;
+      }
+      armedAt = e.key === "g" && !blocked ? Date.now() : 0;
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [handlers]);
 
   // Konami code easter egg ↑↑↓↓←→←→BA
   useEffect(() => {
