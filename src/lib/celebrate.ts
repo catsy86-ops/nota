@@ -35,6 +35,7 @@ const THROTTLE_MS: Record<EffectKey, number> = {
   badgeStamp: 0,
   doneReward: 0,
   themeFade: 0,
+  haptics: 0,
 };
 
 const lastFiredAt: Record<EffectKey, number> = {
@@ -51,6 +52,7 @@ const lastFiredAt: Record<EffectKey, number> = {
   badgeStamp: 0,
   doneReward: 0,
   themeFade: 0,
+  haptics: 0,
 };
 
 let fireworksActive = false;

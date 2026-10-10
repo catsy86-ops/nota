@@ -28,6 +28,9 @@ import { composeReminderTimestamp, toTimeInputValue, DEFAULT_REMINDER_TIME } fro
 import { toast } from "sonner";
 import { pluralPl } from "@/lib/plural";
 import { parsePastedUrl } from "@/lib/urlTitle";
+import { handleEditorKey } from "@/lib/editorKeysDom";
+import { EditorStats } from "./EditorStats";
+import { haptic } from "@/lib/haptics";
 
 interface AddNoteBarProps {
   onAdd: (title: string, content: string, color: NoteColor, labels: string[], reminder: number | null, images: string[], checklist: ChecklistItem[], priority: NotePriority, folderId?: string | null, attachments?: Attachment[]) => void;
@@ -90,6 +93,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
       for (const l of r.labels) if (!allNoteLabels.includes(l)) allNoteLabels.push(l);
       const remindAt = r.reminder ? r.reminder.getTime() : reminder;
       if (r.reminder) requestNotificationPermissionOnIntent();
+      haptic("success");
       onAdd(r.title, r.content, color, allNoteLabels, remindAt, images, checklist, r.priority ?? priority, r.folderId, attachments);
     }
     reset();
@@ -141,7 +145,8 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
 
   /** Ctrl+Shift+L: zaznaczone linie (albo bieżąca) przechodzą na listę zadań. */
   function handleContentKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (!isChecklistShortcut(e)) return;
+    // Ctrl+B/I/K, Ctrl+Enter (zapis), listy, Tab, Alt+↑/↓ — zob. editorKeys.ts.
+    if (!isChecklistShortcut(e)) { handleEditorKey(e, { onSave: handleClose }); return; }
     e.preventDefault();
     const ta = e.currentTarget;
     const r = selectionToChecklist(content, ta.selectionStart, ta.selectionEnd, checklist);
@@ -221,6 +226,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
             }} />
             <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} onPaste={handleContentPaste} onKeyDown={handleContentKeyDown} placeholder="Treść notatki..." rows={3}
               className="w-full max-sm:min-h-[35dvh] bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none" />
+            {content.length > 0 && <EditorStats textareaRef={textareaRef} value={content} className="block text-2xs text-muted-foreground" />}
 
             {capture.length > 0 && (
               <div role="group" aria-label="Rozpoznane w tekście" aria-live="polite" className="flex flex-wrap items-center gap-1.5">

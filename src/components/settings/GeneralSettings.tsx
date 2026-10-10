@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { EFFECT_LABELS, EffectKey, setEffectEnabled, useEffectsSettings } from "@/lib/effectsSettings";
+import { haptic } from "@/lib/haptics";
 import { showAchievementStamp } from "@/lib/achievementStamp";
 import { bubbles, celebrate, dayDoneReward, emojiShower, fireworks, hearts, rainbow, sparkle } from "@/lib/celebrate";
 import { useViewPrefs, setViewPref } from "@/lib/viewPrefs";
@@ -67,6 +68,7 @@ function previewEffect(key: EffectKey) {
     case "themeFade": break;
     case "badgeStamp": showAchievementStamp({ id: "preview", emoji: "🏅", title: "Podgląd pieczątki" }); break;
     case "doneReward": dayDoneReward(); break;
+    case "haptics": haptic("success"); break;
   }
 }
 
@@ -155,7 +157,7 @@ export function GeneralSettings() {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {key !== "seasonalTheme" && key !== "dailyQuote" && key !== "cardTilt" && (
-                  <Button type="button" size="sm" variant="outline" disabled={!enabled} onClick={() => previewEffect(key)} className="h-8 px-2.5 gap-1.5">
+                  <Button type="button" size="sm" variant="outline" disabled={!enabled} onClick={() => previewEffect(key)} className={cn("h-8 px-2.5 gap-1.5", key === "haptics" && "[@media(pointer:fine)]:hidden")}>
                     <Play className="w-3.5 h-3.5" /><span className="text-xs">Test</span>
                   </Button>
                 )}

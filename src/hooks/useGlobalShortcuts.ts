@@ -138,8 +138,12 @@ export function useGlobalShortcuts(handlers: GlobalShortcutHandlers) {
   // Ctrl/Cmd+K — toggle the command palette. Kept here (rather than inside
   // CommandPalette itself) so the shortcut works even before the palette's
   // own lazy-loaded chunk has ever been mounted.
+  // W edytorze tresci (textarea) Ctrl+K wstawia link: `editorKeysDom` woła
+  // preventDefault + stopPropagation, wiec tu zdarzenie juz nie dociera;
+  // `defaultPrevented` to drugie zabezpieczenie.
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      if (e.defaultPrevented) return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
         handlers.onTogglePalette();

@@ -1,3 +1,4 @@
+import { haptic } from "@/lib/haptics";
 import { toast } from "sonner";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,7 @@ export function ReminderDueToast({ toastId, title, when, description, canSnooze,
       <div className="flex items-center gap-2">
         {canSnooze && (
           <>
-            <Button size="sm" variant="outline" onClick={run(onDone)}>Gotowe</Button>
+            <Button size="sm" variant="outline" onClick={() => { haptic("success"); run(onDone)(); }}>Gotowe</Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="sm" variant="ghost" className="gap-1">Odłóż <ChevronDown className="w-3.5 h-3.5" /></Button>

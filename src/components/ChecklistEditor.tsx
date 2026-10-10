@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { emojiShower } from "@/lib/celebrate";
+import { haptic } from "@/lib/haptics";
 import { checklistToContent, contentToChecklist, parsePastedChecklist } from "@/lib/checklistPaste";
 import type { ChecklistItem } from "@/hooks/useNotes";
 
@@ -62,6 +63,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
   function toggleItem(id: string) {
     const next = items.map((i) => (i.id === id ? { ...i, checked: !i.checked } : i));
     setJustChecked(next.find((i) => i.id === id)?.checked ? id : null);
+    haptic("tap");
     onChange(next);
     if (next.length > 0 && next.every((i) => i.checked) && items.some((i) => !i.checked)) {
       emojiShower(["🎉", "✅", "✨", "🥳"]);
@@ -84,6 +86,23 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
     }
     const at = items.findIndex((i) => i.id === afterId) + 1;
     onChange([...items.slice(0, at), ...added, ...items.slice(at)]);
+  }
+
+  /** Alt+↑/↓ w polu pozycji: zamiana miejscami z sąsiednią nieukończoną pozycją. */
+  function moveItem(id: string, dir: -1 | 1) {
+    const open = items.filter((i) => !i.checked);
+    const at = open.findIndex((i) => i.id === id);
+    const other = open[at + dir];
+    if (at === -1 || !other) return;
+    const a = items.findIndex((i) => i.id === id);
+    const b = items.findIndex((i) => i.id === other.id);
+    const next = [...items];
+    [next[a], next[b]] = [next[b], next[a]];
+    onChange(next);
+    // Przesunięty wiersz jest przemontowywany przez układ — oddaj fokus polu.
+    setTimeout(() => {
+      document.querySelector<HTMLInputElement>(`input[data-checklist-item="${id}"]`)?.focus();
+    }, 0);
   }
 
   function removeItem(id: string) {
@@ -126,6 +145,13 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                 value={item.text}
                 onChange={(e) => updateText(item.id, e.target.value)}
                 onPaste={(e) => handlePaste(e, item.id)}
+                data-checklist-item={item.id}
+                onKeyDown={(e) => {
+                  if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+                  if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+                  e.preventDefault();
+                  moveItem(item.id, e.key === "ArrowUp" ? -1 : 1);
+                }}
                 className="text-sm bg-transparent outline-none text-foreground flex-1 min-w-0"
               />
             )}
