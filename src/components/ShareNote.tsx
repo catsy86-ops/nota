@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import type { Note } from "@/hooks/useNotes";
 import { toast } from "sonner";
+import { encodeShareParam } from "@/lib/shareLink";
 
 interface ShareNoteProps {
   note: Note;
@@ -29,15 +30,7 @@ export function ShareNote({ note }: ShareNoteProps) {
   }
 
   function noteToShareUrl(): string {
-    const data = {
-      t: note.title,
-      c: note.content,
-      cl: note.checklist,
-      l: note.labels,
-      co: note.color,
-    };
-    const encoded = btoa(encodeURIComponent(JSON.stringify(data)));
-    return `${window.location.origin}?share=${encoded}`;
+    return `${window.location.origin}?share=${encodeShareParam(note)}`;
   }
 
   async function copyText() {

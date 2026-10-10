@@ -5,6 +5,8 @@ import { importFromJSON } from "@/lib/exportNotes";
 import { yjsStore } from "@/lib/yjsStore";
 import { toastWithUndo } from "@/lib/undoToast";
 import { pluralPl } from "@/lib/plural";
+import { parseShareParam } from "@/lib/shareLink";
+import { logSecurity } from "@/lib/diagnostics";
 import type { ImportPlan } from "@/lib/import";
 
 type AddNote = ReturnType<typeof useNotes>["addNote"];
@@ -28,14 +30,16 @@ export function useImportExport(importNotes: (notes: Note[]) => void, addNote: A
     const params = new URLSearchParams(window.location.search);
     const shareData = params.get("share");
     if (shareData) {
-      try {
-        const decoded = JSON.parse(decodeURIComponent(atob(shareData)));
-        addNote(decoded.t || "", decoded.c || "", decoded.co || "default", decoded.l || [], null, [], decoded.cl || []);
+      // Adres to wejście z zewnątrz: kształt i rozmiary sprawdza `parseShareParam`.
+      const shared = parseShareParam(shareData);
+      if (shared) {
+        addNote(shared.title, shared.content, shared.color, shared.labels, null, [], shared.checklist);
         toast.success("Zaimportowano udostępnioną notatkę!");
-        window.history.replaceState({}, "", window.location.pathname);
-      } catch {
+      } else {
+        logSecurity("rejected-share-link", "link ?share= odrzucony (zły kształt lub rozmiar)");
         toast.error("Nieprawidłowy link udostępniania");
       }
+      window.history.replaceState({}, "", window.location.pathname);
     }
   }, [addNote]);
 
