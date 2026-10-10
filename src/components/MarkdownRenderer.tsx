@@ -1,6 +1,7 @@
 import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 import { Fragment, memo, type ReactNode } from "react";
+import { WikiLink } from "@/components/WikiLinkPreview";
 import { Bold, Code, Heading2, Italic, Link2, List, Quote } from "lucide-react";
 
 interface MarkdownRendererProps {
@@ -22,22 +23,7 @@ function renderWithWiki(text: string, onWikiClick?: (t: string) => void, known?:
     if (m.index > last) parts.push(text.slice(last, m.index));
     const title = m[1].trim();
     const exists = known?.has(title.toLowerCase());
-    parts.push(
-      <button
-        key={`w-${idx++}`}
-        type="button"
-        onClick={(e) => { e.stopPropagation(); onWikiClick?.(title); }}
-        className={cn(
-          "inline px-1 rounded transition-colors font-medium",
-          exists
-            ? "text-accent bg-accent/10 hover:bg-accent/20"
-            : "text-muted-foreground bg-muted/40 hover:bg-muted/60 italic"
-        )}
-        title={exists ? `Otwórz „${title}"` : `Notatka „${title}" nie istnieje`}
-      >
-        {title}
-      </button>
-    );
+    parts.push(<WikiLink key={`w-${idx++}`} title={title} exists={!!exists} onWikiClick={onWikiClick} />);
     last = m.index + m[0].length;
   }
   if (last < text.length) parts.push(text.slice(last));

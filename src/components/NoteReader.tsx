@@ -1,6 +1,9 @@
-import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Maximize2, Minimize2, Minus, Pencil, Plus, X } from "lucide-react";
+import { Link2, Maximize2, Minimize2, Minus, Pencil, Plus, X } from "lucide-react";
+import { useNotesContext } from "@/hooks/NotesProvider";
+import { findUnlinkedMentions, linkFirstMention, type UnlinkedMention } from "@/lib/unlinkedMentions";
+import { toastWithUndo } from "@/lib/undoToast";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import type { Note } from "@/hooks/useNotes";
@@ -136,6 +139,20 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
   const titleHits = tokens.some((t) => note.title.toLowerCase().includes(t.toLowerCase())) ? 1 : 0;
   const backlinks = showBacklinks ? backlinksOf(note, wikiIndex) : [];
   const words = note.content.trim() ? note.content.trim().split(/\s+/).length : 0;
+  const { notes: liveNotes, archivedNotes, updateNote } = useNotesContext();
+  const mentions = useMemo(
+    () => (showBacklinks ? findUnlinkedMentions(note, [...liveNotes, ...archivedNotes], 20) : []),
+    [showBacklinks, note, liveNotes, archivedNotes],
+  );
+
+  function linkMention(m: UnlinkedMention) {
+    const src = [...liveNotes, ...archivedNotes].find((n) => n.id === m.id);
+    const next = src ? linkFirstMention(src.content, note.title) : null;
+    if (!src || next === null) return;
+    const previous = src.content;
+    updateNote(src.id, { content: next });
+    toastWithUndo(`Połączono „${note.title.trim()}” w „${src.title.trim() || "Bez tytułu"}”`, () => updateNote(src.id, { content: previous }));
+  }
 
   function highlight(text: string) {
     if (!tokens.length || !text) return text;
@@ -303,6 +320,37 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                     </button>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {mentions.length > 0 && (
+              <div className={cn("pt-4 border-t border-border/50", backlinks.length > 0 ? "mt-4" : "mt-8")} data-unlinked-mentions="" style={present ? { fontSize: "0.95rem" } : undefined}>
+                <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                  Niepołączone wzmianki ({mentions.length})
+                </p>
+                <ul className="space-y-1.5">
+                  {mentions.map((m) => (
+                    <li key={m.id} className="flex items-start gap-2 rounded-lg bg-muted/30 px-2.5 py-1.5">
+                      <div className="min-w-0 flex-1">
+                        <button
+                          type="button"
+                          onClick={() => onShow(m.id, mode)}
+                          className="block max-w-full truncate text-xs font-medium text-primary hover:underline"
+                        >
+                          {m.title || "Bez tytułu"}
+                        </button>
+                        <p className="mt-0.5 text-xs leading-snug text-foreground/70 break-words">
+                          {m.before}<mark className="rounded bg-primary/25 px-0.5 text-foreground">{m.match}</mark>{m.after}
+                        </p>
+                      </div>
+                      {canEdit && (
+                        <Button size="sm" variant="ghost" className="h-7 shrink-0 gap-1 px-2 text-xs" onClick={() => linkMention(m)} title={`Zamień pierwsze wystąpienie na [[${note.title.trim()}]]`}>
+                          <Link2 className="h-3 w-3" aria-hidden /> Połącz
+                        </Button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
           </div>

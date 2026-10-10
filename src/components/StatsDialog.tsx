@@ -12,7 +12,15 @@ import {
   parseDayKey,
 } from "@/lib/achievements";
 import type { Note } from "@/hooks/useNotes";
-import { Trophy, StickyNote, Pin, Tag, FolderOpen, CheckSquare, RotateCcw, Flame } from "lucide-react";
+import { Trophy, StickyNote, Pin, Tag, FolderOpen, CheckSquare, RotateCcw, Flame, Network } from "lucide-react";
+import { lazy, Suspense, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import { notePath } from "@/lib/viewRoute";
+import { takeLinkGraphRequest } from "@/lib/graphRequest";
+
+// Graf wchodzi dopiero po otwarciu zakładki — Statystyki same go nie potrzebują.
+const NoteGraph = lazy(() => import("@/components/NoteGraph"));
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -29,6 +37,10 @@ interface Props {
 }
 
 export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabels, folders }: Props) {
+  // Paleta („Graf powiązań”) otwiera te same Statystyki od razu na grafie.
+  const [tab, setTab] = useState<"stats" | "graph">(() => (takeLinkGraphRequest() ? "graph" : "stats"));
+  const navigate = useNavigate();
+  const graphNotes = useMemo(() => [...notes, ...archivedNotes], [notes, archivedNotes]);
   const persisted = usePersistedAchievements();
   const live = computeStats(notes, archivedNotes, allLabels, folders);
   const { effective } = mergeWithPersisted(live);
@@ -55,13 +67,42 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className={cn("max-h-[85vh] overflow-y-auto", tab === "graph" ? "sm:max-w-3xl" : "sm:max-w-lg")}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-primary" /> Statystyki i osiągnięcia
           </DialogTitle>
           <DialogDescription>Twoje postępy — zapisywane lokalnie</DialogDescription>
         </DialogHeader>
+
+        <div role="tablist" aria-label="Widok statystyk" className="flex gap-1 rounded-lg bg-muted/50 p-1">
+          {([["stats", "Osiągnięcia", Trophy], ["graph", "Graf powiązań", Network]] as const).map(([id, label, Icon]) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              aria-selected={tab === id}
+              onClick={() => setTab(id)}
+              className={cn(
+                "flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                tab === id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Icon className="h-3.5 w-3.5" aria-hidden /> {label}
+            </button>
+          ))}
+        </div>
+
+        {tab === "graph" && (
+          <Suspense fallback={<div className="h-64 rounded-xl bg-muted/30" />}>
+            <NoteGraph
+              notes={graphNotes}
+              onOpenNote={(id) => { onOpenChange(false); navigate(notePath(id)); }}
+            />
+          </Suspense>
+        )}
+
+        {tab === "stats" && <>
 
         <div className="grid grid-cols-3 gap-2 pt-2">
           {tiles.map((t) => (
@@ -144,6 +185,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
             );
           })}
         </div>
+        </>}
       </DialogContent>
     </Dialog>
   );
