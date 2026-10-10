@@ -3,6 +3,7 @@ import type { Note } from "@/hooks/useNotes";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { buildGraph, circleLayout, forceLayout, GRAPH_NODE_LIMIT, type Point } from "@/lib/noteGraph";
 import { ease, dur } from "@/lib/motion";
+import { pluralPl } from "@/lib/plural";
 
 const W = 1000;
 const H = 620;
@@ -115,7 +116,7 @@ export default function NoteGraph({ notes, onOpenNote }: Props) {
       <p className="mb-2 text-xs text-muted-foreground" aria-live="polite">
         {graph.truncated
           ? `Pokazano ${graph.nodes.length} z ${graph.total} powiązanych notatek (limit ${GRAPH_NODE_LIMIT}) — te z największą liczbą linków.`
-          : `${graph.nodes.length} powiązanych notatek, ${graph.edges.length} linków. Kliknij węzeł, żeby otworzyć notatkę.`}
+          : `${graph.nodes.length} ${pluralPl(graph.nodes.length, ["powiązana notatka", "powiązane notatki", "powiązanych notatek"])}, ${graph.edges.length} ${pluralPl(graph.edges.length, ["link", "linki", "linków"])}. Kliknij węzeł, żeby otworzyć notatkę.`}
       </p>
       <svg
         viewBox={`0 0 ${W} ${H}`}
@@ -141,8 +142,8 @@ export default function NoteGraph({ notes, onOpenNote }: Props) {
                 key={`${e.a}-${e.b}`}
                 d={edgePath(a, b, hash(e.a + e.b))}
                 stroke={lit ? "hsl(var(--primary))" : "currentColor"}
-                strokeWidth={lit ? 2.4 : 1.4}
-                opacity={active === null ? 0.5 : lit ? 1 : 0.1}
+                strokeWidth={lit ? 2.4 : 1.6}
+                opacity={active === null ? 0.7 : lit ? 1 : 0.12}
                 style={{ transition: `opacity ${dur.fast}s cubic-bezier(${ease.out.join(",")})` }}
               />
             );
