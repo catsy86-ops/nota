@@ -22,6 +22,12 @@
 export const VAULT_VERSION = "v1";
 /** OWASP 2023 dla PBKDF2-HMAC-SHA256. */
 export const KDF_ITERATIONS = 600_000;
+/**
+ * Górna granica `iter` z metadanych. Metadane przychodzą z dokumentu (peer, plik,
+ * backup) — `iter: 2e9` zawiesiłoby kartę na odblokowaniu (DoS), a to wartość,
+ * której uczciwy klient nigdy nie zapisze.
+ */
+export const MAX_KDF_ITERATIONS = 10_000_000;
 export const SALT_BYTES = 16;
 export const IV_BYTES = 12;
 const DK_BYTES = 32;
@@ -198,9 +204,11 @@ export interface VaultOptions {
 export function isValidMeta(m: unknown): m is VaultMeta {
   if (!m || typeof m !== "object") return false;
   const x = m as Record<string, unknown>;
-  return x.v === 1 && typeof x.salt === "string" && typeof x.iter === "number" && Number.isInteger(x.iter) && x.iter > 0
-    && typeof x.wrapped === "string" && typeof x.check === "string"
-    && (x.recovery === undefined || typeof x.recovery === "string") && typeof x.epoch === "number";
+  return x.v === 1 && typeof x.salt === "string" && x.salt.length <= 64 && typeof x.iter === "number" && Number.isInteger(x.iter)
+    && x.iter > 0 && x.iter <= MAX_KDF_ITERATIONS
+    && typeof x.wrapped === "string" && x.wrapped.length <= 256 && typeof x.check === "string" && x.check.length <= 256
+    && (x.recovery === undefined || (typeof x.recovery === "string" && x.recovery.length <= 256))
+    && typeof x.epoch === "number" && Number.isFinite(x.epoch);
 }
 
 /** Nowy skarbiec (albo nowy klucz danych przy zmianie hasła). */
@@ -273,10 +281,46 @@ export interface PasswordStrength {
   ok: boolean;
 }
 
+/** Najczęstsze hasła (PL/EN) i hasła „z nazwy aplikacji”; porównanie po zdjęciu cyfr/znaków z końca. */
+const COMMON_PASSWORDS = new Set([
+  "password", "passw0rd", "haslo", "haslo123", "qwerty", "qwertyui", "qwertyuiop", "qwerty123", "asdfghjk", "zxcvbnm",
+  "12345678", "123456789", "1234567890", "11111111", "00000000", "1q2w3e4r", "1qaz2wsx", "zaq12wsx", "admin", "admin123",
+  "letmein", "welcome", "iloveyou", "monkey", "dragon", "master", "abc12345", "polska", "kocham", "notatnik", "notki",
+  "skarbiec", "sekret", "tajne", "tajnehaslo", "mojehaslo", "superhaslo", "trustno1", "changeme",
+]);
+
+const KEYBOARD_ROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm", "1234567890", "qazwsxedcrfvtgbyhnujmik"];
+
+/**
+ * Hasła, które przechodzą długość, a łamie się je w sekundach: ≤ 3 różne znaki,
+ * powtarzany wzorzec („abababab”), ciąg kolejnych znaków („abcdefgh”, „87654321”,
+ * „qwertyui”) albo pozycja z listy najczęstszych haseł (też z doklejoną cyfrą/rokiem).
+ */
+export function isTrivialPassword(pw: string): boolean {
+  const p = pw.normalize("NFKC").toLowerCase();
+  const chars = [...p];
+  if (chars.length === 0) return false;
+  if (new Set(chars).size <= 3) return true;
+  for (let period = 1; period <= 4; period++) {
+    const unit = chars.slice(0, period).join("");
+    if (chars.length % period === 0 && unit.repeat(chars.length / period) === p) return true;
+  }
+  const stripped = p.replace(/[\d\W_]+$/u, "");
+  if (COMMON_PASSWORDS.has(p) || COMMON_PASSWORDS.has(stripped)) return true;
+  // Ciąg kolejnych kodów znaków (rosnąco lub malejąco) albo fragment rzędu klawiatury.
+  const codes = chars.map((c) => c.codePointAt(0)!);
+  const steps = new Set(codes.slice(1).map((c, i) => c - codes[i]));
+  if (steps.size === 1 && (steps.has(1) || steps.has(-1))) return true;
+  const rev = [...p].reverse().join("");
+  if (KEYBOARD_ROWS.some((row) => row.includes(p) || row.includes(rev))) return true;
+  return false;
+}
+
 /** Prosty szacunek: długość i różnorodność znaków; bez słownika, więc tylko wskazówka. */
 export function passwordStrength(pw: string): PasswordStrength {
   const len = [...pw].length;
   if (len === 0) return { score: 0, label: "", ok: false };
+  if (len >= MIN_PASSWORD_LENGTH && isTrivialPassword(pw)) return { score: 0, label: "Zbyt oczywiste", ok: false };
   const classes = [/[a-ząćęłńóśźż]/, /[A-ZĄĆĘŁŃÓŚŹŻ]/, /\d/, /[^A-Za-z0-9ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/].filter((r) => r.test(pw)).length;
   const unique = new Set(pw).size;
   let score = 0;
