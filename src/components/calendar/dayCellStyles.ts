@@ -10,8 +10,10 @@ export const weekdayHeadClass = (i: number) =>
   cn("text-2xs uppercase tracking-wider text-center py-1", i >= 5 ? "text-primary/80" : "text-muted-foreground");
 
 /** Komórka dnia bez rozmiaru — wysokość zależy od tego, co komórka pokazuje. Pełne tło: kratka tła nie prześwituje. */
-export const dayCellClass = (inMonth: boolean) => cn(
+export const dayCellClass = (inMonth: boolean, today = false) => cn(
   "relative rounded-xl border text-left transition-colors outline-none",
+  // Obramowanie „dziś” oddycha — bardzo subtelnie (CSS `today-breath`, wyłączone przy reduced motion).
+  today && inMonth && "today-breath",
   "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background",
   // Dzień spoza miesiąca: szary tekst, nie przezroczystość — przy opacity czerwone święto znikało w ciemnym motywie.
   inMonth ? "border-border/50 bg-card dark:border-transparent" : "border-transparent text-muted-foreground",

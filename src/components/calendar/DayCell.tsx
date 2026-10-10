@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { wasJustMoved } from "./movedSignal";
 import { format, isSameDay, isSameMonth } from "date-fns";
 import { pl } from "date-fns/locale";
 import { ReminderChip } from "./ReminderChip";
@@ -26,6 +28,7 @@ function terminy(n: number): string {
  */
 function DraggableChip({ occurrence, title }: { occurrence: Occurrence; title: string }) {
   const movable = !occurrence.isSeries || occurrence.isNext;
+  const [justMoved] = useState(() => wasJustMoved(occurrence.noteId));
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `occ-${occurrence.noteId}`,
     data: { occurrence },
@@ -40,7 +43,8 @@ function DraggableChip({ occurrence, title }: { occurrence: Occurrence; title: s
       // ma zostać jednym przystankiem tabulatora — chip nie łapie fokusu.
       tabIndex={-1}
       role={undefined}
-      className={cn(movable && "cursor-grab touch-none", isDragging && "opacity-40")}
+      // Wzorzec „stan przy pierwszym renderze”: odbicie gra tylko dla chipa, który właśnie przyleciał.
+      className={cn(movable && "cursor-grab touch-none", isDragging && "opacity-40", justMoved && "chip-drop")}
     >
       <ReminderChip occurrence={occurrence} title={title} />
     </div>
@@ -85,12 +89,16 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
       tabIndex={focused ? 0 : -1}
       onClick={() => onSelect(day)}
       className={cn(
-        dayCellClass(inMonth), "flex flex-col gap-0.5 min-h-[3.5rem] sm:min-h-[6rem] p-1 sm:p-1.5 cursor-pointer",
+        dayCellClass(inMonth, today), "flex flex-col gap-0.5 min-h-[3.5rem] sm:min-h-[6rem] p-1 sm:p-1.5 cursor-pointer",
         // Pełne tło z domieszką marki (nie przezroczystość) — inaczej prześwituje kratka tła.
         // Warianty `dark:` z linii wyżej są silniejsze od zwykłych klas —
         // bez własnych `dark:` zaznaczenie w ciemnym motywie byłoby niewidoczne.
         selected && "border-primary/60 bg-[color-mix(in_srgb,hsl(var(--primary))_7%,hsl(var(--card)))] dark:border-primary/60 dark:bg-[color-mix(in_srgb,hsl(var(--primary))_12%,hsl(var(--card)))]",
-        isOver && "border-primary bg-[color-mix(in_srgb,hsl(var(--primary))_12%,hsl(var(--card)))] dark:border-primary dark:bg-[color-mix(in_srgb,hsl(var(--primary))_18%,hsl(var(--card)))]",
+        // Podświetlenie celu wjeżdża płynnie (tło, ramka, obwódka), a zgasza się szybciej.
+        "transition-[background-color,border-color,box-shadow] ease-out-soft",
+        isOver
+          ? "duration-base border-primary bg-[color-mix(in_srgb,hsl(var(--primary))_12%,hsl(var(--card)))] shadow-[0_0_0_3px_hsl(var(--primary)/0.14)] dark:border-primary dark:bg-[color-mix(in_srgb,hsl(var(--primary))_18%,hsl(var(--card)))]"
+          : "duration-fast",
       )}
     >
       {/* Numer, święto (kropka na telefonie, nazwa od `sm`) — tak samo jak w Grafiku. */}

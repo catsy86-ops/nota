@@ -5,6 +5,7 @@ import { dayKey } from "@/lib/reminderOccurrences";
 import { dayType, entryMinutes, formatDuration, formatHoursShort, holidayName, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 import { monthEnterClass, useMonthDirection } from "@/hooks/useMonthDirection";
+import { stampKey, useStampedDays } from "@/hooks/useStampedDays";
 import { dayCellClass, dayNumberClass, holidayDotClass, holidayNameClass, weekdayHeadClass } from "@/components/calendar/dayCellStyles";
 
 interface ShiftMonthGridProps {
@@ -42,6 +43,7 @@ function useToday(): Date {
 export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesById, onDay, onMonthChange, describedBy }: ShiftMonthGridProps) {
   const today = useToday();
   const direction = useMonthDirection(month);
+  const { stamped, cleared } = useStampedDays(`${month.getFullYear()}-${month.getMonth()}`, days, typesById);
   const weeks = useMemo(() => {
     const all = eachDayOfInterval({ start: startOfWeek(month, WEEK), end: endOfWeek(endOfMonth(month), WEEK) });
     const out: Date[][] = [];
@@ -134,7 +136,7 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                     aria-current={isToday ? "date" : undefined}
                     title={holiday ?? entry?.note}
                     className={cn(
-                      dayCellClass(inMonth), "w-full flex flex-col items-stretch min-h-[3.75rem] sm:min-h-[5rem] p-1",
+                      dayCellClass(inMonth, isToday), "w-full flex flex-col items-stretch min-h-[3.75rem] sm:min-h-[5rem] p-1",
                       inMonth && "[@media(hover:hover)]:hover:border-primary/40",
                     )}
                   >
@@ -150,14 +152,21 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                       </span>
                     </span>
                     {holiday && <span aria-hidden className={holidayNameClass(inMonth)}>{holiday}</span>}
+                    {/* Wyczyszczony dzień: puste, kolorowe „odbicie” gaśnie w miejscu chipa. */}
+                    {!type && cleared.has(key) && (
+                      <span aria-hidden className="stamp-out absolute inset-x-1 bottom-1 h-7 sm:h-11 rounded-lg"
+                        style={{ backgroundColor: cleared.get(key)!.color }} />
+                    )}
                     {type && (
                       <span
+                        // key: zmiana rodzaju lub godzin to nowy chip — pieczątka gra od początku.
+                        key={entry ? stampKey(entry) : undefined}
                         aria-hidden
                         // Nieobecność: jasne tło w kolorze rodzaju i cienka ramka. Przerywana ramka wyglądała jak puste miejsce do wypełnienia.
-                        className={cn("mt-auto rounded-lg px-1 py-0.5 text-center leading-tight", absence ? "border-[1.5px]" : "shadow-sm", !inMonth && "opacity-50")}
+                        className={cn("relative mt-auto rounded-lg px-1 py-0.5 text-center leading-tight", absence ? "border-[1.5px]" : "shadow-sm", !inMonth && "opacity-50", stamped.has(key) && "stamp-in")}
                         style={absence
-                          ? { borderColor: type.color, backgroundColor: `color-mix(in srgb, ${type.color} 16%, transparent)`, color: shiftTextOnCard(type.color) }
-                          : { backgroundColor: type.color, color: shiftInk(type.color) }}
+                          ? { borderColor: type.color, backgroundColor: `color-mix(in srgb, ${type.color} 16%, transparent)`, color: shiftTextOnCard(type.color), "--stamp": type.color } as React.CSSProperties
+                          : { backgroundColor: type.color, color: shiftInk(type.color), "--stamp": type.color } as React.CSSProperties}
                       >
                         <span className="block font-display font-bold text-sm">{type.short}</span>
                         {!absence && (
