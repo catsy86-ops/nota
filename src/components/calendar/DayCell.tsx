@@ -9,17 +9,14 @@ import { cn } from "@/lib/utils";
 import { holidayName } from "@/lib/shifts/holidays";
 import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
 import { dayCellClass, dayNumberClass, holidayDotClass, holidayNameClass } from "./dayCellStyles";
+import { pluralPl } from "@/lib/plural";
 
 /** Ile chipów mieści się w komórce, zanim reszta zwinie się w „+N". */
 const MAX_CHIPS = 3;
 /** Kropka zajmuje ułamek szerokości chipa, więc na telefonie zmieści się ich więcej. */
 const MAX_DOTS = 4;
 
-function terminy(n: number): string {
-  if (n === 1) return "1 termin";
-  if (n >= 2 && n <= 4) return `${n} terminy`;
-  return `${n} terminów`;
-}
+const terminy = (n: number) => `${n} ${pluralPl(n, ["termin", "terminy", "terminów"])}`;
 
 /**
  * Chip, który da się przeciągnąć na inny dzień. Tylko termin zapisany

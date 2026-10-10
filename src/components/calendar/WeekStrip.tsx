@@ -7,6 +7,7 @@ import { holidayName, shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } fr
 import { addDaysToKey, parseDayKey, weekKeys, weekRangeLabel } from "@/lib/week";
 import { cn } from "@/lib/utils";
 import { dayCellClass, dayNumberClass } from "./dayCellStyles";
+import { pluralPl } from "@/lib/plural";
 
 interface WeekStripProps {
   /** Wybrany dzień — jego tydzień pokazuje pasek. */
@@ -16,7 +17,7 @@ interface WeekStripProps {
   onSelectDay: (day: Date) => void;
 }
 
-const terminy = (n: number) => (n === 1 ? "1 termin" : n >= 2 && n <= 4 ? `${n} terminy` : `${n} terminów`);
+const terminy = (n: number) => `${n} ${pluralPl(n, ["termin", "terminy", "terminów"])}`;
 
 /**
  * Pasek jednego tygodnia (pn–nd) nad siatką miesiąca: zmiana z Grafiku

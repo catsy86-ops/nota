@@ -79,6 +79,8 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   // Własne godziny pędzla — przypięte do rodzaju, więc zmiana pędzla je odpina.
   const [brushHours, setBrushHours] = useState<{ typeId: string; hours: ShiftHours } | null>(null);
   const activeHours = brush.kind === "type" && brushHours?.typeId === brush.id ? brushHours.hours : null;
+  // Komunikat dla czytnika ekranu: stuknięcie pędzlem zmienia wpis bez żadnego dymka.
+  const [announce, setAnnounce] = useState("");
   const [editingType, setEditingType] = useState<ShiftType | "new" | null>(null);
   const [openDay, setOpenDay] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -141,10 +143,12 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         && entry.hours.start === h.start && entry.hours.end === h.end && entry.hours.breakMin === h.breakMin;
       if (same) { setDayShift(key, null); return; }
       setDayEntry(key, { type: brush.id, ...(entry?.note ? { note: entry.note } : {}), hours: h, customHours: true });
+      setAnnounce(`${shortDate(key)}: ${typesById.get(brush.id)?.name ?? "zmiana"} ${h.start}–${h.end}`);
       return;
     }
     const clear = brush.kind === "erase" || entry?.type === brush.id;
     setDayShift(key, clear ? null : brush.id);
+    setAnnounce(clear ? `${shortDate(key)}: wyczyszczono` : `${shortDate(key)}: ${typesById.get(brush.id)?.name ?? "zmiana"}`);
     // Notatki i odchylenia nie da się odtworzyć jednym stuknięciem — stąd „Cofnij”.
     if (clear && entry && (entry.note || entry.extraMin)) {
       const [y, m, d] = key.split("-").map(Number);
@@ -152,7 +156,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         description: entry.note ? `Razem z notatką „${entry.note}”` : "Razem z odchyleniem od planu",
       });
     }
-  }, [brush, activeHours]);
+  }, [brush, activeHours, typesById]);
 
   // Przenoszenie i kopiowanie wpisów — jedna ścieżka dla myszy, dotyku i klawiatury.
   const transfer = useCallback((from: string, to: string, mode: TransferMode) => {
@@ -322,6 +326,8 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           </div>
         </section>
       )}
+
+      <p role="status" aria-live="polite" className="sr-only">{announce}</p>
 
       <p id="shift-brush-hint" className="-mt-3 text-xs text-muted-foreground px-1">{brushHint(brush, typesById, activeHours)}</p>
 

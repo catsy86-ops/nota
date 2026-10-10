@@ -409,7 +409,15 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   function ready(): Promise<void> {
     if (!readyPromise) {
       readyPromise = (async () => {
-        await persistence.whenSynced;
+        // Zablokowane IndexedDB (tryb prywatny, brak miejsca) nie może zawiesić aplikacji
+        // na „ładowaniu”: po 8 s idziemy dalej na samej pamięci, a zapis zgłaszamy w diagnostyce.
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        const synced = await Promise.race([
+          persistence.whenSynced.then(() => true, () => false),
+          new Promise<boolean>((r) => { timer = setTimeout(() => r(false), 8000); }),
+        ]);
+        if (timer) clearTimeout(timer);
+        if (!synced) logDiag("error", "yjs", "IndexedDB nie odpowiada — zmiany mogą nie zostać zapisane");
         await images.load();
         await migrateImagesToStore();
         await migrateFromLegacyIfNeeded();

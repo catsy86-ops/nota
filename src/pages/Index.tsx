@@ -160,11 +160,14 @@ const Index = () => {
   }, [isMobile]);
 
   const openNoteRef = useRef<(id: string) => void>(() => {});
+  // Stabilna tablica: nowa w każdym renderze restartowałaby sprawdzanie przy każdym znaku w wyszukiwarce.
+  const reminderNotes = useMemo(() => [...notes, ...archivedNotes], [notes, archivedNotes]);
   useReminderNotifications(
-    [...notes, ...archivedNotes],
+    reminderNotes,
     (id, nextReminder, reminderDay) => updateNote(id, { reminder: nextReminder, reminderDay }),
     (id) => openNoteRef.current(id),
     (id) => updateNote(id, { reminderRepeat: "none", reminderRepeatUntil: undefined }),
+    trashedNotes,
   );
 
   // Odznaki w głównym widoku: jeden cichy toast na paczkę (import potrafi odblokować

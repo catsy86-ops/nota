@@ -50,6 +50,8 @@ export function BrushBar({ types, brush, onBrush, onEditType, onAddType, onPatte
   }, [activeIndex]);
 
   function onRadioKey(e: React.KeyboardEvent) {
+    // Ołówek edycji leży w tej samej grupie wizualnie, ale nie jest pędzlem.
+    if ((e.target as HTMLElement).getAttribute("role") !== "radio") return;
     const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
     if (!step) return;
     e.preventDefault();

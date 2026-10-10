@@ -16,6 +16,8 @@ export function useReminderNotifications(
   onOpen?: (id: string) => void,
   /** Ostatni termin serii właśnie wystrzelił — seria staje się jednorazowa. */
   onSeriesEnded?: (id: string) => void,
+  /** Notatki z kosza: nie odpalają, ale ich wpis „już odpalone” ma przetrwać do przywrócenia. */
+  trashed: Note[] = [],
 ) {
   const firedRef = useRef(loadFired());
   const onOpenRef = useRef(onOpen);
@@ -24,6 +26,10 @@ export function useReminderNotifications(
   notesRef.current = notes;
   const firedCbRef = useRef(onReminderFired);
   firedCbRef.current = onReminderFired;
+  const seriesEndedRef = useRef(onSeriesEnded);
+  seriesEndedRef.current = onSeriesEnded;
+  const trashedRef = useRef(trashed);
+  trashedRef.current = trashed;
 
   // Przyciski akcji z powiadomienia systemowego (public/sw-notifications.js).
   useEffect(() => {
@@ -52,7 +58,7 @@ export function useReminderNotifications(
       // Wpis „już odpalone” ma sens tylko dopóki termin jest w przeszłości.
       // Przesunięcie go w przyszłość (edycja, przeciągnięcie w kalendarzu)
       // musi pozwolić przypomnieniu wystrzelić ponownie.
-      const { next, changed } = reconcileFired(firedRef.current, notes, now);
+      const { next, changed } = reconcileFired(firedRef.current, [...notes, ...trashedRef.current], now);
       if (changed) {
         firedRef.current = next;
         saveFired(next);
@@ -71,7 +77,7 @@ export function useReminderNotifications(
 
           const times = snoozeTimes(now);
           const when = formatReminderShort(note.reminder);
-          const onDone = () => onReminderFired(note.id, null);
+          const onDone = () => firedCbRef.current(note.id, null);
           toast.custom((id) => createElement(ReminderDueToast, {
             toastId: id,
             // Notatka prywatna: ani tytułu, ani treści w dymku (projekcja jest pusta, a tu jawnie nazywamy powód).
@@ -81,8 +87,8 @@ export function useReminderNotifications(
             canSnooze: repeat === "none",
             // Odłożenie przesuwa termin w przyszłość, więc `reconcileFired`
             // zdejmie wpis „już odpalone” i przypomnienie wystrzeli ponownie.
-            onSnooze10: () => onReminderFired(note.id, times.in10min, seriesDay(note)),
-            onSnoozeTomorrow: () => onReminderFired(note.id, times.tomorrow9, seriesDay(note)),
+            onSnooze10: () => firedCbRef.current(note.id, times.in10min, seriesDay(note)),
+            onSnoozeTomorrow: () => firedCbRef.current(note.id, times.tomorrow9, seriesDay(note)),
             onDone,
             onOpen: () => onOpenRef.current?.(note.id),
           }), {
@@ -109,12 +115,12 @@ export function useReminderNotifications(
 
           if (repeat !== "none") {
             const next = nextInSeries(note.reminder, repeat, seriesDay(note), note.reminderRepeatUntil);
-            if (next !== null) onReminderFired(note.id, next, seriesDay(note));
+            if (next !== null) firedCbRef.current(note.id, next, seriesDay(note));
             else {
               // Ostatni termin: zostaje jak odpalone jednorazowe przypomnienie.
               fired.add(note.id);
               saveFired(fired);
-              onSeriesEnded?.(note.id);
+              seriesEndedRef.current?.(note.id);
             }
           }
         }
@@ -124,5 +130,5 @@ export function useReminderNotifications(
     check();
     const interval = setInterval(check, 15000);
     return () => clearInterval(interval);
-  }, [notes, onReminderFired, onSeriesEnded]);
+  }, [notes]);
 }
