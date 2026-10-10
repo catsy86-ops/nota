@@ -13,6 +13,7 @@ import { useConfirmPrefs, setConfirmPref } from "@/lib/confirmPrefs";
 import type { NoteColor } from "@/hooks/useNotes";
 import { cn } from "@/lib/utils";
 import { Section, ToggleRow } from "./SettingsShared";
+import { ReviewSettings } from "./ReviewSettings";
 import { getNotificationPermission } from "@/lib/notificationPermission";
 import { MOD_KEY } from "@/lib/platform";
 
@@ -97,6 +98,8 @@ export function GeneralSettings() {
       </Section>
 
       <NotificationStatus />
+
+      <ReviewSettings />
 
       <ToggleRow
         label="Sprawdzanie pisowni"

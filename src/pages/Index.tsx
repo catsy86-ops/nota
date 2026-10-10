@@ -47,6 +47,7 @@ import { showAchievementStamp } from "@/lib/achievementStamp";
 import { AchievementStamp } from "@/components/AchievementStamp";
 import { ShortcutsDialog } from "@/components/ShortcutsDialog";
 import { DailyQuote } from "@/components/DailyQuote";
+import { WeeklyReviewCard } from "@/components/review/WeeklyReviewCard";
 import { PaperBackdrop } from "@/components/PaperBackdrop";
 import { QuickTemplates } from "@/components/QuickTemplates";
 import { useConfirmAction } from "@/components/ConfirmActionDialog";
@@ -504,6 +505,13 @@ const Index = () => {
             </div>
           )}
           {view === "notes" && <InstallBanner ready={notes.length >= 3} />}
+          {view === "today" && !deferredSearch && (
+            <WeeklyReviewCard
+              notes={notes} folders={folders} onOpen={openNote} onTogglePin={togglePin}
+              onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow}
+              archiveNote={archiveNote} unarchiveNote={unarchiveNote} trashNote={trashNote} restoreFromTrash={restoreFromTrash}
+            />
+          )}
 
           {canCompose && (
             <motion.div initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={tween.enter} className="space-y-3">
