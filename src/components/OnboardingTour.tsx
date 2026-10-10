@@ -10,7 +10,7 @@ const STEPS = [
   {
     emoji: "📝",
     title: "Zapisz myśl w sekundę",
-    desc: "Kliknij pole „Nowa notatka” na górze (lub duży przycisk + na dole) i po prostu pisz. Zapisuje się samo.",
+    desc: "Kliknij pole „Zapisz notatkę…” na górze (lub duży przycisk + na dole) i po prostu pisz. Zapisuje się samo.",
   },
   {
     emoji: "🔍",

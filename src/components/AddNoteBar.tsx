@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, Tag, Bell, ImagePlus, X, PenTool, ListChecks, Palette } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
@@ -129,13 +130,15 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
-  return (
-    <>
-    {/* Na telefonie zwinięty pasek dublował „+” z dolnej nawigacji i zabierał ~90 px nad notatkami — „+” rozwija ten sam edytor. */}
-    <motion.div ref={containerRef} layout data-note-color={expanded && color !== "default" ? color : undefined}
+  // Edycja istniejącej notatki na telefonie jest na pełnym ekranie (NoteCard) — nowa też, zamiast pola w środku listy.
+  const fullScreen = expanded && typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches;
+
+  const composer = (
+    <motion.div ref={containerRef} layout={!fullScreen} data-note-color={expanded && color !== "default" ? color : undefined}
       className={cn("w-full max-w-xl rounded-2xl note-shadow border border-border overflow-hidden transition-[box-shadow,background-color] focus-ring-gradient hover:shadow-elevation-3",
         // Kolor schowany pod ikoną palety — edytor przyjmuje go od razu, żeby było widać wybór.
-        expanded && color !== "default" ? colorClasses[color] : "bg-card", !expanded && "max-md:hidden")}>
+        expanded && color !== "default" ? colorClasses[color] : "bg-card", !expanded && "max-md:hidden",
+        fullScreen && "fixed inset-0 z-50 max-w-none rounded-none border-0 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]")}>
       <AnimatePresence mode="wait">
         {!expanded ? (
           <motion.button key="collapsed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -159,7 +162,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
               setContent(content.slice(0, s) + before + sel + after + content.slice(e2));
             }} />
             <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Treść notatki..." rows={3}
-              className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none" />
+              className="w-full max-sm:min-h-[35dvh] bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none" />
 
             {/* Szablony tylko nad pustym szkicem — wybór tworzy osobną notatkę, więc nic by nie zastąpił. */}
             {templates && isDraftEmpty && templates(reset)}
@@ -293,6 +296,12 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
         )}
       </AnimatePresence>
     </motion.div>
+  );
+
+  return (
+    <>
+    {/* Na telefonie zwinięty pasek dublował „+” z dolnej nawigacji i zabierał ~90 px nad notatkami — „+” rozwija ten sam edytor. */}
+    {fullScreen ? createPortal(composer, document.body) : composer}
 
     <DrawingCanvas
       open={showDrawing}

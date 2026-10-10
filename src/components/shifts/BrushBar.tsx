@@ -65,8 +65,8 @@ export function BrushBar({ types, brush, onBrush, onEditType, onAddType, onPatte
 
   return (
     <div ref={scroller} onScroll={measure}
-      className={cn("flex gap-2 overflow-x-auto py-1.5 -mx-4 px-4 sm:-mx-1 sm:px-1",
-        moreRight && "[mask-image:linear-gradient(to_right,black_calc(100%-2.5rem),transparent)]")}>
+      className={cn("flex gap-2 overflow-x-auto py-1.5 -mx-4 px-4 sm:-mx-1 sm:px-1 sm:flex-wrap sm:overflow-visible",
+        moreRight && "[mask-image:linear-gradient(to_right,black_calc(100%-2.5rem),transparent)] sm:[mask-image:none]")}>
       <button type="button" onClick={onPattern}
         className={cn("pressable shrink-0 flex items-center gap-1.5 px-3 h-12 rounded-2xl border border-border/60 bg-card hover:bg-muted text-sm font-medium font-display", focusRing)}>
         <Repeat className="w-4 h-4" /> Cykl
@@ -76,7 +76,7 @@ export function BrushBar({ types, brush, onBrush, onEditType, onAddType, onPatte
         <Plus className="w-5 h-5" />
       </button>
       <span aria-hidden className="w-px shrink-0 bg-border/70 my-2" />
-      <div role="radiogroup" aria-label="Zmiana do naniesienia" className="flex shrink-0 gap-2" onKeyDown={onRadioKey}>
+      <div role="radiogroup" aria-label="Zmiana do naniesienia" className="flex shrink-0 gap-2 sm:shrink sm:flex-wrap" onKeyDown={onRadioKey}>
         {types.map((t, i) => (
           <BrushChip key={t.id} type={t} active={activeIndex === i} radio={radio(i)}
             onClick={() => onBrush({ kind: "type", id: t.id })} onEdit={() => onEditType(t)} />
