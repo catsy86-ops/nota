@@ -626,4 +626,5 @@ Scalone do master (519 testów jednostkowych, 103 e2e).
 - [x] **Powiązania:** podgląd `[[linku]]` po najechaniu/fokusie/przytrzymaniu, „Niepołączone wzmianki” z przyciskiem „Połącz” (tylko czytnik), graf powiązań (Statystyki i paleta, limit 150 węzłów).
 - [x] **Grupowanie:** wg daty/etykiety/folderu, zwijane sekcje, zwijane Przypięte (>3), sortowanie „Ostatnio otwierane” (`lastOpenedAt` w localStorage), `Ctrl+A`, przeciąganie zaznaczonych na folder.
 - [x] **Przegląd tygodnia** w „Dziś” (`lib/weeklyReview.ts`): zaległe przypomnienia, listy do dokończenia, nietknięte ≥30 dni, do posegregowania; tryb „po kolei” (K/A/D).
-- Do sprawdzenia na żywo: wizualnie wszystkie nowe elementy (agenci nie robili zrzutów), glow przy przenoszeniu wielu notatek naraz, „Niepołączone wzmianki” tylko w czytniku (nie w rozwiniętej karcie).
+- ✅ Przegląd wizualny 2026-10-10 (desktop 1440 i telefon 390): poprawione podpisy i szerokość wierszy karty przeglądu, zwarty graf dla małych zbiorów, pieczątka odznaki czeka na zamknięcie edytora (`data-composer-open`).
+- Do sprawdzenia na żywo: glow przy przenoszeniu wielu notatek naraz, „Niepołączone wzmianki” tylko w czytniku (nie w rozwiniętej karcie), motyw ciemny nowych elementów.

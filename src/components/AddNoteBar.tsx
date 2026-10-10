@@ -188,7 +188,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   const fullScreen = expanded && typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches;
 
   const composer = (
-    <motion.div ref={containerRef} layout={!fullScreen} data-note-color={expanded && color !== "default" ? color : undefined}
+    <motion.div ref={containerRef} layout={!fullScreen} data-composer-open={expanded || undefined} data-note-color={expanded && color !== "default" ? color : undefined}
       className={cn("w-full max-w-xl rounded-2xl note-shadow border border-border overflow-hidden transition-[box-shadow,background-color] focus-ring-gradient hover:shadow-elevation-3",
         // Kolor schowany pod ikoną palety — edytor przyjmuje go od razu, żeby było widać wybór.
         expanded && color !== "default" ? colorClasses[color] : "bg-card", !expanded && "max-md:hidden",

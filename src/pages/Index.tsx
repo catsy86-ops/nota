@@ -46,7 +46,7 @@ import { glowPulse, glowStreak, centerOf, pointOfNote } from "@/lib/glowTrail";
 import { SearchBar } from "@/components/SearchBar";
 import { useAchievementTracker } from "@/lib/achievements";
 import { useDayDoneReward } from "@/hooks/useDayDoneReward";
-import { showAchievementStamp } from "@/lib/achievementStamp";
+import { showAchievementStamp, stampAllowed } from "@/lib/achievementStamp";
 import { AchievementStamp } from "@/components/AchievementStamp";
 import { ShortcutsDialog } from "@/components/ShortcutsDialog";
 import { DailyQuote } from "@/components/DailyQuote";
@@ -187,7 +187,16 @@ const Index = () => {
   useEffect(() => () => { if (badgeTimerRef.current !== null) clearTimeout(badgeTimerRef.current); }, []);
   useAchievementTracker(notes, archivedNotes, allLabels, folders, (a) => {
     // Pieczątka zastępuje dymek (przy wyłączonym efekcie / reduced motion zostaje dymek).
-    if (showAchievementStamp(a)) return;
+    // Nad otwartym oknem lub edytorem nowej notatki zasłaniałaby pisany tekst — czeka na zamknięcie.
+    if (stampAllowed()) {
+      const attempt = (left: number) => {
+        const busy = document.querySelector('[role="dialog"][data-state="open"], [data-composer-open]');
+        if (busy && left > 0) { window.setTimeout(() => attempt(left - 1), 800); return; }
+        showAchievementStamp(a);
+      };
+      attempt(40);
+      return;
+    }
     unlockedBatchRef.current.titles.push(a.title);
     unlockedBatchRef.current.description = a.description;
     if (badgeTimerRef.current === null) showBadgeToast();
