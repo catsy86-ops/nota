@@ -287,7 +287,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           aria-label={isWeek ? "Poprzedni tydzień" : "Poprzedni miesiąc"} className={navButton}>
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <h2 className="min-w-0 sm:min-w-[12rem] text-center" aria-live="polite">
+        <h2 className="min-w-0 sm:min-w-[12rem] text-center">
           <button type="button" onClick={() => (isWeek ? setWeekStart(thisWeek) : setMonth(startOfMonth(new Date())))}
             title={isWeek ? "Wróć do bieżącego tygodnia" : "Wróć do bieżącego miesiąca"}
             className={cn("pressable w-full h-10 coarse:h-11 truncate font-display font-bold text-lg px-3 rounded-xl hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring", !isWeek && "capitalize")}>
@@ -334,6 +334,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
       )}
 
       <p role="status" aria-live="polite" className="sr-only">{announce}</p>
+      <p aria-live="polite" className="sr-only">{isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl })}</p>
 
       <p id="shift-brush-hint" className="-mt-3 text-xs text-muted-foreground px-1">{brushHint(brush, typesById, activeHours)}</p>
 
@@ -347,9 +348,9 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
       <ShiftDnd days={data.days} typesById={typesById} onTransfer={onDrop}>
         {isWeek ? (
           <ShiftWeekView weekStart={weekStart} days={data.days} typesById={typesById} remindersByDay={remindersByDay} titleOf={titleOf}
-            onDay={onDay} onWeekChange={setWeekStart} describedBy="shift-brush-hint" actions={actions} />
+            onDay={onDay} onWeekChange={setWeekStart} describedBy="shift-brush-hint shift-move-hint" actions={actions} />
         ) : (
-          <ShiftMonthGrid month={month} days={data.days} typesById={typesById} onDay={onDay} onMonthChange={setMonth} describedBy="shift-brush-hint" actions={actions} />
+          <ShiftMonthGrid month={month} days={data.days} typesById={typesById} onDay={onDay} onMonthChange={setMonth} describedBy="shift-brush-hint shift-move-hint" actions={actions} />
         )}
       </ShiftDnd>
 

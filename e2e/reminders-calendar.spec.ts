@@ -67,7 +67,7 @@ test("siatka miesiąca pokazuje termin w komórce dnia i w panelu dnia", async (
   // Szukamy więc jedynej komórki z terminem i sprawdzamy, że to właściwy dzień.
   const cell = grid.getByRole("gridcell", { name: /1 termin/ });
   await expect(cell).toHaveCount(1);
-  await expect(cell).toHaveAttribute("aria-label", new RegExp(`^${dayNumber} `));
+  await expect(cell).toHaveAttribute("aria-label", new RegExp(`^[^,]+, ${dayNumber} `));
 
   await cell.click();
   // Panel dnia to lista — kafel w siatce ma ten sam tekst, więc celujemy w pozycję listy.

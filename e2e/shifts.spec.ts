@@ -304,13 +304,13 @@ test("zmiana z Grafiku widać w komórce Kalendarza i w panelu dnia", async ({ p
   await page.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
 
   await page.getByRole("button", { name: /Kalendarz/ }).first().click();
-  const cell = page.getByRole("gridcell", { name: /^5 października 2026.*zmiana: Dzień \d{2}:\d{2}–\d{2}:\d{2}/ });
+  const cell = page.getByRole("gridcell", { name: /^[^,]+, 5 października 2026.*zmiana: Dzień \d{2}:\d{2}–\d{2}:\d{2}/ });
   await expect(cell).toHaveCount(1);
 
   await cell.click();
   await expect(page.getByText(/Zmiana w Grafiku:/)).toBeVisible();
   // Dzień bez zmiany nie ma znacznika.
-  await expect(page.getByRole("gridcell", { name: /^6 października 2026/ })).not.toContainText("zmiana:");
+  await expect(page.getByRole("gridcell", { name: /^[^,]+, 6 października 2026/ })).not.toContainText("zmiana:");
 });
 
 test("Kalendarz pokazuje dziś i jutro: zmianę z Grafiku i brak terminów", async ({ page }) => {

@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { daysUntilMonthEnd, deletePattern, newShiftId, savePattern, shiftInk, shiftTextOnCard, type ShiftPattern, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
+import { toastWithUndo } from "@/lib/undoToast";
+import { TAP } from "@/lib/platform";
 
 interface PatternDialogProps {
   open: boolean;
@@ -85,7 +87,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
                       {p.steps.map((s) => (s ? typesById.get(s)?.short ?? "?" : "–")).join(" ")}
                     </span>
                   </button>
-                  <Button type="button" variant="ghost" size="icon" aria-label={`Usuń cykl ${p.name}`} onClick={() => deletePattern(p.id)}>
+                  <Button type="button" variant="ghost" size="icon" aria-label={`Usuń cykl ${p.name}`} onClick={() => { deletePattern(p.id); toastWithUndo(`Usunięto cykl „${p.name}”`, () => savePattern(p)); }}>
                     <Trash2 className="w-4 h-4" />
                   </Button>
                 </li>
@@ -97,7 +99,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
         <fieldset>
           <legend className="text-sm font-medium mb-2">Kolejne dni cyklu ({steps.length})</legend>
           <div aria-live="polite" className="min-h-[2.75rem] flex flex-wrap gap-1 p-2 rounded-xl bg-muted/50">
-            {steps.length === 0 && <span className="text-sm text-muted-foreground self-center px-1">Stuknij zmiany poniżej, po kolei</span>}
+            {steps.length === 0 && <span className="text-sm text-muted-foreground self-center px-1">{TAP[0].toUpperCase() + TAP.slice(1)} zmiany poniżej, po kolei</span>}
             {steps.map((s, i) => {
               const t = s ? typesById.get(s) : undefined;
               return (

@@ -209,6 +209,11 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
             ))}
           </div>
         </fieldset>
+        {!valid && !breakOutside && (
+          <p role="alert" className="text-xs text-destructive">
+            {draft.name.trim() === "" ? "Podaj nazwę rodzaju zmiany." : "Godzina rozpoczęcia i końca muszą się różnić."}
+          </p>
+        )}
         <DialogFooter className="gap-2 sm:justify-between">
           {type ? (
             <Button type="button" variant={confirmDays === null ? "ghost" : "destructive"}

@@ -83,6 +83,19 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
     setCustom(same ? null : next);
   }
 
+  /** Strzałki przesuwają wybór po rodzajach (jeden przystanek tabulatora na grupę, jak w ARIA radiogroup). */
+  function onTypeKey(e: React.KeyboardEvent<HTMLDivElement>) {
+    const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+    if (!step) return;
+    e.preventDefault();
+    const ids = [null, ...types.map((t) => t.id)];
+    const at = Math.max(0, ids.indexOf(typeId));
+    const next = ids[(at + step + ids.length) % ids.length];
+    pickType(next);
+    const radios = e.currentTarget.querySelectorAll<HTMLButtonElement>("[data-type-radio]");
+    radios[(at + step + ids.length) % ids.length]?.focus();
+  }
+
   function pickType(id: string | null) {
     if (id !== typeId) setCustom(null);
     setTypeId(id);
@@ -110,12 +123,13 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
         <form className="space-y-4 soft-swap" onSubmit={(e) => { e.preventDefault(); save(); }}>
           <fieldset>
             <legend className="text-sm font-medium mb-2">Zmiana</legend>
-            <div role="radiogroup" aria-label="Zmiana" className="flex flex-wrap gap-2">
+            <div role="radiogroup" aria-label="Zmiana" className="flex flex-wrap gap-2" onKeyDown={onTypeKey}>
               {[null, ...types].map((t) => {
                 const id = t?.id ?? null;
                 const active = typeId === id;
                 return (
-                  <button key={id ?? "free"} type="button" role="radio" aria-checked={active} onClick={() => pickType(id)}
+                  <button key={id ?? "free"} type="button" role="radio" aria-checked={active} data-type-radio
+                    tabIndex={active ? 0 : -1} onClick={() => pickType(id)}
                     className={cn("pressable h-10 coarse:h-11 px-3 rounded-xl border text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
                       active ? "border-transparent" : "border-border/60 bg-card/50 hover:bg-muted",
                       active && !t && "bg-foreground text-background")}
