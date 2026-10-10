@@ -644,3 +644,13 @@ Scalone do master (519 testów jednostkowych, 103 e2e).
 - [x] **Auto-blokada**: 1/5/15/30 min lub nigdy, ukrycie karty > 1 min, ręczna (także we wszystkich kartach — BroadcastChannel).
 - Decyzje: notatki z obrazami/załącznikami nie da się zablokować (pliki nie są szyfrowane); prywatne notatki nie biorą udziału w wyszukiwaniu/grafie/przeglądzie nawet po odblokowaniu; wersje (`versionsStore`) wyłączone dla prywatnych; po zablokowaniu dziennik y-indexeddb jest zagęszczany (jawny tekst sprzed blokady znika z IndexedDB tej przeglądarki).
 - Do zrobienia: szyfrowanie bajtów załączników; czytnik/prezentacja odblokowanej notatki; wyszukiwanie po odblokowaniu (w pamięci); powiadomienie push bez treści.
+
+## Audyt i rozszerzenia — 2026-10-10 (piąta runda)
+
+- [x] **Grafik:** własne godziny pędzla (`BrushHours`), „Skończyłem teraz” w karcie bieżącej zmiany, karta czasu `.csv` (`lib/shifts/timesheet.ts`), alarm per rodzaj zmiany w `.ics` (`ShiftType.alarmMin`), komunikat dla czytnika po stuknięciu pędzlem.
+- [x] **Powiadomienia:** wspólny helper `lib/systemNotification.ts`, przyciski „Odłóż 10 min” / „Gotowe” (SW → karta), wibracja, `requireInteraction`. Prawdziwy Web Push przy zamkniętej aplikacji nadal wymaga serwera VAPID.
+- [x] **Wydajność:** indeks Fuse cache'owany per tablica notatek, stabilne sprawdzanie przypomnień i nudge'ów, timeout IndexedDB (8 s), leniwy renderer Markdown i rzadkie panele (główny pakiet 239 → 198 KB gzip).
+- [x] **Bezpieczeństwo:** `npm audit fix`, nagłówki + CSP Report-Only (`netlify.toml`), walidacja URL w SW i `useViewRoute`, losowanie kodu parowania bez obciążenia, pominięcie notatek prywatnych w akcji „Gotowe”.
+- [x] **Notatki:** wklejanie obrazu ze schowka w `AddNoteBar`, dyktowanie (Web Speech, zgoda przy pierwszym użyciu).
+- Do zrobienia (z audytów): react-router 7 (podatności runtime), CSP w trybie egzekwowania po tygodniu bez zgłoszeń, walidacja metadanych skarbca i hasło ≥ 12 znaków, limity w schemacie backupu, ZIP z nakładającymi się wpisami, a11y Kalendarza (cele dotykowe, radiogroup w dialogach, „Cofnij” przy usuwaniu cyklu), wydzielenie hooków tła z `Index.tsx`.
+- Do zrobienia (z porównania z konkurencją): Share Target dla plików, podzadania w listach, „znajdź i zamień”, eksport bazy do `.md`, udostępnienie grafiku jako obraz, premie w rachunku, wiele grafików.
