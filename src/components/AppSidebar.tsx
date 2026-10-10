@@ -89,7 +89,9 @@ export function AppSidebar({
           />
         )}
       </AnimatePresence>
-      <AnimatePresence>
+      {/* initial={false}: przy starcie aplikacji pasek jest od razu rozwinięty — bez wjazdu od zera,
+          który przesuwał całą treść (CLS) przy każdym wczytaniu strony. */}
+      <AnimatePresence initial={false}>
         {open && (
           <motion.aside
             // Telefon: arkusz wjeżdża z krawędzi nad treścią. Desktop: pasek jest w układzie,

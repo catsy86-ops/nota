@@ -111,7 +111,9 @@ const Index = () => {
       if (!el.hasAttribute("data-view-static")) playEnter(el, { opacity: 0, transform: "translateY(6px)" });
     }
   }, [viewKey]);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Start zgodny z efektem poniżej (desktop: otwarty), żeby pasek nie wjeżdżał od zera po montażu
+  // i nie przesuwał całej treści przy każdym wczytaniu strony.
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== "undefined" && window.innerWidth >= 768);
   const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false);
   const addNoteRef = useRef<{ expand: () => void }>(null);
   const logoClicksRef = useRef<{ count: number; lastTs: number }>({ count: 0, lastTs: 0 });
