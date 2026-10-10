@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { tween } from "@/lib/motion";
 import { wordsPl } from "@/lib/plural";
 import { NoteImage } from "./NoteImage";
+import { useWakeLock } from "@/hooks/useWakeLock";
 
 /**
  * Jedno miejsce czytania notatki (wcześniej: szybki podgląd w `NoteGrid`
@@ -112,6 +113,8 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
   useOriginFromTile(panelRef, note.id);
   const { showBacklinks } = useViewPrefs();
   const canEdit = !note.trashed;
+  // Prezentacja (często na stojaku, bez dotykania ekranu) nie może zgasnąć.
+  useWakeLock(present);
 
   // Nowa notatka zaczyna czytanie od góry.
   useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }); }, [note.id]);
