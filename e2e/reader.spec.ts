@@ -76,3 +76,17 @@ test("czytnik kopiuje notatkę jako Markdown i pokazuje toast", async ({ page, c
 
 Treść do skopiowania`);
 });
+
+test("paleta poleceń kopiuje notatkę z fokusem jako Markdown", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  const title = `Paleta ${Date.now()}`;
+  await addNote(page, title, "Treść z palety");
+  await page.locator("body").click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press("Home");
+  await page.keyboard.press("Control+k");
+  await page.getByPlaceholder(/Szukaj|Wpisz/).first().fill("Kopiuj notatkę jako Markdown");
+  await page.getByRole("option", { name: /Kopiuj notatkę jako Markdown/ }).click();
+  await expect(page.getByText("Skopiowano", { exact: true })).toBeVisible();
+  const clip = await page.evaluate(() => navigator.clipboard.readText());
+  expect(clip.split("\r\n").join("\n")).toBe(`# ${title}\n\nTreść z palety`);
+});

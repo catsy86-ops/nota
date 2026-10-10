@@ -16,7 +16,7 @@ import { parseViewRoute } from "@/lib/viewRoute";
 import { groupReminders } from "@/lib/reminderAgenda";
 import { buildWikiIndex, resolveWikiTarget, wikiIndexKey } from "@/lib/wikiLinks";
 import { useLatestRef, useStableByKey } from "@/hooks/useLatestRef";
-import { useGridNavPreviewId, useGridNavState, setGridNavPreview, setGridNavFocus } from "@/lib/gridKeyboardNav";
+import { useGridNavPreviewId, getGridNavFocusedId, setGridNavPreview, setGridNavFocus } from "@/lib/gridKeyboardNav";
 import { copyNoteToClipboard } from "@/lib/noteMarkdown";
 import { NoteReader, type ReaderMode } from "@/components/NoteReader";
 import { cn } from "@/lib/utils";
@@ -385,12 +385,13 @@ const Index = () => {
     [readerId, notes, archivedNotes, trashedNotes],
   );
   // „Bieżąca” notatka dla palety poleceń: otwarta w czytniku, jedyna zaznaczona albo z fokusem.
-  const gridFocusedId = useGridNavState().focusedId;
-  const copyTargetId = readerId ?? (selectedIds.size === 1 ? [...selectedIds][0] : gridFocusedId);
-  const copyTarget = useMemo(
-    () => (copyTargetId ? [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === copyTargetId) ?? null : null),
-    [copyTargetId, notes, archivedNotes, trashedNotes],
-  );
+  // Fokus siatki czytamy tylko po otwarciu palety — subskrypcja przerysowywałaby
+  // całą stronę przy każdej strzałce (patrz selektory w `gridKeyboardNav`).
+  const copyTarget = useMemo(() => {
+    if (!paletteOpen) return null;
+    const id = readerId ?? (selectedIds.size === 1 ? [...selectedIds][0] : getGridNavFocusedId());
+    return id ? [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === id) ?? null : null;
+  }, [paletteOpen, readerId, selectedIds, notes, archivedNotes, trashedNotes]);
   const closeReader = useCallback(() => { setPresentingNoteId(null); setGridNavPreview(null); }, []);
   const showInReader = useCallback((id: string, mode: ReaderMode) => {
     if (mode === "present") { setGridNavPreview(null); setPresentingNoteId(id); }

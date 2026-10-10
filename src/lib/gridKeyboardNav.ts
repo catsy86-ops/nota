@@ -87,6 +87,11 @@ export function hasGridNavFocus(): boolean {
   return state.focusedId !== null;
 }
 
+/** Id kafla z fokusem siatki — odczyt jednorazowy, bez subskrypcji (nie przerysowuje strony). */
+export function getGridNavFocusedId(): string | null {
+  return state.focusedId;
+}
+
 export function setGridNavFocus(id: string | null) {
   setState({ focusedId: id });
 }
