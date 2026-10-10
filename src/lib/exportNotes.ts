@@ -9,7 +9,7 @@ const loadSchemas = () => import("@/lib/noteSchema");
 import { tryWriteBackupToFile } from "@/lib/backupFileHandle";
 import { versionsStore } from "@/lib/versionsStore";
 import { logDiag } from "@/lib/diagnostics";
-import { imageStore, isDataUrl } from "@/lib/imageStore";
+import { imageStore, isEmbeddableImageDataUrl } from "@/lib/imageStore";
 import { restoreShifts, shiftStore, shiftsReady } from "@/lib/shifts/store";
 import { migrate } from "@/lib/shifts/model";
 import { BACKUP_ATTACHMENTS_BUDGET_BYTES, formatFileSize, type Attachment } from "@/lib/attachments";
@@ -30,7 +30,7 @@ export async function withStoredImages(notes: Note[]): Promise<Note[]> {
 
 /** Do Markdown/HTML/PDF: tylko obrazy, które da się osadzić. */
 export async function embeddableImages(images: string[]): Promise<string[]> {
-  return (await imageStore.resolve(images)).filter(isDataUrl);
+  return (await imageStore.resolve(images)).filter(isEmbeddableImageDataUrl);
 }
 
 export async function exportToJSON(notes: Note[], filename?: string): Promise<{ filename: string; size: number }> {
@@ -267,6 +267,7 @@ export async function exportToHTML(notes: Note[]) {
 <html lang="pl">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NOTKI — eksport</title>
 <style>
@@ -308,7 +309,7 @@ h1{font-size:1.8rem;margin-bottom:.2rem}
     const images = await embeddableImages(note.images ?? []);
     if (images.length) {
       html += `<div class="images">`;
-      images.forEach((img) => { html += `<img src="${img}" alt="">`; });
+      images.forEach((img) => { html += `<img src="${escape(img).replace(/"/g, "&quot;")}" alt="">`; });
       html += `</div>`;
     }
     if (note.attachments?.length) {

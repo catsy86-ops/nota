@@ -75,3 +75,26 @@ describe("imageStore", () => {
     expect(await store.getDataUrl(orphan)).toBeUndefined();
   });
 });
+
+describe("niezaufane dane obrazu (A03/A04)", () => {
+  it("safeMime przepuszcza tylko typ/podtyp", async () => {
+    const { safeMime } = await import("./imageStore");
+    expect(safeMime("image/PNG")).toBe("image/png");
+    expect(safeMime('x" onerror="a')).toBe("application/octet-stream");
+    expect(safeMime("text/html;charset=x")).toBe("application/octet-stream");
+    expect(safeMime(undefined)).toBe("application/octet-stream");
+  });
+
+  it("dataUrlToBytes czyści zły typ MIME", async () => {
+    const { dataUrlToBytes } = await import("./imageStore");
+    expect(dataUrlToBytes('data:a"b;base64,AAAA').type).toBe("application/octet-stream");
+    expect(dataUrlToBytes("data:image/png;base64,AAAA").type).toBe("image/png");
+  });
+
+  it("odrzuca obraz od peera ponad limit rozmiaru", async () => {
+    const { createImageStore, MAX_PEER_BLOB_BYTES, sha256Hex } = await import("./imageStore");
+    const store = createImageStore(`peer-limit-${crypto.randomUUID()}`);
+    const big = new Uint8Array(MAX_PEER_BLOB_BYTES + 1);
+    await expect(store.putBytes(big, "image/png", await sha256Hex(big))).rejects.toThrow(/zbyt duży/);
+  });
+});

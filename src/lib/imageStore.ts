@@ -32,12 +32,32 @@ export function isDataUrl(s: string): boolean {
   return s.startsWith("data:");
 }
 
+/** Bajty od peera większe niż to są odrzucane, zanim trafią na dysk (obrona przed zapchaniem IndexedDB). */
+export const MAX_PEER_BLOB_BYTES = 20 * 1024 * 1024;
+
+const MIME_RE = /^[a-z0-9][a-z0-9.+-]{0,60}\/[a-z0-9][a-z0-9.+-]{0,100}$/;
+
+/**
+ * Typ MIME trafia potem do `Blob`, do data URL-a w eksporcie HTML i do
+ * atrybutów `src`. Z pliku/peera jest niezaufany: cokolwiek poza `typ/podtyp`
+ * (cudzysłów, spacje, `;`, `,`) zamieniamy na typ binarny.
+ */
+export function safeMime(type: unknown): string {
+  const t = typeof type === "string" ? type.trim().toLowerCase() : "";
+  return MIME_RE.test(t) ? t : "application/octet-stream";
+}
+
+/** Data URL obrazu, który wolno osadzić w eksporcie (HTML/Markdown/PDF): tylko `image/*` w base64. */
+export function isEmbeddableImageDataUrl(s: string): boolean {
+  return /^data:image\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/]*={0,2}$/.test(s);
+}
+
 export function dataUrlToBytes(dataUrl: string): { bytes: Uint8Array; type: string } {
   const comma = dataUrl.indexOf(",");
   if (!dataUrl.startsWith("data:") || comma < 0) throw new Error("Nieprawidłowy data URL");
   const header = dataUrl.slice(5, comma);
   const payload = dataUrl.slice(comma + 1);
-  const type = header.split(";")[0] || "application/octet-stream";
+  const type = safeMime(header.split(";")[0]);
   if (header.endsWith(";base64")) {
     const bin = atob(payload);
     const bytes = new Uint8Array(bin.length);
@@ -91,6 +111,8 @@ export function createImageStore(dbName: string) {
    */
   async function putBytes(bytes: Uint8Array, type: string, expected?: string): Promise<string> {
     await load();
+    type = safeMime(type);
+    if (expected !== undefined && bytes.length > MAX_PEER_BLOB_BYTES) throw new Error("Obraz od peera jest zbyt duży");
     const hash = await sha256Hex(bytes);
     if (expected !== undefined && hash !== expected) throw new Error("Obraz nie pasuje do swojego hasha");
     if (known.has(hash)) return hash;
