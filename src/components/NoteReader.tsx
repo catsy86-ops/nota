@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Link2, Maximize2, Minimize2, Minus, Pencil, Plus, X } from "lucide-react";
+import { Copy, Link2, Maximize2, Minimize2, Minus, Pencil, Plus, X } from "lucide-react";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { findUnlinkedMentions, linkFirstMention, type UnlinkedMention } from "@/lib/unlinkedMentions";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -17,6 +17,8 @@ import { tween } from "@/lib/motion";
 import { wordsPl } from "@/lib/plural";
 import { NoteImage } from "./NoteImage";
 import { AttachmentsReadOnlyList } from "./AttachmentsList";
+import { useWakeLock } from "@/hooks/useWakeLock";
+import { copyNoteToClipboard } from "@/lib/noteMarkdown";
 
 /**
  * Jedno miejsce czytania notatki (wcześniej: szybki podgląd w `NoteGrid`
@@ -113,6 +115,8 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
   useOriginFromTile(panelRef, note.id);
   const { showBacklinks } = useViewPrefs();
   const canEdit = !note.trashed;
+  // Prezentacja (często na stojaku, bez dotykania ekranu) nie może zgasnąć.
+  useWakeLock(present);
 
   // Nowa notatka zaczyna czytanie od góry.
   useEffect(() => { scrollRef.current?.scrollTo({ top: 0 }); }, [note.id]);
@@ -232,6 +236,14 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                 </Button>
               </>
             )}
+            <Button
+              size="icon" variant="ghost" className="h-8 w-8"
+              onClick={(e) => { void copyNoteToClipboard(note, e.shiftKey ? "text" : "markdown"); }}
+              title="Kopiuj jako Markdown (Shift — jako tekst)"
+              aria-label="Kopiuj jako Markdown"
+            >
+              <Copy className="w-4 h-4" />
+            </Button>
             {canEdit && (
               <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs" onClick={() => onEdit(note.id)} title="Edytuj (Enter)">
                 <Pencil className="w-3.5 h-3.5" /> Edytuj

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, Brain, Keyboard, BookOpen, History, Bookmark, Network } from "lucide-react";
+import { StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, Brain, Keyboard, BookOpen, History, Bookmark, Network, Copy } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes } from "@/lib/searchNotes";
@@ -34,6 +34,8 @@ interface Props {
   onOpenFocusMode: () => void;
   onOpenShortcuts: () => void;
   onGoFilter: (query: string) => void;
+  /** Jest tylko, gdy jest „bieżąca” notatka (otwarta w czytniku, zaznaczona lub z fokusem). */
+  onCopyNote?: (format: "markdown" | "text") => void;
 }
 
 export function CommandPalette({
@@ -50,6 +52,7 @@ export function CommandPalette({
   onOpenFocusMode,
   onOpenShortcuts,
   onGoFilter,
+  onCopyNote,
 }: Props) {
   const { folders } = useNotesContext();
   const { filters } = useSavedFilters();
@@ -120,6 +123,16 @@ export function CommandPalette({
           <CommandItem onSelect={() => run(onDailyNote)}>
             <BookOpen className="w-4 h-4 mr-2" /> Notatka dnia
           </CommandItem>
+          {onCopyNote && (
+            <>
+              <CommandItem value="kopiuj notatke jako markdown" onSelect={() => run(() => onCopyNote("markdown"))}>
+                <Copy className="w-4 h-4 mr-2" /> Kopiuj notatkę jako Markdown
+              </CommandItem>
+              <CommandItem value="kopiuj notatke jako tekst" onSelect={() => run(() => onCopyNote("text"))}>
+                <Copy className="w-4 h-4 mr-2" /> Kopiuj notatkę jako tekst
+              </CommandItem>
+            </>
+          )}
           <CommandItem onSelect={() => run(onOpenSettings)}>
             <Settings className="w-4 h-4 mr-2" /> Ustawienia
           </CommandItem>

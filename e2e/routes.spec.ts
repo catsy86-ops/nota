@@ -56,3 +56,33 @@ test("link /notatka/:id otwiera notatkę, także z Archiwum", async ({ page }) =
   await expect(page.getByText("Tej notatki już nie ma")).toBeVisible();
   await expect(page).toHaveURL(/\/$/);
 });
+
+test("skrót PWA /?new=1 otwiera nową notatkę i czyści parametr z adresu", async ({ page }) => {
+  await page.goto("/?new=1");
+  await expect(page.getByPlaceholder("Tytuł")).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+  expect(new URL(page.url()).search).toBe("");
+});
+
+test("udostępnienie /share tworzy notatkę, pokazuje toast i wraca do Notatek", async ({ page }) => {
+  await page.goto("/share?title=Zebranie%20jutrzejsze&text=Agenda%20spotkania&url=https%3A%2F%2Fexample.com%2Fa");
+  await expect(page.getByText("Zapisano w NOTKACH")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Otwórz" })).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+  expect(new URL(page.url()).search).toBe("");
+  await expect(page.locator("[data-note-id]").filter({ hasText: "Zebranie jutrzejsze" })).toHaveCount(1);
+
+  // Odświeżenie adresu udostępnienia w tej samej sesji nie dubluje notatki.
+  await page.goto("/share?title=Zebranie%20jutrzejsze&text=Agenda%20spotkania&url=https%3A%2F%2Fexample.com%2Fa");
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.locator("[data-note-id]").filter({ hasText: "Zebranie jutrzejsze" })).toHaveCount(1);
+});
+
+test("skróty PWA do widoków otwierają Dziś, Grafik i Przypomnienia", async ({ page }) => {
+  await page.goto("/dzis");
+  await expect(page.getByRole("heading", { name: "Dziś", level: 1 })).toBeVisible();
+  await page.goto("/grafik");
+  await expect(page.getByRole("heading", { name: "Grafik" })).toBeVisible();
+  await page.goto("/przypomnienia");
+  await expect(page.getByRole("heading", { name: "Przypomnienia", level: 1 })).toBeVisible();
+});

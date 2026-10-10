@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useDayClock } from "@/lib/dayClock";
 import {
   DndContext, PointerSensor, TouchSensor, pointerWithin, useSensor, useSensors, type DragEndEvent,
 } from "@dnd-kit/core";
@@ -48,6 +49,9 @@ function monthBounds(month: Date) {
 }
 
 export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: ReminderCalendarViewProps) {
+  // „Dziś” w siatce, pasku tygodnia i najbliższych dniach liczone przy renderze —
+  // sygnał zegara dnia przerysowuje je po północy i po powrocie do karty.
+  useDayClock();
   const [month, setMonth] = useState(() => new Date());
   const [selectedDay, setSelectedDay] = useState(() => new Date());
   const [dialogDay, setDialogDay] = useState<Date | null>(null);

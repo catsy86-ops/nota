@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { celebrate } from "@/lib/celebrate";
 import { toast } from "sonner";
 import { wordsPl } from "@/lib/plural";
+import { useWakeLock } from "@/hooks/useWakeLock";
 
 interface Props {
   open: boolean;
@@ -25,6 +26,8 @@ export function FocusMode({ open, onOpenChange, initialTitle = "", initialConten
   const [running, setRunning] = useState(false);
   const [mode, setMode] = useState<"work" | "break">("work");
   const tickRef = useRef<number | null>(null);
+  // Ekran nie gaśnie w trakcie sesji skupienia.
+  useWakeLock(open);
 
   useEffect(() => {
     if (open) {

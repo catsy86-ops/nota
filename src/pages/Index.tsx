@@ -7,6 +7,7 @@ import { useNotesContext } from "@/hooks/NotesProvider";
 import { useNoteVersions } from "@/hooks/useNoteVersions";
 import type { NoteVersion } from "@/hooks/useNoteVersions";
 import { useReminderNotifications } from "@/hooks/useReminderNotifications";
+import { useOverdueBadge } from "@/hooks/useOverdueBadge";
 import { useTheme } from "@/hooks/useTheme";
 import { useViewPrefs, toggleGroupCollapsed } from "@/lib/viewPrefs";
 import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
@@ -15,11 +16,13 @@ import { parseViewRoute } from "@/lib/viewRoute";
 import { groupReminders } from "@/lib/reminderAgenda";
 import { buildWikiIndex, resolveWikiTarget, wikiIndexKey } from "@/lib/wikiLinks";
 import { useLatestRef, useStableByKey } from "@/hooks/useLatestRef";
-import { useGridNavPreviewId, setGridNavPreview, setGridNavFocus } from "@/lib/gridKeyboardNav";
+import { useGridNavPreviewId, getGridNavFocusedId, setGridNavPreview, setGridNavFocus } from "@/lib/gridKeyboardNav";
+import { copyNoteToClipboard } from "@/lib/noteMarkdown";
 import { NoteReader, type ReaderMode } from "@/components/NoteReader";
 import { cn } from "@/lib/utils";
 import { playEnter, tween } from "@/lib/motion";
-import { useNavigationType } from "react-router-dom";
+import { useNavigate, useNavigationType } from "react-router-dom";
+import { claimShare, parseShare, SHARE_PATH } from "@/lib/shareTarget";
 import { whenNotesReady, isNoteTextEditOpen } from "@/hooks/useNotes";
 import { DAILY_LABEL, DAILY_TEMPLATE, appendTimestamp, dailyKey, dailyTitle, findDailyNote } from "@/lib/dailyNote";
 import { useNoteActions } from "@/hooks/useNoteActions";
@@ -93,6 +96,7 @@ const Index = () => {
   // adres dostaje go z opóźnieniem zerowym, a „wstecz/dalej” wlewa z powrotem.
   const [search, setSearch] = useState(route.search);
   const navigationType = useNavigationType();
+  const navigate = useNavigate();
   useEffect(() => {
     if (navigationType === "POP") setSearch(route.search);
   }, [route.search, navigationType]);
@@ -380,6 +384,14 @@ const Index = () => {
     () => (readerId ? [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === readerId) ?? null : null),
     [readerId, notes, archivedNotes, trashedNotes],
   );
+  // „Bieżąca” notatka dla palety poleceń: otwarta w czytniku, jedyna zaznaczona albo z fokusem.
+  // Fokus siatki czytamy tylko po otwarciu palety — subskrypcja przerysowywałaby
+  // całą stronę przy każdej strzałce (patrz selektory w `gridKeyboardNav`).
+  const copyTarget = useMemo(() => {
+    if (!paletteOpen) return null;
+    const id = readerId ?? (selectedIds.size === 1 ? [...selectedIds][0] : getGridNavFocusedId());
+    return id ? [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === id) ?? null : null;
+  }, [paletteOpen, readerId, selectedIds, notes, archivedNotes, trashedNotes]);
   const closeReader = useCallback(() => { setPresentingNoteId(null); setGridNavPreview(null); }, []);
   const showInReader = useCallback((id: string, mode: ReaderMode) => {
     if (mode === "present") { setGridNavPreview(null); setPresentingNoteId(id); }
@@ -475,14 +487,20 @@ const Index = () => {
   // another app once the app is installed).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const shareTitle = params.get("share-title");
-    const shareText = params.get("share-text");
-    const shareUrl = params.get("share-url");
-    if (shareTitle || shareText || shareUrl) {
-      const content = [shareText, shareUrl].filter(Boolean).join("\n");
-      handleAddNoteGlow(shareTitle ?? "", content);
-      toast.success("Notatka utworzona z udostępnionej treści");
-      window.history.replaceState(null, "", window.location.pathname);
+    const shared = parseShare(window.location.pathname, window.location.search);
+    if (shared) {
+      // Adres czyścimy od razu — odświeżenie nie ma co powtarzać; `claimShare`
+      // łapie jeszcze przypadek odświeżenia, zanim router zdążył zamienić wpis.
+      navigate("/", { replace: true });
+      if (claimShare(shared)) {
+        void whenNotesReady().then(() => {
+          const id = handleAddNoteGlow(shared.title, shared.content);
+          toast.success("Zapisano w NOTKACH", { action: { label: "Otwórz", onClick: () => openNoteRef.current(id) } });
+        });
+      }
+    } else if (window.location.pathname === SHARE_PATH) {
+      // Pusty `/share` (np. ręcznie wpisany adres) — po prostu wróć do Notatek.
+      navigate("/", { replace: true });
     } else if (params.get("new")) {
       expandAddNote();
       window.history.replaceState(null, "", window.location.pathname);
@@ -492,7 +510,8 @@ const Index = () => {
   }, []);
 
   // Licznik w pasku bocznym tylko przy tym, co wymaga uwagi: zaległe przypomnienia i Kosz.
-  const overdueCount = notes.filter((n) => n.reminder && n.reminder < Date.now()).length;
+  // Ta sama liczba ląduje w tytule karty i na ikonie aplikacji (useOverdueBadge).
+  const overdueCount = useOverdueBadge(notes);
   // Trwałe usunięcie zabiera ze sobą historię wersji — inaczej zostawałaby
   // w `localStorage` na zawsze i zjadała limit.
   const deleteNoteForever = useCallback((id: string) => { deleteNote(id); deleteVersions(id); }, [deleteNote, deleteVersions]);
@@ -757,6 +776,7 @@ const Index = () => {
           onOpenStats={() => setStatsOpen(true)}
           onOpenFocusMode={() => setFocusModeOpen(true)}
           onOpenShortcuts={() => setShortcutsOpen(true)}
+          onCopyNote={copyTarget ? (fmt) => { void copyNoteToClipboard(copyTarget, fmt); } : undefined}
         />
       </Suspense>
     )}

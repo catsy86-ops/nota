@@ -22,15 +22,36 @@
       "description": "Od razu otwórz pole nowej notatki",
       "url": "/?new=1",
       "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Dziś",
+      "short_name": "Dziś",
+      "description": "Notatki z dzisiejszego dnia",
+      "url": "/dzis",
+      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Grafik",
+      "short_name": "Grafik",
+      "description": "Grafik zmian",
+      "url": "/grafik",
+      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Przypomnienia",
+      "short_name": "Przypomnienia",
+      "description": "Terminy i zaległe przypomnienia",
+      "url": "/przypomnienia",
+      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ],
   "share_target": {
-    "action": "/",
+    "action": "/share",
     "method": "GET",
     "params": {
-      "title": "share-title",
-      "text": "share-text",
-      "url": "share-url"
+      "title": "title",
+      "text": "text",
+      "url": "url"
     }
   },
   "screenshots": [
