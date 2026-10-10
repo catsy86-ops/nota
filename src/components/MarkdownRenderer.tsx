@@ -2,6 +2,7 @@ import ReactMarkdown from "react-markdown";
 import { cn } from "@/lib/utils";
 import { Fragment, memo, type ReactNode } from "react";
 import { WikiLink } from "@/components/WikiLinkPreview";
+import { isSafeHref, safeHref } from "@/lib/safeUrl";
 import { Bold, Code, Heading2, Italic, Link2, List, Quote } from "lucide-react";
 
 interface MarkdownRendererProps {
@@ -44,6 +45,8 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content, classN
   return (
     <ReactMarkdown
       className={cn("prose-note leading-relaxed", className)}
+      // Treść notatki bywa od peera/z importu: tylko http(s), mailto, tel i odnośniki względne.
+      urlTransform={(url) => (isSafeHref(url) ? url : "")}
       components={{
         h1: ({ children }) => <h1 className="text-base font-display font-bold text-foreground mb-1">{renderText(children)}</h1>,
         h2: ({ children }) => <h2 className="text-sm font-display font-bold text-foreground mb-1">{renderText(children)}</h2>,
@@ -65,8 +68,17 @@ export const MarkdownRenderer = memo(function MarkdownRenderer({ content, classN
           <blockquote className="border-l-2 border-primary/40 pl-3 italic text-foreground/60 text-sm mb-1">{children}</blockquote>
         ),
         a: ({ children, href }) => (
-          <a href={href} target="_blank" rel="noopener noreferrer" className="text-accent underline underline-offset-2 hover:text-accent/80">{children}</a>
+          <a href={safeHref(href)} target="_blank" rel="noopener noreferrer nofollow" referrerPolicy="no-referrer" className="text-accent underline underline-offset-2 hover:text-accent/80">{children}</a>
         ),
+        // Zdalne obrazy z treści nie są ładowane automatycznie: samo wyświetlenie notatki
+        // od peera zdradzałoby adres IP (piksel śledzący). Obrazy notatek to załączniki lokalne.
+        img: ({ src, alt }) => {
+          const href = safeHref(src);
+          const label = `obraz: ${alt || "zdalny obraz"}`;
+          return href
+            ? <a href={href} target="_blank" rel="noopener noreferrer nofollow" referrerPolicy="no-referrer" className="text-accent underline underline-offset-2 hover:text-accent/80">{label}</a>
+            : <span className="text-muted-foreground">{label}</span>;
+        },
         hr: () => <hr className="border-border/30 my-2" />,
       }}
     >

@@ -170,3 +170,32 @@ describe("looksLikeNoteArray", () => {
     expect(looksLikeNoteArray([1, 2])).toBe(false);
   });
 });
+
+describe("eksport HTML - wektory XSS (A03)", () => {
+  it("MIME z cudzego data URL-a nie wstrzykuje atrybutu do <img>", async () => {
+    // Nagłówek z cudzysłowem: po naiwnym odtworzeniu data URL-a zamknąłby atrybut src.
+    const evil = 'data:x" onerror="window.__xss=1;base64,AAAA';
+    const ref = await imageStore.putDataUrl(evil);
+    await exportToHTML([makeNote({ images: [ref] })]);
+    expect(capturedContent).not.toContain("onerror");
+    expect(capturedContent).not.toMatch(/<img[^>]*src="data:x/);
+  });
+
+  it("obrazy spoza image/* nie są osadzane (data:text/html)", async () => {
+    const ref = await imageStore.putDataUrl("data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==");
+    await exportToHTML([makeNote({ images: [ref] })]);
+    expect(capturedContent).not.toContain("text/html;base64");
+    expect(capturedContent).not.toContain("<img");
+  });
+
+  it("escapuje etykiety, checklistę i nazwy załączników; plik niesie CSP bez skryptów", async () => {
+    const payload = '"><img src=x onerror=alert(1)>';
+    await exportToHTML([makeNote({
+      title: payload, labels: [payload], checklist: [{ id: "c", text: payload, checked: false }],
+      attachments: [{ hash: "a".repeat(64), name: payload, size: 1, type: "text/plain" }],
+    })]);
+    expect(capturedContent).not.toContain("<img src=x");
+    expect(capturedContent).toContain("Content-Security-Policy");
+    expect(capturedContent).toContain("default-src 'none'");
+  });
+});

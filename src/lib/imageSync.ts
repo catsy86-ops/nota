@@ -2,7 +2,7 @@ import * as Y from "yjs";
 import type { WebrtcProvider } from "y-webrtc";
 import { yjsStore } from "@/lib/yjsStore";
 import { providerOptions, roomNamesFor } from "@/lib/yjsSync";
-import { logDiag } from "@/lib/diagnostics";
+import { logDiag, logSecurity } from "@/lib/diagnostics";
 
 /**
  * P2P image sync (follow-up to yjsSync.ts's Phase 2 text/metadata sync — see
@@ -70,7 +70,10 @@ async function reconcileMissingImages(map: Y.Map<WireImage>, token: number): Pro
     const wire = map.get(ref);
     if (!isWireImage(wire)) continue;
     try { await images.putBytes(wire.b, wire.t, ref); }
-    catch (err) { logDiag("warn", "imageSync", "rejected image from peer", err); }
+    catch (err) {
+      logDiag("warn", "imageSync", "rejected image from peer", err);
+      logSecurity("rejected-peer-blob", err instanceof Error ? err.message : "odrzucony obraz od peera");
+    }
   }
 }
 

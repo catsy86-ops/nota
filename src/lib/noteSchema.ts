@@ -3,7 +3,7 @@ import type { Note, Folder, NoteColor, FolderColor, ChecklistItem } from "@/hook
 import type { NoteVersion } from "@/lib/versionsStore";
 import { normalizeAttachments } from "@/lib/attachments";
 
-const COLORS = ["default", "coral", "peach", "sand", "mint", "sage", "sky", "lavender", "rose"] as const;
+import { NOTE_COLORS as COLORS } from "@/lib/safeProjection";
 
 const colorSchema = z.enum(COLORS).catch("default" as NoteColor);
 const folderColorSchema = z.enum(COLORS).catch("default" as FolderColor);

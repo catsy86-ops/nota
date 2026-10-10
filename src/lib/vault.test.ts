@@ -145,8 +145,32 @@ describe("vault — hasło, metadane, kod awaryjny", () => {
   it("miernik hasła: krótkie odrzuca, długie ocenia wyżej", () => {
     expect(passwordStrength("").ok).toBe(false);
     expect(passwordStrength("abc").ok).toBe(false);
-    expect(passwordStrength("abcdefgh").ok).toBe(true);
-    expect(passwordStrength("abcdefgh").score).toBe(1);
+    expect(passwordStrength("kwiatek7").ok).toBe(true);
+    expect(passwordStrength("kwiatek7").score).toBe(1);
     expect(passwordStrength("Zażółć-gęślą-jaźń-2026!").score).toBe(4);
+  });
+});
+
+describe("hasło i metadane z zewnątrz (A07/A04)", () => {
+  it("odrzuca hasła trywialne mimo długości", async () => {
+    const { isTrivialPassword } = await import("./vault");
+    for (const pw of ["abcdefgh", "12345678", "87654321", "aaaaaaaa", "abababab", "password", "Password1", "qwertyuiop", "zaq12wsx", "haslo123", "notatnik2026"]) {
+      expect(isTrivialPassword(pw), pw).toBe(true);
+      expect(passwordStrength(pw).ok, pw).toBe(false);
+    }
+    for (const pw of ["stol-krzeslo-lampa-2026", "kwiatek7", "Zażółć-gęślą-jaźń-2026!"]) {
+      expect(isTrivialPassword(pw), pw).toBe(false);
+      expect(passwordStrength(pw).ok, pw).toBe(true);
+    }
+  });
+
+  it("isValidMeta odrzuca iter powyżej limitu (DoS na odblokowaniu) i rozdęte pola", async () => {
+    const { MAX_KDF_ITERATIONS } = await import("./vault");
+    const base = { v: 1, salt: "AAAAAAAAAAAAAAAAAAAAAA", iter: 600_000, wrapped: "v1.a.b", check: "v1.a.b", epoch: 1 };
+    expect(isValidMeta(base)).toBe(true);
+    expect(isValidMeta({ ...base, iter: MAX_KDF_ITERATIONS + 1 })).toBe(false);
+    expect(isValidMeta({ ...base, iter: 2_000_000_000 })).toBe(false);
+    expect(isValidMeta({ ...base, wrapped: "x".repeat(10_000) })).toBe(false);
+    expect(isValidMeta({ ...base, epoch: Infinity })).toBe(false);
   });
 });

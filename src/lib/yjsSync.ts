@@ -21,21 +21,26 @@ const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no ambiguous I/O/0/1
 // więc długość nic nie kosztuje. Stare 8-znakowe kody działają dalej.
 const CODE_LENGTH = 12;
 /**
- * Okres przejściowy: urządzenie dołącza do pokoju SHA-256 **i** do starego
- * pokoju FNV. Starsza wersja aplikacji zna tylko stary pokój — bez tego
- * urządzenia na różnych wersjach cicho przestałyby się widzieć. Wyłączyć
- * dopiero wtedy, gdy wszystkie urządzenia mają już tę wersję.
+ * Zgodność ze starszą wersją aplikacji (opt-in, domyślnie WYŁĄCZONA).
+ * Starsza wersja zna tylko pokój o nazwie FNV-64 z kodu. Taka nazwa idzie
+ * jawnie do publicznych serwerów sygnalizacyjnych, a FNV nie jest funkcją
+ * jednokierunkową (każdy krok da się odwrócić, atak meet-in-the-middle ≈ 2^30)
+ * — operator serwera odzyskałby kod parowania, czyli i hasło szyfrujące ruch.
+ * Dlatego urządzenie dołącza do starego pokoju tylko po jawnym włączeniu
+ * (Ustawienia → Synchronizacja → Zgodność), na czas wymiany starego urządzenia.
  */
-const JOIN_LEGACY_ROOM = true;
+const DEFAULT_LEGACY_ROOM = false;
 
 interface SyncPrefs {
   enabled: boolean;
   code: string | null;
   /** Własne serwery sygnalizacyjne; pusta lista = domyślne publiczne z `y-webrtc`. */
   signaling: string[];
+  /** Dołącz też do starego pokoju FNV (patrz `DEFAULT_LEGACY_ROOM`). */
+  legacyRoom: boolean;
 }
 
-const DEFAULT_PREFS: SyncPrefs = { enabled: false, code: null, signaling: [] };
+const DEFAULT_PREFS: SyncPrefs = { enabled: false, code: null, signaling: [], legacyRoom: DEFAULT_LEGACY_ROOM };
 
 function readPrefs(): SyncPrefs {
   if (typeof window === "undefined") return DEFAULT_PREFS;
@@ -43,8 +48,12 @@ function readPrefs(): SyncPrefs {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULT_PREFS;
     const parsed = { ...DEFAULT_PREFS, ...JSON.parse(raw) };
-    const signaling = Array.isArray(parsed.signaling) ? parseSignalingList(parsed.signaling.join(" ")).valid : [];
-    return { ...parsed, signaling };
+    // localStorage bywa uszkodzony albo podmieniony — każde pole sprawdzamy z osobna.
+    const signaling = Array.isArray(parsed.signaling)
+      ? parseSignalingList(parsed.signaling.filter((s: unknown) => typeof s === "string").join(" ")).valid
+      : [];
+    const code = typeof parsed.code === "string" && /^\S{1,64}$/.test(parsed.code) ? parsed.code : null;
+    return { enabled: parsed.enabled === true && code !== null, code, signaling, legacyRoom: parsed.legacyRoom === true };
   } catch (err) {
     logDiag("warn", "yjsSync", "unreadable sync prefs, using defaults", err);
     return DEFAULT_PREFS;
@@ -182,10 +191,31 @@ export function setSignalingServers(servers: string[]): void {
   if (prefs.enabled && prefs.code) connect(prefs.code);
 }
 
-/** Pokoje, do których dołącza urządzenie: nowy zawsze, stary w okresie przejściowym. */
+/** Pokoje, do których dołącza urządzenie: nowy zawsze, stary tylko po jawnym włączeniu zgodności. */
 export async function roomNamesFor(code: string): Promise<string[]> {
   const v2 = await roomNameV2For(code);
-  return JOIN_LEGACY_ROOM ? [v2, roomNameFor(code)] : [v2];
+  return readPrefs().legacyRoom ? [v2, roomNameFor(code)] : [v2];
+}
+
+export function getLegacyRoom(): boolean {
+  return readPrefs().legacyRoom;
+}
+
+/** Włącza/wyłącza dołączanie do starego pokoju FNV; jeśli sync działa, łączy od nowa. */
+export function setLegacyRoom(on: boolean): void {
+  const prefs = readPrefs();
+  writePrefs({ ...prefs, legacyRoom: on });
+  logDiag("info", "yjsSync", `legacy room: ${on ? "on" : "off"}`);
+  if (prefs.enabled && prefs.code) connect(prefs.code);
+}
+
+/**
+ * Kody ze starszych wersji miały 8 znaków (≈ 40 bitów). Nazwa pokoju (SHA-256 kodu)
+ * jest jawna dla serwera sygnalizacyjnego, a 2^40 skrótów to minuty na jednej karcie
+ * graficznej — krótki kod trzeba wymienić na nowy (12 znaków ≈ 59 bitów).
+ */
+export function isShortCode(code: string | null): boolean {
+  return !!code && code.length < CODE_LENGTH;
 }
 
 function setState(patch: Partial<SyncState>) {

@@ -2,7 +2,7 @@ import type { Note, ChecklistItem } from "@/hooks/useNotes";
 import type { YjsStore } from "@/lib/yjsStore";
 import { yjsStore as defaultStore } from "@/lib/yjsStore";
 import { versionsStore as defaultVersions, type VersionsStore } from "@/lib/versionsStore";
-import { logDiag } from "@/lib/diagnostics";
+import { logDiag, logSecurity } from "@/lib/diagnostics";
 import {
   KDF_ITERATIONS, VaultError, createVault, decryptString, encryptString, isValidMeta, noteAad,
   unlockWithPassword, unlockWithRecovery, type VaultMeta,
@@ -128,9 +128,16 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
   let chain: Promise<void> = Promise.resolve();
   let compactTimer: ReturnType<typeof setTimeout> | null = null;
 
+  let rejectedMetaLogged = false;
   function meta(): VaultMeta | null {
     const m = store.getVaultMeta();
-    return isValidMeta(m) ? m : null;
+    if (isValidMeta(m)) { rejectedMetaLogged = false; return m; }
+    // Coś jest pod kluczem skarbca, ale to nie są poprawne metadane (peer/plik/uszkodzenie).
+    if (m !== undefined && m !== null && !rejectedMetaLogged) {
+      rejectedMetaLogged = true;
+      logSecurity("vault-meta-rejected", "metadane skarbca z dokumentu mają zły kształt lub parametry KDF");
+    }
+    return null;
   }
 
   function phase(): VaultPhase {
@@ -249,11 +256,15 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
 
   function checkThrottle() {
     const t = readThrottle();
-    if (t.until > now()) throw new VaultThrottledError(t.until);
+    if (t.until > now()) {
+      logSecurity("vault-throttled", `blokada prób do ${new Date(t.until).toISOString()}`);
+      throw new VaultThrottledError(t.until);
+    }
   }
-  function recordFailure() {
+  function recordFailure(kind: "vault-unlock-failed" | "vault-recovery-failed" = "vault-unlock-failed") {
     const t = readThrottle();
     const fails = t.fails + 1;
+    logSecurity(kind, `kolejna nieudana próba z rzędu: ${fails}`);
     writeThrottle({ fails, until: now() + throttleDelayMs(fails) });
   }
   function recordSuccess() { writeThrottle(null); }
@@ -306,7 +317,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     try {
       k = await unlockWithRecovery(m, code);
     } catch (err) {
-      if (err instanceof VaultError && err.code === "bad-recovery") recordFailure();
+      if (err instanceof VaultError && err.code === "bad-recovery") recordFailure("vault-recovery-failed");
       throw err;
     }
     recordSuccess();
