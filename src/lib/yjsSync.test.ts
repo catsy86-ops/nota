@@ -59,6 +59,9 @@ async function waitForMainProvider(countAtLeast = ROOMS_PER_CONNECT): Promise<vo
 describe("yjsSync", () => {
   beforeEach(async () => {
     localStorage.clear();
+    // Większość testów dotyczy maszynerii dwóch pokoi, więc zgodność ze starą
+    // wersją jest tu włączona jawnie; domyślne zachowanie sprawdza blok niżej.
+    localStorage.setItem("kaczy.sync.v1", JSON.stringify({ enabled: false, code: null, signaling: [], legacyRoom: true }));
     providerInstances.length = 0;
     vi.resetModules();
   });
@@ -247,5 +250,44 @@ describe("yjsSync", () => {
     joinWithCode("ABCDEFGHJKMN");
     forgetPairing();
     expect(getSignalingServers()).toEqual(["wss://sig.example.com"]);
+  });
+});
+
+describe("yjsSync - bezpieczne domyślne (A02)", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    providerInstances.length = 0;
+    vi.resetModules();
+  });
+
+  it("domyślnie dołącza tylko do pokoju SHA-256 (stary pokój FNV ujawnia kod serwerowi sygnalizacyjnemu)", async () => {
+    const { startPairing, roomNameV2For, getLegacyRoom } = await import("./yjsSync");
+    expect(getLegacyRoom()).toBe(false);
+    const code = startPairing();
+    await waitForMainProvider(1);
+    expect(mainProviders().map((p) => p.roomName)).toEqual([await roomNameV2For(code)]);
+    expect(mainProviders().every((p) => !/^kaczy-[0-9a-f]{16}$/.test(p.roomName))).toBe(true);
+  });
+
+  it("zgodność można włączyć jawnie i jest zapamiętana", async () => {
+    const { setLegacyRoom, getLegacyRoom, roomNamesFor, roomNameFor } = await import("./yjsSync");
+    setLegacyRoom(true);
+    expect(getLegacyRoom()).toBe(true);
+    expect(await roomNamesFor("ABCDEFGHJKMN")).toContain(roomNameFor("ABCDEFGHJKMN"));
+  });
+
+  it("uszkodzone ustawienia w localStorage nie wywracają synchronizacji", async () => {
+    localStorage.setItem("kaczy.sync.v1", JSON.stringify({ enabled: true, code: { evil: 1 }, signaling: [5, "wss://ok.example.com", "javascript:alert(1)"], legacyRoom: "yes" }));
+    const { getSyncState, getSignalingServers, getLegacyRoom } = await import("./yjsSync");
+    expect(getSyncState().code).toBeNull();
+    expect(getSignalingServers()).toEqual(["wss://ok.example.com"]);
+    expect(getLegacyRoom()).toBe(false);
+  });
+
+  it("isShortCode rozpoznaje stare 8-znakowe kody", async () => {
+    const { isShortCode } = await import("./yjsSync");
+    expect(isShortCode("ABCDEFGH")).toBe(true);
+    expect(isShortCode("ABCDEFGHJKMN")).toBe(false);
+    expect(isShortCode(null)).toBe(false);
   });
 });

@@ -9,7 +9,7 @@ import { formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
 import {
   useSyncState, startPairing, joinWithCode, pauseSync, resumeSync, forgetPairing, formatCode,
-  getSignalingServers, setSignalingServers, parseSignalingList,
+  getSignalingServers, setSignalingServers, parseSignalingList, isShortCode, getLegacyRoom, setLegacyRoom,
 } from "@/lib/yjsSync";
 
 interface Props {
@@ -29,6 +29,7 @@ export function SyncSettings({ prefillCode }: Props) {
   const syncState = useSyncState();
   const [joinInput, setJoinInput] = useState("");
   const [copied, setCopied] = useState(false);
+  const [legacyRoom, setLegacyRoomState] = useState(() => getLegacyRoom());
 
   useEffect(() => {
     if (prefillCode) setJoinInput(prefillCode.toUpperCase());
@@ -127,6 +128,24 @@ export function SyncSettings({ prefillCode }: Props) {
         </div>
       )}
 
+      {isShortCode(syncState.code) && (
+        <div role="alert" className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs space-y-2">
+          <p className="font-semibold text-foreground">Ten kod jest krótki (starsza wersja)</p>
+          <p className="text-muted-foreground">
+            Kod z 8 znaków da się odgadnąć z nazwy pokoju widocznej dla serwera sygnalizacyjnego.
+            Wygeneruj nowy, 12-znakowy kod i wpisz go na pozostałych urządzeniach.
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => { startPairing(); toast.success("Nowy kod gotowy — wpisz go na pozostałych urządzeniach"); }}
+          >
+            Wygeneruj nowy kod
+          </Button>
+        </div>
+      )}
+
       <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dołącz do istniejącej grupy</p>
         <div className="flex gap-2">
@@ -144,6 +163,22 @@ export function SyncSettings({ prefillCode }: Props) {
       </div>
 
       <SignalingServers />
+
+      <label className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 text-xs cursor-pointer">
+        <input
+          type="checkbox"
+          className="mt-0.5"
+          checked={legacyRoom}
+          onChange={(e) => { setLegacyRoom(e.target.checked); setLegacyRoomState(e.target.checked); }}
+        />
+        <span className="space-y-0.5">
+          <span className="block font-semibold text-foreground">Zgodność ze starszą wersją aplikacji</span>
+          <span className="block text-muted-foreground">
+            Włącz tylko na czas wymiany starego urządzenia. Stary pokój ma słabą nazwę, z której serwer
+            sygnalizacyjny może odzyskać kod parowania — po aktualizacji wszystkich urządzeń wyłącz.
+          </span>
+        </span>
+      </label>
 
       <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-2">
         <p className="font-semibold text-foreground">Jak to działa</p>
