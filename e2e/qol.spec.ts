@@ -24,7 +24,7 @@ test("„g” w polu tekstowym nie uruchamia nawigacji", async ({ page }) => {
 
 test("wklejony adres w pusty szkic daje tytuł z domeny", async ({ page }) => {
   await page.getByText("Zapisz notatkę...").click();
-  const body = page.getByPlaceholder(/Zapisz notatkę \(/);
+  const body = page.getByPlaceholder("Treść notatki...");
   await body.focus();
   await body.evaluate((el) => {
     const dt = new DataTransfer();
