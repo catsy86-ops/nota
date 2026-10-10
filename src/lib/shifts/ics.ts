@@ -74,8 +74,10 @@ export function buildShiftsIcs(data: ShiftData, dayKeys: string[], { alarmMinute
       const end = new Date(y, m - 1, d, 0, span.to + (entry.extraMin ?? 0)).getTime();
       lines.push(`DTSTART:${formatLocal(start)}`, `DTEND:${formatLocal(Math.max(end, start + 60_000))}`, `SUMMARY:${escapeText(`Zmiana: ${type.name}`)}`);
       if (note) lines.push(note);
-      if (alarmMinutes > 0) {
-        lines.push("BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${escapeText(`Za ${alarmMinutes} min zmiana: ${type.name}`)}`, `TRIGGER:-PT${alarmMinutes}M`, "END:VALARM");
+      // Alarm rodzaju zmiany ma pierwszeństwo przed domyślnym eksportu.
+      const alarm = type.alarmMin ?? alarmMinutes;
+      if (alarm > 0) {
+        lines.push("BEGIN:VALARM", "ACTION:DISPLAY", `DESCRIPTION:${escapeText(`Za ${alarm} min zmiana: ${type.name}`)}`, `TRIGGER:-PT${alarm}M`, "END:VALARM");
       }
     }
     lines.push("END:VEVENT");

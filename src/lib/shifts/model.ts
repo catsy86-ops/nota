@@ -31,6 +31,11 @@ export interface ShiftType {
    * jakby skracała koniec zmiany.
    */
   breakAt?: string;
+  /**
+   * Ile minut przed początkiem zmiany ma zadzwonić alarm w eksporcie do kalendarza.
+   * `0` = bez alarmu; brak = alarm domyślny eksportu.
+   */
+  alarmMin?: number;
   /** Stawka za godzinę tej zmiany; brak = stawka domyślna. */
   rate?: number;
   /**
@@ -231,6 +236,7 @@ function cleanType(t: ShiftType): ShiftType {
   if (out.kind === "absence") out.absenceKind = absenceKindOf({ kind: "absence", name: t.name, absenceKind: ABSENCE_KINDS.includes(t.absenceKind as AbsenceKind) ? t.absenceKind : undefined });
   else delete out.absenceKind;
   if (!(typeof t.breakAt === "string" && HM.test(t.breakAt))) delete out.breakAt;
+  if (!(Number.isInteger(t.alarmMin) && (t.alarmMin as number) >= 0 && (t.alarmMin as number) <= 1440) || out.kind === "absence") delete out.alarmMin;
   return out;
 }
 

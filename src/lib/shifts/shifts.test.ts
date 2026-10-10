@@ -488,6 +488,14 @@ describe("eksport .ics", () => {
     expect(ics.endsWith("END:VCALENDAR\r\n")).toBe(true);
   });
 
+  it("alarm rodzaju zmiany ma pierwszeństwo, 0 wyłącza alarm", () => {
+    const key = "2026-10-09";
+    const withAlarm = (alarmMin: number) => ({ ...d, types: d.types.map((t) => (t.id === "n" ? { ...t, alarmMin } : t)) });
+    expect(buildShiftsIcs(withAlarm(120), [key])).toContain("TRIGGER:-PT120M");
+    const none = buildShiftsIcs({ ...d, types: d.types.map((t) => ({ ...t, alarmMin: 0 })) }, [key]);
+    expect(none).not.toContain("VALARM");
+  });
+
   it("nieobecność to wydarzenie całodniowe bez alarmu", () => {
     const ics = buildShiftsIcs(d, ["2026-10-10"]);
     expect(ics).toContain("DTSTART;VALUE=DATE:20261010");

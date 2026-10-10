@@ -2,12 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDayClock } from "@/lib/dayClock";
 import { addMonths, format, isSameMonth, startOfMonth } from "date-fns";
 import { pl } from "date-fns/locale";
-import { CalendarArrowDown, CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarArrowDown, CalendarRange, FileSpreadsheet, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { dayKey, expandOccurrences, groupByDay, type Occurrence } from "@/lib/reminderOccurrences";
 import type { Note } from "@/hooks/useNotes";
 import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
-import { DEFAULT_SHIFT_TYPES, addDefaultShiftTypes, SHIFTS_EXPORTED_KEY, applyPatternToStore, buildShiftsIcs, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, addDefaultShiftTypes, SHIFTS_EXPORTED_KEY, applyPatternToStore, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
@@ -244,6 +244,12 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
     });
   }
 
+  function exportCsv() {
+    const csv = buildTimesheetCsv(data, shownMonth.getFullYear(), shownMonth.getMonth());
+    download(csv, `karta-czasu-${format(shownMonth, "yyyy-MM")}.csv`, "text/csv;charset=utf-8");
+    toast.success("Pobrano kartę czasu (.csv)", { description: "Otwórz ją w Excelu lub Arkuszach Google." });
+  }
+
   return (
     <div className="space-y-5">
       <NowCard data={data} />
@@ -369,7 +375,11 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="flex justify-end -mt-2">
+      <div className="flex flex-wrap justify-end gap-1 -mt-2">
+        <button type="button" onClick={exportCsv}
+          className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <FileSpreadsheet className="w-4 h-4" /> Karta czasu (.csv)
+        </button>
         <button type="button" onClick={exportIcs}
           className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring">
           <CalendarArrowDown className="w-4 h-4" /> Do kalendarza (.ics)

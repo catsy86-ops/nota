@@ -79,6 +79,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
       kind: draft.kind ?? "work",
       absenceKind: absence ? absenceKindOf({ ...draft, kind: "absence" }) : undefined,
       rate: !absence && Number.isFinite(parsedRate) && parsedRate > 0 ? parsedRate : undefined,
+      alarmMin: !absence && draft.alarmMin !== undefined ? draft.alarmMin : undefined,
     };
     saveShiftType(saved);
     onSaved(saved);
@@ -182,6 +183,17 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
         {type && (type.start !== draft.start || type.end !== draft.end || type.breakMin !== draft.breakMin || (type.breakAt ?? "") !== (placedBreak ? draft.breakAt : "")) && (
           <p className="text-xs text-muted-foreground -mt-2">Nowe godziny od dziś — dni wcześniejsze zachowają dotychczasowe.</p>
         )}
+        {!absence && <div className="space-y-1.5">
+          <Label htmlFor="shift-alarm">Alarm w kalendarzu (.ics)</Label>
+          <select id="shift-alarm" value={draft.alarmMin ?? ""} onChange={(e) => patch({ alarmMin: e.target.value === "" ? undefined : Number(e.target.value) })}
+            className="w-full h-10 coarse:h-11 rounded-lg border border-input bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <option value="">Domyślny (60 min przed)</option>
+            <option value={0}>Bez alarmu</option>
+            {[15, 30, 60, 90, 120, 180, 720].map((m) => (
+              <option key={m} value={m}>{m >= 60 ? `${m / 60} h przed` : `${m} min przed`}</option>
+            ))}
+          </select>
+        </div>}
         {!absence && <div className="space-y-1.5">
           <Label htmlFor="shift-rate">Stawka za godzinę (opcjonalnie)</Label>
           <Input id="shift-rate" inputMode="decimal" value={rate} onChange={(e) => setRate(e.target.value)} placeholder="jak domyślna" />
