@@ -13,7 +13,8 @@ export type EffectKey =
   | "cardTilt"
   | "badgeStamp"
   | "doneReward"
-  | "themeFade";
+  | "themeFade"
+  | "haptics";
 
 export const EFFECT_LABELS: Record<EffectKey, { label: string; description: string; emoji: string }> = {
   confetti: { label: "Konfetti", description: "Wystrzał przy przywracaniu z kosza", emoji: "🎉" },
@@ -29,6 +30,7 @@ export const EFFECT_LABELS: Record<EffectKey, { label: string; description: stri
   badgeStamp: { label: "Pieczątka odznaki", description: "Pieczątka z błyskiem po zdobyciu odznaki", emoji: "🏅" },
   doneReward: { label: "Dzień zamknięty", description: "Drobna nagroda, gdy zrobisz wszystkie zadania na dziś", emoji: "✅" },
   themeFade: { label: "Płynna zmiana motywu", description: "Łagodne przejście jasny/ciemny", emoji: "🌓" },
+  haptics: { label: "Wibracje na telefonie", description: "Krótkie drgnięcie przy przypięciu, odhaczeniu i zapisie", emoji: "📳" },
 };
 
 export type EffectsSettings = Record<EffectKey, boolean>;
@@ -48,6 +50,7 @@ const DEFAULTS: EffectsSettings = {
   badgeStamp: true,
   doneReward: true,
   themeFade: true,
+  haptics: true,
 };
 
 const store = createPersistedStore<EffectsSettings>("kaczy.effectsSettings.v1", DEFAULTS, {
