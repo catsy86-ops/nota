@@ -20,21 +20,22 @@ async function withReminder(page: import("@playwright/test").Page, title: string
 }
 
 test("przypomnienia to agenda: grupy po terminie, bez przełącznika sortowania", async ({ page }) => {
+  // Tytuły nie mogą być frazą daty („Jutro”) — szybkie wprowadzanie zamieniłoby je w przypomnienie.
   // Kolejność tworzenia odwrotna do terminów — agenda ma ją zignorować.
   // W zwykłym widoku sortowanie jest — inaczej asercja niżej byłaby pusta.
   await expect(page.getByRole("button", { name: "Sortowanie" })).toHaveCount(1);
-  await withReminder(page, "Za dwa tygodnie", "25");
-  await withReminder(page, "Jutro", "11");
-  await withReminder(page, "Dzisiaj", "10");
+  await withReminder(page, "Zebranie dalekie", "25");
+  await withReminder(page, "Zebranie jutrzejsze", "11");
+  await withReminder(page, "Zebranie dzisiejsze", "10");
 
   await page.getByRole("button", { name: "Przypomnienia" }).first().click();
   const sections = page.locator("main section[aria-label]");
   await expect(sections).toHaveCount(3);
   await expect(sections.nth(0)).toHaveAttribute("aria-label", "Dziś");
-  await expect(sections.nth(0)).toContainText("Dzisiaj");
+  await expect(sections.nth(0)).toContainText("Zebranie dzisiejsze");
   await expect(sections.nth(1)).toHaveAttribute("aria-label", "Najbliższe 7 dni");
-  await expect(sections.nth(1)).toContainText("Jutro");
+  await expect(sections.nth(1)).toContainText("Zebranie jutrzejsze");
   await expect(sections.nth(2)).toHaveAttribute("aria-label", "Później");
-  await expect(sections.nth(2)).toContainText("Za dwa tygodnie");
+  await expect(sections.nth(2)).toContainText("Zebranie dalekie");
   await expect(page.getByRole("button", { name: "Sortowanie" })).toHaveCount(0);
 });

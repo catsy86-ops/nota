@@ -618,3 +618,12 @@ Scalone do master (519 testów jednostkowych, 103 e2e).
 - [x] Poprawki z przeglądu na żywo: CLS od paska bocznego, zawijanie akcji kafla w wąskim oknie, skróty `g` po kliknięciu notatki.
 - Nie przetestowane na żywo: ścieżka dotykowa przenoszenia zmian, import na prawdziwym Takeout.
 
+
+## Dział Notatki — 2026-10-10 (trzecia runda agentów)
+
+- [x] **Szybkie wprowadzanie** (`lib/quickCapture.ts`, `AddNoteBar`): `#etykieta`, `@folder`, `!`/`!!` (priorytet), fraza daty na końcu jako przypomnienie; wszystko jako chipy „Rozpoznane w tekście” z możliwością zignorowania. `Ctrl+Shift+L` zamienia zaznaczone linie na listę zadań. Tytuł będący samą frazą daty („Jutro”) ustawia przypomnienie — świadomie.
+- [x] **Zapisane filtry** (`lib/searchQuery.ts`, `savedFilters.ts`): operatory `etykieta:`, `folder:`, `ma:`, `brak:przypomnienia`, `przypięte`, `lista:otwarte`, `starsze:`/`nowsze:`; sekcja „Filtry” w pasku bocznym, „Więcej” i palecie; podpowiedzi w SearchBar.
+- [x] **Powiązania:** podgląd `[[linku]]` po najechaniu/fokusie/przytrzymaniu, „Niepołączone wzmianki” z przyciskiem „Połącz” (tylko czytnik), graf powiązań (Statystyki i paleta, limit 150 węzłów).
+- [x] **Grupowanie:** wg daty/etykiety/folderu, zwijane sekcje, zwijane Przypięte (>3), sortowanie „Ostatnio otwierane” (`lastOpenedAt` w localStorage), `Ctrl+A`, przeciąganie zaznaczonych na folder.
+- [x] **Przegląd tygodnia** w „Dziś” (`lib/weeklyReview.ts`): zaległe przypomnienia, listy do dokończenia, nietknięte ≥30 dni, do posegregowania; tryb „po kolei” (K/A/D).
+- Do sprawdzenia na żywo: wizualnie wszystkie nowe elementy (agenci nie robili zrzutów), glow przy przenoszeniu wielu notatek naraz, „Niepołączone wzmianki” tylko w czytniku (nie w rozwiniętej karcie).
