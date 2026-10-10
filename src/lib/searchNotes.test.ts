@@ -125,3 +125,21 @@ describe("searchNotes — indeks z cache", () => {
     expect(searchNotes(all, "prywatne").map((n) => n.id)).not.toContain("d");
   });
 });
+
+describe("searchNotes — diakrytyki i wiele słów", () => {
+  const notes = [
+    makeNote({ id: "a", title: "Żółta kartka", content: "kupić mleko i chleb" }),
+    makeNote({ id: "b", title: "Mleko", content: "sklep na rogu" }),
+    makeNote({ id: "c", title: "Plan", content: "chleb" }),
+  ];
+
+  it("znajduje bez ogonków", () => {
+    expect(searchNotes(notes, "zolta").map((n) => n.id)).toEqual(["a"]);
+  });
+
+  it("wymaga wszystkich słów, niezależnie od kolejności", () => {
+    expect(searchNotes(notes, "mleko kupić").map((n) => n.id)).toEqual(["a"]);
+    expect(searchNotes(notes, "kupic mleko").map((n) => n.id)).toEqual(["a"]);
+    expect(searchNotes(notes, "chleb mleko").map((n) => n.id)).toEqual(["a"]);
+  });
+});

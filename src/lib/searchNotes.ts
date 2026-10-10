@@ -1,6 +1,6 @@
 import Fuse from "fuse.js";
 import type { Note } from "@/hooks/useNotes";
-import { parseSearchQuery, matchesClauses, type MatchFolder } from "@/lib/searchQuery";
+import { parseSearchQuery, matchesClauses, fold, type MatchFolder } from "@/lib/searchQuery";
 
 export interface SearchContext {
   /** Potrzebne operatorowi `folder:` (nazwa → id, z podfolderami). */
@@ -30,7 +30,14 @@ function indexFor(source: Note[]): Fuse<Note> {
       ],
       threshold: 0.38,
       ignoreLocation: true,
-      includeScore: false,
+      includeScore: true,
+      // Indeks bez ogonków i wielkości liter: „zolta” znajduje „żółta”.
+      getFn: (obj, path) => {
+        const v = Fuse.config.getFn(obj, path);
+        // Dla tablic (etykiety, pozycje listy) Fuse oddaje albo teksty, albo `{ v, i }`.
+        const f = (s: unknown) => (typeof s === "string" ? fold(s) : s && typeof s === "object" && "v" in s ? { ...(s as { v: string; i: number }), v: fold((s as { v: string }).v) } : s);
+        return (Array.isArray(v) ? v.map(f) : f(v)) as never;
+      },
     });
     indexCache.set(source, fuse);
   }
@@ -55,7 +62,25 @@ export function searchNotes(notes: Note[], query: string, ctx: SearchContext = {
   const free = text.trim();
   if (!free) return pool;
 
-  const hits = indexFor(source).search(free).map((r) => r.item);
+  const fuse = indexFor(source);
+  // Każde słowo musi się znaleźć (AND) — kolejność słów nie ma znaczenia; trafność = suma wyników.
+  const words = fold(free).split(/\s+/).filter(Boolean);
+  let hits: Note[];
+  if (words.length <= 1) {
+    hits = fuse.search(words[0] ?? "").map((r) => r.item);
+  } else {
+    const scores = new Map<Note, number>();
+    words.forEach((w, i) => {
+      const found = new Map(fuse.search(w).map((r) => [r.item, r.score ?? 0] as const));
+      if (i === 0) found.forEach((s, n) => scores.set(n, s));
+      else for (const n of [...scores.keys()]) {
+        const s = found.get(n);
+        if (s === undefined) scores.delete(n);
+        else scores.set(n, (scores.get(n) ?? 0) + s);
+      }
+    });
+    hits = [...scores.entries()].sort((a, b) => a[1] - b[1]).map(([n]) => n);
+  }
   if (pool === source) return hits;
   const allowed = new Set(pool);
   return hits.filter((n) => allowed.has(n));
