@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import type { Note } from "./useNotes";
 import { nextInSeries, seriesDay } from "@/lib/reminderRepeat";
 import { loadFired, saveFired, reconcileFired } from "@/lib/firedReminders";
+import { showSystemNotification } from "@/lib/systemNotification";
 
 export function useReminderNotifications(
   notes: Note[],
@@ -19,6 +20,30 @@ export function useReminderNotifications(
   const firedRef = useRef(loadFired());
   const onOpenRef = useRef(onOpen);
   onOpenRef.current = onOpen;
+  const notesRef = useRef(notes);
+  notesRef.current = notes;
+  const firedCbRef = useRef(onReminderFired);
+  firedCbRef.current = onReminderFired;
+
+  // Przyciski akcji z powiadomienia systemowego (public/sw-notifications.js).
+  useEffect(() => {
+    const sw = typeof navigator !== "undefined" ? navigator.serviceWorker : undefined;
+    if (!sw) return;
+    const onMessage = (e: MessageEvent) => {
+      const d = e.data as { type?: string; action?: string; noteId?: string } | null;
+      if (d?.type !== "notification-action" || typeof d.noteId !== "string") return;
+      const note = notesRef.current.find((n) => n.id === d.noteId);
+      if (!note) return;
+      if (d.action === "snooze10") {
+        firedCbRef.current(note.id, snoozeTimes(Date.now()).in10min, seriesDay(note));
+        toast("Odłożono o 10 minut");
+      } else if (d.action === "done") {
+        firedCbRef.current(note.id, null);
+      }
+    };
+    sw.addEventListener("message", onMessage);
+    return () => sw.removeEventListener("message", onMessage);
+  }, []);
 
   useEffect(() => {
     function check() {
@@ -67,33 +92,20 @@ export function useReminderNotifications(
             position: window.matchMedia("(max-width: 767px)").matches ? "top-center" : undefined,
           });
 
-          if ("Notification" in window && Notification.permission === "granted") {
-            const title = note.locked ? "Przypomnienie z notatki prywatnej" : note.title || "Notatnik — Przypomnienie";
-            const options: NotificationOptions = {
-              body: note.locked ? "Otwórz NOTKI i odblokuj skarbiec, aby zobaczyć notatkę." : note.content || "Czas na tę notatkę!",
-              icon: "/pwa-192.png",
-              badge: "/pwa-192.png",
-              tag: note.id,
-              renotify: true,
-              // Klik otwiera tę notatkę (public/sw-notifications.js).
-              data: { url: notePath(note.id) },
-            };
-            // Wyświetlenie samego powiadomienia idzie przez rejestrację SW
-            // (spójniejsze na Androidzie niż gołe `new Notification()`), ale
-            // to nie znaczy, że działa w tle: `check()` niżej to zwykły
-            // setInterval w JS strony — jeśli karta/appka jest zamknięta,
-            // nic go nie odpala, więc przypomnienie i tak nie wystrzeli o
-            // czasie (dogoni je dopiero `<= now` przy następnym otwarciu).
-            // Prawdziwe powiadomienia w tle wymagałyby Web Push + serwera.
-            if ("serviceWorker" in navigator) {
-              navigator.serviceWorker.ready
-                .then((registration) => registration.showNotification(title, options))
-                .catch(() => new Notification(title, options));
-            } else {
-              const n = new Notification(title, options);
-              n.onclick = () => { window.focus(); window.location.assign(notePath(note.id)); };
-            }
-          }
+          // Przyciski w powiadomieniu działają przez SW → wiadomość do otwartej karty (niżej).
+          // Powiadomienie w tle nadal nie wystrzeli przy zamkniętej aplikacji — to zwykły
+          // setInterval strony; prawdziwy Web Push wymagałby serwera.
+          showSystemNotification(note.locked ? "Przypomnienie z notatki prywatnej" : note.title || "Notatnik — Przypomnienie", {
+            body: note.locked ? "Otwórz NOTKI i odblokuj skarbiec, aby zobaczyć notatkę." : note.content || "Czas na tę notatkę!",
+            tag: note.id,
+            url: notePath(note.id),
+            requireInteraction: true,
+            data: { noteId: note.id },
+            actions: [
+              ...(repeat === "none" ? [{ action: "snooze10", title: "Odłóż 10 min" }] : []),
+              { action: "done", title: "Gotowe" },
+            ],
+          });
 
           if (repeat !== "none") {
             const next = nextInSeries(note.reminder, repeat, seriesDay(note), note.reminderRepeatUntil);

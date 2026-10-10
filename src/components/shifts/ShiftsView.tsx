@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { dayKey, expandOccurrences, groupByDay, type Occurrence } from "@/lib/reminderOccurrences";
 import type { Note } from "@/hooks/useNotes";
 import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
-import { DEFAULT_SHIFT_TYPES, addDefaultShiftTypes, SHIFTS_EXPORTED_KEY, applyPatternToStore, buildShiftsIcs, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, addDefaultShiftTypes, SHIFTS_EXPORTED_KEY, applyPatternToStore, buildShiftsIcs, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
@@ -15,6 +15,7 @@ import { pluralPl } from "@/lib/plural";
 import { toastWithUndo } from "@/lib/undoToast";
 import { NowCard } from "./NowCard";
 import { BrushBar, type Brush } from "./BrushBar";
+import { BrushHours } from "./BrushHours";
 import { ShiftMonthGrid } from "./ShiftMonthGrid";
 import { ShiftWeekView } from "./ShiftWeekView";
 import { ShiftDnd, type DayActions, type DropMode } from "./ShiftDnd";
@@ -29,11 +30,11 @@ import { DayDialog } from "./DayDialog";
 import { PatternDialog } from "./PatternDialog";
 
 /** Co zrobi stuknięcie w dzień — widoczne pod paskiem i czytane przy siatce. */
-function brushHint(brush: Brush, typesById: Map<string, ShiftType>): string {
+function brushHint(brush: Brush, typesById: Map<string, ShiftType>, hours: ShiftHours | null): string {
   if (brush.kind === "inspect") return `${TAP} dzień, żeby zobaczyć i edytować szczegóły.`;
   if (brush.kind === "erase") return `${TAP} dzień, żeby go wyczyścić.`;
   const name = typesById.get(brush.id)?.name ?? "zmianę";
-  return `${TAP} dzień, żeby nanieść: ${name}. Ponownie — zdejmuje.`;
+  return `${TAP} dzień, żeby nanieść: ${name}${hours ? ` ${hours.start}–${hours.end}` : ""}. Ponownie — zdejmuje.`;
 }
 
 const exportedStore = createPersistedStore<string[]>(SHIFTS_EXPORTED_KEY, [], {
@@ -75,6 +76,9 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   const [asking, setAsking] = useState<{ from: string; to: string } | null>(null);
   const [confirmCopy, setConfirmCopy] = useState<WeekCopyPlan | null>(null);
   const [brush, setBrush] = useState<Brush>(() => (data.types[0] ? { kind: "type", id: data.types[0].id } : { kind: "inspect" }));
+  // Własne godziny pędzla — przypięte do rodzaju, więc zmiana pędzla je odpina.
+  const [brushHours, setBrushHours] = useState<{ typeId: string; hours: ShiftHours } | null>(null);
+  const activeHours = brush.kind === "type" && brushHours?.typeId === brush.id ? brushHours.hours : null;
   const [editingType, setEditingType] = useState<ShiftType | "new" | null>(null);
   const [openDay, setOpenDay] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -131,6 +135,14 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
     if (brush.kind === "inspect") return setOpenDay(key);
     const entry = shiftStore.get().days[key];
     // Ta sama zmiana drugi raz = zdejmij ją — szybka poprawka bez sięgania po gumkę.
+    if (brush.kind === "type" && activeHours) {
+      const h = shiftHours(activeHours);
+      const same = entry?.type === brush.id && entry.customHours && entry.hours
+        && entry.hours.start === h.start && entry.hours.end === h.end && entry.hours.breakMin === h.breakMin;
+      if (same) { setDayShift(key, null); return; }
+      setDayEntry(key, { type: brush.id, ...(entry?.note ? { note: entry.note } : {}), hours: h, customHours: true });
+      return;
+    }
     const clear = brush.kind === "erase" || entry?.type === brush.id;
     setDayShift(key, clear ? null : brush.id);
     // Notatki i odchylenia nie da się odtworzyć jednym stuknięciem — stąd „Cofnij”.
@@ -140,7 +152,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         description: entry.note ? `Razem z notatką „${entry.note}”` : "Razem z odchyleniem od planu",
       });
     }
-  }, [brush]);
+  }, [brush, activeHours]);
 
   // Przenoszenie i kopiowanie wpisów — jedna ścieżka dla myszy, dotyku i klawiatury.
   const transfer = useCallback((from: string, to: string, mode: TransferMode) => {
@@ -287,6 +299,11 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         onPattern={() => setPatternOpen(true)}
       />
 
+      {brush.kind === "type" && typesById.get(brush.id)?.kind !== "absence" && typesById.has(brush.id) && (
+        <BrushHours key={brush.id} type={typesById.get(brush.id)!} hours={activeHours}
+          onChange={(hours) => setBrushHours(hours ? { typeId: brush.id, hours } : null)} />
+      )}
+
       {data.types.length === 0 && (
         <section aria-label="Brak rodzajów zmian" className="rounded-3xl border border-dashed border-border p-4 space-y-3">
           <p className="text-sm">
@@ -306,7 +323,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         </section>
       )}
 
-      <p id="shift-brush-hint" className="-mt-3 text-xs text-muted-foreground px-1">{brushHint(brush, typesById)}</p>
+      <p id="shift-brush-hint" className="-mt-3 text-xs text-muted-foreground px-1">{brushHint(brush, typesById, activeHours)}</p>
 
       <p id="shift-move-hint" className="-mt-3 text-xs text-muted-foreground px-1">
         {IS_TOUCH
