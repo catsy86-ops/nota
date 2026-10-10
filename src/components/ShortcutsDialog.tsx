@@ -49,7 +49,7 @@ const GROUPS: ShortcutGroup[] = [
       { keys: [MOD_KEY, "F"], label: "Znajdź i zamień w treści notatki (też Ctrl+H)" },
       { keys: [MOD_KEY, "Enter"], label: "Zapisz i zamknij edytor" },
       { keys: ["Enter"], label: "Kolejna pozycja listy (pusta kończy listę)" },
-      { keys: ["Tab", "Shift", "Tab"], label: "Podzadanie: wcięcie pozycji listy pod poprzednią (Shift+Tab cofa)" },
+      { keys: ["Tab", "Shift", "Tab"], label: "Wcięcie pozycji listy; na liście zadań — podzadanie (Esc, potem Tab wychodzi z pola)" },
       { keys: ["Alt", "↑", "↓"], label: "Przenieś linię (albo pozycję listy zadań)" },
       { keys: ["Shift", "Alt", "↓"], label: "Duplikuj linię" },
       { keys: ["#etykieta"], label: "Dodaj etykietę (też nową)" },
