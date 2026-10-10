@@ -41,6 +41,7 @@ import { fireworks, megaCelebrate } from "@/lib/celebrate";
 import { glowPulse, glowStreak, centerOf, pointOfNote } from "@/lib/glowTrail";
 import { SearchBar } from "@/components/SearchBar";
 import { useAchievementTracker } from "@/lib/achievements";
+import { useDayDoneReward } from "@/hooks/useDayDoneReward";
 import { showAchievementStamp } from "@/lib/achievementStamp";
 import { AchievementStamp } from "@/components/AchievementStamp";
 import { ShortcutsDialog } from "@/components/ShortcutsDialog";
@@ -204,6 +205,8 @@ const Index = () => {
   const { displayNotes, pinned, others, elsewhere } = useFilteredNotes({
     notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs,
   });
+
+  useDayDoneReward(view === "today" && !search ? displayNotes : null);
 
   const allNotesForLinks = useMemo(() => [...notes, ...archivedNotes], [notes, archivedNotes]);
   const knownTitles = useMemo(
