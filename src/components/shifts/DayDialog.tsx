@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { dayType, entryMinutes, formatDuration, holidayName, isAbsence, setDayEntry, shiftHours, shiftInk, type DayEntry, type ShiftHours, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
+import { TimeStepper } from "./TimeStepper";
 
 interface DayDialogProps {
   dayKey: string | null;
@@ -164,18 +165,12 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
           {type && stored && type.kind !== "absence" && (
             <fieldset className="space-y-1.5">
               <legend className="text-sm font-medium mb-1.5">Godziny tego dnia</legend>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="space-y-1">
-                  <Label htmlFor="day-start" className="text-xs text-muted-foreground">Od</Label>
-                  <Input id="day-start" type="time" value={custom?.start ?? stored.start}
-                    aria-invalid={!!custom && !HM.test(custom.start)} onChange={(e) => editHours({ start: e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="day-end" className="text-xs text-muted-foreground">Do</Label>
-                  <Input id="day-end" type="time" value={custom?.end ?? stored.end}
-                    aria-invalid={!!custom && !HM.test(custom.end)} onChange={(e) => editHours({ end: e.target.value })} />
-                </div>
-                <div className="space-y-1">
+              <div className="grid grid-cols-2 gap-x-2 gap-y-2">
+                <TimeStepper id="day-start" label="Od" value={custom?.start ?? stored.start}
+                  invalid={!!custom && !HM.test(custom.start)} onChange={(v) => editHours({ start: v })} />
+                <TimeStepper id="day-end" label="Do" value={custom?.end ?? stored.end}
+                  invalid={!!custom && !HM.test(custom.end)} onChange={(v) => editHours({ end: v })} />
+                <div className="space-y-1 col-span-2">
                   <Label htmlFor="day-break" className="text-xs text-muted-foreground">Przerwa (min)</Label>
                   <Input id="day-break" type="number" min={0} step={5} inputMode="numeric" value={custom?.breakMin ?? String(stored.breakMin)}
                     aria-invalid={!!custom && custom.breakMin === ""} onChange={(e) => editHours({ breakMin: e.target.value })} />
