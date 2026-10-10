@@ -7,6 +7,7 @@ import { useNotesContext } from "@/hooks/NotesProvider";
 import { useNoteVersions } from "@/hooks/useNoteVersions";
 import type { NoteVersion } from "@/hooks/useNoteVersions";
 import { useReminderNotifications } from "@/hooks/useReminderNotifications";
+import { useOverdueBadge } from "@/hooks/useOverdueBadge";
 import { useTheme } from "@/hooks/useTheme";
 import { useViewPrefs, toggleGroupCollapsed } from "@/lib/viewPrefs";
 import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
@@ -492,7 +493,8 @@ const Index = () => {
   }, []);
 
   // Licznik w pasku bocznym tylko przy tym, co wymaga uwagi: zaległe przypomnienia i Kosz.
-  const overdueCount = notes.filter((n) => n.reminder && n.reminder < Date.now()).length;
+  // Ta sama liczba ląduje w tytule karty i na ikonie aplikacji (useOverdueBadge).
+  const overdueCount = useOverdueBadge(notes);
   // Trwałe usunięcie zabiera ze sobą historię wersji — inaczej zostawałaby
   // w `localStorage` na zawsze i zjadała limit.
   const deleteNoteForever = useCallback((id: string) => { deleteNote(id); deleteVersions(id); }, [deleteNote, deleteVersions]);

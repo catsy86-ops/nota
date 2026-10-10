@@ -16,6 +16,7 @@ import { Section, ToggleRow } from "./SettingsShared";
 import { ReviewSettings } from "./ReviewSettings";
 import { getNotificationPermission } from "@/lib/notificationPermission";
 import { MOD_KEY } from "@/lib/platform";
+import { setBadgeEnabled, useBadgeEnabled } from "@/lib/overdueBadge";
 
 const PERMISSION_TEXT = {
   granted: "Włączone — przypomnienia pokażą się jako powiadomienia systemowe, gdy aplikacja jest otwarta.",
@@ -75,6 +76,7 @@ export function GeneralSettings() {
   const settings = useEffectsSettings();
   const confirmPrefs = useConfirmPrefs();
   const prefs = useViewPrefs();
+  const badgeEnabled = useBadgeEnabled();
   const keys = Object.keys(EFFECT_LABELS) as EffectKey[];
 
   return (
@@ -100,6 +102,13 @@ export function GeneralSettings() {
       <NotificationStatus />
 
       <ReviewSettings />
+
+      <ToggleRow
+        label="Liczba zaległych w tytule karty i na ikonie"
+        desc="Pokazuje liczbę zaległych przypomnień jako „(3) NOTKI” na karcie i znaczek na ikonie zainstalowanej aplikacji."
+        checked={badgeEnabled}
+        onCheck={setBadgeEnabled}
+      />
 
       <ToggleRow
         label="Sprawdzanie pisowni"

@@ -43,6 +43,17 @@ export function groupReminders(notes: Note[], now: number = Date.now()): AgendaG
     .map((k) => ({ key: k, label: LABELS[k], notes: byKey[k] }));
 }
 
+/**
+ * Liczba zaległych przypomnień (termin minął, przypomnienie nadal czeka).
+ * Jedno źródło dla licznika w pasku bocznym, znaczka aplikacji i tytułu karty.
+ * Przyjmuje listę aktywnych notatek — kosz i archiwum nie są w niej liczone.
+ */
+export function countOverdue(notes: Pick<Note, "reminder">[], now: number = Date.now()): number {
+  let n = 0;
+  for (const note of notes) if (note.reminder !== null && note.reminder < now) n++;
+  return n;
+}
+
 /** Terminy drzemki z toastu przypomnienia. */
 export function snoozeTimes(now: number = Date.now()): { in10min: number; tomorrow9: number } {
   const t = new Date(now);
