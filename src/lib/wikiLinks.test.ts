@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   extractWikiLinks, resolveWikiTarget,
-  buildWikiIndex, backlinksOf, wikiQueryAt, suggestWikiTitles, completeWikiLink,
+  renameLinkTargets, buildWikiIndex, backlinksOf, wikiQueryAt, suggestWikiTitles, completeWikiLink,
 } from "./wikiLinks";
 import type { Note } from "@/hooks/useNotes";
 
@@ -130,5 +130,17 @@ describe("completeWikiLink", () => {
     const text = "x [[]] y";
     const q = wikiQueryAt(text, 4)!;
     expect(completeWikiLink(text, q, 4, "Plan")).toEqual({ text: "x [[Plan]] y", caret: 10 });
+  });
+});
+
+describe("renameLinkTargets", () => {
+  it("przepina linki niezależnie od wielkości liter i spacji", () => {
+    expect(renameLinkTargets("Zobacz [[Plan]] i [[ plan ]] oraz [[Inny]]", "Plan", "Plan 2")).toBe("Zobacz [[Plan 2]] i [[Plan 2]] oraz [[Inny]]");
+  });
+
+  it("zwraca tę samą treść, gdy nic nie linkuje", () => {
+    const text = "bez linków [Plan]";
+    expect(renameLinkTargets(text, "Plan", "Nowy")).toBe(text);
+    expect(renameLinkTargets("[[A]]", "", "B")).toBe("[[A]]");
   });
 });

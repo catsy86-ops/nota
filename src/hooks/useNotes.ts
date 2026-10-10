@@ -4,6 +4,7 @@ import { versionsStore } from "@/lib/versionsStore";
 import { privateNotes } from "@/lib/privateNotes";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
+import { renameLinkTargets } from "@/lib/wikiLinks";
 import type { NotePriority } from "@/lib/notePriority";
 import type { Attachment } from "@/lib/attachments";
 
@@ -160,7 +161,34 @@ export function useNotes() {
     if ("reminder" in updates && !("reminderDay" in updates)) {
       updates = { ...updates, reminderDay: updates.reminder ? new Date(updates.reminder).getDate() : undefined };
     }
+    // Zmiana tytułu przepina linki `[[stary]]` w innych notatkach — inaczej backlinki i graf cicho się psują.
+    // Pomijamy, gdy inna notatka nosi ten sam stary tytuł (nie wiadomo, do której linkowano).
+    let relinked: { id: string; before: string }[] = [];
+    if (typeof updates.title === "string") {
+      const all = yjsStore.projectNotes();
+      const self = all.find((n) => n.id === id);
+      const oldT = self?.title.trim() ?? "";
+      const newT = updates.title.trim();
+      if (self && !self.locked && oldT && newT && oldT !== newT
+        && !all.some((n) => n.id !== id && n.title.trim().toLowerCase() === oldT.toLowerCase())) {
+        for (const n of all) {
+          if (n.id === id || n.locked || isNoteTextEditOpen(n.id)) continue;
+          const next = renameLinkTargets(n.content, oldT, newT);
+          if (next !== n.content) {
+            relinked.push({ id: n.id, before: n.content });
+            yjsStore.patchNote(n.id, { content: next });
+          }
+        }
+      }
+    }
     yjsStore.patchNote(id, updates);
+    if (relinked.length > 0) {
+      const done = relinked;
+      toastWithUndo(`Zaktualizowano linki w ${done.length} ${done.length === 1 ? "notatce" : "notatkach"}`, () => {
+        for (const r of done) yjsStore.patchNote(r.id, { content: r.before });
+      });
+      relinked = [];
+    }
   }, []);
 
   const deleteNote = useCallback((id: string) => {

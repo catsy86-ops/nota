@@ -13,6 +13,16 @@ export function extractWikiLinks(content: string): string[] {
   return Array.from(out);
 }
 
+/**
+ * Przepina `[[stary]]` na `[[nowy]]` (bez względu na wielkość liter, z trimem).
+ * Zwraca tę samą treść, gdy nic nie linkuje do starego tytułu.
+ */
+export function renameLinkTargets(content: string, oldTitle: string, newTitle: string): string {
+  const from = oldTitle.trim().toLowerCase();
+  if (!from || !content.includes("[[")) return content;
+  return content.replace(RX, (full, inner: string) => (inner.trim().toLowerCase() === from ? `[[${newTitle.trim()}]]` : full));
+}
+
 /** Resolve a wiki target title → note id (case-insensitive). */
 export function resolveWikiTarget(title: string, all: Note[]): Note | undefined {
   const t = title.trim().toLowerCase();
