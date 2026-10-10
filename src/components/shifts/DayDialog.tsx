@@ -6,7 +6,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { dayType, entryMinutes, formatDuration, holidayName, isAbsence, setDayEntry, shiftInk, type DayEntry, type ShiftType } from "@/lib/shifts";
+import { Input } from "@/components/ui/input";
+import { dayType, entryMinutes, formatDuration, holidayName, isAbsence, setDayEntry, shiftHours, shiftInk, type DayEntry, type ShiftHours, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
 interface DayDialogProps {
@@ -17,6 +18,10 @@ interface DayDialogProps {
 }
 
 const STEP = 15;
+const HM = /^([01]?\d|2[0-3]):[0-5]\d$/;
+
+/** Godziny wpisane ręcznie dla dnia: ciągi z pól, żeby dało się je dopisywać bez walidacji w trakcie. */
+interface HoursDraft { start: string; end: string; breakMin: string }
 
 /**
  * Szczegóły jednego dnia: rodzaj zmiany, odchylenie od planu i notatka.
@@ -42,27 +47,56 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
   const [note, setNote] = useState(entry?.note ?? "");
   const [offSchedule, setOffSchedule] = useState(entry?.offSchedule === true);
   const [inLieu, setInLieu] = useState(entry?.inLieu === true);
+  // Ręczne godziny tego dnia; `null` = godziny rodzaju (albo zapisane z dnia).
+  const [custom, setCustom] = useState<HoursDraft | null>(
+    entry?.customHours && entry.hours
+      ? { start: entry.hours.start, end: entry.hours.end, breakMin: String(entry.hours.breakMin) }
+      : null,
+  );
 
   const [y, m, d] = dayKey.split("-").map(Number);
   const date = new Date(y, m - 1, d);
   const holiday = holidayName(dayKey);
   const base = types.find((t) => t.id === typeId);
   // Ten sam rodzaj co w zapisie: godziny z tamtego dnia (jeśli rodzaj później zmienił godziny).
-  const keepHours = typeId === entry?.type ? entry?.hours : undefined;
-  const type = base && dayType(base, { hours: keepHours });
+  // Godziny wpisane ręcznie to osobny stan (`custom`), nie godziny rodzaju.
+  const keepHours = typeId === entry?.type && !entry?.customHours ? entry?.hours : undefined;
+  const stored = base && dayType(base, { hours: keepHours });
+  const customOk = !!custom && HM.test(custom.start) && HM.test(custom.end)
+    && custom.breakMin !== "" && Number.isInteger(Number(custom.breakMin)) && Number(custom.breakMin) >= 0;
+  const customHours: ShiftHours | null = custom && customOk
+    ? { start: custom.start, end: custom.end, breakMin: Number(custom.breakMin) } : null;
+  // Przerwa „od” dotyczy godzin rodzaju; przy ręcznych godzinach nie ma sensu.
+  const type = stored && (customHours ? { ...stored, ...customHours, breakAt: undefined } : stored);
   const isWork = !!type && !isAbsence(type);
   // W niedzielę i święto „poza grafikiem” zmienia dodatek za nadgodziny, w pozostałe dni — wolne za niedzielę.
   const askOffSchedule = isWork && (date.getDay() === 0 || !!holiday);
   const askInLieu = isWork && !askOffSchedule;
 
+  const hoursInvalid = !!custom && !customOk;
+
+  function editHours(patch: Partial<HoursDraft>) {
+    if (!stored) return;
+    const next = { start: stored.start, end: stored.end, breakMin: String(stored.breakMin), ...custom, ...patch };
+    // Równe godzinom rodzaju = brak ręcznego nadpisania.
+    const same = next.start === stored.start && next.end === stored.end && Number(next.breakMin) === stored.breakMin;
+    setCustom(same ? null : next);
+  }
+
+  function pickType(id: string | null) {
+    if (id !== typeId) setCustom(null);
+    setTypeId(id);
+  }
+
   function save() {
+    if (hoursInvalid) return;
     setDayEntry(dayKey, typeId ? {
       type: typeId,
       ...(extra && !(type && isAbsence(type)) ? { extraMin: extra } : {}),
       ...(note.trim() ? { note: note.trim() } : {}),
       ...(askOffSchedule && offSchedule ? { offSchedule: true as const } : {}),
       ...(askInLieu && inLieu ? { inLieu: true as const } : {}),
-      ...(keepHours ? { hours: keepHours } : {}),
+      ...(customHours && isWork ? { hours: shiftHours(customHours), customHours: true as const } : keepHours ? { hours: keepHours } : {}),
     } : null);
     onOpenChange(false);
   }
@@ -81,7 +115,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
                 const id = t?.id ?? null;
                 const active = typeId === id;
                 return (
-                  <button key={id ?? "free"} type="button" role="radio" aria-checked={active} onClick={() => setTypeId(id)}
+                  <button key={id ?? "free"} type="button" role="radio" aria-checked={active} onClick={() => pickType(id)}
                     className={cn("pressable h-10 coarse:h-11 px-3 rounded-xl border text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
                       active ? "border-transparent" : "border-border/60 bg-card/50 hover:bg-muted",
                       active && !t && "bg-foreground text-background")}
@@ -111,6 +145,39 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
                 Czas tego dnia: <span className="font-semibold text-foreground">{formatDuration(entryMinutes(type, { extraMin: extra }))}</span>
               </p>
             </div>
+          )}
+
+          {type && stored && type.kind !== "absence" && (
+            <fieldset className="space-y-1.5">
+              <legend className="text-sm font-medium mb-1.5">Godziny tego dnia</legend>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor="day-start" className="text-xs text-muted-foreground">Od</Label>
+                  <Input id="day-start" type="time" value={custom?.start ?? stored.start}
+                    aria-invalid={!!custom && !HM.test(custom.start)} onChange={(e) => editHours({ start: e.target.value })} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="day-end" className="text-xs text-muted-foreground">Do</Label>
+                  <Input id="day-end" type="time" value={custom?.end ?? stored.end}
+                    aria-invalid={!!custom && !HM.test(custom.end)} onChange={(e) => editHours({ end: e.target.value })} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="day-break" className="text-xs text-muted-foreground">Przerwa (min)</Label>
+                  <Input id="day-break" type="number" min={0} step={5} inputMode="numeric" value={custom?.breakMin ?? String(stored.breakMin)}
+                    aria-invalid={!!custom && custom.breakMin === ""} onChange={(e) => editHours({ breakMin: e.target.value })} />
+                </div>
+              </div>
+              <div className="flex items-center justify-between gap-2 min-h-8">
+                <p className="text-xs text-muted-foreground">
+                  {custom
+                    ? hoursInvalid ? "Uzupełnij godziny." : `Ręcznie wpisane — zamiast ${base?.start}–${base?.end}.`
+                    : `Wg zmiany „${base?.name}”.`}
+                </p>
+                {custom && (
+                  <Button type="button" variant="ghost" size="sm" onClick={() => setCustom(null)}>Przywróć godziny zmiany</Button>
+                )}
+              </div>
+            </fieldset>
           )}
 
           {askOffSchedule && (
@@ -146,7 +213,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
           </div>
 
           <DialogFooter>
-            <Button type="submit">Zapisz dzień</Button>
+            <Button type="submit" disabled={hoursInvalid}>Zapisz dzień</Button>
           </DialogFooter>
         </form>
     </>

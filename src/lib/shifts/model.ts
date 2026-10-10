@@ -70,6 +70,11 @@ export interface DayEntry {
    * później zmieni godziny rodzaju. Brak = bieżące godziny rodzaju.
    */
   hours?: ShiftHours;
+  /**
+   * `hours` wpisał użytkownik ręcznie dla tego dnia (nie jest to kopia z rodzaju),
+   * więc zostaje także po przeniesieniu wpisu na przyszły dzień.
+   */
+  customHours?: true;
 }
 
 export type ShiftHours = Pick<ShiftType, "start" | "end" | "breakMin" | "breakAt">;
@@ -252,6 +257,8 @@ function toEntry(v: unknown): DayEntry | null {
   else delete entry.inLieu;
   if (isHours(o.hours)) entry.hours = shiftHours(o.hours);
   else delete entry.hours;
+  if (o.customHours === true && entry.hours) entry.customHours = true;
+  else delete entry.customHours;
   return entry;
 }
 

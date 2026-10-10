@@ -86,6 +86,35 @@ test("szczegóły dnia: dłużej niż w planie i notatka", async ({ page }) => {
   await expect(page.getByRole("region", { name: "Podsumowanie miesiąca" })).toContainText("8 h 30 min");
 });
 
+test("godziny wpisane ręcznie w oknie dnia zastępują godziny zmiany i przeżywają odświeżenie", async ({ page }) => {
+  await page.getByRole("radio", { name: "Szczegóły" }).click();
+  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  const dialog = page.getByRole("dialog");
+  await dialog.getByRole("radio", { name: "Dzień" }).click();
+  await expect(dialog.getByText(/Wg zmiany/)).toBeVisible();
+
+  await dialog.getByLabel("Od", { exact: true }).fill("07:00");
+  await dialog.getByLabel("Do", { exact: true }).fill("17:30");
+  await dialog.getByLabel("Przerwa (min)").fill("30");
+  await expect(dialog).toContainText("Ręcznie wpisane");
+  await expect(dialog).toContainText("10 h");
+  await dialog.getByRole("button", { name: "Zapisz dzień" }).click();
+
+  const summary = page.getByRole("region", { name: "Podsumowanie miesiąca" });
+  await expect(summary).toContainText("10 h");
+
+  await page.reload();
+  await expect(page.getByRole("region", { name: "Podsumowanie miesiąca" })).toContainText("10 h");
+  await page.getByRole("radio", { name: "Szczegóły" }).click();
+  await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dzień/ }).first().click();
+  const again = page.getByRole("dialog");
+  await expect(again.getByLabel("Do", { exact: true })).toHaveValue("17:30");
+  await again.getByRole("button", { name: "Przywróć godziny zmiany" }).click();
+  await expect(again.getByLabel("Do", { exact: true })).not.toHaveValue("17:30");
+  await again.getByRole("button", { name: "Zapisz dzień" }).click();
+  await expect(page.getByRole("region", { name: "Podsumowanie miesiąca" })).toContainText("8 h");
+});
+
 test("nieobecność obniża normę zamiast dodawać godziny", async ({ page }) => {
   const summary = page.getByRole("region", { name: "Podsumowanie miesiąca" });
   const normBefore = await summary.getByText(/h normy/).textContent();

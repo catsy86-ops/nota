@@ -73,6 +73,11 @@ describe("transferredEntry", () => {
     expect(transferredEntry(e, "2026-10-01", TODAY)).toEqual({ type: "d", hours });
     expect(transferredEntry(e, "2026-10-20", TODAY)).toEqual({ type: "d" });
   });
+
+  it("godziny wpisane ręcznie jadą też na przyszły dzień", () => {
+    const e = day({ hours, customHours: true });
+    expect(transferredEntry(e, "2026-10-20", TODAY)).toEqual({ type: "d", hours, customHours: true });
+  });
 });
 
 describe("planWeekCopy", () => {

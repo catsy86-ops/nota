@@ -9,19 +9,21 @@ export type TransferMode = "move" | "copy";
  * `offSchedule` i `inLieu` opisują konkretny dzień (niedziela, święto, dzień
  * wolny za niedzielę), więc nie jadą razem z wpisem. Godziny sprzed zmiany
  * rodzaju (`hours`) zostają tylko, gdy dzień docelowy jest w przeszłości —
- * przyszły dzień ma liczyć się wg bieżących godzin rodzaju.
+ * przyszły dzień ma liczyć się wg bieżących godzin rodzaju. Godziny wpisane
+ * ręcznie (`customHours`) jadą zawsze.
  */
 export function transferredEntry(entry: DayEntry, targetKey: string, todayKey: string): DayEntry {
   const out: DayEntry = { type: entry.type };
   if (entry.note) out.note = entry.note;
   if (entry.extraMin) out.extraMin = entry.extraMin;
-  if (entry.hours && targetKey < todayKey) out.hours = entry.hours;
+  if (entry.hours && (entry.customHours || targetKey < todayKey)) out.hours = entry.hours;
+  if (entry.hours && entry.customHours) out.customHours = true;
   return out;
 }
 
 const same = (a: DayEntry | undefined, b: DayEntry): boolean =>
   !!a && a.type === b.type && (a.note ?? "") === (b.note ?? "") && (a.extraMin ?? 0) === (b.extraMin ?? 0)
-  && !a.offSchedule && !a.inLieu && JSON.stringify(a.hours ?? null) === JSON.stringify(b.hours ?? null);
+  && !a.offSchedule && !a.inLieu && JSON.stringify(a.hours ?? null) === JSON.stringify(b.hours ?? null) && !!a.customHours === !!b.customHours;
 
 /**
  * Zmiany dni do zapisu przy przeniesieniu/skopiowaniu wpisu z `from` na `to`
