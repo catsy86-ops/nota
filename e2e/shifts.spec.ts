@@ -270,3 +270,16 @@ test("nowe godziny rodzaju obowiązują od dziś, przeszłe dni zostają przy st
   await expect(page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dzień 06:00–14:00/ }).first()).toBeVisible();
   await expect(page.getByRole("button", { name: /^20 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dzień 07:00–17:00/ }).first()).toBeVisible();
 });
+
+test("zmiana z Grafiku widać w komórce Kalendarza i w panelu dnia", async ({ page }) => {
+  await page.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+
+  await page.getByRole("button", { name: /Kalendarz/ }).first().click();
+  const cell = page.getByRole("gridcell", { name: /^5 października 2026.*zmiana: Dzień \d{2}:\d{2}–\d{2}:\d{2}/ });
+  await expect(cell).toHaveCount(1);
+
+  await cell.click();
+  await expect(page.getByText(/Zmiana w Grafiku:/)).toBeVisible();
+  // Dzień bez zmiany nie ma znacznika.
+  await expect(page.getByRole("gridcell", { name: /^6 października 2026/ })).not.toContainText("zmiana:");
+});

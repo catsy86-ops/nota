@@ -5,12 +5,17 @@ import { ReminderChip } from "./ReminderChip";
 import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
 import { cn } from "@/lib/utils";
 import { holidayName } from "@/lib/shifts/holidays";
+import { shiftInk, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
 import { dayCellClass, dayNumberClass, holidayDotClass, holidayNameClass } from "./dayCellStyles";
 
 /** Ile chipów mieści się w komórce, zanim reszta zwinie się w „+N". */
 const MAX_CHIPS = 3;
 /** Kropka zajmuje ułamek szerokości chipa, więc na telefonie zmieści się ich więcej. */
 const MAX_DOTS = 4;
+
+export function shiftLabel(shift: ShiftType): string {
+  return shift.kind === "absence" ? shift.name : `${shift.name} ${shift.start}–${shift.end}`;
+}
 
 function terminy(n: number): string {
   if (n === 1) return "1 termin";
@@ -55,9 +60,11 @@ interface DayCellProps {
   focused: boolean;
   onSelect: (day: Date) => void;
   cellRef?: (el: HTMLDivElement | null) => void;
+  /** Zmiana z Grafiku w tym dniu (z godzinami dnia), jeśli jest wpisana. */
+  shift?: ShiftType;
 }
 
-export function DayCell({ day, month, occurrences, titleOf, selected, focused, onSelect, cellRef }: DayCellProps) {
+export function DayCell({ day, month, occurrences, titleOf, selected, focused, onSelect, cellRef, shift }: DayCellProps) {
   const { setNodeRef, isOver } = useDroppable({ id: `day-drop-${dayKey(day)}`, data: { day } });
   const inMonth = isSameMonth(day, month);
   const today = isSameDay(day, new Date());
@@ -67,7 +74,7 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
   const hiddenDots = occurrences.length - dots.length;
 
   const holiday = holidayName(dayKey(day));
-  const label = `${format(day, "d MMMM yyyy", { locale: pl })}${today ? ", dzisiaj" : ""}${holiday ? `, ${holiday}` : ""}, ${
+  const label = `${format(day, "d MMMM yyyy", { locale: pl })}${today ? ", dzisiaj" : ""}${holiday ? `, ${holiday}` : ""}${shift ? `, zmiana: ${shiftLabel(shift)}` : ""}, ${
     occurrences.length === 0 ? "brak terminów" : terminy(occurrences.length)
   }`;
 
@@ -93,7 +100,21 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
       {/* Numer, święto (kropka na telefonie, nazwa od `sm`) — tak samo jak w Grafiku. */}
       <span className="flex items-center justify-between">
         <span className={dayNumberClass({ today, holiday: !!holiday, inMonth })}>{format(day, "d")}</span>
-        {holiday && <span aria-hidden className={cn(holidayDotClass(inMonth), "mr-0.5")} />}
+        <span className="flex items-center gap-1">
+          {/* Ten sam kolor i skrót co w Grafiku; nieobecność jako jasne tło z ramką, tak jak tam. */}
+          {shift && (
+            <span
+              aria-hidden
+              className={cn("rounded px-1 font-display font-bold text-2xs leading-4", shift.kind === "absence" && "border", !inMonth && "opacity-50")}
+              style={shift.kind === "absence"
+                ? { borderColor: shift.color, backgroundColor: `color-mix(in srgb, ${shift.color} 16%, transparent)`, color: shiftTextOnCard(shift.color) }
+                : { backgroundColor: shift.color, color: shiftInk(shift.color) }}
+            >
+              {shift.short}
+            </span>
+          )}
+          {holiday && <span aria-hidden className={cn(holidayDotClass(inMonth), "mr-0.5")} />}
+        </span>
       </span>
       {holiday && <span aria-hidden className={holidayNameClass(inMonth)}>{holiday}</span>}
 

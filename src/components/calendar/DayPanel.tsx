@@ -3,6 +3,8 @@ import { pl } from "date-fns/locale";
 import { CalendarPlus, Plus, Pencil, ArrowRight, Download } from "lucide-react";
 import { ReminderChip } from "./ReminderChip";
 import type { Occurrence } from "@/lib/reminderOccurrences";
+import { shiftInk, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
+import { shiftLabel } from "./DayCell";
 
 /**
  * Lista terminów wybranego dnia — tu mieszczą się pełne tytuły, których
@@ -19,6 +21,8 @@ interface DayPanelProps {
   day: Date;
   occurrences: Occurrence[];
   titleOf: (noteId: string) => string;
+  /** Zmiana z Grafiku w tym dniu — pokazana nad terminami, żeby „co mam tego dnia” było w jednym miejscu. */
+  shift?: ShiftType;
   onAdd: () => void;
   onEdit: (occurrence: Occurrence) => void;
   /** Shift+←/→ na terminie — klawiaturowy odpowiednik przeciągania (WCAG 2.5.7). */
@@ -29,7 +33,7 @@ interface DayPanelProps {
   onOpenSeriesSource: (occurrence: Occurrence) => void;
 }
 
-export function DayPanel({ day, occurrences, titleOf, onAdd, onEdit, onMoveByDays, onExport, onOpenSeriesSource }: DayPanelProps) {
+export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMoveByDays, onExport, onOpenSeriesSource }: DayPanelProps) {
   return (
     <section aria-live="polite" className="rounded-2xl border border-border/50 bg-card p-4">
       <div className="flex items-center gap-2 mb-3">
@@ -44,6 +48,21 @@ export function DayPanel({ day, occurrences, titleOf, onAdd, onEdit, onMoveByDay
           Dodaj termin
         </button>
       </div>
+
+      {shift && (
+        <p className="flex items-center gap-2 text-sm mb-3">
+          <span
+            aria-hidden
+            className={`rounded px-1.5 font-display font-bold text-xs leading-5 ${shift.kind === "absence" ? "border" : ""}`}
+            style={shift.kind === "absence"
+              ? { borderColor: shift.color, backgroundColor: `color-mix(in srgb, ${shift.color} 16%, transparent)`, color: shiftTextOnCard(shift.color) }
+              : { backgroundColor: shift.color, color: shiftInk(shift.color) }}
+          >
+            {shift.short}
+          </span>
+          <span><span className="sr-only">Zmiana w Grafiku: </span>{shiftLabel(shift)}</span>
+        </p>
+      )}
 
       {occurrences.length === 0 ? (
         <p className="text-sm text-muted-foreground flex items-center gap-2">

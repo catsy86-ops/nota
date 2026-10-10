@@ -595,4 +595,4 @@ Zrzuty z realistycznymi danymi (12 notatek, grafik, zaległe przypomnienie), 144
 - [x] 8. Pasek rodzajów zmian w Grafiku ucięty bez sygnału — zanikająca krawędź, na komputerze zawijanie.
 - [x] 9. Drobne (czas czytania od 2 min, przewodnik „Zapisz notatkę…”; zostały samotny „Średni” i odznaka nad edytorem): „~1 min” na każdej krótkiej notatce (pokazywać od 2 min), samotny „Średni” w osobnym rzędzie, przewodnik mówi „pole Nowa notatka”, a pole to „Zapisz notatkę...”; odznaka „Pierwszy krok” też wyskakuje nad edytorem.
 - [x] Resztki z 9: filtr priorytetu w siatce 3 kolumn (bez samotnego „Średni”), odznaka czeka, aż zamknie się otwarte okno.
-- [ ] Pomysł: zmiany z Grafiku w komórkach Kalendarza.
+- [x] Zmiany z Grafiku w Kalendarzu: skrót zmiany (kolor rodzaju) w komórce dnia, pełna zmiana z godzinami nad terminami w panelu dnia, w `aria-label` komórki. Bez osobnego widoku „Jutro”.

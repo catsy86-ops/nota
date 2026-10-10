@@ -12,6 +12,7 @@ import { pl } from "date-fns/locale";
 import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences";
 import { nextInSeries, seriesDay } from "@/lib/reminderRepeat";
 import { toast } from "sonner";
+import { dayType, useShifts } from "@/lib/shifts";
 import { MonthGrid } from "./MonthGrid";
 import { DayPanel } from "./DayPanel";
 import { ReminderQuickAddDialog, type ReminderEditTarget } from "./ReminderQuickAddDialog";
@@ -62,6 +63,17 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     const titles = new Map(notes.map((n) => [n.id, n.title || n.content.slice(0, 40)]));
     return (id: string) => titles.get(id) ?? "";
   }, [notes]);
+
+  // Zmiany z Grafiku w komórkach i w panelu dnia — jeden widok „co mam tego dnia”.
+  const shifts = useShifts();
+  const shiftOf = useMemo(() => {
+    const types = new Map(shifts.types.map((t) => [t.id, t]));
+    return (key: string) => {
+      const entry = shifts.days[key];
+      const base = entry && types.get(entry.type);
+      return base ? dayType(base, entry) : undefined;
+    };
+  }, [shifts]);
 
   const shiftMonth = (delta: number) =>
     setMonth((m) => new Date(m.getFullYear(), m.getMonth() + delta, 1));
@@ -250,6 +262,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
         month={month}
         byDay={byDay}
         titleOf={titleOf}
+        shiftOf={shiftOf}
         selectedDay={selectedDay}
         onSelectDay={setSelectedDay}
         onActivateDay={openAdd}
@@ -261,6 +274,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
         day={selectedDay}
         occurrences={selectedOccurrences}
         titleOf={titleOf}
+        shift={shiftOf(dayKey(selectedDay))}
         onAdd={() => openAdd(selectedDay)}
         onEdit={openEdit}
         onExport={exportOne}
