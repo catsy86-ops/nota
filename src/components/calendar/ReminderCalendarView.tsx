@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { pluralPl } from "@/lib/plural";
 import { useDayClock } from "@/lib/dayClock";
 import {
   DndContext, PointerSensor, TouchSensor, pointerWithin, useSensor, useSensors, type DragEndEvent,
@@ -54,6 +55,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
   useDayClock();
   const [month, setMonth] = useState(() => new Date());
   const [selectedDay, setSelectedDay] = useState(() => new Date());
+  const [showKeys, setShowKeys] = useState(false);
   const [dialogDay, setDialogDay] = useState<Date | null>(null);
   const [editTarget, setEditTarget] = useState<ReminderEditTarget | null>(null);
 
@@ -203,8 +205,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     if (list.length === 0) { toast.info("Brak nadchodzących terminów do eksportu"); return; }
     exportIcs(list, `przypomnienia-${format(new Date(), "yyyy-MM-dd")}.ics`);
     const n = list.length;
-    const word = n === 1 ? "termin" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "terminy" : "terminów";
-    toast(`Pobrano ${n} ${word} (.ics)`, {
+    toast(`Pobrano ${n} ${pluralPl(n, ["termin", "terminy", "terminów"])} (.ics)`, {
       description: "Ponowny import zaktualizuje wpisy zamiast je dublować.",
     });
   }
@@ -220,7 +221,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
         <button
           onClick={() => shiftMonth(-1)}
           aria-label="Poprzedni miesiąc"
-          className="p-2 shrink-0 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+          className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
@@ -233,7 +234,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
         <button
           onClick={() => shiftMonth(1)}
           aria-label="Następny miesiąc"
-          className="p-2 shrink-0 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+          className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -241,7 +242,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
           <button
             onClick={goToToday}
             aria-label="Wróć do bieżącego miesiąca"
-            className="ml-1 shrink-0 text-xs font-medium text-primary hover:bg-primary/10 px-2 sm:px-2.5 py-1 rounded-lg transition-colors"
+            className="ml-1 shrink-0 text-xs font-medium text-primary hover:bg-primary/10 px-2 sm:px-2.5 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             Dziś
           </button>
@@ -250,20 +251,29 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
           onClick={exportAll}
           aria-label="Eksportuj nadchodzące terminy do kalendarza (.ics)"
           title="Eksportuj nadchodzące terminy do kalendarza (.ics)"
-          className="ml-auto sm:ml-0 order-last shrink-0 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 rounded-lg transition-colors"
+          className="ml-auto sm:ml-0 order-last shrink-0 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 coarse:min-h-11 coarse:min-w-11 coarse:justify-center rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Download className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">.ics</span>
         </button>
         {/* Ściągawka skrótów w podpowiedzi zamiast stałego tekstu w nagłówku. */}
-        <span
-          title="↑↓←→ — dni · PgUp/PgDn — miesiąc · Enter — dodaj termin · przeciągnij termin lub Shift+←/→"
-          className="ml-auto hidden sm:inline-flex p-2 text-muted-foreground"
+        <button
+          type="button"
+          onClick={() => setShowKeys((v) => !v)}
+          aria-expanded={showKeys}
+          aria-controls="calendar-keys-hint"
+          aria-label="Skróty klawiaturowe kalendarza"
+          title="Skróty klawiaturowe"
+          className="ml-auto hidden sm:inline-flex p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Keyboard className="w-4 h-4" aria-hidden />
-          <span className="sr-only">Skróty: strzałki — dni, PgUp/PgDn — miesiąc, Enter — dodaj termin, Shift+strzałki — przesuń termin</span>
-        </span>
+        </button>
       </header>
+      {showKeys && (
+        <p id="calendar-keys-hint" className="-mt-2 px-1 text-xs text-muted-foreground">
+          Strzałki — przechodzenie po dniach · PgUp / PgDn — miesiąc · Enter — dodaj termin · Shift+←/→ — przesuń wybrany termin o dzień (albo przeciągnij go myszą).
+        </p>
+      )}
 
       <UpcomingDays
         notes={notes}

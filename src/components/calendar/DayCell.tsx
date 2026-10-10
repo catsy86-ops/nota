@@ -71,7 +71,7 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
   const hiddenDots = occurrences.length - dots.length;
 
   const holiday = holidayName(dayKey(day));
-  const label = `${format(day, "d MMMM yyyy", { locale: pl })}${today ? ", dzisiaj" : ""}${holiday ? `, ${holiday}` : ""}${shift ? `, zmiana: ${shiftLabel(shift)}` : ""}, ${
+  const label = `${format(day, "EEEE, d MMMM yyyy", { locale: pl })}${today ? ", dziś" : ""}${holiday ? `, ${holiday}` : ""}${shift ? `, zmiana: ${shiftLabel(shift)}` : ""}, ${
     occurrences.length === 0 ? "brak terminów" : terminy(occurrences.length)
   }`;
 
@@ -81,6 +81,7 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
       role="gridcell"
       aria-label={label}
       aria-selected={selected}
+      aria-current={today ? "date" : undefined}
       // Roving tabindex: cała siatka to jeden przystanek tabulatora, a po
       // dniach chodzi się strzałkami — tak działa natywny date picker.
       tabIndex={focused ? 0 : -1}

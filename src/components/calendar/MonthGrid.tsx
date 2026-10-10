@@ -91,6 +91,8 @@ export function MonthGrid({ month, byDay, titleOf, shiftOf, selectedDay, onSelec
   }
 
   const weekdays = weeks[0].map((d) => format(d, "EEEEEE", { locale: pl }));
+  // Czytnik ekranu literowałby „pn”, „wt” — nagłówki dostają pełne nazwy.
+  const fullWeekdays = weeks[0].map((d) => format(d, "EEEE", { locale: pl }));
 
   return (
     <div
@@ -104,6 +106,7 @@ export function MonthGrid({ month, byDay, titleOf, shiftOf, selectedDay, onSelec
           <div
             key={i}
             role="columnheader"
+            aria-label={fullWeekdays[i]}
             className={weekdayHeadClass(i)}
           >
             {name}

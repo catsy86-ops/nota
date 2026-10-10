@@ -34,14 +34,14 @@ interface DayPanelProps {
 
 export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMoveByDays, onExport, onOpenSeriesSource }: DayPanelProps) {
   return (
-    <section aria-live="polite" className="rounded-2xl border border-border/50 bg-card p-4">
+    <section aria-label="Terminy wybranego dnia" className="rounded-2xl border border-border/50 bg-card p-4">
       <div className="flex items-center gap-2 mb-3">
-        <h3 className="font-display font-semibold text-sm first-letter:uppercase">
+        <h3 aria-live="polite" className="font-display font-semibold text-sm first-letter:uppercase">
           {format(day, "EEEE, d MMMM", { locale: pl })}
         </h3>
         <button
           onClick={onAdd}
-          className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary hover:bg-primary/10 px-2 py-1 rounded-lg transition-colors"
+          className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Plus className="w-3.5 h-3.5" />
           Dodaj termin
@@ -81,10 +81,10 @@ export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMo
                     <button
                       onClick={() => onOpenSeriesSource(occ)}
                       aria-label={`Prognoza serii: ${title.trim() || "Bez tytułu"} — przejdź do najbliższego terminu`}
-                      className="group w-full flex items-center gap-2 rounded-lg hover:bg-muted/60 transition-colors p-1 -m-1"
+                      className="group w-full flex items-center gap-2 rounded-lg hover:bg-muted/60 transition-colors p-1 -m-1 coarse:min-h-11 outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <ReminderChip occurrence={occ} title={title} detailed className="min-w-0 flex-1" />
-                      <ArrowRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
+                      <ArrowRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground opacity-0 coarse:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
                     </button>
                     <p className="text-2xs text-muted-foreground pl-2 mt-0.5">
                       Prognoza serii — zapisany jest tylko najbliższy termin.
@@ -102,16 +102,16 @@ export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMo
                     aria-label={`Edytuj termin: ${title.trim() || "Bez tytułu"}`}
                     aria-keyshortcuts="Shift+ArrowLeft Shift+ArrowRight"
                     title="Shift+←/→ — przesuń o dzień"
-                    className="group w-full flex items-center gap-2 rounded-lg hover:bg-muted/60 transition-colors p-1 -m-1"
+                    className="group w-full flex items-center gap-2 rounded-lg hover:bg-muted/60 transition-colors p-1 -m-1 coarse:min-h-11 outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <ReminderChip occurrence={occ} title={title} detailed className="min-w-0 flex-1" />
-                    <Pencil className="w-3.5 h-3.5 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
+                    <Pencil className="w-3.5 h-3.5 shrink-0 text-muted-foreground opacity-0 coarse:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
                   </button>
                   <button
                     onClick={() => onExport(occ)}
                     aria-label={`Dodaj do kalendarza systemowego: ${title.trim() || "Bez tytułu"}`}
                     title="Pobierz .ics — dodaj do kalendarza Google, Apple lub Outlook"
-                    className="p-2 shrink-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                    className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <Download className="w-3.5 h-3.5" />
                   </button>
