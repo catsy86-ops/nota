@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Tag, Bell, ImagePlus, Paperclip, X, PenTool, ListChecks, Palette, Folder, Flag, Hash } from "lucide-react";
+import { useDictation } from "@/hooks/useDictation";
+import { Plus, Tag, Bell, Mic, ImagePlus, Paperclip, X, PenTool, ListChecks, Palette, Folder, Flag, Hash } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { ColorPicker, colorClasses } from "./ColorPicker";
 import { Badge } from "@/components/ui/badge";
@@ -166,6 +167,13 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
 
   /** Sam URL wklejony w pusty szkic: tytuł z domeny (bez sieci), adres w treści. */
   function handleContentPaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+    // Zrzut ekranu / skopiowany obraz: trafia do załączników szkicu zamiast do pola tekstu.
+    const pastedImages = Array.from(e.clipboardData.files).filter((f) => f.type.startsWith("image/"));
+    if (pastedImages.length > 0) {
+      e.preventDefault();
+      void addImageFiles(pastedImages);
+      return;
+    }
     if (title.trim() || content.trim()) return;
     const parsed = parsePastedUrl(e.clipboardData.getData("text/plain"));
     if (!parsed) return;
@@ -174,12 +182,23 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
     setContent(parsed.url);
   }
 
+  // Dyktowanie dopisuje rozpoznane zdanie na końcu treści.
+  const dictation = useDictation((text) => {
+    if (!text) return;
+    setContent((c) => (c && !/\s$/.test(c) ? `${c} ${text}` : `${c}${text}`));
+  });
+
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files) return;
+    await addImageFiles(Array.from(files));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function addImageFiles(files: File[]) {
     let skipped = 0;
     try {
-      for (const file of Array.from(files)) {
+      for (const file of files) {
         if (file.size > 2 * 1024 * 1024) { skipped++; continue; }
         const ref = await imageStore.putBlob(file);
         setImages((prev) => [...prev, ref]);
@@ -190,7 +209,6 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
     if (skipped > 0) {
       toast.error(skipped === 1 ? "Obrazek jest za duży (max 2 MB)" : `${skipped} ${pluralPl(skipped, ["obrazek jest za duży", "obrazki są za duże", "obrazków jest za dużych"])} (max 2 MB)`);
     }
-    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   // Edycja istniejącej notatki na telefonie jest na pełnym ekranie (NoteCard) — nowa też, zamiast pola w środku listy.
@@ -321,6 +339,12 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                     <ColorPicker selected={color} onSelect={setColor} />
                   </PopoverContent>
                 </Popover>
+                {dictation.supported && (
+                  <IconButton size="sm" tone={dictation.listening ? "active" : "muted"} onClick={dictation.toggle}
+                    title={dictation.listening ? "Zakończ dyktowanie" : "Dyktuj"} aria-label={dictation.listening ? "Zakończ dyktowanie" : "Dyktuj"} aria-pressed={dictation.listening}>
+                    <Mic className={cn("w-4 h-4", dictation.listening && "animate-pulse")} />
+                  </IconButton>
+                )}
                 {/* Image upload */}
                 <IconButton size="sm" onClick={() => fileInputRef.current?.click()} title="Dodaj obrazek" aria-label="Dodaj obrazek">
                   <ImagePlus className="w-4 h-4" />
