@@ -1,7 +1,7 @@
-import { useState, useRef, useEffect, useCallback, forwardRef, useImperativeHandle, type ReactNode } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Tag, Bell, ImagePlus, X, PenTool, ListChecks, Palette } from "lucide-react";
+import { Plus, Tag, Bell, ImagePlus, X, PenTool, ListChecks, Palette, Folder, Flag, Hash } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { ColorPicker, colorClasses } from "./ColorPicker";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,8 @@ import { ChecklistConvertButtons, ChecklistEditor } from "./ChecklistEditor";
 import { FormatToolbar } from "./MarkdownRenderer";
 import { PriorityPicker } from "./PriorityPicker";
 import type { NotePriority } from "@/lib/notePriority";
+import { applyCapture, describeToken, extractCapture, type CaptureToken } from "@/lib/quickCapture";
+import { isChecklistShortcut, selectionToChecklist } from "@/lib/checklistPaste";
 import { QuickReminderInput } from "./QuickReminderInput";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
 import { composeReminderTimestamp, toTimeInputValue, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
@@ -26,7 +28,9 @@ import { pluralPl } from "@/lib/plural";
 import { parsePastedUrl } from "@/lib/urlTitle";
 
 interface AddNoteBarProps {
-  onAdd: (title: string, content: string, color: NoteColor, labels: string[], reminder: number | null, images: string[], checklist: ChecklistItem[], priority: NotePriority) => void;
+  onAdd: (title: string, content: string, color: NoteColor, labels: string[], reminder: number | null, images: string[], checklist: ChecklistItem[], priority: NotePriority, folderId?: string | null) => void;
+  /** Foldery, do których można wskazać `@folder` w treści. */
+  folders?: { id: string; name: string }[];
   allLabels: string[];
   onCreateLabel: (label: string) => void;
   /** Gdzie trafi notatka, gdy tworzona jest w folderze albo etykiecie (np. „Praca”, „#pomysły”). */
@@ -35,7 +39,7 @@ interface AddNoteBarProps {
   templates?: (done: () => void) => ReactNode;
 }
 
-export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(function AddNoteBar({ onAdd, allLabels, onCreateLabel, destination, templates }, ref) {
+export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(function AddNoteBar({ onAdd, folders, allLabels, onCreateLabel, destination, templates }, ref) {
   const [expanded, setExpanded] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -50,6 +54,8 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [showChecklist, setShowChecklist] = useState(false);
   const [showDrawing, setShowDrawing] = useState(false);
+  /** Klucze tokenów, które użytkownik odrzucił chipem — zostają w tekście jak były. */
+  const [ignored, setIgnored] = useState<ReadonlySet<string>>(new Set());
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
@@ -58,15 +64,32 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   useImperativeHandle(ref, () => ({ expand: () => setExpanded(true) }));
 
   const reset = useCallback(() => {
-    setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderDate(undefined); setReminderTime(DEFAULT_REMINDER_TIME); setPriority("none"); setImages([]); setChecklist([]); setShowChecklist(false); setExpanded(false);
+    setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderDate(undefined); setReminderTime(DEFAULT_REMINDER_TIME); setPriority("none"); setImages([]); setChecklist([]); setShowChecklist(false); setIgnored(new Set()); setExpanded(false);
   }, []);
+
+  // Tokeny z tekstu (`#etykieta`, `@folder`, `!`, „jutro 9:00”) — pokazywane jako chipy, zanim cokolwiek się zapisze.
+  const capture = useMemo<CaptureToken[]>(() => {
+    if (!expanded || (!title && !content)) return [];
+    return extractCapture({ title, content }, {
+      labels: allLabels,
+      folders: folders ?? [],
+      hasReminder: reminder !== null,
+      hasPriority: priority !== "none",
+    });
+  }, [expanded, title, content, allLabels, folders, reminder, priority]);
 
   const handleClose = useCallback(() => {
     if (title.trim() || content.trim() || images.length > 0 || checklist.length > 0) {
-      onAdd(title.trim(), content.trim(), color, labels, reminder, images, checklist, priority);
+      const r = applyCapture({ title, content }, capture, ignored, images.length > 0 || checklist.length > 0);
+      r.newLabels.forEach((l) => onCreateLabel(l));
+      const allNoteLabels = [...labels];
+      for (const l of r.labels) if (!allNoteLabels.includes(l)) allNoteLabels.push(l);
+      const remindAt = r.reminder ? r.reminder.getTime() : reminder;
+      if (r.reminder) requestNotificationPermissionOnIntent();
+      onAdd(r.title, r.content, color, allNoteLabels, remindAt, images, checklist, r.priority ?? priority, r.folderId);
     }
     reset();
-  }, [title, content, images, checklist, color, labels, reminder, priority, onAdd, reset]);
+  }, [title, content, images, checklist, color, labels, reminder, priority, capture, ignored, onAdd, onCreateLabel, reset]);
 
   useEffect(() => {
     if (expanded && titleRef.current) titleRef.current.focus();
@@ -110,6 +133,26 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   function handleQuickReminderParsed(parsed: Date) {
     setReminderDate(parsed);
     setReminderTime(toTimeInputValue(parsed.getTime()));
+  }
+
+  /** Ctrl+Shift+L: zaznaczone linie (albo bieżąca) przechodzą na listę zadań. */
+  function handleContentKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (!isChecklistShortcut(e)) return;
+    e.preventDefault();
+    const ta = e.currentTarget;
+    const r = selectionToChecklist(content, ta.selectionStart, ta.selectionEnd, checklist);
+    if (!r) return;
+    setContent(r.content);
+    setChecklist(r.checklist);
+    setShowChecklist(true);
+  }
+
+  function toggleIgnored(key: string) {
+    setIgnored((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
   }
 
   /** Sam URL wklejony w pusty szkic: tytuł z domeny (bez sieci), adres w treści. */
@@ -172,8 +215,32 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
               const sel = content.slice(s, e2);
               setContent(content.slice(0, s) + before + sel + after + content.slice(e2));
             }} />
-            <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} onPaste={handleContentPaste} placeholder="Treść notatki..." rows={3}
+            <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} onPaste={handleContentPaste} onKeyDown={handleContentKeyDown} placeholder="Treść notatki..." rows={3}
               className="w-full max-sm:min-h-[35dvh] bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none" />
+
+            {capture.length > 0 && (
+              <div role="group" aria-label="Rozpoznane w tekście" aria-live="polite" className="flex flex-wrap items-center gap-1.5">
+                {capture.map((t) => {
+                  const off = ignored.has(t.key);
+                  const d = describeToken(t, (date) => formatReminderShort(date.getTime()));
+                  const Icon = t.kind === "label" ? Hash : t.kind === "folder" ? Folder : t.kind === "priority" ? Flag : Bell;
+                  return (
+                    <button key={`${t.field}-${t.start}-${t.key}`} type="button"
+                      aria-label={off ? `Przywróć: ${d.aria}` : `Zignoruj: ${d.aria}`}
+                      title={off ? "Przywróć rozpoznanie" : "Zignoruj — tekst zostanie bez zmian"}
+                      onClick={() => toggleIgnored(t.key)}
+                      onKeyDown={(e) => { if (e.key === "Backspace" || e.key === "Delete") { e.preventDefault(); toggleIgnored(t.key); } }}
+                      className={cn("pressable inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                        off ? "border-border text-muted-foreground line-through" : "border-primary/40 bg-primary/10 text-primary hover:bg-primary/15")}>
+                      <Icon className="w-3 h-3 shrink-0" aria-hidden />
+                      <span>{d.label}</span>
+                      {t.kind === "label" && t.isNew && !off && <span className="text-2xs opacity-70">nowa</span>}
+                      <X className="w-3 h-3 shrink-0 opacity-70" aria-hidden />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
 
             {/* Szablony tylko nad pustym szkicem — wybór tworzy osobną notatkę, więc nic by nie zastąpił. */}
             {templates && isDraftEmpty && templates(reset)}
