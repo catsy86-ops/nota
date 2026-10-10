@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DEFAULT_SHIFT_TYPES, SHIFT_COLORS, SHIFT_COLOR_NAMES, breakOffset, deleteShiftType, formatDuration, newShiftId, restoreShiftType, saveShiftType, shiftMinutes, shiftSpan, shiftStore, type ShiftType } from "@/lib/shifts";
+import { ABSENCE_KINDS, DEFAULT_SHIFT_TYPES, SHIFT_COLORS, SHIFT_COLOR_NAMES, absenceKindOf, breakOffset, deleteShiftType, formatDuration, newShiftId, restoreShiftType, saveShiftType, shiftMinutes, shiftSpan, shiftStore, type AbsenceKind, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -16,6 +16,8 @@ interface ShiftTypeDialogProps {
   onSaved: (type: ShiftType) => void;
   onDeleted: () => void;
 }
+
+const ABSENCE_KIND_LABELS: Record<AbsenceKind, string> = { leave: "Urlop", sick: "L4", other: "Inna" };
 
 const BLANK: ShiftType = { id: "", name: "", short: "", color: SHIFT_COLORS[3], start: "08:00", end: "16:00", breakMin: 0, kind: "work" };
 
@@ -75,6 +77,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
       breakMin: Math.max(0, Math.round(draft.breakMin) || 0),
       breakAt: placedBreak ? draft.breakAt : undefined,
       kind: draft.kind ?? "work",
+      absenceKind: absence ? absenceKindOf({ ...draft, kind: "absence" }) : undefined,
       rate: !absence && Number.isFinite(parsedRate) && parsedRate > 0 ? parsedRate : undefined,
     };
     saveShiftType(saved);
@@ -126,8 +129,22 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
           })}
         </div>
         {absence && (
+          <div role="radiogroup" aria-label="Rodzaj nieobecności" className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-muted/60">
+            {ABSENCE_KINDS.map((k) => {
+              const active = absenceKindOf({ ...draft, kind: "absence" }) === k;
+              return (
+                <button key={k} type="button" role="radio" aria-checked={active} onClick={() => patch({ absenceKind: k })}
+                  className={cn("pressable h-9 coarse:h-11 rounded-lg text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    active ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}>
+                  {ABSENCE_KIND_LABELS[k]}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        {absence && (
           <p className="text-xs text-muted-foreground -mt-2">
-            Urlop, L4 itp. — nie liczy się do przepracowanych godzin, ale obniża normę miesiąca o czas poniżej.
+            Nie liczy się do przepracowanych godzin, ale obniża normę miesiąca o czas poniżej. Urlop trafia też do licznika urlopu.
           </p>
         )}
         <div className="grid grid-cols-3 gap-3">

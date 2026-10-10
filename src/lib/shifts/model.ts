@@ -5,6 +5,9 @@
  */
 
 export type ShiftKind = "work" | "absence";
+/** Rodzaj nieobecności: urlop wypoczynkowy, zwolnienie lekarskie (L4), pozostałe. */
+export type AbsenceKind = "leave" | "sick" | "other";
+export const ABSENCE_KINDS: AbsenceKind[] = ["leave", "sick", "other"];
 export type WorkSystem = "basic" | "equivalent";
 /** Długość okresu rozliczeniowego w miesiącach (art. 129 KP). */
 export type SettlementMonths = 1 | 2 | 3 | 4 | 6 | 12;
@@ -36,6 +39,11 @@ export interface ShiftType {
    * Brak pola = `work` (dane sprzed wprowadzenia nieobecności).
    */
   kind?: ShiftKind;
+  /**
+   * Rodzaj nieobecności (tylko przy `kind: "absence"`). Brak pola = wykryty
+   * po nazwie (`absenceKindOf`) — dane sprzed wprowadzenia pola.
+   */
+  absenceKind?: AbsenceKind;
   /** Pozycja na pasku — kolejność kluczy Y.Map nie jest wspólna dla urządzeń. */
   order?: number;
 }
@@ -110,6 +118,8 @@ export interface ShiftData {
   settlementStart: number;
   /** Wymiar etatu, (0, 1]; norma okresu jest proporcjonalna. */
   fte: number;
+  /** Roczny wymiar urlopu wypoczynkowego w dniach (20 albo 26 wg stażu), 0–99. */
+  leaveDays: number;
   /**
    * Niepełny etat: od jakiego wymiaru praca jest już nadgodzinami z dodatkiem
    * (art. 151 § 5 KP — strony ustalają to w umowie). 1 = dopiero ponad pełny
@@ -169,13 +179,33 @@ export const EMPTY_SHIFT_DATA: ShiftData = {
   settlementMonths: 1,
   settlementStart: 0,
   fte: 1,
+  leaveDays: 20,
   overtimeFrom: 1,
   sundayFrom: 6,
   nightFrom: 22,
   patterns: DEFAULT_PATTERNS,
 };
 
+export const DEFAULT_LEAVE_DAYS = 20;
+
 export const isAbsence = (t: Pick<ShiftType, "kind">) => t.kind === "absence";
+
+/** Urlopy, które nie są wypoczynkowym i nie ubywają z rocznej puli. */
+const NOT_ANNUAL_LEAVE = /bezp[łl]atn|wychowaw|okoliczno|macierzy|rodzicielsk|ojcowsk|szkoleniow/i;
+
+/**
+ * Rodzaj nieobecności: jawny `absenceKind`, a dla danych sprzed jego
+ * wprowadzenia — po nazwie („Urlop” = urlop, „L4”/„chorobowe” = zwolnienie).
+ * `undefined` dla zmian pracy.
+ */
+export function absenceKindOf(t: Pick<ShiftType, "kind" | "name" | "absenceKind">): AbsenceKind | undefined {
+  if (!isAbsence(t)) return undefined;
+  if (t.absenceKind && ABSENCE_KINDS.includes(t.absenceKind)) return t.absenceKind;
+  const name = (t.name ?? "").trim();
+  if (/urlop/i.test(name) && !NOT_ANNUAL_LEAVE.test(name)) return "leave";
+  if (/^l-?4\b|chorob|zwolnieni|zasi[łl]ek/i.test(name)) return "sick";
+  return "other";
+}
 
 function isShiftType(t: unknown): t is ShiftType {
   const o = t as ShiftType;
@@ -192,6 +222,9 @@ function cleanType(t: ShiftType): ShiftType {
     kind: t.kind === "absence" ? "absence" : "work",
   };
   if (!(typeof t.rate === "number" && Number.isFinite(t.rate) && t.rate > 0)) delete out.rate;
+  // Rodzaj nieobecności: brak pola w starych danych dopełniamy wykryciem po nazwie.
+  if (out.kind === "absence") out.absenceKind = absenceKindOf({ kind: "absence", name: t.name, absenceKind: ABSENCE_KINDS.includes(t.absenceKind as AbsenceKind) ? t.absenceKind : undefined });
+  else delete out.absenceKind;
   if (!(typeof t.breakAt === "string" && HM.test(t.breakAt))) delete out.breakAt;
   return out;
 }
@@ -246,6 +279,7 @@ export function migrate(stored: unknown): ShiftData {
     hourlyRate: Math.max(0, num(s.hourlyRate, 0)),
     workSystem: s.workSystem === "equivalent" ? "equivalent" : "basic",
     fte: typeof s.fte === "number" && s.fte > 0 && s.fte <= 1 ? s.fte : 1,
+    leaveDays: Number.isInteger(s.leaveDays) && (s.leaveDays as number) >= 0 && (s.leaveDays as number) <= 99 ? (s.leaveDays as number) : DEFAULT_LEAVE_DAYS,
     overtimeFrom: typeof s.overtimeFrom === "number" && s.overtimeFrom > 0 && s.overtimeFrom <= 1 ? s.overtimeFrom : 1,
     settlementMonths: SETTLEMENT_MONTHS.includes(s.settlementMonths as SettlementMonths) ? (s.settlementMonths as SettlementMonths) : 1,
     settlementStart: Number.isInteger(s.settlementStart) && (s.settlementStart as number) >= 0 && (s.settlementStart as number) < 12 ? (s.settlementStart as number) : 0,

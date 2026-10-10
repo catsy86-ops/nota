@@ -3,6 +3,7 @@ export * from "./time";
 export * from "./holidays";
 export * from "./pattern";
 export * from "./summary";
+export * from "./leave";
 export * from "./store";
 export * from "./ics";
 export * from "./color";
