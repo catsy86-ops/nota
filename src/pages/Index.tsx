@@ -16,7 +16,8 @@ import { parseViewRoute } from "@/lib/viewRoute";
 import { groupReminders } from "@/lib/reminderAgenda";
 import { buildWikiIndex, resolveWikiTarget, wikiIndexKey } from "@/lib/wikiLinks";
 import { useLatestRef, useStableByKey } from "@/hooks/useLatestRef";
-import { useGridNavPreviewId, setGridNavPreview, setGridNavFocus } from "@/lib/gridKeyboardNav";
+import { useGridNavPreviewId, useGridNavState, setGridNavPreview, setGridNavFocus } from "@/lib/gridKeyboardNav";
+import { copyNoteToClipboard } from "@/lib/noteMarkdown";
 import { NoteReader, type ReaderMode } from "@/components/NoteReader";
 import { cn } from "@/lib/utils";
 import { playEnter, tween } from "@/lib/motion";
@@ -382,6 +383,13 @@ const Index = () => {
   const readerNote = useMemo(
     () => (readerId ? [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === readerId) ?? null : null),
     [readerId, notes, archivedNotes, trashedNotes],
+  );
+  // „Bieżąca” notatka dla palety poleceń: otwarta w czytniku, jedyna zaznaczona albo z fokusem.
+  const gridFocusedId = useGridNavState().focusedId;
+  const copyTargetId = readerId ?? (selectedIds.size === 1 ? [...selectedIds][0] : gridFocusedId);
+  const copyTarget = useMemo(
+    () => (copyTargetId ? [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === copyTargetId) ?? null : null),
+    [copyTargetId, notes, archivedNotes, trashedNotes],
   );
   const closeReader = useCallback(() => { setPresentingNoteId(null); setGridNavPreview(null); }, []);
   const showInReader = useCallback((id: string, mode: ReaderMode) => {
@@ -767,6 +775,7 @@ const Index = () => {
           onOpenStats={() => setStatsOpen(true)}
           onOpenFocusMode={() => setFocusModeOpen(true)}
           onOpenShortcuts={() => setShortcutsOpen(true)}
+          onCopyNote={copyTarget ? (fmt) => { void copyNoteToClipboard(copyTarget, fmt); } : undefined}
         />
       </Suspense>
     )}
