@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { dayType, useShifts } from "@/lib/shifts";
 import { MonthGrid } from "./MonthGrid";
 import { DayPanel } from "./DayPanel";
+import { UpcomingDays } from "./UpcomingDays";
 import { ReminderQuickAddDialog, type ReminderEditTarget } from "./ReminderQuickAddDialog";
 import { toastWithUndo } from "@/lib/undoToast";
 import type { ReminderRepeat } from "@/lib/reminderRepeat";
@@ -256,6 +257,16 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
           <span className="sr-only">Skróty: strzałki — dni, PgUp/PgDn — miesiąc, Enter — dodaj termin, Shift+strzałki — przesuń termin</span>
         </span>
       </header>
+
+      <UpcomingDays
+        notes={notes}
+        titleOf={titleOf}
+        shiftOf={shiftOf}
+        onSelectDay={(day) => {
+          setSelectedDay(day);
+          setMonth(new Date(day.getFullYear(), day.getMonth(), 1));
+        }}
+      />
 
       <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
       <MonthGrid

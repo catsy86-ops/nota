@@ -283,3 +283,18 @@ test("zmiana z Grafiku widać w komórce Kalendarza i w panelu dnia", async ({ p
   // Dzień bez zmiany nie ma znacznika.
   await expect(page.getByRole("gridcell", { name: /^6 października 2026/ })).not.toContainText("zmiana:");
 });
+
+test("Kalendarz pokazuje dziś i jutro: zmianę z Grafiku i brak terminów", async ({ page }) => {
+  await page.getByRole("button", { name: /^7 [a-ząćęłńóśźż]+, .*wolne$/ }).first().click();
+  await page.getByRole("button", { name: /Kalendarz/ }).first().click();
+
+  const today = page.getByRole("region", { name: "Dziś i jutro" });
+  await expect(today).toContainText("Dziś");
+  await expect(today).toContainText("środa, 7 października");
+  await expect(today).toContainText("Zmiana w Grafiku: Dzień");
+  await expect(today).toContainText("Bez zmiany w Grafiku"); // jutro
+
+  // Klik w kartę przenosi panel dnia na ten dzień.
+  await today.getByRole("button", { name: /Jutro/ }).click();
+  await expect(page.getByRole("heading", { name: /czwartek, 8 października/i })).toBeVisible();
+});
