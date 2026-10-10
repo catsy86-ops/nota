@@ -4,6 +4,7 @@ import { IndexeddbPersistence } from "y-indexeddb";
 import { get as idbGet, del as idbDel, keys as idbKeys, getMany as idbGetMany } from "idb-keyval";
 import { loadAll as loadLegacySnapshot } from "@/lib/notesStore";
 import { hashImage } from "@/lib/imageHash";
+import { normalizeAttachments, isAttachmentSyncable, type Attachment } from "@/lib/attachments";
 import { imageStore as defaultImageStore, isDataUrl, type ImageStore } from "@/lib/imageStore";
 import type { Note, Folder, ChecklistItem } from "@/hooks/useNotes";
 import { logDiag } from "@/lib/diagnostics";
@@ -143,6 +144,15 @@ function applyChecklistDiff(y: YNote, next: ChecklistItem[]) {
   });
 }
 
+const NO_ATTACHMENTS: Attachment[] = [];
+
+/** Manifest z dokumentu (może pochodzić od peera) → zwalidowana lista; brak = stała pusta tablica. */
+function plainAttachments(raw: unknown): Attachment[] {
+  if (!Array.isArray(raw) || raw.length === 0) return NO_ATTACHMENTS;
+  const list = normalizeAttachments(raw);
+  return list.length ? list : NO_ATTACHMENTS;
+}
+
 function yNoteFromPlain(note: Note): YNote {
   const y: YNote = new Y.Map();
   const text = new Y.Text();
@@ -165,6 +175,8 @@ function yNoteFromPlain(note: Note): YNote {
   y.set("folderId", note.folderId);
   y.set("order", note.order);
   y.set("imageHashes", imageRefs(note.images));
+  // Manifest załączników tylko, gdy są — dokumenty bez nich zostają bajt w bajt jak dawniej.
+  if (note.attachments?.length) y.set("attachments", normalizeAttachments(note.attachments));
   y.set("createdAt", note.createdAt);
   y.set("updatedAt", note.updatedAt);
   return y;
@@ -173,6 +185,7 @@ function yNoteFromPlain(note: Note): YNote {
 function plainFromYNote(id: string, y: YNote): Note {
   const content = y.get("content");
   const images = y.get("imageHashes");
+  const attachments = plainAttachments(y.get("attachments"));
   const dailyDate = y.get("dailyDate");
   return {
     ...(typeof dailyDate === "string" ? { dailyDate } : {}),
@@ -191,6 +204,7 @@ function plainFromYNote(id: string, y: YNote): Note {
     reminderRepeatUntil: (y.get("reminderRepeatUntil") as number | undefined) ?? undefined,
     priority: (y.get("priority") as Note["priority"]) ?? "none",
     images: Array.isArray(images) ? (images as string[]) : NO_IMAGES,
+    ...(attachments.length ? { attachments } : {}),
     checklist: plainChecklistFromY(y.get("checklist")),
     folderId: (y.get("folderId") as string | null) ?? null,
     order: (y.get("order") as number) ?? 0,
@@ -416,6 +430,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     }
     if (updates.checklist !== undefined) applyChecklistDiff(y, updates.checklist);
     if (updates.images !== undefined) y.set("imageHashes", imageRefs(updates.images));
+    if (updates.attachments !== undefined) y.set("attachments", normalizeAttachments(updates.attachments));
     if (!("updatedAt" in updates)) y.set("updatedAt", Date.now());
   }
 
@@ -483,13 +498,42 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     return () => text.unobserve(handler);
   }
 
-  /** Wszystkie klucze obrazów, do których odwołuje się jakakolwiek notatka (także w Koszu). */
+  /**
+   * Wszystkie klucze bajtów w `imageStore`, do których odwołuje się jakakolwiek
+   * notatka (także w Koszu): obrazy ORAZ załączniki. To wejście dla GC — blob
+   * używany przez inną notatkę (ten sam hash) nigdy nie jest kandydatem.
+   */
   function referencedImages(): Set<string> {
     const refs = new Set<string>();
     notesMap.forEach((y) => {
       const list = y.get("imageHashes");
       if (Array.isArray(list)) for (const r of list) if (typeof r === "string") refs.add(r);
+      for (const a of plainAttachments(y.get("attachments"))) refs.add(a.hash);
     });
+    return refs;
+  }
+
+  /** Załączniki wszystkich notatek: hash → manifest (rozmiar do limitu łącznego i backupu). */
+  function referencedAttachments(): Map<string, Attachment> {
+    const out = new Map<string, Attachment>();
+    notesMap.forEach((y) => {
+      for (const a of plainAttachments(y.get("attachments"))) if (!out.has(a.hash)) out.set(a.hash, a);
+    });
+    return out;
+  }
+
+  /**
+   * Klucze, które wolno wysłać innemu urządzeniu (P2P, plik sync): wszystkie
+   * obrazy i załączniki do `ATTACHMENT_SYNC_MAX_BYTES`. Większe pliki są
+   * lokalne dla urządzenia (UI mówi o tym wprost).
+   */
+  function syncableRefs(): Set<string> {
+    const refs = new Set<string>();
+    notesMap.forEach((y) => {
+      const list = y.get("imageHashes");
+      if (Array.isArray(list)) for (const r of list) if (typeof r === "string") refs.add(r);
+    });
+    referencedAttachments().forEach((a, hash) => { if (isAttachmentSyncable(a)) refs.add(hash); });
     return refs;
   }
 
@@ -614,7 +658,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     upsertFolder, patchFolder, removeFolder,
     addLabel, removeLabelEverywhere, renameLabelEverywhere,
     replaceAll, resetForTests, diagStats, encodeSyncState, mergeSyncState,
-    referencedImages, remapImageRefs,
+    referencedImages, referencedAttachments, syncableRefs, remapImageRefs,
     beginTextEdit, endTextEdit, isTextEditOpen, rebaseTextEdit, onRemoteTextChange,
   };
 }

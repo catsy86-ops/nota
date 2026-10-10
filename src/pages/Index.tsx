@@ -453,10 +453,10 @@ const Index = () => {
   const handleAddNoteGlow = useCallback((...args: Parameters<typeof addNote>) => {
     const p = centerOf(document.querySelector("[data-add-note-bar]"));
     if (p) glowPulse(p, "create", 260);
-    const [title, content, color, labels = [], reminder, images, checklist, priority, folderId] = args;
+    const [title, content, color, labels = [], reminder, images, checklist, priority, folderId, attachments] = args;
     const withLabel = activeLabel && !labels.includes(activeLabel) ? [...labels, activeLabel] : labels;
     const inFolder = folderId ?? (view === "folder" ? activeFolder : null);
-    return addNote(title, content, color, withLabel, reminder, images, checklist, priority, inFolder);
+    return addNote(title, content, color, withLabel, reminder, images, checklist, priority, inFolder, attachments);
   }, [addNote, activeLabel, activeFolder, view]);
 
   const handleMoveToFolderGlow = useCallback((id: string, folderId: string | null) => {

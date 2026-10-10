@@ -26,6 +26,10 @@ import { logDiag } from "@/lib/diagnostics";
  * Room suffix `-img2`: the v1 transport carried base64 under FNV hashes; a
  * peer still running it must not read binary values it doesn't understand.
  *
+ * Załączniki (`Note.attachments`) jadą tym samym torem, ale tylko do
+ * `ATTACHMENT_SYNC_MAX_BYTES` — patrz `yjsStore.syncableRefs()`; większe są
+ * lokalne dla urządzenia.
+ *
  * Known limitation: only two devices online with sync connected AT THE SAME
  * TIME exchange images live — same requirement SyncSettings.tsx states for text.
  */
@@ -49,7 +53,7 @@ function isWireImage(v: unknown): v is WireImage {
 
 async function mirrorLocalImages(map: Y.Map<WireImage>, token: number): Promise<void> {
   const images = yjsStore.images;
-  for (const ref of yjsStore.referencedImages()) {
+  for (const ref of yjsStore.syncableRefs()) {
     if (token !== startToken) return;
     if (map.has(ref) || !images.has(ref)) continue;
     const rec = await images.get(ref);
@@ -60,7 +64,7 @@ async function mirrorLocalImages(map: Y.Map<WireImage>, token: number): Promise<
 /** Fills in images a manifest expects, this device lacks and a connected peer already sent. */
 async function reconcileMissingImages(map: Y.Map<WireImage>, token: number): Promise<void> {
   const images = yjsStore.images;
-  for (const ref of yjsStore.referencedImages()) {
+  for (const ref of yjsStore.syncableRefs()) {
     if (token !== startToken) return;
     if (images.has(ref)) continue;
     const wire = map.get(ref);

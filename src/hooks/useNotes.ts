@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { yjsStore } from "@/lib/yjsStore";
 import { versionsStore } from "@/lib/versionsStore";
 import type { NotePriority } from "@/lib/notePriority";
+import type { Attachment } from "@/lib/attachments";
 
 export type NoteColor = "default" | "coral" | "peach" | "sand" | "mint" | "sage" | "sky" | "lavender" | "rose";
 
@@ -52,6 +53,8 @@ export interface Note {
   dailyDate?: string;
   /** Klucze SHA-256 w `imageStore` (manifest `imageHashes` w Y.Doc). Bajty poza dokumentem — patrz `lib/imageStore.ts`. */
   images: string[];
+  /** Pliki inne niż obrazy: manifest `attachments` w Y.Doc, bajty w `imageStore` — patrz `lib/attachments.ts`. Brak = bez załączników. */
+  attachments?: Attachment[];
   checklist: ChecklistItem[];
   folderId: string | null;
   order: number;
@@ -130,9 +133,9 @@ export function useNotes() {
   }, [notes]);
 
   /** Zwraca id utworzonej notatki — potrzebne, gdy wywołujący musi ją zaraz dopatchować. */
-  const addNote = useCallback((title: string, content: string, color: NoteColor = "default", labels: string[] = [], reminder: number | null = null, images: string[] = [], checklist: ChecklistItem[] = [], priority: NotePriority = "none", folderId: string | null = null): string => {
+  const addNote = useCallback((title: string, content: string, color: NoteColor = "default", labels: string[] = [], reminder: number | null = null, images: string[] = [], checklist: ChecklistItem[] = [], priority: NotePriority = "none", folderId: string | null = null, attachments: Attachment[] = []): string => {
     const now = Date.now();
-    const note: Note = { id: crypto.randomUUID(), title, content, color, pinned: false, archived: false, trashed: false, trashedAt: null, labels, reminder, priority, images, checklist, folderId, order: 0, createdAt: now, updatedAt: now };
+    const note: Note = { id: crypto.randomUUID(), title, content, color, pinned: false, archived: false, trashed: false, trashedAt: null, labels, reminder, priority, images, ...(attachments.length ? { attachments } : {}), checklist, folderId, order: 0, createdAt: now, updatedAt: now };
     yjsStore.upsertNote(note);
     return note.id;
   }, []);

@@ -11,6 +11,7 @@ import { logDiag } from "@/lib/diagnostics";
 import { imageStore, isDataUrl } from "@/lib/imageStore";
 import { restoreShifts, shiftStore, shiftsReady } from "@/lib/shifts/store";
 import { migrate } from "@/lib/shifts/model";
+import { BACKUP_ATTACHMENTS_BUDGET_BYTES, formatFileSize, type Attachment } from "@/lib/attachments";
 
 /**
  * Granica plików: na zewnątrz obrazy jadą jako data URL-e (plik ma działać
@@ -38,13 +39,49 @@ export async function exportToJSON(notes: Note[], filename?: string): Promise<{ 
   return { filename: name, size: new Blob([data]).size };
 }
 
-/** Zawartość pełnego backupu v2 (bez zapisu do pliku). */
-export async function buildFullBackup(): Promise<FullBackup> {
+/** Załączniki, których bajtów nie ma w pliku backupu — do ostrzeżenia dla użytkownika. */
+export interface BackupAttachmentReport {
+  /** Pominięte, bo przekroczyłyby budżet rozmiaru backupu. */
+  tooLarge: Attachment[];
+  /** Manifest jest, ale bajtów nie ma na tym urządzeniu (np. plik dodany na innym). */
+  missing: Attachment[];
+}
+
+/** Zdanie do toastu o pominiętych załącznikach; `null`, gdy wszystko weszło. */
+export function describeSkippedAttachments(r?: BackupAttachmentReport): string | null {
+  if (!r) return null;
+  const n = r.tooLarge.length + r.missing.length;
+  if (!n) return null;
+  const parts: string[] = [];
+  if (r.tooLarge.length) parts.push(`${r.tooLarge.length} za duże na backup (limit ${formatFileSize(BACKUP_ATTACHMENTS_BUDGET_BYTES)} na wszystkie pliki)`);
+  if (r.missing.length) parts.push(`${r.missing.length} nieobecne na tym urządzeniu`);
+  return `Pominięte załączniki: ${parts.join(", ")}. Zostaną w notatkach jako wpisy bez zawartości.`;
+}
+
+/** Bajty załączników do backupu v3 w ramach budżetu; najpierw mniejsze, żeby weszło ich jak najwięcej. */
+async function collectAttachmentBlobs(): Promise<{ blobs: Record<string, string>; report: BackupAttachmentReport }> {
+  const report: BackupAttachmentReport = { tooLarge: [], missing: [] };
+  const blobs: Record<string, string> = {};
+  let used = 0;
+  const all = [...yjsStore.referencedAttachments().values()].sort((a, b) => a.size - b.size);
+  for (const a of all) {
+    if (used + a.size > BACKUP_ATTACHMENTS_BUDGET_BYTES) { report.tooLarge.push(a); continue; }
+    const dataUrl = await imageStore.getDataUrl(a.hash);
+    if (!dataUrl) { report.missing.push(a); continue; }
+    blobs[a.hash] = dataUrl;
+    used += a.size;
+  }
+  return { blobs, report };
+}
+
+/** Zawartość pełnego backupu v3 (bez zapisu do pliku) + raport o pominiętych załącznikach. */
+export async function buildFullBackupWithReport(): Promise<{ backup: FullBackup; attachments: BackupAttachmentReport }> {
   await yjsStore.ready();
   await versionsStore.load();
   await shiftsReady();
-  return {
-    version: 2,
+  const { blobs, report } = await collectAttachmentBlobs();
+  const backup: FullBackup = {
+    version: 3,
     exportedAt: Date.now(),
     notes: await withEmbeddedImages(yjsStore.projectNotes()),
     labels: yjsStore.projectLabels(),
@@ -54,7 +91,13 @@ export async function buildFullBackup(): Promise<FullBackup> {
     achievements: readKeys([ACHIEVEMENTS_KEY])[ACHIEVEMENTS_KEY],
     // Ten sam JSON co dawny zapis w localStorage — starsze wersje aplikacji go odczytają.
     shifts: JSON.stringify(shiftStore.get()),
+    ...(Object.keys(blobs).length ? { attachmentBlobs: blobs } : {}),
   };
+  return { backup, attachments: report };
+}
+
+export async function buildFullBackup(): Promise<FullBackup> {
+  return (await buildFullBackupWithReport()).backup;
 }
 
 /**
@@ -65,8 +108,8 @@ export async function buildFullBackup(): Promise<FullBackup> {
 export async function exportFullBackup(
   filename?: string,
   { allowDownload = true }: { allowDownload?: boolean } = {},
-): Promise<{ filename: string; size: number; savedToFile: boolean; downloaded: boolean }> {
-  const backup = await buildFullBackup();
+): Promise<{ filename: string; size: number; savedToFile: boolean; downloaded: boolean; attachments: BackupAttachmentReport }> {
+  const { backup, attachments } = await buildFullBackupWithReport();
   const data = JSON.stringify(backup, null, 2);
   const name = filename || `kaczy-full-backup-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
   const savedToFile = await tryWriteBackupToFile(data);
@@ -74,10 +117,11 @@ export async function exportFullBackup(
   // auto-backup przekazuje `allowDownload: false` i prosi o kliknięcie.
   const downloaded = !savedToFile && allowDownload;
   if (downloaded) download(data, name, "application/json");
-  return { filename: name, size: new Blob([data]).size, savedToFile, downloaded };
+  return { filename: name, size: new Blob([data]).size, savedToFile, downloaded, attachments };
 }
 
-const MAX_IMPORT_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
+// Załączniki (do 40 MB surowych, ~53 MB jako base64) mieszczą się obok notatek i obrazów.
+const MAX_IMPORT_FILE_SIZE = 120 * 1024 * 1024; // 120 MB
 
 /**
  * Ustawienia wchodzące do pełnego backupu. Świadomie **bez** `kaczy.sync.v1`
@@ -138,8 +182,9 @@ export interface RestoreOptions { versions: boolean; settings: boolean; achievem
  */
 export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions): Promise<void> {
   await yjsStore.ready();
-  // Obrazy najpierw: błąd zapisu (brak miejsca) przerywa przed destrukcyjnym replaceAll.
+  // Obrazy i załączniki najpierw: błąd zapisu (brak miejsca) przerywa przed destrukcyjnym replaceAll.
   const notes = await withStoredImages(backup.notes);
+  if (backup.attachmentBlobs) await imageStore.ingest(Object.values(backup.attachmentBlobs));
   yjsStore.replaceAll(notes, backup.folders, backup.labels);
   if (opts.versions && backup.versions) {
     await versionsStore.load();
@@ -193,6 +238,10 @@ export async function exportToMarkdown(notes: Note[]) {
     if (images.length) {
       lines.push("");
       images.forEach((img, i) => lines.push(`![obraz ${i + 1}](${img})`));
+    }
+    if (note.attachments?.length) {
+      // Pliki zostają w aplikacji — eksport tekstowy tylko o nich informuje.
+      lines.push("", `*Załączniki (pliki nie są częścią eksportu): ${note.attachments.map((a) => `${a.name} (${formatFileSize(a.size)})`).join(", ")}*`);
     }
     lines.push("", "---", "");
   }
@@ -249,6 +298,9 @@ h1{font-size:1.8rem;margin-bottom:.2rem}
       html += `<div class="images">`;
       images.forEach((img) => { html += `<img src="${img}" alt="">`; });
       html += `</div>`;
+    }
+    if (note.attachments?.length) {
+      html += `<p class="labels">Załączniki (pliki nie są częścią eksportu): ${escape(note.attachments.map((a) => `${a.name} (${formatFileSize(a.size)})`).join(", "))}</p>`;
     }
     html += `</div>\n`;
   }

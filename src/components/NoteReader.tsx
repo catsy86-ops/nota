@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { tween } from "@/lib/motion";
 import { wordsPl } from "@/lib/plural";
 import { NoteImage } from "./NoteImage";
+import { AttachmentsReadOnlyList } from "./AttachmentsList";
 
 /**
  * Jedno miejsce czytania notatki (wcześniej: szybki podgląd w `NoteGrid`
@@ -282,7 +283,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                 <MarkdownRenderer content={note.content} knownTitles={knownTitles} onWikiClick={handleWiki} />
               </div>
             ) : (
-              !note.checklist?.length && !note.images?.length && <p className="text-muted-foreground italic text-sm">Pusta notatka.</p>
+              !note.checklist?.length && !note.images?.length && !note.attachments?.length && <p className="text-muted-foreground italic text-sm">Pusta notatka.</p>
             )}
 
             {note.checklist && note.checklist.length > 0 && (
@@ -302,6 +303,8 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                 ))}
               </div>
             )}
+
+            <AttachmentsReadOnlyList attachments={note.attachments} />
 
             {backlinks.length > 0 && (
               <div className="mt-8 pt-4 border-t border-border/50" style={present ? { fontSize: "0.95rem" } : undefined}>

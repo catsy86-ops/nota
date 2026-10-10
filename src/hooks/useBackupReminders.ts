@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { toast } from "sonner";
 import type { Note } from "@/hooks/useNotes";
-import { exportFullBackup } from "@/lib/exportNotes";
+import { describeSkippedAttachments, exportFullBackup } from "@/lib/exportNotes";
 import { isBackupDue, markBackup, daysSinceBackup, getLastBackup, oldestCreatedAt } from "@/lib/backupReminder";
 
 export interface BackupReminderPrefs {
@@ -22,12 +22,13 @@ export function useBackupReminders(prefs: BackupReminderPrefs, notes: Note[], ar
         // Bez gestu użytkownika działa tylko zapis do wybranego pliku
         // (File System Access). Inaczej nie udajemy pobrania „w tle” —
         // prosimy o jedno kliknięcie, a backup liczy się dopiero wtedy.
-        const { filename, size, savedToFile } = await exportFullBackup(undefined, { allowDownload: false });
+        const { filename, size, savedToFile, attachments } = await exportFullBackup(undefined, { allowDownload: false });
         const count = notes.length + archivedNotes.length;
         if (savedToFile) {
           markBackup();
           const kb = Math.max(1, Math.round(size / 1024));
-          toast.success("Auto-backup zapisany", { description: `${filename} • ${kb} KB • ${count} notatek`, duration: 8000 });
+          const skipped = describeSkippedAttachments(attachments);
+          toast.success("Auto-backup zapisany", { description: `${filename} • ${kb} KB • ${count} notatek${skipped ? ` — ${skipped}` : ""}`, duration: skipped ? 14000 : 8000 });
           return;
         }
         toast("Czas na backup", {
