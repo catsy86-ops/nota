@@ -47,6 +47,8 @@ interface Props {
   onShow: (id: string, mode: ReaderMode) => void;
   /** Wikilink → id notatki o tym tytule, jeśli istnieje. */
   resolveTitle: (title: string) => string | undefined;
+  /** Odhaczenie pozycji listy prosto w czytniku; brak = lista tylko do odczytu. */
+  onToggleChecklist?: (noteId: string, itemId: string) => void;
 }
 
 const ZOOM_DEFAULT = 1.1;
@@ -101,7 +103,7 @@ function buildSnippets(text: string, tokens: string[], max = 3) {
   return out;
 }
 
-export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, onClose, onEdit, onShow, resolveTitle }: Props) {
+export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, onClose, onEdit, onShow, resolveTitle, onToggleChecklist }: Props) {
   const present = mode === "present";
   const [zoom, setZoom] = useState(ZOOM_DEFAULT);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -295,8 +297,18 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
             {note.checklist && note.checklist.length > 0 && (
               <ul className={cn("space-y-1", present ? "mt-6" : "mt-2 text-sm")}>
                 {note.checklist.map((c) => (
-                  <li key={c.id} className={cn("flex gap-2", c.checked && "line-through text-muted-foreground")}>
-                    <span aria-hidden>{c.checked ? "☑" : "☐"}</span><span>{highlight(c.text)}</span>
+                  <li key={c.id} className={cn("flex gap-2", c.indent === 1 && "ml-6", c.checked && "line-through text-muted-foreground")}>
+                    {onToggleChecklist && !note.locked ? (
+                      <button type="button" role="checkbox" aria-checked={c.checked}
+                        aria-label={`${c.checked ? "Odznacz" : "Odhacz"}: ${c.text || "element"}`}
+                        onClick={() => onToggleChecklist(note.id, c.id)}
+                        className="shrink-0 rounded outline-none focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-8 coarse:min-w-8">
+                        <span aria-hidden>{c.checked ? "☑" : "☐"}</span>
+                      </button>
+                    ) : (
+                      <span aria-hidden>{c.checked ? "☑" : "☐"}</span>
+                    )}
+                    <span>{highlight(c.text)}</span>
                   </li>
                 ))}
               </ul>

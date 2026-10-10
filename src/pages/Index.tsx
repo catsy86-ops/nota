@@ -44,6 +44,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
+import { downloadNotesZip } from "@/lib/exportZip";
 import { DndContext, pointerWithin } from "@dnd-kit/core";
 import { fireworks, megaCelebrate } from "@/lib/celebrate";
 import { glowPulse, glowStreak, centerOf, pointOfNote } from "@/lib/glowTrail";
@@ -885,6 +886,11 @@ const Index = () => {
           onEdit={editFromReader}
           onShow={showInReader}
           resolveTitle={(title) => resolveWikiTarget(title, allNotesForLinks)?.id}
+          onToggleChecklist={(noteId, itemId) => {
+            const n = [...notes, ...archivedNotes].find((x) => x.id === noteId);
+            if (!n) return;
+            updateNote(noteId, { checklist: n.checklist.map((c) => (c.id === itemId ? { ...c, checked: !c.checked } : c)) });
+          }}
         />
       )}
     </AnimatePresence>
@@ -921,6 +927,14 @@ const Index = () => {
       view={view === "trash" ? "trash" : view === "archive" ? "archive" : "other"}
       onRestore={handleBulkRestoreView}
       onDeleteForever={() => setConfirmDeleteIds(Array.from(selectedIds))}
+      onExport={() => {
+        const ids = selectedIds;
+        const chosen = [...notes, ...archivedNotes, ...trashedNotes].filter((n) => ids.has(n.id));
+        const zip = downloadNotesZip(chosen, folders, `notatki-${new Date().toISOString().slice(0, 10)}.zip`);
+        toast.success(`Pobrano ${zip.count} ${zip.count === 1 ? "notatkę" : "notatek"} (ZIP z plikami .md)`, {
+          description: zip.skippedPrivate ? `Pominięto ${zip.skippedPrivate} prywatnych — ich treść jest zaszyfrowana.` : "Bez obrazów i załączników. Da się je wczytać z powrotem przez Importuj → Markdown.",
+        });
+      }}
     />
     <Suspense fallback={null}>
       <OnboardingTour />

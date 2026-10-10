@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Archive, ArchiveRestore, Trash2, Palette, X, CheckSquare, Undo2 } from "lucide-react";
+import { Archive, ArchiveRestore, Download, Trash2, Palette, X, CheckSquare, Undo2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ColorPicker } from "./ColorPicker";
 import type { NoteColor } from "@/hooks/useNotes";
@@ -20,9 +20,11 @@ interface Props {
   onRestore?: () => void;
   /** Trwałe usunięcie (tylko Kosz) — po potwierdzeniu. */
   onDeleteForever?: () => void;
+  /** Eksport zaznaczonych do ZIP z osobnymi plikami `.md`. */
+  onExport?: () => void;
 }
 
-export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArchive, onTrash, onColor, view = "other", onRestore, onDeleteForever }: Props) {
+export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArchive, onTrash, onColor, view = "other", onRestore, onDeleteForever, onExport }: Props) {
   const inTrash = view === "trash";
   const inArchive = view === "archive";
   return (
@@ -62,6 +64,11 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
           {(inTrash || inArchive) && onRestore && (
             <IconButton onClick={onRestore} title={inTrash ? "Przywróć z kosza" : "Przywróć z archiwum"} aria-label={inTrash ? "Przywróć z kosza" : "Przywróć z archiwum"}>
               {inTrash ? <Undo2 className="w-4 h-4" /> : <ArchiveRestore className="w-4 h-4" />}
+            </IconButton>
+          )}
+          {onExport && (
+            <IconButton onClick={onExport} title="Eksportuj zaznaczone (ZIP z plikami .md)" aria-label="Eksportuj zaznaczone">
+              <Download className="w-4 h-4" />
             </IconButton>
           )}
           {!inTrash && !inArchive && (

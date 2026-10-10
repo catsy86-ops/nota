@@ -4,6 +4,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { exportToJSON, exportToMarkdown, exportToHTML } from "@/lib/exportNotes";
 import { markBackup } from "@/lib/backupReminder";
+import { downloadNotesZip } from "@/lib/exportZip";
+import { toast } from "sonner";
 import { OPEN_EXTERNAL_IMPORT_EVENT } from "@/hooks/useImportExport";
 
 interface ImportExportMenuProps {
@@ -17,7 +19,7 @@ interface ImportExportMenuProps {
 
 /** Eksport notatek (JSON, PDF, Markdown, HTML) import z JSON oraz z Google Keep / Markdown — w nagłówku i w „Więcej” na telefonie. */
 export function ImportExportMenu({ children, onImport, onDone, align = "end" }: ImportExportMenuProps) {
-  const { notes, archivedNotes } = useNotesContext();
+  const { notes, archivedNotes, folders } = useNotesContext();
   const all = () => [...notes, ...archivedNotes];
   const run = (fn: () => void) => () => { fn(); onDone?.(); };
   return (
@@ -35,6 +37,15 @@ export function ImportExportMenu({ children, onImport, onDone, align = "end" }: 
         <DropdownMenuItem onClick={run(() => exportToMarkdown(all()))}>
           <FileText className="w-4 h-4 mr-2" />
           Eksportuj jako Markdown
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={run(() => {
+          const zip = downloadNotesZip(all(), folders, `notatki-${new Date().toISOString().slice(0, 10)}.zip`);
+          toast.success(`Pobrano ${zip.count} notatek (ZIP z plikami .md)`, {
+            description: zip.skippedPrivate ? `Pominięto ${zip.skippedPrivate} prywatnych — ich treść jest zaszyfrowana.` : "Foldery jako katalogi; bez obrazów i załączników.",
+          });
+        })}>
+          <FileText className="w-4 h-4 mr-2" />
+          Eksportuj jako ZIP z plikami .md
         </DropdownMenuItem>
         <DropdownMenuItem onClick={run(() => exportToHTML(all()))}>
           <FileText className="w-4 h-4 mr-2" />
