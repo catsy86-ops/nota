@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, Brain, Keyboard, BookOpen, History } from "lucide-react";
+import { StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, Brain, Keyboard, BookOpen, History, Network } from "lucide-react";
+import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes } from "@/lib/searchNotes";
 import { loadRecentSearches, saveRecentSearch } from "@/lib/recentSearches";
@@ -104,6 +105,9 @@ export function CommandPalette({
           </CommandItem>
           <CommandItem onSelect={() => run(onOpenStats)}>
             <Trophy className="w-4 h-4 mr-2" /> Statystyki i osiągnięcia
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => { requestLinkGraph(); onOpenStats(); })}>
+            <Network className="w-4 h-4 mr-2" /> Graf powiązań
           </CommandItem>
           <CommandItem onSelect={() => run(onOpenFocusMode)}>
             <Brain className="w-4 h-4 mr-2" /> Tryb skupienia
