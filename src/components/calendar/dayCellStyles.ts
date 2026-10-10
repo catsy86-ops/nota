@@ -1,4 +1,11 @@
+import type { ShiftType } from "@/lib/shifts";
+
 import { cn } from "@/lib/utils";
+
+/** Zmiana jako tekst: nazwa nieobecności albo nazwa z godzinami. */
+export function shiftLabel(shift: ShiftType): string {
+  return shift.kind === "absence" ? shift.name : `${shift.name} ${shift.start}–${shift.end}`;
+}
 
 /**
  * Wspólny wygląd siatki miesiąca — Kalendarz przypomnień i Grafik mają

@@ -4,7 +4,7 @@ import { CalendarPlus, Plus, Pencil, ArrowRight, Download } from "lucide-react";
 import { ReminderChip } from "./ReminderChip";
 import type { Occurrence } from "@/lib/reminderOccurrences";
 import { shiftInk, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
-import { shiftLabel } from "./DayCell";
+import { shiftLabel } from "./dayCellStyles";
 
 /**
  * Lista terminów wybranego dnia — tu mieszczą się pełne tytuły, których

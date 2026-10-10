@@ -6,16 +6,12 @@ import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
 import { cn } from "@/lib/utils";
 import { holidayName } from "@/lib/shifts/holidays";
 import { shiftInk, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
-import { dayCellClass, dayNumberClass, holidayDotClass, holidayNameClass } from "./dayCellStyles";
+import { dayCellClass, dayNumberClass, holidayDotClass, holidayNameClass, shiftLabel } from "./dayCellStyles";
 
 /** Ile chipów mieści się w komórce, zanim reszta zwinie się w „+N". */
 const MAX_CHIPS = 3;
 /** Kropka zajmuje ułamek szerokości chipa, więc na telefonie zmieści się ich więcej. */
 const MAX_DOTS = 4;
-
-export function shiftLabel(shift: ShiftType): string {
-  return shift.kind === "absence" ? shift.name : `${shift.name} ${shift.start}–${shift.end}`;
-}
 
 function terminy(n: number): string {
   if (n === 1) return "1 termin";
