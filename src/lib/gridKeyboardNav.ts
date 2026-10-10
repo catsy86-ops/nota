@@ -229,15 +229,29 @@ export function handleGridNavKey(e: KeyboardEvent) {
   sectionOf(nextId)?.handlers.scrollToNote(nextId);
 }
 
+/**
+ * Kliknięcie poza kaflem zdejmuje fokus siatki. Bez tego pierścień (a z nim
+ * blokada skrótów „g” + litera i A/P/D) zostawał na kaflu po każdym kliknięciu
+ * w notatkę aż do przeładowania strony.
+ */
+export function handleGridNavPointerDown(e: Pick<Event, "target">) {
+  if (state.focusedId === null) return;
+  const target = e.target;
+  if (target instanceof Element && target.closest("[data-note-id-wrap]")) return;
+  setState({ focusedId: null });
+}
+
 function attachKeyListener() {
   if (keyListenerAttached || typeof window === "undefined") return;
   window.addEventListener("keydown", handleGridNavKey);
+  window.addEventListener("pointerdown", handleGridNavPointerDown, true);
   keyListenerAttached = true;
 }
 
 function detachKeyListener() {
   if (!keyListenerAttached || typeof window === "undefined") return;
   window.removeEventListener("keydown", handleGridNavKey);
+  window.removeEventListener("pointerdown", handleGridNavPointerDown, true);
   keyListenerAttached = false;
 }
 
