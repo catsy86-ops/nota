@@ -25,7 +25,15 @@ const STEP = 15;
  */
 export function DayDialog({ dayKey, entry, types, onOpenChange }: DayDialogProps) {
   if (!dayKey) return null;
-  return <DayForm key={dayKey} dayKey={dayKey} entry={entry} types={types} onOpenChange={onOpenChange} />;
+  // Okno zostaje, gdy zmienia się dzień (np. skok z palety): remontuje się tylko treść
+  // i wjeżdża miękko, zamiast zamykać i otwierać cały dialog z overlayem.
+  return (
+    <Dialog open onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm">
+        <DayForm key={dayKey} dayKey={dayKey} entry={entry} types={types} onOpenChange={onOpenChange} />
+      </DialogContent>
+    </Dialog>
+  );
 }
 
 function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayKey: string }) {
@@ -60,13 +68,12 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
   }
 
   return (
-    <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader>
+    <>
+        <DialogHeader className="soft-swap">
           <DialogTitle className="font-display first-letter:uppercase">{format(date, "EEEE, d MMMM", { locale: pl })}</DialogTitle>
           {holiday && <DialogDescription className="text-destructive">{holiday} — dzień ustawowo wolny</DialogDescription>}
         </DialogHeader>
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); save(); }}>
+        <form className="space-y-4 soft-swap" onSubmit={(e) => { e.preventDefault(); save(); }}>
           <fieldset>
             <legend className="text-sm font-medium mb-2">Zmiana</legend>
             <div role="radiogroup" aria-label="Zmiana" className="flex flex-wrap gap-2">
@@ -142,7 +149,6 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
             <Button type="submit">Zapisz dzień</Button>
           </DialogFooter>
         </form>
-      </DialogContent>
-    </Dialog>
+    </>
   );
 }

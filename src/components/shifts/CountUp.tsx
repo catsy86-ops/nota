@@ -22,7 +22,10 @@ export function CountUp({ value, format, className }: CountUpProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const shown = useRef(value);
   const fmt = useRef(format);
-  fmt.current = format; // eslint-disable-line react-hooks/refs
+
+  useLayoutEffect(() => {
+    fmt.current = format;
+  });
 
   useLayoutEffect(() => {
     const el = ref.current;
