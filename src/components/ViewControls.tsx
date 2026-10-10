@@ -180,7 +180,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           )}
           <DropdownMenuSeparator />
           <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Priorytet</DropdownMenuLabel>
-          <div className="px-2 pb-2 flex items-center gap-1.5 flex-wrap">
+          <div className="px-2 pb-2 grid grid-cols-3 gap-1">
             <button
               onClick={() => setViewPref("filterPriority", "all")}
               className={cn("text-2xs px-2 py-1 rounded-md transition-colors", prefs.filterPriority === "all" ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted text-muted-foreground")}
@@ -192,7 +192,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
                 key={p}
                 onClick={() => setViewPref("filterPriority", p)}
                 className={cn(
-                  "flex items-center gap-1 text-2xs px-2 py-1 rounded-md transition-colors",
+                  "flex items-center justify-center gap-1 text-2xs px-2 py-1 rounded-md transition-colors",
                   prefs.filterPriority === p ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted text-muted-foreground"
                 )}
               >

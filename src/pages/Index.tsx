@@ -153,18 +153,31 @@ const Index = () => {
 
   // Odznaki w głównym widoku: jeden cichy toast na paczkę (import potrafi odblokować
   // kilka naraz), stałe `id` podmienia go zamiast piętrzyć. Szczegóły są w Statystykach.
-  const unlockedBatchRef = useRef<string[]>([]);
-  useAchievementTracker(notes, archivedNotes, allLabels, folders, (a) => {
-    unlockedBatchRef.current.push(a.title);
-    const titles = unlockedBatchRef.current;
+  // Nad otwartym oknem (edytor nowej notatki) odznaka by go zasłaniała — czeka, aż okno się zamknie.
+  const unlockedBatchRef = useRef<{ titles: string[]; description: string }>({ titles: [], description: "" });
+  const badgeTimerRef = useRef<number | null>(null);
+  const showBadgeToast = useCallback(() => {
+    if (document.querySelector('[role="dialog"][data-state="open"]')) {
+      badgeTimerRef.current = window.setTimeout(showBadgeToast, 1000);
+      return;
+    }
+    badgeTimerRef.current = null;
+    const { titles, description } = unlockedBatchRef.current;
+    const reset = () => { unlockedBatchRef.current = { titles: [], description: "" }; };
     toast(titles.length === 1 ? `Nowa odznaka: ${titles[0]}` : `Nowe odznaki: ${titles.length}`, {
       id: "achievements",
-      description: titles.length === 1 ? a.description : titles.join(", "),
+      description: titles.length === 1 ? description : titles.join(", "),
       duration: 4000,
       action: { label: "Zobacz", onClick: () => setStatsOpen(true) },
-      onAutoClose: () => { unlockedBatchRef.current = []; },
-      onDismiss: () => { unlockedBatchRef.current = []; },
+      onAutoClose: reset,
+      onDismiss: reset,
     });
+  }, []);
+  useEffect(() => () => { if (badgeTimerRef.current !== null) clearTimeout(badgeTimerRef.current); }, []);
+  useAchievementTracker(notes, archivedNotes, allLabels, folders, (a) => {
+    unlockedBatchRef.current.titles.push(a.title);
+    unlockedBatchRef.current.description = a.description;
+    if (badgeTimerRef.current === null) showBadgeToast();
   });
 
   useBackupReminders(prefs, notes, archivedNotes);
