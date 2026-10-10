@@ -8,6 +8,11 @@ import { normalizeAttachments, isAttachmentSyncable, type Attachment } from "@/l
 import { imageStore as defaultImageStore, isDataUrl, type ImageStore } from "@/lib/imageStore";
 import type { Note, Folder, ChecklistItem } from "@/hooks/useNotes";
 import { logDiag } from "@/lib/diagnostics";
+import {
+  NOTE_COLORS, PRIORITIES, REMINDER_REPEATS, REMOTE_LIMITS as LIM,
+  safeBool, safeDailyDate, safeEnum, safeNullableNumber, safeNullableString, safeNumber,
+  safeOptionalEnum, safeOptionalNumber, safeReminderDay, safeString, safeStringArray,
+} from "@/lib/safeProjection";
 
 /**
  * Yjs-backed store for notes/folders/labels — the data layer that will let a
@@ -97,12 +102,13 @@ function plainChecklistFromY(value: unknown): ChecklistItem[] {
   if (value instanceof Y.Map) {
     const items: (ChecklistItem & { order: number })[] = [];
     value.forEach((v, id) => {
+      if (items.length >= LIM.checklistItems) return;
       if (v instanceof Y.Map) {
         items.push({
-          id,
-          text: (v.get("text") as string) ?? "",
-          checked: Boolean(v.get("checked")),
-          order: (v.get("order") as number) ?? 0,
+          id: id.length > LIM.id ? id.slice(0, LIM.id) : id,
+          text: safeString(v.get("text"), "", LIM.checklistText),
+          checked: safeBool(v.get("checked")),
+          order: safeNumber(v.get("order")),
         });
       }
     });
@@ -110,7 +116,12 @@ function plainChecklistFromY(value: unknown): ChecklistItem[] {
     return items.map(({ order: _order, ...rest }) => rest);
   }
   // Legacy notes persisted before checklist became a Y.Map — self-heals on next patch.
-  if (Array.isArray(value)) return value as ChecklistItem[];
+  if (Array.isArray(value)) {
+    return value
+      .filter((i): i is Record<string, unknown> => !!i && typeof i === "object" && typeof (i as { id?: unknown }).id === "string")
+      .slice(0, LIM.checklistItems)
+      .map((i) => ({ id: safeString(i.id, "", LIM.id), text: safeString(i.text, "", LIM.checklistText), checked: safeBool(i.checked) }));
+  }
   return [];
 }
 
@@ -196,65 +207,49 @@ function yNoteFromPlain(note: Note): YNote {
   return y;
 }
 
+/**
+ * Wartości z dokumentu mogą pochodzić od peera — każde pole przechodzi przez
+ * `safeProjection` (zły typ = wartość domyślna), więc UI dostaje zawsze `Note`
+ * zgodny z typem, a nie to, co ktoś wpisał do `Y.Map`.
+ */
 function plainFromYNote(id: string, y: YNote): Note {
-  const vault = y.get("locked") === true ? y.get("vault") : undefined;
-  if (typeof vault === "string") {
+  const vaultRaw = y.get("locked") === true ? y.get("vault") : undefined;
+  const dailyDate = safeDailyDate(y.get("dailyDate"));
+  const common = {
+    ...(dailyDate ? { dailyDate } : {}),
+    id,
+    color: safeEnum(y.get("color"), NOTE_COLORS, "default"),
+    pinned: safeBool(y.get("pinned")),
+    archived: safeBool(y.get("archived")),
+    trashed: safeBool(y.get("trashed")),
+    trashedAt: safeNullableNumber(y.get("trashedAt")),
+    reminder: safeNullableNumber(y.get("reminder")),
+    reminderRepeat: safeOptionalEnum(y.get("reminderRepeat"), REMINDER_REPEATS),
+    reminderDay: safeReminderDay(y.get("reminderDay")),
+    reminderRepeatUntil: safeOptionalNumber(y.get("reminderRepeatUntil")),
+    priority: safeEnum(y.get("priority"), PRIORITIES, "none"),
+    folderId: safeNullableString(y.get("folderId"), LIM.id),
+    order: safeNumber(y.get("order")),
+    createdAt: safeNumber(y.get("createdAt")),
+    updatedAt: safeNumber(y.get("updatedAt")),
+  };
+  if (typeof vaultRaw === "string" && vaultRaw.length <= LIM.vault) {
     // Projekcja notatki prywatnej jest zredagowana z konstrukcji: wyszukiwarka, graf,
     // przegląd, eksport i backup widzą pustą notatkę z szyfrogramem.
-    const dailyDate = y.get("dailyDate");
-    return {
-      ...(typeof dailyDate === "string" ? { dailyDate } : {}),
-      id,
-      title: "",
-      content: "",
-      color: (y.get("color") as Note["color"]) ?? "default",
-      pinned: Boolean(y.get("pinned")),
-      archived: Boolean(y.get("archived")),
-      trashed: Boolean(y.get("trashed")),
-      trashedAt: (y.get("trashedAt") as number | null) ?? null,
-      labels: NO_LABELS,
-      reminder: (y.get("reminder") as number | null) ?? null,
-      reminderRepeat: y.get("reminderRepeat") as Note["reminderRepeat"],
-      reminderDay: (y.get("reminderDay") as number | undefined) ?? undefined,
-      reminderRepeatUntil: (y.get("reminderRepeatUntil") as number | undefined) ?? undefined,
-      priority: (y.get("priority") as Note["priority"]) ?? "none",
-      images: NO_IMAGES,
-      locked: true,
-      vault,
-      checklist: NO_CHECKLIST,
-      folderId: (y.get("folderId") as string | null) ?? null,
-      order: (y.get("order") as number) ?? 0,
-      createdAt: (y.get("createdAt") as number) ?? 0,
-      updatedAt: (y.get("updatedAt") as number) ?? 0,
-    };
+    return { ...common, title: "", content: "", labels: NO_LABELS, images: NO_IMAGES, locked: true, vault: vaultRaw, checklist: NO_CHECKLIST };
   }
   const content = y.get("content");
   const images = y.get("imageHashes");
   const attachments = plainAttachments(y.get("attachments"));
-  const dailyDate = y.get("dailyDate");
+  const labels = y.get("labels");
   return {
-    ...(typeof dailyDate === "string" ? { dailyDate } : {}),
-    id,
-    title: (y.get("title") as string) ?? "",
-    content: content instanceof Y.Text ? content.toString() : ((content as string) ?? ""),
-    color: (y.get("color") as Note["color"]) ?? "default",
-    pinned: Boolean(y.get("pinned")),
-    archived: Boolean(y.get("archived")),
-    trashed: Boolean(y.get("trashed")),
-    trashedAt: (y.get("trashedAt") as number | null) ?? null,
-    labels: (y.get("labels") as string[] | undefined) ?? [],
-    reminder: (y.get("reminder") as number | null) ?? null,
-    reminderRepeat: y.get("reminderRepeat") as Note["reminderRepeat"],
-    reminderDay: (y.get("reminderDay") as number | undefined) ?? undefined,
-    reminderRepeatUntil: (y.get("reminderRepeatUntil") as number | undefined) ?? undefined,
-    priority: (y.get("priority") as Note["priority"]) ?? "none",
-    images: Array.isArray(images) ? (images as string[]) : NO_IMAGES,
+    ...common,
+    title: safeString(y.get("title"), "", LIM.title),
+    content: content instanceof Y.Text ? content.toString() : safeString(content),
+    labels: Array.isArray(labels) && labels.length ? safeStringArray(labels, LIM.labels, LIM.label) : NO_LABELS,
+    images: Array.isArray(images) && images.length ? safeStringArray(images, LIM.imageRefs, LIM.imageRef) : NO_IMAGES,
     ...(attachments.length ? { attachments } : {}),
     checklist: plainChecklistFromY(y.get("checklist")),
-    folderId: (y.get("folderId") as string | null) ?? null,
-    order: (y.get("order") as number) ?? 0,
-    createdAt: (y.get("createdAt") as number) ?? 0,
-    updatedAt: (y.get("updatedAt") as number) ?? 0,
   };
 }
 
@@ -271,15 +266,16 @@ function yFolderFromPlain(folder: Folder): YFolder {
 }
 
 function plainFromYFolder(id: string, y: YFolder): Folder {
+  const createdAt = safeNumber(y.get("createdAt"));
   return {
     id,
-    name: (y.get("name") as string) ?? "",
-    color: (y.get("color") as Folder["color"]) ?? "default",
-    emoji: (y.get("emoji") as string | null) ?? null,
-    parentId: (y.get("parentId") as string | null) ?? null,
-    order: (y.get("order") as number) ?? 0,
-    createdAt: (y.get("createdAt") as number) ?? 0,
-    updatedAt: (y.get("updatedAt") as number | undefined) ?? (y.get("createdAt") as number) ?? 0,
+    name: safeString(y.get("name"), "", LIM.folderName),
+    color: safeEnum(y.get("color"), NOTE_COLORS, "default"),
+    emoji: safeNullableString(y.get("emoji"), LIM.emoji),
+    parentId: safeNullableString(y.get("parentId"), LIM.id),
+    order: safeNumber(y.get("order")),
+    createdAt,
+    updatedAt: safeOptionalNumber(y.get("updatedAt")) ?? createdAt,
   };
 }
 
@@ -649,7 +645,8 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     doc.transact(() => {
       labelsMap.delete(label);
       notesMap.forEach((y) => {
-        const labels = (y.get("labels") as string[] | undefined) ?? [];
+        const raw = y.get("labels");
+        const labels = Array.isArray(raw) ? (raw as string[]) : [];
         if (labels.includes(label)) y.set("labels", labels.filter((l) => l !== label));
       });
     });
@@ -661,7 +658,8 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
       if (labelsMap.has(oldLabel)) labelsMap.delete(oldLabel);
       labelsMap.set(newLabel, true);
       notesMap.forEach((y) => {
-        const labels = (y.get("labels") as string[] | undefined) ?? [];
+        const raw = y.get("labels");
+        const labels = Array.isArray(raw) ? (raw as string[]) : [];
         if (labels.includes(oldLabel)) {
           y.set("labels", labels.map((l) => (l === oldLabel ? newLabel : l)));
         }
