@@ -56,3 +56,19 @@ test("link /notatka/:id otwiera notatkę, także z Archiwum", async ({ page }) =
   await expect(page.getByText("Tej notatki już nie ma")).toBeVisible();
   await expect(page).toHaveURL(/\/$/);
 });
+
+test("skrót PWA /?new=1 otwiera nową notatkę i czyści parametr z adresu", async ({ page }) => {
+  await page.goto("/?new=1");
+  await expect(page.getByPlaceholder("Tytuł")).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+  expect(new URL(page.url()).search).toBe("");
+});
+
+test("skróty PWA do widoków otwierają Dziś, Grafik i Przypomnienia", async ({ page }) => {
+  await page.goto("/dzis");
+  await expect(page.getByRole("heading", { name: "Dziś", level: 1 })).toBeVisible();
+  await page.goto("/grafik");
+  await expect(page.getByRole("heading", { name: "Grafik" })).toBeVisible();
+  await page.goto("/przypomnienia");
+  await expect(page.getByRole("heading", { name: "Przypomnienia", level: 1 })).toBeVisible();
+});
