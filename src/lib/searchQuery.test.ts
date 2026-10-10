@@ -96,7 +96,7 @@ describe("suggestOperators", () => {
     expect(suggestOperators("folder:", ctx).items.map((i) => i.label)).toEqual(["Projekty", "Dom"]);
   });
   it("podpowiada operatory po pierwszych literach", () => {
-    expect(suggestOperators("br", ctx).items.map((i) => i.label)).toEqual(["brak:przypomnienia"]);
+    expect(suggestOperators("br", ctx).items.map((i) => i.label)).toEqual(["brak:przypomnienia", "brak:etykiety", "brak:folderu"]);
     expect(suggestOperators("zakupy ", ctx).items).toEqual([]);
   });
 });
@@ -124,5 +124,29 @@ describe("highlightTokens", () => {
     expect(highlightTokens("label:x przypięte kupić mleko")).toEqual(["kupić", "mleko"]);
     expect(highlightTokens("")).toEqual([]);
     expect(highlightTokens(undefined)).toEqual([]);
+  });
+});
+
+describe("operatory: priorytet, załącznik, brak etykiety/folderu, negacja", () => {
+  const base: MatchNote = { labels: [], color: "default", folderId: null, reminder: null, pinned: false, updatedAt: 0 };
+  const test = (q: string, note: Partial<MatchNote>) => matchesClauses({ ...base, ...note }, parseSearchQuery(q).clauses);
+
+  it("priorytet i załącznik", () => {
+    expect(test("priorytet:wysoki", { priority: "high" })).toBe(true);
+    expect(test("priorytet:wysoki", { priority: "low" })).toBe(false);
+    expect(test("ma:załącznik", { attachments: [{}] })).toBe(true);
+    expect(test("ma:zalacznik", {})).toBe(false);
+  });
+
+  it("brak etykiety i folderu", () => {
+    expect(test("brak:etykiety", {})).toBe(true);
+    expect(test("brak:etykiety", { labels: ["x"] })).toBe(false);
+    expect(test("brak:folderu", { folderId: "f" })).toBe(false);
+  });
+
+  it("negacja odwraca operator, a zwykły tekst z minusem zostaje tekstem", () => {
+    expect(test("-etykieta:praca", { labels: ["praca"] })).toBe(false);
+    expect(test("-etykieta:praca", { labels: ["dom"] })).toBe(true);
+    expect(parseSearchQuery("-kot").text).toBe("-kot");
   });
 });

@@ -8,6 +8,8 @@
  *   przypięte
  *   lista:otwarte             (checklista z nieodhaczoną pozycją)
  *   starsze:30d  nowsze:7d    (d = dni, t = tygodnie, m = miesiące; sama liczba = dni)
+ *   priorytet:wysoki|sredni|niski   ma:zalacznik   brak:etykiety  brak:folderu
+ *   -operator:wartość         (negacja, np. -etykieta:praca)
  * Wartość ze spacją w cudzysłowie: etykieta:"moja praca". Wiele operatorów = AND.
  * Nieznany operator i wszystko inne to zwykły tekst dla Fuse.
  */
@@ -23,7 +25,12 @@ export type Clause =
   | { type: "pinned" }
   | { type: "openList" }
   | { type: "older"; days: number }
-  | { type: "newer"; days: number };
+  | { type: "newer"; days: number }
+  | { type: "priority"; value: "low" | "medium" | "high" }
+  | { type: "attachment" }
+  | { type: "noLabel" }
+  | { type: "noFolder" }
+  | { type: "not"; clause: Clause };
 
 export interface ParsedQuery {
   clauses: Clause[];
@@ -79,10 +86,17 @@ function clauseFor(key: string, rawValue: string): Clause | null {
       if (["przypomnienie", "przypomnienia", "reminder"].includes(v)) return { type: "reminder" };
       if (["obraz", "obrazy", "obrazek", "zdjecie", "zdjecia", "image", "images"].includes(v)) return { type: "image" };
       if (["lista", "checklista", "checklist"].includes(v)) return { type: "checklist" };
+      if (["zalacznik", "zalaczniki", "plik", "pliki", "attachment", "attachments"].includes(v)) return { type: "attachment" };
       return null;
     case "brak":
       if (["przypomnienia", "przypomnienie", "reminder"].includes(v)) return { type: "noReminder" };
+      if (["etykiety", "etykieta", "label", "labels"].includes(v)) return { type: "noLabel" };
+      if (["folderu", "folder"].includes(v)) return { type: "noFolder" };
       return null;
+    case "priorytet": case "priority": {
+      const map: Record<string, "low" | "medium" | "high"> = { niski: "low", low: "low", sredni: "medium", medium: "medium", wysoki: "high", high: "high" };
+      return map[v] ? { type: "priority", value: map[v] } : null;
+    }
     case "lista":
       if (["otwarte", "otwarta", "open"].includes(v)) return { type: "openList" };
       return null;
@@ -103,10 +117,10 @@ export function parseSearchQuery(query: string): ParsedQuery {
   const clauses: Clause[] = [];
   const free: string[] = [];
   for (const tok of tokenize(query.trim())) {
-    const m = tok.match(/^([^:"\s]+):(.+)$/);
+    const m = tok.match(/^(-?)([^:"\s]+):(.+)$/);
     if (m) {
-      const clause = clauseFor(fold(m[1]), m[2]);
-      if (clause) { clauses.push(clause); continue; }
+      const clause = clauseFor(fold(m[2]), m[3]);
+      if (clause) { clauses.push(m[1] ? { type: "not", clause } : clause); continue; }
     } else if (["przypiete", "przypiety", "przypieta", "pinned"].includes(fold(tok))) {
       clauses.push({ type: "pinned" });
       continue;
@@ -133,6 +147,8 @@ export interface MatchNote {
   reminder: number | null;
   images?: string[];
   checklist?: { checked: boolean }[];
+  attachments?: unknown[];
+  priority?: string;
   pinned: boolean;
   updatedAt: number;
 }
@@ -157,8 +173,13 @@ function folderIdsByName(name: string, folders: MatchFolder[]): Set<string> {
 
 export function matchesClauses(note: MatchNote, clauses: Clause[], ctx: MatchContext = {}): boolean {
   const now = ctx.now ?? Date.now();
-  return clauses.every((c) => {
+  return clauses.every(function test(c: Clause): boolean {
     switch (c.type) {
+      case "not": return !test(c.clause);
+      case "priority": return (note.priority ?? "none") === c.value;
+      case "attachment": return (note.attachments ?? []).length > 0;
+      case "noLabel": return note.labels.length === 0;
+      case "noFolder": return !note.folderId;
       case "label": { const v = fold(c.value); return note.labels.some((l) => fold(l) === v); }
       case "folder": return !!note.folderId && folderIdsByName(c.value, ctx.folders ?? []).has(note.folderId);
       case "color": return fold(note.color) === fold(c.value);
