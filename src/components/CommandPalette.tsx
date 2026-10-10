@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, Brain, Keyboard, BookOpen } from "lucide-react";
+import { StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, Brain, Keyboard, BookOpen, History } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes } from "@/lib/searchNotes";
+import { loadRecentSearches, saveRecentSearch } from "@/lib/recentSearches";
 import { modShortcut } from "@/lib/platform";
 
 const NOTE_LIMIT = 30;
@@ -45,6 +46,8 @@ export function CommandPalette({
   onOpenShortcuts,
 }: Props) {
   const [search, setSearch] = useState("");
+  // Ostatnie zapytania, które zakończyły się otwarciem notatki (max 5, localStorage).
+  const [recent, setRecent] = useState<string[]>(loadRecentSearches);
   const matched = useMemo(() => searchNotes(notes, search), [notes, search]);
 
   function run(fn: () => void) {
@@ -70,6 +73,19 @@ export function CommandPalette({
             )}
           </div>
         </CommandEmpty>
+        {recent.length > 0 && !search.trim() && (
+          <>
+            <CommandGroup heading="Ostatnio szukane">
+              {recent.map((q) => (
+                <CommandItem key={q} value={`recent-${q}`} onSelect={() => setSearch(q)}>
+                  <History className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <span className="truncate">{q}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
         <CommandGroup heading="Akcje">
           <CommandItem onSelect={() => run(onNewNote)}>
             <Plus className="w-4 h-4 mr-2" /> Nowa notatka <span className="ml-auto text-xs text-muted-foreground">{modShortcut("N")}</span>
@@ -126,7 +142,7 @@ export function CommandPalette({
               forceMount={matched.length > 0}
             >
               {matched.slice(0, NOTE_LIMIT).map((n) => (
-                <CommandItem key={n.id} forceMount value={`note-${n.id}`} onSelect={() => run(() => onOpenNote(n.id))}>
+                <CommandItem key={n.id} forceMount value={`note-${n.id}`} onSelect={() => { setRecent(saveRecentSearch(search)); run(() => onOpenNote(n.id)); }}>
                   <StickyNote className="w-4 h-4 mr-2 text-muted-foreground" />
                   <span className="truncate">{n.title || n.content.slice(0, 60) || "(bez tytułu)"}</span>
                 </CommandItem>
