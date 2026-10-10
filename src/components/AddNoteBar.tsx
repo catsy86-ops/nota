@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { LazyCalendar as Calendar } from "@/components/ui/lazy-calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { prepareImage } from "@/lib/imagePrepare";
 import { IconButton } from "@/components/ui/icon-button";
 import type { NoteColor, ChecklistItem } from "@/hooks/useNotes";
 import { imageStore } from "@/lib/imageStore";
@@ -229,15 +230,16 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
     let skipped = 0;
     try {
       for (const file of files) {
-        if (file.size > 2 * 1024 * 1024) { skipped++; continue; }
-        const ref = await imageStore.putBlob(file);
+        const prepared = await prepareImage(file);
+        if (!prepared) { skipped++; continue; }
+        const ref = await imageStore.putBlob(prepared);
         setImages((prev) => [...prev, ref]);
       }
     } catch {
       toast.error("Nie udało się zapisać obrazka", { description: "Brakuje miejsca w pamięci przeglądarki. Usuń stare notatki z obrazkami i spróbuj ponownie." });
     }
     if (skipped > 0) {
-      toast.error(skipped === 1 ? "Obrazek jest za duży (max 2 MB)" : `${skipped} ${pluralPl(skipped, ["obrazek jest za duży", "obrazki są za duże", "obrazków jest za dużych"])} (max 2 MB)`);
+      toast.error(skipped === 1 ? "Nie udało się zmniejszyć obrazka do 2 MB" : `${skipped} ${pluralPl(skipped, ["obrazka", "obrazków", "obrazków"])} nie udało się zmniejszyć do 2 MB`);
     }
   }
 

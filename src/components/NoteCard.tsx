@@ -15,6 +15,7 @@ import { ChecklistConvertButtons, ChecklistEditor } from "./ChecklistEditor";
 import { isChecklistShortcut, selectionToChecklist } from "@/lib/checklistPaste";
 import { handleEditorKey } from "@/lib/editorKeysDom";
 import { EditorStats } from "./EditorStats";
+import { prepareImage } from "@/lib/imagePrepare";
 import { FindReplaceBar } from "./FindReplaceBar";
 import { haptic } from "@/lib/haptics";
 import { TitleField } from "./TitleField";
@@ -211,12 +212,27 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files) return;
+    await addImages(Array.from(files));
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  /** Wklejony zrzut ekranu albo skopiowany obraz trafia do notatki zamiast do pola tekstu. */
+  function handleEditPaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+    const pasted = Array.from(e.clipboardData.files).filter((f) => f.type.startsWith("image/"));
+    if (pasted.length === 0) return;
+    e.preventDefault();
+    void addImages(pasted);
+  }
+
+  /** Obrazy większe niż limit są skalowane; dopiero gdy się nie da, trafiają na listę pominiętych. */
+  async function addImages(files: File[]) {
     const newImages: string[] = [];
     let skipped = 0;
     try {
-      for (const file of Array.from(files)) {
-        if (file.size > 2 * 1024 * 1024) { skipped++; continue; }
-        newImages.push(await imageStore.putBlob(file));
+      for (const file of files) {
+        const prepared = await prepareImage(file);
+        if (!prepared) { skipped++; continue; }
+        newImages.push(await imageStore.putBlob(prepared));
       }
     } catch {
       toast.error("Nie udało się zapisać obrazka", { description: "Brakuje miejsca w pamięci przeglądarki. Usuń stare notatki z obrazkami i spróbuj ponownie." });
@@ -227,7 +243,6 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
       });
     }
     if (newImages.length) onUpdate?.(note.id, { images: [...(note.images || []), ...newImages] });
-    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   function removeImage(idx: number) {
@@ -359,13 +374,13 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         <div className={cn("relative", contentFills && "flex-1 min-h-0")}>
           {showPreview ? (
             <div className={cn("grid grid-cols-2 gap-2", contentFills && "h-full")}>
-              <textarea spellCheck={prefs.spellcheck} ref={textareaRef} value={editContent} onChange={(e) => setEditContent(e.target.value)} {...wiki.textareaProps} onKeyDown={handleEditKeyDown} className={cn(textareaCls, "border border-border/30 rounded-lg p-2", !contentFills && "min-h-[80px]")} placeholder="Treść notatki..." />
+              <textarea spellCheck={prefs.spellcheck} ref={textareaRef} value={editContent} onChange={(e) => setEditContent(e.target.value)} {...wiki.textareaProps} onKeyDown={handleEditKeyDown} onPaste={handleEditPaste} className={cn(textareaCls, "border border-border/30 rounded-lg p-2", !contentFills && "min-h-[80px]")} placeholder="Treść notatki..." />
               <div className={cn("bg-muted/20 rounded-lg p-2 overflow-y-auto border border-border/30", contentFills ? "h-full" : "min-h-[80px]")}>
                 {editContent ? <MarkdownRenderer content={editContent} knownTitles={knownTitles} onWikiClick={onWikiClick} /> : <p className="text-xs text-muted-foreground italic">Podgląd...</p>}
               </div>
             </div>
           ) : (
-            <textarea spellCheck={prefs.spellcheck} ref={textareaRef} value={editContent} onChange={(e) => setEditContent(e.target.value)} {...wiki.textareaProps} onKeyDown={handleEditKeyDown} className={cn(textareaCls, !full && "min-h-[60px]")} placeholder="Treść notatki..." />
+            <textarea spellCheck={prefs.spellcheck} ref={textareaRef} value={editContent} onChange={(e) => setEditContent(e.target.value)} {...wiki.textareaProps} onKeyDown={handleEditKeyDown} onPaste={handleEditPaste} className={cn(textareaCls, !full && "min-h-[60px]")} placeholder="Treść notatki..." />
           )}
           {wiki.popup()}
         </div>
