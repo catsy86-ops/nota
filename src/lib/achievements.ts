@@ -25,6 +25,7 @@ export interface AchievementStats {
 
 export const ACHIEVEMENTS: Achievement[] = [
   { id: "first-note", emoji: "🐣", title: "Pierwszy krok", description: "Stwórz pierwszą notatkę", progress: (s) => Math.min(1, s.totalNotes / 1) },
+  { id: "first-list", emoji: "🧾", title: "Pierwsza odhaczona", description: "Ukończ pierwszą listę zadań", progress: (s) => Math.min(1, s.checklistsCompleted / 1) },
   { id: "ten-notes", emoji: "📚", title: "Mała biblioteka", description: "10 notatek w kolekcji", progress: (s) => Math.min(1, s.totalNotes / 10) },
   { id: "fifty-notes", emoji: "🏛️", title: "Architekt myśli", description: "50 notatek razem", progress: (s) => Math.min(1, s.totalNotes / 50) },
   { id: "pin-master", emoji: "📌", title: "Mistrz pinezki", description: "Przypnij 5 notatek", progress: (s) => Math.min(1, s.pinnedNotes / 5) },

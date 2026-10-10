@@ -41,6 +41,8 @@ import { fireworks, megaCelebrate } from "@/lib/celebrate";
 import { glowPulse, glowStreak, centerOf, pointOfNote } from "@/lib/glowTrail";
 import { SearchBar } from "@/components/SearchBar";
 import { useAchievementTracker } from "@/lib/achievements";
+import { showAchievementStamp } from "@/lib/achievementStamp";
+import { AchievementStamp } from "@/components/AchievementStamp";
 import { ShortcutsDialog } from "@/components/ShortcutsDialog";
 import { DailyQuote } from "@/components/DailyQuote";
 import { AnimatedBackdrop } from "@/components/AnimatedBackdrop";
@@ -136,6 +138,8 @@ const Index = () => {
   // kilka naraz), stałe `id` podmienia go zamiast piętrzyć. Szczegóły są w Statystykach.
   const unlockedBatchRef = useRef<string[]>([]);
   useAchievementTracker(notes, archivedNotes, allLabels, folders, (a) => {
+    // Pieczątka zastępuje toast (przy wyłączonym efekcie / reduced motion zostaje toast).
+    if (showAchievementStamp(a)) return;
     unlockedBatchRef.current.push(a.title);
     const titles = unlockedBatchRef.current;
     toast(titles.length === 1 ? `Nowa odznaka: ${titles[0]}` : `Nowe odznaki: ${titles.length}`, {
@@ -595,6 +599,7 @@ const Index = () => {
         />
       </Suspense>
     )}
+    <AchievementStamp />
     {statsOpen && (
       <Suspense fallback={null}>
         <StatsDialog
