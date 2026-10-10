@@ -638,7 +638,7 @@ const Index = () => {
           {view === "shifts" && (
             <ViewErrorBoundary name="Grafik">
               <Suspense fallback={null}>
-                <ShiftsView />
+                <ShiftsView notes={[...notes, ...archivedNotes]} />
               </Suspense>
             </ViewErrorBoundary>
           )}

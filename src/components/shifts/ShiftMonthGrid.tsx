@@ -2,11 +2,15 @@ import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { addDays, addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, startOfMonth, startOfWeek } from "date-fns";
 import { pl } from "date-fns/locale";
 import { dayKey } from "@/lib/reminderOccurrences";
-import { dayType, entryMinutes, formatDuration, formatHoursShort, holidayName, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType } from "@/lib/shifts";
+import { dayKeyCommand, dayType, entryMinutes, formatHoursShort, holidayName, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType } from "@/lib/shifts";
+import { addDaysToKey } from "@/lib/week";
 import { cn } from "@/lib/utils";
+import { useToday } from "@/hooks/useToday";
 import { monthEnterClass, useMonthDirection } from "@/hooks/useMonthDirection";
 import { stampKey, useStampedDays } from "@/hooks/useStampedDays";
 import { dayCellClass, dayNumberClass, holidayDotClass, holidayNameClass, weekdayHeadClass } from "@/components/calendar/dayCellStyles";
+import { DayDropCell, type DayActions } from "./ShiftDnd";
+import { dayAriaLabel, dropOverClass } from "./dayLabel";
 
 interface ShiftMonthGridProps {
   month: Date;
@@ -17,22 +21,11 @@ interface ShiftMonthGridProps {
   onMonthChange: (month: Date) => void;
   /** Id tekstu opisującego, co zrobi stuknięcie (wybrany pędzel). */
   describedBy?: string;
+  /** Przenoszenie i kopiowanie wpisów z klawiatury (Shift+strzałki, Ctrl+C/V). */
+  actions: DayActions;
 }
 
 const WEEK = { weekStartsOn: 1 } as const;
-
-/** Odświeża „dziś” po północy — PWA bywa otwarta całą noc. */
-function useToday(): Date {
-  const [today, setToday] = useState(() => new Date());
-  useEffect(() => {
-    const id = window.setInterval(() => {
-      const now = new Date();
-      setToday((t) => (isSameDay(t, now) ? t : now));
-    }, 60_000);
-    return () => window.clearInterval(id);
-  }, []);
-  return today;
-}
 
 /**
  * Miesiąc w siatce 7 kolumn, od poniedziałku. Każdy dzień to przycisk —
@@ -40,7 +33,7 @@ function useToday(): Date {
  * siatka to jeden przystanek tabulatora, strzałki po dniach, PageUp/PageDown
  * po miesiącach, Home/End po tygodniu; Enter/Spacja = stuknięcie.
  */
-export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesById, onDay, onMonthChange, describedBy }: ShiftMonthGridProps) {
+export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesById, onDay, onMonthChange, describedBy, actions }: ShiftMonthGridProps) {
   const today = useToday();
   const direction = useMonthDirection(month);
   const { stamped, cleared } = useStampedDays(`${month.getFullYear()}-${month.getMonth()}`, days, typesById);
@@ -82,6 +75,21 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
       PageUp: () => addMonths(focused, -1),
       PageDown: () => addMonths(focused, 1),
     };
+    const command = dayKeyCommand(e, 7);
+    if (command) {
+      e.preventDefault();
+      const key = dayKey(focused);
+      if (command.kind === "copyEntry") actions.copyEntry(key);
+      else if (command.kind === "paste") actions.paste(key);
+      else {
+        const target = addDaysToKey(key, command.deltaDays);
+        actions.transfer(key, target, command.mode);
+        // Fokus idzie za zmianą — kolejne Shift+strzałki przesuwają ją dalej.
+        const [y, m, d] = target.split("-").map(Number);
+        move(new Date(y, m - 1, d));
+      }
+      return;
+    }
     const to = moves[e.key];
     if (!to) return;
     e.preventDefault();
@@ -112,22 +120,14 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
               const inMonth = isSameMonth(day, month);
               const isToday = isSameDay(day, today);
               const absence = type?.kind === "absence";
-              const label = [
-                format(day, "d MMMM", { locale: pl }),
-                format(day, "EEEE", { locale: pl }),
-                isToday ? "dziś" : undefined,
-                holiday,
-                type ? (absence ? type.name : `${type.name} ${type.start}–${type.end}`) : "wolne",
-                entry?.extraMin ? `odchylenie ${formatDuration(entry.extraMin)}` : undefined,
-                entry?.offSchedule ? "poza grafikiem" : undefined,
-                entry?.inLieu ? "w dzień wolny za niedzielę" : undefined,
-                entry?.note ? `notatka: ${entry.note}` : undefined,
-              ].filter(Boolean).join(", ");
+              const label = dayAriaLabel({ day, today: isToday, holiday, type, entry });
 
               return (
-                <div key={key} role="gridcell" className="flex">
+                <DayDropCell key={key} dayKey={key} draggable={!!entry}>
+                  {({ dragRef, dragProps, dragging, over }) => (
                   <button
-                    ref={(el) => { if (el) cellRefs.current.set(key, el); else cellRefs.current.delete(key); }}
+                    ref={(el) => { dragRef(el); if (el) cellRefs.current.set(key, el); else cellRefs.current.delete(key); }}
+                    {...dragProps}
                     type="button"
                     tabIndex={isSameDay(day, focused) ? 0 : -1}
                     // Dzień spoza miesiąca przełącza miesiąc — malowanie go było ledwo widoczne.
@@ -138,6 +138,7 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                     className={cn(
                       dayCellClass(inMonth, isToday), "w-full flex flex-col items-stretch min-h-[3.75rem] sm:min-h-[5rem] p-1",
                       inMonth && "[@media(hover:hover)]:hover:border-primary/40",
+                      dragging && "opacity-40", over && dropOverClass,
                     )}
                   >
                     <span className="flex items-center justify-between">
@@ -177,7 +178,8 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                       </span>
                     )}
                   </button>
-                </div>
+                  )}
+                </DayDropCell>
               );
             })}
           </div>

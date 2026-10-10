@@ -1,18 +1,26 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { addMonths, format, startOfMonth } from "date-fns";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { addMonths, format, isSameMonth, startOfMonth } from "date-fns";
 import { pl } from "date-fns/locale";
-import { CalendarArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarArrowDown, CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
-import { dayKey } from "@/lib/reminderOccurrences";
-import { DEFAULT_SHIFT_TYPES, addDefaultShiftTypes, SHIFTS_EXPORTED_KEY, applyPatternToStore, buildShiftsIcs, cancelledShiftDays, exportableShiftDays, exportedAfter, monthSummary, restoreDays, setDayEntry, setDayShift, shiftStore, subscribeShiftDay, takeShiftDay, useShifts, useShiftsReady, type ShiftType } from "@/lib/shifts";
+import { dayKey, expandOccurrences, groupByDay, type Occurrence } from "@/lib/reminderOccurrences";
+import type { Note } from "@/hooks/useNotes";
+import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
+import { DEFAULT_SHIFT_TYPES, addDefaultShiftTypes, SHIFTS_EXPORTED_KEY, applyPatternToStore, buildShiftsIcs, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
-import { TAP } from "@/lib/platform";
+import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
 import { pluralPl } from "@/lib/plural";
 import { toastWithUndo } from "@/lib/undoToast";
 import { NowCard } from "./NowCard";
 import { BrushBar, type Brush } from "./BrushBar";
 import { ShiftMonthGrid } from "./ShiftMonthGrid";
+import { ShiftWeekView } from "./ShiftWeekView";
+import { ShiftDnd, type DayActions, type DropMode } from "./ShiftDnd";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { ShiftSummary } from "./ShiftSummary";
 import { ShiftSettingsDialog } from "./ShiftSettingsDialog";
 import { ShiftTypeDialog } from "./ShiftTypeDialog";
@@ -31,6 +39,17 @@ const exportedStore = createPersistedStore<string[]>(SHIFTS_EXPORTED_KEY, [], {
   merge: (defaults, stored) => (Array.isArray(stored) ? stored.filter((k): k is string => typeof k === "string") : defaults),
 });
 
+type ShiftsLayout = "month" | "week";
+
+/** Który widok Grafiku — miesiąc czy tydzień — pamiętany między wizytami. */
+const layoutStore = createPersistedStore<ShiftsLayout>("kaczy.shifts.layout.v1", "month", {
+  merge: (defaults, stored) => (stored === "week" || stored === "month" ? stored : defaults),
+});
+
+const NO_REMINDERS = new Map<string, Occurrence[]>();
+
+const shortDate = (key: string) => format(parseDayKey(key), "d MMM", { locale: pl });
+
 const navButton = "pressable shrink-0 w-10 h-10 coarse:w-11 coarse:h-11 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
 /**
@@ -38,14 +57,20 @@ const navButton = "pressable shrink-0 w-10 h-10 coarse:w-11 coarse:h-11 rounded-
  * `lib/shifts/store`, obliczenia w czystych funkcjach `lib/shifts/*`,
  * a tutaj zostaje to, co lokalne dla ekranu — miesiąc, pędzel i otwarte okna.
  */
-export function ShiftsView() {
+export function ShiftsView({ notes = [] }: { notes?: Note[] }) {
   // Do wczytania dokumentu nic — pusty grafik mignąłby i ustawił zły pędzel startowy.
-  return useShiftsReady() ? <ShiftsScreen /> : null;
+  return useShiftsReady() ? <ShiftsScreen notes={notes} /> : null;
 }
 
-function ShiftsScreen() {
+function ShiftsScreen({ notes }: { notes: Note[] }) {
   const data = useShifts();
+  const layout = layoutStore.use();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
+  const [weekStart, setWeekStart] = useState(() => startOfWeekKey(dayKey(new Date())));
+  const [clip, setClip] = useState<DayEntry | null>(null);
+  const clipRef = useRef<DayEntry | null>(null);
+  const [asking, setAsking] = useState<{ from: string; to: string } | null>(null);
+  const [confirmCopy, setConfirmCopy] = useState<WeekCopyPlan | null>(null);
   const [brush, setBrush] = useState<Brush>(() => (data.types[0] ? { kind: "type", id: data.types[0].id } : { kind: "inspect" }));
   const [editingType, setEditingType] = useState<ShiftType | "new" | null>(null);
   const [openDay, setOpenDay] = useState<string | null>(null);
@@ -60,6 +85,7 @@ function ShiftsScreen() {
       if (!key) return;
       const [y, m] = key.split("-").map(Number);
       setMonth(new Date(y, m - 1, 1));
+      setWeekStart(startOfWeekKey(key));
       setOpenDay(key);
     };
     take();
@@ -67,7 +93,35 @@ function ShiftsScreen() {
   }, []);
 
   const typesById = useMemo(() => new Map(data.types.map((t) => [t.id, t])), [data.types]);
-  const summary = useMemo(() => monthSummary(data, month.getFullYear(), month.getMonth()), [data, month]);
+  const isWeek = layout === "week";
+  // W tygodniu podsumowanie dotyczy miesiąca, w którym tydzień leży głównie (czwartek).
+  const shownMonth = useMemo(() => (isWeek ? startOfMonth(parseDayKey(addDaysToKey(weekStart, 3))) : month), [isWeek, weekStart, month]);
+  const summary = useMemo(() => monthSummary(data, shownMonth.getFullYear(), shownMonth.getMonth()), [data, shownMonth]);
+
+  const titleOf = useMemo(() => {
+    const titles = new Map(notes.map((n) => [n.id, n.title || n.content.slice(0, 40)]));
+    return (id: string) => titles.get(id) ?? "";
+  }, [notes]);
+  // Terminy z Kalendarza — tylko podgląd w widoku tygodnia.
+  const remindersByDay = useMemo(() => {
+    if (!isWeek) return NO_REMINDERS;
+    const start = parseDayKey(weekStart).getTime();
+    const end = parseDayKey(addDaysToKey(weekStart, 7)).getTime() - 1;
+    return groupByDay(expandOccurrences(notes, start, end));
+  }, [isWeek, notes, weekStart]);
+
+  function setLayout(next: ShiftsLayout) {
+    if (next === layout) return;
+    if (next === "week") {
+      const today = new Date();
+      setWeekStart(startOfWeekKey(isSameMonth(today, month) ? dayKey(today) : dayKey(month)));
+    } else {
+      setMonth(startOfMonth(parseDayKey(addDaysToKey(weekStart, 3))));
+    }
+    layoutStore.set(next);
+  }
+
+  const thisWeek = startOfWeekKey(dayKey(new Date()));
 
   // Stabilna referencja — siatka jest `memo` i nie musi się przerysowywać przy otwieraniu okien.
   const onDay = useCallback((key: string) => {
@@ -85,6 +139,65 @@ function ShiftsScreen() {
     }
   }, [brush]);
 
+  // Przenoszenie i kopiowanie wpisów — jedna ścieżka dla myszy, dotyku i klawiatury.
+  const transfer = useCallback((from: string, to: string, mode: TransferMode) => {
+    const days = shiftStore.get().days;
+    const src = days[from];
+    if (!src) { toast("Ten dzień nie ma zmiany", { description: "Nie ma czego przenosić ani kopiować." }); return; }
+    const replaced = !!days[to];
+    const before = transferDay(from, to, mode, dayKey(new Date()));
+    if (!before) { toast("Bez zmian", { description: "W dniu docelowym jest już taki sam wpis." }); return; }
+    const name = shiftStore.get().types.find((t) => t.id === src.type)?.name ?? "Zmiana";
+    toastWithUndo(`${mode === "move" ? "Przeniesiono" : "Skopiowano"} ${name}: ${shortDate(from)} → ${shortDate(to)}`, () => restoreDays(before), {
+      description: replaced ? "Zastąpiono wpis w dniu docelowym" : undefined,
+    });
+  }, []);
+
+  const actions = useMemo<DayActions>(() => ({
+    transfer,
+    copyEntry: (key) => {
+      const entry = shiftStore.get().days[key];
+      if (!entry) { toast("Ten dzień nie ma zmiany do skopiowania"); return; }
+      clipRef.current = entry;
+      setClip(entry);
+      const name = shiftStore.get().types.find((t) => t.id === entry.type)?.name ?? "Zmiana";
+      toast(`Skopiowano wpis: ${name}, ${shortDate(key)}`, { description: `${modShortcut("V")} na innym dniu go wklei.` });
+    },
+    paste: (key) => {
+      const entry = clipRef.current;
+      if (!entry) { toast("Schowek jest pusty", { description: `Na dniu ze zmianą naciśnij ${modShortcut("C")}.` }); return; }
+      const before = pasteDay(entry, key, dayKey(new Date()));
+      if (!before) { toast("Bez zmian", { description: "Ten dzień ma już taki wpis." }); return; }
+      const name = shiftStore.get().types.find((t) => t.id === entry.type)?.name ?? "Zmiana";
+      toastWithUndo(`Wklejono ${name}: ${shortDate(key)}`, () => restoreDays(before));
+    },
+  }), [transfer]);
+
+  const onDrop = useCallback((from: string, to: string, mode: DropMode) => {
+    if (mode === "ask") setAsking({ from, to });
+    else transfer(from, to, mode);
+  }, [transfer]);
+
+  function copyWeek() {
+    const plan = planWeekCopy(shiftStore.get().days, weekStart, dayKey(new Date()));
+    if (plan.copied === 0) {
+      toast("Nie ma czego kopiować", { description: "Ten tydzień nie ma zmian albo następny ma już takie same." });
+      return;
+    }
+    if (plan.overwritten > 0) setConfirmCopy(plan);
+    else runCopyWeek();
+  }
+
+  function runCopyWeek() {
+    const done = copyWeekToNext(weekStart, dayKey(new Date()));
+    setConfirmCopy(null);
+    if (!done) return;
+    const n = done.plan.copied;
+    toastWithUndo(`Skopiowano tydzień na następny (${n} ${pluralPl(n, ["dzień", "dni", "dni"])})`, () => restoreDays(done.before), {
+      description: done.plan.overwritten ? `Zastąpiono ${done.plan.overwritten} ${pluralPl(done.plan.overwritten, ["wpis", "wpisy", "wpisów"])}` : undefined,
+    });
+  }
+
   function applyPattern(steps: (string | null)[], startKey: string, length: number) {
     const before = applyPatternToStore(steps, startKey, length);
     toast.success(`Nałożono cykl na ${length} ${pluralPl(length, ["dzień", "dni", "dni"])}`, {
@@ -97,14 +210,14 @@ function ShiftsScreen() {
    * Dni wysłane wcześniej, a teraz wyczyszczone, idą jako odwołane.
    */
   function exportIcs() {
-    const from = dayKey(month);
+    const from = dayKey(shownMonth);
     const keys = exportableShiftDays(data, from);
     const cancelled = cancelledShiftDays(data, exportedStore.get(), from);
     if (keys.length === 0 && cancelled.length === 0) {
       toast("Brak zmian do eksportu", { description: "Nanieś zmiany w tym lub kolejnych miesiącach." });
       return;
     }
-    download(buildShiftsIcs(data, keys, { cancelled }), `grafik-${format(month, "yyyy-MM")}.ics`, "text/calendar;charset=utf-8");
+    download(buildShiftsIcs(data, keys, { cancelled }), `grafik-${format(shownMonth, "yyyy-MM")}.ics`, "text/calendar;charset=utf-8");
     exportedStore.set(exportedAfter(exportedStore.get(), keys, from));
     const removed = cancelled.length ? ` Odwołuje ${cancelled.length} ${pluralPl(cancelled.length, ["wyczyszczony dzień", "wyczyszczone dni", "wyczyszczonych dni"])}.` : "";
     toast.success(`Pobrano ${keys.length} ${pluralPl(keys.length, ["dzień", "dni", "dni"])} grafiku (.ics)`, {
@@ -116,17 +229,48 @@ function ShiftsScreen() {
     <div className="space-y-5">
       <NowCard data={data} />
 
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div role="group" aria-label="Widok Grafiku" className="flex rounded-xl bg-muted p-0.5">
+          {([["month", "Miesiąc"], ["week", "Tydzień"]] as const).map(([id, text]) => (
+            <button key={id} type="button" aria-pressed={layout === id} onClick={() => setLayout(id)}
+              className={cn(
+                "pressable h-9 coarse:h-10 px-3.5 rounded-[0.65rem] text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                layout === id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+              )}>
+              {text}
+            </button>
+          ))}
+        </div>
+        {isWeek && (
+          <div className="flex flex-wrap items-center gap-1">
+            {weekStart !== thisWeek && (
+              <button type="button" onClick={() => setWeekStart(thisWeek)}
+                className="pressable h-9 coarse:h-10 px-3 rounded-xl text-sm font-medium text-primary hover:bg-primary/10 outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                Ten tydzień
+              </button>
+            )}
+            <button type="button" onClick={copyWeek}
+              className="pressable flex items-center gap-1.5 h-9 coarse:h-10 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              <CalendarRange className="w-4 h-4" /> Skopiuj ten tydzień na następny
+            </button>
+          </div>
+        )}
+      </div>
+
       <div className="flex items-center justify-between gap-2 sm:justify-center sm:gap-4">
-        <button type="button" onClick={() => setMonth((m) => addMonths(m, -1))} aria-label="Poprzedni miesiąc" className={navButton}>
+        <button type="button" onClick={() => (isWeek ? setWeekStart((w) => addDaysToKey(w, -7)) : setMonth((m) => addMonths(m, -1)))}
+          aria-label={isWeek ? "Poprzedni tydzień" : "Poprzedni miesiąc"} className={navButton}>
           <ChevronLeft className="w-5 h-5" />
         </button>
         <h2 className="min-w-0 sm:min-w-[12rem] text-center" aria-live="polite">
-          <button type="button" onClick={() => setMonth(startOfMonth(new Date()))} title="Wróć do bieżącego miesiąca"
-            className="pressable w-full h-10 coarse:h-11 truncate font-display font-bold text-lg capitalize px-3 rounded-xl hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring">
-            {format(month, "LLLL yyyy", { locale: pl })}
+          <button type="button" onClick={() => (isWeek ? setWeekStart(thisWeek) : setMonth(startOfMonth(new Date())))}
+            title={isWeek ? "Wróć do bieżącego tygodnia" : "Wróć do bieżącego miesiąca"}
+            className={cn("pressable w-full h-10 coarse:h-11 truncate font-display font-bold text-lg px-3 rounded-xl hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring", !isWeek && "capitalize")}>
+            {isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl })}
           </button>
         </h2>
-        <button type="button" onClick={() => setMonth((m) => addMonths(m, 1))} aria-label="Następny miesiąc" className={navButton}>
+        <button type="button" onClick={() => (isWeek ? setWeekStart((w) => addDaysToKey(w, 7)) : setMonth((m) => addMonths(m, 1)))}
+          aria-label={isWeek ? "Następny tydzień" : "Następny miesiąc"} className={navButton}>
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
@@ -161,7 +305,43 @@ function ShiftsScreen() {
 
       <p id="shift-brush-hint" className="-mt-3 text-xs text-muted-foreground px-1">{brushHint(brush, typesById)}</p>
 
-      <ShiftMonthGrid month={month} days={data.days} typesById={typesById} onDay={onDay} onMonthChange={setMonth} describedBy="shift-brush-hint" />
+      <p id="shift-move-hint" className="-mt-3 text-xs text-muted-foreground px-1">
+        {IS_TOUCH
+          ? "Przytrzymaj zmianę i przeciągnij na inny dzień — zapytam, czy przenieść, czy skopiować."
+          : `Przeciągnij zmianę na inny dzień, żeby ją przenieść (z Alt — skopiować). Klawiatura: Shift+strzałki przenoszą zmianę, Alt+Shift+strzałki kopiują, ${modShortcut("C")} / ${modShortcut("V")} kopiuje wpis dnia (zmiana, odchylenie, notatka).`}
+        {clip && <span className="font-medium"> Schowek: {typesById.get(clip.type)?.name ?? "wpis"}{clip.note ? " z notatką" : ""}.</span>}
+      </p>
+
+      <ShiftDnd days={data.days} typesById={typesById} onTransfer={onDrop}>
+        {isWeek ? (
+          <ShiftWeekView weekStart={weekStart} days={data.days} typesById={typesById} remindersByDay={remindersByDay} titleOf={titleOf}
+            onDay={onDay} onWeekChange={setWeekStart} describedBy="shift-brush-hint" actions={actions} />
+        ) : (
+          <ShiftMonthGrid month={month} days={data.days} typesById={typesById} onDay={onDay} onMonthChange={setMonth} describedBy="shift-brush-hint" actions={actions} />
+        )}
+      </ShiftDnd>
+
+      <TransferChooser
+        pending={asking}
+        label={asking ? `${typesById.get(data.days[asking.from]?.type ?? "")?.name ?? "Zmiana"}: ${shortDate(asking.from)} → ${shortDate(asking.to)}` : ""}
+        onChoose={(mode) => { if (asking) transfer(asking.from, asking.to, mode); setAsking(null); }}
+        onClose={() => setAsking(null)}
+      />
+
+      <AlertDialog open={confirmCopy !== null} onOpenChange={(o) => { if (!o) setConfirmCopy(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Nadpisać {confirmCopy?.overwritten} {pluralPl(confirmCopy?.overwritten ?? 0, ["dzień", "dni", "dni"])} w następnym tygodniu?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Skopiowanie tygodnia zastąpi wpisy, które następny tydzień już ma w tych dniach. Da się to cofnąć.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction onClick={runCopyWeek}>Nadpisz i skopiuj</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="flex justify-end -mt-2">
         <button type="button" onClick={exportIcs}
@@ -170,7 +350,7 @@ function ShiftsScreen() {
         </button>
       </div>
 
-      <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(month, "LLLL yyyy", { locale: pl })} onOpenSettings={() => setSettingsOpen(true)} />
+      <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(shownMonth, "LLLL yyyy", { locale: pl })} onOpenSettings={() => setSettingsOpen(true)} />
       <ShiftSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} settings={data} />
 
       <ShiftTypeDialog
@@ -186,9 +366,32 @@ function ShiftsScreen() {
         onOpenChange={setPatternOpen}
         types={data.types}
         patterns={data.patterns}
-        defaultStart={dayKey(month)}
+        defaultStart={isWeek ? weekStart : dayKey(month)}
         onApply={applyPattern}
       />
     </div>
+  );
+}
+
+/** Dotyk nie ma Alta — po upuszczeniu zmiany pytamy, co z nią zrobić. */
+function TransferChooser({ pending, label, onChoose, onClose }: {
+  pending: { from: string; to: string } | null;
+  label: string;
+  onChoose: (mode: TransferMode) => void;
+  onClose: () => void;
+}) {
+  return (
+    <Dialog open={pending !== null} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-xs">
+        <DialogHeader>
+          <DialogTitle>Przenieść czy skopiować?</DialogTitle>
+          <DialogDescription>{label}</DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="gap-2 sm:gap-2">
+          <Button type="button" variant="outline" onClick={() => onChoose("copy")}>Skopiuj</Button>
+          <Button type="button" onClick={() => onChoose("move")}>Przenieś</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
