@@ -6,6 +6,7 @@ import { searchNotes } from "@/lib/searchNotes";
 import { getTodayRange, getWeekRange } from "@/lib/dateRanges";
 import { PRIORITY_ORDER } from "@/lib/notePriority";
 import { useLastOpened, type LastOpenedMap } from "@/lib/lastOpened";
+import { useDayClock } from "@/lib/dayClock";
 
 const NO_OPENED: LastOpenedMap = {};
 
@@ -81,6 +82,9 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
   // Mapa „ostatnio otwierane” zmienia się przy każdym otwarciu notatki — nasłuchujemy jej tylko przy tym sortowaniu.
   const lastOpened = useLastOpened();
   const opened = prefs.sortKey === "opened" ? lastOpened : NO_OPENED;
+  // Granice „Dziś” i „Ten tydzień” liczy filtr — po północy i po powrocie do karty
+  // muszą się przeliczyć mimo niezmienionych notatek.
+  const dayTick = useDayClock();
   return useMemo(() => {
     // Kalendarz rysuje własną projekcję (`expandOccurrences`) i nie korzysta
     // z siatki notatek — nie ma po co filtrować ani budować indeksu Fuse.
@@ -119,5 +123,5 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
     };
 
     return { displayNotes, pinned, others, elsewhere };
-  }, [notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs, opened]);
+  }, [notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs, opened, dayTick]);
 }

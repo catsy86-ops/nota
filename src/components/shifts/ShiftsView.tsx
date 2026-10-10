@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useDayClock } from "@/lib/dayClock";
 import { addMonths, format, isSameMonth, startOfMonth } from "date-fns";
 import { pl } from "date-fns/locale";
 import { CalendarArrowDown, CalendarRange, ChevronLeft, ChevronRight } from "lucide-react";
@@ -65,6 +66,8 @@ export function ShiftsView({ notes = [] }: { notes?: Note[] }) {
 function ShiftsScreen({ notes }: { notes: Note[] }) {
   const data = useShifts();
   const layout = layoutStore.use();
+  // `thisWeek` i „Dziś” liczone przy renderze — zegar dnia przerysowuje po północy.
+  useDayClock();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [weekStart, setWeekStart] = useState(() => startOfWeekKey(dayKey(new Date())));
   const [clip, setClip] = useState<DayEntry | null>(null);
