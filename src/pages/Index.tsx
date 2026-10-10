@@ -285,6 +285,12 @@ const Index = () => {
       if (edit) document.querySelector<HTMLElement>(`[data-note-id-wrap="${id}"] .cursor-pointer`)?.click();
     }, 150);
   }, [go, replaceWith]);
+  /** Zapisany filtr: widok Notatki z jego zapytaniem w polu wyszukiwania. */
+  const goFilter = useCallback((query: string) => {
+    setSearch(query);
+    go("notes", { search: query });
+    if (isMobile) setSidebarOpen(false);
+  }, [go, isMobile]);
   const openNote = useCallback((id: string, viaLink = false, edit = false) => {
     const note = [...notesRef.current, ...archivedRef.current, ...trashedRef.current].find((n) => n.id === id);
     if (!note) {
@@ -469,6 +475,8 @@ const Index = () => {
         onGoView={(v) => { go(v); if (isMobile) setSidebarOpen(false); }}
         onGoLabel={(label) => { go("label", { label }); if (isMobile) setSidebarOpen(false); }}
         onGoFolder={(id) => { go("folder", { folder: id }); if (isMobile) setSidebarOpen(false); }}
+        onGoFilter={goFilter}
+        search={search}
         sidebarItems={sidebarItems}
         onLogoClick={handleLogoClick}
         dark={dark}
@@ -659,6 +667,7 @@ const Index = () => {
           onNewNote={expandAddNote}
           onDailyNote={openDailyNote}
           onGo={(v) => go(v)}
+          onGoFilter={goFilter}
           onToggleTheme={toggleTheme}
           onOpenSettings={() => setSettingsOpen(true)}
           onOpenStats={() => setStatsOpen(true)}
@@ -732,6 +741,8 @@ const Index = () => {
       onGo={(v) => go(v)}
       onNew={expandAddNote}
       onImport={handleImport}
+      onGoFilter={goFilter}
+      search={search}
       onOpenSettings={() => setSettingsOpen(true)}
       onOpenActions={() => setActionsOpen(true)}
       trashCount={trashedNotes.length}

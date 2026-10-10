@@ -1,12 +1,13 @@
 import { forwardRef, useState } from "react";
 import { motion, LayoutGroup } from "framer-motion";
-import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History, CalendarRange, BriefcaseBusiness, Moon, Sun, FileDown } from "lucide-react";
+import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History, CalendarRange, BriefcaseBusiness, Moon, Sun, FileDown, Bookmark } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { ImportExportMenu } from "@/components/ImportExportMenu";
 import { cn } from "@/lib/utils";
 import { spring } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
+import { useSavedFilters, sameQuery } from "@/lib/savedFilters";
 
 import type { View } from "@/hooks/useFilteredNotes";
 
@@ -21,6 +22,9 @@ interface BottomNavProps {
   onToggleTheme?: () => void;
   /** Import z JSON — eksport i import są na telefonie tutaj, nie w nagłówku. */
   onImport?: () => void;
+  /** Zapisane filtry w arkuszu „Więcej”: kafel ustawia widok Notatki z tym zapytaniem. */
+  onGoFilter?: (query: string) => void;
+  search?: string;
 }
 
 const slots = [
@@ -32,7 +36,8 @@ const slotsRight = [
   { key: "reminders" as View, label: "Przypomnienia", Icon: Bell },
 ] as const;
 
-export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, dark = false, onToggleTheme, onImport }: BottomNavProps) {
+export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, dark = false, onToggleTheme, onImport, onGoFilter, search = "" }: BottomNavProps) {
+  const { filters } = useSavedFilters();
   const [moreOpen, setMoreOpen] = useState(false);
   // Każde dotknięcie „+” obraca ikonę o ćwierć obrotu — cichy znak, że edytor się otwiera.
   const [quarterTurns, setQuarterTurns] = useState(0);
@@ -100,6 +105,19 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             <SheetTile Icon={CalendarRange} label="Kalendarz" active={view === "calendar"} onClick={() => { onGo("calendar"); setMoreOpen(false); }} />
             <SheetTile Icon={BriefcaseBusiness} label="Grafik" active={view === "shifts"} onClick={() => { onGo("shifts"); setMoreOpen(false); }} />
           </SheetGroup>
+          {onGoFilter && filters.length > 0 && (
+            <SheetGroup title="Filtry">
+              {filters.map((f) => (
+                <SheetTile
+                  key={f.id}
+                  Icon={Bookmark}
+                  label={f.name}
+                  active={view === "notes" && sameQuery(search, f.query)}
+                  onClick={() => { onGoFilter(f.query); setMoreOpen(false); }}
+                />
+              ))}
+            </SheetGroup>
+          )}
           <SheetGroup title="Narzędzia">
             {onOpenActions && <SheetTile Icon={History} label="Ostatnie akcje" onClick={() => { onOpenActions(); setMoreOpen(false); }} />}
             <SheetTile Icon={HelpCircle} label="Samouczek" onClick={() => { window.dispatchEvent(new CustomEvent("kaczy:tour")); setMoreOpen(false); }} />
