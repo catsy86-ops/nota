@@ -357,6 +357,22 @@
     transition-duration: var(--dur-press);
   }
 
+  /* Toast „Cofnij”: cienki pasek pokazuje, ile czasu zostało. Sonner wstrzymuje
+     licznik, gdy kursor jest nad stosem toastów — pasek robi to samo. */
+  .toast-undo { overflow: hidden; }
+  .toast-undo::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 2px;
+    background: hsl(var(--primary) / 0.7);
+    transform-origin: left center;
+    animation: toast-timer var(--toast-ms, 5000ms) linear forwards;
+    pointer-events: none;
+  }
+  [data-sonner-toaster]:hover .toast-undo::after { animation-play-state: paused; }
+  html[data-motion="reduced"] .toast-undo::after { display: none; }
+
   /* Smooth theme switch: applied briefly on <html> when theme changes */
   .theme-transition,
   .theme-transition *,
@@ -441,6 +457,11 @@
 /* Tryb wysokiego kontrastu wycina tła — wtedy zwykłe przekreślenie. */
 @media (forced-colors: active) {
   .check-strike[data-on="true"] { text-decoration: line-through; }
+}
+
+@keyframes toast-timer {
+  from { transform: scaleX(1); }
+  to { transform: scaleX(0); }
 }
 
 /* Chwilowe podświetlenie karty po „otwórz notatkę” (paleta, wikilink). */

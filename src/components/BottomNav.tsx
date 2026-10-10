@@ -6,6 +6,7 @@ import { InstallAppButton } from "@/components/InstallAppButton";
 import { ImportExportMenu } from "@/components/ImportExportMenu";
 import { cn } from "@/lib/utils";
 import { spring } from "@/lib/motion";
+import { useMotionPref } from "@/hooks/useMotionPref";
 
 import type { View } from "@/hooks/useFilteredNotes";
 
@@ -33,6 +34,9 @@ const slotsRight = [
 
 export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, dark = false, onToggleTheme, onImport }: BottomNavProps) {
   const [moreOpen, setMoreOpen] = useState(false);
+  // Każde dotknięcie „+” obraca ikonę o ćwierć obrotu — cichy znak, że edytor się otwiera.
+  const [quarterTurns, setQuarterTurns] = useState(0);
+  const { reduced } = useMotionPref();
   const isMoreActive = ["archive", "trash", "calendar", "shifts", "folder", "label"].includes(view);
 
   return (
@@ -54,13 +58,20 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             {/* Center FAB */}
             <li className="flex justify-center -mt-6">
               <motion.button
-                whileTap={{ scale: 0.92 }}
+                whileTap={reduced ? undefined : { scale: 0.92 }}
                 transition={spring.snap}
-                onClick={onNew}
+                onClick={() => { setQuarterTurns((n) => n + 1); onNew(); }}
                 aria-label="Nowa notatka"
                 className="relative w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-glow-primary ring-4 ring-background outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               >
-                <Plus className="w-6 h-6 relative z-10" />
+                <motion.span
+                  aria-hidden
+                  className="relative z-10 flex"
+                  animate={{ rotate: reduced ? 0 : quarterTurns * 90 }}
+                  transition={spring.snap}
+                >
+                  <Plus className="w-6 h-6" />
+                </motion.span>
               </motion.button>
             </li>
 
