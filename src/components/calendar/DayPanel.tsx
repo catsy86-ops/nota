@@ -70,11 +70,12 @@ export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMo
         </p>
       ) : (
         <ul className="space-y-1.5">
-          {occurrences.map((occ) => {
+          {occurrences.map((occ, i) => {
             const title = titleOf(occ.noteId);
             const forecast = occ.isSeries && !occ.isNext;
             return (
-              <li key={`${occ.noteId}-${occ.at}`}>
+              // Wejście ze stagger 40 ms — przy zmianie dnia klucze są nowe, więc lista wjeżdża na nowo.
+              <li key={`${occ.noteId}-${occ.at}`} className="rise-in" style={{ "--i": Math.min(i, 6) } as React.CSSProperties}>
                 {forecast ? (
                   <>
                     <button

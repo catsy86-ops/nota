@@ -44,7 +44,8 @@ export function UpcomingDays({ notes, titleOf, shiftOf, onSelectDay }: UpcomingD
             key={key}
             type="button"
             onClick={() => onSelectDay(day)}
-            className="text-left rounded-2xl border border-border/50 bg-card p-3 transition-colors [@media(hover:hover)]:hover:border-primary/40"
+            style={{ "--i": i } as React.CSSProperties}
+            className="rise-in text-left rounded-2xl border border-border/50 bg-card p-3 transition-colors [@media(hover:hover)]:hover:border-primary/40"
           >
             <span className="flex items-baseline gap-2">
               <span className="font-display font-semibold text-sm">{i === 0 ? "Dziś" : "Jutro"}</span>
@@ -73,8 +74,9 @@ export function UpcomingDays({ notes, titleOf, shiftOf, onSelectDay }: UpcomingD
                 <span className="text-xs text-muted-foreground">Brak terminów.</span>
               ) : (
                 <>
-                  {shown.map((occ) => (
-                    <ReminderChip key={`${occ.noteId}-${occ.at}`} occurrence={occ} title={titleOf(occ.noteId)} detailed />
+                  {shown.map((occ, j) => (
+                    <ReminderChip key={`${occ.noteId}-${occ.at}`} occurrence={occ} title={titleOf(occ.noteId)} detailed
+                      className="chip-slide" style={{ "--i": i + j } as React.CSSProperties} />
                   ))}
                   {items.length > shown.length && (
                     <span className="text-2xs text-muted-foreground pl-1">+{items.length - shown.length} więcej</span>

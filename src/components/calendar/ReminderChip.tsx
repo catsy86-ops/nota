@@ -28,15 +28,18 @@ interface ReminderChipProps {
   /** `true` w panelu dnia — więcej miejsca, więc pełny tytuł i data. */
   detailed?: boolean;
   className?: string;
+  /** Np. `--i` dla wejścia ze stagger (`chip-slide`). */
+  style?: React.CSSProperties;
 }
 
-export function ReminderChip({ occurrence, title, detailed = false, className }: ReminderChipProps) {
+export function ReminderChip({ occurrence, title, detailed = false, className, style }: ReminderChipProps) {
   const isForecast = occurrence.isSeries && !occurrence.isNext;
   const isPast = occurrence.at < Date.now();
 
   return (
     <span
       title={occurrenceLabel(occurrence, title)}
+      style={style}
       className={cn(
         "flex items-center gap-1 rounded-md border px-1 py-px text-left leading-tight",
         detailed ? "text-xs px-2 py-1 gap-1.5" : "text-2xs",

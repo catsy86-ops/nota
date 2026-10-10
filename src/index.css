@@ -457,11 +457,11 @@ html[data-motion="reduced"] .today-breath::before { animation: none; opacity: 0.
 }
 html[data-motion="reduced"] .now-dot::after { animation: none; opacity: 0; }
 
-/* Pasek postępu zmiany: wypełnienie rośnie z lewej (scaleX), po nim wolno
+/* Pasek postępu zmiany: wypełnienie wsuwa się z lewej (translateX), po nim wolno
    przesuwa się jasny prześwit. Postęp odświeża się co minutę. */
-@keyframes bar-grow { from { transform: scaleX(0); } }
+@keyframes bar-grow { from { transform: translateX(-100%); } }
 @keyframes bar-sheen { from { transform: translateX(-100%); } to { transform: translateX(260%); } }
-.now-bar { transform-origin: left center; animation: bar-grow var(--dur-slow) var(--ease-out); }
+.now-bar { animation: bar-grow var(--dur-slow) var(--ease-out); }
 .now-bar-sheen {
   position: absolute;
   inset: 0;
