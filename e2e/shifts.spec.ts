@@ -298,3 +298,17 @@ test("Kalendarz pokazuje dziś i jutro: zmianę z Grafiku i brak terminów", asy
   await today.getByRole("button", { name: /Jutro/ }).click();
   await expect(page.getByRole("heading", { name: /czwartek, 8 października/i })).toBeVisible();
 });
+
+test("wieczorne przypomnienie o jutrzejszej zmianie pojawia się raz", async ({ page }) => {
+  await page.evaluate(() => localStorage.setItem("kaczy:shifts.eveningNudge", "00:00"));
+  // Środa 7.10 (dziś) — jutro to czwartek 8.10.
+  await page.getByRole("button", { name: /^8 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  await expect(page.getByText(/Jutro: Dzień \d{2}:\d{2}–\d{2}:\d{2}/)).toBeVisible({ timeout: 15000 });
+  expect(await page.evaluate(() => localStorage.getItem("kaczy:shifts.eveningNudged"))).toBe("2026-10-08");
+});
+
+test("godzinę przypomnienia o zmianie ustawia się w ustawieniach grafiku", async ({ page }) => {
+  const settings = await openSettings(page);
+  await settings.getByLabel("Przypomnienie o jutrzejszej zmianie").selectOption("20:00");
+  expect(await page.evaluate(() => localStorage.getItem("kaczy:shifts.eveningNudge"))).toBe("20:00");
+});

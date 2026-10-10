@@ -5,8 +5,8 @@ import { ReminderChip } from "./ReminderChip";
 import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
 import { cn } from "@/lib/utils";
 import { holidayName } from "@/lib/shifts/holidays";
-import { shiftInk, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
-import { dayCellClass, dayNumberClass, holidayDotClass, holidayNameClass, shiftLabel } from "./dayCellStyles";
+import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
+import { dayCellClass, dayNumberClass, holidayDotClass, holidayNameClass } from "./dayCellStyles";
 
 /** Ile chipów mieści się w komórce, zanim reszta zwinie się w „+N". */
 const MAX_CHIPS = 3;

@@ -2,7 +2,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { FTE_OPTIONS, NIGHT_HOURS, NIGHT_STARTS, SETTLEMENT_MONTHS, setFte, setHourlyRate, setNightFrom, setOvertimeFrom, setSettlementMonths, setSettlementStart, setSundayFrom, setWorkSystem, type SettlementMonths, type ShiftData, type WorkSystem } from "@/lib/shifts";
+import { EVENING_NUDGE_HOURS, FTE_OPTIONS, NIGHT_HOURS, NIGHT_STARTS, SETTLEMENT_MONTHS, setFte, setHourlyRate, setNightFrom, setOvertimeFrom, setSettlementMonths, setSettlementStart, setSundayFrom, setWorkSystem, type SettlementMonths, type ShiftData, type WorkSystem } from "@/lib/shifts";
+import { readEveningNudgeTime, writeEveningNudgeTime } from "@/lib/shifts";
+import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
 import { PERIOD_LABELS, WORK_SYSTEM_LABELS } from "./labels";
 
 type Settings = Pick<ShiftData, "hourlyRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "overtimeFrom" | "sundayFrom" | "nightFrom">;
@@ -68,6 +70,7 @@ export function ShiftSettingsDialog({ open, onOpenChange, settings: s }: ShiftSe
               </select>
             </Field>
           )}
+          <EveningNudgeField />
           {/* Pora nocna i doba niedzieli zwykle zostają ustawowe — zmienia się je tylko, gdy regulamin pracy mówi inaczej. */}
           <details open={s.nightFrom !== 22 || s.sundayFrom !== 6 || undefined} className="group rounded-2xl border border-border/60 px-3 py-2.5">
             <summary className="cursor-pointer text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md">
@@ -103,6 +106,28 @@ export function ShiftSettingsDialog({ open, onOpenChange, settings: s }: ShiftSe
         </details>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/** Godzina wieczornego przypomnienia o jutrzejszej zmianie — ustawienie tego urządzenia. */
+function EveningNudgeField() {
+  const [time, setTime] = useState(() => readEveningNudgeTime() ?? "");
+  return (
+    <Field label="Przypomnienie o jutrzejszej zmianie" hint="Wieczorem przypomni, jaką masz zmianę następnego dnia. Działa na tym urządzeniu, gdy aplikacja jest otwarta.">
+      <select
+        value={time}
+        onChange={(e) => {
+          const v = e.target.value;
+          setTime(v);
+          writeEveningNudgeTime(v || null);
+          if (v) requestNotificationPermissionOnIntent();
+        }}
+        className={CONTROL}
+      >
+        <option value="">Wyłączone</option>
+        {EVENING_NUDGE_HOURS.map((h) => <option key={h} value={`${h}:00`}>{`codziennie o ${h}:00`}</option>)}
+      </select>
+    </Field>
   );
 }
 

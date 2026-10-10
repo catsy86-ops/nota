@@ -26,6 +26,7 @@ import { useNoteActions } from "@/hooks/useNoteActions";
 import { useNoteDnd } from "@/hooks/useNoteDnd";
 import { useImportExport } from "@/hooks/useImportExport";
 import { useBackupReminders } from "@/hooks/useBackupReminders";
+import { useShiftEveningNudge } from "@/hooks/useShiftEveningNudge";
 import { useDailyWeeklyNudges } from "@/hooks/useDailyWeeklyNudges";
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
 import { AddNoteBar } from "@/components/AddNoteBar";
@@ -182,6 +183,7 @@ const Index = () => {
 
   useBackupReminders(prefs, notes, archivedNotes);
   useDailyWeeklyNudges(prefs, notes, setView);
+  useShiftEveningNudge(useCallback(() => setView("shifts"), [setView]));
 
   // Pasek dodawania jest też w folderze i etykiecie — nowa notatka dziedziczy
   // ten kontekst (`handleAddNoteGlow`), zamiast lądować poza widokiem.

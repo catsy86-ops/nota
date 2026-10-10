@@ -3,8 +3,7 @@ import { pl } from "date-fns/locale";
 import { CalendarPlus, Plus, Pencil, ArrowRight, Download } from "lucide-react";
 import { ReminderChip } from "./ReminderChip";
 import type { Occurrence } from "@/lib/reminderOccurrences";
-import { shiftInk, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
-import { shiftLabel } from "./dayCellStyles";
+import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
 
 /**
  * Lista terminów wybranego dnia — tu mieszczą się pełne tytuły, których

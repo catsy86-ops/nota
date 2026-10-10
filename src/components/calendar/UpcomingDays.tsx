@@ -2,9 +2,8 @@ import { useMemo } from "react";
 import { addDays, format, startOfDay } from "date-fns";
 import { pl } from "date-fns/locale";
 import { ReminderChip } from "./ReminderChip";
-import { shiftLabel } from "./dayCellStyles";
 import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences";
-import { shiftInk, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
+import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
 import type { Note } from "@/hooks/useNotes";
 
 /** Ile terminów mieści się w karcie dnia, zanim reszta zwinie się w „+N”. */
