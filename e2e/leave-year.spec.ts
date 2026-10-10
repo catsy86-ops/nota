@@ -16,7 +16,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 const DAYS = {
-  // Urlop: pon–śr (do dziś włącznie), czw–pt (zaplanowane), marzec; sobota poza pulą.
+  // Urlop: pon–śr (do dziś włącznie), czw–pt (zaplanowane), marzec; sobota też w puli.
   "2026-10-05": { type: "u" }, "2026-10-06": { type: "u" }, "2026-10-07": { type: "u" },
   "2026-10-08": { type: "u" }, "2026-10-09": { type: "u" }, "2026-10-10": { type: "u" },
   "2026-03-10": { type: "u" },
@@ -27,19 +27,19 @@ const DAYS = {
 test("licznik urlopu liczy wykorzystane, zaplanowane i pozostałe, a wymiar zmienia się w ustawieniach", async ({ page }) => {
   await seed(page, { days: DAYS });
   const meter = page.getByRole("region", { name: "Licznik urlopu 2026" });
-  await expect(meter).toContainText("zostało 14 z 20 dni");
-  await expect(meter).toContainText("wykorzystane 4 · zaplanowane 2");
+  await expect(meter).toContainText("zostało 13 z 20 dni");
+  await expect(meter).toContainText("wykorzystane 4 · zaplanowane 3");
 
   await page.getByRole("button", { name: "Ustawienia grafiku" }).click();
   const settings = page.getByRole("dialog", { name: "Ustawienia grafiku" });
   await settings.getByRole("button", { name: "26", exact: true }).click();
   await expect(settings.getByLabel("Roczny wymiar urlopu")).toHaveValue("26");
   await page.keyboard.press("Escape");
-  await expect(meter).toContainText("zostało 20 z 26 dni");
+  await expect(meter).toContainText("zostało 19 z 26 dni");
 
   // Wymiar przeżywa odświeżenie.
   await page.reload();
-  await expect(page.getByRole("region", { name: "Licznik urlopu 2026" })).toContainText("zostało 20 z 26 dni");
+  await expect(page.getByRole("region", { name: "Licznik urlopu 2026" })).toContainText("zostało 19 z 26 dni");
 });
 
 test("podsumowanie roku pokazuje miesiące, sumę i przełącza rok", async ({ page }) => {
@@ -51,9 +51,9 @@ test("podsumowanie roku pokazuje miesiące, sumę i przełącza rok", async ({ p
   const table = dialog.getByRole("table", { name: "Podsumowanie roku 2026 według miesięcy" });
   await expect(table.getByRole("row")).toHaveCount(14); // nagłówek + 12 miesięcy + razem
   const total = table.getByRole("row").last();
-  // Godz. 8 (jedna zmiana), urlop 6, L4 1, zarobek 8 h × 30 zł.
+  // Godz. 8 (jedna zmiana), urlop 7, L4 1, zarobek 8 h × 30 zł.
   await expect(total).toContainText("8");
-  await expect(total.getByRole("cell").nth(3)).toHaveText("6");
+  await expect(total.getByRole("cell").nth(3)).toHaveText("7");
   await expect(total.getByRole("cell").nth(4)).toHaveText("1");
   await expect(total.getByRole("cell").nth(5)).toContainText("240,00");
   await expect(table.getByRole("row", { name: /^paź/ })).toHaveAttribute("aria-current", "date");

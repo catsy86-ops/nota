@@ -45,13 +45,13 @@ describe("leaveDays w migrate", () => {
 describe("licznik urlopu", () => {
   it("rozdziela dni do dziś włącznie od zaplanowanych", () => {
     const b = leaveBalance(data({ "2026-10-05": U, "2026-10-06": U, "2026-10-07": U, "2026-10-08": U, "2026-10-09": U }), 2026, TODAY);
-    expect(b).toMatchObject({ allowance: 20, used: 3, planned: 2, remaining: 15, offNormDays: 0 });
+    expect(b).toMatchObject({ allowance: 20, used: 3, planned: 2, remaining: 15 });
   });
 
-  it("nie liczy weekendów i świąt do puli, ale je zgłasza", () => {
+  it("liczy też weekendy i święta — urlop wpisany w grafiku ubywa z puli", () => {
     // sobota 10.10, niedziela 11.10, środa 11.11 (święto), poniedziałek 12.10
     const b = leaveBalance(data({ "2026-10-10": U, "2026-10-11": U, "2026-11-11": U, "2026-10-12": U }), 2026, TODAY);
-    expect(b).toMatchObject({ used: 0, planned: 1, remaining: 19, offNormDays: 3 });
+    expect(b).toMatchObject({ used: 0, planned: 4, remaining: 16 });
   });
 
   it("liczy tylko urlop — L4, inne nieobecności i praca nie ubywają z puli", () => {
@@ -62,7 +62,7 @@ describe("licznik urlopu", () => {
 
   it("przełom roku: dzień należy do roku z klucza, 1 stycznia to święto", () => {
     const days = { "2025-12-31": U, "2026-01-01": U, "2026-01-02": U, "2026-12-31": U, "2027-01-04": U };
-    expect(leaveBalance(data(days), 2026, TODAY)).toMatchObject({ used: 1, planned: 1, offNormDays: 1 });
+    expect(leaveBalance(data(days), 2026, TODAY)).toMatchObject({ used: 2, planned: 1 });
     expect(leaveBalance(data(days), 2025, TODAY)).toMatchObject({ used: 1, planned: 0 });
     // Rok przyszły: wszystko przed „dziś” z innego roku nie istnieje, więc zaplanowane.
     expect(leaveBalance(data(days), 2027, TODAY)).toMatchObject({ used: 0, planned: 1 });
@@ -92,15 +92,16 @@ describe("podsumowanie roku", () => {
       "2026-01-05": { type: "d" }, "2026-01-06": { type: "d" },
       "2026-03-10": U, "2026-03-11": U,
       "2026-03-14": { type: "l4" }, "2026-03-16": { type: "l4" },
-      "2026-10-10": U, // sobota — poza pulą
+      "2026-10-10": U, // sobota — też w puli
       "2025-12-30": { type: "d" }, "2027-01-04": { type: "d" },
     }), 2026);
     expect(y.months).toHaveLength(12);
     expect(y.months[0].minutes).toBe(960);
     expect(y.months[2]).toMatchObject({ leaveDays: 2, sickDays: 2 });
-    expect(y.months[9].leaveDays).toBe(0);
-    expect(y.total).toMatchObject({ minutes: 960, leaveDays: 2, sickDays: 2, earnings: 0 });
-    expect(y.total.leaveDays).toBe(leaveBalance(data({ "2026-03-10": U, "2026-03-11": U }), 2026, TODAY).used);
+    expect(y.months[9].leaveDays).toBe(1);
+    expect(y.total).toMatchObject({ minutes: 960, leaveDays: 3, sickDays: 2, earnings: 0 });
+    const b = leaveBalance(data({ "2026-03-10": U, "2026-03-11": U, "2026-10-10": U }), 2026, TODAY);
+    expect(y.total.leaveDays).toBe(b.used + b.planned);
   });
 
   it("liczy zarobek, gdy jest stawka, i sumuje nadgodziny", () => {

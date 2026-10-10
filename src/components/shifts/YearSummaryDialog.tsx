@@ -133,7 +133,7 @@ function Cell({ value, muted, accent, total }: { value: string; muted?: boolean;
 /** Pasek puli urlopu: wykorzystane pełnym kolorem, zaplanowane w paski — jak nadgodziny w podsumowaniu miesiąca. */
 export function LeaveMeter({ balance, compact = false }: { balance: LeaveBalance; compact?: boolean }) {
   const { reduced } = useMotionPref();
-  const { allowance, used, planned, remaining, offNormDays } = balance;
+  const { allowance, used, planned, remaining } = balance;
   const scale = Math.max(allowance, used + planned, 1);
   const transition = reduced ? { duration: 0 } : tween.enter;
   const over = remaining < 0;
@@ -155,7 +155,6 @@ export function LeaveMeter({ balance, compact = false }: { balance: LeaveBalance
       </div>
       <p className="text-2xs text-muted-foreground tabular-nums">
         wykorzystane {used} · zaplanowane {planned}
-        {!compact && offNormDays > 0 && ` · ${offNormDays} ${pluralPl(offNormDays, DAYS)} w weekend lub święto poza pulą`}
       </p>
     </section>
   );

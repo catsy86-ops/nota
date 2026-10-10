@@ -612,7 +612,7 @@ Zrobione przez agentów w osobnych worktree, scalone do master (445 testów jedn
 
 Scalone do master (519 testów jednostkowych, 103 e2e).
 
-- [x] Licznik urlopu: roczny wymiar (domyślnie 20/26), wykorzystany/planowany/pozostały, rodzaj nieobecności (`absenceKind`), podsumowanie roku (`YearSummaryDialog`). **Do decyzji:** urlop w weekend/święto nie ubywa z puli (liczone jak norma, `isNormDay`) — dla systemu zmianowego może niedoliczać; zmiana w `lib/shifts/leave.ts`.
+- [x] Licznik urlopu: roczny wymiar (domyślnie 20/26), wykorzystany/planowany/pozostały, rodzaj nieobecności (`absenceKind`), podsumowanie roku (`YearSummaryDialog`). ✅ 2026-10-10: licznik i podsumowanie roku liczą każdy dzień urlopu, także w weekend i święto (grafik zmianowy sam wyznacza dni pracy); wcześniej liczone jak norma (`isNormDay`).
 - [x] Widok tygodnia w Grafiku (z terminami z Kalendarza), przenoszenie/kopiowanie zmian (mysz, Alt, dotyk, klawiatura), „skopiuj tydzień na następny”, pasek tygodnia w Kalendarzu.
 - [x] Import z Google Keep (JSON/HTML/ZIP) i Markdown/Obsidian z podsumowaniem i „Cofnij”.
 - [x] Poprawki z przeglądu na żywo: CLS od paska bocznego, zawijanie akcji kafla w wąskim oknie, skróty `g` po kliknięciu notatki.

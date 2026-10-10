@@ -1,5 +1,4 @@
 import { absenceKindOf, type AbsenceKind, type ShiftData } from "./model";
-import { isNormDay } from "./holidays";
 import { monthSummary } from "./summary";
 
 const DAY_KEY = /^(\d{4})-(\d{2})-\d{2}$/;
@@ -24,32 +23,26 @@ export interface LeaveBalance {
   planned: number;
   /** Ile zostaje po wykorzystanych i zaplanowanych; ujemne = przekroczony wymiar. */
   remaining: number;
-  /**
-   * Dni urlopu w sobotę, niedzielę i święto — nie liczą się do puli, tak samo
-   * jak nie obniżają normy czasu pracy (art. 130 § 3 KP).
-   */
-  offNormDays: number;
 }
 
 /**
- * Licznik urlopu w roku kalendarzowym. Liczy tylko dni z rodzajem
- * nieobecności „urlop” (`absenceKindOf`) przypadające w dni robocze
- * (pon–pt, bez świąt) — tak jak norma miesiąca. `today` rozdziela dni
- * wykorzystane (do dziś włącznie) od zaplanowanych.
+ * Licznik urlopu w roku kalendarzowym. Liczy każdy dzień z rodzajem
+ * nieobecności „urlop” (`absenceKindOf`), także w weekend i święto — przy
+ * systemie zmianowym to grafik wyznacza dni pracy, a urlop wpisuje się tylko
+ * na dni, które inaczej byłyby pracą. `today` rozdziela dni wykorzystane
+ * (do dziś włącznie) od zaplanowanych.
  */
 export function leaveBalance(data: ShiftData, year: number, today: Date): LeaveBalance {
   const todayKey = localKey(today);
   const prefix = `${year}-`;
   let used = 0;
   let planned = 0;
-  let offNormDays = 0;
   for (const key of absenceDays(data, "leave")) {
     if (!key.startsWith(prefix)) continue;
-    if (!isNormDay(key)) { offNormDays += 1; continue; }
     if (key <= todayKey) used += 1;
     else planned += 1;
   }
-  return { year, allowance: data.leaveDays, used, planned, remaining: data.leaveDays - used - planned, offNormDays };
+  return { year, allowance: data.leaveDays, used, planned, remaining: data.leaveDays - used - planned };
 }
 
 export interface YearMonthRow {
@@ -58,7 +51,7 @@ export interface YearMonthRow {
   minutes: number;
   overtimeMinutes: number;
   nightMinutes: number;
-  /** Dni urlopu w dni robocze (jak w liczniku). */
+  /** Dni urlopu (jak w liczniku). */
   leaveDays: number;
   /** Dni zwolnienia (L4), wszystkie kalendarzowe. */
   sickDays: number;
@@ -80,7 +73,7 @@ export function yearSummary(data: ShiftData, year: number): YearSummary {
     const month = Number(key.slice(5, 7)) - 1;
     m.set(month, (m.get(month) ?? 0) + 1);
   };
-  for (const key of absenceDays(data, "leave")) if (isNormDay(key)) bump(leave, key);
+  for (const key of absenceDays(data, "leave")) bump(leave, key);
   for (const key of absenceDays(data, "sick")) bump(sick, key);
 
   const months: YearMonthRow[] = Array.from({ length: 12 }, (_, month) => {
