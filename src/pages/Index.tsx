@@ -51,22 +51,22 @@ import { useAchievementTracker } from "@/lib/achievements";
 import { useDayDoneReward } from "@/hooks/useDayDoneReward";
 import { showAchievementStamp, stampAllowed } from "@/lib/achievementStamp";
 import { AchievementStamp } from "@/components/AchievementStamp";
-import { ShortcutsDialog } from "@/components/ShortcutsDialog";
 import { DailyQuote } from "@/components/DailyQuote";
-import { WeeklyReviewCard } from "@/components/review/WeeklyReviewCard";
 import { PaperBackdrop } from "@/components/PaperBackdrop";
 import { QuickTemplates } from "@/components/QuickTemplates";
 import { useConfirmAction } from "@/components/ConfirmActionDialog";
 import { BulkActionBar } from "@/components/BulkActionBar";
 import { registerUndoHandlers, undoLastAction } from "@/lib/actionHistory";
 import { BottomNav } from "@/components/BottomNav";
-import { RecentActionsPanel } from "@/components/RecentActionsPanel";
-import { OnboardingTour } from "@/components/OnboardingTour";
 import { VaultHost } from "@/components/vault/VaultHost";
 
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
 // note action or explicit toggle) — kept out of the eager main bundle so
 // first load only pays for the code the note grid itself needs.
+const ShortcutsDialog = lazy(() => import("@/components/ShortcutsDialog").then((m) => ({ default: m.ShortcutsDialog })));
+const WeeklyReviewCard = lazy(() => import("@/components/review/WeeklyReviewCard").then((m) => ({ default: m.WeeklyReviewCard })));
+const RecentActionsPanel = lazy(() => import("@/components/RecentActionsPanel").then((m) => ({ default: m.RecentActionsPanel })));
+const OnboardingTour = lazy(() => import("@/components/OnboardingTour").then((m) => ({ default: m.OnboardingTour })));
 const CommandPalette = lazy(() => import("@/components/CommandPalette").then((m) => ({ default: m.CommandPalette })));
 const ImportExternalDialog = lazy(() => import("@/components/ImportExternalDialog").then((m) => ({ default: m.ImportExternalDialog })));
 const SettingsDialog = lazy(() => import("@/components/SettingsDialog").then((m) => ({ default: m.SettingsDialog })));
@@ -596,11 +596,13 @@ const Index = () => {
           )}
           {view === "notes" && <InstallBanner ready={notes.length >= 3} />}
           {view === "today" && !deferredSearch && (
-            <WeeklyReviewCard
-              notes={notes} folders={folders} onOpen={openNote} onTogglePin={togglePin}
-              onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow}
-              archiveNote={archiveNote} unarchiveNote={unarchiveNote} trashNote={trashNote} restoreFromTrash={restoreFromTrash}
-            />
+            <Suspense fallback={null}>
+              <WeeklyReviewCard
+                notes={notes} folders={folders} onOpen={openNote} onTogglePin={togglePin}
+                onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow}
+                archiveNote={archiveNote} unarchiveNote={unarchiveNote} trashNote={trashNote} restoreFromTrash={restoreFromTrash}
+              />
+            </Suspense>
           )}
 
           {canCompose && (
@@ -822,7 +824,11 @@ const Index = () => {
         />
       </Suspense>
     )}
-    <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+    {shortcutsOpen && (
+      <Suspense fallback={null}>
+        <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      </Suspense>
+    )}
     <AnimatePresence>
       {readerNote && (
         <NoteReader
@@ -870,15 +876,21 @@ const Index = () => {
       onTrash={handleBulkTrash}
       onColor={handleBulkColor}
     />
-    <OnboardingTour />
-    <RecentActionsPanel
-      open={actionsOpen}
-      onOpenChange={setActionsOpen}
-      onOpenNote={(ids) => {
-        const existing = [...notes, ...archivedNotes, ...trashedNotes].find((n) => ids.includes(n.id));
-        openNote(existing?.id ?? ids[0]);
-      }}
-    />
+    <Suspense fallback={null}>
+      <OnboardingTour />
+    </Suspense>
+    {actionsOpen && (
+      <Suspense fallback={null}>
+        <RecentActionsPanel
+          open={actionsOpen}
+          onOpenChange={setActionsOpen}
+          onOpenNote={(ids) => {
+            const existing = [...notes, ...archivedNotes, ...trashedNotes].find((n) => ids.includes(n.id));
+            openNote(existing?.id ?? ids[0]);
+          }}
+        />
+      </Suspense>
+    )}
     {confirmDialog}
     <VaultHost />
     </DndContext>
