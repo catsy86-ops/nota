@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseSearchQuery, matchesClauses, type MatchNote } from "./searchQuery";
+import { parseSearchQuery, matchesClauses, highlightTokens, type MatchNote } from "./searchQuery";
 import { suggestOperators, applySuggestion } from "./searchSuggest";
 import { addFilter, renameFilter, removeFilter, sanitizeFilters } from "./savedFilters";
 
@@ -115,5 +115,14 @@ describe("savedFilters", () => {
     expect(addFilter([], "x", "  ", "1")).toEqual([]);
     expect(sanitizeFilters([{ id: "a", name: "n", query: "q" }, { id: 1 }, null, { id: "a", name: "dup", query: "q" }])).toHaveLength(1);
     expect(sanitizeFilters("zepsute")).toEqual([]);
+  });
+});
+
+describe("highlightTokens", () => {
+  it("pomija operatory, także polskie, i krótkie słowa", () => {
+    expect(highlightTokens("etykieta:praca mleko ma:obraz a")).toEqual(["mleko"]);
+    expect(highlightTokens("label:x przypięte kupić mleko")).toEqual(["kupić", "mleko"]);
+    expect(highlightTokens("")).toEqual([]);
+    expect(highlightTokens(undefined)).toEqual([]);
   });
 });

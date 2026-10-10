@@ -3,6 +3,7 @@ import { yjsStore } from "@/lib/yjsStore";
 import { versionsStore } from "@/lib/versionsStore";
 import { privateNotes } from "@/lib/privateNotes";
 import { toast } from "sonner";
+import { toastWithUndo } from "@/lib/undoToast";
 import type { NotePriority } from "@/lib/notePriority";
 import type { Attachment } from "@/lib/attachments";
 
@@ -215,7 +216,18 @@ export function useNotes() {
   }, []);
 
   const removeLabel = useCallback((label: string) => {
+    // Etykieta znika ze wszystkich notatek (też z archiwum i kosza) — zapamiętujemy,
+    // z których, żeby „Cofnij” przywróciło dokładnie te przypisania.
+    const ids = yjsStore.projectNotes().filter((n) => n.labels.includes(label)).map((n) => n.id);
     yjsStore.removeLabelEverywhere(label);
+    toastWithUndo(`Usunięto etykietę „${label}”`, () => {
+      yjsStore.addLabel(label);
+      const byId = new Map(yjsStore.projectNotes().map((n) => [n.id, n]));
+      for (const id of ids) {
+        const n = byId.get(id);
+        if (n && !n.labels.includes(label)) yjsStore.patchNote(id, { labels: [...n.labels, label] });
+      }
+    }, { description: ids.length > 0 ? `Zdjęta z ${ids.length} ${ids.length === 1 ? "notatki" : "notatek"}` : undefined });
   }, []);
 
   const renameLabel = useCallback((oldLabel: string, newLabel: string) => {

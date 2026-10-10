@@ -116,6 +116,16 @@ export function parseSearchQuery(query: string): ParsedQuery {
   return { clauses, text: free.filter(Boolean).join(" ") };
 }
 
+/**
+ * Słowa warte podświetlenia w treści (czytnik): wolny tekst zapytania bez
+ * operatorów — także polskich (`etykieta:`, `folder:`, `ma:`, `przypięte`).
+ */
+export function highlightTokens(query: string | undefined): string[] {
+  const q = (query || "").trim();
+  if (!q) return [];
+  return parseSearchQuery(q).text.split(/\s+/).filter((t) => t.length >= 2);
+}
+
 export interface MatchNote {
   labels: string[];
   color: string;

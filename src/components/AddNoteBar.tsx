@@ -308,7 +308,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
             {labels.length > 0 && (
               <div className="flex gap-1 flex-wrap">
                 {labels.map((l) => (
-                  <Badge key={l} variant="secondary" className="text-2xs cursor-pointer" onClick={() => toggleLabel(l)}>{l} ×</Badge>
+                  <button key={l} type="button" onClick={() => toggleLabel(l)} aria-label={`Usuń etykietę ${l}`} className="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"><Badge variant="secondary" className="text-2xs cursor-pointer">{l} ×</Badge></button>
                 ))}
               </div>
             )}
@@ -369,7 +369,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                     <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Etykiety</p>
                     <div className="flex gap-1 flex-wrap">
                       {allLabels.map((l) => (
-                        <Badge key={l} variant={labels.includes(l) ? "default" : "outline"} className="cursor-pointer text-xs" onClick={() => toggleLabel(l)}>{l}</Badge>
+                        <button key={l} type="button" onClick={() => toggleLabel(l)} aria-pressed={labels.includes(l)} className="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"><Badge variant={labels.includes(l) ? "default" : "outline"} className="cursor-pointer text-xs">{l}</Badge></button>
                       ))}
                     </div>
                     <div className="flex gap-1.5">

@@ -19,6 +19,7 @@ import { NoteImage } from "./NoteImage";
 import { AttachmentsReadOnlyList } from "./AttachmentsList";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { copyNoteToClipboard } from "@/lib/noteMarkdown";
+import { highlightTokens } from "@/lib/searchQuery";
 
 /**
  * Jedno miejsce czytania notatki (wcześniej: szybki podgląd w `NoteGrid`
@@ -80,13 +81,6 @@ function useOriginFromTile(panelRef: React.RefObject<HTMLDivElement>, noteId: st
 
 function escRx(s: string) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
-/** Słowa z wyszukiwania warte podświetlenia (bez filtrów `label:` itp.). */
-function searchTokens(query: string | undefined): string[] {
-  const q = (query || "").trim();
-  if (!q) return [];
-  return q.split(/\s+/).filter((tok) => !/^(label|color|has):/i.test(tok) && tok.length >= 2);
-}
-
 function buildSnippets(text: string, tokens: string[], max = 3) {
   if (!tokens.length || !text) return [];
   const rx = new RegExp(tokens.map(escRx).join("|"), "gi");
@@ -139,7 +133,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
     return () => window.removeEventListener("keydown", onKey);
   }, [present, note.id, canEdit, onClose, onEdit]);
 
-  const tokens = searchTokens(searchQuery);
+  const tokens = highlightTokens(searchQuery);
   const snippets = buildSnippets(note.content || "", tokens);
   const titleHits = tokens.some((t) => note.title.toLowerCase().includes(t.toLowerCase())) ? 1 : 0;
   const backlinks = showBacklinks ? backlinksOf(note, wikiIndex) : [];

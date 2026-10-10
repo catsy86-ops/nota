@@ -263,10 +263,12 @@ export function ChecklistCount({ items }: { items: ChecklistItem[] }) {
 export function ChecklistPreview({ items, onToggle, showProgress = true }: { items: ChecklistItem[]; onToggle?: (id: string) => void; showProgress?: boolean }) {
   if (!items.length) return null;
   const done = items.filter((i) => i.checked).length;
-  
+  // Cztery odhaczone pozycje na początku nie mogą ukrywać otwartych zadań: nieukończone idą pierwsze.
+  const ordered = [...items.filter((i) => !i.checked), ...items.filter((i) => i.checked)];
+
   return (
     <div className="mt-1">
-      {items.slice(0, PREVIEW_ITEMS).map((item) => (
+      {ordered.slice(0, PREVIEW_ITEMS).map((item) => (
         // Cały wiersz jest polem wyboru: na dotyku cel ma szerokość kafla, nie 14 px.
         <button
           key={item.id}

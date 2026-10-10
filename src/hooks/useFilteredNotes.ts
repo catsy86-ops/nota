@@ -116,7 +116,9 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
 
     // Wyszukiwanie przeszukuje pulę bieżącego widoku — ale gdy trafienia są
     // gdzie indziej, mówimy o tym (i dajemy przejście), zamiast udawać, że nic nie ma.
-    const elsewhere: Elsewhere = !search ? NO_ELSEWHERE : {
+    // Liczymy tylko przy pustym wyniku — tylko wtedy EmptyState pokazuje przejścia, a trzy
+    // dodatkowe wyszukiwania przy każdej edycji notatki były kosztem bez odbiorcy.
+    const elsewhere: Elsewhere = !search || displayNotes.length > 0 ? NO_ELSEWHERE : {
       notes: view === "notes" ? 0 : searchNotes(notes, search, { folders }).length,
       archive: view === "archive" ? 0 : searchNotes(archivedNotes, search, { folders }).length,
       trash: view === "trash" ? 0 : searchNotes(trashedNotes, search, { folders }).length,
