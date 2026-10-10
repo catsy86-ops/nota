@@ -1,9 +1,10 @@
 import type { ReactElement } from "react";
-import { FileJson, FileText, Upload } from "lucide-react";
+import { FileJson, FileText, NotebookPen, Upload } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { exportToJSON, exportToMarkdown, exportToHTML } from "@/lib/exportNotes";
 import { markBackup } from "@/lib/backupReminder";
+import { OPEN_EXTERNAL_IMPORT_EVENT } from "@/hooks/useImportExport";
 
 interface ImportExportMenuProps {
   /** Przycisk otwierający menu (musi przyjmować `ref`). */
@@ -14,7 +15,7 @@ interface ImportExportMenuProps {
   align?: "start" | "end";
 }
 
-/** Eksport notatek (JSON, PDF, Markdown, HTML) i import z JSON — w nagłówku i w „Więcej” na telefonie. */
+/** Eksport notatek (JSON, PDF, Markdown, HTML) import z JSON oraz z Google Keep / Markdown — w nagłówku i w „Więcej” na telefonie. */
 export function ImportExportMenu({ children, onImport, onDone, align = "end" }: ImportExportMenuProps) {
   const { notes, archivedNotes } = useNotesContext();
   const all = () => [...notes, ...archivedNotes];
@@ -22,7 +23,7 @@ export function ImportExportMenu({ children, onImport, onDone, align = "end" }: 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
-      <DropdownMenuContent align={align} className="w-52">
+      <DropdownMenuContent align={align} className="w-60">
         <DropdownMenuItem onClick={run(() => { void exportToJSON(all()).then(markBackup); })}>
           <FileJson className="w-4 h-4 mr-2" />
           Eksportuj jako JSON
@@ -43,6 +44,10 @@ export function ImportExportMenu({ children, onImport, onDone, align = "end" }: 
         <DropdownMenuItem onClick={run(onImport)}>
           <Upload className="w-4 h-4 mr-2" />
           Importuj z JSON
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={run(() => window.dispatchEvent(new Event(OPEN_EXTERNAL_IMPORT_EVENT)))}>
+          <NotebookPen className="w-4 h-4 mr-2" />
+          Z Google Keep / Markdown
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
