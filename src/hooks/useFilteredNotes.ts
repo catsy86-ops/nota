@@ -46,7 +46,7 @@ function filterNotes(list: Note[], { view, activeLabel, activeFolder, folders, s
     filtered = filtered.filter((n) => n.folderId && folderIds.has(n.folderId));
   }
   if (search) {
-    filtered = searchNotes(filtered, search);
+    filtered = searchNotes(filtered, search, { folders });
   }
   return filtered;
 }
@@ -105,9 +105,9 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
     // Wyszukiwanie przeszukuje pulę bieżącego widoku — ale gdy trafienia są
     // gdzie indziej, mówimy o tym (i dajemy przejście), zamiast udawać, że nic nie ma.
     const elsewhere: Elsewhere = !search ? NO_ELSEWHERE : {
-      notes: view === "notes" ? 0 : searchNotes(notes, search).length,
-      archive: view === "archive" ? 0 : searchNotes(archivedNotes, search).length,
-      trash: view === "trash" ? 0 : searchNotes(trashedNotes, search).length,
+      notes: view === "notes" ? 0 : searchNotes(notes, search, { folders }).length,
+      archive: view === "archive" ? 0 : searchNotes(archivedNotes, search, { folders }).length,
+      trash: view === "trash" ? 0 : searchNotes(trashedNotes, search, { folders }).length,
     };
 
     return { displayNotes, pinned, others, elsewhere };
