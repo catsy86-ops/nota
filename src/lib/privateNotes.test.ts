@@ -1,5 +1,4 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import * as Y from "yjs";
 import { createYjsStore, yjsStore } from "@/lib/yjsStore";
 import { createPrivateNotes, privateNotes, throttleDelayMs, VaultThrottledError } from "@/lib/privateNotes";
 import { createVersionsStore, versionsStore } from "@/lib/versionsStore";
@@ -32,7 +31,7 @@ function fresh() {
 
 /** Bajty dokumentu jako tekst — do szukania jawnych fragmentów. */
 function docText(store: ReturnType<typeof createYjsStore>): string {
-  return new TextDecoder("latin1").decode(Y.encodeStateAsUpdate(store.doc));
+  return new TextDecoder("latin1").decode(store.encodeSyncState());
 }
 
 beforeEach(() => { localStorage.clear(); });
