@@ -15,6 +15,21 @@ test("sekwencja „g, k” przechodzi do kosza, a „g, n” wraca do notatek", 
   await expect(page).not.toHaveURL(/\/kosz$/);
 });
 
+test("po kliknięciu notatki kliknięcie poza kaflem przywraca skrót „g, k”", async ({ page }) => {
+  const title = `E2E-fokus ${Date.now()}`;
+  await page.getByText("Zapisz notatkę...").click();
+  await page.getByPlaceholder("Tytuł").fill(title);
+  await page.getByRole("button", { name: "Zamknij" }).click();
+  const card = page.locator("[data-note-id-wrap]", { hasText: title });
+  await expect(card).toHaveCount(1);
+  await card.locator("[data-note-id]").first().click({ position: { x: 10, y: 10 } });
+  await page.keyboard.press("Escape");
+  await page.locator("body").click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press("g");
+  await page.keyboard.press("k");
+  await expect(page).toHaveURL(/\/kosz$/);
+});
+
 test("„g” w polu tekstowym nie uruchamia nawigacji", async ({ page }) => {
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").click();

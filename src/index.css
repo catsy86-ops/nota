@@ -598,6 +598,11 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
   .card-actions:not([data-open]):not([data-editing]) :is(button, [role="button"], a) { pointer-events: auto; }
   .card-actions:not([data-open]):not([data-editing]) .card-action { padding: 0.3125rem; }
 }
+/* Wąskie kafle w oknie z myszą (np. 2 kolumny przy 390 px): siedem ikon nie mieści się w jednym
+   wierszu — bez zawijania „Więcej opcji” jest ucięte, a fokus przewija zawartość kafla w bok. */
+@media (hover: hover) and (max-width: 480px) {
+  .card-actions:not([data-open]):not([data-editing]) { flex-wrap: wrap; }
+}
 
 /* Rachunek w podsumowaniu Grafiku: papier odrobinę jaśniejszy od karty i ząbkowana dolna krawędź (maska). */
 .receipt {

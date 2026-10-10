@@ -4,6 +4,8 @@ import {
   setGridNavFocus,
   setGridNavPreview,
   handleGridNavKey,
+  handleGridNavPointerDown,
+  hasGridNavFocus,
   __resetGridNavForTests,
   type GridNavHandlers,
 } from "./gridKeyboardNav";
@@ -178,5 +180,17 @@ describe("gridKeyboardNav", () => {
     const e = key("/");
     expect(e.defaultPrevented).toBe(true);
     expect(document.activeElement).toBe(input);
+  });
+
+  it("kliknięcie poza kaflem zdejmuje fokus siatki, kliknięcie w kafel go zostawia", () => {
+    probe = probeHandlers();
+    registerGridNavSection(0, ["a", "b"], probe);
+    document.body.innerHTML = '<div data-note-id-wrap="a"><span id="in"></span></div><button id="out"></button>';
+    setGridNavFocus("a");
+    expect(hasGridNavFocus()).toBe(true);
+    handleGridNavPointerDown({ target: document.getElementById("in") });
+    expect(hasGridNavFocus()).toBe(true);
+    handleGridNavPointerDown({ target: document.getElementById("out") });
+    expect(hasGridNavFocus()).toBe(false);
   });
 });
