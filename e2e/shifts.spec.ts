@@ -312,3 +312,16 @@ test("godzinę przypomnienia o zmianie ustawia się w ustawieniach grafiku", asy
   await settings.getByLabel("Przypomnienie o jutrzejszej zmianie").selectOption("20:00");
   expect(await page.evaluate(() => localStorage.getItem("kaczy:shifts.eveningNudge"))).toBe("20:00");
 });
+
+test("paleta poleceń znajduje dzień grafiku i otwiera jego okno", async ({ page }) => {
+  await page.getByRole("button", { name: /^14 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
+  await page.goto("/");
+  await page.keyboard.press("ControlOrMeta+k");
+  const input = page.getByRole("dialog").getByPlaceholder(/Szukaj/i);
+  await input.fill("14 października");
+  const hit = page.getByRole("option", { name: /środa, 14 października|14 października/i }).filter({ hasText: "Dzień" });
+  await expect(hit).toHaveCount(1);
+  await hit.click();
+  await expect(page.getByRole("heading", { name: "Grafik", level: 1 })).toBeVisible();
+  await expect(page.getByRole("dialog")).toContainText("14 października");
+});

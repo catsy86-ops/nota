@@ -3,6 +3,7 @@ import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, C
 import { StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, Brain, Keyboard, BookOpen } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes } from "@/lib/searchNotes";
+import { requestShiftDay, searchShiftDays, useShifts } from "@/lib/shifts";
 import { modShortcut } from "@/lib/platform";
 
 const NOTE_LIMIT = 30;
@@ -46,6 +47,11 @@ export function CommandPalette({
 }: Props) {
   const [search, setSearch] = useState("");
   const matched = useMemo(() => searchNotes(notes, search), [notes, search]);
+  const shifts = useShifts();
+  const shiftHits = useMemo(() => {
+    const types = new Map(shifts.types.map((x) => [x.id, x]));
+    return searchShiftDays(search, shifts.days, types);
+  }, [shifts, search]);
 
   function run(fn: () => void) {
     onOpenChange(false);
@@ -54,7 +60,7 @@ export function CommandPalette({
 
   return (
     <CommandDialog open={open} onOpenChange={onOpenChange}>
-      <CommandInput placeholder="Szukaj notatek lub akcji…" value={search} onValueChange={setSearch} />
+      <CommandInput placeholder="Szukaj notatek, dni grafiku lub akcji…" value={search} onValueChange={setSearch} />
       <CommandList>
         <CommandEmpty>
           <div className="flex flex-col items-center gap-2 py-2">
@@ -117,6 +123,26 @@ export function CommandPalette({
             <Trash className="w-4 h-4 mr-2" /> Kosz
           </CommandItem>
         </CommandGroup>
+        {shiftHits.length > 0 && (
+          <>
+            <CommandSeparator />
+            {/* Dni grafiku filtruje `searchShiftDays`, nie cmdk — stąd `forceMount`. */}
+            <CommandGroup heading="Grafik" forceMount>
+              {shiftHits.map((h) => (
+                <CommandItem
+                  key={h.key}
+                  forceMount
+                  value={`shift-${h.key}`}
+                  onSelect={() => run(() => { requestShiftDay(h.key); onGo("shifts"); })}
+                >
+                  <BriefcaseBusiness className="w-4 h-4 mr-2 text-muted-foreground" />
+                  <span className="truncate first-letter:uppercase">{h.dateLabel}</span>
+                  <span className="ml-2 truncate text-xs text-muted-foreground">{h.shiftLabel}{h.note ? ` · ${h.note}` : ""}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
         {matched.length > 0 && (
           <>
             <CommandSeparator />

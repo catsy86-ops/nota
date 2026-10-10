@@ -1,10 +1,10 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { addMonths, format, startOfMonth } from "date-fns";
 import { pl } from "date-fns/locale";
 import { CalendarArrowDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { dayKey } from "@/lib/reminderOccurrences";
-import { DEFAULT_SHIFT_TYPES, addDefaultShiftTypes, SHIFTS_EXPORTED_KEY, applyPatternToStore, buildShiftsIcs, cancelledShiftDays, exportableShiftDays, exportedAfter, monthSummary, restoreDays, setDayEntry, setDayShift, shiftStore, useShifts, useShiftsReady, type ShiftType } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, addDefaultShiftTypes, SHIFTS_EXPORTED_KEY, applyPatternToStore, buildShiftsIcs, cancelledShiftDays, exportableShiftDays, exportedAfter, monthSummary, restoreDays, setDayEntry, setDayShift, shiftStore, subscribeShiftDay, takeShiftDay, useShifts, useShiftsReady, type ShiftType } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { TAP } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
@@ -51,6 +51,20 @@ function ShiftsScreen() {
   const [openDay, setOpenDay] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [patternOpen, setPatternOpen] = useState(false);
+
+  // „Pokaż dzień” z palety poleceń: miesiąc tego dnia i jego okno. Prośba mogła
+  // przyjść przed załadowaniem widoku, więc odbieramy ją też przy montowaniu.
+  useEffect(() => {
+    const take = () => {
+      const key = takeShiftDay();
+      if (!key) return;
+      const [y, m] = key.split("-").map(Number);
+      setMonth(new Date(y, m - 1, 1));
+      setOpenDay(key);
+    };
+    take();
+    return subscribeShiftDay(take);
+  }, []);
 
   const typesById = useMemo(() => new Map(data.types.map((t) => [t.id, t])), [data.types]);
   const summary = useMemo(() => monthSummary(data, month.getFullYear(), month.getMonth()), [data, month]);
