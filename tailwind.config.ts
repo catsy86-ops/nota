@@ -140,6 +140,16 @@ export default {
           "0%": { transform: "translateX(-100%)", opacity: "0" },
           "100%": { transform: "translateX(0)", opacity: "1" },
         },
+        // Kreska zaznaczenia „długopisem”: odsłania się od lewej (clip-path).
+        "check-draw": {
+          from: { clipPath: "inset(0 100% 0 0)" },
+          to: { clipPath: "inset(0 0 0 0)" },
+        },
+        // Pasek upływu czasu toastu „Cofnij”.
+        "toast-timer": {
+          from: { transform: "scaleX(1)" },
+          to: { transform: "scaleX(0)" },
+        },
         shimmer: {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
@@ -155,6 +165,7 @@ export default {
         "fade-in": "fade-in var(--dur-base) var(--ease-out)",
         "scale-in": "scale-in var(--dur-base) var(--ease-out)",
         "slide-in-left": "slide-in-left 0.3s ease-out",
+        "check-draw": "check-draw var(--dur-base) var(--ease-out)",
         shimmer: "shimmer 2s infinite linear",
         float: "float 3s ease-in-out infinite",
       },
