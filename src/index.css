@@ -742,3 +742,65 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
   .notki-caret { opacity: 1; }
 }
 html[data-motion="reduced"] .notki-caret { opacity: 1; }
+
+/* ── Ruch kart notatek ─────────────────────────────────────────────────── */
+
+/* Fokus z klawiatury: ten sam cień co przy najechaniu, ale bez ruchu. */
+.note-card:has(:focus-visible) { box-shadow: var(--elevation-3); }
+
+/* Uniesienie tylko dla wskaźnika myszy: `translate` jest niezależne od `transform`
+   framer-motion (layout, kaskada), a trafienie liczymy na nieruchomym kontenerze,
+   więc karta nie „drży” na krawędzi kursora. Karta w edycji stoi w miejscu. */
+@media (hover: hover) and (pointer: fine) {
+  .note-lift:hover .note-card:not(:has(textarea)):not([data-tile-editing]) {
+    translate: 0 -2px;
+    box-shadow: var(--elevation-3);
+  }
+}
+
+/* „Klik pinezki”: pinezka spada na kartę, odbija się i znika; z pinezki rozchodzi się fala. */
+.pin-stamp {
+  position: absolute; top: 0.5rem; left: 0.5rem; z-index: 15;
+  display: grid; place-items: center; width: 1.5rem; height: 1.5rem;
+  color: hsl(var(--primary)); opacity: 0; pointer-events: none;
+  animation: pin-drop 900ms var(--ease-out);
+}
+.pin-stamp-ripple {
+  position: absolute; inset: 0; border-radius: 9999px;
+  border: 2px solid hsl(var(--primary) / 0.5); opacity: 0;
+  animation: pin-ripple 700ms var(--ease-out) 120ms;
+}
+@keyframes pin-drop {
+  0%   { opacity: 0; transform: translateY(-10px) scale(1.9) rotate(-35deg); }
+  28%  { opacity: 1; transform: translateY(0) scale(0.9) rotate(8deg); }
+  42%  { opacity: 1; transform: translateY(0) scale(1.08) rotate(-3deg); }
+  55%, 75% { opacity: 1; transform: translateY(0) scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: translateY(0) scale(1) rotate(0deg); }
+}
+@keyframes pin-ripple {
+  0%   { opacity: 0.7; transform: scale(0.6); }
+  100% { opacity: 0; transform: scale(2.2); }
+}
+
+/* Pieczątka „gotowe” po ukończeniu listy: opada na kartę i lekko odbija. */
+.card-stamp {
+  position: absolute; z-index: 15; left: 50%; top: 42%;
+  margin-left: -2.6rem; padding: 0.15rem 0.6rem;
+  border: 2px solid hsl(var(--primary) / 0.85); border-radius: 0.375rem;
+  color: hsl(var(--primary)); background: hsl(var(--background) / 0.55);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
+  opacity: 0; pointer-events: none; transform: rotate(-8deg);
+  animation: card-stamp 1500ms var(--ease-out);
+}
+@keyframes card-stamp {
+  0%   { opacity: 0; transform: rotate(-14deg) scale(1.7); }
+  16%  { opacity: 1; transform: rotate(-8deg) scale(0.95); }
+  24%  { opacity: 1; transform: rotate(-8deg) scale(1); }
+  78%  { opacity: 1; transform: rotate(-8deg) scale(1); }
+  100% { opacity: 0; transform: rotate(-8deg) scale(1); }
+}
+html[data-motion="reduced"] .note-lift:hover .note-card { translate: none; }
+@media (prefers-reduced-motion: reduce) {
+  .note-lift:hover .note-card { translate: none; }
+}

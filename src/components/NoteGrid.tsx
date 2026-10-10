@@ -1,4 +1,5 @@
-import { useRef, useEffect, useCallback, memo, useMemo, forwardRef } from "react";
+import { useRef, useEffect, useCallback, memo, useMemo, useState, forwardRef } from "react";
+import type { CardExitIntent } from "@/lib/cardMotion";
 import { AnimatePresence } from "framer-motion";
 import { useSortable, SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -19,23 +20,31 @@ interface SortableNoteCardProps {
 }
 
 const SortableNoteCard = memo(function SortableNoteCard({ layout, note, index, selected }: SortableNoteCardProps) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: note.id });
+  // Odłożenie karty (i przesuwanie sąsiadów) z łagodnym, papierowym przeskokiem:
+  // krzywa z minimalnym przestrzałem daje mikro-odbicie zamiast sztywnego dojazdu.
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } = useSortable({
+    id: note.id,
+    transition: { duration: 240, easing: "cubic-bezier(0.22, 1.15, 0.36, 1)" },
+  });
+  const baseTransform = CSS.Transform.toString(transform);
   const style = {
-    transform: CSS.Transform.toString(transform),
+    // „Uniesienie”: lekki obrót i skala dopisane do transformu dnd-kit; po upuszczeniu
+    // wracają przez to samo przejście, co daje odłożenie z odbiciem.
+    transform: isDragging ? `${baseTransform ?? ""} scale(1.02) rotate(1.2deg)`.trim() : baseTransform,
     transition,
     zIndex: isDragging ? 50 : undefined,
   };
-  // „Uniesienie” przy przeciąganiu: cień i lekka przezroczystość, bez skali —
-  // transform należy do dnd-kit.
 
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={cn(
-        "rounded-xl transition-[box-shadow,opacity] duration-fast",
+        "rounded-xl transition-[box-shadow,opacity,outline-color] duration-fast outline outline-2 outline-offset-2 outline-transparent",
         layout === "grid" && "h-full",
         isDragging && "opacity-90 shadow-elevation-3",
+        // Miękki wskaźnik miejsca docelowego pod kartą, nad którą jest przeciągana.
+        isOver && !isDragging && "outline-dashed outline-primary/40",
       )}
     >
       <NoteCard note={note} index={index} selected={selected} dragAttributes={attributes} dragListeners={listeners} />
@@ -60,8 +69,19 @@ interface NoteGridProps extends Omit<NoteViewActions, "selectionMode" | "onToggl
 }
 
 export function NoteGrid({
-  notes, onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder, getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectedIds, selectionMode, onToggleSelect, navOrder = 0,
+  notes, onUpdate, onDelete: onDeleteProp, onTogglePin, onDuplicate, onArchive: onArchiveProp, onUnarchive, isArchived, onMoveToFolder, getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectedIds, selectionMode, onToggleSelect, navOrder = 0,
 }: NoteGridProps) {
+  // Zapamiętujemy, co użytkownik zrobił z kartą, żeby jej wyjście (AnimatePresence `custom`)
+  // „leciało” w stronę celu: kosz albo archiwum. Dotyczy też skrótów i przesunięcia palcem.
+  const [exitIntent, setExitIntent] = useState<CardExitIntent | undefined>();
+  const onDelete = useCallback((id: string) => {
+    setExitIntent({ id, kind: "trash" });
+    onDeleteProp(id);
+  }, [onDeleteProp]);
+  const onArchive = useMemo(() => (onArchiveProp ? (id: string) => {
+    setExitIntent({ id, kind: "archive" });
+    onArchiveProp(id);
+  } : undefined), [onArchiveProp]);
   // Stabilna wartość kontekstu — inaczej każdy render siatki przerysowuje wszystkie karty mimo `memo`.
   const animateLayout = notes.length <= LAYOUT_ANIMATION_LIMIT;
   const noteViewActions = useMemo<NoteViewActions>(() => ({
@@ -131,7 +151,7 @@ export function NoteGrid({
     <SortableContext items={noteIds} strategy={rectSortingStrategy}>
       {/* key = układ: przy zmianie widoku siatka pojawia się fade'em zamiast przeskoku. */}
       <div ref={gridRef} key={prefs.layout} className={cn(containerClass, "animate-in fade-in-0 duration-base")}>
-        <AnimatePresence mode="popLayout">
+        <AnimatePresence mode="popLayout" custom={exitIntent}>
           {notes.map((note, i) => (
             <GridItem key={note.id} note={note} index={i} layout={prefs.layout} rowGap={rowGap} wideEditing={wideEditing} selected={selectedIds?.has(note.id) ?? false} />
           ))}
@@ -157,7 +177,7 @@ const GridItem = memo(forwardRef<HTMLDivElement, SortableNoteCardProps & { rowGa
       data-note-id-wrap={note.id}
       onClickCapture={() => setGridNavFocus(note.id)}
       className={cn(
-        "rounded-xl transition-shadow",
+        "note-lift rounded-xl transition-shadow",
         wideEditing && "sm:has-[[data-tile-editing]]:col-span-2",
         // Odstęp pionowy mozaiki jako margines opakowania — `useMasonrySpans` wlicza go w wysokość.
         layout === "masonry" ? rowGap : layout === "grid" ? "h-full" : "",
