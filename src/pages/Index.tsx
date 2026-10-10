@@ -62,6 +62,7 @@ import { registerUndoHandlers, undoLastAction } from "@/lib/actionHistory";
 import { BottomNav } from "@/components/BottomNav";
 import { RecentActionsPanel } from "@/components/RecentActionsPanel";
 import { OnboardingTour } from "@/components/OnboardingTour";
+import { VaultHost } from "@/components/vault/VaultHost";
 
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
 // note action or explicit toggle) — kept out of the eager main bundle so
@@ -259,6 +260,7 @@ const Index = () => {
 
   const handleRestoreVersion = useCallback((noteId: string, version: NoteVersion) => {
     const current = notesRef.current.find((n) => n.id === noteId);
+    if (current?.locked) return;
     addVersion(noteId, current?.title || "", current?.content || "");
     updateNote(noteId, { title: version.title, content: version.content });
     toast.success("Przywrócono wersję");
@@ -291,7 +293,8 @@ const Index = () => {
   }, [showPinned, pinnedCollapsed, pinned, others, groups, groupBy, view, prefs.collapsedGroups]);
   const visibleNotesRef = useLatestRef(visibleNotes);
 
-  const allNotesForLinks = useMemo(() => [...notes, ...archivedNotes], [notes, archivedNotes]);
+  // Notatki prywatne nie tworzą linków, tytułów do podpowiedzi ani backlinków.
+  const allNotesForLinks = useMemo(() => [...notes, ...archivedNotes].filter((n) => !n.locked), [notes, archivedNotes]);
   // `knownTitles` i `wikiIndex` idą do każdej karty: zostawiamy ten sam obiekt,
   // dopóki tytuły i linki się nie zmienią (np. odhaczenie checklisty ich nie rusza).
   const titlesList = useMemo(
@@ -353,7 +356,8 @@ const Index = () => {
     const existing = findDailyNote([...notes, ...archivedNotes], key);
     if (existing) {
       // Przy otwartym edytorze szkic ma pierwszeństwo — nie dopisujemy mu pod ręką.
-      if (!isNoteTextEditOpen(existing.id)) updateNote(existing.id, { content: appendTimestamp(existing.content, now) });
+      // Notatka dnia zablokowana: nie dopisujemy do niej z jawnej (pustej) projekcji.
+      if (!existing.locked && !isNoteTextEditOpen(existing.id)) updateNote(existing.id, { content: appendTimestamp(existing.content, now) });
       openNote(existing.id, false, true);
       return;
     }
@@ -381,7 +385,8 @@ const Index = () => {
   const previewId = useGridNavPreviewId();
   const readerId = presentingNoteId ?? previewId;
   const readerNote = useMemo(
-    () => (readerId ? [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === readerId) ?? null : null),
+    // Czytnik, prezentacja i podgląd nie otwierają notatek prywatnych (nie ma jak ich bezpiecznie pokazać).
+    () => (readerId ? [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === readerId && !n.locked) ?? null : null),
     [readerId, notes, archivedNotes, trashedNotes],
   );
   // „Bieżąca” notatka dla palety poleceń: otwarta w czytniku, jedyna zaznaczona albo z fokusem.
@@ -390,7 +395,7 @@ const Index = () => {
   const copyTarget = useMemo(() => {
     if (!paletteOpen) return null;
     const id = readerId ?? (selectedIds.size === 1 ? [...selectedIds][0] : getGridNavFocusedId());
-    return id ? [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === id) ?? null : null;
+    return id ? [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === id && !n.locked) ?? null : null;
   }, [paletteOpen, readerId, selectedIds, notes, archivedNotes, trashedNotes]);
   const closeReader = useCallback(() => { setPresentingNoteId(null); setGridNavPreview(null); }, []);
   const showInReader = useCallback((id: string, mode: ReaderMode) => {
@@ -872,6 +877,7 @@ const Index = () => {
       }}
     />
     {confirmDialog}
+    <VaultHost />
     </DndContext>
   );
 };

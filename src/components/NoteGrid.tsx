@@ -5,7 +5,7 @@ import { useSortable, SortableContext, rectSortingStrategy } from "@dnd-kit/sort
 import { CSS } from "@dnd-kit/utilities";
 import { cn } from "@/lib/utils";
 import { useViewPrefs, type Layout } from "@/lib/viewPrefs";
-import { NoteCard } from "@/components/NoteCard";
+import { PrivateNoteGate } from "@/components/vault/PrivateNoteGate";
 import { NoteViewActionsProvider, type NoteViewActions } from "@/hooks/NoteViewActionsContext";
 import type { useNotes } from "@/hooks/useNotes";
 import { registerGridNavSection, useIsGridNavFocused, setGridNavFocus } from "@/lib/gridKeyboardNav";
@@ -47,7 +47,7 @@ const SortableNoteCard = memo(function SortableNoteCard({ layout, note, index, s
         isOver && !isDragging && "outline-dashed outline-primary/40",
       )}
     >
-      <NoteCard note={note} index={index} selected={selected} dragAttributes={attributes} dragListeners={listeners} />
+      <PrivateNoteGate note={note} index={index} selected={selected} dragAttributes={attributes} dragListeners={listeners} />
     </div>
   );
 });

@@ -272,7 +272,7 @@ export function ReminderQuickAddDialog({
                         )}
                       >
                         <StickyNote className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-                        <span className="truncate">{n.title.trim() || n.content.slice(0, 40) || "Bez tytułu"}</span>
+                        <span className="truncate">{n.locked ? "Notatka prywatna" : n.title.trim() || n.content.slice(0, 40) || "Bez tytułu"}</span>
                         {n.reminder && (
                           <span className="ml-auto shrink-0 text-2xs text-muted-foreground">
                             ma już termin

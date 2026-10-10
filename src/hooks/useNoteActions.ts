@@ -49,7 +49,7 @@ export function useNoteActions({
 
   const handleTrashSingle = useCallback((id: string) => {
     const note = notesRef.current.find((n) => n.id === id) || archivedRef.current.find((n) => n.id === id);
-    const title = note?.title?.trim() || note?.content?.trim().slice(0, 60) || "Bez tytułu";
+    const title = note?.locked ? "Notatka prywatna" : note?.title?.trim() || note?.content?.trim().slice(0, 60) || "Bez tytułu";
     const preview = note?.content?.trim().replace(/\s+/g, " ").slice(0, 140) || "";
     confirmAction({
       kind: "trash",
@@ -70,7 +70,7 @@ export function useNoteActions({
 
   const handleArchiveSingle = useCallback((id: string) => {
     const note = notesRef.current.find((n) => n.id === id);
-    const title = note?.title?.trim() || note?.content?.trim().slice(0, 60) || "Bez tytułu";
+    const title = note?.locked ? "Notatka prywatna" : note?.title?.trim() || note?.content?.trim().slice(0, 60) || "Bez tytułu";
     const preview = note?.content?.trim().replace(/\s+/g, " ").slice(0, 140) || "";
     confirmAction({
       kind: "archive",

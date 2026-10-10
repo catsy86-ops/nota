@@ -19,6 +19,7 @@ import { haptic } from "@/lib/haptics";
 import { TitleField } from "./TitleField";
 import { MarkdownRenderer, FormatToolbar } from "./MarkdownRenderer";
 import { ShareNote } from "./ShareNote";
+import { PrivateNoteButton } from "./vault/PrivateNoteButton";
 import { FolderPicker } from "./FolderPicker";
 import { VersionHistory } from "./VersionHistory";
 import type { Note, NoteColor, ChecklistItem } from "@/hooks/useNotes";
@@ -380,7 +381,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           </div>
         )}
 
-        <AttachmentsPanel attachments={note.attachments ?? []} onChange={(attachments) => onUpdate?.(note.id, { attachments })} showAddButton />
+        {!note.locked && <AttachmentsPanel attachments={note.attachments ?? []} onChange={(attachments) => onUpdate?.(note.id, { attachments })} showAddButton />}
 
         <div className="flex items-center justify-between">
           <span className="text-2xs text-muted-foreground flex items-center gap-1 whitespace-nowrap min-w-0 truncate">
@@ -682,19 +683,20 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
               className="px-3 pb-3 overflow-hidden"
             >
               <div className="flex items-center gap-0.5 flex-wrap border-t border-border/40 pt-2">
-                <ActionBtn icon={<ImagePlus className="w-4 h-4" />} onClick={() => fileInputRef.current?.click()} title="Dodaj obrazek" />
-                <ActionBtn icon={<PenTool className="w-4 h-4" />} onClick={() => setShowDrawing(true)} title="Rysuj" />
+                {!note.locked && <ActionBtn icon={<ImagePlus className="w-4 h-4" />} onClick={() => fileInputRef.current?.click()} title="Dodaj obrazek" />}
+                {!note.locked && <ActionBtn icon={<PenTool className="w-4 h-4" />} onClick={() => setShowDrawing(true)} title="Rysuj" />}
                 {!isArchived && (
                   <LabelPicker allLabels={allLabels} selected={note.labels} onToggle={handleLabelToggle} onCreateLabel={onCreateLabel} />
                 )}
                 {onMoveToFolder && folders && folders.length > 0 && (
                   <FolderPicker folders={folders} currentFolderId={note.folderId} onSelect={(fId) => onMoveToFolder(note.id, fId)} />
                 )}
-                <ShareNote note={note} />
-                {noteVersions && onRestoreVersion && (
+                <PrivateNoteButton noteId={note.id} locked={!!note.locked} />
+                {!note.locked && <ShareNote note={note} />}
+                {!note.locked && noteVersions && onRestoreVersion && (
                   <VersionHistory versions={noteVersions} onRestore={(v) => onRestoreVersion(note.id, v)} />
                 )}
-                {onPresent && (
+                {!note.locked && onPresent && (
                   <ActionBtn icon={<Maximize2 className="w-4 h-4" />} onClick={() => onPresent(note.id)} title="Prezentacja" />
                 )}
                 {onDuplicate && (

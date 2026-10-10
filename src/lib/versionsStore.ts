@@ -28,6 +28,8 @@ export function createVersionsStore(prefix = "kaczy.versions.") {
   const listeners = new Set<() => void>();
   let writeChain: Promise<void> = Promise.resolve();
   let loadPromise: Promise<void> | null = null;
+  /** Notatki, dla których nie wolno trzymać wersji (prywatne). */
+  let blocker: ((noteId: string) => boolean) | null = null;
 
   function emit() {
     tick++;
@@ -96,6 +98,8 @@ export function createVersionsStore(prefix = "kaczy.versions.") {
   }
 
   function add(noteId: string, title: string, content: string): void {
+    // Wersje trzymają jawny tekst — notatka prywatna ich nie ma (patrz `privateNotes.ts`).
+    if (blocker?.(noteId)) return;
     const list = get(noteId);
     if (list[0] && list[0].title === title && list[0].content === content) return;
     const version: NoteVersion = { id: crypto.randomUUID(), noteId, title, content, timestamp: Date.now() };
@@ -112,13 +116,16 @@ export function createVersionsStore(prefix = "kaczy.versions.") {
   }
 
   function all(): NoteVersion[] {
-    return [...byNote.values()].flat();
+    return [...byNote.entries()].filter(([id]) => !blocker?.(id)).flatMap(([, list]) => list);
   }
 
   /** Przywrócenie z backupu: zastępuje całą historię. */
   function replaceAll(versions: NoteVersion[]): void {
     const next = new Map<string, NoteVersion[]>();
-    for (const v of versions) next.set(v.noteId, [...(next.get(v.noteId) ?? []), v]);
+    for (const v of versions) {
+      if (blocker?.(v.noteId)) continue;
+      next.set(v.noteId, [...(next.get(v.noteId) ?? []), v]);
+    }
     for (const [id, list] of next) next.set(id, newestFirst(list));
     const touched = new Set([...byNote.keys(), ...next.keys()]);
     byNote = next;
@@ -128,6 +135,7 @@ export function createVersionsStore(prefix = "kaczy.versions.") {
 
   return {
     load, get, add, remove, all, replaceAll,
+    setBlocker(fn: ((noteId: string) => boolean) | null) { blocker = fn; },
     subscribe(l: () => void) { listeners.add(l); return () => { listeners.delete(l); }; },
     getTick: () => tick,
     /** Test-only. */

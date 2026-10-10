@@ -26,7 +26,7 @@ export interface NoteGraph {
 
 /** Węzły = notatki z co najmniej jednym wikilinkiem (wychodzącym lub przychodzącym). */
 export function buildGraph(notes: Note[], limit = GRAPH_NODE_LIMIT): NoteGraph {
-  const live = notes.filter((n) => !n.trashed);
+  const live = notes.filter((n) => !n.trashed && !n.locked);
   const byTitle = new Map<string, Note>();
   for (const n of live) {
     const t = n.title.trim().toLowerCase();

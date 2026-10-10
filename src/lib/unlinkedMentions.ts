@@ -59,13 +59,14 @@ export function linkFirstMention(content: string, title: string): string | null 
  * Notatki, które zawierają tytuł `target`, a jej nie linkują. Pomija samą
  * notatkę, kosz, notatki o tym samym tytule i te, które już mają `[[tytuł]]`.
  */
-export function findUnlinkedMentions(target: Pick<Note, "id" | "title">, notes: Note[], limit = 50): UnlinkedMention[] {
+export function findUnlinkedMentions(target: Pick<Note, "id" | "title"> & { locked?: boolean }, notes: Note[], limit = 50): UnlinkedMention[] {
+  if (target.locked) return [];
   const title = target.title.trim();
   if (title.length < MIN_MENTION_TITLE) return [];
   const lower = title.toLowerCase();
   const out: UnlinkedMention[] = [];
   for (const n of notes) {
-    if (n.id === target.id || n.trashed) continue;
+    if (n.id === target.id || n.trashed || n.locked) continue;
     if (n.title.trim().toLowerCase() === lower) continue;
     if (!n.content || !n.content.toLowerCase().includes(lower)) continue;
     if (extractWikiLinks(n.content).includes(lower)) continue;
