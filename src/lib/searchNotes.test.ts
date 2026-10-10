@@ -93,3 +93,35 @@ describe("searchNotes — checklisty", () => {
     expect(searchNotes(notes, "baterie").map((n) => n.id)).toEqual(["a"]);
   });
 });
+
+describe("searchNotes — indeks z cache", () => {
+  const all = [
+    makeNote({ id: "a", title: "Zakupy tygodniowe", folderId: "f1" }),
+    makeNote({ id: "b", title: "Zakupy na imprezę", folderId: "f2" }),
+    makeNote({ id: "c", title: "Plan podróży" }),
+    makeNote({ id: "d", title: "Zakupy prywatne", locked: true }),
+  ];
+
+  it("wynik z podzbioru = trafienia z całości zawężone do podzbioru", () => {
+    const subset = all.filter((n) => n.folderId === "f1");
+    expect(searchNotes(subset, "zakupy", {}, all).map((n) => n.id)).toEqual(["a"]);
+    expect(searchNotes(subset, "zakupy").map((n) => n.id)).toEqual(["a"]);
+  });
+
+  it("kolejne zapytania na tej samej tablicy dają te same wyniki co świeży indeks", () => {
+    const first = searchNotes(all, "zakupy").map((n) => n.id);
+    const again = searchNotes(all, "zakupy").map((n) => n.id);
+    expect(again).toEqual(first);
+    expect(searchNotes(all, "plan").map((n) => n.id)).toEqual(["c"]);
+  });
+
+  it("zmieniona tablica nie korzysta ze starego indeksu", () => {
+    const next = [...all, makeNote({ id: "e", title: "Zakupy nowe" })];
+    expect(searchNotes(next, "nowe").map((n) => n.id)).toContain("e");
+    expect(searchNotes(all, "nowe").map((n) => n.id)).not.toContain("e");
+  });
+
+  it("notatki prywatne nigdy nie trafiają do wyników", () => {
+    expect(searchNotes(all, "prywatne").map((n) => n.id)).not.toContain("d");
+  });
+});

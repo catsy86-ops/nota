@@ -28,7 +28,7 @@ interface FilterArgs {
   prefs: ViewPrefs;
 }
 
-function filterNotes(list: Note[], { view, activeLabel, activeFolder, folders, search }: Pick<FilterArgs, "view" | "activeLabel" | "activeFolder" | "folders" | "search">) {
+function filterNotes(list: Note[], source: Note[], { view, activeLabel, activeFolder, folders, search }: Pick<FilterArgs, "view" | "activeLabel" | "activeFolder" | "folders" | "search">) {
   let filtered = list;
   if (activeLabel && view === "label") {
     filtered = filtered.filter((n) => n.labels.includes(activeLabel));
@@ -50,7 +50,7 @@ function filterNotes(list: Note[], { view, activeLabel, activeFolder, folders, s
     filtered = filtered.filter((n) => n.folderId && folderIds.has(n.folderId));
   }
   if (search) {
-    filtered = searchNotes(filtered, search, { folders });
+    filtered = searchNotes(filtered, search, { folders }, source);
   }
   return filtered;
 }
@@ -91,10 +91,10 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
     if (view === "calendar" || view === "shifts") return { displayNotes: [], pinned: [], others: [], elsewhere: NO_ELSEWHERE };
 
     const baseNotes = view === "archive"
-      ? filterNotes(archivedNotes, { view, activeLabel, activeFolder, folders, search })
+      ? filterNotes(archivedNotes, archivedNotes, { view, activeLabel, activeFolder, folders, search })
       : view === "trash"
-        ? filterNotes(trashedNotes, { view, activeLabel, activeFolder, folders, search })
-        : filterNotes(notes, { view, activeLabel, activeFolder, folders, search });
+        ? filterNotes(trashedNotes, trashedNotes, { view, activeLabel, activeFolder, folders, search })
+        : filterNotes(notes, notes, { view, activeLabel, activeFolder, folders, search });
 
     const filteredByPrefs = view === "trash" ? baseNotes : baseNotes.filter((n) => {
       if (prefs.filterColor !== "all" && n.color !== prefs.filterColor) return false;
