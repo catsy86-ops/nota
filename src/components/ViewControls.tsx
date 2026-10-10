@@ -131,6 +131,13 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
               </DropdownMenuRadioGroup>
             </>
           )}
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Grupuj</DropdownMenuLabel>
+          <DropdownMenuRadioGroup value={prefs.groupBy} onValueChange={(v) => setViewPref("groupBy", v as GroupBy)}>
+            {GROUPS.map((g) => (
+              <DropdownMenuRadioItem key={g.v} value={g.v}>{g.label}</DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
       )}
