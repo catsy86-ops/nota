@@ -82,6 +82,11 @@ export function registerGridNavSection(order: number, noteIds: string[], handler
   };
 }
 
+/** Czy któryś kafel ma teraz fokus klawiatury siatki (litery A/P/D działają na nim). */
+export function hasGridNavFocus(): boolean {
+  return state.focusedId !== null;
+}
+
 export function setGridNavFocus(id: string | null) {
   setState({ focusedId: id });
 }

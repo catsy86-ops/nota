@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { EFFECT_LABELS, EffectKey, setEffectEnabled, useEffectsSettings } from "@/lib/effectsSettings";
-import { bubbles, celebrate, emojiShower, fireworks, hearts, rainbow, sparkle } from "@/lib/celebrate";
+import { showAchievementStamp } from "@/lib/achievementStamp";
+import { bubbles, celebrate, dayDoneReward, emojiShower, fireworks, hearts, rainbow, sparkle } from "@/lib/celebrate";
 import { useViewPrefs, setViewPref } from "@/lib/viewPrefs";
 import { colorClasses } from "@/components/ColorPicker";
 import { useConfirmPrefs, setConfirmPref } from "@/lib/confirmPrefs";
@@ -61,7 +62,10 @@ function previewEffect(key: EffectKey) {
     case "rainbow": rainbow(); break;
     case "seasonalTheme":
     case "dailyQuote":
-    case "cardTilt": break;
+    case "cardTilt":
+    case "themeFade": break;
+    case "badgeStamp": showAchievementStamp({ id: "preview", emoji: "🏅", title: "Podgląd pieczątki" }); break;
+    case "doneReward": dayDoneReward(); break;
   }
 }
 

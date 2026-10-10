@@ -2,6 +2,8 @@ import { motion } from "framer-motion";
 import { Archive, Bell, CalendarDays, CalendarRange, FolderOpen, Tag, Trash2, type LucideIcon } from "lucide-react";
 import { NotatnikWordmark } from "@/components/NotatnikWordmark";
 import type { View, Elsewhere } from "@/hooks/useFilteredNotes";
+import { EmptyIllustration } from "@/components/EmptyIllustration";
+import { hasEmptyIllustration } from "@/lib/emptyGlyphs";
 import { modShortcut, TAP } from "@/lib/platform";
 
 const HEADINGS: Record<View, string> = {
@@ -88,7 +90,9 @@ export function EmptyState({ view, search, elsewhere, onGo }: { view: View; sear
   const Sketch = SKETCHES[view];
   return (
     <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-center py-20 sm:py-24">
-      {Sketch ? (
+      {hasEmptyIllustration(view) ? (
+        <EmptyIllustration view={view} />
+      ) : Sketch ? (
         <Sketch aria-hidden strokeWidth={1.1} className="w-20 h-20 mx-auto mb-5 text-accent -rotate-6" />
       ) : (
         <div className="relative w-64 max-w-full mx-auto mb-6">

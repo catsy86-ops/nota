@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
+import { isMotionReduced } from "@/hooks/useMotionPref";
+import { isEffectEnabled } from "@/lib/effectsSettings";
 
 export type ThemeMode = "system" | "light" | "dark";
 
@@ -18,12 +20,43 @@ function systemPrefersDark(): boolean {
   return typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
+/** Czysta decyzja: czy zmianę motywu animować przez View Transitions API. */
+export function shouldUseViewTransition(o: { supported: boolean; reduced: boolean; enabled: boolean; changed: boolean }): boolean {
+  return o.supported && o.enabled && !o.reduced && o.changed;
+}
+
+type DocWithVT = Document & { startViewTransition?: (cb: () => void) => unknown };
+
+let lastApplied: boolean | null = null;
+
 function applyDark(dark: boolean) {
   const root = document.documentElement;
-  // enable transition for one tick so we don't animate on first paint
+  const changed = lastApplied !== null && lastApplied !== dark;
+  lastApplied = dark;
+  const paint = () => {
+    root.classList.toggle("dark", dark);
+    root.style.colorScheme = dark ? "dark" : "light";
+  };
+  const reduced = isMotionReduced();
+  const vt = shouldUseViewTransition({
+    supported: typeof (document as DocWithVT).startViewTransition === "function",
+    reduced,
+    enabled: isEffectEnabled("themeFade"),
+    changed,
+  });
+  if (vt) {
+    // Płynne przejście całej strony; stan docelowy ustawiany synchronicznie w callbacku.
+    (document as DocWithVT).startViewTransition!(paint);
+    return;
+  }
+  if (reduced || !changed) {
+    // Pierwsze malowanie albo reduced motion: natychmiast, bez animacji.
+    paint();
+    return;
+  }
+  // Fallback bez View Transitions: krótkie przejścia CSS na jeden takt.
   root.classList.add(TRANSITION_CLASS);
-  root.classList.toggle("dark", dark);
-  root.style.colorScheme = dark ? "dark" : "light";
+  paint();
   window.setTimeout(() => root.classList.remove(TRANSITION_CLASS), TRANSITION_MS);
 }
 

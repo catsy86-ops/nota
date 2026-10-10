@@ -42,6 +42,9 @@ import { fireworks, megaCelebrate } from "@/lib/celebrate";
 import { glowPulse, glowStreak, centerOf, pointOfNote } from "@/lib/glowTrail";
 import { SearchBar } from "@/components/SearchBar";
 import { useAchievementTracker } from "@/lib/achievements";
+import { useDayDoneReward } from "@/hooks/useDayDoneReward";
+import { showAchievementStamp } from "@/lib/achievementStamp";
+import { AchievementStamp } from "@/components/AchievementStamp";
 import { ShortcutsDialog } from "@/components/ShortcutsDialog";
 import { DailyQuote } from "@/components/DailyQuote";
 import { PaperBackdrop } from "@/components/PaperBackdrop";
@@ -176,6 +179,8 @@ const Index = () => {
   }, []);
   useEffect(() => () => { if (badgeTimerRef.current !== null) clearTimeout(badgeTimerRef.current); }, []);
   useAchievementTracker(notes, archivedNotes, allLabels, folders, (a) => {
+    // Pieczątka zastępuje dymek (przy wyłączonym efekcie / reduced motion zostaje dymek).
+    if (showAchievementStamp(a)) return;
     unlockedBatchRef.current.titles.push(a.title);
     unlockedBatchRef.current.description = a.description;
     if (badgeTimerRef.current === null) showBadgeToast();
@@ -203,6 +208,7 @@ const Index = () => {
     onNewNote: expandAddNote,
     onGoToday: () => go("today"),
     onGoWeek: () => go("week"),
+    onGoView: (v) => go(v),
     onEasterEgg: () => { megaCelebrate(); toast.success("🍺 KONAMI! Pełen pokaz mocy!"); },
     hasSelection: () => selectedIds.size > 0,
     onEscapeSelection: clearSelection,
@@ -240,6 +246,8 @@ const Index = () => {
   const { displayNotes, pinned, others, elsewhere } = useFilteredNotes({
     notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search: deferredSearch, prefs,
   });
+
+  useDayDoneReward(view === "today" && !search ? displayNotes : null);
 
   const allNotesForLinks = useMemo(() => [...notes, ...archivedNotes], [notes, archivedNotes]);
   // `knownTitles` i `wikiIndex` idą do każdej karty: zostawiamy ten sam obiekt,
@@ -655,6 +663,7 @@ const Index = () => {
         />
       </Suspense>
     )}
+    <AchievementStamp />
     {statsOpen && (
       <Suspense fallback={null}>
         <StatsDialog

@@ -23,6 +23,7 @@ import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermiss
 import { composeReminderTimestamp, toTimeInputValue, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
 import { toast } from "sonner";
 import { pluralPl } from "@/lib/plural";
+import { parsePastedUrl } from "@/lib/urlTitle";
 
 interface AddNoteBarProps {
   onAdd: (title: string, content: string, color: NoteColor, labels: string[], reminder: number | null, images: string[], checklist: ChecklistItem[], priority: NotePriority) => void;
@@ -111,6 +112,16 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
     setReminderTime(toTimeInputValue(parsed.getTime()));
   }
 
+  /** Sam URL wklejony w pusty szkic: tytuł z domeny (bez sieci), adres w treści. */
+  function handleContentPaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+    if (title.trim() || content.trim()) return;
+    const parsed = parsePastedUrl(e.clipboardData.getData("text/plain"));
+    if (!parsed) return;
+    e.preventDefault();
+    setTitle(parsed.title);
+    setContent(parsed.url);
+  }
+
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files) return;
@@ -161,7 +172,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
               const sel = content.slice(s, e2);
               setContent(content.slice(0, s) + before + sel + after + content.slice(e2));
             }} />
-            <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Treść notatki..." rows={3}
+            <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} onPaste={handleContentPaste} placeholder="Treść notatki..." rows={3}
               className="w-full max-sm:min-h-[35dvh] bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none" />
 
             {/* Szablony tylko nad pustym szkicem — wybór tworzy osobną notatkę, więc nic by nie zastąpił. */}

@@ -32,6 +32,9 @@ const THROTTLE_MS: Record<EffectKey, number> = {
   seasonalTheme: 0,
   dailyQuote: 0,
   cardTilt: 0,
+  badgeStamp: 0,
+  doneReward: 0,
+  themeFade: 0,
 };
 
 const lastFiredAt: Record<EffectKey, number> = {
@@ -45,6 +48,9 @@ const lastFiredAt: Record<EffectKey, number> = {
   seasonalTheme: 0,
   dailyQuote: 0,
   cardTilt: 0,
+  badgeStamp: 0,
+  doneReward: 0,
+  themeFade: 0,
 };
 
 let fireworksActive = false;
@@ -239,6 +245,30 @@ export function rainbow() {
         });
       }, i * 80);
     }
+  });
+}
+
+/** Cicha nagroda „dzień zamknięty”: dwa krótkie wystrzały bursztynowych kropek ze środka góry. */
+export function dayDoneReward() {
+  if (typeof window === "undefined") return;
+  if (!canFire("doneReward")) return;
+  const colors = [hslVar("--primary", "#f59e0b"), "#fcd34d", "#fef3c7"];
+  withConfetti((confetti) => {
+    const fire = (angle: number) =>
+      confetti({
+        particleCount: 24,
+        angle,
+        spread: 55,
+        startVelocity: 30,
+        ticks: 110,
+        scalar: 0.8,
+        gravity: 0.9,
+        origin: { x: 0.5, y: 0.25 },
+        colors,
+        disableForReducedMotion: true,
+      });
+    fire(120);
+    setTimeout(() => fire(60), 140);
   });
 }
 
