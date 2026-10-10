@@ -635,3 +635,12 @@ Scalone do master (519 testów jednostkowych, 103 e2e).
 - [x] **Edytor** (`lib/editorKeys.ts`): `Ctrl+B/I/K`, `Ctrl+Enter`, kontynuacja listy, `Tab`/`Shift+Tab`, `Alt+↑/↓`, `Shift+Alt+↓`; licznik słów/znaków/czasu czytania i zaznaczenia; haptyka (`lib/haptics.ts`, przełącznik w efektach). `Ctrl+K` w polu treści = link (zamiast palety).
 - [x] **PWA i czas:** znaczek aplikacji + „(N) NOTKI” z liczbą zaległych, odświeżanie „dziś” po północy i po wznowieniu (`lib/dayClock.ts`), skróty ikony, Web Share Target (tekst i linki), Wake Lock w skupieniu i prezentacji, „Kopiuj jako Markdown/tekst” (czytnik, paleta).
 - Do zrobienia: Share Target dla plików/obrazów (POST multipart), akcja „Kopiuj” w menu „⋯” kafla, refaktor `exportToMarkdown` na `noteToMarkdown`, prywatne notatki (blokada hasłem).
+
+## Prywatne notatki — 2026-10-10
+
+- [x] **Skarbiec** (`lib/vault.ts`, `lib/privateNotes.ts`): jedno hasło; PBKDF2-SHA-256 600 000 iteracji + sól 16 B → klucz opakowujący losowy klucz danych (AES-256-GCM, IV 12 B na zapis, AAD = id notatki, format `v1.<iv>.<ct>`). Kod awaryjny (opcjonalny, pokazywany raz). Klucz tylko w pamięci (`extractable: false`).
+- [x] **Model**: `Note.locked` + `Note.vault`; w dokumencie zostają kolor, przypięcie, folder, daty, termin przypomnienia; tytuł/treść/lista/etykiety w szyfrogramie. Projekcja zablokowanej notatki jest pusta z konstrukcji — wyszukiwanie, graf, przegląd, eksport i backup nie mają czego wyciec. Jeden blok (LWW), bez Y.Text.
+- [x] **UI**: kafel z kłódką (`LockedNoteTile`), `PrivateNoteGate` (jedyne miejsce z jawną treścią), dialogi ustawienia/odblokowania/zmiany hasła/kodu awaryjnego, Ustawienia → Ogólne → „Prywatne notatki” (z opisem, czego NIE chroni), paleta: „Zablokuj prywatne notatki teraz”.
+- [x] **Auto-blokada**: 1/5/15/30 min lub nigdy, ukrycie karty > 1 min, ręczna (także we wszystkich kartach — BroadcastChannel).
+- Decyzje: notatki z obrazami/załącznikami nie da się zablokować (pliki nie są szyfrowane); prywatne notatki nie biorą udziału w wyszukiwaniu/grafie/przeglądzie nawet po odblokowaniu; wersje (`versionsStore`) wyłączone dla prywatnych; po zablokowaniu dziennik y-indexeddb jest zagęszczany (jawny tekst sprzed blokady znika z IndexedDB tej przeglądarki).
+- Do zrobienia: szyfrowanie bajtów załączników; czytnik/prezentacja odblokowanej notatki; wyszukiwanie po odblokowaniu (w pamięci); powiadomienie push bez treści.
