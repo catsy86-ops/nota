@@ -79,3 +79,13 @@ test("zaznaczanie myszą: pole przy kafelku otwiera pasek zbiorczy, a w koszu s�
   await page.getByRole("button", { name: "Przywróć z kosza" }).click();
   await expect(page.getByText(title)).toHaveCount(0);
 });
+
+test("szkic nowej notatki wraca po przeładowaniu strony", async ({ page }) => {
+  const title = `E2E-szkic ${Date.now()}`;
+  await page.getByText("Zapisz notatkę...").click();
+  await page.getByPlaceholder("Tytuł").fill(title);
+  await page.getByPlaceholder("Treść notatki...").fill("rozpoczęta myśl");
+  await page.reload();
+  await expect(page.getByPlaceholder("Tytuł")).toHaveValue(title);
+  await expect(page.getByPlaceholder("Treść notatki...")).toHaveValue("rozpoczęta myśl");
+});

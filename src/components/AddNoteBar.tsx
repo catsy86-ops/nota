@@ -45,10 +45,38 @@ interface AddNoteBarProps {
   templates?: (done: () => void) => ReactNode;
 }
 
+const DRAFT_KEY = "kaczy.draft.v1";
+
+interface Draft { title: string; content: string; checklist: ChecklistItem[] }
+
+/** Szkic nowej notatki z poprzedniej sesji; `null`, gdy nie ma niczego wartego przywrócenia. */
+function readDraft(): Draft | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw) as Partial<Draft>;
+    const title = typeof p.title === "string" ? p.title : "";
+    const content = typeof p.content === "string" ? p.content : "";
+    const checklist = Array.isArray(p.checklist)
+      ? p.checklist.filter((i): i is ChecklistItem => !!i && typeof i.id === "string" && typeof i.text === "string").map((i) => ({ id: i.id, text: i.text, checked: !!i.checked, ...(i.indent === 1 ? { indent: 1 as const } : {}) }))
+      : [];
+    return title.trim() || content.trim() || checklist.length ? { title, content, checklist } : null;
+  } catch { return null; }
+}
+
+function writeDraft(d: Draft): void {
+  try {
+    if (!d.title.trim() && !d.content.trim() && d.checklist.length === 0) localStorage.removeItem(DRAFT_KEY);
+    else localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
+  } catch { /* brak miejsca albo localStorage — szkic po prostu nie przeżyje przeładowania */ }
+}
+
 export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(function AddNoteBar({ onAdd, folders, allLabels, onCreateLabel, destination, templates }, ref) {
-  const [expanded, setExpanded] = useState(false);
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  // Szkic przeżywa przeładowanie i zamknięcie karty: tytuł, treść i pozycje listy wracają po powrocie.
+  const [draft0] = useState(readDraft);
+  const [expanded, setExpanded] = useState(draft0 !== null);
+  const [title, setTitle] = useState(draft0?.title ?? "");
+  const [content, setContent] = useState(draft0?.content ?? "");
   const [color, setColor] = useState<NoteColor>("default");
   const [labels, setLabels] = useState<string[]>([]);
   const [reminder, setReminder] = useState<number | null>(null);
@@ -59,8 +87,8 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   const [images, setImages] = useState<string[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const attachmentsRef = useRef<AttachmentsPanelHandle>(null);
-  const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
-  const [showChecklist, setShowChecklist] = useState(false);
+  const [checklist, setChecklist] = useState<ChecklistItem[]>(draft0?.checklist ?? []);
+  const [showChecklist, setShowChecklist] = useState((draft0?.checklist.length ?? 0) > 0);
   const [showDrawing, setShowDrawing] = useState(false);
   /** Klucze tokenów, które użytkownik odrzucił chipem — zostają w tekście jak były. */
   const [ignored, setIgnored] = useState<ReadonlySet<string>>(new Set());
@@ -103,6 +131,8 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   useEffect(() => {
     if (expanded && titleRef.current) titleRef.current.focus();
   }, [expanded]);
+
+  useEffect(() => { writeDraft({ title, content, checklist }); }, [title, content, checklist]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
