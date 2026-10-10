@@ -20,7 +20,26 @@ function hash(s: string): number {
 }
 
 function radius(degree: number): number {
-  return Math.min(8 + Math.sqrt(degree) * 5, 26);
+  return Math.min(11 + Math.sqrt(degree) * 5, 28);
+}
+
+/**
+ * Układ siłowy rozciąga małe grafy do krawędzi płótna (trzy notatki = trzy kropki
+ * w rogach). Ściskamy go do środka tak, by rozpiętość rosła z liczbą węzłów.
+ */
+function compact(layout: Map<string, Point>, count: number): Map<string, Point> {
+  if (count < 2) return layout;
+  const pts = [...layout.values()];
+  const minX = Math.min(...pts.map((p) => p.x)), maxX = Math.max(...pts.map((p) => p.x));
+  const minY = Math.min(...pts.map((p) => p.y)), maxY = Math.max(...pts.map((p) => p.y));
+  const spanX = maxX - minX || 1, spanY = maxY - minY || 1;
+  const limit = 140 + count * 46;
+  const k = Math.min(1, limit / spanX, (limit * (H / W)) / spanY);
+  if (k >= 1) return layout;
+  const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2;
+  const out = new Map<string, Point>();
+  for (const [id, p] of layout) out.set(id, { x: W / 2 + (p.x - cx) * k, y: H / 2 + (p.y - cy) * k });
+  return out;
 }
 
 /** Krawędź jak kreska odręczna: lekko wygięta, zawsze w tę samą stronę. */
@@ -44,7 +63,7 @@ export default function NoteGraph({ notes, onOpenNote }: Props) {
   const { reduced } = useMotionPref();
   const filterId = useId().replace(/:/g, "");
   const graph = useMemo(() => buildGraph(notes), [notes]);
-  const target = useMemo(() => forceLayout(graph.nodes, graph.edges, W, H), [graph]);
+  const target = useMemo(() => compact(forceLayout(graph.nodes, graph.edges, W, H), graph.nodes.length), [graph]);
   const [pos, setPos] = useState<Map<string, Point>>(target);
   const [active, setActive] = useState<string | null>(null);
 

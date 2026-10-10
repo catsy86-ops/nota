@@ -47,8 +47,9 @@ function detail(key: ReviewCategoryKey, n: Note): string {
   const days = Math.max(0, Math.floor((Date.now() - n.updatedAt) / DAY_MS));
   if (key === "openLists") {
     const open = (n.checklist ?? []).filter((i) => !i.checked).length;
-    return `${open} ${pluralPl(open, ["pozycja", "pozycje", "pozycji"])} do zrobienia · ${days} dni bez zmian`;
+    return `${open} ${pluralPl(open, ["pozycja", "pozycje", "pozycji"])} do zrobienia${days > 0 ? ` · ${days} ${pluralPl(days, ["dzień", "dni", "dni"])} bez zmian` : ""}`;
   }
+  if (key === "unsorted") return days === 0 ? "bez folderu i etykiet · dziś" : `bez folderu i etykiet · ${days} ${pluralPl(days, ["dzień", "dni", "dni"])} temu`;
   return `${days} ${pluralPl(days, ["dzień", "dni", "dni"])} bez zmian`;
 }
 
@@ -214,7 +215,7 @@ export function WeeklyReviewCard(a: WeeklyReviewActions) {
           </Button>
         </header>
 
-        <div className="mt-4 grid gap-5 lg:grid-cols-2">
+        <div className={cn("mt-4 grid gap-5", review.categories.length > 1 && "lg:grid-cols-2")}>
           {review.categories.map((c) => <CategoryBlock key={c.key} cat={c} a={a} />)}
         </div>
 
