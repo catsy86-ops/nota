@@ -46,13 +46,13 @@ npm run test:e2e      # testy e2e (Playwright) — buduje i odpala podgląd prod
 
 ### Notatki
 
-- **Treść:** tekst z Markdownem, listy zadań, rysowanie odręczne, obrazy i załączniki plików, szablony szybkiego startu, notatka dzienna.
+- **Treść:** tekst z Markdownem, listy zadań, rysowanie odręczne, obrazy (większe niż 2 MB są automatycznie zmniejszane; wklejanie ze schowka także w edycji istniejącej notatki) i załączniki plików, szablony szybkiego startu, notatka dzienna.
 - **Organizacja:** kolory, etykiety, foldery (zagnieżdżone), przypinanie, priorytety, archiwum i kosz z odliczaniem, ręczna kolejność (przeciąganie), grupowanie wg daty/etykiety/folderu ze zwijanymi sekcjami, sortowanie (także „ostatnio otwierane”).
 - **Wyszukiwanie:** pełnotekstowe (Fuse.js, indeks cache'owany per lista notatek), bez rozróżniania ogonków („zolta” znajduje „żółta”) i z wieloma słowami naraz (każde musi pasować, kolejność bez znaczenia); operatory (`etykieta:`/`label:`, `kolor:`, `ma:przypomnienie|obraz|lista|zalacznik`, `folder:`, `priorytet:wysoki|sredni|niski`, `brak:przypomnienia|etykiety|folderu`, `przypięte`, `lista:otwarte`, `starsze:`/`nowsze:`), negacja operatora przedrostkiem `-` (np. `-etykieta:praca`), zapisane filtry w pasku bocznym, „Ostatnio szukane” w palecie poleceń.
 - **Powiązania:** linki wiki `[[tytuł]]` z podglądem po najechaniu, „Niepołączone wzmianki”, graf powiązań (do 150 węzłów); zmiana tytułu notatki przepina `[[linki]]` w pozostałych notatkach (z „Cofnij”).
 - **Zaznaczanie wielu:** pole przy kafelku (po najechaniu; na dotyku zawsze widoczne) otwiera pasek zbiorczy. Na liście: kolor, archiwizacja, kosz; w Koszu: przywróć lub usuń trwale; w Archiwum: przywróć.
 - **Szkic:** tytuł, treść i pozycje listy nowej notatki przeżywają przeładowanie strony (w `localStorage`, jawnie — poza skarbcem).
-- **Listy zadań:** merge CRDT na poziomie pojedynczej pozycji, podzadania (Tab / Shift+Tab), wklejanie wielu linii jako pozycji, konwersja tekst ↔ lista, `Ctrl+Shift+L` zamienia zaznaczone linie na listę.
+- **Listy zadań:** merge CRDT na poziomie pojedynczej pozycji, podzadania (Tab / Shift+Tab), Enter dodaje pozycję pod spodem, Backspace na pustej ją usuwa, „Usuń ukończone” (z „Cofnij”), wklejanie wielu linii jako pozycji, konwersja tekst ↔ lista, `Ctrl+Shift+L` zamienia zaznaczone linie na listę; w czytniku pozycje można odhaczać.
 - **Edytor:** `Ctrl+B/I/K`, **znajdź i zamień** (`Ctrl+F` / `Ctrl+H`), kontynuacja list, przenoszenie i duplikowanie linii, licznik słów/znaków/czasu czytania, wklejanie obrazu ze schowka, **dyktowanie głosowe** (Web Speech API, pl-PL — w Chrome nagranie trafia do usługi rozpoznawania mowy Google; wymaga zgody przy pierwszym użyciu).
 - **Czytnik i prezentacja:** szybki podgląd (Spacja), tryb skupienia, tryb prezentacji z Wake Lock.
 - **Historia:** wersje notatki i historia akcji z cofaniem (`Ctrl+Z`).
@@ -115,7 +115,7 @@ Osobny dział (`/grafik`) do planowania i rozliczania pracy zmianowej. Dane Graf
 
 - **Sync P2P:** Ustawienia → Sync, kod parowania lub QR (`?pair=` tylko wstępnie wypełnia pole). Domyślne publiczne serwery sygnalizacyjne `y-webrtc`; własny serwer: [`signaling-server/`](./signaling-server/README.md). Treść notatek nie przechodzi przez serwer sygnalizacyjny. Obrazy synchronizują się osobnym kanałem (limit 2 MB na plik w P2P).
 - **Backup:** pełna kopia całej bazy (JSON v3, w tym Grafik i ustawienia), opcjonalnie do jednego, stale nadpisywanego pliku (File System Access API), przypomnienia o kopii.
-- **Eksport:** pojedyncza notatka do PDF / Markdown / HTML / JSON; terminy do `.ics`; Grafik do `.ics` i `.csv`.
+- **Eksport:** notatki do PDF / Markdown / HTML / JSON oraz **ZIP z osobnymi plikami `.md`** (cała baza albo zaznaczone; frontmatter z tytułem, etykietami i datami, foldery jako katalogi, bez obrazów i załączników, notatki prywatne pomijane — da się je wczytać z powrotem przez import Markdown); terminy do `.ics`; Grafik do `.ics` i `.csv`.
 - **Import:** Google Keep (JSON/HTML/ZIP) i Markdown/Obsidian — z podsumowaniem i „Cofnij”.
 
 ## Skróty klawiszowe i szybkie wprowadzanie
@@ -226,7 +226,7 @@ GitHub Pages serwuje projekt pod ścieżką `/<nazwa-repo>/`, a nie pod rootem. 
 - **Zależności:** pozostałe podatności runtime wymagają przejścia na react-router 7 (zmiana łamiąca).
 - **Skarbiec:** hasło min. 8 znaków i metadane (sól, `wrapped`) dostępne dla każdego, kto ma kopię/dostęp do pokoju sync — atak offline możliwy; w planie dłuższe hasło i walidacja metadanych.
 - **Grafik:** jeden grafik na dokument; brak wymiany zmian, premii w rachunku, udostępniania grafiku jako obrazu.
-- **Notatki:** brak Share Target dla plików/obrazów, eksportu całej bazy do `.md`, OCR i notatek audio (świadomie odrzucone).
+- **Notatki:** brak Share Target dla plików/obrazów, wyróżniania trafień w kaflach, OCR i notatek audio (świadomie odrzucone).
 - **Nie przetestowane na żywo:** ścieżka dotykowa przenoszenia zmian, import na prawdziwym Takeout, dyktowanie w przeglądarkach innych niż Chrome.
 
 Pełna lista zrobionych zadań, audytów i planów: [`roadmap.md`](./roadmap.md).

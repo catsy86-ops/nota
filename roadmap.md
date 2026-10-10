@@ -662,3 +662,13 @@ Scalone do master (519 testów jednostkowych, 103 e2e).
 - [x] Podgląd listy: otwarte najpierw; „Cofnij” przy usuwaniu etykiety; etykiety w kreatorze jako przyciski; przepinanie `[[linków]]` po zmianie tytułu; trwały szkic nowej notatki.
 - [x] Grafik: szybkie −/+ 15 min przy godzinach dnia i pędzla (przytrzymanie powtarza).
 - Zostaje z planu: skalowanie obrazów >2 MB + wklejanie w edytorze istniejącej notatki (#8), edytor listy (#11), interaktywny czytnik (#12), dostępność kafla (#9), eksport zaznaczonych do ZIP z `.md` (#16), trafienia w kaflach (#17). Powiadomienia Android — odłożone do decyzji (Capacitor vs Web Push).
+
+## Dział Notatki — fala 2 i 3 (2026-10-10, siódma runda) — STAN NA KONIEC SESJI
+
+- [x] Obrazy: skalowanie >2 MB do JPEG (`lib/imagePrepare.ts`), wklejanie w edytorze istniejącej notatki.
+- [x] Edytor listy: Enter/Backspace, „Usuń ukończone” z „Cofnij”, widoczne usuwanie na dotyku; kliknięcie dymka nie zamyka edytora nowej notatki.
+- [x] Czytnik: odhaczanie pozycji listy, wcięcia podzadań.
+- [x] Eksport ZIP z osobnymi `.md` (`lib/exportZip.ts`): pasek zbiorczy + menu eksportu.
+- [x] Dostępność: kafel `role="article"` z nazwą, `alt` obrazów, ogłaszanie liczby wyników, `QuickAdd` (cele dotykowe, „zastąpi termin”).
+- **Nie zweryfikowane:** pełny `npm run test:e2e` po ostatnim commicie (`9b400a8`) — przebieg został przerwany przez system (brak pamięci). Uruchomić lokalnie przed dalszą pracą.
+- **Zostaje:** wyróżnianie trafień w kaflach (#17), nawigacja ←/→ między notatkami w czytniku, Android push (decyzja Capacitor vs Web Push), react-router 7, CSP w trybie egzekwowania, walidacja metadanych skarbca, a11y: radiogroup w ShiftTypeDialog, Szczegóły QuickAdd.
