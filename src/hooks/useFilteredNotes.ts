@@ -5,6 +5,9 @@ import type { ViewPrefs } from "@/lib/viewPrefs";
 import { searchNotes } from "@/lib/searchNotes";
 import { getTodayRange, getWeekRange } from "@/lib/dateRanges";
 import { PRIORITY_ORDER } from "@/lib/notePriority";
+import { useLastOpened, type LastOpenedMap } from "@/lib/lastOpened";
+
+const NO_OPENED: LastOpenedMap = {};
 
 export type View = "notes" | "today" | "week" | "archive" | "label" | "reminders" | "calendar" | "shifts" | "folder" | "widget" | "trash";
 
@@ -51,12 +54,14 @@ function filterNotes(list: Note[], { view, activeLabel, activeFolder, folders, s
   return filtered;
 }
 
-function sortNotes(list: Note[], prefs: ViewPrefs): Note[] {
+function sortNotes(list: Note[], prefs: ViewPrefs, opened: LastOpenedMap): Note[] {
   const dir = prefs.sortDir === "asc" ? 1 : -1;
   function sortFn(a: Note, b: Note) {
     switch (prefs.sortKey) {
       case "title": return a.title.localeCompare(b.title) * dir;
       case "created": return (a.createdAt - b.createdAt) * dir;
+      // Nigdy nie otwierane (0) lądują na końcu przy malejącym; remis rozstrzyga data modyfikacji.
+      case "opened": return ((opened[a.id] ?? 0) - (opened[b.id] ?? 0) || a.updatedAt - b.updatedAt) * dir;
       case "color": return a.color.localeCompare(b.color) * dir;
       case "priority": return (PRIORITY_ORDER[a.priority ?? "none"] - PRIORITY_ORDER[b.priority ?? "none"]) * dir;
       case "manual": return (a.order ?? 0) - (b.order ?? 0); // direction doesn't apply to hand-dragged order
@@ -73,6 +78,9 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
   // fine for hundreds of notes, but worth memoizing so it only reruns when
   // an input actually changes, not on every unrelated re-render (typing
   // elsewhere, a note being edited, etc.).
+  // Mapa „ostatnio otwierane” zmienia się przy każdym otwarciu notatki — nasłuchujemy jej tylko przy tym sortowaniu.
+  const lastOpened = useLastOpened();
+  const opened = prefs.sortKey === "opened" ? lastOpened : NO_OPENED;
   return useMemo(() => {
     // Kalendarz rysuje własną projekcję (`expandOccurrences`) i nie korzysta
     // z siatki notatek — nie ma po co filtrować ani budować indeksu Fuse.
@@ -97,7 +105,7 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
     const agenda = view === "reminders";
     const displayNotes = agenda
       ? [...filteredByPrefs].sort((a, b) => (a.reminder ?? 0) - (b.reminder ?? 0))
-      : sortNotes(filteredByPrefs, prefs);
+      : sortNotes(filteredByPrefs, prefs, opened);
     const flat = view === "trash" || agenda;
     const pinned = flat ? [] : displayNotes.filter((n) => n.pinned);
     const others = flat ? displayNotes : displayNotes.filter((n) => !n.pinned);
@@ -111,5 +119,5 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
     };
 
     return { displayNotes, pinned, others, elsewhere };
-  }, [notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs]);
+  }, [notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs, opened]);
 }

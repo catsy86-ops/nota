@@ -8,7 +8,7 @@ import { useNoteVersions } from "@/hooks/useNoteVersions";
 import type { NoteVersion } from "@/hooks/useNoteVersions";
 import { useReminderNotifications } from "@/hooks/useReminderNotifications";
 import { useTheme } from "@/hooks/useTheme";
-import { useViewPrefs } from "@/lib/viewPrefs";
+import { useViewPrefs, toggleGroupCollapsed } from "@/lib/viewPrefs";
 import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
 import { useViewRoute } from "@/hooks/useViewRoute";
 import { parseViewRoute } from "@/lib/viewRoute";
@@ -34,6 +34,9 @@ import { InstallBanner } from "@/components/InstallBanner";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AppHeader } from "@/components/AppHeader";
 import { NoteGrid } from "@/components/NoteGrid";
+import { NoteGroupSection } from "@/components/NoteGroupSection";
+import { groupNotes, type GroupBy } from "@/lib/groupNotes";
+import { markNoteOpened } from "@/lib/lastOpened";
 import { EmptyState } from "@/components/EmptyState";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
@@ -254,6 +257,27 @@ const Index = () => {
 
   useDayDoneReward(view === "today" && !search ? displayNotes : null);
 
+  // Sekcje widoku: „Przypięte” (zwijane od 4 notatek) i reszta, opcjonalnie podzielona na grupy.
+  // `visibleNotes` = to, co faktycznie jest na ekranie (bez zwiniętych) w kolejności widoku.
+  const groupBy: GroupBy = view === "reminders" || view === "trash" ? "none" : prefs.groupBy;
+  const showPinned = pinned.length > 0 && view !== "archive" && view !== "trash";
+  const pinnedCollapsible = pinned.length > 3;
+  const pinnedCollapsed = pinnedCollapsible && prefs.collapsedGroups.includes("pinned");
+  const groups = useMemo(
+    () => groupNotes(others, groupBy, { now: Date.now(), dateField: prefs.sortKey === "created" ? "createdAt" : "updatedAt", folders }),
+    [others, groupBy, prefs.sortKey, folders],
+  );
+  const groupCollapsedKey = (key: string) => `${groupBy}:${key}`;
+  const visibleNotes = useMemo(() => {
+    const out = showPinned && !pinnedCollapsed ? [...pinned] : [];
+    if (view === "reminders") return [...out, ...others];
+    for (const g of groups) {
+      if (groupBy === "none" || !prefs.collapsedGroups.includes(`${groupBy}:${g.key}`)) out.push(...g.notes);
+    }
+    return out;
+  }, [showPinned, pinnedCollapsed, pinned, others, groups, groupBy, view, prefs.collapsedGroups]);
+  const visibleNotesRef = useLatestRef(visibleNotes);
+
   const allNotesForLinks = useMemo(() => [...notes, ...archivedNotes], [notes, archivedNotes]);
   // `knownTitles` i `wikiIndex` idą do każdej karty: zostawiamy ten sam obiekt,
   // dopóki tytuły i linki się nie zmienią (np. odhaczenie checklisty ich nie rusza).
@@ -358,12 +382,11 @@ const Index = () => {
     setTimeout(() => openNote(id, false, true), 50);
   }, [closeReader, openNote]);
 
-  const displayNotesRef = useLatestRef(displayNotes);
   const toggleSelect = useCallback((id: string, shiftKey: boolean) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (shiftKey && lastSelectedRef.current && lastSelectedRef.current !== id) {
-        const ids = displayNotesRef.current.map((n) => n.id);
+        const ids = visibleNotesRef.current.map((n) => n.id);
         const a = ids.indexOf(lastSelectedRef.current);
         const b = ids.indexOf(id);
         if (a !== -1 && b !== -1) {
@@ -378,7 +401,27 @@ const Index = () => {
       lastSelectedRef.current = id;
       return next;
     });
-  }, [displayNotesRef]);
+  }, [visibleNotesRef]);
+
+  // Czytnik/prezentacja też liczy się jako „otwarcie” (sortowanie „Ostatnio otwierane”).
+  useEffect(() => { if (readerId) markNoteOpened(readerId); }, [readerId]);
+
+  // Ctrl/Cmd+A poza polami tekstowymi: zaznacza wszystko, co widać (bez zwiniętych sekcji).
+  useEffect(() => {
+    if (view === "calendar" || view === "shifts") return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== "a") return;
+      const a = document.activeElement as HTMLElement | null;
+      if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT" || a.isContentEditable)) return;
+      if (document.querySelector('[role="dialog"][data-state="open"]') || previewId || presentingNoteId) return;
+      const ids = visibleNotesRef.current.map((n) => n.id);
+      if (ids.length === 0) return;
+      e.preventDefault();
+      setSelectedIds(new Set(ids));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [view, previewId, presentingNoteId, visibleNotesRef]);
 
   // Undo fallbacks so history restored from localStorage stays actionable after reload
   useEffect(() => {
@@ -393,7 +436,7 @@ const Index = () => {
   } = useNoteActions({
     notes, archivedNotes, selectedIds, confirmAction, clearSelection,
     trashNote, restoreFromTrash, archiveNote, unarchiveNote,
-    bulkTrash, bulkArchive, bulkSetColor, bulkRestore, setSelectedIds, displayNotes,
+    bulkTrash, bulkArchive, bulkSetColor, bulkRestore, setSelectedIds, displayNotes: visibleNotes,
   });
 
   // Notatka tworzona w folderze albo w widoku etykiety ląduje tam, gdzie
@@ -451,6 +494,9 @@ const Index = () => {
     folders,
     moveNoteToFolder: handleMoveToFolderGlow,
     reorderNotes,
+    selectedIds,
+    clearSelection,
+    folderOf: (id) => notesRef.current.find((n) => n.id === id)?.folderId ?? null,
   });
 
   const sidebarItems: { icon: React.ElementType; label: string; view: View; count?: number; alert?: boolean; emoji: string }[] = [
@@ -569,18 +615,17 @@ const Index = () => {
             </AlertDialogContent>
           </AlertDialog>
 
-          {pinned.length > 0 && view !== "archive" && view !== "trash" && (
-            <section>
-              <motion.p
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-1 flex items-center gap-1.5"
-              >
-                📌 Przypięte
-                <span className="bg-primary/10 text-primary text-2xs px-1.5 rounded-full">{pinned.length}</span>
-              </motion.p>
+          {showPinned && (
+            <NoteGroupSection
+              groupKey="pinned"
+              label="📌 Przypięte"
+              count={pinned.length}
+              collapsible={pinnedCollapsible}
+              collapsed={pinnedCollapsed}
+              onToggle={() => toggleGroupCollapsed("pinned")}
+            >
               <NoteGrid navOrder={0} notes={pinned} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} onPresent={setPresentingNoteId} knownTitles={knownTitles} onWikiClick={handleWikiClick} wikiIndex={wikiIndex} onOpenNote={openNote} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
-            </section>
+            </NoteGroupSection>
           )}
 
           {view === "reminders" && groupReminders(others).map((group, i) => (
@@ -596,20 +641,11 @@ const Index = () => {
             </section>
           ))}
 
-          {view !== "reminders" && others.length > 0 && (
-            <section>
-              {pinned.length > 0 && view !== "archive" && view !== "trash" && (
-                <motion.p
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-1"
-                >
-                  Inne
-                </motion.p>
-              )}
+          {view !== "reminders" && groups.map((group, gi) => {
+            const grid = (navOrder: number) => (
               <NoteGrid
-                navOrder={1}
-                notes={others}
+                navOrder={navOrder}
+                notes={group.notes}
                 onUpdate={view === "trash" ? undefined : updateNote}
                 onDelete={handleDelete}
                 onTogglePin={view === "trash" ? undefined : togglePin}
@@ -630,8 +666,39 @@ const Index = () => {
                 selectionMode={selectionMode}
                 onToggleSelect={toggleSelect}
               />
-            </section>
-          )}
+            );
+            // Bez podziału: jedna sekcja jak dotąd („Inne” tylko pod przypiętymi).
+            if (groupBy === "none") {
+              return (
+                <section key="others">
+                  {showPinned && (
+                    <motion.p
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-1"
+                    >
+                      Inne
+                    </motion.p>
+                  )}
+                  {grid(1)}
+                </section>
+              );
+            }
+            // Kolejność sekcji = kolejność nawigacji klawiaturą; zwinięta nie renderuje siatki, więc jest pomijana.
+            return (
+              <NoteGroupSection
+                key={`${groupBy}:${group.key}`}
+                groupKey={`${groupBy}-${group.key}`}
+                label={group.label}
+                count={group.notes.length}
+                collapsible
+                collapsed={prefs.collapsedGroups.includes(groupCollapsedKey(group.key))}
+                onToggle={() => toggleGroupCollapsed(groupCollapsedKey(group.key))}
+              >
+                {grid(gi + 1)}
+              </NoteGroupSection>
+            );
+          })}
 
           {view === "calendar" && (
             <ViewErrorBoundary name="Kalendarz">
@@ -759,7 +826,7 @@ const Index = () => {
     />
     <BulkActionBar
       count={selectedIds.size}
-      totalVisible={displayNotes.length}
+      totalVisible={visibleNotes.length}
       onSelectAll={handleSelectAll}
       onClear={clearSelection}
       onArchive={handleBulkArchive}

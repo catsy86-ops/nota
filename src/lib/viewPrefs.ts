@@ -1,10 +1,11 @@
 import type { NoteColor } from "@/hooks/useNotes";
 import type { NotePriority } from "@/lib/notePriority";
 import { createPersistedStore } from "@/lib/persistedStore";
+import type { GroupBy } from "@/lib/groupNotes";
 
 export type Density = "compact" | "cozy" | "comfy";
 export type Layout = "masonry" | "grid" | "list";
-export type SortKey = "updated" | "created" | "title" | "color" | "priority" | "manual";
+export type SortKey = "updated" | "created" | "opened" | "title" | "color" | "priority" | "manual";
 export type SortDir = "desc" | "asc";
 
 export interface ViewPrefs {
@@ -14,6 +15,10 @@ export interface ViewPrefs {
   autoColumns: boolean;
   sortKey: SortKey;
   sortDir: SortDir;
+  /** Podział widoku na sekcje (nagłówki w stylu zeszytu). */
+  groupBy: GroupBy;
+  /** Zwinięte sekcje: `pinned` albo `<groupBy>:<klucz grupy>`. */
+  collapsedGroups: string[];
   filterColor: NoteColor | "all";
   filterLabel: string | "all";
   filterHasReminder: boolean;
@@ -38,6 +43,8 @@ const DEFAULTS: ViewPrefs = {
   autoColumns: true,
   sortKey: "updated",
   sortDir: "desc",
+  groupBy: "none",
+  collapsedGroups: [],
   filterColor: "all",
   filterLabel: "all",
   filterHasReminder: false,
@@ -65,6 +72,12 @@ export function getViewPrefs(): ViewPrefs {
 
 export function setViewPref<K extends keyof ViewPrefs>(key: K, value: ViewPrefs[K]) {
   store.set({ ...store.get(), [key]: value });
+}
+
+/** Zwija / rozwija sekcję; stan trzymany w prefsach, więc przeżywa przeładowanie. */
+export function toggleGroupCollapsed(key: string) {
+  const cur = store.get().collapsedGroups;
+  setViewPref("collapsedGroups", cur.includes(key) ? cur.filter((k) => k !== key) : [...cur, key]);
 }
 
 export function resetViewPrefs() {

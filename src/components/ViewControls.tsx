@@ -6,6 +6,7 @@ import { colorClasses } from "@/components/ColorPicker";
 import { cn } from "@/lib/utils";
 import { IconButton } from "@/components/ui/icon-button";
 import type { NoteColor } from "@/hooks/useNotes";
+import type { GroupBy } from "@/lib/groupNotes";
 import { PRIORITY_LABELS, PRIORITY_COLOR_CLASS, type NotePriority } from "@/lib/notePriority";
 
 interface Props {
@@ -23,10 +24,18 @@ const LAYOUTS: { v: Layout; label: string; icon: typeof LayoutGrid }[] = [
 const SORTS: { v: SortKey; label: string }[] = [
   { v: "updated", label: "Data modyfikacji" },
   { v: "created", label: "Data utworzenia" },
+  { v: "opened", label: "Ostatnio otwierane" },
   { v: "title", label: "Tytuł (A-Z)" },
   { v: "color", label: "Kolor" },
   { v: "priority", label: "Priorytet" },
   { v: "manual", label: "Ręcznie (przeciągnij)" },
+];
+
+const GROUPS: { v: GroupBy; label: string }[] = [
+  { v: "none", label: "Brak" },
+  { v: "date", label: "Wg daty" },
+  { v: "label", label: "Wg etykiety" },
+  { v: "folder", label: "Wg folderu" },
 ];
 
 const COLOR_OPTIONS: NoteColor[] = ["default", "coral", "peach", "sand", "mint", "sage", "sky", "lavender", "rose"];
@@ -122,6 +131,13 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
               </DropdownMenuRadioGroup>
             </>
           )}
+          <DropdownMenuSeparator />
+          <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Grupuj</DropdownMenuLabel>
+          <DropdownMenuRadioGroup value={prefs.groupBy} onValueChange={(v) => setViewPref("groupBy", v as GroupBy)}>
+            {GROUPS.map((g) => (
+              <DropdownMenuRadioItem key={g.v} value={g.v}>{g.label}</DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
       )}
