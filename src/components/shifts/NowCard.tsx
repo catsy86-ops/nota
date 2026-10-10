@@ -36,7 +36,9 @@ export function NowCard({ data }: { data: ShiftData }) {
         {main.type.short}
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <p className="flex items-center gap-1.5 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {/* Pulsujący punkt „trwa teraz” — czysty CSS, bez zegara klatek. */}
+          {current && <span aria-hidden className="now-dot w-1.5 h-1.5 rounded-full" style={{ backgroundColor: main.type.color }} />}
           {current ? "Teraz w pracy" : "Następna zmiana"}
         </p>
         <p className="font-display font-bold truncate">
@@ -48,7 +50,11 @@ export function NowCard({ data }: { data: ShiftData }) {
         {current ? (
           <div className="mt-2 h-1.5 rounded-full bg-muted overflow-hidden" role="progressbar" aria-label="Postęp zmiany"
             aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)}>
-            <div className="h-full rounded-full transition-[width] duration-700" style={{ width: `${Math.min(100, progress * 100)}%`, backgroundColor: main.type.color }} />
+            {/* Wypełnienie jest pełnej szerokości i wsuwa się przesunięciem (transform) — kształt końca się nie spłaszcza; tor przycina. */}
+            <div className="relative h-full w-full overflow-hidden rounded-full now-bar transition-transform duration-700 ease-out-soft"
+              style={{ transform: `translateX(${(Math.min(1, Math.max(0, progress)) - 1) * 100}%)`, backgroundColor: main.type.color }}>
+              <span aria-hidden className="now-bar-sheen" />
+            </div>
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">za {formatDistanceStrict(main.start, now, { locale: pl })}</p>

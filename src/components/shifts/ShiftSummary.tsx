@@ -5,6 +5,10 @@ import { AlertTriangle, Settings2 } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
 import { FTE_OPTIONS, formatDuration, formatHoursShort, formatMoney, type MonthSummary, type PeriodSummary, type SettlementMonths, type WorkSystem } from "@/lib/shifts";
 import { PERIOD_LABELS } from "./labels";
+import { CountUp } from "./CountUp";
+
+/** Czas albo „—” dla zera — jak dotychczasowe kafelki „Nadgodziny” i „Do normy”. */
+const durationOrDash = (min: number) => (Math.round(min) > 0 ? formatDuration(min) : "—");
 import { cn } from "@/lib/utils";
 
 interface ShiftSummaryProps {
@@ -41,8 +45,8 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
         <div>
           <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Przepracowane</p>
           <p className="font-display font-extrabold text-4xl tabular-nums leading-none mt-1">
-            {formatHoursShort(minutes)}<span className="text-lg font-bold text-muted-foreground ml-1">h</span>
-            <span className="text-base font-semibold text-muted-foreground ml-2">/ {formatHoursShort(normMinutes)} h normy</span>
+            <CountUp value={minutes} format={formatHoursShort} /><span className="text-lg font-bold text-muted-foreground ml-1">h</span>
+            <span className="text-base font-semibold text-muted-foreground ml-2">/ <CountUp value={normMinutes} format={formatHoursShort} /> h normy</span>
           </p>
         </div>
       </div>
@@ -56,16 +60,16 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
       </div>
 
       <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-        <Stat label="Dni pracy" value={`${summary.daysWorked}`} />
-        <Stat label="Nadgodziny" value={overtimeMinutes ? formatDuration(overtimeMinutes) : "—"} accent={overtimeMinutes > 0}
+        <Stat label="Dni pracy" value={<CountUp value={summary.daysWorked} format={(n) => String(Math.round(n))} />} />
+        <Stat label="Nadgodziny" value={<CountUp value={overtimeMinutes} format={durationOrDash} />} accent={overtimeMinutes > 0}
           hint={overtimeMinutes > 0 ? [
             dailyOvertimeMinutes > 0 ? `dobowe ${formatDuration(dailyOvertimeMinutes)}` : null,
             overtime100Minutes > 0 ? `z dodatkiem 100% ${formatDuration(overtime100Minutes)}` : null,
           ].filter(Boolean).join(" · ") || undefined : undefined} />
-        <Stat label="W nocy" value={formatDuration(summary.nightMinutes)} />
-        <Stat label="Do normy" value={minutes >= normMinutes ? "—" : formatDuration(normMinutes - minutes)} />
+        <Stat label="W nocy" value={<CountUp value={summary.nightMinutes} format={formatDuration} />} />
+        <Stat label="Do normy" value={<CountUp value={Math.max(0, normMinutes - minutes)} format={durationOrDash} />} />
         {extra > 0 && (
-          <Stat label="Ponadwymiarowe" value={formatDuration(extra)} hint="ponad etat, bez dodatku" />
+          <Stat label="Ponadwymiarowe" value={<CountUp value={extra} format={formatDuration} />} hint="ponad etat, bez dodatku" />
         )}
       </dl>
 
@@ -136,7 +140,7 @@ function PeriodProgress({ period }: { period: PeriodSummary }) {
   );
 }
 
-function Stat({ label, value, accent = false, hint }: { label: string; value: string; accent?: boolean; hint?: string }) {
+function Stat({ label, value, accent = false, hint }: { label: string; value: ReactNode; accent?: boolean; hint?: string }) {
   return (
     <div className="rounded-2xl bg-muted/50 px-3 py-2">
       <dt className="text-2xs uppercase tracking-wider text-muted-foreground">{label}</dt>
@@ -194,7 +198,7 @@ function Receipt({ summary, hourlyRate, monthLabel }: { summary: MonthSummary; h
       {paid && (
         <p className="mt-3 pt-2 border-t-[3px] border-double border-foreground/40 flex items-baseline justify-between gap-3">
           <span className="font-body text-2xs font-semibold uppercase tracking-[0.2em]">Razem brutto</span>
-          <span className="font-display font-extrabold text-xl sm:text-2xl text-primary">{formatMoney(summary.earnings)}</span>
+          <span className="font-display font-extrabold text-xl sm:text-2xl text-primary tabular-nums"><CountUp value={summary.earnings} format={formatMoney} /></span>
         </p>
       )}
     </div>

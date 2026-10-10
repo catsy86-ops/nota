@@ -14,6 +14,7 @@ import { nextInSeries, seriesDay } from "@/lib/reminderRepeat";
 import { toast } from "sonner";
 import { dayType, useShifts } from "@/lib/shifts";
 import { MonthGrid } from "./MonthGrid";
+import { markMoved } from "./movedSignal";
 import { DayPanel } from "./DayPanel";
 import { UpcomingDays } from "./UpcomingDays";
 import { ReminderQuickAddDialog, type ReminderEditTarget } from "./ReminderQuickAddDialog";
@@ -164,6 +165,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     if (isSameDay(from, day)) return;
     const to = new Date(day.getFullYear(), day.getMonth(), day.getDate(), from.getHours(), from.getMinutes());
     const before = previousOf(occ.noteId);
+    markMoved(occ.noteId);
     onSetReminder(occ.noteId, to.getTime(), occ.repeat);
     setSelectedDay(to);
     if (!isSameMonth(to, month)) setMonth(new Date(to.getFullYear(), to.getMonth(), 1));
