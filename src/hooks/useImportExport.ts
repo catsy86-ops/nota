@@ -1,7 +1,11 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import type { Note, useNotes } from "@/hooks/useNotes";
 import { importFromJSON } from "@/lib/exportNotes";
+import { yjsStore } from "@/lib/yjsStore";
+import { toastWithUndo } from "@/lib/undoToast";
+import { pluralPl } from "@/lib/plural";
+import type { ImportPlan } from "@/lib/import";
 
 type AddNote = ReturnType<typeof useNotes>["addNote"];
 
@@ -36,4 +40,82 @@ export function useImportExport(importNotes: (notes: Note[]) => void, addNote: A
   }, [addNote]);
 
   return { handleImport };
+}
+
+/** Zdarzenie otwierające okno importu z Google Keep / Markdown (wysyła menu Import/Eksport). */
+export const OPEN_EXTERNAL_IMPORT_EVENT = "kaczy:import-external";
+
+export type ExternalImportStage = "pick" | "reading" | "summary" | "saving";
+
+/**
+ * Import z Google Keep (Takeout: .json/.html/.zip) i z plików Markdown (też Obsidian).
+ * Trzy kroki: wybór plików → podsumowanie planu (jeszcze nic nie zapisano) → zapis
+ * z dymkiem „Cofnij”. Cała logika importu ładuje się dopiero tutaj (osobny chunk).
+ */
+export function useExternalImport() {
+  const [open, setOpen] = useState(false);
+  const [stage, setStage] = useState<ExternalImportStage>("pick");
+  const [plan, setPlan] = useState<ImportPlan | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  /** Numer „rundy” — odpowiedź z zamkniętego lub zastąpionego okna jest ignorowana. */
+  const runRef = useRef(0);
+
+  const reset = useCallback(() => {
+    runRef.current++;
+    setStage("pick");
+    setPlan(null);
+    setError(null);
+  }, []);
+
+  const openDialog = useCallback(() => { reset(); setOpen(true); }, [reset]);
+  const close = useCallback(() => { reset(); setOpen(false); }, [reset]);
+
+  useEffect(() => {
+    window.addEventListener(OPEN_EXTERNAL_IMPORT_EVENT, openDialog);
+    return () => window.removeEventListener(OPEN_EXTERNAL_IMPORT_EVENT, openDialog);
+  }, [openDialog]);
+
+  const pickFiles = useCallback(async (files: File[]) => {
+    if (!files.length) return;
+    const run = ++runRef.current;
+    setStage("reading");
+    setError(null);
+    try {
+      await yjsStore.ready();
+      const { analyzeFiles } = await import("@/lib/import");
+      const next = await analyzeFiles(files, yjsStore.projectNotes());
+      if (run !== runRef.current) return;
+      setPlan(next);
+      setStage("summary");
+    } catch (err) {
+      if (run !== runRef.current) return;
+      setError(err instanceof Error ? err.message : "Nie udało się odczytać plików");
+      setStage("pick");
+    }
+  }, []);
+
+  const confirm = useCallback(async () => {
+    if (!plan || !plan.notes.length) return;
+    const run = ++runRef.current;
+    setStage("saving");
+    try {
+      const { commitImportPlan, undoImport } = await import("@/lib/import");
+      const result = await commitImportPlan(plan);
+      if (run !== runRef.current) return;
+      const n = result.noteIds.length;
+      const label = pluralPl(n, ["notatka", "notatki", "notatek"]);
+      toastWithUndo(`Zaimportowano ${n} ${label}`, () => undoImport(result), {
+        description: result.failedImages ? `Nie udało się wczytać obrazów: ${result.failedImages}` : undefined,
+        duration: 10000,
+      });
+      reset();
+      setOpen(false);
+    } catch (err) {
+      if (run !== runRef.current) return;
+      setError(err instanceof Error ? err.message : "Nie udało się zapisać notatek");
+      setStage("summary");
+    }
+  }, [plan, reset]);
+
+  return { open, stage, plan, error, openDialog, close, pickFiles, confirm, backToPick: reset };
 }

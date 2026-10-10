@@ -24,7 +24,7 @@ import { whenNotesReady, isNoteTextEditOpen } from "@/hooks/useNotes";
 import { DAILY_LABEL, DAILY_TEMPLATE, appendTimestamp, dailyKey, dailyTitle, findDailyNote } from "@/lib/dailyNote";
 import { useNoteActions } from "@/hooks/useNoteActions";
 import { useNoteDnd } from "@/hooks/useNoteDnd";
-import { useImportExport } from "@/hooks/useImportExport";
+import { useImportExport, useExternalImport } from "@/hooks/useImportExport";
 import { useBackupReminders } from "@/hooks/useBackupReminders";
 import { useShiftEveningNudge } from "@/hooks/useShiftEveningNudge";
 import { useDailyWeeklyNudges } from "@/hooks/useDailyWeeklyNudges";
@@ -60,6 +60,7 @@ import { OnboardingTour } from "@/components/OnboardingTour";
 // note action or explicit toggle) — kept out of the eager main bundle so
 // first load only pays for the code the note grid itself needs.
 const CommandPalette = lazy(() => import("@/components/CommandPalette").then((m) => ({ default: m.CommandPalette })));
+const ImportExternalDialog = lazy(() => import("@/components/ImportExternalDialog").then((m) => ({ default: m.ImportExternalDialog })));
 const SettingsDialog = lazy(() => import("@/components/SettingsDialog").then((m) => ({ default: m.SettingsDialog })));
 const StatsDialog = lazy(() => import("@/components/StatsDialog").then((m) => ({ default: m.StatsDialog })));
 const FocusMode = lazy(() => import("@/components/FocusMode").then((m) => ({ default: m.FocusMode })));
@@ -230,6 +231,7 @@ const Index = () => {
   });
 
   const { handleImport } = useImportExport(importNotes, addNote);
+  const externalImport = useExternalImport();
 
   // Callbacki podawane kartom czytają notatki przez ref — patrz `useLatestRef`.
   const notesRef = useLatestRef(notes);
@@ -681,6 +683,20 @@ const Index = () => {
     {settingsOpen && (
       <Suspense fallback={null}>
         <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      </Suspense>
+    )}
+    {externalImport.open && (
+      <Suspense fallback={null}>
+        <ImportExternalDialog
+          open={externalImport.open}
+          stage={externalImport.stage}
+          plan={externalImport.plan}
+          error={externalImport.error}
+          onPickFiles={externalImport.pickFiles}
+          onConfirm={externalImport.confirm}
+          onBack={externalImport.backToPick}
+          onClose={externalImport.close}
+        />
       </Suspense>
     )}
     <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
