@@ -1,8 +1,18 @@
 import { yjsStore } from "@/lib/yjsStore";
 import { getSyncState, formatCode, getSignalingServers } from "@/lib/yjsSync";
-import { buildDiagReport, getDiagEntries, type DiagSnapshot } from "@/lib/diagnostics";
+import { buildDiagReport, getDiagEntries, getSecurityEvents, type DiagSnapshot } from "@/lib/diagnostics";
 
 declare const __APP_BUILD__: string | undefined;
+
+/** `wss://user:pass@host:1234/path?token=x` → `wss://host:1234` (reszta może być sekretem). */
+export function redactServerUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    return `${u.protocol}//${u.host}`;
+  } catch {
+    return "[nieprawidłowy adres]";
+  }
+}
 
 async function serviceWorkerState(): Promise<string> {
   if (!("serviceWorker" in navigator)) return "nieobsługiwany";
@@ -42,11 +52,12 @@ export async function collectDiagReport(): Promise<string> {
       paired: Boolean(sync.code),
       lastSyncedAt: sync.lastSyncedAt,
       lastError: sync.lastError,
-      signaling: getSignalingServers(),
+      // Adres serwera bywa z tokenem w zapytaniu/userinfo — raport pokazuje tylko schemat i host.
+      signaling: getSignalingServers().map(redactServerUrl),
     },
   };
   // Kod także w postaci z Ustawień (grupy po 4) — gdyby trafił do dziennika przepisany z ekranu.
-  return buildDiagReport(snapshot, getDiagEntries(), sync.code ? [sync.code, formatCode(sync.code)] : []);
+  return buildDiagReport(snapshot, getDiagEntries(), sync.code ? [sync.code, formatCode(sync.code)] : [], getSecurityEvents());
 }
 
 /** Zbiera raport i pobiera go jako plik .txt. Nic nie wysyła. */

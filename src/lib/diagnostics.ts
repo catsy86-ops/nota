@@ -45,6 +45,88 @@ export function getDiagEntries(): readonly DiagEntry[] {
   return entries;
 }
 
+// ── zdarzenia bezpieczeństwa ─────────────────────────────────────────────────
+//
+// Osobny, trwały (localStorage) i mały dziennik: zwykły bufor diagnostyczny
+// żyje tylko do przeładowania karty i jest wypierany przez szum, a próby
+// odblokowania skarbca czy naruszenia CSP warto zobaczyć też po restarcie.
+// Wpis to rodzaj + krótki opis techniczny — nigdy treść notatki, hasło, kod
+// parowania ani pełny adres (patrz `sanitizeDetail`).
+
+export type SecurityEventKind =
+  | "csp-violation"
+  | "vault-unlock-failed"
+  | "vault-recovery-failed"
+  | "vault-throttled"
+  | "vault-meta-rejected"
+  | "rejected-peer-blob"
+  | "rejected-share-link"
+  | "rejected-import"
+  | "rejected-sync-file";
+
+export interface SecurityEvent {
+  at: number;
+  kind: SecurityEventKind;
+  detail: string;
+  /** Ile razy z rzędu wystąpiło dokładnie to samo zdarzenie. */
+  count: number;
+}
+
+const SECURITY_KEY = "kaczy.security.log.v1";
+export const SECURITY_LOG_MAX = 50;
+const SECURITY_DETAIL_MAX = 160;
+let securityEvents: SecurityEvent[] | null = null;
+
+/** Jedna linia, bez znaków sterujących, przycięta; adresy http(s) sprowadzone do `schemat://host`. */
+export function sanitizeDetail(text: string): string {
+  const noUrlPaths = text.replace(/\b([a-z][a-z0-9+.-]*:\/\/[^\s/?#]+)[^\s]*/gi, "$1");
+  // eslint-disable-next-line no-control-regex
+  return noUrlPaths.replace(/[\u0000-\u001f\u007f]+/g, " ").trim().slice(0, SECURITY_DETAIL_MAX);
+}
+
+function loadSecurity(): SecurityEvent[] {
+  if (securityEvents) return securityEvents;
+  securityEvents = [];
+  try {
+    const raw = JSON.parse(localStorage.getItem(SECURITY_KEY) || "[]");
+    if (Array.isArray(raw)) {
+      for (const e of raw) {
+        if (e && typeof e === "object" && typeof e.at === "number" && typeof e.kind === "string" && typeof e.detail === "string") {
+          securityEvents.push({ at: e.at, kind: e.kind, detail: sanitizeDetail(e.detail), count: typeof e.count === "number" && e.count > 0 ? Math.floor(e.count) : 1 });
+        }
+      }
+      securityEvents = securityEvents.slice(-SECURITY_LOG_MAX);
+    }
+  } catch { /* uszkodzone albo brak localStorage — zaczynamy od pustego */ }
+  return securityEvents;
+}
+
+/** Zapisuje zdarzenie bezpieczeństwa (lokalnie; nic nie wychodzi z urządzenia). */
+export function logSecurity(kind: SecurityEventKind, detail = ""): void {
+  const list = loadSecurity();
+  const clean = sanitizeDetail(detail);
+  const last = list[list.length - 1];
+  if (last && last.kind === kind && last.detail === clean) {
+    last.count++;
+    last.at = Date.now();
+  } else {
+    list.push({ at: Date.now(), kind, detail: clean, count: 1 });
+    if (list.length > SECURITY_LOG_MAX) list.splice(0, list.length - SECURITY_LOG_MAX);
+  }
+  try { localStorage.setItem(SECURITY_KEY, JSON.stringify(list)); } catch { /* brak miejsca — zostaje w pamięci */ }
+  logDiag("warn", "security", `${kind}${clean ? `: ${clean}` : ""}`);
+}
+
+export function getSecurityEvents(): readonly SecurityEvent[] {
+  return loadSecurity();
+}
+
+/** Test-only. */
+export function clearSecurityForTests(): void {
+  securityEvents = null;
+  try { localStorage.removeItem(SECURITY_KEY); } catch { /* ignore */ }
+}
+
 /** Test-only. */
 export function clearDiagForTests(): void {
   entries = [];
@@ -58,6 +140,10 @@ export function installGlobalDiagHandlers(): void {
   globalHandlersInstalled = true;
   window.addEventListener("error", (e) => logDiag("error", "window", "uncaught", e.error ?? e.message));
   window.addEventListener("unhandledrejection", (e) => logDiag("error", "window", "unhandled rejection", e.reason));
+  // Naruszenie CSP = coś próbowało załadować/wykonać to, czego polityka nie zezwala.
+  document.addEventListener("securitypolicyviolation", (e) => {
+    logSecurity("csp-violation", `${e.violatedDirective} ${e.blockedURI || "inline"}`);
+  });
 }
 
 export interface DiagSnapshot {
@@ -93,7 +179,7 @@ function redact(text: string, secrets: string[]): string {
  * Czysta funkcja: snapshot + wpisy → tekst raportu.
  * `secrets` to wartości, które nie mogą się w nim pojawić (kod parowania).
  */
-export function buildDiagReport(snapshot: DiagSnapshot, log: readonly DiagEntry[], secrets: string[] = []): string {
+export function buildDiagReport(snapshot: DiagSnapshot, log: readonly DiagEntry[], secrets: string[] = [], security: readonly SecurityEvent[] = []): string {
   const lines = [
     "Notatnik — raport diagnostyczny",
     "(bez treści notatek i bez kodu parowania)",
@@ -110,6 +196,11 @@ export function buildDiagReport(snapshot: DiagSnapshot, log: readonly DiagEntry[
     `ostatnia synchronizacja: ${snapshot.sync.lastSyncedAt ? new Date(snapshot.sync.lastSyncedAt).toISOString() : "nigdy"}`,
     `ostatni błąd sync: ${snapshot.sync.lastError ?? "brak"}`,
     `serwery sygnalizacyjne: ${snapshot.sync.signaling?.length ? snapshot.sync.signaling.join(", ") : "domyślne"}`,
+    "",
+    `zdarzenia bezpieczeństwa (${security.length}; bez haseł i treści):`,
+    ...(security.length
+      ? security.map((e) => `${new Date(e.at).toISOString()} ${e.kind}${e.count > 1 ? ` x${e.count}` : ""}${e.detail ? ` — ${e.detail}` : ""}`)
+      : ["brak"]),
     "",
     `dziennik (${log.length} ostatnich wpisów):`,
     ...log.map((e) => `${new Date(e.at).toISOString()} ${e.level.toUpperCase().padEnd(5)} [${e.source}] ${e.message}`),
