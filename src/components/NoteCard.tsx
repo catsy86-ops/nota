@@ -15,6 +15,7 @@ import { ChecklistConvertButtons, ChecklistEditor } from "./ChecklistEditor";
 import { isChecklistShortcut, selectionToChecklist } from "@/lib/checklistPaste";
 import { handleEditorKey } from "@/lib/editorKeysDom";
 import { EditorStats } from "./EditorStats";
+import { FindReplaceBar } from "./FindReplaceBar";
 import { haptic } from "@/lib/haptics";
 import { TitleField } from "./TitleField";
 import { MarkdownRenderer, FormatToolbar } from "./MarkdownRenderer";
@@ -94,11 +95,18 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
       if (r) { setEditContent(r.content); setEditChecklist(r.checklist); setShowChecklist(true); }
       return;
     }
+    // Ctrl+F / Ctrl+H w treści: znajdź i zamień w tej notatce (zamiast wyszukiwania przeglądarki).
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key.toLowerCase() === "f" || e.key.toLowerCase() === "h")) {
+      e.preventDefault();
+      setFindOpen(true);
+      return;
+    }
     // Otwarta lista `[[` ma pierwszeństwo dla Enter/Tab/strzałek/Esc; Ctrl/Alt jej nie dotyczą.
     if (wiki.isOpen && !e.ctrlKey && !e.metaKey && !e.altKey) { wiki.textareaProps.onKeyDown(e); return; }
     if (handleEditorKey(e, { onSave: handleSave })) return;
     wiki.textareaProps.onKeyDown(e);
   }
+  const [findOpen, setFindOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const wordCount = note.content.trim() ? note.content.trim().split(/\s+/).length : 0;
@@ -323,6 +331,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
       >
         {/* W oknie `pr-*` zostawia miejsce na ✕ w prawym górnym rogu. */}
         <TitleField spellCheck={prefs.spellcheck} autoFocus value={editTitle} onChange={setEditTitle} onEnter={() => textareaRef.current?.focus()} className={cn("w-full bg-transparent font-display font-semibold text-foreground outline-none", full && "text-2xl pr-8 coarse:pr-12")} placeholder="Tytuł" />
+        {findOpen && <FindReplaceBar value={editContent} onChange={setEditContent} textareaRef={textareaRef} onClose={() => setFindOpen(false)} />}
         <div className="flex items-center gap-1">
           <FormatToolbar onInsert={handleFormatInsert} nowrap={!full} />
           <button

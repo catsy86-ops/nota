@@ -46,6 +46,7 @@ const GROUPS: ShortcutGroup[] = [
       { keys: [MOD_KEY, "B"], label: "Pogrubienie (ponownie: zdejmij)" },
       { keys: [MOD_KEY, "I"], label: "Kursywa (ponownie: zdejmij)" },
       { keys: [MOD_KEY, "K"], label: "Link w treści (zamiast palety poleceń)" },
+      { keys: [MOD_KEY, "F"], label: "Znajdź i zamień w treści notatki (też Ctrl+H)" },
       { keys: [MOD_KEY, "Enter"], label: "Zapisz i zamknij edytor" },
       { keys: ["Enter"], label: "Kolejna pozycja listy (pusta kończy listę)" },
       { keys: ["Tab", "Shift", "Tab"], label: "Wcięcie pozycji listy (Esc, potem Tab wychodzi z pola)" },
