@@ -3,6 +3,7 @@ import { renderHook } from "@testing-library/react";
 import { useFilteredNotes } from "./useFilteredNotes";
 import type { Note, Folder } from "@/hooks/useNotes";
 import type { ViewPrefs } from "@/lib/viewPrefs";
+import { markNoteOpened } from "@/lib/lastOpened";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
   return {
@@ -34,6 +35,8 @@ const basePrefs: ViewPrefs = {
   autoColumns: true,
   sortKey: "updated",
   sortDir: "desc",
+  groupBy: "none",
+  collapsedGroups: [],
   filterColor: "all",
   filterLabel: "all",
   filterHasReminder: false,
@@ -134,6 +137,22 @@ describe("useFilteredNotes", () => {
       prefs: { ...basePrefs, sortKey: "title", sortDir: "asc" },
     }));
     expect(result.current.displayNotes.map((n) => n.id)).toEqual(["a", "b"]);
+  });
+
+  it("sorts by last opened (local), never-opened notes last, ties by updatedAt", () => {
+    markNoteOpened("a", 100);
+    markNoteOpened("b", 200);
+    const notes = [
+      makeNote({ id: "never", updatedAt: 999 }),
+      makeNote({ id: "a", updatedAt: 1 }),
+      makeNote({ id: "b", updatedAt: 1 }),
+    ];
+    const { result } = renderHook(() => useFilteredNotes({
+      notes, archivedNotes: [], trashedNotes: [], folders, view: "notes",
+      activeLabel: null, activeFolder: null, search: "",
+      prefs: { ...basePrefs, sortKey: "opened", sortDir: "desc" },
+    }));
+    expect(result.current.displayNotes.map((n) => n.id)).toEqual(["b", "a", "never"]);
   });
 
   it("sorts by manually dragged order when sortKey is 'manual', ignoring updatedAt", () => {

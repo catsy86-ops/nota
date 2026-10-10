@@ -4,12 +4,18 @@ import { PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } 
 import type { Folder } from "@/hooks/useNotes";
 import { glowStreak, glowPulse, pointOfNote } from "@/lib/glowTrail";
 import { getViewPrefs, setViewPref } from "@/lib/viewPrefs";
+import { toastWithUndo } from "@/lib/undoToast";
 
 export interface NoteDndDeps {
   displayNoteIds: string[];
   folders: Folder[];
   moveNoteToFolder: (noteId: string, folderId: string | null) => void;
   reorderNotes: (activeIds: string[]) => void;
+  /** Zaznaczone notatki: przeciągnięcie jednej z nich na folder przenosi wszystkie. */
+  selectedIds?: Set<string>;
+  clearSelection?: () => void;
+  /** Bieżący folder notatki — potrzebny do „Cofnij”. */
+  folderOf?: (noteId: string) => string | null;
 }
 
 // Stałe modułu: nowy literał opcji w każdym renderze daje nowe `sensors`,
@@ -18,7 +24,7 @@ const POINTER_OPTIONS = { activationConstraint: { distance: 8 } };
 const TOUCH_OPTIONS = { activationConstraint: { delay: 200, tolerance: 5 } };
 
 /** @dnd-kit sensors + drop handling: reorder within the grid, or drop onto a folder/root. */
-export function useNoteDnd({ displayNoteIds, folders, moveNoteToFolder, reorderNotes }: NoteDndDeps) {
+export function useNoteDnd({ displayNoteIds, folders, moveNoteToFolder, reorderNotes, selectedIds, clearSelection, folderOf }: NoteDndDeps) {
   const sensors = useSensors(
     useSensor(PointerSensor, POINTER_OPTIONS),
     useSensor(TouchSensor, TOUCH_OPTIONS)
@@ -42,19 +48,27 @@ export function useNoteDnd({ displayNoteIds, folders, moveNoteToFolder, reorderN
     const dropTo = { x: over.rect.left + over.rect.width / 2, y: over.rect.top + over.rect.height / 2 };
     const trail = () => { if (dragFrom) glowStreak(dragFrom, dropTo, "move"); else glowPulse(dropTo, "move"); };
 
-    if (overId === "notes-drop-root") {
+    // Przeciągnięta karta jest zaznaczona (a zaznaczonych jest więcej niż jedna) — rusza cała grupa.
+    const activeId = active.id as string;
+    const ids = selectedIds && selectedIds.size > 1 && selectedIds.has(activeId) ? [...selectedIds] : [activeId];
+    const moveTo = (folderId: string | null, message: string) => {
       trail();
-      moveNoteToFolder(active.id as string, null);
-      toast.success("Usunięto z folderu");
+      const prev = ids.map((id) => [id, folderOf?.(id) ?? null] as const);
+      ids.forEach((id) => moveNoteToFolder(id, folderId));
+      if (ids.length > 1) clearSelection?.();
+      const undo = () => prev.forEach(([id, from]) => moveNoteToFolder(id, from));
+      toastWithUndo(ids.length > 1 ? `${message} (${ids.length})` : message, undo, { icon: "📁" });
+    };
+
+    if (overId === "notes-drop-root") {
+      moveTo(null, "Usunięto z folderu");
       return;
     }
 
     if (overId.startsWith("folder-drop-")) {
       const folderId = overId.replace("folder-drop-", "");
-      trail();
-      moveNoteToFolder(active.id as string, folderId);
       const folder = folders.find((f) => f.id === folderId);
-      toast.success(`Przeniesiono do „${folder?.name || "folder"}"`);
+      moveTo(folderId, `Przeniesiono do „${folder?.name || "folder"}"`);
       return;
     }
 
