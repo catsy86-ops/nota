@@ -34,3 +34,37 @@ export function checklistToContent(content: string, checklist: ChecklistItem[]) 
   const base = content.replace(/\s+$/, "");
   return { content: base && lines ? `${base}\n${lines}` : base || lines, checklist: [] as ChecklistItem[] };
 }
+
+/**
+ * Skrót Ctrl+Shift+L: linie objęte zaznaczeniem (albo bieżąca linia, gdy brak zaznaczenia)
+ * trafiają jako pozycje na koniec listy i znikają z treści. `null`, gdy nie ma nic do zamiany.
+ */
+export function selectionToChecklist(
+  content: string,
+  selStart: number,
+  selEnd: number,
+  checklist: ChecklistItem[],
+  makeId: () => string = () => crypto.randomUUID(),
+) {
+  const lo = Math.max(0, Math.min(selStart, selEnd));
+  let hi = Math.min(content.length, Math.max(selStart, selEnd));
+  const NL = String.fromCharCode(10);
+  // Zaznaczenie kończące się tuż po znaku nowej linii nie obejmuje następnej linii.
+  if (hi > lo && content[hi - 1] === NL) hi--;
+  const from = lo === 0 ? 0 : content.lastIndexOf(NL, lo - 1) + 1;
+  const nl = content.indexOf(NL, hi);
+  const to = nl === -1 ? content.length : nl;
+  const added = parseChecklistLines(content.slice(from, to)).map((i) => ({ ...i, id: makeId() }));
+  if (added.length === 0) return null;
+  const after = content.slice(to);
+  // Sklejamy sąsiednie linie bez pustej dziury po wyciętym fragmencie.
+  let before = content.slice(0, from);
+  // Wyciętym końcem tekstu nie zostawiamy osieroconego znaku nowej linii.
+  if (!after && before.endsWith(NL)) before = before.slice(0, -1);
+  return { content: before + (after.startsWith(NL) ? after.slice(1) : after), checklist: [...checklist, ...added], cursor: from };
+}
+
+/** Ctrl/Cmd + Shift + L. */
+export function isChecklistShortcut(e: { key: string; ctrlKey: boolean; metaKey: boolean; shiftKey: boolean; altKey: boolean }): boolean {
+  return (e.ctrlKey || e.metaKey) && e.shiftKey && !e.altKey && e.key.toLowerCase() === "l";
+}

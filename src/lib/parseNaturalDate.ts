@@ -9,7 +9,7 @@ const WEEKDAYS: Record<string, number> = {
 };
 
 function stripDiacritics(s: string): string {
-  return s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l");
 }
 
 function withTime(base: Date, hours: number, minutes: number): Date {

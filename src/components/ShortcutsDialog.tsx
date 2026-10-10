@@ -40,6 +40,16 @@ const GROUPS: ShortcutGroup[] = [
     ],
   },
   {
+    heading: "Pisanie notatki",
+    items: [
+      { keys: [MOD_KEY, "Shift", "L"], label: "Zaznaczone linie na listę zadań" },
+      { keys: ["#etykieta"], label: "Dodaj etykietę (też nową)" },
+      { keys: ["@folder"], label: "Wybierz folder" },
+      { keys: ["!", "!!"], label: "Priorytet średni / wysoki" },
+      { keys: ["jutro 9:00"], label: "Przypomnienie z daty na końcu" },
+    ],
+  },
+  {
     heading: "Lista notatek",
     items: [
       { keys: ["←", "→", "↑", "↓"], label: "Nawigacja między notatkami" },
