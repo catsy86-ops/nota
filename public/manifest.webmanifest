@@ -46,12 +46,12 @@
     }
   ],
   "share_target": {
-    "action": "/",
+    "action": "/share",
     "method": "GET",
     "params": {
-      "title": "share-title",
-      "text": "share-text",
-      "url": "share-url"
+      "title": "title",
+      "text": "text",
+      "url": "url"
     }
   },
   "screenshots": [

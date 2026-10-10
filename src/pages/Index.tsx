@@ -20,7 +20,8 @@ import { useGridNavPreviewId, setGridNavPreview, setGridNavFocus } from "@/lib/g
 import { NoteReader, type ReaderMode } from "@/components/NoteReader";
 import { cn } from "@/lib/utils";
 import { playEnter, tween } from "@/lib/motion";
-import { useNavigationType } from "react-router-dom";
+import { useNavigate, useNavigationType } from "react-router-dom";
+import { claimShare, parseShare, SHARE_PATH } from "@/lib/shareTarget";
 import { whenNotesReady, isNoteTextEditOpen } from "@/hooks/useNotes";
 import { DAILY_LABEL, DAILY_TEMPLATE, appendTimestamp, dailyKey, dailyTitle, findDailyNote } from "@/lib/dailyNote";
 import { useNoteActions } from "@/hooks/useNoteActions";
@@ -94,6 +95,7 @@ const Index = () => {
   // adres dostaje go z opóźnieniem zerowym, a „wstecz/dalej” wlewa z powrotem.
   const [search, setSearch] = useState(route.search);
   const navigationType = useNavigationType();
+  const navigate = useNavigate();
   useEffect(() => {
     if (navigationType === "POP") setSearch(route.search);
   }, [route.search, navigationType]);
@@ -476,14 +478,20 @@ const Index = () => {
   // another app once the app is installed).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const shareTitle = params.get("share-title");
-    const shareText = params.get("share-text");
-    const shareUrl = params.get("share-url");
-    if (shareTitle || shareText || shareUrl) {
-      const content = [shareText, shareUrl].filter(Boolean).join("\n");
-      handleAddNoteGlow(shareTitle ?? "", content);
-      toast.success("Notatka utworzona z udostępnionej treści");
-      window.history.replaceState(null, "", window.location.pathname);
+    const shared = parseShare(window.location.pathname, window.location.search);
+    if (shared) {
+      // Adres czyścimy od razu — odświeżenie nie ma co powtarzać; `claimShare`
+      // łapie jeszcze przypadek odświeżenia, zanim router zdążył zamienić wpis.
+      navigate("/", { replace: true });
+      if (claimShare(shared)) {
+        void whenNotesReady().then(() => {
+          const id = handleAddNoteGlow(shared.title, shared.content);
+          toast.success("Zapisano w NOTKACH", { action: { label: "Otwórz", onClick: () => openNoteRef.current(id) } });
+        });
+      }
+    } else if (window.location.pathname === SHARE_PATH) {
+      // Pusty `/share` (np. ręcznie wpisany adres) — po prostu wróć do Notatek.
+      navigate("/", { replace: true });
     } else if (params.get("new")) {
       expandAddNote();
       window.history.replaceState(null, "", window.location.pathname);

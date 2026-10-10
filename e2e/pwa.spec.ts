@@ -58,6 +58,21 @@ test("manifest.webmanifest is valid and installable-shaped", async ({ page }) =>
   }
 });
 
+test("/share (Web Share Target) renders the app shell offline, not offline.html", async ({ page, context }) => {
+  await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
+  await page.goto("/");
+  await page.evaluate(async () => { await navigator.serviceWorker.ready; });
+
+  await context.setOffline(true);
+  try {
+    await page.goto("/share?title=Zebranie%20offline&text=tresc");
+    await expect(page.getByText("Zapisano w NOTKACH")).toBeVisible();
+    await expect(page.locator("[data-note-id]").filter({ hasText: "Zebranie offline" })).toHaveCount(1);
+  } finally {
+    await context.setOffline(false);
+  }
+});
+
 test("app shell and existing notes survive a real offline reload", async ({ page, context }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
   await page.goto("/");
