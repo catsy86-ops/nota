@@ -63,6 +63,7 @@ export function foldLine(line: string): string {
 }
 
 function titleOf(note: Note): string {
+  if (note.locked) return "Przypomnienie z notatki prywatnej";
   return note.title.trim() || note.content.trim().split("\n")[0].slice(0, 60) || "Przypomnienie";
 }
 

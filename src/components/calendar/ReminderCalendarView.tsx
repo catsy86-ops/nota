@@ -67,7 +67,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
   );
 
   const titleOf = useMemo(() => {
-    const titles = new Map(notes.map((n) => [n.id, n.title || n.content.slice(0, 40)]));
+    const titles = new Map(notes.map((n) => [n.id, n.locked ? "Notatka prywatna" : n.title || n.content.slice(0, 40)]));
     return (id: string) => titles.get(id) ?? "";
   }, [notes]);
 

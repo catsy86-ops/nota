@@ -35,6 +35,9 @@ export const noteSchema = z.object({
   // Starsze pliki nie mają pola; zły wpis jest pomijany, nie unieważnia notatki.
   attachments: z.unknown().transform((v) => normalizeAttachments(v)).optional(),
   checklist: z.array(checklistItemSchema).catch([]),
+  // Notatka prywatna: tylko szyfrogram (jawne pola są puste). Format sprawdza `yjsStore` przy zapisie.
+  locked: z.literal(true).optional().catch(undefined),
+  vault: z.string().max(5_000_000).optional().catch(undefined),
   folderId: z.string().nullable().catch(null),
   order: z.number().catch(0),
   createdAt: z.number().catch(() => Date.now()),
@@ -81,6 +84,8 @@ export interface FullBackup {
    * wpis w notatce zostaje, ale bez bajtów.
    */
   attachmentBlobs?: Record<string, string>;
+  /** Metadane skarbca prywatnych notatek (sól, klucz danych opakowany hasłem) — kształt waliduje `isValidMeta`. */
+  vault?: unknown;
 }
 
 const versionSchema = z.object({
@@ -103,4 +108,5 @@ export const fullBackupSchema = z.object({
   achievements: z.string().optional().catch(undefined),
   shifts: z.string().optional().catch(undefined),
   attachmentBlobs: z.record(z.string()).optional().catch(undefined),
+  vault: z.unknown().optional(),
 }) satisfies z.ZodType<FullBackup, z.ZodTypeDef, unknown>;

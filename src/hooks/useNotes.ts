@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { yjsStore } from "@/lib/yjsStore";
 import { versionsStore } from "@/lib/versionsStore";
+import { privateNotes } from "@/lib/privateNotes";
+import { toast } from "sonner";
 import type { NotePriority } from "@/lib/notePriority";
 import type { Attachment } from "@/lib/attachments";
 
@@ -56,6 +58,15 @@ export interface Note {
   /** Pliki inne niż obrazy: manifest `attachments` w Y.Doc, bajty w `imageStore` — patrz `lib/attachments.ts`. Brak = bez załączników. */
   attachments?: Attachment[];
   checklist: ChecklistItem[];
+  /**
+   * Notatka prywatna (patrz `lib/privateNotes.ts`): `title`, `content`, `checklist`
+   * i `labels` są w projekcji puste, a prawdziwa treść siedzi zaszyfrowana w
+   * `vault`. Reszta aplikacji widzi więc pustą notatkę — wyciek jest wyłączony
+   * z konstrukcji, nie z pamięci o filtrach.
+   */
+  locked?: boolean;
+  /** Szyfrogram `v1.<iv>.<ct>` z treścią notatki prywatnej (AAD = id notatki). */
+  vault?: string;
   folderId: string | null;
   order: number;
   createdAt: number;
@@ -175,6 +186,13 @@ export function useNotes() {
   const duplicateNote = useCallback((id: string) => {
     const original = yjsStore.projectNotes().find((n) => n.id === id);
     if (!original) return;
+    if (original.locked) {
+      // Kopia notatki prywatnej jest szyfrowana pod nowym id (AAD) — potrzebny odblokowany skarbiec.
+      void privateNotes.duplicate(id).then((newId) => {
+        if (!newId) toast.info("Odblokuj skarbiec, aby zduplikować notatkę prywatną");
+      });
+      return;
+    }
     const now = Date.now();
     // Kopia notatki dnia jest zwykłą notatką — inaczej byłyby dwie „notatki dnia” na ten sam dzień.
     const { dailyDate: _daily, ...rest } = original;

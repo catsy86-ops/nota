@@ -153,36 +153,81 @@ function plainAttachments(raw: unknown): Attachment[] {
   return list.length ? list : NO_ATTACHMENTS;
 }
 
+/** Pola, które w notatce prywatnej żyją tylko w zaszyfrowanym `vault`. */
+const PRIVATE_FIELDS = ["title", "content", "checklist", "labels", "images", "attachments"] as const;
+type PrivateFields = Partial<Pick<Note, (typeof PRIVATE_FIELDS)[number]>>;
+const NO_CHECKLIST: ChecklistItem[] = [];
+const NO_LABELS: string[] = [];
+
+/** Notatka z poprawnym szyfrogramem — tylko taka jest traktowana jako prywatna. */
+function isLockedPlain(note: Pick<Note, "locked" | "vault">): boolean {
+  return note.locked === true && typeof note.vault === "string" && note.vault.startsWith("v1.");
+}
+
 function yNoteFromPlain(note: Note): YNote {
   const y: YNote = new Y.Map();
+  const locked = isLockedPlain(note);
   const text = new Y.Text();
-  if (note.content) text.insert(0, note.content);
+  // Notatka prywatna nigdy nie wchodzi do dokumentu z jawnym tekstem — nawet gdy wołający go podał.
+  if (note.content && !locked) text.insert(0, note.content);
   y.set("content", text);
-  y.set("title", note.title);
+  y.set("title", locked ? "" : note.title);
+  if (locked) { y.set("locked", true); y.set("vault", note.vault as string); }
   y.set("color", note.color);
   y.set("pinned", note.pinned);
   y.set("archived", note.archived);
   y.set("trashed", note.trashed);
   y.set("trashedAt", note.trashedAt);
-  y.set("labels", note.labels.slice());
+  y.set("labels", locked ? [] : note.labels.slice());
   y.set("reminder", note.reminder);
   if (note.reminderRepeat !== undefined) y.set("reminderRepeat", note.reminderRepeat);
   if (note.reminderDay !== undefined) y.set("reminderDay", note.reminderDay);
   if (note.reminderRepeatUntil !== undefined) y.set("reminderRepeatUntil", note.reminderRepeatUntil);
   y.set("priority", note.priority);
   if (note.dailyDate !== undefined) y.set("dailyDate", note.dailyDate);
-  y.set("checklist", yChecklistFromPlain(note.checklist));
+  y.set("checklist", yChecklistFromPlain(locked ? [] : note.checklist));
   y.set("folderId", note.folderId);
   y.set("order", note.order);
-  y.set("imageHashes", imageRefs(note.images));
+  y.set("imageHashes", locked ? [] : imageRefs(note.images));
   // Manifest załączników tylko, gdy są — dokumenty bez nich zostają bajt w bajt jak dawniej.
-  if (note.attachments?.length) y.set("attachments", normalizeAttachments(note.attachments));
+  if (note.attachments?.length && !locked) y.set("attachments", normalizeAttachments(note.attachments));
   y.set("createdAt", note.createdAt);
   y.set("updatedAt", note.updatedAt);
   return y;
 }
 
 function plainFromYNote(id: string, y: YNote): Note {
+  const vault = y.get("locked") === true ? y.get("vault") : undefined;
+  if (typeof vault === "string") {
+    // Projekcja notatki prywatnej jest zredagowana z konstrukcji: wyszukiwarka, graf,
+    // przegląd, eksport i backup widzą pustą notatkę z szyfrogramem.
+    const dailyDate = y.get("dailyDate");
+    return {
+      ...(typeof dailyDate === "string" ? { dailyDate } : {}),
+      id,
+      title: "",
+      content: "",
+      color: (y.get("color") as Note["color"]) ?? "default",
+      pinned: Boolean(y.get("pinned")),
+      archived: Boolean(y.get("archived")),
+      trashed: Boolean(y.get("trashed")),
+      trashedAt: (y.get("trashedAt") as number | null) ?? null,
+      labels: NO_LABELS,
+      reminder: (y.get("reminder") as number | null) ?? null,
+      reminderRepeat: y.get("reminderRepeat") as Note["reminderRepeat"],
+      reminderDay: (y.get("reminderDay") as number | undefined) ?? undefined,
+      reminderRepeatUntil: (y.get("reminderRepeatUntil") as number | undefined) ?? undefined,
+      priority: (y.get("priority") as Note["priority"]) ?? "none",
+      images: NO_IMAGES,
+      locked: true,
+      vault,
+      checklist: NO_CHECKLIST,
+      folderId: (y.get("folderId") as string | null) ?? null,
+      order: (y.get("order") as number) ?? 0,
+      createdAt: (y.get("createdAt") as number) ?? 0,
+      updatedAt: (y.get("updatedAt") as number) ?? 0,
+    };
+  }
   const content = y.get("content");
   const images = y.get("imageHashes");
   const attachments = plainAttachments(y.get("attachments"));
@@ -247,6 +292,9 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   const labelsMap = doc.getMap<boolean>("labels");
   const noteCache = new Map<string, Note>();
   const dirtyNotes = new Set<string>();
+  /** Odbiorca zapisów treści notatek prywatnych (ustawia `privateNotes.ts`). */
+  let lockedWriteSink: ((id: string, fields: PrivateFields) => void) | null = null;
+  const vaultMap = doc.getMap<unknown>("vault");
   notesMap.observeDeep((events) => {
     for (const e of events) {
       if (e.target === notesMap) e.changes.keys.forEach((_c, k) => dirtyNotes.add(k));
@@ -414,6 +462,19 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   }
 
   function applyPatch(id: string, y: YNote, updates: Partial<Omit<Note, "id" | "createdAt">>) {
+    if (y.get("locked") === true) {
+      // Notatka prywatna: pól treści nie wolno zapisać jawnie. Idą do sesji skarbca,
+      // która zaszyfruje je i zapisze `vault` (patrz `privateNotes.ts`).
+      const rest: Record<string, unknown> = { ...updates };
+      const priv: Record<string, unknown> = {};
+      for (const f of PRIVATE_FIELDS) {
+        if (f in rest) { priv[f] = rest[f]; delete rest[f]; }
+      }
+      delete rest.locked;
+      delete rest.vault;
+      if (Object.keys(priv).length) lockedWriteSink?.(id, priv as PrivateFields);
+      updates = rest as typeof updates;
+    }
     if (updates.content !== undefined) {
       const text = y.get("content");
       const base = textBases.get(id);
@@ -456,6 +517,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
    * Zwraca treść bazy — to ona powinna trafić do pola edycji.
    */
   function beginTextEdit(id: string): string | null {
+    if (notesMap.get(id)?.get("locked") === true) return null;
     const text = notesMap.get(id)?.get("content");
     if (!(text instanceof Y.Text)) return null;
     const base = captureTextBase(text);
@@ -607,6 +669,146 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     });
   }
 
+  /** Jawna, pełna notatka z dokumentu (dla skarbca przy blokowaniu). `null`, gdy nie ma albo jest już prywatna. */
+  function readPlainNote(id: string): Note | null {
+    const y = notesMap.get(id);
+    if (!y || y.get("locked") === true) return null;
+    return plainFromYNote(id, y);
+  }
+
+  function isLocked(id: string): boolean {
+    return notesMap.get(id)?.get("locked") === true;
+  }
+
+  /** Id wszystkich notatek prywatnych (też w koszu i archiwum). */
+  function lockedNoteIds(): string[] {
+    const ids: string[] = [];
+    notesMap.forEach((y, id) => { if (y.get("locked") === true && typeof y.get("vault") === "string") ids.push(id); });
+    return ids;
+  }
+
+  function getVault(id: string): string | null {
+    const y = notesMap.get(id);
+    const v = y?.get("locked") === true ? y.get("vault") : undefined;
+    return typeof v === "string" ? v : null;
+  }
+
+  /**
+   * Zamienia notatkę w prywatną: jawne pola znikają z dokumentu (stary `Y.Text` i
+   * mapa listy są zastępowane nowymi, więc ich zawartość zostaje odśmiecona),
+   * zostaje szyfrogram. Jedna transakcja.
+   */
+  function lockNote(id: string, vault: string): boolean {
+    const y = notesMap.get(id);
+    if (!y || y.get("locked") === true) return false;
+    doc.transact(() => {
+      y.set("content", new Y.Text());
+      y.set("title", "");
+      y.set("labels", []);
+      y.set("checklist", new Y.Map<YChecklistItem>());
+      y.set("imageHashes", []);
+      y.delete("attachments");
+      y.set("vault", vault);
+      y.set("locked", true);
+      y.set("updatedAt", Date.now());
+    });
+    textBases.delete(id);
+    return true;
+  }
+
+  /** Nowy szyfrogram istniejącej notatki prywatnej. */
+  function setVault(id: string, vault: string, touch = true): boolean {
+    const y = notesMap.get(id);
+    if (!y || y.get("locked") !== true) return false;
+    doc.transact(() => {
+      y.set("vault", vault);
+      if (touch) y.set("updatedAt", Date.now());
+    });
+    return true;
+  }
+
+  /** Zdejmuje blokadę: jawna treść wraca do dokumentu, szyfrogram znika. */
+  function unlockNote(id: string, plain: Pick<Note, "title" | "content" | "checklist" | "labels">): boolean {
+    const y = notesMap.get(id);
+    if (!y || y.get("locked") !== true) return false;
+    doc.transact(() => {
+      const text = new Y.Text();
+      if (plain.content) text.insert(0, plain.content);
+      y.set("content", text);
+      y.set("title", plain.title);
+      y.set("labels", plain.labels.slice());
+      y.set("checklist", yChecklistFromPlain(plain.checklist));
+      y.delete("vault");
+      y.delete("locked");
+      y.set("updatedAt", Date.now());
+    });
+    return true;
+  }
+
+  function getVaultMeta(): unknown {
+    return vaultMap.get("meta");
+  }
+
+  function setVaultMeta(meta: unknown): void {
+    doc.transact(() => { vaultMap.set("meta", meta); });
+  }
+
+  function observeVaultMeta(listener: () => void): () => void {
+    vaultMap.observe(listener);
+    return () => vaultMap.unobserve(listener);
+  }
+
+  /**
+   * Zmiana klucza skarbca: nowe metadane i nowe szyfrogramy wszystkich podanych
+   * notatek w JEDNEJ transakcji — peer widzi albo stary stan, albo cały nowy.
+   * Zwraca `false` (nic nie zapisuje), gdy któraś notatka zmieniła szyfrogram
+   * od chwili, gdy go odczytano (`expected`), albo przestała być prywatna.
+   */
+  function rekeyVault(meta: unknown, next: Map<string, { expected: string; vault: string }>): boolean {
+    for (const [id, { expected }] of next) if (getVault(id) !== expected) return false;
+    doc.transact(() => {
+      for (const [id, { vault }] of next) notesMap.get(id)!.set("vault", vault);
+      vaultMap.set("meta", meta);
+    });
+    return true;
+  }
+
+  function setLockedWriteSink(sink: typeof lockedWriteSink): void {
+    lockedWriteSink = sink;
+  }
+
+  /**
+   * Dziennik aktualizacji y-indexeddb trzyma dawne aktualizacje (z jawnym
+   * tekstem sprzed zablokowania) aż do własnego zagęszczenia. Tu zagęszczamy
+   * od razu: jedna aktualizacja ze stanem dokumentu zamiast historii.
+   * Nie dotyczy innych urządzeń ani wcześniejszych kopii zapasowych.
+   */
+  async function compactPersistence(): Promise<boolean> {
+    try {
+      await persistence.whenSynced;
+      const db = persistence.db;
+      if (!db) return false;
+      const state = Y.encodeStateAsUpdate(doc);
+      await new Promise<void>((resolve, reject) => {
+        const tx = db.transaction(["updates"], "readwrite");
+        const store = tx.objectStore("updates");
+        const keysReq = store.getAllKeys();
+        keysReq.onsuccess = () => {
+          const old = keysReq.result;
+          const addReq = store.add(state);
+          addReq.onsuccess = () => { for (const k of old) store.delete(k); };
+        };
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        tx.onabort = () => reject(tx.error);
+      });
+      return true;
+    } catch (err) {
+      logDiag("warn", "yjsStore", "cannot compact persistence", err);
+      return false;
+    }
+  }
+
   /** Destructive full replace (used by "restore from backup file") — not a merge. */
   function replaceAll(notes: Note[], folders: Folder[], labels: string[]): void {
     doc.transact(() => {
@@ -660,6 +862,8 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     replaceAll, resetForTests, diagStats, encodeSyncState, mergeSyncState,
     referencedImages, referencedAttachments, syncableRefs, remapImageRefs,
     beginTextEdit, endTextEdit, isTextEditOpen, rebaseTextEdit, onRemoteTextChange,
+    readPlainNote, isLocked, lockedNoteIds, getVault, lockNote, setVault, unlockNote,
+    getVaultMeta, setVaultMeta, observeVaultMeta, rekeyVault, setLockedWriteSink, compactPersistence,
   };
 }
 

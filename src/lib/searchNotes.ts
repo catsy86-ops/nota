@@ -22,7 +22,8 @@ export function searchNotes(notes: Note[], query: string, ctx: SearchContext = {
   const free = text.trim();
   if (!free) return pool;
 
-  const fuse = new Fuse(pool, {
+  // Notatki prywatne nie biorą udziału w wyszukiwaniu tekstu — nawet po odblokowaniu skarbca.
+  const fuse = new Fuse(pool.filter((n) => !n.locked), {
     keys: [
       { name: "title", weight: 0.5 },
       { name: "content", weight: 0.3 },

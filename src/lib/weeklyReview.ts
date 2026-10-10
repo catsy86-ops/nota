@@ -41,7 +41,8 @@ const META: Record<ReviewCategoryKey, { label: string; hint: string }> = {
 const ORDER: ReviewCategoryKey[] = ["overdue", "openLists", "stale", "unsorted"];
 
 function isLive(n: Note): boolean {
-  return !n.archived && !n.trashed;
+  // Notatki prywatne nie trafiają do przeglądu (nie ma tu czego pokazać bez ujawniania treści).
+  return !n.archived && !n.trashed && !n.locked;
 }
 
 function hasText(n: Note): boolean {

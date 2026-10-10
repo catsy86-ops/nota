@@ -15,6 +15,7 @@ import type { NoteColor } from "@/hooks/useNotes";
 import { cn } from "@/lib/utils";
 import { Section, ToggleRow } from "./SettingsShared";
 import { ReviewSettings } from "./ReviewSettings";
+import { VaultSettings } from "./VaultSettings";
 import { getNotificationPermission } from "@/lib/notificationPermission";
 import { MOD_KEY } from "@/lib/platform";
 import { setBadgeEnabled, useBadgeEnabled } from "@/lib/overdueBadge";
@@ -187,6 +188,8 @@ export function GeneralSettings() {
           </div>
         ))}
       </div>
+
+      <div className="pt-2"><VaultSettings /></div>
 
       <div className="pt-2"><Section title="Diagnostyka">
         <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/30 px-4 py-3">

@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import type { Note } from "@/hooks/useNotes";
 import { yjsStore } from "@/lib/yjsStore";
+import { isValidMeta } from "@/lib/vault";
 // Schematy (zod) ładują się dopiero przy imporcie/backupie — nie ma ich w startowym bundlu.
 import type { FullBackup } from "@/lib/noteSchema";
 const loadSchemas = () => import("@/lib/noteSchema");
@@ -83,7 +84,10 @@ export async function buildFullBackupWithReport(): Promise<{ backup: FullBackup;
   const backup: FullBackup = {
     version: 3,
     exportedAt: Date.now(),
+    // Notatki prywatne są w projekcji puste i niosą tylko szyfrogram (`vault`).
     notes: await withEmbeddedImages(yjsStore.projectNotes()),
+    // Sól i klucz danych opakowany hasłem — bez hasła (albo kodu awaryjnego) nic z tego nie odczyta treści.
+    ...(yjsStore.getVaultMeta() ? { vault: yjsStore.getVaultMeta() } : {}),
     labels: yjsStore.projectLabels(),
     folders: yjsStore.projectFolders(),
     versions: versionsStore.all(),
@@ -186,6 +190,8 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   const notes = await withStoredImages(backup.notes);
   if (backup.attachmentBlobs) await imageStore.ingest(Object.values(backup.attachmentBlobs));
   yjsStore.replaceAll(notes, backup.folders, backup.labels);
+  // Metadane skarbca z pliku: bez nich zablokowane notatki z backupu byłyby nie do odszyfrowania.
+  if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);
   if (opts.versions && backup.versions) {
     await versionsStore.load();
     versionsStore.replaceAll(backup.versions);
@@ -223,7 +229,10 @@ export async function exportToMarkdown(notes: Note[]) {
   lines.push(`> ${format(new Date(), "d MMMM yyyy, HH:mm", { locale: pl })}`);
   lines.push("");
 
+  // Notatki prywatne nie trafiają do eksportu tekstowego (jawny plik) — jest ich tylko liczba.
+  const privateCount = notes.filter((n) => n.locked).length;
   for (const note of notes) {
+    if (note.locked) continue;
     if (note.title) lines.push(`## ${note.title}`);
     if (note.labels.length) lines.push(`*Etykiety: ${note.labels.join(", ")}*`);
     if (note.reminder) lines.push(`*Przypomnienie: ${format(new Date(note.reminder), "d MMM yyyy, HH:mm", { locale: pl })}*`);
@@ -246,6 +255,7 @@ export async function exportToMarkdown(notes: Note[]) {
     lines.push("", "---", "");
   }
 
+  if (privateCount) lines.push(`*Pominięto notatki prywatne: ${privateCount}. Są tylko w pełnym backupie, jako szyfrogram.*`, "");
   download(lines.join("\n"), "kaczy-export.md", "text/markdown");
 }
 
@@ -280,7 +290,9 @@ h1{font-size:1.8rem;margin-bottom:.2rem}
 <p class="date">Eksport: ${escape(dateStr)}</p>
 `;
 
+  const privateCount = notes.filter((n) => n.locked).length;
   for (const note of notes) {
+    if (note.locked) continue;
     html += `<div class="note">`;
     if (note.title) html += `<h2>${escape(note.title)}</h2>`;
     if (note.labels.length) html += `<p class="labels">Etykiety: ${escape(note.labels.join(", "))}</p>`;
@@ -305,6 +317,7 @@ h1{font-size:1.8rem;margin-bottom:.2rem}
     html += `</div>\n`;
   }
 
+  if (privateCount) html += `<p class="labels">Pominięto notatki prywatne: ${privateCount}.</p>\n`;
   html += `</body></html>`;
   download(html, "kaczy-export.html", "text/html");
 }

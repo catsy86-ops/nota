@@ -49,9 +49,10 @@ export function useReminderNotifications(
           const onDone = () => onReminderFired(note.id, null);
           toast.custom((id) => createElement(ReminderDueToast, {
             toastId: id,
-            title: note.title || "Przypomnienie",
+            // Notatka prywatna: ani tytułu, ani treści w dymku (projekcja jest pusta, a tu jawnie nazywamy powód).
+            title: note.locked ? "Przypomnienie z notatki prywatnej" : note.title || "Przypomnienie",
             when,
-            description: note.content.slice(0, 120),
+            description: note.locked ? "" : note.content.slice(0, 120),
             canSnooze: repeat === "none",
             // Odłożenie przesuwa termin w przyszłość, więc `reconcileFired`
             // zdejmie wpis „już odpalone” i przypomnienie wystrzeli ponownie.
@@ -67,9 +68,9 @@ export function useReminderNotifications(
           });
 
           if ("Notification" in window && Notification.permission === "granted") {
-            const title = note.title || "Notatnik — Przypomnienie";
+            const title = note.locked ? "Przypomnienie z notatki prywatnej" : note.title || "Notatnik — Przypomnienie";
             const options: NotificationOptions = {
-              body: note.content || "Czas na tę notatkę!",
+              body: note.locked ? "Otwórz NOTKI i odblokuj skarbiec, aby zobaczyć notatkę." : note.content || "Czas na tę notatkę!",
               icon: "/pwa-192.png",
               badge: "/pwa-192.png",
               tag: note.id,

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, Brain, Keyboard, BookOpen, History, Bookmark, Network, Copy } from "lucide-react";
+import { Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, Brain, Keyboard, BookOpen, History, Bookmark, Network, Copy } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes } from "@/lib/searchNotes";
@@ -9,6 +9,10 @@ import { requestShiftDay, searchShiftDays, useShifts } from "@/lib/shifts";
 import { modShortcut } from "@/lib/platform";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useSavedFilters } from "@/lib/savedFilters";
+import { useVault } from "@/hooks/usePrivateNotes";
+import { privateNotes } from "@/lib/privateNotes";
+import { lockEverywhere } from "@/lib/vaultAutoLock";
+import { vaultUi } from "@/lib/vaultUi";
 
 const NOTE_LIMIT = 30;
 
@@ -59,7 +63,10 @@ export function CommandPalette({
   const [search, setSearch] = useState("");
   // Ostatnie zapytania, które zakończyły się otwarciem notatki (max 5, localStorage).
   const [recent, setRecent] = useState<string[]>(loadRecentSearches);
-  const matched = useMemo(() => searchNotes(notes, search, { folders }), [notes, search, folders]);
+  // Notatki prywatne nie pojawiają się w palecie (ani tytułem, ani treścią) — także po odblokowaniu.
+  const publicNotes = useMemo(() => notes.filter((n) => !n.locked), [notes]);
+  const matched = useMemo(() => searchNotes(publicNotes, search, { folders }), [publicNotes, search, folders]);
+  const vault = useVault();
   const shifts = useShifts();
   const shiftHits = useMemo(() => {
     const types = new Map(shifts.types.map((x) => [x.id, x]));
@@ -132,6 +139,16 @@ export function CommandPalette({
                 <Copy className="w-4 h-4 mr-2" /> Kopiuj notatkę jako tekst
               </CommandItem>
             </>
+          )}
+          {vault.phase === "unlocked" && (
+            <CommandItem value="zablokuj prywatne notatki teraz" onSelect={() => run(() => { void lockEverywhere(privateNotes); })}>
+              <Lock className="w-4 h-4 mr-2" /> Zablokuj prywatne notatki teraz
+            </CommandItem>
+          )}
+          {vault.phase === "locked" && (
+            <CommandItem value="odblokuj prywatne notatki" onSelect={() => run(() => vaultUi.open("unlock"))}>
+              <LockOpen className="w-4 h-4 mr-2" /> Odblokuj prywatne notatki
+            </CommandItem>
           )}
           <CommandItem onSelect={() => run(onOpenSettings)}>
             <Settings className="w-4 h-4 mr-2" /> Ustawienia
