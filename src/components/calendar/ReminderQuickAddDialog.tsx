@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { searchNotes } from "@/lib/searchNotes";
 import { parseNaturalDate } from "@/lib/parseNaturalDate";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
-import { composeReminderTimestamp, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
+import { composeReminderTimestamp, isPastReminder, toTimeInputValue, formatReminderShort, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
 import { REMINDER_REPEAT_LABELS, type ReminderRepeat } from "@/lib/reminderRepeat";
 import type { Note } from "@/hooks/useNotes";
 import { cn } from "@/lib/utils";
@@ -193,7 +193,7 @@ export function ReminderQuickAddDialog({
               value={time}
               onChange={(e) => setTime(e.target.value)}
               aria-label="Godzina przypomnienia"
-              className="text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-none focus-visible:ring-2 focus-visible:ring-ring text-foreground"
+              className="text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 coarse:min-h-11 outline-none focus-visible:ring-2 focus-visible:ring-ring text-foreground"
             />
           </label>
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -203,7 +203,7 @@ export function ReminderQuickAddDialog({
               value={repeat}
               onChange={(e) => setRepeat(e.target.value as ReminderRepeat)}
               aria-label="Powtarzanie"
-              className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 outline-none focus-visible:ring-2 focus-visible:ring-ring text-foreground"
+              className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 coarse:min-h-11 outline-none focus-visible:ring-2 focus-visible:ring-ring text-foreground"
             >
               {REPEAT_OPTIONS.map((r) => (
                 <option key={r} value={r}>{REMINDER_REPEAT_LABELS[r]}</option>
@@ -227,7 +227,7 @@ export function ReminderQuickAddDialog({
                 a kolejne wylicza od niego.
               </p>
             )}
-            <Button size="sm" onClick={handleSaveEdit} disabled={timestamp === null} className="w-full">
+            <Button size="sm" onClick={handleSaveEdit} disabled={timestamp === null} className="w-full coarse:h-11">
               Zapisz termin
             </Button>
             <div className="flex flex-col sm:flex-row gap-2">
@@ -250,7 +250,7 @@ export function ReminderQuickAddDialog({
           </div>
         ) : (
           <>
-            <Button size="sm" onClick={handleCreate} disabled={timestamp === null || !title} className="w-full">
+            <Button size="sm" onClick={handleCreate} disabled={timestamp === null || !title} className="w-full coarse:h-11">
               <Plus className="w-3.5 h-3.5 mr-1" />
               Utwórz notatkę z terminem
             </Button>
@@ -267,15 +267,15 @@ export function ReminderQuickAddDialog({
                         onClick={() => handleAttach(n.id)}
                         disabled={timestamp === null}
                         className={cn(
-                          "w-full flex items-center gap-2 text-left rounded-lg px-2 py-1.5 text-sm",
-                          "hover:bg-muted/60 transition-colors disabled:opacity-50",
+                          "w-full flex items-center gap-2 text-left rounded-lg px-2 py-1.5 coarse:min-h-11 text-sm",
+                          "hover:bg-muted/60 transition-colors disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-ring",
                         )}
                       >
                         <StickyNote className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
                         <span className="truncate">{n.locked ? "Notatka prywatna" : n.title.trim() || n.content.slice(0, 40) || "Bez tytułu"}</span>
                         {n.reminder && (
                           <span className="ml-auto shrink-0 text-2xs text-muted-foreground">
-                            ma już termin
+                            zastąpi termin: {formatReminderShort(n.reminder)}
                           </span>
                         )}
                       </button>

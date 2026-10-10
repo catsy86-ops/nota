@@ -464,6 +464,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           ...(tilt ? { transformStyle: "preserve-3d" as const } : {}),
         }}
 
+        role="article"
+        aria-label={note.locked ? "Notatka prywatna" : note.title.trim() || "Notatka bez tytułu"}
         data-note-id={note.id}
         data-note-color={note.color}
         // Siatka (`NoteGrid`) rozciąga kafel w edycji na dwie kolumny.
@@ -526,7 +528,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           <div className={cn("grid gap-0.5", isEditing && note.images.length > 1 && "grid-cols-2")}>
             {note.images.slice(0, isEditing ? note.images.length : 1).map((img, i) => (
               <div key={i} className="relative group/img cursor-pointer overflow-hidden" onClick={() => setPreviewImage(img)}>
-                <NoteImage imageRef={img} className={cn("w-full object-cover transition-transform duration-300 group-hover/img:scale-105", isEditing ? "h-24" : "aspect-video")} />
+                <NoteImage imageRef={img} alt={`Obraz ${i + 1} z ${note.images.length}`} className={cn("w-full object-cover transition-transform duration-300 group-hover/img:scale-105", isEditing ? "h-24" : "aspect-video")} />
                 {!isEditing && note.images.length > 1 && (
                   <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-foreground/60 text-background text-2xs font-semibold tabular-nums">
                     +{note.images.length - 1}

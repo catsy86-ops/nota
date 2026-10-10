@@ -9,12 +9,14 @@ interface Props {
   /** Klasy kafla zastępczego, gdy obraz nie ma naturalnej wysokości (np. w siatce kart). */
   placeholderClassName?: string;
   loading?: "lazy" | "eager";
+  /** Opis dla czytnika ekranu; pusty = obraz dekoracyjny. */
+  alt?: string;
 }
 
 /** Obraz notatki z `imageStore`; kafel zastępczy, gdy bajty jeszcze nie dotarły na to urządzenie. */
-export function NoteImage({ imageRef, className, placeholderClassName, loading = "lazy" }: Props) {
+export function NoteImage({ imageRef, className, placeholderClassName, loading = "lazy", alt = "" }: Props) {
   const url = useImageUrl(imageRef);
-  if (url) return <img src={url} alt="" className={className} loading={loading} />;
+  if (url) return <img src={url} alt={alt} className={className} loading={loading} />;
   return (
     <div
       role="img"

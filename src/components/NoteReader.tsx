@@ -317,7 +317,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
             {note.images && note.images.length > 0 && (
               <div className={cn("grid gap-2 mt-4", present ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2")}>
                 {note.images.map((img, i) => (
-                  <NoteImage key={i} imageRef={img} className="w-full rounded-lg" placeholderClassName="aspect-video" />
+                  <NoteImage key={i} imageRef={img} alt={`Obraz ${i + 1} z ${note.images.length}`} className="w-full rounded-lg" placeholderClassName="aspect-video" />
                 ))}
               </div>
             )}

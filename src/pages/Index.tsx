@@ -45,6 +45,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
 import { downloadNotesZip } from "@/lib/exportZip";
+import { pluralPl } from "@/lib/plural";
 import { DndContext, pointerWithin } from "@dnd-kit/core";
 import { fireworks, megaCelebrate } from "@/lib/celebrate";
 import { glowPulse, glowStreak, centerOf, pointOfNote } from "@/lib/glowTrail";
@@ -808,6 +809,10 @@ const Index = () => {
             </ViewErrorBoundary>
           )}
 
+          {/* Liczba wyników dla czytnika ekranu — lista zmienia się bez żadnego komunikatu. */}
+          <p role="status" aria-live="polite" className="sr-only">
+            {deferredSearch && view !== "calendar" && view !== "shifts" ? `${displayNotes.length} ${pluralPl(displayNotes.length, ["wynik", "wyniki", "wyników"])}` : ""}
+          </p>
           {view !== "calendar" && view !== "shifts" && displayNotes.length === 0 && <EmptyState view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} />}
           {view === "notes" && displayNotes.length > 0 && !deferredSearch && <DailyQuote />}
         </main>
