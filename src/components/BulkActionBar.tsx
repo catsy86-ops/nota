@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Archive, Trash2, Palette, X, CheckSquare } from "lucide-react";
+import { Archive, ArchiveRestore, Trash2, Palette, X, CheckSquare, Undo2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ColorPicker } from "./ColorPicker";
 import type { NoteColor } from "@/hooks/useNotes";
@@ -14,9 +14,17 @@ interface Props {
   onArchive: () => void;
   onTrash: () => void;
   onColor: (c: NoteColor) => void;
+  /** Widok, w którym leży zaznaczenie — w Koszu i Archiwum akcje są inne niż na liście notatek. */
+  view?: "trash" | "archive" | "other";
+  /** Przywrócenie z Kosza albo Archiwum. */
+  onRestore?: () => void;
+  /** Trwałe usunięcie (tylko Kosz) — po potwierdzeniu. */
+  onDeleteForever?: () => void;
 }
 
-export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArchive, onTrash, onColor }: Props) {
+export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArchive, onTrash, onColor, view = "other", onRestore, onDeleteForever }: Props) {
+  const inTrash = view === "trash";
+  const inArchive = view === "archive";
   return (
     <AnimatePresence>
       {count > 0 && (
@@ -39,22 +47,37 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
             Wszystko ({totalVisible})
           </button>
           <div className="w-px h-5 bg-border mx-1" />
-          <Popover>
-            <PopoverTrigger asChild>
-              <IconButton title="Zmień kolor" aria-label="Zmień kolor">
-                <Palette className="w-4 h-4" />
-              </IconButton>
-            </PopoverTrigger>
-            <PopoverContent side="top" className="w-auto p-2">
-              <ColorPicker selected="default" onSelect={(c: NoteColor) => onColor(c)} />
-            </PopoverContent>
-          </Popover>
-          <IconButton onClick={onArchive} title="Archiwizuj" aria-label="Archiwizuj">
-            <Archive className="w-4 h-4" />
-          </IconButton>
-          <IconButton tone="destructive" onClick={onTrash} title="Przenieś do kosza" aria-label="Przenieś do kosza">
-            <Trash2 className="w-4 h-4" />
-          </IconButton>
+          {!inTrash && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <IconButton title="Zmień kolor" aria-label="Zmień kolor">
+                  <Palette className="w-4 h-4" />
+                </IconButton>
+              </PopoverTrigger>
+              <PopoverContent side="top" className="w-auto p-2">
+                <ColorPicker selected="default" onSelect={(c: NoteColor) => onColor(c)} />
+              </PopoverContent>
+            </Popover>
+          )}
+          {(inTrash || inArchive) && onRestore && (
+            <IconButton onClick={onRestore} title={inTrash ? "Przywróć z kosza" : "Przywróć z archiwum"} aria-label={inTrash ? "Przywróć z kosza" : "Przywróć z archiwum"}>
+              {inTrash ? <Undo2 className="w-4 h-4" /> : <ArchiveRestore className="w-4 h-4" />}
+            </IconButton>
+          )}
+          {!inTrash && !inArchive && (
+            <IconButton onClick={onArchive} title="Archiwizuj" aria-label="Archiwizuj">
+              <Archive className="w-4 h-4" />
+            </IconButton>
+          )}
+          {inTrash ? (
+            <IconButton tone="destructive" onClick={onDeleteForever} title="Usuń trwale" aria-label="Usuń trwale">
+              <Trash2 className="w-4 h-4" />
+            </IconButton>
+          ) : (
+            <IconButton tone="destructive" onClick={onTrash} title="Przenieś do kosza" aria-label="Przenieś do kosza">
+              <Trash2 className="w-4 h-4" />
+            </IconButton>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

@@ -231,9 +231,11 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   }
 
   function removeImage(idx: number) {
-    const updated = [...(note.images || [])];
+    const before = [...(note.images || [])];
+    const updated = [...before];
     updated.splice(idx, 1);
     onUpdate?.(note.id, { images: updated });
+    toast("Usunięto obrazek", { action: { label: "Cofnij", onClick: () => onUpdate?.(note.id, { images: before }) } });
   }
 
   // Subtle 3D hover tilt — opt-in (effectsSettings.cardTilt), never with reduced motion.
@@ -471,11 +473,13 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         )}
 
         {/* Selection checkbox */}
-        {(selectionMode || selected) && onToggleSelect && (
+        {!isEditing && onToggleSelect && (
           <button
             onClick={(e) => { e.stopPropagation(); onToggleSelect(note.id, e.shiftKey); }}
             className={cn(
-              "absolute top-2 right-2 z-20 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors",
+              "absolute top-2 right-2 z-20 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-[color,background-color,border-color,opacity]",
+              // Start zaznaczania bez Ctrl+A: pole pojawia się po najechaniu / fokusie, a na dotyku jest zawsze lekko widoczne.
+              !(selectionMode || selected) && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100 coarse:opacity-70",
               selected ? "bg-primary border-primary text-primary-foreground" : "bg-background/80 border-border hover:border-primary"
             )}
             aria-label={selected ? "Odznacz notatkę" : "Zaznacz notatkę"}
@@ -505,7 +509,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           // Poza edycją jedna miniatura 16:9 i „+N” — siatka czterech zdjęć wydłużała kafel.
           // W edycji wszystkie (do 4), bo każde ma przycisk usuwania.
           <div className={cn("grid gap-0.5", isEditing && note.images.length > 1 && "grid-cols-2")}>
-            {note.images.slice(0, isEditing ? 4 : 1).map((img, i) => (
+            {note.images.slice(0, isEditing ? note.images.length : 1).map((img, i) => (
               <div key={i} className="relative group/img cursor-pointer overflow-hidden" onClick={() => setPreviewImage(img)}>
                 <NoteImage imageRef={img} className={cn("w-full object-cover transition-transform duration-300 group-hover/img:scale-105", isEditing ? "h-24" : "aspect-video")} />
                 {!isEditing && note.images.length > 1 && (
@@ -513,16 +517,11 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                     +{note.images.length - 1}
                   </span>
                 )}
-                {isEditing && note.images.length > 4 && i === 3 && (
-                  <div className="absolute inset-0 bg-foreground/40 flex items-center justify-center">
-                    <span className="text-primary-foreground font-display font-bold text-lg">+{note.images.length - 4}</span>
-                  </div>
-                )}
                 {isEditing && (
                   <button
                     onClick={(e) => { e.stopPropagation(); removeImage(i); }}
                     aria-label="Usuń obrazek"
-                    className="absolute top-1 right-1 p-0.5 rounded-full bg-foreground/60 text-background opacity-0 group-hover/img:opacity-100 transition-opacity"
+                    className="absolute top-1 right-1 p-1 coarse:p-2 rounded-full bg-foreground/60 text-background opacity-0 coarse:opacity-100 group-hover/img:opacity-100 focus-visible:opacity-100 transition-opacity"
                   >
                     <X className="w-3 h-3" />
                   </button>

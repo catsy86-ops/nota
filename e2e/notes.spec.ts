@@ -53,3 +53,29 @@ test("moves a note to trash and it disappears from the main list", async ({ page
   // also contains the note title).
   await expect(page.locator("[data-note-id]").filter({ hasText: title })).not.toBeVisible();
 });
+
+test("zaznaczanie myszą: pole przy kafelku otwiera pasek zbiorczy, a w koszu są Przywróć i Usuń trwale", async ({ page }) => {
+  const title = `E2E-zaznacz ${Date.now()}`;
+  await addNote(page, title);
+
+  const card = page.locator("[data-note-id-wrap]", { hasText: title });
+  await card.hover();
+  await card.getByRole("button", { name: "Zaznacz notatkę" }).click();
+  await expect(page.getByText("zaznaczono")).toBeVisible();
+
+  // Do kosza z paska zbiorczego (potwierdzenie).
+  await page.getByRole("button", { name: "Przenieś do kosza" }).click();
+  await page.getByRole("button", { name: "Przenieś do kosza" }).last().click();
+  await expect(page.getByText(title)).toHaveCount(0);
+
+  // W Koszu to samo zaznaczenie daje akcje kosza.
+  await page.keyboard.press("g");
+  await page.keyboard.press("k");
+  const trashed = page.locator("[data-note-id-wrap]", { hasText: title });
+  await trashed.hover();
+  await trashed.getByRole("button", { name: "Zaznacz notatkę" }).click();
+  await expect(page.getByRole("button", { name: "Przywróć z kosza" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Usuń trwale" })).toBeVisible();
+  await page.getByRole("button", { name: "Przywróć z kosza" }).click();
+  await expect(page.getByText(title)).toHaveCount(0);
+});

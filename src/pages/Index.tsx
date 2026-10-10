@@ -43,6 +43,7 @@ import { markNoteOpened } from "@/lib/lastOpened";
 import { EmptyState } from "@/components/EmptyState";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { toastWithUndo } from "@/lib/undoToast";
 import { DndContext, pointerWithin } from "@dnd-kit/core";
 import { fireworks, megaCelebrate } from "@/lib/celebrate";
 import { glowPulse, glowStreak, centerOf, pointOfNote } from "@/lib/glowTrail";
@@ -125,6 +126,7 @@ const Index = () => {
   // i nie przesuwał całej treści przy każdym wczytaniu strony.
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== "undefined" && window.innerWidth >= 768);
   const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false);
+  const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[] | null>(null);
   const addNoteRef = useRef<{ expand: () => void }>(null);
   const logoClicksRef = useRef<{ count: number; lastTs: number }>({ count: 0, lastTs: 0 });
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -525,6 +527,21 @@ const Index = () => {
   const deleteNoteForever = useCallback((id: string) => { deleteNote(id); deleteVersions(id); }, [deleteNote, deleteVersions]);
   const handleDelete = view === "trash" ? deleteNoteForever : handleTrashSingle;
 
+  /** Zaznaczone w Koszu wracają do notatek, w Archiwum — z archiwum; oba z „Cofnij”. */
+  const handleBulkRestoreView = useCallback(() => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (view === "trash") {
+      bulkRestore(ids);
+      clearSelection();
+      toastWithUndo(`Przywrócono ${ids.length} z kosza`, () => bulkTrash(ids));
+    } else {
+      ids.forEach(unarchiveNote);
+      clearSelection();
+      toastWithUndo(`Przywrócono ${ids.length} z archiwum`, () => bulkArchive(ids));
+    }
+  }, [selectedIds, view, bulkRestore, bulkTrash, bulkArchive, unarchiveNote, clearSelection]);
+
   const { sensors, setDraggingNoteId, handleDragEnd } = useNoteDnd({
     displayNoteIds: displayNotes.map((n) => n.id),
     folders,
@@ -632,6 +649,32 @@ const Index = () => {
               </button>
             </motion.div>
           )}
+
+          <AlertDialog open={confirmDeleteIds !== null} onOpenChange={(o) => { if (!o) setConfirmDeleteIds(null); }}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle className="font-display">Usunąć trwale?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {confirmDeleteIds?.length ?? 0} {(confirmDeleteIds?.length ?? 0) === 1 ? "notatka zostanie" : "notatki zostaną"} trwale usunięte. Tej operacji nie można cofnąć.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    const ids = confirmDeleteIds ?? [];
+                    ids.forEach(deleteNoteForever);
+                    clearSelection();
+                    toast.success(`Usunięto trwale: ${ids.length}`);
+                    setConfirmDeleteIds(null);
+                  }}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Usuń trwale
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
 
           <AlertDialog open={confirmEmptyTrash} onOpenChange={setConfirmEmptyTrash}>
             <AlertDialogContent>
@@ -875,6 +918,9 @@ const Index = () => {
       onArchive={handleBulkArchive}
       onTrash={handleBulkTrash}
       onColor={handleBulkColor}
+      view={view === "trash" ? "trash" : view === "archive" ? "archive" : "other"}
+      onRestore={handleBulkRestoreView}
+      onDeleteForever={() => setConfirmDeleteIds(Array.from(selectedIds))}
     />
     <Suspense fallback={null}>
       <OnboardingTour />
