@@ -123,5 +123,7 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
     };
 
     return { displayNotes, pinned, others, elsewhere };
+    // `dayTick` nie jest czytany w środku — tylko wymusza przeliczenie granic „Dziś”.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs, opened, dayTick]);
 }
