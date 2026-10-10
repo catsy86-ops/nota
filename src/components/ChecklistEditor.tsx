@@ -4,6 +4,7 @@ import { Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { emojiShower } from "@/lib/celebrate";
 import { haptic } from "@/lib/haptics";
+import { toastWithUndo } from "@/lib/undoToast";
 import { checklistToContent, contentToChecklist, parsePastedChecklist } from "@/lib/checklistPaste";
 import type { ChecklistItem } from "@/hooks/useNotes";
 
@@ -134,6 +135,43 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
     onChange(items.filter((i) => i.id !== id));
   }
 
+  /** Nowy wiersz montuje się po przejściu wejścia, więc fokus ponawiamy przez kilka klatek. */
+  const focusItem = (id: string) => {
+    let tries = 0;
+    const attempt = () => {
+      const el = document.querySelector<HTMLInputElement>(`input[data-checklist-item="${id}"]`);
+      if (el) { el.focus(); return; }
+      if (++tries < 12) requestAnimationFrame(attempt);
+    };
+    requestAnimationFrame(attempt);
+  };
+
+  /** Enter w polu pozycji: nowa pozycja tuż pod nią (z tym samym wcięciem), fokus w niej. */
+  function insertBelow(id: string) {
+    const at = items.findIndex((i) => i.id === id);
+    if (at === -1) return;
+    const fresh: ChecklistItem = { id: crypto.randomUUID(), text: "", checked: false, ...(items[at].indent === 1 ? { indent: 1 as const } : {}) };
+    onChange([...items.slice(0, at + 1), fresh, ...items.slice(at + 1)]);
+    focusItem(fresh.id);
+  }
+
+  /** Backspace na pustej pozycji usuwa ją, a fokus wraca do poprzedniej. */
+  function removeEmpty(id: string) {
+    const open = items.filter((i) => !i.checked);
+    const at = open.findIndex((i) => i.id === id);
+    const prev = open[at - 1];
+    removeItem(id);
+    if (prev) focusItem(prev.id);
+  }
+
+  function clearChecked() {
+    const before = items;
+    const removed = items.filter((i) => i.checked).length;
+    if (removed === 0) return;
+    onChange(items.filter((i) => !i.checked));
+    toastWithUndo(`Usunięto ukończone (${removed})`, () => onChange(before));
+  }
+
   function updateText(id: string, text: string) {
     onChange(items.map((i) => (i.id === id ? { ...i, text } : i)));
   }
@@ -172,6 +210,17 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                 onPaste={(e) => handlePaste(e, item.id)}
                 data-checklist-item={item.id}
                 onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.nativeEvent.isComposing) {
+                    e.preventDefault();
+                    if (item.text.trim() === "") { setIndent(item.id, false); return; }
+                    insertBelow(item.id);
+                    return;
+                  }
+                  if (e.key === "Backspace" && item.text === "" && !e.altKey && !e.ctrlKey && !e.metaKey) {
+                    e.preventDefault();
+                    removeEmpty(item.id);
+                    return;
+                  }
                   if (e.key === "Tab" && !e.altKey && !e.ctrlKey && !e.metaKey) {
                     if (setIndent(item.id, !e.shiftKey)) e.preventDefault();
                     return;
@@ -186,8 +235,10 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
             )}
             {!readOnly && (
               <button
+                type="button"
                 onClick={() => removeItem(item.id)}
-                className="p-0.5 rounded text-muted-foreground/40 hover:text-destructive opacity-0 group-hover/item:opacity-100 transition-opacity"
+                aria-label={`Usuń pozycję: ${item.text || "pusta"}`}
+                className="p-0.5 coarse:p-2 rounded text-muted-foreground/40 hover:text-destructive opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -198,9 +249,17 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
 
       {checked.length > 0 && (
         <div className="pt-1 border-t border-border/30 mt-2">
-          <p className="text-2xs text-muted-foreground/50 uppercase tracking-wider mb-1">
-            {checked.length} ukończone
-          </p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-2xs text-muted-foreground/50 uppercase tracking-wider">
+              {checked.length} ukończone
+            </p>
+            {!readOnly && (
+              <button type="button" onClick={clearChecked}
+                className="text-2xs coarse:text-xs text-muted-foreground hover:text-foreground rounded outline-none focus-visible:ring-2 focus-visible:ring-ring px-1 coarse:py-1">
+                Usuń ukończone
+              </button>
+            )}
+          </div>
           {checked.map((item) => (
             <div key={item.id} className="flex items-center gap-2 group/item">
               <button
@@ -218,8 +277,10 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
               </span>
               {!readOnly && (
                 <button
+                  type="button"
                   onClick={() => removeItem(item.id)}
-                  className="p-0.5 rounded text-muted-foreground/40 hover:text-destructive opacity-0 group-hover/item:opacity-100 transition-opacity"
+                  aria-label={`Usuń pozycję: ${item.text || "pusta"}`}
+                  className="p-0.5 coarse:p-2 rounded text-muted-foreground/40 hover:text-destructive opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <X className="w-3 h-3" />
                 </button>

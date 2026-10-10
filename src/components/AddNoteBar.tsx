@@ -138,7 +138,8 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        const popover = (e.target as Element)?.closest?.('[data-radix-popper-content-wrapper]');
+        // Kliknięcie w dymek (np. „Cofnij” po usunięciu ukończonych) nie jest kliknięciem „poza” edytorem.
+        const popover = (e.target as Element)?.closest?.('[data-radix-popper-content-wrapper], [data-sonner-toaster]');
         if (!popover) handleClose();
       }
     }
