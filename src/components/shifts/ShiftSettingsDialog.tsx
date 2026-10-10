@@ -2,12 +2,13 @@ import { useEffect, useState, type ReactNode } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { EVENING_NUDGE_HOURS, FTE_OPTIONS, NIGHT_HOURS, NIGHT_STARTS, SETTLEMENT_MONTHS, setFte, setHourlyRate, setNightFrom, setOvertimeFrom, setSettlementMonths, setSettlementStart, setSundayFrom, setWorkSystem, type SettlementMonths, type ShiftData, type WorkSystem } from "@/lib/shifts";
+import { EVENING_NUDGE_HOURS, FTE_OPTIONS, NIGHT_HOURS, NIGHT_STARTS, SETTLEMENT_MONTHS, setFte, setHourlyRate, setLeaveDays, setNightFrom, setOvertimeFrom, setSettlementMonths, setSettlementStart, setSundayFrom, setWorkSystem, type SettlementMonths, type ShiftData, type WorkSystem } from "@/lib/shifts";
 import { readEveningNudgeTime, writeEveningNudgeTime } from "@/lib/shifts";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
+import { cn } from "@/lib/utils";
 import { PERIOD_LABELS, WORK_SYSTEM_LABELS } from "./labels";
 
-type Settings = Pick<ShiftData, "hourlyRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "overtimeFrom" | "sundayFrom" | "nightFrom">;
+type Settings = Pick<ShiftData, "hourlyRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "leaveDays" | "overtimeFrom" | "sundayFrom" | "nightFrom">;
 
 interface ShiftSettingsDialogProps {
   open: boolean;
@@ -58,6 +59,7 @@ export function ShiftSettingsDialog({ open, onOpenChange, settings: s }: ShiftSe
               </select>
             </Field>
           )}
+          <LeaveDaysField value={s.leaveDays} />
           <Field label="Okres rozliczeniowy">
             <select value={s.settlementMonths} onChange={(e) => setSettlementMonths(Number(e.target.value) as SettlementMonths)} className={CONTROL}>
               {SETTLEMENT_MONTHS.map((m) => <option key={m} value={m}>{PERIOD_LABELS[m]}</option>)}
@@ -101,11 +103,50 @@ export function ShiftSettingsDialog({ open, onOpenChange, settings: s }: ShiftSe
             <li>Dodatek 100%: w porze nocnej, w niedzielę i święto wolne wg grafiku, w dzień wolny za niedzielę lub święto, za przekroczenie normy okresu. Pozostałe nadgodziny: 50% (art. 151¹ KP).</li>
             <li>Dzień „poza grafikiem” i „wolny za niedzielę” zaznaczysz w oknie dnia.</li>
             <li>Przerwa bez godziny skraca koniec zmiany.</li>
+            <li>Licznik urlopu liczy dni nieobecności typu „Urlop” w dni robocze (pon–pt bez świąt) — tak jak norma miesiąca.</li>
             <li>Odpoczynek dobowy: co najmniej 11 h (art. 132 KP).</li>
           </ul>
         </details>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/**
+ * Roczny wymiar urlopu: 20 dni (staż poniżej 10 lat) albo 26 (od 10 lat) —
+ * ale też dowolna liczba całkowita 0–99, np. proporcjonalnie przy zmianie pracy.
+ */
+function LeaveDaysField({ value }: { value: number }) {
+  const [text, setText] = useState(() => String(value));
+  const [editing, setEditing] = useState(false);
+  useEffect(() => { if (!editing) setText(String(value)); }, [value, editing]);
+  const invalid = text.trim() !== "" && !(/^\d{1,2}$/.test(text.trim()));
+  return (
+    <Field label="Roczny wymiar urlopu" hint="20 dni (staż do 10 lat) albo 26 dni (od 10 lat). Licznik pokazuje, ile zostało.">
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <input type="number" inputMode="numeric" min={0} max={99} step={1} value={text}
+            aria-invalid={invalid || undefined}
+            onFocus={() => setEditing(true)}
+            onBlur={() => { setEditing(false); setText(String(value)); }}
+            onChange={(e) => {
+              setText(e.target.value);
+              const v = e.target.value.trim();
+              // Tylko poprawna liczba się zapisuje; pusta albo błędna zostawia poprzednią wartość.
+              if (/^\d{1,2}$/.test(v)) setLeaveDays(Number(v));
+            }}
+            className={`${CONTROL} pr-12 tabular-nums`} />
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">dni</span>
+        </div>
+        {[20, 26].map((n) => (
+          <button key={n} type="button" aria-pressed={value === n} onClick={() => { setText(String(n)); setLeaveDays(n); }}
+            className={cn("pressable h-10 coarse:h-11 min-w-12 px-3 rounded-lg border text-sm font-medium tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-ring",
+              value === n ? "border-primary bg-primary/10 text-foreground" : "border-input bg-background text-muted-foreground hover:text-foreground")}>
+            {n}
+          </button>
+        ))}
+      </div>
+    </Field>
   );
 }
 

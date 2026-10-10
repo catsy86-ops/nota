@@ -1,11 +1,12 @@
-import type { ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { AlertTriangle, Settings2 } from "lucide-react";
+import { AlertTriangle, CalendarRange, Settings2 } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
-import { FTE_OPTIONS, formatDuration, formatHoursShort, formatMoney, type MonthSummary, type PeriodSummary, type SettlementMonths, type WorkSystem } from "@/lib/shifts";
+import { FTE_OPTIONS, formatDuration, formatHoursShort, formatMoney, leaveBalance, useShifts, type MonthSummary, type PeriodSummary, type SettlementMonths, type WorkSystem } from "@/lib/shifts";
 import { PERIOD_LABELS } from "./labels";
 import { CountUp } from "./CountUp";
+import { LeaveMeter, YearSummaryDialog } from "./YearSummaryDialog";
 
 /** Czas albo „—” dla zera — jak dotychczasowe kafelki „Nadgodziny” i „Do normy”. */
 const durationOrDash = (min: number) => (Math.round(min) > 0 ? formatDuration(min) : "—");
@@ -38,6 +39,11 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
   // Nadgodziny dobowe mogą być i poniżej normy miesiąca — pasek dzieli faktycznie przepracowane godziny.
   const extra = summary.extraTimeMinutes;
   const within = Math.max(0, minutes - overtimeMinutes - extra);
+  const data = useShifts();
+  const [yearOpen, setYearOpen] = useState(false);
+  // Rok oglądanego miesiąca z jego etykiety („październik 2026”); bez niej — bieżący.
+  const year = Number(/\b(\d{4})\b/.exec(monthLabel)?.[1]) || new Date().getFullYear();
+  const balance = useMemo(() => leaveBalance(data, year, new Date()), [data, year]);
 
   return (
     <section aria-label="Podsumowanie miesiąca" className="rounded-3xl border border-border/60 bg-card p-4 sm:p-5 space-y-4">
@@ -49,6 +55,10 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
             <span className="text-base font-semibold text-muted-foreground ml-2">/ <CountUp value={normMinutes} format={formatHoursShort} /> h normy</span>
           </p>
         </div>
+        <button type="button" onClick={() => setYearOpen(true)} aria-label="Podsumowanie roku"
+          className="pressable shrink-0 flex items-center gap-1.5 h-9 coarse:h-11 px-3 rounded-xl border border-border/60 bg-background hover:bg-muted text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <CalendarRange className="w-4 h-4" aria-hidden /> Rok
+        </button>
       </div>
 
       <div className="h-2.5 rounded-full bg-muted overflow-hidden flex" role="img"
@@ -74,6 +84,8 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
       </dl>
 
       {summary.period && <PeriodProgress period={summary.period} />}
+
+      <LeaveMeter balance={balance} compact />
 
       {summary.shortRests.length > 0 && (
         <div role="note" className="flex gap-2.5 rounded-2xl bg-destructive/10 px-3 py-2.5 text-sm">
@@ -106,6 +118,8 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
           <Settings2 className="w-4 h-4" aria-hidden /> Zmień
         </span>
       </button>
+
+      <YearSummaryDialog open={yearOpen} onOpenChange={setYearOpen} data={data} initialYear={year} />
     </section>
   );
 }

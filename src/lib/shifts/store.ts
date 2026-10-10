@@ -130,6 +130,11 @@ export function setFte(fte: number): void {
   yShifts.setMeta("fte", fte > 0 && fte <= 1 ? fte : 1);
 }
 
+/** Roczny wymiar urlopu w dniach (0–99, całkowite); nieprawidłowa wartość wraca do 20. */
+export function setLeaveDays(days: number): void {
+  yShifts.setMeta("leaveDays", Number.isInteger(days) && days >= 0 && days <= 99 ? days : 20);
+}
+
 /** Umowna granica nadgodzin przy niepełnym etacie (art. 151 § 5 KP) jako wymiar etatu. */
 export function setOvertimeFrom(fte: number): void {
   yShifts.setMeta("overtimeFrom", fte > 0 && fte <= 1 ? fte : 1);

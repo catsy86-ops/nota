@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import * as Y from "yjs";
 import { createYShifts } from "./yShifts";
-import { DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA } from "./model";
+import { DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, migrate } from "./model";
 
 /** Dwa „telefony” i wymiana stanu w obie strony — jak po spotkaniu w sieci. */
 function pair() {
@@ -128,5 +128,34 @@ describe("Grafik w Yjs", () => {
     s.setMeta("hourlyRate", 25);
     expect(s.get()).not.toBe(first);
     expect(s.get().hourlyRate).toBe(25);
+  });
+});
+
+describe("leaveDays w dokumencie Yjs", () => {
+  it("jest zapisywany jako meta i scala się między urządzeniami", () => {
+    const a = new Y.Doc();
+    const b = new Y.Doc();
+    const sa = createYShifts(a);
+    const sb = createYShifts(b);
+    expect(sa.get().leaveDays).toBe(20);
+    sa.setMeta("leaveDays", 26);
+    Y.applyUpdate(b, Y.encodeStateAsUpdate(a));
+    expect(sb.get().leaveDays).toBe(26);
+  });
+
+  it("śmieci od peera wracają do 20", () => {
+    const doc = new Y.Doc();
+    const s = createYShifts(doc);
+    doc.getMap("shiftMeta").set("leaveDays", "dużo");
+    expect(s.get().leaveDays).toBe(20);
+  });
+
+  it("przywrócenie kopii i migracja ze starego zapisu przenoszą wymiar", () => {
+    const s = createYShifts(new Y.Doc());
+    s.replaceAll(migrate({ leaveDays: 26 }));
+    expect(s.get().leaveDays).toBe(26);
+    const t = createYShifts(new Y.Doc());
+    t.mergeIn(migrate({ leaveDays: 26 }), "dev");
+    expect(t.get().leaveDays).toBe(26);
   });
 });

@@ -1,5 +1,5 @@
 import * as Y from "yjs";
-import { DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, shiftHours, type DayEntry, type SettlementMonths, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
+import { DEFAULT_LEAVE_DAYS, DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, shiftHours, type DayEntry, type SettlementMonths, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
 
 /**
  * Grafik w Y.Doc — tym samym, który niosą synchronizacja P2P i plik, więc
@@ -15,7 +15,7 @@ import { DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, shiftHours, type DayEnt
  * od razu, mogłoby przy scaleniu nadpisać czyjeś poprawki tych samych id.
  */
 
-type Meta = "hourlyRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "overtimeFrom" | "sundayFrom" | "nightFrom" | "typesInit" | "patternsInit" | "presetBudowa" | "presetDniowka";
+type Meta = "hourlyRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "leaveDays" | "overtimeFrom" | "sundayFrom" | "nightFrom" | "typesInit" | "patternsInit" | "presetBudowa" | "presetDniowka";
 
 /** Origin transakcji Grafiku — odróżnia lokalne zmiany od tych z sieci i z migracji. */
 export const SHIFTS_ORIGIN = "shifts";
@@ -51,7 +51,7 @@ export function createYShifts(doc: Y.Doc) {
   function get(): ShiftData {
     if (snapshot) return snapshot;
     const settings: Record<string, unknown> = {};
-    for (const k of ["hourlyRate", "workSystem", "settlementMonths", "settlementStart", "fte", "overtimeFrom", "sundayFrom", "nightFrom"] as const) if (meta.has(k)) settings[k] = meta.get(k);
+    for (const k of ["hourlyRate", "workSystem", "settlementMonths", "settlementStart", "fte", "leaveDays", "overtimeFrom", "sundayFrom", "nightFrom"] as const) if (meta.has(k)) settings[k] = meta.get(k);
     snapshot = migrate({
       version: 2,
       ...settings,
@@ -218,6 +218,7 @@ export function createYShifts(doc: Y.Doc) {
       meta.set("settlementMonths", data.settlementMonths);
       meta.set("settlementStart", data.settlementStart);
       meta.set("fte", data.fte);
+      meta.set("leaveDays", data.leaveDays);
       meta.set("overtimeFrom", data.overtimeFrom);
       meta.set("sundayFrom", data.sundayFrom);
       meta.set("nightFrom", data.nightFrom);
@@ -256,6 +257,7 @@ export function createYShifts(doc: Y.Doc) {
       if (!meta.has("settlementMonths") && data.settlementMonths !== 1) meta.set("settlementMonths", data.settlementMonths);
       if (!meta.has("settlementStart") && data.settlementStart !== 0) meta.set("settlementStart", data.settlementStart);
       if (!meta.has("fte") && data.fte !== 1) meta.set("fte", data.fte);
+      if (!meta.has("leaveDays") && data.leaveDays !== DEFAULT_LEAVE_DAYS) meta.set("leaveDays", data.leaveDays);
       if (!meta.has("overtimeFrom") && data.overtimeFrom !== 1) meta.set("overtimeFrom", data.overtimeFrom);
       if (!meta.has("sundayFrom") && data.sundayFrom !== 6) meta.set("sundayFrom", data.sundayFrom);
       if (!meta.has("nightFrom") && data.nightFrom !== 22) meta.set("nightFrom", data.nightFrom);
