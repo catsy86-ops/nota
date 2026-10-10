@@ -78,7 +78,7 @@ function parseContent(json: string): PrivateContent {
   const checklist = Array.isArray(raw.checklist)
     ? raw.checklist
       .filter((i): i is ChecklistItem => !!i && typeof i === "object" && typeof (i as ChecklistItem).id === "string")
-      .map((i) => ({ id: i.id, text: typeof i.text === "string" ? i.text : "", checked: Boolean(i.checked) }))
+      .map((i) => ({ id: i.id, text: typeof i.text === "string" ? i.text : "", checked: Boolean(i.checked), ...(i.indent === 1 ? { indent: 1 as const } : {}) }))
     : [];
   return {
     title: typeof raw.title === "string" ? raw.title : "",

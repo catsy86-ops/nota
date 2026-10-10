@@ -149,6 +149,25 @@ describe("yjsStore — checklist item-level merge", () => {
     }
   });
 
+  it("zachowuje wcięcie podzadania i pozwala je cofnąć", () => {
+    const a = createYjsStore(`indent-a-${crypto.randomUUID()}`);
+    a.upsertNote(makeNote({
+      id: "n1",
+      checklist: [
+        { id: "i1", text: "Zakupy", checked: false },
+        { id: "i2", text: "Mleko", checked: false, indent: 1 },
+      ],
+    }));
+    const read = () => a.projectNotes().find((n) => n.id === "n1")!.checklist;
+    expect(read().map((c) => c.indent)).toEqual([undefined, 1]);
+
+    a.patchNote("n1", { checklist: read().map((c) => (c.id === "i2" ? { id: c.id, text: c.text, checked: c.checked } : c)) });
+    expect(read().find((c) => c.id === "i2")?.indent).toBeUndefined();
+
+    a.patchNote("n1", { checklist: read().map((c) => (c.id === "i1" ? { ...c, indent: 1 as const } : c)) });
+    expect(read().find((c) => c.id === "i1")?.indent).toBe(1);
+  });
+
   it("merges a new checklist item added on one side with a toggle made on the other", () => {
     const a = createYjsStore(`merge-checklist-add-a-${crypto.randomUUID()}`);
     const b = createYjsStore(`merge-checklist-add-b-${crypto.randomUUID()}`);

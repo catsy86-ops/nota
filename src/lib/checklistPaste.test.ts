@@ -8,10 +8,19 @@ describe("parsePastedChecklist", () => {
   });
 
   it("dzieli linie i pomija puste", () => {
-    expect(parsePastedChecklist("mleko\r\n\nchleb\n  masło  ")).toEqual([
+    expect(parsePastedChecklist("mleko\r\n\nchleb\nmasło  ")).toEqual([
       { text: "mleko", checked: false },
       { text: "chleb", checked: false },
       { text: "masło", checked: false },
+    ]);
+  });
+
+  it("wcięta linia to podzadanie, ale nie pierwsza pozycja", () => {
+    expect(parsePastedChecklist("  zakupy\n  - [x] mleko\n\tchleb\nsprzątanie")).toEqual([
+      { text: "zakupy", checked: false },
+      { text: "mleko", checked: true, indent: 1 },
+      { text: "chleb", checked: false, indent: 1 },
+      { text: "sprzątanie", checked: false },
     ]);
   });
 

@@ -19,7 +19,7 @@ export function noteToMarkdown(note: Pick<Note, "title" | "content" | "labels" |
   }
   if (note.checklist?.length) {
     if (lines.length) lines.push("");
-    for (const item of note.checklist) lines.push(`- [${item.checked ? "x" : " "}] ${item.text}`);
+    for (const item of note.checklist) lines.push(`${item.indent ? "  " : ""}- [${item.checked ? "x" : " "}] ${item.text}`);
   }
   return lines.join("\n");
 }

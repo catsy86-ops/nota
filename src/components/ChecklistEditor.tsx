@@ -105,6 +105,31 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
     }, 0);
   }
 
+  /**
+   * Tab / Shift+Tab w polu pozycji: wcięcie pod poprzednią nieukończoną pozycją
+   * albo cofnięcie wcięcia. Zwraca `false`, gdy nic się nie zmienia — wtedy Tab
+   * normalnie przenosi fokus (nie łapiemy użytkownika klawiatury w polu).
+   */
+  function setIndent(id: string, indent: boolean): boolean {
+    const at = items.findIndex((i) => i.id === id);
+    if (at === -1) return false;
+    const item = items[at];
+    if (indent) {
+      if (item.indent === 1) return false;
+      // Wcinać można tylko pod istniejącą pozycją; pierwsza nieukończona nie ma pod czym.
+      if (!items.slice(0, at).some((i) => !i.checked)) return false;
+      onChange(items.map((i) => (i.id === id ? { ...i, indent: 1 as const } : i)));
+    } else {
+      if (item.indent !== 1) return false;
+      onChange(items.map((i) => {
+        if (i.id !== id) return i;
+        const { indent: _drop, ...rest } = i;
+        return rest;
+      }));
+    }
+    return true;
+  }
+
   function removeItem(id: string) {
     onChange(items.filter((i) => i.id !== id));
   }
@@ -126,7 +151,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="flex items-center gap-2 group/item"
+            className={cn("flex items-center gap-2 group/item", item.indent === 1 && "ml-6")}
           >
             <button
               type="button"
@@ -147,6 +172,10 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                 onPaste={(e) => handlePaste(e, item.id)}
                 data-checklist-item={item.id}
                 onKeyDown={(e) => {
+                  if (e.key === "Tab" && !e.altKey && !e.ctrlKey && !e.metaKey) {
+                    if (setIndent(item.id, !e.shiftKey)) e.preventDefault();
+                    return;
+                  }
                   if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
                   if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
                   e.preventDefault();
@@ -246,7 +275,7 @@ export function ChecklistPreview({ items, onToggle, showProgress = true }: { ite
           aria-checked={item.checked}
           disabled={!onToggle}
           onClick={(e) => { e.stopPropagation(); onToggle?.(item.id); }}
-          className="group/check flex w-full items-center gap-2 rounded-md py-0.5 [@media(pointer:coarse)]:py-1 text-left disabled:cursor-default"
+          className={cn("group/check flex w-full items-center gap-2 rounded-md py-0.5 [@media(pointer:coarse)]:py-1 text-left disabled:cursor-default", item.indent === 1 && "pl-4")}
         >
           <CheckMark checked={item.checked} size="sm" />
           <span className={cn("text-xs transition-colors duration-base", item.checked ? "text-muted-foreground" : "text-foreground/80")}>

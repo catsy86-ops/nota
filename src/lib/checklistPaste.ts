@@ -6,11 +6,19 @@ const BULLET_RE = /^(?:[-*+•▪◦]|\d{1,3}[.)])\s+/;
 
 /** Każda niepusta linia to jedna pozycja; znaczniki list zdejmowane, `- [x] coś` odhaczone. */
 export function parseChecklistLines(text: string): Omit<ChecklistItem, "id">[] {
-  return text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).map((line) => {
+  const out: Omit<ChecklistItem, "id">[] = text.split(/\r?\n/).filter((l) => l.trim()).map((raw) => {
+    // Wcięta linia (2+ spacje albo tabulator) to podzadanie poprzedniej pozycji.
+    const indented = /^(?: {2,}|\t)/.test(raw);
+    const line = raw.trim();
     const task = TASK_RE.exec(line);
-    if (task) return { text: line.slice(task[0].length).trim(), checked: task[1] !== " " };
-    return { text: line.replace(BULLET_RE, "").trim(), checked: false };
+    const item = task
+      ? { text: line.slice(task[0].length).trim(), checked: task[1] !== " " }
+      : { text: line.replace(BULLET_RE, "").trim(), checked: false };
+    return indented ? { ...item, indent: 1 as const } : item;
   }).filter((i) => i.text);
+  // Pierwsza pozycja nie ma nad czym się wcinać.
+  if (out[0]?.indent) delete out[0].indent;
+  return out;
 }
 
 /**
@@ -30,7 +38,7 @@ export function contentToChecklist(content: string, checklist: ChecklistItem[], 
 
 /** „Zamień na tekst”: pozycje jako `- [ ] tekst` / `- [x] tekst` pod treścią, lista pusta. */
 export function checklistToContent(content: string, checklist: ChecklistItem[]) {
-  const lines = checklist.map((i) => `- [${i.checked ? "x" : " "}] ${i.text}`).join("\n");
+  const lines = checklist.map((i) => `${i.indent ? "  " : ""}- [${i.checked ? "x" : " "}] ${i.text}`).join("\n");
   const base = content.replace(/\s+$/, "");
   return { content: base && lines ? `${base}\n${lines}` : base || lines, checklist: [] as ChecklistItem[] };
 }

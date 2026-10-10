@@ -25,6 +25,8 @@ export interface ChecklistItem {
   id: string;
   text: string;
   checked: boolean;
+  /** Podzadanie: pozycja wcięta pod poprzednią. Brak pola = poziom główny. */
+  indent?: 1;
 }
 
 export interface Note {

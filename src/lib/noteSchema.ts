@@ -12,6 +12,7 @@ const checklistItemSchema = z.object({
   id: z.string().catch(() => crypto.randomUUID()),
   text: z.string().catch(""),
   checked: z.boolean().catch(false),
+  indent: z.literal(1).optional().catch(undefined),
 }) satisfies z.ZodType<ChecklistItem, z.ZodTypeDef, unknown>;
 
 /** Validates one imported note, filling in safe fallbacks for missing/malformed fields. */

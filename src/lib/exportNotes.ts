@@ -240,7 +240,7 @@ export async function exportToMarkdown(notes: Note[]) {
     if (note.checklist?.length) {
       lines.push("");
       note.checklist.forEach((item) => {
-        lines.push(`- [${item.checked ? "x" : " "}] ${item.text}`);
+        lines.push(`${item.indent ? "  " : ""}- [${item.checked ? "x" : " "}] ${item.text}`);
       });
     }
     const images = await embeddableImages(note.images ?? []);

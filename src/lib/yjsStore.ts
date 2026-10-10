@@ -92,6 +92,7 @@ function yChecklistFromPlain(items: ChecklistItem[]): Y.Map<YChecklistItem> {
     y.set("id", item.id);
     y.set("text", item.text);
     y.set("checked", item.checked);
+    if (item.indent === 1) y.set("indent", 1);
     y.set("order", index);
     map.set(item.id, y);
   });
@@ -108,6 +109,7 @@ function plainChecklistFromY(value: unknown): ChecklistItem[] {
           id: id.length > LIM.id ? id.slice(0, LIM.id) : id,
           text: safeString(v.get("text"), "", LIM.checklistText),
           checked: safeBool(v.get("checked")),
+          ...(v.get("indent") === 1 ? { indent: 1 as const } : {}),
           order: safeNumber(v.get("order")),
         });
       }
@@ -143,12 +145,17 @@ function applyChecklistDiff(y: YNote, next: ChecklistItem[]) {
     if (existing instanceof Y.Map) {
       if (existing.get("text") !== item.text) existing.set("text", item.text);
       if (existing.get("checked") !== item.checked) existing.set("checked", item.checked);
+      if ((existing.get("indent") === 1) !== (item.indent === 1)) {
+        if (item.indent === 1) existing.set("indent", 1);
+        else existing.delete("indent");
+      }
       if (existing.get("order") !== index) existing.set("order", index);
     } else {
       const y2: YChecklistItem = new Y.Map();
       y2.set("id", item.id);
       y2.set("text", item.text);
       y2.set("checked", item.checked);
+      if (item.indent === 1) y2.set("indent", 1);
       y2.set("order", index);
       checklistMap.set(item.id, y2);
     }
