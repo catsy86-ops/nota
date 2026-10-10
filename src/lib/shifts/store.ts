@@ -3,6 +3,7 @@ import { yjsStore } from "@/lib/yjsStore";
 import { logDiag } from "@/lib/diagnostics";
 import { migrate, type DayEntry, type SettlementMonths, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
 import { applyPattern } from "./pattern";
+import { planPaste, planTransfer, planWeekCopy, type TransferMode, type WeekCopyPlan } from "./move";
 import { createYShifts, type DeletedShiftType } from "./yShifts";
 
 /**
@@ -93,7 +94,26 @@ export function restoreDays(before: DaysBefore): void {
   yShifts.writeDays(before);
 }
 
-export const saveShiftType: (type: ShiftType) => void = yShifts.saveShiftType;
+/** Przenosi albo kopiuje wpis dnia; zwraca poprzednie wartości dni (do „Cofnij”) albo `null`, gdy nic się nie zmieniło. */
+export function transferDay(from: string, to: string, mode: TransferMode, todayKey: string): DaysBefore | null {
+  const plan = planTransfer(yShifts.get().days, from, to, mode, todayKey);
+  return plan ? yShifts.writeDays(plan) : null;
+}
+
+/** Wkleja wpis ze schowka na dzień; zwraca poprzednie wartości dni albo `null`, gdy dzień ma już taki wpis. */
+export function pasteDay(entry: DayEntry, to: string, todayKey: string): DaysBefore | null {
+  const plan = planPaste(yShifts.get().days, entry, to, todayKey);
+  return plan ? yShifts.writeDays(plan) : null;
+}
+
+/** Kopiuje tydzień z dniem `weekOf` na następny (po potwierdzeniu nadpisań w UI). */
+export function copyWeekToNext(weekOf: string, todayKey: string): { before: DaysBefore; plan: WeekCopyPlan } | null {
+  const plan = planWeekCopy(yShifts.get().days, weekOf, todayKey);
+  if (plan.copied === 0) return null;
+  return { before: yShifts.writeDays(plan.changes), plan };
+}
+
+export const saveShiftType:(type: ShiftType) => void = yShifts.saveShiftType;
 export const deleteShiftType: (id: string) => DeletedShiftType | null = yShifts.deleteShiftType;
 export const restoreShiftType = yShifts.restoreShiftType;
 export const addDefaultShiftTypes = yShifts.addDefaultShiftTypes;

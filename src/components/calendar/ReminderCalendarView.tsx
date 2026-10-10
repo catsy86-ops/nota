@@ -17,6 +17,7 @@ import { MonthGrid } from "./MonthGrid";
 import { markMoved } from "./movedSignal";
 import { DayPanel } from "./DayPanel";
 import { UpcomingDays } from "./UpcomingDays";
+import { WeekStrip } from "./WeekStrip";
 import { ReminderQuickAddDialog, type ReminderEditTarget } from "./ReminderQuickAddDialog";
 import { toastWithUndo } from "@/lib/undoToast";
 import type { ReminderRepeat } from "@/lib/reminderRepeat";
@@ -267,6 +268,16 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
         onSelectDay={(day) => {
           setSelectedDay(day);
           setMonth(new Date(day.getFullYear(), day.getMonth(), 1));
+        }}
+      />
+
+      <WeekStrip
+        day={selectedDay}
+        byDay={byDay}
+        shiftOf={shiftOf}
+        onSelectDay={(day) => {
+          setSelectedDay(day);
+          setMonth((m) => (m.getFullYear() === day.getFullYear() && m.getMonth() === day.getMonth() ? m : new Date(day.getFullYear(), day.getMonth(), 1)));
         }}
       />
 
