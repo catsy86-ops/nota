@@ -14,7 +14,7 @@ async function addNoteWithFile(page: Page, title: string) {
   const row = page.getByTestId("attachment-row").filter({ hasText: "notatki.txt" });
   await expect(row).toBeVisible();
   await expect(row.getByTestId("attachment-size")).toHaveText("1,5 KB");
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
   // Rozwinięty pasek wygasa z animacją — czekamy, aż wróci zwinięty.
   await expect(page.getByText("Zapisz notatkę...")).toBeVisible();
 }

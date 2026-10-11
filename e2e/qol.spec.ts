@@ -19,7 +19,7 @@ test("po kliknięciu notatki kliknięcie poza kaflem przywraca skrót „g, k”
   const title = `E2E-fokus ${Date.now()}`;
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
   const card = page.locator("[data-note-id-wrap]", { hasText: title });
   await expect(card).toHaveCount(1);
   await card.locator("[data-note-id]").first().click({ position: { x: 10, y: 10 } });
@@ -54,7 +54,7 @@ test("paleta pamięta ostatnie zapytanie po otwarciu notatki", async ({ page }) 
   const title = `Zebra ${Date.now() % 100000}`;
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
   await expect(page.getByText(title)).toBeVisible();
 
   await page.keyboard.press("Control+k");

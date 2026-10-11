@@ -10,7 +10,7 @@ async function addNote(page: Page, title: string, content: string) {
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
   await page.getByPlaceholder("Treść notatki...").fill(content);
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
   await expect(page.getByText("Zapisz notatkę...")).toBeVisible();
   await expect(page.getByRole("heading", { name: title })).toBeVisible();
 }
@@ -94,7 +94,7 @@ test("niepołączone wzmianki: Połącz zamienia wystąpienie na link, Cofnij pr
   await expect(reader.getByRole("button", { name: source })).toBeVisible(); // teraz to backlink
 
   await expect(page.locator("[data-note-id]").filter({ hasText: source }).locator("[data-wiki-link]")).toHaveCount(1);
-  await page.getByRole("button", { name: "Cofnij" }).click();
+  await page.getByRole("listitem").filter({ hasText: "Połączono" }).getByRole("button", { name: "Cofnij" }).click();
   // Klik w toast zamyka czytnik (jak każdy klik poza nim); sprawdzamy kartę źródła.
   await expect(page.getByText("Cofnięto")).toBeVisible();
   const card = page.locator("[data-note-id]").filter({ hasText: source });

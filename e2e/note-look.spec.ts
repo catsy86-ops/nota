@@ -9,7 +9,7 @@ test("ikona, okładka i ulubione: widoczne na kaflu i w pasku bocznym, przeżywa
   const title = `Wyglad ${Date.now()}`;
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
   await expect(page.getByText("Zapisz notatkę...")).toBeVisible();
 
   const card = page.getByRole("article", { name: title });

@@ -16,7 +16,7 @@ async function openComposer(page: Page): Promise<Locator> {
 async function addNote(page: Page, title: string) {
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
   await expect(page.getByText("Zapisz notatkę...")).toBeVisible();
   await expect(page.getByText(title)).toBeVisible();
 }

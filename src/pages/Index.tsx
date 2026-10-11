@@ -33,7 +33,7 @@ import { useBackupReminders } from "@/hooks/useBackupReminders";
 import { useShiftEveningNudge } from "@/hooks/useShiftEveningNudge";
 import { useDailyWeeklyNudges } from "@/hooks/useDailyWeeklyNudges";
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
-import { AddNoteBar } from "@/components/AddNoteBar";
+import { AddNoteBar, type ComposerExtras } from "@/components/AddNoteBar";
 import { InstallBanner } from "@/components/InstallBanner";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AppHeader } from "@/components/AppHeader";
@@ -499,6 +499,28 @@ const Index = () => {
     return addNote(title, content, color, withLabel, reminder, images, checklist, priority, inFolder, attachments);
   }, [addNote, activeLabel, activeFolder, view]);
 
+  /** Dodanie z paska: potwierdzenie z „Cofnij” (tylko tu — szablony i udostępnianie mają swoje komunikaty). */
+  const handleComposerAdd = useCallback((...args: [...Parameters<typeof addNote>, extras?: ComposerExtras]) => {
+    const extras = args.length > 10 ? (args[10] as ComposerExtras | undefined) : undefined;
+    const id = handleAddNoteGlow(...(args.slice(0, 10) as Parameters<typeof addNote>));
+    // Seria przypomnienia i rodzic nie mieszczą się w `addNote` — dopisujemy je zaraz po utworzeniu.
+    if (extras?.reminderRepeat || extras?.parentId) {
+      updateNote(id, {
+        ...(extras.reminderRepeat ? { reminderRepeat: extras.reminderRepeat } : {}),
+        ...(extras.reminderRepeatUntil !== undefined ? { reminderRepeatUntil: extras.reminderRepeatUntil } : {}),
+        ...(extras.parentId ? { parentId: extras.parentId } : {}),
+      });
+    }
+    toastWithUndo("Dodano notatkę", () => deleteNote(id), { icon: "📝", duration: 4000, id: "composer-added" });
+    return id;
+  }, [handleAddNoteGlow, updateNote, deleteNote]);
+
+  /** Kandydaci na rodzica w pasku nowej notatki: jawne, żywe notatki, od ostatnio edytowanych. */
+  const composerParents = useMemo(
+    () => [...notes].filter((n) => !n.locked && !n.archived && !n.trashed).sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 200).map((n) => ({ id: n.id, title: n.title })),
+    [notes],
+  );
+
   const handleMoveToFolderGlow = useCallback((id: string, folderId: string | null) => {
     const from = pointOfNote(id);
     const target = folderId
@@ -739,7 +761,7 @@ const Index = () => {
           {canCompose && (
             <motion.div initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={tween.enter} className="space-y-3">
               <div data-add-note-bar>
-                <AddNoteBar ref={addNoteRef} onAdd={handleAddNoteGlow} folders={folders} allLabels={allLabels} onCreateLabel={addLabel} destination={composeDestination}
+                <AddNoteBar ref={addNoteRef} onAdd={handleComposerAdd} wikiTitles={wikiIndex.titles} parentOptions={composerParents} folders={folders} allLabels={allLabels} onCreateLabel={addLabel} destination={composeDestination}
                   templates={(done) => (
                     <QuickTemplates
                       onPick={(...args) => { done(); handleAddNoteGlow(...args); }}

@@ -10,7 +10,7 @@ test("raport diagnostyczny pobiera się bez treści notatek", async ({ page }) =
   const secret = `sekret-${Date.now()}`;
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(secret);
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
   await expect(page.getByText(secret)).toBeVisible();
 
   await page.getByRole("button", { name: "Ustawienia" }).first().click();

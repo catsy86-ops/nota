@@ -42,7 +42,7 @@ test("kalendarz jest osiągalny z palety poleceń", async ({ page }) => {
 test("siatka miesiąca pokazuje termin w komórce dnia i w panelu dnia", async ({ page }) => {
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill("Oddac ksiazke");
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
 
   // Popover pickera rozwija się pod kartą i przy niskim oknie wychodzi poza ekran.
   await page.setViewportSize({ width: 1280, height: 1000 });
@@ -135,7 +135,7 @@ test("z kalendarza da się dodać termin, edytować go i usunąć", async ({ pag
 test("termin można przypiąć do istniejącej notatki zamiast tworzyć nową", async ({ page }) => {
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill("Zadzwonic do ksiegowej");
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
 
   await page.getByRole("button", { name: /Kalendarz/ }).first().click();
   await page.getByRole("button", { name: "Dodaj termin" }).click();
@@ -158,7 +158,7 @@ async function seedWeeklySeries(page: import("@playwright/test").Page, title: st
   await page.setViewportSize({ width: 1280, height: 1000 });
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
 
   const card = page.locator("[data-note-id-wrap]", { hasText: title });
   await card.hover();

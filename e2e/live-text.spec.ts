@@ -41,7 +41,7 @@ test("tekst z innego urządzenia pojawia się w otwartym edytorze bez utraty szk
   await a.getByText("Zapisz notatkę...").click();
   await a.getByPlaceholder("Tytuł").fill(title);
   await a.getByPlaceholder("Treść notatki...").fill("środek");
-  await a.getByRole("button", { name: "Zamknij" }).click();
+  await a.getByRole("button", { name: "Zapisz", exact: true }).click();
   await expect(a.getByText(title)).toBeVisible();
 
   const b = await (await browser.newContext()).newPage();

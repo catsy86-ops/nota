@@ -13,7 +13,7 @@ test("notatka i grafik z jednej karty pojawiają się w drugiej bez odświeżani
   const title = `Z innej karty ${Date.now()}`;
   await a.getByText("Zapisz notatkę...").click();
   await a.getByPlaceholder("Tytuł").fill(title);
-  await a.getByRole("button", { name: "Zamknij" }).click();
+  await a.getByRole("button", { name: "Zapisz", exact: true }).click();
   await expect(a.getByText(title)).toBeVisible();
   await expect(b.getByText(title)).toBeVisible();
 

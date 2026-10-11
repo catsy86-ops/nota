@@ -65,7 +65,7 @@ test("PDF export lazily fetches its chunk and produces a file", async ({ page })
 
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(`PDF ${Date.now()}`);
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
 
   const jsRequests: string[] = [];
   page.on("request", (r) => {

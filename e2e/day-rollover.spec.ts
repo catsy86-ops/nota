@@ -23,7 +23,7 @@ test("widok Dziś przestaje pokazywać wczorajszą notatkę po północy", async
   const title = "Zebranie jutrzejsze";
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
   await expect(page.locator("[data-note-id]").filter({ hasText: title })).toHaveCount(1);
 
   await page.keyboard.press("Alt+t");

@@ -35,7 +35,7 @@ test("Ustawienia na telefonie zajmują cały ekran i nie zmieniają wysokości p
 test("na dotyku akcje kafla są schowane za „Więcej opcji”", async ({ page }) => {
   await page.getByRole("button", { name: "Nowa notatka" }).click();
   await page.getByPlaceholder("Tytuł").fill("Kafel na telefonie");
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
   const card = page.locator("[data-note-idx]").filter({ hasText: "Kafel na telefonie" });
   await expect(card.getByRole("button", { name: "Przypnij" })).toBeHidden();
   await card.getByRole("button", { name: "Więcej opcji" }).click();
@@ -60,7 +60,7 @@ test("notatka z listą na pełnym ekranie: pozycje zaraz pod tytułem, nie na do
   await page.getByPlaceholder("Tytuł").fill(title);
   await page.getByPlaceholder("Treść notatki...").fill("mleko\nchleb\njajka");
   await page.getByRole("button", { name: "Zamień na listę" }).click();
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
 
   await page.getByText(title).click();
   const dialog = page.getByRole("dialog");

@@ -12,6 +12,11 @@ interface Options {
   titles: string[];
   /** Tytuł edytowanej notatki — link do samej siebie nie ma sensu. */
   exclude: string;
+  /**
+   * Zapytanie po `@`, które należy do czegoś innego niż wzmianka (np. nazwa folderu
+   * w pasku nowej notatki) — wtedy lista wzmianek się nie otwiera.
+   */
+  skipMention?: (query: string) => boolean;
 }
 
 interface OpenQuery {
@@ -34,7 +39,7 @@ const POPUP_W = 224;
  * `[[Tytuł]]` albo datę, Esc chowa listę do czasu, aż zacznie się inne zapytanie.
  * Lista jest pozycjonowana przy karetce, wewnątrz kontenera pola z `position: relative`.
  */
-export function useWikiAutocomplete({ textareaRef, value, onChange, titles, exclude }: Options) {
+export function useWikiAutocomplete({ textareaRef, value, onChange, titles, exclude, skipMention }: Options) {
   const [open, setOpen] = useState<OpenQuery | null>(null);
   const [active, setActive] = useState(0);
   const dismissedAt = useRef<number | null>(null);
@@ -65,9 +70,9 @@ export function useWikiAutocomplete({ textareaRef, value, onChange, titles, excl
   const kind = open?.kind ?? null;
   const suggestions = useMemo<MentionItem[]>(() => {
     if (query === null) return [];
-    if (kind === "mention") return suggestMentions(query, titles, exclude);
+    if (kind === "mention") return skipMention?.(query) ? [] : suggestMentions(query, titles, exclude);
     return suggestWikiTitles(query, titles, exclude).map((t) => ({ key: t, label: t, hint: "notatka" as const, text: `[[${t}]]` }));
-  }, [query, kind, titles, exclude]);
+  }, [query, kind, titles, exclude, skipMention]);
   const isOpen = suggestions.length > 0;
 
   const pick = useCallback((item: MentionItem) => {

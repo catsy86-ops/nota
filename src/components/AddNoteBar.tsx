@@ -3,13 +3,11 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDictation } from "@/hooks/useDictation";
 import { useSlashMenu } from "@/hooks/useSlashMenu";
-import { Plus, Tag, Bell, Mic, ImagePlus, Paperclip, X, PenTool, ListChecks, Palette, Folder, Flag, Hash } from "lucide-react";
+import { Plus, Tag, Bell, Mic, ImagePlus, Paperclip, X, PenTool, ListChecks, Palette, Folder, Flag, Hash, CornerDownRight, Repeat } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { ColorPicker, colorClasses } from "./ColorPicker";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { LazyCalendar as Calendar } from "@/components/ui/lazy-calendar";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { prepareImage } from "@/lib/imagePrepare";
 import { IconButton } from "@/components/ui/icon-button";
@@ -25,9 +23,10 @@ import { PriorityPicker } from "./PriorityPicker";
 import type { NotePriority } from "@/lib/notePriority";
 import { applyCapture, describeToken, extractCapture, type CaptureToken } from "@/lib/quickCapture";
 import { isChecklistShortcut, selectionToChecklist } from "@/lib/checklistPaste";
-import { QuickReminderInput } from "./QuickReminderInput";
+import { ReminderPicker } from "./ReminderPicker";
+import { useWikiAutocomplete } from "@/hooks/useWikiAutocomplete";
+import type { ReminderRepeat } from "@/lib/reminderRepeat";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
-import { composeReminderTimestamp, toTimeInputValue, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
 import { toast } from "sonner";
 import { pluralPl } from "@/lib/plural";
 import { parsePastedUrl } from "@/lib/urlTitle";
@@ -35,8 +34,19 @@ import { handleEditorKey } from "@/lib/editorKeysDom";
 import { EditorStats } from "./EditorStats";
 import { haptic } from "@/lib/haptics";
 
+/** Pola, których nie niesie lista pozycyjna `onAdd` — seria przypomnienia i rodzic. */
+export interface ComposerExtras {
+  reminderRepeat?: ReminderRepeat;
+  reminderRepeatUntil?: number;
+  parentId?: string;
+}
+
 interface AddNoteBarProps {
-  onAdd: (title: string, content: string, color: NoteColor, labels: string[], reminder: number | null, images: string[], checklist: ChecklistItem[], priority: NotePriority, folderId?: string | null, attachments?: Attachment[]) => void;
+  onAdd: (title: string, content: string, color: NoteColor, labels: string[], reminder: number | null, images: string[], checklist: ChecklistItem[], priority: NotePriority, folderId?: string | null, attachments?: Attachment[], extras?: ComposerExtras) => void;
+  /** Tytuły do podpowiedzi `[[` i `@` (od ostatnio edytowanych). */
+  wikiTitles?: string[];
+  /** Notatki, pod którymi można założyć podstronę. */
+  parentOptions?: { id: string; title: string }[];
   /** Foldery, do których można wskazać `@folder` w treści. */
   folders?: { id: string; name: string }[];
   allLabels: string[];
@@ -49,7 +59,21 @@ interface AddNoteBarProps {
 
 const DRAFT_KEY = "kaczy.draft.v1";
 
-interface Draft { title: string; content: string; checklist: ChecklistItem[] }
+interface Draft {
+  title: string;
+  content: string;
+  checklist: ChecklistItem[];
+  /** Metadane szkicu: przywracane razem z tekstem, ale same nie czynią szkicu wartym zachowania. */
+  color: NoteColor;
+  labels: string[];
+  reminder: number | null;
+  reminderRepeat: ReminderRepeat;
+  reminderRepeatUntil?: number;
+  priority: NotePriority;
+}
+
+const DRAFT_REPEATS: ReminderRepeat[] = ["none", "daily", "weekly", "monthly"];
+const DRAFT_PRIORITIES: NotePriority[] = ["none", "low", "medium", "high"];
 
 /** Szkic nowej notatki z poprzedniej sesji; `null`, gdy nie ma niczego wartego przywrócenia. */
 function readDraft(): Draft | null {
@@ -62,7 +86,15 @@ function readDraft(): Draft | null {
     const checklist = Array.isArray(p.checklist)
       ? p.checklist.filter((i): i is ChecklistItem => !!i && typeof i.id === "string" && typeof i.text === "string").map((i) => ({ id: i.id, text: i.text, checked: !!i.checked, ...(i.indent === 1 ? { indent: 1 as const } : {}) }))
       : [];
-    return title.trim() || content.trim() || checklist.length ? { title, content, checklist } : null;
+    if (!title.trim() && !content.trim() && !checklist.length) return null;
+    const color = typeof p.color === "string" && p.color in colorClasses ? (p.color as NoteColor) : "default";
+    const labels = Array.isArray(p.labels) ? p.labels.filter((l): l is string => typeof l === "string" && l.length > 0).slice(0, 20) : [];
+    // Termin z przeszłości wystrzeliłby zaraz po zapisie — lepiej go nie przywracać.
+    const reminder = typeof p.reminder === "number" && Number.isFinite(p.reminder) && p.reminder > Date.now() ? p.reminder : null;
+    const priority = DRAFT_PRIORITIES.includes(p.priority as NotePriority) ? (p.priority as NotePriority) : "none";
+    const reminderRepeat = reminder !== null && DRAFT_REPEATS.includes(p.reminderRepeat as ReminderRepeat) ? (p.reminderRepeat as ReminderRepeat) : "none";
+    const until = typeof p.reminderRepeatUntil === "number" && Number.isFinite(p.reminderRepeatUntil) && reminderRepeat !== "none" ? p.reminderRepeatUntil : undefined;
+    return { title, content, checklist, color, labels, reminder, reminderRepeat, ...(until !== undefined ? { reminderRepeatUntil: until } : {}), priority };
   } catch { return null; }
 }
 
@@ -73,18 +105,21 @@ function writeDraft(d: Draft): void {
   } catch { /* brak miejsca albo localStorage — szkic po prostu nie przeżyje przeładowania */ }
 }
 
-export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(function AddNoteBar({ onAdd, folders, allLabels, onCreateLabel, destination, templates }, ref) {
+export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(function AddNoteBar({ onAdd, folders, allLabels, onCreateLabel, destination, templates, wikiTitles, parentOptions }, ref) {
   // Szkic przeżywa przeładowanie i zamknięcie karty: tytuł, treść i pozycje listy wracają po powrocie.
   const [draft0] = useState(readDraft);
   const [expanded, setExpanded] = useState(draft0 !== null);
   const [title, setTitle] = useState(draft0?.title ?? "");
   const [content, setContent] = useState(draft0?.content ?? "");
-  const [color, setColor] = useState<NoteColor>("default");
-  const [labels, setLabels] = useState<string[]>([]);
-  const [reminder, setReminder] = useState<number | null>(null);
-  const [priority, setPriority] = useState<NotePriority>("none");
-  const [reminderDate, setReminderDate] = useState<Date | undefined>();
-  const [reminderTime, setReminderTime] = useState(DEFAULT_REMINDER_TIME);
+  const [color, setColor] = useState<NoteColor>(draft0?.color ?? "default");
+  const [labels, setLabels] = useState<string[]>(draft0?.labels ?? []);
+  const [reminder, setReminder] = useState<number | null>(draft0?.reminder ?? null);
+  const [priority, setPriority] = useState<NotePriority>(draft0?.priority ?? "none");
+  /** Szkic z poprzedniej sesji — pokazujemy to wprost, z możliwością odrzucenia. */
+  const [restored, setRestored] = useState(draft0 !== null);
+  const [reminderRepeat, setReminderRepeat] = useState<ReminderRepeat>(draft0?.reminderRepeat ?? "none");
+  const [reminderUntil, setReminderUntil] = useState<number | undefined>(draft0?.reminderRepeatUntil);
+  const [parentId, setParentId] = useState<string | null>(null);
   const [newLabel, setNewLabel] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -102,7 +137,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   useImperativeHandle(ref, () => ({ expand: () => setExpanded(true) }));
 
   const reset = useCallback(() => {
-    setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderDate(undefined); setReminderTime(DEFAULT_REMINDER_TIME); setPriority("none"); setImages([]); setAttachments([]); setChecklist([]); setShowChecklist(false); setIgnored(new Set()); setExpanded(false);
+    setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderRepeat("none"); setReminderUntil(undefined); setParentId(null); setPriority("none"); setImages([]); setAttachments([]); setChecklist([]); setShowChecklist(false); setIgnored(new Set()); setRestored(false); setExpanded(false);
   }, []);
 
   // Tokeny z tekstu (`#etykieta`, `@folder`, `!`, „jutro 9:00”) — pokazywane jako chipy, zanim cokolwiek się zapisze.
@@ -116,7 +151,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
     });
   }, [expanded, title, content, allLabels, folders, reminder, priority]);
 
-  const handleClose = useCallback(() => {
+  const commit = useCallback(() => {
     if (title.trim() || content.trim() || images.length > 0 || attachments.length > 0 || checklist.length > 0) {
       const r = applyCapture({ title, content }, capture, ignored, images.length > 0 || attachments.length > 0 || checklist.length > 0);
       r.newLabels.forEach((l) => onCreateLabel(l));
@@ -125,16 +160,31 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
       const remindAt = r.reminder ? r.reminder.getTime() : reminder;
       if (r.reminder) requestNotificationPermissionOnIntent();
       haptic("success");
-      onAdd(r.title, r.content, color, allNoteLabels, remindAt, images, checklist, r.priority ?? priority, r.folderId, attachments);
+      const extras: ComposerExtras = {
+        ...(remindAt !== null && reminderRepeat !== "none" ? { reminderRepeat, ...(reminderUntil !== undefined ? { reminderRepeatUntil: reminderUntil } : {}) } : {}),
+        ...(parentId ? { parentId } : {}),
+      };
+      onAdd(r.title, r.content, color, allNoteLabels, remindAt, images, checklist, r.priority ?? priority, r.folderId, attachments, extras);
     }
     reset();
-  }, [title, content, images, attachments, checklist, color, labels, reminder, priority, capture, ignored, onAdd, onCreateLabel, reset]);
+  }, [title, content, images, attachments, checklist, color, labels, reminder, reminderRepeat, reminderUntil, parentId, priority, capture, ignored, onAdd, onCreateLabel, reset]);
+
+  const handleClose = commit;
+
+  /** Zapisuje i od razu otwiera pusty szkic — do seryjnego wpisywania wielu notatek. */
+  const saveAndNext = useCallback(() => {
+    commit();
+    setExpanded(true);
+    requestAnimationFrame(() => titleRef.current?.focus());
+  }, [commit]);
 
   useEffect(() => {
     if (expanded && titleRef.current) titleRef.current.focus();
   }, [expanded]);
 
-  useEffect(() => { writeDraft({ title, content, checklist }); }, [title, content, checklist]);
+  useEffect(() => {
+    writeDraft({ title, content, checklist, color, labels, reminder, reminderRepeat, reminderRepeatUntil: reminderUntil, priority });
+  }, [title, content, checklist, color, labels, reminder, reminderRepeat, reminderUntil, priority]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -163,26 +213,20 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
 
   const isDraftEmpty = !title.trim() && !content.trim() && images.length === 0 && attachments.length === 0 && checklist.length === 0;
 
-  const reminderTimestamp = reminderDate ? composeReminderTimestamp(reminderDate, reminderTime) : null;
-
-  function handleSetReminder() {
-    if (reminderTimestamp !== null) {
-      requestNotificationPermissionOnIntent();
-      setReminder(reminderTimestamp);
-    }
-  }
-
-  function handleQuickReminderParsed(parsed: Date) {
-    setReminderDate(parsed);
-    setReminderTime(toTimeInputValue(parsed.getTime()));
-  }
-
   const slash = useSlashMenu({ textareaRef, value: content });
+  // `@nazwa` pasująca do folderu to token przechwytywania, nie wzmianka — folder ma pierwszeństwo.
+  const skipMention = useCallback((q: string) => {
+    const lq = q.toLowerCase();
+    return lq.length > 0 && (folders ?? []).some((f) => f.name.toLowerCase().startsWith(lq));
+  }, [folders]);
+  const wiki = useWikiAutocomplete({ textareaRef, value: content, onChange: setContent, titles: wikiTitles ?? [], exclude: title, skipMention });
 
   /** Ctrl+Shift+L: zaznaczone linie (albo bieżąca) przechodzą na listę zadań. */
   function handleContentKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     // Menu „/” przejmuje strzałki, Enter, Tab i Esc, dopóki jest otwarte.
+    if (wiki.isOpen && !e.ctrlKey && !e.metaKey && !e.altKey) { wiki.textareaProps.onKeyDown(e); return; }
     if (slash.isOpen && !e.ctrlKey && !e.metaKey && !e.altKey) { slash.onKeyDown(e); return; }
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "Enter") { e.preventDefault(); saveAndNext(); return; }
     // Ctrl+B/I/K, Ctrl+Enter (zapis), listy, Tab, Alt+↑/↓ — zob. editorKeys.ts.
     if (!isChecklistShortcut(e)) { handleEditorKey(e, { onSave: handleClose }); return; }
     e.preventDefault();
@@ -271,7 +315,21 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
         ) : (
           <motion.div key="expanded" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 space-y-3">
             {destination && <p className="text-xs text-muted-foreground">Trafi do: <span className="font-medium text-foreground">{destination}</span></p>}
+            {restored && (
+              <div role="status" className="flex items-center gap-2 rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs text-primary" data-draft-restored="">
+                <span>Szkic przywrócony z poprzedniej sesji</span>
+                <button type="button" onClick={reset} className="ml-auto rounded px-1.5 py-0.5 font-medium hover:bg-primary/10 outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                  Odrzuć
+                </button>
+              </div>
+            )}
             <input ref={titleRef} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Tytuł"
+              onKeyDown={(e) => {
+                if (e.key !== "Enter") return;
+                e.preventDefault();
+                if (e.ctrlKey || e.metaKey) { if (e.shiftKey) saveAndNext(); else handleClose(); }
+                else textareaRef.current?.focus();
+              }}
               className="w-full bg-transparent text-lg font-display font-semibold text-foreground placeholder:text-muted-foreground/50 outline-none" />
             <FormatToolbar onInsert={(before, after) => {
               const ta = textareaRef.current;
@@ -281,9 +339,9 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
               setContent(content.slice(0, s) + before + sel + after + content.slice(e2));
             }} />
             <div className="relative">
-              <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} onPaste={handleContentPaste} onSelect={slash.refresh} onKeyDown={handleContentKeyDown} placeholder="Treść notatki..." rows={3}
+              <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} onPaste={handleContentPaste} aria-autocomplete="list" aria-expanded={wiki.isOpen} onSelect={() => { wiki.textareaProps.onSelect(); slash.refresh(); }} onKeyDown={handleContentKeyDown} placeholder="Treść notatki..." rows={3}
                 className="w-full max-sm:min-h-[35dvh] bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none" />
-              {slash.popup()}
+              {wiki.popup()}{slash.popup()}
             </div>
             {content.length > 0 && <EditorStats textareaRef={textareaRef} value={content} className="block text-2xs text-muted-foreground" />}
 
@@ -359,7 +417,8 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
               <div className="flex items-center gap-1 text-xs text-primary">
                 <Bell className="w-3 h-3" />
                 {formatReminderShort(reminder)}
-                <button onClick={() => setReminder(null)} aria-label="Usuń przypomnienie" className="ml-1 text-muted-foreground hover:text-foreground">×</button>
+                {reminderRepeat !== "none" && <Repeat className="w-3 h-3" aria-label="Powtarzane" />}
+                <button onClick={() => { setReminder(null); setReminderRepeat("none"); setReminderUntil(undefined); }} aria-label="Usuń przypomnienie" className="ml-1 text-muted-foreground hover:text-foreground">×</button>
               </div>
             )}
 
@@ -422,32 +481,53 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                     </div>
                   </PopoverContent>
                 </Popover>
-                {/* Reminder picker */}
-                <Popover>
-                  <PopoverTrigger asChild>
+                {/* Reminder picker: ten sam co na kaflu — powtarzanie, koniec serii, szybkie terminy */}
+                <ReminderPicker
+                  reminder={reminder}
+                  reminderRepeat={reminderRepeat}
+                  reminderRepeatUntil={reminderUntil}
+                  onSet={(ts, repeat, until) => { setReminder(ts); setReminderRepeat(ts === null ? "none" : repeat); setReminderUntil(ts === null ? undefined : until); }}
+                  trigger={
                     <IconButton size="sm" tone={reminder ? "active" : "muted"} title="Przypomnienie" aria-label="Przypomnienie">
                       <Bell className={cn("w-4 h-4", reminder && "fill-current")} />
                     </IconButton>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-3 space-y-3" align="start">
-                    <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Przypomnienie</p>
-                    <QuickReminderInput onParsed={handleQuickReminderParsed} />
-                    <Calendar mode="single" selected={reminderDate} onSelect={setReminderDate}
-                      disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
-                      className={cn("p-3 pointer-events-auto")} />
-                    <div className="flex items-center gap-2">
-                      <label className="text-xs text-muted-foreground">Godzina:</label>
-                      <input type="time" value={reminderTime} onChange={(e) => setReminderTime(e.target.value)}
-                        className="text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 text-foreground" />
-                    </div>
-                    <Button size="sm" onClick={handleSetReminder} disabled={reminderTimestamp === null} className="w-full">Ustaw</Button>
-                  </PopoverContent>
-                </Popover>
+                  }
+                />
+                {/* Podstrona: notatka powstaje pod wybraną */}
+                {parentOptions && parentOptions.length > 0 && (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <IconButton size="sm" tone={parentId ? "active" : "muted"} title="Podstrona w…" aria-label="Podstrona w…">
+                        <CornerDownRight className="w-4 h-4" />
+                      </IconButton>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 p-3 space-y-2" align="start">
+                      <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Podstrona w</p>
+                      <select
+                        value={parentId ?? ""}
+                        onChange={(e) => setParentId(e.target.value || null)}
+                        aria-label="Notatka nadrzędna"
+                        className="w-full rounded-lg border border-border bg-muted/60 px-2 py-1.5 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary/30"
+                      >
+                        <option value="">Poziom główny</option>
+                        {parentOptions.map((o) => <option key={o.id} value={o.id}>{o.title.trim() || "Bez tytułu"}</option>)}
+                      </select>
+                    </PopoverContent>
+                  </Popover>
+                )}
                 {/* Priority picker */}
                 <PriorityPicker priority={priority} onSet={setPriority} />
+                {!isDraftEmpty && (
+                  <button type="button" onClick={saveAndNext}
+                    title="Zapisz i otwórz pusty szkic (Ctrl+Shift+Enter)"
+                    className="pressable ml-auto px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors shrink-0">
+                    Zapisz i dodaj kolejną
+                  </button>
+                )}
                 <button onClick={handleClose}
-                  className="pressable ml-auto px-4 py-1.5 text-sm font-medium font-display text-primary hover:bg-primary/10 rounded-lg transition-colors shrink-0">
-                  Zamknij
+                  title={isDraftEmpty ? "Zamknij" : "Zapisz notatkę (Ctrl+Enter)"}
+                  className={cn("pressable px-4 py-1.5 text-sm font-medium font-display text-primary hover:bg-primary/10 rounded-lg transition-colors shrink-0", isDraftEmpty && "ml-auto")}>
+                  {isDraftEmpty ? "Zamknij" : "Zapisz"}
                 </button>
               </div>
             </div>

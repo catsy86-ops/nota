@@ -10,7 +10,7 @@ test.beforeEach(async ({ page }) => {
 async function withReminder(page: import("@playwright/test").Page, title: string, day: string) {
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
   const card = page.locator("[data-note-id-wrap]", { hasText: title });
   await card.hover();
   await card.getByRole("button", { name: "Przypomnienie" }).click();

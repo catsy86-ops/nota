@@ -716,3 +716,50 @@ Zrobione: `lib/saveStatus.ts` (zapis do IndexedDB: Zapisywanie… / Zapisano / l
   - **Lista do nauki**: punkty z materiałów pogrupowane w moduły i tematy, ⚠ punkty krytyczne z ryzykiem, filtr „tylko krytyczne”, ściąga wysokości.
   - Postęp w `localStorage` (`kaczy.study.v1`, `lib/study/store.ts`) — **jeszcze nie w pełnej kopii zapasowej ani w synchronizacji Yjs**. Testy: `lib/study/study.test.ts`, e2e `study.spec.ts`.
   - Rozbudowa (2026-10-11): **Powtórka błędów** (store pamięta błędne pytania, dobra odpowiedź je czyści), **„Ćwicz”** na karcie tematu (runda tylko z jego pytań), **„Zrób notatkę”** (`lib/study/toNote.ts`: notatka z etykietą `nauka`, listą kontrolną punktów i sekcją „Na co uważać”); runda w toku nie ginie przy zmianie zakładki.
+
+## Plan dopracowania działów — krok po kroku (2026-10-11)
+
+**Zasada pracy.** Jeden dział naraz, w stałej kolejności. Każdy dział przechodzi te same pięć kroków i nie zaczynamy następnego, dopóki poprzedni nie jest domknięty:
+
+1. **Audyt** — przejście działu w aplikacji (pulpit + telefon, jasny/ciemny motyw), przegląd kodu, lista usterek i luk z priorytetem (krytyczne / ważne / drobne) i nakładem S/M/L.
+2. **Fala 1 — usterki i tarcie** (S): to, co psuje codzienne użycie. Bez nowych funkcji.
+3. **Fala 2 — brakujące podstawy** (M): funkcje, których użytkownik się spodziewa w tym dziale.
+4. **Fala 3 — dopieszczenie** (S–M): ruch, puste stany, skróty klawiaturowe, dostępność.
+5. **Domknięcie** — testy jednostkowe + e2e dla każdej zmiany, pełny `playwright test`, wpis w roadmapie i w pamięci sesji, commit per fala.
+
+**Kryterium „dział gotowy”:** brak otwartych punktów krytycznych i ważnych z audytu, zielone testy, brak regresji w pełnym e2e, krótka notatka „co zostało świadomie na później”.
+
+**Przekrojowo (sprawdzane w każdym dziale):** telefon (cele dotykowe ≥ 44 px, okna mieszczą się w ekranie), klawiatura i czytnik ekranu, tryb ciemny i motywy sezonowe, `prefers-reduced-motion`, stan pusty i błędy, „Cofnij” przy operacjach destrukcyjnych.
+
+### Kolejność działów
+
+| # | Dział | Dlaczego w tym miejscu | Główne tematy do sprawdzenia |
+|---|-------|------------------------|------------------------------|
+| 0 | **Dodaj notatkę** (w toku) | Wejście do całej aplikacji | Fala 1 i 2 zrobione; zostaje fala 3: wklejony link/HTML, menu „Więcej” na wąskim ekranie, kompozytor jako arkusz na telefonie, wiele szkiców |
+| 1 | **Notatki: siatka, kafel, edytor** | Rdzeń; wszystko inne na nim stoi | Podstrony (4a zrobione): przeciąganie na rodzica, drzewo w pasku bocznym, hierarchia w eksporcie; **4b właściwości** + kolumny w tabeli; zmiana kolejności pozycji listy przeciąganiem; zaznaczanie i akcje zbiorcze; gęstość kafli |
+| 2 | **Czytnik i prezentacja** | Blisko edytora, małe domknięcie | Nawigacja ←/→ między notatkami, wyróżnianie trafień w kaflach, spis treści, a11y okna |
+| 3 | **Wyszukiwanie i paleta poleceń** | Szybkość dotarcia do treści | Zapisane filtry, operatory (`w:folder`, daty), podgląd trafień, historia, skróty |
+| 4 | **Foldery, etykiety, filtry** | Porządek w danych | Drzewo folderów, kolory/ikony, scalanie i zmiana nazw etykiet z „Cofnij”, puste foldery, postęp projektu |
+| 5 | **Dziś i Ten tydzień** | Codzienny punkt wejścia | Co pokazuje „Dziś” (terminy, zaległe, notatka dnia), szybkie odhaczanie, przegląd tygodnia |
+| 6 | **Przypomnienia** | Zależy od Dziś/Kalendarza | Odkładanie (preset-y), agenda, powtarzanie z końcem serii, **decyzja Android push** (Capacitor vs Web Push), dźwięk/wibracja |
+| 7 | **Kalendarz** | Widok czasu | Przeciąganie terminów, widok tygodnia, integracja z Grafikiem, święta, eksport .ics |
+| 8 | **Grafik zmian** | Osobna domena, wcześniej audytowana | Statystyki okresu i etatu, szablony tygodni, eksport/druk, zgodność ze zmianami z Kalendarza |
+| 9 | **Nauka** | Nowy dział, rośnie z materiałami | Więcej materiałów (import własnych PDF/tekstu → tematy i pytania), powtórki rozłożone w czasie, postęp w Yjs/synchronizacji |
+| 10 | **Archiwum i Kosz** | Proste, szybkie domknięcie | Wyszukiwanie w koszu, odliczanie, akcje zbiorcze, przywracanie gałęzi podstron |
+| 11 | **Prywatne notatki (skarbiec)** | Wrażliwe, wymaga ostrożności | Metadane skarbca (walidacja), zmiana hasła, blokada po bezczynności, ostrzeżenia przed utratą hasła |
+| 12 | **Ustawienia, kopia zapasowa, synchronizacja** | Spina całość | Nauka w backupie/sync, przywracanie wybiórcze, status sync, diagnostyka, eksport ZIP z hierarchią |
+| 13 | **Wygląd i ruch** | Na końcu, bo dotyka wszystkiego | Spójność motywów, animacje, ikony, puste stany, hierarchia tytuł/treść (otwarty punkt) |
+| 14 | **PWA, wydajność, dostępność** | Przekrojowe domknięcie | Instalacja, offline, rozmiar paczki, czas pierwszego renderu, audyt a11y, CSP, react-router 7 |
+
+### Jak będziemy pracować na co dzień
+
+- Na początku działu robię **audyt i pokazuję listę** (bez zmian w kodzie) — Ty wybierasz, co wchodzi do fal.
+- Każda fala to osobny commit z testami; po każdej podsumowanie „zrobione / nie zrobione / ryzyka”.
+- Rzeczy wymagające decyzji (np. Android push, Share Target dla plików, nowe zależności) zgłaszam **przed** pracą, nie po.
+- Otwarte punkty z wcześniejszych audytów trafiają do właściwego działu, zamiast wisieć osobno.
+
+### Dodaj notatkę — fale 1 i 2 (2026-10-11)
+
+- [x] **Fala 1:** przycisk „Zapisz” (pusty szkic: „Zamknij”), Ctrl+Enter zapisuje, **Ctrl+Shift+Enter / „Zapisz i dodaj kolejną”** zostawia pusty szkic; toast „Dodano notatkę” z „Cofnij” (jeden dymek, `id` zastępuje poprzedni); szkic pamięta kolor, etykiety, przypomnienie z serią i priorytet, a chip „Szkic przywrócony” ma „Odrzuć”.
+- [x] **Fala 2:** `[[` i `@` w nowej notatce (`@nazwa` zgodna z folderem zostaje tokenem przechwytywania); ten sam `ReminderPicker` co na kaflu (szybkie terminy „Dziś wieczorem / Jutro rano / Za tydzień”, powtarzanie, koniec serii; okno przewija się, gdy jest wyższe niż ekran); „Podstrona w…” przy tworzeniu (`parentId`). Testy: `quick-capture.spec.ts`, `composer.spec.ts`.
+- Zostaje (fala 3): wklejony link/HTML, menu „Więcej” na wąskim ekranie, kompozytor jako arkusz na telefonie, wiele szkiców. Szablony w kompozytorze już były (pokazują się w pustym szkicu), więc osobny przycisk „Z szablonu” odpadł.

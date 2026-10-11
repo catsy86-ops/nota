@@ -28,7 +28,7 @@ async function addNoteWithImage(page: Page, title: string) {
   ]);
   await chooser.setFiles({ name: "kropka.png", mimeType: "image/png", buffer: Buffer.from(PNG_B64, "base64") });
   await expect(page.locator('img[src^="blob:"]')).toHaveCount(1); // podgląd w pasku dodawania
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
   // Rozwinięty pasek wygasa z animacją, wciąż z polem „Tytuł” i starym tytułem —
   // bez czekania następne `getByPlaceholder("Tytuł")` trafia czasem na dwa pola.
   await expect(page.getByText("Zapisz notatkę...")).toBeVisible();

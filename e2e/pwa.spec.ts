@@ -84,7 +84,7 @@ test("app shell and existing notes survive a real offline reload", async ({ page
   const title = `E2E-offline ${Date.now()}`;
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
   await expect(page.getByText(title)).toBeVisible();
 
   await context.setOffline(true);

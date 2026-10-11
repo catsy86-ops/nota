@@ -10,7 +10,7 @@ test("Zamień na listę i z powrotem na tekst w edytorze notatki", async ({ page
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
   await page.getByPlaceholder("Treść notatki...").fill("jabłka\ngruszki");
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
   await expect(page.getByText("Zapisz notatkę...")).toBeVisible();
 
   await page.getByText(title).click();

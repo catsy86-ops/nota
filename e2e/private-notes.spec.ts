@@ -14,7 +14,7 @@ async function addNote(page: Page, title: string, content: string) {
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
   await page.getByPlaceholder("Treść notatki...").fill(content);
-  await page.getByRole("button", { name: "Zamknij" }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
   await expect(page.getByText("Zapisz notatkę...")).toBeVisible();
   await expect(page.locator("[data-note-id]").filter({ hasText: title })).toBeVisible();
 }

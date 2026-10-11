@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Bell, Repeat, X } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -17,6 +17,19 @@ interface ReminderPickerProps {
   reminderRepeatUntil?: number;
   /** `until` — koniec serii (koniec dnia) albo `undefined` = bez końca. */
   onSet: (timestamp: number | null, repeat: ReminderRepeat, until?: number) => void;
+  /** Własny przycisk otwierający (np. w pasku nowej notatki); domyślnie ikona dzwonka z kafla. */
+  trigger?: ReactNode;
+}
+
+/** Szybkie terminy: pierwszy przyszły z listy trafia do pól daty i godziny. */
+function presets(now = new Date()): { label: string; at: Date }[] {
+  const at = (days: number, h: number) => new Date(now.getFullYear(), now.getMonth(), now.getDate() + days, h, 0, 0, 0);
+  const list = [
+    { label: "Dziś wieczorem", at: at(0, 18) },
+    { label: "Jutro rano", at: at(1, 9) },
+    { label: "Za tydzień", at: at(7, 9) },
+  ];
+  return list.filter((p) => p.at.getTime() > now.getTime());
 }
 
 /** `YYYY-MM-DD` dla `<input type="date">` w czasie lokalnym. */
@@ -27,7 +40,7 @@ const dateInputValue = (ts: number) => {
 
 const REPEAT_OPTIONS: ReminderRepeat[] = ["none", "daily", "weekly", "monthly"];
 
-export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, onSet }: ReminderPickerProps) {
+export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, onSet, trigger }: ReminderPickerProps) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(reminder ? new Date(reminder) : undefined);
   const [time, setTime] = useState(reminder ? toTimeInputValue(reminder) : DEFAULT_REMINDER_TIME);
@@ -67,18 +80,32 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <motion.button
-          className={cn(
-            "card-action",
-            reminder ? "text-primary" : "text-muted-foreground"
-          )}
-          title="Przypomnienie"
-        >
-          <Bell className={cn("w-4 h-4", reminder && "fill-current")} />
-        </motion.button>
+        {trigger ?? (
+          <motion.button
+            className={cn(
+              "card-action",
+              reminder ? "text-primary" : "text-muted-foreground"
+            )}
+            title="Przypomnienie"
+          >
+            <Bell className={cn("w-4 h-4", reminder && "fill-current")} />
+          </motion.button>
+        )}
       </PopoverTrigger>
-      <PopoverContent className="w-auto max-w-[18.5rem] p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
+      <PopoverContent className="w-auto max-w-[18.5rem] max-h-[var(--radix-popover-content-available-height)] overflow-y-auto p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
         <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Przypomnienie</p>
+        <div className="flex flex-wrap gap-1.5" role="group" aria-label="Szybkie terminy">
+          {presets().map((p) => (
+            <button
+              key={p.label}
+              type="button"
+              onClick={() => handleQuickParsed(p.at)}
+              className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/60 hover:text-primary"
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
         <QuickReminderInput onParsed={handleQuickParsed} />
         <Calendar
           mode="single"
