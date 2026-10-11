@@ -29,6 +29,46 @@ const SheetOverlay = React.forwardRef<
 ));
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
+/** Przeciąganie arkusza w dół za uchwyt: podąża za palcem, a po progu zamyka. */
+function useDragToDismiss(contentRef: React.RefObject<HTMLDivElement | null>, close: () => void) {
+  const start = React.useRef<{ y: number; t: number } | null>(null);
+  const dy = React.useRef(0);
+  const reset = (el: HTMLElement) => {
+    el.style.transition = "transform 200ms cubic-bezier(0.22, 1, 0.36, 1)";
+    el.style.transform = "";
+  };
+  return {
+    onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
+      start.current = { y: e.clientY, t: performance.now() };
+      dy.current = 0;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      if (contentRef.current) contentRef.current.style.transition = "none";
+    },
+    onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => {
+      const s = start.current;
+      const el = contentRef.current;
+      if (!s || !el) return;
+      dy.current = Math.max(0, e.clientY - s.y);
+      el.style.transform = `translateY(${dy.current}px)`;
+    },
+    onPointerUp: () => {
+      const s = start.current;
+      const el = contentRef.current;
+      start.current = null;
+      if (!s || !el) return;
+      const velocity = dy.current / Math.max(1, performance.now() - s.t); // px/ms
+      if (dy.current > 110 || (dy.current > 30 && velocity > 0.6)) {
+        el.style.transform = "";
+        close();
+      } else reset(el);
+    },
+    onPointerCancel: () => {
+      start.current = null;
+      if (contentRef.current) reset(contentRef.current);
+    },
+  };
+}
+
 const sheetVariants = cva(
   "fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-out-soft data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-fast data-[state=open]:duration-base",
   {
@@ -55,10 +95,28 @@ interface SheetContentProps
 const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Content>, SheetContentProps>(
   ({ side = "right", className, children, ...props }, ref) => {
     const closeRef = React.useRef<HTMLButtonElement>(null);
+    const contentRef = React.useRef<HTMLDivElement | null>(null);
+    const setRefs = React.useCallback((el: HTMLDivElement | null) => {
+      contentRef.current = el;
+      if (typeof ref === "function") ref(el);
+      else if (ref) ref.current = el;
+    }, [ref]);
+    const drag = useDragToDismiss(contentRef, () => closeRef.current?.click());
     return (
     <SheetPortal>
       <SheetOverlay />
-      <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
+      <SheetPrimitive.Content ref={setRefs} className={cn(sheetVariants({ side }), className)} {...props}>
+        {side === "bottom" && (
+          // Uchwyt naprawdę działa: przeciągnięcie w dół zamyka arkusz (próg odległości albo szybki ruch).
+          <div
+            aria-hidden
+            data-sheet-handle
+            className="absolute left-1/2 top-0 z-10 flex h-7 w-32 -translate-x-1/2 cursor-grab touch-none justify-center pt-2 active:cursor-grabbing"
+            {...drag}
+          >
+            <span className="h-1.5 w-10 rounded-full bg-muted-foreground/25" />
+          </div>
+        )}
         {children}
         <OverlayBack closeRef={closeRef} />
         <SheetPrimitive.Close ref={closeRef} className="absolute right-3 top-3 inline-flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground ring-offset-background transition-colors duration-fast hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none coarse:h-11 coarse:w-11 coarse:right-2 coarse:top-2">

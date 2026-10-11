@@ -288,7 +288,7 @@ h1{font-size:1.8rem;margin-bottom:.2rem}
 </style>
 </head>
 <body>
-<h1>🍺 NOTKI</h1>
+<h1>NOTKI</h1>
 <p class="date">Eksport: ${escape(dateStr)}</p>
 `;
 

@@ -39,8 +39,30 @@ test("na dotyku akcje kafla są schowane za „Więcej opcji”", async ({ page 
   const card = page.locator("[data-note-idx]").filter({ hasText: "Kafel na telefonie" });
   await expect(card.getByRole("button", { name: "Przypnij" })).toBeHidden();
   await card.getByRole("button", { name: "Więcej opcji" }).click();
-  await expect(card.getByRole("button", { name: "Przypnij" })).toBeVisible();
-  await expect(card.getByRole("button", { name: "Duplikuj" })).toBeVisible();
+  // Na dotyku „⋯” otwiera arkusz akcji z podpisami, a nie siatkę ikon w kaflu.
+  const sheet = page.getByRole("dialog", { name: "Kafel na telefonie" });
+  await expect(sheet.getByRole("button", { name: "Przypnij" })).toBeVisible();
+  await expect(sheet.getByRole("button", { name: "Duplikuj" })).toBeVisible();
+  await sheet.getByRole("button", { name: "Przypnij" }).click();
+  await expect(sheet).toBeHidden();
+  await expect(card.getByRole("button", { name: "Przypnij" })).toBeHidden();
+});
+
+test("przytrzymanie kafla zaznacza go i pokazuje pasek zbiorczy", async ({ page }) => {
+  await page.getByRole("button", { name: "Nowa notatka" }).click();
+  await page.getByPlaceholder("Tytuł").fill("Do zaznaczenia");
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
+  const body = page.locator("[data-note-idx]").filter({ hasText: "Do zaznaczenia" }).getByRole("heading", { name: "Do zaznaczenia" });
+  const box = (await body.boundingBox())!;
+  const x = box.x + box.width / 2, y = box.y + box.height / 2;
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+  await page.waitForTimeout(650);
+  await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  await expect(page.getByText(/zaznaczono/)).toBeAttached();
+  await expect(page.getByRole("button", { name: "Wyczyść zaznaczenie" })).toBeVisible();
+  // Bez otwierania edytora po puszczeniu palca.
+  await expect(page.getByRole("dialog", { name: /Edycja notatki/ })).toHaveCount(0);
 });
 
 test("Przypomnienia mają własną zakładkę w dolnym pasku, Archiwum jest w „Więcej”", async ({ page }) => {
@@ -101,4 +123,40 @@ test("„wstecz” zwija pełnoekranowy kompozytor, szkic zostaje", async ({ pag
   await page.goBack();
   await expect(page.getByPlaceholder("Tytuł")).toBeHidden();
   await expect(page).toHaveURL(/localhost:4173\/?$/);
+});
+
+test("arkusz „Więcej” zamyka się przeciągnięciem uchwytu w dół, krótki ruch go nie zamyka", async ({ page }) => {
+  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  const sheet = page.getByRole("dialog", { name: "Więcej" });
+  await expect(sheet).toBeVisible();
+  const handle = sheet.locator("[data-sheet-handle]");
+  // Pozycję mierzymy po wjeździe arkusza — w trakcie animacji uchwyt jest niżej.
+  await page.waitForTimeout(500);
+  const box = (await handle.boundingBox())!;
+  const x = box.x + box.width / 2, y = box.y + box.height / 2;
+  const cdp = await page.context().newCDPSession(page);
+  const drag = async (dist: number) => {
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [{ x, y }] });
+    for (let i = 1; i <= 6; i++) {
+      await cdp.send("Input.dispatchTouchEvent", { type: "touchMove", touchPoints: [{ x, y: y + (dist * i) / 6 }] });
+      await page.waitForTimeout(40);
+    }
+    await cdp.send("Input.dispatchTouchEvent", { type: "touchEnd", touchPoints: [] });
+  };
+  await drag(40);
+  await page.waitForTimeout(300);
+  await expect(sheet).toBeVisible();
+  await drag(220);
+  await expect(sheet).toBeHidden();
+});
+
+test.describe("telefon w poziomie", () => {
+  test.use({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true });
+
+  test("zostaje dolna nawigacja, a panel boczny nie zajmuje 1/3 ekranu", async ({ page }) => {
+    await expect(page.getByRole("button", { name: "Nowa notatka" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Więcej", exact: true })).toBeVisible();
+    // Panel jest wysuwany na żądanie, nie stały w układzie.
+    await expect(page.getByRole("complementary")).toHaveCount(0);
+  });
 });

@@ -77,6 +77,7 @@ export function ShareNote({ note }: ShareNoteProps) {
         <TooltipTrigger asChild>
           <button
             onClick={(e) => { e.stopPropagation(); setOpen(true); }}
+            aria-label="Udostępnij"
             className="pressable p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5 transition-colors"
           >
             <Share2 className="w-4 h-4" />

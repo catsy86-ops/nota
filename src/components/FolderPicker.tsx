@@ -75,6 +75,7 @@ export function FolderPicker({ folders, currentFolderId, onSelect }: FolderPicke
           <PopoverTrigger asChild>
             <button
               onClick={(e) => e.stopPropagation()}
+              aria-label="Folder"
               className={cn("pressable p-1.5 rounded-full transition-colors", currentFolderId ? "text-primary-ink hover:bg-primary/10" : "text-muted-foreground hover:bg-foreground/5")}
             >
               <FolderOpen className="w-4 h-4" />

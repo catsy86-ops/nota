@@ -34,6 +34,7 @@ import { NoteImage } from "./NoteImage";
 import { AttachmentsPanel } from "./AttachmentsPanel";
 import { AttachmentsBadge } from "./AttachmentsList";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
@@ -77,6 +78,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   const noteVersions = getVersions?.(note.id);
   const [showColors, setShowColors] = useState(false);
   const [showMore, setShowMore] = useState(false);
+  // Dotyk: „⋯” otwiera arkusz akcji od dołu zamiast rozkładać ~18 ikon w wąskim kaflu.
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(note.title);
   const [editContent, setEditContent] = useState(note.content);
@@ -91,6 +94,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   const previewMounted = useLatch(!!previewImage);
   const deleteMounted = useLatch(showDeleteConfirm);
   const drawingMounted = useLatch(showDrawing);
+  const sheetMounted = useLatch(sheetOpen);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   /** Ctrl+Shift+L zamienia zaznaczone linie (albo bieżącą) na pozycje listy zadań; reszta klawiszy trafia do podpowiedzi wikilinków. */
@@ -314,6 +318,34 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   const trashOpacity = useTransform(swipeX, [0, -40, -110], [0, 0.5, 1]);
   const [swiping, setSwiping] = useState(false);
 
+  // Dotyk: przytrzymanie kafla zaznacza go (wejście w tryb zaznaczania), jak w aplikacjach systemowych.
+  const longPressTimer = useRef<number | undefined>(undefined);
+  const longPressStart = useRef<{ x: number; y: number } | null>(null);
+  const longPressed = useRef(false);
+  function cancelLongPress() {
+    window.clearTimeout(longPressTimer.current);
+    longPressStart.current = null;
+  }
+  function handleLongPressStart(e: React.PointerEvent) {
+    if (e.pointerType === "mouse" || isEditing || !onToggleSelect) return;
+    const target = e.target as Element;
+    // Zdarzenia z portali (arkusz akcji) płyną drzewem Reacta — tylko dotyk w samym kaflu.
+    if (!cardRef.current?.contains(target) || target.closest("button, a, input, textarea, [role='checkbox']")) return;
+    longPressStart.current = { x: e.clientX, y: e.clientY };
+    window.clearTimeout(longPressTimer.current);
+    longPressTimer.current = window.setTimeout(() => {
+      longPressed.current = true;
+      longPressStart.current = null;
+      haptic("tap");
+      onToggleSelect(note.id, false);
+    }, 450);
+  }
+  function handleLongPressMove(e: React.PointerEvent) {
+    const s = longPressStart.current;
+    if (s && Math.hypot(e.clientX - s.x, e.clientY - s.y) > 8) cancelLongPress();
+  }
+  useEffect(() => () => window.clearTimeout(longPressTimer.current), []);
+
   function handleSwipeEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
     setSwiping(false);
     const dx = info.offset.x;
@@ -327,6 +359,129 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
       runWithoutConfirm(() => onDelete(note.id));
     }
     swipeX.set(0);
+  }
+
+  // Akcje kafla w dwóch miejscach: stopka/panel „⋯” (mysz) i arkusz akcji (dotyk).
+  function renderPrimaryActions(inSheet: boolean) {
+    return (
+      <>
+          {!isArchived && (
+            <ActionBtn
+              icon={<Pin className={cn("w-4 h-4", note.pinned && "fill-current")} />}
+              onClick={(e) => {
+                if (!note.pinned) {
+                  if (showFx && fx.sparkle) markPinned(note.id);
+                  const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                  sparkle(r.left + r.width / 2, r.top + r.height / 2);
+                }
+                haptic("tap");
+                onTogglePin?.(note.id);
+                if (inSheet) setSheetOpen(false);
+              }}
+              title={note.pinned ? "Odepnij" : "Przypnij"}
+            />
+          )}
+          {!inSheet && <ActionBtn icon={<Palette className="w-4 h-4" />} onClick={() => setShowColors(!showColors)} title="Kolor" />}
+          {!isArchived && (
+            <ReminderPicker
+              reminder={note.reminder}
+              reminderRepeat={note.reminderRepeat}
+              reminderRepeatUntil={note.reminderRepeatUntil}
+              onSet={(r, repeat, until) => onUpdate?.(note.id, { reminder: r, reminderRepeat: repeat, reminderRepeatUntil: until })}
+            />
+          )}
+          {!isArchived && (
+            <PriorityPicker
+              priority={note.priority ?? "none"}
+              onSet={(p) => onUpdate?.(note.id, { priority: p })}
+            />
+          )}
+          {isArchived && onUnarchive ? (
+            <ActionBtn icon={<ArchiveRestore className="w-4 h-4" />} onClick={() => { onUnarchive(note.id); if (inSheet) setSheetOpen(false); }} title="Przywróć" />
+          ) : onArchive ? (
+            <ActionBtn icon={<Archive className="w-4 h-4" />} onClick={() => { haptic("tap"); onArchive(note.id); if (inSheet) setSheetOpen(false); }} title="Archiwizuj" />
+          ) : null}
+          <ActionBtn
+            icon={<Trash2 className="w-4 h-4" />}
+            onClick={() => { if (note.trashed) setShowDeleteConfirm(true); else { haptic("warn"); onDelete(note.id); } if (inSheet) setSheetOpen(false); }}
+            title="Usuń"
+            className="hover:text-destructive"
+          />
+      </>
+    );
+  }
+
+  function renderMoreActions() {
+    return (
+      <>
+                <NoteLookPicker icon={note.icon} cover={note.cover} onChange={(patch) => onUpdate?.(note.id, patch)} />
+                {!isArchived && (
+                  <ActionBtn
+                    icon={<Star className={cn("w-4 h-4", note.favorite && "fill-current")} />}
+                    onClick={() => { haptic("tap"); onUpdate?.(note.id, { favorite: note.favorite ? undefined : true }); }}
+                    title={note.favorite ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
+                    className={cn(note.favorite && "text-primary-ink")}
+                  />
+                )}
+                {!isArchived && (
+                  <ActionBtn
+                    icon={<MoveHorizontal className="w-4 h-4" />}
+                    onClick={() => { haptic("tap"); onUpdate?.(note.id, { wide: note.wide ? undefined : true }); }}
+                    title={note.wide ? "Zwiń do jednej kolumny" : "Rozciągnij na dwie kolumny"}
+                    aria-pressed={!!note.wide}
+                    className={cn(note.wide && "text-primary-ink")}
+                  />
+                )}
+                {!isArchived && (
+                  <ActionBtn
+                    icon={<ZoomIn className="w-4 h-4" />}
+                    onClick={() => { haptic("tap"); onUpdate?.(note.id, { largeText: note.largeText ? undefined : true }); }}
+                    title={note.largeText ? "Zwykły rozmiar tekstu" : "Większy tekst"}
+                    aria-pressed={!!note.largeText}
+                    className={cn(note.largeText && "text-primary-ink")}
+                  />
+                )}
+                {!isArchived && (
+                  <ActionBtn
+                    icon={note.readOnly ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
+                    onClick={() => { haptic("tap"); onUpdate?.(note.id, { readOnly: note.readOnly ? undefined : true }); }}
+                    title={note.readOnly ? "Odblokuj edycję" : "Zablokuj edycję"}
+                    aria-pressed={!!note.readOnly}
+                    className={cn(note.readOnly && "text-primary-ink")}
+                  />
+                )}
+                {!isArchived && !note.locked && (
+                  <ActionBtn
+                    icon={<FilePlus2 className="w-4 h-4" />}
+                    onClick={() => {
+                      haptic("tap");
+                      const id = addSubpage(note.id);
+                      if (id) toast("Dodano podstronę", { action: { label: "Otwórz", onClick: () => onOpenNote?.(id) } });
+                    }}
+                    title="Dodaj podstronę"
+                  />
+                )}
+                {!note.locked && <ActionBtn icon={<ImagePlus className="w-4 h-4" />} onClick={() => fileInputRef.current?.click()} title="Dodaj obrazek" />}
+                {!note.locked && <ActionBtn icon={<PenTool className="w-4 h-4" />} onClick={() => setShowDrawing(true)} title="Rysuj" />}
+                {!isArchived && (
+                  <LabelPicker allLabels={allLabels} selected={note.labels} onToggle={handleLabelToggle} onCreateLabel={onCreateLabel} />
+                )}
+                {onMoveToFolder && folders && folders.length > 0 && (
+                  <FolderPicker folders={folders} currentFolderId={note.folderId} onSelect={(fId) => onMoveToFolder(note.id, fId)} />
+                )}
+                <PrivateNoteButton noteId={note.id} locked={!!note.locked} />
+                {!note.locked && <ShareNote note={note} />}
+                {!note.locked && noteVersions && onRestoreVersion && (
+                  <VersionHistory versions={noteVersions} onRestore={(v) => onRestoreVersion(note.id, v)} />
+                )}
+                {!note.locked && onPresent && (
+                  <ActionBtn icon={<Maximize2 className="w-4 h-4" />} onClick={() => onPresent(note.id)} title="Prezentacja" />
+                )}
+                {onDuplicate && (
+                  <ActionBtn icon={<Copy className="w-4 h-4" />} onClick={() => onDuplicate(note.id)} title="Duplikuj" />
+                )}
+      </>
+    );
   }
 
   function handleMove(e: React.MouseEvent<HTMLDivElement>) {
@@ -461,6 +616,11 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         }}
         onMouseMove={tilt ? handleMove : undefined}
         onMouseLeave={tilt ? handleLeave : undefined}
+        onPointerDown={handleLongPressStart}
+        onPointerMove={handleLongPressMove}
+        onPointerUp={cancelLongPress}
+        onPointerCancel={cancelLongPress}
+        onContextMenu={isTouch && onToggleSelect ? (e) => e.preventDefault() : undefined}
         drag={swipeEnabled ? "x" : false}
         dragDirectionLock
         dragElastic={0.25}
@@ -561,6 +721,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         <div
           className={cn("cursor-pointer", isEditing && !fullEditor ? "p-4" : "card-body px-3.5 pt-3 pb-2.5 leading-[1.5]", note.largeText ? "text-base" : "text-[0.875rem]")}
           onClick={(e) => {
+            if (longPressed.current) { longPressed.current = false; return; }
             if (swiping || Math.abs(swipeX.get()) > 4) return;
             if (selectionMode && onToggleSelect) { onToggleSelect(note.id, e.shiftKey); return; }
 
@@ -680,56 +841,16 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
             kafel nie kończył się rzędem sześciu dużych ikon. */}
         <div className="card-actions flex items-center gap-0.5 px-2 pb-2 flex-wrap" data-open={showColors || showMore || undefined} data-more={showMore || undefined} data-editing={isEditing || undefined}>
           <div className="card-primary contents">
-          {!isArchived && (
-            <ActionBtn
-              icon={<Pin className={cn("w-4 h-4", note.pinned && "fill-current")} />}
-              onClick={(e) => {
-                if (!note.pinned) {
-                  if (showFx && fx.sparkle) markPinned(note.id);
-                  const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                  sparkle(r.left + r.width / 2, r.top + r.height / 2);
-                }
-                haptic("tap");
-                onTogglePin?.(note.id);
-              }}
-              title={note.pinned ? "Odepnij" : "Przypnij"}
-            />
-          )}
-          <ActionBtn icon={<Palette className="w-4 h-4" />} onClick={() => setShowColors(!showColors)} title="Kolor" />
-          {!isArchived && (
-            <ReminderPicker
-              reminder={note.reminder}
-              reminderRepeat={note.reminderRepeat}
-              reminderRepeatUntil={note.reminderRepeatUntil}
-              onSet={(r, repeat, until) => onUpdate?.(note.id, { reminder: r, reminderRepeat: repeat, reminderRepeatUntil: until })}
-            />
-          )}
-          {!isArchived && (
-            <PriorityPicker
-              priority={note.priority ?? "none"}
-              onSet={(p) => onUpdate?.(note.id, { priority: p })}
-            />
-          )}
-          {isArchived && onUnarchive ? (
-            <ActionBtn icon={<ArchiveRestore className="w-4 h-4" />} onClick={() => onUnarchive(note.id)} title="Przywróć" />
-          ) : onArchive ? (
-            <ActionBtn icon={<Archive className="w-4 h-4" />} onClick={() => { haptic("tap"); onArchive(note.id); }} title="Archiwizuj" />
-          ) : null}
-          <ActionBtn
-            icon={<Trash2 className="w-4 h-4" />}
-            onClick={() => { if (note.trashed) setShowDeleteConfirm(true); else { haptic("warn"); onDelete(note.id); } }}
-            title="Usuń"
-            className="hover:text-destructive"
-          />
+            {renderPrimaryActions(false)}
           </div>
 
           <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
 
           <ActionBtn
             icon={<MoreHorizontal className="w-4 h-4" />}
-            onClick={() => setShowMore((v) => !v)}
+            onClick={() => (isTouch ? setSheetOpen(true) : setShowMore((v) => !v))}
             title={showMore ? "Mniej opcji" : "Więcej opcji"}
-            aria-expanded={showMore}
+            aria-expanded={isTouch ? sheetOpen : showMore}
             className={cn("ml-auto", showMore && "text-primary-ink bg-primary/10")}
           />
         </div>
@@ -743,72 +864,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
               className="px-3 pb-3 overflow-hidden"
             >
               <div className="flex items-center gap-0.5 flex-wrap border-t border-border/40 pt-2">
-                <NoteLookPicker icon={note.icon} cover={note.cover} onChange={(patch) => onUpdate?.(note.id, patch)} />
-                {!isArchived && (
-                  <ActionBtn
-                    icon={<Star className={cn("w-4 h-4", note.favorite && "fill-current")} />}
-                    onClick={() => { haptic("tap"); onUpdate?.(note.id, { favorite: note.favorite ? undefined : true }); }}
-                    title={note.favorite ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
-                    className={cn(note.favorite && "text-primary-ink")}
-                  />
-                )}
-                {!isArchived && (
-                  <ActionBtn
-                    icon={<MoveHorizontal className="w-4 h-4" />}
-                    onClick={() => { haptic("tap"); onUpdate?.(note.id, { wide: note.wide ? undefined : true }); }}
-                    title={note.wide ? "Zwiń do jednej kolumny" : "Rozciągnij na dwie kolumny"}
-                    aria-pressed={!!note.wide}
-                    className={cn(note.wide && "text-primary-ink")}
-                  />
-                )}
-                {!isArchived && (
-                  <ActionBtn
-                    icon={<ZoomIn className="w-4 h-4" />}
-                    onClick={() => { haptic("tap"); onUpdate?.(note.id, { largeText: note.largeText ? undefined : true }); }}
-                    title={note.largeText ? "Zwykły rozmiar tekstu" : "Większy tekst"}
-                    aria-pressed={!!note.largeText}
-                    className={cn(note.largeText && "text-primary-ink")}
-                  />
-                )}
-                {!isArchived && (
-                  <ActionBtn
-                    icon={note.readOnly ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
-                    onClick={() => { haptic("tap"); onUpdate?.(note.id, { readOnly: note.readOnly ? undefined : true }); }}
-                    title={note.readOnly ? "Odblokuj edycję" : "Zablokuj edycję"}
-                    aria-pressed={!!note.readOnly}
-                    className={cn(note.readOnly && "text-primary-ink")}
-                  />
-                )}
-                {!isArchived && !note.locked && (
-                  <ActionBtn
-                    icon={<FilePlus2 className="w-4 h-4" />}
-                    onClick={() => {
-                      haptic("tap");
-                      const id = addSubpage(note.id);
-                      if (id) toast("Dodano podstronę", { action: { label: "Otwórz", onClick: () => onOpenNote?.(id) } });
-                    }}
-                    title="Dodaj podstronę"
-                  />
-                )}
-                {!note.locked && <ActionBtn icon={<ImagePlus className="w-4 h-4" />} onClick={() => fileInputRef.current?.click()} title="Dodaj obrazek" />}
-                {!note.locked && <ActionBtn icon={<PenTool className="w-4 h-4" />} onClick={() => setShowDrawing(true)} title="Rysuj" />}
-                {!isArchived && (
-                  <LabelPicker allLabels={allLabels} selected={note.labels} onToggle={handleLabelToggle} onCreateLabel={onCreateLabel} />
-                )}
-                {onMoveToFolder && folders && folders.length > 0 && (
-                  <FolderPicker folders={folders} currentFolderId={note.folderId} onSelect={(fId) => onMoveToFolder(note.id, fId)} />
-                )}
-                <PrivateNoteButton noteId={note.id} locked={!!note.locked} />
-                {!note.locked && <ShareNote note={note} />}
-                {!note.locked && noteVersions && onRestoreVersion && (
-                  <VersionHistory versions={noteVersions} onRestore={(v) => onRestoreVersion(note.id, v)} />
-                )}
-                {!note.locked && onPresent && (
-                  <ActionBtn icon={<Maximize2 className="w-4 h-4" />} onClick={() => onPresent(note.id)} title="Prezentacja" />
-                )}
-                {onDuplicate && (
-                  <ActionBtn icon={<Copy className="w-4 h-4" />} onClick={() => onDuplicate(note.id)} title="Duplikuj" />
-                )}
+                {renderMoreActions()}
               </div>
             </motion.div>
           )}
@@ -822,6 +878,29 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         )}
       </motion.div>
       </div>
+
+      {sheetMounted && <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        {/* Portal: zdarzenia i tak płyną drzewem Reacta do kafla — bez stopPropagation stuknięcie otwierałoby edytor. */}
+        <SheetContent side="bottom" className="note-sheet rounded-t-3xl border-t border-border/60 pb-[calc(env(safe-area-inset-bottom)+16px)]" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+          <SheetHeader className="text-left pr-10">
+            <SheetTitle className="font-display truncate">{note.locked ? "Notatka prywatna" : note.title.trim() || "Notatka bez tytułu"}</SheetTitle>
+          </SheetHeader>
+          {!isArchived && !note.trashed && (
+            <section className="pt-4">
+              <h3 className="px-1 pb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Kolor</h3>
+              <ColorPicker selected={note.color} onSelect={(c: NoteColor) => onUpdate?.(note.id, { color: c })} />
+            </section>
+          )}
+          <section className="pt-4">
+            <h3 className="px-1 pb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Szybkie</h3>
+            <div className="note-sheet-grid">{renderPrimaryActions(true)}</div>
+          </section>
+          <section className="pt-4">
+            <h3 className="px-1 pb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Więcej</h3>
+            <div className="note-sheet-grid">{renderMoreActions()}</div>
+          </section>
+        </SheetContent>
+      </Sheet>}
 
       {/* Dialogi montowane przy pierwszym otwarciu — 150 kart nie trzyma czterech nieużywanych okien. */}
       {editorMounted && <Dialog open={isEditing && fullEditor} onOpenChange={(open) => { if (!open) handleSave(); }}>

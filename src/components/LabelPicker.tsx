@@ -32,6 +32,7 @@ export function LabelPicker({ allLabels, selected, onToggle, onCreateLabel }: La
         <button
           className="pressable p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5 transition-colors"
           title="Etykiety"
+          aria-label="Etykiety"
         >
           <Tag className="w-4 h-4" />
         </button>

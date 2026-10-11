@@ -59,6 +59,8 @@ const navButton = "pressable shrink-0 w-10 h-10 coarse:w-11 coarse:h-11 rounded-
  * `lib/shifts/store`, obliczenia w czystych funkcjach `lib/shifts/*`,
  * a tutaj zostaje to, co lokalne dla ekranu — miesiąc, pędzel i otwarte okna.
  */
+const MOVE_HINT_KEY = "kaczy.shifts.moveHint.v1";
+
 export function ShiftsView({ notes = [] }: { notes?: Note[] }) {
   // Do wczytania dokumentu nic — pusty grafik mignąłby i ustawił zły pędzel startowy.
   return useShiftsReady() ? <ShiftsScreen notes={notes} /> : null;
@@ -76,6 +78,9 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   const [asking, setAsking] = useState<{ from: string; to: string } | null>(null);
   const [confirmCopy, setConfirmCopy] = useState<WeekCopyPlan | null>(null);
   const [brush, setBrush] = useState<Brush>(() => (data.types[0] ? { kind: "type", id: data.types[0].id } : { kind: "inspect" }));
+  // Podpowiedź o przeciąganiu zmian zajmowała miejsce nad siatką przy każdym wejściu — raz wystarczy.
+  const [moveHintSeen, setMoveHintSeen] = useState(() => { try { return localStorage.getItem(MOVE_HINT_KEY) === "1"; } catch { return false; } });
+  const dismissMoveHint = () => { setMoveHintSeen(true); try { localStorage.setItem(MOVE_HINT_KEY, "1"); } catch { /* bez pamięci — tylko na tę sesję */ } };
   // Własne godziny pędzla — przypięte do rodzaju, więc zmiana pędzla je odpina.
   const [brushHours, setBrushHours] = useState<{ typeId: string; hours: ShiftHours } | null>(null);
   const activeHours = brush.kind === "type" && brushHours?.typeId === brush.id ? brushHours.hours : null;
@@ -338,11 +343,18 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
 
       <p id="shift-brush-hint" className="-mt-3 text-xs text-muted-foreground px-1">{brushHint(brush, typesById, activeHours)}</p>
 
-      <p id="shift-move-hint" className="-mt-3 text-xs text-muted-foreground px-1">
+      {/* Podpowiedź o przenoszeniu: po „Rozumiem” zostaje tylko dla czytnika ekranu (aria-describedby siatki). */}
+      <p id="shift-move-hint" className={cn("-mt-3 text-xs text-muted-foreground px-1", moveHintSeen && "sr-only")}>
         {IS_TOUCH
           ? "Przytrzymaj zmianę i przeciągnij na inny dzień — zapytam, czy przenieść, czy skopiować."
           : `Przeciągnij zmianę na inny dzień, żeby ją przenieść (z Alt — skopiować). Klawiatura: Shift+strzałki przenoszą zmianę, Alt+Shift+strzałki kopiują, ${modShortcut("C")} / ${modShortcut("V")} kopiuje wpis dnia (zmiana, odchylenie, notatka).`}
         {clip && <span className="font-medium"> Schowek: {typesById.get(clip.type)?.name ?? "wpis"}{clip.note ? " z notatką" : ""}.</span>}
+        {!moveHintSeen && (
+          <button type="button" onClick={dismissMoveHint}
+            className="ml-1 inline-flex items-center rounded-md px-1.5 py-0.5 coarse:py-2 font-medium text-primary-ink hover:bg-primary/10 outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            Rozumiem
+          </button>
+        )}
       </p>
 
       <ShiftDnd days={data.days} typesById={typesById} onTransfer={onDrop}>

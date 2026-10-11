@@ -26,6 +26,7 @@ export function VersionHistory({ versions, onRestore }: VersionHistoryProps) {
         <TooltipTrigger asChild>
           <button
             onClick={(e) => { e.stopPropagation(); setOpen(true); }}
+            aria-label="Historia wersji"
             className="pressable p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5 transition-colors"
           >
             <History className="w-4 h-4" />

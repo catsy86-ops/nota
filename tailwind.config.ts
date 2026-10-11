@@ -174,5 +174,8 @@ export default {
     tailwindcssAnimate,
     // `coarse:` — palec zamiast kursora (cele dotykowe min. 44 px).
     plugin(({ addVariant }) => addVariant("coarse", "@media (pointer: coarse)")),
+    // `desk:` — układ z paskiem bocznym. Jak `md:`, ale telefon w poziomie (niski ekran dotykowy)
+    // zostaje przy dolnej nawigacji i wysuwanym panelu (src/hooks/use-mobile.tsx — to samo zapytanie).
+    plugin(({ addVariant }) => addVariant("desk", "@media (min-width: 768px) and (min-height: 501px), (min-width: 768px) and (pointer: fine)")),
   ],
 } satisfies Config;

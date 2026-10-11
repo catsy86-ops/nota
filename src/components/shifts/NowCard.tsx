@@ -55,7 +55,7 @@ export function NowCard({ data }: { data: ShiftData }) {
           {current && <span aria-hidden className="now-dot w-1.5 h-1.5 rounded-full" style={{ backgroundColor: main.type.color }} />}
           {current ? "Teraz w pracy" : "Następna zmiana"}
         </p>
-        <p className="font-display font-bold truncate">
+        <p className="font-display font-bold line-clamp-2 [overflow-wrap:anywhere]">
           {main.type.name}{" "}
           <span className="font-normal text-muted-foreground tabular-nums">
             {current ? `do ${format(current.end, "HH:mm")}` : when(main)}

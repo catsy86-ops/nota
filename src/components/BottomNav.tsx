@@ -80,7 +80,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={spring.soft}
-        className="fixed bottom-0 inset-x-0 z-40 md:hidden glass-strong border-t border-border/60 pb-[env(safe-area-inset-bottom)] shadow-elevation-up"
+        className="fixed bottom-0 inset-x-0 z-40 desk:hidden glass-strong border-t border-border/60 pb-[env(safe-area-inset-bottom)] shadow-elevation-up"
       >
         <LayoutGroup id="bottom-nav">
           <ul className="relative grid grid-cols-5 items-end h-[64px] max-w-md mx-auto px-2">
@@ -136,7 +136,6 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
 
       <Sheet open={quickOpen} onOpenChange={setQuickOpen}>
         <SheetContent side="bottom" className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
-          <div aria-hidden className="mx-auto -mt-2 mb-3 h-1.5 w-10 rounded-full bg-muted-foreground/25" />
           <SheetHeader className="text-left">
             <SheetTitle className="font-display">Nowa</SheetTitle>
           </SheetHeader>
@@ -152,7 +151,6 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
 
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
         <SheetContent side="bottom" className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
-          <div aria-hidden className="mx-auto -mt-2 mb-3 h-1.5 w-10 rounded-full bg-muted-foreground/25" />
           <SheetHeader className="text-left">
             <SheetTitle className="font-display">Więcej</SheetTitle>
           </SheetHeader>
