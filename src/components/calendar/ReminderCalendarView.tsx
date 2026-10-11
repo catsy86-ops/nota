@@ -14,7 +14,8 @@ import { pl } from "date-fns/locale";
 import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences";
 import { nextInSeries, seriesDay } from "@/lib/reminderRepeat";
 import { toast } from "sonner";
-import { dayType, useShifts } from "@/lib/shifts";
+import { dayType, setDayEntry, useShifts } from "@/lib/shifts";
+import { DayDialog } from "@/components/shifts/DayDialog";
 import { MonthGrid } from "./MonthGrid";
 import { markMoved } from "./movedSignal";
 import { DayPanel } from "./DayPanel";
@@ -83,6 +84,21 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
       return base ? dayType(base, entry) : undefined;
     };
   }, [shifts]);
+
+  // Okno dnia z Grafiku otwierane z kalendarza: ręczna zmiana rodzaju zmiany i godzin bez przechodzenia do Grafiku.
+  const [shiftDay, setShiftDay] = useState<string | null>(null);
+  const prevShiftEntry = (key: string) => {
+    const [y, m, d] = key.split("-").map(Number);
+    return shifts.days[dayKey(addDays(new Date(y, m - 1, d), -1))];
+  };
+  /** „Jak poprzedni dzień”: ten sam rodzaj i godziny, bez notatki i znaczników premii (te dotyczą konkretnego dnia). */
+  const copyPrevShift = (key: string) => {
+    const prev = prevShiftEntry(key);
+    if (!prev || shifts.days[key]) return;
+    const { type, hours, customHours, extraMin } = prev;
+    setDayEntry(key, { type, ...(hours ? { hours } : {}), ...(customHours ? { customHours } : {}), ...(extraMin ? { extraMin } : {}) });
+    toastWithUndo("Wpisano zmianę z poprzedniego dnia", () => setDayEntry(key, null), { icon: "🗓️" });
+  };
 
   const shiftMonth = (delta: number) =>
     setMonth((m) => new Date(m.getFullYear(), m.getMonth() + delta, 1));
@@ -271,7 +287,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
       </header>
       {showKeys && (
         <p id="calendar-keys-hint" className="-mt-2 px-1 text-xs text-muted-foreground">
-          Strzałki — przechodzenie po dniach · PgUp / PgDn — miesiąc · Enter — dodaj termin · Shift+←/→ — przesuń wybrany termin o dzień (albo przeciągnij go myszą).
+          Strzałki — przechodzenie po dniach · PgUp / PgDn — miesiąc · Enter — dodaj termin · Z — zmiana i godziny z Grafiku · Shift+←/→ — przesuń wybrany termin o dzień (albo przeciągnij go myszą).
         </p>
       )}
 
@@ -304,6 +320,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
         selectedDay={selectedDay}
         onSelectDay={setSelectedDay}
         onActivateDay={openAdd}
+        onEditShift={shifts.types.length > 0 ? (day) => setShiftDay(dayKey(day)) : undefined}
         onMonthChange={setMonth}
       />
       </DndContext>
@@ -313,11 +330,21 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
         occurrences={selectedOccurrences}
         titleOf={titleOf}
         shift={shiftOf(dayKey(selectedDay))}
+        onEditShift={shifts.types.length > 0 ? () => setShiftDay(dayKey(selectedDay)) : undefined}
+        onCopyPrevShift={shifts.types.length > 0 && !shifts.days[dayKey(selectedDay)] && prevShiftEntry(dayKey(selectedDay))
+          ? () => copyPrevShift(dayKey(selectedDay)) : undefined}
         onAdd={() => openAdd(selectedDay)}
         onEdit={openEdit}
         onExport={exportOne}
         onMoveByDays={(occ, days) => moveToDay(occ, addDays(new Date(occ.at), days))}
         onOpenSeriesSource={openSeriesSource}
+      />
+
+      <DayDialog
+        dayKey={shiftDay}
+        entry={shiftDay ? shifts.days[shiftDay] : undefined}
+        types={shifts.types}
+        onOpenChange={(open) => { if (!open) setShiftDay(null); }}
       />
 
       {dialogDay && (

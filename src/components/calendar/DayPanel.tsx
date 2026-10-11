@@ -1,6 +1,6 @@
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { CalendarPlus, Plus, Pencil, ArrowRight, Download } from "lucide-react";
+import { CalendarPlus, Plus, Pencil, ArrowRight, Download, Clock, Copy } from "lucide-react";
 import { ReminderChip } from "./ReminderChip";
 import type { Occurrence } from "@/lib/reminderOccurrences";
 import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
@@ -30,9 +30,13 @@ interface DayPanelProps {
   onExport: (occurrence: Occurrence) => void;
   /** Klik w prognozę serii — prowadzi do najbliższego, zapisanego terminu. */
   onOpenSeriesSource: (occurrence: Occurrence) => void;
+  /** Otwiera okno dnia z Grafiku (rodzaj zmiany i godziny wpisane ręcznie). Brak = tylko podgląd. */
+  onEditShift?: () => void;
+  /** Wpisuje zmianę z poprzedniego dnia; podane tylko, gdy dzień jest pusty, a poprzedni ma zmianę. */
+  onCopyPrevShift?: () => void;
 }
 
-export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMoveByDays, onExport, onOpenSeriesSource }: DayPanelProps) {
+export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMoveByDays, onExport, onOpenSeriesSource, onEditShift, onCopyPrevShift }: DayPanelProps) {
   return (
     <section aria-label="Terminy wybranego dnia" className="rounded-2xl border border-border/50 bg-card p-4">
       <div className="flex items-center gap-2 mb-3">
@@ -60,7 +64,43 @@ export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMo
             {shift.short}
           </span>
           <span><span className="sr-only">Zmiana w Grafiku: </span>{shiftLabel(shift)}</span>
+          {onEditShift && (
+            <button
+              type="button"
+              onClick={onEditShift}
+              aria-keyshortcuts="Z"
+              title="Zmień rodzaj zmiany i godziny tego dnia (Z)"
+              className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Clock className="w-3.5 h-3.5" aria-hidden />
+              Zmień godziny
+            </button>
+          )}
         </p>
+      )}
+      {!shift && onEditShift && (
+        <div className="flex flex-wrap items-center gap-1 mb-3 -mx-2">
+          <button
+            type="button"
+            onClick={onEditShift}
+            aria-keyshortcuts="Z"
+            title="Wpisz zmianę z Grafiku w tym dniu (Z)"
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Clock className="w-3.5 h-3.5" aria-hidden />
+            Dodaj zmianę
+          </button>
+          {onCopyPrevShift && (
+            <button
+              type="button"
+              onClick={onCopyPrevShift}
+              className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Copy className="w-3.5 h-3.5" aria-hidden />
+              Jak poprzedni dzień
+            </button>
+          )}
+        </div>
       )}
 
       {occurrences.length === 0 ? (

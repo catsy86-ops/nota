@@ -34,6 +34,8 @@ interface MonthGridProps {
   titleOf: (noteId: string) => string;
   /** Zmiana z Grafiku w dniu (klucz `yyyy-MM-dd`). */
   shiftOf?: (key: string) => ShiftType | undefined;
+  /** Klawisz Z na dniu: edycja zmiany z Grafiku. */
+  onEditShift?: (day: Date) => void;
   selectedDay: Date;
   onSelectDay: (day: Date) => void;
   /** Enter/Spacja na dniu — klawiaturowy odpowiednik „dodaj termin”. */
@@ -42,7 +44,7 @@ interface MonthGridProps {
   onMonthChange: (month: Date) => void;
 }
 
-export function MonthGrid({ month, byDay, titleOf, shiftOf, selectedDay, onSelectDay, onActivateDay, onMonthChange }: MonthGridProps) {
+export function MonthGrid({ month, byDay, titleOf, shiftOf, selectedDay, onSelectDay, onActivateDay, onEditShift, onMonthChange }: MonthGridProps) {
   const cellRefs = useRef(new Map<string, HTMLDivElement>());
   // Fokus przenosimy dopiero po tym, jak użytkownik ruszył klawiaturą —
   // inaczej samo wejście w widok przeskakiwałoby stronę do siatki.
@@ -84,6 +86,12 @@ export function MonthGrid({ month, byDay, titleOf, shiftOf, selectedDay, onSelec
       case "Enter":
       case " ":
         onActivateDay(selectedDay);
+        break;
+      case "z":
+      case "Z":
+        // Skrót „zmiana”: godziny i rodzaj zmiany wybranego dnia (bez modyfikatorów, by nie zabierać Ctrl+Z).
+        if (!onEditShift || e.ctrlKey || e.metaKey || e.altKey) return;
+        onEditShift(selectedDay);
         break;
       default: return;
     }

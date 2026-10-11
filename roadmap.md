@@ -679,7 +679,7 @@ Plan wdrożenia po kolei (każdy krok osobno, z testami i commitem):
 
 - [x] **1. Menu „/” w edytorze** — `lib/slashMenu.ts`, `hooks/useSlashMenu.tsx`, podpięte w `NoteCard.tsx` i `AddNoteBar.tsx`; e2e `e2e/slash-menu.spec.ts`. Callout, blok zwijany i tabela dodane w pakiecie 1 + 2 (niżej).
 - [x] **2. Ikony, okładki, ulubione** — zrobione: `lib/noteLook.ts`, `components/NoteLookPicker.tsx`, sekcja „Ulubione” w `AppSidebar.tsx`, e2e `e2e/note-look.spec.ts`. Okładka to gotowy wzór (nie obraz), więc nie dotyka sync plików ani skarbca. Eksport Markdown/ZIP jeszcze nie zapisuje ikony we frontmatterze. Plan: pola opcjonalne `icon`, `cover`, `favorite` w `Note`: `hooks/useNotes.ts`, `lib/noteSchema.ts`, `NOTE_SCALAR_FIELDS` + `yNoteFromPlain` + `plainFromYNote` w `lib/yjsStore.ts` (okładka do `PRIVATE_FIELDS`); sekcja „Ulubione” w `AppSidebar.tsx` (`SidebarRow`).
-- [ ] **3. Widok tablicy i tabeli** — `board`/`table` w `Layout` (`lib/viewPrefs.ts`), kolumny z `groupNotes` (`lib/groupNotes.ts`), przeciąganie w `hooks/useNoteDnd.ts`, przełącznik w `ViewControls.tsx`.
+- [x] **3. Widok tablicy i tabeli** (2026-10-11: `lib/boardColumns.ts`, `BoardColumn.tsx`, `NoteTable.tsx`, e2e `board-table.spec.ts`; tablica = kolumny wg podziału, domyślnie etykiet, przeciągnięcie zmienia etykietę/folder/przypięcie z „Cofnij”; tabela z sortowaniem po nagłówkach, bez paska zbiorczego) — — `board`/`table` w `Layout` (`lib/viewPrefs.ts`), kolumny z `groupNotes` (`lib/groupNotes.ts`), przeciąganie w `hooks/useNoteDnd.ts`, przełącznik w `ViewControls.tsx`.
 - [ ] **4. Podstrony i właściwości** — `parentId` (ochrona przed cyklami, osieroceni rodzice na root, kaskada kosza, okruszki), właściwości jako `Y.Map` na klucz, schemat właściwości w `FullBackup`.
 
 ### Pakiet 1 + 2 — tabele, callouty, bloki zwijane (zrobione 2026-10-11)
@@ -701,3 +701,7 @@ Plan wdrożenia po kolei (każdy krok osobno, z testami i commitem):
 ### Wskaznik zapisu i ochrona przed utrata zmian (2026-10-11)
 
 Zrobione: `lib/saveStatus.ts` (zapis do IndexedDB: Zapisywanie… / Zapisano / lepki błąd „Nie zapisano”), `hooks/useDraftAutosave.ts` (szkic zatwierdzany przy `pagehide`/ukryciu karty, licznik niezatwierdzonych szkiców), `OfflineStatus.tsx` (pastylka statusu + `beforeunload`). Testy: `saveStatus.test.ts`. Do zrobienia: fragment notatki → zadanie; widok tablicy/tabeli (#3).
+
+### Kalendarz + Grafik: godziny dnia i QoL (2026-10-11)
+
+- [x] Panel dnia w Kalendarzu: „Zmień godziny” / „Dodaj zmianę” otwiera okno dnia z Grafiku (rodzaj zmiany, godziny ręcznie, −/+15 min); klawisz **Z** na siatce robi to samo; „Jak poprzedni dzień” wpisuje zmianę z poprzedniego dnia z „Cofnij”. e2e `calendar-shift-edit.spec.ts`.
