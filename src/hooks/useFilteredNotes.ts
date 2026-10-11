@@ -110,7 +110,9 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
     const displayNotes = agenda
       ? [...filteredByPrefs].sort((a, b) => (a.reminder ?? 0) - (b.reminder ?? 0))
       : sortNotes(filteredByPrefs, prefs, opened);
-    const flat = view === "trash" || agenda;
+    // Archiwum też bez „Przypiętych”: archiwizacja odpina, ale stara kopia/import może mieć oba pola —
+    // bez tego taka notatka znikałaby z widoku (sekcji przypiętych archiwum nie pokazuje).
+    const flat = view === "trash" || view === "archive" || agenda;
     const pinned = flat ? [] : displayNotes.filter((n) => n.pinned);
     const others = flat ? displayNotes : displayNotes.filter((n) => !n.pinned);
 

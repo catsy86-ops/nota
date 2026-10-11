@@ -20,7 +20,6 @@ import { useLatestRef, useStableByKey } from "@/hooks/useLatestRef";
 import { useGridNavPreviewId, getGridNavFocusedId, setGridNavPreview, setGridNavFocus } from "@/lib/gridKeyboardNav";
 import { copyNoteToClipboard } from "@/lib/noteMarkdown";
 import { NoteReader, type ReaderMode } from "@/components/NoteReader";
-import { cn } from "@/lib/utils";
 import { playEnter, tween } from "@/lib/motion";
 import { useNavigate, useNavigationType } from "react-router-dom";
 import { claimShare, parseShare, SHARE_PATH } from "@/lib/shareTarget";
@@ -851,35 +850,21 @@ const Index = () => {
           )}
 
           {view === "reminders" && groupReminders(others).map((group, i) => (
-            <section key={group.key} aria-label={group.label}>
-              <p className={cn(
-                "text-xs font-semibold uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5",
-                group.key === "overdue" ? "text-destructive" : "text-muted-foreground",
-              )}>
-                {group.label}
-                <span className="bg-muted text-foreground/80 text-2xs px-1.5 rounded-full">{group.notes.length}</span>
-              </p>
+            <NoteGroupSection key={group.key} groupKey={`reminders-${group.key}`} label={group.label} count={group.notes.length} tone={group.key === "overdue" ? "alert" : "default"}>
               <NoteGrid navOrder={i} notes={group.notes} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} onPresent={setPresentingNoteId} knownTitles={knownTitles} onWikiClick={handleWikiClick} wikiIndex={wikiIndex} onOpenNote={openNote} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
-            </section>
+            </NoteGroupSection>
           ))}
 
           {view !== "reminders" && !boardMode && !tableMode && groups.map((group, gi) => {
             const grid = (navOrder: number) => renderGrid(group.notes, navOrder);
             // Bez podziału: jedna sekcja jak dotąd („Inne” tylko pod przypiętymi).
             if (groupBy === "none") {
-              return (
-                <section key="others">
-                  {showPinned && (
-                    <motion.p
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-1"
-                    >
-                      Inne
-                    </motion.p>
-                  )}
+              return showPinned ? (
+                <NoteGroupSection key="others" groupKey="others" label="Inne" count={group.notes.length}>
                   {grid(1)}
-                </section>
+                </NoteGroupSection>
+              ) : (
+                <section key="others">{grid(1)}</section>
               );
             }
             // Kolejność sekcji = kolejność nawigacji klawiaturą; zwinięta nie renderuje siatki, więc jest pomijana.

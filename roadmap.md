@@ -867,12 +867,12 @@ Zasada jak w działach: najpierw **audyt na żywo** (telefon 360/390/430 i deskt
     - D4 ~50 px pustego miejsca między banerem instalacji a „Przypięte”. ✅ pusty pojemnik zwiniętego paska „Zapisz notatkę” schowany pod `md`
   - **Poza zakresem (znalezione przy okazji)**: notatki w `kaczy-notes-data` bez pola `checklist` wywracają migrację (`yjsStore.ts` `yChecklistFromPlain` → `forEach` na `undefined`) — pusta aplikacja. Dotyczy starych kopii/importów. ✅ osłona `items ?? []` + test w `yjsStore.test.ts`.
 - [x] 2b.2 Popover „Widok i kolumny”: niewyrównany, siatka „Auto 1 2 3 4” nieczytelna i z małymi celami; na telefonie 3–4 kolumny nie mają sensu → arkusz od dołu z opisanymi opcjami (układ, kolumny, gęstość, grupowanie). ✅ 2026-10-11: na telefonie (`useIsMobile`) przycisk otwiera `ViewSheet` — układ z jednozdaniowym opisem, kolumny Auto/1/2 tylko w Mozaice i Siatce, gęstość i grupowanie jako przełączniki segmentowe 44 px, „wstecz” zamyka arkusz; desktop bez zmian (popover). Gęstość nadal zmienia tylko odstępy (8/10/20 px) — mocniejszy „Kompakt” to osobna decyzja.
-- [ ] 2b.3 Kolumny na telefonie: zawsze 2 przy „Auto”; sprawdzić 1 kolumnę (pełna szerokość kafla) i szerokie kafle (`wide`) w 2 kolumnach.
-- [ ] 2b.4 Lista: kafle prawie się stykają (~4 px) — spójny odstęp z siatką i gęstością.
+- [x] 2b.3 Kolumny na telefonie: zawsze 2 przy „Auto”; sprawdzić 1 kolumnę (pełna szerokość kafla) i szerokie kafle (`wide`) w 2 kolumnach.
+- [x] 2b.4 Lista: kafle prawie się stykają (~4 px) — spójny odstęp z siatką i gęstością.
 - [ ] 2b.5 Tablica (kolumny etykiet/folderów): szerokość kolumn na telefonie, przewijanie poziome z przyciąganiem (scroll-snap), nagłówki kolumn przyklejone, przenoszenie kafla między kolumnami dotykiem.
-- [ ] 2b.6 Tabela: czy się otwiera i czy jest czytelna na telefonie (audyt nie zdołał jej otworzyć), przewijanie poziome z przyklejoną pierwszą kolumną.
-- [ ] 2b.7 Hierarchia kafla: tytuł vs treść vs metadane (rozmiary 11 px → 12 px tam, gdzie się mieści), zakładka koloru, długie tytuły i kółko zaznaczenia.
-- [ ] 2b.8 Grupy (Przypięte / Inne / etykiety): nagłówki, zwijanie, puste sekcje; „Inne” mieszane z przypiętymi w Dziś.
+- [x] 2b.6 Tabela: czy się otwiera i czy jest czytelna na telefonie (audyt nie zdołał jej otworzyć), przewijanie poziome z przyklejoną pierwszą kolumną.
+- [x] 2b.7 Hierarchia kafla: tytuł vs treść vs metadane (rozmiary 11 px → 12 px tam, gdzie się mieści), zakładka koloru, długie tytuły i kółko zaznaczenia.
+- [x] 2b.8 Grupy (Przypięte / Inne / etykiety): nagłówki, zwijanie, puste sekcje; „Inne” mieszane z przypiętymi w Dziś. ✅ 2026-10-11: jeden wygląd nagłówka sekcji (`NoteGroupSection` — wersaliki, licznik, kreska) także dla „Inne” i grup agendy Przypomnień (Zaległe na czerwono); puste grupy były już pomijane; Archiwum bez podziału na przypięte (przypięta zarchiwizowana notatka ze starej kopii znikała z widoku). W „Dziś” przypięte z dzisiejszą zmianą są w „Przypięte”, reszta w „Inne” — tak samo jak w Notatkach.
 - [ ] 2b.9 Zmiana układu i kolumn bez skoku (płynne przejście, zachowane przewinięcie i fokus).
 
 ### Faza 3 — wydajność przy 300 notatkach (M/L; razem, bo dotyka `NoteCard`/`NoteGrid`)

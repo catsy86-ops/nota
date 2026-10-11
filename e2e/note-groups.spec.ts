@@ -88,6 +88,8 @@ test("Przypięte: do trzech notatek bez zwijania", async ({ page }) => {
   await seed(page, [pinnedNote(1), pinnedNote(2), pinnedNote(3), note("o1", "Zwykła", NOW - 99999)]);
   await expect(page.locator('[data-group="pinned"]')).toBeVisible();
   await expect(page.locator('[data-group-toggle="pinned"]')).toHaveCount(0);
+  // „Inne” ma ten sam nagłówek co pozostałe sekcje: z licznikiem.
+  await expect(page.locator('[data-group="others"]')).toContainText(/Inne\s*1/);
 });
 
 test("Przypięte: powyżej trzech zwijane, z licznikiem i pamiętanym stanem", async ({ page }) => {

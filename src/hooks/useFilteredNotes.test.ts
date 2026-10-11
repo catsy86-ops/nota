@@ -120,6 +120,16 @@ describe("useFilteredNotes", () => {
     expect(displayNotes.map((n) => n.id)).toEqual(["t1"]);
   });
 
+  it("keeps a pinned archived note in 'others' (archive shows no pinned section)", () => {
+    const archivedNotes = [makeNote({ id: "a1", pinned: true, archived: true })];
+    const { result } = renderHook(() => useFilteredNotes({
+      notes: [], archivedNotes, trashedNotes: [], folders, view: "archive",
+      activeLabel: null, activeFolder: null, search: "", prefs: basePrefs,
+    }));
+    expect(result.current.pinned).toEqual([]);
+    expect(result.current.others.map((n) => n.id)).toEqual(["a1"]);
+  });
+
   it("applies the color filter pref outside of trash view", () => {
     const notes = [makeNote({ id: "coral", color: "coral" }), makeNote({ id: "sky", color: "sky" })];
     const { result } = renderHook(() => useFilteredNotes({
