@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, NotebookPen, Play, Trash2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Mic, NotebookPen, Play, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { toastWithUndo } from "@/lib/undoToast";
+import { useDictation } from "@/hooks/useDictation";
 import { CHECKLIST, MODULES, TOPICS } from "@/lib/study/content";
 import {
   addJournalEntry,
@@ -41,6 +42,11 @@ export function StudyJournal({ initialTopic = "", onPractice }: { initialTopic?:
   const [kind, setKind] = useState<JournalKind>("ok");
   const [text, setText] = useState("");
   const [checked, setChecked] = useState<Set<string>>(new Set());
+  // Ręce zajęte robotą: dyktowanie dopisuje rozpoznane zdanie na końcu wpisu.
+  const dictation = useDictation((spoken) => {
+    if (!spoken) return;
+    setText((t) => (t && !/\s$/.test(t) ? `${t} ${spoken}` : `${t}${spoken}`));
+  });
 
   const items = useMemo(() => CHECKLIST.filter((c) => c.topic === topic), [topic]);
   const current = TOPICS.find((t) => t.id === topic) ?? null;
@@ -167,14 +173,34 @@ export function StudyJournal({ initialTopic = "", onPractice }: { initialTopic?:
 
         <label className="block space-y-1 text-xs text-muted-foreground">
           Co się dzieje?
-          <textarea
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); } }}
-            rows={3}
-            placeholder={kind === "problem" ? "Co poszło nie tak i co z tym zrobisz?" : "Krótko: gdzie, co zrobione, co zauważyłeś"}
-            className="w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
-          />
+          <span className="relative block">
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); } }}
+              rows={3}
+              placeholder={kind === "problem" ? "Co poszło nie tak i co z tym zrobisz?" : "Krótko: gdzie, co zrobione, co zauważyłeś"}
+              className={cn(
+                "w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-none focus:ring-2 focus:ring-ring",
+                dictation.supported && "pr-12",
+              )}
+            />
+            {dictation.supported && (
+              <button
+                type="button"
+                onClick={dictation.toggle}
+                aria-pressed={dictation.listening}
+                aria-label={dictation.listening ? "Zakończ dyktowanie" : "Dyktuj"}
+                title={dictation.listening ? "Zakończ dyktowanie" : "Dyktuj wpis"}
+                className={cn(
+                  "absolute right-1.5 top-1.5 grid h-9 w-9 place-items-center rounded-full transition-colors coarse:h-11 coarse:w-11",
+                  dictation.listening ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Mic className={cn("h-4 w-4", dictation.listening && "animate-pulse")} />
+              </button>
+            )}
+          </span>
         </label>
 
         <div className="flex items-center justify-between gap-3">

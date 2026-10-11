@@ -142,3 +142,30 @@ test("dziennik: usunięcie wpisu ma Cofnij", async ({ page }) => {
   await page.getByRole("listitem").filter({ hasText: "Usunięto wpis" }).getByRole("button", { name: "Cofnij" }).click();
   await expect(page.locator("[data-journal-entry]")).toHaveCount(1);
 });
+
+test("dziennik: dyktowanie dopisuje rozpoznany tekst do wpisu", async ({ page }) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("kaczy.dictation.consent", "1");
+    class FakeRecognition {
+      lang = ""; continuous = false; interimResults = false;
+      onresult: ((e: unknown) => void) | null = null;
+      onerror: ((e: unknown) => void) | null = null;
+      onend: (() => void) | null = null;
+      start() {
+        setTimeout(() => this.onresult?.({ resultIndex: 0, results: [{ isFinal: true, 0: { transcript: "trójniki rozsunięte trzydzieści centymetrów" } }] }), 30);
+      }
+      stop() { this.onend?.(); }
+      abort() { this.onend?.(); }
+    }
+    (window as unknown as { SpeechRecognition: unknown }).SpeechRecognition = FakeRecognition;
+  });
+  await page.goto("/nauka");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+
+  await page.getByRole("button", { name: "Dyktuj" }).click();
+  await expect(page.getByLabel("Co się dzieje?")).toHaveValue("trójniki rozsunięte trzydzieści centymetrów");
+  await page.getByRole("button", { name: "Zakończ dyktowanie" }).click();
+
+  await page.getByRole("button", { name: "Dodaj wpis" }).click();
+  await expect(page.locator("[data-journal-entry]")).toContainText("trzydzieści centymetrów");
+});
