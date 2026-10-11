@@ -51,3 +51,26 @@ test.describe("telefon", () => {
     await expect(page.getByRole("dialog")).toBeVisible();
   });
 });
+
+test("kilka zaległych naraz: jeden zbiorczy dymek z „Zobacz” prowadzi do Przypomnień", async ({ page }) => {
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem("seeded")) return;
+    sessionStorage.setItem("seeded", "1");
+    localStorage.setItem("kaczy.tour.seen.v1", "1");
+    const now = Date.now();
+    const base = { content: "", color: "default", pinned: false, archived: false, trashed: false, trashedAt: null, labels: [], priority: "none", images: [], checklist: [], folderId: null, order: 0, createdAt: now, updatedAt: now };
+    localStorage.setItem("kaczy-notes-data", JSON.stringify([
+      { ...base, id: "a", title: "Rachunek za wodę", reminder: now - 3600_000 },
+      { ...base, id: "b", title: "Przegląd auta", reminder: now - 7200_000 },
+      { ...base, id: "c", title: "Kupić filtry", reminder: now - 60_000 },
+    ]));
+  });
+  await page.goto("/");
+  const toast = page.locator("[data-sonner-toast]").filter({ hasText: "3 przypomnienia czekają" });
+  await expect(toast).toBeVisible();
+  await expect(toast).toContainText("Rachunek za wodę");
+  // Bez osobnych dymków dla każdej notatki.
+  await expect(page.locator("[data-sonner-toast]").filter({ hasText: "Odłóż" })).toHaveCount(0);
+  await toast.getByRole("button", { name: "Zobacz" }).click();
+  await expect(page).toHaveURL(/\/przypomnienia/);
+});

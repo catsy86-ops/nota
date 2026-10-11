@@ -159,7 +159,7 @@ const Index = () => {
     if (state.count >= 3) {
       state.count = 0;
       fireworks();
-      toast.success("🍺 Na zdrowie! Niespodzianka!");
+      toast.success("🎉 Niespodzianka!");
     }
   }
 
@@ -177,6 +177,7 @@ const Index = () => {
     (id) => openNoteRef.current(id),
     (id) => updateNote(id, { reminderRepeat: "none", reminderRepeatUntil: undefined }),
     trashedNotes,
+    () => go("reminders"),
   );
 
   // Odznaki w głównym widoku: jeden cichy toast na paczkę (import potrafi odblokować
@@ -242,7 +243,7 @@ const Index = () => {
     onGoToday: () => go("today"),
     onGoWeek: () => go("week"),
     onGoView: (v) => go(v),
-    onEasterEgg: () => { megaCelebrate(); toast.success("🍺 KONAMI! Pełen pokaz mocy!"); },
+    onEasterEgg: () => { megaCelebrate(); toast.success("🎮 KONAMI! Pełen pokaz mocy!"); },
     hasSelection: () => selectedIds.size > 0,
     onEscapeSelection: clearSelection,
     onUndo: () => {
@@ -253,7 +254,7 @@ const Index = () => {
           icon: "↩️",
         });
       } else {
-        toast("Nie ma czego cofać", { icon: "🍺" });
+        toast("Nie ma czego cofać", { icon: "↩️" });
       }
     },
     onCloseSidebar: () => setSidebarOpen(false),

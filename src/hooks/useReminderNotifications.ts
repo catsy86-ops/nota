@@ -18,7 +18,11 @@ export function useReminderNotifications(
   onSeriesEnded?: (id: string) => void,
   /** Notatki z kosza: nie odpalają, ale ich wpis „już odpalone” ma przetrwać do przywrócenia. */
   trashed: Note[] = [],
+  /** Kilka terminów naraz (np. po otwarciu aplikacji): jeden zbiorczy dymek z „Zobacz” zamiast stosu. */
+  onShowAll?: () => void,
 ) {
+  const showAllRef = useRef(onShowAll);
+  showAllRef.current = onShowAll;
   const firedRef = useRef(loadFired());
   const onOpenRef = useRef(onOpen);
   onOpenRef.current = onOpen;
@@ -64,9 +68,24 @@ export function useReminderNotifications(
         saveFired(next);
       }
       const fired = firedRef.current;
+      const due = notes.filter((n) => n.reminder && n.reminder <= now && !fired.has(n.id));
+      const mobile = window.matchMedia("(max-width: 767px)").matches;
+      // Stos kilku dymków u góry zasłaniał nagłówek i treść na każdej trasie — przy ≥ 2 jeden dymek.
+      const grouped = due.length >= 2;
+      if (grouped) {
+        const names = due.slice(0, 3).map((n) => (n.locked ? "Notatka prywatna" : n.title.trim() || "Bez tytułu"));
+        const rest = due.length - names.length;
+        toast(`${due.length} przypomnienia czekają`, {
+          id: "reminders-due",
+          description: names.join(" · ") + (rest > 0 ? ` i ${rest} więcej` : ""),
+          duration: 30000,
+          action: showAllRef.current ? { label: "Zobacz", onClick: () => showAllRef.current?.() } : undefined,
+          position: mobile ? "top-center" : undefined,
+        });
+      }
 
-      for (const note of notes) {
-        if (note.reminder && note.reminder <= now && !fired.has(note.id)) {
+      for (const note of due) {
+        if (note.reminder) {
           const repeat = note.reminderRepeat ?? "none";
           // One-shot reminders are marked fired forever; repeating ones are
           // rescheduled below, so the same id can fire again next cycle.
@@ -78,7 +97,7 @@ export function useReminderNotifications(
           const times = snoozeTimes(now);
           const when = formatReminderShort(note.reminder);
           const onDone = () => firedCbRef.current(note.id, null);
-          toast.custom((id) => createElement(ReminderDueToast, {
+          if (!grouped) toast.custom((id) => createElement(ReminderDueToast, {
             toastId: id,
             // Notatka prywatna: ani tytułu, ani treści w dymku (projekcja jest pusta, a tu jawnie nazywamy powód).
             title: note.locked ? "Przypomnienie z notatki prywatnej" : note.title || "Przypomnienie",
@@ -95,7 +114,7 @@ export function useReminderNotifications(
             duration: 30000,
             // Telefon: u góry, jak powiadomienia systemu — na dole zasłaniało
             // „Zapisz” w edytorze, dolną nawigację i bywało pod klawiaturą.
-            position: window.matchMedia("(max-width: 767px)").matches ? "top-center" : undefined,
+            position: mobile ? "top-center" : undefined,
           });
 
           // Przyciski w powiadomieniu działają przez SW → wiadomość do otwartej karty (niżej).

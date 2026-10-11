@@ -24,7 +24,7 @@ export interface AchievementStats {
 }
 
 export const ACHIEVEMENTS: Achievement[] = [
-  { id: "first-note", emoji: "🐣", title: "Pierwszy krok", description: "Stwórz pierwszą notatkę", progress: (s) => Math.min(1, s.totalNotes / 1) },
+  { id: "first-note", emoji: "🌱", title: "Pierwszy krok", description: "Stwórz pierwszą notatkę", progress: (s) => Math.min(1, s.totalNotes / 1) },
   { id: "first-list", emoji: "🧾", title: "Pierwsza odhaczona", description: "Ukończ pierwszą listę zadań", progress: (s) => Math.min(1, s.checklistsCompleted / 1) },
   { id: "ten-notes", emoji: "📚", title: "Mała biblioteka", description: "10 notatek w kolekcji", progress: (s) => Math.min(1, s.totalNotes / 10) },
   { id: "fifty-notes", emoji: "🏛️", title: "Architekt myśli", description: "50 notatek razem", progress: (s) => Math.min(1, s.totalNotes / 50) },
@@ -32,7 +32,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   { id: "labeler", emoji: "🏷️", title: "Porządkowicz", description: "Stwórz 5 etykiet", progress: (s) => Math.min(1, s.totalLabels / 5) },
   { id: "folder-fan", emoji: "📁", title: "Fan folderów", description: "Stwórz 3 foldery", progress: (s) => Math.min(1, s.totalFolders / 3) },
   { id: "checklist-hero", emoji: "✅", title: "Bohater list", description: "Ukończ 10 checklist", progress: (s) => Math.min(1, s.checklistsCompleted / 10) },
-  { id: "veteran", emoji: "🍺", title: "Stały bywalec", description: "Korzystaj 30 dni", progress: (s) => Math.min(1, s.oldestNoteAgeDays / 30) },
+  { id: "veteran", emoji: "🏅", title: "Stały bywalec", description: "Korzystaj 30 dni", progress: (s) => Math.min(1, s.oldestNoteAgeDays / 30) },
   { id: "week-streak", emoji: "🔥", title: "Tydzień w ogniu", description: "7 dni z rzędu aktywności", progress: (s) => Math.min(1, s.longestStreak / 7) },
 ];
 
