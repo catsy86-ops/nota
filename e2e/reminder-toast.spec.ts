@@ -74,3 +74,15 @@ test("kilka zaległych naraz: jeden zbiorczy dymek z „Zobacz” prowadzi do Pr
   await toast.getByRole("button", { name: "Zobacz" }).click();
   await expect(page).toHaveURL(/\/przypomnienia/);
 });
+
+test("zaległy termin: „Gotowe” na kaflu odhacza bez otwierania notatki, Cofnij przywraca", async ({ page }) => {
+  await seedReminder(page, "Zapłacić czynsz", -2 * 60 * 60 * 1000);
+  await page.goto("/przypomnienia");
+  const card = page.locator('[data-note-id="r1"]');
+  await expect(card.getByRole("button", { name: "Gotowe" })).toBeVisible();
+  await card.getByRole("button", { name: "Gotowe" }).click();
+  await expect(page.getByRole("dialog", { name: /Edycja notatki/ })).toHaveCount(0);
+  await expect(page.getByRole("region", { name: "Zaległe" })).toHaveCount(0);
+  await page.getByRole("listitem").filter({ hasText: "Przypomnienie odhaczone" }).getByRole("button", { name: "Cofnij" }).click();
+  await expect(page.getByRole("region", { name: "Zaległe" })).toBeVisible();
+});

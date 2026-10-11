@@ -54,6 +54,8 @@ import { useSlashMenu } from "@/hooks/useSlashMenu";
 import { NoteLookPicker, NoteCoverStrip } from "./NoteLookPicker";
 import { backlinksOf } from "@/lib/wikiLinks";
 import { toast } from "sonner";
+import { toastWithUndo } from "@/lib/undoToast";
+import { snoozeTimes } from "@/lib/reminderAgenda";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 
 const NO_TITLES: string[] = [];
@@ -762,6 +764,35 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                 <PriorityBadge priority={note.priority ?? "none"} />
                 <AttachmentsBadge attachments={note.attachments} />
               </div>
+              {/* Zaległy termin: odhaczenie i odłożenie bez otwierania notatki (wcześniej tylko w dymku przypomnienia). */}
+              {onUpdate && note.reminder !== null && note.reminder <= Date.now() && !note.trashed && !isArchived && !note.locked && (
+                <div className="mt-2 flex flex-wrap items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const prev = note.reminder;
+                      haptic("success");
+                      onUpdate(note.id, { reminder: null });
+                      toastWithUndo("Przypomnienie odhaczone", () => onUpdate(note.id, { reminder: prev }), { id: `rem-done-${note.id}` });
+                    }}
+                    className="pressable inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 coarse:py-2 text-2xs font-medium text-primary-ink hover:bg-primary/20"
+                  >
+                    <Check className="w-3 h-3" aria-hidden /> Gotowe
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const prev = note.reminder;
+                      haptic("tap");
+                      onUpdate(note.id, { reminder: snoozeTimes().tomorrow9 });
+                      toastWithUndo("Przesunięto na jutro, 9:00", () => onUpdate(note.id, { reminder: prev }), { id: `rem-snooze-${note.id}` });
+                    }}
+                    className="pressable inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2.5 py-1 coarse:py-2 text-2xs font-medium text-muted-foreground hover:text-foreground"
+                  >
+                    Jutro rano
+                  </button>
+                </div>
+              )}
               {backlinks.length > 0 && (
                 <div className="mt-1.5 flex items-center gap-1 min-w-0 text-2xs text-muted-foreground" title="Linkują tu">
                   <Link2 className="w-3 h-3 shrink-0" aria-hidden />
