@@ -802,3 +802,68 @@ Zrobione: `lib/saveStatus.ts` (zapis do IndexedDB: Zapisywanie… / Zapisano / l
 - [x] Zakładka **Dziennik** w `/nauka`: wpis w trakcie pracy (Zrobione / Problem / Notatka) z inwestycją (zapamiętywana), tematem z materiału i jego **listą kontrolną pod ręką** (⚠ punkty krytyczne z ryzykiem; zaznaczone punkty zapisują się we wpisie). Wpisy pogrupowane dniami, z godziną, Cofnij przy usuwaniu, podsumowanie 7 dni.
 - Połączenie teorii z praktyką: **problem cofa temat z „Umiem” do „W trakcie”** (wraca do powtórki), karta tematu na tablicy pokazuje „budowa N×, problemów M”, z karty jest skrót „wpis z budowy”, a z wpisu — „Ćwicz pytania”. Dane w `kaczy.study.v1` (są w kopii zapasowej). `lib/study/store.ts` (`addJournalEntry`, `practiceByTopic`), `StudyJournal.tsx`; testy `study.test.ts`, e2e `study.spec.ts`.
 - Zostaje: zdjęcia we wpisach, dyktowanie, lokalizacja GPS, eksport dziennika do notatki/PDF, synchronizacja przez Yjs (razem z postępem Nauki).
+
+## Plan dopracowania UI/UX na telefonie — 2026-10-11
+
+Źródło: cztery audyty **na żywo** (Playwright, dotyk, 360/390/430 px, jasny/ciemny, CPU 4× + Slow 4G, 20 i 300 notatek): rdzeń notatek, widoki dodatkowe, interakcje i przepływy, wydajność i PWA. Skille użyte: frontend-design, refactoring-ui, design-critique, accessibility-review, web-typography, ios-hig-design, microinteractions, design-everyday-things, ux-heuristics, jobs-to-be-done. Nie zweryfikowano na prawdziwym telefonie: klawiatura ekranowa (K2), haptyka, wydajność urządzenia. Nakład: S < pół dnia, M ok. dnia, L kilka dni.
+
+**Praca, do której telefon jest „wynajmowany”:** złap myśl w 2 sekundy i miej pewność, że wróci. Priorytet: szybki zapis → odnalezienie → zaufanie (nic nie ginie, „wstecz” nie wyrzuca z aplikacji).
+
+### Faza 0 — zrobione (commity f70bd0c, 37ea24e)
+- [x] Pasek zbiorczy mieści się w ekranie (framer zjadał `translate`), przewija się, safe-area, krótkie podpisy.
+- [x] Swipe kafla (archiwum/kosz) bez okna potwierdzenia — zostaje „Cofnij” (`runWithoutConfirm`).
+- [x] Wyszukiwarka 16 px (iOS nie powiększa), `enterkeyhint`, bez autokorekty; `overscroll-behavior-y: contain`.
+- [x] Długi tytuł bez spacji zawija się; chipy Ctrl+K/N ukryte na dotyku; samouczek i baner instalacji pod telefon (baner 1 linia); dymek `HoverTip` nie wisi po dotyku.
+
+### Faza 1 — usterki i tarcie (S, po kolei)
+- [x] 1.1 Okno „Cykl zmian” w Grafiku: poziomy overflow (`min-w-0`, kolumna poniżej 400 px), CTA „Nałóż cykl” sticky na dole.
+- [x] 1.2 Dialog „Nowy termin” (Kalendarz): domyślnie najbliższa pełna godzina, błąd „w przeszłości” dopiero po ręcznej zmianie; lista „przypnij do notatki” bez archiwum.
+- [x] 1.3 Kosz: przycisk „Przywróć” obcięty, „Usunięcie za 27 dni” łamie się — układ zawijany.
+- [x] 1.4 Cele dotyku ≥44 px: przyciski nagłówka (36), kółko zaznaczenia kafla (24, hit-area `::after`, rezerwa w tytule), wiersze listy w kaflu (24 → ≥40), etykiety (28), „×” banera.
+- [x] 1.5 Uchwyt przeciągania kafla widoczny i trafialny na `pointer: coarse` (dziś `opacity: 0`, 37×10) — K3.
+- [x] 1.6 Ramka fokusu po stuknięciu (kafel po zamknięciu edytora, przycisk „Widok”) — `:focus-visible` tylko po klawiaturze.
+- [x] 1.7 Hierarchia w kaflu: `h1–h3` w treści nie większe niż tytuł; odstęp listy ~4 px → spójny `gap`.
+- [x] 1.8 Kompozytor: „Zapisz” po prawej w jednej linii z narzędziami (jeden rząd przewijany, nie 3 rzędy ~180 px); osierocona flaga priorytetu do rzędu metadanych.
+- [x] 1.9 Drobne: Ustawienia (tytuł vs podtytuł wyrównanie), „Dodaj…” w „Więcej” (osierocony kafel), jedna nazwa marki (NOTKI/Notatnik), niebieska kreska po „NOTKI” i czerwona linia drawera (sprawdzić artefakt), 11 px → 12 px (data kafla, podpisy nawigacji), `aria-label` wyszukiwarki + brak `DialogTitle` (ostrzeżenie Radix), wiersze `DayPanel` na 360. **Zrobione:** `aria-label` wyszukiwarki, nagłówek Ustawień. **Świadomie nie:** „Dodaj…” w „Więcej” (alternatywa dla przytrzymania „+”), 11 → 12 px globalnie (ryzyko przepełnień w nawigacji), jedna nazwa marki (decyzja), kreska po „NOTKI” i czerwona linia drawera (nie odtworzone — sprawdzić na zrzucie), gap listy (niezweryfikowane).
+- [x] 1.10 PWA/head: `theme-color` jasny/ciemny (`media`), `apple-mobile-web-app-status-bar-style`, manifest `orientation`/`display_override`, `background_color` zgodny z motywem, okresowe `registration.update()` na `visibilitychange`, rejestracja SW w idle.
+
+### Faza 2 — wzorce mobilne (M)
+- [ ] 2.1 **Przycisk „wstecz”** (K1): `useOverlayHistory(open, close)` — `pushState` przy otwarciu warstwy, `popstate` ją zamyka; podpiąć pod Sheet, Dialog, edytor kafla, czytnik, kompozytor. Dziś „wstecz” zmienia widok pod otwartą warstwą, a z pierwszego wpisu wychodzi z PWA.
+- [ ] 2.2 **Klawiatura ekranowa** (K2): `interactive-widget=resizes-content` + `useKeyboardInset` (visualViewport), pasek narzędzi/„Zapisz” nad klawiaturą. Wymaga testu na telefonie.
+- [ ] 2.3 **Arkusz akcji notatki** zamiast siatki ~18 ikon po „⋯” (W6): grupy Szybkie / Wygląd / Organizacja, podpisy, „Usuń” na dole; ta sama ścieżka dla długiego przytrzymania kafla, który wchodzi w zaznaczanie (W5) z haptyką.
+- [ ] 2.4 **Arkusze przeciągane w dół** (W2): drag-to-dismiss w `ui/sheet.tsx` (uchwyt dziś kłamie); okna Grafiku (nowy rodzaj, cykl) jako arkusze z sticky stopką, jak potwierdzenia.
+- [ ] 2.5 **Toasty zaległych przypomnień**: jeden zbiorczy „3 zaległe · Zobacz” zamiast stosu zasłaniającego nagłówek; nie nakładać z odznaką i banerem (kolejka).
+- [ ] 2.6 **Poziomo i tablet**: układ desktopowy wymaga `min-height: 500px` (844×390 dziś = pasek 280 px + okno 560×320); panel zwinięty domyślnie przy niskiej wysokości.
+- [ ] 2.7 **Wyszukiwanie w zasięgu kciuka** (W4): ikona szukania w dolnym pasku lub pull-down na liście; pole u góry zostaje na desktopie.
+- [ ] 2.8 **Grafik**: ~700 px „chrome” przed siatką — podpowiedzi zwijane po pierwszym użyciu, „Własne godziny” do menu pędzla, pasek pędzli sticky, `NowCard` bez ucinania nazwy.
+- [ ] 2.9 **Kalendarz**: pasek tygodnia i kafle Dziś/Jutro duplikują tydzień z siatki — zwinąć na wąskim ekranie.
+- [ ] 2.10 **Dziennik Nauki**: lista wpisów nad formularzem lub formularz w arkuszu z FAB „+ Wpis”, CTA pełnej szerokości, bez „Ctrl+Enter” na dotyku. (Uwaga: `StudyJournal.tsx` ma niezacommitowane zmiany użytkownika.)
+- [ ] 2.11 **Przypomnienia**: szybkie „Gotowe / Odłóż” na karcie listy (nie tylko w toaście); lista zaległych jako zwykła kolumna, nie masonry.
+- [ ] 2.12 **Pierwsze uruchomienie**: jedna karta „Dziś: 2 zaległe, 1 termin” zamiast stosu; baner instalacji dopiero po pierwszej notatce (jest `ready`).
+
+### Faza 3 — wydajność przy 300 notatkach (M/L; razem, bo dotyka `NoteCard`/`NoteGrid`)
+Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwarcie kafla 2,3–3 s, Kalendarz → Notatki 7–10 s, klawisz w wyszukiwarce 400–740 ms. Przy 20 notatkach OK (przewijanie 60 fps).
+- [ ] 3.1 `content-visibility: auto` + `contain-intrinsic-size` na opakowaniu kafla (S, najtańszy zysk); potem okienkowanie siatki (M/L) z zachowaniem kolejności dnd-kit.
+- [ ] 3.2 Powyżej progu (np. 40 kafli) zwykły `div` zamiast `motion.div` (`drag`, `layout`, `initial/animate`); swipe podpinany przy pierwszym dotknięciu. `NoteCard.tsx` ma CRLF + 2 bajty NUL — edytować bajtowo albo po teście charakteryzującym.
+- [ ] 3.3 Wyszukiwanie: `memo(NoteGrid)`, pasek jako izolowany komponent z debounce 150–200 ms, bez animacji wyjścia przy filtrowaniu.
+- [ ] 3.4 Start: pierwszy render ~12 kart, reszta w idle; nie blokować `images.load()`/migracji przed listą (`yjsStore.ts` ~440–455).
+- [ ] 3.5 Markdown: tekst prosty bez `lazy` dla treści bez składni; `useMasonrySpans.place()` z `borderBoxSize`; nie remontować siatki przy przełączaniu widoków.
+- [ ] 3.6 Paczka: `fuse.js` dynamicznie, `study/content.ts` poza głównym chunkiem, konfetti i samouczek leniwie, preload fontu Jakarta; precache SW 3,4 MB → ≤1,5 MB (PDF, html2canvas, Statystyki do `runtimeCaching`). Kompromis: PDF/Statystyki offline dopiero po pierwszym użyciu.
+- [ ] 3.7 Budżety w CI (`e2e/bundle.spec.ts`): wejściowy JS ≤200 KB gzip (dziś ~376), DOM ≤3 000 przy 300 notatkach, FAB/kafel/widok ≤200 ms, klawisz ≤50/100 ms, precache ≤1,5 MB.
+
+### Faza 4 — „premium” (po fazie 2)
+- [ ] 4.1 Swipe: w prawo przypnij, w lewo archiwizuj (kosz w arkuszu akcji), podpowiedź przy pierwszych 3 razach.
+- [ ] 4.2 Haptyka różnicowana (tap / success / warn / selection) + odhaczenie w kaflu, upuszczenie przeciągniętego kafla, wejście w zaznaczanie; quiz Nauki z haptyką i serią dni.
+- [ ] 4.3 Przejście kafel → edytor jako shared element (dziś skok), nagłówek z cieniem dopiero po przewinięciu, zakładka koloru w nagłówku edytora.
+- [ ] 4.4 Skróty PWA „Szukaj”, „Nowa lista”; Share Target dla pliku/obrazu (po decyzji).
+- [ ] 4.5 Nauka: nagłówek bez powtórki „Nauka”, etykiety przy 18 pigułkach, podpisy przycisków kart, cyfry tabelaryczne zamiast „1” jak „l”.
+
+### Faza 5 — testy i QA mobilnego
+- [ ] 5.1 Projekty Playwright: Pixel 7 + **WebKit/iPhone** (dziś tylko Desktop Chrome + `test.use` w `mobile.spec.ts`); smoke @mobile na obu.
+- [ ] 5.2 e2e: pasek zbiorczy mieści się w 390 px, „wstecz” zamyka warstwy, brak overflow poziomego na każdej trasie (skrypt z audytu), cele dotyku ≥44 px (pomiar).
+- [ ] 5.3 QA na prawdziwym telefonie (lista kontrolna): klawiatura w kompozytorze, haptyka, gesty, przewijanie z paskiem adresu, instalacja PWA.
+
+### Do decyzji użytkownika
+1. Wirtualizacja: wystarczy `content-visibility` + odchudzony kafel, czy robimy pełne okienkowanie (L, ryzyko z dnd-kit)?
+2. Swipe: w prawo = przypnij, w lewo = archiwizuj (propozycja audytu) czy zostaje archiwum/kosz?
+3. Precache: odchudzić do ~1,5 MB kosztem PDF/Statystyk offline dopiero po pierwszym użyciu?
