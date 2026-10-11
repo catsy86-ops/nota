@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo, forwardRef, useImper
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDictation } from "@/hooks/useDictation";
+import { useOverlayHistory } from "@/hooks/useOverlayHistory";
 import { useSlashMenu } from "@/hooks/useSlashMenu";
 import { Plus, Tag, Bell, Mic, ImagePlus, Paperclip, X, PenTool, ListChecks, Palette, Folder, Flag, Hash, CornerDownRight, Repeat, CopyPlus } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
@@ -318,6 +319,8 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
 
   // Edycja istniejącej notatki na telefonie jest na pełnym ekranie (NoteCard) — nowa też, zamiast pola w środku listy.
   const fullScreen = expanded && typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches;
+  // „Wstecz” zwija pełnoekranowy edytor (szkic zostaje), tak jak Esc.
+  useOverlayHistory(fullScreen, () => setExpanded(false));
 
   const composer = (
     <motion.div ref={containerRef} layout={!fullScreen} data-composer-open={expanded || undefined}

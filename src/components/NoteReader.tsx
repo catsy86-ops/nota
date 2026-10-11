@@ -25,6 +25,7 @@ import { AttachmentsReadOnlyList } from "./AttachmentsList";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { copyNoteToClipboard } from "@/lib/noteMarkdown";
 import { highlightTokens } from "@/lib/searchQuery";
+import { useOverlayHistory } from "@/hooks/useOverlayHistory";
 
 /**
  * Jedno miejsce czytania notatki (wcześniej: szybki podgląd w `NoteGrid`
@@ -109,6 +110,7 @@ function buildSnippets(text: string, tokens: string[], max = 3) {
 }
 
 export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, onClose, onEdit, onShow, resolveTitle, onToggleChecklist }: Props) {
+  useOverlayHistory(true, onClose);
   const present = mode === "present";
   const [zoom, setZoom] = useState(ZOOM_DEFAULT);
   const scrollRef = useRef<HTMLDivElement | null>(null);

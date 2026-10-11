@@ -69,3 +69,36 @@ test("notatka z listą na pełnym ekranie: pozycje zaraz pod tytułem, nie na do
   const box = (await first.boundingBox())!;
   expect(box.y).toBeLessThan(844 / 2);
 });
+
+test("„wstecz” zamyka arkusz „Więcej”, a nie zmienia widoku pod nim @smoke", async ({ page }) => {
+  await page.getByRole("navigation").getByRole("button", { name: "Dziś" }).click();
+  await expect(page).toHaveURL(/\/dzis$/);
+  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await expect(page.getByRole("dialog", { name: "Więcej" })).toBeVisible();
+
+  await page.goBack();
+  await expect(page.getByRole("dialog", { name: "Więcej" })).toBeHidden();
+  await expect(page).toHaveURL(/\/dzis$/);
+
+  // Kolejne „wstecz” wraca do poprzedniego widoku, bez wpisów-duchów po arkuszu.
+  await page.goBack();
+  await expect(page).not.toHaveURL(/\/dzis$/);
+});
+
+test("zamknięcie arkusza krzyżykiem nie zostawia dodatkowego wpisu w historii", async ({ page }) => {
+  await page.getByRole("navigation").getByRole("button", { name: "Dziś" }).click();
+  await expect(page).toHaveURL(/\/dzis$/);
+  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("dialog", { name: "Więcej" }).getByRole("button", { name: "Zamknij" }).click();
+  await expect(page.getByRole("dialog", { name: "Więcej" })).toBeHidden();
+  await page.goBack();
+  await expect(page).not.toHaveURL(/\/dzis$/);
+});
+
+test("„wstecz” zwija pełnoekranowy kompozytor, szkic zostaje", async ({ page }) => {
+  await page.getByRole("button", { name: "Nowa notatka" }).click();
+  await page.getByPlaceholder("Tytuł").fill("Szkic przy wstecz");
+  await page.goBack();
+  await expect(page.getByPlaceholder("Tytuł")).toBeHidden();
+  await expect(page).toHaveURL(/localhost:4173\/?$/);
+});
