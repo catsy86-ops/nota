@@ -128,6 +128,9 @@ export function parseMarkdownNote(text: string, ctx: MarkdownContext): ParsedNot
   const updated = parseFrontmatterDate(asString(data.updated ?? data.modified ?? data.updated_at ?? data["date modified"]));
   const fileTime = ctx.lastModified && ctx.lastModified > 0 ? ctx.lastModified : null;
   const truthy = (v: FrontmatterValue | undefined) => /^(true|yes|tak)$/i.test(asString(v).trim());
+  // Ikona: krótki napis (emoji) bez znaków sterujących — frontmatter bywa pisany ręcznie.
+  const rawIcon = asString(data.icon).trim();
+  const icon = rawIcon && [...rawIcon].length <= 4 && [...rawIcon].every((c) => c.charCodeAt(0) > 31) ? rawIcon : "";
 
   return {
     origin: "markdown",
@@ -138,6 +141,8 @@ export function parseMarkdownNote(text: string, ctx: MarkdownContext): ParsedNot
     labels,
     color: "default",
     pinned: truthy(data.pinned),
+    ...(icon ? { icon } : {}),
+    ...(truthy(data.favorite) ? { favorite: true } : {}),
     archived: truthy(data.archived),
     trashed: false,
     createdAt: created ?? null,

@@ -695,7 +695,7 @@ Plan wdrożenia po kolei (każdy krok osobno, z testami i commitem):
 - [x] Własne szablony ze zmiennymi: `{{data}}`, `{{data_iso}}`, `{{dzień}}`, `{{godzina}}`, `{{jutro}}`, `{{wczoraj}}`, `{{tydzień}}`, `{{rok}}` (`lib/templateVars.ts`, `lib/customTemplates.ts`, `CustomTemplateDialog.tsx`; w backupie ustawień). Bez `{{tytuł}}` — nie ma jak go podać przy jednym kliknięciu.
 - [ ] Spis treści i linki do nagłówków (`[[tytuł#nagłówek]]`).
 - [ ] Share Target dla plików/obrazów albo bookmarklet web clippera.
-- [ ] Ikona notatki we frontmatterze eksportu Markdown/ZIP i w imporcie.
+- [x] Ikona (`icon:`) i ulubiona (`favorite: true`) we frontmatterze eksportu ZIP i w imporcie Markdown.
 - Odrzucone: LaTeX, mermaid, embedy wideo/iframe, synchronizowane bloki; wszystko, co wymaga serwera lub konta (uprawnienia, publikacja, formularze, API, agenci AI).
 
 ### Wskaznik zapisu i ochrona przed utrata zmian (2026-10-11)

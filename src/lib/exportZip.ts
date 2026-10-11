@@ -87,6 +87,8 @@ export function noteToMarkdownFile(note: Note): string {
   fm.push(`updated: ${stamp(note.updatedAt)}`);
   if (note.reminder) fm.push(`reminder: ${stamp(note.reminder)}`);
   if (note.pinned) fm.push("pinned: true");
+  if (note.icon) fm.push(`icon: ${quote(note.icon)}`);
+  if (note.favorite) fm.push("favorite: true");
   fm.push("---", "");
   const body: string[] = [];
   if (note.content.trim()) body.push(note.content.trim());

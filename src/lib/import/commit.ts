@@ -78,6 +78,8 @@ export async function commitImportPlan(plan: ImportPlan): Promise<ImportResult> 
       content: p.content,
       color: p.color,
       pinned: p.pinned && !p.archived,
+      ...(p.icon ? { icon: p.icon } : {}),
+      ...(p.favorite ? { favorite: true } : {}),
       archived: p.archived,
       trashed: false,
       trashedAt: null,

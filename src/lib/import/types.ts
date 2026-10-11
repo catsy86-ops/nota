@@ -29,6 +29,10 @@ export interface ParsedNote {
   labels: string[];
   color: NoteColor;
   pinned: boolean;
+  /** Ikona notatki (emoji) z frontmattera `icon:`. */
+  icon?: string;
+  /** Ulubiona (frontmatter `favorite: true`). */
+  favorite?: boolean;
   archived: boolean;
   trashed: boolean;
   /** `null` = źródło nie podało czasu (wtedy używamy daty pliku/„teraz”). */

@@ -45,3 +45,22 @@ describe("exportZip", () => {
     expect(listZip(buildZip([])).entries).toEqual([]);
   });
 });
+
+describe("ikona w frontmatterze", () => {
+  it("eksport zapisuje ikonę i ulubioną, a import je odczytuje", async () => {
+    const { parseMarkdownNote } = await import("./import/markdown");
+    const md = noteToMarkdownFile(note({ title: "Start", content: "x", icon: "🚀", favorite: true }));
+    expect(md).toContain('icon: "🚀"');
+    expect(md).toContain("favorite: true");
+    const parsed = parseMarkdownNote(md, { path: "Start.md" });
+    expect(parsed.icon).toBe("🚀");
+    expect(parsed.favorite).toBe(true);
+  });
+
+  it("import odrzuca zbyt długą „ikonę” i nie dokłada pól, gdy ich nie ma", async () => {
+    const { parseMarkdownNote } = await import("./import/markdown");
+    const parsed = parseMarkdownNote('---\nicon: "to nie jest emoji"\n---\ntreść', { path: "A.md" });
+    expect(parsed.icon).toBeUndefined();
+    expect(parsed.favorite).toBeUndefined();
+  });
+});
