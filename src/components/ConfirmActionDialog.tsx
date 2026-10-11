@@ -16,6 +16,17 @@ const META: Record<ConfirmKey, { heading: string; cta: string; icon: typeof Tras
   archive: { heading: "Zarchiwizować?", cta: "Archiwizuj", icon: Archive, tone: "text-primary-ink" },
 };
 
+let skipConfirm = false;
+
+/**
+ * Wykonuje akcję bez okna potwierdzenia — dla gestów (swipe kafla), które są odwracalne
+ * przez „Cofnij” i same w sobie są świadomą decyzją. Działa tylko dla wywołania synchronicznego.
+ */
+export function runWithoutConfirm(fn: () => void) {
+  skipConfirm = true;
+  try { fn(); } finally { skipConfirm = false; }
+}
+
 /**
  * Friendly confirmation gate for destructive actions.
  * Skips the dialog when the user checked "Nie pytaj ponownie".
@@ -25,7 +36,7 @@ export function useConfirmAction() {
   const [dontAsk, setDontAsk] = useState(false);
 
   const confirmAction = useCallback((action: PendingAction) => {
-    if (!getConfirmPrefs()[action.kind]) {
+    if (skipConfirm || !getConfirmPrefs()[action.kind]) {
       action.run();
       return;
     }

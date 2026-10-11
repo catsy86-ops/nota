@@ -20,6 +20,7 @@ import { EditorStats } from "./EditorStats";
 import { prepareImage } from "@/lib/imagePrepare";
 import { FindReplaceBar } from "./FindReplaceBar";
 import { haptic } from "@/lib/haptics";
+import { runWithoutConfirm } from "@/components/ConfirmActionDialog";
 import { TitleField } from "./TitleField";
 import { MarkdownRenderer, FormatToolbar } from "./MarkdownRenderer";
 import { ShareNote } from "./ShareNote";
@@ -320,10 +321,10 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
     const threshold = fast ? 60 : 110;
     if (dx > threshold && canSwipeArchive) {
       haptic("tap");
-      onArchive?.(note.id);
+      runWithoutConfirm(() => onArchive?.(note.id));
     } else if (dx < -threshold && canSwipeTrash) {
       haptic("warn");
-      onDelete(note.id);
+      runWithoutConfirm(() => onDelete(note.id));
     }
     swipeX.set(0);
   }
@@ -577,7 +578,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
             <>
               <NoteCoverStrip cover={note.cover} className="-mx-3.5 -mt-3 mb-2.5 w-[calc(100%+1.75rem)] rounded-t-[inherit]" />
               {(note.title || note.icon) && (
-                <h3 className="font-display font-semibold text-base leading-snug tracking-[-0.01em] text-foreground mb-1 line-clamp-2">
+                <h3 className="font-display font-semibold text-base leading-snug tracking-[-0.01em] text-foreground mb-1 line-clamp-2 [overflow-wrap:anywhere]">
                   {note.icon && <span className="mr-1.5" aria-hidden>{note.icon}</span>}
                   {note.title}
                   {note.readOnly && <Lock className="inline-block w-3 h-3 ml-1.5 -mt-0.5 text-muted-foreground" aria-label="Zablokowana do edycji" />}

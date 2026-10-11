@@ -160,6 +160,9 @@
   }
 }
 
+/* Bez „gumki” i systemowego pull-to-refresh przy przewijaniu listy na telefonie. */
+html, body { overscroll-behavior-y: contain; }
+
 /* --- Seasonal theme: background wash, blobs and accents --- */
 @layer base {
   :root {
