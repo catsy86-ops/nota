@@ -677,7 +677,23 @@ Scalone do master (519 testów jednostkowych, 103 e2e).
 
 Plan wdrożenia po kolei (każdy krok osobno, z testami i commitem):
 
-- [x] **1. Menu „/” w edytorze** — `lib/slashMenu.ts`, `hooks/useSlashMenu.tsx`, podpięte w `NoteCard.tsx` i `AddNoteBar.tsx`; e2e `e2e/slash-menu.spec.ts`. Callout i blok zwijany odłożone (wymagają zmian w `MarkdownRendererImpl.tsx`).
+- [x] **1. Menu „/” w edytorze** — `lib/slashMenu.ts`, `hooks/useSlashMenu.tsx`, podpięte w `NoteCard.tsx` i `AddNoteBar.tsx`; e2e `e2e/slash-menu.spec.ts`. Callout, blok zwijany i tabela dodane w pakiecie 1 + 2 (niżej).
 - [x] **2. Ikony, okładki, ulubione** — zrobione: `lib/noteLook.ts`, `components/NoteLookPicker.tsx`, sekcja „Ulubione” w `AppSidebar.tsx`, e2e `e2e/note-look.spec.ts`. Okładka to gotowy wzór (nie obraz), więc nie dotyka sync plików ani skarbca. Eksport Markdown/ZIP jeszcze nie zapisuje ikony we frontmatterze. Plan: pola opcjonalne `icon`, `cover`, `favorite` w `Note`: `hooks/useNotes.ts`, `lib/noteSchema.ts`, `NOTE_SCALAR_FIELDS` + `yNoteFromPlain` + `plainFromYNote` w `lib/yjsStore.ts` (okładka do `PRIVATE_FIELDS`); sekcja „Ulubione” w `AppSidebar.tsx` (`SidebarRow`).
 - [ ] **3. Widok tablicy i tabeli** — `board`/`table` w `Layout` (`lib/viewPrefs.ts`), kolumny z `groupNotes` (`lib/groupNotes.ts`), przeciąganie w `hooks/useNoteDnd.ts`, przełącznik w `ViewControls.tsx`.
 - [ ] **4. Podstrony i właściwości** — `parentId` (ochrona przed cyklami, osieroceni rodzice na root, kaskada kosza, okruszki), właściwości jako `Y.Map` na klucz, schemat właściwości w `FullBackup`.
+
+### Pakiet 1 + 2 — tabele, callouty, bloki zwijane (zrobione 2026-10-11)
+
+- [x] **Tabele i GFM** — `remark-gfm` w `MarkdownRendererImpl.tsx` (tabele, `~~skreślenie~~`, pola zadań, autolinki); komenda „Tabela” w menu „/”.
+- [x] **Callouty i bloki zwijane** — własna wtyczka `lib/markdownCallouts.ts` (składnia Obsidiana: `> [!info|tip|warning|danger|toggle]±`, polskie aliasy), bez `rehype-raw`; komendy „Callout” i „Blok zwijany”. Testy: `MarkdownRenderer.blocks.test.tsx`, `e2e/slash-menu.spec.ts`.
+
+### Dalsze pomysły z Notiona (audyt 2026-10-11, od najtańszego)
+
+- [ ] Blokada edycji, pełna szerokość i rozmiar tekstu per notatka (pola opcjonalne jak ikona i okładka).
+- [ ] Rozszerzony pasek zbiorczy: przenieś do folderu, dodaj etykietę, przypnij.
+- [ ] Sekcja „Ostatnio edytowane” i @-wzmianki (notatka, data) w edytorze.
+- [ ] Własne szablony ze zmiennymi (`{{data}}`, `{{tytuł}}`).
+- [ ] Spis treści i linki do nagłówków (`[[tytuł#nagłówek]]`).
+- [ ] Share Target dla plików/obrazów albo bookmarklet web clippera.
+- [ ] Ikona notatki we frontmatterze eksportu Markdown/ZIP i w imporcie.
+- Odrzucone: LaTeX, mermaid, embedy wideo/iframe, synchronizowane bloki; wszystko, co wymaga serwera lub konta (uprawnienia, publikacja, formularze, API, agenci AI).

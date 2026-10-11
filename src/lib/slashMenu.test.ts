@@ -65,6 +65,13 @@ describe("applySlashCommand", () => {
   it("blok kodu po tekście zaczyna się od nowej linii", () => {
     expect(run("ala /kod|", "code")).toBe("ala \n```\n|\n```");
   });
+  it("callout i blok zwijany zostawiają karetkę przy tytule", () => {
+    expect(run("/cal|", "callout")).toBe("> [!info] |\n> ");
+    expect(run("/zw|", "toggle")).toBe("> [!toggle] |\n> ");
+  });
+  it("tabela ustawia karetkę w pierwszej komórce treści", () => {
+    expect(run("/tab|", "table")).toBe("| Kolumna 1 | Kolumna 2 |\n| --- | --- |\n| | |  |");
+  });
   it("wstawia dzisiejszą datę w miejscu zapytania", () => {
     expect(run("dzis: /da|", "date")).toBe("dzis: 2026-10-11|");
   });

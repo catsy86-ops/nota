@@ -56,3 +56,28 @@ test("menu „/” działa też przy edycji istniejącej notatki", async ({ page
   await page.keyboard.press("Enter");
   await expect(body).toHaveValue("> ");
 });
+
+test("menu „/” wstawia tabelę, callout i blok zwijany, a kafel je renderuje", async ({ page }) => {
+  const title = `Bloki ${Date.now()}`;
+  await page.getByText("Zapisz notatkę...").click();
+  await page.getByPlaceholder("Tytuł").fill(title);
+  const body = page.getByPlaceholder("Treść notatki...");
+  await body.click();
+
+  await body.pressSequentially("/tabe");
+  await page.keyboard.press("Enter");
+  await expect(body).toHaveValue("| Kolumna 1 | Kolumna 2 |\n| --- | --- |\n|  |  |");
+
+  await body.press("Control+End");
+  await body.pressSequentially("\n\n/callo");
+  await page.keyboard.press("Enter");
+  await body.pressSequentially("Termin");
+  await expect(body).toHaveValue(/> \[!info\] Termin\n> $/);
+
+  await page.getByRole("button", { name: "Zamknij" }).click();
+  await expect(page.getByText("Zapisz notatkę...")).toBeVisible();
+
+  const card = page.getByRole("article", { name: title });
+  await expect(card.locator("table th")).toHaveCount(2);
+  await expect(card.getByRole("note")).toContainText("Termin");
+});
