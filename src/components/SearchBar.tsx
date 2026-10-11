@@ -23,7 +23,34 @@ const HINTS = [
   "Naciśnij / aby wyszukać",
 ];
 
-export function SearchBar({ value, onChange, className }: SearchBarProps) {
+/** Pauza w pisaniu, po której zapytanie idzie do widoku (filtrowanie 300 kafli na każdy znak blokowało klawiaturę). */
+const SEARCH_DEBOUNCE_MS = 150;
+
+export function SearchBar({ value: externalValue, onChange, className }: SearchBarProps) {
+  // Własny stan pola: znak pojawia się od razu, a widok przelicza się dopiero po krótkiej pauzie.
+  const [value, setValue] = useState(externalValue);
+  const sent = useRef(externalValue);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    // Zmiana z zewnątrz (filtr z paska, operator z palety, „wstecz”) — nie nasze opóźnione wysłanie.
+    if (externalValue !== sent.current) {
+      sent.current = externalValue;
+      window.clearTimeout(timer.current);
+      setValue(externalValue);
+    }
+  }, [externalValue]);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  const commit = (v: string) => {
+    window.clearTimeout(timer.current);
+    setValue(v);
+    sent.current = v;
+    onChange(v);
+  };
+  const typeValue = (v: string) => {
+    setValue(v);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => { sent.current = v; onChange(v); }, SEARCH_DEBOUNCE_MS);
+  };
   const [hintIdx, setHintIdx] = useState(0);
   const [focused, setFocused] = useState(false);
   const { reduced } = useMotionPref();
@@ -58,7 +85,7 @@ export function SearchBar({ value, onChange, className }: SearchBarProps) {
   function pick(i: number) {
     const s = suggestions.items[i];
     if (!s) return;
-    onChange(applySuggestion(value, suggestions.from, s));
+    commit(applySuggestion(value, suggestions.from, s));
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -82,8 +109,8 @@ export function SearchBar({ value, onChange, className }: SearchBarProps) {
   }
 
   return (
+    // Bez `layout`: animacja układu tego pola mierzyła przy każdym znaku wszystkie kafle (projekcja framer-motion).
     <motion.div
-      layout
       className={cn("relative w-full max-w-md", className)}
       animate={{ scale: focused && !reduced ? 1.01 : 1 }}
       transition={spring.snap}
@@ -97,7 +124,7 @@ export function SearchBar({ value, onChange, className }: SearchBarProps) {
       <input
         type="search"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => typeValue(e.target.value)}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         onKeyDown={onKeyDown}
@@ -141,7 +168,7 @@ export function SearchBar({ value, onChange, className }: SearchBarProps) {
             initial={{ opacity: 0, scale: reduced ? 1 : 0.8 }}
             animate={{ opacity: 1, scale: 1, transition: tween.enter }}
             exit={{ opacity: 0, scale: reduced ? 1 : 0.8, transition: tween.exit }}
-            onClick={() => { setSaving(false); onChange(""); }}
+            onClick={() => { setSaving(false); commit(""); }}
             className="pressable absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
             <X className="w-4 h-4" />
