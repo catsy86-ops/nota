@@ -55,7 +55,7 @@ function imageRefs(images: string[]): string[] {
 const NOTE_SCALAR_FIELDS = [
   "title", "color", "pinned", "archived", "trashed", "trashedAt",
   "labels", "reminder", "reminderRepeat", "reminderDay", "reminderRepeatUntil", "priority", "dailyDate",
-  "icon", "cover", "favorite", "readOnly", "wide", "largeText", "folderId", "order", "createdAt", "updatedAt",
+  "icon", "cover", "favorite", "readOnly", "parentId", "wide", "largeText", "folderId", "order", "createdAt", "updatedAt",
 ] as const;
 
 const FOLDER_SCALAR_FIELDS = [
@@ -209,6 +209,7 @@ function yNoteFromPlain(note: Note): YNote {
   if (note.cover) y.set("cover", note.cover);
   if (note.favorite) y.set("favorite", true);
   if (note.readOnly) y.set("readOnly", true);
+  if (note.parentId) y.set("parentId", note.parentId);
   if (note.wide) y.set("wide", true);
   if (note.largeText) y.set("largeText", true);
   y.set("checklist", yChecklistFromPlain(locked ? [] : note.checklist));
@@ -232,10 +233,12 @@ function plainFromYNote(id: string, y: YNote): Note {
   const dailyDate = safeDailyDate(y.get("dailyDate"));
   const icon = safeString(y.get("icon"), "", LIM.emoji);
   const cover = safeOptionalEnum(y.get("cover"), NOTE_COVERS);
+  const parentId = safeString(y.get("parentId"), "", LIM.id);
   const common = {
     ...(dailyDate ? { dailyDate } : {}),
     ...(icon ? { icon } : {}),
     ...(cover ? { cover } : {}),
+    ...(parentId ? { parentId } : {}),
     ...(y.get("favorite") === true ? { favorite: true as const } : {}),
     ...(y.get("readOnly") === true ? { readOnly: true as const } : {}),
     ...(y.get("wide") === true ? { wide: true as const } : {}),

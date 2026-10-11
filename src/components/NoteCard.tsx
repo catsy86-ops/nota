@@ -5,7 +5,9 @@ import { tween, dur, ease } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { cascadeDelay, cardExit, markPinned, hasRecentPin, consumePin, type CardExitIntent } from "@/lib/cardMotion";
 import { Check } from "lucide-react";
-import { Star, Pin, Trash2, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, MoreHorizontal, MoveHorizontal, ZoomIn, Maximize2, Minimize2, Expand, Link2, Lock, LockOpen } from "lucide-react";
+import { Star, Pin, Trash2, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, MoreHorizontal, MoveHorizontal, ZoomIn, Maximize2, Minimize2, Expand, Link2, Lock, LockOpen, FilePlus2, CornerLeftUp } from "lucide-react";
+import { addSubpage } from "@/lib/subpageActions";
+import { pluralPl } from "@/lib/plural";
 import { ColorPicker, colorClasses } from "./ColorPicker";
 import { LabelPicker, LabelBadges } from "./LabelPicker";
 import { ReminderPicker, ReminderBadge } from "./ReminderPicker";
@@ -176,6 +178,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   const slash = useSlashMenu({ textareaRef, value: editContent, disabled: wiki.isOpen });
   function handleEditSelect() { wiki.textareaProps.onSelect(); slash.refresh(); }
   const backlinks = prefs.showBacklinks && wikiIndex ? backlinksOf(note, wikiIndex) : [];
+  const subpage = wikiIndex?.tree.get(note.id);
 
   // Sesję zamykamy po zapisie przy odmontowaniu — cleanupy efektów idą
   // w kolejności deklaracji, więc `useDraftAutosave` zdąży zapisać pierwszy.
@@ -614,6 +617,24 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                   {backlinks.length > BACKLINKS_SHOWN && <span className="shrink-0">+{backlinks.length - BACKLINKS_SHOWN}</span>}
                 </div>
               )}
+              {subpage && (
+                <div className="mt-1.5 flex items-center gap-1.5 min-w-0 text-2xs text-muted-foreground" data-subpage-row="">
+                  {subpage.parentId && (
+                    <button
+                      type="button"
+                      title="Notatka nadrzędna"
+                      onClick={(e) => { e.stopPropagation(); onOpenNote?.(subpage.parentId!); }}
+                      className="flex min-w-0 items-center gap-1 px-1.5 py-0.5 rounded-full bg-foreground/5 hover:bg-primary/10 hover:text-primary transition-colors"
+                    >
+                      <CornerLeftUp className="w-3 h-3 shrink-0" aria-hidden />
+                      <span className="truncate">{subpage.parentTitle || "Bez tytułu"}</span>
+                    </button>
+                  )}
+                  {subpage.childCount > 0 && (
+                    <span className="shrink-0">{subpage.childCount} {pluralPl(subpage.childCount, ["podstrona", "podstrony", "podstron"])}</span>
+                  )}
+                </div>
+              )}
               {trashCountdown && (
                 <div className="inline-flex items-center gap-1 mt-2">
                   <div className={cn(
@@ -755,6 +776,17 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                     title={note.readOnly ? "Odblokuj edycję" : "Zablokuj edycję"}
                     aria-pressed={!!note.readOnly}
                     className={cn(note.readOnly && "text-primary")}
+                  />
+                )}
+                {!isArchived && !note.locked && (
+                  <ActionBtn
+                    icon={<FilePlus2 className="w-4 h-4" />}
+                    onClick={() => {
+                      haptic("tap");
+                      const id = addSubpage(note.id);
+                      if (id) toast("Dodano podstronę", { action: { label: "Otwórz", onClick: () => onOpenNote?.(id) } });
+                    }}
+                    title="Dodaj podstronę"
                   />
                 )}
                 {!note.locked && <ActionBtn icon={<ImagePlus className="w-4 h-4" />} onClick={() => fileInputRef.current?.click()} title="Dodaj obrazek" />}

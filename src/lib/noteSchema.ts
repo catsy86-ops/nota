@@ -37,6 +37,7 @@ export const noteSchema = z.object({
   cover: z.enum(NOTE_COVERS).optional().catch(undefined),
   favorite: z.literal(true).optional().catch(undefined),
   readOnly: z.literal(true).optional().catch(undefined),
+  parentId: z.string().min(1).max(200).optional().catch(undefined),
   wide: z.literal(true).optional().catch(undefined),
   largeText: z.literal(true).optional().catch(undefined),
   images: z.array(z.string()).catch([]),

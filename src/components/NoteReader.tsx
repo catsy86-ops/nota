@@ -2,7 +2,9 @@ import { splitWikiTarget } from "@/lib/wikiLinks";
 import { onHeadingRequest, requestHeading, scrollToHeading, takePendingHeading } from "@/lib/wikiHeading";
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Copy, Link2, Maximize2, Minimize2, Minus, Pencil, Plus, X } from "lucide-react";
+import { ChevronRight, Copy, CornerDownRight, FilePlus2, Link2, Maximize2, Minimize2, Minus, Pencil, Plus, X } from "lucide-react";
+import { ancestorsOf, canSetParent, childrenOf, parentIdOf } from "@/lib/subpages";
+import { setParent } from "@/lib/subpageActions";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { findUnlinkedMentions, linkFirstMention, type UnlinkedMention } from "@/lib/unlinkedMentions";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -144,7 +146,26 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
   const titleHits = tokens.some((t) => note.title.toLowerCase().includes(t.toLowerCase())) ? 1 : 0;
   const backlinks = showBacklinks ? backlinksOf(note, wikiIndex) : [];
   const words = note.content.trim() ? note.content.trim().split(/\s+/).length : 0;
-  const { notes: liveNotes, archivedNotes, updateNote } = useNotesContext();
+  const { notes: liveNotes, archivedNotes, updateNote, addSubpage } = useNotesContext();
+  // Drzewo podstron: okruszki nad tytułem i lista dzieci pod treścią.
+  const treeNotes = useMemo(() => [...liveNotes, ...archivedNotes], [liveNotes, archivedNotes]);
+  const crumbs = useMemo(() => {
+    const byId = new Map(treeNotes.map((n) => [n.id, n] as const));
+    return ancestorsOf(note.id, byId).map((id) => byId.get(id)!).filter(Boolean);
+  }, [treeNotes, note.id]);
+  const subpages = useMemo(() => childrenOf(note.id, treeNotes), [treeNotes, note.id]);
+  const currentParent = useMemo(
+    () => parentIdOf(note, new Map(treeNotes.map((n) => [n.id, n] as const))) ?? "",
+    [treeNotes, note],
+  );
+  /** Kandydaci na rodzica: żywe, jawne notatki poza nią samą i jej potomkami. */
+  const parentOptions = useMemo(
+    () => liveNotes
+      .filter((n) => !n.locked && n.id !== note.id && canSetParent(note.id, n.id, treeNotes))
+      .sort((a, b) => a.title.localeCompare(b.title, "pl"))
+      .slice(0, 300),
+    [liveNotes, treeNotes, note.id],
+  );
   const mentions = useMemo(
     () => (showBacklinks ? findUnlinkedMentions(note, [...liveNotes, ...archivedNotes], 20) : []),
     [showBacklinks, note, liveNotes, archivedNotes],
@@ -231,6 +252,18 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
       >
         <div className="flex items-start gap-2 px-5 pt-4 pb-3 border-b border-border/40">
           <div className="min-w-0 flex-1">
+            {!present && crumbs.length > 0 && (
+              <nav aria-label="Ścieżka podstrony" className="mb-1 flex flex-wrap items-center gap-x-1 text-xs text-muted-foreground">
+                {crumbs.map((c) => (
+                  <span key={c.id} className="inline-flex items-center gap-1">
+                    <button type="button" onClick={() => onShow(c.id, mode)} className="max-w-[10rem] truncate hover:text-foreground hover:underline">
+                      {c.title.trim() || "Bez tytułu"}
+                    </button>
+                    <ChevronRight className="w-3 h-3 shrink-0" aria-hidden />
+                  </span>
+                ))}
+              </nav>
+            )}
             {!present && (
               <h2 className="font-display text-lg font-semibold leading-tight">
                 {note.title ? highlight(note.title) : "Bez tytułu"}
@@ -365,6 +398,57 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                     </button>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {(subpages.length > 0 || (canEdit && !note.locked)) && (
+              <div className="mt-8 pt-4 border-t border-border/50" data-subpages="" style={present ? { fontSize: "0.95rem" } : undefined}>
+                <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                  Podstrony{subpages.length > 0 ? ` (${subpages.length})` : ""}
+                </p>
+                {subpages.length > 0 && (
+                  <ul className="space-y-1">
+                    {subpages.map((s) => (
+                      <li key={s.id}>
+                        <button
+                          type="button"
+                          onClick={() => onShow(s.id, mode)}
+                          className="flex w-full items-center gap-2 rounded-lg bg-muted/30 px-2.5 py-1.5 text-left text-sm hover:bg-muted/60"
+                        >
+                          <CornerDownRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                          <span className="truncate">{s.icon ? `${s.icon} ` : ""}{s.title.trim() || "Bez tytułu"}</span>
+                          {s.trashed && <span className="ml-auto text-2xs text-muted-foreground">w koszu</span>}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {canEdit && !note.locked && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="mt-2 h-8 gap-1.5 px-2 text-xs"
+                    onClick={() => { const id = addSubpage(note.id); if (id) onEdit(id); }}
+                  >
+                    <FilePlus2 className="w-3.5 h-3.5" />Dodaj podstronę
+                  </Button>
+                )}
+                {canEdit && !note.locked && !present && (parentOptions.length > 0 || currentParent) && (
+                  <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                    Notatka nadrzędna
+                    <select
+                      value={currentParent}
+                      onChange={(e) => setParent(note.id, e.target.value || null)}
+                      className="min-w-0 max-w-[14rem] flex-1 truncate rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground"
+                    >
+                      <option value="">Brak (poziom główny)</option>
+                      {currentParent && !parentOptions.some((o) => o.id === currentParent) && (
+                        <option value={currentParent}>{treeNotes.find((n) => n.id === currentParent)?.title.trim() || "Bez tytułu"}</option>
+                      )}
+                      {parentOptions.map((o) => <option key={o.id} value={o.id}>{o.title.trim() || "Bez tytułu"}</option>)}
+                    </select>
+                  </label>
+                )}
               </div>
             )}
 

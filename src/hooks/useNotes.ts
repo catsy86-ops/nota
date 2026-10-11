@@ -5,6 +5,8 @@ import { privateNotes } from "@/lib/privateNotes";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
 import { renameLinkTargets } from "@/lib/wikiLinks";
+import { descendantIds } from "@/lib/subpages";
+import { addSubpage as addSubpageImpl, setParent as setParentImpl } from "@/lib/subpageActions";
 import type { NotePriority } from "@/lib/notePriority";
 import type { Attachment } from "@/lib/attachments";
 import type { NoteCover } from "@/lib/noteLook";
@@ -66,6 +68,11 @@ export interface Note {
   favorite?: boolean;
   /** Blokada edycji: kafel nie wchodzi w tryb edycji, dopóki nie zostanie odblokowany. */
   readOnly?: boolean;
+  /**
+   * Podstrona: id notatki-rodzica (`lib/subpages.ts`). Brak = poziom główny.
+   * Rodzic, którego nie ma, jest traktowany jak brak rodzica.
+   */
+  parentId?: string;
   /** Kafel rozciągnięty na dwie kolumny siatki (od `sm`). */
   wide?: boolean;
   /** Większy tekst w treści kafla. */
@@ -208,13 +215,39 @@ export function useNotes() {
     yjsStore.removeNote(id);
   }, []);
 
+  /** `ids` razem z ich podstronami (kosz i przywracanie działają na całych gałęziach). */
+  const withDescendants = (ids: string[]): string[] => {
+    const all = yjsStore.projectNotes();
+    const out = new Set(ids);
+    const trashed = new Set(all.filter((n) => n.trashed).map((n) => n.id));
+    // Podstrona, która już jest w koszu, zachowuje swój `trashedAt` — przywróci się osobno.
+    for (const id of ids) descendantIds(id, all).filter((d) => !trashed.has(d)).forEach((d) => out.add(d));
+    return [...out];
+  };
+
+  /** Przywracanie: notatka i te podstrony, które trafiły do kosza razem z nią. */
+  const restoreSet = (ids: string[]): string[] => {
+    const all = yjsStore.projectNotes();
+    const out = new Set(ids);
+    for (const id of ids) {
+      const at = all.find((n) => n.id === id)?.trashedAt;
+      if (at == null) continue;
+      const trashedTogether = new Set(all.filter((n) => n.trashed && n.trashedAt === at).map((n) => n.id));
+      descendantIds(id, all).filter((d) => trashedTogether.has(d)).forEach((d) => out.add(d));
+    }
+    return [...out];
+  };
+
   const trashNote = useCallback((id: string) => {
-    yjsStore.patchNote(id, { trashed: true, trashedAt: Date.now(), pinned: false, archived: false });
+    yjsStore.patchNotes(withDescendants([id]), { trashed: true, trashedAt: Date.now(), pinned: false, archived: false });
   }, []);
 
   const restoreFromTrash = useCallback((id: string) => {
-    yjsStore.patchNote(id, { trashed: false, trashedAt: null });
+    yjsStore.patchNotes(restoreSet([id]), { trashed: false, trashedAt: null });
   }, []);
+
+  const setParent = useCallback((id: string, parentId: string | null): boolean => setParentImpl(id, parentId), []);
+  const addSubpage = useCallback((parentId: string): string | null => addSubpageImpl(parentId), []);
 
   const emptyTrash = useCallback(() => {
     const trashedIds = yjsStore.projectNotes().filter((n) => n.trashed).map((n) => n.id);
@@ -327,7 +360,7 @@ export function useNotes() {
   const trashedNotes = useMemo(() => notes.filter((n) => n.trashed).sort((a, b) => b.updatedAt - a.updatedAt), [notes]);
 
   const bulkTrash = useCallback((ids: string[]) => {
-    yjsStore.patchNotes(ids, { trashed: true, trashedAt: Date.now(), pinned: false, archived: false });
+    yjsStore.patchNotes(withDescendants(ids), { trashed: true, trashedAt: Date.now(), pinned: false, archived: false });
   }, []);
   const bulkArchive = useCallback((ids: string[]) => {
     yjsStore.patchNotes(ids, { archived: true, pinned: false });
@@ -336,11 +369,11 @@ export function useNotes() {
     yjsStore.patchNotes(ids, { color });
   }, []);
   const bulkRestore = useCallback((ids: string[]) => {
-    yjsStore.patchNotes(ids, { trashed: false, trashedAt: null, archived: false });
+    yjsStore.patchNotes(restoreSet(ids), { trashed: false, trashedAt: null, archived: false });
   }, []);
 
-  const actions = useMemo(() => ({ addNote, updateNote, deleteNote, trashNote, restoreFromTrash, emptyTrash, togglePin, duplicateNote, archiveNote, unarchiveNote, addLabel, removeLabel, renameLabel, importNotes, reorderNotes, addFolder, updateFolder, deleteFolder, moveNoteToFolder, bulkTrash, bulkArchive, bulkSetColor, bulkRestore }),
-    [addNote, updateNote, deleteNote, trashNote, restoreFromTrash, emptyTrash, togglePin, duplicateNote, archiveNote, unarchiveNote, addLabel, removeLabel, renameLabel, importNotes, reorderNotes, addFolder, updateFolder, deleteFolder, moveNoteToFolder, bulkTrash, bulkArchive, bulkSetColor, bulkRestore]);
+  const actions = useMemo(() => ({ setParent, addSubpage, addNote, updateNote, deleteNote, trashNote, restoreFromTrash, emptyTrash, togglePin, duplicateNote, archiveNote, unarchiveNote, addLabel, removeLabel, renameLabel, importNotes, reorderNotes, addFolder, updateFolder, deleteFolder, moveNoteToFolder, bulkTrash, bulkArchive, bulkSetColor, bulkRestore }),
+    [setParent, addSubpage, addNote, updateNote, deleteNote, trashNote, restoreFromTrash, emptyTrash, togglePin, duplicateNote, archiveNote, unarchiveNote, addLabel, removeLabel, renameLabel, importNotes, reorderNotes, addFolder, updateFolder, deleteFolder, moveNoteToFolder, bulkTrash, bulkArchive, bulkSetColor, bulkRestore]);
 
   return useMemo(() => ({ notes: activeNotes, archivedNotes, trashedNotes, allLabels, folders, ...actions }),
     [activeNotes, archivedNotes, trashedNotes, allLabels, folders, actions]);

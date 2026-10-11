@@ -1,4 +1,5 @@
 import type { Note } from "@/hooks/useNotes";
+import { buildSubpageIndex, type SubpageInfo } from "@/lib/subpages";
 
 const RX = /\[\[([^[\]\n]+?)\]\]/g;
 
@@ -55,6 +56,8 @@ export interface WikiIndex {
   titles: string[];
   /** Tytuł (małymi literami) → notatki, które go linkują. */
   backlinks: Map<string, WikiLinkRef[]>;
+  /** Id notatki → jej rodzic i liczba podstron (tylko notatki w drzewie). */
+  tree: Map<string, SubpageInfo>;
 }
 
 export function buildWikiIndex(notes: Note[]): WikiIndex {
@@ -72,13 +75,14 @@ export function buildWikiIndex(notes: Note[]): WikiIndex {
       backlinks.set(target, list);
     }
   }
-  return { titles, backlinks };
+  return { titles, backlinks, tree: buildSubpageIndex(notes) };
 }
 
 /** Odcisk indeksu: zmienia się tylko, gdy zmienią się tytuły albo linki. */
 export function wikiIndexKey(index: WikiIndex): string {
   const links = [...index.backlinks].map(([target, refs]) => `${target}\t${refs.map((r) => `${r.id}:${r.title}`).join(",")}`);
-  return `${index.titles.join("\n")}\n--\n${links.sort().join("\n")}`;
+  const tree = [...index.tree].map(([id, t]) => `${id}>${t.parentId ?? ""}:${t.childCount}:${t.parentTitle}`);
+  return `${index.titles.join("\n")}\n--\n${links.sort().join("\n")}\n--\n${tree.sort().join("\n")}`;
 }
 
 /** Notatki linkujące do tej (bez niej samej). */

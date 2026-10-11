@@ -169,3 +169,51 @@ describe("useNotes — stabilne referencje", () => {
     expect(result.current.notes).toBe(notes);
   });
 });
+
+describe("useNotes — podstrony", () => {
+  async function setup() {
+    const hook = renderHook(() => useNotes());
+    await waitFor(() => expect(hook.result.current.notes).toEqual([]));
+    let parent = "";
+    let child = "";
+    let grand = "";
+    act(() => { parent = hook.result.current.addNote("Rodzic", ""); });
+    act(() => { child = hook.result.current.addSubpage(parent)!; });
+    act(() => { grand = hook.result.current.addSubpage(child)!; });
+    return { ...hook, parent, child, grand };
+  }
+
+  it("addSubpage tworzy notatkę pod rodzicem i odmawia dla nieistniejącego rodzica", async () => {
+    const { result, parent, child } = await setup();
+    expect(result.current.notes.find((n) => n.id === child)?.parentId).toBe(parent);
+    expect(result.current.addSubpage("nie-ma")).toBeNull();
+  });
+
+  it("setParent odrzuca cykl i pozwala wrócić na poziom główny", async () => {
+    const { result, parent, child, grand } = await setup();
+    let ok = true;
+    act(() => { ok = result.current.setParent(parent, grand); });
+    expect(ok).toBe(false);
+    act(() => { ok = result.current.setParent(grand, null); });
+    expect(ok).toBe(true);
+    expect(result.current.notes.find((n) => n.id === grand)?.parentId).toBeUndefined();
+    expect(result.current.notes.find((n) => n.id === child)?.parentId).toBe(parent);
+  });
+
+  it("kosz bierze całą gałąź, a przywrócenie tylko to, co poszło razem", async () => {
+    const { result, parent, child, grand } = await setup();
+    // Wnuk trafia do kosza wcześniej, osobno — nie wraca z rodzicem.
+    act(() => result.current.trashNote(grand));
+    const grandAt = result.current.trashedNotes.find((n) => n.id === grand)!.trashedAt;
+    await new Promise((r) => setTimeout(r, 5));
+
+    act(() => result.current.trashNote(parent));
+    expect(result.current.trashedNotes.map((n) => n.id).sort()).toEqual([parent, child, grand].sort());
+    expect(result.current.notes).toEqual([]);
+
+    act(() => result.current.restoreFromTrash(parent));
+    expect(result.current.notes.map((n) => n.id).sort()).toEqual([parent, child].sort());
+    expect(result.current.trashedNotes.map((n) => n.id)).toEqual([grand]);
+    expect(result.current.trashedNotes[0].trashedAt).toBe(grandAt);
+  });
+});
