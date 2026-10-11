@@ -828,8 +828,8 @@ Zrobione: `lib/saveStatus.ts` (zapis do IndexedDB: Zapisywanie… / Zapisano / l
 - [x] 1.10 PWA/head: `theme-color` jasny/ciemny (`media`), `apple-mobile-web-app-status-bar-style`, manifest `orientation`/`display_override`, `background_color` zgodny z motywem, okresowe `registration.update()` na `visibilitychange`, rejestracja SW w idle.
 
 ### Faza 2 — wzorce mobilne (M)
-- [ ] 2.1 **Przycisk „wstecz”** (K1): `useOverlayHistory(open, close)` — `pushState` przy otwarciu warstwy, `popstate` ją zamyka; podpiąć pod Sheet, Dialog, edytor kafla, czytnik, kompozytor. Dziś „wstecz” zmienia widok pod otwartą warstwą, a z pierwszego wpisu wychodzi z PWA.
-- [ ] 2.2 **Klawiatura ekranowa** (K2): `interactive-widget=resizes-content` + `useKeyboardInset` (visualViewport), pasek narzędzi/„Zapisz” nad klawiaturą. Wymaga testu na telefonie.
+- [x] 2.1 **Przycisk „wstecz”** (K1): `useOverlayHistory(open, close)` — `pushState` przy otwarciu warstwy, `popstate` ją zamyka; podpiąć pod Sheet, Dialog, edytor kafla, czytnik, kompozytor. Dziś „wstecz” zmienia widok pod otwartą warstwą, a z pierwszego wpisu wychodzi z PWA.
+- [x] 2.2 **Klawiatura ekranowa** (K2): `interactive-widget=resizes-content` + `useKeyboardInset` (visualViewport), pasek narzędzi/„Zapisz” nad klawiaturą. Wymaga testu na telefonie.
 - [ ] 2.3 **Arkusz akcji notatki** zamiast siatki ~18 ikon po „⋯” (W6): grupy Szybkie / Wygląd / Organizacja, podpisy, „Usuń” na dole; ta sama ścieżka dla długiego przytrzymania kafla, który wchodzi w zaznaczanie (W5) z haptyką.
 - [ ] 2.4 **Arkusze przeciągane w dół** (W2): drag-to-dismiss w `ui/sheet.tsx` (uchwyt dziś kłamie); okna Grafiku (nowy rodzaj, cykl) jako arkusze z sticky stopką, jak potwierdzenia.
 - [ ] 2.5 **Toasty zaległych przypomnień**: jeden zbiorczy „3 zaległe · Zobacz” zamiast stosu zasłaniającego nagłówek; nie nakładać z odznaką i banerem (kolejka).
@@ -840,6 +840,8 @@ Zrobione: `lib/saveStatus.ts` (zapis do IndexedDB: Zapisywanie… / Zapisano / l
 - [ ] 2.10 **Dziennik Nauki**: lista wpisów nad formularzem lub formularz w arkuszu z FAB „+ Wpis”, CTA pełnej szerokości, bez „Ctrl+Enter” na dotyku. (Uwaga: `StudyJournal.tsx` ma niezacommitowane zmiany użytkownika.)
 - [ ] 2.11 **Przypomnienia**: szybkie „Gotowe / Odłóż” na karcie listy (nie tylko w toaście); lista zaległych jako zwykła kolumna, nie masonry.
 - [ ] 2.12 **Pierwsze uruchomienie**: jedna karta „Dziś: 2 zaległe, 1 termin” zamiast stosu; baner instalacji dopiero po pierwszej notatce (jest `ready`).
+
+- [x] **Marka (poza planem, 2026-10-11):** ikony PWA z logo N (192/512/maskable/apple/favicon/monochrome), animacja startowa w `index.html` (tylko zainstalowana aplikacja albo `?splash`, znika po wczytaniu danych, `src/lib/bootSplash.ts`), logo N w nagłówku telefonu i na stronie offline (zamiast kufla). Generator ikon: skrypt Playwright rysujący `M6 19V5l12 14V5`.
 
 ### Faza 3 — wydajność przy 300 notatkach (M/L; razem, bo dotyka `NoteCard`/`NoteGrid`)
 Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwarcie kafla 2,3–3 s, Kalendarz → Notatki 7–10 s, klawisz w wyszukiwarce 400–740 ms. Przy 20 notatkach OK (przewijanie 60 fps).
