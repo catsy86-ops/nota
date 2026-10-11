@@ -1,5 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
-import { TOPICS } from "./content";
+import { QUESTIONS, TOPICS } from "./content";
 
 export type Column = "todo" | "doing" | "done";
 export const COLUMNS: Column[] = ["todo", "doing", "done"];
@@ -12,9 +12,11 @@ export interface StudyState {
   /** Najlepszy wynik quizu w procentach (0–100) albo `null`. */
   bestPercent: number | null;
   rounds: number;
+  /** Pytania, na które ostatnio odpowiedziano błędnie — materiał do „Powtórki błędów”. */
+  missed: Record<string, true>;
 }
 
-const DEFAULTS: StudyState = { board: {}, checked: {}, bestPercent: null, rounds: 0 };
+const DEFAULTS: StudyState = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {} };
 
 const isColumn = (v: unknown): v is Column => v === "todo" || v === "doing" || v === "done";
 
@@ -31,7 +33,10 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
   for (const [id, v] of Object.entries(s.checked ?? {})) if (v === true) checked[id] = true;
   const best = typeof s.bestPercent === "number" && s.bestPercent >= 0 && s.bestPercent <= 100 ? Math.round(s.bestPercent) : null;
   const rounds = typeof s.rounds === "number" && s.rounds >= 0 ? Math.floor(s.rounds) : 0;
-  return { board, checked, bestPercent: best, rounds };
+  const questionIds = new Set(QUESTIONS.map((q) => q.id));
+  const missed: Record<string, true> = {};
+  for (const [id, v] of Object.entries(s.missed ?? {})) if (v === true && questionIds.has(id)) missed[id] = true;
+  return { board, checked, bestPercent: best, rounds, missed };
 }
 
 const store = createPersistedStore<StudyState>("kaczy.study.v1", DEFAULTS, {
@@ -63,8 +68,16 @@ export function resetChecklist() {
   store.set({ ...store.get(), checked: {} });
 }
 
-/** Zapisuje wynik rundy; tematy z błędami wracają z „Umiem” do „W trakcie”. */
-export function recordRound(correct: number, total: number, missed: string[]): { demoted: string[] } {
+/**
+ * Zapisuje wynik rundy; tematy z błędami wracają z „Umiem” do „W trakcie”.
+ * `results` aktualizuje listę błędnych pytań: dobra odpowiedź ją czyści, zła dopisuje.
+ */
+export function recordRound(
+  correct: number,
+  total: number,
+  missed: string[],
+  results: { id: string; ok: boolean }[] = [],
+): { demoted: string[] } {
   const s = store.get();
   const percent = total > 0 ? Math.round((correct / total) * 100) : 0;
   const board = { ...s.board };
@@ -72,9 +85,14 @@ export function recordRound(correct: number, total: number, missed: string[]): {
   for (const id of missed) {
     if (board[id] === "done") { board[id] = "doing"; demoted.push(id); }
   }
+  const missedQuestions = { ...s.missed };
+  for (const r of results) {
+    if (r.ok) delete missedQuestions[r.id]; else missedQuestions[r.id] = true;
+  }
   store.set({
     ...s,
     board,
+    missed: missedQuestions,
     rounds: s.rounds + 1,
     bestPercent: s.bestPercent === null ? percent : Math.max(s.bestPercent, percent),
   });

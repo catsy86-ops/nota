@@ -1,4 +1,7 @@
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, FilePlus2, Play } from "lucide-react";
+import { toast } from "sonner";
+import { yjsStore } from "@/lib/yjsStore";
+import { topicToNote } from "@/lib/study/toNote";
 import { LayoutGroup, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { CHECKLIST, MODULES, QUESTIONS, TOPICS, type StudyTopic } from "@/lib/study/content";
@@ -12,7 +15,7 @@ const COLUMN_HINT: Record<Column, string> = {
 };
 const moduleLabel = (id: StudyTopic["module"]) => MODULES.find((m) => m.id === id)?.label ?? id;
 
-function TopicCard({ topic, column, study }: { topic: StudyTopic; column: Column; study: StudyState }) {
+function TopicCard({ topic, column, study, onPractice }: { topic: StudyTopic; column: Column; study: StudyState; onPractice: (topicId: string) => void }) {
   const items = CHECKLIST.filter((c) => c.topic === topic.id);
   const checked = items.filter((c) => study.checked[c.id]).length;
   const critical = items.some((c) => c.critical);
@@ -43,6 +46,28 @@ function TopicCard({ topic, column, study }: { topic: StudyTopic; column: Column
         <div className="flex gap-1">
           <button
             type="button"
+            onClick={() => onPractice(topic.id)}
+            aria-label={`${topic.title}: ćwicz pytania`}
+            title="Ćwicz pytania z tego tematu"
+            className="grid h-7 w-7 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted"
+          >
+            <Play className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const note = topicToNote(topic);
+              yjsStore.upsertNote(note);
+              toast.success(`Dodano notatkę „${note.title}”`);
+            }}
+            aria-label={`${topic.title}: zrób z tego notatkę`}
+            title="Zrób notatkę z listą kontrolną"
+            className="grid h-7 w-7 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted"
+          >
+            <FilePlus2 className="w-3.5 h-3.5" />
+          </button>
+          <button
+            type="button"
             disabled={at === 0}
             onClick={() => moveTopic(topic.id, COLUMNS[at - 1])}
             aria-label={`${topic.title}: przenieś do „${COLUMN_LABEL[COLUMNS[Math.max(at - 1, 0)]]}”`}
@@ -66,7 +91,7 @@ function TopicCard({ topic, column, study }: { topic: StudyTopic; column: Column
 }
 
 /** Tablica nauki: tematy wędrują „Do nauki” → „W trakcie” → „Umiem”. */
-export function StudyBoard() {
+export function StudyBoard({ onPractice }: { onPractice: (topicId: string) => void }) {
   const study = useStudy();
   return (
     <LayoutGroup>
@@ -83,7 +108,7 @@ export function StudyBoard() {
                 <p className="text-xs text-muted-foreground">{COLUMN_HINT[col]}</p>
               </header>
               <ul className="space-y-2.5 min-h-12">
-                {topics.map((t) => <TopicCard key={t.id} topic={t} column={col} study={study} />)}
+                {topics.map((t) => <TopicCard key={t.id} topic={t} column={col} study={study} onPractice={onPractice} />)}
                 {topics.length === 0 && (
                   <li className="rounded-xl border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">Pusto</li>
                 )}

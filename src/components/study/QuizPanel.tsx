@@ -3,7 +3,7 @@ import { ArrowRight, Check, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { TOPICS } from "@/lib/study/content";
+import { QUESTIONS, TOPICS } from "@/lib/study/content";
 import { buildRound, missedTopics, scoreRound, type RoundQuestion } from "@/lib/study/quiz";
 import { columnOf, recordRound, useStudy } from "@/lib/study/store";
 
@@ -11,8 +11,11 @@ const ROUND_SIZE = 10;
 const LETTERS = ["A", "B", "C", "D"];
 const topicTitle = (id: string) => TOPICS.find((t) => t.id === id)?.title ?? id;
 
+/** Z czego składa się runda: wszystko, jeden temat albo pytania, które ostatnio poszły źle. */
+export type QuizScope = { kind: "all" } | { kind: "topic"; topic: string } | { kind: "missed" };
+
 /** Runda quizu: pytania z tematów, których jeszcze nie umiesz, idą na początek. */
-export function QuizPanel() {
+export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: QuizScope; onScopeChange?: (s: QuizScope) => void }) {
   const study = useStudy();
   const [round, setRound] = useState<RoundQuestion[] | null>(null);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
@@ -24,13 +27,24 @@ export function QuizPanel() {
     [study],
   );
 
-  const start = useCallback(() => {
-    const next = buildRound(ROUND_SIZE, weak);
+  const start = useCallback((s: QuizScope = scope) => {
+    const pool = s.kind === "topic" ? QUESTIONS.filter((q) => q.topic === s.topic)
+      : s.kind === "missed" ? QUESTIONS.filter((q) => study.missed[q.id])
+      : QUESTIONS;
+    if (pool.length === 0) { toast("Brak pytań do powtórki"); onScopeChange?.({ kind: "all" }); return; }
+    const next = buildRound(Math.min(ROUND_SIZE, pool.length), weak, Math.random, pool);
     setRound(next);
     setAnswers(next.map(() => null));
     setIndex(0);
     setResult(null);
-  }, [weak]);
+  }, [weak, scope, study.missed, onScopeChange]);
+
+  // Zakres ustawiony spoza panelu (przycisk „Ćwicz” na tablicy) od razu startuje rundę.
+  useEffect(() => {
+    if (scope.kind !== "all") start(scope);
+    // Tylko przy zmianie zakresu — nie przy każdej zmianie postępu.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scope.kind === "topic" ? scope.topic : scope.kind]);
 
   const current = round?.[index] ?? null;
   const picked = round ? answers[index] : null;
@@ -45,7 +59,7 @@ export function QuizPanel() {
     if (index < round.length - 1) { setIndex(index + 1); return; }
     const correct = scoreRound(round, answers);
     const missed = missedTopics(round, answers);
-    const { demoted } = recordRound(correct, round.length, missed);
+    const { demoted } = recordRound(correct, round.length, missed, round.map((q, i) => ({ id: q.id, ok: answers[i] === q.correct })));
     setResult({ correct, missed, demoted });
     if (demoted.length) toast(`Wróciło do nauki: ${demoted.map(topicTitle).join(", ")}`);
   }, [round, index, answers]);
@@ -91,7 +105,13 @@ export function QuizPanel() {
         ) : (
           <p className="text-sm text-muted-foreground">Wszystkie tematy z tej rundy zaliczone.</p>
         )}
-        <Button onClick={start}><RotateCcw className="w-4 h-4 mr-1.5" />Kolejna runda</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => start(scope)}><RotateCcw className="w-4 h-4 mr-1.5" />Jeszcze raz</Button>
+          {scope.kind !== "all" && <Button variant="outline" onClick={() => { onScopeChange?.({ kind: "all" }); setRound(null); setResult(null); }}>Wróć do wszystkich</Button>}
+          {scope.kind === "all" && Object.keys(study.missed).length > 0 && (
+            <Button variant="outline" onClick={() => onScopeChange?.({ kind: "missed" })}>Powtórka błędów ({Object.keys(study.missed).length})</Button>
+          )}
+        </div>
       </section>
     );
   }
@@ -105,7 +125,12 @@ export function QuizPanel() {
           Błąd w temacie z kolumny „Umiem” cofa go do „W trakcie”.
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          <Button onClick={start}>Zacznij rundę</Button>
+          <Button onClick={() => start({ kind: "all" })}>Zacznij rundę</Button>
+          {Object.keys(study.missed).length > 0 && (
+            <Button variant="outline" onClick={() => onScopeChange?.({ kind: "missed" })}>
+              Powtórka błędów ({Object.keys(study.missed).length})
+            </Button>
+          )}
           {study.bestPercent !== null && (
             <p className="text-xs text-muted-foreground">Najlepszy wynik: {study.bestPercent}% · rund: {study.rounds}</p>
           )}
@@ -119,7 +144,9 @@ export function QuizPanel() {
     <section aria-label="Quiz" className="rounded-2xl border border-border bg-card p-5 sm:p-7 space-y-5">
       <div className="flex items-center justify-between gap-3 text-xs">
         <span className="font-mono tabular-nums text-muted-foreground">Pytanie {index + 1} z {round.length}</span>
-        <span className="rounded-full bg-muted px-2.5 py-0.5 text-muted-foreground truncate">{topicTitle(current.topic)}</span>
+        <span className="rounded-full bg-muted px-2.5 py-0.5 text-muted-foreground truncate">
+          {scope.kind === "missed" ? "Powtórka błędów · " : ""}{topicTitle(current.topic)}
+        </span>
       </div>
       <div className="h-1 rounded-full bg-muted overflow-hidden" aria-hidden>
         <div className="h-full bg-primary transition-[width] duration-300" style={{ width: `${((index + (answered ? 1 : 0)) / round.length) * 100}%` }} />

@@ -2,7 +2,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { TOPICS } from "@/lib/study/content";
 import { columnOf, useStudy } from "@/lib/study/store";
-import { QuizPanel } from "./QuizPanel";
+import { useState } from "react";
+import { QuizPanel, type QuizScope } from "./QuizPanel";
 import { StudyBoard } from "./StudyBoard";
 import { StudyChecklist } from "./StudyChecklist";
 
@@ -40,6 +41,13 @@ function MasteryStrip() {
 
 /** Dział „Nauka”: quiz, tablica tematów i lista do nauki z materiałów G-HEAT. */
 export default function StudyView() {
+  const [tab, setTab] = useState("quiz");
+  const [scope, setScope] = useState<QuizScope>({ kind: "all" });
+  // `run` wymusza świeży start, także gdy ćwiczysz ten sam temat drugi raz.
+  const [run, setRun] = useState(0);
+  const practice = (topic: string) => { setScope({ kind: "topic", topic }); setRun((n) => n + 1); setTab("quiz"); };
+  const changeScope = (s: QuizScope) => { setScope(s); setRun((n) => n + 1); };
+
   return (
     <div className="space-y-6" data-testid="study-view">
       <header className="space-y-4">
@@ -50,14 +58,17 @@ export default function StudyView() {
         <MasteryStrip />
       </header>
 
-      <Tabs defaultValue="quiz">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="h-auto w-full sm:w-auto">
           <TabsTrigger value="quiz" className="flex-1 sm:flex-none">Quiz</TabsTrigger>
           <TabsTrigger value="board" className="flex-1 sm:flex-none">Tablica</TabsTrigger>
           <TabsTrigger value="list" className="flex-1 sm:flex-none">Lista do nauki</TabsTrigger>
         </TabsList>
-        <TabsContent value="quiz" className="mt-4"><QuizPanel /></TabsContent>
-        <TabsContent value="board" className="mt-4"><StudyBoard /></TabsContent>
+        {/* forceMount: runda w toku nie ginie po zajrzeniu do tablicy lub listy. */}
+        <TabsContent value="quiz" forceMount className="mt-4 data-[state=inactive]:hidden">
+          <QuizPanel key={run} scope={scope} onScopeChange={changeScope} />
+        </TabsContent>
+        <TabsContent value="board" className="mt-4"><StudyBoard onPractice={practice} /></TabsContent>
         <TabsContent value="list" className="mt-4"><StudyChecklist /></TabsContent>
       </Tabs>
     </div>

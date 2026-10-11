@@ -60,10 +60,36 @@ test("quiz: runda z 10 pytań kończy się wynikiem i zapisuje rundę", async ({
   }
 
   await expect(page.getByRole("region", { name: "Wynik rundy" })).toBeVisible();
-  await page.getByRole("button", { name: "Kolejna runda" }).click();
+  await page.getByRole("button", { name: "Jeszcze raz" }).click();
   await expect(page.getByText("Pytanie 1 z 10")).toBeVisible();
 
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("kaczy.study.v1") ?? "{}"));
   expect(saved.rounds).toBe(1);
   expect(typeof saved.bestPercent).toBe("number");
+});
+
+test("tablica: „Ćwicz” startuje rundę z jednego tematu, a „Zrób notatkę” dodaje notatkę", async ({ page }) => {
+  await page.goto("/nauka");
+  await page.getByRole("tab", { name: "Tablica" }).click();
+  await page.getByRole("button", { name: "Spadki kanalizacji: ćwicz pytania" }).click();
+
+  // Temat „Spadki” ma jedno pytanie — runda ma 1 pytanie i wraca do quizu.
+  await expect(page.getByRole("tab", { name: "Quiz" })).toHaveAttribute("data-state", "active");
+  await expect(page.getByText("Pytanie 1 z 1")).toBeVisible();
+  await expect(page.getByText("Jaki typowy spadek zachowujemy")).toBeVisible();
+
+  // Błędna odpowiedź trafia do „Powtórki błędów”.
+  const options = page.getByRole("group", { name: "Odpowiedzi" }).getByRole("button");
+  const wrong = options.filter({ hasNotText: "Ok. 2–3%" }).first();
+  await wrong.click();
+  await page.getByRole("button", { name: "Zobacz wynik" }).click();
+  await page.getByRole("button", { name: "Wróć do wszystkich" }).click();
+  await expect(page.getByRole("button", { name: /Powtórka błędów \(1\)/ })).toBeVisible();
+
+  // Zakładki nie kasują stanu; notatka z tematu pojawia się na liście notatek.
+  await page.getByRole("tab", { name: "Tablica" }).click();
+  await page.getByRole("button", { name: "Spadki kanalizacji: zrób z tego notatkę" }).click();
+  await expect(page.getByText("Dodano notatkę „Nauka: Spadki kanalizacji”")).toBeVisible();
+  await page.getByRole("button", { name: "Notatki" }).first().click();
+  await expect(page.getByRole("heading", { name: "Nauka: Spadki kanalizacji" })).toBeVisible();
 });

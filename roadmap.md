@@ -714,3 +714,4 @@ Zrobione: `lib/saveStatus.ts` (zapis do IndexedDB: Zapisywanie… / Zapisano / l
   - **Tablica**: Do nauki → W trakcie → Umiem (przyciski ‹ ›, animowane przejście), pasek opanowania u góry.
   - **Lista do nauki**: punkty z materiałów pogrupowane w moduły i tematy, ⚠ punkty krytyczne z ryzykiem, filtr „tylko krytyczne”, ściąga wysokości.
   - Postęp w `localStorage` (`kaczy.study.v1`, `lib/study/store.ts`) — **jeszcze nie w pełnej kopii zapasowej ani w synchronizacji Yjs**. Testy: `lib/study/study.test.ts`, e2e `study.spec.ts`.
+  - Rozbudowa (2026-10-11): **Powtórka błędów** (store pamięta błędne pytania, dobra odpowiedź je czyści), **„Ćwicz”** na karcie tematu (runda tylko z jego pytań), **„Zrób notatkę”** (`lib/study/toNote.ts`: notatka z etykietą `nauka`, listą kontrolną punktów i sekcją „Na co uważać”); runda w toku nie ginie przy zmianie zakładki.
