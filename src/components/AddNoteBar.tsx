@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDictation } from "@/hooks/useDictation";
 import { useSlashMenu } from "@/hooks/useSlashMenu";
-import { Plus, Tag, Bell, Mic, ImagePlus, Paperclip, X, PenTool, ListChecks, Palette, Folder, Flag, Hash, CornerDownRight, Repeat } from "lucide-react";
+import { Plus, Tag, Bell, Mic, ImagePlus, Paperclip, X, PenTool, ListChecks, Palette, Folder, Flag, Hash, CornerDownRight, Repeat, CopyPlus } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { ColorPicker, colorClasses } from "./ColorPicker";
 import { Badge } from "@/components/ui/badge";
@@ -456,8 +456,9 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
             )}
 
             {/* Jeden rząd narzędzi z „Zamknij” — kolory pod ikoną palety, lista zadań jako przełącznik. */}
-            <div className={cn("pt-1", fullScreen && "sticky bottom-0 z-10 -mx-4 mt-auto border-t border-border/60 bg-inherit px-4 pb-2 pt-2")}>
-              <div className="flex items-center gap-1 flex-wrap flex-1">
+            <div className={cn("flex gap-2 pt-1", fullScreen ? "items-center sticky bottom-0 z-10 -mx-4 mt-auto border-t border-border/60 bg-inherit px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2" : "items-end")}>
+              {/* Na telefonie narzędzia przewijają się w jednym rzędzie, a „Zapisz” stoi po prawej, pod kciukiem. */}
+              <div className={cn("flex min-w-0 flex-1 items-center gap-1", fullScreen ? "flex-nowrap overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0" : "flex-wrap")}>
                 <IconButton size="sm" tone={showChecklist ? "active" : "muted"} onClick={() => setShowChecklist(!showChecklist)}
                   title="Lista zadań" aria-label="Lista zadań" aria-pressed={showChecklist}>
                   <ListChecks className="w-4 h-4" />
@@ -550,13 +551,19 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
                 )}
                 {/* Priority picker */}
                 <PriorityPicker priority={priority} onSet={setPriority} />
-                {!isDraftEmpty && (
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                {!isDraftEmpty && (fullScreen ? (
+                  <IconButton onClick={saveAndNext} title="Zapisz i dodaj kolejną (Ctrl+Shift+Enter)" aria-label="Zapisz i dodaj kolejną">
+                    <CopyPlus className="w-4 h-4" />
+                  </IconButton>
+                ) : (
                   <button type="button" onClick={saveAndNext}
                     title="Zapisz i otwórz pusty szkic (Ctrl+Shift+Enter)"
-                    className="pressable ml-auto px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors shrink-0">
+                    className="pressable px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors shrink-0">
                     Zapisz i dodaj kolejną
                   </button>
-                )}
+                ))}
                 <button onClick={handleClose}
                   title={isDraftEmpty ? "Zamknij" : "Zapisz notatkę (Ctrl+Enter)"}
                   className={cn("pressable px-4 py-1.5 text-sm font-medium font-display text-primary-ink hover:bg-primary/10 rounded-lg transition-colors shrink-0", isDraftEmpty && "ml-auto",
