@@ -701,7 +701,7 @@ const Index = () => {
   ];
 
   return (
-    <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={(e) => setDraggingNoteId(e.active.id as string)} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={(e) => setDraggingNoteId(e.active.id as string)} onDragEnd={handleDragEnd} onDragCancel={() => setDraggingNoteId(null)}>
     <PaperBackdrop />
     <div className="min-h-screen flex relative">
       <AppSidebar

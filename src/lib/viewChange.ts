@@ -103,6 +103,12 @@ export function changeView(apply: () => void): void {
   const focusId = focusedNoteId();
 
   const settle = () => {
+    // Na czas zmiany kafle mają prawdziwe wysokości, nie zastępcze z `content-visibility`
+    // (index.css) — inaczej kotwica odjeżdżała, gdy kafle nad nią dostawały wymiary klatkę później.
+    // Po powrocie każdy pamięta swój rozmiar (`contain-intrinsic-size: auto`), więc nic nie skacze.
+    const root = document.documentElement;
+    root.setAttribute("data-view-changing", "");
+    requestAnimationFrame(() => requestAnimationFrame(() => root.removeAttribute("data-view-changing")));
     pendingAnchorId = anchor?.id ?? null;
     try { flushSync(apply); } finally { pendingAnchorId = null; }
     const placed = anchor ? restoreAnchor(anchor) : true;

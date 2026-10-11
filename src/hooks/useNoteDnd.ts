@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import type { Folder } from "@/hooks/useNotes";
@@ -40,6 +40,11 @@ export function useNoteDnd({ displayNoteIds, folders, moveNoteToFolder, reorderN
   );
 
   const [draggingNoteId, setDraggingNoteId] = useState<string | null>(null);
+  // W trakcie przeciągania kafle wyjeżdżają poza swoje opakowania — `content-visibility`
+  // (paint containment) by je przycinał, więc CSS wyłącza go po tym atrybucie.
+  useEffect(() => {
+    document.documentElement.toggleAttribute("data-note-dragging", draggingNoteId !== null);
+  }, [draggingNoteId]);
 
   function handleDragEnd(event: DragEndEvent) {
     setDraggingNoteId(null);

@@ -615,6 +615,20 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
 .note-grid-fill .note-card { display: flex; flex-direction: column; }
 .note-grid-fill .card-body { flex: 1 1 auto; display: flex; flex-direction: column; }
 .note-grid-fill .card-meta { margin-top: auto; padding-top: 0.375rem; }
+/* Kafle poza ekranem bez stylów, układu i malowania: przeliczenie stylów przy 300 notatkach
+   (np. zmiana motywu) ~1000 → ~80 ms przy CPU 4×. `content-visibility` przycina to, co wystaje
+   poza opakowanie — `overflow-clip-margin` zostawia miejsce na cień i uniesienie kafla, więc
+   bez jego obsługi (Safari) zostaje jak było. Wyłączone w edycji w kaflu (podpowiedzi wystają)
+   i w trakcie przeciągania (karty wyjeżdżają poza swoje miejsce), a na chwilę zmiany widoku
+   (`changeView` kotwiczy ekran na prawdziwych wysokościach). */
+@supports (overflow-clip-margin: 1px) {
+  /* Zawsze: rozmiar jest zapamiętywany tylko przy `auto` — także w chwilach bez `content-visibility`. */
+  [data-cv] > [data-note-id-wrap] { contain-intrinsic-block-size: auto 160px; }
+  html:not([data-note-dragging]):not([data-view-changing]) [data-cv] > [data-note-id-wrap]:not(:has([data-tile-editing])) {
+    content-visibility: auto;
+    overflow-clip-margin: 40px;
+  }
+}
 
 /* Rachunek w podsumowaniu Grafiku: papier odrobinę jaśniejszy od karty i ząbkowana dolna krawędź (maska). */
 .receipt {
