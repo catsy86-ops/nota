@@ -705,6 +705,27 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
   .n-mark-dot { animation: none; opacity: 0; }
 }
 
+/* ── Hasło (AnimatedTagline.tsx): litera po literze + fala koloru ───────── */
+.tagline-word { display: inline-block; white-space: pre; }
+.tagline-char {
+  display: inline-block;
+  opacity: 0;
+  animation:
+    tagline-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) calc(0.25s + var(--i) * 0.035s) forwards,
+    tagline-wave 7s ease-in-out calc(1.8s + var(--i) * 0.07s) infinite;
+}
+@keyframes tagline-in {
+  from { opacity: 0; transform: translateY(0.6em); filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+@keyframes tagline-wave {
+  0%, 12%, 100% { color: inherit; }
+  5% { color: hsl(var(--primary)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tagline-char { animation: none; opacity: 1; }
+}
+
 /* ── Wordmark „NOTKI” (NotkiLogo.tsx) ─────────────────────────────────── */
 /* Podzbiór Unbounded: tylko litery N O T K I, grubość 800 (852 B zamiast ~50 KB).
    Generowany z @fontsource-variable/unbounded przez subset-font

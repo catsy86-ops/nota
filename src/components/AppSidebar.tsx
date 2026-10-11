@@ -14,6 +14,7 @@ import { SidebarAddFolderButton } from "@/components/sidebar/SidebarAddFolderBut
 import { SidebarRow, SidebarCount } from "@/components/sidebar/SidebarRow";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { NMonogramLogo } from "@/components/NMonogramLogo";
+import { AnimatedTagline } from "@/components/AnimatedTagline";
 import { NotkiLogo } from "@/components/NotkiLogo";
 import type { View } from "@/hooks/useFilteredNotes";
 import { modShortcut } from "@/lib/platform";
@@ -135,7 +136,7 @@ export function AppSidebar({
                 </button>
                 <div>
                   <h1 className="leading-none"><NotkiLogo /></h1>
-                  <p className="text-2xs text-muted-foreground font-medium mt-1.5">Notuj, zanim zapomnisz 🍺</p>
+                  <AnimatedTagline text="Notuj, zanim zapomnisz" className="text-2xs text-muted-foreground font-medium mt-1.5" />
                 </div>
               </div>
 
