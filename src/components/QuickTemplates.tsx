@@ -1,5 +1,9 @@
-import { Lightbulb, ListChecks, Users, BookOpen, Plane, Coffee } from "lucide-react";
+import { useState } from "react";
+import { Lightbulb, ListChecks, Users, BookOpen, Plane, Coffee, Plus, Pencil } from "lucide-react";
 import type { NoteColor, ChecklistItem } from "@/hooks/useNotes";
+import { CustomTemplateDialog } from "@/components/CustomTemplateDialog";
+import { useCustomTemplates, type CustomTemplate } from "@/lib/customTemplates";
+import { renderTemplate } from "@/lib/templateVars";
 
 interface Template {
   id: string;
@@ -85,7 +89,11 @@ interface Props {
 const chipClass = "group shrink-0 flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-xs font-medium border border-border/60 bg-card hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-colors";
 
 export function QuickTemplates({ onPick, onCreateLabel, onDailyNote }: Props) {
+  const custom = useCustomTemplates();
+  // `undefined` = dialog zamknięty, `null` = nowy szablon, obiekt = edycja.
+  const [editing, setEditing] = useState<CustomTemplate | null | undefined>(undefined);
   return (
+    <>
     <div
       // Fade na prawej krawędzi mówi, że pasek przewija się w bok (na telefonie
       // chipy nie mieszczą się w szerokości).
@@ -121,6 +129,39 @@ export function QuickTemplates({ onPick, onCreateLabel, onDailyNote }: Props) {
           </button>
         );
       })}
+      {custom.map((t) => (
+        <span key={t.id} className="group/tpl shrink-0 flex items-center">
+          <button
+            type="button"
+            onClick={() => {
+              const now = new Date();
+              t.labels.forEach(onCreateLabel);
+              onPick(renderTemplate(t.title, now), renderTemplate(t.content, now), "default", t.labels, null, [], []);
+            }}
+            title="Własny szablon — zmienne ({{data}} itd.) podstawią się przy tworzeniu"
+            className={`${chipClass} rounded-r-none`}
+          >
+            <span aria-hidden>{t.emoji || "📄"}</span>
+            <span>{t.name}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setEditing(t)}
+            aria-label={`Edytuj szablon: ${t.name}`}
+            className="self-stretch px-1.5 rounded-r-lg border border-l-0 border-border/60 bg-card text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
+          >
+            <Pencil className="w-3 h-3" />
+          </button>
+        </span>
+      ))}
+      <button type="button" onClick={() => setEditing(null)} className={chipClass} title="Zapisz własny szablon ze zmiennymi, np. {{data}}">
+        <Plus className="w-3.5 h-3.5" />
+        <span>Własny</span>
+      </button>
     </div>
+    {editing !== undefined && (
+      <CustomTemplateDialog key={editing?.id ?? "new"} template={editing} onOpenChange={(o) => { if (!o) setEditing(undefined); }} />
+    )}
+    </>
   );
 }

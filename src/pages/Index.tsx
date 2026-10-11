@@ -571,6 +571,39 @@ const Index = () => {
       : undefined,
   });
 
+  /** Zbiorcze: przypnij / odepnij zaznaczone (jeśli któraś jest nieprzypięta — przypina wszystkie). */
+  function handleBulkPin() {
+    const chosen = notesRef.current.filter((n) => selectedIds.has(n.id));
+    if (chosen.length === 0) return;
+    const pin = chosen.some((n) => !n.pinned);
+    const changed = chosen.filter((n) => n.pinned !== pin).map((n) => n.id);
+    changed.forEach((id) => togglePin(id));
+    clearSelection();
+    toastWithUndo(`${pin ? "Przypięto" : "Odpięto"} ${changed.length}`, () => changed.forEach((id) => togglePin(id)), { icon: "📌" });
+  }
+
+  /** Zbiorcze: przenieś zaznaczone do folderu (`null` = bez folderu), z „Cofnij”. */
+  function handleBulkMoveToFolder(folderId: string | null) {
+    const prev = notesRef.current.filter((n) => selectedIds.has(n.id) && n.folderId !== folderId).map((n) => [n.id, n.folderId] as const);
+    if (prev.length === 0) { clearSelection(); return; }
+    prev.forEach(([id]) => handleMoveToFolderGlow(id, folderId));
+    clearSelection();
+    const name = folderId ? folders.find((f) => f.id === folderId)?.name ?? "folder" : "Bez folderu";
+    toastWithUndo(`Przeniesiono ${prev.length} do „${name}”`, () => prev.forEach(([id, from]) => handleMoveToFolderGlow(id, from)), { icon: "📁" });
+  }
+
+  /** Zbiorcze: dodaj etykietę do zaznaczonych (istniejące zostają), z „Cofnij”. */
+  function handleBulkAddLabel(label: string) {
+    const name = label.trim().replace(/^#/, "");
+    if (!name) return;
+    const prev = notesRef.current.filter((n) => selectedIds.has(n.id) && !n.labels.includes(name)).map((n) => [n.id, n.labels] as const);
+    if (prev.length === 0) { clearSelection(); return; }
+    addLabel(name);
+    prev.forEach(([id, labels]) => updateNote(id, { labels: [...labels, name] }));
+    clearSelection();
+    toastWithUndo(`Dodano #${name} do ${prev.length}`, () => prev.forEach(([id, labels]) => updateNote(id, { labels })), { icon: "🏷️" });
+  }
+
   /** Przeniesienie kart do kolumny tablicy: przypięcie, etykieta albo folder — z „Cofnij”. */
   function moveToColumn(ids: string[], key: string) {
     if (groupBy === "date") {
@@ -1001,6 +1034,11 @@ const Index = () => {
       onArchive={handleBulkArchive}
       onTrash={handleBulkTrash}
       onColor={handleBulkColor}
+      folders={folders}
+      allLabels={allLabels}
+      onPin={handleBulkPin}
+      onMoveToFolder={handleBulkMoveToFolder}
+      onAddLabel={handleBulkAddLabel}
       view={view === "trash" ? "trash" : view === "archive" ? "archive" : "other"}
       onRestore={handleBulkRestoreView}
       onDeleteForever={() => setConfirmDeleteIds(Array.from(selectedIds))}

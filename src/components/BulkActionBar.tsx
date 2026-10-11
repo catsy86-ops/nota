@@ -1,8 +1,9 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Archive, ArchiveRestore, Download, Trash2, Palette, X, CheckSquare, Undo2 } from "lucide-react";
+import { useState } from "react";
+import { Archive, ArchiveRestore, Download, Trash2, Palette, X, CheckSquare, Undo2, Pin, FolderInput, Tag } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ColorPicker } from "./ColorPicker";
-import type { NoteColor } from "@/hooks/useNotes";
+import type { Folder, NoteColor } from "@/hooks/useNotes";
 import { IconButton } from "@/components/ui/icon-button";
 import { spring } from "@/lib/motion";
 
@@ -22,9 +23,16 @@ interface Props {
   onDeleteForever?: () => void;
   /** Eksport zaznaczonych do ZIP z osobnymi plikami `.md`. */
   onExport?: () => void;
+  /** Foldery i etykiety do zbiorczego przenoszenia / etykietowania (tylko na liście notatek). */
+  folders?: Folder[];
+  allLabels?: string[];
+  onPin?: () => void;
+  onMoveToFolder?: (folderId: string | null) => void;
+  onAddLabel?: (label: string) => void;
 }
 
-export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArchive, onTrash, onColor, view = "other", onRestore, onDeleteForever, onExport }: Props) {
+export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArchive, onTrash, onColor, view = "other", onRestore, onDeleteForever, onExport, folders = [], allLabels = [], onPin, onMoveToFolder, onAddLabel }: Props) {
+  const [newLabel, setNewLabel] = useState("");
   const inTrash = view === "trash";
   const inArchive = view === "archive";
   return (
@@ -58,6 +66,60 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
               </PopoverTrigger>
               <PopoverContent side="top" className="w-auto p-2">
                 <ColorPicker selected="default" onSelect={(c: NoteColor) => onColor(c)} />
+              </PopoverContent>
+            </Popover>
+          )}
+          {!inTrash && !inArchive && onPin && (
+            <IconButton onClick={onPin} title="Przypnij / odepnij zaznaczone" aria-label="Przypnij zaznaczone">
+              <Pin className="w-4 h-4" />
+            </IconButton>
+          )}
+          {!inTrash && !inArchive && onMoveToFolder && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <IconButton title="Przenieś do folderu" aria-label="Przenieś do folderu">
+                  <FolderInput className="w-4 h-4" />
+                </IconButton>
+              </PopoverTrigger>
+              <PopoverContent side="top" className="w-56 p-1 max-h-64 overflow-y-auto">
+                <button onClick={() => onMoveToFolder(null)} className="w-full text-left text-sm px-2 py-1.5 coarse:py-2.5 rounded-md hover:bg-muted text-muted-foreground">
+                  Bez folderu
+                </button>
+                {folders.map((f) => (
+                  <button key={f.id} onClick={() => onMoveToFolder(f.id)} className="w-full text-left text-sm px-2 py-1.5 coarse:py-2.5 rounded-md hover:bg-muted truncate">
+                    {f.emoji ? `${f.emoji} ` : ""}{f.name}
+                  </button>
+                ))}
+              </PopoverContent>
+            </Popover>
+          )}
+          {!inTrash && !inArchive && onAddLabel && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <IconButton title="Dodaj etykietę" aria-label="Dodaj etykietę">
+                  <Tag className="w-4 h-4" />
+                </IconButton>
+              </PopoverTrigger>
+              <PopoverContent side="top" className="w-56 p-1">
+                <form
+                  className="p-1"
+                  onSubmit={(e) => { e.preventDefault(); if (newLabel.trim()) { onAddLabel(newLabel); setNewLabel(""); } }}
+                >
+                  <input
+                    value={newLabel}
+                    onChange={(e) => setNewLabel(e.target.value)}
+                    placeholder="Nowa etykieta…"
+                    aria-label="Nowa etykieta"
+                    className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  />
+                </form>
+                <div className="max-h-48 overflow-y-auto">
+                  {allLabels.map((l) => (
+                    <button key={l} onClick={() => onAddLabel(l)} className="w-full text-left text-sm px-2 py-1.5 coarse:py-2.5 rounded-md hover:bg-muted truncate">
+                      #{l}
+                    </button>
+                  ))}
+                </div>
               </PopoverContent>
             </Popover>
           )}
