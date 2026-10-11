@@ -757,7 +757,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
               )}
               {note.content && (
                 // Kafel to zapowiedź, nie lektura: 4 linie (na telefonie 3) i zwykła interlinia — pełny tekst jest w czytniku.
-                <div className="line-clamp-4 max-sm:line-clamp-3 text-foreground/85 [&_p]:leading-normal [&_li]:leading-normal [&_p]:mb-0.5">
+                // Nagłówki z treści w rozmiarze treści — duże i pogrubione konkurowały z tytułem kafla.
+                <div className="line-clamp-4 max-sm:line-clamp-3 text-foreground/85 [&_p]:leading-normal [&_li]:leading-normal [&_p]:mb-0.5 [&_:is(h1,h2,h3,h4,h5,h6)]:!text-[1em] [&_:is(h1,h2,h3,h4,h5,h6)]:!leading-normal [&_:is(h1,h2,h3,h4,h5,h6)]:!m-0 [&_:is(h1,h2,h3,h4,h5,h6)]:!font-semibold">
                   <MarkdownRenderer content={note.content} knownTitles={knownTitles} onWikiClick={onWikiClick} />
                 </div>
               )}
@@ -773,7 +774,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
               </div>
               {/* Zaległy termin: odhaczenie i odłożenie bez otwierania notatki (wcześniej tylko w dymku przypomnienia). */}
               {onUpdate && note.reminder !== null && note.reminder <= Date.now() && !note.trashed && !isArchived && !note.locked && (
-                <div className="mt-2 flex flex-wrap items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                <div className="mt-2 flex flex-wrap items-center gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
                   <button
                     type="button"
                     onClick={() => {
@@ -782,7 +783,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                       onUpdate(note.id, { reminder: null });
                       toastWithUndo("Przypomnienie odhaczone", () => onUpdate(note.id, { reminder: prev }), { id: `rem-done-${note.id}` });
                     }}
-                    className="pressable inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 coarse:py-2 text-2xs font-medium text-primary-ink hover:bg-primary/20"
+                    className="pressable inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 sm:px-2.5 py-1 coarse:py-2 text-2xs font-medium text-primary-ink hover:bg-primary/20"
                   >
                     <Check className="w-3 h-3" aria-hidden /> Gotowe
                   </button>
@@ -794,9 +795,11 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                       onUpdate(note.id, { reminder: snoozeTimes().tomorrow9 });
                       toastWithUndo("Przesunięto na jutro, 9:00", () => onUpdate(note.id, { reminder: prev }), { id: `rem-snooze-${note.id}` });
                     }}
-                    className="pressable inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2.5 py-1 coarse:py-2 text-2xs font-medium text-muted-foreground hover:text-foreground"
+                    className="pressable inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 sm:px-2.5 py-1 coarse:py-2 text-2xs font-medium text-muted-foreground hover:text-foreground"
+                    aria-label="Jutro rano"
                   >
-                    Jutro rano
+                    {/* Na telefonie samo „Jutro” — z „rano” oba przyciski nie mieściły się w wąskim kaflu i szły w pion. */}
+                    Jutro<span className="max-sm:hidden">rano</span>
                   </button>
                 </div>
               )}
@@ -862,7 +865,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                 </div>
               )}
               {/* Liczba słów jest w czytniku — na wąskim kaflu łamała stopkę na trzy linie. */}
-              <div className="card-meta flex items-center gap-1.5 mt-1.5 text-2xs text-muted-foreground whitespace-nowrap">
+              <div className="card-meta flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground whitespace-nowrap">
                 {prefs.showReadingTime && wordCount > 0 && readMin >= 2 && <><span>~{readMin} min</span><span aria-hidden>·</span></>}
                 <span className="tabular-nums">{format(new Date(note.updatedAt), "d MMM", { locale: pl })}</span>
               </div>

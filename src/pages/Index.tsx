@@ -762,7 +762,9 @@ const Index = () => {
           )}
 
           {canCompose && (
-            <motion.div initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={tween.enter} className="space-y-3">
+            <motion.div initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={tween.enter}
+              // Zwinięty pasek jest pod `md` schowany — pusty pojemnik dokładał drugi odstęp `gap` nad notatkami (~50 px).
+              className="space-y-3 max-md:[&:not(:has([data-composer-open]))]:hidden">
               <div data-add-note-bar>
                 <AddNoteBar ref={addNoteRef} onAdd={handleComposerAdd} wikiTitles={wikiIndex.titles} parentOptions={composerParents} folders={folders} allLabels={allLabels} onCreateLabel={addLabel} destination={composeDestination}
                   templates={(done) => (
