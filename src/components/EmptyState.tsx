@@ -108,7 +108,7 @@ export function EmptyState({ view, search, elsewhere, onGo }: { view: View; sear
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="flex flex-wrap items-center justify-center gap-2 max-w-md mx-auto"
+          className="coarse:hidden flex flex-wrap items-center justify-center gap-2 max-w-md mx-auto"
         >
           {[
             { k: modShortcut("K"), l: "paleta poleceń" },

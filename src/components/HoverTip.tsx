@@ -47,17 +47,24 @@ export function HoverTip() {
     };
     const onFocus = (e: FocusEvent) => {
       const el = target(e);
-      if (!el || !el.matches(":focus-visible")) return;
+      // Po dotyku fokus wraca na przycisk (zamknięte okno/menu) — dymek wisiałby bez końca.
+      if (!el || touched || !el.matches(":focus-visible")) return;
       hide();
       current.current = el;
       show(el);
     };
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") hide(); };
+    // Ostatnie źródło wejścia: dotyk/rysik wyłącza dymek przy fokusie, klawisz go przywraca.
+    let touched = false;
+    const onPointerDown = (e: PointerEvent) => { touched = e.pointerType !== "mouse"; hide(); };
+    const onKey = (e: KeyboardEvent) => {
+      touched = false;
+      if (e.key === "Escape") hide();
+    };
 
     document.addEventListener("pointerover", onOver);
     document.addEventListener("focusin", onFocus);
     document.addEventListener("focusout", hide);
-    document.addEventListener("pointerdown", hide, true);
+    document.addEventListener("pointerdown", onPointerDown, true);
     document.addEventListener("keydown", onKey);
     window.addEventListener("scroll", hide, { capture: true, passive: true });
     return () => {
@@ -65,7 +72,7 @@ export function HoverTip() {
       document.removeEventListener("pointerover", onOver);
       document.removeEventListener("focusin", onFocus);
       document.removeEventListener("focusout", hide);
-      document.removeEventListener("pointerdown", hide, true);
+      document.removeEventListener("pointerdown", onPointerDown, true);
       document.removeEventListener("keydown", onKey);
       window.removeEventListener("scroll", hide, { capture: true });
     };

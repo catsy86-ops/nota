@@ -24,6 +24,12 @@ const STEPS = [
   },
 ];
 
+const PHONE_DESC: Record<number, { desc: string }> = {
+  0: { desc: "Stuknij duży przycisk + na dole i po prostu pisz. Przytrzymaj go, by od razu dodać listę, zdjęcie albo rysunek. Zapisuje się samo." },
+  1: { desc: "Wyszukiwarka u góry przeszukuje tytuły i treść. Foldery i etykiety znajdziesz w panelu otwieranym ikoną w lewym górnym rogu." },
+  2: { desc: "Notatki możesz przypiąć, zarchiwizować (przeciągnij kafel w prawo) albo przenieść do kosza (w lewo) — z kosza wracają przez 30 dni." },
+};
+
 export function OnboardingTour() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
@@ -47,7 +53,9 @@ export function OnboardingTour() {
     setStep(0);
   }
 
-  const s = STEPS[step];
+  // Na telefonie nie ma paska „Zapisz notatkę…” ani panelu po lewej — teksty o „+” i menu „Więcej”.
+  const phone = typeof matchMedia !== "undefined" && matchMedia("(max-width: 767px)").matches;
+  const s = { ...STEPS[step], ...(phone ? PHONE_DESC[step] : {}) };
   const last = step === STEPS.length - 1;
 
   return (
