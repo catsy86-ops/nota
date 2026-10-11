@@ -7,6 +7,7 @@ import type { Folder, FolderColor } from "@/hooks/useNotes";
 import { folderColorDot } from "@/components/FolderPicker";
 import { SidebarRow, SidebarRowMenu } from "@/components/sidebar/SidebarRow";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import type { Progress } from "@/lib/folderProgress";
 
 const FOLDER_COLORS: { value: FolderColor; label: string }[] = [
   { value: "default", label: "Domyślny" },
@@ -22,8 +23,10 @@ const FOLDER_COLORS: { value: FolderColor; label: string }[] = [
 
 const FOLDER_EMOJIS = ["📁", "📂", "📝", "📌", "⭐", "💡", "🎯", "🔥", "💼", "🏠", "🎓", "🎨", "🎵", "📷", "✈️", "🍕", "🌱", "💰", "❤️", "🚀", "📚", "🛒", "💻", "🧪", "🏋️", "🎮", "🐾", "🌍"];
 
-export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, view, onSelect, onRename, onDelete, onSetColor, onSetEmoji, onAddSubfolder }: {
+export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, view, progress, onSelect, onRename, onDelete, onSetColor, onSetEmoji, onAddSubfolder }: {
   folder: Folder; folders: Folder[]; isActive: boolean; activeFolderId: string | null; view: string;
+  /** Postęp zadań folderu razem z podfolderami (brak = folder bez zadań). */
+  progress?: Map<string, Progress>;
   onSelect: (id: string) => void; onRename: (id: string, name: string) => void; onDelete: (id: string) => void;
   onSetColor: (id: string, color: FolderColor) => void; onSetEmoji: (id: string, emoji: string | null) => void; onAddSubfolder: (parentId: string, name: string) => void;
 }) {
@@ -93,6 +96,24 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
           <span className={cn("w-2.5 h-2.5 rounded-full", folderColorDot[folder.color] || folderColorDot.default)} />
         )}
         label={folder.name}
+        trailing={(() => {
+          const p = progress?.get(folder.id);
+          if (!p) return null;
+          const pct = Math.round((p.done / p.total) * 100);
+          return (
+            <span
+              className="ml-auto flex shrink-0 items-center gap-1.5 pl-2 text-2xs tabular-nums text-muted-foreground"
+              title={`Zadania w folderze: ${p.done} z ${p.total} (${pct}%)`}
+              data-folder-progress={folder.id}
+            >
+              <span className="sr-only">Wykonano {p.done} z {p.total} zadań</span>
+              <span aria-hidden className="h-1 w-8 overflow-hidden rounded-full bg-muted">
+                <span className="block h-full rounded-full bg-primary transition-[width] duration-base" style={{ width: `${pct}%` }} />
+              </span>
+              <span aria-hidden>{p.done}/{p.total}</span>
+            </span>
+          );
+        })()}
         actions={
             <SidebarRowMenu label={`folderu ${folder.name}`} onCloseAutoFocus={keepInputFocus}>
               <DropdownMenuItem onSelect={() => { focusInput.current = true; setEditing(true); }}>
@@ -184,6 +205,7 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
               isActive={view === "folder" && activeFolderId === child.id}
               activeFolderId={activeFolderId}
               view={view}
+              progress={progress}
               onSelect={onSelect}
               onRename={onRename}
               onDelete={onDelete}

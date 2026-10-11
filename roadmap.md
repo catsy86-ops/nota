@@ -705,3 +705,4 @@ Zrobione: `lib/saveStatus.ts` (zapis do IndexedDB: Zapisywanie… / Zapisano / l
 ### Kalendarz + Grafik: godziny dnia i QoL (2026-10-11)
 
 - [x] Panel dnia w Kalendarzu: „Zmień godziny” / „Dodaj zmianę” otwiera okno dnia z Grafiku (rodzaj zmiany, godziny ręcznie, −/+15 min); klawisz **Z** na siatce robi to samo; „Jak poprzedni dzień” wpisuje zmianę z poprzedniego dnia z „Cofnij”. e2e `calendar-shift-edit.spec.ts`.
+- [x] Postęp folderu jako „projektu” (2026-10-11): w pasku bocznym pasek i licznik `zrobione/wszystkie` zadań (lista kontrolna + pola `- [ ]` w treści, razem z podfolderami; bez archiwum, kosza i notatek prywatnych). `lib/folderProgress.ts`, e2e `folder-progress.spec.ts`.

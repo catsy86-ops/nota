@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { folderProgress } from "@/lib/folderProgress";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
 import {
@@ -86,6 +87,7 @@ export function AppSidebar({
   const [moreOpen, setMoreOpen] = useState(false);
   const isMobile = useIsMobile();
   const { notes, allLabels, folders, renameLabel, removeLabel, addFolder, updateFolder, deleteFolder } = useNotesContext();
+  const progressByFolder = useMemo(() => folderProgress(notes, folders), [notes, folders]);
   const { filters, rename: renameFilter, remove: removeFilter } = useSavedFilters();
   const counts = useMemo(
     () => filters.map((f) => searchNotes(notes, f.query, { folders }).length),
@@ -229,6 +231,7 @@ export function AppSidebar({
                       isActive={view === "folder" && activeFolder === folder.id}
                       activeFolderId={activeFolder}
                       view={view}
+                      progress={progressByFolder}
                       onSelect={onGoFolder}
                       onRename={(id, name) => updateFolder(id, { name })}
                       onDelete={(id) => deleteFolder(id)}
