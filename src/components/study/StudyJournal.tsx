@@ -1,15 +1,20 @@
-import { useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, Mic, NotebookPen, Play, Trash2 } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { AlertTriangle, Camera, CheckCircle2, Mic, NotebookPen, Play, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { toastWithUndo } from "@/lib/undoToast";
 import { useDictation } from "@/hooks/useDictation";
+import { NoteImage } from "@/components/NoteImage";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { prepareImage } from "@/lib/imagePrepare";
+import { imageStore } from "@/lib/imageStore";
 import { CHECKLIST, MODULES, TOPICS } from "@/lib/study/content";
 import {
   addJournalEntry,
   columnOf,
+  JOURNAL_MAX_IMAGES,
   removeJournalEntry,
   restoreJournalEntry,
   setSite,
@@ -42,6 +47,9 @@ export function StudyJournal({ initialTopic = "", onPractice }: { initialTopic?:
   const [kind, setKind] = useState<JournalKind>("ok");
   const [text, setText] = useState("");
   const [checked, setChecked] = useState<Set<string>>(new Set());
+  const [images, setImages] = useState<string[]>([]);
+  const [zoom, setZoom] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
   // Ręce zajęte robotą: dyktowanie dopisuje rozpoznane zdanie na końcu wpisu.
   const dictation = useDictation((spoken) => {
     if (!spoken) return;
@@ -64,15 +72,32 @@ export function StudyJournal({ initialTopic = "", onPractice }: { initialTopic?:
     });
   }
 
+  async function addPhotos(files: File[]) {
+    let skipped = 0;
+    try {
+      for (const file of files) {
+        if (images.length >= JOURNAL_MAX_IMAGES) { toast(`Wpis mieści maksymalnie ${JOURNAL_MAX_IMAGES} zdjęcia`); break; }
+        const prepared = await prepareImage(file);
+        if (!prepared) { skipped += 1; continue; }
+        const ref = await imageStore.putBlob(prepared);
+        setImages((prev) => (prev.length >= JOURNAL_MAX_IMAGES || prev.includes(ref) ? prev : [...prev, ref]));
+      }
+    } catch {
+      toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki." });
+    }
+    if (skipped > 0) toast.error("Nie udało się zmniejszyć zdjęcia do 2 MB");
+  }
+
   function submit() {
     const wasDone = topic && columnOf(study, topic) === "done";
-    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked] });
+    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images });
     if (!entry) {
-      toast("Wpisz, co się dzieje, albo zaznacz sprawdzone punkty");
+      toast("Wpisz, co się dzieje, dodaj zdjęcie albo zaznacz sprawdzone punkty");
       return;
     }
     setText("");
     setChecked(new Set());
+    setImages([]);
     toast.success(kind === "problem" && wasDone ? "Zapisano problem — temat wraca do powtórki" : "Dodano wpis do dziennika");
   }
 
@@ -203,10 +228,42 @@ export function StudyJournal({ initialTopic = "", onPractice }: { initialTopic?:
           </span>
         </label>
 
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-xs text-muted-foreground">
-            {checked.size > 0 ? `Sprawdzone punkty: ${checked.size}/${items.length}` : "Ctrl+Enter dodaje wpis"}
-          </p>
+        {images.length > 0 && (
+          <ul className="flex flex-wrap gap-2" aria-label="Zdjęcia we wpisie">
+            {images.map((ref) => (
+              <li key={ref} className="relative">
+                <NoteImage imageRef={ref} alt="Zdjęcie z budowy" className="h-20 w-20 rounded-lg object-cover" placeholderClassName="h-20 w-20 rounded-lg" />
+                <button
+                  type="button"
+                  onClick={() => setImages((prev) => prev.filter((r) => r !== ref))}
+                  aria-label="Usuń zdjęcie z wpisu"
+                  className="absolute -right-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full bg-destructive text-destructive-foreground coarse:h-8 coarse:w-8"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              data-testid="journal-photo-input"
+              onChange={(e) => { const f = Array.from(e.target.files ?? []); e.target.value = ""; void addPhotos(f); }}
+            />
+            <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} className="coarse:h-11">
+              <Camera className="mr-1.5 h-4 w-4" />Dodaj zdjęcie
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              {checked.size > 0 ? `Sprawdzone punkty: ${checked.size}/${items.length}` : "Ctrl+Enter dodaje wpis"}
+            </p>
+          </div>
           <Button onClick={submit} className="coarse:h-11">Dodaj wpis</Button>
         </div>
       </section>
@@ -255,6 +312,17 @@ export function StudyJournal({ initialTopic = "", onPractice }: { initialTopic?:
                               {e.checked.length > 0 && <span className="tabular-nums">punkty {e.checked.length}/{total}</span>}
                               {e.site && <span className="truncate">{e.site}</span>}
                             </div>
+                            {e.images.length > 0 && (
+                              <ul className="mt-2 flex flex-wrap gap-2" aria-label="Zdjęcia wpisu">
+                                {e.images.map((ref) => (
+                                  <li key={ref}>
+                                    <button type="button" onClick={() => setZoom(ref)} aria-label="Powiększ zdjęcie" className="block overflow-hidden rounded-lg">
+                                      <NoteImage imageRef={ref} alt="" className="h-16 w-16 object-cover" placeholderClassName="h-16 w-16" />
+                                    </button>
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
                           </div>
                           <button
                             type="button"
@@ -274,6 +342,12 @@ export function StudyJournal({ initialTopic = "", onPractice }: { initialTopic?:
           </div>
         )}
       </section>
+      <Dialog open={zoom !== null} onOpenChange={(o) => { if (!o) setZoom(null); }}>
+        <DialogContent className="max-w-3xl p-3">
+          <DialogTitle className="sr-only">Zdjęcie z budowy</DialogTitle>
+          {zoom && <NoteImage imageRef={zoom} alt="Zdjęcie z budowy" loading="eager" className="max-h-[80dvh] w-full rounded-lg object-contain" />}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

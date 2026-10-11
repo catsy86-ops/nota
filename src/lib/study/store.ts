@@ -1,4 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
+import { isImageRef } from "@/lib/imageStore";
 import { CHECKLIST, QUESTIONS, TOPICS } from "./content";
 
 export type Column = "todo" | "doing" | "done";
@@ -20,7 +21,12 @@ export interface JournalEntry {
   site: string;
   /** Punkty listy do nauki potwierdzone na budowie (id z `CHECKLIST`). */
   checked: string[];
+  /** Zdjęcia z budowy: klucze z `imageStore` (bajty poza stanem Nauki). */
+  images: string[];
 }
+
+/** Ile zdjęć mieści jeden wpis. */
+export const JOURNAL_MAX_IMAGES = 4;
 
 export const JOURNAL_MAX_ENTRIES = 500;
 export const JOURNAL_MAX_TEXT = 2000;
@@ -74,11 +80,15 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
     const text = typeof e.text === "string" ? e.text.slice(0, JOURNAL_MAX_TEXT) : "";
     const topic = typeof e.topic === "string" && topicSet.has(e.topic) ? e.topic : null;
     const checkedIds = Array.isArray(e.checked) ? e.checked.filter((id): id is string => typeof id === "string" && itemIds.has(id)).slice(0, 60) : [];
-    if (!text.trim() && checkedIds.length === 0) continue;
+    const images = Array.isArray(e.images)
+      ? e.images.filter((r): r is string => typeof r === "string" && isImageRef(r)).slice(0, JOURNAL_MAX_IMAGES)
+      : [];
+    if (!text.trim() && checkedIds.length === 0 && images.length === 0) continue;
     journal.push({
       id: e.id, at: e.at, kind: e.kind as JournalKind, topic, text,
       site: typeof e.site === "string" ? e.site.slice(0, SITE_MAX) : "",
       checked: checkedIds,
+      images,
     });
   }
   journal.sort((a, b) => a.at - b.at);
@@ -151,6 +161,7 @@ export interface NewJournalEntry {
   topic: string | null;
   text: string;
   checked?: string[];
+  images?: string[];
 }
 
 /**
@@ -160,7 +171,8 @@ export interface NewJournalEntry {
 export function addJournalEntry(input: NewJournalEntry, now: number = Date.now()): JournalEntry | null {
   const text = input.text.trim().slice(0, JOURNAL_MAX_TEXT);
   const checked = (input.checked ?? []).filter((id) => CHECKLIST.some((c) => c.id === id));
-  if (!text && checked.length === 0) return null;
+  const images = (input.images ?? []).filter(isImageRef).slice(0, JOURNAL_MAX_IMAGES);
+  if (!text && checked.length === 0 && images.length === 0) return null;
   const s = store.get();
   const entry: JournalEntry = {
     id: crypto.randomUUID(),
@@ -170,6 +182,7 @@ export function addJournalEntry(input: NewJournalEntry, now: number = Date.now()
     text,
     site: s.site,
     checked,
+    images,
   };
   const board = { ...s.board };
   if (entry.kind === "problem" && entry.topic && board[entry.topic] === "done") board[entry.topic] = "doing";

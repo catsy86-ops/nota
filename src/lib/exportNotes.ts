@@ -10,6 +10,7 @@ import { tryWriteBackupToFile } from "@/lib/backupFileHandle";
 import { versionsStore } from "@/lib/versionsStore";
 import { logDiag } from "@/lib/diagnostics";
 import { imageStore, isEmbeddableImageDataUrl } from "@/lib/imageStore";
+import { journalImageRefs } from "@/lib/study/images";
 import { restoreShifts, shiftStore, shiftsReady } from "@/lib/shifts/store";
 import { migrate } from "@/lib/shifts/model";
 import { BACKUP_ATTACHMENTS_BUDGET_BYTES, formatFileSize, type Attachment } from "@/lib/attachments";
@@ -71,6 +72,16 @@ async function collectAttachmentBlobs(): Promise<{ blobs: Record<string, string>
     if (!dataUrl) { report.missing.push(a); continue; }
     blobs[a.hash] = dataUrl;
     used += a.size;
+  }
+  // Zdjęcia dziennika z budowy: te same bajty co w `imageStore`, razem z załącznikami w budżecie.
+  for (const hash of journalImageRefs()) {
+    if (blobs[hash]) continue;
+    const dataUrl = await imageStore.getDataUrl(hash);
+    if (!dataUrl) continue;
+    const approx = Math.ceil(dataUrl.length * 0.75);
+    if (used + approx > BACKUP_ATTACHMENTS_BUDGET_BYTES) continue;
+    blobs[hash] = dataUrl;
+    used += approx;
   }
   return { blobs, report };
 }

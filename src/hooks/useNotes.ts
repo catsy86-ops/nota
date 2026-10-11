@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
 import { renameLinkTargets } from "@/lib/wikiLinks";
 import { descendantIds } from "@/lib/subpages";
+import { journalImageRefs } from "@/lib/study/images";
 import { addSubpage as addSubpageImpl, setParent as setParentImpl } from "@/lib/subpageActions";
 import type { NotePriority } from "@/lib/notePriority";
 import type { Attachment } from "@/lib/attachments";
@@ -149,7 +150,11 @@ export function useNotes() {
       projectFolders();
       projectLabels();
       // Sprzątanie obrazów, do których nic się już nie odwołuje — po starcie, żeby nie spowalniać pierwszego renderu.
-      gcTimer = setTimeout(() => { void yjsStore.images.collectGarbage(yjsStore.referencedImages()); }, IMAGE_GC_DELAY_MS);
+      gcTimer = setTimeout(() => {
+        // Zdjęcia dziennika z budowy nie są w notatkach — liczą się jako używane.
+        const used = new Set<string>([...yjsStore.referencedImages(), ...journalImageRefs()]);
+        void yjsStore.images.collectGarbage(used);
+      }, IMAGE_GC_DELAY_MS);
     });
 
     return () => {
