@@ -52,6 +52,31 @@ const SortableNoteCard = memo(function SortableNoteCard({ layout, note, index, s
   );
 });
 
+/**
+ * Render progresywny: pierwszy ekran od razu, reszta paczkami w wolnych chwilach.
+ * 300 kafli w jednym zadaniu blokowało telefon na 2–3 s (pomiar CPU 4×) — teraz lista
+ * jest widoczna po pierwszej paczce, a dociąganie nie zabiera dotyku.
+ */
+const FIRST_BATCH = 24;
+const NEXT_BATCH = 48;
+type IdleWindow = Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+
+function useProgressiveCount(total: number): number {
+  const [count, setCount] = useState(() => Math.min(total, FIRST_BATCH));
+  useEffect(() => {
+    if (count >= total) return;
+    const w = window as IdleWindow;
+    const grow = () => setCount((c) => Math.min(total, c + NEXT_BATCH));
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(grow, { timeout: 200 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const id = window.setTimeout(grow, 16);
+    return () => window.clearTimeout(id);
+  }, [count, total]);
+  return Math.min(count, total);
+}
+
 /** Powyżej tylu kart siatka nie animuje przesunięć — pomiar każdej karty kosztuje więcej, niż daje płynność. */
 const LAYOUT_ANIMATION_LIMIT = 40;
 
@@ -97,6 +122,9 @@ export function NoteGrid({
   );
   const boardColumn = storedPrefs.layout === "board";
   const noteIds = useMemo(() => notes.map((n) => n.id), [notes]);
+  const renderedCount = useProgressiveCount(notes.length);
+  const renderedNotes = renderedCount >= notes.length ? notes : notes.slice(0, renderedCount);
+  const renderedIds = renderedCount >= notes.length ? noteIds : noteIds.slice(0, renderedCount);
   const gridRef = useRef<HTMLDivElement>(null);
 
   const colsCount = useCallback(() => {
@@ -154,11 +182,11 @@ export function NoteGrid({
 
   return (
     <NoteViewActionsProvider value={noteViewActions}>
-    <SortableContext items={noteIds} strategy={rectSortingStrategy}>
+    <SortableContext items={renderedIds} strategy={rectSortingStrategy}>
       {/* key = układ: przy zmianie widoku siatka pojawia się fade'em zamiast przeskoku. */}
       <div ref={gridRef} key={prefs.layout} className={cn(containerClass, "animate-in fade-in-0 duration-base")}>
         <AnimatePresence mode="popLayout" custom={exitIntent}>
-          {notes.map((note, i) => (
+          {renderedNotes.map((note, i) => (
             <GridItem key={note.id} note={note} index={i} layout={prefs.layout} rowGap={rowGap} wideEditing={wideEditing} selected={selectedIds?.has(note.id) ?? false} />
           ))}
         </AnimatePresence>

@@ -13,8 +13,34 @@ interface MarkdownRendererProps {
 // dopiero, gdy jakaś notatka faktycznie jest renderowana, nie w głównym pakiecie.
 const Impl = lazy(() => import("./MarkdownRendererImpl").then((m) => ({ default: m.MarkdownRendererImpl })));
 
+/**
+ * Czy tekst może zawierać składnię Markdown/GFM (nagłówki, listy, linki, `[[wiki]]`, adresy do
+ * autolinkowania, tabele, encje…). Ostrożnie: przy wątpliwości idzie pełny renderer.
+ */
+const MARKDOWN_HINT = /[*_`#>[\]|~<&\\]|https?:|www\.|@|^\s*(?:[-+]|\d+[.)])\s|^\s*[-=]{2,}\s*$/m;
+
+export function needsMarkdown(content: string): boolean {
+  return MARKDOWN_HINT.test(content);
+}
+
+/**
+ * Zwykły tekst bez składni (większość krótkich notatek) — bez react-markdown: 300 kafli to
+ * 300 parserów i drzew. Wynik jak u renderera: akapity po pustej linii, pojedynczy enter to spacja.
+ */
+function PlainParagraphs({ content, className }: { content: string; className?: string }) {
+  const paragraphs = content.split(/\n\s*\n/).map((p) => p.replace(/\s*\n\s*/g, " ").trim()).filter(Boolean);
+  return (
+    <div className={cn("prose-note leading-relaxed", className)}>
+      {paragraphs.map((p, i) => (
+        <p key={i} className="text-sm text-foreground/80 leading-relaxed mb-1 last:mb-0">{p}</p>
+      ))}
+    </div>
+  );
+}
+
 /** Do czasu pobrania renderera pokazuje surowy tekst w tym samym kontenerze — bez skoku układu. */
 export const MarkdownRenderer = memo(function MarkdownRenderer(props: MarkdownRendererProps) {
+  if (!needsMarkdown(props.content)) return <PlainParagraphs content={props.content} className={props.className} />;
   return (
     <Suspense fallback={<div className={cn("whitespace-pre-wrap break-words", props.className)}>{props.content}</div>}>
       <Impl {...props} />

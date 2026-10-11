@@ -590,7 +590,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   return (
     <>
       <div className={cn("relative", tilt && "[perspective:1000px]")}>
-      {swipeEnabled && (
+      {/* Tła gestu tylko w trakcie przeciągania — 300 kafli nie trzyma 600 elementów framer-motion. */}
+      {swipeEnabled && swiping && (
         <>
           <motion.div style={{ opacity: archiveOpacity }} className="absolute inset-y-0 left-0 w-1/2 rounded-xl bg-primary/15 flex items-center justify-start pl-5 pointer-events-none">
             <Archive className="w-6 h-6 text-primary-ink" />
@@ -872,7 +873,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
             kafel nie kończył się rzędem sześciu dużych ikon. */}
         <div className="card-actions flex items-center gap-0.5 px-2 pb-2 flex-wrap" data-open={showColors || showMore || undefined} data-more={showMore || undefined} data-editing={isEditing || undefined}>
           <div className="card-primary contents">
-            {renderPrimaryActions(false)}
+            {/* Dotyk: te akcje są w arkuszu „⋯” — w stopce i tak niewidoczne (CSS), więc bez renderu. */}
+            {!isTouch && renderPrimaryActions(false)}
           </div>
 
           <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
