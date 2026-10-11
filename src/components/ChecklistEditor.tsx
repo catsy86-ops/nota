@@ -338,7 +338,7 @@ export function ChecklistPreview({ items, onToggle, showProgress = true }: { ite
           aria-checked={item.checked}
           disabled={!onToggle}
           onClick={(e) => { e.stopPropagation(); onToggle?.(item.id); }}
-          className={cn("group/check flex w-full items-center gap-2 rounded-md py-0.5 [@media(pointer:coarse)]:py-1 text-left disabled:cursor-default", item.indent === 1 && "pl-4")}
+          className={cn("group/check flex w-full items-center gap-2 rounded-md py-0.5 [@media(pointer:coarse)]:py-2.5 text-left disabled:cursor-default", item.indent === 1 && "pl-4")}
         >
           <CheckMark checked={item.checked} size="sm" />
           <span className={cn("text-xs transition-colors duration-base", item.checked ? "text-muted-foreground" : "text-foreground/80")}>

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 // Przycisk z samą ikoną: jeden rozmiar celu, jeden stan wciśnięcia (`.pressable`),
 // jeden wygląd otwartego menu. Etykieta zawsze przez `aria-label`.
 const iconButtonVariants = cva(
-  "pressable relative inline-flex shrink-0 items-center justify-center rounded-lg ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50",
+  "pressable relative inline-flex shrink-0 items-center justify-center rounded-lg ring-offset-background coarse:after:absolute coarse:after:-inset-1 coarse:after:content-[''] coarse:after:rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       tone: {
@@ -23,8 +23,8 @@ const iconButtonVariants = cva(
       size: {
         /** Gęste paski narzędzi (composer, zaznaczenie). */
         sm: "h-7 w-7 coarse:h-9 coarse:w-9",
-        /** Nagłówek i kontrolki widoku. Na dotyku 36 px, nie 44: pięć przycisków
-         *  musi zmieścić się w nagłówku 320 px (odstępy dokładają resztę celu). */
+        /** Nagłówek i kontrolki widoku. Na dotyku 36 px widoczne + niewidzialny obszar `after` do 44 px:
+         *  pięć przycisków musi zmieścić się w nagłówku 320 px. */
         md: "h-8 w-8 sm:h-9 sm:w-9 coarse:h-9 coarse:w-9",
       },
     },
