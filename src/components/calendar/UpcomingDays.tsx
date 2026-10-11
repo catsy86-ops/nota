@@ -32,7 +32,7 @@ export function UpcomingDays({ notes, titleOf, shiftOf, onSelectDay }: UpcomingD
   }, [notes, days]);
 
   return (
-    <section aria-label="Dziś i jutro" className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+    <section aria-label="Dziś i jutro" className="grid grid-cols-2 gap-2">
       {days.map((day, i) => {
         const key = dayKey(day);
         const shift = shiftOf(key);
@@ -45,13 +45,14 @@ export function UpcomingDays({ notes, titleOf, shiftOf, onSelectDay }: UpcomingD
             type="button"
             onClick={() => onSelectDay(day)}
             style={{ "--i": i } as React.CSSProperties}
-            className="rise-in text-left rounded-2xl border border-border/50 bg-card p-3 transition-colors [@media(hover:hover)]:hover:border-primary/40"
+            className="rise-in min-w-0 text-left rounded-2xl border border-border/50 bg-card p-2.5 sm:p-3 transition-colors [@media(hover:hover)]:hover:border-primary/40"
           >
             <span className="flex items-baseline gap-2">
               <span className="font-display font-semibold text-sm">{i === 0 ? "Dziś" : "Jutro"}</span>
-              <span className="text-xs text-muted-foreground">{format(day, "EEEE, d MMMM", { locale: pl })}</span>
+              <span className="max-sm:hidden text-xs text-muted-foreground">{format(day, "EEEE, d MMMM", { locale: pl })}</span>
+              <span className="sm:hidden text-xs text-muted-foreground">{format(day, "EEEEEE d.MM", { locale: pl })}</span>
             </span>
-            <span className="mt-2 flex items-center gap-2 text-sm">
+            <span className="mt-2 flex min-w-0 items-center gap-2 text-sm">
               {shift ? (
                 <>
                   <span
@@ -63,10 +64,10 @@ export function UpcomingDays({ notes, titleOf, shiftOf, onSelectDay }: UpcomingD
                   >
                     {shift.short}
                   </span>
-                  <span><span className="sr-only">Zmiana w Grafiku: </span>{shiftLabel(shift)}</span>
+                  <span className="min-w-0 truncate"><span className="sr-only">Zmiana w Grafiku: </span>{shiftLabel(shift)}</span>
                 </>
               ) : (
-                <span className="text-muted-foreground">Bez zmiany w Grafiku</span>
+                <span className="text-muted-foreground"><span className="sm:hidden">Bez zmiany</span><span className="max-sm:hidden">Bez zmiany w Grafiku</span></span>
               )}
             </span>
             <span className="mt-2 flex flex-col gap-1">

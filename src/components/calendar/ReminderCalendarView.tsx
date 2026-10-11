@@ -301,6 +301,8 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
         }}
       />
 
+      {/* Telefon: bieżący tydzień i tak jest wierszem siatki miesiąca tuż pod spodem — pasek go dublował. */}
+      <div className="max-sm:hidden">
       <WeekStrip
         day={selectedDay}
         byDay={byDay}
@@ -310,6 +312,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
           setMonth((m) => (m.getFullYear() === day.getFullYear() && m.getMonth() === day.getMonth() ? m : new Date(day.getFullYear(), day.getMonth(), 1)));
         }}
       />
+      </div>
 
       <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
       <MonthGrid
