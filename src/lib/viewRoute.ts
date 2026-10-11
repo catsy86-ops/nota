@@ -22,6 +22,7 @@ const SIMPLE: Record<string, View> = {
   przypomnienia: "reminders",
   kalendarz: "calendar",
   grafik: "shifts",
+  nauka: "study",
   widget: "widget",
   kosz: "trash",
 };

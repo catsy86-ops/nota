@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, Brain, Keyboard, BookOpen, History, Bookmark, Network, Copy } from "lucide-react";
+import { Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, GraduationCap, Brain, Keyboard, BookOpen, History, Bookmark, Network, Copy } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes } from "@/lib/searchNotes";
@@ -31,7 +31,7 @@ interface Props {
   onOpenNote: (id: string) => void;
   onNewNote: () => void;
   onDailyNote: () => void;
-  onGo: (view: "notes" | "today" | "week" | "archive" | "reminders" | "calendar" | "shifts" | "trash" | "widget") => void;
+  onGo: (view: "notes" | "today" | "week" | "archive" | "reminders" | "calendar" | "shifts" | "study" | "trash" | "widget") => void;
   onToggleTheme: () => void;
   onOpenSettings: () => void;
   onOpenStats: () => void;
@@ -185,6 +185,9 @@ export function CommandPalette({
           </CommandItem>
           <CommandItem onSelect={() => run(() => onGo("shifts"))}>
             <BriefcaseBusiness className="w-4 h-4 mr-2" /> Grafik zmian
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => onGo("study"))}>
+            <GraduationCap className="w-4 h-4 mr-2" /> Nauka
           </CommandItem>
           <CommandItem onSelect={() => run(() => onGo("archive"))}>
             <Archive className="w-4 h-4 mr-2" /> Archiwum

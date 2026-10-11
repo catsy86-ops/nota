@@ -706,3 +706,11 @@ Zrobione: `lib/saveStatus.ts` (zapis do IndexedDB: Zapisywanie… / Zapisano / l
 
 - [x] Panel dnia w Kalendarzu: „Zmień godziny” / „Dodaj zmianę” otwiera okno dnia z Grafiku (rodzaj zmiany, godziny ręcznie, −/+15 min); klawisz **Z** na siatce robi to samo; „Jak poprzedni dzień” wpisuje zmianę z poprzedniego dnia z „Cofnij”. e2e `calendar-shift-edit.spec.ts`.
 - [x] Postęp folderu jako „projektu” (2026-10-11): w pasku bocznym pasek i licznik `zrobione/wszystkie` zadań (lista kontrolna + pola `- [ ]` w treści, razem z podfolderami; bez archiwum, kosza i notatek prywatnych). `lib/folderProgress.ts`, e2e `folder-progress.spec.ts`.
+
+### Dział „Nauka” (2026-10-11)
+
+- [x] Osobny widok `/nauka` (pasek boczny, „Więcej” w dolnej nawigacji, paleta poleceń) z materiałami G-HEAT: poradnik „Woda użytkowa” oraz listy kontrolne instalacji wodnej i kanalizacji (PDF-y od użytkownika). Treść statyczna w `lib/study/content.ts` (18 tematów, 35 punktów listy, 29 pytań, tabela wysokości).
+  - **Quiz**: runda 10 pytań, najpierw tematy spoza „Umiem”, wymieszane odpowiedzi, klawisze A–D/1–4 i Enter, wyjaśnienie po każdej odpowiedzi; błąd cofa temat z „Umiem” do „W trakcie”.
+  - **Tablica**: Do nauki → W trakcie → Umiem (przyciski ‹ ›, animowane przejście), pasek opanowania u góry.
+  - **Lista do nauki**: punkty z materiałów pogrupowane w moduły i tematy, ⚠ punkty krytyczne z ryzykiem, filtr „tylko krytyczne”, ściąga wysokości.
+  - Postęp w `localStorage` (`kaczy.study.v1`, `lib/study/store.ts`) — **jeszcze nie w pełnej kopii zapasowej ani w synchronizacji Yjs**. Testy: `lib/study/study.test.ts`, e2e `study.spec.ts`.

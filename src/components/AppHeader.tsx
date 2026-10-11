@@ -85,6 +85,7 @@ export function AppHeader({
 "Kalendarz"
               )}
               {view === "shifts" && "Grafik"}
+              {view === "study" && "Nauka"}
               {view === "archive" && "Archiwum"}
               {view === "reminders" && "Przypomnienia"}
               {view === "trash" && "Kosz"}
@@ -101,7 +102,7 @@ export function AppHeader({
                 </span>
               )}
             </h1>
-            {view !== "calendar" && view !== "shifts" && (
+            {view !== "calendar" && view !== "shifts" && view !== "study" && (
               <p className="text-xs text-muted-foreground hidden sm:block">
                 {displayCount} {pluralPl(displayCount, ["notatka", "notatki", "notatek"])}
               </p>
@@ -110,7 +111,7 @@ export function AppHeader({
         </div>
 
         {/* Grafik i Kalendarz nie przeszukują notatek — pole tylko by udawało, że działa. */}
-        {view !== "shifts" && view !== "calendar" && <SearchBar value={search} onChange={onSearchChange} className="hidden sm:block" />}
+        {view !== "shifts" && view !== "calendar" && view !== "study" && <SearchBar value={search} onChange={onSearchChange} className="hidden sm:block" />}
 
         <div className="flex items-center gap-1">
           {!sidebarOpen && (
@@ -138,7 +139,7 @@ export function AppHeader({
           {/* W kalendarzu układ, sortowanie i filtry notatek nie robią nic —
               kalendarz rysuje własną projekcję terminów. Poza tym, że kontrolki
               tam kłamią, na 320 px rozpychały nagłówek w poziomie. */}
-          {view !== "calendar" && view !== "shifts" && <ViewControls allLabels={allLabels} sortable={view !== "reminders"} />}
+          {view !== "calendar" && view !== "shifts" && view !== "study" && <ViewControls allLabels={allLabels} sortable={view !== "reminders"} />}
         </div>
       </div>
     </header>

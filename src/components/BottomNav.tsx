@@ -1,6 +1,6 @@
 import { forwardRef, useState } from "react";
 import { motion, LayoutGroup } from "framer-motion";
-import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History, CalendarRange, BriefcaseBusiness, Moon, Sun, FileDown, Bookmark } from "lucide-react";
+import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History, CalendarRange, BriefcaseBusiness, GraduationCap, Moon, Sun, FileDown, Bookmark } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { ImportExportMenu } from "@/components/ImportExportMenu";
@@ -42,7 +42,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
   // Każde dotknięcie „+” obraca ikonę o ćwierć obrotu — cichy znak, że edytor się otwiera.
   const [quarterTurns, setQuarterTurns] = useState(0);
   const { reduced } = useMotionPref();
-  const isMoreActive = ["archive", "trash", "calendar", "shifts", "folder", "label"].includes(view);
+  const isMoreActive = ["archive", "trash", "calendar", "shifts", "study", "folder", "label"].includes(view);
 
   return (
     <>
@@ -104,6 +104,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             <SheetTile Icon={Trash2} label="Kosz" active={view === "trash"} badge={trashCount || undefined} onClick={() => { onGo("trash"); setMoreOpen(false); }} />
             <SheetTile Icon={CalendarRange} label="Kalendarz" active={view === "calendar"} onClick={() => { onGo("calendar"); setMoreOpen(false); }} />
             <SheetTile Icon={BriefcaseBusiness} label="Grafik" active={view === "shifts"} onClick={() => { onGo("shifts"); setMoreOpen(false); }} />
+            <SheetTile Icon={GraduationCap} label="Nauka" active={view === "study"} onClick={() => { onGo("study"); setMoreOpen(false); }} />
           </SheetGroup>
           {onGoFilter && filters.length > 0 && (
             <SheetGroup title="Filtry">

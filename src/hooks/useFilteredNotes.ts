@@ -10,7 +10,7 @@ import { useDayClock } from "@/lib/dayClock";
 
 const NO_OPENED: LastOpenedMap = {};
 
-export type View = "notes" | "today" | "week" | "archive" | "label" | "reminders" | "calendar" | "shifts" | "folder" | "widget" | "trash";
+export type View = "notes" | "today" | "week" | "archive" | "label" | "reminders" | "calendar" | "shifts" | "study" | "folder" | "widget" | "trash";
 
 /** Liczba trafień wyszukiwania poza bieżącym widokiem. */
 export interface Elsewhere { notes: number; archive: number; trash: number }
@@ -88,7 +88,7 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
   return useMemo(() => {
     // Kalendarz rysuje własną projekcję (`expandOccurrences`) i nie korzysta
     // z siatki notatek — nie ma po co filtrować ani budować indeksu Fuse.
-    if (view === "calendar" || view === "shifts") return { displayNotes: [], pinned: [], others: [], elsewhere: NO_ELSEWHERE };
+    if (view === "calendar" || view === "shifts" || view === "study") return { displayNotes: [], pinned: [], others: [], elsewhere: NO_ELSEWHERE };
 
     const baseNotes = view === "archive"
       ? filterNotes(archivedNotes, archivedNotes, { view, activeLabel, activeFolder, folders, search })

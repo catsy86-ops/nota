@@ -2,7 +2,7 @@ import { useState, useCallback, useDeferredValue, useEffect, useLayoutEffect, us
 import { motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
-import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange, BriefcaseBusiness } from "lucide-react";
+import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange, BriefcaseBusiness, GraduationCap } from "lucide-react";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useNoteVersions } from "@/hooks/useNoteVersions";
 import type { NoteVersion } from "@/hooks/useNoteVersions";
@@ -80,6 +80,7 @@ const StatsDialog = lazy(() => import("@/components/StatsDialog").then((m) => ({
 const FocusMode = lazy(() => import("@/components/FocusMode").then((m) => ({ default: m.FocusMode })));
 // Kalendarz wchodzi tylko po wejściu w swój widok — siatka notatek go nie potrzebuje.
 // Grafik zmian — osobny dział, ładowany dopiero po wejściu.
+const StudyView = lazy(() => import("@/components/study/StudyView"));
 const ShiftsView = lazy(() => import("@/components/shifts/ShiftsView").then((m) => ({ default: m.ShiftsView })));
 const ReminderCalendarView = lazy(() => import("@/components/calendar/ReminderCalendarView").then((m) => ({ default: m.ReminderCalendarView })));
 
@@ -285,7 +286,7 @@ const Index = () => {
   // Sekcje widoku: „Przypięte” (zwijane od 4 notatek) i reszta, opcjonalnie podzielona na grupy.
   // `visibleNotes` = to, co faktycznie jest na ekranie (bez zwiniętych) w kolejności widoku.
   // Tablica / tabela mają sens tylko w widokach z listą notatek (nie w agendzie, koszu, kalendarzu, grafiku).
-  const listView = view !== "reminders" && view !== "trash" && view !== "calendar" && view !== "shifts";
+  const listView = view !== "reminders" && view !== "trash" && view !== "calendar" && view !== "shifts" && view !== "study";
   const boardMode = prefs.layout === "board" && listView;
   const tableMode = prefs.layout === "table" && listView;
   // Kolumny tablicy potrzebują podziału: bez wybranego domyślnie idą po etykiecie.
@@ -449,7 +450,7 @@ const Index = () => {
 
   // Ctrl/Cmd+A poza polami tekstowymi: zaznacza wszystko, co widać (bez zwiniętych sekcji).
   useEffect(() => {
-    if (view === "calendar" || view === "shifts") return;
+    if (view === "calendar" || view === "shifts" || view === "study") return;
     const onKey = (e: KeyboardEvent) => {
       if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || e.key.toLowerCase() !== "a") return;
       const a = document.activeElement as HTMLElement | null;
@@ -662,6 +663,7 @@ const Index = () => {
     { icon: Bell, label: "Przypomnienia", view: "reminders", count: overdueCount, alert: true, emoji: "🔔" },
     { icon: CalendarRange, label: "Kalendarz", view: "calendar", emoji: "🗓️" },
     { icon: BriefcaseBusiness, label: "Grafik", view: "shifts", emoji: "🗂️" },
+    { icon: GraduationCap, label: "Nauka", view: "study", emoji: "🎓" },
     { icon: Archive, label: "Archiwum", view: "archive", emoji: "📦" },
     { icon: Trash, label: "Kosz", view: "trash", count: trashedNotes.length, emoji: "🗑️" },
   ];
@@ -711,7 +713,7 @@ const Index = () => {
 
         {/* `flex gap`, nie `space-y`: ukryta na sm+ wyszukiwarka nie dokłada marginesu nad treścią. */}
         <main ref={mainRef} className="flex-1 max-w-[88rem] mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-6 sm:gap-8 pb-safe">
-          {view !== "shifts" && view !== "calendar" && (
+          {view !== "shifts" && view !== "calendar" && view !== "study" && (
             <div data-view-static className="sm:hidden">
               <SearchBar value={search} onChange={setSearch} />
             </div>
@@ -906,6 +908,14 @@ const Index = () => {
             </ViewErrorBoundary>
           )}
 
+          {view === "study" && (
+            <ViewErrorBoundary name="Nauka">
+              <Suspense fallback={null}>
+                <StudyView />
+              </Suspense>
+            </ViewErrorBoundary>
+          )}
+
           {view === "shifts" && (
             <ViewErrorBoundary name="Grafik">
               <Suspense fallback={null}>
@@ -916,9 +926,9 @@ const Index = () => {
 
           {/* Liczba wyników dla czytnika ekranu — lista zmienia się bez żadnego komunikatu. */}
           <p role="status" aria-live="polite" className="sr-only">
-            {deferredSearch && view !== "calendar" && view !== "shifts" ? `${displayNotes.length} ${pluralPl(displayNotes.length, ["wynik", "wyniki", "wyników"])}` : ""}
+            {deferredSearch && view !== "calendar" && view !== "shifts" && view !== "study" ? `${displayNotes.length} ${pluralPl(displayNotes.length, ["wynik", "wyniki", "wyników"])}` : ""}
           </p>
-          {view !== "calendar" && view !== "shifts" && displayNotes.length === 0 && <EmptyState view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} />}
+          {view !== "calendar" && view !== "shifts" && view !== "study" && displayNotes.length === 0 && <EmptyState view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} />}
           {view === "notes" && displayNotes.length > 0 && !deferredSearch && <DailyQuote />}
         </main>
       </div>

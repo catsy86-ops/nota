@@ -1,0 +1,108 @@
+import { useState } from "react";
+import { RotateCcw } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { CHECKLIST, HEIGHTS, MODULES, TOPICS } from "@/lib/study/content";
+import { resetChecklist, toggleChecked, useStudy } from "@/lib/study/store";
+
+/** Lista do nauki: punkty z materiałów pogrupowane w moduły i tematy. */
+export function StudyChecklist() {
+  const study = useStudy();
+  const [onlyCritical, setOnlyCritical] = useState(false);
+  const visible = CHECKLIST.filter((c) => !onlyCritical || c.critical);
+  const done = CHECKLIST.filter((c) => study.checked[c.id]).length;
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center gap-3">
+        <p className="font-mono text-sm tabular-nums" data-testid="checklist-progress">
+          {done}<span className="text-muted-foreground">/{CHECKLIST.length}</span>
+        </p>
+        <button
+          type="button"
+          aria-pressed={onlyCritical}
+          onClick={() => setOnlyCritical((v) => !v)}
+          className={cn(
+            "rounded-full border px-3 py-1 text-xs transition-colors",
+            onlyCritical ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted",
+          )}
+        >
+          ⚠ Tylko punkty krytyczne
+        </button>
+        {done > 0 && (
+          <Button variant="ghost" size="sm" onClick={resetChecklist} className="ml-auto">
+            <RotateCcw className="w-4 h-4 mr-1.5" />Wyczyść odhaczenia
+          </Button>
+        )}
+      </div>
+
+      {MODULES.map((mod) => {
+        const topics = TOPICS.filter((t) => t.module === mod.id)
+          .map((t) => ({ topic: t, items: visible.filter((c) => c.topic === t.id) }))
+          .filter((g) => g.items.length > 0);
+        if (topics.length === 0) return null;
+        return (
+          <section key={mod.id} aria-label={mod.label} className="space-y-3">
+            <header>
+              <h3 className="font-display text-lg">{mod.label}</h3>
+              <p className="text-xs text-muted-foreground">{mod.source}</p>
+            </header>
+            {topics.map(({ topic, items }) => (
+              <div key={topic.id} className="rounded-xl border border-border bg-card p-3.5">
+                <h4 className="text-sm font-medium">{topic.title}</h4>
+                <ul className="mt-2 space-y-2">
+                  {items.map((item) => {
+                    const on = !!study.checked[item.id];
+                    return (
+                      <li key={item.id} className="flex items-start gap-2.5">
+                        <Checkbox
+                          id={`study-${item.id}`}
+                          checked={on}
+                          onCheckedChange={() => toggleChecked(item.id)}
+                          className="mt-0.5"
+                        />
+                        <label htmlFor={`study-${item.id}`} className={cn("text-sm leading-snug cursor-pointer", on && "text-muted-foreground line-through decoration-muted-foreground/40")}>
+                          {item.critical && <span className="mr-1 text-primary" aria-label="Punkt krytyczny">⚠</span>}
+                          {item.text}
+                          {item.risk && <span className="mt-0.5 block text-xs text-muted-foreground no-underline">Ryzyko: {item.risk.replace(/^[^=]*= ?/, "")}</span>}
+                        </label>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </section>
+        );
+      })}
+
+      <details className="rounded-xl border border-border bg-card p-3.5 group">
+        <summary className="cursor-pointer text-sm font-medium">Ściąga: wysokości podejść [cm] — standard G-HEAT</summary>
+        <div className="mt-3 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left text-xs text-muted-foreground">
+                <th className="py-1 pr-3 font-medium">Punkt</th>
+                <th className="py-1 pr-3 font-medium">Woda</th>
+                <th className="py-1 pr-3 font-medium">Rozstaw c/z</th>
+                <th className="py-1 font-medium">Kanalizacja</th>
+              </tr>
+            </thead>
+            <tbody className="font-mono tabular-nums">
+              {HEIGHTS.map((h) => (
+                <tr key={h.point} className="border-t border-border/60">
+                  <td className="py-1.5 pr-3 font-sans">{h.point}</td>
+                  <td className="py-1.5 pr-3">{h.water}</td>
+                  <td className="py-1.5 pr-3">{h.spacing ?? "—"}</td>
+                  <td className="py-1.5">{h.sewer ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="mt-2 text-xs text-muted-foreground">Zmywarka — zwykle jak pralka.</p>
+        </div>
+      </details>
+    </div>
+  );
+}
