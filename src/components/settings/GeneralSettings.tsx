@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { Section, ToggleRow } from "./SettingsShared";
 import { ReviewSettings } from "./ReviewSettings";
 import { VaultSettings } from "./VaultSettings";
+import { ClipperSettings } from "./ClipperSettings";
 import { getNotificationPermission } from "@/lib/notificationPermission";
 import { MOD_KEY } from "@/lib/platform";
 import { setBadgeEnabled, useBadgeEnabled } from "@/lib/overdueBadge";
@@ -103,6 +104,7 @@ export function GeneralSettings() {
       </Section>
 
       <NotificationStatus />
+      <ClipperSettings />
 
       <ReviewSettings />
 
