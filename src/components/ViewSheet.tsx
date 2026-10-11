@@ -2,6 +2,7 @@ import { Check, Columns2, Kanban, LayoutGrid, List, Table2 } from "lucide-react"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { setViewPref, useViewPrefs, type Density, type Layout } from "@/lib/viewPrefs";
+import { changeView } from "@/lib/viewChange";
 import type { GroupBy } from "@/lib/groupNotes";
 
 /** Układy z jednym zdaniem: na telefonie nazwa „Mozaika” czy „Tablica” niewiele mówi bez opisu. */
@@ -100,7 +101,7 @@ export function ViewSheet({ open, onOpenChange, groupable = true }: { open: bool
                   type="button"
                   role="radio"
                   aria-checked={on}
-                  onClick={() => setViewPref("layout", l.v)}
+                  onClick={() => changeView(() => setViewPref("layout", l.v))}
                   className={cn(
                     "pressable flex min-h-[3.25rem] items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-fast",
                     on ? "bg-primary/10" : "hover:bg-muted/60",
@@ -126,22 +127,22 @@ export function ViewSheet({ open, onOpenChange, groupable = true }: { open: bool
               label="Kolumny"
               options={COLUMNS}
               value={columns}
-              onChange={(v) => {
+              onChange={(v) => changeView(() => {
                 if (v === "auto") { setViewPref("autoColumns", true); return; }
                 setViewPref("autoColumns", false);
                 setViewPref("columns", v);
-              }}
+              })}
             />
           </Section>
         )}
 
         <Section title="Gęstość">
-          <Segmented label="Gęstość" options={DENSITIES} value={prefs.density} onChange={(v) => setViewPref("density", v)} />
+          <Segmented label="Gęstość" options={DENSITIES} value={prefs.density} onChange={(v) => changeView(() => setViewPref("density", v))} />
         </Section>
 
         {groupable && prefs.layout !== "board" && prefs.layout !== "table" && (
           <Section title="Grupuj">
-            <Segmented label="Grupuj" options={GROUPS} value={prefs.groupBy} onChange={(v) => setViewPref("groupBy", v)} />
+            <Segmented label="Grupuj" options={GROUPS} value={prefs.groupBy} onChange={(v) => changeView(() => setViewPref("groupBy", v))} />
           </Section>
         )}
       </SheetContent>

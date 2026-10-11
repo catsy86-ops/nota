@@ -1,6 +1,7 @@
 import { Sun, Moon, Monitor, Zap, Accessibility } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useViewPrefs, setViewPref, resetViewPrefs, type Density, type Layout } from "@/lib/viewPrefs";
+import { changeView } from "@/lib/viewChange";
 import { useEffectsSettings } from "@/lib/effectsSettings";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { useMotionPref, type MotionMode } from "@/hooks/useMotionPref";
@@ -132,7 +133,7 @@ export function AppearanceSettings() {
           {(["masonry", "grid", "list", "board", "table"] as Layout[]).map((l) => (
             <button
               key={l}
-              onClick={() => setViewPref("layout", l)}
+              onClick={() => changeView(() => setViewPref("layout", l))}
               className={cn(
                 "p-3 rounded-xl border text-xs font-medium transition-all capitalize",
                 prefs.layout === l ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
@@ -147,7 +148,7 @@ export function AppearanceSettings() {
           {(["compact", "cozy", "comfy"] as Density[]).map((d) => (
             <button
               key={d}
-              onClick={() => setViewPref("density", d)}
+              onClick={() => changeView(() => setViewPref("density", d))}
               className={cn(
                 "p-3 rounded-xl border text-xs font-medium transition-all",
                 prefs.density === d ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
@@ -160,14 +161,14 @@ export function AppearanceSettings() {
       <Section title={`Liczba kolumn ${prefs.autoColumns ? "(auto)" : `(${prefs.columns})`}`}>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setViewPref("autoColumns", true)}
+            onClick={() => changeView(() => setViewPref("autoColumns", true))}
             className={cn("flex-1 px-3 py-2 rounded-xl border text-xs font-medium",
               prefs.autoColumns ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60")}
           >Auto (responsywne)</button>
           {[1, 2, 3, 4].map((c) => (
             <button
               key={c}
-              onClick={() => { setViewPref("autoColumns", false); setViewPref("columns", c); }}
+              onClick={() => changeView(() => { setViewPref("autoColumns", false); setViewPref("columns", c); })}
               className={cn("w-10 h-10 rounded-xl border text-sm font-bold",
                 !prefs.autoColumns && prefs.columns === c ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60")}
             >{c}</button>

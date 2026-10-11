@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from "react";
+import { useLayoutEffect, type RefObject } from "react";
 
 /** Wysokość jednego wiersza siatki mozaiki (px) — karta zajmuje tyle wierszy, ile ma wysokości. */
 export const MASONRY_ROW_PX = 4;
@@ -15,7 +15,9 @@ export const MASONRY_ROW_PX = 4;
  * zmiana wysokości karty nie przerysowuje Reacta. Nowe karty łapie `MutationObserver`.
  */
 export function useMasonrySpans(container: RefObject<HTMLElement>, enabled: boolean, itemSelector: string): void {
-  useEffect(() => {
+  // Przed malowaniem: przy przełączeniu układu bez remontu siatki (`changeView`) karty
+  // nie mrugają klatkę z rozpiętością z poprzedniego układu.
+  useLayoutEffect(() => {
     const root = container.current;
     if (!root) return;
     const items = () => Array.from(root.querySelectorAll<HTMLElement>(itemSelector)).filter((el) => el.parentElement === root);

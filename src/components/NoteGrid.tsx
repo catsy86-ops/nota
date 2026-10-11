@@ -10,6 +10,7 @@ import { NoteViewActionsProvider, type NoteViewActions } from "@/hooks/NoteViewA
 import type { useNotes } from "@/hooks/useNotes";
 import { registerGridNavSection, useIsGridNavFocused, setGridNavFocus } from "@/lib/gridKeyboardNav";
 import { useMasonrySpans } from "@/hooks/useMasonrySpans";
+import { getPendingAnchorId } from "@/lib/viewChange";
 
 
 interface SortableNoteCardProps {
@@ -62,8 +63,8 @@ const FIRST_BATCH = 24;
 const NEXT_BATCH = 48;
 type IdleWindow = Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
 
-function useProgressiveCount(total: number): number {
-  const [count, setCount] = useState(() => Math.min(total, FIRST_BATCH));
+function useProgressiveCount(total: number, initial = FIRST_BATCH): number {
+  const [count, setCount] = useState(() => Math.min(total, Math.max(FIRST_BATCH, initial)));
   useEffect(() => {
     if (count >= total) return;
     const w = window as IdleWindow;
@@ -123,7 +124,13 @@ export function NoteGrid({
   );
   const boardColumn = storedPrefs.layout === "board";
   const noteIds = useMemo(() => notes.map((n) => n.id), [notes]);
-  const renderedCount = useProgressiveCount(notes.length);
+  // Zmiana widoku z zachowaniem miejsca (`changeView`): od razu do kafla u góry ekranu i ekran pod nim.
+  const [anchorCount] = useState(() => {
+    const id = getPendingAnchorId();
+    const idx = id ? notes.findIndex((n) => n.id === id) : -1;
+    return idx < 0 ? 0 : idx + 1 + FIRST_BATCH;
+  });
+  const renderedCount = useProgressiveCount(notes.length, anchorCount);
   const renderedNotes = renderedCount >= notes.length ? notes : notes.slice(0, renderedCount);
   const renderedIds = renderedCount >= notes.length ? noteIds : noteIds.slice(0, renderedCount);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -188,8 +195,9 @@ export function NoteGrid({
   return (
     <NoteViewActionsProvider value={noteViewActions}>
     <SortableContext items={renderedIds} strategy={rectSortingStrategy}>
-      {/* key = układ: przy zmianie widoku siatka pojawia się fade'em zamiast przeskoku. */}
-      <div ref={gridRef} key={prefs.layout} className={cn(containerClass, "animate-in fade-in-0 duration-base")}>
+      {/* Bez `key` = układ: zmiana widoku nie remontuje kafli (fokus, edycja w kaflu, przewinięcie) —
+          przejście i zachowanie miejsca robi `changeView`. */}
+      <div ref={gridRef} className={cn(containerClass, "animate-in fade-in-0 duration-base")}>
         <AnimatePresence mode="popLayout" custom={exitIntent}>
           {renderedNotes.map((note, i) => (
             <GridItem key={note.id} note={note} index={i} layout={prefs.layout} rowGap={rowGap} wideEditing={wideEditing} selected={selectedIds?.has(note.id) ?? false} />

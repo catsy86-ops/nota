@@ -2,6 +2,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ArrowDownAZ, ArrowUpAZ, Filter, LayoutGrid, List, Columns2, SlidersHorizontal, Flag, Kanban, Table2 } from "lucide-react";
 import { type Layout, type SortKey, type SortDir, type Density, useViewPrefs, setViewPref } from "@/lib/viewPrefs";
+import { changeView } from "@/lib/viewChange";
 import { colorClasses } from "@/components/ColorPicker";
 import { cn } from "@/lib/utils";
 import { IconButton } from "@/components/ui/icon-button";
@@ -10,7 +11,7 @@ import type { GroupBy } from "@/lib/groupNotes";
 import { PRIORITY_LABELS, PRIORITY_COLOR_CLASS, type NotePriority } from "@/lib/notePriority";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ViewSheet } from "@/components/ViewSheet";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 interface Props {
   allLabels: string[];
@@ -50,6 +51,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
   const prefs = useViewPrefs();
   const isMobile = useIsMobile();
   const [viewSheetOpen, setViewSheetOpen] = useState(false);
+  const layoutTriggerRef = useRef<HTMLButtonElement>(null);
 
   const filtersActive = prefs.filterColor !== "all" || prefs.filterLabel !== "all" || prefs.filterHasReminder || prefs.filterPriority !== "all";
   const LayoutIcon = LAYOUTS.find((l) => l.v === prefs.layout)?.icon ?? LayoutGrid;
@@ -69,16 +71,18 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
-              <IconButton tone="segment" aria-label="Widok i kolumny">
+              <IconButton ref={layoutTriggerRef} tone="segment" aria-label="Widok i kolumny">
                 <LayoutIcon className="w-5 h-5" />
               </IconButton>
             </DropdownMenuTrigger>
           </TooltipTrigger>
           <TooltipContent side="bottom" className="text-xs">Widok i kolumny</TooltipContent>
         </Tooltip>
-        <DropdownMenuContent align="end" className="w-56">
+        {/* Fokus wraca na przycisk bez przewijania — inaczej po zmianie układu (`changeView`
+            zachowuje miejsce na liście) strona odjeżdżała do nagłówka. */}
+        <DropdownMenuContent align="end" className="w-56" onCloseAutoFocus={(e) => { e.preventDefault(); layoutTriggerRef.current?.focus({ preventScroll: true }); }}>
           <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Układ</DropdownMenuLabel>
-          <DropdownMenuRadioGroup value={prefs.layout} onValueChange={(v) => setViewPref("layout", v as Layout)}>
+          <DropdownMenuRadioGroup value={prefs.layout} onValueChange={(v) => changeView(() => setViewPref("layout", v as Layout))}>
             {LAYOUTS.map((l) => (
               <DropdownMenuRadioItem key={l.v} value={l.v}>
                 <l.icon className="w-3.5 h-3.5 mr-2" /> {l.label}
@@ -87,7 +91,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           </DropdownMenuRadioGroup>
           <DropdownMenuSeparator />
           <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Gęstość</DropdownMenuLabel>
-          <DropdownMenuRadioGroup value={prefs.density} onValueChange={(v) => setViewPref("density", v as Density)}>
+          <DropdownMenuRadioGroup value={prefs.density} onValueChange={(v) => changeView(() => setViewPref("density", v as Density))}>
             <DropdownMenuRadioItem value="compact">Kompakt</DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="cozy">Komfort</DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="comfy">Luźno</DropdownMenuRadioItem>
@@ -99,7 +103,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
               {/* Na telefonie mieszczą się najwyżej 2 kolumny — 3 i 4 dawały tam to samo co 2, więc ich nie ma. */}
               <div className="px-2 pb-2 flex items-center gap-1" role="group" aria-label="Liczba kolumn">
                 <button
-                  onClick={() => setViewPref("autoColumns", true)}
+                  onClick={() => changeView(() => setViewPref("autoColumns", true))}
                   aria-pressed={prefs.autoColumns}
                   className={cn("flex-1 text-xs h-8 coarse:h-11 rounded-md", prefs.autoColumns ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
                 >
@@ -108,7 +112,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
                 {[1, 2, 3, 4].map((c) => (
                   <button
                     key={c}
-                    onClick={() => { setViewPref("autoColumns", false); setViewPref("columns", c); }}
+                    onClick={() => changeView(() => { setViewPref("autoColumns", false); setViewPref("columns", c); })}
                     aria-pressed={!prefs.autoColumns && prefs.columns === c}
                     aria-label={c === 1 ? "1 kolumna" : `${c} kolumny`}
                     className={cn("flex-1 text-xs h-8 coarse:h-11 rounded-md tabular-nums", c > 2 && "max-sm:hidden", !prefs.autoColumns && prefs.columns === c ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
@@ -154,7 +158,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           )}
           <DropdownMenuSeparator />
           <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Grupuj</DropdownMenuLabel>
-          <DropdownMenuRadioGroup value={prefs.groupBy} onValueChange={(v) => setViewPref("groupBy", v as GroupBy)}>
+          <DropdownMenuRadioGroup value={prefs.groupBy} onValueChange={(v) => changeView(() => setViewPref("groupBy", v as GroupBy))}>
             {GROUPS.map((g) => (
               <DropdownMenuRadioItem key={g.v} value={g.v}>{g.label}</DropdownMenuRadioItem>
             ))}
