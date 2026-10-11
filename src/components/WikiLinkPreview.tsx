@@ -7,6 +7,8 @@ import { createNoteWithTitle, lookupWikiTarget, previewLines } from "@/lib/wikiN
 
 interface Props {
   title: string;
+  /** Nagłówek z `[[tytuł#nagłówek]]` — klik przewija czytnik do niego. */
+  heading?: string | null;
   exists: boolean;
   onWikiClick?: (title: string) => void;
 }
@@ -24,7 +26,8 @@ function plain(line: string): string {
  * `[[link]]` z podglądem notatki docelowej: po najechaniu myszą, po fokusie
  * klawiatury i po przytrzymaniu palca. Brak notatki → jedno kliknięcie tworzy ją.
  */
-export function WikiLink({ title, exists, onWikiClick }: Props) {
+export function WikiLink({ title, heading = null, exists, onWikiClick }: Props) {
+  const target_ = heading ? `${title}#${heading}` : title;
   const [open, setOpen] = useState(false);
   const timer = useRef<number | undefined>(undefined);
   const pressTimer = useRef<number | undefined>(undefined);
@@ -57,7 +60,7 @@ export function WikiLink({ title, exists, onWikiClick }: Props) {
             e.stopPropagation();
             if (suppressClick.current) { suppressClick.current = false; return; }
             setOpen(false);
-            onWikiClick?.(title);
+            onWikiClick?.(target_);
           }}
           onPointerEnter={(e) => {
             if (e.pointerType === "mouse" && window.matchMedia("(hover: hover)").matches) schedule(true, HOVER_OPEN_MS);
@@ -87,6 +90,7 @@ export function WikiLink({ title, exists, onWikiClick }: Props) {
           aria-expanded={open}
         >
           {title}
+          {heading && <span className="text-muted-foreground font-normal"> › {heading}</span>}
         </button>
       </PopoverPrimitive.Anchor>
       <PopoverPrimitive.Portal>
@@ -120,7 +124,7 @@ export function WikiLink({ title, exists, onWikiClick }: Props) {
               )}
               <button
                 type="button"
-                onClick={() => { setOpen(false); onWikiClick?.(title); }}
+                onClick={() => { setOpen(false); onWikiClick?.(target_); }}
                 className="pressable mt-2 inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/20 outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 Otwórz <ArrowUpRight className="h-3 w-3" aria-hidden />

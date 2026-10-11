@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   extractWikiLinks, resolveWikiTarget,
-  renameLinkTargets, buildWikiIndex, backlinksOf, wikiQueryAt, suggestWikiTitles, completeWikiLink,
+  renameLinkTargets, buildWikiIndex, backlinksOf, wikiQueryAt, suggestWikiTitles, completeWikiLink, splitWikiTarget,
 } from "./wikiLinks";
 import type { Note } from "@/hooks/useNotes";
 
@@ -142,5 +142,23 @@ describe("renameLinkTargets", () => {
     const text = "bez linków [Plan]";
     expect(renameLinkTargets(text, "Plan", "Nowy")).toBe(text);
     expect(renameLinkTargets("[[A]]", "", "B")).toBe("[[A]]");
+  });
+});
+
+describe("[[tytuł#nagłówek]]", () => {
+  it("splitWikiTarget rozdziela tytuł i nagłówek", () => {
+    expect(splitWikiTarget("Plan")).toEqual({ title: "Plan", heading: null });
+    expect(splitWikiTarget(" Plan # Etap 2 ")).toEqual({ title: "Plan", heading: "Etap 2" });
+    expect(splitWikiTarget("Plan#")).toEqual({ title: "Plan", heading: null });
+    expect(splitWikiTarget("#Etap")).toEqual({ title: "", heading: "Etap" });
+  });
+
+  it("extractWikiLinks liczy link do nagłówka jako link do notatki", () => {
+    expect(extractWikiLinks("[[Plan#Etap 2]] i [[plan]] oraz [[Inna]]")).toEqual(["plan", "inna"]);
+  });
+
+  it("renameLinkTargets zachowuje nagłówek", () => {
+    expect(renameLinkTargets("Zob. [[Plan#Etap 2]] i [[Plan]]", "plan", "Harmonogram"))
+      .toBe("Zob. [[Harmonogram#Etap 2]] i [[Harmonogram]]");
   });
 });

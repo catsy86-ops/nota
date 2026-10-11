@@ -2,12 +2,20 @@ import type { Note } from "@/hooks/useNotes";
 
 const RX = /\[\[([^[\]\n]+?)\]\]/g;
 
-/** Extract note titles referenced via [[Title]] syntax. */
+/** `Tytuł#Nagłówek` → tytuł notatki i (opcjonalnie) nagłówek, do którego link przewija. */
+export function splitWikiTarget(raw: string): { title: string; heading: string | null } {
+  const i = raw.indexOf("#");
+  if (i < 0) return { title: raw.trim(), heading: null };
+  const heading = raw.slice(i + 1).trim();
+  return { title: raw.slice(0, i).trim(), heading: heading || null };
+}
+
+/** Extract note titles referenced via [[Title]] or [[Title#Heading]] syntax. */
 export function extractWikiLinks(content: string): string[] {
   const out = new Set<string>();
   let m: RegExpExecArray | null;
   while ((m = RX.exec(content)) !== null) {
-    const t = m[1].trim();
+    const t = splitWikiTarget(m[1]).title;
     if (t) out.add(t.toLowerCase());
   }
   return Array.from(out);
@@ -20,7 +28,11 @@ export function extractWikiLinks(content: string): string[] {
 export function renameLinkTargets(content: string, oldTitle: string, newTitle: string): string {
   const from = oldTitle.trim().toLowerCase();
   if (!from || !content.includes("[[")) return content;
-  return content.replace(RX, (full, inner: string) => (inner.trim().toLowerCase() === from ? `[[${newTitle.trim()}]]` : full));
+  return content.replace(RX, (full, inner: string) => {
+    const { title, heading } = splitWikiTarget(inner);
+    if (title.toLowerCase() !== from) return full;
+    return `[[${newTitle.trim()}${heading ? `#${heading}` : ""}]]`;
+  });
 }
 
 /** Resolve a wiki target title → note id (case-insensitive). */

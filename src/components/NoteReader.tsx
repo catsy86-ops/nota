@@ -1,3 +1,5 @@
+import { splitWikiTarget } from "@/lib/wikiLinks";
+import { onHeadingRequest, requestHeading, scrollToHeading, takePendingHeading } from "@/lib/wikiHeading";
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Copy, Link2, Maximize2, Minimize2, Minus, Pencil, Plus, X } from "lucide-react";
@@ -167,10 +169,27 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
     );
   }
 
-  function handleWiki(title: string) {
-    const id = resolveTitle(title);
-    if (id) onShow(id, mode);
+  function handleWiki(raw: string) {
+    const { title, heading } = splitWikiTarget(raw);
+    const id = title ? resolveTitle(title) : note.id;
+    if (!id) return;
+    if (id === note.id && heading) { scrollToHeading(contentRef.current, heading); return; }
+    if (heading) requestHeading(heading);
+    onShow(id, mode);
   }
+
+  // `[[tytuł#nagłówek]]`: nagłówek bywa renderowany z opóźnieniem (leniwy Markdown), więc kilka prób.
+  useEffect(() => {
+    let timer: number | undefined;
+    const attempt = (heading: string, left: number) => {
+      if (scrollToHeading(contentRef.current, heading) || left <= 0) return;
+      timer = window.setTimeout(() => attempt(heading, left - 1), 80);
+    };
+    const run = () => { const h = takePendingHeading(); if (h) attempt(h, 12); };
+    run();
+    const off = onHeadingRequest(run);
+    return () => { off(); window.clearTimeout(timer); };
+  }, [note.id]);
 
   function setScrollEl(el: HTMLDivElement | null) {
     scrollRef.current = el;

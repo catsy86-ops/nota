@@ -14,7 +14,8 @@ import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
 import { useViewRoute } from "@/hooks/useViewRoute";
 import { parseViewRoute } from "@/lib/viewRoute";
 import { groupReminders } from "@/lib/reminderAgenda";
-import { buildWikiIndex, resolveWikiTarget, wikiIndexKey } from "@/lib/wikiLinks";
+import { buildWikiIndex, resolveWikiTarget, splitWikiTarget, wikiIndexKey } from "@/lib/wikiLinks";
+import { requestHeading } from "@/lib/wikiHeading";
 import { useLatestRef, useStableByKey } from "@/hooks/useLatestRef";
 import { useGridNavPreviewId, getGridNavFocusedId, setGridNavPreview, setGridNavFocus } from "@/lib/gridKeyboardNav";
 import { copyNoteToClipboard } from "@/lib/noteMarkdown";
@@ -391,10 +392,16 @@ const Index = () => {
     if (route.noteId && notesLoaded) openNote(route.noteId, true);
   }, [route.noteId, notesLoaded, openNote]);
 
-  const handleWikiClick = useCallback((title: string) => {
-    const target = allNotesForLinksRef.current.find((n) => n.title.trim().toLowerCase() === title.trim().toLowerCase());
-    if (target) openNote(target.id);
-    else toast.info(`Notatka „${title}" nie istnieje`);
+  const handleWikiClick = useCallback((raw: string) => {
+    const { title, heading } = splitWikiTarget(raw);
+    const target = allNotesForLinksRef.current.find((n) => n.title.trim().toLowerCase() === title.toLowerCase());
+    if (!target) { toast.info(`Notatka „${title}" nie istnieje`); return; }
+    if (heading && !target.locked) {
+      // Do nagłówka przewija czytnik, więc notatka otwiera się w podglądzie.
+      requestHeading(heading);
+      setPresentingNoteId(null);
+      setGridNavPreview(target.id);
+    } else openNote(target.id);
   }, [allNotesForLinksRef, openNote]);
 
   // Czytnik: podgląd (Spacja na kaflu, stan w `gridKeyboardNav`) albo prezentacja.
