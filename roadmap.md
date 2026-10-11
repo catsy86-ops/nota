@@ -689,7 +689,7 @@ Plan wdrożenia po kolei (każdy krok osobno, z testami i commitem):
 
 ### Dalsze pomysły z Notiona (audyt 2026-10-11, od najtańszego)
 
-- [ ] Blokada edycji, pełna szerokość i rozmiar tekstu per notatka (pola opcjonalne jak ikona i okładka).
+- [x] Blokada edycji per notatka (`readOnly`, kłódka w „⋯”, ikona na kaflu, toast „Odblokuj”; e2e `read-only-note.spec.ts`). Nie blokuje odhaczania listy ani usuwania. Pełna szerokość i rozmiar tekstu — jeszcze nie.
 - [x] Rozszerzony pasek zbiorczy: przenieś do folderu, dodaj etykietę, przypnij (z „Cofnij”; `BulkActionBar.tsx`, e2e `templates-bulk.spec.ts`).
 - [ ] Sekcja „Ostatnio edytowane” i @-wzmianki (notatka, data) w edytorze.
 - [x] Własne szablony ze zmiennymi: `{{data}}`, `{{data_iso}}`, `{{dzień}}`, `{{godzina}}`, `{{jutro}}`, `{{wczoraj}}`, `{{tydzień}}`, `{{rok}}` (`lib/templateVars.ts`, `lib/customTemplates.ts`, `CustomTemplateDialog.tsx`; w backupie ustawień). Bez `{{tytuł}}` — nie ma jak go podać przy jednym kliknięciu.

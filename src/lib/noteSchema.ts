@@ -36,6 +36,7 @@ export const noteSchema = z.object({
   icon: z.string().min(1).max(32).optional().catch(undefined),
   cover: z.enum(NOTE_COVERS).optional().catch(undefined),
   favorite: z.literal(true).optional().catch(undefined),
+  readOnly: z.literal(true).optional().catch(undefined),
   images: z.array(z.string()).catch([]),
   // Starsze pliki nie mają pola; zły wpis jest pomijany, nie unieważnia notatki.
   attachments: z.unknown().transform((v) => normalizeAttachments(v)).optional(),

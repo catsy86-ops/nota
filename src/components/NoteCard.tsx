@@ -5,7 +5,7 @@ import { tween, dur, ease } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { cascadeDelay, cardExit, markPinned, hasRecentPin, consumePin, type CardExitIntent } from "@/lib/cardMotion";
 import { Check } from "lucide-react";
-import { Star, Pin, Trash2, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, MoreHorizontal, Maximize2, Minimize2, Expand, Link2 } from "lucide-react";
+import { Star, Pin, Trash2, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, MoreHorizontal, Maximize2, Minimize2, Expand, Link2, Lock, LockOpen } from "lucide-react";
 import { ColorPicker, colorClasses } from "./ColorPicker";
 import { LabelPicker, LabelBadges } from "./LabelPicker";
 import { ReminderPicker, ReminderBadge } from "./ReminderPicker";
@@ -562,6 +562,10 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
 
             // Na telefonie kafel ma pół ekranu — edycja w nim ucinała tytuł i układała ikony w kolumnę.
             // Od razu pełny edytor (na `< sm` zajmuje cały ekran); z myszą zostaje edycja w kaflu.
+            if (note.readOnly && !isEditing) {
+              toast("Notatka jest zablokowana do edycji", { action: { label: "Odblokuj", onClick: () => onUpdate?.(note.id, { readOnly: undefined }) } });
+              return;
+            }
             if (!isEditing && window.matchMedia("(max-width: 639px)").matches) setFullEditor(true);
             if (!isEditing) { markNoteOpened(note.id); versionSavedRef.current = false; setIsEditing(true); setEditTitle(note.title); setEditContent(beginNoteTextEdit(note.id) ?? note.content); setEditChecklist(note.checklist || []); setShowChecklist((note.checklist || []).length > 0); }
           }}
@@ -573,6 +577,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                 <h3 className="font-display font-semibold text-[0.9375rem] leading-tight text-foreground mb-0.5 line-clamp-2">
                   {note.icon && <span className="mr-1.5" aria-hidden>{note.icon}</span>}
                   {note.title}
+                  {note.readOnly && <Lock className="inline-block w-3 h-3 ml-1.5 -mt-0.5 text-muted-foreground" aria-label="Zablokowana do edycji" />}
                   <ChecklistCount items={note.checklist || []} />
                 </h3>
               )}
@@ -723,6 +728,15 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                     onClick={() => { haptic("tap"); onUpdate?.(note.id, { favorite: note.favorite ? undefined : true }); }}
                     title={note.favorite ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
                     className={cn(note.favorite && "text-primary")}
+                  />
+                )}
+                {!isArchived && (
+                  <ActionBtn
+                    icon={note.readOnly ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
+                    onClick={() => { haptic("tap"); onUpdate?.(note.id, { readOnly: note.readOnly ? undefined : true }); }}
+                    title={note.readOnly ? "Odblokuj edycję" : "Zablokuj edycję"}
+                    aria-pressed={!!note.readOnly}
+                    className={cn(note.readOnly && "text-primary")}
                   />
                 )}
                 {!note.locked && <ActionBtn icon={<ImagePlus className="w-4 h-4" />} onClick={() => fileInputRef.current?.click()} title="Dodaj obrazek" />}
