@@ -8,6 +8,9 @@ import { IconButton } from "@/components/ui/icon-button";
 import type { NoteColor } from "@/hooks/useNotes";
 import type { GroupBy } from "@/lib/groupNotes";
 import { PRIORITY_LABELS, PRIORITY_COLOR_CLASS, type NotePriority } from "@/lib/notePriority";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { ViewSheet } from "@/components/ViewSheet";
+import { useState } from "react";
 
 interface Props {
   allLabels: string[];
@@ -45,18 +48,29 @@ const PRIORITY_OPTIONS: NotePriority[] = ["high", "medium", "low", "none"];
 
 export function ViewControls({ allLabels, sortable = true }: Props) {
   const prefs = useViewPrefs();
+  const isMobile = useIsMobile();
+  const [viewSheetOpen, setViewSheetOpen] = useState(false);
 
   const filtersActive = prefs.filterColor !== "all" || prefs.filterLabel !== "all" || prefs.filterHasReminder || prefs.filterPriority !== "all";
+  const LayoutIcon = LAYOUTS.find((l) => l.v === prefs.layout)?.icon ?? LayoutGrid;
 
   return (
     <div className="flex items-center gap-0.5 p-0.5 sm:p-1 rounded-2xl bg-muted/40 border border-border/50">
-      {/* Layout */}
+      {/* Layout — na telefonie arkusz od dołu z opisanymi opcjami, na desktopie menu */}
+      {isMobile ? (
+        <>
+          <IconButton tone="segment" aria-label="Widok i kolumny" aria-haspopup="dialog" onClick={() => setViewSheetOpen(true)}>
+            <LayoutIcon className="w-5 h-5" />
+          </IconButton>
+          <ViewSheet open={viewSheetOpen} onOpenChange={setViewSheetOpen} groupable={sortable} />
+        </>
+      ) : (
       <DropdownMenu>
         <Tooltip>
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
               <IconButton tone="segment" aria-label="Widok i kolumny">
-                {(() => { const Icon = LAYOUTS.find((l) => l.v === prefs.layout)?.icon ?? LayoutGrid; return <Icon className="w-5 h-5" />; })()}
+                <LayoutIcon className="w-5 h-5" />
               </IconButton>
             </DropdownMenuTrigger>
           </TooltipTrigger>
@@ -107,6 +121,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+      )}
 
       {/* Sort — ukryte w agendzie przypomnień, która zawsze idzie po terminie */}
       {sortable && (
