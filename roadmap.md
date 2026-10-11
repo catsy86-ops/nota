@@ -691,7 +691,7 @@ Plan wdrożenia po kolei (każdy krok osobno, z testami i commitem):
 
 - [x] Blokada edycji per notatka (`readOnly`, kłódka w „⋯”, ikona na kaflu, toast „Odblokuj”; e2e `read-only-note.spec.ts`). Nie blokuje odhaczania listy ani usuwania. Pełna szerokość (`wide`, dwie kolumny od `sm`) i większy tekst (`largeText`) per notatka — przyciski w „⋯”, e2e `note-wide-large.spec.ts`.
 - [x] Rozszerzony pasek zbiorczy: przenieś do folderu, dodaj etykietę, przypnij (z „Cofnij”; `BulkActionBar.tsx`, e2e `templates-bulk.spec.ts`).
-- [ ] Sekcja „Ostatnio edytowane” i @-wzmianki (notatka, data) w edytorze.
+- [x] @-wzmianki w edytorze (2026-10-11): `@` na początku słowa podpowiada daty (Dziś/Jutro/Wczoraj, format `{{data}}`) i notatki od ostatnio edytowanych (wstawia `[[tytuł]]`); `lib/mentions.ts`, rozszerzony `useWikiAutocomplete`, e2e `mentions.spec.ts`. Osobnej sekcji „Ostatnio edytowane” nie ma — lista po `@` jest właśnie tak uporządkowana.
 - [x] Własne szablony ze zmiennymi: `{{data}}`, `{{data_iso}}`, `{{dzień}}`, `{{godzina}}`, `{{jutro}}`, `{{wczoraj}}`, `{{tydzień}}`, `{{rok}}` (`lib/templateVars.ts`, `lib/customTemplates.ts`, `CustomTemplateDialog.tsx`; w backupie ustawień). Bez `{{tytuł}}` — nie ma jak go podać przy jednym kliknięciu.
 - [x] Spis treści w czytniku (od 3 nagłówków, `ReaderToc.tsx`, e2e w `reader.spec.ts`). Linki `[[tytuł#nagłówek]]` — jeszcze nie.
 - [ ] Share Target dla plików/obrazów albo bookmarklet web clippera.

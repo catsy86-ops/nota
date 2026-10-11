@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } fro
 import { cn } from "@/lib/utils";
 import { caretCoordinates } from "@/lib/textareaCaret";
 import { completeWikiLink, suggestWikiTitles, wikiQueryAt, type WikiQuery } from "@/lib/wikiLinks";
+import { completeMention, mentionQueryAt, suggestMentions, type MentionItem } from "@/lib/mentions";
 
 interface Options {
   textareaRef: RefObject<HTMLTextAreaElement>;
@@ -14,6 +15,8 @@ interface Options {
 }
 
 interface OpenQuery {
+  /** `wiki` — po `[[`, `mention` — po `@` (daty i notatki). */
+  kind: "wiki" | "mention";
   q: WikiQuery;
   caret: number;
   /** Karetka względem lewego górnego rogu kontenera (`offsetParent` pola). */
@@ -26,8 +29,9 @@ const ITEM_H = 30;
 const POPUP_W = 224;
 
 /**
- * Podpowiedzi tytułów po wpisaniu `[[`: strzałki wybierają, Enter/Tab wstawia
- * `[[Tytuł]]`, Esc chowa listę do czasu, aż zacznie się inny link.
+ * Podpowiedzi tytułów po wpisaniu `[[` oraz @-wzmianki (daty i ostatnio edytowane
+ * notatki) po wpisaniu `@`: strzałki wybierają, Enter/Tab wstawia
+ * `[[Tytuł]]` albo datę, Esc chowa listę do czasu, aż zacznie się inne zapytanie.
  * Lista jest pozycjonowana przy karetce, wewnątrz kontenera pola z `position: relative`.
  */
 export function useWikiAutocomplete({ textareaRef, value, onChange, titles, exclude }: Options) {
@@ -39,14 +43,16 @@ export function useWikiAutocomplete({ textareaRef, value, onChange, titles, excl
     const ta = textareaRef.current;
     if (!ta || ta.selectionStart !== ta.selectionEnd) { setOpen(null); return; }
     const caret = ta.selectionStart;
-    const q = wikiQueryAt(ta.value, caret);
+    const wiki = wikiQueryAt(ta.value, caret);
+    const q = wiki ?? mentionQueryAt(ta.value, caret);
+    const kind = wiki ? "wiki" : "mention";
     if (!q) { dismissedAt.current = null; setOpen(null); return; }
     if (dismissedAt.current === q.start) { setOpen(null); return; }
     const c = caretCoordinates(ta, caret);
     setOpen((prev) =>
-      prev && prev.caret === caret && prev.q.start === q.start && prev.q.query === q.query
+      prev && prev.caret === caret && prev.kind === kind && prev.q.start === q.start && prev.q.query === q.query
         ? prev
-        : { q, caret, top: ta.offsetTop + c.top, left: ta.offsetLeft + c.left, lineHeight: c.height });
+        : { kind, q, caret, top: ta.offsetTop + c.top, left: ta.offsetLeft + c.left, lineHeight: c.height });
   }, [textareaRef]);
 
   // Tekst zmienia się też bez klawiatury (przycisk „Link do notatki”, tekst peera).
@@ -56,16 +62,20 @@ export function useWikiAutocomplete({ textareaRef, value, onChange, titles, excl
   useEffect(() => { setActive(0); }, [queryKey]);
 
   const query = open?.q.query ?? null;
-  const suggestions = useMemo(
-    () => (query === null ? [] : suggestWikiTitles(query, titles, exclude)),
-    [query, titles, exclude],
-  );
+  const kind = open?.kind ?? null;
+  const suggestions = useMemo<MentionItem[]>(() => {
+    if (query === null) return [];
+    if (kind === "mention") return suggestMentions(query, titles, exclude);
+    return suggestWikiTitles(query, titles, exclude).map((t) => ({ key: t, label: t, hint: "notatka" as const, text: `[[${t}]]` }));
+  }, [query, kind, titles, exclude]);
   const isOpen = suggestions.length > 0;
 
-  const pick = useCallback((title: string) => {
+  const pick = useCallback((item: MentionItem) => {
     const ta = textareaRef.current;
     if (!ta || !open) return;
-    const next = completeWikiLink(ta.value, open.q, open.caret, title);
+    const next = open.kind === "mention"
+      ? completeMention(ta.value, open.q, open.caret, item.text)
+      : completeWikiLink(ta.value, open.q, open.caret, item.label);
     onChange(next.text);
     setOpen(null);
     setTimeout(() => { ta.focus(); ta.setSelectionRange(next.caret, next.caret); }, 0);
@@ -110,7 +120,7 @@ export function useWikiAutocomplete({ textareaRef, value, onChange, titles, excl
     return (
       <div
         role="listbox"
-        aria-label="Podpowiedzi linków do notatek"
+        aria-label={open.kind === "mention" ? "Wzmianki: daty i notatki" : "Podpowiedzi linków do notatek"}
         className="absolute z-30 rounded-lg border border-border bg-popover text-popover-foreground shadow-lg py-1"
         style={{ top, left: Math.min(open.left, maxLeft), width: POPUP_W, maxWidth: "calc(100% - 4px)" }}
         // Fokus zostaje w polu — inaczej `onBlur` edytora zapisałby w pół słowa.
@@ -118,19 +128,20 @@ export function useWikiAutocomplete({ textareaRef, value, onChange, titles, excl
       >
         {suggestions.map((t, i) => (
           <button
-            key={t}
+            key={t.key}
             type="button"
             role="option"
             aria-selected={i === active}
             onClick={() => pick(t)}
             onMouseEnter={() => setActive(i)}
             className={cn(
-              "w-full text-left px-3 text-sm truncate transition-colors",
+              "w-full flex items-center gap-2 text-left px-3 text-sm transition-colors",
               i === active ? "bg-primary/10 text-primary" : "hover:bg-muted",
             )}
             style={{ height: ITEM_H }}
           >
-            {t}
+            <span className="truncate flex-1">{t.label}</span>
+            {open.kind === "mention" && <span className="shrink-0 text-2xs text-muted-foreground">{t.hint}</span>}
           </button>
         ))}
       </div>
