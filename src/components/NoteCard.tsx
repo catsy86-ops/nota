@@ -1,6 +1,6 @@
 import { useState, useRef, memo, useCallback, useEffect, useLayoutEffect, useMemo } from "react";
 import { markNoteOpened } from "@/lib/lastOpened";
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useReducedMotion } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useReducedMotion, useDragControls } from "framer-motion";
 import { tween, dur, ease } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { cascadeDelay, cardExit, markPinned, hasRecentPin, consumePin, type CardExitIntent } from "@/lib/cardMotion";
@@ -316,6 +316,9 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   const canSwipeTrash = !note.trashed;
   const swipeEnabled = isTouch && !isEditing && !selectionMode && (canSwipeArchive || canSwipeTrash);
   const swipeX = useMotionValue(0);
+  // Gest startuje ręcznie: dotyk zaczęty na uchwycie przeciągania należy do dnd-kit
+  // (zmiana kolejności / kolumny tablicy), a nie do przesunięcia, które archiwizuje albo usuwa.
+  const swipeControls = useDragControls();
   const archiveOpacity = useTransform(swipeX, [0, 40, 110], [0, 0.5, 1]);
   const trashOpacity = useTransform(swipeX, [0, -40, -110], [0, 0.5, 1]);
   const [swiping, setSwiping] = useState(false);
@@ -332,7 +335,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
     if (e.pointerType === "mouse" || isEditing || !onToggleSelect) return;
     const target = e.target as Element;
     // Zdarzenia z portali (arkusz akcji) płyną drzewem Reacta — tylko dotyk w samym kaflu.
-    if (!cardRef.current?.contains(target) || target.closest("button, a, input, textarea, [role='checkbox']")) return;
+    if (!cardRef.current?.contains(target) || target.closest("button, a, input, textarea, [role='checkbox'], [data-drag-handle]")) return;
     longPressStart.current = { x: e.clientX, y: e.clientY };
     window.clearTimeout(longPressTimer.current);
     longPressTimer.current = window.setTimeout(() => {
@@ -619,12 +622,17 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         }}
         onMouseMove={tilt ? handleMove : undefined}
         onMouseLeave={tilt ? handleLeave : undefined}
-        onPointerDown={handleLongPressStart}
+        onPointerDown={(e) => {
+          handleLongPressStart(e);
+          if (swipeEnabled && !(e.target as Element).closest("[data-drag-handle]")) swipeControls.start(e);
+        }}
         onPointerMove={handleLongPressMove}
         onPointerUp={cancelLongPress}
         onPointerCancel={cancelLongPress}
         onContextMenu={isTouch && onToggleSelect ? (e) => e.preventDefault() : undefined}
         drag={swipeEnabled ? "x" : false}
+        dragControls={swipeControls}
+        dragListener={false}
         dragDirectionLock
         dragElastic={0.25}
         dragConstraints={{ left: canSwipeTrash ? -160 : 0, right: canSwipeArchive ? 160 : 0 }}
@@ -633,7 +641,9 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         onDragEnd={handleSwipeEnd}
         style={{
           ...(tilt ? { rotateX: rotX, rotateY: rotY } : {}),
-          ...(swipeEnabled ? { x: swipeX } : {}),
+          // Bez `dragListener` framer nie ustawia `touch-action` — inaczej ruch w bok przewija
+          // stronę/tablicę i przerywa gest.
+          ...(swipeEnabled ? { x: swipeX, touchAction: "pan-y" } : {}),
           ...(tilt ? { transformStyle: "preserve-3d" as const } : {}),
         }}
 
@@ -685,8 +695,10 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
             {...dragAttributes}
             {...dragListeners}
             aria-label="Przeciągnij, aby zmienić kolejność"
+            data-drag-handle
             // Na dotyku tylko przy sortowaniu ręcznym — przy innym porządku był szumem na każdym kaflu.
-            className={cn(prefs.sortKey !== "manual" && "coarse:hidden", "absolute top-0 left-1/2 -translate-x-1/2 z-10 px-3 pt-0.5 pb-0 coarse:px-6 coarse:pt-1.5 coarse:pb-3 coarse:touch-none coarse:opacity-50 cursor-grab active:cursor-grabbing rounded-b-md opacity-0 group-hover:opacity-60 hover:!opacity-100 focus-visible:opacity-100 transition-opacity")}
+            // W tablicy zawsze: przeniesienie kafla do innej kolumny nie zależy od porządku.
+            className={cn(prefs.sortKey !== "manual" && prefs.layout !== "board" && "coarse:hidden", "absolute top-0 left-1/2 -translate-x-1/2 z-10 px-3 pt-0.5 pb-0 coarse:px-6 coarse:pt-1.5 coarse:pb-3 coarse:touch-none coarse:opacity-50 cursor-grab active:cursor-grabbing rounded-b-md opacity-0 group-hover:opacity-60 hover:!opacity-100 focus-visible:opacity-100 transition-opacity")}
           >
             {/* 10 px wysokości — mieści się w górnym marginesie karty i nie łapie kliknięć w tytuł. */}
             <div className="grid grid-cols-3 gap-[2px]" aria-hidden>

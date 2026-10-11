@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { PanelLeftClose, PanelLeftOpen, Moon, Sun, FileDown, FolderOpen, Tag } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -36,12 +37,30 @@ export function AppHeader({
   // Stan tutaj, nie w Index: schowanie nagłówka przerysowuje tylko nagłówek, a nie całą stronę z kartami.
   const hideHeader = useHideOnScroll(96);
   const { folders, allLabels } = useNotesContext();
+  const hidden = hideHeader && !selectionMode;
+  const headerRef = useRef<HTMLElement>(null);
+
+  // Dla elementów przyklejonych pod nagłówkiem (pasek kolumn tablicy): wysokość nagłówka
+  // w `--app-header-h` i klasa `header-hidden` na <html>, gdy nagłówek jest schowany.
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const root = document.documentElement;
+    const ro = new ResizeObserver(() => root.style.setProperty("--app-header-h", `${el.offsetHeight}px`));
+    ro.observe(el);
+    return () => { ro.disconnect(); root.style.removeProperty("--app-header-h"); };
+  }, []);
+  useEffect(() => {
+    document.documentElement.classList.toggle("header-hidden", hidden);
+    return () => document.documentElement.classList.remove("header-hidden");
+  }, [hidden]);
 
   return (
     <header
+      ref={headerRef}
       className={cn(
         "sticky top-0 z-30 glass header-glow border-b border-border/50 transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none",
-        hideHeader && !selectionMode ? "-translate-y-full" : "translate-y-0"
+        hidden ? "-translate-y-full" : "translate-y-0"
       )}
     >
       {/* Stała wysokość: bez kontrolek widoku (kalendarz, grafik) nagłówek nie skacze przy przejściu. */}

@@ -38,6 +38,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { AppHeader } from "@/components/AppHeader";
 import { NoteGrid } from "@/components/NoteGrid";
 import { BoardColumn } from "@/components/BoardColumn";
+import { NoteBoard } from "@/components/NoteBoard";
 import { NoteTable } from "@/components/NoteTable";
 import { columnOfNote, labelsForColumn, NONE_COLUMN, PINNED_COLUMN } from "@/lib/boardColumns";
 import { NoteGroupSection } from "@/components/NoteGroupSection";
@@ -884,7 +885,12 @@ const Index = () => {
           })}
 
           {boardMode && (
-            <div data-board className="flex items-start gap-3 sm:gap-4 overflow-x-auto snap-x pb-3 -mx-1 px-1">
+            <NoteBoard
+              headers={[
+                ...(showPinned ? [{ key: PINNED_COLUMN, label: "📌 Przypięte", count: pinned.length }] : []),
+                ...groups.map((group) => ({ key: group.key || NONE_COLUMN, label: group.label, count: group.notes.length })),
+              ]}
+            >
               {showPinned && (
                 <BoardColumn columnKey={PINNED_COLUMN} label="📌 Przypięte" count={pinned.length}>
                   {renderGrid(pinned, 0)}
@@ -895,7 +901,7 @@ const Index = () => {
                   {renderGrid(group.notes, gi + 1)}
                 </BoardColumn>
               ))}
-            </div>
+            </NoteBoard>
           )}
 
           {tableMode && (

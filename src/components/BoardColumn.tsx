@@ -3,6 +3,19 @@ import { useDroppable } from "@dnd-kit/core";
 import { cn } from "@/lib/utils";
 import { columnDropId } from "@/lib/boardColumns";
 
+/** Szerokość kolumny — wspólna dla kolumny i przyklejonego paska nagłówków (`NoteBoard`). */
+export const BOARD_COLUMN_WIDTH = "w-[17.5rem] sm:w-72";
+
+/** Etykieta kolumny z licznikiem — w kolumnie i w przyklejonym pasku nagłówków. */
+export function BoardColumnHeading({ label, count, className }: { label: ReactNode; count: number; className?: string }) {
+  return (
+    <div className={cn("flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground", className)}>
+      <span className="truncate">{label}</span>
+      <span className="bg-muted text-foreground/80 text-2xs px-1.5 rounded-full tabular-nums normal-case tracking-normal">{count}</span>
+    </div>
+  );
+}
+
 interface BoardColumnProps {
   /** Klucz kolumny — ten sam, który rozpoznaje `useNoteDnd`. */
   columnKey: string;
@@ -25,13 +38,13 @@ export function BoardColumn({ columnKey, label, count, droppable = true, childre
       data-board-column={columnKey}
       aria-label={typeof label === "string" ? label : undefined}
       className={cn(
-        "w-[17.5rem] sm:w-72 shrink-0 snap-start rounded-2xl border border-border/60 bg-muted/30 p-2.5 transition-colors duration-fast",
+        BOARD_COLUMN_WIDTH,
+        "shrink-0 snap-start rounded-2xl border border-border/60 bg-muted/30 p-2.5 transition-colors duration-fast",
         isOver && "border-primary/50 bg-primary/5",
       )}
     >
-      <header className="flex items-center gap-1.5 px-1 pb-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-        <span className="truncate">{label}</span>
-        <span className="bg-muted text-foreground/80 text-2xs px-1.5 rounded-full tabular-nums normal-case tracking-normal">{count}</span>
+      <header>
+        <BoardColumnHeading label={label} count={count} className="px-1 pb-2.5" />
       </header>
       <div className="min-h-16">{children}</div>
     </section>
