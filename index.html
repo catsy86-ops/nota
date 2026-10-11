@@ -23,9 +23,55 @@
 
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:image" content="/pwa-512.png" />
+    <!-- Ekran startowy (tylko zainstalowana aplikacja albo ?splash): rysujące się „N”, znika, gdy notatki są gotowe (src/lib/bootSplash.ts). -->
+    <style>
+      #boot-splash { display: none; }
+      @media (display-mode: standalone), (display-mode: fullscreen) { #boot-splash { display: grid; } }
+      html.boot-force #boot-splash { display: grid; }
+      #boot-splash {
+        position: fixed; inset: 0; z-index: 9999; place-items: center; align-content: center; gap: 18px;
+        background: radial-gradient(120% 80% at 50% 38%, #2a1f15 0%, #14100d 55%, #0f0d10 100%);
+        transition: opacity 0.38s ease, visibility 0.38s;
+      }
+      #boot-splash.boot-out { opacity: 0; visibility: hidden; pointer-events: none; }
+      #boot-splash svg { width: 112px; height: 112px; overflow: visible; }
+      #boot-splash .b-line, #boot-splash .b-glow {
+        stroke-dasharray: 100; stroke-dashoffset: 100;
+        animation: boot-draw 0.95s cubic-bezier(0.65, 0, 0.35, 1) 0.1s forwards;
+      }
+      #boot-splash .b-glow { opacity: 0.5; filter: blur(5px); animation: boot-draw 0.95s cubic-bezier(0.65, 0, 0.35, 1) 0.1s forwards, boot-pulse 1.4s ease-in-out 1.05s infinite alternate; }
+      #boot-splash .b-dot { offset-path: path("M6 19V5l12 14V5"); offset-distance: 0%; opacity: 0; animation: boot-dot 0.95s cubic-bezier(0.65, 0, 0.35, 1) 0.1s forwards; }
+      #boot-splash .b-word {
+        font: 800 15px/1 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        letter-spacing: 0.42em; margin-right: -0.42em; color: #f3e6d4;
+        opacity: 0; transform: translateY(6px); animation: boot-word 0.5s ease-out 0.75s forwards;
+      }
+      @keyframes boot-draw { to { stroke-dashoffset: 0; } }
+      @keyframes boot-pulse { from { opacity: 0.35; } to { opacity: 0.7; } }
+      @keyframes boot-dot { 0% { offset-distance: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { offset-distance: 100%; opacity: 0; } }
+      @keyframes boot-word { to { opacity: 0.9; transform: none; } }
+      @media (prefers-reduced-motion: reduce) {
+        #boot-splash .b-line, #boot-splash .b-glow, #boot-splash .b-word { animation: none; stroke-dashoffset: 0; opacity: 1; transform: none; }
+        #boot-splash .b-glow { opacity: 0.5; }
+        #boot-splash .b-dot { display: none; }
+      }
+    </style>
   </head>
 
   <body>
+    <div id="boot-splash" aria-hidden="true">
+      <svg viewBox="0 0 24 24">
+        <defs>
+          <linearGradient id="boot-g" gradientUnits="userSpaceOnUse" x1="6" y1="5" x2="18" y2="19">
+            <stop offset="0" stop-color="#ffc247" /><stop offset="0.5" stop-color="#ff7a59" /><stop offset="1" stop-color="#7f98ff" />
+          </linearGradient>
+        </defs>
+        <path class="b-glow" d="M6 19V5l12 14V5" pathLength="100" fill="none" stroke="url(#boot-g)" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round" />
+        <path class="b-line" d="M6 19V5l12 14V5" pathLength="100" fill="none" stroke="url(#boot-g)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+        <circle class="b-dot" r="1.1" fill="#fff" />
+      </svg>
+      <div class="b-word">NOTKI</div>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

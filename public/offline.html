@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0f1115" />
+    <meta name="theme-color" content="#0f0d10" />
     <title>Brak połączenia — NOTKI</title>
     <style>
       :root { color-scheme: dark; }
@@ -31,7 +31,7 @@
         backdrop-filter: blur(12px);
         box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
       }
-      .emoji { font-size: 54px; line-height: 1; }
+      .logo { width: 64px; height: 64px; display: block; margin: 0 auto; overflow: visible; }
       h1 { font-size: 22px; margin: 16px 0 8px; }
       p { margin: 0 0 20px; color: #a9b0c0; font-size: 15px; line-height: 1.55; }
       button {
@@ -54,7 +54,14 @@
   </head>
   <body>
     <main class="card">
-      <div class="emoji">🍺</div>
+      <svg class="logo" viewBox="0 0 24 24" aria-hidden="true">
+        <defs>
+          <linearGradient id="g" gradientUnits="userSpaceOnUse" x1="6" y1="5" x2="18" y2="19">
+            <stop offset="0" stop-color="#ffc247" /><stop offset="0.5" stop-color="#ff7a59" /><stop offset="1" stop-color="#7f98ff" />
+          </linearGradient>
+        </defs>
+        <path d="M6 19V5l12 14V5" fill="none" stroke="url(#g)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
       <h1>Jesteś offline</h1>
       <p>
         Ta strona nie jest jeszcze zapisana w pamięci urządzenia.

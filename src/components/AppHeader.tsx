@@ -9,6 +9,7 @@ import { tween } from "@/lib/motion";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { ImportExportMenu } from "@/components/ImportExportMenu";
 import { NotkiLogo } from "@/components/NotkiLogo";
+import { NMonogramLogo } from "@/components/NMonogramLogo";
 import type { View } from "@/hooks/useFilteredNotes";
 import { pluralPl } from "@/lib/plural";
 import { useHideOnScroll } from "@/hooks/useHideOnScroll";
@@ -68,7 +69,10 @@ export function AppHeader({
               animate={{ opacity: 1, scale: 1 }}
               className={view === "notes" ? undefined : "hidden sm:block"}
             >
-              <NotkiLogo size="sm" />
+              <span className="flex items-center gap-1">
+                <NMonogramLogo className="w-6 h-6" />
+                <NotkiLogo size="sm" />
+              </span>
             </motion.div>
           )}
           {!sidebarOpen && <span aria-hidden className="hidden sm:block h-5 w-px bg-border" />}

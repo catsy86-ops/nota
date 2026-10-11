@@ -11,6 +11,7 @@ import { requestPersistentStorage } from "./lib/storagePersistence";
 import { installGlobalDiagHandlers } from "./lib/diagnostics";
 import { startTabSync } from "./lib/tabSync";
 import { yjsStore } from "./lib/yjsStore";
+import { hideBootSplash } from "./lib/bootSplash";
 
 installGlobalDiagHandlers();
 
@@ -18,6 +19,7 @@ installGlobalDiagHandlers();
 startTabSync(yjsStore.doc, "kaczy-yjs-v1", yjsStore.ready(), yjsStore.isPersistenceOrigin);
 
 createRoot(document.getElementById("root")!).render(<App />);
+hideBootSplash(yjsStore.ready());
 
 registerServiceWorker();
 void requestPersistentStorage();
