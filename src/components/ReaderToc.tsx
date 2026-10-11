@@ -43,7 +43,7 @@ export function ReaderToc({ rootRef, resetKey, className }: { rootRef: RefObject
             <button
               type="button"
               onClick={() => h.el.scrollIntoView({ behavior: "smooth", block: "start" })}
-              className="text-left text-sm text-foreground/80 hover:text-primary hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded"
+              className="text-left text-sm text-foreground/80 hover:text-primary-ink hover:underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded"
             >
               {h.text}
             </button>

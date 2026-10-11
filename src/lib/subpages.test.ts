@@ -47,6 +47,12 @@ describe("drzewo podstron", () => {
     expect(canSetParent("c", null, notes)).toBe(true);
   });
 
+  it("żywa podstrona pod rodzicem w koszu wraca na poziom główny", () => {
+    const m = byId([n("a", undefined, { trashed: true, trashedAt: 5 }), n("b", "a"), n("c", "a", { trashed: true, trashedAt: 5 })]);
+    expect(parentIdOf(m.get("b")!, m)).toBeNull();
+    expect(parentIdOf(m.get("c")!, m)).toBe("a");
+  });
+
   it("buildSubpageIndex: rodzic i liczba podstron, bez podstron z kosza", () => {
     const idx = buildSubpageIndex([n("a"), n("b", "a"), n("c", "a", { trashed: true, trashedAt: 5 }), n("x")]);
     expect(idx.get("a")).toEqual({ parentId: null, parentTitle: "", childCount: 1 });

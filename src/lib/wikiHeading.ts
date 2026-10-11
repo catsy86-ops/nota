@@ -4,18 +4,21 @@
  * istnieć w chwili kliknięcia, więc zostaje w module do odebrania.
  */
 
-let pending: string | null = null;
+let pending: { heading: string; at: number } | null = null;
 const listeners = new Set<() => void>();
 
+/** Prośba starsza niż to jest porzucana — inaczej nieodebrana przewinęłaby „cudzą” notatkę. */
+const PENDING_TTL_MS = 3000;
+
 export function requestHeading(heading: string) {
-  pending = heading;
+  pending = { heading, at: Date.now() };
   listeners.forEach((l) => l());
 }
 
-export function takePendingHeading(): string | null {
-  const h = pending;
+export function takePendingHeading(now: number = Date.now()): string | null {
+  const p = pending;
   pending = null;
-  return h;
+  return p && now - p.at <= PENDING_TTL_MS ? p.heading : null;
 }
 
 export function onHeadingRequest(listener: () => void): () => void {

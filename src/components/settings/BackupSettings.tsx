@@ -192,7 +192,8 @@ function RestoreBackup() {
             <AlertDialogTitle>Przywrócić ten backup?</AlertDialogTitle>
             <AlertDialogDescription>
               {backup && <>Z {new Date(backup.exportedAt).toLocaleString("pl-PL")}: {backup.notes.length} notatek, {backup.folders.length} folderów. </>}
-              Notatki, foldery i etykiety w tej przeglądarce zostaną zastąpione zawartością pliku.
+              Notatki, foldery i etykiety w tej przeglądarce zostaną zastąpione zawartością pliku. Przy sparowanych urządzeniach
+              zmiany zrobione w międzyczasie na innych urządzeniach mogą przepaść — zrób wcześniej kopię bieżącego stanu.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-2">

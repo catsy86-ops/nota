@@ -31,7 +31,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
     const pool = s.kind === "topic" ? QUESTIONS.filter((q) => q.topic === s.topic)
       : s.kind === "missed" ? QUESTIONS.filter((q) => study.missed[q.id])
       : QUESTIONS;
-    if (pool.length === 0) { toast("Brak pytań do powtórki"); onScopeChange?.({ kind: "all" }); return; }
+    if (pool.length === 0) { toast("Nie ma pytań do powtórki. Rozwiąż najpierw rundę."); onScopeChange?.({ kind: "all" }); return; }
     const next = buildRound(Math.min(ROUND_SIZE, pool.length), weak, Math.random, pool);
     setRound(next);
     setAnswers(next.map(() => null));
@@ -85,7 +85,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
     return (
       <section aria-label="Wynik rundy" className="rounded-2xl border border-border bg-card p-5 sm:p-7 space-y-5">
         <div className="flex items-end gap-4">
-          <p className="font-display text-6xl leading-none tabular-nums text-primary">{result.correct}<span className="text-2xl text-muted-foreground">/{round.length}</span></p>
+          <p className="font-display text-6xl leading-none tabular-nums text-primary-ink">{result.correct}<span className="text-2xl text-muted-foreground">/{round.length}</span></p>
           <p className="pb-1 text-sm text-muted-foreground">
             {percent === 100 ? "Bezbłędnie." : percent >= 70 ? "Dobrze — zostało kilka tematów do powtórki." : "Warto wrócić do listy i tablicy."}
           </p>

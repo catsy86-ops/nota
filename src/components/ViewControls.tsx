@@ -85,7 +85,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
               <div className="px-2 pb-2 flex items-center gap-1">
                 <button
                   onClick={() => setViewPref("autoColumns", true)}
-                  className={cn("flex-1 text-xs py-1 rounded-md", prefs.autoColumns ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted text-muted-foreground")}
+                  className={cn("flex-1 text-xs py-1 rounded-md", prefs.autoColumns ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
                 >
                   Auto
                 </button>
@@ -93,7 +93,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
                   <button
                     key={c}
                     onClick={() => { setViewPref("autoColumns", false); setViewPref("columns", c); }}
-                    className={cn("w-7 text-xs py-1 rounded-md", !prefs.autoColumns && prefs.columns === c ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted text-muted-foreground")}
+                    className={cn("w-7 text-xs py-1 rounded-md", !prefs.autoColumns && prefs.columns === c ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
                   >
                     {c}
                   </button>
@@ -164,7 +164,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           <div className="px-2 pb-2 flex items-center gap-1.5 flex-wrap">
             <button
               onClick={() => setViewPref("filterColor", "all")}
-              className={cn("text-2xs px-2 py-1 rounded-md transition-colors", prefs.filterColor === "all" ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted text-muted-foreground")}
+              className={cn("text-2xs px-2 py-1 rounded-md transition-colors", prefs.filterColor === "all" ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
             >
               wszystkie
             </button>
@@ -201,7 +201,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           <div className="px-2 pb-2 grid grid-cols-3 gap-1">
             <button
               onClick={() => setViewPref("filterPriority", "all")}
-              className={cn("text-2xs px-2 py-1 rounded-md transition-colors", prefs.filterPriority === "all" ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted text-muted-foreground")}
+              className={cn("text-2xs px-2 py-1 rounded-md transition-colors", prefs.filterPriority === "all" ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
             >
               wszystkie
             </button>
@@ -211,7 +211,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
                 onClick={() => setViewPref("filterPriority", p)}
                 className={cn(
                   "flex items-center justify-center gap-1 text-2xs px-2 py-1 rounded-md transition-colors",
-                  prefs.filterPriority === p ? "bg-primary/15 text-primary font-semibold" : "hover:bg-muted text-muted-foreground"
+                  prefs.filterPriority === p ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground"
                 )}
               >
                 {p !== "none" && <Flag className={cn("w-2.5 h-2.5 fill-current", PRIORITY_COLOR_CLASS[p])} />}

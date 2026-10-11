@@ -45,7 +45,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMo
         </h3>
         <button
           onClick={onAdd}
-          className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Plus className="w-3.5 h-3.5" />
           Dodaj termin
@@ -70,7 +70,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMo
               onClick={onEditShift}
               aria-keyshortcuts="Z"
               title="Zmień rodzaj zmiany i godziny tego dnia (Z)"
-              className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <Clock className="w-3.5 h-3.5" aria-hidden />
               Zmień godziny
@@ -85,7 +85,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMo
             onClick={onEditShift}
             aria-keyshortcuts="Z"
             title="Wpisz zmianę z Grafiku w tym dniu (Z)"
-            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Clock className="w-3.5 h-3.5" aria-hidden />
             Dodaj zmianę

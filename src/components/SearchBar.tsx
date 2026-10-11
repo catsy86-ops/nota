@@ -91,7 +91,7 @@ export function SearchBar({ value, onChange, className }: SearchBarProps) {
       <Search
         className={cn(
           "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 transition-colors",
-          focused ? "text-primary" : "text-muted-foreground"
+          focused ? "text-primary-ink" : "text-muted-foreground"
         )}
       />
       <input
@@ -122,7 +122,7 @@ export function SearchBar({ value, onChange, className }: SearchBarProps) {
             animate={{ opacity: 1, scale: 1, transition: tween.enter }}
             exit={{ opacity: 0, scale: reduced ? 1 : 0.8, transition: tween.exit }}
             onClick={() => setSaving((v) => !v)}
-            className="pressable absolute right-9 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
+            className="pressable absolute right-9 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary-ink"
           >
             <Bookmark className="w-4 h-4" />
           </motion.button>
@@ -162,7 +162,7 @@ export function SearchBar({ value, onChange, className }: SearchBarProps) {
               onMouseEnter={() => setActive(i)}
               className={cn(
                 "cursor-pointer truncate rounded-lg px-3 py-1.5 text-sm font-mono",
-                i === active ? "bg-primary/10 text-primary" : "text-foreground",
+                i === active ? "bg-primary/10 text-primary-ink" : "text-foreground",
               )}
             >
               {s.label}

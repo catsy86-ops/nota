@@ -84,7 +84,7 @@ export function SyncSettings({ prefillCode }: Props) {
       <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
         <div className="flex items-start gap-3 min-w-0">
           {syncState.status !== "disabled" ? (
-            <Wifi className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+            <Wifi className="w-5 h-5 text-primary-ink shrink-0 mt-0.5" />
           ) : (
             <WifiOff className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
           )}

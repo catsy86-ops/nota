@@ -70,7 +70,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
       <DialogContent className={cn("max-h-[85vh] overflow-y-auto", tab === "graph" ? "sm:max-w-3xl" : "sm:max-w-lg")}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Trophy className="w-5 h-5 text-primary" /> Statystyki i osiągnięcia
+            <Trophy className="w-5 h-5 text-primary-ink" /> Statystyki i osiągnięcia
           </DialogTitle>
           <DialogDescription>Twoje postępy — zapisywane lokalnie</DialogDescription>
         </DialogHeader>
@@ -107,7 +107,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
         <div className="grid grid-cols-3 gap-2 pt-2">
           {tiles.map((t) => (
             <div key={t.label} className="rounded-xl border border-border/60 bg-muted/30 p-3 text-center">
-              <t.icon className="w-4 h-4 mx-auto text-primary mb-1" />
+              <t.icon className="w-4 h-4 mx-auto text-primary-ink mb-1" />
               <p className="text-lg font-display font-bold">{t.value}</p>
               <p className="text-2xs uppercase tracking-wider text-muted-foreground">{t.label}</p>
             </div>
@@ -175,12 +175,12 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
                   <p className="text-xs text-muted-foreground">{a.description}</p>
                   <Progress value={p * 100} className="h-1.5 mt-1.5" />
                   {done && unlockedAt && (
-                    <p className="text-2xs text-primary/80 mt-1">
+                    <p className="text-2xs text-primary-ink/80 mt-1">
                       Zdobyto {format(unlockedAt, "d MMM yyyy", { locale: pl })}
                     </p>
                   )}
                 </div>
-                {done && <span className="text-2xs font-bold text-primary uppercase">✓</span>}
+                {done && <span className="text-2xs font-bold text-primary-ink uppercase">✓</span>}
               </motion.div>
             );
           })}

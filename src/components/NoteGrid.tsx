@@ -40,7 +40,7 @@ const SortableNoteCard = memo(function SortableNoteCard({ layout, note, index, s
       ref={setNodeRef}
       style={style}
       className={cn(
-        "rounded-xl transition-[box-shadow,opacity,outline-color] duration-fast outline outline-2 outline-offset-2 outline-transparent",
+        "rounded-2xl transition-[box-shadow,opacity,outline-color] duration-fast outline outline-2 outline-offset-2 outline-transparent",
         layout === "grid" && "h-full",
         isDragging && "opacity-90 shadow-elevation-3",
         // Miękki wskaźnik miejsca docelowego pod kartą, nad którą jest przeciągana.
@@ -183,12 +183,12 @@ const GridItem = memo(forwardRef<HTMLDivElement, SortableNoteCardProps & { rowGa
       data-note-id-wrap={note.id}
       onClickCapture={() => setGridNavFocus(note.id)}
       className={cn(
-        "note-lift rounded-xl transition-shadow",
+        "note-lift rounded-2xl transition-shadow",
         note.wide && layout !== "list" && "sm:col-span-2",
         wideEditing && "sm:has-[[data-tile-editing]]:col-span-2",
         // Odstęp pionowy mozaiki jako margines opakowania — `useMasonrySpans` wlicza go w wysokość.
         layout === "masonry" ? rowGap : layout === "grid" ? "h-full" : "",
-        focused && "ring-2 ring-primary/60 ring-offset-2 ring-offset-background"
+        focused && "ring-2 ring-ring ring-offset-2 ring-offset-background"
       )}
     >
       <SortableNoteCard note={note} index={index} layout={layout} selected={selected} />

@@ -92,7 +92,7 @@ export function ShareNote({ note }: ShareNoteProps) {
           </DialogHeader>
           <div className="space-y-3 pt-2">
             <Button variant="outline" className="w-full justify-start gap-3" onClick={copyText}>
-              {copied ? <Check className="w-4 h-4 text-primary" /> : <Copy className="w-4 h-4" />}
+              {copied ? <Check className="w-4 h-4 text-primary-ink" /> : <Copy className="w-4 h-4" />}
               Kopiuj tekst
             </Button>
             <Button variant="outline" className="w-full justify-start gap-3" onClick={copyLink}>

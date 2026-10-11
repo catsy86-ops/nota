@@ -36,7 +36,7 @@ function FolderTreeItem({ folder, folders, currentFolderId, onSelect, depth = 0 
         onClick={() => onSelect(isSelected ? null : folder.id)}
         className={cn(
           "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors hover:bg-muted/80",
-          isSelected && "bg-primary/10 text-primary"
+          isSelected && "bg-primary/10 text-primary-ink"
         )}
         style={{ paddingLeft: `${8 + depth * 16}px` }}
       >
@@ -53,7 +53,7 @@ function FolderTreeItem({ folder, folders, currentFolderId, onSelect, depth = 0 
           <span className={cn("w-2.5 h-2.5 rounded-full shrink-0", folderColorDot[folder.color] || folderColorDot.default)} />
         )}
         <span className="truncate flex-1 text-left">{folder.name}</span>
-        {isSelected && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+        {isSelected && <Check className="w-3.5 h-3.5 text-primary-ink shrink-0" />}
       </button>
       {expanded && children.map((child) => (
         <FolderTreeItem key={child.id} folder={child} folders={folders} currentFolderId={currentFolderId} onSelect={onSelect} depth={depth + 1} />
@@ -75,7 +75,7 @@ export function FolderPicker({ folders, currentFolderId, onSelect }: FolderPicke
           <PopoverTrigger asChild>
             <button
               onClick={(e) => e.stopPropagation()}
-              className={cn("pressable p-1.5 rounded-full transition-colors", currentFolderId ? "text-primary hover:bg-primary/10" : "text-muted-foreground hover:bg-foreground/5")}
+              className={cn("pressable p-1.5 rounded-full transition-colors", currentFolderId ? "text-primary-ink hover:bg-primary/10" : "text-muted-foreground hover:bg-foreground/5")}
             >
               <FolderOpen className="w-4 h-4" />
             </button>

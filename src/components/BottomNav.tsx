@@ -1,6 +1,9 @@
-import { forwardRef, useState } from "react";
+import { forwardRef, useRef, useState } from "react";
 import { motion, LayoutGroup } from "framer-motion";
-import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History, CalendarRange, BriefcaseBusiness, GraduationCap, Moon, Sun, FileDown, Bookmark } from "lucide-react";
+import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History, CalendarRange, BriefcaseBusiness, GraduationCap, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool } from "lucide-react";
+import { toast } from "sonner";
+import { haptic } from "@/lib/haptics";
+import type { ComposerAction } from "@/components/AddNoteBar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { ImportExportMenu } from "@/components/ImportExportMenu";
@@ -14,7 +17,8 @@ import type { View } from "@/hooks/useFilteredNotes";
 interface BottomNavProps {
   view: View;
   onGo: (v: View) => void;
-  onNew: () => void;
+  /** Bez argumentu: zwykła notatka. Z argumentem: edytor od razu robi to, co wybrano. */
+  onNew: (action?: ComposerAction) => void;
   onOpenSettings: () => void;
   onOpenActions?: () => void;
   trashCount?: number;
@@ -39,6 +43,32 @@ const slotsRight = [
 export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, dark = false, onToggleTheme, onImport, onGoFilter, search = "" }: BottomNavProps) {
   const { filters } = useSavedFilters();
   const [moreOpen, setMoreOpen] = useState(false);
+  // Długie przytrzymanie „+” otwiera arkusz „Nowa”: lista, dyktowanie, zdjęcie, rysunek.
+  const [quickOpen, setQuickOpen] = useState(false);
+  const pressTimer = useRef<number | undefined>(undefined);
+  const longPressed = useRef(false);
+  const canDictate = typeof window !== "undefined" && ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
+  const startPress = () => {
+    longPressed.current = false;
+    window.clearTimeout(pressTimer.current);
+    pressTimer.current = window.setTimeout(() => {
+      longPressed.current = true;
+      haptic("tap");
+      setQuickOpen(true);
+    }, 420);
+  };
+  const cancelPress = () => window.clearTimeout(pressTimer.current);
+  const hintOnce = () => {
+    try {
+      if (localStorage.getItem("kaczy.fab.hint.v1")) return;
+      const n = Number(localStorage.getItem("kaczy.fab.taps") ?? "0") + 1;
+      localStorage.setItem("kaczy.fab.taps", String(n));
+      if (n >= 4) {
+        localStorage.setItem("kaczy.fab.hint.v1", "1");
+        toast("Przytrzymaj „+”, by od razu dodać listę, zdjęcie, rysunek albo dyktować", { duration: 6000 });
+      }
+    } catch { /* brak localStorage — bez podpowiedzi */ }
+  };
   // Każde dotknięcie „+” obraca ikonę o ćwierć obrotu — cichy znak, że edytor się otwiera.
   const [quarterTurns, setQuarterTurns] = useState(0);
   const { reduced } = useMotionPref();
@@ -65,8 +95,19 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
               <motion.button
                 whileTap={reduced ? undefined : { scale: 0.92 }}
                 transition={spring.snap}
-                onClick={() => { setQuarterTurns((n) => n + 1); onNew(); }}
+                onPointerDown={startPress}
+                onPointerUp={cancelPress}
+                onPointerLeave={cancelPress}
+                onPointerCancel={cancelPress}
+                onContextMenu={(e) => e.preventDefault()}
+                onClick={() => {
+                  if (longPressed.current) { longPressed.current = false; return; }
+                  setQuarterTurns((n) => n + 1);
+                  hintOnce();
+                  onNew();
+                }}
                 aria-label="Nowa notatka"
+                title="Nowa notatka (przytrzymaj po więcej)"
                 className="relative w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-glow-primary ring-4 ring-background outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               >
                 <motion.span
@@ -93,12 +134,31 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
         </LayoutGroup>
       </motion.nav>
 
+      <Sheet open={quickOpen} onOpenChange={setQuickOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
+          <div aria-hidden className="mx-auto -mt-2 mb-3 h-1.5 w-10 rounded-full bg-muted-foreground/25" />
+          <SheetHeader className="text-left">
+            <SheetTitle className="font-display">Nowa</SheetTitle>
+          </SheetHeader>
+          <div className="mt-4 grid grid-cols-3 gap-3" role="group" aria-label="Rodzaj nowej notatki">
+            <SheetTile Icon={Plus} label="Notatka" onClick={() => { setQuickOpen(false); onNew("note"); }} />
+            <SheetTile Icon={ListChecks} label="Lista zadań" onClick={() => { setQuickOpen(false); onNew("list"); }} />
+            {canDictate && <SheetTile Icon={Mic} label="Dyktuj" onClick={() => { setQuickOpen(false); onNew("dictate"); }} />}
+            <SheetTile Icon={ImagePlus} label="Zdjęcie" onClick={() => { setQuickOpen(false); onNew("image"); }} />
+            <SheetTile Icon={PenTool} label="Rysunek" onClick={() => { setQuickOpen(false); onNew("draw"); }} />
+          </div>
+        </SheetContent>
+      </Sheet>
+
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
         <SheetContent side="bottom" className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
           <div aria-hidden className="mx-auto -mt-2 mb-3 h-1.5 w-10 rounded-full bg-muted-foreground/25" />
           <SheetHeader className="text-left">
             <SheetTitle className="font-display">Więcej</SheetTitle>
           </SheetHeader>
+          <SheetGroup title="Dodaj">
+            <SheetTile Icon={Plus} label="Dodaj…" onClick={() => { setMoreOpen(false); setQuickOpen(true); }} />
+          </SheetGroup>
           <SheetGroup title="Przejdź do">
             <SheetTile Icon={Archive} label="Archiwum" active={view === "archive"} onClick={() => { onGo("archive"); setMoreOpen(false); }} />
             <SheetTile Icon={Trash2} label="Kosz" active={view === "trash"} badge={trashCount || undefined} onClick={() => { onGo("trash"); setMoreOpen(false); }} />
@@ -150,7 +210,7 @@ function NavItem({ active, current = active, label, onClick, children, badge, bu
         {...buttonProps}
         className={cn(
           "pressable relative w-full flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl text-2xs font-display outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          active ? "text-primary font-semibold" : "text-muted-foreground font-medium hover:text-foreground"
+          active ? "text-primary-ink font-semibold" : "text-muted-foreground font-medium hover:text-foreground"
         )}
       >
         {active && (
@@ -197,7 +257,7 @@ const SheetTile = forwardRef<HTMLButtonElement, SheetTileProps>(function SheetTi
         active ? "bg-primary/10 border-primary/40" : "bg-muted/50 hover:bg-muted border-border/50",
       )}
     >
-      <span className="w-10 h-10 rounded-xl bg-background flex items-center justify-center text-primary">
+      <span className="w-10 h-10 rounded-xl bg-background flex items-center justify-center text-primary-ink">
         <Icon className="w-5 h-5" />
       </span>
       <span className="text-xs font-medium font-display leading-tight text-center text-foreground">{label}</span>

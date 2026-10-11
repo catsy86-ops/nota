@@ -19,7 +19,7 @@ export function NoteLookPicker({ icon, cover, onChange }: NoteLookPickerProps) {
           onClick={(e) => e.stopPropagation()}
           aria-label="Ikona i okładka"
           data-tip="Ikona i okładka"
-          className={cn("card-action", icon || cover ? "text-primary" : "text-muted-foreground")}
+          className={cn("card-action", icon || cover ? "text-primary-ink" : "text-muted-foreground")}
         >
           {icon ? <span className="text-base leading-none" aria-hidden>{icon}</span> : <Smile className="w-4 h-4" />}
         </button>

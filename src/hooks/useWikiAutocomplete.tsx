@@ -141,7 +141,7 @@ export function useWikiAutocomplete({ textareaRef, value, onChange, titles, excl
             onMouseEnter={() => setActive(i)}
             className={cn(
               "w-full flex items-center gap-2 text-left px-3 text-sm transition-colors",
-              i === active ? "bg-primary/10 text-primary" : "hover:bg-muted",
+              i === active ? "bg-primary/10 text-primary-ink" : "hover:bg-muted",
             )}
             style={{ height: ITEM_H }}
           >

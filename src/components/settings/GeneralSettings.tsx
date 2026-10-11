@@ -52,6 +52,10 @@ const SHORTCUTS: { keys: string; desc: string }[] = [
   { keys: "+ / - / 0", desc: "Zoom w trybie prezentacji notatki" },
   { keys: "Esc", desc: "Zamknij dialogi i tryb prezentacji" },
   { keys: "[[Tytuł]]", desc: "Link do innej notatki w treści" },
+  { keys: "[[Tytuł#Nagłówek]]", desc: "Link do nagłówka w innej notatce" },
+  { keys: "@", desc: "Wzmianka: data (dziś, jutro) albo notatka" },
+  { keys: `${MOD_KEY} + Enter`, desc: "Zapisz nową notatkę" },
+  { keys: `${MOD_KEY} + Shift + Enter`, desc: "Zapisz i dodaj kolejną" },
 ];
 
 function previewEffect(key: EffectKey) {

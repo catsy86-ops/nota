@@ -34,6 +34,9 @@ import { handleEditorKey } from "@/lib/editorKeysDom";
 import { EditorStats } from "./EditorStats";
 import { haptic } from "@/lib/haptics";
 
+/** Od czego zaczyna się nowa notatka (długie przytrzymanie „+” na telefonie). */
+export type ComposerAction = "note" | "list" | "dictate" | "image" | "draw";
+
 /** Pola, których nie niesie lista pozycyjna `onAdd` — seria przypomnienia i rodzic. */
 export interface ComposerExtras {
   reminderRepeat?: ReminderRepeat;
@@ -69,6 +72,7 @@ interface Draft {
   reminder: number | null;
   reminderRepeat: ReminderRepeat;
   reminderRepeatUntil?: number;
+  parentId?: string;
   priority: NotePriority;
 }
 
@@ -94,7 +98,8 @@ function readDraft(): Draft | null {
     const priority = DRAFT_PRIORITIES.includes(p.priority as NotePriority) ? (p.priority as NotePriority) : "none";
     const reminderRepeat = reminder !== null && DRAFT_REPEATS.includes(p.reminderRepeat as ReminderRepeat) ? (p.reminderRepeat as ReminderRepeat) : "none";
     const until = typeof p.reminderRepeatUntil === "number" && Number.isFinite(p.reminderRepeatUntil) && reminderRepeat !== "none" ? p.reminderRepeatUntil : undefined;
-    return { title, content, checklist, color, labels, reminder, reminderRepeat, ...(until !== undefined ? { reminderRepeatUntil: until } : {}), priority };
+    const parentId = typeof p.parentId === "string" && p.parentId.length > 0 && p.parentId.length <= 200 ? p.parentId : undefined;
+    return { title, content, checklist, color, labels, reminder, reminderRepeat, ...(until !== undefined ? { reminderRepeatUntil: until } : {}), ...(parentId ? { parentId } : {}), priority };
   } catch { return null; }
 }
 
@@ -105,7 +110,7 @@ function writeDraft(d: Draft): void {
   } catch { /* brak miejsca albo localStorage — szkic po prostu nie przeżyje przeładowania */ }
 }
 
-export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(function AddNoteBar({ onAdd, folders, allLabels, onCreateLabel, destination, templates, wikiTitles, parentOptions }, ref) {
+export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void }, AddNoteBarProps>(function AddNoteBar({ onAdd, folders, allLabels, onCreateLabel, destination, templates, wikiTitles, parentOptions }, ref) {
   // Szkic przeżywa przeładowanie i zamknięcie karty: tytuł, treść i pozycje listy wracają po powrocie.
   const [draft0] = useState(readDraft);
   const [expanded, setExpanded] = useState(draft0 !== null);
@@ -119,7 +124,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   const [restored, setRestored] = useState(draft0 !== null);
   const [reminderRepeat, setReminderRepeat] = useState<ReminderRepeat>(draft0?.reminderRepeat ?? "none");
   const [reminderUntil, setReminderUntil] = useState<number | undefined>(draft0?.reminderRepeatUntil);
-  const [parentId, setParentId] = useState<string | null>(null);
+  const [parentId, setParentId] = useState<string | null>(draft0?.parentId ?? null);
   const [newLabel, setNewLabel] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
@@ -134,7 +139,14 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   const titleRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useImperativeHandle(ref, () => ({ expand: () => setExpanded(true) }));
+  const [pendingAction, setPendingAction] = useState<ComposerAction | null>(null);
+  useImperativeHandle(ref, () => ({
+    expand: (action) => {
+      setExpanded(true);
+      // Handlery zdarzeń potrafią podać tu obiekt zdarzenia — przyjmujemy tylko znane akcje.
+      if (action === "list" || action === "dictate" || action === "image" || action === "draw") setPendingAction(action);
+    },
+  }));
 
   const reset = useCallback(() => {
     setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderRepeat("none"); setReminderUntil(undefined); setParentId(null); setPriority("none"); setImages([]); setAttachments([]); setChecklist([]); setShowChecklist(false); setIgnored(new Set()); setRestored(false); setExpanded(false);
@@ -162,7 +174,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
       haptic("success");
       const extras: ComposerExtras = {
         ...(remindAt !== null && reminderRepeat !== "none" ? { reminderRepeat, ...(reminderUntil !== undefined ? { reminderRepeatUntil: reminderUntil } : {}) } : {}),
-        ...(parentId ? { parentId } : {}),
+        ...(parentId && (!parentOptions || parentOptions.some((o) => o.id === parentId)) ? { parentId } : {}),
       };
       onAdd(r.title, r.content, color, allNoteLabels, remindAt, images, checklist, r.priority ?? priority, r.folderId, attachments, extras);
     }
@@ -183,8 +195,8 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   }, [expanded]);
 
   useEffect(() => {
-    writeDraft({ title, content, checklist, color, labels, reminder, reminderRepeat, reminderRepeatUntil: reminderUntil, priority });
-  }, [title, content, checklist, color, labels, reminder, reminderRepeat, reminderUntil, priority]);
+    writeDraft({ title, content, checklist, color, labels, reminder, reminderRepeat, reminderRepeatUntil: reminderUntil, ...(parentId ? { parentId } : {}), priority });
+  }, [title, content, checklist, color, labels, reminder, reminderRepeat, reminderUntil, parentId, priority]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -269,6 +281,17 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
     setContent((c) => (c && !/\s$/.test(c) ? `${c} ${text}` : `${c}${text}`));
   });
 
+  // Akcja z długiego przytrzymania „+”: wykonujemy ją, gdy edytor już się otworzył.
+  useEffect(() => {
+    if (!pendingAction || !expanded) return;
+    const a = pendingAction;
+    setPendingAction(null);
+    if (a === "list") setShowChecklist(true);
+    else if (a === "draw") setShowDrawing(true);
+    else if (a === "image") fileInputRef.current?.click();
+    else if (a === "dictate" && dictation.supported && !dictation.listening) dictation.toggle();
+  }, [pendingAction, expanded, dictation]);
+
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files) return;
@@ -297,7 +320,16 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
   const fullScreen = expanded && typeof window !== "undefined" && window.matchMedia("(max-width: 639px)").matches;
 
   const composer = (
-    <motion.div ref={containerRef} layout={!fullScreen} data-composer-open={expanded || undefined} data-note-color={expanded && color !== "default" ? color : undefined}
+    <motion.div ref={containerRef} layout={!fullScreen} data-composer-open={expanded || undefined}
+      role={fullScreen ? "dialog" : undefined} aria-modal={fullScreen || undefined} aria-label={fullScreen ? "Nowa notatka" : undefined}
+      onKeyDown={(e) => {
+        // Esc zwija edytor bez zapisu — szkic zostaje. Zdarzenia z okienek w portalach (przypomnienie, etykiety) nie liczą się.
+        if (e.key !== "Escape" || e.defaultPrevented || !expanded) return;
+        if (!containerRef.current?.contains(e.target as Node)) return;
+        if (wiki.isOpen || slash.isOpen) return;
+        e.stopPropagation();
+        setExpanded(false);
+      }} data-note-color={expanded && color !== "default" ? color : undefined}
       className={cn("w-full max-w-xl rounded-2xl note-shadow border border-border overflow-hidden transition-[box-shadow,background-color] focus-ring-gradient hover:shadow-elevation-3",
         // Kolor schowany pod ikoną palety — edytor przyjmuje go od razu, żeby było widać wybór.
         expanded && color !== "default" ? colorClasses[color] : "bg-card", !expanded && "max-md:hidden",
@@ -313,10 +345,11 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
             {destination && <span className="ml-auto text-xs truncate max-w-[45%]">trafi do: {destination}</span>}
           </motion.button>
         ) : (
-          <motion.div key="expanded" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-4 space-y-3">
+          <motion.div key="expanded" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className={cn("p-4 space-y-3", fullScreen && "flex min-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col space-y-0 gap-3 bg-inherit")}>
             {destination && <p className="text-xs text-muted-foreground">Trafi do: <span className="font-medium text-foreground">{destination}</span></p>}
             {restored && (
-              <div role="status" className="flex items-center gap-2 rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs text-primary" data-draft-restored="">
+              <div role="status" className="flex items-center gap-2 rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs text-primary-ink" data-draft-restored="">
                 <span>Szkic przywrócony z poprzedniej sesji</span>
                 <button type="button" onClick={reset} className="ml-auto rounded px-1.5 py-0.5 font-medium hover:bg-primary/10 outline-none focus-visible:ring-2 focus-visible:ring-ring">
                   Odrzuć
@@ -338,9 +371,9 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
               const sel = content.slice(s, e2);
               setContent(content.slice(0, s) + before + sel + after + content.slice(e2));
             }} />
-            <div className="relative">
+            <div className={cn("relative", fullScreen && "flex-1")}>
               <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} onPaste={handleContentPaste} aria-autocomplete="list" aria-expanded={wiki.isOpen} onSelect={() => { wiki.textareaProps.onSelect(); slash.refresh(); }} onKeyDown={handleContentKeyDown} placeholder="Treść notatki..." rows={3}
-                className="w-full max-sm:min-h-[35dvh] bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none" />
+                className="w-full max-sm:min-h-[35dvh] bg-transparent text-sm max-sm:text-base text-foreground placeholder:text-muted-foreground/50 outline-none resize-none" />
               {wiki.popup()}{slash.popup()}
             </div>
             {content.length > 0 && <EditorStats textareaRef={textareaRef} value={content} className="block text-2xs text-muted-foreground" />}
@@ -358,7 +391,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                       onClick={() => toggleIgnored(t.key)}
                       onKeyDown={(e) => { if (e.key === "Backspace" || e.key === "Delete") { e.preventDefault(); toggleIgnored(t.key); } }}
                       className={cn("pressable inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary",
-                        off ? "border-border text-muted-foreground line-through" : "border-primary/40 bg-primary/10 text-primary hover:bg-primary/15")}>
+                        off ? "border-border text-muted-foreground line-through" : "border-primary/40 bg-primary/10 text-primary-ink hover:bg-primary/15")}>
                       <Icon className="w-3 h-3 shrink-0" aria-hidden />
                       <span>{d.label}</span>
                       {t.kind === "label" && t.isNew && !off && <span className="text-2xs opacity-70">nowa</span>}
@@ -392,7 +425,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                     <button
                       onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
                       aria-label="Usuń obrazek"
-                      className="absolute -top-1.5 -right-1.5 p-0.5 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover/img:opacity-100 transition-opacity"
+                      className="absolute -top-1.5 -right-1.5 p-0.5 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover/img:opacity-100 focus-visible:opacity-100 coarse:opacity-100 coarse:p-2 transition-opacity"
                     >
                       <X className="w-2.5 h-2.5" />
                     </button>
@@ -414,16 +447,16 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
 
             {/* Reminder display */}
             {reminder && (
-              <div className="flex items-center gap-1 text-xs text-primary">
+              <div className="flex items-center gap-1 text-xs text-primary-ink">
                 <Bell className="w-3 h-3" />
                 {formatReminderShort(reminder)}
                 {reminderRepeat !== "none" && <Repeat className="w-3 h-3" aria-label="Powtarzane" />}
-                <button onClick={() => { setReminder(null); setReminderRepeat("none"); setReminderUntil(undefined); }} aria-label="Usuń przypomnienie" className="ml-1 text-muted-foreground hover:text-foreground">×</button>
+                <button onClick={() => { setReminder(null); setReminderRepeat("none"); setReminderUntil(undefined); }} aria-label="Usuń przypomnienie" className="ml-1 text-muted-foreground hover:text-foreground coarse:inline-flex coarse:h-11 coarse:w-11 coarse:items-center coarse:justify-center">×</button>
               </div>
             )}
 
             {/* Jeden rząd narzędzi z „Zamknij” — kolory pod ikoną palety, lista zadań jako przełącznik. */}
-            <div className="pt-1">
+            <div className={cn("pt-1", fullScreen && "sticky bottom-0 z-10 -mx-4 mt-auto border-t border-border/60 bg-inherit px-4 pb-2 pt-2")}>
               <div className="flex items-center gap-1 flex-wrap flex-1">
                 <IconButton size="sm" tone={showChecklist ? "active" : "muted"} onClick={() => setShowChecklist(!showChecklist)}
                   title="Lista zadań" aria-label="Lista zadań" aria-pressed={showChecklist}>
@@ -474,7 +507,7 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                     </div>
                     <div className="flex gap-1.5">
                       <input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleCreateLabel()}
-                        placeholder="Nowa etykieta..." className="flex-1 text-xs bg-muted/60 border border-border rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground" />
+                        placeholder="Nowa etykieta..." className="flex-1 text-xs max-sm:text-base bg-muted/60 border border-border rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground" />
                       <IconButton size="sm" tone="primary" onClick={handleCreateLabel} aria-label="Dodaj etykietę">
                         <Plus className="w-3.5 h-3.5" />
                       </IconButton>
@@ -526,7 +559,8 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
                 )}
                 <button onClick={handleClose}
                   title={isDraftEmpty ? "Zamknij" : "Zapisz notatkę (Ctrl+Enter)"}
-                  className={cn("pressable px-4 py-1.5 text-sm font-medium font-display text-primary hover:bg-primary/10 rounded-lg transition-colors shrink-0", isDraftEmpty && "ml-auto")}>
+                  className={cn("pressable px-4 py-1.5 text-sm font-medium font-display text-primary-ink hover:bg-primary/10 rounded-lg transition-colors shrink-0", isDraftEmpty && "ml-auto",
+                    fullScreen && !isDraftEmpty && "h-11 rounded-full bg-primary px-6 text-primary-foreground shadow-glow-primary hover:bg-primary/90")}>
                   {isDraftEmpty ? "Zamknij" : "Zapisz"}
                 </button>
               </div>

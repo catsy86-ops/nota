@@ -116,7 +116,7 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
           ) : noVault ? (
             <span className="text-2xs text-muted-foreground">Skarbiec nie jest ustawiony na tym urządzeniu.</span>
           ) : (
-            <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium", busy ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary")}>
+            <span className={cn("inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium", busy ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary-ink")}>
               <KeyRound className="w-3 h-3" />
               {busy ? "Odszyfrowuję…" : "Odblokuj"}
             </span>

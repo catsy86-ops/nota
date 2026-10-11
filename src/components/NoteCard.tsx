@@ -362,7 +362,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           <FormatToolbar onInsert={handleFormatInsert} nowrap={!full} />
           <button
             onClick={() => setShowPreview(!showPreview)}
-            className={cn("p-1 rounded text-2xs transition-colors ml-auto", showPreview ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground")}
+            className={cn("p-1 rounded text-2xs transition-colors ml-auto", showPreview ? "text-primary-ink bg-primary/10" : "text-muted-foreground hover:text-foreground")}
             title={showPreview ? "Ukryj podgląd" : "Podgląd Markdown"}
             aria-label={showPreview ? "Ukryj podgląd" : "Podgląd Markdown"}
           >
@@ -398,7 +398,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <button
             onClick={() => setShowChecklist(!showChecklist)}
-            className={cn("flex items-center gap-1.5 text-xs transition-colors", showChecklist ? "text-primary" : "text-muted-foreground hover:text-foreground")}
+            className={cn("flex items-center gap-1.5 text-xs transition-colors", showChecklist ? "text-primary-ink" : "text-muted-foreground hover:text-foreground")}
           >
             <ListChecks className="w-3.5 h-3.5" />
             {showChecklist ? "Lista zadań" : "Dodaj listę"}
@@ -423,7 +423,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
             <Type className="w-3 h-3 shrink-0" />
             <EditorStats textareaRef={textareaRef} value={editContent} />
           </span>
-          <button onClick={handleSave} className="text-sm font-medium text-primary hover:bg-primary/10 px-3 py-1 rounded-lg transition-colors">Zapisz</button>
+          <button onClick={handleSave} className="text-sm font-medium text-primary-ink hover:bg-primary/10 px-3 py-1 rounded-lg transition-colors">Zapisz</button>
         </div>
       </div>
     );
@@ -435,7 +435,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
       {swipeEnabled && (
         <>
           <motion.div style={{ opacity: archiveOpacity }} className="absolute inset-y-0 left-0 w-1/2 rounded-xl bg-primary/15 flex items-center justify-start pl-5 pointer-events-none">
-            <Archive className="w-6 h-6 text-primary" />
+            <Archive className="w-6 h-6 text-primary-ink" />
           </motion.div>
           <motion.div style={{ opacity: trashOpacity }} className="absolute inset-y-0 right-0 w-1/2 rounded-xl bg-destructive/15 flex items-center justify-end pr-5 pointer-events-none">
             <Trash2 className="w-6 h-6 text-destructive" />
@@ -480,7 +480,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         // Siatka (`NoteGrid`) rozciąga kafel w edycji na dwie kolumny.
         data-tile-editing={isEditing && !fullEditor ? "" : undefined}
         className={cn(
-          "group note-card relative rounded-xl border note-shadow transition-[box-shadow,border-color,translate] duration-base ease-out-soft overflow-hidden",
+          "group note-card relative rounded-2xl border note-shadow transition-[box-shadow,border-color,translate] duration-base ease-out-soft overflow-hidden",
           colorClasses[note.color],
           selected ? "note-glow-active border-transparent" : "border-border/50"
         )}
@@ -558,7 +558,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         )}
 
         <div
-          className={cn("cursor-pointer", isEditing && !fullEditor ? "p-4" : "card-body px-3 pt-2.5 pb-2 leading-snug", note.largeText ? "text-base" : "text-[0.8125rem] sm:text-sm")}
+          className={cn("cursor-pointer", isEditing && !fullEditor ? "p-4" : "card-body px-3.5 pt-3 pb-2.5 leading-[1.5]", note.largeText ? "text-base" : "text-[0.875rem]")}
           onClick={(e) => {
             if (swiping || Math.abs(swipeX.get()) > 4) return;
             if (selectionMode && onToggleSelect) { onToggleSelect(note.id, e.shiftKey); return; }
@@ -575,9 +575,9 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         >
           {isEditing && !fullEditor ? renderEditor(false) : (
             <>
-              <NoteCoverStrip cover={note.cover} className="-mx-3 -mt-2.5 mb-2 w-[calc(100%+1.5rem)] rounded-t-[inherit]" />
+              <NoteCoverStrip cover={note.cover} className="-mx-3.5 -mt-3 mb-2.5 w-[calc(100%+1.75rem)] rounded-t-[inherit]" />
               {(note.title || note.icon) && (
-                <h3 className="font-display font-semibold text-[0.9375rem] leading-tight text-foreground mb-0.5 line-clamp-2">
+                <h3 className="font-display font-semibold text-base leading-snug tracking-[-0.01em] text-foreground mb-1 line-clamp-2">
                   {note.icon && <span className="mr-1.5" aria-hidden>{note.icon}</span>}
                   {note.title}
                   {note.readOnly && <Lock className="inline-block w-3 h-3 ml-1.5 -mt-0.5 text-muted-foreground" aria-label="Zablokowana do edycji" />}
@@ -609,7 +609,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                       key={b.id}
                       type="button"
                       onClick={(e) => { e.stopPropagation(); onOpenNote?.(b.id); }}
-                      className="min-w-0 px-1.5 py-0.5 rounded-full bg-foreground/5 hover:bg-primary/10 hover:text-primary truncate transition-colors"
+                      className="min-w-0 px-1.5 py-0.5 rounded-full bg-foreground/5 hover:bg-primary/10 hover:text-primary-ink truncate transition-colors"
                     >
                       {b.title || "Bez tytułu"}
                     </button>
@@ -624,7 +624,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                       type="button"
                       title="Notatka nadrzędna"
                       onClick={(e) => { e.stopPropagation(); onOpenNote?.(subpage.parentId!); }}
-                      className="flex min-w-0 items-center gap-1 px-1.5 py-0.5 rounded-full bg-foreground/5 hover:bg-primary/10 hover:text-primary transition-colors"
+                      className="flex min-w-0 items-center gap-1 px-1.5 py-0.5 rounded-full bg-foreground/5 hover:bg-primary/10 hover:text-primary-ink transition-colors"
                     >
                       <CornerLeftUp className="w-3 h-3 shrink-0" aria-hidden />
                       <span className="truncate">{subpage.parentTitle || "Bez tytułu"}</span>
@@ -652,7 +652,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                         celebrate(r.left + r.width / 2, r.top + r.height / 2);
                         onUnarchive(note.id);
                       }}
-                      className="pressable inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                      className="pressable inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium bg-primary/10 text-primary-ink hover:bg-primary/20 transition-colors"
                       title="Przywróć notatkę"
                     >
                       <RotateCcw className="w-3 h-3" />
@@ -664,7 +664,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
               {/* Liczba słów jest w czytniku — na wąskim kaflu łamała stopkę na trzy linie. */}
               <div className="card-meta flex items-center gap-1.5 mt-1.5 text-2xs text-muted-foreground whitespace-nowrap">
                 {prefs.showReadingTime && wordCount > 0 && readMin >= 2 && <><span>~{readMin} min</span><span aria-hidden>·</span></>}
-                <span>{format(new Date(note.updatedAt), "d MMM", { locale: pl })}</span>
+                <span className="tabular-nums">{format(new Date(note.updatedAt), "d MMM", { locale: pl })}</span>
               </div>
             </>
           )}
@@ -729,7 +729,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
             onClick={() => setShowMore((v) => !v)}
             title={showMore ? "Mniej opcji" : "Więcej opcji"}
             aria-expanded={showMore}
-            className={cn("ml-auto", showMore && "text-primary bg-primary/10")}
+            className={cn("ml-auto", showMore && "text-primary-ink bg-primary/10")}
           />
         </div>
 
@@ -748,7 +748,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                     icon={<Star className={cn("w-4 h-4", note.favorite && "fill-current")} />}
                     onClick={() => { haptic("tap"); onUpdate?.(note.id, { favorite: note.favorite ? undefined : true }); }}
                     title={note.favorite ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
-                    className={cn(note.favorite && "text-primary")}
+                    className={cn(note.favorite && "text-primary-ink")}
                   />
                 )}
                 {!isArchived && (
@@ -757,7 +757,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                     onClick={() => { haptic("tap"); onUpdate?.(note.id, { wide: note.wide ? undefined : true }); }}
                     title={note.wide ? "Zwiń do jednej kolumny" : "Rozciągnij na dwie kolumny"}
                     aria-pressed={!!note.wide}
-                    className={cn(note.wide && "text-primary")}
+                    className={cn(note.wide && "text-primary-ink")}
                   />
                 )}
                 {!isArchived && (
@@ -766,7 +766,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                     onClick={() => { haptic("tap"); onUpdate?.(note.id, { largeText: note.largeText ? undefined : true }); }}
                     title={note.largeText ? "Zwykły rozmiar tekstu" : "Większy tekst"}
                     aria-pressed={!!note.largeText}
-                    className={cn(note.largeText && "text-primary")}
+                    className={cn(note.largeText && "text-primary-ink")}
                   />
                 )}
                 {!isArchived && (
@@ -775,7 +775,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                     onClick={() => { haptic("tap"); onUpdate?.(note.id, { readOnly: note.readOnly ? undefined : true }); }}
                     title={note.readOnly ? "Odblokuj edycję" : "Zablokuj edycję"}
                     aria-pressed={!!note.readOnly}
-                    className={cn(note.readOnly && "text-primary")}
+                    className={cn(note.readOnly && "text-primary-ink")}
                   />
                 )}
                 {!isArchived && !note.locked && (

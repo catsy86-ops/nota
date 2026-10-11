@@ -117,7 +117,7 @@ function TextPreview({ attachment }: { attachment: Attachment }) {
   }
   return (
     <div className="mt-1">
-      <button type="button" onClick={toggle} className="text-2xs text-primary hover:underline">
+      <button type="button" onClick={toggle} className="text-2xs text-primary-ink hover:underline">
         {state === "closed" ? "Pokaż podgląd" : "Ukryj podgląd"}
       </button>
       {state === "error" && <p className="text-2xs text-muted-foreground">Nie udało się wczytać podglądu.</p>}

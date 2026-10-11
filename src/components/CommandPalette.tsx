@@ -89,7 +89,7 @@ export function CommandPalette({
               <button
                 type="button"
                 onClick={() => run(onNewNote)}
-                className="flex items-center gap-1.5 text-xs text-primary hover:underline"
+                className="flex items-center gap-1.5 text-xs text-primary-ink hover:underline"
               >
                 <Plus className="w-3.5 h-3.5" /> Utwórz notatkę „{search.trim()}”
               </button>

@@ -21,7 +21,7 @@ interface InstallAppButtonProps {
 
 type Step = { icon: ReactNode; text: ReactNode };
 
-const STEP_ICON = "w-7 h-7 shrink-0 rounded-lg bg-muted flex items-center justify-center text-primary";
+const STEP_ICON = "w-7 h-7 shrink-0 rounded-lg bg-muted flex items-center justify-center text-primary-ink";
 
 function manualSteps(isIos: boolean, isAndroid: boolean): { intro: string; steps: Step[] } {
   if (isIos) {
@@ -93,7 +93,7 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
           className
         )}
       >
-        <span className="w-10 h-10 rounded-xl bg-background flex items-center justify-center text-primary">
+        <span className="w-10 h-10 rounded-xl bg-background flex items-center justify-center text-primary-ink">
           <Download className="w-5 h-5" />
         </span>
         <span className="text-xs font-medium font-display text-foreground">Zainstaluj</span>
@@ -101,7 +101,7 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
     ) : (
       // Zwykły wiersz paska — cichy jak reszta; ikona w kolorze podpowiada akcję.
       <SidebarRow
-        icon={<Download className="w-[18px] h-[18px] text-primary" />}
+        icon={<Download className="w-[18px] h-[18px] text-primary-ink" />}
         label="Zainstaluj aplikację"
         onClick={handleClick}
         className={className}
@@ -115,7 +115,7 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2">
-              <Download className="w-5 h-5 text-primary" /> Zainstaluj NOTKI
+              <Download className="w-5 h-5 text-primary-ink" /> Zainstaluj NOTKI
             </DialogTitle>
             <DialogDescription>{help.intro}</DialogDescription>
           </DialogHeader>

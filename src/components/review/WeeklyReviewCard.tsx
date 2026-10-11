@@ -103,7 +103,7 @@ function CategoryBlock({ cat, a }: { cat: ReviewCategory; a: WeeklyReviewActions
       <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         <Icon className="w-3.5 h-3.5" aria-hidden />
         {cat.label}
-        <span className="font-mono text-2xs normal-case tracking-normal bg-primary/10 text-primary px-1.5 rounded-full" data-testid="review-count">{cat.count}</span>
+        <span className="font-mono text-2xs normal-case tracking-normal bg-primary/10 text-primary-ink px-1.5 rounded-full" data-testid="review-count">{cat.count}</span>
       </h3>
       <ul className="mt-1.5 divide-y divide-border/50">
         {cat.examples.map((n) => (
@@ -201,7 +201,7 @@ export function WeeklyReviewCard(a: WeeklyReviewActions) {
         )}
       >
         <header className="flex flex-wrap items-start gap-x-3 gap-y-2">
-          <span className="w-9 h-9 shrink-0 rounded-xl bg-primary/15 text-primary grid place-items-center" aria-hidden>
+          <span className="w-9 h-9 shrink-0 rounded-xl bg-primary/15 text-primary-ink grid place-items-center" aria-hidden>
             <Sparkles className="w-[18px] h-[18px]" />
           </span>
           <div className="min-w-0 flex-1">

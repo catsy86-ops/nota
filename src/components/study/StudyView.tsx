@@ -15,7 +15,7 @@ function MasteryStrip() {
   return (
     <div className="space-y-2">
       <div className="flex items-baseline gap-3">
-        <p className="font-display text-4xl leading-none tabular-nums text-primary" data-testid="mastery-count">{done}</p>
+        <p className="font-display text-4xl leading-none tabular-nums text-primary-ink" data-testid="mastery-count">{done}</p>
         <p className="text-sm text-muted-foreground">z {TOPICS.length} tematów opanowanych{doing > 0 ? ` · ${doing} w trakcie` : ""}</p>
       </div>
       <div className="flex gap-1" role="img" aria-label={`Opanowane tematy: ${done} z ${TOPICS.length}`}>

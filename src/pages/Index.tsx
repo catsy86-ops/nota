@@ -33,7 +33,7 @@ import { useBackupReminders } from "@/hooks/useBackupReminders";
 import { useShiftEveningNudge } from "@/hooks/useShiftEveningNudge";
 import { useDailyWeeklyNudges } from "@/hooks/useDailyWeeklyNudges";
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
-import { AddNoteBar, type ComposerExtras } from "@/components/AddNoteBar";
+import { AddNoteBar, type ComposerAction, type ComposerExtras } from "@/components/AddNoteBar";
 import { InstallBanner } from "@/components/InstallBanner";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AppHeader } from "@/components/AppHeader";
@@ -134,7 +134,7 @@ const Index = () => {
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== "undefined" && window.innerWidth >= 768);
   const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false);
   const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[] | null>(null);
-  const addNoteRef = useRef<{ expand: () => void }>(null);
+  const addNoteRef = useRef<{ expand: (action?: ComposerAction) => void }>(null);
   const logoClicksRef = useRef<{ count: number; lastTs: number }>({ count: 0, lastTs: 0 });
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
@@ -230,9 +230,9 @@ const Index = () => {
     ? folders.find((f) => f.id === activeFolder)?.name ?? null
     : view === "label" ? `#${activeLabel}` : null;
 
-  function expandAddNote() {
+  function expandAddNote(action?: ComposerAction) {
     if (!canCompose) setView("notes");
-    setTimeout(() => addNoteRef.current?.expand(), 100);
+    setTimeout(() => addNoteRef.current?.expand(action), 100);
   }
 
   const clearSelection = useCallback(() => { setSelectedIds(new Set()); lastSelectedRef.current = null; }, []);
@@ -1055,7 +1055,7 @@ const Index = () => {
     <BottomNav
       view={view}
       onGo={(v) => go(v)}
-      onNew={expandAddNote}
+      onNew={(action) => expandAddNote(action)}
       onImport={handleImport}
       onGoFilter={goFilter}
       search={search}

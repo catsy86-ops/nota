@@ -126,7 +126,7 @@ function YearBody({ data, initialYear }: { data: ShiftData; initialYear: number 
 
 function Cell({ value, muted, accent, total }: { value: string; muted?: boolean; accent?: boolean; total?: boolean }) {
   return (
-    <td className={cn("text-right py-1.5", total && "pt-2", muted && "text-muted-foreground/60", accent && "text-primary")}>{value}</td>
+    <td className={cn("text-right py-1.5", total && "pt-2", muted && "text-muted-foreground/60", accent && "text-primary-ink")}>{value}</td>
   );
 }
 

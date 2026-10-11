@@ -111,6 +111,9 @@ function whenFlushed(persistence: PersistenceLike): Promise<void> {
   });
 }
 
+/** Zablokowane lub niedostępne IndexedDB nie odpowiada — bez limitu „Zapisywanie…” wisiałoby bez końca. */
+export const FLUSH_TIMEOUT_MS = 15_000;
+
 /**
  * Podpina dokument pod status zapisu. `getPersistence` jest funkcją, bo store podmienia
  * obiekt persistence w testach (`resetForTests`).
@@ -121,9 +124,20 @@ export function trackPersistence(doc: DocLike, getPersistence: () => Persistence
     // Wczytanie z IndexedDB nie jest zapisem.
     if (origin === persistence) return;
     writeStarted();
+    // Własny licznik zamiast opakowania obietnicy: nie dokłada cykli mikrozadań do ścieżki zapisu.
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      logDiag("error", "yjs", "zapis do IndexedDB bez odpowiedzi — przerwano oczekiwanie");
+      writeFinished(false);
+    }, FLUSH_TIMEOUT_MS);
     whenFlushed(persistence).then(
-      () => writeFinished(true),
+      () => { if (settled) return; settled = true; clearTimeout(timer); writeFinished(true); },
       (err) => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
         logDiag("error", "yjs", "zapis do IndexedDB nie powiódł się", err);
         writeFinished(false);
       },

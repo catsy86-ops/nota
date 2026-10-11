@@ -25,7 +25,7 @@ export function StudyChecklist() {
           onClick={() => setOnlyCritical((v) => !v)}
           className={cn(
             "rounded-full border px-3 py-1 text-xs transition-colors",
-            onlyCritical ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted",
+            onlyCritical ? "border-primary bg-primary/10 text-primary-ink" : "border-border text-muted-foreground hover:bg-muted",
           )}
         >
           ⚠ Tylko punkty krytyczne
@@ -63,7 +63,7 @@ export function StudyChecklist() {
                           className="mt-0.5"
                         />
                         <label htmlFor={`study-${item.id}`} className={cn("text-sm leading-snug cursor-pointer", on && "text-muted-foreground line-through decoration-muted-foreground/40")}>
-                          {item.critical && <span className="mr-1 text-primary" aria-label="Punkt krytyczny">⚠</span>}
+                          {item.critical && <span className="mr-1 text-primary-ink" aria-label="Punkt krytyczny">⚠</span>}
                           {item.text}
                           {item.risk && <span className="mt-0.5 block text-xs text-muted-foreground no-underline">Ryzyko: {item.risk.replace(/^[^=]*= ?/, "")}</span>}
                         </label>

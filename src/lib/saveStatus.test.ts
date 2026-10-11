@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { getSaveStatus, hasUnsavedWork, setDraftDirty, trackPersistence } from "@/lib/saveStatus";
+import { FLUSH_TIMEOUT_MS, getSaveStatus, hasUnsavedWork, setDraftDirty, trackPersistence } from "@/lib/saveStatus";
 
 /** Minimalny dokument: `change()` emituje zdarzenie `update` jak Y.Doc przy lokalnej zmianie. */
 function fakeDoc() {
@@ -42,6 +42,20 @@ describe("saveStatus", () => {
 
     vi.advanceTimersByTime(2000);
     expect(getSaveStatus().phase).toBe("idle");
+  });
+
+  it("transakcja bez odpowiedzi kończy się błędem po limicie czasu, zamiast wisieć w „Zapisywanie…”", async () => {
+    const doc = fakeDoc();
+    const { persistence } = fakePersistence();
+    trackPersistence(doc, () => persistence);
+
+    doc.change();
+    expect(getSaveStatus().phase).toBe("saving");
+
+    vi.advanceTimersByTime(FLUSH_TIMEOUT_MS + 1);
+    await tick();
+    expect(getSaveStatus().phase).toBe("error");
+    expect(hasUnsavedWork()).toBe(true);
   });
 
   it("błąd transakcji ustawia error i blokuje zamknięcie karty", async () => {

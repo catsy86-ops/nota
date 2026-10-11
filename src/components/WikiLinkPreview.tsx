@@ -125,7 +125,7 @@ export function WikiLink({ title, heading = null, exists, onWikiClick }: Props) 
               <button
                 type="button"
                 onClick={() => { setOpen(false); onWikiClick?.(target_); }}
-                className="pressable mt-2 inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/20 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="pressable mt-2 inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary-ink hover:bg-primary/20 outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 Otwórz <ArrowUpRight className="h-3 w-3" aria-hidden />
               </button>
@@ -136,7 +136,7 @@ export function WikiLink({ title, heading = null, exists, onWikiClick }: Props) 
               <button
                 type="button"
                 onClick={handleCreate}
-                className="pressable mt-2 inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/20 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="pressable mt-2 inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary-ink hover:bg-primary/20 outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <FilePlus2 className="h-3.5 w-3.5" aria-hidden /> Utwórz notatkę „{title}”
               </button>

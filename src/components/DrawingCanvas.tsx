@@ -337,7 +337,7 @@ function ToolBtn({ icon, onClick, title, active, disabled, className }: {
       disabled={disabled}
       className={cn(
         "pressable p-2 rounded-lg transition-colors",
-        active ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted",
+        active ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:bg-muted",
         disabled && "opacity-40 pointer-events-none",
         className
       )}

@@ -38,7 +38,7 @@ export function VaultDialog({ kind, onDone }: { kind: VaultUiKind; onDone?: () =
       >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 font-display">
-            {recoveryCode ? <ShieldCheck className="w-4 h-4 text-primary" /> : <Lock className="w-4 h-4 text-primary" />}
+            {recoveryCode ? <ShieldCheck className="w-4 h-4 text-primary-ink" /> : <Lock className="w-4 h-4 text-primary-ink" />}
             {title}
           </DialogTitle>
           <DialogDescription className="sr-only">Okno skarbca prywatnych notatek</DialogDescription>

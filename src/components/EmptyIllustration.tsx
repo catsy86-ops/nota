@@ -15,7 +15,7 @@ export function EmptyIllustration({ view }: { view: View }) {
   return (
     <svg
       viewBox="0 0 120 84"
-      className="relative mx-auto h-28 w-40 text-primary"
+      className="relative mx-auto h-28 w-40 text-primary-ink"
       aria-hidden="true"
       data-testid="empty-illustration"
     >

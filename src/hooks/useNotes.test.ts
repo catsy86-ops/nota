@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { renderHook, act, waitFor } from "@testing-library/react";
-import { useNotes, whenNotesReady, type Note } from "./useNotes";
+import { useNotes, whenNotesReady, TRASH_PURGE_GRACE_MS, type Note } from "./useNotes";
 import { clearAllStorage, saveNotesIDB } from "@/lib/notesStore";
 import { yjsStore, createYjsStore } from "@/lib/yjsStore";
 
@@ -120,10 +120,21 @@ describe("useNotes — trash auto-cleanup", () => {
     await waitFor(() => {
       expect(result.current.notes.map((n) => n.id)).toContain("kept");
     });
+    // Czyszczenie czeka krótką karencję (przywrócenie z drugiego urządzenia zdąży dojść).
     await waitFor(() => {
       expect(result.current.trashedNotes.map((n) => n.id)).not.toContain("old-trash");
-    });
-  });
+    }, { timeout: 8000 });
+  }, 15000);
+
+  it("nie usuwa notatki ze znacznikiem kosza z przyszłości (przestawiony zegar)", async () => {
+    const FUTURE = Date.now() + 400 * 24 * 60 * 60 * 1000;
+    await saveNotesIDB([makeNote({ id: "future-trash", trashed: true, trashedAt: FUTURE })]);
+
+    const { result } = renderHook(() => useNotes());
+    await waitFor(() => expect(result.current.trashedNotes.map((n) => n.id)).toContain("future-trash"));
+    await new Promise((r) => setTimeout(r, TRASH_PURGE_GRACE_MS + 500));
+    expect(result.current.trashedNotes.map((n) => n.id)).toContain("future-trash");
+  }, 15000);
 
   it("keeps notes trashed less than 30 days ago", async () => {
     const YESTERDAY = Date.now() - 24 * 60 * 60 * 1000;

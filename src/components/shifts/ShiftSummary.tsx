@@ -158,7 +158,7 @@ function Stat({ label, value, accent = false, hint }: { label: string; value: Re
   return (
     <div className="rounded-2xl bg-muted/50 px-3 py-2">
       <dt className="text-2xs uppercase tracking-wider text-muted-foreground">{label}</dt>
-      <dd className={cn("tabular-nums font-semibold", accent && "text-primary")}>{value}</dd>
+      <dd className={cn("tabular-nums font-semibold", accent && "text-primary-ink")}>{value}</dd>
       {hint && <dd className="text-2xs text-muted-foreground tabular-nums">{hint}</dd>}
     </div>
   );
@@ -212,7 +212,7 @@ function Receipt({ summary, hourlyRate, monthLabel }: { summary: MonthSummary; h
       {paid && (
         <p className="mt-3 pt-2 border-t-[3px] border-double border-foreground/40 flex items-baseline justify-between gap-3">
           <span className="font-body text-2xs font-semibold uppercase tracking-[0.2em]">Razem brutto</span>
-          <span className="font-display font-extrabold text-xl sm:text-2xl text-primary tabular-nums"><CountUp value={summary.earnings} format={formatMoney} /></span>
+          <span className="font-display font-extrabold text-xl sm:text-2xl text-primary-ink tabular-nums"><CountUp value={summary.earnings} format={formatMoney} /></span>
         </p>
       )}
     </div>

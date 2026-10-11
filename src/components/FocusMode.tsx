@@ -82,7 +82,7 @@ export function FocusMode({ open, onOpenChange, initialTitle = "", initialConten
         <DialogTitle className="sr-only">Tryb skupienia</DialogTitle>
         <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
           <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-            {mode === "work" ? <Brain className="w-4 h-4 text-primary" /> : <Coffee className="w-4 h-4 text-accent" />}
+            {mode === "work" ? <Brain className="w-4 h-4 text-primary-ink" /> : <Coffee className="w-4 h-4 text-accent" />}
             <span>{mode === "work" ? "Skupienie" : "Przerwa"}</span>
           </div>
           <button onClick={close} className="p-2 rounded-lg hover:bg-muted">

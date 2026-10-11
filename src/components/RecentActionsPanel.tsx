@@ -9,7 +9,7 @@ import { canUndo, clearActions, relativeTime, undoAction, useActionHistory, type
 
 const META: Record<ActionKind, { icon: typeof Trash2; verb: string; tone: string }> = {
   trash: { icon: Trash2, verb: "Do kosza", tone: "text-destructive" },
-  archive: { icon: Archive, verb: "Do archiwum", tone: "text-primary" },
+  archive: { icon: Archive, verb: "Do archiwum", tone: "text-primary-ink" },
 };
 
 interface Props {
@@ -66,7 +66,7 @@ export function RecentActionsPanel({ open, onOpenChange, onOpenNote }: Props) {
       <SheetContent side="right" className="w-full sm:max-w-md flex flex-col pb-[env(safe-area-inset-bottom)]">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 font-display">
-            <History className="w-4 h-4 text-primary" />
+            <History className="w-4 h-4 text-primary-ink" />
             Ostatnie akcje
           </SheetTitle>
           <SheetDescription>

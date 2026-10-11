@@ -6,15 +6,20 @@
  */
 import type { Note } from "@/hooks/useNotes";
 
-type Tree = Pick<Note, "id" | "parentId">;
+type Tree = Pick<Note, "id" | "parentId"> & { trashed?: boolean };
 
 /** Zabezpieczenie przed patologicznie głębokim drzewem (np. zepsutym przez peera). */
 export const MAX_DEPTH = 32;
 
-/** Id istniejącego rodzica albo `null` (brak, osierocona, wskazuje na siebie). */
+/** Id istniejącego rodzica albo `null` (brak, osierocona, rodzic w koszu, wskazuje na siebie). */
 export function parentIdOf(note: Tree, byId: ReadonlyMap<string, Tree>): string | null {
   const p = note.parentId;
-  if (!p || p === note.id || !byId.has(p)) return null;
+  if (!p || p === note.id) return null;
+  const parent = byId.get(p);
+  if (!parent) return null;
+  // Żywa podstrona pod rodzicem w koszu (np. dodana na innym urządzeniu w trakcie kasowania)
+  // nie powinna znikać razem z nim — wraca na poziom główny.
+  if (parent.trashed && !note.trashed) return null;
   return p;
 }
 

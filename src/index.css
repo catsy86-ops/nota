@@ -18,6 +18,7 @@
     --popover-foreground: 220 20% 14%;
 
     --primary: 34 88% 47%;
+    --ink-mix: 62%;
     --primary-foreground: 220 25% 10%;
 
     --secondary: 220 14% 92%;
@@ -110,6 +111,7 @@
     --popover-foreground: 35 20% 90%;
 
     --primary: 33 88% 59%;
+    --ink-mix: 100%;
     --primary-foreground: 26 30% 8%;
 
     --secondary: 26 14% 16%;
@@ -216,6 +218,9 @@
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
+    /* Preflight zeruje wagę nagłówków (400); bez tego nowe widoki bez jawnego `font-semibold` wyglądają jak tekst. */
+    font-weight: 600;
+    letter-spacing: -0.01em;
   }
   /* Spacja w Plus Jakarta Sans ma 0,17 em — „Spotkanie z zespołem” czytało się jak „zzespołem”.
      Krój jest teraz w całej aplikacji, więc poprawka na body; pola formularzy jej nie dziedziczą same. */
@@ -550,7 +555,7 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
 .note-flash {
   outline: 2px solid hsl(var(--primary));
   outline-offset: 3px;
-  border-radius: 0.75rem; /* jak kafel (rounded-xl) */
+  border-radius: 1rem; /* jak kafel (rounded-2xl) */
   transition: outline-color 0.3s;
 }
 
@@ -850,4 +855,33 @@ html[data-motion="reduced"] .notki-caret { opacity: 1; }
 html[data-motion="reduced"] .note-lift:hover .note-card { translate: none; }
 @media (prefers-reduced-motion: reduce) {
   .note-lift:hover .note-card { translate: none; }
+}
+
+/* ── Kafle: zakładka zamiast paska, kolor krawędzi z koloru notatki (2026-10-11) ───────── */
+/* Kolorowa notatka ma u góry „zakładkę” przy lewej krawędzi — jak kolorowy zakładnik w zeszycie.
+   Przy najechaniu zakładka się wydłuża. Zaznaczony kafel zostaje przy własnej obwódce. */
+.note-card[data-note-color]:not([data-note-color="default"]) {
+  background-image: none;
+}
+.note-card[data-note-color]:not([data-note-color="default"]):not(.note-glow-active) {
+  border-color: hsl(var(--note-ink) / 0.28);
+}
+.note-card[data-note-color]:not([data-note-color="default"])::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0.875rem;
+  z-index: 2;
+  width: 1.75rem;
+  height: 0.3125rem;
+  border-radius: 0 0 0.375rem 0.375rem;
+  background: hsl(var(--note-ink));
+  pointer-events: none;
+  transition: width var(--dur-base, 200ms) var(--ease-out, ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .note-lift:hover .note-card[data-note-color]:not([data-note-color="default"])::before { width: 2.75rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .note-card[data-note-color]:not([data-note-color="default"])::before { transition: none; }
 }

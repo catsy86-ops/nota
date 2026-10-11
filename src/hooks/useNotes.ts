@@ -98,6 +98,10 @@ export interface Note {
 }
 
 const IMAGE_GC_DELAY_MS = 10_000;
+/** Jak długo notatka leży w koszu, zanim zostanie usunięta na stałe. */
+export const TRASH_RETENTION_MS = 30 * 24 * 60 * 60 * 1000;
+/** Karencja po ostatniej zmianie listy, zanim ruszy czyszczenie kosza. */
+export const TRASH_PURGE_GRACE_MS = 3_000;
 
 /** Get all descendant folder IDs (recursive) */
 export function getDescendantFolderIds(folderId: string, folders: Folder[]): string[] {
@@ -158,13 +162,19 @@ export function useNotes() {
   }, []);
 
   // Auto-cleanup: remove notes trashed more than 30 days ago. `removeNotes`
-  // uses a real Y.Map delete (tombstone), same path every other delete uses,
-  // so this stays sync-safe once a network transport is added later.
+  // uses a real Y.Map delete (tombstone), same path every other delete uses.
+  // Tombstone wygrywa z edycją, więc czyścimy ostrożnie: dopiero po chwili spokoju
+  // (przywrócenie z drugiego urządzenia zdąży dojść i przerwie odliczanie), a znacznik
+  // z przyszłości (zegar urządzenia cofnięty/przestawiony) nigdy nie kwalifikuje do usunięcia.
   useEffect(() => {
-    const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
-    const now = Date.now();
-    const expired = notes.filter((n) => n.trashed && n.trashedAt && now - n.trashedAt > THIRTY_DAYS).map((n) => n.id);
-    if (expired.length) { yjsStore.removeNotes(expired); versionsStore.remove(expired); }
+    const t = window.setTimeout(() => {
+      const now = Date.now();
+      const expired = notes
+        .filter((n) => n.trashed && n.trashedAt && n.trashedAt <= now && now - n.trashedAt > TRASH_RETENTION_MS)
+        .map((n) => n.id);
+      if (expired.length) { yjsStore.removeNotes(expired); versionsStore.remove(expired); }
+    }, TRASH_PURGE_GRACE_MS);
+    return () => window.clearTimeout(t);
   }, [notes]);
 
   /** Zwraca id utworzonej notatki — potrzebne, gdy wywołujący musi ją zaraz dopatchować. */
@@ -238,8 +248,20 @@ export function useNotes() {
     return [...out];
   };
 
+  /**
+   * Do kosza idą notatki i ich podstrony z jednym `trashedAt`. Przypięcie i archiwum
+   * zerujemy tylko u notatek wskazanych wprost — podstrony zachowują je do przywrócenia.
+   */
+  const trashBranch = (ids: string[]) => {
+    const at = Date.now();
+    const direct = new Set(ids);
+    const rest = withDescendants(ids).filter((id) => !direct.has(id));
+    yjsStore.patchNotes(ids, { trashed: true, trashedAt: at, pinned: false, archived: false });
+    if (rest.length) yjsStore.patchNotes(rest, { trashed: true, trashedAt: at });
+  };
+
   const trashNote = useCallback((id: string) => {
-    yjsStore.patchNotes(withDescendants([id]), { trashed: true, trashedAt: Date.now(), pinned: false, archived: false });
+    trashBranch([id]);
   }, []);
 
   const restoreFromTrash = useCallback((id: string) => {
@@ -360,7 +382,7 @@ export function useNotes() {
   const trashedNotes = useMemo(() => notes.filter((n) => n.trashed).sort((a, b) => b.updatedAt - a.updatedAt), [notes]);
 
   const bulkTrash = useCallback((ids: string[]) => {
-    yjsStore.patchNotes(withDescendants(ids), { trashed: true, trashedAt: Date.now(), pinned: false, archived: false });
+    trashBranch(ids);
   }, []);
   const bulkArchive = useCallback((ids: string[]) => {
     yjsStore.patchNotes(ids, { archived: true, pinned: false });

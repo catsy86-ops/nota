@@ -11,7 +11,7 @@ export function ReviewSettings() {
   const chip = (active: boolean) =>
     cn(
       "px-3 py-1.5 rounded-full border text-sm transition-colors",
-      active ? "border-primary bg-primary/10 text-primary font-semibold" : "border-border/60 hover:bg-muted/60",
+      active ? "border-primary bg-primary/10 text-primary-ink font-semibold" : "border-border/60 hover:bg-muted/60",
     );
   return (
     <Section title="Przegląd tygodnia">

@@ -142,7 +142,7 @@ export const ShiftWeekView = memo(function ShiftWeekView({
                   )}
                 >
                   <span aria-hidden className="flex w-10 shrink-0 flex-col items-center gap-0.5 sm:w-auto sm:flex-row sm:justify-between">
-                    <span className={cn("text-2xs uppercase tracking-wider", i >= 5 ? "text-primary/80" : "text-muted-foreground")}>
+                    <span className={cn("text-2xs uppercase tracking-wider", i >= 5 ? "text-primary-ink/80" : "text-muted-foreground")}>
                       {format(day, "EEEEEE", { locale: pl })}
                     </span>
                     <span className={dayNumberClass({ today: isToday, holiday: !!holiday, inMonth: true })}>{format(day, "d")}</span>

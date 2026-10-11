@@ -55,7 +55,7 @@ export function SettingsDialog({ trigger, open, onOpenChange }: SettingsDialogPr
       <DialogContent className="h-[100dvh] border-0 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:h-[min(88vh,44rem)] sm:max-w-2xl sm:border sm:py-6 overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Settings className="w-5 h-5 text-primary" />
+            <Settings className="w-5 h-5 text-primary-ink" />
             Ustawienia
           </DialogTitle>
           <DialogDescription>Wszystko zapisuje się automatycznie w tej przeglądarce.</DialogDescription>

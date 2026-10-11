@@ -50,31 +50,31 @@ export function OfflineQueuePanel({ open, onOpenChange, offline }: OfflineQueueP
             {offline ? (
               <CloudOff className="h-4 w-4 shrink-0 text-destructive" />
             ) : (
-              <Wifi className="h-4 w-4 shrink-0 text-primary" />
+              <Wifi className="h-4 w-4 shrink-0 text-primary-ink" />
             )}
             <span className="flex-1">{offline ? "Brak połączenia z internetem" : "Połączenie z internetem jest aktywne"}</span>
           </div>
 
           <div className="flex items-center gap-3 rounded-xl bg-muted/50 border border-border/50 px-3 py-2.5 text-sm">
-            <HardDrive className="h-4 w-4 shrink-0 text-primary" />
+            <HardDrive className="h-4 w-4 shrink-0 text-primary-ink" />
             <span className="flex-1">
               Notatki są zapisywane lokalnie natychmiast
               <span className="block text-xs text-muted-foreground">Działa też offline — nic nie czeka w kolejce.</span>
             </span>
-            <Check className="h-4 w-4 shrink-0 text-primary" />
+            <Check className="h-4 w-4 shrink-0 text-primary-ink" />
           </div>
 
           <div className="flex items-center gap-3 rounded-xl bg-muted/50 border border-border/50 px-3 py-2.5 text-sm">
             {syncState.status === "connecting" ? (
               <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
             ) : syncState.status === "connected" ? (
-              <Wifi className="h-4 w-4 shrink-0 text-primary" />
+              <Wifi className="h-4 w-4 shrink-0 text-primary-ink" />
             ) : (
               <WifiOff className="h-4 w-4 shrink-0 text-muted-foreground" />
             )}
             <span className="flex-1">
               Synchronizacja między urządzeniami
-              <span className={cn("block text-xs", syncState.status === "connected" ? "text-primary" : "text-muted-foreground")}>
+              <span className={cn("block text-xs", syncState.status === "connected" ? "text-primary-ink" : "text-muted-foreground")}>
                 {peerLabel}
               </span>
             </span>

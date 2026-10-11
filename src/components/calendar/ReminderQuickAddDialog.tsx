@@ -156,7 +156,7 @@ export function ReminderQuickAddDialog({
       >
         <DialogHeader>
           <DialogTitle className="font-display flex items-center gap-2">
-            <Bell className="w-4 h-4 text-primary" />
+            <Bell className="w-4 h-4 text-primary-ink" />
             {isEdit ? "Termin przypomnienia" : "Nowy termin"}
           </DialogTitle>
           <DialogDescription className="first-letter:uppercase">
@@ -179,7 +179,7 @@ export function ReminderQuickAddDialog({
             />
             {parsed && (
               <p className="text-xs text-muted-foreground">
-                Rozpoznano datę: <span className="text-primary font-medium">{format(parsed.date, "d MMMM", { locale: pl })}</span>
+                Rozpoznano datę: <span className="text-primary-ink font-medium">{format(parsed.date, "d MMMM", { locale: pl })}</span>
               </p>
             )}
           </div>

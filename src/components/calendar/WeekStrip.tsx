@@ -93,7 +93,7 @@ export function WeekStrip({ day, byDay, shiftOf, onSelectDay }: WeekStripProps) 
                 selected && "border-primary/60 bg-[color-mix(in_srgb,hsl(var(--primary))_7%,hsl(var(--card)))] dark:border-primary/60 dark:bg-[color-mix(in_srgb,hsl(var(--primary))_12%,hsl(var(--card)))]",
               )}
             >
-              <span aria-hidden className={cn("text-2xs uppercase tracking-wider", i >= 5 ? "text-primary/80" : "text-muted-foreground")}>
+              <span aria-hidden className={cn("text-2xs uppercase tracking-wider", i >= 5 ? "text-primary-ink/80" : "text-muted-foreground")}>
                 {format(d, "EEEEEE", { locale: pl })}
               </span>
               <span aria-hidden className={dayNumberClass({ today: isToday, holiday: !!holiday, inMonth: true })}>{format(d, "d")}</span>
@@ -108,7 +108,7 @@ export function WeekStrip({ day, byDay, shiftOf, onSelectDay }: WeekStripProps) 
                     {shift.short}
                   </span>
                 )}
-                {count > 0 && <span className="text-2xs font-medium tabular-nums text-primary">{count}</span>}
+                {count > 0 && <span className="text-2xs font-medium tabular-nums text-primary-ink">{count}</span>}
               </span>
             </button>
           );

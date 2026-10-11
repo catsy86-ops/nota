@@ -326,7 +326,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="text-2xs uppercase tracking-wider text-muted-foreground">Pasuje do:</span>
                   {tokens.map((t) => (
-                    <span key={t} className="text-xs px-1.5 py-0.5 rounded bg-primary/15 text-primary font-medium">{t}</span>
+                    <span key={t} className="text-xs px-1.5 py-0.5 rounded bg-primary/15 text-primary-ink font-medium">{t}</span>
                   ))}
                   <span className="text-2xs text-muted-foreground ml-1">
                     {snippets.length + titleHits} trafień{snippets.length >= 3 ? "+" : ""}
@@ -392,7 +392,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                       key={b.id}
                       type="button"
                       onClick={() => onShow(b.id, mode)}
-                      className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                      className="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary-ink hover:bg-primary/20 transition-colors"
                     >
                       {b.title || "Bez tytułu"}
                     </button>
@@ -464,7 +464,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                         <button
                           type="button"
                           onClick={() => onShow(m.id, mode)}
-                          className="block max-w-full truncate text-xs font-medium text-primary hover:underline"
+                          className="block max-w-full truncate text-xs font-medium text-primary-ink hover:underline"
                         >
                           {m.title || "Bez tytułu"}
                         </button>

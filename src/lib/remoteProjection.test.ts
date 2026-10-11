@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+// Test sprawdza projekcję dokumentu przysłanego przez peera, więc buduje surowy Y.Doc.
+// eslint-disable-next-line no-restricted-imports
 import * as Y from "yjs";
 import { createYjsStore } from "./yjsStore";
 import { safeString, safeStringArray, safeEnum, safeNumber } from "./safeProjection";

@@ -1,5 +1,5 @@
 import { createPersistedStore } from "@/lib/persistedStore";
-import { QUESTIONS, TOPICS } from "./content";
+import { CHECKLIST, QUESTIONS, TOPICS } from "./content";
 
 export type Column = "todo" | "doing" | "done";
 export const COLUMNS: Column[] = ["todo", "doing", "done"];
@@ -29,8 +29,9 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
   for (const [id, col] of Object.entries(s.board ?? {})) {
     if (topicIds.has(id) && isColumn(col) && col !== "todo") board[id] = col;
   }
+  const itemIds = new Set(CHECKLIST.map((c) => c.id));
   const checked: Record<string, true> = {};
-  for (const [id, v] of Object.entries(s.checked ?? {})) if (v === true) checked[id] = true;
+  for (const [id, v] of Object.entries(s.checked ?? {})) if (v === true && itemIds.has(id)) checked[id] = true;
   const best = typeof s.bestPercent === "number" && s.bestPercent >= 0 && s.bestPercent <= 100 ? Math.round(s.bestPercent) : null;
   const rounds = typeof s.rounds === "number" && s.rounds >= 0 ? Math.floor(s.rounds) : 0;
   const questionIds = new Set(QUESTIONS.map((q) => q.id));

@@ -180,7 +180,7 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
               <ul className="space-y-1.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5" aria-label="Ostrzeżenia">
                 {plan.warnings.map((w) => (
                   <li key={w} className="flex items-start gap-2 text-xs text-foreground/90">
-                    <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary" aria-hidden />
+                    <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary-ink" aria-hidden />
                     <span>{w}</span>
                   </li>
                 ))}

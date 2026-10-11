@@ -86,7 +86,7 @@ interface Props {
   onDailyNote: () => void;
 }
 
-const chipClass = "group shrink-0 flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-xs font-medium border border-border/60 bg-card hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-colors";
+const chipClass = "group shrink-0 flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-xs font-medium border border-border/60 bg-card hover:border-primary/40 hover:bg-primary/5 hover:text-primary-ink transition-colors";
 
 export function QuickTemplates({ onPick, onCreateLabel, onDailyNote }: Props) {
   const custom = useCustomTemplates();
@@ -148,7 +148,7 @@ export function QuickTemplates({ onPick, onCreateLabel, onDailyNote }: Props) {
             type="button"
             onClick={() => setEditing(t)}
             aria-label={`Edytuj szablon: ${t.name}`}
-            className="self-stretch px-1.5 rounded-r-lg border border-l-0 border-border/60 bg-card text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
+            className="self-stretch px-1.5 rounded-r-lg border border-l-0 border-border/60 bg-card text-muted-foreground hover:text-primary-ink hover:bg-primary/5 transition-colors"
           >
             <Pencil className="w-3 h-3" />
           </button>

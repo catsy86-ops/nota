@@ -13,7 +13,7 @@ interface PendingAction {
 
 const META: Record<ConfirmKey, { heading: string; cta: string; icon: typeof Trash2; tone: string }> = {
   trash: { heading: "Przenieść do kosza?", cta: "Przenieś do kosza", icon: Trash2, tone: "text-destructive" },
-  archive: { heading: "Zarchiwizować?", cta: "Archiwizuj", icon: Archive, tone: "text-primary" },
+  archive: { heading: "Zarchiwizować?", cta: "Archiwizuj", icon: Archive, tone: "text-primary-ink" },
 };
 
 /**

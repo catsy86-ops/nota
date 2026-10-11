@@ -16,7 +16,7 @@ const iconButtonVariants = cva(
         // Wewnątrz segmentu na tle `bg-muted/40` (ViewControls) — podniesienie zamiast przyciemnienia.
         segment:
           "text-muted-foreground hover:bg-background hover:text-foreground hover:shadow-elevation-1 data-[state=open]:bg-background data-[state=open]:text-foreground data-[state=open]:shadow-elevation-1",
-        active: "bg-primary/10 text-primary hover:bg-primary/15",
+        active: "bg-primary/10 text-primary-ink hover:bg-primary/15",
         primary: "bg-primary text-primary-foreground hover:bg-primary/90",
         destructive: "text-destructive hover:bg-destructive/10",
       },

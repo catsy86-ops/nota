@@ -38,8 +38,8 @@ export const SidebarRow = forwardRef<HTMLDivElement, SidebarRowProps>(function S
       data-active={active || undefined}
       className={cn(
         "group relative flex items-center h-9 coarse:h-11 rounded-lg text-sm font-medium transition-[color,background-color,box-shadow] duration-[var(--dur-fast)]",
-        active ? "text-primary" : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
-        dropActive && "bg-primary/10 text-primary ring-2 ring-primary/40",
+        active ? "text-primary-ink" : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
+        dropActive && "bg-primary/10 text-primary-ink ring-2 ring-primary/40",
         className,
       )}
     >
@@ -117,7 +117,7 @@ export function SidebarCount({ value, active, alert = false }: { value: number; 
     <span
       className={cn(
         "shrink-0 min-w-[22px] rounded-full px-2 py-0.5 text-center text-2xs font-semibold tabular-nums",
-        alert ? "bg-destructive/15 text-destructive" : active ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground",
+        alert ? "bg-destructive/15 text-destructive" : active ? "bg-primary/20 text-primary-ink" : "bg-muted text-muted-foreground",
       )}
     >
       {value}

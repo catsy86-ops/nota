@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { Bell, Repeat, X } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -42,6 +42,7 @@ const REPEAT_OPTIONS: ReminderRepeat[] = ["none", "daily", "weekly", "monthly"];
 
 export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, onSet, trigger }: ReminderPickerProps) {
   const [open, setOpen] = useState(false);
+  const uid = useId();
   const [date, setDate] = useState<Date | undefined>(reminder ? new Date(reminder) : undefined);
   const [time, setTime] = useState(reminder ? toTimeInputValue(reminder) : DEFAULT_REMINDER_TIME);
   const [repeat, setRepeat] = useState<ReminderRepeat>(reminderRepeat ?? "none");
@@ -84,7 +85,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
           <motion.button
             className={cn(
               "card-action",
-              reminder ? "text-primary" : "text-muted-foreground"
+              reminder ? "text-primary-ink" : "text-muted-foreground"
             )}
             title="Przypomnienie"
           >
@@ -100,7 +101,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
               key={p.label}
               type="button"
               onClick={() => handleQuickParsed(p.at)}
-              className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/60 hover:text-primary"
+              className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:border-primary/60 hover:text-primary-ink coarse:min-h-11 coarse:px-3.5"
             >
               {p.label}
             </button>
@@ -115,8 +116,9 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
           className={cn("p-3 pointer-events-auto")}
         />
         <div className="flex items-center gap-2">
-          <label className="text-xs text-muted-foreground">Godzina:</label>
+          <label htmlFor={`${uid}-time`} className="text-xs text-muted-foreground">Godzina:</label>
           <input
+            id={`${uid}-time`}
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
@@ -124,8 +126,9 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
           />
         </div>
         <div className="flex items-center gap-2">
-          <label className="text-xs text-muted-foreground flex items-center gap-1"><Repeat className="w-3 h-3" />Powtarzaj:</label>
+          <label htmlFor={`${uid}-repeat`} className="text-xs text-muted-foreground flex items-center gap-1"><Repeat className="w-3 h-3" />Powtarzaj:</label>
           <select
+            id={`${uid}-repeat`}
             value={repeat}
             onChange={(e) => setRepeat(e.target.value as ReminderRepeat)}
             className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 text-foreground"
@@ -137,14 +140,14 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
         </div>
         {repeat !== "none" && (
           <div className="flex items-center gap-2">
-            <label htmlFor="reminder-until" className="text-xs text-muted-foreground">Do kiedy:</label>
+            <label htmlFor={`${uid}-until`} className="text-xs text-muted-foreground">Do kiedy:</label>
             <input
-              id="reminder-until"
+              id={`${uid}-until`}
               type="date"
               value={untilText}
               min={timestamp !== null ? dateInputValue(timestamp) : undefined}
               onChange={(e) => setUntilText(e.target.value)}
-              aria-describedby="reminder-until-hint"
+              aria-describedby={`${uid}-until-hint`}
               className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 text-foreground"
             />
             {untilText && (
@@ -155,7 +158,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
           </div>
         )}
         {repeat !== "none" && (
-          <p id="reminder-until-hint" className={cn("text-2xs -mt-1", untilTooEarly ? "text-destructive" : "text-muted-foreground")}>
+          <p id={`${uid}-until-hint`} className={cn("text-2xs -mt-1", untilTooEarly ? "text-destructive" : "text-muted-foreground")}>
             {untilTooEarly ? "Koniec serii musi być po pierwszym terminie." : untilText ? "Ostatni termin serii najpóźniej tego dnia." : "Puste pole — seria bez końca."}
           </p>
         )}
@@ -186,7 +189,7 @@ export function ReminderBadge({ reminder, reminderRepeat }: { reminder: number |
   return (
     <div className={cn(
       "flex items-center gap-1 text-2xs mt-2 px-2 py-0.5 rounded-full w-fit",
-      isPast ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"
+      isPast ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary-ink"
     )}>
       <Bell className="w-2.5 h-2.5" />
       {formatReminderShort(reminder)}

@@ -91,13 +91,13 @@ export function AppHeader({
               {view === "trash" && "Kosz"}
               {view === "folder" && (
                 <span className="flex items-center gap-1.5">
-                  <FolderOpen className="w-4 h-4 text-primary" />
+                  <FolderOpen className="w-4 h-4 text-primary-ink" />
                   {folders.find((f) => f.id === activeFolder)?.name || "Folder"}
                 </span>
               )}
               {view === "label" && (
                 <span className="flex items-center gap-1.5">
-                  <Tag className="w-4 h-4 text-primary" />
+                  <Tag className="w-4 h-4 text-primary-ink" />
                   {activeLabel}
                 </span>
               )}

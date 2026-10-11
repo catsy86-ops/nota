@@ -44,7 +44,7 @@ export function AppearanceSettings() {
                 className={cn(
                   "flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border text-xs font-semibold transition-colors",
                   active
-                    ? "border-primary bg-primary/10 text-primary"
+                    ? "border-primary bg-primary/10 text-primary-ink"
                     : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
                 )}
               >
@@ -76,7 +76,7 @@ export function AppearanceSettings() {
                 className={cn(
                   "flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border text-xs font-semibold transition-colors",
                   active
-                    ? "border-primary bg-primary/10 text-primary"
+                    ? "border-primary bg-primary/10 text-primary-ink"
                     : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
                 )}
               >
@@ -108,7 +108,7 @@ export function AppearanceSettings() {
                 className={cn(
                   "flex flex-col items-center justify-center gap-1 py-3 rounded-xl border text-xs font-semibold transition-colors",
                   active
-                    ? "border-primary bg-primary/10 text-primary"
+                    ? "border-primary bg-primary/10 text-primary-ink"
                     : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
                 )}
               >
@@ -135,7 +135,7 @@ export function AppearanceSettings() {
               onClick={() => setViewPref("layout", l)}
               className={cn(
                 "p-3 rounded-xl border text-xs font-medium transition-all capitalize",
-                prefs.layout === l ? "border-primary bg-primary/10 text-primary" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
+                prefs.layout === l ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
               )}
             >{l === "masonry" ? "Mozaika" : l === "grid" ? "Siatka" : l === "list" ? "Lista" : l === "board" ? "Tablica" : "Tabela"}</button>
           ))}
@@ -150,7 +150,7 @@ export function AppearanceSettings() {
               onClick={() => setViewPref("density", d)}
               className={cn(
                 "p-3 rounded-xl border text-xs font-medium transition-all",
-                prefs.density === d ? "border-primary bg-primary/10 text-primary" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
+                prefs.density === d ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
               )}
             >{d === "compact" ? "Kompakt" : d === "cozy" ? "Komfort" : "Luźno"}</button>
           ))}
@@ -162,14 +162,14 @@ export function AppearanceSettings() {
           <button
             onClick={() => setViewPref("autoColumns", true)}
             className={cn("flex-1 px-3 py-2 rounded-xl border text-xs font-medium",
-              prefs.autoColumns ? "border-primary bg-primary/10 text-primary" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60")}
+              prefs.autoColumns ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60")}
           >Auto (responsywne)</button>
           {[1, 2, 3, 4].map((c) => (
             <button
               key={c}
               onClick={() => { setViewPref("autoColumns", false); setViewPref("columns", c); }}
               className={cn("w-10 h-10 rounded-xl border text-sm font-bold",
-                !prefs.autoColumns && prefs.columns === c ? "border-primary bg-primary/10 text-primary" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60")}
+                !prefs.autoColumns && prefs.columns === c ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60")}
             >{c}</button>
           ))}
         </div>

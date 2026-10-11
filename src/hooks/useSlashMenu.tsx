@@ -122,7 +122,7 @@ export function useSlashMenu({ textareaRef, value, disabled = false }: Options) 
             )}
             style={{ height: ITEM_H }}
           >
-            <span className={cn("text-sm font-medium leading-tight truncate", i === active && "text-primary")}>{c.label}</span>
+            <span className={cn("text-sm font-medium leading-tight truncate", i === active && "text-primary-ink")}>{c.label}</span>
             <span className="text-2xs text-muted-foreground truncate font-mono">{c.hint}</span>
           </button>
         ))}

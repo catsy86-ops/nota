@@ -97,7 +97,7 @@ export function OfflineStatus() {
         ) : offline ? (
           <CloudOff className="h-3.5 w-3.5 shrink-0 text-destructive" />
         ) : saved && !saving ? (
-          <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
+          <Check className="h-3.5 w-3.5 shrink-0 text-primary-ink" />
         ) : (
           <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
         )}

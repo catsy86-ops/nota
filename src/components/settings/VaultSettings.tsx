@@ -25,7 +25,7 @@ export function VaultSettings() {
     <Section title="Prywatne notatki">
       <div className="rounded-xl border border-border/60 bg-muted/30 px-4 py-3 space-y-3">
         <p className="text-xs text-muted-foreground flex items-start gap-2" data-testid="vault-status">
-          <ShieldCheck className="w-4 h-4 shrink-0 text-primary" aria-hidden />
+          <ShieldCheck className="w-4 h-4 shrink-0 text-primary-ink" aria-hidden />
           <span>{STATUS[vault.phase]}</span>
         </p>
 

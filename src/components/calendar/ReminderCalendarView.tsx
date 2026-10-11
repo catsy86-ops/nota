@@ -258,7 +258,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
           <button
             onClick={goToToday}
             aria-label="Wróć do bieżącego miesiąca"
-            className="ml-1 shrink-0 text-xs font-medium text-primary hover:bg-primary/10 px-2 sm:px-2.5 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="ml-1 shrink-0 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 sm:px-2.5 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             Dziś
           </button>

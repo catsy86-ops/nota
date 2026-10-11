@@ -34,7 +34,7 @@ export function InstallBanner({ ready }: { ready: boolean }) {
           exit={{ opacity: 0, height: 0 }}
           className="md:hidden flex items-start gap-3 rounded-2xl border border-primary/25 bg-primary/5 p-3"
         >
-          <span className="w-9 h-9 shrink-0 rounded-xl bg-primary/15 text-primary grid place-items-center">
+          <span className="w-9 h-9 shrink-0 rounded-xl bg-primary/15 text-primary-ink grid place-items-center">
             <Smartphone className="w-[18px] h-[18px]" />
           </span>
           <div className="min-w-0 flex-1">

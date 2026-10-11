@@ -139,7 +139,7 @@ export const AttachmentsPanel = forwardRef<AttachmentsPanelHandle, Props>(functi
           {attachments.map((a) => <AttachmentRow key={a.hash} attachment={a} onRemove={remove} />)}
         </ul>
       )}
-      {over && <p className="text-center text-xs text-primary py-1">Upuść plik, aby dodać go do notatki</p>}
+      {over && <p className="text-center text-xs text-primary-ink py-1">Upuść plik, aby dodać go do notatki</p>}
       {showAddButton && (
         <button
           type="button"

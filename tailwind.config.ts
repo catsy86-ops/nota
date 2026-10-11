@@ -42,6 +42,8 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
+          // Tekst na papierze: ten sam kolor motywu, przyciemniony do ~5,5:1 (w ciemnym motywie bez zmian).
+          ink: "color-mix(in srgb, hsl(var(--primary)) var(--ink-mix, 62%), black)",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",

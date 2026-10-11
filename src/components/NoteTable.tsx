@@ -90,7 +90,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
             >
               <td className="px-3 py-2 max-w-[18rem]">
                 <span className="flex items-center gap-1.5">
-                  {n.pinned && <Pin className="w-3 h-3 shrink-0 text-primary" aria-label="Przypięta" />}
+                  {n.pinned && <Pin className="w-3 h-3 shrink-0 text-primary-ink" aria-label="Przypięta" />}
                   {n.icon && <span aria-hidden>{n.icon}</span>}
                   <span className="truncate font-medium">{noteLabel(n)}</span>
                 </span>

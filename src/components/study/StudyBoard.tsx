@@ -36,7 +36,7 @@ function TopicCard({ topic, column, study, onPractice }: { topic: StudyTopic; co
       <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">{moduleLabel(topic.module)}</p>
       <h4 className="mt-0.5 font-medium leading-snug">
         {topic.title}
-        {critical && <span className="ml-1.5 text-primary" title="Zawiera punkty krytyczne" aria-label="Zawiera punkty krytyczne">⚠</span>}
+        {critical && <span className="ml-1.5 text-primary-ink" title="Zawiera punkty krytyczne" aria-label="Zawiera punkty krytyczne">⚠</span>}
       </h4>
       <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{topic.summary}</p>
       <div className="mt-2.5 flex items-center justify-between gap-2">
@@ -49,7 +49,7 @@ function TopicCard({ topic, column, study, onPractice }: { topic: StudyTopic; co
             onClick={() => onPractice(topic.id)}
             aria-label={`${topic.title}: ćwicz pytania`}
             title="Ćwicz pytania z tego tematu"
-            className="grid h-7 w-7 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted"
+            className="grid h-7 w-7 coarse:h-11 coarse:w-11 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted"
           >
             <Play className="w-3.5 h-3.5" />
           </button>
@@ -62,7 +62,7 @@ function TopicCard({ topic, column, study, onPractice }: { topic: StudyTopic; co
             }}
             aria-label={`${topic.title}: zrób z tego notatkę`}
             title="Zrób notatkę z listą kontrolną"
-            className="grid h-7 w-7 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted"
+            className="grid h-7 w-7 coarse:h-11 coarse:w-11 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted"
           >
             <FilePlus2 className="w-3.5 h-3.5" />
           </button>
@@ -71,7 +71,7 @@ function TopicCard({ topic, column, study, onPractice }: { topic: StudyTopic; co
             disabled={at === 0}
             onClick={() => moveTopic(topic.id, COLUMNS[at - 1])}
             aria-label={`${topic.title}: przenieś do „${COLUMN_LABEL[COLUMNS[Math.max(at - 1, 0)]]}”`}
-            className="grid h-7 w-7 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30"
+            className="grid h-7 w-7 coarse:h-11 coarse:w-11 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -80,7 +80,7 @@ function TopicCard({ topic, column, study, onPractice }: { topic: StudyTopic; co
             disabled={at === COLUMNS.length - 1}
             onClick={() => moveTopic(topic.id, COLUMNS[at + 1])}
             aria-label={`${topic.title}: przenieś do „${COLUMN_LABEL[COLUMNS[Math.min(at + 1, COLUMNS.length - 1)]]}”`}
-            className="grid h-7 w-7 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30"
+            className="grid h-7 w-7 coarse:h-11 coarse:w-11 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -110,7 +110,7 @@ export function StudyBoard({ onPractice }: { onPractice: (topicId: string) => vo
               <ul className="space-y-2.5 min-h-12">
                 {topics.map((t) => <TopicCard key={t.id} topic={t} column={col} study={study} onPractice={onPractice} />)}
                 {topics.length === 0 && (
-                  <li className="rounded-xl border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">Pusto</li>
+                  <li className="rounded-xl border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">Brak tematów. Przenieś tu temat strzałką.</li>
                 )}
               </ul>
             </section>

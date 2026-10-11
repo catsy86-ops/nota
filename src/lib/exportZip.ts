@@ -71,6 +71,8 @@ export function buildZip(entries: ZipEntry[], now: Date = new Date()): Uint8Arra
 
 /** Nazwa pliku/katalogu bez znaków zakazanych w systemach plików. */
 export function safeFileName(raw: string, fallback = "Bez tytułu"): string {
+  // Znaki sterujące są tu celem usunięcia — reguła no-control-regex to fałszywy alarm.
+  // eslint-disable-next-line no-control-regex
   const cleaned = raw.replace(/[\\/:*?"<>|\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().replace(/^\.+/, "").slice(0, 80).trim();
   return cleaned || fallback;
 }

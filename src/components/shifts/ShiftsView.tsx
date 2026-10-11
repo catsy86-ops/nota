@@ -270,7 +270,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           <div className="flex flex-wrap items-center gap-1">
             {weekStart !== thisWeek && (
               <button type="button" onClick={() => setWeekStart(thisWeek)}
-                className="pressable h-9 coarse:h-10 px-3 rounded-xl text-sm font-medium text-primary hover:bg-primary/10 outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                className="pressable h-9 coarse:h-10 px-3 rounded-xl text-sm font-medium text-primary-ink hover:bg-primary/10 outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 Ten tydzień
               </button>
             )}

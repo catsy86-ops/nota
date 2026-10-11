@@ -46,7 +46,7 @@ export function AchievementStamp() {
             transition={{ type: "spring", stiffness: 420, damping: 22, mass: 0.8 }}
             className="relative flex flex-col items-center gap-1 rounded-xl border-[3px] border-double border-primary/80 bg-card/95 px-6 py-4 text-center shadow-lg backdrop-blur-sm"
           >
-            <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary-ink">
               {stamp.big ? "Pierwszy raz!" : "Nowa odznaka"}
             </span>
             <span className={stamp.big ? "text-5xl leading-none" : "text-4xl leading-none"} aria-hidden="true">{stamp.emoji}</span>
