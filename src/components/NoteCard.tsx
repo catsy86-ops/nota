@@ -637,9 +637,9 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                 </div>
               )}
               {trashCountdown && (
-                <div className="inline-flex items-center gap-1 mt-2">
+                <div className="flex flex-wrap items-center gap-1 mt-2">
                   <div className={cn(
-                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium",
+                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium whitespace-nowrap",
                     trashCountdown.urgent ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"
                   )}>
                     <Trash2 className="w-3 h-3" />
@@ -653,7 +653,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                         celebrate(r.left + r.width / 2, r.top + r.height / 2);
                         onUnarchive(note.id);
                       }}
-                      className="pressable inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium bg-primary/10 text-primary-ink hover:bg-primary/20 transition-colors"
+                      className="pressable inline-flex items-center gap-1 px-2 py-0.5 coarse:py-2.5 rounded-full text-2xs font-medium whitespace-nowrap bg-primary/10 text-primary-ink hover:bg-primary/20 transition-colors"
                       title="Przywróć notatkę"
                     >
                       <RotateCcw className="w-3 h-3" />
