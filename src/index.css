@@ -801,7 +801,11 @@ html[data-motion="reduced"] .notki-caret { opacity: 1; }
 /* ── Ruch kart notatek ─────────────────────────────────────────────────── */
 
 /* Fokus z klawiatury: ten sam cień co przy najechaniu, ale bez ruchu. */
-.note-card:has(:focus-visible) { box-shadow: var(--elevation-3); }
+html:not([data-input="touch"]) .note-card:has(:focus-visible) { box-shadow: var(--elevation-3); }
+
+/* Po dotyku bez ramki fokusu: fokus wraca programowo po zamknięciu okna/menu i przeglądarka
+   rysowała wtedy grubą obwódkę na kaflu i przycisku. Z klawiatury (Tab/strzałki) ramka zostaje. */
+html[data-input="touch"] :focus-visible { outline: none !important; box-shadow: none !important; }
 
 /* Uniesienie tylko dla wskaźnika myszy: `translate` jest niezależne od `transform`
    framer-motion (layout, kaskada), a trafienie liczymy na nieruchomym kontenerze,

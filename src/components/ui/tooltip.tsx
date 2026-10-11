@@ -2,10 +2,25 @@ import * as React from "react";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 
 import { cn } from "@/lib/utils";
+import { lastInputWasTouch } from "@/lib/inputModality";
 
 const TooltipProvider = TooltipPrimitive.Provider;
 
-const Tooltip = TooltipPrimitive.Root;
+/** Po dotyku dymek nie otwiera się z fokusu (powrót fokusu po zamknięciu menu zostawiał go na ekranie). */
+function Tooltip({ open: openProp, defaultOpen = false, onOpenChange, ...props }: React.ComponentProps<typeof TooltipPrimitive.Root>) {
+  const [open, setOpen] = React.useState(defaultOpen);
+  return (
+    <TooltipPrimitive.Root
+      {...props}
+      open={openProp ?? open}
+      onOpenChange={(next) => {
+        if (next && lastInputWasTouch()) return;
+        setOpen(next);
+        onOpenChange?.(next);
+      }}
+    />
+  );
+}
 
 const TooltipTrigger = TooltipPrimitive.Trigger;
 

@@ -1,6 +1,7 @@
 import { createRoot } from "react-dom/client";
 import { toast } from "sonner";
 import App from "./App.tsx";
+import "@/lib/inputModality";
 import "@fontsource-variable/plus-jakarta-sans";
 // Cyfry o stałej szerokości (rachunek w Grafiku); `wght.css` bez kursywy.
 import "@fontsource-variable/jetbrains-mono/wght.css";
