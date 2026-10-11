@@ -41,7 +41,8 @@ const SortableNoteCard = memo(function SortableNoteCard({ layout, note, index, s
       style={style}
       className={cn(
         "rounded-2xl transition-[box-shadow,opacity,outline-color] duration-fast outline outline-2 outline-offset-2 outline-transparent",
-        layout === "grid" && "h-full",
+        // Siatka: kafel wypełnia wysokość wiersza — bez tego niższe kafle zostawiały dziury pod sobą.
+        layout === "grid" && "h-full [&>div]:h-full [&>div>.note-card]:h-full",
         isDragging && "opacity-90 shadow-elevation-3",
         // Miękki wskaźnik miejsca docelowego pod kartą, nad którą jest przeciągana.
         isOver && !isDragging && "outline-dashed outline-primary/40",
@@ -157,23 +158,27 @@ export function NoteGrid({
     });
   }, [navOrder, noteIdsKey, onDelete, onArchive, onTogglePin, onDuplicate, isArchived, colsCount]);
 
-  const gap = prefs.density === "compact" ? "gap-2 space-y-2" : prefs.density === "comfy" ? "gap-5 space-y-5" : "gap-2.5 sm:gap-3 space-y-2.5 sm:space-y-3";
+  const gap = prefs.density === "compact" ? "gap-2" : prefs.density === "comfy" ? "gap-5" : "gap-2.5 sm:gap-3";
+  const listGap = prefs.density === "compact" ? "space-y-2" : prefs.density === "comfy" ? "space-y-5" : "space-y-2.5 sm:space-y-3";
   const columnGap = prefs.density === "compact" ? "gap-x-2" : prefs.density === "comfy" ? "gap-x-5" : "gap-x-2.5 sm:gap-x-3";
   const rowGap = prefs.density === "compact" ? "mb-2" : prefs.density === "comfy" ? "mb-5" : "mb-2.5 sm:mb-3";
 
   let containerClass: string;
   if (prefs.layout === "list") {
-    containerClass = `${boardColumn ? "w-full" : "max-w-2xl mx-auto"} ${gap.split(" ")[1]}`;
+    // Lista przy lewej krawędzi, jak pasek „Zapisz notatkę” i nagłówki sekcji (wyśrodkowana rozjeżdżała się z nimi).
+    containerClass = `${boardColumn ? "w-full" : "max-w-2xl"} ${listGap}`;
   } else {
+    // Na telefonie 3–4 kolumny się nie mieszczą — ręczny wybór 2+ daje tam 2, jak „Auto” (wcześniej spadał do 1).
     const cols = prefs.autoColumns
       ? "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(13rem,1fr))]"
       : prefs.columns === 1 ? "grid-cols-1"
-      : prefs.columns === 2 ? "grid-cols-1 sm:grid-cols-2"
-      : prefs.columns === 3 ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-      : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
+      : prefs.columns === 2 ? "grid-cols-2"
+      : prefs.columns === 3 ? "grid-cols-2 lg:grid-cols-3"
+      : "grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
     // Mozaika: ta sama siatka kolumn, wiersze po 4 px i odstęp pionowy jako margines karty (`useMasonrySpans`).
     containerClass = prefs.layout === "grid"
-      ? `grid ${cols} ${gap.split(" ")[0]} auto-rows-fr`
+      // Wiersz ma wysokość swojego najwyższego kafla (nie najwyższego w całej siatce, jak przy `auto-rows-fr`).
+      ? `grid ${cols} ${gap} note-grid-fill`
       : `grid ${cols} ${columnGap} auto-rows-[4px] items-start`;
   }
 

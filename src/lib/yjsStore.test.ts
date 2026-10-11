@@ -304,6 +304,19 @@ describe("yjsStore — migration from the legacy idb-keyval store", () => {
     const notes = store.projectNotes();
     expect(notes.map((n) => n.id).sort()).toEqual(["legacy-1", "local-only"]);
   });
+
+  it("migruje stare notatki bez pola `checklist` zamiast wywracać start", async () => {
+    const old = makeNote({ id: "no-checklist", title: "Bez listy" }) as Partial<Note>;
+    delete old.checklist;
+    await saveNotesIDB([old as Note]);
+
+    const store = createYjsStore(`migration-no-checklist-${crypto.randomUUID()}`);
+    await store.ready();
+
+    const [note] = store.projectNotes();
+    expect(note.title).toBe("Bez listy");
+    expect(note.checklist).toEqual([]);
+  });
 });
 
 describe("yjsStore — obrazy w content-addressed store", () => {

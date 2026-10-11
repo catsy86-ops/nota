@@ -82,10 +82,12 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
             <>
               <DropdownMenuSeparator />
               <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Kolumny</DropdownMenuLabel>
-              <div className="px-2 pb-2 flex items-center gap-1">
+              {/* Na telefonie mieszczą się najwyżej 2 kolumny — 3 i 4 dawały tam to samo co 2, więc ich nie ma. */}
+              <div className="px-2 pb-2 flex items-center gap-1" role="group" aria-label="Liczba kolumn">
                 <button
                   onClick={() => setViewPref("autoColumns", true)}
-                  className={cn("flex-1 text-xs py-1 rounded-md", prefs.autoColumns ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
+                  aria-pressed={prefs.autoColumns}
+                  className={cn("flex-1 text-xs h-8 coarse:h-11 rounded-md", prefs.autoColumns ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
                 >
                   Auto
                 </button>
@@ -93,7 +95,9 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
                   <button
                     key={c}
                     onClick={() => { setViewPref("autoColumns", false); setViewPref("columns", c); }}
-                    className={cn("w-7 text-xs py-1 rounded-md", !prefs.autoColumns && prefs.columns === c ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
+                    aria-pressed={!prefs.autoColumns && prefs.columns === c}
+                    aria-label={c === 1 ? "1 kolumna" : `${c} kolumny`}
+                    className={cn("flex-1 text-xs h-8 coarse:h-11 rounded-md tabular-nums", c > 2 && "max-sm:hidden", !prefs.autoColumns && prefs.columns === c ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
                   >
                     {c}
                   </button>

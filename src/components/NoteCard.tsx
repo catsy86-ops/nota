@@ -685,7 +685,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
             {...dragAttributes}
             {...dragListeners}
             aria-label="Przeciągnij, aby zmienić kolejność"
-            className="absolute top-0 left-1/2 -translate-x-1/2 z-10 px-3 pt-0.5 pb-0 coarse:px-6 coarse:pt-1.5 coarse:pb-3 coarse:touch-none coarse:opacity-50 cursor-grab active:cursor-grabbing rounded-b-md opacity-0 group-hover:opacity-60 hover:!opacity-100 focus-visible:opacity-100 transition-opacity"
+            // Na dotyku tylko przy sortowaniu ręcznym — przy innym porządku był szumem na każdym kaflu.
+            className={cn(prefs.sortKey !== "manual" && "coarse:hidden", "absolute top-0 left-1/2 -translate-x-1/2 z-10 px-3 pt-0.5 pb-0 coarse:px-6 coarse:pt-1.5 coarse:pb-3 coarse:touch-none coarse:opacity-50 cursor-grab active:cursor-grabbing rounded-b-md opacity-0 group-hover:opacity-60 hover:!opacity-100 focus-visible:opacity-100 transition-opacity")}
           >
             {/* 10 px wysokości — mieści się w górnym marginesie karty i nie łapie kliknięć w tytuł. */}
             <div className="grid grid-cols-3 gap-[2px]" aria-hidden>
@@ -742,12 +743,17 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
             <>
               <NoteCoverStrip cover={note.cover} className="-mx-3.5 -mt-3 mb-2.5 w-[calc(100%+1.75rem)] rounded-t-[inherit]" />
               {(note.title || note.icon) && (
-                <h3 className="font-display font-semibold text-base leading-snug tracking-[-0.01em] text-foreground mb-1 line-clamp-2 [overflow-wrap:anywhere]">
+                // Prawy margines: tytuł nie wchodzi pod pole zaznaczenia (right-2 + w-6 = 32 px od krawędzi).
+                <h3 className={cn("font-display font-semibold text-base leading-snug tracking-[-0.01em] text-foreground mb-1 line-clamp-2 [overflow-wrap:anywhere]", onToggleSelect && "pr-5")}>
                   {note.icon && <span className="mr-1.5" aria-hidden>{note.icon}</span>}
                   {note.title}
                   {note.readOnly && <Lock className="inline-block w-3 h-3 ml-1.5 -mt-0.5 text-muted-foreground" aria-label="Zablokowana do edycji" />}
                   <ChecklistCount items={note.checklist || []} />
                 </h3>
+              )}
+              {/* Pusta notatka: ten sam zastępnik co w tabeli, zamiast kafla z samą datą. */}
+              {!note.title && !note.icon && !note.content.trim() && !(note.checklist || []).length && !(note.images || []).length && (
+                <p className="font-display text-base leading-snug italic text-muted-foreground mb-1">Bez tytułu</p>
               )}
               {note.content && (
                 // Kafel to zapowiedź, nie lektura: 4 linie (na telefonie 3) i zwykła interlinia — pełny tekst jest w czytniku.

@@ -88,7 +88,8 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
                 selectedIds?.has(n.id) && "bg-primary/10",
               )}
             >
-              <td className="px-3 py-2 max-w-[18rem]">
+              {/* Telefon: tytuł bierze resztę szerokości i się skraca — wcześniej 18rem wypychało datę poza ekran. */}
+              <td className="px-3 py-2 coarse:py-3 w-full max-w-0 sm:w-auto sm:max-w-[18rem]">
                 <span className="flex items-center gap-1.5">
                   {n.pinned && <Pin className="w-3 h-3 shrink-0 text-primary-ink" aria-label="Przypięta" />}
                   {n.icon && <span aria-hidden>{n.icon}</span>}
@@ -121,7 +122,8 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
                 )}
               </td>
               <td className="px-3 py-2 whitespace-nowrap text-xs text-muted-foreground tabular-nums">
-                {format(n.updatedAt, "d MMM yyyy", { locale: pl })}
+                <span className="sm:hidden">{format(n.updatedAt, "d MMM", { locale: pl })}</span>
+                <span className="hidden sm:inline">{format(n.updatedAt, "d MMM yyyy", { locale: pl })}</span>
               </td>
             </tr>
           ))}

@@ -87,9 +87,10 @@ function applyTextDiff(ytext: Y.Text, next: string) {
  *  edits to different items — or the same item's `checked`/`text` — merge
  *  field-by-field instead of one whole-array write clobbering the other.
  *  Item order is tracked via a per-item `order` field, same pattern as note order. */
-function yChecklistFromPlain(items: ChecklistItem[]): Y.Map<YChecklistItem> {
+function yChecklistFromPlain(items: ChecklistItem[] | undefined): Y.Map<YChecklistItem> {
   const map = new Y.Map<YChecklistItem>();
-  items.forEach((item, index) => {
+  // Stare kopie i importy bywają bez pola `checklist` — bez tej osłony migracja wywracała start (pusta aplikacja).
+  (items ?? []).forEach((item, index) => {
     const y: YChecklistItem = new Y.Map();
     y.set("id", item.id);
     y.set("text", item.text);

@@ -183,10 +183,11 @@ const Index = () => {
   // Odznaki w głównym widoku: jeden cichy toast na paczkę (import potrafi odblokować
   // kilka naraz), stałe `id` podmienia go zamiast piętrzyć. Szczegóły są w Statystykach.
   // Nad otwartym oknem (edytor nowej notatki) odznaka by go zasłaniała — czeka, aż okno się zamknie.
+  // Czeka też na inne dymki: przy starcie „N przypomnień czeka” u góry i odznaki u dołu zasłaniały naraz nagłówek i ostatni kafel.
   const unlockedBatchRef = useRef<{ titles: string[]; description: string }>({ titles: [], description: "" });
   const badgeTimerRef = useRef<number | null>(null);
   const showBadgeToast = useCallback(() => {
-    if (document.querySelector('[role="dialog"][data-state="open"]')) {
+    if (document.querySelector('[role="dialog"][data-state="open"], [data-sonner-toast]:not([data-removed="true"]):not(.toast-achievements)')) {
       badgeTimerRef.current = window.setTimeout(showBadgeToast, 1000);
       return;
     }
@@ -195,6 +196,7 @@ const Index = () => {
     const reset = () => { unlockedBatchRef.current = { titles: [], description: "" }; };
     toast(titles.length === 1 ? `Nowa odznaka: ${titles[0]}` : `Nowe odznaki: ${titles.length}`, {
       id: "achievements",
+      className: "toast-achievements",
       description: titles.length === 1 ? description : titles.join(", "),
       duration: 4000,
       action: { label: "Zobacz", onClick: () => setStatsOpen(true) },
