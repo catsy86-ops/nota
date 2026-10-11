@@ -4,7 +4,7 @@ import { createPersistedStore } from "@/lib/persistedStore";
 import type { GroupBy } from "@/lib/groupNotes";
 
 export type Density = "compact" | "cozy" | "comfy";
-export type Layout = "masonry" | "grid" | "list";
+export type Layout = "masonry" | "grid" | "list" | "board" | "table";
 export type SortKey = "updated" | "created" | "opened" | "title" | "color" | "priority" | "manual";
 export type SortDir = "desc" | "asc";
 

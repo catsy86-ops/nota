@@ -89,7 +89,13 @@ export function NoteGrid({
     getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectionMode, onToggleSelect, animateLayout,
   }), [onUpdate, onDelete, onTogglePin, onDuplicate, onArchive, onUnarchive, isArchived, onMoveToFolder,
     getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick, wikiIndex, onOpenNote, selectionMode, onToggleSelect, animateLayout]);
-  const prefs = useViewPrefs();
+  const storedPrefs = useViewPrefs();
+  // Tablica renderuje każdą kolumnę jako jednokolumnową listę; tabela nie używa siatki.
+  const prefs = useMemo(
+    () => (storedPrefs.layout === "board" || storedPrefs.layout === "table" ? { ...storedPrefs, layout: "list" as const } : storedPrefs),
+    [storedPrefs],
+  );
+  const boardColumn = storedPrefs.layout === "board";
   const noteIds = useMemo(() => notes.map((n) => n.id), [notes]);
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -129,7 +135,7 @@ export function NoteGrid({
 
   let containerClass: string;
   if (prefs.layout === "list") {
-    containerClass = `max-w-2xl mx-auto ${gap.split(" ")[1]}`;
+    containerClass = `${boardColumn ? "w-full" : "max-w-2xl mx-auto"} ${gap.split(" ")[1]}`;
   } else {
     const cols = prefs.autoColumns
       ? "grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(13rem,1fr))]"

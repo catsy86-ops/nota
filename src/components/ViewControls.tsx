@@ -1,6 +1,6 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowDownAZ, ArrowUpAZ, Filter, LayoutGrid, List, Columns2, SlidersHorizontal, Flag } from "lucide-react";
+import { ArrowDownAZ, ArrowUpAZ, Filter, LayoutGrid, List, Columns2, SlidersHorizontal, Flag, Kanban, Table2 } from "lucide-react";
 import { type Layout, type SortKey, type SortDir, type Density, useViewPrefs, setViewPref } from "@/lib/viewPrefs";
 import { colorClasses } from "@/components/ColorPicker";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,8 @@ const LAYOUTS: { v: Layout; label: string; icon: typeof LayoutGrid }[] = [
   { v: "masonry", label: "Mozaika", icon: LayoutGrid },
   { v: "grid", label: "Siatka", icon: Columns2 },
   { v: "list", label: "Lista", icon: List },
+  { v: "board", label: "Tablica", icon: Kanban },
+  { v: "table", label: "Tabela", icon: Table2 },
 ];
 
 const SORTS: { v: SortKey; label: string }[] = [
@@ -54,7 +56,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
               <IconButton tone="segment" aria-label="Widok i kolumny">
-                {prefs.layout === "list" ? <List className="w-5 h-5" /> : prefs.layout === "grid" ? <Columns2 className="w-5 h-5" /> : <LayoutGrid className="w-5 h-5" />}
+                {(() => { const Icon = LAYOUTS.find((l) => l.v === prefs.layout)?.icon ?? LayoutGrid; return <Icon className="w-5 h-5" />; })()}
               </IconButton>
             </DropdownMenuTrigger>
           </TooltipTrigger>
@@ -76,7 +78,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
             <DropdownMenuRadioItem value="cozy">Komfort</DropdownMenuRadioItem>
             <DropdownMenuRadioItem value="comfy">Luźno</DropdownMenuRadioItem>
           </DropdownMenuRadioGroup>
-          {prefs.layout !== "list" && (
+          {(prefs.layout === "masonry" || prefs.layout === "grid") && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Kolumny</DropdownMenuLabel>

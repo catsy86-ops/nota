@@ -5,6 +5,7 @@ import type { Folder } from "@/hooks/useNotes";
 import { glowStreak, glowPulse, pointOfNote } from "@/lib/glowTrail";
 import { getViewPrefs, setViewPref } from "@/lib/viewPrefs";
 import { toastWithUndo } from "@/lib/undoToast";
+import { columnKeyFromDropId } from "@/lib/boardColumns";
 
 export interface NoteDndDeps {
   displayNoteIds: string[];
@@ -16,6 +17,14 @@ export interface NoteDndDeps {
   clearSelection?: () => void;
   /** Bieżący folder notatki — potrzebny do „Cofnij”. */
   folderOf?: (noteId: string) => string | null;
+  /**
+   * Widok tablicy: przeciągnięcie karty do innej kolumny zmienia jej etykietę / folder / przypięcie.
+   * `columnOf` zwraca klucz kolumny notatki; `onMove` dostaje notatki do przeniesienia i klucz celu.
+   */
+  board?: {
+    columnOf: (noteId: string) => string | undefined;
+    onMove: (ids: string[], columnKey: string) => void;
+  };
 }
 
 // Stałe modułu: nowy literał opcji w każdym renderze daje nowe `sensors`,
@@ -24,7 +33,7 @@ const POINTER_OPTIONS = { activationConstraint: { distance: 8 } };
 const TOUCH_OPTIONS = { activationConstraint: { delay: 200, tolerance: 5 } };
 
 /** @dnd-kit sensors + drop handling: reorder within the grid, or drop onto a folder/root. */
-export function useNoteDnd({ displayNoteIds, folders, moveNoteToFolder, reorderNotes, selectedIds, clearSelection, folderOf }: NoteDndDeps) {
+export function useNoteDnd({ displayNoteIds, folders, moveNoteToFolder, reorderNotes, selectedIds, clearSelection, folderOf, board }: NoteDndDeps) {
   const sensors = useSensors(
     useSensor(PointerSensor, POINTER_OPTIONS),
     useSensor(TouchSensor, TOUCH_OPTIONS)
@@ -59,6 +68,19 @@ export function useNoteDnd({ displayNoteIds, folders, moveNoteToFolder, reorderN
       const undo = () => prev.forEach(([id, from]) => moveNoteToFolder(id, from));
       toastWithUndo(ids.length > 1 ? `${message} (${ids.length})` : message, undo, { icon: "📁" });
     };
+
+    if (board) {
+      // Upuszczono na kolumnę (puste miejsce) albo na kartę z innej kolumny.
+      const target = columnKeyFromDropId(overId) ?? board.columnOf(overId);
+      const source = board.columnOf(activeId);
+      if (target !== undefined && source !== undefined && target !== source) {
+        trail();
+        board.onMove(ids, target);
+        if (ids.length > 1) clearSelection?.();
+        return;
+      }
+      if (columnKeyFromDropId(overId) !== null) return; // na własną kolumnę: bez zmian
+    }
 
     if (overId === "notes-drop-root") {
       moveTo(null, "Usunięto z folderu");

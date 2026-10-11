@@ -37,6 +37,9 @@ import { InstallBanner } from "@/components/InstallBanner";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AppHeader } from "@/components/AppHeader";
 import { NoteGrid } from "@/components/NoteGrid";
+import { BoardColumn } from "@/components/BoardColumn";
+import { NoteTable } from "@/components/NoteTable";
+import { columnOfNote, labelsForColumn, NONE_COLUMN, PINNED_COLUMN } from "@/lib/boardColumns";
 import { NoteGroupSection } from "@/components/NoteGroupSection";
 import { groupNotes, type GroupBy } from "@/lib/groupNotes";
 import { markNoteOpened } from "@/lib/lastOpened";
@@ -281,7 +284,12 @@ const Index = () => {
 
   // Sekcje widoku: „Przypięte” (zwijane od 4 notatek) i reszta, opcjonalnie podzielona na grupy.
   // `visibleNotes` = to, co faktycznie jest na ekranie (bez zwiniętych) w kolejności widoku.
-  const groupBy: GroupBy = view === "reminders" || view === "trash" ? "none" : prefs.groupBy;
+  // Tablica / tabela mają sens tylko w widokach z listą notatek (nie w agendzie, koszu, kalendarzu, grafiku).
+  const listView = view !== "reminders" && view !== "trash" && view !== "calendar" && view !== "shifts";
+  const boardMode = prefs.layout === "board" && listView;
+  const tableMode = prefs.layout === "table" && listView;
+  // Kolumny tablicy potrzebują podziału: bez wybranego domyślnie idą po etykiecie.
+  const groupBy: GroupBy = view === "reminders" || view === "trash" ? "none" : boardMode && prefs.groupBy === "none" ? "label" : prefs.groupBy;
   const showPinned = pinned.length > 0 && view !== "archive" && view !== "trash";
   const pinnedCollapsible = pinned.length > 3;
   const pinnedCollapsed = pinnedCollapsible && prefs.collapsedGroups.includes("pinned");
@@ -552,7 +560,68 @@ const Index = () => {
     selectedIds,
     clearSelection,
     folderOf: (id) => notesRef.current.find((n) => n.id === id)?.folderId ?? null,
+    board: boardMode
+      ? {
+          columnOf: (id) => {
+            const n = notesRef.current.find((x) => x.id === id);
+            return n ? columnOfNote(n, groupBy) : undefined;
+          },
+          onMove: (ids, key) => moveToColumn(ids, key),
+        }
+      : undefined,
   });
+
+  /** Przeniesienie kart do kolumny tablicy: przypięcie, etykieta albo folder — z „Cofnij”. */
+  function moveToColumn(ids: string[], key: string) {
+    if (groupBy === "date") {
+      toast.message("Kolumny wg daty wynikają z czasu edycji", { description: "Wybierz podział wg etykiety lub folderu, by przenosić karty." });
+      return;
+    }
+    const prev = ids
+      .map((id) => notesRef.current.find((n) => n.id === id))
+      .filter((n): n is NonNullable<typeof n> => !!n)
+      .map((n) => ({ id: n.id, pinned: n.pinned, labels: n.labels, folderId: n.folderId }));
+    const apply = (id: string, target: { pinned: boolean; labels: string[]; folderId: string | null }) => {
+      const cur = notesRef.current.find((n) => n.id === id);
+      if (!cur) return;
+      if (cur.pinned !== target.pinned) togglePin(id);
+      if (groupBy === "label" && cur.labels.join("\n") !== target.labels.join("\n")) updateNote(id, { labels: target.labels });
+      if (groupBy === "folder" && cur.folderId !== target.folderId) handleMoveToFolderGlow(id, target.folderId);
+    };
+    prev.forEach((n) => {
+      if (key === PINNED_COLUMN) apply(n.id, { ...n, pinned: true });
+      else if (groupBy === "label") apply(n.id, { ...n, pinned: false, labels: labelsForColumn(n.labels, key) });
+      else apply(n.id, { ...n, pinned: false, folderId: key === NONE_COLUMN ? null : key });
+    });
+    const label = key === PINNED_COLUMN ? "Przypięte" : key === NONE_COLUMN ? (groupBy === "label" ? "Bez etykiety" : "Bez folderu") : groupBy === "label" ? `#${key}` : folders.find((f) => f.id === key)?.name ?? "folder";
+    toastWithUndo(prev.length > 1 ? `Przeniesiono do „${label}” (${prev.length})` : `Przeniesiono do „${label}”`, () => prev.forEach((n) => apply(n.id, n)), { icon: "🗂️" });
+  }
+
+  const renderGrid = (gridNotes: typeof displayNotes, navOrder: number) => (
+    <NoteGrid
+      navOrder={navOrder}
+      notes={gridNotes}
+      onUpdate={view === "trash" ? undefined : updateNote}
+      onDelete={handleDelete}
+      onTogglePin={view === "trash" ? undefined : togglePin}
+      onDuplicate={view === "trash" ? undefined : duplicateNote}
+      onArchive={view === "archive" ? undefined : view === "trash" ? undefined : handleArchiveSingle}
+      onUnarchive={view === "archive" ? unarchiveNote : view === "trash" ? restoreFromTrash : undefined}
+      isArchived={view === "archive" || view === "trash"}
+      onMoveToFolder={view === "trash" ? undefined : handleMoveToFolderGlow}
+      getVersions={getVersions}
+      onSaveVersion={addVersion}
+      onRestoreVersion={handleRestoreVersion}
+      onPresent={setPresentingNoteId}
+      knownTitles={knownTitles}
+      onWikiClick={handleWikiClick}
+      wikiIndex={wikiIndex}
+      onOpenNote={openNote}
+      selectedIds={selectedIds}
+      selectionMode={selectionMode}
+      onToggleSelect={toggleSelect}
+    />
+  );
 
   const sidebarItems: { icon: React.ElementType; label: string; view: View; count?: number; alert?: boolean; emoji: string }[] = [
     { icon: StickyNote, label: "Notatki", view: "notes", emoji: "📝" },
@@ -699,7 +768,7 @@ const Index = () => {
             </AlertDialogContent>
           </AlertDialog>
 
-          {showPinned && (
+          {showPinned && !boardMode && !tableMode && (
             <NoteGroupSection
               groupKey="pinned"
               label="📌 Przypięte"
@@ -725,32 +794,8 @@ const Index = () => {
             </section>
           ))}
 
-          {view !== "reminders" && groups.map((group, gi) => {
-            const grid = (navOrder: number) => (
-              <NoteGrid
-                navOrder={navOrder}
-                notes={group.notes}
-                onUpdate={view === "trash" ? undefined : updateNote}
-                onDelete={handleDelete}
-                onTogglePin={view === "trash" ? undefined : togglePin}
-                onDuplicate={view === "trash" ? undefined : duplicateNote}
-                onArchive={view === "archive" ? undefined : view === "trash" ? undefined : handleArchiveSingle}
-                onUnarchive={view === "archive" ? unarchiveNote : view === "trash" ? restoreFromTrash : undefined}
-                isArchived={view === "archive" || view === "trash"}
-                onMoveToFolder={view === "trash" ? undefined : handleMoveToFolderGlow}
-                getVersions={getVersions}
-                onSaveVersion={addVersion}
-                onRestoreVersion={handleRestoreVersion}
-                onPresent={setPresentingNoteId}
-                knownTitles={knownTitles}
-                onWikiClick={handleWikiClick}
-                wikiIndex={wikiIndex}
-                onOpenNote={openNote}
-                selectedIds={selectedIds}
-                selectionMode={selectionMode}
-                onToggleSelect={toggleSelect}
-              />
-            );
+          {view !== "reminders" && !boardMode && !tableMode && groups.map((group, gi) => {
+            const grid = (navOrder: number) => renderGrid(group.notes, navOrder);
             // Bez podziału: jedna sekcja jak dotąd („Inne” tylko pod przypiętymi).
             if (groupBy === "none") {
               return (
@@ -783,6 +828,32 @@ const Index = () => {
               </NoteGroupSection>
             );
           })}
+
+          {boardMode && (
+            <div data-board className="flex items-start gap-3 sm:gap-4 overflow-x-auto snap-x pb-3 -mx-1 px-1">
+              {showPinned && (
+                <BoardColumn columnKey={PINNED_COLUMN} label="📌 Przypięte" count={pinned.length}>
+                  {renderGrid(pinned, 0)}
+                </BoardColumn>
+              )}
+              {groups.map((group, gi) => (
+                <BoardColumn key={`${groupBy}:${group.key}`} columnKey={group.key || NONE_COLUMN} label={group.label} count={group.notes.length} droppable={groupBy !== "date"}>
+                  {renderGrid(group.notes, gi + 1)}
+                </BoardColumn>
+              ))}
+            </div>
+          )}
+
+          {tableMode && (
+            <NoteTable
+              notes={[...(showPinned ? pinned : []), ...others]}
+              folders={folders}
+              sortKey={prefs.sortKey}
+              sortDir={prefs.sortDir}
+              selectedIds={selectedIds}
+              onOpen={(id) => showInReader(id, "preview")}
+            />
+          )}
 
           {view === "calendar" && (
             <ViewErrorBoundary name="Kalendarz">
