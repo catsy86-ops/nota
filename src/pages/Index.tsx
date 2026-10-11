@@ -575,6 +575,7 @@ const Index = () => {
         activeLabel={activeLabel}
         activeFolder={activeFolder}
         onGoView={(v) => { go(v); if (isMobile) setSidebarOpen(false); }}
+        onOpenNote={(id) => { openNote(id); if (isMobile) setSidebarOpen(false); }}
         onGoLabel={(label) => { go("label", { label }); if (isMobile) setSidebarOpen(false); }}
         onGoFolder={(id) => { go("folder", { folder: id }); if (isMobile) setSidebarOpen(false); }}
         onGoFilter={goFilter}

@@ -73,6 +73,26 @@ describe("yjsStore — field-level CRDT merge", () => {
     expect("dailyDate" in a.projectNotes().find((n) => n.id === "other")!).toBe(false);
   });
 
+  it("keeps icon, cover and favorite through upsert, patch, sync and clearing", () => {
+    const a = createYjsStore(`look-a-${crypto.randomUUID()}`);
+    const b = createYjsStore(`look-b-${crypto.randomUUID()}`);
+    a.upsertNote(makeNote({ id: "n1", icon: "🚀", cover: "sea", favorite: true }));
+    a.upsertNote(makeNote({ id: "plain" }));
+    a.patchNote("plain", { icon: "📝", favorite: true });
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+
+    const byId = new Map(b.projectNotes().map((n) => [n.id, n]));
+    expect(byId.get("n1")).toMatchObject({ icon: "🚀", cover: "sea", favorite: true });
+    expect(byId.get("plain")).toMatchObject({ icon: "📝", favorite: true });
+    expect("cover" in byId.get("plain")!).toBe(false);
+
+    a.patchNote("n1", { icon: undefined, cover: undefined, favorite: undefined });
+    const cleared = a.projectNotes().find((n) => n.id === "n1")!;
+    expect("icon" in cleared).toBe(false);
+    expect("cover" in cleared).toBe(false);
+    expect("favorite" in cleared).toBe(false);
+  });
+
   it("merges concurrent Y.Text edits to note content instead of one side clobbering the other", () => {
     const a = createYjsStore(`merge-text-a-${crypto.randomUUID()}`);
     const b = createYjsStore(`merge-text-b-${crypto.randomUUID()}`);

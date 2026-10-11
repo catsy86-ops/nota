@@ -7,6 +7,7 @@ import { toastWithUndo } from "@/lib/undoToast";
 import { renameLinkTargets } from "@/lib/wikiLinks";
 import type { NotePriority } from "@/lib/notePriority";
 import type { Attachment } from "@/lib/attachments";
+import type { NoteCover } from "@/lib/noteLook";
 
 export type NoteColor = "default" | "coral" | "peach" | "sand" | "mint" | "sage" | "sky" | "lavender" | "rose";
 
@@ -57,6 +58,12 @@ export interface Note {
   priority: NotePriority;
   /** Notatka dnia: lokalna data `YYYY-MM-DD` (patrz `lib/dailyNote.ts`); brak = zwykła notatka. */
   dailyDate?: string;
+  /** Ikona notatki (emoji) — brak = bez ikony. Strukturalna: zostaje jawna także w notatce prywatnej. */
+  icon?: string;
+  /** Okładka kafla: jeden z gotowych wzorów (`lib/noteLook.ts`). */
+  cover?: NoteCover;
+  /** Ulubiona: pokazuje się w pasku bocznym. Brak = nie. */
+  favorite?: boolean;
   /** Klucze SHA-256 w `imageStore` (manifest `imageHashes` w Y.Doc). Bajty poza dokumentem — patrz `lib/imageStore.ts`. */
   images: string[];
   /** Pliki inne niż obrazy: manifest `attachments` w Y.Doc, bajty w `imageStore` — patrz `lib/attachments.ts`. Brak = bez załączników. */
@@ -226,7 +233,8 @@ export function useNotes() {
     }
     const now = Date.now();
     // Kopia notatki dnia jest zwykłą notatką — inaczej byłyby dwie „notatki dnia” na ten sam dzień.
-    const { dailyDate: _daily, ...rest } = original;
+    // Ulubioną jest oryginał, nie jego kopia.
+    const { dailyDate: _daily, favorite: _fav, ...rest } = original;
     const copy: Note = { ...rest, id: crypto.randomUUID(), title: original.title ? `${original.title} (kopia)` : "", pinned: false, createdAt: now, updatedAt: now };
     yjsStore.upsertNote(copy);
   }, []);

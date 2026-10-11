@@ -8,6 +8,7 @@ import { normalizeAttachments, isAttachmentSyncable, type Attachment } from "@/l
 import { imageStore as defaultImageStore, isDataUrl, type ImageStore } from "@/lib/imageStore";
 import type { Note, Folder, ChecklistItem } from "@/hooks/useNotes";
 import { logDiag } from "@/lib/diagnostics";
+import { NOTE_COVERS } from "@/lib/noteLook";
 import {
   NOTE_COLORS, PRIORITIES, REMINDER_REPEATS, REMOTE_LIMITS as LIM,
   safeBool, safeDailyDate, safeEnum, safeNullableNumber, safeNullableString, safeNumber,
@@ -53,7 +54,7 @@ function imageRefs(images: string[]): string[] {
 const NOTE_SCALAR_FIELDS = [
   "title", "color", "pinned", "archived", "trashed", "trashedAt",
   "labels", "reminder", "reminderRepeat", "reminderDay", "reminderRepeatUntil", "priority", "dailyDate",
-  "folderId", "order", "createdAt", "updatedAt",
+  "icon", "cover", "favorite", "folderId", "order", "createdAt", "updatedAt",
 ] as const;
 
 const FOLDER_SCALAR_FIELDS = [
@@ -203,6 +204,9 @@ function yNoteFromPlain(note: Note): YNote {
   if (note.reminderRepeatUntil !== undefined) y.set("reminderRepeatUntil", note.reminderRepeatUntil);
   y.set("priority", note.priority);
   if (note.dailyDate !== undefined) y.set("dailyDate", note.dailyDate);
+  if (note.icon) y.set("icon", note.icon);
+  if (note.cover) y.set("cover", note.cover);
+  if (note.favorite) y.set("favorite", true);
   y.set("checklist", yChecklistFromPlain(locked ? [] : note.checklist));
   y.set("folderId", note.folderId);
   y.set("order", note.order);
@@ -222,8 +226,13 @@ function yNoteFromPlain(note: Note): YNote {
 function plainFromYNote(id: string, y: YNote): Note {
   const vaultRaw = y.get("locked") === true ? y.get("vault") : undefined;
   const dailyDate = safeDailyDate(y.get("dailyDate"));
+  const icon = safeString(y.get("icon"), "", LIM.emoji);
+  const cover = safeOptionalEnum(y.get("cover"), NOTE_COVERS);
   const common = {
     ...(dailyDate ? { dailyDate } : {}),
+    ...(icon ? { icon } : {}),
+    ...(cover ? { cover } : {}),
+    ...(y.get("favorite") === true ? { favorite: true as const } : {}),
     id,
     color: safeEnum(y.get("color"), NOTE_COLORS, "default"),
     pinned: safeBool(y.get("pinned")),

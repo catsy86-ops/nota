@@ -5,7 +5,7 @@ import { tween, dur, ease } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { cascadeDelay, cardExit, markPinned, hasRecentPin, consumePin, type CardExitIntent } from "@/lib/cardMotion";
 import { Check } from "lucide-react";
-import { Pin, Trash2, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, MoreHorizontal, Maximize2, Minimize2, Expand, Link2 } from "lucide-react";
+import { Star, Pin, Trash2, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, MoreHorizontal, Maximize2, Minimize2, Expand, Link2 } from "lucide-react";
 import { ColorPicker, colorClasses } from "./ColorPicker";
 import { LabelPicker, LabelBadges } from "./LabelPicker";
 import { ReminderPicker, ReminderBadge } from "./ReminderPicker";
@@ -47,6 +47,7 @@ import { useDraftAutosave } from "@/hooks/useDraftAutosave";
 import { useLiveNoteText } from "@/hooks/useLiveNoteText";
 import { useWikiAutocomplete } from "@/hooks/useWikiAutocomplete";
 import { useSlashMenu } from "@/hooks/useSlashMenu";
+import { NoteLookPicker, NoteCoverStrip } from "./NoteLookPicker";
 import { backlinksOf } from "@/lib/wikiLinks";
 import { toast } from "sonner";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
@@ -567,8 +568,10 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         >
           {isEditing && !fullEditor ? renderEditor(false) : (
             <>
-              {note.title && (
+              <NoteCoverStrip cover={note.cover} className="-mx-3 -mt-2.5 mb-2 w-[calc(100%+1.5rem)] rounded-t-[inherit]" />
+              {(note.title || note.icon) && (
                 <h3 className="font-display font-semibold text-[0.9375rem] leading-tight text-foreground mb-0.5 line-clamp-2">
+                  {note.icon && <span className="mr-1.5" aria-hidden>{note.icon}</span>}
                   {note.title}
                   <ChecklistCount items={note.checklist || []} />
                 </h3>
@@ -713,6 +716,15 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
               className="px-3 pb-3 overflow-hidden"
             >
               <div className="flex items-center gap-0.5 flex-wrap border-t border-border/40 pt-2">
+                <NoteLookPicker icon={note.icon} cover={note.cover} onChange={(patch) => onUpdate?.(note.id, patch)} />
+                {!isArchived && (
+                  <ActionBtn
+                    icon={<Star className={cn("w-4 h-4", note.favorite && "fill-current")} />}
+                    onClick={() => { haptic("tap"); onUpdate?.(note.id, { favorite: note.favorite ? undefined : true }); }}
+                    title={note.favorite ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
+                    className={cn(note.favorite && "text-primary")}
+                  />
+                )}
                 {!note.locked && <ActionBtn icon={<ImagePlus className="w-4 h-4" />} onClick={() => fileInputRef.current?.click()} title="Dodaj obrazek" />}
                 {!note.locked && <ActionBtn icon={<PenTool className="w-4 h-4" />} onClick={() => setShowDrawing(true)} title="Rysuj" />}
                 {!isArchived && (

@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
 import {
-  Settings as SettingsIcon, HelpCircle, Tag, Moon, Sun, FolderOpen, Command, History, Trophy, Brain, MoreHorizontal, ChevronDown, Filter,
+  Settings as SettingsIcon, HelpCircle, Tag, Moon, Sun, FolderOpen, Command, History, Trophy, Brain, MoreHorizontal, ChevronDown, Filter, Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotesContext } from "@/hooks/NotesProvider";
@@ -20,6 +20,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { dur, ease, tween } from "@/lib/motion";
 import { useSavedFilters, sameQuery } from "@/lib/savedFilters";
 import { searchNotes } from "@/lib/searchNotes";
+
+const MAX_FAVORITES = 10;
 
 // „Notatki” przyjmują upuszczoną notatkę (wyjęcie z folderu); pozostałe pozycje nie.
 function NavRow({ item, active, onClick }: { item: SidebarItem; active: boolean; onClick: () => void }) {
@@ -61,6 +63,8 @@ interface AppSidebarProps {
   onGoFolder: (folderId: string) => void;
   /** Zapisany filtr: widok Notatki z tym zapytaniem. */
   onGoFilter: (query: string) => void;
+  /** Ulubiona notatka z paska bocznego: otwiera ją w edytorze. */
+  onOpenNote: (id: string) => void;
   /** Bieżące zapytanie wyszukiwarki — wyznacza aktywny filtr. */
   search: string;
   sidebarItems: SidebarItem[];
@@ -75,7 +79,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({
-  open, onClose, view, activeLabel, activeFolder, onGoView, onGoLabel, onGoFolder, onGoFilter, search,
+  open, onClose, view, activeLabel, activeFolder, onGoView, onGoLabel, onGoFolder, onGoFilter, onOpenNote, search,
   sidebarItems, onLogoClick, dark, onToggleTheme, onOpenPalette, onOpenActions,
   onOpenStats, onOpenFocusMode, onSettingsOpenChange,
 }: AppSidebarProps) {
@@ -87,6 +91,7 @@ export function AppSidebar({
     () => filters.map((f) => searchNotes(notes, f.query, { folders }).length),
     [filters, notes, folders],
   );
+  const favorites = useMemo(() => notes.filter((n) => n.favorite).slice(0, MAX_FAVORITES), [notes]);
   // Jedna pigułka aktywna naraz: gdy zapytanie jest zapisanym filtrem, „Notatki” gasną.
   const activeFilterId = view === "notes" ? filters.find((f) => sameQuery(search, f.query))?.id ?? null : null;
 
@@ -143,6 +148,25 @@ export function AppSidebar({
                   />
                 ))}
               </div>
+
+              {favorites.length > 0 && (
+                <div className="pt-5">
+                  <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground px-3 mb-2 flex items-center gap-1.5">
+                    <Star className="w-3 h-3" />
+                    Ulubione
+                  </p>
+                  <div className="space-y-0.5" data-favorites>
+                    {favorites.map((n) => (
+                      <SidebarRow
+                        key={n.id}
+                        icon={n.icon ? <span className="text-sm leading-none">{n.icon}</span> : <Star className="w-[18px] h-[18px]" />}
+                        label={n.locked ? "Notatka prywatna" : n.title.trim() || "Notatka bez tytułu"}
+                        onClick={() => onOpenNote(n.id)}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {filters.length > 0 && (
                 <div className="pt-5">

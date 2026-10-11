@@ -38,6 +38,21 @@ describe("projekcja danych od peera (A01/A08)", () => {
     expect(n.checklist).toEqual([]);
   });
 
+  it("ikona, okładka i ulubiona od peera: zły typ, nieznany wzór i za długa ikona są odrzucane", () => {
+    const store = createYjsStore(`hostile-look-${crypto.randomUUID()}`);
+    hostileNote(store, "a", { icon: { x: 1 }, cover: "url(javascript:alert(1))", favorite: "true" });
+    hostileNote(store, "b", { icon: "x".repeat(500), cover: "dusk", favorite: true });
+    const byId = new Map(store.projectNotes().map((n) => [n.id, n]));
+    const a = byId.get("a")!;
+    expect(a.icon).toBeUndefined();
+    expect(a.cover).toBeUndefined();
+    expect(a.favorite).toBeUndefined();
+    const b = byId.get("b")!;
+    expect(b.icon).toHaveLength(32);
+    expect(b.cover).toBe("dusk");
+    expect(b.favorite).toBe(true);
+  });
+
   it("legacy tablica checklisty: elementy nie-obiekty i bez id odpadają", () => {
     const store = createYjsStore(`hostile-cl-${crypto.randomUUID()}`);
     hostileNote(store, "x", { checklist: [{ id: "1", text: { x: 1 }, checked: 1 }, null, "s", { text: "bez id" }] });
