@@ -1,6 +1,7 @@
 import * as Y from "yjs";
 import { applyTextEdit, captureTextBase, mapOffset, type TextBase } from "./yTextEdit";
 import { IndexeddbPersistence } from "y-indexeddb";
+import { trackPersistence } from "@/lib/saveStatus";
 import { get as idbGet, del as idbDel, keys as idbKeys, getMany as idbGetMany } from "idb-keyval";
 import { loadAll as loadLegacySnapshot } from "@/lib/notesStore";
 import { hashImage } from "@/lib/imageHash";
@@ -316,6 +317,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   const migratedKey = `kaczy.yjs.migrated.v1.${dbName}`;
 
   let persistence = new IndexeddbPersistence(dbName, doc);
+  trackPersistence(doc, () => persistence);
   let readyPromise: Promise<void> | null = null;
 
   /**

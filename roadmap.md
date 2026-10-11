@@ -697,3 +697,7 @@ Plan wdrożenia po kolei (każdy krok osobno, z testami i commitem):
 - [ ] Share Target dla plików/obrazów albo bookmarklet web clippera.
 - [ ] Ikona notatki we frontmatterze eksportu Markdown/ZIP i w imporcie.
 - Odrzucone: LaTeX, mermaid, embedy wideo/iframe, synchronizowane bloki; wszystko, co wymaga serwera lub konta (uprawnienia, publikacja, formularze, API, agenci AI).
+
+### Wskaznik zapisu i ochrona przed utrata zmian (2026-10-11)
+
+Zrobione: `lib/saveStatus.ts` (zapis do IndexedDB: Zapisywanie… / Zapisano / lepki błąd „Nie zapisano”), `hooks/useDraftAutosave.ts` (szkic zatwierdzany przy `pagehide`/ukryciu karty, licznik niezatwierdzonych szkiców), `OfflineStatus.tsx` (pastylka statusu + `beforeunload`). Testy: `saveStatus.test.ts`. Do zrobienia: fragment notatki → zadanie; widok tablicy/tabeli (#3).

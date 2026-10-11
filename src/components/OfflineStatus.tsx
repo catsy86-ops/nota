@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { CloudOff, Wifi, Loader2 } from "lucide-react";
+import { CloudOff, Wifi, Loader2, Check, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { OfflineQueuePanel } from "@/components/OfflineQueuePanel";
 import { useSyncState } from "@/lib/yjsSync";
+import { hasUnsavedWork, useSaveStatus } from "@/lib/saveStatus";
 
 /**
  * Status pill for connectivity and device-to-device sync. Notes themselves
@@ -44,11 +45,42 @@ export function OfflineStatus() {
     };
   }, []);
 
+  const save = useSaveStatus();
+
+  // „Zapisywanie…” pokazujemy dopiero, gdy zapis trwa zauważalnie — zwykle kończy się w kilka ms.
+  const [slowSave, setSlowSave] = useState(false);
+  useEffect(() => {
+    if (save.phase !== "saving") { setSlowSave(false); return; }
+    const t = setTimeout(() => setSlowSave(true), 400);
+    return () => clearTimeout(t);
+  }, [save.phase]);
+
+  // Zamknięcie karty z niezapisanymi zmianami: natywne ostrzeżenie przeglądarki.
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!hasUnsavedWork()) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, []);
+
   const syncing = syncState.status === "connecting";
-  const visible = offline || syncing;
+  const saveFailed = save.phase === "error";
+  const saving = save.phase === "saving" && slowSave;
+  const saved = save.phase === "saved";
+  const visible = saveFailed || offline || saving || saved || syncing;
   if (!visible) return null;
 
-  const label = offline ? "Offline — zapisuję lokalnie" : "Łączenie z urządzeniami…";
+  const label = saveFailed
+    ? "Nie zapisano — zmiany są tylko w tej karcie"
+    : saving ? "Zapisywanie…"
+    : offline ? "Offline — zapisuję lokalnie"
+    : saved ? "Zapisano"
+    : "Łączenie z urządzeniami…";
+  // Sam komunikat o zapisie nie jest przyciskiem — nie może przesłaniać kliknięć pod sobą.
+  const passive = !saveFailed && !offline && (saving || saved);
 
   return (
     <>
@@ -58,10 +90,14 @@ export function OfflineStatus() {
         aria-live="polite"
         onClick={() => setPanelOpen(true)}
         aria-label="Otwórz status zapisu i synchronizacji"
-        className="glass-strong fixed bottom-24 left-1/2 z-50 flex max-w-[92vw] -translate-x-1/2 cursor-pointer items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 text-xs text-muted-foreground shadow-lg transition-colors hover:text-foreground sm:bottom-6"
+        className={`glass-strong fixed bottom-24 left-1/2 z-50 flex max-w-[92vw] -translate-x-1/2 items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 text-xs text-muted-foreground shadow-lg transition-colors hover:text-foreground sm:bottom-6 ${passive ? "pointer-events-none" : "cursor-pointer"}`}
       >
-        {offline ? (
+        {saveFailed ? (
+          <TriangleAlert className="h-3.5 w-3.5 shrink-0 text-destructive" />
+        ) : offline ? (
           <CloudOff className="h-3.5 w-3.5 shrink-0 text-destructive" />
+        ) : saved && !saving ? (
+          <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
         ) : (
           <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
         )}
