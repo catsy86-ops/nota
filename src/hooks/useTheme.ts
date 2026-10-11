@@ -36,6 +36,8 @@ function applyDark(dark: boolean) {
   const paint = () => {
     root.classList.toggle("dark", dark);
     root.style.colorScheme = dark ? "dark" : "light";
+    // Pasek stanu telefonu / okna PWA: ciemny motyw nie świeci bursztynem.
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", dark ? "#0f0d10" : "#f0b429");
   };
   const reduced = isMotionReduced();
   const vt = shouldUseViewTransition({

@@ -102,6 +102,7 @@ export function SearchBar({ value, onChange, className }: SearchBarProps) {
         onBlur={() => setFocused(false)}
         onKeyDown={onKeyDown}
         placeholder={HINTS[hintIdx]}
+        aria-label="Szukaj w notatkach"
         enterKeyHint="search"
         autoCapitalize="off"
         autoCorrect="off"

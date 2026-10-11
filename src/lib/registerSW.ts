@@ -102,7 +102,16 @@ export function registerServiceWorker() {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register(SW_URL, { scope: "/" })
-      .then((registration) => watchForUpdates(registration, hadControllerAtLoad))
+      .then((registration) => {
+        watchForUpdates(registration, hadControllerAtLoad);
+        // Zainstalowana PWA bywa tygodniami „w tle”: po powrocie do aplikacji sprawdź nową wersję (co ≥30 min).
+        let lastCheck = Date.now();
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState !== "visible" || Date.now() - lastCheck < 30 * 60_000) return;
+          lastCheck = Date.now();
+          registration.update().catch(() => { /* offline */ });
+        });
+      })
       .catch(() => {
         /* noop */
       });
