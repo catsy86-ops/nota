@@ -846,7 +846,26 @@ Zrobione: `lib/saveStatus.ts` (zapis do IndexedDB: Zapisywanie… / Zapisano / l
 ### Etap 2b — Notatki i kolumny: dopracowanie i naprawa UI/UX (dopisane 2026-10-11 na prośbę użytkownika)
 
 Zasada jak w działach: najpierw **audyt na żywo** (telefon 360/390/430 i desktop 1440, jasny/ciemny, wszystkie układy: lista, siatka, mozaika, tablica, tabela; 5, 25 i 300 notatek), lista usterek do akceptacji, potem fale z testami. Znane już z audytów 2026-10-11:
-- [ ] 2b.1 Audyt widoku Notatki i kolumn (z zrzutami) — lista krytyczne/ważne/drobne.
+- [x] 2b.1 Audyt widoku Notatki i kolumn (z zrzutami) — lista krytyczne/ważne/drobne. ✅ 2026-10-11: 360/390/430/1440, jasny/ciemny, 5 układów, 5/25/300 notatek, warianty kolumn/gęstości/grupowania + pomiary DOM. Wyniki (czekają na akceptację):
+  - **Krytyczne**
+    - K1 Ręczne kolumny 2/3/4 na telefonie dają **1** kolumnę (gorzej niż „Auto” = 2) — `NoteGrid.tsx` klasy `grid-cols-1 sm:…`. → 2b.3
+    - K2 Lista i Tablica: kafle **sklejone (0 px)** — `space-y-*` kontenera nie działa (pomiar); w Siatce/Mozaice 10 px. → 2b.4, 2b.5
+    - K3 Kółko zaznaczenia **nachodzi na tytuł** we wszystkich układach (tytuł 18 px pod kółkiem, np. „Plan tygodnia 1̶6”) i ma 24×24 px na dotyku. → 2b.7
+  - **Ważne**
+    - W1 Siatka: `auto-rows-fr`, ale kafel nie wypełnia wiersza → dziury do ~220 px między rzędami na telefonie.
+    - W2 Tabela na telefonie otwiera się, ale ma 41 px przewijania poziomego, daty ucięte („11 paź 20…”), brak przyklejonej pierwszej kolumny; na wąskim ekranie wystarczy krótka data. → 2b.6
+    - W3 Popover „Widok i kolumny”: cele „1 2 3 4” 28×24 px; „Kompakt” na telefonie wizualnie prawie bez różnicy. → 2b.2
+    - W4 Uchwyt „⋮⋮” (61×26 px) na każdym kaflu także na dotyku — szum na każdym kaflu (do decyzji: ukryć na `coarse`, przeciąganie przytrzymaniem).
+    - W5 Pusta notatka (bez tytułu i treści) = pusty kafel z samą datą (w Tabeli „Bez tytułu”) — brak spójnego zastępnika.
+    - W6 Lista na desktopie: kolumna `max-w-2xl` wyśrodkowana, a nagłówki „Przypięte / Inne” przy lewej krawędzi. → 2b.8
+    - W7 Tablica: nagłówki kolumn nie są przyklejone (scroll-snap już jest, kolumna 258/366 px — OK). → 2b.5
+    - W8 Przy starcie dwa dymki naraz (przypomnienia u góry, odznaki u dołu) zasłaniają nagłówek i ostatni kafel.
+  - **Drobne**
+    - D1 Nagłówek `##` z treści na kaflu (pogrubiony, 16 px) konkuruje z tytułem. → 2b.7
+    - D2 Metadane 11 px (data, chipy). → 2b.7
+    - D3 W wąskiej kolumnie „Gotowe / Jutro rano” łamią się w pionie i wydłużają kafel.
+    - D4 ~50 px pustego miejsca między banerem instalacji a „Przypięte”.
+  - **Poza zakresem (znalezione przy okazji)**: notatki w `kaczy-notes-data` bez pola `checklist` wywracają migrację (`yjsStore.ts` `yChecklistFromPlain` → `forEach` na `undefined`) — pusta aplikacja. Dotyczy starych kopii/importów.
 - [ ] 2b.2 Popover „Widok i kolumny”: niewyrównany, siatka „Auto 1 2 3 4” nieczytelna i z małymi celami; na telefonie 3–4 kolumny nie mają sensu → arkusz od dołu z opisanymi opcjami (układ, kolumny, gęstość, grupowanie).
 - [ ] 2b.3 Kolumny na telefonie: zawsze 2 przy „Auto”; sprawdzić 1 kolumnę (pełna szerokość kafla) i szerokie kafle (`wide`) w 2 kolumnach.
 - [ ] 2b.4 Lista: kafle prawie się stykają (~4 px) — spójny odstęp z siatką i gęstością.
