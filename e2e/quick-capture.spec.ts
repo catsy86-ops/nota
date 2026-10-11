@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 
 const body = (page: import("@playwright/test").Page) => page.getByPlaceholder("Treść notatki...");
 
-test("#etykieta, @folder i !! stają się chipami i są stosowane przy zapisie", async ({ page }) => {
+test("#etykieta, @folder i !! stają się chipami i są stosowane przy zapisie @smoke", async ({ page }) => {
   const folder = `Fold${Date.now() % 100000}`;
   const label = `lab${Date.now() % 100000}`;
   await page.getByRole("button", { name: "Nowy folder" }).click();

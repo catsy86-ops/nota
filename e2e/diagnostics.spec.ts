@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
 });
 
-test("raport diagnostyczny pobiera się bez treści notatek", async ({ page }) => {
+test("raport diagnostyczny pobiera się bez treści notatek @smoke", async ({ page }) => {
   const secret = `sekret-${Date.now()}`;
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(secret);

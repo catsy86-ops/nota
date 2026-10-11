@@ -16,13 +16,13 @@ async function addNote(page: Page, title: string) {
   await expect(page.getByText("Zapisz notatkę...")).toBeVisible();
 }
 
-test("adds a new note", async ({ page }) => {
+test("adds a new note @smoke", async ({ page }) => {
   const title = `E2E ${Date.now()}`;
   await addNote(page, title);
   await expect(page.getByText(title)).toBeVisible();
 });
 
-test("edits an existing note", async ({ page }) => {
+test("edits an existing note @smoke", async ({ page }) => {
   const title = `E2E-edit ${Date.now()}`;
   await addNote(page, title);
 
@@ -39,7 +39,7 @@ test("edits an existing note", async ({ page }) => {
   await expect(page.getByText(newTitle)).toBeVisible();
 });
 
-test("moves a note to trash and it disappears from the main list", async ({ page }) => {
+test("moves a note to trash and it disappears from the main list @smoke", async ({ page }) => {
   const title = `E2E-trash ${Date.now()}`;
   await addNote(page, title);
 

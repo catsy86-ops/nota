@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
 });
 
-test("Zamień na listę i z powrotem na tekst w edytorze notatki", async ({ page }) => {
+test("Zamień na listę i z powrotem na tekst w edytorze notatki @smoke", async ({ page }) => {
   const title = `E2E-konwersja ${Date.now()}`;
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);

@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
 });
 
-test("dział Nauka: adres /nauka, pozycja w pasku bocznym i trzy zakładki", async ({ page }) => {
+test("dział Nauka: adres /nauka, pozycja w pasku bocznym i trzy zakładki @smoke", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Nauka" }).first().click();
   await expect(page).toHaveURL(/\/nauka$/);
@@ -16,7 +16,7 @@ test("dział Nauka: adres /nauka, pozycja w pasku bocznym i trzy zakładki", asy
   }
 });
 
-test("tablica: temat przechodzi między kolumnami i postęp przeżywa odświeżenie", async ({ page }) => {
+test("tablica: temat przechodzi między kolumnami i postęp przeżywa odświeżenie @smoke", async ({ page }) => {
   await page.goto("/nauka");
   await page.getByRole("tab", { name: "Tablica" }).click();
   await expect(page.getByTestId("count-todo")).toHaveText("18");

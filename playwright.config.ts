@@ -6,9 +6,11 @@ import { defineConfig, devices } from "@playwright/test";
 // actual generated sw.js to test against.
 export default defineConfig({
   testDir: "./e2e",
-  // A single `vite preview` instance backs every test; running many workers
-  // against it locally was flaky (goto timeouts under concurrent load).
-  workers: 1,
+  // Jedna instancja `vite preview` obsługuje wszystkie testy; wiele workerów lokalnie
+  // bywało niestabilne (timeouty goto). Domyślnie 1; `PW_WORKERS=3 npm run test:e2e` przyspiesza przebieg.
+  workers: process.env.PW_WORKERS ? Number(process.env.PW_WORKERS) : 1,
+  // Przerywa, gdy dist/ jest starszy niż źródła (reuseExistingServer pomija build).
+  globalSetup: "./e2e/global-setup.ts",
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: "list",

@@ -789,3 +789,10 @@ Zrobione: `lib/saveStatus.ts` (zapis do IndexedDB: Zapisywanie… / Zapisano / l
 - [x] **A (dostępność/kontrast/UI):** token `text-primary-ink` (bursztyn przyciemniony do ~5,5:1 na papierze; w ciemnym motywie bez zmian — kontrast zmierzony, było 2,65:1) w 120 miejscach; waga nagłówków h1–h6 = 600; fokus kafla `ring-ring`; pola ≥16 px na telefonie; usuwanie obrazka widoczne na dotyku; cele dotyku ≥44 px (tablica Nauki, „×” przypomnienia, szybkie terminy); kompozytor pełnoekranowy jako `role="dialog"` z Esc (zwija, szkic zostaje); etykiety `htmlFor`/`useId` w ReminderPicker; „Dodaj…” w arkuszu „Więcej” (alternatywa dla przytrzymania „+”); zakładka koloru i większy promień kafli; okna potwierdzeń jako arkusz od dołu na telefonie (`DialogContent sheet` jako opt-in); menu/popovery z większym promieniem. Świadomie bez zmian: etykiety „Odhacz: …” (spójna konwencja w edytorze i testach).
 - [x] **B (bezpieczeństwo danych):** czyszczenie kosza z karencją 3 s i bez znaczników z przyszłości; timeout 15 s zapisu do IndexedDB (zamiast wiecznego „Zapisywanie…”); żywa podstrona pod rodzicem z kosza wraca na poziom główny; szkic pamięta rodzica; nagłówki bezpieczeństwa na Vercel (CSP wciąż Report-Only); ostrzeżenie przy przywracaniu kopii przy sparowanych urządzeniach.
 - Zostaje z B: CSP w trybie egzekwowania (wymaga decyzji — inline-skrypt w `offline.html`), etykiety/obrazy jako Y.Map, `epoch` w AAD skarbca, ikona/termin w szyfrogramie.
+
+### Fala D — testy (2026-10-11)
+
+- [x] `e2e/global-setup.ts`: przerywa przebieg, gdy `dist/` jest starszy niż źródła (koniec cichego testowania starego buildu; obejście `PW_ALLOW_STALE=1`).
+- [x] `npm run test:e2e:smoke` — 22 testy `@smoke`, ok. 1,6 min zamiast ~9; `PW_WORKERS=3` przyspiesza pełny przebieg (do sprawdzenia pod kątem stabilności).
+- [x] `e2e/helpers.ts` (`lastToast`, `undoIn`, `addNote`, `seedNotes`) i `e2e/resilience.spec.ts`: uszkodzony localStorage, błąd zapisu IndexedDB (widoczne „Nie zapisano”), dwie karty.
+- Zostaje: przeniesienie logiki czysto-funkcyjnej z e2e do vitest (editor-keys, slash-menu), seedowanie przez import kopii w pozostałych specach.

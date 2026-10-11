@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 // Bez przeładowań: po `goto` karta i tak wczytałaby wszystko z IndexedDB,
 // a sprawdzamy, że zmiana dociera do już otwartej karty.
-test("notatka i grafik z jednej karty pojawiają się w drugiej bez odświeżania", async ({ context }) => {
+test("notatka i grafik z jednej karty pojawiają się w drugiej bez odświeżania @smoke", async ({ context }) => {
   await context.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
   const a = await context.newPage();
   const b = await context.newPage();

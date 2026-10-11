@@ -22,7 +22,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
 });
 
-test("kafle pokazują rodzica i liczbę podstron; sierota zostaje na poziomie głównym", async ({ page }) => {
+test("kafle pokazują rodzica i liczbę podstron; sierota zostaje na poziomie głównym @smoke", async ({ page }) => {
   const parent = page.locator('[data-note-id-wrap="a"]');
   const child = page.locator('[data-note-id-wrap="b"]');
   const orphan = page.locator('[data-note-id-wrap="c"]');

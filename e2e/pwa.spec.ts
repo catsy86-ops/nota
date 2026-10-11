@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
 });
 
-test("registers a service worker that reaches the activated state", async ({ page }) => {
+test("registers a service worker that reaches the activated state @smoke", async ({ page }) => {
   await page.goto("/");
   // registerSW.ts reloads the page once on the very first controllerchange
   // (taking control for the first time counts as one) — that reload can

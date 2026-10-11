@@ -19,7 +19,7 @@ async function withReminder(page: import("@playwright/test").Page, title: string
   await page.getByRole("button", { name: "Zapisz", exact: true }).click();
 }
 
-test("przypomnienia to agenda: grupy po terminie, bez przełącznika sortowania", async ({ page }) => {
+test("przypomnienia to agenda: grupy po terminie, bez przełącznika sortowania @smoke", async ({ page }) => {
   // Tytuły nie mogą być frazą daty („Jutro”) — szybkie wprowadzanie zamieniłoby je w przypomnienie.
   // Kolejność tworzenia odwrotna do terminów — agenda ma ją zignorować.
   // W zwykłym widoku sortowanie jest — inaczej asercja niżej byłaby pusta.

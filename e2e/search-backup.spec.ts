@@ -15,7 +15,7 @@ async function addNote(page: Page, title: string) {
   await expect(page.getByText(title)).toBeVisible();
 }
 
-test("wyszukiwanie pokazuje trafienia z Archiwum i przechodzi do nich", async ({ page }) => {
+test("wyszukiwanie pokazuje trafienia z Archiwum i przechodzi do nich @smoke", async ({ page }) => {
   const title = `Faktura ${Date.now()}`;
   await addNote(page, title);
   const card = page.locator("[data-note-id]").filter({ hasText: title });

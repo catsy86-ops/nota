@@ -9,14 +9,14 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/");
 });
 
-test("„Więcej” → Ustawienia otwiera ustawienia przy zamkniętym pasku bocznym", async ({ page }) => {
+test("„Więcej” → Ustawienia otwiera ustawienia przy zamkniętym pasku bocznym @smoke", async ({ page }) => {
   await page.getByRole("button", { name: "Więcej", exact: true }).click();
   await page.getByRole("button", { name: "Ustawienia" }).last().click();
   await expect(page.getByRole("dialog", { name: "Ustawienia" })).toBeVisible();
   await expect(page.getByRole("tab", { name: /Dane/ })).toBeVisible();
 });
 
-test("Ustawienia na telefonie zajmują cały ekran i nie zmieniają wysokości przy zmianie zakładki", async ({ page }) => {
+test("Ustawienia na telefonie zajmują cały ekran i nie zmieniają wysokości przy zmianie zakładki @smoke", async ({ page }) => {
   await page.getByRole("button", { name: "Więcej", exact: true }).click();
   await page.getByRole("button", { name: "Ustawienia" }).last().click();
   const dialog = page.getByRole("dialog", { name: "Ustawienia" });

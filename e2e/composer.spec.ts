@@ -15,7 +15,7 @@ async function addNote(page: Page, title: string, content = "") {
   await expect(page.getByRole("heading", { name: title })).toBeVisible();
 }
 
-test("przypomnienie z paska: szybki termin i powtarzanie trafiają do notatki", async ({ page }) => {
+test("przypomnienie z paska: szybki termin i powtarzanie trafiają do notatki @smoke", async ({ page }) => {
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill("Co tydzień");
   await page.getByRole("button", { name: "Przypomnienie", exact: true }).click();
@@ -36,7 +36,7 @@ test("przypomnienie z paska: szybki termin i powtarzanie trafiają do notatki", 
   await expect(card.locator("svg.lucide-repeat")).toHaveCount(1);
 });
 
-test("[[ i @ w nowej notatce podpowiadają notatki; @folder zostaje tokenem", async ({ page }) => {
+test("[[ i @ w nowej notatce podpowiadają notatki; @folder zostaje tokenem @smoke", async ({ page }) => {
   await addNote(page, "Zakupy domowe");
 
   await page.getByText("Zapisz notatkę...").click();
@@ -49,7 +49,7 @@ test("[[ i @ w nowej notatce podpowiadają notatki; @folder zostaje tokenem", as
   await expect(page.getByRole("option", { name: /Jutro/ })).toBeVisible();
 });
 
-test("podstrona z paska: notatka powstaje pod wybraną", async ({ page }) => {
+test("podstrona z paska: notatka powstaje pod wybraną @smoke", async ({ page }) => {
   await addNote(page, "Remont");
 
   await page.getByText("Zapisz notatkę...").click();

@@ -15,7 +15,7 @@ async function addNote(page: Page, title: string) {
   await expect(page.getByText(title)).toBeVisible();
 }
 
-test("widok jest w adresie: odświeżenie go zachowuje, a „wstecz” wraca", async ({ page }) => {
+test("widok jest w adresie: odświeżenie go zachowuje, a „wstecz” wraca @smoke", async ({ page }) => {
   await page.getByRole("button", { name: "Archiwum" }).first().click();
   await expect(page).toHaveURL(/\/archiwum$/);
   await page.reload();

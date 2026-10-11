@@ -85,7 +85,7 @@ async function dumpDocIdb(page: Page): Promise<string> {
   }));
 }
 
-test("pełny przebieg: zablokuj, kłódka, odblokuj złym i dobrym hasłem, zdejmij blokadę", async ({ page }) => {
+test("pełny przebieg: zablokuj, kłódka, odblokuj złym i dobrym hasłem, zdejmij blokadę @smoke", async ({ page }) => {
   await addNote(page, TITLE, `Treść z ${SECRET} do ukrycia`);
   await setUpVaultAndLock(page);
 

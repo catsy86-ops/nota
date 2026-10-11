@@ -37,7 +37,7 @@ function chunksMatching(files: string[], marker: RegExp): string[] {
   return files.filter((f) => marker.test(readFileSync(path.join(assetsDir, f), "utf8")));
 }
 
-test("heavy optional libraries stay out of the eager page load", async () => {
+test("heavy optional libraries stay out of the eager page load @smoke", async () => {
   const eager = eagerChunks();
   const allChunks = readdirSync(assetsDir).filter((f) => f.endsWith(".js"));
   const lazy = allChunks.filter((f) => !eager.includes(f));
