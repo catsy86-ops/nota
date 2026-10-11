@@ -13,7 +13,7 @@ import { SidebarFilterItem } from "@/components/sidebar/SidebarFilterItem";
 import { SidebarAddFolderButton } from "@/components/sidebar/SidebarAddFolderButton";
 import { SidebarRow, SidebarCount } from "@/components/sidebar/SidebarRow";
 import { InstallAppButton } from "@/components/InstallAppButton";
-import { BeerMugLogo } from "@/components/BeerMugLogo";
+import { NMonogramLogo } from "@/components/NMonogramLogo";
 import { NotkiLogo } from "@/components/NotkiLogo";
 import type { View } from "@/hooks/useFilteredNotes";
 import { modShortcut } from "@/lib/platform";
@@ -131,7 +131,7 @@ export function AppSidebar({
                   aria-label="NOTKI"
                 >
                   <div className="absolute inset-0 rounded-2xl bg-primary/20 blur-lg opacity-70 -z-10" />
-                  <BeerMugLogo />
+                  <NMonogramLogo />
                 </button>
                 <div>
                   <h1 className="leading-none"><NotkiLogo /></h1>

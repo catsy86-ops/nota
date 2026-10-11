@@ -668,20 +668,41 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
   }
 }
 
-/* ── Kufel (BeerMugLogo.tsx): tylko transform/opacity ───────────────────── */
-.beer-bubble {
+/* ── Monogram „N” (NMonogramLogo.tsx) ──────────────────────────────────── */
+/* Jeden cykl 4,8 s: rysowanie (0–28%), świecenie (28–72%), wymazywanie (72–100%).
+   Kropka jedzie po tym samym obrysie (offset-path), zsynchronizowana z końcem linii. */
+.n-mark-line,
+.n-mark-glow {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 0;
+  animation: n-mark-draw 4.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+.n-mark-glow {
+  opacity: 0.28;
+  filter: blur(1.2px);
+}
+@keyframes n-mark-draw {
+  0% { stroke-dashoffset: 100; }
+  28%, 72% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -100; }
+}
+.n-mark-dot {
+  offset-path: path("M6 19V5l12 14V5");
+  offset-rotate: 0deg;
+  offset-distance: 0%;
   opacity: 0;
-  animation: beer-bubble 2.2s ease-in infinite;
+  animation: n-mark-dot 4.8s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }
-@keyframes beer-bubble {
-  0% { transform: translateY(0); opacity: 0; }
-  50% { opacity: 0.9; }
-  100% { transform: translateY(-8.5px); opacity: 0; }
+@keyframes n-mark-dot {
+  0% { offset-distance: 0%; opacity: 0; }
+  3% { opacity: 1; }
+  28% { offset-distance: 100%; opacity: 1; }
+  34% { offset-distance: 100%; opacity: 0; }
+  100% { offset-distance: 100%; opacity: 0; }
 }
-.beer-foam { animation: beer-foam 3s ease-in-out infinite; }
-@keyframes beer-foam {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-0.3px); }
+@media (prefers-reduced-motion: reduce) {
+  .n-mark-line, .n-mark-glow { animation: none; stroke-dashoffset: 0; }
+  .n-mark-dot { animation: none; opacity: 0; }
 }
 
 /* ── Wordmark „NOTKI” (NotkiLogo.tsx) ─────────────────────────────────── */
