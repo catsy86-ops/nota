@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { CHECKLIST, QUESTIONS, TOPICS } from "./content";
 import { buildRound, missedTopics, scoreRound } from "./quiz";
 import { topicToNote } from "./toNote";
+import { journalImageRefs } from "./images";
 import {
   sanitizeStudy, moveTopic, recordRound, toggleChecked, getStudy, columnOf, resetChecklist,
   addJournalEntry, removeJournalEntry, restoreJournalEntry, setSite, practiceByTopic,
@@ -118,6 +119,15 @@ describe("dziennik z budowy", () => {
     for (const e of getStudy().journal) removeJournalEntry(e.id);
     setSite("");
     for (const t of ["spadki", "napowietrzanie", "otulina"]) moveTopic(t, "todo");
+  });
+
+  it("klucze zdjęć z dziennika czytane z zapisu (bez sklepu) — dla odśmiecania i kopii", () => {
+    const a = "a".repeat(64), b = "b".repeat(64);
+    addJournalEntry({ kind: "ok", topic: null, text: "Zdjęcia", images: [a, b, "nie-klucz"] }, 1000);
+    addJournalEntry({ kind: "note", topic: null, text: "Drugie", images: [a] }, 2000);
+    expect([...journalImageRefs()].sort()).toEqual([a, b]);
+    localStorage.setItem("kaczy.study.v1", "{zepsute");
+    expect(journalImageRefs().size).toBe(0);
   });
 
   it("dodaje wpis z aktualną inwestycją i zapisuje punkty z listy", () => {

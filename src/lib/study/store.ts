@@ -1,6 +1,7 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import { isImageRef } from "@/lib/imageStore";
 import { CHECKLIST, QUESTIONS, TOPICS } from "./content";
+import { STUDY_STORAGE_KEY } from "./images";
 
 export type Column = "todo" | "doing" | "done";
 export const COLUMNS: Column[] = ["todo", "doing", "done"];
@@ -96,7 +97,7 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
   return { board, checked, bestPercent: best, rounds, missed, journal: journal.slice(-JOURNAL_MAX_ENTRIES), site };
 }
 
-const store = createPersistedStore<StudyState>("kaczy.study.v1", DEFAULTS, {
+const store = createPersistedStore<StudyState>(STUDY_STORAGE_KEY, DEFAULTS, {
   merge: (defaults, stored) => sanitizeStudy(defaults, stored),
 });
 

@@ -1,8 +1,8 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import type { Note, Folder } from "@/hooks/useNotes";
 import { getDescendantFolderIds } from "@/hooks/useNotes";
 import type { ViewPrefs } from "@/lib/viewPrefs";
-import { searchNotes } from "@/lib/searchNotes";
+import { searchNotes, useSearchReady, loadSearchIndex } from "@/lib/searchNotes";
 import { getTodayRange, getWeekRange } from "@/lib/dateRanges";
 import { PRIORITY_ORDER } from "@/lib/notePriority";
 import { useLastOpened, type LastOpenedMap } from "@/lib/lastOpened";
@@ -85,6 +85,15 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
   // Granice „Dziś” i „Ten tydzień” liczy filtr — po północy i po powrocie do karty
   // muszą się przeliczyć mimo niezmienionych notatek.
   const dayTick = useDayClock();
+  // Fuse poza główną paczką: wczytujemy w wolnej chwili, a po dojściu wyniki się przeliczają.
+  const searchReady = useSearchReady();
+  useEffect(() => {
+    if (searchReady) return;
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+    if (!w.requestIdleCallback) { const t = window.setTimeout(() => void loadSearchIndex(), 1500); return () => window.clearTimeout(t); }
+    const id = w.requestIdleCallback(() => void loadSearchIndex(), { timeout: 4000 });
+    return () => w.cancelIdleCallback?.(id);
+  }, [searchReady]);
   return useMemo(() => {
     // Kalendarz rysuje własną projekcję (`expandOccurrences`) i nie korzysta
     // z siatki notatek — nie ma po co filtrować ani budować indeksu Fuse.
@@ -127,7 +136,7 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
     };
 
     return { displayNotes, pinned, others, elsewhere };
-    // `dayTick` nie jest czytany w środku — tylko wymusza przeliczenie granic „Dziś”.
+    // `dayTick` i `searchReady` nie są czytane w środku — wymuszają przeliczenie granic „Dziś” i wyników po wczytaniu Fuse.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs, opened, dayTick]);
+  }, [notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs, opened, dayTick, searchReady]);
 }

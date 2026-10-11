@@ -21,7 +21,7 @@ import { modShortcut } from "@/lib/platform";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { dur, ease, tween } from "@/lib/motion";
 import { useSavedFilters, sameQuery } from "@/lib/savedFilters";
-import { searchNotes } from "@/lib/searchNotes";
+import { searchNotes, useSearchReady } from "@/lib/searchNotes";
 
 const MAX_FAVORITES = 10;
 
@@ -90,9 +90,12 @@ export function AppSidebar({
   const { notes, allLabels, folders, renameLabel, removeLabel, addFolder, updateFolder, deleteFolder } = useNotesContext();
   const progressByFolder = useMemo(() => folderProgress(notes, folders), [notes, folders]);
   const { filters, rename: renameFilter, remove: removeFilter } = useSavedFilters();
+  // Liczniki od startu — po wczytaniu Fuse (wyszukiwanie rozmyte) liczone jeszcze raz.
+  const searchReady = useSearchReady();
   const counts = useMemo(
     () => filters.map((f) => searchNotes(notes, f.query, { folders }).length),
-    [filters, notes, folders],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [filters, notes, folders, searchReady],
   );
   const favorites = useMemo(() => notes.filter((n) => n.favorite).slice(0, MAX_FAVORITES), [notes]);
   // Jedna pigułka aktywna naraz: gdy zapytanie jest zapisanym filtrem, „Notatki” gasną.

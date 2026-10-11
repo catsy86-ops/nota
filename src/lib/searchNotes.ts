@@ -1,4 +1,5 @@
-import Fuse from "fuse.js";
+import { useSyncExternalStore } from "react";
+import type Fuse from "fuse.js";
 import type { Note } from "@/hooks/useNotes";
 import { parseSearchQuery, matchesClauses, fold, type MatchFolder } from "@/lib/searchQuery";
 
@@ -9,13 +10,49 @@ export interface SearchContext {
 }
 
 /**
+ * Fuse ładuje się osobno (poza główną paczką): w wolnej chwili po starcie albo przy pierwszym
+ * wyszukiwaniu. Do tego czasu tekst jest dopasowywany dokładnie (bez ogonków i wielkości liter),
+ * a `useSearchReady` przelicza wyniki, gdy biblioteka dojdzie.
+ */
+let FuseLib: typeof Fuse | null = null;
+let fuseLoading: Promise<void> | null = null;
+const readyListeners = new Set<() => void>();
+
+export function loadSearchIndex(): Promise<void> {
+  fuseLoading ??= import("fuse.js").then((m) => {
+    FuseLib = m.default;
+    readyListeners.forEach((l) => l());
+  });
+  return fuseLoading;
+}
+
+function subscribeReady(cb: () => void) {
+  readyListeners.add(cb);
+  return () => { readyListeners.delete(cb); };
+}
+
+/** `true`, gdy wyszukiwanie rozmyte jest gotowe — w zależnościach `useMemo` z `searchNotes`. */
+export function useSearchReady(): boolean {
+  return useSyncExternalStore(subscribeReady, () => FuseLib !== null, () => false);
+}
+
+/** Przed załadowaniem Fuse: każde słowo musi wystąpić w tytule, treści, etykietach albo liście. */
+function exactHits(source: Note[], words: string[]): Note[] {
+  return source.filter((n) => {
+    if (n.locked) return false;
+    const hay = fold([n.title, n.content, ...n.labels, ...(n.checklist ?? []).map((c) => c.text)].join("\n"));
+    return words.every((w) => hay.includes(w));
+  });
+}
+
+/**
  * Indeks Fuse jest drogi (przechodzi całą treść), a zapytanie zmienia się co znak —
  * stąd jeden indeks na tablicę notatek. `useNotes` zachowuje tożsamość tablicy,
  * dopóki nic się nie zmieni, więc kolejne znaki w wyszukiwarce tylko szukają.
  */
 const indexCache = new WeakMap<Note[], Fuse<Note>>();
 
-function indexFor(source: Note[]): Fuse<Note> {
+function indexFor(source: Note[], Fuse: typeof import("fuse.js").default): Fuse<Note> {
   let fuse = indexCache.get(source);
   if (!fuse) {
     // Notatki prywatne nie biorą udziału w wyszukiwaniu tekstu — nawet po odblokowaniu skarbca.
@@ -62,13 +99,16 @@ export function searchNotes(notes: Note[], query: string, ctx: SearchContext = {
   const free = text.trim();
   if (!free) return pool;
 
-  const fuse = indexFor(source);
   // Każde słowo musi się znaleźć (AND) — kolejność słów nie ma znaczenia; trafność = suma wyników.
   const words = fold(free).split(/\s+/).filter(Boolean);
   let hits: Note[];
-  if (words.length <= 1) {
-    hits = fuse.search(words[0] ?? "").map((r) => r.item);
+  if (!FuseLib) {
+    void loadSearchIndex();
+    hits = exactHits(source, words);
+  } else if (words.length <= 1) {
+    hits = indexFor(source, FuseLib).search(words[0] ?? "").map((r) => r.item);
   } else {
+    const fuse = indexFor(source, FuseLib);
     const scores = new Map<Note, number>();
     words.forEach((w, i) => {
       const found = new Map(fuse.search(w).map((r) => [r.item, r.score ?? 0] as const));

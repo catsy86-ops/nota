@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
@@ -10,6 +10,23 @@ function buildId(): string {
   let sha = "nogit";
   try { sha = execSync("git rev-parse --short HEAD").toString().trim(); } catch { /* poza repo */ }
   return `${sha} ${new Date().toISOString().slice(0, 16)}`;
+}
+
+// Preload fontu tekstu (podzbiory łacińskie — polski siedzi w latin-ext): bez tego przeglądarka
+// odkrywa woff2 dopiero po sparsowaniu CSS, a tekst do tego czasu jest w foncie zastępczym.
+function preloadTextFont(): Plugin {
+  return {
+    name: "preload-text-font",
+    transformIndexHtml: {
+      order: "post",
+      handler(_html, ctx) {
+        if (!ctx.bundle) return;
+        return Object.keys(ctx.bundle)
+          .filter((f) => /plus-jakarta-sans-latin(-ext)?-wght-normal-[\w-]+\.woff2$/.test(f))
+          .map((f) => ({ tag: "link", attrs: { rel: "preload", as: "font", type: "font/woff2", href: `/${f}`, crossorigin: "" }, injectTo: "head" as const }));
+      },
+    },
+  };
 }
 
 // https://vitejs.dev/config/
@@ -26,6 +43,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    preloadTextFont(),
     mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",

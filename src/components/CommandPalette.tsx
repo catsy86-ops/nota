@@ -3,7 +3,7 @@ import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, C
 import { Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, GraduationCap, Brain, Keyboard, BookOpen, History, Bookmark, Network, Copy } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
-import { searchNotes } from "@/lib/searchNotes";
+import { searchNotes, useSearchReady } from "@/lib/searchNotes";
 import { loadRecentSearches, saveRecentSearch } from "@/lib/recentSearches";
 import { requestShiftDay, searchShiftDays, useShifts } from "@/lib/shifts";
 import { modShortcut } from "@/lib/platform";
@@ -65,7 +65,9 @@ export function CommandPalette({
   const [recent, setRecent] = useState<string[]>(loadRecentSearches);
   // Notatki prywatne nie pojawiają się w palecie (ani tytułem, ani treścią) — także po odblokowaniu.
   const publicNotes = useMemo(() => notes.filter((n) => !n.locked), [notes]);
-  const matched = useMemo(() => searchNotes(publicNotes, search, { folders }), [publicNotes, search, folders]);
+  const searchReady = useSearchReady();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `searchReady`: przeliczenie po wczytaniu Fuse
+  const matched = useMemo(() => searchNotes(publicNotes, search, { folders }), [publicNotes, search, folders, searchReady]);
   const vault = useVault();
   const shifts = useShifts();
   const shiftHits = useMemo(() => {

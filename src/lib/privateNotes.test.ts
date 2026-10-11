@@ -1,8 +1,8 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
 import { createYjsStore, yjsStore } from "@/lib/yjsStore";
 import { createPrivateNotes, privateNotes, throttleDelayMs, VaultThrottledError } from "@/lib/privateNotes";
 import { createVersionsStore, versionsStore } from "@/lib/versionsStore";
-import { searchNotes } from "@/lib/searchNotes";
+import { searchNotes, loadSearchIndex } from "@/lib/searchNotes";
 import { buildGraph } from "@/lib/noteGraph";
 import { findUnlinkedMentions } from "@/lib/unlinkedMentions";
 import { buildWeeklyReview } from "@/lib/weeklyReview";
@@ -10,6 +10,9 @@ import { buildFullBackup, exportToHTML, exportToJSON, exportToMarkdown } from "@
 import { noteSchema } from "@/lib/noteSchema";
 import { VaultError, looksLikeVaultToken } from "@/lib/vault";
 import type { Note } from "@/hooks/useNotes";
+
+// Fuse ładuje się osobno — wyszukiwanie w testach ma być rozmyte jak w aplikacji.
+beforeAll(() => loadSearchIndex());
 
 const IT = 1000;
 const PW = "hasło-do-testów-12345";

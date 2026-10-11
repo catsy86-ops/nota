@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { searchNotes } from "./searchNotes";
+import { describe, it, expect, beforeAll, vi } from "vitest";
+import { searchNotes, loadSearchIndex } from "./searchNotes";
 import type { Note } from "@/hooks/useNotes";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
@@ -141,5 +141,22 @@ describe("searchNotes — diakrytyki i wiele słów", () => {
     expect(searchNotes(notes, "mleko kupić").map((n) => n.id)).toEqual(["a"]);
     expect(searchNotes(notes, "kupic mleko").map((n) => n.id)).toEqual(["a"]);
     expect(searchNotes(notes, "chleb mleko").map((n) => n.id)).toEqual(["a"]);
+  });
+});
+
+// Fuse ładuje się osobno — reszta testów sprawdza wyszukiwanie rozmyte, więc czeka na bibliotekę.
+beforeAll(() => loadSearchIndex());
+
+describe("przed wczytaniem Fuse", () => {
+  it("dopasowuje dokładnie (bez ogonków i wielkości liter), z pominięciem notatek prywatnych", async () => {
+    vi.resetModules();
+    const fresh = await import("./searchNotes");
+    const notes = [
+      makeNote({ id: "a", title: "Żółta kartka" }),
+      makeNote({ id: "b", title: "Zielona", checklist: [{ id: "x", text: "kupić żółtą farbę", checked: false }] as Note["checklist"] }),
+      makeNote({ id: "c", title: "zolta", locked: true }),
+    ];
+    expect(fresh.searchNotes(notes, "zolt").map((n) => n.id)).toEqual(["a", "b"]);
+    expect(fresh.searchNotes(notes, "zolat")).toEqual([]);
   });
 });
