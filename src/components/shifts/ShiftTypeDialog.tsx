@@ -29,7 +29,7 @@ const BLANK: ShiftType = { id: "", name: "", short: "", color: SHIFT_COLORS[3], 
 export function ShiftTypeDialog({ type, open, onOpenChange, onSaved, onDeleted }: ShiftTypeDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent sheet className="max-w-sm">
         <ShiftTypeForm key={type?.id ?? "new"} type={type} onOpenChange={onOpenChange} onSaved={onSaved} onDeleted={onDeleted} />
       </DialogContent>
     </Dialog>

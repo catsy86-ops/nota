@@ -431,7 +431,7 @@ function TransferChooser({ pending, label, onChoose, onClose }: {
 }) {
   return (
     <Dialog open={pending !== null} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-xs">
+      <DialogContent sheet className="max-w-xs">
         <DialogHeader>
           <DialogTitle>Przenieść czy skopiować?</DialogTitle>
           <DialogDescription>{label}</DialogDescription>

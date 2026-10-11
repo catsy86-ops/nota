@@ -35,7 +35,7 @@ export function DayDialog({ dayKey, entry, types, onOpenChange }: DayDialogProps
   // i wjeżdża miękko, zamiast zamykać i otwierać cały dialog z overlayem.
   return (
     <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
+      <DialogContent sheet className="max-w-sm">
         <DayForm key={dayKey} dayKey={dayKey} entry={entry} types={types} onOpenChange={onOpenChange} />
       </DialogContent>
     </Dialog>
@@ -122,7 +122,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
           {holiday && <DialogDescription className="text-destructive">{holiday} — dzień ustawowo wolny</DialogDescription>}
         </DialogHeader>
         <form className="space-y-4 soft-swap" onSubmit={(e) => { e.preventDefault(); save(); }}>
-          <fieldset>
+          <fieldset className="min-w-0">
             <legend className="text-sm font-medium mb-2">Zmiana</legend>
             <div role="radiogroup" aria-label="Zmiana" className="flex flex-wrap gap-2" onKeyDown={onTypeKey}>
               {[null, ...types].map((t) => {

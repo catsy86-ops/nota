@@ -38,7 +38,7 @@ const PREVIEW_DAYS = 14;
 export function PatternDialog({ open, onOpenChange, ...form }: PatternDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90dvh] overflow-y-auto">
+      <DialogContent sheet className="max-w-md max-h-[90dvh] overflow-y-auto">
         <PatternForm onOpenChange={onOpenChange} {...form} />
       </DialogContent>
     </Dialog>
@@ -75,7 +75,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
 
       <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); apply(); }}>
         {patterns.length > 0 && (
-          <fieldset>
+          <fieldset className="min-w-0">
             <legend className="text-sm font-medium mb-2">Zapisane cykle</legend>
             <ul className="space-y-1.5">
               {patterns.map((p) => (
@@ -96,7 +96,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
           </fieldset>
         )}
 
-        <fieldset>
+        <fieldset className="min-w-0">
           <legend className="text-sm font-medium mb-2">Kolejne dni cyklu ({steps.length})</legend>
           <div aria-live="polite" className="min-h-[2.75rem] flex flex-wrap gap-1 p-2 rounded-xl bg-muted/50">
             {steps.length === 0 && <span className="text-sm text-muted-foreground self-center px-1">{TAP[0].toUpperCase() + TAP.slice(1)} zmiany poniżej, po kolei</span>}
