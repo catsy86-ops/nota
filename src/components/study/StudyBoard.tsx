@@ -1,11 +1,11 @@
-import { ChevronLeft, ChevronRight, FilePlus2, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, FilePlus2, NotebookPen, Play } from "lucide-react";
 import { toast } from "sonner";
 import { yjsStore } from "@/lib/yjsStore";
 import { topicToNote } from "@/lib/study/toNote";
 import { LayoutGroup, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { CHECKLIST, MODULES, QUESTIONS, TOPICS, type StudyTopic } from "@/lib/study/content";
-import { COLUMNS, columnOf, moveTopic, useStudy, type Column, type StudyState } from "@/lib/study/store";
+import { COLUMNS, columnOf, moveTopic, practiceByTopic, useStudy, type Column, type StudyState, type TopicPractice } from "@/lib/study/store";
 
 const COLUMN_LABEL: Record<Column, string> = { todo: "Do nauki", doing: "W trakcie", done: "Umiem" };
 const COLUMN_HINT: Record<Column, string> = {
@@ -15,7 +15,7 @@ const COLUMN_HINT: Record<Column, string> = {
 };
 const moduleLabel = (id: StudyTopic["module"]) => MODULES.find((m) => m.id === id)?.label ?? id;
 
-function TopicCard({ topic, column, study, onPractice }: { topic: StudyTopic; column: Column; study: StudyState; onPractice: (topicId: string) => void }) {
+function TopicCard({ topic, column, study, practice, onPractice, onJournal }: { topic: StudyTopic; column: Column; study: StudyState; practice?: TopicPractice; onPractice: (topicId: string) => void; onJournal: (topicId: string) => void }) {
   const items = CHECKLIST.filter((c) => c.topic === topic.id);
   const checked = items.filter((c) => study.checked[c.id]).length;
   const critical = items.some((c) => c.critical);
@@ -39,11 +39,21 @@ function TopicCard({ topic, column, study, onPractice }: { topic: StudyTopic; co
         {critical && <span className="ml-1.5 text-primary-ink" title="Zawiera punkty krytyczne" aria-label="Zawiera punkty krytyczne">⚠</span>}
       </h4>
       <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{topic.summary}</p>
-      <div className="mt-2.5 flex items-center justify-between gap-2">
+      <div className="mt-2.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
         <p className="font-mono text-2xs text-muted-foreground tabular-nums">
           lista {checked}/{items.length} · pytań {questions}
+          {practice && <> · budowa {practice.ok}×{practice.problem > 0 ? `, problemów ${practice.problem}` : ""}</>}
         </p>
         <div className="flex gap-1">
+          <button
+            type="button"
+            onClick={() => onJournal(topic.id)}
+            aria-label={`${topic.title}: wpis z budowy`}
+            title="Dodaj wpis z budowy do tego tematu"
+            className="grid h-7 w-7 coarse:h-11 coarse:w-11 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted"
+          >
+            <NotebookPen className="w-3.5 h-3.5" />
+          </button>
           <button
             type="button"
             onClick={() => onPractice(topic.id)}
@@ -91,8 +101,9 @@ function TopicCard({ topic, column, study, onPractice }: { topic: StudyTopic; co
 }
 
 /** Tablica nauki: tematy wędrują „Do nauki” → „W trakcie” → „Umiem”. */
-export function StudyBoard({ onPractice }: { onPractice: (topicId: string) => void }) {
+export function StudyBoard({ onPractice, onJournal }: { onPractice: (topicId: string) => void; onJournal: (topicId: string) => void }) {
   const study = useStudy();
+  const practice = practiceByTopic(study.journal);
   return (
     <LayoutGroup>
       <div className="grid gap-4 md:grid-cols-3">
@@ -108,7 +119,7 @@ export function StudyBoard({ onPractice }: { onPractice: (topicId: string) => vo
                 <p className="text-xs text-muted-foreground">{COLUMN_HINT[col]}</p>
               </header>
               <ul className="space-y-2.5 min-h-12">
-                {topics.map((t) => <TopicCard key={t.id} topic={t} column={col} study={study} onPractice={onPractice} />)}
+                {topics.map((t) => <TopicCard key={t.id} topic={t} column={col} study={study} practice={practice.get(t.id)} onPractice={onPractice} onJournal={onJournal} />)}
                 {topics.length === 0 && (
                   <li className="rounded-xl border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">Brak tematów. Przenieś tu temat strzałką.</li>
                 )}

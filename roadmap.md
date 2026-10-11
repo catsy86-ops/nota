@@ -796,3 +796,9 @@ Zrobione: `lib/saveStatus.ts` (zapis do IndexedDB: Zapisywanie… / Zapisano / l
 - [x] `npm run test:e2e:smoke` — 22 testy `@smoke`, ok. 1,6 min zamiast ~9; `PW_WORKERS=3` przyspiesza pełny przebieg (do sprawdzenia pod kątem stabilności).
 - [x] `e2e/helpers.ts` (`lastToast`, `undoIn`, `addNote`, `seedNotes`) i `e2e/resilience.spec.ts`: uszkodzony localStorage, błąd zapisu IndexedDB (widoczne „Nie zapisano”), dwie karty.
 - Zostaje: przeniesienie logiki czysto-funkcyjnej z e2e do vitest (editor-keys, slash-menu), seedowanie przez import kopii w pozostałych specach.
+
+### Nauka: Dziennik z budowy (2026-10-11)
+
+- [x] Zakładka **Dziennik** w `/nauka`: wpis w trakcie pracy (Zrobione / Problem / Notatka) z inwestycją (zapamiętywana), tematem z materiału i jego **listą kontrolną pod ręką** (⚠ punkty krytyczne z ryzykiem; zaznaczone punkty zapisują się we wpisie). Wpisy pogrupowane dniami, z godziną, Cofnij przy usuwaniu, podsumowanie 7 dni.
+- Połączenie teorii z praktyką: **problem cofa temat z „Umiem” do „W trakcie”** (wraca do powtórki), karta tematu na tablicy pokazuje „budowa N×, problemów M”, z karty jest skrót „wpis z budowy”, a z wpisu — „Ćwicz pytania”. Dane w `kaczy.study.v1` (są w kopii zapasowej). `lib/study/store.ts` (`addJournalEntry`, `practiceByTopic`), `StudyJournal.tsx`; testy `study.test.ts`, e2e `study.spec.ts`.
+- Zostaje: zdjęcia we wpisach, dyktowanie, lokalizacja GPS, eksport dziennika do notatki/PDF, synchronizacja przez Yjs (razem z postępem Nauki).

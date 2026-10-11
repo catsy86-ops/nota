@@ -93,3 +93,52 @@ test("tablica: „Ćwicz” startuje rundę z jednego tematu, a „Zrób notatk�
   await page.getByRole("button", { name: "Notatki" }).first().click();
   await expect(page.getByRole("heading", { name: "Nauka: Spadki kanalizacji" })).toBeVisible();
 });
+
+test("dziennik z budowy: lista kontrolna tematu, wpis liczy praktykę, problem cofa temat z „Umiem”", async ({ page }) => {
+  await page.goto("/nauka");
+  await page.getByRole("tab", { name: "Tablica" }).click();
+  await page.getByRole("button", { name: /Spadki kanalizacji: przenieś do „W trakcie”/ }).click();
+  await page.getByRole("button", { name: /Spadki kanalizacji: przenieś do „Umiem”/ }).click();
+  await expect(page.getByTestId("count-done")).toHaveText("1");
+
+  // Z karty tematu prosto do dziennika, z już wybranym tematem.
+  await page.getByRole("button", { name: "Spadki kanalizacji: wpis z budowy" }).click();
+  await expect(page.getByRole("tab", { name: "Dziennik" })).toHaveAttribute("data-state", "active");
+  await expect(page.getByLabel("Czego dotyczy")).toHaveValue("spadki");
+  await expect(page.getByTestId("journal-topic-panel")).toContainText("Sprawdź przed przejściem dalej");
+
+  await page.getByLabel("Inwestycja / adres").fill("Dom testowy");
+  await page.getByLabel(/Zachowaj wymagany spadek/).check();
+  await page.getByRole("radio", { name: "Problem" }).click();
+  await page.getByLabel("Co się dzieje?").fill("Na odcinku do pionu spadek za mały");
+  await page.getByRole("button", { name: "Dodaj wpis" }).click();
+
+  const entry = page.locator('[data-journal-entry="problem"]');
+  await expect(entry).toContainText("Na odcinku do pionu spadek za mały");
+  await expect(entry).toContainText("punkty 1/1");
+  await expect(entry).toContainText("Dom testowy");
+  await expect(page.getByTestId("journal-week")).toContainText("1 wpisów, 1 problemów");
+
+  // Problem na budowie cofnął temat z „Umiem” do „W trakcie” i widać go na karcie.
+  await page.getByRole("tab", { name: "Tablica" }).click();
+  await expect(page.getByTestId("count-done")).toHaveText("0");
+  await expect(page.getByTestId("count-doing")).toHaveText("1");
+  await expect(page.locator('[data-topic="spadki"]')).toContainText("budowa 0×, problemów 1");
+
+  await page.reload();
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await expect(page.locator('[data-journal-entry="problem"]')).toHaveCount(1);
+});
+
+test("dziennik: usunięcie wpisu ma Cofnij", async ({ page }) => {
+  await page.goto("/nauka");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByLabel("Co się dzieje?").fill("Przejście przez ścianę w tulei");
+  await page.getByRole("button", { name: "Dodaj wpis" }).click();
+  await expect(page.locator("[data-journal-entry]")).toHaveCount(1);
+
+  await page.getByRole("button", { name: "Usuń wpis" }).click();
+  await expect(page.locator("[data-journal-entry]")).toHaveCount(0);
+  await page.getByRole("listitem").filter({ hasText: "Usunięto wpis" }).getByRole("button", { name: "Cofnij" }).click();
+  await expect(page.locator("[data-journal-entry]")).toHaveCount(1);
+});

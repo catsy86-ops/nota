@@ -6,6 +6,7 @@ import { useState } from "react";
 import { QuizPanel, type QuizScope } from "./QuizPanel";
 import { StudyBoard } from "./StudyBoard";
 import { StudyChecklist } from "./StudyChecklist";
+import { StudyJournal } from "./StudyJournal";
 
 /** Pasek opanowania: jedna komórka na temat — pełna = „Umiem”, połowa = „W trakcie”. */
 function MasteryStrip() {
@@ -47,6 +48,10 @@ export default function StudyView() {
   const [run, setRun] = useState(0);
   const practice = (topic: string) => { setScope({ kind: "topic", topic }); setRun((n) => n + 1); setTab("quiz"); };
   const changeScope = (s: QuizScope) => { setScope(s); setRun((n) => n + 1); };
+  // Z karty tematu „Wpis z budowy” otwiera dziennik z już wybranym tematem.
+  const [journalTopic, setJournalTopic] = useState("");
+  const [journalKey, setJournalKey] = useState(0);
+  const openJournal = (topic: string) => { setJournalTopic(topic); setJournalKey((n) => n + 1); setTab("journal"); };
 
   return (
     <div className="space-y-6" data-testid="study-view">
@@ -63,13 +68,17 @@ export default function StudyView() {
           <TabsTrigger value="quiz" className="flex-1 sm:flex-none">Quiz</TabsTrigger>
           <TabsTrigger value="board" className="flex-1 sm:flex-none">Tablica</TabsTrigger>
           <TabsTrigger value="list" className="flex-1 sm:flex-none">Lista do nauki</TabsTrigger>
+          <TabsTrigger value="journal" className="flex-1 sm:flex-none">Dziennik</TabsTrigger>
         </TabsList>
         {/* forceMount: runda w toku nie ginie po zajrzeniu do tablicy lub listy. */}
         <TabsContent value="quiz" forceMount className="mt-4 data-[state=inactive]:hidden">
           <QuizPanel key={run} scope={scope} onScopeChange={changeScope} />
         </TabsContent>
-        <TabsContent value="board" className="mt-4"><StudyBoard onPractice={practice} /></TabsContent>
+        <TabsContent value="board" className="mt-4"><StudyBoard onPractice={practice} onJournal={openJournal} /></TabsContent>
         <TabsContent value="list" className="mt-4"><StudyChecklist /></TabsContent>
+        <TabsContent value="journal" className="mt-4">
+          <StudyJournal key={journalKey} initialTopic={journalTopic} onPractice={practice} />
+        </TabsContent>
       </Tabs>
     </div>
   );
