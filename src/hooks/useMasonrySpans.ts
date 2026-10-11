@@ -24,22 +24,41 @@ export function useMasonrySpans(container: RefObject<HTMLElement>, enabled: bool
       return;
     }
 
-    const place = (el: HTMLElement) => {
-      const margin = parseFloat(getComputedStyle(el).marginBottom) || 0;
-      const span = Math.max(1, Math.ceil((el.getBoundingClientRect().height + margin) / MASONRY_ROW_PX));
+    // Margines (odstęp gęstości) jest wspólny dla kart o tej samej klasie — `getComputedStyle`
+    // na każdą kartę przy 300 kartach kosztował ~0,5 s (pomiar CPU 4×).
+    const margins = new Map<string, number>();
+    const marginOf = (el: HTMLElement) => {
+      let m = margins.get(el.className);
+      if (m === undefined) {
+        m = parseFloat(getComputedStyle(el).marginBottom) || 0;
+        margins.set(el.className, m);
+      }
+      return m;
+    };
+    const place = (el: HTMLElement, height?: number) => {
+      const h = height ?? el.getBoundingClientRect().height;
+      const span = Math.max(1, Math.ceil((h + marginOf(el)) / MASONRY_ROW_PX));
       const next = `span ${span}`;
       if (el.style.gridRowEnd !== next) el.style.gridRowEnd = next;
     };
 
     // Callback idzie po layoucie, a przed malowaniem — karty nie mrugają nałożone na siebie.
-    const resize = new ResizeObserver((entries) => entries.forEach((e) => place(e.target as HTMLElement)));
-    const watch = (el: HTMLElement) => { place(el); resize.observe(el); };
-    items().forEach(watch);
+    // Wysokość z wpisu obserwatora (border-box) — bez ponownego pomiaru każdej karty.
+    const resize = new ResizeObserver((entries) => entries.forEach((e) => place(e.target as HTMLElement, e.borderBoxSize?.[0]?.blockSize)));
+    // Nowe karty (pierwsza paczka i dociągane): od razu, przed malowaniem — inaczej mignęłyby
+    // z `span 1`. Najpierw wszystkie odczyty, potem zapisy: jeden przelicz układu na paczkę.
+    const watchAll = (els: HTMLElement[]) => {
+      const heights = els.map((el) => el.getBoundingClientRect().height);
+      els.forEach((el, i) => { place(el, heights[i]); resize.observe(el); });
+    };
+    watchAll(items());
 
     const mutations = new MutationObserver((records) => {
+      const added: HTMLElement[] = [];
       for (const r of records) r.addedNodes.forEach((n) => {
-        if (n instanceof HTMLElement && n.parentElement === root && n.matches(itemSelector)) watch(n);
+        if (n instanceof HTMLElement && n.parentElement === root && n.matches(itemSelector)) added.push(n);
       });
+      if (added.length) watchAll(added);
     });
     mutations.observe(root, { childList: true });
 
