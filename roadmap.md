@@ -693,7 +693,7 @@ Plan wdrożenia po kolei (każdy krok osobno, z testami i commitem):
 - [x] Rozszerzony pasek zbiorczy: przenieś do folderu, dodaj etykietę, przypnij (z „Cofnij”; `BulkActionBar.tsx`, e2e `templates-bulk.spec.ts`).
 - [ ] Sekcja „Ostatnio edytowane” i @-wzmianki (notatka, data) w edytorze.
 - [x] Własne szablony ze zmiennymi: `{{data}}`, `{{data_iso}}`, `{{dzień}}`, `{{godzina}}`, `{{jutro}}`, `{{wczoraj}}`, `{{tydzień}}`, `{{rok}}` (`lib/templateVars.ts`, `lib/customTemplates.ts`, `CustomTemplateDialog.tsx`; w backupie ustawień). Bez `{{tytuł}}` — nie ma jak go podać przy jednym kliknięciu.
-- [ ] Spis treści i linki do nagłówków (`[[tytuł#nagłówek]]`).
+- [x] Spis treści w czytniku (od 3 nagłówków, `ReaderToc.tsx`, e2e w `reader.spec.ts`). Linki `[[tytuł#nagłówek]]` — jeszcze nie.
 - [ ] Share Target dla plików/obrazów albo bookmarklet web clippera.
 - [x] Ikona (`icon:`) i ulubiona (`favorite: true`) we frontmatterze eksportu ZIP i w imporcie Markdown.
 - Odrzucone: LaTeX, mermaid, embedy wideo/iframe, synchronizowane bloki; wszystko, co wymaga serwera lub konta (uprawnienia, publikacja, formularze, API, agenci AI).

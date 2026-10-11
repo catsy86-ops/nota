@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { tween } from "@/lib/motion";
 import { wordsPl } from "@/lib/plural";
 import { NoteImage } from "./NoteImage";
+import { ReaderToc } from "./ReaderToc";
 import { AttachmentsReadOnlyList } from "./AttachmentsList";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { copyNoteToClipboard } from "@/lib/noteMarkdown";
@@ -108,6 +109,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
   const [zoom, setZoom] = useState(ZOOM_DEFAULT);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   useOriginFromTile(panelRef, note.id);
   const { showBacklinks } = useViewPrefs();
   const canEdit = !note.trashed;
@@ -287,9 +289,12 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
             )}
 
             {note.content ? (
-              <div className={cn(!present && "prose prose-sm dark:prose-invert max-w-none")}>
+              <>
+              <ReaderToc rootRef={contentRef} resetKey={note.id} />
+              <div ref={contentRef} className={cn(!present && "prose prose-sm dark:prose-invert max-w-none")}>
                 <MarkdownRenderer content={note.content} knownTitles={knownTitles} onWikiClick={handleWiki} />
               </div>
+              </>
             ) : (
               !note.checklist?.length && !note.images?.length && !note.attachments?.length && <p className="text-muted-foreground italic text-sm">Pusta notatka.</p>
             )}

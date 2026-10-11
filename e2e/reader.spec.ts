@@ -90,3 +90,19 @@ test("paleta poleceń kopiuje notatkę z fokusem jako Markdown", async ({ page, 
   const clip = await page.evaluate(() => navigator.clipboard.readText());
   expect(clip.split("\r\n").join("\n")).toBe(`# ${title}\n\nTreść z palety`);
 });
+
+test("czytnik: spis treści z nagłówków przewija do wybranej sekcji", async ({ page }) => {
+  const title = `Spis ${Date.now()}`;
+  const filler = Array.from({ length: 40 }, (_, i) => `Linia ${i}`).join("\n\n");
+  await addNote(page, title, `# Wstęp\n\n${filler}\n\n## Środek\n\n${filler}\n\n## Koniec\n\nostatnie słowa`);
+
+  await page.locator("body").click({ position: { x: 5, y: 5 } });
+  await page.keyboard.press("Home");
+  await page.keyboard.press(" ");
+  const reader = page.getByRole("dialog", { name: title });
+  const toc = reader.getByRole("navigation", { name: "Spis treści" });
+  await expect(toc.getByRole("button")).toHaveCount(3);
+
+  await toc.getByRole("button", { name: "Koniec" }).click();
+  await expect(reader.getByRole("heading", { name: "Koniec" })).toBeInViewport();
+});
