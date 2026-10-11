@@ -88,8 +88,8 @@ export const MarkdownRendererImpl = memo(function MarkdownRendererImpl({ content
       // Treść notatki bywa od peera/z importu: tylko http(s), mailto, tel i odnośniki względne.
       urlTransform={(url) => (isSafeHref(url) ? url : "")}
       components={{
-        h1: ({ children }) => <h1 className="text-base font-display font-bold text-foreground mb-1">{renderText(children)}</h1>,
-        h2: ({ children }) => <h2 className="text-sm font-display font-bold text-foreground mb-1">{renderText(children)}</h2>,
+        h1: ({ children }) => <h1 className="text-base font-display font-bold text-foreground mb-1 [.note-card_&]:text-sm [.note-card_&]:font-semibold">{renderText(children)}</h1>,
+        h2: ({ children }) => <h2 className="text-sm font-display font-bold text-foreground mb-1 [.note-card_&]:font-semibold">{renderText(children)}</h2>,
         h3: ({ children }) => <h3 className="text-sm font-display font-semibold text-foreground mb-0.5">{renderText(children)}</h3>,
         p: ({ children }) => <p className="text-sm text-foreground/80 leading-relaxed mb-1 last:mb-0">{renderText(children)}</p>,
         strong: ({ children }) => <strong className="font-semibold text-foreground">{renderText(children)}</strong>,
