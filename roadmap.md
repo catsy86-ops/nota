@@ -843,13 +843,26 @@ Zrobione: `lib/saveStatus.ts` (zapis do IndexedDB: Zapisywanie… / Zapisano / l
 
 - [x] **Marka (poza planem, 2026-10-11):** ikony PWA z logo N (192/512/maskable/apple/favicon/monochrome), animacja startowa w `index.html` (tylko zainstalowana aplikacja albo `?splash`, znika po wczytaniu danych, `src/lib/bootSplash.ts`), logo N w nagłówku telefonu i na stronie offline (zamiast kufla). Generator ikon: skrypt Playwright rysujący `M6 19V5l12 14V5`.
 
+### Etap 2b — Notatki i kolumny: dopracowanie i naprawa UI/UX (dopisane 2026-10-11 na prośbę użytkownika)
+
+Zasada jak w działach: najpierw **audyt na żywo** (telefon 360/390/430 i desktop 1440, jasny/ciemny, wszystkie układy: lista, siatka, mozaika, tablica, tabela; 5, 25 i 300 notatek), lista usterek do akceptacji, potem fale z testami. Znane już z audytów 2026-10-11:
+- [ ] 2b.1 Audyt widoku Notatki i kolumn (z zrzutami) — lista krytyczne/ważne/drobne.
+- [ ] 2b.2 Popover „Widok i kolumny”: niewyrównany, siatka „Auto 1 2 3 4” nieczytelna i z małymi celami; na telefonie 3–4 kolumny nie mają sensu → arkusz od dołu z opisanymi opcjami (układ, kolumny, gęstość, grupowanie).
+- [ ] 2b.3 Kolumny na telefonie: zawsze 2 przy „Auto”; sprawdzić 1 kolumnę (pełna szerokość kafla) i szerokie kafle (`wide`) w 2 kolumnach.
+- [ ] 2b.4 Lista: kafle prawie się stykają (~4 px) — spójny odstęp z siatką i gęstością.
+- [ ] 2b.5 Tablica (kolumny etykiet/folderów): szerokość kolumn na telefonie, przewijanie poziome z przyciąganiem (scroll-snap), nagłówki kolumn przyklejone, przenoszenie kafla między kolumnami dotykiem.
+- [ ] 2b.6 Tabela: czy się otwiera i czy jest czytelna na telefonie (audyt nie zdołał jej otworzyć), przewijanie poziome z przyklejoną pierwszą kolumną.
+- [ ] 2b.7 Hierarchia kafla: tytuł vs treść vs metadane (rozmiary 11 px → 12 px tam, gdzie się mieści), zakładka koloru, długie tytuły i kółko zaznaczenia.
+- [ ] 2b.8 Grupy (Przypięte / Inne / etykiety): nagłówki, zwijanie, puste sekcje; „Inne” mieszane z przypiętymi w Dziś.
+- [ ] 2b.9 Zmiana układu i kolumn bez skoku (płynne przejście, zachowane przewinięcie i fokus).
+
 ### Faza 3 — wydajność przy 300 notatkach (M/L; razem, bo dotyka `NoteCard`/`NoteGrid`)
 Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwarcie kafla 2,3–3 s, Kalendarz → Notatki 7–10 s, klawisz w wyszukiwarce 400–740 ms. Przy 20 notatkach OK (przewijanie 60 fps).
 - [ ] 3.1 `content-visibility: auto` + `contain-intrinsic-size` na opakowaniu kafla (S, najtańszy zysk); potem okienkowanie siatki (M/L) z zachowaniem kolejności dnd-kit.
-- [ ] 3.2 Powyżej progu (np. 40 kafli) zwykły `div` zamiast `motion.div` (`drag`, `layout`, `initial/animate`); swipe podpinany przy pierwszym dotknięciu. `NoteCard.tsx` ma CRLF + 2 bajty NUL — edytować bajtowo albo po teście charakteryzującym.
-- [ ] 3.3 Wyszukiwanie: `memo(NoteGrid)`, pasek jako izolowany komponent z debounce 150–200 ms, bez animacji wyjścia przy filtrowaniu.
-- [ ] 3.4 Start: pierwszy render ~12 kart, reszta w idle; nie blokować `images.load()`/migracji przed listą (`yjsStore.ts` ~440–455).
-- [ ] 3.5 Markdown: tekst prosty bez `lazy` dla treści bez składni; `useMasonrySpans.place()` z `borderBoxSize`; nie remontować siatki przy przełączaniu widoków.
+- [x] 3.2 Powyżej progu (np. 40 kafli) zwykły `div` zamiast `motion.div` (`drag`, `layout`, `initial/animate`); swipe podpinany przy pierwszym dotknięciu. `NoteCard.tsx` ma CRLF + 2 bajty NUL — edytować bajtowo albo po teście charakteryzującym. ✅ częściowo (`0454038`): tła swipe tylko w trakcie gestu, ukryte akcje stopki bez renderu na dotyku (DOM 24 tys. → 11 tys.). Zwykły `div` zamiast `motion.div` — nie (swipe/wyjścia).
+- [x] 3.3 Wyszukiwanie: `memo(NoteGrid)`, pasek jako izolowany komponent z debounce 150–200 ms, bez animacji wyjścia przy filtrowaniu. ✅ `1ab4614`: własny stan pola + 150 ms, bez `layout` na polu (klawisz 350–500 → 30–170 ms).
+- [x] 3.4 Start: pierwszy render ~12 kart, reszta w idle; nie blokować `images.load()`/migracji przed listą (`yjsStore.ts` ~440–455). ✅ `0454038`: render progresywny (24 + paczki po 48 w idle) — lista 5,35 → 2,1 s, LCP 7,2 → 3,0 s, najdłuższe zadanie 3,9 → 0,6 s. Łańcuch `images.load()`/migracje — nie ruszony.
+- [x] 3.5 Markdown: tekst prosty bez `lazy` dla treści bez składni; `useMasonrySpans.place()` z `borderBoxSize`; nie remontować siatki przy przełączaniu widoków. ✅ tekst bez składni bez react-markdown (`needsMarkdown`, testy zgodności), mozaika z `borderBoxSize` i odczytami paczką (`485deec`, pomiary układu 378 → 73, CLS 0). Zachowanie siatki przy zmianie widoku — nie.
 - [ ] 3.6 Paczka: `fuse.js` dynamicznie, `study/content.ts` poza głównym chunkiem, konfetti i samouczek leniwie, preload fontu Jakarta; precache SW 3,4 MB → ≤1,5 MB (PDF, html2canvas, Statystyki do `runtimeCaching`). Kompromis: PDF/Statystyki offline dopiero po pierwszym użyciu.
 - [ ] 3.7 Budżety w CI (`e2e/bundle.spec.ts`): wejściowy JS ≤200 KB gzip (dziś ~376), DOM ≤3 000 przy 300 notatkach, FAB/kafel/widok ≤200 ms, klawisz ≤50/100 ms, precache ≤1,5 MB.
 
