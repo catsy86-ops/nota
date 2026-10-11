@@ -12,8 +12,10 @@ import { installGlobalDiagHandlers } from "./lib/diagnostics";
 import { startTabSync } from "./lib/tabSync";
 import { yjsStore } from "./lib/yjsStore";
 import { hideBootSplash } from "./lib/bootSplash";
+import { installKeyboardInset } from "./lib/keyboardInset";
 
 installGlobalDiagHandlers();
+installKeyboardInset();
 
 // Zmiany notatek i Grafiku od razu w innych kartach tej przeglądarki, także bez P2P.
 startTabSync(yjsStore.doc, "kaczy-yjs-v1", yjsStore.ready(), yjsStore.isPersistenceOrigin);
