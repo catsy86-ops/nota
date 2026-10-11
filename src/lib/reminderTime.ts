@@ -12,6 +12,19 @@ import { pl } from "date-fns/locale";
 export const DEFAULT_REMINDER_TIME = "09:00";
 
 /**
+ * Domyślna godzina nowego terminu na dany dzień: 09:00, a gdy dziś już minęła —
+ * najbliższa pełna godzina (do 23:00). Dzięki temu świeży dialog nie zaczyna od błędu „w przeszłości”.
+ */
+export function defaultReminderTimeFor(day: Date, now: Date = new Date()): string {
+  const sameDay = day.getFullYear() === now.getFullYear() && day.getMonth() === now.getMonth() && day.getDate() === now.getDate();
+  if (!sameDay) return DEFAULT_REMINDER_TIME;
+  const [h, m] = DEFAULT_REMINDER_TIME.split(":").map(Number);
+  if (now.getHours() * 60 + now.getMinutes() < h * 60 + m) return DEFAULT_REMINDER_TIME;
+  const next = Math.min(now.getHours() + 1, 23);
+  return `${String(next).padStart(2, "0")}:00`;
+}
+
+/**
  * Data + „HH:mm” → timestamp, albo `null` gdy godzina jest niepełna.
  *
  * `null` zamiast rzucania lub `NaN`: `<input type="time">` bywa pusty (da się

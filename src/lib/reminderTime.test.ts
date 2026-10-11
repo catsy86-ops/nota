@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { composeReminderTimestamp, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME, formatReminderShort } from "./reminderTime";
+import { composeReminderTimestamp, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME, formatReminderShort, defaultReminderTimeFor } from "./reminderTime";
 
 describe("composeReminderTimestamp", () => {
   it("skleja dzień z godziną, zerując sekundy", () => {
@@ -76,5 +76,21 @@ describe("formatReminderShort", () => {
     expect(formatReminderShort(new Date(2026, 8, 29, 8, 0).getTime(), now)).toBe("jutro, 08:00");
     expect(formatReminderShort(new Date(2026, 8, 27, 8, 0).getTime(), now)).toBe("wczoraj, 08:00");
     expect(formatReminderShort(new Date(2026, 9, 3, 19, 10).getTime(), now)).toBe("3 paź, 19:10");
+  });
+});
+
+describe("defaultReminderTimeFor", () => {
+  const now = new Date(2026, 9, 11, 14, 20);
+  it("inny dzień: 09:00", () => {
+    expect(defaultReminderTimeFor(new Date(2026, 9, 12), now)).toBe("09:00");
+  });
+  it("dziś przed 09:00: 09:00", () => {
+    expect(defaultReminderTimeFor(new Date(2026, 9, 11), new Date(2026, 9, 11, 7, 0))).toBe("09:00");
+  });
+  it("dziś po 09:00: najbliższa pełna godzina", () => {
+    expect(defaultReminderTimeFor(new Date(2026, 9, 11), now)).toBe("15:00");
+  });
+  it("późnym wieczorem nie wychodzi poza 23:00", () => {
+    expect(defaultReminderTimeFor(new Date(2026, 9, 11), new Date(2026, 9, 11, 23, 40))).toBe("23:00");
   });
 });

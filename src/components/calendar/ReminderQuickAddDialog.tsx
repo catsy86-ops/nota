@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Repeat, Trash2, StickyNote, Plus, Bell, SkipForward } from "lucide-react";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { searchNotes } from "@/lib/searchNotes";
 import { parseNaturalDate } from "@/lib/parseNaturalDate";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
-import { composeReminderTimestamp, isPastReminder, toTimeInputValue, formatReminderShort, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
+import { composeReminderTimestamp, isPastReminder, toTimeInputValue, formatReminderShort, defaultReminderTimeFor } from "@/lib/reminderTime";
 import { REMINDER_REPEAT_LABELS, type ReminderRepeat } from "@/lib/reminderRepeat";
 import type { Note } from "@/hooks/useNotes";
 import { cn } from "@/lib/utils";
@@ -63,12 +63,17 @@ export function ReminderQuickAddDialog({
   const editedNote = edit ? notes.find((n) => n.id === edit.noteId) : undefined;
 
   const [query, setQuery] = useState("");
-  const [time, setTime] = useState(() => (edit ? toTimeInputValue(edit.at) : DEFAULT_REMINDER_TIME));
+  const [time, setTime] = useState(() => (edit ? toTimeInputValue(edit.at) : defaultReminderTimeFor(day)));
   const [repeat, setRepeat] = useState<ReminderRepeat>(() => edit?.repeat ?? "none");
   // Dzień może przesunąć język naturalny („jutro”, „w piątek”) wpisany w pole.
   const [dayOverride, setDayOverride] = useState<Date | null>(null);
 
   const isEdit = !!edit;
+
+  // Dialog zostaje zamontowany: przy każdym otwarciu na nowy dzień godzina startowa liczy się od nowa.
+  useEffect(() => {
+    if (open && !edit) setTime(defaultReminderTimeFor(day));
+  }, [open, day, edit]);
 
   /**
    * Język naturalny bierzemy z **początku** wpisu: „jutro zadzwonić do Ani”
@@ -95,7 +100,7 @@ export function ReminderQuickAddDialog({
 
   const suggestions = useMemo(() => {
     if (isEdit) return [];
-    const pool = notes.filter((n) => !n.trashed);
+    const pool = notes.filter((n) => !n.trashed && !n.archived);
     const found = query.trim() ? searchNotes(pool, title || query) : pool;
     // Notatki bez terminu na górze — przypięcie do nich niczego nie nadpisze.
     return [...found]
@@ -105,7 +110,7 @@ export function ReminderQuickAddDialog({
 
   function reset() {
     setQuery("");
-    setTime(DEFAULT_REMINDER_TIME);
+    setTime(defaultReminderTimeFor(day));
     setRepeat("none");
     setDayOverride(null);
   }

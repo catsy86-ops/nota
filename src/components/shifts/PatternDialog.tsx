@@ -129,12 +129,12 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
           </div>
         </fieldset>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
+        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
+          <div className="min-w-0 space-y-1.5">
             <Label htmlFor="pattern-start">Od dnia</Label>
-            <Input id="pattern-start" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
+            <Input id="pattern-start" type="date" value={start} onChange={(e) => setStart(e.target.value)} className="min-w-0" />
           </div>
-          <div className="space-y-1.5">
+          <div className="min-w-0 space-y-1.5">
             <Label htmlFor="pattern-range">Na okres</Label>
             <select id="pattern-range" value={range} onChange={(e) => setRange(Number(e.target.value))}
               className="h-10 w-full rounded-md border border-input bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring">
@@ -165,7 +165,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
           <Input id="pattern-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="np. Mój system 12 h" />
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="sticky bottom-0 -mx-1 bg-background/95 px-1 pt-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
           <Button type="submit" disabled={!valid}>Nałóż cykl</Button>
         </DialogFooter>
       </form>
