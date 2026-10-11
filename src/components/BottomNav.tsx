@@ -1,6 +1,6 @@
 import { forwardRef, useRef, useState } from "react";
 import { motion, LayoutGroup } from "framer-motion";
-import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History, CalendarRange, BriefcaseBusiness, GraduationCap, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool } from "lucide-react";
+import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History, CalendarRange, BriefcaseBusiness, GraduationCap, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
 import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
 import type { ComposerAction } from "@/components/AddNoteBar";
@@ -72,6 +72,13 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
   // Każde dotknięcie „+” obraca ikonę o ćwierć obrotu — cichy znak, że edytor się otwiera.
   const [quarterTurns, setQuarterTurns] = useState(0);
   const { reduced } = useMotionPref();
+  // Wyszukiwarka jest u góry, poza zasięgiem kciuka: ponowne stuknięcie „Notatki” przewija na górę
+  // i ustawia w niej kursor (synchronicznie w geście — iOS otworzy wtedy klawiaturę).
+  const focusSearch = () => {
+    window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+    const input = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="search"]')).find((el) => el.offsetParent !== null);
+    input?.focus({ preventScroll: true });
+  };
   const isMoreActive = ["archive", "trash", "calendar", "shifts", "study", "folder", "label"].includes(view);
 
   return (
@@ -85,7 +92,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
         <LayoutGroup id="bottom-nav">
           <ul className="relative grid grid-cols-5 items-end h-[64px] max-w-md mx-auto px-2">
             {slots.map(({ key, label, Icon }) => (
-              <NavItem key={key} active={view === key} label={label} onClick={() => onGo(key)}>
+              <NavItem key={key} active={view === key} label={label} onClick={() => (key === "notes" && view === "notes" ? focusSearch() : onGo(key))}>
                 <Icon className="w-5 h-5" />
               </NavItem>
             ))}
@@ -154,8 +161,10 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
           <SheetHeader className="text-left">
             <SheetTitle className="font-display">Więcej</SheetTitle>
           </SheetHeader>
-          <SheetGroup title="Dodaj">
+          <SheetGroup title="Szybko">
             <SheetTile Icon={Plus} label="Dodaj…" onClick={() => { setMoreOpen(false); setQuickOpen(true); }} />
+            {/* Po zamknięciu arkusza fokus wraca na „Więcej” — kursor w wyszukiwarce dopiero po tym. */}
+            <SheetTile Icon={Search} label="Szukaj" onClick={() => { setMoreOpen(false); onGo("notes"); window.setTimeout(focusSearch, 400); }} />
           </SheetGroup>
           <SheetGroup title="Przejdź do">
             <SheetTile Icon={Archive} label="Archiwum" active={view === "archive"} onClick={() => { onGo("archive"); setMoreOpen(false); }} />

@@ -150,6 +150,19 @@ test("arkusz „Więcej” zamyka się przeciągnięciem uchwytu w dół, krótk
   await expect(sheet).toBeHidden();
 });
 
+test("ponowne stuknięcie „Notatki” i „Więcej → Szukaj” ustawiają kursor w wyszukiwarce", async ({ page }) => {
+  const nav = page.getByRole("navigation");
+  await nav.getByRole("button", { name: "Notatki" }).click();
+  await expect(page.getByRole("searchbox", { name: "Szukaj w notatkach" })).toBeFocused();
+
+  await page.getByRole("searchbox", { name: "Szukaj w notatkach" }).blur();
+  await nav.getByRole("button", { name: "Dziś" }).click();
+  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("dialog", { name: "Więcej" }).getByRole("button", { name: "Szukaj" }).click();
+  await expect(page).not.toHaveURL(/\/dzis$/);
+  await expect(page.getByRole("searchbox", { name: "Szukaj w notatkach" })).toBeFocused();
+});
+
 test.describe("telefon w poziomie", () => {
   test.use({ viewport: { width: 844, height: 390 }, isMobile: true, hasTouch: true });
 
