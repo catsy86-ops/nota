@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback, useMemo, forwardRef, useImper
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDictation } from "@/hooks/useDictation";
+import { useSlashMenu } from "@/hooks/useSlashMenu";
 import { Plus, Tag, Bell, Mic, ImagePlus, Paperclip, X, PenTool, ListChecks, Palette, Folder, Flag, Hash } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { ColorPicker, colorClasses } from "./ColorPicker";
@@ -176,8 +177,12 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
     setReminderTime(toTimeInputValue(parsed.getTime()));
   }
 
+  const slash = useSlashMenu({ textareaRef, value: content });
+
   /** Ctrl+Shift+L: zaznaczone linie (albo bieżąca) przechodzą na listę zadań. */
   function handleContentKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    // Menu „/” przejmuje strzałki, Enter, Tab i Esc, dopóki jest otwarte.
+    if (slash.isOpen && !e.ctrlKey && !e.metaKey && !e.altKey) { slash.onKeyDown(e); return; }
     // Ctrl+B/I/K, Ctrl+Enter (zapis), listy, Tab, Alt+↑/↓ — zob. editorKeys.ts.
     if (!isChecklistShortcut(e)) { handleEditorKey(e, { onSave: handleClose }); return; }
     e.preventDefault();
@@ -275,8 +280,11 @@ export const AddNoteBar = forwardRef<{ expand: () => void }, AddNoteBarProps>(fu
               const sel = content.slice(s, e2);
               setContent(content.slice(0, s) + before + sel + after + content.slice(e2));
             }} />
-            <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} onPaste={handleContentPaste} onKeyDown={handleContentKeyDown} placeholder="Treść notatki..." rows={3}
-              className="w-full max-sm:min-h-[35dvh] bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none" />
+            <div className="relative">
+              <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} onPaste={handleContentPaste} onSelect={slash.refresh} onKeyDown={handleContentKeyDown} placeholder="Treść notatki..." rows={3}
+                className="w-full max-sm:min-h-[35dvh] bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none" />
+              {slash.popup()}
+            </div>
             {content.length > 0 && <EditorStats textareaRef={textareaRef} value={content} className="block text-2xs text-muted-foreground" />}
 
             {capture.length > 0 && (

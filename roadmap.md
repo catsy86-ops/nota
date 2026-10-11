@@ -672,3 +672,12 @@ Scalone do master (519 testów jednostkowych, 103 e2e).
 - [x] Dostępność: kafel `role="article"` z nazwą, `alt` obrazów, ogłaszanie liczby wyników, `QuickAdd` (cele dotykowe, „zastąpi termin”).
 - **Nie zweryfikowane:** pełny `npm run test:e2e` po ostatnim commicie (`9b400a8`) — przebieg został przerwany przez system (brak pamięci). Uruchomić lokalnie przed dalszą pracą.
 - **Zostaje:** wyróżnianie trafień w kaflach (#17), nawigacja ←/→ między notatkami w czytniku, Android push (decyzja Capacitor vs Web Push), react-router 7, CSP w trybie egzekwowania, walidacja metadanych skarbca, a11y: radiogroup w ShiftTypeDialog, Szczegóły QuickAdd.
+
+## Funkcje w stylu Notiona — 2026-10-11
+
+Plan wdrożenia po kolei (każdy krok osobno, z testami i commitem):
+
+- [x] **1. Menu „/” w edytorze** — `lib/slashMenu.ts`, `hooks/useSlashMenu.tsx`, podpięte w `NoteCard.tsx` i `AddNoteBar.tsx`; e2e `e2e/slash-menu.spec.ts`. Callout i blok zwijany odłożone (wymagają zmian w `MarkdownRendererImpl.tsx`).
+- [ ] **2. Ikony, okładki, ulubione** — pola opcjonalne `icon`, `cover`, `favorite` w `Note`: `hooks/useNotes.ts`, `lib/noteSchema.ts`, `NOTE_SCALAR_FIELDS` + `yNoteFromPlain` + `plainFromYNote` w `lib/yjsStore.ts` (okładka do `PRIVATE_FIELDS`); sekcja „Ulubione” w `AppSidebar.tsx` (`SidebarRow`).
+- [ ] **3. Widok tablicy i tabeli** — `board`/`table` w `Layout` (`lib/viewPrefs.ts`), kolumny z `groupNotes` (`lib/groupNotes.ts`), przeciąganie w `hooks/useNoteDnd.ts`, przełącznik w `ViewControls.tsx`.
+- [ ] **4. Podstrony i właściwości** — `parentId` (ochrona przed cyklami, osieroceni rodzice na root, kaskada kosza, okruszki), właściwości jako `Y.Map` na klucz, schemat właściwości w `FullBackup`.

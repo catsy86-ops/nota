@@ -46,6 +46,7 @@ import { useLatch } from "@/hooks/useLatch";
 import { useDraftAutosave } from "@/hooks/useDraftAutosave";
 import { useLiveNoteText } from "@/hooks/useLiveNoteText";
 import { useWikiAutocomplete } from "@/hooks/useWikiAutocomplete";
+import { useSlashMenu } from "@/hooks/useSlashMenu";
 import { backlinksOf } from "@/lib/wikiLinks";
 import { toast } from "sonner";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
@@ -102,6 +103,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
       setFindOpen(true);
       return;
     }
+    // Menu „/” przejmuje strzałki, Enter, Tab i Esc, dopóki jest otwarte.
+    if (slash.isOpen && !e.ctrlKey && !e.metaKey && !e.altKey) { slash.onKeyDown(e); return; }
     // Otwarta lista `[[` ma pierwszeństwo dla Enter/Tab/strzałek/Esc; Ctrl/Alt jej nie dotyczą.
     if (wiki.isOpen && !e.ctrlKey && !e.metaKey && !e.altKey) { wiki.textareaProps.onKeyDown(e); return; }
     if (handleEditorKey(e, { onSave: handleSave })) return;
@@ -169,6 +172,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
     titles: wikiIndex?.titles ?? NO_TITLES,
     exclude: editTitle,
   });
+  const slash = useSlashMenu({ textareaRef, value: editContent, disabled: wiki.isOpen });
+  function handleEditSelect() { wiki.textareaProps.onSelect(); slash.refresh(); }
   const backlinks = prefs.showBacklinks && wikiIndex ? backlinksOf(note, wikiIndex) : [];
 
   // Sesję zamykamy po zapisie przy odmontowaniu — cleanupy efektów idą
@@ -374,15 +379,15 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         <div className={cn("relative", contentFills && "flex-1 min-h-0")}>
           {showPreview ? (
             <div className={cn("grid grid-cols-2 gap-2", contentFills && "h-full")}>
-              <textarea spellCheck={prefs.spellcheck} ref={textareaRef} value={editContent} onChange={(e) => setEditContent(e.target.value)} {...wiki.textareaProps} onKeyDown={handleEditKeyDown} onPaste={handleEditPaste} className={cn(textareaCls, "border border-border/30 rounded-lg p-2", !contentFills && "min-h-[80px]")} placeholder="Treść notatki..." />
+              <textarea spellCheck={prefs.spellcheck} ref={textareaRef} value={editContent} onChange={(e) => setEditContent(e.target.value)} {...wiki.textareaProps} onSelect={handleEditSelect} onKeyDown={handleEditKeyDown} onPaste={handleEditPaste} className={cn(textareaCls, "border border-border/30 rounded-lg p-2", !contentFills && "min-h-[80px]")} placeholder="Treść notatki..." />
               <div className={cn("bg-muted/20 rounded-lg p-2 overflow-y-auto border border-border/30", contentFills ? "h-full" : "min-h-[80px]")}>
                 {editContent ? <MarkdownRenderer content={editContent} knownTitles={knownTitles} onWikiClick={onWikiClick} /> : <p className="text-xs text-muted-foreground italic">Podgląd...</p>}
               </div>
             </div>
           ) : (
-            <textarea spellCheck={prefs.spellcheck} ref={textareaRef} value={editContent} onChange={(e) => setEditContent(e.target.value)} {...wiki.textareaProps} onKeyDown={handleEditKeyDown} onPaste={handleEditPaste} className={cn(textareaCls, !full && "min-h-[60px]")} placeholder="Treść notatki..." />
+            <textarea spellCheck={prefs.spellcheck} ref={textareaRef} value={editContent} onChange={(e) => setEditContent(e.target.value)} {...wiki.textareaProps} onSelect={handleEditSelect} onKeyDown={handleEditKeyDown} onPaste={handleEditPaste} className={cn(textareaCls, !full && "min-h-[60px]")} placeholder="Treść notatki..." />
           )}
-          {wiki.popup()}
+          {wiki.popup()}{slash.popup()}
         </div>
 
         {/* Checklist toggle + konwersja tekst ↔ lista */}
@@ -747,7 +752,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           // Telefon: od krawędzi do krawędzi, bez prześwitu nawigacji; od `sm` okno.
           className="w-full max-w-3xl h-[100dvh] rounded-none border-0 p-4 pt-[max(1rem,env(safe-area-inset-top))] flex flex-col sm:w-[calc(100vw-2rem)] sm:h-[85vh] sm:rounded-2xl sm:border sm:p-6"
           // Esc przy otwartych podpowiedziach `[[` chowa listę, nie zamyka edytora.
-          onEscapeKeyDown={(e) => { if (wiki.isOpen) { e.preventDefault(); wiki.dismiss(); } }}
+          onEscapeKeyDown={(e) => { if (slash.isOpen) { e.preventDefault(); slash.dismiss(); } else if (wiki.isOpen) { e.preventDefault(); wiki.dismiss(); } }}
         >
           <DialogTitle className="sr-only">Edycja notatki</DialogTitle>
           {isEditing && fullEditor && renderEditor(true)}
