@@ -66,6 +66,10 @@ export interface Note {
   favorite?: boolean;
   /** Blokada edycji: kafel nie wchodzi w tryb edycji, dopóki nie zostanie odblokowany. */
   readOnly?: boolean;
+  /** Kafel rozciągnięty na dwie kolumny siatki (od `sm`). */
+  wide?: boolean;
+  /** Większy tekst w treści kafla. */
+  largeText?: boolean;
   /** Klucze SHA-256 w `imageStore` (manifest `imageHashes` w Y.Doc). Bajty poza dokumentem — patrz `lib/imageStore.ts`. */
   images: string[];
   /** Pliki inne niż obrazy: manifest `attachments` w Y.Doc, bajty w `imageStore` — patrz `lib/attachments.ts`. Brak = bez załączników. */

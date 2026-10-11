@@ -184,6 +184,7 @@ const GridItem = memo(forwardRef<HTMLDivElement, SortableNoteCardProps & { rowGa
       onClickCapture={() => setGridNavFocus(note.id)}
       className={cn(
         "note-lift rounded-xl transition-shadow",
+        note.wide && layout !== "list" && "sm:col-span-2",
         wideEditing && "sm:has-[[data-tile-editing]]:col-span-2",
         // Odstęp pionowy mozaiki jako margines opakowania — `useMasonrySpans` wlicza go w wysokość.
         layout === "masonry" ? rowGap : layout === "grid" ? "h-full" : "",

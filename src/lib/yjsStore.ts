@@ -55,7 +55,7 @@ function imageRefs(images: string[]): string[] {
 const NOTE_SCALAR_FIELDS = [
   "title", "color", "pinned", "archived", "trashed", "trashedAt",
   "labels", "reminder", "reminderRepeat", "reminderDay", "reminderRepeatUntil", "priority", "dailyDate",
-  "icon", "cover", "favorite", "readOnly", "folderId", "order", "createdAt", "updatedAt",
+  "icon", "cover", "favorite", "readOnly", "wide", "largeText", "folderId", "order", "createdAt", "updatedAt",
 ] as const;
 
 const FOLDER_SCALAR_FIELDS = [
@@ -209,6 +209,8 @@ function yNoteFromPlain(note: Note): YNote {
   if (note.cover) y.set("cover", note.cover);
   if (note.favorite) y.set("favorite", true);
   if (note.readOnly) y.set("readOnly", true);
+  if (note.wide) y.set("wide", true);
+  if (note.largeText) y.set("largeText", true);
   y.set("checklist", yChecklistFromPlain(locked ? [] : note.checklist));
   y.set("folderId", note.folderId);
   y.set("order", note.order);
@@ -236,6 +238,8 @@ function plainFromYNote(id: string, y: YNote): Note {
     ...(cover ? { cover } : {}),
     ...(y.get("favorite") === true ? { favorite: true as const } : {}),
     ...(y.get("readOnly") === true ? { readOnly: true as const } : {}),
+    ...(y.get("wide") === true ? { wide: true as const } : {}),
+    ...(y.get("largeText") === true ? { largeText: true as const } : {}),
     id,
     color: safeEnum(y.get("color"), NOTE_COLORS, "default"),
     pinned: safeBool(y.get("pinned")),

@@ -5,7 +5,7 @@ import { tween, dur, ease } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { cascadeDelay, cardExit, markPinned, hasRecentPin, consumePin, type CardExitIntent } from "@/lib/cardMotion";
 import { Check } from "lucide-react";
-import { Star, Pin, Trash2, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, MoreHorizontal, Maximize2, Minimize2, Expand, Link2, Lock, LockOpen } from "lucide-react";
+import { Star, Pin, Trash2, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, MoreHorizontal, MoveHorizontal, ZoomIn, Maximize2, Minimize2, Expand, Link2, Lock, LockOpen } from "lucide-react";
 import { ColorPicker, colorClasses } from "./ColorPicker";
 import { LabelPicker, LabelBadges } from "./LabelPicker";
 import { ReminderPicker, ReminderBadge } from "./ReminderPicker";
@@ -555,7 +555,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         )}
 
         <div
-          className={cn("cursor-pointer", isEditing && !fullEditor ? "p-4" : "card-body px-3 pt-2.5 pb-2 text-[0.8125rem] sm:text-sm leading-snug")}
+          className={cn("cursor-pointer", isEditing && !fullEditor ? "p-4" : "card-body px-3 pt-2.5 pb-2 leading-snug", note.largeText ? "text-base" : "text-[0.8125rem] sm:text-sm")}
           onClick={(e) => {
             if (swiping || Math.abs(swipeX.get()) > 4) return;
             if (selectionMode && onToggleSelect) { onToggleSelect(note.id, e.shiftKey); return; }
@@ -728,6 +728,24 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                     onClick={() => { haptic("tap"); onUpdate?.(note.id, { favorite: note.favorite ? undefined : true }); }}
                     title={note.favorite ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
                     className={cn(note.favorite && "text-primary")}
+                  />
+                )}
+                {!isArchived && (
+                  <ActionBtn
+                    icon={<MoveHorizontal className="w-4 h-4" />}
+                    onClick={() => { haptic("tap"); onUpdate?.(note.id, { wide: note.wide ? undefined : true }); }}
+                    title={note.wide ? "Zwiń do jednej kolumny" : "Rozciągnij na dwie kolumny"}
+                    aria-pressed={!!note.wide}
+                    className={cn(note.wide && "text-primary")}
+                  />
+                )}
+                {!isArchived && (
+                  <ActionBtn
+                    icon={<ZoomIn className="w-4 h-4" />}
+                    onClick={() => { haptic("tap"); onUpdate?.(note.id, { largeText: note.largeText ? undefined : true }); }}
+                    title={note.largeText ? "Zwykły rozmiar tekstu" : "Większy tekst"}
+                    aria-pressed={!!note.largeText}
+                    className={cn(note.largeText && "text-primary")}
                   />
                 )}
                 {!isArchived && (
