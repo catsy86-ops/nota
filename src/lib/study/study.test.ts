@@ -4,7 +4,7 @@ import { buildRound, missedTopics, scoreRound } from "./quiz";
 import { topicToNote } from "./toNote";
 import { journalImageRefs } from "./images";
 import {
-  sanitizeStudy, moveTopic, recordRound, toggleChecked, getStudy, columnOf, resetChecklist,
+  sanitizeStudy, moveTopic, recordRound, activeStreak, toggleChecked, getStudy, columnOf, resetChecklist,
   addJournalEntry, removeJournalEntry, restoreJournalEntry, setSite, practiceByTopic,
 } from "./store";
 
@@ -59,10 +59,12 @@ describe("store", () => {
   beforeEach(() => { localStorage.clear(); });
 
   it("sanitizeStudy odrzuca nieznane tematy i złe wartości", () => {
-    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "" };
+    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", streak: 0, lastDay: null };
     expect(sanitizeStudy(d, "śmieci")).toEqual(d);
     const s = sanitizeStudy(d, { board: { spadki: "done", obcy: "done", system: "x" }, checked: { "dok-1": true, a: 1 }, bestPercent: 140, rounds: -2, missed: { "q-pion": true, obce: true } });
-    expect(s).toEqual({ board: { spadki: "done" }, checked: { "dok-1": true }, bestPercent: null, rounds: 0, missed: { "q-pion": true }, journal: [], site: "" });
+    expect(s).toEqual({ board: { spadki: "done" }, checked: { "dok-1": true }, bestPercent: null, rounds: 0, missed: { "q-pion": true }, journal: [], site: "", streak: 0, lastDay: null });
+    expect(sanitizeStudy(d, { streak: 4, lastDay: "2026-10-11" })).toMatchObject({ streak: 4, lastDay: "2026-10-11" });
+    expect(sanitizeStudy(d, { streak: 4, lastDay: "wczoraj" })).toMatchObject({ streak: 0, lastDay: null });
   });
 
   it("przenosi tematy, odhacza punkty i resetuje listę", () => {
@@ -96,6 +98,16 @@ describe("store", () => {
     expect(getStudy().missed).toEqual({ "q-spadek": true });
     recordRound(1, 1, [], [{ id: "q-spadek", ok: true }]);
     expect(getStudy().missed).toEqual({});
+  });
+
+  it("recordRound liczy serię dni: dzień po dniu rośnie, ten sam dzień nie, przerwa zeruje", () => {
+    expect(recordRound(1, 1, [], [], "2026-10-30")).toMatchObject({ streak: 1, streakGrew: true });
+    expect(recordRound(1, 1, [], [], "2026-10-30")).toMatchObject({ streak: 1, streakGrew: false });
+    expect(recordRound(1, 1, [], [], "2026-10-31")).toMatchObject({ streak: 2, streakGrew: true });
+    expect(recordRound(1, 1, [], [], "2026-11-01")).toMatchObject({ streak: 3, streakGrew: true });
+    expect(activeStreak(getStudy(), "2026-11-02")).toBe(3);
+    expect(activeStreak(getStudy(), "2026-11-03")).toBe(0);
+    expect(recordRound(1, 1, [], [], "2026-11-03")).toMatchObject({ streak: 1, streakGrew: true });
   });
 });
 
@@ -171,7 +183,7 @@ describe("dziennik z budowy", () => {
   });
 
   it("sanitizeStudy odfiltrowuje uszkodzone wpisy i przycina tekst", () => {
-    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "" };
+    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", streak: 0, lastDay: null };
     const s = sanitizeStudy(d, {
       site: "x".repeat(500),
       journal: [

@@ -30,7 +30,7 @@ export const EFFECT_LABELS: Record<EffectKey, { label: string; description: stri
   badgeStamp: { label: "Pieczątka odznaki", description: "Pieczątka z błyskiem po zdobyciu odznaki", emoji: "🏅" },
   doneReward: { label: "Dzień zamknięty", description: "Drobna nagroda, gdy zrobisz wszystkie zadania na dziś", emoji: "✅" },
   themeFade: { label: "Płynna zmiana motywu", description: "Łagodne przejście jasny/ciemny", emoji: "🌓" },
-  haptics: { label: "Wibracje na telefonie", description: "Krótkie drgnięcie przy przypięciu, odhaczeniu i zapisie", emoji: "📳" },
+  haptics: { label: "Wibracje na telefonie", description: "Krótkie drgnięcie przy przypięciu, odhaczeniu, przeciąganiu i zapisie", emoji: "📳" },
 };
 
 export type EffectsSettings = Record<EffectKey, boolean>;

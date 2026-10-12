@@ -1,12 +1,14 @@
 import { isEffectEnabled } from "@/lib/effectsSettings";
 import { isMotionReduced } from "@/hooks/useMotionPref";
 
-export type HapticKind = "tap" | "success" | "warn";
+/** tap — zwykła akcja, success — coś się udało, warn — utrata/błąd, selection — wybór lub chwyt. */
+export type HapticKind = "tap" | "success" | "warn" | "selection";
 
 const PATTERNS: Record<HapticKind, number | number[]> = {
   tap: 8,
   success: [10, 45, 16],
   warn: [28, 50, 28],
+  selection: 4,
 };
 
 /**

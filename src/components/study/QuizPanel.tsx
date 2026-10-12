@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { QUESTIONS, TOPICS } from "@/lib/study/content";
 import { buildRound, missedTopics, scoreRound, type RoundQuestion } from "@/lib/study/quiz";
-import { columnOf, recordRound, useStudy } from "@/lib/study/store";
+import { activeStreak, columnOf, recordRound, useStudy } from "@/lib/study/store";
+import { haptic } from "@/lib/haptics";
 
 const ROUND_SIZE = 10;
 const LETTERS = ["A", "B", "C", "D"];
 const topicTitle = (id: string) => TOPICS.find((t) => t.id === id)?.title ?? id;
+const streakLabel = (n: number) => `${n} ${n === 1 ? "dzień" : "dni"}`;
 
 /** Z czego składa się runda: wszystko, jeden temat albo pytania, które ostatnio poszły źle. */
 export type QuizScope = { kind: "all" } | { kind: "topic"; topic: string } | { kind: "missed" };
@@ -20,7 +22,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
   const [round, setRound] = useState<RoundQuestion[] | null>(null);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [index, setIndex] = useState(0);
-  const [result, setResult] = useState<{ correct: number; missed: string[]; demoted: string[] } | null>(null);
+  const [result, setResult] = useState<{ correct: number; missed: string[]; demoted: string[]; streak: number; streakGrew: boolean } | null>(null);
 
   const weak = useMemo(
     () => new Set(TOPICS.filter((t) => columnOf(study, t.id) !== "done").map((t) => t.id)),
@@ -51,6 +53,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
 
   const answer = useCallback((choice: number) => {
     if (!round || answers[index] !== null) return;
+    haptic(choice === round[index].correct ? "success" : "warn");
     setAnswers((prev) => prev.map((a, i) => (i === index ? choice : a)));
   }, [round, answers, index]);
 
@@ -59,8 +62,9 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
     if (index < round.length - 1) { setIndex(index + 1); return; }
     const correct = scoreRound(round, answers);
     const missed = missedTopics(round, answers);
-    const { demoted } = recordRound(correct, round.length, missed, round.map((q, i) => ({ id: q.id, ok: answers[i] === q.correct })));
-    setResult({ correct, missed, demoted });
+    const { demoted, streak, streakGrew } = recordRound(correct, round.length, missed, round.map((q, i) => ({ id: q.id, ok: answers[i] === q.correct })));
+    setResult({ correct, missed, demoted, streak, streakGrew });
+    if (streakGrew && streak > 1) haptic("success");
     if (demoted.length) toast(`Wróciło do nauki: ${demoted.map(topicTitle).join(", ")}`);
   }, [round, index, answers]);
 
@@ -90,6 +94,12 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
             {percent === 100 ? "Bezbłędnie." : percent >= 70 ? "Dobrze — zostało kilka tematów do powtórki." : "Warto wrócić do listy i tablicy."}
           </p>
         </div>
+        {result.streak > 1 && (
+          <p className="text-sm">
+            <span className="font-medium tabular-nums">{result.streakGrew ? `${result.streak}. dzień z rzędu` : `Seria: ${streakLabel(result.streak)}`}</span>
+            <span className="text-muted-foreground">{result.streakGrew ? " — seria trwa." : " — dzisiejsza runda już się liczy."}</span>
+          </p>
+        )}
         {result.missed.length > 0 ? (
           <div>
             <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">Do powtórki</h3>
@@ -132,7 +142,10 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
             </Button>
           )}
           {study.bestPercent !== null && (
-            <p className="text-xs text-muted-foreground">Najlepszy wynik: {study.bestPercent}% · rund: {study.rounds}</p>
+            <p className="text-xs text-muted-foreground tabular-nums">
+              Najlepszy wynik: {study.bestPercent}% · rund: {study.rounds}
+              {activeStreak(study) > 1 && <> · seria: {streakLabel(activeStreak(study))}</>}
+            </p>
           )}
         </div>
       </section>

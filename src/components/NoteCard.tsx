@@ -207,7 +207,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
 
   function handleChecklistToggle(itemId: string) {
     const updated = (note.checklist || []).map((i) => (i.id === itemId ? { ...i, checked: !i.checked } : i));
-    haptic("tap");
+    haptic(updated.every((i) => i.checked) ? "success" : "selection");
     onUpdate?.(note.id, { checklist: updated });
   }
 
@@ -341,7 +341,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
     longPressTimer.current = window.setTimeout(() => {
       longPressed.current = true;
       longPressStart.current = null;
-      haptic("tap");
+      haptic("selection");
       onToggleSelect(note.id, false);
     }, 450);
   }

@@ -887,7 +887,7 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 
 ### Faza 4 — „premium” (po fazie 2)
 - [ ] 4.1 Swipe: w prawo przypnij, w lewo archiwizuj (kosz w arkuszu akcji), podpowiedź przy pierwszych 3 razach.
-- [ ] 4.2 Haptyka różnicowana (tap / success / warn / selection) + odhaczenie w kaflu, upuszczenie przeciągniętego kafla, wejście w zaznaczanie; quiz Nauki z haptyką i serią dni.
+- [x] 4.2 Haptyka różnicowana (tap / success / warn / selection) + odhaczenie w kaflu, upuszczenie przeciągniętego kafla, wejście w zaznaczanie; quiz Nauki z haptyką i serią dni.
 - [ ] 4.3 Przejście kafel → edytor jako shared element (dziś skok), nagłówek z cieniem dopiero po przewinięciu, zakładka koloru w nagłówku edytora.
 - [ ] 4.4 Skróty PWA „Szukaj”, „Nowa lista”; Share Target dla pliku/obrazu (po decyzji).
 - [ ] 4.5 Nauka: nagłówek bez powtórki „Nauka”, etykiety przy 18 pigułkach, podpisy przycisków kart, cyfry tabelaryczne zamiast „1” jak „l”.

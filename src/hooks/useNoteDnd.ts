@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
 import type { Folder } from "@/hooks/useNotes";
 import { glowStreak, glowPulse, pointOfNote } from "@/lib/glowTrail";
 import { getViewPrefs, setViewPref } from "@/lib/viewPrefs";
 import { toastWithUndo } from "@/lib/undoToast";
 import { columnKeyFromDropId } from "@/lib/boardColumns";
+import { haptic } from "@/lib/haptics";
 
 export interface NoteDndDeps {
   displayNoteIds: string[];
@@ -67,6 +68,7 @@ export function useNoteDnd({ displayNoteIds, folders, moveNoteToFolder, reorderN
     const ids = selectedIds && selectedIds.size > 1 && selectedIds.has(activeId) ? [...selectedIds] : [activeId];
     const moveTo = (folderId: string | null, message: string) => {
       trail();
+      haptic("success");
       const prev = ids.map((id) => [id, folderOf?.(id) ?? null] as const);
       ids.forEach((id) => moveNoteToFolder(id, folderId));
       if (ids.length > 1) clearSelection?.();
@@ -80,6 +82,7 @@ export function useNoteDnd({ displayNoteIds, folders, moveNoteToFolder, reorderN
       const source = board.columnOf(activeId);
       if (target !== undefined && source !== undefined && target !== source) {
         trail();
+        haptic("success");
         board.onMove(ids, target);
         if (ids.length > 1) clearSelection?.();
         return;
@@ -108,6 +111,7 @@ export function useNoteDnd({ displayNoteIds, folders, moveNoteToFolder, reorderN
         newIds.splice(oldIndex, 1);
         newIds.splice(newIndex, 0, active.id as string);
         reorderNotes(newIds);
+        haptic("success");
         if (getViewPrefs().sortKey !== "manual") {
           setViewPref("sortKey", "manual");
           toast.message("Przełączono na sortowanie ręczne", { description: "Kolejność notatek ustalasz teraz przeciąganiem." });
@@ -116,5 +120,10 @@ export function useNoteDnd({ displayNoteIds, folders, moveNoteToFolder, reorderN
     }
   }
 
-  return { sensors, draggingNoteId, setDraggingNoteId, handleDragEnd };
+  function handleDragStart(event: DragStartEvent) {
+    haptic("selection");
+    setDraggingNoteId(event.active.id as string);
+  }
+
+  return { sensors, draggingNoteId, setDraggingNoteId, handleDragStart, handleDragEnd };
 }

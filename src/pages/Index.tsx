@@ -585,7 +585,7 @@ const Index = () => {
     }
   }, [selectedIds, view, bulkRestore, bulkTrash, bulkArchive, unarchiveNote, clearSelection]);
 
-  const { sensors, setDraggingNoteId, handleDragEnd } = useNoteDnd({
+  const { sensors, setDraggingNoteId, handleDragStart, handleDragEnd } = useNoteDnd({
     displayNoteIds: displayNotes.map((n) => n.id),
     folders,
     moveNoteToFolder: handleMoveToFolderGlow,
@@ -701,7 +701,7 @@ const Index = () => {
   ];
 
   return (
-    <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={(e) => setDraggingNoteId(e.active.id as string)} onDragEnd={handleDragEnd} onDragCancel={() => setDraggingNoteId(null)}>
+    <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={() => setDraggingNoteId(null)}>
     <PaperBackdrop />
     <div className="min-h-screen flex relative">
       <AppSidebar

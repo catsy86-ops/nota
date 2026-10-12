@@ -64,7 +64,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
   function toggleItem(id: string) {
     const next = items.map((i) => (i.id === id ? { ...i, checked: !i.checked } : i));
     setJustChecked(next.find((i) => i.id === id)?.checked ? id : null);
-    haptic("tap");
+    haptic(next.every((i) => i.checked) && items.some((i) => !i.checked) ? "success" : "selection");
     onChange(next);
     if (next.length > 0 && next.every((i) => i.checked) && items.some((i) => !i.checked)) {
       emojiShower(["🎉", "✅", "✨", "🥳"]);

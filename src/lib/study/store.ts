@@ -2,6 +2,8 @@ import { createPersistedStore } from "@/lib/persistedStore";
 import { isImageRef } from "@/lib/imageStore";
 import { CHECKLIST, QUESTIONS, TOPICS } from "./content";
 import { STUDY_STORAGE_KEY } from "./images";
+import { localDayKey } from "@/lib/dayDone";
+import { addDaysToKey } from "@/lib/week";
 
 export type Column = "todo" | "doing" | "done";
 export const COLUMNS: Column[] = ["todo", "doing", "done"];
@@ -47,9 +49,13 @@ export interface StudyState {
   journal: JournalEntry[];
   /** Bieżąca inwestycja — podpowiada się przy kolejnych wpisach. */
   site: string;
+  /** Seria kolejnych dni z co najmniej jedną rundą quizu (stan na `lastDay`). */
+  streak: number;
+  /** Dzień ostatniej rundy („2026-10-12”) albo `null`. */
+  lastDay: string | null;
 }
 
-const DEFAULTS: StudyState = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "" };
+const DEFAULTS: StudyState = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", streak: 0, lastDay: null };
 
 const isColumn = (v: unknown): v is Column => v === "todo" || v === "doing" || v === "done";
 
@@ -94,7 +100,9 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
   }
   journal.sort((a, b) => a.at - b.at);
   const site = typeof s.site === "string" ? s.site.slice(0, SITE_MAX) : "";
-  return { board, checked, bestPercent: best, rounds, missed, journal: journal.slice(-JOURNAL_MAX_ENTRIES), site };
+  const lastDay = typeof s.lastDay === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s.lastDay) ? s.lastDay : null;
+  const streak = lastDay && typeof s.streak === "number" && s.streak >= 1 ? Math.floor(s.streak) : 0;
+  return { board, checked, bestPercent: best, rounds, missed, journal: journal.slice(-JOURNAL_MAX_ENTRIES), site, streak, lastDay };
 }
 
 const store = createPersistedStore<StudyState>(STUDY_STORAGE_KEY, DEFAULTS, {
@@ -103,6 +111,12 @@ const store = createPersistedStore<StudyState>(STUDY_STORAGE_KEY, DEFAULTS, {
 
 export const useStudy = () => store.use();
 export const getStudy = () => store.get();
+
+/** Seria, która jeszcze trwa: ostatnia runda dziś albo wczoraj; starsza już przepadła. */
+export function activeStreak(state: Pick<StudyState, "streak" | "lastDay">, today = localDayKey()): number {
+  if (!state.lastDay) return 0;
+  return state.lastDay === today || state.lastDay === addDaysToKey(today, -1) ? state.streak : 0;
+}
 
 export function columnOf(state: StudyState, topicId: string): Column {
   return state.board[topicId] ?? "todo";
@@ -135,7 +149,8 @@ export function recordRound(
   total: number,
   missed: string[],
   results: { id: string; ok: boolean }[] = [],
-): { demoted: string[] } {
+  today = localDayKey(),
+): { demoted: string[]; streak: number; streakGrew: boolean } {
   const s = store.get();
   const percent = total > 0 ? Math.round((correct / total) * 100) : 0;
   const board = { ...s.board };
@@ -147,14 +162,18 @@ export function recordRound(
   for (const r of results) {
     if (r.ok) delete missedQuestions[r.id]; else missedQuestions[r.id] = true;
   }
+  const streakGrew = s.lastDay !== today;
+  const streak = streakGrew ? activeStreak(s, today) + 1 : s.streak;
   store.set({
     ...s,
     board,
     missed: missedQuestions,
+    streak,
+    lastDay: today,
     rounds: s.rounds + 1,
     bestPercent: s.bestPercent === null ? percent : Math.max(s.bestPercent, percent),
   });
-  return { demoted };
+  return { demoted, streak, streakGrew };
 }
 
 export interface NewJournalEntry {
