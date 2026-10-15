@@ -164,7 +164,7 @@ i `"bottom-nav-bar"` w `LayoutGroup id="bottom-nav"`).
 **Testy.** `e2e/mobile.spec.ts` („dolny pasek: podpisy 12 px mieszczą się w kolumnach także na 320 px (2.2)”,
 „Przypomnienia mają własną zakładkę…” — teraz po nazwie „Terminy”), też w projektach iPhone 14 i Pixel 7.
 
-**Commit.** `HASHNV` (2026-10-15).
+**Commit.** `ec86276` (2026-10-15).
 
 ---
 
