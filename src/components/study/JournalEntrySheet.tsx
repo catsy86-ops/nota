@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TriangleAlert, Camera, CircleCheck, ChevronDown, Clock, ImagePlus, LoaderCircle, MapPin, Mic, NotebookPen, Pencil, Play, Trash, Type, X } from "lucide-react";
 import { HeightsButton } from "./HeightsSheet";
+import { PressureTestFields } from "./PressureTestFields";
+import { TEST_TOPICS } from "@/lib/study/pressureTest";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -44,7 +46,7 @@ const KIND_ON: Record<JournalKind, string> = {
 let persistAsked = false;
 
 /** Pola wspólne dla szkicu nowego wpisu i edycji zapisanego. */
-type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images">;
+type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "test">;
 
 function useOnline() {
   const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine);
@@ -202,7 +204,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     if (processing > 0) return;
     if (isEdit) { saveEdit(); return; }
     const wasDone = topic && columnOf(study, topic) === "done";
-    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, at });
+    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, at, test: form.test });
     if (!entry) {
       haptic("warn");
       toast("Wpisz, co się dzieje, dodaj zdjęcie albo zaznacz sprawdzone punkty");
@@ -221,7 +223,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     const prev = study.journal.find((e) => e.id === f.id);
     const demotes = f.kind === "problem" && !!f.topic && columnOf(study, f.topic) === "done" && (prev?.kind !== "problem" || prev.topic !== f.topic);
     const saved = updateJournalEntry(f.id, {
-      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, at: f.at, site: f.site, resolved: f.resolved,
+      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, at: f.at, site: f.site, resolved: f.resolved, test: f.test,
     });
     if (!saved) {
       haptic("warn");
@@ -518,6 +520,12 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-fast", topicOpen && "rotate-180")} aria-hidden />
             </button>
             {topic === "punkty" && <div className="border-t border-border px-2 py-1"><HeightsButton variant="link" /></div>}
+            {/* Przy tematach prób protokół od razu pod ręką; przy innych — gdy już jest we wpisie. */}
+            {(TEST_TOPICS.has(topic) || form.test) && (
+              <div className="border-t border-border p-2">
+                <PressureTestFields value={form.test} topic={topic} onChange={(t) => patch({ test: t })} />
+              </div>
+            )}
             {topicOpen && (
               <div id="journal-topic" className="space-y-3 border-t border-border p-3" data-testid="journal-topic-panel">
                 <label className="block space-y-1 text-xs text-muted-foreground">

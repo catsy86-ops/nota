@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { Archive, Check, ChevronLeft, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Play, Plus, Search, X } from "lucide-react";
+import { testLine } from "@/lib/study/pressureTest";
+import { Archive, Check, ChevronLeft, Gauge, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Play, Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusPanel } from "@/components/StatusPanel";
 import { cn } from "@/lib/utils";
@@ -350,7 +351,12 @@ function JournalItem({ entry: e, onPractice, onTopic, onZoom }: { entry: Journal
       <div className="flex items-start gap-2.5">
         {resolved ? <CircleCheck className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden /> : <KindIcon kind={e.kind} />}
         <div className="min-w-0 flex-1">
-          <p className="whitespace-pre-wrap wrap-break-word text-sm leading-snug">{e.text || "Sprawdzone punkty listy"}</p>
+          <p className="whitespace-pre-wrap wrap-break-word text-sm leading-snug">{e.text || (e.test ? "Próba szczelności" : "Sprawdzone punkty listy")}</p>
+          {e.test && (
+            <p className={cn("mt-1 inline-flex items-start gap-1.5 text-xs font-medium", e.test.ok ? "text-success-ink" : "text-destructive")} data-testid="journal-test">
+              <Gauge className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{testLine(e.test)}
+            </p>
+          )}
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
             <span className="font-mono tabular-nums">
               {new Date(e.at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}

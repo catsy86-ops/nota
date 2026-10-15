@@ -4,6 +4,7 @@ import { addDaysToKey } from "@/lib/week";
 import { cleanSite, foldName, type SiteCard } from "./sites";
 import { cleanCard, reviewCard, type ReviewCard } from "./srs";
 import { cleanBoss, cleanGroup, type Boss, type WaGroup } from "./boss";
+import { cleanTest, type PressureTest } from "./pressureTest";
 
 /**
  * Dane Nauki w Y.Doc notatek — synchronizują się i trafiają do pliku sync razem
@@ -42,6 +43,8 @@ export interface JournalEntry {
   images: string[];
   /** Problem rozwiązany — moment rozwiązania (ms); brak = otwarty. Tylko dla `problem`. */
   resolved?: number;
+  /** Protokół próby szczelności (`pressureTest.ts`); brak = wpis bez próby. */
+  test?: PressureTest;
 }
 
 /**
@@ -124,7 +127,8 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
   const text = typeof e.text === "string" ? e.text.slice(0, JOURNAL_MAX_TEXT) : "";
   const checked = Array.isArray(e.checked) ? e.checked.filter((id): id is string => typeof id === "string" && id.length <= 64).slice(0, 60) : [];
   const images = Array.isArray(e.images) ? e.images.filter((r): r is string => typeof r === "string" && isImageRef(r)).slice(0, JOURNAL_MAX_IMAGES) : [];
-  if (!text.trim() && checked.length === 0 && images.length === 0) return null;
+  const test = cleanTest(e.test);
+  if (!text.trim() && checked.length === 0 && images.length === 0 && !test) return null;
   return {
     id: e.id, at: e.at, kind: e.kind as JournalKind,
     topic: typeof e.topic === "string" && e.topic.length <= 64 ? e.topic : null,
@@ -134,6 +138,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
     checked,
     images,
     ...(e.kind === "problem" && typeof e.resolved === "number" && Number.isFinite(e.resolved) ? { resolved: e.resolved } : {}),
+    ...(test ? { test } : {}),
   };
 }
 

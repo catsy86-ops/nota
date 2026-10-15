@@ -1,4 +1,5 @@
 import { pluralPl } from "@/lib/plural";
+import { testLine } from "./pressureTest";
 import { dayType, isAbsence, type ShiftData } from "@/lib/shifts/model";
 import { entryMinutesOn, formatDuration } from "@/lib/shifts/time";
 import { entriesPl, KIND_LABEL } from "./journalView";
@@ -166,7 +167,8 @@ function entryLine(r: ReportEntry): string {
   const text = r.entry.text.trim() || "Sprawdzone punkty listy";
   const extra = [r.site, r.topic && `temat: ${r.topic}`, r.entry.images.length > 0 && photosPl(r.entry.images.length)].filter(Boolean);
   // Kolejne linie tekstu wcięte — zostają w tym samym punkcie listy.
-  return `${r.status}: ${text.replace(/\n+/g, "\n  ")}${extra.length ? ` (${extra.join(", ")})` : ""}`;
+  const test = r.entry.test ? `\n  ${testLine(r.entry.test)}` : "";
+  return `${r.status}: ${text.replace(/\n+/g, "\n  ")}${extra.length ? ` (${extra.join(", ")})` : ""}${test}`;
 }
 
 /** Podsumowanie raportu w jednej linii: „5 wpisów · godziny pracy: 18 h · otwarte problemy: 1”. */

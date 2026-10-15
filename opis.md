@@ -1239,6 +1239,37 @@ podmienia zdjęcie, galeria: przyciski i strzałki).
 
 ---
 
+## Praca — protokół próby szczelności (P5a)
+
+**Co robi.** Przy tematach „Płukanie i próba szczelności” i „Próba kanalizacji na zalanie” arkusz wpisu ma przycisk
+„Dodaj protokół próby szczelności”: czym próba (Powietrze / Woda / Zalanie), ciśnienie [bar], czas [min], spadek na
+manometrze [bar] i wynik (Szczelna / Nieszczelna). Start: powietrze 6 bar (próba robocza z materiału), dla kanalizacji
+— zalanie bez ciśnienia. Wpis pokazuje linię „Próba szczelności (woda, 9 bar, 30 min, spadek 0,1 bar): szczelna”
+(zielona albo czerwona), a raport, notatka z raportu i wiadomość do szefa mają ją pod wpisem. Sam protokół (bez
+tekstu) wystarcza, żeby zapisać wpis.
+
+**Gdzie jest.**
+- `src/lib/study/pressureTest.ts`: `PressureTest`, `TEST_TOPICS`, `defaultTest`, `cleanTest`, `testLine`.
+- `src/lib/study/yStudy.ts` (`JournalEntry.test`, `cleanEntry`), `store.ts` (`NewJournalEntry.test`, `entryFields`,
+  `sanitizeStudy`), `draft.ts` (`JournalDraft.test` w szkicu), `entrySheet.ts` (edycja), `report.ts` (`entryLine`).
+- `src/components/study/PressureTestFields.tsx` (pola, `NumField` z przecinkiem dziesiętnym),
+  `JournalEntrySheet.tsx` (sekcja pod tematem), `StudyJournal.tsx` (`data-testid="journal-test"`).
+
+**Jak działa i dlaczego.** Pole wpisu, nie nowy rodzaj (decyzja): `cleanEntry` starszej wersji odrzuca nieznane
+rodzaje — wpis by zniknął — a nieznane pole tylko pomija. Przy kanalizacji ciśnienie i spadek są zerowane
+(`cleanTest`), żeby protokół nie niósł danych bez sensu. Pole liczby trzyma tekst lokalnie, więc „0,” nie znika
+w trakcie pisania; liczby z przecinkiem jak na budowie.
+
+**Ograniczenia i pułapki.** Starsza wersja aplikacji nie pokaże protokołu, a edytując wpis, zgubi go. Brak
+podpisu/pieczątki w samym protokole — to część raportu (P5b).
+
+**Testy.** `src/lib/study/pressureTest.test.ts`, `e2e/journal-pressure-test.spec.ts` (woda z wartościami → lista
+i tekst raportu; zalanie bez ciśnienia, sam protokół zapisuje wpis).
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Praca → Dziennik budowy
 
 Zakładka „Dziennik” na `/nauka` (`src/components/study/StudyJournal.tsx`). Dziennik instalatora

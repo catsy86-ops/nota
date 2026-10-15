@@ -47,6 +47,7 @@ export function openJournalEdit(entry: JournalEntry) {
   editForm = {
     id: entry.id, at: entry.at, kind: entry.kind, topic: entry.topic ?? "", text: entry.text,
     checked: [...entry.checked], images: [...entry.images], site: entry.site, resolved: entry.resolved ?? null,
+    test: entry.test ?? null,
   };
   state = { open: true, topicFirst: entry.checked.length > 0, editing: entry.id };
   emit();

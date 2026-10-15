@@ -983,7 +983,7 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 - [x] P2 (S) Zwijany nagłówek na Dzienniku: jeden wiersz „12/18 · Na dziś 3” (`StudyView.tsx`).
 - [x] P3 (S) Quiz kciukiem (`coarse:min-h-14`, „Dalej” przyklejony nad dolnym paskiem) + ściąga „Wysokości” pod ręką (nagłówek działu, arkusz wpisu przy temacie `punkty`).
 - [x] P4 (M) Zdjęcia „przed zakryciem”: limit 5 (decyzja 2026-10-15), podpis wtopiony w zdjęcie (pomieszczenie, miara), galeria wpisu w powiększeniu.
-- [ ] P5 (M) Protokół próby szczelności jako opcjonalne pole wpisu (woda 6/9 bar, czas, spadek, wynik; kanalizacja na zalanie) + raport jak druk firmowy (tabela dni, godziny, miejsce na podpis); potem jeden główny przycisk w raporcie („Wyślij szefowi”, reszta w „Więcej”).
+- [ ] P5 (M) ✅ P5a protokół (2026-10-15). Protokół próby szczelności jako opcjonalne pole wpisu (woda 6/9 bar, czas, spadek, wynik; kanalizacja na zalanie) + raport jak druk firmowy (tabela dni, godziny, miejsce na podpis); potem jeden główny przycisk w raporcie („Wyślij szefowi”, reszta w „Więcej”).
 
 ### Dalej (po decyzjach)
 - [ ] Przypomnienia: problem otwarty > 3 dni, próba bez wpisu przed zakryciem (S/M).

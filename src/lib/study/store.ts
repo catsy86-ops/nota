@@ -5,6 +5,7 @@ import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
 import { studyDevice, yStudy } from "./data";
 import { cleanCard, dueIds, type ReviewCard } from "./srs";
+import { cleanTest, type PressureTest } from "./pressureTest";
 import { BOSS_NAME_MAX, cleanBoss, cleanGroup, normalizeGroupLink, normalizePhone } from "./boss";
 import { cleanSite, entrySiteId, resolveSite, siteDirectory, SITE_FIELD_MAX, SITE_NAME_MAX, type SiteCard } from "./sites";
 import {
@@ -55,7 +56,8 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
     const images = Array.isArray(e.images)
       ? e.images.filter((r): r is string => typeof r === "string" && isImageRef(r)).slice(0, JOURNAL_MAX_IMAGES)
       : [];
-    if (!text.trim() && checkedIds.length === 0 && images.length === 0) continue;
+    const test = cleanTest(e.test);
+    if (!text.trim() && checkedIds.length === 0 && images.length === 0 && !test) continue;
     journal.push({
       id: e.id, at: e.at, kind: e.kind as JournalKind, topic, text,
       site: typeof e.site === "string" ? e.site.slice(0, SITE_MAX) : "",
@@ -63,6 +65,7 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
       checked: checkedIds,
       images,
       ...(e.kind === "problem" && typeof e.resolved === "number" && Number.isFinite(e.resolved) ? { resolved: e.resolved } : {}),
+      ...(test ? { test } : {}),
     });
   }
   journal.sort((a, b) => a.at - b.at);
@@ -165,6 +168,8 @@ export interface NewJournalEntry {
   images?: string[];
   /** Moment wpisu („za wczoraj”); brak = teraz. Przyszłość przycina się do teraz. */
   at?: number | null;
+  /** Protokół próby szczelności; `null`/brak = bez próby. */
+  test?: PressureTest | null;
 }
 
 /** Wejście z arkusza → pola wpisu przefiltrowane przez materiał; `null` = pusty wpis. */
@@ -172,7 +177,8 @@ function entryFields(input: NewJournalEntry, now: number) {
   const text = input.text.trim().slice(0, JOURNAL_MAX_TEXT);
   const checked = (input.checked ?? []).filter((id) => CHECKLIST.some((c) => c.id === id));
   const images = (input.images ?? []).filter(isImageRef).slice(0, JOURNAL_MAX_IMAGES);
-  if (!text && checked.length === 0 && images.length === 0) return null;
+  const test = cleanTest(input.test);
+  if (!text && checked.length === 0 && images.length === 0 && !test) return null;
   return {
     at: typeof input.at === "number" && Number.isFinite(input.at) ? Math.min(input.at, now) : now,
     kind: input.kind,
@@ -180,6 +186,7 @@ function entryFields(input: NewJournalEntry, now: number) {
     text,
     checked,
     images,
+    ...(test ? { test } : {}),
   };
 }
 
