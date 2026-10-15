@@ -986,7 +986,7 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 - [ ] 1.2 `vh` → `dvh`: `FocusMode.tsx:81`, `DrawingCanvas.tsx:230`, `ImportExternalDialog.tsx:81`, `ShortcutsDialog.tsx:87`, `StatsDialog.tsx:70`, `VersionHistory.tsx:39`, `ShiftSettingsDialog.tsx:33`, `YearSummaryDialog.tsx:33`.
 - [ ] 1.3 `ui/dialog.tsx`/`alert-dialog.tsx` na telefonie: margines, zaokrąglenie, `max-h-[calc(100dvh-2rem)]` z przewijaniem (zależy od D2).
 - [ ] 1.4 Cele dotyku: zatwierdzenia i „⋯” w `SidebarFolderItem`/`SidebarLabelItem`/`SidebarFilterItem`, `ShiftsView.tsx:283,354`, nawigacja `ui/calendar.tsx:26` (`opacity-70`, `coarse:size-11`); e2e mierzący cele (5.2).
-- [ ] 1.5 Jasny motyw: `--ring` ≥3:1 (jak `primary-ink`), osobny `--input` ~3:1 dla krawędzi pól; `--border` dekoracyjny zostaje.
+- [x] 1.5 Jasny motyw: `--ring` ≥3:1 (jak `primary-ink`), osobny `--input` ~3:1 dla krawędzi pól; `--border` dekoracyjny zostaje. ✅ `--ring` 34 88% 39% (≥3,1:1 na wszystkich tłach), `--input` 220 14% 54% (≥3,1:1, także na `secondary`).
 - [ ] 1.6 `ViewSkeleton` zamiast `Suspense fallback={null}` (`Index.tsx:920,938,946`) + wstępne ładowanie widoku przy `pointerdown` w nawigacji.
 - [ ] 1.7 Haptyka niezależna od ograniczonego ruchu (`lib/haptics.ts`).
 - [ ] 1.8 Grafik: 9 px w `ShiftMonthGrid.tsx:151` → `text-2xs`/ikona; `AchievementStamp.tsx:49`.

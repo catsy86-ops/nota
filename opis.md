@@ -36,6 +36,15 @@ taki sam jak na Tailwind 3 (różnica zrzutów ≤ 0,02%).
 - React 19: `RefObject<T | null>`, `useRef` z argumentem, `ReactNode` zamiast globalnego `JSX`. W `vite.config.ts` paczka
   `vendor-react` obejmuje `react-dom/client` i `scheduler` (tam jest renderer React 19).
 
+**Kolory krawędzi i fokusu (jasny motyw, `src/index.css` `:root`).** Trzy tokeny mają różne zadania:
+- `--border` (220 14% 90%) — krawędź dekoracyjna kart i podziałów; może być jasna.
+- `--input` (220 14% 54%) — krawędź pól, `ui/button` „outline”, tor wyłączonego `ui/switch`. Kontrast ≥3:1 na tle,
+  karcie, `muted`, `secondary` i jasnych notatkach (WCAG 1.4.11). Wcześniej był równy `--border` (~1,3:1) i pola na
+  białej karcie prawie nie miały krawędzi.
+- `--ring` (34 88% 39%) — obwódka fokusu (`ring-ring`, globalna reguła `:focus-visible`, `.card-action`, aktywny kafel
+  w `NoteGrid`). Ten sam bursztyn co `--primary`, ciemniejszy: ≥3:1 wszędzie (wcześniej 2,6:1 na tle).
+Ciemny motyw bez zmian. Kontrast liczony skryptem wzorem WCAG; axe dojdzie w punkcie 2.7.
+
 **Ograniczenia i pułapki.**
 - React 19 dodaje ok. 37 KB gzip; budżet wejściowego JS w `e2e/bundle.spec.ts` podniesiony z 375 do 400 KB. Do odzyskania
   przez `LazyMotion` (plan UI 2026-10-15, 3.4).

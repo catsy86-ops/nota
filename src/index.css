@@ -311,9 +311,12 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
+    /* Krawędź dekoracyjna (karty, podziały) — może być jasna. */
     --border: 220 14% 90%;
-    --input: 220 14% 90%;
-    --ring: 34 88% 47%;
+    /* Krawędź pól i przycisków „outline”: ≥3:1 na tle, karcie, muted i secondary (WCAG 1.4.11). */
+    --input: 220 14% 54%;
+    /* Obwódka fokusu: ten sam bursztyn, ciemniejszy — ≥3:1 na wszystkich tłach, także kolorowych notatkach (2.4.13). */
+    --ring: 34 88% 39%;
 
     /* Linie kratki i czerwony margines zeszytu. */
     --grid: 214 30% 90.5%;
