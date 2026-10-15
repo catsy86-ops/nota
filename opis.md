@@ -1200,7 +1200,7 @@ skan widzi Dziennik ze zwiniętym nagłówkiem; pasek opanowania na innych zakł
 **Testy.** `e2e/study.spec.ts` („telefon: „Dalej” w quizie bez przewijania, ściąga wysokości z nagłówka i z arkusza
 wpisu”), `e2e/a11y.spec.ts`.
 
-**Commit.** — (2026-10-15).
+**Commit.** `8abb8f4` (2026-10-15).
 
 ---
 
