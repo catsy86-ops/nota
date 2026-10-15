@@ -1076,7 +1076,7 @@ z „Cofnij””), `e2e/study.spec.ts` („lista do nauki…”).
 **Testy.** `src/lib/study/stats.test.ts`, `src/lib/study/srs.test.ts` (liczniki, stare karty), `e2e/study.spec.ts`
 („statystyki: trafność per temat, dzień nauki i wpisy po rundzie quizu”), `e2e/a11y.spec.ts`.
 
-**Commit.** — (2026-10-15).
+**Commit.** `94e16fc` (2026-10-15).
 
 ---
 
