@@ -307,7 +307,7 @@ i próbkę z polskimi znakami swoim krojem.
 **Testy.** `src/lib/appFont.test.ts` (6 krojów, atrybut), `e2e/skins.spec.ts` („krój tekstu: Literata…” — tekst
 w Literacie, nagłówek stylu Plan zostaje w Barlow Condensed, wybór przeżywa odświeżenie).
 
-**Commit.** `HASHFO` (2026-10-15).
+**Commit.** `21f2442` (2026-10-15).
 
 ---
 
