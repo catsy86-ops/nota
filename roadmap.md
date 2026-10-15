@@ -980,7 +980,7 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 
 ### Krok po kroku (kolejność z audytu)
 - [x] P1 (S) Kolory z motywu: `emerald` → `success`, jeden ⚠ (`TriangleAlert` w `warning`), wynik quizu w mono; cele dotyku `StudyJournal.tsx:101,324`, pigułka tematu → filtr tematu (quiz tylko „Ćwicz teraz”).
-- [ ] P2 (S) Zwijany nagłówek na Dzienniku: jeden wiersz „12/18 · Na dziś 3” (`StudyView.tsx`).
+- [x] P2 (S) Zwijany nagłówek na Dzienniku: jeden wiersz „12/18 · Na dziś 3” (`StudyView.tsx`).
 - [ ] P3 (S) Quiz kciukiem (`coarse:min-h-14`, „Dalej” przyklejony nad dolnym paskiem) + ściąga „Wysokości” pod ręką (nagłówek działu, arkusz wpisu przy temacie `punkty`).
 - [ ] P4 (M) Zdjęcia „przed zakryciem”: limit 5 (decyzja 2026-10-15), podpis wtopiony w zdjęcie (pomieszczenie, miara), galeria wpisu w powiększeniu.
 - [ ] P5 (M) Protokół próby szczelności jako opcjonalne pole wpisu (woda 6/9 bar, czas, spadek, wynik; kanalizacja na zalanie) + raport jak druk firmowy (tabela dni, godziny, miejsce na podpis); potem jeden główny przycisk w raporcie („Wyślij szefowi”, reszta w „Więcej”).

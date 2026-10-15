@@ -122,6 +122,8 @@ function StudyScreen() {
   const setTab = (t: string) => { setTabState(t); writeStudyTab(t); };
   const [scope, setScope] = useState<QuizScope>({ kind: "all" });
   const [statsOpen, setStatsOpen] = useState(false);
+  const study = useStudy();
+  const masteredCount = TOPICS.filter((t) => columnOf(study, t.id) === "done").length;
   // `run` wymusza świeży start, także gdy ćwiczysz ten sam temat drugi raz.
   const [run, setRun] = useState(0);
   const practice = (topic: string) => { setScope({ kind: "topic", topic }); setRun((n) => n + 1); setTab("quiz"); };
@@ -146,24 +148,51 @@ function StudyScreen() {
 
   return (
     <div className="space-y-6" data-testid="study-view">
-      <header className="space-y-4">
-        <div>
-          <h2 className="font-display text-2xl">Instalacje wod-kan</h2>
-          <p className="text-sm text-muted-foreground">Poradnik „Woda użytkowa” i listy kontrolne G-HEAT, KAN-therm UltraLine.</p>
-        </div>
-        <MasteryStrip />
-        <div className="flex flex-wrap items-center gap-2">
+      {/* Na Dzienniku nauka schodzi do jednego wiersza — na budowie liczy się „+ Wpis” i lista, nie pasek opanowania. */}
+      {tab === "journal" ? (
+        <header className="flex flex-wrap items-center gap-x-3 gap-y-2" data-study-header="compact">
+          <h2 className="font-display text-lg">Instalacje wod-kan</h2>
+          <button
+            type="button"
+            onClick={() => setTab("board")}
+            className="pressable inline-flex items-baseline rounded-full px-2 py-1 text-sm text-muted-foreground hover:bg-muted hover:text-foreground coarse:min-h-11 coarse:items-center"
+            aria-label={`Opanowane tematy: ${masteredCount} z ${TOPICS.length} — otwórz tablicę`}
+          >
+            <span className="font-mono font-semibold tabular-nums text-primary-ink" data-testid="mastery-count">{masteredCount}</span>
+            <span className="font-mono tabular-nums">/{TOPICS.length}</span>
+          </button>
           <DueTodayChip onClick={() => { changeScope({ kind: "due" }); setTab("quiz"); }} />
           <button
             type="button"
             onClick={() => setStatsOpen(true)}
-            className="pressable inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground coarse:min-h-11"
+            aria-label="Statystyki"
+            title="Statystyki"
+            className="pressable ml-auto inline-grid size-9 place-items-center rounded-full border border-border text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
           >
-            <ChartColumn className="h-4 w-4" aria-hidden />Statystyki
+            <ChartColumn className="h-4 w-4" aria-hidden />
           </button>
-        </div>
-        <StudyStatsDialog open={statsOpen} onOpenChange={setStatsOpen} />
-      </header>
+          <StudyStatsDialog open={statsOpen} onOpenChange={setStatsOpen} />
+        </header>
+      ) : (
+        <header className="space-y-4" data-study-header="full">
+          <div>
+            <h2 className="font-display text-2xl">Instalacje wod-kan</h2>
+            <p className="text-sm text-muted-foreground">Poradnik „Woda użytkowa” i listy kontrolne G-HEAT, KAN-therm UltraLine.</p>
+          </div>
+          <MasteryStrip />
+          <div className="flex flex-wrap items-center gap-2">
+            <DueTodayChip onClick={() => { changeScope({ kind: "due" }); setTab("quiz"); }} />
+            <button
+              type="button"
+              onClick={() => setStatsOpen(true)}
+              className="pressable inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground coarse:min-h-11"
+            >
+              <ChartColumn className="h-4 w-4" aria-hidden />Statystyki
+            </button>
+          </div>
+          <StudyStatsDialog open={statsOpen} onOpenChange={setStatsOpen} />
+        </header>
+      )}
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="h-auto w-full sm:w-auto">

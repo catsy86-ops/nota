@@ -419,6 +419,12 @@ test.describe("dziennik na telefonie", () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/praca");
     await expect(page.getByRole("tab", { name: "Dziennik" })).toHaveAttribute("data-state", "active");
+    // Na Dzienniku nagłówek nauki w jednym wierszu; licznik prowadzi do tablicy.
+    await expect(page.locator('[data-study-header="compact"]')).toBeVisible();
+    await expect(page.getByRole("group", { name: /^Opanowane tematy/ })).toHaveCount(0);
+    await page.getByRole("button", { name: /— otwórz tablicę$/ }).click();
+    await expect(page.getByRole("tab", { name: "Tablica" })).toHaveAttribute("data-state", "active");
+    await expect(page.locator('[data-study-header="full"]')).toBeVisible();
   });
 
   test("„+” w dolnym pasku i skrót z ekranu głównego otwierają arkusz wpisu od dołu", async ({ page }) => {

@@ -1151,6 +1151,26 @@ białym — za mało na ikonę; wersja „ink” przechodzi 3:1 dla ikon i 4,5:1
 
 ---
 
+## Praca — zwinięty nagłówek na Dzienniku (P2)
+
+**Co robi.** Na zakładce Dziennik nagłówek działu to jeden wiersz: „Instalacje wod-kan”, licznik opanowanych tematów
+„2/18” (stuknięcie otwiera Tablicę), „Na dziś: N” i ikona statystyk. Pełny nagłówek z paskiem opanowania i opisem
+materiału zostaje na Quizie, Tablicy i Liście.
+
+**Gdzie jest.** `src/components/study/StudyView.tsx` (`data-study-header="compact" | "full"`, `masteredCount`).
+
+**Jak działa i dlaczego.** Na telefonie pełny nagłówek zajmował ~200 px nad „+ Wpis” i listą wpisów — a na budowie
+Dziennik jest główną zakładką (N2). Licznik zostaje jako skrót do nauki.
+
+**Ograniczenia i pułapki.** `data-testid="mastery-count"` jest w obu wariantach (testy smoke).
+
+**Testy.** `e2e/study.spec.ts` („telefon bez zapisanej zakładki zaczyna od Dziennika” — zwinięty nagłówek, licznik
+otwiera Tablicę z pełnym nagłówkiem).
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Praca → Dziennik budowy
 
 Zakładka „Dziennik” na `/nauka` (`src/components/study/StudyJournal.tsx`). Dziennik instalatora
