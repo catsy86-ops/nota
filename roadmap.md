@@ -999,8 +999,8 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 - [ ] 2.4 Komputer: Dziennik ~48 rem + przyklejony panel filtrów i otwartych problemów.
 - [ ] 2.5 `ui/responsive-dialog.tsx` (Dialog na `desk:`, arkusz na telefonie) i migracja ~8 okien (D2).
 - [ ] 2.6 Jeden `StatusPanel` dla pustki, błędu, offline i „nic nie znaleziono”.
-- [ ] 2.7 `@axe-core/playwright` (`e2e/a11y.spec.ts`, oba motywy, 390/1440, wcag22aa, lista wyjątków zapadkowo).
-- [ ] 2.8 Playwright: projekty iPhone 14 (webkit) i Pixel 7 dla `@smoke`/`@mobile`.
+- [x] 2.7 `@axe-core/playwright` (`e2e/a11y.spec.ts`, oba motywy, 390/1440, wcag22aa, lista wyjątków zapadkowo). ✅ 5 widoków × 2 motywy × 2 rozmiary; naprawione tagline (`aria-label` na `<p>`), kontrast stopki, ⌘K i weekendów; jedyny wyjątek `target-size` paska opanowania Nauki na telefonie.
+- [x] 2.8 Playwright: projekty iPhone 14 (webkit) i Pixel 7 dla `@smoke`/`@mobile`. ✅ Tylko `@mobile` (smoke z komputera nie pasuje do telefonu); cały `mobile.spec.ts` oznaczony; SW zablokowany w tych projektach; `npm run test:e2e:mobile`.
 
 ### Faza 3 — duże (L)
 - [ ] 3.1 Kafel → edytor i swipe (= 4.1, 4.3) — po teście charakteryzującym i konwersji `NoteCard.tsx` do UTF-8 LF.

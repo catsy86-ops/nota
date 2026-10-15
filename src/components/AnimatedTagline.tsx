@@ -13,7 +13,9 @@ interface AnimatedTaglineProps {
 export function AnimatedTagline({ text, className }: AnimatedTaglineProps) {
   let index = 0;
   return (
-    <p className={cn("tagline", className)} aria-label={text}>
+    <p className={cn("tagline", className)}>
+      {/* `aria-label` na <p> jest zabronione (axe aria-prohibited-attr) — tekst dla czytnika osobno. */}
+      <span className="sr-only">{text}</span>
       {text.split(" ").map((word, w) => (
         <span key={w} className="tagline-word" aria-hidden="true">
           {Array.from(word).map((ch, c) => (

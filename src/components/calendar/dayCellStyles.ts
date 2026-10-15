@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 /** Nagłówek dnia tygodnia; sobota i niedziela (indeks 5 i 6) w kolorze marki. */
 export const weekdayHeadClass = (i: number) =>
-  cn("text-2xs uppercase tracking-wider text-center py-1", i >= 5 ? "text-primary/80" : "text-muted-foreground");
+  cn("text-2xs uppercase tracking-wider text-center py-1", i >= 5 ? "text-primary-ink" : "text-muted-foreground");
 
 /** Komórka dnia bez rozmiaru — wysokość zależy od tego, co komórka pokazuje. Pełne tło: kratka tła nie prześwituje. */
 export const dayCellClass = (inMonth: boolean, today = false) => cn(

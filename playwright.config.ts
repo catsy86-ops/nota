@@ -26,5 +26,11 @@ export default defineConfig({
   },
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    // Prawdziwe telefony: silnik WebKit (Safari na iOS) i Chrome na Androidzie. Tylko testy
+    // oznaczone @mobile — reszta zakłada układ komputera. `npm run test:e2e:mobile`.
+    // Service worker zablokowany: WebKit w Playwright przenosi go między kontekstami i od
+    // drugiego testu pokazuje dymek „nowa wersja”, który zasłania przyciski. SW sprawdza pwa.spec.
+    { name: "iphone-14", use: { ...devices["iPhone 14"], serviceWorkers: "block" }, grep: /@mobile/ },
+    { name: "pixel-7", use: { ...devices["Pixel 7"], serviceWorkers: "block" }, grep: /@mobile/ },
   ],
 });

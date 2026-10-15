@@ -257,7 +257,7 @@ export function AppSidebar({
                   icon={<Command className="w-[18px] h-[18px]" />}
                   label="Paleta poleceń"
                   onClick={onOpenPalette}
-                  trailing={<span className="shrink-0 text-2xs opacity-70">{modShortcut("K")}</span>}
+                  trailing={<span className="shrink-0 text-2xs">{modShortcut("K")}</span>}
                 />
                 <SidebarRow
                   icon={dark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
@@ -284,7 +284,7 @@ export function AppSidebar({
                   </div>
                 )}
                 <InstallAppButton />
-                <p className="text-2xs text-muted-foreground/40 text-center font-medium">NOTKI v1.0 • Notuj, zanim zapomnisz</p>
+                <p className="text-2xs text-muted-foreground text-center font-medium">NOTKI v1.0 • Notuj, zanim zapomnisz</p>
               </div>
             </div>
           </motion.aside>
