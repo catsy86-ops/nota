@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TriangleAlert, Camera, CircleCheck, ChevronDown, Clock, ImagePlus, LoaderCircle, MapPin, Mic, NotebookPen, Pencil, Play, Trash, X } from "lucide-react";
+import { HeightsButton } from "./HeightsSheet";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -440,6 +441,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               {checked.size > 0 && <span className="font-mono text-xs tabular-nums text-muted-foreground">{checked.size}/{items.length}</span>}
               <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-fast", topicOpen && "rotate-180")} aria-hidden />
             </button>
+            {topic === "punkty" && <div className="border-t border-border px-2 py-1"><HeightsButton variant="link" /></div>}
             {topicOpen && (
               <div id="journal-topic" className="space-y-3 border-t border-border p-3" data-testid="journal-topic-panel">
                 <label className="block space-y-1 text-xs text-muted-foreground">

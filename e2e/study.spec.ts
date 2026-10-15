@@ -415,6 +415,31 @@ test.describe("dziennik na telefonie", () => {
     await expect(page.getByTestId("checklist-progress")).toContainText("2/");
   });
 
+  test("telefon: „Dalej” w quizie bez przewijania, ściąga wysokości z nagłówka i z arkusza wpisu @mobile", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 700 });
+    await page.goto("/praca");
+    await page.getByRole("tab", { name: "Quiz" }).click();
+    await page.getByRole("button", { name: "Zacznij rundę" }).click();
+    for (let i = 1; i <= 3; i++) {
+      await page.getByRole("group", { name: "Odpowiedzi" }).getByRole("button").first().click();
+      await expect(page.getByRole("button", { name: "Dalej" })).toBeInViewport({ ratio: 1 });
+      await page.getByRole("button", { name: "Dalej" }).click();
+    }
+
+    await page.locator("[data-study-header]").getByRole("button", { name: "Wysokości", exact: true }).click();
+    const sheet = page.getByTestId("heights-sheet");
+    await expect(sheet.getByRole("row", { name: /Umywalka/ })).toContainText("58");
+    await page.keyboard.press("Escape");
+
+    await page.getByRole("tab", { name: "Dziennik" }).click();
+    await page.getByRole("button", { name: /^(Wpis|Dokończ wpis)$/ }).click();
+    const entry = page.getByTestId("journal-entry-sheet");
+    await entry.getByRole("button", { name: /^Temat:/ }).click();
+    await entry.getByRole("combobox").first().selectOption("punkty");
+    await entry.getByRole("button", { name: "Wysokości", exact: true }).click();
+    await expect(page.getByTestId("heights-sheet").getByRole("row", { name: /Prysznic/ })).toContainText("110");
+  });
+
   test("telefon bez zapisanej zakładki zaczyna od Dziennika @mobile", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/praca");

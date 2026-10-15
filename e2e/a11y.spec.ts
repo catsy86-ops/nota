@@ -26,14 +26,11 @@ const THEMES = ["light", "dark"] as const;
 
 /**
  * Znane naruszenia: klucz `widok/rozmiar/motyw` → identyfikatory reguł axe. Każde z uzasadnieniem.
- * - nauka/390 target-size: komórki paska opanowania (`StudyView.tsx`) są węższe niż 24 px przy
- *   kilkunastu tematach w module. Te same tematy i ich stan są na tablicy poniżej — wyjątek
- *   „równoważna kontrolka” z WCAG 2.5.8; komórka ma 26 px wysokości celu.
+ * Dziś puste. Uwaga: na telefonie dział Praca startuje od Dziennika ze zwiniętym nagłówkiem (N2, P2),
+ * więc skan nie widzi paska opanowania; na Quizie/Tablicy/Liście jego komórki są węższe niż 24 px —
+ * wyjątek „równoważna kontrolka” z WCAG 2.5.8 (te same tematy są na tablicy), komórka ma 26 px wysokości.
  */
-const KNOWN: Record<string, string[]> = {
-  "nauka/390/light": ["target-size"],
-  "nauka/390/dark": ["target-size"],
-};
+const KNOWN: Record<string, string[]> = {};
 
 async function scan(page: Page): Promise<string[]> {
   const result = await new AxeBuilder({ page }).withTags(TAGS).analyze();

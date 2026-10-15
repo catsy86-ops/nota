@@ -1171,6 +1171,39 @@ otwiera Tablicę z pełnym nagłówkiem).
 
 ---
 
+## Praca — quiz pod kciuk i ściąga wysokości (P3)
+
+**Co robi.** Na telefonie odpowiedzi w quizie mają co najmniej 56 px wysokości i większy tekst, a „Dalej” jest
+przyklejony nad dolnym paskiem na całą szerokość — po odpowiedzi nie trzeba przewijać pod objaśnienie. Plakietka
+„Zapisano” idzie wtedy wyżej, żeby nie zasłaniać przycisku. Ściąga „Wysokości podejść” (standard G-HEAT, duże cyfry
+w kroju mono) otwiera się z nagłówka działu (pigułka „Wysokości”, na Dzienniku ikona miarki) i z arkusza wpisu, gdy
+temat to „Punkty wodne i wysokości”.
+
+**Gdzie jest.**
+- `src/components/study/HeightsSheet.tsx`: `HeightsButton` (`pill` | `icon` | `link`) z oknem tabeli `HEIGHTS`.
+- `src/components/study/QuizPanel.tsx`: `coarse:min-h-14` na odpowiedziach, blok „Dalej” z `data-sticky-action`
+  i `phone:sticky` jako bezpośrednie dziecko sekcji.
+- `src/components/OfflineStatus.tsx` (klasa `save-status`) + reguła w `src/index.css`:
+  `html:has([data-sticky-action]) .save-status` na telefonie wyżej.
+- `StudyView.tsx` (przyciski w obu nagłówkach), `JournalEntrySheet.tsx` (link przy temacie `punkty`).
+
+**Jak działa i dlaczego.** `sticky` działa tylko w obrębie rodzica — przycisk siedzący w krótkim bloku objaśnienia nie
+mógł się przykleić, dlatego jest osobnym dzieckiem sekcji quizu (sięga pod dolny pasek). Plakietka zapisu stała
+dokładnie na wysokości przyklejonego przycisku i pojawia się po każdej odpowiedzi (zapis rundy) — `:has()` przesuwa ją
+tylko, gdy na ekranie jest przyklejona akcja. Ściąga zostaje też na dole Listy (zwijany blok).
+
+**Ograniczenia i pułapki.** Objaśnienie odpowiedzi może schodzić pod przyklejony pasek — czyta się je, przewijając,
+a „Dalej” jest zawsze pod kciukiem. Lista znanych wyjątków axe (`e2e/a11y.spec.ts`) jest teraz pusta: na telefonie
+skan widzi Dziennik ze zwiniętym nagłówkiem; pasek opanowania na innych zakładkach dalej ma wąskie komórki (wyjątek
+„równoważna kontrolka”).
+
+**Testy.** `e2e/study.spec.ts` („telefon: „Dalej” w quizie bez przewijania, ściąga wysokości z nagłówka i z arkusza
+wpisu”), `e2e/a11y.spec.ts`.
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Praca → Dziennik budowy
 
 Zakładka „Dziennik” na `/nauka` (`src/components/study/StudyJournal.tsx`). Dziennik instalatora

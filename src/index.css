@@ -1109,3 +1109,9 @@ html[data-hidden] *::before,
 html[data-hidden] *::after {
   animation-play-state: paused !important;
 }
+
+/* Przyklejona akcja nad dolnym paskiem (np. „Dalej” w quizie, `data-sticky-action`) — plakietka zapisu
+   (`OfflineStatus`) wypada na jej wysokości, więc na telefonie idzie nad nią. */
+@media (max-width: 767px) {
+  html:has([data-sticky-action]) .save-status { bottom: calc(9.5rem + env(safe-area-inset-bottom)); }
+}

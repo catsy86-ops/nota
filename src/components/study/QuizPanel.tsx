@@ -218,7 +218,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
               onClick={() => answer(i)}
               aria-pressed={isPicked}
               className={cn(
-                "pressable flex items-start gap-3 rounded-xl border px-3.5 py-3 text-left text-sm transition-colors",
+                "pressable flex items-start gap-3 rounded-xl border px-3.5 py-3 text-left text-sm transition-colors coarse:min-h-14 coarse:items-center coarse:text-base",
                 !answered && "border-border bg-background hover:border-primary/60 hover:bg-primary/5",
                 answered && isCorrect && "border-success-ink/60 bg-success/10",
                 answered && isPicked && !isCorrect && "border-destructive/60 bg-destructive/10",
@@ -234,12 +234,16 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
         })}
       </div>
       {answered && (
-        <div className="space-y-3" aria-live="polite">
-          <p className="rounded-xl bg-muted/60 px-3.5 py-3 text-sm leading-relaxed">
-            <span className="font-medium">{picked === current.correct ? "Dobrze. " : "Nie tym razem. "}</span>
-            {current.explanation}
-          </p>
-          <Button onClick={next}>
+        <p className="rounded-xl bg-muted/60 px-3.5 py-3 text-sm leading-relaxed" aria-live="polite">
+          <span className="font-medium">{picked === current.correct ? "Dobrze. " : "Nie tym razem. "}</span>
+          {current.explanation}
+        </p>
+      )}
+      {/* Telefon: „Dalej” przyklejony nad dolnym paskiem — bez przewijania pod objaśnienie po każdej odpowiedzi.
+          Bezpośrednio w sekcji: `sticky` działa tylko w obrębie rodzica, a sekcja sięga pod dolny pasek. */}
+      {answered && (
+        <div data-sticky-action className="phone:sticky phone:bottom-[calc(5.5rem+env(safe-area-inset-bottom))] phone:z-10 phone:-mx-5 phone:bg-card/95 phone:px-5 phone:py-2 phone:backdrop-blur-sm">
+          <Button onClick={next} className="phone:h-12 phone:w-full phone:text-base">
             {index < round.length - 1 ? "Dalej" : "Zobacz wynik"}
             <ArrowRight className="w-4 h-4 ml-1.5" />
           </Button>

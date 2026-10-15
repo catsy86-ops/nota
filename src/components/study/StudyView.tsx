@@ -5,6 +5,7 @@ import { columnOf, dueToday, useStudy } from "@/lib/study/store";
 import { pluralPl } from "@/lib/plural";
 import { ChartColumn, RotateCcw } from "lucide-react";
 import { StudyStatsDialog } from "./StudyStats";
+import { HeightsButton } from "./HeightsSheet";
 import { setJournalDraftTopic } from "@/lib/study/draft";
 import { useStudyReady } from "@/lib/study/data";
 import { closeJournalSheet, JOURNAL_ENTRY_PARAM, openJournalSheet, useJournalSheet } from "@/lib/study/entrySheet";
@@ -162,12 +163,13 @@ function StudyScreen() {
             <span className="font-mono tabular-nums">/{TOPICS.length}</span>
           </button>
           <DueTodayChip onClick={() => { changeScope({ kind: "due" }); setTab("quiz"); }} />
+          <HeightsButton variant="icon" className="ml-auto" />
           <button
             type="button"
             onClick={() => setStatsOpen(true)}
             aria-label="Statystyki"
             title="Statystyki"
-            className="pressable ml-auto inline-grid size-9 place-items-center rounded-full border border-border text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
+            className="pressable inline-grid size-9 place-items-center rounded-full border border-border text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
           >
             <ChartColumn className="h-4 w-4" aria-hidden />
           </button>
@@ -189,6 +191,7 @@ function StudyScreen() {
             >
               <ChartColumn className="h-4 w-4" aria-hidden />Statystyki
             </button>
+            <HeightsButton />
           </div>
           <StudyStatsDialog open={statsOpen} onOpenChange={setStatsOpen} />
         </header>
