@@ -8,6 +8,8 @@ import { setJournalDraftTopic } from "@/lib/study/draft";
 import { useStudyReady } from "@/lib/study/data";
 import { closeJournalSheet, JOURNAL_ENTRY_PARAM, openJournalSheet, useJournalSheet } from "@/lib/study/entrySheet";
 import { useEffect, useState } from "react";
+import { MOBILE_QUERY } from "@/hooks/use-mobile";
+import { readStudyTab, writeStudyTab } from "@/lib/study/tab";
 import { QuizPanel, type QuizScope } from "./QuizPanel";
 import { StudyBoard } from "./StudyBoard";
 import { StudyChecklist } from "./StudyChecklist";
@@ -114,7 +116,9 @@ export default function StudyView() {
 }
 
 function StudyScreen() {
-  const [tab, setTab] = useState("quiz");
+  // Zapamiętana zakładka; bez zapisu telefon zaczyna od Dziennika (`lib/study/tab.ts`).
+  const [tab, setTabState] = useState<string>(() => readStudyTab(window.matchMedia?.(MOBILE_QUERY).matches ?? false));
+  const setTab = (t: string) => { setTabState(t); writeStudyTab(t); };
   const [scope, setScope] = useState<QuizScope>({ kind: "all" });
   // `run` wymusza świeży start, także gdy ćwiczysz ten sam temat drugi raz.
   const [run, setRun] = useState(0);

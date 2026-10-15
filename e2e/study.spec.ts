@@ -29,6 +29,14 @@ test("dział Praca: adres /praca, pozycja w pasku bocznym i cztery zakładki @sm
   }
 });
 
+test("zakładka działu Praca jest zapamiętana po odświeżeniu", async ({ page }) => {
+  await page.goto("/praca");
+  await expect(page.getByRole("tab", { name: "Quiz" })).toHaveAttribute("data-state", "active");
+  await page.getByRole("tab", { name: "Lista" }).click();
+  await page.reload();
+  await expect(page.getByRole("tab", { name: "Lista" })).toHaveAttribute("data-state", "active");
+});
+
 test("tablica: temat przechodzi między kolumnami i postęp przeżywa odświeżenie @smoke", async ({ page }) => {
   await page.goto("/praca");
   await page.getByRole("tab", { name: "Tablica" }).click();
@@ -326,6 +334,12 @@ test("dziennik: dyktowanie dopisuje rozpoznany tekst do wpisu", async ({ page })
 
 test.describe("dziennik na telefonie", () => {
   test.use({ hasTouch: true, isMobile: true });
+
+  test("telefon bez zapisanej zakładki zaczyna od Dziennika @mobile", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/praca");
+    await expect(page.getByRole("tab", { name: "Dziennik" })).toHaveAttribute("data-state", "active");
+  });
 
   test("„+” w dolnym pasku i skrót z ekranu głównego otwierają arkusz wpisu od dołu", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });

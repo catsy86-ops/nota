@@ -964,7 +964,7 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 
 ### N — Nauka
 - [x] N1 (= 4.5) Nagłówek „Instalacje wod-kan”, pasek opanowania z modułami i podpisami na dotyk, podpisane przyciski kart, cyfry `tabular-nums` bez `font-display`, zakładka „Lista”. ✅ `MasteryStrip` w `StudyView.tsx`: odcinek na moduł z licznikiem, komórka jako przycisk (cel dotyku 26 px wysokości przy pasku 10 px) podpisuje temat pod paskiem; licznik w JetBrains Mono; karty tematu: „Wpis”, „Ćwicz”, „Do notatki” z podpisami, strzałki przeniesienia przy tytule.
-- [ ] N2 Zapamiętana zakładka; na telefonie domyślnie Dziennik.
+- [x] N2 Zapamiętana zakładka; na telefonie domyślnie Dziennik. ✅ 2026-10-15: `lib/study/tab.ts`, localStorage `kaczy.study.tab.v1` (na urządzeniu, nie w Yjs).
 - [x] N3 Powtórki SM-2 lite (`lib/study/srs.ts`, mapa `studyReview`), „Na dziś: N”. ✅ 2026-10-15: ocena automatyczna (dobrze/źle), 1 → 3 → × łatwość, błąd = jutro; „Na dziś” pod paskiem opanowania i w Quizie, runda najbardziej zaległych; karta w kopii i synchronizacji.
 - [ ] N4 Statystyki: trafność per temat, dni nauki, wpisy per budowa i miesiąc.
 - [ ] N5 Własne pytania i punkty listy (`studyCustom`); import plików później.

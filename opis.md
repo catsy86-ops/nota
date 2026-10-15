@@ -928,6 +928,28 @@ Przesunięcie animuje `framer-motion` (`layoutId`).
 
 **Commit.** N1 `4c951fa` (2026-10-15).
 
+## Praca — zapamiętana zakładka
+
+**Co robi.** Dział Praca otwiera się na zakładce, na której go zostawiono. Bez zapisu telefon zaczyna od Dziennika
+(wpis z budowy), komputer od Quizu.
+
+**Gdzie jest.** `src/lib/study/tab.ts` (`readStudyTab`, `writeStudyTab`, klucz localStorage `kaczy.study.tab.v1`),
+`src/components/study/StudyView.tsx` (`setTab` zapisuje każdą zmianę, też przejście do Quizu z „Ćwicz” i do Dziennika
+przy otwarciu arkusza wpisu).
+
+**Jak działa i dlaczego.** Zapis na urządzeniu, nie w Yjs: telefon i komputer służą do czego innego, więc
+synchronizowana zakładka przeszkadzałaby. Telefon = `MOBILE_QUERY` (`hooks/use-mobile.tsx`), ten sam co dolny pasek.
+
+**Ograniczenia i pułapki.** Nieznana wartość w kluczu (np. stara wersja) — domyślna zakładka. Testy e2e z 390 px
+muszą ustawić rozmiar okna przed wejściem na /praca, inaczej startuje Quiz.
+
+**Testy.** `src/lib/study/tab.test.ts`, `e2e/study.spec.ts` („zakładka działu Praca jest zapamiętana…”, „telefon bez
+zapisanej zakładki zaczyna od Dziennika”).
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Praca — powtórki pytań („Na dziś”)
 
 **Co robi.** Każde pytanie, na które odpowiesz w quizie, wraca do powtórki: po dobrej odpowiedzi coraz rzadziej
