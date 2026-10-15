@@ -807,7 +807,7 @@ stuknięciu w pole); Android otwiera. Udostępnianie plików i obrazów do aplik
 **Testy.** `src/lib/manifest.test.ts` (kolejność i adresy skrótów), `e2e/routes.spec.ts` („skróty PWA „Nowa lista”
 i „Szukaj”…”, „skrót PWA /?new=1…”).
 
-**Commit.** — (2026-10-15).
+**Commit.** `c1a431f` (2026-10-15).
 
 ---
 
