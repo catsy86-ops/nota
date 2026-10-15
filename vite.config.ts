@@ -56,12 +56,12 @@ export default defineConfig(() => ({
         // itself — keep it out of the offline-critical precache.
         // Fonty: offline potrzebne są tylko podzbiory łacińskie (polski siedzi
         // w latin-ext); cyrylica/greka/wietnamski i tak ładują się tylko na żądanie.
-        // Kroje stylów (Plan, Neon, Zorza, Miedź) poza precache — pobiera je dopiero wybrany styl,
+        // Kroje stylów (Plan, Neon, Zorza, Miedź) i kroje tekstu do wyboru poza precache — pobiera je dopiero wybrany styl,
         // potem trzyma `skin-fonts` niżej. Logo („unbounded-notki”) zostaje w precache.
         globIgnores: [
           "**/screenshot-wide.png",
           "**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*.woff2",
-          "**/{barlow-condensed,fraunces,bricolage-grotesque}-*.woff2",
+          "**/{barlow-condensed,fraunces,bricolage-grotesque,inter,nunito,atkinson-hyperlegible-next,literata,manrope,lexend}-*.woff2",
           "**/unbounded-latin*.woff2",
         ],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
@@ -72,7 +72,7 @@ export default defineConfig(() => ({
         navigateFallback: "/index.html",
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => /\/(barlow-condensed|fraunces|bricolage-grotesque|unbounded-latin)[^/]*\.woff2$/.test(url.pathname),
+            urlPattern: ({ url }) => /\/(barlow-condensed|fraunces|bricolage-grotesque|unbounded-latin|inter|nunito|atkinson-hyperlegible-next|literata|manrope|lexend)-[^/]*\.woff2$/.test(url.pathname),
             handler: "CacheFirst",
             options: { cacheName: "skin-fonts", expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 } },
           },

@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { Section, ToggleRow } from "./SettingsShared";
 import { Segmented } from "./Segmented";
 import { SkinPicker } from "./SkinPicker";
+import { FontPicker } from "./FontPicker";
+import { setAppFont, useAppFont } from "@/lib/appFont";
 import { SKIN_SCHEME } from "@/lib/skins";
 import { SKIN_META } from "@/lib/skinGallery";
 import { setSiteMode, useSiteMode, type SiteMode } from "@/lib/siteMode";
@@ -40,6 +42,7 @@ export function AppearanceSettings() {
   const { mode: themeMode, setMode: setThemeMode, skin, setSkin } = useTheme();
   const skinScheme = SKIN_SCHEME[skin];
   const siteMode = useSiteMode();
+  const appFont = useAppFont();
   const { mode: motionMode, reduced: motionReduced, setMode: setMotionMode } = useMotionPref();
   const { pref: seasonPref, season: activeSeason, setPref: setSeasonPref } = useSeasonPref();
 
@@ -47,6 +50,13 @@ export function AppearanceSettings() {
     <div className="space-y-4">
       <Section title="Styl">
         <SkinPicker value={skin} onChange={setSkin} />
+      </Section>
+
+      <Section title="Krój tekstu">
+        <FontPicker value={appFont} onChange={setAppFont} />
+        {skinScheme && appFont !== "default" && (
+          <p className="text-xs text-muted-foreground mt-1.5">Nagłówki zostają w kroju stylu {SKIN_META[skin].label}.</p>
+        )}
       </Section>
 
       <Section title="Jasność">

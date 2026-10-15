@@ -12,9 +12,18 @@ import "@fontsource-variable/unbounded/wght.css";
 import "@fontsource-variable/fraunces/soft.css";
 import "@fontsource-variable/bricolage-grotesque/wght.css";
 import "./styles/skins.css";
+// Kroje tekstu do wyboru (Wygląd → „Krój tekstu”) — plik pobiera się dopiero po wyborze.
+import "@fontsource-variable/inter/wght.css";
+import "@fontsource-variable/nunito/wght.css";
+import "@fontsource-variable/atkinson-hyperlegible-next/wght.css";
+import "@fontsource-variable/literata/wght.css";
+import "@fontsource-variable/manrope/wght.css";
+import "@fontsource-variable/lexend/wght.css";
+import "./styles/fonts.css";
 import "./styles/site.css";
 // Tryb budowa ustawia `html[data-site]` przy imporcie — przed pierwszym malowaniem.
 import "./lib/siteMode";
+import "./lib/appFont";
 import { registerServiceWorker, applyServiceWorkerUpdate, SW_UPDATE_EVENT } from "./lib/registerSW";
 import { requestPersistentStorage } from "./lib/storagePersistence";
 import { installGlobalDiagHandlers } from "./lib/diagnostics";

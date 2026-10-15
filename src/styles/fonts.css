@@ -1,0 +1,17 @@
+/*
+  Krój tekstu (`html[data-font]`, src/lib/appFont.ts). Reguły w `:where()` mają
+  specyficzność samego `html[data-font]` (0,1,1) — przegrywają z krojami nagłówków
+  stylów (`html[data-skin] h1`, 0,1,2), więc Plan/Neon/Zorza/Miedź zachowują nagłówki,
+  a w Zeszycie nagłówki (`.font-display`) idą za wybranym krojem. Logo i cyfry
+  (`.font-logo`, `.font-mono`) mają własne kroje i nie są tu wymienione.
+*/
+html[data-font="inter"] { --app-font: 'Inter Variable', 'Plus Jakarta Sans Variable', sans-serif; }
+html[data-font="nunito"] { --app-font: 'Nunito Variable', 'Plus Jakarta Sans Variable', sans-serif; }
+html[data-font="atkinson"] { --app-font: 'Atkinson Hyperlegible Next Variable', 'Plus Jakarta Sans Variable', sans-serif; }
+html[data-font="literata"] { --app-font: 'Literata Variable', Georgia, serif; }
+html[data-font="manrope"] { --app-font: 'Manrope Variable', 'Plus Jakarta Sans Variable', sans-serif; }
+html[data-font="lexend"] { --app-font: 'Lexend Variable', 'Plus Jakarta Sans Variable', sans-serif; }
+
+html[data-font] :where(body, .font-body, .font-display, input, textarea, select, button) {
+  font-family: var(--app-font);
+}

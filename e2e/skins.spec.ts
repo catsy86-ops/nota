@@ -44,3 +44,20 @@ test("przełącznik jasny/ciemny w nagłówku wraca ze stylu do Zeszytu", async 
   await expect(page.locator("html")).toHaveAttribute("data-skin", "zeszyt");
   await expect(page.locator("html")).toHaveClass(/\bdark\b/);
 });
+
+test("krój tekstu: Literata zmienia tekst; w stylu Plan nagłówki zostają w kroju stylu", async ({ page }) => {
+  await openAppearance(page);
+  await page.locator('[data-font-option="literata"]').click();
+  await expect(page.locator("html")).toHaveAttribute("data-font", "literata");
+  const bodyFont = () => page.evaluate(() => getComputedStyle(document.body).fontFamily);
+  expect(await bodyFont()).toContain("Literata");
+
+  await page.locator('[data-skin-option="plan"]').click();
+  await page.keyboard.press("Escape");
+  const h1Font = await page.locator("h1").first().evaluate((el) => getComputedStyle(el).fontFamily);
+  expect(h1Font).toContain("Barlow Condensed");
+  expect(await bodyFont()).toContain("Literata");
+
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-font", "literata");
+});

@@ -159,7 +159,7 @@ const MAX_IMPORT_FILE_SIZE = 120 * 1024 * 1024; // 120 MB
  */
 export const SETTINGS_KEYS = [
   "kaczy.viewPrefs.v1", "kaczy-theme", "kaczy.motion.v1", "kaczy.confirmPrefs.v1",
-  "kaczy.effectsSettings.v1", "kaczy.seasonTheme.v1", "kaczy.templates.v1", "kaczy.skin.v1", "kaczy.siteMode.v1",
+  "kaczy.effectsSettings.v1", "kaczy.seasonTheme.v1", "kaczy.templates.v1", "kaczy.skin.v1", "kaczy.siteMode.v1", "kaczy.font.v1",
 ];
 export const ACHIEVEMENTS_KEY = "kaczy.achievements.v1";
 
