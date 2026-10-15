@@ -36,7 +36,7 @@ export function VersionHistory({ versions, onRestore }: VersionHistoryProps) {
       </Tooltip>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <DialogContent className="sm:max-w-lg max-h-[80dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2">
               <History className="w-5 h-5" />

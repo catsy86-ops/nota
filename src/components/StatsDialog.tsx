@@ -67,7 +67,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn("max-h-[85vh] overflow-y-auto", tab === "graph" ? "sm:max-w-3xl" : "sm:max-w-lg")}>
+      <DialogContent className={cn("max-h-[85dvh] overflow-y-auto", tab === "graph" ? "sm:max-w-3xl" : "sm:max-w-lg")}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Trophy className="w-5 h-5 text-primary-ink" /> Statystyki i osiągnięcia

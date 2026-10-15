@@ -188,3 +188,17 @@ test("dolny pasek chowa się, gdy klawiatura Androida zmniejsza okno przy pisani
   await expect(page.locator("html")).not.toHaveAttribute("data-typing", "");
   await expect(nav).toBeVisible();
 });
+
+test("zwykłe okno na telefonie jest wyśrodkowane z marginesem 1 rem i zaokrąglone (1.3) @smoke", async ({ page }) => {
+  await page.getByRole("button", { name: "Więcej", exact: true }).click();
+  await page.getByRole("button", { name: "Samouczek" }).click();
+  const dialog = page.getByRole("dialog").last();
+  await expect(dialog).toBeVisible();
+  await page.waitForTimeout(400); // koniec animacji wejścia
+  const box = (await dialog.boundingBox())!;
+  expect(Math.round(box.x)).toBeGreaterThanOrEqual(16);
+  expect(Math.round(390 - box.x - box.width)).toBeGreaterThanOrEqual(16);
+  expect(box.y).toBeGreaterThanOrEqual(16);
+  expect(box.y + box.height).toBeLessThanOrEqual(844 - 16);
+  expect(await dialog.evaluate((el) => parseFloat(getComputedStyle(el).borderBottomLeftRadius))).toBeGreaterThan(0);
+});

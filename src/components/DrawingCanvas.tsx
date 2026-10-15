@@ -227,7 +227,7 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] w-full max-h-[90vh] h-full p-0 gap-0 overflow-hidden flex flex-col">
+      <DialogContent className="max-w-[95vw] max-sm:max-w-[95vw] w-full max-h-[90dvh] h-full p-0 gap-0 overflow-hidden flex flex-col">
         {/* Toolbar */}
         <div className="flex items-center gap-2 p-3 border-b border-border flex-wrap bg-card">
           <div className="flex items-center gap-1">

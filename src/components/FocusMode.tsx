@@ -78,7 +78,7 @@ export function FocusMode({ open, onOpenChange, initialTitle = "", initialConten
 
   return (
     <Dialog open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
-      <DialogContent className="max-w-none w-screen h-screen p-0 rounded-none border-0 bg-background flex flex-col gap-0 sm:rounded-none">
+      <DialogContent className="max-w-none max-sm:max-w-none max-h-none w-screen h-dvh p-0 rounded-none border-0 bg-background flex flex-col gap-0 sm:rounded-none">
         <DialogTitle className="sr-only">Tryb skupienia</DialogTitle>
         <div className="flex items-center justify-between px-6 py-4 border-b border-border/50">
           <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
@@ -124,7 +124,7 @@ export function FocusMode({ open, onOpenChange, initialTitle = "", initialConten
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Pisz w skupieniu… nic Cię nie rozprasza."
-            className="w-full min-h-[40vh] bg-transparent text-base leading-relaxed focus:outline-hidden resize-none placeholder:text-muted-foreground/40"
+            className="w-full min-h-[40dvh] bg-transparent text-base leading-relaxed focus:outline-hidden resize-none placeholder:text-muted-foreground/40"
           />
         </div>
 

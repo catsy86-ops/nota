@@ -30,7 +30,7 @@ const orDash = (n: number, fmt: (n: number) => string = String) => (Math.round(n
 export function YearSummaryDialog({ open, onOpenChange, data, initialYear }: YearSummaryDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg max-h-[min(88vh,48rem)] overflow-y-auto">
+      <DialogContent className="max-w-lg max-h-[min(88dvh,48rem)] overflow-y-auto">
         {/* Montowane z otwarciem — rok startuje od oglądanego miesiąca bez efektów. */}
         <YearBody data={data} initialYear={initialYear} />
       </DialogContent>

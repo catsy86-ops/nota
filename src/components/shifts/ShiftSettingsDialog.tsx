@@ -30,7 +30,7 @@ const CONTROL = "w-full h-10 coarse:h-11 rounded-lg border border-input bg-backg
 export function ShiftSettingsDialog({ open, onOpenChange, settings: s }: ShiftSettingsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[min(88vh,44rem)] overflow-y-auto"
+      <DialogContent className="max-w-md max-h-[min(88dvh,44rem)] overflow-y-auto"
         // Fokus na okno, nie na pole stawki — na telefonie klawiatura zasłaniałaby pół ustawień.
         onOpenAutoFocus={(e) => { e.preventDefault(); (e.currentTarget as HTMLElement).focus(); }}>
         <DialogHeader>
