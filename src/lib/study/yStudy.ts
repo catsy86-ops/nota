@@ -35,6 +35,8 @@ export interface JournalEntry {
   checked: string[];
   /** Zdjęcia z budowy: klucze z `imageStore` (bajty poza stanem Nauki). */
   images: string[];
+  /** Problem rozwiązany — moment rozwiązania (ms); brak = otwarty. Tylko dla `problem`. */
+  resolved?: number;
 }
 
 /** Ile zdjęć mieści jeden wpis. */
@@ -107,6 +109,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
     site: typeof e.site === "string" ? e.site.slice(0, SITE_MAX) : "",
     checked,
     images,
+    ...(e.kind === "problem" && typeof e.resolved === "number" && Number.isFinite(e.resolved) ? { resolved: e.resolved } : {}),
   };
 }
 
@@ -269,6 +272,27 @@ export function createYStudy(doc: Y.Doc) {
     });
   }
 
+  /**
+   * Zmienia wpis w całości (edycja w arkuszu). Wpis, który stał się problemem albo
+   * problem przeniesiony na inny temat, cofa temat z „Umiem” — jak nowy problem.
+   */
+  function updateEntry(entry: JournalEntry): void {
+    transact(() => {
+      const prev = journal.get(entry.id);
+      journal.set(entry.id, entry);
+      const newProblem = entry.kind === "problem" && entry.topic && (prev?.kind !== "problem" || prev.topic !== entry.topic);
+      if (newProblem && board.get(entry.topic!) === "done") board.set(entry.topic!, "doing");
+    });
+  }
+
+  /** Problem rozwiązany (`at`) albo z powrotem otwarty (`null`). */
+  function setResolved(id: string, at: number | null): void {
+    const e = journal.get(id);
+    if (!e || e.kind !== "problem") return;
+    const { resolved: _, ...rest } = e;
+    transact(() => journal.set(id, at === null ? rest : { ...rest, resolved: at }));
+  }
+
   /** Przywraca usunięty wpis (Cofnij); wpis, który w międzyczasie wrócił, zostaje. */
   function restoreEntry(entry: JournalEntry): void {
     transact(() => { if (!journal.has(entry.id)) journal.set(entry.id, entry); });
@@ -329,7 +353,7 @@ export function createYStudy(doc: Y.Doc) {
   return {
     get, dump, subscribe, isMerged,
     setColumn, setChecked, clearChecked, recordRound,
-    addEntry, restoreEntry, removeEntry, setSite,
+    addEntry, updateEntry, setResolved, restoreEntry, removeEntry, setSite,
     replaceAll, mergeIn,
   };
 }

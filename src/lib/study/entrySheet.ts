@@ -1,4 +1,6 @@
 import { useSyncExternalStore } from "react";
+import type { JournalDraft } from "./draft";
+import type { JournalEntry } from "./yStudy";
 
 /**
  * Czy arkusz „Wpis z budowy” jest otwarty. Poza komponentem, bo otwierają go
@@ -10,24 +12,62 @@ export interface JournalSheetState {
   open: boolean;
   /** Otwarty z karty tematu: temat i jego lista kontrolna od razu rozwinięte. */
   topicFirst: boolean;
+  /** Edytowany wpis; `null` = nowy wpis ze szkicu. */
+  editing: string | null;
 }
 
-let state: JournalSheetState = { open: false, topicFirst: false };
+/**
+ * Formularz edycji zapisanego wpisu — osobno od szkicu nowego wpisu, żeby
+ * poprawka starego wpisu nie nadpisała tego, co czeka na zapis. Tylko w pamięci:
+ * zamknięcie arkusza bez „Zapisz zmiany” porzuca edycję.
+ */
+export interface JournalEditForm extends Omit<JournalDraft, "at"> {
+  id: string;
+  at: number;
+  site: string;
+  resolved: number | null;
+}
+
+let state: JournalSheetState = { open: false, topicFirst: false, editing: null };
+let editForm: JournalEditForm | null = null;
 const listeners = new Set<() => void>();
+const emit = () => listeners.forEach((l) => l());
 
 function set(next: JournalSheetState) {
-  if (state.open === next.open && state.topicFirst === next.topicFirst) return;
+  if (state.open === next.open && state.topicFirst === next.topicFirst && state.editing === next.editing) return;
   state = next;
-  listeners.forEach((l) => l());
+  emit();
 }
 
-export const openJournalSheet = (topicFirst = false) => set({ open: true, topicFirst });
-export const closeJournalSheet = () => set({ open: false, topicFirst: false });
+export const openJournalSheet = (topicFirst = false) => { editForm = null; set({ open: true, topicFirst, editing: null }); };
+export const closeJournalSheet = () => { editForm = null; set({ open: false, topicFirst: false, editing: null }); };
 
-export const useJournalSheet = () => useSyncExternalStore(
-  (cb) => { listeners.add(cb); return () => listeners.delete(cb); },
-  () => state,
-);
+/** Otwiera arkusz z zapisanym wpisem; lista kontrolna rozwinięta, jeśli wpis ma odhaczone punkty. */
+export function openJournalEdit(entry: JournalEntry) {
+  editForm = {
+    id: entry.id, at: entry.at, kind: entry.kind, topic: entry.topic ?? "", text: entry.text,
+    checked: [...entry.checked], images: [...entry.images], site: entry.site, resolved: entry.resolved ?? null,
+  };
+  state = { open: true, topicFirst: entry.checked.length > 0, editing: entry.id };
+  emit();
+}
+
+export const getJournalEditForm = () => editForm;
+
+/** Zmiana formularza edycji; po zamknięciu arkusza (np. zdjęcie dokończone później) — nic. */
+export function patchJournalEditForm(patch: Partial<JournalEditForm>) {
+  if (!editForm) return;
+  editForm = { ...editForm, ...patch };
+  emit();
+}
+
+/** Zdjęcia dodane w edycji leżą w `imageStore`, zanim wpis się zapisze — chronione przed odśmiecaniem. */
+export const journalEditImageRefs = (): string[] => editForm?.images ?? [];
+
+const subscribe = (cb: () => void) => { listeners.add(cb); return () => listeners.delete(cb); };
+
+export const useJournalSheet = () => useSyncExternalStore(subscribe, () => state);
+export const useJournalEditForm = () => useSyncExternalStore(subscribe, () => editForm);
 
 /** Parametr adresu ze skrótu PWA „Wpis z budowy” (`/nauka?wpis=1`). */
 export const JOURNAL_ENTRY_PARAM = "wpis";

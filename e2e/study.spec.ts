@@ -186,7 +186,7 @@ test("dziennik: niezapisany wpis ze zdjęciem przeżywa zamknięcie arkusza, „
   await expect(sheet.getByRole("list", { name: "Zdjęcia we wpisie" })).toHaveCount(0);
 });
 
-test("dziennik: pusty wpis się nie zapisuje, usunięcie wpisu ma Cofnij", async ({ page }) => {
+test("dziennik: pusty wpis się nie zapisuje, usunięcie wpisu w arkuszu ma Cofnij", async ({ page }) => {
   await page.goto("/nauka");
   await openEntry(page);
   const sheet = page.getByTestId("journal-entry-sheet");
@@ -197,10 +197,67 @@ test("dziennik: pusty wpis się nie zapisuje, usunięcie wpisu ma Cofnij", async
   await sheet.getByLabel("Co się dzieje?").press("Control+Enter");
   await expect(page.locator("[data-journal-entry]")).toHaveCount(1);
 
-  await page.getByRole("button", { name: "Usuń wpis" }).click();
+  // Kosza na liście nie ma — usuwa się w arkuszu edycji.
+  await expect(page.getByRole("button", { name: "Usuń wpis" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Edytuj wpis" }).click();
+  await expect(sheet.getByRole("heading", { name: "Edytuj wpis" })).toBeVisible();
+  await sheet.getByRole("button", { name: "Usuń" }).click();
+  await expect(sheet).toHaveCount(0);
   await expect(page.locator("[data-journal-entry]")).toHaveCount(0);
   await page.getByRole("listitem").filter({ hasText: "Usunięto wpis" }).getByRole("button", { name: "Cofnij" }).click();
   await expect(page.locator("[data-journal-entry]")).toHaveCount(1);
+});
+
+test("dziennik: wpis „za wczoraj”, poprawka w arkuszu bez ruszania szkicu, problem rozwiązany", async ({ page }) => {
+  await page.goto("/nauka");
+  await openEntry(page);
+  const sheet = page.getByTestId("journal-entry-sheet");
+  await expect(sheet.getByRole("button", { name: "Kiedy: teraz. Zmień" })).toBeVisible();
+  await sheet.getByRole("button", { name: "Kiedy: teraz. Zmień" }).click();
+  const yesterday = await page.evaluate(() => {
+    const d = new Date(); d.setDate(d.getDate() - 1); d.setHours(16, 30, 0, 0);
+    return { value: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}T16:30`, label: d.toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long" }) };
+  });
+  await sheet.getByLabel("Kiedy").fill(yesterday.value);
+  await sheet.getByLabel("Kiedy").press("Enter");
+  await expect(sheet.getByRole("button", { name: "Kiedy: wczoraj, 16:30. Zmień" })).toBeVisible();
+  await sheet.getByRole("radio", { name: "Problem" }).click();
+  await sheet.getByLabel("Co się dzieje?").fill("Przeciek na złączce");
+  await sheet.getByRole("button", { name: "Zapisz wpis" }).click();
+
+  const entry = page.locator('[data-journal-entry="problem"]');
+  await expect(entry).toContainText("16:30");
+  await expect(page.getByRole("heading", { name: yesterday.label })).toBeVisible();
+  await expect(page.getByTestId("journal-open-problems")).toContainText("Otwarte problemy: 1");
+
+  // Niezapisany szkic nowego wpisu czeka, a edycja starego go nie dotyka.
+  await openEntry(page);
+  await expect(sheet.getByRole("button", { name: "Kiedy: teraz. Zmień" })).toBeVisible();
+  await sheet.getByLabel("Co się dzieje?").fill("Szkic na później");
+  await page.keyboard.press("Escape");
+  await entry.getByRole("button", { name: "Edytuj wpis" }).click();
+  await expect(sheet.getByRole("heading", { name: "Edytuj wpis" })).toBeVisible();
+  await expect(sheet.getByLabel("Co się dzieje?")).toHaveValue("Przeciek na złączce");
+  await expect(sheet.getByRole("button", { name: "Kiedy: wczoraj, 16:30. Zmień" })).toBeVisible();
+  await sheet.getByLabel("Co się dzieje?").fill("Przeciek na złączce — dokręcona");
+  await sheet.getByLabel("Problem rozwiązany").check();
+  await sheet.getByRole("button", { name: "Zapisz zmiany" }).click();
+  await expect(sheet).toHaveCount(0);
+  await expect(entry).toContainText("Przeciek na złączce — dokręcona");
+  await expect(entry).toContainText("Problem rozwiązany");
+  await expect(page.getByTestId("journal-open-problems")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Dokończ wpis" })).toBeVisible();
+
+  // Z listy: problem wraca do otwartych i znów da się go zamknąć; stan przeżywa odświeżenie.
+  await entry.getByRole("button", { name: "Otwórz ponownie" }).click();
+  await expect(page.getByTestId("journal-open-problems")).toContainText("Otwarte problemy: 1");
+  await entry.getByRole("button", { name: "Oznacz jako rozwiązany" }).click();
+  await expect(page.getByTestId("journal-open-problems")).toHaveCount(0);
+  await reloadWhenSaved(page);
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await expect(page.locator('[data-journal-entry="problem"][data-resolved]')).toHaveCount(1);
+  await openEntry(page);
+  await expect(sheet.getByLabel("Co się dzieje?")).toHaveValue("Szkic na później");
 });
 
 test("dziennik: dyktowanie dopisuje rozpoznany tekst do wpisu", async ({ page }) => {
@@ -285,7 +342,8 @@ test("dawny zapis Nauki z localStorage przechodzi do dokumentu raz i bez strat",
   await expect(page.locator("[data-journal-entry]")).toHaveCount(1);
 
   // Usunięty po migracji wpis nie wraca z kopii w localStorage po przeładowaniu.
-  await page.getByRole("button", { name: "Usuń wpis" }).click();
+  await page.getByRole("button", { name: "Edytuj wpis" }).click();
+  await page.getByTestId("journal-entry-sheet").getByRole("button", { name: "Usuń" }).click();
   await expect(page.locator("[data-journal-entry]")).toHaveCount(0);
   await reloadWhenSaved(page);
   await page.getByRole("tab", { name: "Dziennik" }).click();

@@ -1,14 +1,15 @@
 import { useMemo, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Check, CheckCircle2, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { toastWithUndo } from "@/lib/undoToast";
+import { cn } from "@/lib/utils";
+import { haptic } from "@/lib/haptics";
 import { NoteImage } from "@/components/NoteImage";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CHECKLIST, TOPICS } from "@/lib/study/content";
-import { removeJournalEntry, restoreJournalEntry, useStudy, type JournalEntry } from "@/lib/study/store";
+import { openProblems, setProblemResolved, useStudy, type JournalEntry } from "@/lib/study/store";
 import { dayLabel, entriesPl, KIND_LABEL, problemsPl } from "@/lib/study/journalView";
 import { useJournalDraft } from "@/lib/study/draft";
-import { openJournalSheet } from "@/lib/study/entrySheet";
+import { openJournalEdit, openJournalSheet } from "@/lib/study/entrySheet";
 import { JournalEntrySheet, KindIcon } from "./JournalEntrySheet";
 
 const topicTitle = (id: string | null) => TOPICS.find((t) => t.id === id)?.title ?? null;
@@ -17,6 +18,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 /**
  * Dziennik z budowy: na górze to, co już zapisane, nowy wpis w arkuszu („+ Wpis”, „+” w dolnym
  * pasku, skrót z ekranu głównego). Problem cofa temat do powtórki, a „Zrobione” liczy się jako praktyka.
+ * Problem zostaje otwarty, dopóki nie oznaczysz go jako rozwiązanego; poprawka i usunięcie wpisu — w arkuszu.
  */
 export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => void }) {
   const study = useStudy();
@@ -24,9 +26,10 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   const hasDraft = !!draft.text.trim() || draft.images.length > 0 || draft.checked.length > 0;
   const [zoom, setZoom] = useState<string | null>(null);
 
-  function remove(entry: JournalEntry) {
-    removeJournalEntry(entry.id);
-    toastWithUndo("Usunięto wpis", () => restoreJournalEntry(entry), { id: "journal-removed" });
+  function toggleResolved(entry: JournalEntry) {
+    const resolve = entry.resolved === undefined;
+    haptic(resolve ? "success" : "tap");
+    setProblemResolved(entry.id, resolve);
   }
 
   const sorted = useMemo(() => [...study.journal].sort((a, b) => b.at - a.at), [study.journal]);
@@ -45,6 +48,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
     const recent = study.journal.filter((e) => e.at >= since);
     return { all: recent.length, problems: recent.filter((e) => e.kind === "problem").length };
   }, [study.journal]);
+  const open = useMemo(() => openProblems(study.journal), [study.journal]);
 
   return (
     <div className="space-y-6" data-testid="study-journal">
@@ -55,6 +59,12 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
             <p className="font-mono text-xs text-muted-foreground tabular-nums" data-testid="journal-week">
               7 dni: {entriesPl(week.all)}, {problemsPl(week.problems)}
             </p>
+            {open > 0 && (
+              <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-foreground" data-testid="journal-open-problems">
+                <KindIcon kind="problem" className="h-3.5 w-3.5" />
+                Otwarte problemy: <span className="font-mono tabular-nums">{open}</span>
+              </p>
+            )}
           </div>
           <Button onClick={() => openJournalSheet()} className="shrink-0 coarse:h-11">
             <Plus className="mr-1 h-4 w-4" aria-hidden />{hasDraft ? "Dokończ wpis" : "Wpis"}
@@ -77,17 +87,18 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                 <ul className="space-y-2">
                   {d.entries.map((e) => {
                     const total = CHECKLIST.filter((c) => c.topic === e.topic).length;
+                    const resolved = e.kind === "problem" && e.resolved !== undefined;
                     return (
-                      <li key={e.id} className="rounded-xl border border-border bg-card p-3" data-journal-entry={e.kind}>
+                      <li key={e.id} className="rounded-xl border border-border bg-card p-3" data-journal-entry={e.kind} data-resolved={resolved || undefined}>
                         <div className="flex items-start gap-2.5">
-                          <KindIcon kind={e.kind} />
+                          {resolved ? <CheckCircle2 className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden /> : <KindIcon kind={e.kind} />}
                           <div className="min-w-0 flex-1">
                             <p className="whitespace-pre-wrap break-words text-sm leading-snug">{e.text || "Sprawdzone punkty listy"}</p>
                             <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
                               <span className="font-mono tabular-nums">
                                 {new Date(e.at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}
                               </span>
-                              <span>{KIND_LABEL[e.kind]}</span>
+                              <span>{resolved ? "Problem rozwiązany" : KIND_LABEL[e.kind]}</span>
                               {e.topic && (
                                 <button
                                   type="button"
@@ -101,6 +112,19 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                               {e.checked.length > 0 && <span className="tabular-nums">punkty {e.checked.length}/{total}</span>}
                               {e.site && <span className="truncate">{e.site}</span>}
                             </div>
+                            {e.kind === "problem" && (
+                              <button
+                                type="button"
+                                onClick={() => toggleResolved(e)}
+                                className={cn(
+                                  "pressable mt-2 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs coarse:min-h-11 coarse:px-3.5 coarse:text-sm",
+                                  resolved ? "border-border text-muted-foreground hover:text-foreground" : "border-warning/60 bg-warning/10 font-medium text-foreground hover:bg-warning/20",
+                                )}
+                              >
+                                <Check className="h-3.5 w-3.5" aria-hidden />
+                                {resolved ? "Otwórz ponownie" : "Oznacz jako rozwiązany"}
+                              </button>
+                            )}
                             {e.images.length > 0 && (
                               <ul className="mt-2 flex flex-wrap gap-2" aria-label="Zdjęcia wpisu">
                                 {e.images.map((ref) => (
@@ -115,11 +139,12 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                           </div>
                           <button
                             type="button"
-                            onClick={() => remove(e)}
-                            aria-label="Usuń wpis"
+                            onClick={() => openJournalEdit(e)}
+                            aria-label="Edytuj wpis"
+                            title="Edytuj albo usuń wpis"
                             className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground coarse:h-11 coarse:w-11"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Pencil className="h-4 w-4" />
                           </button>
                         </div>
                       </li>

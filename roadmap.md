@@ -941,8 +941,8 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 - [x] D2e Prośba o trwały zapis przy pierwszym zdjęciu. ✅ 2026-10-15: `JournalEntrySheet` (od dołu na telefonie, z boku na komputerze; zapis poza przewijaną treścią, nad klawiaturą dzięki `resizes-content`), stan otwarcia w `lib/study/entrySheet.ts`; temat zwinięty, rozwinięty przy wejściu z karty tematu; „Dokończ wpis” przy szkicu; pusty stan otwiera arkusz; „Aparat” tylko na dotyku; podpowiedź mikrofonu klawiatury bez Web Speech albo offline; skrót PWA drugi na liście. e2e `study.spec.ts` 12/12 (w tym telefon).
 
 ### D3 — edycja i problemy
-- [ ] D3a Edycja wpisu w arkuszu (data i godzina — wpis „za wczoraj”), „Usuń” w arkuszu zamiast kosza na liście.
-- [ ] D3b Problem otwarty/rozwiązany, licznik „Otwarte problemy: N”.
+- [x] D3a Edycja wpisu w arkuszu (data i godzina — wpis „za wczoraj”), „Usuń” w arkuszu zamiast kosza na liście.
+- [x] D3b Problem otwarty/rozwiązany, licznik „Otwarte problemy: N”. ✅ 2026-10-15: ołówek na liście otwiera ten sam arkusz z osobnym formularzem edycji (`entrySheet.ts`, tylko w pamięci — szkic nowego wpisu nietknięty, zdjęcia edycji chronione przed odśmiecaniem); pigułka „Kiedy” (`datetime-local`, „Teraz”) w nowym wpisie i edycji, przyszłość przycięta do teraz; budowa w edycji zmienia tylko ten wpis; edycja na problem cofa temat z „Umiem”. Problem: pole `resolved` (moment rozwiązania), „Oznacz jako rozwiązany” / „Otwórz ponownie” na liście, „Problem rozwiązany” w arkuszu, licznik w nagłówku dziennika. Vitest 999/999, e2e `study.spec.ts` 13/13.
 
 ### D4 — budowy
 - [ ] D4a Pigułki ostatnich budów w arkuszu i filtrach.

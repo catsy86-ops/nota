@@ -56,6 +56,7 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
       site: typeof e.site === "string" ? e.site.slice(0, SITE_MAX) : "",
       checked: checkedIds,
       images,
+      ...(e.kind === "problem" && typeof e.resolved === "number" && Number.isFinite(e.resolved) ? { resolved: e.resolved } : {}),
     });
   }
   journal.sort((a, b) => a.at - b.at);
@@ -126,6 +127,24 @@ export interface NewJournalEntry {
   text: string;
   checked?: string[];
   images?: string[];
+  /** Moment wpisu („za wczoraj”); brak = teraz. Przyszłość przycina się do teraz. */
+  at?: number | null;
+}
+
+/** Wejście z arkusza → pola wpisu przefiltrowane przez materiał; `null` = pusty wpis. */
+function entryFields(input: NewJournalEntry, now: number) {
+  const text = input.text.trim().slice(0, JOURNAL_MAX_TEXT);
+  const checked = (input.checked ?? []).filter((id) => CHECKLIST.some((c) => c.id === id));
+  const images = (input.images ?? []).filter(isImageRef).slice(0, JOURNAL_MAX_IMAGES);
+  if (!text && checked.length === 0 && images.length === 0) return null;
+  return {
+    at: typeof input.at === "number" && Number.isFinite(input.at) ? Math.min(input.at, now) : now,
+    kind: input.kind,
+    topic: input.topic && TOPICS.some((t) => t.id === input.topic) ? input.topic : null,
+    text,
+    checked,
+    images,
+  };
 }
 
 /**
@@ -133,23 +152,40 @@ export interface NewJournalEntry {
  * teoria nie wytrzymała praktyki, więc wraca do powtórki (i na początek quizu).
  */
 export function addJournalEntry(input: NewJournalEntry, now: number = Date.now()): JournalEntry | null {
-  const text = input.text.trim().slice(0, JOURNAL_MAX_TEXT);
-  const checked = (input.checked ?? []).filter((id) => CHECKLIST.some((c) => c.id === id));
-  const images = (input.images ?? []).filter(isImageRef).slice(0, JOURNAL_MAX_IMAGES);
-  if (!text && checked.length === 0 && images.length === 0) return null;
-  const entry: JournalEntry = {
-    id: crypto.randomUUID(),
-    at: now,
-    kind: input.kind,
-    topic: input.topic && TOPICS.some((t) => t.id === input.topic) ? input.topic : null,
-    text,
-    site: getStudy().site,
-    checked,
-    images,
-  };
+  const fields = entryFields(input, now);
+  if (!fields) return null;
+  const entry: JournalEntry = { id: crypto.randomUUID(), ...fields, site: getStudy().site };
   yStudy.addEntry(entry);
   return entry;
 }
+
+export interface JournalEdit extends NewJournalEntry {
+  site: string;
+  /** Problem rozwiązany: moment rozwiązania; `null` = otwarty. Inny rodzaj gubi rozwiązanie. */
+  resolved: number | null;
+}
+
+/** Zapisuje zmiany wpisu z arkusza; `null` = pusty wpis (nic się nie zmienia). */
+export function updateJournalEntry(id: string, input: JournalEdit, now: number = Date.now()): JournalEntry | null {
+  const fields = entryFields(input, now);
+  if (!fields) return null;
+  const entry: JournalEntry = {
+    id, ...fields,
+    site: input.site.trim().slice(0, SITE_MAX),
+    ...(fields.kind === "problem" && input.resolved !== null ? { resolved: input.resolved } : {}),
+  };
+  yStudy.updateEntry(entry);
+  return entry;
+}
+
+/** Problem rozwiązany albo z powrotem otwarty — z listy, bez otwierania arkusza. */
+export function setProblemResolved(id: string, resolved: boolean, now: number = Date.now()) {
+  yStudy.setResolved(id, resolved ? now : null);
+}
+
+/** Problemy, które czekają na rozwiązanie. */
+export const openProblems = (journal: readonly JournalEntry[]) =>
+  journal.filter((e) => e.kind === "problem" && e.resolved === undefined).length;
 
 /** Przywraca usunięty wpis (Cofnij) na właściwe miejsce w czasie. */
 export function restoreJournalEntry(entry: JournalEntry) {

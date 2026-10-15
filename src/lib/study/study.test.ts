@@ -4,10 +4,12 @@ import { buildRound, missedTopics, scoreRound } from "./quiz";
 import { topicToNote } from "./toNote";
 import { journalImageRefs } from "./images";
 import { clearJournalDraft, getJournalDraft, patchJournalDraft, sanitizeDraft, setJournalDraftTopic, EMPTY_DRAFT } from "./draft";
-import { dayLabel, entriesPl, problemsPl } from "./journalView";
+import { dayLabel, entriesPl, fromLocalInput, problemsPl, toLocalInput, whenLabel } from "./journalView";
+import { closeJournalSheet, getJournalEditForm, openJournalEdit, patchJournalEditForm } from "./entrySheet";
 import {
   sanitizeStudy, moveTopic, recordRound, activeStreak, toggleChecked, getStudy, columnOf, resetChecklist,
   addJournalEntry, removeJournalEntry, restoreJournalEntry, setSite, practiceByTopic,
+  updateJournalEntry, setProblemResolved, openProblems,
 } from "./store";
 import { resetStudyForTests } from "./data";
 import { yjsStore } from "@/lib/yjsStore";
@@ -208,6 +210,92 @@ describe("dziennik z budowy", () => {
   });
 });
 
+describe("dziennik — edycja i problemy", () => {
+  beforeEach(freshStudy);
+
+  it("wpis „za wczoraj”: podany moment, przyszłość przycięta do teraz", () => {
+    const now = 10_000;
+    expect(addJournalEntry({ kind: "note", topic: null, text: "wczoraj", at: 4000 }, now)!.at).toBe(4000);
+    expect(addJournalEntry({ kind: "note", topic: null, text: "jutro", at: 99_000 }, now)!.at).toBe(now);
+    expect(addJournalEntry({ kind: "note", topic: null, text: "teraz", at: null }, now)!.at).toBe(now);
+  });
+
+  it("edycja zmienia wpis w miejscu, z własną budową i nowym miejscem w czasie", () => {
+    setSite("Budowa A");
+    const a = addJournalEntry({ kind: "note", topic: null, text: "pierwszy" }, 1000)!;
+    addJournalEntry({ kind: "note", topic: null, text: "drugi" }, 2000);
+    setSite("Budowa B");
+    const e = updateJournalEntry(a.id, { kind: "ok", topic: "spadki", text: " poprawiony ", checked: ["spadki-1"], at: 3000, site: "Budowa A2", resolved: 5 }, 9000)!;
+    expect(e).toMatchObject({ id: a.id, kind: "ok", text: "poprawiony", site: "Budowa A2", at: 3000 });
+    expect(e.resolved).toBeUndefined();
+    expect(getStudy().journal.map((x) => x.text)).toEqual(["drugi", "poprawiony"]);
+    expect(getStudy().site).toBe("Budowa B");
+    expect(updateJournalEntry(a.id, { kind: "ok", topic: null, text: "  ", at: 3000, site: "", resolved: null })).toBeNull();
+    expect(getStudy().journal).toHaveLength(2);
+  });
+
+  it("edycja na problem cofa temat z „Umiem”; poprawka tekstu istniejącego problemu już nie", () => {
+    const e = addJournalEntry({ kind: "ok", topic: "spadki", text: "ok" })!;
+    moveTopic("spadki", "done");
+    updateJournalEntry(e.id, { kind: "problem", topic: "spadki", text: "jednak nie", at: e.at, site: "", resolved: null });
+    expect(columnOf(getStudy(), "spadki")).toBe("doing");
+    moveTopic("spadki", "done");
+    updateJournalEntry(e.id, { kind: "problem", topic: "spadki", text: "jednak nie, poprawka", at: e.at, site: "", resolved: null });
+    expect(columnOf(getStudy(), "spadki")).toBe("done");
+  });
+
+  it("problem otwarty → rozwiązany → otwarty; licznik otwartych", () => {
+    const p1 = addJournalEntry({ kind: "problem", topic: null, text: "przeciek" }, 1000)!;
+    addJournalEntry({ kind: "problem", topic: null, text: "spadek" }, 2000);
+    const ok = addJournalEntry({ kind: "ok", topic: null, text: "zrobione" }, 3000)!;
+    expect(openProblems(getStudy().journal)).toBe(2);
+    setProblemResolved(p1.id, true, 5000);
+    setProblemResolved(ok.id, true, 5000);
+    expect(getStudy().journal.find((e) => e.id === p1.id)!.resolved).toBe(5000);
+    expect(getStudy().journal.find((e) => e.id === ok.id)!.resolved).toBeUndefined();
+    expect(openProblems(getStudy().journal)).toBe(1);
+    setProblemResolved(p1.id, false);
+    expect(openProblems(getStudy().journal)).toBe(2);
+  });
+
+  it("formularz edycji jest osobno od szkicu, a jego zdjęcia chronione do zamknięcia", () => {
+    const img = "a".repeat(64), added = "b".repeat(64);
+    patchJournalDraft({ ...EMPTY_DRAFT, text: "szkic nowego" });
+    const e = addJournalEntry({ kind: "problem", topic: null, text: "stary", images: [img] }, 1000)!;
+    openJournalEdit(e);
+    patchJournalEditForm({ text: "zmieniony", images: [img, added] });
+    expect(getJournalDraft().text).toBe("szkic nowego");
+    expect(getJournalEditForm()).toMatchObject({ id: e.id, at: 1000, resolved: null, text: "zmieniony" });
+    expect(journalImageRefs().has(added)).toBe(true);
+    closeJournalSheet();
+    expect(getJournalEditForm()).toBeNull();
+    expect(journalImageRefs().has(added)).toBe(false);
+    patchJournalEditForm({ text: "po zamknięciu" });
+    expect(getJournalEditForm()).toBeNull();
+  });
+
+  it("sanitizeStudy zostawia rozwiązanie tylko problemom", () => {
+    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", streak: 0, lastDay: null };
+    const s = sanitizeStudy(d, { journal: [
+      { id: "p", at: 1, kind: "problem", topic: null, text: "a", site: "", checked: [], images: [], resolved: 7 },
+      { id: "n", at: 2, kind: "note", topic: null, text: "b", site: "", checked: [], images: [], resolved: 7 },
+      { id: "q", at: 3, kind: "problem", topic: null, text: "c", site: "", checked: [], images: [], resolved: "wczoraj" },
+    ] });
+    expect(s.journal.map((e) => e.resolved)).toEqual([7, undefined, undefined]);
+  });
+
+  it("data i godzina: pole datetime-local w czasie lokalnym i krótka etykieta", () => {
+    const at = new Date(2026, 9, 14, 7, 5).getTime();
+    expect(toLocalInput(at)).toBe("2026-10-14T07:05");
+    expect(fromLocalInput("2026-10-14T07:05")).toBe(at);
+    expect(fromLocalInput("")).toBeNull();
+    const now = new Date(2026, 9, 15, 12).getTime();
+    expect(whenLabel(new Date(2026, 9, 15, 9, 30).getTime(), now)).toBe("dziś, 09:30");
+    expect(whenLabel(at, now)).toBe("wczoraj, 07:05");
+    expect(whenLabel(new Date(2025, 9, 1, 8).getTime(), now)).toMatch(/2025/);
+  });
+});
+
 describe("dziennik — limit i etykiety", () => {
   it("bez limitu wpisów (dawny limit kasował najstarsze po cichu)", () => {
     const journal = Array.from({ length: 3500 }, (_, i) => ({ id: `e${i}`, at: i + 1, kind: "note", topic: null, text: `w${i}`, site: "", checked: [], images: [] }));
@@ -259,8 +347,9 @@ describe("szkic wpisu", () => {
   });
 
   it("sanitizeDraft odrzuca śmieci", () => {
-    expect(sanitizeDraft(EMPTY_DRAFT, { kind: "?", text: 5, images: ["nie-klucz", "f".repeat(64)], checked: [1, "a"] }))
+    expect(sanitizeDraft(EMPTY_DRAFT, { kind: "?", text: 5, images: ["nie-klucz", "f".repeat(64)], checked: [1, "a"], at: "wczoraj" }))
       .toEqual({ ...EMPTY_DRAFT, images: ["f".repeat(64)], checked: ["a"] });
+    expect(sanitizeDraft(EMPTY_DRAFT, { at: 1234 }).at).toBe(1234);
     expect(sanitizeDraft(EMPTY_DRAFT, null)).toBe(EMPTY_DRAFT);
   });
 });

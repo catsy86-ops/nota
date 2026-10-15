@@ -26,6 +26,19 @@ describe("Nauka w Yjs", () => {
     expect(b.get().journal.map((e) => e.id)).toEqual(["z-b", "z-a"]);
   });
 
+  it("rozwiązanie problemu przechodzi na drugi telefon; cleanEntry trzyma je tylko przy problemie", () => {
+    const { a, b, sync } = pair();
+    a.addEntry(entry("p", 1, { kind: "problem" }));
+    sync();
+    b.setResolved("p", 500);
+    sync();
+    expect(a.get().journal[0].resolved).toBe(500);
+    a.setResolved("p", null);
+    sync();
+    expect(b.get().journal[0].resolved).toBeUndefined();
+    expect(cleanDump({ journal: [entry("n", 1, { resolved: 3 })] }).journal[0].resolved).toBeUndefined();
+  });
+
   it("usunięcie na jednym telefonie i Cofnij nie gubią wpisów z drugiego", () => {
     const { a, b, sync } = pair();
     a.addEntry(entry("x", 1));

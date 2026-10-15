@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Camera, CheckCircle2, ChevronDown, ImagePlus, Loader2, MapPin, Mic, NotebookPen, Pencil, Play, X } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, ChevronDown, Clock, ImagePlus, Loader2, MapPin, Mic, NotebookPen, Pencil, Play, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { NoteImage } from "@/components/NoteImage";
+import { toastWithUndo } from "@/lib/undoToast";
 import { cn } from "@/lib/utils";
 import { haptic } from "@/lib/haptics";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -13,10 +14,12 @@ import { prepareImage } from "@/lib/imagePrepare";
 import { imageStore } from "@/lib/imageStore";
 import { requestPersistentStorage } from "@/lib/storagePersistence";
 import { CHECKLIST, MODULES, TOPICS } from "@/lib/study/content";
-import { addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, setSite, useStudy, type JournalKind } from "@/lib/study/store";
-import { clearJournalDraft, getJournalDraft, patchJournalDraft, setJournalDraftTopic, useJournalDraft } from "@/lib/study/draft";
-import { closeJournalSheet, useJournalSheet } from "@/lib/study/entrySheet";
-import { KIND_LABEL } from "@/lib/study/journalView";
+import {
+  addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, updateJournalEntry, useStudy, type JournalKind,
+} from "@/lib/study/store";
+import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft, type JournalDraft } from "@/lib/study/draft";
+import { closeJournalSheet, getJournalEditForm, patchJournalEditForm, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
+import { fromLocalInput, KIND_LABEL, toLocalInput, whenLabel } from "@/lib/study/journalView";
 
 export function KindIcon({ kind, className = "h-4 w-4" }: { kind: JournalKind; className?: string }) {
   if (kind === "ok") return <CheckCircle2 className={cn(className, "shrink-0 text-emerald-600")} aria-hidden />;
@@ -35,6 +38,9 @@ const KIND_ON: Record<JournalKind, string> = {
 // dane w przeglądarce, a Chrome chętniej przyznaje trwałość przy wyraźnym zaangażowaniu.
 let persistAsked = false;
 
+/** Pola wspólne dla szkicu nowego wpisu i edycji zapisanego. */
+type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images">;
+
 function useOnline() {
   const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine);
   useEffect(() => {
@@ -50,26 +56,37 @@ function useOnline() {
 /**
  * Wpis z budowy w arkuszu: na telefonie od dołu (nad klawiaturą, kciukiem), na komputerze
  * z boku. Najpierw to, co na budowie robi się zawsze — rodzaj, tekst, zdjęcie; temat z listą
- * kontrolną jest zwinięty, chyba że wpis zaczyna się z karty tematu. Arkusz pokazuje szkic
- * (`draft.ts`): zamknięcie nie gubi tekstu ani zdjęć.
+ * kontrolną jest zwinięty, chyba że wpis zaczyna się z karty tematu. Nowy wpis to szkic
+ * (`draft.ts`): zamknięcie nie gubi tekstu ani zdjęć. Ten sam arkusz poprawia zapisany wpis
+ * (`openJournalEdit`) — wtedy na formularzu edycji, a w stopce jest też „Usuń”.
  */
 export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string) => void }) {
-  const { open, topicFirst } = useJournalSheet();
+  const { open, topicFirst, editing } = useJournalSheet();
   const isMobile = useIsMobile();
   const study = useStudy();
   const draft = useJournalDraft();
-  const { topic, kind, text, images } = draft;
-  const checked = useMemo(() => new Set(draft.checked), [draft.checked]);
+  const editForm = useJournalEditForm();
+  const isEdit = editing !== null && editForm !== null;
+  const form: FormFields = isEdit ? editForm : draft;
+  const { topic, kind, text, images } = form;
+  const checked = useMemo(() => new Set(form.checked), [form.checked]);
+  // Czytane na świeżo (zdjęcia obrabiają się asynchronicznie); edycja zamknięta w trakcie → pusty formularz.
+  const getForm = (): FormFields => (isEdit ? getJournalEditForm() ?? EMPTY_DRAFT : getJournalDraft());
+  const patch: (p: Partial<FormFields>) => void = isEdit ? patchJournalEditForm : patchJournalDraft;
+  const site = isEdit ? editForm.site : study.site;
+  /** Moment wpisu; `null` = chwila zapisu (tylko nowy wpis). */
+  const at = isEdit ? editForm.at : draft.at;
   const [processing, setProcessing] = useState(0);
   const [topicOpen, setTopicOpen] = useState(false);
   const [editingSite, setEditingSite] = useState(false);
+  const [editingWhen, setEditingWhen] = useState(false);
   const galleryRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
   const online = useOnline();
 
   const setText = (next: string | ((prev: string) => string)) =>
-    patchJournalDraft({ text: typeof next === "function" ? next(getJournalDraft().text) : next });
+    patch({ text: typeof next === "function" ? next(getForm().text) : next });
   // Ręce zajęte robotą: dyktowanie dopisuje rozpoznane zdanie na końcu wpisu.
   const dictation = useDictation((spoken) => {
     if (!spoken) return;
@@ -77,22 +94,33 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   });
 
   useEffect(() => {
-    if (!open) { setEditingSite(false); return; }
-    setTopicOpen(topicFirst);
-  }, [open, topicFirst]);
+    setEditingSite(false);
+    setEditingWhen(false);
+    if (open) setTopicOpen(topicFirst);
+  }, [open, topicFirst, editing]);
 
   const items = useMemo(() => CHECKLIST.filter((c) => c.topic === topic), [topic]);
   const current = TOPICS.find((t) => t.id === topic) ?? null;
 
   function toggle(id: string) {
-    const prev = getJournalDraft().checked;
-    patchJournalDraft({ checked: prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id] });
+    const prev = getForm().checked;
+    patch({ checked: prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id] });
+  }
+
+  /** Inny temat = inna lista kontrolna, więc zaznaczone punkty się zerują; tekst i zdjęcia zostają. */
+  function setTopic(next: string) {
+    if (next !== getForm().topic) patch({ topic: next, checked: [] });
+  }
+
+  function setAt(next: number | null) {
+    if (isEdit) patchJournalEditForm({ at: next ?? Date.now() });
+    else patchJournalDraft({ at: next });
   }
 
   async function addPhotos(files: File[]) {
     let skipped = 0;
     // Miejsca liczone z góry: dwa szybkie wybory zdjęć nie przekroczą limitu wpisu.
-    const room = JOURNAL_MAX_IMAGES - getJournalDraft().images.length - processing;
+    const room = JOURNAL_MAX_IMAGES - getForm().images.length - processing;
     if (files.length > room) toast(`Wpis mieści maksymalnie ${JOURNAL_MAX_IMAGES} zdjęcia`);
     const batch = files.slice(0, Math.max(0, room));
     if (batch.length === 0) return;
@@ -105,8 +133,8 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
           if (!prepared) { skipped += 1; continue; }
           const ref = await imageStore.putBlob(prepared);
           // Szkic czytany na świeżo: w trakcie obróbki mogło zniknąć inne zdjęcie albo zmienić się tekst.
-          const now = getJournalDraft().images;
-          if (now.length < JOURNAL_MAX_IMAGES && !now.includes(ref)) { patchJournalDraft({ images: [...now, ref] }); haptic("tap"); }
+          const now = getForm().images;
+          if (now.length < JOURNAL_MAX_IMAGES && !now.includes(ref)) { patch({ images: [...now, ref] }); haptic("tap"); }
         } finally {
           setProcessing((n) => n - 1);
         }
@@ -119,8 +147,9 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
 
   function submit() {
     if (processing > 0) return;
+    if (isEdit) { saveEdit(); return; }
     const wasDone = topic && columnOf(study, topic) === "done";
-    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images });
+    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, at });
     if (!entry) {
       haptic("warn");
       toast("Wpisz, co się dzieje, dodaj zdjęcie albo zaznacz sprawdzone punkty");
@@ -131,6 +160,32 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     clearJournalDraft();
     closeJournalSheet();
     toast.success(kind === "problem" && wasDone ? "Zapisano problem — temat wraca do powtórki" : "Zapisano wpis");
+  }
+
+  function saveEdit() {
+    const f = getJournalEditForm();
+    if (!f) return;
+    const prev = study.journal.find((e) => e.id === f.id);
+    const demotes = f.kind === "problem" && !!f.topic && columnOf(study, f.topic) === "done" && (prev?.kind !== "problem" || prev.topic !== f.topic);
+    const saved = updateJournalEntry(f.id, {
+      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, at: f.at, site: f.site, resolved: f.resolved,
+    });
+    if (!saved) {
+      haptic("warn");
+      toast("Wpis nie może być pusty — opisz, co się dzieje, albo usuń wpis");
+      textRef.current?.focus();
+      return;
+    }
+    haptic("success");
+    closeJournalSheet();
+    toast.success(demotes ? "Zapisano zmiany — temat wraca do powtórki" : "Zapisano zmiany");
+  }
+
+  function remove() {
+    if (!editing) return;
+    const entry = removeJournalEntry(editing);
+    closeJournalSheet();
+    if (entry) toastWithUndo("Usunięto wpis", () => restoreJournalEntry(entry), { id: "journal-removed" });
   }
 
   const fileInput = (props: { ref: React.RefObject<HTMLInputElement>; testId: string; capture?: boolean }) => (
@@ -159,37 +214,70 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
         onOpenAutoFocus={(e) => e.preventDefault()}
       >
         <SheetHeader className="shrink-0 px-5 pb-2 pt-5 text-left">
-          <SheetTitle className="font-display">Wpis z budowy</SheetTitle>
-          <SheetDescription className="sr-only">Rodzaj, opis, zdjęcia i temat z materiału. Szkic zostaje po zamknięciu.</SheetDescription>
+          <SheetTitle className="font-display">{isEdit ? "Edytuj wpis" : "Wpis z budowy"}</SheetTitle>
+          <SheetDescription className="sr-only">
+            {isEdit ? "Popraw rodzaj, opis, zdjęcia, temat albo datę wpisu." : "Rodzaj, opis, zdjęcia i temat z materiału. Szkic zostaje po zamknięciu."}
+          </SheetDescription>
         </SheetHeader>
 
         <div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain px-5 pb-4">
-          {editingSite ? (
-            <label className="block space-y-1 text-xs text-muted-foreground">
-              Inwestycja / adres
-              <input
-                autoFocus
-                value={study.site}
-                onChange={(e) => setSite(e.target.value)}
-                onBlur={() => setEditingSite(false)}
-                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setEditingSite(false); } }}
-                placeholder="np. Dom Kowalskich, ul. Leśna 4"
-                enterKeyHint="done"
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
-              />
-            </label>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setEditingSite(true)}
-              aria-label={study.site ? `Budowa: ${study.site}. Zmień` : "Dodaj budowę"}
-              className="pressable inline-flex max-w-full items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-sm coarse:min-h-11"
-            >
-              <MapPin className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
-              <span className={cn("truncate", !study.site && "text-muted-foreground")}>{study.site || "Dodaj budowę"}</span>
-              <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
-            </button>
-          )}
+          <div className="flex flex-wrap gap-2">
+            {editingSite ? (
+              <label className="block w-full space-y-1 text-xs text-muted-foreground">
+                Inwestycja / adres
+                <input
+                  autoFocus
+                  value={site}
+                  onChange={(e) => (isEdit ? patchJournalEditForm({ site: e.target.value }) : setSite(e.target.value))}
+                  onBlur={() => setEditingSite(false)}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setEditingSite(false); } }}
+                  placeholder="np. Dom Kowalskich, ul. Leśna 4"
+                  enterKeyHint="done"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+                />
+              </label>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setEditingSite(true)}
+                aria-label={site ? `Budowa: ${site}. Zmień` : "Dodaj budowę"}
+                className="pressable inline-flex max-w-full items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-sm coarse:min-h-11"
+              >
+                <MapPin className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
+                <span className={cn("truncate", !site && "text-muted-foreground")}>{site || "Dodaj budowę"}</span>
+                <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+              </button>
+            )}
+            {/* Wpis „za wczoraj”: data i godzina zwinięte w pigułkę, domyślnie chwila zapisu. */}
+            {editingWhen ? (
+              <div className="flex w-full items-end gap-2">
+                <label className="block min-w-0 flex-1 space-y-1 text-xs text-muted-foreground">
+                  Kiedy
+                  <input
+                    type="datetime-local"
+                    autoFocus
+                    value={toLocalInput(at ?? Date.now())}
+                    max={toLocalInput(Date.now())}
+                    onChange={(e) => { const next = fromLocalInput(e.target.value); if (next !== null) setAt(next); }}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setEditingWhen(false); } }}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+                  />
+                </label>
+                <Button type="button" variant="outline" onClick={() => { setAt(null); setEditingWhen(false); }} className="coarse:h-11">Teraz</Button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setEditingWhen(true)}
+                aria-label={`Kiedy: ${at === null ? "teraz" : whenLabel(at)}. Zmień`}
+                className="pressable inline-flex max-w-full items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-sm coarse:min-h-11"
+              >
+                <Clock className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
+                <span className={cn("truncate tabular-nums", at === null && "text-muted-foreground")}>{at === null ? "Teraz" : whenLabel(at)}</span>
+                <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+              </button>
+            )}
+          </div>
 
           <div role="radiogroup" aria-label="Rodzaj wpisu" className="grid grid-cols-3 gap-2">
             {(Object.keys(KIND_LABEL) as JournalKind[]).map((k) => (
@@ -198,7 +286,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 type="button"
                 role="radio"
                 aria-checked={kind === k}
-                onClick={() => { haptic("selection"); patchJournalDraft({ kind: k }); }}
+                onClick={() => { haptic("selection"); patch({ kind: k }); }}
                 className={cn(
                   "pressable flex flex-col items-center justify-center gap-1 rounded-xl border-2 py-2.5 text-sm transition-colors duration-fast coarse:min-h-16",
                   kind === k ? cn(KIND_ON[k], "font-semibold text-foreground") : "border-border text-muted-foreground hover:bg-muted",
@@ -209,6 +297,16 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               </button>
             ))}
           </div>
+
+          {isEdit && kind === "problem" && (
+            <label className="flex items-center gap-2.5 rounded-xl border border-border px-3 py-2.5 text-sm coarse:min-h-12">
+              <Checkbox
+                checked={editForm.resolved !== null}
+                onCheckedChange={(on) => patchJournalEditForm({ resolved: on === true ? editForm.resolved ?? Date.now() : null })}
+              />
+              Problem rozwiązany
+            </label>
+          )}
 
           <div className="space-y-1">
             <label className="block space-y-1 text-xs text-muted-foreground">
@@ -264,7 +362,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                     <NoteImage imageRef={ref} alt="Zdjęcie z budowy" className="h-20 w-20 rounded-lg object-cover" placeholderClassName="h-20 w-20 rounded-lg" />
                     <button
                       type="button"
-                      onClick={() => patchJournalDraft({ images: getJournalDraft().images.filter((r) => r !== ref) })}
+                      onClick={() => patch({ images: getForm().images.filter((r) => r !== ref) })}
                       aria-label="Usuń zdjęcie z wpisu"
                       className="absolute -right-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full bg-destructive text-destructive-foreground coarse:h-8 coarse:w-8"
                     >
@@ -301,7 +399,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                   Czego dotyczy
                   <select
                     value={topic}
-                    onChange={(e) => setJournalDraftTopic(e.target.value)}
+                    onChange={(e) => setTopic(e.target.value)}
                     className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
                   >
                     <option value="">Ogólnie (bez tematu)</option>
@@ -342,10 +440,19 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
 
         {/* Przycisk poza przewijaną treścią: z klawiaturą na ekranie (`resizes-content`) wisi tuż nad nią. */}
         <div className="shrink-0 border-t border-border bg-background px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
-          <Button onClick={submit} disabled={processing > 0} className="h-12 w-full text-base">
-            {processing > 0 ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden />Przygotowuję zdjęcia…</> : "Zapisz wpis"}
-          </Button>
-          <p className="mt-1.5 text-center text-xs text-muted-foreground coarse:hidden">Ctrl+Enter zapisuje wpis</p>
+          <div className="flex gap-2">
+            {isEdit && (
+              <Button type="button" variant="outline" onClick={remove} className="h-12 shrink-0 text-destructive hover:text-destructive">
+                <Trash2 className="mr-1.5 h-4 w-4" aria-hidden />Usuń
+              </Button>
+            )}
+            <Button onClick={submit} disabled={processing > 0} className="h-12 min-w-0 flex-1 text-base">
+              {processing > 0
+                ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden />Przygotowuję zdjęcia…</>
+                : isEdit ? "Zapisz zmiany" : "Zapisz wpis"}
+            </Button>
+          </div>
+          <p className="mt-1.5 text-center text-xs text-muted-foreground coarse:hidden">Ctrl+Enter zapisuje {isEdit ? "zmiany" : "wpis"}</p>
         </div>
       </SheetContent>
     </Sheet>

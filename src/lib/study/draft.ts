@@ -13,9 +13,11 @@ export interface JournalDraft {
   text: string;
   checked: string[];
   images: string[];
+  /** Moment wpisu ustawiony ręcznie („za wczoraj”); `null` = chwila zapisu. */
+  at: number | null;
 }
 
-export const EMPTY_DRAFT: JournalDraft = { topic: "", kind: "ok", text: "", checked: [], images: [] };
+export const EMPTY_DRAFT: JournalDraft = { topic: "", kind: "ok", text: "", checked: [], images: [], at: null };
 
 export function sanitizeDraft(defaults: JournalDraft, stored: unknown): JournalDraft {
   if (!stored || typeof stored !== "object") return defaults;
@@ -26,6 +28,7 @@ export function sanitizeDraft(defaults: JournalDraft, stored: unknown): JournalD
     text: typeof s.text === "string" ? s.text.slice(0, JOURNAL_MAX_TEXT) : "",
     checked: Array.isArray(s.checked) ? s.checked.filter((id): id is string => typeof id === "string").slice(0, 60) : [],
     images: Array.isArray(s.images) ? s.images.filter((r): r is string => typeof r === "string" && isImageRef(r)).slice(0, JOURNAL_MAX_IMAGES) : [],
+    at: typeof s.at === "number" && Number.isFinite(s.at) ? s.at : null,
   };
 }
 

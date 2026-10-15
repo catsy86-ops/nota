@@ -3,13 +3,14 @@ import { yjsStore } from "@/lib/yjsStore";
 import { JOURNAL_DRAFT_KEY, STUDY_STORAGE_KEY } from "./keys";
 import { legacyStudyMerged } from "./data";
 import { journalRefsIn } from "./yStudy";
+import { journalEditImageRefs } from "./entrySheet";
 
 export { JOURNAL_DRAFT_KEY, STUDY_STORAGE_KEY };
 
 /**
  * Klucze obrazów używanych w dzienniku z budowy: wpisy w dokumencie (te zna też
- * `yjsStore.referencedImages()`), niezapisany szkic wpisu — jego zdjęcia leżą
- * w `imageStore`, zanim wpis powstanie — i dawny zapis z localStorage, dopóki
+ * `yjsStore.referencedImages()`), niezapisany szkic wpisu i otwarta edycja — ich
+ * zdjęcia leżą w `imageStore`, zanim wpis się zapisze — i dawny zapis z localStorage, dopóki
  * to urządzenie go nie przeniosło. Bez tej listy zdjęcia znikałyby po karencji.
  *
  * Bez `store.ts`: ten moduł jest w głównej paczce (odśmiecanie, kopia
@@ -29,6 +30,7 @@ export function journalImageRefs(): Set<string> {
       /* uszkodzony zapis — migracja go nie przeniesie */
     }
   }
+  addFrom(journalEditImageRefs());
   try {
     const raw = localStorage.getItem(JOURNAL_DRAFT_KEY);
     addFrom(raw ? JSON.parse(raw)?.images : null);
