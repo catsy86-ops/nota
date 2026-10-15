@@ -126,8 +126,15 @@ export function toggleChecked(itemId: string) {
   yStudy.setChecked(itemId, !getStudy().checked[itemId]);
 }
 
-export function resetChecklist() {
+/** Czyści odhaczenia; zwraca, co było odhaczone — do „Cofnij”. */
+export function resetChecklist(): string[] {
+  const ids = Object.keys(getStudy().checked);
   yStudy.clearChecked();
+  return ids;
+}
+
+export function restoreChecklist(ids: string[]) {
+  yStudy.restoreChecked(ids);
 }
 
 /**

@@ -1015,6 +1015,33 @@ tematem: karta tematu pokazuje go, „Ćwicz teraz”…”).
 
 ---
 
+## Praca — tablica i lista na telefonie
+
+**Co robi.** Na telefonie tablica tematów pokazuje jedną kolumnę naraz, a nad nią przełącznik „Do nauki / W trakcie /
+Umiem” z liczbą tematów (start od „W trakcie”, gdy coś tam jest). Przeniesienie tematu strzałką pokazuje dymek, dokąd
+poszedł (karta znika z widocznej kolumny). Na liście „Wyczyść odhaczenia” działa bez pytania, z „Cofnij” w dymku;
+pigułka „Tylko punkty krytyczne” i przycisk mają 44 px na dotyku.
+
+**Gdzie jest.**
+- `src/components/study/StudyBoard.tsx`: `ToggleGroup` „Kolumna tablicy” (`md:hidden`), `phoneCol`, sekcje
+  `max-md:hidden` poza wybraną; `moveTo` (dymek tylko przy `MOBILE_QUERY`).
+- `src/components/study/StudyChecklist.tsx`: `toastWithUndo` przy czyszczeniu.
+- `src/lib/study/store.ts`: `resetChecklist()` zwraca wyczyszczone id, `restoreChecklist(ids)`;
+  `yStudy.restoreChecked` — przywrócenie jedną transakcją.
+
+**Jak działa i dlaczego.** Trzy kolumny pod sobą na telefonie to kilka ekranów przewijania, zanim dojdzie się do
+„Umiem”. Od `md` (768 px) widać wszystkie trzy jak dotąd. „Cofnij” zamiast okna potwierdzenia — jak w reszcie aplikacji.
+
+**Ograniczenia i pułapki.** Wybrana kolumna nie jest zapamiętywana (start zawsze od „W trakcie”/„Do nauki”). „Cofnij”
+przywraca odhaczenia, ale punkty odhaczone w międzyczasie na drugim telefonie zostają.
+
+**Testy.** `e2e/study.spec.ts` („telefon: tablica pokazuje jedną kolumnę z przełącznikiem, lista czyści odhaczenia
+z „Cofnij””), `e2e/study.spec.ts` („lista do nauki…”).
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Praca → Dziennik budowy
 
 Zakładka „Dziennik” na `/nauka` (`src/components/study/StudyJournal.tsx`). Dziennik instalatora

@@ -968,7 +968,7 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 - [x] N3 Powtórki SM-2 lite (`lib/study/srs.ts`, mapa `studyReview`), „Na dziś: N”. ✅ 2026-10-15: ocena automatyczna (dobrze/źle), 1 → 3 → × łatwość, błąd = jutro; „Na dziś” pod paskiem opanowania i w Quizie, runda najbardziej zaległych; karta w kopii i synchronizacji.
 - [ ] N4 Statystyki: trafność per temat, dni nauki, wpisy per budowa i miesiąc.
 - [ ] N5 Własne pytania i punkty listy (`studyCustom`); import plików później.
-- [ ] N6 Tablica i lista na telefonie: przełącznik kolumn, „Wyczyść odhaczenia” z „Cofnij”, pigułki ≥44 px.
+- [x] N6 Tablica i lista na telefonie: przełącznik kolumn, „Wyczyść odhaczenia” z „Cofnij”, pigułki ≥44 px. ✅ 2026-10-15: `ToggleGroup` kolumn na telefonie, dymek po przeniesieniu, `restoreChecklist`.
 
 Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → reszta.
 

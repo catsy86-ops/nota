@@ -1,5 +1,8 @@
 import { ChevronLeft, ChevronRight, FilePlusCorner, NotebookPen, Play, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { MOBILE_QUERY } from "@/hooks/use-mobile";
 import { yjsStore } from "@/lib/yjsStore";
 import { topicToNote } from "@/lib/study/toNote";
 import { LayoutGroup, m as motion } from "framer-motion";
@@ -18,6 +21,15 @@ const actionClass =
 const moveClass =
   "grid h-7 w-7 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30 coarse:h-11 coarse:w-11";
 const moduleLabel = (id: StudyTopic["module"]) => MODULES.find((m) => m.id === id)?.label ?? id;
+
+/**
+ * Przeniesienie tematu. Na telefonie widać jedną kolumnę naraz, więc karta znika
+ * z ekranu — dymek mówi, dokąd poszła.
+ */
+function moveTo(topic: StudyTopic, column: Column) {
+  moveTopic(topic.id, column);
+  if (window.matchMedia?.(MOBILE_QUERY).matches) toast(`„${topic.title}” → ${COLUMN_LABEL[column]}`);
+}
 
 function TopicCard({ topic, column, study, practice, due, onPractice, onJournal }: { topic: StudyTopic; column: Column; study: StudyState; practice?: TopicPractice; due: number; onPractice: (topicId: string) => void; onJournal: (topicId: string) => void }) {
   const items = CHECKLIST.filter((c) => c.topic === topic.id);
@@ -50,7 +62,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
           <button
             type="button"
             disabled={at === 0}
-            onClick={() => moveTopic(topic.id, COLUMNS[at - 1])}
+            onClick={() => moveTo(topic, COLUMNS[at - 1])}
             aria-label={`${topic.title}: przenieś do „${COLUMN_LABEL[COLUMNS[Math.max(at - 1, 0)]]}”`}
             title={at > 0 ? `Do „${COLUMN_LABEL[COLUMNS[at - 1]]}”` : undefined}
             className={moveClass}
@@ -60,7 +72,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
           <button
             type="button"
             disabled={at === COLUMNS.length - 1}
-            onClick={() => moveTopic(topic.id, COLUMNS[at + 1])}
+            onClick={() => moveTo(topic, COLUMNS[at + 1])}
             aria-label={`${topic.title}: przenieś do „${COLUMN_LABEL[COLUMNS[Math.min(at + 1, COLUMNS.length - 1)]]}”`}
             title={at < COLUMNS.length - 1 ? `Do „${COLUMN_LABEL[COLUMNS[at + 1]]}”` : undefined}
             className={moveClass}
@@ -139,13 +151,28 @@ export function StudyBoard({ onPractice, onJournal }: { onPractice: (topicId: st
     const topic = QUESTIONS.find((q) => q.id === id)?.topic;
     if (topic) dueByTopic.set(topic, (dueByTopic.get(topic) ?? 0) + 1);
   }
+  const counts = Object.fromEntries(COLUMNS.map((c) => [c, TOPICS.filter((t) => columnOf(study, t.id) === c).length])) as Record<Column, number>;
+  // Telefon: jedna kolumna naraz (trzy pod sobą to długie przewijanie); start od „W trakcie”, jeśli coś tam jest.
+  const [phoneCol, setPhoneCol] = useState<Column>(() => (counts.doing > 0 ? "doing" : "todo"));
   return (
     <LayoutGroup>
+      <ToggleGroup
+        aria-label="Kolumna tablicy"
+        value={phoneCol}
+        onValueChange={(v) => setPhoneCol(v as Column)}
+        className="mb-3 md:hidden"
+      >
+        {COLUMNS.map((c) => (
+          <ToggleGroupItem key={c} value={c} className="coarse:h-11">
+            {COLUMN_LABEL[c]} <span className="ml-1 font-mono text-xs tabular-nums opacity-70">{counts[c]}</span>
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
       <div className="grid gap-4 md:grid-cols-3">
         {COLUMNS.map((col) => {
           const topics = TOPICS.filter((t) => columnOf(study, t.id) === col);
           return (
-            <section key={col} aria-label={COLUMN_LABEL[col]} className="rounded-2xl bg-muted/40 p-3">
+            <section key={col} aria-label={COLUMN_LABEL[col]} className={cn("rounded-2xl bg-muted/40 p-3", col !== phoneCol && "max-md:hidden")}>
               <header className="px-1 pb-2.5">
                 <h3 className="flex items-baseline gap-2 font-display text-base">
                   {COLUMN_LABEL[col]}

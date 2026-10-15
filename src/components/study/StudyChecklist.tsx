@@ -3,8 +3,10 @@ import { RotateCcw } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { pluralPl } from "@/lib/plural";
 import { CHECKLIST, HEIGHTS, MODULES, TOPICS } from "@/lib/study/content";
-import { resetChecklist, toggleChecked, useStudy } from "@/lib/study/store";
+import { resetChecklist, restoreChecklist, toggleChecked, useStudy } from "@/lib/study/store";
+import { toastWithUndo } from "@/lib/undoToast";
 
 /** Lista do nauki: punkty z materiałów pogrupowane w moduły i tematy. */
 export function StudyChecklist() {
@@ -24,14 +26,23 @@ export function StudyChecklist() {
           aria-pressed={onlyCritical}
           onClick={() => setOnlyCritical((v) => !v)}
           className={cn(
-            "rounded-full border px-3 py-1 text-xs transition-colors",
+            "pressable rounded-full border px-3 py-1 text-xs transition-colors coarse:min-h-11 coarse:px-4 coarse:text-sm",
             onlyCritical ? "border-primary bg-primary/10 text-primary-ink" : "border-border text-muted-foreground hover:bg-muted",
           )}
         >
           ⚠ Tylko punkty krytyczne
         </button>
         {done > 0 && (
-          <Button variant="ghost" size="sm" onClick={resetChecklist} className="ml-auto">
+          <Button
+            variant="ghost"
+            size="sm"
+            // Bez okna potwierdzenia — „Cofnij” w dymku przywraca wszystkie odhaczenia.
+            onClick={() => {
+              const ids = resetChecklist();
+              toastWithUndo(`Wyczyszczono ${ids.length} ${pluralPl(ids.length, ["odhaczenie", "odhaczenia", "odhaczeń"])}`, () => restoreChecklist(ids));
+            }}
+            className="ml-auto coarse:h-11"
+          >
             <RotateCcw className="w-4 h-4 mr-1.5" />Wyczyść odhaczenia
           </Button>
         )}

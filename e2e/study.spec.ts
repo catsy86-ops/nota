@@ -365,6 +365,30 @@ test("dziennik: dyktowanie dopisuje rozpoznany tekst do wpisu", async ({ page })
 test.describe("dziennik na telefonie", () => {
   test.use({ hasTouch: true, isMobile: true });
 
+  test("telefon: tablica pokazuje jedną kolumnę z przełącznikiem, lista czyści odhaczenia z „Cofnij” @mobile", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/praca");
+    await page.getByRole("tab", { name: "Tablica" }).click();
+    const columns = page.getByRole("radiogroup", { name: "Kolumna tablicy" });
+    await expect(columns.getByRole("radio", { name: /Do nauki/ })).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByRole("region", { name: "Umiem" })).toBeHidden();
+    const first = page.getByRole("region", { name: "Do nauki" }).locator("[data-topic]").first();
+    const title = await first.locator("h4").innerText();
+    await first.getByRole("button", { name: /przenieś do „W trakcie”/ }).click();
+    await expect(page.getByText(`„${title.replace(/\s*⚠$/, "")}” → W trakcie`)).toBeVisible();
+    await columns.getByRole("radio", { name: /W trakcie/ }).click();
+    await expect(page.getByRole("region", { name: "W trakcie" }).locator("[data-topic]")).toHaveCount(1);
+
+    await page.getByRole("tab", { name: "Lista" }).click();
+    await page.locator('[id^="study-"]').first().click();
+    await page.locator('[id^="study-"]').nth(1).click();
+    await expect(page.getByTestId("checklist-progress")).toContainText("2/");
+    await page.getByRole("button", { name: "Wyczyść odhaczenia" }).click();
+    await expect(page.getByTestId("checklist-progress")).toContainText("0/");
+    await page.getByRole("button", { name: "Cofnij" }).click();
+    await expect(page.getByTestId("checklist-progress")).toContainText("2/");
+  });
+
   test("telefon bez zapisanej zakładki zaczyna od Dziennika @mobile", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/praca");

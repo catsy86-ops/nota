@@ -304,6 +304,11 @@ export function createYStudy(doc: Y.Doc) {
     transact(() => { for (const k of Array.from(checked.keys())) checked.delete(k); });
   }
 
+  /** Odhacza punkty z powrotem jedną transakcją („Cofnij” po wyczyszczeniu). */
+  function restoreChecked(ids: string[]): void {
+    transact(() => { for (const id of ids) toggleIn(checked, id, true); });
+  }
+
   /**
    * Runda quizu na urządzeniu `device`: licznik i najlepszy wynik tego urządzenia,
    * dzień do serii, zdegradowane tematy, zmiany listy błędów i terminy powtórek —
@@ -451,7 +456,7 @@ export function createYStudy(doc: Y.Doc) {
 
   return {
     get, dump, subscribe, isMerged,
-    setColumn, setChecked, clearChecked, recordRound,
+    setColumn, setChecked, clearChecked, restoreChecked, recordRound,
     addEntry, updateEntry, setResolved, restoreEntry, removeEntry, setSite, saveSite, setBoss, setGroup,
     replaceAll, mergeIn,
   };
