@@ -1204,6 +1204,41 @@ wpisu”), `e2e/a11y.spec.ts`.
 
 ---
 
+## Praca — zdjęcia „przed zakryciem” (P4)
+
+**Co robi.** Wpis z budowy mieści 5 zdjęć (było 4). Przy każdej miniaturze w arkuszu wpisu jest przycisk „Podpis na
+zdjęciu” (ikona T): wpisany tekst — np. „Łazienka, pion 58 cm” albo z pigułek „Przed zakryciem”, „Łazienka”,
+„Kuchnia”, „Kotłownia” — i data wpisu są wtapiane w dolny pasek zdjęcia. W dzienniku powiększone zdjęcie ma
+strzałki „Poprzednie/Następne”, licznik „2/5” i obsługę ←/→ — przewija wszystkie zdjęcia wpisu.
+
+**Gdzie jest.**
+- `src/lib/study/photoCaption.ts`: `captionLayout` (czcionka ~4,5% krótszego boku, min. 14 px; najwyżej 2 linie,
+  druga z wielokropkiem), `captionText` (tekst do 80 znaków + „dd.mm.rrrr”), `captionPhoto` (canvas → JPEG 0,85).
+- `src/components/study/JournalEntrySheet.tsx`: `burnCaption`, stan `captioning`/`captionDraft`, formularz podpisu.
+- `src/components/study/StudyJournal.tsx`: stan `zoom` = `{ refs, index }`, galeria w oknie.
+- `src/lib/study/yStudy.ts`: `JOURNAL_MAX_IMAGES = 5`.
+
+**Jak działa i dlaczego.**
+- Podpis wtopiony w piksele, nie trzymany obok: zdjęcie wysłane szefowi lub inwestorowi (WhatsApp, „Udostępnij”,
+  paczka) niesie opis i datę ze sobą — to dowód „było zrobione przed zakryciem”. Nowy obraz przechodzi przez
+  `prepareImage` (limit 2 MB) i zastępuje stary we wpisie; oryginał zostaje w magazynie do odśmiecenia (7 dni bez
+  odwołań).
+- Pasek półprzezroczysty czarny (62%) z białym tekstem — czytelny na każdym tle; białe podłoże pod zdjęciem, bo
+  JPEG nie ma przezroczystości.
+- Data to moment wpisu (pole „Kiedy”), nie chwila podpisania — wpis „za wczoraj” ma wczorajszą datę.
+
+**Ograniczenia i pułapki.**
+- Podpisu nie da się zdjąć (to inny plik) — usuń zdjęcie i dodaj ponownie.
+- Starsza wersja aplikacji (limit 4) pokaże 4 zdjęcia wpisu, a edytując go, piąte zgubi.
+- Kilka podpisów pod rząd = kilka nowych plików; nieużywane znikają przy odśmiecaniu.
+
+**Testy.** `src/lib/study/photoCaption.test.ts`, `e2e/journal-photos.spec.ts` (limit 5 z komunikatem, podpis
+podmienia zdjęcie, galeria: przyciski i strzałki).
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Praca → Dziennik budowy
 
 Zakładka „Dziennik” na `/nauka` (`src/components/study/StudyJournal.tsx`). Dziennik instalatora

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Archive, Check, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Play, Plus, Search, X } from "lucide-react";
+import { Archive, Check, ChevronLeft, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Play, Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusPanel } from "@/components/StatusPanel";
 import { cn } from "@/lib/utils";
@@ -43,7 +43,8 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   const study = useStudy();
   const draft = useJournalDraft();
   const hasDraft = !!draft.text.trim() || draft.images.length > 0 || draft.checked.length > 0;
-  const [zoom, setZoom] = useState<string | null>(null);
+  /** Powiększone zdjęcia wpisu i bieżące — galeria przewija wszystkie zdjęcia jednego wpisu. */
+  const [zoom, setZoom] = useState<{ refs: string[]; index: number } | null>(null);
   const [filter, setFilter] = useState<JournalFilter>(NO_FILTER);
   const [showOlder, setShowOlder] = useState(false);
   const [report, setReport] = useState(false);
@@ -264,7 +265,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                             </p>
                           )}
                           <ul className="space-y-2">
-                            {g.entries.map((e) => <JournalItem key={e.id} entry={e} onPractice={onPractice} onTopic={(t) => patch({ topic: t })} onZoom={setZoom} />)}
+                            {g.entries.map((e) => <JournalItem key={e.id} entry={e} onPractice={onPractice} onTopic={(t) => patch({ topic: t })} onZoom={(refs, index) => setZoom({ refs, index })} />)}
                           </ul>
                         </div>
                       ))}
@@ -291,16 +292,51 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
         onReport={(id) => { setCard(null); setReportSite(id); setReport(true); }}
       />
       <Dialog open={zoom !== null} onOpenChange={(o) => { if (!o) setZoom(null); }}>
-        <DialogContent className="max-w-3xl p-3">
+        <DialogContent
+          className="max-w-3xl p-3"
+          data-testid="journal-photo-zoom"
+          onKeyDown={(ev) => {
+            if (!zoom || zoom.refs.length < 2) return;
+            if (ev.key === "ArrowRight") { ev.preventDefault(); setZoom({ ...zoom, index: (zoom.index + 1) % zoom.refs.length }); }
+            if (ev.key === "ArrowLeft") { ev.preventDefault(); setZoom({ ...zoom, index: (zoom.index - 1 + zoom.refs.length) % zoom.refs.length }); }
+          }}
+        >
           <DialogTitle className="sr-only">Zdjęcie z budowy</DialogTitle>
-          {zoom && <NoteImage imageRef={zoom} alt="Zdjęcie z budowy" loading="eager" className="max-h-[80dvh] w-full rounded-lg object-contain" />}
+          {zoom && (
+            <div className="relative">
+              <NoteImage key={zoom.refs[zoom.index]} imageRef={zoom.refs[zoom.index]} alt={`Zdjęcie z budowy ${zoom.index + 1} z ${zoom.refs.length}`} loading="eager" className="max-h-[80dvh] w-full rounded-lg object-contain" />
+              {zoom.refs.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setZoom({ ...zoom, index: (zoom.index - 1 + zoom.refs.length) % zoom.refs.length })}
+                    aria-label="Poprzednie zdjęcie"
+                    className="pressable absolute left-2 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-black/55 text-white"
+                  >
+                    <ChevronLeft className="h-5 w-5" aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setZoom({ ...zoom, index: (zoom.index + 1) % zoom.refs.length })}
+                    aria-label="Następne zdjęcie"
+                    className="pressable absolute right-2 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-black/55 text-white"
+                  >
+                    <ChevronRight className="h-5 w-5" aria-hidden />
+                  </button>
+                  <p className="absolute top-2 left-1/2 -translate-x-1/2 rounded-full bg-black/55 px-2.5 py-0.5 font-mono text-xs tabular-nums text-white" aria-live="polite" data-testid="journal-photo-counter">
+                    {zoom.index + 1}/{zoom.refs.length}
+                  </p>
+                </>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
   );
 }
 
-function JournalItem({ entry: e, onPractice, onTopic, onZoom }: { entry: JournalEntry; onPractice: (topicId: string) => void; onTopic: (topicId: string) => void; onZoom: (ref: string) => void }) {
+function JournalItem({ entry: e, onPractice, onTopic, onZoom }: { entry: JournalEntry; onPractice: (topicId: string) => void; onTopic: (topicId: string) => void; onZoom: (refs: string[], index: number) => void }) {
   const total = CHECKLIST.filter((c) => c.topic === e.topic).length;
   const resolved = e.kind === "problem" && e.resolved !== undefined;
 
@@ -364,7 +400,7 @@ function JournalItem({ entry: e, onPractice, onTopic, onZoom }: { entry: Journal
             <ul className="mt-2 flex flex-wrap gap-2" aria-label="Zdjęcia wpisu">
               {e.images.map((ref) => (
                 <li key={ref}>
-                  <button type="button" onClick={() => onZoom(ref)} aria-label="Powiększ zdjęcie" className="block overflow-hidden rounded-lg">
+                  <button type="button" onClick={() => onZoom(e.images, e.images.indexOf(ref))} aria-label="Powiększ zdjęcie" className="block overflow-hidden rounded-lg">
                     <NoteImage imageRef={ref} alt="" className="h-16 w-16 object-cover" placeholderClassName="h-16 w-16" />
                   </button>
                 </li>

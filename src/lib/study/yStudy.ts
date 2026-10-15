@@ -44,8 +44,11 @@ export interface JournalEntry {
   resolved?: number;
 }
 
-/** Ile zdjęć mieści jeden wpis. */
-export const JOURNAL_MAX_IMAGES = 4;
+/**
+ * Ile zdjęć mieści jeden wpis (decyzja 2026-10-15: 5 — seria „przed zakryciem”).
+ * Starsza wersja aplikacji (limit 4) pokaże 4, a przy edycji wpisu piąte zgubi.
+ */
+export const JOURNAL_MAX_IMAGES = 5;
 export const JOURNAL_MAX_TEXT = 2000;
 export const SITE_MAX = 120;
 
