@@ -69,7 +69,8 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
         {overtimeMinutes > 0 && <div className="h-full transition-[width] duration-500" style={{ width: `${(overtimeMinutes / scale) * 100}%`, backgroundImage: "repeating-linear-gradient(-45deg, hsl(var(--primary)) 0 4px, hsl(var(--primary) / 0.45) 4px 8px)" }} />}
       </div>
 
-      <dl className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+      {/* Kolumny wg szerokości kontenera (`@container` w ShiftsView): w panelu bocznym na xl dwie, nie cztery. */}
+      <dl className="grid grid-cols-2 @lg:grid-cols-4 gap-3 text-sm">
         <Stat label="Dni pracy" value={<CountUp value={summary.daysWorked} format={(n) => String(Math.round(n))} />} />
         <Stat label="Nadgodziny" value={<CountUp value={overtimeMinutes} format={durationOrDash} />} accent={overtimeMinutes > 0}
           hint={overtimeMinutes > 0 ? [

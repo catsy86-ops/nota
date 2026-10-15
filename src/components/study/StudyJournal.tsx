@@ -81,8 +81,10 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
 
   return (
     <div className="space-y-6" data-testid="study-journal">
-      <section aria-label="Wpisy">
-        <header className="mb-3 flex items-center justify-between gap-3">
+      {/* Szeroki ekran (xl): wpisy w kolumnie do 48 rem, obok przyklejony panel filtrów — przewijanie
+          dziennika nie zabiera wyszukiwarki ani „Otwarte” (plan UI 2.4). Węższe: jedna kolumna jak dotąd. */}
+      <section aria-label="Wpisy" className="xl:grid xl:grid-cols-[minmax(0,48rem)_20rem] xl:grid-rows-[auto_auto_1fr] xl:justify-between xl:gap-x-10">
+        <header className="mb-3 flex items-center justify-between gap-3 xl:col-start-1 xl:row-start-1">
           <div className="min-w-0">
             <h3 className="font-display text-lg leading-tight">Dziennik</h3>
             <p className="font-mono text-xs text-muted-foreground tabular-nums" data-testid="journal-week">
@@ -121,13 +123,14 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
           <button
             type="button"
             onClick={() => openJournalSheet()}
-            className="block w-full rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground hover:border-primary/50 hover:text-foreground"
+            className="block w-full rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground hover:border-primary/50 hover:text-foreground xl:col-start-1"
           >
             Brak wpisów. Zapisz, co robisz na budowie — dziennik połączy to z tematami, które przerabiasz.
           </button>
         ) : (
           <>
-            <div className="mb-4 space-y-2" role="search" aria-label="Filtry dziennika">
+            <div className="mb-4 space-y-2 xl:col-start-2 xl:row-span-3 xl:row-start-1 xl:mb-0 xl:sticky xl:top-24 xl:self-start xl:rounded-2xl xl:border xl:border-border/60 xl:bg-card xl:p-4 xl:shadow-elevation-1" role="search" aria-label="Filtry dziennika">
+              <h4 className="hidden xl:block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Filtry</h4>
               <label className="relative block">
                 <span className="sr-only">Szukaj w dzienniku</span>
                 <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
@@ -140,7 +143,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                   className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-base focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 md:text-sm"
                 />
               </label>
-              <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none]" role="group" aria-label="Rodzaj wpisu">
+              <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] xl:flex-wrap xl:overflow-visible" role="group" aria-label="Rodzaj wpisu">
                 {KIND_CHIPS.map((c) => {
                   const on = filter.kind === c.value;
                   return (
@@ -160,7 +163,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                 })}
               </div>
               {used.length > 0 && (
-                <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none]" role="group" aria-label="Budowa">
+                <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] xl:flex-wrap xl:overflow-visible" role="group" aria-label="Budowa">
                   {[null, ...sites, ...(hasUnsited ? [""] : [])].map((x) => {
                     const id = typeof x === "object" && x !== null ? x.id : x;
                     const s = typeof x === "object" && x !== null ? x.name : x;
@@ -223,11 +226,11 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
             </div>
 
             {view.days.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+              <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground xl:col-start-1">
                 {filtered ? "Nic nie pasuje. Zmień słowa albo wyczyść filtry." : `Brak wpisów z ostatnich ${RECENT_DAYS} dni.`}
               </p>
             ) : (
-              <div className="space-y-5">
+              <div className="space-y-5 xl:col-start-1">
                 {view.days.map((d) => (
                   <section key={d.key} aria-label={d.label} data-journal-day={d.key}>
                     <h4 className="sticky top-(--app-header-h,0px) z-10 -mx-1 mb-2 flex items-baseline justify-between gap-2 border-b border-border/60 bg-background/95 px-1 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground backdrop-blur-sm transition-[top] duration-300 ease-out motion-reduce:transition-none [html.header-hidden_&]:top-0">
@@ -267,7 +270,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
             )}
 
             {view.older > 0 && (
-              <Button variant="outline" className="mt-4 w-full coarse:h-11" onClick={() => setShowOlder(true)}>
+              <Button variant="outline" className="mt-4 w-full coarse:h-11 xl:col-start-1 xl:self-start" onClick={() => setShowOlder(true)}>
                 Pokaż starsze ({entriesPl(view.older)})
               </Button>
             )}

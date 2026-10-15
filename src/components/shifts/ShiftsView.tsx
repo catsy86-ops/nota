@@ -256,115 +256,147 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   }
 
   return (
-    <div className="space-y-5">
-      <NowCard data={data} />
-
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div role="group" aria-label="Widok Grafiku" className="flex rounded-xl bg-muted p-0.5">
-          {([["month", "Miesiąc"], ["week", "Tydzień"]] as const).map(([id, text]) => (
-            <button key={id} type="button" aria-pressed={layout === id} onClick={() => setLayout(id)}
-              className={cn(
-                "pressable h-9 coarse:h-11 px-3.5 rounded-[0.65rem] text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
-                layout === id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
-              )}>
-              {text}
-            </button>
-          ))}
+    // Telefon i laptop: jedna kolumna w dawnej kolejności (`contents` + `order`). Szeroki ekran (xl):
+    // siatka po lewej, po prawej przyklejony panel — „Teraz”, paleta zmian i podsumowanie są pod ręką
+    // przy malowaniu dni i przewijaniu (plan UI 2.3).
+    <div className="flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start xl:gap-8">
+      <div className="contents xl:flex xl:flex-col xl:gap-5 xl:min-w-0">
+        <div className="order-2 flex flex-wrap items-center justify-between gap-2">
+          <div role="group" aria-label="Widok Grafiku" className="flex rounded-xl bg-muted p-0.5">
+            {([["month", "Miesiąc"], ["week", "Tydzień"]] as const).map(([id, text]) => (
+              <button key={id} type="button" aria-pressed={layout === id} onClick={() => setLayout(id)}
+                className={cn(
+                  "pressable h-9 coarse:h-11 px-3.5 rounded-[0.65rem] text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                  layout === id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                )}>
+                {text}
+              </button>
+            ))}
+          </div>
+          {isWeek && (
+            <div className="flex flex-wrap items-center gap-1">
+              {weekStart !== thisWeek && (
+                <button type="button" onClick={() => setWeekStart(thisWeek)}
+                  className="pressable h-9 coarse:h-11 px-3 rounded-xl text-sm font-medium text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                  Ten tydzień
+                </button>
+              )}
+              <button type="button" onClick={copyWeek}
+                className="pressable flex items-center gap-1.5 h-9 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                <CalendarRange className="w-4 h-4" /> Skopiuj ten tydzień na następny
+              </button>
+            </div>
+          )}
         </div>
-        {isWeek && (
-          <div className="flex flex-wrap items-center gap-1">
-            {weekStart !== thisWeek && (
-              <button type="button" onClick={() => setWeekStart(thisWeek)}
-                className="pressable h-9 coarse:h-11 px-3 rounded-xl text-sm font-medium text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-                Ten tydzień
+
+        <div className="order-3 flex items-center justify-between gap-2 sm:justify-center sm:gap-4">
+          <button type="button" onClick={() => (isWeek ? setWeekStart((w) => addDaysToKey(w, -7)) : setMonth((m) => addMonths(m, -1)))}
+            aria-label={isWeek ? "Poprzedni tydzień" : "Poprzedni miesiąc"} className={navButton}>
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <h2 className="min-w-0 sm:min-w-48 text-center">
+            <button type="button" onClick={() => (isWeek ? setWeekStart(thisWeek) : setMonth(startOfMonth(new Date())))}
+              title={isWeek ? "Wróć do bieżącego tygodnia" : "Wróć do bieżącego miesiąca"}
+              className={cn("pressable w-full h-10 coarse:h-11 truncate font-display font-bold text-lg px-3 rounded-xl hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring", !isWeek && "capitalize")}>
+              {isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl })}
+            </button>
+          </h2>
+          <button type="button" onClick={() => (isWeek ? setWeekStart((w) => addDaysToKey(w, 7)) : setMonth((m) => addMonths(m, 1)))}
+            aria-label={isWeek ? "Następny tydzień" : "Następny miesiąc"} className={navButton}>
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="order-7 space-y-5">
+          <p role="status" aria-live="polite" className="sr-only">{announce}</p>
+          <p aria-live="polite" className="sr-only">{isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl })}</p>
+
+          <p id="shift-brush-hint" className="text-xs text-muted-foreground px-1">{brushHint(brush, typesById, activeHours)}</p>
+
+          {/* Podpowiedź o przenoszeniu: po „Rozumiem” zostaje tylko dla czytnika ekranu (aria-describedby siatki). */}
+          <p id="shift-move-hint" className={cn("text-xs text-muted-foreground px-1", moveHintSeen && "sr-only")}>
+            {IS_TOUCH
+              ? "Przytrzymaj zmianę i przeciągnij na inny dzień — zapytam, czy przenieść, czy skopiować."
+              : `Przeciągnij zmianę na inny dzień, żeby ją przenieść (z Alt — skopiować). Klawiatura: Shift+strzałki przenoszą zmianę, Alt+Shift+strzałki kopiują, ${modShortcut("C")} / ${modShortcut("V")} kopiuje wpis dnia (zmiana, odchylenie, notatka).`}
+            {clip && <span className="font-medium"> Schowek: {typesById.get(clip.type)?.name ?? "wpis"}{clip.note ? " z notatką" : ""}.</span>}
+            {!moveHintSeen && (
+              <button type="button" onClick={dismissMoveHint}
+                className="relative ml-1 inline-flex items-center rounded-md px-1.5 py-0.5 coarse:py-2 coarse:after:absolute coarse:after:-inset-y-1.5 coarse:after:inset-x-0 coarse:after:content-[''] font-medium text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                Rozumiem
               </button>
             )}
-            <button type="button" onClick={copyWeek}
-              className="pressable flex items-center gap-1.5 h-9 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-              <CalendarRange className="w-4 h-4" /> Skopiuj ten tydzień na następny
-            </button>
-          </div>
-        )}
-      </div>
-
-      <div className="flex items-center justify-between gap-2 sm:justify-center sm:gap-4">
-        <button type="button" onClick={() => (isWeek ? setWeekStart((w) => addDaysToKey(w, -7)) : setMonth((m) => addMonths(m, -1)))}
-          aria-label={isWeek ? "Poprzedni tydzień" : "Poprzedni miesiąc"} className={navButton}>
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <h2 className="min-w-0 sm:min-w-48 text-center">
-          <button type="button" onClick={() => (isWeek ? setWeekStart(thisWeek) : setMonth(startOfMonth(new Date())))}
-            title={isWeek ? "Wróć do bieżącego tygodnia" : "Wróć do bieżącego miesiąca"}
-            className={cn("pressable w-full h-10 coarse:h-11 truncate font-display font-bold text-lg px-3 rounded-xl hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring", !isWeek && "capitalize")}>
-            {isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl })}
-          </button>
-        </h2>
-        <button type="button" onClick={() => (isWeek ? setWeekStart((w) => addDaysToKey(w, 7)) : setMonth((m) => addMonths(m, 1)))}
-          aria-label={isWeek ? "Następny tydzień" : "Następny miesiąc"} className={navButton}>
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
-
-      <BrushBar
-        types={data.types}
-        brush={brush}
-        onBrush={setBrush}
-        onEditType={setEditingType}
-        onAddType={() => setEditingType("new")}
-        onPattern={() => setPatternOpen(true)}
-      />
-
-      {brush.kind === "type" && typesById.get(brush.id)?.kind !== "absence" && typesById.has(brush.id) && (
-        <BrushHours key={brush.id} type={typesById.get(brush.id)!} hours={activeHours}
-          onChange={(hours) => setBrushHours(hours ? { typeId: brush.id, hours } : null)} />
-      )}
-
-      {data.types.length === 0 && (
-        <section aria-label="Brak rodzajów zmian" className="rounded-3xl border border-dashed border-border p-4 space-y-3">
-          <p className="text-sm">
-            <span className="font-display font-bold">Nie ma żadnego rodzaju zmiany.</span>{" "}
-            <span className="text-muted-foreground">Dodaj własny albo przywróć startowe ({DEFAULT_SHIFT_TYPES.map((t) => t.name).join(", ")}), żeby nanosić je na dni.</span>
           </p>
-          <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => setEditingType("new")}
-              className="pressable h-10 coarse:h-11 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-              Dodaj rodzaj zmiany
-            </button>
-            <button type="button" onClick={() => { addDefaultShiftTypes(); setBrush({ kind: "type", id: DEFAULT_SHIFT_TYPES[0].id }); }}
-              className="pressable h-10 coarse:h-11 px-4 rounded-xl border border-border/60 hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-              Przywróć startowe
-            </button>
-          </div>
-        </section>
-      )}
 
-      <p role="status" aria-live="polite" className="sr-only">{announce}</p>
-      <p aria-live="polite" className="sr-only">{isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl })}</p>
+        </div>
+        <div className="order-8">
+          <ShiftDnd days={data.days} typesById={typesById} onTransfer={onDrop}>
+            {isWeek ? (
+              <ShiftWeekView weekStart={weekStart} days={data.days} typesById={typesById} remindersByDay={remindersByDay} titleOf={titleOf}
+                onDay={onDay} onWeekChange={setWeekStart} describedBy="shift-brush-hint shift-move-hint" actions={actions} />
+            ) : (
+              <ShiftMonthGrid month={month} days={data.days} typesById={typesById} onDay={onDay} onMonthChange={setMonth} describedBy="shift-brush-hint shift-move-hint" actions={actions} />
+            )}
+          </ShiftDnd>
 
-      <p id="shift-brush-hint" className="text-xs text-muted-foreground px-1">{brushHint(brush, typesById, activeHours)}</p>
-
-      {/* Podpowiedź o przenoszeniu: po „Rozumiem” zostaje tylko dla czytnika ekranu (aria-describedby siatki). */}
-      <p id="shift-move-hint" className={cn("text-xs text-muted-foreground px-1", moveHintSeen && "sr-only")}>
-        {IS_TOUCH
-          ? "Przytrzymaj zmianę i przeciągnij na inny dzień — zapytam, czy przenieść, czy skopiować."
-          : `Przeciągnij zmianę na inny dzień, żeby ją przenieść (z Alt — skopiować). Klawiatura: Shift+strzałki przenoszą zmianę, Alt+Shift+strzałki kopiują, ${modShortcut("C")} / ${modShortcut("V")} kopiuje wpis dnia (zmiana, odchylenie, notatka).`}
-        {clip && <span className="font-medium"> Schowek: {typesById.get(clip.type)?.name ?? "wpis"}{clip.note ? " z notatką" : ""}.</span>}
-        {!moveHintSeen && (
-          <button type="button" onClick={dismissMoveHint}
-            className="relative ml-1 inline-flex items-center rounded-md px-1.5 py-0.5 coarse:py-2 coarse:after:absolute coarse:after:-inset-y-1.5 coarse:after:inset-x-0 coarse:after:content-[''] font-medium text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-            Rozumiem
+        </div>
+        <div className="order-9 flex flex-wrap justify-end gap-1">
+          <button type="button" onClick={exportCsv}
+            className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+            <FileSpreadsheet className="w-4 h-4" /> Karta czasu (.csv)
           </button>
-        )}
-      </p>
+          <button type="button" onClick={exportIcs}
+            className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+            <CalendarArrowDown className="w-4 h-4" /> Do kalendarza (.ics)
+          </button>
+        </div>
 
-      <ShiftDnd days={data.days} typesById={typesById} onTransfer={onDrop}>
-        {isWeek ? (
-          <ShiftWeekView weekStart={weekStart} days={data.days} typesById={typesById} remindersByDay={remindersByDay} titleOf={titleOf}
-            onDay={onDay} onWeekChange={setWeekStart} describedBy="shift-brush-hint shift-move-hint" actions={actions} />
-        ) : (
-          <ShiftMonthGrid month={month} days={data.days} typesById={typesById} onDay={onDay} onMonthChange={setMonth} describedBy="shift-brush-hint shift-move-hint" actions={actions} />
-        )}
-      </ShiftDnd>
+      </div>
+
+      <aside aria-label="Panel Grafiku" className="contents xl:flex xl:flex-col xl:gap-5 xl:sticky xl:top-24 xl:max-h-[calc(100dvh-7rem)] xl:overflow-y-auto xl:overscroll-contain xl:pb-2">
+        <div className="order-1 empty:hidden">
+          <NowCard data={data} />
+        </div>
+        <div className="order-4 space-y-5">
+          <BrushBar
+            types={data.types}
+            brush={brush}
+            onBrush={setBrush}
+            onEditType={setEditingType}
+            onAddType={() => setEditingType("new")}
+            onPattern={() => setPatternOpen(true)}
+          />
+
+          {brush.kind === "type" && typesById.get(brush.id)?.kind !== "absence" && typesById.has(brush.id) && (
+            <BrushHours key={brush.id} type={typesById.get(brush.id)!} hours={activeHours}
+              onChange={(hours) => setBrushHours(hours ? { typeId: brush.id, hours } : null)} />
+          )}
+
+        </div>
+        <div className="order-6 empty:hidden">
+          {data.types.length === 0 && (
+            <section aria-label="Brak rodzajów zmian" className="rounded-3xl border border-dashed border-border p-4 space-y-3">
+              <p className="text-sm">
+                <span className="font-display font-bold">Nie ma żadnego rodzaju zmiany.</span>{" "}
+                <span className="text-muted-foreground">Dodaj własny albo przywróć startowe ({DEFAULT_SHIFT_TYPES.map((t) => t.name).join(", ")}), żeby nanosić je na dni.</span>
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => setEditingType("new")}
+                  className="pressable h-10 coarse:h-11 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                  Dodaj rodzaj zmiany
+                </button>
+                <button type="button" onClick={() => { addDefaultShiftTypes(); setBrush({ kind: "type", id: DEFAULT_SHIFT_TYPES[0].id }); }}
+                  className="pressable h-10 coarse:h-11 px-4 rounded-xl border border-border/60 hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                  Przywróć startowe
+                </button>
+              </div>
+            </section>
+          )}
+
+        </div>
+        <div className="order-10 @container">
+          <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(shownMonth, "LLLL yyyy", { locale: pl })} onOpenSettings={() => setSettingsOpen(true)} />
+        </div>
+      </aside>
 
       <TransferChooser
         pending={asking}
@@ -388,18 +420,6 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="flex flex-wrap justify-end gap-1">
-        <button type="button" onClick={exportCsv}
-          className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-          <FileSpreadsheet className="w-4 h-4" /> Karta czasu (.csv)
-        </button>
-        <button type="button" onClick={exportIcs}
-          className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-          <CalendarArrowDown className="w-4 h-4" /> Do kalendarza (.ics)
-        </button>
-      </div>
-
-      <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(shownMonth, "LLLL yyyy", { locale: pl })} onOpenSettings={() => setSettingsOpen(true)} />
       <ShiftSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} settings={data} />
 
       <ShiftTypeDialog

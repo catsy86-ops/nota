@@ -232,116 +232,131 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
   return (
     // Pierwsze wejście (leniwy moduł dochodzi po zmianie widoku) — te same 6 px
     // i krzywa co przejście między widokami w Index.
-    <motion.section initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={tween.enter} className="space-y-4">
-      <header className="flex items-center gap-1 sm:gap-2">
-        <button
-          onClick={() => shiftMonth(-1)}
-          aria-label="Poprzedni miesiąc"
-          className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        <h2
-          aria-live="polite"
-          className="font-display font-bold text-base sm:text-lg capitalize text-center truncate sm:min-w-[11ch]"
-        >
-          {format(month, "LLLL yyyy", { locale: pl })}
-        </h2>
-        <button
-          onClick={() => shiftMonth(1)}
-          aria-label="Następny miesiąc"
-          className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-        {!isThisMonth && (
+    // Telefon i laptop: jedna kolumna w dawnej kolejności (`contents` + `order`). Szeroki ekran (xl):
+    // miesiąc po lewej, po prawej przyklejone najbliższe terminy i panel wybranego dnia (plan UI 2.3).
+    <motion.section initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={tween.enter}
+      className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start xl:gap-8">
+      <div className="contents xl:flex xl:flex-col xl:gap-4 xl:min-w-0">
+        <header className="order-1 flex items-center gap-1 sm:gap-2">
           <button
-            onClick={goToToday}
-            aria-label="Wróć do bieżącego miesiąca"
-            className="ml-1 shrink-0 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 sm:px-2.5 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            onClick={() => shiftMonth(-1)}
+            aria-label="Poprzedni miesiąc"
+            className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
-            Dziś
+            <ChevronLeft className="w-4 h-4" />
           </button>
+          <h2
+            aria-live="polite"
+            className="font-display font-bold text-base sm:text-lg capitalize text-center truncate sm:min-w-[11ch]"
+          >
+            {format(month, "LLLL yyyy", { locale: pl })}
+          </h2>
+          <button
+            onClick={() => shiftMonth(1)}
+            aria-label="Następny miesiąc"
+            className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+          {!isThisMonth && (
+            <button
+              onClick={goToToday}
+              aria-label="Wróć do bieżącego miesiąca"
+              className="ml-1 shrink-0 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 sm:px-2.5 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              Dziś
+            </button>
+          )}
+          <button
+            onClick={exportAll}
+            aria-label="Eksportuj nadchodzące terminy do kalendarza (.ics)"
+            title="Eksportuj nadchodzące terminy do kalendarza (.ics)"
+            className="ml-auto sm:ml-0 order-last shrink-0 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 coarse:min-h-11 coarse:min-w-11 coarse:justify-center rounded-lg transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">.ics</span>
+          </button>
+          {/* Ściągawka skrótów w podpowiedzi zamiast stałego tekstu w nagłówku. */}
+          <button
+            type="button"
+            onClick={() => setShowKeys((v) => !v)}
+            aria-expanded={showKeys}
+            aria-controls="calendar-keys-hint"
+            aria-label="Skróty klawiaturowe kalendarza"
+            title="Skróty klawiaturowe"
+            className="ml-auto hidden sm:inline-flex p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Keyboard className="w-4 h-4" aria-hidden />
+          </button>
+        </header>
+        {showKeys && (
+          <p id="calendar-keys-hint" className="order-2 -mt-2 px-1 text-xs text-muted-foreground">
+            Strzałki — przechodzenie po dniach · PgUp / PgDn — miesiąc · Enter — dodaj termin · Z — zmiana i godziny z Grafiku · Shift+←/→ — przesuń wybrany termin o dzień (albo przeciągnij go myszą).
+          </p>
         )}
-        <button
-          onClick={exportAll}
-          aria-label="Eksportuj nadchodzące terminy do kalendarza (.ics)"
-          title="Eksportuj nadchodzące terminy do kalendarza (.ics)"
-          className="ml-auto sm:ml-0 order-last shrink-0 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 coarse:min-h-11 coarse:min-w-11 coarse:justify-center rounded-lg transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <Download className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">.ics</span>
-        </button>
-        {/* Ściągawka skrótów w podpowiedzi zamiast stałego tekstu w nagłówku. */}
-        <button
-          type="button"
-          onClick={() => setShowKeys((v) => !v)}
-          aria-expanded={showKeys}
-          aria-controls="calendar-keys-hint"
-          aria-label="Skróty klawiaturowe kalendarza"
-          title="Skróty klawiaturowe"
-          className="ml-auto hidden sm:inline-flex p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <Keyboard className="w-4 h-4" aria-hidden />
-        </button>
-      </header>
-      {showKeys && (
-        <p id="calendar-keys-hint" className="-mt-2 px-1 text-xs text-muted-foreground">
-          Strzałki — przechodzenie po dniach · PgUp / PgDn — miesiąc · Enter — dodaj termin · Z — zmiana i godziny z Grafiku · Shift+←/→ — przesuń wybrany termin o dzień (albo przeciągnij go myszą).
-        </p>
-      )}
 
-      <UpcomingDays
-        notes={notes}
-        titleOf={titleOf}
-        shiftOf={shiftOf}
-        onSelectDay={(day) => {
-          setSelectedDay(day);
-          setMonth(new Date(day.getFullYear(), day.getMonth(), 1));
-        }}
-      />
+        {/* Telefon: bieżący tydzień i tak jest wierszem siatki miesiąca tuż pod spodem — pasek go dublował. */}
+        <div className="order-4 max-sm:hidden">
+        <WeekStrip
+          day={selectedDay}
+          byDay={byDay}
+          shiftOf={shiftOf}
+          onSelectDay={(day) => {
+            setSelectedDay(day);
+            setMonth((m) => (m.getFullYear() === day.getFullYear() && m.getMonth() === day.getMonth() ? m : new Date(day.getFullYear(), day.getMonth(), 1)));
+          }}
+        />
+        </div>
 
-      {/* Telefon: bieżący tydzień i tak jest wierszem siatki miesiąca tuż pod spodem — pasek go dublował. */}
-      <div className="max-sm:hidden">
-      <WeekStrip
-        day={selectedDay}
-        byDay={byDay}
-        shiftOf={shiftOf}
-        onSelectDay={(day) => {
-          setSelectedDay(day);
-          setMonth((m) => (m.getFullYear() === day.getFullYear() && m.getMonth() === day.getMonth() ? m : new Date(day.getFullYear(), day.getMonth(), 1)));
-        }}
-      />
+        <div className="order-5">
+          <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
+          <MonthGrid
+            month={month}
+            byDay={byDay}
+            titleOf={titleOf}
+            shiftOf={shiftOf}
+            selectedDay={selectedDay}
+            onSelectDay={setSelectedDay}
+            onActivateDay={openAdd}
+            onEditShift={shifts.types.length > 0 ? (day) => setShiftDay(dayKey(day)) : undefined}
+            onMonthChange={setMonth}
+          />
+          </DndContext>
+
+        </div>
       </div>
 
-      <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
-      <MonthGrid
-        month={month}
-        byDay={byDay}
-        titleOf={titleOf}
-        shiftOf={shiftOf}
-        selectedDay={selectedDay}
-        onSelectDay={setSelectedDay}
-        onActivateDay={openAdd}
-        onEditShift={shifts.types.length > 0 ? (day) => setShiftDay(dayKey(day)) : undefined}
-        onMonthChange={setMonth}
-      />
-      </DndContext>
+      <aside aria-label="Wybrany dzień i najbliższe terminy" className="contents xl:flex xl:flex-col xl:gap-4 xl:sticky xl:top-24 xl:max-h-[calc(100dvh-7rem)] xl:overflow-y-auto xl:overscroll-contain xl:pb-2">
+        <div className="order-3 empty:hidden">
+          <UpcomingDays
+            notes={notes}
+            titleOf={titleOf}
+            shiftOf={shiftOf}
+            onSelectDay={(day) => {
+              setSelectedDay(day);
+              setMonth(new Date(day.getFullYear(), day.getMonth(), 1));
+            }}
+          />
 
-      <DayPanel
-        day={selectedDay}
-        occurrences={selectedOccurrences}
-        titleOf={titleOf}
-        shift={shiftOf(dayKey(selectedDay))}
-        onEditShift={shifts.types.length > 0 ? () => setShiftDay(dayKey(selectedDay)) : undefined}
-        onCopyPrevShift={shifts.types.length > 0 && !shifts.days[dayKey(selectedDay)] && prevShiftEntry(dayKey(selectedDay))
-          ? () => copyPrevShift(dayKey(selectedDay)) : undefined}
-        onAdd={() => openAdd(selectedDay)}
-        onEdit={openEdit}
-        onExport={exportOne}
-        onMoveByDays={(occ, days) => moveToDay(occ, addDays(new Date(occ.at), days))}
-        onOpenSeriesSource={openSeriesSource}
-      />
+        </div>
+        <div className="order-6">
+          <DayPanel
+            day={selectedDay}
+            occurrences={selectedOccurrences}
+            titleOf={titleOf}
+            shift={shiftOf(dayKey(selectedDay))}
+            onEditShift={shifts.types.length > 0 ? () => setShiftDay(dayKey(selectedDay)) : undefined}
+            onCopyPrevShift={shifts.types.length > 0 && !shifts.days[dayKey(selectedDay)] && prevShiftEntry(dayKey(selectedDay))
+              ? () => copyPrevShift(dayKey(selectedDay)) : undefined}
+            onAdd={() => openAdd(selectedDay)}
+            onEdit={openEdit}
+            onExport={exportOne}
+            onMoveByDays={(occ, days) => moveToDay(occ, addDays(new Date(occ.at), days))}
+            onOpenSeriesSource={openSeriesSource}
+          />
+
+        </div>
+      </aside>
 
       <DayDialog
         dayKey={shiftDay}
