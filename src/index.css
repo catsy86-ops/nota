@@ -1102,3 +1102,10 @@ html[data-motion="reduced"] .note-lift:hover .note-card { translate: none; }
   .view-skeleton-bone { animation: none; }
 }
 html[data-motion='reduced'] .view-skeleton-bone { animation: none; }
+
+/* Karta w tle (`lib/pageHidden.ts`): zapętlone animacje stoją, po powrocie ruszają dalej. */
+html[data-hidden] *,
+html[data-hidden] *::before,
+html[data-hidden] *::after {
+  animation-play-state: paused !important;
+}

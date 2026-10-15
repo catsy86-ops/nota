@@ -400,6 +400,29 @@ Notatkach”), `e2e/study.spec.ts` (brak wyników filtra Dziennika), `e2e/a11y.s
 
 ---
 
+## Wspólne — animacje w tle wstrzymane
+
+**Co robi.** Gdy karta z aplikacją jest w tle (inna karta, zminimalizowane okno, zablokowany telefon), zapętlone
+animacje (poświata notatki, oddech „dziś”, puls „teraz”, połysk paska, logo N, szkielety ładowania, zorza w stylu
+Zorza) stoją. Po powrocie ruszają od miejsca, w którym stanęły.
+
+**Gdzie jest.** `src/lib/pageHidden.ts` (`installPageHidden`, wołane w `src/main.tsx`), reguła `html[data-hidden]`
+na końcu `src/index.css`.
+
+**Jak działa i dlaczego.** `visibilitychange` przełącza `data-hidden` na `<html>`; CSS ustawia wszystkim elementom i
+pseudoelementom `animation-play-state: paused`. Jedna reguła zamiast pilnowania każdej animacji z osobna — obejmuje
+też przyszłe. Animacje framer-motion (np. połysk w `NotatnikWordmark`) jadą na `requestAnimationFrame`, który
+przeglądarka w tle i tak zatrzymuje.
+
+**Ograniczenia i pułapki.** Przejścia (`transition`) nie są wstrzymywane — są krótkie i jednorazowe. Animacja, która
+w tle miała się skończyć i coś odsłonić, dokończy się dopiero po powrocie (dziś żadna taka nie jest zapętlona).
+
+**Testy.** `src/lib/pageHidden.test.ts`.
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Wspólne — grupy „jedna z kilku” (`ToggleGroup`)
 
 **Co robi.** Przełączniki segmentowe i kafle wyboru działają z klawiatury jak jedna kontrolka: Tab wchodzi do grupy
@@ -433,7 +456,7 @@ odznacza. Czytnik ekranu słyszy „grupa opcji, przycisk opcji, zaznaczony”.
 `e2e/skins.spec.ts` (selektory `radiogroup`/`radio`), `e2e/view-change.spec.ts`, `e2e/shifts.spec.ts`,
 `e2e/study.spec.ts`, `e2e/a11y.spec.ts`.
 
-**Commit.** — (2026-10-15).
+**Commit.** `d3c5c4b` (2026-10-15).
 
 ---
 

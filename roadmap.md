@@ -990,7 +990,7 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 - [x] 1.6 `ViewSkeleton` zamiast `Suspense fallback={null}` (`Index.tsx:920,938,946`) + wstępne ładowanie widoku przy `pointerdown` w nawigacji.
 - [x] 1.7 Haptyka niezależna od ograniczonego ruchu (`lib/haptics.ts`). ✅ Wyłącza ją tylko przełącznik „Wibracje na telefonie”, mysz i brak `navigator.vibrate`.
 - [x] 1.8 Grafik: 9 px w `ShiftMonthGrid.tsx:151` → `text-2xs`/ikona; `AchievementStamp.tsx:49`. ✅ Strzałka nadgodzin i podpis pieczątki w `text-2xs` (11 px).
-- [ ] 1.9 (niski) Zapętlone animacje zatrzymane przy `document.hidden`.
+- [x] 1.9 (niski) Zapętlone animacje zatrzymane przy `document.hidden`. ✅ `lib/pageHidden.ts` → `html[data-hidden]`, jedna reguła CSS `animation-play-state: paused`.
 
 ### Faza 2 — średnie (M)
 - [x] (poza planem, 2026-10-15) Style aplikacji: Plan, Neon, Zorza, Miedź obok Zeszytu (galeria w Wygląd, przejście kołem, własne kroje nagłówków) + mikrointerakcje framer-motion (przełączniki z `layoutId`, licznik w nagłówku, ikona motywu). Opis w `opis.md`.
