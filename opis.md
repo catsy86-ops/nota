@@ -247,7 +247,7 @@ i pierwsze trzy elementy. axe nie ocenia kontrastu tekstu na obrazkach ani w tra
 
 **Testy.** `e2e/a11y.spec.ts` (20 testów).
 
-**Commit.** `HASH27` (2026-10-15).
+**Commit.** `35ed5a3` (2026-10-15).
 
 ---
 
@@ -274,7 +274,7 @@ prawdziwy iOS — nie odtwarza klawiatury ekranowej ani `visualViewport` iPhone'
 
 **Testy.** `e2e/mobile.spec.ts`, `e2e/touch-targets.spec.ts` w projektach `iphone-14` i `pixel-7`.
 
-**Commit.** `HASH27` (2026-10-15).
+**Commit.** `35ed5a3` (2026-10-15).
 
 ---
 
