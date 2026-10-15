@@ -1307,7 +1307,7 @@ w portalu — w testach `page.getByRole("menuitem", …)`, nie wewnątrz okna.
 
 **Testy.** `src/lib/study/fittings.test.ts`, `e2e/journal-fittings.spec.ts`.
 
-**Commit.** — (2026-10-15).
+**Commit.** `feb318e` (2026-10-15).
 
 ---
 
