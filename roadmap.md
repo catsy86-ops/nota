@@ -974,7 +974,12 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 
 Źródło: przegląd kodu (agent Plan) + dokumentacja shadcn (context7), wersje z `npm view`. Kontrast to szacunki — zmierzyć axe. Nie powtarza zamkniętych punktów z planów UI, mobile i 2b. Kierunek „zeszyt” zostaje.
 
-**Decyzje do podjęcia (czekają):** D1 „Tryb budowa” jako przełącznik czy domyślnie na telefonie, auto przy `prefers-contrast: more`; D2 wszystkie okna na telefonie jako arkusz od dołu czy tylko formularze; D3 podpisy dolnego paska 12 px i „Terminy” zamiast „Przypomnienia”; D4 Tailwind v4 + React 19 teraz czy później (shadcn wspiera v3); D5 vaul (Drawer z punktami zatrzymania) dla arkusza wpisu czy własny `ui/sheet.tsx`.
+**Decyzje użytkownika (2026-10-15):**
+- D1 „Tryb budowa” — osobny przełącznik w Ustawieniach, z wyborem (wyłączony / włączony / automatycznie przy `prefers-contrast: more`).
+- D2 Na telefonie jako arkusz od dołu tylko formularze; pozostałe okna wyśrodkowane z marginesem (1.3).
+- D3 Tak: podpisy dolnego paska 12 px i „Terminy” zamiast „Przypomnienia”.
+- D4 Tailwind v4 + React 19 **teraz** — przed fazą 1, żeby nie poprawiać CSS dwa razy.
+- D5 Zostaje własny `ui/sheet.tsx`, bez vaul.
 
 ### Faza 1 — szybkie wygrane (S)
 - [ ] 1.1 Dolny pasek chowa się przy klawiaturze na Androidzie (`html[data-typing]` z `focusin`/`visualViewport`; `keyboardInset.ts`, `BottomNav.tsx`, `index.css`).
@@ -1009,4 +1014,4 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 - Nie teraz: Tailwind 4 + `tailwind-merge` 3 (D4), React 19, `react-day-picker` 10, vite 8. `recharts` 3 + shadcn Chart tylko przy N4.
 - Komponenty shadcn: tak — Input OTP (parowanie, PIN skarbca), Toggle Group (grupy segmentowe), Breadcrumb (podstrony), Chart (N4); nie — Sidebar, Carousel; Drawer/vaul zależnie od D5; Command już jest.
 
-Kolejność: 1.5 → 1.1 → 1.4 → 1.2/1.3 → 1.6 → 1.7/1.8 → 2.7/2.8 → Radix + lucide → 2.1 → 2.2 → 2.3/2.4 → 2.5/2.6 → sonner, LazyMotion, Input OTP, Toggle Group → faza 3. Każdy krok: typecheck, lint, Vitest, build, e2e smoke, zrzuty 390/1440 w obu motywach, wpis w `opis.md`.
+Kolejność (po decyzjach): 3.3 Tailwind v4 + React 19 + shadcn (osobne commity: React 19 → Tailwind v4 → `tailwind-merge` 3 / `tw-animate-css`) → 1.5 → 1.1 → 1.4 → 1.2/1.3 → 1.6 → 1.7/1.8 → 2.7/2.8 → Radix + lucide → 2.1 → 2.2 → 2.3/2.4 → 2.5/2.6 → sonner, LazyMotion, Input OTP, Toggle Group → faza 3. Każdy krok: typecheck, lint, Vitest, build, e2e smoke, zrzuty 390/1440 w obu motywach, wpis w `opis.md`.
