@@ -49,7 +49,7 @@ Przesunięcie animuje `framer-motion` (`layoutId`).
 
 **Testy.** e2e `e2e/study.spec.ts` (tablica, „Ćwicz”, „Do notatki”, wpis z karty tematu).
 
-**Commit.** N1 — zobacz `git log` (2026-10-15).
+**Commit.** N1 `4c951fa` (2026-10-15).
 
 ## Nauka → Dziennik budowy
 
