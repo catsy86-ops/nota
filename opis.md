@@ -946,7 +946,7 @@ muszą ustawić rozmiar okna przed wejściem na /praca, inaczej startuje Quiz.
 **Testy.** `src/lib/study/tab.test.ts`, `e2e/study.spec.ts` („zakładka działu Praca jest zapamiętana…”, „telefon bez
 zapisanej zakładki zaczyna od Dziennika”).
 
-**Commit.** — (2026-10-15).
+**Commit.** `78a4538` (2026-10-15).
 
 ---
 
