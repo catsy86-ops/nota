@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, RotateCcw, Coffee, Brain, X } from "lucide-react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { celebrate } from "@/lib/celebrate";
 import { toast } from "sonner";
 import { wordsPl } from "@/lib/plural";

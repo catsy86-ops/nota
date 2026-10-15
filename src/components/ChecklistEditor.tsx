@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { emojiShower } from "@/lib/celebrate";

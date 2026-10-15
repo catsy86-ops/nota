@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { Quote } from "lucide-react";
 import { getDailyQuote } from "@/lib/dailyQuote";
 import { useEffectsSettings } from "@/lib/effectsSettings";

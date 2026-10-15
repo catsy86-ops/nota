@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { Archive, ArchiveRestore, Check, KeyRound, Lock, Pin, RotateCcw, Trash } from "lucide-react";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 import { format } from "date-fns";

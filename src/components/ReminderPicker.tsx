@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { LazyCalendar as Calendar } from "@/components/ui/lazy-calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { REMINDER_REPEAT_LABELS, endOfDay, type ReminderRepeat } from "@/lib/reminderRepeat";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
 import { composeReminderTimestamp, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";

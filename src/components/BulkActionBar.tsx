@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { Archive, ArchiveRestore, Download, Trash, Palette, X, SquareCheckBig, Undo2, Pin, FolderInput, Tag } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";

@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { LayoutGroup, motion } from "framer-motion";
+import { LayoutGroup, m as motion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import { spring } from "@/lib/motion";
 import { cn } from "@/lib/utils";

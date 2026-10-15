@@ -1,4 +1,4 @@
-import { LayoutGroup, motion } from "framer-motion";
+import { LayoutGroup, m as motion } from "framer-motion";
 import { Check } from "lucide-react";
 import { SKINS, type Skin } from "@/lib/skins";
 import { SKIN_META } from "@/lib/skinGallery";

@@ -1,6 +1,6 @@
 import { useState, useRef, memo, useCallback, useEffect, useLayoutEffect, useMemo } from "react";
 import { markNoteOpened } from "@/lib/lastOpened";
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useReducedMotion, useDragControls } from "framer-motion";
+import { m as motion, AnimatePresence, useMotionValue, useSpring, useTransform, useReducedMotion, useDragControls } from "framer-motion";
 import { tween, dur, ease } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { cascadeDelay, cardExit, markPinned, hasRecentPin, consumePin, type CardExitIntent } from "@/lib/cardMotion";

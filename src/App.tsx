@@ -1,5 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import { MotionConfig } from "framer-motion";
+import { LazyMotion, MotionConfig } from "framer-motion";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { HoverTip } from "@/components/HoverTip";
@@ -11,6 +11,10 @@ import { useEffect } from "react";
 import { applySeasonAttr, useSeasonPref } from "./lib/seasonTheme";
 import { useEffectsSettings } from "./lib/effectsSettings";
 import { NotesProvider } from "./hooks/NotesProvider";
+
+// Funkcje animacji dociągane po starcie (osobna paczka). `strict`: pełny `motion` zamiast
+// lekkiego `m` rzuci błąd — w komponentach importujemy `m as motion` z framer-motion.
+const loadMotionFeatures = () => import("./lib/motionFeatures").then((mod) => mod.default);
 
 const App = () => {
   const { mode } = useMotionPref();
@@ -27,6 +31,7 @@ const App = () => {
   const reducedMotion = mode === "system" ? "user" : mode === "reduced" ? "always" : "never";
 
   return (
+    <LazyMotion features={loadMotionFeatures} strict>
     <MotionConfig reducedMotion={reducedMotion}>
       <TooltipProvider>
         <Sonner />
@@ -46,6 +51,7 @@ const App = () => {
         </BrowserRouter>
       </TooltipProvider>
     </MotionConfig>
+    </LazyMotion>
   );
 };
 

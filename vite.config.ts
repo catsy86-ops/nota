@@ -126,7 +126,8 @@ export default defineConfig(({ mode }) => ({
         manualChunks: {
           // React 19: renderer jest w `react-dom/client` (samo `react-dom` to cienka nakładka).
           "vendor-react": ["react", "react-dom", "react-dom/client", "scheduler", "react-router-dom"],
-          "vendor-motion": ["framer-motion"],
+          // Bez „vendor-motion”: ręczna paczka wciągnęłaby całe framer-motion (z `domMax`) do startu.
+          // LazyMotion (App.tsx) ładuje funkcje animacji osobnym importem — Rollup sam je wydziela.
           "vendor-dnd": ["@dnd-kit/core", "@dnd-kit/sortable", "@dnd-kit/utilities"],
           // Deliberately no "vendor-pdf": jspdf is reachable only through the
           // dynamic import() in exportPdf.ts, so Rollup isolates it in that

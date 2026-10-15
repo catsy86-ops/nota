@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { dismissAchievementStamp, useAchievementStamp } from "@/lib/achievementStamp";
 import { celebrate, sparkle } from "@/lib/celebrate";
 

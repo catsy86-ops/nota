@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { PanelLeftClose, PanelLeftOpen, Moon, Sun, FileDown, FolderOpen, Tag } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SearchBar } from "@/components/SearchBar";

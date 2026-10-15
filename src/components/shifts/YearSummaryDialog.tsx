@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMotionPref } from "@/hooks/useMotionPref";

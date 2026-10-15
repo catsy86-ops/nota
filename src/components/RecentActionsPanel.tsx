@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Archive, ArrowUpRight, RotateCcwClock, RotateCcw, Search, Trash } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";

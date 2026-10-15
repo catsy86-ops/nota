@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
 import { ChevronRight, Palette, FaceSlightlySmiling, FolderPlus, Pencil, Trash, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";

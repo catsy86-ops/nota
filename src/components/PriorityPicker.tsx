@@ -1,6 +1,6 @@
 import { Flag } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { PRIORITY_COLOR_CLASS, PRIORITY_LABELS, type NotePriority } from "@/lib/notePriority";
 

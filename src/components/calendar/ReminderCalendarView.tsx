@@ -4,7 +4,7 @@ import { useDayClock } from "@/lib/dayClock";
 import {
   DndContext, PointerSensor, TouchSensor, pointerWithin, useSensor, useSensors, type DragEndEvent,
 } from "@dnd-kit/core";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { tween } from "@/lib/motion";
 import { ChevronLeft, ChevronRight, Download, Keyboard } from "lucide-react";
 import { buildIcs, exportableReminders } from "@/lib/icsExport";

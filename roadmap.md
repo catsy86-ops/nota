@@ -1007,7 +1007,7 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 - [ ] 3.1 Kafel → edytor i swipe (= 4.1, 4.3) — po teście charakteryzującym i konwersji `NoteCard.tsx` do UTF-8 LF.
 - [ ] 3.2 Wirtualizacja siatki dopiero przy >500 notatek (decyzja z planu mobile).
 - [x] 3.3 Tailwind v4 + React 19 (D4). ✅ React 19 + react-day-picker 9, Tailwind 4 (`@tailwindcss/postcss`, `@config`), `tw-animate-css`, `tailwind-merge` 3; wygląd bez zmian (zrzuty v3/v4 ≤ 0,02%). Tokeny w `@theme` — osobno, jeśli trzeba.
-- [ ] 3.4 Paczka: `LazyMotion` + `m` (~−25–35 KB gzip), `y-webrtc` tylko przy synchronizacji, progi w `bundle.spec.ts` w dół.
+- [x] 3.4 Paczka: `LazyMotion` + `m` (~−25–35 KB gzip), `y-webrtc` tylko przy synchronizacji, progi w `bundle.spec.ts` w dół. ✅ `LazyMotion strict` + `domMax` w osobnej paczce, bez `vendor-motion`; wejściowy JS 400,3 → 372,4 KB, próg 376 KB. `y-webrtc` już był dynamiczny.
 
 ### Biblioteki
 - [x] Radix w obrębie major (`npm update`) + pełne e2e; `lucide-react` 0.462 → 1.x (sprawdzić zmienione nazwy). ✅ 12 paczek `@radix-ui/*` na najnowsze w swoim majorze; `lucide-react` 1.57 — importy na nazwy kanoniczne (15 aliasów, m.in. `Trash2`→`Trash`, `Loader2`→`LoaderCircle`, `Filter`→`Funnel`); ikony bez `aria-*` dostają `aria-hidden`.

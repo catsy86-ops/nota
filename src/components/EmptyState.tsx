@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { Archive, Bell, CalendarDays, CalendarRange, FolderOpen, Tag, Trash, type LucideIcon } from "lucide-react";
 import { NotatnikWordmark } from "@/components/NotatnikWordmark";
 import type { View, Elsewhere } from "@/hooks/useFilteredNotes";

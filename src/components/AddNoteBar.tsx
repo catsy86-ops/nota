@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { useDictation } from "@/hooks/useDictation";
 import { useOverlayHistory } from "@/hooks/useOverlayHistory";
 import { useSlashMenu } from "@/hooks/useSlashMenu";

@@ -21,7 +21,7 @@ import { takeLinkGraphRequest } from "@/lib/graphRequest";
 
 // Graf wchodzi dopiero po otwarciu zakładki — Statystyki same go nie potrzebują.
 const NoteGraph = lazy(() => import("@/components/NoteGraph"));
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { toast } from "sonner";

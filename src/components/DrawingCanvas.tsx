@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useCallback } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { Pen, Eraser, Undo2, Trash, Save, Minus, Plus } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";

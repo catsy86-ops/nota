@@ -1,5 +1,5 @@
 import { forwardRef, useRef, useState } from "react";
-import { motion, LayoutGroup } from "framer-motion";
+import { m as motion, LayoutGroup } from "framer-motion";
 import { StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, Settings as SettingsIcon, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, GraduationCap, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
 import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";

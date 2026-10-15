@@ -1,5 +1,5 @@
 import { useState, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, lazy, Suspense } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
 import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange, BriefcaseBusiness, GraduationCap } from "lucide-react";

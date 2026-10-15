@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Tag, Plus, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 
 interface LabelPickerProps {
   allLabels: string[];

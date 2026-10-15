@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { Smartphone, X } from "lucide-react";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { InstallAppButton } from "@/components/InstallAppButton";

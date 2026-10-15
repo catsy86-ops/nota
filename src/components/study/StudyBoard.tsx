@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight, FilePlusCorner, NotebookPen, Play } from "lu
 import { toast } from "sonner";
 import { yjsStore } from "@/lib/yjsStore";
 import { topicToNote } from "@/lib/study/toNote";
-import { LayoutGroup, motion } from "framer-motion";
+import { LayoutGroup, m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { CHECKLIST, MODULES, QUESTIONS, TOPICS, type StudyTopic } from "@/lib/study/content";
 import { COLUMNS, columnOf, moveTopic, practiceByTopic, useStudy, type Column, type StudyState, type TopicPractice } from "@/lib/study/store";

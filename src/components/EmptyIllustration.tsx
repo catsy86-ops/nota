@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import type { View } from "@/hooks/useFilteredNotes";
 import { EMPTY_GLYPHS } from "@/lib/emptyGlyphs";
 import { isMotionReduced } from "@/hooks/useMotionPref";

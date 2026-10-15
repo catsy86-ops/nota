@@ -1,7 +1,7 @@
 import { splitWikiTarget } from "@/lib/wikiLinks";
 import { onHeadingRequest, requestHeading, scrollToHeading, takePendingHeading } from "@/lib/wikiHeading";
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { m as motion } from "framer-motion";
 import { ChevronRight, Copy, CornerDownRight, FilePlusCorner, Link2, Maximize2, Minimize2, Minus, Pencil, Plus, X } from "lucide-react";
 import { ancestorsOf, canSetParent, childrenOf, parentIdOf } from "@/lib/subpages";
 import { setParent } from "@/lib/subpageActions";

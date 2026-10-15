@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { folderProgress } from "@/lib/folderProgress";
-import { motion, AnimatePresence } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
 import {
   Settings as SettingsIcon, CircleQuestionMark, Tag, Moon, Sun, FolderOpen, Command, RotateCcwClock, Trophy, Brain, Ellipsis, ChevronDown, Funnel, Star,
