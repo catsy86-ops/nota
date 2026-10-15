@@ -162,7 +162,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
 
   useDraftAutosave({
     active: isEditing,
-    draftKey: `${editTitle} ${editContent} ${JSON.stringify(editChecklist)}`,
+    draftKey: `${editTitle}\u0000${editContent}\u0000${JSON.stringify(editChecklist)}`,
     intervalSeconds: prefs.autosaveSeconds,
     onSave: commitDraft,
   });
