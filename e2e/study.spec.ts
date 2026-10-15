@@ -125,6 +125,36 @@ test("powtórki: pytania z rundy wracają następnego dnia jako „Na dziś: 10�
   await expect(page.getByText(/Powtórki na dziś zrobione\. Następne: jutro\./)).toBeVisible();
 });
 
+test("problem z tematem: karta tematu pokazuje go, „Ćwicz teraz” w dzienniku startuje rundę tematu", async ({ page }) => {
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem("seeded")) return;
+    sessionStorage.setItem("seeded", "1");
+    localStorage.setItem("kaczy.study.v1", JSON.stringify({
+      journal: [
+        { id: "p1", at: Date.now() - 86_400_000, kind: "problem", topic: "otulina", text: "Otulina za cienka na pionie\ndruga linia", site: "Lipowa 5", checked: [], images: [] },
+      ],
+    }));
+  });
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Tablica" }).click();
+  const card = page.locator('[data-topic="otulina"]');
+  await expect(card.locator('[data-topic-problem="open"]')).toContainText("Problem na budowie");
+  await expect(card.locator('[data-topic-problem="open"]')).toContainText("Otulina za cienka na pionie");
+  await expect(card.locator('[data-topic-problem="open"]')).not.toContainText("druga linia");
+
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByRole("button", { name: /^Ćwicz teraz: / }).click();
+  await expect(page.getByRole("tab", { name: "Quiz" })).toHaveAttribute("data-state", "active");
+  await expect(page.getByText(/^Pytanie 1 z \d+$/)).toBeVisible();
+
+  // Rozwiązany problem: bez „Ćwicz teraz”, a na karcie jako rozwiązany.
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByRole("button", { name: "Oznacz jako rozwiązany" }).click();
+  await expect(page.getByRole("button", { name: /^Ćwicz teraz: / })).toHaveCount(0);
+  await page.getByRole("tab", { name: "Tablica" }).click();
+  await expect(card.locator('[data-topic-problem="resolved"]')).toBeVisible();
+});
+
 test("tablica: „Ćwicz” startuje rundę z jednego tematu, a „Zrób notatkę” dodaje notatkę", async ({ page }) => {
   await page.goto("/praca");
   await page.getByRole("tab", { name: "Tablica" }).click();

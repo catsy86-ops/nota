@@ -988,6 +988,33 @@ wracają następnego dnia…” — zegar przestawiony na następny dzień).
 
 ---
 
+## Praca — powiązanie problemów z budowy z nauką
+
+**Co robi.** Problem z budowy przypisany do tematu wraca do nauki: w dzienniku otwarty problem ma przycisk
+„Ćwicz teraz” (runda pytań z tego tematu), a karta tematu na tablicy pokazuje ostatni problem — otwarty wyróżniony
+(„Problem na budowie (14.10): …”), rozwiązany przygaszony. Przycisk „Ćwicz” na karcie mówi, ile pytań tematu jest
+do powtórki dziś („2 na dziś”).
+
+**Gdzie jest.**
+- `src/lib/study/store.ts`: `TopicPractice.lastProblem` w `practiceByTopic` (otwarty ma pierwszeństwo przed nowszym
+  rozwiązanym, wśród równych — najnowszy).
+- `src/components/study/StudyBoard.tsx`: `TopicCard` (`data-topic-problem="open|resolved"`, licznik `topic-due`),
+  `dueByTopic` z `dueToday` (N3).
+- `src/components/study/StudyJournal.tsx`: „Ćwicz teraz” obok „Oznacz jako rozwiązany” (`aria-label` z nazwą tematu).
+
+**Jak działa i dlaczego.** Wszystko liczone z dziennika i powtórek przy renderze — bez nowych danych w Yjs. Problem
+przy temacie z „Umiem” już wcześniej cofał temat do „W trakcie”; teraz od razu prowadzi do ćwiczenia. Na karcie tylko
+pierwsza linia opisu — karta ma zostać krótka.
+
+**Ograniczenia i pułapki.** Wpis bez tematu nie ma „Ćwicz teraz”. Chip tematu we wpisie dalej też startuje ćwiczenie.
+
+**Testy.** `src/lib/study/study.test.ts` („ostatni problem tematu: otwarty wygrywa…”), `e2e/study.spec.ts` („problem z
+tematem: karta tematu pokazuje go, „Ćwicz teraz”…”).
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Praca → Dziennik budowy
 
 Zakładka „Dziennik” na `/nauka` (`src/components/study/StudyJournal.tsx`). Dziennik instalatora

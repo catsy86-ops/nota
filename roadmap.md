@@ -960,7 +960,7 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 - [x] D6e Raport do szefa i grupy w WhatsApp (2026-10-15, prośba użytkownika): odbiorcy w `studyMeta` (`boss`, `waGroup`), szef przez `wa.me` z gotowym tekstem, grupa przez `navigator.share` ze zdjęciami (fallback: schowek + link zaproszenia). Bez serwera i bez nieoficjalnych klientów WhatsApp.
 
 ### D7 — powiązania z nauką
-- [ ] Problem z tematem → „Ćwicz teraz”; karta tematu pokazuje ostatni problem; pytania tematu należne dziś (po N3).
+- [x] Problem z tematem → „Ćwicz teraz”; karta tematu pokazuje ostatni problem; pytania tematu należne dziś (po N3). ✅ 2026-10-15: `practiceByTopic().lastProblem`, „Ćwicz teraz” w dzienniku, „N na dziś” na przycisku „Ćwicz”.
 
 ### N — Nauka
 - [x] N1 (= 4.5) Nagłówek „Instalacje wod-kan”, pasek opanowania z modułami i podpisami na dotyk, podpisane przyciski kart, cyfry `tabular-nums` bez `font-display`, zakładka „Lista”. ✅ `MasteryStrip` w `StudyView.tsx`: odcinek na moduł z licznikiem, komórka jako przycisk (cel dotyku 26 px wysokości przy pasku 10 px) podpisuje temat pod paskiem; licznik w JetBrains Mono; karty tematu: „Wpis”, „Ćwicz”, „Do notatki” z podpisami, strzałki przeniesienia przy tytule.

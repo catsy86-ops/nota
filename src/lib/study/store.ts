@@ -295,6 +295,8 @@ export interface TopicPractice {
   problem: number;
   /** Moment ostatniego wpisu o temacie. */
   last: number;
+  /** Ostatni problem z tematem — otwarty ma pierwszeństwo przed nowszym rozwiązanym. */
+  lastProblem?: JournalEntry;
 }
 
 /** Ile razy temat pojawił się na budowie i ile razy sprawił problem. */
@@ -304,7 +306,13 @@ export function practiceByTopic(journal: readonly JournalEntry[]): Map<string, T
     if (!e.topic) continue;
     const p = out.get(e.topic) ?? { ok: 0, problem: 0, last: 0 };
     if (e.kind === "ok") p.ok += 1;
-    else if (e.kind === "problem") p.problem += 1;
+    else if (e.kind === "problem") {
+      p.problem += 1;
+      const prev = p.lastProblem;
+      const open = e.resolved === undefined;
+      const prevOpen = prev?.resolved === undefined;
+      if (!prev || (open && !prevOpen) || (open === prevOpen && e.at > prev.at)) p.lastProblem = e;
+    }
     p.last = Math.max(p.last, e.at);
     out.set(e.topic, p);
   }

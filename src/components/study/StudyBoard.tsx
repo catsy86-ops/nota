@@ -1,11 +1,11 @@
-import { ChevronLeft, ChevronRight, FilePlusCorner, NotebookPen, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, FilePlusCorner, NotebookPen, Play, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { yjsStore } from "@/lib/yjsStore";
 import { topicToNote } from "@/lib/study/toNote";
 import { LayoutGroup, m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { CHECKLIST, MODULES, QUESTIONS, TOPICS, type StudyTopic } from "@/lib/study/content";
-import { COLUMNS, columnOf, moveTopic, practiceByTopic, useStudy, type Column, type StudyState, type TopicPractice } from "@/lib/study/store";
+import { COLUMNS, columnOf, dueToday, moveTopic, practiceByTopic, useStudy, type Column, type StudyState, type TopicPractice } from "@/lib/study/store";
 
 const COLUMN_LABEL: Record<Column, string> = { todo: "Do nauki", doing: "W trakcie", done: "Umiem" };
 const COLUMN_HINT: Record<Column, string> = {
@@ -19,7 +19,7 @@ const moveClass =
   "grid h-7 w-7 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30 coarse:h-11 coarse:w-11";
 const moduleLabel = (id: StudyTopic["module"]) => MODULES.find((m) => m.id === id)?.label ?? id;
 
-function TopicCard({ topic, column, study, practice, onPractice, onJournal }: { topic: StudyTopic; column: Column; study: StudyState; practice?: TopicPractice; onPractice: (topicId: string) => void; onJournal: (topicId: string) => void }) {
+function TopicCard({ topic, column, study, practice, due, onPractice, onJournal }: { topic: StudyTopic; column: Column; study: StudyState; practice?: TopicPractice; due: number; onPractice: (topicId: string) => void; onJournal: (topicId: string) => void }) {
   const items = CHECKLIST.filter((c) => c.topic === topic.id);
   const checked = items.filter((c) => study.checked[c.id]).length;
   const critical = items.some((c) => c.critical);
@@ -74,6 +74,22 @@ function TopicCard({ topic, column, study, practice, onPractice, onJournal }: { 
         lista {checked}/{items.length} · pytań {questions}
         {practice && <> · budowa {practice.ok}×{practice.problem > 0 ? `, problemów ${practice.problem}` : ""}</>}
       </p>
+      {/* Ostatni problem z budowy przy temacie — otwarty wyróżniony; ćwiczenie jest obok. */}
+      {practice?.lastProblem && (
+        <p
+          className={cn(
+            "mt-2 flex items-start gap-1.5 rounded-lg px-2 py-1.5 text-xs leading-snug",
+            practice.lastProblem.resolved === undefined ? "bg-warning/10 text-foreground" : "bg-muted/60 text-muted-foreground",
+          )}
+          data-topic-problem={practice.lastProblem.resolved === undefined ? "open" : "resolved"}
+        >
+          <TriangleAlert className="mt-px h-3.5 w-3.5 shrink-0 text-warning" aria-hidden />
+          <span className="min-w-0">
+            <span className="font-medium">{practice.lastProblem.resolved === undefined ? "Problem na budowie" : "Rozwiązany problem"}</span>
+            {" "}({new Date(practice.lastProblem.at).toLocaleDateString("pl-PL", { day: "numeric", month: "numeric" })}): {practice.lastProblem.text.trim().split("\n")[0] || "bez opisu"}
+          </span>
+        </p>
+      )}
       <div className="mt-2">
         {/* Podpisy przy ikonach: na budowie nikt nie zgaduje, co robi ołówek. */}
         <div className="flex flex-wrap gap-1">
@@ -88,10 +104,11 @@ function TopicCard({ topic, column, study, practice, onPractice, onJournal }: { 
           <button
             type="button"
             onClick={() => onPractice(topic.id)}
-            aria-label={`${topic.title}: ćwicz pytania`}
-            className={actionClass}
+            aria-label={`${topic.title}: ćwicz pytania${due > 0 ? `, ${due} na dziś` : ""}`}
+            className={cn(actionClass, due > 0 && "border-primary/40 text-primary-ink")}
           >
             <Play className="h-3.5 w-3.5 shrink-0" aria-hidden />Ćwicz
+            {due > 0 && <span className="ml-0.5 rounded-full bg-primary/15 px-1.5 font-mono text-2xs tabular-nums" data-testid="topic-due">{due} na dziś</span>}
           </button>
           <button
             type="button"
@@ -116,6 +133,12 @@ function TopicCard({ topic, column, study, practice, onPractice, onJournal }: { 
 export function StudyBoard({ onPractice, onJournal }: { onPractice: (topicId: string) => void; onJournal: (topicId: string) => void }) {
   const study = useStudy();
   const practice = practiceByTopic(study.journal);
+  // Pytania do powtórki dziś, policzone per temat (N3).
+  const dueByTopic = new Map<string, number>();
+  for (const id of dueToday(study)) {
+    const topic = QUESTIONS.find((q) => q.id === id)?.topic;
+    if (topic) dueByTopic.set(topic, (dueByTopic.get(topic) ?? 0) + 1);
+  }
   return (
     <LayoutGroup>
       <div className="grid gap-4 md:grid-cols-3">
@@ -131,7 +154,7 @@ export function StudyBoard({ onPractice, onJournal }: { onPractice: (topicId: st
                 <p className="text-xs text-muted-foreground">{COLUMN_HINT[col]}</p>
               </header>
               <ul className="space-y-2.5 min-h-12">
-                {topics.map((t) => <TopicCard key={t.id} topic={t} column={col} study={study} practice={practice.get(t.id)} onPractice={onPractice} onJournal={onJournal} />)}
+                {topics.map((t) => <TopicCard key={t.id} topic={t} column={col} study={study} practice={practice.get(t.id)} due={dueByTopic.get(t.id) ?? 0} onPractice={onPractice} onJournal={onJournal} />)}
                 {topics.length === 0 && (
                   <li className="rounded-xl border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">Brak tematów. Przenieś tu temat strzałką.</li>
                 )}

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Archive, Check, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Plus, Search, X } from "lucide-react";
+import { Archive, Check, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Play, Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusPanel } from "@/components/StatusPanel";
 import { cn } from "@/lib/utils";
@@ -333,17 +333,30 @@ function JournalItem({ entry: e, onPractice, onZoom }: { entry: JournalEntry; on
             {e.checked.length > 0 && <span className="tabular-nums">punkty {e.checked.length}/{total}</span>}
           </div>
           {e.kind === "problem" && (
-            <button
-              type="button"
-              onClick={toggleResolved}
-              className={cn(
-                "pressable mt-2 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs coarse:min-h-11 coarse:px-3.5 coarse:text-sm",
-                resolved ? "border-border text-muted-foreground hover:text-foreground" : "border-warning/60 bg-warning/10 font-medium text-foreground hover:bg-warning/20",
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={toggleResolved}
+                className={cn(
+                  "pressable inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs coarse:min-h-11 coarse:px-3.5 coarse:text-sm",
+                  resolved ? "border-border text-muted-foreground hover:text-foreground" : "border-warning/60 bg-warning/10 font-medium text-foreground hover:bg-warning/20",
+                )}
+              >
+                <Check className="h-3.5 w-3.5" aria-hidden />
+                {resolved ? "Otwórz ponownie" : "Oznacz jako rozwiązany"}
+              </button>
+              {/* Otwarty problem z tematem: od razu runda pytań z tego tematu — teoria tam, gdzie praktyka zawiodła. */}
+              {!resolved && e.topic && (
+                <button
+                  type="button"
+                  onClick={() => onPractice(e.topic!)}
+                  aria-label={`Ćwicz teraz: ${topicTitle(e.topic)}`}
+                  className="pressable inline-flex items-center gap-1.5 rounded-full border border-primary/40 px-2.5 py-1 text-xs font-medium text-primary-ink hover:bg-primary/10 coarse:min-h-11 coarse:px-3.5 coarse:text-sm"
+                >
+                  <Play className="h-3.5 w-3.5" aria-hidden />Ćwicz teraz
+                </button>
               )}
-            >
-              <Check className="h-3.5 w-3.5" aria-hidden />
-              {resolved ? "Otwórz ponownie" : "Oznacz jako rozwiązany"}
-            </button>
+            </div>
           )}
           {e.images.length > 0 && (
             <ul className="mt-2 flex flex-wrap gap-2" aria-label="Zdjęcia wpisu">

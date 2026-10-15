@@ -190,7 +190,17 @@ describe("dziennik z budowy", () => {
     addJournalEntry({ kind: "problem", topic: "otulina", text: "c" }, 3000);
     addJournalEntry({ kind: "note", topic: null, text: "d" }, 4000);
     const p = practiceByTopic(getStudy().journal).get("otulina");
-    expect(p).toEqual({ ok: 2, problem: 1, last: 3000 });
+    expect(p).toMatchObject({ ok: 2, problem: 1, last: 3000 });
+    expect(p?.lastProblem?.text).toBe("c");
+  });
+
+  it("ostatni problem tematu: otwarty wygrywa z nowszym rozwiązanym", () => {
+    const open = addJournalEntry({ kind: "problem", topic: "otulina", text: "otwarty" }, 1000)!;
+    const later = addJournalEntry({ kind: "problem", topic: "otulina", text: "później" }, 2000)!;
+    setProblemResolved(later.id, true, 2500);
+    expect(practiceByTopic(getStudy().journal).get("otulina")?.lastProblem?.id).toBe(open.id);
+    setProblemResolved(open.id, true, 3000);
+    expect(practiceByTopic(getStudy().journal).get("otulina")?.lastProblem?.id).toBe(later.id);
   });
 
   it("sanitizeStudy odfiltrowuje uszkodzone wpisy i przycina tekst", () => {
