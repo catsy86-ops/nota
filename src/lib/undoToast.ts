@@ -1,11 +1,12 @@
 import type { CSSProperties } from "react";
 import { toast } from "sonner";
+import { undoToastDuration } from "@/lib/siteMode";
 
 export interface UndoToastOptions {
   description?: string;
   /** icon rendered before the message (emoji or single char) */
   icon?: string;
-  /** milliseconds before the toast disappears; defaults to 5000 */
+  /** milliseconds before the toast disappears; defaults to 5000 (tryb budowa: co najmniej 8000) */
   duration?: number;
   /** Stałe id: kolejny dymek z tym samym id zastępuje poprzedni zamiast się układać w stos. */
   id?: string;
@@ -22,7 +23,7 @@ export function toastWithUndo(
   opts: UndoToastOptions = {}
 ) {
   let called = false;
-  const duration = opts.duration ?? 5000;
+  const duration = undoToastDuration(opts.duration ?? 5000);
   const id = toast(message, {
     ...(opts.id ? { id: opts.id } : {}),
     description: opts.description,

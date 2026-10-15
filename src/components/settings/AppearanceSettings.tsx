@@ -1,4 +1,4 @@
-import { Sun, Moon, Monitor, Zap, Accessibility } from "lucide-react";
+import { Sun, Moon, Monitor, Zap, Accessibility, HardHat, CircleOff, Contrast } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useViewPrefs, setViewPref, resetViewPrefs, type Density, type Layout } from "@/lib/viewPrefs";
 import { changeView } from "@/lib/viewChange";
@@ -13,11 +13,18 @@ import { Segmented } from "./Segmented";
 import { SkinPicker } from "./SkinPicker";
 import { SKIN_SCHEME } from "@/lib/skins";
 import { SKIN_META } from "@/lib/skinGallery";
+import { setSiteMode, useSiteMode, type SiteMode } from "@/lib/siteMode";
 
 const themeOptions: { value: ThemeMode; label: string; Icon: typeof Sun }[] = [
   { value: "light", label: "Jasny", Icon: Sun },
   { value: "dark", label: "Ciemny", Icon: Moon },
   { value: "system", label: "System", Icon: Monitor },
+];
+
+const siteOptions: { value: SiteMode; label: string; Icon: typeof Sun }[] = [
+  { value: "off", label: "Wyłączony", Icon: CircleOff },
+  { value: "on", label: "Włączony", Icon: HardHat },
+  { value: "auto", label: "Automatycznie", Icon: Contrast },
 ];
 
 const motionOptions: { value: MotionMode; label: string; Icon: typeof Sun }[] = [
@@ -32,6 +39,7 @@ export function AppearanceSettings() {
   const prefs = useViewPrefs();
   const { mode: themeMode, setMode: setThemeMode, skin, setSkin } = useTheme();
   const skinScheme = SKIN_SCHEME[skin];
+  const siteMode = useSiteMode();
   const { mode: motionMode, reduced: motionReduced, setMode: setMotionMode } = useMotionPref();
   const { pref: seasonPref, season: activeSeason, setPref: setSeasonPref } = useSeasonPref();
 
@@ -51,6 +59,15 @@ export function AppearanceSettings() {
               : themeMode === "dark"
                 ? "Ciemny motyw ułatwia pracę wieczorem."
                 : "Klasyczny jasny motyw."}
+        </p>
+      </Section>
+
+      <Section title="Tryb budowa">
+        <Segmented label="Tryb budowa" options={siteOptions} value={siteMode} onChange={setSiteMode} />
+        <p className="text-xs text-muted-foreground mt-1.5">
+          {siteMode === "auto"
+            ? "Włącza się, gdy system prosi o większy kontrast."
+            : "Do pracy w rękawicach i w słońcu: większy tekst i przyciski, mocniejszy kontrast, gładkie tło, dłuższe „Cofnij”."}
         </p>
       </Section>
 

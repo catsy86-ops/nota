@@ -12,6 +12,9 @@ import "@fontsource-variable/unbounded/wght.css";
 import "@fontsource-variable/fraunces/soft.css";
 import "@fontsource-variable/bricolage-grotesque/wght.css";
 import "./styles/skins.css";
+import "./styles/site.css";
+// Tryb budowa ustawia `html[data-site]` przy imporcie — przed pierwszym malowaniem.
+import "./lib/siteMode";
 import { registerServiceWorker, applyServiceWorkerUpdate, SW_UPDATE_EVENT } from "./lib/registerSW";
 import { requestPersistentStorage } from "./lib/storagePersistence";
 import { installGlobalDiagHandlers } from "./lib/diagnostics";

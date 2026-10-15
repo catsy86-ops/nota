@@ -1,0 +1,52 @@
+/*
+  „Tryb budowa” (`html[data-site]`, src/lib/siteMode.ts): rękawice i słońce.
+  Wczytywany po skins.css — nadpisuje tokeny każdego stylu (wyższa specyficzność
+  `html[data-site]…`). Poza warstwami Tailwinda, jak skins.css.
+*/
+
+/* Wszystko w rem rośnie razem: tekst 18 px, przyciski i odstępy o 12,5%. */
+html[data-site] {
+  font-size: 112.5%;
+  /* Minimalny cel dotyku dla przycisków z `.tap-target`: 3 rem = 54 px. */
+  --tap: 3rem;
+}
+
+/* Mocniejszy tekst pomocniczy i krawędzie — szare podpisy giną w słońcu. */
+html[data-site]:not(.dark) {
+  --muted-foreground: 220 14% 28%;
+  --border: 220 12% 72%;
+  --input: 220 14% 38%;
+}
+html[data-site].dark {
+  --muted-foreground: 30 8% 84%;
+  --border: 30 6% 36%;
+  --input: 30 6% 62%;
+}
+/* Kolorowe kafle w ciemnym: index.css podnosi tam muted do 74% — w trybie budowa jeszcze jaśniej. */
+html[data-site].dark [data-note-color]:not([data-note-color="default"]) {
+  --muted-foreground: 30 8% 86%;
+}
+
+/* Bez kratki i dekoracji tła — gładkie tło jest czytelniejsze w ostrym świetle. */
+html[data-site] .paper-grid::before,
+html[data-site] .paper-grid::after {
+  content: none;
+}
+
+/* Cele dotyku: niewidzialny obszar wokół przycisku ma co najmniej `--tap`. */
+@media (pointer: coarse) {
+  html[data-site] .tap-target { position: relative; }
+  html[data-site] .tap-target::after {
+    content: "";
+    position: absolute;
+    inset: auto;
+    top: 50%;
+    left: 50%;
+    width: max(100%, var(--tap));
+    height: max(100%, var(--tap));
+    translate: -50% -50%;
+    border-radius: 0.75rem;
+  }
+  /* Akcje kafla: 16 px ikona + 2 × 1 rem (×1,125) ≈ 54 px. */
+  html[data-site] .card-action { padding: 1rem; }
+}

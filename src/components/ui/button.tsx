@@ -21,8 +21,8 @@ const buttonVariants = cva(
         default: "h-10 px-4 py-2",
         sm: "h-9 px-3",
         lg: "h-11 px-8",
-        icon: "h-9 w-9 coarse:h-11 coarse:w-11",
-        "icon-sm": "h-8 w-8 coarse:h-11 coarse:w-11",
+        icon: "tap-target h-9 w-9 coarse:h-11 coarse:w-11",
+        "icon-sm": "tap-target h-8 w-8 coarse:h-11 coarse:w-11",
       },
     },
     defaultVariants: {
