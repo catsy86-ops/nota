@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Archive, Check, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StatusPanel } from "@/components/StatusPanel";
 import { cn } from "@/lib/utils";
 import { haptic } from "@/lib/haptics";
 import { NoteImage } from "@/components/NoteImage";
@@ -120,13 +121,14 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
         </header>
 
         {study.journal.length === 0 ? (
-          <button
-            type="button"
-            onClick={() => openJournalSheet()}
-            className="block w-full rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground hover:border-primary/50 hover:text-foreground xl:col-start-1"
-          >
-            Brak wpisów. Zapisz, co robisz na budowie — dziennik połączy to z tematami, które przerabiasz.
-          </button>
+          <StatusPanel
+            size="inline"
+            icon={FileText}
+            title="Brak wpisów"
+            description="Zapisz, co robisz na budowie — dziennik połączy to z tematami, które przerabiasz."
+            actions={<Button size="sm" onClick={() => openJournalSheet()}><Plus className="h-4 w-4" aria-hidden />Dodaj wpis</Button>}
+            className="xl:col-start-1"
+          />
         ) : (
           <>
             <div className="mb-4 space-y-2 xl:col-start-2 xl:row-span-3 xl:row-start-1 xl:mb-0 xl:sticky xl:top-24 xl:self-start xl:rounded-2xl xl:border xl:border-border/60 xl:bg-card xl:p-4 xl:shadow-elevation-1" role="search" aria-label="Filtry dziennika">
@@ -226,9 +228,12 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
             </div>
 
             {view.days.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground xl:col-start-1">
-                {filtered ? "Nic nie pasuje. Zmień słowa albo wyczyść filtry." : `Brak wpisów z ostatnich ${RECENT_DAYS} dni.`}
-              </p>
+              <StatusPanel
+                size="inline"
+                tone={filtered ? "no-results" : "empty"}
+                title={filtered ? "Nic nie pasuje. Zmień słowa albo wyczyść filtry." : `Brak wpisów z ostatnich ${RECENT_DAYS} dni.`}
+                className="xl:col-start-1"
+              />
             ) : (
               <div className="space-y-5 xl:col-start-1">
                 {view.days.map((d) => (

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { StatusPanel } from "@/components/StatusPanel";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { Archive, ArrowUpRight, RotateCcwClock, RotateCcw, Search, Trash } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -172,9 +173,13 @@ export function RecentActionsPanel({ open, onOpenChange, onOpenNote }: Props) {
           </AnimatePresence>
 
           {filtered.length === 0 && (
-            <div className="text-center text-sm text-muted-foreground py-16">
-              {entries.length === 0 ? "Brak akcji do pokazania" : "Nic nie pasuje do wyszukiwania"}
-            </div>
+            <StatusPanel
+              size="inline"
+              tone={entries.length === 0 ? "empty" : "no-results"}
+              icon={entries.length === 0 ? RotateCcwClock : undefined}
+              title={entries.length === 0 ? "Brak akcji do pokazania" : "Nic nie pasuje do wyszukiwania"}
+              className="my-6"
+            />
           )}
         </div>
 

@@ -256,6 +256,20 @@ test("awaria widoku Grafiku nie zabiera reszty aplikacji", async ({ page }) => {
   await expect(page.getByRole("alert")).toHaveCount(0);
 });
 
+test("bez internetu niepobrany Grafik mówi, że czeka na sieć", async ({ page, context }) => {
+  await page.route(/ShiftsView/, (route) => route.abort());
+  await page.goto("/");
+  // Bez SW w testach leniwe części (np. samouczek) muszą się pobrać, zanim odetniemy sieć.
+  await page.waitForLoadState("networkidle");
+  await context.setOffline(true);
+  await page.getByRole("button", { name: "Grafik" }).first().click();
+  const panel = page.locator('[data-status="offline"]');
+  await expect(panel).toContainText("Grafik: ten widok potrzebuje internetu");
+  await expect(panel).toHaveAttribute("role", "status");
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await context.setOffline(false);
+});
+
 test("ostrzega o odpoczynku krótszym niż 11 h", async ({ page }) => {
   await page.getByRole("radio", { name: /Popołudnie/ }).click();
   await page.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();

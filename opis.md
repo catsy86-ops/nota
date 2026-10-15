@@ -357,6 +357,49 @@ dotyczą okien i paneli, nie widoków — tam szkielet nie jest potrzebny.
 
 ---
 
+## Wspólne — pusty widok, błąd, brak sieci, brak wyników (`StatusPanel`)
+
+**Co robi.** Każdy pusty widok, „nic nie znaleziono”, awaria widoku i widok niedostępny bez internetu wygląda tak
+samo: rysunek kreską długopisu (lekko przekrzywiony, jak w zeszycie), nagłówek, jedno zdanie, co zrobić, i ewentualnie
+przycisk. Bez sieci niepobrany jeszcze widok (Grafik, Kalendarz, Praca) mówi wprost, że czeka na internet i że
+notatki działają dalej, zamiast pokazywać ogólny błąd.
+
+**Gdzie jest.**
+- `src/components/StatusPanel.tsx`: `StatusPanel`, typ `StatusTone` (`empty` | `no-results` | `error` | `offline`).
+  Propsy: `title`, `description`, `actions`, `icon` (domyślna ikona rodzaju; `null` — bez), `art` (własna
+  ilustracja), `size` (`page` | `inline`), `headingLevel`.
+- Użycia: `EmptyState` (pusty widok notatek i „Brak wyników w …” z chipami „znaleziono gdzie indziej”),
+  `ViewErrorBoundary` (błąd i brak sieci), `study/StudyJournal` (brak wpisów z przyciskiem „Dodaj wpis”, brak
+  wyników filtra), `study/JournalReport` (pusty okres), `RecentActionsPanel` (brak akcji / brak wyników).
+
+**Jak działa i dlaczego.**
+- `page` — cały widok: duży rysunek, `h2`, wejście z ruchem (pusty widok z opóźnieniem 0,3 s jak dotąd, błąd od
+  razu). `inline` — fragment widoku: przerywana ramka (błąd w czerwonej), mała ikona; bez opisu tytuł jest
+  przygaszony.
+- Kolor kreski koduje rodzaj: akcent — pustka, `muted-foreground` — brak wyników, `destructive` — błąd,
+  `primary-ink` — brak sieci.
+- Dostępność: błąd ma `role="alert"`, brak sieci `role="status"`, pustka i brak wyników nic (to nie zdarzenie).
+  Ikony `aria-hidden`. Każdy panel ma `data-status="<rodzaj>"` (testy, style).
+- Brak sieci w `ViewErrorBoundary`: błąd ładowania paczki (`dynamically imported module` / `Loading chunk` /
+  `Failed to fetch`) przy `navigator.onLine === false`. Przy sieci ten sam błąd zostaje błędem z „Odśwież stronę”.
+- Pusty Dziennik był dotąd całym klikanym przyciskiem; teraz to panel z wyraźnym przyciskiem „Dodaj wpis”.
+
+**Ograniczenia i pułapki.**
+- Bardzo małe puste miejsca zostają zwykłym tekstem: kolumna tablicy tematów (`StudyBoard`, cel upuszczania), „Brak
+  terminów” w `DayPanel`/`UpcomingDays`, `CommandEmpty` w palecie, `LabelPicker`.
+- Leniwie ładowane części poza widokami (np. `OnboardingTour`) nie mają własnej granicy błędu — bez sieci i bez
+  service workera ich błąd pobrania przejmuje globalna granica w `App.tsx`. Na zainstalowanej aplikacji SW ma je w
+  pamięci, więc dotyczy to głównie testów (SW zablokowany) i pierwszej wizyty.
+- Nowy pusty stan: użyj `StatusPanel`, nie własnego `<p>` w przerywanej ramce.
+
+**Testy.** `e2e/shifts.spec.ts` („awaria widoku Grafiku nie zabiera reszty aplikacji”, „bez internetu niepobrany
+Grafik mówi, że czeka na sieć” — `role="status"`, bez `alert`), `e2e/search-backup.spec.ts` („Brak wyników w
+Notatkach”), `e2e/study.spec.ts` (brak wyników filtra Dziennika), `e2e/a11y.spec.ts` (puste widoki w obu motywach).
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Wspólne — wibracje (haptyka)
 
 **Co robi.** Na telefonie z Androidem krótkie drgnięcie potwierdza akcje: zapis notatki, odhaczenie listy, przejście

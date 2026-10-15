@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { StatusPanel } from "@/components/StatusPanel";
 import { logDiag } from "@/lib/diagnostics";
 
 interface Props {
@@ -33,22 +33,30 @@ export class ViewErrorBoundary extends Component<Props, State> {
     if (!this.state.error) return this.props.children;
     // `lazy` pamięta odrzucony import, więc po błędzie ładowania pomaga tylko odświeżenie.
     const chunk = /dynamically imported module|Loading chunk|Failed to fetch/i.test(this.state.error.message);
+    const offline = chunk && typeof navigator !== "undefined" && navigator.onLine === false;
+    const reload = (
+      <Button size="sm" variant={chunk ? "default" : "outline"} onClick={() => window.location.reload()}>Odśwież stronę</Button>
+    );
+    if (offline) {
+      return (
+        <StatusPanel
+          tone="offline"
+          title={`${this.props.name}: ten widok potrzebuje internetu`}
+          description="Nie był jeszcze zapisany na tym urządzeniu. Notatki działają bez sieci — wróć tu po połączeniu i odśwież stronę."
+          actions={reload}
+        />
+      );
+    }
     return (
-      <div role="alert" className="rounded-3xl border border-border/60 bg-card p-5 flex gap-4 items-start">
-        <TriangleAlert className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-        <div className="space-y-3 min-w-0">
-          <div className="space-y-1">
-            <p className="font-display font-bold">{this.props.name}: nie udało się wyświetlić widoku</p>
-            <p className="text-sm text-muted-foreground">
-              {chunk ? "Nie dało się pobrać tej części aplikacji — sprawdź połączenie i odśwież stronę." : "Pozostałe widoki działają. Spróbuj ponownie albo odśwież stronę."}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {!chunk && <Button size="sm" onClick={() => this.setState({ error: null })}>Spróbuj ponownie</Button>}
-            <Button size="sm" variant={chunk ? "default" : "outline"} onClick={() => window.location.reload()}>Odśwież stronę</Button>
-          </div>
-        </div>
-      </div>
+      <StatusPanel
+        tone="error"
+        title={`${this.props.name}: nie udało się wyświetlić widoku`}
+        description={chunk ? "Nie dało się pobrać tej części aplikacji — sprawdź połączenie i odśwież stronę." : "Pozostałe widoki działają. Spróbuj ponownie albo odśwież stronę."}
+        actions={<>
+          {!chunk && <Button size="sm" onClick={() => this.setState({ error: null })}>Spróbuj ponownie</Button>}
+          {reload}
+        </>}
+      />
     );
   }
 }

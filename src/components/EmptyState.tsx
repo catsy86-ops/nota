@@ -2,6 +2,7 @@ import { m as motion } from "framer-motion";
 import { Archive, Bell, CalendarDays, CalendarRange, FolderOpen, Tag, Trash, type LucideIcon } from "lucide-react";
 import { NotatnikWordmark } from "@/components/NotatnikWordmark";
 import type { View, Elsewhere } from "@/hooks/useFilteredNotes";
+import { StatusPanel } from "@/components/StatusPanel";
 import { EmptyIllustration } from "@/components/EmptyIllustration";
 import { hasEmptyIllustration } from "@/lib/emptyGlyphs";
 import { modShortcut, TAP } from "@/lib/platform";
@@ -65,50 +66,50 @@ export function EmptyState({ view, search, elsewhere, onGo }: { view: View; sear
   if (search) {
     const hits = ELSEWHERE_LABELS.filter((e) => (elsewhere?.[e.key] ?? 0) > 0);
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
-        <p className="text-lg font-display font-semibold text-foreground mb-1">
-          Brak wyników{HERE[view] ? ` w ${HERE[view]}` : " w tym widoku"}
-        </p>
-        <p className="text-muted-foreground">Nic nie znaleziono dla „{search}"</p>
-        {hits.length > 0 && onGo && (
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+      <StatusPanel
+        tone="no-results"
+        title={`Brak wyników${HERE[view] ? ` w ${HERE[view]}` : " w tym widoku"}`}
+        description={`Nic nie znaleziono dla „${search}”. Sprawdź pisownię albo szukaj krótszym słowem.`}
+        actions={hits.length > 0 && onGo ? (
+          <>
             <span className="text-sm text-muted-foreground">Znaleziono gdzie indziej:</span>
             {hits.map((e) => (
               <button
                 key={e.key}
                 type="button"
                 onClick={() => onGo(e.view)}
-                className="text-sm font-medium rounded-full border border-border/60 bg-muted/40 px-3 py-1 text-foreground hover:bg-muted focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="tap-target text-sm font-medium rounded-full border border-border/60 bg-muted/40 px-3 py-1 text-foreground hover:bg-muted focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 {elsewhere![e.key]} w {e.name}
               </button>
             ))}
-          </div>
-        )}
-      </motion.div>
+          </>
+        ) : undefined}
+      />
     );
   }
 
   const Sketch = SKETCHES[view];
   return (
-    <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="text-center py-20 sm:py-24">
-      {hasEmptyIllustration(view) ? (
+    <StatusPanel
+      tone="empty"
+      icon={Sketch ?? null}
+      art={hasEmptyIllustration(view) ? (
         <EmptyIllustration view={view} />
-      ) : Sketch ? (
-        <Sketch aria-hidden strokeWidth={1.1} className="w-20 h-20 mx-auto mb-5 text-accent -rotate-6" />
-      ) : (
+      ) : Sketch ? undefined : (
         <div className="relative w-64 max-w-full mx-auto mb-6">
           <NotatnikWordmark className="relative" />
         </div>
       )}
-      <h2 className="text-2xl font-display font-bold text-foreground mb-2">{HEADINGS[view]}</h2>
-      <p className="text-muted-foreground max-w-sm mx-auto mb-6">{DESCRIPTIONS[view]}</p>
+      title={HEADINGS[view]}
+      description={DESCRIPTIONS[view]}
+    >
       {view === "notes" && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="coarse:hidden flex flex-wrap items-center justify-center gap-2 max-w-md mx-auto"
+          className="coarse:hidden mt-6 flex flex-wrap items-center justify-center gap-2 max-w-md mx-auto"
         >
           {[
             { k: modShortcut("K"), l: "paleta poleceń" },
@@ -121,6 +122,6 @@ export function EmptyState({ view, search, elsewhere, onGo }: { view: View; sear
           ))}
         </motion.div>
       )}
-    </motion.div>
+    </StatusPanel>
   );
 }

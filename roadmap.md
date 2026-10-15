@@ -999,7 +999,7 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 - [x] 2.3 Komputer `xl`: Grafik i Kalendarz w dwóch kolumnach z przyklejonym panelem. ✅ `contents` + `order` trzyma kolejność na telefonie; panel Grafiku: Teraz, paleta, podsumowanie; Kalendarza: najbliższe terminy i wybrany dzień.
 - [x] 2.4 Komputer: Dziennik ~48 rem + przyklejony panel filtrów i otwartych problemów. ✅ Panel „Filtry” (z chipem „Otwarte”) przyklejony obok wpisów; chipy się zawijają.
 - [x] 2.5 `ui/responsive-dialog.tsx` (Dialog na `desk:`, arkusz na telefonie) i migracja ~8 okien (D2). ✅ Wariant `phone:` (przeciwieństwo `desk:`, też telefon w poziomie), 11 formularzy, przyklejony pasek przycisków.
-- [ ] 2.6 Jeden `StatusPanel` dla pustki, błędu, offline i „nic nie znaleziono”.
+- [x] 2.6 Jeden `StatusPanel` dla pustki, błędu, offline i „nic nie znaleziono”. ✅ `components/StatusPanel.tsx` (`page`/`inline`, rodzaj → kolor kreski i rola ARIA); `EmptyState`, `ViewErrorBoundary` (nowy stan „widok potrzebuje internetu”), Dziennik, raport, ostatnie akcje.
 - [x] 2.7 `@axe-core/playwright` (`e2e/a11y.spec.ts`, oba motywy, 390/1440, wcag22aa, lista wyjątków zapadkowo). ✅ 5 widoków × 2 motywy × 2 rozmiary; naprawione tagline (`aria-label` na `<p>`), kontrast stopki, ⌘K i weekendów; jedyny wyjątek `target-size` paska opanowania Nauki na telefonie.
 - [x] 2.8 Playwright: projekty iPhone 14 (webkit) i Pixel 7 dla `@smoke`/`@mobile`. ✅ Tylko `@mobile` (smoke z komputera nie pasuje do telefonu); cały `mobile.spec.ts` oznaczony; SW zablokowany w tych projektach; `npm run test:e2e:mobile`.
 

@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Clock, Copy, FilePlusCorner, MapPin, Printer, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { StatusPanel } from "@/components/StatusPanel";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { NoteImage } from "@/components/NoteImage";
@@ -260,7 +261,7 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
       </header>
 
       {report.count === 0 ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">Brak wpisów z tej budowy w tym okresie. Zmień budowę albo okres.</p>
+        <StatusPanel size="inline" tone="no-results" title="Brak wpisów z tej budowy w tym okresie." description="Zmień budowę albo okres." className="my-4" />
       ) : (
         <div className="divide-y divide-border/70">
           {report.days.map((d) => (
