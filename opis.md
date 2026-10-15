@@ -178,7 +178,7 @@ Na telefonie i laptopie wszystko zostaje w jednej kolumnie w dawnej kolejności.
 **Testy.** `e2e/desktop-columns.spec.ts` (1440: panel na prawo od siatki i `sticky` w Grafiku i Kalendarzu, wpisy
 ≤ 48 rem z filtrami obok; 390 `@mobile`: paleta nad siatką, filtry nad wpisami i `static`).
 
-**Commit.** `HASHCO` (2026-10-15).
+**Commit.** `9bfb12e` (2026-10-15).
 
 ---
 
@@ -284,7 +284,7 @@ samouczek) są na telefonie wyśrodkowane z marginesem (1.3).
 poziomie (2.5)”: Cykl zmian dochodzi do dołu ekranu, „Nałóż cykl” widoczny; 390 × 844 i 844 × 390) oraz dotychczasowe
 testy Grafiku, Kalendarza, skarbca i Dziennika.
 
-**Commit.** `HASHRD` (2026-10-15).
+**Commit.** `07bbc03` (2026-10-15).
 
 ---
 
