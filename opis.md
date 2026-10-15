@@ -1291,7 +1291,7 @@ w portalu — w testach `page.getByRole("menuitem", …)`, nie wewnątrz okna.
 **Testy.** `e2e/journal-pressure-test.spec.ts` (protokół w podglądzie, zestawienie prób, podpisy), `e2e/study.spec.ts`
 („raport budowy…” przez menu „Więcej”), `e2e/report-whatsapp.spec.ts`.
 
-**Commit.** — (2026-10-15).
+**Commit.** `e9355ca` (2026-10-15).
 
 ---
 
