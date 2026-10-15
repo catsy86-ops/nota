@@ -308,7 +308,7 @@ trwają 8 s zamiast 5 s. „Automatycznie” włącza tryb, gdy system prosi o w
 **Testy.** `src/lib/siteMode.test.ts` (auto, atrybut, czas „Cofnij”), `e2e/site-mode.spec.ts` (`@mobile`: 18 px,
 brak kratki, cel ≥ 52 px w nagłówku, „Cofnij” 8000 ms, przeżywa odświeżenie; też iPhone 14 i Pixel 7).
 
-**Commit.** `HASHSI` (2026-10-15).
+**Commit.** `d0e244b` (2026-10-15).
 
 ---
 
@@ -437,7 +437,7 @@ worker rejestruje się na każdym hoście produkcyjnym, a offline obsługuje ka�
 
 **Testy.** `e2e/pwa.spec.ts` (rejestracja i aktywacja workera, offline), typecheck, build.
 
-**Commit.** `HASHLV` (2026-10-15).
+**Commit.** `cba3989` (2026-10-15).
 
 ---
 
@@ -531,7 +531,7 @@ w `public/manifest.webmanifest`). `src/lib/viewRoute.ts` mapuje `praca` i `nauka
 i typy zostają przy `study` — zmiana nazwy nie rusza danych. Notatki tworzone z tematów dalej mają tytuł
 „Nauka: …” i etykietę `nauka` — to opis treści (temat do nauki), nie nazwa działu.
 Testy: `src/lib/viewRoute.test.ts`, `e2e/study.spec.ts` („stary adres /nauka nadal otwiera dział Praca”).
-Commit: `HASHPR` (2026-10-15).
+Commit: `b610ff6` (2026-10-15).
 
 ### Pasek opanowania
 
