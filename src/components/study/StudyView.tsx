@@ -4,7 +4,8 @@ import { TOPICS } from "@/lib/study/content";
 import { columnOf, useStudy } from "@/lib/study/store";
 import { setJournalDraftTopic } from "@/lib/study/draft";
 import { useStudyReady } from "@/lib/study/data";
-import { useState } from "react";
+import { closeJournalSheet, JOURNAL_ENTRY_PARAM, openJournalSheet, useJournalSheet } from "@/lib/study/entrySheet";
+import { useEffect, useState } from "react";
 import { QuizPanel, type QuizScope } from "./QuizPanel";
 import { StudyBoard } from "./StudyBoard";
 import { StudyChecklist } from "./StudyChecklist";
@@ -57,7 +58,21 @@ function StudyScreen() {
   const changeScope = (s: QuizScope) => { setScope(s); setRun((n) => n + 1); };
   // Z karty tematu „Wpis z budowy” otwiera dziennik z już wybranym tematem.
   // Zmienia tylko temat szkicu — niezapisany tekst i zdjęcia zostają.
-  const openJournal = (topic: string) => { setJournalDraftTopic(topic); setTab("journal"); };
+  const openJournal = (topic: string) => { setJournalDraftTopic(topic); openJournalSheet(true); };
+
+  // Arkusz wpisu otwierany z zewnątrz („+” w dolnym pasku, skrót z ekranu głównego) pokazuje też listę wpisów pod spodem.
+  const sheet = useJournalSheet();
+  useEffect(() => { if (sheet.open) setTab("journal"); }, [sheet.open]);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has(JOURNAL_ENTRY_PARAM)) return;
+    params.delete(JOURNAL_ENTRY_PARAM);
+    const rest = params.toString();
+    window.history.replaceState(window.history.state, "", window.location.pathname + (rest ? `?${rest}` : ""));
+    openJournalSheet();
+  }, []);
+  // Wyjście z Nauki zamyka arkusz — inaczej otworzyłby się sam przy powrocie.
+  useEffect(() => closeJournalSheet, []);
 
   return (
     <div className="space-y-6" data-testid="study-view">

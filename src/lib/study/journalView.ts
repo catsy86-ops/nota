@@ -1,4 +1,7 @@
 import { pluralPl } from "@/lib/plural";
+import type { JournalKind } from "./yStudy";
+
+export const KIND_LABEL: Record<JournalKind, string> = { ok: "Zrobione", problem: "Problem", note: "Notatka" };
 
 /** Rok tylko wtedy, gdy inny niż bieżący — inaczej wpisy sprzed roku zlewały się z dzisiejszymi. */
 export function dayLabel(at: number, now: number = Date.now()): string {

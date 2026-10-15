@@ -6,6 +6,13 @@ async function reloadWhenSaved(page: Page) {
   await page.reload();
 }
 
+/** Zakładka Dziennik i arkusz nowego wpisu (albo szkicu). */
+async function openEntry(page: Page) {
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByRole("button", { name: /^(Wpis|Dokończ wpis)$/ }).click();
+  await expect(page.getByTestId("journal-entry-sheet")).toBeVisible();
+}
+
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
   await page.setViewportSize({ width: 1440, height: 1000 });
@@ -107,17 +114,23 @@ test("dziennik z budowy: lista kontrolna tematu, wpis liczy praktykę, problem c
   await page.getByRole("button", { name: /Spadki kanalizacji: przenieś do „Umiem”/ }).click();
   await expect(page.getByTestId("count-done")).toHaveText("1");
 
-  // Z karty tematu prosto do dziennika, z już wybranym tematem.
+  // Z karty tematu prosto do arkusza wpisu, z już wybranym i rozwiniętym tematem.
   await page.getByRole("button", { name: "Spadki kanalizacji: wpis z budowy" }).click();
-  await expect(page.getByRole("tab", { name: "Dziennik" })).toHaveAttribute("data-state", "active");
-  await expect(page.getByLabel("Czego dotyczy")).toHaveValue("spadki");
-  await expect(page.getByTestId("journal-topic-panel")).toContainText("Sprawdź przed przejściem dalej");
+  await expect(page.getByRole("tab", { name: "Dziennik", includeHidden: true })).toHaveAttribute("data-state", "active");
+  const sheet = page.getByTestId("journal-entry-sheet");
+  await expect(sheet.getByLabel("Czego dotyczy")).toHaveValue("spadki");
+  await expect(sheet.getByTestId("journal-topic-panel")).toContainText("Sprawdź przed przejściem dalej");
 
-  await page.getByLabel("Inwestycja / adres").fill("Dom testowy");
-  await page.getByLabel(/Zachowaj wymagany spadek/).check();
-  await page.getByRole("radio", { name: "Problem" }).click();
-  await page.getByLabel("Co się dzieje?").fill("Na odcinku do pionu spadek za mały");
-  await page.getByRole("button", { name: "Dodaj wpis" }).click();
+  await sheet.getByRole("button", { name: "Dodaj budowę" }).click();
+  await sheet.getByLabel("Inwestycja / adres").fill("Dom testowy");
+  await sheet.getByLabel("Inwestycja / adres").press("Enter");
+  await expect(sheet.getByRole("button", { name: "Budowa: Dom testowy. Zmień" })).toBeVisible();
+  await sheet.getByLabel(/Zachowaj wymagany spadek/).check();
+  await expect(sheet.getByRole("button", { name: /Temat:/ })).toContainText("1/1");
+  await sheet.getByRole("radio", { name: "Problem" }).click();
+  await sheet.getByLabel("Co się dzieje?").fill("Na odcinku do pionu spadek za mały");
+  await sheet.getByRole("button", { name: "Zapisz wpis" }).click();
+  await expect(sheet).toHaveCount(0);
 
   const entry = page.locator('[data-journal-entry="problem"]');
   await expect(entry).toContainText("Na odcinku do pionu spadek za mały");
@@ -131,46 +144,57 @@ test("dziennik z budowy: lista kontrolna tematu, wpis liczy praktykę, problem c
   await expect(page.getByTestId("count-doing")).toHaveText("1");
   await expect(page.locator('[data-topic="spadki"]')).toContainText("budowa 0×, problemów 1");
 
-  await page.reload();
+  await reloadWhenSaved(page);
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await expect(page.locator('[data-journal-entry="problem"]')).toHaveCount(1);
 });
 
-test("dziennik: niezapisany wpis ze zdjęciem przeżywa zmianę zakładki, „Wpis z budowy” i odświeżenie", async ({ page }) => {
+test("dziennik: niezapisany wpis ze zdjęciem przeżywa zamknięcie arkusza, „Wpis z budowy” i odświeżenie", async ({ page }) => {
   // 1×1 px PNG.
   const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
   await page.goto("/nauka");
-  await page.getByRole("tab", { name: "Dziennik" }).click();
-  await page.getByLabel("Co się dzieje?").fill("Próba ciśnieniowa na 9 bar");
-  await page.getByTestId("journal-photo-input").setInputFiles({ name: "budowa.png", mimeType: "image/png", buffer: png });
-  await expect(page.getByRole("button", { name: "Usuń zdjęcie z wpisu" })).toHaveCount(1);
-  await expect(page.getByRole("button", { name: "Dodaj wpis" })).toBeEnabled();
+  await openEntry(page);
+  const sheet = page.getByTestId("journal-entry-sheet");
+  // Temat zwinięty: na budowie najpierw rodzaj, tekst i zdjęcie.
+  await expect(sheet.getByRole("button", { name: /Temat:/ })).toHaveAttribute("aria-expanded", "false");
+  await sheet.getByLabel("Co się dzieje?").fill("Próba ciśnieniowa na 9 bar");
+  await sheet.getByTestId("journal-photo-input").setInputFiles({ name: "budowa.png", mimeType: "image/png", buffer: png });
+  await expect(sheet.getByRole("button", { name: "Usuń zdjęcie z wpisu" })).toHaveCount(1);
+  await expect(sheet.getByRole("button", { name: "Zapisz wpis" })).toBeEnabled();
 
-  // Wcześniej przejście na inną zakładkę albo „Wpis z budowy” z karty kasowało tekst i zdjęcia.
+  // Zamknięcie arkusza i „Wpis z budowy” z karty nie kasują tekstu ani zdjęć.
+  await page.keyboard.press("Escape");
+  await expect(sheet).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Dokończ wpis" })).toBeVisible();
   await page.getByRole("tab", { name: "Tablica" }).click();
   await page.getByRole("button", { name: "Spadki kanalizacji: wpis z budowy" }).click();
-  await expect(page.getByLabel("Czego dotyczy")).toHaveValue("spadki");
-  await expect(page.getByLabel("Co się dzieje?")).toHaveValue("Próba ciśnieniowa na 9 bar");
+  await expect(sheet.getByLabel("Czego dotyczy")).toHaveValue("spadki");
+  await expect(sheet.getByLabel("Co się dzieje?")).toHaveValue("Próba ciśnieniowa na 9 bar");
 
   await page.reload();
-  await page.getByRole("tab", { name: "Dziennik" }).click();
-  await expect(page.getByLabel("Co się dzieje?")).toHaveValue("Próba ciśnieniowa na 9 bar");
-  await expect(page.getByRole("button", { name: "Usuń zdjęcie z wpisu" })).toHaveCount(1);
+  await openEntry(page);
+  await expect(sheet.getByLabel("Co się dzieje?")).toHaveValue("Próba ciśnieniowa na 9 bar");
+  await expect(sheet.getByRole("button", { name: "Usuń zdjęcie z wpisu" })).toHaveCount(1);
 
-  await page.getByRole("button", { name: "Dodaj wpis" }).click();
+  await sheet.getByRole("button", { name: "Zapisz wpis" }).click();
   await expect(page.locator("[data-journal-entry]")).toContainText("Próba ciśnieniowa na 9 bar");
   await expect(page.getByRole("list", { name: "Zdjęcia wpisu" })).toHaveCount(1);
   // Po zapisie szkic pusty, temat zostaje.
-  await expect(page.getByLabel("Co się dzieje?")).toHaveValue("");
-  await expect(page.getByLabel("Czego dotyczy")).toHaveValue("spadki");
-  await expect(page.getByRole("list", { name: "Zdjęcia we wpisie" })).toHaveCount(0);
+  await openEntry(page);
+  await expect(sheet.getByLabel("Co się dzieje?")).toHaveValue("");
+  await expect(sheet.getByRole("button", { name: /Temat:/ })).toContainText("Spadki kanalizacji");
+  await expect(sheet.getByRole("list", { name: "Zdjęcia we wpisie" })).toHaveCount(0);
 });
 
-test("dziennik: usunięcie wpisu ma Cofnij", async ({ page }) => {
+test("dziennik: pusty wpis się nie zapisuje, usunięcie wpisu ma Cofnij", async ({ page }) => {
   await page.goto("/nauka");
-  await page.getByRole("tab", { name: "Dziennik" }).click();
-  await page.getByLabel("Co się dzieje?").fill("Przejście przez ścianę w tulei");
-  await page.getByRole("button", { name: "Dodaj wpis" }).click();
+  await openEntry(page);
+  const sheet = page.getByTestId("journal-entry-sheet");
+  await sheet.getByRole("button", { name: "Zapisz wpis" }).click();
+  await expect(page.getByText("Wpisz, co się dzieje, dodaj zdjęcie albo zaznacz sprawdzone punkty")).toBeVisible();
+  await expect(sheet).toBeVisible();
+  await sheet.getByLabel("Co się dzieje?").fill("Przejście przez ścianę w tulei");
+  await sheet.getByLabel("Co się dzieje?").press("Control+Enter");
   await expect(page.locator("[data-journal-entry]")).toHaveCount(1);
 
   await page.getByRole("button", { name: "Usuń wpis" }).click();
@@ -196,14 +220,53 @@ test("dziennik: dyktowanie dopisuje rozpoznany tekst do wpisu", async ({ page })
     (window as unknown as { SpeechRecognition: unknown }).SpeechRecognition = FakeRecognition;
   });
   await page.goto("/nauka");
-  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await openEntry(page);
+  const sheet = page.getByTestId("journal-entry-sheet");
 
-  await page.getByRole("button", { name: "Dyktuj" }).click();
-  await expect(page.getByLabel("Co się dzieje?")).toHaveValue("trójniki rozsunięte trzydzieści centymetrów");
-  await page.getByRole("button", { name: "Zakończ dyktowanie" }).click();
+  await sheet.getByRole("button", { name: "Dyktuj" }).click();
+  await expect(sheet.getByLabel("Co się dzieje?")).toHaveValue("trójniki rozsunięte trzydzieści centymetrów");
+  await sheet.getByRole("button", { name: "Zakończ dyktowanie" }).click();
 
-  await page.getByRole("button", { name: "Dodaj wpis" }).click();
+  await sheet.getByRole("button", { name: "Zapisz wpis" }).click();
   await expect(page.locator("[data-journal-entry]")).toContainText("trzydzieści centymetrów");
+});
+
+test.describe("dziennik na telefonie", () => {
+  test.use({ hasTouch: true, isMobile: true });
+
+  test("„+” w dolnym pasku i skrót z ekranu głównego otwierają arkusz wpisu od dołu", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/nauka?wpis=1");
+    const sheet = page.getByTestId("journal-entry-sheet");
+    await expect(sheet).toBeVisible();
+    await expect(page).toHaveURL(/\/nauka$/);
+    await expect(page.getByRole("tab", { name: "Dziennik", includeHidden: true })).toHaveAttribute("data-state", "active");
+    // Na dotyku: aparat i galeria osobno, duże cele rodzaju wpisu.
+    await expect(sheet.getByRole("button", { name: "Aparat" })).toBeVisible();
+    await expect(sheet.getByRole("button", { name: "Galeria" })).toBeVisible();
+    await expect(sheet.getByTestId("journal-camera-input")).toHaveAttribute("capture", "environment");
+    const box = await sheet.getByRole("radio", { name: "Problem" }).boundingBox();
+    expect(box!.height).toBeGreaterThanOrEqual(60);
+    // Przycisk zapisu przy dolnej krawędzi arkusza, w zasięgu kciuka.
+    const cta = await sheet.getByRole("button", { name: "Zapisz wpis" }).boundingBox();
+    expect(cta!.y + cta!.height).toBeGreaterThan(844 - 90);
+
+    await page.keyboard.press("Escape");
+    await expect(sheet).toHaveCount(0);
+    await page.getByRole("tab", { name: "Quiz" }).click();
+    await page.getByRole("button", { name: "Nowy wpis z budowy" }).click();
+    await expect(sheet).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Dziennik", includeHidden: true })).toHaveAttribute("data-state", "active");
+  });
+
+  test("bez internetu podpowiada mikrofon klawiatury", async ({ page, context }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/nauka?wpis=1");
+    await expect(page.getByTestId("journal-entry-sheet")).toBeVisible();
+    await context.setOffline(true);
+    await expect(page.getByTestId("dictation-hint")).toContainText("mikrofonem na klawiaturze");
+    await context.setOffline(false);
+  });
 });
 
 test("dawny zapis Nauki z localStorage przechodzi do dokumentu raz i bez strat", async ({ page }) => {

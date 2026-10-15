@@ -1,114 +1,28 @@
-import { useMemo, useRef, useState } from "react";
-import { AlertTriangle, Camera, CheckCircle2, Loader2, Mic, NotebookPen, Play, Trash2, X } from "lucide-react";
-import { toast } from "sonner";
+import { useMemo, useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/lib/utils";
 import { toastWithUndo } from "@/lib/undoToast";
-import { useDictation } from "@/hooks/useDictation";
 import { NoteImage } from "@/components/NoteImage";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { prepareImage } from "@/lib/imagePrepare";
-import { imageStore } from "@/lib/imageStore";
-import { CHECKLIST, MODULES, TOPICS } from "@/lib/study/content";
-import {
-  addJournalEntry,
-  columnOf,
-  JOURNAL_MAX_IMAGES,
-  removeJournalEntry,
-  restoreJournalEntry,
-  setSite,
-  useStudy,
-  type JournalEntry,
-  type JournalKind,
-} from "@/lib/study/store";
-import { dayLabel, entriesPl, problemsPl } from "@/lib/study/journalView";
-import { clearJournalDraft, getJournalDraft, patchJournalDraft, setJournalDraftTopic, useJournalDraft } from "@/lib/study/draft";
+import { CHECKLIST, TOPICS } from "@/lib/study/content";
+import { removeJournalEntry, restoreJournalEntry, useStudy, type JournalEntry } from "@/lib/study/store";
+import { dayLabel, entriesPl, KIND_LABEL, problemsPl } from "@/lib/study/journalView";
+import { useJournalDraft } from "@/lib/study/draft";
+import { openJournalSheet } from "@/lib/study/entrySheet";
+import { JournalEntrySheet, KindIcon } from "./JournalEntrySheet";
 
-const KIND_LABEL: Record<JournalKind, string> = { ok: "Zrobione", problem: "Problem", note: "Notatka" };
 const topicTitle = (id: string | null) => TOPICS.find((t) => t.id === id)?.title ?? null;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-function KindIcon({ kind }: { kind: JournalKind }) {
-  if (kind === "ok") return <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-hidden />;
-  if (kind === "problem") return <AlertTriangle className="h-4 w-4 shrink-0 text-warning" aria-hidden />;
-  return <NotebookPen className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />;
-}
-
 /**
- * Dziennik z budowy: wpis powstaje w trakcie pracy, przy temacie z materiału, z jego listą
- * kontrolną pod ręką. Problem cofa temat do powtórki, a „Zrobione” liczy się jako praktyka.
+ * Dziennik z budowy: na górze to, co już zapisane, nowy wpis w arkuszu („+ Wpis”, „+” w dolnym
+ * pasku, skrót z ekranu głównego). Problem cofa temat do powtórki, a „Zrobione” liczy się jako praktyka.
  */
 export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => void }) {
   const study = useStudy();
   const draft = useJournalDraft();
-  const { topic, kind, text, images } = draft;
-  const checked = useMemo(() => new Set(draft.checked), [draft.checked]);
-  const setKind = (next: JournalKind) => patchJournalDraft({ kind: next });
-  const setText = (next: string | ((prev: string) => string)) =>
-    patchJournalDraft({ text: typeof next === "function" ? next(getJournalDraft().text) : next });
-  // Zdjęcia w obróbce (zmniejszanie, zapis): do końca „Dodaj wpis” czeka — inaczej wpis szedł bez nich.
-  const [processing, setProcessing] = useState(0);
+  const hasDraft = !!draft.text.trim() || draft.images.length > 0 || draft.checked.length > 0;
   const [zoom, setZoom] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
-  // Ręce zajęte robotą: dyktowanie dopisuje rozpoznane zdanie na końcu wpisu.
-  const dictation = useDictation((spoken) => {
-    if (!spoken) return;
-    setText((t) => (t && !/\s$/.test(t) ? `${t} ${spoken}` : `${t}${spoken}`));
-  });
-
-  const items = useMemo(() => CHECKLIST.filter((c) => c.topic === topic), [topic]);
-  const current = TOPICS.find((t) => t.id === topic) ?? null;
-
-  const changeTopic = setJournalDraftTopic;
-
-  function toggle(id: string) {
-    const prev = getJournalDraft().checked;
-    patchJournalDraft({ checked: prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id] });
-  }
-
-  function removeImage(ref: string) {
-    patchJournalDraft({ images: getJournalDraft().images.filter((r) => r !== ref) });
-  }
-
-  async function addPhotos(files: File[]) {
-    let skipped = 0;
-    // Miejsca liczone z góry: dwa szybkie wybory zdjęć nie przekroczą limitu wpisu.
-    const room = JOURNAL_MAX_IMAGES - getJournalDraft().images.length - processing;
-    if (files.length > room) toast(`Wpis mieści maksymalnie ${JOURNAL_MAX_IMAGES} zdjęcia`);
-    const batch = files.slice(0, Math.max(0, room));
-    if (batch.length === 0) return;
-    setProcessing((n) => n + batch.length);
-    try {
-      for (const file of batch) {
-        try {
-          const prepared = await prepareImage(file);
-          if (!prepared) { skipped += 1; continue; }
-          const ref = await imageStore.putBlob(prepared);
-          // Szkic czytany na świeżo: w trakcie obróbki mogło zniknąć inne zdjęcie albo zmienić się tekst.
-          const now = getJournalDraft().images;
-          if (now.length < JOURNAL_MAX_IMAGES && !now.includes(ref)) patchJournalDraft({ images: [...now, ref] });
-        } finally {
-          setProcessing((n) => n - 1);
-        }
-      }
-    } catch {
-      toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki." });
-    }
-    if (skipped > 0) toast.error("Nie udało się zmniejszyć zdjęcia do 2 MB");
-  }
-
-  function submit() {
-    if (processing > 0) return;
-    const wasDone = topic && columnOf(study, topic) === "done";
-    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images });
-    if (!entry) {
-      toast("Wpisz, co się dzieje, dodaj zdjęcie albo zaznacz sprawdzone punkty");
-      return;
-    }
-    clearJournalDraft();
-    toast.success(kind === "problem" && wasDone ? "Zapisano problem — temat wraca do powtórki" : "Dodano wpis do dziennika");
-  }
 
   function remove(entry: JournalEntry) {
     removeJournalEntry(entry.id);
@@ -134,171 +48,27 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
 
   return (
     <div className="space-y-6" data-testid="study-journal">
-      <section aria-label="Nowy wpis" className="space-y-4 rounded-2xl border border-border bg-card p-4 sm:p-5">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="space-y-1 text-xs text-muted-foreground">
-            Inwestycja / adres
-            <input
-              value={study.site}
-              onChange={(e) => setSite(e.target.value)}
-              placeholder="np. Dom Kowalskich, ul. Leśna 4"
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
-            />
-          </label>
-          <label className="space-y-1 text-xs text-muted-foreground">
-            Czego dotyczy
-            <select
-              value={topic}
-              onChange={(e) => changeTopic(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
-            >
-              <option value="">Ogólnie (bez tematu)</option>
-              {MODULES.map((m) => (
-                <optgroup key={m.id} label={m.label}>
-                  {TOPICS.filter((t) => t.module === m.id).map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
-                </optgroup>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        {current && (
-          <div className="space-y-2 rounded-xl bg-muted/50 p-3" data-testid="journal-topic-panel">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <p className="text-sm leading-snug text-muted-foreground">{current.summary}</p>
-              <Button type="button" variant="outline" size="sm" onClick={() => onPractice(current.id)}>
-                <Play className="mr-1.5 h-3.5 w-3.5" />Ćwicz pytania
-              </Button>
-            </div>
-            <p className="text-xs font-medium text-foreground">Sprawdź przed przejściem dalej</p>
-            <ul className="space-y-2">
-              {items.map((item) => (
-                <li key={item.id} className="flex items-start gap-2.5">
-                  <Checkbox id={`journal-${item.id}`} checked={checked.has(item.id)} onCheckedChange={() => toggle(item.id)} className="mt-0.5" />
-                  <label htmlFor={`journal-${item.id}`} className="cursor-pointer text-sm leading-snug">
-                    {item.critical && <span className="mr-1 text-warning" aria-label="Punkt krytyczny">⚠</span>}
-                    {item.text}
-                    {item.risk && <span className="mt-0.5 block text-xs text-muted-foreground">Ryzyko: {item.risk.replace(/^[^=]*= ?/, "")}</span>}
-                  </label>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        <div role="radiogroup" aria-label="Rodzaj wpisu" className="flex gap-2">
-          {(Object.keys(KIND_LABEL) as JournalKind[]).map((k) => (
-            <button
-              key={k}
-              type="button"
-              role="radio"
-              aria-checked={kind === k}
-              onClick={() => setKind(k)}
-              className={cn(
-                "flex flex-1 items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-sm transition-colors coarse:min-h-11",
-                kind === k ? "border-primary bg-primary/10 text-primary-ink font-medium" : "border-border text-muted-foreground hover:bg-muted",
-              )}
-            >
-              <KindIcon kind={k} />
-              {KIND_LABEL[k]}
-            </button>
-          ))}
-        </div>
-
-        <label className="block space-y-1 text-xs text-muted-foreground">
-          Co się dzieje?
-          <span className="relative block">
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); } }}
-              rows={3}
-              placeholder={kind === "problem" ? "Co poszło nie tak i co z tym zrobisz?" : "Krótko: gdzie, co zrobione, co zauważyłeś"}
-              className={cn(
-                "w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-none focus:ring-2 focus:ring-ring",
-                dictation.supported && "pr-12",
-              )}
-            />
-            {dictation.supported && (
-              <button
-                type="button"
-                onClick={dictation.toggle}
-                aria-pressed={dictation.listening}
-                aria-label={dictation.listening ? "Zakończ dyktowanie" : "Dyktuj"}
-                title={dictation.listening ? "Zakończ dyktowanie" : "Dyktuj wpis"}
-                className={cn(
-                  "absolute right-1.5 top-1.5 grid h-9 w-9 place-items-center rounded-full transition-colors coarse:h-11 coarse:w-11",
-                  dictation.listening ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <Mic className={cn("h-4 w-4", dictation.listening && "animate-pulse")} />
-              </button>
-            )}
-          </span>
-        </label>
-
-        {(images.length > 0 || processing > 0) && (
-          <ul className="flex flex-wrap gap-2" aria-label="Zdjęcia we wpisie">
-            {images.map((ref) => (
-              <li key={ref} className="relative">
-                <NoteImage imageRef={ref} alt="Zdjęcie z budowy" className="h-20 w-20 rounded-lg object-cover" placeholderClassName="h-20 w-20 rounded-lg" />
-                <button
-                  type="button"
-                  onClick={() => removeImage(ref)}
-                  aria-label="Usuń zdjęcie z wpisu"
-                  className="absolute -right-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full bg-destructive text-destructive-foreground coarse:h-8 coarse:w-8"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </li>
-            ))}
-            {Array.from({ length: processing }, (_, i) => (
-              <li key={`processing-${i}`} className="grid h-20 w-20 place-items-center rounded-lg bg-muted" data-testid="journal-photo-processing">
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden />
-                <span className="sr-only">Przygotowuję zdjęcie</span>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              data-testid="journal-photo-input"
-              onChange={(e) => { const f = Array.from(e.target.files ?? []); e.target.value = ""; void addPhotos(f); }}
-            />
-            <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} className="coarse:h-11">
-              <Camera className="mr-1.5 h-4 w-4" />Dodaj zdjęcie
-            </Button>
-            {checked.size > 0 ? (
-              <p className="text-xs text-muted-foreground tabular-nums">Sprawdzone punkty: {checked.size}/{items.length}</p>
-            ) : (
-              <p className="text-xs text-muted-foreground coarse:hidden">Ctrl+Enter dodaje wpis</p>
-            )}
-          </div>
-          <Button onClick={submit} disabled={processing > 0} className="coarse:h-11">
-            {processing > 0 ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden />Przygotowuję zdjęcia…</> : "Dodaj wpis"}
-          </Button>
-        </div>
-      </section>
-
       <section aria-label="Wpisy">
-        <header className="mb-3 flex items-baseline justify-between gap-3">
-          <h3 className="font-display text-lg">Dziennik</h3>
-          <p className="font-mono text-xs text-muted-foreground tabular-nums" data-testid="journal-week">
-            7 dni: {entriesPl(week.all)}, {problemsPl(week.problems)}
-          </p>
+        <header className="mb-3 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="font-display text-lg leading-tight">Dziennik</h3>
+            <p className="font-mono text-xs text-muted-foreground tabular-nums" data-testid="journal-week">
+              7 dni: {entriesPl(week.all)}, {problemsPl(week.problems)}
+            </p>
+          </div>
+          <Button onClick={() => openJournalSheet()} className="shrink-0 coarse:h-11">
+            <Plus className="mr-1 h-4 w-4" aria-hidden />{hasDraft ? "Dokończ wpis" : "Wpis"}
+          </Button>
         </header>
 
         {days.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground">
+          <button
+            type="button"
+            onClick={() => openJournalSheet()}
+            className="block w-full rounded-xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted-foreground hover:border-primary/50 hover:text-foreground"
+          >
             Brak wpisów. Zapisz, co robisz na budowie — dziennik połączy to z tematami, które przerabiasz.
-          </p>
+          </button>
         ) : (
           <div className="space-y-5">
             {days.map((d) => (
@@ -361,6 +131,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
           </div>
         )}
       </section>
+      <JournalEntrySheet onPractice={onPractice} />
       <Dialog open={zoom !== null} onOpenChange={(o) => { if (!o) setZoom(null); }}>
         <DialogContent className="max-w-3xl p-3">
           <DialogTitle className="sr-only">Zdjęcie z budowy</DialogTitle>

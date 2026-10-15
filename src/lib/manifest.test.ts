@@ -11,7 +11,9 @@ describe("manifest.webmanifest", () => {
     const byName = Object.fromEntries(
       (manifest.shortcuts as { name: string; url: string }[]).map((s) => [s.name, new URL(s.url, "https://x.test")]),
     );
-    expect(Object.keys(byName)).toEqual(["Nowa notatka", "Dziś", "Grafik", "Przypomnienia"]);
+    expect(Object.keys(byName)).toEqual(["Nowa notatka", "Wpis z budowy", "Dziś", "Grafik", "Przypomnienia"]);
+    expect(parseViewRoute(byName["Wpis z budowy"].pathname, "").view).toBe("study");
+    expect(byName["Wpis z budowy"].searchParams.get("wpis")).toBe("1");
     expect(byName["Nowa notatka"].searchParams.get("new")).toBe("1");
     expect(parseViewRoute(byName["Dziś"].pathname, "").view).toBe("today");
     expect(parseViewRoute(byName["Grafik"].pathname, "").view).toBe("shifts");

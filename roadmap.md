@@ -934,11 +934,11 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 - [x] D1e Bez limitu wpisów. ✅ 2026-10-15: instancja i migracja w `lib/study/data.ts` (przy starcie aplikacji, znacznik urządzenia w `studyMigrations`, seria → dni, rundy → licznik urządzenia), `StudyView` czeka na wczytanie (`useStudyReady`); kopia: sekcja `study` + Nauka w dawnym kształcie w `settings` dla starszych wersji, osobny przełącznik „Nauka i dziennik z budowy” przy przywracaniu, stara kopia czytana z `settings`. Testy: `yStudy.test.ts` (dwa dokumenty), `fullBackup.test.ts`, e2e migracji.
 
 ### D2 — szybki wpis z telefonu (zastępuje 2.10)
-- [ ] D2a Arkusz `JournalEntrySheet`: rodzaj (3 duże przyciski), pigułka budowy, tekst + mikrofon, „Aparat” (`capture`) i „Galeria”, zwinięty temat z listą, CTA „Zapisz wpis” nad klawiaturą; haptyka.
-- [ ] D2b Lista wpisów na górze; na komputerze „+ Wpis” w nagłówku.
-- [ ] D2c „+” w dolnym pasku na /nauka = „+ Wpis” (`/nauka?wpis=1`), skrót PWA „Wpis z budowy”.
-- [ ] D2d Dyktowanie offline: podpowiedź o mikrofonie klawiatury.
-- [ ] D2e Prośba o trwały zapis przy pierwszym zdjęciu.
+- [x] D2a Arkusz `JournalEntrySheet`: rodzaj (3 duże przyciski), pigułka budowy, tekst + mikrofon, „Aparat” (`capture`) i „Galeria”, zwinięty temat z listą, CTA „Zapisz wpis” nad klawiaturą; haptyka.
+- [x] D2b Lista wpisów na górze; na komputerze „+ Wpis” w nagłówku.
+- [x] D2c „+” w dolnym pasku na /nauka = „+ Wpis” (`/nauka?wpis=1`), skrót PWA „Wpis z budowy”.
+- [x] D2d Dyktowanie offline: podpowiedź o mikrofonie klawiatury.
+- [x] D2e Prośba o trwały zapis przy pierwszym zdjęciu. ✅ 2026-10-15: `JournalEntrySheet` (od dołu na telefonie, z boku na komputerze; zapis poza przewijaną treścią, nad klawiaturą dzięki `resizes-content`), stan otwarcia w `lib/study/entrySheet.ts`; temat zwinięty, rozwinięty przy wejściu z karty tematu; „Dokończ wpis” przy szkicu; pusty stan otwiera arkusz; „Aparat” tylko na dotyku; podpowiedź mikrofonu klawiatury bez Web Speech albo offline; skrót PWA drugi na liście. e2e `study.spec.ts` 12/12 (w tym telefon).
 
 ### D3 — edycja i problemy
 - [ ] D3a Edycja wpisu w arkuszu (data i godzina — wpis „za wczoraj”), „Usuń” w arkuszu zamiast kosza na liście.

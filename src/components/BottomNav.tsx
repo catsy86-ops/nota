@@ -3,6 +3,7 @@ import { motion, LayoutGroup } from "framer-motion";
 import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History, CalendarRange, BriefcaseBusiness, GraduationCap, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
 import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
+import { openJournalSheet } from "@/lib/study/entrySheet";
 import type { ComposerAction } from "@/components/AddNoteBar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { InstallAppButton } from "@/components/InstallAppButton";
@@ -110,11 +111,13 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
                 onClick={() => {
                   if (longPressed.current) { longPressed.current = false; return; }
                   setQuarterTurns((n) => n + 1);
+                  // Na /nauka „+” to wpis z budowy — notatkę dalej daje przytrzymanie.
+                  if (view === "study") { haptic("tap"); openJournalSheet(); return; }
                   hintOnce();
                   onNew();
                 }}
-                aria-label="Nowa notatka"
-                title="Nowa notatka (przytrzymaj po więcej)"
+                aria-label={view === "study" ? "Nowy wpis z budowy" : "Nowa notatka"}
+                title={view === "study" ? "Nowy wpis z budowy (przytrzymaj: nowa notatka)" : "Nowa notatka (przytrzymaj po więcej)"}
                 className="relative w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-glow-primary ring-4 ring-background outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               >
                 <motion.span
