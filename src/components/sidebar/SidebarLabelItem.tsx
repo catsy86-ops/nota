@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Tag, Pencil, Trash2, Check, X } from "lucide-react";
 import { SidebarRow, SidebarRowMenu } from "@/components/sidebar/SidebarRow";
+import { IconButton } from "@/components/ui/icon-button";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
 export function SidebarLabelItem({ label, isActive, onSelect, onRename, onDelete }: {
@@ -26,8 +27,8 @@ export function SidebarLabelItem({ label, isActive, onSelect, onRename, onDelete
         <input ref={inputRef} value={name} onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setName(label); setEditing(false); } }}
           className="flex-1 text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground min-w-0" />
-        <button onClick={save} aria-label="Zapisz nazwę etykiety" className="pressable p-1 rounded-lg text-primary-ink hover:bg-primary/10"><Check className="w-3.5 h-3.5" /></button>
-        <button onClick={() => { setName(label); setEditing(false); }} aria-label="Anuluj edycję etykiety" className="pressable p-1 rounded-lg text-muted-foreground hover:bg-muted"><X className="w-3.5 h-3.5" /></button>
+        <IconButton size="sm" tone="active" onClick={save} aria-label="Zapisz nazwę etykiety"><Check className="w-3.5 h-3.5" /></IconButton>
+        <IconButton size="sm" onClick={() => { setName(label); setEditing(false); }} aria-label="Anuluj edycję etykiety"><X className="w-3.5 h-3.5" /></IconButton>
       </div>
     );
   }

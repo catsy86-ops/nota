@@ -98,7 +98,7 @@ export function SidebarRowMenu({ label, children, onCloseAutoFocus }: {
           type="button"
           aria-label={`Akcje ${label}`}
           onClick={(e) => e.stopPropagation()}
-          className="pressable grid h-7 w-7 coarse:h-9 coarse:w-9 place-items-center rounded-md outline-hidden hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-foreground/10"
+          className="pressable relative grid h-7 w-7 coarse:h-9 coarse:w-9 place-items-center rounded-md coarse:after:absolute coarse:after:-inset-1 coarse:after:content-[''] outline-hidden hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-foreground/10"
         >
           <MoreHorizontal className="h-4 w-4" />
         </button>
