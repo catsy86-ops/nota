@@ -118,7 +118,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
                 }}
                 aria-label={view === "study" ? "Nowy wpis z budowy" : "Nowa notatka"}
                 title={view === "study" ? "Nowy wpis z budowy (przytrzymaj: nowa notatka)" : "Nowa notatka (przytrzymaj po więcej)"}
-                className="relative w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-glow-primary ring-4 ring-background outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+                className="relative w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-glow-primary ring-4 ring-background outline-hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               >
                 <motion.span
                   aria-hidden
@@ -219,7 +219,7 @@ function NavItem({ active, current = active, label, onClick, children, badge, bu
         aria-current={current ? "page" : undefined}
         {...buttonProps}
         className={cn(
-          "pressable relative w-full flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl text-2xs font-display outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "pressable relative w-full flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl text-2xs font-display outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
           active ? "text-primary-ink font-semibold" : "text-muted-foreground font-medium hover:text-foreground"
         )}
       >
@@ -263,7 +263,7 @@ const SheetTile = forwardRef<HTMLButtonElement, SheetTileProps>(function SheetTi
       {...rest}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "pressable relative flex flex-col items-center gap-1.5 p-3 rounded-2xl border outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "pressable relative flex flex-col items-center gap-1.5 p-3 rounded-2xl border outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
         active ? "bg-primary/10 border-primary/40" : "bg-muted/50 hover:bg-muted border-border/50",
       )}
     >

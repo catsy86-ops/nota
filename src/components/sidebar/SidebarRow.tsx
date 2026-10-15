@@ -37,7 +37,7 @@ export const SidebarRow = forwardRef<HTMLDivElement, SidebarRowProps>(function S
       ref={ref}
       data-active={active || undefined}
       className={cn(
-        "group relative flex items-center h-9 coarse:h-11 rounded-lg text-sm font-medium transition-[color,background-color,box-shadow] duration-[var(--dur-fast)]",
+        "group relative flex items-center h-9 coarse:h-11 rounded-lg text-sm font-medium transition-[color,background-color,box-shadow] duration-(--dur-fast)",
         active ? "text-primary-ink" : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
         dropActive && "bg-primary/10 text-primary-ink ring-2 ring-primary/40",
         className,
@@ -58,7 +58,7 @@ export const SidebarRow = forwardRef<HTMLDivElement, SidebarRowProps>(function S
         aria-current={active ? "page" : undefined}
         {...buttonProps}
         className={cn(
-          "pressable relative z-10 flex h-full min-w-0 flex-1 items-center gap-3 rounded-lg text-left outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "pressable relative z-10 flex h-full min-w-0 flex-1 items-center gap-3 rounded-lg text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
           before ? "pl-1.5 pr-3" : "px-3",
         )}
       >
@@ -72,9 +72,9 @@ export const SidebarRow = forwardRef<HTMLDivElement, SidebarRowProps>(function S
             // Ukryte akcje nie zabierają miejsca nazwie — pojawiają się przy najechaniu,
             // fokusie klawiatury w wierszu albo otwartym menu.
             "relative z-10 hidden shrink-0 items-center pr-1",
-            "group-hover:flex group-focus-within:flex has-[[data-state=open]]:flex",
+            "group-hover:flex group-focus-within:flex has-data-[state=open]:flex",
             // Na dotyku nie ma najechania — akcje widać przy aktywnym wierszu.
-            "coarse:group-data-[active]:flex",
+            "coarse:group-data-active:flex",
           )}
         >
           {actions}
@@ -98,7 +98,7 @@ export function SidebarRowMenu({ label, children, onCloseAutoFocus }: {
           type="button"
           aria-label={`Akcje ${label}`}
           onClick={(e) => e.stopPropagation()}
-          className="pressable grid h-7 w-7 coarse:h-9 coarse:w-9 place-items-center rounded-md outline-none hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-foreground/10"
+          className="pressable grid h-7 w-7 coarse:h-9 coarse:w-9 place-items-center rounded-md outline-hidden hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-foreground/10"
         >
           <MoreHorizontal className="h-4 w-4" />
         </button>

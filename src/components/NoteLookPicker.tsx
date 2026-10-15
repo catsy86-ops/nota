@@ -43,7 +43,7 @@ export function NoteLookPicker({ icon, cover, onChange }: NoteLookPickerProps) {
                 aria-pressed={icon === e}
                 aria-label={`Ustaw ikonę: ${e}`}
                 className={cn(
-                  "pressable w-7 h-7 coarse:w-9 coarse:h-9 rounded-md text-sm flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                  "pressable w-7 h-7 coarse:w-9 coarse:h-9 rounded-md text-sm flex items-center justify-center outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
                   icon === e ? "bg-primary/10 ring-1 ring-primary" : "hover:bg-muted/80",
                 )}
               >

@@ -33,7 +33,7 @@ export function AchievementStamp() {
   }, [stamp]);
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-[22%] z-[70] flex justify-center px-4" aria-live="polite">
+    <div className="pointer-events-none fixed inset-x-0 top-[22%] z-70 flex justify-center px-4" aria-live="polite">
       <AnimatePresence>
         {stamp && (
           <motion.div
@@ -44,7 +44,7 @@ export function AchievementStamp() {
             animate={{ opacity: 1, scale: stamp.big ? 1.15 : 1, rotate: -4 }}
             exit={{ opacity: 0, scale: 0.92, y: -12, transition: { duration: 0.3 } }}
             transition={{ type: "spring", stiffness: 420, damping: 22, mass: 0.8 }}
-            className="relative flex flex-col items-center gap-1 rounded-xl border-[3px] border-double border-primary/80 bg-card/95 px-6 py-4 text-center shadow-lg backdrop-blur-sm"
+            className="relative flex flex-col items-center gap-1 rounded-xl border-[3px] border-double border-primary/80 bg-card/95 px-6 py-4 text-center shadow-lg backdrop-blur-xs"
           >
             <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-primary-ink">
               {stamp.big ? "Pierwszy raz!" : "Nowa odznaka"}

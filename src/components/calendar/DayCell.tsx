@@ -87,7 +87,7 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
       tabIndex={focused ? 0 : -1}
       onClick={() => onSelect(day)}
       className={cn(
-        dayCellClass(inMonth, today), "flex flex-col gap-0.5 min-h-[3.5rem] sm:min-h-[6rem] p-1 sm:p-1.5 cursor-pointer",
+        dayCellClass(inMonth, today), "flex flex-col gap-0.5 min-h-14 sm:min-h-24 p-1 sm:p-1.5 cursor-pointer",
         // Pełne tło z domieszką marki (nie przezroczystość) — inaczej prześwituje kratka tła.
         // Warianty `dark:` z linii wyżej są silniejsze od zwykłych klas —
         // bez własnych `dark:` zaznaczenie w ciemnym motywie byłoby niewidoczne.

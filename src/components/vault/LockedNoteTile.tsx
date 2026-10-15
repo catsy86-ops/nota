@@ -80,7 +80,7 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
           {...dragAttributes}
           {...dragListeners}
           aria-label="Przeciągnij, aby zmienić kolejność"
-          className="absolute top-0 left-1/2 -translate-x-1/2 z-10 px-3 pt-0.5 cursor-grab active:cursor-grabbing rounded-b-md opacity-0 group-hover:opacity-60 hover:!opacity-100 focus-visible:opacity-100 transition-opacity"
+          className="absolute top-0 left-1/2 -translate-x-1/2 z-10 px-3 pt-0.5 cursor-grab active:cursor-grabbing rounded-b-md opacity-0 group-hover:opacity-60 hover:opacity-100! focus-visible:opacity-100 transition-opacity"
         >
           <div className="grid grid-cols-3 gap-[2px]" aria-hidden>
             {Array.from({ length: 6 }, (_, i) => <div key={i} className="w-[3px] h-[3px] rounded-full bg-muted-foreground" />)}

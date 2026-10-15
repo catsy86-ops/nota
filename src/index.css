@@ -1,8 +1,275 @@
 /* Fonty z paczek @fontsource (importowane w main.tsx) — działają offline, bez Google Fonts. */
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@config '../tailwind.config.ts';
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+/* v4 zdjął wskaźnik „rączki” z przycisków w preflight — zostajemy przy zachowaniu z v3. */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@utility paper-grid {
+  /* --- Tło: kratka zeszytu (co 20 px ≈ 5 mm), nieruchoma, wygasa ku dołowi i bokom --- */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(hsl(var(--grid)) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--grid)) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-position: -1px -1px;
+    -webkit-mask-image: radial-gradient(
+      140% 110% at 50% 0%,
+      #000 45%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      140% 110% at 50% 0%,
+      #000 45%,
+      transparent 100%
+    );
+  }
+}
+
+@utility note-glow-active {
+  /* --- Active note: seasonal glow --- */
+  box-shadow:
+    0 0 0 2px hsl(var(--season-accent) / 0.9),
+    0 0 0 6px hsl(var(--season-accent) / 0.22),
+    0 10px 34px -8px hsl(var(--season-accent) / 0.55);
+  animation: note-glow-breathe 2.8s ease-in-out infinite;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      120% 80% at 50% 0%,
+      hsl(var(--season-accent) / 0.18),
+      transparent 65%
+    );
+  }
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+  html[data-motion='reduced'] & {
+    animation: none !important;
+  }
+}
+
+@utility note-shadow {
+  box-shadow: var(--elevation-1);
+}
+
+@utility note-shadow-hover {
+  box-shadow: var(--elevation-3);
+}
+
+@utility glass {
+  /* Nagłówek i dolny pasek to pełny papier — bez rozmycia (koszt na telefonie) i bez prześwitującej kratki. */
+  background-color: hsl(var(--background));
+}
+
+@utility glass-strong {
+  background-color: hsl(var(--background));
+}
+
+@utility pb-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
+  @media (min-width: 768px) and (min-height: 501px),
+    (min-width: 768px) and (pointer: fine) {
+    padding-bottom: 2rem;
+  }
+}
+
+@utility focus-ring-gradient {
+  &:focus-within {
+    box-shadow:
+      0 0 0 2px hsl(var(--background)),
+      0 0 0 4px hsl(var(--primary) / 0.5);
+  }
+}
+
+@utility sidebar-gradient {
+  /* Pasek boczny to margines zeszytu: gładki papier, czerwona linia na prawej krawędzi. */
+  background-color: hsl(var(--background));
+  border-right-color: hsl(var(--margin) / 0.8) !important;
+  .dark & {
+    border-right-color: hsl(var(--margin) / 0.45) !important;
+  }
+}
+
+@utility dark {
+  & .sidebar-gradient {
+    border-right-color: hsl(var(--margin) / 0.45) !important;
+  }
+}
+
+@utility header-glow {
+  box-shadow:
+    0 1px 0 hsl(var(--border)),
+    var(--elevation-1);
+}
+
+@utility stats-card {
+  @apply rounded-2xl border border-border/50 p-4;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--card)) 0%,
+    hsl(var(--muted) / 0.5) 100%
+  );
+}
+
+@utility gradient-text {
+  @apply bg-clip-text text-transparent;
+  background-image: linear-gradient(
+    135deg,
+    hsl(var(--primary)),
+    hsl(28 85% 38%)
+  );
+}
+
+@utility scrollbar-none {
+  /* Przewijany w poziomie rząd bez paska przewijania (np. formatowanie w wąskim kaflu). */
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--muted)) transparent;
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted));
+    border-radius: 9999px;
+  }
+}
+
+@utility pressable {
+  /* Dociśnięcie: sygnatura wciśnięcia w całej appce (zamiast skalowania
+     z framer-motion). `translate`, nie `transform` — składa się z pozycjonowaniem
+     typu `-translate-y-1/2` i z transformami framer-motion, zamiast je nadpisać. */
+  transition-property:
+    color, background-color, border-color, box-shadow, translate, filter;
+  transition-duration: var(--dur-fast);
+  transition-timing-function: var(--ease-std);
+  &:active:not(:disabled) {
+    translate: 0 1px;
+    filter: brightness(0.94);
+    transition-duration: var(--dur-press);
+  }
+}
+
+@utility toast-undo {
+  /* Toast „Cofnij”: cienki pasek pokazuje, ile czasu zostało. Sonner wstrzymuje
+     licznik, gdy kursor jest nad stosem toastów — pasek robi to samo. */
+  overflow: hidden;
+  &::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 2px;
+    background: hsl(var(--primary) / 0.7);
+    transform-origin: left center;
+    animation: toast-timer var(--toast-ms, 5000ms) linear forwards;
+    pointer-events: none;
+  }
+  [data-sonner-toaster]:hover &::after {
+    animation-play-state: paused;
+  }
+  html[data-motion='reduced'] &::after {
+    display: none;
+  }
+}
+
+@utility theme-transition {
+  /* Smooth theme switch: applied briefly on <html> when theme changes */
+  transition:
+    background-color var(--dur-slow) var(--ease-std),
+    color var(--dur-slow) var(--ease-std),
+    border-color var(--dur-slow) var(--ease-std),
+    fill var(--dur-slow) var(--ease-std),
+    stroke var(--dur-slow) var(--ease-std),
+    box-shadow var(--dur-slow) var(--ease-std) !important;
+  & * {
+    transition:
+      background-color var(--dur-slow) var(--ease-std),
+      color var(--dur-slow) var(--ease-std),
+      border-color var(--dur-slow) var(--ease-std),
+      fill var(--dur-slow) var(--ease-std),
+      stroke var(--dur-slow) var(--ease-std),
+      box-shadow var(--dur-slow) var(--ease-std) !important;
+  }
+  & *::before {
+    transition:
+      background-color var(--dur-slow) var(--ease-std),
+      color var(--dur-slow) var(--ease-std),
+      border-color var(--dur-slow) var(--ease-std),
+      fill var(--dur-slow) var(--ease-std),
+      stroke var(--dur-slow) var(--ease-std),
+      box-shadow var(--dur-slow) var(--ease-std) !important;
+  }
+  & *::after {
+    transition:
+      background-color var(--dur-slow) var(--ease-std),
+      color var(--dur-slow) var(--ease-std),
+      border-color var(--dur-slow) var(--ease-std),
+      fill var(--dur-slow) var(--ease-std),
+      stroke var(--dur-slow) var(--ease-std),
+      box-shadow var(--dur-slow) var(--ease-std) !important;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    transition: none !important;
+    & * {
+      transition: none !important;
+    }
+  }
+  html[data-motion='reduced'] & {
+    transition: none !important;
+  }
+
+  html[data-motion='reduced'] & * {
+    transition: none !important;
+  }
+}
+
+@utility hover-scale {
+  html[data-motion='reduced'] &:hover {
+    transform: none !important;
+  }
+}
 
 @layer base {
   :root {
@@ -160,10 +427,15 @@
   }
 }
 
-/* Bez „gumki” i systemowego pull-to-refresh przy przewijaniu listy na telefonie. */
-html, body { overscroll-behavior-y: contain; }
+@layer utilities {
+  /* Bez „gumki” i systemowego pull-to-refresh przy przewijaniu listy na telefonie. */
+  html,
+  body {
+    overscroll-behavior-y: contain;
+  }
 
-/* --- Seasonal theme: background wash, blobs and accents --- */
+  /* --- Seasonal theme: background wash, blobs and accents --- */
+}
 @layer base {
   :root {
     /* defaults = autumn-ish warm, overridden by [data-season] below */
@@ -246,36 +518,6 @@ html, body { overscroll-behavior-y: contain; }
 }
 
 @layer utilities {
-  /* --- Tło: kratka zeszytu (co 20 px ≈ 5 mm), nieruchoma, wygasa ku dołowi i bokom --- */
-  .paper-grid::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(hsl(var(--grid)) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--grid)) 1px, transparent 1px);
-    background-size: 20px 20px;
-    background-position: -1px -1px;
-    -webkit-mask-image: radial-gradient(140% 110% at 50% 0%, #000 45%, transparent 100%);
-    mask-image: radial-gradient(140% 110% at 50% 0%, #000 45%, transparent 100%);
-  }
-
-  /* --- Active note: seasonal glow --- */
-  .note-glow-active {
-    box-shadow:
-      0 0 0 2px hsl(var(--season-accent) / 0.9),
-      0 0 0 6px hsl(var(--season-accent) / 0.22),
-      0 10px 34px -8px hsl(var(--season-accent) / 0.55);
-    animation: note-glow-breathe 2.8s ease-in-out infinite;
-  }
-  .note-glow-active::after {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: inherit;
-    pointer-events: none;
-    background: radial-gradient(120% 80% at 50% 0%, hsl(var(--season-accent) / 0.18), transparent 65%);
-  }
   @keyframes note-glow-breathe {
     0%, 100% {
       box-shadow:
@@ -290,113 +532,6 @@ html, body { overscroll-behavior-y: contain; }
         0 14px 40px -8px hsl(var(--season-accent) / 0.65);
     }
   }
-  @media (prefers-reduced-motion: reduce) {
-    .note-glow-active { animation: none; }
-  }
-  html[data-motion="reduced"] .note-glow-active { animation: none !important; }
-
-  .note-shadow {
-    box-shadow: var(--elevation-1);
-  }
-  .note-shadow-hover {
-    box-shadow: var(--elevation-3);
-  }
-  /* Nagłówek i dolny pasek to pełny papier — bez rozmycia (koszt na telefonie) i bez prześwitującej kratki. */
-  .glass {
-    background-color: hsl(var(--background));
-  }
-  .glass-strong {
-    background-color: hsl(var(--background));
-  }
-  .pb-safe {
-    padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
-  }
-  @media (min-width: 768px) and (min-height: 501px), (min-width: 768px) and (pointer: fine) {
-    .pb-safe { padding-bottom: 2rem; }
-  }
-  .focus-ring-gradient:focus-within {
-    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--primary) / 0.5);
-  }
-  /* Pasek boczny to margines zeszytu: gładki papier, czerwona linia na prawej krawędzi. */
-  .sidebar-gradient {
-    background-color: hsl(var(--background));
-    border-right-color: hsl(var(--margin) / 0.8) !important;
-  }
-  .dark .sidebar-gradient { border-right-color: hsl(var(--margin) / 0.45) !important; }
-  .header-glow {
-    box-shadow: 0 1px 0 hsl(var(--border)), var(--elevation-1);
-  }
-  .stats-card {
-    @apply rounded-2xl border border-border/50 p-4;
-    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--muted) / 0.5) 100%);
-  }
-  .gradient-text {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(28 85% 38%));
-  }
-  /* Przewijany w poziomie rząd bez paska przewijania (np. formatowanie w wąskim kaflu). */
-  .scrollbar-none { scrollbar-width: none; }
-  .scrollbar-none::-webkit-scrollbar { display: none; }
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted)) transparent;
-  }
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 4px;
-  }
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted));
-    border-radius: 9999px;
-  }
-  /* Dociśnięcie: sygnatura wciśnięcia w całej appce (zamiast skalowania
-     z framer-motion). `translate`, nie `transform` — składa się z pozycjonowaniem
-     typu `-translate-y-1/2` i z transformami framer-motion, zamiast je nadpisać. */
-  .pressable {
-    transition-property: color, background-color, border-color, box-shadow, translate, filter;
-    transition-duration: var(--dur-fast);
-    transition-timing-function: var(--ease-std);
-  }
-  .pressable:active:not(:disabled) {
-    translate: 0 1px;
-    filter: brightness(0.94);
-    transition-duration: var(--dur-press);
-  }
-
-  /* Toast „Cofnij”: cienki pasek pokazuje, ile czasu zostało. Sonner wstrzymuje
-     licznik, gdy kursor jest nad stosem toastów — pasek robi to samo. */
-  .toast-undo { overflow: hidden; }
-  .toast-undo::after {
-    content: "";
-    position: absolute;
-    inset: auto 0 0 0;
-    height: 2px;
-    background: hsl(var(--primary) / 0.7);
-    transform-origin: left center;
-    animation: toast-timer var(--toast-ms, 5000ms) linear forwards;
-    pointer-events: none;
-  }
-  [data-sonner-toaster]:hover .toast-undo::after { animation-play-state: paused; }
-  html[data-motion="reduced"] .toast-undo::after { display: none; }
-
-  /* Smooth theme switch: applied briefly on <html> when theme changes */
-  .theme-transition,
-  .theme-transition *,
-  .theme-transition *::before,
-  .theme-transition *::after {
-    transition:
-      background-color var(--dur-slow) var(--ease-std),
-      color var(--dur-slow) var(--ease-std),
-      border-color var(--dur-slow) var(--ease-std),
-      fill var(--dur-slow) var(--ease-std),
-      stroke var(--dur-slow) var(--ease-std),
-      box-shadow var(--dur-slow) var(--ease-std) !important;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .theme-transition, .theme-transition * { transition: none !important; }
-  }
 
   /* Reduced motion: driven by <html data-motion="reduced"> (user setting or OS). */
   html[data-motion="reduced"] *,
@@ -406,13 +541,6 @@ html, body { overscroll-behavior-y: contain; }
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
-  }
-  html[data-motion="reduced"] .theme-transition,
-  html[data-motion="reduced"] .theme-transition * {
-    transition: none !important;
-  }
-  html[data-motion="reduced"] .hover-scale:hover {
-    transform: none !important;
   }
 }
 

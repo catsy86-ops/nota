@@ -504,8 +504,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
     // inaczej pusta treść zajmowała ekran, a pozycje lądowały na dole.
     const contentFills = full && !showChecklist;
     const textareaCls = full
-      ? cn("w-full bg-transparent text-base leading-relaxed text-foreground/90 outline-none resize-none", contentFills && "h-full")
-      : "w-full bg-transparent text-sm text-foreground/80 outline-none resize-none";
+      ? cn("w-full bg-transparent text-base leading-relaxed text-foreground/90 outline-hidden resize-none", contentFills && "h-full")
+      : "w-full bg-transparent text-sm text-foreground/80 outline-hidden resize-none";
     return (
       <div
         className={full ? "flex flex-col gap-3 h-full min-h-0" : "space-y-2"}
@@ -517,7 +517,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         }}
       >
         {/* W oknie `pr-*` zostawia miejsce na ✕ w prawym górnym rogu. */}
-        <TitleField spellCheck={prefs.spellcheck} autoFocus value={editTitle} onChange={setEditTitle} onEnter={() => textareaRef.current?.focus()} className={cn("w-full bg-transparent font-display font-semibold text-foreground outline-none", full && "text-2xl pr-8 coarse:pr-12")} placeholder="Tytuł" />
+        <TitleField spellCheck={prefs.spellcheck} autoFocus value={editTitle} onChange={setEditTitle} onEnter={() => textareaRef.current?.focus()} className={cn("w-full bg-transparent font-display font-semibold text-foreground outline-hidden", full && "text-2xl pr-8 coarse:pr-12")} placeholder="Tytuł" />
         {findOpen && <FindReplaceBar value={editContent} onChange={setEditContent} textareaRef={textareaRef} onClose={() => setFindOpen(false)} />}
         <div className="flex items-center gap-1">
           <FormatToolbar onInsert={handleFormatInsert} nowrap={!full} />
@@ -592,7 +592,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
 
   return (
     <>
-      <div className={cn("relative", tilt && "[perspective:1000px]")}>
+      <div className={cn("relative", tilt && "perspective-[1000px]")}>
       {/* Tła gestu tylko w trakcie przeciągania — 300 kafli nie trzyma 600 elementów framer-motion. */}
       {swipeEnabled && swiping && (
         <>
@@ -698,7 +698,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
             data-drag-handle
             // Na dotyku tylko przy sortowaniu ręcznym — przy innym porządku był szumem na każdym kaflu.
             // W tablicy zawsze: przeniesienie kafla do innej kolumny nie zależy od porządku.
-            className={cn(prefs.sortKey !== "manual" && prefs.layout !== "board" && "coarse:hidden", "absolute top-0 left-1/2 -translate-x-1/2 z-10 px-3 pt-0.5 pb-0 coarse:px-6 coarse:pt-1.5 coarse:pb-3 coarse:touch-none coarse:opacity-50 cursor-grab active:cursor-grabbing rounded-b-md opacity-0 group-hover:opacity-60 hover:!opacity-100 focus-visible:opacity-100 transition-opacity")}
+            className={cn(prefs.sortKey !== "manual" && prefs.layout !== "board" && "coarse:hidden", "absolute top-0 left-1/2 -translate-x-1/2 z-10 px-3 pt-0.5 pb-0 coarse:px-6 coarse:pt-1.5 coarse:pb-3 coarse:touch-none coarse:opacity-50 cursor-grab active:cursor-grabbing rounded-b-md opacity-0 group-hover:opacity-60 hover:opacity-100! focus-visible:opacity-100 transition-opacity")}
           >
             {/* 10 px wysokości — mieści się w górnym marginesie karty i nie łapie kliknięć w tytuł. */}
             <div className="grid grid-cols-3 gap-[2px]" aria-hidden>
@@ -735,7 +735,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         )}
 
         <div
-          className={cn("cursor-pointer", isEditing && !fullEditor ? "p-4" : "card-body px-3.5 pt-3 pb-2.5 leading-[1.5]", note.largeText ? "text-base" : "text-[0.875rem]")}
+          className={cn("cursor-pointer", isEditing && !fullEditor ? "p-4" : "card-body px-3.5 pt-3 pb-2.5 leading-normal", note.largeText ? "text-base" : "text-[0.875rem]")}
           onClick={(e) => {
             if (longPressed.current) { longPressed.current = false; return; }
             if (swiping || Math.abs(swipeX.get()) > 4) return;
@@ -756,7 +756,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
               <NoteCoverStrip cover={note.cover} className="-mx-3.5 -mt-3 mb-2.5 w-[calc(100%+1.75rem)] rounded-t-[inherit]" />
               {(note.title || note.icon) && (
                 // Prawy margines: tytuł nie wchodzi pod pole zaznaczenia (right-2 + w-6 = 32 px od krawędzi).
-                <h3 className={cn("font-display font-semibold text-base leading-snug tracking-[-0.01em] text-foreground mb-1 line-clamp-2 [overflow-wrap:anywhere]", onToggleSelect && "pr-5")}>
+                <h3 className={cn("font-display font-semibold text-base leading-snug tracking-[-0.01em] text-foreground mb-1 line-clamp-2 wrap-anywhere", onToggleSelect && "pr-5")}>
                   {note.icon && <span className="mr-1.5" aria-hidden>{note.icon}</span>}
                   {note.title}
                   {note.readOnly && <Lock className="inline-block w-3 h-3 ml-1.5 -mt-0.5 text-muted-foreground" aria-label="Zablokowana do edycji" />}
@@ -770,7 +770,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
               {note.content && (
                 // Kafel to zapowiedź, nie lektura: 4 linie (na telefonie 3) i zwykła interlinia — pełny tekst jest w czytniku.
                 // Nagłówki z treści w rozmiarze treści — duże i pogrubione konkurowały z tytułem kafla.
-                <div className="line-clamp-4 max-sm:line-clamp-3 text-foreground/85 [&_p]:leading-normal [&_li]:leading-normal [&_p]:mb-0.5 [&_:is(h1,h2,h3,h4,h5,h6)]:!text-[1em] [&_:is(h1,h2,h3,h4,h5,h6)]:!leading-normal [&_:is(h1,h2,h3,h4,h5,h6)]:!m-0 [&_:is(h1,h2,h3,h4,h5,h6)]:!font-semibold">
+                <div className="line-clamp-4 max-sm:line-clamp-3 text-foreground/85 [&_p]:leading-normal [&_li]:leading-normal [&_p]:mb-0.5 [&_:is(h1,h2,h3,h4,h5,h6)]:text-[1em]! [&_:is(h1,h2,h3,h4,h5,h6)]:leading-normal! [&_:is(h1,h2,h3,h4,h5,h6)]:m-0! [&_:is(h1,h2,h3,h4,h5,h6)]:font-semibold!">
                   <MarkdownRenderer content={note.content} knownTitles={knownTitles} onWikiClick={onWikiClick} />
                 </div>
               )}
@@ -778,7 +778,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                 <ChecklistPreview items={note.checklist} onToggle={handleChecklistToggle} showProgress={!note.title} />
               )}
               {/* Etykiety, przypomnienie i priorytet w jednym rzędzie — każde w osobnej linii robiło z kafla wieżę. */}
-              <div className="flex items-center gap-1 flex-wrap mt-1.5 empty:hidden [&>*]:!mt-0">
+              <div className="flex items-center gap-1 flex-wrap mt-1.5 empty:hidden *:mt-0!">
                 <LabelBadges labels={note.labels} />
                 <ReminderBadge reminder={note.reminder} reminderRepeat={note.reminderRepeat} />
                 <PriorityBadge priority={note.priority ?? "none"} />

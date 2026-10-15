@@ -10,8 +10,8 @@ interface FindReplaceBarProps {
   onClose: () => void;
 }
 
-const FIELD = "h-8 coarse:h-10 min-w-0 flex-1 rounded-md border border-border/60 bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring";
-const BTN = "pressable h-8 coarse:h-10 px-2 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const FIELD = "h-8 coarse:h-10 min-w-0 flex-1 rounded-md border border-border/60 bg-background px-2 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
+const BTN = "pressable h-8 coarse:h-10 px-2 rounded-md text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
 
 /** Pasek „Znajdź i zamień” nad treścią edytowanej notatki (Ctrl+F / Ctrl+H w polu treści). */
 export function FindReplaceBar({ value, onChange, textareaRef, onClose }: FindReplaceBarProps) {

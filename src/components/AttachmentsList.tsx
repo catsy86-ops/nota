@@ -122,7 +122,7 @@ function TextPreview({ attachment }: { attachment: Attachment }) {
       </button>
       {state === "error" && <p className="text-2xs text-muted-foreground">Nie udało się wczytać podglądu.</p>}
       {state !== "closed" && state !== "error" && (
-        <pre data-testid="attachment-preview" className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-muted/50 p-2 font-mono text-2xs text-foreground/85">
+        <pre data-testid="attachment-preview" className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap wrap-break-word rounded-lg bg-muted/50 p-2 font-mono text-2xs text-foreground/85">
           {state.text}{state.truncated ? "\n…" : ""}
         </pre>
       )}

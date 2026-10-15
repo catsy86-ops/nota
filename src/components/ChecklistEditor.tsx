@@ -230,7 +230,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                   e.preventDefault();
                   moveItem(item.id, e.key === "ArrowUp" ? -1 : 1);
                 }}
-                className="text-sm bg-transparent outline-none text-foreground flex-1 min-w-0"
+                className="text-sm bg-transparent outline-hidden text-foreground flex-1 min-w-0"
               />
             )}
             {!readOnly && (
@@ -238,7 +238,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                 type="button"
                 onClick={() => removeItem(item.id)}
                 aria-label={`Usuń pozycję: ${item.text || "pusta"}`}
-                className="p-0.5 coarse:p-2 rounded text-muted-foreground/40 hover:text-destructive opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="p-0.5 coarse:p-2 rounded text-muted-foreground/40 hover:text-destructive opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -255,7 +255,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
             </p>
             {!readOnly && (
               <button type="button" onClick={clearChecked}
-                className="text-2xs coarse:text-xs text-muted-foreground hover:text-foreground rounded outline-none focus-visible:ring-2 focus-visible:ring-ring px-1 coarse:py-1">
+                className="text-2xs coarse:text-xs text-muted-foreground hover:text-foreground rounded outline-hidden focus-visible:ring-2 focus-visible:ring-ring px-1 coarse:py-1">
                 Usuń ukończone
               </button>
             )}
@@ -280,7 +280,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                   type="button"
                   onClick={() => removeItem(item.id)}
                   aria-label={`Usuń pozycję: ${item.text || "pusta"}`}
-                  className="p-0.5 coarse:p-2 rounded text-muted-foreground/40 hover:text-destructive opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="p-0.5 coarse:p-2 rounded text-muted-foreground/40 hover:text-destructive opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -299,7 +299,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
             onKeyDown={(e) => e.key === "Enter" && addItem()}
             onPaste={(e) => handlePaste(e)}
             placeholder="Dodaj element..."
-            className="text-sm bg-transparent outline-none text-foreground placeholder:text-muted-foreground/40 flex-1 min-w-0"
+            className="text-sm bg-transparent outline-hidden text-foreground placeholder:text-muted-foreground/40 flex-1 min-w-0"
           />
         </div>
       )}

@@ -10,7 +10,7 @@ import { entriesPl, problemsPl } from "@/lib/study/journalView";
 import { periodLabel, dayKeyOf } from "@/lib/study/report";
 
 const fieldClass =
-  "w-full rounded-lg border border-border bg-background px-3 py-2 text-base text-foreground outline-none focus:ring-2 focus:ring-ring sm:text-sm";
+  "w-full rounded-lg border border-border bg-background px-3 py-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring sm:text-sm";
 
 /**
  * Karta budowy: nazwa, adres i inwestor (trafiają do raportu), ile wpisów i otwartych

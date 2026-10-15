@@ -103,12 +103,12 @@ export function ViewSheet({ open, onOpenChange, groupable = true }: { open: bool
                   aria-checked={on}
                   onClick={() => changeView(() => setViewPref("layout", l.v))}
                   className={cn(
-                    "pressable flex min-h-[3.25rem] items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-fast",
+                    "pressable flex min-h-13 items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-fast",
                     on ? "bg-primary/10" : "hover:bg-muted/60",
                   )}
                 >
                   <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg", on ? "bg-primary/15 text-primary-ink" : "bg-muted text-muted-foreground")}>
-                    <l.icon className="h-[1.125rem] w-[1.125rem]" aria-hidden />
+                    <l.icon className="h-4.5 w-4.5" aria-hidden />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className={cn("block text-sm", on ? "font-semibold text-foreground" : "font-medium")}>{l.label}</span>

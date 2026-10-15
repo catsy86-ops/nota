@@ -32,7 +32,7 @@ function Calendar({ className, classNames, showOutsideDays = true, locale = pl, 
         week: cn("mt-2 flex w-full", d.week),
         day: cn(
           "relative h-9 w-9 p-0 text-center text-sm focus-within:relative focus-within:z-20",
-          "[&:has([aria-selected])]:bg-muted first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
+          "has-aria-[selected]:bg-muted first:has-aria-[selected]:rounded-l-md last:has-aria-[selected]:rounded-r-md",
           d.day,
         ),
         day_button: cn(buttonVariants({ variant: "ghost" }), "h-9 w-9 p-0 font-normal aria-selected:opacity-100"),

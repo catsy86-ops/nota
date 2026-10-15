@@ -136,7 +136,7 @@ export const ShiftWeekView = memo(function ShiftWeekView({
                   aria-current={isToday ? "date" : undefined}
                   className={cn(
                     dayCellClass(true, isToday),
-                    "w-full flex flex-row sm:flex-col items-start sm:items-stretch gap-3 sm:gap-1.5 p-2 min-h-[3.5rem] sm:min-h-[11rem]",
+                    "w-full flex flex-row sm:flex-col items-start sm:items-stretch gap-3 sm:gap-1.5 p-2 min-h-14 sm:min-h-44",
                     "[@media(hover:hover)]:hover:border-primary/40",
                     dragging && "opacity-40", over && dropOverClass,
                   )}
@@ -180,7 +180,7 @@ export const ShiftWeekView = memo(function ShiftWeekView({
                     {entry?.note && (
                       <span className="flex items-start gap-1 text-xs text-muted-foreground">
                         <StickyNote className="w-3 h-3 mt-0.5 shrink-0" />
-                        <span className="line-clamp-2 break-words">{entry.note}</span>
+                        <span className="line-clamp-2 wrap-break-word">{entry.note}</span>
                       </span>
                     )}
                     {shown.map((occ) => (

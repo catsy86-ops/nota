@@ -173,7 +173,7 @@ export function GeneralSettings() {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {key !== "seasonalTheme" && key !== "dailyQuote" && key !== "cardTilt" && (
-                  <Button type="button" size="sm" variant="outline" disabled={!enabled} onClick={() => previewEffect(key)} className={cn("h-8 px-2.5 gap-1.5", key === "haptics" && "[@media(pointer:fine)]:hidden")}>
+                  <Button type="button" size="sm" variant="outline" disabled={!enabled} onClick={() => previewEffect(key)} className={cn("h-8 px-2.5 gap-1.5", key === "haptics" && "pointer-fine:hidden")}>
                     <Play className="w-3.5 h-3.5" /><span className="text-xs">Test</span>
                   </Button>
                 )}

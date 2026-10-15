@@ -1,5 +1,4 @@
 import type { Config } from "tailwindcss";
-import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -170,7 +169,6 @@ export default {
     },
   },
   plugins: [
-    tailwindcssAnimate,
     // `coarse:` — palec zamiast kursora (cele dotykowe min. 44 px).
     (({ addVariant }: { addVariant: (name: string, def: string) => void }) => addVariant("coarse", "@media (pointer: coarse)")),
     // `desk:` — układ z paskiem bocznym. Jak `md:`, ale telefon w poziomie (niski ekran dotykowy)

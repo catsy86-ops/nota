@@ -41,7 +41,7 @@ export function QuickReminderInput({ onParsed }: QuickReminderInputProps) {
           }}
           placeholder="np. jutro 15:00, za 2h"
           className={cn(
-            "flex-1 text-xs bg-muted/60 border rounded-lg px-2 py-1.5 outline-none focus:ring-1 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground/70",
+            "flex-1 text-xs bg-muted/60 border rounded-lg px-2 py-1.5 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground/70",
             error ? "border-destructive" : "border-border"
           )}
         />

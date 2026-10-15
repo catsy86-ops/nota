@@ -131,7 +131,7 @@ export const AttachmentsPanel = forwardRef<AttachmentsPanelHandle, Props>(functi
       ref={rootRef}
       data-testid="attachments-panel"
       onClick={(e) => e.stopPropagation()}
-      className={cn("space-y-1.5 rounded-xl", over && "outline outline-2 outline-dashed outline-primary/60 outline-offset-2 bg-primary/5", className)}
+      className={cn("space-y-1.5 rounded-xl", over && "outline-solid outline-2 outline-dashed outline-primary/60 outline-offset-2 bg-primary/5", className)}
     >
       <input ref={inputRef} data-testid="attachment-input" type="file" multiple className="hidden" onChange={(e) => { void addFiles(Array.from(e.target.files ?? [])); e.target.value = ""; }} />
       {!empty && (

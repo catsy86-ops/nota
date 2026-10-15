@@ -47,7 +47,7 @@ function presetOf(from: string, to: string, today: string): Preset {
 }
 
 const fieldClass =
-  "h-9 min-w-0 w-full rounded-md border border-input bg-background px-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 md:text-sm";
+  "h-9 min-w-0 w-full rounded-md border border-input bg-background px-2 text-base focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 md:text-sm";
 
 /**
  * Raport z dziennika: budowa i okres → podgląd jak kartka z zeszytu, a z niego tekst do
@@ -279,7 +279,7 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
                     <span className="pt-px font-mono text-xs tabular-nums text-muted-foreground">{r.time}</span>
                     <KindIcon kind={r.entry.kind} className="mt-0.5 h-4 w-4" />
                     <div className="min-w-0">
-                      <p className="whitespace-pre-wrap break-words leading-snug">{r.entry.text.trim() || "Sprawdzone punkty listy"}</p>
+                      <p className="whitespace-pre-wrap wrap-break-word leading-snug">{r.entry.text.trim() || "Sprawdzone punkty listy"}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         <span className={cn(r.status === "Problem otwarty" && "font-medium text-foreground")}>{r.status}</span>
                         {r.site && <> · {r.site}</>}
@@ -310,7 +310,7 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
             <section className="break-inside-avoid-page pt-3">
               <h3 className="mb-1.5 text-sm font-semibold">Otwarte problemy</h3>
               <ul className="list-disc space-y-0.5 pl-5 text-sm">
-                {report.open.map((r) => <li key={r.entry.id} className="break-words">{r.entry.text.trim().split("\n")[0] || "bez opisu"}</li>)}
+                {report.open.map((r) => <li key={r.entry.id} className="wrap-break-word">{r.entry.text.trim().split("\n")[0] || "bez opisu"}</li>)}
               </ul>
             </section>
           )}

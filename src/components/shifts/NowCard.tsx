@@ -55,7 +55,7 @@ export function NowCard({ data }: { data: ShiftData }) {
           {current && <span aria-hidden className="now-dot w-1.5 h-1.5 rounded-full" style={{ backgroundColor: main.type.color }} />}
           {current ? "Teraz w pracy" : "Następna zmiana"}
         </p>
-        <p className="font-display font-bold line-clamp-2 [overflow-wrap:anywhere]">
+        <p className="font-display font-bold line-clamp-2 wrap-anywhere">
           {main.type.name}{" "}
           <span className="font-normal text-muted-foreground tabular-nums">
             {current ? `do ${format(current.end, "HH:mm")}` : when(main)}
@@ -76,7 +76,7 @@ export function NowCard({ data }: { data: ShiftData }) {
       </div>
       {current && (
         <button type="button" onClick={() => finishNow(current)}
-          className="pressable shrink-0 h-10 coarse:h-11 px-3 rounded-xl border border-border/60 text-sm font-medium hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          className="pressable shrink-0 h-10 coarse:h-11 px-3 rounded-xl border border-border/60 text-sm font-medium hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
           Skończyłem teraz
         </button>
       )}

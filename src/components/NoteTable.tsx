@@ -61,7 +61,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
                     <button
                       type="button"
                       onClick={() => sortBy(c.sort!)}
-                      className="inline-flex items-center gap-1 uppercase tracking-wider hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded"
+                      className="inline-flex items-center gap-1 uppercase tracking-wider hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 rounded"
                     >
                       {c.label}
                       {active && (sortDir === "asc" ? <ArrowUp className="w-3 h-3" aria-hidden /> : <ArrowDown className="w-3 h-3" aria-hidden />)}
@@ -84,7 +84,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(n.id); } }}
               className={cn(
                 "cursor-pointer border-b border-border/40 last:border-0 transition-colors duration-fast hover:bg-muted/50",
-                "focus-visible:outline-none focus-visible:bg-muted/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/50",
+                "focus-visible:outline-hidden focus-visible:bg-muted/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/50",
                 selectedIds?.has(n.id) && "bg-primary/10",
               )}
             >
@@ -96,7 +96,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
                   <span className="truncate font-medium">{noteLabel(n)}</span>
                 </span>
               </td>
-              <td className="hidden md:table-cell px-3 py-2 text-muted-foreground truncate max-w-[10rem]">{folderName(n.folderId)}</td>
+              <td className="hidden md:table-cell px-3 py-2 text-muted-foreground truncate max-w-40">{folderName(n.folderId)}</td>
               <td className="hidden lg:table-cell px-3 py-2">
                 <span className="flex flex-wrap gap-1">
                   {n.labels.slice(0, 3).map((l) => (

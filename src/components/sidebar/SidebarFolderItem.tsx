@@ -63,7 +63,7 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
       <div className="flex items-center gap-1 px-2 py-1">
         <input ref={inputRef} value={name} onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setName(folder.name); setEditing(false); } }}
-          className="flex-1 text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 text-foreground min-w-0" />
+          className="flex-1 text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground min-w-0" />
         <button onClick={save} aria-label="Zapisz nazwę folderu" className="pressable p-1 rounded-lg text-primary-ink hover:bg-primary/10"><Check className="w-3.5 h-3.5" /></button>
         <button onClick={() => { setName(folder.name); setEditing(false); }} aria-label="Anuluj edycję folderu" className="pressable p-1 rounded-lg text-muted-foreground hover:bg-muted"><X className="w-3.5 h-3.5" /></button>
       </div>
@@ -83,9 +83,9 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
             onClick={() => setExpanded(!expanded)}
             aria-label={expanded ? "Zwiń podfoldery" : "Rozwiń podfoldery"}
             aria-expanded={expanded}
-            className="pressable grid h-6 w-6 place-items-center rounded-md outline-none hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring"
+            className="pressable grid h-6 w-6 place-items-center rounded-md outline-hidden hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <ChevronRight className={cn("w-3.5 h-3.5 transition-transform duration-[var(--dur-fast)]", expanded && "rotate-90")} />
+            <ChevronRight className={cn("w-3.5 h-3.5 transition-transform duration-(--dur-fast)", expanded && "rotate-90")} />
           </button>
         ) : (
           <span className="w-6" aria-hidden />
@@ -144,7 +144,7 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
                 <button
                   key={c.value}
                   onClick={(e) => { e.stopPropagation(); onSetColor(folder.id, c.value); setShowColorPicker(false); }}
-                  className={cn("pressable w-5 h-5 coarse:w-7 coarse:h-7 rounded-full ring-offset-2 ring-offset-background outline-none focus-visible:ring-2 focus-visible:ring-ring", folderColorDot[c.value], folder.color === c.value ? "ring-2 ring-primary" : "hover:ring-2 hover:ring-border")}
+                  className={cn("pressable w-5 h-5 coarse:w-7 coarse:h-7 rounded-full ring-offset-2 ring-offset-background outline-hidden focus-visible:ring-2 focus-visible:ring-ring", folderColorDot[c.value], folder.color === c.value ? "ring-2 ring-primary" : "hover:ring-2 hover:ring-border")}
                   aria-pressed={folder.color === c.value}
                   title={c.label}
                   aria-label={`Ustaw kolor: ${c.label}`}
@@ -162,7 +162,7 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
               {folder.emoji && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onSetEmoji(folder.id, null); setShowEmojiPicker(false); }}
-                  className="pressable w-7 h-7 coarse:w-9 coarse:h-9 rounded-md text-xs flex items-center justify-center border border-dashed border-muted-foreground/30 hover:bg-muted/80 text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="pressable w-7 h-7 coarse:w-9 coarse:h-9 rounded-md text-xs flex items-center justify-center border border-dashed border-muted-foreground/30 hover:bg-muted/80 text-muted-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                   title="Usuń emoji"
                   aria-label="Usuń emoji folderu"
                 >
@@ -173,7 +173,7 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
                 <button
                   key={emoji}
                   onClick={(e) => { e.stopPropagation(); onSetEmoji(folder.id, emoji); setShowEmojiPicker(false); }}
-                  className={cn("pressable w-7 h-7 coarse:w-9 coarse:h-9 rounded-md text-sm flex items-center justify-center outline-none focus-visible:ring-2 focus-visible:ring-ring", folder.emoji === emoji ? "bg-primary/10 ring-1 ring-primary" : "hover:bg-muted/80")}
+                  className={cn("pressable w-7 h-7 coarse:w-9 coarse:h-9 rounded-md text-sm flex items-center justify-center outline-hidden focus-visible:ring-2 focus-visible:ring-ring", folder.emoji === emoji ? "bg-primary/10 ring-1 ring-primary" : "hover:bg-muted/80")}
                   aria-pressed={folder.emoji === emoji}
                   aria-label={`Ustaw emoji: ${emoji}`}
                 >
@@ -189,7 +189,7 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
         <div className="flex items-center gap-1 px-6 py-1">
           <input ref={subInputRef} value={subName} onChange={(e) => setSubName(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") submitSub(); if (e.key === "Escape") { setSubName(""); setAddingSub(false); } }}
-            className="flex-1 text-xs bg-muted/60 border border-border rounded-lg px-2 py-0.5 outline-none focus:ring-1 focus:ring-primary/30 text-foreground min-w-0" placeholder="Subfolder..." />
+            className="flex-1 text-xs bg-muted/60 border border-border rounded-lg px-2 py-0.5 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground min-w-0" placeholder="Subfolder..." />
           <button onClick={submitSub} aria-label="Dodaj podfolder" className="pressable p-0.5 rounded text-primary-ink hover:bg-primary/10"><Check className="w-3 h-3" /></button>
           <button onClick={() => { setSubName(""); setAddingSub(false); }} aria-label="Anuluj dodawanie podfolderu" className="pressable p-0.5 rounded text-muted-foreground hover:bg-muted"><X className="w-3 h-3" /></button>
         </div>

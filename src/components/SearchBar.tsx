@@ -138,8 +138,8 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
         aria-controls={showSuggestions ? listId : undefined}
         aria-activedescendant={showSuggestions && active >= 0 ? `${listId}-${active}` : undefined}
         className={cn(
-          "w-full pl-10 py-2.5 rounded-xl bg-muted/60 border text-base md:text-sm text-foreground placeholder:text-muted-foreground outline-none transition-[border-color,box-shadow,background-color] duration-fast ease-std",
-          value ? (canSave ? "pr-[4.5rem]" : "pr-9") : "pr-9",
+          "w-full pl-10 py-2.5 rounded-xl bg-muted/60 border text-base md:text-sm text-foreground placeholder:text-muted-foreground outline-hidden transition-[border-color,box-shadow,background-color] duration-fast ease-std",
+          value ? (canSave ? "pr-18" : "pr-9") : "pr-9",
           focused ? "border-primary/50 ring-2 ring-primary/20 bg-background" : "border-border"
         )}
       />
@@ -219,7 +219,7 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
             maxLength={MAX_FILTER_NAME}
             onChange={(e) => setName(e.target.value)}
             placeholder="np. Do zrobienia"
-            className="w-full rounded-lg border border-border bg-muted/60 px-2.5 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/30"
+            className="w-full rounded-lg border border-border bg-muted/60 px-2.5 py-1.5 text-sm text-foreground outline-hidden focus:ring-2 focus:ring-primary/30"
           />
           <p className="truncate font-mono text-2xs text-muted-foreground">{value.trim()}</p>
           <div className="flex justify-end gap-2">

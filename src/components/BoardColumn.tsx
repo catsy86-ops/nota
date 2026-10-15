@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { columnDropId } from "@/lib/boardColumns";
 
 /** Szerokość kolumny — wspólna dla kolumny i przyklejonego paska nagłówków (`NoteBoard`). */
-export const BOARD_COLUMN_WIDTH = "w-[17.5rem] sm:w-72";
+export const BOARD_COLUMN_WIDTH = "w-70 sm:w-72";
 
 /** Etykieta kolumny z licznikiem — w kolumnie i w przyklejonym pasku nagłówków. */
 export function BoardColumnHeading({ label, count, className }: { label: ReactNode; count: number; className?: string }) {

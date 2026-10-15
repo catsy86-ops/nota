@@ -78,7 +78,7 @@ export function CustomTemplateDialog({ template, onOpenChange }: Props) {
               onChange={(e) => setContent(e.target.value)}
               rows={6}
               placeholder={"Dzisiaj ({{dzień}}, {{godzina}}):\n\n- "}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring resize-y"
             />
           </div>
           <div className="space-y-1">

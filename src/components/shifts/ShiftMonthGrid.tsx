@@ -136,7 +136,7 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                     aria-current={isToday ? "date" : undefined}
                     title={holiday ?? entry?.note}
                     className={cn(
-                      dayCellClass(inMonth, isToday), "w-full flex flex-col items-stretch min-h-[3.75rem] sm:min-h-[5rem] p-1",
+                      dayCellClass(inMonth, isToday), "w-full flex flex-col items-stretch min-h-15 sm:min-h-20 p-1",
                       inMonth && "[@media(hover:hover)]:hover:border-primary/40",
                       dragging && "opacity-40", over && dropOverClass,
                     )}

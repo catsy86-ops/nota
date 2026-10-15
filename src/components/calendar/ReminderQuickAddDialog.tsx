@@ -180,7 +180,7 @@ export function ReminderQuickAddDialog({
               onKeyDown={(e) => { if (e.key === "Enter" && title) { e.preventDefault(); handleCreate(); } }}
               placeholder="Co masz do zrobienia?"
               aria-label="Treść nowej notatki z terminem"
-              className="w-full bg-muted/60 border border-border rounded-xl px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="w-full bg-muted/60 border border-border rounded-xl px-3 py-2 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             />
             {parsed && (
               <p className="text-xs text-muted-foreground">
@@ -198,7 +198,7 @@ export function ReminderQuickAddDialog({
               value={time}
               onChange={(e) => setTime(e.target.value)}
               aria-label="Godzina przypomnienia"
-              className="text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 coarse:min-h-11 outline-none focus-visible:ring-2 focus-visible:ring-ring text-foreground"
+              className="text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring text-foreground"
             />
           </label>
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -208,7 +208,7 @@ export function ReminderQuickAddDialog({
               value={repeat}
               onChange={(e) => setRepeat(e.target.value as ReminderRepeat)}
               aria-label="Powtarzanie"
-              className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 coarse:min-h-11 outline-none focus-visible:ring-2 focus-visible:ring-ring text-foreground"
+              className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring text-foreground"
             >
               {REPEAT_OPTIONS.map((r) => (
                 <option key={r} value={r}>{REMINDER_REPEAT_LABELS[r]}</option>
@@ -273,7 +273,7 @@ export function ReminderQuickAddDialog({
                         disabled={timestamp === null}
                         className={cn(
                           "w-full flex items-center gap-2 text-left rounded-lg px-2 py-1.5 coarse:min-h-11 text-sm",
-                          "hover:bg-muted/60 transition-colors disabled:opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                          "hover:bg-muted/60 transition-colors disabled:opacity-50 outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
                         )}
                       >
                         <StickyNote className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />

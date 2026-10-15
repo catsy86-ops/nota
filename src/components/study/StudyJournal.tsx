@@ -30,7 +30,7 @@ const KIND_CHIPS: { value: KindFilter | null; label: string }[] = [
 ];
 
 const selectClass =
-  "h-9 w-full min-w-0 truncate rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 sm:w-auto sm:max-w-[14rem]";
+  "h-9 w-full min-w-0 truncate rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 sm:w-auto sm:max-w-56";
 
 /**
  * Dziennik z budowy: na górze to, co już zapisane, nowy wpis w arkuszu („+ Wpis”, „+” w dolnym
@@ -137,7 +137,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                   onChange={(ev) => patch({ query: ev.target.value })}
                   placeholder="Szukaj: rura, Lipowa, szczelność…"
                   enterKeyHint="search"
-                  className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 md:text-sm"
+                  className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-base focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 md:text-sm"
                 />
               </label>
               <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none]" role="group" aria-label="Rodzaj wpisu">
@@ -172,7 +172,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                         aria-pressed={on}
                         onClick={() => patch({ site: id })}
                         className={cn(
-                          "pressable inline-flex max-w-[14rem] shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-xs coarse:min-h-11 coarse:px-4 coarse:text-sm",
+                          "pressable inline-flex max-w-56 shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-xs coarse:min-h-11 coarse:px-4 coarse:text-sm",
                           on ? "border-primary bg-primary/10 font-medium text-primary-ink" : "border-border text-muted-foreground hover:text-foreground",
                         )}
                       >
@@ -230,7 +230,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
               <div className="space-y-5">
                 {view.days.map((d) => (
                   <section key={d.key} aria-label={d.label} data-journal-day={d.key}>
-                    <h4 className="sticky top-[var(--app-header-h,0px)] z-10 -mx-1 mb-2 flex items-baseline justify-between gap-2 border-b border-border/60 bg-background/95 px-1 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground backdrop-blur transition-[top] duration-300 ease-out motion-reduce:transition-none [html.header-hidden_&]:top-0">
+                    <h4 className="sticky top-(--app-header-h,0px) z-10 -mx-1 mb-2 flex items-baseline justify-between gap-2 border-b border-border/60 bg-background/95 px-1 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground backdrop-blur-sm transition-[top] duration-300 ease-out motion-reduce:transition-none [html.header-hidden_&]:top-0">
                       <span>{d.label}</span>
                       <span className="font-mono normal-case tracking-normal tabular-nums">{entriesPl(d.count)}</span>
                     </h4>
@@ -306,7 +306,7 @@ function JournalItem({ entry: e, onPractice, onZoom }: { entry: JournalEntry; on
       <div className="flex items-start gap-2.5">
         {resolved ? <CheckCircle2 className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden /> : <KindIcon kind={e.kind} />}
         <div className="min-w-0 flex-1">
-          <p className="whitespace-pre-wrap break-words text-sm leading-snug">{e.text || "Sprawdzone punkty listy"}</p>
+          <p className="whitespace-pre-wrap wrap-break-word text-sm leading-snug">{e.text || "Sprawdzone punkty listy"}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
             <span className="font-mono tabular-nums">
               {new Date(e.at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}

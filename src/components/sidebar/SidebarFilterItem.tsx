@@ -32,7 +32,7 @@ export function SidebarFilterItem({ name, query, count, isActive, onSelect, onRe
           aria-label="Nazwa filtra"
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setDraft(name); setEditing(false); } }}
-          className="flex-1 text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 text-foreground min-w-0"
+          className="flex-1 text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground min-w-0"
         />
         <button onClick={save} aria-label="Zapisz nazwę filtra" className="pressable p-1 rounded-lg text-primary-ink hover:bg-primary/10"><Check className="w-3.5 h-3.5" /></button>
         <button onClick={() => { setDraft(name); setEditing(false); }} aria-label="Anuluj edycję filtra" className="pressable p-1 rounded-lg text-muted-foreground hover:bg-muted"><X className="w-3.5 h-3.5" /></button>

@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 // Przycisk z samą ikoną: jeden rozmiar celu, jeden stan wciśnięcia (`.pressable`),
 // jeden wygląd otwartego menu. Etykieta zawsze przez `aria-label`.
 const iconButtonVariants = cva(
-  "pressable relative inline-flex shrink-0 items-center justify-center rounded-lg ring-offset-background coarse:after:absolute coarse:after:-inset-1 coarse:after:content-[''] coarse:after:rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50",
+  "pressable relative inline-flex shrink-0 items-center justify-center rounded-lg ring-offset-background coarse:after:absolute coarse:after:-inset-1 coarse:after:content-[''] coarse:after:rounded-xl focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       tone: {

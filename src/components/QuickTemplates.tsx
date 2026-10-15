@@ -97,7 +97,7 @@ export function QuickTemplates({ onPick, onCreateLabel, onDailyNote }: Props) {
     <div
       // Fade na prawej krawędzi mówi, że pasek przewija się w bok (na telefonie
       // chipy nie mieszczą się w szerokości).
-      className="flex items-center gap-2 overflow-x-auto scrollbar-thin pb-1 -mx-1 px-1 [mask-image:linear-gradient(to_right,#000_88%,transparent)] sm:[mask-image:none]"
+      className="flex items-center gap-2 overflow-x-auto scrollbar-thin pb-1 -mx-1 px-1 mask-[linear-gradient(to_right,#000_88%,transparent)] sm:mask-none"
     >
       <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground shrink-0 mr-1">
         Szablony

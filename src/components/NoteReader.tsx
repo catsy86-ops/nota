@@ -227,7 +227,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
         animate={{ opacity: 1 }}
         exit={{ opacity: 0, transition: tween.exit }}
         transition={tween.enter}
-        className={cn("fixed inset-0 z-50", present ? "bg-background/70 backdrop-blur-sm" : "bg-background/20 backdrop-blur-[2px]")}
+        className={cn("fixed inset-0 z-50", present ? "bg-background/70 backdrop-blur-xs" : "bg-background/20 backdrop-blur-[2px]")}
         onClick={onClose}
       />
       {/* Centrowanie flexem, nie translate — framer-motion nadpisuje `transform`. */}
@@ -258,7 +258,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
               <nav aria-label="Ścieżka podstrony" className="mb-1 flex flex-wrap items-center gap-x-1 text-xs text-muted-foreground">
                 {crumbs.map((c) => (
                   <span key={c.id} className="inline-flex items-center gap-1">
-                    <button type="button" onClick={() => onShow(c.id, mode)} className="max-w-[10rem] truncate hover:text-foreground hover:underline">
+                    <button type="button" onClick={() => onShow(c.id, mode)} className="max-w-40 truncate hover:text-foreground hover:underline">
                       {c.title.trim() || "Bez tytułu"}
                     </button>
                     <ChevronRight className="w-3 h-3 shrink-0" aria-hidden />
@@ -315,7 +315,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
           </div>
         </div>
 
-        <div ref={setScrollEl} tabIndex={-1} className={cn("flex-1 min-h-0 overflow-y-auto overscroll-contain outline-none", present ? "px-6 sm:px-12 py-8" : "px-6 py-4")}>
+        <div ref={setScrollEl} tabIndex={-1} className={cn("flex-1 min-h-0 overflow-y-auto overscroll-contain outline-hidden", present ? "px-6 sm:px-12 py-8" : "px-6 py-4")}>
           <div className={cn(present && "max-w-3xl mx-auto")} style={present ? { fontSize: `${zoom}rem`, lineHeight: 1.65 } : undefined}>
             {present && note.title && (
               <h1 className="font-display font-extrabold text-foreground mb-4" style={{ fontSize: `${zoom * 2.2}rem`, lineHeight: 1.15 }}>
@@ -361,7 +361,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                       <button type="button" role="checkbox" aria-checked={c.checked}
                         aria-label={`${c.checked ? "Odznacz" : "Odhacz"}: ${c.text || "element"}`}
                         onClick={() => onToggleChecklist(note.id, c.id)}
-                        className="shrink-0 rounded outline-none focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-8 coarse:min-w-8">
+                        className="shrink-0 rounded outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-8 coarse:min-w-8">
                         <span aria-hidden>{c.checked ? "☑" : "☐"}</span>
                       </button>
                     ) : (
@@ -441,7 +441,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                     <select
                       value={currentParent}
                       onChange={(e) => setParent(note.id, e.target.value || null)}
-                      className="min-w-0 max-w-[14rem] flex-1 truncate rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground"
+                      className="min-w-0 max-w-56 flex-1 truncate rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground"
                     >
                       <option value="">Brak (poziom główny)</option>
                       {currentParent && !parentOptions.some((o) => o.id === currentParent) && (
@@ -470,7 +470,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                         >
                           {m.title || "Bez tytułu"}
                         </button>
-                        <p className="mt-0.5 text-xs leading-snug text-foreground/70 break-words">
+                        <p className="mt-0.5 text-xs leading-snug text-foreground/70 wrap-break-word">
                           {m.before}<mark className="rounded bg-primary/25 px-0.5 text-foreground">{m.match}</mark>{m.after}
                         </p>
                       </div>

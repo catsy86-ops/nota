@@ -50,11 +50,11 @@ export function WeekStrip({ day, byDay, shiftOf, onSelectDay }: WeekStripProps) 
         <span className="text-xs font-medium text-muted-foreground">{weekRangeLabel(keys[0])}</span>
         <span className="flex items-center">
           <button type="button" onClick={() => go(addDaysToKey(selectedKey, -7))} aria-label="Poprzedni tydzień"
-            className="w-9 h-9 coarse:w-11 coarse:h-11 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            className="w-9 h-9 coarse:w-11 coarse:h-11 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button type="button" onClick={() => go(addDaysToKey(selectedKey, 7))} aria-label="Następny tydzień"
-            className="w-9 h-9 coarse:w-11 coarse:h-11 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            className="w-9 h-9 coarse:w-11 coarse:h-11 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
             <ChevronRight className="w-4 h-4" />
           </button>
         </span>
@@ -89,7 +89,7 @@ export function WeekStrip({ day, byDay, shiftOf, onSelectDay }: WeekStripProps) 
               aria-label={label}
               onClick={() => onSelectDay(d)}
               className={cn(
-                dayCellClass(true, isToday), "flex flex-col items-center gap-0.5 min-h-[3.5rem] coarse:min-h-[3.75rem] py-1 px-0.5",
+                dayCellClass(true, isToday), "flex flex-col items-center gap-0.5 min-h-14 coarse:min-h-15 py-1 px-0.5",
                 selected && "border-primary/60 bg-[color-mix(in_srgb,hsl(var(--primary))_7%,hsl(var(--card)))] dark:border-primary/60 dark:bg-[color-mix(in_srgb,hsl(var(--primary))_12%,hsl(var(--card)))]",
               )}
             >

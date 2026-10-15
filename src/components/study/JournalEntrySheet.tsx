@@ -274,7 +274,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setEditingSite(false); } }}
                   placeholder="np. Dom Kowalskich, ul. Leśna 4"
                   enterKeyHint="done"
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
                 />
               </label>
             ) : (
@@ -302,7 +302,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                     max={toLocalInput(Date.now())}
                     onChange={(e) => { const next = fromLocalInput(e.target.value); if (next !== null) setAt(next); }}
                     onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setEditingWhen(false); } }}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
                   />
                 </label>
                 <Button type="button" variant="outline" onClick={() => { setAt(null); setEditingWhen(false); }} className="coarse:h-11">Teraz</Button>
@@ -363,7 +363,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                   rows={4}
                   placeholder={kind === "problem" ? "Co poszło nie tak i co z tym zrobisz?" : "Krótko: gdzie, co zrobione, co zauważyłeś"}
                   className={cn(
-                    "w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-none focus:ring-2 focus:ring-ring",
+                    "w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring",
                     dictation.supported && "pr-14",
                   )}
                 />
@@ -443,7 +443,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                   <select
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-none focus:ring-2 focus:ring-ring"
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
                   >
                     <option value="">Ogólnie (bez tematu)</option>
                     {MODULES.map((m) => (

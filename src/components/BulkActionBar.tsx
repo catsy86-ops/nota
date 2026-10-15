@@ -46,7 +46,7 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 60, opacity: 0 }}
           transition={spring.soft}
-          className="pointer-events-auto flex max-w-full items-center gap-1 overflow-x-auto rounded-2xl border border-border/60 bg-card/95 backdrop-blur-md shadow-2xl px-3 py-2 [&>*]:shrink-0"
+          className="pointer-events-auto flex max-w-full items-center gap-1 overflow-x-auto rounded-2xl border border-border/60 bg-card/95 backdrop-blur-md shadow-2xl px-3 py-2 *:shrink-0"
         >
           <IconButton onClick={onClear} title="Wyczyść zaznaczenie" aria-label="Wyczyść zaznaczenie">
             <X className="w-4 h-4" />
@@ -113,7 +113,7 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
                     onChange={(e) => setNewLabel(e.target.value)}
                     placeholder="Nowa etykieta…"
                     aria-label="Nowa etykieta"
-                    className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                   />
                 </form>
                 <div className="max-h-48 overflow-y-auto">

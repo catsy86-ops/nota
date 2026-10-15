@@ -336,7 +336,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
       className={cn("w-full max-w-xl rounded-2xl note-shadow border border-border overflow-hidden transition-[box-shadow,background-color] focus-ring-gradient hover:shadow-elevation-3",
         // Kolor schowany pod ikoną palety — edytor przyjmuje go od razu, żeby było widać wybór.
         expanded && color !== "default" ? colorClasses[color] : "bg-card", !expanded && "max-md:hidden",
-        fullScreen && "fixed inset-x-0 top-0 bottom-[var(--kb-inset,0px)] z-50 max-w-none rounded-none border-0 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]")}>
+        fullScreen && "fixed inset-x-0 top-0 bottom-(--kb-inset,0px) z-50 max-w-none rounded-none border-0 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]")}>
       <AnimatePresence mode="wait">
         {!expanded ? (
           <motion.button key="collapsed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -354,7 +354,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
             {restored && (
               <div role="status" className="flex items-center gap-2 rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs text-primary-ink" data-draft-restored="">
                 <span>Szkic przywrócony z poprzedniej sesji</span>
-                <button type="button" onClick={reset} className="ml-auto rounded px-1.5 py-0.5 font-medium hover:bg-primary/10 outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                <button type="button" onClick={reset} className="ml-auto rounded px-1.5 py-0.5 font-medium hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                   Odrzuć
                 </button>
               </div>
@@ -366,7 +366,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
                 if (e.ctrlKey || e.metaKey) { if (e.shiftKey) saveAndNext(); else handleClose(); }
                 else textareaRef.current?.focus();
               }}
-              className="w-full bg-transparent text-lg font-display font-semibold text-foreground placeholder:text-muted-foreground/50 outline-none" />
+              className="w-full bg-transparent text-lg font-display font-semibold text-foreground placeholder:text-muted-foreground/50 outline-hidden" />
             <FormatToolbar onInsert={(before, after) => {
               const ta = textareaRef.current;
               if (!ta) return;
@@ -376,7 +376,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
             }} />
             <div className={cn("relative", fullScreen && "flex-1")}>
               <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} onPaste={handleContentPaste} aria-autocomplete="list" aria-expanded={wiki.isOpen} onSelect={() => { wiki.textareaProps.onSelect(); slash.refresh(); }} onKeyDown={handleContentKeyDown} placeholder="Treść notatki..." rows={3}
-                className="w-full max-sm:min-h-[35dvh] bg-transparent text-sm max-sm:text-base text-foreground placeholder:text-muted-foreground/50 outline-none resize-none" />
+                className="w-full max-sm:min-h-[35dvh] bg-transparent text-sm max-sm:text-base text-foreground placeholder:text-muted-foreground/50 outline-hidden resize-none" />
               {wiki.popup()}{slash.popup()}
             </div>
             {content.length > 0 && <EditorStats textareaRef={textareaRef} value={content} className="block text-2xs text-muted-foreground" />}
@@ -393,7 +393,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
                       title={off ? "Przywróć rozpoznanie" : "Zignoruj — tekst zostanie bez zmian"}
                       onClick={() => toggleIgnored(t.key)}
                       onKeyDown={(e) => { if (e.key === "Backspace" || e.key === "Delete") { e.preventDefault(); toggleIgnored(t.key); } }}
-                      className={cn("pressable inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                      className={cn("pressable inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-primary",
                         off ? "border-border text-muted-foreground line-through" : "border-primary/40 bg-primary/10 text-primary-ink hover:bg-primary/15")}>
                       <Icon className="w-3 h-3 shrink-0" aria-hidden />
                       <span>{d.label}</span>
@@ -443,7 +443,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
             {labels.length > 0 && (
               <div className="flex gap-1 flex-wrap">
                 {labels.map((l) => (
-                  <button key={l} type="button" onClick={() => toggleLabel(l)} aria-label={`Usuń etykietę ${l}`} className="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"><Badge variant="secondary" className="text-2xs cursor-pointer">{l} ×</Badge></button>
+                  <button key={l} type="button" onClick={() => toggleLabel(l)} aria-label={`Usuń etykietę ${l}`} className="rounded-md outline-hidden focus-visible:ring-2 focus-visible:ring-ring"><Badge variant="secondary" className="text-2xs cursor-pointer">{l} ×</Badge></button>
                 ))}
               </div>
             )}
@@ -461,7 +461,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
             {/* Jeden rząd narzędzi z „Zamknij” — kolory pod ikoną palety, lista zadań jako przełącznik. */}
             <div className={cn("flex gap-2 pt-1", fullScreen ? "items-center sticky bottom-0 z-10 -mx-4 mt-auto border-t border-border/60 bg-inherit px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2" : "items-end")}>
               {/* Na telefonie narzędzia przewijają się w jednym rzędzie, a „Zapisz” stoi po prawej, pod kciukiem. */}
-              <div className={cn("flex min-w-0 flex-1 items-center gap-1", fullScreen ? "flex-nowrap overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0" : "flex-wrap")}>
+              <div className={cn("flex min-w-0 flex-1 items-center gap-1", fullScreen ? "flex-nowrap overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden *:shrink-0" : "flex-wrap")}>
                 <IconButton size="sm" tone={showChecklist ? "active" : "muted"} onClick={() => setShowChecklist(!showChecklist)}
                   title="Lista zadań" aria-label="Lista zadań" aria-pressed={showChecklist}>
                   <ListChecks className="w-4 h-4" />
@@ -506,12 +506,12 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
                     <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Etykiety</p>
                     <div className="flex gap-1 flex-wrap">
                       {allLabels.map((l) => (
-                        <button key={l} type="button" onClick={() => toggleLabel(l)} aria-pressed={labels.includes(l)} className="rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"><Badge variant={labels.includes(l) ? "default" : "outline"} className="cursor-pointer text-xs">{l}</Badge></button>
+                        <button key={l} type="button" onClick={() => toggleLabel(l)} aria-pressed={labels.includes(l)} className="rounded-md outline-hidden focus-visible:ring-2 focus-visible:ring-ring"><Badge variant={labels.includes(l) ? "default" : "outline"} className="cursor-pointer text-xs">{l}</Badge></button>
                       ))}
                     </div>
                     <div className="flex gap-1.5">
                       <input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleCreateLabel()}
-                        placeholder="Nowa etykieta..." className="flex-1 text-xs max-sm:text-base bg-muted/60 border border-border rounded-lg px-2.5 py-1.5 outline-none focus:ring-1 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground" />
+                        placeholder="Nowa etykieta..." className="flex-1 text-xs max-sm:text-base bg-muted/60 border border-border rounded-lg px-2.5 py-1.5 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground" />
                       <IconButton size="sm" tone="primary" onClick={handleCreateLabel} aria-label="Dodaj etykietę">
                         <Plus className="w-3.5 h-3.5" />
                       </IconButton>
@@ -544,7 +544,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
                         value={parentId ?? ""}
                         onChange={(e) => setParentId(e.target.value || null)}
                         aria-label="Notatka nadrzędna"
-                        className="w-full rounded-lg border border-border bg-muted/60 px-2 py-1.5 text-sm text-foreground outline-none focus:ring-1 focus:ring-primary/30"
+                        className="w-full rounded-lg border border-border bg-muted/60 px-2 py-1.5 text-sm text-foreground outline-hidden focus:ring-1 focus:ring-primary/30"
                       >
                         <option value="">Poziom główny</option>
                         {parentOptions.map((o) => <option key={o.id} value={o.id}>{o.title.trim() || "Bez tytułu"}</option>)}

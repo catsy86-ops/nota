@@ -78,7 +78,7 @@ export function EmptyState({ view, search, elsewhere, onGo }: { view: View; sear
                 key={e.key}
                 type="button"
                 onClick={() => onGo(e.view)}
-                className="text-sm font-medium rounded-full border border-border/60 bg-muted/40 px-3 py-1 text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="text-sm font-medium rounded-full border border-border/60 bg-muted/40 px-3 py-1 text-foreground hover:bg-muted focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 {elsewhere![e.key]} w {e.name}
               </button>

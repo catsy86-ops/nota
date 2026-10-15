@@ -15,7 +15,7 @@ interface BrushBarProps {
   onPattern: () => void;
 }
 
-const focusRing = "outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const focusRing = "outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
 
 const sameBrush = (a: Brush, b: Brush) => a.kind === b.kind && (a.kind !== "type" || (b.kind === "type" && a.id === b.id));
 
@@ -68,7 +68,7 @@ export function BrushBar({ types, brush, onBrush, onEditType, onAddType, onPatte
   return (
     <div ref={scroller} onScroll={measure}
       className={cn("flex gap-2 overflow-x-auto py-1.5 -mx-4 px-4 sm:-mx-1 sm:px-1 sm:flex-wrap sm:overflow-visible",
-        moreRight && "[mask-image:linear-gradient(to_right,black_calc(100%-2.5rem),transparent)] sm:[mask-image:none]")}>
+        moreRight && "mask-[linear-gradient(to_right,black_calc(100%-2.5rem),transparent)] sm:mask-none")}>
       <button type="button" onClick={onPattern}
         className={cn("pressable shrink-0 flex items-center gap-1.5 px-3 h-12 rounded-2xl border border-border/60 bg-card hover:bg-muted text-sm font-medium font-display", focusRing)}>
         <Repeat className="w-4 h-4" /> Cykl

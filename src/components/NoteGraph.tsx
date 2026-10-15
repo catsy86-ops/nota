@@ -164,7 +164,7 @@ export default function NoteGraph({ notes, onOpenNote }: Props) {
               role="link"
               tabIndex={0}
               aria-label={`${n.title} — ${n.degree} powiązań`}
-              className="cursor-pointer outline-none"
+              className="cursor-pointer outline-hidden"
               opacity={isDim(n.id) ? 0.25 : 1}
               onClick={() => onOpenNote(n.id)}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpenNote(n.id); } }}

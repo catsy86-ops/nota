@@ -81,7 +81,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
               {patterns.map((p) => (
                 <li key={p.id} className="flex items-center gap-1">
                   <button type="button" onClick={() => setSteps(p.steps)}
-                    className="pressable flex-1 min-w-0 text-left px-3 py-2 rounded-xl border border-border/60 bg-card/50 hover:bg-muted text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                    className="pressable flex-1 min-w-0 text-left px-3 py-2 rounded-xl border border-border/60 bg-card/50 hover:bg-muted text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                     <span className="block font-medium truncate">{p.name}</span>
                     <span className="block text-2xs text-muted-foreground font-mono truncate">
                       {p.steps.map((s) => (s ? typesById.get(s)?.short ?? "?" : "–")).join(" ")}
@@ -98,7 +98,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
 
         <fieldset className="min-w-0">
           <legend className="text-sm font-medium mb-2">Kolejne dni cyklu ({steps.length})</legend>
-          <div aria-live="polite" className="min-h-[2.75rem] flex flex-wrap gap-1 p-2 rounded-xl bg-muted/50">
+          <div aria-live="polite" className="min-h-11 flex flex-wrap gap-1 p-2 rounded-xl bg-muted/50">
             {steps.length === 0 && <span className="text-sm text-muted-foreground self-center px-1">{TAP[0].toUpperCase() + TAP.slice(1)} zmiany poniżej, po kolei</span>}
             {steps.map((s, i) => {
               const t = s ? typesById.get(s) : undefined;
@@ -113,17 +113,17 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
           <div className="flex flex-wrap gap-1.5 mt-2">
             {types.filter((t) => t.kind !== "absence").map((t) => (
               <button key={t.id} type="button" onClick={() => setSteps((s) => [...s, t.id])} aria-label={`Dodaj do cyklu: ${t.name}`}
-                className="pressable h-9 coarse:h-11 px-3 rounded-xl text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="pressable h-9 coarse:h-11 px-3 rounded-xl text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                 style={{ backgroundColor: t.color, color: shiftInk(t.color) }}>
                 + {t.short}
               </button>
             ))}
             <button type="button" onClick={() => setSteps((s) => [...s, null])} aria-label="Dodaj do cyklu: wolne"
-              className="pressable h-9 coarse:h-11 px-3 rounded-xl border border-dashed border-border text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              className="pressable h-9 coarse:h-11 px-3 rounded-xl border border-dashed border-border text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
               + Wolne
             </button>
             <button type="button" onClick={() => setSteps((s) => s.slice(0, -1))} disabled={!steps.length} aria-label="Usuń ostatni dzień cyklu"
-              className="pressable h-9 coarse:h-11 px-3 rounded-xl text-muted-foreground hover:bg-muted disabled:opacity-40 outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              className="pressable h-9 coarse:h-11 px-3 rounded-xl text-muted-foreground hover:bg-muted disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
               <Delete className="w-4 h-4" />
             </button>
           </div>
@@ -137,7 +137,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
           <div className="min-w-0 space-y-1.5">
             <Label htmlFor="pattern-range">Na okres</Label>
             <select id="pattern-range" value={range} onChange={(e) => setRange(Number(e.target.value))}
-              className="h-10 w-full rounded-md border border-input bg-background px-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              className="h-10 w-full rounded-md border border-input bg-background px-2 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
               {RANGES.map((r, i) => <option key={r.label} value={i}>{r.label}</option>)}
             </select>
           </div>
@@ -165,7 +165,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
           <Input id="pattern-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="np. Mój system 12 h" />
         </div>
 
-        <DialogFooter className="sticky bottom-0 -mx-1 bg-background/95 px-1 pt-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] backdrop-blur-sm">
+        <DialogFooter className="sticky bottom-0 -mx-1 bg-background/95 px-1 pt-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] backdrop-blur-xs">
           <Button type="submit" disabled={!valid}>Nałóż cykl</Button>
         </DialogFooter>
       </form>

@@ -107,11 +107,11 @@ export default function ReviewWalkthrough({ queue, onArchive, onTrash, onFinish,
         ) : (
           <div className="space-y-4">
             <div className="rounded-xl border border-border/70 bg-muted/30 p-4 border-l-4 border-l-primary/50">
-              <p className="font-display text-base font-semibold leading-snug break-words">
+              <p className="font-display text-base font-semibold leading-snug wrap-break-word">
                 {current.note.title.trim() || "Bez tytułu"}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">{age(current.note)}</p>
-              <p className="mt-3 text-sm text-foreground/80 break-words line-clamp-5">{preview(current.note)}</p>
+              <p className="mt-3 text-sm text-foreground/80 wrap-break-word line-clamp-5">{preview(current.note)}</p>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <Button variant="outline" onClick={keep}><Check className="w-4 h-4 mr-1.5" />Zostaw <kbd className="ml-1.5 font-mono text-2xs opacity-60">K</kbd></Button>

@@ -118,13 +118,13 @@ export function FocusMode({ open, onOpenChange, initialTitle = "", initialConten
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Tytuł…"
-            className="w-full bg-transparent text-2xl font-display font-bold focus:outline-none placeholder:text-muted-foreground/40"
+            className="w-full bg-transparent text-2xl font-display font-bold focus:outline-hidden placeholder:text-muted-foreground/40"
           />
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Pisz w skupieniu… nic Cię nie rozprasza."
-            className="w-full min-h-[40vh] bg-transparent text-base leading-relaxed focus:outline-none resize-none placeholder:text-muted-foreground/40"
+            className="w-full min-h-[40vh] bg-transparent text-base leading-relaxed focus:outline-hidden resize-none placeholder:text-muted-foreground/40"
           />
         </div>
 

@@ -49,7 +49,7 @@ function MasteryStrip() {
                       aria-pressed={on}
                       onClick={() => setPicked(on ? null : t.id)}
                       // Komórka cienka, cel dotyku wysoki — palec trafia bez celowania.
-                      className="group -my-2 min-w-0 flex-1 py-2 focus-visible:outline-none"
+                      className="group -my-2 min-w-0 flex-1 py-2 focus-visible:outline-hidden"
                     >
                       <span
                         className={cn(

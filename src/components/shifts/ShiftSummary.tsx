@@ -56,7 +56,7 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
           </p>
         </div>
         <button type="button" onClick={() => setYearOpen(true)} aria-label="Podsumowanie roku"
-          className="pressable shrink-0 flex items-center gap-1.5 h-9 coarse:h-11 px-3 rounded-xl border border-border/60 bg-background hover:bg-muted text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          className="pressable shrink-0 flex items-center gap-1.5 h-9 coarse:h-11 px-3 rounded-xl border border-border/60 bg-background hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
           <CalendarRange className="w-4 h-4" aria-hidden /> Rok
         </button>
       </div>
@@ -105,7 +105,7 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
 
       {/* Bieżące ustawienia w jednej linii — pola są w oknie „Ustawienia grafiku”. */}
       <button type="button" onClick={onOpenSettings} aria-label="Ustawienia grafiku"
-        className="pressable w-full flex items-center gap-2 border-t border-border/50 pt-3 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+        className="pressable w-full flex items-center gap-2 border-t border-border/50 pt-3 text-left text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
         <span className="flex-1 min-w-0 text-muted-foreground truncate">
           {[
             hourlyRate > 0 ? `${formatMoney(hourlyRate)}/h` : "bez stawki",
@@ -225,7 +225,7 @@ function ReceiptLine({ label, hours, amount }: { label: ReactNode; hours: string
       <span className="min-w-0 shrink">{label}</span>
       <span aria-hidden className="flex-1 min-w-4 translate-y-[-0.2em] border-b border-dotted border-muted-foreground/50" />
       <span className="shrink-0">{hours}</span>
-      {amount !== undefined && <span className="shrink-0 w-[6.5rem] text-right font-semibold">{amount}</span>}
+      {amount !== undefined && <span className="shrink-0 w-26 text-right font-semibold">{amount}</span>}
     </li>
   );
 }

@@ -356,7 +356,7 @@ function RecoveryCodeStep({ code, onClose }: { code: string; onClose: () => void
       <p className="text-sm text-muted-foreground">
         To jedyny raz, kiedy widzisz ten kod. Zapisz go poza urządzeniem (wydruk, menedżer haseł). Kto go zna, może odblokować Twoje notatki.
       </p>
-      <p data-testid="recovery-code" className="select-all rounded-lg border border-border bg-muted/40 px-3 py-3 text-center font-mono text-sm tracking-wider break-words">{code}</p>
+      <p data-testid="recovery-code" className="select-all rounded-lg border border-border bg-muted/40 px-3 py-3 text-center font-mono text-sm tracking-wider wrap-break-word">{code}</p>
       <div className="flex gap-2">
         <Button type="button" variant="outline" size="sm" onClick={copy}><Copy className="w-3.5 h-3.5 mr-1.5" />Kopiuj</Button>
         <Button type="button" variant="outline" size="sm" onClick={download}><Download className="w-3.5 h-3.5 mr-1.5" />Pobierz .txt</Button>

@@ -131,7 +131,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
                 return (
                   <button key={id ?? "free"} type="button" role="radio" aria-checked={active} data-type-radio
                     tabIndex={active ? 0 : -1} onClick={() => pickType(id)}
-                    className={cn("pressable h-10 coarse:h-11 px-3 rounded-xl border text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                    className={cn("pressable h-10 coarse:h-11 px-3 rounded-xl border text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
                       active ? "border-transparent" : "border-border/60 bg-card/50 hover:bg-muted",
                       active && !t && "bg-foreground text-background")}
                     style={active && t ? { backgroundColor: t.color, color: shiftInk(t.color) } : undefined}>
@@ -218,7 +218,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
           <div className="space-y-1.5">
             <Label htmlFor="day-note">Notatka</Label>
             <textarea id="day-note" value={note} onChange={(e) => setNote(e.target.value)} rows={2} placeholder="np. zastępstwo za Kasię"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none" />
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring resize-none" />
           </div>
 
           <DialogFooter>

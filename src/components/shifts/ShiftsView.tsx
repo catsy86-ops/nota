@@ -52,7 +52,7 @@ const NO_REMINDERS = new Map<string, Occurrence[]>();
 
 const shortDate = (key: string) => format(parseDayKey(key), "d MMM", { locale: pl });
 
-const navButton = "pressable shrink-0 w-10 h-10 coarse:w-11 coarse:h-11 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring";
+const navButton = "pressable shrink-0 w-10 h-10 coarse:w-11 coarse:h-11 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
 
 /**
  * Grafik zmian. Widok tylko składa części: stan Grafiku żyje w
@@ -264,7 +264,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           {([["month", "Miesiąc"], ["week", "Tydzień"]] as const).map(([id, text]) => (
             <button key={id} type="button" aria-pressed={layout === id} onClick={() => setLayout(id)}
               className={cn(
-                "pressable h-9 coarse:h-10 px-3.5 rounded-[0.65rem] text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "pressable h-9 coarse:h-10 px-3.5 rounded-[0.65rem] text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
                 layout === id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
               )}>
               {text}
@@ -275,12 +275,12 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           <div className="flex flex-wrap items-center gap-1">
             {weekStart !== thisWeek && (
               <button type="button" onClick={() => setWeekStart(thisWeek)}
-                className="pressable h-9 coarse:h-10 px-3 rounded-xl text-sm font-medium text-primary-ink hover:bg-primary/10 outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                className="pressable h-9 coarse:h-10 px-3 rounded-xl text-sm font-medium text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                 Ten tydzień
               </button>
             )}
             <button type="button" onClick={copyWeek}
-              className="pressable flex items-center gap-1.5 h-9 coarse:h-10 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              className="pressable flex items-center gap-1.5 h-9 coarse:h-10 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
               <CalendarRange className="w-4 h-4" /> Skopiuj ten tydzień na następny
             </button>
           </div>
@@ -292,10 +292,10 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           aria-label={isWeek ? "Poprzedni tydzień" : "Poprzedni miesiąc"} className={navButton}>
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <h2 className="min-w-0 sm:min-w-[12rem] text-center">
+        <h2 className="min-w-0 sm:min-w-48 text-center">
           <button type="button" onClick={() => (isWeek ? setWeekStart(thisWeek) : setMonth(startOfMonth(new Date())))}
             title={isWeek ? "Wróć do bieżącego tygodnia" : "Wróć do bieżącego miesiąca"}
-            className={cn("pressable w-full h-10 coarse:h-11 truncate font-display font-bold text-lg px-3 rounded-xl hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring", !isWeek && "capitalize")}>
+            className={cn("pressable w-full h-10 coarse:h-11 truncate font-display font-bold text-lg px-3 rounded-xl hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring", !isWeek && "capitalize")}>
             {isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl })}
           </button>
         </h2>
@@ -327,11 +327,11 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           </p>
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => setEditingType("new")}
-              className="pressable h-10 coarse:h-11 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              className="pressable h-10 coarse:h-11 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
               Dodaj rodzaj zmiany
             </button>
             <button type="button" onClick={() => { addDefaultShiftTypes(); setBrush({ kind: "type", id: DEFAULT_SHIFT_TYPES[0].id }); }}
-              className="pressable h-10 coarse:h-11 px-4 rounded-xl border border-border/60 hover:bg-muted text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring">
+              className="pressable h-10 coarse:h-11 px-4 rounded-xl border border-border/60 hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
               Przywróć startowe
             </button>
           </div>
@@ -351,7 +351,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         {clip && <span className="font-medium"> Schowek: {typesById.get(clip.type)?.name ?? "wpis"}{clip.note ? " z notatką" : ""}.</span>}
         {!moveHintSeen && (
           <button type="button" onClick={dismissMoveHint}
-            className="ml-1 inline-flex items-center rounded-md px-1.5 py-0.5 coarse:py-2 font-medium text-primary-ink hover:bg-primary/10 outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            className="ml-1 inline-flex items-center rounded-md px-1.5 py-0.5 coarse:py-2 font-medium text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
             Rozumiem
           </button>
         )}
@@ -390,11 +390,11 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
 
       <div className="flex flex-wrap justify-end gap-1 -mt-2">
         <button type="button" onClick={exportCsv}
-          className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
           <FileSpreadsheet className="w-4 h-4" /> Karta czasu (.csv)
         </button>
         <button type="button" onClick={exportIcs}
-          className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
           <CalendarArrowDown className="w-4 h-4" /> Do kalendarza (.ics)
         </button>
       </div>

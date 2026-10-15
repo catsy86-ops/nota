@@ -93,7 +93,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
           </motion.button>
         )}
       </PopoverTrigger>
-      <PopoverContent className="w-auto max-w-[18.5rem] max-h-[var(--radix-popover-content-available-height)] overflow-y-auto p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
+      <PopoverContent className="w-auto max-w-74 max-h-(--radix-popover-content-available-height) overflow-y-auto p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
         <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Przypomnienie</p>
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Szybkie terminy">
           {presets().map((p) => (
@@ -122,7 +122,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className="text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 text-foreground"
+            className="text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground"
           />
         </div>
         <div className="flex items-center gap-2">
@@ -131,7 +131,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
             id={`${uid}-repeat`}
             value={repeat}
             onChange={(e) => setRepeat(e.target.value as ReminderRepeat)}
-            className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 text-foreground"
+            className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground"
           >
             {REPEAT_OPTIONS.map((r) => (
               <option key={r} value={r}>{REMINDER_REPEAT_LABELS[r]}</option>
@@ -148,7 +148,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
               min={timestamp !== null ? dateInputValue(timestamp) : undefined}
               onChange={(e) => setUntilText(e.target.value)}
               aria-describedby={`${uid}-until-hint`}
-              className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 outline-none focus:ring-1 focus:ring-primary/30 text-foreground"
+              className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground"
             />
             {untilText && (
               <button type="button" onClick={() => setUntilText("")} aria-label="Bez końca serii" className="p-1 rounded text-muted-foreground hover:text-foreground">

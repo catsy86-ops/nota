@@ -107,7 +107,7 @@ export function WikiLink({ title, heading = null, exists, onWikiClick }: Props) 
           onClick={(e) => e.stopPropagation()}
           data-wiki-preview=""
           className={cn(
-            "z-[70] w-72 max-w-[calc(100vw-1.5rem)] rounded-lg border border-border/70 bg-popover text-popover-foreground shadow-lg outline-none",
+            "z-70 w-72 max-w-[calc(100vw-1.5rem)] rounded-lg border border-border/70 bg-popover text-popover-foreground shadow-lg outline-hidden",
             "border-l-[3px] border-l-primary/60 px-3 py-2.5 text-left",
             "duration-fast ease-out-soft data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
           )}
@@ -117,7 +117,7 @@ export function WikiLink({ title, heading = null, exists, onWikiClick }: Props) 
               <p className="font-display text-sm font-semibold leading-snug text-foreground truncate">{target.title.trim() || "Bez tytułu"}</p>
               {lines.length > 0 ? (
                 <div className="mt-1.5 space-y-0.5 text-xs leading-relaxed text-foreground/75" data-wiki-preview-body="">
-                  {lines.map((l, i) => <p key={i} className="line-clamp-2 break-words">{plain(l)}</p>)}
+                  {lines.map((l, i) => <p key={i} className="line-clamp-2 wrap-break-word">{plain(l)}</p>)}
                 </div>
               ) : (
                 <p className="mt-1.5 text-xs italic text-muted-foreground">Pusta notatka.</p>
@@ -125,7 +125,7 @@ export function WikiLink({ title, heading = null, exists, onWikiClick }: Props) 
               <button
                 type="button"
                 onClick={() => { setOpen(false); onWikiClick?.(target_); }}
-                className="pressable mt-2 inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary-ink hover:bg-primary/20 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="pressable mt-2 inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary-ink hover:bg-primary/20 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               >
                 Otwórz <ArrowUpRight className="h-3 w-3" aria-hidden />
               </button>
@@ -136,7 +136,7 @@ export function WikiLink({ title, heading = null, exists, onWikiClick }: Props) 
               <button
                 type="button"
                 onClick={handleCreate}
-                className="pressable mt-2 inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary-ink hover:bg-primary/20 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="pressable mt-2 inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary-ink hover:bg-primary/20 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <FilePlus2 className="h-3.5 w-3.5" aria-hidden /> Utwórz notatkę „{title}”
               </button>

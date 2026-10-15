@@ -54,7 +54,7 @@ export function NoteBoard({ headers, children }: { headers: BoardHeader[]; child
         aria-hidden
         data-board-sticky
         data-stuck={stuck || undefined}
-        className="sticky top-[var(--app-header-h,0px)] [html.header-hidden_&]:top-0 z-[25] h-0 transition-[top] duration-300 ease-out motion-reduce:transition-none pointer-events-none"
+        className="sticky top-(--app-header-h,0px) [html.header-hidden_&]:top-0 z-25 h-0 transition-[top] duration-300 ease-out motion-reduce:transition-none pointer-events-none"
       >
         <div
           className={cn(
