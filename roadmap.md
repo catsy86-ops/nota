@@ -1011,7 +1011,7 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 
 ### Biblioteki
 - [x] Radix w obrębie major (`npm update`) + pełne e2e; `lucide-react` 0.462 → 1.x (sprawdzić zmienione nazwy). ✅ 12 paczek `@radix-ui/*` na najnowsze w swoim majorze; `lucide-react` 1.57 — importy na nazwy kanoniczne (15 aliasów, m.in. `Trash2`→`Trash`, `Loader2`→`LoaderCircle`, `Filter`→`Funnel`); ikony bez `aria-*` dostają `aria-hidden`.
-- [ ] `sonner` 1.7 → 2 po fazie 1 (własne nadpisania w `index.css:681-695`; sprawdzić changelog).
+- [x] `sonner` 1.7 → 2 po fazie 1 (własne nadpisania w `index.css:681-695`; sprawdzić changelog). ✅ 2.0.8 bez zmian w kodzie — używane API i atrybuty `data-sonner-*` zostały; e2e i zrzuty dymków zielone.
 - Nie teraz: `react-day-picker` 10, vite 8 (Tailwind 4, `tailwind-merge` 3 i React 19 zrobione w 3.3). `recharts` 3 + shadcn Chart tylko przy N4.
 - Komponenty shadcn: tak — Input OTP (parowanie, PIN skarbca), Toggle Group (grupy segmentowe), Breadcrumb (podstrony), Chart (N4); nie — Sidebar, Carousel; Drawer/vaul zależnie od D5; Command już jest.
 
