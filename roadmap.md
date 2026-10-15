@@ -904,7 +904,7 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 
 ### Faza 5 — testy i QA mobilnego
 - [x] 5.1 Projekty Playwright: Pixel 7 + **WebKit/iPhone** (dziś tylko Desktop Chrome + `test.use` w `mobile.spec.ts`); smoke @mobile na obu. ✅ zrobione w planie UI 2026-10-15, punkt 2.8 (`iphone-14`, `pixel-7`, `npm run test:e2e:mobile`).
-- [ ] 5.2 e2e: pasek zbiorczy mieści się w 390 px, „wstecz” zamyka warstwy, brak overflow poziomego na każdej trasie (skrypt z audytu), cele dotyku ≥44 px (pomiar).
+- [x] 5.2 e2e: pasek zbiorczy mieści się w 390 px, „wstecz” zamyka warstwy, brak overflow poziomego na każdej trasie (skrypt z audytu), cele dotyku ≥44 px (pomiar). ✅ 2026-10-15: `e2e/mobile-layout.spec.ts`; wyłapał przewijany pasek zbiorczy (70 px akcji poza ekranem) — naprawione zawijaniem. Cele dotyku: `e2e/touch-targets.spec.ts` (1.4).
 - [ ] 5.3 QA na prawdziwym telefonie (lista kontrolna): klawiatura w kompozytorze, haptyka, gesty, przewijanie z paskiem adresu, instalacja PWA.
 
 ### Do decyzji użytkownika

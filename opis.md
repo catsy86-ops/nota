@@ -787,6 +787,28 @@ prawdziwy iOS — nie odtwarza klawiatury ekranowej ani `visualViewport` iPhone'
 
 ---
 
+## Wspólne — układ telefonu bez przewijania w bok, pasek zbiorczy
+
+**Co robi.** Pasek zbiorczy (po zaznaczeniu notatek) na telefonie zawija akcje w drugi rząd, zamiast chować archiwum
+i kosz za przewijaniem w bok. Test pilnuje, że żadna trasa nie przewija się w bok przy 320 i 390 px i że „wstecz”
+zamyka edytor notatki.
+
+**Gdzie jest.** `src/components/BulkActionBar.tsx` (`max-sm:flex-wrap max-sm:justify-center`, separatory ukryte na
+telefonie), `e2e/mobile-layout.spec.ts`.
+
+**Jak działa i dlaczego.** Przy celach dotyku 44 px dziesięć akcji potrzebuje ~440 px, a pasek na 390 px ma ~374 px —
+przewijany w bok pasek ukrywał 70 px akcji bez żadnej wskazówki. Od `sm` pasek zostaje jednorzędowy. Test przewijania
+pomija elementy wewnątrz kontenerów z własnym `overflow-x` (paski pigułek) i wypisuje pierwsze trzy winne elementy.
+
+**Ograniczenia i pułapki.** Trasy z parametrem (folder, etykieta) nie są w pętli testu.
+
+**Testy.** `e2e/mobile-layout.spec.ts` (320/390 px: 9 tras bez przewijania w bok; pasek zbiorczy bez przewijania;
+„wstecz” zamyka edytor), `e2e/templates-bulk.spec.ts`, `e2e/mobile.spec.ts`.
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Notatki — skróty z ikony aplikacji (PWA)
 
 **Co robi.** Przytrzymanie ikony zainstalowanej aplikacji pokazuje skróty: Nowa notatka, Wpis z budowy, Grafik,
