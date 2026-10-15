@@ -962,7 +962,7 @@ najbardziej zaległe pytania (do 10). Gdy na dziś nic nie ma, Quiz mówi, kiedy
 `mergeIn` nie cofa nowszej karty), `src/lib/study/study.test.ts`, `e2e/study.spec.ts` („powtórki: pytania z rundy
 wracają następnego dnia…” — zegar przestawiony na następny dzień).
 
-**Commit.** — (2026-10-15).
+**Commit.** `82b7366` (2026-10-15).
 
 ---
 
@@ -1170,3 +1170,46 @@ z etykietą `budowa` albo wydrukować / zapisać jako PDF.
 **Testy.** `src/lib/study/report.test.ts`, e2e „raport budowy z godzinami z Grafiku…” i „karta budowy…”.
 
 **Commity.** D6 `d73d951`, adres i inwestor w raporcie D4b `e3096c4` (2026-10-15).
+
+---
+
+## Praca → Dziennik: raport do szefa i grupy w WhatsApp
+
+**Co robi.** W oknie „Raport z budowy” zapisujesz odbiorców: szefa (imię i numer WhatsApp) i/lub grupę (nazwa,
+opcjonalnie link zaproszenia). Potem jednym stuknięciem:
+- **„Szefowi”** otwiera czat WhatsApp z szefem z gotowym tekstem raportu — zostaje tylko „Wyślij”.
+- **„Do grupy”** otwiera systemowe „Udostępnij” z tekstem i zdjęciami — w WhatsApp wybierasz grupę. Gdy przeglądarka
+  nie ma udostępniania (komputer), tekst trafia do schowka, a link zaproszenia otwiera grupę — wklejasz.
+Odbiorców zmienia przycisk „Odbiorcy” (na telefonie ikona). Bez odbiorców jest jeden przycisk „WhatsApp: dodaj szefa
+lub grupę”.
+
+**Gdzie jest.**
+- `src/lib/study/boss.ts`: `Boss`, `WaGroup`, `normalizePhone` (+48, 0048, 9 cyfr → `48…`), `formatPhone`,
+  `cleanBoss`, `normalizeGroupLink` (tylko `chat.whatsapp.com/…`), `cleanGroup`, `whatsappUrl` (`wa.me/<numer>?text=`,
+  przycięcie do 3500 znaków na granicy linii z dopiskiem „raport skrócony”).
+- `src/lib/study/report.ts`: `reportWhatsApp` — tytuł i dni jako `*pogrubienie*` zamiast nagłówków markdown.
+- `src/lib/study/yStudy.ts`: klucze `boss` i `waGroup` w mapie `studyMeta`, pola `boss`/`group` w `StudyDump` i
+  `StudyState`, `setBoss`/`setGroup`; `replaceAll` i `mergeIn` je przenoszą.
+- `src/lib/study/store.ts`: `saveBoss(name, phone)`, `saveGroup(name, link)` (pusty numer/nazwa usuwa, zły → `false`).
+- `src/components/study/JournalReport.tsx`: `sendToBoss`, `sendToGroup`, formularz `RecipientsForm`.
+
+**Jak działa i dlaczego.**
+- Aplikacja nie ma serwera, więc nie wysyła sama — otwiera WhatsApp, a wysyła użytkownik. Oficjalne API (WhatsApp
+  Cloud API) wymaga konta firmowego, serwera i tokenu, którego nie wolno trzymać w aplikacji na telefonie; nieoficjalne
+  klienty (np. serwery MCP na whatsmeow) łamią regulamin WhatsApp i grożą blokadą numeru — świadomie nie.
+- `wa.me` otwiera tylko czat z osobą (numer), nie grupę — dlatego grupa idzie przez `navigator.share`, który przy okazji
+  niesie zdjęcia (te same pliki co „Udostępnij”, do 10). Link zaproszenia grupy otwiera czat grupy, ale nie wstawia tekstu.
+- Odbiorcy są w dokumencie Yjs (`studyMeta`), więc są na każdym sparowanym telefonie i w kopii zapasowej (sekcja `study`).
+- Na telefonie przyciski bez imienia/nazwy (nie mieszczą się obok siebie); pełna nazwa zostaje w `aria-label`.
+- Pole linku bez `type="url"`: link bez `https://` zatrzymałaby walidacja przeglądarki, a `normalizeGroupLink` go przyjmuje.
+
+**Ograniczenia i pułapki.**
+- Zdjęcia nie idą przez „Szefowi” (`wa.me` przenosi tylko tekst) — toast podpowiada „Do grupy”/„Udostępnij”.
+- Długi raport (np. miesiąc) w czacie z szefem jest przycinany; pełny tekst: „Kopiuj tekst” albo „Udostępnij”.
+- Numer szefa i link grupy trafiają do synchronizacji z własnymi urządzeniami i do kopii — nigdzie dalej.
+
+**Testy.** `src/lib/study/boss.test.ts`, `src/lib/study/report.test.ts` („reportWhatsApp…”),
+`src/lib/study/yStudy.test.ts` („szef: zapis przechodzi na drugi telefon i do kopii…”),
+`e2e/report-whatsapp.spec.ts` (walidacja, czat z szefem, udostępnienie do grupy, odświeżenie; grupa bez udostępniania).
+
+**Commit.** `364279d` (2026-10-15).

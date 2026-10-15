@@ -957,6 +957,8 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 - [x] D6c „Do notatki” (etykieta `budowa`, te same klucze zdjęć).
 - [x] D6d PDF: widok do druku (`@media print`). ✅ 2026-10-15: `lib/study/report.ts` (`buildJournalReport`, `reportBody`/`reportText`, `workOn` — zmiana z Grafiku z odchyleniem, nieobecność jako „Grafik: Urlop”; godziny tylko z dni z wpisami), okno `JournalReport.tsx` („Raport” w nagłówku dziennika; budowa z filtra albo ostatnia, dzień jej ostatniego wpisu; Dziś/Wczoraj/7 dni/Ten miesiąc/Wybierz), podgląd jak kartka = układ wydruku; zdjęcia (do 10) wczytane z góry do `navigator.share`, bez share → „Kopiuj tekst”; `reportToNote` (etykieta `budowa`); wydruk w `#report-print` + `html.printing-report` (index.css). Vitest 1007/1007, e2e study 15/15.
 
+- [x] D6e Raport do szefa i grupy w WhatsApp (2026-10-15, prośba użytkownika): odbiorcy w `studyMeta` (`boss`, `waGroup`), szef przez `wa.me` z gotowym tekstem, grupa przez `navigator.share` ze zdjęciami (fallback: schowek + link zaproszenia). Bez serwera i bez nieoficjalnych klientów WhatsApp.
+
 ### D7 — powiązania z nauką
 - [ ] Problem z tematem → „Ćwicz teraz”; karta tematu pokazuje ostatni problem; pytania tematu należne dziś (po N3).
 
