@@ -68,9 +68,9 @@ test("przytrzymanie kafla zaznacza go i pokazuje pasek zbiorczy @mobile", async 
 
 test("Przypomnienia mają własną zakładkę w dolnym pasku, Archiwum jest w „Więcej” @mobile", async ({ page }) => {
   const nav = page.getByRole("navigation");
-  await nav.getByRole("button", { name: "Przypomnienia" }).click();
+  await nav.getByRole("button", { name: "Terminy" }).click();
   await expect(page.getByRole("heading", { name: "Przypomnienia", level: 1 })).toBeVisible();
-  await expect(nav.getByRole("button", { name: "Przypomnienia" })).toHaveAttribute("aria-current", "page");
+  await expect(nav.getByRole("button", { name: "Terminy" })).toHaveAttribute("aria-current", "page");
 
   await page.getByRole("button", { name: "Więcej", exact: true }).click();
   await page.getByRole("button", { name: "Archiwum" }).last().click();
@@ -203,4 +203,19 @@ test("zwykłe okno na telefonie jest wyśrodkowane z marginesem 1 rem i zaokrąg
   expect(box.y).toBeGreaterThanOrEqual(16);
   expect(box.y + box.height).toBeLessThanOrEqual(844 - 16);
   expect(await dialog.evaluate((el) => parseFloat(getComputedStyle(el).borderBottomLeftRadius))).toBeGreaterThan(0);
+});
+
+test("dolny pasek: podpisy 12 px mieszczą się w kolumnach także na 320 px (2.2) @mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  const nav = page.getByRole("navigation");
+  for (const name of ["Notatki", "Dziś", "Terminy", "Więcej"]) {
+    const btn = nav.getByRole("button", { name, exact: true });
+    const { fontSize, overflow } = await btn.evaluate((el) => {
+      const label = el.querySelector("span:last-of-type") as HTMLElement;
+      const b = el.getBoundingClientRect(), l = label.getBoundingClientRect();
+      return { fontSize: getComputedStyle(label).fontSize, overflow: l.left < b.left - 0.5 || l.right > b.right + 0.5 };
+    });
+    expect(fontSize, name).toBe("12px");
+    expect(overflow, `${name} wystaje poza kolumnę`).toBe(false);
+  }
 });

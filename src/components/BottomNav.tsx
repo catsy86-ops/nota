@@ -39,7 +39,8 @@ const slots = [
 ] as const;
 
 const slotsRight = [
-  { key: "reminders" as View, label: "Przypomnienia", Icon: Bell },
+  // „Terminy” (D3): pełne „Przypomnienia” nie mieściło się w kolumnie przy podpisach 12 px; nagłówek widoku bez zmian.
+  { key: "reminders" as View, label: "Terminy", Icon: Bell },
 ] as const;
 
 export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, dark = false, onToggleTheme, onImport, onGoFilter, search = "" }: BottomNavProps) {
@@ -220,19 +221,29 @@ function NavItem({ active, current = active, label, onClick, children, badge, bu
         aria-current={current ? "page" : undefined}
         {...buttonProps}
         className={cn(
-          "pressable relative w-full flex flex-col items-center justify-center gap-0.5 py-2 rounded-xl text-2xs font-display outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
-          active ? "text-primary-ink font-semibold" : "text-muted-foreground font-medium hover:text-foreground"
+          "pressable relative w-full flex flex-col items-center justify-center gap-1 py-2 rounded-xl text-xs font-display outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+          // Aktywna: kolor marki, pogrubiony podpis i grubsza kreska ikony — rozpoznawalna też bez koloru.
+          active ? "text-primary-ink font-bold [&_svg]:stroke-[2.5]" : "text-muted-foreground font-medium hover:text-foreground"
         )}
       >
         {active && (
-          <motion.span
-            layoutId="bottom-nav-active"
-            className="absolute inset-x-3 top-1 h-8 rounded-xl bg-primary/15"
-            transition={spring.snap}
-          />
+          <>
+            {/* Pasek akcentu na górnej krawędzi paska nawigacji — widać go kątem oka, także w słońcu. */}
+            <motion.span
+              layoutId="bottom-nav-bar"
+              aria-hidden
+              className="absolute inset-x-5 -top-3 h-[3px] rounded-b-full bg-primary"
+              transition={spring.snap}
+            />
+            <motion.span
+              layoutId="bottom-nav-active"
+              aria-hidden
+              className="absolute inset-x-3 top-1 h-8 rounded-xl bg-primary/20"
+              transition={spring.snap}
+            />
+          </>
         )}
         <span className="relative z-10">{children}</span>
-        {/* Bez ucinania: „Przypomnienia” jest o kilka px szersze niż kolumna, ale obok są wąskie „Więcej” i FAB bez podpisu. */}
         <span className="relative z-10 whitespace-nowrap leading-none tracking-tight">{label}</span>
         {!!badge && (
           <span className="absolute top-0.5 right-1/4 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-2xs font-semibold flex items-center justify-center z-10">

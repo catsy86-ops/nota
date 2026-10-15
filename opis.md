@@ -142,6 +142,32 @@ pada z 36 i 32 px).
 
 ---
 
+## Wspólne — dolny pasek nawigacji (telefon)
+
+**Co robi.** Dolny pasek: Notatki, Dziś, „+”, Terminy, Więcej. Podpisy mają 12 px. Aktywna pozycja ma trzy
+znaki naraz — kolor marki z pogrubionym podpisem i grubszą kreską ikony, pigułkę za ikoną i pasek akcentu wiszący
+z górnej krawędzi paska — więc widać ją kątem oka i bez rozróżniania kolorów. Pigułka i pasek przejeżdżają
+sprężyną do nowej pozycji.
+
+**Gdzie jest.** `src/components/BottomNav.tsx`: `slots`, `slotsRight`, `NavItem` (`layoutId="bottom-nav-active"`
+i `"bottom-nav-bar"` w `LayoutGroup id="bottom-nav"`).
+
+**Jak działa i dlaczego.**
+- „Terminy” zamiast „Przypomnienia” (decyzja D3): pełne słowo nie mieściło się w kolumnie przy 12 px. Nagłówek
+  widoku, pasek boczny i adres (`/przypomnienia`) zostają bez zmian.
+- Grubsza kreska ikony przez `[&_svg]:stroke-[2.5]` na aktywnym przycisku — bez osobnych wariantów ikon.
+- Pasek akcentu ma `-top-3`, czyli zaczyna się dokładnie na górnej krawędzi paska nawigacji (przycisk siedzi
+  12 px niżej, bo lista ma `items-end` i wysokość 64 px).
+
+**Ograniczenia i pułapki.** Wysokość paska jest w px (64), więc w trybie budowa nie rośnie; rosną podpisy i ikony.
+
+**Testy.** `e2e/mobile.spec.ts` („dolny pasek: podpisy 12 px mieszczą się w kolumnach także na 320 px (2.2)”,
+„Przypomnienia mają własną zakładkę…” — teraz po nazwie „Terminy”), też w projektach iPhone 14 i Pixel 7.
+
+**Commit.** `HASHNV` (2026-10-15).
+
+---
+
 ## Wspólne — klawiatura ekranowa i dolny pasek
 
 **Co robi.** Na telefonie podczas pisania (otwarta klawiatura, fokus w polu tekstowym) dolny pasek nawigacji zjeżdża

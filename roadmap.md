@@ -995,7 +995,7 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 ### Faza 2 — średnie (M)
 - [x] (poza planem, 2026-10-15) Style aplikacji: Plan, Neon, Zorza, Miedź obok Zeszytu (galeria w Wygląd, przejście kołem, własne kroje nagłówków) + mikrointerakcje framer-motion (przełączniki z `layoutId`, licznik w nagłówku, ikona motywu). Opis w `opis.md`.
 - [x] 2.1 „Tryb budowa” (rękawice, słońce): `html[data-site]` — tekst 112,5%, cele 52–56 px (`--tap`), mocniejszy `muted-foreground`/krawędzie, bez kratki, toasty z „Cofnij” 8 s (D1). ✅ Wył./wł./auto (`prefers-contrast: more`) w Wygląd; `--tap` 54 px przez `.tap-target::after`; `site.css` nad każdym stylem.
-- [ ] 2.2 Dolny pasek: podpisy 12 px, wyraźniejsza aktywna pozycja (D3).
+- [x] 2.2 Dolny pasek: podpisy 12 px, wyraźniejsza aktywna pozycja (D3). ✅ „Terminy”, pigułka `primary/20`, pasek akcentu u góry (`layoutId`), pogrubiony podpis i kreska ikony; test 320 px.
 - [ ] 2.3 Komputer `xl`: Grafik i Kalendarz w dwóch kolumnach z przyklejonym panelem.
 - [ ] 2.4 Komputer: Dziennik ~48 rem + przyklejony panel filtrów i otwartych problemów.
 - [ ] 2.5 `ui/responsive-dialog.tsx` (Dialog na `desk:`, arkusz na telefonie) i migracja ~8 okien (D2).
