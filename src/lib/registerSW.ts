@@ -1,21 +1,8 @@
 /**
  * Jedyne miejsce rejestracji service workera aplikacji.
- * Nigdy nie rejestruje w dev, w iframe ani w podglądzie Lovable.
+ * Nigdy nie rejestruje w dev ani w iframe (`?sw=off` też wyłącza).
  */
 const SW_URL = "/sw.js";
-
-function isBlockedHost(hostname: string): boolean {
-  return (
-    hostname.startsWith("id-preview--") ||
-    hostname.startsWith("preview--") ||
-    hostname === "lovableproject.com" ||
-    hostname.endsWith(".lovableproject.com") ||
-    hostname === "lovableproject-dev.com" ||
-    hostname.endsWith(".lovableproject-dev.com") ||
-    hostname === "beta.lovable.dev" ||
-    hostname.endsWith(".beta.lovable.dev")
-  );
-}
 
 async function unregisterAppSW() {
   if (!("serviceWorker" in navigator)) return;
@@ -91,7 +78,7 @@ export function registerServiceWorker() {
   const inIframe = window.self !== window.top;
   const swOff = new URLSearchParams(window.location.search).get("sw") === "off";
 
-  if (!import.meta.env.PROD || inIframe || swOff || isBlockedHost(window.location.hostname)) {
+  if (!import.meta.env.PROD || inIframe || swOff) {
     void unregisterAppSW();
     return;
   }

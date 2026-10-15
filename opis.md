@@ -381,6 +381,29 @@ framer-motion do startu. Wejściowy JS: 400,3 → 372,4 KB gzip; próg w `e2e/bu
 
 ---
 
+## Wspólne — budowanie i service worker (bez Lovable)
+
+**Co robi.** Aplikacja nie ma już śladów szablonu Lovable: w budowaniu nie działa wtyczka `lovable-tagger`, service
+worker rejestruje się na każdym hoście produkcyjnym, a offline obsługuje każdą nawigację.
+
+**Gdzie jest.** `vite.config.ts` (lista wtyczek, `workbox.runtimeCaching` → `html-navigations`), `src/lib/registerSW.ts`
+(`registerServiceWorker`), `package.json` (bez `lovable-tagger`).
+
+**Jak działa i dlaczego.**
+- `registerServiceWorker` pomija rejestrację tylko w dev, w ramce (iframe) i przy `?sw=off` — wtedy wyrejestrowuje
+  własnego workera. Lista hostów podglądu Lovable (`*.lovableproject.com`, `*.beta.lovable.dev`, `preview--…`)
+  zniknęła razem z `isBlockedHost`.
+- Bez wyjątku `/~oauth` w `navigateFallbackDenylist` i w regule `html-navigations` — to trasa logowania Lovable
+  Cloud, której aplikacja nie ma.
+
+**Ograniczenia i pułapki.** Wzmianki o Lovable w `roadmap.md` to historia zadań, nie kod.
+
+**Testy.** `e2e/pwa.spec.ts` (rejestracja i aktywacja workera, offline), typecheck, build.
+
+**Commit.** `HASHLV` (2026-10-15).
+
+---
+
 ## Wspólne — automatyczny audyt dostępności (axe)
 
 **Co robi.** Test e2e sprawdza narzędziem axe-core pięć głównych widoków (Notatki, Przypomnienia, Kalendarz, Grafik,

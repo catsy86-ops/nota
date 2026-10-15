@@ -1,7 +1,6 @@
 import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 import { execSync } from "child_process";
 
@@ -30,7 +29,7 @@ function preloadTextFont(): Plugin {
 }
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(() => ({
   define: {
     __APP_BUILD__: JSON.stringify(buildId()),
   },
@@ -44,7 +43,6 @@ export default defineConfig(({ mode }) => ({
   plugins: [
     react(),
     preloadTextFont(),
-    mode === "development" && componentTagger(),
     VitePWA({
       registerType: "autoUpdate",
       injectRegister: null,
@@ -72,7 +70,6 @@ export default defineConfig(({ mode }) => ({
         skipWaiting: false,
         importScripts: ["sw-notifications.js"],
         navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/~oauth/],
         runtimeCaching: [
           {
             urlPattern: ({ url }) => /\/(barlow-condensed|fraunces|bricolage-grotesque|unbounded-latin)[^/]*\.woff2$/.test(url.pathname),
@@ -80,8 +77,7 @@ export default defineConfig(({ mode }) => ({
             options: { cacheName: "skin-fonts", expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 } },
           },
           {
-            urlPattern: ({ request, url }) =>
-              request.mode === "navigate" && !url.pathname.startsWith("/~oauth"),
+            urlPattern: ({ request }) => request.mode === "navigate",
             handler: "NetworkFirst",
             options: {
               cacheName: "html-navigations",
