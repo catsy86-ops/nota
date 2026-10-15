@@ -1,6 +1,7 @@
 import { splitWikiTarget } from "@/lib/wikiLinks";
 import { onHeadingRequest, requestHeading, scrollToHeading, takePendingHeading } from "@/lib/wikiHeading";
-import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { useOriginFromTile } from "@/hooks/useOriginFromTile";
 import { m as motion } from "framer-motion";
 import { ChevronRight, Copy, CornerDownRight, FilePlusCorner, Link2, Maximize2, Minimize2, Minus, Pencil, Plus, X } from "lucide-react";
 import { ancestorsOf, canSetParent, childrenOf, parentIdOf } from "@/lib/subpages";
@@ -61,31 +62,6 @@ const ZOOM_DEFAULT = 1.1;
 
 /** Skala wejścia/wyjścia — przy origin w kaflu daje kilkadziesiąt px drogi „z kafla”. */
 const ENTER_SCALE = 0.94;
-
-/**
- * Czytnik rośnie z kafla, z którego go otwarto, i do niego wraca: origin
- * transformacji = środek kafla we współrzędnych panelu. Tylko transform
- * (bez `layoutId` — wspólny układ z kartą gryzłby się z dnd-kit i kosztował
- * pomiar przy każdym otwarciu). Kafel poza ekranem lub brak kafla (paleta,
- * inny widok) — zostaje środek panelu.
- */
-function useOriginFromTile(panelRef: React.RefObject<HTMLDivElement | null>, noteId: string) {
-  useLayoutEffect(() => {
-    const panel = panelRef.current;
-    const tile = document.querySelector(`[data-note-id-wrap="${CSS.escape(noteId)}"]`);
-    if (!panel) return;
-    const t = tile?.getBoundingClientRect();
-    if (!t || t.bottom < 0 || t.top > window.innerHeight) {
-      panel.style.transformOrigin = "";
-      return;
-    }
-    // Środek panelu nie zależy od skali wokół środka, więc pomiar w trakcie wejścia jest wierny.
-    const p = panel.getBoundingClientRect();
-    const x = t.left + t.width / 2 - (p.left + p.width / 2) + panel.offsetWidth / 2;
-    const y = t.top + t.height / 2 - (p.top + p.height / 2) + panel.offsetHeight / 2;
-    panel.style.transformOrigin = `${Math.round(x)}px ${Math.round(y)}px`;
-  }, [panelRef, noteId]);
-}
 
 function escRx(s: string) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 

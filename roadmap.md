@@ -898,7 +898,7 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 ### Faza 4 — „premium” (po fazie 2)
 - [x] 4.1 Swipe: w prawo przypnij, w lewo archiwizuj (kosz w arkuszu akcji), podpowiedź przy pierwszych 3 razach. ✅ 2026-10-15 (decyzja użytkownika): podpisy w tle przy 3 pierwszych gestach (`lib/swipeHint.ts`), „Przypięto” z „Cofnij”, w Archiwum lewo = przywróć.
 - [x] 4.2 Haptyka różnicowana (tap / success / warn / selection) + odhaczenie w kaflu, upuszczenie przeciągniętego kafla, wejście w zaznaczanie; quiz Nauki z haptyką i serią dni.
-- [ ] 4.3 Przejście kafel → edytor jako shared element (dziś skok), nagłówek z cieniem dopiero po przewinięciu, zakładka koloru w nagłówku edytora.
+- [x] 4.3 Przejście kafel → edytor jako shared element (dziś skok), nagłówek z cieniem dopiero po przewinięciu, zakładka koloru w nagłówku edytora. ✅ 2026-10-15: origin z kafla (`hooks/useOriginFromTile.ts`, wspólny z czytnikiem), bez `layoutId`; cień przez `onScrollCapture`; pasek `--note-ink` u góry okna.
 - [ ] 4.4 Skróty PWA „Szukaj”, „Nowa lista”; Share Target dla pliku/obrazu (po decyzji).
 - [x] 4.5 Nauka: nagłówek bez powtórki „Nauka”, etykiety przy 18 pigułkach, podpisy przycisków kart, cyfry tabelaryczne zamiast „1” jak „l”.
 
@@ -1004,8 +1004,8 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 - [x] 2.8 Playwright: projekty iPhone 14 (webkit) i Pixel 7 dla `@smoke`/`@mobile`. ✅ Tylko `@mobile` (smoke z komputera nie pasuje do telefonu); cały `mobile.spec.ts` oznaczony; SW zablokowany w tych projektach; `npm run test:e2e:mobile`.
 
 ### Faza 3 — duże (L)
-- [ ] 3.1 Kafel → edytor i swipe (= 4.1, 4.3) — po teście charakteryzującym i konwersji `NoteCard.tsx` do UTF-8 LF.
-- [ ] 3.2 Wirtualizacja siatki dopiero przy >500 notatek (decyzja z planu mobile).
+- [x] 3.1 Kafel → edytor i swipe (= 4.1, 4.3) — po teście charakteryzującym i konwersji `NoteCard.tsx` do UTF-8 LF. ✅ `NoteCard.tsx` UTF-8 LF bez NUL (zbudowany JS identyczny), swipe prawo = przypnij / lewo = archiwizuj, edytor rośnie z kafla.
+- [x] 3.2 Wirtualizacja siatki dopiero przy >500 notatek (decyzja z planu mobile). ✅ Decyzja 2026-10-15: nie teraz — zostaje `content-visibility` + odchudzony kafel; wracamy przy realnych >500 notatkach.
 - [x] 3.3 Tailwind v4 + React 19 (D4). ✅ React 19 + react-day-picker 9, Tailwind 4 (`@tailwindcss/postcss`, `@config`), `tw-animate-css`, `tailwind-merge` 3; wygląd bez zmian (zrzuty v3/v4 ≤ 0,02%). Tokeny w `@theme` — osobno, jeśli trzeba.
 - [x] 3.4 Paczka: `LazyMotion` + `m` (~−25–35 KB gzip), `y-webrtc` tylko przy synchronizacji, progi w `bundle.spec.ts` w dół. ✅ `LazyMotion strict` + `domMax` w osobnej paczce, bez `vendor-motion`; wejściowy JS 400,3 → 372,4 KB, próg 376 KB. `y-webrtc` już był dynamiczny.
 

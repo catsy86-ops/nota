@@ -817,6 +817,42 @@ usuwał. Przy pierwszych 3 gestach tło obok ikony podpisuje akcję („Przypnij
 lewo archiwizuje; podpisy tylko na początku”, „przytrzymanie uchwytu … ” — ruch na uchwycie nie przypina ani nie
 archiwizuje).
 
+**Commit.** `1d1811c` (2026-10-15).
+
+---
+
+## Notatki — otwarcie pełnego edytora z kafla
+
+**Co robi.** Pełny edytor (na telefonie każde otwarcie notatki, na komputerze „Pełny ekran”) rośnie z kafla, który
+stuknięto, i przy zamknięciu do niego wraca — zamiast pojawiać się na środku ekranu. U góry okna jest pasek koloru
+notatki, jak na kaflu. Tytuł i pasek narzędzi tworzą nagłówek, który dostaje cień dopiero wtedy, gdy treść pod nim
+jest przewinięta.
+
+**Gdzie jest.**
+- `src/hooks/useOriginFromTile.ts`: `useOriginFromTile(panel, noteId, active, cssScale)` — wspólny z czytnikiem
+  (`NoteReader.tsx`, wcześniej lokalna funkcja).
+- `src/components/NoteCard.tsx`: stan `editorPanel` (ref-callback na `DialogContent`), `editorScrolled`,
+  `onScrollCapture` na oknie, nagłówek `data-editor-header` / `data-scrolled` w `renderEditor(true)`,
+  `data-note-color` na oknie.
+
+**Jak działa i dlaczego.**
+- Origin transformacji = środek kafla (`[data-note-id-wrap]`) we współrzędnych okna. Okno animuje `tw-animate-css`
+  (`ui/dialog.tsx`), więc hook nadpisuje w stylu zmienne `--tw-enter/exit-scale` (0,9) i zeruje
+  `--tw-enter/exit-translate-x/y` — okno rośnie z kafla zamiast wjeżdżać z góry. Bez `layoutId`, bo wspólny układ z
+  kartą gryzłby się z dnd-kit.
+- Element okna trzymany w stanie, nie w `useRef`: treść `Dialog` montuje się w portalu Radix render po otwarciu,
+  więc zwykły ref był pusty w chwili pomiaru.
+- Cień: zdarzenie `scroll` nie bąbelkuje, więc `onScrollCapture` na oknie łapie przewinięcie każdego przewijanego
+  elementu (pole treści, lista, podgląd); nagłówek jest `sticky`, gdy przewija się samo okno.
+- Pasek koloru to ta sama reguła `[data-note-color]` / `--note-ink` co na kaflu (3 px tła u góry).
+
+**Ograniczenia i pułapki.**
+- Kafel poza ekranem (np. otwarcie z palety lub z innego widoku) — okno rośnie ze środka.
+- Przy ograniczonym ruchu działa jak dotąd (animacje okien wyłącza globalne ustawienie).
+
+**Testy.** `e2e/editor-open.spec.ts` (origin, brak przesunięcia, skala, kolor, cień po przewinięciu i znika po powrocie
+na górę), `e2e/reader.spec.ts` (czytnik na wspólnym hooku), `e2e/mobile.spec.ts`, `e2e/editing.spec.ts`.
+
 **Commit.** — (2026-10-15).
 
 ---

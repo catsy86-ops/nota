@@ -49,6 +49,7 @@ import { useNotesMeta } from "@/hooks/NotesProvider";
 import { useNoteViewActions } from "@/hooks/NoteViewActionsContext";
 import { useLatch } from "@/hooks/useLatch";
 import { useDraftAutosave } from "@/hooks/useDraftAutosave";
+import { useOriginFromTile } from "@/hooks/useOriginFromTile";
 import { useLiveNoteText } from "@/hooks/useLiveNoteText";
 import { useWikiAutocomplete } from "@/hooks/useWikiAutocomplete";
 import { useSlashMenu } from "@/hooks/useSlashMenu";
@@ -94,6 +95,12 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   const [showPreview, setShowPreview] = useState(false);
   const [fullEditor, setFullEditor] = useState(false);
   const editorMounted = useLatch(isEditing && fullEditor);
+  // Pełny edytor rośnie z kafla (jak czytnik); nagłówek dostaje cień, gdy coś pod nim przewinięto.
+  // Element w stanie (ref-callback): treść okna montuje się w portalu Radix render po otwarciu.
+  const [editorPanel, setEditorPanel] = useState<HTMLDivElement | null>(null);
+  useOriginFromTile(editorPanel, note.id, isEditing && fullEditor, 0.9);
+  const [editorScrolled, setEditorScrolled] = useState(false);
+  useEffect(() => { if (!isEditing || !fullEditor) setEditorScrolled(false); }, [isEditing, fullEditor]);
   const previewMounted = useLatch(!!previewImage);
   const deleteMounted = useLatch(showDeleteConfirm);
   const drawingMounted = useLatch(showDrawing);
@@ -525,6 +532,15 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           if (!e.currentTarget.contains(e.relatedTarget as Node | null)) commitDraft();
         }}
       >
+        {/* Pełny ekran: tytuł i pasek narzędzi jako nagłówek — cień dopiero po przewinięciu treści. */}
+        <div
+          data-editor-header={full ? "" : undefined}
+          data-scrolled={full && editorScrolled ? "" : undefined}
+          className={full ? cn(
+            "sticky top-0 z-10 -mx-4 -mt-1 space-y-2 bg-background px-4 pt-1 pb-2 transition-shadow duration-fast sm:-mx-6 sm:px-6",
+            editorScrolled && "shadow-elevation-1",
+          ) : "space-y-2"}
+        >
         {/* W oknie `pr-*` zostawia miejsce na ✕ w prawym górnym rogu. */}
         <TitleField spellCheck={prefs.spellcheck} autoFocus value={editTitle} onChange={setEditTitle} onEnter={() => textareaRef.current?.focus()} className={cn("w-full bg-transparent font-display font-semibold text-foreground outline-hidden", full && "text-2xl pr-8 coarse:pr-12")} placeholder="Tytuł" />
         {findOpen && <FindReplaceBar value={editContent} onChange={setEditContent} textareaRef={textareaRef} onClose={() => setFindOpen(false)} />}
@@ -547,6 +563,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           >
             {full ? <Minimize2 className="w-3.5 h-3.5" /> : <Expand className="w-3.5 h-3.5" />}
           </button>
+        </div>
         </div>
 
         {/* `relative`: tu kotwiczy się lista podpowiedzi `[[` (pozycja karetki). */}
@@ -974,6 +991,11 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
       {/* Dialogi montowane przy pierwszym otwarciu — 150 kart nie trzyma czterech nieużywanych okien. */}
       {editorMounted && <Dialog open={isEditing && fullEditor} onOpenChange={(open) => { if (!open) handleSave(); }}>
         <DialogContent
+          ref={setEditorPanel}
+          // Pasek koloru notatki u góry okna (ta sama reguła `--note-ink` co na kaflu).
+          data-note-color={note.color}
+          // Przewinięcie czegokolwiek w oknie (treść, lista, podgląd) — zdarzenie `scroll` nie bąbelkuje.
+          onScrollCapture={(e) => setEditorScrolled((e.target as HTMLElement).scrollTop > 0)}
           // Telefon: od krawędzi do krawędzi, bez prześwitu nawigacji; od `sm` okno.
           className="w-full max-w-3xl h-[calc(100dvh-var(--kb-inset,0px))] max-sm:top-0 max-sm:translate-y-0 rounded-none border-0 p-4 pt-[max(1rem,env(safe-area-inset-top))] flex flex-col sm:w-[calc(100vw-2rem)] sm:h-[85vh] sm:rounded-2xl sm:border sm:p-6"
           // Esc przy otwartych podpowiedziach `[[` chowa listę, nie zamyka edytora.
