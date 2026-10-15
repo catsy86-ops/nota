@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Archive, ArrowLeft, ArrowRight, Check, Trash2 } from "lucide-react";
+import { Archive, ArrowLeft, ArrowRight, Check, Trash } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { Note } from "@/hooks/useNotes";
@@ -116,7 +116,7 @@ export default function ReviewWalkthrough({ queue, onArchive, onTrash, onFinish,
             <div className="grid grid-cols-2 gap-2">
               <Button variant="outline" onClick={keep}><Check className="w-4 h-4 mr-1.5" />Zostaw <kbd className="ml-1.5 font-mono text-2xs opacity-60">K</kbd></Button>
               <Button variant="outline" onClick={archive}><Archive className="w-4 h-4 mr-1.5" />Archiwizuj <kbd className="ml-1.5 font-mono text-2xs opacity-60">A</kbd></Button>
-              <Button variant="outline" onClick={trash}><Trash2 className="w-4 h-4 mr-1.5" />Do kosza <kbd className="ml-1.5 font-mono text-2xs opacity-60">D</kbd></Button>
+              <Button variant="outline" onClick={trash}><Trash className="w-4 h-4 mr-1.5" />Do kosza <kbd className="ml-1.5 font-mono text-2xs opacity-60">D</kbd></Button>
               <Button variant="ghost" onClick={skip}>Dalej<ArrowRight className="w-4 h-4 ml-1.5" /></Button>
             </div>
             <div className="flex items-center justify-between text-xs text-muted-foreground">

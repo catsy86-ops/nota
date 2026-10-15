@@ -3,7 +3,7 @@ import { folderProgress } from "@/lib/folderProgress";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
 import {
-  Settings as SettingsIcon, HelpCircle, Tag, Moon, Sun, FolderOpen, Command, History, Trophy, Brain, MoreHorizontal, ChevronDown, Filter, Star,
+  Settings as SettingsIcon, CircleQuestionMark, Tag, Moon, Sun, FolderOpen, Command, RotateCcwClock, Trophy, Brain, Ellipsis, ChevronDown, Funnel, Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotesContext } from "@/hooks/NotesProvider";
@@ -180,7 +180,7 @@ export function AppSidebar({
               {filters.length > 0 && (
                 <div className="pt-5">
                   <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground px-3 mb-2 flex items-center gap-1.5">
-                    <Filter className="w-3 h-3" />
+                    <Funnel className="w-3 h-3" />
                     Filtry
                   </p>
                   <div className="space-y-0.5" data-saved-filters>
@@ -269,7 +269,7 @@ export function AppSidebar({
 
                 {/* Akcje drugorzędne zwinięte — sidebar ma się mieścić na 900 px. */}
                 <SidebarRow
-                  icon={<MoreHorizontal className="w-[18px] h-[18px]" />}
+                  icon={<Ellipsis className="w-[18px] h-[18px]" />}
                   label="Narzędzia"
                   onClick={() => setMoreOpen((v) => !v)}
                   buttonProps={{ "aria-expanded": moreOpen }}
@@ -277,10 +277,10 @@ export function AppSidebar({
                 />
                 {moreOpen && (
                   <div className="space-y-0.5 pl-2">
-                    <SidebarRow icon={<History className="w-[18px] h-[18px]" />} label="Ostatnie akcje" onClick={onOpenActions} />
+                    <SidebarRow icon={<RotateCcwClock className="w-[18px] h-[18px]" />} label="Ostatnie akcje" onClick={onOpenActions} />
                     <SidebarRow icon={<Trophy className="w-[18px] h-[18px]" />} label="Statystyki" onClick={onOpenStats} />
                     <SidebarRow icon={<Brain className="w-[18px] h-[18px]" />} label="Tryb skupienia" onClick={onOpenFocusMode} />
-                    <SidebarRow icon={<HelpCircle className="w-[18px] h-[18px]" />} label="Samouczek" onClick={() => window.dispatchEvent(new CustomEvent("kaczy:tour"))} />
+                    <SidebarRow icon={<CircleQuestionMark className="w-[18px] h-[18px]" />} label="Samouczek" onClick={() => window.dispatchEvent(new CustomEvent("kaczy:tour"))} />
                   </div>
                 )}
                 <InstallAppButton />

@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { AlertTriangle, CalendarRange, Settings2 } from "lucide-react";
+import { TriangleAlert, CalendarRange, Settings2 } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
 import { FTE_OPTIONS, formatDuration, formatHoursShort, formatMoney, leaveBalance, useShifts, type MonthSummary, type PeriodSummary, type SettlementMonths, type WorkSystem } from "@/lib/shifts";
 import { PERIOD_LABELS } from "./labels";
@@ -89,7 +89,7 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
 
       {summary.shortRests.length > 0 && (
         <div role="note" className="flex gap-2.5 rounded-2xl bg-destructive/10 px-3 py-2.5 text-sm">
-          <AlertTriangle className="w-4 h-4 text-destructive shrink-0 mt-0.5" aria-hidden />
+          <TriangleAlert className="w-4 h-4 text-destructive shrink-0 mt-0.5" aria-hidden />
           <p>
             <span className="font-semibold">Za krótki odpoczynek</span>{" "}
             <span className="text-muted-foreground">(mniej niż 11 h przed zmianą): </span>

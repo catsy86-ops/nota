@@ -2,7 +2,7 @@ import { splitWikiTarget } from "@/lib/wikiLinks";
 import { onHeadingRequest, requestHeading, scrollToHeading, takePendingHeading } from "@/lib/wikiHeading";
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronRight, Copy, CornerDownRight, FilePlus2, Link2, Maximize2, Minimize2, Minus, Pencil, Plus, X } from "lucide-react";
+import { ChevronRight, Copy, CornerDownRight, FilePlusCorner, Link2, Maximize2, Minimize2, Minus, Pencil, Plus, X } from "lucide-react";
 import { ancestorsOf, canSetParent, childrenOf, parentIdOf } from "@/lib/subpages";
 import { setParent } from "@/lib/subpageActions";
 import { useNotesContext } from "@/hooks/NotesProvider";
@@ -432,7 +432,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                     className="mt-2 h-8 gap-1.5 px-2 text-xs"
                     onClick={() => { const id = addSubpage(note.id); if (id) onEdit(id); }}
                   >
-                    <FilePlus2 className="w-3.5 h-3.5" />Dodaj podstronę
+                    <FilePlusCorner className="w-3.5 h-3.5" />Dodaj podstronę
                   </Button>
                 )}
                 {canEdit && !note.locked && !present && (parentOptions.length > 0 || currentParent) && (

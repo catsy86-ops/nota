@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { AlertTriangle, FileArchive, FolderOpen, Loader2 } from "lucide-react";
+import { TriangleAlert, FileArchive, FolderOpen, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { ExternalImportStage } from "@/hooks/useImportExport";
@@ -127,7 +127,7 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
           >
             {stage === "reading" ? (
               <p role="status" className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="w-4 h-4 animate-spin" aria-hidden />
+                <LoaderCircle className="w-4 h-4 animate-spin" aria-hidden />
                 Czytam pliki…
               </p>
             ) : (
@@ -150,7 +150,7 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
 
         {error && (
           <p role="alert" className="text-sm text-destructive flex items-start gap-2">
-            <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" aria-hidden />
+            <TriangleAlert className="w-4 h-4 mt-0.5 shrink-0" aria-hidden />
             {error}
           </p>
         )}
@@ -180,7 +180,7 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
               <ul className="space-y-1.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5" aria-label="Ostrzeżenia">
                 {plan.warnings.map((w) => (
                   <li key={w} className="flex items-start gap-2 text-xs text-foreground/90">
-                    <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary-ink" aria-hidden />
+                    <TriangleAlert className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary-ink" aria-hidden />
                     <span>{w}</span>
                   </li>
                 ))}
@@ -206,7 +206,7 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
               <Button type="button" variant="ghost" onClick={onBack} disabled={stage === "saving"}>Wybierz inne pliki</Button>
               <Button type="button" variant="outline" onClick={onClose} disabled={stage === "saving"}>Anuluj</Button>
               <Button type="button" onClick={onConfirm} disabled={importCount === 0 || stage === "saving"}>
-                {stage === "saving" && <Loader2 className="animate-spin" aria-hidden />}
+                {stage === "saving" && <LoaderCircle className="animate-spin" aria-hidden />}
                 {stage === "saving" ? "Zapisuję…" : `Importuj ${importCount}`}
               </Button>
             </>

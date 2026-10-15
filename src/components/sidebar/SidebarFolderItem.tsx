@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
-import { ChevronRight, Palette, Smile, FolderPlus, Pencil, Trash2, Check, X } from "lucide-react";
+import { ChevronRight, Palette, FaceSlightlySmiling, FolderPlus, Pencil, Trash, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Folder, FolderColor } from "@/hooks/useNotes";
 import { folderColorDot } from "@/components/FolderPicker";
@@ -124,14 +124,14 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
                 <Palette className="w-4 h-4 mr-2" />Kolor
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => { setShowEmojiPicker(!showEmojiPicker); setShowColorPicker(false); }}>
-                <Smile className="w-4 h-4 mr-2" />Emoji
+                <FaceSlightlySmiling className="w-4 h-4 mr-2" />Emoji
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => { focusInput.current = true; setAddingSub(true); setExpanded(true); }}>
                 <FolderPlus className="w-4 h-4 mr-2" />Dodaj podfolder
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => onDelete(folder.id)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
-                <Trash2 className="w-4 h-4 mr-2" />Usuń folder
+                <Trash className="w-4 h-4 mr-2" />Usuń folder
               </DropdownMenuItem>
             </SidebarRowMenu>
         }

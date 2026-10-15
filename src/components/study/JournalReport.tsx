@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Clock, Copy, FilePlus2, MapPin, Printer, Share2 } from "lucide-react";
+import { Clock, Copy, FilePlusCorner, MapPin, Printer, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -204,7 +204,7 @@ export function JournalReportDialog({
               <Copy className="mr-1.5 h-4 w-4" aria-hidden />Kopiuj tekst
             </Button>
             <Button variant="outline" onClick={toNote} disabled={empty} className="coarse:h-11">
-              <FilePlus2 className="mr-1.5 h-4 w-4" aria-hidden />Do notatki
+              <FilePlusCorner className="mr-1.5 h-4 w-4" aria-hidden />Do notatki
             </Button>
             <Button variant="outline" onClick={() => setPrinting(true)} disabled={empty} className={cn("coarse:h-11", canShare && "col-span-2 sm:col-span-1")}>
               <Printer className="mr-1.5 h-4 w-4" aria-hidden />Drukuj / PDF

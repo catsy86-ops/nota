@@ -1,6 +1,6 @@
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { AlertTriangle, ChevronRight, Info, Lightbulb, ShieldAlert } from "lucide-react";
+import { TriangleAlert, ChevronRight, Info, Lightbulb, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Fragment, memo, type ReactNode } from "react";
 import { WikiLink } from "@/components/WikiLinkPreview";
@@ -17,7 +17,7 @@ interface MarkdownRendererProps {
 const CALLOUT_STYLE: Record<CalloutKind, { box: string; icon: typeof Info; label: string }> = {
   info: { box: "border-sky-500/50 bg-sky-500/10", icon: Info, label: "Informacja" },
   tip: { box: "border-emerald-500/50 bg-emerald-500/10", icon: Lightbulb, label: "Wskazówka" },
-  warning: { box: "border-amber-500/60 bg-amber-500/10", icon: AlertTriangle, label: "Uwaga" },
+  warning: { box: "border-amber-500/60 bg-amber-500/10", icon: TriangleAlert, label: "Uwaga" },
   danger: { box: "border-red-500/60 bg-red-500/10", icon: ShieldAlert, label: "Ważne" },
   toggle: { box: "border-border/60 bg-muted/30", icon: ChevronRight, label: "Szczegóły" },
 };

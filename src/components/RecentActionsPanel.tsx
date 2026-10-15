@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
-import { Archive, ArrowUpRight, History, RotateCcw, Search, Trash2 } from "lucide-react";
+import { Archive, ArrowUpRight, RotateCcwClock, RotateCcw, Search, Trash } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { canUndo, clearActions, relativeTime, undoAction, useActionHistory, type ActionKind } from "@/lib/actionHistory";
 
-const META: Record<ActionKind, { icon: typeof Trash2; verb: string; tone: string }> = {
-  trash: { icon: Trash2, verb: "Do kosza", tone: "text-destructive" },
+const META: Record<ActionKind, { icon: typeof Trash; verb: string; tone: string }> = {
+  trash: { icon: Trash, verb: "Do kosza", tone: "text-destructive" },
   archive: { icon: Archive, verb: "Do archiwum", tone: "text-primary-ink" },
 };
 
@@ -66,7 +66,7 @@ export function RecentActionsPanel({ open, onOpenChange, onOpenNote }: Props) {
       <SheetContent side="right" className="w-full sm:max-w-md flex flex-col pb-[env(safe-area-inset-bottom)]">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2 font-display">
-            <History className="w-4 h-4 text-primary-ink" />
+            <RotateCcwClock className="w-4 h-4 text-primary-ink" />
             Ostatnie akcje
           </SheetTitle>
           <SheetDescription>

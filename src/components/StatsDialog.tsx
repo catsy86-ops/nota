@@ -12,7 +12,7 @@ import {
   parseDayKey,
 } from "@/lib/achievements";
 import type { Note } from "@/hooks/useNotes";
-import { Trophy, StickyNote, Pin, Tag, FolderOpen, CheckSquare, RotateCcw, Flame, Network } from "lucide-react";
+import { Trophy, StickyNote, Pin, Tag, FolderOpen, SquareCheckBig, RotateCcw, Flame, Network } from "lucide-react";
 import { lazy, Suspense, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -55,7 +55,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
     { icon: Pin, label: "Przypięte", value: effective.pinnedNotes },
     { icon: Tag, label: "Etykiety", value: effective.totalLabels },
     { icon: FolderOpen, label: "Foldery", value: effective.totalFolders },
-    { icon: CheckSquare, label: "Ukończone listy", value: effective.checklistsCompleted },
+    { icon: SquareCheckBig, label: "Ukończone listy", value: effective.checklistsCompleted },
     { icon: Trophy, label: "Odznaki", value: `${unlocked}/${ACHIEVEMENTS.length}` },
   ];
 

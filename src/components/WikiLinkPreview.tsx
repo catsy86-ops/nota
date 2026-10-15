@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-import { ArrowUpRight, FilePlus2 } from "lucide-react";
+import { ArrowUpRight, FilePlusCorner } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { createNoteWithTitle, lookupWikiTarget, previewLines } from "@/lib/wikiNoteActions";
@@ -138,7 +138,7 @@ export function WikiLink({ title, heading = null, exists, onWikiClick }: Props) 
                 onClick={handleCreate}
                 className="pressable mt-2 inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary-ink hover:bg-primary/20 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <FilePlus2 className="h-3.5 w-3.5" aria-hidden /> Utwórz notatkę „{title}”
+                <FilePlusCorner className="h-3.5 w-3.5" aria-hidden /> Utwórz notatkę „{title}”
               </button>
             </>
           )}

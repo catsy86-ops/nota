@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Archive, Trash2 } from "lucide-react";
+import { Archive, Trash } from "lucide-react";
 import { getConfirmPrefs, setConfirmPref, type ConfirmKey } from "@/lib/confirmPrefs";
 
 interface PendingAction {
@@ -11,8 +11,8 @@ interface PendingAction {
   run: () => void;
 }
 
-const META: Record<ConfirmKey, { heading: string; cta: string; icon: typeof Trash2; tone: string }> = {
-  trash: { heading: "Przenieść do kosza?", cta: "Przenieś do kosza", icon: Trash2, tone: "text-destructive" },
+const META: Record<ConfirmKey, { heading: string; cta: string; icon: typeof Trash; tone: string }> = {
+  trash: { heading: "Przenieść do kosza?", cta: "Przenieś do kosza", icon: Trash, tone: "text-destructive" },
   archive: { heading: "Zarchiwizować?", cta: "Archiwizuj", icon: Archive, tone: "text-primary-ink" },
 };
 

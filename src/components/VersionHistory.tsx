@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { History, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
+import { RotateCcwClock, RotateCcw, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ export function VersionHistory({ versions, onRestore }: VersionHistoryProps) {
             aria-label="Historia wersji"
             className="pressable p-1.5 rounded-full text-muted-foreground hover:bg-foreground/5 transition-colors"
           >
-            <History className="w-4 h-4" />
+            <RotateCcwClock className="w-4 h-4" />
           </button>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="text-xs">Historia wersji ({versions.length})</TooltipContent>
@@ -39,7 +39,7 @@ export function VersionHistory({ versions, onRestore }: VersionHistoryProps) {
         <DialogContent className="sm:max-w-lg max-h-[80dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2">
-              <History className="w-5 h-5" />
+              <RotateCcwClock className="w-5 h-5" />
               Historia wersji
             </DialogTitle>
           </DialogHeader>

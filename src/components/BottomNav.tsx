@@ -1,6 +1,6 @@
 import { forwardRef, useRef, useState } from "react";
 import { motion, LayoutGroup } from "framer-motion";
-import { StickyNote, CalendarDays, Plus, MoreHorizontal, Archive, Trash2, Settings as SettingsIcon, Bell, HelpCircle, History, CalendarRange, BriefcaseBusiness, GraduationCap, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
+import { StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, Settings as SettingsIcon, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, GraduationCap, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
 import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
 import { openJournalSheet } from "@/lib/study/entrySheet";
@@ -139,7 +139,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             ))}
 
             <NavItem active={isMoreActive || moreOpen} current={false} label="Więcej" onClick={() => setMoreOpen(true)} buttonProps={{ "aria-haspopup": "dialog", "aria-expanded": moreOpen }}>
-              <MoreHorizontal className="w-5 h-5" />
+              <Ellipsis className="w-5 h-5" />
             </NavItem>
           </ul>
         </LayoutGroup>
@@ -172,7 +172,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
           </SheetGroup>
           <SheetGroup title="Przejdź do">
             <SheetTile Icon={Archive} label="Archiwum" active={view === "archive"} onClick={() => { onGo("archive"); setMoreOpen(false); }} />
-            <SheetTile Icon={Trash2} label="Kosz" active={view === "trash"} badge={trashCount || undefined} onClick={() => { onGo("trash"); setMoreOpen(false); }} />
+            <SheetTile Icon={Trash} label="Kosz" active={view === "trash"} badge={trashCount || undefined} onClick={() => { onGo("trash"); setMoreOpen(false); }} />
             <SheetTile Icon={CalendarRange} label="Kalendarz" active={view === "calendar"} onPointerDown={() => preloadView("calendar")} onClick={() => { onGo("calendar"); setMoreOpen(false); }} />
             <SheetTile Icon={BriefcaseBusiness} label="Grafik" active={view === "shifts"} onPointerDown={() => preloadView("shifts")} onClick={() => { onGo("shifts"); setMoreOpen(false); }} />
             <SheetTile Icon={GraduationCap} label="Nauka" active={view === "study"} onPointerDown={() => preloadView("study")} onClick={() => { onGo("study"); setMoreOpen(false); }} />
@@ -191,8 +191,8 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             </SheetGroup>
           )}
           <SheetGroup title="Narzędzia">
-            {onOpenActions && <SheetTile Icon={History} label="Ostatnie akcje" onClick={() => { onOpenActions(); setMoreOpen(false); }} />}
-            <SheetTile Icon={HelpCircle} label="Samouczek" onClick={() => { window.dispatchEvent(new CustomEvent("kaczy:tour")); setMoreOpen(false); }} />
+            {onOpenActions && <SheetTile Icon={RotateCcwClock} label="Ostatnie akcje" onClick={() => { onOpenActions(); setMoreOpen(false); }} />}
+            <SheetTile Icon={CircleQuestionMark} label="Samouczek" onClick={() => { window.dispatchEvent(new CustomEvent("kaczy:tour")); setMoreOpen(false); }} />
             {onToggleTheme && <SheetTile Icon={dark ? Sun : Moon} label={dark ? "Tryb jasny" : "Tryb ciemny"} onClick={() => { onToggleTheme(); setMoreOpen(false); }} />}
             {onImport && (
               <ImportExportMenu onImport={onImport} onDone={() => setMoreOpen(false)} align="start">

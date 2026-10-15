@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { motion } from "framer-motion";
-import { Archive, ArchiveRestore, Check, KeyRound, Lock, Pin, RotateCcw, Trash2 } from "lucide-react";
+import { Archive, ArchiveRestore, Check, KeyRound, Lock, Pin, RotateCcw, Trash } from "lucide-react";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -143,7 +143,7 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
           <TileBtn title="Archiwizuj" onClick={stop(() => onArchive(note.id))}><Archive className="w-4 h-4" /></TileBtn>
         ) : null}
         <TileBtn title="Usuń" className="hover:text-destructive" onClick={stop(() => onDelete(note.id))}>
-          <Trash2 className="w-4 h-4" />
+          <Trash className="w-4 h-4" />
         </TileBtn>
       </div>
     </motion.div>

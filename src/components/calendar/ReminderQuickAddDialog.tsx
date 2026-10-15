@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { Repeat, Trash2, StickyNote, Plus, Bell, SkipForward } from "lucide-react";
+import { Repeat, Trash, StickyNote, Plus, Bell, SkipForward } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { searchNotes } from "@/lib/searchNotes";
@@ -248,7 +248,7 @@ export function ReminderQuickAddDialog({
                 onClick={handleDelete}
                 className="flex-1 text-destructive hover:text-destructive"
               >
-                <Trash2 className="w-3.5 h-3.5 mr-1" />
+                <Trash className="w-3.5 h-3.5 mr-1" />
                 {edit?.isSeries ? "Usuń całą serię" : "Usuń termin"}
               </Button>
             </div>

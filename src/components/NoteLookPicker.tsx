@@ -1,4 +1,4 @@
-import { Smile } from "lucide-react";
+import { FaceSlightlySmiling } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { COVER_LABELS, COVER_STYLES, NOTE_COVERS, NOTE_ICONS, type NoteCover } from "@/lib/noteLook";
@@ -21,7 +21,7 @@ export function NoteLookPicker({ icon, cover, onChange }: NoteLookPickerProps) {
           data-tip="Ikona i okładka"
           className={cn("card-action", icon || cover ? "text-primary-ink" : "text-muted-foreground")}
         >
-          {icon ? <span className="text-base leading-none" aria-hidden>{icon}</span> : <Smile className="w-4 h-4" />}
+          {icon ? <span className="text-base leading-none" aria-hidden>{icon}</span> : <FaceSlightlySmiling className="w-4 h-4" />}
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
