@@ -88,7 +88,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={spring.soft}
-        className="fixed bottom-0 inset-x-0 z-40 desk:hidden glass-strong border-t border-border/60 pb-[env(safe-area-inset-bottom)] shadow-elevation-up"
+        className="fixed bottom-0 inset-x-0 z-40 desk:hidden glass-strong border-t border-border/60 pb-[env(safe-area-inset-bottom)] shadow-elevation-up transition-[translate,visibility] duration-200 ease-out motion-reduce:transition-none in-data-typing:translate-y-full in-data-typing:invisible"
       >
         <LayoutGroup id="bottom-nav">
           <ul className="relative grid grid-cols-5 items-end h-[64px] max-w-md mx-auto px-2">

@@ -173,3 +173,18 @@ test.describe("telefon w poziomie", () => {
     await expect(page.getByRole("complementary")).toHaveCount(0);
   });
 });
+
+test("dolny pasek chowa się, gdy klawiatura Androida zmniejsza okno przy pisaniu @mobile", async ({ page }) => {
+  const nav = page.locator("nav").filter({ has: page.getByRole("button", { name: "Więcej", exact: true }) });
+  await expect(nav).toBeVisible();
+  await page.getByRole("button", { name: "Nowa notatka" }).click();
+  await page.getByPlaceholder("Tytuł").focus();
+  // `interactive-widget=resizes-content`: klawiatura zmniejsza całe okno.
+  await page.setViewportSize({ width: 390, height: 500 });
+  await expect(page.locator("html")).toHaveAttribute("data-typing", "");
+  await expect(nav).toBeHidden();
+  // Klawiatura schowana „wstecz”, pole dalej ma fokus — pasek wraca.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.locator("html")).not.toHaveAttribute("data-typing", "");
+  await expect(nav).toBeVisible();
+});

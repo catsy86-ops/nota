@@ -4,7 +4,7 @@ Dokumentacja aktualnego stanu funkcji — co robią, gdzie są w kodzie i jak dz
 Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej opis.
 Zasady prowadzenia: `CLAUDE.md`, sekcja „Dokumentacja techniczna”.
 
-Działy opisane do tej pory: **Wspólne — warstwa UI**, **Nauka** (nagłówek i tablica) i **Nauka → Dziennik budowy**.
+Działy opisane do tej pory: **Wspólne — warstwa UI**, **Wspólne — klawiatura ekranowa**, **Nauka** (nagłówek i tablica) i **Nauka → Dziennik budowy**.
 Pozostałe działy (Notatki, Grafik, Kalendarz, reszta Nauki) dopisuj, gdy zadanie ich dotyczy.
 
 ---
@@ -57,6 +57,45 @@ Ciemny motyw bez zmian. Kontrast liczony skryptem wzorem WCAG; axe dojdzie w pun
 oraz porównaniem zrzutów v3/v4 (6 widoków + arkusz, 390/1440 px, jasny/ciemny).
 
 **Commit.** `544773c` (React 19), `2f5ff5b`, `18e7808`, `12fe855` (Tailwind 4) — 2026-10-15.
+
+---
+
+## Wspólne — klawiatura ekranowa i dolny pasek
+
+**Co robi.** Na telefonie podczas pisania (otwarta klawiatura, fokus w polu tekstowym) dolny pasek nawigacji zjeżdża
+w dół i znika, więc nad klawiaturą zostaje więcej miejsca na tekst. Po schowaniu klawiatury albo wyjściu z pola pasek wraca.
+Pełnoekranowe edytory na iOS trzymają pasek z „Zapisz” nad klawiaturą.
+
+**Gdzie jest.**
+- `src/lib/keyboardInset.ts`: `installKeyboardInset()` (wołane w `src/main.tsx`) i `isTextEntry(el)`.
+- `src/components/BottomNav.tsx`: `motion.nav` z klasami `in-data-typing:translate-y-full in-data-typing:invisible`
+  i przejściem `transition-[translate,visibility]` (bez animacji przy `prefers-reduced-motion`).
+- `src/components/AddNoteBar.tsx`: pełny ekran kompozytora kończy się na `bottom-(--kb-inset,0px)`.
+
+**Jak działa.** Na `<html>` ustawiane są:
+- `--kb-inset` i `data-keyboard` — ile klawiatury zasłania dół (`innerHeight − visualViewport.height − offsetTop`,
+  próg 80 px, poniżej to pasek adresu). Na iOS > 0; na Androidzie 0, bo `interactive-widget=resizes-content`
+  w `index.html` zmniejsza całe okno.
+- `data-typing` — `isTextEntry(document.activeElement)` **i** klawiatura otwarta: `--kb-inset` > 0 (iOS) albo okno
+  niższe o > 80 px od najwyższego widzianego przy tej samej szerokości (Android). Sam fokus nie wystarcza: klawiaturę
+  można schować „wstecz”, a pole zostaje aktywne. Zmiana szerokości (obrót) zeruje wysokość odniesienia.
+- Przeliczenie na `resize`/`scroll` z `visualViewport`, `resize` okna, `focusin` i `focusout` (po `setTimeout 0`,
+  bo przy przejściu między polami `activeElement` chwilę wskazuje `<body>`).
+- `isTextEntry`: `textarea` i `input` tekstowe bez `readOnly`, element `contentEditable`; przyciski, pola wyboru,
+  suwaki itp. nie.
+- Pasek chowa się właściwością CSS `translate`, nie `transform` — `transform` należy do animacji wejścia z `motion`.
+  `invisible` zabiera go z kolejności Tab; przejście `visibility` trzyma go widocznym do końca zjazdu.
+
+**Ograniczenia i pułapki.**
+- Android w trybie `overlays-content` (inne przeglądarki) nie zmienia okna — pasek wtedy zostaje, ale klawiatura i tak go
+  zasłania.
+- Zmniejszenie okna o > 80 px przy fokusie w polu bez zmiany szerokości (np. okno w podziale ekranu) liczy się jako
+  klawiatura. Na komputerze bez znaczenia — dolny pasek jest `desk:hidden`.
+
+**Testy.** `src/lib/keyboardInset.test.ts` (iOS, Android, „wstecz”, obrót, `isTextEntry`), `e2e/mobile.spec.ts`
+„dolny pasek chowa się, gdy klawiatura Androida zmniejsza okno przy pisaniu”.
+
+**Commit.** `HASH` (2026-10-15).
 
 ---
 

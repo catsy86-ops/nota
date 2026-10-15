@@ -982,7 +982,7 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 - D5 Zostaje własny `ui/sheet.tsx`, bez vaul.
 
 ### Faza 1 — szybkie wygrane (S)
-- [ ] 1.1 Dolny pasek chowa się przy klawiaturze na Androidzie (`html[data-typing]` z `focusin`/`visualViewport`; `keyboardInset.ts`, `BottomNav.tsx`, `index.css`).
+- [x] 1.1 Dolny pasek chowa się przy klawiaturze na Androidzie (`html[data-typing]` z `focusin`/`visualViewport`; `keyboardInset.ts`, `BottomNav.tsx`, `index.css`). ✅ `data-typing` = fokus w polu tekstowym i klawiatura otwarta (iOS `--kb-inset` > 0, Android okno niższe o > 80 px od najwyższego przy tej szerokości); pasek zjeżdża przez `translate` + `invisible`.
 - [ ] 1.2 `vh` → `dvh`: `FocusMode.tsx:81`, `DrawingCanvas.tsx:230`, `ImportExternalDialog.tsx:81`, `ShortcutsDialog.tsx:87`, `StatsDialog.tsx:70`, `VersionHistory.tsx:39`, `ShiftSettingsDialog.tsx:33`, `YearSummaryDialog.tsx:33`.
 - [ ] 1.3 `ui/dialog.tsx`/`alert-dialog.tsx` na telefonie: margines, zaokrąglenie, `max-h-[calc(100dvh-2rem)]` z przewijaniem (zależy od D2).
 - [ ] 1.4 Cele dotyku: zatwierdzenia i „⋯” w `SidebarFolderItem`/`SidebarLabelItem`/`SidebarFilterItem`, `ShiftsView.tsx:283,354`, nawigacja `ui/calendar.tsx:26` (`opacity-70`, `coarse:size-11`); e2e mierzący cele (5.2).
