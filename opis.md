@@ -191,7 +191,7 @@ dotyczą okien i paneli, nie widoków — tam szkielet nie jest potrzebny.
 **Testy.** `src/lib/viewPreload.test.ts` (wspólna obietnica, widoki spoza listy), `e2e/view-skeleton.spec.ts`
 (wstrzymana paczka Grafiku → szkielet, potem widok; najechanie na „Kalendarz” pobiera paczkę przed kliknięciem).
 
-**Commit.** `TODO` (2026-10-15).
+**Commit.** `8a5b5da` (2026-10-15).
 
 ---
 
