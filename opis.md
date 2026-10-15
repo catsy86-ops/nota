@@ -1011,7 +1011,7 @@ pierwsza linia opisu — karta ma zostać krótka.
 **Testy.** `src/lib/study/study.test.ts` („ostatni problem tematu: otwarty wygrywa…”), `e2e/study.spec.ts` („problem z
 tematem: karta tematu pokazuje go, „Ćwicz teraz”…”).
 
-**Commit.** — (2026-10-15).
+**Commit.** `95f9c65` (2026-10-15).
 
 ---
 
