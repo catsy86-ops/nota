@@ -1147,7 +1147,7 @@ białym — za mało na ikonę; wersja „ink” przechodzi 3:1 dla ikon i 4,5:1
 **Testy.** `e2e/study.spec.ts` (pigułka tematu filtruje, „Ćwicz teraz” startuje quiz), `e2e/a11y.spec.ts`,
 `e2e/skins.spec.ts`, `e2e/touch-targets.spec.ts`.
 
-**Commit.** — (2026-10-15).
+**Commit.** `b61aba1` (2026-10-15).
 
 ---
 
