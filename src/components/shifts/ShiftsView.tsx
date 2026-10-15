@@ -19,7 +19,8 @@ import { BrushHours } from "./BrushHours";
 import { ShiftMonthGrid } from "./ShiftMonthGrid";
 import { ShiftWeekView } from "./ShiftWeekView";
 import { ShiftDnd, type DayActions, type DropMode } from "./ShiftDnd";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -451,16 +452,16 @@ function TransferChooser({ pending, label, onChoose, onClose }: {
 }) {
   return (
     <Dialog open={pending !== null} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <DialogContent sheet className="max-w-xs">
+      <ResponsiveDialogContent className="max-w-xs">
         <DialogHeader>
           <DialogTitle>Przenieść czy skopiować?</DialogTitle>
           <DialogDescription>{label}</DialogDescription>
         </DialogHeader>
-        <DialogFooter className="gap-2 sm:gap-2">
+        <ResponsiveDialogFooter className="gap-2 sm:gap-2">
           <Button type="button" variant="outline" onClick={() => onChoose("copy")}>Skopiuj</Button>
           <Button type="button" onClick={() => onChoose("move")}>Przenieś</Button>
-        </DialogFooter>
-      </DialogContent>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
     </Dialog>
   );
 }

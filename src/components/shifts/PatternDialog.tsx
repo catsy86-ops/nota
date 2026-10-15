@@ -3,7 +3,8 @@ import { pluralPl } from "@/lib/plural";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Delete, Trash } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,9 +39,9 @@ const PREVIEW_DAYS = 14;
 export function PatternDialog({ open, onOpenChange, ...form }: PatternDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent sheet className="max-w-md max-h-[90dvh] overflow-y-auto">
+      <ResponsiveDialogContent className="max-w-md max-h-[90dvh] overflow-y-auto">
         <PatternForm onOpenChange={onOpenChange} {...form} />
-      </DialogContent>
+      </ResponsiveDialogContent>
     </Dialog>
   );
 }
@@ -165,9 +166,9 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
           <Input id="pattern-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="np. Mój system 12 h" />
         </div>
 
-        <DialogFooter className="sticky bottom-0 -mx-1 bg-background/95 px-1 pt-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] backdrop-blur-xs">
+        <ResponsiveDialogFooter className="sticky bottom-0 -mx-1 bg-background/95 px-1 pt-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] backdrop-blur-xs">
           <Button type="submit" disabled={!valid}>Nałóż cykl</Button>
-        </DialogFooter>
+        </ResponsiveDialogFooter>
       </form>
     </>
   );

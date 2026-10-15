@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { TriangleAlert, Copy, Download, KeyRound, Lock, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +31,7 @@ export function VaultDialog({ kind, onDone }: { kind: VaultUiKind; onDone?: () =
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open && !recoveryCode) vaultUi.close(); }}>
-      <DialogContent
+      <ResponsiveDialogContent
         className="sm:max-w-md"
         // Kod awaryjny widać raz — nie wolno go zamknąć przypadkiem.
         onInteractOutside={(e) => { if (recoveryCode) e.preventDefault(); }}
@@ -54,7 +55,7 @@ export function VaultDialog({ kind, onDone }: { kind: VaultUiKind; onDone?: () =
         ) : (
           <UnlockForm onUnlocked={finish} onRecover={() => setMode("recover")} />
         )}
-      </DialogContent>
+      </ResponsiveDialogContent>
     </Dialog>
   );
 }
@@ -156,14 +157,14 @@ function UnlockForm({ onUnlocked, onRecover }: { onUnlocked: () => void; onRecov
         {wait > 0 && !error && <p role="status" className="text-xs text-muted-foreground">Za dużo błędnych prób — odczekaj {wait} s.</p>}
         {wait > 0 && error && !error.startsWith("Za dużo") && <p role="status" className="text-xs text-muted-foreground">Kolejna próba za {wait} s.</p>}
       </div>
-      <DialogFooter className="gap-2 sm:justify-between">
+      <ResponsiveDialogFooter className="gap-2 sm:justify-between">
         {hasRecovery ? (
           <Button type="button" variant="ghost" size="sm" onClick={onRecover}>Mam kod awaryjny</Button>
         ) : <span />}
         <Button type="submit" disabled={busy || !password || wait > 0}>
           <KeyRound className="w-4 h-4 mr-1.5" />{busy ? "Sprawdzam…" : "Odblokuj"}
         </Button>
-      </DialogFooter>
+      </ResponsiveDialogFooter>
     </form>
   );
 }
@@ -219,9 +220,9 @@ function SetupForm({ onCreated }: { onCreated: (recoveryCode: string | null) => 
         <span>Rozumiem, że zapomnianego hasła nie da się odzyskać.</span>
       </label>
       {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
-      <DialogFooter>
+      <ResponsiveDialogFooter>
         <Button type="submit" disabled={!canSubmit}>{busy ? "Szyfruję…" : "Ustaw hasło"}</Button>
-      </DialogFooter>
+      </ResponsiveDialogFooter>
     </form>
   );
 }
@@ -285,9 +286,9 @@ function ChangeForm({ onChanged }: { onChanged: (recoveryCode: string | null) =>
         <span>Wygeneruj nowy kod awaryjny <span className="text-muted-foreground">— stary przestanie działać.</span></span>
       </label>
       {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
-      <DialogFooter>
+      <ResponsiveDialogFooter>
         <Button type="submit" disabled={!canSubmit}>{busy ? "Przeszyfrowuję…" : "Zmień hasło"}</Button>
-      </DialogFooter>
+      </ResponsiveDialogFooter>
     </form>
   );
 }
@@ -325,10 +326,10 @@ function RecoverForm({ onBack, onDone }: { onBack: () => void; onDone: (recovery
       </div>
       <NewPasswordFields password={password} setPassword={setPassword} confirm={confirm} setConfirm={setConfirm} />
       {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
-      <DialogFooter className="gap-2 sm:justify-between">
+      <ResponsiveDialogFooter className="gap-2 sm:justify-between">
         <Button type="button" variant="ghost" size="sm" onClick={onBack}>Wróć</Button>
         <Button type="submit" disabled={!canSubmit}>{busy ? "Przeszyfrowuję…" : "Ustaw nowe hasło"}</Button>
-      </DialogFooter>
+      </ResponsiveDialogFooter>
     </form>
   );
 }
@@ -365,9 +366,9 @@ function RecoveryCodeStep({ code, onClose }: { code: string; onClose: () => void
         <input type="checkbox" className="mt-1" checked={saved} onChange={(e) => setSaved(e.target.checked)} />
         <span>Zapisałem kod w bezpiecznym miejscu.</span>
       </label>
-      <DialogFooter>
+      <ResponsiveDialogFooter>
         <Button type="button" disabled={!saved} onClick={onClose}>Gotowe</Button>
-      </DialogFooter>
+      </ResponsiveDialogFooter>
     </div>
   );
 }

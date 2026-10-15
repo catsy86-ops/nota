@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Repeat, Trash, StickyNote, Plus, Bell, SkipForward } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { searchNotes } from "@/lib/searchNotes";
 import { parseNaturalDate } from "@/lib/parseNaturalDate";
@@ -155,7 +156,7 @@ export function ReminderQuickAddDialog({
 
   return (
     <Dialog open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
-      <DialogContent
+      <ResponsiveDialogContent
         className={DIALOG_CLASS}
         onOpenAutoFocus={isEdit ? (e) => e.preventDefault() : undefined}
       >
@@ -291,7 +292,7 @@ export function ReminderQuickAddDialog({
             )}
           </>
         )}
-      </DialogContent>
+      </ResponsiveDialogContent>
     </Dialog>
   );
 }

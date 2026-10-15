@@ -174,5 +174,8 @@ export default {
     // `desk:` — układ z paskiem bocznym. Jak `md:`, ale telefon w poziomie (niski ekran dotykowy)
     // zostaje przy dolnej nawigacji i wysuwanym panelu (src/hooks/use-mobile.tsx — to samo zapytanie).
     (({ addVariant }: { addVariant: (name: string, def: string) => void }) => addVariant("desk", "@media (min-width: 768px) and (min-height: 501px), (min-width: 768px) and (pointer: fine)")),
+    // `phone:` — dokładne przeciwieństwo `desk:`: wąski ekran albo niski ekran dotykowy (telefon w poziomie).
+    // Formularze są tu arkuszem od dołu (ui/responsive-dialog.tsx).
+    (({ addVariant }: { addVariant: (name: string, def: string) => void }) => addVariant("phone", "@media (max-width: 767px), (max-height: 500px) and (pointer: coarse)")),
   ],
 } satisfies Config;

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { Archive, ArchiveRestore, FileText, ListFilter, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { haptic } from "@/lib/haptics";
 import { saveSiteCard, setSiteArchived, useStudy } from "@/lib/study/store";
 import { findSiteByName, siteDirectory, SITE_FIELD_MAX, SITE_NAME_MAX } from "@/lib/study/sites";
@@ -64,7 +65,7 @@ export function SiteCardDialog({
 
   return (
     <Dialog open={!!site} onOpenChange={onOpenChange}>
-      <DialogContent sheet className="max-h-[92dvh] gap-0 overflow-y-auto p-0 sm:max-w-md" data-testid="site-card">
+      <ResponsiveDialogContent className="max-h-[92dvh] gap-0 overflow-y-auto p-0 sm:max-w-md" data-testid="site-card">
         {site && (
           <>
             <div className="space-y-1 border-b border-border px-5 pb-4 pt-5 pr-12">
@@ -138,7 +139,7 @@ export function SiteCardDialog({
             </div>
           </>
         )}
-      </DialogContent>
+      </ResponsiveDialogContent>
     </Dialog>
   );
 }

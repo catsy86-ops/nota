@@ -2,7 +2,8 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Minus, Plus } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -35,9 +36,9 @@ export function DayDialog({ dayKey, entry, types, onOpenChange }: DayDialogProps
   // i wjeżdża miękko, zamiast zamykać i otwierać cały dialog z overlayem.
   return (
     <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent sheet className="max-w-sm">
+      <ResponsiveDialogContent className="max-w-sm">
         <DayForm key={dayKey} dayKey={dayKey} entry={entry} types={types} onOpenChange={onOpenChange} />
-      </DialogContent>
+      </ResponsiveDialogContent>
     </Dialog>
   );
 }
@@ -221,9 +222,9 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring resize-none" />
           </div>
 
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <Button type="submit" disabled={hoursInvalid}>Zapisz dzień</Button>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
     </>
   );

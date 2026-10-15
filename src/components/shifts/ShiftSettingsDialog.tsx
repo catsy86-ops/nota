@@ -1,7 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { EVENING_NUDGE_HOURS, FTE_OPTIONS, NIGHT_HOURS, NIGHT_STARTS, SETTLEMENT_MONTHS, setFte, setHourlyRate, setLeaveDays, setNightFrom, setOvertimeFrom, setSettlementMonths, setSettlementStart, setSundayFrom, setWorkSystem, type SettlementMonths, type ShiftData, type WorkSystem } from "@/lib/shifts";
 import { readEveningNudgeTime, writeEveningNudgeTime } from "@/lib/shifts";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
@@ -30,7 +31,7 @@ const CONTROL = "w-full h-10 coarse:h-11 rounded-lg border border-input bg-backg
 export function ShiftSettingsDialog({ open, onOpenChange, settings: s }: ShiftSettingsDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[min(88dvh,44rem)] overflow-y-auto"
+      <ResponsiveDialogContent className="max-w-md max-h-[min(88dvh,44rem)] overflow-y-auto"
         // Fokus na okno, nie na pole stawki — na telefonie klawiatura zasłaniałaby pół ustawień.
         onOpenAutoFocus={(e) => { e.preventDefault(); (e.currentTarget as HTMLElement).focus(); }}>
         <DialogHeader>
@@ -107,7 +108,7 @@ export function ShiftSettingsDialog({ open, onOpenChange, settings: s }: ShiftSe
             <li>Odpoczynek dobowy: co najmniej 11 h (art. 132 KP).</li>
           </ul>
         </details>
-      </DialogContent>
+      </ResponsiveDialogContent>
     </Dialog>
   );
 }

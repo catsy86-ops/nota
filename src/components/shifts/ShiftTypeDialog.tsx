@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,9 +30,9 @@ const BLANK: ShiftType = { id: "", name: "", short: "", color: SHIFT_COLORS[3], 
 export function ShiftTypeDialog({ type, open, onOpenChange, onSaved, onDeleted }: ShiftTypeDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent sheet className="max-w-sm">
+      <ResponsiveDialogContent className="max-w-sm">
         <ShiftTypeForm key={type?.id ?? "new"} type={type} onOpenChange={onOpenChange} onSaved={onSaved} onDeleted={onDeleted} />
-      </DialogContent>
+      </ResponsiveDialogContent>
     </Dialog>
   );
 }
@@ -214,7 +215,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
             {draft.name.trim() === "" ? "Podaj nazwę rodzaju zmiany." : "Godzina rozpoczęcia i końca muszą się różnić."}
           </p>
         )}
-        <DialogFooter className="gap-2 sm:justify-between">
+        <ResponsiveDialogFooter className="gap-2 sm:justify-between">
           {type ? (
             <Button type="button" variant={confirmDays === null ? "ghost" : "destructive"}
               className={cn(confirmDays === null && "text-destructive hover:text-destructive")} onClick={remove}>
@@ -222,7 +223,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
             </Button>
           ) : <span />}
           <Button type="submit" disabled={!valid}>Zapisz rodzaj</Button>
-        </DialogFooter>
+        </ResponsiveDialogFooter>
       </form>
     </>
   );

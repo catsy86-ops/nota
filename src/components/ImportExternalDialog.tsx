@@ -2,7 +2,8 @@ import { useRef, useState } from "react";
 import { m as motion } from "framer-motion";
 import { TriangleAlert, FileArchive, FolderOpen, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import type { ExternalImportStage } from "@/hooks/useImportExport";
 import type { ImportPlan } from "@/lib/import";
 import { pluralPl } from "@/lib/plural";
@@ -78,7 +79,7 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o && stage !== "saving") onClose(); }}>
-      <DialogContent className="max-w-md max-h-[88dvh] overflow-y-auto">
+      <ResponsiveDialogContent className="max-w-md max-h-[88dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Import z Google Keep / Markdown</DialogTitle>
           <DialogDescription>
@@ -200,7 +201,7 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
           </div>
         )}
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <ResponsiveDialogFooter className="gap-2 sm:gap-0">
           {(stage === "summary" || stage === "saving") ? (
             <>
               <Button type="button" variant="ghost" onClick={onBack} disabled={stage === "saving"}>Wybierz inne pliki</Button>
@@ -213,8 +214,8 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
           ) : (
             <Button type="button" variant="outline" onClick={onClose}>Anuluj</Button>
           )}
-        </DialogFooter>
-      </DialogContent>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
     </Dialog>
   );
 }

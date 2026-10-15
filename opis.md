@@ -247,6 +247,47 @@ Pełnoekranowe edytory na iOS trzymają pasek z „Zapisz” nad klawiaturą.
 
 ---
 
+## Wspólne — formularze jako arkusz na telefonie
+
+**Co robi.** Okna z formularzem (decyzja D2) na telefonie wysuwają się od dołu jak arkusz, także gdy telefon leży
+poziomo; pasek z „Zapisz” / „Nałóż cykl” jest przyklejony do dołu arkusza, więc długi formularz nie chowa go pod
+przewinięciem. Na komputerze i tablecie to zwykłe okno na środku. Pozostałe okna (podgląd, statystyki, skróty,
+samouczek) są na telefonie wyśrodkowane z marginesem (1.3).
+
+**Gdzie jest.**
+- `src/components/ui/responsive-dialog.tsx`: `ResponsiveDialogContent` (= `DialogContent` z `sheet`),
+  `ResponsiveDialogFooter` (= `DialogFooter`).
+- `src/components/ui/dialog.tsx`: klasy arkusza na wariancie `phone:`; atrybuty `data-dialog-sheet`
+  (`DialogContent`) i `data-dialog-footer` (`DialogFooter`).
+- `tailwind.config.ts`: wariant `phone:` — `@media (max-width: 767px), (max-height: 500px) and (pointer: coarse)`,
+  dokładne przeciwieństwo `desk:`.
+- `src/index.css`: `[data-dialog-sheet] [data-dialog-footer]` — `position: sticky` na dole, tło, kreska, safe-area.
+- Formularze na `ResponsiveDialogContent`: `CustomTemplateDialog`, `ImportExternalDialog`, `vault/VaultDialogs`,
+  `calendar/ReminderQuickAddDialog`, `shifts/DayDialog`, `ShiftTypeDialog`, `PatternDialog`,
+  `ShiftSettingsDialog`, wybór przenieś/kopiuj w `ShiftsView` (`TransferChooser`), `study/JournalReport`,
+  `study/SiteCardDialog`.
+
+**Jak działa i dlaczego.**
+- Dawny prop `sheet` działał tylko poniżej 640 px (`max-sm:`) — telefon w poziomie dostawał wąskie okno na środku
+  niskiego ekranu. `phone:` pokrywa się z tym, kiedy aplikacja pokazuje dolny pasek zamiast bocznego.
+- Pasek przycisków: `bottom` i `margin-bottom` równe ujemnemu dolnemu odstępowi arkusza, więc pasek dochodzi do
+  krawędzi ekranu; `margin-inline: -1.5rem` + ten sam `padding` daje pełną szerokość z wyrównaniem do treści.
+- Osobny komponent zamiast propa: jedno miejsce mówi „to formularz”; zmiana zachowania formularzy nie wymaga
+  przeszukiwania wywołań `DialogContent`.
+
+**Ograniczenia i pułapki.**
+- Okna z `p-0` (raport, karta budowy) nie mają `DialogFooter` — ich przyciski nie są przyklejane.
+- Nowy formularz: `ResponsiveDialogContent` + `ResponsiveDialogFooter`; nie dodawać `sheet` do `DialogContent`
+  okien pełnoekranowych (ustawiają własne wymiary).
+
+**Testy.** `e2e/mobile.spec.ts` („formularz na telefonie to arkusz od dołu z przyklejonym „Zapisz” — także w
+poziomie (2.5)”: Cykl zmian dochodzi do dołu ekranu, „Nałóż cykl” widoczny; 390 × 844 i 844 × 390) oraz dotychczasowe
+testy Grafiku, Kalendarza, skarbca i Dziennika.
+
+**Commit.** `HASHRD` (2026-10-15).
+
+---
+
 ## Wspólne — okna dialogowe na telefonie
 
 **Co robi.** Na telefonie zwykłe okna (`Dialog`) i potwierdzenia (`AlertDialog`) są wyśrodkowane, mają margines 1 rem

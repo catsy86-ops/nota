@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -47,7 +48,7 @@ export function CustomTemplateDialog({ template, onOpenChange }: Props) {
 
   return (
     <Dialog open onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <ResponsiveDialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display">{template ? "Edytuj szablon" : "Nowy szablon"}</DialogTitle>
           <DialogDescription>
@@ -85,12 +86,12 @@ export function CustomTemplateDialog({ template, onOpenChange }: Props) {
             <Label htmlFor="tpl-labels">Etykiety (po przecinku)</Label>
             <Input id="tpl-labels" value={labels} onChange={(e) => setLabels(e.target.value)} placeholder="dziennik, osobiste" />
           </div>
-          <DialogFooter className="gap-2 sm:justify-between">
+          <ResponsiveDialogFooter className="gap-2 sm:justify-between">
             {template ? <Button type="button" variant="ghost" className="text-destructive" onClick={remove}>Usuń szablon</Button> : <span />}
             <Button type="submit" disabled={!name.trim()}>Zapisz szablon</Button>
-          </DialogFooter>
+          </ResponsiveDialogFooter>
         </form>
-      </DialogContent>
+      </ResponsiveDialogContent>
     </Dialog>
   );
 }

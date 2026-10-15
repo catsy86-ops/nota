@@ -219,3 +219,20 @@ test("dolny pasek: podpisy 12 px mieszczą się w kolumnach także na 320 px (2.
     expect(overflow, `${name} wystaje poza kolumnę`).toBe(false);
   }
 });
+
+test("formularz na telefonie to arkusz od dołu z przyklejonym „Zapisz” — także w poziomie (2.5) @mobile", async ({ page }) => {
+  for (const vp of [{ width: 390, height: 844 }, { width: 844, height: 390 }]) {
+    await page.setViewportSize(vp);
+    await page.goto("/grafik");
+    await page.getByRole("button", { name: "Cykl" }).click();
+    const dialog = page.getByRole("dialog", { name: "Cykl zmian" });
+    await expect(dialog).toBeVisible();
+    await page.waitForTimeout(400); // koniec wjazdu arkusza
+    const box = (await dialog.boundingBox())!;
+    expect(Math.round(box.y + box.height)).toBe(vp.height);
+    const apply = dialog.getByRole("button", { name: "Nałóż cykl" });
+    const b = (await apply.boundingBox())!;
+    expect(b.y + b.height).toBeLessThanOrEqual(vp.height);
+    await page.keyboard.press("Escape");
+  }
+});
