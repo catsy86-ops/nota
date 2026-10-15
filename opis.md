@@ -1042,6 +1042,44 @@ z „Cofnij””), `e2e/study.spec.ts` („lista do nauki…”).
 
 ---
 
+## Praca — statystyki
+
+**Co robi.** Przycisk „Statystyki” pod paskiem opanowania otwiera okno z:
+- kaflami: trafność ogółem (z liczbą odpowiedzi), dni nauki w ostatnich 30 dniach, seria, wpisy z budowy i otwarte problemy;
+- trafnością per temat — poziome słupki od najsłabszego tematu, z procentem i „dobre/wszystkie”;
+- najtrudniejszymi pytaniami (najwięcej pomyłek, do 5);
+- siatką dni nauki z 12 tygodni (kratka = dzień z rundą quizu, dziś obwiedzione);
+- wpisami z budowy per miesiąc (6 miesięcy, puste miesiące jako linia bazowa) i per budowa (do 6, reszta jako
+  „Pozostałe”, z liczbą otwartych problemów).
+
+**Gdzie jest.**
+- `src/lib/study/stats.ts`: `overallAccuracy`, `accuracyByTopic`, `hardestQuestions`, `studyDaysGrid`, `daysInLast`,
+  `entriesByMonth`, `entriesBySite` — czyste funkcje, bez importu materiału.
+- `src/lib/study/srs.ts`: liczniki `seen`/`right` w `ReviewCard` (rosną przy każdej odpowiedzi, także drugiej tego
+  samego dnia — harmonogram dalej liczy się raz na dzień).
+- `src/lib/study/yStudy.ts` / `store.ts`: `StudyState.days` (dni z rundą, rosnąco) ze `studyDays`.
+- `src/components/study/StudyStats.tsx`: `StudyStatsDialog`; przycisk w `StudyView.tsx`.
+
+**Jak działa i dlaczego.**
+- Trafność liczona z kart powtórek, nie z rund: karta zna każde pytanie z osobna, więc da się ją zsumować per temat.
+  Karty sprzed N4 nie mają liczników — `cleanCard` szacuje je z pomyłek i dobrych odpowiedzi z rzędu.
+- Wykresy jednoseryjne, jeden odcień (`primary`), bez biblioteki (recharts dodałby ~100 KB do paczki Pracy). Wartość
+  zawsze podpisana tekstem obok słupka, więc kolor niczego nie koduje sam i legenda jest zbędna; `title` daje dymek z
+  dokładną liczbą, a siatka dni ma `aria-label` z sumą.
+- Na telefonie podpis tematu nad słupkiem (obok zostawało kilka liter); od `sm` w jednym wierszu.
+
+**Ograniczenia i pułapki.**
+- Trafność obejmuje odpowiedzi od wdrożenia powtórek (N3); starsze rundy znały tylko wynik całej rundy.
+- Dni nauki to dni z rundą quizu — same wpisy z budowy ich nie dodają.
+- Zero wpisów w miesiącu to linia 2 px (widać, że miesiąc jest, tylko pusty).
+
+**Testy.** `src/lib/study/stats.test.ts`, `src/lib/study/srs.test.ts` (liczniki, stare karty), `e2e/study.spec.ts`
+(„statystyki: trafność per temat, dzień nauki i wpisy po rundzie quizu”), `e2e/a11y.spec.ts`.
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Praca → Dziennik budowy
 
 Zakładka „Dziennik” na `/nauka` (`src/components/study/StudyJournal.tsx`). Dziennik instalatora

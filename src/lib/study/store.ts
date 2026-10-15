@@ -86,10 +86,11 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
     const card = questionIds.has(id) ? cleanCard(raw) : null;
     if (card) review[id] = card;
   }
-  return { board, checked, bestPercent: best, rounds, missed, journal, site, sites, streak, lastDay, review, boss: cleanBoss(s.boss), group: cleanGroup(s.group) };
+  return { board, checked, bestPercent: best, rounds, missed, journal, site, sites, streak, lastDay, review, boss: cleanBoss(s.boss), group: cleanGroup(s.group),
+    days: Array.isArray(s.days) ? s.days.filter((d): d is string => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)) : [] };
 }
 
-const DEFAULTS: StudyState = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null, review: {}, boss: null, group: null };
+const DEFAULTS: StudyState = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null, review: {}, boss: null, group: null, days: [] };
 
 let lastRaw: StudyState | null = null;
 let lastClean: StudyState = DEFAULTS;

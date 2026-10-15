@@ -21,6 +21,9 @@ export interface ReviewCard {
   last: string;
   /** Pomyłki łącznie — „trudne” pytania (statystyki). */
   lapses: number;
+  /** Odpowiedzi łącznie i dobre odpowiedzi — trafność (statystyki); brak w kartach sprzed N4. */
+  seen: number;
+  right: number;
 }
 
 export const EASE_START = 2.5;
@@ -37,14 +40,16 @@ const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
  * błąd liczy się zawsze.
  */
 export function reviewCard(prev: ReviewCard | undefined, ok: boolean, today: string): ReviewCard {
-  const card = prev ?? { reps: 0, interval: 0, ease: EASE_START, due: today, last: today, lapses: 0 };
+  const card = prev ?? { reps: 0, interval: 0, ease: EASE_START, due: today, last: today, lapses: 0, seen: 0, right: 0 };
+  const seen = card.seen + 1;
   if (!ok) {
-    return { reps: 0, interval: 1, ease: Math.max(EASE_MIN, round2(card.ease - 0.2)), due: addDaysToKey(today, 1), last: today, lapses: card.lapses + 1 };
+    return { reps: 0, interval: 1, ease: Math.max(EASE_MIN, round2(card.ease - 0.2)), due: addDaysToKey(today, 1), last: today, lapses: card.lapses + 1, seen, right: card.right };
   }
-  if (prev && prev.last === today && prev.reps > 0) return prev;
+  // Liczniki rosną zawsze; harmonogram — raz na dzień.
+  if (prev && prev.last === today && prev.reps > 0) return { ...prev, seen, right: prev.right + 1 };
   const reps = card.reps + 1;
   const interval = Math.min(INTERVAL_MAX, reps === 1 ? 1 : reps === 2 ? 3 : Math.round(card.interval * card.ease));
-  return { reps, interval, ease: card.ease, due: addDaysToKey(today, interval), last: today, lapses: card.lapses };
+  return { reps, interval, ease: card.ease, due: addDaysToKey(today, interval), last: today, lapses: card.lapses, seen, right: card.right + 1 };
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -71,5 +76,8 @@ export function cleanCard(raw: unknown): ReviewCard | null {
     due: c.due,
     last: c.last,
     lapses: Math.floor(num(c.lapses, 0, 10_000, 0)),
+    // Karty sprzed N4 bez liczników: odpowiedzi co najmniej tyle, ile pomyłek + dobre z rzędu.
+    seen: Math.floor(num(c.seen, 0, 100_000, num(c.lapses, 0, 10_000, 0) + num(c.reps, 0, 10_000, 0))),
+    right: Math.floor(num(c.right, 0, 100_000, num(c.reps, 0, 10_000, 0))),
   };
 }

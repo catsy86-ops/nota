@@ -155,6 +155,29 @@ test("problem z tematem: karta tematu pokazuje go, „Ćwicz teraz” w dziennik
   await expect(card.locator('[data-topic-problem="resolved"]')).toBeVisible();
 });
 
+test("statystyki: trafność per temat, dzień nauki i wpisy po rundzie quizu", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByRole("button", { name: "Statystyki" }).click();
+  const stats = page.getByTestId("study-stats");
+  await expect(stats.getByText("Rozwiąż rundę quizu — trafność pojawi się tutaj.")).toBeVisible();
+  await page.keyboard.press("Escape");
+
+  await page.getByRole("button", { name: "Zacznij rundę" }).click();
+  for (let i = 1; i <= 10; i++) {
+    await page.getByRole("group", { name: "Odpowiedzi" }).getByRole("button").first().click();
+    await page.getByRole("button", { name: i < 10 ? "Dalej" : "Zobacz wynik" }).click();
+  }
+  await expect(page.getByRole("region", { name: "Wynik rundy" })).toBeVisible();
+  const score = Number((await page.getByRole("region", { name: "Wynik rundy" }).locator("p").first().innerText()).split("/")[0]);
+
+  await page.getByRole("button", { name: "Statystyki" }).click();
+  await expect(stats.getByTestId("stats-tiles")).toContainText(`${score}/10 odpowiedzi`);
+  await expect(stats.getByTestId("stats-tiles")).toContainText(`${Math.round(score * 10)}%`);
+  await expect(stats.getByTestId("stats-topics").locator("li").first()).toBeVisible();
+  await expect(stats.getByTestId("stats-days").locator("[data-studied]")).toHaveCount(1);
+  await expect(stats.getByTestId("stats-months")).toBeVisible();
+});
+
 test("tablica: „Ćwicz” startuje rundę z jednego tematu, a „Zrób notatkę” dodaje notatkę", async ({ page }) => {
   await page.goto("/praca");
   await page.getByRole("tab", { name: "Tablica" }).click();

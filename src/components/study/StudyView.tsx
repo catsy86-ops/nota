@@ -3,7 +3,8 @@ import { cn } from "@/lib/utils";
 import { MODULES, TOPICS } from "@/lib/study/content";
 import { columnOf, dueToday, useStudy } from "@/lib/study/store";
 import { pluralPl } from "@/lib/plural";
-import { RotateCcw } from "lucide-react";
+import { ChartColumn, RotateCcw } from "lucide-react";
+import { StudyStatsDialog } from "./StudyStats";
 import { setJournalDraftTopic } from "@/lib/study/draft";
 import { useStudyReady } from "@/lib/study/data";
 import { closeJournalSheet, JOURNAL_ENTRY_PARAM, openJournalSheet, useJournalSheet } from "@/lib/study/entrySheet";
@@ -120,6 +121,7 @@ function StudyScreen() {
   const [tab, setTabState] = useState<string>(() => readStudyTab(window.matchMedia?.(MOBILE_QUERY).matches ?? false));
   const setTab = (t: string) => { setTabState(t); writeStudyTab(t); };
   const [scope, setScope] = useState<QuizScope>({ kind: "all" });
+  const [statsOpen, setStatsOpen] = useState(false);
   // `run` wymusza świeży start, także gdy ćwiczysz ten sam temat drugi raz.
   const [run, setRun] = useState(0);
   const practice = (topic: string) => { setScope({ kind: "topic", topic }); setRun((n) => n + 1); setTab("quiz"); };
@@ -150,7 +152,17 @@ function StudyScreen() {
           <p className="text-sm text-muted-foreground">Poradnik „Woda użytkowa” i listy kontrolne G-HEAT, KAN-therm UltraLine.</p>
         </div>
         <MasteryStrip />
-        <DueTodayChip onClick={() => { changeScope({ kind: "due" }); setTab("quiz"); }} />
+        <div className="flex flex-wrap items-center gap-2">
+          <DueTodayChip onClick={() => { changeScope({ kind: "due" }); setTab("quiz"); }} />
+          <button
+            type="button"
+            onClick={() => setStatsOpen(true)}
+            className="pressable inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground coarse:min-h-11"
+          >
+            <ChartColumn className="h-4 w-4" aria-hidden />Statystyki
+          </button>
+        </div>
+        <StudyStatsDialog open={statsOpen} onOpenChange={setStatsOpen} />
       </header>
 
       <Tabs value={tab} onValueChange={setTab}>

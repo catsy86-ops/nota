@@ -75,6 +75,8 @@ export interface StudyState {
   boss: Boss | null;
   /** Grupa WhatsApp na raporty; `null` = nieustawiona. */
   group: WaGroup | null;
+  /** Dni z co najmniej jedną rundą quizu, rosnąco (statystyki). */
+  days: string[];
 }
 
 /** Rundy i najlepszy wynik jednego urządzenia. */
@@ -224,6 +226,7 @@ export function stateFromDump(d: StudyDump): StudyState {
     review: d.review,
     boss: d.boss,
     group: d.group,
+    days: [...d.days].sort(),
   };
 }
 

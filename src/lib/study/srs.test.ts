@@ -19,18 +19,20 @@ describe("srs — SM-2 lite z oceną automatyczną", () => {
     expect(c).toMatchObject({ reps: 0, interval: 1, due: "2026-10-16", ease: EASE_MIN, lapses: 10 });
   });
 
-  it("druga dobra odpowiedź tego samego dnia nie wydłuża odstępu", () => {
+  it("druga dobra odpowiedź tego samego dnia nie wydłuża odstępu, ale liczy się do trafności", () => {
     const c = reviewCard(undefined, true, D);
-    expect(reviewCard(c, true, D)).toBe(c);
+    const again = reviewCard(c, true, D);
+    expect(again).toMatchObject({ reps: 1, interval: 1, due: c.due, seen: 2, right: 2 });
+    expect(reviewCard(again, false, D)).toMatchObject({ seen: 3, right: 2, lapses: 1 });
   });
 
   it("odstęp ma sufit", () => {
-    const c: ReviewCard = { reps: 9, interval: 150, ease: 2.5, due: D, last: "2026-01-01", lapses: 0 };
+    const c: ReviewCard = { reps: 9, interval: 150, ease: 2.5, due: D, last: "2026-01-01", lapses: 0, seen: 9, right: 9 };
     expect(reviewCard(c, true, D).interval).toBe(INTERVAL_MAX);
   });
 
   it("dueIds: tylko należne, najpierw najbardziej zaległe, tylko znane pytania", () => {
-    const card = (due: string): ReviewCard => ({ reps: 1, interval: 1, ease: 2.5, due, last: due, lapses: 0 });
+    const card = (due: string): ReviewCard => ({ reps: 1, interval: 1, ease: 2.5, due, last: due, lapses: 0, seen: 1, right: 1 });
     const reviews = { a: card("2026-10-15"), b: card("2026-10-10"), c: card("2026-10-16"), x: card("2026-10-01") };
     expect(dueIds(reviews, D)).toEqual(["x", "b", "a"]);
     expect(dueIds(reviews, D, new Set(["a", "b", "c"]))).toEqual(["b", "a"]);
@@ -39,6 +41,8 @@ describe("srs — SM-2 lite z oceną automatyczną", () => {
   it("cleanCard odrzuca śmieci i przycina wartości", () => {
     expect(cleanCard(null)).toBeNull();
     expect(cleanCard({ due: "jutro", last: D })).toBeNull();
-    expect(cleanCard({ due: D, last: D, ease: 0.1, interval: 9999, reps: -3 })).toEqual({ reps: 0, interval: INTERVAL_MAX, ease: EASE_MIN, due: D, last: D, lapses: 0 });
+    expect(cleanCard({ due: D, last: D, ease: 0.1, interval: 9999, reps: -3 })).toEqual({ reps: 0, interval: INTERVAL_MAX, ease: EASE_MIN, due: D, last: D, lapses: 0, seen: 0, right: 0 });
+    // Karta sprzed N4: liczniki z pomyłek i dobrych z rzędu.
+    expect(cleanCard({ due: D, last: D, reps: 2, lapses: 1 })).toMatchObject({ seen: 3, right: 2 });
   });
 });
