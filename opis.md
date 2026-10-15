@@ -396,7 +396,7 @@ notatki działają dalej, zamiast pokazywać ogólny błąd.
 Grafik mówi, że czeka na sieć” — `role="status"`, bez `alert`), `e2e/search-backup.spec.ts` („Brak wyników w
 Notatkach”), `e2e/study.spec.ts` (brak wyników filtra Dziennika), `e2e/a11y.spec.ts` (puste widoki w obu motywach).
 
-**Commit.** — (2026-10-15).
+**Commit.** `7c47e4b` (2026-10-15).
 
 ---
 
