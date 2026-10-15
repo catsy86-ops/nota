@@ -624,14 +624,17 @@ test("dziennik: raport budowy z godzinami z Grafiku — udostępnij, kopiuj, do 
   expect(shared.text).toContain("- 10:20 Problem otwarty: Żółta rura przecieka");
   expect(shared.text).toContain("Praca: Budowa 07:00–17:00, 10 h");
 
-  await dialog.getByRole("button", { name: "Kopiuj tekst" }).click();
+  await dialog.getByRole("button", { name: "Więcej" }).click();
+  await page.getByRole("menuitem", { name: "Kopiuj tekst" }).click();
   await expect(page.getByText("Skopiowano raport")).toBeVisible();
   expect(await page.evaluate(() => (window as unknown as { __copied: string }).__copied)).toContain("# Raport: Lipowa 5");
 
-  await dialog.getByRole("button", { name: "Drukuj / PDF" }).click();
+  await dialog.getByRole("button", { name: "Więcej" }).click();
+  await page.getByRole("menuitem", { name: "Drukuj / PDF" }).click();
   await expect.poll(() => page.evaluate(() => (window as unknown as { __printed?: string }).__printed)).toContain("Żółta rura przecieka");
 
-  await dialog.getByRole("button", { name: "Do notatki" }).click();
+  await dialog.getByRole("button", { name: "Więcej" }).click();
+  await page.getByRole("menuitem", { name: "Do notatki" }).click();
   await expect(page.getByText("Dodano notatkę „Raport: Lipowa 5 — 8–14 października 2026”")).toBeVisible();
   await page.keyboard.press("Escape");
   await page.goto("/");

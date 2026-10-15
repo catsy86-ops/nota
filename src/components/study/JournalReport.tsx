@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Clock, Copy, FilePlusCorner, MapPin, MessageCircle, Printer, Share2, UserPen, Users } from "lucide-react";
+import { Clock, Copy, Ellipsis, FilePlusCorner, Gauge, MapPin, MessageCircle, Printer, Share2, UserPen, Users } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { testLine } from "@/lib/study/pressureTest";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { StatusPanel } from "@/components/StatusPanel";
@@ -241,8 +243,9 @@ export function JournalReportDialog({
             <ReportPaper report={report} />
           </div>
 
-          <div className="sticky bottom-0 grid grid-cols-2 gap-2 border-t border-border bg-background px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex sm:flex-wrap sm:justify-end sm:px-6">
-            <div className="col-span-2 flex items-center gap-2 sm:order-last sm:w-full sm:justify-end" data-testid="whatsapp-row">
+          {/* Jedna główna akcja — wysłanie przez WhatsApp; „Udostępnij” obok, reszta w „Więcej”. */}
+          <div className="sticky bottom-0 flex flex-col gap-2 border-t border-border bg-background px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex-row-reverse sm:items-center sm:justify-between sm:px-6">
+            <div className="flex items-center gap-2 sm:justify-end" data-testid="whatsapp-row">
               {boss || group ? (
                 <>
                   {boss && (
@@ -271,20 +274,31 @@ export function JournalReportDialog({
                 </Button>
               )}
             </div>
-            {canShare ? (
-              <Button variant="outline" onClick={share} disabled={empty} className="col-span-2 coarse:h-11">
-                <Share2 className="mr-1.5 h-4 w-4" aria-hidden />Udostępnij{files.length > 0 ? ` (${files.length} zdj.)` : ""}
-              </Button>
-            ) : null}
-            <Button variant="outline" onClick={copy} disabled={empty} className={cn("coarse:h-11", !canShare && "col-span-2")}>
-              <Copy className="mr-1.5 h-4 w-4" aria-hidden />Kopiuj tekst
-            </Button>
-            <Button variant="outline" onClick={toNote} disabled={empty} className="coarse:h-11">
-              <FilePlusCorner className="mr-1.5 h-4 w-4" aria-hidden />Do notatki
-            </Button>
-            <Button variant="outline" onClick={() => setPrinting(true)} disabled={empty} className={cn("coarse:h-11", canShare && "col-span-2 sm:col-span-1")}>
-              <Printer className="mr-1.5 h-4 w-4" aria-hidden />Drukuj / PDF
-            </Button>
+            <div className="flex gap-2">
+              {canShare && (
+                <Button variant="outline" onClick={share} disabled={empty} className="min-w-0 flex-1 coarse:h-11 sm:flex-none">
+                  <Share2 className="mr-1.5 h-4 w-4" aria-hidden />Udostępnij{files.length > 0 ? ` (${files.length} zdj.)` : ""}
+                </Button>
+              )}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" disabled={empty} className={cn("coarse:h-11", !canShare && "flex-1 sm:flex-none")}>
+                    <Ellipsis className="mr-1.5 h-4 w-4" aria-hidden />Więcej
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" side="top" className="min-w-48">
+                  <DropdownMenuItem onSelect={() => void copy()} className="coarse:min-h-11">
+                    <Copy className="mr-2 h-4 w-4" aria-hidden />Kopiuj tekst
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={toNote} className="coarse:min-h-11">
+                    <FilePlusCorner className="mr-2 h-4 w-4" aria-hidden />Do notatki
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setPrinting(true)} className="coarse:min-h-11">
+                    <Printer className="mr-2 h-4 w-4" aria-hidden />Drukuj / PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
         </ResponsiveDialogContent>
       </Dialog>
@@ -401,6 +415,7 @@ function useShareFiles(refs: string[], title: string): File[] {
 
 /** Raport jak kartka: ten sam układ w podglądzie i na wydruku. */
 function ReportPaper({ report, print = false }: { report: Report; print?: boolean }) {
+  const tests = report.days.flatMap((d) => d.entries).filter((r) => r.entry.test);
   return (
     <article className={cn("report-paper rounded-xl border border-border bg-card px-4 py-4 sm:px-6", print && "border-0 px-0")} aria-label="Podgląd raportu">
       <header className="border-b-2 border-foreground/80 pb-2">
@@ -416,6 +431,8 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
         <h2 className="font-display text-xl leading-tight">{report.period}</h2>
         <p className="mt-1 font-mono text-xs tabular-nums text-muted-foreground" data-testid="report-summary">{reportSummary(report)}</p>
       </header>
+
+      {report.days.length > 1 && <DaysTable report={report} />}
 
       {report.count === 0 ? (
         <StatusPanel size="inline" tone="no-results" title="Brak wpisów z tej budowy w tym okresie." description="Zmień budowę albo okres." className="my-4" />
@@ -444,6 +461,11 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
                         {r.site && <> · {r.site}</>}
                         {r.topic && <> · {r.topic}</>}
                       </p>
+                      {r.entry.test && (
+                        <p className={cn("mt-0.5 inline-flex items-start gap-1 text-xs font-medium", r.entry.test.ok ? "text-success-ink" : "text-destructive")} data-report-test>
+                          <Gauge className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{testLine(r.entry.test)}
+                        </p>
+                      )}
                       {r.entry.images.length > 0 && (
                         <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-label="Zdjęcia wpisu">
                           {r.entry.images.map((ref) => (
@@ -465,6 +487,19 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
               </ul>
             </section>
           ))}
+          {tests.length > 0 && (
+            <section className="break-inside-avoid-page pt-3" data-report-tests>
+              <h3 className="mb-1.5 text-sm font-semibold">Próby szczelności</h3>
+              <ul className="space-y-0.5 text-sm">
+                {tests.map((r) => (
+                  <li key={r.entry.id} className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-x-2">
+                    <span className="font-mono text-xs tabular-nums text-muted-foreground">{shortDay(r.entry.at)} {r.time}</span>
+                    <span className={cn(!r.entry.test!.ok && "font-medium text-destructive")}>{testLine(r.entry.test!)}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
           {report.open.length > 0 && (
             <section className="break-inside-avoid-page pt-3">
               <h3 className="mb-1.5 text-sm font-semibold">Otwarte problemy</h3>
@@ -475,7 +510,50 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
           )}
         </div>
       )}
+
+      {/* Druk firmowy: miejsce na podpisy i datę sporządzenia — raport jako dokument odbioru. */}
+      {report.count > 0 && (
+        <footer className="mt-4 grid grid-cols-2 gap-6 border-t border-border pt-6 text-xs text-muted-foreground break-inside-avoid-page" data-report-signatures>
+          <div>
+            <div className="h-10 border-b border-dashed border-foreground/50" />
+            <p className="mt-1">Wykonawca (podpis)</p>
+          </div>
+          <div>
+            <div className="h-10 border-b border-dashed border-foreground/50" />
+            <p className="mt-1">Odbierający / kierownik (podpis)</p>
+          </div>
+          <p className="col-span-2 font-mono tabular-nums">Sporządzono: {new Date().toLocaleDateString("pl-PL")}</p>
+        </footer>
+      )}
     </article>
+  );
+}
+
+const shortDay = (at: number) => new Date(at).toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit" });
+
+/** Zestawienie dni na górze raportu (od dwóch dni): dzień, praca z Grafiku, wpisy, problemy. */
+function DaysTable({ report }: { report: Report }) {
+  return (
+    <table className="mt-3 w-full text-left text-xs" data-report-days-table>
+      <thead>
+        <tr className="text-muted-foreground">
+          <th className="py-1 pr-2 font-medium">Dzień</th>
+          <th className="py-1 pr-2 font-medium">Praca</th>
+          <th className="py-1 pr-2 text-right font-medium">Wpisy</th>
+          <th className="py-1 text-right font-medium">Problemy</th>
+        </tr>
+      </thead>
+      <tbody className="font-mono tabular-nums">
+        {report.days.map((d) => (
+          <tr key={d.key} className="border-t border-border/60">
+            <td className="py-1 pr-2">{d.key.slice(8, 10)}.{d.key.slice(5, 7)}</td>
+            <td className="py-1 pr-2 font-sans">{d.work ? (d.work.minutes > 0 ? formatDuration(d.work.minutes) : d.work.label) : "—"}</td>
+            <td className="py-1 pr-2 text-right">{d.entries.length}</td>
+            <td className="py-1 text-right">{d.entries.filter((r) => r.entry.kind === "problem").length || "—"}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 

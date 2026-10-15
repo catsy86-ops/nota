@@ -1270,6 +1270,31 @@ i tekst raportu; zalanie bez ciśnienia, sam protokół zapisuje wpis).
 
 ---
 
+## Praca — raport jak druk firmowy i jedna główna akcja (P5b)
+
+**Co robi.** Raport z budowy (podgląd, wydruk/PDF) ma: zestawienie dni na górze (od dwóch dni: dzień, godziny pracy
+z Grafiku, liczba wpisów i problemów), linię protokołu próby przy wpisie, sekcję „Próby szczelności” ze wszystkimi
+próbami okresu (nieszczelne na czerwono), a na końcu miejsca na podpisy „Wykonawca” i „Odbierający / kierownik”
+oraz datę sporządzenia. Stopka okna: główna akcja to wysłanie przez WhatsApp (szefowi / do grupy / dodaj odbiorców),
+obok „Udostępnij” (gdy telefon pozwala) i „Więcej” z „Kopiuj tekst”, „Do notatki”, „Drukuj / PDF”.
+
+**Gdzie jest.** `src/components/study/JournalReport.tsx`: stopka (`DropdownMenu`), `ReportPaper` (`DaysTable`,
+`data-report-test`, `data-report-tests`, `data-report-signatures`).
+
+**Jak działa i dlaczego.** Siedem równorzędnych przycisków chowało to, po co się raport otwiera — wysłanie szefowi.
+Raport z próbami, godzinami i podpisami służy jako dokument odbioru („było zrobione przed zakryciem”). Podgląd
+i druk to ten sam komponent, więc wyglądają tak samo; w druku kolory zamieniają się na czarny (`index.css`).
+
+**Ograniczenia i pułapki.** Zestawienie dni tylko przy raporcie z co najmniej dwóch dni. Menu „Więcej” otwiera się
+w portalu — w testach `page.getByRole("menuitem", …)`, nie wewnątrz okna.
+
+**Testy.** `e2e/journal-pressure-test.spec.ts` (protokół w podglądzie, zestawienie prób, podpisy), `e2e/study.spec.ts`
+(„raport budowy…” przez menu „Więcej”), `e2e/report-whatsapp.spec.ts`.
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Praca → Dziennik budowy
 
 Zakładka „Dziennik” na `/nauka` (`src/components/study/StudyJournal.tsx`). Dziennik instalatora

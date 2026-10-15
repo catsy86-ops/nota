@@ -39,10 +39,15 @@ test("protokół próby: wpis z ciśnieniem, czasem i spadkiem trafia na listę 
 
   await page.getByTestId("study-journal").getByRole("button", { name: "Raport" }).click();
   const dialog = page.getByTestId("journal-report");
-  await dialog.getByRole("button", { name: "Kopiuj tekst" }).click();
+  await dialog.getByRole("button", { name: "Więcej" }).click();
+  await page.getByRole("menuitem", { name: "Kopiuj tekst" }).click();
   const copied = await page.evaluate(() => (window as unknown as { __copied: string }).__copied);
   expect(copied).toContain("Pion A — próba odbiorowa");
   expect(copied).toContain("Próba szczelności (woda, 9 bar, 30 min, spadek 0,1 bar): szczelna");
+  // Druk firmowy: protokół przy wpisie, zestawienie prób, miejsca na podpisy.
+  await expect(dialog.locator("[data-report-test]")).toHaveCount(1);
+  await expect(dialog.locator("[data-report-tests]")).toContainText("woda, 9 bar");
+  await expect(dialog.locator("[data-report-signatures]")).toContainText("Wykonawca (podpis)");
 });
 
 test("protokół na zalanie (kanalizacja): bez ciśnienia, wynik nieszczelna", async ({ page }) => {
