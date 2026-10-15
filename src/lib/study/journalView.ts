@@ -90,6 +90,20 @@ export function journalSites(entries: readonly JournalEntry[]): string[] {
   return [...last.entries()].sort((a, b) => b[1] - a[1]).map(([s]) => s);
 }
 
+export const SITE_SUGGESTIONS = 6;
+
+/**
+ * Pigułki budów w arkuszu: ostatnio używane, bez bieżącej; przy wpisywaniu tylko pasujące
+ * (bez ogonków, każde słowo gdziekolwiek w nazwie).
+ */
+export function suggestSites(sites: readonly string[], query: string, current: string, limit = SITE_SUGGESTIONS): string[] {
+  const words = fold(query).split(/\s+/).filter(Boolean);
+  const cur = current.trim();
+  return sites
+    .filter((s) => s !== cur && words.every((w) => fold(s).includes(w)))
+    .slice(0, limit);
+}
+
 export interface JournalSiteGroup<E extends JournalEntry = JournalEntry> {
   /** Budowa przycięta; `""` = bez budowy. */
   site: string;

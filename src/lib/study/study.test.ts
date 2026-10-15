@@ -4,7 +4,7 @@ import { buildRound, missedTopics, scoreRound } from "./quiz";
 import { topicToNote } from "./toNote";
 import { journalImageRefs } from "./images";
 import { clearJournalDraft, getJournalDraft, patchJournalDraft, sanitizeDraft, setJournalDraftTopic, EMPTY_DRAFT } from "./draft";
-import { dayLabel, entriesPl, filterJournal, fromLocalInput, groupJournal, journalSites, NO_FILTER, problemsPl, splitRecent, toLocalInput, whenLabel } from "./journalView";
+import { dayLabel, entriesPl, filterJournal, fromLocalInput, groupJournal, journalSites, NO_FILTER, suggestSites, problemsPl, splitRecent, toLocalInput, whenLabel } from "./journalView";
 import { closeJournalSheet, getJournalEditForm, openJournalEdit, patchJournalEditForm } from "./entrySheet";
 import {
   sanitizeStudy, moveTopic, recordRound, activeStreak, toggleChecked, getStudy, columnOf, resetChecklist,
@@ -397,5 +397,13 @@ describe("dziennik — oś czasu i filtry", () => {
     const { recent, older } = splitRecent([...entries, old, edge], at(15, 12));
     expect(recent.map((x) => x.id)).toEqual(["a", "b", "c", "d", "y"]);
     expect(older).toBe(1);
+  });
+
+  it("podpowiada budowy: bez bieżącej, po wpisanych słowach bez ogonków, z limitem", () => {
+    const sites = ["Polna 2", "Łąkowa 7", "Lipowa 5", "Ogrodowa 1"];
+    expect(suggestSites(sites, "", "Polna 2")).toEqual(["Łąkowa 7", "Lipowa 5", "Ogrodowa 1"]);
+    expect(suggestSites(sites, "lakowa", "")).toEqual(["Łąkowa 7"]);
+    expect(suggestSites(sites, "owa", "", 2)).toEqual(["Łąkowa 7", "Lipowa 5"]);
+    expect(suggestSites(sites, "Lipowa 5", "Lipowa 5")).toEqual([]);
   });
 });

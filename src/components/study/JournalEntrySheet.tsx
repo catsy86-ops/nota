@@ -19,7 +19,7 @@ import {
 } from "@/lib/study/store";
 import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft, type JournalDraft } from "@/lib/study/draft";
 import { closeJournalSheet, getJournalEditForm, patchJournalEditForm, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
-import { fromLocalInput, KIND_LABEL, toLocalInput, whenLabel } from "@/lib/study/journalView";
+import { fromLocalInput, journalSites, KIND_LABEL, suggestSites, toLocalInput, whenLabel } from "@/lib/study/journalView";
 
 export function KindIcon({ kind, className = "h-4 w-4" }: { kind: JournalKind; className?: string }) {
   if (kind === "ok") return <CheckCircle2 className={cn(className, "shrink-0 text-emerald-600")} aria-hidden />;
@@ -79,6 +79,8 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const [processing, setProcessing] = useState(0);
   const [topicOpen, setTopicOpen] = useState(false);
   const [editingSite, setEditingSite] = useState(false);
+  /** Budowa w chwili otwarcia pola — dopóki jej nie zmienisz, pigułki pokazują wszystkie ostatnie. */
+  const [siteAtOpen, setSiteAtOpen] = useState("");
   const [editingWhen, setEditingWhen] = useState(false);
   const galleryRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -98,6 +100,22 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     setEditingWhen(false);
     if (open) setTopicOpen(topicFirst);
   }, [open, topicFirst, editing]);
+
+  const recentSites = useMemo(() => journalSites(study.journal), [study.journal]);
+  const siteChips = editingSite
+    ? suggestSites(recentSites, site === siteAtOpen ? "" : site, site)
+    : !site ? suggestSites(recentSites, "", "", 3) : [];
+
+  function openSiteEditor() {
+    setSiteAtOpen(site);
+    setEditingSite(true);
+  }
+
+  function pickSite(next: string) {
+    if (isEdit) patchJournalEditForm({ site: next }); else setSite(next);
+    haptic("selection");
+    setEditingSite(false);
+  }
 
   const items = useMemo(() => CHECKLIST.filter((c) => c.topic === topic), [topic]);
   const current = TOPICS.find((t) => t.id === topic) ?? null;
@@ -201,6 +219,25 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     />
   );
 
+  /** Ostatnie budowy: jeden dotyk zamiast pisania adresu na rusztowaniu. */
+  const siteChipsRow = siteChips.length > 0 && (
+    <div className="flex w-full flex-wrap gap-1.5" role="group" aria-label="Ostatnie budowy" data-testid="journal-site-chips">
+      {siteChips.map((s) => (
+        <button
+          key={s}
+          type="button"
+          // Bez utraty fokusu: pole nie zamyka się przed kliknięciem pigułki.
+          onPointerDown={(e) => e.preventDefault()}
+          onClick={() => pickSite(s)}
+          className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground hover:border-primary hover:text-foreground coarse:min-h-11 coarse:px-3 coarse:text-sm"
+        >
+          <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          <span className="truncate">{s}</span>
+        </button>
+      ))}
+    </div>
+  );
+
   const dictationHint = !dictation.supported
     ? "Dyktuj mikrofonem na klawiaturze telefonu."
     : !online ? "Bez internetu dyktuj mikrofonem na klawiaturze telefonu — przycisk obok działa tylko online." : null;
@@ -239,7 +276,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             ) : (
               <button
                 type="button"
-                onClick={() => setEditingSite(true)}
+                onClick={openSiteEditor}
                 aria-label={site ? `Budowa: ${site}. Zmień` : "Dodaj budowę"}
                 className="pressable inline-flex max-w-full items-center gap-1.5 rounded-full border border-border bg-muted/50 px-3 py-1.5 text-sm coarse:min-h-11"
               >
@@ -248,6 +285,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
               </button>
             )}
+            {editingSite && siteChipsRow}
             {/* Wpis „za wczoraj”: data i godzina zwinięte w pigułkę, domyślnie chwila zapisu. */}
             {editingWhen ? (
               <div className="flex w-full items-end gap-2">
@@ -277,6 +315,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
               </button>
             )}
+            {!editingSite && siteChipsRow}
           </div>
 
           <div role="radiogroup" aria-label="Rodzaj wpisu" className="grid grid-cols-3 gap-2">

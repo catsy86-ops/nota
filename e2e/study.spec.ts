@@ -386,7 +386,7 @@ test("dziennik: oś czasu dzień → budowa, szukanie bez ogonków, filtry i „
   await journal.getByRole("button", { name: "Wyczyść filtry" }).click();
 
   // Budowa i rodzaj.
-  await journal.getByRole("combobox", { name: "Budowa" }).selectOption("Lipowa 5");
+  await journal.getByRole("group", { name: "Budowa" }).getByRole("button", { name: "Lipowa 5" }).click();
   await expect(journal.locator("[data-journal-entry]")).toHaveCount(2);
   await journal.getByRole("button", { name: "Zrobione", exact: true }).click();
   await expect(journal.locator("[data-journal-entry]")).toHaveCount(1);
@@ -399,6 +399,20 @@ test("dziennik: oś czasu dzień → budowa, szukanie bez ogonków, filtry i „
   await expect(journal.getByText("Żółta rura przecieka")).toBeVisible();
   await journal.getByRole("button", { name: "Oznacz jako rozwiązany" }).click();
   await expect(journal.getByText("Nic nie pasuje. Zmień słowa albo wyczyść filtry.")).toBeVisible();
+
+  // Nowy wpis: ostatnie budowy pigułkami, przy wpisywaniu tylko pasujące.
+  await journal.getByRole("button", { name: "Wpis", exact: true }).click();
+  const sheet = page.getByTestId("journal-entry-sheet");
+  const chips = sheet.getByTestId("journal-site-chips");
+  await expect(chips.getByRole("button")).toHaveText(["Lipowa 5", "Polna 2"]);
+  await chips.getByRole("button", { name: "Polna 2" }).click();
+  await expect(sheet.getByRole("button", { name: "Budowa: Polna 2. Zmień" })).toBeVisible();
+  await sheet.getByRole("button", { name: "Budowa: Polna 2. Zmień" }).click();
+  await expect(chips.getByRole("button")).toHaveText(["Lipowa 5"]);
+  await sheet.getByLabel("Inwestycja / adres").fill("pol");
+  await expect(chips.getByRole("button")).toHaveText(["Polna 2"]);
+  await chips.getByRole("button", { name: "Polna 2" }).click();
+  await expect(sheet.getByRole("button", { name: "Budowa: Polna 2. Zmień" })).toBeVisible();
 });
 
 test("dziennik: raport budowy z godzinami z Grafiku — udostępnij, kopiuj, do notatki, wydruk", async ({ page }) => {

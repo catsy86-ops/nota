@@ -945,7 +945,7 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 - [x] D3b Problem otwarty/rozwiązany, licznik „Otwarte problemy: N”. ✅ 2026-10-15: ołówek na liście otwiera ten sam arkusz z osobnym formularzem edycji (`entrySheet.ts`, tylko w pamięci — szkic nowego wpisu nietknięty, zdjęcia edycji chronione przed odśmiecaniem); pigułka „Kiedy” (`datetime-local`, „Teraz”) w nowym wpisie i edycji, przyszłość przycięta do teraz; budowa w edycji zmienia tylko ten wpis; edycja na problem cofa temat z „Umiem”. Problem: pole `resolved` (moment rozwiązania), „Oznacz jako rozwiązany” / „Otwórz ponownie” na liście, „Problem rozwiązany” w arkuszu, licznik w nagłówku dziennika. Vitest 999/999, e2e `study.spec.ts` 13/13.
 
 ### D4 — budowy
-- [ ] D4a Pigułki ostatnich budów w arkuszu i filtrach.
+- [x] D4a Pigułki ostatnich budów w arkuszu i filtrach. ✅ arkusz: 3 ostatnie przy pustej budowie, przy edycji do 6 pasujących (`suggestSites`); filtr budowy pigułkami zamiast listy.
 - [ ] D4b Karta budowy (nazwa, adres, inwestor, archiwum); wpis z `siteId` + kopią nazwy; migracja tekstowych nazw.
 
 ### D5 — oś czasu i filtry

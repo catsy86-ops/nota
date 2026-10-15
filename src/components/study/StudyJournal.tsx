@@ -28,7 +28,7 @@ const KIND_CHIPS: { value: KindFilter | null; label: string }[] = [
 ];
 
 const selectClass =
-  "h-9 min-w-0 flex-1 truncate rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 sm:flex-none sm:max-w-[14rem]";
+  "h-9 w-full min-w-0 truncate rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 sm:w-auto sm:max-w-[14rem]";
 
 /**
  * Dziennik z budowy: na górze to, co już zapisane, nowy wpis w arkuszu („+ Wpis”, „+” w dolnym
@@ -149,32 +149,38 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                   );
                 })}
               </div>
-              {(sites.length > 0 || topics.length > 0) && (
-                <div className="flex gap-2">
-                  {sites.length > 0 && (
-                    <select
-                      aria-label="Budowa"
-                      value={filter.site === null ? "all" : `s:${filter.site}`}
-                      onChange={(ev) => patch({ site: ev.target.value === "all" ? null : ev.target.value.slice(2) })}
-                      className={selectClass}
-                    >
-                      <option value="all">Wszystkie budowy</option>
-                      {sites.map((s) => <option key={s} value={`s:${s}`}>{s}</option>)}
-                      {hasUnsited && <option value="s:">Bez budowy</option>}
-                    </select>
-                  )}
-                  {topics.length > 0 && (
-                    <select
-                      aria-label="Temat"
-                      value={filter.topic ?? ""}
-                      onChange={(ev) => patch({ topic: ev.target.value || null })}
-                      className={selectClass}
-                    >
-                      <option value="">Wszystkie tematy</option>
-                      {topics.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
-                    </select>
-                  )}
+              {sites.length > 0 && (
+                <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none]" role="group" aria-label="Budowa">
+                  {[null, ...sites, ...(hasUnsited ? [""] : [])].map((s) => {
+                    const on = filter.site === s;
+                    return (
+                      <button
+                        key={s ?? "all"}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() => patch({ site: s })}
+                        className={cn(
+                          "pressable inline-flex max-w-[14rem] shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-xs coarse:min-h-11 coarse:px-4 coarse:text-sm",
+                          on ? "border-primary bg-primary/10 font-medium text-primary-ink" : "border-border text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        {s && <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />}
+                        <span className="truncate">{s === null ? "Wszystkie budowy" : s || "Bez budowy"}</span>
+                      </button>
+                    );
+                  })}
                 </div>
+              )}
+              {topics.length > 0 && (
+                <select
+                  aria-label="Temat"
+                  value={filter.topic ?? ""}
+                  onChange={(ev) => patch({ topic: ev.target.value || null })}
+                  className={selectClass}
+                >
+                  <option value="">Wszystkie tematy</option>
+                  {topics.map((t) => <option key={t.id} value={t.id}>{t.title}</option>)}
+                </select>
               )}
               {filtered && (
                 <p className="flex items-center justify-between gap-2 text-xs text-muted-foreground" aria-live="polite" data-testid="journal-results">
