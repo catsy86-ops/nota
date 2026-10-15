@@ -1,5 +1,6 @@
 import type { Note } from "@/hooks/useNotes";
 import { CHECKLIST, MODULES, QUESTIONS, TOPICS, type StudyTopic } from "./content";
+import { reportBody, type JournalReport } from "./report";
 
 /** Treść notatki z tematu: streszczenie, punkty jako lista kontrolna i skutki pominięcia. */
 export function topicToNote(topic: StudyTopic, now: number = Date.now(), id: string = crypto.randomUUID()): Note {
@@ -24,3 +25,18 @@ export function topicToNote(topic: StudyTopic, now: number = Date.now(), id: str
 
 export const topicQuestionCount = (topicId: string) => QUESTIONS.filter((q) => q.topic === topicId).length;
 export const topicById = (id: string) => TOPICS.find((t) => t.id === id);
+
+/** Raport z budowy jako notatka z etykietą „budowa” — te same klucze zdjęć, bez kopiowania bajtów. */
+export function reportToNote(report: JournalReport, now: number = Date.now(), id: string = crypto.randomUUID()): Note {
+  return {
+    id,
+    title: report.title,
+    content: reportBody(report),
+    color: "default",
+    pinned: false, archived: false, trashed: false, trashedAt: null,
+    labels: ["budowa"],
+    reminder: null, priority: "none", images: [...new Set(report.images)],
+    checklist: [],
+    folderId: null, order: 0, createdAt: now, updatedAt: now,
+  };
+}

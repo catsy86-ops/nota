@@ -924,3 +924,14 @@ html[data-motion="reduced"] .note-lift:hover .note-card { translate: none; }
   content: attr(aria-label); font-size: 0.6875rem; line-height: 1.15; font-weight: 500;
   text-align: center; color: hsl(var(--foreground)); overflow-wrap: anywhere;
 }
+
+/* Wydruk raportu z budowy (JournalReport): drukuje się tylko `#report-print`, reszta strony schowana. */
+#report-print { display: none; }
+@media print {
+  html.printing-report body > *:not(#report-print) { display: none !important; }
+  html.printing-report #report-print { display: block; }
+  html.printing-report body { background: #fff; }
+  /* Ciemny motyw nie trafia na papier. */
+  html.printing-report .report-paper, html.printing-report .report-paper * { background: transparent !important; color: #000 !important; border-color: #999 !important; }
+  @page { margin: 14mm; }
+}

@@ -400,3 +400,65 @@ test("dziennik: oś czasu dzień → budowa, szukanie bez ogonków, filtry i „
   await journal.getByRole("button", { name: "Oznacz jako rozwiązany" }).click();
   await expect(journal.getByText("Nic nie pasuje. Zmień słowa albo wyczyść filtry.")).toBeVisible();
 });
+
+test("dziennik: raport budowy z godzinami z Grafiku — udostępnij, kopiuj, do notatki, wydruk", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 9, 14, 12, 0).getTime());
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    Object.defineProperty(navigator, "share", { configurable: true, value: async (data: ShareData) => { w.__shared = data; } });
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async (t: string) => { w.__copied = t; } } });
+    window.print = () => {
+      w.__printed = document.documentElement.classList.contains("printing-report") ? document.getElementById("report-print")?.textContent : null;
+    };
+    if (sessionStorage.getItem("seeded")) return;
+    sessionStorage.setItem("seeded", "1");
+    const at = (d: number, h: number, m = 0) => new Date(2026, 9, d, h, m).getTime();
+    const e = (id: string, when: number, kind: string, site: string, text: string) => ({ id, at: when, kind, topic: null, text, site, checked: [], images: [] });
+    localStorage.setItem("kaczy.study.v1", JSON.stringify({
+      journal: [
+        e("a", at(14, 8, 15), "ok", "Lipowa 5", "Próba szczelności pionu"),
+        e("b", at(14, 10, 20), "problem", "Lipowa 5", "Żółta rura przecieka"),
+        e("c", at(14, 7), "note", "Polna 2", "Inwestor chce zmian"),
+        e("d", at(13, 9), "note", "Lipowa 5", "Dostawa rur"),
+      ],
+    }));
+    localStorage.setItem("kaczy:shifts", JSON.stringify({ version: 2, days: { "2026-10-14": { type: "b" } } }));
+  });
+  await page.goto("/nauka");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByTestId("study-journal").getByRole("button", { name: "Raport" }).click();
+
+  // Ostatnia budowa i dzień jej ostatniego wpisu; godziny z Grafiku.
+  const dialog = page.getByTestId("journal-report");
+  await expect(dialog.getByRole("combobox", { name: "Budowa raportu" })).toHaveValue("s:Lipowa 5");
+  await expect(dialog.getByRole("button", { name: "Dziś" })).toHaveAttribute("aria-pressed", "true");
+  const summary = dialog.getByTestId("report-summary");
+  await expect(summary).toHaveText("2 wpisy · godziny pracy: 10 h · otwarte problemy: 1");
+  await expect(dialog.locator("[data-report-work]")).toHaveText("Budowa 07:00–17:00 · 10 h");
+
+  await dialog.getByRole("button", { name: "7 dni" }).click();
+  await expect(summary).toHaveText("3 wpisy · godziny pracy: 10 h · otwarte problemy: 1");
+  await expect(dialog.locator("[data-report-day]")).toHaveCount(2);
+  await dialog.getByRole("combobox", { name: "Budowa raportu" }).selectOption("all");
+  await expect(summary).toContainText("4 wpisy");
+  await dialog.getByRole("combobox", { name: "Budowa raportu" }).selectOption("s:Lipowa 5");
+
+  await dialog.getByRole("button", { name: /Udostępnij/ }).click();
+  const shared = await page.evaluate(() => (window as unknown as { __shared: ShareData }).__shared);
+  expect(shared.title).toBe("Raport: Lipowa 5 — 8–14 października 2026");
+  expect(shared.text).toContain("- 10:20 Problem otwarty: Żółta rura przecieka");
+  expect(shared.text).toContain("Praca: Budowa 07:00–17:00, 10 h");
+
+  await dialog.getByRole("button", { name: "Kopiuj tekst" }).click();
+  await expect(page.getByText("Skopiowano raport")).toBeVisible();
+  expect(await page.evaluate(() => (window as unknown as { __copied: string }).__copied)).toContain("# Raport: Lipowa 5");
+
+  await dialog.getByRole("button", { name: "Drukuj / PDF" }).click();
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __printed?: string }).__printed)).toContain("Żółta rura przecieka");
+
+  await dialog.getByRole("button", { name: "Do notatki" }).click();
+  await expect(page.getByText("Dodano notatkę „Raport: Lipowa 5 — 8–14 października 2026”")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await page.goto("/");
+  await expect(page.getByText("Raport: Lipowa 5 — 8–14 października 2026")).toBeVisible();
+});

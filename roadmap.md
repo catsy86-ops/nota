@@ -952,10 +952,10 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 - [x] Dzień → budowa, przyklejone nagłówki dni; filtry rodzaju, budowy, tematu; szukanie bez ogonków; ostatnie 30 dni + „Pokaż starsze” (`journalView.ts`). ✅ 2026-10-15: czyste `filterJournal`, `groupJournal`, `journalSites`, `splitRecent` w `journalView.ts`; nagłówek dnia przyklejony pod nagłówkiem aplikacji z liczbą wpisów, budowa jako podtytuł grupy (zamiast na każdym wpisie); pigułki rodzaju (też „Otwarte”), listy budowy (z „Bez budowy”) i tematu; licznik „Otwarte problemy” przełącza filtr; każdy filtr szuka w całym dzienniku, bez filtra okno 30 dni. Vitest 1003/1003, e2e `study.spec.ts` 14/14.
 
 ### D6 — raport
-- [ ] D6a Raport dnia/zakresu dla budowy (markdown, czysta funkcja), godziny z Grafiku.
-- [ ] D6b „Udostępnij” (`navigator.share` z tekstem i zdjęciami; inaczej schowek).
-- [ ] D6c „Do notatki” (etykieta `budowa`, te same klucze zdjęć).
-- [ ] D6d PDF: widok do druku (`@media print`).
+- [x] D6a Raport dnia/zakresu dla budowy (markdown, czysta funkcja), godziny z Grafiku.
+- [x] D6b „Udostępnij” (`navigator.share` z tekstem i zdjęciami; inaczej schowek).
+- [x] D6c „Do notatki” (etykieta `budowa`, te same klucze zdjęć).
+- [x] D6d PDF: widok do druku (`@media print`). ✅ 2026-10-15: `lib/study/report.ts` (`buildJournalReport`, `reportBody`/`reportText`, `workOn` — zmiana z Grafiku z odchyleniem, nieobecność jako „Grafik: Urlop”; godziny tylko z dni z wpisami), okno `JournalReport.tsx` („Raport” w nagłówku dziennika; budowa z filtra albo ostatnia, dzień jej ostatniego wpisu; Dziś/Wczoraj/7 dni/Ten miesiąc/Wybierz), podgląd jak kartka = układ wydruku; zdjęcia (do 10) wczytane z góry do `navigator.share`, bez share → „Kopiuj tekst”; `reportToNote` (etykieta `budowa`); wydruk w `#report-print` + `html.printing-report` (index.css). Vitest 1007/1007, e2e study 15/15.
 
 ### D7 — powiązania z nauką
 - [ ] Problem z tematem → „Ćwicz teraz”; karta tematu pokazuje ostatni problem; pytania tematu należne dziś (po N3).

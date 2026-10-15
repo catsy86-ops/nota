@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, CheckCircle2, MapPin, Pencil, Plus, Search, X } from "lucide-react";
+import { Check, CheckCircle2, FileText, MapPin, Pencil, Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { haptic } from "@/lib/haptics";
@@ -14,6 +14,7 @@ import {
 import { useJournalDraft } from "@/lib/study/draft";
 import { openJournalEdit, openJournalSheet } from "@/lib/study/entrySheet";
 import { JournalEntrySheet, KindIcon } from "./JournalEntrySheet";
+import { JournalReportDialog } from "./JournalReport";
 
 const topicTitle = (id: string | null) => TOPICS.find((t) => t.id === id)?.title ?? null;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -42,6 +43,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   const [zoom, setZoom] = useState<string | null>(null);
   const [filter, setFilter] = useState<JournalFilter>(NO_FILTER);
   const [showOlder, setShowOlder] = useState(false);
+  const [report, setReport] = useState(false);
   const patch = (p: Partial<JournalFilter>) => setFilter((f) => ({ ...f, ...p }));
   const filtered = isFiltered(filter);
 
@@ -93,9 +95,16 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
               </button>
             )}
           </div>
-          <Button onClick={() => openJournalSheet()} className="shrink-0 coarse:h-11">
-            <Plus className="mr-1 h-4 w-4" aria-hidden />{hasDraft ? "Dokończ wpis" : "Wpis"}
-          </Button>
+          <div className="flex shrink-0 gap-2">
+            {study.journal.length > 0 && (
+              <Button variant="outline" onClick={() => setReport(true)} className="max-sm:w-9 max-sm:px-0 coarse:h-11 max-sm:coarse:w-11" title="Raport dnia albo okresu dla budowy">
+                <FileText className="h-4 w-4 sm:mr-1" aria-hidden /><span className="max-sm:sr-only">Raport</span>
+              </Button>
+            )}
+            <Button onClick={() => openJournalSheet()} className="coarse:h-11">
+              <Plus className="mr-1 h-4 w-4" aria-hidden />{hasDraft ? "Dokończ wpis" : "Wpis"}
+            </Button>
+          </div>
         </header>
 
         {study.journal.length === 0 ? (
@@ -218,6 +227,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
         )}
       </section>
       <JournalEntrySheet onPractice={onPractice} />
+      <JournalReportDialog open={report} onOpenChange={setReport} journal={study.journal} sites={sites} initialSite={filter.site} />
       <Dialog open={zoom !== null} onOpenChange={(o) => { if (!o) setZoom(null); }}>
         <DialogContent className="max-w-3xl p-3">
           <DialogTitle className="sr-only">Zdjęcie z budowy</DialogTitle>

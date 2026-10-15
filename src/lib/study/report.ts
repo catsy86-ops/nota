@@ -1,0 +1,188 @@
+import { pluralPl } from "@/lib/plural";
+import { dayType, isAbsence, type ShiftData } from "@/lib/shifts/model";
+import { entryMinutesOn, formatDuration } from "@/lib/shifts/time";
+import { entriesPl, KIND_LABEL } from "./journalView";
+import type { JournalEntry } from "./yStudy";
+
+/**
+ * Raport z dziennika budowy: dzień albo zakres dni, jedna budowa albo wszystkie.
+ * Czysta funkcja — ekran raportu, „Udostępnij”, „Do notatki” i wydruk biorą
+ * ten sam wynik. Godziny pracy z Grafiku (dzień z wpisem w raporcie i zmianą).
+ */
+
+export interface ReportOptions {
+  /** Budowa jak we wpisie (przycięta); `null` = wszystkie, `""` = wpisy bez budowy. */
+  site: string | null;
+  /** Dni lokalne „2026-10-14”, oba włącznie. */
+  from: string;
+  to: string;
+  shifts?: ShiftData | null;
+  topicTitle?: (id: string) => string | null;
+}
+
+export interface ReportWork {
+  /** „Budowa 07:00–17:00” albo „Urlop”. */
+  label: string;
+  /** Czas pracy z odchyleniem; 0 przy nieobecności. */
+  minutes: number;
+}
+
+export interface ReportEntry {
+  entry: JournalEntry;
+  /** „08:15”. */
+  time: string;
+  /** „Problem otwarty”, „Problem rozwiązany 15.10”, „Zrobione”… */
+  status: string;
+  topic: string | null;
+  /** Budowa wpisu — tylko w raporcie ze wszystkich budów. */
+  site: string | null;
+}
+
+export interface ReportDay {
+  key: string;
+  label: string;
+  work: ReportWork | null;
+  entries: ReportEntry[];
+}
+
+export interface JournalReport {
+  title: string;
+  /** „14 października 2026” albo „7–14 października 2026”. */
+  period: string;
+  site: string | null;
+  days: ReportDay[];
+  count: number;
+  workMinutes: number;
+  /** Problemy z raportu, które wciąż są otwarte. */
+  open: ReportEntry[];
+  /** Zdjęcia wszystkich wpisów, od najstarszego. */
+  images: string[];
+}
+
+const pad = (n: number) => String(n).padStart(2, "0");
+const keyOf = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const dateOf = (key: string) => {
+  const [y, m, d] = key.split("-").map(Number);
+  return new Date(y, m - 1, d);
+};
+
+export const dayKeyOf = (at: number) => keyOf(new Date(at));
+
+/** Dzień `key` przesunięty o `n` dni. */
+export const shiftKey = (key: string, n: number) => {
+  const d = dateOf(key);
+  return keyOf(new Date(d.getFullYear(), d.getMonth(), d.getDate() + n));
+};
+
+const MONTH_GEN = ["stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca", "lipca", "sierpnia", "września", "października", "listopada", "grudnia"];
+
+/** „14 października 2026”, „7–14 października 2026”, „28 września – 3 października 2026”. */
+export function periodLabel(from: string, to: string): string {
+  const a = dateOf(from);
+  const b = dateOf(to);
+  const full = (d: Date) => `${d.getDate()} ${MONTH_GEN[d.getMonth()]} ${d.getFullYear()}`;
+  if (from === to) return full(a);
+  if (a.getFullYear() !== b.getFullYear()) return `${full(a)} – ${full(b)}`;
+  if (a.getMonth() !== b.getMonth()) return `${a.getDate()} ${MONTH_GEN[a.getMonth()]} – ${full(b)}`;
+  return `${a.getDate()}–${full(b)}`;
+}
+
+const dayTitle = (key: string) => {
+  const d = dateOf(key);
+  return `${d.toLocaleDateString("pl-PL", { weekday: "long" })}, ${d.getDate()} ${MONTH_GEN[d.getMonth()]}`;
+};
+
+const shortDate = (at: number) => {
+  const d = new Date(at);
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}`;
+};
+
+/** Zmiana z Grafiku w dniu `key`; `null`, gdy dzień bez wpisu w Grafiku. */
+export function workOn(shifts: ShiftData | null | undefined, key: string): ReportWork | null {
+  const entry = shifts?.days[key];
+  const base = entry && shifts.types.find((t) => t.id === entry.type);
+  if (!base) return null;
+  const t = dayType(base, entry);
+  if (isAbsence(t)) return { label: t.name, minutes: 0 };
+  return { label: `${t.name} ${t.start}–${t.end}`, minutes: entryMinutesOn(t, entry, key) };
+}
+
+export function buildJournalReport(journal: readonly JournalEntry[], opts: ReportOptions): JournalReport {
+  const from = opts.from <= opts.to ? opts.from : opts.to;
+  const to = opts.from <= opts.to ? opts.to : opts.from;
+  const title = (id: string | null) => (id ? opts.topicTitle?.(id) ?? null : null);
+  const picked = journal
+    .filter((e) => {
+      const k = dayKeyOf(e.at);
+      return k >= from && k <= to && (opts.site === null || e.site.trim() === opts.site);
+    })
+    .sort((a, b) => a.at - b.at);
+
+  const days: ReportDay[] = [];
+  const open: ReportEntry[] = [];
+  for (const e of picked) {
+    const key = dayKeyOf(e.at);
+    let day = days[days.length - 1];
+    if (!day || day.key !== key) days.push((day = { key, label: dayTitle(key), work: workOn(opts.shifts, key), entries: [] }));
+    const d = new Date(e.at);
+    const isOpen = e.kind === "problem" && e.resolved === undefined;
+    const item: ReportEntry = {
+      entry: e,
+      time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
+      status: e.kind !== "problem" ? KIND_LABEL[e.kind] : isOpen ? "Problem otwarty" : `Problem rozwiązany ${shortDate(e.resolved!)}`,
+      topic: title(e.topic),
+      site: opts.site === null ? e.site.trim() || "bez budowy" : null,
+    };
+    day.entries.push(item);
+    if (isOpen) open.push(item);
+  }
+
+  const period = periodLabel(from, to);
+  return {
+    title: `Raport${opts.site ? `: ${opts.site}` : opts.site === "" ? ": bez budowy" : ""} — ${period}`,
+    period,
+    site: opts.site,
+    days,
+    count: picked.length,
+    workMinutes: days.reduce((s, d) => s + (d.work?.minutes ?? 0), 0),
+    open,
+    images: picked.flatMap((e) => e.images),
+  };
+}
+
+const photosPl = (n: number) => `${n} ${pluralPl(n, ["zdjęcie", "zdjęcia", "zdjęć"])}`;
+
+/** Jednowierszowy opis wpisu bez godziny: „Problem otwarty: Żółta rura przecieka · temat · 2 zdjęcia”. */
+function entryLine(r: ReportEntry): string {
+  const text = r.entry.text.trim() || "Sprawdzone punkty listy";
+  const extra = [r.site, r.topic && `temat: ${r.topic}`, r.entry.images.length > 0 && photosPl(r.entry.images.length)].filter(Boolean);
+  // Kolejne linie tekstu wcięte — zostają w tym samym punkcie listy.
+  return `${r.status}: ${text.replace(/\n+/g, "\n  ")}${extra.length ? ` (${extra.join(", ")})` : ""}`;
+}
+
+/** Podsumowanie raportu w jednej linii: „5 wpisów · godziny pracy: 18 h · otwarte problemy: 1”. */
+export function reportSummary(r: JournalReport): string {
+  const parts = [entriesPl(r.count)];
+  if (r.workMinutes > 0) parts.push(`godziny pracy: ${formatDuration(r.workMinutes)}`);
+  if (r.open.length > 0) parts.push(`otwarte problemy: ${r.open.length}`);
+  return parts.join(" · ");
+}
+
+/** Treść raportu bez tytułu (markdown) — do notatki; `reportText` dokłada tytuł. */
+export function reportBody(r: JournalReport): string {
+  const lines: string[] = [reportSummary(r)];
+  if (r.count === 0) return lines.join("\n");
+  for (const d of r.days) {
+    lines.push("", `## ${d.label}`);
+    if (d.work) lines.push(d.work.minutes > 0 ? `Praca: ${d.work.label}, ${formatDuration(d.work.minutes)}` : `Grafik: ${d.work.label}`);
+    for (const e of d.entries) lines.push(`- ${e.time} ${entryLine(e)}`);
+  }
+  if (r.open.length > 0) {
+    lines.push("", "## Otwarte problemy");
+    for (const e of r.open) lines.push(`- ${shortDate(e.entry.at)} ${e.entry.text.trim().split("\n")[0] || "bez opisu"}`);
+  }
+  return lines.join("\n");
+}
+
+/** Cały raport jako tekst do udostępnienia i schowka. */
+export const reportText = (r: JournalReport) => `# ${r.title}\n\n${reportBody(r)}\n`;
