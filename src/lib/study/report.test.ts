@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { EMPTY_SHIFT_DATA, type ShiftData } from "@/lib/shifts/model";
 import { buildJournalReport, periodLabel, reportBody, reportText, shiftKey, workOn } from "./report";
 import type { JournalEntry } from "./yStudy";
+import { siteKey } from "./sites";
 
 const at = (day: number, h: number, m = 0) => new Date(2026, 9, day, h, m).getTime();
 const e = (id: string, when: number, kind: JournalEntry["kind"], site: string, text: string, extra: Partial<JournalEntry> = {}): JournalEntry =>
@@ -44,7 +45,7 @@ describe("raport z dziennika", () => {
   });
 
   it("jedna budowa w zakresie: dni od najstarszego, godziny tylko z dni z wpisami, otwarte problemy, zdjęcia", () => {
-    const r = buildJournalReport(journal, { site: "Lipowa 5", from: "2026-10-14", to: "2026-10-16", shifts, topicTitle: () => "Próby szczelności" });
+    const r = buildJournalReport(journal, { siteId: siteKey("Lipowa 5"), from: "2026-10-14", to: "2026-10-16", shifts, topicTitle: () => "Próby szczelności" });
     expect(r.title).toBe("Raport: Lipowa 5 — 14–16 października 2026");
     expect(r.count).toBe(4);
     expect(r.days.map((d) => d.key)).toEqual(["2026-10-14", "2026-10-15"]);
@@ -65,14 +66,27 @@ describe("raport z dziennika", () => {
   });
 
   it("wszystkie budowy: budowa przy wpisie; zakres odwrócony działa; pusty raport", () => {
-    const r = buildJournalReport(journal, { site: null, from: "2026-10-14", to: "2026-10-14" });
+    const r = buildJournalReport(journal, { siteId: null, from: "2026-10-14", to: "2026-10-14" });
     expect(r.title).toBe("Raport — 14 października 2026");
     expect(r.count).toBe(4);
     expect(reportBody(r)).toContain("Notatka: Inwestor chce zmian (Polna 2)");
 
-    expect(buildJournalReport(journal, { site: null, from: "2026-10-15", to: "2026-10-14" }).count).toBe(5);
+    expect(buildJournalReport(journal, { siteId: null, from: "2026-10-15", to: "2026-10-14" }).count).toBe(5);
 
-    const empty = buildJournalReport(journal, { site: "Lipowa 5", from: "2026-10-01", to: "2026-10-02" });
+    const card = { name: "Lipowa 5", address: "", investor: "" };
+    const empty = buildJournalReport(journal, { siteId: siteKey("Lipowa 5"), siteCard: card, from: "2026-10-01", to: "2026-10-02" });
     expect(reportText(empty)).toBe("# Raport: Lipowa 5 — 1–2 października 2026\n\n0 wpisów\n");
+  });
+
+  it("karta budowy: nazwa z karty, adres i inwestor na początku; wpis z siteId po zmianie nazwy", () => {
+    const moved = [...journal, e("z", at(14, 18), "ok", "Dom Nowaków", "Odbiór", { siteId: siteKey("Lipowa 5") })];
+    const r = buildJournalReport(moved, {
+      siteId: siteKey("Lipowa 5"), siteCard: { name: "Dom Nowaków", address: "ul. Lipowa 5, Kraków", investor: "Jan Nowak" },
+      from: "2026-10-14", to: "2026-10-14",
+    });
+    expect(r.title).toBe("Raport: Dom Nowaków — 14 października 2026");
+    expect(r.count).toBe(4);
+    expect(reportBody(r).split("\n").slice(0, 3)).toEqual(["Adres: ul. Lipowa 5, Kraków", "Inwestor: Jan Nowak", "4 wpisy · otwarte problemy: 1"]);
+    expect(buildJournalReport(moved, { siteId: null, siteCard: null, from: "2026-10-14", to: "2026-10-14" }).address).toBe("");
   });
 });

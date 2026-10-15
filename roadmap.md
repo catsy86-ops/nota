@@ -946,7 +946,7 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 
 ### D4 — budowy
 - [x] D4a Pigułki ostatnich budów w arkuszu i filtrach. ✅ arkusz: 3 ostatnie przy pustej budowie, przy edycji do 6 pasujących (`suggestSites`); filtr budowy pigułkami zamiast listy.
-- [ ] D4b Karta budowy (nazwa, adres, inwestor, archiwum); wpis z `siteId` + kopią nazwy; migracja tekstowych nazw.
+- [x] D4b Karta budowy (nazwa, adres, inwestor, archiwum); wpis z `siteId` + kopią nazwy; migracja tekstowych nazw. ✅ mapa Yjs `studySites` (`lib/study/sites.ts`), karta z nagłówka budowy na osi czasu i z filtra (`SiteCardDialog`); stare nazwy → `siteKey(nazwa)` przy odczycie, bez przepisywania dokumentu; filtry, oś czasu i raport po `siteId`, adres i inwestor w raporcie; archiwum za pigułką „Archiwum (n)”.
 
 ### D5 — oś czasu i filtry
 - [x] Dzień → budowa, przyklejone nagłówki dni; filtry rodzaju, budowy, tematu; szukanie bez ogonków; ostatnie 30 dni + „Pokaż starsze” (`journalView.ts`). ✅ 2026-10-15: czyste `filterJournal`, `groupJournal`, `journalSites`, `splitRecent` w `journalView.ts`; nagłówek dnia przyklejony pod nagłówkiem aplikacji z liczbą wpisów, budowa jako podtytuł grupy (zamiast na każdym wpisie); pigułki rodzaju (też „Otwarte”), listy budowy (z „Bez budowy”) i tematu; licznik „Otwarte problemy” przełącza filtr; każdy filtr szuka w całym dzienniku, bez filtra okno 30 dni. Vitest 1003/1003, e2e `study.spec.ts` 14/14.

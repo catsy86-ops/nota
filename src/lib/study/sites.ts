@@ -1,0 +1,119 @@
+import type { JournalEntry } from "./yStudy";
+
+/**
+ * Karty budów dziennika. Wpis trzyma `siteId` i kopię nazwy (`site`) — starsza wersja
+ * aplikacji i tekst raportu dalej ją widzą. Wpisy sprzed kart mają tylko nazwę: ich
+ * budowa to `siteKey(nazwa)`, liczone przy odczycie, więc migracja niczego nie
+ * przepisuje w dokumencie i dwa telefony nie robią sobie dwóch kart tej samej budowy.
+ * Karta trafia do dokumentu dopiero przy zapisie (nowa budowa, edycja karty).
+ */
+
+export interface SiteCard {
+  id: string;
+  name: string;
+  address: string;
+  investor: string;
+  /** Moment założenia karty (ms). */
+  created: number;
+  /** Budowa w archiwum od (ms) — znika z pigułek, wpisy zostają. */
+  archived?: number;
+}
+
+export const SITE_NAME_MAX = 120;
+export const SITE_FIELD_MAX = 200;
+
+/** Małe litery bez ogonków — „zolta” znajduje „żółta”. */
+export const fold = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l").replace(/Ł/g, "l").toLowerCase();
+
+/** Nazwa do porównań: bez ogonków, wielkości liter i podwójnych spacji. */
+export const foldName = (s: string) => fold(s).replace(/\s+/g, " ").trim();
+
+/** Id budowy ze starej nazwy tekstowej — to samo na każdym urządzeniu. */
+export function siteKey(name: string): string {
+  let h = 0x811c9dc5;
+  for (const ch of foldName(name)) {
+    h ^= ch.codePointAt(0)!;
+    h = Math.imul(h, 0x01000193) >>> 0;
+  }
+  return `n-${h.toString(16).padStart(8, "0")}`;
+}
+
+/** Budowa wpisu; `""` = bez budowy. */
+export const entrySiteId = (e: Pick<JournalEntry, "site" | "siteId">): string =>
+  e.siteId || (e.site.trim() ? siteKey(e.site) : "");
+
+const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+
+/** Kształt karty; `null` = nie do uratowania. */
+export function cleanSite(raw: unknown): SiteCard | null {
+  const s = raw as Partial<SiteCard> | null;
+  if (!s || typeof s !== "object" || typeof s.id !== "string" || !s.id || s.id.length > 64) return null;
+  const name = str(s.name, SITE_NAME_MAX);
+  if (!name) return null;
+  return {
+    id: s.id, name,
+    address: str(s.address, SITE_FIELD_MAX),
+    investor: str(s.investor, SITE_FIELD_MAX),
+    created: typeof s.created === "number" && Number.isFinite(s.created) ? s.created : 0,
+    ...(typeof s.archived === "number" && Number.isFinite(s.archived) ? { archived: s.archived } : {}),
+  };
+}
+
+export interface SiteInfo extends SiteCard {
+  /** Karta zapisana w dokumencie; `false` = budowa tylko z nazw we wpisach. */
+  stored: boolean;
+  count: number;
+  /** Nierozwiązane problemy. */
+  open: number;
+  /** Pierwszy i ostatni wpis (ms); `null` = bez wpisów. */
+  first: number | null;
+  last: number | null;
+}
+
+/**
+ * Wszystkie budowy: karty i nazwy ze starych wpisów, od ostatnio używanej (wpis albo
+ * założenie karty). Nazwa budowy bez karty — z najnowszego wpisu.
+ */
+export function siteDirectory(sites: Readonly<Record<string, SiteCard>>, journal: readonly JournalEntry[]): SiteInfo[] {
+  const out = new Map<string, SiteInfo>();
+  for (const card of Object.values(sites)) out.set(card.id, { ...card, stored: true, count: 0, open: 0, first: null, last: null });
+  for (const e of journal) {
+    const id = entrySiteId(e);
+    if (!id) continue;
+    let info = out.get(id);
+    if (!info) out.set(id, (info = { id, name: e.site.trim(), address: "", investor: "", created: e.at, stored: false, count: 0, open: 0, first: null, last: null }));
+    else if (!info.stored && (info.last ?? -Infinity) < e.at) info.name = e.site.trim();
+    info.count++;
+    if (e.kind === "problem" && e.resolved === undefined) info.open++;
+    info.first = info.first === null ? e.at : Math.min(info.first, e.at);
+    info.last = info.last === null ? e.at : Math.max(info.last, e.at);
+  }
+  const used = (s: SiteInfo) => Math.max(s.last ?? -Infinity, s.created);
+  return [...out.values()].sort((a, b) => used(b) - used(a) || a.name.localeCompare(b.name, "pl"));
+}
+
+/** Budowa o tej nazwie (bez ogonków i wielkości liter); czynna przed archiwalną. */
+export function findSiteByName(dir: readonly SiteInfo[], name: string): SiteInfo | undefined {
+  const key = foldName(name);
+  if (!key) return undefined;
+  const same = dir.filter((s) => foldName(s.name) === key);
+  return same.find((s) => s.archived === undefined) ?? same[0];
+}
+
+/**
+ * Nazwa z arkusza → budowa wpisu. Nowa nazwa zakłada kartę (`card`); id ze starej nazwy,
+ * chyba że zajęła je karta, której nazwę potem zmieniono.
+ */
+export function resolveSite(
+  dir: readonly SiteInfo[],
+  name: string,
+  now: number,
+): { siteId: string | undefined; site: string; card?: SiteCard } {
+  const clean = name.trim().slice(0, SITE_NAME_MAX);
+  if (!clean) return { siteId: undefined, site: "" };
+  const found = findSiteByName(dir, clean);
+  if (found) return { siteId: found.id, site: found.name };
+  const key = siteKey(clean);
+  const id = dir.some((s) => s.id === key) ? `s-${crypto.randomUUID().slice(0, 13)}` : key;
+  return { siteId: id, site: clean, card: { id, name: clean, address: "", investor: "", created: now } };
+}

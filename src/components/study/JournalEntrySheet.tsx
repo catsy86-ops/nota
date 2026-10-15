@@ -19,7 +19,8 @@ import {
 } from "@/lib/study/store";
 import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft, type JournalDraft } from "@/lib/study/draft";
 import { closeJournalSheet, getJournalEditForm, patchJournalEditForm, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
-import { fromLocalInput, journalSites, KIND_LABEL, suggestSites, toLocalInput, whenLabel } from "@/lib/study/journalView";
+import { fromLocalInput, KIND_LABEL, suggestSites, toLocalInput, whenLabel } from "@/lib/study/journalView";
+import { siteDirectory } from "@/lib/study/sites";
 
 export function KindIcon({ kind, className = "h-4 w-4" }: { kind: JournalKind; className?: string }) {
   if (kind === "ok") return <CheckCircle2 className={cn(className, "shrink-0 text-emerald-600")} aria-hidden />;
@@ -101,7 +102,10 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     if (open) setTopicOpen(topicFirst);
   }, [open, topicFirst, editing]);
 
-  const recentSites = useMemo(() => journalSites(study.journal), [study.journal]);
+  const recentSites = useMemo(
+    () => siteDirectory(study.sites, study.journal).filter((s) => s.archived === undefined).map((s) => s.name),
+    [study.sites, study.journal],
+  );
   const siteChips = editingSite
     ? suggestSites(recentSites, site === siteAtOpen ? "" : site, site)
     : !site ? suggestSites(recentSites, "", "", 3) : [];

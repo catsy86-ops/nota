@@ -12,7 +12,8 @@ import { useShifts } from "@/lib/shifts";
 import { imageStore } from "@/lib/imageStore";
 import { yjsStore } from "@/lib/yjsStore";
 import { TOPICS } from "@/lib/study/content";
-import type { JournalEntry } from "@/lib/study/store";
+import type { JournalEntry, SiteInfo } from "@/lib/study/store";
+import { entrySiteId } from "@/lib/study/sites";
 import { buildJournalReport, dayKeyOf, reportSummary, reportText, shiftKey, type JournalReport as Report } from "@/lib/study/report";
 import { reportToNote } from "@/lib/study/toNote";
 import { KindIcon } from "./JournalEntrySheet";
@@ -59,11 +60,14 @@ export function JournalReportDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   journal: readonly JournalEntry[];
-  sites: string[];
+  /** Budowy od ostatnio używanej (`siteDirectory`). */
+  sites: SiteInfo[];
+  /** Id budowy na start; `null` = ostatnia. */
   initialSite: string | null;
 }) {
   const shifts = useShifts();
   const [site, setSite] = useState<string | null>(null);
+  const card = site ? sites.find((x) => x.id === site) ?? null : null;
   const [range, setRange] = useState<[string, string]>(() => { const t = dayKeyOf(Date.now()); return [t, t]; });
   const [printing, setPrinting] = useState(false);
   const [custom, setCustom] = useState(false);
@@ -73,8 +77,8 @@ export function JournalReportDialog({
   // Przy otwarciu: budowa z filtra albo ostatnia, dzień jej ostatniego wpisu.
   useEffect(() => {
     if (!open) return;
-    const s = initialSite ?? sites[0] ?? null;
-    const last = journal.filter((e) => s === null || e.site.trim() === s).reduce((m, e) => Math.max(m, e.at), 0);
+    const s = initialSite ?? sites.find((x) => x.count > 0)?.id ?? null;
+    const last = journal.filter((e) => s === null || entrySiteId(e) === s).reduce((m, e) => Math.max(m, e.at), 0);
     const day = last ? dayKeyOf(last) : dayKeyOf(Date.now());
     setSite(s);
     setRange([day, day]);
@@ -84,8 +88,8 @@ export function JournalReportDialog({
   }, [open]);
 
   const report = useMemo(
-    () => buildJournalReport(journal, { site, from: range[0], to: range[1], shifts, topicTitle }),
-    [journal, site, range, shifts],
+    () => buildJournalReport(journal, { siteId: site, siteCard: card, from: range[0], to: range[1], shifts, topicTitle }),
+    [journal, site, card, range, shifts],
   );
   const preset = presetOf(range[0], range[1], today);
   const showDates = custom || preset === "custom";
@@ -143,7 +147,9 @@ export function JournalReportDialog({
                 className={fieldClass}
               >
                 <option value="all">Wszystkie budowy</option>
-                {sites.map((s) => <option key={s} value={`s:${s}`}>{s}</option>)}
+                {sites.filter((s) => s.count > 0 || s.id === site).map((s) => (
+                  <option key={s.id} value={`s:${s.id}`}>{s.archived !== undefined ? `${s.name} (archiwum)` : s.name}</option>
+                ))}
                 {hasUnsited && <option value="s:">Bez budowy</option>}
               </select>
             </label>
@@ -243,6 +249,11 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
           <MapPin className="h-3.5 w-3.5 text-primary-ink" aria-hidden />
           {report.site === null ? "Wszystkie budowy" : report.site || "Bez budowy"}
         </p>
+        {(report.address || report.investor) && (
+          <p className="text-xs text-muted-foreground" data-testid="report-site-card">
+            {[report.address, report.investor && `inwestor: ${report.investor}`].filter(Boolean).join(" · ")}
+          </p>
+        )}
         <h2 className="font-display text-xl leading-tight">{report.period}</h2>
         <p className="mt-1 font-mono text-xs tabular-nums text-muted-foreground" data-testid="report-summary">{reportSummary(report)}</p>
       </header>

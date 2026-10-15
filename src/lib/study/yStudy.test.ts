@@ -113,9 +113,35 @@ describe("Nauka w Yjs", () => {
   });
 
   it("cleanDump odrzuca śmieci zamiast wywracać widok", () => {
-    expect(cleanDump("śmieci")).toEqual({ version: 1, board: {}, checked: {}, missed: {}, journal: [], days: [], rounds: {}, site: "" });
+    expect(cleanDump("śmieci")).toEqual({ version: 1, board: {}, checked: {}, missed: {}, journal: [], days: [], rounds: {}, site: "", sites: {} });
     const d = cleanDump({ board: { a: "done", b: "todo", c: "x" }, checked: { k: true, l: 1 }, days: ["2026-10-01", "wczoraj"], rounds: { x: { rounds: -1 }, y: { rounds: 2.7, best: 140 } }, journal: [entry("ok", 1), entry("pusty", 2, { text: " " })] });
     expect(d).toMatchObject({ board: { a: "done" }, checked: { k: true }, days: ["2026-10-01"], rounds: { y: { rounds: 2, best: null } } });
     expect(d.journal.map((e) => e.id)).toEqual(["ok"]);
+  });
+});
+
+describe("karty budów w Yjs", () => {
+  it("ta sama nowa budowa z dwóch telefonów to jedna karta; zmiana nazwy przechodzi na drugi", () => {
+    const { a, b, sync } = pair();
+    const card = (name: string, created: number) => ({ id: "n-1", name, address: "", investor: "", created });
+    a.addEntry(entry("z-a", 1, { site: "Lipowa 5", siteId: "n-1" }), card("Lipowa 5", 1));
+    b.addEntry(entry("z-b", 2, { site: "Lipowa 5", siteId: "n-1" }), card("Lipowa 5", 2));
+    sync();
+    expect(Object.keys(a.get().sites)).toEqual(["n-1"]);
+    b.saveSite({ ...b.get().sites["n-1"], name: "Dom Nowaków", address: "ul. Lipowa 5" });
+    sync();
+    expect(a.get().sites["n-1"]).toMatchObject({ name: "Dom Nowaków", address: "ul. Lipowa 5" });
+    expect(a.get().journal.map((e) => e.siteId)).toEqual(["n-1", "n-1"]);
+  });
+
+  it("kopia: karty w zrzucie, śmieci odpadają, replaceAll i mergeIn je przenoszą", () => {
+    const d = cleanDump({ sites: { ok: { id: "ok", name: " Polna ", created: 3 }, zly: { id: "inny", name: "x" }, pusty: { id: "pusty", name: "  " } } });
+    expect(d.sites).toEqual({ ok: { id: "ok", name: "Polna", address: "", investor: "", created: 3 } });
+    const { a, b } = pair();
+    a.replaceAll(d);
+    expect(a.dump().sites.ok.name).toBe("Polna");
+    b.saveSite({ id: "ok", name: "Moja", address: "", investor: "", created: 1 });
+    b.mergeIn(d);
+    expect(b.get().sites.ok.name).toBe("Moja");
   });
 });

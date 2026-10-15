@@ -1,5 +1,6 @@
 import { pluralPl } from "@/lib/plural";
 import type { JournalEntry, JournalKind } from "./yStudy";
+import { entrySiteId, fold } from "./sites";
 
 export const KIND_LABEL: Record<JournalKind, string> = { ok: "Zrobione", problem: "Problem", note: "Notatka" };
 
@@ -42,15 +43,12 @@ export function whenLabel(at: number, now: number = Date.now()): string {
   return `${date}, ${time}`;
 }
 
-/** Małe litery bez ogonków — „zolta” znajduje „żółta”. */
-const fold = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ł/g, "l").replace(/Ł/g, "l").toLowerCase();
-
 /** „open” = tylko nierozwiązane problemy (z licznika w nagłówku). */
 export type KindFilter = JournalKind | "open";
 
 export interface JournalFilter {
   kind: KindFilter | null;
-  /** Budowa dokładnie jak we wpisie; `""` = wpisy bez budowy. */
+  /** Id budowy (`entrySiteId`); `""` = wpisy bez budowy. */
   site: string | null;
   topic: string | null;
   query: string;
@@ -72,22 +70,12 @@ export function filterJournal<E extends JournalEntry>(
   const words = fold(f.query).split(/\s+/).filter(Boolean);
   return entries.filter((e) => {
     if (f.kind === "open" ? e.kind !== "problem" || e.resolved !== undefined : f.kind !== null && e.kind !== f.kind) return false;
-    if (f.site !== null && e.site.trim() !== f.site) return false;
+    if (f.site !== null && entrySiteId(e) !== f.site) return false;
     if (f.topic !== null && e.topic !== f.topic) return false;
     if (words.length === 0) return true;
     const hay = fold([e.text, e.site, e.topic ? topicTitle(e.topic) ?? "" : "", KIND_LABEL[e.kind]].join(" "));
     return words.every((w) => hay.includes(w));
   });
-}
-
-/** Budowy z dziennika, od ostatnio używanej (bez pustych). */
-export function journalSites(entries: readonly JournalEntry[]): string[] {
-  const last = new Map<string, number>();
-  for (const e of entries) {
-    const s = e.site.trim();
-    if (s && (last.get(s) ?? -Infinity) < e.at) last.set(s, e.at);
-  }
-  return [...last.entries()].sort((a, b) => b[1] - a[1]).map(([s]) => s);
 }
 
 export const SITE_SUGGESTIONS = 6;
@@ -105,7 +93,9 @@ export function suggestSites(sites: readonly string[], query: string, current: s
 }
 
 export interface JournalSiteGroup<E extends JournalEntry = JournalEntry> {
-  /** Budowa przycięta; `""` = bez budowy. */
+  /** Id budowy; `""` = bez budowy. */
+  siteId: string;
+  /** Nazwa budowy z wpisu. */
   site: string;
   entries: E[];
 }
@@ -135,9 +125,9 @@ export function groupJournal<E extends JournalEntry>(entries: readonly E[], now:
     let day = days[days.length - 1];
     if (!day || day.key !== key) days.push((day = { key, label: dayLabel(e.at, now), count: 0, sites: [] }));
     day.count++;
-    const site = e.site.trim();
-    const group = day.sites.find((g) => g.site === site);
-    if (group) group.entries.push(e); else day.sites.push({ site, entries: [e] });
+    const siteId = entrySiteId(e);
+    const group = day.sites.find((g) => g.siteId === siteId);
+    if (group) group.entries.push(e); else day.sites.push({ siteId, site: e.site.trim(), entries: [e] });
   }
   return days;
 }

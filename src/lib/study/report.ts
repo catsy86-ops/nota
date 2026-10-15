@@ -2,6 +2,7 @@ import { pluralPl } from "@/lib/plural";
 import { dayType, isAbsence, type ShiftData } from "@/lib/shifts/model";
 import { entryMinutesOn, formatDuration } from "@/lib/shifts/time";
 import { entriesPl, KIND_LABEL } from "./journalView";
+import { entrySiteId, type SiteCard } from "./sites";
 import type { JournalEntry } from "./yStudy";
 
 /**
@@ -11,8 +12,10 @@ import type { JournalEntry } from "./yStudy";
  */
 
 export interface ReportOptions {
-  /** Budowa jak we wpisie (przycięta); `null` = wszystkie, `""` = wpisy bez budowy. */
-  site: string | null;
+  /** Id budowy (`entrySiteId`); `null` = wszystkie, `""` = wpisy bez budowy. */
+  siteId: string | null;
+  /** Karta wybranej budowy: nazwa, adres i inwestor w nagłówku raportu. */
+  siteCard?: Pick<SiteCard, "name" | "address" | "investor"> | null;
   /** Dni lokalne „2026-10-14”, oba włącznie. */
   from: string;
   to: string;
@@ -49,7 +52,10 @@ export interface JournalReport {
   title: string;
   /** „14 października 2026” albo „7–14 października 2026”. */
   period: string;
+  /** Nazwa budowy; `null` = wszystkie, `""` = bez budowy. */
   site: string | null;
+  address: string;
+  investor: string;
   days: ReportDay[];
   count: number;
   workMinutes: number;
@@ -114,7 +120,7 @@ export function buildJournalReport(journal: readonly JournalEntry[], opts: Repor
   const picked = journal
     .filter((e) => {
       const k = dayKeyOf(e.at);
-      return k >= from && k <= to && (opts.site === null || e.site.trim() === opts.site);
+      return k >= from && k <= to && (opts.siteId === null || entrySiteId(e) === opts.siteId);
     })
     .sort((a, b) => a.at - b.at);
 
@@ -131,17 +137,20 @@ export function buildJournalReport(journal: readonly JournalEntry[], opts: Repor
       time: `${pad(d.getHours())}:${pad(d.getMinutes())}`,
       status: e.kind !== "problem" ? KIND_LABEL[e.kind] : isOpen ? "Problem otwarty" : `Problem rozwiązany ${shortDate(e.resolved!)}`,
       topic: title(e.topic),
-      site: opts.site === null ? e.site.trim() || "bez budowy" : null,
+      site: opts.siteId === null ? e.site.trim() || "bez budowy" : null,
     };
     day.entries.push(item);
     if (isOpen) open.push(item);
   }
 
   const period = periodLabel(from, to);
+  const site = opts.siteId === null ? null : opts.siteId === "" ? "" : opts.siteCard?.name ?? picked[picked.length - 1]?.site.trim() ?? "";
   return {
-    title: `Raport${opts.site ? `: ${opts.site}` : opts.site === "" ? ": bez budowy" : ""} — ${period}`,
+    title: `Raport${site ? `: ${site}` : site === "" ? ": bez budowy" : ""} — ${period}`,
     period,
-    site: opts.site,
+    site,
+    address: (opts.siteId && opts.siteCard?.address) || "",
+    investor: (opts.siteId && opts.siteCard?.investor) || "",
     days,
     count: picked.length,
     workMinutes: days.reduce((s, d) => s + (d.work?.minutes ?? 0), 0),
@@ -170,7 +179,10 @@ export function reportSummary(r: JournalReport): string {
 
 /** Treść raportu bez tytułu (markdown) — do notatki; `reportText` dokłada tytuł. */
 export function reportBody(r: JournalReport): string {
-  const lines: string[] = [reportSummary(r)];
+  const lines: string[] = [];
+  if (r.address) lines.push(`Adres: ${r.address}`);
+  if (r.investor) lines.push(`Inwestor: ${r.investor}`);
+  lines.push(reportSummary(r));
   if (r.count === 0) return lines.join("\n");
   for (const d of r.days) {
     lines.push("", `## ${d.label}`);

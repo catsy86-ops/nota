@@ -1,6 +1,7 @@
 import * as Y from "yjs";
 import { isImageRef } from "@/lib/imageStore";
 import { addDaysToKey } from "@/lib/week";
+import { cleanSite, foldName, type SiteCard } from "./sites";
 
 /**
  * Dane Nauki w Y.Doc notatek — synchronizują się i trafiają do pliku sync razem
@@ -29,8 +30,10 @@ export interface JournalEntry {
   /** Temat z materiału, którego dotyczy wpis; `null` = ogólny. */
   topic: string | null;
   text: string;
-  /** Inwestycja / adres w chwili wpisu. */
+  /** Nazwa budowy w chwili wpisu (kopia z karty — starsze wersje aplikacji widzą tylko ją). */
   site: string;
+  /** Karta budowy (`studySites`); brak = wpis sprzed kart, budowa z nazwy (`entrySiteId`). */
+  siteId?: string;
   /** Punkty listy do nauki potwierdzone na budowie (id z `CHECKLIST`). */
   checked: string[];
   /** Zdjęcia z budowy: klucze z `imageStore` (bajty poza stanem Nauki). */
@@ -58,6 +61,8 @@ export interface StudyState {
   journal: JournalEntry[];
   /** Bieżąca inwestycja — podpowiada się przy kolejnych wpisach. */
   site: string;
+  /** Karty budów po id. */
+  sites: Record<string, SiteCard>;
   /** Seria kolejnych dni z co najmniej jedną rundą quizu (stan na `lastDay`). */
   streak: number;
   /** Dzień ostatniej rundy („2026-10-12”) albo `null`. */
@@ -81,6 +86,7 @@ export interface StudyDump {
   days: string[];
   rounds: Record<string, DeviceRounds>;
   site: string;
+  sites: Record<string, SiteCard>;
 }
 
 /** Origin transakcji Nauki — odróżnia lokalne zmiany od tych z sieci i z migracji. */
@@ -107,6 +113,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
     topic: typeof e.topic === "string" && e.topic.length <= 64 ? e.topic : null,
     text,
     site: typeof e.site === "string" ? e.site.slice(0, SITE_MAX) : "",
+    ...(typeof e.siteId === "string" && e.siteId && e.siteId.length <= 64 ? { siteId: e.siteId } : {}),
     checked,
     images,
     ...(e.kind === "problem" && typeof e.resolved === "number" && Number.isFinite(e.resolved) ? { resolved: e.resolved } : {}),
@@ -139,7 +146,18 @@ export function cleanDump(raw: unknown): StudyDump {
     days: Array.isArray(s.days) ? s.days.filter((d): d is string => typeof d === "string" && DAY_RE.test(d)) : [],
     rounds,
     site: typeof s.site === "string" ? s.site.slice(0, SITE_MAX) : "",
+    sites: cleanSites(s.sites),
   };
+}
+
+function cleanSites(raw: unknown): Record<string, SiteCard> {
+  const out: Record<string, SiteCard> = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const [k, v] of Object.entries(raw)) {
+    const card = cleanSite(v);
+    if (card && card.id === k) out[k] = card;
+  }
+  return out;
 }
 
 /**
@@ -173,6 +191,7 @@ export function stateFromDump(d: StudyDump): StudyState {
     missed: d.missed,
     journal: [...d.journal].sort((a, b) => a.at - b.at || (a.id < b.id ? -1 : 1)),
     site: d.site,
+    sites: d.sites,
     rounds: devices.reduce((n, r) => n + r.rounds, 0),
     bestPercent: bests.length ? Math.max(...bests) : null,
     streak,
@@ -198,6 +217,8 @@ export function createYStudy(doc: Y.Doc) {
   /** Id urządzenia → jego rundy i najlepszy wynik. */
   const rounds = doc.getMap<DeviceRounds>("studyRounds");
   const meta = doc.getMap<unknown>("studyMeta");
+  /** Karty budów (id → karta). */
+  const sites = doc.getMap<SiteCard>("studySites");
   /** Urządzenia, których stary zapis jest już w dokumencie (id urządzenia → czas). */
   const migrations = doc.getMap<number>("studyMigrations");
 
@@ -207,7 +228,7 @@ export function createYStudy(doc: Y.Doc) {
     snapshot = null;
     listeners.forEach((l) => l());
   };
-  for (const m of [journal, board, checked, missed, days, rounds, meta]) m.observe(onChange);
+  for (const m of [journal, board, checked, missed, days, rounds, meta, sites]) m.observe(onChange);
 
   /** Dokument jako zwykły obiekt, przez `cleanDump` — śmieci od peera nie wywrócą widoku. */
   function dump(): StudyDump {
@@ -219,6 +240,7 @@ export function createYStudy(doc: Y.Doc) {
       days: Array.from(days.keys()),
       rounds: Object.fromEntries(rounds.entries()),
       site: meta.get("site"),
+      sites: Object.fromEntries(sites.entries()),
     });
   }
 
@@ -264,9 +286,10 @@ export function createYStudy(doc: Y.Doc) {
     });
   }
 
-  /** Dopisuje wpis; problem przy temacie z „Umiem” cofa go do „W trakcie”. */
-  function addEntry(entry: JournalEntry): void {
+  /** Dopisuje wpis (z kartą nowej budowy); problem przy temacie z „Umiem” cofa go do „W trakcie”. */
+  function addEntry(entry: JournalEntry, newSite?: SiteCard): void {
     transact(() => {
+      if (newSite && !sites.has(newSite.id)) sites.set(newSite.id, newSite);
       journal.set(entry.id, entry);
       if (entry.kind === "problem" && entry.topic && board.get(entry.topic) === "done") board.set(entry.topic, "doing");
     });
@@ -276,8 +299,9 @@ export function createYStudy(doc: Y.Doc) {
    * Zmienia wpis w całości (edycja w arkuszu). Wpis, który stał się problemem albo
    * problem przeniesiony na inny temat, cofa temat z „Umiem” — jak nowy problem.
    */
-  function updateEntry(entry: JournalEntry): void {
+  function updateEntry(entry: JournalEntry, newSite?: SiteCard): void {
     transact(() => {
+      if (newSite && !sites.has(newSite.id)) sites.set(newSite.id, newSite);
       const prev = journal.get(entry.id);
       journal.set(entry.id, entry);
       const newProblem = entry.kind === "problem" && entry.topic && (prev?.kind !== "problem" || prev.topic !== entry.topic);
@@ -308,17 +332,30 @@ export function createYStudy(doc: Y.Doc) {
     transact(() => { if (meta.get("site") !== site) meta.set("site", site); });
   }
 
+  /**
+   * Zapisuje kartę budowy. Zmiana nazwy przenosi też bieżącą budowę arkusza,
+   * jeśli to była ta (`prevName`) — inaczej następny wpis założyłby starą od nowa.
+   */
+  function saveSite(card: SiteCard, prevName?: string): void {
+    transact(() => {
+      sites.set(card.id, card);
+      const cur = meta.get("site");
+      if (prevName && typeof cur === "string" && foldName(cur) === foldName(prevName) && cur !== card.name) meta.set("site", card.name);
+    });
+  }
+
   /** Cała Nauka naraz (przywrócenie kopii) — zastępuje, nie scala. */
   function replaceAll(data: StudyDump): void {
     const d = cleanDump(data);
     transact(() => {
-      for (const m of [journal, board, checked, missed, days, rounds] as Y.Map<unknown>[]) for (const k of Array.from(m.keys())) m.delete(k);
+      for (const m of [journal, board, checked, missed, days, rounds, sites] as Y.Map<unknown>[]) for (const k of Array.from(m.keys())) m.delete(k);
       for (const e of d.journal) journal.set(e.id, e);
       for (const [k, v] of Object.entries(d.board)) board.set(k, v);
       for (const k of Object.keys(d.checked)) checked.set(k, true);
       for (const k of Object.keys(d.missed)) missed.set(k, true);
       for (const k of d.days) days.set(k, true);
       for (const [k, v] of Object.entries(d.rounds)) rounds.set(k, v);
+      for (const [k, v] of Object.entries(d.sites)) sites.set(k, v);
       meta.set("site", d.site);
     });
   }
@@ -344,6 +381,7 @@ export function createYStudy(doc: Y.Doc) {
         const best = prev.best === null ? v.best : v.best === null ? prev.best : Math.max(prev.best, v.best);
         if (v.rounds > prev.rounds || best !== prev.best) rounds.set(k, { rounds: Math.max(prev.rounds, v.rounds), best });
       }
+      for (const [k, v] of Object.entries(d.sites)) if (!sites.has(k)) sites.set(k, v);
       if (!meta.has("site") && d.site) meta.set("site", d.site);
     }, MIGRATION_ORIGIN);
   }
@@ -353,7 +391,7 @@ export function createYStudy(doc: Y.Doc) {
   return {
     get, dump, subscribe, isMerged,
     setColumn, setChecked, clearChecked, recordRound,
-    addEntry, updateEntry, setResolved, restoreEntry, removeEntry, setSite,
+    addEntry, updateEntry, setResolved, restoreEntry, removeEntry, setSite, saveSite,
     replaceAll, mergeIn,
   };
 }

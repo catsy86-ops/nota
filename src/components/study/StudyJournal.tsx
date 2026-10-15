@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, CheckCircle2, FileText, MapPin, Pencil, Plus, Search, X } from "lucide-react";
+import { Archive, Check, CheckCircle2, ChevronRight, FileText, MapPin, Pencil, Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { haptic } from "@/lib/haptics";
@@ -8,13 +8,15 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { CHECKLIST, TOPICS } from "@/lib/study/content";
 import { openProblems, setProblemResolved, useStudy, type JournalEntry } from "@/lib/study/store";
 import {
-  entriesPl, filterJournal, groupJournal, isFiltered, journalSites, KIND_LABEL, NO_FILTER, problemsPl, RECENT_DAYS, splitRecent,
+  entriesPl, filterJournal, groupJournal, isFiltered, KIND_LABEL, NO_FILTER, problemsPl, RECENT_DAYS, splitRecent,
   type JournalFilter, type KindFilter,
 } from "@/lib/study/journalView";
 import { useJournalDraft } from "@/lib/study/draft";
 import { openJournalEdit, openJournalSheet } from "@/lib/study/entrySheet";
 import { JournalEntrySheet, KindIcon } from "./JournalEntrySheet";
 import { JournalReportDialog } from "./JournalReport";
+import { SiteCardDialog } from "./SiteCardDialog";
+import { entrySiteId, siteDirectory } from "@/lib/study/sites";
 
 const topicTitle = (id: string | null) => TOPICS.find((t) => t.id === id)?.title ?? null;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -44,11 +46,19 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   const [filter, setFilter] = useState<JournalFilter>(NO_FILTER);
   const [showOlder, setShowOlder] = useState(false);
   const [report, setReport] = useState(false);
+  /** Budowa raportu otwartego z karty; `null` = z filtra albo ostatnia. */
+  const [reportSite, setReportSite] = useState<string | null>(null);
+  const [card, setCard] = useState<string | null>(null);
+  const [showArchived, setShowArchived] = useState(false);
   const patch = (p: Partial<JournalFilter>) => setFilter((f) => ({ ...f, ...p }));
   const filtered = isFiltered(filter);
 
-  const sites = useMemo(() => journalSites(study.journal), [study.journal]);
-  const hasUnsited = useMemo(() => sites.length > 0 && study.journal.some((e) => !e.site.trim()), [sites, study.journal]);
+  const dir = useMemo(() => siteDirectory(study.sites, study.journal), [study.sites, study.journal]);
+  // Pigułki: budowy z wpisami; archiwalne za „Archiwum”, chyba że wybrana.
+  const used = useMemo(() => dir.filter((x) => x.count > 0), [dir]);
+  const archivedCount = used.filter((x) => x.archived !== undefined).length;
+  const sites = used.filter((x) => x.archived === undefined || showArchived || x.id === filter.site);
+  const hasUnsited = useMemo(() => used.length > 0 && study.journal.some((e) => !entrySiteId(e)), [used, study.journal]);
   const topics = useMemo(() => {
     const used = new Set(study.journal.map((e) => e.topic));
     return TOPICS.filter((t) => used.has(t.id));
@@ -97,7 +107,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
           </div>
           <div className="flex shrink-0 gap-2">
             {study.journal.length > 0 && (
-              <Button variant="outline" onClick={() => setReport(true)} className="max-sm:w-9 max-sm:px-0 coarse:h-11 max-sm:coarse:w-11" title="Raport dnia albo okresu dla budowy">
+              <Button variant="outline" onClick={() => { setReportSite(null); setReport(true); }} className="max-sm:w-9 max-sm:px-0 coarse:h-11 max-sm:coarse:w-11" title="Raport dnia albo okresu dla budowy">
                 <FileText className="h-4 w-4 sm:mr-1" aria-hidden /><span className="max-sm:sr-only">Raport</span>
               </Button>
             )}
@@ -149,16 +159,18 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                   );
                 })}
               </div>
-              {sites.length > 0 && (
+              {used.length > 0 && (
                 <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none]" role="group" aria-label="Budowa">
-                  {[null, ...sites, ...(hasUnsited ? [""] : [])].map((s) => {
-                    const on = filter.site === s;
+                  {[null, ...sites, ...(hasUnsited ? [""] : [])].map((x) => {
+                    const id = typeof x === "object" && x !== null ? x.id : x;
+                    const s = typeof x === "object" && x !== null ? x.name : x;
+                    const on = filter.site === id;
                     return (
                       <button
-                        key={s ?? "all"}
+                        key={id ?? "all"}
                         type="button"
                         aria-pressed={on}
-                        onClick={() => patch({ site: s })}
+                        onClick={() => patch({ site: id })}
                         className={cn(
                           "pressable inline-flex max-w-[14rem] shrink-0 items-center gap-1 rounded-full border px-3 py-1 text-xs coarse:min-h-11 coarse:px-4 coarse:text-sm",
                           on ? "border-primary bg-primary/10 font-medium text-primary-ink" : "border-border text-muted-foreground hover:text-foreground",
@@ -169,6 +181,19 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                       </button>
                     );
                   })}
+                  {archivedCount > 0 && (
+                    <button
+                      type="button"
+                      aria-pressed={showArchived}
+                      onClick={() => setShowArchived((v) => !v)}
+                      className={cn(
+                        "pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed px-3 py-1 text-xs coarse:min-h-11 coarse:px-4 coarse:text-sm",
+                        showArchived ? "border-primary text-primary-ink" : "border-border text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <Archive className="h-3.5 w-3.5 shrink-0" aria-hidden />Archiwum ({archivedCount})
+                    </button>
+                  )}
                 </div>
               )}
               {topics.length > 0 && (
@@ -185,6 +210,11 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
               {filtered && (
                 <p className="flex items-center justify-between gap-2 text-xs text-muted-foreground" aria-live="polite" data-testid="journal-results">
                   <span className="font-mono tabular-nums">Pasuje: {entriesPl(view.shown)}</span>
+                  {filter.site && (
+                    <button type="button" onClick={() => setCard(filter.site)} className="ml-auto inline-flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-muted hover:text-foreground coarse:min-h-11">
+                      <MapPin className="h-3.5 w-3.5" aria-hidden />Karta budowy
+                    </button>
+                  )}
                   <button type="button" onClick={() => setFilter(NO_FILTER)} className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 hover:bg-muted hover:text-foreground coarse:min-h-11">
                     <X className="h-3.5 w-3.5" aria-hidden />Wyczyść filtry
                   </button>
@@ -206,11 +236,23 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                     </h4>
                     <div className="space-y-3">
                       {d.sites.map((g) => (
-                        <div key={g.site}>
-                          {(g.site || d.sites.length > 1) && (
-                            <p className="mb-1.5 flex items-center gap-1 text-xs font-medium text-foreground/80" data-journal-site={g.site}>
+                        <div key={g.siteId}>
+                          {g.siteId ? (
+                            <button
+                              type="button"
+                              onClick={() => setCard(g.siteId)}
+                              aria-label={`${g.site}: karta budowy`}
+                              className="-mx-1 mb-1 flex max-w-full items-center gap-1 rounded px-1 py-0.5 text-xs font-medium text-foreground/80 hover:bg-muted hover:text-foreground coarse:min-h-11"
+                              data-journal-site={g.site}
+                            >
                               <MapPin className="h-3.5 w-3.5 shrink-0 text-primary-ink" aria-hidden />
-                              <span className="truncate">{g.site || "Bez budowy"}</span>
+                              <span className="truncate">{g.site}</span>
+                              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                            </button>
+                          ) : d.sites.length > 1 && (
+                            <p className="mb-1.5 flex items-center gap-1 text-xs font-medium text-foreground/80" data-journal-site="">
+                              <MapPin className="h-3.5 w-3.5 shrink-0 text-primary-ink" aria-hidden />
+                              <span className="truncate">Bez budowy</span>
                             </p>
                           )}
                           <ul className="space-y-2">
@@ -233,7 +275,13 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
         )}
       </section>
       <JournalEntrySheet onPractice={onPractice} />
-      <JournalReportDialog open={report} onOpenChange={setReport} journal={study.journal} sites={sites} initialSite={filter.site} />
+      <JournalReportDialog open={report} onOpenChange={setReport} journal={study.journal} sites={dir} initialSite={reportSite ?? filter.site} />
+      <SiteCardDialog
+        siteId={card}
+        onOpenChange={(o) => { if (!o) setCard(null); }}
+        onShowEntries={(id) => { setCard(null); setFilter({ ...NO_FILTER, site: id }); }}
+        onReport={(id) => { setCard(null); setReportSite(id); setReport(true); }}
+      />
       <Dialog open={zoom !== null} onOpenChange={(o) => { if (!o) setZoom(null); }}>
         <DialogContent className="max-w-3xl p-3">
           <DialogTitle className="sr-only">Zdjęcie z budowy</DialogTitle>

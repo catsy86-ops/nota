@@ -444,7 +444,7 @@ test("dziennik: raport budowy z godzinami z Grafiku — udostępnij, kopiuj, do 
 
   // Ostatnia budowa i dzień jej ostatniego wpisu; godziny z Grafiku.
   const dialog = page.getByTestId("journal-report");
-  await expect(dialog.getByRole("combobox", { name: "Budowa raportu" })).toHaveValue("s:Lipowa 5");
+  await expect(dialog.getByRole("combobox", { name: "Budowa raportu" }).locator("option:checked")).toHaveText("Lipowa 5");
   await expect(dialog.getByRole("button", { name: "Dziś" })).toHaveAttribute("aria-pressed", "true");
   const summary = dialog.getByTestId("report-summary");
   await expect(summary).toHaveText("2 wpisy · godziny pracy: 10 h · otwarte problemy: 1");
@@ -455,7 +455,7 @@ test("dziennik: raport budowy z godzinami z Grafiku — udostępnij, kopiuj, do 
   await expect(dialog.locator("[data-report-day]")).toHaveCount(2);
   await dialog.getByRole("combobox", { name: "Budowa raportu" }).selectOption("all");
   await expect(summary).toContainText("4 wpisy");
-  await dialog.getByRole("combobox", { name: "Budowa raportu" }).selectOption("s:Lipowa 5");
+  await dialog.getByRole("combobox", { name: "Budowa raportu" }).selectOption({ label: "Lipowa 5" });
 
   await dialog.getByRole("button", { name: /Udostępnij/ }).click();
   const shared = await page.evaluate(() => (window as unknown as { __shared: ShareData }).__shared);
@@ -475,4 +475,72 @@ test("dziennik: raport budowy z godzinami z Grafiku — udostępnij, kopiuj, do 
   await page.keyboard.press("Escape");
   await page.goto("/");
   await expect(page.getByText("Raport: Lipowa 5 — 8–14 października 2026")).toBeVisible();
+});
+
+test("dziennik: karta budowy — nazwa, adres, inwestor, raport z karty i archiwum", async ({ page }) => {
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem("seeded")) return;
+    sessionStorage.setItem("seeded", "1");
+    const now = Date.now();
+    const e = (id: string, at: number, kind: string, site: string, text: string) => ({ id, at, kind, topic: null, text, site, checked: [], images: [] });
+    localStorage.setItem("kaczy.study.v1", JSON.stringify({
+      journal: [
+        e("a", now - 60_000, "ok", "Lipowa 5", "Próba szczelności pionu"),
+        e("b", now - 120_000, "problem", "Lipowa 5", "Żółta rura przecieka"),
+        e("c", now - 180_000, "note", "Polna 2", "Inwestor chce zmian"),
+      ],
+    }));
+  });
+  await page.goto("/nauka");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  const journal = page.getByTestId("study-journal");
+
+  // Stare wpisy z samą nazwą mają już kartę — z nagłówka budowy na osi czasu.
+  await journal.getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
+  const card = page.getByTestId("site-card");
+  await expect(card.getByTestId("site-card-stats")).toContainText("2 wpisy · otwarte: 1 problem");
+  await card.getByLabel("Nazwa").fill("polna 2");
+  await expect(card.getByRole("alert")).toHaveText("Jest już budowa „Polna 2”");
+  await expect(card.getByRole("button", { name: "Zapisz kartę" })).toBeDisabled();
+  await card.getByLabel("Nazwa").fill("Dom Nowaków");
+  await card.getByLabel("Adres").fill("ul. Lipowa 5, Kraków");
+  await card.getByLabel("Inwestor").fill("Jan Nowak");
+  await card.getByRole("button", { name: "Zapisz kartę" }).click();
+  await expect(page.getByText("Zapisano kartę budowy")).toBeVisible();
+  await expect(journal.locator("[data-journal-site]")).toHaveText(["Dom Nowaków", "Polna 2"]);
+
+  // Raport z karty: ta budowa, adres i inwestor w nagłówku.
+  await card.getByRole("button", { name: "Raport" }).click();
+  const report = page.getByTestId("journal-report");
+  await expect(report.getByRole("combobox", { name: "Budowa raportu" }).locator("option:checked")).toHaveText("Dom Nowaków");
+  await expect(report.getByTestId("report-site-card")).toHaveText("ul. Lipowa 5, Kraków · inwestor: Jan Nowak");
+  await page.keyboard.press("Escape");
+  await expect(report).toHaveCount(0);
+
+  // Nowa nazwa w pigułkach arkusza i filtra.
+  await journal.getByRole("button", { name: "Wpis", exact: true }).click();
+  const sheet = page.getByTestId("journal-entry-sheet");
+  await expect(sheet.getByTestId("journal-site-chips").getByRole("button")).toHaveText(["Dom Nowaków", "Polna 2"]);
+  await page.keyboard.press("Escape");
+  await expect(sheet).toHaveCount(0);
+  const sites = journal.getByRole("group", { name: "Budowa" });
+  await sites.getByRole("button", { name: "Dom Nowaków" }).click();
+  await expect(journal.locator("[data-journal-entry]")).toHaveCount(2);
+
+  // Archiwum: znika z pigułek, wpisy zostają; „Archiwum (1)” ją pokazuje.
+  await journal.getByRole("button", { name: "Karta budowy", exact: true }).click();
+  await card.getByRole("button", { name: "Do archiwum" }).click();
+  await expect(card).toHaveCount(0);
+  await journal.getByRole("button", { name: "Wyczyść filtry" }).click();
+  await expect(sites.getByRole("button", { name: "Dom Nowaków" })).toHaveCount(0);
+  await expect(journal.locator("[data-journal-entry]")).toHaveCount(3);
+  await sites.getByRole("button", { name: "Archiwum (1)" }).click();
+  await expect(sites.getByRole("button", { name: "Dom Nowaków" })).toBeVisible();
+
+  await reloadWhenSaved(page);
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await expect(journal.locator("[data-journal-site]")).toHaveText(["Dom Nowaków", "Polna 2"]);
+  await journal.getByRole("button", { name: "Dom Nowaków: karta budowy" }).click();
+  await expect(card.getByLabel("Inwestor")).toHaveValue("Jan Nowak");
+  await expect(card.getByTestId("site-card-stats")).toContainText("w archiwum");
 });

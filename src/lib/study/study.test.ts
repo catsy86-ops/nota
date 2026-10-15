@@ -4,14 +4,15 @@ import { buildRound, missedTopics, scoreRound } from "./quiz";
 import { topicToNote } from "./toNote";
 import { journalImageRefs } from "./images";
 import { clearJournalDraft, getJournalDraft, patchJournalDraft, sanitizeDraft, setJournalDraftTopic, EMPTY_DRAFT } from "./draft";
-import { dayLabel, entriesPl, filterJournal, fromLocalInput, groupJournal, journalSites, NO_FILTER, suggestSites, problemsPl, splitRecent, toLocalInput, whenLabel } from "./journalView";
+import { dayLabel, entriesPl, filterJournal, fromLocalInput, groupJournal, NO_FILTER, suggestSites, problemsPl, splitRecent, toLocalInput, whenLabel } from "./journalView";
+import { entrySiteId, findSiteByName, resolveSite, siteDirectory, siteKey } from "./sites";
 import { closeJournalSheet, getJournalEditForm, openJournalEdit, patchJournalEditForm } from "./entrySheet";
 import {
   sanitizeStudy, moveTopic, recordRound, activeStreak, toggleChecked, getStudy, columnOf, resetChecklist,
   addJournalEntry, removeJournalEntry, restoreJournalEntry, setSite, practiceByTopic,
-  updateJournalEntry, setProblemResolved, openProblems,
+  updateJournalEntry, setProblemResolved, openProblems, saveSiteCard, setSiteArchived,
 } from "./store";
-import { resetStudyForTests } from "./data";
+import { resetStudyForTests, yStudy } from "./data";
 import { yjsStore } from "@/lib/yjsStore";
 
 /** Nauka żyje w dokumencie Yjs — każdy test zaczyna od pustego. */
@@ -72,10 +73,10 @@ describe("store", () => {
   beforeEach(freshStudy);
 
   it("sanitizeStudy odrzuca nieznane tematy i złe wartości", () => {
-    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", streak: 0, lastDay: null };
+    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null };
     expect(sanitizeStudy(d, "śmieci")).toEqual(d);
     const s = sanitizeStudy(d, { board: { spadki: "done", obcy: "done", system: "x" }, checked: { "dok-1": true, a: 1 }, bestPercent: 140, rounds: -2, missed: { "q-pion": true, obce: true } });
-    expect(s).toEqual({ board: { spadki: "done" }, checked: { "dok-1": true }, bestPercent: null, rounds: 0, missed: { "q-pion": true }, journal: [], site: "", streak: 0, lastDay: null });
+    expect(s).toEqual({ board: { spadki: "done" }, checked: { "dok-1": true }, bestPercent: null, rounds: 0, missed: { "q-pion": true }, journal: [], site: "", sites: {}, streak: 0, lastDay: null });
     expect(sanitizeStudy(d, { streak: 4, lastDay: "2026-10-11" })).toMatchObject({ streak: 4, lastDay: "2026-10-11" });
     expect(sanitizeStudy(d, { streak: 4, lastDay: "wczoraj" })).toMatchObject({ streak: 0, lastDay: null });
   });
@@ -193,7 +194,7 @@ describe("dziennik z budowy", () => {
   });
 
   it("sanitizeStudy odfiltrowuje uszkodzone wpisy i przycina tekst", () => {
-    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", streak: 0, lastDay: null };
+    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null };
     const s = sanitizeStudy(d, {
       site: "x".repeat(500),
       journal: [
@@ -275,7 +276,7 @@ describe("dziennik — edycja i problemy", () => {
   });
 
   it("sanitizeStudy zostawia rozwiązanie tylko problemom", () => {
-    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", streak: 0, lastDay: null };
+    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null };
     const s = sanitizeStudy(d, { journal: [
       { id: "p", at: 1, kind: "problem", topic: null, text: "a", site: "", checked: [], images: [], resolved: 7 },
       { id: "n", at: 2, kind: "note", topic: null, text: "b", site: "", checked: [], images: [], resolved: 7 },
@@ -299,7 +300,7 @@ describe("dziennik — edycja i problemy", () => {
 describe("dziennik — limit i etykiety", () => {
   it("bez limitu wpisów (dawny limit kasował najstarsze po cichu)", () => {
     const journal = Array.from({ length: 3500 }, (_, i) => ({ id: `e${i}`, at: i + 1, kind: "note", topic: null, text: `w${i}`, site: "", checked: [], images: [] }));
-    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", streak: 0, lastDay: null };
+    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null };
     const s = sanitizeStudy(d, { journal });
     expect(s.journal).toHaveLength(3500);
     expect(s.journal[0].text).toBe("w0");
@@ -376,7 +377,7 @@ describe("dziennik — oś czasu i filtry", () => {
     const ids = (f: Partial<typeof NO_FILTER>) => filterJournal(entries, { ...NO_FILTER, ...f }).map((x) => x.id);
     expect(ids({ kind: "problem" })).toEqual(["b", "d"]);
     expect(ids({ kind: "open" })).toEqual(["b"]);
-    expect(ids({ site: "Lipowa 5" })).toEqual(["a", "c"]);
+    expect(ids({ site: siteKey("Lipowa 5") })).toEqual(["a", "c"]);
     expect(ids({ site: "" })).toEqual(["d"]);
     expect(ids({ topic: "spadki" })).toEqual(["b"]);
   });
@@ -391,7 +392,7 @@ describe("dziennik — oś czasu i filtry", () => {
   });
 
   it("budowy od ostatnio używanej i okno 30 dni", () => {
-    expect(journalSites(entries)).toEqual(["Polna 2", "Lipowa 5"]);
+    expect(siteDirectory({}, entries).map((s) => [s.name, s.count, s.open, s.stored])).toEqual([["Polna 2", 1, 1, false], ["Lipowa 5", 2, 0, false]]);
     const old = e("x", new Date(2026, 8, 15, 23, 59).getTime(), "ok", "");
     const edge = e("y", new Date(2026, 8, 16, 0, 0).getTime(), "ok", "");
     const { recent, older } = splitRecent([...entries, old, edge], at(15, 12));
@@ -405,5 +406,75 @@ describe("dziennik — oś czasu i filtry", () => {
     expect(suggestSites(sites, "lakowa", "")).toEqual(["Łąkowa 7"]);
     expect(suggestSites(sites, "owa", "", 2)).toEqual(["Łąkowa 7", "Lipowa 5"]);
     expect(suggestSites(sites, "Lipowa 5", "Lipowa 5")).toEqual([]);
+  });
+});
+
+describe("budowy — karty", () => {
+  beforeEach(freshStudy);
+
+  it("pierwszy wpis z nową nazwą zakłada kartę; kolejny trafia do niej mimo innej pisowni", () => {
+    setSite("Lipowa 5");
+    const a = addJournalEntry({ kind: "ok", topic: null, text: "Pion" }, 1000)!;
+    expect(a.siteId).toBe(siteKey("Lipowa 5"));
+    expect(getStudy().sites[a.siteId!]).toMatchObject({ name: "Lipowa 5", address: "", investor: "", created: 1000 });
+    setSite("  lipowa   5 ");
+    const b = addJournalEntry({ kind: "ok", topic: null, text: "Poziom" }, 2000)!;
+    expect(b).toMatchObject({ siteId: a.siteId, site: "Lipowa 5" });
+    expect(Object.keys(getStudy().sites)).toHaveLength(1);
+  });
+
+  it("stare wpisy z samą nazwą: budowa liczona z nazwy, karta dopiero przy edycji", () => {
+    yStudy.addEntry({ id: "stary", at: 500, kind: "note", topic: null, text: "Sprzed kart", site: "Polna 2", checked: [], images: [] });
+    const [e] = getStudy().journal;
+    expect(e.siteId).toBe(siteKey("Polna 2"));
+    expect(getStudy().sites).toEqual({});
+    expect(saveSiteCard(e.siteId!, { name: "Dom Nowaków", address: " ul. Polna 2 ", investor: "Nowak" }, 900)).toBe(true);
+    expect(getStudy().sites[e.siteId!]).toMatchObject({ name: "Dom Nowaków", address: "ul. Polna 2", investor: "Nowak", created: 500 });
+    // Wpis bez `siteId` w dokumencie dostaje nazwę z karty.
+    expect(getStudy().journal[0].site).toBe("Dom Nowaków");
+    expect(saveSiteCard(e.siteId!, { name: "  ", address: "", investor: "" })).toBe(false);
+  });
+
+  it("zmiana nazwy przenosi bieżącą budowę arkusza; stara nazwa po zmianie zakłada nową kartę", () => {
+    setSite("Polna 2");
+    const a = addJournalEntry({ kind: "ok", topic: null, text: "Pion" }, 1000)!;
+    saveSiteCard(a.siteId!, { name: "Dom Nowaków", address: "", investor: "" });
+    expect(getStudy().site).toBe("Dom Nowaków");
+    expect(addJournalEntry({ kind: "ok", topic: null, text: "Dalej" }, 2000)!.siteId).toBe(a.siteId);
+    setSite("Polna 2");
+    const c = addJournalEntry({ kind: "ok", topic: null, text: "Inna" }, 3000)!;
+    expect(c.siteId).not.toBe(a.siteId);
+    expect(getStudy().sites[a.siteId!].name).toBe("Dom Nowaków");
+    expect(getStudy().sites[c.siteId!].name).toBe("Polna 2");
+  });
+
+  it("archiwum: budowa zostaje z wpisami, a ta sama nazwa wraca do niej", () => {
+    setSite("Lipowa 5");
+    const a = addJournalEntry({ kind: "problem", topic: null, text: "Przeciek" }, 1000)!;
+    setSiteArchived(a.siteId!, true, 5000);
+    const dir = siteDirectory(getStudy().sites, getStudy().journal);
+    expect(dir[0]).toMatchObject({ id: a.siteId, archived: 5000, count: 1, open: 1 });
+    expect(findSiteByName(dir, "LIPOWA 5")?.id).toBe(a.siteId);
+    setSiteArchived(a.siteId!, false);
+    expect(getStudy().sites[a.siteId!].archived).toBeUndefined();
+  });
+
+  it("edycja wpisu: inna budowa w arkuszu przepina siteId, pusta — bez budowy", () => {
+    setSite("Lipowa 5");
+    const a = addJournalEntry({ kind: "ok", topic: null, text: "Pion" }, 1000)!;
+    const base = { kind: "ok" as const, topic: null, text: "Pion", resolved: null, at: 1000 };
+    expect(updateJournalEntry(a.id, { ...base, site: "Polna 2" }, 2000)!.siteId).toBe(siteKey("Polna 2"));
+    const none = updateJournalEntry(a.id, { ...base, site: "" }, 2000)!;
+    expect(none.siteId).toBeUndefined();
+    expect(entrySiteId(none)).toBe("");
+  });
+
+  it("resolveSite: id zajęte przez kartę o zmienionej nazwie → losowe", () => {
+    const dir = siteDirectory({ [siteKey("Polna 2")]: { id: siteKey("Polna 2"), name: "Dom Nowaków", address: "", investor: "", created: 1 } }, []);
+    const r = resolveSite(dir, "Polna 2", 10);
+    expect(r.siteId).toMatch(/^s-/);
+    expect(r.card).toMatchObject({ name: "Polna 2", created: 10 });
+    expect(resolveSite(dir, "dom nowakow", 10)).toEqual({ siteId: siteKey("Polna 2"), site: "Dom Nowaków" });
+    expect(resolveSite(dir, "   ", 10)).toEqual({ siteId: undefined, site: "" });
   });
 });

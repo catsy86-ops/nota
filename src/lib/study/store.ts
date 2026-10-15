@@ -4,6 +4,7 @@ import { CHECKLIST, QUESTIONS, TOPICS } from "./content";
 import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
 import { studyDevice, yStudy } from "./data";
+import { cleanSite, entrySiteId, resolveSite, siteDirectory, SITE_FIELD_MAX, SITE_NAME_MAX, type SiteCard } from "./sites";
 import {
   JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, SITE_MAX,
   type Column, type JournalEntry, type JournalKind, type StudyState,
@@ -11,6 +12,7 @@ import {
 
 export { COLUMNS, JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT } from "./yStudy";
 export type { Column, JournalEntry, JournalKind, StudyState } from "./yStudy";
+export type { SiteCard, SiteInfo } from "./sites";
 
 /**
  * Nauka żyje w dokumencie Yjs notatek (`yStudy.ts`, instancja w `data.ts`),
@@ -54,19 +56,32 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
     journal.push({
       id: e.id, at: e.at, kind: e.kind as JournalKind, topic, text,
       site: typeof e.site === "string" ? e.site.slice(0, SITE_MAX) : "",
+      ...(typeof e.siteId === "string" && e.siteId && e.siteId.length <= 64 ? { siteId: e.siteId } : {}),
       checked: checkedIds,
       images,
       ...(e.kind === "problem" && typeof e.resolved === "number" && Number.isFinite(e.resolved) ? { resolved: e.resolved } : {}),
     });
   }
   journal.sort((a, b) => a.at - b.at);
+  const sites: Record<string, SiteCard> = {};
+  for (const [id, raw] of Object.entries(s.sites ?? {})) {
+    const card = cleanSite(raw);
+    if (card && card.id === id) sites[id] = card;
+  }
+  // Każdy wpis z budową ma `siteId`, a nazwę — aktualną z karty.
+  for (const e of journal) {
+    const id = entrySiteId(e);
+    if (!id) continue;
+    e.siteId = id;
+    if (sites[id]) e.site = sites[id].name;
+  }
   const site = typeof s.site === "string" ? s.site.slice(0, SITE_MAX) : "";
   const lastDay = typeof s.lastDay === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s.lastDay) ? s.lastDay : null;
   const streak = lastDay && typeof s.streak === "number" && s.streak >= 1 ? Math.floor(s.streak) : 0;
-  return { board, checked, bestPercent: best, rounds, missed, journal, site, streak, lastDay };
+  return { board, checked, bestPercent: best, rounds, missed, journal, site, sites, streak, lastDay };
 }
 
-const DEFAULTS: StudyState = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", streak: 0, lastDay: null };
+const DEFAULTS: StudyState = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null };
 
 let lastRaw: StudyState | null = null;
 let lastClean: StudyState = DEFAULTS;
@@ -154,8 +169,10 @@ function entryFields(input: NewJournalEntry, now: number) {
 export function addJournalEntry(input: NewJournalEntry, now: number = Date.now()): JournalEntry | null {
   const fields = entryFields(input, now);
   if (!fields) return null;
-  const entry: JournalEntry = { id: crypto.randomUUID(), ...fields, site: getStudy().site };
-  yStudy.addEntry(entry);
+  const s = getStudy();
+  const { siteId, site, card } = resolveSite(siteDirectory(s.sites, s.journal), s.site, now);
+  const entry: JournalEntry = { id: crypto.randomUUID(), ...fields, site, ...(siteId ? { siteId } : {}) };
+  yStudy.addEntry(entry, card);
   return entry;
 }
 
@@ -169,12 +186,14 @@ export interface JournalEdit extends NewJournalEntry {
 export function updateJournalEntry(id: string, input: JournalEdit, now: number = Date.now()): JournalEntry | null {
   const fields = entryFields(input, now);
   if (!fields) return null;
+  const s = getStudy();
+  const { siteId, site, card } = resolveSite(siteDirectory(s.sites, s.journal), input.site, now);
   const entry: JournalEntry = {
-    id, ...fields,
-    site: input.site.trim().slice(0, SITE_MAX),
+    id, ...fields, site,
+    ...(siteId ? { siteId } : {}),
     ...(fields.kind === "problem" && input.resolved !== null ? { resolved: input.resolved } : {}),
   };
-  yStudy.updateEntry(entry);
+  yStudy.updateEntry(entry, card);
   return entry;
 }
 
@@ -198,6 +217,40 @@ export function removeJournalEntry(id: string): JournalEntry | null {
 
 export function setSite(site: string) {
   yStudy.setSite(site.slice(0, SITE_MAX));
+}
+
+export interface SiteCardInput {
+  name: string;
+  address: string;
+  investor: string;
+}
+
+/**
+ * Zapisuje kartę budowy (też budowy znanej tylko z nazw we wpisach — wtedy karta powstaje).
+ * Pusta nazwa → `false`, nic się nie zmienia.
+ */
+export function saveSiteCard(id: string, input: SiteCardInput, now: number = Date.now()): boolean {
+  const name = input.name.trim().slice(0, SITE_NAME_MAX);
+  if (!name) return false;
+  const s = getStudy();
+  const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
+  yStudy.saveSite({
+    id, name,
+    address: input.address.trim().slice(0, SITE_FIELD_MAX),
+    investor: input.investor.trim().slice(0, SITE_FIELD_MAX),
+    created: prev?.created ?? now,
+    ...(prev?.archived !== undefined ? { archived: prev.archived } : {}),
+  }, prev?.name);
+  return true;
+}
+
+/** Budowa do archiwum (`true`) albo z powrotem czynna. */
+export function setSiteArchived(id: string, archived: boolean, now: number = Date.now()) {
+  const s = getStudy();
+  const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
+  if (!prev) return;
+  const { archived: _, stored: _s, count: _c, open: _o, first: _f, last: _l, ...card } = prev;
+  yStudy.saveSite(archived ? { ...card, archived: now } : card);
 }
 
 export interface TopicPractice {
