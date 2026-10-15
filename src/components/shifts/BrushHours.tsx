@@ -56,14 +56,14 @@ export function BrushHours({ type, hours, onChange }: BrushHoursProps) {
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)}
-        className="pressable -mt-2 flex items-center gap-1.5 h-9 coarse:h-10 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+        className="pressable flex items-center gap-1.5 h-9 coarse:h-10 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
         <Clock className="w-4 h-4" /> Własne godziny dla „{type.name}”
       </button>
     );
   }
 
   return (
-    <section aria-label={`Własne godziny dla zmiany ${type.name}`} className="-mt-2 rounded-2xl border border-border/60 bg-card/50 p-3 space-y-2.5">
+    <section aria-label={`Własne godziny dla zmiany ${type.name}`} className="rounded-2xl border border-border/60 bg-card/50 p-3 space-y-2.5">
       <div className="flex flex-wrap items-end gap-2">
         <div className="w-40"><TimeStepper id="brush-start" label="Od" value={draft.start} onChange={(v) => edit({ start: v })} /></div>
         <div className="w-40"><TimeStepper id="brush-end" label="Do" value={draft.end} onChange={(v) => edit({ end: v })} /></div>

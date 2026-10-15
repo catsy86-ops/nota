@@ -158,7 +158,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
           </div>
         )}
         {repeat !== "none" && (
-          <p id={`${uid}-until-hint`} className={cn("text-2xs -mt-1", untilTooEarly ? "text-destructive" : "text-muted-foreground")}>
+          <p id={`${uid}-until-hint`} className={cn("text-2xs", untilTooEarly ? "text-destructive" : "text-muted-foreground")}>
             {untilTooEarly ? "Koniec serii musi być po pierwszym terminie." : untilText ? "Ostatni termin serii najpóźniej tego dnia." : "Puste pole — seria bez końca."}
           </p>
         )}

@@ -23,6 +23,14 @@
   }
 }
 
+/* Podpowiedź w polach jak w v3 (szary 400) — v4 bierze półprzezroczysty kolor tekstu. */
+@layer base {
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
+}
+
 /* v4 zdjął wskaźnik „rączki” z przycisków w preflight — zostajemy przy zachowaniu z v3. */
 @layer base {
   button:not(:disabled),

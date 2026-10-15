@@ -144,7 +144,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
           </div>
         )}
         {absence && (
-          <p className="text-xs text-muted-foreground -mt-2">
+          <p className="text-xs text-muted-foreground">
             Nie liczy się do przepracowanych godzin, ale obniża normę miesiąca o czas poniżej. Urlop trafia też do licznika urlopu.
           </p>
         )}
@@ -165,7 +165,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
           </div>
         </div>
         {!absence && draft.breakMin > 0 && (
-          <div className="space-y-1.5 -mt-1">
+          <div className="space-y-1.5">
             <Label htmlFor="shift-break-at">Przerwa od (opcjonalnie)</Label>
             <Input id="shift-break-at" type="time" value={draft.breakAt ?? ""} className="w-32"
               onChange={(e) => patch({ breakAt: e.target.value || undefined })}
@@ -181,7 +181,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
           {absence ? "Obniża normę o:" : "Czas pracy:"} <span className="font-semibold text-foreground">{formatDuration(shiftMinutes(draft))}</span>
         </p>
         {type && (type.start !== draft.start || type.end !== draft.end || type.breakMin !== draft.breakMin || (type.breakAt ?? "") !== (placedBreak ? draft.breakAt : "")) && (
-          <p className="text-xs text-muted-foreground -mt-2">Nowe godziny od dziś — dni wcześniejsze zachowają dotychczasowe.</p>
+          <p className="text-xs text-muted-foreground">Nowe godziny od dziś — dni wcześniejsze zachowają dotychczasowe.</p>
         )}
         {!absence && <div className="space-y-1.5">
           <Label htmlFor="shift-alarm">Alarm w kalendarzu (.ics)</Label>

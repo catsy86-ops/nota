@@ -341,10 +341,10 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
       <p role="status" aria-live="polite" className="sr-only">{announce}</p>
       <p aria-live="polite" className="sr-only">{isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl })}</p>
 
-      <p id="shift-brush-hint" className="-mt-3 text-xs text-muted-foreground px-1">{brushHint(brush, typesById, activeHours)}</p>
+      <p id="shift-brush-hint" className="text-xs text-muted-foreground px-1">{brushHint(brush, typesById, activeHours)}</p>
 
       {/* Podpowiedź o przenoszeniu: po „Rozumiem” zostaje tylko dla czytnika ekranu (aria-describedby siatki). */}
-      <p id="shift-move-hint" className={cn("-mt-3 text-xs text-muted-foreground px-1", moveHintSeen && "sr-only")}>
+      <p id="shift-move-hint" className={cn("text-xs text-muted-foreground px-1", moveHintSeen && "sr-only")}>
         {IS_TOUCH
           ? "Przytrzymaj zmianę i przeciągnij na inny dzień — zapytam, czy przenieść, czy skopiować."
           : `Przeciągnij zmianę na inny dzień, żeby ją przenieść (z Alt — skopiować). Klawiatura: Shift+strzałki przenoszą zmianę, Alt+Shift+strzałki kopiują, ${modShortcut("C")} / ${modShortcut("V")} kopiuje wpis dnia (zmiana, odchylenie, notatka).`}
@@ -388,7 +388,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         </AlertDialogContent>
       </AlertDialog>
 
-      <div className="flex flex-wrap justify-end gap-1 -mt-2">
+      <div className="flex flex-wrap justify-end gap-1">
         <button type="button" onClick={exportCsv}
           className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
           <FileSpreadsheet className="w-4 h-4" /> Karta czasu (.csv)
