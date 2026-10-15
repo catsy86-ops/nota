@@ -95,7 +95,7 @@ Pełnoekranowe edytory na iOS trzymają pasek z „Zapisz” nad klawiaturą.
 **Testy.** `src/lib/keyboardInset.test.ts` (iOS, Android, „wstecz”, obrót, `isTextEntry`), `e2e/mobile.spec.ts`
 „dolny pasek chowa się, gdy klawiatura Androida zmniejsza okno przy pisaniu”.
 
-**Commit.** `HASH` (2026-10-15).
+**Commit.** `c62282f` (2026-10-15).
 
 ---
 
