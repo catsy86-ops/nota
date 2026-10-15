@@ -143,6 +143,9 @@ test("problem z tematem: karta tematu pokazuje go, „Ćwicz teraz” w dziennik
   await expect(card.locator('[data-topic-problem="open"]')).not.toContainText("druga linia");
 
   await page.getByRole("tab", { name: "Dziennik" }).click();
+  // Pigułka tematu filtruje dziennik, nie startuje quizu.
+  await page.getByRole("button", { name: /^Pokaż wpisy z tematu: / }).click();
+  await expect(page.getByRole("tab", { name: "Dziennik" })).toHaveAttribute("data-state", "active");
   await page.getByRole("button", { name: /^Ćwicz teraz: / }).click();
   await expect(page.getByRole("tab", { name: "Quiz" })).toHaveAttribute("data-state", "active");
   await expect(page.getByText(/^Pytanie 1 z \d+$/)).toBeVisible();

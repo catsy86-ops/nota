@@ -1126,6 +1126,31 @@ z „Cofnij””), `e2e/study.spec.ts` („lista do nauki…”).
 
 ---
 
+## Praca — kolory z motywu, ikony ostrzeżeń, cele dotyku (P1)
+
+**Co robi.** Zielony „OK”/„dobrze” w dzienniku i quizie oraz znaki punktów krytycznych biorą kolor z motywu (działają
+w ciemnym motywie i stylach Neon/Zorza/Miedź), punkty krytyczne mają jedną ikonę `TriangleAlert` w kolorze ostrzeżenia
+(wcześniej znak ⚠ raz bursztynowy, raz ostrzegawczy). Wynik rundy w kroju mono jak inne liczby. Pigułka tematu we
+wpisie filtruje dziennik po temacie (wcześniej niespodziewanie startowała quiz — ćwiczenie jest pod „Ćwicz teraz”).
+Licznik „Otwarte problemy” i pigułka tematu mają 44 px na dotyku.
+
+**Gdzie jest.** `tailwind.config.ts` (`success.ink`, `warning.ink`), `study/JournalEntrySheet.tsx` (`KindIcon`,
+`KIND_ON`), `study/QuizPanel.tsx`, `study/StudyChecklist.tsx`, `study/StudyBoard.tsx`, `study/StudyJournal.tsx`
+(`JournalItem` dostał `onTopic`).
+
+**Jak działa i dlaczego.** `success-ink`/`warning-ink` to ten sam wzór co `primary-ink`: `color-mix` koloru z czernią
+wg `--ink-mix` (62% w jasnym, 100% w ciemnym i stylach ciemnych). Sam `--success` w jasnym motywie miał ~2,6:1 na
+białym — za mało na ikonę; wersja „ink” przechodzi 3:1 dla ikon i 4,5:1 dla tekstu.
+
+**Ograniczenia i pułapki.** Tła stanów zostają na `bg-success/10` (dekoracja), tylko krawędź i ikona w „ink”.
+
+**Testy.** `e2e/study.spec.ts` (pigułka tematu filtruje, „Ćwicz teraz” startuje quiz), `e2e/a11y.spec.ts`,
+`e2e/skins.spec.ts`, `e2e/touch-targets.spec.ts`.
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Praca → Dziennik budowy
 
 Zakładka „Dziennik” na `/nauka` (`src/components/study/StudyJournal.tsx`). Dziennik instalatora

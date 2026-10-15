@@ -54,7 +54,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
           <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">{moduleLabel(topic.module)}</p>
           <h4 className="mt-0.5 font-medium leading-snug">
             {topic.title}
-            {critical && <span className="ml-1.5 text-primary-ink" title="Zawiera punkty krytyczne" aria-label="Zawiera punkty krytyczne">⚠</span>}
+            {critical && <span className="ml-1.5 inline-flex align-[-2px]" role="img" title="Zawiera punkty krytyczne" aria-label="Zawiera punkty krytyczne"><TriangleAlert className="h-3.5 w-3.5 text-warning-ink" aria-hidden /></span>}
           </h4>
         </div>
         {/* Strzałki przy tytule: przesunięcie tematu to decyzja o nim, nie akcja z listy. */}
@@ -95,7 +95,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
           )}
           data-topic-problem={practice.lastProblem.resolved === undefined ? "open" : "resolved"}
         >
-          <TriangleAlert className="mt-px h-3.5 w-3.5 shrink-0 text-warning" aria-hidden />
+          <TriangleAlert className="mt-px h-3.5 w-3.5 shrink-0 text-warning-ink" aria-hidden />
           <span className="min-w-0">
             <span className="font-medium">{practice.lastProblem.resolved === undefined ? "Problem na budowie" : "Rozwiązany problem"}</span>
             {" "}({new Date(practice.lastProblem.at).toLocaleDateString("pl-PL", { day: "numeric", month: "numeric" })}): {practice.lastProblem.text.trim().split("\n")[0] || "bez opisu"}

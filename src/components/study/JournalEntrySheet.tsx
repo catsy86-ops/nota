@@ -24,14 +24,14 @@ import { fromLocalInput, KIND_LABEL, suggestSites, toLocalInput, whenLabel } fro
 import { siteDirectory } from "@/lib/study/sites";
 
 export function KindIcon({ kind, className = "h-4 w-4" }: { kind: JournalKind; className?: string }) {
-  if (kind === "ok") return <CircleCheck className={cn(className, "shrink-0 text-emerald-600")} aria-hidden />;
+  if (kind === "ok") return <CircleCheck className={cn(className, "shrink-0 text-success-ink")} aria-hidden />;
   if (kind === "problem") return <TriangleAlert className={cn(className, "shrink-0 text-warning")} aria-hidden />;
   return <NotebookPen className={cn(className, "shrink-0 text-muted-foreground")} aria-hidden />;
 }
 
 /** Zaznaczony rodzaj: kolor rodzaju na ramce i tle — na budowie widać go kątem oka. */
 const KIND_ON: Record<JournalKind, string> = {
-  ok: "border-emerald-600/70 bg-emerald-600/10",
+  ok: "border-success-ink/70 bg-success/10",
   problem: "border-warning bg-warning/10",
   note: "border-foreground/40 bg-muted",
 };
@@ -471,7 +471,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                         <li key={item.id} className="flex items-start gap-2.5">
                           <Checkbox id={`journal-${item.id}`} checked={checked.has(item.id)} onCheckedChange={() => toggle(item.id)} className="mt-0.5" />
                           <label htmlFor={`journal-${item.id}`} className="cursor-pointer text-sm leading-snug">
-                            {item.critical && <span className="mr-1 text-warning" aria-label="Punkt krytyczny">⚠</span>}
+                            {item.critical && <span className="mr-1 inline-flex align-[-2px]" role="img" aria-label="Punkt krytyczny"><TriangleAlert className="h-3.5 w-3.5 text-warning-ink" aria-hidden /></span>}
                             {item.text}
                             {item.risk && <span className="mt-0.5 block text-xs text-muted-foreground">Ryzyko: {item.risk.replace(/^[^=]*= ?/, "")}</span>}
                           </label>

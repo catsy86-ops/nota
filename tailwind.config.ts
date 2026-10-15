@@ -70,10 +70,14 @@ export default {
         success: {
           DEFAULT: "hsl(var(--success))",
           foreground: "hsl(var(--success-foreground))",
+          // Tekst i ikony na jasnym tle — jak `primary-ink` (sam kolor ma za mały kontrast).
+          ink: "color-mix(in srgb, hsl(var(--success)) var(--ink-mix, 62%), black)",
         },
         warning: {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
+          // Tekst i ikony na jasnym tle — jak `primary-ink` (sam kolor ma za mały kontrast).
+          ink: "color-mix(in srgb, hsl(var(--warning)) var(--ink-mix, 62%), black)",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

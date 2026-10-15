@@ -98,7 +98,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                 aria-pressed={filter.kind === "open"}
                 title="Pokaż tylko otwarte problemy"
                 className={cn(
-                  "pressable mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-foreground coarse:min-h-9",
+                  "pressable mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-foreground coarse:min-h-11 coarse:px-3 coarse:text-sm",
                   filter.kind === "open" ? "bg-warning/25 ring-1 ring-warning/60" : "bg-warning/10 hover:bg-warning/20",
                 )}
                 data-testid="journal-open-problems"
@@ -264,7 +264,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                             </p>
                           )}
                           <ul className="space-y-2">
-                            {g.entries.map((e) => <JournalItem key={e.id} entry={e} onPractice={onPractice} onZoom={setZoom} />)}
+                            {g.entries.map((e) => <JournalItem key={e.id} entry={e} onPractice={onPractice} onTopic={(t) => patch({ topic: t })} onZoom={setZoom} />)}
                           </ul>
                         </div>
                       ))}
@@ -300,7 +300,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   );
 }
 
-function JournalItem({ entry: e, onPractice, onZoom }: { entry: JournalEntry; onPractice: (topicId: string) => void; onZoom: (ref: string) => void }) {
+function JournalItem({ entry: e, onPractice, onTopic, onZoom }: { entry: JournalEntry; onPractice: (topicId: string) => void; onTopic: (topicId: string) => void; onZoom: (ref: string) => void }) {
   const total = CHECKLIST.filter((c) => c.topic === e.topic).length;
   const resolved = e.kind === "problem" && e.resolved !== undefined;
 
@@ -321,11 +321,13 @@ function JournalItem({ entry: e, onPractice, onZoom }: { entry: JournalEntry; on
             </span>
             <span>{resolved ? "Problem rozwiązany" : KIND_LABEL[e.kind]}</span>
             {e.topic && (
+              // Pigułka tematu filtruje dziennik po temacie — ćwiczenie jest pod jawnym „Ćwicz teraz”.
               <button
                 type="button"
-                onClick={() => onPractice(e.topic!)}
-                className="rounded-full bg-muted px-2 py-0.5 hover:bg-primary/10 hover:text-primary-ink"
-                title="Ćwicz pytania z tego tematu"
+                onClick={() => onTopic(e.topic!)}
+                className="pressable rounded-full bg-muted px-2 py-0.5 hover:bg-primary/10 hover:text-primary-ink coarse:min-h-11 coarse:px-3 coarse:text-sm"
+                title="Pokaż wpisy z tego tematu"
+                aria-label={`Pokaż wpisy z tematu: ${topicTitle(e.topic)}`}
               >
                 {topicTitle(e.topic)}
               </button>

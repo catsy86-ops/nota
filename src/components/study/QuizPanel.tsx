@@ -115,7 +115,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
     return (
       <section aria-label="Wynik rundy" className="rounded-2xl border border-border bg-card p-5 sm:p-7 space-y-5">
         <div className="flex items-end gap-4">
-          <p className="font-display text-6xl leading-none tabular-nums text-primary-ink">{result.correct}<span className="text-2xl text-muted-foreground">/{round.length}</span></p>
+          <p className="font-mono text-6xl font-semibold leading-none tabular-nums text-primary-ink">{result.correct}<span className="text-2xl text-muted-foreground">/{round.length}</span></p>
           <p className="pb-1 text-sm text-muted-foreground">
             {percent === 100 ? "Bezbłędnie." : percent >= 70 ? "Dobrze — zostało kilka tematów do powtórki." : "Warto wrócić do listy i tablicy."}
           </p>
@@ -220,13 +220,13 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
               className={cn(
                 "pressable flex items-start gap-3 rounded-xl border px-3.5 py-3 text-left text-sm transition-colors",
                 !answered && "border-border bg-background hover:border-primary/60 hover:bg-primary/5",
-                answered && isCorrect && "border-emerald-500/60 bg-emerald-500/10",
+                answered && isCorrect && "border-success-ink/60 bg-success/10",
                 answered && isPicked && !isCorrect && "border-destructive/60 bg-destructive/10",
                 answered && !isCorrect && !isPicked && "border-border bg-background opacity-60",
               )}
             >
               <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border border-border font-mono text-2xs text-muted-foreground">
-                {answered && isCorrect ? <Check className="w-3.5 h-3.5 text-emerald-600" aria-label="Poprawna" /> : answered && isPicked ? <X className="w-3.5 h-3.5 text-destructive" aria-label="Błędna" /> : LETTERS[i]}
+                {answered && isCorrect ? <Check className="w-3.5 h-3.5 text-success-ink" aria-label="Poprawna" /> : answered && isPicked ? <X className="w-3.5 h-3.5 text-destructive" aria-label="Błędna" /> : LETTERS[i]}
               </span>
               <span className="flex-1">{opt}</span>
             </button>
