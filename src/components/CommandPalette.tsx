@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, GraduationCap, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy } from "lucide-react";
+import { Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes, useSearchReady } from "@/lib/searchNotes";
@@ -189,7 +189,7 @@ export function CommandPalette({
             <BriefcaseBusiness className="w-4 h-4 mr-2" /> Grafik zmian
           </CommandItem>
           <CommandItem onSelect={() => run(() => onGo("study"))}>
-            <GraduationCap className="w-4 h-4 mr-2" /> Nauka
+            <HardHat className="w-4 h-4 mr-2" /> Praca
           </CommandItem>
           <CommandItem onSelect={() => run(() => onGo("archive"))}>
             <Archive className="w-4 h-4 mr-2" /> Archiwum

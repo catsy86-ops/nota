@@ -109,7 +109,7 @@ export function AppHeader({
 "Kalendarz"
               )}
               {view === "shifts" && "Grafik"}
-              {view === "study" && "Nauka"}
+              {view === "study" && "Praca"}
               {view === "archive" && "Archiwum"}
               {view === "reminders" && "Przypomnienia"}
               {view === "trash" && "Kosz"}

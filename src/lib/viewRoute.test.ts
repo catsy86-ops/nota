@@ -31,3 +31,11 @@ describe("viewRoute", () => {
     expect(withSearch("", "")).toBe("");
   });
 });
+
+describe("dział Praca (dawniej Nauka)", () => {
+  it("nowy i stary adres prowadzą do tego samego widoku, linki budują nowy", () => {
+    expect(parseViewRoute("/praca", "").view).toBe("study");
+    expect(parseViewRoute("/nauka", "").view).toBe("study");
+    expect(viewPath("study")).toBe("/praca");
+  });
+});

@@ -25,7 +25,7 @@ test.describe("odporność na uszkodzone dane i błędy zapisu", () => {
 
     await addNote(page, "Działa mimo uszkodzeń");
 
-    await page.goto("/nauka");
+    await page.goto("/praca");
     await expect(page.getByTestId("study-view")).toBeVisible();
     await expect(page.getByTestId("mastery-count")).toHaveText("0");
   });

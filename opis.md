@@ -4,7 +4,7 @@ Dokumentacja aktualnego stanu funkcji — co robią, gdzie są w kodzie i jak dz
 Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej opis.
 Zasady prowadzenia: `CLAUDE.md`, sekcja „Dokumentacja techniczna”.
 
-Działy opisane do tej pory: **Wspólne — style i mikrointerakcje**, **Wspólne — warstwa UI**, **Wspólne — biblioteki UI (Radix, lucide, sonner)**, **Wspólne — audyt dostępności i testy na telefonach**, **Wspólne — klawiatura ekranowa**, **Wspólne — cele dotyku**, **Nauka** (nagłówek i tablica) i **Nauka → Dziennik budowy**.
+Działy opisane do tej pory: **Wspólne — style i mikrointerakcje**, **Wspólne — warstwa UI**, **Wspólne — biblioteki UI (Radix, lucide, sonner)**, **Wspólne — audyt dostępności i testy na telefonach**, **Wspólne — klawiatura ekranowa**, **Wspólne — cele dotyku**, **Praca** (nagłówek i tablica) i **Praca → Dziennik budowy**.
 Pozostałe działy (Notatki, Grafik, Kalendarz, reszta Nauki) dopisuj, gdy zadanie ich dotyczy.
 
 ---
@@ -481,10 +481,20 @@ najmniejszego rozmiaru w aplikacji; wartości poniżej 11 px są nieczytelne w s
 
 ---
 
-## Nauka — nagłówek i tablica tematów
+## Praca — nagłówek i tablica tematów
 
 `/nauka` (`src/components/study/StudyView.tsx`): nagłówek „Instalacje wod-kan”, pasek opanowania
 i zakładki Quiz / Tablica / Lista / Dziennik.
+
+**Nazwa działu.** Do 2026-10-15 dział nazywał się „Nauka” (`/nauka`). W interfejsie jest „Praca” z ikoną kasku
+(`HardHat`): pasek boczny (`Index.tsx`), „Więcej” (`BottomNav.tsx`), paleta poleceń, nagłówek (`AppHeader.tsx`),
+szkielet ładowania, kopia zapasowa („Praca i dziennik z budowy”), skrót PWA „Wpis z budowy” (`/praca?wpis=1`
+w `public/manifest.webmanifest`). `src/lib/viewRoute.ts` mapuje `praca` i `nauka` na widok `study`; linki budują
+`/praca`, stary adres dalej działa (zakładki, zainstalowana aplikacja ze starym manifestem). Kod, klucze zapisu
+i typy zostają przy `study` — zmiana nazwy nie rusza danych. Notatki tworzone z tematów dalej mają tytuł
+„Nauka: …” i etykietę `nauka` — to opis treści (temat do nauki), nie nazwa działu.
+Testy: `src/lib/viewRoute.test.ts`, `e2e/study.spec.ts` („stary adres /nauka nadal otwiera dział Praca”).
+Commit: `HASHPR` (2026-10-15).
 
 ### Pasek opanowania
 
@@ -523,7 +533,7 @@ Przesunięcie animuje `framer-motion` (`layoutId`).
 
 **Commit.** N1 `4c951fa` (2026-10-15).
 
-## Nauka → Dziennik budowy
+## Praca → Dziennik budowy
 
 Zakładka „Dziennik” na `/nauka` (`src/components/study/StudyJournal.tsx`). Dziennik instalatora
 wod-kan: co zrobione, jakie problemy, zdjęcia, na której budowie — połączone z tematami

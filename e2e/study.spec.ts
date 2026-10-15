@@ -18,10 +18,10 @@ test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
 });
 
-test("dział Nauka: adres /nauka, pozycja w pasku bocznym i cztery zakładki @smoke", async ({ page }) => {
+test("dział Praca: adres /praca, pozycja w pasku bocznym i cztery zakładki @smoke", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Nauka" }).first().click();
-  await expect(page).toHaveURL(/\/nauka$/);
+  await page.getByRole("button", { name: "Praca" }).first().click();
+  await expect(page).toHaveURL(/\/praca$/);
   await expect(page.getByTestId("study-view")).toBeVisible();
   await expect(page.getByTestId("mastery-count")).toHaveText("0");
   for (const name of ["Quiz", "Tablica", "Lista", "Dziennik"]) {
@@ -30,7 +30,7 @@ test("dział Nauka: adres /nauka, pozycja w pasku bocznym i cztery zakładki @sm
 });
 
 test("tablica: temat przechodzi między kolumnami i postęp przeżywa odświeżenie @smoke", async ({ page }) => {
-  await page.goto("/nauka");
+  await page.goto("/praca");
   await page.getByRole("tab", { name: "Tablica" }).click();
   await expect(page.getByTestId("count-todo")).toHaveText("18");
 
@@ -50,7 +50,7 @@ test("tablica: temat przechodzi między kolumnami i postęp przeżywa odświeże
 });
 
 test("lista do nauki: odhaczanie, filtr krytycznych i ściąga wysokości", async ({ page }) => {
-  await page.goto("/nauka");
+  await page.goto("/praca");
   await page.getByRole("tab", { name: "Lista" }).click();
   const progress = page.getByTestId("checklist-progress");
   await expect(progress).toContainText("0");
@@ -67,7 +67,7 @@ test("lista do nauki: odhaczanie, filtr krytycznych i ściąga wysokości", asyn
 });
 
 test("quiz: runda z 10 pytań kończy się wynikiem i zapisuje rundę", async ({ page }) => {
-  await page.goto("/nauka");
+  await page.goto("/praca");
   await page.getByRole("button", { name: "Zacznij rundę" }).click();
 
   for (let i = 1; i <= 10; i++) {
@@ -86,7 +86,7 @@ test("quiz: runda z 10 pytań kończy się wynikiem i zapisuje rundę", async ({
 });
 
 test("tablica: „Ćwicz” startuje rundę z jednego tematu, a „Zrób notatkę” dodaje notatkę", async ({ page }) => {
-  await page.goto("/nauka");
+  await page.goto("/praca");
   await page.getByRole("tab", { name: "Tablica" }).click();
   await page.getByRole("button", { name: "Spadki kanalizacji: ćwicz pytania" }).click();
 
@@ -112,7 +112,7 @@ test("tablica: „Ćwicz” startuje rundę z jednego tematu, a „Zrób notatk�
 });
 
 test("dziennik z budowy: lista kontrolna tematu, wpis liczy praktykę, problem cofa temat z „Umiem”", async ({ page }) => {
-  await page.goto("/nauka");
+  await page.goto("/praca");
   await page.getByRole("tab", { name: "Tablica" }).click();
   await page.getByRole("button", { name: /Spadki kanalizacji: przenieś do „W trakcie”/ }).click();
   await page.getByRole("button", { name: /Spadki kanalizacji: przenieś do „Umiem”/ }).click();
@@ -156,7 +156,7 @@ test("dziennik z budowy: lista kontrolna tematu, wpis liczy praktykę, problem c
 test("dziennik: niezapisany wpis ze zdjęciem przeżywa zamknięcie arkusza, „Wpis z budowy” i odświeżenie", async ({ page }) => {
   // 1×1 px PNG.
   const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
-  await page.goto("/nauka");
+  await page.goto("/praca");
   await openEntry(page);
   const sheet = page.getByTestId("journal-entry-sheet");
   // Temat zwinięty: na budowie najpierw rodzaj, tekst i zdjęcie.
@@ -191,7 +191,7 @@ test("dziennik: niezapisany wpis ze zdjęciem przeżywa zamknięcie arkusza, „
 });
 
 test("dziennik: pusty wpis się nie zapisuje, usunięcie wpisu w arkuszu ma Cofnij", async ({ page }) => {
-  await page.goto("/nauka");
+  await page.goto("/praca");
   await openEntry(page);
   const sheet = page.getByTestId("journal-entry-sheet");
   await sheet.getByRole("button", { name: "Zapisz wpis" }).click();
@@ -213,7 +213,7 @@ test("dziennik: pusty wpis się nie zapisuje, usunięcie wpisu w arkuszu ma Cofn
 });
 
 test("dziennik: wpis „za wczoraj”, poprawka w arkuszu bez ruszania szkicu, problem rozwiązany", async ({ page }) => {
-  await page.goto("/nauka");
+  await page.goto("/praca");
   await openEntry(page);
   const sheet = page.getByTestId("journal-entry-sheet");
   await expect(sheet.getByRole("button", { name: "Kiedy: teraz. Zmień" })).toBeVisible();
@@ -280,7 +280,7 @@ test("dziennik: dyktowanie dopisuje rozpoznany tekst do wpisu", async ({ page })
     }
     (window as unknown as { SpeechRecognition: unknown }).SpeechRecognition = FakeRecognition;
   });
-  await page.goto("/nauka");
+  await page.goto("/praca");
   await openEntry(page);
   const sheet = page.getByTestId("journal-entry-sheet");
 
@@ -297,10 +297,10 @@ test.describe("dziennik na telefonie", () => {
 
   test("„+” w dolnym pasku i skrót z ekranu głównego otwierają arkusz wpisu od dołu", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/nauka?wpis=1");
+    await page.goto("/praca?wpis=1");
     const sheet = page.getByTestId("journal-entry-sheet");
     await expect(sheet).toBeVisible();
-    await expect(page).toHaveURL(/\/nauka$/);
+    await expect(page).toHaveURL(/\/praca$/);
     await expect(page.getByRole("tab", { name: "Dziennik", includeHidden: true })).toHaveAttribute("data-state", "active");
     // Na dotyku: aparat i galeria osobno, duże cele rodzaju wpisu.
     await expect(sheet.getByRole("button", { name: "Aparat" })).toBeVisible();
@@ -322,7 +322,7 @@ test.describe("dziennik na telefonie", () => {
 
   test("bez internetu podpowiada mikrofon klawiatury", async ({ page, context }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/nauka?wpis=1");
+    await page.goto("/praca?wpis=1");
     await expect(page.getByTestId("journal-entry-sheet")).toBeVisible();
     await context.setOffline(true);
     await expect(page.getByTestId("dictation-hint")).toContainText("mikrofonem na klawiaturze");
@@ -339,7 +339,7 @@ test("dawny zapis Nauki z localStorage przechodzi do dokumentu raz i bez strat",
       journal: [{ id: "stary-1", at: Date.now() - 3600_000, kind: "ok", topic: null, text: "Wpis sprzed migracji", site: "", checked: [], images: [] }],
     }));
   });
-  await page.goto("/nauka");
+  await page.goto("/praca");
   await expect(page.getByTestId("mastery-count")).toHaveText("1");
   await expect(page.getByText(/Najlepszy wynik: 70% · rund: 2/)).toBeVisible();
   await page.getByRole("tab", { name: "Dziennik" }).click();
@@ -370,7 +370,7 @@ test("dziennik: oś czasu dzień → budowa, szukanie bez ogonków, filtry i „
       ],
     }));
   });
-  await page.goto("/nauka");
+  await page.goto("/praca");
   await page.getByRole("tab", { name: "Dziennik" }).click();
   const journal = page.getByTestId("study-journal");
 
@@ -442,7 +442,7 @@ test("dziennik: raport budowy z godzinami z Grafiku — udostępnij, kopiuj, do 
     }));
     localStorage.setItem("kaczy:shifts", JSON.stringify({ version: 2, days: { "2026-10-14": { type: "b" } } }));
   });
-  await page.goto("/nauka");
+  await page.goto("/praca");
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await page.getByTestId("study-journal").getByRole("button", { name: "Raport" }).click();
 
@@ -495,7 +495,7 @@ test("dziennik: karta budowy — nazwa, adres, inwestor, raport z karty i archiw
       ],
     }));
   });
-  await page.goto("/nauka");
+  await page.goto("/praca");
   await page.getByRole("tab", { name: "Dziennik" }).click();
   const journal = page.getByTestId("study-journal");
 
@@ -547,4 +547,9 @@ test("dziennik: karta budowy — nazwa, adres, inwestor, raport z karty i archiw
   await journal.getByRole("button", { name: "Dom Nowaków: karta budowy" }).click();
   await expect(card.getByLabel("Inwestor")).toHaveValue("Jan Nowak");
   await expect(card.getByTestId("site-card-stats")).toContainText("w archiwum");
+});
+
+test("stary adres /nauka nadal otwiera dział Praca", async ({ page }) => {
+  await page.goto("/nauka");
+  await expect(page.getByRole("heading", { name: "Praca", level: 1 })).toBeVisible();
 });

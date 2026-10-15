@@ -8,7 +8,7 @@ import type { LazyView } from "@/lib/viewPreload";
 const LABELS: Record<LazyView, string> = {
   calendar: "Ładowanie kalendarza…",
   shifts: "Ładowanie grafiku…",
-  study: "Ładowanie Nauki…",
+  study: "Ładowanie Pracy…",
 };
 
 function Bone({ className }: { className?: string }) {

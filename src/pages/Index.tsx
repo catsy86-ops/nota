@@ -2,7 +2,7 @@ import { useState, useCallback, useDeferredValue, useEffect, useLayoutEffect, us
 import { m as motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
-import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange, BriefcaseBusiness, GraduationCap } from "lucide-react";
+import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange, BriefcaseBusiness, HardHat } from "lucide-react";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useNoteVersions } from "@/hooks/useNoteVersions";
 import type { NoteVersion } from "@/hooks/useNoteVersions";
@@ -698,7 +698,7 @@ const Index = () => {
     { icon: Bell, label: "Przypomnienia", view: "reminders", count: overdueCount, alert: true, emoji: "🔔" },
     { icon: CalendarRange, label: "Kalendarz", view: "calendar", emoji: "🗓️" },
     { icon: BriefcaseBusiness, label: "Grafik", view: "shifts", emoji: "🗂️" },
-    { icon: GraduationCap, label: "Nauka", view: "study", emoji: "🎓" },
+    { icon: HardHat, label: "Praca", view: "study", emoji: "👷" },
     { icon: Archive, label: "Archiwum", view: "archive", emoji: "📦" },
     { icon: Trash, label: "Kosz", view: "trash", count: trashedNotes.length, emoji: "🗑️" },
   ];
@@ -937,7 +937,7 @@ const Index = () => {
           )}
 
           {view === "study" && (
-            <ViewErrorBoundary name="Nauka">
+            <ViewErrorBoundary name="Praca">
               <Suspense fallback={<ViewSkeleton view="study" />}>
                 <StudyView />
               </Suspense>

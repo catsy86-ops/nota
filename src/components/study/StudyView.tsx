@@ -86,7 +86,7 @@ function MasteryStrip() {
   );
 }
 
-/** Dział „Nauka”: quiz, tablica tematów i lista do nauki z materiałów G-HEAT. */
+/** Dział „Praca” (dawniej „Nauka”): quiz, tablica tematów i lista do nauki z materiałów G-HEAT. */
 export default function StudyView() {
   // Do wczytania dokumentu nic — pusta Nauka mignęłaby zerami i pustym dziennikiem.
   return useStudyReady() ? <StudyScreen /> : null;

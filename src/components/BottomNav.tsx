@@ -1,6 +1,6 @@
 import { forwardRef, useRef, useState } from "react";
 import { m as motion, LayoutGroup } from "framer-motion";
-import { StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, Settings as SettingsIcon, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, GraduationCap, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
+import { StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, Settings as SettingsIcon, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, HardHat, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
 import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
 import { openJournalSheet } from "@/lib/study/entrySheet";
@@ -175,7 +175,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             <SheetTile Icon={Trash} label="Kosz" active={view === "trash"} badge={trashCount || undefined} onClick={() => { onGo("trash"); setMoreOpen(false); }} />
             <SheetTile Icon={CalendarRange} label="Kalendarz" active={view === "calendar"} onPointerDown={() => preloadView("calendar")} onClick={() => { onGo("calendar"); setMoreOpen(false); }} />
             <SheetTile Icon={BriefcaseBusiness} label="Grafik" active={view === "shifts"} onPointerDown={() => preloadView("shifts")} onClick={() => { onGo("shifts"); setMoreOpen(false); }} />
-            <SheetTile Icon={GraduationCap} label="Nauka" active={view === "study"} onPointerDown={() => preloadView("study")} onClick={() => { onGo("study"); setMoreOpen(false); }} />
+            <SheetTile Icon={HardHat} label="Praca" active={view === "study"} onPointerDown={() => preloadView("study")} onClick={() => { onGo("study"); setMoreOpen(false); }} />
           </SheetGroup>
           {onGoFilter && filters.length > 0 && (
             <SheetGroup title="Filtry">

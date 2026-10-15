@@ -179,7 +179,7 @@ function RestoreBackup() {
     { key: "settings", label: "Ustawienia (wygląd, motyw, efekty, potwierdzenia)", present: backup.settings !== undefined },
     { key: "achievements", label: "Odznaki i passa", present: backup.achievements !== undefined },
     { key: "shifts", label: "Grafik zmian", present: backup.shifts !== undefined },
-    { key: "study", label: "Nauka i dziennik z budowy", present: backup.study !== undefined || backup.settings?.["kaczy.study.v1"] !== undefined },
+    { key: "study", label: "Praca i dziennik z budowy", present: backup.study !== undefined || backup.settings?.["kaczy.study.v1"] !== undefined },
   ] : [];
 
   return (

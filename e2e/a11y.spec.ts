@@ -14,7 +14,7 @@ const VIEWS = [
   { name: "przypomnienia", path: "/przypomnienia" },
   { name: "kalendarz", path: "/kalendarz" },
   { name: "grafik", path: "/grafik" },
-  { name: "nauka", path: "/nauka" },
+  { name: "nauka", path: "/praca" },
 ] as const;
 
 const SIZES = [

@@ -22,10 +22,13 @@ const SIMPLE: Record<string, View> = {
   przypomnienia: "reminders",
   kalendarz: "calendar",
   grafik: "shifts",
+  // Dawny adres działu Praca (był „Nauka”) — stare zakładki i skróty dalej działają.
   nauka: "study",
+  praca: "study",
   widget: "widget",
   kosz: "trash",
 };
+// Przy kilku adresach jednego widoku wygrywa ostatni (`praca` po `nauka`).
 const SLUG: Partial<Record<View, string>> = Object.fromEntries(Object.entries(SIMPLE).map(([k, v]) => [v, k]));
 
 function decode(s: string): string {
