@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Clock, Copy, FilePlusCorner, MapPin, Printer, Share2 } from "lucide-react";
+import { Clock, Copy, FilePlusCorner, MapPin, MessageCircle, Printer, Share2, UserPen, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { StatusPanel } from "@/components/StatusPanel";
@@ -14,9 +14,10 @@ import { useShifts } from "@/lib/shifts";
 import { imageStore } from "@/lib/imageStore";
 import { yjsStore } from "@/lib/yjsStore";
 import { TOPICS } from "@/lib/study/content";
-import type { JournalEntry, SiteInfo } from "@/lib/study/store";
+import { saveBoss, saveGroup, useStudy, type Boss, type JournalEntry, type SiteInfo, type WaGroup } from "@/lib/study/store";
+import { formatPhone, whatsappUrl } from "@/lib/study/boss";
 import { entrySiteId } from "@/lib/study/sites";
-import { buildJournalReport, dayKeyOf, reportSummary, reportText, shiftKey, type JournalReport as Report } from "@/lib/study/report";
+import { buildJournalReport, dayKeyOf, reportSummary, reportText, reportWhatsApp, shiftKey, type JournalReport as Report } from "@/lib/study/report";
 import { reportToNote } from "@/lib/study/toNote";
 import { KindIcon } from "./JournalEntrySheet";
 
@@ -68,6 +69,8 @@ export function JournalReportDialog({
   initialSite: string | null;
 }) {
   const shifts = useShifts();
+  const { boss, group } = useStudy();
+  const [bossEdit, setBossEdit] = useState(false);
   const [site, setSite] = useState<string | null>(null);
   const card = site ? sites.find((x) => x.id === site) ?? null : null;
   const [range, setRange] = useState<[string, string]>(() => { const t = dayKeyOf(Date.now()); return [t, t]; });
@@ -85,6 +88,7 @@ export function JournalReportDialog({
     setSite(s);
     setRange([day, day]);
     setCustom(false);
+    setBossEdit(false);
     // Tylko przy otwarciu — później wybiera użytkownik.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
@@ -119,6 +123,45 @@ export function JournalReportDialog({
     } catch {
       toast.error("Nie udało się skopiować — zaznacz tekst w podglądzie");
     }
+  }
+
+  /** Czat WhatsApp z szefem i gotowym tekstem — wysyła użytkownik w komunikatorze. */
+  function sendToBoss() {
+    if (!boss) { setBossEdit(true); return; }
+    window.open(whatsappUrl(boss.phone, reportWhatsApp(report)), "_blank", "noopener,noreferrer");
+    haptic("success");
+    toast.success(`Otwieram WhatsApp — ${boss.name || "szef"}`, {
+      description: report.images.length > 0 ? "Zdjęcia dołączysz w czacie albo przez „Udostępnij”." : undefined,
+    });
+  }
+
+  /**
+   * Do grupy: systemowe „Udostępnij” z tekstem i zdjęciami — w WhatsApp wybierasz grupę
+   * (`wa.me` nie otwiera grup z gotowym tekstem). Bez udostępniania: tekst do schowka
+   * i otwarcie grupy z linku zaproszenia — wklejasz w czacie.
+   */
+  async function sendToGroup() {
+    if (!group) { setBossEdit(true); return; }
+    const text = reportWhatsApp(report);
+    if (canShare) {
+      const withFiles = files.length > 0 && navigator.canShare?.({ files, text });
+      try {
+        await navigator.share(withFiles ? { text, files } : { text });
+        haptic("success");
+        return;
+      } catch (err) {
+        if ((err as Error)?.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      toast.error("Nie udało się skopiować — zaznacz tekst w podglądzie");
+      return;
+    }
+    haptic("success");
+    if (group.link) window.open(group.link, "_blank", "noopener,noreferrer");
+    toast.success(`Skopiowano raport — wklej w grupie „${group.name}”`);
   }
 
   function toNote() {
@@ -192,17 +235,48 @@ export function JournalReportDialog({
             )}
           </div>
 
+          {bossEdit && <RecipientsForm boss={boss} group={group} onDone={() => setBossEdit(false)} />}
+
           <div className="bg-muted/30 px-3 py-4 sm:px-6">
             <ReportPaper report={report} />
           </div>
 
-          <div className="sticky bottom-0 grid grid-cols-2 gap-2 border-t border-border bg-background px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex sm:justify-end sm:px-6">
+          <div className="sticky bottom-0 grid grid-cols-2 gap-2 border-t border-border bg-background px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:flex sm:flex-wrap sm:justify-end sm:px-6">
+            <div className="col-span-2 flex items-center gap-2 sm:order-last sm:w-full sm:justify-end" data-testid="whatsapp-row">
+              {boss || group ? (
+                <>
+                  {boss && (
+                    // Na telefonie sam „Szefowi” — imię nie mieści się obok drugiego przycisku; zostaje w nazwie dla czytnika.
+                    <Button onClick={sendToBoss} disabled={empty} aria-label={`Szefowi${boss.name ? ` (${boss.name})` : ""}`} className="min-w-0 flex-1 coarse:h-11 sm:flex-none">
+                      <MessageCircle className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
+                      <span className="truncate">Szefowi{boss.name && <span className="max-sm:hidden"> ({boss.name})</span>}</span>
+                    </Button>
+                  )}
+                  {group && (
+                    <Button variant={boss ? "outline" : "default"} onClick={sendToGroup} disabled={empty} aria-label={`Do grupy „${group.name}”`} className="min-w-0 flex-1 coarse:h-11 sm:flex-none">
+                      <Users className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
+                      <span className="truncate">Do grupy<span className={cn(boss && "max-sm:hidden")}> „{group.name}”</span></span>
+                    </Button>
+                  )}
+                  {!bossEdit && (
+                    <Button variant="ghost" size="sm" onClick={() => setBossEdit(true)} aria-label="Odbiorcy" title="Odbiorcy" className="shrink-0 text-muted-foreground coarse:h-11 coarse:w-11 max-sm:px-0">
+                      <UserPen className="h-4 w-4 sm:mr-1.5" aria-hidden /><span className="max-sm:hidden">Odbiorcy</span>
+                    </Button>
+                  )}
+                </>
+              ) : (
+                <Button onClick={() => setBossEdit(true)} className="min-w-0 flex-1 coarse:h-11 sm:flex-none">
+                  <MessageCircle className="mr-1.5 h-4 w-4 shrink-0" aria-hidden />
+                  <span className="truncate">WhatsApp: dodaj szefa lub grupę</span>
+                </Button>
+              )}
+            </div>
             {canShare ? (
-              <Button onClick={share} disabled={empty} className="col-span-2 coarse:h-11 sm:order-last">
+              <Button variant="outline" onClick={share} disabled={empty} className="col-span-2 coarse:h-11">
                 <Share2 className="mr-1.5 h-4 w-4" aria-hidden />Udostępnij{files.length > 0 ? ` (${files.length} zdj.)` : ""}
               </Button>
             ) : null}
-            <Button variant={canShare ? "outline" : "default"} onClick={copy} disabled={empty} className={cn("coarse:h-11", !canShare && "col-span-2 sm:order-last")}>
+            <Button variant="outline" onClick={copy} disabled={empty} className={cn("coarse:h-11", !canShare && "col-span-2")}>
               <Copy className="mr-1.5 h-4 w-4" aria-hidden />Kopiuj tekst
             </Button>
             <Button variant="outline" onClick={toNote} disabled={empty} className="coarse:h-11">
@@ -216,6 +290,89 @@ export function JournalReportDialog({
       </Dialog>
       {printing && <ReportPrint report={report} onDone={() => setPrinting(false)} />}
     </>
+  );
+}
+
+/** Odbiorcy raportu w WhatsApp — szef (numer) i grupa; zapisani w danych Pracy, więc są na każdym sparowanym telefonie. */
+function RecipientsForm({ boss, group, onDone }: { boss: Boss | null; group: WaGroup | null; onDone: () => void }) {
+  const [name, setName] = useState(boss?.name ?? "");
+  const [phone, setPhone] = useState(boss ? formatPhone(boss.phone) : "");
+  const [groupName, setGroupName] = useState(group?.name ?? "");
+  const [groupLink, setGroupLink] = useState(group?.link ?? "");
+  const [phoneError, setPhoneError] = useState(false);
+  const [linkError, setLinkError] = useState(false);
+  function save() {
+    const phoneOk = saveBoss(name, phone);
+    const linkOk = saveGroup(groupName, groupLink);
+    setPhoneError(!phoneOk);
+    setLinkError(!linkOk);
+    if (!phoneOk || !linkOk) return;
+    haptic("success");
+    toast.success("Zapisano odbiorców");
+    onDone();
+  }
+  return (
+    <form
+      className="space-y-4 border-b border-border px-5 py-4 sm:px-6"
+      aria-label="Odbiorcy raportu w WhatsApp"
+      onSubmit={(ev) => { ev.preventDefault(); save(); }}
+    >
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-medium">Szef</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="text-xs text-muted-foreground">
+            Imię
+            <input value={name} onChange={(ev) => setName(ev.target.value)} autoComplete="name" placeholder="np. Marek" className={cn(fieldClass, "mt-1")} />
+          </label>
+          <label className="text-xs text-muted-foreground">
+            Numer WhatsApp
+            <input
+              value={phone}
+              onChange={(ev) => { setPhone(ev.target.value); setPhoneError(false); }}
+              type="tel" inputMode="tel" autoComplete="tel" placeholder="600 100 200"
+              aria-invalid={phoneError}
+              aria-describedby="boss-phone-hint"
+              className={cn(fieldClass, "mt-1 font-mono tabular-nums", phoneError && "border-destructive")}
+            />
+          </label>
+        </div>
+        <p id="boss-phone-hint" className={cn("text-xs", phoneError ? "text-destructive" : "text-muted-foreground")}>
+          {phoneError
+            ? "To nie wygląda na numer — 9 cyfr albo z kierunkowym, np. +48 600 100 200."
+            : "Raport otworzy się w czacie z szefem — wysyłasz Ty. Pusty numer usuwa szefa."}
+        </p>
+      </fieldset>
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-medium">Grupa</legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="text-xs text-muted-foreground">
+            Nazwa grupy
+            <input value={groupName} onChange={(ev) => setGroupName(ev.target.value)} placeholder="np. Brygada Lipowa" className={cn(fieldClass, "mt-1")} />
+          </label>
+          <label className="text-xs text-muted-foreground">
+            Link zaproszenia (opcjonalnie)
+            <input
+              value={groupLink}
+              onChange={(ev) => { setGroupLink(ev.target.value); setLinkError(false); }}
+              // Bez `type="url"`: link bez „https://” zatrzymałaby walidacja przeglądarki — `normalizeGroupLink` go przyjmuje.
+              inputMode="url" autoCapitalize="none" spellCheck={false} placeholder="chat.whatsapp.com/…"
+              aria-invalid={linkError}
+              aria-describedby="group-link-hint"
+              className={cn(fieldClass, "mt-1", linkError && "border-destructive")}
+            />
+          </label>
+        </div>
+        <p id="group-link-hint" className={cn("text-xs", linkError ? "text-destructive" : "text-muted-foreground")}>
+          {linkError
+            ? "To nie jest link grupy — w WhatsApp: grupa → Zaproś przez link → Kopiuj."
+            : "Raport ze zdjęciami idzie przez „Udostępnij” — w WhatsApp wybierz tę grupę. Link przydaje się, gdy telefon nie ma udostępniania. Pusta nazwa usuwa grupę."}
+        </p>
+      </fieldset>
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" size="sm" className="coarse:h-11">Zapisz</Button>
+        <Button type="button" size="sm" variant="ghost" onClick={onDone} className="coarse:h-11">Anuluj</Button>
+      </div>
+    </form>
   );
 }
 

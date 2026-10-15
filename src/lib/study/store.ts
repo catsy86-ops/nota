@@ -5,6 +5,7 @@ import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
 import { studyDevice, yStudy } from "./data";
 import { cleanCard, dueIds, type ReviewCard } from "./srs";
+import { BOSS_NAME_MAX, cleanBoss, cleanGroup, normalizeGroupLink, normalizePhone } from "./boss";
 import { cleanSite, entrySiteId, resolveSite, siteDirectory, SITE_FIELD_MAX, SITE_NAME_MAX, type SiteCard } from "./sites";
 import {
   JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, SITE_MAX,
@@ -14,6 +15,7 @@ import {
 export { COLUMNS, JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT } from "./yStudy";
 export type { Column, JournalEntry, JournalKind, StudyState } from "./yStudy";
 export type { SiteCard, SiteInfo } from "./sites";
+export type { Boss, WaGroup } from "./boss";
 
 /**
  * Nauka żyje w dokumencie Yjs notatek (`yStudy.ts`, instancja w `data.ts`),
@@ -84,10 +86,10 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
     const card = questionIds.has(id) ? cleanCard(raw) : null;
     if (card) review[id] = card;
   }
-  return { board, checked, bestPercent: best, rounds, missed, journal, site, sites, streak, lastDay, review };
+  return { board, checked, bestPercent: best, rounds, missed, journal, site, sites, streak, lastDay, review, boss: cleanBoss(s.boss), group: cleanGroup(s.group) };
 }
 
-const DEFAULTS: StudyState = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null, review: {} };
+const DEFAULTS: StudyState = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null, review: {}, boss: null, group: null };
 
 let lastRaw: StudyState | null = null;
 let lastClean: StudyState = DEFAULTS;
@@ -224,6 +226,30 @@ export function restoreJournalEntry(entry: JournalEntry) {
 
 export function removeJournalEntry(id: string): JournalEntry | null {
   return yStudy.removeEntry(id);
+}
+
+/**
+ * Zapisuje szefa (imię i numer WhatsApp). Pusty numer usuwa kontakt;
+ * niepoprawny → `false`, nic się nie zmienia.
+ */
+export function saveBoss(name: string, phone: string): boolean {
+  if (!phone.trim()) { yStudy.setBoss(null); return true; }
+  const normalized = normalizePhone(phone);
+  if (!normalized) return false;
+  yStudy.setBoss({ name: name.trim().slice(0, BOSS_NAME_MAX), phone: normalized });
+  return true;
+}
+
+/**
+ * Zapisuje grupę WhatsApp na raporty. Pusta nazwa usuwa grupę; link opcjonalny,
+ * ale wpisany musi być linkiem zaproszenia (`chat.whatsapp.com/…`) → inaczej `false`.
+ */
+export function saveGroup(name: string, link: string): boolean {
+  if (!name.trim()) { yStudy.setGroup(null); return true; }
+  const normalized = link.trim() ? normalizeGroupLink(link) : "";
+  if (normalized === null) return false;
+  yStudy.setGroup({ name: name.trim().slice(0, BOSS_NAME_MAX), link: normalized });
+  return true;
 }
 
 export function setSite(site: string) {

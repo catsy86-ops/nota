@@ -3,6 +3,7 @@ import { isImageRef } from "@/lib/imageStore";
 import { addDaysToKey } from "@/lib/week";
 import { cleanSite, foldName, type SiteCard } from "./sites";
 import { cleanCard, reviewCard, type ReviewCard } from "./srs";
+import { cleanBoss, cleanGroup, type Boss, type WaGroup } from "./boss";
 
 /**
  * Dane Nauki w Y.Doc notatek — synchronizują się i trafiają do pliku sync razem
@@ -70,6 +71,10 @@ export interface StudyState {
   lastDay: string | null;
   /** Powtórki pytań (SM-2 lite, `srs.ts`) po id pytania. */
   review: Record<string, ReviewCard>;
+  /** Szef, któremu idzie raport (WhatsApp); `null` = nieustawiony. */
+  boss: Boss | null;
+  /** Grupa WhatsApp na raporty; `null` = nieustawiona. */
+  group: WaGroup | null;
 }
 
 /** Rundy i najlepszy wynik jednego urządzenia. */
@@ -92,6 +97,8 @@ export interface StudyDump {
   sites: Record<string, SiteCard>;
   /** Powtórki pytań; brak w kopiach sprzed N3. */
   review: Record<string, ReviewCard>;
+  boss: Boss | null;
+  group: WaGroup | null;
 }
 
 /** Origin transakcji Nauki — odróżnia lokalne zmiany od tych z sieci i z migracji. */
@@ -153,6 +160,8 @@ export function cleanDump(raw: unknown): StudyDump {
     site: typeof s.site === "string" ? s.site.slice(0, SITE_MAX) : "",
     sites: cleanSites(s.sites),
     review: cleanReviews(s.review),
+    boss: cleanBoss(s.boss),
+    group: cleanGroup(s.group),
   };
 }
 
@@ -213,6 +222,8 @@ export function stateFromDump(d: StudyDump): StudyState {
     streak,
     lastDay,
     review: d.review,
+    boss: d.boss,
+    group: d.group,
   };
 }
 
@@ -261,6 +272,8 @@ export function createYStudy(doc: Y.Doc) {
       site: meta.get("site"),
       sites: Object.fromEntries(sites.entries()),
       review: Object.fromEntries(review.entries()),
+      boss: meta.get("boss"),
+      group: meta.get("waGroup"),
     });
   }
 
@@ -356,6 +369,16 @@ export function createYStudy(doc: Y.Doc) {
     return found;
   }
 
+  /** Szef do raportów; `null` usuwa kontakt. */
+  function setBoss(boss: Boss | null): void {
+    transact(() => { if (boss) meta.set("boss", boss); else if (meta.has("boss")) meta.delete("boss"); });
+  }
+
+  /** Grupa WhatsApp na raporty; `null` ją usuwa. */
+  function setGroup(group: WaGroup | null): void {
+    transact(() => { if (group) meta.set("waGroup", group); else if (meta.has("waGroup")) meta.delete("waGroup"); });
+  }
+
   function setSite(site: string): void {
     transact(() => { if (meta.get("site") !== site) meta.set("site", site); });
   }
@@ -386,6 +409,8 @@ export function createYStudy(doc: Y.Doc) {
       for (const [k, v] of Object.entries(d.sites)) sites.set(k, v);
       for (const [k, v] of Object.entries(d.review)) review.set(k, v);
       meta.set("site", d.site);
+      if (d.boss) meta.set("boss", d.boss); else meta.delete("boss");
+      if (d.group) meta.set("waGroup", d.group); else meta.delete("waGroup");
     });
   }
 
@@ -417,6 +442,8 @@ export function createYStudy(doc: Y.Doc) {
         if (!prev || v.last > prev.last) review.set(k, v);
       }
       if (!meta.has("site") && d.site) meta.set("site", d.site);
+      if (!meta.has("boss") && d.boss) meta.set("boss", d.boss);
+      if (!meta.has("waGroup") && d.group) meta.set("waGroup", d.group);
     }, MIGRATION_ORIGIN);
   }
 
@@ -425,7 +452,7 @@ export function createYStudy(doc: Y.Doc) {
   return {
     get, dump, subscribe, isMerged,
     setColumn, setChecked, clearChecked, recordRound,
-    addEntry, updateEntry, setResolved, restoreEntry, removeEntry, setSite, saveSite,
+    addEntry, updateEntry, setResolved, restoreEntry, removeEntry, setSite, saveSite, setBoss, setGroup,
     replaceAll, mergeIn,
   };
 }

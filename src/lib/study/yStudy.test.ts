@@ -113,7 +113,7 @@ describe("Nauka w Yjs", () => {
   });
 
   it("cleanDump odrzuca śmieci zamiast wywracać widok", () => {
-    expect(cleanDump("śmieci")).toEqual({ version: 1, board: {}, checked: {}, missed: {}, journal: [], days: [], rounds: {}, site: "", sites: {}, review: {} });
+    expect(cleanDump("śmieci")).toEqual({ version: 1, board: {}, checked: {}, missed: {}, journal: [], days: [], rounds: {}, site: "", sites: {}, review: {}, boss: null, group: null });
     const d = cleanDump({ board: { a: "done", b: "todo", c: "x" }, checked: { k: true, l: 1 }, days: ["2026-10-01", "wczoraj"], rounds: { x: { rounds: -1 }, y: { rounds: 2.7, best: 140 } }, journal: [entry("ok", 1), entry("pusty", 2, { text: " " })] });
     expect(d).toMatchObject({ board: { a: "done" }, checked: { k: true }, days: ["2026-10-01"], rounds: { y: { rounds: 2, best: null } } });
     expect(d.journal.map((e) => e.id)).toEqual(["ok"]);
@@ -162,5 +162,21 @@ describe("karty budów w Yjs", () => {
     a.recordRound("tel-a", 100, "2026-10-16", [], [{ id: "q2", ok: true }]);
     a.mergeIn({ ...dump, review: { q2: { ...dump.review.q2 } } });
     expect(a.get().review.q2.last).toBe("2026-10-16");
+  });
+
+  it("szef: zapis przechodzi na drugi telefon i do kopii, zły numer odpada", () => {
+    const { a, b, sync } = pair();
+    a.setBoss({ name: "Jan", phone: "48600100200" });
+    sync();
+    expect(b.get().boss).toEqual({ name: "Jan", phone: "48600100200" });
+    const { a: c } = pair();
+    c.replaceAll(a.dump());
+    expect(c.get().boss?.name).toBe("Jan");
+    expect(cleanDump({ boss: { name: "X", phone: "12" } }).boss).toBeNull();
+    a.setGroup({ name: "Brygada", link: "https://chat.whatsapp.com/AbCdEf1234567890xyZ" });
+    a.setBoss(null);
+    sync();
+    expect(b.get().boss).toBeNull();
+    expect(b.get().group?.name).toBe("Brygada");
   });
 });

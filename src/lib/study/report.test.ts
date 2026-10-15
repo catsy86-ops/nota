@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { EMPTY_SHIFT_DATA, type ShiftData } from "@/lib/shifts/model";
-import { buildJournalReport, periodLabel, reportBody, reportText, shiftKey, workOn } from "./report";
+import { buildJournalReport, periodLabel, reportBody, reportText, reportWhatsApp, shiftKey, workOn } from "./report";
 import type { JournalEntry } from "./yStudy";
 import { siteKey } from "./sites";
 
@@ -88,5 +88,14 @@ describe("raport z dziennika", () => {
     expect(r.count).toBe(4);
     expect(reportBody(r).split("\n").slice(0, 3)).toEqual(["Adres: ul. Lipowa 5, Kraków", "Inwestor: Jan Nowak", "4 wpisy · otwarte problemy: 1"]);
     expect(buildJournalReport(moved, { siteId: null, siteCard: null, from: "2026-10-14", to: "2026-10-14" }).address).toBe("");
+  });
+
+  it("reportWhatsApp: tytuł i dni pogrubione zamiast nagłówków markdown", () => {
+    const r = buildJournalReport(journal, { siteId: siteKey("Lipowa 5"), siteCard: null, from: "2026-10-14", to: "2026-10-15", shifts, topicTitle: () => null });
+    const text = reportWhatsApp(r);
+    expect(text.startsWith(`*${r.title}*\n\n`)).toBe(true);
+    expect(text).not.toMatch(/^#/m);
+    expect(text).toMatch(/^\*[^*\n]+\*$/m);
+    expect(text).toContain("- ");
   });
 });

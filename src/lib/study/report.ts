@@ -198,3 +198,12 @@ export function reportBody(r: JournalReport): string {
 
 /** Cały raport jako tekst do udostępnienia i schowka. */
 export const reportText = (r: JournalReport) => `# ${r.title}\n\n${reportBody(r)}\n`;
+
+/**
+ * Raport do WhatsApp: komunikator nie zna nagłówków markdown — tytuł i dni
+ * pogrubione (`*…*`), listy „- ” zostają (WhatsApp je rozumie).
+ */
+export function reportWhatsApp(r: JournalReport): string {
+  const body = reportBody(r).replace(/^## (.+)$/gm, "*$1*");
+  return `*${r.title}*\n\n${body}`;
+}
