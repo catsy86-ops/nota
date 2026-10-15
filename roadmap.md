@@ -896,7 +896,7 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 - [x] 3.7 Budżety w CI (`e2e/bundle.spec.ts`): wejściowy JS ≤200 KB gzip (dziś ~376), DOM ≤3 000 przy 300 notatkach, FAB/kafel/widok ≤200 ms, klawisz ≤50/100 ms, precache ≤1,5 MB. ✅ częściowo 2026-10-11: w `e2e/bundle.spec.ts` progi zapadkowe na dzisiejszym poziomie z zapasem — wejściowy JS ≤375 KB gzip (jest 357), precache ≤4,3 MB (3,85), DOM przy 300 notatkach ≤10 500 na telefonie (9 763) i ≤20 500 na komputerze (19 220); fuse.js i materiał Nauki pilnowane jako leniwe. Cele z tego punktu czekają na decyzje o precache i wirtualizacji — po każdym zejściu obniżyć próg. Czasów (FAB, klawisz) nie ma: na współdzielonej maszynie skaczą.
 
 ### Faza 4 — „premium” (po fazie 2)
-- [ ] 4.1 Swipe: w prawo przypnij, w lewo archiwizuj (kosz w arkuszu akcji), podpowiedź przy pierwszych 3 razach.
+- [x] 4.1 Swipe: w prawo przypnij, w lewo archiwizuj (kosz w arkuszu akcji), podpowiedź przy pierwszych 3 razach. ✅ 2026-10-15 (decyzja użytkownika): podpisy w tle przy 3 pierwszych gestach (`lib/swipeHint.ts`), „Przypięto” z „Cofnij”, w Archiwum lewo = przywróć.
 - [x] 4.2 Haptyka różnicowana (tap / success / warn / selection) + odhaczenie w kaflu, upuszczenie przeciągniętego kafla, wejście w zaznaczanie; quiz Nauki z haptyką i serią dni.
 - [ ] 4.3 Przejście kafel → edytor jako shared element (dziś skok), nagłówek z cieniem dopiero po przewinięciu, zakładka koloru w nagłówku edytora.
 - [ ] 4.4 Skróty PWA „Szukaj”, „Nowa lista”; Share Target dla pliku/obrazu (po decyzji).

@@ -139,19 +139,39 @@ test.describe("tablica na telefonie", () => {
     await expect(page.locator('[data-board-column="praca"] [data-note-id-wrap="n-c"]')).toHaveCount(1);
     // Ruch w bok zaczęty na uchwycie nie jest przesunięciem kafla (to archiwizowało notatkę).
     await expect(page.getByText("Zarchiwizowano")).toHaveCount(0);
+    await expect(page.getByText("Przypięto")).toHaveCount(0);
   });
 
-  test("dotyk: przesunięcie kafla w prawo (poza uchwytem) nadal archiwizuje", async ({ page }) => {
+  test("dotyk: przesunięcie kafla w prawo przypina, w lewo archiwizuje; podpisy tylko na początku", async ({ page }) => {
     await seedNotes(page, NOTES);
     await expect(page.locator(".fixed.inset-0.z-40")).toHaveCount(0);
-    const box = (await page.locator('[data-note-id-wrap="n-c"]').boundingBox())!;
     const cdp = await page.context().newCDPSession(page);
     const touch = (type: string, x: number, y: number) =>
       cdp.send("Input.dispatchTouchEvent", { type, touchPoints: type === "touchEnd" ? [] : [{ x, y }] });
-    const sx = box.x + 40, sy = box.y + box.height / 2;
-    await touch("touchStart", sx, sy);
-    for (let i = 1; i <= 10; i++) await touch("touchMove", sx + i * 18, sy);
-    await touch("touchEnd", sx + 180, sy);
+    // Gest z zatrzymaniem przed puszczeniem — sprawdza tło, a potem kończy ruch.
+    const swipe = async (id: string, dir: 1 | -1, check?: () => Promise<void>) => {
+      const box = (await page.locator(`[data-note-id-wrap="${id}"]`).boundingBox())!;
+      // W lewo ze środka — przy prawej krawędzi tablica ma uchwyt przeciągania.
+      const sx = dir === 1 ? box.x + 40 : box.x + box.width / 2, sy = box.y + box.height / 2;
+      await touch("touchStart", sx, sy);
+      for (let i = 1; i <= 10; i++) await touch("touchMove", sx + dir * i * 18, sy);
+      await check?.();
+      await touch("touchEnd", sx + dir * 180, sy);
+    };
+
+    await swipe("n-c", 1, async () => {
+      await expect(page.locator('[data-swipe-bg="pin"]')).toContainText("Przypnij");
+    });
+    await expect(page.getByText("Przypięto")).toBeVisible();
+    await expect(page.getByText("Zarchiwizowano")).toHaveCount(0);
+    expect(await page.evaluate(() => localStorage.getItem("kaczy.swipeHints.v1"))).toBe("1");
+
+    // Po trzech gestach w tle zostają same ikony.
+    await page.evaluate(() => localStorage.setItem("kaczy.swipeHints.v1", "3"));
+    await swipe("n-c", -1, async () => {
+      await expect(page.locator('[data-swipe-bg="archive"]')).toBeVisible();
+      await expect(page.locator('[data-swipe-bg="archive"]')).not.toContainText("Archiwizuj");
+    });
     await expect(page.getByText("Zarchiwizowano")).toBeVisible();
   });
 });

@@ -5,7 +5,7 @@ import { tween, dur, ease } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { cascadeDelay, cardExit, markPinned, hasRecentPin, consumePin, type CardExitIntent } from "@/lib/cardMotion";
 import { Check } from "lucide-react";
-import { Star, Pin, Trash, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, Ellipsis, MoveHorizontal, ZoomIn, Maximize2, Minimize2, Expand, Link2, Lock, LockOpen, FilePlusCorner, CornerLeftUp } from "lucide-react";
+import { Star, Pin, PinOff, Trash, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, Ellipsis, MoveHorizontal, ZoomIn, Maximize2, Minimize2, Expand, Link2, Lock, LockOpen, FilePlusCorner, CornerLeftUp } from "lucide-react";
 import { addSubpage } from "@/lib/subpageActions";
 import { pluralPl } from "@/lib/plural";
 import { ColorPicker, colorClasses } from "./ColorPicker";
@@ -20,6 +20,7 @@ import { EditorStats } from "./EditorStats";
 import { prepareImage } from "@/lib/imagePrepare";
 import { FindReplaceBar } from "./FindReplaceBar";
 import { haptic } from "@/lib/haptics";
+import { countSwipe, showSwipeLabels } from "@/lib/swipeHint";
 import { runWithoutConfirm } from "@/components/ConfirmActionDialog";
 import { TitleField } from "./TitleField";
 import { MarkdownRenderer, FormatToolbar } from "./MarkdownRenderer";
@@ -310,18 +311,21 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   const rotX = useSpring(useTransform(mvY, [-0.5, 0.5], [4, -4]), { stiffness: 220, damping: 18 });
   const rotY = useSpring(useTransform(mvX, [-0.5, 0.5], [-4, 4]), { stiffness: 220, damping: 18 });
 
-  // Swipe-to-act (touch): right → archiwum, left → kosz
+  // Przesunięcie (dotyk): w prawo przypnij/odepnij, w lewo archiwizuj (w Archiwum: przywróć).
+  // Kosz celowo nie ma gestu — tylko w arkuszu akcji, żeby przypadkowy ruch niczego nie usuwał.
   const isTouch = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches;
-  const canSwipeArchive = !!onArchive && !isArchived && !note.trashed;
-  const canSwipeTrash = !note.trashed;
-  const swipeEnabled = isTouch && !isEditing && !selectionMode && (canSwipeArchive || canSwipeTrash);
+  const canSwipePin = !!onTogglePin && !isArchived && !note.trashed;
+  const canSwipeArchive = !note.trashed && (isArchived ? !!onUnarchive : !!onArchive);
+  const swipeEnabled = isTouch && !isEditing && !selectionMode && (canSwipePin || canSwipeArchive);
   const swipeX = useMotionValue(0);
   // Gest startuje ręcznie: dotyk zaczęty na uchwycie przeciągania należy do dnd-kit
   // (zmiana kolejności / kolumny tablicy), a nie do przesunięcia, które archiwizuje albo usuwa.
   const swipeControls = useDragControls();
-  const archiveOpacity = useTransform(swipeX, [0, 40, 110], [0, 0.5, 1]);
-  const trashOpacity = useTransform(swipeX, [0, -40, -110], [0, 0.5, 1]);
+  const pinOpacity = useTransform(swipeX, [0, 40, 110], [0, 0.5, 1]);
+  const archiveOpacity = useTransform(swipeX, [0, -40, -110], [0, 0.5, 1]);
   const [swiping, setSwiping] = useState(false);
+  // Podpisy w tle tylko przy pierwszych gestach (`lib/swipeHint.ts`); czytane na starcie gestu.
+  const [swipeLabels, setSwipeLabels] = useState(false);
 
   // Dotyk: przytrzymanie kafla zaznacza go (wejście w tryb zaznaczania), jak w aplikacjach systemowych.
   const longPressTimer = useRef<number | undefined>(undefined);
@@ -356,12 +360,17 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
     const dx = info.offset.x;
     const fast = Math.abs(info.velocity.x) > 500;
     const threshold = fast ? 60 : 110;
-    if (dx > threshold && canSwipeArchive) {
+    if (dx > threshold && canSwipePin) {
       haptic("tap");
-      runWithoutConfirm(() => onArchive?.(note.id));
-    } else if (dx < -threshold && canSwipeTrash) {
-      haptic("warn");
-      runWithoutConfirm(() => onDelete(note.id));
+      countSwipe();
+      const pinning = !note.pinned;
+      if (pinning && showFx && fx.sparkle) markPinned(note.id);
+      onTogglePin?.(note.id);
+      toastWithUndo(pinning ? "Przypięto" : "Odpięto", () => onTogglePin?.(note.id), { icon: "📌" });
+    } else if (dx < -threshold && canSwipeArchive) {
+      haptic("tap");
+      countSwipe();
+      runWithoutConfirm(() => (isArchived ? onUnarchive : onArchive)?.(note.id));
     }
     swipeX.set(0);
   }
@@ -596,12 +605,18 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
       {/* Tła gestu tylko w trakcie przeciągania — 300 kafli nie trzyma 600 elementów framer-motion. */}
       {swipeEnabled && swiping && (
         <>
-          <motion.div style={{ opacity: archiveOpacity }} className="absolute inset-y-0 left-0 w-1/2 rounded-xl bg-primary/15 flex items-center justify-start pl-5 pointer-events-none">
-            <Archive className="w-6 h-6 text-primary-ink" />
-          </motion.div>
-          <motion.div style={{ opacity: trashOpacity }} className="absolute inset-y-0 right-0 w-1/2 rounded-xl bg-destructive/15 flex items-center justify-end pr-5 pointer-events-none">
-            <Trash className="w-6 h-6 text-destructive" />
-          </motion.div>
+          {canSwipePin && (
+            <motion.div style={{ opacity: pinOpacity }} data-swipe-bg="pin" className="absolute inset-y-0 left-0 w-1/2 rounded-xl bg-primary/15 flex items-center justify-start gap-2 pl-5 pointer-events-none text-primary-ink">
+              {note.pinned ? <PinOff className="w-6 h-6" aria-hidden /> : <Pin className="w-6 h-6" aria-hidden />}
+              {swipeLabels && <span className="text-sm font-semibold">{note.pinned ? "Odepnij" : "Przypnij"}</span>}
+            </motion.div>
+          )}
+          {canSwipeArchive && (
+            <motion.div style={{ opacity: archiveOpacity }} data-swipe-bg="archive" className="absolute inset-y-0 right-0 w-1/2 rounded-xl bg-secondary flex items-center justify-end gap-2 pr-5 pointer-events-none text-foreground">
+              {swipeLabels && <span className="text-sm font-semibold">{isArchived ? "Przywróć" : "Archiwizuj"}</span>}
+              {isArchived ? <ArchiveRestore className="w-6 h-6" aria-hidden /> : <Archive className="w-6 h-6" aria-hidden />}
+            </motion.div>
+          )}
         </>
       )}
 
@@ -635,9 +650,9 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         dragListener={false}
         dragDirectionLock
         dragElastic={0.25}
-        dragConstraints={{ left: canSwipeTrash ? -160 : 0, right: canSwipeArchive ? 160 : 0 }}
+        dragConstraints={{ left: canSwipeArchive ? -160 : 0, right: canSwipePin ? 160 : 0 }}
         dragSnapToOrigin
-        onDragStart={() => setSwiping(true)}
+        onDragStart={() => { setSwipeLabels(showSwipeLabels()); setSwiping(true); }}
         onDragEnd={handleSwipeEnd}
         style={{
           ...(tilt ? { rotateX: rotX, rotateY: rotY } : {}),

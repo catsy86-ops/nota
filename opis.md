@@ -787,6 +787,40 @@ prawdziwy iOS — nie odtwarza klawiatury ekranowej ani `visualViewport` iPhone'
 
 ---
 
+## Notatki — przesunięcie kafla (telefon)
+
+**Co robi.** Na ekranie dotykowym przesunięcie kafla w prawo przypina go (albo odpina przypięty), w lewo archiwizuje
+(w Archiwum: przywraca). Po przypięciu dymek „Przypięto”/„Odpięto” z „Cofnij”, po archiwizacji jak dotąd
+„Zarchiwizowano” z „Cofnij”. Kosz nie ma gestu — jest w arkuszu akcji „⋯”, żeby przypadkowy ruch kciuka niczego nie
+usuwał. Przy pierwszych 3 gestach tło obok ikony podpisuje akcję („Przypnij”, „Archiwizuj”), potem zostają ikony.
+
+**Gdzie jest.**
+- `src/components/NoteCard.tsx`: `canSwipePin`, `canSwipeArchive`, `swipeEnabled`, `handleSwipeEnd`, tła gestu
+  `data-swipe-bg="pin"` / `"archive"` (renderowane tylko w trakcie gestu), stan `swipeLabels`.
+- `src/lib/swipeHint.ts`: `showSwipeLabels`, `countSwipe`, klucz localStorage `kaczy.swipeHints.v1` (liczba
+  wykonanych gestów, maks. `SWIPE_HINT_LIMIT` = 3).
+- `src/components/OnboardingTour.tsx`: opis gestu w kroku 2 na telefonie.
+
+**Jak działa i dlaczego.**
+- Gest startuje ręcznie (`useDragControls`) poza uchwytem przeciągania (`[data-drag-handle]` należy do dnd-kit),
+  `touch-action: pan-y` — przewijanie w pionie działa dalej. Próg 110 px albo 60 px przy szybkim ruchu.
+- Przypięcie przez `onTogglePin` z `NoteViewActions` (ta sama ścieżka co przycisk pinezki, z iskrą `markPinned`);
+  archiwizacja przez `runWithoutConfirm` — gest jest odwracalny „Cofnij”, więc bez okna potwierdzenia.
+- Kierunki: w Archiwum tylko w lewo (przywróć), w Koszu brak gestu, w trybie zaznaczania i w edycji brak gestu.
+- Licznik podpisów czytany na starcie gestu, liczony przy wykonanym geście (nie przy cofniętym w połowie).
+
+**Ograniczenia i pułapki.**
+- Licznik jest na urządzeniu (localStorage), nie w synchronizacji.
+- Na tablicy pierwsza kolumna to „Przypięte” — w testach na 390 px kolumny dalej są poza ekranem.
+
+**Testy.** `src/lib/swipeHint.test.ts`, `e2e/board-table.spec.ts` („dotyk: przesunięcie kafla w prawo przypina, w
+lewo archiwizuje; podpisy tylko na początku”, „przytrzymanie uchwytu … ” — ruch na uchwycie nie przypina ani nie
+archiwizuje).
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Grafik — czytelność drobnych znaczników
 
 **Co robi.** W siatce miesiąca na telefonie strzałka nadgodzin (↑/↓) przy numerze dnia ma 11 px zamiast 9 px.

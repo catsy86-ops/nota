@@ -27,7 +27,7 @@ const STEPS = [
 const PHONE_DESC: Record<number, { desc: string }> = {
   0: { desc: "Stuknij duży przycisk + na dole i po prostu pisz. Przytrzymaj go, by od razu dodać listę, zdjęcie albo rysunek. Zapisuje się samo." },
   1: { desc: "Wyszukiwarka u góry przeszukuje tytuły i treść. Foldery i etykiety znajdziesz w panelu otwieranym ikoną w lewym górnym rogu." },
-  2: { desc: "Notatki możesz przypiąć, zarchiwizować (przeciągnij kafel w prawo) albo przenieść do kosza (w lewo) — z kosza wracają przez 30 dni." },
+  2: { desc: "Na telefonie przesuń kafel w prawo, żeby go przypiąć, albo w lewo, żeby zarchiwizować. Kosz jest w menu „⋯” — z kosza notatki wracają przez 30 dni." },
 };
 
 export function OnboardingTour() {
