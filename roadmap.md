@@ -900,7 +900,7 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 - [x] 4.2 Haptyka różnicowana (tap / success / warn / selection) + odhaczenie w kaflu, upuszczenie przeciągniętego kafla, wejście w zaznaczanie; quiz Nauki z haptyką i serią dni.
 - [ ] 4.3 Przejście kafel → edytor jako shared element (dziś skok), nagłówek z cieniem dopiero po przewinięciu, zakładka koloru w nagłówku edytora.
 - [ ] 4.4 Skróty PWA „Szukaj”, „Nowa lista”; Share Target dla pliku/obrazu (po decyzji).
-- [ ] 4.5 Nauka: nagłówek bez powtórki „Nauka”, etykiety przy 18 pigułkach, podpisy przycisków kart, cyfry tabelaryczne zamiast „1” jak „l”.
+- [x] 4.5 Nauka: nagłówek bez powtórki „Nauka”, etykiety przy 18 pigułkach, podpisy przycisków kart, cyfry tabelaryczne zamiast „1” jak „l”.
 
 ### Faza 5 — testy i QA mobilnego
 - [ ] 5.1 Projekty Playwright: Pixel 7 + **WebKit/iPhone** (dziś tylko Desktop Chrome + `test.use` w `mobile.spec.ts`); smoke @mobile na obu.
@@ -961,7 +961,7 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 - [ ] Problem z tematem → „Ćwicz teraz”; karta tematu pokazuje ostatni problem; pytania tematu należne dziś (po N3).
 
 ### N — Nauka
-- [ ] N1 (= 4.5) Nagłówek „Instalacje wod-kan”, pasek opanowania z modułami i podpisami na dotyk, podpisane przyciski kart, cyfry `tabular-nums` bez `font-display`, zakładka „Lista”.
+- [x] N1 (= 4.5) Nagłówek „Instalacje wod-kan”, pasek opanowania z modułami i podpisami na dotyk, podpisane przyciski kart, cyfry `tabular-nums` bez `font-display`, zakładka „Lista”. ✅ `MasteryStrip` w `StudyView.tsx`: odcinek na moduł z licznikiem, komórka jako przycisk (cel dotyku 26 px wysokości przy pasku 10 px) podpisuje temat pod paskiem; licznik w JetBrains Mono; karty tematu: „Wpis”, „Ćwicz”, „Do notatki” z podpisami, strzałki przeniesienia przy tytule.
 - [ ] N2 Zapamiętana zakładka; na telefonie domyślnie Dziennik.
 - [ ] N3 Powtórki SM-2 lite (`lib/study/srs.ts`, mapa `studyReview`), „Na dziś: N”.
 - [ ] N4 Statystyki: trafność per temat, dni nauki, wpisy per budowa i miesiąc.

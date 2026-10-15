@@ -4,10 +4,52 @@ Dokumentacja aktualnego stanu funkcji — co robią, gdzie są w kodzie i jak dz
 Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej opis.
 Zasady prowadzenia: `CLAUDE.md`, sekcja „Dokumentacja techniczna”.
 
-Działy opisane do tej pory: **Nauka → Dziennik budowy**. Pozostałe działy (Notatki, Grafik,
+Działy opisane do tej pory: **Nauka** (nagłówek i tablica) i **Nauka → Dziennik budowy**. Pozostałe działy (Notatki, Grafik,
 Kalendarz, reszta Nauki) dopisuj, gdy zadanie ich dotyczy.
 
 ---
+
+## Nauka — nagłówek i tablica tematów
+
+`/nauka` (`src/components/study/StudyView.tsx`): nagłówek „Instalacje wod-kan”, pasek opanowania
+i zakładki Quiz / Tablica / Lista / Dziennik.
+
+### Pasek opanowania
+
+**Co robi.** Pokazuje, ile z 18 tematów jest w kolumnie „Umiem”, z podziałem na moduły
+(Woda użytkowa, Kanalizacja, Wspólne). Dotknięcie lub kliknięcie komórki podpisuje temat
+i jego stan pod paskiem — na telefonie nie ma najechania kursorem.
+
+**Gdzie jest.** `MasteryStrip` w `src/components/study/StudyView.tsx`; dane z `useStudy`,
+`columnOf` (`store.ts`), `MODULES` i `TOPICS` (`content.ts`).
+
+**Jak działa.** Odcinek modułu ma szerokość proporcjonalną do liczby tematów (`flexGrow`),
+ale najmniej 4,5 rem, żeby zmieścił się podpis z licznikiem `x/n`. Komórka: pełna =
+„Umiem”, połowa = „W trakcie”, pusta = „Do nauki”. Każda komórka to przycisk
+(`aria-label` „Temat: stan”, `aria-pressed`) z wysokim celem dotyku przy cienkim pasku
+(`-my-2 py-2`). Podpis pod paskiem ma `aria-live="polite"`. Wybór żyje tylko w stanie komponentu.
+Licznik jest w JetBrains Mono (`font-mono tabular-nums`), bo w kroju nagłówków „1” wyglądała jak „l”.
+
+**Testy.** e2e `e2e/study.spec.ts` („tablica: temat przechodzi między kolumnami…”: licznik
+modułu i podpis po kliknięciu komórki), `e2e/resilience.spec.ts` (`mastery-count`).
+
+### Karty tematów na tablicy
+
+**Co robi.** Temat wędruje „Do nauki” → „W trakcie” → „Umiem” strzałkami przy tytule.
+Pod opisem są przyciski z podpisami: „Wpis” (arkusz wpisu z tym tematem), „Ćwicz”
+(runda quizu z tematu), „Do notatki” (notatka z listą kontrolną tematu).
+
+**Gdzie jest.** `TopicCard` i `StudyBoard` w `src/components/study/StudyBoard.tsx`;
+`moveTopic`, `practiceByTopic` (`store.ts`), `topicToNote` (`toNote.ts`).
+
+**Jak działa.** Etykiety dostępności mają postać „Temat: wpis z budowy”, „Temat: ćwicz pytania”,
+„Temat: do notatki”, „Temat: przenieś do „…””. Podpis widoczny jest zawarty w nazwie
+dostępnej (WCAG 2.5.3). Na dotyku przyciski mają 44 px (`coarse:`), na komputerze 28 px.
+Przesunięcie animuje `framer-motion` (`layoutId`).
+
+**Testy.** e2e `e2e/study.spec.ts` (tablica, „Ćwicz”, „Do notatki”, wpis z karty tematu).
+
+**Commit.** N1 — zobacz `git log` (2026-10-15).
 
 ## Nauka → Dziennik budowy
 
