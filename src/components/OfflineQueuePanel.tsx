@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import {
-  CloudOff, Check, HardDrive, Wifi, WifiOff, Loader2,
+  CloudOff, Check, HardDrive, Wifi, WifiOff, LoaderCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSyncState } from "@/lib/yjsSync";
@@ -66,7 +66,7 @@ export function OfflineQueuePanel({ open, onOpenChange, offline }: OfflineQueueP
 
           <div className="flex items-center gap-3 rounded-xl bg-muted/50 border border-border/50 px-3 py-2.5 text-sm">
             {syncState.status === "connecting" ? (
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
+              <LoaderCircle className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
             ) : syncState.status === "connected" ? (
               <Wifi className="h-4 w-4 shrink-0 text-primary-ink" />
             ) : (

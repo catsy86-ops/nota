@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Wand2 } from "lucide-react";
+import { WandSparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { parseNaturalDate } from "@/lib/parseNaturalDate";
@@ -46,7 +46,7 @@ export function QuickReminderInput({ onParsed }: QuickReminderInputProps) {
           )}
         />
         <Button size="sm" variant="outline" className="px-2" onClick={handleParse} title="Rozpoznaj datę">
-          <Wand2 className="w-3.5 h-3.5" />
+          <WandSparkles className="w-3.5 h-3.5" />
         </Button>
       </div>
       {error && (

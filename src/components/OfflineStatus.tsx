@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { CloudOff, Wifi, Loader2, Check, TriangleAlert } from "lucide-react";
+import { CloudOff, Wifi, LoaderCircle, Check, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { OfflineQueuePanel } from "@/components/OfflineQueuePanel";
 import { useSyncState } from "@/lib/yjsSync";
@@ -99,7 +99,7 @@ export function OfflineStatus() {
         ) : saved && !saving ? (
           <Check className="h-3.5 w-3.5 shrink-0 text-primary-ink" />
         ) : (
-          <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
+          <LoaderCircle className="h-3.5 w-3.5 shrink-0 animate-spin" />
         )}
         <span className="truncate">{label}</span>
       </button>

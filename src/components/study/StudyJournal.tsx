@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Archive, Check, CheckCircle2, ChevronRight, FileText, MapPin, Pencil, Plus, Search, X } from "lucide-react";
+import { Archive, Check, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Plus, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { haptic } from "@/lib/haptics";
@@ -304,7 +304,7 @@ function JournalItem({ entry: e, onPractice, onZoom }: { entry: JournalEntry; on
   return (
     <li className="rounded-xl border border-border bg-card p-3" data-journal-entry={e.kind} data-resolved={resolved || undefined}>
       <div className="flex items-start gap-2.5">
-        {resolved ? <CheckCircle2 className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden /> : <KindIcon kind={e.kind} />}
+        {resolved ? <CircleCheck className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden /> : <KindIcon kind={e.kind} />}
         <div className="min-w-0 flex-1">
           <p className="whitespace-pre-wrap wrap-break-word text-sm leading-snug">{e.text || "Sprawdzone punkty listy"}</p>
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">

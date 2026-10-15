@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Pen, Eraser, Undo2, Trash2, Save, Minus, Plus } from "lucide-react";
+import { Pen, Eraser, Undo2, Trash, Save, Minus, Plus } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -291,7 +291,7 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
             />
             <ToolBtn
               onClick={clearAll}
-              icon={<Trash2 className="w-4 h-4" />}
+              icon={<Trash className="w-4 h-4" />}
               title="Wyczyść"
               disabled={strokes.length === 0}
               className="hover:text-destructive"

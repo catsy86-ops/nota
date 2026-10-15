@@ -2,7 +2,7 @@ import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { spring } from "@/lib/motion";
-import { MoreHorizontal } from "lucide-react";
+import { Ellipsis } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 // Jeden wiersz paska bocznego: nawigacja, etykiety, foldery i stopka.
@@ -100,7 +100,7 @@ export function SidebarRowMenu({ label, children, onCloseAutoFocus }: {
           onClick={(e) => e.stopPropagation()}
           className="pressable relative grid h-7 w-7 coarse:h-9 coarse:w-9 place-items-center rounded-md coarse:after:absolute coarse:after:-inset-1 coarse:after:content-[''] outline-hidden hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-foreground/10"
         >
-          <MoreHorizontal className="h-4 w-4" />
+          <Ellipsis className="h-4 w-4" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48" onCloseAutoFocus={onCloseAutoFocus}>

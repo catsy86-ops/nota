@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Archive, Bell, CalendarDays, CalendarRange, FolderOpen, Tag, Trash2, type LucideIcon } from "lucide-react";
+import { Archive, Bell, CalendarDays, CalendarRange, FolderOpen, Tag, Trash, type LucideIcon } from "lucide-react";
 import { NotatnikWordmark } from "@/components/NotatnikWordmark";
 import type { View, Elsewhere } from "@/hooks/useFilteredNotes";
 import { EmptyIllustration } from "@/components/EmptyIllustration";
@@ -45,7 +45,7 @@ const DESCRIPTIONS: Record<View, string> = {
  */
 const SKETCHES: Partial<Record<View, LucideIcon>> = {
   archive: Archive,
-  trash: Trash2,
+  trash: Trash,
   reminders: Bell,
   today: CalendarDays,
   week: CalendarRange,

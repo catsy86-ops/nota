@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AlertTriangle, Camera, CheckCircle2, ChevronDown, Clock, ImagePlus, Loader2, MapPin, Mic, NotebookPen, Pencil, Play, Trash2, X } from "lucide-react";
+import { TriangleAlert, Camera, CircleCheck, ChevronDown, Clock, ImagePlus, LoaderCircle, MapPin, Mic, NotebookPen, Pencil, Play, Trash, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -23,8 +23,8 @@ import { fromLocalInput, KIND_LABEL, suggestSites, toLocalInput, whenLabel } fro
 import { siteDirectory } from "@/lib/study/sites";
 
 export function KindIcon({ kind, className = "h-4 w-4" }: { kind: JournalKind; className?: string }) {
-  if (kind === "ok") return <CheckCircle2 className={cn(className, "shrink-0 text-emerald-600")} aria-hidden />;
-  if (kind === "problem") return <AlertTriangle className={cn(className, "shrink-0 text-warning")} aria-hidden />;
+  if (kind === "ok") return <CircleCheck className={cn(className, "shrink-0 text-emerald-600")} aria-hidden />;
+  if (kind === "problem") return <TriangleAlert className={cn(className, "shrink-0 text-warning")} aria-hidden />;
   return <NotebookPen className={cn(className, "shrink-0 text-muted-foreground")} aria-hidden />;
 }
 
@@ -415,7 +415,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 ))}
                 {Array.from({ length: processing }, (_, i) => (
                   <li key={`processing-${i}`} className="grid h-20 w-20 place-items-center rounded-lg bg-muted" data-testid="journal-photo-processing">
-                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden />
+                    <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden />
                     <span className="sr-only">Przygotowuję zdjęcie</span>
                   </li>
                 ))}
@@ -486,12 +486,12 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
           <div className="flex gap-2">
             {isEdit && (
               <Button type="button" variant="outline" onClick={remove} className="h-12 shrink-0 text-destructive hover:text-destructive">
-                <Trash2 className="mr-1.5 h-4 w-4" aria-hidden />Usuń
+                <Trash className="mr-1.5 h-4 w-4" aria-hidden />Usuń
               </Button>
             )}
             <Button onClick={submit} disabled={processing > 0} className="h-12 min-w-0 flex-1 text-base">
               {processing > 0
-                ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden />Przygotowuję zdjęcia…</>
+                ? <><LoaderCircle className="mr-1.5 h-4 w-4 animate-spin" aria-hidden />Przygotowuję zdjęcia…</>
                 : isEdit ? "Zapisz zmiany" : "Zapisz wpis"}
             </Button>
           </div>

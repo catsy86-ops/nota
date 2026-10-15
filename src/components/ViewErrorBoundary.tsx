@@ -1,5 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { AlertTriangle } from "lucide-react";
+import { TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { logDiag } from "@/lib/diagnostics";
 
@@ -35,7 +35,7 @@ export class ViewErrorBoundary extends Component<Props, State> {
     const chunk = /dynamically imported module|Loading chunk|Failed to fetch/i.test(this.state.error.message);
     return (
       <div role="alert" className="rounded-3xl border border-border/60 bg-card p-5 flex gap-4 items-start">
-        <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+        <TriangleAlert className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
         <div className="space-y-3 min-w-0">
           <div className="space-y-1">
             <p className="font-display font-bold">{this.props.name}: nie udało się wyświetlić widoku</p>

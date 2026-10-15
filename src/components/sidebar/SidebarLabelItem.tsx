@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Tag, Pencil, Trash2, Check, X } from "lucide-react";
+import { Tag, Pencil, Trash, Check, X } from "lucide-react";
 import { SidebarRow, SidebarRowMenu } from "@/components/sidebar/SidebarRow";
 import { IconButton } from "@/components/ui/icon-button";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -46,7 +46,7 @@ export function SidebarLabelItem({ label, isActive, onSelect, onRename, onDelete
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onSelect={onDelete} className="text-destructive focus:text-destructive focus:bg-destructive/10">
-            <Trash2 className="w-4 h-4 mr-2" />Usuń etykietę
+            <Trash className="w-4 h-4 mr-2" />Usuń etykietę
           </DropdownMenuItem>
         </SidebarRowMenu>
       }

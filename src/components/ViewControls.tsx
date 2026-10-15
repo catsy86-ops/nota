@@ -1,6 +1,6 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { ArrowDownAZ, ArrowUpAZ, Filter, LayoutGrid, List, Columns2, SlidersHorizontal, Flag, Kanban, Table2 } from "lucide-react";
+import { ArrowDownAZ, ArrowUpAZ, Funnel, LayoutGrid, List, Columns2, SlidersHorizontal, Flag, Kanban, Table2 } from "lucide-react";
 import { type Layout, type SortKey, type SortDir, type Density, useViewPrefs, setViewPref } from "@/lib/viewPrefs";
 import { changeView } from "@/lib/viewChange";
 import { colorClasses } from "@/components/ColorPicker";
@@ -173,7 +173,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           <TooltipTrigger asChild>
             <DropdownMenuTrigger asChild>
               <IconButton tone={filtersActive ? "active" : "segment"} aria-label="Filtry">
-                <Filter className="w-5 h-5" />
+                <Funnel className="w-5 h-5" />
                 {filtersActive && (
                   <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-primary" />
                 )}

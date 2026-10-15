@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, FilePlus2, NotebookPen, Play } from "lucide-react";
+import { ChevronLeft, ChevronRight, FilePlusCorner, NotebookPen, Play } from "lucide-react";
 import { toast } from "sonner";
 import { yjsStore } from "@/lib/yjsStore";
 import { topicToNote } from "@/lib/study/toNote";
@@ -104,7 +104,7 @@ function TopicCard({ topic, column, study, practice, onPractice, onJournal }: { 
             title="Notatka z listą kontrolną tematu"
             className={actionClass}
           >
-            <FilePlus2 className="h-3.5 w-3.5 shrink-0" aria-hidden />Do notatki
+            <FilePlusCorner className="h-3.5 w-3.5 shrink-0" aria-hidden />Do notatki
           </button>
         </div>
       </div>

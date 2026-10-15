@@ -4,7 +4,7 @@ Dokumentacja aktualnego stanu funkcji — co robią, gdzie są w kodzie i jak dz
 Plik opisuje stan bieżący, nie historię: przy zmianie funkcji poprawiaj jej opis.
 Zasady prowadzenia: `CLAUDE.md`, sekcja „Dokumentacja techniczna”.
 
-Działy opisane do tej pory: **Wspólne — warstwa UI**, **Wspólne — audyt dostępności i testy na telefonach**, **Wspólne — klawiatura ekranowa**, **Wspólne — cele dotyku**, **Nauka** (nagłówek i tablica) i **Nauka → Dziennik budowy**.
+Działy opisane do tej pory: **Wspólne — warstwa UI**, **Wspólne — biblioteki UI (Radix, lucide)**, **Wspólne — audyt dostępności i testy na telefonach**, **Wspólne — klawiatura ekranowa**, **Wspólne — cele dotyku**, **Nauka** (nagłówek i tablica) i **Nauka → Dziennik budowy**.
 Pozostałe działy (Notatki, Grafik, Kalendarz, reszta Nauki) dopisuj, gdy zadanie ich dotyczy.
 
 ---
@@ -57,6 +57,53 @@ Ciemny motyw bez zmian. Kontrast liczony skryptem wzorem WCAG; axe dojdzie w pun
 oraz porównaniem zrzutów v3/v4 (6 widoków + arkusz, 390/1440 px, jasny/ciemny).
 
 **Commit.** `544773c` (React 19), `2f5ff5b`, `18e7808`, `12fe855` (Tailwind 4) — 2026-10-15.
+
+---
+
+## Wspólne — biblioteki UI (Radix, lucide)
+
+**Co robi.** Okna, menu, przełączniki i podpowiedzi (Radix) oraz wszystkie ikony (lucide) działają na aktualnych
+wersjach bibliotek. Dla użytkownika zmienia się tylko rysunek części ikon — lucide przerysował je w nowszych wersjach
+(np. kosz, kalendarz, ikony plików, księżyc, ustawienia, lejek filtra). Układ i działanie bez zmian.
+
+**Gdzie jest.**
+- `package.json`: 12 paczek `@radix-ui/react-*` podniesionych do najnowszych w swoim majorze (np. `react-dialog` 1.3,
+  `react-dropdown-menu` 2.2, `react-popover` 1.3, `react-slider` 1.6, `react-tooltip` 1.4, `react-slot` 1.5);
+  `lucide-react` 0.462 → 1.57.
+- Importy ikon w 38 plikach `src/` (`from "lucide-react"`), m.in. `AppSidebar.tsx`, `BottomNav.tsx`, `NoteCard.tsx`,
+  `study/JournalEntrySheet.tsx`, `InstallAppButton.tsx`.
+
+**Jak działa i dlaczego tak.**
+- Radix: tylko podbicie w obrębie majora, bez zmian w `src/components/ui/*` — API się nie zmieniło. Przy okazji
+  zniknęły zdublowane wewnętrzne paczki Radix (część komponentów miała własne kopie `dismissable-layer`, `portal`
+  itd. w starszych wersjach), stąd mniejszy `package-lock.json`.
+- lucide 1.x usunął tylko ikony marek (żadnej nie używamy) i UMD. Stare nazwy zostały jako aliasy, ale importy
+  przeszły na nazwy kanoniczne, żeby kod zgadzał się z dokumentacją lucide i nie zależał od aliasów:
+  `AlertTriangle`→`TriangleAlert`, `CheckCircle2`→`CircleCheck`, `CheckSquare`→`SquareCheckBig`,
+  `HelpCircle`→`CircleQuestionMark`, `Loader2`→`LoaderCircle`, `MoreHorizontal`→`Ellipsis`,
+  `MoreVertical`→`EllipsisVertical`, `PlusSquare`→`SquarePlus`, `Wand2`→`WandSparkles`, `Filter`→`Funnel`,
+  `History`→`RotateCcwClock`, `FileJson`→`FileBraces`, `FilePlus2`→`FilePlusCorner`, `Smile`→`FaceSlightlySmiling`,
+  `Trash2`→`Trash`.
+- `Trash2` w 1.x to alias `Trash`: kosz z pionowymi kreskami jest teraz jedynym koszem. Tam, gdzie wcześniej był
+  goły `Trash` (paleta poleceń, lista widoków w `Index.tsx`), też są kreski — cała aplikacja ma jeden kosz.
+- lucide 1.x domyślnie dodaje `aria-hidden="true"`, chyba że ikona dostanie `aria-*`, `role` albo `title`. Ikony
+  z własną etykietą zostają widoczne dla czytnika ekranu; ozdobne nie trzeba już ręcznie ukrywać.
+- Klasa CSS ikony (`lucide-<nazwa>`) bierze się z nazwy kanonicznej, nie z importu — selektor `svg.lucide-repeat`
+  w `e2e/composer.spec.ts` działa bez zmian.
+
+**Ograniczenia i pułapki.**
+- Porównanie rysunków 0.462 i 1.57 (skrypt na `iconNode`): 65 ze 153 używanych ikon ma inny zapis SVG — część
+  tylko formalnie (`polyline` → `path`, kolejność elementów), reszta zwykle drobnie (zaokrąglenia, kalendarz o 1 px wyżej). Największe różnice: `Smile` (inna buzia), `Filter`/`Funnel`,
+  `Flame`, `Moon`, `Settings`, `Sparkles`, `Zap`, `Expand`. Zrzuty 390 i 1440 px (pasek boczny, arkusz „Więcej”,
+  akcje karty) wyglądają poprawnie.
+- `NoteCard.tsx` zawiera bajty NUL i CRLF — zmieniany tylko skryptem na bajtach, nie edytorem.
+- Następne paczki z tej grupy: `sonner` 2 (roadmap, „Biblioteki”).
+
+**Testy.** Bez nowych testów. Typecheck (`tsc -p tsconfig.app.json`), ESLint (0 błędów), Vitest 1024/1024, build,
+`e2e/bundle.spec.ts` (budżety bez zmian), pełne e2e Chromium 255/255 (jeden test `view-change.spec.ts` niestabilny
+przy obciążeniu — osobno 3/3), iPhone 14 + Pixel 7: 28 zaliczonych, 2 pominięte (CDP tylko w Chromium).
+
+**Commit.** COMMIT_HASH (2026-10-15).
 
 ---
 

@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { Archive, ArchiveRestore, Download, Trash2, Palette, X, CheckSquare, Undo2, Pin, FolderInput, Tag } from "lucide-react";
+import { Archive, ArchiveRestore, Download, Trash, Palette, X, SquareCheckBig, Undo2, Pin, FolderInput, Tag } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ColorPicker } from "./ColorPicker";
 import type { Folder, NoteColor } from "@/hooks/useNotes";
@@ -56,7 +56,7 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
           </span>
           <div className="w-px h-5 bg-border mx-1" />
           <button onClick={onSelectAll} className="pressable text-xs font-medium px-2 py-1 coarse:py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground" title="Zaznacz wszystko">
-            <CheckSquare className="w-3.5 h-3.5 inline mr-1" />
+            <SquareCheckBig className="w-3.5 h-3.5 inline mr-1" />
             <span className="max-sm:sr-only">Wszystko </span>({totalVisible})
           </button>
           <div className="w-px h-5 bg-border mx-1" />
@@ -143,11 +143,11 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
           )}
           {inTrash ? (
             <IconButton tone="destructive" onClick={onDeleteForever} title="Usuń trwale" aria-label="Usuń trwale">
-              <Trash2 className="w-4 h-4" />
+              <Trash className="w-4 h-4" />
             </IconButton>
           ) : (
             <IconButton tone="destructive" onClick={onTrash} title="Przenieś do kosza" aria-label="Przenieś do kosza">
-              <Trash2 className="w-4 h-4" />
+              <Trash className="w-4 h-4" />
             </IconButton>
           )}
         </motion.div>

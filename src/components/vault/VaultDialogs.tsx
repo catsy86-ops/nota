@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, Copy, Download, KeyRound, Lock, ShieldCheck } from "lucide-react";
+import { TriangleAlert, Copy, Download, KeyRound, Lock, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -81,7 +81,7 @@ function StrengthMeter({ password }: { password: string }) {
 function NoRecoveryWarning() {
   return (
     <div role="note" className="flex gap-2 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-xs leading-relaxed">
-      <AlertTriangle className="w-4 h-4 shrink-0 text-destructive mt-0.5" aria-hidden />
+      <TriangleAlert className="w-4 h-4 shrink-0 text-destructive mt-0.5" aria-hidden />
       <p>
         <strong>Zapomnianego hasła nie da się odzyskać.</strong> Nie ma resetu ani konta, które mogłoby to zrobić — treść jest
         szyfrowana tylko na Twoich urządzeniach. Bez hasła (albo kodu awaryjnego) zablokowane notatki są nie do odczytania.

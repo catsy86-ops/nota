@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { pluralPl } from "@/lib/plural";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { Delete, Trash2 } from "lucide-react";
+import { Delete, Trash } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,7 +88,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
                     </span>
                   </button>
                   <Button type="button" variant="ghost" size="icon" aria-label={`Usuń cykl ${p.name}`} onClick={() => { deletePattern(p.id); toastWithUndo(`Usunięto cykl „${p.name}”`, () => savePattern(p)); }}>
-                    <Trash2 className="w-4 h-4" />
+                    <Trash className="w-4 h-4" />
                   </Button>
                 </li>
               ))}

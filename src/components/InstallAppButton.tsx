@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { Download, CheckCircle2, Share, PlusSquare, MoreVertical, WifiOff, MonitorDown } from "lucide-react";
+import { Download, CircleCheck, Share, SquarePlus, EllipsisVertical, WifiOff, MonitorDown } from "lucide-react";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { toast } from "sonner";
 import {
@@ -29,8 +29,8 @@ function manualSteps(isIos: boolean, isAndroid: boolean): { intro: string; steps
       intro: "Na iPhonie instaluje się ręcznie, w Safari:",
       steps: [
         { icon: <Share className="w-4 h-4" />, text: <>Dotknij przycisku <strong>Udostępnij</strong> na pasku Safari.</> },
-        { icon: <PlusSquare className="w-4 h-4" />, text: <>Wybierz <strong>„Do ekranu początkowego”</strong>.</> },
-        { icon: <CheckCircle2 className="w-4 h-4" />, text: <>Potwierdź przyciskiem <strong>Dodaj</strong>.</> },
+        { icon: <SquarePlus className="w-4 h-4" />, text: <>Wybierz <strong>„Do ekranu początkowego”</strong>.</> },
+        { icon: <CircleCheck className="w-4 h-4" />, text: <>Potwierdź przyciskiem <strong>Dodaj</strong>.</> },
       ],
     };
   }
@@ -38,9 +38,9 @@ function manualSteps(isIos: boolean, isAndroid: boolean): { intro: string; steps
     return {
       intro: "Przeglądarka nie pokazała okna instalacji — zrób to z jej menu:",
       steps: [
-        { icon: <MoreVertical className="w-4 h-4" />, text: <>Otwórz menu przeglądarki <strong>⋮</strong> (prawy górny róg).</> },
+        { icon: <EllipsisVertical className="w-4 h-4" />, text: <>Otwórz menu przeglądarki <strong>⋮</strong> (prawy górny róg).</> },
         { icon: <Download className="w-4 h-4" />, text: <>Wybierz <strong>„Zainstaluj aplikację”</strong> albo <strong>„Dodaj do ekranu głównego”</strong>.</> },
-        { icon: <CheckCircle2 className="w-4 h-4" />, text: <>Potwierdź — ikona NOTKI pojawi się na ekranie głównym.</> },
+        { icon: <CircleCheck className="w-4 h-4" />, text: <>Potwierdź — ikona NOTKI pojawi się na ekranie głównym.</> },
       ],
     };
   }
@@ -48,7 +48,7 @@ function manualSteps(isIos: boolean, isAndroid: boolean): { intro: string; steps
     intro: "Zainstaluj z paska adresu przeglądarki (Chrome, Edge):",
     steps: [
       { icon: <MonitorDown className="w-4 h-4" />, text: <>Kliknij ikonę <strong>instalacji</strong> po prawej stronie paska adresu.</> },
-      { icon: <CheckCircle2 className="w-4 h-4" />, text: <>Potwierdź <strong>Zainstaluj</strong>. Na telefonie otwórz tę stronę i użyj tego samego przycisku.</> },
+      { icon: <CircleCheck className="w-4 h-4" />, text: <>Potwierdź <strong>Zainstaluj</strong>. Na telefonie otwórz tę stronę i użyj tego samego przycisku.</> },
     ],
   };
 }

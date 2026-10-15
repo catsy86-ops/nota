@@ -1,5 +1,5 @@
 import type { ReactElement } from "react";
-import { FileJson, FileText, NotebookPen, Upload } from "lucide-react";
+import { FileBraces, FileText, NotebookPen, Upload } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { exportToJSON, exportToMarkdown, exportToHTML } from "@/lib/exportNotes";
@@ -27,7 +27,7 @@ export function ImportExportMenu({ children, onImport, onDone, align = "end" }: 
       <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
       <DropdownMenuContent align={align} className="w-60">
         <DropdownMenuItem onClick={run(() => { void exportToJSON(all()).then(markBackup); })}>
-          <FileJson className="w-4 h-4 mr-2" />
+          <FileBraces className="w-4 h-4 mr-2" />
           Eksportuj jako JSON
         </DropdownMenuItem>
         <DropdownMenuItem onClick={run(() => { import("@/lib/exportPdf").then((m) => m.exportToPDF(all())); })}>

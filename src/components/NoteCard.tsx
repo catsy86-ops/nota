@@ -5,7 +5,7 @@ import { tween, dur, ease } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { cascadeDelay, cardExit, markPinned, hasRecentPin, consumePin, type CardExitIntent } from "@/lib/cardMotion";
 import { Check } from "lucide-react";
-import { Star, Pin, Trash2, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, MoreHorizontal, MoveHorizontal, ZoomIn, Maximize2, Minimize2, Expand, Link2, Lock, LockOpen, FilePlus2, CornerLeftUp } from "lucide-react";
+import { Star, Pin, Trash, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, Ellipsis, MoveHorizontal, ZoomIn, Maximize2, Minimize2, Expand, Link2, Lock, LockOpen, FilePlusCorner, CornerLeftUp } from "lucide-react";
 import { addSubpage } from "@/lib/subpageActions";
 import { pluralPl } from "@/lib/plural";
 import { ColorPicker, colorClasses } from "./ColorPicker";
@@ -407,7 +407,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
             <ActionBtn icon={<Archive className="w-4 h-4" />} onClick={() => { haptic("tap"); onArchive(note.id); if (inSheet) setSheetOpen(false); }} title="Archiwizuj" />
           ) : null}
           <ActionBtn
-            icon={<Trash2 className="w-4 h-4" />}
+            icon={<Trash className="w-4 h-4" />}
             onClick={() => { if (note.trashed) setShowDeleteConfirm(true); else { haptic("warn"); onDelete(note.id); } if (inSheet) setSheetOpen(false); }}
             title="Usuń"
             className="hover:text-destructive"
@@ -457,7 +457,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                 )}
                 {!isArchived && !note.locked && (
                   <ActionBtn
-                    icon={<FilePlus2 className="w-4 h-4" />}
+                    icon={<FilePlusCorner className="w-4 h-4" />}
                     onClick={() => {
                       haptic("tap");
                       const id = addSubpage(note.id);
@@ -600,7 +600,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
             <Archive className="w-6 h-6 text-primary-ink" />
           </motion.div>
           <motion.div style={{ opacity: trashOpacity }} className="absolute inset-y-0 right-0 w-1/2 rounded-xl bg-destructive/15 flex items-center justify-end pr-5 pointer-events-none">
-            <Trash2 className="w-6 h-6 text-destructive" />
+            <Trash className="w-6 h-6 text-destructive" />
           </motion.div>
         </>
       )}
@@ -856,7 +856,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                     "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium whitespace-nowrap",
                     trashCountdown.urgent ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"
                   )}>
-                    <Trash2 className="w-3 h-3" />
+                    <Trash className="w-3 h-3" />
                     {trashCountdown.label}
                   </div>
                   {onUnarchive && (
@@ -901,7 +901,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
 
           <ActionBtn
-            icon={<MoreHorizontal className="w-4 h-4" />}
+            icon={<Ellipsis className="w-4 h-4" />}
             onClick={() => (isTouch ? setSheetOpen(true) : setShowMore((v) => !v))}
             title={showMore ? "Mniej opcji" : "Więcej opcji"}
             aria-expanded={isTouch ? sheetOpen : showMore}
