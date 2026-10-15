@@ -24,7 +24,7 @@ test("dział Nauka: adres /nauka, pozycja w pasku bocznym i cztery zakładki @sm
   await expect(page).toHaveURL(/\/nauka$/);
   await expect(page.getByTestId("study-view")).toBeVisible();
   await expect(page.getByTestId("mastery-count")).toHaveText("0");
-  for (const name of ["Quiz", "Tablica", "Lista do nauki", "Dziennik"]) {
+  for (const name of ["Quiz", "Tablica", "Lista", "Dziennik"]) {
     await expect(page.getByRole("tab", { name })).toBeVisible();
   }
 });
@@ -39,6 +39,10 @@ test("tablica: temat przechodzi między kolumnami i postęp przeżywa odświeże
   await expect(page.getByTestId("count-todo")).toHaveText("17");
   await expect(page.getByTestId("count-done")).toHaveText("1");
   await expect(page.getByTestId("mastery-count")).toHaveText("1");
+  // Pasek opanowania: odcinek modułu z licznikiem, komórka podpisuje temat.
+  await expect(page.locator('[data-mastery-module="kan"]')).toContainText(/Kanalizacja\s*1\//);
+  await page.getByRole("button", { name: "Spadki kanalizacji: umiem" }).click();
+  await expect(page.getByTestId("mastery-picked")).toHaveText("Spadki kanalizacji · umiem");
 
   await reloadWhenSaved(page);
   await page.getByRole("tab", { name: "Tablica" }).click();
@@ -47,7 +51,7 @@ test("tablica: temat przechodzi między kolumnami i postęp przeżywa odświeże
 
 test("lista do nauki: odhaczanie, filtr krytycznych i ściąga wysokości", async ({ page }) => {
   await page.goto("/nauka");
-  await page.getByRole("tab", { name: "Lista do nauki" }).click();
+  await page.getByRole("tab", { name: "Lista" }).click();
   const progress = page.getByTestId("checklist-progress");
   await expect(progress).toContainText("0");
 
@@ -101,7 +105,7 @@ test("tablica: „Ćwicz” startuje rundę z jednego tematu, a „Zrób notatk�
 
   // Zakładki nie kasują stanu; notatka z tematu pojawia się na liście notatek.
   await page.getByRole("tab", { name: "Tablica" }).click();
-  await page.getByRole("button", { name: "Spadki kanalizacji: zrób z tego notatkę" }).click();
+  await page.getByRole("button", { name: "Spadki kanalizacji: do notatki" }).click();
   await expect(page.getByText("Dodano notatkę „Nauka: Spadki kanalizacji”")).toBeVisible();
   await page.getByRole("button", { name: "Notatki" }).first().click();
   await expect(page.getByRole("heading", { name: "Nauka: Spadki kanalizacji" })).toBeVisible();

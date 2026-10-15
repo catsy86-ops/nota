@@ -13,6 +13,10 @@ const COLUMN_HINT: Record<Column, string> = {
   doing: "Znasz zarys, wracasz do detali",
   done: "Zaliczone w quizie lub liście",
 };
+const actionClass =
+  "pressable inline-flex h-7 items-center gap-1 rounded-md border border-border px-2 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground coarse:h-11 coarse:px-3 coarse:text-sm";
+const moveClass =
+  "grid h-7 w-7 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30 coarse:h-11 coarse:w-11";
 const moduleLabel = (id: StudyTopic["module"]) => MODULES.find((m) => m.id === id)?.label ?? id;
 
 function TopicCard({ topic, column, study, practice, onPractice, onJournal }: { topic: StudyTopic; column: Column; study: StudyState; practice?: TopicPractice; onPractice: (topicId: string) => void; onJournal: (topicId: string) => void }) {
@@ -33,35 +37,61 @@ function TopicCard({ topic, column, study, practice, onPractice, onJournal }: { 
       )}
       data-topic={topic.id}
     >
-      <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">{moduleLabel(topic.module)}</p>
-      <h4 className="mt-0.5 font-medium leading-snug">
-        {topic.title}
-        {critical && <span className="ml-1.5 text-primary-ink" title="Zawiera punkty krytyczne" aria-label="Zawiera punkty krytyczne">⚠</span>}
-      </h4>
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">{moduleLabel(topic.module)}</p>
+          <h4 className="mt-0.5 font-medium leading-snug">
+            {topic.title}
+            {critical && <span className="ml-1.5 text-primary-ink" title="Zawiera punkty krytyczne" aria-label="Zawiera punkty krytyczne">⚠</span>}
+          </h4>
+        </div>
+        {/* Strzałki przy tytule: przesunięcie tematu to decyzja o nim, nie akcja z listy. */}
+        <div className="flex shrink-0 gap-1">
+          <button
+            type="button"
+            disabled={at === 0}
+            onClick={() => moveTopic(topic.id, COLUMNS[at - 1])}
+            aria-label={`${topic.title}: przenieś do „${COLUMN_LABEL[COLUMNS[Math.max(at - 1, 0)]]}”`}
+            title={at > 0 ? `Do „${COLUMN_LABEL[COLUMNS[at - 1]]}”` : undefined}
+            className={moveClass}
+          >
+            <ChevronLeft className="h-4 w-4" aria-hidden />
+          </button>
+          <button
+            type="button"
+            disabled={at === COLUMNS.length - 1}
+            onClick={() => moveTopic(topic.id, COLUMNS[at + 1])}
+            aria-label={`${topic.title}: przenieś do „${COLUMN_LABEL[COLUMNS[Math.min(at + 1, COLUMNS.length - 1)]]}”`}
+            title={at < COLUMNS.length - 1 ? `Do „${COLUMN_LABEL[COLUMNS[at + 1]]}”` : undefined}
+            className={moveClass}
+          >
+            <ChevronRight className="h-4 w-4" aria-hidden />
+          </button>
+        </div>
+      </div>
       <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{topic.summary}</p>
-      <div className="mt-2.5 flex flex-wrap items-center justify-between gap-x-2 gap-y-1.5">
-        <p className="font-mono text-2xs text-muted-foreground tabular-nums">
-          lista {checked}/{items.length} · pytań {questions}
-          {practice && <> · budowa {practice.ok}×{practice.problem > 0 ? `, problemów ${practice.problem}` : ""}</>}
-        </p>
-        <div className="flex gap-1">
+      <p className="mt-2 font-mono text-2xs text-muted-foreground tabular-nums">
+        lista {checked}/{items.length} · pytań {questions}
+        {practice && <> · budowa {practice.ok}×{practice.problem > 0 ? `, problemów ${practice.problem}` : ""}</>}
+      </p>
+      <div className="mt-2">
+        {/* Podpisy przy ikonach: na budowie nikt nie zgaduje, co robi ołówek. */}
+        <div className="flex flex-wrap gap-1">
           <button
             type="button"
             onClick={() => onJournal(topic.id)}
             aria-label={`${topic.title}: wpis z budowy`}
-            title="Dodaj wpis z budowy do tego tematu"
-            className="grid h-7 w-7 coarse:h-11 coarse:w-11 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted"
+            className={actionClass}
           >
-            <NotebookPen className="w-3.5 h-3.5" />
+            <NotebookPen className="h-3.5 w-3.5 shrink-0" aria-hidden />Wpis
           </button>
           <button
             type="button"
             onClick={() => onPractice(topic.id)}
             aria-label={`${topic.title}: ćwicz pytania`}
-            title="Ćwicz pytania z tego tematu"
-            className="grid h-7 w-7 coarse:h-11 coarse:w-11 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted"
+            className={actionClass}
           >
-            <Play className="w-3.5 h-3.5" />
+            <Play className="h-3.5 w-3.5 shrink-0" aria-hidden />Ćwicz
           </button>
           <button
             type="button"
@@ -70,29 +100,11 @@ function TopicCard({ topic, column, study, practice, onPractice, onJournal }: { 
               yjsStore.upsertNote(note);
               toast.success(`Dodano notatkę „${note.title}”`);
             }}
-            aria-label={`${topic.title}: zrób z tego notatkę`}
-            title="Zrób notatkę z listą kontrolną"
-            className="grid h-7 w-7 coarse:h-11 coarse:w-11 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted"
+            aria-label={`${topic.title}: do notatki`}
+            title="Notatka z listą kontrolną tematu"
+            className={actionClass}
           >
-            <FilePlus2 className="w-3.5 h-3.5" />
-          </button>
-          <button
-            type="button"
-            disabled={at === 0}
-            onClick={() => moveTopic(topic.id, COLUMNS[at - 1])}
-            aria-label={`${topic.title}: przenieś do „${COLUMN_LABEL[COLUMNS[Math.max(at - 1, 0)]]}”`}
-            className="grid h-7 w-7 coarse:h-11 coarse:w-11 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            disabled={at === COLUMNS.length - 1}
-            onClick={() => moveTopic(topic.id, COLUMNS[at + 1])}
-            aria-label={`${topic.title}: przenieś do „${COLUMN_LABEL[COLUMNS[Math.min(at + 1, COLUMNS.length - 1)]]}”`}
-            className="grid h-7 w-7 coarse:h-11 coarse:w-11 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30"
-          >
-            <ChevronRight className="w-4 h-4" />
+            <FilePlus2 className="h-3.5 w-3.5 shrink-0" aria-hidden />Do notatki
           </button>
         </div>
       </div>
