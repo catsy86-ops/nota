@@ -73,3 +73,39 @@ for (const size of SIZES) {
     }
   });
 }
+
+// Style (Ustawienia → Wygląd → Styl): każdy ma własne tokeny kolorów — ten sam audyt na Notatkach,
+// Kalendarzu i Grafiku (siatki dni, weekendy, kolorowe kafle).
+const SKINS = ["plan", "neon", "zorza", "miedz"] as const;
+const SKIN_VIEWS = VIEWS.filter((v) => v.name === "notatki" || v.name === "kalendarz" || v.name === "grafik");
+
+for (const size of SIZES) {
+  test.describe(`a11y styl ${size.name}`, () => {
+    test.use({ viewport: size.viewport, isMobile: size.mobile, hasTouch: size.mobile });
+
+    for (const skin of SKINS) {
+      for (const view of SKIN_VIEWS) {
+        test(`${view.name} — ${skin}`, async ({ page }) => {
+          await seedNotes(page, [
+            { id: "a11y-1", title: "Zakupy", content: "Mleko, chleb", color: "default", pinned: true, archived: false, labels: ["dom"], createdAt: Date.now(), updatedAt: Date.now() },
+            { id: "a11y-2", title: "Budowa", content: "Zamówić beton", color: "sky", pinned: false, archived: false, labels: [], createdAt: Date.now(), updatedAt: Date.now() },
+            { id: "a11y-3", title: "Piwo", content: "Piątek", color: "peach", pinned: false, archived: false, labels: [], createdAt: Date.now(), updatedAt: Date.now() },
+          ]);
+          await page.addInitScript((s) => {
+            localStorage.setItem("kaczy.skin.v1", JSON.stringify(s));
+            localStorage.setItem("kaczy.motion.v1", "reduced");
+          }, skin);
+          await page.emulateMedia({ reducedMotion: "reduce" });
+          await page.goto(view.path);
+          await expect(page.locator("main").first()).toBeVisible();
+          await page.waitForLoadState("networkidle");
+          await expect(page.locator(".view-skeleton")).toHaveCount(0);
+
+          const found = await scan(page);
+          const known = (KNOWN[`${view.name}/${size.name}/${skin}`] ?? []).slice().sort();
+          expect(found, "nowe albo naprawione naruszenia — popraw kod albo listę KNOWN").toEqual(known);
+        });
+      }
+    }
+  });
+}

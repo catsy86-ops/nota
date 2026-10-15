@@ -9,6 +9,10 @@ import { SEASON_META, useSeasonPref, type SeasonPref } from "@/lib/seasonTheme";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Section, ToggleRow } from "./SettingsShared";
+import { Segmented } from "./Segmented";
+import { SkinPicker } from "./SkinPicker";
+import { SKIN_SCHEME } from "@/lib/skins";
+import { SKIN_META } from "@/lib/skinGallery";
 
 const themeOptions: { value: ThemeMode; label: string; Icon: typeof Sun }[] = [
   { value: "light", label: "Jasny", Icon: Sun },
@@ -22,71 +26,36 @@ const motionOptions: { value: MotionMode; label: string; Icon: typeof Sun }[] = 
   { value: "system", label: "System", Icon: Monitor },
 ];
 
-/** "Wygląd" tab: theme, motion, seasonal theme, grid layout/density/columns. */
+/** "Wygląd" tab: style (skin), brightness, motion, seasonal theme, grid layout/density/columns. */
 export function AppearanceSettings() {
   const settings = useEffectsSettings();
   const prefs = useViewPrefs();
-  const { mode: themeMode, setMode: setThemeMode } = useTheme();
+  const { mode: themeMode, setMode: setThemeMode, skin, setSkin } = useTheme();
+  const skinScheme = SKIN_SCHEME[skin];
   const { mode: motionMode, reduced: motionReduced, setMode: setMotionMode } = useMotionPref();
   const { pref: seasonPref, season: activeSeason, setPref: setSeasonPref } = useSeasonPref();
 
   return (
     <div className="space-y-4">
-      <Section title="Motyw">
-        <div className="grid grid-cols-3 gap-2">
-          {themeOptions.map((opt) => {
-            const active = themeMode === opt.value;
-            const Icon = opt.Icon;
-            return (
-              <button
-                key={opt.value}
-                onClick={() => setThemeMode(opt.value)}
-                aria-pressed={active}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border text-xs font-semibold transition-colors",
-                  active
-                    ? "border-primary bg-primary/10 text-primary-ink"
-                    : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
-                )}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{opt.label}</span>
-              </button>
-            );
-          })}
-        </div>
+      <Section title="Styl">
+        <SkinPicker value={skin} onChange={setSkin} />
+      </Section>
+
+      <Section title="Jasność">
+        <Segmented label="Jasność" options={themeOptions} value={themeMode} onChange={setThemeMode} disabled={!!skinScheme} />
         <p className="text-xs text-muted-foreground mt-1.5">
-          {themeMode === "system"
-            ? "Motyw dopasowuje się do ustawień Twojego systemu."
-            : themeMode === "dark"
-              ? "Ciemny motyw ułatwia pracę wieczorem."
-              : "Klasyczny jasny motyw."}
+          {skinScheme
+            ? `${SKIN_META[skin].label} ma własne, ${skinScheme === "dark" ? "ciemne" : "jasne"} kolory. Jasność ustawisz w stylu Zeszyt.`
+            : themeMode === "system"
+              ? "Motyw dopasowuje się do ustawień Twojego systemu."
+              : themeMode === "dark"
+                ? "Ciemny motyw ułatwia pracę wieczorem."
+                : "Klasyczny jasny motyw."}
         </p>
       </Section>
 
       <Section title="Ruch i animacje">
-        <div className="grid grid-cols-3 gap-2">
-          {motionOptions.map((opt) => {
-            const active = motionMode === opt.value;
-            const Icon = opt.Icon;
-            return (
-              <button
-                key={opt.value}
-                onClick={() => setMotionMode(opt.value)}
-                aria-pressed={active}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-1.5 py-3 rounded-xl border text-xs font-semibold transition-colors",
-                  active
-                    ? "border-primary bg-primary/10 text-primary-ink"
-                    : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
-                )}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{opt.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        <Segmented label="Ruch i animacje" options={motionOptions} value={motionMode} onChange={setMotionMode} />
         <p className="text-xs text-muted-foreground mt-1.5">
           {motionMode === "system"
             ? `Zgodnie z ustawieniem systemu (teraz: ${motionReduced ? "ograniczony ruch" : "pełne animacje"}).`

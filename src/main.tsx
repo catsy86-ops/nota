@@ -6,6 +6,12 @@ import "@fontsource-variable/plus-jakarta-sans";
 // Cyfry o stałej szerokości (rachunek w Grafiku); `wght.css` bez kursywy.
 import "@fontsource-variable/jetbrains-mono/wght.css";
 import "./index.css";
+// Kroje stylów (Ustawienia → Wygląd). @font-face pobiera plik dopiero, gdy styl go użyje.
+import "@fontsource/barlow-condensed/600.css";
+import "@fontsource-variable/unbounded/wght.css";
+import "@fontsource-variable/fraunces/soft.css";
+import "@fontsource-variable/bricolage-grotesque/wght.css";
+import "./styles/skins.css";
 import { registerServiceWorker, applyServiceWorkerUpdate, SW_UPDATE_EVENT } from "./lib/registerSW";
 import { requestPersistentStorage } from "./lib/storagePersistence";
 import { installGlobalDiagHandlers } from "./lib/diagnostics";

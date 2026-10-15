@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { PanelLeftClose, PanelLeftOpen, Moon, Sun, FileDown, FolderOpen, Tag } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SearchBar } from "@/components/SearchBar";
@@ -13,6 +13,7 @@ import { NotkiLogo } from "@/components/NotkiLogo";
 import { NMonogramLogo } from "@/components/NMonogramLogo";
 import type { View } from "@/hooks/useFilteredNotes";
 import { pluralPl } from "@/lib/plural";
+import { RollingNumber } from "@/components/RollingNumber";
 import { useHideOnScroll } from "@/hooks/useHideOnScroll";
 
 interface AppHeaderProps {
@@ -127,7 +128,7 @@ export function AppHeader({
             </h1>
             {view !== "calendar" && view !== "shifts" && view !== "study" && (
               <p className="text-xs text-muted-foreground hidden sm:block">
-                {displayCount} {pluralPl(displayCount, ["notatka", "notatki", "notatek"])}
+                <RollingNumber value={displayCount} /> {pluralPl(displayCount, ["notatka", "notatki", "notatek"])}
               </p>
             )}
           </div>
@@ -147,7 +148,19 @@ export function AppHeader({
                 aria-label={dark ? "Włącz tryb jasny" : "Włącz tryb ciemny"}
                 aria-pressed={dark}
               >
-                {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                {/* Słońce i księżyc zamieniają się obrotem — ikona mówi, co się stanie po kliknięciu. */}
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={dark ? "sun" : "moon"}
+                    initial={{ rotate: -90, scale: 0.4, opacity: 0 }}
+                    animate={{ rotate: 0, scale: 1, opacity: 1 }}
+                    exit={{ rotate: 90, scale: 0.4, opacity: 0 }}
+                    transition={tween.enter}
+                    className="inline-flex"
+                  >
+                    {dark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                  </motion.span>
+                </AnimatePresence>
               </motion.button>
             </IconButton>
           )}

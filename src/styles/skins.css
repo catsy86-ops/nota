@@ -1,0 +1,425 @@
+/*
+  Style aplikacji (`html[data-skin]`, src/lib/skins.ts). Poza warstwami Tailwinda, więc
+  nadpisują tokeny z `index.css` (:root / .dark w @layer base) bez podnoszenia specyficzności.
+  Każdy styl ma jeden schemat (Plan, Neon, Zorza — ciemne; Miedź — jasna); klasa `.dark`
+  jest ustawiana zgodnie z nim, więc warianty `dark:` w komponentach dalej działają.
+
+  Zasada: wszystko, co dekoracyjne, siedzi w tle (`.paper-grid` z PaperBackdrop) i w kilku
+  akcentach (logo, przycisk główny, krawędź paska bocznego). Treść notatek zostaje czytelna.
+*/
+
+/* ─────────────────────────── PLAN — rysunek techniczny ─────────────────────────── */
+html[data-skin="plan"] {
+  --background: 211 66% 18%;
+  --foreground: 205 70% 95%;
+  --card: 211 58% 22%;
+  --card-foreground: 205 70% 95%;
+  --popover: 211 58% 21%;
+  --popover-foreground: 205 70% 95%;
+  --primary: 197 94% 70%;
+  --ink-mix: 100%;
+  --primary-foreground: 212 75% 12%;
+  --secondary: 211 45% 28%;
+  --secondary-foreground: 205 70% 95%;
+  --muted: 211 50% 25%;
+  --muted-foreground: 205 35% 78%;
+  /* Żółty ołówek — linki i [[linki]]. */
+  --accent: 50 96% 68%;
+  --accent-foreground: 212 75% 12%;
+  --destructive: 4 80% 52%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 207 45% 34%;
+  --input: 205 45% 58%;
+  --ring: 197 94% 70%;
+  --grid: 205 80% 85%;
+  /* Czerwona kreska poprawki. */
+  --margin: 4 90% 64%;
+
+  --note-default: 211 58% 22%;
+  --note-coral: 6 22% 25%;
+  --note-peach: 24 20% 24%;
+  --note-sand: 44 18% 23%;
+  --note-mint: 165 24% 21%;
+  --note-sage: 180 16% 22%;
+  --note-sky: 200 42% 26%;
+  --note-lavender: 245 26% 28%;
+  --note-rose: 335 22% 26%;
+
+  --elevation-1: 0 0 0 1px hsl(205 80% 85% / 0.06), 0 2px 6px -2px hsl(214 80% 5% / 0.5);
+  --elevation-2: 0 0 0 1px hsl(205 80% 85% / 0.08), 0 8px 18px -6px hsl(214 80% 5% / 0.6);
+  --elevation-3: 0 0 0 1px hsl(205 80% 85% / 0.12), 0 16px 34px -10px hsl(214 80% 4% / 0.7);
+  --elevation-up: 0 -8px 24px -12px hsl(214 80% 4% / 0.6);
+  --glow-primary: 0 8px 26px -8px hsl(var(--primary) / 0.55);
+}
+
+/* Kalka: drobna kratka co 12 px, gruba co 60 px, winieta jak przy świetle lampy. */
+html[data-skin="plan"] .paper-grid::before {
+  background-image:
+    linear-gradient(hsl(var(--grid) / 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--grid) / 0.16) 1px, transparent 1px),
+    linear-gradient(hsl(var(--grid) / 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--grid) / 0.06) 1px, transparent 1px);
+  background-size: 60px 60px, 60px 60px, 12px 12px, 12px 12px;
+  -webkit-mask-image: radial-gradient(130% 100% at 50% 30%, #000 50%, rgb(0 0 0 / 0.35) 100%);
+  mask-image: radial-gradient(130% 100% at 50% 30%, #000 50%, rgb(0 0 0 / 0.35) 100%);
+}
+/* Tabliczka rysunkowa w rogu arkusza — tylko na komputerze, na telefonie siedzi tam dolny pasek. */
+html[data-skin="plan"] .paper-grid::after {
+  content: "NOTKI  ·  ARKUSZ 1/1  ·  SKALA 1:1";
+  position: absolute;
+  right: 1.5rem;
+  bottom: 1.25rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid hsl(var(--grid) / 0.3);
+  box-shadow: inset 0 0 0 3px hsl(var(--background)), inset 0 0 0 4px hsl(var(--grid) / 0.18);
+  font: 600 0.75rem/1 'Barlow Condensed', sans-serif;
+  letter-spacing: 0.22em;
+  color: hsl(var(--grid) / 0.45);
+}
+@media (max-width: 767px) {
+  html[data-skin="plan"] .paper-grid::after { content: none; }
+}
+html[data-skin="plan"] .notki-glyph {
+  background-image:
+    linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.9) 50%, transparent 62%),
+    linear-gradient(170deg, hsl(0 0% 100%), hsl(var(--primary)) 70%);
+}
+html[data-skin="plan"] .notki-logo { filter: none; }
+html[data-skin="plan"] h1,
+html[data-skin="plan"] h2,
+html[data-skin="plan"] h3 {
+  font-family: 'Barlow Condensed', 'Plus Jakarta Sans Variable', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+/* Kafel jak rzut na arkuszu: znaczniki narożników w kolorze linii. */
+html[data-skin="plan"] .note-card::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  pointer-events: none;
+  border-radius: calc(var(--radius) - 4px);
+  --tick: hsl(var(--grid) / 0.4);
+  background:
+    linear-gradient(var(--tick), var(--tick)) top left / 10px 1px,
+    linear-gradient(var(--tick), var(--tick)) top left / 1px 10px,
+    linear-gradient(var(--tick), var(--tick)) top right / 10px 1px,
+    linear-gradient(var(--tick), var(--tick)) top right / 1px 10px,
+    linear-gradient(var(--tick), var(--tick)) bottom left / 10px 1px,
+    linear-gradient(var(--tick), var(--tick)) bottom left / 1px 10px,
+    linear-gradient(var(--tick), var(--tick)) bottom right / 10px 1px,
+    linear-gradient(var(--tick), var(--tick)) bottom right / 1px 10px;
+  background-repeat: no-repeat;
+}
+
+/* ─────────────────────────── NEON — po fajrancie ─────────────────────────── */
+html[data-skin="neon"] {
+  --background: 282 42% 6%;
+  --foreground: 290 60% 96%;
+  --card: 282 36% 11%;
+  --card-foreground: 290 60% 96%;
+  --popover: 282 36% 11%;
+  --popover-foreground: 290 60% 96%;
+  --primary: 316 100% 66%;
+  --ink-mix: 100%;
+  --primary-foreground: 285 60% 8%;
+  --secondary: 282 30% 17%;
+  --secondary-foreground: 290 60% 96%;
+  --muted: 282 32% 14%;
+  --muted-foreground: 290 22% 76%;
+  --accent: 186 100% 62%;
+  --accent-foreground: 285 60% 8%;
+  --destructive: 352 90% 56%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 288 28% 21%;
+  --input: 296 30% 52%;
+  --ring: 186 100% 62%;
+  --grid: 290 40% 60%;
+  --margin: 186 100% 58%;
+
+  --note-default: 282 36% 11%;
+  --note-coral: 6 24% 14%;
+  --note-peach: 24 22% 13%;
+  --note-sand: 46 18% 12%;
+  --note-mint: 160 24% 11%;
+  --note-sage: 172 16% 12%;
+  --note-sky: 196 32% 13%;
+  --note-lavender: 262 30% 16%;
+  --note-rose: 326 32% 15%;
+
+  --elevation-1: 0 1px 2px hsl(280 60% 2% / 0.6);
+  --elevation-2: 0 6px 16px -4px hsl(280 60% 2% / 0.7), 0 0 0 1px hsl(300 100% 80% / 0.05);
+  --elevation-3: 0 14px 36px -10px hsl(280 60% 2% / 0.8), 0 0 0 1px hsl(var(--primary) / 0.25), 0 0 24px -6px hsl(var(--primary) / 0.35);
+  --elevation-up: 0 -8px 24px -12px hsl(280 60% 2% / 0.7);
+  --glow-primary: 0 0 0 1px hsl(var(--primary) / 0.6), 0 0 18px hsl(var(--primary) / 0.55), 0 0 42px -6px hsl(var(--primary) / 0.5);
+}
+/* Ceglana ściana w półmroku i dwie plamy światła z neonów nad nią. */
+html[data-skin="neon"] .paper-grid::before {
+  background-image:
+    radial-gradient(60% 45% at 12% 0%, hsl(316 100% 60% / 0.16), transparent 70%),
+    radial-gradient(55% 40% at 92% 6%, hsl(186 100% 55% / 0.12), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='36'%3E%3Cg fill='none' stroke='%23d9a6ff' stroke-opacity='.07'%3E%3Cpath d='M0 .5h72M0 18.5h72M.5 0v18M36.5 18v18'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 100% 100%, 100% 100%, 72px 36px;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+html[data-skin="neon"] .paper-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 80% at 50% 120%, hsl(282 60% 2% / 0.8), transparent 60%);
+}
+/* Tylko nagłówki widoków i okien: Unbounded jest bardzo szeroki i ucinałby tytuły kafli na telefonie. */
+html[data-skin="neon"] h1,
+html[data-skin="neon"] h2 {
+  font-family: 'Unbounded Variable', 'Plus Jakarta Sans Variable', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+/* Nagłówki widoków świecą jak rurka. */
+html[data-skin="neon"] h1 {
+  text-shadow: 0 0 1px hsl(var(--foreground) / 0.9), 0 0 12px hsl(var(--primary) / 0.55), 0 0 30px hsl(var(--primary) / 0.3);
+}
+/* Logo „zapala się” z mrugnięciem przy każdym przejściu na Neon. */
+html[data-skin="neon"] .notki-logo {
+  filter: drop-shadow(0 0 6px hsl(var(--primary) / 0.9)) drop-shadow(0 0 18px hsl(var(--primary) / 0.55));
+  animation: neon-ignite 1.4s steps(1, end) 1 both;
+}
+html[data-skin="neon"] .notki-glyph {
+  background-image:
+    linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.9) 50%, transparent 62%),
+    linear-gradient(170deg, hsl(320 100% 88%), hsl(var(--primary)) 55%, hsl(300 90% 55%));
+}
+html[data-motion="reduced"][data-skin="neon"] .notki-logo { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="neon"] .notki-logo { animation: none; }
+}
+@keyframes neon-ignite {
+  0% { opacity: 0.15; }
+  12% { opacity: 1; }
+  18% { opacity: 0.25; }
+  30% { opacity: 1; }
+  36% { opacity: 0.5; }
+  44%, 100% { opacity: 1; }
+}
+html[data-skin="neon"] .note-card:hover { border-color: hsl(var(--primary) / 0.45); }
+
+/* ─────────────────────────── ZORZA — nocne niebo ─────────────────────────── */
+html[data-skin="zorza"] {
+  --background: 228 52% 6%;
+  --foreground: 210 50% 96%;
+  --card: 226 40% 11%;
+  --card-foreground: 210 50% 96%;
+  --popover: 226 40% 11%;
+  --popover-foreground: 210 50% 96%;
+  --primary: 156 88% 58%;
+  --ink-mix: 100%;
+  --primary-foreground: 200 70% 7%;
+  --secondary: 226 30% 17%;
+  --secondary-foreground: 210 50% 96%;
+  --muted: 226 32% 14%;
+  --muted-foreground: 220 24% 76%;
+  --accent: 262 92% 80%;
+  --accent-foreground: 230 60% 8%;
+  --destructive: 352 84% 56%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 226 30% 21%;
+  --input: 222 26% 52%;
+  --ring: 156 88% 58%;
+  --grid: 210 60% 90%;
+  --margin: 156 80% 52%;
+
+  --note-default: 226 40% 11%;
+  --note-coral: 6 20% 14%;
+  --note-peach: 26 18% 13%;
+  --note-sand: 46 16% 12%;
+  --note-mint: 160 26% 11%;
+  --note-sage: 174 16% 12%;
+  --note-sky: 200 32% 13%;
+  --note-lavender: 258 26% 16%;
+  --note-rose: 330 24% 14%;
+
+  --elevation-1: 0 1px 2px hsl(230 60% 2% / 0.5), inset 0 1px 0 hsl(210 80% 90% / 0.05);
+  --elevation-2: 0 8px 20px -6px hsl(230 60% 2% / 0.6), inset 0 1px 0 hsl(210 80% 90% / 0.06);
+  --elevation-3: 0 18px 40px -12px hsl(230 60% 2% / 0.7), 0 0 30px -10px hsl(var(--primary) / 0.35), inset 0 1px 0 hsl(210 80% 90% / 0.08);
+  --elevation-up: 0 -8px 24px -12px hsl(230 60% 2% / 0.6);
+  --glow-primary: 0 10px 30px -8px hsl(var(--primary) / 0.6);
+}
+/* Gwiazdy: trzy warstwy kropek w różnych odstępach — powtórzenie nie rzuca się w oczy. */
+html[data-skin="zorza"] .paper-grid::before {
+  background-image:
+    radial-gradient(1px 1px at 20px 30px, hsl(210 80% 96% / 0.7), transparent),
+    radial-gradient(1px 1px at 90px 120px, hsl(210 80% 96% / 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 160px 60px, hsl(50 90% 90% / 0.6), transparent),
+    radial-gradient(1px 1px at 230px 190px, hsl(210 80% 96% / 0.45), transparent),
+    radial-gradient(1px 1px at 300px 20px, hsl(210 80% 96% / 0.55), transparent);
+  background-size: 170px 170px, 230px 230px, 310px 310px, 270px 270px, 390px 390px;
+  -webkit-mask-image: linear-gradient(#000 0%, rgb(0 0 0 / 0.5) 60%, transparent 100%);
+  mask-image: linear-gradient(#000 0%, rgb(0 0 0 / 0.5) 60%, transparent 100%);
+}
+/* Zorza: trzy rozmyte wstęgi, dryfują powoli (tylko transform — bez przeliczania układu). */
+html[data-skin="zorza"] .paper-grid::after {
+  content: "";
+  position: absolute;
+  inset: -20% -10% 30% -10%;
+  background:
+    radial-gradient(40% 30% at 25% 40%, hsl(156 95% 55% / 0.32), transparent 70%),
+    radial-gradient(35% 26% at 60% 30%, hsl(186 95% 55% / 0.24), transparent 70%),
+    radial-gradient(38% 30% at 82% 46%, hsl(268 90% 65% / 0.26), transparent 70%);
+  filter: blur(36px);
+  transform-origin: 50% 30%;
+  animation: aurora-drift 28s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes aurora-drift {
+  0% { transform: translate3d(-4%, 0, 0) rotate(-3deg) scale(1); }
+  50% { transform: translate3d(3%, 3%, 0) rotate(2deg) scale(1.08); }
+  100% { transform: translate3d(5%, -2%, 0) rotate(4deg) scale(0.96); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="zorza"] .paper-grid::after { animation: none; }
+}
+html[data-motion="reduced"][data-skin="zorza"] .paper-grid::after { animation: none; }
+/* Karta jak szyba: na komputerze prześwituje zorza; na telefonie bez rozmycia (koszt GPU). */
+@media (pointer: fine) {
+  html[data-skin="zorza"] .note-card[data-note-color="default"] {
+    background-color: hsl(var(--card) / 0.7);
+    backdrop-filter: blur(14px) saturate(140%);
+  }
+}
+html[data-skin="zorza"] h1,
+html[data-skin="zorza"] h2,
+html[data-skin="zorza"] h3 {
+  font-family: 'Fraunces Variable', Georgia, serif;
+  font-variation-settings: "SOFT" 100, "WONK" 0;
+  letter-spacing: -0.005em;
+}
+/* Logo w barwach zorzy. */
+html[data-skin="zorza"] .notki-glyph {
+  background-image:
+    linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.9) 50%, transparent 62%),
+    linear-gradient(100deg, hsl(156 90% 66%), hsl(186 90% 68%) 50%, hsl(262 92% 80%));
+}
+html[data-skin="zorza"] .notki-logo { filter: drop-shadow(0 2px 14px hsl(var(--primary) / 0.45)); }
+
+/* ─────────────────────────── MIEDŹ — beton i rury ─────────────────────────── */
+html[data-skin="miedz"] {
+  --background: 30 7% 89%;
+  --foreground: 22 14% 12%;
+  --card: 40 25% 98.5%;
+  --card-foreground: 22 14% 12%;
+  --popover: 40 25% 98.5%;
+  --popover-foreground: 22 14% 12%;
+  --primary: 21 62% 41%;
+  --ink-mix: 82%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 30 8% 82%;
+  --secondary-foreground: 22 14% 12%;
+  --muted: 30 10% 92%;
+  --muted-foreground: 22 9% 34%;
+  /* Patyna (śniedź) — linki. */
+  --accent: 186 48% 29%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 70% 46%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 30 8% 80%;
+  --input: 25 9% 48%;
+  --ring: 21 70% 35%;
+  --grid: 30 6% 70%;
+  --margin: 21 62% 45%;
+
+  --note-default: 40 25% 98.5%;
+  --note-coral: 14 70% 96%;
+  --note-peach: 28 75% 95%;
+  --note-sand: 44 70% 93.5%;
+  --note-mint: 150 34% 94%;
+  --note-sage: 160 18% 93.5%;
+  --note-sky: 196 50% 95%;
+  --note-lavender: 260 40% 96%;
+  --note-rose: 340 50% 96%;
+
+  --elevation-1: 0 1px 0 hsl(22 30% 20% / 0.08), 0 3px 8px -4px hsl(22 30% 20% / 0.18);
+  --elevation-2: 0 1px 0 hsl(22 30% 20% / 0.07), 0 8px 16px -6px hsl(22 30% 20% / 0.2);
+  --elevation-3: 0 1px 0 hsl(22 30% 20% / 0.06), 0 16px 34px -10px hsl(22 30% 20% / 0.28);
+  --glow-primary: 0 10px 26px -8px hsl(var(--primary) / 0.6);
+}
+/* Beton architektoniczny: ziarno, styki płyt szalunkowych i otwory po ściągach. */
+html[data-skin="miedz"] .paper-grid::before {
+  background-image:
+    radial-gradient(circle at 60px 60px, hsl(25 8% 45% / 0.55) 0 3px, hsl(30 10% 98% / 0.5) 3.5px 4.5px, transparent 5px),
+    linear-gradient(hsl(30 6% 72% / 0.7) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(30 6% 72% / 0.7) 1px, transparent 1px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .32 0 0 0 0 .3 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 240px 120px, 240px 120px, 240px 120px, 160px 160px;
+  background-position: 0 0, -1px -1px, -1px -1px, 0 0;
+  opacity: 0.55;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+html[data-skin="miedz"] h1,
+html[data-skin="miedz"] h2,
+html[data-skin="miedz"] h3 {
+  font-family: 'Bricolage Grotesque Variable', 'Plus Jakarta Sans Variable', sans-serif;
+  letter-spacing: -0.015em;
+}
+/* Miedziana rura zamiast czerwonego marginesu: walec z odblaskiem. */
+html[data-skin="miedz"] .sidebar-gradient {
+  border-right-color: transparent !important;
+  box-shadow: inset -4px 0 0 -1px hsl(21 55% 42%), inset -2px 0 0 -1px hsl(28 70% 70%);
+}
+html[data-skin="miedz"] .notki-glyph {
+  background-image:
+    linear-gradient(105deg, transparent 38%, hsl(36 100% 92% / 0.95) 50%, transparent 62%),
+    linear-gradient(170deg, hsl(28 80% 62%), hsl(var(--primary)) 50%, hsl(16 60% 28%));
+}
+/* Przycisk główny lśni jak wypolerowana miedź; odblask przesuwa się po najechaniu. */
+html[data-skin="miedz"] button.bg-primary {
+  background-image: linear-gradient(115deg, transparent 30%, hsl(32 90% 80% / 0.45) 45%, transparent 60%),
+    linear-gradient(180deg, hsl(24 62% 50%), hsl(19 64% 37%));
+  background-size: 250% 100%, 100% 100%;
+  background-position: 120% 0, 0 0;
+  transition: background-position 700ms var(--ease-out);
+}
+html[data-skin="miedz"] button.bg-primary:hover { background-position: -20% 0, 0 0; }
+
+/* ─────────────────────────── wspólne ─────────────────────────── */
+/* Przejście motywu kołem (useTheme → View Transitions): bez domyślnego przenikania. */
+html.theme-reveal::view-transition-old(root),
+html.theme-reveal::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+html.theme-reveal::view-transition-new(root) { z-index: 2; }
+
+/* Miniatury w galerii stylów (AppearanceSettings) — to samo tło w małej skali. */
+.skin-thumb { position: relative; overflow: hidden; isolation: isolate; }
+.skin-thumb::before { content: ""; position: absolute; inset: 0; z-index: -1; }
+.skin-thumb[data-thumb="zeszyt"]::before {
+  background-image: linear-gradient(#dfe6f0 1px, transparent 1px), linear-gradient(90deg, #dfe6f0 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+.skin-thumb[data-thumb="plan"]::before {
+  background-image:
+    linear-gradient(rgb(200 230 255 / 0.18) 1px, transparent 1px), linear-gradient(90deg, rgb(200 230 255 / 0.18) 1px, transparent 1px),
+    linear-gradient(rgb(200 230 255 / 0.07) 1px, transparent 1px), linear-gradient(90deg, rgb(200 230 255 / 0.07) 1px, transparent 1px);
+  background-size: 30px 30px, 30px 30px, 6px 6px, 6px 6px;
+}
+.skin-thumb[data-thumb="neon"]::before {
+  background:
+    radial-gradient(70% 60% at 10% 0%, rgb(255 71 209 / 0.35), transparent 70%),
+    radial-gradient(60% 50% at 95% 10%, rgb(62 240 255 / 0.25), transparent 70%);
+}
+.skin-thumb[data-thumb="zorza"]::before {
+  background:
+    radial-gradient(1px 1px at 12px 14px, #fff, transparent), radial-gradient(1px 1px at 70px 30px, #fff, transparent),
+    radial-gradient(1px 1px at 110px 8px, #fff, transparent),
+    radial-gradient(50% 40% at 30% 30%, rgb(60 245 166 / 0.55), transparent 70%),
+    radial-gradient(45% 40% at 80% 35%, rgb(155 123 255 / 0.5), transparent 70%);
+  filter: saturate(1.2);
+}
+.skin-thumb[data-thumb="miedz"]::before {
+  background-image:
+    radial-gradient(circle at 30px 30px, rgb(120 110 100 / 0.6) 0 2px, transparent 2.5px),
+    linear-gradient(rgb(170 160 150 / 0.6) 1px, transparent 1px), linear-gradient(90deg, rgb(170 160 150 / 0.6) 1px, transparent 1px);
+  background-size: 120px 60px;
+}

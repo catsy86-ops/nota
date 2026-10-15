@@ -58,7 +58,14 @@ export default defineConfig(({ mode }) => ({
         // itself — keep it out of the offline-critical precache.
         // Fonty: offline potrzebne są tylko podzbiory łacińskie (polski siedzi
         // w latin-ext); cyrylica/greka/wietnamski i tak ładują się tylko na żądanie.
-        globIgnores: ["**/screenshot-wide.png", "**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*.woff2"],
+        // Kroje stylów (Plan, Neon, Zorza, Miedź) poza precache — pobiera je dopiero wybrany styl,
+        // potem trzyma `skin-fonts` niżej. Logo („unbounded-notki”) zostaje w precache.
+        globIgnores: [
+          "**/screenshot-wide.png",
+          "**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*.woff2",
+          "**/{barlow-condensed,fraunces,bricolage-grotesque}-*.woff2",
+          "**/unbounded-latin*.woff2",
+        ],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         cleanupOutdatedCaches: true,
         clientsClaim: true,
@@ -67,6 +74,11 @@ export default defineConfig(({ mode }) => ({
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/~oauth/],
         runtimeCaching: [
+          {
+            urlPattern: ({ url }) => /\/(barlow-condensed|fraunces|bricolage-grotesque|unbounded-latin)[^/]*\.woff2$/.test(url.pathname),
+            handler: "CacheFirst",
+            options: { cacheName: "skin-fonts", expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 } },
+          },
           {
             urlPattern: ({ request, url }) =>
               request.mode === "navigate" && !url.pathname.startsWith("/~oauth"),
