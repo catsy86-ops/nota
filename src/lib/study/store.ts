@@ -4,6 +4,7 @@ import { CHECKLIST, QUESTIONS, TOPICS } from "./content";
 import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
 import { studyDevice, yStudy } from "./data";
+import { cleanCard, dueIds, type ReviewCard } from "./srs";
 import { cleanSite, entrySiteId, resolveSite, siteDirectory, SITE_FIELD_MAX, SITE_NAME_MAX, type SiteCard } from "./sites";
 import {
   JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, SITE_MAX,
@@ -78,10 +79,15 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
   const site = typeof s.site === "string" ? s.site.slice(0, SITE_MAX) : "";
   const lastDay = typeof s.lastDay === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s.lastDay) ? s.lastDay : null;
   const streak = lastDay && typeof s.streak === "number" && s.streak >= 1 ? Math.floor(s.streak) : 0;
-  return { board, checked, bestPercent: best, rounds, missed, journal, site, sites, streak, lastDay };
+  const review: Record<string, ReviewCard> = {};
+  for (const [id, raw] of Object.entries(s.review ?? {})) {
+    const card = questionIds.has(id) ? cleanCard(raw) : null;
+    if (card) review[id] = card;
+  }
+  return { board, checked, bestPercent: best, rounds, missed, journal, site, sites, streak, lastDay, review };
 }
 
-const DEFAULTS: StudyState = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null };
+const DEFAULTS: StudyState = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null, review: {} };
 
 let lastRaw: StudyState | null = null;
 let lastClean: StudyState = DEFAULTS;
@@ -99,6 +105,11 @@ export const useStudy = () => useSyncExternalStore(yStudy.subscribe, getStudy);
 export function activeStreak(state: Pick<StudyState, "streak" | "lastDay">, today = localDayKey()): number {
   if (!state.lastDay) return 0;
   return state.lastDay === today || state.lastDay === addDaysToKey(today, -1) ? state.streak : 0;
+}
+
+/** Pytania do powtórki na dziś (termin minął), od najbardziej zaległych — „Na dziś: N”. */
+export function dueToday(state: Pick<StudyState, "review">, today = localDayKey()): string[] {
+  return dueIds(state.review, today);
 }
 
 export function columnOf(state: StudyState, topicId: string): Column {

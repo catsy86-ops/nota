@@ -928,6 +928,44 @@ Przesunięcie animuje `framer-motion` (`layoutId`).
 
 **Commit.** N1 `4c951fa` (2026-10-15).
 
+## Praca — powtórki pytań („Na dziś”)
+
+**Co robi.** Każde pytanie, na które odpowiesz w quizie, wraca do powtórki: po dobrej odpowiedzi coraz rzadziej
+(1 dzień, 3 dni, potem coraz dłużej), po błędzie — następnego dnia. Pod paskiem opanowania pojawia się „Na dziś: N
+powtórek” (z każdej zakładki), a w Quizie ramka „Na dziś: N pytań do powtórki” z „Powtórz”. Runda powtórek bierze
+najbardziej zaległe pytania (do 10). Gdy na dziś nic nie ma, Quiz mówi, kiedy następne („jutro”, „za 3 dni”, „24.10”).
+
+**Gdzie jest.**
+- `src/lib/study/srs.ts`: `ReviewCard`, `reviewCard` (następny stan po odpowiedzi), `dueIds`, `cleanCard`.
+- `src/lib/study/yStudy.ts`: mapa Yjs `studyReview` (id pytania → karta), `StudyDump.review`, `StudyState.review`;
+  `recordRound` aktualizuje karty w tej samej transakcji co runda; `replaceAll`/`mergeIn` (nowsza `last` wygrywa).
+- `src/lib/study/store.ts`: `dueToday`, filtr kart po znanych pytaniach w `sanitizeStudy`.
+- `src/components/study/QuizPanel.tsx`: zakres `{ kind: "due" }`, ramka „Na dziś”, „Następne: …”;
+  `StudyView.tsx`: `DueTodayChip`.
+
+**Jak działa i dlaczego.**
+- SM-2 „lite” z oceną automatyczną (decyzja z planu): dobra odpowiedź = q 4 (łatwość bez zmian), zła = q 1 (od nowa,
+  łatwość −0,2, min. 1,3). Bez pytania o samoocenę — jedno stuknięcie na budowie. Odstęp maks. 180 dni.
+- Dni jako klucze lokalnego dnia („2026-10-15”), nie milisekundy: „jutro” znaczy jutro niezależnie od godziny rundy.
+- Druga dobra odpowiedź tego samego dnia („Jeszcze raz”) nie wydłuża odstępu — inaczej powtarzanie rundy
+  „przewijałoby” pytania o tygodnie. Błąd liczy się zawsze (licznik `lapses` — trudne pytania, pod N4).
+- Klucz mapy per pytanie: dwa telefony odpowiadające na różne pytania scalają się bez strat; to samo pytanie — ostatni
+  zapis wygrywa (Yjs).
+- Kopia zapasowa: sekcja `study` niesie `review`; kopie sprzed N3 czytają się z pustymi powtórkami. Karty pytań
+  usuniętych z materiału są pomijane w widoku.
+
+**Ograniczenia i pułapki.**
+- Pytania, na które jeszcze nigdy nie odpowiedziano, nie są „na dziś” — trafiają do zwykłej rundy.
+- „Powtórka błędów” (`studyMissed`) zostaje osobno: to lista ostatnich błędów, powtórki to harmonogram.
+
+**Testy.** `src/lib/study/srs.test.ts`, `src/lib/study/yStudy.test.ts` (terminy, scalanie dwóch telefonów, kopia,
+`mergeIn` nie cofa nowszej karty), `src/lib/study/study.test.ts`, `e2e/study.spec.ts` („powtórki: pytania z rundy
+wracają następnego dnia…” — zegar przestawiony na następny dzień).
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Praca → Dziennik budowy
 
 Zakładka „Dziennik” na `/nauka` (`src/components/study/StudyJournal.tsx`). Dziennik instalatora

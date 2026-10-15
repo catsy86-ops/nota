@@ -113,7 +113,7 @@ describe("Nauka w Yjs", () => {
   });
 
   it("cleanDump odrzuca śmieci zamiast wywracać widok", () => {
-    expect(cleanDump("śmieci")).toEqual({ version: 1, board: {}, checked: {}, missed: {}, journal: [], days: [], rounds: {}, site: "", sites: {} });
+    expect(cleanDump("śmieci")).toEqual({ version: 1, board: {}, checked: {}, missed: {}, journal: [], days: [], rounds: {}, site: "", sites: {}, review: {} });
     const d = cleanDump({ board: { a: "done", b: "todo", c: "x" }, checked: { k: true, l: 1 }, days: ["2026-10-01", "wczoraj"], rounds: { x: { rounds: -1 }, y: { rounds: 2.7, best: 140 } }, journal: [entry("ok", 1), entry("pusty", 2, { text: " " })] });
     expect(d).toMatchObject({ board: { a: "done" }, checked: { k: true }, days: ["2026-10-01"], rounds: { y: { rounds: 2, best: null } } });
     expect(d.journal.map((e) => e.id)).toEqual(["ok"]);
@@ -143,5 +143,24 @@ describe("karty budów w Yjs", () => {
     b.saveSite({ id: "ok", name: "Moja", address: "", investor: "", created: 1 });
     b.mergeIn(d);
     expect(b.get().sites.ok.name).toBe("Moja");
+  });
+
+  it("runda ustawia terminy powtórek; dwa telefony scalają różne pytania, kopia je przenosi", () => {
+    const { a, b, sync } = pair();
+    a.recordRound("tel-a", 50, "2026-10-15", [], [{ id: "q1", ok: true }, { id: "q2", ok: false }]);
+    b.recordRound("tel-b", 100, "2026-10-15", [], [{ id: "q3", ok: true }]);
+    sync();
+    const r = b.get().review;
+    expect(Object.keys(r).sort()).toEqual(["q1", "q2", "q3"]);
+    expect(r.q1).toMatchObject({ reps: 1, due: "2026-10-16" });
+    expect(r.q2).toMatchObject({ reps: 0, lapses: 1, due: "2026-10-16" });
+    const dump = a.dump();
+    const { a: c } = pair();
+    c.replaceAll(dump);
+    expect(c.get().review.q2.lapses).toBe(1);
+    // Scalanie starszej karty nie cofa nowszej.
+    a.recordRound("tel-a", 100, "2026-10-16", [], [{ id: "q2", ok: true }]);
+    a.mergeIn({ ...dump, review: { q2: { ...dump.review.q2 } } });
+    expect(a.get().review.q2.last).toBe("2026-10-16");
   });
 });

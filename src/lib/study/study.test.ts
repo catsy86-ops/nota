@@ -73,10 +73,10 @@ describe("store", () => {
   beforeEach(freshStudy);
 
   it("sanitizeStudy odrzuca nieznane tematy i złe wartości", () => {
-    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null };
+    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null, review: {} };
     expect(sanitizeStudy(d, "śmieci")).toEqual(d);
     const s = sanitizeStudy(d, { board: { spadki: "done", obcy: "done", system: "x" }, checked: { "dok-1": true, a: 1 }, bestPercent: 140, rounds: -2, missed: { "q-pion": true, obce: true } });
-    expect(s).toEqual({ board: { spadki: "done" }, checked: { "dok-1": true }, bestPercent: null, rounds: 0, missed: { "q-pion": true }, journal: [], site: "", sites: {}, streak: 0, lastDay: null });
+    expect(s).toEqual({ board: { spadki: "done" }, checked: { "dok-1": true }, bestPercent: null, rounds: 0, missed: { "q-pion": true }, journal: [], site: "", sites: {}, streak: 0, lastDay: null, review: {} });
     expect(sanitizeStudy(d, { streak: 4, lastDay: "2026-10-11" })).toMatchObject({ streak: 4, lastDay: "2026-10-11" });
     expect(sanitizeStudy(d, { streak: 4, lastDay: "wczoraj" })).toMatchObject({ streak: 0, lastDay: null });
   });
@@ -194,7 +194,7 @@ describe("dziennik z budowy", () => {
   });
 
   it("sanitizeStudy odfiltrowuje uszkodzone wpisy i przycina tekst", () => {
-    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null };
+    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null, review: {} };
     const s = sanitizeStudy(d, {
       site: "x".repeat(500),
       journal: [
@@ -276,7 +276,7 @@ describe("dziennik — edycja i problemy", () => {
   });
 
   it("sanitizeStudy zostawia rozwiązanie tylko problemom", () => {
-    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null };
+    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null, review: {} };
     const s = sanitizeStudy(d, { journal: [
       { id: "p", at: 1, kind: "problem", topic: null, text: "a", site: "", checked: [], images: [], resolved: 7 },
       { id: "n", at: 2, kind: "note", topic: null, text: "b", site: "", checked: [], images: [], resolved: 7 },
@@ -300,7 +300,7 @@ describe("dziennik — edycja i problemy", () => {
 describe("dziennik — limit i etykiety", () => {
   it("bez limitu wpisów (dawny limit kasował najstarsze po cichu)", () => {
     const journal = Array.from({ length: 3500 }, (_, i) => ({ id: `e${i}`, at: i + 1, kind: "note", topic: null, text: `w${i}`, site: "", checked: [], images: [] }));
-    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null };
+    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null, review: {} };
     const s = sanitizeStudy(d, { journal });
     expect(s.journal).toHaveLength(3500);
     expect(s.journal[0].text).toBe("w0");

@@ -2,6 +2,7 @@ import * as Y from "yjs";
 import { isImageRef } from "@/lib/imageStore";
 import { addDaysToKey } from "@/lib/week";
 import { cleanSite, foldName, type SiteCard } from "./sites";
+import { cleanCard, reviewCard, type ReviewCard } from "./srs";
 
 /**
  * Dane Nauki w Y.Doc notatek — synchronizują się i trafiają do pliku sync razem
@@ -67,6 +68,8 @@ export interface StudyState {
   streak: number;
   /** Dzień ostatniej rundy („2026-10-12”) albo `null`. */
   lastDay: string | null;
+  /** Powtórki pytań (SM-2 lite, `srs.ts`) po id pytania. */
+  review: Record<string, ReviewCard>;
 }
 
 /** Rundy i najlepszy wynik jednego urządzenia. */
@@ -87,6 +90,8 @@ export interface StudyDump {
   rounds: Record<string, DeviceRounds>;
   site: string;
   sites: Record<string, SiteCard>;
+  /** Powtórki pytań; brak w kopiach sprzed N3. */
+  review: Record<string, ReviewCard>;
 }
 
 /** Origin transakcji Nauki — odróżnia lokalne zmiany od tych z sieci i z migracji. */
@@ -147,7 +152,18 @@ export function cleanDump(raw: unknown): StudyDump {
     rounds,
     site: typeof s.site === "string" ? s.site.slice(0, SITE_MAX) : "",
     sites: cleanSites(s.sites),
+    review: cleanReviews(s.review),
   };
+}
+
+function cleanReviews(raw: unknown): Record<string, ReviewCard> {
+  const out: Record<string, ReviewCard> = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const [k, v] of Object.entries(raw)) {
+    const card = k.length <= 64 ? cleanCard(v) : null;
+    if (card) out[k] = card;
+  }
+  return out;
 }
 
 function cleanSites(raw: unknown): Record<string, SiteCard> {
@@ -196,6 +212,7 @@ export function stateFromDump(d: StudyDump): StudyState {
     bestPercent: bests.length ? Math.max(...bests) : null,
     streak,
     lastDay,
+    review: d.review,
   };
 }
 
@@ -221,6 +238,8 @@ export function createYStudy(doc: Y.Doc) {
   const sites = doc.getMap<SiteCard>("studySites");
   /** Urządzenia, których stary zapis jest już w dokumencie (id urządzenia → czas). */
   const migrations = doc.getMap<number>("studyMigrations");
+  /** Powtórki: id pytania → karta SM-2. Klucz per pytanie — dwa telefony scalają różne pytania. */
+  const review = doc.getMap<ReviewCard>("studyReview");
 
   let snapshot: StudyState | null = null;
   const listeners = new Set<() => void>();
@@ -228,7 +247,7 @@ export function createYStudy(doc: Y.Doc) {
     snapshot = null;
     listeners.forEach((l) => l());
   };
-  for (const m of [journal, board, checked, missed, days, rounds, meta, sites]) m.observe(onChange);
+  for (const m of [journal, board, checked, missed, days, rounds, meta, sites, review] as Y.Map<unknown>[]) m.observe(onChange);
 
   /** Dokument jako zwykły obiekt, przez `cleanDump` — śmieci od peera nie wywrócą widoku. */
   function dump(): StudyDump {
@@ -241,6 +260,7 @@ export function createYStudy(doc: Y.Doc) {
       rounds: Object.fromEntries(rounds.entries()),
       site: meta.get("site"),
       sites: Object.fromEntries(sites.entries()),
+      review: Object.fromEntries(review.entries()),
     });
   }
 
@@ -273,7 +293,8 @@ export function createYStudy(doc: Y.Doc) {
 
   /**
    * Runda quizu na urządzeniu `device`: licznik i najlepszy wynik tego urządzenia,
-   * dzień do serii, zdegradowane tematy i zmiany listy błędów — jedną transakcją.
+   * dzień do serii, zdegradowane tematy, zmiany listy błędów i terminy powtórek —
+   * jedną transakcją.
    */
   function recordRound(device: string, percent: number, day: string, demote: string[], results: { id: string; ok: boolean }[]): void {
     transact(() => {
@@ -283,6 +304,13 @@ export function createYStudy(doc: Y.Doc) {
       if (DAY_RE.test(day) && !days.has(day)) days.set(day, true);
       for (const id of demote) if (board.get(id) === "done") board.set(id, "doing");
       for (const r of results) toggleIn(missed, r.id, !r.ok);
+      if (DAY_RE.test(day)) {
+        for (const r of results) {
+          const prevCard = cleanCard(review.get(r.id)) ?? undefined;
+          const nextCard = reviewCard(prevCard, r.ok, day);
+          if (nextCard !== prevCard) review.set(r.id, nextCard);
+        }
+      }
     });
   }
 
@@ -348,7 +376,7 @@ export function createYStudy(doc: Y.Doc) {
   function replaceAll(data: StudyDump): void {
     const d = cleanDump(data);
     transact(() => {
-      for (const m of [journal, board, checked, missed, days, rounds, sites] as Y.Map<unknown>[]) for (const k of Array.from(m.keys())) m.delete(k);
+      for (const m of [journal, board, checked, missed, days, rounds, sites, review] as Y.Map<unknown>[]) for (const k of Array.from(m.keys())) m.delete(k);
       for (const e of d.journal) journal.set(e.id, e);
       for (const [k, v] of Object.entries(d.board)) board.set(k, v);
       for (const k of Object.keys(d.checked)) checked.set(k, true);
@@ -356,6 +384,7 @@ export function createYStudy(doc: Y.Doc) {
       for (const k of d.days) days.set(k, true);
       for (const [k, v] of Object.entries(d.rounds)) rounds.set(k, v);
       for (const [k, v] of Object.entries(d.sites)) sites.set(k, v);
+      for (const [k, v] of Object.entries(d.review)) review.set(k, v);
       meta.set("site", d.site);
     });
   }
@@ -382,6 +411,11 @@ export function createYStudy(doc: Y.Doc) {
         if (v.rounds > prev.rounds || best !== prev.best) rounds.set(k, { rounds: Math.max(prev.rounds, v.rounds), best });
       }
       for (const [k, v] of Object.entries(d.sites)) if (!sites.has(k)) sites.set(k, v);
+      // Karta z nowszą ostatnią odpowiedzią wygrywa.
+      for (const [k, v] of Object.entries(d.review)) {
+        const prev = cleanCard(review.get(k));
+        if (!prev || v.last > prev.last) review.set(k, v);
+      }
       if (!meta.has("site") && d.site) meta.set("site", d.site);
     }, MIGRATION_ORIGIN);
   }

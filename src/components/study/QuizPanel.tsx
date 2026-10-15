@@ -5,16 +5,27 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { QUESTIONS, TOPICS } from "@/lib/study/content";
 import { buildRound, missedTopics, scoreRound, type RoundQuestion } from "@/lib/study/quiz";
-import { activeStreak, columnOf, recordRound, useStudy } from "@/lib/study/store";
+import { activeStreak, columnOf, dueToday, recordRound, useStudy } from "@/lib/study/store";
+import { localDayKey } from "@/lib/dayDone";
+import { addDaysToKey } from "@/lib/week";
 import { haptic } from "@/lib/haptics";
+import { pluralPl } from "@/lib/plural";
 
 const ROUND_SIZE = 10;
 const LETTERS = ["A", "B", "C", "D"];
 const topicTitle = (id: string) => TOPICS.find((t) => t.id === id)?.title ?? id;
 const streakLabel = (n: number) => `${n} ${n === 1 ? "dzień" : "dni"}`;
 
-/** Z czego składa się runda: wszystko, jeden temat albo pytania, które ostatnio poszły źle. */
-export type QuizScope = { kind: "all" } | { kind: "topic"; topic: string } | { kind: "missed" };
+/** Z czego składa się runda: wszystko, jeden temat, pytania, które ostatnio poszły źle, albo powtórki na dziś. */
+export type QuizScope = { kind: "all" } | { kind: "topic"; topic: string } | { kind: "missed" } | { kind: "due" };
+
+/** „jutro”, „za 3 dni”, „24.10” — kiedy wypada najbliższa powtórka. */
+function nextReviewLabel(due: string, today: string): string {
+  if (due === addDaysToKey(today, 1)) return "jutro";
+  for (let n = 2; n <= 6; n++) if (due === addDaysToKey(today, n)) return `za ${n} dni`;
+  const [, m, d] = due.split("-");
+  return `${Number(d)}.${m}`;
+}
 
 /** Runda quizu: pytania z tematów, których jeszcze nie umiesz, idą na początek. */
 export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: QuizScope; onScopeChange?: (s: QuizScope) => void }) {
@@ -29,17 +40,32 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
     [study],
   );
 
+  const due = useMemo(() => dueToday(study), [study]);
+  // Najbliższy termin, gdy na dziś nic nie ma — żeby było wiadomo, kiedy wrócić.
+  const nextDue = useMemo(() => {
+    const today = localDayKey();
+    const later = Object.values(study.review).map((c) => c.due).filter((d) => d > today).sort()[0];
+    return later ? nextReviewLabel(later, today) : null;
+  }, [study.review]);
+
   const start = useCallback((s: QuizScope = scope) => {
+    // Powtórki: najbardziej zaległe pierwsze, reszta czeka na następną rundę.
+    const dueIds = new Set(due.slice(0, ROUND_SIZE));
     const pool = s.kind === "topic" ? QUESTIONS.filter((q) => q.topic === s.topic)
       : s.kind === "missed" ? QUESTIONS.filter((q) => study.missed[q.id])
+      : s.kind === "due" ? QUESTIONS.filter((q) => dueIds.has(q.id))
       : QUESTIONS;
-    if (pool.length === 0) { toast("Nie ma pytań do powtórki. Rozwiąż najpierw rundę."); onScopeChange?.({ kind: "all" }); return; }
+    if (pool.length === 0) {
+      toast(s.kind === "due" ? "Na dziś nie ma powtórek." : "Nie ma pytań do powtórki. Rozwiąż najpierw rundę.");
+      onScopeChange?.({ kind: "all" });
+      return;
+    }
     const next = buildRound(Math.min(ROUND_SIZE, pool.length), weak, Math.random, pool);
     setRound(next);
     setAnswers(next.map(() => null));
     setIndex(0);
     setResult(null);
-  }, [weak, scope, study.missed, onScopeChange]);
+  }, [weak, scope, study.missed, due, onScopeChange]);
 
   // Zakres ustawiony spoza panelu (przycisk „Ćwicz” na tablicy) od razu startuje rundę.
   useEffect(() => {
@@ -118,10 +144,16 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
         <div className="flex flex-wrap gap-2">
           <Button onClick={() => start(scope)}><RotateCcw className="w-4 h-4 mr-1.5" />Jeszcze raz</Button>
           {scope.kind !== "all" && <Button variant="outline" onClick={() => { onScopeChange?.({ kind: "all" }); setRound(null); setResult(null); }}>Wróć do wszystkich</Button>}
+          {scope.kind !== "due" && due.length > 0 && (
+            <Button variant="outline" onClick={() => onScopeChange?.({ kind: "due" })}>Na dziś: {due.length}</Button>
+          )}
           {scope.kind === "all" && Object.keys(study.missed).length > 0 && (
             <Button variant="outline" onClick={() => onScopeChange?.({ kind: "missed" })}>Powtórka błędów ({Object.keys(study.missed).length})</Button>
           )}
         </div>
+        {scope.kind === "due" && due.length === 0 && (
+          <p className="text-sm text-muted-foreground">Powtórki na dziś zrobione.{nextDue && <> Następne: {nextDue}.</>}</p>
+        )}
       </section>
     );
   }
@@ -132,10 +164,19 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
         <h2 className="font-display text-xl">Sprawdź, co umiesz</h2>
         <p className="text-sm text-muted-foreground max-w-prose">
           {ROUND_SIZE} pytań z poradnika i list kontrolnych. Najpierw wypadają tematy, których jeszcze nie masz w kolumnie „Umiem”.
-          Błąd w temacie z kolumny „Umiem” cofa go do „W trakcie”.
+          Błąd w temacie z kolumny „Umiem” cofa go do „W trakcie”. Każde pytanie wraca do powtórki: po dobrej odpowiedzi
+          coraz rzadziej, po błędzie — następnego dnia.
         </p>
+        {due.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-3.5 py-3" data-testid="due-today">
+            <p className="text-sm"><span className="font-semibold tabular-nums">Na dziś: {due.length}</span> <span className="text-muted-foreground">{pluralPl(due.length, ["pytanie", "pytania", "pytań"])} do powtórki</span></p>
+            <Button size="sm" onClick={() => onScopeChange?.({ kind: "due" })}>Powtórz</Button>
+          </div>
+        ) : nextDue ? (
+          <p className="text-xs text-muted-foreground" data-testid="due-today">Na dziś nic do powtórki. Następne: {nextDue}.</p>
+        ) : null}
         <div className="flex flex-wrap items-center gap-3">
-          <Button onClick={() => start({ kind: "all" })}>Zacznij rundę</Button>
+          <Button variant={due.length > 0 ? "outline" : "default"} onClick={() => start({ kind: "all" })}>Zacznij rundę</Button>
           {Object.keys(study.missed).length > 0 && (
             <Button variant="outline" onClick={() => onScopeChange?.({ kind: "missed" })}>
               Powtórka błędów ({Object.keys(study.missed).length})
@@ -158,7 +199,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
       <div className="flex items-center justify-between gap-3 text-xs">
         <span className="font-mono tabular-nums text-muted-foreground">Pytanie {index + 1} z {round.length}</span>
         <span className="rounded-full bg-muted px-2.5 py-0.5 text-muted-foreground truncate">
-          {scope.kind === "missed" ? "Powtórka błędów · " : ""}{topicTitle(current.topic)}
+          {scope.kind === "missed" ? "Powtórka błędów · " : scope.kind === "due" ? "Na dziś · " : ""}{topicTitle(current.topic)}
         </span>
       </div>
       <div className="h-1 rounded-full bg-muted overflow-hidden" aria-hidden>

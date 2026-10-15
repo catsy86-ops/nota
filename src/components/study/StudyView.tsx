@@ -1,7 +1,9 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { MODULES, TOPICS } from "@/lib/study/content";
-import { columnOf, useStudy } from "@/lib/study/store";
+import { columnOf, dueToday, useStudy } from "@/lib/study/store";
+import { pluralPl } from "@/lib/plural";
+import { RotateCcw } from "lucide-react";
 import { setJournalDraftTopic } from "@/lib/study/draft";
 import { useStudyReady } from "@/lib/study/data";
 import { closeJournalSheet, JOURNAL_ENTRY_PARAM, openJournalSheet, useJournalSheet } from "@/lib/study/entrySheet";
@@ -86,6 +88,25 @@ function MasteryStrip() {
   );
 }
 
+/** „Na dziś: N” pod paskiem opanowania — skrót do rundy powtórek z każdej zakładki. */
+function DueTodayChip({ onClick }: { onClick: () => void }) {
+  const study = useStudy();
+  const n = dueToday(study).length;
+  if (n === 0) return null;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      data-testid="due-chip"
+      className="pressable inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary-ink coarse:min-h-11"
+    >
+      <RotateCcw className="h-4 w-4" aria-hidden />
+      <span className="tabular-nums">Na dziś: {n}</span>
+      <span className="font-normal text-muted-foreground">{pluralPl(n, ["powtórka", "powtórki", "powtórek"])}</span>
+    </button>
+  );
+}
+
 /** Dział „Praca” (dawniej „Nauka”): quiz, tablica tematów i lista do nauki z materiałów G-HEAT. */
 export default function StudyView() {
   // Do wczytania dokumentu nic — pusta Nauka mignęłaby zerami i pustym dziennikiem.
@@ -125,6 +146,7 @@ function StudyScreen() {
           <p className="text-sm text-muted-foreground">Poradnik „Woda użytkowa” i listy kontrolne G-HEAT, KAN-therm UltraLine.</p>
         </div>
         <MasteryStrip />
+        <DueTodayChip onClick={() => { changeScope({ kind: "due" }); setTab("quiz"); }} />
       </header>
 
       <Tabs value={tab} onValueChange={setTab}>

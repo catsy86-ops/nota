@@ -85,6 +85,38 @@ test("quiz: runda z 10 pytań kończy się wynikiem i zapisuje rundę", async ({
   await expect(page.getByText(/Najlepszy wynik: \d+% · rund: 1/)).toBeVisible();
 });
 
+test("powtórki: pytania z rundy wracają następnego dnia jako „Na dziś: 10”, runda powtórek je zdejmuje", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 9, 14, 12, 0).getTime());
+  await page.goto("/praca");
+  await expect(page.getByTestId("due-chip")).toHaveCount(0);
+  await page.getByRole("button", { name: "Zacznij rundę" }).click();
+  for (let i = 1; i <= 10; i++) {
+    await page.getByRole("group", { name: "Odpowiedzi" }).getByRole("button").first().click();
+    await page.getByRole("button", { name: i < 10 ? "Dalej" : "Zobacz wynik" }).click();
+  }
+  await expect(page.getByRole("region", { name: "Wynik rundy" })).toBeVisible();
+  // Tego samego dnia nic nie jest należne — najbliższy termin jutro.
+  await expect(page.getByTestId("due-chip")).toHaveCount(0);
+  await expect(page.getByText("Zapisano", { exact: true })).toBeVisible();
+
+  // Następny dzień: każde pytanie z rundy (dobre po 1 dniu, złe też jutro) jest do powtórki.
+  await page.clock.setFixedTime(new Date(2026, 9, 15, 9, 0).getTime());
+  await page.reload();
+  await expect(page.getByTestId("due-chip")).toContainText("Na dziś: 10");
+  await page.getByRole("tab", { name: "Tablica" }).click();
+  await page.getByTestId("due-chip").click();
+  await expect(page.getByText("Pytanie 1 z 10")).toBeVisible();
+  await expect(page.getByText(/^Na dziś · /)).toBeVisible();
+  for (let i = 1; i <= 10; i++) {
+    await page.getByRole("group", { name: "Odpowiedzi" }).getByRole("button").first().click();
+    await page.getByRole("button", { name: i < 10 ? "Dalej" : "Zobacz wynik" }).click();
+  }
+  await expect(page.getByRole("region", { name: "Wynik rundy" })).toBeVisible();
+  // Dobre odpowiedzi odsunęły termin, złe wracają jutro — dziś już nic.
+  await expect(page.getByTestId("due-chip")).toHaveCount(0);
+  await expect(page.getByText(/Powtórki na dziś zrobione\. Następne: jutro\./)).toBeVisible();
+});
+
 test("tablica: „Ćwicz” startuje rundę z jednego tematu, a „Zrób notatkę” dodaje notatkę", async ({ page }) => {
   await page.goto("/praca");
   await page.getByRole("tab", { name: "Tablica" }).click();
