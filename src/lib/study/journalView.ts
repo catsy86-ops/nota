@@ -1,5 +1,5 @@
 import { pluralPl } from "@/lib/plural";
-import type { JournalKind } from "./yStudy";
+import type { JournalEntry, JournalKind } from "./yStudy";
 
 export const KIND_LABEL: Record<JournalKind, string> = { ok: "Zrobione", problem: "Problem", note: "Notatka" };
 
@@ -40,4 +40,100 @@ export function whenLabel(at: number, now: number = Date.now()): string {
   const otherYear = d.getFullYear() !== new Date(now).getFullYear();
   const date = d.toLocaleDateString("pl-PL", { weekday: "short", day: "numeric", month: "short", ...(otherYear ? { year: "numeric" } : {}) });
   return `${date}, ${time}`;
+}
+
+/** Małe litery bez ogonków — „zolta” znajduje „żółta”. */
+const fold = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ł/g, "l").replace(/Ł/g, "l").toLowerCase();
+
+/** „open” = tylko nierozwiązane problemy (z licznika w nagłówku). */
+export type KindFilter = JournalKind | "open";
+
+export interface JournalFilter {
+  kind: KindFilter | null;
+  /** Budowa dokładnie jak we wpisie; `""` = wpisy bez budowy. */
+  site: string | null;
+  topic: string | null;
+  query: string;
+}
+
+export const NO_FILTER: JournalFilter = { kind: null, site: null, topic: null, query: "" };
+
+export const isFiltered = (f: JournalFilter) => f.kind !== null || f.site !== null || f.topic !== null || f.query.trim() !== "";
+
+/**
+ * Wpisy pasujące do filtra. Szukanie bez ogonków i wielkości liter, każde słowo musi się znaleźć
+ * w tekście, budowie, nazwie tematu albo rodzaju wpisu.
+ */
+export function filterJournal<E extends JournalEntry>(
+  entries: readonly E[],
+  f: JournalFilter,
+  topicTitle: (id: string) => string | null = () => null,
+): E[] {
+  const words = fold(f.query).split(/\s+/).filter(Boolean);
+  return entries.filter((e) => {
+    if (f.kind === "open" ? e.kind !== "problem" || e.resolved !== undefined : f.kind !== null && e.kind !== f.kind) return false;
+    if (f.site !== null && e.site.trim() !== f.site) return false;
+    if (f.topic !== null && e.topic !== f.topic) return false;
+    if (words.length === 0) return true;
+    const hay = fold([e.text, e.site, e.topic ? topicTitle(e.topic) ?? "" : "", KIND_LABEL[e.kind]].join(" "));
+    return words.every((w) => hay.includes(w));
+  });
+}
+
+/** Budowy z dziennika, od ostatnio używanej (bez pustych). */
+export function journalSites(entries: readonly JournalEntry[]): string[] {
+  const last = new Map<string, number>();
+  for (const e of entries) {
+    const s = e.site.trim();
+    if (s && (last.get(s) ?? -Infinity) < e.at) last.set(s, e.at);
+  }
+  return [...last.entries()].sort((a, b) => b[1] - a[1]).map(([s]) => s);
+}
+
+export interface JournalSiteGroup<E extends JournalEntry = JournalEntry> {
+  /** Budowa przycięta; `""` = bez budowy. */
+  site: string;
+  entries: E[];
+}
+
+export interface JournalDay<E extends JournalEntry = JournalEntry> {
+  /** Dzień lokalny „2026-10-14”. */
+  key: string;
+  label: string;
+  count: number;
+  sites: JournalSiteGroup<E>[];
+}
+
+const dayKey = (at: number) => {
+  const d = new Date(at);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+};
+
+/**
+ * Oś czasu: dni od najnowszego, w dniu budowy w kolejności ostatniego wpisu, w budowie wpisy od
+ * najnowszego. Kolejność wejścia nie ma znaczenia.
+ */
+export function groupJournal<E extends JournalEntry>(entries: readonly E[], now: number = Date.now()): JournalDay<E>[] {
+  const sorted = [...entries].sort((a, b) => b.at - a.at);
+  const days: JournalDay<E>[] = [];
+  for (const e of sorted) {
+    const key = dayKey(e.at);
+    let day = days[days.length - 1];
+    if (!day || day.key !== key) days.push((day = { key, label: dayLabel(e.at, now), count: 0, sites: [] }));
+    day.count++;
+    const site = e.site.trim();
+    const group = day.sites.find((g) => g.site === site);
+    if (group) group.entries.push(e); else day.sites.push({ site, entries: [e] });
+  }
+  return days;
+}
+
+export const RECENT_DAYS = 30;
+
+/** Wpisy z ostatnich `RECENT_DAYS` dni (od północy) i liczba starszych — reszta za „Pokaż starsze”. */
+export function splitRecent<E extends JournalEntry>(entries: readonly E[], now: number = Date.now()): { recent: E[]; older: number } {
+  const d = new Date(now);
+  const since = new Date(d.getFullYear(), d.getMonth(), d.getDate() - (RECENT_DAYS - 1)).getTime();
+  const recent = entries.filter((e) => e.at >= since);
+  return { recent, older: entries.length - recent.length };
 }

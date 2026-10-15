@@ -135,7 +135,7 @@ test("dziennik z budowy: lista kontrolna tematu, wpis liczy praktykę, problem c
   const entry = page.locator('[data-journal-entry="problem"]');
   await expect(entry).toContainText("Na odcinku do pionu spadek za mały");
   await expect(entry).toContainText("punkty 1/1");
-  await expect(entry).toContainText("Dom testowy");
+  await expect(page.locator("[data-journal-site]")).toHaveText(["Dom testowy"]);
   await expect(page.getByTestId("journal-week")).toContainText("1 wpis, 1 problem");
 
   // Problem na budowie cofnął temat z „Umiem” do „W trakcie” i widać go na karcie.
@@ -349,4 +349,54 @@ test("dawny zapis Nauki z localStorage przechodzi do dokumentu raz i bez strat",
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await expect(page.getByText("Wpis sprzed migracji")).toHaveCount(0);
   expect(await page.evaluate(() => localStorage.getItem("kaczy.study.v1"))).toContain("stary-1");
+});
+
+test("dziennik: oś czasu dzień → budowa, szukanie bez ogonków, filtry i „Pokaż starsze”", async ({ page }) => {
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem("seeded")) return;
+    sessionStorage.setItem("seeded", "1");
+    const h = 3600_000;
+    const now = Date.now();
+    const e = (id: string, at: number, kind: string, site: string, text: string) => ({ id, at, kind, topic: null, text, site, checked: [], images: [] });
+    localStorage.setItem("kaczy.study.v1", JSON.stringify({
+      journal: [
+        e("a", now - 60_000, "ok", "Lipowa 5", "Próba szczelności pionu"),
+        e("b", now - 2 * 60_000, "problem", "Polna 2", "Żółta rura przecieka"),
+        e("c", now - 45 * 24 * h, "note", "Lipowa 5", "Stary wpis z lata"),
+      ],
+    }));
+  });
+  await page.goto("/nauka");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  const journal = page.getByTestId("study-journal");
+
+  // Ostatnie 30 dni, w dniu grupy budów; starszy wpis za przyciskiem.
+  await expect(journal.locator("[data-journal-entry]")).toHaveCount(2);
+  await expect(journal.locator("[data-journal-site]")).toHaveText(["Lipowa 5", "Polna 2"]);
+  await journal.getByRole("button", { name: "Pokaż starsze (1 wpis)" }).click();
+  await expect(journal.getByText("Stary wpis z lata")).toBeVisible();
+
+  // Szukanie bez ogonków przeszukuje cały dziennik.
+  const search = journal.getByRole("searchbox", { name: "Szukaj w dzienniku" });
+  await search.fill("zolta");
+  await expect(journal.locator("[data-journal-entry]")).toHaveCount(1);
+  await expect(journal.getByTestId("journal-results")).toContainText("Pasuje: 1 wpis");
+  await search.fill("lata");
+  await expect(journal.getByText("Stary wpis z lata")).toBeVisible();
+  await journal.getByRole("button", { name: "Wyczyść filtry" }).click();
+
+  // Budowa i rodzaj.
+  await journal.getByRole("combobox", { name: "Budowa" }).selectOption("Lipowa 5");
+  await expect(journal.locator("[data-journal-entry]")).toHaveCount(2);
+  await journal.getByRole("button", { name: "Zrobione", exact: true }).click();
+  await expect(journal.locator("[data-journal-entry]")).toHaveCount(1);
+  await expect(journal.getByText("Próba szczelności pionu")).toBeVisible();
+  await journal.getByRole("button", { name: "Wyczyść filtry" }).click();
+
+  // Licznik otwartych problemów filtruje do nich.
+  await journal.getByTestId("journal-open-problems").click();
+  await expect(journal.locator("[data-journal-entry]")).toHaveCount(1);
+  await expect(journal.getByText("Żółta rura przecieka")).toBeVisible();
+  await journal.getByRole("button", { name: "Oznacz jako rozwiązany" }).click();
+  await expect(journal.getByText("Nic nie pasuje. Zmień słowa albo wyczyść filtry.")).toBeVisible();
 });

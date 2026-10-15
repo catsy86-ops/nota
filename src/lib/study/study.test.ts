@@ -4,7 +4,7 @@ import { buildRound, missedTopics, scoreRound } from "./quiz";
 import { topicToNote } from "./toNote";
 import { journalImageRefs } from "./images";
 import { clearJournalDraft, getJournalDraft, patchJournalDraft, sanitizeDraft, setJournalDraftTopic, EMPTY_DRAFT } from "./draft";
-import { dayLabel, entriesPl, fromLocalInput, problemsPl, toLocalInput, whenLabel } from "./journalView";
+import { dayLabel, entriesPl, filterJournal, fromLocalInput, groupJournal, journalSites, NO_FILTER, problemsPl, splitRecent, toLocalInput, whenLabel } from "./journalView";
 import { closeJournalSheet, getJournalEditForm, openJournalEdit, patchJournalEditForm } from "./entrySheet";
 import {
   sanitizeStudy, moveTopic, recordRound, activeStreak, toggleChecked, getStudy, columnOf, resetChecklist,
@@ -351,5 +351,51 @@ describe("szkic wpisu", () => {
       .toEqual({ ...EMPTY_DRAFT, images: ["f".repeat(64)], checked: ["a"] });
     expect(sanitizeDraft(EMPTY_DRAFT, { at: 1234 }).at).toBe(1234);
     expect(sanitizeDraft(EMPTY_DRAFT, null)).toBe(EMPTY_DRAFT);
+  });
+});
+
+describe("dziennik — oś czasu i filtry", () => {
+  const at = (d: number, h: number) => new Date(2026, 9, d, h, 0).getTime();
+  const e = (id: string, a: number, kind: "ok" | "problem" | "note", site: string, text = "", extra: Partial<{ topic: string; resolved: number }> = {}) =>
+    ({ id, at: a, kind, site, text, topic: extra.topic ?? null, checked: [], images: [], ...(extra.resolved !== undefined ? { resolved: extra.resolved } : {}) });
+  const entries = [
+    e("a", at(14, 8), "ok", "Lipowa 5", "Próba szczelności"),
+    e("b", at(14, 15), "problem", "Polna 2", "Żółta rura przecieka", { topic: "spadki" }),
+    e("c", at(14, 10), "note", "Lipowa 5 ", "Zamówić kolana"),
+    e("d", at(13, 9), "problem", "", "Brak złączek", { resolved: at(13, 12) }),
+  ];
+
+  it("grupuje dzień → budowa, od najnowszego", () => {
+    const days = groupJournal(entries, at(15, 12));
+    expect(days.map((d) => [d.key, d.count])).toEqual([["2026-10-14", 3], ["2026-10-13", 1]]);
+    expect(days[0].sites.map((g) => [g.site, g.entries.map((x) => x.id)])).toEqual([["Polna 2", ["b"]], ["Lipowa 5", ["c", "a"]]]);
+    expect(days[1].sites[0].site).toBe("");
+  });
+
+  it("filtruje po rodzaju, otwartych problemach, budowie i temacie", () => {
+    const ids = (f: Partial<typeof NO_FILTER>) => filterJournal(entries, { ...NO_FILTER, ...f }).map((x) => x.id);
+    expect(ids({ kind: "problem" })).toEqual(["b", "d"]);
+    expect(ids({ kind: "open" })).toEqual(["b"]);
+    expect(ids({ site: "Lipowa 5" })).toEqual(["a", "c"]);
+    expect(ids({ site: "" })).toEqual(["d"]);
+    expect(ids({ topic: "spadki" })).toEqual(["b"]);
+  });
+
+  it("szuka bez ogonków, po wszystkich słowach, też w nazwie tematu", () => {
+    const ids = (query: string) => filterJournal(entries, { ...NO_FILTER, query }, (id) => (id === "spadki" ? "Spadki kanalizacji" : null)).map((x) => x.id);
+    expect(ids("zolta")).toEqual(["b"]);
+    expect(ids("ZLACZEK")).toEqual(["d"]);
+    expect(ids("lipowa proba")).toEqual(["a"]);
+    expect(ids("kanalizacji")).toEqual(["b"]);
+    expect(ids("polna kolana")).toEqual([]);
+  });
+
+  it("budowy od ostatnio używanej i okno 30 dni", () => {
+    expect(journalSites(entries)).toEqual(["Polna 2", "Lipowa 5"]);
+    const old = e("x", new Date(2026, 8, 15, 23, 59).getTime(), "ok", "");
+    const edge = e("y", new Date(2026, 8, 16, 0, 0).getTime(), "ok", "");
+    const { recent, older } = splitRecent([...entries, old, edge], at(15, 12));
+    expect(recent.map((x) => x.id)).toEqual(["a", "b", "c", "d", "y"]);
+    expect(older).toBe(1);
   });
 });
