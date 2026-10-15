@@ -1,66 +1,22 @@
-import { createPersistedStore } from "@/lib/persistedStore";
+import { useSyncExternalStore } from "react";
 import { isImageRef } from "@/lib/imageStore";
 import { CHECKLIST, QUESTIONS, TOPICS } from "./content";
-import { STUDY_STORAGE_KEY } from "./images";
 import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
+import { studyDevice, yStudy } from "./data";
+import {
+  JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, SITE_MAX,
+  type Column, type JournalEntry, type JournalKind, type StudyState,
+} from "./yStudy";
 
-export type Column = "todo" | "doing" | "done";
-export const COLUMNS: Column[] = ["todo", "doing", "done"];
-
-/** Rodzaj wpisu w dzienniku z budowy. */
-export type JournalKind = "ok" | "problem" | "note";
-export const JOURNAL_KINDS: JournalKind[] = ["ok", "problem", "note"];
-
-export interface JournalEntry {
-  id: string;
-  /** Moment wpisu (ms). */
-  at: number;
-  kind: JournalKind;
-  /** Temat z materiału, którego dotyczy wpis; `null` = ogólny. */
-  topic: string | null;
-  text: string;
-  /** Inwestycja / adres w chwili wpisu. */
-  site: string;
-  /** Punkty listy do nauki potwierdzone na budowie (id z `CHECKLIST`). */
-  checked: string[];
-  /** Zdjęcia z budowy: klucze z `imageStore` (bajty poza stanem Nauki). */
-  images: string[];
-}
-
-/** Ile zdjęć mieści jeden wpis. */
-export const JOURNAL_MAX_IMAGES = 4;
+export { COLUMNS, JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT } from "./yStudy";
+export type { Column, JournalEntry, JournalKind, StudyState } from "./yStudy";
 
 /**
- * Górna granica dziennika w localStorage (wpis bez zdjęć to ok. 300 B, więc ~1 MB). Powyżej
- * najstarsze wpisy wypadają — od `JOURNAL_WARN_ENTRIES` dziennik ostrzega przy każdym wpisie.
+ * Nauka żyje w dokumencie Yjs notatek (`yStudy.ts`, instancja w `data.ts`),
+ * więc synchronizuje się razem z nimi. Ten moduł to fasada dla widoków /nauka:
+ * projekcja przefiltrowana przez materiał (`sanitizeStudy`) i akcje.
  */
-export const JOURNAL_MAX_ENTRIES = 3000;
-export const JOURNAL_WARN_ENTRIES = Math.floor(JOURNAL_MAX_ENTRIES * 0.9);
-export const JOURNAL_MAX_TEXT = 2000;
-const SITE_MAX = 120;
-
-export interface StudyState {
-  /** Kolumna tablicy per temat; brak wpisu = „Do nauki”. */
-  board: Record<string, Column>;
-  /** Odhaczone punkty listy do nauki. */
-  checked: Record<string, true>;
-  /** Najlepszy wynik quizu w procentach (0–100) albo `null`. */
-  bestPercent: number | null;
-  rounds: number;
-  /** Pytania, na które ostatnio odpowiedziano błędnie — materiał do „Powtórki błędów”. */
-  missed: Record<string, true>;
-  /** Dziennik z budowy, od najstarszego do najnowszego. */
-  journal: JournalEntry[];
-  /** Bieżąca inwestycja — podpowiada się przy kolejnych wpisach. */
-  site: string;
-  /** Seria kolejnych dni z co najmniej jedną rundą quizu (stan na `lastDay`). */
-  streak: number;
-  /** Dzień ostatniej rundy („2026-10-12”) albo `null`. */
-  lastDay: string | null;
-}
-
-const DEFAULTS: StudyState = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", streak: 0, lastDay: null };
 
 const isColumn = (v: unknown): v is Column => v === "todo" || v === "doing" || v === "done";
 
@@ -81,7 +37,6 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
   const questionIds = new Set(QUESTIONS.map((q) => q.id));
   const missed: Record<string, true> = {};
   for (const [id, v] of Object.entries(s.missed ?? {})) if (v === true && questionIds.has(id)) missed[id] = true;
-  const topicSet = new Set(TOPICS.map((t) => t.id));
   const journal: JournalEntry[] = [];
   for (const raw of Array.isArray(s.journal) ? s.journal : []) {
     const e = raw as Partial<JournalEntry> | null;
@@ -90,7 +45,7 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
     if (typeof e.at !== "number" || !Number.isFinite(e.at)) continue;
     if (!JOURNAL_KINDS.includes(e.kind as JournalKind)) continue;
     const text = typeof e.text === "string" ? e.text.slice(0, JOURNAL_MAX_TEXT) : "";
-    const topic = typeof e.topic === "string" && topicSet.has(e.topic) ? e.topic : null;
+    const topic = typeof e.topic === "string" && topicIds.has(e.topic) ? e.topic : null;
     const checkedIds = Array.isArray(e.checked) ? e.checked.filter((id): id is string => typeof id === "string" && itemIds.has(id)).slice(0, 60) : [];
     const images = Array.isArray(e.images)
       ? e.images.filter((r): r is string => typeof r === "string" && isImageRef(r)).slice(0, JOURNAL_MAX_IMAGES)
@@ -107,15 +62,22 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
   const site = typeof s.site === "string" ? s.site.slice(0, SITE_MAX) : "";
   const lastDay = typeof s.lastDay === "string" && /^\d{4}-\d{2}-\d{2}$/.test(s.lastDay) ? s.lastDay : null;
   const streak = lastDay && typeof s.streak === "number" && s.streak >= 1 ? Math.floor(s.streak) : 0;
-  return { board, checked, bestPercent: best, rounds, missed, journal: journal.slice(-JOURNAL_MAX_ENTRIES), site, streak, lastDay };
+  return { board, checked, bestPercent: best, rounds, missed, journal, site, streak, lastDay };
 }
 
-const store = createPersistedStore<StudyState>(STUDY_STORAGE_KEY, DEFAULTS, {
-  merge: (defaults, stored) => sanitizeStudy(defaults, stored),
-});
+const DEFAULTS: StudyState = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", streak: 0, lastDay: null };
 
-export const useStudy = () => store.use();
-export const getStudy = () => store.get();
+let lastRaw: StudyState | null = null;
+let lastClean: StudyState = DEFAULTS;
+
+/** Projekcja dokumentu przefiltrowana przez materiał; ta sama referencja, dopóki dokument się nie zmieni. */
+export function getStudy(): StudyState {
+  const raw = yStudy.get();
+  if (raw !== lastRaw) { lastRaw = raw; lastClean = sanitizeStudy(DEFAULTS, raw); }
+  return lastClean;
+}
+
+export const useStudy = () => useSyncExternalStore(yStudy.subscribe, getStudy);
 
 /** Seria, która jeszcze trwa: ostatnia runda dziś albo wczoraj; starsza już przepadła. */
 export function activeStreak(state: Pick<StudyState, "streak" | "lastDay">, today = localDayKey()): number {
@@ -128,21 +90,15 @@ export function columnOf(state: StudyState, topicId: string): Column {
 }
 
 export function moveTopic(topicId: string, column: Column) {
-  const s = store.get();
-  const board = { ...s.board };
-  if (column === "todo") delete board[topicId]; else board[topicId] = column;
-  store.set({ ...s, board });
+  yStudy.setColumn(topicId, column);
 }
 
 export function toggleChecked(itemId: string) {
-  const s = store.get();
-  const checked = { ...s.checked };
-  if (checked[itemId]) delete checked[itemId]; else checked[itemId] = true;
-  store.set({ ...s, checked });
+  yStudy.setChecked(itemId, !getStudy().checked[itemId]);
 }
 
 export function resetChecklist() {
-  store.set({ ...store.get(), checked: {} });
+  yStudy.clearChecked();
 }
 
 /**
@@ -156,29 +112,12 @@ export function recordRound(
   results: { id: string; ok: boolean }[] = [],
   today = localDayKey(),
 ): { demoted: string[]; streak: number; streakGrew: boolean } {
-  const s = store.get();
+  const s = getStudy();
   const percent = total > 0 ? Math.round((correct / total) * 100) : 0;
-  const board = { ...s.board };
-  const demoted: string[] = [];
-  for (const id of missed) {
-    if (board[id] === "done") { board[id] = "doing"; demoted.push(id); }
-  }
-  const missedQuestions = { ...s.missed };
-  for (const r of results) {
-    if (r.ok) delete missedQuestions[r.id]; else missedQuestions[r.id] = true;
-  }
+  const demoted = [...new Set(missed)].filter((id) => s.board[id] === "done");
   const streakGrew = s.lastDay !== today;
-  const streak = streakGrew ? activeStreak(s, today) + 1 : s.streak;
-  store.set({
-    ...s,
-    board,
-    missed: missedQuestions,
-    streak,
-    lastDay: today,
-    rounds: s.rounds + 1,
-    bestPercent: s.bestPercent === null ? percent : Math.max(s.bestPercent, percent),
-  });
-  return { demoted, streak, streakGrew };
+  yStudy.recordRound(studyDevice(), percent, today, demoted, results);
+  return { demoted, streak: activeStreak(getStudy(), today), streakGrew };
 }
 
 export interface NewJournalEntry {
@@ -198,39 +137,31 @@ export function addJournalEntry(input: NewJournalEntry, now: number = Date.now()
   const checked = (input.checked ?? []).filter((id) => CHECKLIST.some((c) => c.id === id));
   const images = (input.images ?? []).filter(isImageRef).slice(0, JOURNAL_MAX_IMAGES);
   if (!text && checked.length === 0 && images.length === 0) return null;
-  const s = store.get();
   const entry: JournalEntry = {
     id: crypto.randomUUID(),
     at: now,
     kind: input.kind,
     topic: input.topic && TOPICS.some((t) => t.id === input.topic) ? input.topic : null,
     text,
-    site: s.site,
+    site: getStudy().site,
     checked,
     images,
   };
-  const board = { ...s.board };
-  if (entry.kind === "problem" && entry.topic && board[entry.topic] === "done") board[entry.topic] = "doing";
-  store.set({ ...s, board, journal: [...s.journal, entry].sort((a, b) => a.at - b.at).slice(-JOURNAL_MAX_ENTRIES) });
+  yStudy.addEntry(entry);
   return entry;
 }
 
 /** Przywraca usunięty wpis (Cofnij) na właściwe miejsce w czasie. */
 export function restoreJournalEntry(entry: JournalEntry) {
-  const s = store.get();
-  if (s.journal.some((e) => e.id === entry.id)) return;
-  store.set({ ...s, journal: [...s.journal, entry].sort((a, b) => a.at - b.at).slice(-JOURNAL_MAX_ENTRIES) });
+  yStudy.restoreEntry(entry);
 }
 
 export function removeJournalEntry(id: string): JournalEntry | null {
-  const s = store.get();
-  const found = s.journal.find((e) => e.id === id) ?? null;
-  if (found) store.set({ ...s, journal: s.journal.filter((e) => e.id !== id) });
-  return found;
+  return yStudy.removeEntry(id);
 }
 
 export function setSite(site: string) {
-  store.set({ ...store.get(), site: site.slice(0, SITE_MAX) });
+  yStudy.setSite(site.slice(0, SITE_MAX));
 }
 
 export interface TopicPractice {

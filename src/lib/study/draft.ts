@@ -1,7 +1,7 @@
 import { createPersistedStore } from "@/lib/persistedStore";
 import { isImageRef } from "@/lib/imageStore";
-import { JOURNAL_DRAFT_KEY } from "./images";
-import { JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, type JournalKind } from "./store";
+import { JOURNAL_DRAFT_KEY } from "./keys";
+import { JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, type JournalKind } from "./yStudy";
 
 /**
  * Niezapisany wpis do dziennika. Trzymany poza komponentem: przejście na Quiz, „Wpis z budowy”

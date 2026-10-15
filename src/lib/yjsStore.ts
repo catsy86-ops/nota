@@ -10,6 +10,7 @@ import { imageStore as defaultImageStore, isDataUrl, type ImageStore } from "@/l
 import type { Note, Folder, ChecklistItem } from "@/hooks/useNotes";
 import { logDiag } from "@/lib/diagnostics";
 import { NOTE_COVERS } from "@/lib/noteLook";
+import { journalRefsIn } from "@/lib/study/yStudy";
 import {
   NOTE_COLORS, PRIORITIES, REMINDER_REPEATS, REMOTE_LIMITS as LIM,
   safeBool, safeDailyDate, safeEnum, safeNullableNumber, safeNullableString, safeNumber,
@@ -594,7 +595,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
 
   /**
    * Wszystkie klucze bajtów w `imageStore`, do których odwołuje się jakakolwiek
-   * notatka (także w Koszu): obrazy ORAZ załączniki. To wejście dla GC — blob
+   * notatka (także w Koszu) albo wpis dziennika z budowy: obrazy ORAZ załączniki. To wejście dla GC — blob
    * używany przez inną notatkę (ten sam hash) nigdy nie jest kandydatem.
    */
   function referencedImages(): Set<string> {
@@ -604,6 +605,8 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
       if (Array.isArray(list)) for (const r of list) if (typeof r === "string") refs.add(r);
       for (const a of plainAttachments(y.get("attachments"))) refs.add(a.hash);
     });
+    // Zdjęcia dziennika z budowy (Nauka) — te same bajty w `imageStore`.
+    for (const r of journalRefsIn(doc)) refs.add(r);
     return refs;
   }
 
@@ -618,7 +621,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
 
   /**
    * Klucze, które wolno wysłać innemu urządzeniu (P2P, plik sync): wszystkie
-   * obrazy i załączniki do `ATTACHMENT_SYNC_MAX_BYTES`. Większe pliki są
+   * obrazy (także zdjęcia dziennika z budowy) i załączniki do `ATTACHMENT_SYNC_MAX_BYTES`. Większe pliki są
    * lokalne dla urządzenia (UI mówi o tym wprost).
    */
   function syncableRefs(): Set<string> {
@@ -628,6 +631,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
       if (Array.isArray(list)) for (const r of list) if (typeof r === "string") refs.add(r);
     });
     referencedAttachments().forEach((a, hash) => { if (isAttachmentSyncable(a)) refs.add(hash); });
+    for (const r of journalRefsIn(doc)) refs.add(r);
     return refs;
   }
 

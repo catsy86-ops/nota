@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { TOPICS } from "@/lib/study/content";
 import { columnOf, useStudy } from "@/lib/study/store";
 import { setJournalDraftTopic } from "@/lib/study/draft";
+import { useStudyReady } from "@/lib/study/data";
 import { useState } from "react";
 import { QuizPanel, type QuizScope } from "./QuizPanel";
 import { StudyBoard } from "./StudyBoard";
@@ -43,6 +44,11 @@ function MasteryStrip() {
 
 /** Dział „Nauka”: quiz, tablica tematów i lista do nauki z materiałów G-HEAT. */
 export default function StudyView() {
+  // Do wczytania dokumentu nic — pusta Nauka mignęłaby zerami i pustym dziennikiem.
+  return useStudyReady() ? <StudyScreen /> : null;
+}
+
+function StudyScreen() {
   const [tab, setTab] = useState("quiz");
   const [scope, setScope] = useState<QuizScope>({ kind: "all" });
   // `run` wymusza świeży start, także gdy ćwiczysz ten sam temat drugi raz.

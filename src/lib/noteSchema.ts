@@ -87,6 +87,8 @@ export interface FullBackup {
   achievements?: string;
   /** Surowy dokument Grafiku zmian (`lib/shifts`); kształt waliduje `migrate()` przy odczycie. */
   shifts?: string;
+  /** Nauka i dziennik z budowy (`lib/study/yStudy.ts`, `StudyDump` jako JSON); kształt waliduje `cleanDump()`. */
+  study?: string;
   /**
    * v3: bajty załączników (hash SHA-256 → data URL), każdy raz. Manifesty są
    * w `notes[].attachments`; plik większy niż budżet backupu jest pominięty —
@@ -116,6 +118,7 @@ export const fullBackupSchema = z.object({
   settings: z.record(z.string()).optional().catch(undefined),
   achievements: z.string().optional().catch(undefined),
   shifts: z.string().optional().catch(undefined),
+  study: z.string().optional().catch(undefined),
   attachmentBlobs: z.record(z.string()).optional().catch(undefined),
   vault: z.unknown().optional(),
 }) satisfies z.ZodType<FullBackup, z.ZodTypeDef, unknown>;

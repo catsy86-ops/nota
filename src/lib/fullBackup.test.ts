@@ -5,6 +5,8 @@ import { yjsStore } from "./yjsStore";
 import { versionsStore } from "./versionsStore";
 import { clearAllStorage } from "./notesStore";
 import { imageStore } from "./imageStore";
+import { yStudy } from "./study/data";
+import { cleanDump } from "./study/yStudy";
 import type { Note } from "@/hooks/useNotes";
 
 function makeNote(overrides: Partial<Note> = {}): Note {
@@ -15,7 +17,7 @@ function makeNote(overrides: Partial<Note> = {}): Note {
   };
 }
 
-const ALL = { versions: true, settings: true, achievements: true, shifts: true };
+const ALL = { versions: true, settings: true, achievements: true, shifts: true, study: true };
 
 beforeEach(async () => {
   localStorage.clear();
@@ -62,7 +64,7 @@ describe("pełny backup v2", () => {
     versionsStore.replaceAll([]);
     localStorage.setItem("kaczy-theme", "light");
     localStorage.setItem(ACHIEVEMENTS_KEY, "lokalne");
-    await restoreFullBackup(backup, { versions: true, settings: true, achievements: false, shifts: false });
+    await restoreFullBackup(backup, { versions: true, settings: true, achievements: false, shifts: false, study: false });
 
     expect(versionsStore.get("n1").map((v) => v.title)).toEqual(["z pliku"]);
     expect(localStorage.getItem("kaczy-theme")).toBe("dark");
@@ -171,10 +173,36 @@ describe("pełny backup v3 — załączniki", () => {
   });
 
   it("reports journal photos left out of the backup instead of dropping them silently", async () => {
-    localStorage.setItem("kaczy.study.v1", JSON.stringify({ journal: [{ id: "j", at: 1, kind: "ok", topic: null, text: "x", site: "", checked: [], images: ["e".repeat(64)] }] }));
+    yStudy.addEntry({ id: "j", at: 1, kind: "ok", topic: null, text: "x", site: "", checked: [], images: ["e".repeat(64)] });
     const { attachments } = await buildFullBackupWithReport();
     expect(attachments.journalPhotos).toBe(1);
     expect(describeSkippedAttachments(attachments)).toContain("zdjęcia dziennika");
-    localStorage.removeItem("kaczy.study.v1");
+  });
+});
+
+describe("Nauka w pełnej kopii", () => {
+  const entry = { id: "j1", at: 5, kind: "problem" as const, topic: "spadki", text: "Za mały spadek", site: "Leśna 4", checked: [], images: [] };
+
+  it("niesie dziennik w sekcji study i w dawnym kształcie wśród ustawień; przywraca do Yjs", async () => {
+    yStudy.addEntry(entry);
+    yStudy.recordRound("dev-a", 80, "2026-10-14", [], []);
+    yStudy.setSite("Leśna 4");
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
+    expect(cleanDump(JSON.parse(backup.study!)).journal).toEqual([entry]);
+    expect(JSON.parse(backup.settings!["kaczy.study.v1"])).toMatchObject({ rounds: 1, bestPercent: 80, lastDay: "2026-10-14", streak: 1 });
+
+    yStudy.removeEntry("j1");
+    await restoreFullBackup(backup, { ...ALL, study: false });
+    expect(yStudy.get().journal).toEqual([]);
+    await restoreFullBackup(backup, ALL);
+    expect(yStudy.get()).toMatchObject({ journal: [entry], rounds: 1, site: "Leśna 4" });
+    expect(localStorage.getItem("kaczy.study.v1")).toBeNull();
+  });
+
+  it("czyta starą kopię, w której Nauka była tylko wśród ustawień", async () => {
+    const legacy = { journal: [entry], rounds: 3, bestPercent: 90, streak: 2, lastDay: "2026-10-12", board: { spadki: "doing" } };
+    const old = { version: 3, exportedAt: 1, notes: [], labels: [], folders: [], settings: { "kaczy.study.v1": JSON.stringify(legacy) } };
+    await restoreFullBackup(await parseFullBackup(JSON.stringify(old)), ALL);
+    expect(yStudy.get()).toMatchObject({ journal: [entry], rounds: 3, bestPercent: 90, streak: 2, lastDay: "2026-10-12", board: { spadki: "doing" } });
   });
 });

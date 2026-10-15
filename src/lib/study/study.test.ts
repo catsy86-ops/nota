@@ -7,8 +7,17 @@ import { clearJournalDraft, getJournalDraft, patchJournalDraft, sanitizeDraft, s
 import { dayLabel, entriesPl, problemsPl } from "./journalView";
 import {
   sanitizeStudy, moveTopic, recordRound, activeStreak, toggleChecked, getStudy, columnOf, resetChecklist,
-  addJournalEntry, removeJournalEntry, restoreJournalEntry, setSite, practiceByTopic, JOURNAL_MAX_ENTRIES,
+  addJournalEntry, removeJournalEntry, restoreJournalEntry, setSite, practiceByTopic,
 } from "./store";
+import { resetStudyForTests } from "./data";
+import { yjsStore } from "@/lib/yjsStore";
+
+/** Nauka żyje w dokumencie Yjs — każdy test zaczyna od pustego. */
+async function freshStudy() {
+  localStorage.clear();
+  await yjsStore.resetForTests();
+  resetStudyForTests();
+}
 
 const seeded = (seed: number) => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
 
@@ -58,7 +67,7 @@ describe("buildRound", () => {
 });
 
 describe("store", () => {
-  beforeEach(() => { localStorage.clear(); });
+  beforeEach(freshStudy);
 
   it("sanitizeStudy odrzuca nieznane tematy i złe wartości", () => {
     const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", streak: 0, lastDay: null };
@@ -127,21 +136,18 @@ describe("topicToNote", () => {
 });
 
 describe("dziennik z budowy", () => {
-  beforeEach(() => {
-    localStorage.clear();
-    // Stan modułu żyje w pamięci między testami — czyścimy dziennik wprost.
-    for (const e of getStudy().journal) removeJournalEntry(e.id);
-    setSite("");
-    for (const t of ["spadki", "napowietrzanie", "otulina"]) moveTopic(t, "todo");
-  });
+  beforeEach(freshStudy);
 
-  it("klucze zdjęć z dziennika czytane z zapisu (bez sklepu) — dla odśmiecania i kopii", () => {
+  it("klucze zdjęć z dziennika czytane z dokumentu (bez sklepu) — dla odśmiecania, kopii i synchronizacji", () => {
     const a = "a".repeat(64), b = "b".repeat(64);
     addJournalEntry({ kind: "ok", topic: null, text: "Zdjęcia", images: [a, b, "nie-klucz"] }, 1000);
     addJournalEntry({ kind: "note", topic: null, text: "Drugie", images: [a] }, 2000);
     expect([...journalImageRefs()].sort()).toEqual([a, b]);
+    expect(yjsStore.referencedImages().has(b)).toBe(true);
+    expect(yjsStore.syncableRefs().has(b)).toBe(true);
+    // Zepsuty dawny zapis w localStorage nie zdejmuje ochrony ze zdjęć z dokumentu.
     localStorage.setItem("kaczy.study.v1", "{zepsute");
-    expect(journalImageRefs().size).toBe(0);
+    expect([...journalImageRefs()].sort()).toEqual([a, b]);
   });
 
   it("dodaje wpis z aktualną inwestycją i zapisuje punkty z listy", () => {
@@ -203,12 +209,11 @@ describe("dziennik z budowy", () => {
 });
 
 describe("dziennik — limit i etykiety", () => {
-  it("ponad 500 wpisów nie wypada (dawny limit kasował najstarsze po cichu)", () => {
-    expect(JOURNAL_MAX_ENTRIES).toBeGreaterThanOrEqual(3000);
-    const journal = Array.from({ length: 800 }, (_, i) => ({ id: `e${i}`, at: i + 1, kind: "note", topic: null, text: `w${i}`, site: "", checked: [], images: [] }));
+  it("bez limitu wpisów (dawny limit kasował najstarsze po cichu)", () => {
+    const journal = Array.from({ length: 3500 }, (_, i) => ({ id: `e${i}`, at: i + 1, kind: "note", topic: null, text: `w${i}`, site: "", checked: [], images: [] }));
     const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", streak: 0, lastDay: null };
     const s = sanitizeStudy(d, { journal });
-    expect(s.journal).toHaveLength(800);
+    expect(s.journal).toHaveLength(3500);
     expect(s.journal[0].text).toBe("w0");
   });
 

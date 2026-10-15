@@ -1,4 +1,10 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+
+/** Nauka zapisuje się do IndexedDB (Yjs) asynchronicznie — przeładowanie dopiero po „Zapisano”. */
+async function reloadWhenSaved(page: Page) {
+  await expect(page.getByText("Zapisano", { exact: true })).toBeVisible();
+  await page.reload();
+}
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
@@ -27,7 +33,7 @@ test("tablica: temat przechodzi między kolumnami i postęp przeżywa odświeże
   await expect(page.getByTestId("count-done")).toHaveText("1");
   await expect(page.getByTestId("mastery-count")).toHaveText("1");
 
-  await page.reload();
+  await reloadWhenSaved(page);
   await page.getByRole("tab", { name: "Tablica" }).click();
   await expect(page.getByTestId("count-done")).toHaveText("1");
 });
@@ -63,9 +69,9 @@ test("quiz: runda z 10 pytań kończy się wynikiem i zapisuje rundę", async ({
   await page.getByRole("button", { name: "Jeszcze raz" }).click();
   await expect(page.getByText("Pytanie 1 z 10")).toBeVisible();
 
-  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem("kaczy.study.v1") ?? "{}"));
-  expect(saved.rounds).toBe(1);
-  expect(typeof saved.bestPercent).toBe("number");
+  // Runda jest w dokumencie Yjs — przeżywa przeładowanie.
+  await reloadWhenSaved(page);
+  await expect(page.getByText(/Najlepszy wynik: \d+% · rund: 1/)).toBeVisible();
 });
 
 test("tablica: „Ćwicz” startuje rundę z jednego tematu, a „Zrób notatkę” dodaje notatkę", async ({ page }) => {
@@ -198,4 +204,28 @@ test("dziennik: dyktowanie dopisuje rozpoznany tekst do wpisu", async ({ page })
 
   await page.getByRole("button", { name: "Dodaj wpis" }).click();
   await expect(page.locator("[data-journal-entry]")).toContainText("trzydzieści centymetrów");
+});
+
+test("dawny zapis Nauki z localStorage przechodzi do dokumentu raz i bez strat", async ({ page }) => {
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem("seeded")) return;
+    sessionStorage.setItem("seeded", "1");
+    localStorage.setItem("kaczy.study.v1", JSON.stringify({
+      board: { spadki: "done" }, rounds: 2, bestPercent: 70,
+      journal: [{ id: "stary-1", at: Date.now() - 3600_000, kind: "ok", topic: null, text: "Wpis sprzed migracji", site: "", checked: [], images: [] }],
+    }));
+  });
+  await page.goto("/nauka");
+  await expect(page.getByTestId("mastery-count")).toHaveText("1");
+  await expect(page.getByText(/Najlepszy wynik: 70% · rund: 2/)).toBeVisible();
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await expect(page.locator("[data-journal-entry]")).toHaveCount(1);
+
+  // Usunięty po migracji wpis nie wraca z kopii w localStorage po przeładowaniu.
+  await page.getByRole("button", { name: "Usuń wpis" }).click();
+  await expect(page.locator("[data-journal-entry]")).toHaveCount(0);
+  await reloadWhenSaved(page);
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await expect(page.getByText("Wpis sprzed migracji")).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem("kaczy.study.v1"))).toContain("stary-1");
 });

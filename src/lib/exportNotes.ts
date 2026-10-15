@@ -11,6 +11,9 @@ import { versionsStore } from "@/lib/versionsStore";
 import { logDiag } from "@/lib/diagnostics";
 import { imageStore, isEmbeddableImageDataUrl } from "@/lib/imageStore";
 import { journalImageRefs } from "@/lib/study/images";
+import { STUDY_STORAGE_KEY } from "@/lib/study/keys";
+import { studyDevice, studyReady, yStudy } from "@/lib/study/data";
+import { cleanDump, dumpFromLegacy, stateFromDump } from "@/lib/study/yStudy";
 import { restoreShifts, shiftStore, shiftsReady } from "@/lib/shifts/store";
 import { migrate } from "@/lib/shifts/model";
 import { BACKUP_ATTACHMENTS_BUDGET_BYTES, formatFileSize, type Attachment } from "@/lib/attachments";
@@ -98,7 +101,9 @@ export async function buildFullBackupWithReport(): Promise<{ backup: FullBackup;
   await yjsStore.ready();
   await versionsStore.load();
   await shiftsReady();
+  await studyReady();
   const { blobs, report } = await collectAttachmentBlobs();
+  const study = yStudy.dump();
   const backup: FullBackup = {
     version: 3,
     exportedAt: Date.now(),
@@ -109,10 +114,12 @@ export async function buildFullBackupWithReport(): Promise<{ backup: FullBackup;
     labels: yjsStore.projectLabels(),
     folders: yjsStore.projectFolders(),
     versions: versionsStore.all(),
-    settings: readKeys(SETTINGS_KEYS),
+    // Nauka także w dawnym kształcie, wśród ustawień — starsze wersje aplikacji ją odczytają.
+    settings: { ...readKeys(SETTINGS_KEYS), [STUDY_STORAGE_KEY]: JSON.stringify(stateFromDump(study)) },
     achievements: readKeys([ACHIEVEMENTS_KEY])[ACHIEVEMENTS_KEY],
     // Ten sam JSON co dawny zapis w localStorage — starsze wersje aplikacji go odczytają.
     shifts: JSON.stringify(shiftStore.get()),
+    study: JSON.stringify(study),
     ...(Object.keys(blobs).length ? { attachmentBlobs: blobs } : {}),
   };
   return { backup, attachments: report };
@@ -153,7 +160,6 @@ const MAX_IMPORT_FILE_SIZE = 120 * 1024 * 1024; // 120 MB
 export const SETTINGS_KEYS = [
   "kaczy.viewPrefs.v1", "kaczy-theme", "kaczy.motion.v1", "kaczy.confirmPrefs.v1",
   "kaczy.effectsSettings.v1", "kaczy.seasonTheme.v1", "kaczy.templates.v1",
-  "kaczy.study.v1",
 ];
 export const ACHIEVEMENTS_KEY = "kaczy.achievements.v1";
 
@@ -196,7 +202,7 @@ export async function parseFullBackup(text: string): Promise<FullBackup> {
   return fullBackupSchema.parse(raw);
 }
 
-export interface RestoreOptions { versions: boolean; settings: boolean; achievements: boolean; shifts: boolean }
+export interface RestoreOptions { versions: boolean; settings: boolean; achievements: boolean; shifts: boolean; study: boolean }
 
 /**
  * Przywraca backup: notatki, foldery i etykiety zawsze (destrukcyjnie),
@@ -226,6 +232,14 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
       await shiftsReady();
       restoreShifts(migrate(JSON.parse(backup.shifts)));
     } catch (err) { logDiag("warn", "backup", "cannot restore shifts", err); }
+  }
+  const legacyStudy = backup.settings?.[STUDY_STORAGE_KEY];
+  if (opts.study && (backup.study !== undefined || legacyStudy !== undefined)) {
+    try {
+      await studyReady();
+      // Starsze kopie niosą Naukę tylko wśród ustawień, w kształcie dawnego zapisu.
+      yStudy.replaceAll(backup.study !== undefined ? cleanDump(JSON.parse(backup.study)) : dumpFromLegacy(JSON.parse(legacyStudy!), studyDevice()));
+    } catch (err) { logDiag("warn", "backup", "cannot restore study", err); }
   }
   for (const [k, v] of Object.entries(writes)) {
     try { localStorage.setItem(k, v); } catch (err) { logDiag("warn", "backup", `cannot restore ${k}`, err); }

@@ -14,9 +14,7 @@ import { CHECKLIST, MODULES, TOPICS } from "@/lib/study/content";
 import {
   addJournalEntry,
   columnOf,
-  JOURNAL_MAX_ENTRIES,
   JOURNAL_MAX_IMAGES,
-  JOURNAL_WARN_ENTRIES,
   removeJournalEntry,
   restoreJournalEntry,
   setSite,
@@ -110,13 +108,6 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
     }
     clearJournalDraft();
     toast.success(kind === "problem" && wasDone ? "Zapisano problem — temat wraca do powtórki" : "Dodano wpis do dziennika");
-    const count = study.journal.length + 1;
-    if (count >= JOURNAL_WARN_ENTRIES) {
-      toast.warning(`Dziennik ma ${entriesPl(count)} z ${JOURNAL_MAX_ENTRIES}`, {
-        id: "journal-full",
-        description: "Po przekroczeniu limitu najstarsze wpisy będą usuwane. Zrób kopię zapasową.",
-      });
-    }
   }
 
   function remove(entry: JournalEntry) {

@@ -848,18 +848,28 @@ Zrobione: `lib/saveStatus.ts` (zapis do IndexedDB: Zapisywanie… / Zapisano / l
 Zasada jak w działach: najpierw **audyt na żywo** (telefon 360/390/430 i desktop 1440, jasny/ciemny, wszystkie układy: lista, siatka, mozaika, tablica, tabela; 5, 25 i 300 notatek), lista usterek do akceptacji, potem fale z testami. Znane już z audytów 2026-10-11:
 - [x] 2b.1 Audyt widoku Notatki i kolumn (z zrzutami) — lista krytyczne/ważne/drobne. ✅ 2026-10-11: 360/390/430/1440, jasny/ciemny, 5 układów, 5/25/300 notatek, warianty kolumn/gęstości/grupowania + pomiary DOM. Wyniki (zaakceptowane; fala 1 — K1–K3, W1–W6, W8 i błąd migracji — zrobiona tego samego dnia, e2e 211/211; fala 2 — D1–D4 — też):
   - **Krytyczne**
-    - K1 Ręczne kolumny 2/3/4 na telefonie dają **1** kolumnę (gorzej niż „Auto” = 2) — `NoteGrid.tsx` klasy `grid-cols-1 sm:…`. → 2b.3 ✅ ręczne 2+ = 2 kolumny na telefonie (3/4 dopiero od `lg`/`xl`)
-    - K2 Lista i Tablica: kafle **sklejone (0 px)** — `space-y-*` kontenera nie działa (pomiar); w Siatce/Mozaice 10 px. → 2b.4, 2b.5 ✅ `listGap` osobno od `gap` (było `gap.split(" ")[1]` = `sm:gap-3`)
-    - K3 Kółko zaznaczenia **nachodzi na tytuł** we wszystkich układach (tytuł 18 px pod kółkiem, np. „Plan tygodnia 1̶6”) i ma 24×24 px na dotyku. → 2b.7 ✅ `pr-5` tytułu przy polu zaznaczenia; cel dotyku i tak ma 44 px (`coarse:after:-inset-2.5`)
+    - K1 Ręczne kolumny 2/3/4 na telefonie dają **1** kolumnę (gorzej niż „Auto” = 2) — `NoteGrid.tsx` klasy `grid-cols-1 sm:…`. → 2b.3
+ ✅ ręczne 2+ = 2 kolumny na telefonie (3/4 dopiero od `lg`/`xl`)
+    - K2 Lista i Tablica: kafle **sklejone (0 px)** — `space-y-*` kontenera nie działa (pomiar); w Siatce/Mozaice 10 px. → 2b.4, 2b.5
+ ✅ `listGap` osobno od `gap` (było `gap.split(" ")[1]` = `sm:gap-3`)
+    - K3 Kółko zaznaczenia **nachodzi na tytuł** we wszystkich układach (tytuł 18 px pod kółkiem, np. „Plan tygodnia 1̶6”) i ma 24×24 px na dotyku. → 2b.7
+ ✅ `pr-5` tytułu przy polu zaznaczenia; cel dotyku i tak ma 44 px (`coarse:after:-inset-2.5`)
   - **Ważne**
-    - W1 Siatka: `auto-rows-fr`, ale kafel nie wypełnia wiersza → dziury do ~220 px między rzędami na telefonie. ✅ bez `auto-rows-fr` (wiersz = najwyższy kafel w wierszu), kafel wypełnia wiersz, data przy dolnej krawędzi (`.note-grid-fill`)
-    - W2 Tabela na telefonie otwiera się, ale ma 41 px przewijania poziomego, daty ucięte („11 paź 20…”), brak przyklejonej pierwszej kolumny; na wąskim ekranie wystarczy krótka data. → 2b.6 ✅ tytuł bierze resztę szerokości (`w-full max-w-0`), krótka data `d MMM` poniżej `sm`, wiersz 44+ px na dotyku — bez przewijania w bok, więc przyklejona kolumna zbędna
-    - W3 Popover „Widok i kolumny”: cele „1 2 3 4” 28×24 px; „Kompakt” na telefonie wizualnie prawie bez różnicy. → 2b.2 ✅ cele 32/44 px, na telefonie tylko Auto/1/2, `aria-pressed`; „Kompakt” — zostaje do 2b.2
-    - W4 Uchwyt „⋮⋮” (61×26 px) na każdym kaflu także na dotyku — szum na każdym kaflu (do decyzji: ukryć na `coarse`, przeciąganie przytrzymaniem). ✅ na dotyku uchwyt tylko przy sortowaniu „Ręcznie”
-    - W5 Pusta notatka (bez tytułu i treści) = pusty kafel z samą datą (w Tabeli „Bez tytułu”) — brak spójnego zastępnika. ✅ kursywą „Bez tytułu”, jak w Tabeli
-    - W6 Lista na desktopie: kolumna `max-w-2xl` wyśrodkowana, a nagłówki „Przypięte / Inne” przy lewej krawędzi. → 2b.8 ✅ lista przy lewej krawędzi (bez `mx-auto`)
+    - W1 Siatka: `auto-rows-fr`, ale kafel nie wypełnia wiersza → dziury do ~220 px między rzędami na telefonie.
+ ✅ bez `auto-rows-fr` (wiersz = najwyższy kafel w wierszu), kafel wypełnia wiersz, data przy dolnej krawędzi (`.note-grid-fill`)
+    - W2 Tabela na telefonie otwiera się, ale ma 41 px przewijania poziomego, daty ucięte („11 paź 20…”), brak przyklejonej pierwszej kolumny; na wąskim ekranie wystarczy krótka data. → 2b.6
+ ✅ tytuł bierze resztę szerokości (`w-full max-w-0`), krótka data `d MMM` poniżej `sm`, wiersz 44+ px na dotyku — bez przewijania w bok, więc przyklejona kolumna zbędna
+    - W3 Popover „Widok i kolumny”: cele „1 2 3 4” 28×24 px; „Kompakt” na telefonie wizualnie prawie bez różnicy. → 2b.2
+ ✅ cele 32/44 px, na telefonie tylko Auto/1/2, `aria-pressed`; „Kompakt” — zostaje do 2b.2
+    - W4 Uchwyt „⋮⋮” (61×26 px) na każdym kaflu także na dotyku — szum na każdym kaflu (do decyzji: ukryć na `coarse`, przeciąganie przytrzymaniem).
+ ✅ na dotyku uchwyt tylko przy sortowaniu „Ręcznie”
+    - W5 Pusta notatka (bez tytułu i treści) = pusty kafel z samą datą (w Tabeli „Bez tytułu”) — brak spójnego zastępnika.
+ ✅ kursywą „Bez tytułu”, jak w Tabeli
+    - W6 Lista na desktopie: kolumna `max-w-2xl` wyśrodkowana, a nagłówki „Przypięte / Inne” przy lewej krawędzi. → 2b.8
+ ✅ lista przy lewej krawędzi (bez `mx-auto`)
     - W7 Tablica: nagłówki kolumn nie są przyklejone (scroll-snap już jest, kolumna 258/366 px — OK). → 2b.5 ✅ przyklejony pasek z kopią nagłówków nad kolumnami (`NoteBoard`), przesuwany razem z przewijaniem w poziomie
-    - W8 Przy starcie dwa dymki naraz (przypomnienia u góry, odznaki u dołu) zasłaniają nagłówek i ostatni kafel. ✅ dymek odznak czeka, aż znikną inne dymki (jak na otwarte okno)
+    - W8 Przy starcie dwa dymki naraz (przypomnienia u góry, odznaki u dołu) zasłaniają nagłówek i ostatni kafel.
+ ✅ dymek odznak czeka, aż znikną inne dymki (jak na otwarte okno)
   - **Drobne**
     - D1 Nagłówek `##` z treści na kaflu (pogrubiony, 16 px) konkuruje z tytułem. → 2b.7 ✅ nagłówki z treści na kaflu w rozmiarze treści (`!text-[1em]`)
     - D2 Metadane 11 px (data, chipy). → 2b.7 ✅ data na kaflu 12 px (`text-xs`); chipy zostają 11 px
@@ -917,11 +927,11 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 - [x] D0.5 Zdjęcia dziennika pominięte w kopii trafiają do raportu (`BackupAttachmentReport.journalPhotos`).
 
 ### D1 — dane Nauki w Yjs (synchronizacja i kopia), migracja bez strat
-- [ ] D1a `lib/study/yStudy.ts` (bez importu `content.ts`): mapy `studyJournal`, `studyBoard`, `studyChecked`, `studyMissed`, `studyDays` (seria z dni), `studyRounds` (per urządzenie), `studyMeta`, `studyMigrations`; testy na dwóch `Y.Doc`. Wzór: `lib/shifts/yShifts.ts`.
-- [ ] D1b `store.ts` jako fasada (to samo API), migracja raz na urządzenie, stary klucz zostaje jako kopia.
-- [ ] D1c Zdjęcia dziennika w `referencedImages`/`syncableRefs` (`yjsStore.ts`) — odśmiecanie, P2P, plik sync.
-- [ ] D1d Sekcja `study` w pełnej kopii (`noteSchema.ts`), przywracanie do Yjs; stary format z `settings` czytany dalej.
-- [ ] D1e Bez limitu wpisów.
+- [x] D1a `lib/study/yStudy.ts` (bez importu `content.ts`): mapy `studyJournal`, `studyBoard`, `studyChecked`, `studyMissed`, `studyDays` (seria z dni), `studyRounds` (per urządzenie), `studyMeta`, `studyMigrations`; testy na dwóch `Y.Doc`. Wzór: `lib/shifts/yShifts.ts`.
+- [x] D1b `store.ts` jako fasada (to samo API), migracja raz na urządzenie, stary klucz zostaje jako kopia.
+- [x] D1c Zdjęcia dziennika w `referencedImages`/`syncableRefs` (`yjsStore.ts`) — odśmiecanie, P2P, plik sync.
+- [x] D1d Sekcja `study` w pełnej kopii (`noteSchema.ts`), przywracanie do Yjs; stary format z `settings` czytany dalej.
+- [x] D1e Bez limitu wpisów. ✅ 2026-10-15: instancja i migracja w `lib/study/data.ts` (przy starcie aplikacji, znacznik urządzenia w `studyMigrations`, seria → dni, rundy → licznik urządzenia), `StudyView` czeka na wczytanie (`useStudyReady`); kopia: sekcja `study` + Nauka w dawnym kształcie w `settings` dla starszych wersji, osobny przełącznik „Nauka i dziennik z budowy” przy przywracaniu, stara kopia czytana z `settings`. Testy: `yStudy.test.ts` (dwa dokumenty), `fullBackup.test.ts`, e2e migracji.
 
 ### D2 — szybki wpis z telefonu (zastępuje 2.10)
 - [ ] D2a Arkusz `JournalEntrySheet`: rodzaj (3 duże przyciski), pigułka budowy, tekst + mikrofon, „Aparat” (`capture`) i „Galeria”, zwinięty temat z listą, CTA „Zapisz wpis” nad klawiaturą; haptyka.
