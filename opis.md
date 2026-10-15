@@ -216,7 +216,7 @@ podglądu w Ustawieniach jest ukryty (`pointer-fine:hidden`).
 **Testy.** `src/lib/haptics.test.ts` (różne wzorce, mysz, ograniczony ruch nadal wibruje, wyłączony przełącznik,
 brak API i wyjątek).
 
-**Commit.** `HASH17` (2026-10-15).
+**Commit.** `6442da5` (2026-10-15).
 
 ---
 
@@ -235,7 +235,7 @@ najmniejszego rozmiaru w aplikacji; wartości poniżej 11 px są nieczytelne w s
 
 **Testy.** `e2e/shifts.spec.ts`, `e2e/touch-targets.spec.ts` (bez zmian, przechodzą).
 
-**Commit.** `HASH17` (2026-10-15).
+**Commit.** `6442da5` (2026-10-15).
 
 ---
 
