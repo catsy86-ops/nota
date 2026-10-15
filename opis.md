@@ -111,7 +111,7 @@ przy obciążeniu — osobno 3/3), iPhone 14 + Pixel 7: 28 zaliczonych, 2 pomini
 sonner 2: Vitest 1030/1030, pełne e2e Chromium 281/281, iPhone 14 + Pixel 7: 27 zaliczonych, 2 pominięte, jeden
 test WebKit niestabilny (`mobile.spec.ts:121`, osobno 3/3).
 
-**Commit.** `ee5a23f` (Radix, lucide), `HASHSO` (sonner) — 2026-10-15.
+**Commit.** `ee5a23f` (Radix, lucide), `4e96f34` (sonner) — 2026-10-15.
 
 ---
 
