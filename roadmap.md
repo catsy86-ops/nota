@@ -969,3 +969,44 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 - [ ] N6 Tablica i lista na telefonie: przełącznik kolumn, „Wyczyść odhaczenia” z „Cofnij”, pigułki ≥44 px.
 
 Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → reszta.
+
+## Plan dopracowania UI: telefon i komputer — 2026-10-15
+
+Źródło: przegląd kodu (agent Plan) + dokumentacja shadcn (context7), wersje z `npm view`. Kontrast to szacunki — zmierzyć axe. Nie powtarza zamkniętych punktów z planów UI, mobile i 2b. Kierunek „zeszyt” zostaje.
+
+**Decyzje do podjęcia (czekają):** D1 „Tryb budowa” jako przełącznik czy domyślnie na telefonie, auto przy `prefers-contrast: more`; D2 wszystkie okna na telefonie jako arkusz od dołu czy tylko formularze; D3 podpisy dolnego paska 12 px i „Terminy” zamiast „Przypomnienia”; D4 Tailwind v4 + React 19 teraz czy później (shadcn wspiera v3); D5 vaul (Drawer z punktami zatrzymania) dla arkusza wpisu czy własny `ui/sheet.tsx`.
+
+### Faza 1 — szybkie wygrane (S)
+- [ ] 1.1 Dolny pasek chowa się przy klawiaturze na Androidzie (`html[data-typing]` z `focusin`/`visualViewport`; `keyboardInset.ts`, `BottomNav.tsx`, `index.css`).
+- [ ] 1.2 `vh` → `dvh`: `FocusMode.tsx:81`, `DrawingCanvas.tsx:230`, `ImportExternalDialog.tsx:81`, `ShortcutsDialog.tsx:87`, `StatsDialog.tsx:70`, `VersionHistory.tsx:39`, `ShiftSettingsDialog.tsx:33`, `YearSummaryDialog.tsx:33`.
+- [ ] 1.3 `ui/dialog.tsx`/`alert-dialog.tsx` na telefonie: margines, zaokrąglenie, `max-h-[calc(100dvh-2rem)]` z przewijaniem (zależy od D2).
+- [ ] 1.4 Cele dotyku: zatwierdzenia i „⋯” w `SidebarFolderItem`/`SidebarLabelItem`/`SidebarFilterItem`, `ShiftsView.tsx:283,354`, nawigacja `ui/calendar.tsx:26` (`opacity-70`, `coarse:size-11`); e2e mierzący cele (5.2).
+- [ ] 1.5 Jasny motyw: `--ring` ≥3:1 (jak `primary-ink`), osobny `--input` ~3:1 dla krawędzi pól; `--border` dekoracyjny zostaje.
+- [ ] 1.6 `ViewSkeleton` zamiast `Suspense fallback={null}` (`Index.tsx:920,938,946`) + wstępne ładowanie widoku przy `pointerdown` w nawigacji.
+- [ ] 1.7 Haptyka niezależna od ograniczonego ruchu (`lib/haptics.ts`).
+- [ ] 1.8 Grafik: 9 px w `ShiftMonthGrid.tsx:151` → `text-2xs`/ikona; `AchievementStamp.tsx:49`.
+- [ ] 1.9 (niski) Zapętlone animacje zatrzymane przy `document.hidden`.
+
+### Faza 2 — średnie (M)
+- [ ] 2.1 „Tryb budowa” (rękawice, słońce): `html[data-site]` — tekst 112,5%, cele 52–56 px (`--tap`), mocniejszy `muted-foreground`/krawędzie, bez kratki, toasty z „Cofnij” 8 s (D1).
+- [ ] 2.2 Dolny pasek: podpisy 12 px, wyraźniejsza aktywna pozycja (D3).
+- [ ] 2.3 Komputer `xl`: Grafik i Kalendarz w dwóch kolumnach z przyklejonym panelem.
+- [ ] 2.4 Komputer: Dziennik ~48 rem + przyklejony panel filtrów i otwartych problemów.
+- [ ] 2.5 `ui/responsive-dialog.tsx` (Dialog na `desk:`, arkusz na telefonie) i migracja ~8 okien (D2).
+- [ ] 2.6 Jeden `StatusPanel` dla pustki, błędu, offline i „nic nie znaleziono”.
+- [ ] 2.7 `@axe-core/playwright` (`e2e/a11y.spec.ts`, oba motywy, 390/1440, wcag22aa, lista wyjątków zapadkowo).
+- [ ] 2.8 Playwright: projekty iPhone 14 (webkit) i Pixel 7 dla `@smoke`/`@mobile`.
+
+### Faza 3 — duże (L)
+- [ ] 3.1 Kafel → edytor i swipe (= 4.1, 4.3) — po teście charakteryzującym i konwersji `NoteCard.tsx` do UTF-8 LF.
+- [ ] 3.2 Wirtualizacja siatki dopiero przy >500 notatek (decyzja z planu mobile).
+- [ ] 3.3 Tailwind v4 / shadcn najnowsze (D4).
+- [ ] 3.4 Paczka: `LazyMotion` + `m` (~−25–35 KB gzip), `y-webrtc` tylko przy synchronizacji, progi w `bundle.spec.ts` w dół.
+
+### Biblioteki
+- [ ] Radix w obrębie major (`npm update`) + pełne e2e; `lucide-react` 0.462 → 1.x (sprawdzić zmienione nazwy).
+- [ ] `sonner` 1.7 → 2 po fazie 1 (własne nadpisania w `index.css:681-695`; sprawdzić changelog).
+- Nie teraz: Tailwind 4 + `tailwind-merge` 3 (D4), React 19, `react-day-picker` 10, vite 8. `recharts` 3 + shadcn Chart tylko przy N4.
+- Komponenty shadcn: tak — Input OTP (parowanie, PIN skarbca), Toggle Group (grupy segmentowe), Breadcrumb (podstrony), Chart (N4); nie — Sidebar, Carousel; Drawer/vaul zależnie od D5; Command już jest.
+
+Kolejność: 1.5 → 1.1 → 1.4 → 1.2/1.3 → 1.6 → 1.7/1.8 → 2.7/2.8 → Radix + lucide → 2.1 → 2.2 → 2.3/2.4 → 2.5/2.6 → sonner, LazyMotion, Input OTP, Toggle Group → faza 3. Każdy krok: typecheck, lint, Vitest, build, e2e smoke, zrzuty 390/1440 w obu motywach, wpis w `opis.md`.
