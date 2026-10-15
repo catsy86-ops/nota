@@ -5,13 +5,13 @@ test.beforeEach(async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 1000 });
 });
 
-test("dział Nauka: adres /nauka, pozycja w pasku bocznym i trzy zakładki @smoke", async ({ page }) => {
+test("dział Nauka: adres /nauka, pozycja w pasku bocznym i cztery zakładki @smoke", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Nauka" }).first().click();
   await expect(page).toHaveURL(/\/nauka$/);
   await expect(page.getByTestId("study-view")).toBeVisible();
   await expect(page.getByTestId("mastery-count")).toHaveText("0");
-  for (const name of ["Quiz", "Tablica", "Lista do nauki"]) {
+  for (const name of ["Quiz", "Tablica", "Lista do nauki", "Dziennik"]) {
     await expect(page.getByRole("tab", { name })).toBeVisible();
   }
 });
@@ -117,7 +117,7 @@ test("dziennik z budowy: lista kontrolna tematu, wpis liczy praktykę, problem c
   await expect(entry).toContainText("Na odcinku do pionu spadek za mały");
   await expect(entry).toContainText("punkty 1/1");
   await expect(entry).toContainText("Dom testowy");
-  await expect(page.getByTestId("journal-week")).toContainText("1 wpisów, 1 problemów");
+  await expect(page.getByTestId("journal-week")).toContainText("1 wpis, 1 problem");
 
   // Problem na budowie cofnął temat z „Umiem” do „W trakcie” i widać go na karcie.
   await page.getByRole("tab", { name: "Tablica" }).click();
@@ -128,6 +128,36 @@ test("dziennik z budowy: lista kontrolna tematu, wpis liczy praktykę, problem c
   await page.reload();
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await expect(page.locator('[data-journal-entry="problem"]')).toHaveCount(1);
+});
+
+test("dziennik: niezapisany wpis ze zdjęciem przeżywa zmianę zakładki, „Wpis z budowy” i odświeżenie", async ({ page }) => {
+  // 1×1 px PNG.
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+  await page.goto("/nauka");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByLabel("Co się dzieje?").fill("Próba ciśnieniowa na 9 bar");
+  await page.getByTestId("journal-photo-input").setInputFiles({ name: "budowa.png", mimeType: "image/png", buffer: png });
+  await expect(page.getByRole("button", { name: "Usuń zdjęcie z wpisu" })).toHaveCount(1);
+  await expect(page.getByRole("button", { name: "Dodaj wpis" })).toBeEnabled();
+
+  // Wcześniej przejście na inną zakładkę albo „Wpis z budowy” z karty kasowało tekst i zdjęcia.
+  await page.getByRole("tab", { name: "Tablica" }).click();
+  await page.getByRole("button", { name: "Spadki kanalizacji: wpis z budowy" }).click();
+  await expect(page.getByLabel("Czego dotyczy")).toHaveValue("spadki");
+  await expect(page.getByLabel("Co się dzieje?")).toHaveValue("Próba ciśnieniowa na 9 bar");
+
+  await page.reload();
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await expect(page.getByLabel("Co się dzieje?")).toHaveValue("Próba ciśnieniowa na 9 bar");
+  await expect(page.getByRole("button", { name: "Usuń zdjęcie z wpisu" })).toHaveCount(1);
+
+  await page.getByRole("button", { name: "Dodaj wpis" }).click();
+  await expect(page.locator("[data-journal-entry]")).toContainText("Próba ciśnieniowa na 9 bar");
+  await expect(page.getByRole("list", { name: "Zdjęcia wpisu" })).toHaveCount(1);
+  // Po zapisie szkic pusty, temat zostaje.
+  await expect(page.getByLabel("Co się dzieje?")).toHaveValue("");
+  await expect(page.getByLabel("Czego dotyczy")).toHaveValue("spadki");
+  await expect(page.getByRole("list", { name: "Zdjęcia we wpisie" })).toHaveCount(0);
 });
 
 test("dziennik: usunięcie wpisu ma Cofnij", async ({ page }) => {

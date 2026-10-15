@@ -3,9 +3,11 @@ import { CHECKLIST, QUESTIONS, TOPICS } from "./content";
 import { buildRound, missedTopics, scoreRound } from "./quiz";
 import { topicToNote } from "./toNote";
 import { journalImageRefs } from "./images";
+import { clearJournalDraft, getJournalDraft, patchJournalDraft, sanitizeDraft, setJournalDraftTopic, EMPTY_DRAFT } from "./draft";
+import { dayLabel, entriesPl, problemsPl } from "./journalView";
 import {
   sanitizeStudy, moveTopic, recordRound, activeStreak, toggleChecked, getStudy, columnOf, resetChecklist,
-  addJournalEntry, removeJournalEntry, restoreJournalEntry, setSite, practiceByTopic,
+  addJournalEntry, removeJournalEntry, restoreJournalEntry, setSite, practiceByTopic, JOURNAL_MAX_ENTRIES,
 } from "./store";
 
 const seeded = (seed: number) => () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
@@ -197,5 +199,63 @@ describe("dziennik z budowy", () => {
     expect(s.site).toHaveLength(120);
     expect(s.journal).toHaveLength(1);
     expect(s.journal[0]).toMatchObject({ id: "ok1", topic: "spadki", checked: ["spadki-1"] });
+  });
+});
+
+describe("dziennik — limit i etykiety", () => {
+  it("ponad 500 wpisów nie wypada (dawny limit kasował najstarsze po cichu)", () => {
+    expect(JOURNAL_MAX_ENTRIES).toBeGreaterThanOrEqual(3000);
+    const journal = Array.from({ length: 800 }, (_, i) => ({ id: `e${i}`, at: i + 1, kind: "note", topic: null, text: `w${i}`, site: "", checked: [], images: [] }));
+    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", streak: 0, lastDay: null };
+    const s = sanitizeStudy(d, { journal });
+    expect(s.journal).toHaveLength(800);
+    expect(s.journal[0].text).toBe("w0");
+  });
+
+  it("etykieta dnia ma rok tylko dla innego roku niż bieżący", () => {
+    const now = new Date(2026, 9, 15, 12).getTime();
+    expect(dayLabel(new Date(2026, 9, 14, 8).getTime(), now)).not.toMatch(/2026/);
+    expect(dayLabel(new Date(2025, 9, 14, 8).getTime(), now)).toMatch(/2025/);
+  });
+
+  it("odmienia liczniki", () => {
+    expect([1, 2, 5, 12, 22].map(entriesPl)).toEqual(["1 wpis", "2 wpisy", "5 wpisów", "12 wpisów", "22 wpisy"]);
+    expect([0, 1, 3].map(problemsPl)).toEqual(["0 problemów", "1 problem", "3 problemy"]);
+  });
+});
+
+describe("szkic wpisu", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    patchJournalDraft({ ...EMPTY_DRAFT });
+  });
+
+  it("przeżywa zmianę tematu bez utraty tekstu i zdjęć; punkty listy się zerują", () => {
+    const img = "c".repeat(64);
+    patchJournalDraft({ topic: "spadki", text: "Spadek 2%", checked: ["spadki-1"], images: [img] });
+    setJournalDraftTopic("spadki");
+    expect(getJournalDraft().checked).toEqual(["spadki-1"]);
+    setJournalDraftTopic("otulina");
+    expect(getJournalDraft()).toMatchObject({ topic: "otulina", text: "Spadek 2%", checked: [], images: [img] });
+  });
+
+  it("po zapisie czyści treść, a rodzaj i temat zostają", () => {
+    patchJournalDraft({ topic: "otulina", kind: "problem", text: "x", checked: ["a"], images: ["d".repeat(64)] });
+    clearJournalDraft();
+    expect(getJournalDraft()).toEqual({ ...EMPTY_DRAFT, topic: "otulina", kind: "problem" });
+  });
+
+  it("zdjęcia ze szkicu są chronione przed odśmiecaniem", () => {
+    const img = "e".repeat(64);
+    patchJournalDraft({ images: [img] });
+    expect(journalImageRefs().has(img)).toBe(true);
+    localStorage.setItem("kaczy.study.draft.v1", "{zepsute");
+    expect(journalImageRefs().has(img)).toBe(false);
+  });
+
+  it("sanitizeDraft odrzuca śmieci", () => {
+    expect(sanitizeDraft(EMPTY_DRAFT, { kind: "?", text: 5, images: ["nie-klucz", "f".repeat(64)], checked: [1, "a"] }))
+      .toEqual({ ...EMPTY_DRAFT, images: ["f".repeat(64)], checked: ["a"] });
+    expect(sanitizeDraft(EMPTY_DRAFT, null)).toBe(EMPTY_DRAFT);
   });
 });

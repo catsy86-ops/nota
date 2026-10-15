@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { AlertTriangle, Camera, CheckCircle2, Mic, NotebookPen, Play, Trash2, X } from "lucide-react";
+import { AlertTriangle, Camera, CheckCircle2, Loader2, Mic, NotebookPen, Play, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,7 +14,9 @@ import { CHECKLIST, MODULES, TOPICS } from "@/lib/study/content";
 import {
   addJournalEntry,
   columnOf,
+  JOURNAL_MAX_ENTRIES,
   JOURNAL_MAX_IMAGES,
+  JOURNAL_WARN_ENTRIES,
   removeJournalEntry,
   restoreJournalEntry,
   setSite,
@@ -22,6 +24,8 @@ import {
   type JournalEntry,
   type JournalKind,
 } from "@/lib/study/store";
+import { dayLabel, entriesPl, problemsPl } from "@/lib/study/journalView";
+import { clearJournalDraft, getJournalDraft, patchJournalDraft, setJournalDraftTopic, useJournalDraft } from "@/lib/study/draft";
 
 const KIND_LABEL: Record<JournalKind, string> = { ok: "Zrobione", problem: "Problem", note: "Notatka" };
 const topicTitle = (id: string | null) => TOPICS.find((t) => t.id === id)?.title ?? null;
@@ -33,21 +37,20 @@ function KindIcon({ kind }: { kind: JournalKind }) {
   return <NotebookPen className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />;
 }
 
-function dayLabel(at: number): string {
-  return new Date(at).toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long" });
-}
-
 /**
  * Dziennik z budowy: wpis powstaje w trakcie pracy, przy temacie z materiału, z jego listą
  * kontrolną pod ręką. Problem cofa temat do powtórki, a „Zrobione” liczy się jako praktyka.
  */
-export function StudyJournal({ initialTopic = "", onPractice }: { initialTopic?: string; onPractice: (topicId: string) => void }) {
+export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => void }) {
   const study = useStudy();
-  const [topic, setTopic] = useState(initialTopic);
-  const [kind, setKind] = useState<JournalKind>("ok");
-  const [text, setText] = useState("");
-  const [checked, setChecked] = useState<Set<string>>(new Set());
-  const [images, setImages] = useState<string[]>([]);
+  const draft = useJournalDraft();
+  const { topic, kind, text, images } = draft;
+  const checked = useMemo(() => new Set(draft.checked), [draft.checked]);
+  const setKind = (next: JournalKind) => patchJournalDraft({ kind: next });
+  const setText = (next: string | ((prev: string) => string)) =>
+    patchJournalDraft({ text: typeof next === "function" ? next(getJournalDraft().text) : next });
+  // Zdjęcia w obróbce (zmniejszanie, zapis): do końca „Dodaj wpis” czeka — inaczej wpis szedł bez nich.
+  const [processing, setProcessing] = useState(0);
   const [zoom, setZoom] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   // Ręce zajęte robotą: dyktowanie dopisuje rozpoznane zdanie na końcu wpisu.
@@ -59,28 +62,37 @@ export function StudyJournal({ initialTopic = "", onPractice }: { initialTopic?:
   const items = useMemo(() => CHECKLIST.filter((c) => c.topic === topic), [topic]);
   const current = TOPICS.find((t) => t.id === topic) ?? null;
 
-  function changeTopic(next: string) {
-    setTopic(next);
-    setChecked(new Set());
-  }
+  const changeTopic = setJournalDraftTopic;
 
   function toggle(id: string) {
-    setChecked((prev) => {
-      const n = new Set(prev);
-      if (n.has(id)) n.delete(id); else n.add(id);
-      return n;
-    });
+    const prev = getJournalDraft().checked;
+    patchJournalDraft({ checked: prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id] });
+  }
+
+  function removeImage(ref: string) {
+    patchJournalDraft({ images: getJournalDraft().images.filter((r) => r !== ref) });
   }
 
   async function addPhotos(files: File[]) {
     let skipped = 0;
+    // Miejsca liczone z góry: dwa szybkie wybory zdjęć nie przekroczą limitu wpisu.
+    const room = JOURNAL_MAX_IMAGES - getJournalDraft().images.length - processing;
+    if (files.length > room) toast(`Wpis mieści maksymalnie ${JOURNAL_MAX_IMAGES} zdjęcia`);
+    const batch = files.slice(0, Math.max(0, room));
+    if (batch.length === 0) return;
+    setProcessing((n) => n + batch.length);
     try {
-      for (const file of files) {
-        if (images.length >= JOURNAL_MAX_IMAGES) { toast(`Wpis mieści maksymalnie ${JOURNAL_MAX_IMAGES} zdjęcia`); break; }
-        const prepared = await prepareImage(file);
-        if (!prepared) { skipped += 1; continue; }
-        const ref = await imageStore.putBlob(prepared);
-        setImages((prev) => (prev.length >= JOURNAL_MAX_IMAGES || prev.includes(ref) ? prev : [...prev, ref]));
+      for (const file of batch) {
+        try {
+          const prepared = await prepareImage(file);
+          if (!prepared) { skipped += 1; continue; }
+          const ref = await imageStore.putBlob(prepared);
+          // Szkic czytany na świeżo: w trakcie obróbki mogło zniknąć inne zdjęcie albo zmienić się tekst.
+          const now = getJournalDraft().images;
+          if (now.length < JOURNAL_MAX_IMAGES && !now.includes(ref)) patchJournalDraft({ images: [...now, ref] });
+        } finally {
+          setProcessing((n) => n - 1);
+        }
       }
     } catch {
       toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki." });
@@ -89,16 +101,22 @@ export function StudyJournal({ initialTopic = "", onPractice }: { initialTopic?:
   }
 
   function submit() {
+    if (processing > 0) return;
     const wasDone = topic && columnOf(study, topic) === "done";
     const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images });
     if (!entry) {
       toast("Wpisz, co się dzieje, dodaj zdjęcie albo zaznacz sprawdzone punkty");
       return;
     }
-    setText("");
-    setChecked(new Set());
-    setImages([]);
+    clearJournalDraft();
     toast.success(kind === "problem" && wasDone ? "Zapisano problem — temat wraca do powtórki" : "Dodano wpis do dziennika");
+    const count = study.journal.length + 1;
+    if (count >= JOURNAL_WARN_ENTRIES) {
+      toast.warning(`Dziennik ma ${entriesPl(count)} z ${JOURNAL_MAX_ENTRIES}`, {
+        id: "journal-full",
+        description: "Po przekroczeniu limitu najstarsze wpisy będą usuwane. Zrób kopię zapasową.",
+      });
+    }
   }
 
   function remove(entry: JournalEntry) {
@@ -228,19 +246,25 @@ export function StudyJournal({ initialTopic = "", onPractice }: { initialTopic?:
           </span>
         </label>
 
-        {images.length > 0 && (
+        {(images.length > 0 || processing > 0) && (
           <ul className="flex flex-wrap gap-2" aria-label="Zdjęcia we wpisie">
             {images.map((ref) => (
               <li key={ref} className="relative">
                 <NoteImage imageRef={ref} alt="Zdjęcie z budowy" className="h-20 w-20 rounded-lg object-cover" placeholderClassName="h-20 w-20 rounded-lg" />
                 <button
                   type="button"
-                  onClick={() => setImages((prev) => prev.filter((r) => r !== ref))}
+                  onClick={() => removeImage(ref)}
                   aria-label="Usuń zdjęcie z wpisu"
                   className="absolute -right-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full bg-destructive text-destructive-foreground coarse:h-8 coarse:w-8"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
+              </li>
+            ))}
+            {Array.from({ length: processing }, (_, i) => (
+              <li key={`processing-${i}`} className="grid h-20 w-20 place-items-center rounded-lg bg-muted" data-testid="journal-photo-processing">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden />
+                <span className="sr-only">Przygotowuję zdjęcie</span>
               </li>
             ))}
           </ul>
@@ -260,11 +284,15 @@ export function StudyJournal({ initialTopic = "", onPractice }: { initialTopic?:
             <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} className="coarse:h-11">
               <Camera className="mr-1.5 h-4 w-4" />Dodaj zdjęcie
             </Button>
-            <p className="text-xs text-muted-foreground">
-              {checked.size > 0 ? `Sprawdzone punkty: ${checked.size}/${items.length}` : "Ctrl+Enter dodaje wpis"}
-            </p>
+            {checked.size > 0 ? (
+              <p className="text-xs text-muted-foreground tabular-nums">Sprawdzone punkty: {checked.size}/{items.length}</p>
+            ) : (
+              <p className="text-xs text-muted-foreground coarse:hidden">Ctrl+Enter dodaje wpis</p>
+            )}
           </div>
-          <Button onClick={submit} className="coarse:h-11">Dodaj wpis</Button>
+          <Button onClick={submit} disabled={processing > 0} className="coarse:h-11">
+            {processing > 0 ? <><Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden />Przygotowuję zdjęcia…</> : "Dodaj wpis"}
+          </Button>
         </div>
       </section>
 
@@ -272,7 +300,7 @@ export function StudyJournal({ initialTopic = "", onPractice }: { initialTopic?:
         <header className="mb-3 flex items-baseline justify-between gap-3">
           <h3 className="font-display text-lg">Dziennik</h3>
           <p className="font-mono text-xs text-muted-foreground tabular-nums" data-testid="journal-week">
-            7 dni: {week.all} wpisów, {week.problems} problemów
+            7 dni: {entriesPl(week.all)}, {problemsPl(week.problems)}
           </p>
         </header>
 

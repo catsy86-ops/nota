@@ -31,7 +31,12 @@ export interface JournalEntry {
 /** Ile zdjęć mieści jeden wpis. */
 export const JOURNAL_MAX_IMAGES = 4;
 
-export const JOURNAL_MAX_ENTRIES = 500;
+/**
+ * Górna granica dziennika w localStorage (wpis bez zdjęć to ok. 300 B, więc ~1 MB). Powyżej
+ * najstarsze wpisy wypadają — od `JOURNAL_WARN_ENTRIES` dziennik ostrzega przy każdym wpisie.
+ */
+export const JOURNAL_MAX_ENTRIES = 3000;
+export const JOURNAL_WARN_ENTRIES = Math.floor(JOURNAL_MAX_ENTRIES * 0.9);
 export const JOURNAL_MAX_TEXT = 2000;
 const SITE_MAX = 120;
 

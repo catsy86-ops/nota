@@ -2,6 +2,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { TOPICS } from "@/lib/study/content";
 import { columnOf, useStudy } from "@/lib/study/store";
+import { setJournalDraftTopic } from "@/lib/study/draft";
 import { useState } from "react";
 import { QuizPanel, type QuizScope } from "./QuizPanel";
 import { StudyBoard } from "./StudyBoard";
@@ -49,9 +50,8 @@ export default function StudyView() {
   const practice = (topic: string) => { setScope({ kind: "topic", topic }); setRun((n) => n + 1); setTab("quiz"); };
   const changeScope = (s: QuizScope) => { setScope(s); setRun((n) => n + 1); };
   // Z karty tematu „Wpis z budowy” otwiera dziennik z już wybranym tematem.
-  const [journalTopic, setJournalTopic] = useState("");
-  const [journalKey, setJournalKey] = useState(0);
-  const openJournal = (topic: string) => { setJournalTopic(topic); setJournalKey((n) => n + 1); setTab("journal"); };
+  // Zmienia tylko temat szkicu — niezapisany tekst i zdjęcia zostają.
+  const openJournal = (topic: string) => { setJournalDraftTopic(topic); setTab("journal"); };
 
   return (
     <div className="space-y-6" data-testid="study-view">
@@ -77,7 +77,7 @@ export default function StudyView() {
         <TabsContent value="board" className="mt-4"><StudyBoard onPractice={practice} onJournal={openJournal} /></TabsContent>
         <TabsContent value="list" className="mt-4"><StudyChecklist /></TabsContent>
         <TabsContent value="journal" className="mt-4">
-          <StudyJournal key={journalKey} initialTopic={journalTopic} onPractice={practice} />
+          <StudyJournal onPractice={practice} />
         </TabsContent>
       </Tabs>
     </div>

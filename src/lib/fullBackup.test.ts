@@ -169,4 +169,12 @@ describe("pełny backup v3 — załączniki", () => {
     expect(attachments.missing.map((a) => a.name)).toEqual(["obcy.pdf"]);
     expect(describeSkippedAttachments(attachments)).toContain("nieobecne");
   });
+
+  it("reports journal photos left out of the backup instead of dropping them silently", async () => {
+    localStorage.setItem("kaczy.study.v1", JSON.stringify({ journal: [{ id: "j", at: 1, kind: "ok", topic: null, text: "x", site: "", checked: [], images: ["e".repeat(64)] }] }));
+    const { attachments } = await buildFullBackupWithReport();
+    expect(attachments.journalPhotos).toBe(1);
+    expect(describeSkippedAttachments(attachments)).toContain("zdjęcia dziennika");
+    localStorage.removeItem("kaczy.study.v1");
+  });
 });

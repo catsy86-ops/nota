@@ -837,7 +837,7 @@ Zrobione: `lib/saveStatus.ts` (zapis do IndexedDB: Zapisywanie… / Zapisano / l
 - [x] 2.7 **Wyszukiwanie w zasięgu kciuka** (W4): ikona szukania w dolnym pasku lub pull-down na liście; pole u góry zostaje na desktopie. ✅ wariant bez zmiany paska: ponowne stuknięcie „Notatki” i „Więcej → Szukaj” (grupa „Szybko”). Ikona szukania w pasku / pull-down — do decyzji.
 - [x] 2.8 **Grafik**: ~700 px „chrome” przed siatką — podpowiedzi zwijane po pierwszym użyciu, „Własne godziny” do menu pędzla, pasek pędzli sticky, `NowCard` bez ucinania nazwy. ✅ częściowo: podpowiedź o przenoszeniu z „Rozumiem”, nazwa w `NowCard` na 2 linie. „Własne godziny” w menu pędzla i sticky pasek — nie.
 - [x] 2.9 **Kalendarz**: pasek tygodnia i kafle Dziś/Jutro duplikują tydzień z siatki — zwinąć na wąskim ekranie. ✅ pasek tygodnia schowany < sm, Dziś/Jutro w 2 kolumnach.
-- [ ] 2.10 **Dziennik Nauki**: lista wpisów nad formularzem lub formularz w arkuszu z FAB „+ Wpis”, CTA pełnej szerokości, bez „Ctrl+Enter” na dotyku. (Uwaga: `StudyJournal.tsx` ma niezacommitowane zmiany użytkownika.)
+- [ ] 2.10 **Dziennik Nauki**: lista wpisów nad formularzem lub formularz w arkuszu z FAB „+ Wpis”, CTA pełnej szerokości, bez „Ctrl+Enter” na dotyku. → przeniesione do planu Nauki, D2 (sekcja na końcu).
 - [x] 2.11 **Przypomnienia**: szybkie „Gotowe / Odłóż” na karcie listy (nie tylko w toaście); lista zaległych jako zwykła kolumna, nie masonry. ✅ „Gotowe / Jutro rano” na kaflu zaległego terminu (z Cofnij). Lista bez masonry — nie.
 - [x] 2.12 **Pierwsze uruchomienie**: jedna karta „Dziś: 2 zaległe, 1 termin” zamiast stosu; baner instalacji dopiero po pierwszej notatce (jest `ready`). ✅ przez 2.5 (zbiorczy dymek) i istniejące `ready` banera; odznaka już czeka na zamknięcie okien.
 
@@ -901,3 +901,61 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 1. Wirtualizacja: wystarczy `content-visibility` + odchudzony kafel, czy robimy pełne okienkowanie (L, ryzyko z dnd-kit)?
 2. Swipe: w prawo = przypnij, w lewo = archiwizuj (propozycja audytu) czy zostaje archiwum/kosz?
 3. Precache: odchudzić do ~1,5 MB kosztem PDF/Statystyk offline dopiero po pierwszym użyciu?
+
+
+## Plan rozbudowy Nauki i Dziennika budowy — 2026-10-15
+
+Źródło: przegląd kodu działu (agent Plan). Dziennik pierwszy, potem Nauka. Każdy punkt = osobny commit.
+
+**Decyzje (2026-10-15):** budowa jako pełna karta (nazwa, adres, inwestor, archiwum — D4b obowiązkowe); godziny pracy w raporcie z Grafiku; PDF przez widok do druku; start od D0. Domyślnie wg rekomendacji (do zmiany): wpisy w osobnej mapie Yjs + most „Do notatki”, synchronizacja ze sparowanymi urządzeniami, status problemu tak, GPS nie, 8 zdjęć na wpis, SM-2 z oceną automatyczną, własne materiały ręcznie (import PDF nie).
+
+### D0 — szybkie naprawy (localStorage, bez zmiany modelu)
+- [x] D0.1 Szkic wpisu w `kaczy.study.draft.v1` (`lib/study/draft.ts`): przeżywa zmianę zakładki, „Wpis z budowy” z karty (zmienia tylko temat) i odświeżenie; zdjęcia szkicu chronione przed odśmiecaniem (`journalImageRefs`).
+- [x] D0.2 Zdjęcia w obróbce: kafelki z kółkiem, „Dodaj wpis” wyłączony do końca; limit liczony z góry.
+- [x] D0.3 Rok w etykiecie dnia (inny rok), odmiana liczników (`lib/study/journalView.ts`), „Ctrl+Enter” schowane na dotyku.
+- [x] D0.4 Limit dziennika 500 → 3000 + ostrzeżenie od 90% (usunięcie limitu w D1e).
+- [x] D0.5 Zdjęcia dziennika pominięte w kopii trafiają do raportu (`BackupAttachmentReport.journalPhotos`).
+
+### D1 — dane Nauki w Yjs (synchronizacja i kopia), migracja bez strat
+- [ ] D1a `lib/study/yStudy.ts` (bez importu `content.ts`): mapy `studyJournal`, `studyBoard`, `studyChecked`, `studyMissed`, `studyDays` (seria z dni), `studyRounds` (per urządzenie), `studyMeta`, `studyMigrations`; testy na dwóch `Y.Doc`. Wzór: `lib/shifts/yShifts.ts`.
+- [ ] D1b `store.ts` jako fasada (to samo API), migracja raz na urządzenie, stary klucz zostaje jako kopia.
+- [ ] D1c Zdjęcia dziennika w `referencedImages`/`syncableRefs` (`yjsStore.ts`) — odśmiecanie, P2P, plik sync.
+- [ ] D1d Sekcja `study` w pełnej kopii (`noteSchema.ts`), przywracanie do Yjs; stary format z `settings` czytany dalej.
+- [ ] D1e Bez limitu wpisów.
+
+### D2 — szybki wpis z telefonu (zastępuje 2.10)
+- [ ] D2a Arkusz `JournalEntrySheet`: rodzaj (3 duże przyciski), pigułka budowy, tekst + mikrofon, „Aparat” (`capture`) i „Galeria”, zwinięty temat z listą, CTA „Zapisz wpis” nad klawiaturą; haptyka.
+- [ ] D2b Lista wpisów na górze; na komputerze „+ Wpis” w nagłówku.
+- [ ] D2c „+” w dolnym pasku na /nauka = „+ Wpis” (`/nauka?wpis=1`), skrót PWA „Wpis z budowy”.
+- [ ] D2d Dyktowanie offline: podpowiedź o mikrofonie klawiatury.
+- [ ] D2e Prośba o trwały zapis przy pierwszym zdjęciu.
+
+### D3 — edycja i problemy
+- [ ] D3a Edycja wpisu w arkuszu (data i godzina — wpis „za wczoraj”), „Usuń” w arkuszu zamiast kosza na liście.
+- [ ] D3b Problem otwarty/rozwiązany, licznik „Otwarte problemy: N”.
+
+### D4 — budowy
+- [ ] D4a Pigułki ostatnich budów w arkuszu i filtrach.
+- [ ] D4b Karta budowy (nazwa, adres, inwestor, archiwum); wpis z `siteId` + kopią nazwy; migracja tekstowych nazw.
+
+### D5 — oś czasu i filtry
+- [ ] Dzień → budowa, przyklejone nagłówki dni; filtry rodzaju, budowy, tematu; szukanie bez ogonków; ostatnie 30 dni + „Pokaż starsze” (`journalView.ts`).
+
+### D6 — raport
+- [ ] D6a Raport dnia/zakresu dla budowy (markdown, czysta funkcja), godziny z Grafiku.
+- [ ] D6b „Udostępnij” (`navigator.share` z tekstem i zdjęciami; inaczej schowek).
+- [ ] D6c „Do notatki” (etykieta `budowa`, te same klucze zdjęć).
+- [ ] D6d PDF: widok do druku (`@media print`).
+
+### D7 — powiązania z nauką
+- [ ] Problem z tematem → „Ćwicz teraz”; karta tematu pokazuje ostatni problem; pytania tematu należne dziś (po N3).
+
+### N — Nauka
+- [ ] N1 (= 4.5) Nagłówek „Instalacje wod-kan”, pasek opanowania z modułami i podpisami na dotyk, podpisane przyciski kart, cyfry `tabular-nums` bez `font-display`, zakładka „Lista”.
+- [ ] N2 Zapamiętana zakładka; na telefonie domyślnie Dziennik.
+- [ ] N3 Powtórki SM-2 lite (`lib/study/srs.ts`, mapa `studyReview`), „Na dziś: N”.
+- [ ] N4 Statystyki: trafność per temat, dni nauki, wpisy per budowa i miesiąc.
+- [ ] N5 Własne pytania i punkty listy (`studyCustom`); import plików później.
+- [ ] N6 Tablica i lista na telefonie: przełącznik kolumn, „Wyczyść odhaczenia” z „Cofnij”, pigułki ≥44 px.
+
+Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → reszta.

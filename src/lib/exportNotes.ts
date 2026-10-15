@@ -47,17 +47,23 @@ export interface BackupAttachmentReport {
   tooLarge: Attachment[];
   /** Manifest jest, ale bajtów nie ma na tym urządzeniu (np. plik dodany na innym). */
   missing: Attachment[];
+  /** Zdjęcia dziennika z budowy, które nie weszły do backupu (budżet albo brak bajtów). */
+  journalPhotos?: number;
 }
 
 /** Zdanie do toastu o pominiętych załącznikach; `null`, gdy wszystko weszło. */
 export function describeSkippedAttachments(r?: BackupAttachmentReport): string | null {
   if (!r) return null;
   const n = r.tooLarge.length + r.missing.length;
-  if (!n) return null;
+  const photos = r.journalPhotos ?? 0;
+  if (!n && !photos) return null;
+  const photosPart = photos ? `Pominięte zdjęcia dziennika z budowy: ${photos} — zostaną tylko na tym urządzeniu.` : null;
+  if (!n) return photosPart;
   const parts: string[] = [];
   if (r.tooLarge.length) parts.push(`${r.tooLarge.length} za duże na backup (limit ${formatFileSize(BACKUP_ATTACHMENTS_BUDGET_BYTES)} na wszystkie pliki)`);
   if (r.missing.length) parts.push(`${r.missing.length} nieobecne na tym urządzeniu`);
-  return `Pominięte załączniki: ${parts.join(", ")}. Zostaną w notatkach jako wpisy bez zawartości.`;
+  const main = `Pominięte załączniki: ${parts.join(", ")}. Zostaną w notatkach jako wpisy bez zawartości.`;
+  return photosPart ? `${main} ${photosPart}` : main;
 }
 
 /** Bajty załączników do backupu v3 w ramach budżetu; najpierw mniejsze, żeby weszło ich jak najwięcej. */
@@ -77,9 +83,10 @@ async function collectAttachmentBlobs(): Promise<{ blobs: Record<string, string>
   for (const hash of journalImageRefs()) {
     if (blobs[hash]) continue;
     const dataUrl = await imageStore.getDataUrl(hash);
-    if (!dataUrl) continue;
+    // Wcześniej pomijane po cichu — użytkownik myślał, że zdjęcia z budowy są w kopii.
+    if (!dataUrl) { report.journalPhotos = (report.journalPhotos ?? 0) + 1; continue; }
     const approx = Math.ceil(dataUrl.length * 0.75);
-    if (used + approx > BACKUP_ATTACHMENTS_BUDGET_BYTES) continue;
+    if (used + approx > BACKUP_ATTACHMENTS_BUDGET_BYTES) { report.journalPhotos = (report.journalPhotos ?? 0) + 1; continue; }
     blobs[hash] = dataUrl;
     used += approx;
   }
