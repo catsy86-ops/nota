@@ -1266,7 +1266,7 @@ podpisu/pieczątki w samym protokole — to część raportu (P5b).
 **Testy.** `src/lib/study/pressureTest.test.ts`, `e2e/journal-pressure-test.spec.ts` (woda z wartościami → lista
 i tekst raportu; zalanie bez ciśnienia, sam protokół zapisuje wpis).
 
-**Commit.** — (2026-10-15).
+**Commit.** `dcb1d66` (2026-10-15).
 
 ---
 
