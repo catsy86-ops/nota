@@ -438,7 +438,7 @@ z wypełnionymi kratkami.
 **Testy.** `src/lib/yjsSync.test.ts` („codeFromPaste wyciąga kod z linku i grup”), `e2e/sync-code.spec.ts` (link
 `?pair=` wypełnia kratki; 8/12 znaków, odrzucanie „O” i „0”).
 
-**Commit.** — (2026-10-15).
+**Commit.** `75a026c` (2026-10-15).
 
 ---
 
