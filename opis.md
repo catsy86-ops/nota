@@ -1235,7 +1235,7 @@ strzałki „Poprzednie/Następne”, licznik „2/5” i obsługę ←/→ — 
 **Testy.** `src/lib/study/photoCaption.test.ts`, `e2e/journal-photos.spec.ts` (limit 5 z komunikatem, podpis
 podmienia zdjęcie, galeria: przyciski i strzałki).
 
-**Commit.** — (2026-10-15).
+**Commit.** `bd14a71` (2026-10-15).
 
 ---
 
