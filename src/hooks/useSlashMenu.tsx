@@ -7,7 +7,7 @@ import {
 } from "@/lib/slashMenu";
 
 interface Options {
-  textareaRef: RefObject<HTMLTextAreaElement>;
+  textareaRef: RefObject<HTMLTextAreaElement | null>;
   /** Bieżący tekst — zmiana (też z zewnątrz) odświeża menu. */
   value: string;
   /** Gdy inna lista podpowiedzi (np. `[[`) jest otwarta, menu „/” się nie pokazuje. */

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 interface FindReplaceBarProps {
   value: string;
   onChange: (value: string) => void;
-  textareaRef: React.RefObject<HTMLTextAreaElement>;
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   onClose: () => void;
 }
 

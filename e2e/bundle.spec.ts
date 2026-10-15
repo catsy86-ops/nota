@@ -90,7 +90,8 @@ test("PDF export lazily fetches its chunk and produces a file", async ({ page })
 // zejściu w dół obniż próg. Czasów (FAB, klawisz) tu nie ma — na współdzielonej maszynie CI skaczą.
 const KB = 1024;
 const BUDGET = {
-  eagerJsGzip: 375 * KB, // 2026-10-11: 357 KB (index 214 + react/motion/radix/dnd)
+  // 2026-10-15: 397 KB po React 19 (react-dom/client ~74 z routerem, index 218). Do odzyskania: LazyMotion (plan UI 3.4).
+  eagerJsGzip: 400 * KB, // 2026-10-11: 357 KB (index 214 + react/motion/radix/dnd)
   precacheBytes: 4.3 * KB * KB, // 2026-10-11: 3,85 MB, 72 pliki
   domPhone: 10_500, // 2026-10-11: 9 763 przy 300 notatkach (mozaika)
   domDesktop: 20_500, // 2026-10-11: 19 220 — akcje kafla w DOM dla najechania

@@ -53,7 +53,7 @@ test("siatka miesiąca pokazuje termin w komórce dnia i w panelu dnia", async (
   // Ostatni dzień miesiąca: na pewno w bieżącym miesiącu i nieodfiltrowany
   // blokadą „data w przeszłości". Godzina późna, żeby termin nie wypadł
   // w przeszłości, gdy test biegnie po południu.
-  const pickerDay = page.getByRole("gridcell", { disabled: false }).last();
+  const pickerDay = page.locator("[role=gridcell] button:not([disabled])").last();
   const dayNumber = (await pickerDay.textContent())!.trim();
   await pickerDay.click();
   await page.locator('input[type="time"]').fill("23:59");
@@ -165,7 +165,7 @@ async function seedWeeklySeries(page: import("@playwright/test").Page, title: st
   await card.getByRole("button", { name: "Przypomnienie" }).click();
   // Początek widocznego miesiąca w pickerze bywa w przeszłości — bierzemy
   // pierwszy dozwolony dzień i późną godzinę, żeby termin był w przyszłości.
-  await page.getByRole("gridcell", { disabled: false }).first().click();
+  await page.locator("[role=gridcell] button:not([disabled])").first().click();
   await page.locator('input[type="time"]').fill("23:30");
   await page.locator("select").selectOption("weekly");
   await page.getByRole("button", { name: "Zapisz", exact: true }).click();

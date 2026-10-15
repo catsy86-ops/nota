@@ -69,7 +69,7 @@ const ENTER_SCALE = 0.94;
  * pomiar przy każdym otwarciu). Kafel poza ekranem lub brak kafla (paleta,
  * inny widok) — zostaje środek panelu.
  */
-function useOriginFromTile(panelRef: React.RefObject<HTMLDivElement>, noteId: string) {
+function useOriginFromTile(panelRef: React.RefObject<HTMLDivElement | null>, noteId: string) {
   useLayoutEffect(() => {
     const panel = panelRef.current;
     const tile = document.querySelector(`[data-note-id-wrap="${CSS.escape(noteId)}"]`);

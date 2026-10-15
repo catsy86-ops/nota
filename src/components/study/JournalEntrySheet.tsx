@@ -210,7 +210,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     if (entry) toastWithUndo("Usunięto wpis", () => restoreJournalEntry(entry), { id: "journal-removed" });
   }
 
-  const fileInput = (props: { ref: React.RefObject<HTMLInputElement>; testId: string; capture?: boolean }) => (
+  const fileInput = (props: { ref: React.RefObject<HTMLInputElement | null>; testId: string; capture?: boolean }) => (
     <input
       ref={props.ref}
       type="file"

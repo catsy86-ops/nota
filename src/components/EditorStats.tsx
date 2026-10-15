@@ -15,7 +15,7 @@ export const EditorStats = memo(function EditorStats({
   value,
   className,
 }: {
-  textareaRef: RefObject<HTMLTextAreaElement>;
+  textareaRef: RefObject<HTMLTextAreaElement | null>;
   value: string;
   className?: string;
 }) {

@@ -5,7 +5,7 @@ import { useOverlayHistory } from "@/hooks/useOverlayHistory";
  * Montowany wewnątrz treści okna/arkusza (istnieje tylko, gdy okno jest otwarte):
  * „wstecz” przeglądarki zamyka okno tak samo jak przycisk ×.
  */
-export function OverlayBack({ closeRef }: { closeRef: React.RefObject<HTMLElement> }) {
+export function OverlayBack({ closeRef }: { closeRef: React.RefObject<HTMLElement | null> }) {
   useOverlayHistory(true, () => closeRef.current?.click());
   return null;
 }

@@ -1,6 +1,6 @@
 import * as React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { DayPicker } from "react-day-picker";
+import { DayPicker, getDefaultClassNames } from "react-day-picker";
 import { pl } from "date-fns/locale";
 
 import { cn } from "@/lib/utils";
@@ -10,43 +10,44 @@ export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
 // Polski domyślnie: nazwy miesięcy i dni oraz tydzień od poniedziałku (było „October”, „Su Mo Tu”).
 function Calendar({ className, classNames, showOutsideDays = true, locale = pl, ...props }: CalendarProps) {
+  const d = getDefaultClassNames();
   return (
     <DayPicker
       locale={locale}
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
       classNames={{
-        months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-        month: "space-y-4",
-        caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium first-letter:uppercase",
-        nav: "space-x-1 flex items-center",
-        nav_button: cn(
-          buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+        root: cn("w-fit", d.root),
+        months: cn("relative flex flex-col gap-4 sm:flex-row", d.months),
+        month: cn("flex flex-col gap-4", d.month),
+        month_caption: cn("flex h-9 items-center justify-center px-10 coarse:h-11", d.month_caption),
+        caption_label: cn("text-sm font-medium first-letter:uppercase", d.caption_label),
+        nav: cn("absolute inset-x-0 top-0 flex items-center justify-between", d.nav),
+        // Strzałki widoczne i duże na dotyku: w słońcu 50% krycia ginęło.
+        button_previous: cn(buttonVariants({ variant: "outline" }), "h-9 w-9 bg-transparent p-0 opacity-70 hover:opacity-100 coarse:h-11 coarse:w-11", d.button_previous),
+        button_next: cn(buttonVariants({ variant: "outline" }), "h-9 w-9 bg-transparent p-0 opacity-70 hover:opacity-100 coarse:h-11 coarse:w-11", d.button_next),
+        month_grid: cn("w-full border-collapse", d.month_grid),
+        weekdays: cn("flex", d.weekdays),
+        weekday: cn("w-9 rounded-md text-[0.8rem] font-normal text-muted-foreground", d.weekday),
+        week: cn("mt-2 flex w-full", d.week),
+        day: cn(
+          "relative h-9 w-9 p-0 text-center text-sm focus-within:relative focus-within:z-20",
+          "[&:has([aria-selected])]:bg-muted first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
+          d.day,
         ),
-        nav_button_previous: "absolute left-1",
-        nav_button_next: "absolute right-1",
-        table: "w-full border-collapse space-y-1",
-        head_row: "flex",
-        head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
-        row: "flex w-full mt-2",
-        cell: "h-9 w-9 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-muted/50 [&:has([aria-selected])]:bg-muted first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
-        day: cn(buttonVariants({ variant: "ghost" }), "h-9 w-9 p-0 font-normal aria-selected:opacity-100"),
-        day_range_end: "day-range-end",
-        day_selected:
-          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
-        day_today: "bg-muted text-foreground",
-        day_outside:
-          "day-outside text-muted-foreground opacity-50 aria-selected:bg-muted/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
-        day_disabled: "text-muted-foreground opacity-50",
-        day_range_middle: "aria-selected:bg-muted aria-selected:text-foreground",
-        day_hidden: "invisible",
+        day_button: cn(buttonVariants({ variant: "ghost" }), "h-9 w-9 p-0 font-normal aria-selected:opacity-100"),
+        selected:
+          "[&>button]:bg-primary [&>button]:text-primary-foreground [&>button:hover]:bg-primary [&>button:hover]:text-primary-foreground [&>button:focus]:bg-primary [&>button:focus]:text-primary-foreground",
+        today: "[&>button]:bg-muted [&>button]:text-foreground",
+        outside: "text-muted-foreground opacity-50 aria-selected:bg-muted/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
+        disabled: "text-muted-foreground opacity-50",
+        range_middle: "aria-selected:bg-muted aria-selected:text-foreground",
+        hidden: "invisible",
         ...classNames,
       }}
       components={{
-        IconLeft: ({ ..._props }) => <ChevronLeft className="h-4 w-4" />,
-        IconRight: ({ ..._props }) => <ChevronRight className="h-4 w-4" />,
+        Chevron: ({ orientation, className: c }) =>
+          orientation === "left" ? <ChevronLeft className={cn("h-4 w-4", c)} /> : <ChevronRight className={cn("h-4 w-4", c)} />,
       }}
       {...props}
     />

@@ -20,7 +20,7 @@ interface Tip {
  */
 export function HoverTip() {
   const [tip, setTip] = useState<Tip | null>(null);
-  const timer = useRef<number>();
+  const timer = useRef<number | undefined>(undefined);
   const current = useRef<HTMLElement | null>(null);
 
   useEffect(() => {

@@ -112,7 +112,8 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks: {
-          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          // React 19: renderer jest w `react-dom/client` (samo `react-dom` to cienka nakładka).
+          "vendor-react": ["react", "react-dom", "react-dom/client", "scheduler", "react-router-dom"],
           "vendor-motion": ["framer-motion"],
           "vendor-dnd": ["@dnd-kit/core", "@dnd-kit/sortable", "@dnd-kit/utilities"],
           // Deliberately no "vendor-pdf": jspdf is reachable only through the

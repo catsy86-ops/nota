@@ -5,7 +5,7 @@ import { completeWikiLink, suggestWikiTitles, wikiQueryAt, type WikiQuery } from
 import { completeMention, mentionQueryAt, suggestMentions, type MentionItem } from "@/lib/mentions";
 
 interface Options {
-  textareaRef: RefObject<HTMLTextAreaElement>;
+  textareaRef: RefObject<HTMLTextAreaElement | null>;
   value: string;
   onChange: (text: string) => void;
   /** Tytuły do podpowiedzi (`WikiIndex.titles`). */

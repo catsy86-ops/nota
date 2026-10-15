@@ -5,7 +5,7 @@ interface LiveNoteTextOptions {
   noteId: string;
   /** Czy sesja edycji jest otwarta (`beginNoteTextEdit` już zawołane). */
   active: boolean;
-  textareaRef: RefObject<HTMLTextAreaElement>;
+  textareaRef: RefObject<HTMLTextAreaElement | null>;
   /** Bieżący szkic treści — czytany w chwili zdarzenia, nie z domknięcia. */
   getDraft: () => string;
   setDraft: (text: string) => void;

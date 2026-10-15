@@ -55,7 +55,7 @@ const WIKI_RX = /\[\[([^[\]\n]+?)\]\]/g;
 
 function renderWithWiki(text: string, onWikiClick?: (t: string) => void, known?: Set<string>) {
   if (!onWikiClick && !known) return text;
-  const parts: (string | JSX.Element)[] = [];
+  const parts: ReactNode[] = [];
   let last = 0;
   let m: RegExpExecArray | null;
   let idx = 0;

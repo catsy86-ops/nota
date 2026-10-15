@@ -14,7 +14,7 @@ export const MASONRY_ROW_PX = 4;
  * Jeden `ResizeObserver` na wszystkie karty, styl ustawiany wprost na elemencie —
  * zmiana wysokości karty nie przerysowuje Reacta. Nowe karty łapie `MutationObserver`.
  */
-export function useMasonrySpans(container: RefObject<HTMLElement>, enabled: boolean, itemSelector: string): void {
+export function useMasonrySpans(container: RefObject<HTMLElement | null>, enabled: boolean, itemSelector: string): void {
   // Przed malowaniem: przy przełączeniu układu bez remontu siatki (`changeView`) karty
   // nie mrugają klatkę z rozpiętością z poprzedniego układu.
   useLayoutEffect(() => {

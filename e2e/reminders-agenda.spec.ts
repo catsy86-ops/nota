@@ -14,7 +14,8 @@ async function withReminder(page: import("@playwright/test").Page, title: string
   const card = page.locator("[data-note-id-wrap]", { hasText: title });
   await card.hover();
   await card.getByRole("button", { name: "Przypomnienie" }).click();
-  await page.getByRole("gridcell", { name: day, exact: true }).first().click();
+  // react-day-picker 9: gridcell to komórka, dzień to przycisk z pełną datą w nazwie.
+  await page.locator("[role=gridcell]:not([data-outside]) button", { hasText: new RegExp(`^${day}$`) }).first().click();
   await page.locator('input[type="time"]').fill("18:00");
   await page.getByRole("button", { name: "Zapisz", exact: true }).click();
 }
