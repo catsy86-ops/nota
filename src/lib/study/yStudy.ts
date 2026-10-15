@@ -1,4 +1,5 @@
 import * as Y from "yjs";
+import { cleanFittings, type Fitting } from "./fittings";
 import { isImageRef } from "@/lib/imageStore";
 import { addDaysToKey } from "@/lib/week";
 import { cleanSite, foldName, type SiteCard } from "./sites";
@@ -45,6 +46,8 @@ export interface JournalEntry {
   resolved?: number;
   /** Protokół próby szczelności (`pressureTest.ts`); brak = wpis bez próby. */
   test?: PressureTest;
+  /** Zużyte kształtki (`fittings.ts`); brak = bez kształtek. */
+  fittings?: Fitting[];
 }
 
 /**
@@ -128,7 +131,8 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
   const checked = Array.isArray(e.checked) ? e.checked.filter((id): id is string => typeof id === "string" && id.length <= 64).slice(0, 60) : [];
   const images = Array.isArray(e.images) ? e.images.filter((r): r is string => typeof r === "string" && isImageRef(r)).slice(0, JOURNAL_MAX_IMAGES) : [];
   const test = cleanTest(e.test);
-  if (!text.trim() && checked.length === 0 && images.length === 0 && !test) return null;
+  const fittings = cleanFittings(e.fittings);
+  if (!text.trim() && checked.length === 0 && images.length === 0 && !test && fittings.length === 0) return null;
   return {
     id: e.id, at: e.at, kind: e.kind as JournalKind,
     topic: typeof e.topic === "string" && e.topic.length <= 64 ? e.topic : null,
@@ -139,6 +143,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
     images,
     ...(e.kind === "problem" && typeof e.resolved === "number" && Number.isFinite(e.resolved) ? { resolved: e.resolved } : {}),
     ...(test ? { test } : {}),
+    ...(fittings.length ? { fittings } : {}),
   };
 }
 

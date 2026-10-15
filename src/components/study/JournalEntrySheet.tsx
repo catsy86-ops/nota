@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { TriangleAlert, Camera, CircleCheck, ChevronDown, Clock, ImagePlus, LoaderCircle, MapPin, Mic, NotebookPen, Pencil, Play, Trash, Type, X } from "lucide-react";
 import { HeightsButton } from "./HeightsSheet";
 import { PressureTestFields } from "./PressureTestFields";
+import { FittingsFields } from "./FittingsFields";
 import { TEST_TOPICS } from "@/lib/study/pressureTest";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -46,7 +47,7 @@ const KIND_ON: Record<JournalKind, string> = {
 let persistAsked = false;
 
 /** Pola wspólne dla szkicu nowego wpisu i edycji zapisanego. */
-type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "test">;
+type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "test" | "fittings">;
 
 function useOnline() {
   const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine);
@@ -84,6 +85,8 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   /** Moment wpisu; `null` = chwila zapisu (tylko nowy wpis). */
   const at = isEdit ? editForm.at : draft.at;
   const [processing, setProcessing] = useState(0);
+  /** Kształtki z poprzednich wpisów — podpowiedzi nazw. */
+  const fittingHistory = useMemo(() => study.journal.map((e) => e.fittings), [study.journal]);
   /** Zdjęcie, któremu wpisujesz podpis („przed zakryciem”); `null` = pole schowane. */
   const [captioning, setCaptioning] = useState<string | null>(null);
   const [captionDraft, setCaptionDraft] = useState("");
@@ -204,7 +207,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     if (processing > 0) return;
     if (isEdit) { saveEdit(); return; }
     const wasDone = topic && columnOf(study, topic) === "done";
-    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, at, test: form.test });
+    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, at, test: form.test, fittings: form.fittings });
     if (!entry) {
       haptic("warn");
       toast("Wpisz, co się dzieje, dodaj zdjęcie albo zaznacz sprawdzone punkty");
@@ -223,7 +226,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     const prev = study.journal.find((e) => e.id === f.id);
     const demotes = f.kind === "problem" && !!f.topic && columnOf(study, f.topic) === "done" && (prev?.kind !== "problem" || prev.topic !== f.topic);
     const saved = updateJournalEntry(f.id, {
-      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, at: f.at, site: f.site, resolved: f.resolved, test: f.test,
+      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, at: f.at, site: f.site, resolved: f.resolved, test: f.test, fittings: f.fittings,
     });
     if (!saved) {
       haptic("warn");
@@ -526,6 +529,9 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 <PressureTestFields value={form.test} topic={topic} onChange={(t) => patch({ test: t })} />
               </div>
             )}
+            <div className="border-t border-border p-2">
+              <FittingsFields value={form.fittings ?? []} history={fittingHistory} onChange={(f) => patch({ fittings: f })} />
+            </div>
             {topicOpen && (
               <div id="journal-topic" className="space-y-3 border-t border-border p-3" data-testid="journal-topic-panel">
                 <label className="block space-y-1 text-xs text-muted-foreground">

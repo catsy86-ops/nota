@@ -24,7 +24,7 @@ export function PressureTestFields({ value, topic, onChange }: { value: Pressure
   const sewer = value.medium === "sewer";
   const set = (patch: Partial<PressureTest>) => onChange({ ...value, ...patch });
   return (
-    <fieldset className="space-y-3 rounded-xl border border-primary/40 bg-primary/5 p-3" data-testid="pressure-test">
+    <fieldset className="min-w-0 space-y-3 rounded-xl border border-primary/40 bg-primary/5 p-3" data-testid="pressure-test">
       <legend className="sr-only">Protokół próby szczelności</legend>
       <div className="flex items-center gap-2">
         <Gauge className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />

@@ -1,4 +1,5 @@
 import { pluralPl } from "@/lib/plural";
+import { fittingsLine, sumFittings, type Fitting } from "./fittings";
 import { testLine } from "./pressureTest";
 import { dayType, isAbsence, type ShiftData } from "@/lib/shifts/model";
 import { entryMinutesOn, formatDuration } from "@/lib/shifts/time";
@@ -64,6 +65,8 @@ export interface JournalReport {
   open: ReportEntry[];
   /** Zdjęcia wszystkich wpisów, od najstarszego. */
   images: string[];
+  /** Suma kształtek z wpisów raportu, od największej liczby. */
+  fittings: Fitting[];
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -157,6 +160,7 @@ export function buildJournalReport(journal: readonly JournalEntry[], opts: Repor
     workMinutes: days.reduce((s, d) => s + (d.work?.minutes ?? 0), 0),
     open,
     images: picked.flatMap((e) => e.images),
+    fittings: sumFittings(picked.map((e) => e.fittings)),
   };
 }
 
@@ -168,7 +172,8 @@ function entryLine(r: ReportEntry): string {
   const extra = [r.site, r.topic && `temat: ${r.topic}`, r.entry.images.length > 0 && photosPl(r.entry.images.length)].filter(Boolean);
   // Kolejne linie tekstu wcięte — zostają w tym samym punkcie listy.
   const test = r.entry.test ? `\n  ${testLine(r.entry.test)}` : "";
-  return `${r.status}: ${text.replace(/\n+/g, "\n  ")}${extra.length ? ` (${extra.join(", ")})` : ""}${test}`;
+  const fit = r.entry.fittings?.length ? `\n  Kształtki: ${fittingsLine(r.entry.fittings)}` : "";
+  return `${r.status}: ${text.replace(/\n+/g, "\n  ")}${extra.length ? ` (${extra.join(", ")})` : ""}${test}${fit}`;
 }
 
 /** Podsumowanie raportu w jednej linii: „5 wpisów · godziny pracy: 18 h · otwarte problemy: 1”. */
@@ -190,6 +195,10 @@ export function reportBody(r: JournalReport): string {
     lines.push("", `## ${d.label}`);
     if (d.work) lines.push(d.work.minutes > 0 ? `Praca: ${d.work.label}, ${formatDuration(d.work.minutes)}` : `Grafik: ${d.work.label}`);
     for (const e of d.entries) lines.push(`- ${e.time} ${entryLine(e)}`);
+  }
+  if (r.fittings.length > 0) {
+    lines.push("", "## Kształtki (suma)");
+    for (const f of r.fittings) lines.push(`- ${f.name}: ${f.qty} szt.`);
   }
   if (r.open.length > 0) {
     lines.push("", "## Otwarte problemy");

@@ -991,7 +991,7 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 - [ ] Wpis jako linijka w zeszycie (godzina mono na marginesie, mniej ramek); pasek opanowania z kratek i pieczątka „Umiem” modułu; puste stany z ilustracją (S–M).
 - [ ] Paczka ZIP budowy (wpisy, zdjęcia, PDF) z karty budowy (M).
 - [ ] Karta doświadczenia: liczba budów, próby, opanowane tematy, trafność — eksport (S/M, dane w `stats.ts`).
-- [ ] Kształtki we wpisie (rodzaj + liczba sztuk), sumy per budowa w raporcie (M) — decyzja: tylko kształtki.
+- [x] Kształtki we wpisie (rodzaj + liczba sztuk), sumy per budowa w raporcie (M) — decyzja: tylko kształtki.
 
 ### Decyzje użytkownika (2026-10-15)
 1. Limit **5** zdjęć na wpis.

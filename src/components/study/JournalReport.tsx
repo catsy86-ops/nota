@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Clock, Copy, Ellipsis, FilePlusCorner, Gauge, MapPin, MessageCircle, Printer, Share2, UserPen, Users } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { testLine } from "@/lib/study/pressureTest";
+import { fittingsLine } from "@/lib/study/fittings";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { StatusPanel } from "@/components/StatusPanel";
@@ -461,6 +462,9 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
                         {r.site && <> · {r.site}</>}
                         {r.topic && <> · {r.topic}</>}
                       </p>
+                      {r.entry.fittings && r.entry.fittings.length > 0 && (
+                        <p className="mt-0.5 text-xs text-muted-foreground" data-report-fittings>Kształtki: {fittingsLine(r.entry.fittings)}</p>
+                      )}
                       {r.entry.test && (
                         <p className={cn("mt-0.5 inline-flex items-start gap-1 text-xs font-medium", r.entry.test.ok ? "text-success-ink" : "text-destructive")} data-report-test>
                           <Gauge className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{testLine(r.entry.test)}
@@ -498,6 +502,21 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
                   </li>
                 ))}
               </ul>
+            </section>
+          )}
+          {report.fittings.length > 0 && (
+            <section className="break-inside-avoid-page pt-3" data-report-fittings-sum>
+              <h3 className="mb-1.5 text-sm font-semibold">Kształtki (suma)</h3>
+              <table className="w-full max-w-sm text-sm">
+                <tbody>
+                  {report.fittings.map((f) => (
+                    <tr key={f.name} className="border-t border-border/60 first:border-t-0">
+                      <td className="py-0.5 pr-3">{f.name}</td>
+                      <td className="py-0.5 text-right font-mono tabular-nums">{f.qty} szt.</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </section>
           )}
           {report.open.length > 0 && (

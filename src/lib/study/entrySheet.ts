@@ -48,6 +48,7 @@ export function openJournalEdit(entry: JournalEntry) {
     id: entry.id, at: entry.at, kind: entry.kind, topic: entry.topic ?? "", text: entry.text,
     checked: [...entry.checked], images: [...entry.images], site: entry.site, resolved: entry.resolved ?? null,
     test: entry.test ?? null,
+    fittings: entry.fittings ?? [],
   };
   state = { open: true, topicFirst: entry.checked.length > 0, editing: entry.id };
   emit();

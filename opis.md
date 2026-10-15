@@ -1295,6 +1295,22 @@ w portalu — w testach `page.getByRole("menuitem", …)`, nie wewnątrz okna.
 
 ---
 
+## Praca — kształtki we wpisie
+
+**Co robi.** Arkusz wpisu ma „Dodaj kształtki”: pozycje „nazwa + sztuki” (decyzja: tylko sztuki), podpowiedzi nazw z poprzednich wpisów i pigułki najczęstszych, duże −/+ (przy 1 sztuce „−” usuwa pozycję). Wpis pokazuje „Kolano 16 × 3, Mufa 32 × 1”; raport ma linię przy wpisie i sekcję „Kształtki (suma)” z okresu (też w tekście dla szefa).
+
+**Gdzie jest.** `src/lib/study/fittings.ts` (`cleanFittings`, `sumFittings`, `fittingsLine`, `suggestFittingNames`), pole `fittings` w `yStudy.ts`, `store.ts`, `draft.ts`, `entrySheet.ts`, `report.ts` (`JournalReport.fittings`); `components/study/FittingsFields.tsx`, `JournalEntrySheet.tsx`, `StudyJournal.tsx`, `JournalReport.tsx`.
+
+**Jak działa i dlaczego.** Pole wpisu jak protokół próby (starsza wersja je pomija). Ta sama nazwa w różnej pisowni sumuje się (`fittingKey`: bez wielkości liter, spacji i ogonków). Wiersze z pustą nazwą czyści dopiero zapis. `<fieldset>` ma `min-w-0` — domyślne `min-inline-size: min-content` rozpychało arkusz w bok na 390 px.
+
+**Ograniczenia.** Do 20 pozycji, nazwa do 40 znaków, bez metrów rury.
+
+**Testy.** `src/lib/study/fittings.test.ts`, `e2e/journal-fittings.spec.ts`.
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Praca → Dziennik budowy
 
 Zakładka „Dziennik” na `/nauka` (`src/components/study/StudyJournal.tsx`). Dziennik instalatora
