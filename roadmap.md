@@ -1013,6 +1013,7 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 - [x] Radix w obrębie major (`npm update`) + pełne e2e; `lucide-react` 0.462 → 1.x (sprawdzić zmienione nazwy). ✅ 12 paczek `@radix-ui/*` na najnowsze w swoim majorze; `lucide-react` 1.57 — importy na nazwy kanoniczne (15 aliasów, m.in. `Trash2`→`Trash`, `Loader2`→`LoaderCircle`, `Filter`→`Funnel`); ikony bez `aria-*` dostają `aria-hidden`.
 - [x] `sonner` 1.7 → 2 po fazie 1 (własne nadpisania w `index.css:681-695`; sprawdzić changelog). ✅ 2.0.8 bez zmian w kodzie — używane API i atrybuty `data-sonner-*` zostały; e2e i zrzuty dymków zielone.
 - Nie teraz: `react-day-picker` 10, vite 8 (Tailwind 4, `tailwind-merge` 3 i React 19 zrobione w 3.3). `recharts` 3 + shadcn Chart tylko przy N4.
+- [x] Input OTP: kod parowania w Ustawienia → Sync (12 kratek 4-4-4, wklejanie linku, stary 8-znakowy kod); przy okazji naprawiony link `?pair=` z QR. PIN skarbca — nie dotyczy (skarbiec ma hasło).
 - Komponenty shadcn: tak — Input OTP (parowanie, PIN skarbca), Toggle Group (grupy segmentowe), Breadcrumb (podstrony), Chart (N4); nie — Sidebar, Carousel; Drawer/vaul zależnie od D5; Command już jest.
 
 Kolejność (po decyzjach): 3.3 Tailwind v4 + React 19 + shadcn (osobne commity: React 19 → Tailwind v4 → `tailwind-merge` 3 / `tw-animate-css`) → 1.5 → 1.1 → 1.4 → 1.2/1.3 → 1.6 → 1.7/1.8 → 2.7/2.8 → Radix + lucide → 2.1 → 2.2 → 2.3/2.4 → 2.5/2.6 → sonner, LazyMotion, Input OTP, Toggle Group → faza 3. Każdy krok: typecheck, lint, Vitest, build, e2e smoke, zrzuty 390/1440 w obu motywach, wpis w `opis.md`.

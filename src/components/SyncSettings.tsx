@@ -3,14 +3,18 @@ import { QRCodeSVG } from "qrcode.react";
 import { Wifi, WifiOff, Copy, Check, LogOut } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
 import {
   useSyncState, startPairing, joinWithCode, pauseSync, resumeSync, forgetPairing, formatCode,
   getSignalingServers, setSignalingServers, parseSignalingList, isShortCode, getLegacyRoom, setLegacyRoom,
+  codeFromPaste, CODE_LENGTH, CODE_PATTERN,
 } from "@/lib/yjsSync";
+
+/** Długość starego kodu — wciąż przyjmowany (`isShortCode`). */
+const LEGACY_CODE_LENGTH = 8;
 
 interface Props {
   prefillCode?: string;
@@ -32,7 +36,7 @@ export function SyncSettings({ prefillCode }: Props) {
   const [legacyRoom, setLegacyRoomState] = useState(() => getLegacyRoom());
 
   useEffect(() => {
-    if (prefillCode) setJoinInput(prefillCode.toUpperCase());
+    if (prefillCode) setJoinInput(codeFromPaste(prefillCode));
   }, [prefillCode]);
 
   function handleToggle(checked: boolean) {
@@ -44,10 +48,11 @@ export function SyncSettings({ prefillCode }: Props) {
     }
   }
 
+  const joinReady = joinInput.length === CODE_LENGTH || joinInput.length === LEGACY_CODE_LENGTH;
+
   function handleJoin() {
-    const trimmed = joinInput.trim();
-    if (!trimmed) return;
-    joinWithCode(trimmed);
+    if (!joinReady) return;
+    joinWithCode(joinInput);
     toast.success("Dołączono do grupy synchronizacji");
   }
 
@@ -148,18 +153,40 @@ export function SyncSettings({ prefillCode }: Props) {
 
       <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-2">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dołącz do istniejącej grupy</p>
-        <div className="flex gap-2">
-          <Input
+        <form
+          className="flex flex-col gap-2 sm:flex-row sm:items-center"
+          onSubmit={(e) => { e.preventDefault(); handleJoin(); }}
+        >
+          <InputOTP
+            maxLength={CODE_LENGTH}
+            pattern={CODE_PATTERN}
+            pasteTransformer={codeFromPaste}
             value={joinInput}
-            onChange={(e) => setJoinInput(e.target.value.toUpperCase())}
-            placeholder="Kod z innego urządzenia"
-            // Rozstrzelony monospace tylko dla wpisanego kodu — placeholder w nim się nie mieścił.
-            className="font-mono tracking-widest placeholder:font-sans placeholder:tracking-normal"
-            // 12 znaków, a przepisywane z ekranu bywają ze spacjami między grupami.
-            maxLength={16}
-          />
-          <Button type="button" onClick={handleJoin} disabled={!joinInput.trim()}>Dołącz</Button>
-        </div>
+            onChange={(v) => setJoinInput(v.toUpperCase())}
+            inputMode="text"
+            autoCapitalize="characters"
+            autoCorrect="off"
+            spellCheck={false}
+            aria-label="Kod z innego urządzenia"
+            aria-describedby="sync-join-hint"
+            containerClassName="w-full sm:w-auto"
+          >
+            {[0, 4, 8].map((start, g) => (
+              <div key={start} className="contents">
+                {g > 0 && <InputOTPSeparator />}
+                <InputOTPGroup className="flex-1 min-w-0 sm:flex-none">
+                  {[0, 1, 2, 3].map((i) => (
+                    <InputOTPSlot key={i} index={start + i} className="flex-1 min-w-0 sm:w-9 sm:flex-none" />
+                  ))}
+                </InputOTPGroup>
+              </div>
+            ))}
+          </InputOTP>
+          <Button type="submit" disabled={!joinReady} className="coarse:h-11">Dołącz</Button>
+        </form>
+        <p id="sync-join-hint" className="text-2xs text-muted-foreground">
+          12 znaków z drugiego urządzenia — możesz wkleić cały link. Starszy, 8-znakowy kod też zadziała.
+        </p>
       </div>
 
       <SignalingServers />

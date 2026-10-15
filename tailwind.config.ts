@@ -155,6 +155,11 @@ export default {
           "0%, 100%": { transform: "translateY(0)" },
           "50%": { transform: "translateY(-8px)" },
         },
+        // Udawana karetka w kratce `InputOTP`.
+        "caret-blink": {
+          "0%, 70%, 100%": { opacity: "1" },
+          "20%, 50%": { opacity: "0" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -165,6 +170,7 @@ export default {
         "check-draw": "check-draw var(--dur-base) var(--ease-out)",
         shimmer: "shimmer 2s infinite linear",
         float: "float 3s ease-in-out infinite",
+        "caret-blink": "caret-blink 1.25s ease-out infinite",
       },
     },
   },

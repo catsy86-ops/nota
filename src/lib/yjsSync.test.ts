@@ -284,6 +284,14 @@ describe("yjsSync - bezpieczne domyślne (A02)", () => {
     expect(getLegacyRoom()).toBe(false);
   });
 
+  it("codeFromPaste wyciąga kod z linku i grup", async () => {
+    const { codeFromPaste } = await import("./yjsSync");
+    expect(codeFromPaste("abcd efgh-jkmn")).toBe("ABCDEFGHJKMN");
+    expect(codeFromPaste("https://x.pl/app/?pair=ABCDEFGHJKMN#n")).toBe("ABCDEFGHJKMN");
+    expect(codeFromPaste(" ABCD EFGH.")).toBe("ABCDEFGH");
+    expect(codeFromPaste("ABCDEFGHJKMNPQRS")).toBe("ABCDEFGHJKMN");
+  });
+
   it("isShortCode rozpoznaje stare 8-znakowe kody", async () => {
     const { isShortCode } = await import("./yjsSync");
     expect(isShortCode("ABCDEFGH")).toBe(true);

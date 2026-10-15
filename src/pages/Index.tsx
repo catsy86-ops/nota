@@ -141,7 +141,9 @@ const Index = () => {
   const logoClicksRef = useRef<{ count: number; lastTs: number }>({ count: 0, lastTs: 0 });
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
+  // Link z kodu QR (`?pair=…`) otwiera Ustawienia → Sync; kod odczytuje i usuwa z adresu
+  // `SettingsDialog`, który montuje się dopiero po otwarciu.
+  const [settingsOpen, setSettingsOpen] = useState(() => new URLSearchParams(window.location.search).has("pair"));
   const [statsOpen, setStatsOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [presentingNoteId, setPresentingNoteId] = useState<string | null>(null);

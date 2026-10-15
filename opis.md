@@ -400,6 +400,48 @@ Notatkach”), `e2e/study.spec.ts` (brak wyników filtra Dziennika), `e2e/a11y.s
 
 ---
 
+## Synchronizacja — pole kodu parowania (`InputOTP`)
+
+**Co robi.** W Ustawieniach → Sync kod z drugiego urządzenia wpisuje się w 12 kratek w trzech grupach po 4 — tak samo,
+jak kod jest wyświetlany (`ABCD EFGH JKMN`). Pole przyjmuje tylko znaki z alfabetu kodu (bez I, L, O, 0, 1), małe
+litery zamienia na wielkie, a wklejenie przyjmuje też kod ze spacjami/myślnikami albo cały link `?pair=…`.
+„Dołącz” jest aktywne przy 12 znakach albo przy starym, 8-znakowym kodzie. Link z kodu QR otwiera Ustawienia → Sync
+z wypełnionymi kratkami.
+
+**Gdzie jest.**
+- `src/components/ui/input-otp.tsx`: `InputOTP`, `InputOTPGroup`, `InputOTPSlot`, `InputOTPSeparator` (shadcn Input
+  OTP na paczce `input-otp` 1.5). Animacja udawanej karetki `caret-blink` w `tailwind.config.ts`.
+- `src/components/SyncSettings.tsx`: formularz „Dołącz do istniejącej grupy”, stała `LEGACY_CODE_LENGTH`, `joinReady`.
+- `src/lib/yjsSync.ts`: `CODE_LENGTH` (eksport), `CODE_PATTERN` (regex dla pola), `codeFromPaste` (link → kod, odrzuca
+  znaki spoza alfabetu, tnie do 12).
+- `src/pages/Index.tsx`: `settingsOpen` startuje jako `true`, gdy adres ma `?pair=`.
+
+**Jak działa i dlaczego.**
+- Pod kratkami jest jedno niewidoczne `<input>` (z `aria-label` „Kod z innego urządzenia” i podpowiedzią przez
+  `aria-describedby`), więc wklejanie, autouzupełnianie i czytniki ekranu działają jak w zwykłym polu. Kratki to
+  tylko obraz wartości.
+- Na telefonie kratki rozciągają się na całą szerokość (`flex-1`), przycisk jest pod nimi; od `sm:` stała szerokość
+  36 px i przycisk obok. Kratki mają 44 px wysokości (cel dotyku).
+- Bez automatycznego dołączania po wpisaniu ostatniego znaku — dołączenie zmienia grupę synchronizacji, więc zostaje
+  świadome „Dołącz” (Enter w polu też działa — to `<form>`).
+- `?pair=` naprawione: od przeniesienia Ustawień do leniwej paczki (`1f24bb8`) okno montuje się dopiero po otwarciu,
+  więc jego efekt czytający `?pair=` nigdy nie ruszał i link z QR tylko otwierał aplikację. Teraz `Index` otwiera
+  okno od startu, a `SettingsDialog` jak dotąd przełącza na Sync, wpisuje kod i usuwa parametr z adresu.
+
+**Ograniczenia i pułapki.**
+- Kody spoza alfabetu (np. ręcznie zmienione) nie dadzą się wpisać — wszystkie generowane kody, stare i nowe, są z
+  tego samego alfabetu.
+- Kod 9–11 znaków nie aktywuje „Dołącz” (to zawsze literówka).
+- PIN skarbca nie korzysta z `InputOTP`: skarbiec ma hasło dowolnej długości, nie PIN.
+- `fill()` w Playwright nie przechodzi przez `pasteTransformer` ani filtr — w testach wpisuj `pressSequentially`.
+
+**Testy.** `src/lib/yjsSync.test.ts` („codeFromPaste wyciąga kod z linku i grup”), `e2e/sync-code.spec.ts` (link
+`?pair=` wypełnia kratki; 8/12 znaków, odrzucanie „O” i „0”).
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Wspólne — wibracje (haptyka)
 
 **Co robi.** Na telefonie z Androidem krótkie drgnięcie potwierdza akcje: zapis notatki, odhaczenie listy, przejście

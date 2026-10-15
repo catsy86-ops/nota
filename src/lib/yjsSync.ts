@@ -19,7 +19,7 @@ const STORAGE_KEY = "kaczy.sync.v1";
 const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no ambiguous I/O/0/1/L
 // 12 znaków z 31 ≈ 59 bitów (wcześniej 8 ≈ 40). Kod i tak zwykle idzie przez QR,
 // więc długość nic nie kosztuje. Stare 8-znakowe kody działają dalej.
-const CODE_LENGTH = 12;
+export const CODE_LENGTH = 12;
 /**
  * Zgodność ze starszą wersją aplikacji (opt-in, domyślnie WYŁĄCZONA).
  * Starsza wersja zna tylko pokój o nazwie FNV-64 z kodu. Taka nazwa idzie
@@ -121,6 +121,19 @@ export function generateCode(): string {
 /** Kod z pola lub linku: wielkie litery, bez spacji i myślników (kod jest wyświetlany w grupach). */
 export function normalizeCode(raw: string): string {
   return raw.toUpperCase().replace(/[\s-]/g, "");
+}
+
+/** Dozwolone znaki kodu dla pola z kratkami (małe litery pole zamienia na wielkie). */
+export const CODE_PATTERN = "^[A-HJKMNP-Za-hjkmnp-z2-9]*$";
+
+/**
+ * Wklejony tekst → kod: przyjmuje też cały link `?pair=…` i kod w grupach.
+ * Odrzuca znaki spoza alfabetu (np. kropkę z końca zdania), tnie do 12.
+ */
+export function codeFromPaste(raw: string): string {
+  const fromLink = raw.match(/[?&]pair=([^&#\s]+)/)?.[1];
+  const code = normalizeCode(fromLink ?? raw);
+  return [...code].filter((c) => CODE_ALPHABET.includes(c)).join("").slice(0, CODE_LENGTH);
 }
 
 /** Kod w grupach po 4 znaki — łatwiej przepisać z ekranu. */
