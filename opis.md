@@ -805,7 +805,7 @@ pomija elementy wewnątrz kontenerów z własnym `overflow-x` (paski pigułek) i
 **Testy.** `e2e/mobile-layout.spec.ts` (320/390 px: 9 tras bez przewijania w bok; pasek zbiorczy bez przewijania;
 „wstecz” zamyka edytor), `e2e/templates-bulk.spec.ts`, `e2e/mobile.spec.ts`.
 
-**Commit.** — (2026-10-15).
+**Commit.** `e2c8b95` (2026-10-15).
 
 ---
 
