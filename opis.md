@@ -103,7 +103,7 @@ wersjach bibliotek. Dla użytkownika zmienia się tylko rysunek części ikon �
 `e2e/bundle.spec.ts` (budżety bez zmian), pełne e2e Chromium 255/255 (jeden test `view-change.spec.ts` niestabilny
 przy obciążeniu — osobno 3/3), iPhone 14 + Pixel 7: 28 zaliczonych, 2 pominięte (CDP tylko w Chromium).
 
-**Commit.** COMMIT_HASH (2026-10-15).
+**Commit.** `ee5a23f` (2026-10-15).
 
 ---
 
