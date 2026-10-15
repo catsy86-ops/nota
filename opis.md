@@ -1167,7 +1167,7 @@ Dziennik jest główną zakładką (N2). Licznik zostaje jako skrót do nauki.
 **Testy.** `e2e/study.spec.ts` („telefon bez zapisanej zakładki zaczyna od Dziennika” — zwinięty nagłówek, licznik
 otwiera Tablicę z pełnym nagłówkiem).
 
-**Commit.** — (2026-10-15).
+**Commit.** `5dc3359` (2026-10-15).
 
 ---
 
