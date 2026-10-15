@@ -972,6 +972,36 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 
 Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → reszta.
 
+## Plan Pracy po audycie — 2026-10-15 (agent Plan)
+
+Źródło: audyt działu Praca (agent Plan, tylko odczyt), twierdzenia sprawdzone w kodzie. Nie powtarza zrobionych D0–D7, N1–N4, N6; N5 odłożony.
+
+**Diagnoza:** nagłówek nauki (~200 px) nad Dziennikiem na telefonie; `emerald-*` na sztywno zamiast `--success` (nie idzie za stylami i trybem budowa); quiz bez celów dotyku i z „Dalej” pod objaśnieniem; lista kontrolna globalna, nie per budowa/odbiór, brak protokołu próby szczelności; limit 4 zdjęć wbrew decyzji „8”, bez podpisów; pigułka tematu we wpisie startuje quiz (zaskoczenie) i cele 36 px; raport z 7 równorzędnymi przyciskami; pusty Dziennik z `FileText` zamiast ilustracji.
+
+### Krok po kroku (kolejność z audytu)
+- [ ] P1 (S) Kolory z motywu: `emerald` → `success`, jeden ⚠ (`TriangleAlert` w `warning`), wynik quizu w mono; cele dotyku `StudyJournal.tsx:101,324`, pigułka tematu → filtr tematu (quiz tylko „Ćwicz teraz”).
+- [ ] P2 (S) Zwijany nagłówek na Dzienniku: jeden wiersz „12/18 · Na dziś 3” (`StudyView.tsx`).
+- [ ] P3 (S) Quiz kciukiem (`coarse:min-h-14`, „Dalej” przyklejony nad dolnym paskiem) + ściąga „Wysokości” pod ręką (nagłówek działu, arkusz wpisu przy temacie `punkty`).
+- [ ] P4 (M) Zdjęcia „przed zakryciem”: limit 8 (decyzja z planu), podpis wtopiony w zdjęcie (pomieszczenie, miara), galeria wpisu w powiększeniu.
+- [ ] P5 (M) Protokół próby szczelności jako opcjonalne pole wpisu (woda 6/9 bar, czas, spadek, wynik; kanalizacja na zalanie) + raport jak druk firmowy (tabela dni, godziny, miejsce na podpis); potem jeden główny przycisk w raporcie („Wyślij szefowi”, reszta w „Więcej”).
+
+### Dalej (po decyzjach)
+- [ ] Przypomnienia: problem otwarty > 3 dni, próba bez wpisu przed zakryciem (S/M).
+- [ ] Szybkie wpisy: podpowiedzi z ostatnich tekstów na budowie, „Jak wczoraj” (S/M).
+- [ ] Wpis jako linijka w zeszycie (godzina mono na marginesie, mniej ramek); pasek opanowania z kratek i pieczątka „Umiem” modułu; puste stany z ilustracją (S–M).
+- [ ] Paczka ZIP budowy (wpisy, zdjęcia, PDF) z karty budowy (M).
+- [ ] Karta doświadczenia: liczba budów, próby, opanowane tematy, trafność — eksport (S/M, dane w `stats.ts`).
+- [ ] Obmiary i zużycie materiału we wpisie, sumy w raporcie (M/L) — tylko jeśli szef rozlicza metry.
+
+### Do decyzji użytkownika
+1. Limit 8 zdjęć na wpis (więcej miejsca w telefonie)?
+2. Próba szczelności jako pole wpisu (zalecane — nie psuje starszych wersji) czy osobny rodzaj?
+3. Czy szef rozlicza metry/kształtki (obmiary)?
+4. Imię i firma w materiale w kodzie (`content.ts`) — zostają czy do N5 jako własna treść?
+5. Wersja dla brygady/firmy (wspólny dziennik) wymaga serwera — wchodzi w grę?
+
+**Wartość biznesowa (wnioski audytu):** największa dla jednej osoby — dokumentacja odbiorów (próba + zdjęcia przed zakryciem + raport) chroni przed obciążeniem kosztami przecieku. Monetyzacja ma sens dopiero dla firmy (pakiet list kontrolnych firmy po N5 + szablon raportu z logo); praca brygady = serwer. Najpierw zapytać szefa/G-HEAT, czy by za to zapłacili.
+
 ## Plan dopracowania UI: telefon i komputer — 2026-10-15
 
 Źródło: przegląd kodu (agent Plan) + dokumentacja shadcn (context7), wersje z `npm view`. Kontrast to szacunki — zmierzyć axe. Nie powtarza zamkniętych punktów z planów UI, mobile i 2b. Kierunek „zeszyt” zostaje.
