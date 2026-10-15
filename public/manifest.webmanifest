@@ -32,17 +32,31 @@
       "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
-      "name": "Dziś",
-      "short_name": "Dziś",
-      "description": "Notatki z dzisiejszego dnia",
-      "url": "/dzis",
-      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
-    },
-    {
       "name": "Grafik",
       "short_name": "Grafik",
       "description": "Grafik zmian",
       "url": "/grafik",
+      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Szukaj",
+      "short_name": "Szukaj",
+      "description": "Szukaj w notatkach",
+      "url": "/?szukaj=1",
+      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Nowa lista",
+      "short_name": "Nowa lista",
+      "description": "Od razu otwórz nową listę do odhaczania",
+      "url": "/?new=list",
+      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Dziś",
+      "short_name": "Dziś",
+      "description": "Notatki z dzisiejszego dnia",
+      "url": "/dzis",
       "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {

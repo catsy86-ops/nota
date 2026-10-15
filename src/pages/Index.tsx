@@ -540,8 +540,8 @@ const Index = () => {
     moveNoteToFolder(id, folderId);
   }, [moveNoteToFolder]);
 
-  // Entry points from manifest.webmanifest: home-screen "Nowa notatka" shortcut
-  // (?new=1) and Web Share Target (?share-title/-text/-url=, from "Share" on
+  // Entry points from manifest.webmanifest: home-screen shortcuts "Nowa notatka"
+  // (?new=1), "Nowa lista" (?new=list), "Szukaj" (?szukaj=1) and Web Share Target (?share-title/-text/-url=, from "Share" on
   // another app once the app is installed).
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -560,8 +560,17 @@ const Index = () => {
       // Pusty `/share` (np. ręcznie wpisany adres) — po prostu wróć do Notatek.
       navigate("/", { replace: true });
     } else if (params.get("new")) {
-      expandAddNote();
+      // Skrót „Nowa lista” (`?new=list`) otwiera kompozytor od razu w trybie listy.
+      expandAddNote(params.get("new") === "list" ? "list" : undefined);
       window.history.replaceState(null, "", window.location.pathname);
+    } else if (params.get("szukaj")) {
+      // Skrót „Szukaj”: kursor w polu wyszukiwania (widocznym — na telefonie i komputerze to inne pola).
+      // Bez gestu iOS nie otworzy klawiatury; Android tak.
+      window.history.replaceState(null, "", window.location.pathname);
+      window.setTimeout(() => {
+        const input = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="search"]')).find((el) => el.offsetParent !== null);
+        input?.focus();
+      }, 300);
     }
     // Intentionally once on mount: reads the URL this load started with.
     // eslint-disable-next-line react-hooks/exhaustive-deps

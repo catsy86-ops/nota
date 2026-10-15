@@ -561,7 +561,7 @@ Odrzucone:
 - [x] Pasek akcji po najechaniu wtapia się w kartę (maska zamiast cienia), przezroczysta część nie łapie kliknięć.
 - [x] Zdjęcia: poza edycją jedna miniatura 16:9 i „+N”.
 - [x] Kolumny liczone od szerokości 13 rem (CSS `columns`/`auto-fill`), na telefonie zawsze 2. Treść ma `max-width`, więc na 1920 px dalej 5 kolumn.
-- [ ] Hierarchia tytuł/treść — po zagęszczeniu czytelna, bez zmian.
+- [x] Hierarchia tytuł/treść — po zagęszczeniu czytelna, bez zmian.
 
 **Decyzja (2026-10-09):** okna potwierdzeń (AlertDialog) zostają z mocno przyciemnionym tłem (`bg-black/80`), zwykłe okna z lżejszym (`bg-foreground/30`) — świadoma różnica, potwierdzenie ma się wyróżniać.
 
@@ -837,7 +837,7 @@ Zrobione: `lib/saveStatus.ts` (zapis do IndexedDB: Zapisywanie… / Zapisano / l
 - [x] 2.7 **Wyszukiwanie w zasięgu kciuka** (W4): ikona szukania w dolnym pasku lub pull-down na liście; pole u góry zostaje na desktopie. ✅ wariant bez zmiany paska: ponowne stuknięcie „Notatki” i „Więcej → Szukaj” (grupa „Szybko”). Ikona szukania w pasku / pull-down — do decyzji.
 - [x] 2.8 **Grafik**: ~700 px „chrome” przed siatką — podpowiedzi zwijane po pierwszym użyciu, „Własne godziny” do menu pędzla, pasek pędzli sticky, `NowCard` bez ucinania nazwy. ✅ częściowo: podpowiedź o przenoszeniu z „Rozumiem”, nazwa w `NowCard` na 2 linie. „Własne godziny” w menu pędzla i sticky pasek — nie.
 - [x] 2.9 **Kalendarz**: pasek tygodnia i kafle Dziś/Jutro duplikują tydzień z siatki — zwinąć na wąskim ekranie. ✅ pasek tygodnia schowany < sm, Dziś/Jutro w 2 kolumnach.
-- [ ] 2.10 **Dziennik Nauki**: lista wpisów nad formularzem lub formularz w arkuszu z FAB „+ Wpis”, CTA pełnej szerokości, bez „Ctrl+Enter” na dotyku. → przeniesione do planu Nauki, D2 (sekcja na końcu).
+- [x] 2.10 **Dziennik Nauki**: lista wpisów nad formularzem lub formularz w arkuszu z FAB „+ Wpis”, CTA pełnej szerokości, bez „Ctrl+Enter” na dotyku. → przeniesione do planu Nauki, D2 (sekcja na końcu).
 - [x] 2.11 **Przypomnienia**: szybkie „Gotowe / Odłóż” na karcie listy (nie tylko w toaście); lista zaległych jako zwykła kolumna, nie masonry. ✅ „Gotowe / Jutro rano” na kaflu zaległego terminu (z Cofnij). Lista bez masonry — nie.
 - [x] 2.12 **Pierwsze uruchomienie**: jedna karta „Dziś: 2 zaległe, 1 termin” zamiast stosu; baner instalacji dopiero po pierwszej notatce (jest `ready`). ✅ przez 2.5 (zbiorczy dymek) i istniejące `ready` banera; odznaka już czeka na zamknięcie okien.
 
@@ -899,11 +899,11 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 - [x] 4.1 Swipe: w prawo przypnij, w lewo archiwizuj (kosz w arkuszu akcji), podpowiedź przy pierwszych 3 razach. ✅ 2026-10-15 (decyzja użytkownika): podpisy w tle przy 3 pierwszych gestach (`lib/swipeHint.ts`), „Przypięto” z „Cofnij”, w Archiwum lewo = przywróć.
 - [x] 4.2 Haptyka różnicowana (tap / success / warn / selection) + odhaczenie w kaflu, upuszczenie przeciągniętego kafla, wejście w zaznaczanie; quiz Nauki z haptyką i serią dni.
 - [x] 4.3 Przejście kafel → edytor jako shared element (dziś skok), nagłówek z cieniem dopiero po przewinięciu, zakładka koloru w nagłówku edytora. ✅ 2026-10-15: origin z kafla (`hooks/useOriginFromTile.ts`, wspólny z czytnikiem), bez `layoutId`; cień przez `onScrollCapture`; pasek `--note-ink` u góry okna.
-- [ ] 4.4 Skróty PWA „Szukaj”, „Nowa lista”; Share Target dla pliku/obrazu (po decyzji).
+- [ ] 4.4 Skróty PWA „Szukaj”, „Nowa lista”; Share Target dla pliku/obrazu (po decyzji). ✅ częściowo 2026-10-15: skróty „Szukaj” (`?szukaj=1`) i „Nowa lista” (`?new=list`), kolejność skrótów pod Androida. Share Target dla plików — czeka na decyzję.
 - [x] 4.5 Nauka: nagłówek bez powtórki „Nauka”, etykiety przy 18 pigułkach, podpisy przycisków kart, cyfry tabelaryczne zamiast „1” jak „l”.
 
 ### Faza 5 — testy i QA mobilnego
-- [ ] 5.1 Projekty Playwright: Pixel 7 + **WebKit/iPhone** (dziś tylko Desktop Chrome + `test.use` w `mobile.spec.ts`); smoke @mobile na obu.
+- [x] 5.1 Projekty Playwright: Pixel 7 + **WebKit/iPhone** (dziś tylko Desktop Chrome + `test.use` w `mobile.spec.ts`); smoke @mobile na obu. ✅ zrobione w planie UI 2026-10-15, punkt 2.8 (`iphone-14`, `pixel-7`, `npm run test:e2e:mobile`).
 - [ ] 5.2 e2e: pasek zbiorczy mieści się w 390 px, „wstecz” zamyka warstwy, brak overflow poziomego na każdej trasie (skrypt z audytu), cele dotyku ≥44 px (pomiar).
 - [ ] 5.3 QA na prawdziwym telefonie (lista kontrolna): klawiatura w kompozytorze, haptyka, gesty, przewijanie z paskiem adresu, instalacja PWA.
 

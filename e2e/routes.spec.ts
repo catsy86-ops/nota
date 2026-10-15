@@ -64,6 +64,17 @@ test("skrót PWA /?new=1 otwiera nową notatkę i czyści parametr z adresu", as
   expect(new URL(page.url()).search).toBe("");
 });
 
+test("skróty PWA „Nowa lista” i „Szukaj”: lista od razu w kompozytorze, kursor w wyszukiwaniu", async ({ page }) => {
+  await page.goto("/?new=list");
+  await expect(page.locator("[aria-label=\"Lista zadań\"][aria-pressed=\"true\"]")).toHaveCount(1);
+  await expect(page.getByPlaceholder("Dodaj element...")).toBeVisible();
+  expect(new URL(page.url()).search).toBe("");
+
+  await page.goto("/?szukaj=1");
+  await expect(page.locator('input[type="search"]:visible').first()).toBeFocused();
+  expect(new URL(page.url()).search).toBe("");
+});
+
 test("udostępnienie /share tworzy notatkę, pokazuje toast i wraca do Notatek", async ({ page }) => {
   await page.goto("/share?title=Zebranie%20jutrzejsze&text=Agenda%20spotkania&url=https%3A%2F%2Fexample.com%2Fa");
   await expect(page.getByText("Zapisano w NOTKACH")).toBeVisible();

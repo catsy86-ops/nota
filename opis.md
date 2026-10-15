@@ -787,6 +787,30 @@ prawdziwy iOS — nie odtwarza klawiatury ekranowej ani `visualViewport` iPhone'
 
 ---
 
+## Notatki — skróty z ikony aplikacji (PWA)
+
+**Co robi.** Przytrzymanie ikony zainstalowanej aplikacji pokazuje skróty: Nowa notatka, Wpis z budowy, Grafik,
+Szukaj, Nowa lista, Dziś, Przypomnienia. „Nowa lista” otwiera kompozytor od razu z listą do odhaczania, „Szukaj”
+stawia kursor w polu wyszukiwania.
+
+**Gdzie jest.** `public/manifest.webmanifest` (`shortcuts`), obsługa adresów w `src/pages/Index.tsx` (efekt przy starcie:
+`?new=1`, `?new=list` → `expandAddNote("list")`, `?szukaj=1` → fokus na widocznym `input[type="search"]`); parametr
+znika z adresu, więc odświeżenie nie powtarza akcji.
+
+**Jak działa i dlaczego.** Kolejność skrótów jest celowa: Android pokazuje tylko kilka pierwszych (zwykle 4), więc na
+początku to, co najczęściej robi się na budowie. Pole wyszukiwania szukane jako widoczne, bo telefon i komputer mają
+osobne pola.
+
+**Ograniczenia i pułapki.** Bez gestu użytkownika iOS nie otworzy klawiatury przy „Szukaj” (kursor jest, klawiatura po
+stuknięciu w pole); Android otwiera. Udostępnianie plików i obrazów do aplikacji (Share Target z POST) — czeka na decyzję.
+
+**Testy.** `src/lib/manifest.test.ts` (kolejność i adresy skrótów), `e2e/routes.spec.ts` („skróty PWA „Nowa lista”
+i „Szukaj”…”, „skrót PWA /?new=1…”).
+
+**Commit.** — (2026-10-15).
+
+---
+
 ## Notatki — przesunięcie kafla (telefon)
 
 **Co robi.** Na ekranie dotykowym przesunięcie kafla w prawo przypina go (albo odpina przypięty), w lewo archiwizuje
