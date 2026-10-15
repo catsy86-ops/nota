@@ -853,7 +853,7 @@ jest przewinięta.
 **Testy.** `e2e/editor-open.spec.ts` (origin, brak przesunięcia, skala, kolor, cień po przewinięciu i znika po powrocie
 na górę), `e2e/reader.spec.ts` (czytnik na wspólnym hooku), `e2e/mobile.spec.ts`, `e2e/editing.spec.ts`.
 
-**Commit.** — (2026-10-15).
+**Commit.** `b091505` (2026-10-15).
 
 ---
 
