@@ -419,7 +419,7 @@ w tle miała się skończyć i coś odsłonić, dokończy się dopiero po powroc
 
 **Testy.** `src/lib/pageHidden.test.ts`.
 
-**Commit.** — (2026-10-15).
+**Commit.** `75ea68d` (2026-10-15).
 
 ---
 
