@@ -83,7 +83,7 @@ celu (np. padding rodzica) nie zostaną policzone.
 **Testy.** `e2e/touch-targets.spec.ts` (tablet 1180 × 820 z dotykiem: pasek boczny i Grafik; na kodzie sprzed zmiany
 pada z 36 i 32 px).
 
-**Commit.** `HASH` (2026-10-15).
+**Commit.** `b06445b` (2026-10-15).
 
 ---
 
