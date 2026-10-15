@@ -195,6 +195,50 @@ dotyczą okien i paneli, nie widoków — tam szkielet nie jest potrzebny.
 
 ---
 
+## Wspólne — wibracje (haptyka)
+
+**Co robi.** Na telefonie z Androidem krótkie drgnięcie potwierdza akcje: zapis notatki, odhaczenie listy, przejście
+w dolnym pasku, odpowiedź w quizie, zapis wpisu w Dzienniku. Działa także przy ograniczonym ruchu — wyłącza je tylko
+przełącznik „Wibracje na telefonie” w Ustawieniach → Ogólne.
+
+**Gdzie jest.** `src/lib/haptics.ts`: `haptic(kind)`, typ `HapticKind` (`tap`, `success`, `warn`, `selection`),
+wzorce w `PATTERNS`. Przełącznik: klucz `haptics` w `src/lib/effectsSettings.ts`, podgląd w
+`src/components/settings/GeneralSettings.tsx` (`previewEffect`).
+
+**Jak działa i dlaczego.** `haptic` po cichu nic nie robi, gdy nie ma `navigator.vibrate` (iOS, komputer), gdy
+wskaźnik jest precyzyjny (`pointer: fine` — mysz), gdy efekt `haptics` jest wyłączony, albo gdy wibracja rzuci
+wyjątek. Ograniczony ruch (`prefers-reduced-motion`, `html[data-motion='reduced']`) celowo jej nie wyłącza:
+wibracja nie jest animacją, a w rękawicach i w hałasie bywa jedynym potwierdzeniem akcji.
+
+**Ograniczenia i pułapki.** iOS Safari nie ma `navigator.vibrate` — tam wibracji nie ma wcale. Przy myszy przycisk
+podglądu w Ustawieniach jest ukryty (`pointer-fine:hidden`).
+
+**Testy.** `src/lib/haptics.test.ts` (różne wzorce, mysz, ograniczony ruch nadal wibruje, wyłączony przełącznik,
+brak API i wyjątek).
+
+**Commit.** `HASH17` (2026-10-15).
+
+---
+
+## Grafik — czytelność drobnych znaczników
+
+**Co robi.** W siatce miesiąca na telefonie strzałka nadgodzin (↑/↓) przy numerze dnia ma 11 px zamiast 9 px.
+Podpis „Nowa odznaka” / „Pierwszy raz!” na pieczątce osiągnięcia też ma 11 px zamiast 10 px.
+
+**Gdzie jest.** `src/components/shifts/ShiftMonthGrid.tsx` (znacznik `entry.extraMin`, tylko `sm:hidden`),
+`src/components/AchievementStamp.tsx` (podpis nad emoji).
+
+**Jak działa i dlaczego.** Oba używają tokenu `text-2xs` (0,6875 rem / 16 px wiersza, `tailwind.config.ts`) —
+najmniejszego rozmiaru w aplikacji; wartości poniżej 11 px są nieczytelne w słońcu.
+
+**Ograniczenia i pułapki.** Strzałka ma `leading-none`, więc nie podnosi wysokości nagłówka komórki.
+
+**Testy.** `e2e/shifts.spec.ts`, `e2e/touch-targets.spec.ts` (bez zmian, przechodzą).
+
+**Commit.** `HASH17` (2026-10-15).
+
+---
+
 ## Nauka — nagłówek i tablica tematów
 
 `/nauka` (`src/components/study/StudyView.tsx`): nagłówek „Instalacje wod-kan”, pasek opanowania

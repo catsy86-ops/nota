@@ -988,8 +988,8 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 - [x] 1.4 Cele dotyku: zatwierdzenia i „⋯” w `SidebarFolderItem`/`SidebarLabelItem`/`SidebarFilterItem`, `ShiftsView.tsx:283,354`, nawigacja `ui/calendar.tsx:26` (`opacity-70`, `coarse:size-11`); e2e mierzący cele (5.2). ✅ ✓/✕ w pasku bocznym jako `IconButton size="sm"`, „⋯” i strzałka podfolderów z `::after` do 44 px, Grafik `coarse:h-11`, „Rozumiem” z `::after`; `e2e/touch-targets.spec.ts`.
 - [x] 1.5 Jasny motyw: `--ring` ≥3:1 (jak `primary-ink`), osobny `--input` ~3:1 dla krawędzi pól; `--border` dekoracyjny zostaje. ✅ `--ring` 34 88% 39% (≥3,1:1 na wszystkich tłach), `--input` 220 14% 54% (≥3,1:1, także na `secondary`).
 - [x] 1.6 `ViewSkeleton` zamiast `Suspense fallback={null}` (`Index.tsx:920,938,946`) + wstępne ładowanie widoku przy `pointerdown` w nawigacji.
-- [ ] 1.7 Haptyka niezależna od ograniczonego ruchu (`lib/haptics.ts`).
-- [ ] 1.8 Grafik: 9 px w `ShiftMonthGrid.tsx:151` → `text-2xs`/ikona; `AchievementStamp.tsx:49`.
+- [x] 1.7 Haptyka niezależna od ograniczonego ruchu (`lib/haptics.ts`). ✅ Wyłącza ją tylko przełącznik „Wibracje na telefonie”, mysz i brak `navigator.vibrate`.
+- [x] 1.8 Grafik: 9 px w `ShiftMonthGrid.tsx:151` → `text-2xs`/ikona; `AchievementStamp.tsx:49`. ✅ Strzałka nadgodzin i podpis pieczątki w `text-2xs` (11 px).
 - [ ] 1.9 (niski) Zapętlone animacje zatrzymane przy `document.hidden`.
 
 ### Faza 2 — średnie (M)

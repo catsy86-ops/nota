@@ -148,7 +148,7 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                       <span className="flex gap-0.5 mr-0.5" aria-hidden>
                         {/* Na telefonie nazwa święta i godziny się nie mieszczą — zostaje znacznik, nie sam kolor. */}
                         {holiday && <span className={holidayDotClass(inMonth)} />}
-                        {entry?.extraMin ? <span className="sm:hidden text-[0.5625rem] leading-none font-bold">{entry.extraMin > 0 ? "↑" : "↓"}</span> : null}
+                        {entry?.extraMin ? <span className="sm:hidden text-2xs leading-none font-bold">{entry.extraMin > 0 ? "↑" : "↓"}</span> : null}
                         {entry?.note && <span className="w-1.5 h-1.5 rounded-full bg-foreground/50" />}
                       </span>
                     </span>

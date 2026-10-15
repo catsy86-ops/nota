@@ -40,10 +40,10 @@ describe("haptic", () => {
     expect(vibrate).not.toHaveBeenCalled();
   });
 
-  it("nie wibruje przy ograniczonym ruchu", () => {
+  it("wibruje także przy ograniczonym ruchu", () => {
     setMotionMode("reduced");
     haptic("success");
-    expect(vibrate).not.toHaveBeenCalled();
+    expect(vibrate).toHaveBeenCalledTimes(1);
   });
 
   it("nie wibruje po wyłączeniu w ustawieniach", () => {
