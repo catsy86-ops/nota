@@ -281,7 +281,7 @@ miejsca kliknięcia.
 (wybór Neonu, zablokowana jasność, odświeżenie, kolor paska; przełącznik w nagłówku wraca z Miedzi do Zeszytu),
 `e2e/a11y.spec.ts` (każdy styl na Notatkach, Kalendarzu i Grafiku, 390 i 1440 — bez naruszeń).
 
-**Commit.** `HASHSK` (2026-10-15).
+**Commit.** `95ca98f` (2026-10-15).
 
 ---
 
@@ -313,7 +313,7 @@ miejsca kliknięcia.
 
 **Testy.** `e2e/skins.spec.ts` (galeria, przełączniki), `e2e/a11y.spec.ts`; ruch sprawdzony na zrzutach.
 
-**Commit.** `HASHSK` (2026-10-15).
+**Commit.** `95ca98f` (2026-10-15).
 
 ---
 
