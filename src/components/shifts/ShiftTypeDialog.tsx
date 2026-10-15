@@ -4,6 +4,7 @@ import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ABSENCE_KINDS, DEFAULT_SHIFT_TYPES, SHIFT_COLORS, SHIFT_COLOR_NAMES, absenceKindOf, breakOffset, deleteShiftType, formatDuration, newShiftId, restoreShiftType, saveShiftType, shiftMinutes, shiftSpan, shiftStore, type AbsenceKind, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
@@ -118,31 +119,20 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
             <Input id="shift-short" value={draft.short} maxLength={3} onChange={(e) => patch({ short: e.target.value })} placeholder="R" />
           </div>
         </div>
-        <div role="radiogroup" aria-label="Rodzaj" className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-muted/60">
-          {([["work", "Praca"], ["absence", "Nieobecność"]] as const).map(([kind, label]) => {
-            const active = (draft.kind ?? "work") === kind;
-            return (
-              <button key={kind} type="button" role="radio" aria-checked={active} onClick={() => patch({ kind })}
-                className={cn("pressable h-9 coarse:h-11 rounded-lg text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
-                  active ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}>
-                {label}
-              </button>
-            );
-          })}
-        </div>
+        <ToggleGroup aria-label="Rodzaj" value={draft.kind ?? "work"} onValueChange={(v) => patch({ kind: v as "work" | "absence" })}>
+          <ToggleGroupItem value="work">Praca</ToggleGroupItem>
+          <ToggleGroupItem value="absence">Nieobecność</ToggleGroupItem>
+        </ToggleGroup>
         {absence && (
-          <div role="radiogroup" aria-label="Rodzaj nieobecności" className="grid grid-cols-3 gap-1 p-1 rounded-xl bg-muted/60">
-            {ABSENCE_KINDS.map((k) => {
-              const active = absenceKindOf({ ...draft, kind: "absence" }) === k;
-              return (
-                <button key={k} type="button" role="radio" aria-checked={active} onClick={() => patch({ absenceKind: k })}
-                  className={cn("pressable h-9 coarse:h-11 rounded-lg text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
-                    active ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground")}>
-                  {ABSENCE_KIND_LABELS[k]}
-                </button>
-              );
-            })}
-          </div>
+          <ToggleGroup
+            aria-label="Rodzaj nieobecności"
+            value={absenceKindOf({ ...draft, kind: "absence" }) ?? ""}
+            onValueChange={(v) => patch({ absenceKind: v as (typeof ABSENCE_KINDS)[number] })}
+          >
+            {ABSENCE_KINDS.map((k) => (
+              <ToggleGroupItem key={k} value={k}>{ABSENCE_KIND_LABELS[k]}</ToggleGroupItem>
+            ))}
+          </ToggleGroup>
         )}
         {absence && (
           <p className="text-xs text-muted-foreground">

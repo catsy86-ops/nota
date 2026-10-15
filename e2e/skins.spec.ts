@@ -27,7 +27,7 @@ test("styl Neon: ciemne kolory, jasność zablokowana, wybór przeżywa odświe�
   await expect(neon).toHaveAttribute("aria-pressed", "true");
   await expect(html).toHaveAttribute("data-skin", "neon");
   await expect(html).toHaveClass(/\bdark\b/);
-  await expect(page.getByRole("group", { name: "Jasność" }).getByRole("button", { name: "Jasny" })).toBeDisabled();
+  await expect(page.getByRole("radiogroup", { name: "Jasność" }).getByRole("radio", { name: "Jasny" })).toBeDisabled();
   await expect(page.getByText("Neon ma własne, ciemne kolory.", { exact: false })).toBeVisible();
 
   await page.reload();

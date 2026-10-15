@@ -1,5 +1,6 @@
 import { Check, Columns2, Kanban, LayoutGrid, List, Table2 } from "lucide-react";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
 import { setViewPref, useViewPrefs, type Density, type Layout } from "@/lib/viewPrefs";
 import { changeView } from "@/lib/viewChange";
@@ -43,7 +44,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-/** Przełącznik segmentowy: jedna z kilku opcji, cele 44 px. */
+/** Przełącznik segmentowy: jedna z kilku opcji, cele 44 px; wartości liczbowe przez `String`. */
 function Segmented<T extends string | number>({ label, options, value, onChange }: {
   label: string;
   options: { v: T; label: string; aria?: string }[];
@@ -51,27 +52,18 @@ function Segmented<T extends string | number>({ label, options, value, onChange 
   onChange: (v: T) => void;
 }) {
   return (
-    <div role="radiogroup" aria-label={label} className="flex gap-1 rounded-xl bg-muted/50 p-1">
-      {options.map((o) => {
-        const on = o.v === value;
-        return (
-          <button
-            key={String(o.v)}
-            type="button"
-            role="radio"
-            aria-checked={on}
-            aria-label={o.aria}
-            onClick={() => onChange(o.v)}
-            className={cn(
-              "pressable h-11 flex-1 rounded-lg text-sm transition-colors duration-fast tabular-nums",
-              on ? "bg-card font-semibold text-primary-ink shadow-elevation-1" : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            {o.label}
-          </button>
-        );
-      })}
-    </div>
+    <ToggleGroup
+      aria-label={label}
+      value={String(value)}
+      onValueChange={(v) => { const o = options.find((x) => String(x.v) === v); if (o) onChange(o.v); }}
+      className="flex bg-muted/50"
+    >
+      {options.map((o) => (
+        <ToggleGroupItem key={String(o.v)} value={String(o.v)} aria-label={o.aria} className="h-11 coarse:h-11 flex-1 font-normal tabular-nums">
+          {o.label}
+        </ToggleGroupItem>
+      ))}
+    </ToggleGroup>
   );
 }
 
@@ -92,18 +84,22 @@ export function ViewSheet({ open, onOpenChange, groupable = true }: { open: bool
         </SheetHeader>
 
         <Section title="Układ">
-          <div role="radiogroup" aria-label="Układ" className="flex flex-col gap-1">
+          <ToggleGroup
+            variant="plain"
+            aria-label="Układ"
+            orientation="vertical"
+            value={prefs.layout}
+            onValueChange={(v) => changeView(() => setViewPref("layout", v as Layout))}
+            className="flex flex-col gap-1"
+          >
             {LAYOUTS.map((l) => {
               const on = prefs.layout === l.v;
               return (
-                <button
+                <ToggleGroupItem
                   key={l.v}
-                  type="button"
-                  role="radio"
-                  aria-checked={on}
-                  onClick={() => changeView(() => setViewPref("layout", l.v))}
+                  value={l.v}
                   className={cn(
-                    "pressable flex min-h-13 items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-fast",
+                    "flex min-h-13 items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-fast",
                     on ? "bg-primary/10" : "hover:bg-muted/60",
                   )}
                 >
@@ -115,10 +111,10 @@ export function ViewSheet({ open, onOpenChange, groupable = true }: { open: bool
                     <span className="block text-xs text-muted-foreground">{l.hint}</span>
                   </span>
                   {on && <Check className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />}
-                </button>
+                </ToggleGroupItem>
               );
             })}
-          </div>
+          </ToggleGroup>
         </Section>
 
         {(prefs.layout === "masonry" || prefs.layout === "grid") && (

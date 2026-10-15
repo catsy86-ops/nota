@@ -12,7 +12,7 @@ test("tryb budowa: większy tekst, cele ≥ 52 px, gładkie tło, „Cofnij” 8
   await page.getByRole("button", { name: "Więcej", exact: true }).click();
   await page.getByRole("button", { name: "Ustawienia" }).last().click();
   await page.getByRole("tab", { name: "Wygląd" }).click();
-  await page.getByRole("group", { name: "Tryb budowa" }).getByRole("button", { name: "Włączony" }).click();
+  await page.getByRole("radiogroup", { name: "Tryb budowa" }).getByRole("radio", { name: "Włączony" }).click();
   await expect(html).toHaveAttribute("data-site", "");
   expect(await html.evaluate((el) => getComputedStyle(el).fontSize)).toBe("18px");
   await page.keyboard.press("Escape");

@@ -3,6 +3,7 @@ import { TriangleAlert, Camera, CircleCheck, ChevronDown, Clock, ImagePlus, Load
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { NoteImage } from "@/components/NoteImage";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -322,24 +323,27 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             {!editingSite && siteChipsRow}
           </div>
 
-          <div role="radiogroup" aria-label="Rodzaj wpisu" className="grid grid-cols-3 gap-2">
+          <ToggleGroup
+            variant="plain"
+            aria-label="Rodzaj wpisu"
+            value={kind}
+            onValueChange={(v) => { haptic("selection"); patch({ kind: v as JournalKind }); }}
+            className="grid grid-cols-3 gap-2"
+          >
             {(Object.keys(KIND_LABEL) as JournalKind[]).map((k) => (
-              <button
+              <ToggleGroupItem
                 key={k}
-                type="button"
-                role="radio"
-                aria-checked={kind === k}
-                onClick={() => { haptic("selection"); patch({ kind: k }); }}
+                value={k}
                 className={cn(
-                  "pressable flex flex-col items-center justify-center gap-1 rounded-xl border-2 py-2.5 text-sm transition-colors duration-fast coarse:min-h-16",
+                  "flex flex-col items-center justify-center gap-1 rounded-xl border-2 py-2.5 text-sm transition-colors duration-fast coarse:min-h-16",
                   kind === k ? cn(KIND_ON[k], "font-semibold text-foreground") : "border-border text-muted-foreground hover:bg-muted",
                 )}
               >
                 <KindIcon kind={k} className="h-5 w-5" />
                 {KIND_LABEL[k]}
-              </button>
+              </ToggleGroupItem>
             ))}
-          </div>
+          </ToggleGroup>
 
           {isEdit && kind === "problem" && (
             <label className="flex items-center gap-2.5 rounded-xl border border-border px-3 py-2.5 text-sm coarse:min-h-12">
