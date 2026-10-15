@@ -1005,13 +1005,13 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 ### Faza 3 — duże (L)
 - [ ] 3.1 Kafel → edytor i swipe (= 4.1, 4.3) — po teście charakteryzującym i konwersji `NoteCard.tsx` do UTF-8 LF.
 - [ ] 3.2 Wirtualizacja siatki dopiero przy >500 notatek (decyzja z planu mobile).
-- [ ] 3.3 Tailwind v4 / shadcn najnowsze (D4).
+- [x] 3.3 Tailwind v4 + React 19 (D4). ✅ React 19 + react-day-picker 9, Tailwind 4 (`@tailwindcss/postcss`, `@config`), `tw-animate-css`, `tailwind-merge` 3; wygląd bez zmian (zrzuty v3/v4 ≤ 0,02%). Tokeny w `@theme` — osobno, jeśli trzeba.
 - [ ] 3.4 Paczka: `LazyMotion` + `m` (~−25–35 KB gzip), `y-webrtc` tylko przy synchronizacji, progi w `bundle.spec.ts` w dół.
 
 ### Biblioteki
 - [ ] Radix w obrębie major (`npm update`) + pełne e2e; `lucide-react` 0.462 → 1.x (sprawdzić zmienione nazwy).
 - [ ] `sonner` 1.7 → 2 po fazie 1 (własne nadpisania w `index.css:681-695`; sprawdzić changelog).
-- Nie teraz: Tailwind 4 + `tailwind-merge` 3 (D4), React 19, `react-day-picker` 10, vite 8. `recharts` 3 + shadcn Chart tylko przy N4.
+- Nie teraz: `react-day-picker` 10, vite 8 (Tailwind 4, `tailwind-merge` 3 i React 19 zrobione w 3.3). `recharts` 3 + shadcn Chart tylko przy N4.
 - Komponenty shadcn: tak — Input OTP (parowanie, PIN skarbca), Toggle Group (grupy segmentowe), Breadcrumb (podstrony), Chart (N4); nie — Sidebar, Carousel; Drawer/vaul zależnie od D5; Command już jest.
 
 Kolejność (po decyzjach): 3.3 Tailwind v4 + React 19 + shadcn (osobne commity: React 19 → Tailwind v4 → `tailwind-merge` 3 / `tw-animate-css`) → 1.5 → 1.1 → 1.4 → 1.2/1.3 → 1.6 → 1.7/1.8 → 2.7/2.8 → Radix + lucide → 2.1 → 2.2 → 2.3/2.4 → 2.5/2.6 → sonner, LazyMotion, Input OTP, Toggle Group → faza 3. Każdy krok: typecheck, lint, Vitest, build, e2e smoke, zrzuty 390/1440 w obu motywach, wpis w `opis.md`.
