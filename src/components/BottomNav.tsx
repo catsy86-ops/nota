@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { spring } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { useSavedFilters, sameQuery } from "@/lib/savedFilters";
+import { preloadView } from "@/lib/viewPreload";
 
 import type { View } from "@/hooks/useFilteredNotes";
 
@@ -172,9 +173,9 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
           <SheetGroup title="Przejdź do">
             <SheetTile Icon={Archive} label="Archiwum" active={view === "archive"} onClick={() => { onGo("archive"); setMoreOpen(false); }} />
             <SheetTile Icon={Trash2} label="Kosz" active={view === "trash"} badge={trashCount || undefined} onClick={() => { onGo("trash"); setMoreOpen(false); }} />
-            <SheetTile Icon={CalendarRange} label="Kalendarz" active={view === "calendar"} onClick={() => { onGo("calendar"); setMoreOpen(false); }} />
-            <SheetTile Icon={BriefcaseBusiness} label="Grafik" active={view === "shifts"} onClick={() => { onGo("shifts"); setMoreOpen(false); }} />
-            <SheetTile Icon={GraduationCap} label="Nauka" active={view === "study"} onClick={() => { onGo("study"); setMoreOpen(false); }} />
+            <SheetTile Icon={CalendarRange} label="Kalendarz" active={view === "calendar"} onPointerDown={() => preloadView("calendar")} onClick={() => { onGo("calendar"); setMoreOpen(false); }} />
+            <SheetTile Icon={BriefcaseBusiness} label="Grafik" active={view === "shifts"} onPointerDown={() => preloadView("shifts")} onClick={() => { onGo("shifts"); setMoreOpen(false); }} />
+            <SheetTile Icon={GraduationCap} label="Nauka" active={view === "study"} onPointerDown={() => preloadView("study")} onClick={() => { onGo("study"); setMoreOpen(false); }} />
           </SheetGroup>
           {onGoFilter && filters.length > 0 && (
             <SheetGroup title="Filtry">

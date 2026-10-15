@@ -70,6 +70,8 @@ import { VaultHost } from "@/components/vault/VaultHost";
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
 // note action or explicit toggle) — kept out of the eager main bundle so
 // first load only pays for the code the note grid itself needs.
+import { ViewSkeleton } from "@/components/ViewSkeleton";
+import { loadCalendarView, loadShiftsView, loadStudyView } from "@/lib/viewPreload";
 const ShortcutsDialog = lazy(() => import("@/components/ShortcutsDialog").then((m) => ({ default: m.ShortcutsDialog })));
 const WeeklyReviewCard = lazy(() => import("@/components/review/WeeklyReviewCard").then((m) => ({ default: m.WeeklyReviewCard })));
 const RecentActionsPanel = lazy(() => import("@/components/RecentActionsPanel").then((m) => ({ default: m.RecentActionsPanel })));
@@ -81,9 +83,10 @@ const StatsDialog = lazy(() => import("@/components/StatsDialog").then((m) => ({
 const FocusMode = lazy(() => import("@/components/FocusMode").then((m) => ({ default: m.FocusMode })));
 // Kalendarz wchodzi tylko po wejściu w swój widok — siatka notatek go nie potrzebuje.
 // Grafik zmian — osobny dział, ładowany dopiero po wejściu.
-const StudyView = lazy(() => import("@/components/study/StudyView"));
-const ShiftsView = lazy(() => import("@/components/shifts/ShiftsView").then((m) => ({ default: m.ShiftsView })));
-const ReminderCalendarView = lazy(() => import("@/components/calendar/ReminderCalendarView").then((m) => ({ default: m.ReminderCalendarView })));
+// Loadery wspólne z nawigacją (`preloadView` przy `pointerdown`), patrz lib/viewPreload.ts.
+const StudyView = lazy(loadStudyView);
+const ShiftsView = lazy(() => loadShiftsView().then((m) => ({ default: m.ShiftsView })));
+const ReminderCalendarView = lazy(() => loadCalendarView().then((m) => ({ default: m.ReminderCalendarView })));
 
 const Index = () => {
   const {
@@ -917,7 +920,7 @@ const Index = () => {
 
           {view === "calendar" && (
             <ViewErrorBoundary name="Kalendarz">
-              <Suspense fallback={null}>
+              <Suspense fallback={<ViewSkeleton view="calendar" />}>
                 <ReminderCalendarView
                   notes={[...notes, ...archivedNotes]}
                   onCreateNote={(title, reminder, repeat) => {
@@ -935,7 +938,7 @@ const Index = () => {
 
           {view === "study" && (
             <ViewErrorBoundary name="Nauka">
-              <Suspense fallback={null}>
+              <Suspense fallback={<ViewSkeleton view="study" />}>
                 <StudyView />
               </Suspense>
             </ViewErrorBoundary>
@@ -943,7 +946,7 @@ const Index = () => {
 
           {view === "shifts" && (
             <ViewErrorBoundary name="Grafik">
-              <Suspense fallback={null}>
+              <Suspense fallback={<ViewSkeleton view="shifts" />}>
                 <ShiftsView notes={[...notes, ...archivedNotes]} />
               </Suspense>
             </ViewErrorBoundary>

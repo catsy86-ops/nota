@@ -1074,3 +1074,14 @@ html[data-motion="reduced"] .note-lift:hover .note-card { translate: none; }
   html.printing-report .report-paper, html.printing-report .report-paper * { background: transparent !important; color: #000 !important; border-color: #999 !important; }
   @page { margin: 14mm; }
 }
+
+/* Szkielet widoku ładowanego leniwie (ViewSkeleton.tsx): wchodzi po 180 ms, żeby szybkie
+   ładowanie nie mignęło; kości pulsują tylko przy pełnym ruchu. */
+.view-skeleton { animation: view-skeleton-in 0.2s ease-out 0.18s both; }
+.view-skeleton-bone { animation: view-skeleton-pulse 1.6s ease-in-out 0.4s infinite; }
+@keyframes view-skeleton-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes view-skeleton-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) {
+  .view-skeleton-bone { animation: none; }
+}
+html[data-motion='reduced'] .view-skeleton-bone { animation: none; }

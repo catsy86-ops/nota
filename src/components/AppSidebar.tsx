@@ -22,6 +22,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { dur, ease, tween } from "@/lib/motion";
 import { useSavedFilters, sameQuery } from "@/lib/savedFilters";
 import { searchNotes, useSearchReady } from "@/lib/searchNotes";
+import { preloadView } from "@/lib/viewPreload";
 
 const MAX_FAVORITES = 10;
 
@@ -38,6 +39,8 @@ function NavRow({ item, active, onClick }: { item: SidebarItem; active: boolean;
         active={active}
         dropActive={isOver}
         onClick={onClick}
+        // Paczka widoku (Kalendarz, Grafik, Nauka) zaczyna się pobierać przy najechaniu / dotknięciu, przed kliknięciem.
+        buttonProps={{ onPointerEnter: () => preloadView(item.view), onPointerDown: () => preloadView(item.view) }}
         trailing={item.count !== undefined && item.count > 0 ? <SidebarCount value={item.count} active={active} alert={item.alert} /> : undefined}
       />
     </div>
