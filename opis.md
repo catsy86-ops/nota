@@ -1038,7 +1038,7 @@ przywraca odhaczenia, ale punkty odhaczone w międzyczasie na drugim telefonie z
 **Testy.** `e2e/study.spec.ts` („telefon: tablica pokazuje jedną kolumnę z przełącznikiem, lista czyści odhaczenia
 z „Cofnij””), `e2e/study.spec.ts` („lista do nauki…”).
 
-**Commit.** — (2026-10-15).
+**Commit.** `b87ef5b` (2026-10-15).
 
 ---
 
