@@ -156,7 +156,7 @@ margines. `overflow-y-auto` jest bazowe — element pozycjonowany absolutnie w o
 **Testy.** `e2e/mobile.spec.ts` „zwykłe okno na telefonie jest wyśrodkowane z marginesem 1 rem i zaokrąglone (1.3)”
 (okno samouczka, 390 × 844) i „Ustawienia na telefonie zajmują cały ekran…”.
 
-**Commit.** — (2026-10-15).
+**Commit.** `9ed219c` (2026-10-15).
 
 ---
 
