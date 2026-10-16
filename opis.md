@@ -1138,6 +1138,30 @@ z „Cofnij””), `e2e/study.spec.ts` („lista do nauki…”).
 
 ---
 
+### Karta doświadczenia
+
+**Co robi.** Na dole statystyk: budowy z wpisami, liczba prób szczelności (z pozytywnymi), opanowane tematy
+z 18 (z nazwami) i trafność quizu. Przyciski „Kopiuj” (schowek) i „Pobierz .md” (`karta-doswiadczenia-RRRR-MM-DD.md`)
+wysyłają ten sam tekst. Bez rund quizu trafność pokazuje „jeszcze bez rund”.
+
+**Gdzie jest.** `src/lib/study/experience.ts`: `buildExperience(input)` (czysta funkcja, `ExperienceCard`) i
+`experienceText(card, today)` (Markdown). Dialog: `src/components/study/StudyStats.tsx` (`StatsBody`, sekcja
+„Karta doświadczenia”, `ExperienceRows` — podgląd jako lista definicji, `copyCard`, `downloadCard`).
+Dane: trafność z `overallAccuracy` (`stats.ts`), budowy z `siteDirectory`, „Umiem” z `columnOf` (`store.ts`).
+
+**Jak działa i dlaczego.** Liczenie jest w czystej funkcji, żeby tekst dało się przetestować bez przeglądarki.
+Budowy liczą się, gdy mają wpisy (`count > 0`), także archiwalne — były budowami. Odmiana „odpowiedź / odpowiedzi”
+przez `pluralPl`. Podgląd nie renderuje Markdownu: to te same liczby w czytelniejszej formie.
+
+**Ograniczenia i pułapki.** Trafność to suma kart powtórek (`seen`/`right`), a nie tylko ostatnia runda.
+Próby liczą się z wpisów z protokołem (`test`), bez względu na datę. Plik nazywa się po dniu lokalnym —
+pobranie tego samego dnia nadpisze poprzedni plik w pobranych.
+
+**Testy.** `src/lib/study/experience.test.ts` (liczenie, pusty stan, format i odmiana), `e2e/study.spec.ts`
+(„statystyki: karta doświadczenia na pustym stanie i pobranie pliku .md”).
+
+**Commit.** `16cc7e5` (2026-10-16).
+
 ## Praca — kolory z motywu, ikony ostrzeżeń, cele dotyku (P1)
 
 **Co robi.** Zielony „OK”/„dobrze” w dzienniku i quizie oraz znaki punktów krytycznych biorą kolor z motywu (działają
