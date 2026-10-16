@@ -1,9 +1,9 @@
 import { useState, useRef, memo, useEffect, useMemo } from "react";
 import { markNoteOpened } from "@/lib/lastOpened";
-import { m as motion, AnimatePresence, useMotionValue, useSpring, useTransform, useReducedMotion, useDragControls } from "framer-motion";
+import { m as motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { tween, dur, ease } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
-import { cascadeDelay, cardExit, markPinned, hasRecentPin, consumePin, type CardExitIntent } from "@/lib/cardMotion";
+import { cascadeDelay, cardExit, hasRecentPin, consumePin, type CardExitIntent } from "@/lib/cardMotion";
 import { Check } from "lucide-react";
 import { Pin, PinOff, Trash, Archive, ArchiveRestore, X, RotateCcw, Ellipsis, Link2, Lock, CornerLeftUp } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
@@ -14,10 +14,9 @@ import { PriorityBadge } from "./PriorityPicker";
 import { ChecklistCount, ChecklistPreview } from "./ChecklistEditor";
 import { useNoteImages } from "@/hooks/useNoteImages";
 import { haptic } from "@/lib/haptics";
-import { countSwipe, showSwipeLabels } from "@/lib/swipeHint";
-import { runWithoutConfirm } from "@/components/ConfirmActionDialog";
 import { ActionBtn, MoreActions, PrimaryActions } from "./NoteCardActions";
 import { NoteEditor } from "./NoteEditor";
+import { useCardGestures } from "@/hooks/useCardGestures";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import type { Note, NoteColor } from "@/hooks/useNotes";
 import { useNoteEditSession } from "@/hooks/useNoteEditSession";
@@ -149,82 +148,14 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
     prevAllDone.current = allDone;
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reagujemy tylko na zmianę „wszystko gotowe”
   }, [allDone]);
-  const mvX = useMotionValue(0);
-  const mvY = useMotionValue(0);
-  const rotX = useSpring(useTransform(mvY, [-0.5, 0.5], [4, -4]), { stiffness: 220, damping: 18 });
-  const rotY = useSpring(useTransform(mvX, [-0.5, 0.5], [-4, 4]), { stiffness: 220, damping: 18 });
-
-  // Przesunięcie (dotyk): w prawo przypnij/odepnij, w lewo archiwizuj (w Archiwum: przywróć).
-  // Kosz celowo nie ma gestu — tylko w arkuszu akcji, żeby przypadkowy ruch niczego nie usuwał.
-  const isTouch = typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches;
-  const canSwipePin = !!onTogglePin && !isArchived && !note.trashed;
-  const canSwipeArchive = !note.trashed && (isArchived ? !!onUnarchive : !!onArchive);
-  const swipeEnabled = isTouch && !isEditing && !selectionMode && (canSwipePin || canSwipeArchive);
-  const swipeX = useMotionValue(0);
-  // Gest startuje ręcznie: dotyk zaczęty na uchwycie przeciągania należy do dnd-kit
-  // (zmiana kolejności / kolumny tablicy), a nie do przesunięcia, które archiwizuje albo usuwa.
-  const swipeControls = useDragControls();
-  const pinOpacity = useTransform(swipeX, [0, 40, 110], [0, 0.5, 1]);
-  const archiveOpacity = useTransform(swipeX, [0, -40, -110], [0, 0.5, 1]);
-  const [swiping, setSwiping] = useState(false);
-  // Podpisy w tle tylko przy pierwszych gestach (`lib/swipeHint.ts`); czytane na starcie gestu.
-  const [swipeLabels, setSwipeLabels] = useState(false);
-
-  // Dotyk: przytrzymanie kafla zaznacza go (wejście w tryb zaznaczania), jak w aplikacjach systemowych.
-  const longPressTimer = useRef<number | undefined>(undefined);
-  const longPressStart = useRef<{ x: number; y: number } | null>(null);
-  const longPressed = useRef(false);
-  function cancelLongPress() {
-    window.clearTimeout(longPressTimer.current);
-    longPressStart.current = null;
-  }
-  function handleLongPressStart(e: React.PointerEvent) {
-    if (e.pointerType === "mouse" || isEditing || !onToggleSelect) return;
-    const target = e.target as Element;
-    // Zdarzenia z portali (arkusz akcji) płyną drzewem Reacta — tylko dotyk w samym kaflu.
-    if (!cardRef.current?.contains(target) || target.closest("button, a, input, textarea, [role='checkbox'], [data-drag-handle]")) return;
-    longPressStart.current = { x: e.clientX, y: e.clientY };
-    window.clearTimeout(longPressTimer.current);
-    longPressTimer.current = window.setTimeout(() => {
-      longPressed.current = true;
-      longPressStart.current = null;
-      haptic("selection");
-      onToggleSelect(note.id, false);
-    }, 450);
-  }
-  function handleLongPressMove(e: React.PointerEvent) {
-    const s = longPressStart.current;
-    if (s && Math.hypot(e.clientX - s.x, e.clientY - s.y) > 8) cancelLongPress();
-  }
-  useEffect(() => () => window.clearTimeout(longPressTimer.current), []);
-
-  function handleSwipeEnd(_: unknown, info: { offset: { x: number }; velocity: { x: number } }) {
-    setSwiping(false);
-    const dx = info.offset.x;
-    const fast = Math.abs(info.velocity.x) > 500;
-    const threshold = fast ? 60 : 110;
-    if (dx > threshold && canSwipePin) {
-      haptic("tap");
-      countSwipe();
-      const pinning = !note.pinned;
-      if (pinning && showFx && fx.sparkle) markPinned(note.id);
-      onTogglePin?.(note.id);
-      toastWithUndo(pinning ? "Przypięto" : "Odpięto", () => onTogglePin?.(note.id), { icon: "📌" });
-    } else if (dx < -threshold && canSwipeArchive) {
-      haptic("tap");
-      countSwipe();
-      runWithoutConfirm(() => (isArchived ? onUnarchive : onArchive)?.(note.id));
-    }
-    swipeX.set(0);
-  }
-
-  function handleMove(e: React.MouseEvent<HTMLDivElement>) {
-    if (isEditing || !tilt) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    mvX.set((e.clientX - r.left) / r.width - 0.5);
-    mvY.set((e.clientY - r.top) / r.height - 0.5);
-  }
-  function handleLeave() { mvX.set(0); mvY.set(0); }
+  const {
+    isTouch, canSwipePin, canSwipeArchive, swipeEnabled, swipeX, swipeControls, swiping, swipeLabels,
+    pinOpacity, archiveOpacity, handleSwipeStart, handleSwipeEnd, handleLongPressStart, handleLongPressMove,
+    cancelLongPress, longPressed, rotX, rotY, handleMove, handleLeave,
+  } = useCardGestures({
+    note, isArchived, isEditing, selectionMode, cardRef, tilt, pinSparkle: showFx && fx.sparkle,
+    onToggleSelect, onTogglePin, onArchive, onUnarchive,
+  });
 
   // Ten sam zestaw w rozwinięciu „Więcej opcji” i w arkuszu — jeden element, dwa miejsca.
   const moreActions = (
@@ -307,7 +238,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         dragElastic={0.25}
         dragConstraints={{ left: canSwipeArchive ? -160 : 0, right: canSwipePin ? 160 : 0 }}
         dragSnapToOrigin
-        onDragStart={() => { setSwipeLabels(showSwipeLabels()); setSwiping(true); }}
+        onDragStart={handleSwipeStart}
         onDragEnd={handleSwipeEnd}
         style={{
           ...(tilt ? { rotateX: rotX, rotateY: rotY } : {}),
