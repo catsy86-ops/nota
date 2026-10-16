@@ -281,7 +281,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                               <span className="truncate">Bez budowy</span>
                             </p>
                           )}
-                          <ul className="space-y-2">
+                          <ul>
                             {g.entries.map((e) => <JournalItem key={e.id} entry={e} onPractice={onPractice} onTopic={(t) => patch({ topic: t })} onZoom={(refs, index) => setZoom({ refs, index })} />)}
                           </ul>
                         </div>
@@ -384,9 +384,16 @@ function JournalItem({ entry: e, onPractice, onTopic, onZoom }: { entry: Journal
   }
 
   return (
-    <li className="rounded-xl border border-border bg-card p-3" data-journal-entry={e.kind} data-resolved={resolved || undefined}>
-      <div className="flex items-start gap-2.5">
-        {resolved ? <CircleCheck className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden /> : <KindIcon kind={e.kind} />}
+    // Wpis jak linijka w zeszycie: godzina na marginesie, linia oddziela wpisy zamiast ramki.
+    <li className="grid grid-cols-[3.25rem_minmax(0,1fr)] gap-x-3 border-b border-dashed border-border/70 py-3 first:pt-1 last:border-b-0" data-journal-entry={e.kind} data-resolved={resolved || undefined}>
+      <time
+        dateTime={new Date(e.at).toISOString()}
+        className="border-r border-primary/30 pr-2 pt-0.5 text-right font-mono text-xs tabular-nums text-muted-foreground"
+      >
+        {new Date(e.at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}
+      </time>
+      <div className="flex min-w-0 items-start gap-2.5">
+        {resolved ? <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden /> : <KindIcon kind={e.kind} />}
         <div className="min-w-0 flex-1">
           <p className="whitespace-pre-wrap wrap-break-word text-sm leading-snug">{e.text || (e.test ? "Próba szczelności" : e.fittings?.length ? "Kształtki" : "Sprawdzone punkty listy")}</p>
           {e.fittings && e.fittings.length > 0 && (
@@ -400,9 +407,6 @@ function JournalItem({ entry: e, onPractice, onTopic, onZoom }: { entry: Journal
             </p>
           )}
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-            <span className="font-mono tabular-nums">
-              {new Date(e.at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}
-            </span>
             <span>{resolved ? "Problem rozwiązany" : KIND_LABEL[e.kind]}</span>
             {e.topic && (
               // Pigułka tematu filtruje dziennik po temacie — ćwiczenie jest pod jawnym „Ćwicz teraz”.
