@@ -2447,7 +2447,8 @@ okresu raportu, bez sekcji w raporcie wszystkich budów). Regresja działu: `e2e
 ### Braki materiału i historia zamówień
 
 **Co robi.** W karcie budowy sekcja „Braki materiału”: dopisujesz, czego brakuje, z ilością („Rura PEX 16 · 50 m”,
-„Klej PCV”). Stuknięcie w status przełącza *Brakuje → Zamówione → Dostarczone* (data zmiany się zapisuje). „Kopiuj braki”
+„Klej PCV”). Stuknięcie w status przełącza *Brakuje → Zamówione → Dostarczone* (data zmiany się zapisuje); kolory:
+czerwony, bursztynowy, zielony — „Brakuje” celowo czerwone, bo bursztyn motywu i ostrzeżenie są prawie tym samym kolorem. „Kopiuj braki”
 kopiuje tekst dla dostawcy albo szefa, „Wyczyść dostarczone” sprząta listę (z „Cofnij”), usunięcie pozycji też ma
 „Cofnij”. Raport budowy dla szefa ma w podsumowaniu „braki materiału: N” i sekcję z tym, co jeszcze nie dojechało.
 Pod „Do zamówienia” (kształtki) jest zwinięta lista „Poprzednie zamówienia” — każde „Oznacz jako zamówione” zapisuje
@@ -2481,7 +2482,9 @@ brakujące najpierw. Dane w karcie budowy (mapa Yjs `studySites`), więc synchro
 **Testy.** `src/lib/study/shortages.test.ts` (10: dopisanie i duplikaty, dostarczona nie blokuje, statusy, otwarte i
 czyszczenie, limit, linia i tekst, `cleanShortages`, historia i limit, `cleanOrderLog`, `cleanSite`).
 `src/lib/study/report.test.ts` („braki materiału”). `e2e/site-shortages.spec.ts` (dopisanie, status, kopia, czyszczenie z
-„Cofnij”, historia zamówień, raport, stan po przeładowaniu). Regresja działu Praca 39/39 (chromium), układ telefonu 4/4.
+„Cofnij”, historia zamówień, raport, stan po przeładowaniu). `e2e/site-card-mobile.spec.ts` (`@mobile`, iPhone 14 i
+Pixel 7, 320 i 390 px: karta z etapami, zamówieniem i brakami bez przewijania w bok, cele dotyku ≥ 44 px; `26cf71f`).
+Regresja działu Praca 39/39 (chromium). Zrzuty karty obejrzane w jasnym i ciemnym motywie (390 px).
 
 **Commit.** `f10d6dd` (2026-10-16).
 
@@ -2617,8 +2620,10 @@ na początku („4 kolana 16”) albo ostatnia z dwóch liczb („trójnik 16 2�
 
 **Ograniczenia i pułapki.**
 - Budowa rozpoznaje się tylko spośród znanych (z kart i wpisów, bez archiwum) i w mianowniku („Lipowa”, nie „na Lipowej”).
-- Braki zostają w formie, w jakiej padły („brakuje kleju” → „Kleju do PCV”); słowo „brak” (nie „brakuje”) to zwykły
-  tekst problemu. Ilość bez jednostki („rura 16”) to wymiar, nie ilość.
+- Po „brakuje” pierwsze słowo wraca z dopełniacza do mianownika dla częstych materiałów („kleju” → „Klej”, „rury” →
+  „Rura”; słownik `GENITIVE_TO_NOMINATIVE`, `ddb87d0`); nieznane słowa i reszta pozycji zostają, jak padły. Po „do
+  zamówienia” nic się nie zmienia (tam mówi się w mianowniku). Słowo „brak” (nie „brakuje”) to zwykły tekst problemu.
+  Ilość bez jednostki („rura 16”) to wymiar, nie ilość.
 - Pierwsze słowo budowy bez przecinka i bez słowa rodzaju za nim nie wystarcza („polna droga zalana” to tekst).
 - „Dyktuj kształtki” bierze każdy kawałek jako pozycję: przypadkowe słowa („coś tam”) zostaną pozycją — usuwa się „−”.
 - Web Speech API: w Chrome nagranie idzie do usługi Google; bez internetu nie działa. Na iPhonie (Safari) zależnie od
