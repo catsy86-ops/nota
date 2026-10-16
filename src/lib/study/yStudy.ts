@@ -45,6 +45,8 @@ export interface JournalEntry {
   images: string[];
   /** Problem rozwiązany — moment rozwiązania (ms); brak = otwarty. Tylko dla `problem`. */
   resolved?: number;
+  /** Jak problem rozwiązano („wymieniona złączka”) — baza własnych rozwiązań. Tylko dla `problem`. */
+  solution?: string;
   /** Protokół próby szczelności (`pressureTest.ts`); brak = wpis bez próby. */
   test?: PressureTest;
   /** Zużyte kształtki (`fittings.ts`); brak = bez kształtek. */
@@ -57,6 +59,8 @@ export interface JournalEntry {
  */
 export const JOURNAL_MAX_IMAGES = 5;
 export const JOURNAL_MAX_TEXT = 2000;
+/** Opis rozwiązania problemu — krótki, jedno-dwa zdania. */
+export const JOURNAL_SOLUTION_MAX = 500;
 export const SITE_MAX = 120;
 
 export interface StudyState {
@@ -147,6 +151,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
     checked,
     images,
     ...(e.kind === "problem" && typeof e.resolved === "number" && Number.isFinite(e.resolved) ? { resolved: e.resolved } : {}),
+    ...(e.kind === "problem" && typeof e.solution === "string" && e.solution.trim() ? { solution: e.solution.trim().slice(0, JOURNAL_SOLUTION_MAX) } : {}),
     ...(test ? { test } : {}),
     ...(fittings.length ? { fittings } : {}),
   };
@@ -389,6 +394,15 @@ export function createYStudy(doc: Y.Doc) {
     transact(() => journal.set(id, at === null ? rest : { ...rest, resolved: at }));
   }
 
+  /** Opis rozwiązania problemu; pusty tekst usuwa opis. Inny rodzaj wpisu — nic. */
+  function setSolution(id: string, text: string): void {
+    const e = journal.get(id);
+    if (!e || e.kind !== "problem") return;
+    const { solution: _, ...rest } = e;
+    const t = text.trim().slice(0, JOURNAL_SOLUTION_MAX);
+    transact(() => journal.set(id, t ? { ...rest, solution: t } : rest));
+  }
+
   /** Przywraca usunięty wpis (Cofnij); wpis, który w międzyczasie wrócił, zostaje. */
   function restoreEntry(entry: JournalEntry): void {
     transact(() => { if (!journal.has(entry.id)) journal.set(entry.id, entry); });
@@ -511,7 +525,7 @@ export function createYStudy(doc: Y.Doc) {
   return {
     get, dump, subscribe, isMerged,
     setColumn, setChecked, clearChecked, restoreChecked, recordRound,
-    addEntry, updateEntry, setResolved, restoreEntry, removeEntry, setSite, saveSite, setBoss, setGroup,
+    addEntry, updateEntry, setResolved, setSolution, restoreEntry, removeEntry, setSite, saveSite, setBoss, setGroup,
     addCustom, removeCustom, restoreCustom,
     replaceAll, mergeIn,
   };

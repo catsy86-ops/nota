@@ -191,7 +191,8 @@ function entryLine(r: ReportEntry): string {
   // Kolejne linie tekstu wcięte — zostają w tym samym punkcie listy.
   const test = r.entry.test ? `\n  ${testLine(r.entry.test)}` : "";
   const fit = r.entry.fittings?.length ? `\n  Kształtki: ${fittingsLine(r.entry.fittings)}` : "";
-  return `${r.status}: ${text.replace(/\n+/g, "\n  ")}${extra.length ? ` (${extra.join(", ")})` : ""}${test}${fit}`;
+  const sol = r.entry.solution ? `\n  Rozwiązanie: ${r.entry.solution}` : "";
+  return `${r.status}: ${text.replace(/\n+/g, "\n  ")}${extra.length ? ` (${extra.join(", ")})` : ""}${test}${fit}${sol}`;
 }
 
 /** Podsumowanie raportu w jednej linii: „5 wpisów · godziny pracy: 18 h · otwarte problemy: 1”. */

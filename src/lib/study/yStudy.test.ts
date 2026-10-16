@@ -39,6 +39,20 @@ describe("Nauka w Yjs", () => {
     expect(cleanDump({ journal: [entry("n", 1, { resolved: 3 })] }).journal[0].resolved).toBeUndefined();
   });
 
+  it("opis rozwiązania jedzie na drugi telefon i przez kopię; nie-problem go nie ma", () => {
+    const { a, b, sync } = pair();
+    a.addEntry(entry("p", 1, { kind: "problem" }));
+    sync();
+    b.setSolution("p", "  Nowa złączka  ");
+    sync();
+    expect(a.get().journal[0].solution).toBe("Nowa złączka");
+    a.setSolution("p", "");
+    sync();
+    expect(b.get().journal[0].solution).toBeUndefined();
+    expect(cleanDump({ journal: [entry("p", 1, { kind: "problem", solution: " Dokręcone " })] }).journal[0].solution).toBe("Dokręcone");
+    expect(cleanDump({ journal: [entry("n", 1, { solution: "x" })] }).journal[0].solution).toBeUndefined();
+  });
+
   it("usunięcie na jednym telefonie i Cofnij nie gubią wpisów z drugiego", () => {
     const { a, b, sync } = pair();
     a.addEntry(entry("x", 1));

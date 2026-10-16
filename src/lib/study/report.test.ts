@@ -174,3 +174,12 @@ describe("raport — braki materiału", () => {
     expect(all.shortages).toEqual([]);
   });
 });
+
+describe("raport — rozwiązanie problemu", () => {
+  it("wpis rozwiązanego problemu ma linię „Rozwiązanie:”", () => {
+    const j = [e("p", at(14, 9), "problem", "Lipowa 5", "Przeciek przy pionie", { resolved: at(14, 15), solution: "Wymieniona złączka" })];
+    const body = reportBody(buildJournalReport(j, { siteId: null, from: "2026-10-14", to: "2026-10-14" }));
+    expect(body).toContain("Przeciek przy pionie");
+    expect(body).toContain("\n  Rozwiązanie: Wymieniona złączka");
+  });
+});

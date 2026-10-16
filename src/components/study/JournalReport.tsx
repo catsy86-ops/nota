@@ -474,6 +474,9 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
                           <Gauge className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{testLine(r.entry.test)}
                         </p>
                       )}
+                      {r.entry.solution && (
+                        <p className="mt-0.5 text-xs" data-report-solution><span className="font-medium">Rozwiązanie:</span> {r.entry.solution}</p>
+                      )}
                       {r.entry.images.length > 0 && (
                         <ul className="mt-1.5 flex flex-wrap gap-1.5" aria-label="Zdjęcia wpisu">
                           {r.entry.images.map((ref) => (

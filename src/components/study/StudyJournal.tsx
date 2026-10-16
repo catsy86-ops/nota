@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { fittingsLine } from "@/lib/study/fittings";
 import { testLine } from "@/lib/study/pressureTest";
-import { Archive, Check, ChevronLeft, Gauge, Package, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Play, Plus, Search, TriangleAlert, X } from "lucide-react";
+import { Archive, Check, ChevronLeft, Gauge, Package, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Play, Plus, Search, TriangleAlert, Wrench, X } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
 import { studyReminders, type StudyReminder } from "@/lib/study/reminders";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import { haptic } from "@/lib/haptics";
 import { NoteImage } from "@/components/NoteImage";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { TOPICS } from "@/lib/study/content";
-import { openProblems, setProblemResolved, useStudy, useStudyLists, type JournalEntry } from "@/lib/study/store";
+import { JOURNAL_SOLUTION_MAX, openProblems, setProblemResolved, setProblemSolution, useStudy, useStudyLists, type JournalEntry } from "@/lib/study/store";
 import {
   entriesPl, filterJournal, groupJournal, isFiltered, KIND_LABEL, NO_FILTER, problemsPl, RECENT_DAYS, splitRecent,
   type JournalFilter, type KindFilter,
@@ -405,10 +405,13 @@ function JournalItem({ entry: e, onPractice, onTopic, onZoom }: { entry: Journal
   const lists = useStudyLists();
   const total = lists.checklist.filter((c) => c.topic === e.topic).length;
   const resolved = e.kind === "problem" && e.resolved !== undefined;
+  /** Pole „Jak rozwiązane?” otwarte — samo po oznaczeniu problemu jako rozwiązanego, jeśli brak opisu. */
+  const [solving, setSolving] = useState(false);
 
   function toggleResolved() {
     haptic(resolved ? "tap" : "success");
     setProblemResolved(e.id, !resolved);
+    setSolving(!resolved && !e.solution);
   }
 
   return (
@@ -476,6 +479,7 @@ function JournalItem({ entry: e, onPractice, onTopic, onZoom }: { entry: Journal
               )}
             </div>
           )}
+          {resolved && <SolutionLine entry={e} editing={solving} onEditing={setSolving} />}
           {e.images.length > 0 && (
             <ul className="mt-2 flex flex-wrap gap-2" aria-label="Zdjęcia wpisu">
               {e.images.map((ref) => (
@@ -499,5 +503,54 @@ function JournalItem({ entry: e, onPractice, onTopic, onZoom }: { entry: Journal
         </button>
       </div>
     </li>
+  );
+}
+
+/**
+ * Jak problem rozwiązano — jedno-dwa zdania pod rozwiązanym problemem („wymieniona złączka, dokręcony
+ * śrubunek”). Trafia do raportu i do „Moich rozwiązań” przy temacie na tablicy Nauki.
+ */
+function SolutionLine({ entry: e, editing, onEditing }: { entry: JournalEntry; editing: boolean; onEditing: (v: boolean) => void }) {
+  const [text, setText] = useState(e.solution ?? "");
+  useEffect(() => { if (editing) setText(e.solution ?? ""); }, [editing, e.solution]);
+
+  if (editing) {
+    return (
+      <form
+        className="mt-2 flex flex-wrap gap-2"
+        aria-label="Jak rozwiązane"
+        onSubmit={(ev) => { ev.preventDefault(); setProblemSolution(e.id, text); haptic("success"); onEditing(false); }}
+      >
+        <input
+          autoFocus
+          value={text}
+          onChange={(ev) => setText(ev.target.value)}
+          maxLength={JOURNAL_SOLUTION_MAX}
+          placeholder="Jak rozwiązane? np. wymieniona złączka"
+          aria-label="Jak rozwiązane?"
+          className="h-9 min-w-0 flex-1 basis-56 rounded-lg border border-input bg-background px-2.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
+        />
+        <Button type="submit" size="sm" className="coarse:h-11">Zapisz</Button>
+        <Button type="button" size="sm" variant="ghost" onClick={() => onEditing(false)} className="coarse:h-11">Pomiń</Button>
+      </form>
+    );
+  }
+  if (e.solution) {
+    return (
+      <p className="mt-1.5 flex items-start gap-1.5 text-xs text-foreground/80" data-testid="journal-solution">
+        <Wrench className="mt-px h-3.5 w-3.5 shrink-0 text-success-ink" aria-hidden />
+        <span className="min-w-0"><span className="font-medium">Rozwiązanie:</span> {e.solution}</span>
+        <button type="button" onClick={() => onEditing(true)} className="shrink-0 text-muted-foreground underline-offset-2 hover:text-foreground hover:underline coarse:min-h-11">Zmień</button>
+      </p>
+    );
+  }
+  return (
+    <button
+      type="button"
+      onClick={() => onEditing(true)}
+      className="pressable mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground coarse:min-h-11"
+    >
+      <Wrench className="h-3.5 w-3.5" aria-hidden />Jak rozwiązane?
+    </button>
   );
 }

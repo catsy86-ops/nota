@@ -11,6 +11,7 @@ import {
   sanitizeStudy, moveTopic, recordRound, activeStreak, toggleChecked, getStudy, columnOf, resetChecklist,
   addJournalEntry, removeJournalEntry, restoreJournalEntry, setSite, practiceByTopic,
   updateJournalEntry, setProblemResolved, openProblems, saveSiteCard, setSiteArchived,
+  setProblemSolution, JOURNAL_SOLUTION_MAX,
 } from "./store";
 import { resetStudyForTests, yStudy } from "./data";
 import { yjsStore } from "@/lib/yjsStore";
@@ -486,5 +487,58 @@ describe("budowy — karty", () => {
     expect(r.card).toMatchObject({ name: "Polna 2", created: 10 });
     expect(resolveSite(dir, "dom nowakow", 10)).toEqual({ siteId: siteKey("Polna 2"), site: "Dom Nowaków" });
     expect(resolveSite(dir, "   ", 10)).toEqual({ siteId: undefined, site: "" });
+  });
+});
+
+describe("dziennik — jak rozwiązano problem", () => {
+  beforeEach(freshStudy);
+
+  it("opis rozwiązania: zapis, przycięcie, usunięcie pustym tekstem; tylko dla problemu", () => {
+    const p = addJournalEntry({ kind: "problem", topic: "spadki", text: "Zaleganie w poziomie" }, 1000)!;
+    const ok = addJournalEntry({ kind: "ok", topic: null, text: "Zrobione" }, 1100)!;
+    setProblemResolved(p.id, true, 2000);
+    setProblemSolution(p.id, "  Poprawiony spadek na 2%  ");
+    setProblemSolution(ok.id, "nie dotyczy");
+    const find = (id: string) => getStudy().journal.find((e) => e.id === id)!;
+    expect(find(p.id).solution).toBe("Poprawiony spadek na 2%");
+    expect(find(ok.id).solution).toBeUndefined();
+    setProblemSolution(p.id, "x".repeat(900));
+    expect(find(p.id).solution).toHaveLength(JOURNAL_SOLUTION_MAX);
+    setProblemSolution(p.id, "   ");
+    expect(find(p.id).solution).toBeUndefined();
+  });
+
+  it("edycja wpisu w arkuszu i ponowne otwarcie problemu nie gubią opisu; zmiana rodzaju — tak", () => {
+    const p = addJournalEntry({ kind: "problem", topic: "spadki", text: "Zaleganie" }, 1000)!;
+    setProblemResolved(p.id, true, 2000);
+    setProblemSolution(p.id, "Poprawiony spadek");
+    updateJournalEntry(p.id, { kind: "problem", topic: "spadki", text: "Zaleganie w łazience", at: 1000, site: "", resolved: 2000 });
+    expect(getStudy().journal[0].solution).toBe("Poprawiony spadek");
+    setProblemResolved(p.id, false);
+    expect(getStudy().journal[0].solution).toBe("Poprawiony spadek");
+    updateJournalEntry(p.id, { kind: "note", topic: null, text: "Teraz notatka", at: 1000, site: "", resolved: null });
+    expect(getStudy().journal[0].solution).toBeUndefined();
+  });
+
+  it("„Moje rozwiązania” przy temacie: tylko rozwiązane z opisem, od najnowszego; szukanie po rozwiązaniu", () => {
+    const a = addJournalEntry({ kind: "problem", topic: "spadki", text: "Pierwszy" }, 1000)!;
+    const b = addJournalEntry({ kind: "problem", topic: "spadki", text: "Drugi" }, 2000)!;
+    addJournalEntry({ kind: "problem", topic: "spadki", text: "Otwarty" }, 3000);
+    setProblemResolved(a.id, true, 5000);
+    setProblemSolution(a.id, "Rewizja przestawiona");
+    setProblemResolved(b.id, true, 4000);
+    setProblemSolution(b.id, "Nowa złączka");
+    const p = practiceByTopic(getStudy().journal).get("spadki")!;
+    expect(p.solutions.map((e) => e.solution)).toEqual(["Rewizja przestawiona", "Nowa złączka"]);
+    expect(filterJournal(getStudy().journal, { ...NO_FILTER, query: "złączka" }).map((e) => e.text)).toEqual(["Drugi"]);
+  });
+
+  it("opis rozwiązania przechodzi przez czyszczenie danych (kopia, peer)", () => {
+    const clean = sanitizeStudy(getStudy(), { journal: [
+      { id: "a", at: 1, kind: "problem", topic: null, text: "Przeciek", site: "", checked: [], images: [], resolved: 2, solution: " Dokręcony śrubunek " },
+      { id: "b", at: 1, kind: "ok", topic: null, text: "OK", site: "", checked: [], images: [], solution: "nie dla ok" },
+    ] });
+    expect(clean.journal.find((e) => e.id === "a")?.solution).toBe("Dokręcony śrubunek");
+    expect(clean.journal.find((e) => e.id === "b")?.solution).toBeUndefined();
   });
 });

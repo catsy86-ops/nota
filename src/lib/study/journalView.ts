@@ -60,7 +60,7 @@ export const isFiltered = (f: JournalFilter) => f.kind !== null || f.site !== nu
 
 /**
  * Wpisy pasujące do filtra. Szukanie bez ogonków i wielkości liter, każde słowo musi się znaleźć
- * w tekście, budowie, nazwie tematu albo rodzaju wpisu.
+ * w tekście, rozwiązaniu problemu, budowie, nazwie tematu albo rodzaju wpisu.
  */
 export function filterJournal<E extends JournalEntry>(
   entries: readonly E[],
@@ -73,7 +73,7 @@ export function filterJournal<E extends JournalEntry>(
     if (f.site !== null && entrySiteId(e) !== f.site) return false;
     if (f.topic !== null && e.topic !== f.topic) return false;
     if (words.length === 0) return true;
-    const hay = fold([e.text, e.site, e.topic ? topicTitle(e.topic) ?? "" : "", KIND_LABEL[e.kind]].join(" "));
+    const hay = fold([e.text, e.solution ?? "", e.site, e.topic ? topicTitle(e.topic) ?? "" : "", KIND_LABEL[e.kind]].join(" "));
     return words.every((w) => hay.includes(w));
   });
 }

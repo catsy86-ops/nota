@@ -103,6 +103,24 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
           </span>
         </p>
       )}
+      {/* Jak naprawiałeś to wcześniej — z rozwiązanych problemów tego tematu. */}
+      {practice && practice.solutions.length > 0 && (
+        <details className="mt-2 text-xs" data-topic-solutions>
+          <summary className="cursor-pointer select-none font-medium text-success-ink coarse:py-2">
+            Moje rozwiązania ({practice.solutions.length})
+          </summary>
+          <ul className="mt-1 space-y-1.5">
+            {practice.solutions.map((s) => (
+              <li key={s.id} className="leading-snug">
+                <span className="text-muted-foreground">
+                  {new Date(s.at).toLocaleDateString("pl-PL", { day: "numeric", month: "numeric" })} · {s.text.trim().split("\n")[0] || "bez opisu"}
+                </span>
+                <span className="block text-foreground">→ {s.solution}</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
       <div className="mt-2">
         {/* Podpisy przy ikonach: na budowie nikt nie zgaduje, co robi ołówek. */}
         <div className="flex flex-wrap gap-1">

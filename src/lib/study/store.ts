@@ -14,11 +14,11 @@ import { cleanStages, type SiteStage } from "./stages";
 import { cleanShortages, logOrder, type Shortage } from "./shortages";
 import { siteOrder } from "./order";
 import {
-  JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, SITE_MAX,
+  JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, JOURNAL_SOLUTION_MAX, SITE_MAX,
   type Column, type JournalEntry, type JournalKind, type StudyState,
 } from "./yStudy";
 
-export { COLUMNS, JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT } from "./yStudy";
+export { COLUMNS, JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, JOURNAL_SOLUTION_MAX } from "./yStudy";
 export type { Column, JournalEntry, JournalKind, StudyState } from "./yStudy";
 export type { SiteCard, SiteInfo } from "./sites";
 export type { Boss, WaGroup } from "./boss";
@@ -74,6 +74,7 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
       checked: checkedIds,
       images,
       ...(e.kind === "problem" && typeof e.resolved === "number" && Number.isFinite(e.resolved) ? { resolved: e.resolved } : {}),
+      ...(e.kind === "problem" && typeof e.solution === "string" && e.solution.trim() ? { solution: e.solution.trim().slice(0, JOURNAL_SOLUTION_MAX) } : {}),
       ...(test ? { test } : {}),
       ...(fittings.length ? { fittings } : {}),
     });
@@ -248,10 +249,13 @@ export function updateJournalEntry(id: string, input: JournalEdit, now: number =
   if (!fields) return null;
   const s = getStudy();
   const { siteId, site, card } = resolveSite(siteDirectory(s.sites, s.journal), input.site, now);
+  // Opis rozwiązania nie jest w formularzu arkusza — zostaje z zapisanego wpisu, dopóki to problem.
+  const prevSolution = s.journal.find((e) => e.id === id)?.solution;
   const entry: JournalEntry = {
     id, ...fields, site,
     ...(siteId ? { siteId } : {}),
     ...(fields.kind === "problem" && input.resolved !== null ? { resolved: input.resolved } : {}),
+    ...(fields.kind === "problem" && prevSolution ? { solution: prevSolution } : {}),
   };
   yStudy.updateEntry(entry, card);
   return entry;
@@ -260,6 +264,11 @@ export function updateJournalEntry(id: string, input: JournalEdit, now: number =
 /** Problem rozwiązany albo z powrotem otwarty — z listy, bez otwierania arkusza. */
 export function setProblemResolved(id: string, resolved: boolean, now: number = Date.now()) {
   yStudy.setResolved(id, resolved ? now : null);
+}
+
+/** Jak problem rozwiązano — baza własnych rozwiązań; pusty tekst usuwa opis. */
+export function setProblemSolution(id: string, text: string) {
+  yStudy.setSolution(id, text);
 }
 
 /** Problemy, które czekają na rozwiązanie. */
@@ -415,6 +424,8 @@ export interface TopicPractice {
   last: number;
   /** Ostatni problem z tematem — otwarty ma pierwszeństwo przed nowszym rozwiązanym. */
   lastProblem?: JournalEntry;
+  /** Rozwiązane problemy z opisem rozwiązania, od najnowszego — „Moje rozwiązania”. */
+  solutions: JournalEntry[];
 }
 
 /** Ile razy temat pojawił się na budowie i ile razy sprawił problem. */
@@ -422,7 +433,7 @@ export function practiceByTopic(journal: readonly JournalEntry[]): Map<string, T
   const out = new Map<string, TopicPractice>();
   for (const e of journal) {
     if (!e.topic) continue;
-    const p = out.get(e.topic) ?? { ok: 0, problem: 0, last: 0 };
+    const p = out.get(e.topic) ?? { ok: 0, problem: 0, last: 0, solutions: [] };
     if (e.kind === "ok") p.ok += 1;
     else if (e.kind === "problem") {
       p.problem += 1;
@@ -430,9 +441,11 @@ export function practiceByTopic(journal: readonly JournalEntry[]): Map<string, T
       const open = e.resolved === undefined;
       const prevOpen = prev?.resolved === undefined;
       if (!prev || (open && !prevOpen) || (open === prevOpen && e.at > prev.at)) p.lastProblem = e;
+      if (!open && e.solution) p.solutions.push(e);
     }
     p.last = Math.max(p.last, e.at);
     out.set(e.topic, p);
   }
+  for (const p of out.values()) p.solutions.sort((a, b) => (b.resolved ?? b.at) - (a.resolved ?? a.at));
   return out;
 }
