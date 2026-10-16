@@ -5,50 +5,35 @@ import { tween, dur, ease } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { cascadeDelay, cardExit, hasRecentPin, consumePin, type CardExitIntent } from "@/lib/cardMotion";
 import { Check } from "lucide-react";
-import { Pin, PinOff, Trash, Archive, ArchiveRestore, X, RotateCcw, Ellipsis, Link2, Lock, CornerLeftUp } from "lucide-react";
-import { pluralPl } from "@/lib/plural";
+import { Pin, PinOff, Archive, ArchiveRestore, X, Ellipsis } from "lucide-react";
 import { ColorPicker, colorClasses } from "./ColorPicker";
-import { LabelBadges } from "./LabelPicker";
-import { ReminderBadge } from "./ReminderPicker";
-import { PriorityBadge } from "./PriorityPicker";
-import { ChecklistCount, ChecklistPreview } from "./ChecklistEditor";
 import { useNoteImages } from "@/hooks/useNoteImages";
 import { haptic } from "@/lib/haptics";
 import { ActionBtn, MoreActions, PrimaryActions } from "./NoteCardActions";
 import { NoteEditor } from "./NoteEditor";
 import { useCardGestures } from "@/hooks/useCardGestures";
+import { NoteCardBody } from "./NoteCardBody";
 import { ActionSheet, DeleteNoteDialog, ImagePreviewDialog } from "./NoteCardDialogs";
-import { MarkdownRenderer } from "./MarkdownRenderer";
 import type { Note, NoteColor } from "@/hooks/useNotes";
 import { useNoteEditSession } from "@/hooks/useNoteEditSession";
 import { NoteImage } from "./NoteImage";
-import { AttachmentsBadge } from "./AttachmentsList";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useSearchTerms } from "@/lib/searchTerms";
 import { firstSnippet } from "@/lib/searchHighlight";
-import { Marked } from "@/components/SearchMarks";
-import { format } from "date-fns";
-import { pl } from "date-fns/locale";
 import { DrawingCanvas } from "./DrawingCanvas";
 import { useTrashCountdown } from "@/hooks/useTrashCountdown";
-import { celebrate } from "@/lib/celebrate";
 import { useViewPrefs, readingTimeMin } from "@/lib/viewPrefs";
 import { useEffectsSettings } from "@/lib/effectsSettings";
 import { useNotesMeta } from "@/hooks/NotesProvider";
 import { useNoteViewActions } from "@/hooks/NoteViewActionsContext";
 import { useLatch } from "@/hooks/useLatch";
 import { useOriginFromTile } from "@/hooks/useOriginFromTile";
-import { NoteCoverStrip } from "./NoteLookPicker";
 import { backlinksOf } from "@/lib/wikiLinks";
 import { toast } from "sonner";
-import { toastWithUndo } from "@/lib/undoToast";
-import { snoozeTimes } from "@/lib/reminderAgenda";
 import type { DraggableAttributes, DraggableSyntheticListeners } from "@dnd-kit/core";
 
 const NO_TITLES: string[] = [];
-/** Na kaflu jeden link zwrotny i „+N” — pełna lista jest w czytniku. */
-const BACKLINKS_SHOWN = 1;
 
 interface NoteCardProps {
   note: Note;
@@ -352,141 +337,25 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           }}
         >
           {isEditing && !fullEditor ? renderEditor(false) : (
-            <>
-              <NoteCoverStrip cover={note.cover} className="-mx-3.5 -mt-3 mb-2.5 w-[calc(100%+1.75rem)] rounded-t-[inherit]" />
-              {(note.title || note.icon) && (
-                // Prawy margines: tytuł nie wchodzi pod pole zaznaczenia (right-2 + w-6 = 32 px od krawędzi).
-                <h3 className={cn("font-display font-semibold text-base leading-snug tracking-[-0.01em] text-foreground mb-1 line-clamp-2 wrap-anywhere", onToggleSelect && "pr-5")}>
-                  {note.icon && <span className="mr-1.5" aria-hidden>{note.icon}</span>}
-                  <Marked text={note.title} terms={searchTerms} />
-                  {note.readOnly && <Lock className="inline-block w-3 h-3 ml-1.5 -mt-0.5 text-muted-foreground" aria-label="Zablokowana do edycji" />}
-                  <ChecklistCount items={note.checklist || []} />
-                </h3>
-              )}
-              {/* Pusta notatka: ten sam zastępnik co w tabeli, zamiast kafla z samą datą. */}
-              {!note.title && !note.icon && !note.content.trim() && !(note.checklist || []).length && !(note.images || []).length && (
-                <p className="font-display text-base leading-snug italic text-muted-foreground mb-1">Bez tytułu</p>
-              )}
-              {note.content && (
-                // Kafel to zapowiedź, nie lektura: 4 linie (na telefonie 3) i zwykła interlinia — pełny tekst jest w czytniku.
-                // Nagłówki z treści w rozmiarze treści — duże i pogrubione konkurowały z tytułem kafla.
-                <div className="line-clamp-4 max-sm:line-clamp-3 text-foreground/85 [&_p]:leading-normal [&_li]:leading-normal [&_p]:mb-0.5 [&_:is(h1,h2,h3,h4,h5,h6)]:text-[1em]! [&_:is(h1,h2,h3,h4,h5,h6)]:leading-normal! [&_:is(h1,h2,h3,h4,h5,h6)]:m-0! [&_:is(h1,h2,h3,h4,h5,h6)]:font-semibold!">
-                  {snippet ? (
-                    // Szukasz: zamiast początku treści pokazujemy fragment z trafieniem.
-                    <p className="text-sm leading-normal">{snippet.before}<mark className="rounded bg-primary/25 px-0.5 text-foreground">{snippet.match}</mark>{snippet.after}</p>
-                  ) : (
-                    <MarkdownRenderer content={note.content} knownTitles={knownTitles} onWikiClick={onWikiClick} />
-                  )}
-                </div>
-              )}
-              {(note.checklist || []).length > 0 && (
-                <ChecklistPreview items={note.checklist} onToggle={handleChecklistToggle} showProgress={!note.title} />
-              )}
-              {/* Etykiety, przypomnienie i priorytet w jednym rzędzie — każde w osobnej linii robiło z kafla wieżę. */}
-              <div className="flex items-center gap-1 flex-wrap mt-1.5 empty:hidden *:mt-0!">
-                <LabelBadges labels={note.labels} />
-                <ReminderBadge reminder={note.reminder} reminderRepeat={note.reminderRepeat} />
-                <PriorityBadge priority={note.priority ?? "none"} />
-                <AttachmentsBadge attachments={note.attachments} />
-              </div>
-              {/* Zaległy termin: odhaczenie i odłożenie bez otwierania notatki (wcześniej tylko w dymku przypomnienia). */}
-              {onUpdate && note.reminder !== null && note.reminder <= Date.now() && !note.trashed && !isArchived && !note.locked && (
-                <div className="mt-2 flex flex-wrap items-center gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const prev = note.reminder;
-                      haptic("success");
-                      onUpdate(note.id, { reminder: null });
-                      toastWithUndo("Przypomnienie odhaczone", () => onUpdate(note.id, { reminder: prev }), { id: `rem-done-${note.id}` });
-                    }}
-                    className="pressable inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 sm:px-2.5 py-1 coarse:py-2 text-2xs font-medium text-primary-ink hover:bg-primary/20"
-                  >
-                    <Check className="w-3 h-3" aria-hidden /> Gotowe
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const prev = note.reminder;
-                      haptic("tap");
-                      onUpdate(note.id, { reminder: snoozeTimes().tomorrow9 });
-                      toastWithUndo("Przesunięto na jutro, 9:00", () => onUpdate(note.id, { reminder: prev }), { id: `rem-snooze-${note.id}` });
-                    }}
-                    className="pressable inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 sm:px-2.5 py-1 coarse:py-2 text-2xs font-medium text-muted-foreground hover:text-foreground"
-                    aria-label="Jutro rano"
-                  >
-                    {/* Na telefonie samo „Jutro” — z „rano” oba przyciski nie mieściły się w wąskim kaflu i szły w pion. */}
-                    Jutro<span className="max-sm:hidden">rano</span>
-                  </button>
-                </div>
-              )}
-              {backlinks.length > 0 && (
-                <div className="mt-1.5 flex items-center gap-1 min-w-0 text-2xs text-muted-foreground" title="Linkują tu">
-                  <Link2 className="w-3 h-3 shrink-0" aria-hidden />
-                  <span className="sr-only">Linkują tu:</span>
-                  {backlinks.slice(0, BACKLINKS_SHOWN).map((b) => (
-                    <button
-                      key={b.id}
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); onOpenNote?.(b.id); }}
-                      className="min-w-0 px-1.5 py-0.5 rounded-full bg-foreground/5 hover:bg-primary/10 hover:text-primary-ink truncate transition-colors"
-                    >
-                      {b.title || "Bez tytułu"}
-                    </button>
-                  ))}
-                  {backlinks.length > BACKLINKS_SHOWN && <span className="shrink-0">+{backlinks.length - BACKLINKS_SHOWN}</span>}
-                </div>
-              )}
-              {subpage && (
-                <div className="mt-1.5 flex items-center gap-1.5 min-w-0 text-2xs text-muted-foreground" data-subpage-row="">
-                  {subpage.parentId && (
-                    <button
-                      type="button"
-                      title="Notatka nadrzędna"
-                      onClick={(e) => { e.stopPropagation(); onOpenNote?.(subpage.parentId!); }}
-                      className="flex min-w-0 items-center gap-1 px-1.5 py-0.5 rounded-full bg-foreground/5 hover:bg-primary/10 hover:text-primary-ink transition-colors"
-                    >
-                      <CornerLeftUp className="w-3 h-3 shrink-0" aria-hidden />
-                      <span className="truncate">{subpage.parentTitle || "Bez tytułu"}</span>
-                    </button>
-                  )}
-                  {subpage.childCount > 0 && (
-                    <span className="shrink-0">{subpage.childCount} {pluralPl(subpage.childCount, ["podstrona", "podstrony", "podstron"])}</span>
-                  )}
-                </div>
-              )}
-              {trashCountdown && (
-                <div className="flex flex-wrap items-center gap-1 mt-2">
-                  <div className={cn(
-                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium whitespace-nowrap",
-                    trashCountdown.urgent ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"
-                  )}>
-                    <Trash className="w-3 h-3" />
-                    {trashCountdown.label}
-                  </div>
-                  {onUnarchive && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                        celebrate(r.left + r.width / 2, r.top + r.height / 2);
-                        onUnarchive(note.id);
-                      }}
-                      className="pressable inline-flex items-center gap-1 px-2 py-0.5 coarse:py-2.5 rounded-full text-2xs font-medium whitespace-nowrap bg-primary/10 text-primary-ink hover:bg-primary/20 transition-colors"
-                      title="Przywróć notatkę"
-                    >
-                      <RotateCcw className="w-3 h-3" />
-                      Przywróć
-                    </button>
-                  )}
-                </div>
-              )}
-              {/* Liczba słów jest w czytniku — na wąskim kaflu łamała stopkę na trzy linie. */}
-              <div className="card-meta flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground whitespace-nowrap">
-                {prefs.showReadingTime && wordCount > 0 && readMin >= 2 && <><span>~{readMin} min</span><span aria-hidden>·</span></>}
-                <span className="tabular-nums">{format(new Date(note.updatedAt), "d MMM", { locale: pl })}</span>
-              </div>
-            </>
+            <NoteCardBody
+              note={note}
+              isArchived={isArchived}
+              selectable={!!onToggleSelect}
+              snippet={snippet}
+              searchTerms={searchTerms}
+              knownTitles={knownTitles}
+              onWikiClick={onWikiClick}
+              onUpdate={onUpdate}
+              onOpenNote={onOpenNote}
+              onUnarchive={onUnarchive}
+              handleChecklistToggle={handleChecklistToggle}
+              backlinks={backlinks}
+              subpage={subpage}
+              trashCountdown={trashCountdown}
+              showReadingTime={prefs.showReadingTime}
+              wordCount={wordCount}
+              readMin={readMin}
+            />
           )}
         </div>
 
