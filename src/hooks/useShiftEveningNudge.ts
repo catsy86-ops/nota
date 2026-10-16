@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useLatestRef } from "@/hooks/useLatestRef";
 import { showSystemNotification } from "@/lib/systemNotification";
+import { pushKey } from "@/lib/push/shown";
 import {
   EVENING_NUDGED_KEY, eveningNudgeFor, readEveningNudgeTime, useShifts, useShiftsReady,
 } from "@/lib/shifts";
@@ -9,7 +10,8 @@ import {
 /**
  * Wieczorem (o godzinie z ustawień Grafiku) przypomina o jutrzejszej zmianie:
  * dymek w aplikacji i — jeśli jest zgoda — powiadomienie systemowe. Jak reszta
- * przypomnień działa tylko przy otwartej aplikacji (bez serwera push).
+ * przypomnień timer działa przy otwartej aplikacji; przy zamkniętej termin wysyła serwer push
+ * (`lib/push/schedule.ts`), jeśli jest włączony.
  */
 export function useShiftEveningNudge(onOpenShifts: () => void) {
   const ready = useShiftsReady();
@@ -37,7 +39,7 @@ export function useShiftEveningNudge(onOpenShifts: () => void) {
         action: { label: "Grafik", onClick: () => openRef.current() },
       });
 
-      showSystemNotification(nudge.title, { body: nudge.description ?? "Grafik na jutro.", tag: "shift-evening-nudge", url: "/grafik" });
+      showSystemNotification(nudge.title, { body: nudge.description ?? "Grafik na jutro.", tag: "shift-evening-nudge", key: pushKey.evening(nudge.forKey), url: "/grafik" });
     }
 
     const first = window.setTimeout(check, 7000);

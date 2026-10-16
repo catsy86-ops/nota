@@ -17,12 +17,13 @@ import { Section, ToggleRow } from "./SettingsShared";
 import { ReviewSettings } from "./ReviewSettings";
 import { VaultSettings } from "./VaultSettings";
 import { ClipperSettings } from "./ClipperSettings";
+import { PushSettings } from "./PushSettings";
 import { getNotificationPermission } from "@/lib/notificationPermission";
 import { MOD_KEY } from "@/lib/platform";
 import { setBadgeEnabled, useBadgeEnabled } from "@/lib/overdueBadge";
 
 const PERMISSION_TEXT = {
-  granted: "Włączone — przypomnienia pokażą się jako powiadomienia systemowe, gdy aplikacja jest otwarta.",
+  granted: "Włączone — przypomnienia pokażą się jako powiadomienia systemowe, gdy aplikacja jest otwarta (przy zamkniętej — patrz niżej).",
   default: "Przeglądarka zapyta o zgodę przy ustawieniu pierwszego przypomnienia.",
   denied: "Zablokowane w przeglądarce — przypomnienia pojawią się tylko w aplikacji. Zmienisz to w ustawieniach witryny (ikona kłódki przy adresie).",
   unsupported: "Ta przeglądarka nie obsługuje powiadomień — przypomnienia pojawią się tylko w aplikacji.",
@@ -108,6 +109,7 @@ export function GeneralSettings() {
       </Section>
 
       <NotificationStatus />
+      <PushSettings />
       <ClipperSettings />
 
       <ReviewSettings />

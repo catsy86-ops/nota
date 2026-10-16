@@ -38,6 +38,7 @@ import { useSelection } from "@/hooks/useSelection";
 import { useSelectionGestures } from "@/hooks/useSelectionGestures";
 import { useBackupReminders } from "@/hooks/useBackupReminders";
 import { useShiftEveningNudge } from "@/hooks/useShiftEveningNudge";
+import { pushPrefs } from "@/lib/push/prefs";
 import { useDailyWeeklyNudges } from "@/hooks/useDailyWeeklyNudges";
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts";
 import { AddNoteBar, type ComposerAction, type ComposerExtras } from "@/components/AddNoteBar";
@@ -100,6 +101,8 @@ const ShiftsView = lazy(() => loadShiftsView().then((m) => ({ default: m.ShiftsV
 const ReminderCalendarView = lazy(() => loadCalendarView().then((m) => ({ default: m.ReminderCalendarView })));
 // Przypomnienie „Raport dnia gotowy” (dział Praca) — leniwie, żeby dziennik nie wchodził do głównej paczki.
 const DailyReportNudge = lazy(() => import("@/components/study/DailyReportNudge"));
+// Harmonogram dla serwera push — tylko przy włączonych powiadomieniach przy zamkniętej aplikacji.
+const PushScheduleSync = lazy(() => import("@/components/PushScheduleSync"));
 // Czytnik notatek poza paczką startową; doczytywany w tle, gdy przeglądarka odpocznie (patrz efekt w `Index`),
 // więc pierwsze otwarcie notatki nie czeka.
 const loadNoteReader = () => import("@/components/NoteReader");
@@ -197,6 +200,7 @@ const Index = () => {
   const openNoteRef = useRef<(id: string) => void>(() => {});
   // Stabilna tablica: nowa w każdym renderze restartowałaby sprawdzanie przy każdym znaku w wyszukiwarce.
   const reminderNotes = useMemo(() => [...notes, ...archivedNotes], [notes, archivedNotes]);
+  const pushEnabled = pushPrefs.use().enabled;
   useReminderNotifications(
     reminderNotes,
     (id, nextReminder, reminderDay) => updateNote(id, { reminder: nextReminder, reminderDay }),
@@ -790,6 +794,7 @@ const Index = () => {
 
     <Suspense fallback={null}>
       <DailyReportNudge onOpenWork={() => setView("study")} />
+      {pushEnabled && <PushScheduleSync notes={reminderNotes} />}
     </Suspense>
 
     {paletteOpen && (

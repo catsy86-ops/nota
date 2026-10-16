@@ -661,7 +661,7 @@ Scalone do master (519 testów jednostkowych, 103 e2e).
 - [x] Wyszukiwanie: bez ogonków, wiele słów (AND), operatory `priorytet:`, `ma:zalacznik`, `brak:etykiety|folderu`, negacja `-`; podświetlanie w czytniku wg parsera zapytania; liczniki „gdzie indziej” tylko przy pustym wyniku.
 - [x] Podgląd listy: otwarte najpierw; „Cofnij” przy usuwaniu etykiety; etykiety w kreatorze jako przyciski; przepinanie `[[linków]]` po zmianie tytułu; trwały szkic nowej notatki.
 - [x] Grafik: szybkie −/+ 15 min przy godzinach dnia i pędzla (przytrzymanie powtarza).
-- Zostaje z planu: skalowanie obrazów >2 MB + wklejanie w edytorze istniejącej notatki (#8), edytor listy (#11), interaktywny czytnik (#12), dostępność kafla (#9), eksport zaznaczonych do ZIP z `.md` (#16), trafienia w kaflach (#17). Powiadomienia Android — odłożone do decyzji (Capacitor vs Web Push).
+- Zostaje z planu: skalowanie obrazów >2 MB + wklejanie w edytorze istniejącej notatki (#8), edytor listy (#11), interaktywny czytnik (#12), dostępność kafla (#9), eksport zaznaczonych do ZIP z `.md` (#16), trafienia w kaflach (#17). Powiadomienia Android — ✅ 2026-10-16 decyzja: Web Push z własnym serwerem (`push-server/`, ustawienie „Powiadomienia przy zamkniętej aplikacji”; opis w `opis.md`). Do sprawdzenia na prawdziwym telefonie po wdrożeniu serwera z https.
 
 ## Dział Notatki — fala 2 i 3 (2026-10-10, siódma runda) — STAN NA KONIEC SESJI
 

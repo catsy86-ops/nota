@@ -1,3 +1,5 @@
+import { markShown, wasShown } from "@/lib/push/shown";
+
 /**
  * Powiadomienie systemowe przez rejestrację service workera (spójniej na
  * Androidzie niż gołe `new Notification()`), z awaryjnym `Notification`.
@@ -15,10 +17,28 @@ export interface SystemNotificationOptions {
   /** Zostaje na ekranie do reakcji — dla terminów, które nie mogą przepaść. */
   requireInteraction?: boolean;
   silent?: boolean;
+  /**
+   * Klucz terminu (`pushKey` w `lib/push/shown.ts`): jeśli to samo powiadomienie przyszło już
+   * z serwera push (aplikacja była zamknięta), drugi raz go nie pokazujemy.
+   */
+  key?: string;
 }
 
 export function showSystemNotification(title: string, o: SystemNotificationOptions): void {
   if (typeof window === "undefined" || !("Notification" in window) || Notification.permission !== "granted") return;
+  if (o.key) {
+    const key = o.key;
+    void wasShown(key).then(async (shown) => {
+      if (shown) return;
+      await markShown(key);
+      show(title, o);
+    });
+    return;
+  }
+  show(title, o);
+}
+
+function show(title: string, o: SystemNotificationOptions): void {
   const options: NotificationOptions & { actions?: unknown; vibrate?: number[] } = {
     body: o.body,
     icon: "/pwa-192.png",

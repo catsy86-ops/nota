@@ -1,0 +1,17 @@
+{
+  "name": "notki-push-server",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Serwer Web Push dla NOTKI — wysyła przypomnienia o czasie, także gdy aplikacja jest zamknięta.",
+  "type": "module",
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "web-push": "^3.6.7"
+  }
+}

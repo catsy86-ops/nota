@@ -8,6 +8,7 @@ import type { Note } from "./useNotes";
 import { nextInSeries, seriesDay } from "@/lib/reminderRepeat";
 import { loadFired, saveFired, reconcileFired } from "@/lib/firedReminders";
 import { showSystemNotification } from "@/lib/systemNotification";
+import { pushKey } from "@/lib/push/shown";
 
 export function useReminderNotifications(
   notes: Note[],
@@ -118,11 +119,12 @@ export function useReminderNotifications(
           });
 
           // Przyciski w powiadomieniu działają przez SW → wiadomość do otwartej karty (niżej).
-          // Powiadomienie w tle nadal nie wystrzeli przy zamkniętej aplikacji — to zwykły
-          // setInterval strony; prawdziwy Web Push wymagałby serwera.
+          // Przy zamkniętej aplikacji termin wysyła serwer push (`lib/push/`), jeśli jest włączony —
+          // klucz `pushKey.note` nie pozwala pokazać go tu drugi raz.
           showSystemNotification(note.locked ? "Przypomnienie z notatki prywatnej" : note.title || "Notatnik — Przypomnienie", {
             body: note.locked ? "Otwórz NOTKI i odblokuj skarbiec, aby zobaczyć notatkę." : note.content || "Czas na tę notatkę!",
             tag: note.id,
+            key: pushKey.note(note.id, note.reminder),
             url: notePath(note.id),
             requireInteraction: true,
             data: { noteId: note.id },
