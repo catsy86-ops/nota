@@ -37,6 +37,7 @@ import { useNoteActions } from "@/hooks/useNoteActions";
 import { useNoteDnd } from "@/hooks/useNoteDnd";
 import { useImportExport, useExternalImport } from "@/hooks/useImportExport";
 import { useAchievementToasts } from "@/hooks/useAchievementToasts";
+import { useSelection } from "@/hooks/useSelection";
 import { useBackupReminders } from "@/hooks/useBackupReminders";
 import { useShiftEveningNudge } from "@/hooks/useShiftEveningNudge";
 import { useDailyWeeklyNudges } from "@/hooks/useDailyWeeklyNudges";
@@ -159,12 +160,7 @@ const Index = () => {
   const [propDefsOpen, setPropDefsOpen] = useState(false);
   const [presentingNoteId, setPresentingNoteId] = useState<string | null>(null);
   const [focusModeOpen, setFocusModeOpen] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const lastSelectedRef = useRef<string | null>(null);
-  const selectionMode = selectedIds.size > 0;
-
-  // Reset selection whenever the view or active label/folder changes.
-  useEffect(() => { setSelectedIds(new Set()); lastSelectedRef.current = null; }, [view, activeLabel, activeFolder]);
+  const { selectedIds, setSelectedIds, selectionMode, lastSelectedRef, clearSelection } = useSelection({ view, activeLabel, activeFolder });
 
   function handleLogoClick() {
     const now = Date.now();
@@ -214,8 +210,6 @@ const Index = () => {
     if (!canCompose) setView("notes");
     setTimeout(() => addNoteRef.current?.expand(action), 100);
   }
-
-  const clearSelection = useCallback(() => { setSelectedIds(new Set()); lastSelectedRef.current = null; }, []);
 
   useGlobalShortcuts({
     onNewNote: expandAddNote,
@@ -411,7 +405,7 @@ const Index = () => {
       lastSelectedRef.current = id;
       return next;
     });
-  }, [visibleNotesRef]);
+  }, [visibleNotesRef, lastSelectedRef, setSelectedIds]);
 
   // Czytnik/prezentacja też liczy się jako „otwarcie” (sortowanie „Ostatnio otwierane”).
   useEffect(() => { if (readerId) markNoteOpened(readerId); }, [readerId]);
@@ -431,7 +425,7 @@ const Index = () => {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [view, previewId, presentingNoteId, visibleNotesRef]);
+  }, [view, previewId, presentingNoteId, visibleNotesRef, setSelectedIds]);
 
   // Undo fallbacks so history restored from localStorage stays actionable after reload
   useEffect(() => {
