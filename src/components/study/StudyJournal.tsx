@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { fittingsLine } from "@/lib/study/fittings";
 import { testLine } from "@/lib/study/pressureTest";
 import { Archive, Check, ChevronLeft, Gauge, Package, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Play, Plus, Search, TriangleAlert, X } from "lucide-react";
@@ -23,6 +23,7 @@ import { openJournalEdit, openJournalSheet } from "@/lib/study/entrySheet";
 import { JournalEntrySheet, KindIcon } from "./JournalEntrySheet";
 import { JournalReportDialog } from "./JournalReport";
 import { SiteCardDialog } from "./SiteCardDialog";
+import { consumeJournalReportRequest, useJournalReportRequest } from "@/lib/study/reportLink";
 import { entrySiteId, siteDirectory } from "@/lib/study/sites";
 
 const topicTitle = (id: string | null) => TOPICS.find((t) => t.id === id)?.title ?? null;
@@ -56,6 +57,11 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   const [report, setReport] = useState(false);
   /** Budowa raportu otwartego z karty; `null` = z filtra albo ostatnia. */
   const [reportSite, setReportSite] = useState<string | null>(null);
+  // Przypomnienie „Raport dnia gotowy”: okno raportu na ostatniej budowie i jej ostatnim dniu (dziś).
+  const reportRequested = useJournalReportRequest();
+  useEffect(() => {
+    if (reportRequested && consumeJournalReportRequest()) { setReportSite(null); setReport(true); }
+  }, [reportRequested]);
   const [card, setCard] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
   const patch = (p: Partial<JournalFilter>) => setFilter((f) => ({ ...f, ...p }));

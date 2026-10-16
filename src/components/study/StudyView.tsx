@@ -9,6 +9,7 @@ import { HeightsButton } from "./HeightsSheet";
 import { setJournalDraftTopic } from "@/lib/study/draft";
 import { useStudyReady } from "@/lib/study/data";
 import { closeJournalSheet, JOURNAL_ENTRY_PARAM, openJournalSheet, useJournalSheet } from "@/lib/study/entrySheet";
+import { JOURNAL_REPORT_PARAM, requestJournalReport, useJournalReportRequest } from "@/lib/study/reportLink";
 import { useEffect, useState } from "react";
 import { MOBILE_QUERY } from "@/hooks/use-mobile";
 import { readStudyTab, writeStudyTab } from "@/lib/study/tab";
@@ -149,6 +150,17 @@ function StudyScreen() {
     const rest = params.toString();
     window.history.replaceState(window.history.state, "", window.location.pathname + (rest ? `?${rest}` : ""));
     openJournalSheet();
+  }, []);
+  // Raport dnia z przypomnienia (dymek albo powiadomienie `?raport=dzis`): Dziennik otworzy okno raportu.
+  const reportRequested = useJournalReportRequest();
+  useEffect(() => { if (reportRequested) setTab("journal"); }, [reportRequested]);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has(JOURNAL_REPORT_PARAM)) return;
+    params.delete(JOURNAL_REPORT_PARAM);
+    const rest = params.toString();
+    window.history.replaceState(window.history.state, "", window.location.pathname + (rest ? `?${rest}` : ""));
+    requestJournalReport();
   }, []);
   // Wyjście z Nauki zamyka arkusz — inaczej otworzyłby się sam przy powrocie.
   useEffect(() => closeJournalSheet, []);

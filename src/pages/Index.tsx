@@ -99,6 +99,8 @@ const FocusMode = lazy(() => import("@/components/FocusMode").then((m) => ({ def
 const StudyView = lazy(loadStudyView);
 const ShiftsView = lazy(() => loadShiftsView().then((m) => ({ default: m.ShiftsView })));
 const ReminderCalendarView = lazy(() => loadCalendarView().then((m) => ({ default: m.ReminderCalendarView })));
+// Przypomnienie „Raport dnia gotowy” (dział Praca) — leniwie, żeby dziennik nie wchodził do głównej paczki.
+const DailyReportNudge = lazy(() => import("@/components/study/DailyReportNudge"));
 
 const Index = () => {
   const {
@@ -949,6 +951,10 @@ const Index = () => {
         </main>
       </div>
     </div>
+
+    <Suspense fallback={null}>
+      <DailyReportNudge onOpenWork={() => setView("study")} />
+    </Suspense>
 
     {paletteOpen && (
       <Suspense fallback={null}>
