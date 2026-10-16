@@ -882,8 +882,8 @@ zachowanie się nie zmienia. Stan prezentacji zostawiony w `Index` (dwa miejsca 
 
 **Stan etapu 4.** Zrobione też: sesja edycji kafla (`useNoteEditSession`), obrazy kafla (`useNoteImages`), akcje kafla
 (`NoteCardActions`), edytor kafla i okna (`NoteEditor`), gesty kafla (`useCardGestures`), arkusz, podgląd i
-usuwanie (`NoteCardDialogs`), podgląd zawartości (`NoteCardBody`), patrz niżej. Pozostają: otoczka kafla i stan
-w `NoteCard.tsx` oraz reszta `Index.tsx` — wielosesyjny podział, każdy kawałek z własnym e2e.
+usuwanie (`NoteCardDialogs`), podgląd zawartości (`NoteCardBody`), efekty ruchu (`useCardMotion`), patrz niżej.
+Pozostają: otoczka kafla w `NoteCard.tsx` oraz reszta `Index.tsx` — wielosesyjny podział, każdy kawałek z własnym e2e.
 
 **Testy.** Charakteryzujące: `e2e/reader.spec.ts`, `reader-step.spec.ts`, `wikilinks.spec.ts`, `notes.spec.ts`,
 `editing.spec.ts`, `routes.spec.ts`, `tabs.spec.ts`, `search-highlight.spec.ts` — 28/28.
@@ -922,6 +922,28 @@ obsługę obrazów. Pozostają też `FindReplaceBar` (renderowany w `NoteCard`) 
 1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
 
 **Commit.** `3342c00` (2026-10-16) — sesja edycji; `ff09430` (2026-10-16) — klawisze, podpowiedzi i Ctrl+F.
+
+## Notatki — efekty ruchu kafla w useCardMotion (plan Notatek, etap 4, refaktor NoteCard)
+
+**Co robi.** Bez zmian dla użytkownika. Kafel ma lekki przechył 3D przy najechaniu (gdy włączony w ustawieniach),
+animację wyjścia (kosz/archiwum), iskrę „klik pinezki” po przypięciu i pieczątkę „gotowe” po odhaczeniu ostatniego
+zadania listy. Przy redukcji ruchu (systemowej lub w aplikacji) przechyłu, animacji wyjścia i iskier nie ma.
+
+**Gdzie jest.** `src/hooks/useCardMotion.ts`: `useCardMotion({ note, isEditing })` zwraca `reduce`, `fx` (ustawienia
+efektów), `tilt`, `showFx`, `cardVariants`, `pinFx`/`setPinFx`, `stampKey`/`setStampKey`. `NoteCard.tsx` czyta je na
+początku komponentu i przekazuje do `useCardGestures` (przechył, iskra przy przypięciu gestem) oraz do `motion.div`.
+
+**Jak działa i dlaczego.** Logika bez zmian. Pinezka: `consumePin` zdejmuje znacznik po przypięciu, a `pinFx` pokazuje
+falę na nowej karcie w innej sekcji. Pieczątka: wyzwala ją przejście `allDone` z fałszu na prawdę, poza edycją i koszem.
+
+**Ograniczenia.** Efekt pieczątki celowo reaguje tylko na zmianę `allDone` (eslint-disable w pliku), jak wcześniej.
+
+**Testy.** Charakteryzujące (chromium, `--workers=1`): `card-motion`, `checklist`, `notes`, `note-groups`, `board-table`,
+`subpages`, `editing`, `reader`, `view-change`, `desktop-columns` — 45/45. Na `iphone-14` (`@mobile`): `mobile`,
+`mobile-layout`, `editor-open`, `touch-targets` — 20/20. Testy jednostkowe `src/components`, `src/hooks`, `src/lib`:
+1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
+
+**Commit.** `2141f60` (2026-10-16).
 
 ## Notatki — podgląd zawartości kafla w NoteCardBody (plan Notatek, etap 4, refaktor NoteCard)
 
