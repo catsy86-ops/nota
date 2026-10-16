@@ -1,4 +1,4 @@
-import { useState, useRef, memo, useCallback, useEffect, useLayoutEffect, useMemo } from "react";
+import { useState, useRef, memo, useEffect, useMemo } from "react";
 import { markNoteOpened } from "@/lib/lastOpened";
 import { m as motion, AnimatePresence, useMotionValue, useSpring, useTransform, useReducedMotion, useDragControls } from "framer-motion";
 import { tween, dur, ease } from "@/lib/motion";
@@ -28,8 +28,8 @@ import { ShareNote } from "./ShareNote";
 import { PrivateNoteButton } from "./vault/PrivateNoteButton";
 import { FolderPicker } from "./FolderPicker";
 import { VersionHistory } from "./VersionHistory";
-import type { Note, NoteColor, ChecklistItem } from "@/hooks/useNotes";
-import { beginNoteTextEdit, endNoteTextEdit } from "@/hooks/useNotes";
+import type { Note, NoteColor } from "@/hooks/useNotes";
+import { useNoteEditSession } from "@/hooks/useNoteEditSession";
 import { imageStore } from "@/lib/imageStore";
 import { NoteImage } from "./NoteImage";
 import { AttachmentsPanel } from "./AttachmentsPanel";
@@ -51,9 +51,7 @@ import { useEffectsSettings } from "@/lib/effectsSettings";
 import { useNotesMeta } from "@/hooks/NotesProvider";
 import { useNoteViewActions } from "@/hooks/NoteViewActionsContext";
 import { useLatch } from "@/hooks/useLatch";
-import { useDraftAutosave } from "@/hooks/useDraftAutosave";
 import { useOriginFromTile } from "@/hooks/useOriginFromTile";
-import { useLiveNoteText } from "@/hooks/useLiveNoteText";
 import { useWikiAutocomplete } from "@/hooks/useWikiAutocomplete";
 import { useSlashMenu } from "@/hooks/useSlashMenu";
 import { NoteLookPicker, NoteCoverStrip } from "./NoteLookPicker";
@@ -83,22 +81,22 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
     wikiIndex, onOpenNote, selectionMode, onToggleSelect, animateLayout = true,
   } = useNoteViewActions();
   const noteVersions = getVersions?.(note.id);
+  const prefs = useViewPrefs();
+  const { isEditing, editTitle, setEditTitle, editContent, setEditContent, editChecklist, setEditChecklist, showChecklist, setShowChecklist, showPreview, setShowPreview, fullEditor, setFullEditor, textareaRef, commitDraft, handleSave, begin } = useNoteEditSession({
+    note,
+    autosaveSeconds: prefs.autosaveSeconds,
+    onUpdate,
+    onSaveVersion,
+  });
   const [showColors, setShowColors] = useState(false);
   const [showMore, setShowMore] = useState(false);
   // Dotyk: „⋯” otwiera arkusz akcji od dołu zamiast rozkładać ~18 ikon w wąskim kaflu.
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editTitle, setEditTitle] = useState(note.title);
   const searchTerms = useSearchTerms();
   const snippet = searchTerms.length ? firstSnippet(note.content || "", searchTerms) : null;
-  const [editContent, setEditContent] = useState(note.content);
-  const [editChecklist, setEditChecklist] = useState<ChecklistItem[]>(note.checklist || []);
-  const [showChecklist, setShowChecklist] = useState((note.checklist || []).length > 0);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDrawing, setShowDrawing] = useState(false);
-  const [showPreview, setShowPreview] = useState(false);
-  const [fullEditor, setFullEditor] = useState(false);
   const editorMounted = useLatch(isEditing && fullEditor);
   // Pełny edytor rośnie z kafla (jak czytnik); nagłówek dostaje cień, gdy coś pod nim przewinięto.
   // Element w stanie (ref-callback): treść okna montuje się w portalu Radix render po otwarciu.
@@ -111,7 +109,6 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   const drawingMounted = useLatch(showDrawing);
   const sheetMounted = useLatch(sheetOpen);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   /** Ctrl+Shift+L zamienia zaznaczone linie (albo bieżącą) na pozycje listy zadań; reszta klawiszy trafia do podpowiedzi wikilinków. */
   function handleEditKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (isChecklistShortcut(e)) {
@@ -138,55 +135,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
 
   const wordCount = note.content.trim() ? note.content.trim().split(/\s+/).length : 0;
   const trashCountdown = useTrashCountdown(note.trashed ? note.trashedAt : null, cardRef);
-  const prefs = useViewPrefs();
   const readMin = readingTimeMin(note.content);
-
-  // Edycja w kaflu rośnie z treścią (do ~60% ekranu), zamiast pokazywać 2 linie.
-  // Pełny ekran bez listy ma własną wysokość (`h-full`), tam nie ruszamy;
-  // z listą treść rośnie do ~35% ekranu, a resztę dostaje lista.
-  useLayoutEffect(() => {
-    const ta = textareaRef.current;
-    if (!isEditing || (fullEditor && !showChecklist) || !ta) return;
-    ta.style.height = "auto";
-    ta.style.height = `${Math.min(ta.scrollHeight + 2, Math.round(window.innerHeight * (fullEditor ? 0.35 : 0.6)))}px`;
-  }, [isEditing, fullEditor, showChecklist, showPreview, editContent]);
-
-  // Szkic trzymamy też w refie: `commitDraft` jest wołane z cleanupu efektu
-  // przy odmontowaniu, gdzie zwykłe domknięcie byłoby już zestarzałe.
-  const draftRef = useRef({ title: editTitle, content: editContent, checklist: editChecklist });
-  draftRef.current = { title: editTitle, content: editContent, checklist: editChecklist };
-  // Wersję zapisujemy raz na sesję edycji — inaczej autosave co 5 s wyczerpałby
-  // limit 20 wersji na notatkę w ciągu dwóch minut pisania.
-  const versionSavedRef = useRef(false);
-
-  const commitDraft = useCallback(() => {
-    const draft = draftRef.current;
-    const title = draft.title.trim();
-    const content = draft.content.trim();
-    const checklistChanged = JSON.stringify(draft.checklist) !== JSON.stringify(note.checklist || []);
-    if (note.title === title && note.content === content && !checklistChanged) return;
-
-    if (onSaveVersion && !versionSavedRef.current) {
-      onSaveVersion(note.id, note.title, note.content);
-      versionSavedRef.current = true;
-    }
-    onUpdate?.(note.id, { title, content, checklist: draft.checklist });
-  }, [note.id, note.title, note.content, note.checklist, onSaveVersion, onUpdate]);
-
-  useDraftAutosave({
-    active: isEditing,
-    draftKey: `${editTitle}\u0000${editContent}\u0000${JSON.stringify(editChecklist)}`,
-    intervalSeconds: prefs.autosaveSeconds,
-    onSave: commitDraft,
-  });
-
-  useLiveNoteText({
-    noteId: note.id,
-    active: isEditing,
-    textareaRef,
-    getDraft: () => draftRef.current.content,
-    setDraft: setEditContent,
-  });
 
   const wiki = useWikiAutocomplete({
     textareaRef,
@@ -199,19 +148,6 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   function handleEditSelect() { wiki.textareaProps.onSelect(); slash.refresh(); }
   const backlinks = prefs.showBacklinks && wikiIndex ? backlinksOf(note, wikiIndex) : [];
   const subpage = wikiIndex?.tree.get(note.id);
-
-  // Sesję zamykamy po zapisie przy odmontowaniu — cleanupy efektów idą
-  // w kolejności deklaracji, więc `useDraftAutosave` zdąży zapisać pierwszy.
-  useEffect(() => () => endNoteTextEdit(note.id), [note.id]);
-
-  function handleSave() {
-    haptic("success");
-    commitDraft();
-    endNoteTextEdit(note.id);
-    setIsEditing(false);
-    setShowPreview(false);
-    setFullEditor(false);
-  }
 
   function handleLabelToggle(label: string) {
     const labels = note.labels.includes(label) ? note.labels.filter((l) => l !== label) : [...note.labels, label];
@@ -785,7 +721,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
               return;
             }
             if (!isEditing && window.matchMedia("(max-width: 639px)").matches) setFullEditor(true);
-            if (!isEditing) { markNoteOpened(note.id); versionSavedRef.current = false; setIsEditing(true); setEditTitle(note.title); setEditContent(beginNoteTextEdit(note.id) ?? note.content); setEditChecklist(note.checklist || []); setShowChecklist((note.checklist || []).length > 0); }
+            if (!isEditing) { markNoteOpened(note.id); begin(); }
           }}
         >
           {isEditing && !fullEditor ? renderEditor(false) : (
