@@ -6,6 +6,7 @@ import { pluralPl } from "@/lib/plural";
 import { ChartColumn, RotateCcw } from "lucide-react";
 import { StudyStatsDialog } from "./StudyStats";
 import { HeightsButton } from "./HeightsSheet";
+import { CalculatorsButton } from "./CalculatorsSheet";
 import { setJournalDraftTopic } from "@/lib/study/draft";
 import { useStudyReady } from "@/lib/study/data";
 import { closeJournalSheet, JOURNAL_ENTRY_PARAM, openJournalSheet, useJournalSheet } from "@/lib/study/entrySheet";
@@ -183,6 +184,7 @@ function StudyScreen() {
           </button>
           <DueTodayChip onClick={() => { changeScope({ kind: "due" }); setTab("quiz"); }} />
           <HeightsButton variant="icon" className="ml-auto" />
+          <CalculatorsButton variant="icon" />
           <button
             type="button"
             onClick={() => setStatsOpen(true)}
@@ -211,6 +213,7 @@ function StudyScreen() {
               <ChartColumn className="h-4 w-4" aria-hidden />Statystyki
             </button>
             <HeightsButton />
+            <CalculatorsButton />
           </div>
           <StudyStatsDialog open={statsOpen} onOpenChange={setStatsOpen} />
         </header>
