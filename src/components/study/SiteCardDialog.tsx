@@ -13,6 +13,7 @@ import { findSiteByName, siteDirectory, SITE_FIELD_MAX, SITE_NAME_MAX } from "@/
 import { entriesPl, problemsPl } from "@/lib/study/journalView";
 import { buildJournalReport, periodLabel, dayKeyOf } from "@/lib/study/report";
 import { downloadSiteZip } from "@/lib/study/siteZip";
+import { SiteOrderPanel } from "./SiteOrderPanel";
 
 const topicTitle = (id: string) => TOPICS.find((t) => t.id === id)?.title ?? null;
 
@@ -159,6 +160,8 @@ export function SiteCardDialog({
               </label>
               <Button type="submit" disabled={!dirty || !!error} className="w-full coarse:h-11">Zapisz kartę</Button>
             </form>
+
+            {site && <div className="px-5 pb-4"><SiteOrderPanel site={site} /></div>}
 
             <div className="grid grid-cols-2 gap-2 border-t border-border px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
               <Button variant="outline" onClick={() => onShowEntries(site.id)} disabled={site.count === 0} className="coarse:h-11">

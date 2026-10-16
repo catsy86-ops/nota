@@ -17,6 +17,11 @@ export interface SiteCard {
   created: number;
   /** Budowa w archiwum od (ms) — znika z pigułek, wpisy zostają. */
   archived?: number;
+  /**
+   * Ostatnie zamówienie kształtek (ms). Zamówienie liczy kształtki z wpisów nowszych niż ten moment
+   * (`order.ts`). Brak = nigdy nie zamawiano, liczy się cała historia budowy.
+   */
+  orderedAt?: number;
 }
 
 export const SITE_NAME_MAX = 120;
@@ -56,6 +61,7 @@ export function cleanSite(raw: unknown): SiteCard | null {
     investor: str(s.investor, SITE_FIELD_MAX),
     created: typeof s.created === "number" && Number.isFinite(s.created) ? s.created : 0,
     ...(typeof s.archived === "number" && Number.isFinite(s.archived) ? { archived: s.archived } : {}),
+    ...(typeof s.orderedAt === "number" && Number.isFinite(s.orderedAt) ? { orderedAt: s.orderedAt } : {}),
   };
 }
 

@@ -358,8 +358,18 @@ export function saveSiteCard(id: string, input: SiteCardInput, now: number = Dat
     investor: input.investor.trim().slice(0, SITE_FIELD_MAX),
     created: prev?.created ?? now,
     ...(prev?.archived !== undefined ? { archived: prev.archived } : {}),
+    ...(prev?.orderedAt !== undefined ? { orderedAt: prev.orderedAt } : {}),
   }, prev?.name);
   return true;
+}
+
+/** Zaznacza zamówienie kształtek na teraz: od tej chwili lista „do zamówienia” zaczyna się od zera. */
+export function markSiteOrdered(id: string, now: number = Date.now()) {
+  const s = getStudy();
+  const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
+  if (!prev) return;
+  const { stored: _s, count: _c, open: _o, first: _f, last: _l, ...card } = prev;
+  yStudy.saveSite({ ...card, orderedAt: now });
 }
 
 /** Budowa do archiwum (`true`) albo z powrotem czynna. */
