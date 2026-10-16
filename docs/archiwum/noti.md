@@ -1,3 +1,7 @@
+> **ARCHIWUM (2026-10-16).** Ten dokument to plan z 11.10.2026 pisany przed przeglądem produktu. Opisuje konta,
+> logowanie i funkcje, których aplikacja nie ma (zgodnie z `roadmap.md`: „Konto użytkownika — sprzeczne z tożsamością projektu”).
+> Aktualny stan: [`README.md`](../../README.md), plan: [`roadmap.md`](../../roadmap.md).
+
 NOTKI — Plan rozwoju aplikacji
 
 Projekt: NOTKI
