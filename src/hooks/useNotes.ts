@@ -11,6 +11,7 @@ import { addSubpage as addSubpageImpl, setParent as setParentImpl } from "@/lib/
 import type { NotePriority } from "@/lib/notePriority";
 import type { Attachment } from "@/lib/attachments";
 import type { NoteCover } from "@/lib/noteLook";
+import { cleanPropDef, makePropDef, propNameTaken, type NoteProps, type PropDef, type PropType } from "@/lib/noteProps";
 
 export type NoteColor = "default" | "coral" | "peach" | "sand" | "mint" | "sage" | "sky" | "lavender" | "rose";
 
@@ -76,6 +77,8 @@ export interface Note {
   parentId?: string;
   /** Kafel rozciągnięty na dwie kolumny siatki (od `sm`). */
   wide?: boolean;
+  /** Wartości własnych właściwości (`lib/noteProps.ts`), klucz = id definicji. Brak = bez wartości. Nie w notatce prywatnej. */
+  props?: NoteProps;
   /** Większy tekst w treści kafla. */
   largeText?: boolean;
   /** Klucze SHA-256 w `imageStore` (manifest `imageHashes` w Y.Doc). Bajty poza dokumentem — patrz `lib/imageStore.ts`. */
@@ -123,8 +126,11 @@ export function useNotes() {
   const [notes, setNotes] = useState<Note[]>([]);
   const [allLabels, setAllLabels] = useState<string[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
+  const [propDefs, setPropDefs] = useState<PropDef[]>([]);
   const foldersRef = useRef<Folder[]>(folders);
   foldersRef.current = folders;
+  const propDefsRef = useRef<PropDef[]>(propDefs);
+  propDefsRef.current = propDefs;
 
   useEffect(() => {
     let cancelled = false;
@@ -138,10 +144,12 @@ export function useNotes() {
     }
     const projectFolders = () => setFolders(yjsStore.projectFolders());
     const projectLabels = () => setAllLabels(yjsStore.projectLabels());
+    const projectPropDefs = () => setPropDefs(yjsStore.projectPropDefs());
 
     yjsStore.notesMap.observeDeep(projectNotes);
     yjsStore.foldersMap.observeDeep(projectFolders);
     yjsStore.labelsMap.observeDeep(projectLabels);
+    yjsStore.propDefsMap.observeDeep(projectPropDefs);
     let gcTimer: ReturnType<typeof setTimeout> | undefined;
 
     yjsStore.ready().then(() => {
@@ -149,6 +157,7 @@ export function useNotes() {
       projectNotes();
       projectFolders();
       projectLabels();
+      projectPropDefs();
       // Sprzątanie obrazów, do których nic się już nie odwołuje — po starcie, żeby nie spowalniać pierwszego renderu.
       gcTimer = setTimeout(() => {
         // Zdjęcia dziennika z budowy nie są w notatkach — liczą się jako używane.
@@ -163,6 +172,7 @@ export function useNotes() {
       yjsStore.notesMap.unobserveDeep(projectNotes);
       yjsStore.foldersMap.unobserveDeep(projectFolders);
       yjsStore.labelsMap.unobserveDeep(projectLabels);
+      yjsStore.propDefsMap.unobserveDeep(projectPropDefs);
     };
   }, []);
 
@@ -399,11 +409,36 @@ export function useNotes() {
     yjsStore.patchNotes(restoreSet(ids), { trashed: false, trashedAt: null, archived: false });
   }, []);
 
-  const actions = useMemo(() => ({ setParent, addSubpage, addNote, updateNote, deleteNote, trashNote, restoreFromTrash, emptyTrash, togglePin, duplicateNote, archiveNote, unarchiveNote, addLabel, removeLabel, renameLabel, importNotes, reorderNotes, addFolder, updateFolder, deleteFolder, moveNoteToFolder, bulkTrash, bulkArchive, bulkSetColor, bulkRestore }),
-    [setParent, addSubpage, addNote, updateNote, deleteNote, trashNote, restoreFromTrash, emptyTrash, togglePin, duplicateNote, archiveNote, unarchiveNote, addLabel, removeLabel, renameLabel, importNotes, reorderNotes, addFolder, updateFolder, deleteFolder, moveNoteToFolder, bulkTrash, bulkArchive, bulkSetColor, bulkRestore]);
+  /** Nowa właściwość; `null`, gdy nazwa pusta albo zajęta (wołający pokazuje komunikat). */
+  const addPropDef = useCallback((name: string, type: PropType, options: string[] = []): PropDef | null => {
+    const trimmed = name.trim();
+    if (propNameTaken(propDefsRef.current, trimmed)) return null;
+    const def = makePropDef(propDefsRef.current, trimmed, type, options);
+    if (def) yjsStore.upsertPropDef(def);
+    return def;
+  }, []);
 
-  return useMemo(() => ({ notes: activeNotes, archivedNotes, trashedNotes, allLabels, folders, ...actions }),
-    [activeNotes, archivedNotes, trashedNotes, allLabels, folders, actions]);
+  /** Zmiana nazwy albo opcji wyboru (typ jest stały). */
+  const updatePropDef = useCallback((id: string, updates: { name?: string; options?: string[] }): boolean => {
+    const current = propDefsRef.current.find((d) => d.id === id);
+    if (!current) return false;
+    const name = (updates.name ?? current.name).trim();
+    if (!name || propNameTaken(propDefsRef.current, name, id)) return false;
+    const next = cleanPropDef({ ...current, name, options: current.type === "select" ? (updates.options ?? current.options) : undefined });
+    if (!next) return false;
+    yjsStore.upsertPropDef(next);
+    return true;
+  }, []);
+
+  const deletePropDef = useCallback((id: string) => {
+    yjsStore.deletePropDef(id);
+  }, []);
+
+  const actions = useMemo(() => ({ setParent, addSubpage, addNote, updateNote, deleteNote, trashNote, restoreFromTrash, emptyTrash, togglePin, duplicateNote, archiveNote, unarchiveNote, addLabel, removeLabel, renameLabel, importNotes, reorderNotes, addFolder, updateFolder, deleteFolder, moveNoteToFolder, bulkTrash, bulkArchive, bulkSetColor, bulkRestore, addPropDef, updatePropDef, deletePropDef }),
+    [setParent, addSubpage, addNote, updateNote, deleteNote, trashNote, restoreFromTrash, emptyTrash, togglePin, duplicateNote, archiveNote, unarchiveNote, addLabel, removeLabel, renameLabel, importNotes, reorderNotes, addFolder, updateFolder, deleteFolder, moveNoteToFolder, bulkTrash, bulkArchive, bulkSetColor, bulkRestore, addPropDef, updatePropDef, deletePropDef]);
+
+  return useMemo(() => ({ notes: activeNotes, archivedNotes, trashedNotes, allLabels, folders, propDefs, ...actions }),
+    [activeNotes, archivedNotes, trashedNotes, allLabels, folders, propDefs, actions]);
 }
 
 /**

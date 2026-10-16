@@ -3,6 +3,7 @@ import type { Note, Folder, NoteColor, FolderColor, ChecklistItem } from "@/hook
 import type { NoteVersion } from "@/lib/versionsStore";
 import { normalizeAttachments } from "@/lib/attachments";
 import { NOTE_COVERS } from "@/lib/noteLook";
+import { cleanNoteProps, cleanPropDefs, type PropDef } from "@/lib/noteProps";
 
 import { NOTE_COLORS as COLORS } from "@/lib/safeProjection";
 
@@ -40,6 +41,8 @@ export const noteSchema = z.object({
   parentId: z.string().min(1).max(200).optional().catch(undefined),
   wide: z.literal(true).optional().catch(undefined),
   largeText: z.literal(true).optional().catch(undefined),
+  // Wartości właściwości: zły wpis jest pomijany, notatka zostaje.
+  props: z.unknown().transform((v) => cleanNoteProps(v)).optional(),
   images: z.array(z.string()).catch([]),
   // Starsze pliki nie mają pola; zły wpis jest pomijany, nie unieważnia notatki.
   attachments: z.unknown().transform((v) => normalizeAttachments(v)).optional(),
@@ -95,6 +98,8 @@ export interface FullBackup {
    * wpis w notatce zostaje, ale bez bajtów.
    */
   attachmentBlobs?: Record<string, string>;
+  /** Definicje własnych właściwości (`lib/noteProps.ts`); brak sekcji = brak definicji. */
+  propDefs?: PropDef[];
   /** Metadane skarbca prywatnych notatek (sól, klucz danych opakowany hasłem) — kształt waliduje `isValidMeta`. */
   vault?: unknown;
 }
@@ -120,5 +125,7 @@ export const fullBackupSchema = z.object({
   shifts: z.string().optional().catch(undefined),
   study: z.string().optional().catch(undefined),
   attachmentBlobs: z.record(z.string()).optional().catch(undefined),
+  // Starsze kopie nie mają sekcji — wtedy po prostu brak definicji.
+  propDefs: z.unknown().transform((v) => cleanPropDefs(v)).optional(),
   vault: z.unknown().optional(),
 }) satisfies z.ZodType<FullBackup, z.ZodTypeDef, unknown>;

@@ -906,6 +906,68 @@ na górę), `e2e/reader.spec.ts` (czytnik na wspólnym hooku), `e2e/mobile.spec.
 
 ---
 
+## Notatki — właściwości notatek (4b)
+
+**Co robi.** Własne pola przy notatkach, jak w Notionie: tekst, liczba, data albo wybór z listy opcji. Pola zarządza się
+oknem „Pola” nad tabelą (dodaj, zmień nazwę, zmień opcje wyboru, usuń). Wartości wpisuje się prosto w komórki
+tabeli — kolumna na każde pole, przed „Zmieniono”. Wartości zostają po odświeżeniu i synchronizują się między
+urządzeniami.
+
+**Gdzie jest.**
+- `src/lib/noteProps.ts`: typy `PropDef`, `PropType` (`text | number | date | select`), `PropValue`, `NoteProps`;
+  `cleanPropDef`, `cleanPropDefs`, `cleanNoteProps`, `parsePropInput`, `propValueFor`, `propDisplayText`,
+  `withPropValue`, `propNameTaken`, `makePropDef`; limity w `PROP_LIMITS`.
+- `src/lib/yjsStore.ts`: mapa `propDefs` (korzeń dokumentu), pole `props` na notatce, `applyPropsDiff`,
+  `plainPropsFromY`, `projectPropDefs`, `upsertPropDef`, `deletePropDef`, `replaceAll(…, propDefs)`.
+- `src/hooks/useNotes.ts`: `Note.props`, stan `propDefs` (obserwator `yjsStore.propDefsMap`), akcje `addPropDef`,
+  `updatePropDef`, `deletePropDef`.
+- `src/components/NoteTable.tsx`: kolumny pól w nagłówku i `PropCell` (edycja na miejscu).
+- `src/components/PropDefsDialog.tsx`: okno „Pola notatek” (lazy, `Index.tsx`).
+- `src/pages/Index.tsx`: przycisk „Pola (n)” nad tabelą, `onUpdate={updateNote}`.
+- `src/lib/noteSchema.ts`: `props` w `noteSchema`, `propDefs` w `fullBackupSchema`.
+- `src/lib/exportNotes.ts`: `buildFullBackupWithReport` zapisuje `propDefs` (tylko gdy są), `restoreFullBackup`
+  przekazuje je do `replaceAll`.
+
+**Jak działa i dlaczego.**
+- **Dwa miejsca danych.** Definicja żyje w mapie `propDefs` w korzeniu Y.Doc (klucz = id, pola: `name`, `type`,
+  `options`, `order`). Wartość żyje w `props` (Y.Map) konkretnej notatki, klucz = id definicji. Dzięki temu dwie
+  równoległe zmiany różnych pól tej samej notatki się łączą (CRDT na kluczach), a zmiana nazwy pola nie rusza
+  wartości — wiążą się przez id, nie przez nazwę.
+- **Zapis tylko różnic.** `applyPropsDiff` zmienia klucze, które się zmieniły, i kasuje te, których nie ma w nowym
+  słowniku — jak checklista. Pusta mapa po wyczyszczeniu wszystkich pól jest kasowana z projekcji (`props` znika).
+- **Walidacja trzy razy tak samo.** Ten sam `cleanPropDef`/`cleanNoteProps` działa przy odczycie z dokumentu (może
+  go zmienić peer), przy przywracaniu kopii i przy wejściu z komórki. Zły wpis jest pomijany, nie unieważnia notatki.
+- **Liczba** przyjmuje przecinek i kropkę, pokazuje się z przecinkiem (`propDisplayText`). **Data** to tylko
+  prawdziwa data `YYYY-MM-DD` (28.02 OK, 29.02 w nie-przestępnym roku odrzucone). **Wybór** przyjmuje tylko opcje
+  z listy.
+- **Usunięcie pola** kasuje definicję i jego wartości we wszystkich notatkach w jednej transakcji. Dlatego okno
+  pyta w linii („Usunąć pole … i jego wartości?”) zamiast od razu usuwać.
+- **Kopia zapasowa:** sekcja `propDefs` jest opcjonalna (jak `shifts`/`study`), więc wersja `version: 3` bez zmian.
+  Kopia bez pól nie ma sekcji — wygląda jak dawniej. Stara aplikacja ignoruje nieznane pola.
+- **Notatka prywatna** (`locked`) nie dostaje właściwości: nie ma ich w szyfrogramie, więc zapis do niej jest po
+  cichu pomijany w `applyPatch`, a projekcja nie zwraca `props`. Komórki takiej notatki są tylko do odczytu (pusta).
+
+**Ograniczenia i pułapki.**
+- **Edycja tylko w tabeli** (widok „Tabela”, od `md`). Na telefonie kolumny są ukryte, więc tam pól nie wpiszesz —
+  czytnik i edytor nie mają jeszcze sekcji właściwości.
+- Typ pola jest stały po utworzeniu (zmiana typu wymagałaby konwersji wartości).
+- Usunięcie opcji z listy nie kasuje wartości, które jej używały — taka wartość wyświetla się jako pusta (nie da się jej
+  już wybrać), ale zostaje w dokumencie do czasu wyczyszczenia.
+- Limity: 30 pól, nazwa 40 znaków, tekst 500, 20 opcji po 40 znaków, liczba do ±10¹².
+- Eksport Markdown/ZIP i wyszukiwarka właściwości jeszcze nie widzą (ani sortowania/filtrów po polach).
+- Próg `eagerJsGzip` w `e2e/bundle.spec.ts` podniesiony z 376 do 384 KB (zmierzone 380 KB po tej funkcji — koszt
+  głównie w eager `NoteTable`/Yjs); do odzyskania przy LazyMotion i deduplikacji Radix.
+
+**Testy.** `src/lib/noteProps.test.ts` (walidacja, formatowanie, nazwy), `src/lib/yjsStore.props.test.ts` (zapis,
+patch, łączenie równoległych zmian, notatka prywatna, usunięcie pola, `replaceAll`, synchronizacja),
+`src/lib/noteSchema.props.test.ts` (czyszczenie w kopii, stara kopia bez sekcji), `e2e/note-props.spec.ts` (dodanie
+pola i wartość po odświeżeniu, walidacja liczby i wybór z listy, usunięcie z potwierdzeniem), `e2e/bundle.spec.ts`
+(budżet JS).
+
+**Commit.** w commicie `feat(notatki): właściwości notatek (4b)` (2026-10-16); hash dopisany w kolejnym commicie docs.
+
+---
+
 ## Grafik — czytelność drobnych znaczników
 
 **Co robi.** W siatce miesiąca na telefonie strzałka nadgodzin (↑/↓) przy numerze dnia ma 11 px zamiast 9 px.

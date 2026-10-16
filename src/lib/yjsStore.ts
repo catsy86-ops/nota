@@ -10,6 +10,7 @@ import { imageStore as defaultImageStore, isDataUrl, type ImageStore } from "@/l
 import type { Note, Folder, ChecklistItem } from "@/hooks/useNotes";
 import { logDiag } from "@/lib/diagnostics";
 import { NOTE_COVERS } from "@/lib/noteLook";
+import { cleanNoteProps, cleanPropDef, cleanPropDefs, type NoteProps, type PropDef } from "@/lib/noteProps";
 import { journalRefsIn } from "@/lib/study/yStudy";
 import {
   NOTE_COLORS, PRIORITIES, REMINDER_REPEATS, REMOTE_LIMITS as LIM,
@@ -166,6 +167,52 @@ function applyChecklistDiff(y: YNote, next: ChecklistItem[]) {
   });
 }
 
+/** Wartości właściwości notatki: `Y.Map` klucz (id definicji) → skalar. Brak mapy = brak wartości. */
+type YProps = Y.Map<unknown>;
+
+function yPropsFromPlain(props: NoteProps): YProps {
+  const map: YProps = new Y.Map();
+  for (const [key, value] of Object.entries(props)) map.set(key, value);
+  return map;
+}
+
+/** Zmienia tylko klucze, które się różnią — równoległa edycja innej właściwości tej samej notatki przeżywa. */
+function applyPropsDiff(y: YNote, next: NoteProps) {
+  let map = y.get("props");
+  if (!(map instanceof Y.Map)) {
+    map = new Y.Map();
+    y.set("props", map);
+  }
+  const propsMap = map as YProps;
+  for (const key of Array.from(propsMap.keys())) {
+    if (!(key in next)) propsMap.delete(key);
+  }
+  for (const [key, value] of Object.entries(next)) {
+    if (propsMap.get(key) !== value) propsMap.set(key, value);
+  }
+}
+
+function plainPropsFromY(value: unknown): NoteProps {
+  if (!(value instanceof Y.Map)) return {};
+  return cleanNoteProps(Object.fromEntries(value.entries()));
+}
+
+/** Definicja właściwości w dokumencie: `Y.Map` z polami; id to klucz w `propDefs`. */
+type YPropDef = Y.Map<unknown>;
+
+function yPropDefFromPlain(def: PropDef): YPropDef {
+  const y: YPropDef = new Y.Map();
+  y.set("name", def.name);
+  y.set("type", def.type);
+  if (def.type === "select") y.set("options", def.options ?? []);
+  y.set("order", def.order);
+  return y;
+}
+
+function plainPropDefFromY(id: string, y: YPropDef): PropDef | null {
+  return cleanPropDef({ id, name: y.get("name"), type: y.get("type"), options: y.get("options"), order: y.get("order") });
+}
+
 const NO_ATTACHMENTS: Attachment[] = [];
 
 /** Manifest z dokumentu (może pochodzić od peera) → zwalidowana lista; brak = stała pusta tablica. */
@@ -220,6 +267,8 @@ function yNoteFromPlain(note: Note): YNote {
   y.set("imageHashes", locked ? [] : imageRefs(note.images));
   // Manifest załączników tylko, gdy są — dokumenty bez nich zostają bajt w bajt jak dawniej.
   if (note.attachments?.length && !locked) y.set("attachments", normalizeAttachments(note.attachments));
+  // Właściwości nie idą do notatki prywatnej — nie ma ich w szyfrogramie, więc nie wyciekają jawnie.
+  if (!locked && note.props && Object.keys(note.props).length) y.set("props", yPropsFromPlain(note.props));
   y.set("createdAt", note.createdAt);
   y.set("updatedAt", note.updatedAt);
   return y;
@@ -270,8 +319,10 @@ function plainFromYNote(id: string, y: YNote): Note {
   const images = y.get("imageHashes");
   const attachments = plainAttachments(y.get("attachments"));
   const labels = y.get("labels");
+  const props = plainPropsFromY(y.get("props"));
   return {
     ...common,
+    ...(Object.keys(props).length ? { props } : {}),
     title: safeString(y.get("title"), "", LIM.title),
     content: content instanceof Y.Text ? content.toString() : safeString(content),
     labels: Array.isArray(labels) && labels.length ? safeStringArray(labels, LIM.labels, LIM.label) : NO_LABELS,
@@ -314,6 +365,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   const notesMap = doc.getMap<YNote>("notes");
   const foldersMap = doc.getMap<YFolder>("folders");
   const labelsMap = doc.getMap<boolean>("labels");
+  const propDefsMap = doc.getMap<YPropDef>("propDefs");
   const noteCache = new Map<string, Note>();
   const dirtyNotes = new Set<string>();
   /** Odbiorca zapisów treści notatek prywatnych (ustawia `privateNotes.ts`). */
@@ -488,6 +540,34 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     return Array.from(labelsMap.keys()).sort((a, b) => a.localeCompare(b));
   }
 
+  /** Definicje właściwości po kolejności; uszkodzony wpis od peera jest pomijany. */
+  function projectPropDefs(): PropDef[] {
+    const list: PropDef[] = [];
+    propDefsMap.forEach((y, id) => {
+      const def = plainPropDefFromY(id, y);
+      if (def) list.push(def);
+    });
+    return cleanPropDefs(list);
+  }
+
+  /** Dodaje albo zmienia definicję (nazwa, opcje). Typ nie zmienia się po utworzeniu. */
+  function upsertPropDef(def: PropDef): void {
+    doc.transact(() => {
+      propDefsMap.set(def.id, yPropDefFromPlain(def));
+    });
+  }
+
+  /** Usuwa definicję i jej wartości we wszystkich notatkach — w jednej transakcji. */
+  function deletePropDef(id: string): void {
+    doc.transact(() => {
+      propDefsMap.delete(id);
+      notesMap.forEach((y) => {
+        const props = y.get("props");
+        if (props instanceof Y.Map && props.has(id)) props.delete(id);
+      });
+    });
+  }
+
   function upsertNote(note: Note): void {
     doc.transact(() => {
       notesMap.set(note.id, yNoteFromPlain(note));
@@ -505,6 +585,8 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
       }
       delete rest.locked;
       delete rest.vault;
+      // Właściwości nie są w szyfrogramie — przy notatce prywatnej pomijamy je po cichu.
+      delete rest.props;
       if (Object.keys(priv).length) lockedWriteSink?.(id, priv as PrivateFields);
       updates = rest as typeof updates;
     }
@@ -525,6 +607,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     if (updates.checklist !== undefined) applyChecklistDiff(y, updates.checklist);
     if (updates.images !== undefined) y.set("imageHashes", imageRefs(updates.images));
     if (updates.attachments !== undefined) y.set("attachments", normalizeAttachments(updates.attachments));
+    if (updates.props !== undefined) applyPropsDiff(y, cleanNoteProps(updates.props));
     if (!("updatedAt" in updates)) y.set("updatedAt", Date.now());
   }
 
@@ -848,14 +931,16 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   }
 
   /** Destructive full replace (used by "restore from backup file") — not a merge. */
-  function replaceAll(notes: Note[], folders: Folder[], labels: string[]): void {
+  function replaceAll(notes: Note[], folders: Folder[], labels: string[], propDefs: PropDef[] = []): void {
     doc.transact(() => {
       notesMap.forEach((_v, k) => notesMap.delete(k));
       foldersMap.forEach((_v, k) => foldersMap.delete(k));
       labelsMap.forEach((_v, k) => labelsMap.delete(k));
+      propDefsMap.forEach((_v, k) => propDefsMap.delete(k));
       for (const note of notes) notesMap.set(note.id, yNoteFromPlain(note));
       for (const folder of folders) foldersMap.set(folder.id, yFolderFromPlain(folder));
       for (const label of labels) labelsMap.set(label, true);
+      for (const def of cleanPropDefs(propDefs)) propDefsMap.set(def.id, yPropDefFromPlain(def));
     });
   }
 
@@ -893,7 +978,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
 
   return {
     doc, notesMap, foldersMap, labelsMap, images, isPersistenceOrigin,
-    ready, projectNotes, projectFolders, projectLabels,
+    ready, projectNotes, projectFolders, projectLabels, projectPropDefs, upsertPropDef, deletePropDef, propDefsMap,
     upsertNote, patchNote, patchNotes, setNoteOrder, removeNote, removeNotes,
     upsertFolder, patchFolder, removeFolder,
     addLabel, removeLabelEverywhere, renameLabelEverywhere,

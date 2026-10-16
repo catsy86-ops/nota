@@ -104,6 +104,7 @@ export async function buildFullBackupWithReport(): Promise<{ backup: FullBackup;
   await studyReady();
   const { blobs, report } = await collectAttachmentBlobs();
   const study = yStudy.dump();
+  const propDefs = yjsStore.projectPropDefs();
   const backup: FullBackup = {
     version: 3,
     exportedAt: Date.now(),
@@ -113,6 +114,8 @@ export async function buildFullBackupWithReport(): Promise<{ backup: FullBackup;
     ...(yjsStore.getVaultMeta() ? { vault: yjsStore.getVaultMeta() } : {}),
     labels: yjsStore.projectLabels(),
     folders: yjsStore.projectFolders(),
+    // Bez definicji nie ma sekcji — kopia bez właściwości wygląda jak dawniej.
+    ...(propDefs.length ? { propDefs } : {}),
     versions: versionsStore.all(),
     // Nauka także w dawnym kształcie, wśród ustawień — starsze wersje aplikacji ją odczytają.
     settings: { ...readKeys(SETTINGS_KEYS), [STUDY_STORAGE_KEY]: JSON.stringify(stateFromDump(study)) },
@@ -214,7 +217,7 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   // Obrazy i załączniki najpierw: błąd zapisu (brak miejsca) przerywa przed destrukcyjnym replaceAll.
   const notes = await withStoredImages(backup.notes);
   if (backup.attachmentBlobs) await imageStore.ingest(Object.values(backup.attachmentBlobs));
-  yjsStore.replaceAll(notes, backup.folders, backup.labels);
+  yjsStore.replaceAll(notes, backup.folders, backup.labels, backup.propDefs ?? []);
   // Metadane skarbca z pliku: bez nich zablokowane notatki z backupu byłyby nie do odszyfrowania.
   if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);
   if (opts.versions && backup.versions) {

@@ -39,6 +39,8 @@ export default tseslint.config(
     files: [
       "src/lib/yjsStore.ts",
       "src/lib/yjsStore.test.ts",
+      // Właściwości notatek: test synchronizacji dwóch dokumentów (Y.applyUpdate) i ręczny Y.Map w uszkodzonym wpisie.
+      "src/lib/yjsStore.props.test.ts",
       "src/lib/yTextEdit.ts",
       "src/lib/yTextEdit.test.ts",
       "src/lib/yjsSync.ts",

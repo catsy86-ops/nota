@@ -5,6 +5,14 @@ import { cn } from "@/lib/utils";
 import type { Folder, Note } from "@/hooks/useNotes";
 import { PRIORITY_COLOR_CLASS, PRIORITY_LABELS } from "@/lib/notePriority";
 import { setViewPref, type SortDir, type SortKey } from "@/lib/viewPrefs";
+import {
+  parsePropInput,
+  propDisplayText,
+  propValueFor,
+  withPropValue,
+  type PropDef,
+  type PropValue,
+} from "@/lib/noteProps";
 
 interface NoteTableProps {
   notes: Note[];
@@ -13,6 +21,9 @@ interface NoteTableProps {
   sortDir: SortDir;
   onOpen: (id: string) => void;
   selectedIds?: Set<string>;
+  /** Własne właściwości: kolumna na każde pole. Pusta lista = tabela jak dotąd. */
+  propDefs?: PropDef[];
+  onUpdate?: (id: string, updates: Partial<Pick<Note, "props">>) => void;
 }
 
 /** Kolumny, po których da się sortować — pozostałe nagłówki są tylko opisem. */
@@ -31,11 +42,71 @@ function noteLabel(n: Note): string {
   return n.title.trim() || first?.trim().slice(0, 80) || "Bez tytułu";
 }
 
+const CELL_INPUT = "h-8 w-full min-w-0 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50";
+
+/**
+ * Komórka właściwości: edycja na miejscu. Pole tekstowe zapisuje się przy wyjściu
+ * (Enter też), Escape cofa. Niepoprawna wartość (np. liczba z literą) nie zapisuje się.
+ * Zdarzenia zatrzymane tu, żeby klawisz w komórce nie otwierał notatki wiersza.
+ */
+function PropCell({ def, note, onUpdate }: { def: PropDef; note: Note; onUpdate?: NoteTableProps["onUpdate"] }) {
+  const value = propValueFor(def, note.props);
+  const current = propDisplayText(def, value);
+  const editable = !!onUpdate && !note.locked && !note.readOnly;
+  const label = `${def.name}: ${noteLabel(note)}`;
+  const save = (next: PropValue | null) => onUpdate?.(note.id, { props: withPropValue(note.props, def.id, next) });
+
+  if (!editable) return <span className="text-sm">{current}</span>;
+
+  const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
+
+  if (def.type === "select") {
+    return (
+      <select
+        aria-label={label}
+        value={current}
+        onClick={stop}
+        onKeyDown={stop}
+        onChange={(e) => save(e.target.value || null)}
+        className={CELL_INPUT}
+      >
+        <option value="">—</option>
+        {/* Wartość spoza listy (opcję usunięto) nie jest wybieralna, więc pokazujemy jako pustą. */}
+        {(def.options ?? []).map((o) => <option key={o} value={o}>{o}</option>)}
+      </select>
+    );
+  }
+
+  return (
+    <input
+      // Klucz = bieżąca wartość: zmiana z innego urządzenia od razu wpada do pola.
+      key={current}
+      aria-label={label}
+      type={def.type === "date" ? "date" : "text"}
+      inputMode={def.type === "number" ? "decimal" : undefined}
+      defaultValue={current}
+      onClick={stop}
+      onKeyDown={(e) => {
+        stop(e);
+        if (e.key === "Enter") e.currentTarget.blur();
+        if (e.key === "Escape") { e.currentTarget.value = current; e.currentTarget.blur(); }
+      }}
+      onBlur={(e) => {
+        const parsed = parsePropInput(def, e.currentTarget.value);
+        if (parsed === undefined) { e.currentTarget.value = current; return; }
+        if ((parsed ?? undefined) === value) return;
+        save(parsed);
+      }}
+      className={CELL_INPUT}
+    />
+  );
+}
+
 /**
  * Przegląd wszystkich notatek jako tabela: jeden wiersz = jedna notatka. Nagłówki z
  * sortowaniem korzystają z tych samych preferencji co menu „Sortowanie”. Wiersz otwiera czytnik.
  */
-export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedIds }: NoteTableProps) {
+export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedIds, propDefs = [], onUpdate }: NoteTableProps) {
   const folderName = (id: string | null) => (id ? folders.find((f) => f.id === id)?.name ?? "" : "");
 
   const sortBy = (key: SortKey) => {
@@ -43,13 +114,22 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
     else { setViewPref("sortKey", key); setViewPref("sortDir", key === "title" ? "asc" : "desc"); }
   };
 
+  // Pola właściwości wchodzą przed „Zmieniono” (ostatnia kolumna zostaje na końcu).
+  const updatedColumn = COLUMNS[COLUMNS.length - 1];
+  const columns = [
+    ...COLUMNS.slice(0, -1),
+    ...propDefs.map((d) => ({ key: `prop:${d.id}`, label: d.name, className: "hidden md:table-cell" })),
+    updatedColumn,
+  ];
+
   return (
     <div className="overflow-x-auto rounded-2xl border border-border/60 bg-card/60">
       <table className="w-full text-sm" data-note-table>
         <thead>
           <tr className="border-b border-border/60 text-left text-2xs uppercase tracking-wider text-muted-foreground">
-            {COLUMNS.map((c) => {
-              const active = c.sort !== undefined && c.sort === sortKey;
+            {columns.map((c) => {
+              const sort = "sort" in c ? c.sort : undefined;
+              const active = sort !== undefined && sort === sortKey;
               return (
                 <th
                   key={c.key}
@@ -57,10 +137,10 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
                   aria-sort={active ? (sortDir === "asc" ? "ascending" : "descending") : undefined}
                   className={cn("px-3 py-2 font-semibold", c.className)}
                 >
-                  {c.sort ? (
+                  {sort ? (
                     <button
                       type="button"
-                      onClick={() => sortBy(c.sort!)}
+                      onClick={() => sortBy(sort)}
                       className="inline-flex items-center gap-1 uppercase tracking-wider hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 rounded"
                     >
                       {c.label}
@@ -121,6 +201,11 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
                   </span>
                 )}
               </td>
+              {propDefs.map((d) => (
+                <td key={d.id} className="hidden md:table-cell px-3 py-1.5 align-middle max-w-48">
+                  <PropCell def={d} note={n} onUpdate={onUpdate} />
+                </td>
+              ))}
               <td className="px-3 py-2 whitespace-nowrap text-xs text-muted-foreground tabular-nums">
                 <span className="sm:hidden">{format(n.updatedAt, "d MMM", { locale: pl })}</span>
                 <span className="hidden sm:inline">{format(n.updatedAt, "d MMM yyyy", { locale: pl })}</span>

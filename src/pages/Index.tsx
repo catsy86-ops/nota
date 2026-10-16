@@ -73,6 +73,7 @@ import { VaultHost } from "@/components/vault/VaultHost";
 import { ViewSkeleton } from "@/components/ViewSkeleton";
 import { loadCalendarView, loadShiftsView, loadStudyView } from "@/lib/viewPreload";
 const ShortcutsDialog = lazy(() => import("@/components/ShortcutsDialog").then((m) => ({ default: m.ShortcutsDialog })));
+const PropDefsDialog = lazy(() => import("@/components/PropDefsDialog").then((m) => ({ default: m.PropDefsDialog })));
 const WeeklyReviewCard = lazy(() => import("@/components/review/WeeklyReviewCard").then((m) => ({ default: m.WeeklyReviewCard })));
 const RecentActionsPanel = lazy(() => import("@/components/RecentActionsPanel").then((m) => ({ default: m.RecentActionsPanel })));
 const OnboardingTour = lazy(() => import("@/components/OnboardingTour").then((m) => ({ default: m.OnboardingTour })));
@@ -90,7 +91,7 @@ const ReminderCalendarView = lazy(() => loadCalendarView().then((m) => ({ defaul
 
 const Index = () => {
   const {
-    notes, archivedNotes, trashedNotes, allLabels, folders,
+    notes, archivedNotes, trashedNotes, allLabels, folders, propDefs, addPropDef, updatePropDef, deletePropDef,
     addNote, updateNote, deleteNote, trashNote, restoreFromTrash, emptyTrash, togglePin, duplicateNote,
     archiveNote, unarchiveNote, addLabel, importNotes, reorderNotes, moveNoteToFolder,
     bulkTrash, bulkArchive, bulkSetColor, bulkRestore,
@@ -146,6 +147,7 @@ const Index = () => {
   const [settingsOpen, setSettingsOpen] = useState(() => new URLSearchParams(window.location.search).has("pair"));
   const [statsOpen, setStatsOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
+  const [propDefsOpen, setPropDefsOpen] = useState(false);
   const [presentingNoteId, setPresentingNoteId] = useState<string | null>(null);
   const [focusModeOpen, setFocusModeOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -919,14 +921,27 @@ const Index = () => {
           )}
 
           {tableMode && (
-            <NoteTable
-              notes={[...(showPinned ? pinned : []), ...others]}
-              folders={folders}
-              sortKey={prefs.sortKey}
-              sortDir={prefs.sortDir}
-              selectedIds={selectedIds}
-              onOpen={(id) => showInReader(id, "preview")}
-            />
+            <>
+              <div className="mb-2 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setPropDefsOpen(true)}
+                  className="inline-flex h-9 items-center rounded-lg border border-input bg-background px-3 text-sm hover:bg-muted"
+                >
+                  Pola{propDefs.length ? ` (${propDefs.length})` : ""}
+                </button>
+              </div>
+              <NoteTable
+                notes={[...(showPinned ? pinned : []), ...others]}
+                folders={folders}
+                sortKey={prefs.sortKey}
+                sortDir={prefs.sortDir}
+                selectedIds={selectedIds}
+                onOpen={(id) => showInReader(id, "preview")}
+                propDefs={propDefs}
+                onUpdate={updateNote}
+              />
+            </>
           )}
 
           {view === "calendar" && (
@@ -1030,6 +1045,18 @@ const Index = () => {
     {shortcutsOpen && (
       <Suspense fallback={null}>
         <ShortcutsDialog open={shortcutsOpen} onOpenChange={setShortcutsOpen} />
+      </Suspense>
+    )}
+    {propDefsOpen && (
+      <Suspense fallback={null}>
+        <PropDefsDialog
+          open={propDefsOpen}
+          onOpenChange={setPropDefsOpen}
+          defs={propDefs}
+          onAdd={addPropDef}
+          onUpdate={updatePropDef}
+          onDelete={deletePropDef}
+        />
       </Suspense>
     )}
     <AnimatePresence>
