@@ -1,0 +1,16 @@
+# Tekst: w repo zawsze LF, na dysku zgodnie z systemem nie zmieniamy (git sam normalizuje).
+* text=auto eol=lf
+
+# Binarne: nigdy nie przepisywać końców linii ani nie diffować.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+*.pdf binary
+*.zip binary
