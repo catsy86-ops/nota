@@ -2623,6 +2623,56 @@ Vitest 1339/1339, e2e Pracy 53/53. Obejrzane na zrzutach 390 px i na komputerze,
 
 **Commit.** `f5186f5` (2026-10-16).
 
+### Plany i dokumenty budowy (H3)
+
+**Co robi.** Karta budowy ma panel „Plany i dokumenty”. Przycisk „Dodaj plan lub dokument” przyjmuje zdjęcia
+(rzut, zdjęcie tablicy) i PDF-y (projekt), także kilka naraz. Zdjęcia są miniaturami: stuknięcie powiększa,
+„100%” pokazuje obraz w pełnej rozdzielczości z przewijaniem (do odczytu wymiarów), a „Dopasuj” wraca do widoku
+całości. PDF to wiersz z rozmiarem i przyciskiem „Otwórz”, który zapisuje plik i otwiera go aplikacją telefonu.
+Usunięcie ma „Cofnij”. Wszystko leży na urządzeniu, więc działa bez zasięgu. Paczka ZIP budowy ma katalog
+`dokumenty/` z tymi plikami pod ich nazwami.
+
+**Gdzie jest.**
+- `src/lib/study/siteDocs.ts`: `SiteDoc` (`id` = klucz w `imageStore`, `name`, `size`, `type`, `at`), `cleanSiteDocs`
+  (tylko `image/*` i `application/pdf`, limit `SITE_DOCS_MAX` = 30), `isImageDoc`, `docLabel`.
+- `src/lib/study/siteDocsAdd.ts` (doczytywany przy dodawaniu): `addSiteDocFiles`. Obrazy idą przez `prepareImage`
+  i `imageStore.putBlob`, a PDF-y przez `addAttachmentFiles` (10 MB na plik, łączny limit załączników).
+- `src/lib/study/siteItems.ts`: rodzaj listy `docs` (`budowa␁docs␁klucz` → `{ name, size, type, at }`). `sites.ts`:
+  `SiteCard.docs`. `store.ts`: `setSiteDocs(id, next, base)`.
+- `src/lib/study/journalRefs.ts`: `journalRefsIn(doc, syncable)` zbiera też klucze dokumentów z `studySiteItems`.
+  `yjsStore.syncableRefs` woła je z `syncable = true`.
+- `src/lib/study/siteZip.ts`: `buildSiteZip(…, siteDocs)` i `downloadSiteZip(report, docs)`. Pola wyniku `docs`
+  i `missingDocs`, a druga kopia nazwy dostaje dopisek „(2)”.
+- `src/components/study/SiteDocsPanel.tsx` (panel w `SiteCardDialog.tsx` pod brakami).
+
+**Jak działa i dlaczego.**
+- Obrazy i PDF-y mają klucze w tym samym formacie (SHA-256 bajtów w `imageStore`), więc jedna lista wystarcza.
+  Ten sam plik dodany drugi raz nie dubluje się.
+- Rdzeń widzi dokumenty przez `journalRefsIn`:
+  - sprzątanie magazynu ich nie usuwa (`referencedImages`);
+  - kopia zapasowa zabiera je razem ze zdjęciami dziennika (`journalImageRefs`, ten sam budżet);
+  - synchronizacja wysyła obrazy zawsze, a PDF-y do 2 MB, jak załączniki notatek.
+- „Otwórz” używa `downloadAttachment`: aplikacja nie wyświetla PDF-a u siebie (zasada załączników). Telefon otwiera
+  pobrany plik swoją przeglądarką PDF.
+- Obraz do 2 MB zostaje bez zmian (plan musi być czytelny), większy zmniejsza `prepareImage`.
+
+**Ograniczenia i pułapki.**
+- PDF powyżej 2 MB zostaje na telefonie, który go dodał. Na drugim „Otwórz” mówi, że pliku tu nie ma.
+- Łączny limit załączników (100 MB) przy dodawaniu PDF-a budowy liczy załączniki notatek i PDF-y tej budowy, ale nie
+  innych budów. Przy dodawaniu załącznika notatki PDF-y budów się nie liczą.
+- Komunikat o limicie liczby plików z `describeRejections` mówi o „notatce” (wspólny tekst załączników).
+- Starsza wersja aplikacji nie widzi dokumentów i nie chroni ich bajtów przed swoim sprzątaniem (karencja daje czas
+  na aktualizację).
+- Pułapka lintu: `yjs` wolno importować tylko w wymienionych plikach. Test na `Y.Doc` jest więc w `yStudy.test.ts`,
+  nie w `siteDocs.test.ts`.
+
+**Testy.** `src/lib/study/siteDocs.test.ts` (czyszczenie, podpis), `yStudy.test.ts` („dokumenty budowy w dokumencie”:
+odniesienia i duży PDF poza synchronizacją), `siteZip.test.ts` (katalog `dokumenty/`, ta sama nazwa, brak bajtów),
+`e2e/site-docs.spec.ts` (zdjęcie i PDF, powiększenie i „100%”, pobranie, „Cofnij”, po przeładowaniu; inny typ
+pominięty). Vitest 1343/1343, e2e Pracy i kopii 56/56. Obejrzane na zrzutach 390 px w obu motywach.
+
+**Commit.** `0f78d36` (2026-10-16).
+
 ### Etapy budowy
 
 **Co robi.** Karta budowy ma listę etapów instalacji w domku jednorodzinnym: domyślnie kanalizacja podposadzkowa,
