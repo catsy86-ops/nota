@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
   cleanNoteProps,
+  comparePropsForSort,
   filledPropEntries,
+  type NoteProps,
   cleanPropDef,
   cleanPropDefs,
   formatPropValue,
@@ -152,5 +154,17 @@ describe("propNameTaken / makePropDef", () => {
     ];
     expect(filledPropEntries(defs, { a: 3.5, b: "tekst" })).toEqual([["Pierwsza", "3,5"], ["Druga", "tekst"]]);
     expect(filledPropEntries(defs, undefined)).toEqual([]);
+  });
+
+  it("comparePropsForSort: puste zawsze na końcu, liczby jak liczby, tekst z polskim porządkiem", () => {
+    const num: PropDef = { id: "n", name: "Cena", type: "number", order: 0 };
+    const txt: PropDef = { id: "t", name: "Nazwa", type: "text", order: 1 };
+    const rows: { id: string; p: NoteProps }[] = [{ id: "a", p: { n: 10 } }, { id: "b", p: { n: 9 } }, { id: "c", p: {} }];
+    const byNum = (dir: 1 | -1) => [...rows].sort((x, y) => comparePropsForSort(num, x.p, y.p, dir)).map((r) => r.id);
+    expect(byNum(1)).toEqual(["b", "a", "c"]);
+    expect(byNum(-1)).toEqual(["a", "b", "c"]);
+    const names: { id: string; p: NoteProps }[] = [{ id: "x", p: { t: "Żółw" } }, { id: "y", p: { t: "zebra" } }, { id: "z", p: { t: "Ala" } }, { id: "e", p: {} }];
+    expect([...names].sort((x, y) => comparePropsForSort(txt, x.p, y.p, 1)).map((r) => r.id)).toEqual(["z", "y", "x", "e"]);
+    expect([...names].sort((x, y) => comparePropsForSort(txt, x.p, y.p, -1)).map((r) => r.id)).toEqual(["x", "y", "z", "e"]);
   });
 });

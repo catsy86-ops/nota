@@ -6,6 +6,7 @@ import type { Folder, Note } from "@/hooks/useNotes";
 import { PRIORITY_COLOR_CLASS, PRIORITY_LABELS } from "@/lib/notePriority";
 import { setViewPref, type SortDir, type SortKey } from "@/lib/viewPrefs";
 import {
+  filledPropEntries,
   parsePropInput,
   propDisplayText,
   propValueFor,
@@ -14,7 +15,7 @@ import {
   type PropValue,
 } from "@/lib/noteProps";
 
-interface NoteTableProps {
+export interface NoteTableProps {
   notes: Note[];
   folders: Folder[];
   sortKey: SortKey;
@@ -49,14 +50,14 @@ const CELL_INPUT = "h-8 w-full min-w-0 rounded-md border border-input bg-backgro
  * (Enter też), Escape cofa. Niepoprawna wartość (np. liczba z literą) nie zapisuje się.
  * Zdarzenia zatrzymane tu, żeby klawisz w komórce nie otwierał notatki wiersza.
  */
-function PropCell({ def, note, onUpdate }: { def: PropDef; note: Note; onUpdate?: NoteTableProps["onUpdate"] }) {
+export function PropCell({ def, note, onUpdate }: { def: PropDef; note: Note; onUpdate?: NoteTableProps["onUpdate"] }) {
   const value = propValueFor(def, note.props);
   const current = propDisplayText(def, value);
   const editable = !!onUpdate && !note.locked && !note.readOnly;
   const label = `${def.name}: ${noteLabel(note)}`;
   const save = (next: PropValue | null) => onUpdate?.(note.id, { props: withPropValue(note.props, def.id, next) });
 
-  if (!editable) return <span className="text-sm">{current}</span>;
+  if (!editable) return <span className={cn("text-sm", !current && "text-muted-foreground")}>{current || "—"}</span>;
 
   const stop = (e: { stopPropagation: () => void }) => e.stopPropagation();
 
@@ -111,14 +112,14 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
 
   const sortBy = (key: SortKey) => {
     if (sortKey === key) setViewPref("sortDir", sortDir === "asc" ? "desc" : "asc");
-    else { setViewPref("sortKey", key); setViewPref("sortDir", key === "title" ? "asc" : "desc"); }
+    else { setViewPref("sortKey", key); setViewPref("sortDir", key === "title" || key.startsWith("prop:") ? "asc" : "desc"); }
   };
 
   // Pola właściwości wchodzą przed „Zmieniono” (ostatnia kolumna zostaje na końcu).
   const updatedColumn = COLUMNS[COLUMNS.length - 1];
   const columns = [
     ...COLUMNS.slice(0, -1),
-    ...propDefs.map((d) => ({ key: `prop:${d.id}`, label: d.name, className: "hidden md:table-cell" })),
+    ...propDefs.map((d) => ({ key: `prop:${d.id}`, label: d.name, sort: `prop:${d.id}` as const, className: "hidden md:table-cell" })),
     updatedColumn,
   ];
 
@@ -175,6 +176,12 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
                   {n.icon && <span aria-hidden>{n.icon}</span>}
                   <span className="truncate font-medium">{noteLabel(n)}</span>
                 </span>
+                {/* Telefon: kolumny pól są schowane, więc wartości idą pod tytuł. */}
+                {propDefs.length > 0 && (
+                  <span className="md:hidden block truncate text-2xs text-muted-foreground">
+                    {filledPropEntries(propDefs, n.props).map(([name, text]) => `${name}: ${text}`).join(" · ")}
+                  </span>
+                )}
               </td>
               <td className="hidden md:table-cell px-3 py-2 text-muted-foreground truncate max-w-40">{folderName(n.folderId)}</td>
               <td className="hidden lg:table-cell px-3 py-2">

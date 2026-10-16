@@ -169,6 +169,19 @@ export function makePropDef(defs: PropDef[], name: string, type: PropType, optio
   return cleanPropDef({ id, name, type, options: type === "select" ? options : undefined, order });
 }
 
+/**
+ * Porównanie dwóch notatek po jednym polu. Puste wartości zawsze na końcu, niezależnie od kierunku
+ * (inaczej przy malejącym sortowaniu wszystkie notatki bez liczby wpadałyby na górę).
+ * Liczby porównywane jak liczby, reszta jak tekst z polskim porządkiem (`10` po `9`).
+ */
+export function comparePropsForSort(def: PropDef, a: NoteProps | undefined, b: NoteProps | undefined, dir: 1 | -1): number {
+  const va = propValueFor(def, a);
+  const vb = propValueFor(def, b);
+  if (va === undefined || vb === undefined) return va === vb ? 0 : va === undefined ? 1 : -1;
+  if (typeof va === "number" && typeof vb === "number") return (va - vb) * dir;
+  return String(va).localeCompare(String(vb), "pl", { numeric: true, sensitivity: "base" }) * dir;
+}
+
 /** Pola z wartością, w kolejności pokazywania, jako pary `[nazwa, tekst]` — do eksportu tekstowego. */
 export function filledPropEntries(defs: PropDef[], props: NoteProps | undefined): [string, string][] {
   return [...defs]

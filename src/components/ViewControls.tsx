@@ -10,6 +10,8 @@ import type { NoteColor } from "@/hooks/useNotes";
 import type { GroupBy } from "@/lib/groupNotes";
 import { PRIORITY_LABELS, PRIORITY_COLOR_CLASS, type NotePriority } from "@/lib/notePriority";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNotesContext } from "@/hooks/NotesProvider";
+import { sortOptions } from "@/lib/sortOptions";
 import { ViewSheet } from "@/components/ViewSheet";
 import { useRef, useState } from "react";
 
@@ -27,16 +29,6 @@ const LAYOUTS: { v: Layout; label: string; icon: typeof LayoutGrid }[] = [
   { v: "table", label: "Tabela", icon: Table2 },
 ];
 
-const SORTS: { v: SortKey; label: string }[] = [
-  { v: "updated", label: "Data modyfikacji" },
-  { v: "created", label: "Data utworzenia" },
-  { v: "opened", label: "Ostatnio otwierane" },
-  { v: "title", label: "Tytuł (A-Z)" },
-  { v: "color", label: "Kolor" },
-  { v: "priority", label: "Priorytet" },
-  { v: "manual", label: "Ręcznie (przeciągnij)" },
-];
-
 const GROUPS: { v: GroupBy; label: string }[] = [
   { v: "none", label: "Brak" },
   { v: "date", label: "Wg daty" },
@@ -49,6 +41,7 @@ const PRIORITY_OPTIONS: NotePriority[] = ["high", "medium", "low", "none"];
 
 export function ViewControls({ allLabels, sortable = true }: Props) {
   const prefs = useViewPrefs();
+  const { propDefs } = useNotesContext();
   const isMobile = useIsMobile();
   const [viewSheetOpen, setViewSheetOpen] = useState(false);
   const layoutTriggerRef = useRef<HTMLButtonElement>(null);
@@ -143,7 +136,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuLabel className="text-2xs uppercase tracking-wider">Sortuj wg</DropdownMenuLabel>
           <DropdownMenuRadioGroup value={prefs.sortKey} onValueChange={(v) => setViewPref("sortKey", v as SortKey)}>
-            {SORTS.map((s) => (
+            {sortOptions(propDefs).map((s) => (
               <DropdownMenuRadioItem key={s.v} value={s.v}>{s.label}</DropdownMenuRadioItem>
             ))}
           </DropdownMenuRadioGroup>

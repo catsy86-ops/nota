@@ -2,11 +2,14 @@ import { useSyncExternalStore } from "react";
 import type Fuse from "fuse.js";
 import type { Note } from "@/hooks/useNotes";
 import { parseSearchQuery, matchesClauses, fold, type MatchFolder } from "@/lib/searchQuery";
+import type { PropDef } from "@/lib/noteProps";
 
 export interface SearchContext {
   /** Potrzebne operatorowi `folder:` (nazwa → id, z podfolderami). */
   folders?: MatchFolder[];
   now?: number;
+  /** Potrzebne operatorowi `pole:`. */
+  propDefs?: PropDef[];
 }
 
 /**

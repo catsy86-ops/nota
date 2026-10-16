@@ -289,7 +289,7 @@ const Index = () => {
   }, [notesRef, updateNote, addVersion]);
 
   const { displayNotes, pinned, others, elsewhere } = useFilteredNotes({
-    notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search: deferredSearch, prefs,
+    notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search: deferredSearch, prefs, propDefs,
   });
 
   useDayDoneReward(view === "today" && !search ? displayNotes : null);
@@ -1072,6 +1072,8 @@ const Index = () => {
           onEdit={editFromReader}
           onShow={showInReader}
           resolveTitle={(title) => resolveWikiTarget(title, allNotesForLinks)?.id}
+          propDefs={propDefs}
+          onUpdateProps={updateNote}
           onToggleChecklist={(noteId, itemId) => {
             const n = [...notes, ...archivedNotes].find((x) => x.id === noteId);
             if (!n) return;

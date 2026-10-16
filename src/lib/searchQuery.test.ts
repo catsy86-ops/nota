@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { parseSearchQuery, matchesClauses, highlightTokens, type MatchNote } from "./searchQuery";
+import type { PropDef } from "@/lib/noteProps";
 import { suggestOperators, applySuggestion } from "./searchSuggest";
 import { addFilter, renameFilter, removeFilter, sanitizeFilters } from "./savedFilters";
 
@@ -148,5 +149,36 @@ describe("operatory: priorytet, załącznik, brak etykiety/folderu, negacja", ()
     expect(test("-etykieta:praca", { labels: ["praca"] })).toBe(false);
     expect(test("-etykieta:praca", { labels: ["dom"] })).toBe(true);
     expect(parseSearchQuery("-kot").text).toBe("-kot");
+  });
+});
+
+describe("operator pole:", () => {
+  const defs: PropDef[] = [
+    { id: "s", name: "Status", type: "select", options: ["w toku", "gotowe"], order: 0 },
+    { id: "c", name: "Cena", type: "number", order: 1 },
+  ];
+  const ctx = { propDefs: defs, now: NOW };
+  const withProps = (props: MatchNote["props"]) => note({ props });
+
+  it("parsuje nazwę i wartość; wartość ze spacją w cudzysłowie", () => {
+    expect(parseSearchQuery('pole:"Status=w toku"').clauses).toEqual([{ type: "prop", name: "Status", value: "w toku" }]);
+    expect(parseSearchQuery("pole:Cena").clauses).toEqual([{ type: "prop", name: "Cena", value: undefined }]);
+    expect(parseSearchQuery("pole:=x").clauses).toEqual([]);
+  });
+
+  it("dopasowuje wartość bez wielkości liter i ogonków; liczba z przecinkiem i kropką", () => {
+    const clauses = parseSearchQuery('pole:"Status=W Toku"').clauses;
+    expect(matchesClauses(withProps({ s: "w toku" }), clauses, ctx)).toBe(true);
+    expect(matchesClauses(withProps({ s: "gotowe" }), clauses, ctx)).toBe(false);
+    expect(matchesClauses(withProps({ c: 12.5 }), parseSearchQuery("pole:Cena=12.5").clauses, ctx)).toBe(true);
+    expect(matchesClauses(withProps({ c: 12.5 }), parseSearchQuery("pole:Cena=12,5").clauses, ctx)).toBe(true);
+  });
+
+  it("bez „=” znaczy: pole ma wartość; puste pole nie pasuje; nieznana nazwa nie pasuje", () => {
+    const has = parseSearchQuery("pole:Cena").clauses;
+    expect(matchesClauses(withProps({ c: 0 }), has, ctx)).toBe(true);
+    expect(matchesClauses(withProps({}), has, ctx)).toBe(false);
+    expect(matchesClauses(withProps({ c: 1 }), parseSearchQuery("pole:Nieznane").clauses, ctx)).toBe(false);
+    expect(matchesClauses(withProps({ c: 1 }), parseSearchQuery("-pole:Nieznane").clauses, ctx)).toBe(true);
   });
 });

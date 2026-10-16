@@ -7,6 +7,7 @@ import { getTodayRange, getWeekRange } from "@/lib/dateRanges";
 import { PRIORITY_ORDER } from "@/lib/notePriority";
 import { useLastOpened, type LastOpenedMap } from "@/lib/lastOpened";
 import { useDayClock } from "@/lib/dayClock";
+import { comparePropsForSort, type PropDef } from "@/lib/noteProps";
 
 const NO_OPENED: LastOpenedMap = {};
 
@@ -26,9 +27,10 @@ interface FilterArgs {
   activeFolder: string | null;
   search: string;
   prefs: ViewPrefs;
+  propDefs?: PropDef[];
 }
 
-function filterNotes(list: Note[], source: Note[], { view, activeLabel, activeFolder, folders, search }: Pick<FilterArgs, "view" | "activeLabel" | "activeFolder" | "folders" | "search">) {
+function filterNotes(list: Note[], source: Note[], { view, activeLabel, activeFolder, folders, search, propDefs }: Pick<FilterArgs, "view" | "activeLabel" | "activeFolder" | "folders" | "search" | "propDefs">) {
   let filtered = list;
   if (activeLabel && view === "label") {
     filtered = filtered.filter((n) => n.labels.includes(activeLabel));
@@ -50,13 +52,18 @@ function filterNotes(list: Note[], source: Note[], { view, activeLabel, activeFo
     filtered = filtered.filter((n) => n.folderId && folderIds.has(n.folderId));
   }
   if (search) {
-    filtered = searchNotes(filtered, search, { folders }, source);
+    filtered = searchNotes(filtered, search, { folders, propDefs }, source);
   }
   return filtered;
 }
 
-function sortNotes(list: Note[], prefs: ViewPrefs, opened: LastOpenedMap): Note[] {
+function sortNotes(list: Note[], prefs: ViewPrefs, opened: LastOpenedMap, propDefs: PropDef[]): Note[] {
   const dir = prefs.sortDir === "asc" ? 1 : -1;
+  if (prefs.sortKey.startsWith("prop:")) {
+    // Brak pola (usunięte po wybraniu sortowania) = zwykłe sortowanie po dacie zmiany.
+    const def = propDefs.find((d) => `prop:${d.id}` === prefs.sortKey);
+    if (def) return [...list].sort((a, b) => comparePropsForSort(def, a.props, b.props, dir) || b.updatedAt - a.updatedAt);
+  }
   function sortFn(a: Note, b: Note) {
     switch (prefs.sortKey) {
       case "title": return a.title.localeCompare(b.title) * dir;
@@ -74,7 +81,7 @@ function sortNotes(list: Note[], prefs: ViewPrefs, opened: LastOpenedMap): Note[
 }
 
 /** Pure filter/sort pipeline: view + label/folder + prefs + search + sort, split into pinned/others. */
-export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs }: FilterArgs) {
+export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs, propDefs = [] }: FilterArgs) {
   // Search rebuilds a fresh Fuse index over the filtered pool on every call —
   // fine for hundreds of notes, but worth memoizing so it only reruns when
   // an input actually changes, not on every unrelated re-render (typing
@@ -100,10 +107,10 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
     if (view === "calendar" || view === "shifts" || view === "study") return { displayNotes: [], pinned: [], others: [], elsewhere: NO_ELSEWHERE };
 
     const baseNotes = view === "archive"
-      ? filterNotes(archivedNotes, archivedNotes, { view, activeLabel, activeFolder, folders, search })
+      ? filterNotes(archivedNotes, archivedNotes, { view, activeLabel, activeFolder, folders, search, propDefs })
       : view === "trash"
-        ? filterNotes(trashedNotes, trashedNotes, { view, activeLabel, activeFolder, folders, search })
-        : filterNotes(notes, notes, { view, activeLabel, activeFolder, folders, search });
+        ? filterNotes(trashedNotes, trashedNotes, { view, activeLabel, activeFolder, folders, search, propDefs })
+        : filterNotes(notes, notes, { view, activeLabel, activeFolder, folders, search, propDefs });
 
     const filteredByPrefs = view === "trash" ? baseNotes : baseNotes.filter((n) => {
       if (prefs.filterColor !== "all" && n.color !== prefs.filterColor) return false;
@@ -118,7 +125,7 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
     const agenda = view === "reminders";
     const displayNotes = agenda
       ? [...filteredByPrefs].sort((a, b) => (a.reminder ?? 0) - (b.reminder ?? 0))
-      : sortNotes(filteredByPrefs, prefs, opened);
+      : sortNotes(filteredByPrefs, prefs, opened, propDefs);
     // Archiwum też bez „Przypiętych”: archiwizacja odpina, ale stara kopia/import może mieć oba pola —
     // bez tego taka notatka znikałaby z widoku (sekcji przypiętych archiwum nie pokazuje).
     const flat = view === "trash" || view === "archive" || agenda;

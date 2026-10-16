@@ -27,6 +27,8 @@ import { useWakeLock } from "@/hooks/useWakeLock";
 import { copyNoteToClipboard } from "@/lib/noteMarkdown";
 import { highlightTokens } from "@/lib/searchQuery";
 import { useOverlayHistory } from "@/hooks/useOverlayHistory";
+import { PropCell } from "@/components/NoteTable";
+import type { PropDef } from "@/lib/noteProps";
 
 /**
  * Jedno miejsce czytania notatki (wcześniej: szybki podgląd w `NoteGrid`
@@ -56,6 +58,10 @@ interface Props {
   resolveTitle: (title: string) => string | undefined;
   /** Odhaczenie pozycji listy prosto w czytniku; brak = lista tylko do odczytu. */
   onToggleChecklist?: (noteId: string, itemId: string) => void;
+  /** Własne pola notatki (sekcja „Pola” pod załącznikami). */
+  propDefs?: PropDef[];
+  /** Zmiana wartości pola prosto w czytniku; brak = pola tylko do odczytu. */
+  onUpdateProps?: (id: string, updates: Partial<Pick<Note, "props">>) => void;
 }
 
 const ZOOM_DEFAULT = 1.1;
@@ -85,7 +91,7 @@ function buildSnippets(text: string, tokens: string[], max = 3) {
   return out;
 }
 
-export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, onClose, onEdit, onShow, resolveTitle, onToggleChecklist }: Props) {
+export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, onClose, onEdit, onShow, resolveTitle, onToggleChecklist, propDefs = [], onUpdateProps }: Props) {
   useOverlayHistory(true, onClose);
   const present = mode === "present";
   const [zoom, setZoom] = useState(ZOOM_DEFAULT);
@@ -358,6 +364,22 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
             )}
 
             <AttachmentsReadOnlyList attachments={note.attachments} />
+
+            {propDefs.length > 0 && (
+              <section aria-label="Pola notatki" className="mt-6 pt-3 border-t border-border/50" style={present ? { fontSize: "0.95rem" } : undefined}>
+                <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Pola</p>
+                <dl>
+                  {[...propDefs].sort((a, b) => a.order - b.order).map((d) => (
+                    <div key={d.id} className="grid grid-cols-[minmax(0,40%)_minmax(0,1fr)] items-center gap-3 border-b border-dashed border-border/60 py-1.5 last:border-0">
+                      <dt className="truncate text-xs text-muted-foreground">{d.name}</dt>
+                      <dd className="min-w-0">
+                        <PropCell def={d} note={note} onUpdate={onUpdateProps} />
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </section>
+            )}
 
             {backlinks.length > 0 && (
               <div className="mt-8 pt-4 border-t border-border/50" style={present ? { fontSize: "0.95rem" } : undefined}>

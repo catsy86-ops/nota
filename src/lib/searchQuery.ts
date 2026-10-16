@@ -1,3 +1,5 @@
+import { propDisplayText, propValueFor, type NoteProps, type PropDef } from "@/lib/noteProps";
+
 /**
  * Parser zapytania wyszukiwarki — czysty, bez zależności od React ani Fuse.
  *
@@ -9,6 +11,8 @@
  *   lista:otwarte             (checklista z nieodhaczoną pozycją)
  *   starsze:30d  nowsze:7d    (d = dni, t = tygodnie, m = miesiące; sama liczba = dni)
  *   priorytet:wysoki|sredni|niski   ma:zalacznik   brak:etykiety  brak:folderu
+ *   pole:Nazwa=wartość        (własne pole notatki; bez „=” = pole ma jakąkolwiek wartość;
+ *                             wartość ze spacją: pole:"Status=w toku")
  *   -operator:wartość         (negacja, np. -etykieta:praca)
  * Wartość ze spacją w cudzysłowie: etykieta:"moja praca". Wiele operatorów = AND.
  * Nieznany operator i wszystko inne to zwykły tekst dla Fuse.
@@ -30,6 +34,7 @@ export type Clause =
   | { type: "attachment" }
   | { type: "noLabel" }
   | { type: "noFolder" }
+  | { type: "prop"; name: string; value?: string }
   | { type: "not"; clause: Clause };
 
 export interface ParsedQuery {
@@ -97,6 +102,14 @@ function clauseFor(key: string, rawValue: string): Clause | null {
       const map: Record<string, "low" | "medium" | "high"> = { niski: "low", low: "low", sredni: "medium", medium: "medium", wysoki: "high", high: "high" };
       return map[v] ? { type: "priority", value: map[v] } : null;
     }
+    case "pole": case "field": {
+      // Nazwa pola i wartość rozdziela pierwszy „=”; nazwa dopasowywana bez wielkości liter i ogonków.
+      const eq = value.indexOf("=");
+      const name = (eq < 0 ? value : value.slice(0, eq)).trim();
+      if (!name) return null;
+      const want = eq < 0 ? "" : value.slice(eq + 1).trim();
+      return { type: "prop", name, value: want || undefined };
+    }
     case "lista":
       if (["otwarte", "otwarta", "open"].includes(v)) return { type: "openList" };
       return null;
@@ -151,9 +164,10 @@ export interface MatchNote {
   priority?: string;
   pinned: boolean;
   updatedAt: number;
+  props?: NoteProps;
 }
 export interface MatchFolder { id: string; name: string; parentId?: string | null }
-export interface MatchContext { folders?: MatchFolder[]; now?: number }
+export interface MatchContext { folders?: MatchFolder[]; now?: number; propDefs?: PropDef[] }
 
 const DAY_MS = 86_400_000;
 
@@ -169,6 +183,17 @@ function folderIdsByName(name: string, folders: MatchFolder[]): Set<string> {
     }
   }
   return ids;
+}
+
+/** `pole:Nazwa` (wartość jest) albo `pole:Nazwa=wartość` (ta sama treść jak w komórce; przecinek = kropka). */
+function matchesProp(note: MatchNote, name: string, want: string | undefined, defs: PropDef[]): boolean {
+  const def = defs.find((d) => fold(d.name) === fold(name));
+  if (!def) return false;
+  const text = propDisplayText(def, propValueFor(def, note.props));
+  if (text === "") return false;
+  if (want === undefined) return true;
+  const norm = (s: string) => fold(s).replace(/\./g, ",");
+  return norm(text) === norm(want);
 }
 
 export function matchesClauses(note: MatchNote, clauses: Clause[], ctx: MatchContext = {}): boolean {
@@ -189,6 +214,7 @@ export function matchesClauses(note: MatchNote, clauses: Clause[], ctx: MatchCon
       case "checklist": return (note.checklist ?? []).length > 0;
       case "pinned": return note.pinned;
       case "openList": return (note.checklist ?? []).some((i) => !i.checked);
+      case "prop": return matchesProp(note, c.name, c.value, ctx.propDefs ?? []);
       case "older": return note.updatedAt < now - c.days * DAY_MS;
       case "newer": return note.updatedAt >= now - c.days * DAY_MS;
     }

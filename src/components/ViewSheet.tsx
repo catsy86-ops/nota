@@ -2,7 +2,9 @@ import { Check, Columns2, Kanban, LayoutGrid, List, Table2 } from "lucide-react"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { cn } from "@/lib/utils";
-import { setViewPref, useViewPrefs, type Density, type Layout } from "@/lib/viewPrefs";
+import { setViewPref, useViewPrefs, type Density, type Layout, type SortDir, type SortKey } from "@/lib/viewPrefs";
+import { useNotesContext } from "@/hooks/NotesProvider";
+import { sortOptions } from "@/lib/sortOptions";
 import { changeView } from "@/lib/viewChange";
 import type { GroupBy } from "@/lib/groupNotes";
 
@@ -19,6 +21,11 @@ const DENSITIES: { v: Density; label: string }[] = [
   { v: "compact", label: "Kompakt" },
   { v: "cozy", label: "Komfort" },
   { v: "comfy", label: "Luźno" },
+];
+
+const DIRS: { v: SortDir; label: string }[] = [
+  { v: "desc", label: "Malejąco" },
+  { v: "asc", label: "Rosnąco" },
 ];
 
 const GROUPS: { v: GroupBy; label: string }[] = [
@@ -73,6 +80,7 @@ function Segmented<T extends string | number>({ label, options, value, onChange 
  */
 export function ViewSheet({ open, onOpenChange, groupable = true }: { open: boolean; onOpenChange: (open: boolean) => void; groupable?: boolean }) {
   const prefs = useViewPrefs();
+  const { propDefs } = useNotesContext();
   const columns: ColumnsChoice = prefs.autoColumns ? "auto" : prefs.columns <= 1 ? 1 : 2;
 
   return (
@@ -135,6 +143,25 @@ export function ViewSheet({ open, onOpenChange, groupable = true }: { open: bool
         <Section title="Gęstość">
           <Segmented label="Gęstość" options={DENSITIES} value={prefs.density} onChange={(v) => changeView(() => setViewPref("density", v))} />
         </Section>
+
+        {groupable && (
+          // Na telefonie nie ma menu „Sortuj wg” z komputera — bez tej sekcji własnych pól nie da się posortować.
+          <Section title="Sortuj wg">
+            <select
+              aria-label="Sortuj wg"
+              value={prefs.sortKey}
+              onChange={(e) => setViewPref("sortKey", e.target.value as SortKey)}
+              className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
+            >
+              {sortOptions(propDefs).map((o) => <option key={o.v} value={o.v}>{o.label}</option>)}
+            </select>
+            {prefs.sortKey !== "manual" && (
+              <div className="mt-2">
+                <Segmented label="Kierunek sortowania" options={DIRS} value={prefs.sortDir} onChange={(v) => setViewPref("sortDir", v)} />
+              </div>
+            )}
+          </Section>
+        )}
 
         {groupable && prefs.layout !== "board" && prefs.layout !== "table" && (
           <Section title="Grupuj">
