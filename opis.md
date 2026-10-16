@@ -1562,6 +1562,20 @@ Pasek nie jest zapamiętywany (brak „ukryj”), bo znika sam.
 
 **Commit.** `7fcff9a` (2026-10-16).
 
+### Wpis jako linijka w zeszycie
+
+**Co robi.** Wpis na liście dziennika wygląda jak linijka w zeszycie: godzina (mono) stoi na marginesie po lewej, oddzielona pionową linią, a wpisy dzieli przerywana linia zamiast osobnej ramki z tłem. Ikona rodzaju, treść, zdjęcia i przyciski działają jak wcześniej.
+
+**Gdzie jest.** `src/components/study/StudyJournal.tsx`: funkcja `JournalItem` (`<li>` jako siatka `grid-cols-[3.25rem_minmax(0,1fr)]`, element `<time>` z `dateTime`), lista wpisów w `StudyJournal` (`<ul>` bez `space-y-2`, bo odstęp daje `py-3` wpisu).
+
+**Jak działa i dlaczego.** Godzina przeniesiona z wiersza meta na margines, żeby czas czytało się pionowo jak w zeszycie i nie konkurowało z pigułkami tematu. Linia pionowa to `border-r` kolumny godziny; oddzielenie wpisów `border-b border-dashed` z `last:border-b-0`. Usunięto ramkę `rounded-xl border bg-card`, bo przy wielu wpisach na dzień karty zlewały się w bloki. Przy pierwszym wpisie `first:pt-1`, żeby nie dublować odstępu pod nagłówkiem dnia.
+
+**Ograniczenia i pułapki.** Wpis z problemem nadal ma ikonę ostrzegawczą, a rozwiązany — szary znacznik `CircleCheck` (teraz z `mt-0.5`, żeby stał równo z pierwszą linią). Na bardzo wąskim ekranie kolumna godziny zajmuje 52 px, więc treść zostaje ok. 280 px. Nie testowano wizualnie w przeglądarce, tylko przez e2e (układ nie jest tam sprawdzany).
+
+**Testy.** `e2e/study.spec.ts` (37/37 razem z `desktop-columns.spec.ts`, w tym telefony iPhone 14 i Pixel 7). Selektory używają `data-journal-entry`, nie klas. Typecheck i lint pliku czyste.
+
+**Commit.** `162dcdf` (2026-10-16).
+
 ---
 
 ## Praca → Dziennik: raport do szefa i grupy w WhatsApp
