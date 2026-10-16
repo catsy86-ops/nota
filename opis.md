@@ -954,7 +954,6 @@ urządzeniami.
 - Usunięcie opcji z listy nie kasuje wartości, które jej używały — taka wartość wyświetla się jako pusta (nie da się jej
   już wybrać), ale zostaje w dokumencie do czasu wyczyszczenia.
 - Limity: 30 pól, nazwa 40 znaków, tekst 500, 20 opcji po 40 znaków, liczba do ±10¹².
-- Eksport Markdown/ZIP i wyszukiwarka właściwości jeszcze nie widzą (ani sortowania/filtrów po polach).
 - Próg `eagerJsGzip` w `e2e/bundle.spec.ts` podniesiony z 376 do 384 KB (zmierzone 380 KB po tej funkcji — koszt
   głównie w eager `NoteTable`/Yjs); do odzyskania przy LazyMotion i deduplikacji Radix.
 
@@ -968,8 +967,28 @@ pola i wartość po odświeżeniu, walidacja liczby i wybór z listy, usunięcie
 
 ---
 
-- **Eksport.** Markdown (`exportToMarkdown`) dostaje wiersz `*Pole: wartość · …*` pod przypomnieniem, ZIP (`noteToMarkdownFile`, `buildNotesZip`, `downloadNotesZip`) klucz frontmatter `props` z mapą JSON (poprawny YAML). Jeden klucz, a nie klucz na pole, bo nazwa pola (np. `title`) zderzyłaby się z kluczami importu. Pola puste pomijane, kolejność jak w tabeli, liczby z przecinkiem jak w UI (`filledPropEntries` w `noteProps.ts`). Import Markdown zna tylko swoje klucze, więc `props` przy odczycie ignoruje — pola nie wracają z ZIP-a — odzyskanie to osobny krok.
+- **Eksport.** Markdown (`exportToMarkdown`) dostaje wiersz `*Pole: wartość · …*` pod przypomnieniem, ZIP (`noteToMarkdownFile`, `buildNotesZip`, `downloadNotesZip`) klucz frontmatter `props` z mapą JSON (poprawny YAML). Jeden klucz, a nie klucz na pole, bo nazwa pola (np. `title`) zderzyłaby się z kluczami importu. Pola puste pomijane, kolejność jak w tabeli, liczby z przecinkiem jak w UI (`filledPropEntries` w `noteProps.ts`). Import czyta ten klucz z powrotem (patrz „Import z ZIP-a” niżej).
   Testy: `exportZip.test.ts`, `noteProps.test.ts`.
+
+**Import z ZIP-a.** Pola z frontmattera `props` wracają do właściwości przy imporcie Markdown. Pole dopasowuje się do
+istniejącej definicji po nazwie (bez wielkości liter i spacji na brzegach). Nieznane pole powstaje na nowo, o ile
+mieści się w limicie 30 pól; typ wybiera się z wartości: wszystkie liczby (także z przecinkiem) → Liczba, wszystkie
+`YYYY-MM-DD` → Data, w pozostałych przypadkach → Tekst. Pola typu Wybór nie da się wywnioskować, więc wartość trafia
+tylko do istniejącej definicji wyboru i tylko wtedy, gdy opcja jest na liście; inaczej jest pomijana. Import tworzy
+definicje przed notatkami i zapisuje wartości tą samą walidacją co UI (`parsePropInput`). Cofnięcie importu usuwa
+utworzone przez niego definicje, ale tylko te, których żadna notatka nie używa (`ImportResult.createdPropDefIds`).
+
+- `src/lib/import/markdown.ts`: `parsePropsFrontmatter` (JSON → mapa nazwa → wartość; zły JSON, tablica i wartości
+  innych typów są pomijane; klucz `__proto__` odrzucany), `parseMarkdownNote` dokłada `props` tylko gdy są.
+- `src/lib/import/types.ts`: `ParsedNote.props?: Record<string, PropValue>` (klucz to nazwa pola, nie id).
+- `src/lib/import/commit.ts`: `inferPropType`, `resolvePropDefs`, obsługa `props` w `commitImportPlan`, usuwanie w
+  `undoImport`.
+- `src/lib/noteProps.ts`: `propNameKey` (wspólne porównanie nazw), `findPropDefByName`.
+
+Import nie zmienia ani nie usuwa istniejących pól — dopisuje tylko brakujące definicje i wartości notatek importowanych.
+
+  Testy: `src/lib/import/markdown.test.ts` (parser i pełny obieg eksport → parser), `src/lib/import/commit.test.ts`
+  (dopasowanie po nazwie, typy, opcje wyboru, cofnięcie, pole użyte poza importem).
 
 **Sortowanie i filtr po polach.** Nagłówek kolumny pola sortuje tabelę (`SortKey` = `prop:<id>`). Menu „Sortuj wg”
 na komputerze i sekcja „Sortuj wg” w arkuszu „Widok i kolumny” na telefonie biorą opcje z jednego miejsca
@@ -990,14 +1009,15 @@ Czytnik ma sekcję „Pola” pod załącznikami (`NoteReader.tsx`): każde pole
 
 **Ograniczenia i pułapki.** Sortowanie po polu obowiązuje we wszystkich widokach z listą, nie tylko w tabeli. Sekcja
 "Sortuj wg" w arkuszu telefonu pojawia się tam, gdzie pokazuje się menu sortowania (`groupable` w `ViewSheet.tsx`).
-Import pól z ZIP-a nadal nie działa (klucz `props` jest ignorowany).
+Import pól z ZIP-a działa (patrz wyżej). Z `props` w imporcie Markdown nie idą pola z pojedynczego pliku `*Pole: …*`
+(wiersz eksportu Markdown) — tylko frontmatter ZIP-a.
 
 **Testy.** `src/lib/searchQuery.test.ts` (operator `pole:`), `src/lib/noteProps.test.ts` (`comparePropsForSort`,
 `filledPropEntries`), `e2e/note-props-view.spec.ts` (sortowanie i filtr na komputerze; wartości pod tytułem,
 edycja w czytniku i sortowanie w arkuszu na telefonie), `e2e/note-props.spec.ts` (istniejący), `e2e/bundle.spec.ts`
 (budżet wejściowego JS).
 
-**Commit.** `a5976a1` (2026-10-16) — pola i tabela; eksport MD/ZIP `fd377a5` (2026-10-16); sortowanie, filtr i telefon: `5bb3966` (2026-10-16).
+**Commit.** `a5976a1` (2026-10-16) — pola i tabela; eksport MD/ZIP `fd377a5` (2026-10-16); sortowanie, filtr i telefon: `5bb3966` (2026-10-16); import pól z ZIP-a `f64dd9d` (2026-10-16).
 
 ## Grafik — czytelność drobnych znaczników
 
