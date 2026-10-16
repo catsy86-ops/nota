@@ -2490,40 +2490,52 @@ Nie sprawdzone z prawdziwym mikrofonem.
 
 **Commit.** `b65d58c` (kształtki, 2026-10-16), `b61b737` (cały wpis, 2026-10-16).
 
-### Przypomnienie „Raport dnia gotowy”
+### Przypomnienia o raporcie (dzień i tydzień)
 
-**Co robi.** Raz dziennie, po końcu dzisiejszej zmiany z Grafiku (bez zmiany albo przy nieobecności i zmianie przez
-północ — o 17:00), jeśli dziś są wpisy w dzienniku, aplikacja pokazuje dymek „Raport dnia gotowy” i — przy zgodzie —
-powiadomienie systemowe. „Otwórz raport” przechodzi do Pracy i otwiera okno raportu z dzisiejszymi wpisami ostatniej
-budowy, skąd raport idzie do szefa (WhatsApp) albo do grupy. Powiadomienie systemowe otwiera `/praca?raport=dzis`.
+**Co robi.**
+- **Raport dnia** — raz dziennie, po końcu dzisiejszej zmiany z Grafiku (bez zmiany albo przy nieobecności i zmianie
+  przez północ — o 17:00), jeśli dziś są wpisy: dymek „Raport dnia gotowy” i — przy zgodzie — powiadomienie systemowe.
+- **Raport tygodnia** — w piątek po końcu dnia pracy (albo w sobotę/niedzielę, jeśli w piątek nie było okazji), raz na
+  tydzień, gdy w ostatnich 7 dniach są wpisy: „Raport tygodnia gotowy”. Tego dnia zastępuje raport dnia (obejmuje dziś).
+- „Otwórz raport” przechodzi do Pracy i otwiera okno raportu z tym zakresem: dzień ostatniego wpisu albo 7 dni.
+  Przy kilku budowach (dziś / w tygodniu) od razu „Wszystkie budowy”, żeby żadna nie wypadła. Stamtąd raport idzie
+  do szefa (WhatsApp) albo do grupy jednym stuknięciem.
+- Powiadomienie systemowe otwiera `/praca?raport=dzis`, `dzis-wszystkie`, `tydzien` albo `tydzien-wszystkie`.
 
 **Gdzie jest.**
-- `src/lib/study/reportNudge.ts`: `reportDueMinute(shifts, key)`, `dailyReportNudge(journal, shifts, now, lastNudged)`,
-  `REPORT_NUDGE_KEY` (`kaczy.study.reportNudged.v1` — dzień ostatniego przypomnienia), `REPORT_NUDGE_FALLBACK` (`17:00`).
-- `src/lib/study/reportLink.ts`: prośba o otwarcie raportu (`requestJournalReport`, `consumeJournalReportRequest`,
-  `useJournalReportRequest`), parametr `JOURNAL_REPORT_PARAM` (`raport`).
-- `src/components/study/DailyReportNudge.tsx`: sprawdzenie przy starcie i co minutę; montowany w `src/pages/Index.tsx`
-  leniwie (`lazy`), z `onOpenWork` → widok `study`.
-- `StudyView.tsx` przełącza na Dziennik i zdejmuje `?raport=` z adresu; `StudyJournal.tsx` otwiera okno raportu.
+- `src/lib/study/reportNudge.ts`: `reportDueMinute`, `dailyReportNudge`, `weeklyReportNudge`, `weekKeyOf`;
+  klucze `REPORT_NUDGE_KEY` (`kaczy.study.reportNudged.v1`, dzień) i `WEEK_REPORT_NUDGE_KEY`
+  (`kaczy.study.weekReportNudged.v1`, poniedziałek tygodnia); `REPORT_NUDGE_FALLBACK` (`17:00`).
+- `src/lib/study/reportLink.ts`: prośba `JournalReportRequest { allSites, range }` (`requestJournalReport`,
+  `consumeJournalReportRequest`, `useJournalReportRequest`), parametr `raport` (`reportParam` / `parseReportParam`).
+- `src/components/study/DailyReportNudge.tsx`: sprawdzenie przy starcie i co minutę (najpierw tydzień, potem dzień);
+  montowany leniwie w `src/pages/Index.tsx` (`onOpenWork` → widok `study`).
+- `StudyView.tsx` przełącza na Dziennik i zdejmuje `?raport=` z adresu; `StudyJournal.tsx` otwiera okno raportu
+  z `initialRequest`; `JournalReport.tsx` (`JournalReportDialog`): `allSites` → „Wszystkie budowy”, `week` → preset 7 dni.
 
-**Jak działa i dlaczego.** Godzina z Grafiku, bo to koniec dnia pracy; stała godzina, gdy Grafiku brak. Raz dziennie
-(klucz w `localStorage`), żeby nie nękać. Komponent czyta dziennik przez `yStudy` z `data.ts`, a nie przez `store.ts`
-— ten importuje materiał do nauki, który nie musi się ładować przy każdym starcie aplikacji. Okno raportu samo wybiera
-ostatnią budowę i dzień jej ostatniego wpisu, więc przy dzisiejszych wpisach otwiera się raport z dziś.
+**Jak działa i dlaczego.** Godzina z Grafiku, bo to koniec dnia pracy; stała godzina, gdy Grafiku brak. Raz dziennie /
+raz na tydzień (klucze w `localStorage`), żeby nie nękać. W piątek tydzień ma pierwszeństwo — szef dostaje jedno
+podsumowanie zamiast dwóch. Komponent czyta dziennik przez `yStudy` z `data.ts`, a nie przez `store.ts` — ten importuje
+materiał do nauki, który nie musi się ładować przy każdym starcie aplikacji. Zwykłe otwarcie raportu (przycisk, karta
+budowy) czyści prośbę, więc nie dziedziczy zakresu z przypomnienia.
 
 **Ograniczenia i pułapki.**
-- Bez serwera push: przypomnienie działa tylko przy otwartej aplikacji (jak reszta przypomnień).
+- Bez serwera push: przypomnienia działają tylko przy otwartej aplikacji (jak reszta przypomnień).
 - Wysłanie do szefa zostaje jednym stuknięciem w oknie raportu — automatyczna wysyłka WhatsApp wymagałaby serwera.
-- Gdy dziś były wpisy na kilku budowach, raport otwiera się na ostatniej; inną wybiera się w oknie.
+- Tydzień = ostatnie 7 dni (jak preset „7 dni”), nie tydzień kalendarzowy od poniedziałku.
+- e2e bez stałego zegara: w piątek po 17:00 albo w weekend dymek może się pojawić w niezwiązanym teście, który tworzy
+  wpisy (`docs/GOTCHAS.md`). Testy przypomnień ustawiają `page.clock`.
 - Budżet paczki (`e2e/bundle.spec.ts`) był już przekroczony przed tą zmianą: wejściowy JS 388 KB gzip (próg 384),
-  precache 4,32 MB (próg 4,3). Ta zmiana dokłada ~1 KB (leniwy import). Do decyzji: odchudzić wejście albo podnieść próg.
+  precache 4,32 MB (próg 4,3). Komponent dokłada ~1 KB (leniwy import). Do decyzji: odchudzić wejście albo podnieść próg.
 
-**Testy.** `src/lib/study/reportNudge.test.ts` (7: godzina z Grafiku, nieobecność i brak zmiany, zmiana przez północ,
-po i przed końcem zmiany, raz dziennie, bez wpisów). `e2e/report-nudge.spec.ts` (dymek po 17:00 prowadzi do raportu z
-dziś bez wczorajszego wpisu i nie wraca po przejściu na stronę główną; przed końcem dnia go nie ma; `?raport=dzis`
-otwiera raport i znika z adresu). Testy „nie ma dymku” czekają 1,5 s — nie wykluczają dymku pokazanego później.
+**Testy.** `src/lib/study/reportNudge.test.ts` (11: godzina z Grafiku, nieobecność i brak zmiany, zmiana przez północ,
+po i przed końcem zmiany, raz dziennie, bez wpisów; tydzień: piątek po pracy, przed, inny dzień, już przypomniane,
+pusty tydzień, weekend, klucz tygodnia; parametr adresu w obie strony). `e2e/report-nudge.spec.ts` (6: dymek dnia
+prowadzi do raportu z dziś i nie wraca; przed końcem dnia go nie ma; `?raport=dzis`; kilka budów → „Wszystkie budowy”;
+piątek → raport tygodnia bez raportu dnia; `?raport=tydzien-wszystkie`). Testy „nie ma dymku” czekają 1,5 s — nie
+wykluczają dymku pokazanego później.
 
-**Commit.** `5d6008e` (2026-10-16).
+**Commit.** `5d6008e` (raport dnia, 2026-10-16), `83a6383` (tydzień, kilka budów, 2026-10-16).
 
 ### Przypomnienia nad listą
 

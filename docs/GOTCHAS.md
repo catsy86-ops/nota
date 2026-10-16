@@ -27,6 +27,9 @@ i sprawdzenie, jak to zweryfikować. Historia decyzji: [`roadmap.md`](../roadmap
   właściwy typecheck to `tsc --noEmit -p tsconfig.app.json`.
 - **Asercje tekstowe po polsku.** `getByText("własny")` trafia też w dłuższe słowa (np. „własnych”) i w ukryte
   zakładki Radixa. W testach używaj `{ exact: true }` albo ról.
+- **Przypomnienia o raporcie w e2e.** `DailyReportNudge` sprawdza dziennik przy starcie i co minutę. Test bez
+  `page.clock`, który tworzy wpisy w dzienniku, w piątek po 17:00 albo w weekend może dostać dymek „Raport … gotowy”.
+  Testy z dymkami: ustaw stały zegar na dzień roboczy przed 17:00 (np. środa 14.10.2026, 12:00).
 - **Budżet bundla.** `e2e/bundle.spec.ts` pilnuje wejściowego JS (gzip). Lazy-ładowane karty widoków
   nie wchodzą do budżetu; nowy kod dodawany statycznie do `Index.tsx` — tak.
 
