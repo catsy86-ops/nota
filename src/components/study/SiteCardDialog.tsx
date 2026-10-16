@@ -1,14 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { Archive, ArchiveRestore, FileText, ListFilter, MapPin } from "lucide-react";
+import { Archive, ArchiveRestore, FileText, ListFilter, MapPin, Package } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { haptic } from "@/lib/haptics";
+import { useShifts } from "@/lib/shifts";
+import { pluralPl } from "@/lib/plural";
+import { TOPICS } from "@/lib/study/content";
 import { saveSiteCard, setSiteArchived, useStudy } from "@/lib/study/store";
 import { findSiteByName, siteDirectory, SITE_FIELD_MAX, SITE_NAME_MAX } from "@/lib/study/sites";
 import { entriesPl, problemsPl } from "@/lib/study/journalView";
-import { periodLabel, dayKeyOf } from "@/lib/study/report";
+import { buildJournalReport, periodLabel, dayKeyOf } from "@/lib/study/report";
+import { downloadSiteZip } from "@/lib/study/siteZip";
+
+const topicTitle = (id: string) => TOPICS.find((t) => t.id === id)?.title ?? null;
 
 const fieldClass =
   "w-full rounded-lg border border-border bg-background px-3 py-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring sm:text-sm";
@@ -28,9 +34,11 @@ export function SiteCardDialog({
   onReport: (siteId: string) => void;
 }) {
   const study = useStudy();
+  const shifts = useShifts();
   const dir = useMemo(() => siteDirectory(study.sites, study.journal), [study.sites, study.journal]);
   const site = siteId ? dir.find((s) => s.id === siteId) ?? null : null;
   const [form, setForm] = useState({ name: "", address: "", investor: "" });
+  const [zipping, setZipping] = useState(false);
 
   useEffect(() => {
     if (site) setForm({ name: site.name, address: site.address, investor: site.investor });
@@ -48,6 +56,34 @@ export function SiteCardDialog({
     if (saveSiteCard(site.id, form)) {
       haptic("success");
       toast.success("Zapisano kartę budowy");
+    }
+  }
+
+  /** Cała budowa (od pierwszego do ostatniego wpisu) w jednym ZIP: raport.md i zdjęcia. */
+  async function zip() {
+    if (!site || site.first == null || site.last == null) return;
+    setZipping(true);
+    try {
+      const report = buildJournalReport(study.journal, {
+        siteId: site.id,
+        siteCard: site,
+        from: dayKeyOf(site.first),
+        to: dayKeyOf(site.last),
+        shifts,
+        topicTitle,
+      });
+      const res = await downloadSiteZip(report);
+      haptic("success");
+      const photos = `${res.photos} ${pluralPl(res.photos, ["zdjęcie", "zdjęcia", "zdjęć"])}`;
+      toast.success(
+        res.missingPhotos > 0
+          ? `Paczka gotowa: raport i ${photos}. ${res.missingPhotos} bez bajtów na tym urządzeniu — pominięte.`
+          : `Paczka gotowa: raport i ${photos}`,
+      );
+    } catch {
+      toast.error("Nie udało się przygotować paczki");
+    } finally {
+      setZipping(false);
     }
   }
 
@@ -130,6 +166,15 @@ export function SiteCardDialog({
               </Button>
               <Button variant="outline" onClick={() => onReport(site.id)} disabled={site.count === 0} className="coarse:h-11">
                 <FileText className="mr-1.5 h-4 w-4" aria-hidden />Raport
+              </Button>
+              <Button
+                variant="outline"
+                onClick={zip}
+                disabled={site.count === 0 || zipping}
+                title="Raport i zdjęcia całej budowy w jednym pliku ZIP"
+                className="col-span-2 coarse:h-11"
+              >
+                <Package className="mr-1.5 h-4 w-4" aria-hidden />{zipping ? "Pakuję…" : "Paczka ZIP"}
               </Button>
               <Button variant="ghost" onClick={toggleArchive} className="col-span-2 text-muted-foreground coarse:h-11">
                 {site.archived === undefined

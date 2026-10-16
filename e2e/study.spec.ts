@@ -702,6 +702,16 @@ test("dziennik: karta budowy — nazwa, adres, inwestor, raport z karty i archiw
   await page.keyboard.press("Escape");
   await expect(report).toHaveCount(0);
 
+  // Paczka ZIP z karty: plik pobiera się od razu, nazwa z tytułu raportu.
+  await journal.getByRole("button", { name: "Dom Nowaków: karta budowy" }).click();
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    card.getByRole("button", { name: "Paczka ZIP" }).click(),
+  ]);
+  expect(download.suggestedFilename()).toMatch(/^Raport Dom Nowaków .*\.zip$/);
+  await expect(page.getByText(/^Paczka gotowa: raport i 0 zdjęć/)).toBeVisible();
+  await page.keyboard.press("Escape");
+
   // Nowa nazwa w pigułkach arkusza i filtra.
   await journal.getByRole("button", { name: "Wpis", exact: true }).click();
   const sheet = page.getByTestId("journal-entry-sheet");
