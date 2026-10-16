@@ -70,3 +70,28 @@ describe("przypomnienia dziennika", () => {
     expect(r).toEqual([{ kind: "no-test", siteId: "x", site: "Nowa nazwa" }]);
   });
 });
+
+describe("przypomnienie: zamówione, a nie dojechało", () => {
+  const card = (id: string, shortages: NonNullable<import("./sites").SiteCard["shortages"]>, extra: Partial<import("./sites").SiteCard> = {}) =>
+    ({ id, name: id === "k1" ? "Lipowa 5" : "Polna 2", address: "", investor: "", created: 0, shortages, ...extra });
+  const item = (id: string, text: string, status: "missing" | "ordered" | "delivered", changedDaysAgo: number) =>
+    ({ id, text, qty: "", status, at: NOW - 10 * DAY, changed: NOW - changedDaysAgo * DAY });
+
+  it("zamówione ponad 3 dni temu, niedostarczone — jedno przypomnienie na budowę z nazwami", () => {
+    const sites = {
+      k1: card("k1", [item("a", "Klej PCV", "ordered", 4), item("b", "Rura PEX 16", "ordered", 5), item("c", "Otulina", "ordered", 1), item("d", "Kolano", "delivered", 9)]),
+      k2: card("k2", [item("e", "Syfon", "missing", 9)]),
+    };
+    expect(studyReminders([], NOW, sites)).toEqual([{ kind: "late-order", siteId: "k1", site: "Lipowa 5", items: ["Klej PCV", "Rura PEX 16"] }]);
+  });
+
+  it("budowa w archiwum i świeże zamówienia — bez przypomnienia", () => {
+    expect(studyReminders([], NOW, { k1: card("k1", [item("a", "Klej PCV", "ordered", 9)], { archived: NOW }) })).toEqual([]);
+    expect(studyReminders([], NOW, { k1: card("k1", [item("a", "Klej PCV", "ordered", 2)]) })).toEqual([]);
+  });
+
+  it("bez daty zmiany liczy się od dopisania", () => {
+    const old = { id: "a", text: "Klej PCV", qty: "", status: "ordered" as const, at: NOW - 5 * DAY };
+    expect(studyReminders([], NOW, { k1: card("k1", [old]) })).toHaveLength(1);
+  });
+});
