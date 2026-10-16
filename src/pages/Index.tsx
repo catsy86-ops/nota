@@ -4,7 +4,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
 import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange, BriefcaseBusiness, HardHat, Inbox } from "lucide-react";
 import { InboxCapture } from "@/components/InboxCapture";
-import { readerNeighbors } from "@/lib/readerStep";
+import { useReaderNav } from "@/hooks/useReaderNav";
 import { setSearchTerms } from "@/lib/searchTerms";
 import { highlightTokens } from "@/lib/searchQuery";
 import { isInboxNote } from "@/lib/inbox";
@@ -22,9 +22,9 @@ import { groupReminders } from "@/lib/reminderAgenda";
 import { buildWikiIndex, resolveWikiTarget, splitWikiTarget, wikiIndexKey } from "@/lib/wikiLinks";
 import { requestHeading } from "@/lib/wikiHeading";
 import { useLatestRef, useStableByKey } from "@/hooks/useLatestRef";
-import { useGridNavPreviewId, getGridNavFocusedId, setGridNavPreview, setGridNavFocus } from "@/lib/gridKeyboardNav";
+import { setGridNavPreview, setGridNavFocus } from "@/lib/gridKeyboardNav";
 import { copyNoteToClipboard } from "@/lib/noteMarkdown";
-import { NoteReader, type ReaderMode } from "@/components/NoteReader";
+import { NoteReader } from "@/components/NoteReader";
 import { playEnter, tween } from "@/lib/motion";
 import { useNavigate, useNavigationType } from "react-router-dom";
 import { claimShare, parseShare, SHARE_PATH } from "@/lib/shareTarget";
@@ -424,45 +424,13 @@ const Index = () => {
     } else openNote(target.id);
   }, [allNotesForLinksRef, openNote]);
 
-  // Czytnik: podgląd (Spacja na kaflu, stan w `gridKeyboardNav`) albo prezentacja.
-  const previewId = useGridNavPreviewId();
-  const readerId = presentingNoteId ?? previewId;
-  const readerNote = useMemo(
-    // Czytnik, prezentacja i podgląd nie otwierają notatek prywatnych (nie ma jak ich bezpiecznie pokazać).
-    () => (readerId ? [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === readerId && !n.locked) ?? null : null),
-    [readerId, notes, archivedNotes, trashedNotes],
-  );
-  // „Bieżąca” notatka dla palety poleceń: otwarta w czytniku, jedyna zaznaczona albo z fokusem.
-  // Fokus siatki czytamy tylko po otwarciu palety — subskrypcja przerysowywałaby
-  // całą stronę przy każdej strzałce (patrz selektory w `gridKeyboardNav`).
   // Frazy wyszukiwania dla wyróżniania w kaflach (magazyn `searchTerms`, bez przerysowania całej listy).
   useEffect(() => { setSearchTerms(highlightTokens(search)); }, [search]);
 
-  // Sąsiedzi czytnika w liście, którą użytkownik widzi (bez notatek prywatnych).
-  const readerSteps = useMemo(() => {
-    const ids = visibleNotes.filter((n) => !n.locked).map((n) => n.id);
-    return readerNeighbors(ids, readerId ?? null);
-  }, [visibleNotes, readerId]);
-  const copyTarget = useMemo(() => {
-    if (!paletteOpen) return null;
-    const id = readerId ?? (selectedIds.size === 1 ? [...selectedIds][0] : getGridNavFocusedId());
-    return id ? [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === id && !n.locked) ?? null : null;
-  }, [paletteOpen, readerId, selectedIds, notes, archivedNotes, trashedNotes]);
-  const closeReader = useCallback(() => { setPresentingNoteId(null); setGridNavPreview(null); }, []);
-  const showInReader = useCallback((id: string, mode: ReaderMode) => {
-    if (mode === "present") { setGridNavPreview(null); setPresentingNoteId(id); }
-    else { setPresentingNoteId(null); setGridNavPreview(id); }
-  }, []);
-  const stepReader = useCallback((dir: -1 | 1) => {
-    const target = dir < 0 ? readerSteps.prev : readerSteps.next;
-    if (!target) return;
-    showInReader(target, presentingNoteId ? "present" : "preview");
-  }, [readerSteps, presentingNoteId, showInReader]);
-  const editFromReader = useCallback((id: string) => {
-    closeReader();
-    // Kafel musi najpierw wrócić na wierzch po zamknięciu czytnika.
-    setTimeout(() => openNote(id, false, true), 50);
-  }, [closeReader, openNote]);
+  // Czytnik i prezentacja (logika w `useReaderNav`).
+  const { previewId, readerId, readerNote, readerSteps, copyTarget, closeReader, showInReader, stepReader, editFromReader } = useReaderNav({
+    notes, archivedNotes, trashedNotes, visibleNotes, presentingNoteId, setPresentingNoteId, paletteOpen, selectedIds, openNote,
+  });
 
   const toggleSelect = useCallback((id: string, shiftKey: boolean) => {
     setSelectedIds((prev) => {
