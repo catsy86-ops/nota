@@ -53,3 +53,21 @@ test("protokół odbioru: dane z karty, etap, próba szczelności, uwagi i podpi
   expect(printed).toContain("Wykonawca — data i podpis");
   expect(printed).toContain("Inwestor — data i podpis");
 });
+
+test("tekst protokołu: bez udostępniania systemowego kopiuje się do schowka", async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    Object.defineProperty(navigator, "share", { configurable: true, value: undefined });
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async (t: string) => { w.__copied = t; } } });
+  });
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
+  const card = page.getByTestId("site-card");
+  await card.getByRole("button", { name: "Tekst protokołu" }).click();
+  await expect(page.getByText("Skopiowano tekst protokołu")).toBeVisible();
+  const copied = await page.evaluate(() => (window as unknown as { __copied: string }).__copied);
+  expect(copied.startsWith("# Protokół odbioru instalacji wod-kan — Lipowa 5")).toBe(true);
+  expect(copied).toContain("Próba szczelności (woda, 9 bar, 30 min, spadek 0 bar): szczelna");
+  expect(copied).toContain("## Uwagi\n- 12.10.2026 Brak rewizji w łazience");
+});

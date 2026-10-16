@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Archive, ArchiveRestore, ClipboardCheck, FileText, ListFilter, MapPin, Package } from "lucide-react";
+import { Archive, ArchiveRestore, ClipboardCheck, FileText, ListFilter, MapPin, Package, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -18,7 +18,7 @@ import { SiteStagesPanel } from "./SiteStagesPanel";
 import { SiteShortagesPanel } from "./SiteShortagesPanel";
 import { PrintRoot } from "./PrintRoot";
 import { HandoverPaper } from "./HandoverPaper";
-import { buildHandover, type Handover } from "@/lib/study/handover";
+import { buildHandover, handoverText, type Handover } from "@/lib/study/handover";
 
 const topicTitle = (id: string) => TOPICS.find((t) => t.id === id)?.title ?? null;
 
@@ -93,6 +93,22 @@ export function SiteCardDialog({
       toast.error("Nie udało się przygotować paczki");
     } finally {
       setZipping(false);
+    }
+  }
+
+  /** Tekst protokołu (bez zdjęć): udostępnianie z telefonu, a bez niego — schowek. */
+  async function shareHandover() {
+    if (!site) return;
+    const text = handoverText(buildHandover(study.journal, site));
+    const copy = async () => {
+      try { await navigator.clipboard.writeText(text); toast.success("Skopiowano tekst protokołu"); } catch { toast.error("Nie udało się skopiować"); }
+    };
+    if (typeof navigator.share !== "function") { await copy(); return; }
+    try {
+      await navigator.share({ title: `Protokół odbioru — ${site.name}`, text });
+    } catch (e) {
+      // Anulowanie okna udostępniania to nie błąd; inny problem — kopia do schowka.
+      if ((e as { name?: string } | null)?.name !== "AbortError") await copy();
     }
   }
 
@@ -196,9 +212,18 @@ export function SiteCardDialog({
                 onClick={() => setHandover(buildHandover(study.journal, site))}
                 disabled={site.count === 0 && !site.stages}
                 title="Etapy, próby szczelności, uwagi i zdjęcia na jednej kartce z miejscem na podpisy — wydruk albo PDF"
-                className="col-span-2 coarse:h-11"
+                className="coarse:h-11"
               >
                 <ClipboardCheck className="mr-1.5 h-4 w-4" aria-hidden />Protokół odbioru
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => void shareHandover()}
+                disabled={site.count === 0 && !site.stages}
+                title="Ten sam protokół jako tekst — do wiadomości dla inwestora albo szefa"
+                className="coarse:h-11"
+              >
+                <Share2 className="mr-1.5 h-4 w-4" aria-hidden />Tekst protokołu
               </Button>
               <Button variant="ghost" onClick={toggleArchive} className="col-span-2 text-muted-foreground coarse:h-11">
                 {site.archived === undefined
