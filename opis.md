@@ -2125,6 +2125,7 @@ Pola przyjmują przecinek i kropkę; wyniki po polsku, dużym krojem mono (czyta
 **Testy.** `src/lib/study/calc.test.ts` (6: liczby z przecinkiem, zapis po polsku, spadek w obie strony, podpowiedź
 2–3%, próba wodna, pojemność i wymiary rur). `e2e/calculators.spec.ts` (spadek w obie strony z podpowiedzią, próba
 wodna, pojemność dwóch odcinków). Regresja: `study.spec.ts` 29/29 (z kalkulatorami), układ telefonu `iphone-14` 19/19.
+Zrzuty z telefonu (390 px) obejrzane; opis rury w polu wyboru skrócony do „16×2 · 12 mm”, bo się ucinał (`c2c112b`).
 
 **Commit.** `7740d29` (2026-10-16).
 
