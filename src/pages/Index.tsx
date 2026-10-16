@@ -4,6 +4,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
 import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange, BriefcaseBusiness, HardHat, Inbox } from "lucide-react";
 import { InboxCapture } from "@/components/InboxCapture";
+import { readerNeighbors } from "@/lib/readerStep";
 import { isInboxNote } from "@/lib/inbox";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useNoteVersions } from "@/hooks/useNoteVersions";
@@ -432,6 +433,11 @@ const Index = () => {
   // „Bieżąca” notatka dla palety poleceń: otwarta w czytniku, jedyna zaznaczona albo z fokusem.
   // Fokus siatki czytamy tylko po otwarciu palety — subskrypcja przerysowywałaby
   // całą stronę przy każdej strzałce (patrz selektory w `gridKeyboardNav`).
+  // Sąsiedzi czytnika w liście, którą użytkownik widzi (bez notatek prywatnych).
+  const readerSteps = useMemo(() => {
+    const ids = visibleNotes.filter((n) => !n.locked).map((n) => n.id);
+    return readerNeighbors(ids, readerId ?? null);
+  }, [visibleNotes, readerId]);
   const copyTarget = useMemo(() => {
     if (!paletteOpen) return null;
     const id = readerId ?? (selectedIds.size === 1 ? [...selectedIds][0] : getGridNavFocusedId());
@@ -442,6 +448,11 @@ const Index = () => {
     if (mode === "present") { setGridNavPreview(null); setPresentingNoteId(id); }
     else { setPresentingNoteId(null); setGridNavPreview(id); }
   }, []);
+  const stepReader = useCallback((dir: -1 | 1) => {
+    const target = dir < 0 ? readerSteps.prev : readerSteps.next;
+    if (!target) return;
+    showInReader(target, presentingNoteId ? "present" : "preview");
+  }, [readerSteps, presentingNoteId, showInReader]);
   const editFromReader = useCallback((id: string) => {
     closeReader();
     // Kafel musi najpierw wrócić na wierzch po zamknięciu czytnika.
@@ -1129,6 +1140,9 @@ const Index = () => {
           knownTitles={knownTitles}
           wikiIndex={wikiIndex}
           onClose={closeReader}
+          onStep={stepReader}
+          canPrev={!!readerSteps.prev}
+          canNext={!!readerSteps.next}
           onEdit={editFromReader}
           onShow={showInReader}
           resolveTitle={(title) => resolveWikiTarget(title, allNotesForLinks)?.id}

@@ -3,7 +3,7 @@ import { onHeadingRequest, requestHeading, scrollToHeading, takePendingHeading }
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useOriginFromTile } from "@/hooks/useOriginFromTile";
 import { m as motion } from "framer-motion";
-import { ChevronRight, Copy, CornerDownRight, FilePlusCorner, Link2, Maximize2, Minimize2, Minus, Pencil, Plus, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Copy, CornerDownRight, FilePlusCorner, Link2, Maximize2, Minimize2, Minus, Pencil, Plus, X } from "lucide-react";
 import { ancestorsOf, canSetParent, childrenOf, parentIdOf } from "@/lib/subpages";
 import { setParent } from "@/lib/subpageActions";
 import { useNotesContext } from "@/hooks/NotesProvider";
@@ -51,6 +51,10 @@ interface Props {
   knownTitles: Set<string>;
   wikiIndex: WikiIndex;
   onClose: () => void;
+  /** Krok do sąsiedniej notatki z listy (←/→ i przyciski); brak = czytnik bez kroku. */
+  onStep?: (dir: -1 | 1) => void;
+  canPrev?: boolean;
+  canNext?: boolean;
   onEdit: (id: string) => void;
   /** Przejście do innej notatki (wikilink, „Linkują tutaj”, przełączenie trybu). */
   onShow: (id: string, mode: ReaderMode) => void;
@@ -91,7 +95,7 @@ function buildSnippets(text: string, tokens: string[], max = 3) {
   return out;
 }
 
-export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, onClose, onEdit, onShow, resolveTitle, onToggleChecklist, propDefs = [], onUpdateProps }: Props) {
+export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, onClose, onStep, canPrev = false, canNext = false, onEdit, onShow, resolveTitle, onToggleChecklist, propDefs = [], onUpdateProps }: Props) {
   useOverlayHistory(true, onClose);
   const present = mode === "present";
   const [zoom, setZoom] = useState(ZOOM_DEFAULT);
@@ -124,6 +128,22 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [present, note.id, canEdit, onClose, onEdit]);
+
+  // ←/→ przechodzą do sąsiedniej notatki w obu trybach (podgląd i prezentacja).
+  useEffect(() => {
+    if (!onStep) return;
+    function onArrow(e: KeyboardEvent) {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+      if (e.key === "ArrowLeft") onStep?.(-1);
+      else if (e.key === "ArrowRight") onStep?.(1);
+      else return;
+      e.preventDefault();
+    }
+    window.addEventListener("keydown", onArrow);
+    return () => window.removeEventListener("keydown", onArrow);
+  }, [onStep]);
 
   const tokens = highlightTokens(searchQuery);
   const snippets = buildSnippets(note.content || "", tokens);
@@ -282,6 +302,16 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
               <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs" onClick={() => onEdit(note.id)} title="Edytuj (Enter)">
                 <Pencil className="w-3.5 h-3.5" /> Edytuj
               </Button>
+            )}
+            {onStep && (
+              <>
+                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onStep(-1)} disabled={!canPrev} title="Poprzednia notatka (←)" aria-label="Poprzednia notatka">
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onStep(1)} disabled={!canNext} title="Następna notatka (→)" aria-label="Następna notatka">
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </>
             )}
             <Button
               size="icon" variant="ghost" className="h-8 w-8"

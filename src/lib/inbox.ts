@@ -1,11 +1,9 @@
-import type { Note } from "@/hooks/useNotes";
-
 /**
  * Skrzynka: notatki „do posortowania” — bez folderu, bez etykiet i nie będące podnotatką.
  * Bez osobnego pola w danych: skrzynka to reguła nad istniejącymi notatkami, więc
  * sortowanie (przeniesienie do folderu albo nadanie etykiety) od razu ją opróżnia.
  */
-export function isInboxNote(n: Pick<Note, "folderId" | "labels" | "parentId">): boolean {
+export function isInboxNote(n: { folderId?: string | null; labels: readonly string[]; parentId?: string | null }): boolean {
   return !n.folderId && n.labels.length === 0 && !n.parentId;
 }
 
