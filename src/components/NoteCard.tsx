@@ -1,9 +1,8 @@
-import { useState, useRef, memo, useEffect, useMemo } from "react";
+import { useState, useRef, memo, useEffect } from "react";
 import { markNoteOpened } from "@/lib/lastOpened";
-import { m as motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { m as motion, AnimatePresence } from "framer-motion";
 import { tween, dur, ease } from "@/lib/motion";
-import { useMotionPref } from "@/hooks/useMotionPref";
-import { cascadeDelay, cardExit, hasRecentPin, consumePin, type CardExitIntent } from "@/lib/cardMotion";
+import { cascadeDelay } from "@/lib/cardMotion";
 import { Check } from "lucide-react";
 import { Pin, PinOff, Archive, ArchiveRestore, X, Ellipsis } from "lucide-react";
 import { ColorPicker, colorClasses } from "./ColorPicker";
@@ -12,6 +11,7 @@ import { haptic } from "@/lib/haptics";
 import { ActionBtn, MoreActions, PrimaryActions } from "./NoteCardActions";
 import { NoteEditor } from "./NoteEditor";
 import { useCardGestures } from "@/hooks/useCardGestures";
+import { useCardMotion } from "@/hooks/useCardMotion";
 import { NoteCardBody } from "./NoteCardBody";
 import { ActionSheet, DeleteNoteDialog, ImagePreviewDialog } from "./NoteCardDialogs";
 import type { Note, NoteColor } from "@/hooks/useNotes";
@@ -24,7 +24,6 @@ import { firstSnippet } from "@/lib/searchHighlight";
 import { DrawingCanvas } from "./DrawingCanvas";
 import { useTrashCountdown } from "@/hooks/useTrashCountdown";
 import { useViewPrefs, readingTimeMin } from "@/lib/viewPrefs";
-import { useEffectsSettings } from "@/lib/effectsSettings";
 import { useNotesMeta } from "@/hooks/NotesProvider";
 import { useNoteViewActions } from "@/hooks/NoteViewActionsContext";
 import { useLatch } from "@/hooks/useLatch";
@@ -96,42 +95,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
     onUpdate?.(note.id, { checklist: updated });
   }
 
-  // Subtle 3D hover tilt — opt-in (effectsSettings.cardTilt), never with reduced motion.
-  // Ruch ograniczamy zarówno ustawieniem aplikacji, jak i preferencją systemu.
-  const osReduce = useReducedMotion();
-  const { reduced: appReduce } = useMotionPref();
-  const reduce = !!osReduce || appReduce;
-  const fx = useEffectsSettings();
-  const tilt = fx.cardTilt && !reduce;
-  const showFx = !reduce;
-
-  // Wyjście zależne od akcji (kosz/archiwum) — intencję podaje `custom` z AnimatePresence w NoteGrid.
-  const cardVariants = useMemo(() => ({
-    exit: (intent: CardExitIntent | undefined) => cardExit(intent, note.id, reduce),
-  }), [note.id, reduce]);
-
-  // „Klik pinezki”: po przypięciu notatka trafia do innej sekcji (karta montuje się od nowa),
-  // więc na nowej karcie na chwilę pojawia się pinezka z falą.
-  const [pinFx, setPinFx] = useState(0);
-  useEffect(() => {
-    if (note.pinned && hasRecentPin(note.id)) {
-      consumePin(note.id);
-      if (showFx) setPinFx((k) => k + 1);
-    }
-  }, [note.pinned, note.id, showFx]);
-
-  // Pieczątka „gotowe” po odhaczeniu ostatniego zadania (efekt „Deszcz emoji”).
-  const checklistItems = note.checklist || [];
-  const allDone = checklistItems.length > 0 && checklistItems.every((i) => i.checked);
-  const prevAllDone = useRef(allDone);
-  const [stampKey, setStampKey] = useState(0);
-  useEffect(() => {
-    if (allDone && !prevAllDone.current && !isEditing && !note.trashed && fx.emojiShower && showFx) {
-      setStampKey((k) => k + 1);
-    }
-    prevAllDone.current = allDone;
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reagujemy tylko na zmianę „wszystko gotowe”
-  }, [allDone]);
+  const { reduce, fx, tilt, showFx, cardVariants, pinFx, setPinFx, stampKey, setStampKey } = useCardMotion({ note, isEditing });
   const {
     isTouch, canSwipePin, canSwipeArchive, swipeEnabled, swipeX, swipeControls, swiping, swipeLabels,
     pinOpacity, archiveOpacity, handleSwipeStart, handleSwipeEnd, handleLongPressStart, handleLongPressMove,
