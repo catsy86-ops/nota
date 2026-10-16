@@ -2292,6 +2292,44 @@ toast „Paczka gotowa: raport i 0 zdjęć”).
 
 **Commit.** `50842a6` (2026-10-16).
 
+### Etapy budowy
+
+**Co robi.** Karta budowy ma listę etapów instalacji w domku jednorodzinnym: domyślnie kanalizacja podposadzkowa,
+rozprowadzenie wody, piony i podejścia kanalizacji, próba szczelności, zakrycie instalacji, biały montaż, odbiór.
+Odhaczenie zapisuje datę, pasek pokazuje postęp, a „Następny:” — pierwszy niezrobiony etap. Własny etap dopisuje się na
+końcu, usunięcie ma „Cofnij”. Przy nazwie budowy w dzienniku widać „etapy 3/7”, a raport budowy dla szefa ma w
+podsumowaniu „postęp: 3/7 etapów” i sekcję „Etapy (3/7)” z datami (WhatsApp: ✅ / ⬜).
+
+**Gdzie jest.**
+- `src/lib/study/stages.ts`: `SiteStage { id, name, done? }`, `DEFAULT_STAGES`, `siteStages(card)`, `cleanStages`,
+  `stageProgress`, `toggleStage`, `addStage`, `removeStage`; limity `STAGES_MAX` (20), `STAGE_NAME_MAX` (60).
+- `src/lib/study/sites.ts`: pole `SiteCard.stages?`; `cleanSite` czyści je przez `cleanStages`.
+- `src/lib/study/store.ts`: `setSiteStages(id, stages)` (przez `patchSiteCard`, tak samo jak `markSiteOrdered`);
+  `saveSiteCard` przenosi `stages` przy edycji karty.
+- `src/components/study/SiteStagesPanel.tsx` (`data-testid="site-stages"`) w `SiteCardDialog.tsx` nad „Do zamówienia”.
+- `src/components/study/StudyJournal.tsx`: `stagesBySite`, znacznik `[data-site-progress]` obok przycisku budowy.
+- `src/lib/study/report.ts`: `JournalReport.stages`, postęp w `reportSummary`, sekcja w `reportBody`, znaczki w
+  `reportWhatsApp`; `JournalReport.tsx`: `[data-report-stages]`.
+
+**Jak działa i dlaczego.** Karta bez własnej listy pokazuje domyślną, ale niczego nie zapisuje; pierwsza zmiana zapisuje
+całą listę w karcie (mapa Yjs `studySites`). Dzięki temu postęp w dzienniku i w raporcie pojawia się tylko przy budowach,
+na których ktoś faktycznie odhacza etapy — reszta raportów się nie zmienia. Znacznik postępu stoi obok przycisku budowy,
+nie w nim, żeby nazwa budowy (i jej `aria-label`) zostały czyste.
+
+**Ograniczenia i pułapki.**
+- Lista etapów to jedno pole karty: dwa telefony zmieniające etapy tej samej budowy w tej samej chwili — wygrywa
+  ostatni zapis całej listy.
+- Starsza wersja aplikacji nie zna `stages`: zapis karty w starej wersji je zgubi.
+- Etapów nie da się przestawiać ani zmieniać im nazw (usuń i dodaj nowy); nie odhacza się ich z arkusza wpisu.
+
+**Testy.** `src/lib/study/stages.test.ts` (8: domyślne jako kopia, odhaczanie i cofanie, postęp i następny, wszystko
+zrobione, własny etap i duplikaty, limit, usuwanie, `cleanStages`, `cleanSite`). `src/lib/study/report.test.ts`
+(„etapy budowy”: postęp, sekcja z datami, znaczki WhatsApp; bez sekcji bez własnej listy i w raporcie wszystkich budów).
+`e2e/site-stages.spec.ts` (odhaczenie z datą, własny etap, usunięcie z „Cofnij”, raport, postęp przy budowie po
+przeładowaniu). Regresja działu Praca 41/41 (chromium), układ telefonu 6/6 (`iphone-14`). Nie sprawdzone ręcznie na telefonie.
+
+**Commit.** `a25958a` (2026-10-16).
+
 ### Do zamówienia (kształtki)
 
 **Co robi.** W karcie budowy sekcja „Do zamówienia” pokazuje kształtki zużyte na tej budowie od ostatniego
