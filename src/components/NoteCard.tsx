@@ -17,14 +17,13 @@ import { haptic } from "@/lib/haptics";
 import { ActionBtn, MoreActions, PrimaryActions } from "./NoteCardActions";
 import { NoteEditor } from "./NoteEditor";
 import { useCardGestures } from "@/hooks/useCardGestures";
+import { ActionSheet, DeleteNoteDialog, ImagePreviewDialog } from "./NoteCardDialogs";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import type { Note, NoteColor } from "@/hooks/useNotes";
 import { useNoteEditSession } from "@/hooks/useNoteEditSession";
 import { NoteImage } from "./NoteImage";
 import { AttachmentsBadge } from "./AttachmentsList";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { useSearchTerms } from "@/lib/searchTerms";
 import { firstSnippet } from "@/lib/searchHighlight";
@@ -553,42 +552,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
       </motion.div>
       </div>
 
-      {sheetMounted && <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        {/* Portal: zdarzenia i tak płyną drzewem Reacta do kafla — bez stopPropagation stuknięcie otwierałoby edytor. */}
-        <SheetContent side="bottom" className="note-sheet rounded-t-3xl border-t border-border/60 pb-[calc(env(safe-area-inset-bottom)+16px)]" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
-          <SheetHeader className="text-left pr-10">
-            <SheetTitle className="font-display truncate">{note.locked ? "Notatka prywatna" : note.title.trim() || "Notatka bez tytułu"}</SheetTitle>
-          </SheetHeader>
-          {!isArchived && !note.trashed && (
-            <section className="pt-4">
-              <h3 className="px-1 pb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Kolor</h3>
-              <ColorPicker selected={note.color} onSelect={(c: NoteColor) => onUpdate?.(note.id, { color: c })} />
-            </section>
-          )}
-          <section className="pt-4">
-            <h3 className="px-1 pb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Szybkie</h3>
-            <div className="note-sheet-grid">
-              <PrimaryActions
-                note={note}
-                isArchived={isArchived}
-                inSheet
-                pinSparkle={showFx && fx.sparkle}
-                onClose={() => setSheetOpen(false)}
-                onAskDeleteConfirm={() => setShowDeleteConfirm(true)}
-                onUpdate={onUpdate}
-                onTogglePin={onTogglePin}
-                onArchive={onArchive}
-                onUnarchive={onUnarchive}
-                onDelete={onDelete}
-              />
-            </div>
-          </section>
-          <section className="pt-4">
-            <h3 className="px-1 pb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Więcej</h3>
-            <div className="note-sheet-grid">{moreActions}</div>
-          </section>
-        </SheetContent>
-      </Sheet>}
+      {sheetMounted && <ActionSheet open={sheetOpen} onOpenChange={setSheetOpen} note={note} isArchived={isArchived} pinSparkle={showFx && fx.sparkle} onAskDeleteConfirm={() => setShowDeleteConfirm(true)} more={moreActions} onUpdate={onUpdate} onTogglePin={onTogglePin} onArchive={onArchive} onUnarchive={onUnarchive} onDelete={onDelete} />}
 
       {/* Dialogi montowane przy pierwszym otwarciu — 150 kart nie trzyma czterech nieużywanych okien. */}
       {editorMounted && <Dialog open={isEditing && fullEditor} onOpenChange={(open) => { if (!open) handleSave(); }}>
@@ -608,26 +572,9 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         </DialogContent>
       </Dialog>}
 
-      {previewMounted && <Dialog open={!!previewImage} onOpenChange={() => setPreviewImage(null)}>
-        <DialogContent className="max-w-3xl p-2 bg-transparent border-none shadow-none">
-          {previewImage && <NoteImage imageRef={previewImage} loading="eager" className="w-full rounded-2xl shadow-2xl" placeholderClassName="aspect-video" />}
-        </DialogContent>
-      </Dialog>}
+      {previewMounted && <ImagePreviewDialog imageRef={previewImage} onClose={() => setPreviewImage(null)} />}
 
-      {deleteMounted && <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="font-display">Usunąć notatkę?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {note.title ? `„${note.title}" zostanie trwale usunięta.` : "Ta notatka zostanie trwale usunięta."} Tej operacji nie można cofnąć.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Anuluj</AlertDialogCancel>
-            <AlertDialogAction onClick={() => onDelete(note.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Usuń</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>}
+      {deleteMounted && <DeleteNoteDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm} note={note} onDelete={onDelete} />}
 
       {drawingMounted && <DrawingCanvas open={showDrawing} onOpenChange={setShowDrawing} onSave={addDrawing} />}
     </>
