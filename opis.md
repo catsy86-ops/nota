@@ -971,6 +971,8 @@ pola i wartość po odświeżeniu, walidacja liczby i wybór z listy, usunięcie
 - **Eksport.** Markdown (`exportToMarkdown`) dostaje wiersz `*Pole: wartość · …*` pod przypomnieniem, ZIP (`noteToMarkdownFile`, `buildNotesZip`, `downloadNotesZip`) klucz frontmatter `props` z mapą JSON (poprawny YAML). Jeden klucz, a nie klucz na pole, bo nazwa pola (np. `title`) zderzyłaby się z kluczami importu. Pola puste pomijane, kolejność jak w tabeli, liczby z przecinkiem jak w UI (`filledPropEntries` w `noteProps.ts`). Import Markdown zna tylko swoje klucze, więc `props` przy odczycie ignoruje — pola nie wracają z ZIP-a — odzyskanie to osobny krok.
   Testy: `exportZip.test.ts`, `noteProps.test.ts`.
 
+**Commit.** `a5976a1` (2026-10-16) — pola i tabela; eksport MD/ZIP `fd377a5` (2026-10-16).
+
 ## Grafik — czytelność drobnych znaczników
 
 **Co robi.** W siatce miesiąca na telefonie strzałka nadgodzin (↑/↓) przy numerze dnia ma 11 px zamiast 9 px.
