@@ -27,6 +27,7 @@ const SIMPLE: Record<string, View> = {
   praca: "study",
   widget: "widget",
   kosz: "trash",
+  skrzynka: "inbox",
 };
 // Przy kilku adresach jednego widoku wygrywa ostatni (`praca` po `nauka`).
 const SLUG: Partial<Record<View, string>> = Object.fromEntries(Object.entries(SIMPLE).map(([k, v]) => [v, k]));

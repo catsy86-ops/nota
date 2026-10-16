@@ -8,10 +8,11 @@ import { PRIORITY_ORDER } from "@/lib/notePriority";
 import { useLastOpened, type LastOpenedMap } from "@/lib/lastOpened";
 import { useDayClock } from "@/lib/dayClock";
 import { comparePropsForSort, type PropDef } from "@/lib/noteProps";
+import { isInboxNote } from "@/lib/inbox";
 
 const NO_OPENED: LastOpenedMap = {};
 
-export type View = "notes" | "today" | "week" | "archive" | "label" | "reminders" | "calendar" | "shifts" | "study" | "folder" | "widget" | "trash";
+export type View = "notes" | "today" | "week" | "archive" | "label" | "reminders" | "calendar" | "shifts" | "study" | "folder" | "widget" | "trash" | "inbox";
 
 /** Liczba trafień wyszukiwania poza bieżącym widokiem. */
 export interface Elsewhere { notes: number; archive: number; trash: number }
@@ -45,6 +46,9 @@ function filterNotes(list: Note[], source: Note[], { view, activeLabel, activeFo
   if (view === "week") {
     const { start, end } = getWeekRange();
     filtered = filtered.filter((n) => (n.createdAt >= start && n.createdAt <= end) || (n.updatedAt >= start && n.updatedAt <= end));
+  }
+  if (view === "inbox") {
+    filtered = filtered.filter(isInboxNote);
   }
   if (view === "folder" && activeFolder) {
     const descendantIds = getDescendantFolderIds(activeFolder, folders);

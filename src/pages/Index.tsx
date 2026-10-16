@@ -2,7 +2,9 @@ import { useState, useCallback, useDeferredValue, useEffect, useLayoutEffect, us
 import { m as motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
-import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange, BriefcaseBusiness, HardHat } from "lucide-react";
+import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange, BriefcaseBusiness, HardHat, Inbox } from "lucide-react";
+import { InboxCapture } from "@/components/InboxCapture";
+import { isInboxNote } from "@/lib/inbox";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useNoteVersions } from "@/hooks/useNoteVersions";
 import type { NoteVersion } from "@/hooks/useNoteVersions";
@@ -740,8 +742,17 @@ const Index = () => {
     />
   );
 
+  // Skrzynka: notatki do posortowania (bez folderu i etykiet); licznik w pasku bocznym.
+  const inboxCount = useMemo(() => notes.reduce((n, note) => n + (isInboxNote(note) ? 1 : 0), 0), [notes]);
+  // Pole Skrzynki: Enter zapisuje od razu, bez pytań; „Cofnij” w dymku kasuje świeżą notatkę.
+  const captureToInbox = useCallback((title: string, content: string) => {
+    const id = handleAddNoteGlow(title, content);
+    toastWithUndo("Zapisano w skrzynce", () => deleteNote(id), { icon: "📥", duration: 4000, id: "inbox-capture" });
+  }, [handleAddNoteGlow, deleteNote]);
+
   const sidebarItems: { icon: React.ElementType; label: string; view: View; count?: number; alert?: boolean; emoji: string }[] = [
     { icon: StickyNote, label: "Notatki", view: "notes", emoji: "📝" },
+    { icon: Inbox, label: "Skrzynka", view: "inbox", count: inboxCount, emoji: "📥" },
     { icon: Calendar, label: "Dziś", view: "today", emoji: "📅" },
     { icon: Bell, label: "Przypomnienia", view: "reminders", count: overdueCount, alert: true, emoji: "🔔" },
     { icon: CalendarRange, label: "Kalendarz", view: "calendar", emoji: "🗓️" },
@@ -802,6 +813,8 @@ const Index = () => {
             </div>
           )}
           {view === "notes" && <InstallBanner ready={notes.length >= 3} />}
+          {view === "inbox" && !deferredSearch && <InboxCapture onCapture={captureToInbox} />}
+
           {view === "today" && !deferredSearch && (
             <Suspense fallback={null}>
               <TodayShiftCard onOpenShifts={() => go("shifts")} onDailyNote={openDailyNote} />

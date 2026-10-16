@@ -20,6 +20,7 @@ const HEADINGS: Record<View, string> = {
   label: "Brak notatek z tą etykietą",
   folder: "Zacznij tworzyć",
   widget: "Zacznij tworzyć",
+  inbox: "Skrzynka jest pusta",
 };
 
 const DESCRIPTIONS: Record<View, string> = {
@@ -38,6 +39,7 @@ const DESCRIPTIONS: Record<View, string> = {
   label: "Dodaj etykietę do notatki, aby zobaczyć ją tutaj",
   folder: "Dodaj notatkę do tego folderu, aby zobaczyć ją tutaj",
   widget: "",
+  inbox: "Każda notatka ma folder albo etykietę. Nowe pomysły wpisz w polu powyżej — trafią tu, dopóki ich nie posortujesz",
 };
 
 /**
