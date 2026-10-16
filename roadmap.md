@@ -986,7 +986,7 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 - [x] P5 (M) ✅ P5a protokół, P5b raport jak druk + jedna główna akcja (2026-10-15). Protokół próby szczelności jako opcjonalne pole wpisu (woda 6/9 bar, czas, spadek, wynik; kanalizacja na zalanie) + raport jak druk firmowy (tabela dni, godziny, miejsce na podpis); potem jeden główny przycisk w raporcie („Wyślij szefowi”, reszta w „Więcej”).
 
 ### Dalej (po decyzjach)
-- [ ] Przypomnienia: problem otwarty > 3 dni, próba bez wpisu przed zakryciem (S/M).
+- [x] Przypomnienia: problem otwarty > 3 dni, próba bez wpisu przed zakryciem (S/M) — pasek nad Dziennikiem, `lib/study/reminders.ts`.
 - [ ] Szybkie wpisy: podpowiedzi z ostatnich tekstów na budowie, „Jak wczoraj” (S/M).
 - [ ] Wpis jako linijka w zeszycie (godzina mono na marginesie, mniej ramek); pasek opanowania z kratek i pieczątka „Umiem” modułu; puste stany z ilustracją (S–M).
 - [ ] Paczka ZIP budowy (wpisy, zdjęcia, PDF) z karty budowy (M).

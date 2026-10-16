@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { fittingsLine } from "@/lib/study/fittings";
 import { testLine } from "@/lib/study/pressureTest";
-import { Archive, Check, ChevronLeft, Gauge, Package, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Play, Plus, Search, X } from "lucide-react";
+import { Archive, Check, ChevronLeft, Gauge, Package, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Play, Plus, Search, TriangleAlert, X } from "lucide-react";
+import { pluralPl } from "@/lib/plural";
+import { studyReminders, type StudyReminder } from "@/lib/study/reminders";
 import { Button } from "@/components/ui/button";
 import { StatusPanel } from "@/components/StatusPanel";
 import { cn } from "@/lib/utils";
@@ -82,6 +84,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
     return { all: recent.length, problems: recent.filter((e) => e.kind === "problem").length };
   }, [study.journal]);
   const open = useMemo(() => openProblems(study.journal), [study.journal]);
+  const reminders = useMemo(() => studyReminders(study.journal), [study.journal]);
 
   return (
     <div className="space-y-6" data-testid="study-journal">
@@ -122,6 +125,18 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
             </Button>
           </div>
         </header>
+
+        {reminders.length > 0 && (
+          <ul aria-label="Przypomnienia" className="mb-4 space-y-2 xl:col-start-1" data-testid="journal-reminders">
+            {reminders.map((r) => (
+              <ReminderRow
+                key={r.kind === "stale-problems" ? "stale" : `test-${r.siteId}`}
+                reminder={r}
+                onShow={() => (r.kind === "stale-problems" ? patch({ kind: "open" }) : patch({ site: r.siteId }))}
+              />
+            ))}
+          </ul>
+        )}
 
         {study.journal.length === 0 ? (
           <StatusPanel
@@ -335,6 +350,27 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+/** Jeden wiersz przypomnienia: ⚠ w kolorze ostrzeżenia, treść i przycisk pokazujący wpisy, których dotyczy. */
+function ReminderRow({ reminder: r, onShow }: { reminder: StudyReminder; onShow: () => void }) {
+  const text =
+    r.kind === "stale-problems"
+      ? `${r.count} ${pluralPl(r.count, ["problem", "problemy", "problemów"])} otwarte od ponad 3 dni`
+      : `Budowa „${r.site}”: montaż bez protokołu próby. Zapisz próbę przed zakryciem.`;
+  return (
+    <li className="flex items-start gap-2.5 rounded-xl border border-warning/50 bg-warning/10 p-3 text-sm" data-reminder={r.kind}>
+      <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" aria-hidden />
+      <p className="min-w-0 flex-1 leading-snug">{text}</p>
+      <button
+        type="button"
+        onClick={onShow}
+        className="pressable shrink-0 self-center rounded-full border border-warning/60 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-warning/20 coarse:min-h-11 coarse:px-3.5 coarse:text-sm"
+      >
+        {r.kind === "stale-problems" ? "Pokaż otwarte" : "Pokaż wpisy budowy"}
+      </button>
+    </li>
   );
 }
 
