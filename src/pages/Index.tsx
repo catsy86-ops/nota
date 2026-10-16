@@ -2,7 +2,6 @@ import { useState, useCallback, useDeferredValue, useEffect, useLayoutEffect, us
 import { m as motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
-import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange, BriefcaseBusiness, HardHat, Inbox } from "lucide-react";
 import { InboxCapture } from "@/components/InboxCapture";
 import { useReaderNav } from "@/hooks/useReaderNav";
 import { setSearchTerms } from "@/lib/searchTerms";
@@ -19,17 +18,16 @@ import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
 import { useViewRoute } from "@/hooks/useViewRoute";
 import { parseViewRoute } from "@/lib/viewRoute";
 import { groupReminders } from "@/lib/reminderAgenda";
-import { buildWikiIndex, resolveWikiTarget, splitWikiTarget, wikiIndexKey } from "@/lib/wikiLinks";
+import { resolveWikiTarget, splitWikiTarget } from "@/lib/wikiLinks";
 import { requestHeading } from "@/lib/wikiHeading";
-import { useLatestRef, useStableByKey } from "@/hooks/useLatestRef";
+import { useLatestRef } from "@/hooks/useLatestRef";
+import { useWikiLinkIndex } from "@/hooks/useWikiLinkIndex";
+import { useLaunchIntents } from "@/hooks/useLaunchIntents";
+import { useBulkNoteOps } from "@/hooks/useBulkNoteOps";
 import { setGridNavPreview, setGridNavFocus } from "@/lib/gridKeyboardNav";
 import { copyNoteToClipboard } from "@/lib/noteMarkdown";
 import { playEnter, tween } from "@/lib/motion";
 import { useNavigate, useNavigationType } from "react-router-dom";
-import { claimShare, parseShare, SHARE_PATH } from "@/lib/shareTarget";
-import { takeShareInbox, importSharedFiles } from "@/lib/shareInbox";
-import { describeRejections } from "@/lib/attachments";
-import { yjsStore } from "@/lib/yjsStore";
 import { whenNotesReady, isNoteTextEditOpen } from "@/hooks/useNotes";
 import { DAILY_LABEL, DAILY_TEMPLATE, appendTimestamp, dailyKey, dailyTitle, findDailyNote } from "@/lib/dailyNote";
 import { useNoteActions } from "@/hooks/useNoteActions";
@@ -50,12 +48,13 @@ import { NoteGrid } from "@/components/NoteGrid";
 import { BoardColumn } from "@/components/BoardColumn";
 import { NoteBoard } from "@/components/NoteBoard";
 import { NoteTable } from "@/components/NoteTable";
-import { columnOfNote, labelsForColumn, NONE_COLUMN, PINNED_COLUMN } from "@/lib/boardColumns";
+import { columnOfNote, NONE_COLUMN, PINNED_COLUMN } from "@/lib/boardColumns";
 import { NoteGroupSection } from "@/components/NoteGroupSection";
 import { groupNotes, type GroupBy } from "@/lib/groupNotes";
 import { markNoteOpened } from "@/lib/lastOpened";
 import { EmptyState } from "@/components/EmptyState";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { DeleteForeverDialog, EmptyTrashDialog } from "@/components/TrashConfirmDialogs";
+import { sidebarItems } from "@/components/sidebar/sidebarItems";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
 import { downloadNotesZip } from "@/lib/exportZip";
@@ -299,18 +298,7 @@ const Index = () => {
   }, [showPinned, pinnedCollapsed, pinned, others, groups, groupBy, view, prefs.collapsedGroups]);
   const visibleNotesRef = useLatestRef(visibleNotes);
 
-  // Notatki prywatne nie tworzą linków, tytułów do podpowiedzi ani backlinków.
-  const allNotesForLinks = useMemo(() => [...notes, ...archivedNotes].filter((n) => !n.locked), [notes, archivedNotes]);
-  // `knownTitles` i `wikiIndex` idą do każdej karty: zostawiamy ten sam obiekt,
-  // dopóki tytuły i linki się nie zmienią (np. odhaczenie checklisty ich nie rusza).
-  const titlesList = useMemo(
-    () => [...new Set(allNotesForLinks.map((n) => n.title.trim().toLowerCase()).filter(Boolean))].sort(),
-    [allNotesForLinks],
-  );
-  const freshKnownTitles = useMemo(() => new Set(titlesList), [titlesList]);
-  const knownTitles = useStableByKey(freshKnownTitles, titlesList.join("\n"));
-  const freshWikiIndex = useMemo(() => buildWikiIndex(allNotesForLinks), [allNotesForLinks]);
-  const wikiIndex = useStableByKey(freshWikiIndex, wikiIndexKey(freshWikiIndex));
+  const { allNotesForLinks, knownTitles, wikiIndex } = useWikiLinkIndex(notes, archivedNotes);
   const allNotesForLinksRef = useLatestRef(allNotesForLinks);
   /**
    * Jedno miejsce „pokaż tę notatkę”: przełącza na widok, w którym notatka
@@ -465,71 +453,7 @@ const Index = () => {
     moveNoteToFolder(id, folderId);
   }, [moveNoteToFolder]);
 
-  // Entry points from manifest.webmanifest: home-screen shortcuts "Nowa notatka"
-  // (?new=1), "Nowa lista" (?new=list), "Szukaj" (?szukaj=1) and Web Share Target (?share-title/-text/-url=, from "Share" on
-  // another app once the app is installed).
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const shared = parseShare(window.location.pathname, window.location.search);
-    const inbox = params.get("inbox");
-    if (inbox !== null && window.location.pathname === SHARE_PATH) {
-      // Udostępnienie z plikami: service worker odłożył je pod `?inbox=<id>` (sw-share.js).
-      // `0` = SW nie zdołał zapisać, nie ma czego odbierać.
-      navigate("/", { replace: true });
-      void whenNotesReady().then(async () => {
-        const received = inbox === "0" ? null : await takeShareInbox(inbox);
-        if (!received) {
-          toast.error("Nie udało się odebrać udostępnionych plików", { description: "Spróbuj udostępnić jeszcze raz." });
-          return;
-        }
-        const used = new Map<string, number>();
-        yjsStore.referencedAttachments().forEach((a, hash) => used.set(hash, a.size));
-        const imported = await importSharedFiles(received.files, used);
-        const text = parseShare(SHARE_PATH, received.query) ?? { title: "", content: "" };
-        if (!text.title && !text.content && imported.images.length === 0 && imported.attachments.length === 0) {
-          toast.error("Z udostępnienia nie ma czego zapisać");
-          return;
-        }
-        const id = handleAddNoteGlow(text.title, text.content, "default", [], null, imported.images, [], "none", null, imported.attachments);
-        if (imported.unsupported.length) {
-          toast.error(`Nie przyjęto: ${imported.unsupported.join(", ")}`, { description: "Z plików przyjmuję obrazy i PDF.", duration: 9000 });
-        }
-        if (imported.skippedImages > 0) {
-          toast.error(imported.skippedImages === 1 ? "Nie udało się zmniejszyć obrazka do 2 MB" : `${imported.skippedImages} obrazków nie udało się zmniejszyć do 2 MB`);
-        }
-        const problem = describeRejections(imported.rejected);
-        if (problem) toast.error("Część plików nie została dodana", { description: problem, duration: 9000 });
-        toast.success("Zapisano w NOTKACH", { action: { label: "Otwórz", onClick: () => openNoteRef.current(id) } });
-      });
-    } else if (shared) {
-      // Adres czyścimy od razu — odświeżenie nie ma co powtarzać; `claimShare`
-      // łapie jeszcze przypadek odświeżenia, zanim router zdążył zamienić wpis.
-      navigate("/", { replace: true });
-      if (claimShare(shared)) {
-        void whenNotesReady().then(() => {
-          const id = handleAddNoteGlow(shared.title, shared.content);
-          toast.success("Zapisano w NOTKACH", { action: { label: "Otwórz", onClick: () => openNoteRef.current(id) } });
-        });
-      }
-    } else if (window.location.pathname === SHARE_PATH) {
-      // Pusty `/share` (np. ręcznie wpisany adres) — po prostu wróć do Notatek.
-      navigate("/", { replace: true });
-    } else if (params.get("new")) {
-      // Skrót „Nowa lista” (`?new=list`) otwiera kompozytor od razu w trybie listy.
-      expandAddNote(params.get("new") === "list" ? "list" : undefined);
-      window.history.replaceState(null, "", window.location.pathname);
-    } else if (params.get("szukaj")) {
-      // Skrót „Szukaj”: kursor w polu wyszukiwania (widocznym — na telefonie i komputerze to inne pola).
-      // Bez gestu iOS nie otworzy klawiatury; Android tak.
-      window.history.replaceState(null, "", window.location.pathname);
-      window.setTimeout(() => {
-        const input = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="search"]')).find((el) => el.offsetParent !== null);
-        input?.focus();
-      }, 300);
-    }
-    // Intentionally once on mount: reads the URL this load started with.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  useLaunchIntents({ navigate, addNote: handleAddNoteGlow, openNote, expandComposer: expandAddNote });
 
   // Licznik w pasku bocznym tylko przy tym, co wymaga uwagi: zaległe przypomnienia i Kosz.
   // Ta sama liczba ląduje w tytule karty i na ikonie aplikacji (useOverdueBadge).
@@ -539,20 +463,10 @@ const Index = () => {
   const deleteNoteForever = useCallback((id: string) => { deleteNote(id); deleteVersions(id); }, [deleteNote, deleteVersions]);
   const handleDelete = view === "trash" ? deleteNoteForever : handleTrashSingle;
 
-  /** Zaznaczone w Koszu wracają do notatek, w Archiwum — z archiwum; oba z „Cofnij”. */
-  const handleBulkRestoreView = useCallback(() => {
-    const ids = Array.from(selectedIds);
-    if (ids.length === 0) return;
-    if (view === "trash") {
-      bulkRestore(ids);
-      clearSelection();
-      toastWithUndo(`Przywrócono ${ids.length} z kosza`, () => bulkTrash(ids));
-    } else {
-      ids.forEach(unarchiveNote);
-      clearSelection();
-      toastWithUndo(`Przywrócono ${ids.length} z archiwum`, () => bulkArchive(ids));
-    }
-  }, [selectedIds, view, bulkRestore, bulkTrash, bulkArchive, unarchiveNote, clearSelection]);
+  const { restoreSelected, pinSelected, moveSelectedToFolder, labelSelected, moveToColumn } = useBulkNoteOps({
+    view, groupBy, folders, notesRef, selectedIds, clearSelection, togglePin, updateNote, addLabel,
+    unarchiveNote, bulkRestore, bulkTrash, bulkArchive, moveToFolder: handleMoveToFolderGlow,
+  });
 
   const { sensors, setDraggingNoteId, handleDragStart, handleDragEnd } = useNoteDnd({
     displayNoteIds: displayNotes.map((n) => n.id),
@@ -573,64 +487,6 @@ const Index = () => {
       : undefined,
   });
 
-  /** Zbiorcze: przypnij / odepnij zaznaczone (jeśli któraś jest nieprzypięta — przypina wszystkie). */
-  function handleBulkPin() {
-    const chosen = notesRef.current.filter((n) => selectedIds.has(n.id));
-    if (chosen.length === 0) return;
-    const pin = chosen.some((n) => !n.pinned);
-    const changed = chosen.filter((n) => n.pinned !== pin).map((n) => n.id);
-    changed.forEach((id) => togglePin(id));
-    clearSelection();
-    toastWithUndo(`${pin ? "Przypięto" : "Odpięto"} ${changed.length}`, () => changed.forEach((id) => togglePin(id)), { icon: "📌" });
-  }
-
-  /** Zbiorcze: przenieś zaznaczone do folderu (`null` = bez folderu), z „Cofnij”. */
-  function handleBulkMoveToFolder(folderId: string | null) {
-    const prev = notesRef.current.filter((n) => selectedIds.has(n.id) && n.folderId !== folderId).map((n) => [n.id, n.folderId] as const);
-    if (prev.length === 0) { clearSelection(); return; }
-    prev.forEach(([id]) => handleMoveToFolderGlow(id, folderId));
-    clearSelection();
-    const name = folderId ? folders.find((f) => f.id === folderId)?.name ?? "folder" : "Bez folderu";
-    toastWithUndo(`Przeniesiono ${prev.length} do „${name}”`, () => prev.forEach(([id, from]) => handleMoveToFolderGlow(id, from)), { icon: "📁" });
-  }
-
-  /** Zbiorcze: dodaj etykietę do zaznaczonych (istniejące zostają), z „Cofnij”. */
-  function handleBulkAddLabel(label: string) {
-    const name = label.trim().replace(/^#/, "");
-    if (!name) return;
-    const prev = notesRef.current.filter((n) => selectedIds.has(n.id) && !n.labels.includes(name)).map((n) => [n.id, n.labels] as const);
-    if (prev.length === 0) { clearSelection(); return; }
-    addLabel(name);
-    prev.forEach(([id, labels]) => updateNote(id, { labels: [...labels, name] }));
-    clearSelection();
-    toastWithUndo(`Dodano #${name} do ${prev.length}`, () => prev.forEach(([id, labels]) => updateNote(id, { labels })), { icon: "🏷️" });
-  }
-
-  /** Przeniesienie kart do kolumny tablicy: przypięcie, etykieta albo folder — z „Cofnij”. */
-  function moveToColumn(ids: string[], key: string) {
-    if (groupBy === "date") {
-      toast.message("Kolumny wg daty wynikają z czasu edycji", { description: "Wybierz podział wg etykiety lub folderu, by przenosić karty." });
-      return;
-    }
-    const prev = ids
-      .map((id) => notesRef.current.find((n) => n.id === id))
-      .filter((n): n is NonNullable<typeof n> => !!n)
-      .map((n) => ({ id: n.id, pinned: n.pinned, labels: n.labels, folderId: n.folderId }));
-    const apply = (id: string, target: { pinned: boolean; labels: string[]; folderId: string | null }) => {
-      const cur = notesRef.current.find((n) => n.id === id);
-      if (!cur) return;
-      if (cur.pinned !== target.pinned) togglePin(id);
-      if (groupBy === "label" && cur.labels.join("\n") !== target.labels.join("\n")) updateNote(id, { labels: target.labels });
-      if (groupBy === "folder" && cur.folderId !== target.folderId) handleMoveToFolderGlow(id, target.folderId);
-    };
-    prev.forEach((n) => {
-      if (key === PINNED_COLUMN) apply(n.id, { ...n, pinned: true });
-      else if (groupBy === "label") apply(n.id, { ...n, pinned: false, labels: labelsForColumn(n.labels, key) });
-      else apply(n.id, { ...n, pinned: false, folderId: key === NONE_COLUMN ? null : key });
-    });
-    const label = key === PINNED_COLUMN ? "Przypięte" : key === NONE_COLUMN ? (groupBy === "label" ? "Bez etykiety" : "Bez folderu") : groupBy === "label" ? `#${key}` : folders.find((f) => f.id === key)?.name ?? "folder";
-    toastWithUndo(prev.length > 1 ? `Przeniesiono do „${label}” (${prev.length})` : `Przeniesiono do „${label}”`, () => prev.forEach((n) => apply(n.id, n)), { icon: "🗂️" });
-  }
 
   const renderGrid = (gridNotes: typeof displayNotes, navOrder: number) => (
     <NoteGrid
@@ -666,17 +522,7 @@ const Index = () => {
     toastWithUndo("Zapisano w skrzynce", () => deleteNote(id), { icon: "📥", duration: 4000, id: "inbox-capture" });
   }, [handleAddNoteGlow, deleteNote]);
 
-  const sidebarItems: { icon: React.ElementType; label: string; view: View; count?: number; alert?: boolean; emoji: string }[] = [
-    { icon: StickyNote, label: "Notatki", view: "notes", emoji: "📝" },
-    { icon: Inbox, label: "Skrzynka", view: "inbox", count: inboxCount, emoji: "📥" },
-    { icon: Calendar, label: "Dziś", view: "today", emoji: "📅" },
-    { icon: Bell, label: "Przypomnienia", view: "reminders", count: overdueCount, alert: true, emoji: "🔔" },
-    { icon: CalendarRange, label: "Kalendarz", view: "calendar", emoji: "🗓️" },
-    { icon: BriefcaseBusiness, label: "Grafik", view: "shifts", emoji: "🗂️" },
-    { icon: HardHat, label: "Praca", view: "study", emoji: "👷" },
-    { icon: Archive, label: "Archiwum", view: "archive", emoji: "📦" },
-    { icon: Trash, label: "Kosz", view: "trash", count: trashedNotes.length, emoji: "🗑️" },
-  ];
+  const navItems = sidebarItems({ inbox: inboxCount, overdue: overdueCount, trash: trashedNotes.length });
 
   return (
     <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={() => setDraggingNoteId(null)}>
@@ -694,7 +540,7 @@ const Index = () => {
         onGoFolder={(id) => { go("folder", { folder: id }); if (isMobile) setSidebarOpen(false); }}
         onGoFilter={goFilter}
         search={search}
-        sidebarItems={sidebarItems}
+        sidebarItems={navItems}
         onLogoClick={handleLogoClick}
         dark={dark}
         onToggleTheme={toggleTheme}
@@ -789,51 +635,23 @@ const Index = () => {
             </motion.div>
           )}
 
-          <AlertDialog open={confirmDeleteIds !== null} onOpenChange={(o) => { if (!o) setConfirmDeleteIds(null); }}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle className="font-display">Usunąć trwale?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  {confirmDeleteIds?.length ?? 0} {(confirmDeleteIds?.length ?? 0) === 1 ? "notatka zostanie" : "notatki zostaną"} trwale usunięte. Tej operacji nie można cofnąć.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Anuluj</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => {
-                    const ids = confirmDeleteIds ?? [];
-                    ids.forEach(deleteNoteForever);
-                    clearSelection();
-                    toast.success(`Usunięto trwale: ${ids.length}`);
-                    setConfirmDeleteIds(null);
-                  }}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Usuń trwale
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <DeleteForeverDialog
+            ids={confirmDeleteIds}
+            onCancel={() => setConfirmDeleteIds(null)}
+            onConfirm={(ids) => {
+              ids.forEach(deleteNoteForever);
+              clearSelection();
+              toast.success(`Usunięto trwale: ${ids.length}`);
+              setConfirmDeleteIds(null);
+            }}
+          />
 
-          <AlertDialog open={confirmEmptyTrash} onOpenChange={setConfirmEmptyTrash}>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle className="font-display">Opróżnić kosz?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Wszystkie {trashedNotes.length} {trashedNotes.length === 1 ? "notatka zostanie" : "notatki zostaną"} trwale usunięte. Tej operacji nie można cofnąć.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Anuluj</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => { deleteVersions(trashedNotes.map((n) => n.id)); emptyTrash(); toast.success("Kosz opróżniony"); setConfirmEmptyTrash(false); }}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  Opróżnij
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <EmptyTrashDialog
+            open={confirmEmptyTrash}
+            onOpenChange={setConfirmEmptyTrash}
+            count={trashedNotes.length}
+            onConfirm={() => { deleteVersions(trashedNotes.map((n) => n.id)); emptyTrash(); toast.success("Kosz opróżniony"); setConfirmEmptyTrash(false); }}
+          />
 
           {showPinned && !boardMode && !tableMode && (
             <NoteGroupSection
@@ -844,13 +662,13 @@ const Index = () => {
               collapsed={pinnedCollapsed}
               onToggle={() => toggleGroupCollapsed("pinned")}
             >
-              <NoteGrid navOrder={0} notes={pinned} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} onPresent={setPresentingNoteId} knownTitles={knownTitles} onWikiClick={handleWikiClick} wikiIndex={wikiIndex} onOpenNote={openNote} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
+              {renderGrid(pinned, 0)}
             </NoteGroupSection>
           )}
 
           {view === "reminders" && groupReminders(others).map((group, i) => (
             <NoteGroupSection key={group.key} groupKey={`reminders-${group.key}`} label={group.label} count={group.notes.length} tone={group.key === "overdue" ? "alert" : "default"}>
-              <NoteGrid navOrder={i} notes={group.notes} onUpdate={updateNote} onDelete={handleDelete} onTogglePin={togglePin} onDuplicate={duplicateNote} onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow} getVersions={getVersions} onSaveVersion={addVersion} onRestoreVersion={handleRestoreVersion} onPresent={setPresentingNoteId} knownTitles={knownTitles} onWikiClick={handleWikiClick} wikiIndex={wikiIndex} onOpenNote={openNote} selectedIds={selectedIds} selectionMode={selectionMode} onToggleSelect={toggleSelect} />
+              {renderGrid(group.notes, i)}
             </NoteGroupSection>
           ))}
 
@@ -1104,11 +922,11 @@ const Index = () => {
       onColor={handleBulkColor}
       folders={folders}
       allLabels={allLabels}
-      onPin={handleBulkPin}
-      onMoveToFolder={handleBulkMoveToFolder}
-      onAddLabel={handleBulkAddLabel}
+      onPin={pinSelected}
+      onMoveToFolder={moveSelectedToFolder}
+      onAddLabel={labelSelected}
       view={view === "trash" ? "trash" : view === "archive" ? "archive" : "other"}
-      onRestore={handleBulkRestoreView}
+      onRestore={restoreSelected}
       onDeleteForever={() => setConfirmDeleteIds(Array.from(selectedIds))}
       onExport={() => {
         const ids = selectedIds;

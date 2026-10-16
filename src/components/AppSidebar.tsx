@@ -23,6 +23,7 @@ import { dur, ease, tween } from "@/lib/motion";
 import { useSavedFilters, sameQuery } from "@/lib/savedFilters";
 import { searchNotes, useSearchReady } from "@/lib/searchNotes";
 import { preloadView } from "@/lib/viewPreload";
+import type { SidebarItem } from "@/components/sidebar/sidebarItems";
 
 const MAX_FAVORITES = 10;
 
@@ -45,16 +46,6 @@ function NavRow({ item, active, onClick }: { item: SidebarItem; active: boolean;
       />
     </div>
   );
-}
-
-interface SidebarItem {
-  icon: React.ElementType;
-  label: string;
-  view: View;
-  count?: number;
-  /** Licznik oznacza coś pilnego (np. zaległe przypomnienia). */
-  alert?: boolean;
-  emoji: string;
 }
 
 interface AppSidebarProps {
