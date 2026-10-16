@@ -77,6 +77,7 @@ import { ViewSkeleton } from "@/components/ViewSkeleton";
 import { loadCalendarView, loadShiftsView, loadStudyView } from "@/lib/viewPreload";
 const ShortcutsDialog = lazy(() => import("@/components/ShortcutsDialog").then((m) => ({ default: m.ShortcutsDialog })));
 const PropDefsDialog = lazy(() => import("@/components/PropDefsDialog").then((m) => ({ default: m.PropDefsDialog })));
+const TodayShiftCard = lazy(() => import("@/components/review/TodayShiftCard").then((m) => ({ default: m.TodayShiftCard })));
 const WeeklyReviewCard = lazy(() => import("@/components/review/WeeklyReviewCard").then((m) => ({ default: m.WeeklyReviewCard })));
 const RecentActionsPanel = lazy(() => import("@/components/RecentActionsPanel").then((m) => ({ default: m.RecentActionsPanel })));
 const OnboardingTour = lazy(() => import("@/components/OnboardingTour").then((m) => ({ default: m.OnboardingTour })));
@@ -800,6 +801,12 @@ const Index = () => {
             </div>
           )}
           {view === "notes" && <InstallBanner ready={notes.length >= 3} />}
+          {view === "today" && !deferredSearch && (
+            <Suspense fallback={null}>
+              <TodayShiftCard onOpenShifts={() => go("shifts")} onDailyNote={openDailyNote} />
+            </Suspense>
+          )}
+
           {view === "today" && !deferredSearch && (
             <Suspense fallback={null}>
               <WeeklyReviewCard
