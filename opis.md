@@ -963,6 +963,8 @@ dostaje ją od razu po jego przeniesieniu do „Umiem”. Pieczątka jest tekste
 modułu i podpis po kliknięciu kratki; „pasek opanowania: pieczątka „Umiem” dopiero, gdy cały moduł jest w „Umiem””),
 `e2e/resilience.spec.ts` (`mastery-count`).
 
+**Commit.** `7f780d9` (2026-10-16).
+
 ### Karty tematów na tablicy
 
 **Co robi.** Temat wędruje „Do nauki” → „W trakcie” → „Umiem” strzałkami przy tytule.
