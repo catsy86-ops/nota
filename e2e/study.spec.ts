@@ -777,3 +777,17 @@ test("dziennik bez wpisów: szkic zeszytu i zaproszenie do pierwszego wpisu", as
   await expect(empty.getByText("Brak wpisów", { exact: true })).toBeVisible();
   await expect(empty.getByRole("button", { name: "Dodaj wpis" })).toBeVisible();
 });
+
+test("statystyki: karta doświadczenia na pustym stanie i pobranie pliku .md", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByRole("button", { name: "Statystyki" }).click();
+  const stats = page.getByTestId("study-stats");
+  const card = stats.getByTestId("experience-card");
+  await expect(card).toContainText("0 z 18");
+  await expect(card).toContainText("jeszcze bez rund");
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    stats.getByRole("button", { name: "Pobierz .md" }).click(),
+  ]);
+  expect(download.suggestedFilename()).toMatch(/^karta-doswiadczenia-\d{4}-\d{2}-\d{2}\.md$/);
+});

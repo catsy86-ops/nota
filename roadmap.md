@@ -992,7 +992,7 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 - [x] Pasek opanowania z kratek i pieczątka „Umiem” modułu ✅ 2026-10-16 (`MasteryStrip`, e2e pieczątki).
 - [x] Puste stany z ilustracją (S–M) ✅ 2026-10-16 — szkic zeszytu w pustym Dzienniku (`JOURNAL_GLYPH`, `EmptySketch`).
 - [x] Paczka ZIP budowy (raport, zdjęcia) z karty budowy (M) ✅ 2026-10-16 — bez PDF (wydruk raportu); `lib/study/siteZip.ts`.
-- [ ] Karta doświadczenia: liczba budów, próby, opanowane tematy, trafność — eksport (S/M, dane w `stats.ts`).
+- [x] Karta doświadczenia: liczba budów, próby, opanowane tematy, trafność — eksport ✅ 2026-10-16 (`lib/study/experience.ts`, Kopiuj i Pobierz .md w statystykach).
 - [x] Kształtki we wpisie (rodzaj + liczba sztuk), sumy per budowa w raporcie (M) — decyzja: tylko kształtki.
 
 ### Decyzje użytkownika (2026-10-15)

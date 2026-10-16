@@ -1,11 +1,16 @@
 import { useMemo } from "react";
+import { toast } from "sonner";
+import { Copy, Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
 import { localDayKey } from "@/lib/dayDone";
 import { QUESTIONS, TOPICS } from "@/lib/study/content";
-import { activeStreak, openProblems, useStudy } from "@/lib/study/store";
+import { activeStreak, columnOf, openProblems, useStudy } from "@/lib/study/store";
+import { siteDirectory } from "@/lib/study/sites";
+import { buildExperience, experienceText, type ExperienceCard } from "@/lib/study/experience";
 import { accuracyByTopic, daysInLast, entriesByMonth, entriesBySite, hardestQuestions, overallAccuracy, studyDaysGrid } from "@/lib/study/stats";
 
 const topicTitle = (id: string) => TOPICS.find((t) => t.id === id)?.title ?? id;
@@ -43,8 +48,16 @@ function StatsBody() {
       days30: daysInLast(study.days, today, 30),
       months: entriesByMonth(study.journal, Date.now(), 6),
       sites: entriesBySite(study.journal, 6),
+      card: buildExperience({
+        journal: study.journal,
+        review: study.review,
+        sites: siteDirectory(study.sites, study.journal),
+        doneTopics: TOPICS.filter((t) => columnOf(study, t.id) === "done").map((t) => t.title),
+        totalTopics: TOPICS.length,
+      }),
     };
   }, [study, today]);
+  const cardText = useMemo(() => experienceText(s.card, today), [s.card, today]);
   const streak = activeStreak(study);
   const open = openProblems(study.journal);
   const maxMonth = Math.max(1, ...s.months.map((m) => m.count));
@@ -141,8 +154,67 @@ function StatsBody() {
           </ul>
         </Section>
       )}
+
+      <Section title="Karta doświadczenia" note="Budowy, próby szczelności, opanowane tematy i trafność — do pokazania albo wysłania.">
+        <ExperienceRows card={s.card} />
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={() => copyCard(cardText)} className="coarse:h-11">
+            <Copy className="mr-1.5 h-4 w-4" aria-hidden />Kopiuj
+          </Button>
+          <Button variant="outline" onClick={() => downloadCard(cardText, today)} className="coarse:h-11">
+            <Download className="mr-1.5 h-4 w-4" aria-hidden />Pobierz .md
+          </Button>
+        </div>
+      </Section>
     </div>
   );
+}
+
+/** Podgląd karty doświadczenia: te same liczby co w pliku, czytelne bez Markdownu. */
+function ExperienceRows({ card }: { card: ExperienceCard }) {
+  const { seen, right, percent } = card.accuracy;
+  return (
+    <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-xl border border-border bg-card p-3 text-sm" data-testid="experience-card">
+      <dt className="text-muted-foreground">Budowy</dt>
+      <dd>
+        <span className="font-mono tabular-nums">{card.sites.length}</span>
+        {card.sites.length > 0 && <span className="text-muted-foreground"> · {card.sites.join(", ")}</span>}
+      </dd>
+      <dt className="text-muted-foreground">Próby szczelności</dt>
+      <dd className="font-mono tabular-nums">
+        {card.tests}
+        {card.tests > 0 && <span className="font-sans text-muted-foreground"> · pozytywnych: {card.testsOk}</span>}
+      </dd>
+      <dt className="text-muted-foreground">Opanowane tematy</dt>
+      <dd>
+        <span className="font-mono tabular-nums">{card.doneTopics.length} z {card.totalTopics}</span>
+        {card.doneTopics.length > 0 && <span className="block text-xs text-muted-foreground">{card.doneTopics.join(" · ")}</span>}
+      </dd>
+      <dt className="text-muted-foreground">Trafność quizu</dt>
+      <dd className="font-mono tabular-nums">
+        {percent === null ? <span className="font-sans text-muted-foreground">jeszcze bez rund</span> : <>{percent}% <span className="font-sans text-muted-foreground">({right} z {seen})</span></>}
+      </dd>
+    </dl>
+  );
+}
+
+async function copyCard(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.success("Skopiowano kartę doświadczenia");
+  } catch {
+    toast.error("Nie udało się skopiować");
+  }
+}
+
+/** Plik `.md` z kartą; nazwa z dnia, żeby kolejne stany nie nadpisywały się w pobranych. */
+function downloadCard(text: string, today: string) {
+  const url = URL.createObjectURL(new Blob([text], { type: "text/markdown;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `karta-doswiadczenia-${today}.md`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
