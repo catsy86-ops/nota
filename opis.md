@@ -2074,6 +2074,9 @@ instalacji / aktualizacji offline. Funkcje działają tak samo; płótno, „Zna
 doczytują się przy pierwszym otwarciu (ułamek sekundy).
 
 **Gdzie jest.**
+- Czytnik notatek (`NoteReader`) leniwie w `Index.tsx` (`Suspense key="reader"` jako bezpośrednie dziecko
+  `AnimatePresence` — animacja zamknięcia działa) i doczytywany w czasie bezczynności po starcie
+  (`requestIdleCallback`, bez niego po 1,5 s), żeby pierwsze otwarcie notatki nie czekało (`a7bfb5a`).
 - Leniwe ładowanie (`lazy` + `Suspense`): `DrawingCanvas` w `NoteCard.tsx` i `AddNoteBar.tsx` (montowany dopiero po
   pierwszym „Rysuj” — `useLatch`), `FindReplaceBar` w `NoteEditor.tsx`, `CustomTemplateDialog` w `QuickTemplates.tsx`.
 - `src/lib/study/journalRefs.ts`: `journalRefsIn` (klucze zdjęć dziennika) w osobnym module bez importu `yjs`;
@@ -2083,12 +2086,13 @@ doczytują się przy pierwszym otwarciu (ułamek sekundy).
 - `vite.config.ts`: bez `includeAssets` — ikony i `offline.html` z `public/` łapie `globPatterns`, a oba naraz dublowały
   6 plików w liście precache `sw.js`.
 
-**Wynik.** Paczka startowa (gzip) 390 → 383 KB (próg 384); precache 4,37 → 4,03 MB (próg 4,3), 90 → 84 pliki.
+**Wynik.** Paczka startowa (gzip) 390 → 383 KB, potem (osobne pozycje list budowy, `395c311`) 384,0 KB, a po leniwym
+czytniku 378,7 KB — zapas 5,3 KB do progu 384. Precache 4,37 → 4,03 MB (próg 4,3), 90 → 84 pliki.
 
 **Ograniczenia i pułapki.**
 - `study/data.ts` (z `yStudy.ts`) zostaje w paczce startowej celowo: odśmiecanie zdjęć (`useNotes`) potrzebuje od startu
   wiedzy, czy stary dziennik przeniesiono do dokumentu (`legacyStudyMerged`) — inaczej mogłoby usunąć jego zdjęcia.
-- Zapas do progu paczki startowej to ok. 1 KB — kolejny duży moduł w głównej paczce przekroczy próg.
+- Zapas do progu paczki startowej ~5 KB (po `a7bfb5a`) — nowe moduły w głównej paczce zjadają go szybko.
 - Duplikaty w precache nie dublowały pobierania (ta sama rewizja), ale zawyżały test budżetu.
 
 **Testy.** `e2e/bundle.spec.ts` (oba progi zielone, pomiar w komentarzu), `e2e/pwa.spec.ts`, rysowanie w notatce
@@ -2096,7 +2100,9 @@ doczytują się przy pierwszym otwarciu (ułamek sekundy).
 kopia zapasowa (`images.spec.ts`, `search-backup.spec.ts`, `private-notes.spec.ts`), `study.spec.ts`, `composer.spec.ts`
 — 66/66 + 1/1; Vitest 1291/1291.
 
-**Commit.** `3d31b58` (2026-10-16).
+**Commit.** `3d31b58`, `a7bfb5a` (czytnik, 2026-10-16). Testy czytnika po zmianie: `reader`, `reader-step`,
+`note-links`, `note-props-view`, `routes`, `subpages`, `wiki-heading`, `wikilinks`, `attachments`, `board-table`,
+`reminders-calendar`, `toggle-group`, `search-highlight`, `bundle` — 56/56; telefon (`mobile`, `mobile-layout`) 17/17.
 
 ## Praca — kalkulatory na budowę
 
