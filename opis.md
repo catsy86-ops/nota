@@ -836,6 +836,38 @@ i „Szukaj”…”, „skrót PWA /?new=1…”).
 
 ---
 
+## Notatki — wyróżnianie trafień w kaflach (plan Notatek, etap 1.2)
+
+**Co robi.** Gdy szukasz, trafienia są zaznaczone w tytule kafla. Jeśli trafienie jest tylko w treści, kafel pokazuje
+fragment z zaznaczeniem (kilka słów wokół), zamiast początku treści. Dopasowanie jest bez ogonków i bez wielkości liter:
+„zolw” zaznacza „żółw”.
+
+**Gdzie jest.**
+- `src/lib/searchHighlight.ts`: `matchParts(text, tokens)` (podział na fragmenty z trafieniem i bez), `firstSnippet`
+  (pierwsze trafienie z kontekstem, przycinane wielokropkiem).
+- `src/lib/searchTerms.ts`: magazyn fraz (`setSearchTerms`, hook `useSearchTerms`). Ustawia je `Index.tsx` z `?q=`/pola szukania.
+- `src/components/SearchMarks.tsx`: komponent `Marked` (zaznaczony tekst).
+- `src/components/NoteCard.tsx`: tytuł przez `Marked`; przy trafieniu w treści zamiast Markdownu pokazuje `snippet`.
+- `src/lib/searchQuery.ts`: poprawka `fold` (patrz niżej).
+
+**Jak działa i dlaczego.**
+- Frazy idą magazynem, nie przez props: `NoteCard` jest zapamiętany, a zmiana zapytania nie musi przechodzić przez
+  `NoteGrid` do każdego kafla. Hook przerysowuje tylko kafle, gdy zmieni się fraza.
+- Dopasowanie idzie po tym samym `fold`, co wyszukiwarka, a każdy znak zachowuje pozycję w oryginale — zaznaczenie
+  obejmuje dokładnie to, co widać.
+
+**Poprawka błędu w wyszukiwarce.** `fold` zamieniał „ł” na „l” przed zamianą na małe litery, więc wielkie „Ł” zostawało
+i „Łódź” nie trafiało w „lodz”. Kolejność odwrócona. Poprawka dotyczy też operatorów (`etykieta:`, `folder:` itd.).
+
+**Ograniczenia.** Zapowiedź fragmentu zastępuje na kafelku Markdown (formatowanie nie jest pokazywane w trakcie
+wyszukiwania). Kafel bez wyszukiwania działa jak dotąd.
+
+**Testy.** `src/lib/searchHighlight.test.ts` (bez ogonków, wielkość liter, łączenie zakresów, fragment z przycinaniem),
+`src/lib/searchQuery` (dotychczasowe testy po poprawce), `e2e/search-highlight.spec.ts` (tytuł z ogonkami, fragment
+z treści).
+
+**Commit.** `8f01351` (2026-10-16).
+
 ## Notatki — nawigacja ←/→ w czytniku (plan Notatek, etap 1.1)
 
 **Co robi.** W czytniku (podgląd i pełny ekran) ←/→ przechodzi do poprzedniej i następnej notatki z listy,
