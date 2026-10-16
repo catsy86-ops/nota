@@ -13,18 +13,18 @@ import { FITTING_NAME_MAX, FITTING_QTY_MAX, FITTINGS_MAX, fittingKey, type Fitti
  * - nazwa znana z poprzednich wpisów albo podpowiedzi przyjmuje jej pisownię.
  */
 
-const UNITS: Record<string, number> = {
+export const UNITS: Record<string, number> = {
   jeden: 1, jedna: 1, jedno: 1, dwa: 2, dwie: 2, trzy: 3, cztery: 4, pięć: 5, sześć: 6, siedem: 7, osiem: 8,
   dziewięć: 9, dziesięć: 10, jedenaście: 11, dwanaście: 12, trzynaście: 13, czternaście: 14, piętnaście: 15,
   szesnaście: 16, siedemnaście: 17, osiemnaście: 18, dziewiętnaście: 19,
 };
-const TENS: Record<string, number> = {
+export const TENS: Record<string, number> = {
   dwadzieścia: 20, trzydzieści: 30, czterdzieści: 40, pięćdziesiąt: 50, sześćdziesiąt: 60,
   siedemdziesiąt: 70, osiemdziesiąt: 80, dziewięćdziesiąt: 90,
 };
 
 /** Liczba mnoga → pojedyncza dla częstych kształtek instalatora (porównanie bez ogonków). */
-const SINGULAR: Record<string, string> = {
+export const SINGULAR: Record<string, string> = {
   kolana: "kolano", kolan: "kolano",
   trojniki: "trójnik", trojnikow: "trójnik",
   zlaczki: "złączka", zlaczek: "złączka",
@@ -40,9 +40,9 @@ const SINGULAR: Record<string, string> = {
   syfony: "syfon", syfonow: "syfon",
 };
 
-const QTY_WORD = /^(sztuk[ai]?|szt\.?|razy|x)$/;
+export const QTY_WORD = /^(sztuk[ai]?|szt\.?|razy|x)$/;
 
-const fold = (s: string) => s.toLocaleLowerCase("pl").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l");
+export const fold = (s: string) => s.toLocaleLowerCase("pl").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l");
 
 /** Słowa liczebników → cyfry („dwadzieścia pięć” → „25”); reszta bez zmian. */
 export function wordsToDigits(text: string): string {

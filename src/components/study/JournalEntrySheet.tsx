@@ -28,6 +28,9 @@ import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, use
 import { closeJournalSheet, getJournalEditForm, patchJournalEditForm, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
 import { fromLocalInput, KIND_LABEL, recentSiteTexts, suggestSites, toLocalInput, whenLabel, yesterdaySiteText } from "@/lib/study/journalView";
 import { findSiteByName, siteDirectory } from "@/lib/study/sites";
+import { fittingsLine, suggestFittingNames } from "@/lib/study/fittings";
+import { mergeFittings } from "@/lib/study/spokenFittings";
+import { parseSpokenEntry } from "@/lib/study/spokenEntry";
 
 export function KindIcon({ kind, className = "h-4 w-4" }: { kind: JournalKind; className?: string }) {
   if (kind === "ok") return <CircleCheck className={cn(className, "shrink-0 text-success-ink")} aria-hidden />;
@@ -102,11 +105,6 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
 
   const setText = (next: string | ((prev: string) => string)) =>
     patch({ text: typeof next === "function" ? next(getForm().text) : next });
-  // Ręce zajęte robotą: dyktowanie dopisuje rozpoznane zdanie na końcu wpisu.
-  const dictation = useDictation((spoken) => {
-    if (!spoken) return;
-    setText((t) => (t && !/\s$/.test(t) ? `${t} ${spoken}` : `${t}${spoken}`));
-  });
 
   useEffect(() => {
     setEditingSite(false);
@@ -137,6 +135,29 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     haptic("selection");
     setEditingSite(false);
   }
+
+  /** Nazwy kształtek do dopasowania dyktowania (historia i podpowiedzi). */
+  const knownFittings = useMemo(() => suggestFittingNames(fittingHistory, []), [fittingHistory]);
+  // Ręce zajęte robotą: dyktowanie dopisuje rozpoznane zdanie na końcu wpisu. Gdy w wypowiedzi padnie
+  // budowa, rodzaj albo kształtki („Lipowa, problem, przeciek przy trójniku, kolano 16 cztery sztuki”),
+  // trafiają do swoich pól, a do tekstu idzie reszta (`spokenEntry.ts`).
+  const dictation = useDictation((spoken) => {
+    if (!spoken) return;
+    const append = (part: string) => {
+      if (part) setText((t) => (t && !/\s$/.test(t) ? `${t} ${part}` : `${t}${part}`));
+    };
+    const parsed = parseSpokenEntry(spoken, { sites: recentSites, fittings: knownFittings });
+    if (!parsed.structured) { append(spoken); return; }
+    const done: string[] = [];
+    if (parsed.site) { if (parsed.site !== site) pickSite(parsed.site); done.push(`budowa ${parsed.site}`); }
+    if (parsed.kind) { patch({ kind: parsed.kind }); done.push(KIND_LABEL[parsed.kind]); }
+    if (parsed.fittings.length > 0) {
+      patch({ fittings: mergeFittings(getForm().fittings ?? [], parsed.fittings) });
+      done.push(`kształtki: ${fittingsLine(parsed.fittings)}`);
+    }
+    append(parsed.text);
+    toast.success(`Z wypowiedzi: ${done.join(" · ")}`, { id: "entry-dictation" });
+  });
 
   const lists = useStudyLists();
   const items = useMemo(() => lists.checklist.filter((c) => c.topic === topic), [lists, topic]);
