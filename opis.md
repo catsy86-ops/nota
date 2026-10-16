@@ -891,29 +891,35 @@ i reszta `Index.tsx` — wielosesyjny podział, każdy kawałek z własnym e2e.
 ## Notatki — sesja edycji kafla w hooku (plan Notatek, etap 4, refaktor NoteCard)
 
 **Co robi.** Bez zmian dla użytkownika. Edycja tytułu, treści i listy w kaflu, autozapis, „Zapisz”, zapis przy
-zamknięciu i wysokość pola działają jak wcześniej.
+zamknięciu, wysokość pola, skróty w polu treści (Ctrl+F/H, lista, Tab, Alt+↑/↓), podpowiedzi `[[` i `/`
+oraz pasek formatowania działają jak wcześniej.
 
 **Gdzie jest.**
-- `src/hooks/useNoteEditSession.ts`: `useNoteEditSession({ note, autosaveSeconds, onUpdate, onSaveVersion })`.
-  Zwraca stan (`isEditing`, `editTitle`, `editContent`, `editChecklist`, `showChecklist`, `showPreview`, `fullEditor`)
-  wraz z setterami, `textareaRef`, `commitDraft`, `handleSave`, `begin`.
+- `src/hooks/useNoteEditSession.ts`: `useNoteEditSession({ note, autosaveSeconds, onUpdate, onSaveVersion, wikiTitles })`.
+  Zwraca stan (`isEditing`, `editTitle`, `editContent`, `editChecklist`, `showChecklist`, `showPreview`, `fullEditor`,
+  `findOpen`) wraz z setterami, `textareaRef`, `wiki`, `slash`, `handleEditSelect`, `handleEditKeyDown`,
+  `handleFormatInsert`, `commitDraft`, `handleSave`, `begin`.
 - `src/components/NoteCard.tsx`: wywołanie hooka na początku komponentu (po `prefs`); `begin()` w kliknięciu kafla
-  zastępuje dawny blok ustawień. Usunięte importy `useDraftAutosave`, `useLiveNoteText`, `beginNoteTextEdit`, `endNoteTextEdit`.
+  zastępuje dawny blok ustawień. `wikiTitles` to `wikiIndex?.titles ?? NO_TITLES`. Usunięte importy hooków i funkcji
+  edytora, które przeszły do hooka.
 
 **Jak działa i dlaczego.** Szkic siedzi w hooku razem z `draftRef` i `versionSavedRef`, bo `commitDraft` jest wołane
 z cleanupu efektu przy odmontowaniu. Kolejność efektów została ta sama: wysokość pola, autozapis, tekst na żywo,
-potem `endNoteTextEdit` przy odmontowaniu. `begin()` bierze treść z `beginNoteTextEdit`, a nie z `note`, żeby
-pokazać to, co widzi peer. Wiki-podpowiedzi i menu „/” zostają w `NoteCard`, bo czytają `editContent` i `textareaRef`
-przez parametry hooków.
+podpowiedzi, potem `endNoteTextEdit` przy odmontowaniu. `begin()` bierze treść z `beginNoteTextEdit`, a nie z `note`, żeby
+pokazać to, co widzi peer. Obsługa klawiszy (`handleEditKeyDown`) ma tę samą kolejność priorytetów: lista zadań,
+Ctrl+F/H, menu „/”, lista `[[`, skróty edytora. Wklejanie obrazów (`handleEditPaste`) i dodawanie obrazów zostają w
+`NoteCard`, bo zależą od `addImages` i `imageStore`.
 
-**Ograniczenia.** Hook nie zawiera wiki/slash ani `findOpen` — zostają w `NoteCard` do kolejnych kroków refaktoru.
+**Ograniczenia.** `handleEditPaste` i `addImages` nadal w `NoteCard` — przeniesienie wymaga, żeby hook przyjął
+obsługę obrazów. Pozostają też `FindReplaceBar` (renderowany w `NoteCard`) i cały podział widoku.
 
 **Testy.** Charakteryzujące, bez nowych testów: `e2e/editing.spec.ts`, `editor-keys.spec.ts`, `editor-open.spec.ts`,
 `checklist.spec.ts`, `composer.spec.ts`, `live-text.spec.ts`, `live-text-focused.spec.ts`, `note-props.spec.ts`,
-`parked-drafts.spec.ts`, `read-only-note.spec.ts` — 30/30 (`--workers=1`). Testy jednostkowe `src/components` i `src/hooks`:
-139/139. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
+`parked-drafts.spec.ts`, `read-only-note.spec.ts`, `wikilinks.spec.ts`, `note-links.spec.ts`, `wiki-heading.spec.ts`,
+`daily-note.spec.ts` — 39/39 (`--workers=1`). Testy jednostkowe `src/components`, `src/hooks`, `src/lib`:
+1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
 
-**Commit.** `3342c00` (2026-10-16).
+**Commit.** `3342c00` (2026-10-16) — sesja edycji; `ff09430` (2026-10-16) — klawisze, podpowiedzi i Ctrl+F.
 
 ## Notatki — tekst peera na żywo w otwartym edytorze (plan Notatek, etap 4, weryfikacja)
 
