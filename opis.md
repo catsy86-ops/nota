@@ -923,6 +923,31 @@ obsługę obrazów. Pozostają też `FindReplaceBar` (renderowany w `NoteCard`) 
 
 **Commit.** `3342c00` (2026-10-16) — sesja edycji; `ff09430` (2026-10-16) — klawisze, podpowiedzi i Ctrl+F.
 
+## Notatki — zaznaczenie notatek w useSelection (refaktor Index.tsx)
+
+**Co robi.** Bez zmian dla użytkownika. Zaznaczone notatki w widoku listy: pasek zbiorczy pokazuje liczbę,
+a Esc albo „wyczyść” zdejmuje zaznaczenie. Zaznaczenie znika przy zmianie widoku, etykiety lub folderu.
+
+**Gdzie jest.** `src/hooks/useSelection.ts`: `useSelection({ view, activeLabel, activeFolder })` zwraca `selectedIds`,
+`setSelectedIds`, `selectionMode` (`selectedIds.size > 0`), `lastSelectedRef` i `clearSelection`. W `src/pages/Index.tsx`
+wywołanie stoi w miejscu dawnego stanu zaznaczenia. Zostają tam `toggleSelect` (klik i Shift-zakres czytają widoczne
+notatki przez `visibleNotesRef`) oraz skrót Ctrl/Cmd+A (czyta `previewId` i `presentingNoteId`).
+
+**Jak działa i dlaczego.** Hook wyciągnięto tylko z tego, co zależy wyłącznie od widoku. `toggleSelect` i Ctrl+A zależą
+od wartości liczonych dużo niżej w `Index` (filtrowane notatki, czytnik), więc przeniesienie ich tutaj wymagałoby
+przestawiania całej kolejności hooków. Do tablic zależności dopisano `setSelectedIds` i `lastSelectedRef` — są stabilne,
+więc zachowanie się nie zmienia, a lint jest czysty.
+
+**Ograniczenia.** Hook nie zawiera zaznaczania ani skrótu Ctrl+A; dalsze przeniesienie wymaga najpierw uporządkowania
+kolejności `visibleNotes` i czytnika w `Index`.
+
+**Testy.** Charakteryzujące (chromium, `--workers=1`): `notes`, `note-groups`, `templates-bulk`, `reminders-calendar`,
+`quick-capture`, `search-highlight`, `reader`, `note-links`, `editor-keys` — 62/62. Na `iphone-14` (`@mobile`): `mobile`,
+`mobile-layout` — 17/17 (przytrzymanie kafla zaznacza go). Testy jednostkowe `src/components`, `src/hooks`, `src/lib`,
+`src/pages`: 1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
+
+**Commit.** `bea4f33` (2026-10-16).
+
 ## Notatki — odznaki w useAchievementToasts (refaktor Index.tsx)
 
 **Co robi.** Bez zmian dla użytkownika. Nowa odznaka pokazuje pieczątkę (przy włączonych efektach, gdy nie ma otwartego
