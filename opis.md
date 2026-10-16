@@ -923,6 +923,30 @@ obsługę obrazów. Pozostają też `FindReplaceBar` (renderowany w `NoteCard`) 
 
 **Commit.** `3342c00` (2026-10-16) — sesja edycji; `ff09430` (2026-10-16) — klawisze, podpowiedzi i Ctrl+F.
 
+## Notatki — odznaki w useAchievementToasts (refaktor Index.tsx)
+
+**Co robi.** Bez zmian dla użytkownika. Nowa odznaka pokazuje pieczątkę (przy włączonych efektach, gdy nie ma otwartego
+okna ani edytora nowej notatki) albo jeden cichy toast „Nowa odznaka” / „Nowe odznaki: N”, który podmienia poprzedni
+(stałe `id`). Przycisk „Zobacz” otwiera Statystyki.
+
+**Gdzie jest.** `src/hooks/useAchievementToasts.ts`: `useAchievementToasts({ notes, archivedNotes, allLabels, folders,
+onOpenStats })`. Wywołanie w `src/pages/Index.tsx` (w miejscu dawnego bloku odznak). `onOpenStats` idzie przez
+`useLatestRef`, więc toast nie trzyma starego callbacku.
+
+**Jak działa i dlaczego.** Logika bez zmian: `useAchievementTracker` z `src/lib/achievements.ts` wykrywa odblokowanie,
+a hook decyduje, czy pokazać pieczątkę, czy dopisać do paczki. Gdy otwarte jest okno, toast czeka (1 s ponowienia),
+a pieczątka czeka do 40 prób po 800 ms.
+
+**Ograniczenia.** Hook nie ma testu e2e. Logika odznak i pieczątki są w `src/lib/achievements.test.ts` i
+`achievementStamp.test.ts`; samego zachowania toastów (paczkowanie, podmiana, „Zobacz”) nie sprawdza żaden test.
+
+**Testy.** Jednostkowe: `src/lib/achievements.test.ts`, `achievementStamp.test.ts`. e2e (chromium, `--workers=1`) przechodzące
+przy wyciągnięciu: `notes`, `routes`, `tabs`, `composer`, `reminders-calendar`, `search-backup`, `board-table`, `reader`,
+`quick-capture`, `weekly-review` — 57/57. Testy jednostkowe `src/components`, `src/hooks`, `src/lib`, `src/pages`:
+1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
+
+**Commit.** `39231e6` (2026-10-16).
+
 ## Notatki — efekty ruchu kafla w useCardMotion (plan Notatek, etap 4, refaktor NoteCard)
 
 **Co robi.** Bez zmian dla użytkownika. Kafel ma lekki przechył 3D przy najechaniu (gdy włączony w ustawieniach),
