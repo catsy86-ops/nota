@@ -1,8 +1,10 @@
 /**
  * Web Share Target: „Udostępnij → NOTKI” z innej aplikacji.
- * Manifest kieruje GET na `/share?title=&text=&url=`; starsze instalacje
- * wysyłają jeszcze `/?share-title=&share-text=&share-url=`, więc obie postacie
- * są obsługiwane. Pliki i obrazy są poza zakresem (po załącznikach).
+ * Tekst i link: manifest kieruje GET na `/share?title=&text=&url=`; starsze
+ * instalacje wysyłają jeszcze `/?share-title=&share-text=&share-url=`, więc
+ * obie postacie są obsługiwane. Pliki (obrazy, PDF) idą POST-em do service
+ * workera, który odkłada je i przekierowuje na `/share?inbox=<id>` — odbiór
+ * w `lib/shareInbox.ts`.
  */
 
 export const SHARE_PATH = "/share";

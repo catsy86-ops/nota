@@ -23,9 +23,11 @@ describe("manifest.webmanifest", () => {
     expect(parseViewRoute(byName["Przypomnienia"].pathname, "").view).toBe("reminders");
   });
 
-  it("share_target is a GET to /share that parseShare understands", () => {
+  it("share_target is a POST multipart to /share (obrazy i PDF) that parseShare understands", () => {
     const t = manifest.share_target;
-    expect(t.method).toBe("GET");
+    expect(t.method).toBe("POST");
+    expect(t.enctype).toBe("multipart/form-data");
+    expect(t.params.files[0].accept).toEqual(["image/*", "application/pdf"]);
     expect(t.action).toBe("/share");
     const qs = new URLSearchParams({ [t.params.title]: "T", [t.params.text]: "X", [t.params.url]: "https://example.com/" });
     expect(parseShare(t.action, "?" + qs.toString())).toEqual({ title: "T", content: "X\n\nhttps://example.com/" });

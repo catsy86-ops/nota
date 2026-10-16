@@ -23,6 +23,9 @@ import { NoteReader, type ReaderMode } from "@/components/NoteReader";
 import { playEnter, tween } from "@/lib/motion";
 import { useNavigate, useNavigationType } from "react-router-dom";
 import { claimShare, parseShare, SHARE_PATH } from "@/lib/shareTarget";
+import { takeShareInbox, importSharedFiles } from "@/lib/shareInbox";
+import { describeRejections } from "@/lib/attachments";
+import { yjsStore } from "@/lib/yjsStore";
 import { whenNotesReady, isNoteTextEditOpen } from "@/hooks/useNotes";
 import { DAILY_LABEL, DAILY_TEMPLATE, appendTimestamp, dailyKey, dailyTitle, findDailyNote } from "@/lib/dailyNote";
 import { useNoteActions } from "@/hooks/useNoteActions";
@@ -548,7 +551,37 @@ const Index = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const shared = parseShare(window.location.pathname, window.location.search);
-    if (shared) {
+    const inbox = params.get("inbox");
+    if (inbox !== null && window.location.pathname === SHARE_PATH) {
+      // Udostępnienie z plikami: service worker odłożył je pod `?inbox=<id>` (sw-share.js).
+      // `0` = SW nie zdołał zapisać, nie ma czego odbierać.
+      navigate("/", { replace: true });
+      void whenNotesReady().then(async () => {
+        const received = inbox === "0" ? null : await takeShareInbox(inbox);
+        if (!received) {
+          toast.error("Nie udało się odebrać udostępnionych plików", { description: "Spróbuj udostępnić jeszcze raz." });
+          return;
+        }
+        const used = new Map<string, number>();
+        yjsStore.referencedAttachments().forEach((a, hash) => used.set(hash, a.size));
+        const imported = await importSharedFiles(received.files, used);
+        const text = parseShare(SHARE_PATH, received.query) ?? { title: "", content: "" };
+        if (!text.title && !text.content && imported.images.length === 0 && imported.attachments.length === 0) {
+          toast.error("Z udostępnienia nie ma czego zapisać");
+          return;
+        }
+        const id = handleAddNoteGlow(text.title, text.content, "default", [], null, imported.images, [], "none", null, imported.attachments);
+        if (imported.unsupported.length) {
+          toast.error(`Nie przyjęto: ${imported.unsupported.join(", ")}`, { description: "Z plików przyjmuję obrazy i PDF.", duration: 9000 });
+        }
+        if (imported.skippedImages > 0) {
+          toast.error(imported.skippedImages === 1 ? "Nie udało się zmniejszyć obrazka do 2 MB" : `${imported.skippedImages} obrazków nie udało się zmniejszyć do 2 MB`);
+        }
+        const problem = describeRejections(imported.rejected);
+        if (problem) toast.error("Część plików nie została dodana", { description: problem, duration: 9000 });
+        toast.success("Zapisano w NOTKACH", { action: { label: "Otwórz", onClick: () => openNoteRef.current(id) } });
+      });
+    } else if (shared) {
       // Adres czyścimy od razu — odświeżenie nie ma co powtarzać; `claimShare`
       // łapie jeszcze przypadek odświeżenia, zanim router zdążył zamienić wpis.
       navigate("/", { replace: true });

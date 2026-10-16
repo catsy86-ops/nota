@@ -68,7 +68,7 @@ export default defineConfig(() => ({
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: false,
-        importScripts: ["sw-notifications.js"],
+        importScripts: ["sw-notifications.js", "sw-share.js"],
         navigateFallback: "/index.html",
         runtimeCaching: [
           {
