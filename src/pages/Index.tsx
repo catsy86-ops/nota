@@ -36,6 +36,7 @@ import { DAILY_LABEL, DAILY_TEMPLATE, appendTimestamp, dailyKey, dailyTitle, fin
 import { useNoteActions } from "@/hooks/useNoteActions";
 import { useNoteDnd } from "@/hooks/useNoteDnd";
 import { useImportExport, useExternalImport } from "@/hooks/useImportExport";
+import { useAchievementToasts } from "@/hooks/useAchievementToasts";
 import { useBackupReminders } from "@/hooks/useBackupReminders";
 import { useShiftEveningNudge } from "@/hooks/useShiftEveningNudge";
 import { useDailyWeeklyNudges } from "@/hooks/useDailyWeeklyNudges";
@@ -62,9 +63,7 @@ import { DndContext, pointerWithin } from "@dnd-kit/core";
 import { fireworks, megaCelebrate } from "@/lib/celebrate";
 import { glowPulse, glowStreak, centerOf, pointOfNote } from "@/lib/glowTrail";
 import { SearchBar } from "@/components/SearchBar";
-import { useAchievementTracker } from "@/lib/achievements";
 import { useDayDoneReward } from "@/hooks/useDayDoneReward";
-import { showAchievementStamp, stampAllowed } from "@/lib/achievementStamp";
 import { AchievementStamp } from "@/components/AchievementStamp";
 import { DailyQuote } from "@/components/DailyQuote";
 import { PaperBackdrop } from "@/components/PaperBackdrop";
@@ -197,47 +196,8 @@ const Index = () => {
     () => go("reminders"),
   );
 
-  // Odznaki w głównym widoku: jeden cichy toast na paczkę (import potrafi odblokować
-  // kilka naraz), stałe `id` podmienia go zamiast piętrzyć. Szczegóły są w Statystykach.
-  // Nad otwartym oknem (edytor nowej notatki) odznaka by go zasłaniała — czeka, aż okno się zamknie.
-  // Czeka też na inne dymki: przy starcie „N przypomnień czeka” u góry i odznaki u dołu zasłaniały naraz nagłówek i ostatni kafel.
-  const unlockedBatchRef = useRef<{ titles: string[]; description: string }>({ titles: [], description: "" });
-  const badgeTimerRef = useRef<number | null>(null);
-  const showBadgeToast = useCallback(() => {
-    if (document.querySelector('[role="dialog"][data-state="open"], [data-sonner-toast]:not([data-removed="true"]):not(.toast-achievements)')) {
-      badgeTimerRef.current = window.setTimeout(showBadgeToast, 1000);
-      return;
-    }
-    badgeTimerRef.current = null;
-    const { titles, description } = unlockedBatchRef.current;
-    const reset = () => { unlockedBatchRef.current = { titles: [], description: "" }; };
-    toast(titles.length === 1 ? `Nowa odznaka: ${titles[0]}` : `Nowe odznaki: ${titles.length}`, {
-      id: "achievements",
-      className: "toast-achievements",
-      description: titles.length === 1 ? description : titles.join(", "),
-      duration: 4000,
-      action: { label: "Zobacz", onClick: () => setStatsOpen(true) },
-      onAutoClose: reset,
-      onDismiss: reset,
-    });
-  }, []);
-  useEffect(() => () => { if (badgeTimerRef.current !== null) clearTimeout(badgeTimerRef.current); }, []);
-  useAchievementTracker(notes, archivedNotes, allLabels, folders, (a) => {
-    // Pieczątka zastępuje dymek (przy wyłączonym efekcie / reduced motion zostaje dymek).
-    // Nad otwartym oknem lub edytorem nowej notatki zasłaniałaby pisany tekst — czeka na zamknięcie.
-    if (stampAllowed()) {
-      const attempt = (left: number) => {
-        const busy = document.querySelector('[role="dialog"][data-state="open"], [data-composer-open]');
-        if (busy && left > 0) { window.setTimeout(() => attempt(left - 1), 800); return; }
-        showAchievementStamp(a);
-      };
-      attempt(40);
-      return;
-    }
-    unlockedBatchRef.current.titles.push(a.title);
-    unlockedBatchRef.current.description = a.description;
-    if (badgeTimerRef.current === null) showBadgeToast();
-  });
+  // Odznaki i pieczątki (logika w `useAchievementToasts`).
+  useAchievementToasts({ notes, archivedNotes, allLabels, folders, onOpenStats: () => setStatsOpen(true) });
 
   useBackupReminders(prefs, notes, archivedNotes);
   useDailyWeeklyNudges(prefs, notes, setView);
