@@ -868,6 +868,28 @@ z treści).
 
 **Commit.** `8f01351` (2026-10-16).
 
+## Notatki — przesuwanie pozycji listy przyciskami (plan Notatek, etap 2)
+
+**Co robi.** W edytorze listy każda nieodhaczona pozycja ma dwa przyciski: „Przesuń w górę” i „Przesuń w dół”.
+Wyłączają się na krawędzi listy. Na komputerze pojawiają się po najechaniu lub fokusie, na dotyku są zawsze widoczne.
+
+**Gdzie jest.** `src/components/ChecklistEditor.tsx`: `canMove(id, dir)`, przyciski w wierszu pozycji (obok „Usuń”).
+Przesuwanie używa istniejącego `moveItem`, który zamienia pozycję z sąsiadem wśród nieodhaczonych.
+
+**Jak działa i dlaczego.**
+- Przeciąganie (dnd) odłożone: na dotyku jest zawodne przy przewijaniu, a przyciski są czytelne dla klawiatury
+  i czytnika ekranu. Skrót Alt+↑/↓ działa jak dotąd.
+- Odhaczone pozycje nie mają przycisków: nie są przesuwane, tak jak w `moveItem`.
+- Kolejność zapisuje się przez `onChange` w tym samym polu `checklist`, więc synchronizacja i kopia działają bez zmian.
+
+**Ograniczenia.** Przyciski są tylko w edytorze. Czytnik (podgląd) pozostaje tylko do odhaczania.
+Przeciąganie pozycji jest odłożone; jeśli będzie potrzebne, to osobny etap.
+
+**Testy.** `e2e/checklist-move.spec.ts` (kolejność po przesunięciach, wyłączenie na krawędzi).
+Regresja: `e2e/checklist.spec.ts`, `e2e/reader.spec.ts` przechodzą.
+
+**Commit.** `1ca6108` (2026-10-16).
+
 ## Notatki — nawigacja ←/→ w czytniku (plan Notatek, etap 1.1)
 
 **Co robi.** W czytniku (podgląd i pełny ekran) ←/→ przechodzi do poprzedniej i następnej notatki z listy,
