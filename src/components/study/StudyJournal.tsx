@@ -24,6 +24,7 @@ import { JournalEntrySheet, KindIcon } from "./JournalEntrySheet";
 import { JournalReportDialog } from "./JournalReport";
 import { SiteCardDialog } from "./SiteCardDialog";
 import { consumeJournalReportRequest, useJournalReportRequest } from "@/lib/study/reportLink";
+import { stageProgress } from "@/lib/study/stages";
 import { entrySiteId, siteDirectory } from "@/lib/study/sites";
 
 const topicTitle = (id: string | null) => TOPICS.find((t) => t.id === id)?.title ?? null;
@@ -68,6 +69,11 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   const filtered = isFiltered(filter);
 
   const dir = useMemo(() => siteDirectory(study.sites, study.journal), [study.sites, study.journal]);
+  // Postęp etapów przy nazwie budowy — tylko budowy z własną listą (ktoś już odhaczał).
+  const stagesBySite = useMemo(
+    () => new Map(dir.filter((x) => x.stages).map((x) => [x.id, stageProgress(x.stages!)] as const)),
+    [dir],
+  );
   // Pigułki: budowy z wpisami; archiwalne za „Archiwum”, chyba że wybrana.
   const used = useMemo(() => dir.filter((x) => x.count > 0), [dir]);
   const archivedCount = used.filter((x) => x.archived !== undefined).length;
@@ -273,17 +279,25 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                       {d.sites.map((g) => (
                         <div key={g.siteId}>
                           {g.siteId ? (
-                            <button
-                              type="button"
-                              onClick={() => setCard(g.siteId)}
-                              aria-label={`${g.site}: karta budowy`}
-                              className="-mx-1 mb-1 flex max-w-full items-center gap-1 rounded px-1 py-0.5 text-xs font-medium text-foreground/80 hover:bg-muted hover:text-foreground coarse:min-h-11"
-                              data-journal-site={g.site}
-                            >
-                              <MapPin className="h-3.5 w-3.5 shrink-0 text-primary-ink" aria-hidden />
-                              <span className="truncate">{g.site}</span>
-                              <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
-                            </button>
+                            <div className="mb-1 flex min-w-0 items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setCard(g.siteId)}
+                                aria-label={`${g.site}: karta budowy`}
+                                className="-mx-1 flex min-w-0 max-w-full items-center gap-1 rounded px-1 py-0.5 text-xs font-medium text-foreground/80 hover:bg-muted hover:text-foreground coarse:min-h-11"
+                                data-journal-site={g.site}
+                              >
+                                <MapPin className="h-3.5 w-3.5 shrink-0 text-primary-ink" aria-hidden />
+                                <span className="truncate">{g.site}</span>
+                                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                              </button>
+                              {/* Postęp etapów obok, nie w przycisku — nazwa budowy zostaje czysta. */}
+                              {stagesBySite.has(g.siteId) && (
+                                <span className="shrink-0 font-mono text-2xs tabular-nums text-muted-foreground" data-site-progress title="Etapy budowy">
+                                  etapy {stagesBySite.get(g.siteId)!.done}/{stagesBySite.get(g.siteId)!.total}
+                                </span>
+                              )}
+                            </div>
                           ) : d.sites.length > 1 && (
                             <p className="mb-1.5 flex items-center gap-1 text-xs font-medium text-foreground/80" data-journal-site="">
                               <MapPin className="h-3.5 w-3.5 shrink-0 text-primary-ink" aria-hidden />

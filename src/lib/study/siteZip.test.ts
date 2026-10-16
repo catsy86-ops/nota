@@ -19,6 +19,7 @@ const report: JournalReport = {
   images: [REF_A, REF_B, REF_C],
   fittings: [],
   toOrder: [],
+  stages: null,
 };
 
 const bytes = (...b: number[]) => new Uint8Array(b).buffer;

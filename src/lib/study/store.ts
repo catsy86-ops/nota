@@ -10,6 +10,7 @@ import { cleanCard, dueIds, type ReviewCard } from "./srs";
 import { cleanTest, type PressureTest } from "./pressureTest";
 import { BOSS_NAME_MAX, cleanBoss, cleanGroup, normalizeGroupLink, normalizePhone } from "./boss";
 import { cleanSite, entrySiteId, resolveSite, siteDirectory, SITE_FIELD_MAX, SITE_NAME_MAX, type SiteCard } from "./sites";
+import { cleanStages, type SiteStage } from "./stages";
 import {
   JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, SITE_MAX,
   type Column, type JournalEntry, type JournalKind, type StudyState,
@@ -359,17 +360,31 @@ export function saveSiteCard(id: string, input: SiteCardInput, now: number = Dat
     created: prev?.created ?? now,
     ...(prev?.archived !== undefined ? { archived: prev.archived } : {}),
     ...(prev?.orderedAt !== undefined ? { orderedAt: prev.orderedAt } : {}),
+    ...(prev?.stages !== undefined ? { stages: prev.stages } : {}),
   }, prev?.name);
   return true;
 }
 
-/** Zaznacza zamówienie kształtek na teraz: od tej chwili lista „do zamówienia” zaczyna się od zera. */
-export function markSiteOrdered(id: string, now: number = Date.now()) {
+/**
+ * Zmienia pola karty budowy, zachowując resztę. Budowa znana tylko z nazw we wpisach dostaje
+ * przy tym kartę w dokumencie. Nieznana budowa — nic.
+ */
+function patchSiteCard(id: string, patch: Partial<Pick<SiteCard, "orderedAt" | "stages">>) {
   const s = getStudy();
   const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
   if (!prev) return;
   const { stored: _s, count: _c, open: _o, first: _f, last: _l, ...card } = prev;
-  yStudy.saveSite({ ...card, orderedAt: now });
+  yStudy.saveSite({ ...card, ...patch });
+}
+
+/** Zaznacza zamówienie kształtek na teraz: od tej chwili lista „do zamówienia” zaczyna się od zera. */
+export function markSiteOrdered(id: string, now: number = Date.now()) {
+  patchSiteCard(id, { orderedAt: now });
+}
+
+/** Zapisuje całą listę etapów budowy (po odhaczeniu, dodaniu albo usunięciu etapu). */
+export function setSiteStages(id: string, stages: SiteStage[]) {
+  patchSiteCard(id, { stages: cleanStages(stages) ?? [] });
 }
 
 /** Budowa do archiwum (`true`) albo z powrotem czynna. */

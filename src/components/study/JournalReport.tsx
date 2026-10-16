@@ -519,6 +519,27 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
               </table>
             </section>
           )}
+          {report.stages && report.stages.length > 0 && (
+            <section className="break-inside-avoid-page pt-3" data-report-stages>
+              <h3 className="mb-1.5 text-sm font-semibold">
+                Etapy ({report.stages.filter((s) => s.done !== undefined).length}/{report.stages.length})
+              </h3>
+              <ul className="space-y-0.5 text-sm">
+                {report.stages.map((s) => (
+                  <li key={s.id} className="flex items-baseline gap-2" data-stage-done={s.done !== undefined || undefined}>
+                    <span aria-hidden className={s.done !== undefined ? "text-success-ink" : "text-muted-foreground"}>{s.done !== undefined ? "✓" : "○"}</span>
+                    <span className={s.done !== undefined ? "" : "text-muted-foreground"}>{s.name}</span>
+                    {s.done !== undefined && (
+                      <span className="ml-auto font-mono text-xs tabular-nums text-muted-foreground">
+                        {new Date(s.done).toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit" })}
+                      </span>
+                    )}
+                    <span className="sr-only">{s.done !== undefined ? "zrobione" : "do zrobienia"}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
           {report.toOrder.length > 0 && (
             <section className="break-inside-avoid-page pt-3" data-report-to-order>
               <h3 className="mb-1.5 text-sm font-semibold">Do zamówienia</h3>

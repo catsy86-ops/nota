@@ -6,6 +6,7 @@ import { entryMinutesOn, formatDuration } from "@/lib/shifts/time";
 import { entriesPl, KIND_LABEL } from "./journalView";
 import { entrySiteId, type SiteCard } from "./sites";
 import { siteOrder } from "./order";
+import { stageProgress, type SiteStage } from "./stages";
 import type { JournalEntry } from "./yStudy";
 
 /**
@@ -18,7 +19,7 @@ export interface ReportOptions {
   /** Id budowy (`entrySiteId`); `null` = wszystkie, `""` = wpisy bez budowy. */
   siteId: string | null;
   /** Karta wybranej budowy: nazwa, adres i inwestor w nagłówku raportu. */
-  siteCard?: Pick<SiteCard, "name" | "address" | "investor" | "orderedAt"> | null;
+  siteCard?: Pick<SiteCard, "name" | "address" | "investor" | "orderedAt" | "stages"> | null;
   /** Dni lokalne „2026-10-14”, oba włącznie. */
   from: string;
   to: string;
@@ -73,6 +74,11 @@ export interface JournalReport {
    * od okresu raportu. Puste dla raportu wszystkich budów i wpisów bez budowy.
    */
   toOrder: Fitting[];
+  /**
+   * Etapy budowy z karty (`stages.ts`) — tylko raport jednej budowy, której karta ma własną listę
+   * (ktoś ją odhaczał). `null` = bez sekcji etapów.
+   */
+  stages: SiteStage[] | null;
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -168,6 +174,7 @@ export function buildJournalReport(journal: readonly JournalEntry[], opts: Repor
     images: picked.flatMap((e) => e.images),
     fittings: sumFittings(picked.map((e) => e.fittings)),
     toOrder: opts.siteId ? siteOrder(journal, opts.siteId, opts.siteCard?.orderedAt).items : [],
+    stages: opts.siteId && opts.siteCard?.stages ? opts.siteCard.stages.map((s) => ({ ...s })) : null,
   };
 }
 
@@ -186,6 +193,10 @@ function entryLine(r: ReportEntry): string {
 /** Podsumowanie raportu w jednej linii: „5 wpisów · godziny pracy: 18 h · otwarte problemy: 1”. */
 export function reportSummary(r: JournalReport): string {
   const parts = [entriesPl(r.count)];
+  if (r.stages && r.stages.length > 0) {
+    const p = stageProgress(r.stages);
+    parts.push(`postęp: ${p.done}/${p.total} ${pluralPl(p.total, ["etap", "etapy", "etapów"])}`);
+  }
   if (r.workMinutes > 0) parts.push(`godziny pracy: ${formatDuration(r.workMinutes)}`);
   if (r.open.length > 0) parts.push(`otwarte problemy: ${r.open.length}`);
   return parts.join(" · ");
@@ -207,6 +218,11 @@ export function reportBody(r: JournalReport): string {
     lines.push("", "## Kształtki (suma)");
     for (const f of r.fittings) lines.push(`- ${f.name}: ${f.qty} szt.`);
   }
+  if (r.stages && r.stages.length > 0) {
+    const p = stageProgress(r.stages);
+    lines.push("", `## Etapy (${p.done}/${p.total})`);
+    for (const s of r.stages) lines.push(s.done !== undefined ? `- [x] ${s.name} (${shortDate(s.done)})` : `- [ ] ${s.name}`);
+  }
   if (r.toOrder.length > 0) {
     lines.push("", "## Do zamówienia");
     for (const f of r.toOrder) lines.push(`- ${f.name}: ${f.qty} szt.`);
@@ -226,6 +242,10 @@ export const reportText = (r: JournalReport) => `# ${r.title}\n\n${reportBody(r)
  * pogrubione (`*…*`), listy „- ” zostają (WhatsApp je rozumie).
  */
 export function reportWhatsApp(r: JournalReport): string {
-  const body = reportBody(r).replace(/^## (.+)$/gm, "*$1*");
+  const body = reportBody(r)
+    .replace(/^## (.+)$/gm, "*$1*")
+    // Pola listy zadań markdown WhatsApp pokazuje dosłownie — znaczki czyta każdy.
+    .replace(/^- \[x\] /gm, "✅ ")
+    .replace(/^- \[ \] /gm, "⬜ ");
   return `*${r.title}*\n\n${body}`;
 }

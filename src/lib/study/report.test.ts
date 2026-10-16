@@ -123,3 +123,31 @@ describe("raport — materiał do zamówienia", () => {
     expect(reportBody(all)).not.toContain("Do zamówienia");
   });
 });
+
+describe("raport — etapy budowy", () => {
+  const site = siteKey("Lipowa 5");
+  const stages = [
+    { id: "kan-pod", name: "Kanalizacja podposadzkowa", done: at(10, 15) },
+    { id: "proba", name: "Próba szczelności" },
+  ];
+
+  it("raport budowy z własną listą: postęp w podsumowaniu, sekcja z datami, znaczki w WhatsAppie", () => {
+    const r = buildJournalReport(journal, { siteId: site, siteCard: { name: "Lipowa 5", address: "", investor: "", stages }, from: "2026-10-14", to: "2026-10-14" });
+    expect(r.stages).toHaveLength(2);
+    const body = reportBody(r);
+    expect(body).toContain("postęp: 1/2 etapy");
+    expect(body).toContain("## Etapy (1/2)\n- [x] Kanalizacja podposadzkowa (10.10)\n- [ ] Próba szczelności");
+    const wa = reportWhatsApp(r);
+    expect(wa).toContain("✅ Kanalizacja podposadzkowa (10.10)");
+    expect(wa).toContain("⬜ Próba szczelności");
+    expect(wa).not.toContain("- [");
+  });
+
+  it("bez własnej listy w karcie i w raporcie wszystkich budów — bez sekcji", () => {
+    const plain = buildJournalReport(journal, { siteId: site, siteCard: { name: "Lipowa 5", address: "", investor: "" }, from: "2026-10-14", to: "2026-10-14" });
+    expect(plain.stages).toBeNull();
+    expect(reportBody(plain)).not.toContain("Etapy");
+    const all = buildJournalReport(journal, { siteId: null, siteCard: { name: "x", address: "", investor: "", stages }, from: "2026-10-14", to: "2026-10-14" });
+    expect(all.stages).toBeNull();
+  });
+});
