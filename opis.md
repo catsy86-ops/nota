@@ -827,7 +827,7 @@ początku to, co najczęściej robi się na budowie. Pole wyszukiwania szukane j
 osobne pola.
 
 **Ograniczenia i pułapki.** Bez gestu użytkownika iOS nie otworzy klawiatury przy „Szukaj” (kursor jest, klawiatura po
-stuknięciu w pole); Android otwiera. Udostępnianie plików i obrazów do aplikacji (Share Target z POST) — czeka na decyzję.
+stuknięciu w pole); Android otwiera. Udostępnianie z innej aplikacji (tekst, obrazy, PDF) — patrz „Notatki — udostępnianie z innej aplikacji”.
 
 **Testy.** `src/lib/manifest.test.ts` (kolejność i adresy skrótów), `e2e/routes.spec.ts` („skróty PWA „Nowa lista”
 i „Szukaj”…”, „skrót PWA /?new=1…”).
@@ -835,6 +835,47 @@ i „Szukaj”…”, „skrót PWA /?new=1…”).
 **Commit.** `c1a431f` (2026-10-15).
 
 ---
+
+## Notatki — udostępnianie z innej aplikacji (Share Target)
+
+**Co robi.** „Udostępnij → NOTKI” z innej aplikacji tworzy nową notatkę. Tytuł, tekst i link trafiają do treści (link
+bez dubla, jeśli już jest w tekście). Obrazy stają się zdjęciami notatki, PDF — załącznikiem. Inne typy (np. `.txt`,
+`.docx`) są pomijane, a toast mówi, których nie przyjęto. Po zapisie toast „Zapisano w NOTKACH” z „Otwórz”.
+
+**Gdzie jest.**
+- `public/manifest.webmanifest` → `share_target`: `POST /share`, `multipart/form-data`, pola `title`, `text`, `url`
+  oraz `files` z `accept: ["image/*", "application/pdf"]`.
+- `public/sw-share.js` (dołączany przez `workbox.importScripts` w `vite.config.ts`): przechwytuje `POST /share`,
+  zapisuje pliki do Cache Storage `share-inbox-v1` i przekierowuje (303) na `/share?inbox=<id>`.
+- `src/lib/shareInbox.ts`: `takeShareInbox(id)` — odbiera i kasuje wpis; `importSharedFiles(files, used)` — obrazy
+  przez `prepareImage` + `imageStore.putBlob` (jak w pasku dodawania), PDF przez `addAttachmentFiles`.
+- `src/lib/shareTarget.ts`: `parseShare` (tekst i link z GET, jak wcześniej) — odbiór z pliku przechodzi przez niego
+  z zapisanymi polami.
+- `src/pages/Index.tsx`: efekt montowania — gałąź `?inbox=` przed starą gałęzią `/share`.
+
+**Jak działa i dlaczego.**
+- Dwa etapy, bo POST nie ma gdzie wylądować: aplikacja może się nie załadować w chwili udostępnienia, a SW jest
+  jedynym miejscem, które przechwyci żądanie. Dlatego SW odkłada dane i przekierowuje, a aplikacja odbiera je po starcie
+  (po `whenNotesReady`).
+- Klucze w cache: `/share-inbox/<id>/f<i>` (bajty pliku, nazwa URI-zakodowana w `x-name`) i `/share-inbox/<id>/meta`
+  (JSON: `title`, `text`, `url`, `files`). **Meta zapisywana ostatnia** — przerwany zapis nie da notatki bez plików.
+- Pliki wędrują tą samą drogą co załączniki z edytora (SHA-256, deduplikacja, limity 10 MB na plik, 100 MB łącznie),
+  więc PDF z udostępnienia jest taki sam jak dodany ręcznie. Obrazy nie idą do załączników — zostają zdjęciami.
+- Wpis w cache jest kasowany przy odbiorze (także gdy plików brakuje), żeby nie zostawał.
+
+**Ograniczenia i pułapki.**
+- Działa tylko w zainstalowanej PWA i tylko z aktywnym SW. Stara wersja SW nie przechwyci POST-a — po aktualizacji
+  pierwsze udostępnienie z plikiem może trafić na zwykłą stronę 405 zamiast do aplikacji (do ponownego udostępnienia).
+- `?inbox=0` oznacza, że SW nie zapisał (np. brak miejsca w cache); aplikacja pokazuje „Nie udało się odebrać”.
+- Maks. 30 plików w jednym udostępnieniu; obrazy powyżej 2 MB są zmniejszane, a jeśli się nie dają — pomijane z toastem.
+- Tekst ucinany do 20 000 znaków, tytuł do 200 (jak przy GET).
+- Dedup `claimShare` dotyczy tylko udostępnień tekstowych; wpis z plikami jest jednorazowy z natury (kasowany).
+
+**Testy.** `src/lib/shareInbox.test.ts` (odbiór, kasowanie, brak meta, ograniczenie liczby plików, rozdział typów),
+`src/lib/manifest.test.ts` (POST, `accept`), `src/lib/shareTarget.test.ts` (tekst bez zmian),
+`e2e/share-files.spec.ts` (PDF → załącznik, zdjęcie → obraz; formularz POST przez SW), `e2e/routes.spec.ts` (tekst z GET).
+
+**Commit.** `0aa1c77` (2026-10-16).
 
 ## Notatki — przesunięcie kafla (telefon)
 

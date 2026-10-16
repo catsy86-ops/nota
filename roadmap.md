@@ -899,7 +899,7 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 - [x] 4.1 Swipe: w prawo przypnij, w lewo archiwizuj (kosz w arkuszu akcji), podpowiedź przy pierwszych 3 razach. ✅ 2026-10-15 (decyzja użytkownika): podpisy w tle przy 3 pierwszych gestach (`lib/swipeHint.ts`), „Przypięto” z „Cofnij”, w Archiwum lewo = przywróć.
 - [x] 4.2 Haptyka różnicowana (tap / success / warn / selection) + odhaczenie w kaflu, upuszczenie przeciągniętego kafla, wejście w zaznaczanie; quiz Nauki z haptyką i serią dni.
 - [x] 4.3 Przejście kafel → edytor jako shared element (dziś skok), nagłówek z cieniem dopiero po przewinięciu, zakładka koloru w nagłówku edytora. ✅ 2026-10-15: origin z kafla (`hooks/useOriginFromTile.ts`, wspólny z czytnikiem), bez `layoutId`; cień przez `onScrollCapture`; pasek `--note-ink` u góry okna.
-- [ ] 4.4 Skróty PWA „Szukaj”, „Nowa lista”; Share Target dla pliku/obrazu (po decyzji). ✅ częściowo 2026-10-15: skróty „Szukaj” (`?szukaj=1`) i „Nowa lista” (`?new=list`), kolejność skrótów pod Androida. Share Target dla plików — czeka na decyzję.
+- [x] 4.4 Skróty PWA „Szukaj”, „Nowa lista”; Share Target dla obrazów i PDF. ✅ 2026-10-15: skróty (`?szukaj=1`, `?new=list`), kolejność pod Androida. ✅ 2026-10-16 (decyzja użytkownika: obrazy i PDF): POST multipart na `/share` przechwytywany przez `public/sw-share.js`, odbiór w `lib/shareInbox.ts`; PDF jako załącznik, obrazy jako zdjęcia. Opis w `opis.md` „Notatki — udostępnianie z innej aplikacji”.
 - [x] 4.5 Nauka: nagłówek bez powtórki „Nauka”, etykiety przy 18 pigułkach, podpisy przycisków kart, cyfry tabelaryczne zamiast „1” jak „l”.
 
 ### Faza 5 — testy i QA mobilnego
