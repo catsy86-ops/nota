@@ -1518,6 +1518,36 @@ z etykietą `budowa` albo wydrukować / zapisać jako PDF.
 
 ---
 
+### Przypomnienia nad listą
+
+**Co robi.** Nad listą wpisów Dziennika pojawia się pasek „Przypomnienia” (tylko gdy coś jest do zrobienia):
+- **Problemy otwarte od ponad 3 dni** — „N problemów otwartych od ponad 3 dni”, przycisk „Pokaż otwarte” (filtr „Otwarte”).
+- **Budowa z montażem bez protokołu próby** — „Budowa „X”: montaż bez protokołu próby. Zapisz próbę przed zakryciem.”,
+  przycisk „Pokaż wpisy budowy” (filtr tej budowy).
+
+Pasek znika sam, gdy warunek przestanie być prawdziwy (problem rozwiązany, protokół dopisany).
+
+**Gdzie jest.** Reguła: `src/lib/study/reminders.ts` (`studyReminders(journal, now)`, stała `REMINDER_PROBLEM_DAYS = 3`,
+typ `StudyReminder`). Pasek: `ReminderRow` w `src/components/study/StudyJournal.tsx` (`data-testid="journal-reminders"`).
+
+**Jak działa.**
+- Problem przypomina, gdy jest otwarty i `now − at > 3 dni` (od chwili wpisu problemu, nie od rozwiązania). Dokładnie 3 dni — jeszcze bez przypomnienia.
+- „Montaż” budowy = wpis z kształtkami (`fittings`) albo wpis z tematu próby (`TEST_TOPICS`: `proba-wody`, `proba-kan`).
+  Budowa z montażem, w której **żaden** wpis nie ma `test`, dostaje przypomnienie. Próba zapisana w innej budowie go nie zdejmuje.
+- Wpisy bez budowy (`entrySiteId` = `""`) są pomijane. Nazwa budowy z najnowszego wpisu.
+- Liczone w `useMemo` na zmianie dziennika — bez timera. Jeśli strona stoi otwarta, a problem przekroczy 3 dni bez zmiany
+  dziennika, pasek pojawi się dopiero po następnym renderze (np. po przejściu zakładki).
+
+**Ograniczenia i pułapki.** Heurystyka montażu jest przybliżona: wpis z tematu „Próba” bez protokołu też uruchamia przypomnienie.
+Przypomnienie nie ma przycisku „Dodaj protokół” — arkusz wpisu nie przyjmuje z góry budowy, więc przycisk pokazuje wpisy budowy.
+Pasek nie jest zapamiętywany (brak „ukryj”), bo znika sam.
+
+**Testy.** `src/lib/study/reminders.test.ts` (7 testów). Pasek nie ma osobnego e2e; cały `e2e/study.spec.ts` (30/30, w tym telefony) przechodzi.
+
+**Commit.** `d41bd89` (2026-10-16).
+
+---
+
 ## Praca → Dziennik: raport do szefa i grupy w WhatsApp
 
 **Co robi.** W oknie „Raport z budowy” zapisujesz odbiorców: szefa (imię i numer WhatsApp) i/lub grupę (nazwa,
