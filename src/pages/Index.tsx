@@ -24,7 +24,6 @@ import { requestHeading } from "@/lib/wikiHeading";
 import { useLatestRef, useStableByKey } from "@/hooks/useLatestRef";
 import { setGridNavPreview, setGridNavFocus } from "@/lib/gridKeyboardNav";
 import { copyNoteToClipboard } from "@/lib/noteMarkdown";
-import { NoteReader } from "@/components/NoteReader";
 import { playEnter, tween } from "@/lib/motion";
 import { useNavigate, useNavigationType } from "react-router-dom";
 import { claimShare, parseShare, SHARE_PATH } from "@/lib/shareTarget";
@@ -102,6 +101,10 @@ const ShiftsView = lazy(() => loadShiftsView().then((m) => ({ default: m.ShiftsV
 const ReminderCalendarView = lazy(() => loadCalendarView().then((m) => ({ default: m.ReminderCalendarView })));
 // Przypomnienie „Raport dnia gotowy” (dział Praca) — leniwie, żeby dziennik nie wchodził do głównej paczki.
 const DailyReportNudge = lazy(() => import("@/components/study/DailyReportNudge"));
+// Czytnik notatek poza paczką startową; doczytywany w tle, gdy przeglądarka odpocznie (patrz efekt w `Index`),
+// więc pierwsze otwarcie notatki nie czeka.
+const loadNoteReader = () => import("@/components/NoteReader");
+const NoteReader = lazy(() => loadNoteReader().then((m) => ({ default: m.NoteReader })));
 
 const Index = () => {
   const {
@@ -183,6 +186,14 @@ const Index = () => {
   useEffect(() => {
     setSidebarOpen(!isMobile);
   }, [isMobile]);
+
+  // Czytnik w tle po starcie — kliknięcie notatki go nie czeka.
+  useEffect(() => {
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+    if (!w.requestIdleCallback) { const t = window.setTimeout(() => void loadNoteReader(), 1500); return () => window.clearTimeout(t); }
+    const id = w.requestIdleCallback(() => void loadNoteReader(), { timeout: 4000 });
+    return () => w.cancelIdleCallback?.(id);
+  }, []);
 
   const openNoteRef = useRef<(id: string) => void>(() => {});
   // Stabilna tablica: nowa w każdym renderze restartowałaby sprawdzanie przy każdym znaku w wyszukiwarce.
@@ -1036,8 +1047,8 @@ const Index = () => {
     )}
     <AnimatePresence>
       {readerNote && (
+        <Suspense key="reader" fallback={null}>
         <NoteReader
-          key="reader"
           note={readerNote}
           mode={presentingNoteId ? "present" : "preview"}
           searchQuery={search}
@@ -1058,6 +1069,7 @@ const Index = () => {
             updateNote(noteId, { checklist: n.checklist.map((c) => (c.id === itemId ? { ...c, checked: !c.checked } : c)) });
           }}
         />
+        </Suspense>
       )}
     </AnimatePresence>
     {focusModeOpen && (
