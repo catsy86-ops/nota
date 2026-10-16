@@ -881,8 +881,8 @@ z treści).
 zachowanie się nie zmienia. Stan prezentacji zostawiony w `Index` (dwa miejsca go ustawiają: siatka i czytnik).
 
 **Stan etapu 4.** Zrobione też: sesja edycji kafla (`useNoteEditSession`), obrazy kafla (`useNoteImages`), akcje kafla
-(`NoteCardActions`), patrz niżej. Pozostają: reszta `NoteCard.tsx` (widok kafla, pasek i tryb wpisu) i reszta `Index.tsx`
-— wielosesyjny podział, każdy kawałek z własnym e2e.
+(`NoteCardActions`), edytor kafla i okna (`NoteEditor`), patrz niżej. Pozostają: reszta `NoteCard.tsx` (widok kafla
+i tryb wpisu) i reszta `Index.tsx` — wielosesyjny podział, każdy kawałek z własnym e2e.
 
 **Testy.** Charakteryzujące: `e2e/reader.spec.ts`, `reader-step.spec.ts`, `wikilinks.spec.ts`, `notes.spec.ts`,
 `editing.spec.ts`, `routes.spec.ts`, `tabs.spec.ts`, `search-highlight.spec.ts` — 28/28.
@@ -921,6 +921,31 @@ obsługę obrazów. Pozostają też `FindReplaceBar` (renderowany w `NoteCard`) 
 1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
 
 **Commit.** `3342c00` (2026-10-16) — sesja edycji; `ff09430` (2026-10-16) — klawisze, podpowiedzi i Ctrl+F.
+
+## Notatki — edytor kafla i okna w NoteEditor (plan Notatek, etap 4, refaktor NoteCard)
+
+**Co robi.** Bez zmian dla użytkownika. Edytor w kaflu i w oknie pełnoekranowym: tytuł, pasek formatowania,
+podgląd Markdown, lista zadań, załączniki, licznik i „Zapisz”.
+
+**Gdzie jest.** `src/components/NoteEditor.tsx`: `NoteEditor({ full, note, session, spellcheck, editorScrolled,
+knownTitles, onWikiClick, onUpdate, onPaste })`. Stan i handlery z `session` (typ `NoteEditSession` z
+`src/hooks/useNoteEditSession.ts`). `NoteCard.tsx` ma `renderEditor(full)`, który tylko zwraca `<NoteEditor/>`,
+i używa go w kaflu (`full={false}`) i w `Dialog` (`full`).
+
+**Jak działa i dlaczego.** Jedna sesja edycji dla obu miejsc, więc rozwinięcie okna nie zmienia ścieżki zapisu.
+Przekazanie całego obiektu sesji zamiast kilkudziesięciu props. `onBlur` na korzeniu zapisuje szkic przy wyjściu
+fokusem, ale nie zamyka edytora.
+
+**Ograniczenia.** `NoteEditor` czyta `session` przez destrukturyzację — nowe pole sesji trzeba dopisać do listy w tym pliku.
+
+**Testy.** Charakteryzujące: `e2e/editing.spec.ts`, `editor-keys.spec.ts`, `editor-open.spec.ts`, `checklist.spec.ts`,
+`live-text.spec.ts`, `live-text-focused.spec.ts`, `wikilinks.spec.ts`, `note-links.spec.ts`, `wiki-heading.spec.ts`,
+`images.spec.ts`, `card-images.spec.ts`, `paste-html.spec.ts`, `attachments.spec.ts`, `read-only-note.spec.ts`,
+`parked-drafts.spec.ts`, `notes.spec.ts`, `daily-note.spec.ts`, `composer.spec.ts` — 49/49 (`--workers=1`).
+Testy jednostkowe `src/components`, `src/hooks`, `src/lib`: 1209/1209. `tsc` i eslint bez błędów.
+Nie uruchamiano pełnego e2e.
+
+**Commit.** `ad2df94` (2026-10-16).
 
 ## Notatki — akcje kafla w NoteCardActions (plan Notatek, etap 4, refaktor NoteCard)
 
