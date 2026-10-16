@@ -57,6 +57,27 @@ test("tablica: temat przechodzi między kolumnami i postęp przeżywa odświeże
   await expect(page.getByTestId("count-done")).toHaveText("1");
 });
 
+test("pasek opanowania: pieczątka „Umiem” dopiero, gdy cały moduł jest w „Umiem”", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Tablica" }).click();
+  const kan = [
+    "Kielichy, uszczelki i fazowanie",
+    "Napowietrzenie pionu",
+    "Piony, rewizje i mocowania",
+    "Próba kanalizacji na zalanie",
+    "Spadki kanalizacji",
+  ];
+  for (const title of kan.slice(0, -1)) {
+    await page.getByRole("button", { name: `${title}: przenieś do „W trakcie”` }).click();
+    await page.getByRole("button", { name: `${title}: przenieś do „Umiem”` }).click();
+  }
+  await expect(page.locator("[data-mastery-stamp]")).toHaveCount(0);
+  await page.getByRole("button", { name: `${kan[4]}: przenieś do „W trakcie”` }).click();
+  await page.getByRole("button", { name: `${kan[4]}: przenieś do „Umiem”` }).click();
+  await expect(page.locator('[data-mastery-module="kan"] [data-mastery-stamp]')).toHaveText("Umiem");
+  await expect(page.locator('[data-mastery-module="woda"] [data-mastery-stamp]')).toHaveCount(0);
+});
+
 test("lista do nauki: odhaczanie, filtr krytycznych i ściąga wysokości", async ({ page }) => {
   await page.goto("/praca");
   await page.getByRole("tab", { name: "Lista" }).click();

@@ -988,7 +988,9 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 ### Dalej (po decyzjach)
 - [x] Przypomnienia: problem otwarty > 3 dni, próba bez wpisu przed zakryciem (S/M) — pasek nad Dziennikiem, `lib/study/reminders.ts`.
 - [x] Szybkie wpisy: podpowiedzi z ostatnich tekstów na budowie, „Jak wczoraj” (S/M). ✅ 2026-10-16: pusty wpis na budowie pokazuje pigułki z 3 ostatnich różnych tekstów tej budowy i „Jak wczoraj” (tekst najnowszego wpisu z poprzedniego dnia); `journalView.ts` (`recentSiteTexts`, `yesterdaySiteText`), 7 testów, e2e w `study.spec.ts` (31/31).
-- [x] Wpis jako linijka w zeszycie (godzina mono na marginesie, linia zamiast ramki) ✅ 2026-10-16; pasek opanowania z kratek i pieczątka „Umiem” modułu; puste stany z ilustracją (S–M) — jeszcze otwarte.
+- [x] Wpis jako linijka w zeszycie (godzina mono na marginesie, linia zamiast ramki) ✅ 2026-10-16.
+- [x] Pasek opanowania z kratek i pieczątka „Umiem” modułu ✅ 2026-10-16 (`MasteryStrip`, e2e pieczątki).
+- [ ] Puste stany z ilustracją (S–M).
 - [ ] Paczka ZIP budowy (wpisy, zdjęcia, PDF) z karty budowy (M).
 - [ ] Karta doświadczenia: liczba budów, próby, opanowane tematy, trafność — eksport (S/M, dane w `stats.ts`).
 - [x] Kształtki we wpisie (rodzaj + liczba sztuk), sumy per budowa w raporcie (M) — decyzja: tylko kształtki.

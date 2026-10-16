@@ -35,14 +35,14 @@ function MasteryStrip() {
         <p className="font-mono text-4xl font-semibold leading-none tabular-nums text-primary-ink" data-testid="mastery-count">{done}</p>
         <p className="text-sm text-muted-foreground">z {TOPICS.length} tematów opanowanych{doing > 0 ? ` · ${doing} w trakcie` : ""}</p>
       </div>
-      <div className="flex gap-2.5" role="group" aria-label={`Opanowane tematy: ${done} z ${TOPICS.length}`}>
+      <div className="flex flex-wrap gap-x-5 gap-y-3" role="group" aria-label={`Opanowane tematy: ${done} z ${TOPICS.length}`}>
         {MODULES.map((m) => {
           const topics = TOPICS.filter((t) => t.module === m.id);
           if (topics.length === 0) return null;
           const modDone = topics.filter((t) => columnOf(study, t.id) === "done").length;
           return (
-            <div key={m.id} className="min-w-0" style={{ flexGrow: topics.length, flexBasis: 0, minWidth: "4.5rem" }} data-mastery-module={m.id}>
-              <div className="flex gap-0.5">
+            <div key={m.id} className="min-w-0 max-w-full" data-mastery-module={m.id}>
+              <div className="flex flex-wrap gap-1">
                 {topics.map((t) => {
                   const col = columnOf(study, t.id);
                   const on = picked === t.id;
@@ -54,12 +54,12 @@ function MasteryStrip() {
                       aria-label={`${t.title}: ${COLUMN_STATE[col]}`}
                       aria-pressed={on}
                       onClick={() => setPicked(on ? null : t.id)}
-                      // Komórka cienka, cel dotyku wysoki — palec trafia bez celowania.
-                      className="group -my-2 min-w-0 flex-1 py-2 focus-visible:outline-hidden"
+                      // Kratka 20 px w polu 28 px (na dotyku 44 px) — palec trafia bez celowania.
+                      className="group grid size-7 shrink-0 place-items-center focus-visible:outline-hidden coarse:size-11"
                     >
                       <span
                         className={cn(
-                          "block h-2.5 rounded-sm border transition-colors duration-300 group-focus-visible:ring-2 group-focus-visible:ring-ring",
+                          "block size-5 rounded-[4px] border transition-colors duration-300 group-focus-visible:ring-2 group-focus-visible:ring-ring",
                           col === "done" && "border-primary bg-primary",
                           col === "doing" && "border-primary/60 bg-primary/30",
                           col === "todo" && "border-border bg-transparent",
@@ -70,9 +70,15 @@ function MasteryStrip() {
                   );
                 })}
               </div>
-              <p className="mt-1 flex items-baseline justify-between gap-1 text-2xs text-muted-foreground">
+              <p className="mt-1 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5 text-2xs text-muted-foreground">
                 <span className="truncate">{m.label}</span>
-                <span className="shrink-0 font-mono tabular-nums">{modDone}/{topics.length}</span>
+                <span className="flex shrink-0 items-center gap-1.5">
+                  {modDone === topics.length && (
+                    // Pieczątka: moduł cały w „Umiem” — krzywo, jak stempel w zeszycie.
+                    <span data-mastery-stamp className="-rotate-3 rounded-sm border-2 border-success-ink px-1.5 text-[0.65rem] font-semibold uppercase leading-4 tracking-widest text-success-ink">Umiem</span>
+                  )}
+                  <span className="font-mono tabular-nums">{modDone}/{topics.length}</span>
+                </span>
               </p>
             </div>
           );
