@@ -880,8 +880,8 @@ z treści).
 **Jak działa i dlaczego.** Hook nie trzyma własnego stanu poza tym, co było już w `gridKeyboardNav` i w `Index`, więc
 zachowanie się nie zmienia. Stan prezentacji zostawiony w `Index` (dwa miejsca go ustawiają: siatka i czytnik).
 
-**Stan etapu 4.** Zrobione też: sesja edycji kafla (`useNoteEditSession`, patrz niżej). Pozostają: reszta `NoteCard.tsx`
-i reszta `Index.tsx` — wielosesyjny podział, każdy kawałek z własnym e2e.
+**Stan etapu 4.** Zrobione też: sesja edycji kafla (`useNoteEditSession`), obrazy kafla (`useNoteImages`), patrz niżej.
+Pozostają: reszta `NoteCard.tsx` (widok i menu) i reszta `Index.tsx` — wielosesyjny podział, każdy kawałek z własnym e2e.
 
 **Testy.** Charakteryzujące: `e2e/reader.spec.ts`, `reader-step.spec.ts`, `wikilinks.spec.ts`, `notes.spec.ts`,
 `editing.spec.ts`, `routes.spec.ts`, `tabs.spec.ts`, `search-highlight.spec.ts` — 28/28.
@@ -920,6 +920,30 @@ obsługę obrazów. Pozostają też `FindReplaceBar` (renderowany w `NoteCard`) 
 1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
 
 **Commit.** `3342c00` (2026-10-16) — sesja edycji; `ff09430` (2026-10-16) — klawisze, podpowiedzi i Ctrl+F.
+
+## Notatki — obrazy kafla w hooku useNoteImages (plan Notatek, etap 4, refaktor NoteCard)
+
+**Co robi.** Bez zmian dla użytkownika. Obrazy z pliku („Dodaj obrazek”), wklejony zrzut do pola treści,
+rysunek z płótna i usuwanie z „Cofnij” działają jak wcześniej.
+
+**Gdzie jest.** `src/hooks/useNoteImages.ts`: `useNoteImages({ note, onUpdate })` zwraca `fileInputRef`,
+`handleImageUpload`, `handleEditPaste`, `addDrawing(dataUrl)`, `removeImage(idx)`. `NoteCard.tsx` wywołuje go
+na początku komponentu i podpina `fileInputRef` do `<input type="file">`, `handleEditPaste` do pól treści,
+`addDrawing` do `DrawingCanvas`. Stan podglądu (`previewImage`) i otwarcia rysownika (`showDrawing`) zostaje w `NoteCard`.
+
+**Jak działa i dlaczego.** Obraz przechodzi przez `prepareImage` (skalowanie do limitu 2 MB), bajty idą do
+`imageStore`, a do notatki trafia tylko referencja (klucz SHA-256). Obrazy, których nie da się przeskalować,
+są liczone i pokazywane w jednym komunikacie. Usuwanie zapisuje poprzednią listę, żeby „Cofnij” ją przywrócił.
+
+**Ograniczenia.** Brak e2e, które w samym kaflu dodaje lub usuwa obraz (przycisk, wklejenie do edytora, „Cofnij”).
+`e2e/images.spec.ts` sprawdza przeładowanie, backup i migrację, a nie kliknięcia w kafel. Ten test trzeba dopisać osobno.
+
+**Testy.** Charakteryzujące: `e2e/images.spec.ts`, `paste-html.spec.ts`, `attachments.spec.ts`, `editing.spec.ts`,
+`editor-keys.spec.ts`, `composer.spec.ts`, `note-look.spec.ts`, `note-props.spec.ts`, `checklist.spec.ts`,
+`live-text.spec.ts`, `parked-drafts.spec.ts`, `read-only-note.spec.ts` — 36/36 (`--workers=1`).
+Testy jednostkowe `src/components`, `src/hooks`, `src/lib`: 1209/1209. `tsc` i eslint bez błędów.
+
+**Commit.** `53e7886` (2026-10-16).
 
 ## Notatki — tekst peera na żywo w otwartym edytorze (plan Notatek, etap 4, weryfikacja)
 
