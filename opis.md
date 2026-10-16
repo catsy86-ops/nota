@@ -1501,6 +1501,38 @@ w portalu — w testach `page.getByRole("menuitem", …)`, nie wewnątrz okna.
 
 ---
 
+## Skrzynka — szybkie przechwycenie do posortowania (punkt 4 planu)
+
+**Co robi.** Widok „Skrzynka” w pasku bocznym (licznik = liczba notatek do posortowania). Na górze pole:
+Enter zapisuje tekst od razu, bez tytułu, folderu i etykiet. Pierwsza linia staje się tytułem (do 120 znaków),
+reszta treścią. Dymek „Zapisano w skrzynce” ma „Cofnij”. Skrzynka pokazuje notatki bez folderu, bez etykiet
+i nie będące podnotatkami. Przeniesienie do folderu albo nadanie etykiety usuwa notatkę ze skrzynki.
+
+**Gdzie jest.**
+- `src/lib/inbox.ts`: `isInboxNote` (reguła), `captureParts` (tekst → tytuł i treść), `INBOX_TITLE_MAX`.
+- `src/components/InboxCapture.tsx`: pole na górze widoku, czyści się po zapisie.
+- `src/hooks/useFilteredNotes.ts`: typ `View` z `"inbox"`, filtr w `filterNotes`.
+- `src/lib/viewRoute.ts`: adres `/skrzynka`.
+- `src/components/EmptyState.tsx`: nagłówek i opis pustej skrzynki.
+- `src/pages/Index.tsx`: pozycja w `sidebarItems` z `inboxCount`, handler `captureToInbox`, render `InboxCapture`.
+
+**Jak działa i dlaczego.**
+- Brak nowego pola w danych: skrzynka to reguła nad istniejącymi notatkami. Nie trzeba migracji, synchronizacja
+  i kopia zapasowa działają bez zmian, a sortowanie od razu opróżnia skrzynkę.
+- Zapis idzie przez `handleAddNoteGlow`, tak jak w kompozytorze i udostępnianiu, więc widok `inbox` nie dokłada
+  folderu ani etykiety (`activeLabel` jest pusty poza widokiem etykiety).
+- Pole zapisuje się tylko dla niepustego tekstu; pusty Enter nic nie robi.
+
+**Ograniczenia i pułapki.**
+- Notatki w koszu i archiwum nie są w skrzynce (reguła działa na aktywnych notatkach).
+- Starsze notatki bez folderu i etykiet też trafiają do skrzynki. To zamierzone: to „do posortowania”.
+- Pasek „Zapisz notatkę…” nie pojawia się w skrzynce. Nowe notatki z szablonami robi się dalej w widoku Notatek.
+- Brak wpisu w palecie poleceń i w dolnej nawigacji telefonu — skrzynkę otwiera się z paska bocznego.
+
+**Testy.** Nie dodano (na prośbę, bez e2e na razie). Sprawdzono: typecheck, lint zmienionych plików.
+
+**Commit.** `c8b9817` (2026-10-16).
+
 ## Dziś — karta zmiany, zaległe i terminy (punkt 3 planu)
 
 **Co robi.** Na górze widoku „Dziś” są trzy elementy, w tej kolejności:
