@@ -15,7 +15,7 @@ import { PriorityPicker, PriorityBadge } from "./PriorityPicker";
 import { ChecklistCount, ChecklistPreview } from "./ChecklistEditor";
 import { ChecklistConvertButtons, ChecklistEditor } from "./ChecklistEditor";
 import { EditorStats } from "./EditorStats";
-import { prepareImage } from "@/lib/imagePrepare";
+import { useNoteImages } from "@/hooks/useNoteImages";
 import { FindReplaceBar } from "./FindReplaceBar";
 import { haptic } from "@/lib/haptics";
 import { countSwipe, showSwipeLabels } from "@/lib/swipeHint";
@@ -28,7 +28,6 @@ import { FolderPicker } from "./FolderPicker";
 import { VersionHistory } from "./VersionHistory";
 import type { Note, NoteColor } from "@/hooks/useNotes";
 import { useNoteEditSession } from "@/hooks/useNoteEditSession";
-import { imageStore } from "@/lib/imageStore";
 import { NoteImage } from "./NoteImage";
 import { AttachmentsPanel } from "./AttachmentsPanel";
 import { AttachmentsBadge } from "./AttachmentsList";
@@ -105,7 +104,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   const deleteMounted = useLatch(showDeleteConfirm);
   const drawingMounted = useLatch(showDrawing);
   const sheetMounted = useLatch(sheetOpen);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { fileInputRef, handleImageUpload, handleEditPaste, addDrawing, removeImage } = useNoteImages({ note, onUpdate });
   const cardRef = useRef<HTMLDivElement>(null);
 
   const wordCount = note.content.trim() ? note.content.trim().split(/\s+/).length : 0;
@@ -124,50 +123,6 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
     const updated = (note.checklist || []).map((i) => (i.id === itemId ? { ...i, checked: !i.checked } : i));
     haptic(updated.every((i) => i.checked) ? "success" : "selection");
     onUpdate?.(note.id, { checklist: updated });
-  }
-
-  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (!files) return;
-    await addImages(Array.from(files));
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  }
-
-  /** Wklejony zrzut ekranu albo skopiowany obraz trafia do notatki zamiast do pola tekstu. */
-  function handleEditPaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
-    const pasted = Array.from(e.clipboardData.files).filter((f) => f.type.startsWith("image/"));
-    if (pasted.length === 0) return;
-    e.preventDefault();
-    void addImages(pasted);
-  }
-
-  /** Obrazy większe niż limit są skalowane; dopiero gdy się nie da, trafiają na listę pominiętych. */
-  async function addImages(files: File[]) {
-    const newImages: string[] = [];
-    let skipped = 0;
-    try {
-      for (const file of files) {
-        const prepared = await prepareImage(file);
-        if (!prepared) { skipped++; continue; }
-        newImages.push(await imageStore.putBlob(prepared));
-      }
-    } catch {
-      toast.error("Nie udało się zapisać obrazka", { description: "Brakuje miejsca w pamięci przeglądarki. Usuń stare notatki z obrazkami i spróbuj ponownie." });
-    }
-    if (skipped > 0) {
-      toast.error(skipped === 1 ? "Obrazek jest za duży (max 2 MB)" : `${skipped} obrazków jest za dużych (max 2 MB)`, {
-        description: newImages.length > 0 ? "Pozostałe zostały dodane." : undefined,
-      });
-    }
-    if (newImages.length) onUpdate?.(note.id, { images: [...(note.images || []), ...newImages] });
-  }
-
-  function removeImage(idx: number) {
-    const before = [...(note.images || [])];
-    const updated = [...before];
-    updated.splice(idx, 1);
-    onUpdate?.(note.id, { images: updated });
-    toast("Usunięto obrazek", { action: { label: "Cofnij", onClick: () => onUpdate?.(note.id, { images: before }) } });
   }
 
   // Subtle 3D hover tilt — opt-in (effectsSettings.cardTilt), never with reduced motion.
@@ -925,11 +880,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         </AlertDialogContent>
       </AlertDialog>}
 
-      {drawingMounted && <DrawingCanvas open={showDrawing} onOpenChange={setShowDrawing} onSave={(dataUrl) => {
-        imageStore.putDataUrl(dataUrl)
-          .then((ref) => onUpdate?.(note.id, { images: [...(note.images || []), ref] }))
-          .catch(() => toast.error("Nie udało się zapisać rysunku", { description: "Brakuje miejsca w pamięci przeglądarki." }));
-      }} />}
+      {drawingMounted && <DrawingCanvas open={showDrawing} onOpenChange={setShowDrawing} onSave={addDrawing} />}
     </>
   );
 });
