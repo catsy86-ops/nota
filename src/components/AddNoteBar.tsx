@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { prepareImage } from "@/lib/imagePrepare";
+import { htmlToMarkdown } from "@/lib/htmlToMarkdown";
 import { IconButton } from "@/components/ui/icon-button";
 import type { NoteColor, ChecklistItem } from "@/hooks/useNotes";
 import { imageStore } from "@/lib/imageStore";
@@ -268,12 +269,37 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
       void addImageFiles(pastedImages);
       return;
     }
-    if (title.trim() || content.trim()) return;
-    const parsed = parsePastedUrl(e.clipboardData.getData("text/plain"));
-    if (!parsed) return;
+    // Pusty szkic: sam adres z tytułem strony (istniejąca obsługa). Inaczej — formatowanie z HTML.
+    if (!title.trim() && !content.trim()) {
+      const parsed = parsePastedUrl(e.clipboardData.getData("text/plain"));
+      if (parsed) {
+        e.preventDefault();
+        setTitle(parsed.title);
+        setContent(parsed.url);
+        return;
+      }
+    }
+    pasteHtmlAsMarkdown(e);
+  }
+
+  /**
+   * Wklejenie z HTML (strona, dokument) zamienia formatowanie na Markdown i wstawia w miejscu kursora.
+   * Zwykły tekst bez formatowania zostaje przy domyślnym wklejaniu — różnica nie ma sensu.
+   */
+  function pasteHtmlAsMarkdown(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+    const html = e.clipboardData.getData("text/html");
+    if (!html.trim()) return;
+    const md = htmlToMarkdown(html);
+    if (!md || md === e.clipboardData.getData("text/plain").trim()) return;
     e.preventDefault();
-    setTitle(parsed.title);
-    setContent(parsed.url);
+    const el = textareaRef.current;
+    const start = el?.selectionStart ?? content.length;
+    const end = el?.selectionEnd ?? content.length;
+    setContent(content.slice(0, start) + md + content.slice(end));
+    requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(start + md.length, start + md.length);
+    });
   }
 
   // Dyktowanie dopisuje rozpoznane zdanie na końcu treści.
