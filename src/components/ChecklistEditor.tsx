@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { m as motion, AnimatePresence } from "framer-motion";
-import { Plus, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { emojiShower } from "@/lib/celebrate";
 import { haptic } from "@/lib/haptics";
@@ -90,6 +90,13 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
   }
 
   /** Alt+↑/↓ w polu pozycji: zamiana miejscami z sąsiednią nieukończoną pozycją. */
+  /** Czy pozycja może się przesunąć (jest sąsiad wśród nieodhaczonych) — do wyłączania przycisków. */
+  function canMove(id: string, dir: -1 | 1): boolean {
+    const open = items.filter((i) => !i.checked);
+    const at = open.findIndex((i) => i.id === id);
+    return at !== -1 && !!open[at + dir];
+  }
+
   function moveItem(id: string, dir: -1 | 1) {
     const open = items.filter((i) => !i.checked);
     const at = open.findIndex((i) => i.id === id);
@@ -232,6 +239,29 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                 }}
                 className="text-sm bg-transparent outline-hidden text-foreground flex-1 min-w-0"
               />
+            )}
+            {!readOnly && !item.checked && (
+              // Widoczne przesunięcie (bez przeciągania): na komputerze po najechaniu lub fokusie, na dotyku zawsze.
+              <span className="flex shrink-0 items-center opacity-0 transition-opacity group-hover/item:opacity-100 focus-within:opacity-100 coarse:opacity-100">
+                {(["up", "down"] as const).map((dirName) => {
+                  const dir = dirName === "up" ? -1 : 1;
+                  const label = dirName === "up" ? "Przesuń w górę" : "Przesuń w dół";
+                  const Icon = dirName === "up" ? ChevronUp : ChevronDown;
+                  return (
+                    <button
+                      key={dirName}
+                      type="button"
+                      onClick={() => moveItem(item.id, dir)}
+                      disabled={!canMove(item.id, dir)}
+                      aria-label={`${label}: ${item.text || "pusta"}`}
+                      title={label}
+                      className="grid place-items-center rounded p-0.5 text-muted-foreground hover:text-foreground disabled:opacity-30 outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 coarse:w-9"
+                    >
+                      <Icon className="w-3.5 h-3.5" aria-hidden />
+                    </button>
+                  );
+                })}
+              </span>
             )}
             {!readOnly && (
               <button
