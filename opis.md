@@ -2297,9 +2297,13 @@ toast „Paczka gotowa: raport i 0 zdjęć”).
 **Co robi.** W karcie budowy sekcja „Do zamówienia” pokazuje kształtki zużyte na tej budowie od ostatniego
 zamówienia (suma sztuk per nazwa). „Kopiuj listę” kopiuje gotowy tekst do wysłania dostawcy albo do grupy,
 a „Oznacz jako zamówione” zapisuje moment zamówienia — od tej chwili lista zaczyna się od zera i rośnie z
-kolejnymi wpisami. Bez kształtek oba przyciski są nieaktywne.
+kolejnymi wpisami. Bez kształtek oba przyciski są nieaktywne. Ta sama lista idzie w raporcie budowy dla szefa
+(ekran, wydruk, tekst, WhatsApp) jako sekcja „Do zamówienia” — w jednej wiadomości postęp i brakujący materiał.
 
 **Gdzie jest.**
+- `src/lib/study/report.ts`: `JournalReport.toOrder` (z `siteOrder`, tylko raport jednej budowy), sekcja
+  `## Do zamówienia` w `reportBody` (WhatsApp: `*Do zamówienia*`); `ReportOptions.siteCard` niesie `orderedAt`.
+  Tabela `[data-report-to-order]` w `JournalReport.tsx`.
 - `src/lib/study/order.ts`: `siteOrder(journal, siteId, orderedAt?)` → `{ items, entries, since }` (czysta funkcja),
   `orderText(siteName, order)` — tekst bez znaczników formatowania.
 - `src/lib/study/sites.ts`: pole `SiteCard.orderedAt?` (ms); `cleanSite` zachowuje je, gdy jest liczbą.
@@ -2322,11 +2326,79 @@ pierwszym oznaczeniu zamówienia.
 
 **Testy.** `src/lib/study/order.test.ts` (10: suma i kolejność, granica `orderedAt`, inne budowy i wpisy bez kształtek,
 `siteId` przed nazwą, tekst z datą i bez pozycji, `cleanSite` z `orderedAt`). `e2e/site-order.spec.ts` (suma budowy
-bez obcej budowy, kopia listy, oznaczenie zeruje listę i blokuje przyciski, stan po przeładowaniu). Regresja działu:
-`e2e/study.spec.ts`, `journal-fittings.spec.ts`, `site-order.spec.ts` — 30/30 (chromium, `--workers=1`); Vitest 1220/1220.
-Nie sprawdzone ręcznie na telefonie.
+bez obcej budowy, kopia listy, oznaczenie zeruje listę i blokuje przyciski, stan po przeładowaniu; raport z karty ma
+sekcję na ekranie i w kopiowanym tekście). `src/lib/study/report.test.ts` („materiał do zamówienia”: niezależnie od
+okresu raportu, bez sekcji w raporcie wszystkich budów). Regresja działu: `e2e/study.spec.ts`, `journal-fittings.spec.ts`,
+`site-order.spec.ts` — zielone (chromium, `--workers=1`). Nie sprawdzone ręcznie na telefonie.
 
-**Commit.** `98e625a` (2026-10-16).
+**Commit.** `98e625a` (karta, 2026-10-16), `a8cf1a9` (raport, 2026-10-16).
+
+### Dyktowanie kształtek
+
+**Co robi.** W polu kształtek wpisu jest mikrofon „Dyktuj”. Powiedz np. „kolano szesnaście cztery sztuki, trójnik 16 dwa”
+— pozycje dopisują się do listy, a dymek pokazuje, co dodano („Dodano: Kolano 16 × 4, Trójnik 16 × 2”). Ta sama nazwa
+sumuje sztuki zamiast nowego wiersza. Gdy nic nie rozpozna, dymek pokazuje usłyszany tekst i przykład. Treść wpisu
+dyktuje się osobnym mikrofonem przy polu tekstu (było wcześniej).
+
+**Gdzie jest.**
+- `src/lib/study/spokenFittings.ts`: `parseSpokenFittings(text, known)`, `mergeFittings(current, added)`, `wordsToDigits`.
+- `src/components/study/FittingsFields.tsx`: przycisk „Dyktuj kształtki” (`aria-label`) przy „Dodaj kształtki” i przy
+  „Kolejna”; `useDictation` (Web Speech API, `pl-PL`, zgoda przy pierwszym użyciu — `kaczy.dictation.consent`).
+
+**Jak działa i dlaczego.** Rozpoznawanie mowy zwraca raz cyfry, raz słowa — `wordsToDigits` zamienia liczebniki
+(„szesnaście”, „dwadzieścia pięć”). Pozycje dzieli przecinek, kropka, średnik, „i”, „oraz”, „plus”. Liczba sztuk:
+po mnożniku („x 3”), przed „sztuk/szt/razy/x”, na początku („4 kolana 16”) albo ostatnia z dwóch liczb („trójnik 16 2”);
+bez liczby — 1. „20 na 16” to wymiar („Redukcja 20/16”), nie sztuki. Liczba mnoga pierwszego słowa wraca do pojedynczej
+(słownik częstych kształtek), a nazwa znana z historii albo podpowiedzi przyjmuje jej pisownię. Lista czytana z refu,
+bo kilka wyników mowy potrafi przyjść między renderami.
+
+**Ograniczenia i pułapki.**
+- Parser nie zna wszystkich nazw: przypadkowe słowa („i coś tam”) zostaną pozycją „Coś tam”. Pozycję usuwa się „−”.
+- Web Speech API: w Chrome nagranie idzie do usługi Google; bez internetu nie działa. Na iPhonie (Safari) zależnie od
+  wersji — przy braku wsparcia mikrofonu nie ma (zostaje dyktowanie z klawiatury telefonu).
+- W e2e nazwy przycisków: „Dyktuj” (tekst wpisu) wymaga `exact: true`, bo obok jest „Dyktuj kształtki”.
+
+**Testy.** `src/lib/study/spokenFittings.test.ts` (10: liczebniki, kilka pozycji, liczba na początku i na końcu,
+„20 na 16”, mnożnik, pisownia znanej nazwy i sumowanie, pomijanie samych liczb, scalanie z pustym wierszem i limitem).
+`e2e/fittings-dictation.spec.ts` (udawane `SpeechRecognition`: dwie wypowiedzi, suma sztuk, zapis wpisu).
+Nie sprawdzone z prawdziwym mikrofonem.
+
+**Commit.** `b65d58c` (2026-10-16).
+
+### Przypomnienie „Raport dnia gotowy”
+
+**Co robi.** Raz dziennie, po końcu dzisiejszej zmiany z Grafiku (bez zmiany albo przy nieobecności i zmianie przez
+północ — o 17:00), jeśli dziś są wpisy w dzienniku, aplikacja pokazuje dymek „Raport dnia gotowy” i — przy zgodzie —
+powiadomienie systemowe. „Otwórz raport” przechodzi do Pracy i otwiera okno raportu z dzisiejszymi wpisami ostatniej
+budowy, skąd raport idzie do szefa (WhatsApp) albo do grupy. Powiadomienie systemowe otwiera `/praca?raport=dzis`.
+
+**Gdzie jest.**
+- `src/lib/study/reportNudge.ts`: `reportDueMinute(shifts, key)`, `dailyReportNudge(journal, shifts, now, lastNudged)`,
+  `REPORT_NUDGE_KEY` (`kaczy.study.reportNudged.v1` — dzień ostatniego przypomnienia), `REPORT_NUDGE_FALLBACK` (`17:00`).
+- `src/lib/study/reportLink.ts`: prośba o otwarcie raportu (`requestJournalReport`, `consumeJournalReportRequest`,
+  `useJournalReportRequest`), parametr `JOURNAL_REPORT_PARAM` (`raport`).
+- `src/components/study/DailyReportNudge.tsx`: sprawdzenie przy starcie i co minutę; montowany w `src/pages/Index.tsx`
+  leniwie (`lazy`), z `onOpenWork` → widok `study`.
+- `StudyView.tsx` przełącza na Dziennik i zdejmuje `?raport=` z adresu; `StudyJournal.tsx` otwiera okno raportu.
+
+**Jak działa i dlaczego.** Godzina z Grafiku, bo to koniec dnia pracy; stała godzina, gdy Grafiku brak. Raz dziennie
+(klucz w `localStorage`), żeby nie nękać. Komponent czyta dziennik przez `yStudy` z `data.ts`, a nie przez `store.ts`
+— ten importuje materiał do nauki, który nie musi się ładować przy każdym starcie aplikacji. Okno raportu samo wybiera
+ostatnią budowę i dzień jej ostatniego wpisu, więc przy dzisiejszych wpisach otwiera się raport z dziś.
+
+**Ograniczenia i pułapki.**
+- Bez serwera push: przypomnienie działa tylko przy otwartej aplikacji (jak reszta przypomnień).
+- Wysłanie do szefa zostaje jednym stuknięciem w oknie raportu — automatyczna wysyłka WhatsApp wymagałaby serwera.
+- Gdy dziś były wpisy na kilku budowach, raport otwiera się na ostatniej; inną wybiera się w oknie.
+- Budżet paczki (`e2e/bundle.spec.ts`) był już przekroczony przed tą zmianą: wejściowy JS 388 KB gzip (próg 384),
+  precache 4,32 MB (próg 4,3). Ta zmiana dokłada ~1 KB (leniwy import). Do decyzji: odchudzić wejście albo podnieść próg.
+
+**Testy.** `src/lib/study/reportNudge.test.ts` (7: godzina z Grafiku, nieobecność i brak zmiany, zmiana przez północ,
+po i przed końcem zmiany, raz dziennie, bez wpisów). `e2e/report-nudge.spec.ts` (dymek po 17:00 prowadzi do raportu z
+dziś bez wczorajszego wpisu i nie wraca po przejściu na stronę główną; przed końcem dnia go nie ma; `?raport=dzis`
+otwiera raport i znika z adresu). Testy „nie ma dymku” czekają 1,5 s — nie wykluczają dymku pokazanego później.
+
+**Commit.** `5d6008e` (2026-10-16).
 
 ### Przypomnienia nad listą
 
