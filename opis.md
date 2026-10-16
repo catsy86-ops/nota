@@ -1560,7 +1560,7 @@ Pasek nie jest zapamiętywany (brak „ukryj”), bo znika sam.
 
 **Testy.** `src/lib/study/journalView.test.ts` (7 testów: kolejność, limit, dedup, pusta budowa, wczoraj vs. dziś/przedwczoraj, obce budowy); `e2e/study.spec.ts` („pusty wpis na budowie podpowiada wcześniejsze teksty tej budowy”). Cały `study.spec.ts` 31/31 (w tym telefony).
 
-**Commit.** `7fcff9a` (2026-10-16) — hash dopisany w następnym commicie.
+**Commit.** `7fcff9a` (2026-10-16).
 
 ---
 
