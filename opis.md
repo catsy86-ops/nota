@@ -1530,6 +1530,33 @@ z etykietą `budowa` albo wydrukować / zapisać jako PDF.
 
 ---
 
+### Paczka ZIP budowy
+
+**Co robi.** W karcie budowy przycisk „Paczka ZIP” pobiera jeden plik `.zip` z całą budową: `raport.md`
+(ten sam tekst co „Kopiuj” w raporcie, od pierwszego do ostatniego wpisu) i zdjęcia z wpisów w katalogu
+`zdjecia/`, numerowane od najstarszego (`01.jpg`, `02.png`…). Nazwa pliku to tytuł raportu. PDF nie wchodzi
+do paczki: „Drukuj / PDF” w raporcie (menu „Więcej”) daje PDF w oknie drukowania.
+
+**Gdzie jest.** `src/lib/study/siteZip.ts` (`buildSiteZip(report, read?, now?)`, `downloadSiteZip(report)`),
+składanie ZIP-a w `buildZip` z `src/lib/exportZip.ts` (bez kompresji — zdjęcia są już JPEG-ami). Przycisk
+i stan „Pakuję…” w `SiteCardDialog.tsx` (`zip()`); raport budowany tak jak w `JournalReportDialog`: `buildJournalReport`
+z `useShifts()` (godziny z Grafiku) i zakresem od `site.first` do `site.last`.
+
+**Jak działa i dlaczego.** Zdjęcia czytane są z `imageStore.get` po kluczu z `report.images` — tej samej
+kolejności, co w raporcie. Brak bajtów na tym urządzeniu (zdjęcie jeszcze nie dotarło synchronizacją) nie
+przerywa paczki: zdjęcie się pomija, a toast podaje, ile pominięto. Błąd odczytu jednego zdjęcia liczy się tak samo.
+
+**Ograniczenia i pułapki.** Cała paczka składa się w pamięci (`Uint8Array`), więc budowa z setkami zdjęć
+to duży bufor — przy bardzo dużych budowach warto dzielić na okresy (raport z zakresem dat). Brak PDF:
+generowanie PDF wymagałoby osobnego układu (jak `exportPdf.ts` dla notatek), na razie nie robiono.
+Wpisy bez budowy nie mają karty, więc paczki też nie mają.
+
+**Testy.** `src/lib/study/siteZip.test.ts` (3 testy: nazwy i numeracja zdjęć, pominięcie brakujących,
+paczka bez zdjęć, błąd odczytu nie przerywa). `e2e/study.spec.ts` („karta budowy…”: pobranie `Raport Dom Nowaków … .zip`,
+toast „Paczka gotowa: raport i 0 zdjęć”).
+
+**Commit.** `50842a6` (2026-10-16).
+
 ### Przypomnienia nad listą
 
 **Co robi.** Nad listą wpisów Dziennika pojawia się pasek „Przypomnienia” (tylko gdy coś jest do zrobienia):
