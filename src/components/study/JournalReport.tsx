@@ -519,6 +519,21 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
               </table>
             </section>
           )}
+          {report.toOrder.length > 0 && (
+            <section className="break-inside-avoid-page pt-3" data-report-to-order>
+              <h3 className="mb-1.5 text-sm font-semibold">Do zamówienia</h3>
+              <table className="w-full max-w-sm text-sm">
+                <tbody>
+                  {report.toOrder.map((f) => (
+                    <tr key={f.name} className="border-t border-border/60 first:border-t-0">
+                      <td className="py-0.5 pr-3">{f.name}</td>
+                      <td className="py-0.5 text-right font-mono tabular-nums">{f.qty} szt.</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          )}
           {report.open.length > 0 && (
             <section className="break-inside-avoid-page pt-3">
               <h3 className="mb-1.5 text-sm font-semibold">Otwarte problemy</h3>

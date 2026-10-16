@@ -99,3 +99,27 @@ describe("raport z dziennika", () => {
     expect(text).toContain("- ");
   });
 });
+
+describe("raport — materiał do zamówienia", () => {
+  const withFittings: JournalEntry[] = [
+    e("p1", at(10, 8), "ok", "Lipowa 5", "Piony", { fittings: [{ name: "Kolano 16", qty: 4 }] }),
+    e("p2", at(14, 9), "ok", "Lipowa 5", "Podejścia", { fittings: [{ name: "Kolano 16", qty: 2 }, { name: "Trójnik 16", qty: 1 }] }),
+    e("p3", at(14, 10), "ok", "Polna 2", "Inna budowa", { fittings: [{ name: "Kolano 16", qty: 9 }] }),
+  ];
+  const site = siteKey("Lipowa 5");
+
+  it("raport budowy liczy materiał od ostatniego zamówienia, niezależnie od okresu raportu", () => {
+    const r = buildJournalReport(withFittings, { siteId: site, siteCard: { name: "Lipowa 5", address: "", investor: "", orderedAt: at(12, 0) }, from: "2026-10-14", to: "2026-10-14" });
+    expect(r.toOrder).toEqual([{ name: "Kolano 16", qty: 2 }, { name: "Trójnik 16", qty: 1 }]);
+    expect(reportBody(r)).toContain("## Do zamówienia\n- Kolano 16: 2 szt.\n- Trójnik 16: 1 szt.");
+    expect(reportWhatsApp(r)).toContain("*Do zamówienia*");
+  });
+
+  it("bez zamówienia liczy całą budowę, a raport wszystkich budów nie ma sekcji", () => {
+    const r = buildJournalReport(withFittings, { siteId: site, from: "2026-10-14", to: "2026-10-14" });
+    expect(r.toOrder).toEqual([{ name: "Kolano 16", qty: 6 }, { name: "Trójnik 16", qty: 1 }]);
+    const all = buildJournalReport(withFittings, { siteId: null, from: "2026-10-14", to: "2026-10-14" });
+    expect(all.toOrder).toEqual([]);
+    expect(reportBody(all)).not.toContain("Do zamówienia");
+  });
+});

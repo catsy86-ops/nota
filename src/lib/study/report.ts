@@ -5,6 +5,7 @@ import { dayType, isAbsence, type ShiftData } from "@/lib/shifts/model";
 import { entryMinutesOn, formatDuration } from "@/lib/shifts/time";
 import { entriesPl, KIND_LABEL } from "./journalView";
 import { entrySiteId, type SiteCard } from "./sites";
+import { siteOrder } from "./order";
 import type { JournalEntry } from "./yStudy";
 
 /**
@@ -17,7 +18,7 @@ export interface ReportOptions {
   /** Id budowy (`entrySiteId`); `null` = wszystkie, `""` = wpisy bez budowy. */
   siteId: string | null;
   /** Karta wybranej budowy: nazwa, adres i inwestor w nagłówku raportu. */
-  siteCard?: Pick<SiteCard, "name" | "address" | "investor"> | null;
+  siteCard?: Pick<SiteCard, "name" | "address" | "investor" | "orderedAt"> | null;
   /** Dni lokalne „2026-10-14”, oba włącznie. */
   from: string;
   to: string;
@@ -67,6 +68,11 @@ export interface JournalReport {
   images: string[];
   /** Suma kształtek z wpisów raportu, od największej liczby. */
   fittings: Fitting[];
+  /**
+   * Kształtki do zamówienia na tej budowie: zużyte od ostatniego zamówienia (`order.ts`), niezależnie
+   * od okresu raportu. Puste dla raportu wszystkich budów i wpisów bez budowy.
+   */
+  toOrder: Fitting[];
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -161,6 +167,7 @@ export function buildJournalReport(journal: readonly JournalEntry[], opts: Repor
     open,
     images: picked.flatMap((e) => e.images),
     fittings: sumFittings(picked.map((e) => e.fittings)),
+    toOrder: opts.siteId ? siteOrder(journal, opts.siteId, opts.siteCard?.orderedAt).items : [],
   };
 }
 
@@ -199,6 +206,10 @@ export function reportBody(r: JournalReport): string {
   if (r.fittings.length > 0) {
     lines.push("", "## Kształtki (suma)");
     for (const f of r.fittings) lines.push(`- ${f.name}: ${f.qty} szt.`);
+  }
+  if (r.toOrder.length > 0) {
+    lines.push("", "## Do zamówienia");
+    for (const f of r.toOrder) lines.push(`- ${f.name}: ${f.qty} szt.`);
   }
   if (r.open.length > 0) {
     lines.push("", "## Otwarte problemy");

@@ -62,3 +62,20 @@ test("do zamówienia: suma budowy, kopia listy, oznaczenie zamówienia zeruje li
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
   await expect(page.getByTestId("site-card").getByTestId("site-order").getByText(/^Nic do zamówienia od ostatniego zamówienia/)).toBeVisible();
 });
+
+test("raport z karty budowy: sekcja „Do zamówienia” na ekranie i w kopiowanym tekście", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
+  await page.getByTestId("site-card").getByRole("button", { name: "Raport", exact: true }).click();
+
+  const dialog = page.getByTestId("journal-report");
+  const toOrder = dialog.locator("[data-report-to-order]");
+  await expect(toOrder.getByRole("row", { name: /Kolano 16/ })).toContainText("5 szt.");
+  await expect(toOrder.getByRole("row", { name: /Trójnik 16/ })).toContainText("1 szt.");
+
+  await dialog.getByRole("button", { name: "Więcej" }).click();
+  await page.getByRole("menuitem", { name: "Kopiuj tekst" }).click();
+  const copied = await page.evaluate(() => (window as unknown as { __copied: string }).__copied);
+  expect(copied).toContain("## Do zamówienia\n- Kolano 16: 5 szt.\n- Trójnik 16: 1 szt.");
+});
