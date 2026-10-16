@@ -868,6 +868,33 @@ z treści).
 
 **Commit.** `8f01351` (2026-10-16).
 
+## Notatki — wklejanie HTML jako Markdown w kompozytorze (plan Notatek, etap 3.1)
+
+**Co robi.** Wklejenie treści skopiowanej ze strony lub dokumentu w polu treści nowej notatki zamienia formatowanie
+na Markdown i wstawia go w miejscu kursora. Obsługiwane: nagłówki, pogrubienie, kursywa, listy (punktowane i numerowane),
+linki (tylko http/https), kod, bloki kodu, cytaty. Zwykły tekst bez formatowania wkleja się jak dotąd.
+
+**Gdzie jest.**
+- `src/lib/htmlToMarkdown.ts`: `htmlToMarkdown(html)` — DOMParser, tylko wybrane znaczniki, skrypty/style/obrazy pomijane.
+- `src/components/AddNoteBar.tsx`: `handleContentPaste` (kolejność: obrazy → na pustym szkicu adres z tytułem jak dotąd
+  → `pasteHtmlAsMarkdown`).
+
+**Jak działa i dlaczego.**
+- Linki na pustym szkicu zachowują pierwszeństwo: wklejony adres dostaje tytuł strony (istniejąca obsługa).
+- Gdy wynik Markdownu jest taki sam jak zwykły tekst, wklejanie zostaje domyślne — nie ma czego zamieniać.
+- Tylko adresy http/https stają się linkami; `javascript:` i inne schematy zostają zwykłym tekstem.
+- Wklejanie idzie w miejsce kursora (zaznaczony fragment jest zastępowany), a kursor ląduje za wklejonym tekstem.
+
+**Ograniczenia.** Konwerter nie obsługuje tabel (tekst wierszy zostaje w kolejności), zagnieżdżonych list i obrazów
+(świadomie pomijane). Edytor istniejącej notatki (`NoteCard`) nie ma tej zmiany — tylko kompozytor nowej notatki.
+
+**Testy.** `src/lib/htmlToMarkdown.test.ts` (nagłówki, listy, linki, kod, cytat, pomijanie skryptów, pusty wynik),
+`e2e/paste-html.spec.ts` (wklejenie z HTML do kompozytora, w miejscu kursora). Regresja: `e2e/composer.spec.ts`,
+`quick-capture.spec.ts`, `editing.spec.ts`, `editor-keys.spec.ts`, `notes.spec.ts`, `mentions.spec.ts`,
+`slash-menu.spec.ts`, `live-text.spec.ts` — 40/40.
+
+**Commit.** `4b02b6f` (2026-10-16).
+
 ## Notatki — przesuwanie pozycji listy przyciskami (plan Notatek, etap 2)
 
 **Co robi.** W edytorze listy każda nieodhaczona pozycja ma dwa przyciski: „Przesuń w górę” i „Przesuń w dół”.
