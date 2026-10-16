@@ -87,7 +87,7 @@ działają na aktualnych wersjach bibliotek. Dla użytkownika zmienia się tylko
   `History`→`RotateCcwClock`, `FileJson`→`FileBraces`, `FilePlus2`→`FilePlusCorner`, `Smile`→`FaceSlightlySmiling`,
   `Trash2`→`Trash`.
 - `Trash2` w 1.x to alias `Trash`: kosz z pionowymi kreskami jest teraz jedynym koszem. Tam, gdzie wcześniej był
-  goły `Trash` (paleta poleceń, lista widoków w `Index.tsx`), też są kreski — cała aplikacja ma jeden kosz.
+  goły `Trash` (paleta poleceń, lista działów w `sidebar/sidebarItems.ts`), też są kreski — cała aplikacja ma jeden kosz.
 - lucide 1.x domyślnie dodaje `aria-hidden="true"`, chyba że ikona dostanie `aria-*`, `role` albo `title`. Ikony
   z własną etykietą zostają widoczne dla czytnika ekranu; ozdobne nie trzeba już ręcznie ukrywać.
 - sonner 2: API, którego używamy (`toast`, `toast.success/error`, `action`, `duration`, `classNames`, zmienne
@@ -818,8 +818,8 @@ pomija elementy wewnątrz kontenerów z własnym `overflow-x` (paski pigułek) i
 Szukaj, Nowa lista, Dziś, Przypomnienia. „Nowa lista” otwiera kompozytor od razu z listą do odhaczania, „Szukaj”
 stawia kursor w polu wyszukiwania.
 
-**Gdzie jest.** `public/manifest.webmanifest` (`shortcuts`), obsługa adresów w `src/pages/Index.tsx` (efekt przy starcie:
-`?new=1`, `?new=list` → `expandAddNote("list")`, `?szukaj=1` → fokus na widocznym `input[type="search"]`); parametr
+**Gdzie jest.** `public/manifest.webmanifest` (`shortcuts`), obsługa adresów w `src/hooks/useLaunchIntents.ts` (efekt przy starcie, wołany z `Index.tsx`:
+`?new=1`, `?new=list` → `expandComposer("list")`, `?szukaj=1` → fokus na widocznym `input[type="search"]`); parametr
 znika z adresu, więc odświeżenie nie powtarza akcji.
 
 **Jak działa i dlaczego.** Kolejność skrótów jest celowa: Android pokazuje tylko kilka pierwszych (zwykle 4), więc na
@@ -883,7 +883,8 @@ zachowanie się nie zmienia. Stan prezentacji zostawiony w `Index` (dwa miejsca 
 **Stan etapu 4.** Zrobione też: sesja edycji kafla (`useNoteEditSession`), obrazy kafla (`useNoteImages`), akcje kafla
 (`NoteCardActions`), edytor kafla i okna (`NoteEditor`), gesty kafla (`useCardGestures`), arkusz, podgląd i
 usuwanie (`NoteCardDialogs`), podgląd zawartości (`NoteCardBody`), efekty ruchu (`useCardMotion`), patrz niżej.
-Pozostają: otoczka kafla w `NoteCard.tsx` oraz reszta `Index.tsx` — wielosesyjny podział, każdy kawałek z własnym e2e.
+Pozostają: otoczka kafla w `NoteCard.tsx` oraz reszta `Index.tsx` (po `useBulkNoteOps` i reszcie — patrz „start,
+operacje zbiorcze i indeks linków” — 961 linii; zostały widoki i okna leniwe).
 
 **Testy.** Charakteryzujące: `e2e/reader.spec.ts`, `reader-step.spec.ts`, `wikilinks.spec.ts`, `notes.spec.ts`,
 `editing.spec.ts`, `routes.spec.ts`, `tabs.spec.ts`, `search-highlight.spec.ts` — 28/28.
@@ -976,6 +977,37 @@ przy wyciągnięciu: `notes`, `routes`, `tabs`, `composer`, `reminders-calendar`
 1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
 
 **Commit.** `39231e6` (2026-10-16).
+
+## Notatki — start, operacje zbiorcze i indeks linków poza Index (refaktor Index.tsx)
+
+**Co robi.** Bez zmian dla użytkownika. `Index.tsx` zmalał z 1143 do 961 linii.
+
+**Gdzie jest.**
+- `src/hooks/useLaunchIntents.ts`: `useLaunchIntents({ navigate, addNote, openNote, expandComposer })` — raz przy
+  starcie: udostępnianie (`/share`, `?inbox=` z plikami), skróty PWA `?new=1`, `?new=list`, `?szukaj=1`.
+- `src/hooks/useBulkNoteOps.ts`: `useBulkNoteOps({ view, groupBy, folders, notesRef, selectedIds, … moveToFolder })` →
+  `restoreSelected`, `pinSelected`, `moveSelectedToFolder`, `labelSelected` (pasek zbiorczy) i `moveToColumn`
+  (przeciąganie na tablicy, `useNoteDnd`). Kosz, archiwum i kolor zostają w `useNoteActions`.
+- `src/hooks/useWikiLinkIndex.ts`: `useWikiLinkIndex(notes, archivedNotes)` → `allNotesForLinks`, `knownTitles`,
+  `wikiIndex` (stabilne obiekty przez `useStableByKey`).
+- `src/components/TrashConfirmDialogs.tsx`: `DeleteForeverDialog`, `EmptyTrashDialog`.
+- `src/components/sidebar/sidebarItems.ts`: `SidebarItem`, `sidebarItems({ inbox, overdue, trash })` — lista działów
+  paska bocznego (typ przeniesiony z `AppSidebar.tsx`).
+- `Index.tsx`: przypięte i grupy przypomnień rysuje ten sam `renderGrid` co reszta (wcześniej dwie skopiowane długie
+  linie `NoteGrid` z tymi samymi propsami — w widokach, gdzie się pojawiają, `renderGrid` daje identyczne propsy).
+
+**Jak działa i dlaczego.** Kod przeniesiony bez zmian logiki. `useLaunchIntents` czyta funkcje przez `useLatestRef`,
+więc efekt biegnie raz (jak dawne `useEffect(…, [])` z wyłączonym lintem), a zapis po `whenNotesReady` używa
+najnowszego `handleAddNoteGlow`. `useBulkNoteOps` musi stać po `groupBy` i `handleMoveToFolderGlow`, a przed
+`useNoteDnd` (dawniej `moveToColumn` było deklaracją funkcji wynoszoną na górę).
+
+**Ograniczenia.** Zostały w `Index`: stan okien (paleta, ustawienia, statystyki…) i ich leniwe renderowanie, sekcje
+„Dziś” i widoki — dalszy podział wymagałby przeniesienia stanu okien do osobnego magazynu.
+
+**Testy.** Bez nowych; pełne e2e chromium (`--workers=1`): 365/365. Vitest 1314/1314, `tsc` i eslint bez błędów,
+build i budżet paczki w progach.
+
+**Commit.** `6ab66bf` (2026-10-16).
 
 ## Notatki — efekty ruchu kafla w useCardMotion (plan Notatek, etap 4, refaktor NoteCard)
 
@@ -1290,7 +1322,7 @@ bez dubla, jeśli już jest w tekście). Obrazy stają się zdjęciami notatki, 
   przez `prepareImage` + `imageStore.putBlob` (jak w pasku dodawania), PDF przez `addAttachmentFiles`.
 - `src/lib/shareTarget.ts`: `parseShare` (tekst i link z GET, jak wcześniej) — odbiór z pliku przechodzi przez niego
   z zapisanymi polami.
-- `src/pages/Index.tsx`: efekt montowania — gałąź `?inbox=` przed starą gałęzią `/share`.
+- `src/hooks/useLaunchIntents.ts` (wołany z `Index.tsx`): efekt montowania — gałąź `?inbox=` przed starą gałęzią `/share`.
 
 **Jak działa i dlaczego.**
 - Dwa etapy, bo POST nie ma gdzie wylądować: aplikacja może się nie załadować w chwili udostępnienia, a SW jest
@@ -1524,7 +1556,7 @@ najmniejszego rozmiaru w aplikacji; wartości poniżej 11 px są nieczytelne w s
 i zakładki Quiz / Tablica / Lista / Dziennik.
 
 **Nazwa działu.** Do 2026-10-15 dział nazywał się „Nauka” (`/nauka`). W interfejsie jest „Praca” z ikoną kasku
-(`HardHat`): pasek boczny (`Index.tsx`), „Więcej” (`BottomNav.tsx`), paleta poleceń, nagłówek (`AppHeader.tsx`),
+(`HardHat`): pasek boczny (`sidebar/sidebarItems.ts`), „Więcej” (`BottomNav.tsx`), paleta poleceń, nagłówek (`AppHeader.tsx`),
 szkielet ładowania, kopia zapasowa („Praca i dziennik z budowy”), skrót PWA „Wpis z budowy” (`/praca?wpis=1`
 w `public/manifest.webmanifest`). `src/lib/viewRoute.ts` mapuje `praca` i `nauka` na widok `study`; linki budują
 `/praca`, stary adres dalej działa (zakładki, zainstalowana aplikacja ze starym manifestem). Kod, klucze zapisu
@@ -1953,7 +1985,8 @@ i nie będące podnotatkami. Przeniesienie do folderu albo nadanie etykiety usuw
 - `src/hooks/useFilteredNotes.ts`: typ `View` z `"inbox"`, filtr w `filterNotes`.
 - `src/lib/viewRoute.ts`: adres `/skrzynka`.
 - `src/components/EmptyState.tsx`: nagłówek i opis pustej skrzynki.
-- `src/pages/Index.tsx`: pozycja w `sidebarItems` z `inboxCount`, handler `captureToInbox`, render `InboxCapture`.
+- `src/components/sidebar/sidebarItems.ts`: pozycja „Skrzynka” z licznikiem; `src/pages/Index.tsx`: `inboxCount`, handler
+  `captureToInbox`, render `InboxCapture`.
 
 **Jak działa i dlaczego.**
 - Brak nowego pola w danych: skrzynka to reguła nad istniejącymi notatkami. Nie trzeba migracji, synchronizacja
