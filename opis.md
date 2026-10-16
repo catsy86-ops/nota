@@ -2452,7 +2452,8 @@ Etap odhacza się też bez otwierania karty: w nowym wpisie z rodzajem „Zrobio
 następnymi niezrobionymi etapami wybranej budowy (stuknięcie odhacza od razu, dymek ma „Cofnij”), a dyktowanie
 „Lipowa, etap próba szczelności zrobiony, …” odhacza etap głosem (patrz „Dyktowanie”). Odhaczony z wpisu etap
 przypina się do wpisu (pasek „Etap: …” w arkuszu, z ✕ do odpięcia) — zdjęcia wpisu idą do protokołu odbioru pod tym
-etapem.
+etapem. Zapisany wpis (np. zdjęcia „przed zakryciem” zrobione przed odhaczeniem) przypina się w edycji polem „Zdjęcia do
+protokołu przy etapie” — lista wszystkich etapów karty (zrobione z ✓); stan etapu w karcie się wtedy nie zmienia.
 
 **Gdzie jest.**
 - `src/lib/study/stages.ts`: `SiteStage { id, name, done? }`, `DEFAULT_STAGES`, `siteStages(card)`, `cleanStages`,
@@ -2489,7 +2490,7 @@ początki słów nazwy („piony”, „bialy montaz”); gdy pasuje kilka etap�
   telefony zmieniające różne etapy tej samej budowy scalają się. Ten sam etap zmieniony naraz — wygrywa ostatni zapis.
 - Starsza wersja aplikacji (sprzed `395c311`) widzi etapy tylko z dawnego pola karty — nowych zmian nie zobaczy.
 - Etapów nie da się przestawiać ani zmieniać im nazw (usuń i dodaj nowy). Z arkusza wpisu tylko się odhacza (cofnięcie
-  — „Cofnij” w dymku albo w karcie); pigułki nie ma w edycji zapisanego wpisu. Odhaczenie z pigułki zapisuje się od razu,
+  — „Cofnij” w dymku albo w karcie); w edycji zapisanego wpisu zamiast pigułek jest lista do przypięcia (bez odhaczania). Odhaczenie z pigułki zapisuje się od razu,
   nawet gdy wpis potem odrzucisz. „Cofnij” w dymku cofa też przypięcie. Zmiana budowy po odhaczeniu nie czyści
   `stage` — pasek znika (etapu nie ma w nowej karcie), a protokół takiego wpisu nie przypisze do etapu.
 - Starsza wersja aplikacji nie zna `stage`: przy edycji wpisu pole może zginąć (wpis wraca do „Pozostałych”).
@@ -2505,8 +2506,11 @@ przeładowaniu; pigułki przy „Zrobione”: odhaczenie, „Cofnij” bez zamyk
 
 Pole `stage`: `study.test.ts` (szkic, wpis z samym etapem, `sanitizeStudy`), `e2e/site-handover.spec.ts`.
 
+Przypięcie w edycji: `e2e/site-handover.spec.ts` (zapisany wpis ze zdjęciem → etap z listy → etap w karcie nadal
+nieodhaczony, zdjęcie w grupie etapu na wydruku).
+
 **Commit.** `a25958a` (2026-10-16), `b82dda3` (odhaczanie z wpisu i głosem, 2026-10-16), `5ee9858` (przypięcie wpisu
-do etapu, 2026-10-16).
+do etapu, 2026-10-16), `f31f65f` (przypięcie w edycji, 2026-10-16).
 
 ### Do zamówienia (kształtki)
 
@@ -2621,8 +2625,10 @@ idzie do pozostałych. Przycisk jest aktywny, gdy budowa ma wpisy albo własną 
 
 **Ograniczenia i pułapki.**
 - Bez podglądu przed drukiem — od razu okno drukowania (jak „Drukuj” w raporcie).
-- Zdjęcie trafia pod etap tylko przez wpis, który ten etap odhaczył (pigułka albo głos). Etap odhaczony w karcie nie
-  przypina żadnego wpisu; zapisanego wpisu nie da się przypiąć do etapu (w edycji można tylko odpiąć).
+- Zdjęcie trafia pod etap tylko przez wpis przypięty do etapu: odhaczenie z wpisu (pigułka, głos) albo wybór w edycji
+  zapisanego wpisu. Etap odhaczony w samej karcie nie przypina żadnego wpisu.
+- Grupy idą po liście etapów karty, a gdy karta nie ma własnej listy — po domyślnych (`siteStages`); sekcja „Zakres prac”
+  nadal pokazuje się tylko przy własnej liście (`stages: null`).
 - „Tekst protokołu” (obok „Protokół odbioru”) wysyła ten sam protokół jako tekst, bez zdjęć: udostępnianie systemowe
   na telefonie, a bez niego — schowek (`shareHandover` w `SiteCardDialog.tsx`, `f5dc1f6`).
 
@@ -2633,7 +2639,8 @@ próbą, uwagą i podpisami; `window.print` podmienione; wpis ze zdjęciem odhac
 w grupie etapu na wydruku). Regresja działu Praca 37/37 (w tym wydruk raportu); po `5ee9858` 40/40 + bundle.
 Nie drukowane na prawdziwej drukarce ani do PDF w telefonie.
 
-**Commit.** `9b169ad` (2026-10-16), `5ee9858` (zdjęcia przy etapach, 2026-10-16).
+**Commit.** `9b169ad` (2026-10-16), `5ee9858` (zdjęcia przy etapach, 2026-10-16), `f31f65f` (grupy po domyślnych
+etapach, 2026-10-16; test „karta bez własnej listy” w `handover.test.ts`).
 
 ### Rysowanie po zdjęciu
 
