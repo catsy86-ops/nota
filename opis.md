@@ -2371,37 +2371,50 @@ okresu raportu, bez sekcji w raporcie wszystkich budów). Regresja działu: `e2e
 
 **Commit.** `98e625a` (karta, 2026-10-16), `a8cf1a9` (raport, 2026-10-16).
 
-### Dyktowanie kształtek
+### Dyktowanie: cały wpis i kształtki
 
-**Co robi.** W polu kształtek wpisu jest mikrofon „Dyktuj”. Powiedz np. „kolano szesnaście cztery sztuki, trójnik 16 dwa”
-— pozycje dopisują się do listy, a dymek pokazuje, co dodano („Dodano: Kolano 16 × 4, Trójnik 16 × 2”). Ta sama nazwa
-sumuje sztuki zamiast nowego wiersza. Gdy nic nie rozpozna, dymek pokazuje usłyszany tekst i przykład. Treść wpisu
-dyktuje się osobnym mikrofonem przy polu tekstu (było wcześniej).
+**Co robi.**
+- **Cały wpis jedną wypowiedzią** — mikrofon „Dyktuj” przy treści wpisu. Np. „Lipowa, problem, przeciek przy trójniku,
+  kolano 16 cztery sztuki”: budowa zmienia się na Lipowa 5, rodzaj na „Problem”, do tekstu idzie „przeciek przy
+  trójniku”, a kształtka trafia na listę. Dymek mówi, co rozpoznano („Z wypowiedzi: budowa Lipowa 5 · Problem ·
+  kształtki: Kolano 16 × 4”). Zwykłe zdanie bez budowy, rodzaju i kształtek dopisuje się do tekstu bez zmian (jak dawniej).
+- **Same kształtki** — mikrofon „Dyktuj kształtki” w polu kształtek: „kolano szesnaście cztery sztuki, trójnik 16 dwa”.
+  Ta sama nazwa sumuje sztuki zamiast nowego wiersza. Gdy nic nie rozpozna, dymek pokazuje usłyszany tekst i przykład.
 
 **Gdzie jest.**
-- `src/lib/study/spokenFittings.ts`: `parseSpokenFittings(text, known)`, `mergeFittings(current, added)`, `wordsToDigits`.
-- `src/components/study/FittingsFields.tsx`: przycisk „Dyktuj kształtki” (`aria-label`) przy „Dodaj kształtki” i przy
-  „Kolejna”; `useDictation` (Web Speech API, `pl-PL`, zgoda przy pierwszym użyciu — `kaczy.dictation.consent`).
+- `src/lib/study/spokenEntry.ts`: `parseSpokenEntry(spoken, { sites, fittings })` → `{ site?, kind?, fittings, text, structured }`.
+- `src/lib/study/spokenFittings.ts`: `parseSpokenFittings(text, known)`, `mergeFittings(current, added)`, `wordsToDigits`;
+  wspólne słowniki (`UNITS`, `TENS`, `SINGULAR`, `QTY_WORD`, `fold`).
+- `src/components/study/JournalEntrySheet.tsx`: obsługa dyktowania treści (`useDictation` → `parseSpokenEntry`; budowa
+  przez `pickSite`, rodzaj i kształtki przez `patch`, kształtki scalane `mergeFittings`).
+- `src/components/study/FittingsFields.tsx`: przycisk „Dyktuj kształtki” przy „Dodaj kształtki” i przy „Kolejna”.
+- Oba przez `useDictation` (Web Speech API, `pl-PL`, zgoda przy pierwszym użyciu — `kaczy.dictation.consent`).
 
-**Jak działa i dlaczego.** Rozpoznawanie mowy zwraca raz cyfry, raz słowa — `wordsToDigits` zamienia liczebniki
-(„szesnaście”, „dwadzieścia pięć”). Pozycje dzieli przecinek, kropka, średnik, „i”, „oraz”, „plus”. Liczba sztuk:
-po mnożniku („x 3”), przed „sztuk/szt/razy/x”, na początku („4 kolana 16”) albo ostatnia z dwóch liczb („trójnik 16 2”);
-bez liczby — 1. „20 na 16” to wymiar („Redukcja 20/16”), nie sztuki. Liczba mnoga pierwszego słowa wraca do pojedynczej
-(słownik częstych kształtek), a nazwa znana z historii albo podpowiedzi przyjmuje jej pisownię. Lista czytana z refu,
-bo kilka wyników mowy potrafi przyjść między renderami.
+**Jak działa i dlaczego.** Rozpoznawanie mowy zwykle nie stawia przecinków, więc reguły całego wpisu są ostrożne:
+budowa tylko na początku (pełna nazwa znanej budowy albo jej jednoznaczne pierwsze słowo, za którym stoi przecinek
+albo słowo rodzaju; opcjonalnie „budowa …”), rodzaj tylko jako pierwsze słowo po budowie (problem/usterka/awaria,
+notatka/uwaga, zrobione/gotowe), kształtka tylko jako nazwa kształtki z co najmniej jedną liczbą za nią („trójnik 16 dwa”;
+„trójniki rozsunięte trzydzieści centymetrów” zostaje tekstem). Zapowiedź „kształtki” i spójnik przed kształtką nie
+zostają w tekście. Kształtki: liczebniki zamienia `wordsToDigits`; sztuki — po mnożniku („x 3”), przed „sztuk/szt/razy/x”,
+na początku („4 kolana 16”) albo ostatnia z dwóch liczb („trójnik 16 2”); bez liczby — 1; „20 na 16” to wymiar
+(„Redukcja 20/16”). Liczba mnoga pierwszego słowa wraca do pojedynczej, nazwa znana z historii przyjmuje jej pisownię.
 
 **Ograniczenia i pułapki.**
-- Parser nie zna wszystkich nazw: przypadkowe słowa („i coś tam”) zostaną pozycją „Coś tam”. Pozycję usuwa się „−”.
+- Budowa rozpoznaje się tylko spośród znanych (z kart i wpisów, bez archiwum) i w mianowniku („Lipowa”, nie „na Lipowej”).
+- Pierwsze słowo budowy bez przecinka i bez słowa rodzaju za nim nie wystarcza („polna droga zalana” to tekst).
+- „Dyktuj kształtki” bierze każdy kawałek jako pozycję: przypadkowe słowa („coś tam”) zostaną pozycją — usuwa się „−”.
 - Web Speech API: w Chrome nagranie idzie do usługi Google; bez internetu nie działa. Na iPhonie (Safari) zależnie od
-  wersji — przy braku wsparcia mikrofonu nie ma (zostaje dyktowanie z klawiatury telefonu).
-- W e2e nazwy przycisków: „Dyktuj” (tekst wpisu) wymaga `exact: true`, bo obok jest „Dyktuj kształtki”.
+  wersji — przy braku wsparcia mikrofonów nie ma (zostaje dyktowanie z klawiatury telefonu).
+- W e2e: „Dyktuj” (treść) wymaga `exact: true`, bo obok jest „Dyktuj kształtki”.
 
-**Testy.** `src/lib/study/spokenFittings.test.ts` (10: liczebniki, kilka pozycji, liczba na początku i na końcu,
-„20 na 16”, mnożnik, pisownia znanej nazwy i sumowanie, pomijanie samych liczb, scalanie z pustym wierszem i limitem).
-`e2e/fittings-dictation.spec.ts` (udawane `SpeechRecognition`: dwie wypowiedzi, suma sztuk, zapis wpisu).
+**Testy.** `src/lib/study/spokenEntry.test.ts` (8: bez przecinków, z przecinkami i liczbą słownie, zwykłe zdanie bez
+zmian, pierwsze słowo budowy tylko przed przecinkiem/rodzajem, niejednoznaczne „dom”, „budowa …” i rodzaj bez budowy,
+zapowiedź „kształtki” i nazwa wielowyrazowa, „20 na 16”). `src/lib/study/spokenFittings.test.ts` (10). e2e z udawanym
+`SpeechRecognition`: `e2e/entry-dictation.spec.ts` (zmiana budowy z Polnej na Lipową, rodzaj, tekst, kształtka, zapis na
+właściwej budowie), `e2e/fittings-dictation.spec.ts` (dwie wypowiedzi, suma sztuk), `e2e/study.spec.ts` (zwykłe zdanie).
 Nie sprawdzone z prawdziwym mikrofonem.
 
-**Commit.** `b65d58c` (2026-10-16).
+**Commit.** `b65d58c` (kształtki, 2026-10-16), `b61b737` (cały wpis, 2026-10-16).
 
 ### Przypomnienie „Raport dnia gotowy”
 
