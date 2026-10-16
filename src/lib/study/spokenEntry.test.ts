@@ -11,6 +11,7 @@ describe("parseSpokenEntry — cały wpis z jednej wypowiedzi", () => {
       kind: "problem",
       text: "przeciek przy trójniku",
       fittings: [{ name: "Kolano 16", qty: 4 }],
+      shortages: [],
       structured: true,
     });
   });
@@ -25,7 +26,7 @@ describe("parseSpokenEntry — cały wpis z jednej wypowiedzi", () => {
 
   it("zwykłe zdanie zostaje tekstem dokładnie tak, jak padło", () => {
     expect(parseSpokenEntry("trójniki rozsunięte trzydzieści centymetrów", ctx)).toEqual({
-      fittings: [], text: "trójniki rozsunięte trzydzieści centymetrów", structured: false,
+      fittings: [], text: "trójniki rozsunięte trzydzieści centymetrów", shortages: [], structured: false,
     });
     expect(parseSpokenEntry("Wymieniłem kolano przy pionie", ctx).structured).toBe(false);
   });
@@ -55,5 +56,37 @@ describe("parseSpokenEntry — cały wpis z jednej wypowiedzi", () => {
 
   it("redukcja „20 na 16” jako wymiar", () => {
     expect(parseSpokenEntry("redukcja dwadzieścia na szesnaście dwie sztuki", ctx).fittings).toEqual([{ name: "Redukcja 20/16", qty: 2 }]);
+  });
+});
+
+describe("parseSpokenEntry — braki materiału głosem", () => {
+  it("„brakuje” po budowie: pozycje z ilością (liczba z jednostką), wielkość liter jak padło", () => {
+    expect(parseSpokenEntry("lipowa brakuje kleju do PCV i rury PEX 16 pięćdziesiąt metrów", ctx)).toEqual({
+      site: "Lipowa 5",
+      fittings: [],
+      text: "",
+      shortages: [{ text: "Kleju do PCV", qty: "" }, { text: "Rury PEX 16", qty: "50 m" }],
+      structured: true,
+    });
+  });
+
+  it("„do zamówienia” bez budowy; jednostki inne niż m/szt. zostają słowem", () => {
+    expect(parseSpokenEntry("do zamówienia: klej, otulina 9 mm dwa worki, rura 20 3 sztuki", ctx).shortages).toEqual([
+      { text: "Klej", qty: "" },
+      { text: "Otulina 9 mm", qty: "2 worki" },
+      { text: "Rura 20", qty: "3 szt." },
+    ]);
+  });
+
+  it("samo „brakuje” na początku zwykłego zdania z budową z przecinkiem", () => {
+    const r = parseSpokenEntry("Polna, brakuje: syfon", ctx);
+    expect(r.site).toBe("Polna 2");
+    expect(r.shortages).toEqual([{ text: "Syfon", qty: "" }]);
+  });
+
+  it("„brak” (nie „brakuje”) to zwykły problem w tekście, nie braki", () => {
+    const r = parseSpokenEntry("problem brak wody na piętrze", ctx);
+    expect(r.shortages).toEqual([]);
+    expect(r.text).toBe("brak wody na piętrze");
   });
 });

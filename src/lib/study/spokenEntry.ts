@@ -24,9 +24,31 @@ export interface SpokenEntry {
   fittings: Fitting[];
   /** Tekst wpisu bez rozpoznanych części; bez struktury — cała wypowiedź bez zmian. */
   text: string;
-  /** Rozpoznano budowę, rodzaj albo kształtki. */
+  /** Braki materiału („brakuje …”, „do zamówienia …”) — trafiają do karty budowy, nie do wpisu. */
+  shortages: SpokenShortage[];
+  /** Rozpoznano budowę, rodzaj, kształtki albo braki. */
   structured: boolean;
 }
+
+export interface SpokenShortage {
+  /** Co: „Klej do PCV” (tak, jak padło — „brakuje kleju” zostaje w dopełniaczu). */
+  text: string;
+  /** Ilość z jednostką („50 m”, „2 worki”); pusta, gdy nie padła liczba z jednostką. */
+  qty: string;
+}
+
+/** Słowa przełączające resztę wypowiedzi w listę braków. */
+const SHORTAGE_MARKERS = new Set(["brakuje", "zamowic"]);
+/** Jednostki: skrót albo `null` = zostaw słowo, jak padło („2 worki”). */
+const UNIT_SHORT = new Map<string, string | null>([
+  ...["metr", "metry", "metrow", "metra", "m", "mb"].map((u) => [u, "m"] as const),
+  ...["sztuka", "sztuki", "sztuk", "szt", "szt."].map((u) => [u, "szt."] as const),
+  ...["opakowanie", "opakowania", "opakowan", "op", "op."].map((u) => [u, "op."] as const),
+  ...["litr", "litry", "litrow", "litra", "l"].map((u) => [u, "l"] as const),
+  ...["kilogram", "kilogramy", "kilogramow", "kilo", "kg"].map((u) => [u, "kg"] as const),
+  ...["worek", "worki", "workow", "rolka", "rolki", "rolek", "karton", "kartony", "kartonow", "paczka", "paczki", "paczek", "puszka", "puszki", "puszek", "tuba", "tuby", "tub"]
+    .map((u) => [u, null] as const),
+]);
 
 const KIND_MARKERS = new Map<string, JournalKind>([
   ["problem", "problem"], ["usterka", "problem"], ["awaria", "problem"],
@@ -42,6 +64,12 @@ const CONJ = new Set(["i", "oraz", "plus", "a"]);
 const LEAD_WORDS = new Set(["ksztaltki", "ksztaltek", "material"]);
 
 const isSep = (t: string) => /^[,;.:!?]$/.test(t);
+/** Ile słów zajmuje zapowiedź braków od pozycji `at` („brakuje” — 1, „do zamówienia” — 2); 0 = nie ma. */
+const shortageMarker = (tokens: string[], at: number): number => {
+  const f = fold(tokens[at] ?? "");
+  if (SHORTAGE_MARKERS.has(f)) return 1;
+  return f === "do" && fold(tokens[at + 1] ?? "") === "zamowienia" ? 2 : 0;
+};
 const norm = (t: string) => { const f = fold(t); return NUM_WORDS.get(f) ?? f; };
 const isNumeric = (t: string) => /^\d+(?:[/.,]\d+)?$/.test(t) || NUM_WORDS.has(fold(t));
 
@@ -66,7 +94,7 @@ function matchSite(tokens: string[], at: number, sites: readonly string[]): { na
   const same = sites.filter((n) => fold(n).split(/\s+/)[0] === first);
   if (same.length !== 1) return null;
   const after = tokens[at + 1];
-  if (after !== undefined && !isSep(after) && !KIND_MARKERS.has(fold(after))) return null;
+  if (after !== undefined && !isSep(after) && !KIND_MARKERS.has(fold(after)) && shortageMarker(tokens, at + 1) === 0) return null;
   return { name: same[0], len: 1 };
 }
 
@@ -89,6 +117,13 @@ export function parseSpokenEntry(
   let kind: JournalKind | undefined;
   const marker = i < tokens.length ? KIND_MARKERS.get(fold(tokens[i])) : undefined;
   if (marker) { kind = marker; i++; skipSeps(); }
+
+  // „Lipowa, brakuje kleju do PCV i rury PEX 16 50 metrów” — reszta to braki materiału, nie wpis.
+  const lead = shortageMarker(tokens, i);
+  if (lead > 0) {
+    const shortages = parseShortages(tokens.slice(i + lead));
+    return { ...(site ? { site } : {}), ...(kind ? { kind } : {}), fittings: [], text: "", shortages, structured: true };
+  }
 
   const phrases = [...new Set(knownFittings.map((n) => namePrefix(n).join(" ")))]
     .map((p) => p.split(" "))
@@ -130,10 +165,53 @@ export function parseSpokenEntry(
 
   const fittings = spans.length > 0 ? parseSpokenFittings(spans.join(", "), knownFittings) : [];
   const structured = site !== undefined || kind !== undefined || fittings.length > 0;
-  if (!structured) return { fittings: [], text: raw, structured: false };
+  if (!structured) return { fittings: [], text: raw, shortages: [], structured: false };
 
   while (text.length > 0 && (isSep(text[0]) || CONJ.has(fold(text[0])))) text.shift();
   while (text.length > 0 && (isSep(text[text.length - 1]) || CONJ.has(fold(text[text.length - 1])))) text.pop();
   const joined = text.join(" ").replace(/\s+([,;.:!?])/g, "$1");
-  return { ...(site ? { site } : {}), ...(kind ? { kind } : {}), fittings, text: joined, structured };
+  return { ...(site ? { site } : {}), ...(kind ? { kind } : {}), fittings, text: joined, shortages: [], structured };
+}
+
+/** Liczebniki słownie → cyfry, z zachowaniem wielkości liter pozostałych słów („dwadzieścia pięć” → „25”). */
+function numberize(tokens: string[]): string[] {
+  const out: string[] = [];
+  for (let k = 0; k < tokens.length; k++) {
+    const f = fold(tokens[k]);
+    const tens = Object.entries(TENS).find(([w]) => fold(w) === f)?.[1];
+    if (tens !== undefined) {
+      const unit = Object.entries(UNITS).find(([w]) => fold(w) === fold(tokens[k + 1] ?? ""))?.[1];
+      if (unit !== undefined && unit < 10) { out.push(String(tens + unit)); k++; } else out.push(String(tens));
+      continue;
+    }
+    const n = NUM_WORDS.get(f);
+    out.push(n ?? tokens[k]);
+  }
+  return out;
+}
+
+/** Pozycje braków: rozdzielone przecinkiem albo „i/oraz/plus”; ilość = liczba z jednostką. */
+function parseShortages(tokens: string[]): SpokenShortage[] {
+  const groups: string[][] = [[]];
+  for (const t of tokens) {
+    if (isSep(t) || CONJ.has(fold(t))) { if (groups[groups.length - 1].length > 0) groups.push([]); continue; }
+    groups[groups.length - 1].push(t);
+  }
+  const out: SpokenShortage[] = [];
+  for (const g of groups) {
+    const words = numberize(g);
+    let qty = "";
+    for (let k = 0; k < words.length - 1; k++) {
+      const unit = UNIT_SHORT.get(fold(words[k + 1]));
+      if (/^\d+(?:[.,]\d+)?$/.test(words[k]) && unit !== undefined) {
+        qty = `${words[k]} ${unit ?? words[k + 1]}`;
+        words.splice(k, 2);
+        break;
+      }
+    }
+    const text = words.join(" ").trim();
+    if (!text || !/\p{L}/u.test(text)) continue;
+    out.push({ text: text.charAt(0).toLocaleUpperCase("pl") + text.slice(1), qty });
+  }
+  return out;
 }

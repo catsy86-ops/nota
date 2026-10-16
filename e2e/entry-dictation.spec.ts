@@ -62,3 +62,25 @@ test("jedna wypowiedź ustawia budowę, rodzaj, tekst i kształtki, a wpis zapis
   await sites.getByRole("button", { name: "Polna 2" }).click();
   await expect(journal.locator("[data-journal-entry]").filter({ hasText: "przeciek przy trójniku" })).toHaveCount(0);
 });
+
+test("„brakuje …” w dyktowaniu dopisuje braki do karty budowy, a nie do wpisu", async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as Record<string, unknown>).__speech = ["lipowa brakuje kleju do PCV i rury PEX 16 pięćdziesiąt metrów"];
+  });
+  await page.goto("/praca");
+  await page.getByRole("button", { name: /^(Wpis|Dokończ wpis)$/ }).click();
+  const sheet = page.getByTestId("journal-entry-sheet");
+  await sheet.getByRole("button", { name: "Dyktuj", exact: true }).click();
+  await expect(page.getByText("Z wypowiedzi: budowa Lipowa 5 · braki (Lipowa 5): Kleju do PCV, Rury PEX 16 50 m")).toBeVisible();
+  // Treść wpisu pusta — braki nie trafiły do tekstu.
+  await expect(sheet.getByLabel("Co się dzieje?")).toHaveValue("");
+  await page.keyboard.press("Escape");
+  await expect(sheet).toHaveCount(0);
+
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
+  const panel = page.getByTestId("site-card").getByTestId("site-shortages");
+  await expect(panel.locator("[data-shortage-status]")).toHaveCount(2);
+  await expect(panel).toContainText("Kleju do PCV");
+  await expect(panel).toContainText("Rury PEX 16 · 50 m");
+  await expect(panel.getByRole("button", { name: "Rury PEX 16: Brakuje. Zmień status" })).toBeVisible();
+});

@@ -23,7 +23,7 @@ import { CAPTION_MAX, captionPhoto, captionText } from "@/lib/study/photoCaption
 import { requestPersistentStorage } from "@/lib/storagePersistence";
 import { MODULES, TOPICS } from "@/lib/study/content";
 import {
-  addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, updateJournalEntry, useStudy, useStudyLists, type JournalKind,
+  addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, setSiteShortages, updateJournalEntry, useStudy, useStudyLists, type JournalKind,
 } from "@/lib/study/store";
 import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft, type JournalDraft } from "@/lib/study/draft";
 import { closeJournalSheet, getJournalEditForm, patchJournalEditForm, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
@@ -31,6 +31,7 @@ import { fromLocalInput, KIND_LABEL, recentSiteTexts, suggestSites, toLocalInput
 import { findSiteByName, siteDirectory } from "@/lib/study/sites";
 import { fittingsLine, suggestFittingNames } from "@/lib/study/fittings";
 import { mergeFittings } from "@/lib/study/spokenFittings";
+import { addShortage } from "@/lib/study/shortages";
 import { parseSpokenEntry } from "@/lib/study/spokenEntry";
 
 export function KindIcon({ kind, className = "h-4 w-4" }: { kind: JournalKind; className?: string }) {
@@ -155,6 +156,18 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     if (parsed.fittings.length > 0) {
       patch({ fittings: mergeFittings(getForm().fittings ?? [], parsed.fittings) });
       done.push(`kształtki: ${fittingsLine(parsed.fittings)}`);
+    }
+    // „brakuje …” — braki idą od razu do karty budowy (wskazanej w wypowiedzi albo bieżącej), nie do wpisu.
+    if (parsed.shortages.length > 0) {
+      const name = parsed.site ?? site;
+      const card = name ? findSiteByName(siteDirectory(study.sites, study.journal), name) : undefined;
+      if (!card) {
+        toast.error("Braki zapisują się w karcie budowy", { description: "Najpierw wybierz budowę wpisu albo powiedz jej nazwę na początku." });
+        return;
+      }
+      const now = Date.now();
+      setSiteShortages(card.id, parsed.shortages.reduce((list, x) => addShortage(list, x.text, x.qty, now), card.shortages ?? []));
+      done.push(`braki (${card.name}): ${parsed.shortages.map((x) => (x.qty ? `${x.text} ${x.qty}` : x.text)).join(", ")}`);
     }
     append(parsed.text);
     toast.success(`Z wypowiedzi: ${done.join(" · ")}`, { id: "entry-dictation" });
