@@ -868,6 +868,35 @@ z treści).
 
 **Commit.** `8f01351` (2026-10-16).
 
+## Notatki — lista robocza szkiców (plan Notatek, etap 3.4)
+
+**Co robi.** W kompozytorze nowej notatki „Odłóż” zapisuje bieżący szkic na listę roboczą i otwiera pusty kompozytor.
+Odłożone szkice są w rzędzie „Odłożone” nad tytułem. Kliknięcie wznawia szkic; jeśli bieżący szkic był rozpoczęty,
+najpierw sam trafia na listę, więc nic nie przepada. „×” usuwa szkic z listy, z „Cofnij”.
+
+**Gdzie jest.**
+- `src/lib/parkedDrafts.ts`: `addParked` (najnowszy pierwszy, limit `PARKED_MAX` = 20), `removeParked`, `parkedLabel`
+  (tytuł → pierwsza linia treści → pierwsza pozycja listy → „Bez tytułu”, do 40 znaków).
+- `src/components/AddNoteBar.tsx`: klucz `kaczy.drafts.v1`, `readParked` / `writeParked`, `sanitizeDraft` (wydzielone
+  z `readDraft`, używane przez obie ścieżki), `parkCurrent`, `resumeParked`, `deleteParked`, rząd „Odłożone szkice”.
+
+**Jak działa i dlaczego.**
+- Oddzielny klucz, nie rozszerzenie `kaczy.draft.v1`: dotychczasowy szkic bieżący zostaje bez zmian, więc starsze wersje
+  i obecne przywracanie działają jak dawniej.
+- Każdy wpis listy przechodzi przez tę samą walidację co szkic (`sanitizeDraft`); uszkodzone pozycje odpadają po cichu.
+- Zdjęć i plików nie odkłada się (nie są zapisywane w szkicu): „Odłóż” i wznowienie wtedy zgłaszają to komunikatem,
+  zamiast cicho je zgubić.
+- Usunięcie z listy ma „Cofnij”, które przywraca całą listę sprzed usunięcia.
+
+**Ograniczenia.** Lista jest lokalna dla przeglądarki (jak szkic), nie synchronizuje się z innymi urządzeniami.
+Rząd jest widoczny po rozwinięciu kompozytora. Limit 20 szkiców; najstarszy odpada.
+
+**Testy.** `src/lib/parkedDrafts.test.ts` (etykieta, limit, kolejność, usuwanie), `e2e/parked-drafts.spec.ts`
+(odłóż, wznów z odłożeniem bieżącego, przeładowanie, usuń z „Cofnij”). Regresja: `composer.spec.ts`,
+`quick-capture.spec.ts`, `notes.spec.ts`, `paste-html.spec.ts`, `resilience.spec.ts` — 23/23.
+
+**Commit.** `682f69f` (2026-10-16).
+
 ## Notatki — wklejanie HTML jako Markdown w kompozytorze (plan Notatek, etap 3.1)
 
 **Co robi.** Wklejenie treści skopiowanej ze strony lub dokumentu w polu treści nowej notatki zamienia formatowanie
