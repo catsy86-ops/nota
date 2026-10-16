@@ -38,6 +38,9 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
+import { useSearchTerms } from "@/lib/searchTerms";
+import { firstSnippet } from "@/lib/searchHighlight";
+import { Marked } from "@/components/SearchMarks";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { DrawingCanvas } from "./DrawingCanvas";
@@ -86,6 +89,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   const [sheetOpen, setSheetOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(note.title);
+  const searchTerms = useSearchTerms();
+  const snippet = searchTerms.length ? firstSnippet(note.content || "", searchTerms) : null;
   const [editContent, setEditContent] = useState(note.content);
   const [editChecklist, setEditChecklist] = useState<ChecklistItem[]>(note.checklist || []);
   const [showChecklist, setShowChecklist] = useState((note.checklist || []).length > 0);
@@ -790,7 +795,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                 // Prawy margines: tytuł nie wchodzi pod pole zaznaczenia (right-2 + w-6 = 32 px od krawędzi).
                 <h3 className={cn("font-display font-semibold text-base leading-snug tracking-[-0.01em] text-foreground mb-1 line-clamp-2 wrap-anywhere", onToggleSelect && "pr-5")}>
                   {note.icon && <span className="mr-1.5" aria-hidden>{note.icon}</span>}
-                  {note.title}
+                  <Marked text={note.title} terms={searchTerms} />
                   {note.readOnly && <Lock className="inline-block w-3 h-3 ml-1.5 -mt-0.5 text-muted-foreground" aria-label="Zablokowana do edycji" />}
                   <ChecklistCount items={note.checklist || []} />
                 </h3>
@@ -803,7 +808,12 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
                 // Kafel to zapowiedź, nie lektura: 4 linie (na telefonie 3) i zwykła interlinia — pełny tekst jest w czytniku.
                 // Nagłówki z treści w rozmiarze treści — duże i pogrubione konkurowały z tytułem kafla.
                 <div className="line-clamp-4 max-sm:line-clamp-3 text-foreground/85 [&_p]:leading-normal [&_li]:leading-normal [&_p]:mb-0.5 [&_:is(h1,h2,h3,h4,h5,h6)]:text-[1em]! [&_:is(h1,h2,h3,h4,h5,h6)]:leading-normal! [&_:is(h1,h2,h3,h4,h5,h6)]:m-0! [&_:is(h1,h2,h3,h4,h5,h6)]:font-semibold!">
-                  <MarkdownRenderer content={note.content} knownTitles={knownTitles} onWikiClick={onWikiClick} />
+                  {snippet ? (
+                    // Szukasz: zamiast początku treści pokazujemy fragment z trafieniem.
+                    <p className="text-sm leading-normal">{snippet.before}<mark className="rounded bg-primary/25 px-0.5 text-foreground">{snippet.match}</mark>{snippet.after}</p>
+                  ) : (
+                    <MarkdownRenderer content={note.content} knownTitles={knownTitles} onWikiClick={onWikiClick} />
+                  )}
                 </div>
               )}
               {(note.checklist || []).length > 0 && (

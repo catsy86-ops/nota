@@ -5,6 +5,8 @@ import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
 import { StickyNote, Archive, Bell, Trash, Calendar, CalendarRange, BriefcaseBusiness, HardHat, Inbox } from "lucide-react";
 import { InboxCapture } from "@/components/InboxCapture";
 import { readerNeighbors } from "@/lib/readerStep";
+import { setSearchTerms } from "@/lib/searchTerms";
+import { highlightTokens } from "@/lib/searchQuery";
 import { isInboxNote } from "@/lib/inbox";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useNoteVersions } from "@/hooks/useNoteVersions";
@@ -433,6 +435,9 @@ const Index = () => {
   // „Bieżąca” notatka dla palety poleceń: otwarta w czytniku, jedyna zaznaczona albo z fokusem.
   // Fokus siatki czytamy tylko po otwarciu palety — subskrypcja przerysowywałaby
   // całą stronę przy każdej strzałce (patrz selektory w `gridKeyboardNav`).
+  // Frazy wyszukiwania dla wyróżniania w kaflach (magazyn `searchTerms`, bez przerysowania całej listy).
+  useEffect(() => { setSearchTerms(highlightTokens(search)); }, [search]);
+
   // Sąsiedzi czytnika w liście, którą użytkownik widzi (bez notatek prywatnych).
   const readerSteps = useMemo(() => {
     const ids = visibleNotes.filter((n) => !n.locked).map((n) => n.id);

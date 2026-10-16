@@ -45,7 +45,8 @@ export interface ParsedQuery {
 
 /** Małe litery bez ogonków — porównania operatorów i wartości. */
 export function fold(s: string): string {
-  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l").toLowerCase();
+  // Najpierw małe litery, potem „ł” — inaczej wielkie „Ł” zostawało bez zmiany i nie trafiało w „lodz”.
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/ł/g, "l");
 }
 
 /** Dzieli po spacjach, ale spacje w cudzysłowie zostają w tokenie. */
