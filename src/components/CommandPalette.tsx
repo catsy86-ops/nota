@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy } from "lucide-react";
+import { Inbox, Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes, useSearchReady } from "@/lib/searchNotes";
@@ -31,7 +31,7 @@ interface Props {
   onOpenNote: (id: string) => void;
   onNewNote: () => void;
   onDailyNote: () => void;
-  onGo: (view: "notes" | "today" | "week" | "archive" | "reminders" | "calendar" | "shifts" | "study" | "trash" | "widget") => void;
+  onGo: (view: "notes" | "inbox" | "today" | "week" | "archive" | "reminders" | "calendar" | "shifts" | "study" | "trash" | "widget") => void;
   onToggleTheme: () => void;
   onOpenSettings: () => void;
   onOpenStats: () => void;
@@ -175,6 +175,9 @@ export function CommandPalette({
         <CommandGroup heading="Nawigacja">
           <CommandItem onSelect={() => run(() => onGo("notes"))}>
             <StickyNote className="w-4 h-4 mr-2" /> Notatki
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => onGo("inbox"))}>
+            <Inbox className="w-4 h-4 mr-2" /> Skrzynka
           </CommandItem>
           <CommandItem onSelect={() => run(() => onGo("today"))}>
             <Calendar className="w-4 h-4 mr-2" /> Dziś <span className="ml-auto text-xs text-muted-foreground">Alt+T</span>

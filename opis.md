@@ -1527,7 +1527,8 @@ i nie będące podnotatkami. Przeniesienie do folderu albo nadanie etykiety usuw
 - Notatki w koszu i archiwum nie są w skrzynce (reguła działa na aktywnych notatkach).
 - Starsze notatki bez folderu i etykiet też trafiają do skrzynki. To zamierzone: to „do posortowania”.
 - Pasek „Zapisz notatkę…” nie pojawia się w skrzynce. Nowe notatki z szablonami robi się dalej w widoku Notatek.
-- Brak wpisu w palecie poleceń i w dolnej nawigacji telefonu — skrzynkę otwiera się z paska bocznego.
+- Jest wpis „Skrzynka” w palecie poleceń (`CommandPalette.tsx`). Brak pozycji w dolnej nawigacji telefonu (miejsce
+  na pasku jest ograniczone) — tam skrzynkę otwiera się z paska bocznego albo z palety.
 
 **Testy.** Nie dodano (na prośbę, bez e2e na razie). Sprawdzono: typecheck, lint zmienionych plików.
 
