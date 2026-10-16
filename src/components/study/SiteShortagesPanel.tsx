@@ -13,7 +13,9 @@ import {
 } from "@/lib/study/shortages";
 
 const STATUS_CLASS: Record<ShortageStatus, string> = {
-  missing: "border-warning-ink/50 bg-warning/10 text-warning-ink",
+  // Czerwień, nie ostrzeżenie: w motywie bursztyn (kolor główny) i ostrzeżenie są prawie tym samym kolorem,
+  // a „Brakuje” musi odróżniać się od „Zamówione” na pierwszy rzut oka.
+  missing: "border-destructive/50 bg-destructive/10 text-destructive",
   ordered: "border-primary/40 bg-primary/10 text-primary-ink",
   delivered: "border-success-ink/40 bg-success/10 text-success-ink",
 };
