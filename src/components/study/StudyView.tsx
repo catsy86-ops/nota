@@ -7,6 +7,7 @@ import { ChartColumn, RotateCcw } from "lucide-react";
 import { StudyStatsDialog } from "./StudyStats";
 import { HeightsButton } from "./HeightsSheet";
 import { CalculatorsButton } from "./CalculatorsSheet";
+import { STUDY_DUE_PARAM } from "@/components/review/TodayStudyCard";
 import { setJournalDraftTopic } from "@/lib/study/draft";
 import { useStudyReady } from "@/lib/study/data";
 import { closeJournalSheet, JOURNAL_ENTRY_PARAM, openJournalSheet, useJournalSheet } from "@/lib/study/entrySheet";
@@ -137,6 +138,17 @@ function StudyScreen() {
   const [run, setRun] = useState(0);
   const practice = (topic: string) => { setScope({ kind: "topic", topic }); setRun((n) => n + 1); setTab("quiz"); };
   const changeScope = (s: QuizScope) => { setScope(s); setRun((n) => n + 1); };
+  // „Powtórz” z karty na stronie „Dziś” (`/praca?powtorka=1`): od razu quiz „Na dziś”.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has(STUDY_DUE_PARAM)) return;
+    params.delete(STUDY_DUE_PARAM);
+    const rest = params.toString();
+    window.history.replaceState(window.history.state, "", window.location.pathname + (rest ? `?${rest}` : ""));
+    setScope({ kind: "due" });
+    setRun((n) => n + 1);
+    setTab("quiz");
+  }, []);
   // Z karty tematu „Wpis z budowy” otwiera dziennik z już wybranym tematem.
   // Zmienia tylko temat szkicu — niezapisany tekst i zdjęcia zostają.
   const openJournal = (topic: string) => { setJournalDraftTopic(topic); openJournalSheet(true); };

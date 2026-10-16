@@ -85,6 +85,7 @@ const ShortcutsDialog = lazy(() => import("@/components/ShortcutsDialog").then((
 const PropDefsDialog = lazy(() => import("@/components/PropDefsDialog").then((m) => ({ default: m.PropDefsDialog })));
 const TodayDueList = lazy(() => import("@/components/review/TodayDueList").then((m) => ({ default: m.TodayDueList })));
 const TodayShiftCard = lazy(() => import("@/components/review/TodayShiftCard").then((m) => ({ default: m.TodayShiftCard })));
+const TodayStudyCard = lazy(() => import("@/components/review/TodayStudyCard").then((m) => ({ default: m.TodayStudyCard })));
 const WeeklyReviewCard = lazy(() => import("@/components/review/WeeklyReviewCard").then((m) => ({ default: m.WeeklyReviewCard })));
 const RecentActionsPanel = lazy(() => import("@/components/RecentActionsPanel").then((m) => ({ default: m.RecentActionsPanel })));
 const OnboardingTour = lazy(() => import("@/components/OnboardingTour").then((m) => ({ default: m.OnboardingTour })));
@@ -728,6 +729,12 @@ const Index = () => {
           {view === "today" && !deferredSearch && (
             <Suspense fallback={null}>
               <TodayDueList notes={notes} onOpen={openNote} onOpenReminders={() => go("reminders")} />
+            </Suspense>
+          )}
+
+          {view === "today" && !deferredSearch && (
+            <Suspense fallback={null}>
+              <TodayStudyCard onPractice={() => navigate("/praca?powtorka=1")} />
             </Suspense>
           )}
 
