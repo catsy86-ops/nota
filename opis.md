@@ -940,21 +940,28 @@ Commit: `b610ff6` (2026-10-15).
 ### Pasek opanowania
 
 **Co robi.** Pokazuje, ile z 18 tematów jest w kolumnie „Umiem”, z podziałem na moduły
-(Woda użytkowa, Kanalizacja, Wspólne). Dotknięcie lub kliknięcie komórki podpisuje temat
-i jego stan pod paskiem — na telefonie nie ma najechania kursorem.
+(Woda użytkowa, Kanalizacja, Wspólne). Każdy temat to kratka jak w zeszycie w rzędzie modułu.
+Gdy cały moduł jest w „Umiem”, przy jego nazwie pojawia się krzywo ułożona pieczątka „Umiem”.
+Dotknięcie lub kliknięcie kratki podpisuje temat i jego stan pod paskiem — na telefonie nie ma najechania kursorem.
 
 **Gdzie jest.** `MasteryStrip` w `src/components/study/StudyView.tsx`; dane z `useStudy`,
 `columnOf` (`store.ts`), `MODULES` i `TOPICS` (`content.ts`).
 
-**Jak działa.** Odcinek modułu ma szerokość proporcjonalną do liczby tematów (`flexGrow`),
-ale najmniej 4,5 rem, żeby zmieścił się podpis z licznikiem `x/n`. Komórka: pełna =
-„Umiem”, połowa = „W trakcie”, pusta = „Do nauki”. Każda komórka to przycisk
-(`aria-label` „Temat: stan”, `aria-pressed`) z wysokim celem dotyku przy cienkim pasku
-(`-my-2 py-2`). Podpis pod paskiem ma `aria-live="polite"`. Wybór żyje tylko w stanie komponentu.
+**Jak działa.** Moduły stoją obok siebie (`flex-wrap`, na wąskim ekranie zawijają się), a kratki
+w module też się zawijają. Kratka to kwadrat 20 px (`size-5`) w polu 28 px (`size-7`), a na dotyku
+44 px (`coarse:size-11`). Kolor: pełna = „Umiem”, połowa = „W trakcie”, pusta = „Do nauki”. Każda
+kratka to przycisk (`aria-label` „Temat: stan”, `aria-pressed`). Pieczątka `data-mastery-stamp`
+pokazuje się, gdy `modDone === topics.length`, i jest obrócona o −3°, w kolorze `success-ink`.
+Podpis pod paskiem ma `aria-live="polite"`. Wybór żyje tylko w stanie komponentu.
 Licznik jest w JetBrains Mono (`font-mono tabular-nums`), bo w kroju nagłówków „1” wyglądała jak „l”.
+Poprzednio odcinki miały szerokość proporcjonalną do liczby tematów (`flexGrow`) i były cienkimi paskami.
+
+**Ograniczenia i pułapki.** Pieczątka pojawia się tylko przy pełnym module; moduł z jednym tematem
+dostaje ją od razu po jego przeniesieniu do „Umiem”. Pieczątka jest tekstem, nie obrazkiem, więc czytnik ekranu czyta ją jako „Umiem” przy nazwie modułu.
 
 **Testy.** e2e `e2e/study.spec.ts` („tablica: temat przechodzi między kolumnami…”: licznik
-modułu i podpis po kliknięciu komórki), `e2e/resilience.spec.ts` (`mastery-count`).
+modułu i podpis po kliknięciu kratki; „pasek opanowania: pieczątka „Umiem” dopiero, gdy cały moduł jest w „Umiem””),
+`e2e/resilience.spec.ts` (`mastery-count`).
 
 ### Karty tematów na tablicy
 
