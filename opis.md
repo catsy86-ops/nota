@@ -1501,17 +1501,25 @@ w portalu — w testach `page.getByRole("menuitem", …)`, nie wewnątrz okna.
 
 ---
 
-## Dziś — karta zmiany z Grafiku (punkt 2 planu)
+## Dziś — karta zmiany, zaległe i terminy (punkt 3 planu)
 
-**Co robi.** Na górze widoku „Dziś” jest karta z datą, dzisiejszą zmianą z Grafiku (nazwa, godziny) albo informacją,
-że dziś nie ma zmiany. Dwa przyciski: „Grafik” otwiera Grafik, „Notatka dnia” otwiera dzisiejszą notatkę dnia.
-Karta znika przy aktywnym wyszukiwaniu, tak jak przegląd tygodnia.
+**Co robi.** Na górze widoku „Dziś” są trzy elementy, w tej kolejności:
+1. Karta z datą i dzisiejszą zmianą z Grafiku (nazwa, godziny) albo informacją, że dziś nie ma zmiany. Przyciski:
+   „Grafik” otwiera Grafik, „Notatka dnia” otwiera dzisiejszą notatkę dnia.
+2. Sekcja „Przypomnienia”: zaległe i dzisiejsze terminy (po cztery z każdej grupy, z licznikiem reszty).
+   Kliknięcie otwiera notatkę, „Wszystkie” przechodzi do widoku Przypomnień.
+3. Przegląd tygodnia (jak dotąd).
+Wszystko znika przy aktywnym wyszukiwaniu.
 
 **Gdzie jest.**
 - `src/components/review/TodayShiftCard.tsx`: `TodayShiftCard({ onOpenShifts, onDailyNote })`. Czyta
   `useShifts()` i `useShiftsReady()` z `lib/shifts`, dzień liczy przez `localDayKey()`.
-- `src/pages/Index.tsx`: lazy import `TodayShiftCard`, renderowanie w widoku `today` przed `WeeklyReviewCard`.
-  `onOpenShifts` → `go("shifts")`, `onDailyNote` → `openDailyNote`.
+- `src/components/review/TodayDueList.tsx`: `TodayDueList({ notes, onOpen, onOpenReminders })`. Grupowanie przez
+  `groupReminders` z `lib/reminderAgenda.ts` (ta sama logika co widok Przypomnień), tylko grupy „Zaległe” i „Dziś”.
+  Czas przy notatce przez `formatReminderShort` z `lib/reminderTime.ts`.
+- `src/pages/Index.tsx`: lazy importy `TodayShiftCard` i `TodayDueList`, renderowanie w widoku `today` przed
+  `WeeklyReviewCard`. `onOpenShifts` → `go("shifts")`, `onDailyNote` → `openDailyNote`, `onOpen` → `openNote`,
+  `onOpenReminders` → `go("reminders")`.
 
 **Jak działa i dlaczego.**
 - Dane tylko do odczytu: zmianę dodaje się i zmienia w Grafiku, nie tutaj (jeden punkt prawdy).
@@ -1519,13 +1527,13 @@ Karta znika przy aktywnym wyszukiwaniu, tak jak przegląd tygodnia.
 - Gdy Grafik jeszcze się nie wczytał, karta pokazuje „Grafik się wczytuje…”, zamiast udawać brak zmiany.
 - Rodzaj zmiany usunięty z Grafiku daje „Zaplanowana zmiana (rodzaj usunięty).” — zapis nie znika bez śladu.
 
-**Ograniczenia.** Karta nie pokazuje terminów ani zaległych notatek; to kolejny krok planu „Dziś”
-(dotąd widok listy i przegląd tygodnia zostają bez zmian). Brak testów jednostkowych i e2e dla tej karty —
-świadomie pominięte na prośbę (pamięć i pełny e2e).
+**Ograniczenia.** Sekcja terminów pokazuje tylko zaległe i dzisiejsze; przyszłe terminy są w Przypomnieniach.
+Notatki w koszu i archiwum są pomijane. Brak testów jednostkowych i e2e dla tych dwóch elementów — świadomie
+pominięte na prośbę (pamięć i pełny e2e).
 
 **Testy.** Nie dodano. Sprawdzono: typecheck, lint zmienionych plików.
 
-**Commit.** `32f51b7` (2026-10-16).
+**Commit.** `32f51b7`, `25ed6cb` (2026-10-16).
 
 ## Praca — własne pytania i punkty listy (N5)
 
