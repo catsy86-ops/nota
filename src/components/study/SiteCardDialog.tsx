@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { Archive, ArchiveRestore, FileText, ListFilter, MapPin, Package } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Archive, ArchiveRestore, ClipboardCheck, FileText, ListFilter, MapPin, Package } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -16,6 +16,9 @@ import { downloadSiteZip } from "@/lib/study/siteZip";
 import { SiteOrderPanel } from "./SiteOrderPanel";
 import { SiteStagesPanel } from "./SiteStagesPanel";
 import { SiteShortagesPanel } from "./SiteShortagesPanel";
+import { PrintRoot } from "./PrintRoot";
+import { HandoverPaper } from "./HandoverPaper";
+import { buildHandover, type Handover } from "@/lib/study/handover";
 
 const topicTitle = (id: string) => TOPICS.find((t) => t.id === id)?.title ?? null;
 
@@ -42,6 +45,9 @@ export function SiteCardDialog({
   const site = siteId ? dir.find((s) => s.id === siteId) ?? null : null;
   const [form, setForm] = useState({ name: "", address: "", investor: "" });
   const [zipping, setZipping] = useState(false);
+  /** Protokół odbioru w trakcie drukowania; `null` = nie drukujemy. */
+  const [handover, setHandover] = useState<Handover | null>(null);
+  const endHandover = useCallback(() => setHandover(null), []);
 
   useEffect(() => {
     if (site) setForm({ name: site.name, address: site.address, investor: site.investor });
@@ -185,6 +191,15 @@ export function SiteCardDialog({
               >
                 <Package className="mr-1.5 h-4 w-4" aria-hidden />{zipping ? "Pakuję…" : "Paczka ZIP"}
               </Button>
+              <Button
+                variant="outline"
+                onClick={() => setHandover(buildHandover(study.journal, site))}
+                disabled={site.count === 0 && !site.stages}
+                title="Etapy, próby szczelności, uwagi i zdjęcia na jednej kartce z miejscem na podpisy — wydruk albo PDF"
+                className="col-span-2 coarse:h-11"
+              >
+                <ClipboardCheck className="mr-1.5 h-4 w-4" aria-hidden />Protokół odbioru
+              </Button>
               <Button variant="ghost" onClick={toggleArchive} className="col-span-2 text-muted-foreground coarse:h-11">
                 {site.archived === undefined
                   ? <><Archive className="mr-1.5 h-4 w-4" aria-hidden />Do archiwum</>
@@ -194,6 +209,11 @@ export function SiteCardDialog({
           </>
         )}
       </ResponsiveDialogContent>
+      {handover && (
+        <PrintRoot testId="handover-print" onDone={endHandover}>
+          <HandoverPaper handover={handover} />
+        </PrintRoot>
+      )}
     </Dialog>
   );
 }

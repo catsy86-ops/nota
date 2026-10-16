@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { createPortal } from "react-dom";
 import { Clock, Copy, Ellipsis, FilePlusCorner, Gauge, MapPin, MessageCircle, Printer, Share2, UserPen, Users } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { testLine } from "@/lib/study/pressureTest";
@@ -22,6 +21,7 @@ import { formatPhone, whatsappUrl } from "@/lib/study/boss";
 import { entrySiteId } from "@/lib/study/sites";
 import { buildJournalReport, dayKeyOf, reportSummary, reportText, reportWhatsApp, shiftKey, type JournalReport as Report } from "@/lib/study/report";
 import { shortageLine } from "@/lib/study/shortages";
+import { PrintRoot } from "./PrintRoot";
 import { reportToNote } from "@/lib/study/toNote";
 import { KindIcon } from "./JournalEntrySheet";
 
@@ -621,48 +621,11 @@ function DaysTable({ report }: { report: Report }) {
   );
 }
 
-/**
- * Wydruk: raport w osobnym korzeniu pod `body`, a reszta strony schowana stylem
- * `html.printing-report` (index.css). Drukujemy dopiero po wczytaniu zdjęć.
- */
+/** Wydruk raportu: wspólny mechanizm z protokołem odbioru (`PrintRoot`). */
 function ReportPrint({ report, onDone }: { report: Report; onDone: () => void }) {
-  const [root, setRoot] = useState<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!root) return;
-    let alive = true;
-    const html = document.documentElement;
-    const finish = () => {
-      html.classList.remove("printing-report");
-      window.removeEventListener("afterprint", finish);
-      if (alive) onDone();
-    };
-    const loaded = () => [...root.querySelectorAll("img")].every((img) => img.complete) && !root.querySelector('[aria-label="Wczytywanie obrazu"]');
-    const started = Date.now();
-    const tick = () => {
-      if (!alive) return;
-      if (!loaded() && Date.now() - started < 3000) { setTimeout(tick, 100); return; }
-      html.classList.add("printing-report");
-      window.addEventListener("afterprint", finish);
-      window.print();
-      // Część przeglądarek (Android, Safari) nie wysyła `afterprint` albo `print()` nie czeka
-      // na zamknięcie okna — sprzątamy przy pierwszym dotknięciu po powrocie. Klasa działa
-      // tylko w `@media print`, więc na ekranie niczego nie zmienia.
-      setTimeout(() => { if (alive) window.addEventListener("pointerdown", finish, { once: true }); }, 500);
-    };
-    tick();
-    return () => {
-      alive = false;
-      html.classList.remove("printing-report");
-      window.removeEventListener("afterprint", finish);
-      window.removeEventListener("pointerdown", finish);
-    };
-  }, [root, onDone]);
-
-  return createPortal(
-    <div id="report-print" ref={setRoot} data-testid="report-print">
+  return (
+    <PrintRoot onDone={onDone}>
       <ReportPaper report={report} print />
-    </div>,
-    document.body,
+    </PrintRoot>
   );
 }
