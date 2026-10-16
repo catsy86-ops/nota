@@ -383,6 +383,9 @@ notatki działają dalej, zamiast pokazywać ogólny błąd.
 - Brak sieci w `ViewErrorBoundary`: błąd ładowania paczki (`dynamically imported module` / `Loading chunk` /
   `Failed to fetch`) przy `navigator.onLine === false`. Przy sieci ten sam błąd zostaje błędem z „Odśwież stronę”.
 - Pusty Dziennik był dotąd całym klikanym przyciskiem; teraz to panel z wyraźnym przyciskiem „Dodaj wpis”.
+- Ilustracja pustego widoku to `EmptySketch` (`src/components/EmptyIllustration.tsx`, ścieżki z `src/lib/emptyGlyphs.ts`).
+  `EmptyIllustration` bierze szkic po `View` (Notatki), a Dziennik Pracy przekazuje własny: `JOURNAL_GLYPH` (kartka
+  z marginesem, wiersze i długopis). Wariant `inline` też przyjmuje `art` — zwykła ikona ma wtedy `icon={null}`.
 
 **Ograniczenia i pułapki.**
 - Bardzo małe puste miejsca zostają zwykłym tekstem: kolumna tablicy tematów (`StudyBoard`, cel upuszczania), „Brak
@@ -394,9 +397,9 @@ notatki działają dalej, zamiast pokazywać ogólny błąd.
 
 **Testy.** `e2e/shifts.spec.ts` („awaria widoku Grafiku nie zabiera reszty aplikacji”, „bez internetu niepobrany
 Grafik mówi, że czeka na sieć” — `role="status"`, bez `alert`), `e2e/search-backup.spec.ts` („Brak wyników w
-Notatkach”), `e2e/study.spec.ts` (brak wyników filtra Dziennika), `e2e/a11y.spec.ts` (puste widoki w obu motywach).
+Notatkach”), `e2e/study.spec.ts` (brak wyników filtra Dziennika; „dziennik bez wpisów: szkic zeszytu…”), `e2e/a11y.spec.ts` (puste widoki w obu motywach).
 
-**Commit.** `7c47e4b` (2026-10-15).
+**Commit.** `7c47e4b` (2026-10-15); szkic zeszytu w Dzienniku — `59063d5` (2026-10-16).
 
 ---
 
