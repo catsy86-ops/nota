@@ -30,6 +30,8 @@ import { useWikiAutocomplete } from "@/hooks/useWikiAutocomplete";
 import type { ReminderRepeat } from "@/lib/reminderRepeat";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
 import { toast } from "sonner";
+import { addParked, parkedLabel, PARKED_MAX, removeParked, type Parked } from "@/lib/parkedDrafts";
+import { toastWithUndo } from "@/lib/undoToast";
 import { pluralPl } from "@/lib/plural";
 import { parsePastedUrl } from "@/lib/urlTitle";
 import { handleEditorKey } from "@/lib/editorKeysDom";
@@ -63,6 +65,7 @@ interface AddNoteBarProps {
 }
 
 const DRAFT_KEY = "kaczy.draft.v1";
+const PARKED_KEY = "kaczy.drafts.v1";
 
 interface Draft {
   title: string;
@@ -81,12 +84,9 @@ interface Draft {
 const DRAFT_REPEATS: ReminderRepeat[] = ["none", "daily", "weekly", "monthly"];
 const DRAFT_PRIORITIES: NotePriority[] = ["none", "low", "medium", "high"];
 
-/** Szkic nowej notatki z poprzedniej sesji; `null`, gdy nie ma niczego wartego przywrócenia. */
-function readDraft(): Draft | null {
-  try {
-    const raw = localStorage.getItem(DRAFT_KEY);
-    if (!raw) return null;
-    const p = JSON.parse(raw) as Partial<Draft>;
+/** Szkic z dowolnego zapisu (localStorage, lista robocza): pola sprawdzone; `null`, gdy nie ma niczego wartego zachowania. */
+function sanitizeDraft(p: Partial<Draft>): Draft | null {
+  {
     const title = typeof p.title === "string" ? p.title : "";
     const content = typeof p.content === "string" ? p.content : "";
     const checklist = Array.isArray(p.checklist)
@@ -102,7 +102,41 @@ function readDraft(): Draft | null {
     const until = typeof p.reminderRepeatUntil === "number" && Number.isFinite(p.reminderRepeatUntil) && reminderRepeat !== "none" ? p.reminderRepeatUntil : undefined;
     const parentId = typeof p.parentId === "string" && p.parentId.length > 0 && p.parentId.length <= 200 ? p.parentId : undefined;
     return { title, content, checklist, color, labels, reminder, reminderRepeat, ...(until !== undefined ? { reminderRepeatUntil: until } : {}), ...(parentId ? { parentId } : {}), priority };
+  }
+}
+
+/** Szkic nowej notatki z poprzedniej sesji; `null`, gdy nie ma niczego wartego przywrócenia. */
+function readDraft(): Draft | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return null;
+    return sanitizeDraft(JSON.parse(raw) as Partial<Draft>);
   } catch { return null; }
+}
+
+/** Lista robocza z localStorage: każdy wpis przechodzi przez `sanitizeDraft`; uszkodzone pozycje odpadają. */
+function readParked(): Parked<Draft>[] {
+  try {
+    const raw = localStorage.getItem(PARKED_KEY);
+    if (!raw) return [];
+    const list = JSON.parse(raw) as unknown;
+    if (!Array.isArray(list)) return [];
+    const out: Parked<Draft>[] = [];
+    for (const e of list) {
+      const x = e as { id?: unknown; at?: unknown; draft?: unknown } | null;
+      if (!x || typeof x.id !== "string" || typeof x.at !== "number" || !x.draft || typeof x.draft !== "object") continue;
+      const draft = sanitizeDraft(x.draft as Partial<Draft>);
+      if (draft) out.push({ id: x.id, at: x.at, draft });
+    }
+    return out.slice(0, PARKED_MAX);
+  } catch { return []; }
+}
+
+function writeParked(list: Parked<Draft>[]): void {
+  try {
+    if (list.length === 0) localStorage.removeItem(PARKED_KEY);
+    else localStorage.setItem(PARKED_KEY, JSON.stringify(list));
+  } catch { /* brak miejsca — lista robocza nie przeżyje przeładowania */ }
 }
 
 function writeDraft(d: Draft): void {
@@ -153,6 +187,71 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
   const reset = useCallback(() => {
     setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderRepeat("none"); setReminderUntil(undefined); setParentId(null); setPriority("none"); setImages([]); setAttachments([]); setChecklist([]); setShowChecklist(false); setIgnored(new Set()); setRestored(false); setExpanded(false);
   }, []);
+
+  // Lista robocza: odłożone szkice nowych notatek (wznawiane z rzędu nad tytułem).
+  const [parked, setParked] = useState<Parked<Draft>[]>(readParked);
+
+  const currentDraft = (): Draft => ({
+    title, content, checklist, color, labels, reminder, reminderRepeat,
+    ...(reminderUntil !== undefined ? { reminderRepeatUntil: reminderUntil } : {}),
+    ...(parentId ? { parentId } : {}),
+    priority,
+  });
+
+  /** Ładuje szkic do kompozytora (wznowienie z listy). */
+  const applyDraft = (d: Draft) => {
+    setTitle(d.title); setContent(d.content); setColor(d.color); setLabels(d.labels);
+    setReminder(d.reminder); setReminderRepeat(d.reminderRepeat); setReminderUntil(d.reminderRepeatUntil);
+    setParentId(d.parentId ?? null); setPriority(d.priority); setChecklist(d.checklist);
+    setShowChecklist(d.checklist.length > 0); setIgnored(new Set()); setRestored(false); setExpanded(true);
+  };
+
+  /** Zdjęć i plików nie ma w szkicu (nie są zapisywane przy odkładaniu) — wtedy nie odkładamy. */
+  const hasUnsavedMedia = images.length > 0 || attachments.length > 0;
+
+  /** „Odłóż”: bieżący szkic idzie na listę, kompozytor zostaje otwarty i pusty. */
+  const parkCurrent = () => {
+    if (isDraftEmpty) return;
+    if (hasUnsavedMedia) {
+      toast.error("Zdjęć i plików nie da się odłożyć", { description: "Zapisz notatkę albo usuń załączniki." });
+      return;
+    }
+    const draft = currentDraft();
+    const next = addParked(parked, draft, crypto.randomUUID(), Date.now());
+    writeParked(next);
+    setParked(next);
+    reset();
+    setExpanded(true);
+    requestAnimationFrame(() => titleRef.current?.focus());
+    toast(`Odłożono: „${parkedLabel(draft)}”`, { duration: 3000 });
+  };
+
+  /** Wznowienie z listy: bieżący niepusty szkic najpierw zostaje odłożony, żeby nic nie przepadło. */
+  const resumeParked = (id: string) => {
+    const entry = parked.find((p) => p.id === id);
+    if (!entry) return;
+    if (!isDraftEmpty && hasUnsavedMedia) {
+      toast.error("Zdjęć i plików nie da się odłożyć", { description: "Zapisz notatkę albo usuń załączniki." });
+      return;
+    }
+    const base = isDraftEmpty ? parked : addParked(parked, currentDraft(), crypto.randomUUID(), Date.now());
+    const next = removeParked(base, id);
+    writeParked(next);
+    setParked(next);
+    applyDraft(entry.draft);
+    requestAnimationFrame(() => titleRef.current?.focus());
+  };
+
+  /** Usunięcie z listy z „Cofnij”, które przywraca całą listę sprzed usunięcia. */
+  const deleteParked = (id: string) => {
+    const entry = parked.find((p) => p.id === id);
+    if (!entry) return;
+    const before = parked;
+    const next = removeParked(before, id);
+    writeParked(next);
+    setParked(next);
+    toastWithUndo(`Usunięto szkic „${parkedLabel(entry.draft)}”`, () => { writeParked(before); setParked(before); });
+  };
 
   // Tokeny z tekstu (`#etykieta`, `@folder`, `!`, „jutro 9:00”) — pokazywane jako chipy, zanim cokolwiek się zapisze.
   const capture = useMemo<CaptureToken[]>(() => {
@@ -385,6 +484,26 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
                 </button>
               </div>
             )}
+            {parked.length > 0 && (
+              <div role="group" aria-label="Odłożone szkice" className="flex flex-wrap items-center gap-1.5 text-xs" data-parked-count={parked.length}>
+                <span className="text-muted-foreground">Odłożone:</span>
+                {parked.map((p) => {
+                  const label = parkedLabel(p.draft);
+                  return (
+                    <span key={p.id} className="inline-flex max-w-full items-center rounded-full border border-border bg-muted/40">
+                      <button type="button" onClick={() => resumeParked(p.id)} aria-label={`Wznów szkic: ${label}`}
+                        className="min-w-0 truncate px-2.5 py-1 hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11 coarse:px-3">
+                        {label}
+                      </button>
+                      <button type="button" onClick={() => deleteParked(p.id)} aria-label={`Usuń odłożony szkic: ${label}`}
+                        className="pr-2 pl-0.5 text-muted-foreground hover:text-destructive outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11">
+                        <X className="h-3 w-3" aria-hidden />
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
             <input ref={titleRef} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Tytuł"
               onKeyDown={(e) => {
                 if (e.key !== "Enter") return;
@@ -582,6 +701,12 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
                 <PriorityPicker priority={priority} onSet={setPriority} />
               </div>
               <div className="flex shrink-0 items-center gap-1">
+                {!isDraftEmpty && (
+                  <button type="button" onClick={parkCurrent} title="Odłóż szkic na listę roboczą — wrócisz do niego z rzędu „Odłożone”"
+                    className="pressable px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors shrink-0 coarse:min-h-11">
+                    Odłóż
+                  </button>
+                )}
                 {!isDraftEmpty && (fullScreen ? (
                   <IconButton onClick={saveAndNext} title="Zapisz i dodaj kolejną (Ctrl+Shift+Enter)" aria-label="Zapisz i dodaj kolejną">
                     <CopyPlus className="w-4 h-4" />
