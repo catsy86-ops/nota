@@ -2364,6 +2364,44 @@ toast „Paczka gotowa: raport i 0 zdjęć”).
 
 **Commit.** `50842a6` (2026-10-16).
 
+### Listy karty budowy w dokumencie (etapy, braki, zamówienia)
+
+**Co robi.** Dla użytkownika: zmiany etapów, braków i historii zamówień z dwóch telefonów tej samej budowy łączą
+się — np. odhaczenie etapu na jednym i usunięcie innego na drugim zostaje po obu stronach. Usunięta pozycja nie
+wraca przez to, że drugi telefon miał starszą listę.
+
+**Gdzie jest.**
+- `src/lib/study/siteItems.ts`: klucze `budowa␁rodzaj␁id` (`itemKey`) i znacznik listy `budowa␁meta␁rodzaj` (`metaKey`),
+  rodzaje `stage`, `short`, `order`; `composeSiteLists` (mapa → listy per budowa), `listItemId`, `listItemValue`,
+  `sameItem`, `stripLists`. Bez importu `yjs`.
+- `src/lib/study/yStudy.ts`: mapa `studySiteItems`; `setSiteList(siteId, kind, next, base)` zapisuje różnicę;
+  `migrateCardLists` przenosi dawne pola karty; `dump()` składa karty z listami (`withSiteLists`); `saveSite` zapisuje
+  kartę bez list; `replaceAll` / `mergeIn` rozkładają listy z kopii do mapy.
+- `src/lib/study/store.ts`: `setSiteStages(id, next, base?)`, `setSiteShortages(id, next, base?)`, `markSiteOrdered`
+  (historia przez `setSiteList`), `siteListBase` (lista jeszcze nie zapisana = pusta baza, inaczej niezmienione
+  domyślne etapy nie trafiłyby do zapisu).
+- Panele (`SiteStagesPanel`, `SiteShortagesPanel`) i dyktowanie braków przekazują `base` — listę z ekranu.
+
+**Jak działa i dlaczego.** Zapis porównuje `base` (lista, od której zaczął użytkownik) z `next`: usuwa tylko pozycje,
+które były w `base`, a zapisuje tylko zmienione — pozycje dopisane w tym czasie na drugim telefonie zostają. Kolejność
+etapu zapisuje się raz, przy dodaniu (nowy — na koniec), więc usunięcie innego etapu nie przepisuje sąsiednich (co
+mogłoby nadpisać równoczesne odhaczenie). Znacznik listy odróżnia pustą listę od „jeszcze nie zapisanej” (usunięte
+wszystkie etapy nie wracają do domyślnych). Stan i kopia zapasowa nadal mają listy w kartach — widoki i format kopii
+bez zmian.
+
+**Ograniczenia i pułapki.**
+- Ta sama pozycja zmieniona naraz na dwóch telefonach — wygrywa ostatni zapis tej pozycji.
+- Karta zapisana w starszej wersji aplikacji może dostać z powrotem dawne pola list — są ignorowane, gdy lista jest już
+  w mapie (znacznik), a starsza wersja nie widzi nowych zmian.
+- `yStudy.ts` jest w paczce startowej — dodatkowy kod tu zużywa budżet paczki (po tej zmianie zapas ~44 B).
+
+**Testy.** `src/lib/study/yStudy.test.ts` („listy karty budowy”, 6: dwa telefony — etap odhaczony i inny usunięty;
+braki dopisane i zmienione; stara lista nie wskrzesza usuniętej pozycji; migracja dawnych pól; zapis karty i kopia
+zapasowa w obie strony; pusta lista etapów). e2e działu Praca i kopii (`site-stages`, `site-shortages`, `site-order`,
+`site-handover`, `entry-dictation`, `study`, `report-nudge`, `images`, `search-backup`) — 48/48. Vitest 1305/1305.
+
+**Commit.** `395c311` (2026-10-16).
+
 ### Etapy budowy
 
 **Co robi.** Karta budowy ma listę etapów instalacji w domku jednorodzinnym: domyślnie kanalizacja podposadzkowa,
@@ -2389,9 +2427,9 @@ na których ktoś faktycznie odhacza etapy — reszta raportów się nie zmienia
 nie w nim, żeby nazwa budowy (i jej `aria-label`) zostały czyste.
 
 **Ograniczenia i pułapki.**
-- Lista etapów to jedno pole karty: dwa telefony zmieniające etapy tej samej budowy w tej samej chwili — wygrywa
-  ostatni zapis całej listy.
-- Starsza wersja aplikacji nie zna `stages`: zapis karty w starej wersji je zgubi.
+- Od `395c311` każdy etap to osobny klucz mapy `studySiteItems` (patrz „Listy karty budowy w dokumencie”): dwa
+  telefony zmieniające różne etapy tej samej budowy scalają się. Ten sam etap zmieniony naraz — wygrywa ostatni zapis.
+- Starsza wersja aplikacji (sprzed `395c311`) widzi etapy tylko z dawnego pola karty — nowych zmian nie zobaczy.
 - Etapów nie da się przestawiać ani zmieniać im nazw (usuń i dodaj nowy); nie odhacza się ich z arkusza wpisu.
 
 **Testy.** `src/lib/study/stages.test.ts` (8: domyślne jako kopia, odhaczanie i cofanie, postęp i następny, wszystko
@@ -2475,8 +2513,8 @@ brakujące najpierw. Dane w karcie budowy (mapa Yjs `studySites`), więc synchro
 **Ograniczenia i pułapki.**
 - Decyzja z 2026-10-15 („obmiary tylko kształtki”) dotyczyła liczenia zużycia; braki to osobna, ręczna lista —
   wprowadzone 2026-10-16 na prośbę („rób po kolei” po propozycji punktu 3).
-- Lista braków to jedno pole karty: równoczesne zmiany z dwóch telefonów — wygrywa ostatni zapis całej listy.
-- Starsza wersja aplikacji nie zna `shortages` ani `orders`; zapis karty w starej wersji je zgubi.
+- Od `395c311` każdy brak i każde zamówienie to osobny klucz mapy `studySiteItems`: zmiany różnych pozycji z dwóch
+  telefonów scalają się. Starsza wersja aplikacji (sprzed `395c311`) widzi tylko dawne pola karty.
 - Braki dyktuje się głosem przy treści wpisu („Lipowa, brakuje …” — patrz „Dyktowanie”); przypomnienie o materiale
   „zamówionym” ponad 3 dni — w „Przypomnieniach nad listą”.
 
