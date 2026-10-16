@@ -20,9 +20,9 @@ import { prepareImage } from "@/lib/imagePrepare";
 import { imageStore } from "@/lib/imageStore";
 import { CAPTION_MAX, captionPhoto, captionText } from "@/lib/study/photoCaption";
 import { requestPersistentStorage } from "@/lib/storagePersistence";
-import { CHECKLIST, MODULES, TOPICS } from "@/lib/study/content";
+import { MODULES, TOPICS } from "@/lib/study/content";
 import {
-  addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, updateJournalEntry, useStudy, type JournalKind,
+  addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, updateJournalEntry, useStudy, useStudyLists, type JournalKind,
 } from "@/lib/study/store";
 import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft, type JournalDraft } from "@/lib/study/draft";
 import { closeJournalSheet, getJournalEditForm, patchJournalEditForm, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
@@ -138,7 +138,8 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     setEditingSite(false);
   }
 
-  const items = useMemo(() => CHECKLIST.filter((c) => c.topic === topic), [topic]);
+  const lists = useStudyLists();
+  const items = useMemo(() => lists.checklist.filter((c) => c.topic === topic), [lists, topic]);
   const current = TOPICS.find((t) => t.id === topic) ?? null;
 
   function toggle(id: string) {

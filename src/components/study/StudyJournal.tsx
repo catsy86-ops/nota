@@ -12,8 +12,8 @@ import { cn } from "@/lib/utils";
 import { haptic } from "@/lib/haptics";
 import { NoteImage } from "@/components/NoteImage";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { CHECKLIST, TOPICS } from "@/lib/study/content";
-import { openProblems, setProblemResolved, useStudy, type JournalEntry } from "@/lib/study/store";
+import { TOPICS } from "@/lib/study/content";
+import { openProblems, setProblemResolved, useStudy, useStudyLists, type JournalEntry } from "@/lib/study/store";
 import {
   entriesPl, filterJournal, groupJournal, isFiltered, KIND_LABEL, NO_FILTER, problemsPl, RECENT_DAYS, splitRecent,
   type JournalFilter, type KindFilter,
@@ -378,7 +378,8 @@ function ReminderRow({ reminder: r, onShow }: { reminder: StudyReminder; onShow:
 }
 
 function JournalItem({ entry: e, onPractice, onTopic, onZoom }: { entry: JournalEntry; onPractice: (topicId: string) => void; onTopic: (topicId: string) => void; onZoom: (refs: string[], index: number) => void }) {
-  const total = CHECKLIST.filter((c) => c.topic === e.topic).length;
+  const lists = useStudyLists();
+  const total = lists.checklist.filter((c) => c.topic === e.topic).length;
   const resolved = e.kind === "problem" && e.resolved !== undefined;
 
   function toggleResolved() {

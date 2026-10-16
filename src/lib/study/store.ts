@@ -1,7 +1,8 @@
-import { useSyncExternalStore } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { cleanFittings, type Fitting } from "./fittings";
 import { isImageRef } from "@/lib/imageStore";
-import { CHECKLIST, QUESTIONS, TOPICS } from "./content";
+import { CHECKLIST, QUESTIONS, TOPICS, type ChecklistItem, type Question } from "./content";
+import { CUSTOM_MAX, CUSTOM_PREFIX, CUSTOM_TEXT_MAX, cleanCustom, cleanCustomList, questionOptions, type CustomEntry, type CustomItem, type CustomQuestion } from "./custom";
 import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
 import { studyDevice, yStudy } from "./data";
@@ -36,12 +37,15 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
   for (const [id, col] of Object.entries(s.board ?? {})) {
     if (topicIds.has(id) && isColumn(col) && col !== "todo") board[id] = col;
   }
-  const itemIds = new Set(CHECKLIST.map((c) => c.id));
+  // Własne wpisy (N5) walidowane tu, bo tylko tu znane są tematy; potem liczą się jak materiał.
+  const custom = cleanCustomList(s.custom).filter((e) => topicIds.has(e.topic));
+  const lists = studyLists(custom);
+  const itemIds = new Set(lists.checklist.map((c) => c.id));
   const checked: Record<string, true> = {};
   for (const [id, v] of Object.entries(s.checked ?? {})) if (v === true && itemIds.has(id)) checked[id] = true;
   const best = typeof s.bestPercent === "number" && s.bestPercent >= 0 && s.bestPercent <= 100 ? Math.round(s.bestPercent) : null;
   const rounds = typeof s.rounds === "number" && s.rounds >= 0 ? Math.floor(s.rounds) : 0;
-  const questionIds = new Set(QUESTIONS.map((q) => q.id));
+  const questionIds = new Set(lists.questions.map((q) => q.id));
   const missed: Record<string, true> = {};
   for (const [id, v] of Object.entries(s.missed ?? {})) if (v === true && questionIds.has(id)) missed[id] = true;
   const journal: JournalEntry[] = [];
@@ -92,11 +96,28 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
     const card = questionIds.has(id) ? cleanCard(raw) : null;
     if (card) review[id] = card;
   }
-  return { board, checked, bestPercent: best, rounds, missed, journal, site, sites, streak, lastDay, review, boss: cleanBoss(s.boss), group: cleanGroup(s.group),
+  return { board, checked, bestPercent: best, rounds, missed, journal, site, sites, streak, lastDay, review, boss: cleanBoss(s.boss), group: cleanGroup(s.group), custom,
     days: Array.isArray(s.days) ? s.days.filter((d): d is string => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)) : [] };
 }
 
-const DEFAULTS: StudyState = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null, review: {}, boss: null, group: null, days: [] };
+/** Materiał G-HEAT i własne wpisy razem — to widzą listy, quiz, tablica i dziennik. */
+export function studyLists(custom: readonly CustomEntry[]): { checklist: ChecklistItem[]; questions: Question[] } {
+  const checklist: ChecklistItem[] = [...CHECKLIST];
+  const questions: Question[] = [...QUESTIONS];
+  for (const e of custom) {
+    if (e.kind === "item") checklist.push({ id: e.id, topic: e.topic, text: e.text });
+    else questions.push({ id: e.id, topic: e.topic, question: e.question, options: questionOptions(e), explanation: e.explanation });
+  }
+  return { checklist, questions };
+}
+
+/** Listy z materiału i własnych wpisów; ta sama referencja, dopóki zmienią się własne wpisy. */
+export function useStudyLists() {
+  const custom = useStudy().custom;
+  return useMemo(() => studyLists(custom), [custom]);
+}
+
+const DEFAULTS: StudyState = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null, review: {}, boss: null, group: null, days: [], custom: [] };
 
 let lastRaw: StudyState | null = null;
 let lastClean: StudyState = DEFAULTS;
@@ -180,7 +201,8 @@ export interface NewJournalEntry {
 /** Wejście z arkusza → pola wpisu przefiltrowane przez materiał; `null` = pusty wpis. */
 function entryFields(input: NewJournalEntry, now: number) {
   const text = input.text.trim().slice(0, JOURNAL_MAX_TEXT);
-  const checked = (input.checked ?? []).filter((id) => CHECKLIST.some((c) => c.id === id));
+  const items = studyLists(getStudy().custom).checklist;
+  const checked = (input.checked ?? []).filter((id) => items.some((c) => c.id === id));
   const images = (input.images ?? []).filter(isImageRef).slice(0, JOURNAL_MAX_IMAGES);
   const test = cleanTest(input.test);
   const fittings = cleanFittings(input.fittings);
@@ -254,6 +276,43 @@ export function removeJournalEntry(id: string): JournalEntry | null {
  * Zapisuje szefa (imię i numer WhatsApp). Pusty numer usuwa kontakt;
  * niepoprawny → `false`, nic się nie zmienia.
  */
+/** Własne punkty i pytania (N5): zapis tylko dla znanego tematu i w limicie. `null` = odrzucone. */
+function addCustomEntry(entry: CustomEntry | null): CustomEntry | null {
+  if (!entry || !TOPICS.some((t) => t.id === entry.topic)) return null;
+  if (getStudy().custom.length >= CUSTOM_MAX) return null;
+  yStudy.addCustom(entry);
+  return entry;
+}
+
+export function addCustomItem(topic: string, text: string): CustomItem | null {
+  const t = text.trim();
+  if (!t || t.length > CUSTOM_TEXT_MAX) return null;
+  return addCustomEntry(cleanCustom({ kind: "item", id: CUSTOM_PREFIX + crypto.randomUUID(), topic, text: t })) as CustomItem | null;
+}
+
+export interface CustomQuestionInput {
+  topic: string;
+  question: string;
+  correct: string;
+  wrong: [string, string, string];
+  explanation: string;
+}
+
+/** `null` = niepoprawne (np. dwie takie same odpowiedzi, za długie pole). */
+export function addCustomQuestion(input: CustomQuestionInput): CustomQuestion | null {
+  const raw = { kind: "question", id: CUSTOM_PREFIX + crypto.randomUUID(), ...input };
+  return addCustomEntry(cleanCustom(raw)) as CustomQuestion | null;
+}
+
+/** Usuwa własny wpis; zwraca go do „Cofnij”. */
+export function removeCustomEntry(id: string): CustomEntry | null {
+  return yStudy.removeCustom(id);
+}
+
+export function restoreCustomEntry(entry: CustomEntry) {
+  yStudy.restoreCustom(entry);
+}
+
 export function saveBoss(name: string, phone: string): boolean {
   if (!phone.trim()) { yStudy.setBoss(null); return true; }
   const normalized = normalizePhone(phone);

@@ -3,9 +3,10 @@ import { ArrowRight, Check, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { QUESTIONS, TOPICS } from "@/lib/study/content";
+import { TOPICS } from "@/lib/study/content";
 import { buildRound, missedTopics, scoreRound, type RoundQuestion } from "@/lib/study/quiz";
-import { activeStreak, columnOf, dueToday, recordRound, useStudy } from "@/lib/study/store";
+import { activeStreak, columnOf, dueToday, recordRound, useStudy, useStudyLists } from "@/lib/study/store";
+import { CustomQuestionsDialog } from "./CustomQuestionsDialog";
 import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
 import { haptic } from "@/lib/haptics";
@@ -30,6 +31,8 @@ function nextReviewLabel(due: string, today: string): string {
 /** Runda quizu: pytania z tematów, których jeszcze nie umiesz, idą na początek. */
 export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: QuizScope; onScopeChange?: (s: QuizScope) => void }) {
   const study = useStudy();
+  const lists = useStudyLists();
+  const [ownOpen, setOwnOpen] = useState(false);
   const [round, setRound] = useState<RoundQuestion[] | null>(null);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [index, setIndex] = useState(0);
@@ -51,10 +54,11 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
   const start = useCallback((s: QuizScope = scope) => {
     // Powtórki: najbardziej zaległe pierwsze, reszta czeka na następną rundę.
     const dueIds = new Set(due.slice(0, ROUND_SIZE));
-    const pool = s.kind === "topic" ? QUESTIONS.filter((q) => q.topic === s.topic)
-      : s.kind === "missed" ? QUESTIONS.filter((q) => study.missed[q.id])
-      : s.kind === "due" ? QUESTIONS.filter((q) => dueIds.has(q.id))
-      : QUESTIONS;
+    const all = lists.questions;
+    const pool = s.kind === "topic" ? all.filter((q) => q.topic === s.topic)
+      : s.kind === "missed" ? all.filter((q) => study.missed[q.id])
+      : s.kind === "due" ? all.filter((q) => dueIds.has(q.id))
+      : all;
     if (pool.length === 0) {
       toast(s.kind === "due" ? "Na dziś nie ma powtórek." : "Nie ma pytań do powtórki. Rozwiąż najpierw rundę.");
       onScopeChange?.({ kind: "all" });
@@ -65,7 +69,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
     setAnswers(next.map(() => null));
     setIndex(0);
     setResult(null);
-  }, [weak, scope, study.missed, due, onScopeChange]);
+  }, [weak, scope, study.missed, due, onScopeChange, lists]);
 
   // Zakres ustawiony spoza panelu (przycisk „Ćwicz” na tablicy) od razu startuje rundę.
   useEffect(() => {
@@ -163,7 +167,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
       <section aria-label="Quiz" className="rounded-2xl border border-border bg-card p-5 sm:p-7 space-y-4">
         <h2 className="font-display text-xl">Sprawdź, co umiesz</h2>
         <p className="text-sm text-muted-foreground max-w-prose">
-          {ROUND_SIZE} pytań z poradnika i list kontrolnych. Najpierw wypadają tematy, których jeszcze nie masz w kolumnie „Umiem”.
+          {ROUND_SIZE} pytań z poradnika, list kontrolnych i Twoich własnych. Najpierw wypadają tematy, których jeszcze nie masz w kolumnie „Umiem”.
           Błąd w temacie z kolumny „Umiem” cofa go do „W trakcie”. Każde pytanie wraca do powtórki: po dobrej odpowiedzi
           coraz rzadziej, po błędzie — następnego dnia.
         </p>
@@ -182,6 +186,10 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
               Powtórka błędów ({Object.keys(study.missed).length})
             </Button>
           )}
+          <Button variant="ghost" onClick={() => setOwnOpen(true)} data-testid="open-custom-questions">
+            Moje pytania{study.custom.some((e) => e.kind === "question") && <span className="ml-1 font-mono tabular-nums text-muted-foreground">({study.custom.filter((e) => e.kind === "question").length})</span>}
+          </Button>
+          <CustomQuestionsDialog open={ownOpen} onOpenChange={setOwnOpen} />
           {study.bestPercent !== null && (
             <p className="text-xs text-muted-foreground tabular-nums">
               Najlepszy wynik: {study.bestPercent}% · rund: {study.rounds}

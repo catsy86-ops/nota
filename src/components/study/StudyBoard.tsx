@@ -7,8 +7,8 @@ import { yjsStore } from "@/lib/yjsStore";
 import { topicToNote } from "@/lib/study/toNote";
 import { LayoutGroup, m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { CHECKLIST, MODULES, QUESTIONS, TOPICS, type StudyTopic } from "@/lib/study/content";
-import { COLUMNS, columnOf, dueToday, moveTopic, practiceByTopic, useStudy, type Column, type StudyState, type TopicPractice } from "@/lib/study/store";
+import { MODULES, TOPICS, type StudyTopic } from "@/lib/study/content";
+import { COLUMNS, columnOf, dueToday, moveTopic, practiceByTopic, useStudy, useStudyLists, type Column, type StudyState, type TopicPractice } from "@/lib/study/store";
 
 const COLUMN_LABEL: Record<Column, string> = { todo: "Do nauki", doing: "W trakcie", done: "Umiem" };
 const COLUMN_HINT: Record<Column, string> = {
@@ -32,10 +32,11 @@ function moveTo(topic: StudyTopic, column: Column) {
 }
 
 function TopicCard({ topic, column, study, practice, due, onPractice, onJournal }: { topic: StudyTopic; column: Column; study: StudyState; practice?: TopicPractice; due: number; onPractice: (topicId: string) => void; onJournal: (topicId: string) => void }) {
-  const items = CHECKLIST.filter((c) => c.topic === topic.id);
+  const lists = useStudyLists();
+  const items = lists.checklist.filter((c) => c.topic === topic.id);
   const checked = items.filter((c) => study.checked[c.id]).length;
   const critical = items.some((c) => c.critical);
-  const questions = QUESTIONS.filter((q) => q.topic === topic.id).length;
+  const questions = lists.questions.filter((q) => q.topic === topic.id).length;
   const at = COLUMNS.indexOf(column);
 
   return (
@@ -144,11 +145,12 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
 /** Tablica nauki: tematy wędrują „Do nauki” → „W trakcie” → „Umiem”. */
 export function StudyBoard({ onPractice, onJournal }: { onPractice: (topicId: string) => void; onJournal: (topicId: string) => void }) {
   const study = useStudy();
+  const lists = useStudyLists();
   const practice = practiceByTopic(study.journal);
   // Pytania do powtórki dziś, policzone per temat (N3).
   const dueByTopic = new Map<string, number>();
   for (const id of dueToday(study)) {
-    const topic = QUESTIONS.find((q) => q.id === id)?.topic;
+    const topic = lists.questions.find((q) => q.id === id)?.topic;
     if (topic) dueByTopic.set(topic, (dueByTopic.get(topic) ?? 0) + 1);
   }
   const counts = Object.fromEntries(COLUMNS.map((c) => [c, TOPICS.filter((t) => columnOf(study, t.id) === c).length])) as Record<Column, number>;

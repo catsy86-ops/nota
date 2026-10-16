@@ -113,7 +113,7 @@ describe("Nauka w Yjs", () => {
   });
 
   it("cleanDump odrzuca śmieci zamiast wywracać widok", () => {
-    expect(cleanDump("śmieci")).toEqual({ version: 1, board: {}, checked: {}, missed: {}, journal: [], days: [], rounds: {}, site: "", sites: {}, review: {}, boss: null, group: null });
+    expect(cleanDump("śmieci")).toEqual({ version: 1, board: {}, checked: {}, missed: {}, journal: [], days: [], rounds: {}, site: "", sites: {}, review: {}, boss: null, group: null, custom: {} });
     const d = cleanDump({ board: { a: "done", b: "todo", c: "x" }, checked: { k: true, l: 1 }, days: ["2026-10-01", "wczoraj"], rounds: { x: { rounds: -1 }, y: { rounds: 2.7, best: 140 } }, journal: [entry("ok", 1), entry("pusty", 2, { text: " " })] });
     expect(d).toMatchObject({ board: { a: "done" }, checked: { k: true }, days: ["2026-10-01"], rounds: { y: { rounds: 2, best: null } } });
     expect(d.journal.map((e) => e.id)).toEqual(["ok"]);
@@ -178,5 +178,47 @@ describe("karty budów w Yjs", () => {
     sync();
     expect(b.get().boss).toBeNull();
     expect(b.get().group?.name).toBe("Brygada");
+  });
+});
+
+describe("własne wpisy Nauki w Yjs (N5)", () => {
+  const item = (id: string, text = "t") => ({ kind: "item" as const, id, topic: "system", text });
+
+  it("własny punkt synchronizuje się na drugi telefon i wraca w kopii", () => {
+    const { a, b, sync } = pair();
+    a.addCustom(item("c-1", "z A"));
+    sync();
+    expect(b.get().custom).toEqual([item("c-1", "z A")]);
+    expect(b.dump().custom).toEqual({ "c-1": item("c-1", "z A") });
+  });
+
+  it("usunięcie z jednego telefonu znika na drugim, bez ponownego pojawienia się", () => {
+    const { a, b, sync } = pair();
+    a.addCustom(item("c-2"));
+    sync();
+    a.removeCustom("c-2");
+    sync();
+    expect(b.get().custom).toEqual([]);
+  });
+
+  it("usunięcie zabiera powtórkę, błąd i odhaczenie wpisu", () => {
+    const { a } = pair();
+    a.addCustom({ kind: "question", id: "c-q", topic: "system", question: "?", correct: "a", wrong: ["b", "c", "d"], explanation: "" });
+    a.recordRound("telefon", 0, "2026-10-16", [], [{ id: "c-q", ok: false }]);
+    a.setChecked("c-q", true);
+    a.removeCustom("c-q");
+    expect(a.get().review["c-q"]).toBeUndefined();
+    expect(a.get().missed["c-q"]).toBeUndefined();
+    expect(a.get().checked["c-q"]).toBeUndefined();
+  });
+
+  it("przywrócenie kopii zastępuje, a scalanie nie nadpisuje własnego wpisu o tym samym id", () => {
+    const { a } = pair();
+    a.addCustom(item("c-3", "moje"));
+    a.mergeIn(cleanDump({ custom: { "c-3": item("c-3", "obcy") , "c-4": item("c-4") } }));
+    expect(a.get().custom.map((e) => e.id).sort()).toEqual(["c-3", "c-4"]);
+    expect(a.get().custom.find((e) => e.id === "c-3")).toEqual(item("c-3", "moje"));
+    a.replaceAll(cleanDump({ custom: { "c-5": item("c-5") } }));
+    expect(a.get().custom.map((e) => e.id)).toEqual(["c-5"]);
   });
 });

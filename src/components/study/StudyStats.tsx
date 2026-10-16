@@ -7,8 +7,8 @@ import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
 import { localDayKey } from "@/lib/dayDone";
-import { QUESTIONS, TOPICS } from "@/lib/study/content";
-import { activeStreak, columnOf, openProblems, useStudy } from "@/lib/study/store";
+import { TOPICS } from "@/lib/study/content";
+import { activeStreak, columnOf, openProblems, useStudy, useStudyLists } from "@/lib/study/store";
 import { siteDirectory } from "@/lib/study/sites";
 import { buildExperience, experienceText, type ExperienceCard } from "@/lib/study/experience";
 import { accuracyByTopic, daysInLast, entriesByMonth, entriesBySite, hardestQuestions, overallAccuracy, studyDaysGrid } from "@/lib/study/stats";
@@ -37,12 +37,13 @@ export function StudyStatsDialog({ open, onOpenChange }: { open: boolean; onOpen
 
 function StatsBody() {
   const study = useStudy();
+  const lists = useStudyLists();
   const today = localDayKey();
   const s = useMemo(() => {
     const overall = overallAccuracy(study.review);
     return {
       overall,
-      topics: accuracyByTopic(study.review, QUESTIONS, TOPICS.map((t) => t.id)).filter((r) => r.percent !== null),
+      topics: accuracyByTopic(study.review, lists.questions, TOPICS.map((t) => t.id)).filter((r) => r.percent !== null),
       hardest: hardestQuestions(study.review, 5),
       grid: studyDaysGrid(study.days, today, 12),
       days30: daysInLast(study.days, today, 30),
@@ -56,7 +57,7 @@ function StatsBody() {
         totalTopics: TOPICS.length,
       }),
     };
-  }, [study, today]);
+  }, [study, today, lists]);
   const cardText = useMemo(() => experienceText(s.card, today), [s.card, today]);
   const streak = activeStreak(study);
   const open = openProblems(study.journal);
@@ -88,7 +89,7 @@ function StatsBody() {
         <Section title="Najtrudniejsze pytania" note="Najwięcej pomyłek — wracają do powtórki następnego dnia po błędzie.">
           <ol className="space-y-1.5 text-sm" data-testid="stats-hardest">
             {s.hardest.map((h) => {
-              const q = QUESTIONS.find((x) => x.id === h.id);
+              const q = lists.questions.find((x) => x.id === h.id);
               return (
                 <li key={h.id} className="flex items-baseline gap-2">
                   <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">{h.lapses}×</span>

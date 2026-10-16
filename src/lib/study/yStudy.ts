@@ -6,6 +6,7 @@ import { cleanSite, foldName, type SiteCard } from "./sites";
 import { cleanCard, reviewCard, type ReviewCard } from "./srs";
 import { cleanBoss, cleanGroup, type Boss, type WaGroup } from "./boss";
 import { cleanTest, type PressureTest } from "./pressureTest";
+import { cleanCustomList, type CustomEntry } from "./custom";
 
 /**
  * Dane Nauki w Y.Doc notatek — synchronizują się i trafiają do pliku sync razem
@@ -86,6 +87,8 @@ export interface StudyState {
   group: WaGroup | null;
   /** Dni z co najmniej jedną rundą quizu, rosnąco (statystyki). */
   days: string[];
+  /** Własne pytania i punkty listy (`custom.ts`), od najstarszego. */
+  custom: CustomEntry[];
 }
 
 /** Rundy i najlepszy wynik jednego urządzenia. */
@@ -110,6 +113,8 @@ export interface StudyDump {
   review: Record<string, ReviewCard>;
   boss: Boss | null;
   group: WaGroup | null;
+  /** Własne pytania i punkty listy po id; brak w kopiach sprzed N5. */
+  custom: Record<string, CustomEntry>;
 }
 
 /** Origin transakcji Nauki — odróżnia lokalne zmiany od tych z sieci i z migracji. */
@@ -177,6 +182,7 @@ export function cleanDump(raw: unknown): StudyDump {
     review: cleanReviews(s.review),
     boss: cleanBoss(s.boss),
     group: cleanGroup(s.group),
+    custom: Object.fromEntries(cleanCustomList(s.custom).map((e) => [e.id, e])),
   };
 }
 
@@ -240,6 +246,7 @@ export function stateFromDump(d: StudyDump): StudyState {
     boss: d.boss,
     group: d.group,
     days: [...d.days].sort(),
+    custom: Object.values(d.custom),
   };
 }
 
@@ -267,6 +274,8 @@ export function createYStudy(doc: Y.Doc) {
   const migrations = doc.getMap<number>("studyMigrations");
   /** Powtórki: id pytania → karta SM-2. Klucz per pytanie — dwa telefony scalają różne pytania. */
   const review = doc.getMap<ReviewCard>("studyReview");
+  /** Własne pytania i punkty listy (`custom.ts`): id → wpis. */
+  const custom = doc.getMap<CustomEntry>("studyCustom");
 
   let snapshot: StudyState | null = null;
   const listeners = new Set<() => void>();
@@ -274,7 +283,7 @@ export function createYStudy(doc: Y.Doc) {
     snapshot = null;
     listeners.forEach((l) => l());
   };
-  for (const m of [journal, board, checked, missed, days, rounds, meta, sites, review] as Y.Map<unknown>[]) m.observe(onChange);
+  for (const m of [journal, board, checked, missed, days, rounds, meta, sites, review, custom] as Y.Map<unknown>[]) m.observe(onChange);
 
   /** Dokument jako zwykły obiekt, przez `cleanDump` — śmieci od peera nie wywrócą widoku. */
   function dump(): StudyDump {
@@ -290,6 +299,7 @@ export function createYStudy(doc: Y.Doc) {
       review: Object.fromEntries(review.entries()),
       boss: meta.get("boss"),
       group: meta.get("waGroup"),
+      custom: Object.fromEntries(custom.entries()),
     });
   }
 
@@ -416,11 +426,37 @@ export function createYStudy(doc: Y.Doc) {
     });
   }
 
+  /**
+   * Dodaje własne pytanie albo punkt. Id nadaje wywołujący (`c-…`), a nowy wpis
+   * nie nadpisuje istniejącego o tym samym id.
+   */
+  function addCustom(entry: CustomEntry): void {
+    if (!custom.has(entry.id)) custom.set(entry.id, entry);
+  }
+
+  /** Usuwa własny wpis razem z jego powtórkami, błędami i odhaczeniem — nie zostaje po nim śmieć. */
+  function removeCustom(id: string): CustomEntry | null {
+    const prev = custom.get(id) ?? null;
+    if (!prev) return null;
+    transact(() => {
+      custom.delete(id);
+      review.delete(id);
+      missed.delete(id);
+      checked.delete(id);
+    });
+    return prev;
+  }
+
+  /** Cofnięcie usunięcia: wpis wraca z tym samym id (powtórki już nie wrócą). */
+  function restoreCustom(entry: CustomEntry): void {
+    custom.set(entry.id, entry);
+  }
+
   /** Cała Nauka naraz (przywrócenie kopii) — zastępuje, nie scala. */
   function replaceAll(data: StudyDump): void {
     const d = cleanDump(data);
     transact(() => {
-      for (const m of [journal, board, checked, missed, days, rounds, sites, review] as Y.Map<unknown>[]) for (const k of Array.from(m.keys())) m.delete(k);
+      for (const m of [journal, board, checked, missed, days, rounds, sites, review, custom] as Y.Map<unknown>[]) for (const k of Array.from(m.keys())) m.delete(k);
       for (const e of d.journal) journal.set(e.id, e);
       for (const [k, v] of Object.entries(d.board)) board.set(k, v);
       for (const k of Object.keys(d.checked)) checked.set(k, true);
@@ -429,6 +465,7 @@ export function createYStudy(doc: Y.Doc) {
       for (const [k, v] of Object.entries(d.rounds)) rounds.set(k, v);
       for (const [k, v] of Object.entries(d.sites)) sites.set(k, v);
       for (const [k, v] of Object.entries(d.review)) review.set(k, v);
+      for (const [k, v] of Object.entries(d.custom)) custom.set(k, v);
       meta.set("site", d.site);
       if (d.boss) meta.set("boss", d.boss); else meta.delete("boss");
       if (d.group) meta.set("waGroup", d.group); else meta.delete("waGroup");
@@ -462,6 +499,7 @@ export function createYStudy(doc: Y.Doc) {
         const prev = cleanCard(review.get(k));
         if (!prev || v.last > prev.last) review.set(k, v);
       }
+      for (const [k, v] of Object.entries(d.custom)) if (!custom.has(k)) custom.set(k, v);
       if (!meta.has("site") && d.site) meta.set("site", d.site);
       if (!meta.has("boss") && d.boss) meta.set("boss", d.boss);
       if (!meta.has("waGroup") && d.group) meta.set("waGroup", d.group);
@@ -474,6 +512,7 @@ export function createYStudy(doc: Y.Doc) {
     get, dump, subscribe, isMerged,
     setColumn, setChecked, clearChecked, restoreChecked, recordRound,
     addEntry, updateEntry, setResolved, restoreEntry, removeEntry, setSite, saveSite, setBoss, setGroup,
+    addCustom, removeCustom, restoreCustom,
     replaceAll, mergeIn,
   };
 }

@@ -4,22 +4,25 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
-import { CHECKLIST, HEIGHTS, MODULES, TOPICS } from "@/lib/study/content";
-import { resetChecklist, restoreChecklist, toggleChecked, useStudy } from "@/lib/study/store";
+import { HEIGHTS, MODULES, TOPICS } from "@/lib/study/content";
+import { resetChecklist, restoreChecklist, toggleChecked, useStudy, useStudyLists } from "@/lib/study/store";
+import { CustomChecklistSection } from "./CustomChecklistForm";
+import { isCustomId } from "@/lib/study/custom";
 import { toastWithUndo } from "@/lib/undoToast";
 
 /** Lista do nauki: punkty z materiałów pogrupowane w moduły i tematy. */
 export function StudyChecklist() {
   const study = useStudy();
+  const lists = useStudyLists();
   const [onlyCritical, setOnlyCritical] = useState(false);
-  const visible = CHECKLIST.filter((c) => !onlyCritical || c.critical);
-  const done = CHECKLIST.filter((c) => study.checked[c.id]).length;
+  const visible = lists.checklist.filter((c) => !onlyCritical || c.critical);
+  const done = lists.checklist.filter((c) => study.checked[c.id]).length;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
         <p className="font-mono text-sm tabular-nums" data-testid="checklist-progress">
-          {done}<span className="text-muted-foreground">/{CHECKLIST.length}</span>
+          {done}<span className="text-muted-foreground">/{lists.checklist.length}</span>
         </p>
         <button
           type="button"
@@ -76,6 +79,7 @@ export function StudyChecklist() {
                         <label htmlFor={`study-${item.id}`} className={cn("text-sm leading-snug cursor-pointer", on && "text-muted-foreground line-through decoration-muted-foreground/40")}>
                           {item.critical && <span className="mr-1 inline-flex align-[-2px]" role="img" aria-label="Punkt krytyczny"><TriangleAlert className="h-3.5 w-3.5 text-warning-ink" aria-hidden /></span>}
                           {item.text}
+                          {isCustomId(item.id) && <span className="ml-1.5 align-[1px] rounded-full bg-muted px-1.5 py-px text-2xs text-muted-foreground no-underline">własny</span>}
                           {item.risk && <span className="mt-0.5 block text-xs text-muted-foreground no-underline">Ryzyko: {item.risk.replace(/^[^=]*= ?/, "")}</span>}
                         </label>
                       </li>
@@ -87,6 +91,8 @@ export function StudyChecklist() {
           </section>
         );
       })}
+
+      <CustomChecklistSection />
 
       <details className="rounded-xl border border-border bg-card p-3.5 group">
         <summary className="cursor-pointer text-sm font-medium">Ściąga: wysokości podejść [cm] — standard G-HEAT</summary>
