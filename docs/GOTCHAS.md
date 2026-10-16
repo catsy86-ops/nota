@@ -30,6 +30,10 @@ i sprawdzenie, jak to zweryfikować. Historia decyzji: [`roadmap.md`](../roadmap
 - **Przypomnienia o raporcie w e2e.** `DailyReportNudge` sprawdza dziennik przy starcie i co minutę. Test bez
   `page.clock`, który tworzy wpisy w dzienniku, w piątek po 17:00 albo w weekend może dostać dymek „Raport … gotowy”.
   Testy z dymkami: ustaw stały zegar na dzień roboczy przed 17:00 (np. środa 14.10.2026, 12:00).
+- **Precache: nie dubluj `includeAssets` z `globPatterns`.** Pliki z `public/` łapie już `globPatterns`;
+  `includeAssets` dopisywało je drugi raz do `sw.js` i test budżetu liczył je podwójnie (stan od `3d31b58`).
+- **Zapas paczki startowej ~1 KB (2026-10-16).** Rzadko otwierane okna i narzędzia ładuj leniwie (`lazy` + `Suspense`),
+  dane działu Praca w głównej paczce tylko przez `study/data.ts` (bez `store.ts`, który ciągnie materiał).
 - **Budżet bundla.** `e2e/bundle.spec.ts` pilnuje wejściowego JS (gzip). Lazy-ładowane karty widoków
   nie wchodzą do budżetu; nowy kod dodawany statycznie do `Index.tsx` — tak.
 

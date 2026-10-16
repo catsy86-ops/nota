@@ -2067,6 +2067,37 @@ walidacja formularza, zapis, licznik quizu).
 
 **Commit.** `8725703` (2026-10-16).
 
+## Wydajność — paczka startowa i precache (2026-10-16)
+
+**Co robi.** Dla użytkownika: szybszy pierwszy start (mniej kodu do pobrania i uruchomienia) i mniej danych przy
+instalacji / aktualizacji offline. Funkcje działają tak samo; płótno, „Znajdź i zamień” i okno własnego szablonu
+doczytują się przy pierwszym otwarciu (ułamek sekundy).
+
+**Gdzie jest.**
+- Leniwe ładowanie (`lazy` + `Suspense`): `DrawingCanvas` w `NoteCard.tsx` i `AddNoteBar.tsx` (montowany dopiero po
+  pierwszym „Rysuj” — `useLatch`), `FindReplaceBar` w `NoteEditor.tsx`, `CustomTemplateDialog` w `QuickTemplates.tsx`.
+- `src/lib/study/journalRefs.ts`: `journalRefsIn` (klucze zdjęć dziennika) w osobnym module bez importu `yjs`;
+  `yjsStore.ts` i `study/images.ts` korzystają z niego, `yStudy.ts` go re-eksportuje.
+- `src/lib/exportNotes.ts`: dane działu Praca (`study/data`, `study/yStudy`) importowane dynamicznie w
+  `buildFullBackupWithReport` i przy przywracaniu kopii.
+- `vite.config.ts`: bez `includeAssets` — ikony i `offline.html` z `public/` łapie `globPatterns`, a oba naraz dublowały
+  6 plików w liście precache `sw.js`.
+
+**Wynik.** Paczka startowa (gzip) 390 → 383 KB (próg 384); precache 4,37 → 4,03 MB (próg 4,3), 90 → 84 pliki.
+
+**Ograniczenia i pułapki.**
+- `study/data.ts` (z `yStudy.ts`) zostaje w paczce startowej celowo: odśmiecanie zdjęć (`useNotes`) potrzebuje od startu
+  wiedzy, czy stary dziennik przeniesiono do dokumentu (`legacyStudyMerged`) — inaczej mogłoby usunąć jego zdjęcia.
+- Zapas do progu paczki startowej to ok. 1 KB — kolejny duży moduł w głównej paczce przekroczy próg.
+- Duplikaty w precache nie dublowały pobierania (ta sama rewizja), ale zawyżały test budżetu.
+
+**Testy.** `e2e/bundle.spec.ts` (oba progi zielone, pomiar w komentarzu), `e2e/pwa.spec.ts`, rysowanie w notatce
+(`card-images.spec.ts`), nowy test „Znajdź i zamień” (`editor-keys.spec.ts`), własny szablon (`templates-bulk.spec.ts`),
+kopia zapasowa (`images.spec.ts`, `search-backup.spec.ts`, `private-notes.spec.ts`), `study.spec.ts`, `composer.spec.ts`
+— 66/66 + 1/1; Vitest 1291/1291.
+
+**Commit.** `3d31b58` (2026-10-16).
+
 ## Praca — kalkulatory na budowę
 
 **Co robi.** Przycisk „Kalkulatory” w nagłówku działu (obok „Wysokości”; na Dzienniku jako ikona) otwiera okno z trzema
@@ -2629,8 +2660,8 @@ budowy) czyści prośbę, więc nie dziedziczy zakresu z przypomnienia.
 - Tydzień = ostatnie 7 dni (jak preset „7 dni”), nie tydzień kalendarzowy od poniedziałku.
 - e2e bez stałego zegara: w piątek po 17:00 albo w weekend dymek może się pojawić w niezwiązanym teście, który tworzy
   wpisy (`docs/GOTCHAS.md`). Testy przypomnień ustawiają `page.clock`.
-- Budżet paczki (`e2e/bundle.spec.ts`) był już przekroczony przed tą zmianą: wejściowy JS 388 KB gzip (próg 384),
-  precache 4,32 MB (próg 4,3). Komponent dokłada ~1 KB (leniwy import). Do decyzji: odchudzić wejście albo podnieść próg.
+- Komponent dokłada ~1 KB do paczki startowej (leniwy import). Budżet paczki — patrz „Wydajność — paczka startowa
+  i precache” (od `3d31b58` w progach).
 
 **Testy.** `src/lib/study/reportNudge.test.ts` (11: godzina z Grafiku, nieobecność i brak zmiany, zmiana przez północ,
 po i przed końcem zmiany, raz dziennie, bez wpisów; tydzień: piątek po pracy, przed, inny dzień, już przypomniane,
