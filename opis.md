@@ -935,10 +935,11 @@ na początku komponentu i podpina `fileInputRef` do `<input type="file">`, `hand
 `imageStore`, a do notatki trafia tylko referencja (klucz SHA-256). Obrazy, których nie da się przeskalować,
 są liczone i pokazywane w jednym komunikacie. Usuwanie zapisuje poprzednią listę, żeby „Cofnij” ją przywrócił.
 
-**Ograniczenia.** Brak e2e, które w samym kaflu dodaje lub usuwa obraz (przycisk, wklejenie do edytora, „Cofnij”).
-`e2e/images.spec.ts` sprawdza przeładowanie, backup i migrację, a nie kliknięcia w kafel. Ten test trzeba dopisać osobno.
+**Ograniczenia.** Wklejenie zrzutu do pola treści nie ma jeszcze e2e (jest tylko kod `handleEditPaste`).
+„Dodaj obrazek” jest w rozwijanym menu „Więcej opcji”, nie na pasku kafla.
 
-**Testy.** Charakteryzujące: `e2e/images.spec.ts`, `paste-html.spec.ts`, `attachments.spec.ts`, `editing.spec.ts`,
+**Testy.** `e2e/card-images.spec.ts` (dodanie z menu, przeładowanie, usunięcie z „Cofnij”). Charakteryzujące:
+`e2e/images.spec.ts`, `paste-html.spec.ts`, `attachments.spec.ts`, `editing.spec.ts`,
 `editor-keys.spec.ts`, `composer.spec.ts`, `note-look.spec.ts`, `note-props.spec.ts`, `checklist.spec.ts`,
 `live-text.spec.ts`, `parked-drafts.spec.ts`, `read-only-note.spec.ts` — 36/36 (`--workers=1`).
 Testy jednostkowe `src/components`, `src/hooks`, `src/lib`: 1209/1209. `tsc` i eslint bez błędów.
