@@ -77,6 +77,7 @@ import { ViewSkeleton } from "@/components/ViewSkeleton";
 import { loadCalendarView, loadShiftsView, loadStudyView } from "@/lib/viewPreload";
 const ShortcutsDialog = lazy(() => import("@/components/ShortcutsDialog").then((m) => ({ default: m.ShortcutsDialog })));
 const PropDefsDialog = lazy(() => import("@/components/PropDefsDialog").then((m) => ({ default: m.PropDefsDialog })));
+const TodayDueList = lazy(() => import("@/components/review/TodayDueList").then((m) => ({ default: m.TodayDueList })));
 const TodayShiftCard = lazy(() => import("@/components/review/TodayShiftCard").then((m) => ({ default: m.TodayShiftCard })));
 const WeeklyReviewCard = lazy(() => import("@/components/review/WeeklyReviewCard").then((m) => ({ default: m.WeeklyReviewCard })));
 const RecentActionsPanel = lazy(() => import("@/components/RecentActionsPanel").then((m) => ({ default: m.RecentActionsPanel })));
@@ -804,6 +805,12 @@ const Index = () => {
           {view === "today" && !deferredSearch && (
             <Suspense fallback={null}>
               <TodayShiftCard onOpenShifts={() => go("shifts")} onDailyNote={openDailyNote} />
+            </Suspense>
+          )}
+
+          {view === "today" && !deferredSearch && (
+            <Suspense fallback={null}>
+              <TodayDueList notes={notes} onOpen={openNote} onOpenReminders={() => go("reminders")} />
             </Suspense>
           )}
 
