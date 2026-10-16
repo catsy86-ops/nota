@@ -23,7 +23,7 @@ import { openJournalEdit, openJournalSheet } from "@/lib/study/entrySheet";
 import { JournalEntrySheet, KindIcon } from "./JournalEntrySheet";
 import { JournalReportDialog } from "./JournalReport";
 import { SiteCardDialog } from "./SiteCardDialog";
-import { consumeJournalReportRequest, useJournalReportRequest } from "@/lib/study/reportLink";
+import { consumeJournalReportRequest, useJournalReportRequest, type JournalReportRequest } from "@/lib/study/reportLink";
 import { stageProgress } from "@/lib/study/stages";
 import { entrySiteId, siteDirectory } from "@/lib/study/sites";
 
@@ -58,10 +58,14 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   const [report, setReport] = useState(false);
   /** Budowa raportu otwartego z karty; `null` = z filtra albo ostatnia. */
   const [reportSite, setReportSite] = useState<string | null>(null);
-  // Przypomnienie „Raport dnia gotowy”: okno raportu na ostatniej budowie i jej ostatnim dniu (dziś).
+  // Przypomnienie o raporcie (dnia albo tygodnia): okno raportu z zakresem z prośby — jedna budowa albo
+  // wszystkie, dzień ostatniego wpisu albo 7 dni. Zwykłe otwarcie raportu czyści prośbę (`null`).
+  const [reportRequest, setReportRequest] = useState<JournalReportRequest | null>(null);
   const reportRequested = useJournalReportRequest();
   useEffect(() => {
-    if (reportRequested && consumeJournalReportRequest()) { setReportSite(null); setReport(true); }
+    if (!reportRequested) return;
+    const req = consumeJournalReportRequest();
+    if (req) { setReportSite(null); setReportRequest(req); setReport(true); }
   }, [reportRequested]);
   const [card, setCard] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
@@ -130,7 +134,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
           </div>
           <div className="flex shrink-0 gap-2">
             {study.journal.length > 0 && (
-              <Button variant="outline" onClick={() => { setReportSite(null); setReport(true); }} className="max-sm:w-9 max-sm:px-0 coarse:h-11 max-sm:coarse:w-11" title="Raport dnia albo okresu dla budowy">
+              <Button variant="outline" onClick={() => { setReportSite(null); setReportRequest(null); setReport(true); }} className="max-sm:w-9 max-sm:px-0 coarse:h-11 max-sm:coarse:w-11" title="Raport dnia albo okresu dla budowy">
                 <FileText className="h-4 w-4 sm:mr-1" aria-hidden /><span className="max-sm:sr-only">Raport</span>
               </Button>
             )}
@@ -324,12 +328,12 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
         )}
       </section>
       <JournalEntrySheet onPractice={onPractice} />
-      <JournalReportDialog open={report} onOpenChange={setReport} journal={study.journal} sites={dir} initialSite={reportSite ?? filter.site} />
+      <JournalReportDialog open={report} onOpenChange={setReport} journal={study.journal} sites={dir} initialSite={reportSite ?? filter.site} initialRequest={reportRequest} />
       <SiteCardDialog
         siteId={card}
         onOpenChange={(o) => { if (!o) setCard(null); }}
         onShowEntries={(id) => { setCard(null); setFilter({ ...NO_FILTER, site: id }); }}
-        onReport={(id) => { setCard(null); setReportSite(id); setReport(true); }}
+        onReport={(id) => { setCard(null); setReportSite(id); setReportRequest(null); setReport(true); }}
       />
       <Dialog open={zoom !== null} onOpenChange={(o) => { if (!o) setZoom(null); }}>
         <DialogContent

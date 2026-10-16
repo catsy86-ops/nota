@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_SHIFT_DATA, type ShiftData } from "@/lib/shifts/model";
-import { dailyReportNudge, reportDueMinute, REPORT_NUDGE_FALLBACK } from "./reportNudge";
+import { dailyReportNudge, reportDueMinute, REPORT_NUDGE_FALLBACK, weekKeyOf, weeklyReportNudge } from "./reportNudge";
+import { parseReportParam, reportParam } from "./reportLink";
 import type { JournalEntry } from "./yStudy";
 
 const at = (day: number, h: number, m = 0) => new Date(2026, 9, day, h, m);
@@ -53,5 +54,41 @@ describe("dailyReportNudge", () => {
 
   it("bez dzisiejszych wpisów — nic", () => {
     expect(dailyReportNudge([e("c", at(13, 9))], shifts, afterShift, null)).toBeNull();
+  });
+});
+
+describe("weeklyReportNudge", () => {
+  // 16.10.2026 to piątek, 17 — sobota, 19 — poniedziałek.
+  const week = [e("a", at(12, 9)), e("b", at(14, 9), "Polna 2"), e("stary", at(5, 9))];
+  const fridayAfter = at(16, Math.floor(toMin(REPORT_NUDGE_FALLBACK) / 60) + 1);
+
+  it("piątek po końcu dnia pracy: wpisy z 7 dni i budowy, klucz tygodnia = poniedziałek", () => {
+    expect(weeklyReportNudge(week, null, fridayAfter, null)).toEqual({ weekKey: "2026-10-12", dayKey: "2026-10-16", entries: 2, sites: 2 });
+  });
+
+  it("piątek przed końcem pracy, inny dzień tygodnia, już przypomniane albo pusty tydzień — nic", () => {
+    expect(weeklyReportNudge(week, null, at(16, 9), null)).toBeNull();
+    expect(weeklyReportNudge(week, null, at(14, 20), null)).toBeNull();
+    expect(weeklyReportNudge(week, null, fridayAfter, "2026-10-12")).toBeNull();
+    expect(weeklyReportNudge([e("stary", at(5, 9))], null, fridayAfter, null)).toBeNull();
+  });
+
+  it("w weekend, jeśli w piątek nie było okazji (od rana)", () => {
+    expect(weeklyReportNudge(week, null, at(17, 8), null)?.weekKey).toBe("2026-10-12");
+    expect(weekKeyOf(at(18, 8))).toBe("2026-10-12");
+    expect(weekKeyOf(at(19, 8))).toBe("2026-10-19");
+  });
+});
+
+describe("parametr adresu raportu", () => {
+  it("w obie strony", () => {
+    for (const req of [
+      { range: "day" as const, allSites: false },
+      { range: "day" as const, allSites: true },
+      { range: "week" as const, allSites: false },
+      { range: "week" as const, allSites: true },
+    ]) expect(parseReportParam(reportParam(req))).toEqual(req);
+    expect(reportParam({ range: "week", allSites: true })).toBe("tydzien-wszystkie");
+    expect(parseReportParam("cokolwiek")).toEqual({ range: "day", allSites: false });
   });
 });

@@ -9,7 +9,7 @@ import { HeightsButton } from "./HeightsSheet";
 import { setJournalDraftTopic } from "@/lib/study/draft";
 import { useStudyReady } from "@/lib/study/data";
 import { closeJournalSheet, JOURNAL_ENTRY_PARAM, openJournalSheet, useJournalSheet } from "@/lib/study/entrySheet";
-import { JOURNAL_REPORT_PARAM, requestJournalReport, useJournalReportRequest } from "@/lib/study/reportLink";
+import { JOURNAL_REPORT_PARAM, parseReportParam, requestJournalReport, useJournalReportRequest } from "@/lib/study/reportLink";
 import { useEffect, useState } from "react";
 import { MOBILE_QUERY } from "@/hooks/use-mobile";
 import { readStudyTab, writeStudyTab } from "@/lib/study/tab";
@@ -157,10 +157,11 @@ function StudyScreen() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (!params.has(JOURNAL_REPORT_PARAM)) return;
+    const req = parseReportParam(params.get(JOURNAL_REPORT_PARAM) ?? "");
     params.delete(JOURNAL_REPORT_PARAM);
     const rest = params.toString();
     window.history.replaceState(window.history.state, "", window.location.pathname + (rest ? `?${rest}` : ""));
-    requestJournalReport();
+    requestJournalReport(req);
   }, []);
   // Wyjście z Nauki zamyka arkusz — inaczej otworzyłby się sam przy powrocie.
   useEffect(() => closeJournalSheet, []);

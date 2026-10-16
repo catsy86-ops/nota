@@ -22,6 +22,7 @@ import { entrySiteId } from "@/lib/study/sites";
 import { buildJournalReport, dayKeyOf, reportSummary, reportText, reportWhatsApp, shiftKey, type JournalReport as Report } from "@/lib/study/report";
 import { shortageLine } from "@/lib/study/shortages";
 import { PrintRoot } from "./PrintRoot";
+import type { JournalReportRequest } from "@/lib/study/reportLink";
 import { reportToNote } from "@/lib/study/toNote";
 import { KindIcon } from "./JournalEntrySheet";
 
@@ -62,7 +63,7 @@ const fieldClass =
  * (PDF przez „Zapisz jako PDF” w oknie drukowania). Godziny pracy z Grafiku.
  */
 export function JournalReportDialog({
-  open, onOpenChange, journal, sites, initialSite,
+  open, onOpenChange, journal, sites, initialSite, initialRequest = null,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -71,6 +72,8 @@ export function JournalReportDialog({
   sites: SiteInfo[];
   /** Id budowy na start; `null` = ostatnia. */
   initialSite: string | null;
+  /** Otwarcie z przypomnienia: wszystkie budowy i/lub 7 dni zamiast dnia ostatniego wpisu. */
+  initialRequest?: JournalReportRequest | null;
 }) {
   const shifts = useShifts();
   const { boss, group } = useStudy();
@@ -86,11 +89,11 @@ export function JournalReportDialog({
   // Przy otwarciu: budowa z filtra albo ostatnia, dzień jej ostatniego wpisu.
   useEffect(() => {
     if (!open) return;
-    const s = initialSite ?? sites.find((x) => x.count > 0)?.id ?? null;
+    const s = initialRequest?.allSites ? null : initialSite ?? sites.find((x) => x.count > 0)?.id ?? null;
     const last = journal.filter((e) => s === null || entrySiteId(e) === s).reduce((m, e) => Math.max(m, e.at), 0);
     const day = last ? dayKeyOf(last) : dayKeyOf(Date.now());
     setSite(s);
-    setRange([day, day]);
+    setRange(initialRequest?.range === "week" ? presetRange("week", dayKeyOf(Date.now())) : [day, day]);
     setCustom(false);
     setBossEdit(false);
     // Tylko przy otwarciu — później wybiera użytkownik.
