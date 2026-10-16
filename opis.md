@@ -2415,14 +2415,22 @@ rozprowadzenie wody, piony i podejścia kanalizacji, próba szczelności, zakryc
 Odhaczenie zapisuje datę, pasek pokazuje postęp, a „Następny:” — pierwszy niezrobiony etap. Własny etap dopisuje się na
 końcu, usunięcie ma „Cofnij”. Przy nazwie budowy w dzienniku widać „etapy 3/7”, a raport budowy dla szefa ma w
 podsumowaniu „postęp: 3/7 etapów” i sekcję „Etapy (3/7)” z datami (WhatsApp: ✅ / ⬜).
+Etap odhacza się też bez otwierania karty: w nowym wpisie z rodzajem „Zrobione” pod rodzajem są pigułki z trzema
+następnymi niezrobionymi etapami wybranej budowy (stuknięcie odhacza od razu, dymek ma „Cofnij”), a dyktowanie
+„Lipowa, etap próba szczelności zrobiony, …” odhacza etap głosem (patrz „Dyktowanie”).
 
 **Gdzie jest.**
 - `src/lib/study/stages.ts`: `SiteStage { id, name, done? }`, `DEFAULT_STAGES`, `siteStages(card)`, `cleanStages`,
-  `stageProgress`, `toggleStage`, `addStage`, `removeStage`; limity `STAGES_MAX` (20), `STAGE_NAME_MAX` (60).
+  `stageProgress`, `toggleStage`, `addStage`, `removeStage`, `matchStage(stages, phrase)`; limity `STAGES_MAX` (20),
+  `STAGE_NAME_MAX` (60).
 - `src/lib/study/sites.ts`: pole `SiteCard.stages?`; `cleanSite` czyści je przez `cleanStages`.
 - `src/lib/study/store.ts`: `setSiteStages(id, stages)` (przez `patchSiteCard`, tak samo jak `markSiteOrdered`);
   `saveSiteCard` przenosi `stages` przy edycji karty.
 - `src/components/study/SiteStagesPanel.tsx` (`data-testid="site-stages"`) w `SiteCardDialog.tsx` nad „Do zamówienia”.
+- `src/components/study/JournalEntrySheet.tsx`: `siteCard`, `nextStages`, `markStage` — pigułki
+  `data-testid="journal-stage-chips"` (tylko nowy wpis, rodzaj „Zrobione”, budowa z kartą lub wpisami).
+- `src/components/ui/sheet.tsx`: klik w dymek (`[data-sonner-toaster]`) nie zamyka arkusza — jak w `dialog.tsx`; bez
+  tego „Cofnij” w dymku zamykał arkusz wpisu.
 - `src/components/study/StudyJournal.tsx`: `stagesBySite`, znacznik `[data-site-progress]` obok przycisku budowy.
 - `src/lib/study/report.ts`: `JournalReport.stages`, postęp w `reportSummary`, sekcja w `reportBody`, znaczki w
   `reportWhatsApp`; `JournalReport.tsx`: `[data-report-stages]`.
@@ -2430,21 +2438,30 @@ podsumowaniu „postęp: 3/7 etapów” i sekcję „Etapy (3/7)” z datami (Wh
 **Jak działa i dlaczego.** Karta bez własnej listy pokazuje domyślną, ale niczego nie zapisuje; pierwsza zmiana zapisuje
 całą listę w karcie (mapa Yjs `studySites`). Dzięki temu postęp w dzienniku i w raporcie pojawia się tylko przy budowach,
 na których ktoś faktycznie odhacza etapy — reszta raportów się nie zmienia. Znacznik postępu stoi obok przycisku budowy,
-nie w nim, żeby nazwa budowy (i jej `aria-label`) zostały czyste.
+nie w nim, żeby nazwa budowy (i jej `aria-label`) zostały czyste. Pigułki pokazują się tylko przy „Zrobione”, bo
+etap kończy się wpisem o zrobionej robocie; przy „Problem” i „Notatka” byłyby szumem. `matchStage` porównuje bez
+ogonków i wielkości liter: najpierw cała nazwa, potem początek nazwy („odbiór”), potem wszystkie słowa wypowiedzi jako
+początki słów nazwy („piony”, „bialy montaz”); gdy pasuje kilka etapów tak samo („grzejniki” przy „Grzejniki parter” i
+„Grzejniki piętro”) — nic, zamiast zgadywać.
 
 **Ograniczenia i pułapki.**
 - Od `395c311` każdy etap to osobny klucz mapy `studySiteItems` (patrz „Listy karty budowy w dokumencie”): dwa
   telefony zmieniające różne etapy tej samej budowy scalają się. Ten sam etap zmieniony naraz — wygrywa ostatni zapis.
 - Starsza wersja aplikacji (sprzed `395c311`) widzi etapy tylko z dawnego pola karty — nowych zmian nie zobaczy.
-- Etapów nie da się przestawiać ani zmieniać im nazw (usuń i dodaj nowy); nie odhacza się ich z arkusza wpisu.
+- Etapów nie da się przestawiać ani zmieniać im nazw (usuń i dodaj nowy). Z arkusza wpisu tylko się odhacza (cofnięcie
+  — „Cofnij” w dymku albo w karcie); pigułki nie ma w edycji zapisanego wpisu. Odhaczenie z pigułki zapisuje się od razu,
+  nawet gdy wpis potem odrzucisz.
 
-**Testy.** `src/lib/study/stages.test.ts` (8: domyślne jako kopia, odhaczanie i cofanie, postęp i następny, wszystko
-zrobione, własny etap i duplikaty, limit, usuwanie, `cleanStages`, `cleanSite`). `src/lib/study/report.test.ts`
+**Testy.** `src/lib/study/stages.test.ts` (10: domyślne jako kopia, odhaczanie i cofanie, postęp i następny, wszystko
+zrobione, własny etap i duplikaty, limit, usuwanie, `cleanStages`, `cleanSite`, `matchStage` — trafienia i
+niejednoznaczne). `src/lib/study/report.test.ts`
 („etapy budowy”: postęp, sekcja z datami, znaczki WhatsApp; bez sekcji bez własnej listy i w raporcie wszystkich budów).
 `e2e/site-stages.spec.ts` (odhaczenie z datą, własny etap, usunięcie z „Cofnij”, raport, postęp przy budowie po
-przeładowaniu). Regresja działu Praca 41/41 (chromium), układ telefonu 6/6 (`iphone-14`). Nie sprawdzone ręcznie na telefonie.
+przeładowaniu; pigułki przy „Zrobione”: odhaczenie, „Cofnij” bez zamykania arkusza, stan w karcie). Regresja działu Praca
+41/41 (chromium), układ telefonu 6/6 (`iphone-14`); po `b82dda3`: wpis, zdjęcia, kształtki, próba, szkice, `study.spec`
+(31), karta na telefonie — wszystko zielone. Nie sprawdzone ręcznie na telefonie.
 
-**Commit.** `a25958a` (2026-10-16).
+**Commit.** `a25958a` (2026-10-16), `b82dda3` (odhaczanie z wpisu i głosem, 2026-10-16).
 
 ### Do zamówienia (kształtki)
 
@@ -2641,16 +2658,22 @@ edycja i ponowne otwarcie nie gubią opisu, zmiana rodzaju tak; „Moje rozwiąz
   „zamówić …”, „do zamówienia …”) dopisuje pozycje do „Braków materiału” w karcie budowy (wskazanej albo bieżącej),
   z ilością, gdy padła liczba z jednostką („50 m”, „3 szt.”, „2 worki”). Do treści wpisu nic nie trafia; bez budowy —
   komunikat „Braki zapisują się w karcie budowy”.
+- **Etap zrobiony** — „Lipowa, etap próba szczelności zrobiony, ciśnienie trzymało”: etap odhacza się w karcie budowy
+  (jeśli już był odhaczony — zostaje z pierwszą datą), rodzaj wpisu ustawia się na „Zrobione” (chyba że padł inny), a
+  reszta idzie do tekstu. Nazwa kończy się słowem zrobiony/gotowy/skończony/zakończony (każda forma) albo przecinkiem.
+  Nieznana nazwa albo brak budowy — komunikat błędu, reszta wypowiedzi i tak trafia do wpisu.
 - **Same kształtki** — mikrofon „Dyktuj kształtki” w polu kształtek: „kolano szesnaście cztery sztuki, trójnik 16 dwa”.
   Ta sama nazwa sumuje sztuki zamiast nowego wiersza. Gdy nic nie rozpozna, dymek pokazuje usłyszany tekst i przykład.
 
 **Gdzie jest.**
-- `src/lib/study/spokenEntry.ts`: `parseSpokenEntry(spoken, { sites, fittings })` → `{ site?, kind?, fittings, text,
-  shortages, structured }`; braki: `SHORTAGE_MARKERS`, `UNIT_SHORT`, `parseShortages`, `numberize`.
+- `src/lib/study/spokenEntry.ts`: `parseSpokenEntry(spoken, { sites, fittings })` → `{ site?, kind?, stage?, fittings,
+  text, shortages, structured }`; braki: `SHORTAGE_MARKERS`, `UNIT_SHORT`, `parseShortages`, `numberize`; etap:
+  `STAGE_DONE` (słowa kończące nazwę), znacznik „etap” zaraz po budowie/rodzaju.
 - `src/lib/study/spokenFittings.ts`: `parseSpokenFittings(text, known)`, `mergeFittings(current, added)`, `wordsToDigits`;
   wspólne słowniki (`UNITS`, `TENS`, `SINGULAR`, `QTY_WORD`, `fold`).
 - `src/components/study/JournalEntrySheet.tsx`: obsługa dyktowania treści (`useDictation` → `parseSpokenEntry`; budowa
-  przez `pickSite`, rodzaj i kształtki przez `patch`, kształtki scalane `mergeFittings`).
+  przez `pickSite`, rodzaj i kształtki przez `patch`, kształtki scalane `mergeFittings`; etap — `matchStage` na liście
+  karty i `setSiteStages` z bazą).
 - `src/components/study/FittingsFields.tsx`: przycisk „Dyktuj kształtki” przy „Dodaj kształtki” i przy „Kolejna”.
 - Oba przez `useDictation` (Web Speech API, `pl-PL`, zgoda przy pierwszym użyciu — `kaczy.dictation.consent`).
 
@@ -2684,6 +2707,8 @@ Nie sprawdzone z prawdziwym mikrofonem.
 
 **Commit.** `b65d58c` (kształtki, 2026-10-16), `b61b737` (cały wpis, 2026-10-16), `db490f7` (braki głosem, 2026-10-16).
 Testy braków: `spokenEntry.test.ts` („braki materiału głosem”, 4), `e2e/entry-dictation.spec.ts` („brakuje …” → karta).
+Etap głosem: `b82dda3` (2026-10-16); `spokenEntry.test.ts` („etap głosem”, 3), `e2e/entry-dictation.spec.ts` („etap …
+zrobiony” → odhaczony w karcie, 1/7).
 
 ### Przypomnienia o raporcie (dzień i tydzień)
 
