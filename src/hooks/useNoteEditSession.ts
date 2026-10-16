@@ -176,3 +176,6 @@ export function useNoteEditSession({
     begin,
   };
 }
+
+/** Wynik `useNoteEditSession` — to samo przekazuje się edytorowi kafla (`NoteEditor`). */
+export type NoteEditSession = ReturnType<typeof useNoteEditSession>;
