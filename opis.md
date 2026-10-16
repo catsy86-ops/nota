@@ -971,7 +971,33 @@ pola i wartość po odświeżeniu, walidacja liczby i wybór z listy, usunięcie
 - **Eksport.** Markdown (`exportToMarkdown`) dostaje wiersz `*Pole: wartość · …*` pod przypomnieniem, ZIP (`noteToMarkdownFile`, `buildNotesZip`, `downloadNotesZip`) klucz frontmatter `props` z mapą JSON (poprawny YAML). Jeden klucz, a nie klucz na pole, bo nazwa pola (np. `title`) zderzyłaby się z kluczami importu. Pola puste pomijane, kolejność jak w tabeli, liczby z przecinkiem jak w UI (`filledPropEntries` w `noteProps.ts`). Import Markdown zna tylko swoje klucze, więc `props` przy odczycie ignoruje — pola nie wracają z ZIP-a — odzyskanie to osobny krok.
   Testy: `exportZip.test.ts`, `noteProps.test.ts`.
 
-**Commit.** `a5976a1` (2026-10-16) — pola i tabela; eksport MD/ZIP `fd377a5` (2026-10-16).
+**Sortowanie i filtr po polach.** Nagłówek kolumny pola sortuje tabelę (`SortKey` = `prop:<id>`). Menu „Sortuj wg”
+na komputerze i sekcja „Sortuj wg” w arkuszu „Widok i kolumny” na telefonie biorą opcje z jednego miejsca
+(`src/lib/sortOptions.ts`). Puste wartości są zawsze na końcu, w obu kierunkach (`comparePropsForSort` w
+`noteProps.ts`); liczby porównuje jak liczby, tekst z polskim porządkiem. Preferencja wskazująca usunięte pole
+wraca do sortowania po dacie zmiany (`useFilteredNotes.ts`, `sortNotes`).
+
+**Filtr `pole:`.** `pole:Nazwa=wartość` (wartość ze spacją w cudzysłowie: `pole:"Status=w toku"`),
+`pole:Nazwa` znaczy „pole ma jakąkolwiek wartość”, `-pole:…` to negacja. Nazwa dopasowuje się bez wielkości
+liter i ogonków; wartość też, a przecinek i kropka w liczbach są równoważne. Parser i dopasowanie: `searchQuery.ts`
+(`parseSearchQuery`, `matchesProp`); definicje idą `propDefs` przez `useFilteredNotes` → `searchNotes` →
+`matchesClauses`. Nieznana nazwa nie pasuje do niczego (a `-pole:` przepuszcza wszystko).
+
+**Telefon.** W tabeli pod tytułem jest wiersz „Nazwa: wartość · …”, widoczny tylko poniżej `md` (`NoteTable.tsx`).
+Czytnik ma sekcję „Pola” pod załącznikami (`NoteReader.tsx`): każde pole z definicji, także puste, z tym samym
+`PropCell` co w tabeli, więc wartości da się zmienić bez wchodzenia w kartę. Escape w polu tylko cofa edycję
+(jak w tabeli), czytnik zamyka przycisk „Zamknij”. Pusta wartość w tabeli i w czytniku pokazuje „—”.
+
+**Ograniczenia i pułapki.** Sortowanie po polu obowiązuje we wszystkich widokach z listą, nie tylko w tabeli. Sekcja
+"Sortuj wg" w arkuszu telefonu pojawia się tam, gdzie pokazuje się menu sortowania (`groupable` w `ViewSheet.tsx`).
+Import pól z ZIP-a nadal nie działa (klucz `props` jest ignorowany).
+
+**Testy.** `src/lib/searchQuery.test.ts` (operator `pole:`), `src/lib/noteProps.test.ts` (`comparePropsForSort`,
+`filledPropEntries`), `e2e/note-props-view.spec.ts` (sortowanie i filtr na komputerze; wartości pod tytułem,
+edycja w czytniku i sortowanie w arkuszu na telefonie), `e2e/note-props.spec.ts` (istniejący), `e2e/bundle.spec.ts`
+(budżet wejściowego JS).
+
+**Commit.** `a5976a1` (2026-10-16) — pola i tabela; eksport MD/ZIP `fd377a5` (2026-10-16); sortowanie, filtr i telefon: `5bb3966` (2026-10-16).
 
 ## Grafik — czytelność drobnych znaczników
 
