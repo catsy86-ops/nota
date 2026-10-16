@@ -880,20 +880,47 @@ z treści).
 **Jak działa i dlaczego.** Hook nie trzyma własnego stanu poza tym, co było już w `gridKeyboardNav` i w `Index`, więc
 zachowanie się nie zmienia. Stan prezentacji zostawiony w `Index` (dwa miejsca go ustawiają: siatka i czytnik).
 
-**Stan etapu 4.** Pozostałe części refaktoru (`NoteCard.tsx`, reszta `Index.tsx`) są dalej do zrobienia — to wielosesyjny
-podział, każdy kawałek z własnym e2e.
+**Stan etapu 4.** Zrobione też: sesja edycji kafla (`useNoteEditSession`, patrz niżej). Pozostają: reszta `NoteCard.tsx`
+i reszta `Index.tsx` — wielosesyjny podział, każdy kawałek z własnym e2e.
 
 **Testy.** Charakteryzujące: `e2e/reader.spec.ts`, `reader-step.spec.ts`, `wikilinks.spec.ts`, `notes.spec.ts`,
 `editing.spec.ts`, `routes.spec.ts`, `tabs.spec.ts`, `search-highlight.spec.ts` — 28/28.
 
 **Commit.** `1ccb86d` (2026-10-16).
 
+## Notatki — sesja edycji kafla w hooku (plan Notatek, etap 4, refaktor NoteCard)
+
+**Co robi.** Bez zmian dla użytkownika. Edycja tytułu, treści i listy w kaflu, autozapis, „Zapisz”, zapis przy
+zamknięciu i wysokość pola działają jak wcześniej.
+
+**Gdzie jest.**
+- `src/hooks/useNoteEditSession.ts`: `useNoteEditSession({ note, autosaveSeconds, onUpdate, onSaveVersion })`.
+  Zwraca stan (`isEditing`, `editTitle`, `editContent`, `editChecklist`, `showChecklist`, `showPreview`, `fullEditor`)
+  wraz z setterami, `textareaRef`, `commitDraft`, `handleSave`, `begin`.
+- `src/components/NoteCard.tsx`: wywołanie hooka na początku komponentu (po `prefs`); `begin()` w kliknięciu kafla
+  zastępuje dawny blok ustawień. Usunięte importy `useDraftAutosave`, `useLiveNoteText`, `beginNoteTextEdit`, `endNoteTextEdit`.
+
+**Jak działa i dlaczego.** Szkic siedzi w hooku razem z `draftRef` i `versionSavedRef`, bo `commitDraft` jest wołane
+z cleanupu efektu przy odmontowaniu. Kolejność efektów została ta sama: wysokość pola, autozapis, tekst na żywo,
+potem `endNoteTextEdit` przy odmontowaniu. `begin()` bierze treść z `beginNoteTextEdit`, a nie z `note`, żeby
+pokazać to, co widzi peer. Wiki-podpowiedzi i menu „/” zostają w `NoteCard`, bo czytają `editContent` i `textareaRef`
+przez parametry hooków.
+
+**Ograniczenia.** Hook nie zawiera wiki/slash ani `findOpen` — zostają w `NoteCard` do kolejnych kroków refaktoru.
+
+**Testy.** Charakteryzujące, bez nowych testów: `e2e/editing.spec.ts`, `editor-keys.spec.ts`, `editor-open.spec.ts`,
+`checklist.spec.ts`, `composer.spec.ts`, `live-text.spec.ts`, `live-text-focused.spec.ts`, `note-props.spec.ts`,
+`parked-drafts.spec.ts`, `read-only-note.spec.ts` — 30/30 (`--workers=1`). Testy jednostkowe `src/components` i `src/hooks`:
+139/139. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
+
+**Commit.** `3342c00` (2026-10-16).
+
 ## Notatki — tekst peera na żywo w otwartym edytorze (plan Notatek, etap 4, weryfikacja)
 
 **Co robi.** Gdy edytujesz notatkę, a drugie urządzenie dopisuje do niej tekst, ten tekst pojawia się w Twoim polu
 od razu, bez zapisu i bez wychodzenia z pola. Karetka zostaje przy znaku, który piszesz.
 
-**Gdzie jest.** `src/hooks/useLiveNoteText.ts` (podpięty w `NoteCard`): zdalna zmiana → `rebaseNoteTextEdit` → wstawienie
+**Gdzie jest.** `src/hooks/useLiveNoteText.ts` (podpięty w `useNoteEditSession`, od `3342c00` także nie w `NoteCard`): zdalna zmiana → `rebaseNoteTextEdit` → wstawienie
 do szkicu i przywrócenie zaznaczenia.
 
 **Stan.** Działało już wcześniej, ale test sprawdzał tekst dopiero po `blur`. Dodany test `e2e/live-text-focused.spec.ts`
