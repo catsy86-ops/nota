@@ -1974,14 +1974,16 @@ pusty tekst), `e2e/inbox-today.spec.ts` (zapis, licznik w pasku, „Cofnij”, p
 
 **Commit.** `c8b9817` (2026-10-16).
 
-## Dziś — karta zmiany, zaległe i terminy (punkt 3 planu)
+## Dziś — karta zmiany, zaległe i terminy, powtórki (punkt 3 planu)
 
-**Co robi.** Na górze widoku „Dziś” są trzy elementy, w tej kolejności:
+**Co robi.** Na górze widoku „Dziś” są cztery elementy, w tej kolejności:
 1. Karta z datą i dzisiejszą zmianą z Grafiku (nazwa, godziny) albo informacją, że dziś nie ma zmiany. Przyciski:
    „Grafik” otwiera Grafik, „Notatka dnia” otwiera dzisiejszą notatkę dnia.
 2. Sekcja „Przypomnienia”: zaległe i dzisiejsze terminy (po cztery z każdej grupy, z licznikiem reszty).
    Kliknięcie otwiera notatkę, „Wszystkie” przechodzi do widoku Przypomnień.
-3. Przegląd tygodnia (jak dotąd).
+3. „Powtórki na dziś: N pytań” z działu Praca — tylko gdy są pytania do powtórki. „Powtórz” otwiera quiz od razu
+   w trybie „Na dziś” (`/praca?powtorka=1`).
+4. Przegląd tygodnia (jak dotąd).
 Wszystko znika przy aktywnym wyszukiwaniu.
 
 **Gdzie jest.**
@@ -1990,13 +1992,18 @@ Wszystko znika przy aktywnym wyszukiwaniu.
 - `src/components/review/TodayDueList.tsx`: `TodayDueList({ notes, onOpen, onOpenReminders })`. Grupowanie przez
   `groupReminders` z `lib/reminderAgenda.ts` (ta sama logika co widok Przypomnień), tylko grupy „Zaległe” i „Dziś”.
   Czas przy notatce przez `formatReminderShort` z `lib/reminderTime.ts`.
-- `src/pages/Index.tsx`: lazy importy `TodayShiftCard` i `TodayDueList`, renderowanie w widoku `today` przed
+- `src/components/review/TodayStudyCard.tsx`: `TodayStudyCard({ onPractice })` (dane) i `TodayStudyCardView`
+  (sam widok). Liczy `dueIds(review, localDayKey())` z `lib/study/srs.ts` na stanie z `yStudy` (`lib/study/data.ts`);
+  `STUDY_DUE_PARAM` (`powtorka`) — obsługa w `StudyView.tsx` (zakładka quiz, zakres „due”, parametr zdjęty z adresu).
+- `src/pages/Index.tsx`: lazy importy `TodayShiftCard`, `TodayDueList` i `TodayStudyCard`, renderowanie w widoku `today` przed
   `WeeklyReviewCard`. `onOpenShifts` → `go("shifts")`, `onDailyNote` → `openDailyNote`, `onOpen` → `openNote`,
   `onOpenReminders` → `go("reminders")`.
 
 **Jak działa i dlaczego.**
 - Dane tylko do odczytu: zmianę dodaje się i zmienia w Grafiku, nie tutaj (jeden punkt prawdy).
 - Karta jest leniwa (jak przegląd tygodnia), więc nie dokłada nic do pierwszego ekranu.
+- Karta powtórek czyta stan z warstwy danych, nie z `study/store.ts`: ten importuje cały materiał do nauki, który
+  nie jest potrzebny do policzenia pytań na dziś. Bez pytań na dziś karty nie ma (nie zajmuje miejsca).
 - Gdy Grafik jeszcze się nie wczytał, karta pokazuje „Grafik się wczytuje…”, zamiast udawać brak zmiany.
 - Rodzaj zmiany usunięty z Grafiku daje „Zaplanowana zmiana (rodzaj usunięty).” — zapis nie znika bez śladu.
 
@@ -2005,9 +2012,11 @@ Notatki w koszu i archiwum są pomijane.
 
 **Testy.** `src/components/review/TodayDueList.test.tsx` (grupy, limit 4, archiwum i kosz pominięte, kliknięcie),
 `src/components/review/TodayShiftCard.test.tsx` (brak zmiany, godziny, usunięty rodzaj, Grafik niegotowy, przyciski;
-`useShifts` zmockowany), `e2e/inbox-today.spec.ts` (karta zmiany i przypomnienia na pustym koncie, przycisk „Grafik”).
+`useShifts` zmockowany), `src/components/review/TodayStudyCard.test.tsx` (bez powtórek — nic; liczba z odmianą,
+„Powtórz”), `e2e/inbox-today.spec.ts` (karta zmiany i przypomnienia na pustym koncie, przycisk „Grafik”),
+`e2e/today-study.spec.ts` (runda quizu, następnego dnia karta „10”, „Powtórz” → quiz „Na dziś”).
 
-**Commit.** `32f51b7`, `25ed6cb` (2026-10-16).
+**Commit.** `32f51b7`, `25ed6cb`, `ddf6765` (powtórki) (2026-10-16).
 
 ## Praca — własne pytania i punkty listy (N5)
 
