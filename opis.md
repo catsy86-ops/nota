@@ -1548,6 +1548,22 @@ Pasek nie jest zapamiętywany (brak „ukryj”), bo znika sam.
 
 ---
 
+### Podpowiedzi tekstu z budowy
+
+**Co robi.** Pusty nowy wpis na wybranej budowie pokazuje pod polem „Co się dzieje?” pigułki: „Jak wczoraj” (tekst najnowszego wpisu tej budowy z poprzedniego dnia kalendarzowego) i do 3 ostatnich różnych tekstów z tej budowy, od najnowszego. Stuknięcie wstawia tekst do pola. Znikają, gdy pole ma treść, i nie pojawiają się przy edycji wpisu.
+
+**Gdzie jest.** Funkcje czyste: `src/lib/study/journalView.ts` (`recentSiteTexts(journal, siteId, limit = 3)`, `yesterdaySiteText(journal, siteId, now)`). UI: `src/components/study/JournalEntrySheet.tsx` (`siteId`, `textSuggestions`, `yesterdayText`; `data-testid="journal-text-suggestions"`).
+
+**Jak działa i dlaczego.** Id budowy liczy się z nazwy w polu przez `findSiteByName(siteDirectory(...))`, więc porównanie idzie po tym samym `entrySiteId`, co oś czasu i raport (wpisy sprzed kart dopasowują się po nazwie). Pigułki są w `journal-text-suggestions` tylko przy pustym polu — nie zasłaniają pisania. Przycisk ma `onPointerDown` z `preventDefault`, żeby nie tracić fokusu z pola (jak pigułki budów). „Jak wczoraj” kopiuje tylko tekst, nie rodzaj ani temat — świadomie, żeby nie zgadywać, czy wczorajszy wpis był o tym samym temacie.
+
+**Ograniczenia i pułapki.** Teksty są deduplikowane po przycięciu spacji (różnica wielkości liter zostaje jako osobna pozycja). Pigułki obcinają długi tekst jedną linią (`title` pokazuje całość). „Wczoraj” liczy się wg czasu lokalnego, nie 24 h wstecz. Podpowiedzi nie działają dla wpisu bez budowy.
+
+**Testy.** `src/lib/study/journalView.test.ts` (7 testów: kolejność, limit, dedup, pusta budowa, wczoraj vs. dziś/przedwczoraj, obce budowy); `e2e/study.spec.ts` („pusty wpis na budowie podpowiada wcześniejsze teksty tej budowy”). Cały `study.spec.ts` 31/31 (w tym telefony).
+
+**Commit.** `7fcff9a` (2026-10-16) — hash dopisany w następnym commicie.
+
+---
+
 ## Praca → Dziennik: raport do szefa i grupy w WhatsApp
 
 **Co robi.** W oknie „Raport z budowy” zapisujesz odbiorców: szefa (imię i numer WhatsApp) i/lub grupę (nazwa,
