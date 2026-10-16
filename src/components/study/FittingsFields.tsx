@@ -1,27 +1,70 @@
-import { useId, useMemo } from "react";
-import { Minus, Package, Plus, Trash } from "lucide-react";
-import { FITTING_NAME_MAX, FITTING_QTY_MAX, FITTINGS_MAX, suggestFittingNames, type Fitting } from "@/lib/study/fittings";
+import { useId, useMemo, useRef } from "react";
+import { Mic, Minus, Package, Plus, Trash } from "lucide-react";
+import { toast } from "sonner";
+import { useDictation } from "@/hooks/useDictation";
+import { haptic } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
+import { FITTING_NAME_MAX, FITTING_QTY_MAX, FITTINGS_MAX, fittingsLine, suggestFittingNames, type Fitting } from "@/lib/study/fittings";
+import { mergeFittings, parseSpokenFittings } from "@/lib/study/spokenFittings";
 
 /**
  * Kształtki we wpisie: nazwa (z podpowiedziami z poprzednich wpisów) i liczba sztuk
  * z dużymi −/+ pod kciuk. Wiersze w trakcie pisania mogą mieć pustą nazwę — czyści je
- * dopiero zapis wpisu (`cleanFittings` w `entryFields`).
+ * dopiero zapis wpisu (`cleanFittings` w `entryFields`). Mikrofon dyktuje kilka pozycji
+ * naraz („kolano 16 cztery sztuki, trójnik 16 dwa”) — parser w `spokenFittings.ts`.
  */
 export function FittingsFields({ value, history, onChange }: { value: Fitting[]; history: readonly (readonly Fitting[] | undefined)[]; onChange: (f: Fitting[]) => void }) {
   const listId = useId();
   const names = useMemo(() => suggestFittingNames(history, value.map((f) => f.name)), [history, value]);
+  // Pisownia nazw do dopasowania dyktowania: wszystkie znane, także już dodane do wpisu.
+  const known = useMemo(() => suggestFittingNames(history, []), [history]);
   const setRow = (i: number, patch: Partial<Fitting>) => onChange(value.map((f, j) => (j === i ? { ...f, ...patch } : f)));
   const add = (name = "") => onChange([...value, { name, qty: 1 }]);
 
+  // Kilka wyników mowy potrafi przyjść między renderami — lista z refu, żeby żaden nie zginął.
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const dictation = useDictation((spoken) => {
+    const parsed = parseSpokenFittings(spoken, known);
+    if (parsed.length === 0) {
+      toast("Nie rozpoznałem kształtek", { id: "fittings-dictation", description: `Usłyszałem: „${spoken}”. Powiedz np. „kolano 16 cztery sztuki”.` });
+      return;
+    }
+    const next = mergeFittings(valueRef.current, parsed);
+    valueRef.current = next;
+    onChange(next);
+    haptic("success");
+    toast.success(`Dodano: ${fittingsLine(parsed)}`, { id: "fittings-dictation" });
+  });
+  const mic = dictation.supported && (
+    <button
+      type="button"
+      onClick={() => { haptic("tap"); dictation.toggle(); }}
+      aria-pressed={dictation.listening}
+      aria-label={dictation.listening ? "Zakończ dyktowanie kształtek" : "Dyktuj kształtki"}
+      title="Powiedz np. „kolano 16 cztery sztuki, trójnik 16 dwa”"
+      className={cn(
+        "pressable inline-flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-sm coarse:min-h-12",
+        dictation.listening ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:bg-muted",
+      )}
+    >
+      <Mic className={cn("h-4 w-4", dictation.listening && "animate-pulse")} aria-hidden />
+      {dictation.listening ? "Słucham…" : "Dyktuj"}
+    </button>
+  );
+
   if (value.length === 0) {
     return (
-      <button
-        type="button"
-        onClick={() => add()}
-        className="pressable flex w-full items-center gap-2 rounded-xl border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
-      >
-        <Package className="h-4 w-4 shrink-0" aria-hidden />Dodaj kształtki
-      </button>
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={() => add()}
+          className="pressable flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
+        >
+          <Package className="h-4 w-4 shrink-0" aria-hidden />Dodaj kształtki
+        </button>
+        {mic}
+      </div>
     );
   }
   return (
@@ -62,6 +105,7 @@ export function FittingsFields({ value, history, onChange }: { value: Fitting[];
           <button type="button" onClick={() => add()} className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted coarse:min-h-11 coarse:px-3 coarse:text-sm">
             <Plus className="h-3.5 w-3.5" aria-hidden />Kolejna
           </button>
+          {mic}
           {/* Szybkie pigułki: najczęstsze nazwy jednym stuknięciem. */}
           {names.slice(0, 4).map((n) => (
             <button key={n} type="button" onClick={() => add(n)} className="pressable rounded-full bg-muted px-2.5 py-1 text-xs hover:bg-primary/10 coarse:min-h-11 coarse:px-3 coarse:text-sm">

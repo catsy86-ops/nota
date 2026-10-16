@@ -401,7 +401,8 @@ test("dziennik: dyktowanie dopisuje rozpoznany tekst do wpisu", async ({ page })
   await openEntry(page);
   const sheet = page.getByTestId("journal-entry-sheet");
 
-  await sheet.getByRole("button", { name: "Dyktuj" }).click();
+  // `exact`: obok jest też „Dyktuj kształtki”.
+  await sheet.getByRole("button", { name: "Dyktuj", exact: true }).click();
   await expect(sheet.getByLabel("Co się dzieje?")).toHaveValue("trójniki rozsunięte trzydzieści centymetrów");
   await sheet.getByRole("button", { name: "Zakończ dyktowanie" }).click();
 
