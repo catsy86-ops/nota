@@ -967,7 +967,7 @@ Pomiar (CPU 4×, Slow 4G): lista widoczna 7–11 s, 24 tys. węzłów DOM, otwar
 - [x] N2 Zapamiętana zakładka; na telefonie domyślnie Dziennik. ✅ 2026-10-15: `lib/study/tab.ts`, localStorage `kaczy.study.tab.v1` (na urządzeniu, nie w Yjs).
 - [x] N3 Powtórki SM-2 lite (`lib/study/srs.ts`, mapa `studyReview`), „Na dziś: N”. ✅ 2026-10-15: ocena automatyczna (dobrze/źle), 1 → 3 → × łatwość, błąd = jutro; „Na dziś” pod paskiem opanowania i w Quizie, runda najbardziej zaległych; karta w kopii i synchronizacji.
 - [x] N4 Statystyki: trafność per temat, dni nauki, wpisy per budowa i miesiąc. ✅ 2026-10-15: okno „Statystyki” (`StudyStats.tsx`, `lib/study/stats.ts`), liczniki `seen`/`right` w kartach powtórek; wykresy bez recharts.
-- [ ] N5 Własne pytania i punkty listy (`studyCustom`); import plików później.
+- [x] N5 Własne pytania i punkty listy (`studyCustom`); import plików później. ✅ 2026-10-16: `lib/study/custom.ts`, mapa Yjs `studyCustom`, punkty w sekcji „Własne punkty” listy, pytania w oknie „Moje pytania” z quizu; liczą się w quizie, powtórkach, statystykach i tablicy. Opis w `opis.md` „Praca — własne pytania i punkty listy (N5)”.
 - [x] N6 Tablica i lista na telefonie: przełącznik kolumn, „Wyczyść odhaczenia” z „Cofnij”, pigułki ≥44 px. ✅ 2026-10-15: `ToggleGroup` kolumn na telefonie, dymek po przeniesieniu, `restoreChecklist`.
 
 Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → reszta.

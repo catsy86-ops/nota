@@ -1501,6 +1501,55 @@ w portalu — w testach `page.getByRole("menuitem", …)`, nie wewnątrz okna.
 
 ---
 
+## Praca — własne pytania i punkty listy (N5)
+
+**Co robi.** Możesz dodać własne pytanie do quizu (z czterema odpowiedziami: poprawna i trzy błędne, plus wyjaśnienie)
+i własny punkt do listy kontrolnej, przypięty do tematu. Własne wpisy liczą się jak materiał: są w puli quizu, w
+powtórkach „Na dziś”, w statystykach trafności, w postępie tematu na tablicy i w arkuszu wpisu z budowy. Oznaczone
+podpisem „własny”. Usunięcie daje „Cofnij”.
+
+**Gdzie jest.**
+- `src/lib/study/custom.ts`: typy `CustomQuestion` / `CustomItem` / `CustomEntry`, `cleanCustom`, `cleanCustomList`,
+  `questionOptions` (poprawna pierwsza, jak w materiale), limity (`CUSTOM_MAX` 200, tekst 300, odpowiedź 200,
+  wyjaśnienie 500 — za długie przycinane).
+- `src/lib/study/yStudy.ts`: mapa Yjs `studyCustom` (klucz = id), pole `custom` w `StudyState` i w `StudyDump`
+  (sekcja `study` kopii, opcjonalna), `addCustom`, `removeCustom` (też powtórki, błędy i odhaczenie), `restoreCustom`.
+- `src/lib/study/store.ts`: `studyLists(custom)` (materiał + własne), hook `useStudyLists()`, `addCustomItem`,
+  `addCustomQuestion`, `removeCustomEntry`, `restoreCustomEntry`; `sanitizeStudy` waliduje własne wpisy temat po temacie.
+- `src/lib/study/customActions.ts`: `deleteCustom` — usunięcie z „Cofnij”.
+- `src/components/study/CustomChecklistForm.tsx`: sekcja „Własne punkty” (zwijana, pod listą), `TopicSelect`.
+- `src/components/study/CustomQuestionsDialog.tsx`: okno „Moje pytania” (formularz + lista), `draftError` z komunikatami.
+- `src/components/study/QuizPanel.tsx`: przycisk „Moje pytania (n)” na ekranie startowym; pule rund z `lists.questions`.
+- Komponenty czytające materiał (`StudyBoard`, `StudyStats`, `StudyJournal`, `JournalEntrySheet`, `StudyChecklist`)
+  biorą listy z `useStudyLists()` zamiast importować `CHECKLIST` / `QUESTIONS` wprost.
+
+**Jak działa i dlaczego.**
+- Materiał G-HEAT zostaje statyczny w `content.ts`; własne wpisy są w Yjs, więc synchronizują się z sparowanymi
+  telefonami i jadą w kopii, bez zmiany materiału. Id zaczynają się od `c-`, żeby nie kolidowały z materiałem.
+- Każdy wpis to osobny klucz mapy — dwa telefony dodające różne pytania scalają się bez strat (jak dziennik i powtórki).
+- Walidacja tematu jest w `store.ts`, nie w `custom.ts`: `yStudy.ts` nie może importować materiału (patrz komentarz
+  na górze pliku), a tylko store zna listę tematów. Wpis z obcym tematem od peera jest po prostu pomijany.
+- Usunięcie czyści `review`, `missed` i `checked` dla tego id. Bez tego zostałyby osierocone wpisy, które przy
+  przywróceniu (cofnięciu) pojawiłyby się z historią, której użytkownik się pozbył.
+- Pytanie własne ma poprawną odpowiedź zawsze pierwszą (jak w materiale); `buildRound` miesza ją sam.
+
+**Ograniczenia i pułapki.**
+- Import plików (PDF, tekst) do Nauki — poza zakresem N5 (`import plików później`).
+- Pytania i punkty muszą mieć cztery różne odpowiedzi (lub unikalną treść punktu); duplikaty odrzuca `cleanCustom`.
+- Starsza wersja aplikacji nie zna mapy `studyCustom`: własne wpisy jej nie pokażą, ale nic nie zepsuje (klucze
+  materiału są nietknięte). Wpis dziennika odwołujący się do własnego punktu zachowuje id; po usunięciu punktu
+  odhaczenie znika z wpisu (filtr przy odczycie).
+- Limit 200 własnych wpisów łącznie; po przekroczeniu dodanie zwraca `null` i formularz pokazuje komunikat.
+- Kopia zapasowa sprzed N5 nie ma pola `custom` — `cleanDump` traktuje brak jako pusty zbiór.
+
+**Testy.** `src/lib/study/custom.test.ts` (walidacja, limity, odpowiedzi), `src/lib/study/customStore.test.ts`
+(scalenie z materiałem, dodanie, usunięcie z powtórkami i cofnięcie, odrzucanie obcych tematów),
+`src/lib/study/yStudy.test.ts` („własne wpisy Nauki w Yjs”: synchronizacja, usunięcie na drugim telefonie, scalanie
+i przywracanie kopii), `e2e/study-custom.spec.ts` (punkt: dodanie, przeładowanie, usunięcie z „Cofnij”; pytanie:
+walidacja formularza, zapis, licznik quizu).
+
+**Commit.** `8725703` (2026-10-16).
+
 ## Praca → Dziennik budowy
 
 Zakładka „Dziennik” na `/nauka` (`src/components/study/StudyJournal.tsx`). Dziennik instalatora
