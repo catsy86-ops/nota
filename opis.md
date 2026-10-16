@@ -2292,6 +2292,42 @@ toast „Paczka gotowa: raport i 0 zdjęć”).
 
 **Commit.** `50842a6` (2026-10-16).
 
+### Do zamówienia (kształtki)
+
+**Co robi.** W karcie budowy sekcja „Do zamówienia” pokazuje kształtki zużyte na tej budowie od ostatniego
+zamówienia (suma sztuk per nazwa). „Kopiuj listę” kopiuje gotowy tekst do wysłania dostawcy albo do grupy,
+a „Oznacz jako zamówione” zapisuje moment zamówienia — od tej chwili lista zaczyna się od zera i rośnie z
+kolejnymi wpisami. Bez kształtek oba przyciski są nieaktywne.
+
+**Gdzie jest.**
+- `src/lib/study/order.ts`: `siteOrder(journal, siteId, orderedAt?)` → `{ items, entries, since }` (czysta funkcja),
+  `orderText(siteName, order)` — tekst bez znaczników formatowania.
+- `src/lib/study/sites.ts`: pole `SiteCard.orderedAt?` (ms); `cleanSite` zachowuje je, gdy jest liczbą.
+- `src/lib/study/store.ts`: `markSiteOrdered(id, now)`; `saveSiteCard` przenosi `orderedAt` przy edycji karty.
+- `src/components/study/SiteOrderPanel.tsx` (`data-testid="site-order"`), wstawiony w `SiteCardDialog.tsx` pod formularzem.
+
+**Jak działa i dlaczego.** Liczymy od ostatniego zamówienia, a nie od początku budowy — inaczej lista rosłaby bez
+końca i nie mówiłaby, czego brakuje. Wpis należy do budowy przez `entrySiteId` (karta albo nazwa ze starszych wpisów);
+liczą się tylko wpisy z `at` późniejszym niż `orderedAt` (wpis z dokładnie tą chwilą uznajemy za zamówiony). Nazwy
+sumuje `sumFittings` (bez wielkości liter i ogonków). Zamówienie zapisuje się w karcie (mapa Yjs `studySites`), więc
+synchronizuje się z drugim telefonem tak jak reszta karty. Budowa znana tylko z nazw we wpisach dostaje kartę przy
+pierwszym oznaczeniu zamówienia.
+
+**Ograniczenia i pułapki.**
+- Liczy tylko kształtki (decyzja z 2026-10-15: bez metrów rury).
+- Starsza wersja aplikacji nie zna `orderedAt`: pokaże kartę bez sekcji, ale zapis karty w starej wersji
+  pole zgubi (wtedy lista znów liczy się od początku budowy).
+- Jedno zamówienie na budowę naraz — nie ma historii zamówień ani częściowego zamówienia pozycji.
+- `orderText` formatuje datę przez `toLocaleDateString("pl-PL")` (strefa urządzenia).
+
+**Testy.** `src/lib/study/order.test.ts` (10: suma i kolejność, granica `orderedAt`, inne budowy i wpisy bez kształtek,
+`siteId` przed nazwą, tekst z datą i bez pozycji, `cleanSite` z `orderedAt`). `e2e/site-order.spec.ts` (suma budowy
+bez obcej budowy, kopia listy, oznaczenie zeruje listę i blokuje przyciski, stan po przeładowaniu). Regresja działu:
+`e2e/study.spec.ts`, `journal-fittings.spec.ts`, `site-order.spec.ts` — 30/30 (chromium, `--workers=1`); Vitest 1220/1220.
+Nie sprawdzone ręcznie na telefonie.
+
+**Commit.** `98e625a` (2026-10-16).
+
 ### Przypomnienia nad listą
 
 **Co robi.** Nad listą wpisów Dziennika pojawia się pasek „Przypomnienia” (tylko gdy coś jest do zrobienia):
