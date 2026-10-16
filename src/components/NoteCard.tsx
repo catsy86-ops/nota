@@ -5,13 +5,12 @@ import { tween, dur, ease } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { cascadeDelay, cardExit, markPinned, hasRecentPin, consumePin, type CardExitIntent } from "@/lib/cardMotion";
 import { Check } from "lucide-react";
-import { Star, Pin, PinOff, Trash, Palette, Archive, ArchiveRestore, ImagePlus, X, Copy, Type, PenTool, ListChecks, Eye, EyeOff, RotateCcw, Ellipsis, MoveHorizontal, ZoomIn, Maximize2, Minimize2, Expand, Link2, Lock, LockOpen, FilePlusCorner, CornerLeftUp } from "lucide-react";
-import { addSubpage } from "@/lib/subpageActions";
+import { Pin, PinOff, Trash, Archive, ArchiveRestore, X, Type, ListChecks, Eye, EyeOff, RotateCcw, Ellipsis, Minimize2, Expand, Link2, Lock, CornerLeftUp } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
 import { ColorPicker, colorClasses } from "./ColorPicker";
-import { LabelPicker, LabelBadges } from "./LabelPicker";
-import { ReminderPicker, ReminderBadge } from "./ReminderPicker";
-import { PriorityPicker, PriorityBadge } from "./PriorityPicker";
+import { LabelBadges } from "./LabelPicker";
+import { ReminderBadge } from "./ReminderPicker";
+import { PriorityBadge } from "./PriorityPicker";
 import { ChecklistCount, ChecklistPreview } from "./ChecklistEditor";
 import { ChecklistConvertButtons, ChecklistEditor } from "./ChecklistEditor";
 import { EditorStats } from "./EditorStats";
@@ -22,10 +21,7 @@ import { countSwipe, showSwipeLabels } from "@/lib/swipeHint";
 import { runWithoutConfirm } from "@/components/ConfirmActionDialog";
 import { TitleField } from "./TitleField";
 import { MarkdownRenderer, FormatToolbar } from "./MarkdownRenderer";
-import { ShareNote } from "./ShareNote";
-import { PrivateNoteButton } from "./vault/PrivateNoteButton";
-import { FolderPicker } from "./FolderPicker";
-import { VersionHistory } from "./VersionHistory";
+import { ActionBtn, MoreActions, PrimaryActions } from "./NoteCardActions";
 import type { Note, NoteColor } from "@/hooks/useNotes";
 import { useNoteEditSession } from "@/hooks/useNoteEditSession";
 import { NoteImage } from "./NoteImage";
@@ -42,14 +38,14 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { DrawingCanvas } from "./DrawingCanvas";
 import { useTrashCountdown } from "@/hooks/useTrashCountdown";
-import { celebrate, sparkle } from "@/lib/celebrate";
+import { celebrate } from "@/lib/celebrate";
 import { useViewPrefs, readingTimeMin } from "@/lib/viewPrefs";
 import { useEffectsSettings } from "@/lib/effectsSettings";
 import { useNotesMeta } from "@/hooks/NotesProvider";
 import { useNoteViewActions } from "@/hooks/NoteViewActionsContext";
 import { useLatch } from "@/hooks/useLatch";
 import { useOriginFromTile } from "@/hooks/useOriginFromTile";
-import { NoteLookPicker, NoteCoverStrip } from "./NoteLookPicker";
+import { NoteCoverStrip } from "./NoteLookPicker";
 import { backlinksOf } from "@/lib/wikiLinks";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -113,11 +109,6 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
 
   const backlinks = prefs.showBacklinks && wikiIndex ? backlinksOf(note, wikiIndex) : [];
   const subpage = wikiIndex?.tree.get(note.id);
-
-  function handleLabelToggle(label: string) {
-    const labels = note.labels.includes(label) ? note.labels.filter((l) => l !== label) : [...note.labels, label];
-    onUpdate?.(note.id, { labels });
-  }
 
   function handleChecklistToggle(itemId: string) {
     const updated = (note.checklist || []).map((i) => (i.id === itemId ? { ...i, checked: !i.checked } : i));
@@ -230,129 +221,6 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
     swipeX.set(0);
   }
 
-  // Akcje kafla w dwóch miejscach: stopka/panel „⋯” (mysz) i arkusz akcji (dotyk).
-  function renderPrimaryActions(inSheet: boolean) {
-    return (
-      <>
-          {!isArchived && (
-            <ActionBtn
-              icon={<Pin className={cn("w-4 h-4", note.pinned && "fill-current")} />}
-              onClick={(e) => {
-                if (!note.pinned) {
-                  if (showFx && fx.sparkle) markPinned(note.id);
-                  const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                  sparkle(r.left + r.width / 2, r.top + r.height / 2);
-                }
-                haptic("tap");
-                onTogglePin?.(note.id);
-                if (inSheet) setSheetOpen(false);
-              }}
-              title={note.pinned ? "Odepnij" : "Przypnij"}
-            />
-          )}
-          {!inSheet && <ActionBtn icon={<Palette className="w-4 h-4" />} onClick={() => setShowColors(!showColors)} title="Kolor" />}
-          {!isArchived && (
-            <ReminderPicker
-              reminder={note.reminder}
-              reminderRepeat={note.reminderRepeat}
-              reminderRepeatUntil={note.reminderRepeatUntil}
-              onSet={(r, repeat, until) => onUpdate?.(note.id, { reminder: r, reminderRepeat: repeat, reminderRepeatUntil: until })}
-            />
-          )}
-          {!isArchived && (
-            <PriorityPicker
-              priority={note.priority ?? "none"}
-              onSet={(p) => onUpdate?.(note.id, { priority: p })}
-            />
-          )}
-          {isArchived && onUnarchive ? (
-            <ActionBtn icon={<ArchiveRestore className="w-4 h-4" />} onClick={() => { onUnarchive(note.id); if (inSheet) setSheetOpen(false); }} title="Przywróć" />
-          ) : onArchive ? (
-            <ActionBtn icon={<Archive className="w-4 h-4" />} onClick={() => { haptic("tap"); onArchive(note.id); if (inSheet) setSheetOpen(false); }} title="Archiwizuj" />
-          ) : null}
-          <ActionBtn
-            icon={<Trash className="w-4 h-4" />}
-            onClick={() => { if (note.trashed) setShowDeleteConfirm(true); else { haptic("warn"); onDelete(note.id); } if (inSheet) setSheetOpen(false); }}
-            title="Usuń"
-            className="hover:text-destructive"
-          />
-      </>
-    );
-  }
-
-  function renderMoreActions() {
-    return (
-      <>
-                <NoteLookPicker icon={note.icon} cover={note.cover} onChange={(patch) => onUpdate?.(note.id, patch)} />
-                {!isArchived && (
-                  <ActionBtn
-                    icon={<Star className={cn("w-4 h-4", note.favorite && "fill-current")} />}
-                    onClick={() => { haptic("tap"); onUpdate?.(note.id, { favorite: note.favorite ? undefined : true }); }}
-                    title={note.favorite ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
-                    className={cn(note.favorite && "text-primary-ink")}
-                  />
-                )}
-                {!isArchived && (
-                  <ActionBtn
-                    icon={<MoveHorizontal className="w-4 h-4" />}
-                    onClick={() => { haptic("tap"); onUpdate?.(note.id, { wide: note.wide ? undefined : true }); }}
-                    title={note.wide ? "Zwiń do jednej kolumny" : "Rozciągnij na dwie kolumny"}
-                    aria-pressed={!!note.wide}
-                    className={cn(note.wide && "text-primary-ink")}
-                  />
-                )}
-                {!isArchived && (
-                  <ActionBtn
-                    icon={<ZoomIn className="w-4 h-4" />}
-                    onClick={() => { haptic("tap"); onUpdate?.(note.id, { largeText: note.largeText ? undefined : true }); }}
-                    title={note.largeText ? "Zwykły rozmiar tekstu" : "Większy tekst"}
-                    aria-pressed={!!note.largeText}
-                    className={cn(note.largeText && "text-primary-ink")}
-                  />
-                )}
-                {!isArchived && (
-                  <ActionBtn
-                    icon={note.readOnly ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
-                    onClick={() => { haptic("tap"); onUpdate?.(note.id, { readOnly: note.readOnly ? undefined : true }); }}
-                    title={note.readOnly ? "Odblokuj edycję" : "Zablokuj edycję"}
-                    aria-pressed={!!note.readOnly}
-                    className={cn(note.readOnly && "text-primary-ink")}
-                  />
-                )}
-                {!isArchived && !note.locked && (
-                  <ActionBtn
-                    icon={<FilePlusCorner className="w-4 h-4" />}
-                    onClick={() => {
-                      haptic("tap");
-                      const id = addSubpage(note.id);
-                      if (id) toast("Dodano podstronę", { action: { label: "Otwórz", onClick: () => onOpenNote?.(id) } });
-                    }}
-                    title="Dodaj podstronę"
-                  />
-                )}
-                {!note.locked && <ActionBtn icon={<ImagePlus className="w-4 h-4" />} onClick={() => fileInputRef.current?.click()} title="Dodaj obrazek" />}
-                {!note.locked && <ActionBtn icon={<PenTool className="w-4 h-4" />} onClick={() => setShowDrawing(true)} title="Rysuj" />}
-                {!isArchived && (
-                  <LabelPicker allLabels={allLabels} selected={note.labels} onToggle={handleLabelToggle} onCreateLabel={onCreateLabel} />
-                )}
-                {onMoveToFolder && folders && folders.length > 0 && (
-                  <FolderPicker folders={folders} currentFolderId={note.folderId} onSelect={(fId) => onMoveToFolder(note.id, fId)} />
-                )}
-                <PrivateNoteButton noteId={note.id} locked={!!note.locked} />
-                {!note.locked && <ShareNote note={note} />}
-                {!note.locked && noteVersions && onRestoreVersion && (
-                  <VersionHistory versions={noteVersions} onRestore={(v) => onRestoreVersion(note.id, v)} />
-                )}
-                {!note.locked && onPresent && (
-                  <ActionBtn icon={<Maximize2 className="w-4 h-4" />} onClick={() => onPresent(note.id)} title="Prezentacja" />
-                )}
-                {onDuplicate && (
-                  <ActionBtn icon={<Copy className="w-4 h-4" />} onClick={() => onDuplicate(note.id)} title="Duplikuj" />
-                )}
-      </>
-    );
-  }
-
   function handleMove(e: React.MouseEvent<HTMLDivElement>) {
     if (isEditing || !tilt) return;
     const r = e.currentTarget.getBoundingClientRect();
@@ -360,6 +228,26 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
     mvY.set((e.clientY - r.top) / r.height - 0.5);
   }
   function handleLeave() { mvX.set(0); mvY.set(0); }
+
+  // Ten sam zestaw w rozwinięciu „Więcej opcji” i w arkuszu — jeden element, dwa miejsca.
+  const moreActions = (
+    <MoreActions
+      note={note}
+      isArchived={isArchived}
+      noteVersions={noteVersions}
+      folders={folders}
+      allLabels={allLabels}
+      onCreateLabel={onCreateLabel}
+      onAddImage={() => fileInputRef.current?.click()}
+      onDraw={() => setShowDrawing(true)}
+      onUpdate={onUpdate}
+      onMoveToFolder={onMoveToFolder}
+      onRestoreVersion={onRestoreVersion}
+      onPresent={onPresent}
+      onDuplicate={onDuplicate}
+      onOpenNote={onOpenNote}
+    />
+  );
 
   // Jeden edytor, dwa miejsca: kafel i okno pełnoekranowe. Ten sam stan,
   // autosave i sesja Yjs — rozwinięcie nie zmienia ścieżki zapisu.
@@ -780,7 +668,21 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         <div className="card-actions flex items-center gap-0.5 px-2 pb-2 flex-wrap" data-open={showColors || showMore || undefined} data-more={showMore || undefined} data-editing={isEditing || undefined}>
           <div className="card-primary contents">
             {/* Dotyk: te akcje są w arkuszu „⋯” — w stopce i tak niewidoczne (CSS), więc bez renderu. */}
-            {!isTouch && renderPrimaryActions(false)}
+            {!isTouch && (
+              <PrimaryActions
+                note={note}
+                isArchived={isArchived}
+                inSheet={false}
+                pinSparkle={showFx && fx.sparkle}
+                onToggleColors={() => setShowColors(!showColors)}
+                onAskDeleteConfirm={() => setShowDeleteConfirm(true)}
+                onUpdate={onUpdate}
+                onTogglePin={onTogglePin}
+                onArchive={onArchive}
+                onUnarchive={onUnarchive}
+                onDelete={onDelete}
+              />
+            )}
           </div>
 
           <input ref={fileInputRef} type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
@@ -803,7 +705,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
               className="px-3 pb-3 overflow-hidden"
             >
               <div className="flex items-center gap-0.5 flex-wrap border-t border-border/40 pt-2">
-                {renderMoreActions()}
+                {moreActions}
               </div>
             </motion.div>
           )}
@@ -832,11 +734,25 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           )}
           <section className="pt-4">
             <h3 className="px-1 pb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Szybkie</h3>
-            <div className="note-sheet-grid">{renderPrimaryActions(true)}</div>
+            <div className="note-sheet-grid">
+              <PrimaryActions
+                note={note}
+                isArchived={isArchived}
+                inSheet
+                pinSparkle={showFx && fx.sparkle}
+                onClose={() => setSheetOpen(false)}
+                onAskDeleteConfirm={() => setShowDeleteConfirm(true)}
+                onUpdate={onUpdate}
+                onTogglePin={onTogglePin}
+                onArchive={onArchive}
+                onUnarchive={onUnarchive}
+                onDelete={onDelete}
+              />
+            </div>
           </section>
           <section className="pt-4">
             <h3 className="px-1 pb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Więcej</h3>
-            <div className="note-sheet-grid">{renderMoreActions()}</div>
+            <div className="note-sheet-grid">{moreActions}</div>
           </section>
         </SheetContent>
       </Sheet>}
@@ -884,18 +800,3 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
     </>
   );
 });
-
-function ActionBtn({ icon, onClick, title, className = "", "aria-expanded": ariaExpanded }: { icon: React.ReactNode; onClick: (e: React.MouseEvent<HTMLButtonElement>) => void; title: string; className?: string; "aria-expanded"?: boolean }) {
-  return (
-    // Podpowiedź przez wspólny `HoverTip` (`data-tip`), nie osobny Radix Tooltip na każdy przycisk każdej karty.
-    <button
-      onClick={(e) => { e.stopPropagation(); onClick(e); }}
-      aria-label={title}
-      aria-expanded={ariaExpanded}
-      data-tip={title}
-      className={cn("card-action text-muted-foreground", className)}
-    >
-      {icon}
-    </button>
-  );
-}
