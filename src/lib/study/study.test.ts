@@ -456,6 +456,19 @@ describe("budowy — karty", () => {
     expect(saveSiteCard(e.siteId!, { name: "  ", address: "", investor: "" })).toBe(false);
   });
 
+  it("kontakt i dostęp w karcie: zapis, czyszczenie pola, bez pola w formularzu zostaje", () => {
+    setSite("Polna 2");
+    const a = addJournalEntry({ kind: "ok", topic: null, text: "Pion" }, 1000)!;
+    saveSiteCard(a.siteId!, { name: "Polna 2", address: "", investor: "", phone: "600 100 200", manager: "Kowalski", managerPhone: "", access: "Kod 1234#" });
+    expect(getStudy().sites[a.siteId!]).toMatchObject({ phone: "600 100 200", manager: "Kowalski", access: "Kod 1234#" });
+    expect("managerPhone" in getStudy().sites[a.siteId!]).toBe(false);
+    // Formularz bez pól kontaktu (np. zmiana samej nazwy) nie kasuje ich.
+    saveSiteCard(a.siteId!, { name: "Dom Nowaków", address: "", investor: "" });
+    expect(getStudy().sites[a.siteId!]).toMatchObject({ name: "Dom Nowaków", phone: "600 100 200" });
+    saveSiteCard(a.siteId!, { name: "Dom Nowaków", address: "", investor: "", phone: "" });
+    expect("phone" in getStudy().sites[a.siteId!]).toBe(false);
+  });
+
   it("zmiana nazwy przenosi bieżącą budowę arkusza; stara nazwa po zmianie zakłada nową kartę", () => {
     setSite("Polna 2");
     const a = addJournalEntry({ kind: "ok", topic: null, text: "Pion" }, 1000)!;

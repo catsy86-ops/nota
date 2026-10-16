@@ -1,6 +1,7 @@
 import type { JournalEntry } from "./yStudy";
 import { cleanStages, type SiteStage } from "./stages";
 import { cleanOrderLog, cleanShortages, type OrderLogEntry, type Shortage } from "./shortages";
+import { SITE_ACCESS_MAX, SITE_PHONE_MAX } from "./contact";
 
 /**
  * Karty budów dziennika. Wpis trzyma `siteId` i kopię nazwy (`site`) — starsza wersja
@@ -15,6 +16,13 @@ export interface SiteCard {
   name: string;
   address: string;
   investor: string;
+  /** Telefon inwestora (`contact.ts`); brak = nie wpisany. */
+  phone?: string;
+  /** Kierownik budowy albo osoba na miejscu. */
+  manager?: string;
+  managerPhone?: string;
+  /** Dostęp do budowy: kod do bramy, gdzie klucze, od której wejście. */
+  access?: string;
   /** Moment założenia karty (ms). */
   created: number;
   /** Budowa w archiwum od (ms) — znika z pigułek, wpisy zostają. */
@@ -61,6 +69,9 @@ const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice
 const withStages = (stages: SiteStage[] | undefined) => (stages ? { stages } : {});
 const optional = <K extends string, V>(k: K, v: V | undefined) => (v === undefined ? {} : ({ [k]: v } as Record<K, V>));
 
+/** Pole tekstowe karty, które nie musi być wpisane: pusty tekst = brak pola. */
+const optionalText = <K extends string>(k: K, v: unknown, max: number) => optional(k, str(v, max) || undefined);
+
 export function cleanSite(raw: unknown): SiteCard | null {
   const s = raw as Partial<SiteCard> | null;
   if (!s || typeof s !== "object" || typeof s.id !== "string" || !s.id || s.id.length > 64) return null;
@@ -70,6 +81,10 @@ export function cleanSite(raw: unknown): SiteCard | null {
     id: s.id, name,
     address: str(s.address, SITE_FIELD_MAX),
     investor: str(s.investor, SITE_FIELD_MAX),
+    ...optionalText("phone", s.phone, SITE_PHONE_MAX),
+    ...optionalText("manager", s.manager, SITE_FIELD_MAX),
+    ...optionalText("managerPhone", s.managerPhone, SITE_PHONE_MAX),
+    ...optionalText("access", s.access, SITE_ACCESS_MAX),
     created: typeof s.created === "number" && Number.isFinite(s.created) ? s.created : 0,
     ...(typeof s.archived === "number" && Number.isFinite(s.archived) ? { archived: s.archived } : {}),
     ...(typeof s.orderedAt === "number" && Number.isFinite(s.orderedAt) ? { orderedAt: s.orderedAt } : {}),

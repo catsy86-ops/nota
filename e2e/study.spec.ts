@@ -690,7 +690,7 @@ test("dziennik: karta budowy — nazwa, adres, inwestor, raport z karty i archiw
   await expect(card.getByRole("button", { name: "Zapisz kartę" })).toBeDisabled();
   await card.getByLabel("Nazwa").fill("Dom Nowaków");
   await card.getByLabel("Adres").fill("ul. Lipowa 5, Kraków");
-  await card.getByLabel("Inwestor").fill("Jan Nowak");
+  await card.getByLabel("Inwestor", { exact: true }).fill("Jan Nowak");
   await card.getByRole("button", { name: "Zapisz kartę" }).click();
   await expect(page.getByText("Zapisano kartę budowy")).toBeVisible();
   await expect(journal.locator("[data-journal-site]")).toHaveText(["Dom Nowaków", "Polna 2"]);
@@ -737,7 +737,7 @@ test("dziennik: karta budowy — nazwa, adres, inwestor, raport z karty i archiw
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await expect(journal.locator("[data-journal-site]")).toHaveText(["Dom Nowaków", "Polna 2"]);
   await journal.getByRole("button", { name: "Dom Nowaków: karta budowy" }).click();
-  await expect(card.getByLabel("Inwestor")).toHaveValue("Jan Nowak");
+  await expect(card.getByLabel("Inwestor", { exact: true })).toHaveValue("Jan Nowak");
   await expect(card.getByTestId("site-card-stats")).toContainText("w archiwum");
 });
 

@@ -36,7 +36,7 @@ test("protokół odbioru: dane z karty, etap, próba szczelności, uwagi i podpi
   const card = page.getByTestId("site-card");
 
   await card.getByLabel("Adres").fill("ul. Lipowa 5, Kraków");
-  await card.getByLabel("Inwestor").fill("Jan Kowalski");
+  await card.getByLabel("Inwestor", { exact: true }).fill("Jan Kowalski");
   await card.getByRole("button", { name: "Zapisz kartę" }).click();
   await card.getByTestId("site-stages").getByRole("checkbox", { name: /Próba szczelności/ }).click();
 

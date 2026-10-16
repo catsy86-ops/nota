@@ -9,7 +9,7 @@ import { studyDevice, yStudy } from "./data";
 import { cleanCard, dueIds, type ReviewCard } from "./srs";
 import { cleanTest, type PressureTest } from "./pressureTest";
 import { BOSS_NAME_MAX, cleanBoss, cleanGroup, normalizeGroupLink, normalizePhone } from "./boss";
-import { cleanSite, entrySiteId, resolveSite, siteDirectory, SITE_FIELD_MAX, SITE_NAME_MAX, type SiteCard, type SiteInfo } from "./sites";
+import { cleanSite, entrySiteId, resolveSite, siteDirectory, SITE_NAME_MAX, type SiteCard, type SiteInfo } from "./sites";
 import { cleanStages, type SiteStage } from "./stages";
 import { cleanShortages, logOrder, type OrderLogEntry, type Shortage } from "./shortages";
 import { siteOrder } from "./order";
@@ -359,6 +359,10 @@ export interface SiteCardInput {
   name: string;
   address: string;
   investor: string;
+  phone?: string;
+  manager?: string;
+  managerPhone?: string;
+  access?: string;
 }
 
 /**
@@ -370,15 +374,22 @@ export function saveSiteCard(id: string, input: SiteCardInput, now: number = Dat
   if (!name) return false;
   const s = getStudy();
   const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
-  // Reszta karty (archiwum, zamówienia, etapy, braki…) zostaje — edycja zmienia tylko te trzy pola.
-  const { stored: _s, count: _c, open: _o, first: _f, last: _l, ...rest } = prev ?? ({} as Partial<SiteInfo>);
-  yStudy.saveSite({
+  // Reszta karty (archiwum, zamówienia, etapy, braki…) zostaje — edycja zmienia tylko pola formularza.
+  const { stored: _s, count: _c, open: _o, first: _f, last: _l, phone: _p, manager: _m, managerPhone: _mp, access: _a, ...rest } =
+    prev ?? ({} as Partial<SiteInfo>);
+  // Pola kontaktu z formularza; pole pominięte w `input` zostaje takie, jak było.
+  const keep = (k: "phone" | "manager" | "managerPhone" | "access") => input[k] ?? prev?.[k];
+  const card = cleanSite({
     ...rest,
     id, name,
-    address: input.address.trim().slice(0, SITE_FIELD_MAX),
-    investor: input.investor.trim().slice(0, SITE_FIELD_MAX),
+    address: input.address,
+    investor: input.investor,
+    phone: keep("phone"), manager: keep("manager"), managerPhone: keep("managerPhone"), access: keep("access"),
     created: prev?.created ?? now,
-  }, prev?.name);
+  });
+  if (!card) return false;
+  // `cleanSite` przepuszcza listy karty tylko w znanym kształcie — zostają takie, jak były.
+  yStudy.saveSite({ ...rest, ...card, id }, prev?.name);
   return true;
 }
 

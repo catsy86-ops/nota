@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Archive, ArchiveRestore, ClipboardCheck, FileText, ListFilter, MapPin, Package, Share2 } from "lucide-react";
+import { Archive, ArchiveRestore, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Phone, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -19,8 +19,26 @@ import { SiteShortagesPanel } from "./SiteShortagesPanel";
 import { PrintRoot } from "./PrintRoot";
 import { HandoverPaper } from "./HandoverPaper";
 import { buildHandover, handoverText, type Handover } from "@/lib/study/handover";
+import { mapsHref, prettyPhone, smsHref, SITE_ACCESS_MAX, SITE_PHONE_MAX, telHref } from "@/lib/study/contact";
 
 const topicTitle = (id: string) => TOPICS.find((t) => t.id === id)?.title ?? null;
+
+const EMPTY_FORM = { name: "", address: "", investor: "", phone: "", manager: "", managerPhone: "", access: "" };
+type SiteForm = typeof EMPTY_FORM;
+const formOf = (s: Partial<SiteForm>): SiteForm => ({ ...EMPTY_FORM, ...Object.fromEntries(Object.entries(s).filter(([k, v]) => k in EMPTY_FORM && typeof v === "string")) });
+
+/** Szybka akcja w karcie: link (telefon, SMS, Mapy) wyglądający jak przycisk. */
+function QuickLink({ href, icon: Icon, children, label }: { href: string; icon: typeof Phone; children: React.ReactNode; label?: string }) {
+  const external = href.startsWith("https:");
+  return (
+    <Button asChild variant="outline" size="sm" className="pressable h-10 min-w-0 justify-start gap-1.5 coarse:h-11">
+      <a href={href} aria-label={label} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+        <Icon className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
+        <span className="truncate">{children}</span>
+      </a>
+    </Button>
+  );
+}
 
 const fieldClass =
   "w-full rounded-lg border border-border bg-background px-3 py-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring sm:text-sm";
@@ -43,21 +61,22 @@ export function SiteCardDialog({
   const shifts = useShifts();
   const dir = useMemo(() => siteDirectory(study.sites, study.journal), [study.sites, study.journal]);
   const site = siteId ? dir.find((s) => s.id === siteId) ?? null : null;
-  const [form, setForm] = useState({ name: "", address: "", investor: "" });
+  const [form, setForm] = useState<SiteForm>(EMPTY_FORM);
   const [zipping, setZipping] = useState(false);
   /** Protokół odbioru w trakcie drukowania; `null` = nie drukujemy. */
   const [handover, setHandover] = useState<Handover | null>(null);
   const endHandover = useCallback(() => setHandover(null), []);
 
   useEffect(() => {
-    if (site) setForm({ name: site.name, address: site.address, investor: site.investor });
+    if (site) setForm(formOf(site));
     // Tylko przy otwarciu innej karty — zmiany z drugiego telefonu nie kasują pisanego tekstu.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteId]);
 
   const name = form.name.trim();
   const clash = name ? findSiteByName(dir.filter((s) => s.id !== siteId), name) : undefined;
-  const dirty = !!site && (name !== site.name || form.address.trim() !== site.address || form.investor.trim() !== site.investor);
+  const saved = site ? formOf(site) : EMPTY_FORM;
+  const dirty = !!site && (Object.keys(EMPTY_FORM) as (keyof SiteForm)[]).some((k) => form[k].trim() !== saved[k]);
   const error = !name ? "Podaj nazwę budowy" : clash ? `Jest już budowa „${clash.name}”` : null;
 
   function save() {
@@ -122,6 +141,14 @@ export function SiteCardDialog({
     if (archive) onOpenChange(false);
   }
 
+  // Szybkie akcje z zapisanej karty (nie z pisanego formularza) — numer przed zapisem nie dzwoni.
+  const nav = site ? mapsHref(site.address) : null;
+  const call = site?.phone ? telHref(site.phone) : null;
+  const sms = site?.phone ? smsHref(site.phone) : null;
+  const callManager = site?.managerPhone ? telHref(site.managerPhone) : null;
+  const setField = (k: keyof SiteForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setForm((f) => ({ ...f, [k]: e.target.value }));
+
   const period = site?.first != null && site.last != null ? periodLabel(dayKeyOf(site.first), dayKeyOf(site.last)) : null;
 
   return (
@@ -144,6 +171,25 @@ export function SiteCardDialog({
               </DialogDescription>
             </div>
 
+            {(nav || call || callManager || site.access) && (
+              <div className="space-y-2 border-b border-border px-5 py-3" data-testid="site-quick">
+                {(nav || call || callManager) && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {nav && <QuickLink href={nav} icon={Navigation}>Nawiguj</QuickLink>}
+                    {call && <QuickLink href={call} icon={Phone} label={`Zadzwoń do inwestora: ${prettyPhone(site.phone!)}`}>{site.investor || "Inwestor"}</QuickLink>}
+                    {sms && <QuickLink href={sms} icon={MessageSquare} label={`SMS do inwestora: ${prettyPhone(site.phone!)}`}>SMS</QuickLink>}
+                    {callManager && <QuickLink href={callManager} icon={Phone} label={`Zadzwoń do kierownika: ${prettyPhone(site.managerPhone!)}`}>{site.manager || "Kierownik"}</QuickLink>}
+                  </div>
+                )}
+                {site.access && (
+                  <p className="flex items-start gap-2 rounded-lg bg-warning/10 px-3 py-2 text-sm text-foreground" data-testid="site-access">
+                    <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" aria-hidden />
+                    <span className="min-w-0 whitespace-pre-line break-words"><span className="sr-only">Dostęp: </span>{site.access}</span>
+                  </p>
+                )}
+              </div>
+            )}
+
             <form
               className="space-y-3 px-5 py-4"
               onSubmit={(e) => { e.preventDefault(); save(); }}
@@ -152,7 +198,7 @@ export function SiteCardDialog({
                 Nazwa
                 <input
                   value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                  onChange={setField("name")}
                   maxLength={SITE_NAME_MAX}
                   aria-invalid={!!error}
                   aria-describedby={error ? "site-card-error" : undefined}
@@ -164,7 +210,7 @@ export function SiteCardDialog({
                 Adres
                 <input
                   value={form.address}
-                  onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))}
+                  onChange={setField("address")}
                   maxLength={SITE_FIELD_MAX}
                   placeholder="ul. Lipowa 5, Kraków"
                   autoComplete="off"
@@ -175,11 +221,61 @@ export function SiteCardDialog({
                 Inwestor
                 <input
                   value={form.investor}
-                  onChange={(e) => setForm((f) => ({ ...f, investor: e.target.value }))}
+                  onChange={setField("investor")}
                   maxLength={SITE_FIELD_MAX}
                   placeholder="np. Jan Kowalski"
                   autoComplete="off"
                   className={fieldClass}
+                />
+              </label>
+              <label className="block space-y-1 text-xs text-muted-foreground">
+                Telefon inwestora
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  value={form.phone}
+                  onChange={setField("phone")}
+                  maxLength={SITE_PHONE_MAX}
+                  placeholder="600 100 200"
+                  autoComplete="off"
+                  className={fieldClass}
+                />
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="block min-w-0 space-y-1 text-xs text-muted-foreground">
+                  Kierownik budowy
+                  <input
+                    value={form.manager}
+                    onChange={setField("manager")}
+                    maxLength={SITE_FIELD_MAX}
+                    placeholder="imię"
+                    autoComplete="off"
+                    className={fieldClass}
+                  />
+                </label>
+                <label className="block min-w-0 space-y-1 text-xs text-muted-foreground">
+                  Telefon kierownika
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    value={form.managerPhone}
+                    onChange={setField("managerPhone")}
+                    maxLength={SITE_PHONE_MAX}
+                    placeholder="600 100 200"
+                    autoComplete="off"
+                    className={fieldClass}
+                  />
+                </label>
+              </div>
+              <label className="block space-y-1 text-xs text-muted-foreground">
+                Dostęp do budowy
+                <textarea
+                  value={form.access}
+                  onChange={setField("access")}
+                  maxLength={SITE_ACCESS_MAX}
+                  rows={2}
+                  placeholder="np. kod do bramy 1234#, klucze u sąsiada spod 7"
+                  className={`${fieldClass} resize-none`}
                 />
               </label>
               <Button type="submit" disabled={!dirty || !!error} className="w-full coarse:h-11">Zapisz kartę</Button>

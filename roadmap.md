@@ -1052,3 +1052,10 @@ Kolejność: D0 → D1 → D2 → D3 → D5 → D6 → D4 → N1 → N3 → resz
 - Komponenty shadcn: tak — Input OTP (parowanie, PIN skarbca), Toggle Group (grupy segmentowe), Breadcrumb (podstrony), Chart (N4); nie — Sidebar, Carousel; Drawer/vaul zależnie od D5; Command już jest.
 
 Kolejność (po decyzjach): 3.3 Tailwind v4 + React 19 + shadcn (osobne commity: React 19 → Tailwind v4 → `tailwind-merge` 3 / `tw-animate-css`) → 1.5 → 1.1 → 1.4 → 1.2/1.3 → 1.6 → 1.7/1.8 → 2.7/2.8 → Radix + lucide → 2.1 → 2.2 → 2.3/2.4 → 2.5/2.6 → sonner, LazyMotion, Input OTP, Toggle Group → faza 3. Każdy krok: typecheck, lint, Vitest, build, e2e smoke, zrzuty 390/1440 w obu motywach, wpis w `opis.md`.
+
+## Praca w terenie — 2026-10-16 (prośba „ulepsz dział hydraulik”, wybrane 4 z 4)
+
+- [x] H1 Kontakt i dojazd w karcie budowy: telefon inwestora, kierownik z telefonem, „Dostęp do budowy” (kod, klucze); pasek „Nawiguj / Inwestor / SMS / Kierownik” (`lib/study/contact.ts`).
+- [ ] H2 Godziny na budowach: podział godzin dnia z Grafiku między budowy; godziny przy każdej budowie w raporcie.
+- [ ] H3 Plany i dokumenty budowy: rzuty, projekt (PDF/obraz) przypięte do karty budowy, offline.
+- [ ] H4 Serwis i gwarancja: zgłoszenia po odbiorze z terminem, statusem i przypomnieniem; historia w karcie.
