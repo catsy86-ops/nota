@@ -2417,7 +2417,9 @@ końcu, usunięcie ma „Cofnij”. Przy nazwie budowy w dzienniku widać „eta
 podsumowaniu „postęp: 3/7 etapów” i sekcję „Etapy (3/7)” z datami (WhatsApp: ✅ / ⬜).
 Etap odhacza się też bez otwierania karty: w nowym wpisie z rodzajem „Zrobione” pod rodzajem są pigułki z trzema
 następnymi niezrobionymi etapami wybranej budowy (stuknięcie odhacza od razu, dymek ma „Cofnij”), a dyktowanie
-„Lipowa, etap próba szczelności zrobiony, …” odhacza etap głosem (patrz „Dyktowanie”).
+„Lipowa, etap próba szczelności zrobiony, …” odhacza etap głosem (patrz „Dyktowanie”). Odhaczony z wpisu etap
+przypina się do wpisu (pasek „Etap: …” w arkuszu, z ✕ do odpięcia) — zdjęcia wpisu idą do protokołu odbioru pod tym
+etapem.
 
 **Gdzie jest.**
 - `src/lib/study/stages.ts`: `SiteStage { id, name, done? }`, `DEFAULT_STAGES`, `siteStages(card)`, `cleanStages`,
@@ -2427,8 +2429,13 @@ następnymi niezrobionymi etapami wybranej budowy (stuknięcie odhacza od razu, 
 - `src/lib/study/store.ts`: `setSiteStages(id, stages)` (przez `patchSiteCard`, tak samo jak `markSiteOrdered`);
   `saveSiteCard` przenosi `stages` przy edycji karty.
 - `src/components/study/SiteStagesPanel.tsx` (`data-testid="site-stages"`) w `SiteCardDialog.tsx` nad „Do zamówienia”.
-- `src/components/study/JournalEntrySheet.tsx`: `siteCard`, `nextStages`, `markStage` — pigułki
-  `data-testid="journal-stage-chips"` (tylko nowy wpis, rodzaj „Zrobione”, budowa z kartą lub wpisami).
+- `src/components/study/JournalEntrySheet.tsx`: `siteCard`, `nextStages`, `markStage`, `entryStage` — pigułki
+  `data-testid="journal-stage-chips"` (tylko nowy wpis, rodzaj „Zrobione”, budowa z kartą lub wpisami, wpis jeszcze
+  bez etapu) i pasek `journal-entry-stage`.
+- Pole wpisu `JournalEntry.stage?` (id etapu; `yStudy.ts`, czyszczone `cleanEntryStage` w `cleanEntry` i
+  `sanitizeStudy`), w szkicu `JournalDraft.stage` (`draft.ts`, starszy szkic bez pola = `null`), w formularzu edycji
+  (`entrySheet.ts`), przez `NewJournalEntry.stage` w `addJournalEntry`/`updateJournalEntry` (`store.ts`). Wpis z samym
+  etapem (bez tekstu i zdjęć) jest poprawny.
 - `src/components/ui/sheet.tsx`: klik w dymek (`[data-sonner-toaster]`) nie zamyka arkusza — jak w `dialog.tsx`; bez
   tego „Cofnij” w dymku zamykał arkusz wpisu.
 - `src/components/study/StudyJournal.tsx`: `stagesBySite`, znacznik `[data-site-progress]` obok przycisku budowy.
@@ -2450,7 +2457,9 @@ początki słów nazwy („piony”, „bialy montaz”); gdy pasuje kilka etap�
 - Starsza wersja aplikacji (sprzed `395c311`) widzi etapy tylko z dawnego pola karty — nowych zmian nie zobaczy.
 - Etapów nie da się przestawiać ani zmieniać im nazw (usuń i dodaj nowy). Z arkusza wpisu tylko się odhacza (cofnięcie
   — „Cofnij” w dymku albo w karcie); pigułki nie ma w edycji zapisanego wpisu. Odhaczenie z pigułki zapisuje się od razu,
-  nawet gdy wpis potem odrzucisz.
+  nawet gdy wpis potem odrzucisz. „Cofnij” w dymku cofa też przypięcie. Zmiana budowy po odhaczeniu nie czyści
+  `stage` — pasek znika (etapu nie ma w nowej karcie), a protokół takiego wpisu nie przypisze do etapu.
+- Starsza wersja aplikacji nie zna `stage`: przy edycji wpisu pole może zginąć (wpis wraca do „Pozostałych”).
 
 **Testy.** `src/lib/study/stages.test.ts` (10: domyślne jako kopia, odhaczanie i cofanie, postęp i następny, wszystko
 zrobione, własny etap i duplikaty, limit, usuwanie, `cleanStages`, `cleanSite`, `matchStage` — trafienia i
@@ -2461,7 +2470,10 @@ przeładowaniu; pigułki przy „Zrobione”: odhaczenie, „Cofnij” bez zamyk
 41/41 (chromium), układ telefonu 6/6 (`iphone-14`); po `b82dda3`: wpis, zdjęcia, kształtki, próba, szkice, `study.spec`
 (31), karta na telefonie — wszystko zielone. Nie sprawdzone ręcznie na telefonie.
 
-**Commit.** `a25958a` (2026-10-16), `b82dda3` (odhaczanie z wpisu i głosem, 2026-10-16).
+Pole `stage`: `study.test.ts` (szkic, wpis z samym etapem, `sanitizeStudy`), `e2e/site-handover.spec.ts`.
+
+**Commit.** `a25958a` (2026-10-16), `b82dda3` (odhaczanie z wpisu i głosem, 2026-10-16), `5ee9858` (przypięcie wpisu
+do etapu, 2026-10-16).
 
 ### Do zamówienia (kształtki)
 
@@ -2555,32 +2567,40 @@ Regresja działu Praca 39/39 (chromium). Zrzuty karty obejrzane w jasnym i ciemn
 **Co robi.** Przycisk „Protokół odbioru” w karcie budowy drukuje jedną kartkę (albo PDF przez „Zapisz jako PDF” w oknie
 drukowania): nazwa budowy, adres, inwestor, okres prac, data protokołu, etapy z datami (☑/☐), próby szczelności z
 wpisów z wynikiem, uwagi (otwarte problemy; bez nich „Brak uwag”), do 12 zdjęć i dwa pola „Wykonawca / Inwestor —
-data i podpis”.
+data i podpis”. Zdjęcia z wpisów, które odhaczyły etap (patrz „Etapy budowy”), stoją pod nazwą tego etapu, w
+kolejności etapów; reszta pod „Pozostałe” (bez żadnego przypiętego — jedna siatka bez nagłówka).
 
 **Gdzie jest.**
 - `src/lib/study/handover.ts`: `buildHandover(journal, site, now)` → `Handover`, `handoverText(h)` (ta sama treść jako
-  tekst, bez zdjęć), `HANDOVER_PHOTOS_MAX` (12).
-- `src/components/study/HandoverPaper.tsx` — kartka (klasa `.report-paper`, czarno na białym na papierze).
+  tekst, bez zdjęć; liczy zdjęcia etapów: „5 zdjęć (Próba szczelności: 2, …)”), `HANDOVER_PHOTOS_MAX` (12),
+  `HandoverPhotoGroup { stage, photos }` w `Handover.photoGroups` (obok płaskiego `photos`).
+- `src/components/study/HandoverPaper.tsx` — kartka (klasa `.report-paper`, czarno na białym na papierze); grupy
+  zdjęć `[data-handover-photo-group]` z nagłówkiem etapu, `break-inside-avoid-page`.
 - `src/components/study/PrintRoot.tsx` — wspólny wydruk (raport i protokół): korzeń `#report-print` pod `body`, klasa
   `html.printing-report`, czekanie na zdjęcia (do 3 s), sprzątanie po `afterprint` albo pierwszym dotknięciu.
 - `src/components/study/SiteCardDialog.tsx`: przycisk, stan `handover`, `<PrintRoot testId="handover-print">`.
 
 **Jak działa i dlaczego.** Protokół składa się z danych, które już są: karta (adres, inwestor, etapy), wpisy (próby
-`test`, problemy bez `resolved`, zdjęcia). Zdjęcia od najstarszych, bo „przed zakryciem” są zwykle na początku budowy;
-reszta jest w paczce ZIP. Przycisk jest aktywny, gdy budowa ma wpisy albo własną listę etapów.
+`test`, problemy bez `resolved`, zdjęcia). Najpierw zdjęcia przypięte do etapów (wpis z `stage`, w kolejności listy
+etapów), potem pozostałe od najstarszych, bo „przed zakryciem” są zwykle na początku budowy. Limit 12 tnie od końca,
+więc zdjęcia etapów mają pierwszeństwo; reszta jest w paczce ZIP. Wpis z `stage` etapu, którego już nie ma w karcie,
+idzie do pozostałych. Przycisk jest aktywny, gdy budowa ma wpisy albo własną listę etapów.
 
 **Ograniczenia i pułapki.**
 - Bez podglądu przed drukiem — od razu okno drukowania (jak „Drukuj” w raporcie).
-- Zdjęć „przed zakryciem” nie da się odróżnić od innych (podpis jest wtopiony w obraz) — bierzemy najstarsze.
+- Zdjęcie trafia pod etap tylko przez wpis, który ten etap odhaczył (pigułka albo głos). Etap odhaczony w karcie nie
+  przypina żadnego wpisu; zapisanego wpisu nie da się przypiąć do etapu (w edycji można tylko odpiąć).
 - „Tekst protokołu” (obok „Protokół odbioru”) wysyła ten sam protokół jako tekst, bez zdjęć: udostępnianie systemowe
   na telefonie, a bez niego — schowek (`shareHandover` w `SiteCardDialog.tsx`, `f5dc1f6`).
 
 **Testy.** `src/lib/study/handover.test.ts` (4: dane, okres, próby i uwagi tylko z tej budowy; etapy i limit zdjęć;
-budowa bez wpisów; tekst). `e2e/site-handover.spec.ts` (karta z adresem i inwestorem, odhaczony etap, treść wydruku z
-próbą, uwagą i podpisami; `window.print` podmienione). Regresja działu Praca 37/37 (w tym wydruk raportu).
+budowa bez wpisów; tekst; + 3 „zdjęcia przy etapach”: kolejność grup i tekst, limit tnie od pozostałych, bez
+przypiętych jedna grupa). `e2e/site-handover.spec.ts` (karta z adresem i inwestorem, odhaczony etap, treść wydruku z
+próbą, uwagą i podpisami; `window.print` podmienione; wpis ze zdjęciem odhacza etap pigułką → po przeładowaniu zdjęcie
+w grupie etapu na wydruku). Regresja działu Praca 37/37 (w tym wydruk raportu); po `5ee9858` 40/40 + bundle.
 Nie drukowane na prawdziwej drukarce ani do PDF w telefonie.
 
-**Commit.** `9b169ad` (2026-10-16).
+**Commit.** `9b169ad` (2026-10-16), `5ee9858` (zdjęcia przy etapach, 2026-10-16).
 
 ### Rysowanie po zdjęciu
 
