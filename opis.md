@@ -2502,6 +2502,44 @@ Nie sprawdzone palcem na telefonie.
 
 **Commit.** `b1f3842` (2026-10-16).
 
+### „Jak rozwiązane?” — baza własnych rozwiązań
+
+**Co robi.** Po „Oznacz jako rozwiązany” pod problemem otwiera się pole „Jak rozwiązane?” (np. „wymieniona złączka,
+dokręcony śrubunek”). „Zapisz” albo Enter zapisuje opis, „Pomiń” zamyka pole — wtedy zostaje przycisk „Jak
+rozwiązane?”, żeby dopisać później; zapisany opis ma „Zmień”. Opis jest:
+- pod wpisem („Rozwiązanie: …”),
+- w raporcie dla szefa (linia „Rozwiązanie:” pod problemem, też na wydruku),
+- w szukaniu dziennika (słowo z rozwiązania znajduje wpis),
+- na tablicy Nauki przy temacie: zwinięte „Moje rozwiązania (N)” — problem i „→ jak rozwiązano”, od najnowszego.
+
+**Gdzie jest.**
+- `src/lib/study/yStudy.ts`: pole `JournalEntry.solution?` (tylko `problem`), `JOURNAL_SOLUTION_MAX` (500),
+  `setSolution(id, text)`; czyszczenie w `cleanEntry` (kopia, drugi telefon).
+- `src/lib/study/store.ts`: `setProblemSolution`, czyszczenie w `sanitizeStudy`, `updateJournalEntry` zachowuje opis
+  przy edycji w arkuszu (formularz go nie zna), `practiceByTopic` → `TopicPractice.solutions`.
+- `src/lib/study/journalView.ts`: `filterJournal` szuka też w `solution`.
+- `src/lib/study/report.ts` (`entryLine`), `src/components/study/JournalReport.tsx` (`[data-report-solution]`).
+- `src/components/study/StudyJournal.tsx`: `SolutionLine` (pole, opis, „Zmień”); `StudyBoard.tsx`: `[data-topic-solutions]`.
+
+**Jak działa i dlaczego.** Dziennik już wiedział, że problem rozwiązano, ale nie jak — a to jest wiedza, której
+potrzeba przy następnym takim problemie. Opis jest opcjonalny i nie blokuje oznaczenia (szybkość na budowie).
+Ponowne otwarcie problemu zostawia opis (przy kolejnym rozwiązaniu jest pod ręką); zmiana rodzaju wpisu na inny niż
+problem go usuwa.
+
+**Ograniczenia i pułapki.**
+- Nie ma zamiany rozwiązania na własne pytanie quizu jednym stuknięciem — pytanie potrzebuje trzech błędnych
+  odpowiedzi, których aplikacja nie wymyśli; własne pytania dodaje się jak dotąd („Moje pytania”).
+- Opisu nie dyktuje się osobnym mikrofonem (można dyktować klawiaturą telefonu).
+- Starsza wersja aplikacji nie zna `solution`: edycja wpisu w starej wersji opis zgubi.
+
+**Testy.** `src/lib/study/study.test.ts` („jak rozwiązano problem”: zapis, przycięcie, usunięcie, tylko problem;
+edycja i ponowne otwarcie nie gubią opisu, zmiana rodzaju tak; „Moje rozwiązania” i szukanie; `sanitizeStudy`).
+`src/lib/study/yStudy.test.ts` (synchronizacja dwóch telefonów, `cleanDump`). `src/lib/study/report.test.ts`
+(linia „Rozwiązanie:”). `e2e/journal-solution.spec.ts` (2: pole po oznaczeniu, po przeładowaniu, szukanie, tablica;
+„Pomiń” i dopisanie później). Regresja działu Praca 34/34; Vitest 1289/1289.
+
+**Commit.** `415b7a5` (2026-10-16).
+
 ### Dyktowanie: cały wpis i kształtki
 
 **Co robi.**
