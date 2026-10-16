@@ -2475,7 +2475,8 @@ brakujące najpierw. Dane w karcie budowy (mapa Yjs `studySites`), więc synchro
   wprowadzone 2026-10-16 na prośbę („rób po kolei” po propozycji punktu 3).
 - Lista braków to jedno pole karty: równoczesne zmiany z dwóch telefonów — wygrywa ostatni zapis całej listy.
 - Starsza wersja aplikacji nie zna `shortages` ani `orders`; zapis karty w starej wersji je zgubi.
-- Braków nie dyktuje się głosem (jeszcze); nie ma przypomnienia o długo „zamówionych”.
+- Braki dyktuje się głosem przy treści wpisu („Lipowa, brakuje …” — patrz „Dyktowanie”); przypomnienie o materiale
+  „zamówionym” ponad 3 dni — w „Przypomnieniach nad listą”.
 
 **Testy.** `src/lib/study/shortages.test.ts` (10: dopisanie i duplikaty, dostarczona nie blokuje, statusy, otwarte i
 czyszczenie, limit, linia i tekst, `cleanShortages`, historia i limit, `cleanOrderLog`, `cleanSite`).
@@ -2506,7 +2507,8 @@ reszta jest w paczce ZIP. Przycisk jest aktywny, gdy budowa ma wpisy albo własn
 **Ograniczenia i pułapki.**
 - Bez podglądu przed drukiem — od razu okno drukowania (jak „Drukuj” w raporcie).
 - Zdjęć „przed zakryciem” nie da się odróżnić od innych (podpis jest wtopiony w obraz) — bierzemy najstarsze.
-- `handoverText` jest gotowe, ale w interfejsie nie ma jeszcze „Kopiuj tekst protokołu”.
+- „Tekst protokołu” (obok „Protokół odbioru”) wysyła ten sam protokół jako tekst, bez zdjęć: udostępnianie systemowe
+  na telefonie, a bez niego — schowek (`shareHandover` w `SiteCardDialog.tsx`, `f5dc1f6`).
 
 **Testy.** `src/lib/study/handover.test.ts` (4: dane, okres, próby i uwagi tylko z tej budowy; etapy i limit zdjęć;
 budowa bez wpisów; tekst). `e2e/site-handover.spec.ts` (karta z adresem i inwestorem, odhaczony etap, treść wydruku z
@@ -2587,11 +2589,16 @@ edycja i ponowne otwarcie nie gubią opisu, zmiana rodzaju tak; „Moje rozwiąz
   kolano 16 cztery sztuki”: budowa zmienia się na Lipowa 5, rodzaj na „Problem”, do tekstu idzie „przeciek przy
   trójniku”, a kształtka trafia na listę. Dymek mówi, co rozpoznano („Z wypowiedzi: budowa Lipowa 5 · Problem ·
   kształtki: Kolano 16 × 4”). Zwykłe zdanie bez budowy, rodzaju i kształtek dopisuje się do tekstu bez zmian (jak dawniej).
+- **Braki materiału** — ten sam mikrofon: „Lipowa, brakuje kleju do PCV i rury PEX 16 pięćdziesiąt metrów” (także
+  „zamówić …”, „do zamówienia …”) dopisuje pozycje do „Braków materiału” w karcie budowy (wskazanej albo bieżącej),
+  z ilością, gdy padła liczba z jednostką („50 m”, „3 szt.”, „2 worki”). Do treści wpisu nic nie trafia; bez budowy —
+  komunikat „Braki zapisują się w karcie budowy”.
 - **Same kształtki** — mikrofon „Dyktuj kształtki” w polu kształtek: „kolano szesnaście cztery sztuki, trójnik 16 dwa”.
   Ta sama nazwa sumuje sztuki zamiast nowego wiersza. Gdy nic nie rozpozna, dymek pokazuje usłyszany tekst i przykład.
 
 **Gdzie jest.**
-- `src/lib/study/spokenEntry.ts`: `parseSpokenEntry(spoken, { sites, fittings })` → `{ site?, kind?, fittings, text, structured }`.
+- `src/lib/study/spokenEntry.ts`: `parseSpokenEntry(spoken, { sites, fittings })` → `{ site?, kind?, fittings, text,
+  shortages, structured }`; braki: `SHORTAGE_MARKERS`, `UNIT_SHORT`, `parseShortages`, `numberize`.
 - `src/lib/study/spokenFittings.ts`: `parseSpokenFittings(text, known)`, `mergeFittings(current, added)`, `wordsToDigits`;
   wspólne słowniki (`UNITS`, `TENS`, `SINGULAR`, `QTY_WORD`, `fold`).
 - `src/components/study/JournalEntrySheet.tsx`: obsługa dyktowania treści (`useDictation` → `parseSpokenEntry`; budowa
@@ -2610,6 +2617,8 @@ na początku („4 kolana 16”) albo ostatnia z dwóch liczb („trójnik 16 2�
 
 **Ograniczenia i pułapki.**
 - Budowa rozpoznaje się tylko spośród znanych (z kart i wpisów, bez archiwum) i w mianowniku („Lipowa”, nie „na Lipowej”).
+- Braki zostają w formie, w jakiej padły („brakuje kleju” → „Kleju do PCV”); słowo „brak” (nie „brakuje”) to zwykły
+  tekst problemu. Ilość bez jednostki („rura 16”) to wymiar, nie ilość.
 - Pierwsze słowo budowy bez przecinka i bez słowa rodzaju za nim nie wystarcza („polna droga zalana” to tekst).
 - „Dyktuj kształtki” bierze każdy kawałek jako pozycję: przypadkowe słowa („coś tam”) zostaną pozycją — usuwa się „−”.
 - Web Speech API: w Chrome nagranie idzie do usługi Google; bez internetu nie działa. Na iPhonie (Safari) zależnie od
@@ -2623,7 +2632,8 @@ zapowiedź „kształtki” i nazwa wielowyrazowa, „20 na 16”). `src/lib/stu
 właściwej budowie), `e2e/fittings-dictation.spec.ts` (dwie wypowiedzi, suma sztuk), `e2e/study.spec.ts` (zwykłe zdanie).
 Nie sprawdzone z prawdziwym mikrofonem.
 
-**Commit.** `b65d58c` (kształtki, 2026-10-16), `b61b737` (cały wpis, 2026-10-16).
+**Commit.** `b65d58c` (kształtki, 2026-10-16), `b61b737` (cały wpis, 2026-10-16), `db490f7` (braki głosem, 2026-10-16).
+Testy braków: `spokenEntry.test.ts` („braki materiału głosem”, 4), `e2e/entry-dictation.spec.ts` („brakuje …” → karta).
 
 ### Przypomnienia o raporcie (dzień i tydzień)
 
@@ -2678,17 +2688,22 @@ wykluczają dymku pokazanego później.
 - **Problemy otwarte od ponad 3 dni** — „N problemów otwartych od ponad 3 dni”, przycisk „Pokaż otwarte” (filtr „Otwarte”).
 - **Budowa z montażem bez protokołu próby** — „Budowa „X”: montaż bez protokołu próby. Zapisz próbę przed zakryciem.”,
   przycisk „Pokaż wpisy budowy” (filtr tej budowy).
+- **Materiał zamówiony, a niedostarczony** — „Budowa „X”: zamówione ponad 3 dni temu i nie dojechało — klej, rura…”
+  (do 3 nazw i „i N więcej”), przycisk „Karta budowy” otwiera kartę, gdzie zmienia się status braku.
 
-Pasek znika sam, gdy warunek przestanie być prawdziwy (problem rozwiązany, protokół dopisany).
+Pasek znika sam, gdy warunek przestanie być prawdziwy (problem rozwiązany, protokół dopisany, materiał „dostarczony”).
 
-**Gdzie jest.** Reguła: `src/lib/study/reminders.ts` (`studyReminders(journal, now)`, stała `REMINDER_PROBLEM_DAYS = 3`,
-typ `StudyReminder`). Pasek: `ReminderRow` w `src/components/study/StudyJournal.tsx` (`data-testid="journal-reminders"`).
+**Gdzie jest.** Reguła: `src/lib/study/reminders.ts` (`studyReminders(journal, now, siteCards)`, stałe
+`REMINDER_PROBLEM_DAYS = 3`, `REMINDER_ORDER_DAYS = 3`, typ `StudyReminder` z rodzajami `stale-problems`, `no-test`,
+`late-order`). Pasek: `ReminderRow` w `src/components/study/StudyJournal.tsx` (`data-testid="journal-reminders"`).
 
 **Jak działa.**
 - Problem przypomina, gdy jest otwarty i `now − at > 3 dni` (od chwili wpisu problemu, nie od rozwiązania). Dokładnie 3 dni — jeszcze bez przypomnienia.
 - „Montaż” budowy = wpis z kształtkami (`fittings`) albo wpis z tematu próby (`TEST_TOPICS`: `proba-wody`, `proba-kan`).
   Budowa z montażem, w której **żaden** wpis nie ma `test`, dostaje przypomnienie. Próba zapisana w innej budowie go nie zdejmuje.
 - Wpisy bez budowy (`entrySiteId` = `""`) są pomijane. Nazwa budowy z najnowszego wpisu.
+- Zamówienia: brak ze statusem „zamówione”, którego ostatnia zmiana statusu (`changed`, bez niej — dopisanie `at`)
+  była ponad 3 dni temu; jedno przypomnienie na budowę; budowy w archiwum pomijane.
 - Liczone w `useMemo` na zmianie dziennika — bez timera. Jeśli strona stoi otwarta, a problem przekroczy 3 dni bez zmiany
   dziennika, pasek pojawi się dopiero po następnym renderze (np. po przejściu zakładki).
 
@@ -2696,9 +2711,11 @@ typ `StudyReminder`). Pasek: `ReminderRow` w `src/components/study/StudyJournal.
 Przypomnienie nie ma przycisku „Dodaj protokół” — arkusz wpisu nie przyjmuje z góry budowy, więc przycisk pokazuje wpisy budowy.
 Pasek nie jest zapamiętywany (brak „ukryj”), bo znika sam.
 
-**Testy.** `src/lib/study/reminders.test.ts` (7 testów). Pasek nie ma osobnego e2e; cały `e2e/study.spec.ts` (30/30, w tym telefony) przechodzi.
+**Testy.** `src/lib/study/reminders.test.ts` (10: w tym zamówienia — nazwy, archiwum, świeże, bez daty zmiany).
+`e2e/site-shortages.spec.ts` („zamówione ponad 3 dni temu…”: zegar +4 dni, przypomnienie, „Karta budowy”, po
+„Dostarczone” znika). Problemy i protokół — przez `e2e/study.spec.ts`.
 
-**Commit.** `d41bd89` (2026-10-16).
+**Commit.** `d41bd89` (2026-10-16), `7f95fe9` (zamówienia, 2026-10-16).
 
 ---
 
