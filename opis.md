@@ -812,6 +812,82 @@ pomija elementy wewnątrz kontenerów z własnym `overflow-x` (paski pigułek) i
 
 ---
 
+## Wspólne — powiadomienia przy zamkniętej aplikacji (Web Push)
+
+**Co robi.** Przypomnienia przychodzą o czasie także wtedy, gdy NOTKI są zamknięte. Działa to po włączeniu w
+**Ustawienia → Ogólne → Powiadomienia przy zamkniętej aplikacji**: wpisujesz adres własnego serwera, stukasz
+„Włącz”, a potem możesz sprawdzić działanie przyciskiem „Wyślij próbne”. Przez serwer idą:
+- przypomnienia notatek, w tym kolejne terminy serii;
+- Grafik na jutro, o godzinie wieczornego przypomnienia;
+- „Raport dnia gotowy” i „Raport tygodnia gotowy”;
+- problem z budowy otwarty od 3 dni;
+- materiał zamówiony 3 dni temu, który jeszcze nie dojechał.
+
+Pod polem adresu widać stan: liczbę zaplanowanych terminów i czas ostatniej wysyłki albo błąd.
+
+**Gdzie jest.**
+- `push-server/`: osobny serwer Node.
+  - `core.js` — czysta logika: `cleanSubscription`, `cleanItems`, `dueItems`, `cleanStore`, `payloadOf`.
+  - `server.js` — HTTP (`GET /vapid`, `PUT /schedule`, `POST /test`, `POST /unsubscribe`, `GET /health`) i obieg co 20 s.
+  - `Dockerfile` i `README.md` z wdrożeniem i limitami.
+- `src/lib/push/schedule.ts`: `buildPushSchedule(input)` zwraca `PushItem[]` (`key`, `at`, `title`, `body`, `url`).
+  Ma też `outsideQuietHours` i stałe `PUSH_HORIZON_DAYS` (14) i `PUSH_MAX_ITEMS` (200).
+- `src/lib/push/client.ts`: `pushSupport`, `enablePush`, `disablePush`, `sendTestPush`, `uploadSchedule`.
+- `src/lib/push/prefs.ts`: store `pushPrefs` (localStorage `kaczy.push.v1`: `server`, `enabled`, `sentHash`, `last`)
+  i `normalizePushServer`.
+- `src/lib/push/shown.ts`: `pushKey` (klucze terminów), `wasShown`, `markShown` (Cache Storage `notki-push`, wpis `/__push-shown`).
+- `src/components/PushScheduleSync.tsx`: ładowany leniwie z `Index.tsx`, tylko gdy `pushPrefs.enabled`.
+- `src/components/settings/PushSettings.tsx`: sekcja w `GeneralSettings.tsx`.
+- `public/sw-notifications.js`: obsługa zdarzenia `push`.
+- `src/lib/systemNotification.ts`: nowe pole `key` w `showSystemNotification`. Podają je `useReminderNotifications`,
+  `useShiftEveningNudge` i `DailyReportNudge`.
+
+**Jak działa i dlaczego.**
+- **Aplikacja liczy, serwer tylko wysyła.** Notatki, Grafik i dziennik żyją w Yjs na urządzeniu, więc serwer ich
+  nie zna. Aplikacja liczy terminy na 14 dni tymi samymi funkcjami co timery strony (`nextInSeries`,
+  `eveningNudgeFor`, `reportDueMinute`, progi z `reminders.ts`) i wysyła całą listę przez `PUT /schedule`.
+  Serwer zastępuje nią poprzednią listę urządzenia.
+- **Kiedy lista idzie na serwer.** Trzy sekundy po każdej zmianie notatek, Grafiku albo dziennika, co godzinę
+  i od razu przy schowaniu aplikacji (`visibilitychange`, `fetch` z `keepalive`). To ostatnie łapie typowy
+  przypadek: ktoś ustawia przypomnienie i od razu zamyka aplikację. Skrót listy (`sentHash`) blokuje
+  wysyłanie bez zmian, ale co 6 godzin lista idzie i tak: horyzont się przesuwa, a serwer mógł stracić dane.
+- **Warunki „na teraz” liczone z bieżącego stanu.** Raport dnia trafia na listę tylko wtedy, gdy dziś są już wpisy.
+  Problem rozwiązany albo materiał dostarczony znika z listy przy najbliższej wysyłce. Progi „od 3 dni” wypadające
+  między 21:00 a 7:00 przesuwamy na 7:00 (`outsideQuietHours`).
+- **Bez podwójnych powiadomień.** Ten sam termin może przyjść z serwera i z timera strony. Obie drogi zapisują
+  klucz terminu (`pushKey`, np. `n:<id>:<termin>`, `rd:<dzień>`, `e:<jutro>`) w Cache Storage, które widzą
+  i strona, i service worker. Druga droga pomija klucz już pokazany. Dodatkowo push nie pokazuje nic, gdy
+  aplikacja jest widoczna, bo wtedy przypomina sama (dymek i powiadomienie z timera). Wyjątek: powiadomienie
+  próbne (`test:…`) pokazuje się zawsze.
+- **Prywatność.** Na serwer trafiają terminy, tytuły i krótkie opisy. Z notatek idzie tylko tytuł, bez treści,
+  a notatka prywatna ma stały tytuł „Przypomnienie z notatki prywatnej”. Ustawienie jest urządzenia, nie dokumentu
+  Yjs: dwa telefony z tą samą listą dostałyby każde przypomnienie dwa razy.
+- **Klucze VAPID.** Serwer tworzy je przy pierwszym starcie (`DATA_DIR/vapid.json`). `enablePush` porównuje klucz
+  istniejącej subskrypcji z kluczem serwera i przy zmianie subskrybuje od nowa.
+
+**Ograniczenia i pułapki.**
+- Wymaga własnego serwera z https (Caddy lub nginx przed portem 4455). Bez niego wszystko działa jak dotąd:
+  przypomnienia tylko przy otwartej aplikacji.
+- iPhone obsługuje push tylko w aplikacji dodanej do ekranu początkowego; w Safari sekcja to mówi.
+- Przyciski w powiadomieniu („Odłóż 10 min”, „Gotowe”) są tylko w powiadomieniach z timera strony. Powiadomienie
+  z serwera tylko otwiera aplikację pod adresem notatki albo działu.
+- Seria przypomnień przesuwa `reminder` notatki dopiero przy otwartej aplikacji. Kolejne terminy serii są jednak
+  na liście, więc przy zamkniętej aplikacji też przyjdą.
+- Termin spóźniony o ponad godzinę (serwer nie działał) przepada. Nieudanej wysyłki serwer nie ponawia.
+- Nie da się wysłać przypomnienia „próba bez protokołu” (`no-test`): nie ma ono momentu w czasie. Zostaje jako
+  pasek w Dzienniku.
+- Lista na serwerze jest najwyżej tak świeża jak ostatnie otwarcie aplikacji. Wpis dodany na innym telefonie
+  trafi na tę listę dopiero po synchronizacji i otwarciu aplikacji na tym urządzeniu.
+- Nie sprawdzone na prawdziwym telefonie (headless Chromium nie ma usługi push). Serwer sprawdzony lokalnie:
+  zapisał termin, o czasie wysłał go do FCM, a po 404/410 dla fikcyjnej subskrypcji ją usunął.
+
+**Testy.** `src/lib/push/schedule.test.ts` (notatki i serie, notatka prywatna, Grafik, raport dnia i tygodnia,
+problemy, braki, noc), `push-server/core.test.js` (`npm test` w `push-server`: walidacja, limity, termin
+należny i przepadły, uszkodzony plik), `e2e/push.spec.ts` (włączenie z podstawioną subskrypcją i serwerem:
+`PUT /schedule`, „Wyślij próbne”, „Wyłącz”; błędny adres).
+
+**Commit.** `fe01dcd` (2026-10-16).
+
 ## Notatki — skróty z ikony aplikacji (PWA)
 
 **Co robi.** Przytrzymanie ikony zainstalowanej aplikacji pokazuje skróty: Nowa notatka, Wpis z budowy, Grafik,
