@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   cleanNoteProps,
+  filledPropEntries,
   cleanPropDef,
   cleanPropDefs,
   formatPropValue,
@@ -141,5 +142,15 @@ describe("propNameTaken / makePropDef", () => {
   it("opcje są brane tylko dla wyboru", () => {
     expect(makePropDef([], "X", "text", ["A"], "id")).not.toHaveProperty("options");
     expect(makePropDef([], "X", "select", ["A"], "id")?.options).toEqual(["A"]);
+  });
+
+  it("filledPropEntries: kolejność pól, pominięte puste, liczba z przecinkiem", () => {
+    const defs: PropDef[] = [
+      { id: "b", name: "Druga", type: "text", order: 1 },
+      { id: "a", name: "Pierwsza", type: "number", order: 0 },
+      { id: "c", name: "Pusta", type: "date", order: 2 },
+    ];
+    expect(filledPropEntries(defs, { a: 3.5, b: "tekst" })).toEqual([["Pierwsza", "3,5"], ["Druga", "tekst"]]);
+    expect(filledPropEntries(defs, undefined)).toEqual([]);
   });
 });

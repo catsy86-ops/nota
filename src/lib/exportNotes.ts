@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import type { Note } from "@/hooks/useNotes";
 import { yjsStore } from "@/lib/yjsStore";
+import { filledPropEntries, type PropDef } from "@/lib/noteProps";
 import { isValidMeta } from "@/lib/vault";
 // Schematy (zod) ładują się dopiero przy imporcie/backupie — nie ma ich w startowym bundlu.
 import type { FullBackup } from "@/lib/noteSchema";
@@ -259,7 +260,7 @@ export function download(content: string, filename: string, type: string) {
   URL.revokeObjectURL(url);
 }
 
-export async function exportToMarkdown(notes: Note[]) {
+export async function exportToMarkdown(notes: Note[], propDefs: PropDef[] = []) {
   const lines: string[] = [];
   lines.push(`# NOTKI — eksport`);
   lines.push(`> ${format(new Date(), "d MMMM yyyy, HH:mm", { locale: pl })}`);
@@ -272,6 +273,8 @@ export async function exportToMarkdown(notes: Note[]) {
     if (note.title) lines.push(`## ${note.title}`);
     if (note.labels.length) lines.push(`*Etykiety: ${note.labels.join(", ")}*`);
     if (note.reminder) lines.push(`*Przypomnienie: ${format(new Date(note.reminder), "d MMM yyyy, HH:mm", { locale: pl })}*`);
+    const fields = filledPropEntries(propDefs, note.props);
+    if (fields.length) lines.push(`*${fields.map(([name, text]) => `${name}: ${text}`).join(" · ")}*`);
     if (note.content) lines.push("", note.content);
     if (note.checklist?.length) {
       lines.push("");

@@ -168,3 +168,11 @@ export function makePropDef(defs: PropDef[], name: string, type: PropType, optio
   const order = defs.reduce((max, d) => Math.max(max, d.order), -1) + 1;
   return cleanPropDef({ id, name, type, options: type === "select" ? options : undefined, order });
 }
+
+/** Pola z wartością, w kolejności pokazywania, jako pary `[nazwa, tekst]` — do eksportu tekstowego. */
+export function filledPropEntries(defs: PropDef[], props: NoteProps | undefined): [string, string][] {
+  return [...defs]
+    .sort((a, b) => a.order - b.order)
+    .map((def): [string, string] => [def.name, formatPropValue(def, props)])
+    .filter(([, text]) => text !== "");
+}

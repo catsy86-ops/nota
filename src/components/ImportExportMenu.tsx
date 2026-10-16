@@ -19,7 +19,7 @@ interface ImportExportMenuProps {
 
 /** Eksport notatek (JSON, PDF, Markdown, HTML) import z JSON oraz z Google Keep / Markdown — w nagłówku i w „Więcej” na telefonie. */
 export function ImportExportMenu({ children, onImport, onDone, align = "end" }: ImportExportMenuProps) {
-  const { notes, archivedNotes, folders } = useNotesContext();
+  const { notes, archivedNotes, folders, propDefs } = useNotesContext();
   const all = () => [...notes, ...archivedNotes];
   const run = (fn: () => void) => () => { fn(); onDone?.(); };
   return (
@@ -34,12 +34,12 @@ export function ImportExportMenu({ children, onImport, onDone, align = "end" }: 
           <FileText className="w-4 h-4 mr-2" />
           Eksportuj jako PDF
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={run(() => exportToMarkdown(all()))}>
+        <DropdownMenuItem onClick={run(() => exportToMarkdown(all(), propDefs))}>
           <FileText className="w-4 h-4 mr-2" />
           Eksportuj jako Markdown
         </DropdownMenuItem>
         <DropdownMenuItem onClick={run(() => {
-          const zip = downloadNotesZip(all(), folders, `notatki-${new Date().toISOString().slice(0, 10)}.zip`);
+          const zip = downloadNotesZip(all(), folders, `notatki-${new Date().toISOString().slice(0, 10)}.zip`, propDefs);
           toast.success(`Pobrano ${zip.count} notatek (ZIP z plikami .md)`, {
             description: zip.skippedPrivate ? `Pominięto ${zip.skippedPrivate} prywatnych — ich treść jest zaszyfrowana.` : "Foldery jako katalogi; bez obrazów i załączników.",
           });

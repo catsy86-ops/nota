@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import type { Folder, Note } from "@/hooks/useNotes";
+import { filledPropEntries, type PropDef } from "@/lib/noteProps";
 
 /**
  * Eksport notatek jako ZIP z osobnymi plikami `.md` (frontmatter zgodny z importem
@@ -80,8 +81,8 @@ export function safeFileName(raw: string, fallback = "Bez tytułu"): string {
 const quote = (s: string) => `"${s.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 const stamp = (ms: number) => format(new Date(ms), "yyyy-MM-dd HH:mm");
 
-/** Jedna notatka jako plik `.md`: frontmatter + treść + lista zadań na końcu. */
-export function noteToMarkdownFile(note: Note): string {
+/** Jedna notatka jako plik `.md`: frontmatter + treść + lista zadań na końcu. Pola jako jeden klucz `props` (mapa JSON = poprawny YAML), żeby nazwa pola nie zderzyła się z `title`/`tags`. */
+export function noteToMarkdownFile(note: Note, propDefs: PropDef[] = []): string {
   const fm: string[] = ["---"];
   if (note.title.trim()) fm.push(`title: ${quote(note.title.trim())}`);
   if (note.labels.length) fm.push(`tags: [${note.labels.map(quote).join(", ")}]`);
@@ -91,6 +92,8 @@ export function noteToMarkdownFile(note: Note): string {
   if (note.pinned) fm.push("pinned: true");
   if (note.icon) fm.push(`icon: ${quote(note.icon)}`);
   if (note.favorite) fm.push("favorite: true");
+  const props = Object.fromEntries(filledPropEntries(propDefs, note.props));
+  if (Object.keys(props).length) fm.push(`props: ${JSON.stringify(props)}`);
   fm.push("---", "");
   const body: string[] = [];
   if (note.content.trim()) body.push(note.content.trim());
@@ -104,7 +107,7 @@ export function noteToMarkdownFile(note: Note): string {
 export interface NotesZip { bytes: Uint8Array; count: number; skippedPrivate: number }
 
 /** Archiwum z podanych notatek; foldery jako katalogi, powtórzone tytuły dostają numer. */
-export function buildNotesZip(notes: Note[], folders: Folder[], now: Date = new Date()): NotesZip {
+export function buildNotesZip(notes: Note[], folders: Folder[], now: Date = new Date(), propDefs: PropDef[] = []): NotesZip {
   const byId = new Map(folders.map((f) => [f.id, f]));
   const pathOf = (id: string | null | undefined): string => {
     const parts: string[] = [];
@@ -126,14 +129,14 @@ export function buildNotesZip(notes: Note[], folders: Folder[], now: Date = new 
     let name = `${dir}${base}.md`;
     for (let i = 2; used.has(name.toLowerCase()); i++) name = `${dir}${base} (${i}).md`;
     used.add(name.toLowerCase());
-    entries.push({ name, data: TEXT.encode(noteToMarkdownFile(n)) });
+    entries.push({ name, data: TEXT.encode(noteToMarkdownFile(n, propDefs)) });
   }
   return { bytes: buildZip(entries, now), count: entries.length, skippedPrivate };
 }
 
 /** Pobranie archiwum jako pliku; potwierdza toastem i zwraca liczbę zapisanych notatek. */
-export function downloadNotesZip(notes: Note[], folders: Folder[], filename: string): NotesZip {
-  const zip = buildNotesZip(notes, folders);
+export function downloadNotesZip(notes: Note[], folders: Folder[], filename: string, propDefs: PropDef[] = []): NotesZip {
+  const zip = buildNotesZip(notes, folders, new Date(), propDefs);
   const url = URL.createObjectURL(new Blob([zip.bytes as unknown as BlobPart], { type: "application/zip" }));
   const a = document.createElement("a");
   a.href = url;

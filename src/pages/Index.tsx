@@ -1121,7 +1121,7 @@ const Index = () => {
       onExport={() => {
         const ids = selectedIds;
         const chosen = [...notes, ...archivedNotes, ...trashedNotes].filter((n) => ids.has(n.id));
-        const zip = downloadNotesZip(chosen, folders, `notatki-${new Date().toISOString().slice(0, 10)}.zip`);
+        const zip = downloadNotesZip(chosen, folders, `notatki-${new Date().toISOString().slice(0, 10)}.zip`, propDefs);
         toast.success(`Pobrano ${zip.count} ${zip.count === 1 ? "notatkę" : "notatek"} (ZIP z plikami .md)`, {
           description: zip.skippedPrivate ? `Pominięto ${zip.skippedPrivate} prywatnych — ich treść jest zaszyfrowana.` : "Bez obrazów i załączników. Da się je wczytać z powrotem przez Importuj → Markdown.",
         });

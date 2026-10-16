@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildNotesZip, buildZip, noteToMarkdownFile, safeFileName } from "./exportZip";
 import { listZip } from "./import/zip";
 import type { Folder, Note } from "@/hooks/useNotes";
+import type { PropDef } from "@/lib/noteProps";
 
 const note = (o: Partial<Note>): Note => ({
   id: "1", title: "", content: "", color: "default", pinned: false, archived: false, trashed: false, trashedAt: null,
@@ -62,5 +63,21 @@ describe("ikona w frontmatterze", () => {
     const parsed = parseMarkdownNote('---\nicon: "to nie jest emoji"\n---\ntreść', { path: "A.md" });
     expect(parsed.icon).toBeUndefined();
     expect(parsed.favorite).toBeUndefined();
+  });
+
+  it("pola z wartością trafiają do jednego klucza `props`, puste pomijane; nazwa pola nie nadpisuje `title`", async () => {
+    const defs: PropDef[] = [
+      { id: "a", name: "title", type: "text", order: 1 },
+      { id: "b", name: "Cena", type: "number", order: 0 },
+      { id: "c", name: "Status", type: "select", options: ["x"], order: 2 },
+    ];
+    const md = noteToMarkdownFile(note({ title: "Ofert", props: { a: "t", b: 12.5 } }), defs);
+    expect(md).toContain('title: "Ofert"');
+    expect(md).toContain('props: {"Cena":"12,5","title":"t"}');
+    expect(noteToMarkdownFile(note({ title: "Pusta", props: {} }), defs)).not.toContain("props:");
+    // czytnik importu zostawia zwykłe pola nietknięte
+    const { parseFrontmatter } = await import("./import/markdown");
+    const parsed = parseFrontmatter(md).data;
+    expect(parsed.title).toBe("Ofert");
   });
 });
