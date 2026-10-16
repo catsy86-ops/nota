@@ -157,10 +157,21 @@ export function cleanPropDefs(raw: unknown): PropDef[] {
   return out.sort((a, b) => a.order - b.order).slice(0, PROP_LIMITS.defs);
 }
 
+/** Klucz porównania nazw pól: bez spacji na brzegach i bez wielkości liter. */
+export function propNameKey(name: string): string {
+  return name.trim().toLocaleLowerCase("pl");
+}
+
 /** Czy nazwa jest już zajęta (bez wielkości liter); `exceptId` pozwala zostawić nazwę własnej definicji. */
 export function propNameTaken(defs: PropDef[], name: string, exceptId?: string): boolean {
-  const n = name.trim().toLocaleLowerCase("pl");
-  return defs.some((d) => d.id !== exceptId && d.name.trim().toLocaleLowerCase("pl") === n);
+  const n = propNameKey(name);
+  return defs.some((d) => d.id !== exceptId && propNameKey(d.name) === n);
+}
+
+/** Definicja o tej nazwie (bez wielkości liter) — import dopasowuje pola z pliku po nazwie. */
+export function findPropDefByName(defs: PropDef[], name: string): PropDef | undefined {
+  const n = propNameKey(name);
+  return defs.find((d) => propNameKey(d.name) === n);
 }
 
 /** Nowa definicja z formularza. `options` liczy się tylko dla wyboru. */

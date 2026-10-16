@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { cleanTags, countImageEmbeds, extractTrailingTasks, parseFrontmatter, parseFrontmatterDate, parseMarkdownNote } from "./markdown";
+import { noteToMarkdownFile } from "@/lib/exportZip";
+import type { Note } from "@/hooks/useNotes";
+import type { PropDef } from "@/lib/noteProps";
+import { cleanTags, countImageEmbeds, extractTrailingTasks, parseFrontmatter, parseFrontmatterDate, parseMarkdownNote, parsePropsFrontmatter } from "./markdown";
 import { MD_INLINE_TAGS_NOTE, MD_PLAIN_NOTE, OBSIDIAN_NOTE } from "./__fixtures__/samples";
 
 describe("parseFrontmatter", () => {
@@ -79,5 +82,37 @@ describe("pomocnicze", () => {
   });
   it("countImageEmbeds liczy lokalne obrazy", () => {
     expect(countImageEmbeds("![[a.png]] ![x](b.jpg) ![w](https://x/y.png)")).toBe(2);
+  });
+});
+
+describe("parsePropsFrontmatter", () => {
+  it("czyta mapę JSON z nazwami pól i liczbami zapisanymi tekstem", () => {
+    expect(parsePropsFrontmatter('{"Cena": "1,5", "Status": "w toku", "Ilość": 3}')).toEqual({ Cena: "1,5", Status: "w toku", Ilość: 3 });
+  });
+  it("pomija zły JSON, tablice, puste wartości i typy inne niż tekst/liczba", () => {
+    expect(parsePropsFrontmatter("{zły json")).toEqual({});
+    expect(parsePropsFrontmatter('["a", "b"]')).toEqual({});
+    expect(parsePropsFrontmatter('{"": "x", "Puste": "  ", "Null": null, "Zagn": {"a": 1}}')).toEqual({});
+  });
+  it("nie zamienia klucza __proto__ w prototyp", () => {
+    const out = parsePropsFrontmatter('{"__proto__": "x", "Ok": "tak"}');
+    expect(Object.getPrototypeOf(out)).toBe(Object.prototype);
+    expect(out).toEqual({ Ok: "tak" });
+  });
+  it("parseMarkdownNote podaje props tylko gdy są, bez wpływu na resztę", () => {
+    const withProps = parseMarkdownNote('---\ntitle: "Zakup"\nprops: {"Cena": "12,50"}\n---\nTreść', { path: "Zakup.md" });
+    expect(withProps.props).toEqual({ Cena: "12,50" });
+    expect(withProps.title).toBe("Zakup");
+    expect("props" in parseMarkdownNote(MD_PLAIN_NOTE, { path: "Pomysł.md" })).toBe(false);
+  });
+});
+
+describe("eksport ZIP → import właściwości", () => {
+  it("plik z noteToMarkdownFile wraca z tymi samymi nazwami pól i wartościami tekstowymi", () => {
+    const defs: PropDef[] = [{ id: "c", name: "Cena", type: "number", order: 0 }, { id: "t", name: "title", type: "text", order: 1 }];
+    const note = { id: "1", title: "Ofert", content: "", color: "default", pinned: false, archived: false, trashed: false, trashedAt: null, labels: [], reminder: null, priority: "none", images: [], checklist: [], folderId: null, order: 0, createdAt: 0, updatedAt: 0, props: { c: 12.5, t: "tak" } } as Note;
+    const parsed = parseMarkdownNote(noteToMarkdownFile(note, defs), { path: "Ofert.md" });
+    expect(parsed.props).toEqual({ Cena: "12,5", title: "tak" });
+    expect(parsed.title).toBe("Ofert");
   });
 });

@@ -62,3 +62,43 @@ describe("commitImportPlan", () => {
     expect(yjsStore.projectFolders().map((f) => f.id)).toEqual(["f1"]);
   });
 });
+
+describe("commitImportPlan — właściwości z frontmattera props", () => {
+  const ZAKUPY = '---\ntitle: "Zakupy"\nprops: {"Cena": "12,50", "Termin": "2026-03-01", "Status": "w toku"}\n---\nTreść';
+  const INNE = '---\ntitle: "Inne"\nprops: {"cena": "7", "Status": "nieznany"}\n---\nx';
+
+  it("dopasowuje pola po nazwie, wnioskuje typy nowych i pomija wartości spoza opcji; cofnięcie usuwa tylko nowe pola", async () => {
+    yjsStore.upsertPropDef({ id: "st1", name: "Status", type: "select", options: ["w toku", "zamknięte"], order: 0 });
+    const plan = await buildImportPlan([
+      memorySource("Vault/Zakupy.md", ZAKUPY),
+      memorySource("Vault/Inne.md", INNE),
+    ]);
+    const result = await commitImportPlan(plan);
+    expect(result.createdPropDefIds).toHaveLength(2);
+
+    const defs = yjsStore.projectPropDefs();
+    const cena = defs.find((d) => d.name === "Cena")!;
+    expect(cena.type).toBe("number");
+    expect(defs.find((d) => d.name === "Termin")!.type).toBe("date");
+    expect(defs.find((d) => d.name === "Status")!.id).toBe("st1");
+    expect(defs.filter((d) => d.name.toLowerCase() === "cena")).toHaveLength(1);
+
+    const notes = yjsStore.projectNotes();
+    const zakupy = notes.find((n) => n.title === "Zakupy")!;
+    expect(zakupy.props).toEqual({ [cena.id]: 12.5, [defs.find((d) => d.name === "Termin")!.id]: "2026-03-01", st1: "w toku" });
+    const inne = notes.find((n) => n.title === "Inne")!;
+    expect(inne.props).toEqual({ [cena.id]: 7 });
+
+    undoImport(result);
+    expect(yjsStore.projectPropDefs().map((d) => d.id)).toEqual(["st1"]);
+  });
+
+  it("nie usuwa nowego pola, jeśli notatka spoza importu ma w nim wartość", async () => {
+    const keep = await commitImportPlan(await buildImportPlan([memorySource("Vault/Pomysł.md", MD_PLAIN_NOTE)]));
+    const result = await commitImportPlan(await buildImportPlan([memorySource("Vault/Zakupy.md", ZAKUPY)]));
+    const cena = yjsStore.projectPropDefs().find((d) => d.name === "Cena")!;
+    yjsStore.patchNote(keep.noteIds[0], { props: { [cena.id]: 99 } });
+    undoImport(result);
+    expect(yjsStore.projectPropDefs().map((d) => d.id)).toContain(cena.id);
+  });
+});

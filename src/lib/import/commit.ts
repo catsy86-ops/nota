@@ -1,9 +1,10 @@
 import type { Folder, Note } from "@/hooks/useNotes";
 import { logDiag } from "@/lib/diagnostics";
 import { imageStore } from "@/lib/imageStore";
+import { cleanPropDef, findPropDefByName, makePropDef, parsePropInput, PROP_LIMITS, propNameKey, type NoteProps, type PropDef, type PropType } from "@/lib/noteProps";
 import { yjsStore } from "@/lib/yjsStore";
 import { imageMimeFromName } from "./keep";
-import type { ImportPlan } from "./plan";
+import type { ImportPlan, PlannedNote } from "./plan";
 
 export interface ImportResult {
   noteIds: string[];
@@ -11,14 +12,59 @@ export interface ImportResult {
   createdFolderIds: string[];
   /** Etykiety, których wcześniej nie było. */
   createdLabels: string[];
+  /** Właściwości (definicje), których wcześniej nie było; cofnięcie usuwa je, jeśli nikt ich nie używa. */
+  createdPropDefIds: string[];
   imageCount: number;
   failedImages: number;
 }
 
 /**
+ * Typ nowego pola z wartości z pliku: liczba, data albo tekst. Eksport zapisuje liczby tekstem
+ * (z przecinkiem), więc wybiera pierwszy typ, który przyjmie wszystkie wartości tego pola.
+ */
+function inferPropType(values: string[]): PropType {
+  const fits = (type: PropType) => {
+    const probe = cleanPropDef({ id: "probe", name: "probe", type, order: 0 });
+    return !!probe && values.every((v) => parsePropInput(probe, v) !== undefined);
+  };
+  if (fits("number")) return "number";
+  if (fits("date")) return "date";
+  return "text";
+}
+
+/**
+ * Nazwy pól z plików → definicje. Istniejąca definicja o tej samej nazwie (bez wielkości liter)
+ * zostaje użyta; nieznane pole powstaje, o ile starczy miejsca (limit `PROP_LIMITS.defs`).
+ */
+function resolvePropDefs(notes: PlannedNote[], defs: PropDef[], created: string[]): Map<string, PropDef> {
+  const byKey = new Map<string, { name: string; values: string[] }>();
+  for (const n of notes) {
+    for (const [name, value] of Object.entries(n.props ?? {})) {
+      const key = propNameKey(name);
+      const entry = byKey.get(key) ?? { name, values: [] };
+      entry.values.push(String(value));
+      byKey.set(key, entry);
+    }
+  }
+  const out = new Map<string, PropDef>();
+  for (const [key, { name, values }] of byKey) {
+    const existing = findPropDefByName(defs, name);
+    if (existing) { out.set(key, existing); continue; }
+    if (defs.length >= PROP_LIMITS.defs) continue;
+    const def = makePropDef(defs, name, inferPropType(values));
+    if (!def) continue;
+    defs.push(def);
+    yjsStore.upsertPropDef(def);
+    created.push(def.id);
+    out.set(key, def);
+  }
+  return out;
+}
+
+/**
  * Zapisuje plan w bazie. Kolejność chroni dane: najpierw obrazy (błąd zapisu
  * — np. brak miejsca — przerywa, zanim powstanie jakakolwiek notatka), potem
- * foldery, etykiety i notatki. Każdy zapis przechodzi walidację `noteSchema`.
+ * foldery, etykiety, właściwości i notatki. Każdy zapis przechodzi walidację `noteSchema`.
  */
 export async function commitImportPlan(plan: ImportPlan): Promise<ImportResult> {
   const { noteSchema } = await import("@/lib/noteSchema");
@@ -62,7 +108,11 @@ export async function commitImportPlan(plan: ImportPlan): Promise<ImportResult> 
     return parentId;
   };
 
-  // 3. Notatki.
+  // 3. Właściwości: definicje przed notatkami, żeby wartości miały już do czego wskazywać.
+  const createdPropDefIds: string[] = [];
+  const propDefByKey = resolvePropDefs(plan.notes, yjsStore.projectPropDefs(), createdPropDefIds);
+
+  // 4. Notatki.
   const knownLabels = new Set(yjsStore.projectLabels());
   const createdLabels = new Set<string>();
   const noteIds: string[] = [];
@@ -70,6 +120,12 @@ export async function commitImportPlan(plan: ImportPlan): Promise<ImportResult> 
   for (const p of plan.notes) {
     const hashes = p.images.map((i) => hashBySource.get(i)).filter((h): h is string => typeof h === "string");
     imageCount += hashes.length;
+    const props: NoteProps = {};
+    for (const [name, raw] of Object.entries(p.props ?? {})) {
+      const def = propDefByKey.get(propNameKey(name));
+      const value = def && parsePropInput(def, String(raw));
+      if (def && value !== null && value !== undefined) props[def.id] = value;
+    }
     const created = p.createdAt ?? p.updatedAt ?? now;
     const updated = Math.max(p.updatedAt ?? created, created);
     const note: Note = noteSchema.parse({
@@ -80,6 +136,7 @@ export async function commitImportPlan(plan: ImportPlan): Promise<ImportResult> 
       pinned: p.pinned && !p.archived,
       ...(p.icon ? { icon: p.icon } : {}),
       ...(p.favorite ? { favorite: true } : {}),
+      ...(Object.keys(props).length ? { props } : {}),
       archived: p.archived,
       trashed: false,
       trashedAt: null,
@@ -101,7 +158,7 @@ export async function commitImportPlan(plan: ImportPlan): Promise<ImportResult> 
     }
   }
 
-  return { noteIds, createdFolderIds, createdLabels: [...createdLabels], imageCount, failedImages };
+  return { noteIds, createdFolderIds, createdLabels: [...createdLabels], createdPropDefIds, imageCount, failedImages };
 }
 
 /**
@@ -126,5 +183,10 @@ export function undoImport(result: ImportResult): void {
   const used = new Set(yjsStore.projectNotes().flatMap((n) => n.labels));
   for (const l of result.createdLabels) {
     if (!used.has(l)) yjsStore.removeLabelEverywhere(l);
+  }
+  // Pole zostaje, jeśli jakaś notatka ma w nim wartość (dodaną po imporcie albo wcześniej).
+  const usedProps = new Set(yjsStore.projectNotes().flatMap((n) => Object.keys(n.props ?? {})));
+  for (const id of result.createdPropDefIds) {
+    if (!usedProps.has(id)) yjsStore.deletePropDef(id);
   }
 }

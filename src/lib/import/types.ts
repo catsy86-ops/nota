@@ -1,4 +1,5 @@
 import type { NoteColor } from "@/hooks/useNotes";
+import type { PropValue } from "@/lib/noteProps";
 
 /** Plik wejściowy importu — z wybranych plików, folderu albo z wnętrza archiwum ZIP. */
 export interface SourceFile {
@@ -33,6 +34,8 @@ export interface ParsedNote {
   icon?: string;
   /** Ulubiona (frontmatter `favorite: true`). */
   favorite?: boolean;
+  /** Właściwości z frontmattera `props` (klucz = nazwa pola, nie id); puste = brak. */
+  props?: Record<string, PropValue>;
   archived: boolean;
   trashed: boolean;
   /** `null` = źródło nie podało czasu (wtedy używamy daty pliku/„teraz”). */

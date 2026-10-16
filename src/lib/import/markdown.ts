@@ -1,3 +1,4 @@
+import { PROP_LIMITS, type PropValue } from "@/lib/noteProps";
 import type { ParsedNote } from "./types";
 
 export type FrontmatterValue = string | string[];
@@ -74,6 +75,25 @@ export function parseFrontmatterDate(value: string): number | null {
   return Number.isFinite(p) && p > 0 ? p : null;
 }
 
+/**
+ * Klucz `props` z eksportu ZIP: jedna linia JSON `{"Nazwa": "wartość"}` (liczby zapisane tekstem z przecinkiem).
+ * Zły JSON, tablica albo wartość innego typu są pomijane — jak zły wpis w reszcie frontmattera.
+ */
+export function parsePropsFrontmatter(raw: string): Record<string, PropValue> {
+  const out: Record<string, PropValue> = {};
+  if (!raw.startsWith("{")) return out;
+  let parsed: unknown;
+  try { parsed = JSON.parse(raw); } catch { return out; }
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return out;
+  for (const [rawName, value] of Object.entries(parsed)) {
+    const name = rawName.trim().slice(0, PROP_LIMITS.name);
+    if (!name || name === "__proto__" || Object.keys(out).length >= PROP_LIMITS.defs) continue;
+    if (typeof value === "number" && Number.isFinite(value)) out[name] = value;
+    else if (typeof value === "string" && value.trim()) out[name] = value.trim().slice(0, PROP_LIMITS.text);
+  }
+  return out;
+}
+
 const TASK_RE = /^\s*[-*+]\s+\[([ xX])\]\s+(.*)$/;
 
 /** Końcowy blok `- [ ] zadanie` → lista kontrolna (reszta zostaje treścią). */
@@ -128,6 +148,7 @@ export function parseMarkdownNote(text: string, ctx: MarkdownContext): ParsedNot
   const updated = parseFrontmatterDate(asString(data.updated ?? data.modified ?? data.updated_at ?? data["date modified"]));
   const fileTime = ctx.lastModified && ctx.lastModified > 0 ? ctx.lastModified : null;
   const truthy = (v: FrontmatterValue | undefined) => /^(true|yes|tak)$/i.test(asString(v).trim());
+  const props = parsePropsFrontmatter(asString(data.props));
   // Ikona: krótki napis (emoji) bez znaków sterujących — frontmatter bywa pisany ręcznie.
   const rawIcon = asString(data.icon).trim();
   const icon = rawIcon && [...rawIcon].length <= 4 && [...rawIcon].every((c) => c.charCodeAt(0) > 31) ? rawIcon : "";
@@ -143,6 +164,7 @@ export function parseMarkdownNote(text: string, ctx: MarkdownContext): ParsedNot
     pinned: truthy(data.pinned),
     ...(icon ? { icon } : {}),
     ...(truthy(data.favorite) ? { favorite: true } : {}),
+    ...(Object.keys(props).length ? { props } : {}),
     archived: truthy(data.archived),
     trashed: false,
     createdAt: created ?? null,
