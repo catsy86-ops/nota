@@ -60,12 +60,12 @@ describe("parseSpokenEntry — cały wpis z jednej wypowiedzi", () => {
 });
 
 describe("parseSpokenEntry — braki materiału głosem", () => {
-  it("„brakuje” po budowie: pozycje z ilością (liczba z jednostką), wielkość liter jak padło", () => {
+  it("„brakuje” po budowie: pozycje z ilością, pierwsze słowo z dopełniacza do mianownika, reszta jak padła", () => {
     expect(parseSpokenEntry("lipowa brakuje kleju do PCV i rury PEX 16 pięćdziesiąt metrów", ctx)).toEqual({
       site: "Lipowa 5",
       fittings: [],
       text: "",
-      shortages: [{ text: "Kleju do PCV", qty: "" }, { text: "Rury PEX 16", qty: "50 m" }],
+      shortages: [{ text: "Klej do PCV", qty: "" }, { text: "Rura PEX 16", qty: "50 m" }],
       structured: true,
     });
   });
@@ -82,6 +82,11 @@ describe("parseSpokenEntry — braki materiału głosem", () => {
     const r = parseSpokenEntry("Polna, brakuje: syfon", ctx);
     expect(r.site).toBe("Polna 2");
     expect(r.shortages).toEqual([{ text: "Syfon", qty: "" }]);
+  });
+
+  it("po „do zamówienia” mianownik zostaje („rury” to liczba mnoga), nieznane słowo bez zmian", () => {
+    expect(parseSpokenEntry("do zamówienia rury PEX 16", ctx).shortages).toEqual([{ text: "Rury PEX 16", qty: "" }]);
+    expect(parseSpokenEntry("brakuje rotopiany", ctx).shortages).toEqual([{ text: "Rotopiany", qty: "" }]);
   });
 
   it("„brak” (nie „brakuje”) to zwykły problem w tekście, nie braki", () => {

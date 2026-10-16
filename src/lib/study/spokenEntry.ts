@@ -37,6 +37,22 @@ export interface SpokenShortage {
   qty: string;
 }
 
+/**
+ * Po „brakuje” materiał pada w dopełniaczu („brakuje kleju”). Pierwsze słowo pozycji wraca do mianownika
+ * dla częstych materiałów instalatora; reszta zostaje, jak padła. Klucze bez ogonków (`fold`).
+ */
+const GENITIVE_TO_NOMINATIVE: Record<string, string> = {
+  kleju: "klej", rury: "rura", rur: "rury", rurki: "rurka", rurek: "rurki", otuliny: "otulina", otulin: "otuliny",
+  syfonu: "syfon", syfonow: "syfony", zaworu: "zawór", zaworow: "zawory", tasmy: "taśma", silikonu: "silikon",
+  pianki: "pianka", ksztaltek: "kształtki", uszczelek: "uszczelki", obejmy: "obejma", obejm: "obejmy",
+  hakow: "haki", kolkow: "kołki", wkretow: "wkręty", pakul: "pakuły", pasty: "pasta", mufy: "mufa", muf: "mufy",
+  trojnika: "trójnik", trojnikow: "trójniki", kolana: "kolano", kolan: "kolana", kolanka: "kolanko",
+  zlaczki: "złączka", zlaczek: "złączki", redukcji: "redukcja", korka: "korek", korkow: "korki",
+  rewizji: "rewizja", kielicha: "kielich", nypla: "nypel", srubunku: "śrubunek", cementu: "cement",
+  gipsu: "gips", zaprawy: "zaprawa", folii: "folia", grzejnika: "grzejnik", grzejnikow: "grzejniki",
+  baterii: "bateria", odplywu: "odpływ", kratki: "kratka", stelaza: "stelaż", miski: "miska",
+};
+
 /** Słowa przełączające resztę wypowiedzi w listę braków. */
 const SHORTAGE_MARKERS = new Set(["brakuje", "zamowic"]);
 /** Jednostki: skrót albo `null` = zostaw słowo, jak padło („2 worki”). */
@@ -121,7 +137,8 @@ export function parseSpokenEntry(
   // „Lipowa, brakuje kleju do PCV i rury PEX 16 50 metrów” — reszta to braki materiału, nie wpis.
   const lead = shortageMarker(tokens, i);
   if (lead > 0) {
-    const shortages = parseShortages(tokens.slice(i + lead));
+    // Po „brakuje” / „zamówić” — dopełniacz („brakuje kleju”, „zamówić rurę” ma biernik, tu nie ruszamy).
+    const shortages = parseShortages(tokens.slice(i + lead), fold(tokens[i]) === "brakuje");
     return { ...(site ? { site } : {}), ...(kind ? { kind } : {}), fittings: [], text: "", shortages, structured: true };
   }
 
@@ -191,7 +208,7 @@ function numberize(tokens: string[]): string[] {
 }
 
 /** Pozycje braków: rozdzielone przecinkiem albo „i/oraz/plus”; ilość = liczba z jednostką. */
-function parseShortages(tokens: string[]): SpokenShortage[] {
+function parseShortages(tokens: string[], genitive = false): SpokenShortage[] {
   const groups: string[][] = [[]];
   for (const t of tokens) {
     if (isSep(t) || CONJ.has(fold(t))) { if (groups[groups.length - 1].length > 0) groups.push([]); continue; }
@@ -208,6 +225,10 @@ function parseShortages(tokens: string[]): SpokenShortage[] {
         words.splice(k, 2);
         break;
       }
+    }
+    if (genitive && words.length > 0) {
+      const nominative = GENITIVE_TO_NOMINATIVE[fold(words[0])];
+      if (nominative) words[0] = nominative;
     }
     const text = words.join(" ").trim();
     if (!text || !/\p{L}/u.test(text)) continue;
