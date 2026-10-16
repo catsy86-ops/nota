@@ -322,3 +322,20 @@ describe("listy karty budowy — osobne pozycje w dokumencie", () => {
     expect(a.get().sites.k1.stages).toEqual([]);
   });
 });
+
+describe("dokumenty budowy w dokumencie", () => {
+  const H = (c: string) => c.repeat(64);
+  it("odniesienia: dokumenty chronione przed sprzątaniem; duży PDF nie jedzie do innego urządzenia", () => {
+    const doc = new Y.Doc();
+    const s = createYStudy(doc);
+    s.saveSite({ id: "a", name: "Lipowa", address: "", investor: "", created: 1 });
+    s.setSiteList("a", "docs", [
+      { id: H("1"), name: "rzut.jpg", size: 5 * 1024 * 1024, type: "image/jpeg", at: 1 },
+      { id: H("2"), name: "maly.pdf", size: 1000, type: "application/pdf", at: 2 },
+      { id: H("3"), name: "duzy.pdf", size: 5 * 1024 * 1024, type: "application/pdf", at: 3 },
+    ], []);
+    expect([...journalRefsIn(doc)].sort()).toEqual([H("1"), H("2"), H("3")]);
+    expect([...journalRefsIn(doc, true)].sort()).toEqual([H("1"), H("2")]);
+    expect(s.get().sites.a.docs?.map((d) => d.name)).toEqual(["rzut.jpg", "maly.pdf", "duzy.pdf"]);
+  });
+});

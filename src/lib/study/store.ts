@@ -14,6 +14,7 @@ import { cleanStages, type SiteStage } from "./stages";
 import { cleanShortages, logOrder, type OrderLogEntry, type Shortage } from "./shortages";
 import { siteOrder } from "./order";
 import { cleanSiteHours, type SiteHours } from "./siteHours";
+import { cleanSiteDocs, type SiteDoc } from "./siteDocs";
 import {
   cleanEntryStage, JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, JOURNAL_SOLUTION_MAX, SITE_MAX,
   type Column, type JournalEntry, type JournalKind, type StudyState,
@@ -411,7 +412,7 @@ function patchSiteCard(id: string, patch: Partial<Pick<SiteCard, "orderedAt">>) 
  * nie zapisana (np. domyślne etapy) to pusta baza: wtedy zapisują się wszystkie pozycje, nie tylko zmienione.
  * Budowa znana tylko z nazw we wpisach dostaje przy tym kartę w dokumencie.
  */
-function siteListBase<T>(id: string, field: "stages" | "shortages" | "orders" | "hours", uiBase: readonly T[] | undefined): readonly T[] | null {
+function siteListBase<T>(id: string, field: "stages" | "shortages" | "orders" | "hours" | "docs", uiBase: readonly T[] | undefined): readonly T[] | null {
   const s = getStudy();
   const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
   if (!prev) return null;
@@ -462,6 +463,13 @@ export function setDayHours(day: string, minutes: Readonly<Record<string, number
     const next = min > 0 ? [...others, { id: day, minutes: min }] : others;
     yStudy.setSiteList(id, "hours", cleanSiteHours(next) ?? [], from);
   }
+}
+
+/** Plany i dokumenty budowy po zmianie (dodanie, usunięcie); `base` jak przy brakach. */
+export function setSiteDocs(id: string, docs: SiteDoc[], base?: readonly SiteDoc[]) {
+  const from = siteListBase(id, "docs", base);
+  if (from === null) return;
+  yStudy.setSiteList(id, "docs", cleanSiteDocs(docs) ?? [], from);
 }
 
 /** Budowa do archiwum (`true`) albo z powrotem czynna. */

@@ -2,6 +2,7 @@ import type { SiteCard } from "./sites";
 import type { SiteStage } from "./stages";
 import type { OrderLogEntry, Shortage } from "./shortages";
 import type { SiteHours } from "./siteHours";
+import type { SiteDoc } from "./siteDocs";
 
 /**
  * Listy karty budowy (etapy, braki, historia zamówień) w dokumencie: każda pozycja to osobny klucz
@@ -11,9 +12,9 @@ import type { SiteHours } from "./siteHours";
  * Czysta logika bez `yjs` — zapis w `yStudy.ts`.
  */
 
-export type SiteListKind = "stage" | "short" | "order" | "hours";
-export const SITE_LIST_KINDS: SiteListKind[] = ["stage", "short", "order", "hours"];
-export const LIST_FIELD = { stage: "stages", short: "shortages", order: "orders", hours: "hours" } as const satisfies Record<SiteListKind, keyof SiteCard>;
+export type SiteListKind = "stage" | "short" | "order" | "hours" | "docs";
+export const SITE_LIST_KINDS: SiteListKind[] = ["stage", "short", "order", "hours", "docs"];
+export const LIST_FIELD = { stage: "stages", short: "shortages", order: "orders", hours: "hours", docs: "docs" } as const satisfies Record<SiteListKind, keyof SiteCard>;
 
 const SEP = "\u0001";
 export const itemKey = (siteId: string, kind: SiteListKind, id: string) => [siteId, kind, id].join(SEP);
@@ -25,7 +26,7 @@ export interface StageItem { name: string; order: number; done?: number }
 /** Id pozycji listy w kluczu mapy. */
 export function listItemId(kind: SiteListKind, item: unknown): string {
   if (kind === "order") return String((item as OrderLogEntry).at);
-  return (item as SiteStage | Shortage | SiteHours).id;
+  return (item as SiteStage | Shortage | SiteHours | SiteDoc).id;
 }
 
 /** Wartość pozycji w mapie (bez kolejności etapu — tę ustala zapis). */
@@ -39,6 +40,7 @@ export function listItemValue(kind: SiteListKind, item: unknown): unknown {
     return { at: o.at, items: o.items.map((f) => ({ ...f })) };
   }
   if (kind === "hours") return { minutes: (item as SiteHours).minutes };
+  if (kind === "docs") { const { id: _id, ...rest } = item as SiteDoc; return rest; }
   return { ...(item as Shortage) };
 }
 
@@ -52,7 +54,7 @@ export function sameItem(kind: SiteListKind, a: unknown, b: unknown): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-export type SiteLists = Partial<Pick<SiteCard, "stages" | "shortages" | "orders" | "hours">>;
+export type SiteLists = Partial<Pick<SiteCard, "stages" | "shortages" | "orders" | "hours" | "docs">>;
 
 /**
  * Wpisy mapy (wszystkie budowy) → listy per budowa. Lista jest, gdy ma znacznik albo choć jedną
@@ -64,6 +66,7 @@ export function composeSiteLists(entries: Iterable<[string, unknown]>): Map<stri
   const shortages = new Map<string, Shortage[]>();
   const orders = new Map<string, OrderLogEntry[]>();
   const hours = new Map<string, SiteHours[]>();
+  const docs = new Map<string, SiteDoc[]>();
   const seen = new Map<string, Set<SiteListKind>>();
   const mark = (siteId: string, kind: SiteListKind) => {
     const s = seen.get(siteId) ?? new Set<SiteListKind>();
@@ -93,6 +96,9 @@ export function composeSiteLists(entries: Iterable<[string, unknown]>): Map<stri
     } else if (kind === "hours") {
       hours.set(siteId, [...(hours.get(siteId) ?? []), { id, minutes: (value as Partial<SiteHours>).minutes as number }]);
       mark(siteId, "hours");
+    } else if (kind === "docs") {
+      docs.set(siteId, [...(docs.get(siteId) ?? []), { ...(value as Omit<SiteDoc, "id">), id }]);
+      mark(siteId, "docs");
     }
   }
   const out = new Map<string, SiteLists>();
@@ -108,13 +114,14 @@ export function composeSiteLists(entries: Iterable<[string, unknown]>): Map<stri
     }
     if (kinds.has("order")) lists.orders = (orders.get(siteId) ?? []).sort((a, b) => a.at - b.at);
     if (kinds.has("hours")) lists.hours = (hours.get(siteId) ?? []).sort((a, b) => (a.id < b.id ? -1 : 1));
+    if (kinds.has("docs")) lists.docs = (docs.get(siteId) ?? []).sort((a, b) => (a.at ?? 0) - (b.at ?? 0) || (a.id < b.id ? -1 : 1));
     out.set(siteId, lists);
   }
   return out;
 }
 
 /** Karta bez list — te żyją w osobnej mapie. */
-export function stripLists<C extends SiteCard>(card: C): Omit<C, "stages" | "shortages" | "orders" | "hours"> {
-  const { stages: _s, shortages: _h, orders: _o, hours: _g, ...plain } = card;
+export function stripLists<C extends SiteCard>(card: C): Omit<C, "stages" | "shortages" | "orders" | "hours" | "docs"> {
+  const { stages: _s, shortages: _h, orders: _o, hours: _g, docs: _d, ...plain } = card;
   return plain;
 }

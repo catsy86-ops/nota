@@ -3,6 +3,7 @@ import { cleanStages, type SiteStage } from "./stages";
 import { cleanOrderLog, cleanShortages, type OrderLogEntry, type Shortage } from "./shortages";
 import { SITE_ACCESS_MAX, SITE_PHONE_MAX } from "./contact";
 import { cleanSiteHours, type SiteHours } from "./siteHours";
+import { cleanSiteDocs, type SiteDoc } from "./siteDocs";
 
 /**
  * Karty budów dziennika. Wpis trzyma `siteId` i kopię nazwy (`site`) — starsza wersja
@@ -41,6 +42,8 @@ export interface SiteCard {
   orders?: OrderLogEntry[];
   /** Godziny pracy na tej budowie, po jednej pozycji na dzień (`siteHours.ts`); brak = nic nie wpisano. */
   hours?: SiteHours[];
+  /** Plany i dokumenty budowy (`siteDocs.ts`); brak = nic nie dodano. */
+  docs?: SiteDoc[];
 }
 
 export const SITE_NAME_MAX = 120;
@@ -95,6 +98,7 @@ export function cleanSite(raw: unknown): SiteCard | null {
     ...optional("shortages", cleanShortages(s.shortages)),
     ...optional("orders", cleanOrderLog(s.orders)),
     ...optional("hours", cleanSiteHours(s.hours)),
+    ...optional("docs", cleanSiteDocs(s.docs)),
   };
 }
 

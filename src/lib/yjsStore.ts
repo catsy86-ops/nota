@@ -714,7 +714,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
       if (Array.isArray(list)) for (const r of list) if (typeof r === "string") refs.add(r);
     });
     referencedAttachments().forEach((a, hash) => { if (isAttachmentSyncable(a)) refs.add(hash); });
-    for (const r of journalRefsIn(doc)) refs.add(r);
+    for (const r of journalRefsIn(doc, true)) refs.add(r);
     return refs;
   }
 

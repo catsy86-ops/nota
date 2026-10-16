@@ -16,6 +16,7 @@ import { downloadSiteZip } from "@/lib/study/siteZip";
 import { SiteOrderPanel } from "./SiteOrderPanel";
 import { SiteStagesPanel } from "./SiteStagesPanel";
 import { SiteShortagesPanel } from "./SiteShortagesPanel";
+import { SiteDocsPanel } from "./SiteDocsPanel";
 import { PrintRoot } from "./PrintRoot";
 import { HandoverPaper } from "./HandoverPaper";
 import { buildHandover, handoverText, type Handover } from "@/lib/study/handover";
@@ -101,13 +102,15 @@ export function SiteCardDialog({
         shifts,
         topicTitle,
       });
-      const res = await downloadSiteZip(report);
+      const res = await downloadSiteZip(report, site.docs ?? []);
       haptic("success");
       const photos = `${res.photos} ${pluralPl(res.photos, ["zdjęcie", "zdjęcia", "zdjęć"])}`;
+      const docs = res.docs > 0 ? `, ${res.docs} ${pluralPl(res.docs, ["dokument", "dokumenty", "dokumentów"])}` : "";
+      const missing = res.missingPhotos + res.missingDocs;
       toast.success(
-        res.missingPhotos > 0
-          ? `Paczka gotowa: raport i ${photos}. ${res.missingPhotos} bez bajtów na tym urządzeniu — pominięte.`
-          : `Paczka gotowa: raport i ${photos}`,
+        missing > 0
+          ? `Paczka gotowa: raport i ${photos}${docs}. ${missing} bez bajtów na tym urządzeniu — pominięte.`
+          : `Paczka gotowa: raport i ${photos}${docs}`,
       );
     } catch {
       toast.error("Nie udało się przygotować paczki");
@@ -286,6 +289,7 @@ export function SiteCardDialog({
               <SiteStagesPanel site={site} />
               <SiteOrderPanel site={site} />
               <SiteShortagesPanel site={site} />
+              <SiteDocsPanel site={site} />
             </div>
 
             <div className="grid grid-cols-2 gap-2 border-t border-border px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">

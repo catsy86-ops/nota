@@ -65,3 +65,19 @@ describe("buildSiteZip", () => {
     expect(text(zip.bytes)).toContain("zdjecia/02.jpg");
   });
 });
+
+describe("buildSiteZip — dokumenty budowy", () => {
+  it("plany i dokumenty w katalogu dokumenty/ pod własnymi nazwami, bez nadpisań", async () => {
+    const read = async (ref: string) => (ref === REF_B ? undefined : { bytes: bytes(9), type: ref === REF_A ? "application/pdf" : "image/jpeg" });
+    const docs = [
+      { id: REF_A, name: "Rzut parteru.pdf", size: 1, type: "application/pdf", at: 1 },
+      { id: REF_C, name: "Rzut parteru.pdf", size: 1, type: "image/jpeg", at: 2 },
+      { id: REF_B, name: "brak.jpg", size: 1, type: "image/jpeg", at: 3 },
+    ];
+    const zip = await buildSiteZip({ ...report, images: [] }, read, new Date(2026, 9, 16), docs);
+    const names = text(zip.bytes);
+    expect(names).toContain("dokumenty/Rzut parteru.pdf");
+    expect(names).toContain("dokumenty/Rzut parteru (2).pdf");
+    expect(zip).toMatchObject({ docs: 2, missingDocs: 1, photos: 0 });
+  });
+});
