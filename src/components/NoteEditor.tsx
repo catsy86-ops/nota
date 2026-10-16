@@ -7,7 +7,10 @@ import { MarkdownRenderer, FormatToolbar } from "./MarkdownRenderer";
 import { AttachmentsPanel } from "./AttachmentsPanel";
 import { ChecklistConvertButtons, ChecklistEditor } from "./ChecklistEditor";
 import { EditorStats } from "./EditorStats";
-import { FindReplaceBar } from "./FindReplaceBar";
+import { lazy, Suspense } from "react";
+
+/** Pasek „Znajdź i zamień” (Ctrl+F/H) ładowany przy pierwszym użyciu. */
+const FindReplaceBar = lazy(() => import("./FindReplaceBar").then((m) => ({ default: m.FindReplaceBar })));
 
 /**
  * Edytor notatki: tytuł, pasek narzędzi, treść (z podglądem), lista zadań, załączniki
@@ -81,7 +84,7 @@ export function NoteEditor({
       >
       {/* W oknie `pr-*` zostawia miejsce na ✕ w prawym górnym rogu. */}
       <TitleField spellCheck={spellcheck} autoFocus value={editTitle} onChange={setEditTitle} onEnter={() => textareaRef.current?.focus()} className={cn("w-full bg-transparent font-display font-semibold text-foreground outline-hidden", full && "text-2xl pr-8 coarse:pr-12")} placeholder="Tytuł" />
-      {findOpen && <FindReplaceBar value={editContent} onChange={setEditContent} textareaRef={textareaRef} onClose={() => setFindOpen(false)} />}
+      {findOpen && <Suspense fallback={null}><FindReplaceBar value={editContent} onChange={setEditContent} textareaRef={textareaRef} onClose={() => setFindOpen(false)} /></Suspense>}
       <div className="flex items-center gap-1">
         <FormatToolbar onInsert={handleFormatInsert} nowrap={!full} />
         <button

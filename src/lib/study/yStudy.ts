@@ -256,13 +256,8 @@ export function stateFromDump(d: StudyDump): StudyState {
 }
 
 /** Klucze zdjęć dziennika w dokumencie — dla odśmiecania i synchronizacji obrazów. */
-export function journalRefsIn(doc: Y.Doc): Set<string> {
-  const refs = new Set<string>();
-  doc.getMap<JournalEntry>("studyJournal").forEach((e) => {
-    if (Array.isArray(e?.images)) for (const r of e.images) if (typeof r === "string" && isImageRef(r)) refs.add(r);
-  });
-  return refs;
-}
+// Klucze zdjęć dziennika w dokumencie — w osobnym, małym module (rdzeń synchronizacji go używa).
+export { journalRefsIn } from "./journalRefs";
 
 export function createYStudy(doc: Y.Doc) {
   const journal = doc.getMap<JournalEntry>("studyJournal");

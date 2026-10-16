@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle, type ReactNode } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo, forwardRef, useImperativeHandle, lazy, Suspense, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { useDictation } from "@/hooks/useDictation";
@@ -18,7 +18,8 @@ import { imageStore } from "@/lib/imageStore";
 import { NoteImage } from "./NoteImage";
 import { AttachmentsPanel, type AttachmentsPanelHandle } from "./AttachmentsPanel";
 import type { Attachment } from "@/lib/attachments";
-import { DrawingCanvas } from "./DrawingCanvas";
+// Płótno ładowane przy pierwszym „Rysuj” — nie wchodzi do paczki startowej.
+const DrawingCanvas = lazy(() => import("./DrawingCanvas").then((m) => ({ default: m.DrawingCanvas })));
 import { ChecklistConvertButtons, ChecklistEditor } from "./ChecklistEditor";
 import { FormatToolbar } from "./MarkdownRenderer";
 import { PriorityPicker } from "./PriorityPicker";
@@ -37,6 +38,7 @@ import { parsePastedUrl } from "@/lib/urlTitle";
 import { handleEditorKey } from "@/lib/editorKeysDom";
 import { EditorStats } from "./EditorStats";
 import { haptic } from "@/lib/haptics";
+import { useLatch } from "@/hooks/useLatch";
 
 /** Od czego zaczyna się nowa notatka (długie przytrzymanie „+” na telefonie). */
 export type ComposerAction = "note" | "list" | "dictate" | "image" | "draw";
@@ -168,6 +170,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
   const [checklist, setChecklist] = useState<ChecklistItem[]>(draft0?.checklist ?? []);
   const [showChecklist, setShowChecklist] = useState((draft0?.checklist.length ?? 0) > 0);
   const [showDrawing, setShowDrawing] = useState(false);
+  const drawingMounted = useLatch(showDrawing);
   /** Klucze tokenów, które użytkownik odrzucił chipem — zostają w tekście jak były. */
   const [ignored, setIgnored] = useState<ReadonlySet<string>>(new Set());
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -737,7 +740,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
     {/* Na telefonie zwinięty pasek dublował „+” z dolnej nawigacji i zabierał ~90 px nad notatkami — „+” rozwija ten sam edytor. */}
     {fullScreen ? createPortal(composer, document.body) : composer}
 
-    <DrawingCanvas
+    {drawingMounted && <Suspense fallback={null}><DrawingCanvas
       open={showDrawing}
       onOpenChange={setShowDrawing}
       onSave={(dataUrl) => {
@@ -745,7 +748,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
           .then((ref) => setImages((prev) => [...prev, ref]))
           .catch(() => toast.error("Nie udało się zapisać rysunku", { description: "Brakuje miejsca w pamięci przeglądarki." }));
       }}
-    />
+    /></Suspense>}
     </>
   );
 });

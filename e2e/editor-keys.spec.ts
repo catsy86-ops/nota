@@ -191,3 +191,23 @@ test("Alt+↑/↓ w liście zadań przenosi pozycję", async ({ page }) => {
   await expect(items.nth(0)).toHaveValue("chleb");
   await expect(items.nth(1)).toHaveValue("mleko");
 });
+
+test("w edytorze notatki: Ctrl+F otwiera „Znajdź i zamień”, „Zamień wszystkie” podmienia każde trafienie", async ({ page }) => {
+  const title = `Remont ${Date.now()}`;
+  await addNote(page, title);
+  await page.getByText(title).click();
+  const editor = page.locator("[data-note-id]").getByPlaceholder("Treść notatki...");
+  await editor.click();
+  await editor.fill("rura PEX, druga rura, trzecia rura");
+  await editor.press("Control+f");
+
+  // Pasek ładuje się leniwie przy pierwszym Ctrl+F.
+  const bar = page.getByRole("search", { name: "Znajdź i zamień w notatce" });
+  await expect(bar).toBeVisible();
+  await bar.getByRole("textbox", { name: "Znajdź" }).fill("rura");
+  await bar.getByRole("textbox", { name: "Zamień na" }).fill("rurka");
+  await bar.getByRole("button", { name: "Zamień wszystkie" }).click();
+  await expect(editor).toHaveValue("rurka PEX, druga rurka, trzecia rurka");
+  await bar.getByRole("button", { name: "Zamknij pasek" }).click();
+  await expect(bar).toHaveCount(0);
+});

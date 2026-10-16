@@ -13,8 +13,6 @@ import { logDiag } from "@/lib/diagnostics";
 import { imageStore, isEmbeddableImageDataUrl } from "@/lib/imageStore";
 import { journalImageRefs } from "@/lib/study/images";
 import { STUDY_STORAGE_KEY } from "@/lib/study/keys";
-import { studyDevice, studyReady, yStudy } from "@/lib/study/data";
-import { cleanDump, dumpFromLegacy, stateFromDump } from "@/lib/study/yStudy";
 import { restoreShifts, shiftStore, shiftsReady } from "@/lib/shifts/store";
 import { migrate } from "@/lib/shifts/model";
 import { BACKUP_ATTACHMENTS_BUDGET_BYTES, formatFileSize, type Attachment } from "@/lib/attachments";
@@ -102,6 +100,8 @@ export async function buildFullBackupWithReport(): Promise<{ backup: FullBackup;
   await yjsStore.ready();
   await versionsStore.load();
   await shiftsReady();
+  // Dane działu Praca ładowane dopiero tu — nie wchodzą do paczki startowej.
+  const [{ studyReady, yStudy }, { stateFromDump }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy")]);
   await studyReady();
   const { blobs, report } = await collectAttachmentBlobs();
   const study = yStudy.dump();
@@ -240,6 +240,7 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   const legacyStudy = backup.settings?.[STUDY_STORAGE_KEY];
   if (opts.study && (backup.study !== undefined || legacyStudy !== undefined)) {
     try {
+      const [{ studyDevice, studyReady, yStudy }, { cleanDump, dumpFromLegacy }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy")]);
       await studyReady();
       // Starsze kopie niosą Naukę tylko wśród ustawień, w kształcie dawnego zapisu.
       yStudy.replaceAll(backup.study !== undefined ? cleanDump(JSON.parse(backup.study)) : dumpFromLegacy(JSON.parse(legacyStudy!), studyDevice()));

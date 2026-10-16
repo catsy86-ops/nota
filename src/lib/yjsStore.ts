@@ -11,7 +11,7 @@ import type { Note, Folder, ChecklistItem } from "@/hooks/useNotes";
 import { logDiag } from "@/lib/diagnostics";
 import { NOTE_COVERS } from "@/lib/noteLook";
 import { cleanNoteProps, cleanPropDef, cleanPropDefs, type NoteProps, type PropDef } from "@/lib/noteProps";
-import { journalRefsIn } from "@/lib/study/yStudy";
+import { journalRefsIn } from "@/lib/study/journalRefs";
 import {
   NOTE_COLORS, PRIORITIES, REMINDER_REPEATS, REMOTE_LIMITS as LIM,
   safeBool, safeDailyDate, safeEnum, safeNullableNumber, safeNullableString, safeNumber,

@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Lightbulb, ListChecks, Users, BookOpen, Plane, Coffee, Plus, Pencil } from "lucide-react";
 import type { NoteColor, ChecklistItem } from "@/hooks/useNotes";
-import { CustomTemplateDialog } from "@/components/CustomTemplateDialog";
+// Okno własnego szablonu ładowane przy pierwszym otwarciu.
+const CustomTemplateDialog = lazy(() => import("@/components/CustomTemplateDialog").then((m) => ({ default: m.CustomTemplateDialog })));
 import { useCustomTemplates, type CustomTemplate } from "@/lib/customTemplates";
 import { renderTemplate } from "@/lib/templateVars";
 
@@ -160,7 +161,7 @@ export function QuickTemplates({ onPick, onCreateLabel, onDailyNote }: Props) {
       </button>
     </div>
     {editing !== undefined && (
-      <CustomTemplateDialog key={editing?.id ?? "new"} template={editing} onOpenChange={(o) => { if (!o) setEditing(undefined); }} />
+      <Suspense fallback={null}><CustomTemplateDialog key={editing?.id ?? "new"} template={editing} onOpenChange={(o) => { if (!o) setEditing(undefined); }} /></Suspense>
     )}
     </>
   );

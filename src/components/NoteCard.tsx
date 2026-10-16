@@ -1,4 +1,4 @@
-import { useState, useRef, memo, useEffect } from "react";
+import { useState, useRef, memo, useEffect, lazy, Suspense } from "react";
 import { markNoteOpened } from "@/lib/lastOpened";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { tween, dur, ease } from "@/lib/motion";
@@ -21,7 +21,8 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useSearchTerms } from "@/lib/searchTerms";
 import { firstSnippet } from "@/lib/searchHighlight";
-import { DrawingCanvas } from "./DrawingCanvas";
+// Płótno ładowane przy pierwszym „Rysuj” — nie wchodzi do paczki startowej.
+const DrawingCanvas = lazy(() => import("./DrawingCanvas").then((m) => ({ default: m.DrawingCanvas })));
 import { useTrashCountdown } from "@/hooks/useTrashCountdown";
 import { useViewPrefs, readingTimeMin } from "@/lib/viewPrefs";
 import { useNotesMeta } from "@/hooks/NotesProvider";
@@ -409,7 +410,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
 
       {deleteMounted && <DeleteNoteDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm} note={note} onDelete={onDelete} />}
 
-      {drawingMounted && <DrawingCanvas open={showDrawing} onOpenChange={setShowDrawing} onSave={addDrawing} />}
+      {drawingMounted && <Suspense fallback={null}><DrawingCanvas open={showDrawing} onOpenChange={setShowDrawing} onSave={addDrawing} /></Suspense>}
     </>
   );
 });

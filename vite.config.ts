@@ -49,7 +49,8 @@ export default defineConfig(() => ({
       filename: "sw.js",
       devOptions: { enabled: false },
       manifest: false,
-      includeAssets: ["favicon.png", "apple-touch-icon.png", "pwa-192.png", "pwa-512.png", "pwa-512-maskable.png", "offline.html"],
+      // Bez `includeAssets`: ikony i offline.html z `public/` łapie już `globPatterns` niżej — oba naraz
+      // dublowały je w liście precache sw.js (6 plików, ok. 0,3 MB liczone podwójnie).
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
         // Manifest-only asset: fetched by the OS install UI, never by the app
