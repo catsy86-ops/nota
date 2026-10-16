@@ -868,6 +868,39 @@ z treści).
 
 **Commit.** `8f01351` (2026-10-16).
 
+## Notatki — czytnik wydzielony z Index (plan Notatek, etap 4, pierwszy krok refaktoru)
+
+**Co robi.** Bez zmian dla użytkownika. Logika czytnika i prezentacji została przeniesiona z `Index.tsx` do hooka.
+
+**Gdzie jest.**
+- `src/hooks/useReaderNav.ts`: `useReaderNav({ notes, archivedNotes, trashedNotes, visibleNotes, presentingNoteId, setPresentingNoteId, paletteOpen, selectedIds, openNote })`.
+  Zwraca `previewId`, `readerId`, `readerNote`, `readerSteps`, `copyTarget`, `closeReader`, `showInReader`, `stepReader`, `editFromReader`.
+- `src/pages/Index.tsx`: wywołanie hooka w miejscu dawnego bloku; stan `presentingNoteId` zostaje w `Index`, bo ustawia go też klawiatura siatki.
+
+**Jak działa i dlaczego.** Hook nie trzyma własnego stanu poza tym, co było już w `gridKeyboardNav` i w `Index`, więc
+zachowanie się nie zmienia. Stan prezentacji zostawiony w `Index` (dwa miejsca go ustawiają: siatka i czytnik).
+
+**Stan etapu 4.** Pozostałe części refaktoru (`NoteCard.tsx`, reszta `Index.tsx`) są dalej do zrobienia — to wielosesyjny
+podział, każdy kawałek z własnym e2e.
+
+**Testy.** Charakteryzujące: `e2e/reader.spec.ts`, `reader-step.spec.ts`, `wikilinks.spec.ts`, `notes.spec.ts`,
+`editing.spec.ts`, `routes.spec.ts`, `tabs.spec.ts`, `search-highlight.spec.ts` — 28/28.
+
+**Commit.** `1ccb86d` (2026-10-16).
+
+## Notatki — tekst peera na żywo w otwartym edytorze (plan Notatek, etap 4, weryfikacja)
+
+**Co robi.** Gdy edytujesz notatkę, a drugie urządzenie dopisuje do niej tekst, ten tekst pojawia się w Twoim polu
+od razu, bez zapisu i bez wychodzenia z pola. Karetka zostaje przy znaku, który piszesz.
+
+**Gdzie jest.** `src/hooks/useLiveNoteText.ts` (podpięty w `NoteCard`): zdalna zmiana → `rebaseNoteTextEdit` → wstawienie
+do szkicu i przywrócenie zaznaczenia.
+
+**Stan.** Działało już wcześniej, ale test sprawdzał tekst dopiero po `blur`. Dodany test `e2e/live-text-focused.spec.ts`
+sprawdza przypadek z fokusem: tekst peera wchodzi do pola, a karetka zostaje za własnym tekstem. Zielony.
+
+**Commit.** `1ccb86d` (2026-10-16).
+
 ## Notatki — lista robocza szkiców (plan Notatek, etap 3.4)
 
 **Co robi.** W kompozytorze nowej notatki „Odłóż” zapisuje bieżący szkic na listę roboczą i otwiera pusty kompozytor.
