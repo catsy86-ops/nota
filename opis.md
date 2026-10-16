@@ -1530,7 +1530,8 @@ i nie będące podnotatkami. Przeniesienie do folderu albo nadanie etykiety usuw
 - Jest wpis „Skrzynka” w palecie poleceń (`CommandPalette.tsx`). Brak pozycji w dolnej nawigacji telefonu (miejsce
   na pasku jest ograniczone) — tam skrzynkę otwiera się z paska bocznego albo z palety.
 
-**Testy.** Nie dodano (na prośbę, bez e2e na razie). Sprawdzono: typecheck, lint zmienionych plików.
+**Testy.** `src/lib/inbox.test.ts` (reguła skrzynki, podział tekstu), `src/components/InboxCapture.test.tsx` (Enter,
+pusty tekst), `e2e/inbox-today.spec.ts` (zapis, licznik w pasku, „Cofnij”, pusta skrzynka).
 
 **Commit.** `c8b9817` (2026-10-16).
 
@@ -1561,10 +1562,11 @@ Wszystko znika przy aktywnym wyszukiwaniu.
 - Rodzaj zmiany usunięty z Grafiku daje „Zaplanowana zmiana (rodzaj usunięty).” — zapis nie znika bez śladu.
 
 **Ograniczenia.** Sekcja terminów pokazuje tylko zaległe i dzisiejsze; przyszłe terminy są w Przypomnieniach.
-Notatki w koszu i archiwum są pomijane. Brak testów jednostkowych i e2e dla tych dwóch elementów — świadomie
-pominięte na prośbę (pamięć i pełny e2e).
+Notatki w koszu i archiwum są pomijane.
 
-**Testy.** Nie dodano. Sprawdzono: typecheck, lint zmienionych plików.
+**Testy.** `src/components/review/TodayDueList.test.tsx` (grupy, limit 4, archiwum i kosz pominięte, kliknięcie),
+`src/components/review/TodayShiftCard.test.tsx` (brak zmiany, godziny, usunięty rodzaj, Grafik niegotowy, przyciski;
+`useShifts` zmockowany), `e2e/inbox-today.spec.ts` (karta zmiany i przypomnienia na pustym koncie, przycisk „Grafik”).
 
 **Commit.** `32f51b7`, `25ed6cb` (2026-10-16).
 
