@@ -14,8 +14,6 @@ import { ReminderPicker, ReminderBadge } from "./ReminderPicker";
 import { PriorityPicker, PriorityBadge } from "./PriorityPicker";
 import { ChecklistCount, ChecklistPreview } from "./ChecklistEditor";
 import { ChecklistConvertButtons, ChecklistEditor } from "./ChecklistEditor";
-import { isChecklistShortcut, selectionToChecklist } from "@/lib/checklistPaste";
-import { handleEditorKey } from "@/lib/editorKeysDom";
 import { EditorStats } from "./EditorStats";
 import { prepareImage } from "@/lib/imagePrepare";
 import { FindReplaceBar } from "./FindReplaceBar";
@@ -52,8 +50,6 @@ import { useNotesMeta } from "@/hooks/NotesProvider";
 import { useNoteViewActions } from "@/hooks/NoteViewActionsContext";
 import { useLatch } from "@/hooks/useLatch";
 import { useOriginFromTile } from "@/hooks/useOriginFromTile";
-import { useWikiAutocomplete } from "@/hooks/useWikiAutocomplete";
-import { useSlashMenu } from "@/hooks/useSlashMenu";
 import { NoteLookPicker, NoteCoverStrip } from "./NoteLookPicker";
 import { backlinksOf } from "@/lib/wikiLinks";
 import { toast } from "sonner";
@@ -82,11 +78,12 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   } = useNoteViewActions();
   const noteVersions = getVersions?.(note.id);
   const prefs = useViewPrefs();
-  const { isEditing, editTitle, setEditTitle, editContent, setEditContent, editChecklist, setEditChecklist, showChecklist, setShowChecklist, showPreview, setShowPreview, fullEditor, setFullEditor, textareaRef, commitDraft, handleSave, begin } = useNoteEditSession({
+  const { isEditing, editTitle, setEditTitle, editContent, setEditContent, editChecklist, setEditChecklist, showChecklist, setShowChecklist, showPreview, setShowPreview, fullEditor, setFullEditor, findOpen, setFindOpen, textareaRef, wiki, slash, handleEditSelect, handleEditKeyDown, handleFormatInsert, commitDraft, handleSave, begin } = useNoteEditSession({
     note,
     autosaveSeconds: prefs.autosaveSeconds,
     onUpdate,
     onSaveVersion,
+    wikiTitles: wikiIndex?.titles ?? NO_TITLES,
   });
   const [showColors, setShowColors] = useState(false);
   const [showMore, setShowMore] = useState(false);
@@ -109,43 +106,12 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   const drawingMounted = useLatch(showDrawing);
   const sheetMounted = useLatch(sheetOpen);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  /** Ctrl+Shift+L zamienia zaznaczone linie (albo bieżącą) na pozycje listy zadań; reszta klawiszy trafia do podpowiedzi wikilinków. */
-  function handleEditKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (isChecklistShortcut(e)) {
-      e.preventDefault();
-      const r = selectionToChecklist(editContent, e.currentTarget.selectionStart, e.currentTarget.selectionEnd, editChecklist);
-      if (r) { setEditContent(r.content); setEditChecklist(r.checklist); setShowChecklist(true); }
-      return;
-    }
-    // Ctrl+F / Ctrl+H w treści: znajdź i zamień w tej notatce (zamiast wyszukiwania przeglądarki).
-    if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key.toLowerCase() === "f" || e.key.toLowerCase() === "h")) {
-      e.preventDefault();
-      setFindOpen(true);
-      return;
-    }
-    // Menu „/” przejmuje strzałki, Enter, Tab i Esc, dopóki jest otwarte.
-    if (slash.isOpen && !e.ctrlKey && !e.metaKey && !e.altKey) { slash.onKeyDown(e); return; }
-    // Otwarta lista `[[` ma pierwszeństwo dla Enter/Tab/strzałek/Esc; Ctrl/Alt jej nie dotyczą.
-    if (wiki.isOpen && !e.ctrlKey && !e.metaKey && !e.altKey) { wiki.textareaProps.onKeyDown(e); return; }
-    if (handleEditorKey(e, { onSave: handleSave })) return;
-    wiki.textareaProps.onKeyDown(e);
-  }
-  const [findOpen, setFindOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   const wordCount = note.content.trim() ? note.content.trim().split(/\s+/).length : 0;
   const trashCountdown = useTrashCountdown(note.trashed ? note.trashedAt : null, cardRef);
   const readMin = readingTimeMin(note.content);
 
-  const wiki = useWikiAutocomplete({
-    textareaRef,
-    value: editContent,
-    onChange: setEditContent,
-    titles: wikiIndex?.titles ?? NO_TITLES,
-    exclude: editTitle,
-  });
-  const slash = useSlashMenu({ textareaRef, value: editContent, disabled: wiki.isOpen });
-  function handleEditSelect() { wiki.textareaProps.onSelect(); slash.refresh(); }
   const backlinks = prefs.showBacklinks && wikiIndex ? backlinksOf(note, wikiIndex) : [];
   const subpage = wikiIndex?.tree.get(note.id);
 
@@ -158,20 +124,6 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
     const updated = (note.checklist || []).map((i) => (i.id === itemId ? { ...i, checked: !i.checked } : i));
     haptic(updated.every((i) => i.checked) ? "success" : "selection");
     onUpdate?.(note.id, { checklist: updated });
-  }
-
-  function handleFormatInsert(before: string, after: string) {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selected = editContent.slice(start, end);
-    const newContent = editContent.slice(0, start) + before + selected + after + editContent.slice(end);
-    setEditContent(newContent);
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(start + before.length, end + before.length);
-    }, 0);
   }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
