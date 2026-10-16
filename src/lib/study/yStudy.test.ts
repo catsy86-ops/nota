@@ -236,3 +236,89 @@ describe("własne wpisy Nauki w Yjs (N5)", () => {
     expect(a.get().custom.map((e) => e.id)).toEqual(["c-5"]);
   });
 });
+
+describe("listy karty budowy — osobne pozycje w dokumencie", () => {
+  const card = (over: Partial<import("./sites").SiteCard> = {}): import("./sites").SiteCard =>
+    ({ id: "k1", name: "Lipowa 5", address: "", investor: "", created: 1, ...over });
+  const stages = [{ id: "woda", name: "Rozprowadzenie wody" }, { id: "proba", name: "Próba szczelności" }, { id: "odbior", name: "Odbiór" }];
+
+  it("dwa telefony: odhaczenie etapu na jednym i usunięcie innego na drugim — oba zostają", () => {
+    const { a, b, sync } = pair();
+    a.saveSite(card());
+    a.setSiteList("k1", "stage", stages, []);
+    sync();
+    const base = b.get().sites.k1.stages!;
+    a.setSiteList("k1", "stage", base.map((s) => (s.id === "proba" ? { ...s, done: 500 } : s)), base);
+    b.setSiteList("k1", "stage", base.filter((s) => s.id !== "odbior"), base);
+    sync();
+    for (const side of [a, b]) {
+      expect(side.get().sites.k1.stages).toEqual([{ id: "woda", name: "Rozprowadzenie wody" }, { id: "proba", name: "Próba szczelności", done: 500 }]);
+    }
+  });
+
+  it("braki: dopisanie na jednym i zmiana statusu innego na drugim — oba zostają, kolejność po dopisaniu", () => {
+    const { a, b, sync } = pair();
+    a.saveSite(card());
+    const klej = { id: "s1", text: "Klej", qty: "", status: "missing" as const, at: 1 };
+    a.setSiteList("k1", "short", [klej], []);
+    sync();
+    const base = b.get().sites.k1.shortages!;
+    a.setSiteList("k1", "short", [...base, { id: "s2", text: "Rura", qty: "50 m", status: "missing" as const, at: 2 }], base);
+    b.setSiteList("k1", "short", [{ ...klej, status: "ordered" as const, changed: 3 }], base);
+    sync();
+    expect(a.get().sites.k1.shortages!.map((s) => `${s.text}:${s.status}`)).toEqual(["Klej:ordered", "Rura:missing"]);
+    expect(b.get().sites.k1.shortages).toEqual(a.get().sites.k1.shortages);
+  });
+
+  it("zapis bez zmian w bazie nie wskrzesza pozycji usuniętej na drugim telefonie", () => {
+    const { a, b, sync } = pair();
+    a.saveSite(card());
+    a.setSiteList("k1", "stage", stages, []);
+    sync();
+    const base = a.get().sites.k1.stages!;
+    b.setSiteList("k1", "stage", base.filter((s) => s.id !== "woda"), base);
+    sync();
+    // A nie widział jeszcze usunięcia w swojej bazie — odhacza „Odbiór” na starej liście.
+    a.setSiteList("k1", "stage", base.map((s) => (s.id === "odbior" ? { ...s, done: 9 } : s)), base);
+    sync();
+    expect(a.get().sites.k1.stages!.map((s) => s.id)).toEqual(["proba", "odbior"]);
+  });
+
+  it("dawne pola karty: czytane bez zmian, przy pierwszym zapisie przechodzą do mapy, a karta je traci", () => {
+    const { a, docA } = pair();
+    a.saveSite(card());
+    // Karta zapisana przez starszą wersję aplikacji — listy w polach karty.
+    docA.getMap("studySites").set("k1", card({ stages: [{ id: "woda", name: "Woda", done: 4 }], shortages: [{ id: "s1", text: "Klej", qty: "", status: "missing", at: 1 }] }));
+    expect(a.get().sites.k1.stages).toEqual([{ id: "woda", name: "Woda", done: 4 }]);
+    a.setSiteList("k1", "short", [], a.get().sites.k1.shortages!);
+    expect(a.get().sites.k1.shortages).toEqual([]);
+    expect(a.get().sites.k1.stages).toEqual([{ id: "woda", name: "Woda", done: 4 }]);
+    expect(docA.getMap("studySites").get("k1")).not.toHaveProperty("stages");
+    expect(docA.getMap("studySites").get("k1")).not.toHaveProperty("shortages");
+  });
+
+  it("zapis karty (nazwa, adres) nie rusza list; kopia zapasowa: listy w kartach i z powrotem do mapy", () => {
+    const { a } = pair();
+    a.saveSite(card());
+    a.setSiteList("k1", "stage", stages, []);
+    a.setSiteList("k1", "order", [{ at: 5, items: [{ name: "Kolano 16", qty: 2 }] }], []);
+    const projected = a.get().sites.k1;
+    a.saveSite({ ...projected, address: "ul. Lipowa 5" });
+    expect(a.get().sites.k1.stages).toHaveLength(3);
+    const dump = a.dump();
+    expect(dump.sites.k1.orders).toEqual([{ at: 5, items: [{ name: "Kolano 16", qty: 2 }] }]);
+    const { b } = pair();
+    b.replaceAll(dump);
+    expect(b.get().sites.k1.stages!.map((s) => s.id)).toEqual(["woda", "proba", "odbior"]);
+    expect(b.get().sites.k1.address).toBe("ul. Lipowa 5");
+    expect(b.get().sites.k1.orders).toHaveLength(1);
+  });
+
+  it("usunięte wszystkie etapy zostają pustą listą, nie wracają domyślne", () => {
+    const { a } = pair();
+    a.saveSite(card());
+    a.setSiteList("k1", "stage", stages, []);
+    a.setSiteList("k1", "stage", [], a.get().sites.k1.stages!);
+    expect(a.get().sites.k1.stages).toEqual([]);
+  });
+});

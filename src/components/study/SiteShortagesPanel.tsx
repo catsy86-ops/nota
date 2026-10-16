@@ -35,7 +35,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
   function add() {
     const next = addShortage(list, text, qty, Date.now());
     if (next.length === list.length && next.every((s, i) => s.qty === list[i]?.qty)) return;
-    setSiteShortages(site.id, next);
+    setSiteShortages(site.id, next, list);
     setText("");
     setQty("");
     haptic("tap");
@@ -46,20 +46,22 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
     if (!item) return;
     const status = nextStatus(item.status);
     haptic(status === "delivered" ? "success" : "selection");
-    setSiteShortages(site.id, setShortageStatus(list, id, status, Date.now()));
+    setSiteShortages(site.id, setShortageStatus(list, id, status, Date.now()), list);
   }
 
   function remove(id: string) {
     const before = list;
+    const after = removeShortage(list, id);
     const label = list.find((s) => s.id === id)?.text ?? "pozycję";
-    setSiteShortages(site.id, removeShortage(list, id));
-    toastWithUndo(`Usunięto „${label}”`, () => setSiteShortages(site.id, before));
+    setSiteShortages(site.id, after, before);
+    toastWithUndo(`Usunięto „${label}”`, () => setSiteShortages(site.id, before, after));
   }
 
   function clear() {
     const before = list;
-    setSiteShortages(site.id, clearDelivered(list));
-    toastWithUndo(`Wyczyszczono dostarczone: ${delivered}`, () => setSiteShortages(site.id, before));
+    const after = clearDelivered(list);
+    setSiteShortages(site.id, after, before);
+    toastWithUndo(`Wyczyszczono dostarczone: ${delivered}`, () => setSiteShortages(site.id, before, after));
   }
 
   async function copy() {

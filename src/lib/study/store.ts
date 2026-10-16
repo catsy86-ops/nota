@@ -11,7 +11,7 @@ import { cleanTest, type PressureTest } from "./pressureTest";
 import { BOSS_NAME_MAX, cleanBoss, cleanGroup, normalizeGroupLink, normalizePhone } from "./boss";
 import { cleanSite, entrySiteId, resolveSite, siteDirectory, SITE_FIELD_MAX, SITE_NAME_MAX, type SiteCard, type SiteInfo } from "./sites";
 import { cleanStages, type SiteStage } from "./stages";
-import { cleanShortages, logOrder, type Shortage } from "./shortages";
+import { cleanShortages, logOrder, type OrderLogEntry, type Shortage } from "./shortages";
 import { siteOrder } from "./order";
 import {
   JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, JOURNAL_SOLUTION_MAX, SITE_MAX,
@@ -380,12 +380,27 @@ export function saveSiteCard(id: string, input: SiteCardInput, now: number = Dat
  * Zmienia pola karty budowy, zachowując resztę. Budowa znana tylko z nazw we wpisach dostaje
  * przy tym kartę w dokumencie. Nieznana budowa — nic.
  */
-function patchSiteCard(id: string, patch: Partial<Pick<SiteCard, "orderedAt" | "stages" | "shortages" | "orders">>) {
+function patchSiteCard(id: string, patch: Partial<Pick<SiteCard, "orderedAt">>) {
   const s = getStudy();
   const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
   if (!prev) return;
   const { stored: _s, count: _c, open: _o, first: _f, last: _l, ...card } = prev;
   yStudy.saveSite({ ...card, ...patch });
+}
+
+/**
+ * Lista karty budowy przed zmianą — punkt wyjścia zapisu różnicy (`yStudy.setSiteList`). Lista jeszcze
+ * nie zapisana (np. domyślne etapy) to pusta baza: wtedy zapisują się wszystkie pozycje, nie tylko zmienione.
+ * Budowa znana tylko z nazw we wpisach dostaje przy tym kartę w dokumencie.
+ */
+function siteListBase<T>(id: string, field: "stages" | "shortages" | "orders", uiBase: readonly T[] | undefined): readonly T[] | null {
+  const s = getStudy();
+  const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
+  if (!prev) return null;
+  if (!prev.stored) patchSiteCard(id, {});
+  const stored = prev[field] as T[] | undefined;
+  if (stored === undefined) return [];
+  return uiBase ?? stored;
 }
 
 /** Zaznacza zamówienie kształtek na teraz: od tej chwili lista „do zamówienia” zaczyna się od zera. */
@@ -395,17 +410,26 @@ export function markSiteOrdered(id: string, now: number = Date.now()) {
   if (!prev) return;
   // Co właśnie zamówiono — do historii zamówień w karcie.
   const items = siteOrder(s.journal, id, prev.orderedAt).items;
-  patchSiteCard(id, { orderedAt: now, orders: logOrder(prev.orders, items, now) });
+  patchSiteCard(id, { orderedAt: now });
+  const base = siteListBase<OrderLogEntry>(id, "orders", undefined) ?? [];
+  yStudy.setSiteList(id, "order", logOrder(prev.orders, items, now), base);
 }
 
-/** Zapisuje całą listę braków materiału (dopisanie, zmiana statusu, usunięcie). */
-export function setSiteShortages(id: string, shortages: Shortage[]) {
-  patchSiteCard(id, { shortages: cleanShortages(shortages) ?? [] });
+/**
+ * Lista braków materiału po zmianie (dopisanie, status, usunięcie). `base` — lista, od której zaczął
+ * użytkownik (z ekranu); zapisuje się tylko różnica, więc zmiany z drugiego telefonu nie giną.
+ */
+export function setSiteShortages(id: string, shortages: Shortage[], base?: readonly Shortage[]) {
+  const from = siteListBase(id, "shortages", base);
+  if (from === null) return;
+  yStudy.setSiteList(id, "short", cleanShortages(shortages) ?? [], from);
 }
 
-/** Zapisuje całą listę etapów budowy (po odhaczeniu, dodaniu albo usunięciu etapu). */
-export function setSiteStages(id: string, stages: SiteStage[]) {
-  patchSiteCard(id, { stages: cleanStages(stages) ?? [] });
+/** Lista etapów budowy po zmianie (odhaczenie, dodanie, usunięcie); `base` jak przy brakach. */
+export function setSiteStages(id: string, stages: SiteStage[], base?: readonly SiteStage[]) {
+  const from = siteListBase(id, "stages", base);
+  if (from === null) return;
+  yStudy.setSiteList(id, "stage", cleanStages(stages) ?? [], from);
 }
 
 /** Budowa do archiwum (`true`) albo z powrotem czynna. */

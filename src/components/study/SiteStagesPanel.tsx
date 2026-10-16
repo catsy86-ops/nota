@@ -23,20 +23,21 @@ export function SiteStagesPanel({ site }: { site: SiteInfo }) {
     const next = toggleStage(stages, id, Date.now());
     const nowDone = next.find((s) => s.id === id)?.done !== undefined;
     haptic(nowDone ? "success" : "tap");
-    setSiteStages(site.id, next);
+    setSiteStages(site.id, next, stages);
   }
 
   function remove(id: string) {
     const before = stages;
+    const after = removeStage(stages, id);
     const label = stages.find((s) => s.id === id)?.name ?? "etap";
-    setSiteStages(site.id, removeStage(stages, id));
-    toastWithUndo(`Usunięto etap „${label}”`, () => setSiteStages(site.id, before));
+    setSiteStages(site.id, after, before);
+    toastWithUndo(`Usunięto etap „${label}”`, () => setSiteStages(site.id, before, after));
   }
 
   function add() {
     const after = addStage(stages, name);
     if (after.length === stages.length) return;
-    setSiteStages(site.id, after);
+    setSiteStages(site.id, after, stages);
     setName("");
     haptic("tap");
   }

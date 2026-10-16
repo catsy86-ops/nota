@@ -7,6 +7,10 @@ import { cleanCard, reviewCard, type ReviewCard } from "./srs";
 import { cleanBoss, cleanGroup, type Boss, type WaGroup } from "./boss";
 import { cleanTest, type PressureTest } from "./pressureTest";
 import { cleanCustomList, type CustomEntry } from "./custom";
+import {
+  composeSiteLists, itemKey, LIST_FIELD, listItemId, listItemValue, metaKey, sameItem, SITE_LIST_KINDS, stripLists,
+  type SiteListKind, type StageItem,
+} from "./siteItems";
 
 /**
  * Dane Nauki w Y.Doc notatek — synchronizują się i trafiają do pliku sync razem
@@ -276,6 +280,8 @@ export function createYStudy(doc: Y.Doc) {
   const review = doc.getMap<ReviewCard>("studyReview");
   /** Własne pytania i punkty listy (`custom.ts`): id → wpis. */
   const custom = doc.getMap<CustomEntry>("studyCustom");
+  /** Etapy, braki i historia zamówień budów — pozycja na klucz (`siteItems.ts`). */
+  const siteItems = doc.getMap<unknown>("studySiteItems");
 
   let snapshot: StudyState | null = null;
   const listeners = new Set<() => void>();
@@ -283,7 +289,7 @@ export function createYStudy(doc: Y.Doc) {
     snapshot = null;
     listeners.forEach((l) => l());
   };
-  for (const m of [journal, board, checked, missed, days, rounds, meta, sites, review, custom] as Y.Map<unknown>[]) m.observe(onChange);
+  for (const m of [journal, board, checked, missed, days, rounds, meta, sites, review, custom, siteItems] as Y.Map<unknown>[]) m.observe(onChange);
 
   /** Dokument jako zwykły obiekt, przez `cleanDump` — śmieci od peera nie wywrócą widoku. */
   function dump(): StudyDump {
@@ -295,12 +301,62 @@ export function createYStudy(doc: Y.Doc) {
       days: Array.from(days.keys()),
       rounds: Object.fromEntries(rounds.entries()),
       site: meta.get("site"),
-      sites: Object.fromEntries(sites.entries()),
+      // Listy z osobnej mapy nadpisują dawne pola karty (te zostają tylko w kartach sprzed migracji).
+      sites: withSiteLists(),
       review: Object.fromEntries(review.entries()),
       boss: meta.get("boss"),
       group: meta.get("waGroup"),
       custom: Object.fromEntries(custom.entries()),
     });
+  }
+
+  function withSiteLists(): Record<string, SiteCard> {
+    const lists = composeSiteLists(siteItems.entries());
+    const out: Record<string, SiteCard> = {};
+    for (const [k, card] of sites.entries()) out[k] = { ...card, ...(lists.get(k) ?? {}) };
+    return out;
+  }
+
+  /**
+   * Zapisuje pozycje listy jako osobne klucze — bez transakcji (woła ją zapis). Dawne pole karty
+   * przechodzi do mapy przy pierwszym zapisie tej listy; potem ze znacznikiem lista jest w mapie.
+   */
+  function writeListItems(siteId: string, kind: SiteListKind, next: readonly unknown[], base: readonly unknown[]): void {
+    const want = new Map(next.map((x) => [listItemId(kind, x), listItemValue(kind, x)] as const));
+    const had = new Map(base.map((x) => [listItemId(kind, x), listItemValue(kind, x)] as const));
+    for (const id of had.keys()) {
+      const k = itemKey(siteId, kind, id);
+      if (!want.has(id) && siteItems.has(k)) siteItems.delete(k);
+    }
+    // Kolejność etapu: zachowana z mapy; nowy etap — na koniec (największa + 1).
+    let maxOrder = -1;
+    if (kind === "stage") {
+      for (const [k, v] of siteItems.entries()) {
+        if (k.startsWith(itemKey(siteId, "stage", "")) && typeof (v as StageItem)?.order === "number") maxOrder = Math.max(maxOrder, (v as StageItem).order);
+      }
+    }
+    for (const [id, value] of want) {
+      if (had.has(id) && sameItem(kind, had.get(id), value)) continue;
+      const k = itemKey(siteId, kind, id);
+      if (kind === "stage") {
+        const prev = siteItems.get(k) as StageItem | undefined;
+        const order = typeof prev?.order === "number" ? prev.order : (maxOrder += 1);
+        siteItems.set(k, { ...(value as object), order });
+      } else siteItems.set(k, value);
+    }
+    if (!siteItems.has(metaKey(siteId, kind))) siteItems.set(metaKey(siteId, kind), true);
+  }
+
+  /** Dawne listy w polach karty (sprzed `studySiteItems`) → mapa; pola znikają z karty. Bez transakcji. */
+  function migrateCardLists(siteId: string, source?: SiteCard): void {
+    const stored = sites.get(siteId);
+    for (const kind of SITE_LIST_KINDS) {
+      if (siteItems.has(metaKey(siteId, kind))) continue;
+      const legacy = (stored?.[LIST_FIELD[kind]] ?? source?.[LIST_FIELD[kind]]) as unknown[] | undefined;
+      if (legacy && legacy.length > 0) writeListItems(siteId, kind, legacy, []);
+      else if (legacy) siteItems.set(metaKey(siteId, kind), true);
+    }
+    if (stored && SITE_LIST_KINDS.some((k) => stored[LIST_FIELD[k]] !== undefined)) sites.set(siteId, stripLists(stored));
   }
 
   function get(): StudyState {
@@ -429,9 +485,23 @@ export function createYStudy(doc: Y.Doc) {
    */
   function saveSite(card: SiteCard, prevName?: string): void {
     transact(() => {
-      sites.set(card.id, card);
+      // Listy karty są w osobnej mapie: tu tylko przeniesienie dawnych pól (stara karta albo kopia), potem sama karta.
+      migrateCardLists(card.id, card);
+      sites.set(card.id, stripLists(card));
       const cur = meta.get("site");
       if (prevName && typeof cur === "string" && foldName(cur) === foldName(prevName) && cur !== card.name) meta.set("site", card.name);
+    });
+  }
+
+  /**
+   * Zmienia listę karty budowy (etapy, braki, historia zamówień): zapisuje tylko różnicę między
+   * `base` (lista, od której zaczął użytkownik) a `next`. Pozycje dopisane w tym czasie na drugim
+   * telefonie zostają — usuwamy tylko to, co było w `base`.
+   */
+  function setSiteList(siteId: string, kind: SiteListKind, next: readonly unknown[], base: readonly unknown[]): void {
+    transact(() => {
+      migrateCardLists(siteId);
+      writeListItems(siteId, kind, next, base);
     });
   }
 
@@ -465,14 +535,15 @@ export function createYStudy(doc: Y.Doc) {
   function replaceAll(data: StudyDump): void {
     const d = cleanDump(data);
     transact(() => {
-      for (const m of [journal, board, checked, missed, days, rounds, sites, review, custom] as Y.Map<unknown>[]) for (const k of Array.from(m.keys())) m.delete(k);
+      for (const m of [journal, board, checked, missed, days, rounds, sites, review, custom, siteItems] as Y.Map<unknown>[]) for (const k of Array.from(m.keys())) m.delete(k);
       for (const e of d.journal) journal.set(e.id, e);
       for (const [k, v] of Object.entries(d.board)) board.set(k, v);
       for (const k of Object.keys(d.checked)) checked.set(k, true);
       for (const k of Object.keys(d.missed)) missed.set(k, true);
       for (const k of d.days) days.set(k, true);
       for (const [k, v] of Object.entries(d.rounds)) rounds.set(k, v);
-      for (const [k, v] of Object.entries(d.sites)) sites.set(k, v);
+      // Kopia niesie listy w kartach — do osobnej mapy, karty bez list.
+      for (const [k, v] of Object.entries(d.sites)) { migrateCardLists(k, v); sites.set(k, stripLists(v)); }
       for (const [k, v] of Object.entries(d.review)) review.set(k, v);
       for (const [k, v] of Object.entries(d.custom)) custom.set(k, v);
       meta.set("site", d.site);
@@ -502,7 +573,7 @@ export function createYStudy(doc: Y.Doc) {
         const best = prev.best === null ? v.best : v.best === null ? prev.best : Math.max(prev.best, v.best);
         if (v.rounds > prev.rounds || best !== prev.best) rounds.set(k, { rounds: Math.max(prev.rounds, v.rounds), best });
       }
-      for (const [k, v] of Object.entries(d.sites)) if (!sites.has(k)) sites.set(k, v);
+      for (const [k, v] of Object.entries(d.sites)) if (!sites.has(k)) { migrateCardLists(k, v); sites.set(k, stripLists(v)); }
       // Karta z nowszą ostatnią odpowiedzią wygrywa.
       for (const [k, v] of Object.entries(d.review)) {
         const prev = cleanCard(review.get(k));
@@ -520,7 +591,7 @@ export function createYStudy(doc: Y.Doc) {
   return {
     get, dump, subscribe, isMerged,
     setColumn, setChecked, clearChecked, restoreChecked, recordRound,
-    addEntry, updateEntry, setResolved, setSolution, restoreEntry, removeEntry, setSite, saveSite, setBoss, setGroup,
+    addEntry, updateEntry, setResolved, setSolution, restoreEntry, removeEntry, setSite, saveSite, setSiteList, setBoss, setGroup,
     addCustom, removeCustom, restoreCustom,
     replaceAll, mergeIn,
   };

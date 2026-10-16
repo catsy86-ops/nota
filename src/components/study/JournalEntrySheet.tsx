@@ -166,7 +166,8 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
         return;
       }
       const now = Date.now();
-      setSiteShortages(card.id, parsed.shortages.reduce((list, x) => addShortage(list, x.text, x.qty, now), card.shortages ?? []));
+      const base = card.shortages ?? [];
+      setSiteShortages(card.id, parsed.shortages.reduce((list, x) => addShortage(list, x.text, x.qty, now), base), base);
       done.push(`braki (${card.name}): ${parsed.shortages.map((x) => (x.qty ? `${x.text} ${x.qty}` : x.text)).join(", ")}`);
     }
     append(parsed.text);
