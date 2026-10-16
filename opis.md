@@ -928,25 +928,30 @@ obsługę obrazów. Pozostają też `FindReplaceBar` (renderowany w `NoteCard`) 
 **Co robi.** Bez zmian dla użytkownika. Zaznaczone notatki w widoku listy: pasek zbiorczy pokazuje liczbę,
 a Esc albo „wyczyść” zdejmuje zaznaczenie. Zaznaczenie znika przy zmianie widoku, etykiety lub folderu.
 
-**Gdzie jest.** `src/hooks/useSelection.ts`: `useSelection({ view, activeLabel, activeFolder })` zwraca `selectedIds`,
-`setSelectedIds`, `selectionMode` (`selectedIds.size > 0`), `lastSelectedRef` i `clearSelection`. W `src/pages/Index.tsx`
-wywołanie stoi w miejscu dawnego stanu zaznaczenia. Zostają tam `toggleSelect` (klik i Shift-zakres czytają widoczne
-notatki przez `visibleNotesRef`) oraz skrót Ctrl/Cmd+A (czyta `previewId` i `presentingNoteId`).
+**Gdzie jest.**
+- `src/hooks/useSelection.ts`: `useSelection({ view, activeLabel, activeFolder })` zwraca `selectedIds`,
+  `setSelectedIds`, `selectionMode` (`selectedIds.size > 0`), `lastSelectedRef` i `clearSelection`. Wywołanie w
+  `src/pages/Index.tsx` stoi w miejscu dawnego stanu zaznaczenia.
+- `src/hooks/useSelectionGestures.ts`: `useSelectionGestures({ view, visibleNotesRef, previewId, presentingNoteId,
+  setSelectedIds, lastSelectedRef })` zwraca `toggleSelect` (klik i Shift-zakres) i obsługuje skrót Ctrl/Cmd+A.
+  Wywołanie w `Index.tsx` stoi zaraz po czytniku (`useReaderNav`), bo potrzebuje `previewId` i `visibleNotesRef`.
 
-**Jak działa i dlaczego.** Hook wyciągnięto tylko z tego, co zależy wyłącznie od widoku. `toggleSelect` i Ctrl+A zależą
-od wartości liczonych dużo niżej w `Index` (filtrowane notatki, czytnik), więc przeniesienie ich tutaj wymagałoby
-przestawiania całej kolejności hooków. Do tablic zależności dopisano `setSelectedIds` i `lastSelectedRef` — są stabilne,
-więc zachowanie się nie zmienia, a lint jest czysty.
+**Jak działa i dlaczego.** Pierwszy hook zawiera tylko to, co zależy od widoku. Drugi dostaje wartości z `Index`
+jako parametry, więc jego wywołanie musi stać po ich wyliczeniu. Do tablic zależności dopisano `setSelectedIds` i
+`lastSelectedRef` — są stabilne, więc zachowanie się nie zmienia, a lint jest czysty. Ctrl+A nic nie robi, gdy otwarte
+jest okno, czytnik albo prezentacja, i nie działa w kalendarzu, grafiku ani nauce.
 
-**Ograniczenia.** Hook nie zawiera zaznaczania ani skrótu Ctrl+A; dalsze przeniesienie wymaga najpierw uporządkowania
-kolejności `visibleNotes` i czytnika w `Index`.
+**Ograniczenia.** `visibleNotesRef` i `previewId` muszą być policzone przed wywołaniem `useSelectionGestures`. Zmiana
+kolejności `visibleNotes` albo czytnika w `Index` wymaga sprawdzenia tej zależności.
 
 **Testy.** Charakteryzujące (chromium, `--workers=1`): `notes`, `note-groups`, `templates-bulk`, `reminders-calendar`,
-`quick-capture`, `search-highlight`, `reader`, `note-links`, `editor-keys` — 62/62. Na `iphone-14` (`@mobile`): `mobile`,
-`mobile-layout` — 17/17 (przytrzymanie kafla zaznacza go). Testy jednostkowe `src/components`, `src/hooks`, `src/lib`,
-`src/pages`: 1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
+`quick-capture`, `search-highlight`, `reader`, `note-links`, `editor-keys` — 62/62 po pierwszym kroku i 50/50 po
+przeniesieniu klika i Ctrl+A (`notes`, `note-groups`, `templates-bulk`, `editor-keys`, `reader`, `quick-capture`,
+`note-links`, `search-highlight`). Na `iphone-14` (`@mobile`): `mobile`, `mobile-layout` — 17/17 (przytrzymanie kafla
+zaznacza go). Testy jednostkowe `src/components`, `src/hooks`, `src/lib`, `src/pages`: 1209/1209. `tsc` i eslint bez
+błędów. Nie uruchamiano pełnego e2e.
 
-**Commit.** `bea4f33` (2026-10-16).
+**Commit.** `bea4f33` (stan zaznaczenia, 2026-10-16), `c513247` (klik, Shift i Ctrl+A, 2026-10-16).
 
 ## Notatki — odznaki w useAchievementToasts (refaktor Index.tsx)
 
