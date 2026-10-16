@@ -881,9 +881,9 @@ z treści).
 zachowanie się nie zmienia. Stan prezentacji zostawiony w `Index` (dwa miejsca go ustawiają: siatka i czytnik).
 
 **Stan etapu 4.** Zrobione też: sesja edycji kafla (`useNoteEditSession`), obrazy kafla (`useNoteImages`), akcje kafla
-(`NoteCardActions`), edytor kafla i okna (`NoteEditor`), gesty kafla (`useCardGestures`), patrz niżej.
-Pozostają: reszta `NoteCard.tsx` (widok kafla, dialogi, tryb wpisu) i reszta `Index.tsx` — wielosesyjny podział,
-każdy kawałek z własnym e2e.
+(`NoteCardActions`), edytor kafla i okna (`NoteEditor`), gesty kafla (`useCardGestures`), arkusz, podgląd i
+usuwanie (`NoteCardDialogs`), patrz niżej. Pozostają: widok kafla w `NoteCard.tsx` i reszta `Index.tsx` —
+wielosesyjny podział, każdy kawałek z własnym e2e.
 
 **Testy.** Charakteryzujące: `e2e/reader.spec.ts`, `reader-step.spec.ts`, `wikilinks.spec.ts`, `notes.spec.ts`,
 `editing.spec.ts`, `routes.spec.ts`, `tabs.spec.ts`, `search-highlight.spec.ts` — 28/28.
@@ -922,6 +922,32 @@ obsługę obrazów. Pozostają też `FindReplaceBar` (renderowany w `NoteCard`) 
 1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
 
 **Commit.** `3342c00` (2026-10-16) — sesja edycji; `ff09430` (2026-10-16) — klawisze, podpowiedzi i Ctrl+F.
+
+## Notatki — arkusz „⋯”, podgląd obrazu i usuwanie w NoteCardDialogs (plan Notatek, etap 4, refaktor NoteCard)
+
+**Co robi.** Bez zmian dla użytkownika. Arkusz „⋯” na dotyku (tytuł, kolor, szybkie akcje, „Więcej”), podgląd
+obrazka na pełnym ekranie i potwierdzenie trwałego usunięcia z kosza.
+
+**Gdzie jest.** `src/components/NoteCardDialogs.tsx`:
+- `ActionSheet({ open, onOpenChange, note, isArchived, pinSparkle, onAskDeleteConfirm, more, … })` — `more` to element
+  budowany w `NoteCard` (`moreActions`), ten sam co w rozwinięciu.
+- `ImagePreviewDialog({ imageRef, onClose })`.
+- `DeleteNoteDialog({ open, onOpenChange, note, onDelete })`.
+`NoteCard.tsx` trzyma stan otwarcia (`sheetOpen`, `previewImage`, `showDeleteConfirm`) i montowanie „leniwe” (`useLatch`).
+
+**Jak działa i dlaczego.** Arkusz zatrzymuje zdarzenia na `SheetContent`, bo płyną drzewem Reacta do kafla. Zamknięcie
+po akcji idzie przez `onOpenChange(false)`, tak samo jak wcześniej `setSheetOpen(false)`.
+
+**Ograniczenia.** Dialog podglądu zamyka się przez `onClose`, który czyści `previewImage` (dawniej `setPreviewImage(null)`).
+
+**Testy.** Charakteryzujące: `e2e/notes.spec.ts`, `editing.spec.ts` (usuwanie do kosza), `card-images.spec.ts`,
+`images.spec.ts`, `subpages.spec.ts`, `private-notes.spec.ts`, `card-motion.spec.ts`, `note-props.spec.ts`,
+`reminder-toast.spec.ts`, `read-only-note.spec.ts` — 31/31 (chromium, `--workers=1`). Na profilu `iphone-14` (`@mobile`):
+`mobile.spec.ts`, `mobile-layout.spec.ts`, `editor-open.spec.ts`, `touch-targets.spec.ts` — 19/20 przy pierwszym
+przebiegu; jedna porażka (`320 px: żadna trasa…`) to timeout `page.goto` na zimnym starcie, a sam test przechodzi (1/1).
+Testy jednostkowe `src/components`, `src/hooks`, `src/lib`: 1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
+
+**Commit.** `3596e41` (2026-10-16).
 
 ## Notatki — gesty kafla w useCardGestures (plan Notatek, etap 4, refaktor NoteCard)
 
