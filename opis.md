@@ -881,8 +881,9 @@ z treści).
 zachowanie się nie zmienia. Stan prezentacji zostawiony w `Index` (dwa miejsca go ustawiają: siatka i czytnik).
 
 **Stan etapu 4.** Zrobione też: sesja edycji kafla (`useNoteEditSession`), obrazy kafla (`useNoteImages`), akcje kafla
-(`NoteCardActions`), edytor kafla i okna (`NoteEditor`), patrz niżej. Pozostają: reszta `NoteCard.tsx` (widok kafla
-i tryb wpisu) i reszta `Index.tsx` — wielosesyjny podział, każdy kawałek z własnym e2e.
+(`NoteCardActions`), edytor kafla i okna (`NoteEditor`), gesty kafla (`useCardGestures`), patrz niżej.
+Pozostają: reszta `NoteCard.tsx` (widok kafla, dialogi, tryb wpisu) i reszta `Index.tsx` — wielosesyjny podział,
+każdy kawałek z własnym e2e.
 
 **Testy.** Charakteryzujące: `e2e/reader.spec.ts`, `reader-step.spec.ts`, `wikilinks.spec.ts`, `notes.spec.ts`,
 `editing.spec.ts`, `routes.spec.ts`, `tabs.spec.ts`, `search-highlight.spec.ts` — 28/28.
@@ -921,6 +922,31 @@ obsługę obrazów. Pozostają też `FindReplaceBar` (renderowany w `NoteCard`) 
 1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
 
 **Commit.** `3342c00` (2026-10-16) — sesja edycji; `ff09430` (2026-10-16) — klawisze, podpowiedzi i Ctrl+F.
+
+## Notatki — gesty kafla w useCardGestures (plan Notatek, etap 4, refaktor NoteCard)
+
+**Co robi.** Bez zmian dla użytkownika. Na dotyku: przesunięcie kafla w prawo (przypnij/odepnij) lub w lewo
+(archiwizuj, w Archiwum przywróć), z podpisami w tle przy pierwszych gestach; przytrzymanie 450 ms zaznacza kafel.
+Przy myszy: przechył 3D, gdy włączony w ustawieniach i bez redukcji ruchu.
+
+**Gdzie jest.** `src/hooks/useCardGestures.ts`: `useCardGestures({ note, isArchived, isEditing, selectionMode, cardRef,
+tilt, pinSparkle, onToggleSelect, onTogglePin, onArchive, onUnarchive })`. Zwraca `isTouch`, `canSwipePin`,
+`canSwipeArchive`, `swipeEnabled`, `swipeX`, `swipeControls`, `swiping`, `swipeLabels`, `pinOpacity`, `archiveOpacity`,
+`handleSwipeStart`, `handleSwipeEnd`, `handleLongPressStart`, `handleLongPressMove`, `cancelLongPress`, `longPressed`,
+`rotX`, `rotY`, `handleMove`, `handleLeave`. `NoteCard.tsx` podpina je do `motion.div` kafla i do tła gestu.
+
+**Jak działa i dlaczego.** Gest startuje ręcznie przez `swipeControls` — dotyk na uchwycie przeciągania należy do dnd-kit
+(kolejność, kolumny tablicy), nie do przesunięcia. Kosz nie ma gestu, żeby przypadkowy ruch niczego nie usuwał.
+Iskry przy przypięciu gestem liczy `NoteCard` (`pinSparkle`), bo zależą od ustawień efektów i ruchu.
+
+**Ograniczenia.** `isTouch` liczone przy renderze przez `matchMedia`, nie reaguje na zmianę urządzenia w trakcie sesji (jak wcześniej).
+
+**Testy.** Charakteryzujące: `e2e/mobile.spec.ts`, `mobile-layout.spec.ts`, `card-motion.spec.ts`, `board-table.spec.ts`,
+`desktop-columns.spec.ts`, `editor-open.spec.ts`, `touch-targets.spec.ts`, `notes.spec.ts`, `card-images.spec.ts`,
+`view-change.spec.ts`, `reminder-toast.spec.ts` — 49/49 (`--workers=1`, chromium); z `@mobile` na `iphone-14` 20/20.
+Testy jednostkowe `src/components`, `src/hooks`, `src/lib`: 1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
+
+**Commit.** `c55f50e` (2026-10-16).
 
 ## Notatki — edytor kafla i okna w NoteEditor (plan Notatek, etap 4, refaktor NoteCard)
 
