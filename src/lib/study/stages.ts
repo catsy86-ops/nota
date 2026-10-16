@@ -90,3 +90,23 @@ export function addStage(stages: readonly SiteStage[], name: string, makeId: () 
 export function removeStage(stages: readonly SiteStage[], id: string): SiteStage[] {
   return stages.filter((s) => s.id !== id).map((s) => ({ ...s }));
 }
+
+const foldStage = (s: string) => s.toLocaleLowerCase("pl").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l").replace(/\s+/g, " ").trim();
+
+/**
+ * Etap z wypowiedzianej nazwy („próba szczelności”, „biały montaż”, „kanalizacja”): najpierw dokładnie,
+ * potem początek nazwy, potem wszystkie słowa wypowiedzi w nazwie etapu. Niejednoznaczne (kilka etapów
+ * pasuje tak samo) albo nic — `null`.
+ */
+export function matchStage(stages: readonly SiteStage[], phrase: string): SiteStage | null {
+  const p = foldStage(phrase);
+  if (!p) return null;
+  const names = stages.map((s) => ({ s, n: foldStage(s.name) }));
+  const exact = names.filter((x) => x.n === p);
+  if (exact.length === 1) return exact[0].s;
+  const prefix = names.filter((x) => x.n.startsWith(p));
+  if (prefix.length === 1) return prefix[0].s;
+  const words = p.split(" ");
+  const all = names.filter((x) => words.every((w) => x.n.split(" ").some((nw) => nw.startsWith(w))));
+  return all.length === 1 ? all[0].s : null;
+}

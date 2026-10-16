@@ -26,6 +26,8 @@ export interface SpokenEntry {
   text: string;
   /** Braki materiału („brakuje …”, „do zamówienia …”) — trafiają do karty budowy, nie do wpisu. */
   shortages: SpokenShortage[];
+  /** Nazwa zakończonego etapu, jak padła („etap próba szczelności zrobiony”) — dopasowuje ją `matchStage`. */
+  stage?: string;
   /** Rozpoznano budowę, rodzaj, kształtki albo braki. */
   structured: boolean;
 }
@@ -52,6 +54,9 @@ const GENITIVE_TO_NOMINATIVE: Record<string, string> = {
   gipsu: "gips", zaprawy: "zaprawa", folii: "folia", grzejnika: "grzejnik", grzejnikow: "grzejniki",
   baterii: "bateria", odplywu: "odpływ", kratki: "kratka", stelaza: "stelaż", miski: "miska",
 };
+
+/** Słowa kończące nazwę etapu („etap próba szczelności zrobiony”). */
+const STAGE_DONE = new Set(["zrobiony", "zrobiona", "zrobione", "gotowy", "gotowa", "gotowe", "skonczony", "skonczona", "skonczone", "zakonczony", "zakonczona", "zakonczone"]);
 
 /** Słowa przełączające resztę wypowiedzi w listę braków. */
 const SHORTAGE_MARKERS = new Set(["brakuje", "zamowic"]);
@@ -110,7 +115,7 @@ function matchSite(tokens: string[], at: number, sites: readonly string[]): { na
   const same = sites.filter((n) => fold(n).split(/\s+/)[0] === first);
   if (same.length !== 1) return null;
   const after = tokens[at + 1];
-  if (after !== undefined && !isSep(after) && !KIND_MARKERS.has(fold(after)) && shortageMarker(tokens, at + 1) === 0) return null;
+  if (after !== undefined && !isSep(after) && !KIND_MARKERS.has(fold(after)) && fold(after) !== "etap" && shortageMarker(tokens, at + 1) === 0) return null;
   return { name: same[0], len: 1 };
 }
 
@@ -134,12 +139,22 @@ export function parseSpokenEntry(
   const marker = i < tokens.length ? KIND_MARKERS.get(fold(tokens[i])) : undefined;
   if (marker) { kind = marker; i++; skipSeps(); }
 
+  // „Lipowa, etap próba szczelności zrobiony, …” — etap do odhaczenia; dalej zwykły wpis.
+  let stage: string | undefined;
+  if (i < tokens.length && fold(tokens[i]) === "etap") {
+    const words: string[] = [];
+    let j = i + 1;
+    while (j < tokens.length && !isSep(tokens[j]) && !STAGE_DONE.has(fold(tokens[j]))) words.push(tokens[j++]);
+    if (j < tokens.length && STAGE_DONE.has(fold(tokens[j]))) j++;
+    if (words.length > 0) { stage = words.join(" "); kind ??= "ok"; i = j; skipSeps(); }
+  }
+
   // „Lipowa, brakuje kleju do PCV i rury PEX 16 50 metrów” — reszta to braki materiału, nie wpis.
   const lead = shortageMarker(tokens, i);
   if (lead > 0) {
     // Po „brakuje” / „zamówić” — dopełniacz („brakuje kleju”, „zamówić rurę” ma biernik, tu nie ruszamy).
     const shortages = parseShortages(tokens.slice(i + lead), fold(tokens[i]) === "brakuje");
-    return { ...(site ? { site } : {}), ...(kind ? { kind } : {}), fittings: [], text: "", shortages, structured: true };
+    return { ...(site ? { site } : {}), ...(kind ? { kind } : {}), ...(stage ? { stage } : {}), fittings: [], text: "", shortages, structured: true };
   }
 
   const phrases = [...new Set(knownFittings.map((n) => namePrefix(n).join(" ")))]
@@ -181,13 +196,13 @@ export function parseSpokenEntry(
   }
 
   const fittings = spans.length > 0 ? parseSpokenFittings(spans.join(", "), knownFittings) : [];
-  const structured = site !== undefined || kind !== undefined || fittings.length > 0;
+  const structured = site !== undefined || kind !== undefined || fittings.length > 0 || stage !== undefined;
   if (!structured) return { fittings: [], text: raw, shortages: [], structured: false };
 
   while (text.length > 0 && (isSep(text[0]) || CONJ.has(fold(text[0])))) text.shift();
   while (text.length > 0 && (isSep(text[text.length - 1]) || CONJ.has(fold(text[text.length - 1])))) text.pop();
   const joined = text.join(" ").replace(/\s+([,;.:!?])/g, "$1");
-  return { ...(site ? { site } : {}), ...(kind ? { kind } : {}), fittings, text: joined, shortages: [], structured };
+  return { ...(site ? { site } : {}), ...(kind ? { kind } : {}), ...(stage ? { stage } : {}), fittings, text: joined, shortages: [], structured };
 }
 
 /** Liczebniki słownie → cyfry, z zachowaniem wielkości liter pozostałych słów („dwadzieścia pięć” → „25”). */

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addStage, cleanStages, DEFAULT_STAGES, removeStage, siteStages, stageProgress, STAGES_MAX, toggleStage } from "./stages";
+import { addStage, cleanStages, DEFAULT_STAGES, matchStage, removeStage, siteStages, stageProgress, STAGES_MAX, toggleStage } from "./stages";
 import { cleanSite } from "./sites";
 
 describe("etapy budowy", () => {
@@ -57,5 +57,25 @@ describe("etapy budowy", () => {
     const base = { id: "k1", name: "Dom", address: "", investor: "", created: 1 };
     expect(cleanSite({ ...base, stages: [{ id: "woda", name: "Woda", done: 3 }] })?.stages).toEqual([{ id: "woda", name: "Woda", done: 3 }]);
     expect(cleanSite(base)).not.toHaveProperty("stages");
+  });
+});
+
+describe("matchStage — etap z wypowiedzi", () => {
+  const list = siteStages(null);
+  it("dokładnie, po początku i po słowach (bez ogonków)", () => {
+    expect(matchStage(list, "Próba szczelności")?.id).toBe("proba");
+    expect(matchStage(list, "bialy montaz")?.id).toBe("bialy");
+    expect(matchStage(list, "odbiór")?.id).toBe("odbior");
+    expect(matchStage(list, "rozprowadzenie")?.id).toBe("woda");
+    expect(matchStage(list, "piony")?.id).toBe("kan-pion");
+  });
+  it("niejednoznaczne albo nieznane — null", () => {
+    // „kanalizacja” zaczyna tylko „Kanalizacja podposadzkowa” (drugi etap ma „kanalizacji”).
+    expect(matchStage(list, "kanalizacja")?.id).toBe("kan-pod");
+    const two = [...list, { id: "g1", name: "Grzejniki parter" }, { id: "g2", name: "Grzejniki piętro" }];
+    expect(matchStage(two, "grzejniki")).toBeNull();
+    expect(matchStage(two, "grzejniki pietro")?.id).toBe("g2");
+    expect(matchStage(list, "kocioł")).toBeNull();
+    expect(matchStage(list, "  ")).toBeNull();
   });
 });

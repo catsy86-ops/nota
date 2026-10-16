@@ -84,3 +84,21 @@ test("„brakuje …” w dyktowaniu dopisuje braki do karty budowy, a nie do wp
   await expect(panel).toContainText("Rura PEX 16 · 50 m");
   await expect(panel.getByRole("button", { name: "Rura PEX 16: Brakuje. Zmień status" })).toBeVisible();
 });
+
+test("„etap … zrobiony” w dyktowaniu odhacza etap w karcie budowy", async ({ page }) => {
+  await page.addInitScript(() => {
+    (window as unknown as Record<string, unknown>).__speech = ["lipowa etap próba szczelności zrobiona ciśnienie trzymało"];
+  });
+  await page.goto("/praca");
+  await page.getByRole("button", { name: /^(Wpis|Dokończ wpis)$/ }).click();
+  const sheet = page.getByTestId("journal-entry-sheet");
+  await sheet.getByRole("button", { name: "Dyktuj", exact: true }).click();
+  await expect(page.getByText("Z wypowiedzi: budowa Lipowa 5 · Zrobione · etap zrobiony: Próba szczelności")).toBeVisible();
+  await expect(sheet.getByLabel("Co się dzieje?")).toHaveValue("ciśnienie trzymało");
+  await page.keyboard.press("Escape");
+
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
+  const stages = page.getByTestId("site-card").getByTestId("site-stages");
+  await expect(stages.getByRole("checkbox", { name: /Próba szczelności/ })).toHaveAttribute("aria-checked", "true");
+  await expect(stages.getByTestId("site-stages-progress")).toHaveText("1/7");
+});

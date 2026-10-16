@@ -88,12 +88,15 @@ const sheetVariants = cva(
   },
 );
 
+/** Klik w dymek (Cofnij, przypomnienie) nie jest „poza arkuszem” — nie zamyka go (jak w `dialog.tsx`). */
+const fromToast = (e: Event) => !!(e.target as Element | null)?.closest?.("[data-sonner-toaster]");
+
 interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
     VariantProps<typeof sheetVariants> {}
 
 const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Content>, SheetContentProps>(
-  ({ side = "right", className, children, ...props }, ref) => {
+  ({ side = "right", className, children, onInteractOutside, ...props }, ref) => {
     const closeRef = React.useRef<HTMLButtonElement>(null);
     const contentRef = React.useRef<HTMLDivElement | null>(null);
     const setRefs = React.useCallback((el: HTMLDivElement | null) => {
@@ -105,7 +108,15 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
     return (
     <SheetPortal>
       <SheetOverlay />
-      <SheetPrimitive.Content ref={setRefs} className={cn(sheetVariants({ side }), className)} {...props}>
+      <SheetPrimitive.Content
+        ref={setRefs}
+        className={cn(sheetVariants({ side }), className)}
+        onInteractOutside={(e) => {
+          if (fromToast(e)) e.preventDefault();
+          onInteractOutside?.(e);
+        }}
+        {...props}
+      >
         {side === "bottom" && (
           // Uchwyt naprawdę działa: przeciągnięcie w dół zamyka arkusz (próg odległości albo szybki ruch).
           <div

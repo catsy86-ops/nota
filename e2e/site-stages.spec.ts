@@ -66,3 +66,24 @@ test("etapy: odhaczenie, własny etap, usunięcie z Cofnij, postęp przy budowie
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
   await expect(page.getByTestId("site-card").getByTestId("site-stages")).toContainText("Kocioł i grzejniki");
 });
+
+test("wpis „Zrobione” podsuwa następne etapy — stuknięcie odhacza, „Cofnij” przywraca", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByRole("button", { name: /^(Wpis|Dokończ wpis)$/ }).click();
+  const sheet = page.getByTestId("journal-entry-sheet");
+  await sheet.getByRole("radio", { name: "Zrobione" }).click();
+  const chips = sheet.getByTestId("journal-stage-chips").getByRole("button");
+  await expect(chips).toHaveText(["Kanalizacja podposadzkowa", "Rozprowadzenie wody", "Piony i podejścia kanalizacji"]);
+
+  await sheet.getByRole("button", { name: "Odhacz etap: Kanalizacja podposadzkowa" }).click();
+  await expect(chips.first()).toHaveText("Rozprowadzenie wody");
+  await page.locator("[data-sonner-toast]").filter({ hasText: "Etap zrobiony: Kanalizacja podposadzkowa" }).getByRole("button", { name: "Cofnij" }).click();
+  await expect(chips.first()).toHaveText("Kanalizacja podposadzkowa");
+
+  await sheet.getByRole("button", { name: "Odhacz etap: Rozprowadzenie wody" }).click();
+  await page.keyboard.press("Escape");
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
+  const stages = page.getByTestId("site-card").getByTestId("site-stages");
+  await expect(stages.getByTestId("site-stages-progress")).toHaveText("1/7");
+  await expect(stages.getByRole("checkbox", { name: /Rozprowadzenie wody/ })).toHaveAttribute("aria-checked", "true");
+});

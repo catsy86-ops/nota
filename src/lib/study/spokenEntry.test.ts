@@ -95,3 +95,22 @@ describe("parseSpokenEntry — braki materiału głosem", () => {
     expect(r.text).toBe("brak wody na piętrze");
   });
 });
+
+describe("parseSpokenEntry — etap głosem", () => {
+  it("„etap … zrobiony” po budowie: nazwa etapu, rodzaj „zrobione”, dalej zwykły wpis", () => {
+    expect(parseSpokenEntry("lipowa etap próba szczelności zrobiony ciśnienie trzymało", ctx)).toEqual({
+      site: "Lipowa 5", kind: "ok", stage: "próba szczelności", fittings: [], text: "ciśnienie trzymało", shortages: [], structured: true,
+    });
+  });
+
+  it("bez słowa końca — do przecinka; rodzaj z wypowiedzi zostaje", () => {
+    const r = parseSpokenEntry("Polna, problem, etap biały montaż, brak baterii", ctx);
+    expect(r.kind).toBe("problem");
+    expect(r.stage).toBe("biały montaż");
+    expect(r.text).toBe("brak baterii");
+  });
+
+  it("samo słowo „etap” bez nazwy to zwykły tekst", () => {
+    expect(parseSpokenEntry("etap", ctx).structured).toBe(false);
+  });
+});

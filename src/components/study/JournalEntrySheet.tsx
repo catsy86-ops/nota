@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { TriangleAlert, Camera, CircleCheck, ChevronDown, Clock, ImagePlus, LoaderCircle, MapPin, Mic, NotebookPen, Pencil, PenTool, Play, Trash, Type, X } from "lucide-react";
+import { TriangleAlert, Camera, CircleCheck, ChevronDown, Clock, ImagePlus, ListChecks, LoaderCircle, MapPin, Mic, NotebookPen, Pencil, PenTool, Play, Trash, Type, X } from "lucide-react";
 import { HeightsButton } from "./HeightsSheet";
 import { PressureTestFields } from "./PressureTestFields";
 import { FittingsFields } from "./FittingsFields";
@@ -23,7 +23,7 @@ import { CAPTION_MAX, captionPhoto, captionText } from "@/lib/study/photoCaption
 import { requestPersistentStorage } from "@/lib/storagePersistence";
 import { MODULES, TOPICS } from "@/lib/study/content";
 import {
-  addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, setSiteShortages, updateJournalEntry, useStudy, useStudyLists, type JournalKind,
+  addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, setSiteShortages, setSiteStages, updateJournalEntry, useStudy, useStudyLists, type JournalKind,
 } from "@/lib/study/store";
 import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft, type JournalDraft } from "@/lib/study/draft";
 import { closeJournalSheet, getJournalEditForm, patchJournalEditForm, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
@@ -33,6 +33,7 @@ import { fittingsLine, suggestFittingNames } from "@/lib/study/fittings";
 import { mergeFittings } from "@/lib/study/spokenFittings";
 import { addShortage } from "@/lib/study/shortages";
 import { parseSpokenEntry } from "@/lib/study/spokenEntry";
+import { matchStage, siteStages, toggleStage } from "@/lib/study/stages";
 
 export function KindIcon({ kind, className = "h-4 w-4" }: { kind: JournalKind; className?: string }) {
   if (kind === "ok") return <CircleCheck className={cn(className, "shrink-0 text-success-ink")} aria-hidden />;
@@ -119,7 +120,20 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     [study.sites, study.journal],
   );
   /** Id budowy wybranej w polu (`""` = bez budowy albo nieznana nazwa) — dla podpowiedzi tekstu. */
-  const siteId = useMemo(() => findSiteByName(siteDirectory(study.sites, study.journal), site)?.id ?? "", [study.sites, study.journal, site]);
+  const siteCard = useMemo(() => findSiteByName(siteDirectory(study.sites, study.journal), site), [study.sites, study.journal, site]);
+  const siteId = siteCard?.id ?? "";
+  /** Najbliższe nieodhaczone etapy budowy — przy „Zrobione” do odhaczenia jednym stuknięciem. */
+  const nextStages = useMemo(() => (siteCard ? siteStages(siteCard).filter((s) => s.done === undefined).slice(0, 3) : []), [siteCard]);
+
+  function markStage(id: string) {
+    if (!siteCard) return;
+    const before = siteStages(siteCard);
+    const after = toggleStage(before, id, Date.now());
+    const label = before.find((s) => s.id === id)?.name ?? "etap";
+    haptic("success");
+    setSiteStages(siteCard.id, after, before);
+    toastWithUndo(`Etap zrobiony: ${label}`, () => setSiteStages(siteCard.id, before, after));
+  }
   /** Podpowiedzi tekstu tylko dla nowego, pustego wpisu z wybraną budową. */
   const textSuggestions = useMemo(() => (isEdit ? [] : recentSiteTexts(study.journal, siteId)), [isEdit, study.journal, siteId]);
   const yesterdayText = useMemo(() => (isEdit ? null : yesterdaySiteText(study.journal, siteId)), [isEdit, study.journal, siteId]);
@@ -157,10 +171,23 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
       patch({ fittings: mergeFittings(getForm().fittings ?? [], parsed.fittings) });
       done.push(`kształtki: ${fittingsLine(parsed.fittings)}`);
     }
+    const name = parsed.site ?? site;
+    const card = name ? findSiteByName(siteDirectory(study.sites, study.journal), name) : undefined;
+    // „etap próba szczelności zrobiony” — odhacza etap w karcie budowy (już odhaczony zostaje z pierwszą datą).
+    if (parsed.stage) {
+      const stages = siteStages(card);
+      const hit = card ? matchStage(stages, parsed.stage) : null;
+      if (!card || !hit) {
+        toast.error(card ? `Nie ma takiego etapu: „${parsed.stage}”` : "Etapy są w karcie budowy", {
+          description: card ? "Powiedz nazwę jak na liście etapów, np. „etap próba szczelności zrobiony”." : "Najpierw wybierz budowę wpisu albo powiedz jej nazwę na początku.",
+        });
+      } else {
+        if (hit.done === undefined) setSiteStages(card.id, toggleStage(stages, hit.id, Date.now()), stages);
+        done.push(`etap zrobiony: ${hit.name}`);
+      }
+    }
     // „brakuje …” — braki idą od razu do karty budowy (wskazanej w wypowiedzi albo bieżącej), nie do wpisu.
     if (parsed.shortages.length > 0) {
-      const name = parsed.site ?? site;
-      const card = name ? findSiteByName(siteDirectory(study.sites, study.journal), name) : undefined;
       if (!card) {
         toast.error("Braki zapisują się w karcie budowy", { description: "Najpierw wybierz budowę wpisu albo powiedz jej nazwę na początku." });
         return;
@@ -451,6 +478,26 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               </ToggleGroupItem>
             ))}
           </ToggleGroup>
+
+          {!isEdit && kind === "ok" && nextStages.length > 0 && (
+            <div className="space-y-1" data-testid="journal-stage-chips">
+              <p className="text-xs text-muted-foreground">Skończony etap? Odhacz w karcie budowy:</p>
+              <div className="flex flex-wrap gap-1.5" role="group" aria-label="Następne etapy budowy">
+                {nextStages.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => markStage(s.id)}
+                    aria-label={`Odhacz etap: ${s.name}`}
+                    className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-success-ink/40 px-2.5 py-1 text-xs text-success-ink hover:bg-success/10 coarse:min-h-11 coarse:px-3 coarse:text-sm"
+                  >
+                    <ListChecks className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                    <span className="truncate">{s.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {isEdit && kind === "problem" && (
             <label className="flex items-center gap-2.5 rounded-xl border border-border px-3 py-2.5 text-sm coarse:min-h-12">
