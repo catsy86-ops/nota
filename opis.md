@@ -2561,6 +2561,68 @@ Pod paskiem jest wyróżniona notka z dostępem (ikona klucza).
 
 **Commit.** `95159d1` (2026-10-16).
 
+### Godziny na budowach (H2)
+
+**Co robi.** Przy dniu z wpisami z kilku budów nagłówek dnia w Dzienniku ma przycisk z zegarem. Pokazuje on „podziel
+godziny” (kolor ostrzeżenia), dopóki dzień nie jest podzielony, a potem podział, np. „3,5 + 6,5 h”.
+
+Przycisk otwiera okno „Godziny na budowach”. Okno pokazuje zmianę z Grafiku i ma pole godzin przy każdej budowie
+(„6”, „6,5”, „6:30”). Pod polami jest podpowiedź („Puste pole dostanie resztę: 3 h 30 min”), a przyciski to
+„Po równo” i „Zapisz”.
+
+Przy nazwie budowy w Dzienniku widać jej godziny. Raport jednej budowy liczy tylko jej część dnia,
+np. „3 h 30 min na tej budowie (z 10 h, Budowa 07:00–17:00)”. Raport wszystkich budów pokazuje cały dzień
+z podziałem w nawiasie.
+
+**Gdzie jest.**
+- `src/lib/study/siteHours.ts`:
+  - typ `SiteHours` (`id` = dzień, `minutes`);
+  - `cleanSiteHours`, `parseHours`;
+  - `dayHours(journal, cards, work, key, dayKeyOf)` zwraca `DayHours` z budowami dnia, minutami (albo `null`)
+    i flagą `set`;
+  - `siteMinutesOn`.
+- `src/lib/study/siteItems.ts`: rodzaj listy `hours` w mapie `studySiteItems` (`budowa␁hours␁dzień` → `{ minutes }`).
+- `src/lib/study/sites.ts`: `SiteCard.hours`. `src/lib/study/store.ts`: `setDayHours(day, { siteId: minuty })`.
+- `src/lib/study/report.ts`:
+  - `ReportOptions.sites` (wszystkie karty);
+  - `ReportWork.site` (minuty tej budowy albo `null`) i `ReportWork.bySite`;
+  - `splitWork`, `workMinutesOf`, `workLine`. Ten sam opis dnia trafia na ekran, do tekstu i na wydruk.
+- `src/components/study/DayHoursDialog.tsx` (okno); `StudyJournal.tsx` (`hoursByDay`, przycisk `[data-day-hours]`,
+  godziny przy budowie `[data-site-hours]`); `JournalReport.tsx` i `SiteCardDialog.tsx` (paczka ZIP) przekazują
+  wszystkie karty.
+
+**Jak działa i dlaczego.**
+- Zasada bez wpisanych godzin:
+  - wpisany podział wygrywa;
+  - jedyna budowa dnia dostaje cały dzień z Grafiku;
+  - jedyna budowa bez wpisu przy innych wpisanych dostaje resztę;
+  - kilka budów bez podziału to „nierozdzielone”.
+
+  Wcześniej raport każdej z dwóch budów tego samego dnia liczył pełne 10 h, więc suma dla szefa była zawyżona.
+  Teraz taki dzień ma w raporcie budowy opis „godziny nierozdzielone” i nie wchodzi do sumy.
+- Godziny to lista karty budowy w osobnych kluczach mapy, tak jak etapy i braki. Każdy dzień to osobna pozycja,
+  więc dwa telefony wpisujące różne dni się scalają. Kopia zapasowa i stara karta z polem `hours` przechodzą
+  przez ogólne `migrateCardLists`.
+- Godzin nie zapisujemy w Grafiku: Grafik to dzień pracy, a podział między budowy to sprawa dziennika.
+  Grafik zostaje jedynym źródłem długości dnia.
+- `dayHours` dostaje minuty pracy i `dayKeyOf` z zewnątrz, bo `report.ts` importuje `siteHours.ts` (bez cyklu importów).
+- Kolejność w nagłówku dnia idzie za grupami budów pod nim (od najnowszej).
+
+**Ograniczenia i pułapki.**
+- Wpisane godziny mogą przekroczyć dzień z Grafiku. Okno to pokazuje („Wpisano … więcej niż w Grafiku”), ale nie blokuje.
+- Bez zmiany w Grafiku (lub przy nieobecności) przycisk pojawia się tylko, gdy coś już wpisano. Raport wtedy
+  nie liczy godzin, bo nie ma dnia pracy.
+- Starsza wersja aplikacji nie zna rodzaju `hours`: nie pokaże podziału, ale też go nie skasuje (osobne klucze mapy).
+- Pułapka testów: dane z dwiema budowami tego samego dnia dają teraz „nierozdzielone”. Dlatego `report.test.ts`
+  i `study.spec.ts` (raport z Grafikiem) mają poprawione oczekiwania i dane.
+
+**Testy.** `src/lib/study/siteHours.test.ts` (`parseHours`, `cleanSiteHours`, zasady `dayHours`, raport jednej i wszystkich
+budów), `study.test.ts` („godziny na budowach”: dzień zmienia tylko swoją pozycję, 0 usuwa), `report.test.ts`,
+`e2e/site-hours.spec.ts` (podział z podpowiedzią reszty, godziny przy budowach, raport po przeładowaniu; błędna liczba).
+Vitest 1339/1339, e2e Pracy 53/53. Obejrzane na zrzutach 390 px i na komputerze, w obu motywach.
+
+**Commit.** `f5186f5` (2026-10-16).
+
 ### Etapy budowy
 
 **Co robi.** Karta budowy ma listę etapów instalacji w domku jednorodzinnym: domyślnie kanalizacja podposadzkowa,
