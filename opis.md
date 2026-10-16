@@ -1525,7 +1525,7 @@ Karta znika przy aktywnym wyszukiwaniu, tak jak przegląd tygodnia.
 
 **Testy.** Nie dodano. Sprawdzono: typecheck, lint zmienionych plików.
 
-**Commit.** (w toku)
+**Commit.** `32f51b7` (2026-10-16).
 
 ## Praca — własne pytania i punkty listy (N5)
 
