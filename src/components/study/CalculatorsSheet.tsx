@@ -168,8 +168,9 @@ function VolumeCalc() {
             <label className="space-y-1 text-xs text-muted-foreground">
               Rura {i + 1}
               <select value={r.pipe} onChange={(e) => patch(r.id, { pipe: e.target.value })} className={cn(fieldClass, "font-sans")} aria-label={`Rura ${i + 1}`}>
-                {PIPES.map((p) => <option key={p.id} value={p.id}>{p.label} (wewn. {p.innerMm} mm)</option>)}
-                <option value="custom">Inna — średnica wewn.</option>
+                {/* Krótko — na telefonie pole ma ~165 px; „wewn.” jest w podpisie pod kalkulatorem. */}
+                {PIPES.map((p) => <option key={p.id} value={p.id}>{p.label} · {p.innerMm} mm</option>)}
+                <option value="custom">Inna rura</option>
               </select>
             </label>
             {r.pipe === "custom" ? (
