@@ -1501,6 +1501,32 @@ w portalu — w testach `page.getByRole("menuitem", …)`, nie wewnątrz okna.
 
 ---
 
+## Dziś — karta zmiany z Grafiku (punkt 2 planu)
+
+**Co robi.** Na górze widoku „Dziś” jest karta z datą, dzisiejszą zmianą z Grafiku (nazwa, godziny) albo informacją,
+że dziś nie ma zmiany. Dwa przyciski: „Grafik” otwiera Grafik, „Notatka dnia” otwiera dzisiejszą notatkę dnia.
+Karta znika przy aktywnym wyszukiwaniu, tak jak przegląd tygodnia.
+
+**Gdzie jest.**
+- `src/components/review/TodayShiftCard.tsx`: `TodayShiftCard({ onOpenShifts, onDailyNote })`. Czyta
+  `useShifts()` i `useShiftsReady()` z `lib/shifts`, dzień liczy przez `localDayKey()`.
+- `src/pages/Index.tsx`: lazy import `TodayShiftCard`, renderowanie w widoku `today` przed `WeeklyReviewCard`.
+  `onOpenShifts` → `go("shifts")`, `onDailyNote` → `openDailyNote`.
+
+**Jak działa i dlaczego.**
+- Dane tylko do odczytu: zmianę dodaje się i zmienia w Grafiku, nie tutaj (jeden punkt prawdy).
+- Karta jest leniwa (jak przegląd tygodnia), więc nie dokłada nic do pierwszego ekranu.
+- Gdy Grafik jeszcze się nie wczytał, karta pokazuje „Grafik się wczytuje…”, zamiast udawać brak zmiany.
+- Rodzaj zmiany usunięty z Grafiku daje „Zaplanowana zmiana (rodzaj usunięty).” — zapis nie znika bez śladu.
+
+**Ograniczenia.** Karta nie pokazuje terminów ani zaległych notatek; to kolejny krok planu „Dziś”
+(dotąd widok listy i przegląd tygodnia zostają bez zmian). Brak testów jednostkowych i e2e dla tej karty —
+świadomie pominięte na prośbę (pamięć i pełny e2e).
+
+**Testy.** Nie dodano. Sprawdzono: typecheck, lint zmienionych plików.
+
+**Commit.** (w toku)
+
 ## Praca — własne pytania i punkty listy (N5)
 
 **Co robi.** Możesz dodać własne pytanie do quizu (z czterema odpowiedziami: poprawna i trzy błędne, plus wyjaśnienie)
