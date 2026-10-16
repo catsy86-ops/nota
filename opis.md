@@ -2244,7 +2244,8 @@ z etykietą `budowa` albo wydrukować / zapisać jako PDF.
 - `src/lib/study/report.ts` — `buildJournalReport`, `reportBody`, `reportText`, `reportSummary`,
   `workOn`, `periodLabel`, `dayKeyOf`, `shiftKey`.
 - `src/lib/study/toNote.ts` — `reportToNote`.
-- `src/components/study/JournalReport.tsx` — `JournalReportDialog`, podgląd `ReportPaper`, wydruk `ReportPrint`.
+- `src/components/study/JournalReport.tsx` — `JournalReportDialog`, podgląd `ReportPaper`, wydruk `ReportPrint`
+  (przez wspólny `PrintRoot.tsx`, ten sam co protokół odbioru).
 
 **Jak działa.**
 - `ReportOptions.siteId`: `null` = wszystkie budowy, `""` = bez budowy. `siteCard` daje
@@ -2256,7 +2257,7 @@ z etykietą `budowa` albo wydrukować / zapisać jako PDF.
 - Udostępnianie: zdjęcia (do 10) wczytane z góry do `navigator.share` — po kliknięciu
   przeglądarka daje mało czasu. Bez share albo przy błędzie raport idzie do schowka.
 - „Do notatki”: te same klucze zdjęć, bez kopiowania bajtów.
-- Wydruk: kontener `#report-print` i klasa `html.printing-report` (style w `index.css`).
+- Wydruk: kontener `#report-print` i klasa `html.printing-report` (style w `index.css`); logika w `PrintRoot.tsx`.
   Podgląd w oknie ma ten sam układ co wydruk.
 
 **Testy.** `src/lib/study/report.test.ts`, e2e „raport budowy z godzinami z Grafiku…” i „karta budowy…”.
@@ -2412,6 +2413,37 @@ czyszczenie, limit, linia i tekst, `cleanShortages`, historia i limit, `cleanOrd
 „Cofnij”, historia zamówień, raport, stan po przeładowaniu). Regresja działu Praca 39/39 (chromium), układ telefonu 4/4.
 
 **Commit.** `f10d6dd` (2026-10-16).
+
+### Protokół odbioru dla inwestora
+
+**Co robi.** Przycisk „Protokół odbioru” w karcie budowy drukuje jedną kartkę (albo PDF przez „Zapisz jako PDF” w oknie
+drukowania): nazwa budowy, adres, inwestor, okres prac, data protokołu, etapy z datami (☑/☐), próby szczelności z
+wpisów z wynikiem, uwagi (otwarte problemy; bez nich „Brak uwag”), do 12 zdjęć i dwa pola „Wykonawca / Inwestor —
+data i podpis”.
+
+**Gdzie jest.**
+- `src/lib/study/handover.ts`: `buildHandover(journal, site, now)` → `Handover`, `handoverText(h)` (ta sama treść jako
+  tekst, bez zdjęć), `HANDOVER_PHOTOS_MAX` (12).
+- `src/components/study/HandoverPaper.tsx` — kartka (klasa `.report-paper`, czarno na białym na papierze).
+- `src/components/study/PrintRoot.tsx` — wspólny wydruk (raport i protokół): korzeń `#report-print` pod `body`, klasa
+  `html.printing-report`, czekanie na zdjęcia (do 3 s), sprzątanie po `afterprint` albo pierwszym dotknięciu.
+- `src/components/study/SiteCardDialog.tsx`: przycisk, stan `handover`, `<PrintRoot testId="handover-print">`.
+
+**Jak działa i dlaczego.** Protokół składa się z danych, które już są: karta (adres, inwestor, etapy), wpisy (próby
+`test`, problemy bez `resolved`, zdjęcia). Zdjęcia od najstarszych, bo „przed zakryciem” są zwykle na początku budowy;
+reszta jest w paczce ZIP. Przycisk jest aktywny, gdy budowa ma wpisy albo własną listę etapów.
+
+**Ograniczenia i pułapki.**
+- Bez podglądu przed drukiem — od razu okno drukowania (jak „Drukuj” w raporcie).
+- Zdjęć „przed zakryciem” nie da się odróżnić od innych (podpis jest wtopiony w obraz) — bierzemy najstarsze.
+- `handoverText` jest gotowe, ale w interfejsie nie ma jeszcze „Kopiuj tekst protokołu”.
+
+**Testy.** `src/lib/study/handover.test.ts` (4: dane, okres, próby i uwagi tylko z tej budowy; etapy i limit zdjęć;
+budowa bez wpisów; tekst). `e2e/site-handover.spec.ts` (karta z adresem i inwestorem, odhaczony etap, treść wydruku z
+próbą, uwagą i podpisami; `window.print` podmienione). Regresja działu Praca 37/37 (w tym wydruk raportu).
+Nie drukowane na prawdziwej drukarce ani do PDF w telefonie.
+
+**Commit.** `9b169ad` (2026-10-16).
 
 ### Dyktowanie: cały wpis i kształtki
 
