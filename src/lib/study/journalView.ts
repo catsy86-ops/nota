@@ -141,3 +141,35 @@ export function splitRecent<E extends JournalEntry>(entries: readonly E[], now: 
   const recent = entries.filter((e) => e.at >= since);
   return { recent, older: entries.length - recent.length };
 }
+
+/**
+ * Ostatnie różne teksty z tej budowy, od najnowszego — pigułki pod pustym polem „Co się dzieje?”.
+ * `siteId` = id karty (`siteDirectory`); pusty = bez budowy, bez podpowiedzi.
+ */
+export function recentSiteTexts(journal: readonly JournalEntry[], siteId: string, limit = 3): string[] {
+  if (!siteId) return [];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const e of [...journal].sort((a, b) => b.at - a.at)) {
+    const text = e.text.trim();
+    if (!text || entrySiteId(e) !== siteId || seen.has(text)) continue;
+    seen.add(text);
+    out.push(text);
+    if (out.length === limit) break;
+  }
+  return out;
+}
+
+/** Najnowszy tekst z poprzedniego dnia kalendarzowego na tej budowie („Jak wczoraj”); brak → `null`. */
+export function yesterdaySiteText(journal: readonly JournalEntry[], siteId: string, now: number = Date.now()): string | null {
+  if (!siteId) return null;
+  const today = new Date(now);
+  const start = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+  const yesterday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1).getTime();
+  let best: JournalEntry | null = null;
+  for (const e of journal) {
+    if (e.at < yesterday || e.at >= start || !e.text.trim() || entrySiteId(e) !== siteId) continue;
+    if (!best || e.at > best.at) best = e;
+  }
+  return best?.text.trim() ?? null;
+}

@@ -713,3 +713,26 @@ test("stary adres /nauka nadal otwiera dział Praca", async ({ page }) => {
   await page.goto("/nauka");
   await expect(page.getByRole("heading", { name: "Praca", level: 1 })).toBeVisible();
 });
+
+test("dziennik: pusty wpis na budowie podpowiada wcześniejsze teksty tej budowy", async ({ page }) => {
+  await page.goto("/praca");
+  await openEntry(page);
+  let sheet = page.getByTestId("journal-entry-sheet");
+  await sheet.getByRole("button", { name: "Dodaj budowę" }).click();
+  await sheet.getByLabel("Inwestycja / adres").fill("Dom podpowiedzi");
+  await sheet.getByLabel("Inwestycja / adres").press("Enter");
+  await sheet.getByLabel("Co się dzieje?").fill("Montaż pionu w piwnicy");
+  await sheet.getByRole("button", { name: "Zapisz wpis" }).click();
+  await expect(sheet).toHaveCount(0);
+  await reloadWhenSaved(page);
+
+  await openEntry(page);
+  sheet = page.getByTestId("journal-entry-sheet");
+  // Budowa z poprzedniego wpisu zostaje wybrana — podpowiedzi są od razu.
+  await expect(sheet.getByRole("button", { name: "Budowa: Dom podpowiedzi. Zmień" })).toBeVisible();
+  const chips = sheet.getByTestId("journal-text-suggestions");
+  await expect(chips).toContainText("Montaż pionu w piwnicy");
+  await chips.getByRole("button", { name: "Montaż pionu w piwnicy" }).click();
+  await expect(sheet.getByLabel("Co się dzieje?")).toHaveValue("Montaż pionu w piwnicy");
+  await expect(chips).toHaveCount(0);
+});

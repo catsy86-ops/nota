@@ -26,8 +26,8 @@ import {
 } from "@/lib/study/store";
 import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft, type JournalDraft } from "@/lib/study/draft";
 import { closeJournalSheet, getJournalEditForm, patchJournalEditForm, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
-import { fromLocalInput, KIND_LABEL, suggestSites, toLocalInput, whenLabel } from "@/lib/study/journalView";
-import { siteDirectory } from "@/lib/study/sites";
+import { fromLocalInput, KIND_LABEL, recentSiteTexts, suggestSites, toLocalInput, whenLabel, yesterdaySiteText } from "@/lib/study/journalView";
+import { findSiteByName, siteDirectory } from "@/lib/study/sites";
 
 export function KindIcon({ kind, className = "h-4 w-4" }: { kind: JournalKind; className?: string }) {
   if (kind === "ok") return <CircleCheck className={cn(className, "shrink-0 text-success-ink")} aria-hidden />;
@@ -118,6 +118,11 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     () => siteDirectory(study.sites, study.journal).filter((s) => s.archived === undefined).map((s) => s.name),
     [study.sites, study.journal],
   );
+  /** Id budowy wybranej w polu (`""` = bez budowy albo nieznana nazwa) — dla podpowiedzi tekstu. */
+  const siteId = useMemo(() => findSiteByName(siteDirectory(study.sites, study.journal), site)?.id ?? "", [study.sites, study.journal, site]);
+  /** Podpowiedzi tekstu tylko dla nowego, pustego wpisu z wybraną budową. */
+  const textSuggestions = useMemo(() => (isEdit ? [] : recentSiteTexts(study.journal, siteId)), [isEdit, study.journal, siteId]);
+  const yesterdayText = useMemo(() => (isEdit ? null : yesterdaySiteText(study.journal, siteId)), [isEdit, study.journal, siteId]);
   const siteChips = editingSite
     ? suggestSites(recentSites, site === siteAtOpen ? "" : site, site)
     : !site ? suggestSites(recentSites, "", "", 3) : [];
@@ -424,6 +429,33 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               </span>
             </label>
             {dictationHint && <p className="hidden text-xs text-muted-foreground coarse:block" data-testid="dictation-hint">{dictationHint}</p>}
+            {!text.trim() && (yesterdayText || textSuggestions.length > 0) && (
+              <div className="flex flex-wrap gap-1.5" role="group" aria-label="Podpowiedzi tekstu z tej budowy" data-testid="journal-text-suggestions">
+                {yesterdayText && (
+                  <button
+                    type="button"
+                    onPointerDown={(e) => e.preventDefault()}
+                    onClick={() => { haptic("selection"); setText(yesterdayText); }}
+                    title={yesterdayText}
+                    className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-primary/40 px-2.5 py-1 text-xs text-primary hover:bg-primary/10 coarse:min-h-11 coarse:px-3 coarse:text-sm"
+                  >
+                    Jak wczoraj
+                  </button>
+                )}
+                {textSuggestions.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onPointerDown={(e) => e.preventDefault()}
+                    onClick={() => { haptic("selection"); setText(t); }}
+                    title={t}
+                    className="pressable inline-flex max-w-full items-center rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground hover:border-primary hover:text-foreground coarse:min-h-11 coarse:px-3 coarse:text-sm"
+                  >
+                    <span className="truncate">{t}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
