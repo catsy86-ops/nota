@@ -55,6 +55,8 @@ export interface JournalEntry {
   test?: PressureTest;
   /** Zużyte kształtki (`fittings.ts`); brak = bez kształtek. */
   fittings?: Fitting[];
+  /** Etap budowy (id z listy karty, `stages.ts`), który ten wpis zamknął — zdjęcia idą do protokołu przy etapie. */
+  stage?: string;
 }
 
 /**
@@ -145,7 +147,8 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
   const images = Array.isArray(e.images) ? e.images.filter((r): r is string => typeof r === "string" && isImageRef(r)).slice(0, JOURNAL_MAX_IMAGES) : [];
   const test = cleanTest(e.test);
   const fittings = cleanFittings(e.fittings);
-  if (!text.trim() && checked.length === 0 && images.length === 0 && !test && fittings.length === 0) return null;
+  const stage = cleanEntryStage(e.stage);
+  if (!text.trim() && checked.length === 0 && images.length === 0 && !test && fittings.length === 0 && !stage) return null;
   return {
     id: e.id, at: e.at, kind: e.kind as JournalKind,
     topic: typeof e.topic === "string" && e.topic.length <= 64 ? e.topic : null,
@@ -158,8 +161,12 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
     ...(e.kind === "problem" && typeof e.solution === "string" && e.solution.trim() ? { solution: e.solution.trim().slice(0, JOURNAL_SOLUTION_MAX) } : {}),
     ...(test ? { test } : {}),
     ...(fittings.length ? { fittings } : {}),
+    ...(stage ? { stage } : {}),
   };
 }
+
+/** Id etapu przy wpisie; śmieci → brak. */
+export const cleanEntryStage = (v: unknown): string | undefined => (typeof v === "string" && v && v.length <= 40 ? v : undefined);
 
 const trueKeys = (v: unknown): string[] =>
   v && typeof v === "object" ? Object.entries(v as Record<string, unknown>).filter(([, x]) => x === true).map(([k]) => k) : [];

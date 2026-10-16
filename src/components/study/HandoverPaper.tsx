@@ -64,9 +64,17 @@ export function HandoverPaper({ handover: h }: { handover: Handover }) {
       {h.photos.length > 0 && (
         <section data-handover-photos>
           <h3 className="mb-1 font-semibold">Dokumentacja zdjęciowa</h3>
-          <div className="grid grid-cols-3 gap-2">
-            {h.photos.map((ref) => (
-              <NoteImage key={ref} imageRef={ref} loading="eager" alt="Zdjęcie z budowy" className="aspect-[4/3] w-full rounded object-cover" placeholderClassName="aspect-[4/3]" />
+          <div className="space-y-2">
+            {h.photoGroups.map((g) => (
+              <div key={g.stage ?? ""} className="break-inside-avoid-page" data-handover-photo-group={g.stage ?? ""}>
+                {/* Podpis grupy tylko przy etapach — bez przypiętych zdjęć zostaje jedna siatka bez nagłówka. */}
+                {(g.stage || h.photoGroups.length > 1) && <h4 className="mb-1 text-xs font-medium text-muted-foreground">{g.stage ?? "Pozostałe"}</h4>}
+                <div className="grid grid-cols-3 gap-2">
+                  {g.photos.map((ref) => (
+                    <NoteImage key={ref} imageRef={ref} loading="eager" alt={g.stage ? `Zdjęcie: ${g.stage}` : "Zdjęcie z budowy"} className="aspect-[4/3] w-full rounded object-cover" placeholderClassName="aspect-[4/3]" />
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
           {h.morePhotos > 0 && <p className="mt-1 text-xs text-muted-foreground">i {h.morePhotos} więcej — w paczce ZIP budowy.</p>}

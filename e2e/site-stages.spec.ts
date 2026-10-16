@@ -75,10 +75,13 @@ test("wpis „Zrobione” podsuwa następne etapy — stuknięcie odhacza, „Co
   const chips = sheet.getByTestId("journal-stage-chips").getByRole("button");
   await expect(chips).toHaveText(["Kanalizacja podposadzkowa", "Rozprowadzenie wody", "Piony i podejścia kanalizacji"]);
 
+  // Odhaczony etap przypina się do wpisu — zamiast pigułek pasek „Etap: …”.
   await sheet.getByRole("button", { name: "Odhacz etap: Kanalizacja podposadzkowa" }).click();
-  await expect(chips.first()).toHaveText("Rozprowadzenie wody");
+  await expect(sheet.getByTestId("journal-entry-stage")).toContainText("Kanalizacja podposadzkowa");
+  await expect(chips).toHaveCount(0);
   await page.locator("[data-sonner-toast]").filter({ hasText: "Etap zrobiony: Kanalizacja podposadzkowa" }).getByRole("button", { name: "Cofnij" }).click();
   await expect(chips.first()).toHaveText("Kanalizacja podposadzkowa");
+  await expect(sheet.getByTestId("journal-entry-stage")).toHaveCount(0);
 
   await sheet.getByRole("button", { name: "Odhacz etap: Rozprowadzenie wody" }).click();
   await page.keyboard.press("Escape");

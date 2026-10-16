@@ -14,7 +14,7 @@ import { cleanStages, type SiteStage } from "./stages";
 import { cleanShortages, logOrder, type OrderLogEntry, type Shortage } from "./shortages";
 import { siteOrder } from "./order";
 import {
-  JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, JOURNAL_SOLUTION_MAX, SITE_MAX,
+  cleanEntryStage, JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, JOURNAL_SOLUTION_MAX, SITE_MAX,
   type Column, type JournalEntry, type JournalKind, type StudyState,
 } from "./yStudy";
 
@@ -66,7 +66,8 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
       : [];
     const test = cleanTest(e.test);
     const fittings = cleanFittings(e.fittings);
-    if (!text.trim() && checkedIds.length === 0 && images.length === 0 && !test && fittings.length === 0) continue;
+    const stage = cleanEntryStage(e.stage);
+    if (!text.trim() && checkedIds.length === 0 && images.length === 0 && !test && fittings.length === 0 && !stage) continue;
     journal.push({
       id: e.id, at: e.at, kind: e.kind as JournalKind, topic, text,
       site: typeof e.site === "string" ? e.site.slice(0, SITE_MAX) : "",
@@ -77,6 +78,7 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
       ...(e.kind === "problem" && typeof e.solution === "string" && e.solution.trim() ? { solution: e.solution.trim().slice(0, JOURNAL_SOLUTION_MAX) } : {}),
       ...(test ? { test } : {}),
       ...(fittings.length ? { fittings } : {}),
+      ...(stage ? { stage } : {}),
     });
   }
   journal.sort((a, b) => a.at - b.at);
@@ -200,6 +202,8 @@ export interface NewJournalEntry {
   test?: PressureTest | null;
   /** Zużyte kształtki; puste/brak = bez kształtek. */
   fittings?: Fitting[];
+  /** Etap budowy zamknięty tym wpisem (id z karty); `null`/brak = bez etapu. */
+  stage?: string | null;
 }
 
 /** Wejście z arkusza → pola wpisu przefiltrowane przez materiał; `null` = pusty wpis. */
@@ -210,7 +214,8 @@ function entryFields(input: NewJournalEntry, now: number) {
   const images = (input.images ?? []).filter(isImageRef).slice(0, JOURNAL_MAX_IMAGES);
   const test = cleanTest(input.test);
   const fittings = cleanFittings(input.fittings);
-  if (!text && checked.length === 0 && images.length === 0 && !test && fittings.length === 0) return null;
+  const stage = cleanEntryStage(input.stage);
+  if (!text && checked.length === 0 && images.length === 0 && !test && fittings.length === 0 && !stage) return null;
   return {
     at: typeof input.at === "number" && Number.isFinite(input.at) ? Math.min(input.at, now) : now,
     kind: input.kind,
@@ -220,6 +225,7 @@ function entryFields(input: NewJournalEntry, now: number) {
     images,
     ...(test ? { test } : {}),
     ...(fittings.length ? { fittings } : {}),
+    ...(stage ? { stage } : {}),
   };
 }
 

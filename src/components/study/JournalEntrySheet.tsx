@@ -53,7 +53,7 @@ const KIND_ON: Record<JournalKind, string> = {
 let persistAsked = false;
 
 /** Pola wspólne dla szkicu nowego wpisu i edycji zapisanego. */
-type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "test" | "fittings">;
+type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "test" | "fittings" | "stage">;
 
 function useOnline() {
   const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine);
@@ -125,6 +125,10 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   /** Najbliższe nieodhaczone etapy budowy — przy „Zrobione” do odhaczenia jednym stuknięciem. */
   const nextStages = useMemo(() => (siteCard ? siteStages(siteCard).filter((s) => s.done === undefined).slice(0, 3) : []), [siteCard]);
 
+  /** Etap zamknięty tym wpisem (nazwa z karty); `null` = bez etapu albo etap usunięty z karty. */
+  const entryStage = form.stage && siteCard ? siteStages(siteCard).find((s) => s.id === form.stage) ?? null : null;
+
+  /** Odhacza etap w karcie od razu i przypina do niego wpis (jego zdjęcia idą do protokołu przy etapie). */
   function markStage(id: string) {
     if (!siteCard) return;
     const before = siteStages(siteCard);
@@ -132,7 +136,11 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     const label = before.find((s) => s.id === id)?.name ?? "etap";
     haptic("success");
     setSiteStages(siteCard.id, after, before);
-    toastWithUndo(`Etap zrobiony: ${label}`, () => setSiteStages(siteCard.id, before, after));
+    patch({ stage: id });
+    toastWithUndo(`Etap zrobiony: ${label}`, () => {
+      setSiteStages(siteCard.id, before, after);
+      if (getForm().stage === id) patch({ stage: null });
+    });
   }
   /** Podpowiedzi tekstu tylko dla nowego, pustego wpisu z wybraną budową. */
   const textSuggestions = useMemo(() => (isEdit ? [] : recentSiteTexts(study.journal, siteId)), [isEdit, study.journal, siteId]);
@@ -183,6 +191,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
         });
       } else {
         if (hit.done === undefined) setSiteStages(card.id, toggleStage(stages, hit.id, Date.now()), stages);
+        patch({ stage: hit.id });
         done.push(`etap zrobiony: ${hit.name}`);
       }
     }
@@ -306,7 +315,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     if (processing > 0) return;
     if (isEdit) { saveEdit(); return; }
     const wasDone = topic && columnOf(study, topic) === "done";
-    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, at, test: form.test, fittings: form.fittings });
+    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, at, test: form.test, fittings: form.fittings, stage: form.stage });
     if (!entry) {
       haptic("warn");
       toast("Wpisz, co się dzieje, dodaj zdjęcie albo zaznacz sprawdzone punkty");
@@ -325,7 +334,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     const prev = study.journal.find((e) => e.id === f.id);
     const demotes = f.kind === "problem" && !!f.topic && columnOf(study, f.topic) === "done" && (prev?.kind !== "problem" || prev.topic !== f.topic);
     const saved = updateJournalEntry(f.id, {
-      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, at: f.at, site: f.site, resolved: f.resolved, test: f.test, fittings: f.fittings,
+      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, at: f.at, site: f.site, resolved: f.resolved, test: f.test, fittings: f.fittings, stage: f.stage,
     });
     if (!saved) {
       haptic("warn");
@@ -479,9 +488,25 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             ))}
           </ToggleGroup>
 
-          {!isEdit && kind === "ok" && nextStages.length > 0 && (
+          {entryStage && (
+            <div className="flex items-center gap-2 rounded-xl border border-success-ink/40 bg-success/10 px-3 py-1.5 text-sm" data-testid="journal-entry-stage">
+              <ListChecks className="h-4 w-4 shrink-0 text-success-ink" aria-hidden />
+              <span className="min-w-0 flex-1 truncate">Etap: <span className="font-medium">{entryStage.name}</span></span>
+              <button
+                type="button"
+                onClick={() => { haptic("tap"); patch({ stage: null }); }}
+                aria-label={`Odepnij wpis od etapu: ${entryStage.name}`}
+                title="Odepnij od etapu (etap zostaje odhaczony w karcie)"
+                className="pressable grid size-7 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
+              >
+                <X className="h-3.5 w-3.5" aria-hidden />
+              </button>
+            </div>
+          )}
+
+          {!isEdit && !entryStage && kind === "ok" && nextStages.length > 0 && (
             <div className="space-y-1" data-testid="journal-stage-chips">
-              <p className="text-xs text-muted-foreground">Skończony etap? Odhacz w karcie budowy:</p>
+              <p className="text-xs text-muted-foreground">Skończony etap? Odhacz go — zdjęcia z wpisu trafią do protokołu przy nim:</p>
               <div className="flex flex-wrap gap-1.5" role="group" aria-label="Następne etapy budowy">
                 {nextStages.map((s) => (
                   <button

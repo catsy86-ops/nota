@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 // Protokół odbioru z karty budowy: wydruk z danymi budowy, etapami, próbą szczelności, uwagami i podpisami.
 
@@ -70,4 +70,39 @@ test("tekst protokołu: bez udostępniania systemowego kopiuje się do schowka",
   expect(copied.startsWith("# Protokół odbioru instalacji wod-kan — Lipowa 5")).toBe(true);
   expect(copied).toContain("Próba szczelności (woda, 9 bar, 30 min, spadek 0 bar): szczelna");
   expect(copied).toContain("## Uwagi\n- 12.10.2026 Brak rewizji w łazience");
+});
+
+async function png(page: Page) {
+  const b64 = await page.evaluate(() => {
+    const c = document.createElement("canvas");
+    c.width = 160; c.height = 120;
+    const ctx = c.getContext("2d")!;
+    ctx.fillStyle = "hsl(200, 70%, 50%)";
+    ctx.fillRect(0, 0, 160, 120);
+    return c.toDataURL("image/png").split(",")[1];
+  });
+  return { name: "pod-posadzka.png", mimeType: "image/png", buffer: Buffer.from(b64, "base64") };
+}
+
+test("zdjęcia wpisu, który odhaczył etap, idą do protokołu przy tym etapie (po przeładowaniu)", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByRole("button", { name: /^(Wpis|Dokończ wpis)$/ }).click();
+  const sheet = page.getByTestId("journal-entry-sheet");
+  await sheet.getByRole("radio", { name: "Zrobione" }).click();
+  await sheet.getByTestId("journal-photo-input").setInputFiles([await png(page)]);
+  await expect(sheet.getByRole("button", { name: "Usuń zdjęcie z wpisu" })).toHaveCount(1);
+  await sheet.getByRole("button", { name: "Odhacz etap: Kanalizacja podposadzkowa" }).click();
+  await expect(sheet.getByTestId("journal-entry-stage")).toContainText("Etap: Kanalizacja podposadzkowa");
+  await expect(sheet.getByTestId("journal-stage-chips")).toHaveCount(0);
+  await sheet.getByRole("button", { name: "Zapisz wpis" }).click();
+  await expect(sheet).toHaveCount(0);
+
+  await expect(page.getByText("Zapisano", { exact: true })).toBeVisible();
+  await page.reload();
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
+  const card = page.getByTestId("site-card");
+  await card.getByRole("button", { name: "Protokół odbioru" }).click();
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __printed?: string }).__printed)).toBeTruthy();
+  await expect(page.locator("#report-print [data-handover-photo-group='Kanalizacja podposadzkowa'] img")).toHaveCount(1);
 });

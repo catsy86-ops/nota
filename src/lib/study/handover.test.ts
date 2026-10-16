@@ -52,3 +52,39 @@ describe("protokół odbioru", () => {
     expect(text).toContain("## Uwagi\n- 03.10.2026 Brak rewizji w łazience");
   });
 });
+
+describe("protokół odbioru — zdjęcia przy etapach", () => {
+  const stages = [{ id: "kan-pod", name: "Kanalizacja podposadzkowa", done: at(1) }, { id: "proba", name: "Próba szczelności", done: at(3) }];
+
+  it("grupy w kolejności etapów, pozostałe na końcu; tekst liczy zdjęcia etapów", () => {
+    const journal = [
+      e("x", at(1), { images: [IMG(1)] }),
+      e("p", at(3), { images: [IMG(2), IMG(3)], stage: "proba" }),
+      e("k", at(2), { images: [IMG(4)], stage: "kan-pod" }),
+      e("usuniety", at(4), { images: [IMG(5)], stage: "nie-ma" }),
+    ];
+    const h = buildHandover(journal, { ...card, stages }, at(16));
+    expect(h.photoGroups).toEqual([
+      { stage: "Kanalizacja podposadzkowa", photos: [IMG(4)] },
+      { stage: "Próba szczelności", photos: [IMG(2), IMG(3)] },
+      { stage: null, photos: [IMG(1), IMG(5)] },
+    ]);
+    expect(h.photos).toEqual([IMG(4), IMG(2), IMG(3), IMG(1), IMG(5)]);
+    expect(handoverText(h)).toContain("Dokumentacja zdjęciowa: 5 zdjęć (Kanalizacja podposadzkowa: 1, Próba szczelności: 2).");
+  });
+
+  it("limit wydruku tnie od końca — etapy mają pierwszeństwo przed resztą", () => {
+    const journal = [
+      ...Array.from({ length: 10 }, (_, i) => e(`r${i}`, at(1) + i, { images: [IMG(i)] })),
+      e("p", at(5), { images: [IMG(1), IMG(2), IMG(3), IMG(4), IMG(5)], stage: "proba" }),
+    ];
+    const h = buildHandover(journal, { ...card, stages }, at(16));
+    expect(h.photoGroups.map((g) => [g.stage, g.photos.length])).toEqual([["Próba szczelności", 5], [null, 7]]);
+    expect(h.morePhotos).toBe(3);
+  });
+
+  it("bez przypiętych — jedna grupa bez etapu", () => {
+    const h = buildHandover([e("x", at(1), { images: [IMG(1)] })], card, at(16));
+    expect(h.photoGroups).toEqual([{ stage: null, photos: [IMG(1)] }]);
+  });
+});

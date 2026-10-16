@@ -363,6 +363,16 @@ describe("szkic wpisu", () => {
       .toEqual({ ...EMPTY_DRAFT, images: ["f".repeat(64)], checked: ["a"] });
     expect(sanitizeDraft(EMPTY_DRAFT, { at: 1234 }).at).toBe(1234);
     expect(sanitizeDraft(EMPTY_DRAFT, null)).toBe(EMPTY_DRAFT);
+    expect(sanitizeDraft(EMPTY_DRAFT, { stage: "proba" }).stage).toBe("proba");
+    expect(sanitizeDraft(EMPTY_DRAFT, { stage: 5 }).stage).toBeNull();
+  });
+
+  it("wpis z samym etapem (bez tekstu i zdjęć) zapisuje się; etap przeżywa sanitizeStudy", () => {
+    const e = addJournalEntry({ kind: "ok", topic: null, text: "", stage: "proba" }, 1000)!;
+    expect(e.stage).toBe("proba");
+    expect(addJournalEntry({ kind: "ok", topic: null, text: "", stage: "" }, 1000)).toBeNull();
+    const back = sanitizeStudy(getStudy(), { journal: [{ ...e, stage: "proba" }, { ...e, id: "x", stage: 7, text: "t" }] });
+    expect(back.journal.map((j) => j.stage)).toEqual(["proba", undefined]);
   });
 });
 

@@ -21,9 +21,11 @@ export interface JournalDraft {
   fittings: Fitting[];
   /** Moment wpisu ustawiony ręcznie („za wczoraj”); `null` = chwila zapisu. */
   at: number | null;
+  /** Etap budowy odhaczony z tego wpisu (id z karty); `null` = bez etapu. Brak w starszym szkicu = `null`. */
+  stage?: string | null;
 }
 
-export const EMPTY_DRAFT: JournalDraft = { topic: "", kind: "ok", text: "", checked: [], images: [], test: null, fittings: [], at: null };
+export const EMPTY_DRAFT: JournalDraft = { topic: "", kind: "ok", text: "", checked: [], images: [], test: null, fittings: [], at: null, stage: null };
 
 export function sanitizeDraft(defaults: JournalDraft, stored: unknown): JournalDraft {
   if (!stored || typeof stored !== "object") return defaults;
@@ -37,6 +39,7 @@ export function sanitizeDraft(defaults: JournalDraft, stored: unknown): JournalD
     test: cleanTest(s.test),
     fittings: cleanFittings(s.fittings),
     at: typeof s.at === "number" && Number.isFinite(s.at) ? s.at : null,
+    stage: typeof s.stage === "string" && s.stage && s.stage.length <= 40 ? s.stage : null,
   };
 }
 

@@ -24,6 +24,12 @@ export interface HandoverRemark {
   text: string;
 }
 
+/** Zdjęcia jednego etapu (wpisy przypięte do etapu) albo pozostałe (`stage: null`). */
+export interface HandoverPhotoGroup {
+  stage: string | null;
+  photos: string[];
+}
+
 export interface Handover {
   site: string;
   address: string;
@@ -39,6 +45,8 @@ export interface Handover {
   remarks: HandoverRemark[];
   /** Zdjęcia od najstarszego (przed zakryciem są zwykle pierwsze), do `HANDOVER_PHOTOS_MAX`. */
   photos: string[];
+  /** Te same zdjęcia po etapach (kolejność listy etapów), na końcu pozostałe; bez przypiętych — jedna grupa `null`. */
+  photoGroups: HandoverPhotoGroup[];
   /** Zdjęcia, które się nie zmieściły. */
   morePhotos: number;
 }
@@ -49,7 +57,19 @@ export function buildHandover(
   now: number = Date.now(),
 ): Handover {
   const entries = journal.filter((e) => entrySiteId(e) === site.id).sort((a, b) => a.at - b.at);
-  const photos = entries.flatMap((e) => e.images);
+  // Najpierw zdjęcia przypięte do etapów (w kolejności etapów), potem reszta — limit wydruku tnie od końca.
+  const stageList = site.stages ?? [];
+  const groups: HandoverPhotoGroup[] = stageList
+    .map((s) => ({ stage: s.name, photos: entries.filter((e) => e.stage === s.id).flatMap((e) => e.images) }))
+    .filter((g) => g.photos.length > 0);
+  const known = new Set(stageList.map((s) => s.id));
+  const rest = entries.filter((e) => !e.stage || !known.has(e.stage)).flatMap((e) => e.images);
+  if (rest.length > 0) groups.push({ stage: null, photos: rest });
+  const photos = groups.flatMap((g) => g.photos);
+  let left = HANDOVER_PHOTOS_MAX;
+  const photoGroups = groups
+    .map((g) => { const taken = g.photos.slice(0, Math.max(0, left)); left -= taken.length; return { stage: g.stage, photos: taken }; })
+    .filter((g) => g.photos.length > 0);
   const first = entries[0]?.at;
   const last = entries[entries.length - 1]?.at;
   return {
@@ -64,6 +84,7 @@ export function buildHandover(
       .filter((e) => e.kind === "problem" && e.resolved === undefined)
       .map((e) => ({ at: e.at, text: e.text.trim().split("\n")[0] || "bez opisu" })),
     photos: photos.slice(0, HANDOVER_PHOTOS_MAX),
+    photoGroups,
     morePhotos: Math.max(0, photos.length - HANDOVER_PHOTOS_MAX),
   };
 }
@@ -87,6 +108,9 @@ export function handoverText(h: Handover): string {
   lines.push("", "## Uwagi");
   if (h.remarks.length === 0) lines.push("Brak uwag — wszystkie zgłoszone problemy rozwiązane.");
   for (const r of h.remarks) lines.push(`- ${shortDate(r.at)} ${r.text}`);
-  if (h.photos.length > 0) lines.push("", `Dokumentacja zdjęciowa: ${h.photos.length + h.morePhotos} zdjęć.`);
+  if (h.photos.length > 0) {
+    const byStage = h.photoGroups.filter((g) => g.stage).map((g) => `${g.stage}: ${g.photos.length}`);
+    lines.push("", `Dokumentacja zdjęciowa: ${h.photos.length + h.morePhotos} zdjęć${byStage.length ? ` (${byStage.join(", ")})` : ""}.`);
+  }
   return lines.join("\n");
 }
