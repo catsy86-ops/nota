@@ -95,6 +95,7 @@ export function SiteCardDialog({
       const report = buildJournalReport(study.journal, {
         siteId: site.id,
         siteCard: site,
+        sites: Object.fromEntries(dir.map((x) => [x.id, x])),
         from: dayKeyOf(site.first),
         to: dayKeyOf(site.last),
         shifts,

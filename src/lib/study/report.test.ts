@@ -44,20 +44,22 @@ describe("raport z dziennika", () => {
     expect(workOn(null, "2026-10-14")).toBeNull();
   });
 
-  it("jedna budowa w zakresie: dni od najstarszego, godziny tylko z dni z wpisami, otwarte problemy, zdjęcia", () => {
+  it("jedna budowa w zakresie: dni od najstarszego, dzień na dwóch budowach bez podziału godzin, otwarte problemy, zdjęcia", () => {
     const r = buildJournalReport(journal, { siteId: siteKey("Lipowa 5"), from: "2026-10-14", to: "2026-10-16", shifts, topicTitle: () => "Próby szczelności" });
     expect(r.title).toBe("Raport: Lipowa 5 — 14–16 października 2026");
     expect(r.count).toBe(4);
     expect(r.days.map((d) => d.key)).toEqual(["2026-10-14", "2026-10-15"]);
     expect(r.days[0].entries.map((x) => x.entry.id)).toEqual(["a", "b", "c"]);
-    expect(r.workMinutes).toBe(630);
+    // 14.10 to też Polna 2 — bez podziału godzin dzień nie liczy się w całości do Lipowej.
+    expect(r.days[0].work?.site).toBeNull();
+    expect(r.workMinutes).toBe(0);
     expect(r.open.map((x) => x.entry.id)).toEqual(["b"]);
     expect(r.images).toEqual([IMG("a"), IMG("b")]);
     expect(r.days[0].entries[2].status).toBe("Problem rozwiązany 15.10");
 
     const body = reportBody(r);
-    expect(body).toContain("4 wpisy · godziny pracy: 10 h 30 min · otwarte problemy: 1");
-    expect(body).toContain("Praca: Budowa 07:00–17:00, 10 h 30 min");
+    expect(body).toContain("4 wpisy · otwarte problemy: 1");
+    expect(body).toContain("Praca: Budowa 07:00–17:00 · 10 h 30 min — dzień na kilku budowach, godziny nierozdzielone");
     expect(body).toContain("Grafik: Urlop");
     expect(body).toContain("- 08:15 Zrobione: Próba szczelności pionu (temat: Próby szczelności, 2 zdjęcia)");
     expect(body).toContain("- 10:20 Problem otwarty: Żółta rura przecieka\n  przy trójniku");

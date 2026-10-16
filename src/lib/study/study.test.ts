@@ -10,7 +10,7 @@ import { closeJournalSheet, getJournalEditForm, openJournalEdit, patchJournalEdi
 import {
   sanitizeStudy, moveTopic, recordRound, activeStreak, toggleChecked, getStudy, columnOf, resetChecklist,
   addJournalEntry, removeJournalEntry, restoreJournalEntry, setSite, practiceByTopic,
-  updateJournalEntry, setProblemResolved, openProblems, saveSiteCard, setSiteArchived,
+  updateJournalEntry, setProblemResolved, openProblems, saveSiteCard, setSiteArchived, setDayHours,
   setProblemSolution, JOURNAL_SOLUTION_MAX,
 } from "./store";
 import { resetStudyForTests, yStudy } from "./data";
@@ -467,6 +467,18 @@ describe("budowy — karty", () => {
     expect(getStudy().sites[a.siteId!]).toMatchObject({ name: "Dom Nowaków", phone: "600 100 200" });
     saveSiteCard(a.siteId!, { name: "Dom Nowaków", address: "", investor: "", phone: "" });
     expect("phone" in getStudy().sites[a.siteId!]).toBe(false);
+  });
+
+  it("godziny na budowach: dzień zmienia tylko swoją pozycję, 0 ją usuwa, budowa bez karty dostaje kartę", () => {
+    yStudy.addEntry({ id: "stary", at: 500, kind: "note", topic: null, text: "Sprzed kart", site: "Polna 2", checked: [], images: [] });
+    const id = siteKey("Polna 2");
+    setDayHours("2026-10-14", { [id]: 300 });
+    setDayHours("2026-10-15", { [id]: 120 });
+    expect(getStudy().sites[id].hours).toEqual([{ id: "2026-10-14", minutes: 300 }, { id: "2026-10-15", minutes: 120 }]);
+    setDayHours("2026-10-14", { [id]: 0 });
+    expect(getStudy().sites[id].hours).toEqual([{ id: "2026-10-15", minutes: 120 }]);
+    setDayHours("2026-10-14", { nieznana: 60 });
+    expect(getStudy().sites.nieznana).toBeUndefined();
   });
 
   it("zmiana nazwy przenosi bieżącą budowę arkusza; stara nazwa po zmianie zakłada nową kartę", () => {

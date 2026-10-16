@@ -19,7 +19,7 @@ import { TOPICS } from "@/lib/study/content";
 import { saveBoss, saveGroup, useStudy, type Boss, type JournalEntry, type SiteInfo, type WaGroup } from "@/lib/study/store";
 import { formatPhone, whatsappUrl } from "@/lib/study/boss";
 import { entrySiteId } from "@/lib/study/sites";
-import { buildJournalReport, dayKeyOf, reportSummary, reportText, reportWhatsApp, shiftKey, type JournalReport as Report } from "@/lib/study/report";
+import { buildJournalReport, dayKeyOf, reportSummary, workLine, workMinutesOf, reportText, reportWhatsApp, shiftKey, type JournalReport as Report } from "@/lib/study/report";
 import { shortageLine } from "@/lib/study/shortages";
 import { PrintRoot } from "./PrintRoot";
 import type { JournalReportRequest } from "@/lib/study/reportLink";
@@ -100,9 +100,11 @@ export function JournalReportDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  // Karty wszystkich budów — podział godzin dnia między budowy (`siteHours.ts`).
+  const cards = useMemo(() => Object.fromEntries(sites.map((x) => [x.id, x])), [sites]);
   const report = useMemo(
-    () => buildJournalReport(journal, { siteId: site, siteCard: card, from: range[0], to: range[1], shifts, topicTitle }),
-    [journal, site, card, range, shifts],
+    () => buildJournalReport(journal, { siteId: site, siteCard: card, sites: cards, from: range[0], to: range[1], shifts, topicTitle }),
+    [journal, site, card, cards, range, shifts],
   );
   const preset = presetOf(range[0], range[1], today);
   const showDates = custom || preset === "custom";
@@ -450,7 +452,7 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
                 {d.work && (
                   <p className="inline-flex items-center gap-1 font-mono text-xs tabular-nums text-muted-foreground" data-report-work>
                     <Clock className="h-3.5 w-3.5" aria-hidden />
-                    {d.work.minutes > 0 ? `${d.work.label} · ${formatDuration(d.work.minutes)}` : d.work.label}
+                    {workLine(d.work)}
                   </p>
                 )}
               </div>
@@ -617,7 +619,7 @@ function DaysTable({ report }: { report: Report }) {
         {report.days.map((d) => (
           <tr key={d.key} className="border-t border-border/60">
             <td className="py-1 pr-2">{d.key.slice(8, 10)}.{d.key.slice(5, 7)}</td>
-            <td className="py-1 pr-2 font-sans">{d.work ? (d.work.minutes > 0 ? formatDuration(d.work.minutes) : d.work.label) : "—"}</td>
+            <td className="py-1 pr-2 font-sans">{d.work ? (d.work.minutes <= 0 ? d.work.label : d.work.site === null ? "nierozdz." : formatDuration(workMinutesOf(d.work))) : "—"}</td>
             <td className="py-1 pr-2 text-right">{d.entries.length}</td>
             <td className="py-1 text-right">{d.entries.filter((r) => r.entry.kind === "problem").length || "—"}</td>
           </tr>

@@ -8,6 +8,7 @@ import { entrySiteId, type SiteCard } from "./sites";
 import { siteOrder } from "./order";
 import { stageProgress, type SiteStage } from "./stages";
 import { openShortages, shortageLine, type Shortage } from "./shortages";
+import { dayHours, siteMinutesOn } from "./siteHours";
 import type { JournalEntry } from "./yStudy";
 
 /**
@@ -20,7 +21,12 @@ export interface ReportOptions {
   /** Id budowy (`entrySiteId`); `null` = wszystkie, `""` = wpisy bez budowy. */
   siteId: string | null;
   /** Karta wybranej budowy: nazwa, adres i inwestor w nagłówku raportu. */
-  siteCard?: Pick<SiteCard, "name" | "address" | "investor" | "orderedAt" | "stages" | "shortages"> | null;
+  siteCard?: Pick<SiteCard, "name" | "address" | "investor" | "orderedAt" | "stages" | "shortages" | "hours"> | null;
+  /**
+   * Wszystkie karty budów — do podziału godzin dnia między budowy (`siteHours.ts`). Bez nich liczy się
+   * tylko karta wybranej budowy (dzień z kilkoma budowami wyjdzie wtedy jako „nierozdzielony”).
+   */
+  sites?: Readonly<Record<string, Pick<SiteCard, "name" | "hours">>>;
   /** Dni lokalne „2026-10-14”, oba włącznie. */
   from: string;
   to: string;
@@ -33,6 +39,25 @@ export interface ReportWork {
   label: string;
   /** Czas pracy z odchyleniem; 0 przy nieobecności. */
   minutes: number;
+  /**
+   * Raport jednej budowy, gdy dzień dzielono między budowy albo był na kilku: minuty tej budowy,
+   * `null` = nierozdzielone. Brak = cały dzień na tej budowie.
+   */
+  site?: number | null;
+  /** Raport wszystkich budów, dzień na kilku budowach: podział (`null` = nierozdzielone). */
+  bySite?: { site: string; minutes: number | null }[];
+}
+
+/** Minuty dnia liczone do sumy raportu: przy jednej budowie — jej część (nierozdzielone = 0). */
+export const workMinutesOf = (w: ReportWork) => (w.site === undefined ? w.minutes : w.site ?? 0);
+
+/** Opis pracy w dniu: „Dniówka 07:00–15:00 · 8 h”, „5 h na tej budowie (z 8 h, Dniówka …)”, z podziałem budów. */
+export function workLine(w: ReportWork): string {
+  if (w.minutes <= 0) return w.label;
+  if (w.site === null) return `${w.label} · ${formatDuration(w.minutes)} — dzień na kilku budowach, godziny nierozdzielone`;
+  if (w.site !== undefined) return `${formatDuration(w.site)} na tej budowie (z ${formatDuration(w.minutes)}, ${w.label})`;
+  const split = w.bySite?.map((b) => `${b.site}: ${b.minutes === null ? "?" : formatDuration(b.minutes)}`).join(", ");
+  return `${w.label} · ${formatDuration(w.minutes)}${split ? ` (${split})` : ""}`;
 }
 
 export interface ReportEntry {
@@ -132,6 +157,20 @@ export function workOn(shifts: ShiftData | null | undefined, key: string): Repor
   return { label: `${t.name} ${t.start}–${t.end}`, minutes: entryMinutesOn(t, entry, key) };
 }
 
+/** Praca w dniu z podziałem między budowy (`siteHours.ts`) — tylko gdy dzień jest na kilku budowach albo podzielony. */
+function splitWork(journal: readonly JournalEntry[], opts: ReportOptions, key: string): ReportWork | null {
+  const work = workOn(opts.shifts, key);
+  if (!work || work.minutes <= 0) return work;
+  const cards = opts.sites ?? (opts.siteId && opts.siteCard ? { [opts.siteId]: opts.siteCard } : {});
+  const day = dayHours(journal, cards, work.minutes, key, dayKeyOf);
+  if (opts.siteId === null) {
+    return day.sites.length > 1 ? { ...work, bySite: day.sites.map((s) => ({ site: s.site, minutes: s.minutes })) } : work;
+  }
+  if (!opts.siteId) return work;
+  const mine = day.sites.find((s) => s.siteId === opts.siteId);
+  return day.sites.length > 1 || mine?.set ? { ...work, site: siteMinutesOn(day, opts.siteId) } : work;
+}
+
 export function buildJournalReport(journal: readonly JournalEntry[], opts: ReportOptions): JournalReport {
   const from = opts.from <= opts.to ? opts.from : opts.to;
   const to = opts.from <= opts.to ? opts.to : opts.from;
@@ -148,7 +187,7 @@ export function buildJournalReport(journal: readonly JournalEntry[], opts: Repor
   for (const e of picked) {
     const key = dayKeyOf(e.at);
     let day = days[days.length - 1];
-    if (!day || day.key !== key) days.push((day = { key, label: dayTitle(key), work: workOn(opts.shifts, key), entries: [] }));
+    if (!day || day.key !== key) days.push((day = { key, label: dayTitle(key), work: splitWork(journal, opts, key), entries: [] }));
     const d = new Date(e.at);
     const isOpen = e.kind === "problem" && e.resolved === undefined;
     const item: ReportEntry = {
@@ -172,7 +211,7 @@ export function buildJournalReport(journal: readonly JournalEntry[], opts: Repor
     investor: (opts.siteId && opts.siteCard?.investor) || "",
     days,
     count: picked.length,
-    workMinutes: days.reduce((s, d) => s + (d.work?.minutes ?? 0), 0),
+    workMinutes: days.reduce((s, d) => s + (d.work ? workMinutesOf(d.work) : 0), 0),
     open,
     images: picked.flatMap((e) => e.images),
     fittings: sumFittings(picked.map((e) => e.fittings)),
@@ -217,7 +256,7 @@ export function reportBody(r: JournalReport): string {
   if (r.count === 0) return lines.join("\n");
   for (const d of r.days) {
     lines.push("", `## ${d.label}`);
-    if (d.work) lines.push(d.work.minutes > 0 ? `Praca: ${d.work.label}, ${formatDuration(d.work.minutes)}` : `Grafik: ${d.work.label}`);
+    if (d.work) lines.push(d.work.minutes > 0 ? `Praca: ${workLine(d.work)}` : `Grafik: ${d.work.label}`);
     for (const e of d.entries) lines.push(`- ${e.time} ${entryLine(e)}`);
   }
   if (r.fittings.length > 0) {

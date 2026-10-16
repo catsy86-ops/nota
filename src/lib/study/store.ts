@@ -13,6 +13,7 @@ import { cleanSite, entrySiteId, resolveSite, siteDirectory, SITE_NAME_MAX, type
 import { cleanStages, type SiteStage } from "./stages";
 import { cleanShortages, logOrder, type OrderLogEntry, type Shortage } from "./shortages";
 import { siteOrder } from "./order";
+import { cleanSiteHours, type SiteHours } from "./siteHours";
 import {
   cleanEntryStage, JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, JOURNAL_SOLUTION_MAX, SITE_MAX,
   type Column, type JournalEntry, type JournalKind, type StudyState,
@@ -410,7 +411,7 @@ function patchSiteCard(id: string, patch: Partial<Pick<SiteCard, "orderedAt">>) 
  * nie zapisana (np. domyślne etapy) to pusta baza: wtedy zapisują się wszystkie pozycje, nie tylko zmienione.
  * Budowa znana tylko z nazw we wpisach dostaje przy tym kartę w dokumencie.
  */
-function siteListBase<T>(id: string, field: "stages" | "shortages" | "orders", uiBase: readonly T[] | undefined): readonly T[] | null {
+function siteListBase<T>(id: string, field: "stages" | "shortages" | "orders" | "hours", uiBase: readonly T[] | undefined): readonly T[] | null {
   const s = getStudy();
   const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
   if (!prev) return null;
@@ -447,6 +448,20 @@ export function setSiteStages(id: string, stages: SiteStage[], base?: readonly S
   const from = siteListBase(id, "stages", base);
   if (from === null) return;
   yStudy.setSiteList(id, "stage", cleanStages(stages) ?? [], from);
+}
+
+/**
+ * Podział godzin dnia `day` między budowy (minuty; 0 = bez godzin na tej budowie). Każda budowa
+ * zmienia tylko pozycję tego dnia — inne dni i zmiany z drugiego telefonu zostają.
+ */
+export function setDayHours(day: string, minutes: Readonly<Record<string, number>>) {
+  for (const [id, min] of Object.entries(minutes)) {
+    const from = siteListBase<SiteHours>(id, "hours", undefined);
+    if (from === null) continue;
+    const others = from.filter((h) => h.id !== day);
+    const next = min > 0 ? [...others, { id: day, minutes: min }] : others;
+    yStudy.setSiteList(id, "hours", cleanSiteHours(next) ?? [], from);
+  }
 }
 
 /** Budowa do archiwum (`true`) albo z powrotem czynna. */

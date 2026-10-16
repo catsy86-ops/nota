@@ -2,6 +2,7 @@ import type { JournalEntry } from "./yStudy";
 import { cleanStages, type SiteStage } from "./stages";
 import { cleanOrderLog, cleanShortages, type OrderLogEntry, type Shortage } from "./shortages";
 import { SITE_ACCESS_MAX, SITE_PHONE_MAX } from "./contact";
+import { cleanSiteHours, type SiteHours } from "./siteHours";
 
 /**
  * Karty budów dziennika. Wpis trzyma `siteId` i kopię nazwy (`site`) — starsza wersja
@@ -38,6 +39,8 @@ export interface SiteCard {
   shortages?: Shortage[];
   /** Historia zamówień kształtek, od najstarszego (`shortages.ts`). */
   orders?: OrderLogEntry[];
+  /** Godziny pracy na tej budowie, po jednej pozycji na dzień (`siteHours.ts`); brak = nic nie wpisano. */
+  hours?: SiteHours[];
 }
 
 export const SITE_NAME_MAX = 120;
@@ -91,6 +94,7 @@ export function cleanSite(raw: unknown): SiteCard | null {
     ...withStages(cleanStages(s.stages)),
     ...optional("shortages", cleanShortages(s.shortages)),
     ...optional("orders", cleanOrderLog(s.orders)),
+    ...optional("hours", cleanSiteHours(s.hours)),
   };
 }
 

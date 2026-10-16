@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { fittingsLine } from "@/lib/study/fittings";
 import { testLine } from "@/lib/study/pressureTest";
-import { Archive, Check, ChevronLeft, Gauge, Package, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Play, Plus, Search, TriangleAlert, Wrench, X } from "lucide-react";
+import { Archive, Check, ChevronLeft, Clock, Gauge, Package, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Play, Plus, Search, TriangleAlert, Wrench, X } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
 import { studyReminders, type StudyReminder } from "@/lib/study/reminders";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,11 @@ import { openJournalEdit, openJournalSheet } from "@/lib/study/entrySheet";
 import { JournalEntrySheet, KindIcon } from "./JournalEntrySheet";
 import { JournalReportDialog } from "./JournalReport";
 import { SiteCardDialog } from "./SiteCardDialog";
+import { DayHoursDialog } from "./DayHoursDialog";
+import { useShifts } from "@/lib/shifts";
+import { formatHoursShort } from "@/lib/shifts/time";
+import { dayKeyOf, workOn } from "@/lib/study/report";
+import { dayHours, type DayHours } from "@/lib/study/siteHours";
 import { consumeJournalReportRequest, useJournalReportRequest, type JournalReportRequest } from "@/lib/study/reportLink";
 import { stageProgress } from "@/lib/study/stages";
 import { entrySiteId, siteDirectory } from "@/lib/study/sites";
@@ -68,6 +73,9 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
     if (req) { setReportSite(null); setReportRequest(req); setReport(true); }
   }, [reportRequested]);
   const [card, setCard] = useState<string | null>(null);
+  /** Dzień w oknie „Godziny na budowach”. */
+  const [hoursDay, setHoursDay] = useState<{ key: string; label: string } | null>(null);
+  const shifts = useShifts();
   const [showArchived, setShowArchived] = useState(false);
   const patch = (p: Partial<JournalFilter>) => setFilter((f) => ({ ...f, ...p }));
   const filtered = isFiltered(filter);
@@ -91,10 +99,22 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   // Filtr szuka w całym dzienniku — inaczej wpis sprzed dwóch miesięcy „nie istnieje”.
   const view = useMemo(() => {
     const matches = filterJournal(study.journal, filter, topicTitle);
+
     if (filtered || showOlder) return { days: groupJournal(matches), shown: matches.length, older: 0 };
     const { recent, older } = splitRecent(matches);
     return { days: groupJournal(recent), shown: recent.length, older };
   }, [study.journal, filter, filtered, showOlder]);
+
+  // Podział godzin tylko dla dni z kilkoma budowami albo z wpisanymi godzinami (H2, `siteHours.ts`).
+  const hoursByDay = useMemo(() => {
+    const out = new Map<string, DayHours>();
+    for (const d of view.days) {
+      const work = workOn(shifts, d.key)?.minutes ?? 0;
+      const split = dayHours(study.journal, study.sites, work, d.key, dayKeyOf);
+      if (split.sites.length > 1 || split.sites.some((s) => s.set)) out.set(d.key, split);
+    }
+    return out;
+  }, [view.days, shifts, study.journal, study.sites]);
 
   const week = useMemo(() => {
     const since = Date.now() - 7 * DAY_MS;
@@ -276,8 +296,31 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                 {view.days.map((d) => (
                   <section key={d.key} aria-label={d.label} data-journal-day={d.key}>
                     <h4 className="sticky top-(--app-header-h,0px) z-10 -mx-1 mb-2 flex items-baseline justify-between gap-2 border-b border-border/60 bg-background/95 px-1 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground backdrop-blur-sm transition-[top] duration-300 ease-out motion-reduce:transition-none [html.header-hidden_&]:top-0">
-                      <span>{d.label}</span>
-                      <span className="font-mono normal-case tracking-normal tabular-nums">{entriesPl(d.count)}</span>
+                      <span className="min-w-0 truncate">{d.label}</span>
+                      <span className="flex shrink-0 items-baseline gap-2">
+                        {hoursByDay.has(d.key) && (() => {
+                          const h = hoursByDay.get(d.key)!;
+                          const unsplit = h.work > 0 && h.sites.some((s) => s.minutes === null);
+                          // Jak grupy budów pod nagłówkiem (od najnowszej); budowa z samymi godzinami — na końcu.
+                          const order = (id: string) => { const i = d.sites.findIndex((g) => g.siteId === id); return i < 0 ? d.sites.length : i; };
+                          return (
+                            <button
+                              type="button"
+                              onClick={() => setHoursDay({ key: d.key, label: d.label })}
+                              className={cn(
+                                "-my-1 inline-flex items-center gap-1 rounded px-1 py-1 font-mono normal-case tracking-normal tabular-nums hover:bg-muted coarse:min-h-11",
+                                unsplit ? "text-warning-ink" : "text-muted-foreground",
+                              )}
+                              aria-label={unsplit ? `${d.label}: podziel godziny między budowy` : `${d.label}: godziny na budowach`}
+                              data-day-hours={d.key}
+                            >
+                              <Clock className="h-3.5 w-3.5" aria-hidden />
+                              {unsplit ? "podziel godziny" : [...h.sites].sort((x, y) => order(x.siteId) - order(y.siteId)).map((s) => formatHoursShort(s.minutes ?? 0)).join(" + ") + " h"}
+                            </button>
+                          );
+                        })()}
+                        <span className="font-mono normal-case tracking-normal tabular-nums">{entriesPl(d.count)}</span>
+                      </span>
                     </h4>
                     <div className="space-y-3">
                       {d.sites.map((g) => (
@@ -295,6 +338,14 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                                 <span className="truncate">{g.site}</span>
                                 <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
                               </button>
+                              {(() => {
+                                const m = hoursByDay.get(d.key)?.sites.find((s) => s.siteId === g.siteId)?.minutes;
+                                return typeof m === "number" && m > 0 && (
+                                  <span className="shrink-0 font-mono text-2xs tabular-nums text-muted-foreground" data-site-hours title="Godziny na tej budowie">
+                                    {formatHoursShort(m)} h
+                                  </span>
+                                );
+                              })()}
                               {/* Postęp etapów obok, nie w przycisku — nazwa budowy zostaje czysta. */}
                               {stagesBySite.has(g.siteId) && (
                                 <span className="shrink-0 font-mono text-2xs tabular-nums text-muted-foreground" data-site-progress title="Etapy budowy">
@@ -329,6 +380,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
       </section>
       <JournalEntrySheet onPractice={onPractice} />
       <JournalReportDialog open={report} onOpenChange={setReport} journal={study.journal} sites={dir} initialSite={reportSite ?? filter.site} initialRequest={reportRequest} />
+      <DayHoursDialog day={hoursDay?.key ?? null} label={hoursDay?.label ?? ""} onOpenChange={(o) => { if (!o) setHoursDay(null); }} />
       <SiteCardDialog
         siteId={card}
         onOpenChange={(o) => { if (!o) setCard(null); }}

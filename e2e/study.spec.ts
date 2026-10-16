@@ -615,7 +615,8 @@ test("dziennik: raport budowy z godzinami z Grafiku — udostępnij, kopiuj, do 
       journal: [
         e("a", at(14, 8, 15), "ok", "Lipowa 5", "Próba szczelności pionu"),
         e("b", at(14, 10, 20), "problem", "Lipowa 5", "Żółta rura przecieka"),
-        e("c", at(14, 7), "note", "Polna 2", "Inwestor chce zmian"),
+        // Polna 2 innego dnia niż Lipowa: dzień na dwóch budowach bez podziału godzin nie liczy się w całości (siteHours).
+        e("c", at(13, 7), "note", "Polna 2", "Inwestor chce zmian"),
         e("d", at(13, 9), "note", "Lipowa 5", "Dostawa rur"),
       ],
     }));
@@ -644,7 +645,7 @@ test("dziennik: raport budowy z godzinami z Grafiku — udostępnij, kopiuj, do 
   const shared = await page.evaluate(() => (window as unknown as { __shared: ShareData }).__shared);
   expect(shared.title).toBe("Raport: Lipowa 5 — 8–14 października 2026");
   expect(shared.text).toContain("- 10:20 Problem otwarty: Żółta rura przecieka");
-  expect(shared.text).toContain("Praca: Budowa 07:00–17:00, 10 h");
+  expect(shared.text).toContain("Praca: Budowa 07:00–17:00 · 10 h");
 
   await dialog.getByRole("button", { name: "Więcej" }).click();
   await page.getByRole("menuitem", { name: "Kopiuj tekst" }).click();
