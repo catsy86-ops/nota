@@ -2445,6 +2445,33 @@ Nie drukowane na prawdziwej drukarce ani do PDF w telefonie.
 
 **Commit.** `9b169ad` (2026-10-16).
 
+### Rysowanie po zdjęciu
+
+**Co robi.** Na miniaturce zdjęcia w arkuszu wpisu jest przycisk „Rysuj na zdjęciu” (ołówek, prawy dolny róg).
+Otwiera płótno ze zdjęciem w jego proporcjach: strzałka, wymiar, zaznaczenie kolorem. „Zapisz rysunek” podmienia
+zdjęcie we wpisie na wersję z rysunkiem (jak wtopiony podpis), więc rysunek jedzie do szefa, raportu i paczki ZIP.
+
+**Gdzie jest.**
+- `src/components/study/JournalEntrySheet.tsx`: stan `drawing { ref, url }`, `openDrawing` (bajty z `imageStore` →
+  adres `blob:`), `saveDrawing` (`dataURL` → `prepareImage` → `imageStore.putBlob` → podmiana w `images`).
+- `src/components/DrawingCanvas.tsx` (wspólne z Notatkami): `paintStrokes`, `compose`, tło wczytywane raz (`bg`),
+  rozmiar płótna z proporcji zdjęcia, eksport w rozdzielczości zdjęcia (do `PHOTO_EXPORT_MAX` = 1600 px, JPEG 0,9).
+
+**Jak działa i dlaczego.** Kreski są rysowane na osobnej warstwie nakładanej na tło, więc gumka ściera tylko kreski,
+a nie zdjęcie (wcześniej `destination-out` wycinało dziury w tle). Płótno bez zdjęcia (rysunek w Notatkach) wygląda
+i zapisuje się jak dotąd (PNG na białym tle). Oryginał zdjęcia zostaje w magazynie do odśmiecenia, jak przy podpisie.
+
+**Ograniczenia i pułapki.**
+- Rysunek się „wtapia” — nie da się go potem edytować osobno od zdjęcia (można usunąć zdjęcie i dodać oryginał).
+- Kreska zaczęta, zanim zdjęcie się wczyta, może się przesunąć, gdy płótno zmieni rozmiar (zdjęcie wczytuje się szybko).
+- e2e: współrzędne płótna liczyć dopiero po ustaniu animacji okna (`canvas.hover()` + chwila).
+
+**Testy.** `e2e/photo-drawing.spec.ts` (proporcje 4:3, kreska, zapis podmienia zdjęcie). `e2e/card-images.spec.ts`
+(„rysunek z menu Więcej opcji” — płótno w Notatkach po zmianie). Regresja zdjęć dziennika i notatek 35/35.
+Nie sprawdzone palcem na telefonie.
+
+**Commit.** `b1f3842` (2026-10-16).
+
 ### Dyktowanie: cały wpis i kształtki
 
 **Co robi.**
