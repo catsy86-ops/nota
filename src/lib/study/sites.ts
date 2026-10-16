@@ -1,5 +1,6 @@
 import type { JournalEntry } from "./yStudy";
 import { cleanStages, type SiteStage } from "./stages";
+import { cleanOrderLog, cleanShortages, type OrderLogEntry, type Shortage } from "./shortages";
 
 /**
  * Karty budów dziennika. Wpis trzyma `siteId` i kopię nazwy (`site`) — starsza wersja
@@ -25,6 +26,10 @@ export interface SiteCard {
   orderedAt?: number;
   /** Etapy budowy (`stages.ts`); brak = lista domyślna, jeszcze nieruszana. */
   stages?: SiteStage[];
+  /** Braki materiału ze statusem (`shortages.ts`); brak = lista pusta, jeszcze nieruszana. */
+  shortages?: Shortage[];
+  /** Historia zamówień kształtek, od najstarszego (`shortages.ts`). */
+  orders?: OrderLogEntry[];
 }
 
 export const SITE_NAME_MAX = 120;
@@ -54,6 +59,7 @@ const str = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice
 
 /** Kształt karty; `null` = nie do uratowania. */
 const withStages = (stages: SiteStage[] | undefined) => (stages ? { stages } : {});
+const optional = <K extends string, V>(k: K, v: V | undefined) => (v === undefined ? {} : ({ [k]: v } as Record<K, V>));
 
 export function cleanSite(raw: unknown): SiteCard | null {
   const s = raw as Partial<SiteCard> | null;
@@ -68,6 +74,8 @@ export function cleanSite(raw: unknown): SiteCard | null {
     ...(typeof s.archived === "number" && Number.isFinite(s.archived) ? { archived: s.archived } : {}),
     ...(typeof s.orderedAt === "number" && Number.isFinite(s.orderedAt) ? { orderedAt: s.orderedAt } : {}),
     ...withStages(cleanStages(s.stages)),
+    ...optional("shortages", cleanShortages(s.shortages)),
+    ...optional("orders", cleanOrderLog(s.orders)),
   };
 }
 

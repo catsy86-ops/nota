@@ -6,11 +6,12 @@ import { haptic } from "@/lib/haptics";
 import { markSiteOrdered, useStudy } from "@/lib/study/store";
 import type { SiteInfo } from "@/lib/study/sites";
 import { orderText, siteOrder } from "@/lib/study/order";
+import { orderLogLine } from "@/lib/study/shortages";
 
 /**
  * „Do zamówienia” w karcie budowy: kształtki zużyte od ostatniego zamówienia, kopia tekstu
  * do wysłania dostawcy i zaznaczenie zamówienia (od tej chwili lista zaczyna się od zera).
- * Dane tylko do odczytu z wpisów; zmienia się wyłącznie `orderedAt` karty.
+ * Dane tylko do odczytu z wpisów; zmienia się `orderedAt` karty i historia zamówień (`orders`).
  */
 export function SiteOrderPanel({ site }: { site: SiteInfo }) {
   const study = useStudy();
@@ -63,6 +64,14 @@ export function SiteOrderPanel({ site }: { site: SiteInfo }) {
           <Check className="mr-1.5 h-4 w-4" aria-hidden />Oznacz jako zamówione
         </Button>
       </div>
+      {site.orders && site.orders.length > 0 && (
+        <details className="text-xs text-muted-foreground" data-testid="site-order-history">
+          <summary className="cursor-pointer select-none py-1 coarse:py-2">Poprzednie zamówienia ({site.orders.length})</summary>
+          <ul className="mt-1 space-y-0.5">
+            {[...site.orders].reverse().map((o) => <li key={o.at} className="font-mono tabular-nums">{orderLogLine(o)}</li>)}
+          </ul>
+        </details>
+      )}
     </section>
   );
 }

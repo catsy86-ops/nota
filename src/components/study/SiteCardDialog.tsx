@@ -15,6 +15,7 @@ import { buildJournalReport, periodLabel, dayKeyOf } from "@/lib/study/report";
 import { downloadSiteZip } from "@/lib/study/siteZip";
 import { SiteOrderPanel } from "./SiteOrderPanel";
 import { SiteStagesPanel } from "./SiteStagesPanel";
+import { SiteShortagesPanel } from "./SiteShortagesPanel";
 
 const topicTitle = (id: string) => TOPICS.find((t) => t.id === id)?.title ?? null;
 
@@ -165,6 +166,7 @@ export function SiteCardDialog({
             <div className="space-y-3 px-5 pb-4">
               <SiteStagesPanel site={site} />
               <SiteOrderPanel site={site} />
+              <SiteShortagesPanel site={site} />
             </div>
 
             <div className="grid grid-cols-2 gap-2 border-t border-border px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">

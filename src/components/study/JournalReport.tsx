@@ -21,6 +21,7 @@ import { saveBoss, saveGroup, useStudy, type Boss, type JournalEntry, type SiteI
 import { formatPhone, whatsappUrl } from "@/lib/study/boss";
 import { entrySiteId } from "@/lib/study/sites";
 import { buildJournalReport, dayKeyOf, reportSummary, reportText, reportWhatsApp, shiftKey, type JournalReport as Report } from "@/lib/study/report";
+import { shortageLine } from "@/lib/study/shortages";
 import { reportToNote } from "@/lib/study/toNote";
 import { KindIcon } from "./JournalEntrySheet";
 
@@ -537,6 +538,14 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
                     <span className="sr-only">{s.done !== undefined ? "zrobione" : "do zrobienia"}</span>
                   </li>
                 ))}
+              </ul>
+            </section>
+          )}
+          {report.shortages.length > 0 && (
+            <section className="break-inside-avoid-page pt-3" data-report-shortages>
+              <h3 className="mb-1.5 text-sm font-semibold">Braki materiału</h3>
+              <ul className="space-y-0.5 text-sm">
+                {report.shortages.map((s) => <li key={s.id}>{shortageLine(s)}</li>)}
               </ul>
             </section>
           )}

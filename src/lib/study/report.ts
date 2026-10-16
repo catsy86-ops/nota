@@ -7,6 +7,7 @@ import { entriesPl, KIND_LABEL } from "./journalView";
 import { entrySiteId, type SiteCard } from "./sites";
 import { siteOrder } from "./order";
 import { stageProgress, type SiteStage } from "./stages";
+import { openShortages, shortageLine, type Shortage } from "./shortages";
 import type { JournalEntry } from "./yStudy";
 
 /**
@@ -19,7 +20,7 @@ export interface ReportOptions {
   /** Id budowy (`entrySiteId`); `null` = wszystkie, `""` = wpisy bez budowy. */
   siteId: string | null;
   /** Karta wybranej budowy: nazwa, adres i inwestor w nagłówku raportu. */
-  siteCard?: Pick<SiteCard, "name" | "address" | "investor" | "orderedAt" | "stages"> | null;
+  siteCard?: Pick<SiteCard, "name" | "address" | "investor" | "orderedAt" | "stages" | "shortages"> | null;
   /** Dni lokalne „2026-10-14”, oba włącznie. */
   from: string;
   to: string;
@@ -79,6 +80,8 @@ export interface JournalReport {
    * (ktoś ją odhaczał). `null` = bez sekcji etapów.
    */
   stages: SiteStage[] | null;
+  /** Braki materiału, które jeszcze nie dojechały (brakuje, zamówione) — tylko raport jednej budowy. */
+  shortages: Shortage[];
 }
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -175,6 +178,7 @@ export function buildJournalReport(journal: readonly JournalEntry[], opts: Repor
     fittings: sumFittings(picked.map((e) => e.fittings)),
     toOrder: opts.siteId ? siteOrder(journal, opts.siteId, opts.siteCard?.orderedAt).items : [],
     stages: opts.siteId && opts.siteCard?.stages ? opts.siteCard.stages.map((s) => ({ ...s })) : null,
+    shortages: opts.siteId ? openShortages(opts.siteCard?.shortages ?? []) : [],
   };
 }
 
@@ -198,6 +202,7 @@ export function reportSummary(r: JournalReport): string {
     parts.push(`postęp: ${p.done}/${p.total} ${pluralPl(p.total, ["etap", "etapy", "etapów"])}`);
   }
   if (r.workMinutes > 0) parts.push(`godziny pracy: ${formatDuration(r.workMinutes)}`);
+  if (r.shortages.length > 0) parts.push(`braki materiału: ${r.shortages.length}`);
   if (r.open.length > 0) parts.push(`otwarte problemy: ${r.open.length}`);
   return parts.join(" · ");
 }
@@ -222,6 +227,10 @@ export function reportBody(r: JournalReport): string {
     const p = stageProgress(r.stages);
     lines.push("", `## Etapy (${p.done}/${p.total})`);
     for (const s of r.stages) lines.push(s.done !== undefined ? `- [x] ${s.name} (${shortDate(s.done)})` : `- [ ] ${s.name}`);
+  }
+  if (r.shortages.length > 0) {
+    lines.push("", "## Braki materiału");
+    for (const s of r.shortages) lines.push(`- ${shortageLine(s)}`);
   }
   if (r.toOrder.length > 0) {
     lines.push("", "## Do zamówienia");

@@ -151,3 +151,26 @@ describe("raport — etapy budowy", () => {
     expect(all.stages).toBeNull();
   });
 });
+
+describe("raport — braki materiału", () => {
+  const site = siteKey("Lipowa 5");
+  const shortages = [
+    { id: "1", text: "Rura PEX 16", qty: "50 m", status: "missing" as const, at: at(10, 8) },
+    { id: "2", text: "Klej PCV", qty: "", status: "ordered" as const, at: at(10, 9), changed: at(13, 9) },
+    { id: "3", text: "Otulina", qty: "", status: "delivered" as const, at: at(10, 9), changed: at(14, 9) },
+  ];
+
+  it("raport budowy: niedostarczone braki w podsumowaniu i w sekcji, dostarczone pominięte", () => {
+    const r = buildJournalReport(journal, { siteId: site, siteCard: { name: "Lipowa 5", address: "", investor: "", shortages }, from: "2026-10-14", to: "2026-10-14" });
+    expect(r.shortages.map((s) => s.text)).toEqual(["Rura PEX 16", "Klej PCV"]);
+    const body = reportBody(r);
+    expect(body).toContain("braki materiału: 2");
+    expect(body).toContain("## Braki materiału\n- Rura PEX 16: 50 m — brakuje\n- Klej PCV — zamówione 13.10");
+    expect(body).not.toContain("Otulina");
+  });
+
+  it("raport wszystkich budów — bez braków", () => {
+    const all = buildJournalReport(journal, { siteId: null, siteCard: { name: "x", address: "", investor: "", shortages }, from: "2026-10-14", to: "2026-10-14" });
+    expect(all.shortages).toEqual([]);
+  });
+});

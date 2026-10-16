@@ -20,6 +20,7 @@ const report: JournalReport = {
   fittings: [],
   toOrder: [],
   stages: null,
+  shortages: [],
 };
 
 const bytes = (...b: number[]) => new Uint8Array(b).buffer;
