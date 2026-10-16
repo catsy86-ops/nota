@@ -2345,7 +2345,8 @@ kolejnymi wpisami. Bez kształtek oba przyciski są nieaktywne. Ta sama lista id
 - `src/lib/study/order.ts`: `siteOrder(journal, siteId, orderedAt?)` → `{ items, entries, since }` (czysta funkcja),
   `orderText(siteName, order)` — tekst bez znaczników formatowania.
 - `src/lib/study/sites.ts`: pole `SiteCard.orderedAt?` (ms); `cleanSite` zachowuje je, gdy jest liczbą.
-- `src/lib/study/store.ts`: `markSiteOrdered(id, now)`; `saveSiteCard` przenosi `orderedAt` przy edycji karty.
+- `src/lib/study/store.ts`: `markSiteOrdered(id, now)` (zapisuje też, co zamówiono, w historii `orders` — patrz „Braki
+  materiału”); `saveSiteCard` zachowuje wszystkie pola karty poza nazwą, adresem i inwestorem.
 - `src/components/study/SiteOrderPanel.tsx` (`data-testid="site-order"`), wstawiony w `SiteCardDialog.tsx` pod formularzem.
 
 **Jak działa i dlaczego.** Liczymy od ostatniego zamówienia, a nie od początku budowy — inaczej lista rosłaby bez
@@ -2359,7 +2360,8 @@ pierwszym oznaczeniu zamówienia.
 - Liczy tylko kształtki (decyzja z 2026-10-15: bez metrów rury).
 - Starsza wersja aplikacji nie zna `orderedAt`: pokaże kartę bez sekcji, ale zapis karty w starej wersji
   pole zgubi (wtedy lista znów liczy się od początku budowy).
-- Jedno zamówienie na budowę naraz — nie ma historii zamówień ani częściowego zamówienia pozycji.
+- „Oznacz jako zamówione” zamawia całą listę naraz — nie da się zamówić części pozycji. Historia zamówień jest
+  (ostatnie 20, „Poprzednie zamówienia”).
 - `orderText` formatuje datę przez `toLocaleDateString("pl-PL")` (strefa urządzenia).
 
 **Testy.** `src/lib/study/order.test.ts` (10: suma i kolejność, granica `orderedAt`, inne budowy i wpisy bez kształtek,
@@ -2370,6 +2372,46 @@ okresu raportu, bez sekcji w raporcie wszystkich budów). Regresja działu: `e2e
 `site-order.spec.ts` — zielone (chromium, `--workers=1`). Nie sprawdzone ręcznie na telefonie.
 
 **Commit.** `98e625a` (karta, 2026-10-16), `a8cf1a9` (raport, 2026-10-16).
+
+### Braki materiału i historia zamówień
+
+**Co robi.** W karcie budowy sekcja „Braki materiału”: dopisujesz, czego brakuje, z ilością („Rura PEX 16 · 50 m”,
+„Klej PCV”). Stuknięcie w status przełącza *Brakuje → Zamówione → Dostarczone* (data zmiany się zapisuje). „Kopiuj braki”
+kopiuje tekst dla dostawcy albo szefa, „Wyczyść dostarczone” sprząta listę (z „Cofnij”), usunięcie pozycji też ma
+„Cofnij”. Raport budowy dla szefa ma w podsumowaniu „braki materiału: N” i sekcję z tym, co jeszcze nie dojechało.
+Pod „Do zamówienia” (kształtki) jest zwinięta lista „Poprzednie zamówienia” — każde „Oznacz jako zamówione” zapisuje
+datę i zamówione pozycje.
+
+**Gdzie jest.**
+- `src/lib/study/shortages.ts`: `Shortage { id, text, qty, status, at, changed? }`, `addShortage`, `nextStatus`,
+  `setShortageStatus`, `removeShortage`, `clearDelivered`, `openShortages`, `shortageLine`, `shortagesText`,
+  `cleanShortages`; historia: `OrderLogEntry { at, items }`, `logOrder`, `cleanOrderLog`, `orderLogLine`.
+  Limity: 40 braków, 80 znaków nazwy, 20 znaków ilości, 20 zamówień w historii.
+- `src/lib/study/sites.ts`: pola `SiteCard.shortages?` i `SiteCard.orders?`, czyszczone w `cleanSite`.
+- `src/lib/study/store.ts`: `setSiteShortages`, `markSiteOrdered` (dopisuje do `orders`), wspólne `patchSiteCard`.
+- `src/components/study/SiteShortagesPanel.tsx` (`data-testid="site-shortages"`) w `SiteCardDialog.tsx` pod „Do zamówienia”;
+  historia w `SiteOrderPanel.tsx` (`site-order-history`).
+- `src/lib/study/report.ts`: `JournalReport.shortages` (otwarte, tylko raport jednej budowy), sekcja „Braki materiału”
+  w `reportBody`; `JournalReport.tsx`: `[data-report-shortages]`.
+
+**Jak działa i dlaczego.** Kształtki liczą się same z wpisów (zużycie), a braki to rzeczy, których nie widać we wpisach
+— rury w metrach, kleje, otuliny. Dlatego osobna, ręczna lista ze statusem, a nie liczenie. Ta sama nazwa dopisana
+ponownie, dopóki nie dojechała, nie robi duplikatu (najwyżej podmienia ilość). W raporcie tylko „brakuje” i „zamówione”,
+brakujące najpierw. Dane w karcie budowy (mapa Yjs `studySites`), więc synchronizują się jak reszta karty.
+
+**Ograniczenia i pułapki.**
+- Decyzja z 2026-10-15 („obmiary tylko kształtki”) dotyczyła liczenia zużycia; braki to osobna, ręczna lista —
+  wprowadzone 2026-10-16 na prośbę („rób po kolei” po propozycji punktu 3).
+- Lista braków to jedno pole karty: równoczesne zmiany z dwóch telefonów — wygrywa ostatni zapis całej listy.
+- Starsza wersja aplikacji nie zna `shortages` ani `orders`; zapis karty w starej wersji je zgubi.
+- Braków nie dyktuje się głosem (jeszcze); nie ma przypomnienia o długo „zamówionych”.
+
+**Testy.** `src/lib/study/shortages.test.ts` (10: dopisanie i duplikaty, dostarczona nie blokuje, statusy, otwarte i
+czyszczenie, limit, linia i tekst, `cleanShortages`, historia i limit, `cleanOrderLog`, `cleanSite`).
+`src/lib/study/report.test.ts` („braki materiału”). `e2e/site-shortages.spec.ts` (dopisanie, status, kopia, czyszczenie z
+„Cofnij”, historia zamówień, raport, stan po przeładowaniu). Regresja działu Praca 39/39 (chromium), układ telefonu 4/4.
+
+**Commit.** `f10d6dd` (2026-10-16).
 
 ### Dyktowanie: cały wpis i kształtki
 
