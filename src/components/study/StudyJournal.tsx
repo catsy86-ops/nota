@@ -6,6 +6,8 @@ import { pluralPl } from "@/lib/plural";
 import { studyReminders, type StudyReminder } from "@/lib/study/reminders";
 import { Button } from "@/components/ui/button";
 import { StatusPanel } from "@/components/StatusPanel";
+import { EmptySketch } from "@/components/EmptyIllustration";
+import { JOURNAL_GLYPH } from "@/lib/emptyGlyphs";
 import { cn } from "@/lib/utils";
 import { haptic } from "@/lib/haptics";
 import { NoteImage } from "@/components/NoteImage";
@@ -141,7 +143,8 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
         {study.journal.length === 0 ? (
           <StatusPanel
             size="inline"
-            icon={FileText}
+            icon={null}
+            art={<EmptySketch paths={JOURNAL_GLYPH} className="relative mx-auto mb-3 h-20 w-28 text-primary-ink" />}
             title="Brak wpisów"
             description="Zapisz, co robisz na budowie — dziennik połączy to z tematami, które przerabiasz."
             actions={<Button size="sm" onClick={() => openJournalSheet()}><Plus className="h-4 w-4" aria-hidden />Dodaj wpis</Button>}

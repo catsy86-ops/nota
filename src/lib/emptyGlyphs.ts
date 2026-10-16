@@ -11,6 +11,9 @@ export const EMPTY_GLYPHS: Partial<Record<View, string[]>> = {
   label: ["M30 22 H64 L90 44 L68 66 L30 40 Z", "M46 32 H46.1"],
 };
 
+/** Dziennik budowy bez wpisów: kartka zeszytu z marginesem, wiersze tekstu i długopis. */
+export const JOURNAL_GLYPH = ["M28 16 H92 V64 H28 Z", "M42 16 V64", "M52 30 H82", "M52 40 H78", "M52 50 H70", "M76 60 L92 44"];
+
 export function hasEmptyIllustration(view: View): boolean {
   return view in EMPTY_GLYPHS;
 }

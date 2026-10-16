@@ -757,3 +757,13 @@ test("dziennik: pusty wpis na budowie podpowiada wcześniejsze teksty tej budowy
   await expect(sheet.getByLabel("Co się dzieje?")).toHaveValue("Montaż pionu w piwnicy");
   await expect(chips).toHaveCount(0);
 });
+
+test("dziennik bez wpisów: szkic zeszytu i zaproszenie do pierwszego wpisu", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  const empty = page.locator('[data-testid="study-journal"] [data-status="empty"]');
+  await expect(empty).toBeVisible();
+  await expect(empty.getByTestId("empty-illustration")).toBeVisible();
+  await expect(empty.getByText("Brak wpisów", { exact: true })).toBeVisible();
+  await expect(empty.getByRole("button", { name: "Dodaj wpis" })).toBeVisible();
+});

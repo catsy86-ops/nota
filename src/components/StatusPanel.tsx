@@ -76,7 +76,7 @@ export function StatusPanel({
           className,
         )}
       >
-        {Icon && <Icon aria-hidden strokeWidth={1.5} className={cn("mx-auto mb-2 h-6 w-6 -rotate-6", TONE_INK[tone])} />}
+        {art ?? (Icon && <Icon aria-hidden strokeWidth={1.5} className={cn("mx-auto mb-2 h-6 w-6 -rotate-6", TONE_INK[tone])} />)}
         <p className={cn(description ? "font-medium text-foreground" : "text-muted-foreground")}>{title}</p>
         {description && <p className="mt-1 text-muted-foreground">{description}</p>}
         {actions && <div className="mt-3 flex flex-wrap items-center justify-center gap-2">{actions}</div>}

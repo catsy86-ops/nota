@@ -11,11 +11,16 @@ import { isMotionReduced } from "@/hooks/useMotionPref";
 export function EmptyIllustration({ view }: { view: View }) {
   const paths = EMPTY_GLYPHS[view];
   if (!paths) return null;
+  return <EmptySketch paths={paths} />;
+}
+
+/** Szkic z podanych ścieżek na kartce w linie — też dla pustych widoków spoza listy Notatek (Dziennik Pracy). */
+export function EmptySketch({ paths, className = "relative mx-auto h-28 w-40 text-primary-ink" }: { paths: string[]; className?: string }) {
   const still = isMotionReduced();
   return (
     <svg
       viewBox="0 0 120 84"
-      className="relative mx-auto h-28 w-40 text-primary-ink"
+      className={className}
       aria-hidden="true"
       data-testid="empty-illustration"
     >
