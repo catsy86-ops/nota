@@ -836,6 +836,31 @@ i „Szukaj”…”, „skrót PWA /?new=1…”).
 
 ---
 
+## Notatki — nawigacja ←/→ w czytniku (plan Notatek, etap 1.1)
+
+**Co robi.** W czytniku (podgląd i pełny ekran) ←/→ przechodzi do poprzedniej i następnej notatki z listy,
+którą widzisz. Na pasku czytnika są też przyciski „Poprzednia notatka” i „Następna notatka” (dla dotyku).
+Na krawędzi listy przycisk jest nieaktywny.
+
+**Gdzie jest.**
+- `src/lib/readerStep.ts`: `readerNeighbors(ids, current)` — sąsiedzi w liście; notatka spoza listy nie ma sąsiadów.
+- `src/components/NoteReader.tsx`: props `onStep`, `canPrev`, `canNext`; efekt ←/→ w obu trybach; przyciski na pasku.
+- `src/pages/Index.tsx`: `readerSteps` (sąsiedzi z `visibleNotes` bez notatek prywatnych), `stepReader`
+  (przełącza w tym samym trybie: podgląd zostaje podglądem, prezentacja prezentacją).
+
+**Jak działa i dlaczego.**
+- Lista to `visibleNotes` — kolejność widoku, bez zwiniętych grup. Krok idzie po tym, co widzisz, a nie po wszystkich notatkach.
+- ←/→ są ignorowane w polach tekstowych, w `SELECT` i przy klawiszach z modyfikatorami (Ctrl, Alt, Shift),
+  żeby nie kraść strzałek z edycji.
+- Notatki prywatne są pomijane w krokach (czytnik ich nie otwiera).
+
+**Ograniczenia.** Notatka otwarta z wyniku innego widoku (np. z linku) nie ma sąsiadów w bieżącej liście i krok nic nie robi.
+
+**Testy.** `src/lib/readerStep.test.ts` (sąsiedzi w środku, na krawędzi, spoza listy, pojedyncza notatka),
+`e2e/reader-step.spec.ts` (Spacja → ←/→ → przyciski, nieaktywne krawędzie, tryb podglądu zostaje).
+
+**Commit.** `86479bf` (2026-10-16).
+
 ## Notatki — udostępnianie z innej aplikacji (Share Target)
 
 **Co robi.** „Udostępnij → NOTKI” z innej aplikacji tworzy nową notatkę. Tytuł, tekst i link trafiają do treści (link
