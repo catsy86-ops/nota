@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { TriangleAlert, Camera, CircleCheck, ChevronDown, Clock, ImagePlus, LoaderCircle, MapPin, Mic, NotebookPen, Pencil, Play, Trash, Type, X } from "lucide-react";
+import { TriangleAlert, Camera, CircleCheck, ChevronDown, Clock, ImagePlus, LoaderCircle, MapPin, Mic, NotebookPen, Pencil, PenTool, Play, Trash, Type, X } from "lucide-react";
 import { HeightsButton } from "./HeightsSheet";
 import { PressureTestFields } from "./PressureTestFields";
 import { FittingsFields } from "./FittingsFields";
@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { NoteImage } from "@/components/NoteImage";
+import { DrawingCanvas } from "@/components/DrawingCanvas";
 import { toastWithUndo } from "@/lib/undoToast";
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
@@ -195,6 +196,36 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
       haptic("success");
       setCaptioning(null);
       setCaptionDraft("");
+    } catch {
+      toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki." });
+    } finally {
+      setProcessing((n) => n - 1);
+    }
+  }
+
+  /** Zdjęcie otwarte do rysowania (strzałka, wymiar „przed zakryciem”); `null` = płótno zamknięte. */
+  const [drawing, setDrawing] = useState<{ ref: string; url: string } | null>(null);
+  useEffect(() => () => { if (drawing) URL.revokeObjectURL(drawing.url); }, [drawing]);
+
+  async function openDrawing(ref: string) {
+    const rec = await imageStore.get(ref);
+    if (!rec) { toast.error("Tego zdjęcia nie ma na tym urządzeniu"); return; }
+    setDrawing({ ref, url: URL.createObjectURL(new Blob([rec.bytes], { type: rec.type })) });
+  }
+
+  /** Rysunek na zdjęciu podmienia zdjęcie we wpisie (jak podpis) — oryginał zostaje do odśmiecenia. */
+  async function saveDrawing(dataUrl: string) {
+    const ref = drawing?.ref;
+    if (!ref) return;
+    setProcessing((n) => n + 1);
+    try {
+      const blob = await (await fetch(dataUrl)).blob();
+      const fitted = await prepareImage(new File([blob], "rysunek.jpg", { type: blob.type || "image/jpeg" }));
+      if (!fitted) { toast.error("Nie udało się zapisać rysunku na zdjęciu"); return; }
+      const next = await imageStore.putBlob(fitted);
+      const now = getForm().images;
+      if (now.includes(ref)) patch({ images: now.map((r) => (r === ref ? next : r)) });
+      haptic("success");
     } catch {
       toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki." });
     } finally {
@@ -516,6 +547,15 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                     >
                       <Type className="h-3.5 w-3.5" aria-hidden />
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => void openDrawing(ref)}
+                      aria-label="Rysuj na zdjęciu"
+                      title="Strzałka, wymiar, zaznaczenie — rysunek zostaje na zdjęciu"
+                      className="absolute -bottom-1.5 -right-1.5 grid h-6 w-6 place-items-center rounded-full border border-border bg-card text-foreground shadow-sm coarse:h-8 coarse:w-8"
+                    >
+                      <PenTool className="h-3.5 w-3.5" aria-hidden />
+                    </button>
                   </li>
                 ))}
                 {Array.from({ length: processing }, (_, i) => (
@@ -647,6 +687,13 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
           </div>
           <p className="mt-1.5 text-center text-xs text-muted-foreground coarse:hidden">Ctrl+Enter zapisuje {isEdit ? "zmiany" : "wpis"}</p>
         </div>
+        {/* Rysowanie po zdjęciu — okno nad arkuszem; zamknięcie bez zapisu zostawia zdjęcie bez zmian. */}
+        <DrawingCanvas
+          open={drawing !== null}
+          onOpenChange={(o) => { if (!o) setDrawing(null); }}
+          initialImage={drawing?.url ?? null}
+          onSave={(dataUrl) => void saveDrawing(dataUrl)}
+        />
       </SheetContent>
     </Sheet>
   );

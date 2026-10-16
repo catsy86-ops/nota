@@ -30,6 +30,52 @@ interface DrawingCanvasProps {
   initialImage?: string | null;
 }
 
+/** Kreski (z gumką) na jednym kontekście — gumka wycina tylko kreski, bo rysujemy je na osobnej warstwie. */
+function paintStrokes(ctx: CanvasRenderingContext2D, strokes: Stroke[]) {
+  for (const stroke of strokes) {
+    if (stroke.points.length < 2) continue;
+    ctx.beginPath();
+    ctx.strokeStyle = stroke.tool === "eraser" ? "#ffffff" : stroke.color;
+    ctx.lineWidth = stroke.tool === "eraser" ? stroke.width * 3 : stroke.width;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+    ctx.globalCompositeOperation = stroke.tool === "eraser" ? "destination-out" : "source-over";
+
+    ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+    for (let i = 1; i < stroke.points.length; i++) {
+      const prev = stroke.points[i - 1];
+      const curr = stroke.points[i];
+      const midX = (prev.x + curr.x) / 2;
+      const midY = (prev.y + curr.y) / 2;
+      ctx.quadraticCurveTo(prev.x, prev.y, midX, midY);
+    }
+    ctx.stroke();
+    ctx.globalCompositeOperation = "source-over";
+  }
+}
+
+/**
+ * Tło (białe albo zdjęcie) i warstwa kresek w skali `scale` (eksport w większej rozdzielczości).
+ * Warstwa jest osobnym płótnem, więc gumka nie ściera zdjęcia pod spodem.
+ */
+function compose(ctx: CanvasRenderingContext2D, width: number, height: number, bg: HTMLImageElement | null, strokes: Stroke[], scale = 1) {
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, width, height);
+  if (bg) ctx.drawImage(bg, 0, 0, width, height);
+  const layer = document.createElement("canvas");
+  layer.width = width;
+  layer.height = height;
+  const lctx = layer.getContext("2d");
+  if (!lctx) return;
+  lctx.scale(scale, scale);
+  paintStrokes(lctx, strokes);
+  ctx.drawImage(layer, 0, 0);
+}
+
+/** Najdłuższy bok eksportu rysunku na zdjęciu — zdjęcia w dzienniku i tak są zmniejszane. */
+const PHOTO_EXPORT_MAX = 1600;
+
 export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: DrawingCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -40,16 +86,34 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [currentStroke, setCurrentStroke] = useState<Stroke | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 500 });
+  /** Zdjęcie tła (rysowanie po zdjęciu); `null` = białe tło albo jeszcze się wczytuje. */
+  const [bg, setBg] = useState<HTMLImageElement | null>(null);
 
-  // Resize canvas to fit container
+  // Tło wczytywane raz na otwarcie, nie przy każdej kresce.
+  useEffect(() => {
+    setBg(null);
+    if (!open || !initialImage) return;
+    let alive = true;
+    const img = new Image();
+    img.onload = () => { if (alive) setBg(img); };
+    img.src = initialImage;
+    return () => { alive = false; };
+  }, [open, initialImage]);
+
+  // Resize canvas to fit container; przy zdjęciu — w jego proporcjach, bez rozciągania.
   useEffect(() => {
     if (!open) return;
     const updateSize = () => {
       if (containerRef.current) {
         const rect = containerRef.current.getBoundingClientRect();
-        const w = Math.min(rect.width - 2, 1200);
-        const h = Math.min(rect.height - 2, 800);
-        setCanvasSize({ width: Math.max(w, 300), height: Math.max(h, 200) });
+        const maxW = Math.max(Math.min(rect.width - 2, 1200), 300);
+        const maxH = Math.max(Math.min(rect.height - 2, 800), 200);
+        if (bg && bg.naturalWidth > 0 && bg.naturalHeight > 0) {
+          const k = Math.min(maxW / bg.naturalWidth, maxH / bg.naturalHeight);
+          setCanvasSize({ width: Math.round(bg.naturalWidth * k), height: Math.round(bg.naturalHeight * k) });
+        } else {
+          setCanvasSize({ width: maxW, height: maxH });
+        }
       }
     };
     // Delay to allow dialog to render
@@ -59,31 +123,7 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
       clearTimeout(timeout);
       window.removeEventListener("resize", updateSize);
     };
-  }, [open]);
-
-  const drawAllStrokes = useCallback((ctx: CanvasRenderingContext2D) => {
-    const allStrokes = currentStroke ? [...strokes, currentStroke] : strokes;
-    for (const stroke of allStrokes) {
-      if (stroke.points.length < 2) continue;
-      ctx.beginPath();
-      ctx.strokeStyle = stroke.tool === "eraser" ? "#ffffff" : stroke.color;
-      ctx.lineWidth = stroke.tool === "eraser" ? stroke.width * 3 : stroke.width;
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-      ctx.globalCompositeOperation = stroke.tool === "eraser" ? "destination-out" : "source-over";
-
-      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
-      for (let i = 1; i < stroke.points.length; i++) {
-        const prev = stroke.points[i - 1];
-        const curr = stroke.points[i];
-        const midX = (prev.x + curr.x) / 2;
-        const midY = (prev.y + curr.y) / 2;
-        ctx.quadraticCurveTo(prev.x, prev.y, midX, midY);
-      }
-      ctx.stroke();
-      ctx.globalCompositeOperation = "source-over";
-    }
-  }, [strokes, currentStroke]);
+  }, [open, bg]);
 
   // Redraw canvas when strokes or size change
   const redraw = useCallback(() => {
@@ -91,27 +131,11 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw background image if exists
-    if (initialImage) {
-      const img = new Image();
-      img.src = initialImage;
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        drawAllStrokes(ctx);
-      };
-    } else {
-      // White background
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      drawAllStrokes(ctx);
-    }
+    compose(ctx, canvas.width, canvas.height, bg, currentStroke ? [...strokes, currentStroke] : strokes);
     // canvasSize isn't read directly above, but changing the canvas width/height JSX attrs
     // clears its pixel buffer, so a resize must still trigger a redraw.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canvasSize, initialImage, drawAllStrokes]);
+  }, [canvasSize, bg, strokes, currentStroke]);
 
   useEffect(() => {
     if (open) redraw();
@@ -178,49 +202,15 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
   function handleSave() {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    // Redraw without eraser composite to get clean image
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    // Create a temporary canvas for export
+    // Rysunek na zdjęciu — w rozdzielczości zdjęcia (do PHOTO_EXPORT_MAX), kreski przeskalowane.
+    const scale = bg ? Math.max(1, Math.min(PHOTO_EXPORT_MAX / Math.max(canvas.width, canvas.height), bg.naturalWidth / canvas.width)) : 1;
     const exportCanvas = document.createElement("canvas");
-    exportCanvas.width = canvas.width;
-    exportCanvas.height = canvas.height;
+    exportCanvas.width = Math.round(canvas.width * scale);
+    exportCanvas.height = Math.round(canvas.height * scale);
     const exportCtx = exportCanvas.getContext("2d");
     if (!exportCtx) return;
-
-    // White bg
-    exportCtx.fillStyle = "#ffffff";
-    exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-
-    // Draw initial image if exists
-    if (initialImage) {
-      const img = new Image();
-      img.src = initialImage;
-      // Sync draw since image should be cached
-      exportCtx.drawImage(img, 0, 0, exportCanvas.width, exportCanvas.height);
-    }
-
-    // Draw all strokes
-    for (const stroke of strokes) {
-      if (stroke.points.length < 2) continue;
-      exportCtx.beginPath();
-      exportCtx.strokeStyle = stroke.tool === "eraser" ? "#ffffff" : stroke.color;
-      exportCtx.lineWidth = stroke.tool === "eraser" ? stroke.width * 3 : stroke.width;
-      exportCtx.lineCap = "round";
-      exportCtx.lineJoin = "round";
-      exportCtx.globalCompositeOperation = stroke.tool === "eraser" ? "destination-out" : "source-over";
-      exportCtx.moveTo(stroke.points[0].x, stroke.points[0].y);
-      for (let i = 1; i < stroke.points.length; i++) {
-        const prev = stroke.points[i - 1];
-        const curr = stroke.points[i];
-        exportCtx.quadraticCurveTo(prev.x, prev.y, (prev.x + curr.x) / 2, (prev.y + curr.y) / 2);
-      }
-      exportCtx.stroke();
-      exportCtx.globalCompositeOperation = "source-over";
-    }
-
-    const dataUrl = exportCanvas.toDataURL("image/png");
+    compose(exportCtx, exportCanvas.width, exportCanvas.height, bg, strokes, scale);
+    const dataUrl = exportCanvas.toDataURL(bg ? "image/jpeg" : "image/png", 0.9);
     onSave(dataUrl);
     onOpenChange(false);
   }

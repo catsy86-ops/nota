@@ -47,3 +47,28 @@ test("obraz dodany w edycji kafla zostaje po przeładowaniu, a usunięcie ma Cof
   await page.getByRole("button", { name: "Cofnij", exact: true }).click();
   await expect(cardImage(page, title)).toHaveCount(1);
 });
+
+test("rysunek z menu „Więcej opcji” dodaje obraz do notatki", async ({ page }) => {
+  const title = `Kafel z rysunkiem ${Date.now()}`;
+  await addNote(page, title);
+
+  await page.getByText(title).click();
+  await card(page, title).getByRole("button", { name: "Więcej opcji" }).click();
+  await card(page, title).getByRole("button", { name: "Rysuj" }).click();
+  const canvas = page.locator("canvas.cursor-crosshair");
+  await expect(canvas).toBeVisible();
+  // Bez zdjęcia płótno zajmuje okno (nie 4:3 zdjęcia) — jak przed zmianą.
+  await expect.poll(async () => canvas.evaluate((c: HTMLCanvasElement) => c.width)).toBeGreaterThan(300);
+  // Okno wjeżdża z animacją, a płótno dopasowuje się do okna po 100 ms — współrzędne dopiero po ustaniu ruchu.
+  await canvas.hover();
+  await page.waitForTimeout(300);
+
+  const box = (await canvas.boundingBox())!;
+  await page.mouse.move(box.x + 40, box.y + 40);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 200, box.y + 120, { steps: 6 });
+  await page.mouse.up();
+  await page.getByRole("button", { name: "Zapisz rysunek" }).click();
+  await expect(canvas).toHaveCount(0);
+  await expect(cardImage(page, title)).toHaveCount(1);
+});
