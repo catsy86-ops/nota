@@ -964,7 +964,7 @@ patch, łączenie równoległych zmian, notatka prywatna, usunięcie pola, `repl
 pola i wartość po odświeżeniu, walidacja liczby i wybór z listy, usunięcie z potwierdzeniem), `e2e/bundle.spec.ts`
 (budżet JS).
 
-**Commit.** w commicie `feat(notatki): właściwości notatek (4b)` (2026-10-16); hash dopisany w kolejnym commicie docs.
+**Commit.** `a5976a1` (2026-10-16).
 
 ---
 
