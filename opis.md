@@ -2058,6 +2058,36 @@ walidacja formularza, zapis, licznik quizu).
 
 **Commit.** `8725703` (2026-10-16).
 
+## Praca — kalkulatory na budowę
+
+**Co robi.** Przycisk „Kalkulatory” w nagłówku działu (obok „Wysokości”; na Dzienniku jako ikona) otwiera okno z trzema
+kalkulatorami:
+- **Spadek kanalizacji** — z długości i spadku liczy różnicę wysokości (szybkie 2 / 2,5 / 3%), albo z długości
+  i różnicy wysokości — spadek w %. Poza typowymi 2–3% pokazuje podpowiedź „sprawdź wymagany spadek dla tej średnicy”.
+- **Próba wodna** — z ciśnienia roboczego: ciśnienie próbne (1,5 × robocze) i najmniejszy zakres manometru (+50%),
+  z przypomnieniem o podziałce 0,1 bar, odpowietrzeniu i o próbie roboczej 6 bar / protokole 9 bar.
+- **Pojemność instalacji** — kilka odcinków (rura 16×2, 20×2, 25×2,5, 32×3 albo inna średnica wewnętrzna) i suma litrów.
+
+**Gdzie jest.** `src/lib/study/calc.ts` (`parseNum`, `plNum`, `slopeDrop`, `slopeFromDrop`, `slopeNote`, `SLOPE_TYPICAL`,
+`waterTest`, `PIPES`, `pipeLiters`); `src/components/study/CalculatorsSheet.tsx` (`CalculatorsButton`, okno
+`data-testid="calculators"`); przyciski w `StudyView.tsx`.
+
+**Jak działa i dlaczego.** Liczby normowe tylko z materiału G-HEAT (`content.ts`: spadki „ok. 2–3%”, próba wodna
+1,5 × robocze, manometr +50% i podziałka 0,1 bar, próba robocza 6 bar, protokół 9 bar) — aplikacja nie dopisuje norm
+z zewnątrz. Reszta to geometria: 1% = 1 cm na metr, pojemność π·r²·L, średnica wewnętrzna = zewnętrzna − 2 × ścianka.
+Pola przyjmują przecinek i kropkę; wyniki po polsku, dużym krojem mono (czytane z wyciągniętej ręki).
+
+**Ograniczenia i pułapki.**
+- Nie ma doboru średnic — materiał każe brać je z projektu, a w razie wątpliwości pytać Grzegorza.
+- Spadek „typowy” to podpowiedź; wymagany spadek zależy od średnicy (materiał nie podaje tabeli).
+- Wartości nie zapisują się (kalkulator jest na chwilę).
+
+**Testy.** `src/lib/study/calc.test.ts` (6: liczby z przecinkiem, zapis po polsku, spadek w obie strony, podpowiedź
+2–3%, próba wodna, pojemność i wymiary rur). `e2e/calculators.spec.ts` (spadek w obie strony z podpowiedzią, próba
+wodna, pojemność dwóch odcinków). Regresja: `study.spec.ts` 29/29 (z kalkulatorami), układ telefonu `iphone-14` 19/19.
+
+**Commit.** `7740d29` (2026-10-16).
+
 ## Praca → Dziennik budowy
 
 Zakładka „Dziennik” na `/nauka` (`src/components/study/StudyJournal.tsx`). Dziennik instalatora
