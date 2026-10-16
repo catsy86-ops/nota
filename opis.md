@@ -880,8 +880,9 @@ z treści).
 **Jak działa i dlaczego.** Hook nie trzyma własnego stanu poza tym, co było już w `gridKeyboardNav` i w `Index`, więc
 zachowanie się nie zmienia. Stan prezentacji zostawiony w `Index` (dwa miejsca go ustawiają: siatka i czytnik).
 
-**Stan etapu 4.** Zrobione też: sesja edycji kafla (`useNoteEditSession`), obrazy kafla (`useNoteImages`), patrz niżej.
-Pozostają: reszta `NoteCard.tsx` (widok i menu) i reszta `Index.tsx` — wielosesyjny podział, każdy kawałek z własnym e2e.
+**Stan etapu 4.** Zrobione też: sesja edycji kafla (`useNoteEditSession`), obrazy kafla (`useNoteImages`), akcje kafla
+(`NoteCardActions`), patrz niżej. Pozostają: reszta `NoteCard.tsx` (widok kafla, pasek i tryb wpisu) i reszta `Index.tsx`
+— wielosesyjny podział, każdy kawałek z własnym e2e.
 
 **Testy.** Charakteryzujące: `e2e/reader.spec.ts`, `reader-step.spec.ts`, `wikilinks.spec.ts`, `notes.spec.ts`,
 `editing.spec.ts`, `routes.spec.ts`, `tabs.spec.ts`, `search-highlight.spec.ts` — 28/28.
@@ -920,6 +921,36 @@ obsługę obrazów. Pozostają też `FindReplaceBar` (renderowany w `NoteCard`) 
 1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
 
 **Commit.** `3342c00` (2026-10-16) — sesja edycji; `ff09430` (2026-10-16) — klawisze, podpowiedzi i Ctrl+F.
+
+## Notatki — akcje kafla w NoteCardActions (plan Notatek, etap 4, refaktor NoteCard)
+
+**Co robi.** Bez zmian dla użytkownika. Na stopce kafla (mysz) albo w arkuszu „⋯” (dotyk) są: przypnij, kolor,
+przypomnienie, priorytet, archiwizuj, usuń; w „Więcej opcji” (rozwinięcie lub arkusz) reszta: ikona, ulubione,
+szerokość, większy tekst, blokada, podstrona, obraz, rysunek, etykiety, folder, prywatna, udostępnij, wersje,
+prezentacja, duplikat.
+
+**Gdzie jest.** `src/components/NoteCardActions.tsx`:
+- `ActionBtn` — przycisk ikony na stopce (przeniesiony z `NoteCard.tsx`, dalej tylko tam używany).
+- `PrimaryActions({ note, isArchived, inSheet, pinSparkle, onClose, onToggleColors, onAskDeleteConfirm, … })`.
+- `MoreActions({ note, isArchived, noteVersions, folders, allLabels, onCreateLabel, onAddImage, onDraw, … })`.
+`NoteCard.tsx` buduje `moreActions` (jeden element dla rozwinięcia i arkusza) i wywołuje `PrimaryActions` dwa razy:
+w stopce (`inSheet={false}`) i w arkuszu (`inSheet`, `onClose` zamyka arkusz).
+
+**Jak działa i dlaczego.** Komponenty dostają wszystko przez props, nie przez zamknięcia z `NoteCard`. Iskry przy
+przypięciu liczy `NoteCard` (`showFx && fx.sparkle`), bo zależą od ustawień efektów i ruchu. Usunięcie notatki z kosza
+idzie przez `onAskDeleteConfirm` — dialog zostaje w `NoteCard`. `handleLabelToggle` przeniesiony do `MoreActions`
+(czyta tylko `note` i `onUpdate`).
+
+**Ograniczenia.** `isArchived` jest opcjonalne w kontekście, więc w propsach też opcjonalne (działa jak `!isArchived`).
+Dodanie nowej akcji wymaga dopisania jej w obu miejscach, czyli zmiany `NoteCardActions.tsx`, nie `NoteCard.tsx`.
+
+**Testy.** Charakteryzujące: `e2e/notes.spec.ts`, `card-images.spec.ts`, `card-motion.spec.ts`, `note-look.spec.ts`,
+`note-props.spec.ts`, `subpages.spec.ts`, `private-notes.spec.ts`, `read-only-note.spec.ts`, `reminder-toast.spec.ts`,
+`reminders-calendar.spec.ts`, `mobile.spec.ts`, `editing.spec.ts`, `attachments.spec.ts`, `board-table.spec.ts` — 66/66
+(`--workers=1`). Testy jednostkowe `src/components`, `src/hooks`, `src/lib`: 1209/1209. `tsc` i eslint bez błędów.
+Nie uruchamiano pełnego e2e.
+
+**Commit.** `7437879` (2026-10-16).
 
 ## Notatki — obrazy kafla w hooku useNoteImages (plan Notatek, etap 4, refaktor NoteCard)
 
