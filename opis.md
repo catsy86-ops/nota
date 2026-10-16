@@ -882,8 +882,8 @@ zachowanie się nie zmienia. Stan prezentacji zostawiony w `Index` (dwa miejsca 
 
 **Stan etapu 4.** Zrobione też: sesja edycji kafla (`useNoteEditSession`), obrazy kafla (`useNoteImages`), akcje kafla
 (`NoteCardActions`), edytor kafla i okna (`NoteEditor`), gesty kafla (`useCardGestures`), arkusz, podgląd i
-usuwanie (`NoteCardDialogs`), patrz niżej. Pozostają: widok kafla w `NoteCard.tsx` i reszta `Index.tsx` —
-wielosesyjny podział, każdy kawałek z własnym e2e.
+usuwanie (`NoteCardDialogs`), podgląd zawartości (`NoteCardBody`), patrz niżej. Pozostają: otoczka kafla i stan
+w `NoteCard.tsx` oraz reszta `Index.tsx` — wielosesyjny podział, każdy kawałek z własnym e2e.
 
 **Testy.** Charakteryzujące: `e2e/reader.spec.ts`, `reader-step.spec.ts`, `wikilinks.spec.ts`, `notes.spec.ts`,
 `editing.spec.ts`, `routes.spec.ts`, `tabs.spec.ts`, `search-highlight.spec.ts` — 28/28.
@@ -922,6 +922,35 @@ obsługę obrazów. Pozostają też `FindReplaceBar` (renderowany w `NoteCard`) 
 1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
 
 **Commit.** `3342c00` (2026-10-16) — sesja edycji; `ff09430` (2026-10-16) — klawisze, podpowiedzi i Ctrl+F.
+
+## Notatki — podgląd zawartości kafla w NoteCardBody (plan Notatek, etap 4, refaktor NoteCard)
+
+**Co robi.** Bez zmian dla użytkownika. Tryb podglądu kafla: okładka, tytuł (z ikoną i kłódką przy zablokowanej),
+treść albo fragment trafienia wyszukiwania, lista zadań, etykiety, przypomnienie, priorytet, załączniki, „Gotowe” /
+„Jutro” przy zaległym terminie, link zwrotny (jeden, reszta „+N”), nadrzędna notatka i liczba podstron, odliczanie
+kosza z „Przywróć”, czas czytania i data.
+
+**Gdzie jest.** `src/components/NoteCardBody.tsx`: `NoteCardBody({ note, isArchived, selectable, snippet, searchTerms,
+knownTitles, onWikiClick, onUpdate, onOpenNote, onUnarchive, handleChecklistToggle, backlinks, subpage, trashCountdown,
+showReadingTime, wordCount, readMin })`. Stała `BACKLINKS_SHOWN` przeniesiona tutaj. `NoteCard.tsx` renderuje ją w
+miejscu dawnej gałęzi „nie edytuj” i przekazuje wyliczone wartości (`backlinks`, `subpage`, `trashCountdown`).
+
+**Jak działa i dlaczego.** Komponent ma propy o tych samych nazwach co dawne zmienne, więc treść JSX nie zmieniła się.
+Jedyna zmiana: `selectable` zamiast `onToggleSelect`, a `showReadingTime` zamiast `prefs.showReadingTime`.
+Zaznaczanie kafla i akcje klikalne zostają w `NoteCard` (obsługa kliknięcia kafla), a tu są już tylko treść i
+przyciski „Gotowe”/„Jutro”, które wywołują `onUpdate` z propsów.
+
+**Ograniczenia.** Typ `subpage` jest pisany ręcznie (kształt z `wikiIndex.tree`); zmiana kształtu `wikiIndex` wymaga
+poprawki tutaj.
+
+**Testy.** Charakteryzujące (chromium, `--workers=1`): `notes`, `note-links`, `subpages`, `reminders-calendar`,
+`reminder-toast`, `search-highlight`, `checklist`, `note-look`, `note-groups`, `reminders-agenda`, `saved-filters`,
+`private-notes`, `card-motion`, `desktop-columns` — 58/58; `board-table`, `wikilinks`, `wiki-heading`, `reader`,
+`reader-step`, `view-change`, `editing`, `card-images`, `read-only-note`, `note-props-view`, `note-wide-large`,
+`masonry` — 30/30. Na `iphone-14` (`@mobile`): `mobile`, `mobile-layout`, `editor-open`, `touch-targets` — 20/20.
+Testy jednostkowe `src/components`, `src/hooks`, `src/lib`: 1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
+
+**Commit.** `a8ae0a5` (2026-10-16).
 
 ## Notatki — arkusz „⋯”, podgląd obrazu i usuwanie w NoteCardDialogs (plan Notatek, etap 4, refaktor NoteCard)
 
