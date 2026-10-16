@@ -2517,6 +2517,50 @@ zapasowa w obie strony; pusta lista etapów). e2e działu Praca i kopii (`site-s
 
 **Commit.** `395c311` (2026-10-16).
 
+### Kontakt i dojazd w karcie budowy (H1)
+
+**Co robi.** Karta budowy ma dodatkowe pola: „Telefon inwestora”, „Kierownik budowy”, „Telefon kierownika” i „Dostęp do
+budowy” (np. kod do bramy, gdzie są klucze). Po zapisie pod nagłówkiem karty jest pasek szybkich akcji:
+- **Nawiguj** — Mapy Google z trasą do adresu;
+- **telefon z imieniem inwestora** — połączenie;
+- **SMS** — wiadomość do inwestora;
+- **telefon z imieniem kierownika** — połączenie.
+
+Pod paskiem jest wyróżniona notka z dostępem (ikona klucza).
+
+**Gdzie jest.**
+- `src/lib/study/contact.ts`: `telHref`, `smsHref`, `prettyPhone`, `mapsHref` i limity `SITE_PHONE_MAX` (40)
+  i `SITE_ACCESS_MAX` (300). Numer czyści `normalizePhone` z `boss.ts`, ten sam co numer szefa: 9 cyfr dostaje +48,
+  a `00` zamienia się na `+`.
+- `src/lib/study/sites.ts`: opcjonalne pola `SiteCard.phone`, `manager`, `managerPhone`, `access`. `cleanSite` pomija
+  puste i ucina długie (`optionalText`).
+- `src/lib/study/store.ts`: `SiteCardInput` z polami kontaktu; `saveSiteCard` składa kartę przez `cleanSite`.
+- `src/components/study/SiteCardDialog.tsx`: `QuickLink` (link jako przycisk), pasek `[data-testid=site-quick]`,
+  notka `[data-testid=site-access]` i pola formularza (`EMPTY_FORM`, `formOf`).
+
+**Jak działa i dlaczego.**
+- Szybkie akcje liczą się z zapisanej karty, nie z pisanego formularza. Dzięki temu numer w trakcie wpisywania
+  niczego nie wybiera, a pasek pokazuje dokładnie to, co jest w dokumencie.
+- Pola pominięte w `SiteCardInput` zostają bez zmian. Zapis z samą nazwą (np. z innego miejsca) nie kasuje telefonów.
+  Pusty tekst usuwa pole z karty.
+- Link Map w formie `google.com/maps/dir/?api=1&destination=…`: na Androidzie otwiera aplikację Mapy, na iPhonie
+  i komputerze stronę. Działa bez klucza API.
+- Przyciski pokazują tylko imię z ikoną słuchawki, bo „Zadzwoń: Jan Nowak” ucinało się na telefonie. Pełny opis
+  z numerem jest w `aria-label` („Zadzwoń do inwestora: +48 600 100 200”).
+
+**Ograniczenia i pułapki.**
+- Starsza wersja aplikacji nie zna nowych pól: zapis karty w niej je zgubi (jak przy etapach).
+- Numer, którego `normalizePhone` nie rozpozna (np. „u sąsiada”), zostaje w polu, ale nie daje przycisku.
+- Kontakt nie trafia do raportu ani protokołu odbioru, bo to dane robocze, nie dla inwestora.
+- Pułapka e2e: etykieta „Telefon inwestora” zawiera „Inwestor”, więc `getByLabel("Inwestor")` wymaga `exact: true`
+  (poprawione w `study.spec.ts` i `site-handover.spec.ts`).
+
+**Testy.** `src/lib/study/contact.test.ts` (linki, Mapy, zapis numeru, czyszczenie pól karty), `study.test.ts`
+(„kontakt i dostęp w karcie”: zapis, pole pominięte zostaje, pusty tekst usuwa), `e2e/site-contact.spec.ts`
+(pasek akcji z hrefami, dostęp, po przeładowaniu). Obejrzane na zrzutach 390 px i na komputerze, w obu motywach.
+
+**Commit.** `95159d1` (2026-10-16).
+
 ### Etapy budowy
 
 **Co robi.** Karta budowy ma listę etapów instalacji w domku jednorodzinnym: domyślnie kanalizacja podposadzkowa,
