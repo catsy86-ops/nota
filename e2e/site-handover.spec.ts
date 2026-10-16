@@ -106,3 +106,28 @@ test("zdjęcia wpisu, który odhaczył etap, idą do protokołu przy tym etapie 
   await expect.poll(() => page.evaluate(() => (window as unknown as { __printed?: string }).__printed)).toBeTruthy();
   await expect(page.locator("#report-print [data-handover-photo-group='Kanalizacja podposadzkowa'] img")).toHaveCount(1);
 });
+
+test("zapisany wpis ze zdjęciem można przypiąć do etapu w edycji — zdjęcie idzie do protokołu przy etapie", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByRole("button", { name: /^(Wpis|Dokończ wpis)$/ }).click();
+  const sheet = page.getByTestId("journal-entry-sheet");
+  await sheet.getByLabel("Co się dzieje?").fill("Pion przed zakryciem");
+  await sheet.getByTestId("journal-photo-input").setInputFiles([await png(page)]);
+  await expect(sheet.getByRole("button", { name: "Usuń zdjęcie z wpisu" })).toHaveCount(1);
+  await sheet.getByRole("button", { name: "Zapisz wpis" }).click();
+  await expect(sheet).toHaveCount(0);
+
+  await page.locator("[data-journal-entry]").filter({ hasText: "Pion przed zakryciem" }).getByRole("button", { name: "Edytuj wpis" }).click();
+  await sheet.getByLabel("Przypnij wpis do etapu").selectOption({ label: "Piony i podejścia kanalizacji" });
+  await expect(sheet.getByTestId("journal-entry-stage")).toContainText("Piony i podejścia kanalizacji");
+  await sheet.getByRole("button", { name: "Zapisz zmiany" }).click();
+  await expect(sheet).toHaveCount(0);
+
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
+  const card = page.getByTestId("site-card");
+  // Przypięcie nie odhacza etapu w karcie.
+  await expect(card.getByTestId("site-stages").getByRole("checkbox", { name: /Piony i podejścia/ })).toHaveAttribute("aria-checked", "false");
+  await card.getByRole("button", { name: "Protokół odbioru" }).click();
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __printed?: string }).__printed)).toBeTruthy();
+  await expect(page.locator("#report-print [data-handover-photo-group='Piony i podejścia kanalizacji'] img")).toHaveCount(1);
+});

@@ -83,6 +83,12 @@ describe("protokół odbioru — zdjęcia przy etapach", () => {
     expect(h.morePhotos).toBe(3);
   });
 
+  it("karta bez własnej listy — grupuje po domyślnych etapach", () => {
+    const h = buildHandover([e("p", at(1), { images: [IMG(1)], stage: "kan-pion" })], card, at(16));
+    expect(h.stages).toBeNull();
+    expect(h.photoGroups).toEqual([{ stage: "Piony i podejścia kanalizacji", photos: [IMG(1)] }]);
+  });
+
   it("bez przypiętych — jedna grupa bez etapu", () => {
     const h = buildHandover([e("x", at(1), { images: [IMG(1)] })], card, at(16));
     expect(h.photoGroups).toEqual([{ stage: null, photos: [IMG(1)] }]);

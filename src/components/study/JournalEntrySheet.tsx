@@ -524,6 +524,23 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             </div>
           )}
 
+          {isEdit && !entryStage && siteCard && (
+            // Zapisany wpis (np. zdjęcia „przed zakryciem” sprzed odhaczenia) — przypięcie bez ruszania stanu etapu w karcie.
+            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              <ListChecks className="h-4 w-4 shrink-0" aria-hidden />
+              <span className="shrink-0">Zdjęcia do protokołu przy etapie:</span>
+              <select
+                value=""
+                onChange={(e) => { if (e.target.value) { haptic("selection"); patch({ stage: e.target.value }); } }}
+                aria-label="Przypnij wpis do etapu"
+                className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-background px-2 text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11"
+              >
+                <option value="">— bez etapu —</option>
+                {siteStages(siteCard).map((s) => <option key={s.id} value={s.id}>{s.done !== undefined ? `✓ ${s.name}` : s.name}</option>)}
+              </select>
+            </label>
+          )}
+
           {isEdit && kind === "problem" && (
             <label className="flex items-center gap-2.5 rounded-xl border border-border px-3 py-2.5 text-sm coarse:min-h-12">
               <Checkbox

@@ -1,7 +1,7 @@
 import { entrySiteId, type SiteCard } from "./sites";
 import { testLine } from "./pressureTest";
 import { dayKeyOf, periodLabel } from "./report";
-import type { SiteStage } from "./stages";
+import { siteStages, type SiteStage } from "./stages";
 import type { JournalEntry } from "./yStudy";
 
 /**
@@ -58,7 +58,8 @@ export function buildHandover(
 ): Handover {
   const entries = journal.filter((e) => entrySiteId(e) === site.id).sort((a, b) => a.at - b.at);
   // Najpierw zdjęcia przypięte do etapów (w kolejności etapów), potem reszta — limit wydruku tnie od końca.
-  const stageList = site.stages ?? [];
+  // Karta bez własnej listy ma domyślne etapy — wpis mógł zostać przypięty do jednego z nich.
+  const stageList = siteStages(site);
   const groups: HandoverPhotoGroup[] = stageList
     .map((s) => ({ stage: s.name, photos: entries.filter((e) => e.stage === s.id).flatMap((e) => e.images) }))
     .filter((g) => g.photos.length > 0);
