@@ -306,11 +306,13 @@ test("termin da się przeciągnąć na inny dzień, przesunąć Shift+strzałką
   await expect(source).toHaveCount(1);
   const sourceLabel = (await source.getAttribute("aria-label"))!;
 
-  // Przeciągnięcie myszą o jedną komórkę w prawo (lub w lewo w niedzielę).
+  // Przeciągnięcie myszą o jedną komórkę w prawo, a w ostatniej kolumnie siatki (niedziela) w lewo.
+  // Kierunek liczymy od krawędzi siatki, nie viewportu: termin domyślny wypada raz w niedzielę.
   const chip = source.locator(".cursor-grab");
   const from = (await chip.boundingBox())!;
   const cellBox = (await source.boundingBox())!;
-  const dx = cellBox.x + cellBox.width * 1.5 < (page.viewportSize()!.width - 40) ? cellBox.width + 8 : -(cellBox.width + 8);
+  const gridBox = (await grid.boundingBox())!;
+  const dx = cellBox.x + cellBox.width * 2 < gridBox.x + gridBox.width ? cellBox.width + 8 : -(cellBox.width + 8);
   await page.mouse.move(from.x + 5, from.y + 5);
   await page.mouse.down();
   await page.mouse.move(from.x + 5 + dx / 2, from.y + 5, { steps: 5 });
