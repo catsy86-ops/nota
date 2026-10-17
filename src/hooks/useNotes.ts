@@ -118,6 +118,41 @@ export function getDescendantFolderIds(folderId: string, folders: Folder[]): str
   return ids;
 }
 
+/** `ids` razem z ich podstronami (kosz i przywracanie działają na całych gałęziach). */
+const withDescendants = (ids: string[]): string[] => {
+  const all = yjsStore.projectNotes();
+  const out = new Set(ids);
+  const trashed = new Set(all.filter((n) => n.trashed).map((n) => n.id));
+  // Podstrona, która już jest w koszu, zachowuje swój `trashedAt` — przywróci się osobno.
+  for (const id of ids) descendantIds(id, all).filter((d) => !trashed.has(d)).forEach((d) => out.add(d));
+  return [...out];
+};
+
+/** Przywracanie: notatka i te podstrony, które trafiły do kosza razem z nią. */
+const restoreSet = (ids: string[]): string[] => {
+  const all = yjsStore.projectNotes();
+  const out = new Set(ids);
+  for (const id of ids) {
+    const at = all.find((n) => n.id === id)?.trashedAt;
+    if (at == null) continue;
+    const trashedTogether = new Set(all.filter((n) => n.trashed && n.trashedAt === at).map((n) => n.id));
+    descendantIds(id, all).filter((d) => trashedTogether.has(d)).forEach((d) => out.add(d));
+  }
+  return [...out];
+};
+
+/**
+ * Do kosza idą notatki i ich podstrony z jednym `trashedAt`. Przypięcie i archiwum
+ * zerujemy tylko u notatek wskazanych wprost — podstrony zachowują je do przywrócenia.
+ */
+const trashBranch = (ids: string[]) => {
+  const at = Date.now();
+  const direct = new Set(ids);
+  const rest = withDescendants(ids).filter((id) => !direct.has(id));
+  yjsStore.patchNotes(ids, { trashed: true, trashedAt: at, pinned: false, archived: false });
+  if (rest.length) yjsStore.patchNotes(rest, { trashed: true, trashedAt: at });
+};
+
 export function useNotes() {
   // Notes/folders/labels live in a Yjs doc (persisted via y-indexeddb); this
   // React state is a projection of it, kept in sync via observeDeep. See
@@ -239,41 +274,6 @@ export function useNotes() {
   const deleteNote = useCallback((id: string) => {
     yjsStore.removeNote(id);
   }, []);
-
-  /** `ids` razem z ich podstronami (kosz i przywracanie działają na całych gałęziach). */
-  const withDescendants = (ids: string[]): string[] => {
-    const all = yjsStore.projectNotes();
-    const out = new Set(ids);
-    const trashed = new Set(all.filter((n) => n.trashed).map((n) => n.id));
-    // Podstrona, która już jest w koszu, zachowuje swój `trashedAt` — przywróci się osobno.
-    for (const id of ids) descendantIds(id, all).filter((d) => !trashed.has(d)).forEach((d) => out.add(d));
-    return [...out];
-  };
-
-  /** Przywracanie: notatka i te podstrony, które trafiły do kosza razem z nią. */
-  const restoreSet = (ids: string[]): string[] => {
-    const all = yjsStore.projectNotes();
-    const out = new Set(ids);
-    for (const id of ids) {
-      const at = all.find((n) => n.id === id)?.trashedAt;
-      if (at == null) continue;
-      const trashedTogether = new Set(all.filter((n) => n.trashed && n.trashedAt === at).map((n) => n.id));
-      descendantIds(id, all).filter((d) => trashedTogether.has(d)).forEach((d) => out.add(d));
-    }
-    return [...out];
-  };
-
-  /**
-   * Do kosza idą notatki i ich podstrony z jednym `trashedAt`. Przypięcie i archiwum
-   * zerujemy tylko u notatek wskazanych wprost — podstrony zachowują je do przywrócenia.
-   */
-  const trashBranch = (ids: string[]) => {
-    const at = Date.now();
-    const direct = new Set(ids);
-    const rest = withDescendants(ids).filter((id) => !direct.has(id));
-    yjsStore.patchNotes(ids, { trashed: true, trashedAt: at, pinned: false, archived: false });
-    if (rest.length) yjsStore.patchNotes(rest, { trashed: true, trashedAt: at });
-  };
 
   const trashNote = useCallback((id: string) => {
     trashBranch([id]);

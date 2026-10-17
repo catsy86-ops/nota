@@ -283,7 +283,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
       onAdd(r.title, r.content, color, allNoteLabels, remindAt, images, checklist, r.priority ?? priority, r.folderId, attachments, extras);
     }
     reset();
-  }, [title, content, images, attachments, checklist, color, labels, reminder, reminderRepeat, reminderUntil, parentId, priority, capture, ignored, onAdd, onCreateLabel, reset]);
+  }, [title, content, images, attachments, checklist, color, labels, reminder, reminderRepeat, reminderUntil, parentId, parentOptions, priority, capture, ignored, onAdd, onCreateLabel, reset]);
 
   const handleClose = commit;
 

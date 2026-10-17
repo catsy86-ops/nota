@@ -86,7 +86,7 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
 
       {summary.period && <PeriodProgress period={summary.period} />}
 
-      <LeaveMeter balance={balance} compact />
+      <LeaveMeter balance={balance} />
 
       {summary.shortRests.length > 0 && (
         <div role="note" className="flex gap-2.5 rounded-2xl bg-destructive/10 px-3 py-2.5 text-sm">
