@@ -64,6 +64,9 @@ export default defineConfig(() => ({
           "**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*.woff2",
           "**/{barlow-condensed,fraunces,bricolage-grotesque,inter,nunito,atkinson-hyperlegible-next,literata,manrope,lexend}-*.woff2",
           "**/unbounded-latin*.woff2",
+          // Eksport PDF (jsPDF + html2canvas + purify + index.es) i Statystyki: ~1,1 MB, rzadko używane.
+          // Nie w precache — trafiają do cache `static-assets` przy pierwszym użyciu (offline wcześniej: błąd).
+          "**/{exportPdf,index.es,html2canvas.esm,purify.es,StatsDialog}-*.js",
         ],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         cleanupOutdatedCaches: true,

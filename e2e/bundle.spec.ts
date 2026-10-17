@@ -86,8 +86,8 @@ test("PDF export lazily fetches its chunk and produces a file", async ({ page })
 
 // 3.7 Budżety: progi zapadkowe na poziomie z 2026-10-11 (z małym zapasem) — rośnięcie paczki,
 // precache albo DOM wychodzi w teście, a nie dopiero na telefonie. Cele z roadmapy (wejściowy JS
-// ≤200 KB, precache ≤1,5 MB, DOM ≤3 000) czekają na decyzje o precache i wirtualizacji; po każdym
-// zejściu w dół obniż próg. Czasów (FAB, klawisz) tu nie ma — na współdzielonej maszynie CI skaczą.
+// ≤200 KB, precache ≤1,5 MB, DOM ≤3 000) nie są osiągnięte: precache 3,0 MB (decyzja 2026-10-17),
+// DOM bez okienkowania (decyzja 2026-10-17); po każdym zejściu w dół obniż próg. Czasów (FAB, klawisz) tu nie ma — na współdzielonej maszynie CI skaczą.
 const KB = 1024;
 const BUDGET = {
   // 2026-10-15: 397 KB po React 19 (react-dom/client ~74 z routerem, index 218). Do odzyskania: LazyMotion (plan UI 3.4).
@@ -98,7 +98,9 @@ const BUDGET = {
   eagerJsGzip: 384 * KB,
   // 2026-10-11: 357 KB (index 214 + react/motion/radix/dnd)
   // 2026-10-16: 4,37 → 4,03 MB — `includeAssets` dublował 6 plików z `public/` (łapie je `globPatterns`).
-  precacheBytes: 4.3 * KB * KB, // 2026-10-11: 3,85 MB, 72 pliki
+  // 2026-10-17: 4,09 → 3,00 MB — PDF (jsPDF/html2canvas/purify), Statystyki poza precache (cache `static-assets` po pierwszym użyciu).
+  // Cel 1,5 MB wymagałby też Nauki, Grafiku i Markdownu poza precache — nie zrobione, bo łamie offline-first tych działów.
+  precacheBytes: 3.1 * KB * KB, // 2026-10-11: 3,85 MB, 72 pliki
   domPhone: 10_500, // 2026-10-11: 9 763 przy 300 notatkach (mozaika)
   domDesktop: 20_500, // 2026-10-11: 19 220 — akcje kafla w DOM dla najechania
 };
