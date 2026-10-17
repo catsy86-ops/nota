@@ -65,7 +65,8 @@ function MasteryStrip() {
                           "block size-5 rounded-[4px] border transition-colors duration-300 group-focus-visible:ring-2 group-focus-visible:ring-ring",
                           col === "done" && "border-primary bg-primary",
                           col === "doing" && "border-primary/60 bg-primary/30",
-                          col === "todo" && "border-border bg-transparent",
+                          // Nieopanowane: obwódka ma być widoczna na papierze (≥ 3:1), bo sama krawędź niesie stan.
+                          col === "todo" && "border-foreground/50 bg-transparent",
                           on && "ring-2 ring-foreground/70 ring-offset-1 ring-offset-background",
                         )}
                       />
