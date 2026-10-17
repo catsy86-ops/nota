@@ -50,7 +50,8 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
   const LayoutIcon = LAYOUTS.find((l) => l.v === prefs.layout)?.icon ?? LayoutGrid;
 
   return (
-    <div className="flex items-center gap-0.5 p-0.5 sm:p-1 rounded-2xl bg-muted/40 border border-border/50">
+    // Kartka z lekkim cieniem zamiast szarej plamy — grupa ikon siedzi na papierze jak przycisk w zeszycie.
+    <div className="flex items-center gap-0.5 p-0.5 sm:p-1 rounded-2xl bg-card/80 border border-border/60 shadow-elevation-1">
       {/* Layout — na telefonie arkusz od dołu z opisanymi opcjami, na desktopie menu */}
       {isMobile ? (
         <>

@@ -469,10 +469,13 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
         {!expanded ? (
           <motion.button key="collapsed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setExpanded(true)}
-            className="w-full flex items-center gap-3 px-5 py-4 text-muted-foreground hover:text-foreground transition-colors"
+            className="group w-full flex items-center gap-3.5 px-4 py-3.5 text-muted-foreground hover:text-foreground transition-colors"
           >
-            <Plus className="w-5 h-5" />
-            <span className="font-medium font-display">Zapisz notatkę...</span>
+            {/* Kafelek z bursztynowym plusem — jak zakładka w zeszycie; reaguje na najechanie i fokus. */}
+            <span aria-hidden className="grid place-items-center w-9 h-9 rounded-xl bg-primary/12 text-primary-ink ring-1 ring-primary/20 transition-[background-color,transform] duration-(--dur-fast) group-hover:bg-primary/20 group-active:scale-95">
+              <Plus className="w-5 h-5" />
+            </span>
+            <span className="font-medium font-display text-[0.95rem] tracking-tight">Zapisz notatkę...</span>
             {destination && <span className="ml-auto text-xs truncate max-w-[45%]">trafi do: {destination}</span>}
           </motion.button>
         ) : (

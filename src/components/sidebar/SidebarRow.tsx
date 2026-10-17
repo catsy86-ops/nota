@@ -49,7 +49,10 @@ export const SidebarRow = forwardRef<HTMLDivElement, SidebarRowProps>(function S
           aria-hidden
           className="absolute inset-0 rounded-lg bg-primary/10"
           transition={spring.snap}
-        />
+        >
+          {/* Kreska jak zapis na marginesie zeszytu — jedzie razem z pigułką (ten sam layoutId). */}
+          <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-primary" />
+        </motion.span>
       )}
       {before && <span className="relative z-10 flex shrink-0 items-center pl-1.5">{before}</span>}
       <button
