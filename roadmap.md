@@ -1058,4 +1058,4 @@ Kolejność (po decyzjach): 3.3 Tailwind v4 + React 19 + shadcn (osobne commity:
 - [x] H1 Kontakt i dojazd w karcie budowy: telefon inwestora, kierownik z telefonem, „Dostęp do budowy” (kod, klucze); pasek „Nawiguj / Inwestor / SMS / Kierownik” (`lib/study/contact.ts`).
 - [x] H2 Godziny na budowach: podział godzin dnia z Grafiku między budowy (`siteHours.ts`, okno `DayHoursDialog`); godziny przy budowie w Dzienniku i w raporcie.
 - [x] H3 Plany i dokumenty budowy: zdjęcia i PDF w karcie budowy (`siteDocs.ts`, `SiteDocsPanel`), offline, w paczce ZIP.
-- [ ] H4 Serwis i gwarancja: zgłoszenia po odbiorze z terminem, statusem i przypomnieniem; historia w karcie.
+- [x] H4 Serwis i gwarancja: zgłoszenia po odbiorze z terminem, statusem i przypomnieniem; historia w karcie.

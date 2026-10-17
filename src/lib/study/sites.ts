@@ -4,6 +4,7 @@ import { cleanOrderLog, cleanShortages, type OrderLogEntry, type Shortage } from
 import { SITE_ACCESS_MAX, SITE_PHONE_MAX } from "./contact";
 import { cleanSiteHours, type SiteHours } from "./siteHours";
 import { cleanSiteDocs, type SiteDoc } from "./siteDocs";
+import { cleanServiceCalls, isDayKey, type ServiceCall } from "./service";
 
 /**
  * Karty budów dziennika. Wpis trzyma `siteId` i kopię nazwy (`site`) — starsza wersja
@@ -44,6 +45,10 @@ export interface SiteCard {
   hours?: SiteHours[];
   /** Plany i dokumenty budowy (`siteDocs.ts`); brak = nic nie dodano. */
   docs?: SiteDoc[];
+  /** Zgłoszenia serwisowe po odbiorze (`service.ts`). */
+  service?: ServiceCall[];
+  /** Ostatni dzień gwarancji („2028-10-16”); brak = nie wpisano. */
+  warranty?: string;
 }
 
 export const SITE_NAME_MAX = 120;
@@ -99,6 +104,8 @@ export function cleanSite(raw: unknown): SiteCard | null {
     ...optional("orders", cleanOrderLog(s.orders)),
     ...optional("hours", cleanSiteHours(s.hours)),
     ...optional("docs", cleanSiteDocs(s.docs)),
+    ...optional("service", cleanServiceCalls(s.service)),
+    ...(isDayKey(s.warranty) ? { warranty: s.warranty } : {}),
   };
 }
 

@@ -9,6 +9,7 @@ import { dayKeyOf, shiftKey } from "@/lib/study/report";
 import { JOURNAL_REPORT_PARAM, reportParam } from "@/lib/study/reportLink";
 import { entrySiteId } from "@/lib/study/sites";
 import type { Shortage } from "@/lib/study/shortages";
+import type { ServiceCall } from "@/lib/study/service";
 import type { JournalEntry } from "@/lib/study/yStudy";
 import { notePath } from "@/lib/viewRoute";
 import { pushKey } from "./shown";
@@ -52,6 +53,7 @@ export interface PushSite {
   name: string;
   archived?: number;
   shortages?: Shortage[];
+  service?: ServiceCall[];
 }
 
 export interface PushInput {
@@ -175,6 +177,16 @@ function studyItems(input: PushInput, now: number, end: number): PushItem[] {
       key: pushKey.problem(e.id), at, title: `Problem otwarty od ${REMINDER_PROBLEM_DAYS} dni`,
       body: clip(`${where ? `${where}: ` : ""}${firstLine(e.text) || "bez opisu"}`, 200), url: "/praca",
     });
+  }
+  // Serwis: rano w dniu wizyty — także budowy w archiwum (serwis jest po odbiorze).
+  for (const site of Object.values(input.sites ?? {})) {
+    for (const c of site.service ?? []) {
+      if (c.done !== undefined || !c.due) continue;
+      const [y, m, d] = c.due.split("-").map(Number);
+      const at = new Date(y, m - 1, d, QUIET_TO).getTime();
+      if (at <= now || at > end) continue;
+      out.push({ key: pushKey.service(c.id, c.due), at, title: `Serwis dziś: ${site.name}`, body: clip(c.text, 200), url: "/praca" });
+    }
   }
   for (const site of Object.values(input.sites ?? {})) {
     if (site.archived !== undefined) continue;

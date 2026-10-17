@@ -17,6 +17,7 @@ import { SiteOrderPanel } from "./SiteOrderPanel";
 import { SiteStagesPanel } from "./SiteStagesPanel";
 import { SiteShortagesPanel } from "./SiteShortagesPanel";
 import { SiteDocsPanel } from "./SiteDocsPanel";
+import { SiteServicePanel } from "./SiteServicePanel";
 import { PrintRoot } from "./PrintRoot";
 import { HandoverPaper } from "./HandoverPaper";
 import { buildHandover, handoverText, type Handover } from "@/lib/study/handover";
@@ -290,6 +291,7 @@ export function SiteCardDialog({
               <SiteOrderPanel site={site} />
               <SiteShortagesPanel site={site} />
               <SiteDocsPanel site={site} />
+              <SiteServicePanel site={site} />
             </div>
 
             <div className="grid grid-cols-2 gap-2 border-t border-border px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">

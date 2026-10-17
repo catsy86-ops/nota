@@ -15,6 +15,7 @@ import { cleanShortages, logOrder, type OrderLogEntry, type Shortage } from "./s
 import { siteOrder } from "./order";
 import { cleanSiteHours, type SiteHours } from "./siteHours";
 import { cleanSiteDocs, type SiteDoc } from "./siteDocs";
+import { cleanServiceCalls, type ServiceCall } from "./service";
 import {
   cleanEntryStage, JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, JOURNAL_SOLUTION_MAX, SITE_MAX,
   type Column, type JournalEntry, type JournalKind, type StudyState,
@@ -412,7 +413,7 @@ function patchSiteCard(id: string, patch: Partial<Pick<SiteCard, "orderedAt">>) 
  * nie zapisana (np. domyślne etapy) to pusta baza: wtedy zapisują się wszystkie pozycje, nie tylko zmienione.
  * Budowa znana tylko z nazw we wpisach dostaje przy tym kartę w dokumencie.
  */
-function siteListBase<T>(id: string, field: "stages" | "shortages" | "orders" | "hours" | "docs", uiBase: readonly T[] | undefined): readonly T[] | null {
+function siteListBase<T>(id: string, field: "stages" | "shortages" | "orders" | "hours" | "docs" | "service", uiBase: readonly T[] | undefined): readonly T[] | null {
   const s = getStudy();
   const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
   if (!prev) return null;
@@ -470,6 +471,22 @@ export function setSiteDocs(id: string, docs: SiteDoc[], base?: readonly SiteDoc
   const from = siteListBase(id, "docs", base);
   if (from === null) return;
   yStudy.setSiteList(id, "docs", cleanSiteDocs(docs) ?? [], from);
+}
+
+/** Zgłoszenia serwisowe po zmianie (dodanie, zamknięcie, usunięcie); `base` jak przy brakach. */
+export function setSiteService(id: string, calls: ServiceCall[], base?: readonly ServiceCall[]) {
+  const from = siteListBase(id, "service", base);
+  if (from === null) return;
+  yStudy.setSiteList(id, "service", cleanServiceCalls(calls) ?? [], from);
+}
+
+/** Koniec gwarancji („2028-10-16”) albo `null` — bez gwarancji. */
+export function setSiteWarranty(id: string, warranty: string | null) {
+  const s = getStudy();
+  const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
+  if (!prev) return;
+  const { stored: _s, count: _c, open: _o, first: _f, last: _l, warranty: _w, ...card } = prev;
+  yStudy.saveSite(warranty ? { ...card, warranty } : card);
 }
 
 /** Budowa do archiwum (`true`) albo z powrotem czynna. */
