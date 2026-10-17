@@ -2673,6 +2673,60 @@ pominięty). Vitest 1343/1343, e2e Pracy i kopii 56/56. Obejrzane na zrzutach 39
 
 **Commit.** `0f78d36` (2026-10-16).
 
+### Serwis i gwarancja (H4)
+
+**Co robi.** Karta budowy ma panel „Serwis i gwarancja”. Zgłoszenie po odbiorze („cieknie syfon w łazience”) dostaje
+datę zgłoszenia i opcjonalny termin wizyty. Pozycja jest „otwarta”, dopóki nie zamkniesz jej przyciskiem „Załatwione”,
+który prosi o krótki opis („wymieniona uszczelka”). Załatwione chowają się pod licznikiem „Załatwione (n)” razem z opisem,
+a „↺” otwiera je ponownie. Obok jest pole „Gwarancja do” z liczbą dni do końca (od 30 dni na żółto). Zgłoszenia działają
+także na budowie w archiwum, bo serwis zwykle przychodzi po odbiorze. Zgłoszenie z terminem na dziś albo zaległe trafia do
+przypomnień nad Dziennikiem („Serwis „X” na dziś: …”) i do powiadomień push rano w dniu wizyty.
+
+**Gdzie jest.**
+- `src/lib/study/service.ts`: typ `ServiceCall` (`id`, `text`, `at`, `due?` dzień, `done?`, `solution?`), `cleanServiceCalls`
+  (limit `SERVICE_MAX` = 50, tekst `SERVICE_TEXT_MAX` = 200), `addServiceCall`, `closeServiceCall`, `reopenServiceCall`,
+  `openServiceCalls` (z terminem najpierw, najbliższy wyżej), `dueServiceCalls(list, dziś)`, `warrantyDaysLeft`,
+  `serviceDayKey` (dzień lokalny).
+- `src/lib/study/sites.ts`: `SiteCard.service` (lista) i `SiteCard.warranty` (ostatni dzień gwarancji, „2028-10-16”);
+  `cleanSite` czyści oba (zły format daty odpada).
+- `src/lib/study/siteItems.ts`: rodzaj listy `service` (`budowa␁service␁id` → wartość bez `id`); `composeSiteLists`
+  i `stripLists` znają to pole.
+- `src/lib/study/store.ts`: `setSiteService(id, calls, base)` i `setSiteWarranty(id, dzień|null)`. Gwarancja idzie przez
+  `yStudy.saveSite`, bo jest polem karty, a nie listą.
+- `src/lib/study/reminders.ts`: rodzaj przypomnienia `service-due` (dla budów w archiwum też).
+- `src/lib/push/schedule.ts`: `studyItems` dodaje powiadomienie „Serwis dziś: …” o 7:00 w dniu wizyty; klucz
+  `pushKey.service(id, due)` w `shown.ts` chroni przed podwójnym powiadomieniem.
+- `src/components/study/SiteServicePanel.tsx` (panel w `SiteCardDialog.tsx` pod dokumentami). `StudyJournal.tsx`:
+  przypomnienie `service-due` otwiera kartę budowy.
+
+**Jak działa i dlaczego.**
+- Zgłoszenia są pozycjami listy karty w mapie Yjs `studySiteItems` (jak braki i godziny), więc dwie osoby dopisujące
+  różne zgłoszenia nie nadpisują się nawzajem. Przy zapisie rodzaj `service` dostaje `siteListBase`, tak samo jak reszta.
+- Termin to dzień („2026-10-20”), nie godzina. Wizyta „dziś” znaczy cały dzień, a push idzie rano, nie o konkretnej porze.
+- Przypomnienie w Dzienniku liczy się przy każdym renderze (`studyReminders` jest czysta) i znika samo po zamknięciu
+  zgłoszenia albo po zmianie terminu. Nie ma osobnego stanu „odhaczone przypomnienie”.
+- Zamknięcie zapisuje `done` (ms) i opcjonalne `solution`. Ponowne otwarcie zdejmuje `done`, a opis zostaje.
+- Gwarancja: „po gwarancji” gdy liczba dni jest ujemna, „ostatni dzień” gdy zero. Liczenie dni idzie przez
+  `Date.UTC`, więc zmiana czasu letniego nie przesuwa wyniku.
+
+**Ograniczenia i pułapki.**
+- Push wysyła tylko zgłoszenia z terminem na dziś. Zaległe zgłoszenia są widoczne w Dzienniku, ale nie w powiadomieniach
+  (inaczej co rano dzwoniłoby to samo).
+- Zgłoszenie bez terminu nie generuje ani przypomnienia, ani powiadomienia. Pole „Wizyta” ma `min=dziś`, ale wpisanego
+  daty z przeszłości nie blokuje (zaległe są celowe).
+- Starsza wersja aplikacji nie zna pól `service` i `warranty`; przy zapisie karty może je zgubić (tak samo jak wcześniej
+  listy H1–H3). Nie sprawdzono, czy zgubione zgłoszenia wracają po aktualizacji.
+- Limit 50 zgłoszeń na budowę; po przekroczeniu „Dodaj” jest nieaktywne.
+- Pułapka e2e: przycisk „Załatwione” jest też w podciągu „Załatwione (1)” po zamknięciu pierwszego zgłoszenia, więc
+  `getByRole` z samym tekstem trafia w dwa elementy — w teście używaj nazwy dokładnej albo kolejności.
+
+**Testy.** `src/lib/study/service.test.ts` (dodanie, zamknięcie i ponowne otwarcie, kolejność, czyszczenie karty,
+dni gwarancji, przypomnienie na budowie w archiwum, powiadomienie push tylko rano w dniu wizyty),
+`e2e/site-service.spec.ts` (gwarancja, zgłoszenie na dziś, przypomnienie → karta, zamknięcie z opisem, po przeładowaniu).
+Vitest study+push 265/265, e2e serwisu i zamówień 3/3, budżet paczki 6/6.
+
+**Commit.** `d61e8a2` (2026-10-17, kod); opis w osobnym commicie `docs(opis)`.
+
 ### Etapy budowy
 
 **Co robi.** Karta budowy ma listę etapów instalacji w domku jednorodzinnym: domyślnie kanalizacja podposadzkowa,
