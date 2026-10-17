@@ -1694,7 +1694,9 @@ Dotknięcie lub kliknięcie kratki podpisuje temat i jego stan pod paskiem — n
 
 **Jak działa.** Moduły stoją obok siebie (`flex-wrap`, na wąskim ekranie zawijają się), a kratki
 w module też się zawijają. Kratka to kwadrat 20 px (`size-5`) w polu 28 px (`size-7`), a na dotyku
-44 px (`coarse:size-11`). Kolor: pełna = „Umiem”, połowa = „W trakcie”, pusta = „Do nauki”. Każda
+44 px (`coarse:size-11`). Kolor: pełna = „Umiem”, połowa = „W trakcie”, pusta = „Do nauki”. Pusta kratka ma
+obwódkę `border-foreground/50` (nie `border-border`), bo na papierze jasna obwódka była prawie niewidoczna
+i stan „Do nauki” niósł tylko kolor. Wartość dobrana szacunkowo pod ~3:1 (nie zmierzono narzędziem); zrzuty w obu motywach czytelne. Każda
 kratka to przycisk (`aria-label` „Temat: stan”, `aria-pressed`). Pieczątka `data-mastery-stamp`
 pokazuje się, gdy `modDone === topics.length`, i jest obrócona o −3°, w kolorze `success-ink`.
 Podpis pod paskiem ma `aria-live="polite"`. Wybór żyje tylko w stanie komponentu.
