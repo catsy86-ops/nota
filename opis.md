@@ -1280,6 +1280,47 @@ sprawdza przypadek z fokusem: tekst peera wchodzi do pola, a karetka zostaje za 
 
 **Commit.** `1ccb86d` (2026-10-16).
 
+## Notatki — zwinięty pasek „Zapisz notatkę...” (wygląd)
+
+**Co robi.** Zwinięty pasek nad siatką kafli to teraz kafelek z bursztynowym plusem w zaokrąglonym polu (jak
+zakładka w zeszycie). Po najechaniu tło plusa mocniej się wypełnia, a po kliknięciu kafelek lekko się zmniejsza.
+Tekst i działanie bez zmian: kliknięcie rozwija kompozytor.
+
+**Gdzie jest.** `src/components/AddNoteBar.tsx`, przycisk w gałęzi `!expanded` (klasa `group` na przycisku,
+kafelek to `span aria-hidden`). Kolory z tokenów `primary` / `primary-ink`, czas z `--dur-fast`.
+
+**Jak działa.** Sama zmiana stylu, bez nowego stanu. Tekst „Zapisz notatkę...” zostaje w tym samym miejscu DOM,
+więc selektory w e2e (`getByText`) działają jak dawniej.
+
+**Ograniczenia i pułapki.** Pasek jest ukryty na telefonie (`max-md:hidden`), tam działa dolny przycisk „+”.
+Kafelek ma `aria-hidden`, więc czytnik ekranu czyta tylko tekst.
+
+**Testy.** Brak dedykowanego testu wyglądu. Pełny zestaw Vitest przechodzi (1349). Regresja: `e2e/composer.spec.ts`
+(uruchomiono tylko Vitest, e2e nie puszczano).
+
+## Wspólne — aktywny wiersz paska bocznego (wygląd)
+
+**Co robi.** Aktywny wiersz paska bocznego (Notatki, Skrzynka, folder, etykieta) ma bursztynową pigułkę jak dotąd
+i dodatkowo cienką kreskę przy lewej krawędzi, jak zapis na marginesie zeszytu. Kreska przejeżdża razem z pigułką.
+
+**Gdzie jest.** `src/components/sidebar/SidebarRow.tsx`: `motion.span` z `layoutId="sidebar-active-pill"` ma w środku
+dziecko `span` (`absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-primary`).
+
+**Ograniczenia.** Kreska jest w tym samym `layoutId`, więc animacja przejścia między wierszami obejmuje też ją.
+Na telefonie pasek boczny jest arkuszem, a ten sam wiersz wygląda tak samo.
+
+**Testy.** Brak dedykowanego testu wyglądu; Vitest przechodzi (1349). Zrzut jasnego motywu sprawdzony.
+
+## Notatki — grupa widoku w nagłówku (wygląd)
+
+**Co robi.** Trzy ikony po prawej w nagłówku (układ, sortowanie, filtry) siedzą na jasnej kartce z cieniem
+zamiast na szarej plamie. Działanie bez zmian.
+
+**Gdzie jest.** `src/components/ViewControls.tsx`, kontener `div` zwracany przez komponent (klasy `bg-card/80`,
+`border-border/60`, `shadow-elevation-1`). Wstawiany w `AppHeader.tsx`.
+
+**Testy.** Brak dedykowanego testu wyglądu; Vitest przechodzi. Zrzuty sprawdzone w jasnym i ciemnym motywie.
+
 ## Notatki — lista robocza szkiców (plan Notatek, etap 3.4)
 
 **Co robi.** W kompozytorze nowej notatki „Odłóż” zapisuje bieżący szkic na listę roboczą i otwiera pusty kompozytor.
