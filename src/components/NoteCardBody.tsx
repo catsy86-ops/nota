@@ -175,7 +175,7 @@ export function NoteCardBody({
                 <div className="flex flex-wrap items-center gap-1 mt-2">
                   <div className={cn(
                     "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-2xs font-medium whitespace-nowrap",
-                    trashCountdown.urgent ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"
+                    trashCountdown.urgent ? "bg-destructive/15 text-destructive-ink" : "bg-muted text-muted-foreground"
                   )}>
                     <Trash className="w-3 h-3" />
                     {trashCountdown.label}
@@ -198,7 +198,7 @@ export function NoteCardBody({
                 </div>
               )}
               {/* Liczba słów jest w czytniku — na wąskim kaflu łamała stopkę na trzy linie. */}
-              <div className="card-meta flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground whitespace-nowrap">
+              <div className="card-meta flex items-center gap-1.5 mt-1.5 font-mono text-[11px] text-muted-foreground whitespace-nowrap">
                 {showReadingTime && wordCount > 0 && readMin >= 2 && <><span>~{readMin} min</span><span aria-hidden>·</span></>}
                 <span className="tabular-nums">{format(new Date(note.updatedAt), "d MMM", { locale: pl })}</span>
               </div>

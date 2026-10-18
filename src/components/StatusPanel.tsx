@@ -22,7 +22,7 @@ const TONE_ICON: Record<StatusTone, LucideIcon | null> = {
 const TONE_INK: Record<StatusTone, string> = {
   empty: "text-accent",
   "no-results": "text-muted-foreground",
-  error: "text-destructive",
+  error: "text-destructive-ink",
   offline: "text-primary-ink",
 };
 

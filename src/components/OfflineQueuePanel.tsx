@@ -48,7 +48,7 @@ export function OfflineQueuePanel({ open, onOpenChange, offline }: OfflineQueueP
         <div className="mt-4 space-y-2">
           <div className="flex items-center gap-3 rounded-xl bg-muted/50 border border-border/50 px-3 py-2.5 text-sm">
             {offline ? (
-              <CloudOff className="h-4 w-4 shrink-0 text-destructive" />
+              <CloudOff className="h-4 w-4 shrink-0 text-destructive-ink" />
             ) : (
               <Wifi className="h-4 w-4 shrink-0 text-primary-ink" />
             )}

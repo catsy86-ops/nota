@@ -75,9 +75,10 @@ function hslVar(name: string, fallback: string): string {
 
 function themeColors(): string[] {
   return [
-    hslVar("--primary", "hsl(220 90% 60%)"),
-    hslVar("--accent", "hsl(280 80% 65%)"),
-    hslVar("--secondary", "hsl(160 70% 55%)"),
+    // Awaryjne kolory (gdy zmiennej motywu brak) to kolory marki: bursztyn, niebieski długopis, zieleń.
+    hslVar("--primary", "hsl(34 88% 55%)"),
+    hslVar("--accent", "hsl(222 57% 55%)"),
+    hslVar("--secondary", "hsl(150 60% 45%)"),
   ];
 }
 

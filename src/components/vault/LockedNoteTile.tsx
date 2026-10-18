@@ -112,7 +112,7 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
 
         <div className="mt-3 flex items-center gap-2 flex-wrap">
           {undecryptable ? (
-            <span className="text-2xs text-destructive">Tego szyfrogramu nie da się odszyfrować tym hasłem.</span>
+            <span className="text-2xs text-destructive-ink">Tego szyfrogramu nie da się odszyfrować tym hasłem.</span>
           ) : noVault ? (
             <span className="text-2xs text-muted-foreground">Skarbiec nie jest ustawiony na tym urządzeniu.</span>
           ) : (
@@ -142,7 +142,7 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
         ) : onArchive ? (
           <TileBtn title="Archiwizuj" onClick={stop(() => onArchive(note.id))}><Archive className="w-4 h-4" /></TileBtn>
         ) : null}
-        <TileBtn title="Usuń" className="hover:text-destructive" onClick={stop(() => onDelete(note.id))}>
+        <TileBtn title="Usuń" className="hover:text-destructive-ink" onClick={stop(() => onDelete(note.id))}>
           <Trash className="w-4 h-4" />
         </TileBtn>
       </div>

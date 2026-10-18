@@ -59,7 +59,7 @@ export function PushSettings() {
           Trafiają na niego terminy i tytuły na 14 dni — bez treści notatek, a z notatek prywatnych bez tytułów.
         </p>
         {support !== "ok" ? (
-          <p className="text-xs text-destructive">
+          <p className="text-xs text-destructive-ink">
             {support === "ios-browser"
               ? "Na iPhonie dodaj NOTKI do ekranu początkowego (Udostępnij → Do ekranu początkowego) i otwórz je stamtąd."
               : "Ta przeglądarka nie obsługuje powiadomień push."}
@@ -91,7 +91,7 @@ export function PushSettings() {
               )}
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p role="status" className={cn("text-xs", prefs.enabled && last && !last.ok ? "text-destructive" : "text-muted-foreground")}>{status}</p>
+              <p role="status" className={cn("text-xs", prefs.enabled && last && !last.ok ? "text-destructive-ink" : "text-muted-foreground")}>{status}</p>
               {prefs.enabled && (
                 <Button type="button" size="sm" variant="outline" className="pressable gap-1.5" disabled={busy !== null}
                   onClick={() => void run("test", sendTestPush, "Wysłano próbne powiadomienie")}>

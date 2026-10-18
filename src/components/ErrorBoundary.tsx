@@ -60,9 +60,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
     return (
       <div className="min-h-screen flex items-center justify-center p-6 bg-background">
-        <div className="max-w-md w-full rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-6 shadow-lg text-center space-y-4">
+        <div className="max-w-md w-full rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm p-6 shadow-sm text-center space-y-4">
           <div className="mx-auto w-14 h-14 rounded-full bg-destructive/10 flex items-center justify-center">
-            <TriangleAlert className="w-7 h-7 text-destructive" />
+            <TriangleAlert className="w-7 h-7 text-destructive-ink" />
           </div>
           <div className="space-y-1">
             <h1 className="text-xl font-display font-bold">Coś poszło nie tak</h1>
@@ -82,7 +82,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <Button onClick={this.handleReload} variant="outline" className="gap-2">
               <RotateCcw className="w-4 h-4" /> Odśwież stronę
             </Button>
-            <Button onClick={this.handleClearAndReload} variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-destructive">
+            <Button onClick={this.handleClearAndReload} variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-destructive-ink">
               <Trash className="w-3.5 h-3.5" /> Wyczyść dane lokalne i odśwież
             </Button>
           </div>

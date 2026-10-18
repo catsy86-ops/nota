@@ -150,7 +150,7 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
         )}
 
         {error && (
-          <p role="alert" className="text-sm text-destructive flex items-start gap-2">
+          <p role="alert" className="text-sm text-destructive-ink flex items-start gap-2">
             <TriangleAlert className="w-4 h-4 mt-0.5 shrink-0" aria-hidden />
             {error}
           </p>

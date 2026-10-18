@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 const SHOWN_PER_GROUP = 4;
 
 const GROUP_TONE: Record<Extract<AgendaGroupKey, "overdue" | "today">, string> = {
-  overdue: "text-destructive",
+  overdue: "text-destructive-ink",
   today: "text-primary-ink",
 };
 
@@ -29,10 +29,10 @@ export function TodayDueList({ notes, onOpen, onOpenReminders }: { notes: Note[]
   return (
     <section aria-label="Zaległe i dziś" data-testid="today-due" className="rounded-2xl border border-border bg-card p-4 sm:p-5 space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <h2 className="section-label gap-2">
           <BellRing className="h-3.5 w-3.5" aria-hidden />
           Przypomnienia
-          {total > 0 && <span className="font-mono normal-case tracking-normal rounded-full bg-primary/10 px-1.5 text-primary-ink" data-testid="today-due-count">{total}</span>}
+          {total > 0 && <span className="stamp-tag normal-case text-primary-ink" data-testid="today-due-count">{total}</span>}
         </h2>
         <Button variant="ghost" size="sm" onClick={onOpenReminders} className="coarse:h-11">
           Wszystkie<ChevronRight className="ml-0.5 h-4 w-4" aria-hidden />

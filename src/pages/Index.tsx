@@ -1,4 +1,6 @@
 import { useState, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, lazy, Suspense } from "react";
+import { flushSync } from "react-dom";
+import { isMotionReduced } from "@/hooks/useMotionPref";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
@@ -123,7 +125,17 @@ const Index = () => {
   // Widok, folder, etykieta i zapytanie żyją w adresie (patrz `lib/viewRoute.ts`).
   const route = useViewRoute();
   const { view, label: activeLabel, folder: activeFolder, go, replaceWith } = route;
-  const setView = useCallback((v: View) => go(v), [go]);
+  // Zmiana widoku przenika się ze starym (View Transitions); bez wsparcia albo przy ograniczonym ruchu — od razu.
+  const setView = useCallback((v: View) => {
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+    if (typeof doc.startViewTransition === "function" && !isMotionReduced()) {
+      doc.startViewTransition(() => flushSync(() => go(v)));
+    } else {
+      go(v);
+    }
+  }, [go]);
+  // Tabliczka rysunkowa w tle zmienia napis według widoku (CSS: `html[data-view]`).
+  useEffect(() => { document.documentElement.dataset.view = view; }, [view]);
   // Pole wyszukiwania ma własny stan (karetka nie może czekać na router);
   // adres dostaje go z opóźnieniem zerowym, a „wstecz/dalej” wlewa z powrotem.
   const [search, setSearch] = useState(route.search);
@@ -572,7 +584,7 @@ const Index = () => {
         />
 
         {/* `flex gap`, nie `space-y`: ukryta na sm+ wyszukiwarka nie dokłada marginesu nad treścią. */}
-        <main ref={mainRef} className="flex-1 max-w-352 mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-6 sm:gap-8 pb-safe">
+        <main ref={mainRef} className="flex-1 max-w-352 mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-8 sm:gap-10 pb-safe">
           {view !== "shifts" && view !== "calendar" && view !== "study" && (
             <div data-view-static className="sm:hidden">
               <SearchBar value={search} onChange={setSearch} />
@@ -632,7 +644,7 @@ const Index = () => {
               <p className="text-xs text-muted-foreground">Notatki w koszu są automatycznie usuwane po 30 dniach</p>
               <button
                 onClick={() => setConfirmEmptyTrash(true)}
-                className="pressable text-xs font-medium text-destructive hover:bg-destructive/10 px-3 py-1.5 rounded-lg transition-colors"
+                className="pressable text-xs font-medium text-destructive-ink hover:bg-destructive/10 px-3 py-1.5 rounded-lg transition-colors"
               >
                 Opróżnij kosz
               </button>

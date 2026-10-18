@@ -87,7 +87,7 @@ export function CustomTemplateDialog({ template, onOpenChange }: Props) {
             <Input id="tpl-labels" value={labels} onChange={(e) => setLabels(e.target.value)} placeholder="dziennik, osobiste" />
           </div>
           <ResponsiveDialogFooter className="gap-2 sm:justify-between">
-            {template ? <Button type="button" variant="ghost" className="text-destructive" onClick={remove}>Usuń szablon</Button> : <span />}
+            {template ? <Button type="button" variant="ghost" className="text-destructive-ink" onClick={remove}>Usuń szablon</Button> : <span />}
             <Button type="submit" disabled={!name.trim()}>Zapisz szablon</Button>
           </ResponsiveDialogFooter>
         </form>

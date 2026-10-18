@@ -161,7 +161,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
             <Input id="shift-break-at" type="time" value={draft.breakAt ?? ""} className="w-32"
               onChange={(e) => patch({ breakAt: e.target.value || undefined })}
               aria-invalid={breakOutside} aria-describedby="shift-break-at-hint" />
-            <p id="shift-break-at-hint" className={cn("text-xs", breakOutside ? "text-destructive" : "text-muted-foreground")}>
+            <p id="shift-break-at-hint" className={cn("text-xs", breakOutside ? "text-destructive-ink" : "text-muted-foreground")}>
               {breakOutside
                 ? "Przerwa musi się zmieścić w godzinach zmiany."
                 : "Z godziną przerwa nie liczy się do pory nocnej i dokładniej wyznacza nadgodziny. Bez niej skraca koniec zmiany."}
@@ -201,14 +201,14 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
           </div>
         </fieldset>
         {!valid && !breakOutside && (
-          <p role="alert" className="text-xs text-destructive">
+          <p role="alert" className="text-xs text-destructive-ink">
             {draft.name.trim() === "" ? "Podaj nazwę rodzaju zmiany." : "Godzina rozpoczęcia i końca muszą się różnić."}
           </p>
         )}
         <ResponsiveDialogFooter className="gap-2 sm:justify-between">
           {type ? (
             <Button type="button" variant={confirmDays === null ? "ghost" : "destructive"}
-              className={cn(confirmDays === null && "text-destructive hover:text-destructive")} onClick={remove}>
+              className={cn(confirmDays === null && "text-destructive-ink hover:text-destructive-ink")} onClick={remove}>
               {confirmDays === null ? "Usuń rodzaj" : `Usunąć z ${confirmDays} ${pluralPl(confirmDays, ["dniem", "dniami", "dniami"])}?`}
             </Button>
           ) : <span />}

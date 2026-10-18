@@ -47,7 +47,7 @@ export function PressureTestFields({ value, topic, onChange }: { value: Pressure
       </div>
       <ToggleGroup aria-label="Wynik próby" value={value.ok ? "ok" : "fail"} onValueChange={(v) => set({ ok: v === "ok" })}>
         <ToggleGroupItem value="ok" className="coarse:h-11 data-[state=on]:text-success-ink">Szczelna</ToggleGroupItem>
-        <ToggleGroupItem value="fail" className="coarse:h-11 data-[state=on]:text-destructive">Nieszczelna</ToggleGroupItem>
+        <ToggleGroupItem value="fail" className="coarse:h-11 data-[state=on]:text-destructive-ink">Nieszczelna</ToggleGroupItem>
       </ToggleGroup>
     </fieldset>
   );

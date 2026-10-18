@@ -48,9 +48,9 @@ function StoragePersistenceStatus() {
       <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs space-y-2">
         <div className="flex items-center gap-2">
           {info.persisted ? (
-            <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
+            <ShieldCheck className="w-4 h-4 text-success-ink shrink-0" />
           ) : (
-            <ShieldAlert className="w-4 h-4 text-amber-500 shrink-0" />
+            <ShieldAlert className="w-4 h-4 text-warning-ink shrink-0" />
           )}
           <p className="text-foreground">
             {info.persisted

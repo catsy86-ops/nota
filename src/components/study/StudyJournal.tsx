@@ -489,7 +489,7 @@ function JournalItem({ entry: e, onPractice, onTopic, onZoom }: { entry: Journal
             </p>
           )}
           {e.test && (
-            <p className={cn("mt-1 inline-flex items-start gap-1.5 text-xs font-medium", e.test.ok ? "text-success-ink" : "text-destructive")} data-testid="journal-test">
+            <p className={cn("mt-1 inline-flex items-start gap-1.5 text-xs font-medium", e.test.ok ? "text-success-ink" : "text-destructive-ink")} data-testid="journal-test">
               <Gauge className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{testLine(e.test)}
             </p>
           )}

@@ -268,7 +268,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                 type="button"
                 onClick={() => removeItem(item.id)}
                 aria-label={`Usuń pozycję: ${item.text || "pusta"}`}
-                className="p-0.5 coarse:p-2 rounded text-muted-foreground/40 hover:text-destructive opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                className="p-0.5 coarse:p-2 rounded text-muted-foreground/40 hover:text-destructive-ink opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <X className="w-3 h-3" />
               </button>
@@ -310,7 +310,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                   type="button"
                   onClick={() => removeItem(item.id)}
                   aria-label={`Usuń pozycję: ${item.text || "pusta"}`}
-                  className="p-0.5 coarse:p-2 rounded text-muted-foreground/40 hover:text-destructive opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                  className="p-0.5 coarse:p-2 rounded text-muted-foreground/40 hover:text-destructive-ink opacity-0 coarse:opacity-100 group-hover/item:opacity-100 focus-visible:opacity-100 transition-opacity outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <X className="w-3 h-3" />
                 </button>

@@ -61,7 +61,8 @@ function applyAppearance(dark: boolean, skin: Skin) {
     root.dataset.skin = skin;
     root.style.colorScheme = dark ? "dark" : "light";
     // Pasek stanu telefonu / okna PWA w kolorze stylu; Zeszyt: ciemny nie świeci bursztynem.
-    const color = skin === "zeszyt" && dark ? "#0f0d10" : SKIN_THEME_COLOR[skin];
+    // #15110e = `--background` ciemnego Zeszytu (hsl 26 20% 7%), nie chłodny fiolet.
+    const color = skin === "zeszyt" && dark ? "#15110e" : SKIN_THEME_COLOR[skin];
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", color);
   };
   const reduced = isMotionReduced();

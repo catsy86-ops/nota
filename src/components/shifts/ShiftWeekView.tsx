@@ -149,7 +149,7 @@ export const ShiftWeekView = memo(function ShiftWeekView({
                   </span>
 
                   <span aria-hidden className="flex min-w-0 flex-1 flex-col gap-1 self-stretch">
-                    {holiday && <span className="text-2xs leading-tight text-destructive/80">{holiday}</span>}
+                    {holiday && <span className="text-2xs leading-tight text-destructive-ink/80">{holiday}</span>}
 
                     {!type && cleared.has(key) && (
                       <span className="stamp-out block h-7 rounded-lg" style={{ backgroundColor: cleared.get(key)!.color }} />

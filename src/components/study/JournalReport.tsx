@@ -357,7 +357,7 @@ function RecipientsForm({ boss, group, onDone }: { boss: Boss | null; group: WaG
             />
           </label>
         </div>
-        <p id="boss-phone-hint" className={cn("text-xs", phoneError ? "text-destructive" : "text-muted-foreground")}>
+        <p id="boss-phone-hint" className={cn("text-xs", phoneError ? "text-destructive-ink" : "text-muted-foreground")}>
           {phoneError
             ? "To nie wygląda na numer — 9 cyfr albo z kierunkowym, np. +48 600 100 200."
             : "Raport otworzy się w czacie z szefem — wysyłasz Ty. Pusty numer usuwa szefa."}
@@ -383,7 +383,7 @@ function RecipientsForm({ boss, group, onDone }: { boss: Boss | null; group: WaG
             />
           </label>
         </div>
-        <p id="group-link-hint" className={cn("text-xs", linkError ? "text-destructive" : "text-muted-foreground")}>
+        <p id="group-link-hint" className={cn("text-xs", linkError ? "text-destructive-ink" : "text-muted-foreground")}>
           {linkError
             ? "To nie jest link grupy — w WhatsApp: grupa → Zaproś przez link → Kopiuj."
             : "Raport ze zdjęciami idzie przez „Udostępnij” — w WhatsApp wybierz tę grupę. Link przydaje się, gdy telefon nie ma udostępniania. Pusta nazwa usuwa grupę."}
@@ -472,7 +472,7 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
                         <p className="mt-0.5 text-xs text-muted-foreground" data-report-fittings>Kształtki: {fittingsLine(r.entry.fittings)}</p>
                       )}
                       {r.entry.test && (
-                        <p className={cn("mt-0.5 inline-flex items-start gap-1 text-xs font-medium", r.entry.test.ok ? "text-success-ink" : "text-destructive")} data-report-test>
+                        <p className={cn("mt-0.5 inline-flex items-start gap-1 text-xs font-medium", r.entry.test.ok ? "text-success-ink" : "text-destructive-ink")} data-report-test>
                           <Gauge className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{testLine(r.entry.test)}
                         </p>
                       )}
@@ -507,7 +507,7 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
                 {tests.map((r) => (
                   <li key={r.entry.id} className="grid grid-cols-[5.5rem_minmax(0,1fr)] gap-x-2">
                     <span className="font-mono text-xs tabular-nums text-muted-foreground">{shortDay(r.entry.at)} {r.time}</span>
-                    <span className={cn(!r.entry.test!.ok && "font-medium text-destructive")}>{testLine(r.entry.test!)}</span>
+                    <span className={cn(!r.entry.test!.ok && "font-medium text-destructive-ink")}>{testLine(r.entry.test!)}</span>
                   </li>
                 ))}
               </ul>

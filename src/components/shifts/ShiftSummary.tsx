@@ -90,7 +90,7 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
 
       {summary.shortRests.length > 0 && (
         <div role="note" className="flex gap-2.5 rounded-2xl bg-destructive/10 px-3 py-2.5 text-sm">
-          <TriangleAlert className="w-4 h-4 text-destructive shrink-0 mt-0.5" aria-hidden />
+          <TriangleAlert className="w-4 h-4 text-destructive-ink shrink-0 mt-0.5" aria-hidden />
           <p>
             <span className="font-semibold">Za krótki odpoczynek</span>{" "}
             <span className="text-muted-foreground">(mniej niż 11 h przed zmianą): </span>

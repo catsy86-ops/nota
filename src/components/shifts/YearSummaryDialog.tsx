@@ -141,7 +141,7 @@ export function LeaveMeter({ balance }: { balance: LeaveBalance }) {
     <section aria-label={`Licznik urlopu ${balance.year}`} className="rounded-2xl bg-muted/50 px-3 py-2.5 space-y-2 text-sm">
       <p className="flex items-baseline justify-between gap-3 flex-wrap">
         <span className="text-muted-foreground">Urlop {balance.year}</span>
-        <span className={cn("tabular-nums font-semibold", over && "text-destructive")}>
+        <span className={cn("tabular-nums font-semibold", over && "text-destructive-ink")}>
           {over
             ? `${-remaining} ${pluralPl(-remaining, DAYS)} ponad wymiar`
             : `zostało ${remaining} z ${allowance} ${pluralPl(allowance, DAYS)}`}

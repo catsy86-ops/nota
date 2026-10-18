@@ -165,10 +165,11 @@ export function NoteGrid({
     });
   }, [navOrder, noteIdsKey, onDelete, onArchive, onTogglePin, onDuplicate, isArchived, colsCount]);
 
-  const gap = prefs.density === "compact" ? "gap-2" : prefs.density === "comfy" ? "gap-5" : "gap-2.5 sm:gap-3";
-  const listGap = prefs.density === "compact" ? "space-y-2" : prefs.density === "comfy" ? "space-y-5" : "space-y-2.5 sm:space-y-3";
-  const columnGap = prefs.density === "compact" ? "gap-x-2" : prefs.density === "comfy" ? "gap-x-5" : "gap-x-2.5 sm:gap-x-3";
-  const rowGap = prefs.density === "compact" ? "mb-2" : prefs.density === "comfy" ? "mb-5" : "mb-2.5 sm:mb-3";
+  // Domyślna gęstość na krok 4 px (12/16 px zamiast 10/12 px); zwarta i wygodna bez zmian.
+  const gap = prefs.density === "compact" ? "gap-2" : prefs.density === "comfy" ? "gap-5" : "gap-3 sm:gap-4";
+  const listGap = prefs.density === "compact" ? "space-y-2" : prefs.density === "comfy" ? "space-y-5" : "space-y-3 sm:space-y-4";
+  const columnGap = prefs.density === "compact" ? "gap-x-2" : prefs.density === "comfy" ? "gap-x-5" : "gap-x-3 sm:gap-x-4";
+  const rowGap = prefs.density === "compact" ? "mb-2" : prefs.density === "comfy" ? "mb-5" : "mb-3 sm:mb-4";
 
   let containerClass: string;
   if (prefs.layout === "list") {

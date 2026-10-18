@@ -139,7 +139,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
             className={cn(actionClass, due > 0 && "border-primary/40 text-primary-ink")}
           >
             <Play className="h-3.5 w-3.5 shrink-0" aria-hidden />Ćwicz
-            {due > 0 && <span className="ml-0.5 rounded-full bg-primary/15 px-1.5 font-mono text-2xs tabular-nums" data-testid="topic-due">{due} na dziś</span>}
+            {due > 0 && <span className="ml-0.5 stamp-tag text-2xs text-primary-ink tabular-nums" data-testid="topic-due">{due} na dziś</span>}
           </button>
           <button
             type="button"

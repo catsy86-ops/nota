@@ -93,15 +93,19 @@ export function OfflineStatus() {
         className={`save-status glass-strong fixed bottom-24 left-1/2 z-50 flex max-w-[92vw] -translate-x-1/2 items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 text-xs text-muted-foreground shadow-lg transition-colors hover:text-foreground sm:bottom-6 ${passive ? "pointer-events-none" : "cursor-pointer"}`}
       >
         {saveFailed ? (
-          <TriangleAlert className="h-3.5 w-3.5 shrink-0 text-destructive" />
+          <TriangleAlert className="h-3.5 w-3.5 shrink-0 text-destructive-ink" />
         ) : offline ? (
-          <CloudOff className="h-3.5 w-3.5 shrink-0 text-destructive" />
+          <CloudOff className="h-3.5 w-3.5 shrink-0 text-destructive-ink" />
         ) : saved && !saving ? (
           <Check className="h-3.5 w-3.5 shrink-0 text-primary-ink" />
         ) : (
           <LoaderCircle className="h-3.5 w-3.5 shrink-0 animate-spin" />
         )}
-        <span className="truncate">{label}</span>
+        <span className="truncate">
+          {label}
+          {/* Ołówek: kreska rysuje się przy każdym zapisie (element wraca z `saved`). */}
+          {saved && !saving && <span className="pencil-stroke" aria-hidden />}
+        </span>
       </button>
       <OfflineQueuePanel open={panelOpen} onOpenChange={setPanelOpen} offline={offline} />
     </>

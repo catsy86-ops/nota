@@ -219,7 +219,7 @@ export function ReminderQuickAddDialog({
         </div>
 
         {past && (
-          <p className="text-xs text-destructive">
+          <p className="text-xs text-destructive-ink">
             Ten termin jest w przeszłości — przypomnienie odezwie się przy najbliższym otwarciu aplikacji.
           </p>
         )}
@@ -247,7 +247,7 @@ export function ReminderQuickAddDialog({
                 size="sm"
                 variant="outline"
                 onClick={handleDelete}
-                className="flex-1 text-destructive hover:text-destructive"
+                className="flex-1 text-destructive-ink hover:text-destructive-ink"
               >
                 <Trash className="w-3.5 h-3.5 mr-1" />
                 {edit?.isSeries ? "Usuń całą serię" : "Usuń termin"}

@@ -15,9 +15,10 @@ export const PRIORITY_ORDER: Record<NotePriority, number> = {
   high: 3,
 };
 
+/** Kolor ikony priorytetu: ciemniejszy na jasnym tle (≥4.5:1), jaśniejszy w ciemnym motywie. */
 export const PRIORITY_COLOR_CLASS: Record<NotePriority, string> = {
   none: "",
-  low: "text-sky-500",
-  medium: "text-amber-500",
-  high: "text-rose-500",
+  low: "text-sky-700 dark:text-sky-400",
+  medium: "text-amber-700 dark:text-amber-400",
+  high: "text-rose-700 dark:text-rose-400",
 };

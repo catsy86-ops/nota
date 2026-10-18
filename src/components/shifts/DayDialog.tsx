@@ -120,7 +120,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
     <>
         <DialogHeader className="soft-swap">
           <DialogTitle className="font-display first-letter:uppercase">{format(date, "EEEE, d MMMM", { locale: pl })}</DialogTitle>
-          {holiday && <DialogDescription className="text-destructive">{holiday} — dzień ustawowo wolny</DialogDescription>}
+          {holiday && <DialogDescription className="text-destructive-ink">{holiday} — dzień ustawowo wolny</DialogDescription>}
         </DialogHeader>
         <form className="space-y-4 soft-swap" onSubmit={(e) => { e.preventDefault(); save(); }}>
           <fieldset className="min-w-0">

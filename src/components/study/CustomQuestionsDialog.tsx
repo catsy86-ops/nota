@@ -101,7 +101,7 @@ export function CustomQuestionsDialog({ open, onOpenChange }: { open: boolean; o
             <Label htmlFor="cq-explanation">Wyjaśnienie <span className="font-normal text-muted-foreground">(opcjonalne)</span></Label>
             <Input id="cq-explanation" value={draft.explanation} maxLength={CUSTOM_EXPLANATION_MAX} onChange={(e) => set("explanation", e.target.value)} />
           </div>
-          {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
+          {error && <p role="alert" className="text-xs text-destructive-ink">{error}</p>}
           <div className="flex justify-end">
             <Button type="submit" className="coarse:h-11">Dodaj pytanie</Button>
           </div>

@@ -97,7 +97,7 @@ export function AppHeader({
           )}
           {!sidebarOpen && <span aria-hidden className="hidden sm:block h-5 w-px bg-border" />}
           <div className={!sidebarOpen && view === "notes" ? "hidden sm:block" : undefined}>
-            <h1 className="text-lg font-display font-extrabold leading-tight tracking-tight text-foreground">
+            <h1 className="text-lg font-display leading-tight tracking-tight text-foreground">
               {view === "notes" && "Notatki"}
               {view === "today" && (
 "Dziś"

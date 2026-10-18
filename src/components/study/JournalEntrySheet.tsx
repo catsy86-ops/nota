@@ -593,7 +593,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                     onPointerDown={(e) => e.preventDefault()}
                     onClick={() => { haptic("selection"); setText(yesterdayText); }}
                     title={yesterdayText}
-                    className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-primary/40 px-2.5 py-1 text-xs text-primary hover:bg-primary/10 coarse:min-h-11 coarse:px-3 coarse:text-sm"
+                    className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-primary/40 px-2.5 py-1 text-xs text-primary-ink hover:bg-primary/10 coarse:min-h-11 coarse:px-3 coarse:text-sm"
                   >
                     Jak wczoraj
                   </button>
@@ -778,7 +778,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
         <div className="shrink-0 border-t border-border bg-background px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
           <div className="flex gap-2">
             {isEdit && (
-              <Button type="button" variant="outline" onClick={remove} className="h-12 shrink-0 text-destructive hover:text-destructive">
+              <Button type="button" variant="outline" onClick={remove} className="h-12 shrink-0 text-destructive-ink hover:text-destructive-ink">
                 <Trash className="mr-1.5 h-4 w-4" aria-hidden />Usuń
               </Button>
             )}

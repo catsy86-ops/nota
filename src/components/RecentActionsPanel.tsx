@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { canUndo, clearActions, relativeTime, undoAction, useActionHistory, type ActionKind } from "@/lib/actionHistory";
 
 const META: Record<ActionKind, { icon: typeof Trash; verb: string; tone: string }> = {
-  trash: { icon: Trash, verb: "Do kosza", tone: "text-destructive" },
+  trash: { icon: Trash, verb: "Do kosza", tone: "text-destructive-ink" },
   archive: { icon: Archive, verb: "Do archiwum", tone: "text-primary-ink" },
 };
 

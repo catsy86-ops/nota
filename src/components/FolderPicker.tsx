@@ -5,16 +5,17 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { cn } from "@/lib/utils";
 import type { Folder } from "@/hooks/useNotes";
 
+// Kropki kolorów = kolory kafli (`--note-ink`, ustawiane przez `data-swatch` na elemencie), nie paleta Tailwinda.
 const folderColorDot: Record<string, string> = {
   default: "bg-muted-foreground/40",
-  coral: "bg-red-400",
-  peach: "bg-orange-400",
-  sand: "bg-yellow-400",
-  mint: "bg-emerald-400",
-  sage: "bg-green-400",
-  sky: "bg-blue-400",
-  lavender: "bg-purple-400",
-  rose: "bg-pink-400",
+  coral: "bg-[hsl(var(--note-ink))]",
+  peach: "bg-[hsl(var(--note-ink))]",
+  sand: "bg-[hsl(var(--note-ink))]",
+  mint: "bg-[hsl(var(--note-ink))]",
+  sage: "bg-[hsl(var(--note-ink))]",
+  sky: "bg-[hsl(var(--note-ink))]",
+  lavender: "bg-[hsl(var(--note-ink))]",
+  rose: "bg-[hsl(var(--note-ink))]",
 };
 
 interface FolderPickerProps {
@@ -50,7 +51,7 @@ function FolderTreeItem({ folder, folders, currentFolderId, onSelect, depth = 0 
         {folder.emoji ? (
           <span className="text-sm shrink-0">{folder.emoji}</span>
         ) : (
-          <span className={cn("w-2.5 h-2.5 rounded-full shrink-0", folderColorDot[folder.color] || folderColorDot.default)} />
+          <span data-swatch={folder.color} className={cn("w-2.5 h-2.5 rounded-full shrink-0", folderColorDot[folder.color] || folderColorDot.default)} />
         )}
         <span className="truncate flex-1 text-left">{folder.name}</span>
         {isSelected && <Check className="w-3.5 h-3.5 text-primary-ink shrink-0" />}

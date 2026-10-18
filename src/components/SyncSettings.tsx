@@ -104,7 +104,7 @@ export function SyncSettings({ prefillCode }: Props) {
               </p>
             )}
             {syncState.lastError && (
-              <p className="text-2xs text-destructive mt-0.5">Błąd połączenia: {syncState.lastError}</p>
+              <p className="text-2xs text-destructive-ink mt-0.5">Błąd połączenia: {syncState.lastError}</p>
             )}
           </div>
         </div>
@@ -127,14 +127,14 @@ export function SyncSettings({ prefillCode }: Props) {
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             </Button>
           </div>
-          <Button type="button" variant="ghost" size="sm" onClick={handleForget} className="text-muted-foreground hover:text-destructive gap-1.5">
+          <Button type="button" variant="ghost" size="sm" onClick={handleForget} className="text-muted-foreground hover:text-destructive-ink gap-1.5">
             <LogOut className="w-3.5 h-3.5" /> Zapomnij i zacznij od nowa
           </Button>
         </div>
       )}
 
       {isShortCode(syncState.code) && (
-        <div role="alert" className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs space-y-2">
+        <div role="alert" className="rounded-xl border border-warning/40 bg-warning/10 p-3 text-xs space-y-2">
           <p className="font-semibold text-foreground">Ten kod jest krótki (starsza wersja)</p>
           <p className="text-muted-foreground">
             Kod z 8 znaków da się odgadnąć z nazwy pokoju widocznej dla serwera sygnalizacyjnego.
@@ -258,7 +258,7 @@ function SignalingServers() {
           className="w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-base sm:text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         />
         {invalid.length > 0 && (
-          <p className="text-destructive">
+          <p className="text-destructive-ink">
             Nie zostanie zapisane (adres musi zaczynać się od wss:// albo ws://): {invalid.join(", ")}
           </p>
         )}

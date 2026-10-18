@@ -115,7 +115,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
         </div>
 
         <div className="flex items-center gap-3 mt-3 rounded-xl border border-border/60 bg-muted/30 p-3">
-          <Flame className={`w-6 h-6 shrink-0 ${live.currentStreak > 0 ? "text-orange-500" : "text-muted-foreground"}`} />
+          <Flame className={`w-6 h-6 shrink-0 ${live.currentStreak > 0 ? "text-warning-ink" : "text-muted-foreground"}`} />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold">
               {live.currentStreak > 0
@@ -153,7 +153,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
         <div className="pt-4 space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Odznaki</p>
-            <Button variant="ghost" size="sm" onClick={handleReset} className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-destructive">
+            <Button variant="ghost" size="sm" onClick={handleReset} className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-destructive-ink">
               <RotateCcw className="w-3 h-3" /> Resetuj
             </Button>
           </div>

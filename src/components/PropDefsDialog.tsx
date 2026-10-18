@@ -127,7 +127,7 @@ export function PropDefsDialog({ open, onOpenChange, defs, onAdd, onUpdate, onDe
               className="h-9"
             />
           )}
-          {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
+          {error && <p role="alert" className="text-xs text-destructive-ink">{error}</p>}
           <Button type="submit" size="sm">Dodaj pole</Button>
         </form>
       </DialogContent>

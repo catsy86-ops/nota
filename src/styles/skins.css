@@ -63,22 +63,6 @@ html[data-skin="plan"] .paper-grid::before {
   -webkit-mask-image: radial-gradient(130% 100% at 50% 30%, #000 50%, rgb(0 0 0 / 0.35) 100%);
   mask-image: radial-gradient(130% 100% at 50% 30%, #000 50%, rgb(0 0 0 / 0.35) 100%);
 }
-/* Tabliczka rysunkowa w rogu arkusza — tylko na komputerze, na telefonie siedzi tam dolny pasek. */
-html[data-skin="plan"] .paper-grid::after {
-  content: "NOTKI  ·  ARKUSZ 1/1  ·  SKALA 1:1";
-  position: absolute;
-  right: 1.5rem;
-  bottom: 1.25rem;
-  padding: 0.5rem 0.875rem;
-  border: 1px solid hsl(var(--grid) / 0.3);
-  box-shadow: inset 0 0 0 3px hsl(var(--background)), inset 0 0 0 4px hsl(var(--grid) / 0.18);
-  font: 600 0.75rem/1 'Barlow Condensed', sans-serif;
-  letter-spacing: 0.22em;
-  color: hsl(var(--grid) / 0.45);
-}
-@media (max-width: 767px) {
-  html[data-skin="plan"] .paper-grid::after { content: none; }
-}
 html[data-skin="plan"] .notki-glyph {
   background-image:
     linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.9) 50%, transparent 62%),
@@ -275,6 +259,10 @@ html[data-skin="zorza"] .paper-grid::after {
   0% { transform: translate3d(-4%, 0, 0) rotate(-3deg) scale(1); }
   50% { transform: translate3d(3%, 3%, 0) rotate(2deg) scale(1.08); }
   100% { transform: translate3d(5%, -2%, 0) rotate(4deg) scale(0.96); }
+}
+/* Telefon: bez rozmycia i dryfu zorzy — to największy koszt GPU w tle. Gradient zostaje statyczny. */
+@media (pointer: coarse) {
+  html[data-skin="zorza"] .paper-grid::after { filter: none; animation: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   html[data-skin="zorza"] .paper-grid::after { animation: none; }

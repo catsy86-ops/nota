@@ -94,7 +94,7 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
         icon={folder.emoji ? (
           <span className="text-sm leading-none">{folder.emoji}</span>
         ) : (
-          <span className={cn("w-2.5 h-2.5 rounded-full", folderColorDot[folder.color] || folderColorDot.default)} />
+          <span data-swatch={folder.color} className={cn("w-2.5 h-2.5 rounded-full", folderColorDot[folder.color] || folderColorDot.default)} />
         )}
         label={folder.name}
         trailing={(() => {
@@ -130,7 +130,7 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
                 <FolderPlus className="w-4 h-4 mr-2" />Dodaj podfolder
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => onDelete(folder.id)} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+              <DropdownMenuItem onSelect={() => onDelete(folder.id)} className="text-destructive-ink focus:text-destructive-ink focus:bg-destructive/10">
                 <Trash className="w-4 h-4 mr-2" />Usuń folder
               </DropdownMenuItem>
             </SidebarRowMenu>
@@ -145,6 +145,7 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
                 <button
                   key={c.value}
                   onClick={(e) => { e.stopPropagation(); onSetColor(folder.id, c.value); setShowColorPicker(false); }}
+                  data-swatch={c.value}
                   className={cn("pressable w-5 h-5 coarse:w-7 coarse:h-7 rounded-full ring-offset-2 ring-offset-background outline-hidden focus-visible:ring-2 focus-visible:ring-ring", folderColorDot[c.value], folder.color === c.value ? "ring-2 ring-primary" : "hover:ring-2 hover:ring-border")}
                   aria-pressed={folder.color === c.value}
                   title={c.label}

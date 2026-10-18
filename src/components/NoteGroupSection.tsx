@@ -44,8 +44,8 @@ export function NoteGroupSection({ groupKey, label, count, collapsible, collapse
     </>
   );
   const headerClass = cn(
-    "w-full text-xs font-semibold uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5",
-    tone === "alert" ? "text-destructive" : "text-muted-foreground",
+    "section-label w-full mb-3 px-1",
+    tone === "alert" && "text-destructive-ink",
   );
   return (
     <section data-group={groupKey} aria-label={typeof label === "string" ? label : undefined}>

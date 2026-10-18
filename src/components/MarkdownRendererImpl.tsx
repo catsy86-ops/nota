@@ -15,10 +15,10 @@ interface MarkdownRendererProps {
 }
 
 const CALLOUT_STYLE: Record<CalloutKind, { box: string; icon: typeof Info; label: string }> = {
-  info: { box: "border-sky-500/50 bg-sky-500/10", icon: Info, label: "Informacja" },
-  tip: { box: "border-emerald-500/50 bg-emerald-500/10", icon: Lightbulb, label: "Wskazówka" },
-  warning: { box: "border-amber-500/60 bg-amber-500/10", icon: TriangleAlert, label: "Uwaga" },
-  danger: { box: "border-red-500/60 bg-red-500/10", icon: ShieldAlert, label: "Ważne" },
+  info: { box: "border-accent/50 bg-accent/10", icon: Info, label: "Informacja" },
+  tip: { box: "border-success/50 bg-success/10", icon: Lightbulb, label: "Wskazówka" },
+  warning: { box: "border-warning/60 bg-warning/10", icon: TriangleAlert, label: "Uwaga" },
+  danger: { box: "border-destructive/60 bg-destructive/10", icon: ShieldAlert, label: "Ważne" },
   toggle: { box: "border-border/60 bg-muted/30", icon: ChevronRight, label: "Szczegóły" },
 };
 

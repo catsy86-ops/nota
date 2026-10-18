@@ -158,12 +158,12 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
           </div>
         )}
         {repeat !== "none" && (
-          <p id={`${uid}-until-hint`} className={cn("text-2xs", untilTooEarly ? "text-destructive" : "text-muted-foreground")}>
+          <p id={`${uid}-until-hint`} className={cn("text-2xs", untilTooEarly ? "text-destructive-ink" : "text-muted-foreground")}>
             {untilTooEarly ? "Koniec serii musi być po pierwszym terminie." : untilText ? "Ostatni termin serii najpóźniej tego dnia." : "Puste pole — seria bez końca."}
           </p>
         )}
         {pastTime && (
-          <p className="text-2xs text-destructive">Ta godzina już minęła. Wybierz godzinę w przyszłości.</p>
+          <p className="text-2xs text-destructive-ink">Ta godzina już minęła. Wybierz godzinę w przyszłości.</p>
         )}
         <p className="text-2xs text-muted-foreground">
           Działa najpewniej, gdy aplikacja zostaje otwarta w tle — bez serwera powiadomień push, zamknięta karta może dostarczyć przypomnienie dopiero po ponownym otwarciu appki.
@@ -188,8 +188,8 @@ export function ReminderBadge({ reminder, reminderRepeat }: { reminder: number |
   const isPast = reminder < Date.now();
   return (
     <div className={cn(
-      "flex items-center gap-1 text-2xs mt-2 px-2 py-0.5 rounded-full w-fit",
-      isPast ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary-ink"
+      "stamp-tag text-2xs mt-2 w-fit",
+      isPast ? "text-destructive-ink" : "text-primary-ink"
     )}>
       <Bell className="w-2.5 h-2.5" />
       {formatReminderShort(reminder)}

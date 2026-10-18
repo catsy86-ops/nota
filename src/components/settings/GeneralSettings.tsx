@@ -33,7 +33,7 @@ function NotificationStatus() {
   const state = getNotificationPermission();
   return (
     <Section title="Powiadomienia o przypomnieniach">
-      <p className={cn("text-xs", state === "denied" ? "text-destructive" : "text-muted-foreground")}>
+      <p className={cn("text-xs", state === "denied" ? "text-destructive-ink" : "text-muted-foreground")}>
         {PERMISSION_TEXT[state]}
       </p>
     </Section>

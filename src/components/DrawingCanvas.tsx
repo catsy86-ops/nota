@@ -284,7 +284,7 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
               icon={<Trash className="w-4 h-4" />}
               title="Wyczyść"
               disabled={strokes.length === 0}
-              className="hover:text-destructive"
+              className="hover:text-destructive-ink"
             />
           </div>
 
@@ -302,7 +302,7 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
             ref={canvasRef}
             width={canvasSize.width}
             height={canvasSize.height}
-            className="rounded-xl shadow-lg bg-white cursor-crosshair touch-none max-w-full max-h-full"
+            className="rounded-xl shadow-sm bg-white cursor-crosshair touch-none max-w-full max-h-full"
             style={{ imageRendering: "auto" }}
             onMouseDown={startDrawing}
             onMouseMove={draw}

@@ -64,7 +64,7 @@ export function VaultDialog({ kind, onDone }: { kind: VaultUiKind; onDone?: () =
 
 function StrengthMeter({ password }: { password: string }) {
   const s = passwordStrength(password);
-  const tone = s.score >= 3 ? "bg-primary" : s.score === 2 ? "bg-amber-500" : "bg-destructive";
+  const tone = s.score >= 3 ? "bg-primary" : s.score === 2 ? "bg-warning" : "bg-destructive";
   return (
     <div aria-live="polite" data-testid="password-strength">
       <div className="flex gap-1" aria-hidden>
@@ -82,7 +82,7 @@ function StrengthMeter({ password }: { password: string }) {
 function NoRecoveryWarning() {
   return (
     <div role="note" className="flex gap-2 rounded-lg border border-destructive/40 bg-destructive/5 p-3 text-xs leading-relaxed">
-      <TriangleAlert className="w-4 h-4 shrink-0 text-destructive mt-0.5" aria-hidden />
+      <TriangleAlert className="w-4 h-4 shrink-0 text-destructive-ink mt-0.5" aria-hidden />
       <p>
         <strong>Zapomnianego hasła nie da się odzyskać.</strong> Nie ma resetu ani konta, które mogłoby to zrobić — treść jest
         szyfrowana tylko na Twoich urządzeniach. Bez hasła (albo kodu awaryjnego) zablokowane notatki są nie do odczytania.
@@ -153,7 +153,7 @@ function UnlockForm({ onUnlocked, onRecover }: { onUnlocked: () => void; onRecov
       <div className="space-y-1.5">
         <Label htmlFor="vault-password">Hasło skarbca</Label>
         <Input id="vault-password" type="password" autoFocus autoComplete="off" value={password} onChange={(e) => setPassword(e.target.value)} disabled={busy || wait > 0} aria-invalid={!!error} aria-describedby={error ? "vault-error" : undefined} />
-        {error && <p id="vault-error" role="alert" className="text-xs text-destructive">{error}</p>}
+        {error && <p id="vault-error" role="alert" className="text-xs text-destructive-ink">{error}</p>}
         {wait > 0 && !error && <p role="status" className="text-xs text-muted-foreground">Za dużo błędnych prób — odczekaj {wait} s.</p>}
         {wait > 0 && error && !error.startsWith("Za dużo") && <p role="status" className="text-xs text-muted-foreground">Kolejna próba za {wait} s.</p>}
       </div>
@@ -209,7 +209,7 @@ function SetupForm({ onCreated }: { onCreated: (recoveryCode: string | null) => 
       <div className="space-y-1.5">
         <Label htmlFor="vault-confirm-password">Powtórz hasło</Label>
         <Input id="vault-confirm-password" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} aria-invalid={mismatch} />
-        {mismatch && <p role="alert" className="text-xs text-destructive">Hasła się różnią.</p>}
+        {mismatch && <p role="alert" className="text-xs text-destructive-ink">Hasła się różnią.</p>}
       </div>
       <label className="flex items-start gap-2 text-sm">
         <input type="checkbox" className="mt-1" checked={withRecovery} onChange={(e) => setWithRecovery(e.target.checked)} />
@@ -219,7 +219,7 @@ function SetupForm({ onCreated }: { onCreated: (recoveryCode: string | null) => 
         <input type="checkbox" className="mt-1" checked={ack} onChange={(e) => setAck(e.target.checked)} />
         <span>Rozumiem, że zapomnianego hasła nie da się odzyskać.</span>
       </label>
-      {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
+      {error && <p role="alert" className="text-xs text-destructive-ink">{error}</p>}
       <ResponsiveDialogFooter>
         <Button type="submit" disabled={!canSubmit}>{busy ? "Szyfruję…" : "Ustaw hasło"}</Button>
       </ResponsiveDialogFooter>
@@ -241,7 +241,7 @@ function NewPasswordFields({ password, setPassword, confirm, setConfirm }: { pas
       <div className="space-y-1.5">
         <Label htmlFor="vault-confirm-password">Powtórz nowe hasło</Label>
         <Input id="vault-confirm-password" type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} aria-invalid={mismatch} />
-        {mismatch && <p role="alert" className="text-xs text-destructive">Hasła się różnią.</p>}
+        {mismatch && <p role="alert" className="text-xs text-destructive-ink">Hasła się różnią.</p>}
       </div>
     </>
   );
@@ -285,7 +285,7 @@ function ChangeForm({ onChanged }: { onChanged: (recoveryCode: string | null) =>
         <input type="checkbox" className="mt-1" checked={withRecovery} onChange={(e) => setWithRecovery(e.target.checked)} />
         <span>Wygeneruj nowy kod awaryjny <span className="text-muted-foreground">— stary przestanie działać.</span></span>
       </label>
-      {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
+      {error && <p role="alert" className="text-xs text-destructive-ink">{error}</p>}
       <ResponsiveDialogFooter>
         <Button type="submit" disabled={!canSubmit}>{busy ? "Przeszyfrowuję…" : "Zmień hasło"}</Button>
       </ResponsiveDialogFooter>
@@ -325,7 +325,7 @@ function RecoverForm({ onBack, onDone }: { onBack: () => void; onDone: (recovery
         <Input id="vault-recovery-code" autoFocus autoComplete="off" spellCheck={false} placeholder="XXXX-XXXX-XXXX-…" className="font-mono" value={code} onChange={(e) => setCode(e.target.value)} />
       </div>
       <NewPasswordFields password={password} setPassword={setPassword} confirm={confirm} setConfirm={setConfirm} />
-      {error && <p role="alert" className="text-xs text-destructive">{error}</p>}
+      {error && <p role="alert" className="text-xs text-destructive-ink">{error}</p>}
       <ResponsiveDialogFooter className="gap-2 sm:justify-between">
         <Button type="button" variant="ghost" size="sm" onClick={onBack}>Wróć</Button>
         <Button type="submit" disabled={!canSubmit}>{busy ? "Przeszyfrowuję…" : "Ustaw nowe hasło"}</Button>

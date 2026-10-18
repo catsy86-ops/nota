@@ -50,6 +50,8 @@ export default {
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
+          // Tekst i ikony na tle — tło przycisku zostaje, bo biały tekst na nim ma 4.8:1.
+          ink: "hsl(var(--destructive-ink))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -112,6 +114,10 @@ export default {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        // Trzy promienie systemu (index.css `--r-*`): przyciski i ikony, pola, karty i kafle.
+        control: "var(--r-control)",
+        field: "var(--r-field)",
+        card: "var(--r-card)",
       },
       // Tokeny ruchu z index.css — `duration-fast`, `ease-out-soft` itd.
       transitionDuration: {

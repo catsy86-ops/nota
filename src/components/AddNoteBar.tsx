@@ -502,7 +502,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
                         {label}
                       </button>
                       <button type="button" onClick={() => deleteParked(p.id)} aria-label={`Usuń odłożony szkic: ${label}`}
-                        className="pr-2 pl-0.5 text-muted-foreground hover:text-destructive outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11">
+                        className="pr-2 pl-0.5 text-muted-foreground hover:text-destructive-ink outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:min-h-11">
                         <X className="h-3 w-3" aria-hidden />
                       </button>
                     </span>

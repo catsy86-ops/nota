@@ -22,10 +22,10 @@ export const dayCellClass = (inMonth: boolean, today = false) => cn(
 /** Numer dnia: „dziś” w kółku marki, święto pogrubione (czerwone w bieżącym miesiącu). */
 export const dayNumberClass = ({ today, holiday, inMonth }: { today: boolean; holiday: boolean; inMonth: boolean }) => cn(
   "text-xs font-medium tabular-nums w-5 h-5 flex items-center justify-center rounded-full shrink-0",
-  today ? "bg-primary text-primary-foreground" : holiday && cn("font-bold", inMonth && "text-destructive"),
+  today ? "bg-primary text-primary-foreground" : holiday && cn("font-bold", inMonth && "text-destructive-ink"),
 );
 
 /** Nazwa święta pod numerem (od `sm`); na telefonie zostaje kropka `holidayDotClass`. */
-export const holidayNameClass = (inMonth: boolean) => cn("hidden sm:block text-2xs leading-tight truncate", inMonth && "text-destructive/80");
+export const holidayNameClass = (inMonth: boolean) => cn("hidden sm:block text-2xs leading-tight truncate", inMonth && "text-destructive-ink/80");
 
 export const holidayDotClass = (inMonth: boolean) => cn("sm:hidden w-1.5 h-1.5 rounded-full", inMonth ? "bg-destructive" : "bg-muted-foreground");

@@ -210,7 +210,7 @@ export function SiteCardDialog({
                   className={fieldClass}
                 />
               </label>
-              {error && <p id="site-card-error" className="text-xs text-destructive" role="alert">{error}</p>}
+              {error && <p id="site-card-error" className="text-xs text-destructive-ink" role="alert">{error}</p>}
               <label className="block space-y-1 text-xs text-muted-foreground">
                 Adres
                 <input

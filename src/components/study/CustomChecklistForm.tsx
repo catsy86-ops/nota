@@ -66,7 +66,7 @@ export function CustomChecklistSection() {
               aria-invalid={error ? true : undefined}
               aria-describedby={error ? "custom-item-error" : undefined}
             />
-            {error && <p id="custom-item-error" role="alert" className="mt-1 text-xs text-destructive">{error}</p>}
+            {error && <p id="custom-item-error" role="alert" className="mt-1 text-xs text-destructive-ink">{error}</p>}
           </div>
           <Button type="submit" variant="outline" className="coarse:h-11">
             <Plus className="mr-1.5 h-4 w-4" aria-hidden />Dodaj punkt

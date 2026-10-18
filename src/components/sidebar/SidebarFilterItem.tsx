@@ -55,7 +55,7 @@ export function SidebarFilterItem({ name, query, count, isActive, onSelect, onRe
             <Pencil className="w-4 h-4 mr-2" />Zmień nazwę
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={onDelete} className="text-destructive focus:text-destructive focus:bg-destructive/10">
+          <DropdownMenuItem onSelect={onDelete} className="text-destructive-ink focus:text-destructive-ink focus:bg-destructive/10">
             <Trash className="w-4 h-4 mr-2" />Usuń filtr
           </DropdownMenuItem>
         </SidebarRowMenu>

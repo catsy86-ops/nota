@@ -1,7 +1,12 @@
 import { test, expect, type Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
+  // Pinezka to część efektu „Iskierki” (domyślnie wyłączonego), więc test włącza go jawnie.
+  await page.addInitScript(() => {
+    localStorage.setItem("kaczy.tour.seen.v1", "1");
+    localStorage.setItem("kaczy.effectsSettings.defaults2", "1");
+    localStorage.setItem("kaczy.effectsSettings.v1", JSON.stringify({ sparkle: true }));
+  });
   await page.goto("/");
 });
 

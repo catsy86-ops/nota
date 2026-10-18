@@ -36,26 +36,45 @@ export const EFFECT_LABELS: Record<EffectKey, { label: string; description: stri
 export type EffectsSettings = Record<EffectKey, boolean>;
 
 const DEFAULTS: EffectsSettings = {
+  // Zostają dwa: przywrócenie z kosza i zamknięty dzień. Reszta konkuruje z treścią,
+  // więc jest wyłączona domyślnie (wybór użytkownika jest zachowany).
   confetti: true,
-  sparkle: true,
-  emojiShower: true,
-  fireworks: true,
-  hearts: true,
-  bubbles: true,
-  rainbow: true,
-  seasonalTheme: true,
-  dailyQuote: true,
-  // Domyślnie wyłączone: sprężyny na każdym kaflu kosztują render, a nic nie mówią.
+  sparkle: false,
+  emojiShower: false,
+  fireworks: false,
+  hearts: false,
+  bubbles: false,
+  rainbow: false,
+  seasonalTheme: false,
+  dailyQuote: false,
+  // Sprężyny na każdym kaflu kosztują render, a nic nie mówią.
   cardTilt: false,
-  badgeStamp: true,
+  badgeStamp: false,
   doneReward: true,
   themeFade: true,
   haptics: true,
 };
 
+/** Wartości, które przy pierwszym starcie tej wersji wyłączamy także u osób z już zapisanymi ustawieniami. */
+const DEFAULTS_V2_OFF: EffectKey[] = ["sparkle", "emojiShower", "fireworks", "hearts", "bubbles", "rainbow", "seasonalTheme", "dailyQuote", "badgeStamp"];
+const MIGRATION_FLAG = "kaczy.effectsSettings.defaults2";
+
 const store = createPersistedStore<EffectsSettings>("kaczy.effectsSettings.v1", DEFAULTS, {
   merge: (defaults, stored) => ({ ...defaults, ...stored }),
 });
+
+// Jednorazowo: nowe domyślne wartości nie docierają do już zapisanych ustawień, więc wyłączamy je raz.
+try {
+  if (localStorage.getItem(MIGRATION_FLAG) !== "1") {
+    const current = store.get();
+    const next = { ...current };
+    for (const key of DEFAULTS_V2_OFF) next[key] = false;
+    store.set(next);
+    localStorage.setItem(MIGRATION_FLAG, "1");
+  }
+} catch {
+  // Bez localStorage zostają domyślne wartości z DEFAULTS.
+}
 
 export function getEffectsSettings(): EffectsSettings {
   return store.get();

@@ -87,7 +87,7 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
                 type="button"
                 onClick={() => remove(d)}
                 aria-label={`Usuń: ${docLabel(d)}`}
-                className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-background/90 text-muted-foreground shadow-sm hover:text-destructive coarse:h-9 coarse:w-9"
+                className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-background/90 text-muted-foreground shadow-sm hover:text-destructive-ink coarse:h-9 coarse:w-9"
               >
                 <X className="h-3.5 w-3.5" aria-hidden />
               </button>
@@ -108,7 +108,7 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
               <Button type="button" variant="outline" size="sm" className="pressable shrink-0 coarse:h-11" onClick={() => void open(d)} aria-label={`Otwórz: ${docLabel(d)}`}>
                 Otwórz
               </Button>
-              <Button type="button" variant="ghost" size="sm" className="shrink-0 px-2 text-muted-foreground hover:text-destructive coarse:h-11" onClick={() => remove(d)} aria-label={`Usuń: ${docLabel(d)}`}>
+              <Button type="button" variant="ghost" size="sm" className="shrink-0 px-2 text-muted-foreground hover:text-destructive-ink coarse:h-11" onClick={() => remove(d)} aria-label={`Usuń: ${docLabel(d)}`}>
                 <X className="h-4 w-4" aria-hidden />
               </Button>
             </li>

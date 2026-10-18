@@ -298,7 +298,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           <h2 className="min-w-0 sm:min-w-48 text-center">
             <button type="button" onClick={() => (isWeek ? setWeekStart(thisWeek) : setMonth(startOfMonth(new Date())))}
               title={isWeek ? "Wróć do bieżącego tygodnia" : "Wróć do bieżącego miesiąca"}
-              className={cn("pressable w-full h-10 coarse:h-11 truncate font-display font-bold text-lg px-3 rounded-xl hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring", !isWeek && "capitalize")}>
+              className={cn("pressable w-full h-10 coarse:h-11 truncate font-display font-semibold text-lg px-3 rounded-xl hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring", !isWeek && "capitalize")}>
               {isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl })}
             </button>
           </h2>

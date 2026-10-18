@@ -108,7 +108,7 @@ export function PrimaryActions({
         icon={<Trash className="w-4 h-4" />}
         onClick={() => { if (note.trashed) onAskDeleteConfirm(); else { haptic("warn"); onDelete(note.id); } if (inSheet) onClose?.(); }}
         title="Usuń"
-        className="hover:text-destructive"
+        className="hover:text-destructive-ink"
       />
     </>
   );

@@ -15,7 +15,7 @@ import {
 const STATUS_CLASS: Record<ShortageStatus, string> = {
   // Czerwień, nie ostrzeżenie: w motywie bursztyn (kolor główny) i ostrzeżenie są prawie tym samym kolorem,
   // a „Brakuje” musi odróżniać się od „Zamówione” na pierwszy rzut oka.
-  missing: "border-destructive/50 bg-destructive/10 text-destructive",
+  missing: "border-destructive/50 bg-destructive/10 text-destructive-ink",
   ordered: "border-primary/40 bg-primary/10 text-primary-ink",
   delivered: "border-success-ink/40 bg-success/10 text-success-ink",
 };

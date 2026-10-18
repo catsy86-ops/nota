@@ -136,7 +136,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
             <ul className="space-y-1.5">
               {result.missed.map((id) => (
                 <li key={id} className="flex items-center gap-2 text-sm">
-                  <X className="w-4 h-4 text-destructive shrink-0" aria-hidden />
+                  <X className="w-4 h-4 text-destructive-ink shrink-0" aria-hidden />
                   {topicTitle(id)}
                 </li>
               ))}
@@ -234,7 +234,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
               )}
             >
               <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border border-border font-mono text-2xs text-muted-foreground">
-                {answered && isCorrect ? <Check className="w-3.5 h-3.5 text-success-ink" aria-label="Poprawna" /> : answered && isPicked ? <X className="w-3.5 h-3.5 text-destructive" aria-label="Błędna" /> : LETTERS[i]}
+                {answered && isCorrect ? <Check className="w-3.5 h-3.5 text-success-ink" aria-label="Poprawna" /> : answered && isPicked ? <X className="w-3.5 h-3.5 text-destructive-ink" aria-label="Błędna" /> : LETTERS[i]}
               </span>
               <span className="flex-1">{opt}</span>
             </button>

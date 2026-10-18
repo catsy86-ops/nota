@@ -100,7 +100,7 @@ export function DayHoursDialog({ day, label, onOpenChange }: {
               </li>
             ))}
           </ul>
-          {bad.length > 0 && <p className="text-xs text-destructive" role="alert">Wpisz godziny jak 6, 6,5 albo 6:30.</p>}
+          {bad.length > 0 && <p className="text-xs text-destructive-ink" role="alert">Wpisz godziny jak 6, 6,5 albo 6:30.</p>}
           {split.work > 0 && (
             <p
               role="status"

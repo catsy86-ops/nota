@@ -114,7 +114,7 @@ export function SiteServicePanel({ site }: { site: SiteInfo }) {
                     onClick={() => { setClosing(closing === c.id ? null : c.id); setSolution(""); }} aria-expanded={closing === c.id}>
                     <Check className="mr-1 h-3.5 w-3.5" aria-hidden />Załatwione
                   </Button>
-                  <Button type="button" variant="ghost" size="sm" className="shrink-0 px-2 text-muted-foreground hover:text-destructive coarse:h-11"
+                  <Button type="button" variant="ghost" size="sm" className="shrink-0 px-2 text-muted-foreground hover:text-destructive-ink coarse:h-11"
                     onClick={() => remove(c)} aria-label={`Usuń zgłoszenie: ${c.text}`}>
                     <X className="h-4 w-4" aria-hidden />
                   </Button>
