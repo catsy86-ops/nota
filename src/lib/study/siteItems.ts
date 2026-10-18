@@ -1,9 +1,13 @@
 import type { SiteCard } from "./sites";
 import type { SiteStage } from "./stages";
 import type { OrderLogEntry, Shortage } from "./shortages";
+import { cleanOrderLog, cleanShortages } from "./shortages";
 import type { SiteHours } from "./siteHours";
+import { cleanSiteHours } from "./siteHours";
 import type { SiteDoc } from "./siteDocs";
+import { cleanSiteDocs } from "./siteDocs";
 import type { ServiceCall } from "./service";
+import { cleanServiceCalls } from "./service";
 
 /**
  * Listy karty budowy (etapy, braki, historia zamówień) w dokumencie: każda pozycja to osobny klucz
@@ -91,19 +95,25 @@ export function composeSiteLists(entries: Iterable<[string, unknown]>): Map<stri
       stages.set(siteId, list);
       mark(siteId, "stage");
     } else if (kind === "short") {
-      shortages.set(siteId, [...(shortages.get(siteId) ?? []), value as Shortage]);
+      // Dane z zewnątrz (kopia, peer) przechodzą przez czyszczenie, nie przez rzutowanie.
+      const ok = cleanShortages([value]) ?? [];
+      if (ok.length) shortages.set(siteId, [...(shortages.get(siteId) ?? []), ...ok]);
       mark(siteId, "short");
     } else if (kind === "order") {
-      orders.set(siteId, [...(orders.get(siteId) ?? []), value as OrderLogEntry]);
+      const ok = cleanOrderLog([value]) ?? [];
+      if (ok.length) orders.set(siteId, [...(orders.get(siteId) ?? []), ...ok]);
       mark(siteId, "order");
     } else if (kind === "hours") {
-      hours.set(siteId, [...(hours.get(siteId) ?? []), { id, minutes: (value as Partial<SiteHours>).minutes as number }]);
+      const ok = cleanSiteHours([{ id, minutes: (value as { minutes?: unknown }).minutes }]) ?? [];
+      if (ok.length) hours.set(siteId, [...(hours.get(siteId) ?? []), ...ok]);
       mark(siteId, "hours");
     } else if (kind === "docs") {
-      docs.set(siteId, [...(docs.get(siteId) ?? []), { ...(value as Omit<SiteDoc, "id">), id }]);
+      const ok = cleanSiteDocs([{ ...value, id }]) ?? [];
+      if (ok.length) docs.set(siteId, [...(docs.get(siteId) ?? []), ...ok]);
       mark(siteId, "docs");
     } else if (kind === "service") {
-      service.set(siteId, [...(service.get(siteId) ?? []), value as ServiceCall]);
+      const ok = cleanServiceCalls([value]) ?? [];
+      if (ok.length) service.set(siteId, [...(service.get(siteId) ?? []), ...ok]);
       mark(siteId, "service");
     }
   }

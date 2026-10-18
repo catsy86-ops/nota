@@ -165,9 +165,11 @@ function RestoreBackup() {
     if (!backup) return;
     setBusy(true);
     try {
-      await restoreFullBackup(backup, opts);
-      toast.success(`Backup przywrócony — ${backup.notes.length} notatek. Odświeżam…`);
-      setTimeout(() => window.location.reload(), 1200);
+      const { studyDropped } = await restoreFullBackup(backup, opts);
+      // Przy pominiętych wpisach Nauki dajemy czas na przeczytanie komunikatu przed odświeżeniem.
+      toast.success(`Backup przywrócony — ${backup.notes.length} notatek. Odświeżam…`,
+        studyDropped > 0 ? { description: `Pominięto ${studyDropped} ${studyDropped === 1 ? "wpis Nauki" : "wpisy Nauki"} o nieznanym kształcie — ślad jest w diagnostyce.`, duration: 8000 } : undefined);
+      setTimeout(() => window.location.reload(), studyDropped > 0 ? 6000 : 1200);
     } catch (err) {
       setBusy(false);
       toast.error("Nie udało się przywrócić backupu" + (err instanceof Error ? ": " + err.message : ""));

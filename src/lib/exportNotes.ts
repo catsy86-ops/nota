@@ -213,7 +213,9 @@ export interface RestoreOptions { versions: boolean; settings: boolean; achievem
  * pozostałe sekcje tylko zaznaczone i obecne w pliku. Ustawienia działają
  * po przeładowaniu strony, które i tak następuje po przywróceniu.
  */
-export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions): Promise<void> {
+/** Wynik przywracania: ile wpisów Nauki odrzucono przy czyszczeniu kopii (0 = wszystko przeszło). */
+export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions): Promise<{ studyDropped: number }> {
+  let studyDropped = 0;
   await yjsStore.ready();
   // Obrazy i załączniki najpierw: błąd zapisu (brak miejsca) przerywa przed destrukcyjnym replaceAll.
   const notes = await withStoredImages(backup.notes);
@@ -247,13 +249,17 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
       const dump = raw !== null ? cleanDump(raw) : dumpFromLegacy(JSON.parse(legacyStudy!), studyDevice());
       // Wpisy nieznanego rodzaju albo z uszkodzonymi polami odpadają przy czyszczeniu — zostawiamy ślad, zamiast gubić je po cichu.
       const rawCount = raw && Array.isArray(raw.journal) ? raw.journal.length : dump.journal.length;
-      if (rawCount > dump.journal.length) logDiag("warn", "backup", `przywracanie Nauki: pominięto ${rawCount - dump.journal.length} wpisów`);
+      if (rawCount > dump.journal.length) {
+        studyDropped = rawCount - dump.journal.length;
+        logDiag("warn", "backup", `przywracanie Nauki: pominięto ${studyDropped} wpisów`);
+      }
       yStudy.replaceAll(dump);
     } catch (err) { logDiag("warn", "backup", "cannot restore study", err); }
   }
   for (const [k, v] of Object.entries(writes)) {
     try { localStorage.setItem(k, v); } catch (err) { logDiag("warn", "backup", `cannot restore ${k}`, err); }
   }
+  return { studyDropped };
 }
 
 export function download(content: string, filename: string, type: string) {

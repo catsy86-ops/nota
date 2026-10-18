@@ -3445,3 +3445,12 @@ lub grupę”.
 - **Gdzie:** `src/lib/study/study.test.ts` — dwa nowe testy (blok „listy budowy: zapis z podstawą”).
 - **Testy:** 1393 jednostkowe; e2e bundle i study — 40/40.
 - **Commit:** brak — zmiany niezacommitowane.
+
+## Praca — porządek w kodzie i odporność danych (plan działu Praca: L3, L4, L5, D2, 2026-10-18)
+
+- **Cykl importów (L3):** `siteKey`, `foldName`, `fold` i `entrySiteId` przeniesione do `src/lib/study/siteKey.ts` (bez zależności od reszty działu). `sites.ts` re-eksportuje je, więc importy w innych plikach nie zmieniły się; `siteHours.ts` importuje z `siteKey.ts` — cykl `sites` ↔ `siteHours` zniknął.
+- **Normalizator nazw kształtek (L4):** `fittingKey` korzysta z tej samej funkcji `foldName` (wynik identyczny dla polskich znaków).
+- **Dane z zewnątrz (L5):** `siteItems.ts` czyści pozycje listy budowy (braki, zamówienia, wizyty serwisowe, dokumenty, godziny) funkcjami `clean*`, zamiast rzutować `as`. Pozycja, której nie da się oczyścić, jest pomijana zamiast trafić do stanu jako surowa.
+- **Ślad przy przywracaniu (D2, dokończone):** `restoreFullBackup` zwraca liczbę pominiętych wpisów Nauki; okno przywracania pokazuje ją w komunikacie i wydłuża czas do odświeżenia.
+- **Testy:** 1393 jednostkowe; e2e kopia, Nauka, listy budowy (etapy, braki, zamówienia), bundle — 50/50.
+- **Commit:** brak — zmiany niezacommitowane.

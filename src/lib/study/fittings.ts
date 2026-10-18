@@ -1,3 +1,4 @@
+import { foldName } from "./siteKey";
 /**
  * Kształtki zużyte na budowie (decyzja 2026-10-15: tylko sztuki, bez metrów rury).
  * Opcjonalne pole wpisu — jak protokół próby: starsza wersja aplikacji je pomija.
@@ -18,8 +19,7 @@ export const FITTINGS_MAX = 20;
 export const FITTING_SUGGESTIONS = ["Kolano 16", "Trójnik 16", "Złączka 16", "Kolano naścienne 16", "Kolano 20", "Trójnik 20", "Złączka 20", "Redukcja 20/16"];
 
 /** Klucz porównania nazw: bez wielkości liter, nadmiarowych spacji i ogonków („Kolano  16” = „kolano 16”). */
-export const fittingKey = (name: string) =>
-  name.trim().replace(/\s+/g, " ").toLocaleLowerCase("pl").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/ł/g, "l");
+export const fittingKey = (name: string) => foldName(name);
 
 /**
  * Dowolne wejście → lista kształtek: puste nazwy i zera odpadają, liczby całkowite w zakresie,
