@@ -3,6 +3,7 @@ import type { WebrtcProvider } from "y-webrtc";
 import { yjsStore } from "@/lib/yjsStore";
 import { startImageSync, stopImageSync } from "@/lib/imageSync";
 import { logDiag } from "@/lib/diagnostics";
+import { toast } from "sonner";
 
 /**
  * Peer-to-peer transport for the Yjs doc (Phase 2 of the multi-device sync
@@ -91,6 +92,8 @@ const DEFAULT_STATE: SyncState = { status: "disabled", peerCount: 0, code: null,
 // Ponowne łączenie po powrocie do karty albo odzyskaniu sieci — nie częściej niż co tyle ms.
 const RECONNECT_MIN_GAP_MS = 10_000;
 let lastConnectAt = 0;
+const REMOTE_TOAST_GAP_MS = 30_000;
+let lastRemoteToastAt = 0;
 // Zmiany od peerów potrafią przychodzić seriami; odświeżamy znacznik co najwyżej
 // raz na kilka sekund, żeby nie przerenderowywać Ustawień przy każdej.
 const SYNCED_AT_THROTTLE_MS = 5000;
@@ -302,6 +305,11 @@ yjsStore.doc.on("update", (_update: Uint8Array, origin: unknown) => {
   if (!origin || !providers.some((p) => origin === p.room)) return;
   const now = Date.now();
   if (state.lastSyncedAt && now - state.lastSyncedAt < SYNCED_AT_THROTTLE_MS) return;
+  // Komunikat tylko na widocznej karcie i co najwyżej raz na 30 s — seria zmian to jedno powiadomienie.
+  if (document.visibilityState === "visible" && now - lastRemoteToastAt > REMOTE_TOAST_GAP_MS) {
+    lastRemoteToastAt = now;
+    toast("Zmiana z innego urządzenia", { description: "Notatki są już zaktualizowane." });
+  }
   setState({ lastSyncedAt: now });
 });
 
