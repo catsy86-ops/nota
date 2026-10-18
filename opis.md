@@ -3422,3 +3422,11 @@ lub grupę”.
 - **Budżet:** wejściowy JS to 393 402 B przy progu 393 216 B — **przekroczenie o 186 B**. Zmiana czeka na decyzję: podniesienie progu albo oszczędności.
 - **Testy:** `src/lib/yjsSync.test.ts` (22/22; dwa testy uodpornione na kolejność — liczą tylko instancje z własnego testu; nowy test zapisanego krótkiego kodu); e2e `sync-code.spec.ts` (kod 12 znaków), `file-sync.spec.ts`.
 - **Commit:** brak — zmiany niezacommitowane.
+
+## Praca — wpisy bez utraty danych (plan działu Praca, D1, D4, T7, 2026-10-18)
+
+- **Co robi:** wpis, który ma tylko odhaczone punkty listy, nie znika z dziennika, raportów i serii, gdy jego punkt został usunięty; stare odhaczenia są po prostu pomijane, a sam wpis zostaje. Wpis ze zdjęciem, którego bajtów nie ma w kopii, przeżywa import z zachowaną referencją. Usunięcie wpisu ze zdjęciami i „Cofnij” przywraca wpis z tymi samymi zdjęciami.
+- **Gdzie jest:** `src/lib/study/store.ts` (`sanitizeStudy` — pustość liczona przed odrzuceniem nieznanych punktów, zmienna `hadChecks`).
+- **Testy:** `src/lib/study/study.test.ts` — trzy nowe testy (wpis z odhaczeniami usuniętego punktu, referencja do brakującego zdjęcia, usunięcie i „Cofnij” ze zdjęciami).
+- **Nie zrobione z planu:** D2 (przywracanie kopii — walidacja przed kasowaniem), D3 (budżet kopii 40 MB), D5 (model wpisu), reszta planu — czekają na decyzje z planu działu Praca.
+- **Commit:** brak — zmiany niezacommitowane.

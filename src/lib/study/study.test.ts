@@ -82,6 +82,21 @@ describe("store", () => {
     expect(sanitizeStudy(d, { streak: 4, lastDay: "wczoraj" })).toMatchObject({ streak: 0, lastDay: null });
   });
 
+  it("wpis ze zdjęciem, którego bajtów nie ma w kopii, przeżywa import (referencja zostaje)", () => {
+    const ref = "a".repeat(64);
+    const s = sanitizeStudy({ board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null, review: {}, boss: null, group: null, days: [], custom: [] }, { journal: [{ id: "e2", at: 1000, kind: "ok", topic: null, text: "Pion", site: "", checked: [], images: [ref] }] });
+    expect(s.journal).toHaveLength(1);
+    expect(s.journal[0].images).toEqual([ref]);
+  });
+
+  it("wpis z odhaczeniami usuniętego punktu zostaje w dzienniku (nie znika po cichu)", () => {
+    const d = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null, review: {}, boss: null, group: null, days: [], custom: [] };
+    const raw = { journal: [{ id: "e1", at: 1000, kind: "ok", topic: null, text: "", site: "", checked: ["punkt-usuniety"], images: [] }] };
+    const s = sanitizeStudy(d, raw);
+    expect(s.journal.map((e) => e.id)).toEqual(["e1"]);
+    expect(s.journal[0].checked).toEqual([]);
+  });
+
   it("przenosi tematy, odhacza punkty i resetuje listę", () => {
     moveTopic("spadki", "doing");
     expect(columnOf(getStudy(), "spadki")).toBe("doing");
@@ -173,6 +188,17 @@ describe("dziennik z budowy", () => {
     expect(siteDirectory(getStudy().sites, getStudy().journal).find((s) => s.id === e.siteId)?.geo).toEqual(geo);
     setSiteGeo(e.siteId!, null);
     expect(siteDirectory(getStudy().sites, getStudy().journal).find((s) => s.id === e.siteId)?.geo).toBeUndefined();
+  });
+
+  it("usunięcie wpisu ze zdjęciami i „Cofnij” przywraca wpis z tymi samymi zdjęciami", () => {
+    const ref = "b".repeat(64);
+    const e = addJournalEntry({ kind: "ok", topic: null, text: "Zdjęcia z budowy", images: [ref] }, 1000)!;
+    const removed = removeJournalEntry(e.id);
+    expect(getStudy().journal).toHaveLength(0);
+    expect(removed?.images).toEqual([ref]);
+    restoreJournalEntry(removed!);
+    expect(getStudy().journal).toHaveLength(1);
+    expect(getStudy().journal[0].images).toEqual([ref]);
   });
 
   it("odrzuca pusty wpis i nieznany temat zamienia na ogólny", () => {

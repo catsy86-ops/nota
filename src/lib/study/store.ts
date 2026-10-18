@@ -72,7 +72,10 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
     const fittings = cleanFittings(e.fittings);
     const stage = cleanEntryStage(e.stage);
     const geo = cleanGeo(e.geo);
-    if (!text.trim() && checkedIds.length === 0 && images.length === 0 && !test && fittings.length === 0 && !stage) continue;
+    // Pustość liczona przed odrzuceniem nieznanych punktów: wpis z odhaczeniami, których punkt już nie istnieje,
+    // zostaje jako zapis (wcześniej znikał z dziennika, raportów i serii, a zostawał w kopii).
+    const hadChecks = Array.isArray(e.checked) && e.checked.length > 0;
+    if (!text.trim() && !hadChecks && images.length === 0 && !test && fittings.length === 0 && !stage) continue;
     journal.push({
       id: e.id, at: e.at, kind: e.kind as JournalKind, topic, text,
       site: typeof e.site === "string" ? e.site.slice(0, SITE_MAX) : "",
