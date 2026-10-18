@@ -18,11 +18,6 @@ test("skrzynka: Enter zapisuje bez pytań, licznik w pasku bocznym i „Cofnij�
   await expect(page.locator("[data-note-id]").filter({ hasText: "Kupić uszczelki do pralki" })).toHaveCount(1);
   await expect(page.getByRole("button", { name: /Skrzynka/ }).first()).toContainText("1");
 
-  // Toast osiągnięcia („pierwsza notatka”) bez pieczątki pojawia się od razu i zasłania „Cofnij” w stosie toastów.
-  // Zamykamy go przyciskiem × (nie czekamy, bo okno na „Cofnij” by minęło).
-  await expect(page.getByRole("button", { name: "Cofnij" })).toBeVisible();
-  const achievement = page.locator(".toast-achievements [data-close-button]");
-  if (await achievement.count()) await achievement.first().click();
   await page.getByRole("button", { name: "Cofnij" }).click();
   await expect(page.locator("[data-note-id]").filter({ hasText: "Kupić uszczelki do pralki" })).toHaveCount(0);
 });

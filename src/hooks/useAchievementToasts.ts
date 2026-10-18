@@ -66,6 +66,8 @@ export function useAchievementToasts({
     }
     unlockedBatchRef.current.titles.push(a.title);
     unlockedBatchRef.current.description = a.description;
-    if (badgeTimerRef.current === null) showBadgeToast();
+    // Najpierw krótka zwłoka: toasty tej samej akcji (np. „Cofnij” po zapisie) montują się po tym zdarzeniu,
+    // a bez zwłoki odznaka wchodziła na wierzch i zasłaniała przycisk „Cofnij”.
+    if (badgeTimerRef.current === null) badgeTimerRef.current = window.setTimeout(showBadgeToast, 400);
   });
 }
