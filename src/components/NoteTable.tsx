@@ -1,7 +1,10 @@
 import { ArrowDown, ArrowUp, Bell, Flag, Pin } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useMotionPref } from "@/hooks/useMotionPref";
+import { dur, ease } from "@/lib/motion";
 import type { Folder, Note } from "@/hooks/useNotes";
 import { PRIORITY_COLOR_CLASS, PRIORITY_LABELS } from "@/lib/notePriority";
 import { setViewPref, type SortDir, type SortKey } from "@/lib/viewPrefs";
@@ -109,6 +112,9 @@ export function PropCell({ def, note, onUpdate }: { def: PropDef; note: Note; on
  */
 export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedIds, propDefs = [], onUpdate }: NoteTableProps) {
   const folderName = (id: string | null) => (id ? folders.find((f) => f.id === id)?.name ?? "" : "");
+  const { reduced } = useMotionPref();
+  const rowTransition = reduced ? { duration: 0 } : { duration: dur.base, ease: ease.out };
+  const rowExit = reduced ? { duration: 0 } : { duration: dur.fast, ease: ease.in };
 
   const sortBy = (key: SortKey) => {
     if (sortKey === key) setViewPref("sortDir", sortDir === "asc" ? "desc" : "asc");
@@ -153,10 +159,16 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
             })}
           </tr>
         </thead>
+        {/* Wiersz z kosza albo archiwum gaśnie, a nowy pojawia się łagodnie — bez skoku tabeli.
+            Przy ograniczonym ruchu natychmiast (jak w kaflach, `cardMotion.ts`). */}
         <tbody>
+          <AnimatePresence initial={false}>
           {notes.map((n) => (
-            <tr
+            <motion.tr
               key={n.id}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1, transition: rowTransition }}
+              exit={{ opacity: 0, transition: rowExit }}
               data-note-row={n.id}
               tabIndex={0}
               role="button"
@@ -217,8 +229,9 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
                 <span className="sm:hidden">{format(n.updatedAt, "d MMM", { locale: pl })}</span>
                 <span className="hidden sm:inline">{format(n.updatedAt, "d MMM yyyy", { locale: pl })}</span>
               </td>
-            </tr>
+            </motion.tr>
           ))}
+          </AnimatePresence>
         </tbody>
       </table>
     </div>

@@ -1,6 +1,9 @@
 import type { ReactNode } from "react";
+import { AnimatePresence, m as motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useMotionPref } from "@/hooks/useMotionPref";
+import { dur, ease } from "@/lib/motion";
 
 interface NoteGroupSectionProps {
   /** Klucz do testów i `aria-controls`. */
@@ -23,6 +26,10 @@ interface NoteGroupSectionProps {
  */
 export function NoteGroupSection({ groupKey, label, count, collapsible, collapsed, onToggle, tone = "default", children }: NoteGroupSectionProps) {
   const bodyId = `group-body-${groupKey}`;
+  // Zwijanie: treść opada/rośnie wysokością. Przy ograniczonym ruchu zmiana jest natychmiastowa.
+  const { reduced } = useMotionPref();
+  const toggleTransition = reduced ? { duration: 0 } : { duration: dur.base, ease: ease.out };
+  const collapseTransition = reduced ? { duration: 0 } : { duration: dur.fast, ease: ease.in };
   const text = (
     <>
       {collapsible && (
@@ -56,7 +63,21 @@ export function NoteGroupSection({ groupKey, label, count, collapsible, collapse
       ) : (
         <p className={headerClass}>{text}</p>
       )}
-      {!collapsed && <div id={bodyId}>{children}</div>}
+      {/* Zwinięta sekcja nie renderuje siatki po zakończeniu zwijania (wyrejestrowanie z nawigacji klawiaturą). */}
+      <AnimatePresence initial={false}>
+        {!collapsed && (
+          <motion.div
+            key="body"
+            id={bodyId}
+            initial={{ height: 0, opacity: 0, overflow: "hidden" }}
+            // `overflow` wraca do `visible` po wjeździe — kafle mają focus ring i cień poza swoim pudełkiem.
+            animate={{ height: "auto", opacity: 1, transition: toggleTransition, transitionEnd: { overflow: "visible" } }}
+            exit={{ height: 0, opacity: 0, overflow: "hidden", transition: collapseTransition }}
+          >
+            {children}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
