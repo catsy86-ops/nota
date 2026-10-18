@@ -95,7 +95,9 @@ const BUDGET = {
   // 2026-10-16: 380 KB po właściwościach notatek (`lib/noteProps.ts`, kolumny w tabeli, mapa w Yjs) — próg 384 KB; do odzyskania przy LazyMotion/Radix.
   // 2026-10-16: 390 KB po funkcjach Notatek i Pracy → 383 KB: płótno, „Znajdź i zamień”, okno szablonu leniwie,
   // `journalRefsIn` w osobnym module, dane Pracy w kopii zapasowej importowane dynamicznie.
-  eagerJsGzip: 384 * KB,
+  // 2026-10-18: 393 402 B po synchronizacji (krótkie kody, diagnostyka, ponowne łączenie) — próg podniesiony do 385 KB
+  // (decyzja użytkownika). Przy każdym zejściu w dół obniż próg.
+  eagerJsGzip: 385 * KB,
   // 2026-10-11: 357 KB (index 214 + react/motion/radix/dnd)
   // 2026-10-16: 4,37 → 4,03 MB — `includeAssets` dublował 6 plików z `public/` (łapie je `globPatterns`).
   // 2026-10-17: 4,09 → 3,00 MB — PDF (jsPDF/html2canvas/purify), Statystyki poza precache (cache `static-assets` po pierwszym użyciu).
