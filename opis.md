@@ -3271,3 +3271,38 @@ lub grupę”.
 - `src/components/shifts/YearSummaryDialog.tsx`: `LeaveMeter` bez nieużywanego `compact`; `src/components/shifts/ShiftSummary.tsx` nie przekazuje już tej prop.
 
 **Testy.** `npm run typecheck` czysty, `npx eslint .` 0 błędów (11 ostrzeżeń `react-refresh`), `npx vitest run` 144 pliki zielone. E2e wybrane (`subpages`, `composer`, `notes`, `editing`, `note-groups`, `qol`) 21/21 przy jednym workerze.
+
+## Wspólne — ruch (animacje i przejścia, 2026-10-18)
+
+- **Co robi:** zwijanie grupy w Notatkach opada wysokością zamiast skakać; wiersz tabeli usunięty lub zarchiwizowany gaśnie, nowy łagodnie wjeżdża; karty „Dziś” rezerwują miejsce szkieletem, więc lista nie przesuwa się po dociągnięciu danych; pusty stan gaśnie, gdy pojawią się notatki. Przy ograniczonym ruchu zmiany są natychmiastowe.
+- **Gdzie jest:** `src/components/NoteGroupSection.tsx` (AnimatePresence + `m.div`, wysokość i przezroczystość), `src/components/NoteTable.tsx` (`m.tr` w AnimatePresence `initial={false}`), `src/components/StatusPanel.tsx` (exit w trybie page), `src/components/ViewSkeleton.tsx` (`CardSkeleton`, wchodzi po 180 ms przez klasę `.view-skeleton`), `src/pages/Index.tsx` (cztery `Suspense fallback={null}` kart Dziś → `CardSkeleton`; `EmptyState` w AnimatePresence, `key="empty"`).
+- **Jak działa:** korzysta z istniejącego LazyMotion; `overflow` grupy wraca do `visible` po wjeździe, żeby nie ucinać focus ringu kafli.
+- **Ograniczenia i pułapki:** wiersze tabeli nie animują się przy pierwszym montażu widoku (celowo). Jeśli karta Dziś po załadowaniu renderuje `null`, szkielet znika i lista się przesuwa — uznano to za mniejsze zło niż skok bez szkieletu.
+- **Testy:** `src/components` i `src/hooks` (jednostkowe); e2e warto potwierdzić na `e2e/` przy tabeli i zwijaniu grup. Nie sprawdzano wizualnie na telefonie.
+- **Commit:** c630cb4, 30427f2 (2026-10-18), scalone do master (merge e3492b9 i poprzednie).
+
+## Wspólne — mikrointerakcje i stany (2026-10-18)
+
+- **Co robi:** pole z błędem (`aria-invalid`) ma czerwoną ramkę i czerwony fokus; przełączniki i checkboxy podświetlają się po najechaniu (osobno dla włączonego i wyłączonego); suwak ma halo przy najechaniu i przeciąganiu; tosty mają przycisk × (błąd z 9 s można zamknąć od razu); Enter i Spacja po dotyku nie włączają ramki fokusu z klawiatury.
+- **Gdzie jest:** `src/components/ui/input.tsx`, `switch.tsx`, `checkbox.tsx`, `slider.tsx`, `sonner.tsx` (prop `closeButton`, kolory ze zmiennych Sonnera); `src/lib/inputModality.ts` (+ `inputModality.test.ts`).
+- **Jak działa:** `inputModality` wykrywa Enter/Spację na przycisku po dotyku; pola tekstowe i textarea są wykluczone, bo klawiatura ekranowa wysyła te klawisze i pole dostałoby ramkę fokusu.
+- **Ograniczenia i pułapki:** przycisk w stanie „ładuje” (wspólny prop `loading`) nie zrobiony — wymagałby zmiany API w wielu dialogach. Hover i wygląd × na tostach nieprzejrzane na zrzutach.
+- **Testy:** `src/lib/inputModality.test.ts`; e2e `a11y.spec.ts` i `skins.spec.ts` (47/47 w worktree).
+- **Commit:** 84490c6 (2026-10-18), scalone do master.
+- **Budżet:** wejściowy JS 381 KB gzip, próg w `e2e/bundle.spec.ts` 384 KB — zapas mały.
+
+## Notatki — scalanie zaznaczonych notatek (2026-10-18)
+
+- **Co robi:** przycisk „Scal zaznaczone w jedną notatkę” na pasku zbiorczym (tylko lista). Pierwsza notatka na liście dostaje treść pozostałych (z pogrubionym tytułem, oddzielone `---`), etykiety, obrazy, załączniki, checklisty i najwyższy priorytet. Termin zostaje pierwszej, a gdy go nie ma — najwcześniejszy z pozostałych. Pozostałe idą do kosza. „Cofnij” przywraca pola i notatki.
+- **Gdzie jest:** `src/lib/mergeNotes.ts` (`planMerge`, czysta funkcja), `src/hooks/useBulkNoteOps.ts` (`mergeSelected`), `src/components/BulkActionBar.tsx` (prop `onMerge`, ikona `Combine`), `src/pages/Index.tsx` (podpięcie).
+- **Odmowa z komunikatem:** mniej niż 2 notatki, notatka prywatna, tylko do odczytu, archiwum lub kosz, podstrony, otwarty edytor celu.
+- **Ograniczenia i pułapki:** scalanie nie przenosi właściwości (`props`) ani kolorów pozostałych notatek. Wikilinki do scalonych tytułów po wyrzuceniu do kosza przestają wskazywać na żywą notatkę.
+- **Testy:** `src/lib/mergeNotes.test.ts` (14), `e2e/merge-notes.spec.ts` (2).
+- **Commit:** 5f003ca (2026-10-18), scalone do master.
+
+## Notatki — kopiuj jako Markdown w menu kafla (2026-10-18)
+
+- **Co robi:** w menu „Więcej opcji” kafla (także w arkuszu na telefonie) akcja kopiuje notatkę jako Markdown. Ukryta dla notatek prywatnych.
+- **Gdzie jest:** `src/components/NoteCardActions.tsx` (`MoreActions`), używa istniejącego `copyNoteToClipboard`.
+- **Testy:** `e2e/card-copy.spec.ts`.
+- **Commit:** d0c6eed (2026-10-18), scalone do master.
