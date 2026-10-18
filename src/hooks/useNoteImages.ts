@@ -54,7 +54,7 @@ export function useNoteImages({ note, onUpdate }: { note: Note } & Pick<ReturnTy
   function addDrawing(dataUrl: string) {
     imageStore.putDataUrl(dataUrl)
       .then((ref) => onUpdate?.(note.id, { images: [...(note.images || []), ref] }))
-      .catch(() => toast.error("Nie udało się zapisać rysunku", { description: "Brakuje miejsca w pamięci przeglądarki." }));
+      .catch(() => toast.error("Nie udało się zapisać rysunku", { description: "Brakuje miejsca w pamięci przeglądarki. Usuń stare obrazy albo zrób kopię zapasową i spróbuj ponownie." }));
   }
 
   /** Usunięcie z „Cofnij” — poprzednia lista obrazów wraca bez zmian. */

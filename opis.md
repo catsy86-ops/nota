@@ -3454,3 +3454,12 @@ lub grupę”.
 - **Ślad przy przywracaniu (D2, dokończone):** `restoreFullBackup` zwraca liczbę pominiętych wpisów Nauki; okno przywracania pokazuje ją w komunikacie i wydłuża czas do odświeżenia.
 - **Testy:** 1393 jednostkowe; e2e kopia, Nauka, listy budowy (etapy, braki, zamówienia), bundle — 50/50.
 - **Commit:** brak — zmiany niezacommitowane.
+
+## Praca — komunikaty, dotyk zakładek, testy dokumentów budowy (U2, U6, U4, T2, 2026-10-18)
+
+- **Seria wpisów (U2):** już działa — po zapisie zostają budowa i rodzaj, czyści się treść; test w `study.test.ts` pilnuje tego zachowania.
+- **Brak miejsca (U6):** każdy komunikat o braku miejsca w pamięci podpowiada, co zrobić (usunąć stare zdjęcia albo obrazy, zrobić kopię zapasową) — `JournalEntrySheet.tsx`, `AddNoteBar.tsx`, `useNoteImages.ts`.
+- **Dotyk (U4):** cztery zakładki działu Praca (Quiz, Tablica, Lista kontrolna, Dziennik) mają na dotyku minimalną wysokość 44 px (`coarse:min-h-11`, `StudyView.tsx`). Wspólny komponent zakładek bez zmian.
+- **Testy (T2):** `src/lib/study/siteDocsAdd.test.ts` — odrzucenie nieobsługiwanego typu pliku, limit liczby dokumentów przy pełnej liście, brak plików.
+- **Testy:** 1396 jednostkowych; e2e study, study-custom, touch-targets, site-docs, journal-geo, bundle — 52/52.
+- **Commit:** brak — zmiany niezacommitowane.

@@ -278,7 +278,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
       setCaptioning(null);
       setCaptionDraft("");
     } catch {
-      toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki." });
+      toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki. Usuń stare zdjęcia albo zrób kopię zapasową i spróbuj ponownie." });
     } finally {
       setProcessing((n) => n - 1);
     }
@@ -308,7 +308,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
       if (now.includes(ref)) patch({ images: now.map((r) => (r === ref ? next : r)) });
       haptic("success");
     } catch {
-      toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki." });
+      toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki. Usuń stare zdjęcia albo zrób kopię zapasową i spróbuj ponownie." });
     } finally {
       setProcessing((n) => n - 1);
     }
@@ -337,7 +337,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
         }
       }
     } catch {
-      toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki." });
+      toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki. Usuń stare zdjęcia albo zrób kopię zapasową i spróbuj ponownie." });
     }
     if (skipped > 0) toast.error("Nie udało się zmniejszyć zdjęcia do 2 MB");
   }

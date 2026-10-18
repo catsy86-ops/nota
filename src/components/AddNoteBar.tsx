@@ -756,7 +756,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
       onSave={(dataUrl) => {
         imageStore.putDataUrl(dataUrl)
           .then((ref) => setImages((prev) => [...prev, ref]))
-          .catch(() => toast.error("Nie udało się zapisać rysunku", { description: "Brakuje miejsca w pamięci przeglądarki." }));
+          .catch(() => toast.error("Nie udało się zapisać rysunku", { description: "Brakuje miejsca w pamięci przeglądarki. Usuń stare obrazy albo zrób kopię zapasową i spróbuj ponownie." }));
       }}
     /></Suspense>}
     </>

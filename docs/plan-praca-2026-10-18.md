@@ -42,11 +42,11 @@ Uwaga: wejściowy JS jest na progu (próg podniesiony do 385 KB). Nowy kod w gł
 | # | Propozycja | Nakład | Ryzyko |
 |---|-----------|--------|--------|
 | U1 | **Przypomnienie „próba przed zakryciem":** gdy etap instalacji podposadzkowej/bruzd jest zrobiony, a próby szczelności nie ma — pokaż na „Dziś" i w karcie budowy (najdroższy błąd, nic dziś tego nie pilnuje) | S–M | fałszywe alarmy, gdy etapy nie są odhaczane |
-| U2 | **Seria wpisów z jednej budowy:** po „Zapisz wpis" zostaje budowa i rodzaj, czyszczony tekst i zdjęcia | S | wpis w złej budowie — nazwa budowy widoczna w nagłówku |
+| U2 ✅ (było już) | **Seria wpisów z jednej budowy:** po „Zapisz wpis" zostaje budowa i rodzaj, czyszczony tekst i zdjęcia | S | wpis w złej budowie — nazwa budowy widoczna w nagłówku |
 | U3 ✅ (zakładka) | **Jedna nazwa na każdą rzecz:** „Wpis" / „Dokończ wpis" / „Wpis z budowy"; „Lista" → „Lista kontrolna"; w notatkach „Tablica" to układ kolumn, w Pracy tablica tematów | S | e2e szukające tekstów do poprawy (zmieniamy etykiety, nie klucze) |
-| U4 | **Rękawice:** sprawdzić, czy zakładki Quiz/Tablica/Lista/Dziennik mają 44 px na dotyku | S | na telefonie niesprawdzone |
+| U4 ✅ | **Rękawice:** sprawdzić, czy zakładki Quiz/Tablica/Lista/Dziennik mają 44 px na dotyku | S | na telefonie niesprawdzone |
 | U5 | **Szybki wpis głosowy ze skrótu** (`?wpis=1` z włączonym dyktowaniem) | S–M | dyktowanie przeglądarkowe wymaga sieci i słabo działa na iOS |
-| U6 | **Puste stany i błędy z następnym krokiem:** „Brak wpisów" bez przycisku „+ Wpis"; „Brakuje miejsca w pamięci" bez wskazówki (usuń stare zdjęcia) | S | minimalne |
+| U6 ✅ | **Puste stany i błędy z następnym krokiem:** „Brak wpisów" bez przycisku „+ Wpis"; „Brakuje miejsca w pamięci" bez wskazówki (usuń stare zdjęcia) | S | minimalne |
 | U7 | **Zamówienie do hurtowni przez WhatsApp** (dziś tylko „Kopiuj") | S–M | numer hurtowni trafia do sync i kopii |
 | U8 | Nagranie głosowe w wpisie jako plan B (`VoiceRecorder` z notatek) | M | sync wymaga, by oba urządzenia były online; bez transkrypcji nie trafia do raportu |
 
