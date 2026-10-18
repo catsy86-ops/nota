@@ -185,3 +185,16 @@ describe("raport — rozwiązanie problemu", () => {
     expect(body).toContain("\n  Rozwiązanie: Wymieniona złączka");
   });
 });
+
+describe("raport: „Tu jestem” w treści", () => {
+  it("wpis z lokalizacją ma link do map w punkcie listy, wpis bez lokalizacji nie", () => {
+    const geo = { lat: 52.22977, lng: 21.01178, acc: 12 };
+    const withGeo = [e("g", at(14, 9), "ok", "Lipowa 5", "Pion w łazience", { geo })];
+    const body = reportBody(buildJournalReport(withGeo, { siteId: null, from: "2026-10-14", to: "2026-10-14" }));
+    expect(body).toContain("Mapa (±12 m): https://www.google.com/maps/search/?api=1&query=52.22977,21.01178");
+    expect(reportWhatsApp(buildJournalReport(withGeo, { siteId: null, from: "2026-10-14", to: "2026-10-14" }))).toContain("Mapa (±12 m)");
+
+    const plain = reportBody(buildJournalReport(journal, { siteId: null, from: "2026-10-14", to: "2026-10-14" }));
+    expect(plain).not.toContain("Mapa (");
+  });
+});

@@ -8,7 +8,7 @@ Poprzedni plan mobilny (roadmap, „Plan dopracowania UI/UX na telefonie — 202
 - ✅ M1.1 przyciski w powiadomieniu push i akcja przy zamkniętej aplikacji (`?akcja=`). Serwer push trzeba wdrożyć ponownie (pole `snooze`).
 - ✅ M1.3 notatka głosowa w notatkach (nie we wpisach Dziennika). Synchronizuje się jak inne załączniki do 2 MB — inaczej niż domyślna decyzja „tylko na telefonie”.
 - ✅ M2.1 „Tu jestem”, zapis lokalizacji budowy, „Budowa obok”, link „Mapa” przy wpisie.
-- ⏭ M2.2 mapa w raporcie — pominięte (decyzja domyślna: lokalizacja tylko w aplikacji).
+- ✅ M2.2 mapa w raporcie — link „Mapa (±12 m)” przy wpisie z lokalizacją (użytkownik poprosił o tę funkcję; adresu budowy w raporcie nie ma).
 - ⏭ M2.3 QR — już było: `SyncSettings` pokazuje QR z linkiem `?pair=`. Skaner w aplikacji nic nie dodaje (Android przechwytuje link, iPhone nie ma `BarcodeDetector`).
 - ✅ M3.1 Grafik w poziomie (wariant `short:`).
 - ⏳ M0 (QA na telefonie, wdrożenie serwera push) — po stronie użytkownika.

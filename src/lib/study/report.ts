@@ -5,6 +5,7 @@ import { dayType, isAbsence, type ShiftData } from "@/lib/shifts/model";
 import { entryMinutesOn, formatDuration } from "@/lib/shifts/time";
 import { entriesPl, KIND_LABEL } from "./journalView";
 import { entrySiteId, type SiteCard } from "./sites";
+import { accuracyLabel, mapsUrl } from "./geo";
 import { siteOrder } from "./order";
 import { stageProgress, type SiteStage } from "./stages";
 import { openShortages, shortageLine, type Shortage } from "./shortages";
@@ -231,7 +232,9 @@ function entryLine(r: ReportEntry): string {
   const test = r.entry.test ? `\n  ${testLine(r.entry.test)}` : "";
   const fit = r.entry.fittings?.length ? `\n  Kształtki: ${fittingsLine(r.entry.fittings)}` : "";
   const sol = r.entry.solution ? `\n  Rozwiązanie: ${r.entry.solution}` : "";
-  return `${r.status}: ${text.replace(/\n+/g, "\n  ")}${extra.length ? ` (${extra.join(", ")})` : ""}${test}${fit}${sol}`;
+  // „Tu jestem”: link do miejsca wpisu (tylko współrzędne — adresu w raporcie nie ma).
+  const map = r.entry.geo ? `\n  Mapa (${accuracyLabel(r.entry.geo)}): ${mapsUrl(r.entry.geo)}` : "";
+  return `${r.status}: ${text.replace(/\n+/g, "\n  ")}${extra.length ? ` (${extra.join(", ")})` : ""}${test}${fit}${sol}${map}`;
 }
 
 /** Podsumowanie raportu w jednej linii: „5 wpisów · godziny pracy: 18 h · otwarte problemy: 1”. */

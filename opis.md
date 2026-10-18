@@ -3395,3 +3395,12 @@ lub grupę”.
 - **Co robi:** panel po stuknięciu pigułki statusu zapisu (`OfflineQueuePanel`) ładuje się przy pierwszym otwarciu i zostaje zamontowany (animacja zamykania działa).
 - **Gdzie jest:** `src/components/OfflineStatus.tsx` (`lazy`, `panelMounted`).
 - **Dlaczego:** funkcje mobilne dodały ok. 1,1 KB do wejściowego JS; przed nimi zapas do progu 384 KB wynosił ok. 0,5 KB. Po przeniesieniu panelu wejściowy JS to 393 200 B przy progu 393 216 B — **zapas 16 B**; następna zmiana w głównej paczce musi czymś się zrównoważyć.
+
+## Praca → raport z budowy — mapa przy wpisie (plan mobilny M2.2, 2026-10-18)
+
+- **Co robi:** wpis z lokalizacją „Tu jestem” ma w raporcie punkt „Mapa (±12 m): <link>”. Link otwiera miejsce w aplikacji map. Dotyczy tekstu raportu (schowek, WhatsApp, notatka) i podglądu/wydruku.
+- **Gdzie jest:** `src/lib/study/report.ts` (`entryLine` — dopisuje linię „Mapa”); `src/components/study/JournalReport.tsx` (`ReportPaper` — link w punkcie, `data-report-geo`); helpery `accuracyLabel`, `mapsUrl` z `src/lib/study/geo.ts`.
+- **Decyzja:** w raporcie trafiają tylko współrzędne przy wpisach, które same je mają. Adresu budowy w tym miejscu nie ma. Wcześniej otwarte pytanie (czy lokalizacja w ogóle może iść do szefa) rozstrzygnięto: raport dostaje link, bo użytkownik poprosił o M2.2. Wpisy bez „Tu jestem” są bez zmian.
+- **Ograniczenia i pułapki:** link wysyła się razem z raportem — kto dostanie raport, zobaczy miejsce wpisu. Współrzędne są zaokrąglone do ~1 m. Raport nie ma osobnego przełącznika „bez lokalizacji”.
+- **Testy:** `src/lib/study/report.test.ts` („Tu jestem” w treści); e2e `report-nudge.spec.ts`, `report-whatsapp.spec.ts`, `study.spec.ts`, `journal-geo.spec.ts`.
+- **Commit:** brak — zmiany niezacommitowane.

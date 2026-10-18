@@ -3,6 +3,7 @@ import { Clock, Copy, Ellipsis, FilePlusCorner, Gauge, MapPin, MessageCircle, Pr
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { testLine } from "@/lib/study/pressureTest";
 import { fittingsLine } from "@/lib/study/fittings";
+import { accuracyLabel, mapsUrl } from "@/lib/study/geo";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { StatusPanel } from "@/components/StatusPanel";
@@ -468,6 +469,11 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
                         {r.site && <> · {r.site}</>}
                         {r.topic && <> · {r.topic}</>}
                       </p>
+                      {r.entry.geo && (
+                        <p className="mt-0.5 text-xs text-muted-foreground" data-report-geo>
+                          Mapa ({accuracyLabel(r.entry.geo)}): <a href={mapsUrl(r.entry.geo)} target="_blank" rel="noopener noreferrer" className="underline-offset-2 hover:underline">otwórz w mapach</a>
+                        </p>
+                      )}
                       {r.entry.fittings && r.entry.fittings.length > 0 && (
                         <p className="mt-0.5 text-xs text-muted-foreground" data-report-fittings>Kształtki: {fittingsLine(r.entry.fittings)}</p>
                       )}
