@@ -50,6 +50,7 @@ export function openJournalEdit(entry: JournalEntry) {
     test: entry.test ?? null,
     fittings: entry.fittings ?? [],
     stage: entry.stage ?? null,
+    geo: entry.geo ?? null,
   };
   state = { open: true, topicFirst: entry.checked.length > 0, editing: entry.id };
   emit();

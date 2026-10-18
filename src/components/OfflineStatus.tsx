@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { CloudOff, Wifi, LoaderCircle, Check, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
-import { OfflineQueuePanel } from "@/components/OfflineQueuePanel";
 import { useSyncState } from "@/lib/yjsSync";
 import { hasUnsavedWork, useSaveStatus } from "@/lib/saveStatus";
+
+// Panel otwiera się dopiero po stuknięciu pigułki — leniwie, poza główną paczką.
+const OfflineQueuePanel = lazy(() => import("@/components/OfflineQueuePanel").then((m) => ({ default: m.OfflineQueuePanel })));
 
 /**
  * Status pill for connectivity and device-to-device sync. Notes themselves
@@ -14,6 +16,8 @@ import { hasUnsavedWork, useSaveStatus } from "@/lib/saveStatus";
 export function OfflineStatus() {
   const [offline, setOffline] = useState(() => typeof navigator !== "undefined" && !navigator.onLine);
   const [panelOpen, setPanelOpen] = useState(false);
+  // Montowany przy pierwszym otwarciu i zostaje — zamknięcie ma swoją animację.
+  const [panelMounted, setPanelMounted] = useState(false);
   const syncState = useSyncState();
 
   const wasOfflineRef = useRef(offline);
@@ -88,7 +92,7 @@ export function OfflineStatus() {
         type="button"
         role="status"
         aria-live="polite"
-        onClick={() => setPanelOpen(true)}
+        onClick={() => { setPanelMounted(true); setPanelOpen(true); }}
         aria-label="Otwórz status zapisu i synchronizacji"
         className={`save-status glass-strong fixed bottom-24 left-1/2 z-50 flex max-w-[92vw] -translate-x-1/2 items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 text-xs text-muted-foreground shadow-lg transition-colors hover:text-foreground sm:bottom-6 ${passive ? "pointer-events-none" : "cursor-pointer"}`}
       >
@@ -107,7 +111,7 @@ export function OfflineStatus() {
           {saved && !saving && <span className="pencil-stroke" aria-hidden />}
         </span>
       </button>
-      <OfflineQueuePanel open={panelOpen} onOpenChange={setPanelOpen} offline={offline} />
+      {panelMounted && <Suspense fallback={null}><OfflineQueuePanel open={panelOpen} onOpenChange={setPanelOpen} offline={offline} /></Suspense>}
     </>
   );
 }

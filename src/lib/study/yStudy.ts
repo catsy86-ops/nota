@@ -6,6 +6,7 @@ import { cleanSite, foldName, type SiteCard } from "./sites";
 import { cleanCard, reviewCard, type ReviewCard } from "./srs";
 import { cleanBoss, cleanGroup, type Boss, type WaGroup } from "./boss";
 import { cleanTest, type PressureTest } from "./pressureTest";
+import { cleanGeo, type GeoPoint } from "./geo";
 import { cleanCustomList, type CustomEntry } from "./custom";
 import {
   composeSiteLists, itemKey, LIST_FIELD, listItemId, listItemValue, metaKey, sameItem, SITE_LIST_KINDS, stripLists,
@@ -57,6 +58,8 @@ export interface JournalEntry {
   fittings?: Fitting[];
   /** Etap budowy (id z listy karty, `stages.ts`), który ten wpis zamknął — zdjęcia idą do protokołu przy etapie. */
   stage?: string;
+  /** „Tu jestem”: gdzie zapisano wpis (`geo.ts`); tylko po stuknięciu, nie trafia do raportu. */
+  geo?: GeoPoint;
 }
 
 /**
@@ -148,6 +151,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
   const test = cleanTest(e.test);
   const fittings = cleanFittings(e.fittings);
   const stage = cleanEntryStage(e.stage);
+  const geo = cleanGeo(e.geo);
   if (!text.trim() && checked.length === 0 && images.length === 0 && !test && fittings.length === 0 && !stage) return null;
   return {
     id: e.id, at: e.at, kind: e.kind as JournalKind,
@@ -162,6 +166,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
     ...(test ? { test } : {}),
     ...(fittings.length ? { fittings } : {}),
     ...(stage ? { stage } : {}),
+    ...(geo ? { geo } : {}),
   };
 }
 

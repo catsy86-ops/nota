@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { fittingsLine } from "@/lib/study/fittings";
 import { testLine } from "@/lib/study/pressureTest";
 import { Archive, Check, ChevronLeft, Clock, Gauge, Package, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Play, Plus, Search, TriangleAlert, Wrench, X } from "lucide-react";
+import { mapsUrl } from "@/lib/study/geo";
 import { pluralPl } from "@/lib/plural";
 import { studyReminders, type StudyReminder } from "@/lib/study/reminders";
 import { Button } from "@/components/ui/button";
@@ -495,6 +496,12 @@ function JournalItem({ entry: e, onPractice, onTopic, onZoom }: { entry: Journal
           )}
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
             <span>{resolved ? "Problem rozwiązany" : KIND_LABEL[e.kind]}</span>
+            {e.geo && (
+              // „Tu jestem” — gdzie zapisano wpis; link do map, tylko w aplikacji (raport tego nie zawiera).
+              <a href={mapsUrl(e.geo)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-foreground hover:underline" data-testid="journal-entry-geo">
+                <MapPin className="h-3 w-3" aria-hidden />Mapa
+              </a>
+            )}
             {e.topic && (
               // Pigułka tematu filtruje dziennik po temacie — ćwiczenie jest pod jawnym „Ćwicz teraz”.
               <button

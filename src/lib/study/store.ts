@@ -8,6 +8,7 @@ import { addDaysToKey } from "@/lib/week";
 import { studyDevice, yStudy } from "./data";
 import { cleanCard, dueIds, type ReviewCard } from "./srs";
 import { cleanTest, type PressureTest } from "./pressureTest";
+import { cleanGeo, type GeoPoint } from "./geo";
 import { BOSS_NAME_MAX, cleanBoss, cleanGroup, normalizeGroupLink, normalizePhone } from "./boss";
 import { cleanSite, entrySiteId, resolveSite, siteDirectory, SITE_NAME_MAX, type SiteCard, type SiteInfo } from "./sites";
 import { cleanStages, type SiteStage } from "./stages";
@@ -70,6 +71,7 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
     const test = cleanTest(e.test);
     const fittings = cleanFittings(e.fittings);
     const stage = cleanEntryStage(e.stage);
+    const geo = cleanGeo(e.geo);
     if (!text.trim() && checkedIds.length === 0 && images.length === 0 && !test && fittings.length === 0 && !stage) continue;
     journal.push({
       id: e.id, at: e.at, kind: e.kind as JournalKind, topic, text,
@@ -82,6 +84,7 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
       ...(test ? { test } : {}),
       ...(fittings.length ? { fittings } : {}),
       ...(stage ? { stage } : {}),
+      ...(geo ? { geo } : {}),
     });
   }
   journal.sort((a, b) => a.at - b.at);
@@ -207,6 +210,8 @@ export interface NewJournalEntry {
   fittings?: Fitting[];
   /** Etap budowy zamknięty tym wpisem (id z karty); `null`/brak = bez etapu. */
   stage?: string | null;
+  /** „Tu jestem” — lokalizacja wpisu; `null`/brak = bez lokalizacji. Sama nie czyni wpisu niepustym. */
+  geo?: GeoPoint | null;
 }
 
 /** Wejście z arkusza → pola wpisu przefiltrowane przez materiał; `null` = pusty wpis. */
@@ -218,6 +223,7 @@ function entryFields(input: NewJournalEntry, now: number) {
   const test = cleanTest(input.test);
   const fittings = cleanFittings(input.fittings);
   const stage = cleanEntryStage(input.stage);
+  const geo = cleanGeo(input.geo);
   if (!text && checked.length === 0 && images.length === 0 && !test && fittings.length === 0 && !stage) return null;
   return {
     at: typeof input.at === "number" && Number.isFinite(input.at) ? Math.min(input.at, now) : now,
@@ -229,6 +235,7 @@ function entryFields(input: NewJournalEntry, now: number) {
     ...(test ? { test } : {}),
     ...(fittings.length ? { fittings } : {}),
     ...(stage ? { stage } : {}),
+    ...(geo ? { geo } : {}),
   };
 }
 
@@ -487,6 +494,16 @@ export function setSiteWarranty(id: string, warranty: string | null) {
   if (!prev) return;
   const { stored: _s, count: _c, open: _o, first: _f, last: _l, warranty: _w, ...card } = prev;
   yStudy.saveSite(warranty ? { ...card, warranty } : card);
+}
+
+/** Lokalizacja budowy zapisana na miejscu („Zapisz lokalizację budowy”); `null` usuwa. */
+export function setSiteGeo(id: string, geo: GeoPoint | null) {
+  const s = getStudy();
+  const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
+  if (!prev) return;
+  const { stored: _s, count: _c, open: _o, first: _f, last: _l, geo: _g, ...card } = prev;
+  const clean = cleanGeo(geo);
+  yStudy.saveSite(clean ? { ...card, geo: clean } : card);
 }
 
 /** Budowa do archiwum (`true`) albo z powrotem czynna. */

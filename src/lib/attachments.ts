@@ -75,6 +75,11 @@ export function sanitizeFileName(raw: string, fallback = "plik"): string {
 
 const EXT_TYPES: Record<string, string> = {
   pdf: "application/pdf",
+  m4a: "audio/mp4",
+  mp3: "audio/mpeg",
+  ogg: "audio/ogg",
+  opus: "audio/ogg",
+  wav: "audio/wav",
   txt: "text/plain",
   md: "text/markdown",
   markdown: "text/markdown",
@@ -124,13 +129,15 @@ export function safeDownloadType(type: string): string {
   return t;
 }
 
-export type AttachmentKind = "pdf" | "text" | "image" | "sheet" | "archive" | "doc" | "other";
+export type AttachmentKind = "pdf" | "text" | "image" | "audio" | "sheet" | "archive" | "doc" | "other";
 
 export function attachmentKind(a: Pick<Attachment, "name" | "type">): AttachmentKind {
   const type = resolveMimeType(a.name, a.type);
   const ext = extensionOf(a.name);
   if (type === "application/pdf") return "pdf";
   if (type.startsWith("image/")) return "image";
+  // Notatka głosowa (`voiceRecorder.ts`) i inne nagrania — z odtwarzaczem na liście.
+  if (type.startsWith("audio/")) return "audio";
   if (type === "text/csv" || type.includes("spreadsheet") || type === "application/vnd.ms-excel") return "sheet";
   if (type === "application/zip" || type.includes("compressed") || ["zip", "rar", "7z", "gz", "tar"].includes(ext)) return "archive";
   if (type.startsWith("text/") || type === "application/json" || ["txt", "md", "log"].includes(ext)) return "text";

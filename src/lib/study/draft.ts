@@ -3,6 +3,7 @@ import { cleanFittings, type Fitting } from "./fittings";
 import { cleanTest, type PressureTest } from "./pressureTest";
 import { isImageRef } from "@/lib/imageStore";
 import { JOURNAL_DRAFT_KEY } from "./keys";
+import { cleanGeo, type GeoPoint } from "./geo";
 import { JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, type JournalKind } from "./yStudy";
 
 /**
@@ -23,9 +24,11 @@ export interface JournalDraft {
   at: number | null;
   /** Etap budowy odhaczony z tego wpisu (id z karty); `null` = bez etapu. Brak w starszym szkicu = `null`. */
   stage?: string | null;
+  /** „Tu jestem” — lokalizacja wpisu; `null` = bez lokalizacji. Brak w starszym szkicu = `null`. */
+  geo?: GeoPoint | null;
 }
 
-export const EMPTY_DRAFT: JournalDraft = { topic: "", kind: "ok", text: "", checked: [], images: [], test: null, fittings: [], at: null, stage: null };
+export const EMPTY_DRAFT: JournalDraft = { topic: "", kind: "ok", text: "", checked: [], images: [], test: null, fittings: [], at: null, stage: null, geo: null };
 
 export function sanitizeDraft(defaults: JournalDraft, stored: unknown): JournalDraft {
   if (!stored || typeof stored !== "object") return defaults;
@@ -40,6 +43,7 @@ export function sanitizeDraft(defaults: JournalDraft, stored: unknown): JournalD
     fittings: cleanFittings(s.fittings),
     at: typeof s.at === "number" && Number.isFinite(s.at) ? s.at : null,
     stage: typeof s.stage === "string" && s.stage && s.stage.length <= 40 ? s.stage : null,
+    geo: cleanGeo(s.geo) ?? null,
   };
 }
 

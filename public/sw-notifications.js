@@ -45,6 +45,11 @@ self.addEventListener("push", (event) => {
       if (clients.some((c) => c.visibilityState === "visible")) return;
       await markPushShown(key);
     }
+    // Przypomnienie z notatki (`n:<id>:<termin>`) dostaje te same przyciski co powiadomienie ze strony.
+    const noteId = key.startsWith("n:") ? key.split(":")[1] || "" : "";
+    const actions = noteId
+      ? [...(d.snooze === true ? [{ action: "snooze10", title: "Odłóż 10 min" }] : []), { action: "done", title: "Gotowe" }]
+      : [];
     await self.registration.showNotification(title, {
       body: typeof d.body === "string" ? d.body : "",
       icon: "/pwa-192.png",
@@ -52,7 +57,8 @@ self.addEventListener("push", (event) => {
       tag,
       renotify: true,
       vibrate: [120, 60, 120],
-      data: { url, key },
+      data: noteId ? { url, key, noteId } : { url, key },
+      actions,
     });
   })());
 });
@@ -76,7 +82,10 @@ self.addEventListener("notificationclick", (event) => {
           return client.focus();
         }
       }
-      if (self.clients.openWindow) return self.clients.openWindow(url);
+      // Bez otwartej karty akcja nie może zmienić dokumentu w workerze — aplikacja otwiera się
+      // z `?akcja=…` i wykonuje ją po wczytaniu notatek (`useReminderNotifications`).
+      const target = action && action !== "open" && data.noteId ? `${url}${url.includes("?") ? "&" : "?"}akcja=${encodeURIComponent(action)}` : url;
+      if (self.clients.openWindow) return self.clients.openWindow(target);
     })
   );
 });

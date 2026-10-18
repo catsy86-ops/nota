@@ -3332,7 +3332,7 @@ lub grupę”.
 - **Jak działa:** napis tabliczki wybiera CSS z atrybutu `data-view`, który `Index` ustawia z routera; bez JS poza tym jednym efektem. Przejście widoku: gdy przeglądarka nie ma View Transitions albo jest ograniczony ruch, zmiana jest natychmiastowa. Kreska ołówka to CSS na elemencie montowanym przy `saved`, więc rysuje się przy każdym zapisie bez stanu.
 - **Efekty domyślnie:** zostają tylko przywrócenie z kosza (konfetti) i zamknięty dzień; wyłączone: iskierki, deszcz emoji, fajerwerki, serduszka, bąbelki, tęcza, motyw sezonowy, cytat dnia, odznaka. Migracja jednorazowa (`kaczy.effectsSettings.defaults2`) wyłącza je także u osób z już zapisanymi ustawieniami; późniejsze wybory użytkownika są zachowane.
 - **Skutki wyłączenia efektów (do wiedzy):** pinezka przy przypięciu to część efektu „Iskierki” (`markPinned` działa tylko przy `sparkle`), więc domyślnie jej nie ma. Pieczątka odznaki wyłączona oznacza, że toast osiągnięcia pojawia się od razu i — naprawione: toast osiągnięcia czeka 400 ms (`useAchievementToasts.ts`), żeby toasty tej samej akcji zdążyły się zamontować, i nie zasłania „Cofnij”.
-- **Ograniczenia i pułapki:** czerwony margines Zeszytu (plan D7) nie jest rysowany: tło nie zna szerokości paska bocznego, więc linia leżała pod paskiem (komputer) albo pod kartami (telefon). Tabliczka na Grafiku bywa zasłonięta przez panel podsumowania w prawym dolnym rogu. Ołówek jest pod „Zapisano” w pigułce statusu, a nie pod tytułem notatki (plan mówił o tytule; to wymagałoby stanu w edytorze). Tabliczka nie pokazuje dat ani numeru, tylko stałe napisy. Przejście widoków to ogólne przenikanie, bez nazwanych elementów. Blok tytułowy widoku (B4) nie zrobiony — decyzja użytkownika.
+- **Ograniczenia i pułapki:** czerwony margines Zeszytu (plan D7) nie jest rysowany: tło nie zna szerokości paska bocznego, więc linia leżała pod paskiem (komputer) albo pod kartami (telefon). Na Grafiku tabliczka przechodzi na lewy dolny róg (`html[data-view="shifts"]`), bo prawy dolny zajmuje panel podsumowania. Ołówek jest pod „Zapisano” w pigułce statusu, a nie pod tytułem notatki (plan mówił o tytule; to wymagałoby stanu w edytorze). Tabliczka nie pokazuje dat ani numeru, tylko stałe napisy. Przejście widoków to ogólne przenikanie, bez nazwanych elementów. Blok tytułowy widoku (B4) nie zrobiony — decyzja użytkownika.
 - **Testy:** testy jednostkowe 147 plików / 1372 testy; e2e z zestawu `a11y`, `bundle`, `skins`, `view-change`, `mobile-layout`, `notes`, `qol`, `routes`, `touch-targets`, `resilience`, `parked-drafts`.
 - **Commit:** brak — zmiany niezacommitowane w `master`.
 
@@ -3354,3 +3354,44 @@ lub grupę”.
 - **Ograniczenia i pułapki:** w aplikacji zostają pigułki z wypełnieniem na przyciskach (świadomie). Odznaki pieczątek nie mają animacji, bo są stanem, nie zdarzeniem. Nie zrobiono wizualnego przeglądu tych czterech miejsc.
 - **Testy:** testy jednostkowe 147 plików / 1372 testy; e2e `a11y`, `inbox-today`, `reminders-agenda`, `reminder-toast`, `study`, `study-custom`, `today-study`, `weekly-review` — 95/95.
 - **Commit:** brak — zmiany niezacommitowane w `master`.
+
+## Telefon — przyciski w powiadomieniach i jedno okno aplikacji (plan mobilny M1.1, M1.2, 2026-10-18)
+
+- **Co robi:** powiadomienie o przypomnieniu z serwera push (aplikacja zamknięta) ma te same przyciski co powiadomienie ze strony: „Gotowe” i — dla przypomnień jednorazowych — „Odłóż 10 min”. Gdy żadna karta aplikacji nie jest otwarta, przycisk otwiera aplikację i wykonuje akcję po wczytaniu notatek (toast „Przypomnienie odhaczone” / „Odłożono o 10 minut”). Skrót z ikony, udostępnienie i powiadomienie otwierają istniejące okno aplikacji zamiast nowego.
+- **Gdzie jest:** `public/sw-notifications.js` (push: `noteId` z klucza `n:<id>:<termin>`, `actions`; `notificationclick` bez karty → `?akcja=done|snooze10`); `src/lib/notificationAction.ts` (`parsePendingAction`, `withoutActionParam`); `src/hooks/useReminderNotifications.ts` (wspólne `applyActionRef`, akcja z adresu po pojawieniu się notatki); `src/lib/push/schedule.ts` (pole `snooze` przy notatkach); `push-server/core.js` (`cleanItems` i `payloadOf` przepuszczają `snooze`); `public/manifest.webmanifest` (`launch_handler: navigate-existing`, `background_color` = ciepłe tło ciemnego Zeszytu).
+- **Jak działa:** worker nie zmienia dokumentu Yjs, więc przy zamkniętej aplikacji przekazuje akcję w adresie; parametr znika z adresu po wykonaniu, żeby odświeżenie go nie powtórzyło. `navigate-existing` (a nie `focus-existing`) przeładowuje istniejące okno pod adresem skrótu — parametry `?new=1`, `?szukaj=1` i formularz udostępniania (POST `/share`) działają bez dodatkowego kodu.
+- **Ograniczenia i pułapki:** na iPhonie powiadomienia nie mają przycisków (stuknięcie otwiera notatkę). Serwer push wymaga ponownego wdrożenia, żeby wysyłał `snooze`; stary serwer wysyła powiadomienia tylko z „Gotowe”. `launch_handler` obsługuje Chrome; Safari go ignoruje.
+- **Testy:** `src/lib/notificationAction.test.ts`, `src/lib/push/schedule.test.ts`, `push-server/core.test.js` (test `snooze`), e2e `notification-action.spec.ts`, `push.spec.ts`, `pwa.spec.ts`.
+- **Commit:** brak — zmiany niezacommitowane.
+
+## Telefon — notatka głosowa (plan mobilny M1.3, 2026-10-18)
+
+- **Co robi:** w pasku nowej notatki przycisk z falą dźwięku („Nagraj notatkę głosową”), w edytorze notatki „Nagraj” obok „Dodaj plik”. Pasek nagrywania pokazuje czas i limit 3:00 z „Zatrzymaj”; nagranie („Nagranie 2026-10-18 14-05.webm”, na iPhonie `.m4a`) trafia do załączników i ma odtwarzacz na liście. Dyktowanie (mikrofon) zostaje osobno — to tekst, a nagranie to dźwięk.
+- **Gdzie jest:** `src/lib/voiceRecorder.ts` (`startVoiceRecording`, `pickAudioType`, `voiceFileName`, `voiceErrorMessage`, limit `VOICE_MAX_MS`; 32 kb/s); `src/lib/voiceSupport.ts` (`canRecordVoice`); `src/components/VoiceAttachmentParts.tsx` (`VoiceRecorder`, `RecordingBar`, `AudioPreview`); `src/components/AttachmentsPanel.tsx` (uchwyt `record()`, flaga `recording`); `src/components/AttachmentsList.tsx` (rodzaj „Nagranie”, odtwarzacz); `src/lib/attachments.ts` (rodzaj `audio`, typy m4a/mp3/ogg/opus/wav); `src/components/AddNoteBar.tsx` (przycisk w pasku).
+- **Jak działa:** nagranie jest zwykłym załącznikiem, więc obowiązują limity i synchronizacja załączników: do 2 MB plik jedzie na inne urządzenia (3 min przy 32 kb/s ≈ 0,7 MB). Nagrywanie, pasek i odtwarzacz są w osobnej paczce ładowanej dopiero po „Nagraj” albo przy załączniku audio. Zamknięcie edytora w trakcie kończy nagranie, a plik i tak trafia do notatki.
+- **Ograniczenia i pułapki:** decyzja domyślna „tylko na telefonie” nie została zastosowana — nagrania synchronizują się jak inne małe załączniki. We wpisach Dziennika nagrań nie ma (wpis ma zdjęcia, nie załączniki). W trybie deweloperskim (podwójny efekt) anulowana pusta sesja nie pokazuje błędu.
+- **Testy:** `src/lib/voiceRecorder.test.ts`; e2e `voice-note.spec.ts` (sztuczny mikrofon Chromium).
+- **Commit:** brak — zmiany niezacommitowane.
+
+## Praca → Dziennik budowy — „Tu jestem” (plan mobilny M2.1, 2026-10-18)
+
+- **Co robi:** w arkuszu wpisu przycisk „Tu jestem” zapisuje lokalizację wpisu (tylko po stuknięciu, nigdy w tle) z dokładnością („Tu (±12 m)”, link do map, × usuwa). Jeśli w promieniu 300 m jest budowa z zapisaną lokalizacją, pojawia się „Budowa obok: …”. Lokalizację budowy zapisuje „Zapisz jako lokalizację budowy” w arkuszu (budowa z kartą) albo akcja w toaście „Zapisano wpis” (nowa budowa — karta powstaje przy zapisie). Na liście Dziennika wpis z lokalizacją ma link „Mapa”.
+- **Gdzie jest:** `src/lib/study/geo.ts` (`GeoPoint`, `cleanGeo`, `distanceM`, `nearestSite`, `mapsUrl`, `accuracyLabel`); pole `geo` w `JournalEntry` (`yStudy.ts`, `cleanEntry`), `SiteCard` (`sites.ts`, `cleanSite`), `JournalDraft` (`draft.ts`), `NewJournalEntry`/`entryFields` i `sanitizeStudy` (`store.ts`), `openJournalEdit` (`entrySheet.ts`); `setSiteGeo` w `store.ts`; UI w `JournalEntrySheet.tsx` i `StudyJournal.tsx`.
+- **Jak działa:** współrzędne zaokrąglone do ~1 m, dokładność w metrach. Sama lokalizacja nie czyni wpisu niepustym.
+- **Ograniczenia i pułapki:** lokalizacja jest tylko w aplikacji — raport dla szefa jej nie zawiera (decyzja domyślna; M2.2 „mapa w raporcie” nie robione). `sanitizeStudy` w `store.ts` ma własną kopię czyszczenia wpisu — nowe pola wpisu trzeba dodać w obu miejscach (`cleanEntry` i `sanitizeStudy`). Bez zgody przeglądarki — komunikat i brak lokalizacji.
+- **Testy:** `src/lib/study/geo.test.ts`, `src/lib/study/study.test.ts` („Tu jestem”), e2e `journal-geo.spec.ts`.
+- **Commit:** brak — zmiany niezacommitowane.
+
+## Grafik — telefon w poziomie (plan mobilny M3.1, 2026-10-18)
+
+- **Co robi:** na niskim ekranie dotykowym w poziomie przełącznik „Miesiąc/Tydzień” i nawigacja miesiąca są w jednym rzędzie, paleta zmian w jednym przewijanym rzędzie, podpowiedzi o nanoszeniu i przenoszeniu schowane (zostają dla czytnika ekranu przez `aria-describedby`). Siatka miesiąca zaczyna się tuż pod paletą zamiast półtora ekranu niżej.
+- **Gdzie jest:** `tailwind.config.ts` (wariant `short:` — `(orientation: landscape) and (max-height: 500px) and (pointer: coarse)`); `src/components/shifts/ShiftsView.tsx` (`short:grid` z dwiema kolumnami, `short:col-span-2` na pozostałych sekcjach, `short:hidden` na podpowiedziach); `src/components/shifts/BrushBar.tsx` (`short:flex-nowrap!`).
+- **Ograniczenia i pułapki:** zrzut `fullPage` w Playwright powiększa wysokość okna i wyłącza wariant — sprawdzaj zwykłym zrzutem 844×390.
+- **Testy:** e2e `shifts-landscape.spec.ts` (Chromium, iPhone 14, Pixel 7), `mobile-layout.spec.ts`, `shifts*.spec.ts`.
+- **Commit:** brak — zmiany niezacommitowane.
+
+## Wydajność — panel statusu synchronizacji leniwie (2026-10-18)
+
+- **Co robi:** panel po stuknięciu pigułki statusu zapisu (`OfflineQueuePanel`) ładuje się przy pierwszym otwarciu i zostaje zamontowany (animacja zamykania działa).
+- **Gdzie jest:** `src/components/OfflineStatus.tsx` (`lazy`, `panelMounted`).
+- **Dlaczego:** funkcje mobilne dodały ok. 1,1 KB do wejściowego JS; przed nimi zapas do progu 384 KB wynosił ok. 0,5 KB. Po przeniesieniu panelu wejściowy JS to 393 200 B przy progu 393 216 B — **zapas 16 B**; następna zmiana w głównej paczce musi czymś się zrównoważyć.

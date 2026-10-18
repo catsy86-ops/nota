@@ -193,5 +193,8 @@ export default {
     // `phone:` — dokładne przeciwieństwo `desk:`: wąski ekran albo niski ekran dotykowy (telefon w poziomie).
     // Formularze są tu arkuszem od dołu (ui/responsive-dialog.tsx).
     (({ addVariant }: { addVariant: (name: string, def: string) => void }) => addVariant("phone", "@media (max-width: 767px), (max-height: 500px) and (pointer: coarse)")),
+    // `short:` — telefon w poziomie (niski ekran dotykowy): mało wysokości, więc chowamy podpowiedzi
+    // i trzymamy paletę w jednym rzędzie, żeby siatka miesiąca była bliżej góry.
+    (({ addVariant }: { addVariant: (name: string, def: string) => void }) => addVariant("short", "@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse)")),
   ],
 } satisfies Config;

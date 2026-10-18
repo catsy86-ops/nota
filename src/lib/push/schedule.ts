@@ -27,6 +27,8 @@ export interface PushItem {
   title: string;
   body: string;
   url: string;
+  /** Przypomnienie jednorazowe: powiadomienie ma „Odłóż 10 min” (seria — tylko „Gotowe”). */
+  snooze?: boolean;
 }
 
 export const PUSH_HORIZON_DAYS = 14;
@@ -93,7 +95,7 @@ function noteItems(notes: readonly PushNote[], now: number, end: number): PushIt
     let at: number | null = n.reminder;
     // Seria: kolejne terminy też — strona przesuwa `reminder` dopiero, gdy jest otwarta.
     for (let i = 0; at !== null && at <= end && i < 60; i++) {
-      if (at > now) out.push({ key: pushKey.note(n.id, at), at, title, body, url: notePath(n.id) });
+      if (at > now) out.push({ key: pushKey.note(n.id, at), at, title, body, url: notePath(n.id), snooze: repeat === "none" });
       if (repeat === "none") break;
       at = nextInSeries(at, repeat, seriesDay(n), n.reminderRepeatUntil);
     }

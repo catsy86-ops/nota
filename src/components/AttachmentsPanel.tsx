@@ -1,5 +1,5 @@
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
-import { Paperclip } from "lucide-react";
+import { forwardRef, lazy, Suspense, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
+import { Mic, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 import { AttachmentRow } from "@/components/AttachmentsList";
 import {
@@ -7,11 +7,17 @@ import {
 } from "@/lib/attachments";
 import { yjsStore } from "@/lib/yjsStore";
 import { cn } from "@/lib/utils";
+import { canRecordVoice } from "@/lib/voiceSupport";
 
 export interface AttachmentsPanelHandle {
   /** Otwiera systemowy wybór plików (przycisk w pasku narzędzi edytora). */
   pick: () => void;
+  /** Notatka głosowa: zaczyna nagrywanie albo kończy trwające (przycisk mikrofonu w pasku). */
+  record: () => void;
 }
+
+// Nagrywanie — leniwie, poza główną paczką.
+const VoiceRecorder = lazy(() => import("./VoiceAttachmentParts").then((m) => ({ default: m.VoiceRecorder })));
 
 interface Props {
   attachments: Attachment[];
@@ -40,8 +46,11 @@ export const AttachmentsPanel = forwardRef<AttachmentsPanelHandle, Props>(functi
   onChangeRef.current = onChange;
   const [over, setOver] = useState(false);
   const [busy, setBusy] = useState(false);
+  // Notatka głosowa: cały mechanizm w leniwym `VoiceRecorder` — tu tylko przełącznik.
+  // Wyłączenie (drugie „record()” albo zamknięcie edytora) kończy nagranie, a plik i tak trafia do notatki.
+  const [recording, setRecording] = useState(false);
 
-  useImperativeHandle(ref, () => ({ pick: () => inputRef.current?.click() }));
+  useImperativeHandle(ref, () => ({ pick: () => inputRef.current?.click(), record: () => setRecording((r) => !r) }));
 
   const addFiles = useCallback(async (files: File[]) => {
     if (!files.length) return;
@@ -62,6 +71,8 @@ export const AttachmentsPanel = forwardRef<AttachmentsPanelHandle, Props>(functi
       setBusy(false);
     }
   }, []);
+  const addFilesRef = useRef(addFiles);
+  addFilesRef.current = addFiles;
 
   // Upuszczanie plików na cały edytor (kartę albo composer), nie tylko na listę.
   useEffect(() => {
@@ -118,7 +129,7 @@ export const AttachmentsPanel = forwardRef<AttachmentsPanelHandle, Props>(functi
   }
 
   const empty = attachments.length === 0;
-  if (empty && !showAddButton && !over) {
+  if (empty && !showAddButton && !over && !recording) {
     return (
       <div ref={rootRef} className="hidden">
         <input ref={inputRef} data-testid="attachment-input" type="file" multiple className="hidden" onChange={(e) => { void addFiles(Array.from(e.target.files ?? [])); e.target.value = ""; }} />
@@ -140,6 +151,7 @@ export const AttachmentsPanel = forwardRef<AttachmentsPanelHandle, Props>(functi
         </ul>
       )}
       {over && <p className="text-center text-xs text-primary-ink py-1">Upuść plik, aby dodać go do notatki</p>}
+      {recording && <Suspense fallback={null}><VoiceRecorder onFile={(f) => void addFilesRef.current([f])} onClose={() => setRecording(false)} /></Suspense>}
       {showAddButton && (
         <button
           type="button"
@@ -150,6 +162,18 @@ export const AttachmentsPanel = forwardRef<AttachmentsPanelHandle, Props>(functi
         >
           <Paperclip className="w-3.5 h-3.5" aria-hidden />
           {busy ? "Dodawanie…" : "Dodaj plik"}
+        </button>
+      )}
+      {showAddButton && !recording && canRecordVoice() && (
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => setRecording(true)}
+          className="pressable ml-3 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+          title="Notatka głosowa, do 3 minut"
+        >
+          <Mic className="w-3.5 h-3.5" aria-hidden />
+          Nagraj
         </button>
       )}
     </div>

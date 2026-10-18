@@ -51,7 +51,8 @@ export function cleanItems(raw, now) {
     if (typeof at !== "number" || !Number.isFinite(at) || at <= now || at > now + LIMITS.horizonMs) continue;
     const url = str(r.url, LIMITS.url);
     seen.add(key);
-    out.push({ key, at, title, body: str(r.body, LIMITS.body), url: /^\/(?![/\\])/.test(url) ? url : "/" });
+    // `snooze` — przypomnienie jednorazowe: powiadomienie dostaje „Odłóż 10 min” (seria tylko „Gotowe”).
+    out.push({ key, at, title, body: str(r.body, LIMITS.body), url: /^\/(?![/\\])/.test(url) ? url : "/", snooze: r.snooze === true });
     if (out.length >= LIMITS.items) break;
   }
   return out.sort((a, b) => a.at - b.at);
@@ -75,7 +76,7 @@ export function dueItems(store, now) {
 
 /** Treść wiadomości push — czyta ją `public/sw-notifications.js`. */
 export function payloadOf(item) {
-  return JSON.stringify({ title: item.title, body: item.body, url: item.url, key: item.key });
+  return JSON.stringify({ title: item.title, body: item.body, url: item.url, key: item.key, snooze: item.snooze === true });
 }
 
 /** Usuwa wysłane/przepadłe terminy (po kluczu) z subskrypcji. */

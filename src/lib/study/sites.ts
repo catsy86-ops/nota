@@ -5,6 +5,7 @@ import { SITE_ACCESS_MAX, SITE_PHONE_MAX } from "./contact";
 import { cleanSiteHours, type SiteHours } from "./siteHours";
 import { cleanSiteDocs, type SiteDoc } from "./siteDocs";
 import { cleanServiceCalls, isDayKey, type ServiceCall } from "./service";
+import { cleanGeo, type GeoPoint } from "./geo";
 
 /**
  * Karty budów dziennika. Wpis trzyma `siteId` i kopię nazwy (`site`) — starsza wersja
@@ -19,6 +20,8 @@ export interface SiteCard {
   name: string;
   address: string;
   investor: string;
+  /** Lokalizacja budowy zapisana na miejscu (`geo.ts`) — nowy wpis podpowiada najbliższą budowę. */
+  geo?: GeoPoint;
   /** Telefon inwestora (`contact.ts`); brak = nie wpisany. */
   phone?: string;
   /** Kierownik budowy albo osoba na miejscu. */
@@ -83,6 +86,8 @@ const optional = <K extends string, V>(k: K, v: V | undefined) => (v === undefin
 /** Pole tekstowe karty, które nie musi być wpisane: pusty tekst = brak pola. */
 const optionalText = <K extends string>(k: K, v: unknown, max: number) => optional(k, str(v, max) || undefined);
 
+const withGeo = (geo: GeoPoint | undefined) => (geo ? { geo } : {});
+
 export function cleanSite(raw: unknown): SiteCard | null {
   const s = raw as Partial<SiteCard> | null;
   if (!s || typeof s !== "object" || typeof s.id !== "string" || !s.id || s.id.length > 64) return null;
@@ -106,6 +111,7 @@ export function cleanSite(raw: unknown): SiteCard | null {
     ...optional("docs", cleanSiteDocs(s.docs)),
     ...optional("service", cleanServiceCalls(s.service)),
     ...(isDayKey(s.warranty) ? { warranty: s.warranty } : {}),
+    ...withGeo(cleanGeo(s.geo)),
   };
 }
 

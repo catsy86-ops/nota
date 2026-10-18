@@ -11,7 +11,7 @@ import {
   sanitizeStudy, moveTopic, recordRound, activeStreak, toggleChecked, getStudy, columnOf, resetChecklist,
   addJournalEntry, removeJournalEntry, restoreJournalEntry, setSite, practiceByTopic,
   updateJournalEntry, setProblemResolved, openProblems, saveSiteCard, setSiteArchived, setDayHours,
-  setProblemSolution, JOURNAL_SOLUTION_MAX,
+  setProblemSolution, JOURNAL_SOLUTION_MAX, setSiteGeo,
 } from "./store";
 import { resetStudyForTests, yStudy } from "./data";
 import { yjsStore } from "@/lib/yjsStore";
@@ -159,6 +159,20 @@ describe("dziennik z budowy", () => {
     const e = addJournalEntry({ kind: "ok", topic: "trojniki", text: "  Skrzyżowanie przy kuchni  ", checked: ["trojniki-1", "nie-ma"] }, 1000)!;
     expect(e).toMatchObject({ kind: "ok", topic: "trojniki", text: "Skrzyżowanie przy kuchni", site: "Dom Kowalskich, ul. Leśna 4", checked: ["trojniki-1"] });
     expect(getStudy().journal).toHaveLength(1);
+  });
+
+  it("„Tu jestem”: lokalizacja zostaje we wpisie i w karcie budowy, sama nie czyni wpisu niepustym", () => {
+    setSite("Lipowa 5");
+    const geo = { lat: 52.22977, lng: 21.01178, acc: 12 };
+    const e = addJournalEntry({ kind: "ok", topic: null, text: "Pion w łazience", geo }, 1000)!;
+    expect(e.geo).toEqual(geo);
+    expect(getStudy().journal[0].geo).toEqual(geo);
+    expect(addJournalEntry({ kind: "ok", topic: null, text: " ", geo })).toBeNull();
+
+    setSiteGeo(e.siteId!, geo);
+    expect(siteDirectory(getStudy().sites, getStudy().journal).find((s) => s.id === e.siteId)?.geo).toEqual(geo);
+    setSiteGeo(e.siteId!, null);
+    expect(siteDirectory(getStudy().sites, getStudy().journal).find((s) => s.id === e.siteId)?.geo).toBeUndefined();
   });
 
   it("odrzuca pusty wpis i nieznany temat zamienia na ogólny", () => {

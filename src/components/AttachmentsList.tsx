@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Archive, Download, File as FileIcon, FileImage, FileSpreadsheet, FileText, Paperclip, X } from "lucide-react";
+import { lazy, Suspense, useState } from "react";
+import { Archive, Download, File as FileIcon, FileImage, Mic, FileSpreadsheet, FileText, Paperclip, X } from "lucide-react";
 import { toast } from "sonner";
 import { IconButton } from "@/components/ui/icon-button";
 import { useAttachmentBlob } from "@/hooks/useAttachmentBlob";
@@ -13,6 +13,7 @@ const ICONS: Record<AttachmentKind, typeof FileIcon> = {
   pdf: FileText,
   text: FileText,
   image: FileImage,
+  audio: Mic,
   sheet: FileSpreadsheet,
   archive: Archive,
   doc: FileText,
@@ -20,8 +21,11 @@ const ICONS: Record<AttachmentKind, typeof FileIcon> = {
 };
 
 const KIND_LABEL: Record<AttachmentKind, string> = {
-  pdf: "PDF", text: "Tekst", image: "Obraz", sheet: "Arkusz", archive: "Archiwum", doc: "Dokument", other: "Plik",
+  pdf: "PDF", text: "Tekst", image: "Obraz", audio: "Nagranie", sheet: "Arkusz", archive: "Archiwum", doc: "Dokument", other: "Plik",
 };
+
+// Odtwarzacz nagrania — leniwie, poza główną paczką.
+const AudioPreview = lazy(() => import("./VoiceAttachmentParts").then((m) => ({ default: m.AudioPreview })));
 
 /** Mały znacznik „📎 N” na kaflu — nic nie renderuje bez załączników. */
 export function AttachmentsBadge({ attachments, className }: { attachments?: Attachment[]; className?: string }) {
@@ -98,6 +102,7 @@ export function AttachmentRow({ attachment: a, onRemove, children }: RowProps) {
         </IconButton>
       )}
       </div>
+      {kind === "audio" && blob !== "missing" && <Suspense fallback={null}><AudioPreview attachment={a} /></Suspense>}
       {children}
     </li>
   );

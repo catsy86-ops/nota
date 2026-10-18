@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { TriangleAlert, Camera, CircleCheck, ChevronDown, Clock, ImagePlus, ListChecks, LoaderCircle, MapPin, Mic, NotebookPen, Pencil, PenTool, Play, Trash, Type, X } from "lucide-react";
+import { TriangleAlert, Camera, CircleCheck, ChevronDown, Clock, ImagePlus, ListChecks, LoaderCircle, LocateFixed, MapPin, Mic, NotebookPen, Pencil, PenTool, Play, Trash, Type, X } from "lucide-react";
 import { HeightsButton } from "./HeightsSheet";
 import { PressureTestFields } from "./PressureTestFields";
 import { FittingsFields } from "./FittingsFields";
@@ -23,12 +23,13 @@ import { CAPTION_MAX, captionPhoto, captionText } from "@/lib/study/photoCaption
 import { requestPersistentStorage } from "@/lib/storagePersistence";
 import { MODULES, TOPICS } from "@/lib/study/content";
 import {
-  addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, setSiteShortages, setSiteStages, updateJournalEntry, useStudy, useStudyLists, type JournalKind,
+  addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, setSiteGeo, setSiteShortages, setSiteStages, updateJournalEntry, useStudy, useStudyLists, type JournalKind,
 } from "@/lib/study/store";
 import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft, type JournalDraft } from "@/lib/study/draft";
 import { closeJournalSheet, getJournalEditForm, patchJournalEditForm, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
 import { fromLocalInput, KIND_LABEL, recentSiteTexts, suggestSites, toLocalInput, whenLabel, yesterdaySiteText } from "@/lib/study/journalView";
 import { findSiteByName, siteDirectory } from "@/lib/study/sites";
+import { accuracyLabel, cleanGeo, mapsUrl, nearestSite } from "@/lib/study/geo";
 import { fittingsLine, suggestFittingNames } from "@/lib/study/fittings";
 import { mergeFittings } from "@/lib/study/spokenFittings";
 import { addShortage } from "@/lib/study/shortages";
@@ -53,7 +54,7 @@ const KIND_ON: Record<JournalKind, string> = {
 let persistAsked = false;
 
 /** Pola wspólne dla szkicu nowego wpisu i edycji zapisanego. */
-type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "test" | "fittings" | "stage">;
+type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "test" | "fittings" | "stage" | "geo">;
 
 function useOnline() {
   const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine);
@@ -158,6 +159,36 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     if (isEdit) patchJournalEditForm({ site: next }); else setSite(next);
     haptic("selection");
     setEditingSite(false);
+  }
+
+  // „Tu jestem”: pozycja tylko po stuknięciu, nigdy w tle; widać ją w aplikacji, raport jej nie zawiera.
+  const [locating, setLocating] = useState(false);
+  const geo = form.geo ?? null;
+  /** Budowa z zapisaną lokalizacją w promieniu 300 m — jeden dotyk zamiast wybierania. */
+  const nearby = useMemo(() => (geo ? nearestSite(siteDirectory(study.sites, study.journal), geo) : null), [geo, study.sites, study.journal]);
+  function locate() {
+    if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
+      toast.error("Ta przeglądarka nie udostępnia lokalizacji");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocating(false);
+        const g = cleanGeo({ lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy });
+        if (!g) return;
+        patch({ geo: g });
+        haptic("success");
+      },
+      (err) => {
+        setLocating(false);
+        haptic("warn");
+        toast.error(err.code === err.PERMISSION_DENIED
+          ? "Brak zgody na lokalizację — włącz ją w ustawieniach przeglądarki"
+          : "Nie udało się ustalić lokalizacji — spróbuj bliżej okna albo na zewnątrz");
+      },
+      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 60_000 },
+    );
   }
 
   /** Nazwy kształtek do dopasowania dyktowania (historia i podpowiedzi). */
@@ -315,7 +346,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     if (processing > 0) return;
     if (isEdit) { saveEdit(); return; }
     const wasDone = topic && columnOf(study, topic) === "done";
-    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, at, test: form.test, fittings: form.fittings, stage: form.stage });
+    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, at, test: form.test, fittings: form.fittings, stage: form.stage, geo: form.geo ?? null });
     if (!entry) {
       haptic("warn");
       toast("Wpisz, co się dzieje, dodaj zdjęcie albo zaznacz sprawdzone punkty");
@@ -325,7 +356,17 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     haptic("success");
     clearJournalDraft();
     closeJournalSheet();
-    toast.success(kind === "problem" && wasDone ? "Zapisano problem — temat wraca do powtórki" : "Zapisano wpis");
+    const message = kind === "problem" && wasDone ? "Zapisano problem — temat wraca do powtórki" : "Zapisano wpis";
+    // Nowa budowa ma kartę dopiero po zapisie — lokalizację budowy proponujemy w toaście, jawnie.
+    const savedGeo = form.geo ?? null;
+    const siteForGeo = entry.siteId;
+    if (savedGeo && siteForGeo && !siteCard?.geo) {
+      toast.success(message, {
+        action: { label: "Zapisz lokalizację budowy", onClick: () => { setSiteGeo(siteForGeo, savedGeo); toast.success(`Zapisano lokalizację budowy „${entry.site}”`); } },
+      });
+    } else {
+      toast.success(message);
+    }
   }
 
   function saveEdit() {
@@ -334,7 +375,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     const prev = study.journal.find((e) => e.id === f.id);
     const demotes = f.kind === "problem" && !!f.topic && columnOf(study, f.topic) === "done" && (prev?.kind !== "problem" || prev.topic !== f.topic);
     const saved = updateJournalEntry(f.id, {
-      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, at: f.at, site: f.site, resolved: f.resolved, test: f.test, fittings: f.fittings, stage: f.stage,
+      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, at: f.at, site: f.site, resolved: f.resolved, test: f.test, fittings: f.fittings, stage: f.stage, geo: f.geo ?? null,
     });
     if (!saved) {
       haptic("warn");
@@ -434,6 +475,39 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               </button>
             )}
             {editingSite && siteChipsRow}
+            {!editingSite && (geo ? (
+              <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-border bg-muted/50 pl-3 text-sm coarse:min-h-11" data-testid="journal-geo">
+                <LocateFixed className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
+                <a href={mapsUrl(geo)} target="_blank" rel="noopener noreferrer" className="truncate underline-offset-2 hover:underline">Tu ({accuracyLabel(geo)})</a>
+                <button type="button" onClick={() => patch({ geo: null })} aria-label="Usuń lokalizację wpisu" className="pressable rounded-full p-1.5 text-muted-foreground hover:text-foreground coarse:p-2.5">
+                  <X className="h-3.5 w-3.5" aria-hidden />
+                </button>
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={locate}
+                disabled={locating}
+                className="pressable inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1.5 text-sm text-muted-foreground hover:border-primary hover:text-foreground disabled:opacity-60 coarse:min-h-11"
+              >
+                {locating ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden /> : <LocateFixed className="h-4 w-4" aria-hidden />}
+                {locating ? "Szukam…" : "Tu jestem"}
+              </button>
+            ))}
+            {/* Lokalizacja wpisu obok zapisanej budowy: jeden dotyk zamiast wybierania. */}
+            {!editingSite && nearby && nearby.name !== site && (
+              <button type="button" onClick={() => pickSite(nearby.name)} data-testid="journal-nearby-site" className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-primary/40 px-3 py-1.5 text-sm text-primary-ink hover:bg-primary/10 coarse:min-h-11">
+                <MapPin className="h-4 w-4 shrink-0" aria-hidden />
+                <span className="truncate">Budowa obok: {nearby.name}</span>
+              </button>
+            )}
+            {/* Pierwszy raz na tej budowie: zapisz jej lokalizację, następne wpisy podpowiedzą ją same. */}
+            {!editingSite && geo && siteCard && !siteCard.geo && (
+              <button type="button" onClick={() => { setSiteGeo(siteCard.id, geo); haptic("success"); toast.success(`Zapisano lokalizację budowy „${siteCard.name}”`); }} data-testid="journal-save-site-geo" className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-dashed border-primary/40 px-3 py-1.5 text-sm text-primary-ink hover:bg-primary/10 coarse:min-h-11">
+                <MapPin className="h-4 w-4 shrink-0" aria-hidden />
+                <span className="truncate">Zapisz jako lokalizację budowy</span>
+              </button>
+            )}
             {/* Wpis „za wczoraj”: data i godzina zwinięte w pigułkę, domyślnie chwila zapisu. */}
             {editingWhen ? (
               <div className="flex w-full items-end gap-2">

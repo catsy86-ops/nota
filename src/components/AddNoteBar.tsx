@@ -4,7 +4,7 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import { useDictation } from "@/hooks/useDictation";
 import { useOverlayHistory } from "@/hooks/useOverlayHistory";
 import { useSlashMenu } from "@/hooks/useSlashMenu";
-import { Plus, Tag, Bell, Mic, ImagePlus, Paperclip, X, PenTool, ListChecks, Palette, Folder, Flag, Hash, CornerDownRight, Repeat, CopyPlus } from "lucide-react";
+import { AudioLines, Plus, Tag, Bell, Mic, ImagePlus, Paperclip, X, PenTool, ListChecks, Palette, Folder, Flag, Hash, CornerDownRight, Repeat, CopyPlus } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { ColorPicker, colorClasses } from "./ColorPicker";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ import type { NoteColor, ChecklistItem } from "@/hooks/useNotes";
 import { imageStore } from "@/lib/imageStore";
 import { NoteImage } from "./NoteImage";
 import { AttachmentsPanel, type AttachmentsPanelHandle } from "./AttachmentsPanel";
+import { canRecordVoice } from "@/lib/voiceSupport";
 import type { Attachment } from "@/lib/attachments";
 // Płótno ładowane przy pierwszym „Rysuj” — nie wchodzi do paczki startowej.
 const DrawingCanvas = lazy(() => import("./DrawingCanvas").then((m) => ({ default: m.DrawingCanvas })));
@@ -642,6 +643,12 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
                 <IconButton size="sm" onClick={() => attachmentsRef.current?.pick()} title="Dodaj plik" aria-label="Dodaj plik">
                   <Paperclip className="w-4 h-4" />
                 </IconButton>
+                {/* Notatka głosowa jako załącznik (dyktowanie to osobny przycisk z mikrofonem). */}
+                {canRecordVoice() && (
+                  <IconButton size="sm" onClick={() => attachmentsRef.current?.record()} title="Nagraj notatkę głosową (do 3 min)" aria-label="Nagraj notatkę głosową">
+                    <AudioLines className="w-4 h-4" />
+                  </IconButton>
+                )}
                 {/* Drawing */}
                 <IconButton size="sm" onClick={() => setShowDrawing(true)} title="Rysuj" aria-label="Rysuj">
                   <PenTool className="w-4 h-4" />

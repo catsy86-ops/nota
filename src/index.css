@@ -574,6 +574,8 @@
   html[data-view="reminders"] .paper-stamp::after { content: "PRZYPOMNIENIA · ARKUSZ 1/1"; }
   html[data-view="calendar"] .paper-stamp::after { content: "KALENDARZ · ARKUSZ 1/1"; }
   html[data-view="shifts"] .paper-stamp::after { content: "GRAFIK · ARKUSZ 1/1"; }
+  /* Grafik: prawy dolny róg zajmuje panel podsumowania, więc tabliczka przechodzi na lewo od linków eksportu. */
+  html[data-view="shifts"] .paper-stamp { right: auto; left: 18.5rem; }
   html[data-view="study"] .paper-stamp::after { content: "PRACA · DZIENNIK BUDOWY"; }
   html[data-skin="plan"] .paper-stamp {
     font-family: 'Barlow Condensed', sans-serif;

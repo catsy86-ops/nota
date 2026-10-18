@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cleanItems, cleanStore, cleanSubscription, dueItems, LIMITS, removeItems, subKey } from "./core.js";
+import { cleanItems, cleanStore, cleanSubscription, dueItems, LIMITS, payloadOf, removeItems, subKey } from "./core.js";
 
 const NOW = Date.UTC(2026, 9, 16, 12);
 const sub = { endpoint: "https://fcm.googleapis.com/fcm/send/abc", keys: { p256dh: "BPk", auth: "xyz" } };
@@ -54,4 +54,15 @@ test("plik: uszkodzone wpisy wypadają, klucz liczony z endpointu", () => {
   assert.deepEqual(Object.keys(store.subs), [subKey(sub.endpoint)]);
   assert.equal(store.subs[subKey(sub.endpoint)].items.length, 1);
   assert.deepEqual(cleanStore("śmieci", NOW), { subs: {} });
+});
+
+test("terminy: „Odłóż” tylko dla przypomnień jednorazowych (`snooze: true`), trafia do treści push", () => {
+  const [once, series] = cleanItems([
+    { key: "n:a:1", at: NOW + 1000, title: "Raz", url: "/notatka/a", snooze: true },
+    { key: "n:b:1", at: NOW + 2000, title: "Seria", url: "/notatka/b", snooze: "tak" },
+  ], NOW);
+  assert.equal(once.snooze, true);
+  assert.equal(series.snooze, false);
+  assert.equal(JSON.parse(payloadOf(once)).snooze, true);
+  assert.equal(JSON.parse(payloadOf(series)).snooze, false);
 });
