@@ -17,6 +17,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
         "--normal-text": "hsl(var(--foreground))",
         "--normal-border": "hsl(var(--border))",
       } as React.CSSProperties}
+      // Przycisk „×” na każdym toście: błąd z długim opisem (9 s) da się zamknąć dotykiem od razu,
+      // bez czekania na licznik albo przeciągania.
+      closeButton
       toastOptions={{
         classNames: {
           toast: "group toast shadow-lg! rounded-lg!",
