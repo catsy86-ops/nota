@@ -236,7 +236,7 @@ function StudyScreen() {
         <TabsList className="h-auto w-full sm:w-auto">
           <TabsTrigger value="quiz" className="flex-1 sm:flex-none">Quiz</TabsTrigger>
           <TabsTrigger value="board" className="flex-1 sm:flex-none">Tablica</TabsTrigger>
-          <TabsTrigger value="list" className="flex-1 sm:flex-none">Lista</TabsTrigger>
+          <TabsTrigger value="list" className="flex-1 sm:flex-none">Lista kontrolna</TabsTrigger>
           <TabsTrigger value="journal" className="flex-1 sm:flex-none">Dziennik</TabsTrigger>
         </TabsList>
         {/* forceMount: runda w toku nie ginie po zajrzeniu do tablicy lub listy. */}

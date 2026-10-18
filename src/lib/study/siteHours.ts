@@ -46,7 +46,8 @@ export function parseHours(raw: string): number | null {
   if (!t) return 0;
   let min: number;
   const hm = /^(\d{1,2})\s*(?::|h)\s*(\d{1,2})?\s*(?:min)?$/.exec(t);
-  if (hm) min = Number(hm[1]) * 60 + Number(hm[2] ?? 0);
+  // Minuty to 0–59: „6:70” nie jest 7 h 10 min, tylko błędem wpisu.
+  if (hm) { if (hm[2] !== undefined && Number(hm[2]) > 59) return null; min = Number(hm[1]) * 60 + Number(hm[2] ?? 0); }
   else if (/^\d{1,2}([.,]\d+)?\s*h?$/.test(t)) min = Number(t.replace(/\s*h$/, "").replace(",", ".")) * 60;
   else return null;
   if (!Number.isFinite(min) || min < 0 || min > DAY_MAX_MINUTES) return null;

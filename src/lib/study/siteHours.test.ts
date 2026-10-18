@@ -16,6 +16,10 @@ const shifts: ShiftData = { ...EMPTY_SHIFT_DATA, days: { "2026-10-14": { type: "
 const WORK = 10 * 60;
 
 describe("parseHours", () => {
+  it("minuty powyżej 59 są błędem, nie dodatkiem do godzin", () => {
+    expect(parseHours("6:70")).toBeNull();
+    expect(parseHours("6:55")).toBe(360 + 55);
+  });
   it("różne zapisy godzin", () => {
     expect(parseHours("6")).toBe(360);
     expect(parseHours("6,5")).toBe(390);

@@ -3430,3 +3430,11 @@ lub grupę”.
 - **Testy:** `src/lib/study/study.test.ts` — trzy nowe testy (wpis z odhaczeniami usuniętego punktu, referencja do brakującego zdjęcia, usunięcie i „Cofnij” ze zdjęciami).
 - **Nie zrobione z planu:** D2 (przywracanie kopii — walidacja przed kasowaniem), D3 (budżet kopii 40 MB), D5 (model wpisu), reszta planu — czekają na decyzje z planu działu Praca.
 - **Commit:** brak — zmiany niezacommitowane.
+
+## Praca — kolejne poprawki z planu (D2 częściowo, U3, T3, 2026-10-18)
+
+- **Przywracanie kopii (D2):** wpisy Nauki odrzucone przy czyszczeniu kopii są liczone i zapisywane w diagnostyce (`exportNotes.ts`, ostrzeżenie „pominięto N wpisów”). Ta sama kopia nie jest już czyszczona dwukrotnie. Brakuje jeszcze pokazania liczby w oknie przywracania.
+- **Nazwa zakładki (U3):** „Lista” → „Lista kontrolna” (`StudyView.tsx`). Testy e2e działu nie wymagały zmian (dopasowanie po podciągu).
+- **Godziny (T3):** `parseHours` odrzuca minuty powyżej 59 (`6:70` to błąd, a nie 7 h 10 min). Test w `siteHours.test.ts`.
+- **Testy:** 1391 jednostkowych; e2e study, study-custom, bundle, today-study — 43/43.
+- **Commit:** brak — zmiany niezacommitowane.

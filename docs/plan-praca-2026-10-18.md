@@ -9,7 +9,7 @@ Uwaga: wejściowy JS jest na progu (próg podniesiony do 385 KB). Nowy kod w gł
 | # | Problem | Gdzie | Naprawa | Nakład |
 |---|---------|-------|---------|--------|
 | D1 ✅ | Wpis z samymi odhaczeniami znika po usunięciu punktu listy (pustość liczona po filtrze materiału); `removeCustom` nie czyści wpisów | `store.ts:67,75`, `yStudy.ts:529-539` | Sprawdzać pustość przed filtrem; czyścić `checked` we wpisach przy usuwaniu punktu; test | S |
-| D2 | Przywracanie kopii najpierw kasuje wpisy, potem zapisuje oczyszczone; wpisy nieznanego rodzaju i zdjęcia z błędnym kluczem znikają bez śladu | `yStudy.ts:550-551,150,198`, `store.ts:69` | Walidować przed kasowaniem; liczyć i logować odrzucone (`logDiag`); pokazać liczbę w oknie przywracania | M |
+| D2 (częściowo: ślad w diagnostyce) | Przywracanie kopii najpierw kasuje wpisy, potem zapisuje oczyszczone; wpisy nieznanego rodzaju i zdjęcia z błędnym kluczem znikają bez śladu | `yStudy.ts:550-551,150,198`, `store.ts:69` | Walidować przed kasowaniem; liczyć i logować odrzucone (`logDiag`); pokazać liczbę w oknie przywracania | M |
 | D3 | Kopia zapasowa: przekroczenie budżetu 40 MB gubi zdjęcia i pliki budów po cichu; plany (PDF) liczą się jako „zdjęcia dziennika"; brak testu gałęzi przekroczenia | `attachments.ts:36`, `exportNotes.ts:91`, `journalRefs.ts`, `fullBackup.test.ts:175` | Test przekroczenia; osobna etykieta dla dokumentów budów; raport o pominiętych plikach | M |
 | D4 ✅ | Wpis z referencją do nieobecnego zdjęcia: nie sprawdzono, czy przeżywa import | `fullBackup.test.ts:186`, `cleanDump`/`sanitizeStudy` | Test importu z brakującym obrazem; raport wymienia zdjęcie | S |
 | D5 | Edycja tego samego wpisu na dwóch telefonach gubi pola: cały wpis to jeden klucz `Y.Map` | `yStudy.ts:433,442-467` | Pola wpisu jako osobne klucze (jak listy budowy w `siteItems.ts`) — zmiana modelu, osobna decyzja | L |
@@ -31,7 +31,7 @@ Uwaga: wejściowy JS jest na progu (próg podniesiony do 385 KB). Nowy kod w gł
 |---|-----------|--------|
 | T1 | Round-trip wrapperów list budowy: `setSiteStages/Shortages/Docs/Service/Warranty`, `markSiteOrdered` z `base` z innego zapisu (drugi telefon) | M |
 | T2 | Komponenty działu bez testów jednostkowych (SiteDocs, SiteService, SiteStages, SiteShortages, SiteOrder, JournalEntrySheet, DayHours, Calculators); `addSiteDocFiles` z limitami i deduplikacją | S dla funkcji, M dla komponentów |
-| T3 | Funkcje liczące: `workLine`/`workMinutesOf`, `composeSiteLists`, `stripLists`, `reviewCard` („błąd, potem dobra tego samego dnia"), `deleteCustom`, `downloadSiteZip`; `parseHours` przepuszcza „6:70" jako 7 h 10 min | S każde |
+| T3 (parseHours ✅) | Funkcje liczące: `workLine`/`workMinutesOf`, `composeSiteLists`, `stripLists`, `reviewCard` („błąd, potem dobra tego samego dnia"), `deleteCustom`, `downloadSiteZip`; `parseHours` przepuszcza „6:70" jako 7 h 10 min | S każde |
 | T4 | Dawny zapis w localStorage z ważnymi zdjęciami (ścieżka, którą GC może skasować) | S |
 | T5 | Flaki w e2e: `report-nudge.spec.ts:41,49` (`waitForTimeout` przed negatywną asercją), słabe asercje (`journal-geo.spec.ts:57` akceptuje dwa komunikaty; `today-study.spec.ts` zawsze pierwsza odpowiedź) | S |
 | T6 | Testy zależne od zegara bez mocków: `TodayDueList.test.tsx`, `recordRound` i `addJournalEntry` bez jawnego `now` | S |
@@ -43,7 +43,7 @@ Uwaga: wejściowy JS jest na progu (próg podniesiony do 385 KB). Nowy kod w gł
 |---|-----------|--------|--------|
 | U1 | **Przypomnienie „próba przed zakryciem":** gdy etap instalacji podposadzkowej/bruzd jest zrobiony, a próby szczelności nie ma — pokaż na „Dziś" i w karcie budowy (najdroższy błąd, nic dziś tego nie pilnuje) | S–M | fałszywe alarmy, gdy etapy nie są odhaczane |
 | U2 | **Seria wpisów z jednej budowy:** po „Zapisz wpis" zostaje budowa i rodzaj, czyszczony tekst i zdjęcia | S | wpis w złej budowie — nazwa budowy widoczna w nagłówku |
-| U3 | **Jedna nazwa na każdą rzecz:** „Wpis" / „Dokończ wpis" / „Wpis z budowy"; „Lista" → „Lista kontrolna"; w notatkach „Tablica" to układ kolumn, w Pracy tablica tematów | S | e2e szukające tekstów do poprawy (zmieniamy etykiety, nie klucze) |
+| U3 ✅ (zakładka) | **Jedna nazwa na każdą rzecz:** „Wpis" / „Dokończ wpis" / „Wpis z budowy"; „Lista" → „Lista kontrolna"; w notatkach „Tablica" to układ kolumn, w Pracy tablica tematów | S | e2e szukające tekstów do poprawy (zmieniamy etykiety, nie klucze) |
 | U4 | **Rękawice:** sprawdzić, czy zakładki Quiz/Tablica/Lista/Dziennik mają 44 px na dotyku | S | na telefonie niesprawdzone |
 | U5 | **Szybki wpis głosowy ze skrótu** (`?wpis=1` z włączonym dyktowaniem) | S–M | dyktowanie przeglądarkowe wymaga sieci i słabo działa na iOS |
 | U6 | **Puste stany i błędy z następnym krokiem:** „Brak wpisów" bez przycisku „+ Wpis"; „Brakuje miejsca w pamięci" bez wskazówki (usuń stare zdjęcia) | S | minimalne |

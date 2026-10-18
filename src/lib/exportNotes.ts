@@ -243,7 +243,12 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
       const [{ studyDevice, studyReady, yStudy }, { cleanDump, dumpFromLegacy }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy")]);
       await studyReady();
       // Starsze kopie niosą Naukę tylko wśród ustawień, w kształcie dawnego zapisu.
-      yStudy.replaceAll(backup.study !== undefined ? cleanDump(JSON.parse(backup.study)) : dumpFromLegacy(JSON.parse(legacyStudy!), studyDevice()));
+      const raw = backup.study !== undefined ? JSON.parse(backup.study) : null;
+      const dump = raw !== null ? cleanDump(raw) : dumpFromLegacy(JSON.parse(legacyStudy!), studyDevice());
+      // Wpisy nieznanego rodzaju albo z uszkodzonymi polami odpadają przy czyszczeniu — zostawiamy ślad, zamiast gubić je po cichu.
+      const rawCount = raw && Array.isArray(raw.journal) ? raw.journal.length : dump.journal.length;
+      if (rawCount > dump.journal.length) logDiag("warn", "backup", `przywracanie Nauki: pominięto ${rawCount - dump.journal.length} wpisów`);
+      yStudy.replaceAll(dump);
     } catch (err) { logDiag("warn", "backup", "cannot restore study", err); }
   }
   for (const [k, v] of Object.entries(writes)) {
