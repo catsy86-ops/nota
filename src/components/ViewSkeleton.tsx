@@ -25,6 +25,19 @@ function MonthGrid() {
   );
 }
 
+/**
+ * Zarys karty z pulpitu „Dziś” (ładowanej leniwie) — rezerwuje miejsce, zanim paczka dojdzie,
+ * więc lista pod nią nie przeskakuje. Ukryty przed 180 ms jak `ViewSkeleton`; dla czytnika
+ * ekranu pominięty (to tylko podpowiedź, nie osobny komunikat).
+ */
+export function CardSkeleton() {
+  return (
+    <div aria-hidden className="view-skeleton">
+      <Bone className="h-24 w-full rounded-2xl" />
+    </div>
+  );
+}
+
 export function ViewSkeleton({ view }: { view: LazyView }) {
   return (
     <div role="status" aria-live="polite" className="view-skeleton space-y-4" data-testid="view-skeleton">

@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { m as motion } from "framer-motion";
 import { SearchX, TriangleAlert, WifiOff, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { tween } from "@/lib/motion";
 
 /**
  * Rodzaj stanu. `empty` — jeszcze nic tu nie ma (zaproszenie do działania);
@@ -93,6 +94,8 @@ export function StatusPanel({
       initial={{ opacity: 0, y: tone === "empty" ? 30 : 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: tone === "empty" ? 0.3 : 0 }}
+      // Wyjście, gdy w widoku pojawią się notatki (`AnimatePresence` w `Index`): gaśnie zamiast zniknąć skokiem.
+      exit={{ opacity: 0, transition: tween.exit }}
       className={cn("text-center", tone === "empty" ? "py-20 sm:py-24" : "py-14 sm:py-16", className)}
     >
       {art ?? (Icon && (
