@@ -78,7 +78,7 @@ import { VaultHost } from "@/components/vault/VaultHost";
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
 // note action or explicit toggle) — kept out of the eager main bundle so
 // first load only pays for the code the note grid itself needs.
-import { ViewSkeleton } from "@/components/ViewSkeleton";
+import { CardSkeleton, ViewSkeleton } from "@/components/ViewSkeleton";
 import { loadCalendarView, loadShiftsView, loadStudyView } from "@/lib/viewPreload";
 const ShortcutsDialog = lazy(() => import("@/components/ShortcutsDialog").then((m) => ({ default: m.ShortcutsDialog })));
 const PropDefsDialog = lazy(() => import("@/components/PropDefsDialog").then((m) => ({ default: m.PropDefsDialog })));
@@ -582,25 +582,25 @@ const Index = () => {
           {view === "inbox" && !deferredSearch && <InboxCapture onCapture={captureToInbox} />}
 
           {view === "today" && !deferredSearch && (
-            <Suspense fallback={null}>
+            <Suspense fallback={<CardSkeleton />}>
               <TodayShiftCard onOpenShifts={() => go("shifts")} onDailyNote={openDailyNote} />
             </Suspense>
           )}
 
           {view === "today" && !deferredSearch && (
-            <Suspense fallback={null}>
+            <Suspense fallback={<CardSkeleton />}>
               <TodayDueList notes={notes} onOpen={openNote} onOpenReminders={() => go("reminders")} />
             </Suspense>
           )}
 
           {view === "today" && !deferredSearch && (
-            <Suspense fallback={null}>
+            <Suspense fallback={<CardSkeleton />}>
               <TodayStudyCard onPractice={() => navigate("/praca?powtorka=1")} />
             </Suspense>
           )}
 
           {view === "today" && !deferredSearch && (
-            <Suspense fallback={null}>
+            <Suspense fallback={<CardSkeleton />}>
               <WeeklyReviewCard
                 notes={notes} folders={folders} onOpen={openNote} onTogglePin={togglePin}
                 onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow}
@@ -786,7 +786,9 @@ const Index = () => {
           <p role="status" aria-live="polite" className="sr-only">
             {deferredSearch && view !== "calendar" && view !== "shifts" && view !== "study" ? `${displayNotes.length} ${pluralPl(displayNotes.length, ["wynik", "wyniki", "wyników"])}` : ""}
           </p>
-          {view !== "calendar" && view !== "shifts" && view !== "study" && displayNotes.length === 0 && <EmptyState view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} />}
+          <AnimatePresence>
+            {view !== "calendar" && view !== "shifts" && view !== "study" && displayNotes.length === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} />}
+          </AnimatePresence>
           {view === "notes" && displayNotes.length > 0 && !deferredSearch && <DailyQuote />}
         </main>
       </div>
