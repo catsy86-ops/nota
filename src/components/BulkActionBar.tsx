@@ -1,6 +1,6 @@
 import { m as motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { Archive, ArchiveRestore, Download, Trash, Palette, X, SquareCheckBig, Undo2, Pin, FolderInput, Tag } from "lucide-react";
+import { Archive, ArchiveRestore, Download, Trash, Palette, X, SquareCheckBig, Undo2, Pin, FolderInput, Tag, Combine } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ColorPicker } from "./ColorPicker";
 import type { Folder, NoteColor } from "@/hooks/useNotes";
@@ -29,9 +29,11 @@ interface Props {
   onPin?: () => void;
   onMoveToFolder?: (folderId: string | null) => void;
   onAddLabel?: (label: string) => void;
+  /** Scalenie zaznaczonych w jedną notatkę (`lib/mergeNotes.ts`); odmowy pokazuje handler. */
+  onMerge?: () => void;
 }
 
-export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArchive, onTrash, onColor, view = "other", onRestore, onDeleteForever, onExport, folders = [], allLabels = [], onPin, onMoveToFolder, onAddLabel }: Props) {
+export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArchive, onTrash, onColor, view = "other", onRestore, onDeleteForever, onExport, folders = [], allLabels = [], onPin, onMoveToFolder, onAddLabel, onMerge }: Props) {
   const [newLabel, setNewLabel] = useState("");
   const inTrash = view === "trash";
   const inArchive = view === "archive";
@@ -127,6 +129,11 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
                 </div>
               </PopoverContent>
             </Popover>
+          )}
+          {!inTrash && !inArchive && onMerge && (
+            <IconButton onClick={onMerge} title="Scal zaznaczone w jedną notatkę" aria-label="Scal zaznaczone w jedną notatkę">
+              <Combine className="w-4 h-4" />
+            </IconButton>
           )}
           {(inTrash || inArchive) && onRestore && (
             <IconButton onClick={onRestore} title={inTrash ? "Przywróć z kosza" : "Przywróć z archiwum"} aria-label={inTrash ? "Przywróć z kosza" : "Przywróć z archiwum"}>

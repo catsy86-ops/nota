@@ -467,7 +467,7 @@ const Index = () => {
   const deleteNoteForever = useCallback((id: string) => { deleteNote(id); deleteVersions(id); }, [deleteNote, deleteVersions]);
   const handleDelete = view === "trash" ? deleteNoteForever : handleTrashSingle;
 
-  const { restoreSelected, pinSelected, moveSelectedToFolder, labelSelected, moveToColumn } = useBulkNoteOps({
+  const { restoreSelected, pinSelected, moveSelectedToFolder, labelSelected, moveToColumn, mergeSelected } = useBulkNoteOps({
     view, groupBy, folders, notesRef, selectedIds, clearSelection, togglePin, updateNote, addLabel,
     unarchiveNote, bulkRestore, bulkTrash, bulkArchive, moveToFolder: handleMoveToFolderGlow,
   });
@@ -932,6 +932,7 @@ const Index = () => {
       onPin={pinSelected}
       onMoveToFolder={moveSelectedToFolder}
       onAddLabel={labelSelected}
+      onMerge={mergeSelected}
       view={view === "trash" ? "trash" : view === "archive" ? "archive" : "other"}
       onRestore={restoreSelected}
       onDeleteForever={() => setConfirmDeleteIds(Array.from(selectedIds))}

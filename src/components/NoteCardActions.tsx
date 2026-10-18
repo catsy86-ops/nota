@@ -1,11 +1,12 @@
 import type { ComponentProps, ReactNode } from "react";
-import { Star, Pin, Palette, Archive, ArchiveRestore, ImagePlus, Copy, PenTool, Trash, Maximize2, Lock, LockOpen, FilePlusCorner, MoveHorizontal, ZoomIn } from "lucide-react";
+import { Star, Pin, Palette, Archive, ArchiveRestore, ImagePlus, Copy, ClipboardCopy, PenTool, Trash, Maximize2, Lock, LockOpen, FilePlusCorner, MoveHorizontal, ZoomIn } from "lucide-react";
 import { toast } from "sonner";
 import type { Note } from "@/hooks/useNotes";
 import type { useNoteViewActions } from "@/hooks/NoteViewActionsContext";
 import { addSubpage } from "@/lib/subpageActions";
 import { haptic } from "@/lib/haptics";
 import { markPinned } from "@/lib/cardMotion";
+import { copyNoteToClipboard } from "@/lib/noteMarkdown";
 import { sparkle } from "@/lib/celebrate";
 import { cn } from "@/lib/utils";
 import { ReminderPicker } from "./ReminderPicker";
@@ -215,6 +216,14 @@ export function MoreActions({
       )}
       {onDuplicate && (
         <ActionBtn icon={<Copy className="w-4 h-4" />} onClick={() => onDuplicate(note.id)} title="Duplikuj" />
+      )}
+      {/* Prywatnej notatki nie kopiujemy: jej treść w projekcji jest pusta (szyfrogram). */}
+      {!note.locked && (
+        <ActionBtn
+          icon={<ClipboardCopy className="w-4 h-4" />}
+          onClick={() => { haptic("tap"); void copyNoteToClipboard(note, "markdown"); }}
+          title="Kopiuj jako Markdown"
+        />
       )}
     </>
   );

@@ -2,9 +2,11 @@ import type { MutableRefObject } from "react";
 import { toast } from "sonner";
 import type { Folder, Note } from "@/hooks/useNotes";
 import type { View } from "@/hooks/useFilteredNotes";
+import { isNoteTextEditOpen } from "@/hooks/useNotes";
 import type { GroupBy } from "@/lib/groupNotes";
 import { labelsForColumn, NONE_COLUMN, PINNED_COLUMN } from "@/lib/boardColumns";
 import { toastWithUndo } from "@/lib/undoToast";
+import { planMerge } from "@/lib/mergeNotes";
 
 export interface BulkNoteOpsDeps {
   view: View;
@@ -58,6 +60,36 @@ export function useBulkNoteOps({
     toastWithUndo(`${pin ? "Przypięto" : "Odpięto"} ${changed.length}`, () => changed.forEach((id) => togglePin(id)), { icon: "📌" });
   }
 
+  /**
+   * Scala zaznaczone notatki w pierwszą (`lib/mergeNotes.ts`): pozostałe idą do kosza.
+   * Cofnięcie przywraca poprzednie pola pierwszej i odtwarza pozostałe z kosza.
+   */
+  function mergeSelected() {
+    const all = notesRef.current;
+    const chosen = all.filter((n) => selectedIds.has(n.id));
+    const res = planMerge(chosen, (id) => all.some((n) => n.parentId === id));
+    if (!res.ok) { toast.info("Nie scalono", { description: res.reason }); return; }
+    const { targetId, patch, sourceIds } = res.plan;
+    const target = chosen.find((n) => n.id === targetId);
+    if (!target) return;
+    if (isNoteTextEditOpen(targetId)) {
+      toast.info("Nie scalono", { description: "Zamknij edycję pierwszej notatki, zanim ją scalisz." });
+      return;
+    }
+    // Poprzednie wartości tylko dla pól, które scalenie zmienia (brak załączników = pusta lista).
+    const keys = Object.keys(patch) as (keyof typeof patch)[];
+    const prev = Object.fromEntries(
+      keys.map((k) => [k, k === "attachments" ? (target.attachments ?? []) : target[k]]),
+    ) as typeof patch;
+    updateNote(targetId, patch);
+    bulkTrash(sourceIds);
+    clearSelection();
+    toastWithUndo(`Scalono ${chosen.length} notatek`, () => {
+      updateNote(targetId, prev);
+      bulkRestore(sourceIds);
+    }, { icon: "🧩", description: `Pozostałe ${sourceIds.length} są w koszu. Cofnij je przywraca.` });
+  }
+
   /** Przenieś zaznaczone do folderu (`null` = bez folderu), z „Cofnij”. */
   function moveSelectedToFolder(folderId: string | null) {
     const prev = notesRef.current.filter((n) => selectedIds.has(n.id) && n.folderId !== folderId).map((n) => [n.id, n.folderId] as const);
@@ -106,5 +138,5 @@ export function useBulkNoteOps({
     toastWithUndo(prev.length > 1 ? `Przeniesiono do „${label}” (${prev.length})` : `Przeniesiono do „${label}”`, () => prev.forEach((n) => apply(n.id, n)), { icon: "🗂️" });
   }
 
-  return { restoreSelected, pinSelected, moveSelectedToFolder, labelSelected, moveToColumn };
+  return { restoreSelected, pinSelected, moveSelectedToFolder, labelSelected, moveToColumn, mergeSelected };
 }
