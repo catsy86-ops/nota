@@ -29,7 +29,7 @@ Uwaga: wejściowy JS jest na progu (próg podniesiony do 385 KB). Nowy kod w gł
 
 | # | Co brakuje | Nakład |
 |---|-----------|--------|
-| T1 | Round-trip wrapperów list budowy: `setSiteStages/Shortages/Docs/Service/Warranty`, `markSiteOrdered` z `base` z innego zapisu (drugi telefon) | M |
+| T1 ✅ | Round-trip wrapperów list budowy: `setSiteStages/Shortages/Docs/Service/Warranty`, `markSiteOrdered` z `base` z innego zapisu (drugi telefon) | M |
 | T2 | Komponenty działu bez testów jednostkowych (SiteDocs, SiteService, SiteStages, SiteShortages, SiteOrder, JournalEntrySheet, DayHours, Calculators); `addSiteDocFiles` z limitami i deduplikacją | S dla funkcji, M dla komponentów |
 | T3 (parseHours ✅) | Funkcje liczące: `workLine`/`workMinutesOf`, `composeSiteLists`, `stripLists`, `reviewCard` („błąd, potem dobra tego samego dnia"), `deleteCustom`, `downloadSiteZip`; `parseHours` przepuszcza „6:70" jako 7 h 10 min | S każde |
 | T4 | Dawny zapis w localStorage z ważnymi zdjęciami (ścieżka, którą GC może skasować) | S |

@@ -3438,3 +3438,10 @@ lub grupę”.
 - **Godziny (T3):** `parseHours` odrzuca minuty powyżej 59 (`6:70` to błąd, a nie 7 h 10 min). Test w `siteHours.test.ts`.
 - **Testy:** 1391 jednostkowych; e2e study, study-custom, bundle, today-study — 43/43.
 - **Commit:** brak — zmiany niezacommitowane.
+
+## Praca — testy listy budowy z podstawą (T1, 2026-10-18)
+
+- **Co sprawdzają:** `setSiteStages` z podstawą (`base`) nie kasuje pozycji dodanych na drugim urządzeniu; `markSiteOrdered` zapisuje moment zamówienia na karcie.
+- **Gdzie:** `src/lib/study/study.test.ts` — dwa nowe testy (blok „listy budowy: zapis z podstawą”).
+- **Testy:** 1393 jednostkowe; e2e bundle i study — 40/40.
+- **Commit:** brak — zmiany niezacommitowane.

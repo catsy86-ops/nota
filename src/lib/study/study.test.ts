@@ -11,7 +11,7 @@ import {
   sanitizeStudy, moveTopic, recordRound, activeStreak, toggleChecked, getStudy, columnOf, resetChecklist,
   addJournalEntry, removeJournalEntry, restoreJournalEntry, setSite, practiceByTopic,
   updateJournalEntry, setProblemResolved, openProblems, saveSiteCard, setSiteArchived, setDayHours,
-  setProblemSolution, JOURNAL_SOLUTION_MAX, setSiteGeo,
+  setProblemSolution, JOURNAL_SOLUTION_MAX, setSiteGeo, setSiteStages, markSiteOrdered,
 } from "./store";
 import { resetStudyForTests, yStudy } from "./data";
 import { yjsStore } from "@/lib/yjsStore";
@@ -615,5 +615,32 @@ describe("dziennik — jak rozwiązano problem", () => {
     ] });
     expect(clean.journal.find((e) => e.id === "a")?.solution).toBe("Dokręcony śrubunek");
     expect(clean.journal.find((e) => e.id === "b")?.solution).toBeUndefined();
+  });
+});
+
+describe("listy budowy: zapis z podstawą (cofnij, drugi telefon)", () => {
+  it("setSiteStages z podstawą nie gubi pozycji dodanych na innym urządzeniu", () => {
+    setSite("Lipowa 7");
+    const e = addJournalEntry({ kind: "ok", topic: null, text: "start" }, 1000)!;
+    const id = e.siteId!;
+    const site = () => siteDirectory(getStudy().sites, getStudy().journal).find((x) => x.id === id)!;
+    const a = { id: "s-a", name: "Montaż pionu" };
+    const b = { id: "s-b", name: "Próba szczelności" };
+    const c = { id: "s-c", name: "Zasypanie" };
+
+    setSiteStages(id, [a]);
+    expect(site().stages?.map((x) => x.id)).toEqual(["s-a"]);
+    // Dodanie b na jednym urządzeniu, na podstawie stanu sprzed zmiany.
+    setSiteStages(id, [a, b], [a]);
+    // Drugie urządzenie dodało c, opierając się na starym stanie [a] — to nie może skasować b.
+    setSiteStages(id, [a, c], [a]);
+    expect(site().stages?.map((x) => x.id).sort()).toEqual(["s-a", "s-b", "s-c"].sort());
+  });
+
+  it("markSiteOrdered zapisuje moment zamówienia na karcie", () => {
+    setSite("Lipowa 8");
+    const e = addJournalEntry({ kind: "ok", topic: null, text: "start" }, 1000)!;
+    markSiteOrdered(e.siteId!, 5000);
+    expect(siteDirectory(getStudy().sites, getStudy().journal).find((x) => x.id === e.siteId)?.orderedAt).toBe(5000);
   });
 });
