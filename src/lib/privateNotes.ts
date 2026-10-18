@@ -60,7 +60,10 @@ function readThrottle(): { fails: number; until: number } {
   try {
     const raw = JSON.parse(localStorage.getItem(THROTTLE_KEY) || "null");
     if (raw && typeof raw.fails === "number" && typeof raw.until === "number") return raw;
-  } catch { /* uszkodzone — zaczynamy od zera */ }
+  } catch (err) {
+    // Uszkodzony licznik prób zeruje ochronę przed zgadywaniem hasła — musi zostawić ślad.
+    logDiag("warn", "vault", "uszkodzony licznik prób", err);
+  }
   return { fails: 0, until: 0 };
 }
 

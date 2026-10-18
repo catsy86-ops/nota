@@ -252,9 +252,9 @@ export function AppSidebar({
                 />
                 <SidebarRow
                   icon={dark ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
-                  label={dark ? "Tryb jasny" : "Tryb ciemny"}
+                  label="Tryb ciemny"
                   onClick={onToggleTheme}
-                  buttonProps={{ "aria-label": dark ? "Włącz tryb jasny" : "Włącz tryb ciemny", "aria-pressed": dark }}
+                  buttonProps={{ "aria-label": "Tryb ciemny", "aria-pressed": dark }}
                 />
                 <SidebarRow icon={<SettingsIcon className="w-[18px] h-[18px]" />} label="Ustawienia" onClick={() => onSettingsOpenChange(true)} />
 

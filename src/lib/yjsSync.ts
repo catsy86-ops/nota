@@ -38,9 +38,11 @@ interface SyncPrefs {
   signaling: string[];
   /** Dołącz też do starego pokoju FNV (patrz `DEFAULT_LEGACY_ROOM`). */
   legacyRoom: boolean;
+  /** Zapisany kod był krótki (8 znaków) i został usunięty — trzeba sparować ponownie. */
+  shortCodeDropped: boolean;
 }
 
-const DEFAULT_PREFS: SyncPrefs = { enabled: false, code: null, signaling: [], legacyRoom: DEFAULT_LEGACY_ROOM };
+const DEFAULT_PREFS: SyncPrefs = { enabled: false, code: null, signaling: [], legacyRoom: DEFAULT_LEGACY_ROOM, shortCodeDropped: false };
 
 function readPrefs(): SyncPrefs {
   if (typeof window === "undefined") return DEFAULT_PREFS;
@@ -52,8 +54,14 @@ function readPrefs(): SyncPrefs {
     const signaling = Array.isArray(parsed.signaling)
       ? parseSignalingList(parsed.signaling.filter((s: unknown) => typeof s === "string").join(" ")).valid
       : [];
-    const code = typeof parsed.code === "string" && /^\S{1,64}$/.test(parsed.code) ? parsed.code : null;
-    return { enabled: parsed.enabled === true && code !== null, code, signaling, legacyRoom: parsed.legacyRoom === true };
+    const rawCode = typeof parsed.code === "string" && /^\S{1,64}$/.test(parsed.code) ? parsed.code : null;
+    // Krótkie kody (starsza wersja) nie są już przyjmowane: nazwa pokoju z 8 znaków dałaby się odgadnąć.
+    const short = rawCode !== null && rawCode.length < CODE_LENGTH;
+    const code = short ? null : rawCode;
+    return {
+      enabled: parsed.enabled === true && code !== null, code, signaling, legacyRoom: parsed.legacyRoom === true,
+      shortCodeDropped: short || parsed.shortCodeDropped === true,
+    };
   } catch (err) {
     logDiag("warn", "yjsSync", "unreadable sync prefs, using defaults", err);
     return DEFAULT_PREFS;
@@ -74,9 +82,15 @@ export interface SyncState {
   lastSyncedAt: number | null;
   /** Ostatni błąd transportu — żeby „nie synchronizuje się” miało odpowiedź. */
   lastError: string | null;
+  /** Ile serwerów sygnalizacji odpowiada z tylu, do których dołączamy (diagnostyka w ustawieniach). */
+  signalingUp: number;
+  signalingTotal: number;
 }
 
-const DEFAULT_STATE: SyncState = { status: "disabled", peerCount: 0, code: null, lastSyncedAt: null, lastError: null };
+const DEFAULT_STATE: SyncState = { status: "disabled", peerCount: 0, code: null, lastSyncedAt: null, lastError: null, signalingUp: 0, signalingTotal: 0 };
+// Ponowne łączenie po powrocie do karty albo odzyskaniu sieci — nie częściej niż co tyle ms.
+const RECONNECT_MIN_GAP_MS = 10_000;
+let lastConnectAt = 0;
 // Zmiany od peerów potrafią przychodzić seriami; odświeżamy znacznik co najwyżej
 // raz na kilka sekund, żeby nie przerenderowywać Ustawień przy każdej.
 const SYNCED_AT_THROTTLE_MS = 5000;
@@ -246,7 +260,8 @@ function setState(patch: Partial<SyncState>) {
 function connect(code: string) {
   disconnectProvider();
   const token = ++connectToken;
-  setState({ status: "connecting", peerCount: 0, code });
+  lastConnectAt = Date.now();
+  setState({ status: "connecting", peerCount: 0, code, signalingUp: 0, signalingTotal: 0 });
   // y-webrtc is ~the heaviest dep in the app but sync is opt-in and off by
   // default — load it only once a connection is actually requested, instead
   // of forcing it into the eager main bundle for every visitor.
@@ -260,7 +275,7 @@ function connect(code: string) {
       p.on("status", ({ connected: c }: { connected: boolean }) => {
         logDiag("info", "yjsSync", `${c ? "signaling connected" : "signaling disconnected"} (room ${i})`);
         connected[i] = c;
-        setState({ status: connected.some(Boolean) ? "connected" : "connecting" });
+        setState({ status: connected.some(Boolean) ? "connected" : "connecting", signalingUp: connected.filter(Boolean).length, signalingTotal: rooms.length });
       });
       p.on("peers", ({ webrtcPeers, bcPeers }: { webrtcPeers: string[]; bcPeers: string[] }) => {
         peers[i] = webrtcPeers.length + bcPeers.length;
@@ -295,22 +310,32 @@ function disconnectProvider() {
   providers.forEach((p) => p.destroy());
   providers = [];
   stopImageSync();
+  setState({ signalingUp: 0, signalingTotal: 0 });
 }
 
 /** Generates a fresh pairing code, enables sync and connects. Returns the code. */
 export function startPairing(): string {
   const code = generateCode();
-  writePrefs({ ...readPrefs(), enabled: true, code });
+  writePrefs({ ...readPrefs(), enabled: true, code, shortCodeDropped: false });
   connect(code);
   return code;
 }
 
-/** Joins (or switches to) an existing pairing group by code. */
-export function joinWithCode(rawCode: string): string {
+/**
+ * Dołącza do grupy po kodzie (albo przełącza na nią). Kod musi mieć 12 znaków — krótsze
+ * nie są przyjmowane; zwraca `null`, gdy długość jest zła.
+ */
+export function joinWithCode(rawCode: string): string | null {
   const code = normalizeCode(rawCode);
-  writePrefs({ ...readPrefs(), enabled: true, code });
+  if (code.length !== CODE_LENGTH) return null;
+  writePrefs({ ...readPrefs(), enabled: true, code, shortCodeDropped: false });
   connect(code);
   return code;
+}
+
+/** Czy zapisany kod był krótki i został usunięty (do komunikatu w ustawieniach). */
+export function wasShortCodeDropped(): boolean {
+  return readPrefs().shortCodeDropped;
 }
 
 /** Disconnects but remembers the code, so re-enabling resumes the same group. */
@@ -339,7 +364,22 @@ export function forgetPairing(): void {
 }
 
 /** Call once at app startup, after yjsStore.ready(), to resume a prior session. */
+let returnListenersBound = false;
+
+/** Wraca do sieci albo do karty: jeśli sync jest włączony, a nie działa, łączymy od nowa. */
+function reconnectIfNeeded() {
+  const prefs = readPrefs();
+  if (!prefs.enabled || !prefs.code || state.status === "connected") return;
+  if (Date.now() - lastConnectAt < RECONNECT_MIN_GAP_MS) return;
+  connect(prefs.code);
+}
+
 export function initSync(): void {
   const prefs = readPrefs();
   if (prefs.enabled && prefs.code) connect(prefs.code);
+  if (!returnListenersBound && typeof window !== "undefined") {
+    returnListenersBound = true;
+    window.addEventListener("online", reconnectIfNeeded);
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") reconnectIfNeeded(); });
+  }
 }

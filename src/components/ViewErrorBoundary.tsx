@@ -51,7 +51,7 @@ export class ViewErrorBoundary extends Component<Props, State> {
       <StatusPanel
         tone="error"
         title={`${this.props.name}: nie udało się wyświetlić widoku`}
-        description={chunk ? "Nie dało się pobrać tej części aplikacji — sprawdź połączenie i odśwież stronę." : "Pozostałe widoki działają. Spróbuj ponownie albo odśwież stronę."}
+        description={chunk ? "Nie udało się pobrać tej części aplikacji — sprawdź połączenie i odśwież stronę." : "Pozostałe widoki działają. Spróbuj ponownie albo odśwież stronę."}
         actions={<>
           {!chunk && <Button size="sm" onClick={() => this.setState({ error: null })}>Spróbuj ponownie</Button>}
           {reload}

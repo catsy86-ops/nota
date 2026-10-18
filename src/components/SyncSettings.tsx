@@ -8,13 +8,19 @@ import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
 import {
-  useSyncState, startPairing, joinWithCode, pauseSync, resumeSync, forgetPairing, formatCode,
-  getSignalingServers, setSignalingServers, parseSignalingList, isShortCode, getLegacyRoom, setLegacyRoom,
+  useSyncState, type SyncState, startPairing, joinWithCode, pauseSync, resumeSync, forgetPairing, formatCode,
+  getSignalingServers, setSignalingServers, parseSignalingList, wasShortCodeDropped, getLegacyRoom, setLegacyRoom,
   codeFromPaste, CODE_LENGTH, CODE_PATTERN,
 } from "@/lib/yjsSync";
 
-/** Długość starego kodu — wciąż przyjmowany (`isShortCode`). */
-const LEGACY_CODE_LENGTH = 8;
+/** Jedno zdanie o tym, na którym etapie synchronizacja stoi (bez żargonu). */
+function diagnosis(s: SyncState): string {
+  if (s.lastError) return "Nie udało się uruchomić połączenia. Sprawdź internet i spróbuj ponownie.";
+  if (s.status === "connected" && s.peerCount === 0) return "Połączono z serwerami. Drugie urządzenie jeszcze nie dołączyło — otwórz tu sam kod na nim.";
+  if (s.signalingTotal > 0 && s.signalingUp === 0) return "Nie ma połączenia z serwerami wymiany. Sprawdź internet; połączenie wznowi się samo.";
+  if (s.status === "connecting") return `Łączenie z serwerami (${s.signalingUp} z ${s.signalingTotal || "?"}).`;
+  return "";
+}
 
 interface Props {
   prefillCode?: string;
@@ -48,11 +54,11 @@ export function SyncSettings({ prefillCode }: Props) {
     }
   }
 
-  const joinReady = joinInput.length === CODE_LENGTH || joinInput.length === LEGACY_CODE_LENGTH;
+  const joinReady = joinInput.length === CODE_LENGTH;
 
   function handleJoin() {
     if (!joinReady) return;
-    joinWithCode(joinInput);
+    if (!joinWithCode(joinInput)) return;
     toast.success("Dołączono do grupy synchronizacji");
   }
 
@@ -97,6 +103,9 @@ export function SyncSettings({ prefillCode }: Props) {
             <p className="text-sm font-semibold">Synchronizacja między urządzeniami</p>
             <p className="text-xs text-muted-foreground mt-0.5">{statusLabel}</p>
             {syncState.status !== "disabled" && (
+              <p className="text-xs text-muted-foreground mt-1" data-testid="sync-diagnosis">{diagnosis(syncState)}</p>
+            )}
+            {syncState.status !== "disabled" && (
               <p className="text-2xs text-muted-foreground mt-0.5">
                 {syncState.lastSyncedAt
                   ? `Ostatnia zmiana z innego urządzenia: ${formatDistanceToNow(syncState.lastSyncedAt, { addSuffix: true, locale: pl })}`
@@ -133,12 +142,12 @@ export function SyncSettings({ prefillCode }: Props) {
         </div>
       )}
 
-      {isShortCode(syncState.code) && (
+      {wasShortCodeDropped() && (
         <div role="alert" className="rounded-xl border border-warning/40 bg-warning/10 p-3 text-xs space-y-2">
-          <p className="font-semibold text-foreground">Ten kod jest krótki (starsza wersja)</p>
+          <p className="font-semibold text-foreground">Synchronizacja wyłączona: kod był za krótki</p>
           <p className="text-muted-foreground">
-            Kod z 8 znaków da się odgadnąć z nazwy pokoju widocznej dla serwera sygnalizacyjnego.
-            Wygeneruj nowy, 12-znakowy kod i wpisz go na pozostałych urządzeniach.
+            Kody z 8 znaków dało się odgadnąć z nazwy pokoju widocznej dla serwera sygnalizacyjnego,
+            więc ich już nie przyjmujemy. Wygeneruj nowy, 12-znakowy kod i wpisz go na pozostałych urządzeniach.
           </p>
           <Button
             type="button"

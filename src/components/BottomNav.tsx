@@ -197,7 +197,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             {onToggleTheme && <SheetTile Icon={dark ? Sun : Moon} label={dark ? "Tryb jasny" : "Tryb ciemny"} onClick={() => { onToggleTheme(); setMoreOpen(false); }} />}
             {onImport && (
               <ImportExportMenu onImport={onImport} onDone={() => setMoreOpen(false)} align="start">
-                <SheetTile Icon={FileDown} label="Import i eksport" />
+                <SheetTile Icon={FileDown} label="Import / Eksport" />
               </ImportExportMenu>
             )}
             <SheetTile Icon={SettingsIcon} label="Ustawienia" onClick={() => { onOpenSettings(); setMoreOpen(false); }} />

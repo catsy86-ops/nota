@@ -145,7 +145,7 @@ export function AppHeader({
                 animate={{ opacity: 1, scale: 1 }}
                 transition={tween.enter}
                 onClick={onToggleTheme}
-                aria-label={dark ? "Włącz tryb jasny" : "Włącz tryb ciemny"}
+                aria-label="Tryb ciemny"
                 aria-pressed={dark}
               >
                 {/* Słońce i księżyc zamieniają się obrotem — ikona mówi, co się stanie po kliknięciu. */}

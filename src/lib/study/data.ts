@@ -28,7 +28,11 @@ export function studyDevice(): string {
 
 /** Czy stary zapis tego urządzenia jest już w dokumencie (wtedy jego zdjęcia chroni dokument). */
 export function legacyStudyMerged(): boolean {
-  try { return yStudy.isMerged(studyDevice()); } catch { return false; }
+  try { return yStudy.isMerged(studyDevice()); } catch (err) {
+    // Błąd tu oznacza, że nie wiemy, czy zdjęcia są chronione — zostawiamy ślad, zamiast zgadywać po cichu.
+    logDiag("warn", "study", "błąd scalania starego zapisu", err);
+    return false;
+  }
 }
 
 /**

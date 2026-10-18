@@ -15,7 +15,7 @@ test("link ?pair= wypełnia kratki kodem", async ({ page }) => {
   await expect(page).not.toHaveURL(/pair=/);
 });
 
-test("kratki przyjmują 12 albo 8 znaków, bez znaków spoza alfabetu", async ({ page }) => {
+test("kod parowania ma 12 znaków, krótsze nie są przyjmowane, bez znaków spoza alfabetu", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Ustawienia" }).first().click();
   await page.getByRole("tab", { name: "Sync" }).click();
@@ -30,11 +30,10 @@ test("kratki przyjmują 12 albo 8 znaków, bez znaków spoza alfabetu", async ({
   // „O” i „0” nie należą do alfabetu kodu — pole ich nie przyjmuje.
   await field.pressSequentially("O0defgh");
   await expect(field).toHaveValue("ABCDEFGH");
-  await expect(join).toBeEnabled();
-
-  await field.pressSequentially("jk");
+  // Stare 8-znakowe kody są odrzucane (nazwa pokoju dawałaby się odgadnąć).
   await expect(join).toBeDisabled();
-  await field.pressSequentially("mn");
+
+  await field.pressSequentially("jkmn");
   await expect(field).toHaveValue("ABCDEFGHJKMN");
   await expect(join).toBeEnabled();
 });

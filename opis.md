@@ -3404,3 +3404,21 @@ lub grupę”.
 - **Ograniczenia i pułapki:** link wysyła się razem z raportem — kto dostanie raport, zobaczy miejsce wpisu. Współrzędne są zaokrąglone do ~1 m. Raport nie ma osobnego przełącznika „bez lokalizacji”.
 - **Testy:** `src/lib/study/report.test.ts` („Tu jestem” w treści); e2e `report-nudge.spec.ts`, `report-whatsapp.spec.ts`, `study.spec.ts`, `journal-geo.spec.ts`.
 - **Commit:** brak — zmiany niezacommitowane.
+
+## Poprawki po audycie (2026-10-18)
+
+- **Paczka:** `vendor-radix` w `manualChunks` zostawiony — próba usunięcia powiększyła wejściowy JS o 1,5 KB (Radix trafia do `index`). Zmiana cofnięta.
+- **Usunięte pliki:** `public/placeholder.svg` (bez odwołań, wypadł z precache), `src/components/ui/skeleton.tsx` (bez importów).
+- **Logowanie błędów:** `study/data.ts` (`legacyStudyMerged`), `privateNotes.ts` (`readThrottle` — uszkodzony licznik prób hasła), zapis z `logDiag`. Parser w `notesStore.ts` bez logu — dodanie przekroczyłoby budżet paczki o 14 B.
+- **Etykiety:** przełącznik motywu ma stałą nazwę „Tryb ciemny” z `aria-pressed` (AppHeader, AppSidebar); pasek boczny z tą samą etykietą widoczną; „Import i eksport” → „Import / Eksport” w dolnym menu; „Nie dało się” → „Nie udało się” (`ViewErrorBoundary`).
+- **Korekty audytu:** „Widok i kolumny” nie występuje dwa razy naraz (inna gałąź telefon/komputer); `aria-expanded` na filtrach i sortowaniu ustawia Radix; `ui/calendar.tsx` i `ui/overlay-back.tsx` są używane.
+- **Budżet:** wejściowy JS 393 208 B przy progu 393 216 B (zapas 8 B).
+
+## Synchronizacja — krótkie kody odrzucone, diagnostyka, ponowne łączenie (plan synchronizacji, fazy 0, 1, 3, 2026-10-18)
+
+- **Co robi:** kody parowania muszą mieć 12 znaków (8-znakowe kody nie są przyjmowane ani przy wpisywaniu, ani w zapisanych ustawieniach — zapisany krótki kod jest usuwany i pokazuje się komunikat „Synchronizacja wyłączona: kod był za krótki” z przyciskiem „Wygeneruj nowy kod”). Ustawienia mają jedno zdanie diagnozy: brak połączenia z serwerami, połączono bez drugiego urządzenia, łączenie (ile serwerów odpowiada). Po powrocie do karty albo odzyskaniu sieci sync łączy się ponownie, nie częściej niż co 10 s.
+- **Gdzie jest:** `src/lib/yjsSync.ts` (`readPrefs` — odrzucenie krótkiego kodu i pole `shortCodeDropped`; `joinWithCode` zwraca `null` dla złej długości; `wasShortCodeDropped`; `SyncState.signalingUp/signalingTotal`; `reconnectIfNeeded` i listener `visibilitychange` w `initSync`); `src/components/SyncSettings.tsx` (`diagnosis`, alert o skróconym kodzie).
+- **Ograniczenia i pułapki:** nie dodano TURN (brak hostingu — decyzja użytkownika); połączenie przez część sieci komórkowych może się nie udać. Synchronizacja nadal wymaga, by oba urządzenia były online jednocześnie. Listener `online` kosztuje 3 B — zostawiony.
+- **Budżet:** wejściowy JS to 393 402 B przy progu 393 216 B — **przekroczenie o 186 B**. Zmiana czeka na decyzję: podniesienie progu albo oszczędności.
+- **Testy:** `src/lib/yjsSync.test.ts` (22/22; dwa testy uodpornione na kolejność — liczą tylko instancje z własnego testu; nowy test zapisanego krótkiego kodu); e2e `sync-code.spec.ts` (kod 12 znaków), `file-sync.spec.ts`.
+- **Commit:** brak — zmiany niezacommitowane.

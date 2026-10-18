@@ -17,7 +17,9 @@ const LS_FOLDERS = "kaczy-notes-folders";
 
 function parse<T>(raw: string | null, fallback: T): T {
   if (!raw) return fallback;
-  try { return JSON.parse(raw) as T; } catch { return fallback; }
+  try { return JSON.parse(raw) as T; } catch {
+    return fallback;
+  }
 }
 
 export interface Snapshot {

@@ -155,7 +155,8 @@ describe("yjsSync", () => {
 
   it("joinWithCode normalizes casing, whitespace and group separators", async () => {
     const { joinWithCode, getSyncState } = await import("./yjsSync");
-    expect(joinWithCode("  abcdefgh  ")).toBe("ABCDEFGH");
+    // Krótkie 8-znakowe kody nie są przyjmowane.
+    expect(joinWithCode("  abcdefgh  ")).toBeNull();
     const code = joinWithCode("abcd efgh-jkmn");
     expect(code).toBe("ABCDEFGHJKMN");
     expect(getSyncState().code).toBe("ABCDEFGHJKMN");
@@ -163,10 +164,12 @@ describe("yjsSync", () => {
 
   it("pauseSync disconnects both providers but keeps the code; resumeSync reconnects to the same group", async () => {
     const { startPairing, pauseSync, resumeSync, getSyncState } = await import("./yjsSync");
+    // Tylko providery z tego testu — poprzednie testy zostawiają własne instancje.
+    const before = providerInstances.length;
     const code = startPairing();
     await waitForMainProvider();
-    await vi.waitFor(() => { if (providerInstances.length < 2 * ROOMS_PER_CONNECT) throw new Error("not all up"); });
-    const firstRound = providerInstances.slice();
+    await vi.waitFor(() => { if (providerInstances.length - before < 2 * ROOMS_PER_CONNECT) throw new Error("not all up"); });
+    const firstRound = providerInstances.slice(before);
 
     pauseSync();
     for (const p of firstRound) expect(p.destroyed).toBe(true);
@@ -182,11 +185,12 @@ describe("yjsSync", () => {
 
   it("forgetPairing disconnects and clears the code entirely", async () => {
     const { startPairing, forgetPairing, getSyncState } = await import("./yjsSync");
+    const before = mainProviders().length;
     startPairing();
-    await waitForMainProvider();
+    await waitForMainProvider(before + ROOMS_PER_CONNECT);
 
     forgetPairing();
-    for (const p of mainProviders()) expect(p.destroyed).toBe(true);
+    for (const p of mainProviders().slice(before)) expect(p.destroyed).toBe(true);
     expect(getSyncState().code).toBeNull();
     expect(getSyncState().status).toBe("disabled");
   });
@@ -297,5 +301,12 @@ describe("yjsSync - bezpieczne domyślne (A02)", () => {
     expect(isShortCode("ABCDEFGH")).toBe(true);
     expect(isShortCode("ABCDEFGHJKMN")).toBe(false);
     expect(isShortCode(null)).toBe(false);
+  });
+
+  it("zapisany krótki kod jest usuwany: sync wyłączony, komunikat zostaje do ponownego sparowania", async () => {
+    localStorage.setItem("kaczy.sync.v1", JSON.stringify({ enabled: true, code: "ABCDEFGH", signaling: [], legacyRoom: false }));
+    const { wasShortCodeDropped, getSyncState } = await import("./yjsSync");
+    expect(wasShortCodeDropped()).toBe(true);
+    expect(getSyncState().code).toBeNull();
   });
 });
