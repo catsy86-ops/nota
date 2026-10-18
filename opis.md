@@ -3463,3 +3463,11 @@ lub grupę”.
 - **Testy (T2):** `src/lib/study/siteDocsAdd.test.ts` — odrzucenie nieobsługiwanego typu pliku, limit liczby dokumentów przy pełnej liście, brak plików.
 - **Testy:** 1396 jednostkowych; e2e study, study-custom, touch-targets, site-docs, journal-geo, bundle — 52/52.
 - **Commit:** brak — zmiany niezacommitowane.
+
+## Praca — testy bez zależności od czasu i flaki (T5, T6, podział godzin, 2026-10-18)
+
+- **Flaki (T5):** `report-nudge.spec.ts` — negatywne asercje („przypomnienia nie ma”) nie czekają już 1,5 s na sztywno, tylko przesuwają zegar Playwrighta o dwie minuty.
+- **Zegar (T6):** `TodayDueList.test.tsx` ma stały „teraz” i sfałszowany zegar `Date`.
+- **Podział godzin:** reguła „po równo” wydzielona do `evenShare` w `siteHours.ts` (zaokrąglenie do 5 min), z testem; `DayHoursDialog` jej używa.
+- **Testy:** 1397 jednostkowych; e2e site-hours, report-nudge, weekly-review, today-study, bundle — 21/21.
+- **Commit:** zapisany poniżej.

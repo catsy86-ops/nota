@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_SHIFT_DATA, type ShiftData } from "@/lib/shifts/model";
 import { buildJournalReport, dayKeyOf, reportBody } from "./report";
-import { cleanSiteHours, dayHours, parseHours, siteMinutesOn } from "./siteHours";
+import { cleanSiteHours, dayHours, evenShare, parseHours, siteMinutesOn } from "./siteHours";
 import { siteKey } from "./sites";
 import type { JournalEntry } from "./yStudy";
 
@@ -93,5 +93,13 @@ describe("raport z podziałem godzin", () => {
     const r = buildJournalReport(journal, { siteId: null, sites, from: "2026-10-14", to: "2026-10-14", shifts });
     expect(r.workMinutes).toBe(WORK);
     expect(reportBody(r)).toContain("(Lipowa 5: 5 h, Polna 2: 5 h)");
+  });
+});
+
+describe("evenShare", () => {
+  it("dzieli po równo i zaokrągla do 5 min; bez budów zero", () => {
+    expect(evenShare(480, 3)).toBe(160);
+    expect(evenShare(470, 3)).toBe(155);
+    expect(evenShare(480, 0)).toBe(0);
   });
 });

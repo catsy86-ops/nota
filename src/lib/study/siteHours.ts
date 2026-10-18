@@ -107,3 +107,8 @@ export function siteMinutesOn(day: DayHours, siteId: string): number | null {
   const s = day.sites.find((x) => x.siteId === siteId);
   return s ? s.minutes : 0;
 }
+
+/** Równy podział `work` minut między `count` budów, zaokrąglony do 5 min (0 budów = 0). */
+export function evenShare(work: number, count: number): number {
+  return count > 0 ? Math.round(work / count / 5) * 5 : 0;
+}

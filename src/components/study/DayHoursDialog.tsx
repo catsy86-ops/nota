@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { evenShare } from "@/lib/study/siteHours";
 import { Clock } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -54,7 +55,7 @@ export function DayHoursDialog({ day, label, onOpenChange }: {
     (values[siteId] ?? "").trim() === "" && empty === 1 && left > 0 ? formatHoursShort(left) : "";
 
   function evenly() {
-    const each = Math.round(split!.work / split!.sites.length / 5) * 5;
+    const each = evenShare(split!.work, split!.sites.length);
     setValues(Object.fromEntries(split!.sites.map((s) => [s.siteId, formatHoursShort(each)])));
   }
 

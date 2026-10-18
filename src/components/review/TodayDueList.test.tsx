@@ -1,4 +1,4 @@
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, beforeAll, afterAll, vi } from "vitest";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import { TodayDueList } from "./TodayDueList";
 import type { Note } from "@/hooks/useNotes";
@@ -6,7 +6,14 @@ import type { Note } from "@/hooks/useNotes";
 afterEach(cleanup);
 
 const HOUR = 3600_000;
-const now = Date.now();
+// Stały „teraz” — wynik nie zależy od godziny uruchomienia testów.
+const now = new Date(2026, 9, 14, 12, 0).getTime();
+
+beforeAll(() => {
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(now);
+});
+afterAll(() => vi.useRealTimers());
 
 /** Minimalna notatka do listy terminów — reszta pól bez znaczenia dla grupowania. */
 function note(id: string, reminder: number | null, over: Partial<Note> = {}): Note {

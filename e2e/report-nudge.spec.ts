@@ -38,7 +38,7 @@ test("po końcu dnia pracy: dymek „Raport dnia gotowy” prowadzi do raportu z
   await page.keyboard.press("Escape");
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 }).or(page.locator("main")).first()).toBeVisible();
-  await page.waitForTimeout(1500);
+  await page.clock.runFor(120_000);
   await expect(page.locator("[data-sonner-toast]").filter({ hasText: "Raport dnia gotowy" })).toHaveCount(0);
 });
 
@@ -46,7 +46,8 @@ test("przed końcem dnia pracy nie ma przypomnienia", async ({ page }) => {
   await seed(page, 12);
   await page.goto("/");
   await expect(page.locator("main").first()).toBeVisible();
-  await page.waitForTimeout(1500);
+  // Przypomnienie sprawdza się co minutę: przesuwamy zegar o dwie, zamiast czekać realnie.
+  await page.clock.runFor(120_000);
   await expect(page.locator("[data-sonner-toast]").filter({ hasText: "Raport dnia gotowy" })).toHaveCount(0);
 });
 
