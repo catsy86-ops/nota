@@ -64,7 +64,6 @@ export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMo
       </div>
 
       <ToggleGroup
-        type="single"
         variant="plain"
         value={view}
         onValueChange={(v) => { if (v) setView(v as DayView); }}
