@@ -1,4 +1,5 @@
 import type { Note } from "@/hooks/useNotes";
+import { endOfDay, termStatus } from "@/lib/dueTerms";
 
 export type AgendaGroupKey = "overdue" | "today" | "week" | "later";
 
@@ -15,13 +16,6 @@ const LABELS: Record<AgendaGroupKey, string> = {
   later: "Później",
 };
 
-function endOfDay(t: number, plusDays = 0): number {
-  const d = new Date(t);
-  d.setDate(d.getDate() + plusDays);
-  d.setHours(23, 59, 59, 999);
-  return d.getTime();
-}
-
 /**
  * Widok „Przypomnienia” jako agenda: po terminie rosnąco, w grupach.
  * Kolejność sortowania z ustawień nie ma tu sensu — lista terminów
@@ -29,15 +23,9 @@ function endOfDay(t: number, plusDays = 0): number {
  * Puste grupy są pomijane.
  */
 export function groupReminders(notes: Note[], now: number = Date.now()): AgendaGroup[] {
-  const todayEnd = endOfDay(now);
-  const weekEnd = endOfDay(now, 7);
   const byKey: Record<AgendaGroupKey, Note[]> = { overdue: [], today: [], week: [], later: [] };
   const sorted = notes.filter((n) => n.reminder !== null).sort((a, b) => (a.reminder as number) - (b.reminder as number));
-  for (const n of sorted) {
-    const t = n.reminder as number;
-    const key: AgendaGroupKey = t < now ? "overdue" : t <= todayEnd ? "today" : t <= weekEnd ? "week" : "later";
-    byKey[key].push(n);
-  }
+  for (const n of sorted) byKey[termStatus(n.reminder as number, now)].push(n);
   return (Object.keys(byKey) as AgendaGroupKey[])
     .filter((k) => byKey[k].length)
     .map((k) => ({ key: k, label: LABELS[k], notes: byKey[k] }));
@@ -46,11 +34,11 @@ export function groupReminders(notes: Note[], now: number = Date.now()): AgendaG
 /**
  * Liczba zaległych przypomnień (termin minął, przypomnienie nadal czeka).
  * Jedno źródło dla licznika w pasku bocznym, znaczka aplikacji i tytułu karty.
- * Przyjmuje listę aktywnych notatek — kosz i archiwum nie są w niej liczone.
+ * Przyjmuje notatki bez kosza. Archiwum jest liczone: jego przypomnienia nadal dzwonią.
  */
 export function countOverdue(notes: Pick<Note, "reminder">[], now: number = Date.now()): number {
   let n = 0;
-  for (const note of notes) if (note.reminder !== null && note.reminder < now) n++;
+  for (const note of notes) if (note.reminder !== null && termStatus(note.reminder, now) === "overdue") n++;
   return n;
 }
 

@@ -475,7 +475,7 @@ const Index = () => {
 
   // Licznik w pasku bocznym tylko przy tym, co wymaga uwagi: zaległe przypomnienia i Kosz.
   // Ta sama liczba ląduje w tytule karty i na ikonie aplikacji (useOverdueBadge).
-  const overdueCount = useOverdueBadge(notes);
+  const overdueCount = useOverdueBadge(reminderNotes);
   // Trwałe usunięcie zabiera ze sobą historię wersji — inaczej zostawałaby
   // w `localStorage` na zawsze i zjadała limit.
   const deleteNoteForever = useCallback((id: string) => { deleteNote(id); deleteVersions(id); }, [deleteNote, deleteVersions]);
@@ -604,7 +604,7 @@ const Index = () => {
 
           {view === "today" && !deferredSearch && (
             <Suspense fallback={<CardSkeleton />}>
-              <TodayDueList notes={notes} onOpen={openNote} onOpenReminders={() => go("reminders")} />
+              <TodayDueList notes={reminderNotes} onOpen={openNote} onOpenReminders={() => go("reminders")} />
             </Suspense>
           )}
 
@@ -685,7 +685,7 @@ const Index = () => {
             </NoteGroupSection>
           )}
 
-          {view === "reminders" && groupReminders(others).map((group, i) => (
+          {view === "reminders" && groupReminders([...others, ...archivedNotes]).map((group, i) => (
             <NoteGroupSection key={group.key} groupKey={`reminders-${group.key}`} label={group.label} count={group.notes.length} tone={group.key === "overdue" ? "alert" : "default"}>
               {renderGrid(group.notes, i)}
             </NoteGroupSection>

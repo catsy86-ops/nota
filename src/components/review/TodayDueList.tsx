@@ -21,7 +21,8 @@ const GROUP_TONE: Record<Extract<AgendaGroupKey, "overdue" | "today">, string> =
  */
 export function TodayDueList({ notes, onOpen, onOpenReminders }: { notes: Note[]; onOpen: (id: string) => void; onOpenReminders: () => void }) {
   const groups = useMemo(
-    () => groupReminders(notes.filter((n) => !n.archived && !n.trashed)).filter((g) => g.key === "overdue" || g.key === "today"),
+    // Archiwum też: jego przypomnienia nadal dzwonią, więc muszą być widoczne i liczone jak reszta.
+    () => groupReminders(notes.filter((n) => !n.trashed)).filter((g) => g.key === "overdue" || g.key === "today"),
     [notes],
   );
   const total = groups.reduce((n, g) => n + g.notes.length, 0);

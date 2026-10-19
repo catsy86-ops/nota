@@ -21,7 +21,7 @@ function note(id: string, reminder: number | null, over: Partial<Note> = {}): No
 }
 
 describe("TodayDueList", () => {
-  it("pokazuje zaległe i dzisiejsze, a pomija przyszłe, archiwum i kosz", () => {
+  it("pokazuje zaległe i dzisiejsze, a pomija przyszłe i kosz; archiwum liczy się jak reszta", () => {
     const notes = [
       note("late", now - 2 * HOUR),
       note("soon", now + 60 * 60_000 * 0.5),
@@ -32,10 +32,10 @@ describe("TodayDueList", () => {
     render(<TodayDueList notes={notes} onOpen={() => {}} onOpenReminders={() => {}} />);
     const overdue = screen.getByText("Zaległe").closest("[data-due-group]") as HTMLElement;
     expect(within(overdue).getByText("T-late")).toBeTruthy();
+    expect(within(overdue).getByText("T-arch")).toBeTruthy();
     expect(screen.queryByText("T-week")).toBeNull();
-    expect(screen.queryByText("T-arch")).toBeNull();
     expect(screen.queryByText("T-bin")).toBeNull();
-    expect(screen.getByTestId("today-due-count").textContent).toBe("2");
+    expect(screen.getByTestId("today-due-count").textContent).toBe("3");
   });
 
   it("gdy nic nie czeka, mówi to wprost", () => {
