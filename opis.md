@@ -3570,3 +3570,12 @@ lub grupę”.
 - **Czego nie dodano:** przycisków w pustych stanach. Plan mówi „gdzie sensowne”, a tu następny krok to już działanie na kaflu albo w kompozytorze („+”), więc przycisk dublowałby ten sam skrót. Do rozważenia później.
 - **Testy:** `src/components/EmptyState.copy.test.ts` (12: nagłówek i krok w każdym widoku, długość, brak wykrzykników). W Chrome (`scratchpad/test-chrome.mjs`): /kosz, /archiwum, /przypomnienia pokazują nowe zdania. E2E `reminders-calendar`, `search-backup`: 14/14. Vitest: patrz wpis commitu.
 - **Commit:** f5e418c, 2026-10-19.
+
+## Wspólne — podpowiedź o przytrzymaniu „+” od pierwszego stuknięcia (faza 7 planu Notatek, 2026-10-19)
+
+- **Co robi:** po pierwszym stuknięciu „+” na dolnym pasku pojawia się jednorazowy komunikat: „Przytrzymaj „+”, by od razu dodać listę, zdjęcie, rysunek albo dyktować”. Dawniej pokazywał się dopiero po czwartym stuknięciu, czyli często wcale.
+- **Gdzie jest:** `src/components/BottomNav.tsx` — `hintOnce`.
+- **Jak działa:** flaga `kaczy.fab.hint.v1` w localStorage ustawiana przy pierwszym pokazaniu. Licznik `kaczy.fab.taps` już nie jest używany (stary klucz zostaje w przeglądarkach, nic nie czyta). Ci, którzy już widzieli podpowiedź po czwartym stuknięciu, nie dostaną jej drugi raz.
+- **Ograniczenia:** w trybie bez localStorage (prywatne okno) podpowiedzi nie ma — tak jak wcześniej. Komunikat wisi 6 s; w tym czasie kolejne stuknięcia go nie powtarzają.
+- **Testy:** osobny skrypt z czystym profilem (`scratchpad/fab.mjs`): po pierwszym stuknięciu komunikat jest, po ponownym (po zniknięciu tostu) już nie. E2E `mobile`: 44/44. Vitest 1423/1423.
+- **Commit:** patrz następna linia.

@@ -61,15 +61,12 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
     }, 420);
   };
   const cancelPress = () => window.clearTimeout(pressTimer.current);
+  // Podpowiedź o przytrzymaniu „+” — raz, już przy pierwszym stuknięciu (wcześniej dopiero po czwartym).
   const hintOnce = () => {
     try {
       if (localStorage.getItem("kaczy.fab.hint.v1")) return;
-      const n = Number(localStorage.getItem("kaczy.fab.taps") ?? "0") + 1;
-      localStorage.setItem("kaczy.fab.taps", String(n));
-      if (n >= 4) {
-        localStorage.setItem("kaczy.fab.hint.v1", "1");
-        toast("Przytrzymaj „+”, by od razu dodać listę, zdjęcie, rysunek albo dyktować", { duration: 6000 });
-      }
+      localStorage.setItem("kaczy.fab.hint.v1", "1");
+      toast("Przytrzymaj „+”, by od razu dodać listę, zdjęcie, rysunek albo dyktować", { duration: 6000 });
     } catch { /* brak localStorage — bez podpowiedzi */ }
   };
   // Każde dotknięcie „+” obraca ikonę o ćwierć obrotu — cichy znak, że edytor się otwiera.
