@@ -3826,7 +3826,66 @@ lub grupę”.
   - T2 — testy komponentów działu Praca: `SiteOrderPanel.test.tsx` (WhatsApp), `SiteShortagesPanel.test.tsx` (dopisanie, status, data dostawy, usuwanie z „Cofnij”, czyszczenie), `SiteStagesPanel.test.tsx` (domyślne etapy, odhaczenie z datą, postęp, własny etap), `SiteDocsPanel.test.tsx` (miniatury i PDF-y, „Otwórz”, usuwanie, podgląd 100%), `DayHoursDialog.test.tsx` (zapis godzin, błędny format, reszta dnia, ostrzeżenie o nadmiarze). Biblioteka i store zamockowane, bez zależności od prawdziwego zegara. Dochodzą: `SiteServicePanel.test.tsx` (zgłoszenia z terminem, zaległe i dziś, zamknięcie z opisem, „Cofnij”, gwarancja, załatwione i „Otwórz ponownie”), `CalculatorsSheet.test.tsx` (spadek w obu trybach z podpowiedzią, próba wodna, pojemność z kolejnym odcinkiem i „Inna rura”), `JournalEntrySheet.test.tsx` (rodzaj w szkicu, pusty wpis, zapis z tekstem, edycja, „Usuń” z „Cofnij”; store zapisu zamockowany, szkic i stan arkusza prawdziwe).
 - **Nie zrobione (z planu Pracy):** brak — T2 zamknięte, wszystkie komponenty działu mają test.
   - T5 — `report-nudge.spec.ts` nie ma już `waitForTimeout` (usunięty wcześniej); `journal-geo.spec.ts` celowo akceptuje dwa komunikaty (zależne od przeglądarki); `today-study.spec.ts` przechodzi, a wynik nie zależy od odpowiedzi (wszystkie 10 pytań wraca następnego dnia). Bez zmian.
-  - U8 — decyzja właściciela: nagranie jako osobny załącznik. Nie zrobione: audio w `imageStore` wymaga obsługi w kopii (budżet 40 MB), PDF, ZIP, odśmiecaniu i w arkuszu wpisu (zdjęcia zakładają obrazy).
+  - U8 — decyzja właściciela: nagranie jako osobny załącznik. Zrobione w kolejnej sesji (bez commita) — patrz „Praca — nagranie głosowe w wpisie (U8)”.
   - D5 — decyzja właściciela: zostaje obecny model wpisu (jeden klucz Y.Map), bez przebudowy.
-  - P3 — decyzja: odłożenie dotyczy tylko jednego wystąpienia. Nie zrobione: dziś „Odłóż” z powiadomienia zapisuje nowy `reminder` notatki, czyli przesuwa kotwicę całej serii. Potrzebne pole nakładki w `reminderSpec` i obsługa w harmonogramie push, Kalendarzu, Dziś i Przypomnieniach (ok. 39 plików, 73 miejsca czytania terminu) — osobna sesja z pełnym e2e.
+  - P3 — decyzja: odłożenie dotyczy tylko jednego wystąpienia. Nie zrobione: dziś „Odłóż” z powiadomienia zapisuje nowy `reminder` notatki, czyli przesuwa kotwicę całej serii. Zrobione w kolejnej sesji (2026-10-19, bez commita) — patrz „Przypomnienia — odłożenie jednego wystąpienia serii”.
 - **Commit:** 19f2ade, 2026-10-19; testy T2 w 4fdd64f, 2026-10-19.
+
+## Przypomnienia — odłożenie jednego wystąpienia serii (P3, 2026-10-19, 3c07051)
+
+- **Co robi:** „Odłóż” (10 minut, jutro o 9:00), także z powiadomienia systemowego i push, działa dla przypomnień cyklicznych. Odkłada tylko to jedno wystąpienie: kolejne są jak wcześniej, od swojego terminu, a nie od chwili odłożenia. Dotąd „Odłóż” było ukryte dla serii, a z powiadomienia przesuwało całą serię.
+- **Gdzie jest:**
+  - `src/lib/reminderSpec.ts` — pole `reminderBase` (termin serii, który zastępuje odłożona chwila w `reminder`). `mergeSpec`: zapis `reminder` bez jawnego `reminderBase` go czyści, więc zwykła zmiana terminu nie zostawia starego odłożenia.
+  - `src/lib/reminderRepeat.ts` — `nextOccurrence(note, at)`: następne wystąpienie serii; gdy `at` to odłożone wystąpienie, liczy od `reminderBase`. `snoozeTarget(note, at, now)`: zapis po odłożeniu.
+  - `src/hooks/useReminderNotifications.ts` — `applyActionRef` (akcja z SW i z kolejki przy starcie) i przyciski dymku zapisują przez `snoozeTarget`; `onReminderFired` dostaje czwarty argument `reminderBase`.
+  - `src/components/ReminderDueToast.tsx` — usunięty prop `canSnooze`; „Odłóż” zawsze w dymku.
+  - `src/pages/Index.tsx` — callbacki przekazują `reminderBase` do `updateNote`; `onSetReminder` kalendarza też.
+  - Liczenie serii, które zmieniły się na `nextOccurrence`: `src/lib/reminderDue.ts` (planer odpaleń), `src/lib/reminderOccurrences.ts` (kalendarz i Dziś), `src/lib/push/schedule.ts` (harmonogram push), `src/components/calendar/ReminderCalendarView.tsx` („Pomiń” wystąpienie).
+  - Przepływ danych: `src/hooks/useNotes.ts` (typ `Note.reminderBase`), `src/lib/noteSchema.ts`, `src/lib/mergeNotes.ts` (scalanie kopii), `src/lib/yjsStore.ts` (zapis i projekcja `reminderSpec`).
+  - `push-server/core.js` — tylko komentarz: przycisk „Odłóż” dla serii też.
+- **Jak działa i dlaczego:**
+  - Odłożenie zapisuje `reminder` = odłożona chwila i `reminderBase` = termin serii, który ona zastępuje. Dzięki temu kolejne wystąpienia nie przesuwają się — wszystkie czytniki `nextOccurrence` liczą od bazy.
+  - Odłożona chwila zawsze wypada przed następnym terminem serii (`snoozeTarget` zastępuje ją zwykłym terminem, gdyby wypadała później). Dzięki temu nie ma dwóch przypomnień w kolejności odwrotnej ani podwójnego odpalenia.
+  - Zaległości: po nieobecności aplikacji `snoozeTarget` przesuwa bazę na ostatnie wystąpienie, które już minęło (`now`), więc odłożenie nie wraca od razu.
+  - Dlaczego pole w spec, a nie osobna struktura: całe przypomnienie idzie jednym zapisem `reminderSpec` (LWW), więc konflikt dwóch urządzeń nie może zostawić mieszanki bazy i terminu.
+- **Ograniczenia i pułapki:**
+  - „Gotowe” dla serii nadal zapisuje `reminder = null`, czyli kończy serię (zachowanie sprzed zmiany, nie ruszane tutaj). Warto to potwierdzić — zob. „Nie zrobione”.
+  - Stare notatki bez `reminderBase` działają jak dotąd.
+  - Przesunięcie serii w kalendarzu (przeciągnięcie, „Termin zapisany”) czyści odłożenie: to nowy termin serii.
+- **Testy:**
+  - `src/lib/reminderRepeat.test.ts` — `nextOccurrence` (bez i z bazą, tygodniowa, jednorazowa) i `snoozeTarget` (jednorazowa, przed kolejnym terminem, po nim, zaległe, seria zakończona).
+  - `src/lib/reminderSpec.test.ts` — zapis i odczyt bazy, czyszczenie przy nowym terminie, jawne `undefined`.
+  - `src/lib/reminderDue.test.ts` — odłożone wystąpienie odpala się raz, następne od terminu serii.
+  - `src/lib/yjsStore.reminder.test.ts` — baza wraca po synchronizacji i gaśnie przy zwykłym terminie.
+  - Istniejące testy (`reminderOccurrences`, `push/*`, `ReminderDueToast`) przechodzą bez zmian.
+  - e2e nie uruchomiono (pamięć); na telefonie nie sprawdzono.
+- **Nie zrobione / do potwierdzenia:**
+  - „Gotowe” w serii kończy ją (`reminder: null`). Może to być błąd, bo „Gotowe” powinno zwykle przejść do następnego wystąpienia. Do decyzji właściciela, nie zmieniane tutaj.
+  - Brak e2e dla odłożenia serii i testu na telefonie.
+- **Commit:** 3c07051, 2026-10-19.
+
+## Praca — nagranie głosowe w wpisie (U8, 2026-10-19, 5581ece)
+
+- **Co robi:** we wpisie z budowy można nagrać głos przyciskiem „Nagraj” (do 3 min, do 3 nagrań w wpisie). Nagranie to osobny załącznik audio — pod zdjęciami na liście, z odtwarzaczem i „Usuń”. Samo nagranie wystarcza, by zapisać wpis. Działa w nowym wpisie i w edycji.
+- **Gdzie jest:**
+  - `src/lib/study/yStudy.ts` — pole `JournalEntry.recordings?: Attachment[]`, stała `JOURNAL_MAX_RECORDINGS = 3`, `cleanRecordings` (tylko manifesty audio z kluczem 64-znakowym w `imageStore`), `cleanEntryParts` i `cleanEntry` (nagranie czyni wpis niepustym).
+  - `src/lib/study/store.ts` — `NewJournalEntry.recordings`, `entryFields` (zapis), `sanitizeStudy` (projekcja).
+  - `src/lib/study/draft.ts` — `JournalDraft.recordings` (szkic zostaje po zamknięciu arkusza, czyści się po zapisie), `sanitizeDraft` (starszy szkic → `[]`).
+  - `src/lib/study/entrySheet.ts` — `openJournalEdit` przepisuje nagrania do formularza edycji.
+  - `src/lib/study/recordings.ts` — `addRecording(file, current)`: limit 3 w wpisie, `addAttachmentFiles` (limity, hash, dedup, quota jak w notatkach), `used` liczy załączniki notatek i nagrania wszystkich wpisów.
+  - `src/lib/study/journalRefs.ts` — `journalRefsIn` zbiera klucze nagrań; w trybie sync tylko do 2 MB (jak dokumenty budów).
+  - `src/components/study/JournalEntrySheet.tsx` — przycisk „Nagraj”, lista nagrań z `AudioPreview` i „Usuń nagranie”, `addRecordingFile`. `VoiceRecorder` i `AudioPreview` są leniwe (`VoiceAttachmentParts.tsx`), więc startowa paczka nie rośnie.
+- **Jak działa i dlaczego:**
+  - Nagranie to załącznik audio, nie zdjęcie: osobna lista `recordings`, bo raport i kopia opisują zdjęcia jako obrazy. Bajty trzymają się tego samego magazynu co załączniki notatek (`imageStore`), więc odśmiecanie, kopia (`exportNotes` / backup v3 przez `journalImageRefs`) i przywracanie (`putDataUrl`, bez filtra na `image/`) działają bez nowych ścieżek.
+  - Wpis to jeden klucz w mapie Yjs (LWW na cały wpis), więc nagrania jadą z wpisem; nie ma nowego modelu synchronizacji.
+  - Sync do innego urządzenia: nagrania do 2 MB; większe zostają lokalnie — tak jak załączniki notatek i dokumenty budów.
+- **Ograniczenia i pułapki:**
+  - Raport kopii (`exportNotes`) liczy pominięte nagrania w kategorii „zdjęcia dziennika” (`journalPhotos`), bo `journalImageRefs` zbiera wszystkie klucze wpisów. Etykieta w raporcie jest myląca — do poprawy osobno.
+  - Limit łączny 100 MB liczy wszystkie załączniki w aplikacji (`used`). Nagranie usunięte z wpisu zostaje w magazynie do odśmiecania (po karencji).
+  - Przeglądarki nagrywają w `audio/webm`, `audio/ogg` albo `audio/mp4`; `cleanRecordings` odrzuca każdy inny typ.
+  - Dyktowanie (`useDictation`) i nagrywanie są niezależne — nagranie nie jest transkrybowane i nie trafia do raportu.
+- **Testy:**
+  - `src/lib/study/recordings.test.ts` — `cleanRecordings` (typy, klucze, rozmiary, limit), wpis z samym nagraniem, `journalRefsIn` (także tryb sync do 2 MB), limit w `addRecording`.
+  - `e2e/bundle.spec.ts` — budżet startowej paczki zielony po dodaniu nagrań.
+  - Nagrywania w przeglądarce (mikrofon) nie testowano e2e — brak fake mikrofonu w zestawie; wymaga ręcznego sprawdzenia na telefonie.
+- **Commit:** 5581ece, 2026-10-19.
