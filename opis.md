@@ -3512,4 +3512,4 @@ lub grupę”.
 - **Ograniczenia:** „Spotkanie w piątek” w tytule też nie ustawi przypomnienia (świadoma decyzja, plan: `docs/plan-notatki-2026-10-19.md`, opcja A). Tytuł bez przyimka („Zadzwonić jutro 9:00”) nadal zamienia datę w przypomnienie i wycina ją z tytułu.
 - **Błąd naprawiony:** kompozytor zapisywał „Lista na sobotę” jako „Lista na” z przypomnieniem na sobotę.
 - **Testy:** `src/lib/quickCapture.test.ts` (38, w tym trzy nowe dla tytułu). Sprawdzone w prawdziwym Chrome (puppeteer-core, `scratchpad/test-chrome.mjs`): karta ma tytuł „Lista na sobotę”.
-- **Commit:** patrz następna linia.
+- **Commit:** 6e95430, 2026-10-19.
