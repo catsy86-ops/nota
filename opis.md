@@ -3610,3 +3610,20 @@ lub grupę”.
 - **Dlaczego:** token `--r-card` (`src/index.css`) to 1 rem we wszystkich stylach, tyle samo co `rounded-2xl`. Zmiana nie zmienia wyglądu, a promienie kart mają jedno źródło prawdy.
 - **Testy:** Vitest 1424/1424, typecheck czysty, Chrome: promień kafla 16 px (30/30 sprawdzeń).
 - **Commit:** 9b7f7b2, 2026-10-19.
+
+## Dziś, Praca, Grafik — blok tytułowy widoku (B4, 2026-10-19)
+
+- **Co robi:** na Dziś, Praca i Grafik nad treścią stoi tytuł h1 (font display, 3xl) i wiersz mono z dzisiejszą datą. Na Dziś dochodzi licznik notatek („2 notatki”). Pasek nagłówka na tych widokach nie pokazuje już nazwy widoku, żeby nie powielać tytułu.
+- **Gdzie jest:** `src/components/ViewTitle.tsx` (`ViewTitle`, `isTitleBlockView`, lista `TITLE_BLOCK_VIEWS`), `src/pages/Index.tsx` (pierwsze dziecko `<main>`), `src/components/AppHeader.tsx` (h1 z klasą `hidden` na tych widokach).
+- **Jak działa:** na tych trzech widokach jedyny widoczny h1 to blok tytułowy. Nagłówek go ukrywa (`hidden` usuwa też z drzewa dostępności), więc czytnik ekranu nie widzi dwóch nagłówków poziomu 1.
+- **Decyzja:** B4 z planu wizualnego (`docs/plan-wizualny-2026-10-18.md`) zrobiony jako dom tytułu z datą. Nie dodano innych widoków.
+- **Testy:** w Chrome (390 px): na /dzis, /praca, /grafik jeden widoczny h1 z właściwą nazwą i wiersz z datą. E2E `routes`, `shifts`: 32/33 (jeden test offline Grafiku niestabilny pod obciążeniem, przechodzi osobno).
+- **Commit:** patrz następna linia.
+
+## Długi — rodzaje „Pożyczyłem od” i „Oddałem” (2026-10-19)
+
+- **Co robi:** cztery rodzaje wpisu: „Pożyczyłem” i „Oddał mi” (jak dotąd) oraz „Pożyczyłem od” i „Oddałem”. Jedna osoba może mieć długi w obie strony. Saldo to: pożyczyłem (+), oddał mi (−), pożyczyłem od (−), oddałem (+). Dodatnie saldo: ta osoba jest nam winna. Ujemne: my jesteśmy winni i pojawia się przycisk „Oddałem całość”.
+- **Gdzie jest:** `src/lib/debts/model.ts` (`DebtKind`, `DEBT_KINDS`, `KIND_SIGN`, `balances`, `cleanDebt`), `src/components/debts/DebtsView.tsx` (wybór rodzaju w siatce 2×2, ikony i kolory według znaku, `PersonHistory`).
+- **Kompatybilność:** stare wpisy („lent”, „repaid”) bez zmian, saldo liczone tak samo.
+- **Testy:** `src/lib/debts/model.test.ts` (znak salda dla nowych rodzajów, czyszczenie). W Chrome: cztery rodzaje w wyborze, „Pożyczyłem od 120” daje sumę „My jesteśmy winni” 120,00 zł, saldo ujemne i „Oddałem całość”. Vitest 1427/1427.
+- **Commit:** patrz następna linia.

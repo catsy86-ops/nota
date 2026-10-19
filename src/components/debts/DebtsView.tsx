@@ -8,7 +8,7 @@ import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { localDayKey } from "@/lib/dayDone";
 import { addDebt, addDebtFromText, removeDebt, restoreDebt, useDebts } from "@/lib/debts/store";
-import { balances, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, knownPeople, parseAmount, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
+import { balances, DEBT_KINDS, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, parseAmount, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
 
 /**
  * Długi: kto ile u nas pożyczył i ile oddał. Góra — podsumowanie i szybki wpis,
@@ -53,7 +53,7 @@ function Summary({ owedToMe, iOwe }: { owedToMe: number; iOwe: number }) {
   );
 }
 
-const KIND_LABEL: Record<DebtKind, string> = { lent: "Pożyczyłem", repaid: "Oddał mi" };
+const KIND_LABEL: Record<DebtKind, string> = { lent: "Pożyczyłem", repaid: "Oddał mi", borrowed: "Pożyczyłem od", returned: "Oddałem" };
 
 /** Dodawanie: osoba, rodzaj, kwota, dzień i notatka. Po zapisie zostaje osoba — kolejne pozycje dopisuje się szybciej. */
 function AddForm({ entries }: { entries: DebtEntry[] }) {
@@ -86,9 +86,10 @@ function AddForm({ entries }: { entries: DebtEntry[] }) {
   return (
     <form onSubmit={submit} noValidate aria-label="Nowy wpis" className="mb-6 space-y-4 rounded-card border border-border/70 bg-card p-4">
       <div role="radiogroup" aria-label="Rodzaj wpisu" className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
-        {(["lent", "repaid"] as const).map((k) => {
+        {DEBT_KINDS.map((k) => {
           const selected = kind === k;
-          const Icon = k === "lent" ? ArrowUpRight : ArrowDownLeft;
+          // Pieniądze wychodzą od nas (pożyczka, zwrot): strzałka w górę. Wracają (spłata, dług u kogoś): w dół.
+          const Icon = KIND_SIGN[k] > 0 ? ArrowUpRight : ArrowDownLeft;
           return (
             <button
               key={k}
@@ -222,7 +223,8 @@ function PersonSheet({ person, onClose }: { person: PersonDebts | null; onClose:
 
 function PersonHistory({ person, onDone }: { person: PersonDebts; onDone: () => void }) {
   const settle = () => {
-    addDebt({ person: person.name, kind: "repaid", amount: person.balance });
+    // Saldo dodatnie: oni oddają nam. Ujemne: oddajemy my.
+    addDebt({ person: person.name, kind: person.balance > 0 ? "repaid" : "returned", amount: Math.abs(person.balance) });
     haptic("tap");
     toast.success(`Oddane w całości: ${person.name}`);
   };
@@ -240,18 +242,18 @@ function PersonHistory({ person, onDone }: { person: PersonDebts; onDone: () => 
         </SheetDescription>
       </SheetHeader>
 
-      {person.balance > 0 && (
+      {person.balance !== 0 && (
         <Button className="mt-4 w-full h-11 gap-2" onClick={() => { settle(); onDone(); }}>
           <Check />
-          Oddał całość ({formatAmount(person.balance)})
+          {person.balance > 0 ? `Oddał całość (${formatAmount(person.balance)})` : `Oddałem całość (${formatAmount(-person.balance)})`}
         </Button>
       )}
 
       <ol className="mt-5 space-y-2" aria-label="Historia">
         {person.entries.map((e) => (
           <li key={e.id} className="flex items-center gap-3 rounded-xl border border-border/60 bg-background p-3">
-            <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full", e.kind === "lent" ? "bg-warning/15 text-warning-ink" : "bg-success/15 text-success-ink")} aria-hidden>
-              {e.kind === "lent" ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownLeft className="h-4 w-4" />}
+            <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full", KIND_SIGN[e.kind] > 0 ? "bg-warning/15 text-warning-ink" : "bg-success/15 text-success-ink")} aria-hidden>
+              {KIND_SIGN[e.kind] > 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownLeft className="h-4 w-4" />}
             </span>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium">{KIND_LABEL[e.kind]} · <span className="tabular-nums">{formatAmount(e.amount)}</span></p>

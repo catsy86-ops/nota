@@ -15,6 +15,7 @@ import type { View } from "@/hooks/useFilteredNotes";
 import { pluralPl } from "@/lib/plural";
 import { RollingNumber } from "@/components/RollingNumber";
 import { useHideOnScroll } from "@/hooks/useHideOnScroll";
+import { isTitleBlockView } from "@/components/ViewTitle";
 
 interface AppHeaderProps {
   selectionMode: boolean;
@@ -97,7 +98,7 @@ export function AppHeader({
           )}
           {!sidebarOpen && <span aria-hidden className="hidden sm:block h-5 w-px bg-border" />}
           <div className={!sidebarOpen && view === "notes" ? "hidden sm:block" : undefined}>
-            <h1 className="app-title text-lg font-display leading-tight tracking-tight text-foreground">
+            <h1 className={cn("app-title text-lg font-display leading-tight tracking-tight text-foreground", isTitleBlockView(view) && "hidden")}>
               {view === "notes" && "Notatki"}
               {view === "today" && (
 "Dziś"

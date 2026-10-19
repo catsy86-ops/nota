@@ -79,3 +79,25 @@ describe("knownPeople", () => {
     expect(personKey("  ANNA ")).toBe("anna");
   });
 });
+
+describe("cztery rodzaje wpisu i znak salda", () => {
+  it("pożyczka od kogoś zmniejsza saldo, a jego zwrot je zwiększa", () => {
+    const [p] = balances([
+      e({ id: "1", kind: "lent", amount: 10000, created: 1 }),
+      e({ id: "2", kind: "borrowed", amount: 4000, at: "2026-10-12", created: 2 }),
+      e({ id: "3", kind: "returned", amount: 1000, at: "2026-10-13", created: 3 }),
+    ]);
+    expect(p.balance).toBe(10000 - 4000 + 1000);
+  });
+
+  it("saldo ujemne: my jesteśmy winni i mamy to w podsumowaniu", () => {
+    const people = balances([e({ id: "1", kind: "borrowed", amount: 2500 })]);
+    expect(people[0].balance).toBe(-2500);
+    expect(totals(people)).toEqual({ owedToMe: 0, iOwe: 2500 });
+  });
+
+  it("cleanDebt przepuszcza wszystkie cztery rodzaje, a obce odrzuca", () => {
+    for (const kind of ["lent", "repaid", "borrowed", "returned"]) expect(cleanDebt(e({ kind: kind as never }))?.kind).toBe(kind);
+    expect(cleanDebt(e({ kind: "gift" as never }))).toBeNull();
+  });
+});

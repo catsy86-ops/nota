@@ -47,6 +47,7 @@ import { AddNoteBar, type ComposerAction, type ComposerExtras } from "@/componen
 import { InstallBanner } from "@/components/InstallBanner";
 import { AppSidebar } from "@/components/AppSidebar";
 import { AppHeader } from "@/components/AppHeader";
+import { ViewTitle, isTitleBlockView } from "@/components/ViewTitle";
 import { NoteGrid } from "@/components/NoteGrid";
 import { BoardColumn } from "@/components/BoardColumn";
 import { NoteBoard } from "@/components/NoteBoard";
@@ -586,6 +587,7 @@ const Index = () => {
 
         {/* `flex gap`, nie `space-y`: ukryta na sm+ wyszukiwarka nie dokłada marginesu nad treścią. */}
         <main ref={mainRef} className="flex-1 max-w-352 mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-8 sm:gap-10 pb-safe">
+          {isTitleBlockView(view) && <ViewTitle view={view} count={view === "today" ? displayNotes.length : undefined} />}
           {view !== "shifts" && view !== "calendar" && view !== "study" && view !== "debts" && (
             <div data-view-static className="sm:hidden">
               <SearchBar value={search} onChange={setSearch} />

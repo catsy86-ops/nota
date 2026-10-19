@@ -6,7 +6,14 @@
  * Znak salda: dodatni = ta osoba jest nam winna, ujemny = my jesteśmy winni.
  */
 
-export type DebtKind = "lent" | "repaid";
+/**
+ * Cztery rodzaje wpisu. Saldo osoby to: pożyczyłem (+), oddał mi (−), pożyczyłem od (−), oddałem (+).
+ * Dzięki temu jedna osoba może mieć długi w obie strony.
+ */
+export type DebtKind = "lent" | "repaid" | "borrowed" | "returned";
+export const DEBT_KINDS: readonly DebtKind[] = ["lent", "repaid", "borrowed", "returned"];
+/** Znak wpływu wpisu na saldo: dodatni = ta osoba jest nam winna więcej. */
+export const KIND_SIGN: Record<DebtKind, 1 | -1> = { lent: 1, repaid: -1, borrowed: -1, returned: 1 };
 
 export interface DebtEntry {
   id: string;
@@ -36,14 +43,14 @@ export function cleanDebt(raw: unknown): DebtEntry | null {
   const e = raw as Partial<DebtEntry> | null;
   if (!e || typeof e !== "object") return null;
   if (typeof e.id !== "string" || !e.id || e.id.length > ID_MAX) return null;
-  if (e.kind !== "lent" && e.kind !== "repaid") return null;
+  if (!DEBT_KINDS.includes(e.kind as DebtKind)) return null;
   const person = typeof e.person === "string" ? normalizeName(e.person).slice(0, DEBT_PERSON_MAX) : "";
   if (!person) return null;
   if (typeof e.amount !== "number" || !Number.isInteger(e.amount) || e.amount <= 0 || e.amount > DEBT_MAX_AMOUNT) return null;
   if (typeof e.at !== "string" || !DAY_RE.test(e.at)) return null;
   const created = typeof e.created === "number" && Number.isFinite(e.created) ? e.created : 0;
   const note = typeof e.note === "string" ? e.note.trim().slice(0, DEBT_NOTE_MAX) : "";
-  return { id: e.id, person, kind: e.kind, amount: e.amount, at: e.at, note, created };
+  return { id: e.id, person, kind: e.kind as DebtKind, amount: e.amount, at: e.at, note, created };
 }
 
 /** Spacje na brzegach i w środku → jedna spacja. */
@@ -98,7 +105,7 @@ export function balances(entries: readonly DebtEntry[]): PersonDebts[] {
     const key = personKey(e.person);
     let g = groups.get(key);
     if (!g) { g = { key, name: e.person, balance: 0, entries: [] }; groups.set(key, g); }
-    g.balance += e.kind === "lent" ? e.amount : -e.amount;
+    g.balance += KIND_SIGN[e.kind] * e.amount;
     g.entries.push(e);
   }
   const rank = (b: number) => (b > 0 ? 0 : b < 0 ? 1 : 2);
