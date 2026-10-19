@@ -3706,7 +3706,7 @@ lub grupę”.
 - **Model danych:** `due` to opcjonalne pole w pozycji listy braków (ms, północ lokalna). Zapisuje się w tym samym kluczu co reszta pozycji, więc konflikt dwóch telefonów rozstrzyga cała lista, jak dotąd. Stare dane bez `due` działają bez zmian; `cleanShortages` odrzuca `NaN`.
 - **Ograniczenie:** `setShortageDue` nie ustawia daty dla pozycji spoza „zamówione” (zmiana statusu na inny nie czyści `due`, ale jest ignorowane, dopóki pozycja nie wróci do „zamówione”).
 - **Testy:** `src/lib/study/shortages.test.ts` (grupa „data dostawy braku”), `src/lib/study/reminders.test.ts` (zaległe po końcu dnia dostawy). Vitest: `src/lib/study` i `src/lib/push` 300/300, `tsc` i eslint czyste.
-- **Commit:** w commicie z tym wpisem, 2026-10-19.
+- **Commit:** 668c7ba, 2026-10-19.
 
 ## Terminy — prognoza serii w „Najbliższe 7 dni” (T2 planu kalendarza/przypomnień, 2026-10-19)
 
