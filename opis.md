@@ -3494,7 +3494,7 @@ lub grupę”.
   - Waluta to zawsze złote (zł).
   - Dane są w dokumencie notatek, więc idą z synchronizacją i z kopią pełną. Nie są w eksporcie tylko Nauki/Grafiku, bo ich tam nie ma.
 - **Testy:** `src/lib/debts/model.test.ts` (kwoty, czyszczenie, salda, sortowanie), `src/lib/debts/yDebts.test.ts` (scalanie dwóch dokumentów, usunięcie i przywrócenie, śmieci od peera, powiadomienia). Ręcznie sprawdzone w przeglądarce na szerokości telefonu: zapis, saldo i „Cofnij”.
-- **Commit:** patrz wpis „Sesja 2026-10-19” niżej.
+- **Commit:** 94434d5, 2026-10-19.
 
 ## Wspólne — arkusz „Nowa” z przycisku „+” (wygląd i opisy)
 
