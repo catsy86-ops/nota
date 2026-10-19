@@ -10,7 +10,8 @@ export interface ConfirmPrefs {
 const DEFAULTS: ConfirmPrefs = { trash: true, archive: true };
 
 const store = createPersistedStore<ConfirmPrefs>("kaczy.confirmPrefs.v1", DEFAULTS, {
-  merge: (defaults, stored) => ({ ...defaults, ...stored }),
+  merge: (defaults, stored) =>
+    stored !== null && typeof stored === "object" && !Array.isArray(stored) ? { ...defaults, ...stored } : defaults,
 });
 
 export function getConfirmPrefs(): ConfirmPrefs {

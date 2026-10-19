@@ -64,7 +64,9 @@ const DEFAULTS: ViewPrefs = {
 };
 
 const store = createPersistedStore<ViewPrefs>("kaczy.viewPrefs.v1", DEFAULTS, {
-  merge: (defaults, stored) => ({ ...defaults, ...stored }),
+  // Uszkodzony zapis (np. tekst zamiast obiektu) nie może rozsypać się w klucze „0”, „1”… — wtedy domyślne.
+  merge: (defaults, stored) =>
+    stored !== null && typeof stored === "object" && !Array.isArray(stored) ? { ...defaults, ...stored } : defaults,
 });
 
 export function getViewPrefs(): ViewPrefs {

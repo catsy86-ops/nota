@@ -3,6 +3,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Wifi, WifiOff, Copy, Check, LogOut } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
@@ -39,6 +40,7 @@ export function SyncSettings({ prefillCode }: Props) {
   const syncState = useSyncState();
   const [joinInput, setJoinInput] = useState("");
   const [copied, setCopied] = useState(false);
+  const [forgetOpen, setForgetOpen] = useState(false);
   const [legacyRoom, setLegacyRoomState] = useState(() => getLegacyRoom());
 
   useEffect(() => {
@@ -117,7 +119,7 @@ export function SyncSettings({ prefillCode }: Props) {
             )}
           </div>
         </div>
-        <Switch checked={syncState.status !== "disabled"} onCheckedChange={handleToggle} />
+        <Switch checked={syncState.status !== "disabled"} onCheckedChange={handleToggle} aria-label="Synchronizacja między urządzeniami" />
       </div>
 
       {syncState.code && (
@@ -132,13 +134,29 @@ export function SyncSettings({ prefillCode }: Props) {
           </div>
           <div className="flex items-center justify-center gap-2">
             <code className="text-lg font-mono font-bold tracking-widest">{formatCode(syncState.code)}</code>
-            <Button type="button" size="sm" variant="ghost" onClick={handleCopy} className="h-7 px-2">
+            <Button type="button" size="sm" variant="ghost" onClick={handleCopy} aria-label="Kopiuj kod" className="h-7 px-2 coarse:h-11 coarse:px-3">
               {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             </Button>
           </div>
-          <Button type="button" variant="ghost" size="sm" onClick={handleForget} className="text-muted-foreground hover:text-destructive-ink gap-1.5">
+          <Button type="button" variant="ghost" size="sm" onClick={() => setForgetOpen(true)} className="text-muted-foreground hover:text-destructive-ink gap-1.5 coarse:h-11">
             <LogOut className="w-3.5 h-3.5" /> Zapomnij i zacznij od nowa
           </Button>
+          {/* Zapomnienie rozłącza to urządzenie od grupy; bez potwierdzenia łatwo to kliknąć przez pomyłkę. */}
+          <AlertDialog open={forgetOpen} onOpenChange={setForgetOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Opuścić grupę synchronizacji?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  To urządzenie przestanie się synchronizować z pozostałymi i dostanie nowy kod. Dane w tej przeglądarce zostaną.
+                  Żeby wrócić do grupy, trzeba będzie ponownie wpisać kod z innego urządzenia.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Anuluj</AlertDialogCancel>
+                <AlertDialogAction onClick={() => { setForgetOpen(false); handleForget(); }}>Opuść grupę</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       )}
 

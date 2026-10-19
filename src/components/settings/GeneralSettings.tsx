@@ -42,6 +42,12 @@ function NotificationStatus() {
 
 const COLORS: NoteColor[] = ["default", "coral", "peach", "sand", "mint", "sage", "sky", "lavender", "rose"];
 
+/** Polskie nazwy kolorów — czytnik ekranu i podpowiedź mówią po polsku, nie kluczem z kodu. */
+const COLOR_LABEL: Record<NoteColor, string> = {
+  default: "domyślny", coral: "koralowy", peach: "brzoskwiniowy", sand: "piaskowy", mint: "miętowy",
+  sage: "szałwiowy", sky: "niebieski", lavender: "lawendowy", rose: "różowy",
+};
+
 const SHORTCUTS: { keys: string; desc: string }[] = [
   { keys: `${MOD_KEY} + N`, desc: "Nowa notatka" },
   { keys: "Alt + N", desc: "Nowa notatka (alternatywnie)" },
@@ -97,12 +103,14 @@ export function GeneralSettings() {
               key={c}
               onClick={() => setViewPref("defaultNoteColor", c)}
               data-swatch={c}
+              aria-label={`Kolor ${COLOR_LABEL[c]}`}
+              aria-pressed={prefs.defaultNoteColor === c}
               className={cn(
-                "w-9 h-9 rounded-full border-2 transition-transform",
+                "w-9 h-9 coarse:size-11 rounded-full border-2 transition-transform",
                 colorClasses[c],
                 prefs.defaultNoteColor === c ? "border-primary scale-110 ring-2 ring-primary/30" : "border-border/60 hover:scale-105"
               )}
-              title={c}
+              title={COLOR_LABEL[c]}
             />
           ))}
         </div>
@@ -146,6 +154,7 @@ export function GeneralSettings() {
         <Slider
           value={[prefs.autosaveSeconds]}
           min={0} max={30} step={5}
+          aria-label="Autosave: co ile sekund"
           onValueChange={([v]) => setViewPref("autosaveSeconds", v)}
         />
         <p className="text-xs text-muted-foreground mt-1.5">
@@ -175,7 +184,7 @@ export function GeneralSettings() {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {key !== "seasonalTheme" && key !== "dailyQuote" && key !== "cardTilt" && (
-                  <Button type="button" size="sm" variant="outline" disabled={!enabled} onClick={() => previewEffect(key)} className={cn("h-8 px-2.5 gap-1.5", key === "haptics" && "pointer-fine:hidden")}>
+                  <Button type="button" size="sm" variant="outline" disabled={!enabled} onClick={() => previewEffect(key)} className={cn("h-8 px-2.5 gap-1.5 coarse:h-11", key === "haptics" && "pointer-fine:hidden")}>
                     <Play className="w-3.5 h-3.5" /><span className="text-xs">Test</span>
                   </Button>
                 )}

@@ -3889,3 +3889,27 @@ lub grupę”.
   - `e2e/bundle.spec.ts` — budżet startowej paczki zielony po dodaniu nagrań.
   - Nagrywania w przeglądarce (mikrofon) nie testowano e2e — brak fake mikrofonu w zestawie; wymaga ręcznego sprawdzenia na telefonie.
 - **Commit:** 5581ece, 2026-10-19; poprawka raportu kopii f6867bd, 2026-10-19.
+
+## Ustawienia — dopracowanie, faza 1 (2026-10-19, bez commita)
+
+- **Co robi:** okno Ustawienia (cztery karty: Wygląd, Ogólne, Dane, Sync) jest bardziej bezpieczne i dostępne. Reset „Przywróć domyślne” w Wyglądzie i „Zapomnij i zacznij od nowa” w Sync pytają najpierw o potwierdzenie. Reset nadal kasuje cały widok (decyzja właściciela), a potwierdzenie wymienia, co wróci do domyślnych, i czego reset nie dotyczy. Przełączniki mają nazwę dla czytników ekranu. Opis okna nie obiecuje już, że wszystko działa tylko w tej przeglądarce.
+- **Gdzie jest:**
+  - `src/components/SettingsDialog.tsx` — opis okna; szkielet zamiast pustego ekranu przy ładowaniu karty Sync.
+  - `src/components/settings/AppearanceSettings.tsx` — reset z `AlertDialog` (`resetOpen`), treść potwierdzenia.
+  - `src/components/SyncSettings.tsx` — „Zapomnij” z `AlertDialog` (`forgetOpen`); nazwa dla przełącznika synchronizacji i przycisku kopiowania kodu.
+  - `src/components/settings/SettingsShared.tsx` — `ToggleRow` łączy etykietę z przełącznikiem (`useId` + `aria-labelledby`); tytuł sekcji to `h3`.
+  - `src/components/settings/GeneralSettings.tsx` — kolory: `aria-label` po polsku (`COLOR_LABEL`) i `aria-pressed`; suwak autosave ma nazwę; przycisk „Test” na dotyku 44 px.
+  - `src/components/settings/BackupSettings.tsx` — nazwy suwaków kopii i przypomnień, pól godziny i dnia; linki „wyczyść”/„wyłącz” na dotyku 44 px.
+  - `src/components/ui/switch.tsx`, `tabs.tsx`, `slider.tsx` — cele dotyku 44 px na dotyku (przełącznik przez pseudo-element, bez zmiany wyglądu); `Slider` przekazuje `aria-label` do kciuka.
+  - `src/lib/viewPrefs.ts`, `effectsSettings.ts`, `confirmPrefs.ts` — `merge` wraca do domyślnych, gdy zapis nie jest obiektem (np. uszkodzony JSON).
+- **Jak działa i dlaczego:**
+  - Uszkodzony zapis: `persistedStore` przy błędnym JSON przekazuje surowy tekst do `merge`. Wcześniej `{...defaults, ...stored}` rozsypywało znaki tekstu w klucze „0”, „1”… w stanie. Teraz domyślne wartości wracają w całości. Domyślne wartości przeżywały wcześniej, więc to nie była utrata danych.
+  - Reset zostaje pełny (decyzja „Wszystko”): potwierdzenie jest tekstem listy, żeby było widać, co dokładnie zniknie.
+- **Ograniczenia i pułapki:**
+  - Cele dotyku dla przełącznika są powiększone pseudo-elementem tylko na dotyku; wizualnie przełącznik się nie zmienił.
+  - Nazwy kolorów są po polsku w kodzie (`COLOR_LABEL`); dodanie koloru wymaga wpisu.
+  - Nie sprawdzono QA na telefonie (zakładki, dotyk, klawiatura) — zgodnie z decyzją, później.
+- **Testy:**
+  - `src/lib/settingsPrefs.test.ts` — uszkodzony JSON i tekst zamiast obiektu w `viewPrefs`, częściowy zapis, reset, `confirmPrefs` (domyślne, uszkodzony JSON, zapis jednego klucza), `normalizePushServer` (ukośnik, http dla zdalnego hosta, localhost, pusty tekst).
+  - E2e (chromium, 106 testów): `mobile`, `skins`, `clipper`, `push`, `diagnostics`, `sync-code`, `search-backup`, `private-notes`, `shifts`, `a11y`, `toggle-group`, `site-mode`, `card-motion` — zielone.
+- **Commit:** —

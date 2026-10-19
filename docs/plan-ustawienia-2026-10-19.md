@@ -81,3 +81,25 @@ Niestabilność w e2e: stałe czekania (`mobile.spec.ts:61, 136, 144, 149, 199, 
 
 - Ten plan nie zmienia kodu. Każda faza osobnym commitem z hashem w `opis.md`.
 - QA na telefonie (zakładki, dotyk, klawiatura) — zgodnie z decyzją, później.
+
+## Decyzje właściciela (2026-10-19)
+
+1. Reset: **zostaje pełny reset**, z potwierdzeniem, które wymienia, co wróci do domyślnych, i czego reset nie dotyczy.
+2. Karta „Dane” → **„Kopia i dane”** (faza 2d).
+3. Wyszukiwanie ustawień: **nie**.
+
+## Status
+
+- **Faza 1 — zrobione** (2026-10-19): potwierdzenia dla resetu i „Zapomnij”; reset z listą zmian; przełącznik z nazwą (`aria-labelledby`); nazwy suwaków, pól czasu, wyboru dnia i kolorów (po polsku, `aria-pressed`); tytuły sekcji jako nagłówki; cele dotyku 44 px na dotyku (zakładki, przełącznik, kciuk suwaka, kolory, „Test”, kopiowanie kodu, linki); szkielet zamiast pustego ekranu karty Sync; poprawny opis okna; `viewPrefs`/`effectsSettings`/`confirmPrefs` przy uszkodzonym zapisie wracają do domyślnych (test `settingsPrefs.test.ts`).
+- **Faza 2 — do zrobienia**: zmiana nazwy karty (decyzja 2), grupowanie przypomnień, podział Ogólne, sekcja Praca/Grafik.
+- **Faza 3 — do zrobienia** bez wyszukiwania (decyzja 3): reset per sekcja, linki `?settings=`.
+
+## Ustalenia z mapy kodu (trzeci raport)
+
+- **Sprzeczne domyślne „przegląd tygodnia”:** Ogólne (`kaczy:review.day`, domyślnie niedziela) i Dane (`weekReminderDay`, domyślnie poniedziałek). Dwie niezależne wartości o tej samej nazwie. Do ujednolicenia w fazie 2.
+- **Zduplikowany klucz** `kaczy.lastAutoExport` w `BackupSettings.tsx:130,137` i w `backupReminder.ts:2` — jedna stała.
+- **Martwa gałąź** w `SettingsDialog.tsx` (niekontrolowany `trigger`) — nigdzie nie używana.
+- **Nieużywane eksporty:** `getEffectsSettings`, `getSeasonPref`, `getAutoLockMinutes`, `getBadgeEnabled`.
+- **`NotificationStatus`** czyta uprawnienia raz na render, bez subskrypcji — może się zestarzeć.
+- **Skróty klawiszy** w Ogólne to zakodowana lista, nie wyliczona z obsługi klawiszy — może się rozjechać.
+- **Brak sposobu cofnięcia zgody na dyktowanie** (`kaczy.dictation.consent`) w Ustawieniach.

@@ -266,6 +266,7 @@ export function BackupSettings() {
         <Slider
           value={[prefs.autoExportDays]}
           min={0} max={30} step={1}
+          aria-label="Auto-backup: co ile dni"
           onValueChange={([v]) => handleAutoExportChange(v)}
         />
         <p className="text-xs text-muted-foreground mt-1.5">
@@ -277,6 +278,7 @@ export function BackupSettings() {
         <Slider
           value={[prefs.backupReminderDays]}
           min={0} max={60} step={1}
+          aria-label="Przypomnienie o kopii: co ile dni"
           onValueChange={([v]) => setViewPref("backupReminderDays", v)}
         />
         <p className="text-xs text-muted-foreground mt-1.5">
@@ -292,6 +294,7 @@ export function BackupSettings() {
         <Slider
           value={[prefs.todayReminderHours]}
           min={0} max={48} step={1}
+          aria-label="Przypomnienie Dziś: co ile godzin"
           onValueChange={([v]) => setViewPref("todayReminderHours", v)}
           disabled={!!prefs.todayReminderTime}
         />
@@ -300,6 +303,7 @@ export function BackupSettings() {
           <input
             type="time"
             value={prefs.todayReminderTime}
+            aria-label="Przypomnienie Dziś: stała godzina"
             onChange={(e) => setViewPref("todayReminderTime", e.target.value)}
             className="text-xs bg-background border border-border/60 rounded-md px-2 py-1 text-foreground"
           />
@@ -307,7 +311,7 @@ export function BackupSettings() {
             <button
               type="button"
               onClick={() => setViewPref("todayReminderTime", "")}
-              className="text-xs text-muted-foreground hover:text-foreground underline"
+              className="text-xs text-muted-foreground hover:text-foreground underline coarse:min-h-11 coarse:px-2"
             >wyczyść</button>
           )}
         </div>
@@ -324,6 +328,7 @@ export function BackupSettings() {
         <div className="flex flex-wrap items-center gap-2">
           <select
             value={prefs.weekReminderDay}
+            aria-label="Przypomnienie Ten tydzień: dzień"
             onChange={(e) => setViewPref("weekReminderDay", Number(e.target.value))}
             className="text-xs bg-background border border-border/60 rounded-md px-2 py-1 text-foreground"
             disabled={!prefs.weekReminderTime}
@@ -335,6 +340,7 @@ export function BackupSettings() {
           <input
             type="time"
             value={prefs.weekReminderTime}
+            aria-label="Przypomnienie Ten tydzień: godzina"
             onChange={(e) => setViewPref("weekReminderTime", e.target.value)}
             className="text-xs bg-background border border-border/60 rounded-md px-2 py-1 text-foreground"
           />
@@ -342,7 +348,7 @@ export function BackupSettings() {
             <button
               type="button"
               onClick={() => setViewPref("weekReminderTime", "")}
-              className="text-xs text-muted-foreground hover:text-foreground underline"
+              className="text-xs text-muted-foreground hover:text-foreground underline coarse:min-h-11 coarse:px-2"
             >wyłącz</button>
           )}
         </div>

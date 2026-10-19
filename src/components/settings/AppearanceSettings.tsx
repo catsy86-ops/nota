@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { Sun, Moon, Monitor, Zap, Accessibility, HardHat, CircleOff, Contrast } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useViewPrefs, setViewPref, resetViewPrefs, type Density, type Layout } from "@/lib/viewPrefs";
 import { changeView } from "@/lib/viewChange";
 import { useEffectsSettings } from "@/lib/effectsSettings";
@@ -39,6 +41,7 @@ const motionOptions: { value: MotionMode; label: string; Icon: typeof Sun }[] = 
 export function AppearanceSettings() {
   const settings = useEffectsSettings();
   const prefs = useViewPrefs();
+  const [resetOpen, setResetOpen] = useState(false);
   const { mode: themeMode, setMode: setThemeMode, skin, setSkin } = useTheme();
   const skinScheme = SKIN_SCHEME[skin];
   const siteMode = useSiteMode();
@@ -185,9 +188,29 @@ export function AppearanceSettings() {
         onCheck={(v) => setViewPref("showBacklinks", v)}
       />
 
-      <Button variant="ghost" size="sm" onClick={() => { resetViewPrefs(); toast.success("Przywrócono ustawienia"); }}>
+      <Button variant="ghost" size="sm" onClick={() => setResetOpen(true)}>
         Przywróć domyślne
       </Button>
+
+      {/* Reset kasuje ustawienia widoku, nie tylko wygląd — dlatego potwierdzenie mówi, co dokładnie wróci do domyślnych. */}
+      <AlertDialog open={resetOpen} onOpenChange={setResetOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Przywrócić domyślne ustawienia widoku?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Wrócą do domyślnych: gęstość, układ i kolumny; sortowanie, grupowanie i filtry; kolor nowej notatki; pisownia;
+              autosave; przypomnienia o kopii, o dzisiejszych zadaniach i o przeglądzie tygodnia; czas czytania i backlinki.
+              Nie zmienią się: skórka, czcionka, tryb ruchu, motyw sezonowy, efekty, potwierdzenia, sync, kopia, sejf i powiadomienia push.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { resetViewPrefs(); toast.success("Przywrócono domyślne ustawienia widoku"); }}>
+              Przywróć domyślne
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

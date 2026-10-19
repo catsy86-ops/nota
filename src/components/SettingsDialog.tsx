@@ -58,7 +58,7 @@ export function SettingsDialog({ trigger, open, onOpenChange }: SettingsDialogPr
             <Settings className="w-5 h-5 text-primary-ink" />
             Ustawienia
           </DialogTitle>
-          <DialogDescription>Wszystko zapisuje się automatycznie w tej przeglądarce.</DialogDescription>
+          <DialogDescription>Zmiany zapisują się od razu w tej przeglądarce. Sync i kopia przenoszą dane na inne urządzenia.</DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
@@ -85,7 +85,7 @@ export function SettingsDialog({ trigger, open, onOpenChange }: SettingsDialogPr
             </TabsContent>
 
             <TabsContent value="sync" className="mt-0">
-              <Suspense fallback={null}>
+              <Suspense fallback={<div className="h-40 animate-pulse rounded-xl bg-muted/40" aria-hidden />}>
                 <SyncSettings prefillCode={joinPrefill} />
               </Suspense>
             </TabsContent>

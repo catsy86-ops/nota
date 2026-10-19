@@ -60,7 +60,8 @@ const DEFAULTS_V2_OFF: EffectKey[] = ["sparkle", "emojiShower", "fireworks", "he
 const MIGRATION_FLAG = "kaczy.effectsSettings.defaults2";
 
 const store = createPersistedStore<EffectsSettings>("kaczy.effectsSettings.v1", DEFAULTS, {
-  merge: (defaults, stored) => ({ ...defaults, ...stored }),
+  merge: (defaults, stored) =>
+    stored !== null && typeof stored === "object" && !Array.isArray(stored) ? { ...defaults, ...stored } : defaults,
 });
 
 // Jednorazowo: nowe domyślne wartości nie docierają do już zapisanych ustawień, więc wyłączamy je raz.
