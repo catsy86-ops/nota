@@ -8,7 +8,7 @@ import { entriesPl } from "@/lib/study/journalView";
 import { dayKeyOf, shiftKey } from "@/lib/study/report";
 import { JOURNAL_REPORT_PARAM, reportParam } from "@/lib/study/reportLink";
 import { entrySiteId } from "@/lib/study/sites";
-import type { Shortage } from "@/lib/study/shortages";
+import { orderLateFrom, type Shortage } from "@/lib/study/shortages";
 import type { ServiceCall } from "@/lib/study/service";
 import type { JournalEntry } from "@/lib/study/yStudy";
 import { notePath } from "@/lib/viewRoute";
@@ -199,13 +199,18 @@ function studyItems(input: PushInput, now: number, end: number): PushItem[] {
   for (const site of Object.values(input.sites ?? {})) {
     if (site.archived !== undefined) continue;
     for (const s of site.shortages ?? []) {
-      if (s.status !== "ordered") continue;
-      const since = s.changed ?? s.at;
-      const at = outsideQuietHours(since + REMINDER_ORDER_DAYS * DAY_MS);
+      const from = orderLateFrom(s);
+      if (from === null) continue;
+      const at = outsideQuietHours(from);
       if (at <= now || at > end) continue;
+      // Z datą dostawy klucz to ta data (zmiana dostawy = nowe powiadomienie); bez niej — jak dotąd, od zmiany.
       out.push({
-        key: pushKey.order(s.id, since), at, title: "Materiał zamówiony, a nie dojechał",
-        body: clip(`${site.name}: ${s.text}${s.qty ? ` (${s.qty})` : ""} — zamówione ${REMINDER_ORDER_DAYS} dni temu.`, 200), url: "/praca",
+        key: pushKey.order(s.id, s.due ?? s.changed ?? s.at), at, title: "Materiał zamówiony, a nie dojechał",
+        body: clip(
+          `${site.name}: ${s.text}${s.qty ? ` (${s.qty})` : ""} — ${s.due !== undefined ? "dostawa miała być tego dnia" : `zamówione ${REMINDER_ORDER_DAYS} dni temu`}.`,
+          200,
+        ),
+        url: "/praca",
       });
     }
   }

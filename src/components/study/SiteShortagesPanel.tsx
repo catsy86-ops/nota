@@ -8,8 +8,8 @@ import { toastWithUndo } from "@/lib/undoToast";
 import { setSiteShortages } from "@/lib/study/store";
 import type { SiteInfo } from "@/lib/study/sites";
 import {
-  addShortage, clearDelivered, nextStatus, removeShortage, setShortageStatus, shortagesText,
-  SHORTAGE_QTY_MAX, SHORTAGE_TEXT_MAX, SHORTAGES_MAX, STATUS_LABEL, type ShortageStatus,
+  addShortage, clearDelivered, dueDayValue, dueFromDayValue, nextStatus, removeShortage, setShortageDue, setShortageStatus,
+  shortagesText, SHORTAGE_QTY_MAX, SHORTAGE_TEXT_MAX, SHORTAGES_MAX, STATUS_LABEL, type ShortageStatus,
 } from "@/lib/study/shortages";
 
 const STATUS_CLASS: Record<ShortageStatus, string> = {
@@ -47,6 +47,10 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
     const status = nextStatus(item.status);
     haptic(status === "delivered" ? "success" : "selection");
     setSiteShortages(site.id, setShortageStatus(list, id, status, Date.now()), list);
+  }
+
+  function setDue(id: string, value: string) {
+    setSiteShortages(site.id, setShortageDue(list, id, dueFromDayValue(value)), list);
   }
 
   function remove(id: string) {
@@ -92,6 +96,16 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
               <span className={cn("min-w-0 flex-1 text-sm", s.status === "delivered" && "text-muted-foreground line-through decoration-muted-foreground/50")}>
                 {s.text}{s.qty && <span className="text-muted-foreground"> · {s.qty}</span>}
               </span>
+              {s.status === "ordered" && (
+                <input
+                  type="date"
+                  value={dueDayValue(s.due)}
+                  onChange={(e) => setDue(s.id, e.target.value)}
+                  aria-label={`Data dostawy: ${s.text}`}
+                  title="Data dostawy"
+                  className="h-8 w-[8.5rem] shrink-0 rounded-lg border border-input bg-background px-1.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
+                />
+              )}
               <button
                 type="button"
                 onClick={() => cycle(s.id)}

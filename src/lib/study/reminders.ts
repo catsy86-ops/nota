@@ -1,12 +1,13 @@
 import { TEST_TOPICS } from "./pressureTest";
 import { dueServiceCalls, serviceDayKey } from "./service";
 import { entrySiteId, type SiteCard } from "./sites";
+import { ORDER_LATE_DAYS, orderLateFrom } from "./shortages";
 import type { JournalEntry } from "./yStudy";
 
 /** Problem otwarty dłużej niż tyle dni dostaje przypomnienie (plan Nauki i Dziennika, 2026-10-15). */
 export const REMINDER_PROBLEM_DAYS = 3;
 /** Materiał „zamówiony” dłużej niż tyle dni, a wciąż nie „dostarczony” — przypomnienie przy budowie. */
-export const REMINDER_ORDER_DAYS = 3;
+export const REMINDER_ORDER_DAYS = ORDER_LATE_DAYS;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export type StudyReminder =
@@ -56,7 +57,7 @@ export function studyReminders(
 
   for (const card of Object.values(siteCards)) {
     if (card.archived !== undefined) continue;
-    const late = (card.shortages ?? []).filter((x) => x.status === "ordered" && now - (x.changed ?? x.at) > REMINDER_ORDER_DAYS * DAY_MS);
+    const late = (card.shortages ?? []).filter((x) => { const from = orderLateFrom(x); return from !== null && now > from; });
     if (late.length > 0) out.push({ kind: "late-order", siteId: card.id, site: card.name, items: late.map((x) => x.text) });
   }
 

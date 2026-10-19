@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
-  addShortage, cleanOrderLog, cleanShortages, clearDelivered, logOrder, nextStatus, openShortages, orderLogLine,
-  ORDER_LOG_MAX, removeShortage, setShortageStatus, shortageLine, shortagesText, SHORTAGES_MAX,
+  addShortage, cleanOrderLog, cleanShortages, clearDelivered, dueDayValue, dueFromDayValue, logOrder, nextStatus, openShortages,
+  orderLateFrom, orderLogLine, ORDER_LATE_DAYS, ORDER_LOG_MAX, removeShortage, setShortageDue, setShortageStatus, shortageLine,
+  shortagesText, SHORTAGES_MAX,
 } from "./shortages";
 import { cleanSite } from "./sites";
 
@@ -65,6 +66,36 @@ describe("braki materiału", () => {
       { id: "a", text: "Duplikat" },
       { id: "b", text: "" },
     ])).toEqual([{ id: "a", text: "Rura", qty: "", status: "missing", at: 0 }]);
+  });
+});
+
+describe("data dostawy braku", () => {
+  const ordered = { id: "1", text: "Klej PCV", qty: "", status: "ordered" as const, at: day(1), changed: day(14) };
+
+  it("ustawia datę tylko przy zamówionym, czyści ją undefined", () => {
+    const withDue = setShortageDue([ordered, { ...ordered, id: "2", status: "missing" }], "1", day(20));
+    expect(withDue[0].due).toBe(day(20));
+    expect(setShortageDue([ordered], "1", undefined)[0]).not.toHaveProperty("due");
+    expect(setShortageDue([{ ...ordered, id: "2", status: "missing" }], "2", day(20))[0]).not.toHaveProperty("due");
+  });
+
+  it("termin z datą dostawy to koniec tego dnia, bez niej — ponad ORDER_LATE_DAYS od zmiany", () => {
+    expect(orderLateFrom({ ...ordered, due: day(20) })).toBe(new Date(2026, 9, 20, 23, 59, 59, 999).getTime());
+    expect(orderLateFrom(ordered)).toBe(day(14) + ORDER_LATE_DAYS * 24 * 60 * 60 * 1000);
+    expect(orderLateFrom({ ...ordered, status: "delivered" })).toBeNull();
+  });
+
+  it("wartość pola daty przechodzi w obie strony bez przesunięcia dnia", () => {
+    expect(dueDayValue(day(20))).toBe("2026-10-20");
+    expect(dueFromDayValue("2026-10-20")).toBe(new Date(2026, 9, 20).getTime());
+    expect(dueFromDayValue("")).toBeUndefined();
+    expect(dueFromDayValue("20.10.2026")).toBeUndefined();
+  });
+
+  it("dostawa w linii do wysłania, a czyszczenie zachowuje ją w zapisie", () => {
+    expect(shortageLine({ ...ordered, due: day(20) })).toBe("Klej PCV — zamówione 14.10, dostawa 20.10");
+    expect(cleanShortages([{ ...ordered, due: day(20) }])?.[0].due).toBe(day(20));
+    expect(cleanShortages([{ ...ordered, due: NaN }])?.[0]).not.toHaveProperty("due");
   });
 });
 

@@ -90,6 +90,14 @@ describe("przypomnienie: zamówione, a nie dojechało", () => {
     expect(studyReminders([], NOW, { k1: card("k1", [item("a", "Klej PCV", "ordered", 2)]) })).toEqual([]);
   });
 
+  it("z datą dostawy: zaległe dopiero po końcu dnia dostawy, niezależnie od daty zmiany", () => {
+    const withDue = (due: number, changedDaysAgo: number) => ({ ...item("a", "Klej PCV", "ordered", changedDaysAgo), due });
+    // Dostawa wczoraj: zaległa już dziś rano, choć zamówienie świeże.
+    expect(studyReminders([], NOW, { k1: card("k1", [withDue(NOW - DAY, 1)]) })).toHaveLength(1);
+    // Dostawa dziś: jeszcze nie zaległa, mimo że zamówione dawno.
+    expect(studyReminders([], NOW, { k1: card("k1", [withDue(NOW, 9)]) })).toEqual([]);
+  });
+
   it("bez daty zmiany liczy się od dopisania", () => {
     const old = { id: "a", text: "Klej PCV", qty: "", status: "ordered" as const, at: NOW - 5 * DAY };
     expect(studyReminders([], NOW, { k1: card("k1", [old]) })).toHaveLength(1);

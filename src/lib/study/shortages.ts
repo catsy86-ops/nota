@@ -1,4 +1,5 @@
 import { cleanFittings, fittingsLine, type Fitting } from "./fittings";
+import { endOfDay } from "../dueTerms";
 
 /**
  * Braki materiału na budowie (nie tylko kształtki): „Rura PEX 16 — 50 m”, „Klej do PCV”. Każda
@@ -20,6 +21,8 @@ export interface Shortage {
   at: number;
   /** Ostatnia zmiana statusu (ms); brak = od dopisania bez zmian. */
   changed?: number;
+  /** Data dostawy (ms, północ lokalna dnia); tylko przy „zamówione”. Brak = termin liczy się od zmiany statusu. */
+  due?: number;
 }
 
 export interface OrderLogEntry {
@@ -32,6 +35,9 @@ export const SHORTAGE_TEXT_MAX = 80;
 export const SHORTAGE_QTY_MAX = 20;
 export const SHORTAGES_MAX = 40;
 export const ORDER_LOG_MAX = 20;
+/** Zamówienie bez daty dostawy jest zaległe po tylu dniach od zmiany statusu. */
+export const ORDER_LATE_DAYS = 3;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export const STATUS_LABEL: Record<ShortageStatus, string> = { missing: "Brakuje", ordered: "Zamówione", delivered: "Dostarczone" };
 const STATUSES: ShortageStatus[] = ["missing", "ordered", "delivered"];
@@ -56,6 +62,7 @@ export function cleanShortages(raw: unknown): Shortage[] | undefined {
       status: STATUSES.includes(s.status as ShortageStatus) ? (s.status as ShortageStatus) : "missing",
       at: typeof s.at === "number" && Number.isFinite(s.at) ? s.at : 0,
       ...(typeof s.changed === "number" && Number.isFinite(s.changed) ? { changed: s.changed } : {}),
+      ...(typeof s.due === "number" && Number.isFinite(s.due) ? { due: s.due } : {}),
     });
     if (out.length >= SHORTAGES_MAX) break;
   }
@@ -107,6 +114,41 @@ export function setShortageStatus(list: readonly Shortage[], id: string, status:
   return list.map((s) => (s.id === id ? { ...s, status, changed: now } : { ...s }));
 }
 
+/** Ustawia albo czyści (`undefined`) datę dostawy. Dotyczy tylko pozycji zamówionych — inne zwraca bez zmian. */
+export function setShortageDue(list: readonly Shortage[], id: string, due: number | undefined): Shortage[] {
+  return list.map((s) => {
+    if (s.id !== id || s.status !== "ordered") return { ...s };
+    const next: Shortage = { ...s };
+    if (due === undefined) delete next.due;
+    else next.due = due;
+    return next;
+  });
+}
+
+/**
+ * Moment, po którym zamówienie jest zaległe (przypomnienie i push). Z datą dostawy: koniec tego
+ * dnia. Bez niej: ponad `ORDER_LATE_DAYS` od zmiany statusu. `null` dla pozycji, które nie są zamówione.
+ */
+export function orderLateFrom(s: Shortage): number | null {
+  if (s.status !== "ordered") return null;
+  return s.due !== undefined ? endOfDay(s.due) : (s.changed ?? s.at) + ORDER_LATE_DAYS * DAY_MS;
+}
+
+/** Data dostawy jako wartość pola `type="date"` (lokalna, `YYYY-MM-DD`); pusta = brak. */
+export function dueDayValue(due: number | undefined): string {
+  if (due === undefined) return "";
+  const d = new Date(due);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** Odwrotność `dueDayValue`: pusta albo źle sformatowana wartość → `undefined` (bez daty). */
+export function dueFromDayValue(v: string): number | undefined {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
+  if (!m) return undefined;
+  const t = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime();
+  return Number.isFinite(t) ? t : undefined;
+}
+
 export const removeShortage = (list: readonly Shortage[], id: string): Shortage[] => list.filter((s) => s.id !== id).map((s) => ({ ...s }));
 export const clearDelivered = (list: readonly Shortage[]): Shortage[] => list.filter((s) => s.status !== "delivered").map((s) => ({ ...s }));
 /** To, co jeszcze nie dojechało: brakuje i zamówione — kolejność: brakuje najpierw, potem wg dopisania. */
@@ -117,7 +159,11 @@ const shortDate = (at: number) => new Date(at).toLocaleDateString("pl-PL", { day
 
 /** Jedna linia braku: „Rura PEX 16: 50 m — brakuje” albo „Klej do PCV — zamówione 14.10”. */
 export function shortageLine(s: Shortage): string {
-  const status = s.status === "missing" ? "brakuje" : s.status === "ordered" ? `zamówione${s.changed ? ` ${shortDate(s.changed)}` : ""}` : "dostarczone";
+  const status = s.status === "missing"
+    ? "brakuje"
+    : s.status === "ordered"
+      ? `zamówione${s.changed ? ` ${shortDate(s.changed)}` : ""}${s.due !== undefined ? `, dostawa ${shortDate(s.due)}` : ""}`
+      : "dostarczone";
   return `${s.text}${s.qty ? `: ${s.qty}` : ""} — ${status}`;
 }
 

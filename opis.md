@@ -3698,6 +3698,16 @@ lub grupę”.
 - **Stan weryfikacji:** pełny przebieg e2e nie został dotąd zakończony bez przerwania (brak pamięci). Zmiany sprawdzone osobno: `shifts`, `routes` i powiązane specy przechodzą.
 - **Commit:** bdba60c, 2026-10-19.
 
+## Praca — data dostawy zamówienia (T4 planu kalendarza/przypomnień, 2026-10-19)
+
+- **Co robi:** przy braku „zamówione” pojawia się pole daty dostawy. Zaległe zamówienie dzwoni dopiero po końcu dnia dostawy, a nie po trzech dniach od zamówienia. Bez daty działa dawna reguła. Linia do wysłania (`shortagesText`) pokazuje „dostawa dd.mm”.
+- **Gdzie jest:** `src/lib/study/shortages.ts` (pole `Shortage.due`, `setShortageDue`, `orderLateFrom`, `dueDayValue`, `dueFromDayValue`, `ORDER_LATE_DAYS`), `src/lib/study/reminders.ts` (przypomnienie „zamówione, a nie dojechało”), `src/lib/push/schedule.ts` (ten sam próg dla push), `src/components/study/SiteShortagesPanel.tsx` (pole `type="date"` przy zamówionym).
+- **Jak działa:** `orderLateFrom` jest jedynym źródłem progu i dla przypomnienia w aplikacji, i dla push. Z `due`: koniec dnia dostawy (`endOfDay` z `dueTerms`). Bez `due`: `changed ?? at` + 3 dni. Klucz powiadomienia push to `due`, gdy jest, więc zmiana daty wysyła nowe powiadomienie. Czyszczenie pola ustawia brak daty.
+- **Model danych:** `due` to opcjonalne pole w pozycji listy braków (ms, północ lokalna). Zapisuje się w tym samym kluczu co reszta pozycji, więc konflikt dwóch telefonów rozstrzyga cała lista, jak dotąd. Stare dane bez `due` działają bez zmian; `cleanShortages` odrzuca `NaN`.
+- **Ograniczenie:** `setShortageDue` nie ustawia daty dla pozycji spoza „zamówione” (zmiana statusu na inny nie czyści `due`, ale jest ignorowane, dopóki pozycja nie wróci do „zamówione”).
+- **Testy:** `src/lib/study/shortages.test.ts` (grupa „data dostawy braku”), `src/lib/study/reminders.test.ts` (zaległe po końcu dnia dostawy). Vitest: `src/lib/study` i `src/lib/push` 300/300, `tsc` i eslint czyste.
+- **Commit:** w commicie z tym wpisem, 2026-10-19.
+
 ## Terminy — prognoza serii w „Najbliższe 7 dni” (T2 planu kalendarza/przypomnień, 2026-10-19)
 
 - **Co robi:** w widoku Terminy, pod grupami, jest blok „Prognoza serii (najbliższe 7 dni)” — jeden wiersz na powtarzalne przypomnienie z liczbą jego kolejnych wystąpień w tym tygodniu, np. „+4 wystąpienia (prognoza)”. Wiersze są tylko do odczytu.
