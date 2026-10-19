@@ -1,7 +1,8 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useLatestRef } from "@/hooks/useLatestRef";
 import { uploadSchedule } from "@/lib/push/client";
-import { buildPushSchedule, type PushNote } from "@/lib/push/schedule";
+import { buildPushSchedulePlan, PUSH_MAX_ITEMS, type PushNote } from "@/lib/push/schedule";
+import { PUSH_SUMMARY_KEY } from "@/lib/push/summary";
 import { EVENING_NUDGED_KEY, readEveningNudgeTime, useShifts, useShiftsReady } from "@/lib/shifts";
 import { useStudyReady, yStudy } from "@/lib/study/data";
 import { REPORT_NUDGE_KEY, WEEK_REPORT_NUDGE_KEY } from "@/lib/study/reportNudge";
@@ -29,7 +30,7 @@ export default function PushScheduleSync({ notes }: { notes: readonly PushNote[]
   useEffect(() => {
     if (!ready) return;
     const send = (keepalive = false) => {
-      const items = buildPushSchedule({
+      const plan = buildPushSchedulePlan({
         now: Date.now(),
         notes: notesRef.current,
         journal: studyRef.current.journal,
@@ -40,7 +41,9 @@ export default function PushScheduleSync({ notes }: { notes: readonly PushNote[]
         reportNudged: read(REPORT_NUDGE_KEY),
         weekReportNudged: read(WEEK_REPORT_NUDGE_KEY),
       });
-      void uploadSchedule(items, keepalive);
+      // Podsumowanie dla Ustawień: ile wysłano z ilu i ile odpadło przy limicie. Tylko na tym urządzeniu.
+      try { localStorage.setItem(PUSH_SUMMARY_KEY, JSON.stringify({ sent: plan.items.length, total: plan.total, dropped: plan.dropped, limit: PUSH_MAX_ITEMS, at: Date.now() })); } catch { /* bez localStorage — bez podsumowania */ }
+      void uploadSchedule(plan.items, keepalive);
     };
     const timer = window.setTimeout(send, DEBOUNCE_MS);
     const hourly = window.setInterval(send, REFRESH_MS);

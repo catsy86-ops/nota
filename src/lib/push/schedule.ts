@@ -212,15 +212,24 @@ function studyItems(input: PushInput, now: number, end: number): PushItem[] {
   return out;
 }
 
-export function buildPushSchedule(input: PushInput): PushItem[] {
+/**
+ * Harmonogram do serwera z limitem `PUSH_MAX_ITEMS`. Gdy pozycji jest za dużo, pierwszeństwo mają
+ * przypomnienia z notatek, potem Praca (serwis, zamówienia, problemy), na końcu nakazy Grafiku i raporty.
+ * W ramach grupy — wcześniejsze. `dropped` = ile pozycji nie zmieściło się w limicie (widać w Ustawieniach).
+ */
+export function buildPushSchedulePlan(input: PushInput): { items: PushItem[]; total: number; dropped: number } {
   const { now } = input;
   const end = now + PUSH_HORIZON_DAYS * DAY_MS;
-  return [
-    ...noteItems(input.notes, now, end),
-    ...eveningItems(input, now),
-    ...reportItems(input, now),
-    ...studyItems(input, now, end),
-  ]
-    .sort((a, b) => a.at - b.at)
-    .slice(0, PUSH_MAX_ITEMS);
+  const groups = [
+    noteItems(input.notes, now, end),
+    studyItems(input, now, end),
+    [...eveningItems(input, now), ...reportItems(input, now)],
+  ].map((g) => g.sort((a, b) => a.at - b.at));
+  const total = groups.reduce((n, g) => n + g.length, 0);
+  const chosen = groups.flat().slice(0, PUSH_MAX_ITEMS);
+  return { items: chosen.sort((a, b) => a.at - b.at), total, dropped: total - chosen.length };
+}
+
+export function buildPushSchedule(input: PushInput): PushItem[] {
+  return buildPushSchedulePlan(input).items;
 }

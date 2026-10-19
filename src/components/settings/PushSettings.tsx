@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
 import { disablePush, enablePush, pushSupport, sendTestPush } from "@/lib/push/client";
 import { normalizePushServer, pushPrefs } from "@/lib/push/prefs";
+import { PUSH_SUMMARY_KEY, readPushSummary } from "@/lib/push/summary";
 import { cn } from "@/lib/utils";
 import { Section } from "./SettingsShared";
 
@@ -16,6 +17,8 @@ const errorText = (e: unknown) => (e instanceof Error ? e.message : "Coś poszł
  * Powiadomienia przy zamkniętej aplikacji: adres własnego serwera (`push-server/`), włączenie
  * (zgoda + subskrypcja), próbne powiadomienie i stan ostatniej wysyłki harmonogramu.
  */
+const safeGet = (k: string) => { try { return localStorage.getItem(k); } catch { return null; } };
+
 export function PushSettings() {
   const prefs = pushPrefs.use();
   const [server, setServer] = useState(prefs.server);
@@ -42,6 +45,7 @@ export function PushSettings() {
   };
 
   const last = prefs.last;
+  const summary = readPushSummary(safeGet(PUSH_SUMMARY_KEY));
   const status = !prefs.enabled
     ? "Wyłączone — przypomnienia działają tylko przy otwartej aplikacji."
     : !last
@@ -92,6 +96,12 @@ export function PushSettings() {
             </div>
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p role="status" className={cn("text-xs", prefs.enabled && last && !last.ok ? "text-destructive-ink" : "text-muted-foreground")}>{status}</p>
+              {prefs.enabled && summary && (
+                <p className={cn("text-xs", summary.dropped > 0 ? "text-warning-ink" : "text-muted-foreground")}>
+                  Serwer przyjmuje do {summary.limit} przypomnień: wysłano {summary.sent} z {summary.total}.
+                  {summary.dropped > 0 && ` ${summary.dropped} nie zmieściło się — najpierw zostają przypomnienia z notatek, potem Praca, na końcu Grafik.`}
+                </p>
+              )}
               {prefs.enabled && (
                 <Button type="button" size="sm" variant="outline" className="pressable gap-1.5" disabled={busy !== null}
                   onClick={() => void run("test", sendTestPush, "Wysłano próbne powiadomienie")}>
