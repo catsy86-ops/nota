@@ -3569,4 +3569,4 @@ lub grupę”.
 - **Zasady tekstów:** bez wykrzykników, bez przepraszania, zdania w trybie rozkazującym lub z podmiotem „notatka”. Opisane gesty i menu są sprawdzone w kodzie: archiwizacja w lewo (dotyk) i „Archiwizuj” w menu, kosz z 30 dniami, `#etykieta` i `@folder` w kompozytorze, `jutro 9:00` jako przypomnienie.
 - **Czego nie dodano:** przycisków w pustych stanach. Plan mówi „gdzie sensowne”, a tu następny krok to już działanie na kaflu albo w kompozytorze („+”), więc przycisk dublowałby ten sam skrót. Do rozważenia później.
 - **Testy:** `src/components/EmptyState.copy.test.ts` (12: nagłówek i krok w każdym widoku, długość, brak wykrzykników). W Chrome (`scratchpad/test-chrome.mjs`): /kosz, /archiwum, /przypomnienia pokazują nowe zdania. E2E `reminders-calendar`, `search-backup`: 14/14. Vitest: patrz wpis commitu.
-- **Commit:** patrz następna linia.
+- **Commit:** f5e418c, 2026-10-19.
