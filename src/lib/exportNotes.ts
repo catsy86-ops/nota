@@ -5,14 +5,14 @@ import { yjsStore } from "@/lib/yjsStore";
 import { filledPropEntries, type PropDef } from "@/lib/noteProps";
 import { isValidMeta } from "@/lib/vault";
 // Schematy (zod) ładują się dopiero przy imporcie/backupie — nie ma ich w startowym bundlu.
-import type { BackupSkipped, FullBackup } from "@/lib/noteSchema";
+import type { FullBackup } from "@/lib/noteSchema";
 const loadSchemas = () => import("@/lib/noteSchema");
 import { tryWriteBackupToFile } from "@/lib/backupFileHandle";
 import { versionsStore } from "@/lib/versionsStore";
 import { logDiag } from "@/lib/diagnostics";
 import { imageStore, isEmbeddableImageDataUrl } from "@/lib/imageStore";
 import { journalImageRefs } from "@/lib/study/images";
-import { siteDocRefsIn } from "@/lib/study/journalRefs";
+import { recordingRefsIn, siteDocRefsIn } from "@/lib/study/journalRefs";
 import { STUDY_STORAGE_KEY } from "@/lib/study/keys";
 import { restoreShifts, shiftStore, shiftsReady } from "@/lib/shifts/store";
 import { migrate } from "@/lib/shifts/model";
@@ -54,6 +54,8 @@ export interface BackupAttachmentReport {
   journalPhotos: number;
   /** Pliki budów (plany, PDF), które nie weszły do backupu — osobno od zdjęć. */
   siteDocs: number;
+  /** Nagrania głosowe z wpisów, które nie weszły do backupu — osobno od zdjęć (U8). */
+  recordings: number;
 }
 
 /** Zdanie do toastu o pominiętych załącznikach; `null`, gdy wszystko weszło. */
@@ -62,10 +64,11 @@ export function describeSkippedAttachments(r?: BackupAttachmentReport): string |
   const n = r.tooLarge.length + r.missing.length;
   const photos = r.journalPhotos;
   const docs = r.siteDocs;
-  if (!n && !photos && !docs) return null;
+  if (!n && !photos && !docs && !r.recordings) return null;
   const photosPart = photos ? `Pominięte zdjęcia dziennika z budowy: ${photos} — zostaną tylko na tym urządzeniu.` : null;
   const docsPart = docs ? `Pominięte pliki budów (plany, PDF): ${docs} — zostaną tylko na tym urządzeniu.` : null;
-  const extra = [photosPart, docsPart].filter(Boolean).join(" ") || null;
+  const recPart = r.recordings ? `Pominięte nagrania głosowe: ${r.recordings} — zostaną tylko na tym urządzeniu.` : null;
+  const extra = [photosPart, docsPart, recPart].filter(Boolean).join(" ") || null;
   if (!n) return extra;
   const parts: string[] = [];
   if (r.tooLarge.length) parts.push(`${r.tooLarge.length} za duże na backup (limit ${formatFileSize(BACKUP_ATTACHMENTS_BUDGET_BYTES)} na wszystkie pliki)`);
@@ -76,7 +79,7 @@ export function describeSkippedAttachments(r?: BackupAttachmentReport): string |
 
 /** Bajty załączników do backupu v3 w ramach budżetu; najpierw mniejsze, żeby weszło ich jak najwięcej. */
 async function collectAttachmentBlobs(budget: number): Promise<{ blobs: Record<string, string>; report: BackupAttachmentReport }> {
-  const report: BackupAttachmentReport = { tooLarge: [], missing: [], journalPhotos: 0, siteDocs: 0 };
+  const report: BackupAttachmentReport = { tooLarge: [], missing: [], journalPhotos: 0, siteDocs: 0, recordings: 0 };
   const blobs: Record<string, string> = {};
   let used = 0;
   const all = [...yjsStore.referencedAttachments().values()].sort((a, b) => a.size - b.size);
@@ -89,9 +92,11 @@ async function collectAttachmentBlobs(budget: number): Promise<{ blobs: Record<s
   }
   // Zdjęcia dziennika z budowy: te same bajty co w `imageStore`, razem z załącznikami w budżecie.
   const docs = siteDocRefsIn(yjsStore.doc);
-  // Każdy pominięty bajt liczony w swojej kategorii: zdjęcie dziennika albo plik budowy.
+  const recordings = recordingRefsIn(yjsStore.doc);
+  // Każdy pominięty bajt liczony w swojej kategorii: plik budowy, nagranie albo zdjęcie dziennika.
   const skip = (hash: string) => {
     if (docs.has(hash)) report.siteDocs++;
+    else if (recordings.has(hash)) report.recordings++;
     else report.journalPhotos++;
   };
   for (const hash of journalImageRefs()) {
@@ -138,7 +143,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     study: JSON.stringify(study),
     ...(Object.keys(blobs).length ? { attachmentBlobs: blobs } : {}),
     // Same liczby (bez treści) — okno przywracania mówi, czego w pliku nie ma; zera = nic nie pominięto.
-    skipped: { tooLarge: report.tooLarge.length, missing: report.missing.length, journalPhotos: report.journalPhotos, siteDocs: report.siteDocs },
+    skipped: { tooLarge: report.tooLarge.length, missing: report.missing.length, journalPhotos: report.journalPhotos, siteDocs: report.siteDocs, recordings: report.recordings },
   };
   return { backup, attachments: report };
 }

@@ -57,3 +57,17 @@ export function journalRefsIn(doc: { getMap(name: string): MapLike }, syncable =
   });
   return refs;
 }
+
+/** Klucze nagrań głosowych (`JournalEntry.recordings`) — osobno od zdjęć, żeby raport kopii je nazywał. */
+export function recordingRefsIn(doc: { getMap(name: string): MapLike }): Set<string> {
+  const refs = new Set<string>();
+  doc.getMap("studyJournal").forEach((e) => {
+    const list = (e as { recordings?: unknown } | null)?.recordings;
+    if (!Array.isArray(list)) return;
+    for (const r of list) {
+      const hash = (r as { hash?: unknown } | null)?.hash;
+      if (typeof hash === "string" && isImageRef(hash)) refs.add(hash);
+    }
+  });
+  return refs;
+}

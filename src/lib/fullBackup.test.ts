@@ -194,7 +194,7 @@ describe("pełny backup v3 — załączniki", () => {
     expect(attachments.journalPhotos).toBe(1);
     expect(attachments.siteDocs).toBe(1);
     // Ten sam raport trafia do pliku jako liczby, żeby okno przywracania mogło powiedzieć, czego w nim nie ma.
-    expect(backup.skipped).toEqual({ tooLarge: 1, missing: 0, journalPhotos: 1, siteDocs: 1 });
+    expect(backup.skipped).toEqual({ tooLarge: 1, missing: 0, journalPhotos: 1, siteDocs: 1, recordings: 0 });
     expect(describeBackupSkipped(backup.skipped)).toBe(
       "Ten plik nie zawiera: załączniki za duże na backup: 1, zdjęcia dziennika z budowy: 1, pliki budów (plany, PDF): 1. " +
       "Zdjęcia dziennika i pliki budów zostały tylko na tamtym urządzeniu.",
@@ -213,7 +213,7 @@ describe("pełny backup v3 — załączniki", () => {
     expect(Object.keys(backup.attachmentBlobs ?? {})).toContain(plan);
     expect(attachments.siteDocs).toBe(0);
     expect(describeSkippedAttachments(attachments)).toBeNull();
-    expect(backup.skipped).toEqual({ tooLarge: 0, missing: 0, journalPhotos: 0, siteDocs: 0 });
+    expect(backup.skipped).toEqual({ tooLarge: 0, missing: 0, journalPhotos: 0, siteDocs: 0, recordings: 0 });
     expect(describeBackupSkipped(backup.skipped)).toBeNull();
   });
 });

@@ -80,6 +80,8 @@ export interface BackupSkipped {
   missing: number;
   journalPhotos: number;
   siteDocs: number;
+  /** Nagrania głosowe z wpisów (U8); starsze kopie tego pola nie mają. */
+  recordings?: number;
 }
 
 /**
@@ -137,7 +139,7 @@ export const fullBackupSchema = z.object({
   shifts: z.string().optional().catch(undefined),
   study: z.string().optional().catch(undefined),
   attachmentBlobs: z.record(z.string()).optional().catch(undefined),
-  skipped: z.object({ tooLarge: z.number(), missing: z.number(), journalPhotos: z.number(), siteDocs: z.number() }).optional().catch(undefined),
+  skipped: z.object({ tooLarge: z.number(), missing: z.number(), journalPhotos: z.number(), siteDocs: z.number(), recordings: z.number().optional().catch(undefined) }).optional().catch(undefined),
   // Starsze kopie nie mają sekcji — wtedy po prostu brak definicji.
   propDefs: z.unknown().transform((v) => cleanPropDefs(v)).optional(),
   vault: z.unknown().optional(),

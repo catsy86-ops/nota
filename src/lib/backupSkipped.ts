@@ -8,7 +8,10 @@ export function describeBackupSkipped(s?: BackupSkipped): string | null {
   if (s.missing) parts.push(`załączniki nieobecne na urządzeniu, z którego zrobiono kopię: ${s.missing}`);
   if (s.journalPhotos) parts.push(`zdjęcia dziennika z budowy: ${s.journalPhotos}`);
   if (s.siteDocs) parts.push(`pliki budów (plany, PDF): ${s.siteDocs}`);
+  if (s.recordings) parts.push(`nagrania głosowe z wpisów: ${s.recordings}`);
   if (!parts.length) return null;
-  const onlyHere = s.journalPhotos || s.siteDocs ? " Zdjęcia dziennika i pliki budów zostały tylko na tamtym urządzeniu." : "";
+  const onlyHere = s.recordings
+    ? " Zdjęcia, nagrania i pliki budów zostały tylko na tamtym urządzeniu."
+    : s.journalPhotos || s.siteDocs ? " Zdjęcia dziennika i pliki budów zostały tylko na tamtym urządzeniu." : "";
   return `Ten plik nie zawiera: ${parts.join(", ")}.${onlyHere}`;
 }

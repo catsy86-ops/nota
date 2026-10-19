@@ -3880,7 +3880,7 @@ lub grupę”.
   - Wpis to jeden klucz w mapie Yjs (LWW na cały wpis), więc nagrania jadą z wpisem; nie ma nowego modelu synchronizacji.
   - Sync do innego urządzenia: nagrania do 2 MB; większe zostają lokalnie — tak jak załączniki notatek i dokumenty budów.
 - **Ograniczenia i pułapki:**
-  - Raport kopii (`exportNotes`) liczy pominięte nagrania w kategorii „zdjęcia dziennika” (`journalPhotos`), bo `journalImageRefs` zbiera wszystkie klucze wpisów. Etykieta w raporcie jest myląca — do poprawy osobno.
+  - Raport kopii (`exportNotes`) liczy pominięte nagrania osobno (`recordings`, z `recordingRefsIn` w `journalRefs.ts`), nie jako zdjęcia. Starsze kopie bez tego pola działają jak dotąd (pole opcjonalne w `noteSchema.ts`).
   - Limit łączny 100 MB liczy wszystkie załączniki w aplikacji (`used`). Nagranie usunięte z wpisu zostaje w magazynie do odśmiecania (po karencji).
   - Przeglądarki nagrywają w `audio/webm`, `audio/ogg` albo `audio/mp4`; `cleanRecordings` odrzuca każdy inny typ.
   - Dyktowanie (`useDictation`) i nagrywanie są niezależne — nagranie nie jest transkrybowane i nie trafia do raportu.

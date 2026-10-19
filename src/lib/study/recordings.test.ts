@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { cleanEntry, cleanRecordings, JOURNAL_MAX_RECORDINGS } from "./yStudy";
-import { journalRefsIn } from "./journalRefs";
+import { journalRefsIn, recordingRefsIn } from "./journalRefs";
 import { addRecording } from "./recordings";
 
 // Klucze w `imageStore` to 64 znaki hex (SHA-256).
@@ -80,5 +80,12 @@ describe("addRecording — limit nagrań w wpisie", () => {
     const res = await addRecording(new File(["x"], "n.webm", { type: "audio/webm" }), current);
     expect(res.added).toBeNull();
     expect(res.message).toMatch(/najwyżej 3 nagrania/);
+  });
+});
+
+describe("recordingRefsIn — klucze nagrań dla raportu kopii", () => {
+  it("zwraca tylko nagrania, bez zdjęć wpisu", () => {
+    const doc = docWith({ e1: { images: [H1], recordings: [rec(H2)] } });
+    expect([...recordingRefsIn(doc)]).toEqual([H2]);
   });
 });
