@@ -55,9 +55,9 @@ export function reviewCard(prev: ReviewCard | undefined, ok: boolean, today: str
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /** Pytania należne do powtórki (termin dziś lub wcześniej), od najbardziej zaległych. */
-export function dueIds(reviews: Readonly<Record<string, ReviewCard>>, today: string, known?: ReadonlySet<string>): string[] {
+export function dueIds(reviews: Readonly<Record<string, ReviewCard>>, today: string): string[] {
   return Object.entries(reviews)
-    .filter(([id, c]) => c.due <= today && (!known || known.has(id)))
+    .filter(([, c]) => c.due <= today)
     .sort(([a, x], [b, y]) => (x.due < y.due ? -1 : x.due > y.due ? 1 : a < b ? -1 : 1))
     .map(([id]) => id);
 }

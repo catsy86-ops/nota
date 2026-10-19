@@ -154,11 +154,24 @@ export function ReminderQuickAddDialog({
     close();
   }
 
+  /**
+   * Ctrl/⌘+Enter z dowolnego pola okna (także godziny i powtarzania) zapisuje — to samo co
+   * główny przycisk. Zwykły Enter zostaje w polu tekstu jak dotąd.
+   */
+  function handleShortcut(e: React.KeyboardEvent) {
+    if (e.key !== "Enter" || !(e.ctrlKey || e.metaKey)) return;
+    e.preventDefault();
+    if (timestamp === null) return;
+    if (isEdit) handleSaveEdit();
+    else if (title) handleCreate();
+  }
+
   return (
     <Dialog open={open} onOpenChange={(v) => (v ? onOpenChange(true) : close())}>
       <ResponsiveDialogContent
         className={DIALOG_CLASS}
         onOpenAutoFocus={isEdit ? (e) => e.preventDefault() : undefined}
+        onKeyDown={handleShortcut}
       >
         <DialogHeader>
           <DialogTitle className="font-display flex items-center gap-2">
@@ -233,7 +246,7 @@ export function ReminderQuickAddDialog({
                 a kolejne wylicza od niego.
               </p>
             )}
-            <Button size="sm" onClick={handleSaveEdit} disabled={timestamp === null} className="w-full coarse:h-11">
+            <Button size="sm" onClick={handleSaveEdit} disabled={timestamp === null} className="w-full coarse:h-11" aria-keyshortcuts="Control+Enter Meta+Enter">
               Zapisz termin
             </Button>
             <div className="flex flex-col sm:flex-row gap-2">
@@ -256,7 +269,7 @@ export function ReminderQuickAddDialog({
           </div>
         ) : (
           <>
-            <Button size="sm" onClick={handleCreate} disabled={timestamp === null || !title} className="w-full coarse:h-11">
+            <Button size="sm" onClick={handleCreate} disabled={timestamp === null || !title} className="w-full coarse:h-11" aria-keyshortcuts="Control+Enter Meta+Enter">
               <Plus className="w-3.5 h-3.5 mr-1" />
               Utwórz notatkę z terminem
             </Button>

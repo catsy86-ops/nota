@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { CHECKLIST, QUESTIONS, TOPICS } from "./content";
 import { buildRound, missedTopics, scoreRound } from "./quiz";
 import { topicToNote } from "./toNote";
@@ -19,6 +19,9 @@ import { yjsStore } from "@/lib/yjsStore";
 /** Nauka żyje w dokumencie Yjs — każdy test zaczyna od pustego. */
 async function freshStudy() {
   localStorage.clear();
+  // Zegar zamrożony: `recordRound` i `addJournalEntry` biorą dzień i chwilę z "teraz" (T6).
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 9, 14, 12));
   await yjsStore.resetForTests();
   resetStudyForTests();
 }

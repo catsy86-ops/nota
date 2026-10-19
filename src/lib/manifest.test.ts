@@ -12,11 +12,15 @@ describe("manifest.webmanifest", () => {
       (manifest.shortcuts as { name: string; url: string }[]).map((s) => [s.name, new URL(s.url, "https://x.test")]),
     );
     // Kolejność ma znaczenie: Android pokazuje tylko kilka pierwszych skrótów.
-    expect(Object.keys(byName)).toEqual(["Nowa notatka", "Wpis z budowy", "Grafik", "Szukaj", "Nowa lista", "Dziś", "Przypomnienia"]);
+    expect(Object.keys(byName)).toEqual(["Nowa notatka", "Wpis z budowy", "Wpis głosowy", "Grafik", "Szukaj", "Nowa lista", "Dziś", "Przypomnienia"]);
     expect(byName["Nowa lista"].searchParams.get("new")).toBe("list");
     expect(byName["Szukaj"].searchParams.get("szukaj")).toBe("1");
     expect(parseViewRoute(byName["Wpis z budowy"].pathname, "").view).toBe("study");
     expect(byName["Wpis z budowy"].searchParams.get("wpis")).toBe("1");
+    // Wpis głosowy: ten sam arkusz, plus start dyktowania (U5).
+    expect(parseViewRoute(byName["Wpis głosowy"].pathname, "").view).toBe("study");
+    expect(byName["Wpis głosowy"].searchParams.get("wpis")).toBe("1");
+    expect(byName["Wpis głosowy"].searchParams.get("glos")).toBe("1");
     expect(byName["Nowa notatka"].searchParams.get("new")).toBe("1");
     expect(parseViewRoute(byName["Dziś"].pathname, "").view).toBe("today");
     expect(parseViewRoute(byName["Grafik"].pathname, "").view).toBe("shifts");

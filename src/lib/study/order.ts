@@ -40,3 +40,9 @@ export function orderText(siteName: string, order: SiteOrder): string {
     : `Liczone od ${new Date(order.since).toLocaleDateString("pl-PL")} (${order.entries} ${order.entries === 1 ? "wpis" : "wpisów"}).`;
   return [head, ...lines, since].join("\n");
 }
+
+/**
+ * Link „wyślij przez WhatsApp” z tekstem zamówienia. Bez numeru: WhatsApp pyta, do kogo wysłać,
+ * więc numer hurtowni nigdzie nie trafia (ani do synchronizacji, ani do kopii).
+ */
+export const whatsappOrderUrl = (text: string): string => `https://wa.me/?text=${encodeURIComponent(text)}`;

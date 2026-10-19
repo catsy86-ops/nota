@@ -507,6 +507,14 @@ test.describe("dziennik na telefonie", () => {
     await expect(page.getByTestId("dictation-hint")).toContainText("mikrofonem na klawiaturze");
     await context.setOffline(false);
   });
+
+  test("skrót „Wpis głosowy” otwiera arkusz i zdejmuje `glos` z adresu (U5)", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto("/praca?wpis=1&glos=1");
+    await expect(page.getByTestId("journal-entry-sheet")).toBeVisible();
+    // Parametr `glos` znika z adresu jak `wpis`, żeby odświeżenie nie otwierało arkusza drugi raz.
+    await expect(page).toHaveURL(/\/praca$/);
+  });
 });
 
 test("dawny zapis Nauki z localStorage przechodzi do dokumentu raz i bez strat", async ({ page }) => {

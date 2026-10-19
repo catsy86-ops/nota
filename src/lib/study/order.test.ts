@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { JournalEntry } from "./yStudy";
-import { orderText, siteOrder } from "./order";
+import { orderText, siteOrder, whatsappOrderUrl } from "./order";
 import { cleanSite, siteKey } from "./sites";
 
 const day = (d: number, h = 12) => new Date(2026, 9, d, h).getTime();
@@ -95,5 +95,13 @@ describe("cleanSite — zamówienie w karcie", () => {
     const card = cleanSite({ ...base, orderedAt: "wczoraj" });
     expect(card).not.toBeNull();
     expect(card).not.toHaveProperty("orderedAt");
+  });
+});
+
+describe("whatsappOrderUrl (U7)", () => {
+  it("koduje tekst zamówienia w parametrze text, bez numeru odbiorcy", () => {
+    const url = whatsappOrderUrl("Zamówienie: kolano 16 — 2 szt.\nTrójnik");
+    expect(url.startsWith("https://wa.me/?text=")).toBe(true);
+    expect(decodeURIComponent(url.slice("https://wa.me/?text=".length))).toBe("Zamówienie: kolano 16 — 2 szt.\nTrójnik");
   });
 });

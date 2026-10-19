@@ -892,7 +892,9 @@ należny i przepadły, uszkodzony plik), `e2e/push.spec.ts` (włączenie z podst
 
 **Co robi.** Przytrzymanie ikony zainstalowanej aplikacji pokazuje skróty: Nowa notatka, Wpis z budowy, Grafik,
 Szukaj, Nowa lista, Dziś, Przypomnienia. „Nowa lista” otwiera kompozytor od razu z listą do odhaczania, „Szukaj”
-stawia kursor w polu wyszukiwania.
+stawia kursor w polu wyszukiwania. „Wpis głosowy” (drugi po „Wpis z budowy”) otwiera ten sam arkusz wpisu i od razu
+startuje dyktowanie — `/praca?wpis=1&glos=1`, patrz „Praca — dyktowanie wpisu ze skrótu” niżej (U5).
+Przez to na Androidzie „Grafik” i dalsze skróty przesunęły się o jedno miejsce.
 
 **Gdzie jest.** `public/manifest.webmanifest` (`shortcuts`), obsługa adresów w `src/hooks/useLaunchIntents.ts` (efekt przy starcie, wołany z `Index.tsx`:
 `?new=1`, `?new=list` → `expandComposer("list")`, `?szukaj=1` → fokus na widocznym `input[type="search"]`); parametr
@@ -1760,7 +1762,8 @@ powtórek” (z każdej zakładki), a w Quizie ramka „Na dziś: N pytań do po
 najbardziej zaległe pytania (do 10). Gdy na dziś nic nie ma, Quiz mówi, kiedy następne („jutro”, „za 3 dni”, „24.10”).
 
 **Gdzie jest.**
-- `src/lib/study/srs.ts`: `ReviewCard`, `reviewCard` (następny stan po odpowiedzi), `dueIds`, `cleanCard`.
+- `src/lib/study/srs.ts`: `ReviewCard`, `reviewCard` (następny stan po odpowiedzi), `dueIds(reviews, today)` (samo
+  filtrowanie po terminie i sortowanie; parametr „znanych pytań” usunięty — znane pytania filtruje `sanitizeStudy`), `cleanCard`.
 - `src/lib/study/yStudy.ts`: mapa Yjs `studyReview` (id pytania → karta), `StudyDump.review`, `StudyState.review`;
   `recordRound` aktualizuje karty w tej samej transakcji co runda; `replaceAll`/`mergeIn` (nowsza `last` wygrywa).
 - `src/lib/study/store.ts`: `dueToday`, filtr kart po znanych pytaniach w `sanitizeStudy`.
@@ -2145,7 +2148,9 @@ Wszystko znika przy aktywnym wyszukiwaniu.
   `groupReminders` z `lib/reminderAgenda.ts` (ta sama logika co widok Przypomnień), tylko grupy „Zaległe” i „Dziś”.
   Czas przy notatce przez `formatReminderShort` z `lib/reminderTime.ts`.
 - `src/components/review/TodayStudyCard.tsx`: `TodayStudyCard({ onPractice })` (dane) i `TodayStudyCardView`
-  (sam widok). Liczy `dueIds(review, localDayKey())` z `lib/study/srs.ts` na stanie z `yStudy` (`lib/study/data.ts`);
+  (sam widok). Liczy `dueToday(useStudy())` z `lib/study/store.ts` — ta sama projekcja i funkcja co „Na dziś: N” w Pracy,
+  więc liczba nie zawyża kart pytań, których nie ma już w materiale (L2). Karta ładuje `store.ts` (materiał), ale jest
+  lazy i nie wchodzi w paczkę startową;
   `STUDY_DUE_PARAM` (`powtorka`) — obsługa w `StudyView.tsx` (zakładka quiz, zakres „due”, parametr zdjęty z adresu).
 - `src/pages/Index.tsx`: lazy importy `TodayShiftCard`, `TodayDueList` i `TodayStudyCard`, renderowanie w widoku `today` przed
   `WeeklyReviewCard`. `onOpenShifts` → `go("shifts")`, `onDailyNote` → `openDailyNote`, `onOpen` → `openNote`,
@@ -2307,7 +2312,9 @@ z notatkami i trafiają do kopii zapasowej.
 
 **Gdzie jest.**
 - `src/lib/study/yStudy.ts` — `createYStudy(doc)`, typy `JournalEntry`, `StudyState`, `StudyDump`,
-  czyszczenie wejścia `cleanEntry`, `cleanDump`, `dumpFromLegacy`, `stateFromDump`, `journalRefsIn`.
+  czyszczenie wejścia `cleanEntryParts` (wspólna część wpisu: tekst, odhaczenia, zdjęcia, próba, kształtki, etap,
+  lokalizacja, flaga `empty`), `cleanEntry` (kształt wpisu, z `cleanEntryParts`), `cleanDump`, `dumpFromLegacy`,
+  `stateFromDump`, `journalRefsIn`.
 - `src/lib/study/data.ts` — jedyna instancja `yStudy` na `yjsStore.doc`, `studyDevice()`,
   migracja ze starego zapisu, `useStudyReady`.
 - `src/lib/study/store.ts` — fasada dla widoków: `useStudy`, `getStudy`, `sanitizeStudy`
@@ -2375,6 +2382,13 @@ poprawia zapisany wpis i go usuwa (z „Cofnij”).
   z `preventDefault`).
 - Dyktowanie (`useDictation`) dopisuje rozpoznane zdanie na końcu tekstu. Bez Web Speech
   albo bez internetu jest podpowiedź o mikrofonie klawiatury.
+- **Praca — dyktowanie wpisu ze skrótu (U5).** `/praca?wpis=1&glos=1` otwiera arkusz i włącza dyktowanie od razu
+  (`glos=1` bez `wpis` nic nie robi). `StudyView.tsx` czyta `glos`, zdejmuje oba parametry z adresu i ustawia
+  żądanie (`requestVoiceOnOpen`, `takeVoiceRequest` w `lib/study/entrySheet.ts` — jednorazowe). `JournalEntrySheet.tsx`
+  przy otwarciu bierze żądanie i wywołuje `toggle()` z `useDictation`. Bez zgody zapisanej na urządzeniu `toggle()`
+  pokazuje dotychczasowe pytanie o zgodę, więc pierwsze użycie zawsze wymaga kliknięcia. Bez Web Speech dyktowanie
+  po prostu się nie zaczyna. Skrót PWA: `public/manifest.webmanifest`. Testy: `e2e/study.spec.ts` („skrót „Wpis
+  głosowy””), `src/lib/manifest.test.ts` (kolejność i adresy skrótów).
 - Problem przy temacie z kolumny „Umiem” cofa temat do „W trakcie” (też przy edycji
   wpisu na problem lub zmianie tematu problemu).
 - Wejścia: „+ Wpis” w nagłówku dziennika, „+” w dolnym pasku na `/nauka`, skrót PWA
@@ -2853,7 +2867,9 @@ do etapu, 2026-10-16), `f31f65f` (przypięcie w edycji, 2026-10-16).
 **Co robi.** W karcie budowy sekcja „Do zamówienia” pokazuje kształtki zużyte na tej budowie od ostatniego
 zamówienia (suma sztuk per nazwa). „Kopiuj listę” kopiuje gotowy tekst do wysłania dostawcy albo do grupy,
 a „Oznacz jako zamówione” zapisuje moment zamówienia — od tej chwili lista zaczyna się od zera i rośnie z
-kolejnymi wpisami. Bez kształtek oba przyciski są nieaktywne. Ta sama lista idzie w raporcie budowy dla szefa
+kolejnymi wpisami. Bez kształtek wszystkie przyciski są nieaktywne. „WhatsApp” (U7) otwiera `wa.me/?text=…` z tym
+samym tekstem: WhatsApp sam pyta o odbiorcę, więc numer hurtowni nie jest zapisywany ani w karcie, ani w sync, ani w kopii
+(decyzja domyślna — wybór numeru zapisywanego w karcie czeka na zgodę właściciela). Ta sama lista idzie w raporcie budowy dla szefa
 (ekran, wydruk, tekst, WhatsApp) jako sekcja „Do zamówienia” — w jednej wiadomości postęp i brakujący materiał.
 
 **Gdzie jest.**
@@ -2861,7 +2877,9 @@ kolejnymi wpisami. Bez kształtek oba przyciski są nieaktywne. Ta sama lista id
   `## Do zamówienia` w `reportBody` (WhatsApp: `*Do zamówienia*`); `ReportOptions.siteCard` niesie `orderedAt`.
   Tabela `[data-report-to-order]` w `JournalReport.tsx`.
 - `src/lib/study/order.ts`: `siteOrder(journal, siteId, orderedAt?)` → `{ items, entries, since }` (czysta funkcja),
-  `orderText(siteName, order)` — tekst bez znaczników formatowania.
+  `orderText(siteName, order)` — tekst bez znaczników formatowania, `whatsappOrderUrl(text)` — link `wa.me` (U7).
+  Test: `src/components/study/SiteOrderPanel.test.tsx` (klik „WhatsApp” otwiera `wa.me` z treścią; pusta lista = wyłączony),
+  `src/lib/study/order.test.ts` (kodowanie tekstu w linku).
 - `src/lib/study/sites.ts`: pole `SiteCard.orderedAt?` (ms); `cleanSite` zachowuje je, gdy jest liczbą.
 - `src/lib/study/store.ts`: `markSiteOrdered(id, now)` (zapisuje też, co zamówiono, w historii `orders` — patrz „Braki
   materiału”); `saveSiteCard` zachowuje wszystkie pola karty poza nazwą, adresem i inwestorem.
@@ -3426,7 +3444,7 @@ lub grupę”.
 ## Praca — wpisy bez utraty danych (plan działu Praca, D1, D4, T7, 2026-10-18)
 
 - **Co robi:** wpis, który ma tylko odhaczone punkty listy, nie znika z dziennika, raportów i serii, gdy jego punkt został usunięty; stare odhaczenia są po prostu pomijane, a sam wpis zostaje. Wpis ze zdjęciem, którego bajtów nie ma w kopii, przeżywa import z zachowaną referencją. Usunięcie wpisu ze zdjęciami i „Cofnij” przywraca wpis z tymi samymi zdjęciami.
-- **Gdzie jest:** `src/lib/study/store.ts` (`sanitizeStudy` — pustość liczona przed odrzuceniem nieznanych punktów, zmienna `hadChecks`).
+- **Gdzie jest:** `src/lib/study/store.ts` (`sanitizeStudy` — pustość liczona przed odrzuceniem nieznanych punktów przez `cleanEntryParts(...).empty`, patrz „Praca — porządki po planie” niżej).
 - **Testy:** `src/lib/study/study.test.ts` — trzy nowe testy (wpis z odhaczeniami usuniętego punktu, referencja do brakującego zdjęcia, usunięcie i „Cofnij” ze zdjęciami).
 - **Nie zrobione z planu:** D2 (przywracanie kopii — walidacja przed kasowaniem), D3 (budżet kopii 40 MB), D5 (model wpisu), reszta planu — czekają na decyzje z planu działu Praca.
 - **Commit:** brak — zmiany niezacommitowane.
@@ -3778,3 +3796,35 @@ lub grupę”.
 - **Ograniczenie:** zmiana przez północ rysuje się tylko do 24:00 (część po północy nie wchodzi na oś tego dnia). Przerwa bez godziny (`breakAt`) nie ma miejsca na osi — zmiana rysuje się jako jeden odcinek. Oś nie pokazuje minut na skali (wiersz to godzina, a dokładny czas jest w tekście terminu). Kompozytor nowej notatki nie zmienia się.
 - **Testy:** `src/lib/dayTimeline.test.ts` (odcinki zmiany, przerwa, urlop, zakres osi, gradient w godzinie, minuty), `src/lib/reminderOccurrences.test.ts` (grupa „cały dzień”: flaga w wystąpieniach jednorazowych i serii). E2E `e2e/day-timeline.spec.ts`: termin ląduje w wierszu 23:00 na osi, lista jest domyślna; 360 px bez poziomego przewijania (zrzut sprawdzony).
 - **Commit:** w commicie z tym wpisem, 2026-10-19.
+
+## Kalendarz — skróty w oknie terminu (K3 planu kalendarza/przypomnień, 2026-10-19)
+
+- **Co robi:** Ctrl+Enter (na Macu ⌘+Enter) z dowolnego pola okna „Nowy termin” (także z godziny i powtarzania) tworzy notatkę z terminem, a w edycji zapisuje termin — to samo co przycisk. Zwykły Enter w polu tekstu działa jak dotąd. Przycisk ma `aria-keyshortcuts`.
+- **Gdzie jest:** `src/components/calendar/ReminderQuickAddDialog.tsx` (`handleShortcut` na `ResponsiveDialogContent`, `onKeyDown`).
+- **Jak działa:** skrót nie zapisuje, gdy godzina jest niepoprawna (`timestamp === null`), a przy dodawaniu wymaga tytułu. Przyjmuje się zdarzenie z całego okna, więc działa z fokusem w każdym polu.
+- **Testy:** `e2e/reminders-calendar.spec.ts` („Ctrl+Enter z pola godziny tworzy notatkę z terminem (K3)”) — sprawdza, że okno się zamyka i dzień ma jeden termin. Uruchomiony: przechodzi.
+- **Nie zrobione z K3:** podpowiedzi skrótów widoczne w interfejsie (tylko `aria-keyshortcuts` i zachowanie).
+
+## Praca — porządki po planie (L1, L2, L6, T4, T6, T2 częściowo, C4 — 2026-10-19)
+
+- **Co robi:** bez zmiany zachowania dla użytkownika, poza licznikiem „Na dziś” na karcie Dziś (L2 — teraz z tą samą projekcją co Praca). Wpisy zapisywane, z kopii i z projekcji są czyszczone jedną funkcją.
+- **Gdzie jest:**
+  - `src/lib/study/yStudy.ts` — `cleanEntryParts(e)` (L1): tekst, odhaczenia (tylko id, bez materiału), zdjęcia, próba, kształtki, etap, lokalizacja i flaga `empty`; `cleanEntry` (kopia, drugi telefon) korzysta z niej.
+  - `src/lib/study/store.ts` — `sanitizeStudy` (projekcja) i `entryFields` (zapis z arkusza) też korzystają z `cleanEntryParts`. Różnice, które zostają świadomie: projekcja filtruje odhaczenia po materiale już *po* sprawdzeniu pustości (D1), zapis filtruje je *przed* sprawdzeniem.
+  - `src/lib/study/srs.ts` — `dueIds(reviews, today)`: usunięty nieużywany parametr `known` (L6).
+  - `src/components/review/TodayStudyCard.tsx` — `dueToday(useStudy())` zamiast `dueIds` na surowej kopii (L2).
+  - `src/lib/study/store.ts` — JSDoc `saveBoss` wrócił nad swoją funkcją (L6, wcześniej wisiał nad `addCustomEntry`); `handover.ts` wskazuje `HandoverPaper.tsx` (L6).
+  - `docs/GOTCHAS.md` — wpis o strefie czasowej (C4): termin to chwila, nie godzina ścienna.
+- **Jak działa i dlaczego:** L2 — karta Dziś ładuje `store.ts`, który ciągnie `content.ts` (22 KB materiału). Karta jest leniwa, więc materiał trafia do jej fragmentu, nie do startowego. Zrobione tak, bo zgodność liczby z Pracą jest ważniejsza niż ten kawałek bajtów; pilnuje tego budżet wejściowego JS w `e2e/bundle.spec.ts` — uruchomiony po buildzie, 6/6 zielone.
+- **Testy:**
+  - `src/lib/study/yStudy.test.ts` — migracja dawnego zapisu zachowuje zdjęcia i są widoczne dla odśmiecania (T4).
+  - `src/lib/study/study.test.ts`, `src/lib/study/customStore.test.ts` — zegar zamrożony w `freshStudy` (`vi.setSystemTime`), bo `recordRound` i `addJournalEntry` brały dzień z prawdziwego zegara (T6). `TodayDueList.test.tsx` i `StudyDueRows.test.tsx` już miały zamrożony `Date`.
+  - `src/lib/study/srs.test.ts` — po usunięciu parametru `known` został test samego sortowania.
+  - `src/components/study/SiteOrderPanel.test.tsx` — pierwszy test komponentu z działu Praca (T2, jeden z ośmiu).
+- **Nie zrobione (z planu Pracy):**
+  - T2 — testy pozostałych komponentów: SiteDocs, SiteService, SiteStages, SiteShortages, JournalEntrySheet, DayHours, Calculators.
+  - T5 — `report-nudge.spec.ts` nie ma już `waitForTimeout` (usunięty wcześniej); `journal-geo.spec.ts` celowo akceptuje dwa komunikaty (zależne od przeglądarki); `today-study.spec.ts` przechodzi, a wynik nie zależy od odpowiedzi (wszystkie 10 pytań wraca następnego dnia). Bez zmian.
+  - U8 — decyzja właściciela: nagranie jako osobny załącznik. Nie zrobione: audio w `imageStore` wymaga obsługi w kopii (budżet 40 MB), PDF, ZIP, odśmiecaniu i w arkuszu wpisu (zdjęcia zakładają obrazy).
+  - D5 — decyzja właściciela: zostaje obecny model wpisu (jeden klucz Y.Map), bez przebudowy.
+  - P3 — decyzja: odłożenie dotyczy tylko jednego wystąpienia. Nie zrobione: dziś „Odłóż” z powiadomienia zapisuje nowy `reminder` notatki, czyli przesuwa kotwicę całej serii. Potrzebne pole nakładki w `reminderSpec` i obsługa w harmonogramie push, Kalendarzu, Dziś i Przypomnieniach (ok. 39 plików, 73 miejsca czytania terminu) — osobna sesja z pełnym e2e.
+- **Commit:** brak — zmiany niezacommitowane.

@@ -35,7 +35,6 @@ describe("srs — SM-2 lite z oceną automatyczną", () => {
     const card = (due: string): ReviewCard => ({ reps: 1, interval: 1, ease: 2.5, due, last: due, lapses: 0, seen: 1, right: 1 });
     const reviews = { a: card("2026-10-15"), b: card("2026-10-10"), c: card("2026-10-16"), x: card("2026-10-01") };
     expect(dueIds(reviews, D)).toEqual(["x", "b", "a"]);
-    expect(dueIds(reviews, D, new Set(["a", "b", "c"]))).toEqual(["b", "a"]);
   });
 
   it("cleanCard odrzuca śmieci i przycina wartości", () => {

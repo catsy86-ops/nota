@@ -148,6 +148,19 @@ test("termin można przypiąć do istniejącej notatki zamiast tworzyć nową", 
   await expect(row).toContainText("23:45");
 });
 
+test("Ctrl+Enter z pola godziny tworzy notatkę z terminem (K3)", async ({ page }) => {
+  await page.getByRole("button", { name: /Kalendarz/ }).first().click();
+  await page.getByRole("button", { name: "Dodaj termin" }).click();
+  await page.getByLabel("Treść nowej notatki z terminem").fill("skrot klawiatury");
+  await page.getByLabel("Godzina przypomnienia").focus();
+  await page.keyboard.press("ControlOrMeta+Enter");
+
+  // Dialog zamyka się po zapisie, a dzień dostaje jeden termin w siatce.
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  const grid = page.getByRole("grid", { name: /Kalendarz przypomnień/ });
+  await expect(grid.getByRole("gridcell", { name: /1 termin/ })).toHaveCount(1);
+});
+
 /** Tworzy notatkę z cotygodniowym przypomnieniem i wchodzi w kalendarz. */
 async function seedWeeklySeries(page: import("@playwright/test").Page, title: string) {
   // Seria startuje „dziś”, więc pod koniec miesiąca mieściło się w nim tylko

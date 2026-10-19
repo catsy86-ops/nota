@@ -75,3 +75,18 @@ export const useJournalEditForm = () => useSyncExternalStore(subscribe, () => ed
 
 /** Parametr adresu ze skrótu PWA „Wpis z budowy” (`/nauka?wpis=1`). */
 export const JOURNAL_ENTRY_PARAM = "wpis";
+
+/** Parametr razem z `wpis`: `?wpis=1&glos=1` od razu startuje dyktowanie w arkuszu (U5). */
+export const JOURNAL_VOICE_PARAM = "glos";
+
+let voiceRequested = false;
+
+/** Zaznacza, że następne otwarcie arkusza ma włączyć dyktowanie. */
+export function requestVoiceOnOpen() { voiceRequested = true; }
+
+/** Odczytuje i zeruje żądanie dyktowania (jednorazowe, żeby kolejne otwarcie nie nagrywało samo). */
+export function takeVoiceRequest(): boolean {
+  const v = voiceRequested;
+  voiceRequested = false;
+  return v;
+}

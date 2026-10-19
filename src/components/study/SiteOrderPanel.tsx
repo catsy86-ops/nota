@@ -1,11 +1,11 @@
 import { useMemo } from "react";
-import { PackageCheck, Copy, Check } from "lucide-react";
+import { PackageCheck, Copy, Check, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { haptic } from "@/lib/haptics";
 import { markSiteOrdered, useStudy } from "@/lib/study/store";
 import type { SiteInfo } from "@/lib/study/sites";
-import { orderText, siteOrder } from "@/lib/study/order";
+import { orderText, siteOrder, whatsappOrderUrl } from "@/lib/study/order";
 import { orderLogLine } from "@/lib/study/shortages";
 
 /**
@@ -29,6 +29,11 @@ export function SiteOrderPanel({ site }: { site: SiteInfo }) {
     } catch {
       toast.error("Nie udało się skopiować", { description: "Przeglądarka nie dała dostępu do schowka." });
     }
+  }
+
+  function sendWhatsApp() {
+    haptic("tap");
+    window.open(whatsappOrderUrl(orderText(site.name, order)), "_blank", "noopener");
   }
 
   function markOrdered() {
@@ -59,6 +64,9 @@ export function SiteOrderPanel({ site }: { site: SiteInfo }) {
       <div className="flex flex-wrap gap-2">
         <Button variant="outline" size="sm" onClick={copy} disabled={empty} className="coarse:h-11">
           <Copy className="mr-1.5 h-4 w-4" aria-hidden />Kopiuj listę
+        </Button>
+        <Button variant="outline" size="sm" onClick={sendWhatsApp} disabled={empty} className="coarse:h-11">
+          <MessageCircle className="mr-1.5 h-4 w-4" aria-hidden />WhatsApp
         </Button>
         <Button size="sm" onClick={markOrdered} disabled={empty} className="coarse:h-11">
           <Check className="mr-1.5 h-4 w-4" aria-hidden />Oznacz jako zamówione

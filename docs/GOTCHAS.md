@@ -55,6 +55,12 @@ i sprawdzenie, jak to zweryfikować. Historia decyzji: [`roadmap.md`](../roadmap
 - **Kopie zapasowe bez nowych pól.** Każde nowe pole w `StudyDump` / `FullBackup` ma być opcjonalne
   (`cleanDump` traktuje brak jako pusty zbiór), żeby starsze kopie dalej się przywracały.
 - **Tekst z drugiego urządzenia pojawia się po zapisie**, nie na żywo w otwartym edytorze (świadome ograniczenie).
+- **Strefa czasowa: termin to chwila (epoch ms), nie godzina ścienna.** `composeReminderTimestamp` składa datę
+  i godzinę w strefie urządzenia *w chwili zapisu* i zapisuje wynik jako liczbę. Po zmianie strefy (podróż) albo
+  przy odczycie z innego urządzenia w innej strefie przypomnienie odpali o tej samej chwili, czyli o innej godzinie
+  ściennej. Serie liczą kolejne wystąpienia od tej chwili, a dzień miesięczny trzyma `reminderDay`. Przeliczenia
+  „o tej samej godzinie lokalnej przy odpaleniu” nie ma — wymagałoby przechowania godziny ściennej w schemacie
+  (C4, odłożone). Testy: `reminderTime.test.ts`.
 
 ## Service worker i PWA
 

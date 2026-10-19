@@ -26,7 +26,7 @@ import {
   addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, setSiteGeo, setSiteShortages, setSiteStages, updateJournalEntry, useStudy, useStudyLists, type JournalKind,
 } from "@/lib/study/store";
 import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft, type JournalDraft } from "@/lib/study/draft";
-import { closeJournalSheet, getJournalEditForm, patchJournalEditForm, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
+import { closeJournalSheet, getJournalEditForm, patchJournalEditForm, takeVoiceRequest, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
 import { fromLocalInput, KIND_LABEL, recentSiteTexts, suggestSites, toLocalInput, whenLabel, yesterdaySiteText } from "@/lib/study/journalView";
 import { findSiteByName, siteDirectory } from "@/lib/study/sites";
 import { accuracyLabel, cleanGeo, mapsUrl, nearestSite } from "@/lib/study/geo";
@@ -240,6 +240,14 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     append(parsed.text);
     toast.success(`Z wypowiedzi: ${done.join(" · ")}`, { id: "entry-dictation" });
   });
+  // Skrót „Wpis głosowy” (`?wpis=1&glos=1`): arkusz otwarty z żądaniem startuje dyktowanie od razu.
+  // Bez zgody na usługę mowy pokaże się zwykłe pytanie o zgodę — zgodę zawsze daje kliknięcie.
+  const { supported: dictationSupported, toggle: toggleDictation } = dictation;
+  useEffect(() => {
+    if (!open) return;
+    const voice = takeVoiceRequest();
+    if (voice && dictationSupported) toggleDictation();
+  }, [open, dictationSupported, toggleDictation]);
 
   const lists = useStudyLists();
   const items = useMemo(() => lists.checklist.filter((c) => c.topic === topic), [lists, topic]);

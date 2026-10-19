@@ -7,7 +7,7 @@ import type { JournalEntry } from "./yStudy";
 /**
  * Protokół odbioru dla inwestora — jedna kartka na koniec budowy: dane budowy, etapy z datami,
  * próby szczelności z wpisów, uwagi (otwarte problemy), zdjęcia i miejsca na podpisy.
- * Czysta funkcja; wydruk (PDF przez „Zapisz jako PDF”) w `HandoverPrint.tsx`.
+ * Czysta funkcja; wydruk (PDF przez „Zapisz jako PDF”) w `HandoverPaper.tsx`.
  */
 
 /** Ile zdjęć mieści się na wydruku; reszta jest w paczce ZIP budowy. */

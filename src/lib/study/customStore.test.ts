@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { CHECKLIST, QUESTIONS } from "./content";
 import { studyLists, getStudy, toggleChecked, recordRound, addCustomItem, addCustomQuestion, removeCustomEntry, restoreCustomEntry, sanitizeStudy } from "./store";
 import { resetStudyForTests, yStudy } from "./data";
@@ -6,6 +6,9 @@ import { yjsStore } from "@/lib/yjsStore";
 
 async function freshStudy() {
   localStorage.clear();
+  // Zegar zamrożony: `recordRound` i `addJournalEntry` biorą dzień i chwilę z "teraz" (T6).
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(new Date(2026, 9, 14, 12));
   await yjsStore.resetForTests();
   resetStudyForTests();
 }

@@ -138,13 +138,12 @@ const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 const isColumn = (v: unknown): v is Column => v === "todo" || v === "doing" || v === "done";
 const isPercent = (v: unknown): v is number => typeof v === "number" && v >= 0 && v <= 100;
 
-/** Kształt wpisu (bez sprawdzania materiału); `null` = nie do uratowania. */
-export function cleanEntry(raw: unknown): JournalEntry | null {
-  const e = raw as Partial<JournalEntry> | null;
-  if (!e || typeof e !== "object") return null;
-  if (typeof e.id !== "string" || !e.id || e.id.length > 64) return null;
-  if (typeof e.at !== "number" || !Number.isFinite(e.at)) return null;
-  if (!JOURNAL_KINDS.includes(e.kind as JournalKind)) return null;
+/**
+ * Część wpisu wspólna dla zapisu, kopii i projekcji: tekst, odhaczenia (id, bez sprawdzania
+ * materiału), zdjęcia, próba, kształtki, etap, lokalizacja. `empty` = nic w tym nie ma
+ * (sprawdzane przed filtrem materiału — wpis z odhaczeniami, których punkt zniknął, zostaje).
+ */
+export function cleanEntryParts(e: { text?: unknown; checked?: unknown; images?: unknown; test?: unknown; fittings?: unknown; stage?: unknown; geo?: unknown }) {
   const text = typeof e.text === "string" ? e.text.slice(0, JOURNAL_MAX_TEXT) : "";
   const checked = Array.isArray(e.checked) ? e.checked.filter((id): id is string => typeof id === "string" && id.length <= 64).slice(0, 60) : [];
   const images = Array.isArray(e.images) ? e.images.filter((r): r is string => typeof r === "string" && isImageRef(r)).slice(0, JOURNAL_MAX_IMAGES) : [];
@@ -152,7 +151,19 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
   const fittings = cleanFittings(e.fittings);
   const stage = cleanEntryStage(e.stage);
   const geo = cleanGeo(e.geo);
-  if (!text.trim() && checked.length === 0 && images.length === 0 && !test && fittings.length === 0 && !stage) return null;
+  const empty = !text.trim() && checked.length === 0 && images.length === 0 && !test && fittings.length === 0 && !stage;
+  return { text, checked, images, test, fittings, stage, geo, empty };
+}
+
+/** Kształt wpisu (bez sprawdzania materiału); `null` = nie do uratowania. */
+export function cleanEntry(raw: unknown): JournalEntry | null {
+  const e = raw as Partial<JournalEntry> | null;
+  if (!e || typeof e !== "object") return null;
+  if (typeof e.id !== "string" || !e.id || e.id.length > 64) return null;
+  if (typeof e.at !== "number" || !Number.isFinite(e.at)) return null;
+  if (!JOURNAL_KINDS.includes(e.kind as JournalKind)) return null;
+  const { text, checked, images, test, fittings, stage, geo, empty } = cleanEntryParts(e);
+  if (empty) return null;
   return {
     id: e.id, at: e.at, kind: e.kind as JournalKind,
     topic: typeof e.topic === "string" && e.topic.length <= 64 ? e.topic : null,

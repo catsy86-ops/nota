@@ -1,13 +1,12 @@
 import { useMemo, useSyncExternalStore } from "react";
-import { cleanFittings, type Fitting } from "./fittings";
-import { isImageRef } from "@/lib/imageStore";
+import type { Fitting } from "./fittings";
 import { CHECKLIST, QUESTIONS, TOPICS, type ChecklistItem, type Question } from "./content";
 import { CUSTOM_MAX, CUSTOM_PREFIX, CUSTOM_TEXT_MAX, cleanCustom, cleanCustomList, questionOptions, type CustomEntry, type CustomItem, type CustomQuestion } from "./custom";
 import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
 import { studyDevice, yStudy } from "./data";
 import { cleanCard, dueIds, type ReviewCard } from "./srs";
-import { cleanTest, type PressureTest } from "./pressureTest";
+import type { PressureTest } from "./pressureTest";
 import { cleanGeo, type GeoPoint } from "./geo";
 import { BOSS_NAME_MAX, cleanBoss, cleanGroup, normalizeGroupLink, normalizePhone } from "./boss";
 import { cleanSite, entrySiteId, resolveSite, siteDirectory, SITE_NAME_MAX, type SiteCard, type SiteInfo } from "./sites";
@@ -18,7 +17,7 @@ import { cleanSiteHours, type SiteHours } from "./siteHours";
 import { cleanSiteDocs, type SiteDoc } from "./siteDocs";
 import { cleanServiceCalls, type ServiceCall } from "./service";
 import {
-  cleanEntryStage, JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, JOURNAL_SOLUTION_MAX, SITE_MAX,
+  cleanEntryParts, JOURNAL_KINDS, JOURNAL_SOLUTION_MAX, SITE_MAX,
   type Column, type JournalEntry, type JournalKind, type StudyState,
 } from "./yStudy";
 
@@ -62,32 +61,23 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
     if (typeof e.id !== "string" || !e.id || e.id.length > 64) continue;
     if (typeof e.at !== "number" || !Number.isFinite(e.at)) continue;
     if (!JOURNAL_KINDS.includes(e.kind as JournalKind)) continue;
-    const text = typeof e.text === "string" ? e.text.slice(0, JOURNAL_MAX_TEXT) : "";
-    const topic = typeof e.topic === "string" && topicIds.has(e.topic) ? e.topic : null;
-    const checkedIds = Array.isArray(e.checked) ? e.checked.filter((id): id is string => typeof id === "string" && itemIds.has(id)).slice(0, 60) : [];
-    const images = Array.isArray(e.images)
-      ? e.images.filter((r): r is string => typeof r === "string" && isImageRef(r)).slice(0, JOURNAL_MAX_IMAGES)
-      : [];
-    const test = cleanTest(e.test);
-    const fittings = cleanFittings(e.fittings);
-    const stage = cleanEntryStage(e.stage);
-    const geo = cleanGeo(e.geo);
-    // Pustość liczona przed odrzuceniem nieznanych punktów: wpis z odhaczeniami, których punkt już nie istnieje,
+    const parts = cleanEntryParts(e);
+    // Pustość przed odrzuceniem nieznanych punktów: wpis z odhaczeniami, których punkt już nie istnieje,
     // zostaje jako zapis (wcześniej znikał z dziennika, raportów i serii, a zostawał w kopii).
-    const hadChecks = Array.isArray(e.checked) && e.checked.length > 0;
-    if (!text.trim() && !hadChecks && images.length === 0 && !test && fittings.length === 0 && !stage) continue;
+    if (parts.empty) continue;
+    const topic = typeof e.topic === "string" && topicIds.has(e.topic) ? e.topic : null;
     journal.push({
-      id: e.id, at: e.at, kind: e.kind as JournalKind, topic, text,
+      id: e.id, at: e.at, kind: e.kind as JournalKind, topic, text: parts.text,
       site: typeof e.site === "string" ? e.site.slice(0, SITE_MAX) : "",
       ...(typeof e.siteId === "string" && e.siteId && e.siteId.length <= 64 ? { siteId: e.siteId } : {}),
-      checked: checkedIds,
-      images,
+      checked: parts.checked.filter((id) => itemIds.has(id)),
+      images: parts.images,
       ...(e.kind === "problem" && typeof e.resolved === "number" && Number.isFinite(e.resolved) ? { resolved: e.resolved } : {}),
       ...(e.kind === "problem" && typeof e.solution === "string" && e.solution.trim() ? { solution: e.solution.trim().slice(0, JOURNAL_SOLUTION_MAX) } : {}),
-      ...(test ? { test } : {}),
-      ...(fittings.length ? { fittings } : {}),
-      ...(stage ? { stage } : {}),
-      ...(geo ? { geo } : {}),
+      ...(parts.test ? { test: parts.test } : {}),
+      ...(parts.fittings.length ? { fittings: parts.fittings } : {}),
+      ...(parts.stage ? { stage: parts.stage } : {}),
+      ...(parts.geo ? { geo: parts.geo } : {}),
     });
   }
   journal.sort((a, b) => a.at - b.at);
@@ -219,15 +209,19 @@ export interface NewJournalEntry {
 
 /** Wejście z arkusza → pola wpisu przefiltrowane przez materiał; `null` = pusty wpis. */
 function entryFields(input: NewJournalEntry, now: number) {
-  const text = input.text.trim().slice(0, JOURNAL_MAX_TEXT);
   const items = studyLists(getStudy().custom).checklist;
-  const checked = (input.checked ?? []).filter((id) => items.some((c) => c.id === id));
-  const images = (input.images ?? []).filter(isImageRef).slice(0, JOURNAL_MAX_IMAGES);
-  const test = cleanTest(input.test);
-  const fittings = cleanFittings(input.fittings);
-  const stage = cleanEntryStage(input.stage);
-  const geo = cleanGeo(input.geo);
-  if (!text && checked.length === 0 && images.length === 0 && !test && fittings.length === 0 && !stage) return null;
+  // Odhaczenia tylko z istniejących punktów — pustość liczona po tym filtrze (w odróżnieniu od `sanitizeStudy`).
+  const parts = cleanEntryParts({
+    text: input.text.trim(),
+    checked: (input.checked ?? []).filter((id) => items.some((c) => c.id === id)),
+    images: input.images ?? [],
+    test: input.test,
+    fittings: input.fittings,
+    stage: input.stage,
+    geo: input.geo,
+  });
+  if (parts.empty) return null;
+  const { text, checked, images, test, fittings, stage, geo } = parts;
   return {
     at: typeof input.at === "number" && Number.isFinite(input.at) ? Math.min(input.at, now) : now,
     kind: input.kind,
@@ -303,10 +297,6 @@ export function removeJournalEntry(id: string): JournalEntry | null {
   return yStudy.removeEntry(id);
 }
 
-/**
- * Zapisuje szefa (imię i numer WhatsApp). Pusty numer usuwa kontakt;
- * niepoprawny → `false`, nic się nie zmienia.
- */
 /** Własne punkty i pytania (N5): zapis tylko dla znanego tematu i w limicie. `null` = odrzucone. */
 function addCustomEntry(entry: CustomEntry | null): CustomEntry | null {
   if (!entry || !TOPICS.some((t) => t.id === entry.topic)) return null;
@@ -344,6 +334,10 @@ export function restoreCustomEntry(entry: CustomEntry) {
   yStudy.restoreCustom(entry);
 }
 
+/**
+ * Zapisuje szefa (imię i numer WhatsApp). Pusty numer usuwa kontakt;
+ * niepoprawny → `false`, nic się nie zmienia.
+ */
 export function saveBoss(name: string, phone: string): boolean {
   if (!phone.trim()) { yStudy.setBoss(null); return true; }
   const normalized = normalizePhone(phone);

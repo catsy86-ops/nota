@@ -33,6 +33,13 @@
       "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
+      "name": "Wpis głosowy",
+      "short_name": "Wpis głosowy",
+      "description": "Otwórz wpis z budowy i od razu zacznij dyktować",
+      "url": "/praca?wpis=1&glos=1",
+      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
       "name": "Grafik",
       "short_name": "Grafik",
       "description": "Grafik zmian",

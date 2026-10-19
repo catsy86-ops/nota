@@ -1,11 +1,8 @@
-import { useSyncExternalStore } from "react";
 import { GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { pluralPl } from "@/lib/plural";
-import { localDayKey } from "@/lib/dayDone";
-// Warstwa danych i SRS, nie `study/store.ts` — ten importuje cały materiał do nauki.
-import { useStudyReady, yStudy } from "@/lib/study/data";
-import { dueIds } from "@/lib/study/srs";
+import { useStudy, dueToday } from "@/lib/study/store";
+import { useStudyReady } from "@/lib/study/data";
 
 /** Parametr adresu: `/praca?powtorka=1` otwiera quiz od razu w trybie „Na dziś”. */
 export const STUDY_DUE_PARAM = "powtorka";
@@ -31,11 +28,12 @@ export function TodayStudyCardView({ due, onPractice }: { due: number; onPractic
 
 /**
  * Powtórki pytań z działu Praca (SRS) na stronie „Dziś” — nauka bez wchodzenia do Pracy.
- * Ładowana leniwie z `Index.tsx`, czyta tylko stan powtórek (`yStudy` z `data.ts`).
+ * Ładowana leniwie z `Index.tsx`. Liczy przez tę samą projekcję i `dueToday` co Praca
+ * („Na dziś: N”), więc licznik nie zawyża kart pytań, których już nie ma w materiale.
  */
 export function TodayStudyCard({ onPractice }: { onPractice: () => void }) {
   const ready = useStudyReady();
-  const study = useSyncExternalStore(yStudy.subscribe, yStudy.get);
+  const study = useStudy();
   if (!ready) return null;
-  return <TodayStudyCardView due={dueIds(study.review, localDayKey()).length} onPractice={onPractice} />;
+  return <TodayStudyCardView due={dueToday(study).length} onPractice={onPractice} />;
 }

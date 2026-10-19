@@ -10,7 +10,7 @@ import { CalculatorsButton } from "./CalculatorsSheet";
 import { STUDY_DUE_PARAM } from "@/components/review/TodayStudyCard";
 import { setJournalDraftTopic } from "@/lib/study/draft";
 import { useStudyReady } from "@/lib/study/data";
-import { closeJournalSheet, JOURNAL_ENTRY_PARAM, openJournalSheet, useJournalSheet } from "@/lib/study/entrySheet";
+import { closeJournalSheet, JOURNAL_ENTRY_PARAM, JOURNAL_VOICE_PARAM, openJournalSheet, requestVoiceOnOpen, useJournalSheet } from "@/lib/study/entrySheet";
 import { JOURNAL_REPORT_PARAM, parseReportParam, requestJournalReport, useJournalReportRequest } from "@/lib/study/reportLink";
 import { useEffect, useState } from "react";
 import { MOBILE_QUERY } from "@/hooks/use-mobile";
@@ -161,6 +161,8 @@ function StudyScreen() {
     const params = new URLSearchParams(window.location.search);
     if (!params.has(JOURNAL_ENTRY_PARAM)) return;
     params.delete(JOURNAL_ENTRY_PARAM);
+    if (params.get(JOURNAL_VOICE_PARAM) === "1") requestVoiceOnOpen();
+    params.delete(JOURNAL_VOICE_PARAM);
     const rest = params.toString();
     window.history.replaceState(window.history.state, "", window.location.pathname + (rest ? `?${rest}` : ""));
     openJournalSheet();

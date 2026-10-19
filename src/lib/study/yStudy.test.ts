@@ -117,6 +117,15 @@ describe("Nauka w Yjs", () => {
     expect(a.get()).toBe(once);
   });
 
+  it("migracja dawnego zapisu zachowuje zdjęcia wpisów — są widoczne dla odśmiecania (T4)", () => {
+    const { a, docA } = pair();
+    const photo = "c".repeat(64);
+    const legacy = { journal: [entry("ze-zdjeciem", 1, { images: [photo] })], streak: 0 };
+    a.mergeIn(dumpFromLegacy(legacy, "dev-a"), "dev-a");
+    expect(a.get().journal[0].images).toEqual([photo]);
+    expect(journalRefsIn(docA)).toContain(photo);
+  });
+
   it("replaceAll zastępuje wszystko, a zdjęcia wpisów są widoczne dla odśmiecania", () => {
     const { a, docA } = pair();
     a.addEntry(entry("stary", 1, { images: ["a".repeat(64)] }));
