@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { endOfDay, getNextReminderTime, nextInSeries, seriesDay } from "./reminderRepeat";
+import { endOfDay, getNextReminderTime, nextInSeries, nextOccurrence, seriesDay, snoozeTarget } from "./reminderRepeat";
 
 describe("getNextReminderTime", () => {
   const base = new Date(2026, 0, 15, 9, 30).getTime(); // 15 Jan 2026, 09:30
@@ -73,5 +73,63 @@ describe("koniec serii", () => {
     expect(nextInSeries(new Date(2026, 9, 6, 9, 0).getTime(), "daily", undefined, until)).toBe(new Date(2026, 9, 7, 9, 0).getTime());
     expect(nextInSeries(new Date(2026, 9, 7, 9, 0).getTime(), "daily", undefined, until)).toBeNull();
     expect(nextInSeries(start, "weekly")).toBe(new Date(2026, 9, 12, 9, 0).getTime());
+  });
+});
+
+describe("nextOccurrence — odłożone wystąpienie nie przesuwa serii", () => {
+  const at = (d: number, h = 9, min = 0) => new Date(2026, 9, d, h, min).getTime();
+
+  it("bez odłożenia liczy od zapisanego terminu", () => {
+    expect(nextOccurrence({ reminder: at(19), reminderRepeat: "daily" }, at(19))).toBe(at(20));
+  });
+
+  it("z odłożeniem kolejny termin to następny dzień serii, nie odłożona chwila", () => {
+    const note = { reminder: at(19, 9, 10), reminderBase: at(19), reminderRepeat: "daily" as const };
+    expect(nextOccurrence(note, at(19, 9, 10))).toBe(at(20));
+  });
+
+  it("odłożenie w serii tygodniowej zachowuje dzień tygodnia i godzinę serii", () => {
+    const note = { reminder: at(20, 17, 0), reminderBase: at(19), reminderRepeat: "weekly" as const };
+    expect(nextOccurrence(note, at(20, 17, 0))).toBe(at(26));
+  });
+
+  it("seria jednorazowa nie ma następnego wystąpienia", () => {
+    expect(nextOccurrence({ reminder: at(19), reminderRepeat: "none" }, at(19))).toBeNull();
+  });
+});
+
+describe("snoozeTarget — odłożenie jednego wystąpienia", () => {
+  const at = (d: number, h = 9, min = 0) => new Date(2026, 9, d, h, min).getTime();
+
+  it("seria jednorazowa: zwykły nowy termin, bez bazy", () => {
+    expect(snoozeTarget({ reminder: at(19), reminderRepeat: "none" }, at(19, 9, 10), at(19, 9))).toEqual({
+      reminder: at(19, 9, 10),
+      reminderBase: undefined,
+    });
+  });
+
+  it("seria: odłożona chwila przed kolejnym terminem zapisuje termin serii jako bazę", () => {
+    const note = { reminder: at(19), reminderRepeat: "daily" as const };
+    expect(snoozeTarget(note, at(19, 9, 10), at(19, 9))).toEqual({ reminder: at(19, 9, 10), reminderBase: at(19) });
+  });
+
+  it("odłożenie po kolejnym terminie serii zastępuje go zwykłym terminem serii", () => {
+    const note = { reminder: at(19), reminderRepeat: "daily" as const };
+    // „Jutro o 9:00” wypada na tym samym dniu co kolejne wystąpienie 20.10 — nie może wyprzedzić serii.
+    expect(snoozeTarget(note, at(20, 9), at(19, 9))).toEqual({ reminder: at(20), reminderBase: undefined });
+  });
+
+  it("zaległe wystąpienia: odkładamy ostatnie, które minęło, nie stary termin", () => {
+    // Aplikacja była zamknięta 3 dni; teraz 22.10 10:00. Odkładamy wystąpienie z 22.10.
+    const note = { reminder: at(19), reminderRepeat: "daily" as const };
+    const now = at(22, 10);
+    const t = snoozeTarget(note, now + 10 * 60_000, now);
+    expect(t.reminderBase).toBe(at(22));
+    expect(t.reminder).toBe(now + 10 * 60_000);
+  });
+
+  it("seria, która się skończyła, zostawia odłożenie jako ostatni termin", () => {
+    const note = { reminder: at(19), reminderRepeat: "daily" as const, reminderRepeatUntil: at(19, 23, 59) };
+    expect(snoozeTarget(note, at(19, 9, 10), at(19, 9))).toEqual({ reminder: at(19, 9, 10), reminderBase: at(19) });
   });
 });

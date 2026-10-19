@@ -61,6 +61,8 @@ export interface Note {
   reminderRepeatUntil?: number;
   /** Przypomnienie na cały dzień: `reminder` = 9:00 tego dnia, UI pokazuje samą datę. Brak = zwykły termin z godziną. */
   reminderAllDay?: boolean;
+  /** Odłożone wystąpienie serii: termin serii, który `reminder` zastępuje (patrz `reminderSpec.ts`). */
+  reminderBase?: number;
   priority: NotePriority;
   /** Notatka dnia: lokalna data `YYYY-MM-DD` (patrz `lib/dailyNote.ts`); brak = zwykła notatka. */
   dailyDate?: string;

@@ -14,7 +14,7 @@ import type { ReminderRepeat } from "./reminderRepeat";
 
 const REPEATS: readonly ReminderRepeat[] = ["none", "daily", "weekly", "monthly"];
 
-export const REMINDER_FIELDS = ["reminder", "reminderRepeat", "reminderDay", "reminderRepeatUntil", "reminderAllDay"] as const;
+export const REMINDER_FIELDS = ["reminder", "reminderRepeat", "reminderDay", "reminderRepeatUntil", "reminderAllDay", "reminderBase"] as const;
 
 export interface ReminderState {
   reminder: number | null;
@@ -23,6 +23,12 @@ export interface ReminderState {
   reminderRepeatUntil?: number;
   /** Cały dzień: `reminder` to wtedy 9:00 tego dnia (domyślna godzina), a UI pokazuje samą datę. */
   reminderAllDay?: boolean;
+  /**
+   * Odłożone wystąpienie serii: `reminder` to wtedy odłożona chwila, a tu — termin serii, który ona zastępuje.
+   * Kolejne wystąpienia liczą się od tego terminu (`nextOccurrence` w `reminderRepeat.ts`), więc odłożenie
+   * nie przesuwa całej serii. Zapis `reminder` bez tego pola go czyści (`mergeSpec`).
+   */
+  reminderBase?: number;
 }
 
 /** Zapisany kształt: bez pól `undefined`, żeby Yjs i JSON się zgadzały. */
@@ -36,6 +42,7 @@ export function specOf(state: ReminderState): ReminderSpec {
   if (state.reminderRepeatUntil !== undefined) out.reminderRepeatUntil = state.reminderRepeatUntil;
   // Flaga zapisana tylko gdy prawdziwa: brak pola = zwykły termin z godziną.
   if (state.reminderAllDay === true) out.reminderAllDay = true;
+  if (state.reminderBase !== undefined) out.reminderBase = state.reminderBase;
   return out;
 }
 
@@ -48,6 +55,8 @@ export function mergeSpec(current: ReminderState, updates: Partial<ReminderState
   for (const f of REMINDER_FIELDS) {
     if (f in updates) next[f] = (updates as Record<string, unknown>)[f];
   }
+  // Nowy termin bez jawnego `reminderBase` to nowy termin serii — odłożenie przestaje obowiązywać.
+  if ("reminder" in updates && !("reminderBase" in updates)) next.reminderBase = undefined;
   return specOf(next as unknown as ReminderState);
 }
 
@@ -61,6 +70,7 @@ export function readSpec(raw: unknown): ReminderSpec | null {
   if (typeof r.reminderDay === "number" && Number.isInteger(r.reminderDay) && r.reminderDay >= 1 && r.reminderDay <= 31) spec.reminderDay = r.reminderDay;
   if (typeof r.reminderRepeatUntil === "number" && Number.isFinite(r.reminderRepeatUntil)) spec.reminderRepeatUntil = r.reminderRepeatUntil;
   if (r.reminderAllDay === true) spec.reminderAllDay = true;
+  if (typeof r.reminderBase === "number" && Number.isFinite(r.reminderBase)) spec.reminderBase = r.reminderBase;
   return spec;
 }
 

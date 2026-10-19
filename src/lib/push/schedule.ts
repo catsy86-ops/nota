@@ -1,5 +1,5 @@
 import { addDays } from "date-fns";
-import { nextInSeries, seriesDay, type ReminderRepeat } from "@/lib/reminderRepeat";
+import { nextOccurrence, type ReminderRepeat } from "@/lib/reminderRepeat";
 import { eveningNudgeFor } from "@/lib/shifts/eveningNudge";
 import type { ShiftData, ShiftType } from "@/lib/shifts/model";
 import { REMINDER_ORDER_DAYS, REMINDER_PROBLEM_DAYS } from "@/lib/study/reminders";
@@ -95,9 +95,9 @@ function noteItems(notes: readonly PushNote[], now: number, end: number): PushIt
     let at: number | null = n.reminder;
     // Seria: kolejne terminy też — strona przesuwa `reminder` dopiero, gdy jest otwarta.
     for (let i = 0; at !== null && at <= end && i < 60; i++) {
-      if (at > now) out.push({ key: pushKey.note(n.id, at), at, title, body, url: notePath(n.id), snooze: repeat === "none" });
+      if (at > now) out.push({ key: pushKey.note(n.id, at), at, title, body, url: notePath(n.id), snooze: true });
       if (repeat === "none") break;
-      at = nextInSeries(at, repeat, seriesDay(n), n.reminderRepeatUntil);
+      at = nextOccurrence(n, at);
     }
   }
   return out;

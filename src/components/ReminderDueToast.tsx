@@ -11,8 +11,6 @@ interface ReminderDueToastProps {
   when: string;
   /** Początek treści notatki; pusty = bez opisu. */
   description: string;
-  /** Tylko dla jednorazowych — w serii kolejny termin jest już ustawiony. */
-  canSnooze: boolean;
   onOpen: () => void;
   onSnooze10: () => void;
   onSnoozeTomorrow: () => void;
@@ -24,7 +22,7 @@ interface ReminderDueToastProps {
  * odkładanie w menu. Wcześniej cztery przyciski w dwóch rzędach zajmowały
  * na telefonie piątą część ekranu.
  */
-export function ReminderDueToast({ toastId, title, when, description, canSnooze, onOpen, onSnooze10, onSnoozeTomorrow, onDone }: ReminderDueToastProps) {
+export function ReminderDueToast({ toastId, title, when, description, onOpen, onSnooze10, onSnoozeTomorrow, onDone }: ReminderDueToastProps) {
   const run = (fn: () => void) => () => { fn(); toast.dismiss(toastId); };
   return (
     <div className="w-full rounded-lg border bg-background text-foreground shadow-lg p-3.5 flex flex-col gap-2.5">
@@ -36,20 +34,16 @@ export function ReminderDueToast({ toastId, title, when, description, canSnooze,
         {description && <div className="text-sm text-muted-foreground mt-0.5 line-clamp-2">{description}</div>}
       </div>
       <div className="flex items-center gap-2">
-        {canSnooze && (
-          <>
-            <Button size="sm" variant="outline" onClick={() => { haptic("success"); run(onDone)(); }}>Gotowe</Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="ghost" className="gap-1">Odłóż <ChevronDown className="w-3.5 h-3.5" /></Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuItem onSelect={run(onSnooze10)}>Za 10 minut</DropdownMenuItem>
-                <DropdownMenuItem onSelect={run(onSnoozeTomorrow)}>Jutro o 9:00</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </>
-        )}
+        <Button size="sm" variant="outline" onClick={() => { haptic("success"); run(onDone)(); }}>Gotowe</Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" variant="ghost" className="gap-1">Odłóż <ChevronDown className="w-3.5 h-3.5" /></Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onSelect={run(onSnooze10)}>Za 10 minut</DropdownMenuItem>
+            <DropdownMenuItem onSelect={run(onSnoozeTomorrow)}>Jutro o 9:00</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button size="sm" className="ml-auto" onClick={run(onOpen)}>Otwórz</Button>
       </div>
     </div>

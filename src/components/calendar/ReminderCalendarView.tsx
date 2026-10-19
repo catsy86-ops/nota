@@ -12,7 +12,7 @@ import { download } from "@/lib/exportNotes";
 import { addDays, format, isSameDay, isSameMonth } from "date-fns";
 import { pl } from "date-fns/locale";
 import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences";
-import { nextInSeries, seriesDay } from "@/lib/reminderRepeat";
+import { nextInSeries, nextOccurrence, seriesDay } from "@/lib/reminderRepeat";
 import { toast } from "sonner";
 import { dayType, setDayEntry, useShifts } from "@/lib/shifts";
 import { useStudyDayMarks } from "./useStudyDayMarks";
@@ -41,7 +41,8 @@ interface ReminderCalendarViewProps {
   notes: Note[];
   onCreateNote: (title: string, reminder: number, repeat: ReminderRepeat) => void;
   /** `reminderDay` podany = przesunięcie w obrębie serii (bez zmiany jej dnia); brak = nowy termin. */
-  onSetReminder: (noteId: string, reminder: number | null, repeat: ReminderRepeat, reminderDay?: number) => void;
+  /** `reminderBase` — termin serii przy odłożonym wystąpieniu (`undefined` = zwykły termin, czyści odłożenie). */
+  onSetReminder: (noteId: string, reminder: number | null, repeat: ReminderRepeat, reminderDay?: number, reminderBase?: number) => void;
 }
 
 function monthBounds(month: Date) {
@@ -132,6 +133,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
       repeat: note?.reminderRepeat ?? "none" as ReminderRepeat,
       day: note ? seriesDay(note) : undefined,
       until: note?.reminderRepeatUntil,
+      base: note?.reminderBase,
     };
   }
 
@@ -148,11 +150,13 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
    */
   function handleSkip(noteId: string, at: number, repeat: ReminderRepeat) {
     const before = previousOf(noteId);
-    const next = nextInSeries(at, repeat, before.day, before.until);
+    const note = notes.find((n) => n.id === noteId);
+    // Odłożone wystąpienie: kolejny termin liczy się od serii (`nextOccurrence`), nie od odłożonej chwili.
+    const next = note ? nextOccurrence(note, at) : nextInSeries(at, repeat, before.day, before.until);
     // Pominięcie ostatniego terminu serii kończy ją — nie ma już czego przypominać.
     if (next === null) onSetReminder(noteId, null, "none");
-    else onSetReminder(noteId, next, repeat, before.day);
-    toastWithUndo("Wystąpienie pominięte", () => onSetReminder(noteId, before.reminder, before.repeat, before.day), { icon: "⏭️" });
+    else onSetReminder(noteId, next, repeat, before.day, undefined);
+    toastWithUndo("Wystąpienie pominięte", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base), { icon: "⏭️" });
   }
 
   /**

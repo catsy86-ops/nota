@@ -1,5 +1,5 @@
 import type { Note } from "@/hooks/useNotes";
-import { nextInSeries, seriesDay } from "@/lib/reminderRepeat";
+import { nextOccurrence } from "@/lib/reminderRepeat";
 
 /**
  * Które przypomnienia odpalić przy tym sprawdzeniu. Czysta funkcja: bez zegara,
@@ -47,15 +47,15 @@ export function planDueReminders(
       continue;
     }
 
-    const day = seriesDay(note);
     let cur = note.reminder;
-    let next = nextInSeries(cur, repeat, day, note.reminderRepeatUntil);
+    // Odłożone wystąpienie: następny jest od terminu serii, nie od odłożonej chwili.
+    let next = nextOccurrence(note, cur);
     let missed = 0;
     // Nadganianie: kolejne wystąpienia już minęły — liczymy je, zamiast odpalać każde osobno.
     while (next !== null && next <= now && missed < MAX_CATCH_UP) {
       cur = next;
       missed++;
-      next = nextInSeries(cur, repeat, day, note.reminderRepeatUntil);
+      next = nextOccurrence(note, cur);
     }
     steps.push({ note, kind: "series", next, missed });
   }

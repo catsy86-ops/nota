@@ -219,7 +219,7 @@ const Index = () => {
   const pushEnabled = pushPrefs.use().enabled;
   useReminderNotifications(
     reminderNotes,
-    (id, nextReminder, reminderDay) => updateNote(id, { reminder: nextReminder, reminderDay }),
+    (id, nextReminder, reminderDay, reminderBase) => updateNote(id, { reminder: nextReminder, reminderDay, reminderBase }),
     (id) => openNoteRef.current(id),
     (id) => updateNote(id, { reminderRepeat: "none", reminderRepeatUntil: undefined }),
     trashedNotes,
@@ -791,8 +791,8 @@ const Index = () => {
                     // patchem po utworzeniu — stąd id zwracane przez `addNote`.
                     if (repeat !== "none") updateNote(id, { reminderRepeat: repeat });
                   }}
-                  onSetReminder={(id, reminder, repeat, reminderDay) =>
-                    updateNote(id, reminderDay === undefined ? { reminder, reminderRepeat: repeat } : { reminder, reminderRepeat: repeat, reminderDay })}
+                  onSetReminder={(id, reminder, repeat, reminderDay, reminderBase) =>
+                    updateNote(id, { reminder, reminderRepeat: repeat, ...(reminderDay === undefined ? {} : { reminderDay }), reminderBase })}
                 />
               </Suspense>
             </ViewErrorBoundary>

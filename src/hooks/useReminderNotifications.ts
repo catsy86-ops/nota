@@ -1,6 +1,7 @@
 import { createElement, useEffect, useRef } from "react";
 import { ReminderDueToast } from "@/components/ReminderDueToast";
 import { snoozeTimes } from "@/lib/reminderAgenda";
+import { snoozeTarget } from "@/lib/reminderRepeat";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { notePath } from "@/lib/viewRoute";
 import { toast } from "sonner";
@@ -14,8 +15,11 @@ import { parsePendingAction, withoutActionParam } from "@/lib/notificationAction
 
 export function useReminderNotifications(
   notes: Note[],
-  /** `reminderDay` zostaje z notatki — przesunięcie serii nie zmienia jej dnia. */
-  onReminderFired: (id: string, nextReminder: number | null, reminderDay?: number) => void,
+  /**
+   * `reminderDay` zostaje z notatki — przesunięcie serii nie zmienia jej dnia. `reminderBase` — termin serii,
+   * gdy odkładamy jedno wystąpienie (`snoozeTarget`); bez niego zapis to zwykły termin.
+   */
+  onReminderFired: (id: string, nextReminder: number | null, reminderDay?: number, reminderBase?: number) => void,
   onOpen?: (id: string) => void,
   /** Ostatni termin serii właśnie wystrzelił — seria staje się jednorazowa. */
   onSeriesEnded?: (id: string) => void,
@@ -44,7 +48,9 @@ export function useReminderNotifications(
   const applyActionRef = useRef((note: Note, action: string) => {
     if (note.locked) return;
     if (action === "snooze10") {
-      firedCbRef.current(note.id, snoozeTimes(Date.now()).in10min, seriesDay(note));
+      const now = Date.now();
+      const t = snoozeTarget(note, snoozeTimes(now).in10min, now);
+      firedCbRef.current(note.id, t.reminder, seriesDay(note), t.reminderBase);
       toast("Odłożono o 10 minut");
     } else if (action === "done") {
       firedCbRef.current(note.id, null);
@@ -115,7 +121,6 @@ export function useReminderNotifications(
 
       for (const { note, kind, next, missed } of steps) {
         if (note.reminder) {
-          const repeat = note.reminderRepeat ?? "none";
           // Ten termin jest obsłużony: zapis przesunięcia może jeszcze nie dotrzeć do listy notatek.
           handledRef.current.set(note.id, note.reminder);
           // One-shot reminders are marked fired forever; repeating ones are
@@ -134,11 +139,11 @@ export function useReminderNotifications(
             title: note.locked ? "Przypomnienie z notatki prywatnej" : note.title || "Przypomnienie",
             when,
             description: note.locked ? "" : note.content.slice(0, 120),
-            canSnooze: repeat === "none",
             // Odłożenie przesuwa termin w przyszłość, więc `reconcileFired`
             // zdejmie wpis „już odpalone” i przypomnienie wystrzeli ponownie.
-            onSnooze10: () => firedCbRef.current(note.id, times.in10min, seriesDay(note)),
-            onSnoozeTomorrow: () => firedCbRef.current(note.id, times.tomorrow9, seriesDay(note)),
+            // Seria: odkładamy tylko to wystąpienie (`snoozeTarget`), reszta serii zostaje.
+            onSnooze10: () => { const t = snoozeTarget(note, times.in10min, now); firedCbRef.current(note.id, t.reminder, seriesDay(note), t.reminderBase); },
+            onSnoozeTomorrow: () => { const t = snoozeTarget(note, times.tomorrow9, now); firedCbRef.current(note.id, t.reminder, seriesDay(note), t.reminderBase); },
             onDone,
             onOpen: () => onOpenRef.current?.(note.id),
           }), {
@@ -159,7 +164,7 @@ export function useReminderNotifications(
             requireInteraction: true,
             data: { noteId: note.id },
             actions: [
-              ...(repeat === "none" ? [{ action: "snooze10", title: "Odłóż 10 min" }] : []),
+              { action: "snooze10", title: "Odłóż 10 min" },
               { action: "done", title: "Gotowe" },
             ],
           });

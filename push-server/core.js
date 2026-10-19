@@ -51,7 +51,7 @@ export function cleanItems(raw, now) {
     if (typeof at !== "number" || !Number.isFinite(at) || at <= now || at > now + LIMITS.horizonMs) continue;
     const url = str(r.url, LIMITS.url);
     seen.add(key);
-    // `snooze` — przypomnienie jednorazowe: powiadomienie dostaje „Odłóż 10 min” (seria tylko „Gotowe”).
+    // `snooze` — powiadomienie dostaje „Odłóż 10 min” (także przy serii: odkłada tylko to wystąpienie).
     out.push({ key, at, title, body: str(r.body, LIMITS.body), url: /^\/(?![/\\])/.test(url) ? url : "/", snooze: r.snooze === true });
     if (out.length >= LIMITS.items) break;
   }

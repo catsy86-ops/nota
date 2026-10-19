@@ -47,6 +47,46 @@ export function nextInSeries(current: number, repeat: ReminderRepeat, anchorDay?
   return until !== undefined && next > until ? null : next;
 }
 
+/**
+ * Następne wystąpienie serii po `at`. Gdy `at` to odłożone wystąpienie (`reminder` z `reminderBase`),
+ * kolejny jest liczony od terminu serii, nie od chwili odłożenia — odłożenie nie przesuwa serii.
+ */
+export function nextOccurrence(
+  note: { reminder: number | null; reminderRepeat?: ReminderRepeat; reminderDay?: number; reminderRepeatUntil?: number; reminderBase?: number },
+  at: number,
+): number | null {
+  const repeat = note.reminderRepeat ?? "none";
+  if (repeat === "none") return null;
+  const from = note.reminderBase !== undefined && at === note.reminder ? note.reminderBase : at;
+  return nextInSeries(from, repeat, seriesDay(note), note.reminderRepeatUntil);
+}
+
+/**
+ * Nowy zapis po odłożeniu wystąpienia do `at` (`reminder` + `reminderBase`). Seria jednorazowa — zwykły termin.
+ * Seria: odłożona chwila zawsze wypada przed kolejnym terminem serii; gdyby nie, to kolejny termin zastępuje odłożenie
+ * (przypomnienie nie wypada dwa razy). Seria, która się skończyła, zostawia odłożenie jako ostatni termin.
+ */
+export function snoozeTarget(
+  note: { reminder: number | null; reminderRepeat?: ReminderRepeat; reminderDay?: number; reminderRepeatUntil?: number; reminderBase?: number },
+  at: number,
+  now: number,
+): { reminder: number; reminderBase: number | undefined } {
+  const repeat = note.reminderRepeat ?? "none";
+  if (repeat === "none") return { reminder: at, reminderBase: undefined };
+  // Zaległe wystąpienia (aplikacja była zamknięta): odkładamy ostatnie, które już minęło, nie stary `reminder`.
+  let base = note.reminderBase ?? note.reminder ?? at;
+  let seriesNext = nextInSeries(base, repeat, seriesDay(note), note.reminderRepeatUntil);
+  for (let i = 0; seriesNext !== null && seriesNext <= now && i < MAX_SERIES_STEPS; i++) {
+    base = seriesNext;
+    seriesNext = nextInSeries(base, repeat, seriesDay(note), note.reminderRepeatUntil);
+  }
+  if (seriesNext === null || at < seriesNext) return { reminder: at, reminderBase: base };
+  return { reminder: seriesNext, reminderBase: undefined };
+}
+
+/** Zabezpieczenie pętli przy bardzo starym terminie (jak `MAX_CATCH_UP` w `reminderDue.ts`). */
+const MAX_SERIES_STEPS = 1000;
+
 /** Koniec wybranego dnia (czas lokalny) — wartość `reminderRepeatUntil`. */
 export function endOfDay(date: Date): number {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999).getTime();

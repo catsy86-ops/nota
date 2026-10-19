@@ -88,4 +88,14 @@ describe("planDueReminders", () => {
   it("notatki bez terminu są pomijane", () => {
     expect(planDueReminders([note({ reminder: null })], new Set(), Date.now())).toEqual([]);
   });
+
+  it("odłożone wystąpienie serii: po odpaleniu następny jest od terminu serii, nie od odłożonej chwili", () => {
+    // Seria dzienna o 9:00; 19.10 odłożona na 9:10. Teraz 9:15 — odpala się odłożone, następne to 20.10 9:00.
+    const nine = at(2026, 9, 19);
+    const n = note({ reminder: nine + 10 * 60_000, reminderBase: nine, reminderRepeat: "daily" });
+    const steps = planDueReminders([n], new Set(), nine + 15 * 60_000);
+    expect(steps).toHaveLength(1);
+    expect(steps[0].kind).toBe("series");
+    expect(steps[0].next).toBe(at(2026, 9, 20));
+  });
 });

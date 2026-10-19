@@ -61,3 +61,27 @@ describe("reminderAllDay (cały dzień)", () => {
     expect(mergeSpec(on, { reminder: 2 })).toEqual({ reminder: 2, reminderAllDay: true });
   });
 });
+
+describe("reminderBase — odłożone wystąpienie", () => {
+  const series: ReminderState = { reminder: 2000, reminderRepeat: "daily", reminderBase: 1000 };
+
+  it("przetrwa zapis i odczyt spec", () => {
+    expect(readSpec(specOf(series))).toEqual({ reminder: 2000, reminderRepeat: "daily", reminderBase: 1000 });
+  });
+
+  it("odrzuca niepoprawną bazę z dokumentu", () => {
+    expect(readSpec({ reminder: 1, reminderBase: "x" })).toEqual({ reminder: 1 });
+  });
+
+  it("nowy termin bez jawnej bazy czyści odłożenie (zwykła zmiana terminu serii)", () => {
+    expect(mergeSpec(series, { reminder: 3000 })).toEqual({ reminder: 3000, reminderRepeat: "daily" });
+  });
+
+  it("jawna baza zostaje — tak zapisuje odłożenie", () => {
+    expect(mergeSpec(series, { reminder: 2500, reminderBase: 1000 })).toEqual({ reminder: 2500, reminderRepeat: "daily", reminderBase: 1000 });
+  });
+
+  it("jawne undefined bazy też czyści (po odpaleniu serii)", () => {
+    expect(mergeSpec(series, { reminder: 3000, reminderBase: undefined })).toEqual({ reminder: 3000, reminderRepeat: "daily" });
+  });
+});

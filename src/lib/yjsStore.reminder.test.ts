@@ -53,4 +53,19 @@ describe("przypomnienie na cały dzień (reminderAllDay w reminderSpec)", () => 
     Y.applyUpdate(a.doc, Y.encodeStateAsUpdate(b.doc));
     expect(a.projectNotes().find((n) => n.id === "r1")?.reminderAllDay).toBeUndefined();
   });
+
+  it("odłożone wystąpienie (reminderBase) wraca po synchronizacji i gaśnie przy zwykłym terminie", () => {
+    const a = createYjsStore(`rem-base-a-${crypto.randomUUID()}`);
+    const b = createYjsStore(`rem-base-b-${crypto.randomUUID()}`);
+    a.upsertNote(note({ reminder: 1000, reminderRepeat: "daily" }));
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+
+    a.patchNote("r1", { reminder: 1500, reminderBase: 1000 });
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+    expect(b.projectNotes().find((n) => n.id === "r1")?.reminderBase).toBe(1000);
+
+    a.patchNote("r1", { reminder: 3000 });
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+    expect(b.projectNotes().find((n) => n.id === "r1")?.reminderBase).toBeUndefined();
+  });
 });
