@@ -3697,3 +3697,13 @@ lub grupę”.
 - **Dlaczego:** trzy testy (skrzynka, tryb budowa na iPhonie, Grafik offline) padały tylko w pełnym przebiegu i przechodziły przy ponownym uruchomieniu.
 - **Stan weryfikacji:** pełny przebieg e2e nie został dotąd zakończony bez przerwania (brak pamięci). Zmiany sprawdzone osobno: `shifts`, `routes` i powiązane specy przechodzą.
 - **Commit:** bdba60c, 2026-10-19.
+
+## Przypomnienia — cały termin w jednym zapisie `reminderSpec` (C3 planu kalendarza/przypomnień, 2026-10-19)
+
+- **Problem:** termin, powtarzanie, dzień serii i koniec były czterema osobnymi polami Yjs, z osobnym rozstrzyganiem konfliktów. Dwa urządzenia zmieniające ten sam termin naraz mogły zostawić niezgodną mieszankę (np. nowy termin ze starym dniem serii).
+- **Rozwiązanie:** całe przypomnienie jest zapisane jako jedna wartość `reminderSpec` w Y.Map notatki. Konflikt wygrywa w całości. Starsze pola (`reminder`, `reminderRepeat`, `reminderDay`, `reminderRepeatUntil`) są nadal zapisywane tą samą wartością, żeby starsze odczyty działały.
+- **Odczyt:** najpierw `reminderSpec`; gdy go nie ma (notatki sprzed zmiany), stare pola. Nic nie trzeba migrować w dokumencie.
+- **Gdzie jest:** `src/lib/reminderSpec.ts` (`specOf`, `mergeSpec`, `readSpec`, `projectReminder`), `src/lib/yjsStore.ts` (`readReminderState`, zapis w `applyPatch` i przy tworzeniu notatki, projekcja w `plainFromYNote`).
+- **Ograniczenie:** notatki zapisane przez starszą wersję aplikacji nie mają `reminderSpec`, dopóki nie zostaną zmienione — wtedy czyta się je ze starych pól, co jest poprawne, ale konflikt całości obejmuje dopiero zmienione notatki.
+- **Testy:** `src/lib/reminderSpec.test.ts` (8), `src/lib/yjsStore.reminder.test.ts` (dwa urządzenia, równoległa zmiana terminu i powtarzania daje jedną całość). E2E `reminders-calendar`, `reminder-toast`, `reminders-agenda`, `notes`: 22/22. Vitest 1466+. Budżet bundla: w progu 387 KB.
+- **Commit:** patrz następna linia.

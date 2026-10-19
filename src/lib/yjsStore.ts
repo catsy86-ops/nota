@@ -11,6 +11,7 @@ import type { Note, Folder, ChecklistItem } from "@/hooks/useNotes";
 import { logDiag } from "@/lib/diagnostics";
 import { NOTE_COVERS } from "@/lib/noteLook";
 import { cleanNoteProps, cleanPropDef, cleanPropDefs, type NoteProps, type PropDef } from "@/lib/noteProps";
+import { mergeSpec, projectReminder, readSpec, REMINDER_FIELDS, specOf, type ReminderState } from "@/lib/reminderSpec";
 import { journalRefsIn } from "@/lib/study/journalRefs";
 import {
   NOTE_COLORS, PRIORITIES, REMINDER_REPEATS, REMOTE_LIMITS as LIM,
@@ -52,6 +53,16 @@ function imageRefs(images: string[]): string[] {
   if (!images.some(isDataUrl)) return images.slice();
   logDiag("error", "yjsStore", "data URL passed as an image ref — dropped (caller must ingest first)");
   return images.filter((img) => !isDataUrl(img));
+}
+
+/** Przypomnienie z dokumentu: `reminderSpec`, a gdy go nie ma — stare pola (notatki sprzed zmiany). */
+function readReminderState(y: YNote): ReminderState {
+  return projectReminder(readSpec(y.get("reminderSpec")), {
+    reminder: safeNullableNumber(y.get("reminder")),
+    reminderRepeat: safeOptionalEnum(y.get("reminderRepeat"), REMINDER_REPEATS),
+    reminderDay: safeReminderDay(y.get("reminderDay")),
+    reminderRepeatUntil: safeOptionalNumber(y.get("reminderRepeatUntil")),
+  });
 }
 
 const NOTE_SCALAR_FIELDS = [
@@ -252,6 +263,7 @@ function yNoteFromPlain(note: Note): YNote {
   if (note.reminderRepeat !== undefined) y.set("reminderRepeat", note.reminderRepeat);
   if (note.reminderDay !== undefined) y.set("reminderDay", note.reminderDay);
   if (note.reminderRepeatUntil !== undefined) y.set("reminderRepeatUntil", note.reminderRepeatUntil);
+  y.set("reminderSpec", specOf({ reminder: note.reminder, reminderRepeat: note.reminderRepeat, reminderDay: note.reminderDay, reminderRepeatUntil: note.reminderRepeatUntil }));
   y.set("priority", note.priority);
   if (note.dailyDate !== undefined) y.set("dailyDate", note.dailyDate);
   if (note.icon) y.set("icon", note.icon);
@@ -285,6 +297,7 @@ function plainFromYNote(id: string, y: YNote): Note {
   const icon = safeString(y.get("icon"), "", LIM.emoji);
   const cover = safeOptionalEnum(y.get("cover"), NOTE_COVERS);
   const parentId = safeString(y.get("parentId"), "", LIM.id);
+  const rem = readReminderState(y);
   const common = {
     ...(dailyDate ? { dailyDate } : {}),
     ...(icon ? { icon } : {}),
@@ -300,10 +313,10 @@ function plainFromYNote(id: string, y: YNote): Note {
     archived: safeBool(y.get("archived")),
     trashed: safeBool(y.get("trashed")),
     trashedAt: safeNullableNumber(y.get("trashedAt")),
-    reminder: safeNullableNumber(y.get("reminder")),
-    reminderRepeat: safeOptionalEnum(y.get("reminderRepeat"), REMINDER_REPEATS),
-    reminderDay: safeReminderDay(y.get("reminderDay")),
-    reminderRepeatUntil: safeOptionalNumber(y.get("reminderRepeatUntil")),
+    reminder: rem.reminder,
+    reminderRepeat: rem.reminderRepeat,
+    reminderDay: rem.reminderDay,
+    reminderRepeatUntil: rem.reminderRepeatUntil,
     priority: safeEnum(y.get("priority"), PRIORITIES, "none"),
     folderId: safeNullableString(y.get("folderId"), LIM.id),
     order: safeNumber(y.get("order")),
@@ -601,9 +614,12 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
         y.set("content", t);
       }
     }
+    // Przypomnienie idzie jednym zapisem `reminderSpec` — bieżący stan czytamy przed nadpisaniem pól.
+    const remBefore = REMINDER_FIELDS.some((f) => f in updates) ? readReminderState(y) : null;
     for (const field of NOTE_SCALAR_FIELDS) {
       if (field in updates) y.set(field, (updates as Record<string, unknown>)[field]);
     }
+    if (remBefore) y.set("reminderSpec", mergeSpec(remBefore, updates));
     if (updates.checklist !== undefined) applyChecklistDiff(y, updates.checklist);
     if (updates.images !== undefined) y.set("imageHashes", imageRefs(updates.images));
     if (updates.attachments !== undefined) y.set("attachments", normalizeAttachments(updates.attachments));
