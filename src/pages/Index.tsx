@@ -697,7 +697,7 @@ const Index = () => {
             </Suspense>
           )}
           {view === "reminders" && groupReminders([...others, ...archivedNotes]).map((group, i) => (
-            <NoteGroupSection key={group.key} groupKey={`reminders-${group.key}`} label={group.label} count={group.notes.length} tone={group.key === "overdue" ? "alert" : "default"}>
+            <NoteGroupSection key={group.key} groupKey={`reminders-${group.key}`} label={group.label} count={group.notes.length} tone={group.key === "overdue" || group.key === "missed" ? "alert" : "default"}>
               {renderGrid(group.notes, i)}
             </NoteGroupSection>
           ))}

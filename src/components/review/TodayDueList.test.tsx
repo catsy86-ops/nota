@@ -30,8 +30,10 @@ describe("TodayDueList", () => {
       note("bin", now - HOUR, { trashed: true }),
     ];
     render(<TodayDueList notes={notes} onOpen={() => {}} onOpenReminders={() => {}} />);
+    // „late” (2 h temu) to przegapione; „arch” (1 h temu) wciąż zaległe.
+    const missed = screen.getByText("Przegapione").closest("[data-due-group]") as HTMLElement;
+    expect(within(missed).getByText("T-late")).toBeTruthy();
     const overdue = screen.getByText("Zaległe").closest("[data-due-group]") as HTMLElement;
-    expect(within(overdue).getByText("T-late")).toBeTruthy();
     expect(within(overdue).getByText("T-arch")).toBeTruthy();
     expect(screen.queryByText("T-week")).toBeNull();
     expect(screen.queryByText("T-bin")).toBeNull();
@@ -46,7 +48,7 @@ describe("TodayDueList", () => {
   it("ucina do czterech pozycji z grupy i wskazuje resztę", () => {
     const notes = Array.from({ length: 6 }, (_, i) => note(`o${i}`, now - (i + 1) * HOUR));
     render(<TodayDueList notes={notes} onOpen={() => {}} onOpenReminders={() => {}} />);
-    expect(screen.getByText("i jeszcze 2 w Przypomnieniach")).toBeTruthy();
+    expect(screen.getByText("i jeszcze 1 w Przypomnieniach")).toBeTruthy();
     expect(screen.getByTestId("today-due-count").textContent).toBe("6");
   });
 

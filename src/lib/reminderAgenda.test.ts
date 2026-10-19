@@ -11,6 +11,14 @@ const note = (id: string, reminder: number | null, updatedAt = 0): Note => ({
 const NOW = at(2026, 9, 28, 12);
 
 describe("groupReminders", () => {
+  it("zaległe w ostatniej godzinie zostają w „Zaległe”, starsze idą do „Przegapione”", () => {
+    const groups = groupReminders([note("przed-chwila", NOW - 30 * 60_000), note("godzinę-temu", NOW - 60 * 60_000 - 1)], NOW);
+    expect(groups.map((g) => [g.key, g.notes.map((n) => n.id)])).toEqual([
+      ["overdue", ["przed-chwila"]],
+      ["missed", ["godzinę-temu"]],
+    ]);
+  });
+
   it("groups by due date and sorts by reminder, ignoring edit time", () => {
     const groups = groupReminders([
       note("pozniej", at(2026, 11, 1), 999),
@@ -21,7 +29,8 @@ describe("groupReminders", () => {
       note("bez-terminu", null),
     ], NOW);
     expect(groups.map((g) => [g.key, g.notes.map((n) => n.id)])).toEqual([
-      ["overdue", ["zalegle", "zalegle-dzis-rano"]],
+      // Zaległe starsze niż godzina (serwer push ich już nie dośle) idą do „Przegapione”.
+      ["missed", ["zalegle", "zalegle-dzis-rano"]],
       ["today", ["dzis-wieczorem"]],
       ["week", ["jutro"]],
       ["later", ["pozniej"]],

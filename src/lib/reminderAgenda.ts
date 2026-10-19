@@ -1,7 +1,13 @@
 import type { Note } from "@/hooks/useNotes";
 import { endOfDay, termStatus } from "@/lib/dueTerms";
 
-export type AgendaGroupKey = "overdue" | "today" | "week" | "later";
+export type AgendaGroupKey = "overdue" | "missed" | "today" | "week" | "later";
+
+/**
+ * Zaległe starsze niż tyle wpada do „Przegapione”: serwer push odrzuca spóźnienie powyżej godziny
+ * (push-server/core.js), więc ich już nie dośle. W aplikacji nadal odpalają się, gdy jest otwarta.
+ */
+export const MISSED_AFTER_MS = 60 * 60 * 1000;
 
 export interface AgendaGroup {
   key: AgendaGroupKey;
@@ -11,6 +17,7 @@ export interface AgendaGroup {
 
 const LABELS: Record<AgendaGroupKey, string> = {
   overdue: "Zaległe",
+  missed: "Przegapione",
   today: "Dziś",
   week: "Najbliższe 7 dni",
   later: "Później",
@@ -23,9 +30,13 @@ const LABELS: Record<AgendaGroupKey, string> = {
  * Puste grupy są pomijane.
  */
 export function groupReminders(notes: Note[], now: number = Date.now()): AgendaGroup[] {
-  const byKey: Record<AgendaGroupKey, Note[]> = { overdue: [], today: [], week: [], later: [] };
+  const byKey: Record<AgendaGroupKey, Note[]> = { overdue: [], missed: [], today: [], week: [], later: [] };
   const sorted = notes.filter((n) => n.reminder !== null).sort((a, b) => (a.reminder as number) - (b.reminder as number));
-  for (const n of sorted) byKey[termStatus(n.reminder as number, now)].push(n);
+  for (const n of sorted) {
+    const t = n.reminder as number;
+    const status = termStatus(t, now);
+    byKey[status === "overdue" && now - t > MISSED_AFTER_MS ? "missed" : status].push(n);
+  }
   return (Object.keys(byKey) as AgendaGroupKey[])
     .filter((k) => byKey[k].length)
     .map((k) => ({ key: k, label: LABELS[k], notes: byKey[k] }));

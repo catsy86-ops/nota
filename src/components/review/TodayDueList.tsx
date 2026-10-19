@@ -9,8 +9,9 @@ import { cn } from "@/lib/utils";
 /** Ile pozycji z grupy pokazujemy na „Dziś”; reszta jest w widoku Przypomnień. */
 const SHOWN_PER_GROUP = 4;
 
-const GROUP_TONE: Record<Extract<AgendaGroupKey, "overdue" | "today">, string> = {
+const GROUP_TONE: Record<Extract<AgendaGroupKey, "overdue" | "missed" | "today">, string> = {
   overdue: "text-destructive-ink",
+  missed: "text-destructive-ink",
   today: "text-primary-ink",
 };
 
@@ -22,7 +23,7 @@ const GROUP_TONE: Record<Extract<AgendaGroupKey, "overdue" | "today">, string> =
 export function TodayDueList({ notes, onOpen, onOpenReminders }: { notes: Note[]; onOpen: (id: string) => void; onOpenReminders: () => void }) {
   const groups = useMemo(
     // Archiwum też: jego przypomnienia nadal dzwonią, więc muszą być widoczne i liczone jak reszta.
-    () => groupReminders(notes.filter((n) => !n.trashed)).filter((g) => g.key === "overdue" || g.key === "today"),
+    () => groupReminders(notes.filter((n) => !n.trashed)).filter((g) => g.key === "overdue" || g.key === "missed" || g.key === "today"),
     [notes],
   );
   const total = groups.reduce((n, g) => n + g.notes.length, 0);
@@ -44,7 +45,7 @@ export function TodayDueList({ notes, onOpen, onOpenReminders }: { notes: Note[]
         <p className="text-sm text-muted-foreground">Nic nie czeka na dziś.</p>
       ) : (
         groups.map((g) => {
-          const key = g.key as "overdue" | "today";
+          const key = g.key as "overdue" | "missed" | "today";
           const shown = g.notes.slice(0, SHOWN_PER_GROUP);
           const rest = g.notes.length - shown.length;
           return (
