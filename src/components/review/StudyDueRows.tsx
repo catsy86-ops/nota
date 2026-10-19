@@ -1,0 +1,49 @@
+import { useMemo } from "react";
+import { HardHat, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useStudyReady } from "@/lib/study/data";
+import { useStudy } from "@/lib/study/store";
+import { studyReminders } from "@/lib/study/reminders";
+import { studyDueRows } from "@/lib/study/dueRows";
+
+/**
+ * Terminy z działu Praca (serwis, zamówienia bez dostawy, otwarte problemy) — tylko do odczytu.
+ * Ładowany leniwie z Dziś i z Terminów, żeby dane Pracy nie weszły do paczki startowej.
+ * Bez wierszy nic nie pokazuje.
+ */
+export function StudyDueRows({ onOpenStudy }: { onOpenStudy: () => void }) {
+  const ready = useStudyReady();
+  if (!ready) return null;
+  return <StudyDueRowsList onOpenStudy={onOpenStudy} />;
+}
+
+function StudyDueRowsList({ onOpenStudy }: { onOpenStudy: () => void }) {
+  const study = useStudy();
+  // Godzina z renderu: terminy Pracy zmieniają się wraz z dziennikiem i listami, a nie co minutę.
+  const rows = useMemo(() => studyDueRows(studyReminders(study.journal, Date.now(), study.sites)), [study.journal, study.sites]);
+  if (rows.length === 0) return null;
+  return (
+    <section aria-label="Terminy z Praca" data-testid="study-due" className="rounded-card border border-border bg-card p-4 sm:p-5 space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="section-label gap-2">
+          <HardHat className="h-3.5 w-3.5" aria-hidden />
+          Praca
+          <span className="stamp-tag normal-case text-primary-ink" data-testid="study-due-count">{rows.length}</span>
+        </h2>
+        <Button variant="ghost" size="sm" onClick={onOpenStudy} className="coarse:h-11">
+          Otwórz Pracę<ChevronRight className="ml-0.5 h-4 w-4" aria-hidden />
+        </Button>
+      </div>
+      <ul className="divide-y divide-border/50">
+        {rows.map((row) => (
+          <li key={row.key} data-study-due={row.kind} className="py-2">
+            <p className="text-sm">{row.title}</p>
+            {row.detail && <p className="mt-0.5 text-xs text-muted-foreground">{row.detail}</p>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+export default StudyDueRows;

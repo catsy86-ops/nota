@@ -86,6 +86,7 @@ import { loadCalendarView, loadShiftsView, loadStudyView } from "@/lib/viewPrelo
 const ShortcutsDialog = lazy(() => import("@/components/ShortcutsDialog").then((m) => ({ default: m.ShortcutsDialog })));
 const PropDefsDialog = lazy(() => import("@/components/PropDefsDialog").then((m) => ({ default: m.PropDefsDialog })));
 const TodayDueList = lazy(() => import("@/components/review/TodayDueList").then((m) => ({ default: m.TodayDueList })));
+const StudyDueRows = lazy(() => import("@/components/review/StudyDueRows"));
 const TodayShiftCard = lazy(() => import("@/components/review/TodayShiftCard").then((m) => ({ default: m.TodayShiftCard })));
 const TodayStudyCard = lazy(() => import("@/components/review/TodayStudyCard").then((m) => ({ default: m.TodayStudyCard })));
 const WeeklyReviewCard = lazy(() => import("@/components/review/WeeklyReviewCard").then((m) => ({ default: m.WeeklyReviewCard })));
@@ -603,9 +604,14 @@ const Index = () => {
           )}
 
           {view === "today" && !deferredSearch && (
-            <Suspense fallback={<CardSkeleton />}>
-              <TodayDueList notes={reminderNotes} onOpen={openNote} onOpenReminders={() => go("reminders")} />
-            </Suspense>
+            <>
+              <Suspense fallback={<CardSkeleton />}>
+                <TodayDueList notes={reminderNotes} onOpen={openNote} onOpenReminders={() => go("reminders")} />
+              </Suspense>
+              <Suspense fallback={null}>
+                <StudyDueRows onOpenStudy={() => go("study")} />
+              </Suspense>
+            </>
           )}
 
           {view === "today" && !deferredSearch && (
@@ -685,6 +691,11 @@ const Index = () => {
             </NoteGroupSection>
           )}
 
+          {view === "reminders" && (
+            <Suspense fallback={null}>
+              <StudyDueRows onOpenStudy={() => go("study")} />
+            </Suspense>
+          )}
           {view === "reminders" && groupReminders([...others, ...archivedNotes]).map((group, i) => (
             <NoteGroupSection key={group.key} groupKey={`reminders-${group.key}`} label={group.label} count={group.notes.length} tone={group.key === "overdue" ? "alert" : "default"}>
               {renderGrid(group.notes, i)}
