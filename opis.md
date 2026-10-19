@@ -3914,7 +3914,7 @@ lub grupę”.
   - E2e (chromium, 106 testów): `mobile`, `skins`, `clipper`, `push`, `diagnostics`, `sync-code`, `search-backup`, `private-notes`, `shifts`, `a11y`, `toggle-group`, `site-mode`, `card-motion` — zielone.
 - **Commit:** cb2ecff, 2026-10-19.
 
-## Ustawienia — struktura, faza 2 (2026-10-19, bez commita)
+## Ustawienia — struktura, faza 2 (2026-10-19, 430379d)
 
 - **Co robi:** cztery karty zostają, ale rozłożone inaczej. Karta „Dane” nazywa się „Kopia i dane”. Przypomnienia „Dziś” i „Ten tydzień” są w Ogólne, obok przeglądu tygodnia. Synchronizacja przez plik jest w karcie Sync, obok parowania. Efekty i zabawa są w Wyglądzie. Ogólne ma sekcję „Praca i Grafik” z przyciskiem „Ustawienia Grafiku”. Przypomnienie o kopii zostaje w karcie Kopii.
 - **Gdzie jest:**
@@ -3938,5 +3938,5 @@ lub grupę”.
   - QA na telefonie nie sprawdzono (zgodnie z decyzją, później). Szczególnie: zakładka „Kopia i dane” zawija się na wąskim ekranie.
 - **Testy:**
   - `src/lib/settingsPrefs.test.ts` — domyślny dzień tygodnia to 0.
-  - E2e: zmienione specy zielone (`file-sync`, `images`, `live-text`, `live-text-focused`, `mobile`, i pozostałe z listy fazy 1). Pełny e2e w trakcie przy zapisie tej sekcji.
-- **Commit:** —
+  - Pełny e2e chromium: 386/386 zielone.
+- **Commit:** 430379d, 2026-10-19.
