@@ -9,6 +9,7 @@ import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
 import { monthEnterClass, useMonthDirection } from "@/hooks/useMonthDirection";
 import { cn } from "@/lib/utils";
 import type { ShiftType } from "@/lib/shifts";
+import type { StudyDayMarks } from "@/lib/study/calendarMarks";
 import { weekdayHeadClass } from "./dayCellStyles";
 
 /**
@@ -34,6 +35,8 @@ interface MonthGridProps {
   titleOf: (noteId: string) => string;
   /** Zmiana z Grafiku w dniu (klucz `yyyy-MM-dd`). */
   shiftOf?: (key: string) => ShiftType | undefined;
+  /** Wizyty serwisowe i dostawy z Pracy w dniu (tylko odczyt). */
+  studyOf?: (key: string) => StudyDayMarks | undefined;
   /** Klawisz Z na dniu: edycja zmiany z Grafiku. */
   onEditShift?: (day: Date) => void;
   selectedDay: Date;
@@ -44,7 +47,7 @@ interface MonthGridProps {
   onMonthChange: (month: Date) => void;
 }
 
-export function MonthGrid({ month, byDay, titleOf, shiftOf, selectedDay, onSelectDay, onActivateDay, onEditShift, onMonthChange }: MonthGridProps) {
+export function MonthGrid({ month, byDay, titleOf, shiftOf, studyOf, selectedDay, onSelectDay, onActivateDay, onEditShift, onMonthChange }: MonthGridProps) {
   const cellRefs = useRef(new Map<string, HTMLDivElement>());
   // Fokus przenosimy dopiero po tym, jak użytkownik ruszył klawiaturą —
   // inaczej samo wejście w widok przeskakiwałoby stronę do siatki.
@@ -136,6 +139,7 @@ export function MonthGrid({ month, byDay, titleOf, shiftOf, selectedDay, onSelec
                   occurrences={byDay.get(key) ?? []}
                   titleOf={titleOf}
                   shift={shiftOf?.(key)}
+                  study={studyOf?.(key)}
                   selected={isSameDay(day, selectedDay)}
                   focused={isSameDay(day, selectedDay)}
                   onSelect={onSelectDay}

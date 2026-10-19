@@ -3698,6 +3698,16 @@ lub grupę”.
 - **Stan weryfikacji:** pełny przebieg e2e nie został dotąd zakończony bez przerwania (brak pamięci). Zmiany sprawdzone osobno: `shifts`, `routes` i powiązane specy przechodzą.
 - **Commit:** bdba60c, 2026-10-19.
 
+## Kalendarz — znaczniki Pracy w komórkach (K2 planu kalendarza/przypomnień, 2026-10-19)
+
+- **Co robi:** w siatce miesiąca dzień z wizytą serwisową albo dostawą ma małą ikonę kasku z liczbą (np. „2”). Po najechaniu i w czytniku ekranu: „Praca: 2 wizyty, 1 dostawa”. Tylko odczyt, bez edycji.
+- **Gdzie jest:** `src/lib/study/calendarMarks.ts` (`studyDayMarks`, typ `StudyDayMarks`), `src/components/calendar/useStudyDayMarks.ts` (hook: czeka na `studyReady`, potem liczy), `src/components/calendar/ReminderCalendarView.tsx` (`studyOf` do siatki), `src/components/calendar/MonthGrid.tsx` (prop `studyOf`), `src/components/calendar/DayCell.tsx` (ikona i `studySummary` w `aria-label`).
+- **Jak działa:** wizyta to otwarte zgłoszenie serwisowe z terminem (`due`, dzień `yyyy-MM-dd`), dostawa to pozycja „zamówione” z `due` (T4). Klucz dnia to ta sama postać co w `dueDayValue`. Budowy w archiwum pomijane, tak jak w przypomnieniach.
+- **Ograniczenie:** znaczniki są tylko w siatce miesiąca; widok tygodnia (`WeekStrip`) i „najbliższe dni” (`UpcomingDays`) ich nie pokazują. Dane Praca ładują się leniwie, więc do gotowości dokumentu kalendarz pokazuje brak znaczników i przelicza się po wczytaniu.
+- **Paczka:** kalendarz jest już leniwy; `useStudyDayMarks` wciąga `store.ts` Pracy do paczki kalendarza, a nie do startowej. Próg paczki startowej 387 KB bez zmian (`e2e/bundle.spec.ts`).
+- **Testy:** `src/lib/study/calendarMarks.test.ts` (liczenie po dniach, otwarte/zamknięte, dostawa po dacie, archiwum). E2E `reminders-calendar`, `reminders-agenda`, `reminder-toast` 17/17 po wszystkich krokach.
+- **Commit:** w commicie z tym wpisem, 2026-10-19.
+
 ## Praca — próba przed zakryciem z etapów karty (U1 planu Pracy, 2026-10-19)
 
 - **Co robi:** gdy na karcie budowy odhaczono etap instalacji (kanalizacja podposadzkowa, rozprowadzenie wody, piony), a nie ma odhaczonej próby szczelności ani protokołu w dzienniku, i nie odhaczono zakrycia — pojawia się przypomnienie „Próba przed zakryciem”. Widać je w Dzienniku (lista przypomnień, przycisk „Karta budowy”) i jako wiersz na Dziś w dziale Praca.
@@ -3710,8 +3720,8 @@ lub grupę”.
 
 ## Przypomnienia — cały dzień (P6 planu kalendarza/przypomnień, 2026-10-19)
 
-- **Co robi:** w wyborze przypomnienia na notatce jest pole „Cały dzień”. Zamiast godziny zapisuje się 9:00 wybranego dnia, a na kaflu i w Terminach widać samą datę („dziś”, „jutro”, „25 paź”).
-- **Gdzie jest:** `src/lib/reminderSpec.ts` (`reminderAllDay` w `ReminderState`, `REMINDER_FIELDS`, `specOf`, `readSpec`), `src/lib/yjsStore.ts` (zapis w `reminderSpec` przy tworzeniu i przy zmianie, projekcja), `src/components/ReminderPicker.tsx` (pole wyboru, `ReminderBadge`), `src/lib/reminderTime.ts` (`formatReminderShort(ts, now, allDay)`), `src/components/NoteCardActions.tsx` (przekazanie flagi do `onUpdate`), `src/lib/mergeNotes.ts`, `src/lib/noteSchema.ts`, `src/hooks/useNotes.ts` (typ `Note.reminderAllDay`).
+- **Co robi:** w wyborze przypomnienia na notatce jest pole „Cały dzień (o 9:00)”. Zamiast godziny zapisuje się 9:00 wybranego dnia, a na kaflu i w Terminach widać samą datę („dziś”, „jutro”, „25 paź”).
+- **Gdzie jest:** `src/lib/reminderSpec.ts` (`reminderAllDay` w `ReminderState`, `REMINDER_FIELDS`, `specOf`, `readSpec`), `src/lib/yjsStore.ts` (zapis w `reminderSpec` przy tworzeniu i przy zmianie, projekcja), `src/components/ReminderPicker.tsx` (pole wyboru, `ReminderBadge`), `src/lib/reminderTime.ts` (`formatReminderShort(ts, now, allDay)`, `dayInputValue`, wspólne z `shortages.ts`), `src/components/NoteCardActions.tsx` (przekazanie flagi do `onUpdate`), `src/lib/mergeNotes.ts`, `src/lib/noteSchema.ts`, `src/hooks/useNotes.ts` (typ `Note.reminderAllDay`).
 - **Jak działa:** flaga siedzi w `reminderSpec` razem z terminem, więc konflikt dwóch urządzeń rozstrzyga cała całość, jak przy C3. Flaga zapisuje się tylko gdy `true`; zwykły termin jej nie ma. Odpalanie nie zmieniło się: przypomnienie idzie o zapisanej godzinie (9:00), w aplikacji i w push. Zmiana na zwykły termin przez `reminderAllDay: undefined` gasi flagę.
 - **Decyzje:** „cały dzień” to 9:00, a nie północ, bo północ dzwoniłaby w nocy. Zaległość liczy się od 9:00, więc termin „cały dzień” na dziś staje się zaległy o 9:00 i wpada do „Zaległe”/„Przegapione” jak każdy inny. Wybór dnia, który już minął (9:00 dziś przeszło), jest blokowany tym samym komunikatem co przeszła godzina.
 - **Ograniczenie:** kompozytor nowej notatki (`AddNoteBar`) nie ma pola „Cały dzień” — tam termin nadal wymaga godziny. Do dodania osobno wraz z szkicem (`Draft`), bo tam jest osobny stan i zapis szkicu.
@@ -3731,11 +3741,12 @@ lub grupę”.
 ## Terminy — prognoza serii w „Najbliższe 7 dni” (T2 planu kalendarza/przypomnień, 2026-10-19)
 
 - **Co robi:** w widoku Terminy, pod grupami, jest blok „Prognoza serii (najbliższe 7 dni)” — jeden wiersz na powtarzalne przypomnienie z liczbą jego kolejnych wystąpień w tym tygodniu, np. „+4 wystąpienia (prognoza)”. Wiersze są tylko do odczytu.
-- **Gdzie jest:** `src/lib/reminderAgenda.ts` (`weekSeriesForecasts`, typ `SeriesForecast`), `src/components/calendar/SeriesForecastRows.tsx` (`SeriesForecastRows`), `src/pages/Index.tsx` (memo `seriesForecasts`, blok po grupach w widoku `reminders`).
+- **Gdzie jest:** `src/lib/reminderForecast.ts` (`weekSeriesForecasts`, typ `SeriesForecast`), `src/components/calendar/SeriesForecastSection.tsx` (sekcja, ładowana leniwie z `Index.tsx`), `src/components/calendar/SeriesForecastRows.tsx` (`SeriesForecastRows`), `src/pages/Index.tsx` (`SeriesForecastSection` po grupach w widoku `reminders`).
 - **Jak działa:** zapisany jest tylko najbliższy termin, więc kolejne wystąpienia liczy `expandOccurrences` (`src/lib/reminderOccurrences.ts`) w oknie od końca dziś +1 ms do końca dnia +7 — ten sam przedział co grupa „Najbliższe 7 dni”. Liczone są wyłącznie wystąpienia z `isSeries && !isNext`, czyli te, których nie ma w danych. Kosz jest pomijany, archiwum nie. Kolejność wierszy: wg pierwszego wystąpienia w oknie.
+- **Paczka:** pierwsza wersja trzymała `weekSeriesForecasts` w `reminderAgenda.ts`, co wciągało rozwijanie wystąpień do paczki startowej (przekroczenie budżetu o ok. 0,6 KB). Przeniesione do `reminderForecast.ts`, a sekcja jest leniwa.
 - **Decyzja:** blok stoi pod grupami, a nie w grupie „Najbliższe 7 dni”. Seria zaległa (zapisany termin w „Zaległe”), która ma wystąpienia w tym tygodniu, nie trafia do żadnej grupy „Najbliższe 7 dni”, więc wiersz w grupie by zniknął, gdyby tej grupy nie było.
 - **Ograniczenie:** `now` w memo to czas ostatniego przeliczenia (zależności: widok i lista notatek); otwarty widok przez północ może pokazać prognozę o dzień starą, do najbliższej zmiany listy. Prognoza nie ma akcji (edycja tylko dla zapisanego terminu).
-- **Testy:** `src/lib/reminderAgenda.test.ts` (`weekSeriesForecasts`: zaległa seria 7 wystąpień, seria od jutra 6, jednorazowe pominięte, seria poza oknem i kosz). Vitest 1471/1471. E2E nie uruchomione w tej sesji (mało pamięci wolnej, ~2 GB).
+- **Testy:** `src/lib/reminderAgenda.test.ts` (`weekSeriesForecasts`: zaległa seria 7 wystąpień, seria od jutra 6, jednorazowe pominięte, seria poza oknem i kosz). Vitest 1489/1489 po wszystkich krokach.
 - **Commit:** 392f197, 2026-10-19.
 
 ## Przypomnienia — cały termin w jednym zapisie `reminderSpec` (C3 planu kalendarza/przypomnień, 2026-10-19)

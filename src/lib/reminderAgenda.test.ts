@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { groupReminders, snoozeTimes, weekSeriesForecasts } from "./reminderAgenda";
+import { groupReminders, snoozeTimes } from "./reminderAgenda";
+import { weekSeriesForecasts } from "@/lib/reminderForecast";
 import type { Note } from "@/hooks/useNotes";
 
 const at = (y: number, m: number, d: number, h = 12, min = 0) => new Date(y, m - 1, d, h, min).getTime();

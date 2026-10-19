@@ -1,5 +1,6 @@
 import { cleanFittings, fittingsLine, type Fitting } from "./fittings";
 import { endOfDay } from "../dueTerms";
+import { dayInputValue } from "../reminderTime";
 
 /**
  * Braki materiału na budowie (nie tylko kształtki): „Rura PEX 16 — 50 m”, „Klej do PCV”. Każda
@@ -136,9 +137,7 @@ export function orderLateFrom(s: Shortage): number | null {
 
 /** Data dostawy jako wartość pola `type="date"` (lokalna, `YYYY-MM-DD`); pusta = brak. */
 export function dueDayValue(due: number | undefined): string {
-  if (due === undefined) return "";
-  const d = new Date(due);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return due === undefined ? "" : dayInputValue(due);
 }
 
 /** Odwrotność `dueDayValue`: pusta albo źle sformatowana wartość → `undefined` (bez daty). */

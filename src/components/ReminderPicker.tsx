@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { m as motion } from "framer-motion";
 import { REMINDER_REPEAT_LABELS, endOfDay, type ReminderRepeat } from "@/lib/reminderRepeat";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
-import { composeReminderTimestamp, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
+import { composeReminderTimestamp, dayInputValue, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
 import { QuickReminderInput } from "@/components/QuickReminderInput";
 
 interface ReminderPickerProps {
@@ -34,11 +34,6 @@ function presets(now = new Date()): { label: string; at: Date }[] {
   return list.filter((p) => p.at.getTime() > now.getTime());
 }
 
-/** `YYYY-MM-DD` dla `<input type="date">` w czasie lokalnym. */
-const dateInputValue = (ts: number) => {
-  const d = new Date(ts);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-};
 
 const REPEAT_OPTIONS: ReminderRepeat[] = ["none", "daily", "weekly", "monthly"];
 
@@ -49,7 +44,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
   const [time, setTime] = useState(reminder ? toTimeInputValue(reminder) : DEFAULT_REMINDER_TIME);
   const [repeat, setRepeat] = useState<ReminderRepeat>(reminderRepeat ?? "none");
   const [allDay, setAllDay] = useState(reminderAllDay === true);
-  const [untilText, setUntilText] = useState(reminderRepeatUntil !== undefined ? dateInputValue(reminderRepeatUntil) : "");
+  const [untilText, setUntilText] = useState(reminderRepeatUntil !== undefined ? dayInputValue(reminderRepeatUntil) : "");
 
   function handleQuickParsed(parsed: Date) {
     setDate(parsed);
@@ -121,11 +116,9 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
         />
         <label htmlFor={`${uid}-allday`} className="flex items-center gap-2 text-xs text-muted-foreground">
           <input id={`${uid}-allday`} type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} className="size-4 accent-primary" />
-          Cały dzień
+          Cały dzień (o 9:00)
         </label>
-        {allDay ? (
-          <p className="text-2xs text-muted-foreground">Przypomnienie przyjdzie o 9:00 wybranego dnia.</p>
-        ) : (
+        {!allDay && (
           <div className="flex items-center gap-2">
             <label htmlFor={`${uid}-time`} className="text-xs text-muted-foreground">Godzina:</label>
             <input
@@ -157,7 +150,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
               id={`${uid}-until`}
               type="date"
               value={untilText}
-              min={timestamp !== null ? dateInputValue(timestamp) : undefined}
+              min={timestamp !== null ? dayInputValue(timestamp) : undefined}
               onChange={(e) => setUntilText(e.target.value)}
               aria-describedby={`${uid}-until-hint`}
               className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground"

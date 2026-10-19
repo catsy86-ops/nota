@@ -15,6 +15,7 @@ import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences
 import { nextInSeries, seriesDay } from "@/lib/reminderRepeat";
 import { toast } from "sonner";
 import { dayType, setDayEntry, useShifts } from "@/lib/shifts";
+import { useStudyDayMarks } from "./useStudyDayMarks";
 import { DayDialog } from "@/components/shifts/DayDialog";
 import { MonthGrid } from "./MonthGrid";
 import { markMoved } from "./movedSignal";
@@ -84,6 +85,9 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
       return base ? dayType(base, entry) : undefined;
     };
   }, [shifts]);
+
+  // Praca w komórkach: wizyty serwisowe i dostawy (K2), tylko odczyt.
+  const studyMarks = useStudyDayMarks();
 
   // Okno dnia z Grafiku otwierane z kalendarza: ręczna zmiana rodzaju zmiany i godzin bez przechodzenia do Grafiku.
   const [shiftDay, setShiftDay] = useState<string | null>(null);
@@ -315,6 +319,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
             byDay={byDay}
             titleOf={titleOf}
             shiftOf={shiftOf}
+            studyOf={(key) => studyMarks.get(key)}
             selectedDay={selectedDay}
             onSelectDay={setSelectedDay}
             onActivateDay={openAdd}

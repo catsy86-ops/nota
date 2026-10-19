@@ -49,6 +49,12 @@ export function isPastReminder(timestamp: number | null, now: number = Date.now(
   return timestamp !== null && timestamp < now;
 }
 
+/** Timestamp → wartość dla `<input type="date">`: lokalny dzień `YYYY-MM-DD`. */
+export function dayInputValue(timestamp: number): string {
+  const d = new Date(timestamp);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 /** Timestamp → wartość dla `<input type="time">`. */
 export function toTimeInputValue(timestamp: number): string {
   const d = new Date(timestamp);

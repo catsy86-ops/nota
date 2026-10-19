@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
+import { HardHat } from "lucide-react";
 import { wasJustMoved } from "./movedSignal";
 import { format, isSameDay, isSameMonth } from "date-fns";
 import { pl } from "date-fns/locale";
@@ -10,6 +11,7 @@ import { holidayName } from "@/lib/shifts/holidays";
 import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
 import { dayCellClass, dayNumberClass, holidayDotClass, holidayNameClass } from "./dayCellStyles";
 import { pluralPl } from "@/lib/plural";
+import type { StudyDayMarks } from "@/lib/study/calendarMarks";
 
 /** Ile chipów mieści się w komórce, zanim reszta zwinie się w „+N". */
 const MAX_CHIPS = 3;
@@ -59,9 +61,20 @@ interface DayCellProps {
   cellRef?: (el: HTMLDivElement | null) => void;
   /** Zmiana z Grafiku w tym dniu (z godzinami dnia), jeśli jest wpisana. */
   shift?: ShiftType;
+  /** Wizyty serwisowe i dostawy z Pracy w tym dniu (tylko odczyt). */
+  study?: StudyDayMarks;
 }
 
-export function DayCell({ day, month, occurrences, titleOf, selected, focused, onSelect, cellRef, shift }: DayCellProps) {
+/** Podsumowanie Pracy dla czytnika i tytułu: „2 wizyty, 1 dostawa”; `null`, gdy nic nie ma. */
+function studySummary(study: StudyDayMarks | undefined): string | null {
+  if (!study || (study.service === 0 && study.delivery === 0)) return null;
+  const parts: string[] = [];
+  if (study.service > 0) parts.push(`${study.service} ${pluralPl(study.service, ["wizyta", "wizyty", "wizyt"])}`);
+  if (study.delivery > 0) parts.push(`${study.delivery} ${pluralPl(study.delivery, ["dostawa", "dostawy", "dostaw"])}`);
+  return `Praca: ${parts.join(", ")}`;
+}
+
+export function DayCell({ day, month, occurrences, titleOf, selected, focused, onSelect, cellRef, shift, study }: DayCellProps) {
   const { setNodeRef, isOver } = useDroppable({ id: `day-drop-${dayKey(day)}`, data: { day } });
   const inMonth = isSameMonth(day, month);
   const today = isSameDay(day, new Date());
@@ -71,7 +84,8 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
   const hiddenDots = occurrences.length - dots.length;
 
   const holiday = holidayName(dayKey(day));
-  const label = `${format(day, "EEEE, d MMMM yyyy", { locale: pl })}${today ? ", dziś" : ""}${holiday ? `, ${holiday}` : ""}${shift ? `, zmiana: ${shiftLabel(shift)}` : ""}, ${
+  const work = studySummary(study);
+  const label = `${format(day, "EEEE, d MMMM yyyy", { locale: pl })}${today ? ", dziś" : ""}${holiday ? `, ${holiday}` : ""}${shift ? `, zmiana: ${shiftLabel(shift)}` : ""}${work ? `, ${work}` : ""}, ${
     occurrences.length === 0 ? "brak terminów" : terminy(occurrences.length)
   }`;
 
@@ -103,6 +117,13 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
       <span className="flex items-center justify-between">
         <span className={dayNumberClass({ today, holiday: !!holiday, inMonth })}>{format(day, "d")}</span>
         <span className="flex items-center gap-1">
+          {/* Praca: ikona z liczbą wizyt i dostaw; osobno od terminów notatek (kropki) i zmiany z Grafiku. */}
+          {work && (
+            <span aria-hidden className={cn("flex items-center gap-0.5 text-2xs leading-4 text-muted-foreground", !inMonth && "opacity-50")} title={work}>
+              <HardHat className="size-3" />
+              {(study?.service ?? 0) + (study?.delivery ?? 0)}
+            </span>
+          )}
           {/* Ten sam kolor i skrót co w Grafiku; nieobecność jako jasne tło z ramką, tak jak tam. */}
           {shift && (
             <span

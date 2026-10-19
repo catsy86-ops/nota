@@ -1,5 +1,5 @@
 import { Repeat } from "lucide-react";
-import type { SeriesForecast } from "@/lib/reminderAgenda";
+import type { SeriesForecast } from "@/lib/reminderForecast";
 
 /**
  * Jeden wiersz na serię w „Najbliższe 7 dni”: ile kolejnych wystąpień wypada w tym tygodniu.
