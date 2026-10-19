@@ -15,8 +15,10 @@ interface ReminderPickerProps {
   reminder: number | null;
   reminderRepeat?: ReminderRepeat;
   reminderRepeatUntil?: number;
-  /** `until` — koniec serii (koniec dnia) albo `undefined` = bez końca. */
-  onSet: (timestamp: number | null, repeat: ReminderRepeat, until?: number) => void;
+  /** Cały dzień: termin to 9:00 wybranego dnia, bez pola godziny. */
+  reminderAllDay?: boolean;
+  /** `until` — koniec serii (koniec dnia) albo `undefined` = bez końca. `allDay` tylko gdy włączony. */
+  onSet: (timestamp: number | null, repeat: ReminderRepeat, until?: number, allDay?: boolean) => void;
   /** Własny przycisk otwierający (np. w pasku nowej notatki); domyślnie ikona dzwonka z kafla. */
   trigger?: ReactNode;
 }
@@ -40,12 +42,13 @@ const dateInputValue = (ts: number) => {
 
 const REPEAT_OPTIONS: ReminderRepeat[] = ["none", "daily", "weekly", "monthly"];
 
-export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, onSet, trigger }: ReminderPickerProps) {
+export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, reminderAllDay, onSet, trigger }: ReminderPickerProps) {
   const [open, setOpen] = useState(false);
   const uid = useId();
   const [date, setDate] = useState<Date | undefined>(reminder ? new Date(reminder) : undefined);
   const [time, setTime] = useState(reminder ? toTimeInputValue(reminder) : DEFAULT_REMINDER_TIME);
   const [repeat, setRepeat] = useState<ReminderRepeat>(reminderRepeat ?? "none");
+  const [allDay, setAllDay] = useState(reminderAllDay === true);
   const [untilText, setUntilText] = useState(reminderRepeatUntil !== undefined ? dateInputValue(reminderRepeatUntil) : "");
 
   function handleQuickParsed(parsed: Date) {
@@ -55,7 +58,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
 
   // `null` = godzina niepełna (pole `type="time"` da się wyczyścić); wtedy
   // nie ma czego zapisać, a wcześniej szło w dane `NaN`.
-  const timestamp = date ? composeReminderTimestamp(date, time) : null;
+  const timestamp = date ? composeReminderTimestamp(date, allDay ? DEFAULT_REMINDER_TIME : time) : null;
   const pastTime = isPastReminder(timestamp);
   const [uy, um, ud] = untilText.split("-").map(Number);
   const until = repeat !== "none" && untilText ? endOfDay(new Date(uy, um - 1, ud)) : undefined;
@@ -65,7 +68,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
   function handleSave() {
     if (timestamp === null || pastTime || untilTooEarly) return;
     requestNotificationPermissionOnIntent();
-    onSet(timestamp, repeat, until);
+    onSet(timestamp, repeat, until, allDay || undefined);
     setOpen(false);
   }
 
@@ -75,6 +78,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
     setDate(undefined);
     setTime(DEFAULT_REMINDER_TIME);
     setRepeat("none");
+    setAllDay(false);
     setOpen(false);
   }
 
@@ -115,16 +119,24 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
           disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
           className={cn("p-3 pointer-events-auto")}
         />
-        <div className="flex items-center gap-2">
-          <label htmlFor={`${uid}-time`} className="text-xs text-muted-foreground">Godzina:</label>
-          <input
-            id={`${uid}-time`}
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className="text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground"
-          />
-        </div>
+        <label htmlFor={`${uid}-allday`} className="flex items-center gap-2 text-xs text-muted-foreground">
+          <input id={`${uid}-allday`} type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} className="size-4 accent-primary" />
+          Cały dzień
+        </label>
+        {allDay ? (
+          <p className="text-2xs text-muted-foreground">Przypomnienie przyjdzie o 9:00 wybranego dnia.</p>
+        ) : (
+          <div className="flex items-center gap-2">
+            <label htmlFor={`${uid}-time`} className="text-xs text-muted-foreground">Godzina:</label>
+            <input
+              id={`${uid}-time`}
+              type="time"
+              value={time}
+              onChange={(e) => setTime(e.target.value)}
+              className="text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground"
+            />
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <label htmlFor={`${uid}-repeat`} className="text-xs text-muted-foreground flex items-center gap-1"><Repeat className="w-3 h-3" />Powtarzaj:</label>
           <select
@@ -163,7 +175,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
           </p>
         )}
         {pastTime && (
-          <p className="text-2xs text-destructive-ink">Ta godzina już minęła. Wybierz godzinę w przyszłości.</p>
+          <p className="text-2xs text-destructive-ink">{allDay ? "Ten dzień już minął. Wybierz dzień w przyszłości." : "Ta godzina już minęła. Wybierz godzinę w przyszłości."}</p>
         )}
         <p className="text-2xs text-muted-foreground">
           Działa najpewniej, gdy aplikacja zostaje otwarta w tle — bez serwera powiadomień push, zamknięta karta może dostarczyć przypomnienie dopiero po ponownym otwarciu appki.
@@ -183,7 +195,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
   );
 }
 
-export function ReminderBadge({ reminder, reminderRepeat }: { reminder: number | null; reminderRepeat?: ReminderRepeat }) {
+export function ReminderBadge({ reminder, reminderRepeat, reminderAllDay }: { reminder: number | null; reminderRepeat?: ReminderRepeat; reminderAllDay?: boolean }) {
   if (!reminder) return null;
   const isPast = reminder < Date.now();
   return (
@@ -192,7 +204,7 @@ export function ReminderBadge({ reminder, reminderRepeat }: { reminder: number |
       isPast ? "text-destructive-ink" : "text-primary-ink"
     )}>
       <Bell className="w-2.5 h-2.5" />
-      {formatReminderShort(reminder)}
+      {formatReminderShort(reminder, new Date(), reminderAllDay === true)}
       {reminderRepeat && reminderRepeat !== "none" && <Repeat className="w-2.5 h-2.5" />}
     </div>
   );

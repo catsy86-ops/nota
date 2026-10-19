@@ -37,3 +37,20 @@ describe("przypomnienie jako jeden zapis (reminderSpec)", () => {
     expect(whole).toContainEqual(fromA);
   });
 });
+
+describe("przypomnienie na cały dzień (reminderAllDay w reminderSpec)", () => {
+  it("flaga zapisuje się, wraca po synchronizacji i gaśnie przy zmianie na zwykły termin", () => {
+    const a = createYjsStore(`allday-a-${crypto.randomUUID()}`);
+    const b = createYjsStore(`allday-b-${crypto.randomUUID()}`);
+    a.upsertNote(note({ reminder: 1000 }));
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+
+    a.patchNote("r1", { reminder: 2000, reminderAllDay: true });
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+    expect(b.projectNotes().find((n) => n.id === "r1")?.reminderAllDay).toBe(true);
+
+    b.patchNote("r1", { reminder: 3000, reminderAllDay: undefined });
+    Y.applyUpdate(a.doc, Y.encodeStateAsUpdate(b.doc));
+    expect(a.projectNotes().find((n) => n.id === "r1")?.reminderAllDay).toBeUndefined();
+  });
+});

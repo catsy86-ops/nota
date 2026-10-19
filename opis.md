@@ -3698,6 +3698,16 @@ lub grupę”.
 - **Stan weryfikacji:** pełny przebieg e2e nie został dotąd zakończony bez przerwania (brak pamięci). Zmiany sprawdzone osobno: `shifts`, `routes` i powiązane specy przechodzą.
 - **Commit:** bdba60c, 2026-10-19.
 
+## Przypomnienia — cały dzień (P6 planu kalendarza/przypomnień, 2026-10-19)
+
+- **Co robi:** w wyborze przypomnienia na notatce jest pole „Cały dzień”. Zamiast godziny zapisuje się 9:00 wybranego dnia, a na kaflu i w Terminach widać samą datę („dziś”, „jutro”, „25 paź”).
+- **Gdzie jest:** `src/lib/reminderSpec.ts` (`reminderAllDay` w `ReminderState`, `REMINDER_FIELDS`, `specOf`, `readSpec`), `src/lib/yjsStore.ts` (zapis w `reminderSpec` przy tworzeniu i przy zmianie, projekcja), `src/components/ReminderPicker.tsx` (pole wyboru, `ReminderBadge`), `src/lib/reminderTime.ts` (`formatReminderShort(ts, now, allDay)`), `src/components/NoteCardActions.tsx` (przekazanie flagi do `onUpdate`), `src/lib/mergeNotes.ts`, `src/lib/noteSchema.ts`, `src/hooks/useNotes.ts` (typ `Note.reminderAllDay`).
+- **Jak działa:** flaga siedzi w `reminderSpec` razem z terminem, więc konflikt dwóch urządzeń rozstrzyga cała całość, jak przy C3. Flaga zapisuje się tylko gdy `true`; zwykły termin jej nie ma. Odpalanie nie zmieniło się: przypomnienie idzie o zapisanej godzinie (9:00), w aplikacji i w push. Zmiana na zwykły termin przez `reminderAllDay: undefined` gasi flagę.
+- **Decyzje:** „cały dzień” to 9:00, a nie północ, bo północ dzwoniłaby w nocy. Zaległość liczy się od 9:00, więc termin „cały dzień” na dziś staje się zaległy o 9:00 i wpada do „Zaległe”/„Przegapione” jak każdy inny. Wybór dnia, który już minął (9:00 dziś przeszło), jest blokowany tym samym komunikatem co przeszła godzina.
+- **Ograniczenie:** kompozytor nowej notatki (`AddNoteBar`) nie ma pola „Cały dzień” — tam termin nadal wymaga godziny. Do dodania osobno wraz z szkicem (`Draft`), bo tam jest osobny stan i zapis szkicu.
+- **Testy:** `src/lib/reminderSpec.test.ts` (grupa „reminderAllDay”), `src/lib/reminderTime.test.ts` (`formatReminderShort` z flagą), `src/lib/yjsStore.reminder.test.ts` (flaga przez dwa dokumenty Yjs, włącz i wyłącz). Vitest 1482/1482, tsc i eslint czyste. E2E nie uruchomione (pamięć).
+- **Commit:** w commicie z tym wpisem, 2026-10-19.
+
 ## Praca — data dostawy zamówienia (T4 planu kalendarza/przypomnień, 2026-10-19)
 
 - **Co robi:** przy braku „zamówione” pojawia się pole daty dostawy. Zaległe zamówienie dzwoni dopiero po końcu dnia dostawy, a nie po trzech dniach od zamówienia. Bez daty działa dawna reguła. Linia do wysłania (`shortagesText`) pokazuje „dostawa dd.mm”.

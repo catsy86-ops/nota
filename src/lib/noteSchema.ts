@@ -32,6 +32,7 @@ export const noteSchema = z.object({
   reminderRepeat: z.enum(["none", "daily", "weekly", "monthly"]).optional().catch(undefined),
   reminderDay: z.number().int().min(1).max(31).optional().catch(undefined),
   reminderRepeatUntil: z.number().finite().optional().catch(undefined),
+  reminderAllDay: z.boolean().optional().catch(undefined),
   priority: z.enum(["none", "low", "medium", "high"]).catch("none"),
   dailyDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().catch(undefined),
   icon: z.string().min(1).max(32).optional().catch(undefined),

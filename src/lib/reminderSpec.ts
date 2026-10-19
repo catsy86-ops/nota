@@ -14,13 +14,15 @@ import type { ReminderRepeat } from "./reminderRepeat";
 
 const REPEATS: readonly ReminderRepeat[] = ["none", "daily", "weekly", "monthly"];
 
-export const REMINDER_FIELDS = ["reminder", "reminderRepeat", "reminderDay", "reminderRepeatUntil"] as const;
+export const REMINDER_FIELDS = ["reminder", "reminderRepeat", "reminderDay", "reminderRepeatUntil", "reminderAllDay"] as const;
 
 export interface ReminderState {
   reminder: number | null;
   reminderRepeat?: ReminderRepeat;
   reminderDay?: number;
   reminderRepeatUntil?: number;
+  /** Cały dzień: `reminder` to wtedy 9:00 tego dnia (domyślna godzina), a UI pokazuje samą datę. */
+  reminderAllDay?: boolean;
 }
 
 /** Zapisany kształt: bez pól `undefined`, żeby Yjs i JSON się zgadzały. */
@@ -32,6 +34,8 @@ export function specOf(state: ReminderState): ReminderSpec {
   if (state.reminderRepeat !== undefined) out.reminderRepeat = state.reminderRepeat;
   if (state.reminderDay !== undefined) out.reminderDay = state.reminderDay;
   if (state.reminderRepeatUntil !== undefined) out.reminderRepeatUntil = state.reminderRepeatUntil;
+  // Flaga zapisana tylko gdy prawdziwa: brak pola = zwykły termin z godziną.
+  if (state.reminderAllDay === true) out.reminderAllDay = true;
   return out;
 }
 
@@ -56,6 +60,7 @@ export function readSpec(raw: unknown): ReminderSpec | null {
   if (typeof r.reminderRepeat === "string" && (REPEATS as readonly string[]).includes(r.reminderRepeat)) spec.reminderRepeat = r.reminderRepeat as ReminderRepeat;
   if (typeof r.reminderDay === "number" && Number.isInteger(r.reminderDay) && r.reminderDay >= 1 && r.reminderDay <= 31) spec.reminderDay = r.reminderDay;
   if (typeof r.reminderRepeatUntil === "number" && Number.isFinite(r.reminderRepeatUntil)) spec.reminderRepeatUntil = r.reminderRepeatUntil;
+  if (r.reminderAllDay === true) spec.reminderAllDay = true;
   return spec;
 }
 

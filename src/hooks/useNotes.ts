@@ -59,6 +59,8 @@ export interface Note {
    * dnia, czas lokalny). Brak = seria bez końca. Jedna liczba — bezpieczna dla LWW.
    */
   reminderRepeatUntil?: number;
+  /** Przypomnienie na cały dzień: `reminder` = 9:00 tego dnia, UI pokazuje samą datę. Brak = zwykły termin z godziną. */
+  reminderAllDay?: boolean;
   priority: NotePriority;
   /** Notatka dnia: lokalna data `YYYY-MM-DD` (patrz `lib/dailyNote.ts`); brak = zwykła notatka. */
   dailyDate?: string;

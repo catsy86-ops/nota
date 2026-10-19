@@ -101,7 +101,7 @@ export function NoteCardBody({
               {/* Etykiety, przypomnienie i priorytet w jednym rzędzie — każde w osobnej linii robiło z kafla wieżę. */}
               <div className="flex items-center gap-1 flex-wrap mt-1.5 empty:hidden *:mt-0!">
                 <LabelBadges labels={note.labels} />
-                <ReminderBadge reminder={note.reminder} reminderRepeat={note.reminderRepeat} />
+                <ReminderBadge reminder={note.reminder} reminderRepeat={note.reminderRepeat} reminderAllDay={note.reminderAllDay} />
                 <PriorityBadge priority={note.priority ?? "none"} />
                 <AttachmentsBadge attachments={note.attachments} />
               </div>

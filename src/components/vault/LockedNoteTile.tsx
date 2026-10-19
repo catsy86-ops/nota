@@ -152,7 +152,7 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
 
 /** Termin przypomnienia zostaje jawny (decyzja projektowa), tekstu nie ma. */
 function ReminderBadgeSafe({ note }: { note: Note }) {
-  return <ReminderBadge reminder={note.reminder} reminderRepeat={note.reminderRepeat} />;
+  return <ReminderBadge reminder={note.reminder} reminderRepeat={note.reminderRepeat} reminderAllDay={note.reminderAllDay} />;
 }
 
 function TileBtn({ title, onClick, className, children }: { title: string; onClick: (e: React.MouseEvent) => void; className?: string; children: React.ReactNode }) {

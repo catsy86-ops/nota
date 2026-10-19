@@ -90,7 +90,8 @@ export function PrimaryActions({
           reminder={note.reminder}
           reminderRepeat={note.reminderRepeat}
           reminderRepeatUntil={note.reminderRepeatUntil}
-          onSet={(r, repeat, until) => onUpdate?.(note.id, { reminder: r, reminderRepeat: repeat, reminderRepeatUntil: until })}
+          reminderAllDay={note.reminderAllDay}
+          onSet={(r, repeat, until, allDay) => onUpdate?.(note.id, { reminder: r, reminderRepeat: repeat, reminderRepeatUntil: until, reminderAllDay: allDay })}
         />
       )}
       {!isArchived && (

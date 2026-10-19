@@ -43,3 +43,21 @@ describe("projectReminder", () => {
     expect(projectReminder(null, { reminder: 1, reminderRepeat: "weekly" })).toEqual({ reminder: 1, reminderRepeat: "weekly" });
   });
 });
+
+describe("reminderAllDay (cały dzień)", () => {
+  it("flaga zapisuje się tylko gdy prawdziwa, a `false` znika jak brak pola", () => {
+    expect(specOf({ reminder: 1, reminderAllDay: true })).toEqual({ reminder: 1, reminderAllDay: true });
+    expect(specOf({ reminder: 1, reminderAllDay: false })).toEqual({ reminder: 1 });
+  });
+
+  it("readSpec przepuszcza tylko `true`, zły typ traktuje jak brak", () => {
+    expect(readSpec({ reminder: 1, reminderAllDay: true })?.reminderAllDay).toBe(true);
+    expect(readSpec({ reminder: 1, reminderAllDay: "tak" })).toEqual({ reminder: 1 });
+  });
+
+  it("mergeSpec wyłącza flagę jawnym undefined, a zwykła zmiana terminu ją zostawia", () => {
+    const on = { reminder: 1, reminderAllDay: true };
+    expect(mergeSpec(on, { reminderAllDay: undefined })).toEqual({ reminder: 1 });
+    expect(mergeSpec(on, { reminder: 2 })).toEqual({ reminder: 2, reminderAllDay: true });
+  });
+});
