@@ -15,13 +15,8 @@ interface SearchBarProps {
   className?: string;
 }
 
-const HINTS = [
-  "Szukaj notatek...",
-  "Spróbuj: etykieta:praca",
-  "Spróbuj: ma:przypomnienie",
-  "Spróbuj: starsze:30d",
-  "Naciśnij / aby wyszukać",
-];
+/** Stała etykieta pola: podpowiedzi operatorów są w pustym wyniku wyszukiwania, a nie w polu, które się zmienia. */
+const PLACEHOLDER = "Szukaj notatek...";
 
 /** Pauza w pisaniu, po której zapytanie idzie do widoku (filtrowanie 300 kafli na każdy znak blokowało klawiaturę). */
 const SEARCH_DEBOUNCE_MS = 150;
@@ -51,7 +46,6 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => { sent.current = v; onChange(v); }, SEARCH_DEBOUNCE_MS);
   };
-  const [hintIdx, setHintIdx] = useState(0);
   const [focused, setFocused] = useState(false);
   const { reduced } = useMotionPref();
   const { allLabels, folders } = useNotesContext();
@@ -64,12 +58,6 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
   // Indeks podświetlonej podpowiedzi (-1 = brak: Enter zostaje zwykłym Enterem).
   const [active, setActive] = useState(-1);
   const [dismissed, setDismissed] = useState(false);
-
-  useEffect(() => {
-    if (focused || value) return;
-    const id = setInterval(() => setHintIdx((i) => (i + 1) % HINTS.length), 3200);
-    return () => clearInterval(id);
-  }, [focused, value]);
 
   useEffect(() => { if (saving) nameRef.current?.focus(); }, [saving]);
   useEffect(() => { setActive(-1); setDismissed(false); }, [value]);
@@ -128,7 +116,7 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         onKeyDown={onKeyDown}
-        placeholder={HINTS[hintIdx]}
+        placeholder={PLACEHOLDER}
         aria-label="Szukaj w notatkach"
         enterKeyHint="search"
         autoCapitalize="off"

@@ -3533,3 +3533,12 @@ lub grupę”.
 - **Pułapki:** reguły z `:not([data-skin])` nie działają w tej aplikacji. Każdy styl dla domyślnego wyglądu pisać jako `[data-skin="zeszyt"]`.
 - **Testy:** w prawdziwym Chrome (`scratchpad/test-chrome.mjs`): tytuł w Fraunces, pasek z samą linią. Vitest 1411/1411. E2E `a11y` 56/56 w pełni. E2E `mobile-layout` 53 zaliczone, 3 niezaliczone: `/praca` przy 320 px jest szersza niż ekran (`chromium`, `iphone-14`, `pixel-7`). Ten sam test nie przechodzi na HEAD przed tą zmianą, więc to osobny, wcześniejszy problem widoku Praca, nie nagłówka.
 - **Commit:** 2745eaf, 2026-10-19.
+
+## Notatki — pasek wyszukiwania: stała etykieta, podpowiedzi filtrów w pustym wyniku (faza 3 planu Notatek, 2026-10-19)
+
+- **Co robi:** pole „Szukaj notatek...” ma stałą etykietę. Dawniej zmieniało ją co 3,2 s („Spróbuj: etykieta:praca” itd.), co było nieczytelne. Podpowiedzi filtrów (`etykieta:`, `ma:`, `starsze:`) pokazują się teraz, gdy wyszukiwanie nic nie znajdzie: w zdaniu pustego wyniku.
+- **Gdzie jest:** `src/components/SearchBar.tsx` (stała `PLACEHOLDER`; usunięte `HINTS`, licznik i interwał), `src/components/EmptyState.tsx` (gałąź `search`, zdanie w opisie).
+- **Jak działa:** placeholder jest stały. Podpowiedzi operatorów z listy usuniętej z pola są w opisie „Brak wyników”, bo tam użytkownik szuka właściwego sposobu. Podpowiedź „Naciśnij / aby wyszukać” usunięta z pola (skrót jest w oknie skrótów).
+- **Pułapki:** na telefonie są dwa pola `input[type=search][aria-label="Szukaj w notatkach"]` — jedno w nagłówku, ukryte na małych ekranach, drugie w treści. Testy muszą brać widoczne (`offsetParent !== null`), inaczej piszą w ukryte pole.
+- **Testy:** `scratchpad/test-chrome.mjs` (w Chrome: placeholder po 3,6 s bez zmiany; pusty wynik zawiera „etykieta:praca” i „ma:przypomnienie”). E2E: `saved-filters`, `search-highlight`, `search-backup` — 6/6. Vitest: patrz wpis commitu.
+- **Commit:** patrz następna linia.

@@ -73,7 +73,7 @@ export function EmptyState({ view, search, elsewhere, onGo }: { view: View; sear
       <StatusPanel
         tone="no-results"
         title={`Brak wyników${HERE[view] ? ` w ${HERE[view]}` : " w tym widoku"}`}
-        description={`Nic nie znaleziono dla „${search}”. Sprawdź pisownię albo szukaj krótszym słowem.`}
+        description={`Nic nie znaleziono dla „${search}”. Sprawdź pisownię albo szukaj krótszym słowem. Filtr też można wpisać, np. etykieta:praca albo ma:przypomnienie.`}
         actions={hits.length > 0 && onGo ? (
           <>
             <span className="text-sm text-muted-foreground">Znaleziono gdzie indziej:</span>
