@@ -1,11 +1,11 @@
 import { forwardRef, useRef, useState } from "react";
 import { m as motion, LayoutGroup } from "framer-motion";
-import { StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, Settings as SettingsIcon, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, HardHat, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
+import { StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, Settings as SettingsIcon, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
 import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
 import { openJournalSheet } from "@/lib/study/entrySheet";
 import type { ComposerAction } from "@/components/AddNoteBar";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { ImportExportMenu } from "@/components/ImportExportMenu";
 import { cn } from "@/lib/utils";
@@ -82,7 +82,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
     const input = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="search"]')).find((el) => el.offsetParent !== null);
     input?.focus({ preventScroll: true });
   };
-  const isMoreActive = ["archive", "trash", "calendar", "shifts", "study", "folder", "label"].includes(view);
+  const isMoreActive = ["archive", "trash", "calendar", "shifts", "study", "debts", "folder", "label"].includes(view);
 
   return (
     <>
@@ -149,14 +149,15 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
       <Sheet open={quickOpen} onOpenChange={setQuickOpen}>
         <SheetContent side="bottom" className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
           <SheetHeader className="text-left">
-            <SheetTitle className="font-display">Nowa</SheetTitle>
+            <SheetTitle className="font-display text-2xl">Nowa</SheetTitle>
+            <SheetDescription>Co zapisać? Stuknij „+”, by od razu napisać notatkę.</SheetDescription>
           </SheetHeader>
-          <div className="mt-4 grid grid-cols-3 gap-3" role="group" aria-label="Rodzaj nowej notatki">
-            <SheetTile Icon={Plus} label="Notatka" onClick={() => { setQuickOpen(false); onNew("note"); }} />
-            <SheetTile Icon={ListChecks} label="Lista zadań" onClick={() => { setQuickOpen(false); onNew("list"); }} />
-            {canDictate && <SheetTile Icon={Mic} label="Dyktuj" onClick={() => { setQuickOpen(false); onNew("dictate"); }} />}
-            <SheetTile Icon={ImagePlus} label="Zdjęcie" onClick={() => { setQuickOpen(false); onNew("image"); }} />
-            <SheetTile Icon={PenTool} label="Rysunek" onClick={() => { setQuickOpen(false); onNew("draw"); }} />
+          <div className="mt-4 grid grid-cols-2 gap-2.5" role="group" aria-label="Rodzaj nowej notatki">
+            <QuickTile Icon={Plus} title="Notatka" hint="Pusta kartka do pisania" tone="primary" onClick={() => { setQuickOpen(false); onNew("note"); }} />
+            <QuickTile Icon={ListChecks} title="Lista zadań" hint="Punkty do odhaczenia" tone="success" onClick={() => { setQuickOpen(false); onNew("list"); }} />
+            {canDictate && <QuickTile Icon={Mic} title="Dyktuj" hint="Mów, a zamienię na tekst" tone="warning" onClick={() => { setQuickOpen(false); onNew("dictate"); }} />}
+            <QuickTile Icon={ImagePlus} title="Zdjęcie" hint="Z aparatu albo galerii" tone="primary" onClick={() => { setQuickOpen(false); onNew("image"); }} />
+            <QuickTile Icon={PenTool} title="Rysunek" hint="Szkic palcem lub rysikiem" tone="success" onClick={() => { setQuickOpen(false); onNew("draw"); }} />
           </div>
         </SheetContent>
       </Sheet>
@@ -177,6 +178,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             <SheetTile Icon={CalendarRange} label="Kalendarz" active={view === "calendar"} onPointerDown={() => preloadView("calendar")} onClick={() => { onGo("calendar"); setMoreOpen(false); }} />
             <SheetTile Icon={BriefcaseBusiness} label="Grafik" active={view === "shifts"} onPointerDown={() => preloadView("shifts")} onClick={() => { onGo("shifts"); setMoreOpen(false); }} />
             <SheetTile Icon={HardHat} label="Praca" active={view === "study"} onPointerDown={() => preloadView("study")} onClick={() => { onGo("study"); setMoreOpen(false); }} />
+            <SheetTile Icon={HandCoins} label="Długi" active={view === "debts"} onClick={() => { onGo("debts"); setMoreOpen(false); }} />
           </SheetGroup>
           {onGoFilter && filters.length > 0 && (
             <SheetGroup title="Filtry">
@@ -261,6 +263,32 @@ function SheetGroup({ title, children }: { title: string; children: React.ReactN
       <h3 className="px-1 pb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h3>
       <div className="grid grid-cols-3 gap-3">{children}</div>
     </section>
+  );
+}
+
+type QuickTone = "primary" | "success" | "warning";
+const QUICK_TONE: Record<QuickTone, string> = {
+  primary: "bg-primary/15 text-primary-ink",
+  success: "bg-success/15 text-success-ink",
+  warning: "bg-warning/15 text-warning-ink",
+};
+
+/** Kafel w arkuszu „Nowa”: ikona w kolorze rodzaju, tytuł i jedno zdanie, co się stanie. */
+function QuickTile({ Icon, title, hint, tone, onClick }: { Icon: React.ComponentType<{ className?: string }>; title: string; hint: string; tone: QuickTone; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="pressable group flex items-center gap-3 rounded-2xl border border-border/60 bg-card p-3.5 text-left transition-colors hover:border-primary/40 hover:bg-muted/40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-xl transition-transform duration-200 group-hover:-rotate-6 motion-reduce:transition-none", QUICK_TONE[tone])} aria-hidden>
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="min-w-0">
+        <span className="block font-display text-sm font-semibold text-foreground">{title}</span>
+        <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">{hint}</span>
+      </span>
+    </button>
   );
 }
 

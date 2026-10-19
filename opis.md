@@ -3471,3 +3471,35 @@ lub grupę”.
 - **Podział godzin:** reguła „po równo” wydzielona do `evenShare` w `siteHours.ts` (zaokrąglenie do 5 min), z testem; `DayHoursDialog` jej używa.
 - **Testy:** 1397 jednostkowych; e2e site-hours, report-nudge, weekly-review, today-study, bundle — 21/21.
 - **Commit:** zapisany poniżej.
+
+## Długi — pożyczki i spłaty (nowy dział, 2026-10-19)
+
+- **Co robi:** zapisujesz, komu ile pożyczyłeś i ile już oddał. Góra: „Są nam winni” i „My jesteśmy winni”. Pod spodem lista osób z saldem i paskiem spłaty. Stuknięcie w osobę otwiera jej historię, z przyciskiem „Oddał całość” i usuwaniem wpisów (z „Cofnij”).
+- **Gdzie jest:**
+  - `src/components/debts/DebtsView.tsx` — widok: `Summary`, `AddForm` (rodzaj, osoba z podpowiedziami, kwota, dzień, „za co”), `People`, `PersonSheet`/`PersonHistory`.
+  - `src/lib/debts/model.ts` — czysty model: `cleanDebt`, `parseAmount`, `formatAmount`, `balances`, `totals`, `knownPeople`, `personKey`.
+  - `src/lib/debts/yDebts.ts` — `createYDebts(doc)`: mapa `debts` w Y.Doc (klucz = id wpisu).
+  - `src/lib/debts/store.ts` — `useDebts()` i akcje `addDebt`, `addDebtFromText`, `removeDebt`, `restoreDebt` na `yjsStore.doc`.
+  - Podpięcie: `hooks/useFilteredNotes.ts` (typ `View` = `"debts"`), `pages/Index.tsx` (leniwy widok, bez listy notatek i wyszukiwarki), `components/BottomNav.tsx` (kafel „Długi” w „Więcej”), `components/sidebar/sidebarItems.ts`, `components/CommandPalette.tsx`, `components/AppHeader.tsx` (tytuł), `lib/viewRoute.ts` (adres `/dlugi`).
+- **Jak działa:**
+  - Każdy wpis to osobny klucz mapy Yjs, więc dwa telefony dopisujące pożyczki scalają się bez strat (jak Grafik i listy budowy).
+  - Kwoty w groszach (liczby całkowite). `parseAmount` przyjmuje „1 234,5”, „1234.50”, „80”; odrzuca zero, litery, więcej niż dwa miejsca po przecinku i ponad 1 000 000 zł.
+  - Saldo osoby = pożyczki − spłaty. Dodatnie: jest nam winna. Ujemne: my jesteśmy winni (tylko gdy ktoś oddał więcej, niż pożyczył). Osoby grupowane bez względu na wielkość liter („Anna” = „anna”). Kolejność: nam winni, my winni, rozliczeni.
+  - Po zapisie zostaje osoba i data, czyszczona jest kwota i notatka, a fokus wraca do pola kwoty. Komunikat „Cofnij” usuwa właśnie dodany wpis.
+  - „Oddał całość” dodaje wpis spłaty na pełne saldo.
+- **Ograniczenia i pułapki:**
+  - Tylko dwa rodzaje: „Pożyczyłem” i „Oddał mi”. Nie ma jeszcze zapisu długu wobec innych osób (pożyczyłeś od kogoś).
+  - Limit 2000 wpisów (`DEBT_MAX_ENTRIES`), 40 znaków na osobę, 200 na notatkę.
+  - Nieprawidłowe wpisy od peera są pomijane po cichu przy odczycie (`cleanDebt`).
+  - Waluta to zawsze złote (zł).
+  - Dane są w dokumencie notatek, więc idą z synchronizacją i z kopią pełną. Nie są w eksporcie tylko Nauki/Grafiku, bo ich tam nie ma.
+- **Testy:** `src/lib/debts/model.test.ts` (kwoty, czyszczenie, salda, sortowanie), `src/lib/debts/yDebts.test.ts` (scalanie dwóch dokumentów, usunięcie i przywrócenie, śmieci od peera, powiadomienia). Ręcznie sprawdzone w przeglądarce na szerokości telefonu: zapis, saldo i „Cofnij”.
+- **Commit:** patrz wpis „Sesja 2026-10-19” niżej.
+
+## Wspólne — arkusz „Nowa” z przycisku „+” (wygląd i opisy)
+
+- **Co robi:** przytrzymanie „+” na dolnym pasku otwiera arkusz „Nowa” z pięcioma kafelkami (Notatka, Lista zadań, Dyktuj, Zdjęcie, Rysunek). Każdy ma teraz ikonę w kolorze rodzaju i jedno zdanie, co się stanie. Stuknięcie „+” nadal od razu otwiera nową notatkę.
+- **Gdzie jest:** `src/components/BottomNav.tsx` — `QuickTile` (kafel z tonem `primary`/`success`/`warning`), arkusz `quickOpen`.
+- **Jak działa:** na telefonie kafle w dwóch kolumnach; „Dyktuj” tylko tam, gdzie przeglądarka ma rozpoznawanie mowy. Kafel „Długi” dodany też do arkusza „Więcej” (sekcja „Przejdź do”).
+- **Ograniczenia:** zachowanie stuknięcia bez zmian — arkusz pokazuje się po przytrzymaniu lub z „Więcej → Dodaj…”. Podpowiedź o przytrzymaniu pojawia się po czwartym stuknięciu (jak dotąd).
+- **Testy:** typecheck czysty; pełny Vitest 1409/1409. Sprawdzone wizualnie w przeglądarce (telefon 390 px).
