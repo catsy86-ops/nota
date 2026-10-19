@@ -3708,9 +3708,11 @@ lub grupę”.
 - **Testy:** `src/lib/reminderSpec.test.ts` (8), `src/lib/yjsStore.reminder.test.ts` (dwa urządzenia, równoległa zmiana terminu i powtarzania daje jedną całość). E2E `reminders-calendar`, `reminder-toast`, `reminders-agenda`, `notes`: 22/22. Vitest 1466+. Budżet bundla: w progu 387 KB.
 - **Commit:** 831ab76, 2026-10-19.
 
-## Kopia zapasowa — pliki budów osobno od zdjęć dziennika (D3, w toku, 2026-10-19)
+## Kopia zapasowa — pliki budów osobno od zdjęć dziennika (D3, 2026-10-19)
 
-- **Co zmieniono:** raport kopii rozdziela pominięte bajty na trzy kategorie: załączniki notatek, zdjęcia dziennika i pliki budów (plany, PDF). Wcześniej plany liczyły się jako „zdjęcia dziennika”.
-- **Gdzie:** `src/lib/study/journalRefs.ts` (`siteDocRefsIn`), `src/lib/exportNotes.ts` (`collectAttachmentBlobs`, `describeSkippedAttachments`, pole `siteDocs`, opcja `attachmentBudget` w `buildFullBackupWithReport`).
-- **Jeszcze nie zrobione:** testy gałęzi przekroczenia budżetu (użyć `attachmentBudget` w `fullBackup.test.ts`), raport w oknie przywracania. Do tego czasu zmiany są niezacommitowane.
-- **Testy:** Vitest 1467/1467 po zmianach. Typecheck czysty.
+- **Co robi:** raport kopii rozdziela pominięte bajty na trzy kategorie: załączniki notatek, zdjęcia dziennika i pliki budów (plany, PDF). Toast po zapisie kopii podaje każdą kategorię osobno. Plan nie jest już nazywany zdjęciem dziennika.
+- **Gdzie:** `src/lib/study/journalRefs.ts` (`siteDocRefsIn`), `src/lib/exportNotes.ts` (`collectAttachmentBlobs`, `describeSkippedAttachments`, pole `siteDocs` w `BackupAttachmentReport`, opcja `attachmentBudget` w `buildFullBackupWithReport`).
+- **Jak działa:** `collectAttachmentBlobs` bierze budżet z opcji (domyślnie `BACKUP_ATTACHMENTS_BUDGET_BYTES`, 40 MB). Każdy pominięty bajt z dziennika albo z kart budów liczy się w swojej kategorii; klucze dokumentów budów wyznacza `siteDocRefsIn` z `studySiteItems`.
+- **Ograniczenie:** raport nie jest jeszcze pokazany w oknie przywracania kopii.
+- **Testy:** `src/lib/fullBackup.test.ts` — przekroczenie budżetu (`attachmentBudget: 0`) rozdziela załącznik, zdjęcie dziennika i plan oraz składa komunikat; bez przekroczenia plan wchodzi do kopii i nie jest raportowany. Vitest 1469/1469, typecheck czysty.
+- **Commit:** 6a97a92 (kod), testy budżetu — w commicie z tym wpisem, 2026-10-19.

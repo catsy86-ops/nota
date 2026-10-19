@@ -178,6 +178,35 @@ describe("pełny backup v3 — załączniki", () => {
     expect(attachments.journalPhotos).toBe(1);
     expect(describeSkippedAttachments(attachments)).toContain("zdjęcia dziennika");
   });
+
+  it("przy przekroczonym budżecie liczy załączniki, zdjęcia dziennika i pliki budów osobno", async () => {
+    const att = await addFile("duzy.txt", "0123456789");
+    yjsStore.upsertNote(makeNote({ id: "z", attachments: [att] }));
+    const photo = await imageStore.putDataUrl("data:image/png;base64,AAAA");
+    yStudy.addEntry({ id: "j2", at: 1, kind: "ok", topic: null, text: "x", site: "", checked: [], images: [photo] });
+    const plan = await imageStore.putDataUrl("data:image/png;base64,BBBB");
+    yStudy.setSiteList("budowa-1", "docs", [{ id: plan, name: "rzut.png", size: 4, type: "image/png", at: 1 }], []);
+
+    // Budżet 0: nic nie wchodzi; każdy pominięty bajt trafia do swojej kategorii.
+    const { attachments } = await buildFullBackupWithReport({ attachmentBudget: 0 });
+    expect(attachments.tooLarge.map((a) => a.name)).toEqual(["duzy.txt"]);
+    expect(attachments.journalPhotos).toBe(1);
+    expect(attachments.siteDocs).toBe(1);
+    expect(describeSkippedAttachments(attachments)).toBe(
+      "Pominięte załączniki: 1 za duże na backup (limit 40 MB na wszystkie pliki). Zostaną w notatkach jako wpisy bez zawartości. " +
+      "Pominięte zdjęcia dziennika z budowy: 1 — zostaną tylko na tym urządzeniu. " +
+      "Pominięte pliki budów (plany, PDF): 1 — zostaną tylko na tym urządzeniu.",
+    );
+  });
+
+  it("bez przekroczenia budżetu pliki budów wchodzą do kopii i nie są raportowane", async () => {
+    const plan = await imageStore.putDataUrl("data:image/png;base64,CCCC");
+    yStudy.setSiteList("budowa-2", "docs", [{ id: plan, name: "plan.png", size: 4, type: "image/png", at: 1 }], []);
+    const { backup, attachments } = await buildFullBackupWithReport();
+    expect(Object.keys(backup.attachmentBlobs ?? {})).toContain(plan);
+    expect(attachments.siteDocs).toBeUndefined();
+    expect(describeSkippedAttachments(attachments)).toBeNull();
+  });
 });
 
 describe("Nauka w pełnej kopii", () => {
