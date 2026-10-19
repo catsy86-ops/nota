@@ -3681,4 +3681,4 @@ lub grupę”.
 - **Dlaczego priorytety:** przy kilku seriach dziennych zjadały limit i późniejsze serwisy przepadały bez śladu. Teraz przepadają najmniej ważne rodzaje, a użytkownik to widzi.
 - **Ograniczenia:** podsumowanie jest lokalne dla urządzenia i pojawia się po pierwszym wysłaniu harmonogramu. Liczy tylko wysłane z tego urządzenia.
 - **Testy:** `src/lib/push/schedule.limit.test.ts` (3: w limicie nic nie odpada; nad limitem odpada najpóźniejsze; notatki wypierają serwis z Praca), `src/lib/push/summary.test.ts` (2). E2E `push`, `bundle`: 8/8. Vitest 1457/1457. Typecheck czysty.
-- **Commit:** patrz następna linia.
+- **Commit:** a00bb21, 2026-10-19.
