@@ -3586,4 +3586,4 @@ lub grupę”.
 - **Gdzie jest:** `src/components/study/StudyView.tsx` — `TabsTrigger` z klasami `min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11`.
 - **Przyczyna:** „Lista kontrolna” z `whitespace-nowrap` nie mieściła się w czwartej części paska, więc przycisk „Dziennik” wychodził poza ekran o 2 px. Przez to cała strona była szersza od ekranu, a warstwy `fixed` (tło, dolny pasek, nakładki) dziedziczyły tę szerokość.
 - **Testy:** `e2e/mobile-layout.spec.ts`: 12/12 (wszystkie trasy przy 320 i 390 px, iPhone 14 i Pixel 7). Test `e2e/diagnostics.spec.ts`: w tym samym przebiegu sprawdzono tekst notatki przez nagłówek karty, a nie `getByText` (pole tytułu kompozytora ma tę samą treść, póki się zamyka). Vitest 1423/1423.
-- **Commit:** patrz następna linia.
+- **Commit:** 9a85c10, 2026-10-19.
