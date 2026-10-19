@@ -3706,7 +3706,7 @@ lub grupę”.
 - **Ograniczenie:** znaczniki są tylko w siatce miesiąca; widok tygodnia (`WeekStrip`) i „najbliższe dni” (`UpcomingDays`) ich nie pokazują. Dane Praca ładują się leniwie, więc do gotowości dokumentu kalendarz pokazuje brak znaczników i przelicza się po wczytaniu.
 - **Paczka:** kalendarz jest już leniwy; `useStudyDayMarks` wciąga `store.ts` Pracy do paczki kalendarza, a nie do startowej. Próg paczki startowej 387 KB bez zmian (`e2e/bundle.spec.ts`).
 - **Testy:** `src/lib/study/calendarMarks.test.ts` (liczenie po dniach, otwarte/zamknięte, dostawa po dacie, archiwum). E2E `reminders-calendar`, `reminders-agenda`, `reminder-toast` 17/17 po wszystkich krokach.
-- **Commit:** w commicie z tym wpisem, 2026-10-19.
+- **Commit:** 42e1c83, 2026-10-19.
 
 ## Praca — próba przed zakryciem z etapów karty (U1 planu Pracy, 2026-10-19)
 
