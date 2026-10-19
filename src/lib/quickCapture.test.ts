@@ -116,6 +116,17 @@ describe("priorytet", () => {
 });
 
 describe("data", () => {
+  it("tytuł z przyimkiem przed dniem („Lista na sobotę”) zachowuje całą frazę i nie ustawia przypomnienia", () => {
+    const { tokens, res } = run("", "Lista na sobotę");
+    expect(tokens).toHaveLength(0);
+    expect(res.title).toBe("Lista na sobotę");
+    expect(res.reminder).toBeNull();
+  });
+  it("tytuł bez przyimka nadal zamienia dzień w przypomnienie", () => {
+    const { res } = run("", "Zadzwonić jutro 9:00");
+    expect(res.title).toBe("Zadzwonić");
+    expect(res.reminder?.getDate()).toBe(7);
+  });
   it("rozpoznaje „jutro 9:00” na końcu i usuwa frazę", () => {
     const { tokens, res } = run("zadzwonić do lekarza jutro 9:00");
     expect(tokens.map((t) => t.kind)).toEqual(["date"]);

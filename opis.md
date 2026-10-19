@@ -3503,3 +3503,13 @@ lub grupę”.
 - **Jak działa:** na telefonie kafle w dwóch kolumnach; „Dyktuj” tylko tam, gdzie przeglądarka ma rozpoznawanie mowy. Kafel „Długi” dodany też do arkusza „Więcej” (sekcja „Przejdź do”).
 - **Ograniczenia:** zachowanie stuknięcia bez zmian — arkusz pokazuje się po przytrzymaniu lub z „Więcej → Dodaj…”. Podpowiedź o przytrzymaniu pojawia się po czwartym stuknięciu (jak dotąd).
 - **Testy:** typecheck czysty; pełny Vitest 1409/1409. Sprawdzone wizualnie w przeglądarce (telefon 390 px).
+
+## Notatki — rozpoznawanie fraz w kompozytorze (`quickCapture`, poprawka tytułu, 2026-10-19)
+
+- **Co robi:** w kompozytorze nowej notatki `#etykieta`, `@folder`, `!`/`!!` (priorytet) i frazy daty na końcu pola („jutro 9:00”, „za 2h”, „w piątek”) zamieniają się w cechy notatki, a ich tekst znika z pola.
+- **Gdzie jest:** `src/lib/quickCapture.ts` — `scanField` (rozpoznawanie), `applyCapture` (wycinanie tekstu), `PREPOSITION_BEFORE_RE`.
+- **Jak działa:** data na końcu pola to `DATE_END_RE`. W **tytule** nie jest traktowana jako termin, gdy stoi po przyimku (na, do, w, we, od, o, dla, przed, po). Dzięki temu „Lista na sobotę” zostaje tytułem bez przypomnienia. W **treści** zachowanie bez zmian: „zadzwonić do lekarza jutro 9:00” nadal ustawia przypomnienie i wycina frazę.
+- **Ograniczenia:** „Spotkanie w piątek” w tytule też nie ustawi przypomnienia (świadoma decyzja, plan: `docs/plan-notatki-2026-10-19.md`, opcja A). Tytuł bez przyimka („Zadzwonić jutro 9:00”) nadal zamienia datę w przypomnienie i wycina ją z tytułu.
+- **Błąd naprawiony:** kompozytor zapisywał „Lista na sobotę” jako „Lista na” z przypomnieniem na sobotę.
+- **Testy:** `src/lib/quickCapture.test.ts` (38, w tym trzy nowe dla tytułu). Sprawdzone w prawdziwym Chrome (puppeteer-core, `scratchpad/test-chrome.mjs`): karta ma tytuł „Lista na sobotę”.
+- **Commit:** patrz następna linia.

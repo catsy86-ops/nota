@@ -98,6 +98,9 @@ const DATE_END_RE = new RegExp(
   `(?:^|\\s)(za\\s+\\d+\\s*(?:godz(?:in[aey]?)?|h|min(?:ut[aey]?)?|m|dni|dzien)|${DAY_WORD}(?:\\s+\\d{1,2}[:.]\\d{2})?|\\d{1,2}:\\d{2})$`,
 );
 
+/** Przyimek tuż przed frazą daty („Lista na sobotę”): to część zdania w tytule, a nie termin. */
+const PREPOSITION_BEFORE_RE = /(?:^|\s)(?:na|do|we?|od|o|dla|przed|po)\s*$/;
+
 /** Rozpoznaje tokeny w jednym polu. Pozycje odnoszą się do `text`. */
 function scanField(text: string, field: CaptureField, ctx: CaptureContext): CaptureToken[] {
   const out: CaptureToken[] = [];
@@ -162,7 +165,9 @@ function scanField(text: string, field: CaptureField, ctx: CaptureContext): Capt
       const start = trimmedEnd - m[1].length;
       const raw = head.slice(start);
       const date = parseNaturalDate(raw, now);
-      if (date && !inRanges(start, code)) {
+      // W tytule przyimek przed datą zostawia frazę w tekście („na sobotę” nie ustawia przypomnienia).
+      const afterPreposition = field === "title" && PREPOSITION_BEFORE_RE.test(plain(head.slice(0, start)));
+      if (date && !inRanges(start, code) && !afterPreposition) {
         out.push({ kind: "date", field, start, end: trimmedEnd, raw, date, key: `date:${plain(raw)}` });
       }
     }
