@@ -3888,4 +3888,4 @@ lub grupę”.
   - `src/lib/study/recordings.test.ts` — `cleanRecordings` (typy, klucze, rozmiary, limit), wpis z samym nagraniem, `journalRefsIn` (także tryb sync do 2 MB), limit w `addRecording`.
   - `e2e/bundle.spec.ts` — budżet startowej paczki zielony po dodaniu nagrań.
   - Nagrywania w przeglądarce (mikrofon) nie testowano e2e — brak fake mikrofonu w zestawie; wymaga ręcznego sprawdzenia na telefonie.
-- **Commit:** 5581ece, 2026-10-19.
+- **Commit:** 5581ece, 2026-10-19; poprawka raportu kopii f6867bd, 2026-10-19.
