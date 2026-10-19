@@ -234,10 +234,10 @@ function StudyScreen() {
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="h-auto w-full sm:w-auto">
-          <TabsTrigger value="quiz" className="flex-1 sm:flex-none coarse:min-h-11">Quiz</TabsTrigger>
-          <TabsTrigger value="board" className="flex-1 sm:flex-none coarse:min-h-11">Tablica</TabsTrigger>
-          <TabsTrigger value="list" className="flex-1 sm:flex-none coarse:min-h-11">Lista kontrolna</TabsTrigger>
-          <TabsTrigger value="journal" className="flex-1 sm:flex-none coarse:min-h-11">Dziennik</TabsTrigger>
+          <TabsTrigger value="quiz" className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11">Quiz</TabsTrigger>
+          <TabsTrigger value="board" className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11">Tablica</TabsTrigger>
+          <TabsTrigger value="list" className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11">Lista kontrolna</TabsTrigger>
+          <TabsTrigger value="journal" className="min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11">Dziennik</TabsTrigger>
         </TabsList>
         {/* forceMount: runda w toku nie ginie po zajrzeniu do tablicy lub listy. */}
         <TabsContent value="quiz" forceMount className="mt-4 data-[state=inactive]:hidden">

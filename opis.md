@@ -3579,3 +3579,11 @@ lub grupę”.
 - **Ograniczenia:** w trybie bez localStorage (prywatne okno) podpowiedzi nie ma — tak jak wcześniej. Komunikat wisi 6 s; w tym czasie kolejne stuknięcia go nie powtarzają.
 - **Testy:** osobny skrypt z czystym profilem (`scratchpad/fab.mjs`): po pierwszym stuknięciu komunikat jest, po ponownym (po zniknięciu tostu) już nie. E2E `mobile`: 44/44. Vitest 1423/1423.
 - **Commit:** 2cafa53, 2026-10-19.
+
+## Praca — zakładki na 320 px bez przelewania strony (poprawka, 2026-10-19)
+
+- **Co robi:** na wąskich telefonach (320 px) cztery zakładki Pracy (Quiz, Tablica, Lista kontrolna, Dziennik) mieszczą się w szerokości ekranu. Etykiety zawijają się w dwie linie zamiast rozpychać pasek. Od 640 px (`sm`) zakładki wyglądają jak dotąd, w jednej linii.
+- **Gdzie jest:** `src/components/study/StudyView.tsx` — `TabsTrigger` z klasami `min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11`.
+- **Przyczyna:** „Lista kontrolna” z `whitespace-nowrap` nie mieściła się w czwartej części paska, więc przycisk „Dziennik” wychodził poza ekran o 2 px. Przez to cała strona była szersza od ekranu, a warstwy `fixed` (tło, dolny pasek, nakładki) dziedziczyły tę szerokość.
+- **Testy:** `e2e/mobile-layout.spec.ts`: 12/12 (wszystkie trasy przy 320 i 390 px, iPhone 14 i Pixel 7). Test `e2e/diagnostics.spec.ts`: w tym samym przebiegu sprawdzono tekst notatki przez nagłówek karty, a nie `getByText` (pole tytułu kompozytora ma tę samą treść, póki się zamyka). Vitest 1423/1423.
+- **Commit:** patrz następna linia.

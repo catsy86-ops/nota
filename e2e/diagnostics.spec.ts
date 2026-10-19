@@ -11,7 +11,8 @@ test("raport diagnostyczny pobiera się bez treści notatek @smoke", async ({ pa
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(secret);
   await page.getByRole("button", { name: "Zapisz", exact: true }).click();
-  await expect(page.getByText(secret)).toBeVisible();
+  // Nagłówek karty: pole tytułu kompozytora (textarea) też ma tę treść, póki zamyka się animacją.
+  await expect(page.getByRole("heading", { name: secret, exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "Ustawienia" }).first().click();
   await page.getByRole("tab", { name: "Ogólne" }).click();
