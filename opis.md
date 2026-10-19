@@ -3890,7 +3890,7 @@ lub grupę”.
   - Nagrywania w przeglądarce (mikrofon) nie testowano e2e — brak fake mikrofonu w zestawie; wymaga ręcznego sprawdzenia na telefonie.
 - **Commit:** 5581ece, 2026-10-19; poprawka raportu kopii f6867bd, 2026-10-19.
 
-## Ustawienia — dopracowanie, faza 1 (2026-10-19, bez commita)
+## Ustawienia — dopracowanie, faza 1 (2026-10-19, cb2ecff)
 
 - **Co robi:** okno Ustawienia (cztery karty: Wygląd, Ogólne, Dane, Sync) jest bardziej bezpieczne i dostępne. Reset „Przywróć domyślne” w Wyglądzie i „Zapomnij i zacznij od nowa” w Sync pytają najpierw o potwierdzenie. Reset nadal kasuje cały widok (decyzja właściciela), a potwierdzenie wymienia, co wróci do domyślnych, i czego reset nie dotyczy. Przełączniki mają nazwę dla czytników ekranu. Opis okna nie obiecuje już, że wszystko działa tylko w tej przeglądarce.
 - **Gdzie jest:**
@@ -3912,4 +3912,4 @@ lub grupę”.
 - **Testy:**
   - `src/lib/settingsPrefs.test.ts` — uszkodzony JSON i tekst zamiast obiektu w `viewPrefs`, częściowy zapis, reset, `confirmPrefs` (domyślne, uszkodzony JSON, zapis jednego klucza), `normalizePushServer` (ukośnik, http dla zdalnego hosta, localhost, pusty tekst).
   - E2e (chromium, 106 testów): `mobile`, `skins`, `clipper`, `push`, `diagnostics`, `sync-code`, `search-backup`, `private-notes`, `shifts`, `a11y`, `toggle-group`, `site-mode`, `card-motion` — zielone.
-- **Commit:** —
+- **Commit:** cb2ecff, 2026-10-19.
