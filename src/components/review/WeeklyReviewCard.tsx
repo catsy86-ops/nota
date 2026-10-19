@@ -196,7 +196,7 @@ export function WeeklyReviewCard(a: WeeklyReviewActions) {
         aria-label="Przegląd tygodnia"
         data-testid="weekly-review"
         className={cn(
-          "relative rounded-2xl border border-primary/25 bg-card p-4 sm:p-5 pl-5 sm:pl-6",
+          "relative rounded-card border border-primary/25 bg-card p-4 sm:p-5 pl-5 sm:pl-6",
           "border-l-4 border-l-primary/50 shadow-sm",
         )}
       >

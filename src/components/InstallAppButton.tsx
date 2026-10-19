@@ -89,7 +89,7 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
       <button
         onClick={handleClick}
         className={cn(
-          "pressable relative flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-muted/50 hover:bg-muted transition-colors border border-border/50",
+          "pressable relative flex flex-col items-center gap-1.5 p-3 rounded-card bg-muted/50 hover:bg-muted transition-colors border border-border/50",
           className
         )}
       >

@@ -130,7 +130,7 @@ export function NoteTable({ notes, folders, sortKey, sortDir, onOpen, selectedId
   ];
 
   return (
-    <div className="overflow-x-auto rounded-2xl border border-border/60 bg-card/60">
+    <div className="overflow-x-auto rounded-card border border-border/60 bg-card/60">
       <table className="w-full text-sm" data-note-table>
         <thead>
           <tr className="border-b border-border/60 text-left text-2xs uppercase tracking-wider text-muted-foreground">

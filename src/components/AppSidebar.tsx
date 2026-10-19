@@ -125,10 +125,10 @@ export function AppSidebar({
                 <button
                   type="button"
                   onClick={onLogoClick}
-                  className="pressable relative shrink-0 grid place-items-center w-12 h-12 rounded-2xl bg-linear-to-br from-primary/15 via-accent/10 to-transparent ring-1 ring-border/60"
+                  className="pressable relative shrink-0 grid place-items-center w-12 h-12 rounded-card bg-linear-to-br from-primary/15 via-accent/10 to-transparent ring-1 ring-border/60"
                   aria-label="NOTKI"
                 >
-                  <div className="absolute inset-0 rounded-2xl bg-primary/20 blur-lg opacity-70 -z-10" />
+                  <div className="absolute inset-0 rounded-card bg-primary/20 blur-lg opacity-70 -z-10" />
                   <NMonogramLogo />
                 </button>
                 <div>

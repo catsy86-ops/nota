@@ -463,7 +463,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
         e.stopPropagation();
         setExpanded(false);
       }} data-note-color={expanded && color !== "default" ? color : undefined}
-      className={cn("w-full max-w-xl rounded-2xl note-shadow border border-border overflow-hidden transition-[box-shadow,background-color] focus-ring-gradient hover:shadow-elevation-3",
+      className={cn("w-full max-w-xl rounded-card note-shadow border border-border overflow-hidden transition-[box-shadow,background-color] focus-ring-gradient hover:shadow-elevation-3",
         // Kolor schowany pod ikoną palety — edytor przyjmuje go od razu, żeby było widać wybór.
         expanded && color !== "default" ? colorClasses[color] : "bg-card", !expanded && "max-md:hidden",
         fullScreen && "fixed inset-x-0 top-0 bottom-(--kb-inset,0px) z-50 max-w-none rounded-none border-0 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]")}>

@@ -117,7 +117,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
   if (result && round) {
     const percent = Math.round((result.correct / round.length) * 100);
     return (
-      <section aria-label="Wynik rundy" className="rounded-2xl border border-border bg-card p-5 sm:p-7 space-y-5">
+      <section aria-label="Wynik rundy" className="rounded-card border border-border bg-card p-5 sm:p-7 space-y-5">
         <div className="flex items-end gap-4">
           <p className="font-mono text-6xl font-semibold leading-none tabular-nums text-primary-ink">{result.correct}<span className="text-2xl text-muted-foreground">/{round.length}</span></p>
           <p className="pb-1 text-sm text-muted-foreground">
@@ -164,7 +164,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
 
   if (!round || !current) {
     return (
-      <section aria-label="Quiz" className="rounded-2xl border border-border bg-card p-5 sm:p-7 space-y-4">
+      <section aria-label="Quiz" className="rounded-card border border-border bg-card p-5 sm:p-7 space-y-4">
         <h2 className="font-display text-xl">Sprawdź, co umiesz</h2>
         <p className="text-sm text-muted-foreground max-w-prose">
           {ROUND_SIZE} pytań z poradnika, list kontrolnych i Twoich własnych. Najpierw wypadają tematy, których jeszcze nie masz w kolumnie „Umiem”.
@@ -203,7 +203,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
 
   const answered = picked !== null;
   return (
-    <section aria-label="Quiz" className="rounded-2xl border border-border bg-card p-5 sm:p-7 space-y-5">
+    <section aria-label="Quiz" className="rounded-card border border-border bg-card p-5 sm:p-7 space-y-5">
       <div className="flex items-center justify-between gap-3 text-xs">
         <span className="font-mono tabular-nums text-muted-foreground">Pytanie {index + 1} z {round.length}</span>
         <span className="rounded-full bg-muted px-2.5 py-0.5 text-muted-foreground truncate">

@@ -11,7 +11,7 @@ export function InboxCapture({ onCapture }: { onCapture: (title: string, content
   const [text, setText] = useState("");
   return (
     <form
-      className="flex items-center gap-2 rounded-2xl border border-border bg-card px-3 py-2"
+      className="flex items-center gap-2 rounded-card border border-border bg-card px-3 py-2"
       onSubmit={(e) => {
         e.preventDefault();
         const parts = captureParts(text);

@@ -50,7 +50,7 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
           transition={spring.soft}
           // Telefon: akcje zawijają się w drugi rząd — przy celach 44 px nie mieszczą się w 390 px,
           // a przewijany w bok pasek chował archiwum i kosz poza ekranem (e2e/mobile-layout.spec.ts).
-          className="pointer-events-auto flex max-w-full items-center gap-1 overflow-x-auto rounded-2xl border border-border/60 bg-card/95 backdrop-blur-md shadow-2xl px-3 py-2 *:shrink-0 max-sm:flex-wrap max-sm:justify-center max-sm:overflow-visible max-sm:px-2"
+          className="pointer-events-auto flex max-w-full items-center gap-1 overflow-x-auto rounded-card border border-border/60 bg-card/95 backdrop-blur-md shadow-2xl px-3 py-2 *:shrink-0 max-sm:flex-wrap max-sm:justify-center max-sm:overflow-visible max-sm:px-2"
         >
           <IconButton onClick={onClear} title="Wyczyść zaznaczenie" aria-label="Wyczyść zaznaczenie">
             <X className="w-4 h-4" />

@@ -189,7 +189,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
           />
         ) : (
           <>
-            <div className="mb-4 space-y-2 xl:col-start-2 xl:row-span-3 xl:row-start-1 xl:mb-0 xl:sticky xl:top-24 xl:self-start xl:rounded-2xl xl:border xl:border-border/60 xl:bg-card xl:p-4 xl:shadow-elevation-1" role="search" aria-label="Filtry dziennika">
+            <div className="mb-4 space-y-2 xl:col-start-2 xl:row-span-3 xl:row-start-1 xl:mb-0 xl:sticky xl:top-24 xl:self-start xl:rounded-card xl:border xl:border-border/60 xl:bg-card xl:p-4 xl:shadow-elevation-1" role="search" aria-label="Filtry dziennika">
               <h4 className="hidden xl:block text-xs font-semibold uppercase tracking-wider text-muted-foreground">Filtry</h4>
               <label className="relative block">
                 <span className="sr-only">Szukaj w dzienniku</span>

@@ -34,14 +34,14 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
               whileHover={{ y: -3 }}
               whileTap={{ scale: 0.96 }}
               transition={spring.snap}
-              className="group relative rounded-2xl p-1.5 text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              className="group relative rounded-card p-1.5 text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             >
               {active && (
                 <motion.span
                   layoutId="skin-active"
                   transition={spring.soft}
                   aria-hidden
-                  className="absolute inset-0 rounded-2xl border-2 border-primary bg-primary/5"
+                  className="absolute inset-0 rounded-card border-2 border-primary bg-primary/5"
                 />
               )}
               <span

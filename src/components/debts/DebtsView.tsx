@@ -40,7 +40,7 @@ export function DebtsView() {
 
 function Summary({ owedToMe, iOwe }: { owedToMe: number; iOwe: number }) {
   return (
-    <div className="grid grid-cols-2 gap-3 rounded-2xl border border-border/70 bg-card p-4 shadow-elevation-up" role="group" aria-label="Podsumowanie">
+    <div className="grid grid-cols-2 gap-3 rounded-card border border-border/70 bg-card p-4 shadow-elevation-up" role="group" aria-label="Podsumowanie">
       <div>
         <p className="text-xs text-muted-foreground">Są nam winni</p>
         <p className="mt-1 font-display text-xl font-bold tabular-nums text-success-ink" data-testid="debts-owed">{formatAmount(owedToMe)}</p>
@@ -84,7 +84,7 @@ function AddForm({ entries }: { entries: DebtEntry[] }) {
   };
 
   return (
-    <form onSubmit={submit} noValidate aria-label="Nowy wpis" className="mb-6 space-y-4 rounded-2xl border border-border/70 bg-card p-4">
+    <form onSubmit={submit} noValidate aria-label="Nowy wpis" className="mb-6 space-y-4 rounded-card border border-border/70 bg-card p-4">
       <div role="radiogroup" aria-label="Rodzaj wpisu" className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
         {(["lent", "repaid"] as const).map((k) => {
           const selected = kind === k;
@@ -164,7 +164,7 @@ function AddForm({ entries }: { entries: DebtEntry[] }) {
 function People({ people, onOpen }: { people: PersonDebts[]; onOpen: (key: string) => void }) {
   if (people.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+      <div className="rounded-card border border-dashed border-border p-8 text-center">
         <p className="font-display text-lg font-semibold">Jeszcze nikogo tu nie ma</p>
         <p className="mt-1 text-sm text-muted-foreground">Dodaj pierwszą pożyczkę powyżej — zobaczysz od razu, kto ile jest winien.</p>
       </div>
@@ -182,7 +182,7 @@ function People({ people, onOpen }: { people: PersonDebts[]; onOpen: (key: strin
             <button
               type="button"
               onClick={() => onOpen(p.key)}
-              className="pressable group w-full rounded-2xl border border-border/70 bg-card p-4 text-left transition-colors hover:border-primary/50 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              className="pressable group w-full rounded-card border border-border/70 bg-card p-4 text-left transition-colors hover:border-primary/50 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             >
               <div className="flex items-baseline justify-between gap-3">
                 <span className="font-display text-base font-semibold truncate">{p.name}</span>

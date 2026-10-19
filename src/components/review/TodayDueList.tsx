@@ -27,7 +27,7 @@ export function TodayDueList({ notes, onOpen, onOpenReminders }: { notes: Note[]
   const total = groups.reduce((n, g) => n + g.notes.length, 0);
 
   return (
-    <section aria-label="Zaległe i dziś" data-testid="today-due" className="rounded-2xl border border-border bg-card p-4 sm:p-5 space-y-3">
+    <section aria-label="Zaległe i dziś" data-testid="today-due" className="rounded-card border border-border bg-card p-4 sm:p-5 space-y-3">
       <div className="flex items-center justify-between gap-3">
         <h2 className="section-label gap-2">
           <BellRing className="h-3.5 w-3.5" aria-hidden />

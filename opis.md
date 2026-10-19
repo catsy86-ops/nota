@@ -3603,3 +3603,10 @@ lub grupę”.
 - **Dlaczego:** po funkcjach Długów, pasku „+” i poprawkach pustych stanów paczka startowa ma 385,4 KB. Właściciel projektu zdecydował o podniesieniu progu zamiast przenoszenia arkusza „Nowa” do leniwego modułu.
 - **Testy:** `e2e/bundle.spec.ts`: 6/6.
 - **Commit:** edec40f, 2026-10-19.
+
+## Wspólne — promień z tokenu `rounded-card` zamiast `rounded-2xl` (2026-10-19)
+
+- **Co zmieniono:** 51 wystąpień `rounded-2xl` w 36 plikach `src` (bez testów) zamieniono na `rounded-card`.
+- **Dlaczego:** token `--r-card` (`src/index.css`) to 1 rem we wszystkich stylach, tyle samo co `rounded-2xl`. Zmiana nie zmienia wyglądu, a promienie kart mają jedno źródło prawdy.
+- **Testy:** Vitest 1424/1424, typecheck czysty, Chrome: promień kafla 16 px (30/30 sprawdzeń).
+- **Commit:** patrz następna linia.

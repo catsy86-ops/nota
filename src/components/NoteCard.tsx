@@ -397,7 +397,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           // Przewinięcie czegokolwiek w oknie (treść, lista, podgląd) — zdarzenie `scroll` nie bąbelkuje.
           onScrollCapture={(e) => setEditorScrolled((e.target as HTMLElement).scrollTop > 0)}
           // Telefon: od krawędzi do krawędzi, bez prześwitu nawigacji; od `sm` okno.
-          className="w-full max-w-3xl h-[calc(100dvh-var(--kb-inset,0px))] max-sm:top-0 max-sm:translate-y-0 rounded-none border-0 p-4 pt-[max(1rem,env(safe-area-inset-top))] flex flex-col sm:w-[calc(100vw-2rem)] sm:h-[85vh] sm:rounded-2xl sm:border sm:p-6"
+          className="w-full max-w-3xl h-[calc(100dvh-var(--kb-inset,0px))] max-sm:top-0 max-sm:translate-y-0 rounded-none border-0 p-4 pt-[max(1rem,env(safe-area-inset-top))] flex flex-col sm:w-[calc(100vw-2rem)] sm:h-[85vh] sm:rounded-card sm:border sm:p-6"
           // Esc przy otwartych podpowiedziach `[[` chowa listę, nie zamyka edytora.
           onEscapeKeyDown={(e) => { if (slash.isOpen) { e.preventDefault(); slash.dismiss(); } else if (wiki.isOpen) { e.preventDefault(); wiki.dismiss(); } }}
         >

@@ -14,7 +14,7 @@ export const STUDY_DUE_PARAM = "powtorka";
 export function TodayStudyCardView({ due, onPractice }: { due: number; onPractice: () => void }) {
   if (due <= 0) return null;
   return (
-    <section aria-label="Powtórki na dziś" data-testid="today-study" className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+    <section aria-label="Powtórki na dziś" data-testid="today-study" className="rounded-card border border-border bg-card p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="flex min-w-0 items-center gap-2 text-sm sm:text-base">
           <GraduationCap className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />

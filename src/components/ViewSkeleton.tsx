@@ -33,7 +33,7 @@ function MonthGrid() {
 export function CardSkeleton() {
   return (
     <div aria-hidden className="view-skeleton">
-      <Bone className="h-24 w-full rounded-2xl" />
+      <Bone className="h-24 w-full rounded-card" />
     </div>
   );
 }

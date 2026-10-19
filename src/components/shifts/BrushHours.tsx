@@ -63,7 +63,7 @@ export function BrushHours({ type, hours, onChange }: BrushHoursProps) {
   }
 
   return (
-    <section aria-label={`Własne godziny dla zmiany ${type.name}`} className="rounded-2xl border border-border/60 bg-card/50 p-3 space-y-2.5">
+    <section aria-label={`Własne godziny dla zmiany ${type.name}`} className="rounded-card border border-border/60 bg-card/50 p-3 space-y-2.5">
       <div className="flex flex-wrap items-end gap-2">
         <div className="w-40"><TimeStepper id="brush-start" label="Od" value={draft.start} onChange={(v) => edit({ start: v })} /></div>
         <div className="w-40"><TimeStepper id="brush-end" label="Do" value={draft.end} onChange={(v) => edit({ end: v })} /></div>

@@ -41,7 +41,7 @@ const SortableNoteCard = memo(function SortableNoteCard({ layout, note, index, s
       ref={setNodeRef}
       style={style}
       className={cn(
-        "rounded-2xl transition-[box-shadow,opacity,outline-color] duration-fast outline-solid outline-2 outline-offset-2 outline-transparent",
+        "rounded-card transition-[box-shadow,opacity,outline-color] duration-fast outline-solid outline-2 outline-offset-2 outline-transparent",
         // Siatka: kafel wypełnia wysokość wiersza — bez tego niższe kafle zostawiały dziury pod sobą.
         layout === "grid" && "h-full [&>div]:h-full [&>div>.note-card]:h-full",
         isDragging && "opacity-90 shadow-elevation-3",
@@ -227,7 +227,7 @@ const GridItem = memo(forwardRef<HTMLDivElement, SortableNoteCardProps & { rowGa
       data-note-id-wrap={note.id}
       onClickCapture={() => setGridNavFocus(note.id)}
       className={cn(
-        "note-lift rounded-2xl transition-shadow",
+        "note-lift rounded-card transition-shadow",
         note.wide && layout !== "list" && "sm:col-span-2",
         wideEditing && "sm:has-data-tile-editing:col-span-2",
         // Odstęp pionowy mozaiki jako margines opakowania — `useMasonrySpans` wlicza go w wysokość.

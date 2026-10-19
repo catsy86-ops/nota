@@ -192,7 +192,7 @@ export function StudyBoard({ onPractice, onJournal }: { onPractice: (topicId: st
         {COLUMNS.map((col) => {
           const topics = TOPICS.filter((t) => columnOf(study, t.id) === col);
           return (
-            <section key={col} aria-label={COLUMN_LABEL[col]} className={cn("rounded-2xl bg-muted/40 p-3", col !== phoneCol && "max-md:hidden")}>
+            <section key={col} aria-label={COLUMN_LABEL[col]} className={cn("rounded-card bg-muted/40 p-3", col !== phoneCol && "max-md:hidden")}>
               <header className="px-1 pb-2.5">
                 <h3 className="flex items-baseline gap-2 font-display text-base">
                   {COLUMN_LABEL[col]}

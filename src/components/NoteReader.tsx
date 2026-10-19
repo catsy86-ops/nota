@@ -248,7 +248,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
         data-state={present ? "open" : undefined}
         data-reader-mode={mode}
         className={cn(
-          "pointer-events-auto flex flex-col rounded-2xl border border-border/60 bg-card/95 backdrop-blur-md shadow-2xl",
+          "pointer-events-auto flex flex-col rounded-card border border-border/60 bg-card/95 backdrop-blur-md shadow-2xl",
           present ? "w-[min(56rem,95vw)] h-[90dvh]" : "w-full max-w-2xl max-h-[80dvh]",
         )}
         onClick={(e) => e.stopPropagation()}

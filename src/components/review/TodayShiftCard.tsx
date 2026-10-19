@@ -22,7 +22,7 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote }: { onOpenShifts: ()
   else shift = "Zaplanowana zmiana (rodzaj usunięty).";
 
   return (
-    <section aria-label="Dziś" data-testid="today-card" className="rounded-2xl border border-border bg-card p-4 sm:p-5">
+    <section aria-label="Dziś" data-testid="today-card" className="rounded-card border border-border bg-card p-4 sm:p-5">
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{dateLabel}</p>
       <div className="mt-1.5 flex flex-wrap items-center justify-between gap-3">
         <p className="min-w-0 text-sm sm:text-base" data-testid="today-shift">

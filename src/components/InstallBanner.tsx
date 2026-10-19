@@ -32,7 +32,7 @@ export function InstallBanner({ ready }: { ready: boolean }) {
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, height: 0 }}
-          className="md:hidden flex items-center gap-2.5 rounded-2xl border border-primary/25 bg-primary/5 py-2 pl-3 pr-1.5"
+          className="md:hidden flex items-center gap-2.5 rounded-card border border-primary/25 bg-primary/5 py-2 pl-3 pr-1.5"
         >
           <span className="w-8 h-8 shrink-0 rounded-xl bg-primary/15 text-primary-ink grid place-items-center">
             <Smartphone className="w-4 h-4" />

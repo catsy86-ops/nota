@@ -39,7 +39,7 @@ export function BoardColumn({ columnKey, label, count, droppable = true, childre
       aria-label={typeof label === "string" ? label : undefined}
       className={cn(
         BOARD_COLUMN_WIDTH,
-        "shrink-0 snap-start rounded-2xl border border-border/60 bg-muted/30 p-2.5 transition-colors duration-fast",
+        "shrink-0 snap-start rounded-card border border-border/60 bg-muted/30 p-2.5 transition-colors duration-fast",
         isOver && "border-primary/50 bg-primary/5",
       )}
     >

@@ -51,7 +51,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
 
   return (
     // Kartka z lekkim cieniem zamiast szarej plamy — grupa ikon siedzi na papierze jak przycisk w zeszycie.
-    <div className="flex items-center gap-0.5 p-0.5 sm:p-1 rounded-2xl bg-card/80 border border-border/60 shadow-elevation-1">
+    <div className="flex items-center gap-0.5 p-0.5 sm:p-1 rounded-card bg-card/80 border border-border/60 shadow-elevation-1">
       {/* Layout — na telefonie arkusz od dołu z opisanymi opcjami, na desktopie menu */}
       {isMobile ? (
         <>

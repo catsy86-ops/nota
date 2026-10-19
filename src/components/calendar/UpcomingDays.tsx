@@ -45,7 +45,7 @@ export function UpcomingDays({ notes, titleOf, shiftOf, onSelectDay }: UpcomingD
             type="button"
             onClick={() => onSelectDay(day)}
             style={{ "--i": i } as React.CSSProperties}
-            className="rise-in min-w-0 text-left rounded-2xl border border-border/50 bg-card p-2.5 sm:p-3 transition-colors [@media(hover:hover)]:hover:border-primary/40"
+            className="rise-in min-w-0 text-left rounded-card border border-border/50 bg-card p-2.5 sm:p-3 transition-colors [@media(hover:hover)]:hover:border-primary/40"
           >
             <span className="flex items-baseline gap-2">
               <span className="font-display font-semibold text-sm">{i === 0 ? "Dziś" : "Jutro"}</span>

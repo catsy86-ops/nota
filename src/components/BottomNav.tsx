@@ -276,7 +276,7 @@ function QuickTile({ Icon, title, hint, tone, onClick }: { Icon: React.Component
     <button
       type="button"
       onClick={onClick}
-      className="pressable group flex items-center gap-3 rounded-2xl border border-border/60 bg-card p-3.5 text-left transition-colors hover:border-primary/40 hover:bg-muted/40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+      className="pressable group flex items-center gap-3 rounded-card border border-border/60 bg-card p-3.5 text-left transition-colors hover:border-primary/40 hover:bg-muted/40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
     >
       <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-xl transition-transform duration-200 group-hover:-rotate-6 motion-reduce:transition-none", QUICK_TONE[tone])} aria-hidden>
         <Icon className="h-5 w-5" />
@@ -300,7 +300,7 @@ const SheetTile = forwardRef<HTMLButtonElement, SheetTileProps>(function SheetTi
       {...rest}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "pressable relative flex flex-col items-center gap-1.5 p-3 rounded-2xl border outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+        "pressable relative flex flex-col items-center gap-1.5 p-3 rounded-card border outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
         active ? "bg-primary/10 border-primary/40" : "bg-muted/50 hover:bg-muted border-border/50",
       )}
     >

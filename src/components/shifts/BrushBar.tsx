@@ -70,11 +70,11 @@ export function BrushBar({ types, brush, onBrush, onEditType, onAddType, onPatte
       className={cn("flex gap-2 overflow-x-auto py-1.5 -mx-4 px-4 sm:-mx-1 sm:px-1 sm:flex-wrap sm:overflow-visible short:flex-nowrap! short:overflow-x-auto!",
         moreRight && "mask-[linear-gradient(to_right,black_calc(100%-2.5rem),transparent)] sm:mask-none short:mask-[linear-gradient(to_right,black_calc(100%-2.5rem),transparent)]!")}>
       <button type="button" onClick={onPattern}
-        className={cn("pressable shrink-0 flex items-center gap-1.5 px-3 h-12 rounded-2xl border border-border/60 bg-card hover:bg-muted text-sm font-medium font-display", focusRing)}>
+        className={cn("pressable shrink-0 flex items-center gap-1.5 px-3 h-12 rounded-card border border-border/60 bg-card hover:bg-muted text-sm font-medium font-display", focusRing)}>
         <Repeat className="w-4 h-4" /> Cykl
       </button>
       <button type="button" onClick={onAddType} aria-label="Dodaj rodzaj zmiany"
-        className={cn("pressable shrink-0 w-12 h-12 rounded-2xl border border-dashed border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted", focusRing)}>
+        className={cn("pressable shrink-0 w-12 h-12 rounded-card border border-dashed border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted", focusRing)}>
         <Plus className="w-5 h-5" />
       </button>
       <span aria-hidden className="w-px shrink-0 bg-border/70 my-2" />
@@ -98,7 +98,7 @@ interface RadioProps {
 function ToolButton({ active, radio, onClick, Icon, label }: { active: boolean; radio: RadioProps; onClick: () => void; Icon: React.ComponentType<{ className?: string }>; label: string }) {
   return (
     <button type="button" role="radio" aria-checked={active} onClick={onClick} ref={radio.ref} tabIndex={radio.tabIndex}
-      className={cn("pressable relative shrink-0 flex items-center justify-center gap-1.5 px-3 max-sm:px-0 max-sm:w-12 h-12 rounded-2xl border text-sm font-medium font-display", focusRing,
+      className={cn("pressable relative shrink-0 flex items-center justify-center gap-1.5 px-3 max-sm:px-0 max-sm:w-12 h-12 rounded-card border text-sm font-medium font-display", focusRing,
         active ? "border-foreground/50 bg-muted" : "border-border/60 bg-card hover:bg-muted")}>
       <Icon className="w-4 h-4" /> <span className="max-sm:sr-only">{label}</span>
     </button>
@@ -108,7 +108,7 @@ function ToolButton({ active, radio, onClick, Icon, label }: { active: boolean; 
 function BrushChip({ type, active, radio, onClick, onEdit }: { type: ShiftType; active: boolean; radio: RadioProps; onClick: () => void; onEdit: () => void }) {
   const absence = type.kind === "absence";
   return (
-    <div className={cn("shrink-0 flex items-center rounded-2xl border transition-colors",
+    <div className={cn("shrink-0 flex items-center rounded-card border transition-colors",
       active ? "border-transparent ring-2 ring-offset-2 ring-offset-background" : "border-border/60 bg-card")}
       style={active ? { backgroundColor: `${type.color}22`, ["--tw-ring-color" as string]: type.color } : undefined}>
       <button type="button" role="radio" aria-checked={active} onClick={onClick} ref={radio.ref} tabIndex={radio.tabIndex}

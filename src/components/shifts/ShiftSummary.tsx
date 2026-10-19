@@ -89,7 +89,7 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
       <LeaveMeter balance={balance} />
 
       {summary.shortRests.length > 0 && (
-        <div role="note" className="flex gap-2.5 rounded-2xl bg-destructive/10 px-3 py-2.5 text-sm">
+        <div role="note" className="flex gap-2.5 rounded-card bg-destructive/10 px-3 py-2.5 text-sm">
           <TriangleAlert className="w-4 h-4 text-destructive-ink shrink-0 mt-0.5" aria-hidden />
           <p>
             <span className="font-semibold">Za krótki odpoczynek</span>{" "}
@@ -135,7 +135,7 @@ function PeriodProgress({ period }: { period: PeriodSummary }) {
   const range = `${monthName(period.year, period.startMonth, "LLL")}–${monthName(period.year, last, "LLL yyyy")}`;
   const share = Math.min(1, period.minutes / Math.max(1, period.normMinutes));
   return (
-    <div className="rounded-2xl bg-muted/50 px-3 py-2.5 space-y-1.5 text-sm">
+    <div className="rounded-card bg-muted/50 px-3 py-2.5 space-y-1.5 text-sm">
       <p className="flex justify-between gap-3 flex-wrap">
         <span className="text-muted-foreground">Okres {range}</span>
         <span className="tabular-nums font-semibold">
@@ -157,7 +157,7 @@ function PeriodProgress({ period }: { period: PeriodSummary }) {
 
 function Stat({ label, value, accent = false, hint }: { label: string; value: ReactNode; accent?: boolean; hint?: string }) {
   return (
-    <div className="rounded-2xl bg-muted/50 px-3 py-2">
+    <div className="rounded-card bg-muted/50 px-3 py-2">
       <dt className="text-2xs uppercase tracking-wider text-muted-foreground">{label}</dt>
       <dd className={cn("tabular-nums font-semibold", accent && "text-primary-ink")}>{value}</dd>
       {hint && <dd className="text-2xs text-muted-foreground tabular-nums">{hint}</dd>}

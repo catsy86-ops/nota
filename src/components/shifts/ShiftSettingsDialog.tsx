@@ -75,7 +75,7 @@ export function ShiftSettingsDialog({ open, onOpenChange, settings: s }: ShiftSe
           )}
           <EveningNudgeField />
           {/* Pora nocna i doba niedzieli zwykle zostają ustawowe — zmienia się je tylko, gdy regulamin pracy mówi inaczej. */}
-          <details open={s.nightFrom !== 22 || s.sundayFrom !== 6 || undefined} className="group rounded-2xl border border-border/60 px-3 py-2.5">
+          <details open={s.nightFrom !== 22 || s.sundayFrom !== 6 || undefined} className="group rounded-card border border-border/60 px-3 py-2.5">
             <summary className="cursor-pointer text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded-md">
               Opcjonalne <span className="font-normal text-muted-foreground">— pora nocna, niedziela i święto</span>
             </summary>
@@ -95,7 +95,7 @@ export function ShiftSettingsDialog({ open, onOpenChange, settings: s }: ShiftSe
           </details>
         </div>
 
-        <details className="group rounded-2xl bg-muted/50 px-3 py-2.5 text-sm">
+        <details className="group rounded-card bg-muted/50 px-3 py-2.5 text-sm">
           <summary className="cursor-pointer font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded-md">Jak liczymy?</summary>
           <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground list-disc pl-4">
             <li>Norma miesiąca wg art. 130 KP, proporcjonalna do etatu, pomniejszona o nieobecności w dni robocze.</li>
