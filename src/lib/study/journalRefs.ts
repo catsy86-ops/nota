@@ -8,6 +8,21 @@ const DOC_SYNC_MAX_BYTES = 2 * 1024 * 1024;
 const DOCS_KEY = "\u0001docs\u0001";
 
 /**
+ * Pliki budów (plany, PDF, dokumenty z kart budów) — osobno od zdjęć dziennika, żeby raport kopii
+ * nie nazywał planu zdjęciem. Tylko klucze dokumentów z `studySiteItems`.
+ */
+export function siteDocRefsIn(doc: { getMap(name: string): MapLike }): Set<string> {
+  const refs = new Set<string>();
+  doc.getMap("studySiteItems").forEach((_v, key) => {
+    const i = key.indexOf(DOCS_KEY);
+    if (i < 0) return;
+    const id = key.slice(i + DOCS_KEY.length);
+    if (isImageRef(id)) refs.add(id);
+  });
+  return refs;
+}
+
+/**
  * Klucze bajtów działu Praca w dokumencie — dla sprzątania magazynu, kopii i synchronizacji
  * (`yjsStore.ts`): zdjęcia wpisów dziennika i plany/dokumenty z kart budów (`siteDocs.ts`).
  * `syncable` pomija dokumenty (nie obrazy) większe niż 2 MB — nie jadą do innego urządzenia.

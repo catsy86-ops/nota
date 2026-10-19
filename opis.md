@@ -3707,3 +3707,10 @@ lub grupę”.
 - **Ograniczenie:** notatki zapisane przez starszą wersję aplikacji nie mają `reminderSpec`, dopóki nie zostaną zmienione — wtedy czyta się je ze starych pól, co jest poprawne, ale konflikt całości obejmuje dopiero zmienione notatki.
 - **Testy:** `src/lib/reminderSpec.test.ts` (8), `src/lib/yjsStore.reminder.test.ts` (dwa urządzenia, równoległa zmiana terminu i powtarzania daje jedną całość). E2E `reminders-calendar`, `reminder-toast`, `reminders-agenda`, `notes`: 22/22. Vitest 1466+. Budżet bundla: w progu 387 KB.
 - **Commit:** 831ab76, 2026-10-19.
+
+## Kopia zapasowa — pliki budów osobno od zdjęć dziennika (D3, w toku, 2026-10-19)
+
+- **Co zmieniono:** raport kopii rozdziela pominięte bajty na trzy kategorie: załączniki notatek, zdjęcia dziennika i pliki budów (plany, PDF). Wcześniej plany liczyły się jako „zdjęcia dziennika”.
+- **Gdzie:** `src/lib/study/journalRefs.ts` (`siteDocRefsIn`), `src/lib/exportNotes.ts` (`collectAttachmentBlobs`, `describeSkippedAttachments`, pole `siteDocs`, opcja `attachmentBudget` w `buildFullBackupWithReport`).
+- **Jeszcze nie zrobione:** testy gałęzi przekroczenia budżetu (użyć `attachmentBudget` w `fullBackup.test.ts`), raport w oknie przywracania. Do tego czasu zmiany są niezacommitowane.
+- **Testy:** Vitest 1467/1467 po zmianach. Typecheck czysty.

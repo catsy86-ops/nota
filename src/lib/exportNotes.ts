@@ -12,6 +12,7 @@ import { versionsStore } from "@/lib/versionsStore";
 import { logDiag } from "@/lib/diagnostics";
 import { imageStore, isEmbeddableImageDataUrl } from "@/lib/imageStore";
 import { journalImageRefs } from "@/lib/study/images";
+import { siteDocRefsIn } from "@/lib/study/journalRefs";
 import { STUDY_STORAGE_KEY } from "@/lib/study/keys";
 import { restoreShifts, shiftStore, shiftsReady } from "@/lib/shifts/store";
 import { migrate } from "@/lib/shifts/model";
@@ -51,6 +52,8 @@ export interface BackupAttachmentReport {
   missing: Attachment[];
   /** Zdjęcia dziennika z budowy, które nie weszły do backupu (budżet albo brak bajtów). */
   journalPhotos?: number;
+  /** Pliki budów (plany, PDF), które nie weszły do backupu — osobno od zdjęć. */
+  siteDocs?: number;
 }
 
 /** Zdanie do toastu o pominiętych załącznikach; `null`, gdy wszystko weszło. */
@@ -58,37 +61,46 @@ export function describeSkippedAttachments(r?: BackupAttachmentReport): string |
   if (!r) return null;
   const n = r.tooLarge.length + r.missing.length;
   const photos = r.journalPhotos ?? 0;
-  if (!n && !photos) return null;
+  const docs = r.siteDocs ?? 0;
+  if (!n && !photos && !docs) return null;
   const photosPart = photos ? `Pominięte zdjęcia dziennika z budowy: ${photos} — zostaną tylko na tym urządzeniu.` : null;
-  if (!n) return photosPart;
+  const docsPart = docs ? `Pominięte pliki budów (plany, PDF): ${docs} — zostaną tylko na tym urządzeniu.` : null;
+  const extra = [photosPart, docsPart].filter(Boolean).join(" ") || null;
+  if (!n) return extra;
   const parts: string[] = [];
   if (r.tooLarge.length) parts.push(`${r.tooLarge.length} za duże na backup (limit ${formatFileSize(BACKUP_ATTACHMENTS_BUDGET_BYTES)} na wszystkie pliki)`);
   if (r.missing.length) parts.push(`${r.missing.length} nieobecne na tym urządzeniu`);
   const main = `Pominięte załączniki: ${parts.join(", ")}. Zostaną w notatkach jako wpisy bez zawartości.`;
-  return photosPart ? `${main} ${photosPart}` : main;
+  return extra ? `${main} ${extra}` : main;
 }
 
 /** Bajty załączników do backupu v3 w ramach budżetu; najpierw mniejsze, żeby weszło ich jak najwięcej. */
-async function collectAttachmentBlobs(): Promise<{ blobs: Record<string, string>; report: BackupAttachmentReport }> {
+async function collectAttachmentBlobs(budget: number): Promise<{ blobs: Record<string, string>; report: BackupAttachmentReport }> {
   const report: BackupAttachmentReport = { tooLarge: [], missing: [] };
   const blobs: Record<string, string> = {};
   let used = 0;
   const all = [...yjsStore.referencedAttachments().values()].sort((a, b) => a.size - b.size);
   for (const a of all) {
-    if (used + a.size > BACKUP_ATTACHMENTS_BUDGET_BYTES) { report.tooLarge.push(a); continue; }
+    if (used + a.size > budget) { report.tooLarge.push(a); continue; }
     const dataUrl = await imageStore.getDataUrl(a.hash);
     if (!dataUrl) { report.missing.push(a); continue; }
     blobs[a.hash] = dataUrl;
     used += a.size;
   }
   // Zdjęcia dziennika z budowy: te same bajty co w `imageStore`, razem z załącznikami w budżecie.
+  const docs = siteDocRefsIn(yjsStore.doc);
+  // Każdy pominięty bajt liczony w swojej kategorii: zdjęcie dziennika albo plik budowy.
+  const skip = (hash: string) => {
+    if (docs.has(hash)) report.siteDocs = (report.siteDocs ?? 0) + 1;
+    else report.journalPhotos = (report.journalPhotos ?? 0) + 1;
+  };
   for (const hash of journalImageRefs()) {
     if (blobs[hash]) continue;
     const dataUrl = await imageStore.getDataUrl(hash);
     // Wcześniej pomijane po cichu — użytkownik myślał, że zdjęcia z budowy są w kopii.
-    if (!dataUrl) { report.journalPhotos = (report.journalPhotos ?? 0) + 1; continue; }
+    if (!dataUrl) { skip(hash); continue; }
     const approx = Math.ceil(dataUrl.length * 0.75);
-    if (used + approx > BACKUP_ATTACHMENTS_BUDGET_BYTES) { report.journalPhotos = (report.journalPhotos ?? 0) + 1; continue; }
+    if (used + approx > budget) { skip(hash); continue; }
     blobs[hash] = dataUrl;
     used += approx;
   }
@@ -96,14 +108,14 @@ async function collectAttachmentBlobs(): Promise<{ blobs: Record<string, string>
 }
 
 /** Zawartość pełnego backupu v3 (bez zapisu do pliku) + raport o pominiętych załącznikach. */
-export async function buildFullBackupWithReport(): Promise<{ backup: FullBackup; attachments: BackupAttachmentReport }> {
+export async function buildFullBackupWithReport(opts: { attachmentBudget?: number } = {}): Promise<{ backup: FullBackup; attachments: BackupAttachmentReport }> {
   await yjsStore.ready();
   await versionsStore.load();
   await shiftsReady();
   // Dane działu Praca ładowane dopiero tu — nie wchodzą do paczki startowej.
   const [{ studyReady, yStudy }, { stateFromDump }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy")]);
   await studyReady();
-  const { blobs, report } = await collectAttachmentBlobs();
+  const { blobs, report } = await collectAttachmentBlobs(opts.attachmentBudget ?? BACKUP_ATTACHMENTS_BUDGET_BYTES);
   const study = yStudy.dump();
   const propDefs = yjsStore.projectPropDefs();
   const backup: FullBackup = {
