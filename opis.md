@@ -3587,3 +3587,12 @@ lub grupę”.
 - **Przyczyna:** „Lista kontrolna” z `whitespace-nowrap` nie mieściła się w czwartej części paska, więc przycisk „Dziennik” wychodził poza ekran o 2 px. Przez to cała strona była szersza od ekranu, a warstwy `fixed` (tło, dolny pasek, nakładki) dziedziczyły tę szerokość.
 - **Testy:** `e2e/mobile-layout.spec.ts`: 12/12 (wszystkie trasy przy 320 i 390 px, iPhone 14 i Pixel 7). Test `e2e/diagnostics.spec.ts`: w tym samym przebiegu sprawdzono tekst notatki przez nagłówek karty, a nie `getByText` (pole tytułu kompozytora ma tę samą treść, póki się zamyka). Vitest 1423/1423.
 - **Commit:** 9a85c10, 2026-10-19.
+
+## Notatki — poprawka pustych stanów i selektorów e2e po pełnym przebiegu (2026-10-19)
+
+- **Błąd z fazy 6, naprawiony:** skrypt zmiany zapisał nowe zdania w `HEADINGS` (nagłówki), a `DESCRIPTIONS` zostały ze starymi tekstami. Teraz nagłówki są krótkimi etykietami („Kosz jest pusty”), a nowe zdania są w `DESCRIPTIONS`. Test `EmptyState.copy.test.ts` pilnuje, że nagłówek to etykieta bez kropki (do 60 znaków).
+- **Skrzynka:** ten sam błąd wpisał nowe zdanie jako nagłówek „Skrzynka jest pusta”; przywrócone.
+- **E2E po zmianie kompozytora (faza 1) i wyszukiwania (faza 3):** testy szukające tytułu przez `getByText` trafiały też w pole tytułu (`textarea` ma tę treść) i w ukryte pole wyszukiwania. Zmienione na `getByRole("heading", …)` oraz `getByRole("searchbox", { name: "Szukaj w notatkach" })`: `live-text`, `live-text-focused`, `pwa`, `qol`, `tabs`, `note-links`.
+- **Wynik:** 20/20 w tych plikach; Vitest 1424/1424; Chrome 30/30.
+- **Nierozwiązane:** budżet wejściowego JS w `e2e/bundle.spec.ts` (385,4 KB gzip przy progu 385 KB). Decyzja o progu należy do właściciela projektu.
+- **Commit:** patrz następna linia.

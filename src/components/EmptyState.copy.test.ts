@@ -17,6 +17,13 @@ describe("teksty pustych stanów", () => {
     expect(text.length).toBeLessThanOrEqual(170);
   });
 
+  it("nagłówek to krótka etykieta, nie zdanie z kropką", () => {
+    for (const view of LIST_VIEWS) {
+      expect(HEADINGS[view].length).toBeLessThanOrEqual(60);
+      expect(HEADINGS[view]).not.toMatch(/\./);
+    }
+  });
+
   it("bez wykrzykników i bez przepraszania", () => {
     for (const view of LIST_VIEWS) {
       expect(HEADINGS[view]).not.toMatch(/[!]/);

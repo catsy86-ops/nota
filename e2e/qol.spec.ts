@@ -55,7 +55,7 @@ test("paleta pamięta ostatnie zapytanie po otwarciu notatki", async ({ page }) 
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
   await page.getByRole("button", { name: "Zapisz", exact: true }).click();
-  await expect(page.getByText(title)).toBeVisible();
+  await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
 
   await page.keyboard.press("Control+k");
   const input = page.getByRole("dialog").getByPlaceholder(/Szukaj/i);

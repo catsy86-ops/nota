@@ -42,20 +42,20 @@ test("tekst z innego urządzenia pojawia się w otwartym edytorze bez utraty szk
   await a.getByPlaceholder("Tytuł").fill(title);
   await a.getByPlaceholder("Treść notatki...").fill("środek");
   await a.getByRole("button", { name: "Zapisz", exact: true }).click();
-  await expect(a.getByText(title)).toBeVisible();
+  await expect(a.getByRole("heading", { name: title, exact: true })).toBeVisible();
 
   const b = await (await browser.newContext()).newPage();
   await open(b);
   await mergeSync(b, await exportSync(a));
 
   // A dopisuje początek i zapisuje.
-  await a.getByText(title).click();
+  await a.getByRole("heading", { name: title, exact: true }).click();
   await a.getByPlaceholder(CONTENT).fill("POCZĄTEK środek");
   await a.getByRole("button", { name: "Zapisz", exact: true }).click();
   const fileA = await exportSync(a);
 
   // B edytuje w kaflu, dopisuje koniec, i w trakcie scala plik z A.
-  await b.getByText(title).click();
+  await b.getByRole("heading", { name: title, exact: true }).click();
   const editor = b.getByPlaceholder(CONTENT);
   await editor.click();
   await editor.press("End");

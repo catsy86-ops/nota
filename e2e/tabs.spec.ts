@@ -14,8 +14,8 @@ test("notatka i grafik z jednej karty pojawiają się w drugiej bez odświeżani
   await a.getByText("Zapisz notatkę...").click();
   await a.getByPlaceholder("Tytuł").fill(title);
   await a.getByRole("button", { name: "Zapisz", exact: true }).click();
-  await expect(a.getByText(title)).toBeVisible();
-  await expect(b.getByText(title)).toBeVisible();
+  await expect(a.getByRole("heading", { name: title, exact: true })).toBeVisible();
+  await expect(b.getByRole("heading", { name: title, exact: true })).toBeVisible();
 
   // Grafik otwarty w obu kartach (nawigacja w aplikacji), dzień naniesiony w drugiej.
   await a.getByRole("button", { name: "Grafik", exact: true }).click();

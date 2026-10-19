@@ -85,7 +85,7 @@ test("app shell and existing notes survive a real offline reload", async ({ page
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
   await page.getByRole("button", { name: "Zapisz", exact: true }).click();
-  await expect(page.getByText(title)).toBeVisible();
+  await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
 
   await context.setOffline(true);
   try {
@@ -95,7 +95,7 @@ test("app shell and existing notes survive a real offline reload", async ({ page
     // work with zero network (this is the actual "used daily, no backend"
     // reliability property, not just static-asset caching).
     await expect(page.getByPlaceholder("Szukaj notatek...").first()).toBeVisible();
-    await expect(page.getByText(title)).toBeVisible();
+    await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
   } finally {
     await context.setOffline(false);
   }

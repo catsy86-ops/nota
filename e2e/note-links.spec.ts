@@ -110,7 +110,7 @@ test("graf powiązań z palety: węzły i otwarcie notatki", async ({ page }) =>
   await addNote(page, a, `Łączy się z [[${b}]]`);
 
   await page.keyboard.press("Control+k");
-  await page.getByPlaceholder(/Szukaj notatek/).fill("Graf powiązań");
+  await page.getByRole("searchbox", { name: "Szukaj w notatkach" }).fill("Graf powiązań");
   await page.getByRole("option", { name: /Graf powiązań/ }).click();
 
   const graph = page.getByTestId("link-graph");

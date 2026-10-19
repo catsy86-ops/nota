@@ -9,19 +9,19 @@ import { modShortcut, TAP } from "@/lib/platform";
 
 export const HEADINGS: Record<View, string> = {
   notes: "Zacznij tworzyć",
-  archive: "Odłóż notatkę tutaj: wybierz „Archiwizuj” w jej menu, a na telefonie przesuń kafel w lewo.",
-  trash: "Usunięte notatki czekają tu 30 dni, potem znikają na dobre. Przywrócisz je z menu notatki.",
-  reminders: "Dodaj przypomnienie w edytorze notatki albo wpisz w tekście, np. „jutro 9:00”.",
+  archive: "Archiwum jest puste",
+  trash: "Kosz jest pusty",
+  reminders: "Brak przypomnień",
   calendar: "Pusty miesiąc",
   shifts: "Pusty grafik",
   study: "",
   debts: "",
-  today: "Notatka pojawi się tu, gdy ją dziś utworzysz albo zmienisz. Zacznij od nowej notatki.",
-  week: "Notatki z ostatnich 7 dni pojawią się tu, gdy je utworzysz albo zmienisz. Zacznij od nowej notatki.",
-  label: "Dodaj etykietę, wpisując #nazwę w treści notatki albo wybierając ją w menu notatki.",
-  folder: "Przenieś notatkę do tego folderu z jej menu albo wpisz @nazwę folderu przy zapisie.",
+  today: "Brak notatek z dzisiaj",
+  week: "Brak notatek z tego tygodnia",
+  label: "Brak notatek z tą etykietą",
+  folder: "Zacznij tworzyć",
   widget: "Zacznij tworzyć",
-  inbox: "Nowe pomysły wpisz w polu powyżej. Trafią tu, dopóki nie przypiszesz im folderu albo etykiety.",
+  inbox: "Skrzynka jest pusta",
 };
 
 export const DESCRIPTIONS: Record<View, string> = {
@@ -29,19 +29,19 @@ export const DESCRIPTIONS: Record<View, string> = {
   notes: typeof matchMedia !== "undefined" && matchMedia("(max-width: 767px)").matches
     ? "Stuknij „+” na dole ekranu — są tam też szablony"
     : `${TAP} „Zapisz notatkę…” powyżej (są tam też szablony) lub naciśnij ` + modShortcut("N"),
-  archive: "Zarchiwizowane notatki pojawią się tutaj",
-  trash: "Usunięte notatki pojawią się tutaj",
-  reminders: "Notatki z przypomnieniami pojawią się tutaj",
+  archive: "Odłóż notatkę tutaj: wybierz „Archiwizuj” w jej menu, a na telefonie przesuń kafel w lewo.",
+  trash: "Usunięte notatki czekają tu 30 dni, potem znikają na dobre. Przywrócisz je z menu notatki.",
+  reminders: "Dodaj przypomnienie w edytorze notatki albo wpisz w tekście, np. „jutro 9:00”.",
   calendar: `${TAP} dzień, aby dodać przypomnienie`,
   shifts: `Wybierz zmianę i ${TAP.toLowerCase()} dni`,
   study: "",
   debts: "",
-  today: "Notatki utworzone lub edytowane dzisiaj pojawią się tutaj",
-  week: "Notatki z ostatnich 7 dni pojawią się tutaj",
-  label: "Dodaj etykietę do notatki, aby zobaczyć ją tutaj",
-  folder: "Dodaj notatkę do tego folderu, aby zobaczyć ją tutaj",
+  today: "Notatka pojawi się tu, gdy ją dziś utworzysz albo zmienisz. Zacznij od nowej notatki.",
+  week: "Notatki z ostatnich 7 dni pojawią się tu, gdy je utworzysz albo zmienisz. Zacznij od nowej notatki.",
+  label: "Dodaj etykietę, wpisując #nazwę w treści notatki albo wybierając ją w menu notatki.",
+  folder: "Przenieś notatkę do tego folderu z jej menu albo wpisz @nazwę folderu przy zapisie.",
   widget: "",
-  inbox: "Każda notatka ma folder albo etykietę. Nowe pomysły wpisz w polu powyżej — trafią tu, dopóki ich nie posortujesz",
+  inbox: "Nowe pomysły wpisz w polu powyżej. Trafią tu, dopóki nie przypiszesz im folderu albo etykiety.",
 };
 
 /**
