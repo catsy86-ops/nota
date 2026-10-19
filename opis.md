@@ -3595,4 +3595,4 @@ lub grupę”.
 - **E2E po zmianie kompozytora (faza 1) i wyszukiwania (faza 3):** testy szukające tytułu przez `getByText` trafiały też w pole tytułu (`textarea` ma tę treść) i w ukryte pole wyszukiwania. Zmienione na `getByRole("heading", …)` oraz `getByRole("searchbox", { name: "Szukaj w notatkach" })`: `live-text`, `live-text-focused`, `pwa`, `qol`, `tabs`, `note-links`.
 - **Wynik:** 20/20 w tych plikach; Vitest 1424/1424; Chrome 30/30.
 - **Nierozwiązane:** budżet wejściowego JS w `e2e/bundle.spec.ts` (385,4 KB gzip przy progu 385 KB). Decyzja o progu należy do właściciela projektu.
-- **Commit:** patrz następna linia.
+- **Commit:** 0284db6, 2026-10-19.
