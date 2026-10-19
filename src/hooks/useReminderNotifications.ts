@@ -5,7 +5,8 @@ import { formatReminderShort } from "@/lib/reminderTime";
 import { notePath } from "@/lib/viewRoute";
 import { toast } from "sonner";
 import type { Note } from "./useNotes";
-import { nextInSeries, seriesDay } from "@/lib/reminderRepeat";
+import { seriesDay } from "@/lib/reminderRepeat";
+import { planDueReminders } from "@/lib/reminderDue";
 import { loadFired, saveFired, reconcileFired } from "@/lib/firedReminders";
 import { showSystemNotification } from "@/lib/systemNotification";
 import { pushKey } from "@/lib/push/shown";
@@ -36,6 +37,8 @@ export function useReminderNotifications(
   seriesEndedRef.current = onSeriesEnded;
   const trashedRef = useRef(trashed);
   trashedRef.current = trashed;
+  // id → termin już obsłużony (`planDueReminders`), żeby opóźniony zapis nie odpalił go drugi raz.
+  const handledRef = useRef(new Map<string, number>());
 
   // Przyciski akcji z powiadomienia systemowego (public/sw-notifications.js).
   const applyActionRef = useRef((note: Note, action: string) => {
@@ -87,7 +90,14 @@ export function useReminderNotifications(
         saveFired(next);
       }
       const fired = firedRef.current;
-      const due = notes.filter((n) => n.reminder && n.reminder <= now && !fired.has(n.id));
+      // Decyzja, co odpalić, jest w `planDueReminders` (czysta, testowana): seria zaległa o kilka cykli
+      // daje jeden krok z liczbą pominiętych wystąpień, a nie stos dymków.
+      // Wpis „obsłużone” żyje tylko, dopóki notatka ma stary termin; po zmianie terminu albo usunięciu notatki znika.
+      for (const [id, obsluzony] of handledRef.current) {
+        if (!notes.some((n) => n.id === id && n.reminder === obsluzony)) handledRef.current.delete(id);
+      }
+      const steps = planDueReminders(notes, fired, now, handledRef.current);
+      const due = steps.map((s) => s.note);
       const mobile = window.matchMedia("(max-width: 767px)").matches;
       // Stos kilku dymków u góry zasłaniał nagłówek i treść na każdej trasie — przy ≥ 2 jeden dymek.
       const grouped = due.length >= 2;
@@ -103,18 +113,20 @@ export function useReminderNotifications(
         });
       }
 
-      for (const note of due) {
+      for (const { note, kind, next, missed } of steps) {
         if (note.reminder) {
           const repeat = note.reminderRepeat ?? "none";
+          // Ten termin jest obsłużony: zapis przesunięcia może jeszcze nie dotrzeć do listy notatek.
+          handledRef.current.set(note.id, note.reminder);
           // One-shot reminders are marked fired forever; repeating ones are
           // rescheduled below, so the same id can fire again next cycle.
-          if (repeat === "none") {
+          if (kind === "once") {
             fired.add(note.id);
             saveFired(fired);
           }
 
           const times = snoozeTimes(now);
-          const when = formatReminderShort(note.reminder);
+          const when = missed > 0 ? `${formatReminderShort(note.reminder)} · pominięto ${missed}` : formatReminderShort(note.reminder);
           const onDone = () => firedCbRef.current(note.id, null);
           if (!grouped) toast.custom((id) => createElement(ReminderDueToast, {
             toastId: id,
@@ -152,8 +164,7 @@ export function useReminderNotifications(
             ],
           });
 
-          if (repeat !== "none") {
-            const next = nextInSeries(note.reminder, repeat, seriesDay(note), note.reminderRepeatUntil);
+          if (kind === "series") {
             if (next !== null) firedCbRef.current(note.id, next, seriesDay(note));
             else {
               // Ostatni termin: zostaje jak odpalone jednorazowe przypomnienie.

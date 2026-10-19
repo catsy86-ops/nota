@@ -3627,3 +3627,13 @@ lub grupę”.
 - **Kompatybilność:** stare wpisy („lent”, „repaid”) bez zmian, saldo liczone tak samo.
 - **Testy:** `src/lib/debts/model.test.ts` (znak salda dla nowych rodzajów, czyszczenie). W Chrome: cztery rodzaje w wyborze, „Pożyczyłem od 120” daje sumę „My jesteśmy winni” 120,00 zł, saldo ujemne i „Oddałem całość”. Vitest 1427/1427.
 - **Commit:** dada7f1, 2026-10-19.
+
+## Przypomnienia — jedno odpalenie zaległej serii (krok 1 planu kalendarza/przypomnień, 2026-10-19)
+
+- **Co robi:** seria przypomnień (codziennie, co tydzień, co miesiąc), która minęła o kilka cykli (np. aplikacja była zamknięta), odpala się RAZ. Dymek lub powiadomienie pokazuje „pominięto N”, a termin przesuwa się na najbliższy przyszły. Wcześniej każdy zaległy cykl dawał osobny dymek i powiadomienie.
+- **Gdzie jest:** `src/lib/reminderDue.ts` (`planDueReminders` — czysta funkcja: co odpalić, z liczbą pominiętych wystąpień), `src/hooks/useReminderNotifications.ts` (wykonuje efekty: dymki, powiadomienia, przesunięcie serii).
+- **Jak działa:** funkcja dostaje notatki, rejestr „już odpalone” i mapę `handled` (id → termin już obsłużony). Termin obsłużony nie odpala się drugi raz, dopóki zapis przesunięcia nie dotrze do listy notatek. Wpis `handled` znika, gdy termin się zmieni albo notatka zniknie. Jednorazowe przypomnienia działają jak dotąd.
+- **Decyzja:** przyjęto zalecaną wersję („jeden dymek, pominięto N”). Pytanie 3 z planu nie zostało jeszcze potwierdzone przez właściciela.
+- **Ograniczenia:** zabezpieczenie 1000 wystąpień wstecz. Przy absurdalnie starym terminie pominięte są najwyżej tysiąc cykli.
+- **Testy:** `src/lib/reminderDue.test.ts` (10: na czas, zaległa seria 5 dni, koniec serii, miesiąc z 31., rejestr, `handled`, brak terminu). E2E `reminder-toast`, `reminders-calendar`: 16/16. Vitest 1437/1437. Typecheck czysty.
+- **Commit:** patrz następna linia.
