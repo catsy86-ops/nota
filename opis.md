@@ -3560,4 +3560,4 @@ lub grupę”.
 - **Jak działa:** cień spoczynkowy to jeden poziom (`--elevation-1`), a `note-shadow-hover` / uniesienie `translate: 0 -2px` działają tylko przy `hover:hover` i `pointer:fine`. Na dotyku hover nie istnieje, więc brak „przyklejonego” uniesienia po stuknięciu.
 - **Czego nie zmieniano:** obramowanie `border-border/50` i 46 innych miejsc z `rounded-2xl` w innych komponentach (osobny, kosmetyczny PR, zob. plan).
 - **Testy:** `scratchpad/test-chrome.mjs` — promień 16 px, `hoverFine=false` i `translate=none` na dotyku, zero poziomego przewijania przy 390 px. E2E `touch-targets`, `card-images`: 8/8. Vitest: patrz wpis commitu.
-- **Commit:** patrz następna linia.
+- **Commit:** bb48640, 2026-10-19.
