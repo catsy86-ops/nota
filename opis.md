@@ -3706,7 +3706,7 @@ lub grupę”.
 - **Decyzje:** „cały dzień” to 9:00, a nie północ, bo północ dzwoniłaby w nocy. Zaległość liczy się od 9:00, więc termin „cały dzień” na dziś staje się zaległy o 9:00 i wpada do „Zaległe”/„Przegapione” jak każdy inny. Wybór dnia, który już minął (9:00 dziś przeszło), jest blokowany tym samym komunikatem co przeszła godzina.
 - **Ograniczenie:** kompozytor nowej notatki (`AddNoteBar`) nie ma pola „Cały dzień” — tam termin nadal wymaga godziny. Do dodania osobno wraz z szkicem (`Draft`), bo tam jest osobny stan i zapis szkicu.
 - **Testy:** `src/lib/reminderSpec.test.ts` (grupa „reminderAllDay”), `src/lib/reminderTime.test.ts` (`formatReminderShort` z flagą), `src/lib/yjsStore.reminder.test.ts` (flaga przez dwa dokumenty Yjs, włącz i wyłącz). Vitest 1482/1482, tsc i eslint czyste. E2E nie uruchomione (pamięć).
-- **Commit:** w commicie z tym wpisem, 2026-10-19.
+- **Commit:** a235912, 2026-10-19.
 
 ## Praca — data dostawy zamówienia (T4 planu kalendarza/przypomnień, 2026-10-19)
 
