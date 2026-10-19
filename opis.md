@@ -3666,3 +3666,10 @@ lub grupę”.
 - **Budżet:** `schedule.ts` jest ładowany leniwie (PushScheduleSync, DailyReportNudge, client), więc nie zmienia paczki startowej. Próg wciąż czeka na decyzję (patrz krok 3).
 - **Testy:** `src/lib/push/schedule.service.test.ts` (3: wizyta dziś z jutrzejszym zaległym, wizyta z wczoraj, wizyta z przedwczoraj nie wysyłana, zamknięta nie wysyłana). `src/lib/study/service.test.ts`: oczekiwania zaktualizowane do nowego zachowania. Vitest 1452/1452. E2E `push`: przechodzi; `site-service`: jeden test niestabilny pod obciążeniem (przy ponownym uruchomieniu przechodzi dwa razy).
 - **Commit:** 3dd2544, 2026-10-19.
+
+## Budżet paczki startowej — próg 387 KB (decyzja właściciela, 2026-10-19)
+
+- **Co zmieniono:** próg wejściowego JS (gzip) w `e2e/bundle.spec.ts` podniesiony z 386 do 387 KB.
+- **Dlaczego:** po terminach z Praca na Dziś i w Terminach paczka startowa ma 395 319 B (386,0 KB) przy progu 386 KB. Właściciel zdecydował o podniesieniu progu.
+- **Testy:** `e2e/bundle.spec.ts`: 6/6.
+- **Commit:** patrz następna linia.
