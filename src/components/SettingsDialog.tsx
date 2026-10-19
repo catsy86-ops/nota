@@ -1,24 +1,23 @@
 import { useEffect, useState, lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Settings, LayoutGrid, Pencil, Database, Wifi } from "lucide-react";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
 import { BackupSettings } from "@/components/settings/BackupSettings";
+import { SyncFileSection } from "@/components/settings/SyncFileSection";
 
 // qrcode.react (used only here, for device pairing) kept out of the eager
 // main bundle — TabsContent below only mounts this once the Sync tab is active.
 const SyncSettings = lazy(() => import("@/components/SyncSettings").then((m) => ({ default: m.SyncSettings })));
 
 interface SettingsDialogProps {
-  trigger?: React.ReactNode;
-  open?: boolean;
-  onOpenChange?: (v: boolean) => void;
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
 }
 
-export function SettingsDialog({ trigger, open, onOpenChange }: SettingsDialogProps) {
-  const controlled = open !== undefined;
+export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("appearance");
   const [joinPrefill, setJoinPrefill] = useState("");
@@ -39,18 +38,6 @@ export function SettingsDialog({ trigger, open, onOpenChange }: SettingsDialogPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {!controlled && (
-        <DialogTrigger asChild>
-          {trigger ?? (
-            <button
-              className="pressable w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted/80 hover:text-foreground transition-all"
-            >
-              <Settings className="w-[18px] h-[18px]" />
-              <span>Ustawienia</span>
-            </button>
-          )}
-        </DialogTrigger>
-      )}
       {/* Stała wysokość: okno nie skacze przy zmianie zakładki. Na telefonie pełny ekran. */}
       <DialogContent className="h-dvh max-h-none max-sm:max-w-none rounded-none border-0 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:h-[min(88dvh,44rem)] sm:max-w-2xl sm:rounded-card sm:border sm:py-6 overflow-hidden flex flex-col">
         <DialogHeader className="text-left">
@@ -63,10 +50,11 @@ export function SettingsDialog({ trigger, open, onOpenChange }: SettingsDialogPr
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
           {/* Na telefonie same nazwy (ikona bez podpisu nie mówi, co jest w zakładce). */}
-          <TabsList className="grid grid-cols-4 w-full">
+          <TabsList className="grid grid-cols-4 w-full h-auto">
             <TabsTrigger value="appearance" className="gap-1.5"><LayoutGrid className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Wygląd</span></TabsTrigger>
             <TabsTrigger value="general" className="gap-1.5"><Pencil className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Ogólne</span></TabsTrigger>
-            <TabsTrigger value="backup" className="gap-1.5"><Database className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Dane</span></TabsTrigger>
+            {/* „Kopia i dane” może się zawinąć na wąskim ekranie — zakładka nie ma mieć stałej wysokości na jeden wiersz. */}
+            <TabsTrigger value="backup" className="gap-1.5 whitespace-normal text-center leading-tight"><Database className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Kopia i dane</span></TabsTrigger>
             <TabsTrigger value="sync" className="gap-1.5"><Wifi className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Sync</span></TabsTrigger>
           </TabsList>
 
@@ -88,6 +76,7 @@ export function SettingsDialog({ trigger, open, onOpenChange }: SettingsDialogPr
               <Suspense fallback={<div className="h-40 animate-pulse rounded-xl bg-muted/40" aria-hidden />}>
                 <SyncSettings prefillCode={joinPrefill} />
               </Suspense>
+              <div className="pt-4"><SyncFileSection /></div>
             </TabsContent>
           </div>
         </Tabs>

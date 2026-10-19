@@ -12,7 +12,7 @@ async function dataTab(page: Page) {
   // Escape zamykający poprzedni dialog potrafi też zwinąć panel boczny.
   if (!(await settings.isVisible())) await page.getByRole("button", { name: /panel/i }).first().click();
   await settings.click();
-  await page.getByRole("tab", { name: "Dane" }).click();
+  await page.getByRole("tab", { name: "Sync" }).click();
 }
 
 async function exportSync(page: Page): Promise<string> {

@@ -17,7 +17,7 @@ async function addNote(page: Page, title: string) {
 
 async function openDataTab(page: Page) {
   await page.getByRole("button", { name: "Ustawienia" }).first().click();
-  await page.getByRole("tab", { name: "Dane" }).click();
+  await page.getByRole("tab", { name: "Sync" }).click();
 }
 
 test("plik synchronizacji scala notatki dwóch urządzeń bez usuwania", async ({ browser }) => {

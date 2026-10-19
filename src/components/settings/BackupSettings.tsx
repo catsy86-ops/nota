@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Download, Database, ShieldCheck, ShieldAlert, FileCog, FileDown, GitMerge } from "lucide-react";
+import { Download, Database, ShieldCheck, ShieldAlert, FileCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useViewPrefs, setViewPref } from "@/lib/viewPrefs";
@@ -8,8 +8,7 @@ import { describeBackupSkipped } from "@/lib/backupSkipped";
 import type { FullBackup } from "@/lib/noteSchema";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { exportSyncFile, importSyncFile } from "@/lib/yjsFileSync";
-import { daysSinceBackup } from "@/lib/backupReminder";
+import { daysSinceBackup, LAST_AUTO_EXPORT_KEY } from "@/lib/backupReminder";
 import { requestPersistentStorage, getStorageInfo, type StorageInfo } from "@/lib/storagePersistence";
 import { isFileSystemAccessSupported, pickBackupFile, clearBackupFile, getBackupFileName } from "@/lib/backupFileHandle";
 import { toast } from "sonner";
@@ -127,14 +126,14 @@ function BackupFileTarget() {
 function handleAutoExportChange(v: number) {
   setViewPref("autoExportDays", v);
   if (v === 0) {
-    try { localStorage.removeItem("kaczy.lastAutoExport"); } catch { /* ignore */ }
+    try { localStorage.removeItem(LAST_AUTO_EXPORT_KEY); } catch { /* ignore */ }
   }
 }
 
 async function exportNow() {
   try {
     const { savedToFile, attachments } = await exportFullBackup();
-    try { localStorage.setItem("kaczy.lastAutoExport", String(Date.now())); } catch { /* ignore */ }
+    try { localStorage.setItem(LAST_AUTO_EXPORT_KEY, String(Date.now())); } catch { /* ignore */ }
     const skipped = describeSkippedAttachments(attachments);
     toast.success(savedToFile ? "Backup zapisany 💾" : "Backup pobrany 💾", skipped ? { description: skipped, duration: 12000 } : undefined);
   } catch {
@@ -227,32 +226,6 @@ function RestoreBackup() {
   );
 }
 
-async function exportSyncNow() {
-  try {
-    await exportSyncFile();
-    toast.success("Plik synchronizacji pobrany — wczytaj go na drugim urządzeniu");
-  } catch {
-    toast.error("Nie udało się zapisać pliku synchronizacji");
-  }
-}
-
-function newNotesLabel(n: number): string {
-  if (n === 1) return "1 nowa notatka";
-  const few = n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14);
-  return `${n} ${few ? "nowe notatki" : "nowych notatek"}`;
-}
-
-async function mergeSyncNow() {
-  try {
-    const { newNotes } = await importSyncFile();
-    toast.success(newNotes ? `Scalono — ${newNotesLabel(newNotes)}` : "Scalono — zmiany z pliku są już w notatkach");
-  } catch (err) {
-    if (err instanceof Error && err.message !== "Nie wybrano pliku") {
-      toast.error("Nie udało się scalić pliku: " + err.message);
-    }
-  }
-}
-
 /** "Dane" tab: auto-backup, backup/today/week reminders, manual export/import. */
 export function BackupSettings() {
   const prefs = useViewPrefs();
@@ -290,93 +263,10 @@ export function BackupSettings() {
         </p>
       </Section>
 
-      <Section title={`Przypomnienie „Dziś” ${prefs.todayReminderTime ? `codziennie o ${prefs.todayReminderTime}` : prefs.todayReminderHours === 0 ? "(wyłączone)" : prefs.todayReminderHours >= 24 ? `co ${Math.round(prefs.todayReminderHours / 24)} dni` : `co ${prefs.todayReminderHours} h`}`}>
-        <Slider
-          value={[prefs.todayReminderHours]}
-          min={0} max={48} step={1}
-          aria-label="Przypomnienie Dziś: co ile godzin"
-          onValueChange={([v]) => setViewPref("todayReminderHours", v)}
-          disabled={!!prefs.todayReminderTime}
-        />
-        <div className="flex items-center gap-2 mt-2">
-          <span className="text-xs text-muted-foreground shrink-0">albo o stałej godzinie:</span>
-          <input
-            type="time"
-            value={prefs.todayReminderTime}
-            aria-label="Przypomnienie Dziś: stała godzina"
-            onChange={(e) => setViewPref("todayReminderTime", e.target.value)}
-            className="text-xs bg-background border border-border/60 rounded-md px-2 py-1 text-foreground"
-          />
-          {prefs.todayReminderTime && (
-            <button
-              type="button"
-              onClick={() => setViewPref("todayReminderTime", "")}
-              className="text-xs text-muted-foreground hover:text-foreground underline coarse:min-h-11 coarse:px-2"
-            >wyczyść</button>
-          )}
-        </div>
-        <p className="text-xs text-muted-foreground mt-1.5">
-          {prefs.todayReminderTime
-            ? `Toast pojawi się raz dziennie o ${prefs.todayReminderTime} (gdy masz notatki z dzisiaj).`
-            : prefs.todayReminderHours === 0
-              ? "Powiadomienie o notatkach z dzisiaj nie będzie się pojawiać."
-              : `Toast pojawi się co najwyżej raz na ${prefs.todayReminderHours} ${prefs.todayReminderHours === 1 ? "godzinę" : prefs.todayReminderHours < 5 ? "godziny" : "godzin"} (gdy masz notatki z dzisiaj).`}
-        </p>
-      </Section>
-
-      <Section title={`Przypomnienie „Ten tydzień” ${prefs.weekReminderTime ? `${["w niedzielę", "w poniedziałek", "we wtorek", "w środę", "w czwartek", "w piątek", "w sobotę"][prefs.weekReminderDay]} o ${prefs.weekReminderTime}` : "(wyłączone)"}`}>
-        <div className="flex flex-wrap items-center gap-2">
-          <select
-            value={prefs.weekReminderDay}
-            aria-label="Przypomnienie Ten tydzień: dzień"
-            onChange={(e) => setViewPref("weekReminderDay", Number(e.target.value))}
-            className="text-xs bg-background border border-border/60 rounded-md px-2 py-1 text-foreground"
-            disabled={!prefs.weekReminderTime}
-          >
-            {["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"].map((d, i) => (
-              <option key={d} value={i}>{d}</option>
-            ))}
-          </select>
-          <input
-            type="time"
-            value={prefs.weekReminderTime}
-            aria-label="Przypomnienie Ten tydzień: godzina"
-            onChange={(e) => setViewPref("weekReminderTime", e.target.value)}
-            className="text-xs bg-background border border-border/60 rounded-md px-2 py-1 text-foreground"
-          />
-          {prefs.weekReminderTime && (
-            <button
-              type="button"
-              onClick={() => setViewPref("weekReminderTime", "")}
-              className="text-xs text-muted-foreground hover:text-foreground underline coarse:min-h-11 coarse:px-2"
-            >wyłącz</button>
-          )}
-        </div>
-        <p className="text-xs text-muted-foreground mt-1.5">
-          {prefs.weekReminderTime
-            ? "Raz w tygodniu, o wybranej porze, dostaniesz podsumowanie ostatnich 7 dni."
-            : "Ustaw godzinę, aby otrzymywać cotygodniowe przypomnienie."}
-        </p>
-      </Section>
-
       <Button onClick={exportNow} className="w-full gap-2">
         <Download className="w-4 h-4" /> Pobierz pełny backup teraz
       </Button>
       <RestoreBackup />
-
-      <Section title="Synchronizacja przez plik">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <Button onClick={exportSyncNow} variant="outline" className="gap-2">
-            <FileDown className="w-4 h-4" /> Zapisz plik synchronizacji
-          </Button>
-          <Button onClick={mergeSyncNow} variant="outline" className="gap-2">
-            <GitMerge className="w-4 h-4" /> Scal z pliku
-          </Button>
-        </div>
-        <p className="text-xs text-muted-foreground mt-1.5">
-          Przenosi zmiany między urządzeniami bez połączenia na żywo. Scalanie łączy notatki i Grafik zmian z obu stron — nic nie usuwa i nie nadpisuje. Używaj świeżych plików: bardzo stary może przywrócić dawno usuniętą notatkę.
-        </p>
-      </Section>
 
       <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-1">
         <p className="font-semibold text-foreground">💡 Wskazówka</p>

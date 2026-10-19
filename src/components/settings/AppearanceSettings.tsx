@@ -11,6 +11,7 @@ import { SEASON_META, useSeasonPref, type SeasonPref } from "@/lib/seasonTheme";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Section, ToggleRow } from "./SettingsShared";
+import { EffectsSettings } from "./EffectsSettings";
 import { Segmented } from "./Segmented";
 import { SkinPicker } from "./SkinPicker";
 import { FontPicker } from "./FontPicker";
@@ -187,6 +188,8 @@ export function AppearanceSettings() {
         checked={prefs.showBacklinks}
         onCheck={(v) => setViewPref("showBacklinks", v)}
       />
+
+      <div className="pt-2"><EffectsSettings /></div>
 
       <Button variant="ghost" size="sm" onClick={() => setResetOpen(true)}>
         Przywróć domyślne

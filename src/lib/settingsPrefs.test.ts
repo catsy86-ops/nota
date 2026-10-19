@@ -15,7 +15,8 @@ describe("viewPrefs — odczyt zapisu", () => {
   it("bez zapisu zwraca domyślne", async () => {
     const m = await loadFresh<typeof import("./viewPrefs")>("./viewPrefs");
     expect(m.getViewPrefs().density).toBe("cozy");
-    expect(m.getViewPrefs().weekReminderDay).toBe(1);
+    // Przypomnienie „Ten tydzień” domyślnie w niedzielę — tak jak przegląd tygodnia (faza 2).
+    expect(m.getViewPrefs().weekReminderDay).toBe(0);
   });
 
   it("częściowy zapis łączy się z domyślnymi", async () => {

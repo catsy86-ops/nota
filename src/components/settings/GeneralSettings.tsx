@@ -1,13 +1,10 @@
-import { Play, FileDown } from "lucide-react";
+import { useState } from "react";
+import { FileDown } from "lucide-react";
+import { useShifts } from "@/lib/shifts";
+import { ShiftSettingsDialog } from "@/components/shifts/ShiftSettingsDialog";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { EFFECT_LABELS, EffectKey, setEffectEnabled, useEffectsSettings } from "@/lib/effectsSettings";
-import { haptic } from "@/lib/haptics";
-import { showAchievementStamp } from "@/lib/achievementStamp";
-import { bubbles, celebrate, dayDoneReward, emojiShower, fireworks, hearts, rainbow, sparkle } from "@/lib/celebrate";
 import { useViewPrefs, setViewPref } from "@/lib/viewPrefs";
 import { colorClasses } from "@/components/ColorPicker";
 import { useConfirmPrefs, setConfirmPref } from "@/lib/confirmPrefs";
@@ -28,6 +25,24 @@ const PERMISSION_TEXT = {
   denied: "Zablokowane w przeglądarce — przypomnienia pojawią się tylko w aplikacji. Zmienisz to w ustawieniach witryny (ikona kłódki przy adresie).",
   unsupported: "Ta przeglądarka nie obsługuje powiadomień — przypomnienia pojawią się tylko w aplikacji.",
 } as const;
+
+/**
+ * Praca i Grafik: ustawienia Grafiku (norma, nadgodziny, zarobek) są w `ShiftSettingsDialog`, który otwiera się
+ * z Grafiku. Tu jest drugie wejście, żeby z Ustawień dało się je znaleźć (faza 2c).
+ */
+function WorkSettingsLink() {
+  const data = useShifts();
+  const [open, setOpen] = useState(false);
+  return (
+    <Section title="Praca i Grafik">
+      <p className="text-xs text-muted-foreground">Norma, nadgodziny i zarobek liczą się z ustawień Grafiku. Zmiany zapisują się od razu.</p>
+      <Button type="button" variant="outline" size="sm" onClick={() => setOpen(true)} className="gap-1.5 coarse:h-11">
+        Ustawienia Grafiku
+      </Button>
+      <ShiftSettingsDialog open={open} onOpenChange={setOpen} settings={data} />
+    </Section>
+  );
+}
 
 function NotificationStatus() {
   const state = getNotificationPermission();
@@ -65,34 +80,12 @@ const SHORTCUTS: { keys: string; desc: string }[] = [
   { keys: `${MOD_KEY} + Shift + Enter`, desc: "Zapisz i dodaj kolejną" },
 ];
 
-function previewEffect(key: EffectKey) {
-  const cx = window.innerWidth / 2;
-  const cy = window.innerHeight / 2;
-  switch (key) {
-    case "confetti": celebrate(cx, cy); break;
-    case "sparkle": sparkle(cx, cy); break;
-    case "emojiShower": emojiShower(); break;
-    case "fireworks": fireworks(1200); break;
-    case "hearts": hearts(cx, cy); break;
-    case "bubbles": bubbles(cx, window.innerHeight - 40); break;
-    case "rainbow": rainbow(); break;
-    case "seasonalTheme":
-    case "dailyQuote":
-    case "cardTilt":
-    case "themeFade": break;
-    case "badgeStamp": showAchievementStamp({ id: "preview", emoji: "🏅", title: "Podgląd pieczątki" }); break;
-    case "doneReward": dayDoneReward(); break;
-    case "haptics": haptic("success"); break;
-  }
-}
 
 /** "Ogólne" tab: default note color, editor prefs, confirmations, autosave, effects, shortcuts cheat-sheet. */
 export function GeneralSettings() {
-  const settings = useEffectsSettings();
   const confirmPrefs = useConfirmPrefs();
   const prefs = useViewPrefs();
   const badgeEnabled = useBadgeEnabled();
-  const keys = Object.keys(EFFECT_LABELS) as EffectKey[];
 
   return (
     <div className="space-y-4">
@@ -121,6 +114,74 @@ export function GeneralSettings() {
       <ClipperSettings />
 
       <ReviewSettings />
+      <Section title={`Przypomnienie „Dziś” ${prefs.todayReminderTime ? `codziennie o ${prefs.todayReminderTime}` : prefs.todayReminderHours === 0 ? "(wyłączone)" : prefs.todayReminderHours >= 24 ? `co ${Math.round(prefs.todayReminderHours / 24)} dni` : `co ${prefs.todayReminderHours} h`}`}>
+        <Slider
+          value={[prefs.todayReminderHours]}
+          min={0} max={48} step={1}
+          aria-label="Przypomnienie Dziś: co ile godzin"
+          onValueChange={([v]) => setViewPref("todayReminderHours", v)}
+          disabled={!!prefs.todayReminderTime}
+        />
+        <div className="flex items-center gap-2 mt-2">
+          <span className="text-xs text-muted-foreground shrink-0">albo o stałej godzinie:</span>
+          <input
+            type="time"
+            value={prefs.todayReminderTime}
+            aria-label="Przypomnienie Dziś: stała godzina"
+            onChange={(e) => setViewPref("todayReminderTime", e.target.value)}
+            className="text-xs bg-background border border-border/60 rounded-md px-2 py-1 text-foreground"
+          />
+          {prefs.todayReminderTime && (
+            <button
+              type="button"
+              onClick={() => setViewPref("todayReminderTime", "")}
+              className="text-xs text-muted-foreground hover:text-foreground underline coarse:min-h-11 coarse:px-2"
+            >wyczyść</button>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground mt-1.5">
+          {prefs.todayReminderTime
+            ? `Toast pojawi się raz dziennie o ${prefs.todayReminderTime} (gdy masz notatki z dzisiaj).`
+            : prefs.todayReminderHours === 0
+              ? "Powiadomienie o notatkach z dzisiaj nie będzie się pojawiać."
+              : `Toast pojawi się co najwyżej raz na ${prefs.todayReminderHours} ${prefs.todayReminderHours === 1 ? "godzinę" : prefs.todayReminderHours < 5 ? "godziny" : "godzin"} (gdy masz notatki z dzisiaj).`}
+        </p>
+      </Section>
+
+      <Section title={`Przypomnienie „Ten tydzień” ${prefs.weekReminderTime ? `${["w niedzielę", "w poniedziałek", "we wtorek", "w środę", "w czwartek", "w piątek", "w sobotę"][prefs.weekReminderDay]} o ${prefs.weekReminderTime}` : "(wyłączone)"}`}>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={prefs.weekReminderDay}
+            aria-label="Przypomnienie Ten tydzień: dzień"
+            onChange={(e) => setViewPref("weekReminderDay", Number(e.target.value))}
+            className="text-xs bg-background border border-border/60 rounded-md px-2 py-1 text-foreground"
+            disabled={!prefs.weekReminderTime}
+          >
+            {["Niedziela", "Poniedziałek", "Wtorek", "Środa", "Czwartek", "Piątek", "Sobota"].map((d, i) => (
+              <option key={d} value={i}>{d}</option>
+            ))}
+          </select>
+          <input
+            type="time"
+            value={prefs.weekReminderTime}
+            aria-label="Przypomnienie Ten tydzień: godzina"
+            onChange={(e) => setViewPref("weekReminderTime", e.target.value)}
+            className="text-xs bg-background border border-border/60 rounded-md px-2 py-1 text-foreground"
+          />
+          {prefs.weekReminderTime && (
+            <button
+              type="button"
+              onClick={() => setViewPref("weekReminderTime", "")}
+              className="text-xs text-muted-foreground hover:text-foreground underline coarse:min-h-11 coarse:px-2"
+            >wyłącz</button>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground mt-1.5">
+          {prefs.weekReminderTime
+            ? "Raz w tygodniu, o wybranej porze, dostaniesz podsumowanie ostatnich 7 dni."
+            : "Ustaw godzinę, aby otrzymywać cotygodniowe przypomnienie."}
+        </p>
+      </Section>
 
       <ToggleRow
         label="Liczba zaległych w tytule karty i na ikonie"
@@ -164,36 +225,6 @@ export function GeneralSettings() {
         </p>
       </Section>
 
-      <div className="pt-2"><Section title="Efekty i zabawa">
-        <p className="text-xs text-muted-foreground mb-2">Małe mikrointerakcje i sezonowe kolory. Wszystko respektuje tryb ograniczonego ruchu.</p>
-      </Section></div>
-      <div className="space-y-3">
-        {keys.map((key) => {
-          const meta = EFFECT_LABELS[key];
-          const enabled = settings[key];
-          const id = `effect-${key}`;
-          return (
-            // Przechył za kursorem nic nie robi na dotyku — tam go nie pokazujemy.
-            <div key={key} className={cn("flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/30 px-4 py-3", key === "cardTilt" && "[@media(pointer:coarse)]:hidden")}>
-              <div className="flex items-start gap-3 min-w-0">
-                <span className="text-2xl leading-none shrink-0" aria-hidden>{meta.emoji}</span>
-                <div className="min-w-0">
-                  <Label htmlFor={id} className="text-sm font-semibold cursor-pointer">{meta.label}</Label>
-                  <p className="text-xs text-muted-foreground mt-0.5">{meta.description}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                {key !== "seasonalTheme" && key !== "dailyQuote" && key !== "cardTilt" && (
-                  <Button type="button" size="sm" variant="outline" disabled={!enabled} onClick={() => previewEffect(key)} className={cn("h-8 px-2.5 gap-1.5 coarse:h-11", key === "haptics" && "pointer-fine:hidden")}>
-                    <Play className="w-3.5 h-3.5" /><span className="text-xs">Test</span>
-                  </Button>
-                )}
-                <Switch id={id} checked={enabled} onCheckedChange={(v) => setEffectEnabled(key, v)} />
-              </div>
-            </div>
-          );
-        })}
-      </div>
 
       {/* Skróty klawiszowe są bezużyteczne na telefonie. */}
       <div className="pt-2 space-y-2 [@media(pointer:coarse)]:hidden">
@@ -205,6 +236,8 @@ export function GeneralSettings() {
           </div>
         ))}
       </div>
+
+      <div className="pt-2"><WorkSettingsLink /></div>
 
       <div className="pt-2"><VaultSettings /></div>
 

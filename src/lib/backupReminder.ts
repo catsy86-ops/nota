@@ -1,5 +1,7 @@
 /** Shared last-backup timestamp. Reuses the auto-export key so manual & auto backups share state. */
-const KEY = "kaczy.lastAutoExport";
+/** Klucz ostatniej kopii (ręcznej i automatycznej) — jedna stała, używana też w Ustawieniach (Dane). */
+export const LAST_AUTO_EXPORT_KEY = "kaczy.lastAutoExport";
+const KEY = LAST_AUTO_EXPORT_KEY;
 
 export function getLastBackup(): number {
   try { return Number(localStorage.getItem(KEY) || 0); } catch { return 0; }

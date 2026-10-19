@@ -13,7 +13,7 @@ test("„Więcej” → Ustawienia otwiera ustawienia przy zamkniętym pasku boc
   await page.getByRole("button", { name: "Więcej", exact: true }).click();
   await page.getByRole("button", { name: "Ustawienia" }).last().click();
   await expect(page.getByRole("dialog", { name: "Ustawienia" })).toBeVisible();
-  await expect(page.getByRole("tab", { name: /Dane/ })).toBeVisible();
+  await expect(page.getByRole("tab", { name: /Kopia i dane/ })).toBeVisible();
 });
 
 test("Ustawienia na telefonie zajmują cały ekran i nie zmieniają wysokości przy zmianie zakładki @smoke @mobile", async ({ page }) => {
@@ -23,7 +23,7 @@ test("Ustawienia na telefonie zajmują cały ekran i nie zmieniają wysokości p
   await expect(dialog).toBeVisible();
 
   const heights: number[] = [];
-  for (const tab of ["Wygląd", "Ogólne", "Dane", "Sync"]) {
+  for (const tab of ["Wygląd", "Ogólne", "Kopia i dane", "Sync"]) {
     await page.getByRole("tab", { name: tab }).click();
     await expect(page.getByRole("tab", { name: tab })).toHaveAttribute("data-state", "active");
     heights.push(Math.round((await dialog.boundingBox())!.height));

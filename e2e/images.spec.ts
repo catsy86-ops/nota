@@ -14,6 +14,11 @@ async function open(page: Page) {
   await page.goto("/");
 }
 
+async function openSyncTab(page: Page) {
+  await page.getByRole("button", { name: "Ustawienia" }).first().click();
+  await page.getByRole("tab", { name: "Sync" }).click();
+}
+
 async function openDataTab(page: Page) {
   await page.getByRole("button", { name: "Ustawienia" }).first().click();
   await page.getByRole("tab", { name: "Dane" }).click();
@@ -38,7 +43,7 @@ const cardImage = (page: Page, title: string) =>
   page.locator("[data-note-id]").filter({ hasText: title }).locator('img[src^="blob:"]');
 
 async function mergeSyncFile(page: Page, file: string) {
-  await openDataTab(page);
+  await openSyncTab(page);
   const [chooser] = await Promise.all([
     page.waitForEvent("filechooser"),
     page.getByRole("button", { name: "Scal z pliku" }).click(),
@@ -58,7 +63,7 @@ test("obraz przeżywa przeładowanie i jedzie plikiem synchronizacji na drugie u
   await a.reload();
   await expect(cardImage(a, title)).toHaveCount(1);
 
-  await openDataTab(a);
+  await openSyncTab(a);
   const [download] = await Promise.all([
     a.waitForEvent("download"),
     a.getByRole("button", { name: "Zapisz plik synchronizacji" }).click(),

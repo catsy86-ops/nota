@@ -3913,3 +3913,30 @@ lub grupę”.
   - `src/lib/settingsPrefs.test.ts` — uszkodzony JSON i tekst zamiast obiektu w `viewPrefs`, częściowy zapis, reset, `confirmPrefs` (domyślne, uszkodzony JSON, zapis jednego klucza), `normalizePushServer` (ukośnik, http dla zdalnego hosta, localhost, pusty tekst).
   - E2e (chromium, 106 testów): `mobile`, `skins`, `clipper`, `push`, `diagnostics`, `sync-code`, `search-backup`, `private-notes`, `shifts`, `a11y`, `toggle-group`, `site-mode`, `card-motion` — zielone.
 - **Commit:** cb2ecff, 2026-10-19.
+
+## Ustawienia — struktura, faza 2 (2026-10-19, bez commita)
+
+- **Co robi:** cztery karty zostają, ale rozłożone inaczej. Karta „Dane” nazywa się „Kopia i dane”. Przypomnienia „Dziś” i „Ten tydzień” są w Ogólne, obok przeglądu tygodnia. Synchronizacja przez plik jest w karcie Sync, obok parowania. Efekty i zabawa są w Wyglądzie. Ogólne ma sekcję „Praca i Grafik” z przyciskiem „Ustawienia Grafiku”. Przypomnienie o kopii zostaje w karcie Kopii.
+- **Gdzie jest:**
+  - `src/components/SettingsDialog.tsx` — nazwa karty „Kopia i dane” (zakładki na wiele wierszy, `h-auto`); `SyncFileSection` w karcie Sync; usunięta niekontrolowana gałąź `trigger`, prop `open`/`onOpenChange` wymagane.
+  - `src/components/settings/GeneralSettings.tsx` — przypomnienia „Dziś”/„Ten tydzień” po `<ReviewSettings />`; `WorkSettingsLink` (sekcja „Praca i Grafik”, otwiera `ShiftSettingsDialog`); efekty usunięte stąd.
+  - `src/components/settings/EffectsSettings.tsx` (nowy) — sekcja „Efekty i zabawa” i `previewEffect`, przeniesione z Ogólne.
+  - `src/components/settings/AppearanceSettings.tsx` — renderuje `EffectsSettings` przed resetem.
+  - `src/components/settings/SyncFileSection.tsx` (nowy) — „Synchronizacja przez plik” i jej obsługa (`exportSyncNow`, `mergeSyncNow`, `newNotesLabel`), przeniesione z `BackupSettings.tsx`.
+  - `src/components/settings/BackupSettings.tsx` — bez sekcji przypomnień Dziś/Ten tydzień i bez synchronizacji pliku; używa `LAST_AUTO_EXPORT_KEY`.
+  - `src/lib/backupReminder.ts` — `LAST_AUTO_EXPORT_KEY`, jedna stała dla klucza ostatniej kopii.
+  - `src/lib/viewPrefs.ts` — domyślny `weekReminderDay` to 0 (niedziela), tak jak dzień przeglądu tygodnia.
+- **Jak działa i dlaczego:**
+  - Przypomnienia „Dziś”/„Ten tydzień” to ustawienia powiadomień, nie kopii, więc są razem z przeglądem tygodnia. Przypomnienie o kopii zostaje w Kopii, bo mierzy czas od ostatniego backupu.
+  - Synchronizacja przez plik jest w karcie Sync, bo to też synchronizacja między urządzeniami.
+  - Efekty przeniesione do Wyglądu zamiast trzeciej karty: pięć kart na telefonie nie mieści się w jednym wierszu.
+  - Domyślny dzień przypomnienia ustawiono na niedzielę, bo przegląd tygodnia ma niedzielę. To zmienia tylko nowe ustawienia; zapisane dni zostają.
+- **Ograniczenia i pułapki:**
+  - Istniejące kopie i zapisane ustawienia nie zmieniają się. Zmienia się tylko domyślny dzień, gdy użytkownik nigdy nie ustawił godziny.
+  - E2e szukające karty „Dane” — `mobile.spec.ts` używa teraz „Kopia i dane”; testy synchronizacji pliku (`file-sync`, `live-text`, `live-text-focused`, `images`) otwierają kartę Sync.
+  - Nie zrobiono fazy 3 (reset per sekcja, linki `?settings=`). Wyszukiwanie ustawień odrzucone decyzją właściciela.
+  - QA na telefonie nie sprawdzono (zgodnie z decyzją, później). Szczególnie: zakładka „Kopia i dane” zawija się na wąskim ekranie.
+- **Testy:**
+  - `src/lib/settingsPrefs.test.ts` — domyślny dzień tygodnia to 0.
+  - E2e: zmienione specy zielone (`file-sync`, `images`, `live-text`, `live-text-focused`, `mobile`, i pozostałe z listy fazy 1). Pełny e2e w trakcie przy zapisie tej sekcji.
+- **Commit:** —

@@ -32,7 +32,7 @@ export interface ViewPrefs {
   todayReminderHours: number; // 0 = off, otherwise interval in hours between nudges
   todayReminderTime: string; // "" = disabled, otherwise "HH:mm" for daily fixed-time reminder (takes priority over interval)
   weekReminderTime: string; // "" = disabled, otherwise "HH:mm" for weekly fixed-time reminder
-  weekReminderDay: number; // 0 = Sunday … 6 = Saturday (default 1 = Monday)
+  weekReminderDay: number; // 0 = Sunday … 6 = Saturday (default 0 = niedziela, jak przegląd tygodnia)
   showReadingTime: boolean;
   showBacklinks: boolean;
 }
@@ -58,7 +58,7 @@ const DEFAULTS: ViewPrefs = {
   todayReminderHours: 0,
   todayReminderTime: "",
   weekReminderTime: "",
-  weekReminderDay: 1,
+  weekReminderDay: 0,
   showReadingTime: true,
   showBacklinks: true,
 };
