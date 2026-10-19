@@ -3804,6 +3804,7 @@ lub grupę”.
 - **Jak działa:** skrót nie zapisuje, gdy godzina jest niepoprawna (`timestamp === null`), a przy dodawaniu wymaga tytułu. Przyjmuje się zdarzenie z całego okna, więc działa z fokusem w każdym polu.
 - **Testy:** `e2e/reminders-calendar.spec.ts` („Ctrl+Enter z pola godziny tworzy notatkę z terminem (K3)”) — sprawdza, że okno się zamyka i dzień ma jeden termin. Uruchomiony: przechodzi.
 - **Nie zrobione z K3:** podpowiedzi skrótów widoczne w interfejsie (tylko `aria-keyshortcuts` i zachowanie).
+- **Commit:** 19f2ade, 2026-10-19.
 
 ## Praca — porządki po planie (L1, L2, L6, T4, T6, T2 częściowo, C4 — 2026-10-19)
 
@@ -3827,4 +3828,4 @@ lub grupę”.
   - U8 — decyzja właściciela: nagranie jako osobny załącznik. Nie zrobione: audio w `imageStore` wymaga obsługi w kopii (budżet 40 MB), PDF, ZIP, odśmiecaniu i w arkuszu wpisu (zdjęcia zakładają obrazy).
   - D5 — decyzja właściciela: zostaje obecny model wpisu (jeden klucz Y.Map), bez przebudowy.
   - P3 — decyzja: odłożenie dotyczy tylko jednego wystąpienia. Nie zrobione: dziś „Odłóż” z powiadomienia zapisuje nowy `reminder` notatki, czyli przesuwa kotwicę całej serii. Potrzebne pole nakładki w `reminderSpec` i obsługa w harmonogramie push, Kalendarzu, Dziś i Przypomnieniach (ok. 39 plików, 73 miejsca czytania terminu) — osobna sesja z pełnym e2e.
-- **Commit:** brak — zmiany niezacommitowane.
+- **Commit:** 19f2ade, 2026-10-19.
