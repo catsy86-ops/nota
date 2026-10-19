@@ -1,5 +1,6 @@
 import { useMemo, useSyncExternalStore } from "react";
 import type { Fitting } from "./fittings";
+import type { Attachment } from "@/lib/attachments";
 import { CHECKLIST, QUESTIONS, TOPICS, type ChecklistItem, type Question } from "./content";
 import { CUSTOM_MAX, CUSTOM_PREFIX, CUSTOM_TEXT_MAX, cleanCustom, cleanCustomList, questionOptions, type CustomEntry, type CustomItem, type CustomQuestion } from "./custom";
 import { localDayKey } from "@/lib/dayDone";
@@ -72,6 +73,7 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
       ...(typeof e.siteId === "string" && e.siteId && e.siteId.length <= 64 ? { siteId: e.siteId } : {}),
       checked: parts.checked.filter((id) => itemIds.has(id)),
       images: parts.images,
+      ...(parts.recordings.length ? { recordings: parts.recordings } : {}),
       ...(e.kind === "problem" && typeof e.resolved === "number" && Number.isFinite(e.resolved) ? { resolved: e.resolved } : {}),
       ...(e.kind === "problem" && typeof e.solution === "string" && e.solution.trim() ? { solution: e.solution.trim().slice(0, JOURNAL_SOLUTION_MAX) } : {}),
       ...(parts.test ? { test: parts.test } : {}),
@@ -195,6 +197,8 @@ export interface NewJournalEntry {
   text: string;
   checked?: string[];
   images?: string[];
+  /** Nagrania głosowe (załączniki audio); brak = bez nagrań. Nagranie samo wystarcza, by wpis nie był pusty (jak zdjęcie). */
+  recordings?: Attachment[];
   /** Moment wpisu („za wczoraj”); brak = teraz. Przyszłość przycina się do teraz. */
   at?: number | null;
   /** Protokół próby szczelności; `null`/brak = bez próby. */
@@ -215,13 +219,14 @@ function entryFields(input: NewJournalEntry, now: number) {
     text: input.text.trim(),
     checked: (input.checked ?? []).filter((id) => items.some((c) => c.id === id)),
     images: input.images ?? [],
+    recordings: input.recordings ?? [],
     test: input.test,
     fittings: input.fittings,
     stage: input.stage,
     geo: input.geo,
   });
   if (parts.empty) return null;
-  const { text, checked, images, test, fittings, stage, geo } = parts;
+  const { text, checked, images, recordings, test, fittings, stage, geo } = parts;
   return {
     at: typeof input.at === "number" && Number.isFinite(input.at) ? Math.min(input.at, now) : now,
     kind: input.kind,
@@ -229,6 +234,7 @@ function entryFields(input: NewJournalEntry, now: number) {
     text,
     checked,
     images,
+    ...(recordings.length ? { recordings } : {}),
     ...(test ? { test } : {}),
     ...(fittings.length ? { fittings } : {}),
     ...(stage ? { stage } : {}),

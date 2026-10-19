@@ -1,6 +1,7 @@
 import * as Y from "yjs";
 import { cleanFittings, type Fitting } from "./fittings";
 import { isImageRef } from "@/lib/imageStore";
+import type { Attachment } from "@/lib/attachments";
 import { addDaysToKey } from "@/lib/week";
 import { cleanSite, foldName, type SiteCard } from "./sites";
 import { cleanCard, reviewCard, type ReviewCard } from "./srs";
@@ -48,6 +49,8 @@ export interface JournalEntry {
   checked: string[];
   /** Zdjęcia z budowy: klucze z `imageStore` (bajty poza stanem Nauki). */
   images: string[];
+  /** Nagrania głosowe z budowy (załączniki audio; bajty w `imageStore`). Brak = bez nagrań. */
+  recordings?: Attachment[];
   /** Problem rozwiązany — moment rozwiązania (ms); brak = otwarty. Tylko dla `problem`. */
   resolved?: number;
   /** Jak problem rozwiązano („wymieniona złączka”) — baza własnych rozwiązań. Tylko dla `problem`. */
@@ -67,6 +70,8 @@ export interface JournalEntry {
  * Starsza wersja aplikacji (limit 4) pokaże 4, a przy edycji wpisu piąte zgubi.
  */
 export const JOURNAL_MAX_IMAGES = 5;
+/** Nagrania w jednym wpisie (U8: osobny załącznik, nie zdjęcie). */
+export const JOURNAL_MAX_RECORDINGS = 3;
 export const JOURNAL_MAX_TEXT = 2000;
 /** Opis rozwiązania problemu — krótki, jedno-dwa zdania. */
 export const JOURNAL_SOLUTION_MAX = 500;
@@ -143,16 +148,37 @@ const isPercent = (v: unknown): v is number => typeof v === "number" && v >= 0 &
  * materiału), zdjęcia, próba, kształtki, etap, lokalizacja. `empty` = nic w tym nie ma
  * (sprawdzane przed filtrem materiału — wpis z odhaczeniami, których punkt zniknął, zostaje).
  */
-export function cleanEntryParts(e: { text?: unknown; checked?: unknown; images?: unknown; test?: unknown; fittings?: unknown; stage?: unknown; geo?: unknown }) {
+export function cleanEntryParts(e: { text?: unknown; checked?: unknown; images?: unknown; recordings?: unknown; test?: unknown; fittings?: unknown; stage?: unknown; geo?: unknown }) {
   const text = typeof e.text === "string" ? e.text.slice(0, JOURNAL_MAX_TEXT) : "";
   const checked = Array.isArray(e.checked) ? e.checked.filter((id): id is string => typeof id === "string" && id.length <= 64).slice(0, 60) : [];
   const images = Array.isArray(e.images) ? e.images.filter((r): r is string => typeof r === "string" && isImageRef(r)).slice(0, JOURNAL_MAX_IMAGES) : [];
+  const recordings = cleanRecordings(e.recordings);
   const test = cleanTest(e.test);
   const fittings = cleanFittings(e.fittings);
   const stage = cleanEntryStage(e.stage);
   const geo = cleanGeo(e.geo);
-  const empty = !text.trim() && checked.length === 0 && images.length === 0 && !test && fittings.length === 0 && !stage;
-  return { text, checked, images, test, fittings, stage, geo, empty };
+  const empty = !text.trim() && checked.length === 0 && images.length === 0 && recordings.length === 0 && !test && fittings.length === 0 && !stage;
+  return { text, checked, images, recordings, test, fittings, stage, geo, empty };
+}
+
+/**
+ * Nagrania wpisu z dowolnego wejścia (dokument, kopia, peer): tylko poprawne manifesty audio.
+ * Hash to klucz w `imageStore`; rozmiar i typ muszą mieścić się w zapisanych wartościach.
+ */
+export function cleanRecordings(raw: unknown): Attachment[] {
+  if (!Array.isArray(raw)) return [];
+  const out: Attachment[] = [];
+  for (const r of raw) {
+    const a = r as Partial<Attachment> | null;
+    if (!a || typeof a !== "object") continue;
+    if (typeof a.hash !== "string" || !isImageRef(a.hash)) continue;
+    if (typeof a.name !== "string" || !a.name) continue;
+    if (typeof a.size !== "number" || !Number.isFinite(a.size) || a.size <= 0) continue;
+    if (typeof a.type !== "string" || !a.type.startsWith("audio/")) continue;
+    out.push({ hash: a.hash, name: a.name.slice(0, 120), size: a.size, type: a.type });
+    if (out.length >= JOURNAL_MAX_RECORDINGS) break;
+  }
+  return out;
 }
 
 /** Kształt wpisu (bez sprawdzania materiału); `null` = nie do uratowania. */
@@ -162,7 +188,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
   if (typeof e.id !== "string" || !e.id || e.id.length > 64) return null;
   if (typeof e.at !== "number" || !Number.isFinite(e.at)) return null;
   if (!JOURNAL_KINDS.includes(e.kind as JournalKind)) return null;
-  const { text, checked, images, test, fittings, stage, geo, empty } = cleanEntryParts(e);
+  const { text, checked, images, recordings, test, fittings, stage, geo, empty } = cleanEntryParts(e);
   if (empty) return null;
   return {
     id: e.id, at: e.at, kind: e.kind as JournalKind,
@@ -172,6 +198,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
     ...(typeof e.siteId === "string" && e.siteId && e.siteId.length <= 64 ? { siteId: e.siteId } : {}),
     checked,
     images,
+    ...(recordings.length ? { recordings } : {}),
     ...(e.kind === "problem" && typeof e.resolved === "number" && Number.isFinite(e.resolved) ? { resolved: e.resolved } : {}),
     ...(e.kind === "problem" && typeof e.solution === "string" && e.solution.trim() ? { solution: e.solution.trim().slice(0, JOURNAL_SOLUTION_MAX) } : {}),
     ...(test ? { test } : {}),

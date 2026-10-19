@@ -1,5 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { TriangleAlert, Camera, CircleCheck, ChevronDown, Clock, ImagePlus, ListChecks, LoaderCircle, LocateFixed, MapPin, Mic, NotebookPen, Pencil, PenTool, Play, Trash, Type, X } from "lucide-react";
+import { formatFileSize } from "@/lib/attachments";
+import { addRecording } from "@/lib/study/recordings";
+import { JOURNAL_MAX_RECORDINGS } from "@/lib/study/yStudy";
 import { HeightsButton } from "./HeightsSheet";
 import { PressureTestFields } from "./PressureTestFields";
 import { FittingsFields } from "./FittingsFields";
@@ -54,7 +57,11 @@ const KIND_ON: Record<JournalKind, string> = {
 let persistAsked = false;
 
 /** Pola wspólne dla szkicu nowego wpisu i edycji zapisanego. */
-type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "test" | "fittings" | "stage" | "geo">;
+type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "recordings" | "test" | "fittings" | "stage" | "geo">;
+
+/** Odtwarzacz i nagrywanie leniwie, poza główną paczką (jak w notatkach). */
+const VoiceRecorder = lazy(() => import("@/components/VoiceAttachmentParts").then((m) => ({ default: m.VoiceRecorder })));
+const AudioPreview = lazy(() => import("@/components/VoiceAttachmentParts").then((m) => ({ default: m.AudioPreview })));
 
 function useOnline() {
   const [online, setOnline] = useState(() => typeof navigator === "undefined" || navigator.onLine);
@@ -83,7 +90,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const editForm = useJournalEditForm();
   const isEdit = editing !== null && editForm !== null;
   const form: FormFields = isEdit ? editForm : draft;
-  const { topic, kind, text, images } = form;
+  const { topic, kind, text, images, recordings } = form;
   const checked = useMemo(() => new Set(form.checked), [form.checked]);
   // Czytane na świeżo (zdjęcia obrabiają się asynchronicznie); edycja zamknięta w trakcie → pusty formularz.
   const getForm = (): FormFields => (isEdit ? getJournalEditForm() ?? EMPTY_DRAFT : getJournalDraft());
@@ -102,6 +109,8 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   /** Budowa w chwili otwarcia pola — dopóki jej nie zmienisz, pigułki pokazują wszystkie ostatnie. */
   const [siteAtOpen, setSiteAtOpen] = useState("");
   const [editingWhen, setEditingWhen] = useState(false);
+  /** Nagrywanie w toku (pasek z licznikiem zamiast przycisku); nagranie trafia do załączników wpisu. */
+  const [recording, setRecording] = useState(false);
   const galleryRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
@@ -354,7 +363,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     if (processing > 0) return;
     if (isEdit) { saveEdit(); return; }
     const wasDone = topic && columnOf(study, topic) === "done";
-    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, at, test: form.test, fittings: form.fittings, stage: form.stage, geo: form.geo ?? null });
+    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, recordings: form.recordings, at, test: form.test, fittings: form.fittings, stage: form.stage, geo: form.geo ?? null });
     if (!entry) {
       haptic("warn");
       toast("Wpisz, co się dzieje, dodaj zdjęcie albo zaznacz sprawdzone punkty");
@@ -383,7 +392,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     const prev = study.journal.find((e) => e.id === f.id);
     const demotes = f.kind === "problem" && !!f.topic && columnOf(study, f.topic) === "done" && (prev?.kind !== "problem" || prev.topic !== f.topic);
     const saved = updateJournalEntry(f.id, {
-      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, at: f.at, site: f.site, resolved: f.resolved, test: f.test, fittings: f.fittings, stage: f.stage, geo: f.geo ?? null,
+      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, recordings: f.recordings, at: f.at, site: f.site, resolved: f.resolved, test: f.test, fittings: f.fittings, stage: f.stage, geo: f.geo ?? null,
     });
     if (!saved) {
       haptic("warn");
@@ -401,6 +410,16 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     const entry = removeJournalEntry(editing);
     closeJournalSheet();
     if (entry) toastWithUndo("Usunięto wpis", () => restoreJournalEntry(entry), { id: "journal-removed" });
+  }
+
+  /** Gotowe nagranie z `VoiceRecorder`: przypinamy do szkicu albo edytowanego wpisu. */
+  async function addRecordingFile(file: File) {
+    const { added, message } = await addRecording(file, getForm().recordings);
+    if (added) {
+      patch({ recordings: [...getForm().recordings, added] });
+      haptic("success");
+    }
+    if (message) toast.error(message);
   }
 
   const fileInput = (props: { ref: React.RefObject<HTMLInputElement | null>; testId: string; capture?: boolean }) => (
@@ -706,7 +725,43 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               <Button type="button" variant="outline" onClick={() => galleryRef.current?.click()} className="coarse:h-12">
                 <ImagePlus className="mr-1.5 h-4 w-4 coarse:h-5 coarse:w-5" /><span className="coarse:hidden">Dodaj zdjęcie</span><span className="hidden coarse:inline">Galeria</span>
               </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setRecording(true)}
+                disabled={recording || recordings.length >= JOURNAL_MAX_RECORDINGS}
+                className="coarse:h-12"
+              >
+                <Mic className="mr-1.5 h-4 w-4 coarse:h-5 coarse:w-5" />Nagraj
+              </Button>
             </div>
+            {recording && (
+              <Suspense fallback={null}>
+                <VoiceRecorder onFile={(f) => void addRecordingFile(f)} onClose={() => setRecording(false)} />
+              </Suspense>
+            )}
+            {recordings.length > 0 && (
+              <ul className="space-y-2" aria-label="Nagrania we wpisie">
+                {recordings.map((a) => (
+                  <li key={a.hash} className="rounded-lg border border-border px-2.5 py-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <Mic className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                      <span className="min-w-0 flex-1 truncate">{a.name}</span>
+                      <span className="shrink-0 font-mono text-2xs tabular-nums text-muted-foreground">{formatFileSize(a.size)}</span>
+                      <button
+                        type="button"
+                        onClick={() => patch({ recordings: getForm().recordings.filter((x) => x.hash !== a.hash) })}
+                        aria-label={`Usuń nagranie: ${a.name}`}
+                        className="pressable grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
+                      >
+                        <X className="h-3.5 w-3.5" aria-hidden />
+                      </button>
+                    </div>
+                    <Suspense fallback={null}><AudioPreview attachment={a} /></Suspense>
+                  </li>
+                ))}
+              </ul>
+            )}
             {(images.length > 0 || processing > 0) && (
               <ul className="flex flex-wrap gap-2" aria-label="Zdjęcia we wpisie">
                 {images.map((ref) => (

@@ -32,8 +32,18 @@ export function siteDocRefsIn(doc: { getMap(name: string): MapLike }): Set<strin
 export function journalRefsIn(doc: { getMap(name: string): MapLike }, syncable = false): Set<string> {
   const refs = new Set<string>();
   doc.getMap("studyJournal").forEach((e) => {
-    const images = (e as { images?: unknown } | null)?.images;
+    const entry = e as { images?: unknown; recordings?: unknown } | null;
+    const images = entry?.images;
     if (Array.isArray(images)) for (const r of images) if (typeof r === "string" && isImageRef(r)) refs.add(r);
+    // Nagrania (U8): ten sam magazyn; do innego urządzenia jadą jak załączniki do 2 MB.
+    if (Array.isArray(entry?.recordings)) {
+      for (const r of entry.recordings) {
+        const a = r as { hash?: unknown; size?: unknown } | null;
+        if (typeof a?.hash !== "string" || !isImageRef(a.hash)) continue;
+        if (syncable && !(typeof a.size === "number" && a.size <= DOC_SYNC_MAX_BYTES)) continue;
+        refs.add(a.hash);
+      }
+    }
   });
   doc.getMap("studySiteItems").forEach((v, key) => {
     const i = key.indexOf(DOCS_KEY);
