@@ -3636,4 +3636,4 @@ lub grupę”.
 - **Decyzja:** przyjęto zalecaną wersję („jeden dymek, pominięto N”). Pytanie 3 z planu nie zostało jeszcze potwierdzone przez właściciela.
 - **Ograniczenia:** zabezpieczenie 1000 wystąpień wstecz. Przy absurdalnie starym terminie pominięte są najwyżej tysiąc cykli.
 - **Testy:** `src/lib/reminderDue.test.ts` (10: na czas, zaległa seria 5 dni, koniec serii, miesiąc z 31., rejestr, `handled`, brak terminu). E2E `reminder-toast`, `reminders-calendar`: 16/16. Vitest 1437/1437. Typecheck czysty.
-- **Commit:** patrz następna linia.
+- **Commit:** 0d6e497, 2026-10-19.
