@@ -3706,7 +3706,7 @@ lub grupę”.
 - **Decyzje:** identyfikatory etapów z `DEFAULT_STAGES` (`stages.ts`), stałe trzymane w `reminders.ts`, żeby nie wprowadzać cyklu importów. Przypomnienie nie idzie do push: to ostrzeżenie na czas budowy, a nie termin, więc zostaje w aplikacji (Dziś i Dziennik).
 - **Ograniczenie:** etap „Próba szczelności” jest tylko odhaczeniem; nie zastępuje protokołu z wynikiem (ciśnienie, czas, spadek). Nazwy etapów własnych nie są rozpoznawane, tylko identyfikatory domyślne.
 - **Testy:** `src/lib/study/reminders.test.ts` (grupa „próba przed zakryciem z etapów karty (U1)”: bez zakrycia, odhaczone zakrycie/próba, archiwum, duplikat z „no-test”, protokół w dzienniku), `src/lib/study/dueRows.test.ts` (wiersz na Dziś). Vitest `src/lib/study` 287/287, tsc czysty.
-- **Commit:** w commicie z tym wpisem, 2026-10-19.
+- **Commit:** 7fd412a, 2026-10-19.
 
 ## Przypomnienia — cały dzień (P6 planu kalendarza/przypomnień, 2026-10-19)
 
