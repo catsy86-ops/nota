@@ -3561,3 +3561,12 @@ lub grupę”.
 - **Czego nie zmieniano:** obramowanie `border-border/50` i 46 innych miejsc z `rounded-2xl` w innych komponentach (osobny, kosmetyczny PR, zob. plan).
 - **Testy:** `scratchpad/test-chrome.mjs` — promień 16 px, `hoverFine=false` i `translate=none` na dotyku, zero poziomego przewijania przy 390 px. E2E `touch-targets`, `card-images`: 8/8. Vitest: patrz wpis commitu.
 - **Commit:** bb48640, 2026-10-19.
+
+## Notatki — puste stany z następnym krokiem (faza 6 planu Notatek, 2026-10-19)
+
+- **Co robi:** każdy pusty widok listy (Notatki, Archiwum, Kosz, Przypomnienia, Kalendarz, Grafik, Dziś, Tydzień, etykieta, folder, Skrzynka) ma nagłówek i jedno–dwa zdania, które mówią, co zrobić dalej. Dawniej większość mówiła tylko, że „coś pojawi się tutaj”.
+- **Gdzie jest:** `src/components/EmptyState.tsx` — słowniki `HEADINGS` i `DESCRIPTIONS` (teraz eksportowane do testów). Komponent `StatusPanel` bez zmian.
+- **Zasady tekstów:** bez wykrzykników, bez przepraszania, zdania w trybie rozkazującym lub z podmiotem „notatka”. Opisane gesty i menu są sprawdzone w kodzie: archiwizacja w lewo (dotyk) i „Archiwizuj” w menu, kosz z 30 dniami, `#etykieta` i `@folder` w kompozytorze, `jutro 9:00` jako przypomnienie.
+- **Czego nie dodano:** przycisków w pustych stanach. Plan mówi „gdzie sensowne”, a tu następny krok to już działanie na kaflu albo w kompozytorze („+”), więc przycisk dublowałby ten sam skrót. Do rozważenia później.
+- **Testy:** `src/components/EmptyState.copy.test.ts` (12: nagłówek i krok w każdym widoku, długość, brak wykrzykników). W Chrome (`scratchpad/test-chrome.mjs`): /kosz, /archiwum, /przypomnienia pokazują nowe zdania. E2E `reminders-calendar`, `search-backup`: 14/14. Vitest: patrz wpis commitu.
+- **Commit:** patrz następna linia.
