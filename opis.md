@@ -3789,6 +3789,8 @@ lub grupę”.
 
 ## Kalendarz — widok dnia z osią godzin (K1 planu kalendarza/przypomnień, 2026-10-19)
 
+- **Poprawka typu (2026-10-19, bez commita):** `src/components/calendar/DayPanel.tsx` — usunięty zbędny prop `type="single"` z `ToggleGroup`; wrapper z `src/components/ui/toggle-group.tsx` ustawia go sam. Błąd `tsc` zgłaszany od 5aa530e znika (`npx tsc -p tsconfig.app.json --noEmit` czysty).
+
 - **Co robi:** w panelu wybranego dnia przełącznik „Lista | Oś godzin”. Lista zostaje domyślna. Oś to wiersze po godzinach z napisem `07:00`; zmiana z Grafiku jest paskiem w lewej kolumnie (przerwa jaśniejsza), a każdy termin stoi w swojej godzinie z dokładnym czasem i pełnym tytułem. Terminy „cały dzień” są nad osią, bez godziny.
 - **Gdzie jest:** `src/lib/dayTimeline.ts` (czysta logika: `shiftPieces`, `timelineHours`, `hourBackground`, `minutesOfDay`), `src/components/calendar/DayTimeline.tsx` (widok osi, `TimelineItem`), `src/components/calendar/DayPanel.tsx` (przełącznik `ToggleGroup`, stan `view`, warunkowe renderowanie), `src/lib/reminderOccurrences.ts` (pole `Occurrence.allDay` z `note.reminderAllDay`).
 - **Jak działa:** zakres osi to co najmniej 7–21, a rozszerza się, gdy zmiana albo termin wychodzi poza ten przedział (w granicach doby). Pasek zmiany to gradient CSS w każdym wierszu: każdy wiersz dostaje tylko swój fragment (np. zmiana od 14:30 daje połowę wiersza 14:00). Dzięki temu wiersz może rosnąć od wielu terminów bez przesunięć paska. Klik w termin otwiera edycję, Shift+←/→ przesuwa o dzień, prognoza serii otwiera najbliższy zapisany termin — tak jak w liście.
@@ -3821,11 +3823,10 @@ lub grupę”.
   - `src/lib/study/yStudy.test.ts` — migracja dawnego zapisu zachowuje zdjęcia i są widoczne dla odśmiecania (T4).
   - `src/lib/study/study.test.ts`, `src/lib/study/customStore.test.ts` — zegar zamrożony w `freshStudy` (`vi.setSystemTime`), bo `recordRound` i `addJournalEntry` brały dzień z prawdziwego zegara (T6). `TodayDueList.test.tsx` i `StudyDueRows.test.tsx` już miały zamrożony `Date`.
   - `src/lib/study/srs.test.ts` — po usunięciu parametru `known` został test samego sortowania.
-  - `src/components/study/SiteOrderPanel.test.tsx` — pierwszy test komponentu z działu Praca (T2, jeden z ośmiu).
-- **Nie zrobione (z planu Pracy):**
-  - T2 — testy pozostałych komponentów: SiteDocs, SiteService, SiteStages, SiteShortages, JournalEntrySheet, DayHours, Calculators.
+  - T2 — testy komponentów działu Praca: `SiteOrderPanel.test.tsx` (WhatsApp), `SiteShortagesPanel.test.tsx` (dopisanie, status, data dostawy, usuwanie z „Cofnij”, czyszczenie), `SiteStagesPanel.test.tsx` (domyślne etapy, odhaczenie z datą, postęp, własny etap), `SiteDocsPanel.test.tsx` (miniatury i PDF-y, „Otwórz”, usuwanie, podgląd 100%), `DayHoursDialog.test.tsx` (zapis godzin, błędny format, reszta dnia, ostrzeżenie o nadmiarze). Biblioteka i store zamockowane, bez zależności od prawdziwego zegara. Dochodzą: `SiteServicePanel.test.tsx` (zgłoszenia z terminem, zaległe i dziś, zamknięcie z opisem, „Cofnij”, gwarancja, załatwione i „Otwórz ponownie”), `CalculatorsSheet.test.tsx` (spadek w obu trybach z podpowiedzią, próba wodna, pojemność z kolejnym odcinkiem i „Inna rura”), `JournalEntrySheet.test.tsx` (rodzaj w szkicu, pusty wpis, zapis z tekstem, edycja, „Usuń” z „Cofnij”; store zapisu zamockowany, szkic i stan arkusza prawdziwe).
+- **Nie zrobione (z planu Pracy):** brak — T2 zamknięte, wszystkie komponenty działu mają test.
   - T5 — `report-nudge.spec.ts` nie ma już `waitForTimeout` (usunięty wcześniej); `journal-geo.spec.ts` celowo akceptuje dwa komunikaty (zależne od przeglądarki); `today-study.spec.ts` przechodzi, a wynik nie zależy od odpowiedzi (wszystkie 10 pytań wraca następnego dnia). Bez zmian.
   - U8 — decyzja właściciela: nagranie jako osobny załącznik. Nie zrobione: audio w `imageStore` wymaga obsługi w kopii (budżet 40 MB), PDF, ZIP, odśmiecaniu i w arkuszu wpisu (zdjęcia zakładają obrazy).
   - D5 — decyzja właściciela: zostaje obecny model wpisu (jeden klucz Y.Map), bez przebudowy.
   - P3 — decyzja: odłożenie dotyczy tylko jednego wystąpienia. Nie zrobione: dziś „Odłóż” z powiadomienia zapisuje nowy `reminder` notatki, czyli przesuwa kotwicę całej serii. Potrzebne pole nakładki w `reminderSpec` i obsługa w harmonogramie push, Kalendarzu, Dziś i Przypomnieniach (ok. 39 plików, 73 miejsca czytania terminu) — osobna sesja z pełnym e2e.
-- **Commit:** 19f2ade, 2026-10-19.
+- **Commit:** 19f2ade, 2026-10-19 (testy T2 z kolejnej sesji — bez commita, patrz sekcja kalendarza K1).
