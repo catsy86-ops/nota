@@ -3521,4 +3521,4 @@ lub grupę”.
 - **Jak działa:** `TitleField` to `<textarea>` z automatyczną wysokością. Przyjmuje `ref` od rodzica (kompozytor ustawia na nim fokus) i łączy go z własnym refem do pomiaru. `onEnter` dostaje zdarzenie klawisza, więc kompozytor zachowuje skróty: Enter przenosi do treści, Ctrl+Enter zamyka, Ctrl+Shift+Enter zapisuje i zostawia pusty szkic.
 - **Ograniczenia i pułapki:** w DOM pole tytułu to `textarea`, a jego treść liczy się jako tekst. Testy e2e szukające tytułu przez `getByText` mogą trafić w pole, gdy kompozytor jeszcze się zwija. Stąd `getByRole("heading", …)` w `e2e/quick-capture.spec.ts` (Ctrl+Shift+L w edycji).
 - **Testy:** `e2e/quick-capture.spec.ts` (10/10), `e2e/composer.spec.ts`, `e2e/editing.spec.ts`. W prawdziwym Chrome (`scratchpad/test-chrome.mjs`, 390 px): długi tytuł zawija się na co najmniej dwie linie, nie przewija w bok i zapisuje się w całości.
-- **Commit:** patrz następna linia.
+- **Commit:** 280f294, 2026-10-19.
