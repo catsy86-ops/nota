@@ -10,11 +10,17 @@ export const REMINDER_PROBLEM_DAYS = 3;
 export const REMINDER_ORDER_DAYS = ORDER_LATE_DAYS;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/** Etapy karty budowy (`stages.ts`): instalacja pod posadzką / w ścianie, próba i zakrycie. */
+const INSTALL_STAGE_IDS: readonly string[] = ["kan-pod", "woda", "kan-pion"];
+const TEST_STAGE_ID = "proba";
+const COVER_STAGE_ID = "zakrycie";
+
 export type StudyReminder =
   | { kind: "stale-problems"; count: number; oldest: number }
   | { kind: "no-test"; siteId: string; site: string }
   | { kind: "late-order"; siteId: string; site: string; items: string[] }
-  | { kind: "service-due"; siteId: string; site: string; items: string[] };
+  | { kind: "service-due"; siteId: string; site: string; items: string[] }
+  | { kind: "pre-cover-test"; siteId: string; site: string };
 
 /**
  * Przypomnienia do dziennika:
@@ -31,7 +37,7 @@ export type StudyReminder =
 export function studyReminders(
   journal: readonly JournalEntry[],
   now: number = Date.now(),
-  siteCards: Readonly<Record<string, Pick<SiteCard, "id" | "name" | "archived" | "shortages" | "service">>> = {},
+  siteCards: Readonly<Record<string, Pick<SiteCard, "id" | "name" | "archived" | "shortages" | "service" | "stages">>> = {},
 ): StudyReminder[] {
   const out: StudyReminder[] = [];
 
@@ -53,6 +59,18 @@ export function studyReminders(
   }
   for (const [siteId, s] of sites) {
     if (s.install && !s.tested) out.push({ kind: "no-test", siteId, site: s.site });
+  }
+
+  // Próba przed zakryciem z etapów: instalacja odhaczona na karcie, a protokołu nie ma ani w dzienniku,
+  // ani jako odhaczony etap „Próba”, i zakrycie jeszcze nie odhaczone. Budowy z „no-test” pomijamy — tam już wisi.
+  for (const card of Object.values(siteCards)) {
+    if (card.archived !== undefined) continue;
+    const done = new Set((card.stages ?? []).filter((x) => x.done !== undefined).map((x) => x.id));
+    const installed = INSTALL_STAGE_IDS.some((id) => done.has(id));
+    if (!installed || done.has(TEST_STAGE_ID) || done.has(COVER_STAGE_ID)) continue;
+    const journal = sites.get(card.id);
+    if (journal && (journal.tested || journal.install)) continue;
+    out.push({ kind: "pre-cover-test", siteId: card.id, site: card.name });
   }
 
   for (const card of Object.values(siteCards)) {

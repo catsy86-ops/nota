@@ -30,3 +30,11 @@ describe("studyDueRows", () => {
     expect(studyDueRows([{ kind: "stale-problems", count: 5, oldest: 0 }])[0].title).toBe("5 otwartych problemów");
   });
 });
+
+describe("próba przed zakryciem na Dziś (U1)", () => {
+  it("przypomnienie z etapów trafia na Dziś jako wiersz „test” z odnośnikiem do budowy", () => {
+    expect(studyDueRows([{ kind: "pre-cover-test", siteId: "k1", site: "Lipowa 5" }])).toEqual([
+      { key: "test:k1", kind: "test", title: "Próba przed zakryciem: Lipowa 5", detail: "instalacja odhaczona, a protokołu próby nie ma", siteId: "k1" },
+    ]);
+  });
+});

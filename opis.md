@@ -3698,6 +3698,16 @@ lub grupę”.
 - **Stan weryfikacji:** pełny przebieg e2e nie został dotąd zakończony bez przerwania (brak pamięci). Zmiany sprawdzone osobno: `shifts`, `routes` i powiązane specy przechodzą.
 - **Commit:** bdba60c, 2026-10-19.
 
+## Praca — próba przed zakryciem z etapów karty (U1 planu Pracy, 2026-10-19)
+
+- **Co robi:** gdy na karcie budowy odhaczono etap instalacji (kanalizacja podposadzkowa, rozprowadzenie wody, piony), a nie ma odhaczonej próby szczelności ani protokołu w dzienniku, i nie odhaczono zakrycia — pojawia się przypomnienie „Próba przed zakryciem”. Widać je w Dzienniku (lista przypomnień, przycisk „Karta budowy”) i jako wiersz na Dziś w dziale Praca.
+- **Gdzie jest:** `src/lib/study/reminders.ts` (typ `StudyReminder` kind `pre-cover-test`, stałe `INSTALL_STAGE_IDS`, `TEST_STAGE_ID`, `COVER_STAGE_ID`, pętla po kartach), `src/lib/study/dueRows.ts` (wiersz kind `test`), `src/components/study/StudyJournal.tsx` (`ReminderRow`).
+- **Jak działa:** warunek to instalacja odhaczona AND NOT(próba odhaczona) AND NOT(zakrycie odhaczone) AND NOT(dziennik ma wpis o montażu lub próbie dla tej budowy). Ostatni warunek wyłącza duplikat z „no-test”, który wisi już z wpisów dziennika. Budowy w archiwum pomijane. Przypomnienie znika samo, gdy odhaczysz próbę lub zakrycie, albo gdy dopiszesz protokół w dzienniku.
+- **Decyzje:** identyfikatory etapów z `DEFAULT_STAGES` (`stages.ts`), stałe trzymane w `reminders.ts`, żeby nie wprowadzać cyklu importów. Przypomnienie nie idzie do push: to ostrzeżenie na czas budowy, a nie termin, więc zostaje w aplikacji (Dziś i Dziennik).
+- **Ograniczenie:** etap „Próba szczelności” jest tylko odhaczeniem; nie zastępuje protokołu z wynikiem (ciśnienie, czas, spadek). Nazwy etapów własnych nie są rozpoznawane, tylko identyfikatory domyślne.
+- **Testy:** `src/lib/study/reminders.test.ts` (grupa „próba przed zakryciem z etapów karty (U1)”: bez zakrycia, odhaczone zakrycie/próba, archiwum, duplikat z „no-test”, protokół w dzienniku), `src/lib/study/dueRows.test.ts` (wiersz na Dziś). Vitest `src/lib/study` 287/287, tsc czysty.
+- **Commit:** w commicie z tym wpisem, 2026-10-19.
+
 ## Przypomnienia — cały dzień (P6 planu kalendarza/przypomnień, 2026-10-19)
 
 - **Co robi:** w wyborze przypomnienia na notatce jest pole „Cały dzień”. Zamiast godziny zapisuje się 9:00 wybranego dnia, a na kaflu i w Terminach widać samą datę („dziś”, „jutro”, „25 paź”).

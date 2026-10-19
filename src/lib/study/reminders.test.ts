@@ -103,3 +103,34 @@ describe("przypomnienie: zamówione, a nie dojechało", () => {
     expect(studyReminders([], NOW, { k1: card("k1", [old]) })).toHaveLength(1);
   });
 });
+
+describe("próba przed zakryciem z etapów karty (U1)", () => {
+  type Card = Parameters<typeof studyReminders>[2] extends Readonly<Record<string, infer C>> | undefined ? C : never;
+  const card = (id: string, stages: { id: string; name: string; done?: number }[], extra: Partial<Card> = {}) =>
+    ({ id, name: "Lipowa 5", address: "", investor: "", created: 0, shortages: [], stages, ...extra }) as Card;
+  const installed = { id: "kan-pod", name: "Kanalizacja podposadzkowa", done: NOW - DAY };
+  const cover = { id: "zakrycie", name: "Zakrycie instalacji" };
+
+  it("instalacja odhaczona, bez próby i zakrycia → przypomnienie przed zakryciem", () => {
+    expect(studyReminders([], NOW, { k1: card("k1", [installed, cover]) })).toEqual([
+      { kind: "pre-cover-test", siteId: "k1", site: "Lipowa 5" },
+    ]);
+  });
+
+  it("zakrycie odhaczone, próba odhaczona albo brak odhaczonej instalacji — bez przypomnienia", () => {
+    expect(studyReminders([], NOW, { k1: card("k1", [installed, { ...cover, done: NOW }]) })).toEqual([]);
+    expect(studyReminders([], NOW, { k1: card("k1", [installed, { id: "proba", name: "Próba szczelności", done: NOW }, cover]) })).toEqual([]);
+    expect(studyReminders([], NOW, { k1: card("k1", [{ ...cover }]) })).toEqual([]);
+    expect(studyReminders([], NOW, { k1: card("k1", [installed, cover], { archived: NOW }) })).toEqual([]);
+  });
+
+  it("budowa z wpisem o montażu bez próby dostaje tylko przypomnienie „no-test”, bez duplikatu", () => {
+    const r = studyReminders([entry({ siteId: "k1", site: "Lipowa 5", topic: "proba-wody" })], NOW, { k1: card("k1", [installed, cover]) });
+    expect(r).toEqual([{ kind: "no-test", siteId: "k1", site: "Lipowa 5" }]);
+  });
+
+  it("protokół w dzienniku wyłącza przypomnienie z etapów", () => {
+    const r = studyReminders([entry({ siteId: "k1", site: "Lipowa 5", topic: "proba-wody", test: { medium: "air", bar: 6, minutes: 15, drop: 0, ok: true } })], NOW, { k1: card("k1", [installed, cover]) });
+    expect(r).toEqual([]);
+  });
+});

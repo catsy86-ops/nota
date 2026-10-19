@@ -10,7 +10,7 @@ import { REMINDER_ORDER_DAYS, REMINDER_PROBLEM_DAYS, type StudyReminder } from "
 
 export interface StudyDueRow {
   key: string;
-  kind: "service" | "order" | "problems";
+  kind: "service" | "order" | "problems" | "test";
   title: string;
   /** Pozycje (np. nazwy kształtek) albo krótki opis; pusty, gdy nie ma czego podać. */
   detail: string;
@@ -31,6 +31,8 @@ export function studyDueRows(reminders: readonly StudyReminder[]): StudyDueRow[]
         detail: `${r.items.join(", ")} — zamówione ponad ${REMINDER_ORDER_DAYS} dni temu`,
         siteId: r.siteId,
       });
+    } else if (r.kind === "pre-cover-test") {
+      rows.push({ key: `test:${r.siteId}`, kind: "test", title: `Próba przed zakryciem: ${r.site}`, detail: "instalacja odhaczona, a protokołu próby nie ma", siteId: r.siteId });
     } else if (r.kind === "stale-problems") {
       rows.push({
         key: "problems",

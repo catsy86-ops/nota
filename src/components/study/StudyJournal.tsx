@@ -171,7 +171,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
               <ReminderRow
                 key={r.kind === "stale-problems" ? "stale" : `${r.kind}-${r.siteId}`}
                 reminder={r}
-                onShow={() => (r.kind === "stale-problems" ? patch({ kind: "open" }) : r.kind === "late-order" || r.kind === "service-due" ? setCard(r.siteId) : patch({ site: r.siteId }))}
+                onShow={() => (r.kind === "stale-problems" ? patch({ kind: "open" }) : r.kind === "late-order" || r.kind === "service-due" || r.kind === "pre-cover-test" ? setCard(r.siteId) : patch({ site: r.siteId }))}
               />
             ))}
           </ul>
@@ -442,7 +442,9 @@ function ReminderRow({ reminder: r, onShow }: { reminder: StudyReminder; onShow:
         ? `Budowa „${r.site}”: zamówione ponad 3 dni temu i nie dojechało — ${r.items.slice(0, 3).join(", ")}${r.items.length > 3 ? ` i ${r.items.length - 3} więcej` : ""}.`
         : r.kind === "service-due"
           ? `Serwis „${r.site}” na dziś: ${r.items.slice(0, 3).join(", ")}${r.items.length > 3 ? ` i ${r.items.length - 3} więcej` : ""}.`
-          : `Budowa „${r.site}”: montaż bez protokołu próby. Zapisz próbę przed zakryciem.`;
+          : r.kind === "pre-cover-test"
+            ? `Budowa „${r.site}”: instalacja odhaczona, a protokołu próby nie ma. Zrób próbę przed zakryciem.`
+            : `Budowa „${r.site}”: montaż bez protokołu próby. Zapisz próbę przed zakryciem.`;
   return (
     <li className="flex items-start gap-2.5 rounded-xl border border-warning/50 bg-warning/10 p-3 text-sm" data-reminder={r.kind}>
       <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" aria-hidden />
@@ -452,7 +454,7 @@ function ReminderRow({ reminder: r, onShow }: { reminder: StudyReminder; onShow:
         onClick={onShow}
         className="pressable shrink-0 self-center rounded-full border border-warning/60 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-warning/20 coarse:min-h-11 coarse:px-3.5 coarse:text-sm"
       >
-        {r.kind === "stale-problems" ? "Pokaż otwarte" : r.kind === "late-order" || r.kind === "service-due" ? "Karta budowy" : "Pokaż wpisy budowy"}
+        {r.kind === "stale-problems" ? "Pokaż otwarte" : r.kind === "late-order" || r.kind === "service-due" || r.kind === "pre-cover-test" ? "Karta budowy" : "Pokaż wpisy budowy"}
       </button>
     </li>
   );
