@@ -3789,7 +3789,7 @@ lub grupę”.
 
 ## Kalendarz — widok dnia z osią godzin (K1 planu kalendarza/przypomnień, 2026-10-19)
 
-- **Poprawka typu (2026-10-19, bez commita):** `src/components/calendar/DayPanel.tsx` — usunięty zbędny prop `type="single"` z `ToggleGroup`; wrapper z `src/components/ui/toggle-group.tsx` ustawia go sam. Błąd `tsc` zgłaszany od 5aa530e znika (`npx tsc -p tsconfig.app.json --noEmit` czysty).
+- **Poprawka typu (2026-10-19, 0236f73):** `src/components/calendar/DayPanel.tsx` — usunięty zbędny prop `type="single"` z `ToggleGroup`; wrapper z `src/components/ui/toggle-group.tsx` ustawia go sam. Błąd `tsc` zgłaszany od 5aa530e znika (`npx tsc -p tsconfig.app.json --noEmit` czysty).
 
 - **Co robi:** w panelu wybranego dnia przełącznik „Lista | Oś godzin”. Lista zostaje domyślna. Oś to wiersze po godzinach z napisem `07:00`; zmiana z Grafiku jest paskiem w lewej kolumnie (przerwa jaśniejsza), a każdy termin stoi w swojej godzinie z dokładnym czasem i pełnym tytułem. Terminy „cały dzień” są nad osią, bez godziny.
 - **Gdzie jest:** `src/lib/dayTimeline.ts` (czysta logika: `shiftPieces`, `timelineHours`, `hourBackground`, `minutesOfDay`), `src/components/calendar/DayTimeline.tsx` (widok osi, `TimelineItem`), `src/components/calendar/DayPanel.tsx` (przełącznik `ToggleGroup`, stan `view`, warunkowe renderowanie), `src/lib/reminderOccurrences.ts` (pole `Occurrence.allDay` z `note.reminderAllDay`).
@@ -3829,4 +3829,4 @@ lub grupę”.
   - U8 — decyzja właściciela: nagranie jako osobny załącznik. Nie zrobione: audio w `imageStore` wymaga obsługi w kopii (budżet 40 MB), PDF, ZIP, odśmiecaniu i w arkuszu wpisu (zdjęcia zakładają obrazy).
   - D5 — decyzja właściciela: zostaje obecny model wpisu (jeden klucz Y.Map), bez przebudowy.
   - P3 — decyzja: odłożenie dotyczy tylko jednego wystąpienia. Nie zrobione: dziś „Odłóż” z powiadomienia zapisuje nowy `reminder` notatki, czyli przesuwa kotwicę całej serii. Potrzebne pole nakładki w `reminderSpec` i obsługa w harmonogramie push, Kalendarzu, Dziś i Przypomnieniach (ok. 39 plików, 73 miejsca czytania terminu) — osobna sesja z pełnym e2e.
-- **Commit:** 19f2ade, 2026-10-19 (testy T2 z kolejnej sesji — bez commita, patrz sekcja kalendarza K1).
+- **Commit:** 19f2ade, 2026-10-19; testy T2 w 4fdd64f, 2026-10-19.
