@@ -264,7 +264,8 @@ test("bez internetu niepobrany Grafik mówi, że czeka na sieć", async ({ page,
   await context.setOffline(true);
   await page.getByRole("button", { name: "Grafik" }).first().click();
   const panel = page.locator('[data-status="offline"]');
-  await expect(panel).toContainText("Grafik: ten widok potrzebuje internetu");
+  // Ponowne wyrenderowanie po odcięciu sieci bywa wolne przy obciążonym przebiegu — dłuższy limit tylko tej asercji.
+  await expect(panel).toContainText("Grafik: ten widok potrzebuje internetu", { timeout: 15_000 });
   await expect(panel).toHaveAttribute("role", "status");
   await expect(page.getByRole("alert")).toHaveCount(0);
   await context.setOffline(false);

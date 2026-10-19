@@ -13,6 +13,8 @@ export default defineConfig({
   globalSetup: "./e2e/global-setup.ts",
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
+  // Pierwszy `goto` w `beforeEach` na obciążonym przebiegu bywa powyżej 30 s (domyślny limit testu); 60 s zamiast ponowień.
+  timeout: 60_000,
   reporter: "list",
   use: {
     baseURL: "http://localhost:4173",
