@@ -3578,4 +3578,4 @@ lub grupę”.
 - **Jak działa:** flaga `kaczy.fab.hint.v1` w localStorage ustawiana przy pierwszym pokazaniu. Licznik `kaczy.fab.taps` już nie jest używany (stary klucz zostaje w przeglądarkach, nic nie czyta). Ci, którzy już widzieli podpowiedź po czwartym stuknięciu, nie dostaną jej drugi raz.
 - **Ograniczenia:** w trybie bez localStorage (prywatne okno) podpowiedzi nie ma — tak jak wcześniej. Komunikat wisi 6 s; w tym czasie kolejne stuknięcia go nie powtarzają.
 - **Testy:** osobny skrypt z czystym profilem (`scratchpad/fab.mjs`): po pierwszym stuknięciu komunikat jest, po ponownym (po zniknięciu tostu) już nie. E2E `mobile`: 44/44. Vitest 1423/1423.
-- **Commit:** patrz następna linia.
+- **Commit:** 2cafa53, 2026-10-19.
