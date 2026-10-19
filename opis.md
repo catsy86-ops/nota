@@ -3706,7 +3706,7 @@ lub grupę”.
 - **Decyzja:** blok stoi pod grupami, a nie w grupie „Najbliższe 7 dni”. Seria zaległa (zapisany termin w „Zaległe”), która ma wystąpienia w tym tygodniu, nie trafia do żadnej grupy „Najbliższe 7 dni”, więc wiersz w grupie by zniknął, gdyby tej grupy nie było.
 - **Ograniczenie:** `now` w memo to czas ostatniego przeliczenia (zależności: widok i lista notatek); otwarty widok przez północ może pokazać prognozę o dzień starą, do najbliższej zmiany listy. Prognoza nie ma akcji (edycja tylko dla zapisanego terminu).
 - **Testy:** `src/lib/reminderAgenda.test.ts` (`weekSeriesForecasts`: zaległa seria 7 wystąpień, seria od jutra 6, jednorazowe pominięte, seria poza oknem i kosz). Vitest 1471/1471. E2E nie uruchomione w tej sesji (mało pamięci wolnej, ~2 GB).
-- **Commit:** w commicie z tym wpisem, 2026-10-19.
+- **Commit:** 392f197, 2026-10-19.
 
 ## Przypomnienia — cały termin w jednym zapisie `reminderSpec` (C3 planu kalendarza/przypomnień, 2026-10-19)
 
