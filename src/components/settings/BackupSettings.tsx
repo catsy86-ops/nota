@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useViewPrefs, setViewPref } from "@/lib/viewPrefs";
 import { describeSkippedAttachments, exportFullBackup, pickFullBackup, restoreFullBackup, type RestoreOptions } from "@/lib/exportNotes";
+import { describeBackupSkipped } from "@/lib/backupSkipped";
 import type { FullBackup } from "@/lib/noteSchema";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -200,6 +201,9 @@ function RestoreBackup() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-2">
+            {backup && describeBackupSkipped(backup.skipped) && (
+              <p className="text-sm text-warning-ink" data-testid="restore-skipped">{describeBackupSkipped(backup.skipped)}</p>
+            )}
             {sections.map((sec) => (
               <label key={sec.key} className="flex items-center gap-2 text-sm text-foreground">
                 <Checkbox

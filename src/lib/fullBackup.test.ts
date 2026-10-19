@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describeBackupSkipped } from "./backupSkipped";
 import { buildFullBackup, buildFullBackupWithReport, describeSkippedAttachments, parseFullBackup, restoreFullBackup, SETTINGS_KEYS, ACHIEVEMENTS_KEY } from "./exportNotes";
 import { setDayShift, shiftStore } from "./shifts/store";
 import { yjsStore } from "./yjsStore";
@@ -188,10 +189,16 @@ describe("pełny backup v3 — załączniki", () => {
     yStudy.setSiteList("budowa-1", "docs", [{ id: plan, name: "rzut.png", size: 4, type: "image/png", at: 1 }], []);
 
     // Budżet 0: nic nie wchodzi; każdy pominięty bajt trafia do swojej kategorii.
-    const { attachments } = await buildFullBackupWithReport({ attachmentBudget: 0 });
+    const { backup, attachments } = await buildFullBackupWithReport({ attachmentBudget: 0 });
     expect(attachments.tooLarge.map((a) => a.name)).toEqual(["duzy.txt"]);
     expect(attachments.journalPhotos).toBe(1);
     expect(attachments.siteDocs).toBe(1);
+    // Ten sam raport trafia do pliku jako liczby, żeby okno przywracania mogło powiedzieć, czego w nim nie ma.
+    expect(backup.skipped).toEqual({ tooLarge: 1, missing: 0, journalPhotos: 1, siteDocs: 1 });
+    expect(describeBackupSkipped(backup.skipped)).toBe(
+      "Ten plik nie zawiera: załączniki za duże na backup: 1, zdjęcia dziennika z budowy: 1, pliki budów (plany, PDF): 1. " +
+      "Zdjęcia dziennika i pliki budów zostały tylko na tamtym urządzeniu.",
+    );
     expect(describeSkippedAttachments(attachments)).toBe(
       "Pominięte załączniki: 1 za duże na backup (limit 40 MB na wszystkie pliki). Zostaną w notatkach jako wpisy bez zawartości. " +
       "Pominięte zdjęcia dziennika z budowy: 1 — zostaną tylko na tym urządzeniu. " +
@@ -204,8 +211,10 @@ describe("pełny backup v3 — załączniki", () => {
     yStudy.setSiteList("budowa-2", "docs", [{ id: plan, name: "plan.png", size: 4, type: "image/png", at: 1 }], []);
     const { backup, attachments } = await buildFullBackupWithReport();
     expect(Object.keys(backup.attachmentBlobs ?? {})).toContain(plan);
-    expect(attachments.siteDocs).toBeUndefined();
+    expect(attachments.siteDocs).toBe(0);
     expect(describeSkippedAttachments(attachments)).toBeNull();
+    expect(backup.skipped).toEqual({ tooLarge: 0, missing: 0, journalPhotos: 0, siteDocs: 0 });
+    expect(describeBackupSkipped(backup.skipped)).toBeNull();
   });
 });
 

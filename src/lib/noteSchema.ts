@@ -73,6 +73,14 @@ export function looksLikeNoteArray(value: unknown): value is Record<string, unkn
   return Array.isArray(value) && value.every((n) => n && typeof n === "object");
 }
 
+/** Liczby pominięte przy eksporcie (nie treść): za duże, nieobecne, zdjęcia dziennika, pliki budów. */
+export interface BackupSkipped {
+  tooLarge: number;
+  missing: number;
+  journalPhotos: number;
+  siteDocs: number;
+}
+
 /**
  * Pełny backup. v2 dokłada opcjonalne sekcje — plik v1 (bez nich) czyta się
  * dalej, a przy przywracaniu brakująca sekcja po prostu nie jest ruszana.
@@ -99,6 +107,8 @@ export interface FullBackup {
    * wpis w notatce zostaje, ale bez bajtów.
    */
   attachmentBlobs?: Record<string, string>;
+  /** Ile załączników i plików nie weszło do tego pliku — same liczby, pokazuje je okno przywracania. */
+  skipped?: BackupSkipped;
   /** Definicje własnych właściwości (`lib/noteProps.ts`); brak sekcji = brak definicji. */
   propDefs?: PropDef[];
   /** Metadane skarbca prywatnych notatek (sól, klucz danych opakowany hasłem) — kształt waliduje `isValidMeta`. */
@@ -126,6 +136,7 @@ export const fullBackupSchema = z.object({
   shifts: z.string().optional().catch(undefined),
   study: z.string().optional().catch(undefined),
   attachmentBlobs: z.record(z.string()).optional().catch(undefined),
+  skipped: z.object({ tooLarge: z.number(), missing: z.number(), journalPhotos: z.number(), siteDocs: z.number() }).optional().catch(undefined),
   // Starsze kopie nie mają sekcji — wtedy po prostu brak definicji.
   propDefs: z.unknown().transform((v) => cleanPropDefs(v)).optional(),
   vault: z.unknown().optional(),
