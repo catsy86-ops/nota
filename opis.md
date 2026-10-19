@@ -3522,3 +3522,14 @@ lub grupę”.
 - **Ograniczenia i pułapki:** w DOM pole tytułu to `textarea`, a jego treść liczy się jako tekst. Testy e2e szukające tytułu przez `getByText` mogą trafić w pole, gdy kompozytor jeszcze się zwija. Stąd `getByRole("heading", …)` w `e2e/quick-capture.spec.ts` (Ctrl+Shift+L w edycji).
 - **Testy:** `e2e/quick-capture.spec.ts` (10/10), `e2e/composer.spec.ts`, `e2e/editing.spec.ts`. W prawdziwym Chrome (`scratchpad/test-chrome.mjs`, 390 px): długi tytuł zawija się na co najmniej dwie linie, nie przewija w bok i zapisuje się w całości.
 - **Commit:** 280f294, 2026-10-19.
+
+## Notatki — nagłówek widoku w Zeszycie (faza 2 planu Notatek, 2026-10-19)
+
+- **Co robi:** w stylu Zeszyt (domyślnym) tytuł widoku („Notatki”, „Dziś”, „Długi”…) jest w Fraunces, a pasek nagłówka ma tylko cienką kreskę pod sobą, bez cienia uniesienia. Pozostałe style bez zmian.
+- **Gdzie jest:** `src/components/AppHeader.tsx` (klasy `app-header` na `<header>`, `app-title` na `<h1>`), `src/index.css` (reguły `html[data-skin="zeszyt"] .app-title` i `.app-header` obok `@utility header-glow`).
+- **Jak działa:** `data-skin` na `<html>` jest zawsze ustawiony (domyślnie `zeszyt`, `src/lib/skins.ts`). Dawna reguła `html:not([data-skin]) h1` nigdy nie pasowała, więc Fraunces w nagłówku w ogóle się nie pokazywał. Zastąpiona selektorem `data-skin="zeszyt"` ograniczonym do klas nagłówka, żeby nie zmienić krojów wszystkich `h1` w aplikacji.
+- **Szkło:** klasa `glass` to już tylko pełne tło (bez rozmycia od wcześniejszych zmian), więc nie zmieniałem jej. Usunięto cień uniesienia, a zostaje linia.
+- **Czas przejścia:** nagłówek używa tokenu `duration-base` zamiast `duration-300`.
+- **Pułapki:** reguły z `:not([data-skin])` nie działają w tej aplikacji. Każdy styl dla domyślnego wyglądu pisać jako `[data-skin="zeszyt"]`.
+- **Testy:** w prawdziwym Chrome (`scratchpad/test-chrome.mjs`): tytuł w Fraunces, pasek z samą linią. Vitest 1411/1411. E2E `a11y` 56/56 w pełni (w tym 2 nowe przypadki stylu). E2E `mobile-layout` 53 zaliczone, 3 niezaliczone: `/praca` przy 320 px jest szersza niż ekran (`chromium`, `iphone-14`, `pixel-7`). Ten sam test nie przechodzi na HEAD przed tą zmianą, więc to osobny, wcześniejszy problem widoku Praca, nie nagłówka.
+- **Commit:** patrz następna linia.

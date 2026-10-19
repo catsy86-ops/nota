@@ -60,7 +60,7 @@ export function AppHeader({
     <header
       ref={headerRef}
       className={cn(
-        "sticky top-0 z-30 glass header-glow border-b border-border/50 transition-transform duration-300 ease-out will-change-transform motion-reduce:transition-none",
+        "app-header sticky top-0 z-30 glass header-glow border-b border-border/50 transition-transform duration-base ease-out will-change-transform motion-reduce:transition-none",
         hidden ? "-translate-y-full" : "translate-y-0"
       )}
     >
@@ -97,7 +97,7 @@ export function AppHeader({
           )}
           {!sidebarOpen && <span aria-hidden className="hidden sm:block h-5 w-px bg-border" />}
           <div className={!sidebarOpen && view === "notes" ? "hidden sm:block" : undefined}>
-            <h1 className="text-lg font-display leading-tight tracking-tight text-foreground">
+            <h1 className="app-title text-lg font-display leading-tight tracking-tight text-foreground">
               {view === "notes" && "Notatki"}
               {view === "today" && (
 "Dziś"

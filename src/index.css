@@ -144,6 +144,18 @@
     var(--elevation-1);
 }
 
+/* Zeszyt: tytuł widoku w Fraunces (łagodny szeryf) i pasek bez cienia — sama kreska linii, jak w zeszycie.
+   Selektory z `data-skin="zeszyt"` (atrybut jest zawsze ustawiony), a nie `:not([data-skin])`, które nigdy nie pasowało. */
+html[data-skin="zeszyt"] .app-title {
+  font-family: 'Fraunces Variable', Georgia, serif;
+  font-variation-settings: "SOFT" 50, "WONK" 0;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+html[data-skin="zeszyt"] .app-header {
+  box-shadow: 0 1px 0 hsl(var(--border));
+}
+
 @utility stats-card {
   @apply rounded-card border border-border/50 p-4;
   background: linear-gradient(
@@ -635,13 +647,6 @@
     }
   }
 
-  /* Zeszyt: nagłówki w Fraunces (łagodny szeryf), bez zmiany krojów w pozostałych skinach. */
-  html:not([data-skin]) h1 {
-    font-family: 'Fraunces Variable', Georgia, serif;
-    font-variation-settings: "SOFT" 50, "WONK" 0;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-  }
 }
 
 @layer utilities {
