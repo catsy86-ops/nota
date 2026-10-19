@@ -3609,4 +3609,4 @@ lub grupę”.
 - **Co zmieniono:** 51 wystąpień `rounded-2xl` w 36 plikach `src` (bez testów) zamieniono na `rounded-card`.
 - **Dlaczego:** token `--r-card` (`src/index.css`) to 1 rem we wszystkich stylach, tyle samo co `rounded-2xl`. Zmiana nie zmienia wyglądu, a promienie kart mają jedno źródło prawdy.
 - **Testy:** Vitest 1424/1424, typecheck czysty, Chrome: promień kafla 16 px (30/30 sprawdzeń).
-- **Commit:** patrz następna linia.
+- **Commit:** 9b7f7b2, 2026-10-19.
