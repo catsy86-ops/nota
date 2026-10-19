@@ -3551,4 +3551,4 @@ lub grupę”.
 - **Kontrast (zmierzony w Chrome):** jasny motyw 15,54:1 (tło `rgb(252,251,246)`, tekst `rgb(29,33,43)`), ciemny 15,14:1 (tło `rgb(21,17,14)`, tekst `rgb(235,230,224)`). Próg planu: 4,5:1.
 - **Pułapki:** grupy pojawiają się w widoku „Notatki” tylko przy przypiętych notatkach albo ustawionym grupowaniu (`kaczy.viewPrefs.v1`, `groupBy`). W testach ustawiać `groupBy: "label"` przed załadowaniem.
 - **Testy:** `scratchpad/test-chrome.mjs` (Chrome, jasny i ciemny motyw wymuszone przez `kaczy-theme`): jedna pieczątka, zero starych pigułek, kontrast jak wyżej. E2E `note-groups`, `contrast`: 9/9. Vitest 1411/1411.
-- **Commit:** patrz następna linia.
+- **Commit:** 707e7a0, 2026-10-19.
