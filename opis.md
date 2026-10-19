@@ -3849,7 +3849,7 @@ lub grupę”.
   - Zaległości: po nieobecności aplikacji `snoozeTarget` przesuwa bazę na ostatnie wystąpienie, które już minęło (`now`), więc odłożenie nie wraca od razu.
   - Dlaczego pole w spec, a nie osobna struktura: całe przypomnienie idzie jednym zapisem `reminderSpec` (LWW), więc konflikt dwóch urządzeń nie może zostawić mieszanki bazy i terminu.
 - **Ograniczenia i pułapki:**
-  - „Gotowe” dla serii nadal zapisuje `reminder = null`, czyli kończy serię (zachowanie sprzed zmiany, nie ruszane tutaj). Warto to potwierdzić — zob. „Nie zrobione”.
+  - „Gotowe” w serii przechodzi do następnego wystąpienia (`doneTarget` w `reminderRepeat.ts`); koniec serii zapisuje `reminder = null`. Zaległe wystąpienia są pomijane. Decyzja właściciela 2026-10-19.
   - Stare notatki bez `reminderBase` działają jak dotąd.
   - Przesunięcie serii w kalendarzu (przeciągnięcie, „Termin zapisany”) czyści odłożenie: to nowy termin serii.
 - **Testy:**
@@ -3860,7 +3860,7 @@ lub grupę”.
   - Istniejące testy (`reminderOccurrences`, `push/*`, `ReminderDueToast`) przechodzą bez zmian.
   - e2e nie uruchomiono (pamięć); na telefonie nie sprawdzono.
 - **Nie zrobione / do potwierdzenia:**
-  - „Gotowe” w serii kończy ją (`reminder: null`). Może to być błąd, bo „Gotowe” powinno zwykle przejść do następnego wystąpienia. Do decyzji właściciela, nie zmieniane tutaj.
+  - Decyzja właściciela (2026-10-19): „Gotowe” w serii przechodzi do następnego wystąpienia — wdrożone (`markDone` w `useReminderNotifications.ts`, `doneTarget` w `reminderRepeat.ts`, testy w `reminderRepeat.test.ts`).
   - Brak e2e dla odłożenia serii i testu na telefonie.
 - **Commit:** 3c07051, 2026-10-19.
 

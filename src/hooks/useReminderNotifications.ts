@@ -1,7 +1,7 @@
 import { createElement, useEffect, useRef } from "react";
 import { ReminderDueToast } from "@/components/ReminderDueToast";
 import { snoozeTimes } from "@/lib/reminderAgenda";
-import { snoozeTarget } from "@/lib/reminderRepeat";
+import { doneTarget, snoozeTarget } from "@/lib/reminderRepeat";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { notePath } from "@/lib/viewRoute";
 import { toast } from "sonner";
@@ -12,6 +12,20 @@ import { loadFired, saveFired, reconcileFired } from "@/lib/firedReminders";
 import { showSystemNotification } from "@/lib/systemNotification";
 import { pushKey } from "@/lib/push/shown";
 import { parsePendingAction, withoutActionParam } from "@/lib/notificationAction";
+
+/**
+ * „Gotowe” na przypomnieniu. Seria przechodzi do następnego wystąpienia (`doneTarget`); koniec serii
+ * albo zwykłe przypomnienie zapisuje `null`. Nowy termin serii czyści odłożenie (brak `reminderBase`).
+ */
+function markDone(
+  note: Note,
+  now: number,
+  fire: (id: string, nextReminder: number | null, reminderDay?: number, reminderBase?: number) => void,
+) {
+  const next = doneTarget(note, now);
+  if (next === null) fire(note.id, null);
+  else fire(note.id, next, seriesDay(note), undefined);
+}
 
 export function useReminderNotifications(
   notes: Note[],
@@ -53,7 +67,7 @@ export function useReminderNotifications(
       firedCbRef.current(note.id, t.reminder, seriesDay(note), t.reminderBase);
       toast("Odłożono o 10 minut");
     } else if (action === "done") {
-      firedCbRef.current(note.id, null);
+      markDone(note, Date.now(), firedCbRef.current);
       toast("Przypomnienie odhaczone");
     }
   });
@@ -132,7 +146,6 @@ export function useReminderNotifications(
 
           const times = snoozeTimes(now);
           const when = missed > 0 ? `${formatReminderShort(note.reminder)} · pominięto ${missed}` : formatReminderShort(note.reminder);
-          const onDone = () => firedCbRef.current(note.id, null);
           if (!grouped) toast.custom((id) => createElement(ReminderDueToast, {
             toastId: id,
             // Notatka prywatna: ani tytułu, ani treści w dymku (projekcja jest pusta, a tu jawnie nazywamy powód).
@@ -144,7 +157,7 @@ export function useReminderNotifications(
             // Seria: odkładamy tylko to wystąpienie (`snoozeTarget`), reszta serii zostaje.
             onSnooze10: () => { const t = snoozeTarget(note, times.in10min, now); firedCbRef.current(note.id, t.reminder, seriesDay(note), t.reminderBase); },
             onSnoozeTomorrow: () => { const t = snoozeTarget(note, times.tomorrow9, now); firedCbRef.current(note.id, t.reminder, seriesDay(note), t.reminderBase); },
-            onDone,
+            onDone: () => markDone(note, Date.now(), firedCbRef.current),
             onOpen: () => onOpenRef.current?.(note.id),
           }), {
             duration: 30000,

@@ -84,6 +84,23 @@ export function snoozeTarget(
   return { reminder: seriesNext, reminderBase: undefined };
 }
 
+/**
+ * „Gotowe” na przypomnieniu: nowy termin to następne wystąpienie serii, które jeszcze nie minęło
+ * (zaległe pomijamy, jak przy odpaleniu). `null` = seria jednorazowa albo już się skończyła.
+ */
+export function doneTarget(
+  note: { reminder: number | null; reminderRepeat?: ReminderRepeat; reminderDay?: number; reminderRepeatUntil?: number; reminderBase?: number },
+  now: number,
+): number | null {
+  const repeat = note.reminderRepeat ?? "none";
+  if (note.reminder === null || repeat === "none") return null;
+  let next = nextOccurrence(note, note.reminder);
+  for (let i = 0; next !== null && next <= now && i < MAX_SERIES_STEPS; i++) {
+    next = nextInSeries(next, repeat, seriesDay(note), note.reminderRepeatUntil);
+  }
+  return next;
+}
+
 /** Zabezpieczenie pętli przy bardzo starym terminie (jak `MAX_CATCH_UP` w `reminderDue.ts`). */
 const MAX_SERIES_STEPS = 1000;
 

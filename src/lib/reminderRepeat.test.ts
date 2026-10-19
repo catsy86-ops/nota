@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { endOfDay, getNextReminderTime, nextInSeries, nextOccurrence, seriesDay, snoozeTarget } from "./reminderRepeat";
+import { doneTarget, endOfDay, getNextReminderTime, nextInSeries, nextOccurrence, seriesDay, snoozeTarget } from "./reminderRepeat";
 
 describe("getNextReminderTime", () => {
   const base = new Date(2026, 0, 15, 9, 30).getTime(); // 15 Jan 2026, 09:30
@@ -95,6 +95,31 @@ describe("nextOccurrence — odłożone wystąpienie nie przesuwa serii", () => 
 
   it("seria jednorazowa nie ma następnego wystąpienia", () => {
     expect(nextOccurrence({ reminder: at(19), reminderRepeat: "none" }, at(19))).toBeNull();
+  });
+});
+
+describe("doneTarget — „Gotowe” przechodzi do następnego wystąpienia", () => {
+  const at = (d: number, h = 9, min = 0) => new Date(2026, 9, d, h, min).getTime();
+
+  it("seria jednorazowa kończy przypomnienie", () => {
+    expect(doneTarget({ reminder: at(19), reminderRepeat: "none" }, at(19, 9, 5))).toBeNull();
+  });
+
+  it("zwykła seria: następny dzień o tej samej godzinie", () => {
+    expect(doneTarget({ reminder: at(19), reminderRepeat: "daily" }, at(19, 9, 5))).toBe(at(20));
+  });
+
+  it("odłożone wystąpienie: następne to kolejny dzień serii, nie odłożona chwila", () => {
+    const note = { reminder: at(19, 9, 10), reminderBase: at(19), reminderRepeat: "daily" as const };
+    expect(doneTarget(note, at(19, 9, 12))).toBe(at(20));
+  });
+
+  it("zaległa seria: pomija wystąpienia, które już minęły", () => {
+    expect(doneTarget({ reminder: at(19), reminderRepeat: "daily" }, at(22, 10))).toBe(at(23));
+  });
+
+  it("koniec serii: brak następnego terminu", () => {
+    expect(doneTarget({ reminder: at(19), reminderRepeat: "daily", reminderRepeatUntil: at(19, 23, 59) }, at(19, 9, 5))).toBeNull();
   });
 });
 
