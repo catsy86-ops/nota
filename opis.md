@@ -3667,12 +3667,12 @@ lub grupę”.
 - **Testy:** `src/lib/push/schedule.service.test.ts` (3: wizyta dziś z jutrzejszym zaległym, wizyta z wczoraj, wizyta z przedwczoraj nie wysyłana, zamknięta nie wysyłana). `src/lib/study/service.test.ts`: oczekiwania zaktualizowane do nowego zachowania. Vitest 1452/1452. E2E `push`: przechodzi; `site-service`: jeden test niestabilny pod obciążeniem (przy ponownym uruchomieniu przechodzi dwa razy).
 - **Commit:** 3dd2544, 2026-10-19.
 
-## Budżet paczki startowej — próg 387 KB (decyzja właściciela, 2026-10-19)
+## Budżet paczki startowej — próg 388 KB (decyzja właściciela, 2026-10-19)
 
-- **Co zmieniono:** próg wejściowego JS (gzip) w `e2e/bundle.spec.ts` podniesiony z 386 do 387 KB.
-- **Dlaczego:** po terminach z Praca na Dziś i w Terminach paczka startowa ma 395 319 B (386,0 KB) przy progu 386 KB. Właściciel zdecydował o podniesieniu progu.
+- **Co zmieniono:** próg wejściowego JS (gzip) w `e2e/bundle.spec.ts` podniesiony z 387 do 388 KB.
+- **Dlaczego:** po raporcie pominiętych załączników w oknie przywracania paczka startowa ma 396 282 B (387,0 KB), czyli 6 B zapasu przy progu 387 KB. Właściciel zdecydował o podniesieniu progu, żeby kolejne zmiany (P6, T4) miały miejsce.
 - **Testy:** `e2e/bundle.spec.ts`: 6/6.
-- **Commit:** 647f312, 2026-10-19.
+- **Commit:** 647f312 (próg 387 KB), podniesienie do 388 KB — w commicie z tym wpisem, 2026-10-19.
 
 ## Push — limit 200 z priorytetem i licznikiem w Ustawieniach (P4 planu kalendarza/przypomnień, 2026-10-19)
 
@@ -3704,7 +3704,7 @@ lub grupę”.
 - **Gdzie jest:** `src/lib/study/calendarMarks.ts` (`studyDayMarks`, typ `StudyDayMarks`), `src/components/calendar/useStudyDayMarks.ts` (hook: czeka na `studyReady`, potem liczy), `src/components/calendar/ReminderCalendarView.tsx` (`studyOf` do siatki), `src/components/calendar/MonthGrid.tsx` (prop `studyOf`), `src/components/calendar/DayCell.tsx` (ikona i `studySummary` w `aria-label`).
 - **Jak działa:** wizyta to otwarte zgłoszenie serwisowe z terminem (`due`, dzień `yyyy-MM-dd`), dostawa to pozycja „zamówione” z `due` (T4). Klucz dnia to ta sama postać co w `dueDayValue`. Budowy w archiwum pomijane, tak jak w przypomnieniach.
 - **Ograniczenie:** znaczniki są tylko w siatce miesiąca; widok tygodnia (`WeekStrip`) i „najbliższe dni” (`UpcomingDays`) ich nie pokazują. Dane Praca ładują się leniwie, więc do gotowości dokumentu kalendarz pokazuje brak znaczników i przelicza się po wczytaniu.
-- **Paczka:** kalendarz jest już leniwy; `useStudyDayMarks` wciąga `store.ts` Pracy do paczki kalendarza, a nie do startowej. Próg paczki startowej 387 KB bez zmian (`e2e/bundle.spec.ts`).
+- **Paczka:** kalendarz jest już leniwy; `useStudyDayMarks` wciąga `store.ts` Pracy do paczki kalendarza, a nie do startowej. Próg paczki startowej 388 KB (od 2026-10-19) (`e2e/bundle.spec.ts`).
 - **Testy:** `src/lib/study/calendarMarks.test.ts` (liczenie po dniach, otwarte/zamknięte, dostawa po dacie, archiwum). E2E `reminders-calendar`, `reminders-agenda`, `reminder-toast` 17/17 po wszystkich krokach.
 - **Commit:** 42e1c83, 2026-10-19.
 
@@ -3764,7 +3764,7 @@ lub grupę”.
 - **Co robi:** raport kopii rozdziela pominięte bajty na trzy kategorie: załączniki notatek, zdjęcia dziennika i pliki budów (plany, PDF). Toast po zapisie kopii podaje każdą kategorię osobno. Plan nie jest już nazywany zdjęciem dziennika.
 - **Gdzie:** `src/lib/study/journalRefs.ts` (`siteDocRefsIn`), `src/lib/exportNotes.ts` (`collectAttachmentBlobs`, `describeSkippedAttachments`, pole `siteDocs` w `BackupAttachmentReport`, opcja `attachmentBudget` w `buildFullBackupWithReport`).
 - **Jak działa:** `collectAttachmentBlobs` bierze budżet z opcji (domyślnie `BACKUP_ATTACHMENTS_BUDGET_BYTES`, 40 MB). Każdy pominięty bajt z dziennika albo z kart budów liczy się w swojej kategorii; klucze dokumentów budów wyznacza `siteDocRefsIn` z `studySiteItems`.
-- **Okno przywracania:** liczby pominięte przy eksporcie zapisują się w pliku jako `skipped` (`BackupSkipped` w `src/lib/noteSchema.ts`, pole opcjonalne, bez treści; zawsze cztery liczby, zera, gdy nic nie pominięto — dzięki temu w `exportNotes.ts` nie ma gałęzi, a paczka startowa mieści się w budżecie 387 KB). Okno „Przywrócić ten backup?” pokazuje je jako zdanie `describeBackupSkipped` (`src/lib/backupSkipped.ts`, moduł tylko dla okna Ustawień, żeby nie wchodził do paczki startowej) nad listą sekcji (`data-testid=restore-skipped`), żeby było widać, czego w pliku nie ma. Starsze pliki bez pola: brak zdania.
+- **Okno przywracania:** liczby pominięte przy eksporcie zapisują się w pliku jako `skipped` (`BackupSkipped` w `src/lib/noteSchema.ts`, pole opcjonalne, bez treści; zawsze cztery liczby, zera, gdy nic nie pominięto — dzięki temu w `exportNotes.ts` nie ma gałęzi, a paczka startowa mieści się w budżecie 388 KB). Okno „Przywrócić ten backup?” pokazuje je jako zdanie `describeBackupSkipped` (`src/lib/backupSkipped.ts`, moduł tylko dla okna Ustawień, żeby nie wchodził do paczki startowej) nad listą sekcji (`data-testid=restore-skipped`), żeby było widać, czego w pliku nie ma. Starsze pliki bez pola: brak zdania.
 - **Ograniczenie:** `skipped` to liczby z chwili eksportu. Przywrócenie nie odzyskuje pominiętych zdjęć — tylko je nazywa.
 - **Testy:** `src/lib/fullBackup.test.ts` — przekroczenie budżetu (`attachmentBudget: 0`) rozdziela załącznik, zdjęcie dziennika i plan oraz składa komunikat; bez przekroczenia plan wchodzi do kopii i nie jest raportowany. Vitest 1469/1469, typecheck czysty.
 - **Commit:** 6a97a92 (kod), testy budżetu — w commicie z tym wpisem, 2026-10-19; okno przywracania z `skipped` — 5fa3fbd, 2026-10-19.
