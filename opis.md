@@ -3532,4 +3532,4 @@ lub grupę”.
 - **Czas przejścia:** nagłówek używa tokenu `duration-base` zamiast `duration-300`.
 - **Pułapki:** reguły z `:not([data-skin])` nie działają w tej aplikacji. Każdy styl dla domyślnego wyglądu pisać jako `[data-skin="zeszyt"]`.
 - **Testy:** w prawdziwym Chrome (`scratchpad/test-chrome.mjs`): tytuł w Fraunces, pasek z samą linią. Vitest 1411/1411. E2E `a11y` 56/56 w pełni (w tym 2 nowe przypadki stylu). E2E `mobile-layout` 53 zaliczone, 3 niezaliczone: `/praca` przy 320 px jest szersza niż ekran (`chromium`, `iphone-14`, `pixel-7`). Ten sam test nie przechodzi na HEAD przed tą zmianą, więc to osobny, wcześniejszy problem widoku Praca, nie nagłówka.
-- **Commit:** patrz następna linia.
+- **Commit:** 2745eaf, 2026-10-19.
