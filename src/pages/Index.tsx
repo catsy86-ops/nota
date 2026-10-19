@@ -19,7 +19,8 @@ import { useViewPrefs, toggleGroupCollapsed } from "@/lib/viewPrefs";
 import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
 import { useViewRoute } from "@/hooks/useViewRoute";
 import { parseViewRoute } from "@/lib/viewRoute";
-import { groupReminders } from "@/lib/reminderAgenda";
+import { groupReminders, weekSeriesForecasts } from "@/lib/reminderAgenda";
+import { SeriesForecastRows } from "@/components/calendar/SeriesForecastRows";
 import { resolveWikiTarget, splitWikiTarget } from "@/lib/wikiLinks";
 import { requestHeading } from "@/lib/wikiHeading";
 import { useLatestRef } from "@/hooks/useLatestRef";
@@ -305,6 +306,11 @@ const Index = () => {
   const groups = useMemo(
     () => groupNotes(others, groupBy, { now: Date.now(), dateField: prefs.sortKey === "created" ? "createdAt" : "updatedAt", folders }),
     [others, groupBy, prefs.sortKey, folders],
+  );
+  // Prognoza serii w widoku Terminy: kolejne wystąpienia, których nie ma w danych (tylko odczyt).
+  const seriesForecasts = useMemo(
+    () => (view === "reminders" ? weekSeriesForecasts([...others, ...archivedNotes]) : []),
+    [view, others, archivedNotes],
   );
   const groupCollapsedKey = (key: string) => `${groupBy}:${key}`;
   const visibleNotes = useMemo(() => {
@@ -701,6 +707,11 @@ const Index = () => {
               {renderGrid(group.notes, i)}
             </NoteGroupSection>
           ))}
+          {view === "reminders" && seriesForecasts.length > 0 && (
+            <NoteGroupSection groupKey="reminders-series" label="Prognoza serii (najbliższe 7 dni)" count={seriesForecasts.length}>
+              <SeriesForecastRows forecasts={seriesForecasts} />
+            </NoteGroupSection>
+          )}
 
           {view !== "reminders" && !boardMode && !tableMode && groups.map((group, gi) => {
             const grid = (navOrder: number) => renderGrid(group.notes, navOrder);

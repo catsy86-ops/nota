@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { groupReminders, snoozeTimes } from "./reminderAgenda";
+import { groupReminders, snoozeTimes, weekSeriesForecasts } from "./reminderAgenda";
 import type { Note } from "@/hooks/useNotes";
 
 const at = (y: number, m: number, d: number, h = 12, min = 0) => new Date(y, m - 1, d, h, min).getTime();
@@ -40,6 +40,31 @@ describe("groupReminders", () => {
   it("puts the end of the 7th day into the week group and skips empty groups", () => {
     const groups = groupReminders([note("d7", at(2026, 10, 5, 23, 30)), note("d8", at(2026, 10, 6, 0, 1))], NOW);
     expect(groups.map((g) => [g.key, g.notes.map((n) => n.id)])).toEqual([["week", ["d7"]], ["later", ["d8"]]]);
+  });
+});
+
+describe("weekSeriesForecasts", () => {
+  const series = (id: string, reminder: number): Note => ({ ...note(id, reminder), reminderRepeat: "daily" });
+  // 28 października: okno prognozy to 29 października – 4 listopada.
+  const TODAY = at(2026, 10, 28, 12);
+
+  it("liczy wystąpienia serii w 7 dniach poza zapisanym terminem, jednorazowe pomija", () => {
+    const forecasts = weekSeriesForecasts([
+      series("seria-jutro", at(2026, 10, 29, 9)), // zapisany 29, w oknie 30 – 4 listopada: 6 prognoz
+      series("seria-zalegla", at(2026, 10, 26, 9)), // zaległy zapisany termin, w oknie 29 – 4 listopada: 7 prognoz
+      note("jednorazowe", at(2026, 10, 29, 9)),
+      series("seria-dalej", at(2026, 11, 10, 9)), // poza oknem
+    ], TODAY);
+    // Kolejność: wg pierwszego wystąpienia w oknie (29 października przed 30.).
+    expect(forecasts).toEqual([
+      { noteId: "seria-zalegla", title: "seria-zalegla", count: 7 },
+      { noteId: "seria-jutro", title: "seria-jutro", count: 6 },
+    ]);
+  });
+
+  it("pomija kosz i serie bez wystąpień w oknie", () => {
+    const trashed = { ...series("kosz", at(2026, 10, 29, 9)), trashed: true };
+    expect(weekSeriesForecasts([trashed], TODAY)).toEqual([]);
   });
 });
 
