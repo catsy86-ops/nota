@@ -39,7 +39,7 @@ export function NoteGroupSection({ groupKey, label, count, collapsible, collapse
         />
       )}
       <span className="truncate">{label}</span>
-      <span className="bg-muted text-foreground/80 text-2xs px-1.5 rounded-full tabular-nums normal-case tracking-normal">{count}</span>
+      <span className="stamp-tag tabular-nums normal-case tracking-normal">{count}</span>
       <span className="flex-1 h-px bg-border/70 ml-1" aria-hidden />
     </>
   );

@@ -3542,3 +3542,13 @@ lub grupę”.
 - **Pułapki:** na telefonie są dwa pola `input[type=search][aria-label="Szukaj w notatkach"]` — jedno w nagłówku, ukryte na małych ekranach, drugie w treści. Testy muszą brać widoczne (`offsetParent !== null`), inaczej piszą w ukryte pole.
 - **Testy:** `scratchpad/test-chrome.mjs` (w Chrome: placeholder po 3,6 s bez zmiany; pusty wynik zawiera „etykieta:praca” i „ma:przypomnienie”). E2E: `saved-filters`, `search-highlight`, `search-backup` — 6/6. Vitest: patrz wpis commitu.
 - **Commit:** d3f446f, 2026-10-19.
+
+## Notatki — licznik grupy jako pieczątka (faza 4 planu Notatek, 2026-10-19)
+
+- **Co robi:** liczba notatek przy nagłówku grupy („Przypięte”, „Inne”, etykiety) jest pieczątką (obwódka, bez wypełnienia), a nie wypełnioną pigułką. Zgodnie z regułą pieczątek liczniki, które nie są przyciskami, mają wyglądać jak stempel.
+- **Gdzie jest:** `src/components/NoteGroupSection.tsx` — licznik to `<span className="stamp-tag …">`. Styl `.stamp-tag` (obwódka `currentColor`, mono 11 px) już istniał w `src/index.css`.
+- **Jak działa:** pieczątka dziedziczy kolor z nagłówka grupy, więc zmienia się z motywem. Nie ma osobnego koloru: kontrast wynika z tokenów `--foreground` i tła.
+- **Kontrast (zmierzony w Chrome):** jasny motyw 15,54:1 (tło `rgb(252,251,246)`, tekst `rgb(29,33,43)`), ciemny 15,14:1 (tło `rgb(21,17,14)`, tekst `rgb(235,230,224)`). Próg planu: 4,5:1.
+- **Pułapki:** grupy pojawiają się w widoku „Notatki” tylko przy przypiętych notatkach albo ustawionym grupowaniu (`kaczy.viewPrefs.v1`, `groupBy`). W testach ustawiać `groupBy: "label"` przed załadowaniem.
+- **Testy:** `scratchpad/test-chrome.mjs` (Chrome, jasny i ciemny motyw wymuszone przez `kaczy-theme`): jedna pieczątka, zero starych pigułek, kontrast jak wyżej. E2E `note-groups`, `contrast`: 9/9. Vitest 1411/1411.
+- **Commit:** patrz następna linia.
