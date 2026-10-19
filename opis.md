@@ -3596,3 +3596,10 @@ lub grupę”.
 - **Wynik:** 20/20 w tych plikach; Vitest 1424/1424; Chrome 30/30.
 - **Nierozwiązane:** budżet wejściowego JS w `e2e/bundle.spec.ts` (385,4 KB gzip przy progu 385 KB). Decyzja o progu należy do właściciela projektu.
 - **Commit:** 0284db6, 2026-10-19.
+
+## Budżet paczki startowej — próg 386 KB (decyzja właściciela, 2026-10-19)
+
+- **Co zmieniono:** próg wejściowego JS (gzip) w `e2e/bundle.spec.ts` podniesiony z 385 do 386 KB.
+- **Dlaczego:** po funkcjach Długów, pasku „+” i poprawkach pustych stanów paczka startowa ma 385,4 KB. Właściciel projektu zdecydował o podniesieniu progu zamiast przenoszenia arkusza „Nowa” do leniwego modułu.
+- **Testy:** `e2e/bundle.spec.ts`: 6/6.
+- **Commit:** patrz następna linia.

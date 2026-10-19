@@ -97,7 +97,8 @@ const BUDGET = {
   // `journalRefsIn` w osobnym module, dane Pracy w kopii zapasowej importowane dynamicznie.
   // 2026-10-18: 393 402 B po synchronizacji (krótkie kody, diagnostyka, ponowne łączenie) — próg podniesiony do 385 KB
   // (decyzja użytkownika). Przy każdym zejściu w dół obniż próg.
-  eagerJsGzip: 385 * KB,
+  // 2026-10-19: 385,4 KB po Długach, pasku „+” i poprawkach pustych stanów — próg 386 KB (decyzja użytkownika).
+  eagerJsGzip: 386 * KB,
   // 2026-10-11: 357 KB (index 214 + react/motion/radix/dnd)
   // 2026-10-16: 4,37 → 4,03 MB — `includeAssets` dublował 6 plików z `public/` (łapie je `globPatterns`).
   // 2026-10-17: 4,09 → 3,00 MB — PDF (jsPDF/html2canvas/purify), Statystyki poza precache (cache `static-assets` po pierwszym użyciu).
