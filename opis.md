@@ -3541,4 +3541,4 @@ lub grupę”.
 - **Jak działa:** placeholder jest stały. Podpowiedzi operatorów z listy usuniętej z pola są w opisie „Brak wyników”, bo tam użytkownik szuka właściwego sposobu. Podpowiedź „Naciśnij / aby wyszukać” usunięta z pola (skrót jest w oknie skrótów).
 - **Pułapki:** na telefonie są dwa pola `input[type=search][aria-label="Szukaj w notatkach"]` — jedno w nagłówku, ukryte na małych ekranach, drugie w treści. Testy muszą brać widoczne (`offsetParent !== null`), inaczej piszą w ukryte pole.
 - **Testy:** `scratchpad/test-chrome.mjs` (w Chrome: placeholder po 3,6 s bez zmiany; pusty wynik zawiera „etykieta:praca” i „ma:przypomnienie”). E2E: `saved-filters`, `search-highlight`, `search-backup` — 6/6. Vitest: patrz wpis commitu.
-- **Commit:** patrz następna linia.
+- **Commit:** d3f446f, 2026-10-19.
