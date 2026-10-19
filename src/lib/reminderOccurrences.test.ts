@@ -164,3 +164,18 @@ describe("seria z końcem", () => {
     expect(occ.map((o) => new Date(o.at).getDate())).toEqual([2, 9, 16]);
   });
 });
+
+describe("cały dzień", () => {
+  it("flaga z notatki trafia do wystąpienia (jednorazowego i serii)", () => {
+    const once = makeNote({ id: "j", reminder: at(2026, 3, 2, 9, 0), reminderAllDay: true });
+    const series = makeNote({ id: "s", reminder: at(2026, 3, 3, 9, 0), reminderRepeat: "daily", reminderAllDay: true });
+    const occ = expandOccurrences([once, series], MARCH.start, MARCH.end);
+    expect(occ.filter((o) => o.allDay).length).toBe(occ.length);
+    expect(occ.length).toBeGreaterThan(2);
+  });
+
+  it("zwykły termin nie jest „cały dzień”", () => {
+    const occ = expandOccurrences([makeNote({ reminder: at(2026, 3, 2, 14, 30) })], MARCH.start, MARCH.end);
+    expect(occ[0].allDay).toBe(false);
+  });
+});

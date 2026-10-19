@@ -25,6 +25,8 @@ export interface Occurrence {
    */
   isNext: boolean;
   repeat: ReminderRepeat;
+  /** Cały dzień: godzina 9:00 z flagi, nie z wyboru — oś dnia pokazuje takie terminy u góry, bez godziny. */
+  allDay: boolean;
 }
 
 /**
@@ -53,10 +55,11 @@ export function expandOccurrences(notes: Note[], rangeStart: number, rangeEnd: n
     if (!isCandidate(note)) continue;
     const start = note.reminder as number;
     const repeat = note.reminderRepeat ?? "none";
+    const allDay = note.reminderAllDay === true;
 
     if (repeat === "none") {
       if (start >= rangeStart && start <= rangeEnd) {
-        out.push({ noteId: note.id, at: start, isSeries: false, index: 0, isNext: true, repeat });
+        out.push({ noteId: note.id, at: start, isSeries: false, index: 0, isNext: true, repeat, allDay });
       }
       continue;
     }
@@ -65,7 +68,7 @@ export function expandOccurrences(notes: Note[], rangeStart: number, rangeEnd: n
     for (let index = 0; index < MAX_OCCURRENCES_PER_NOTE; index++) {
       if (at > rangeEnd) break;
       if (at >= rangeStart) {
-        out.push({ noteId: note.id, at, isSeries: true, index, isNext: index === 0, repeat });
+        out.push({ noteId: note.id, at, isSeries: true, index, isNext: index === 0, repeat, allDay });
       }
       const next = nextInSeries(at, repeat, seriesDay(note), note.reminderRepeatUntil);
       // Koniec serii albo nieruchomy krok — inaczej pętla stałaby w miejscu.

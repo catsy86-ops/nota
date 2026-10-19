@@ -1,15 +1,17 @@
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { CalendarPlus, Plus, Pencil, ArrowRight, Download, Clock, Copy } from "lucide-react";
+import { useState } from "react";
+import { CalendarPlus, Plus, Pencil, ArrowRight, Download, Clock, Copy, List } from "lucide-react";
 import { ReminderChip } from "./ReminderChip";
+import { DayTimeline } from "./DayTimeline";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { Occurrence } from "@/lib/reminderOccurrences";
 import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
 
 /**
- * Lista terminów wybranego dnia — tu mieszczą się pełne tytuły, których
- * komórka siatki nie pomieści, więc to ona jest właściwym „widokiem dnia”.
- * Osi godzinowej świadomie nie ma: przypomnienia mają godzinę, ale nie mają
- * czasu trwania, więc oś rysowałaby punkty, nie bloki — czyli gorszą listę.
+ * Terminy wybranego dnia — tu mieszczą się pełne tytuły, których komórka siatki
+ * nie pomieści. Dwa widoki: lista (domyślna) i oś godzin (`DayTimeline`). Oś rysuje
+ * zmianę z Grafiku jako blok, bo ma godziny, a przypomnienia jako punkty w swojej godzinie.
  *
  * Wszystkie akcje (dodaj, edytuj) siedzą tutaj, a nie w komórkach siatki:
  * siatka zostaje jednym przystankiem tabulatora z nawigacją strzałkami,
@@ -36,7 +38,16 @@ interface DayPanelProps {
   onCopyPrevShift?: () => void;
 }
 
+type DayView = "list" | "axis";
+
 export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMoveByDays, onExport, onOpenSeriesSource, onEditShift, onCopyPrevShift }: DayPanelProps) {
+  const [view, setView] = useState<DayView>("list");
+  const emptyHint = (
+    <p className="text-sm text-muted-foreground flex items-center gap-2">
+      <CalendarPlus className="w-4 h-4 shrink-0 text-muted-foreground/70" />
+      Brak terminów tego dnia.
+    </p>
+  );
   return (
     <section aria-label="Terminy wybranego dnia" className="rounded-card border border-border/50 bg-card p-4">
       <div className="flex items-center gap-2 mb-3">
@@ -51,6 +62,24 @@ export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMo
           Dodaj termin
         </button>
       </div>
+
+      <ToggleGroup
+        type="single"
+        variant="plain"
+        value={view}
+        onValueChange={(v) => { if (v) setView(v as DayView); }}
+        aria-label="Widok terminów dnia"
+        className="mb-3 inline-flex gap-0.5 rounded-lg bg-muted/50 p-0.5"
+      >
+        <ToggleGroupItem value="list" className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-card data-[state=on]:text-primary-ink data-[state=on]:shadow-sm coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+          <List className="w-3.5 h-3.5" aria-hidden />
+          Lista
+        </ToggleGroupItem>
+        <ToggleGroupItem value="axis" className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-card data-[state=on]:text-primary-ink data-[state=on]:shadow-sm coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+          <Clock className="w-3.5 h-3.5" aria-hidden />
+          Oś godzin
+        </ToggleGroupItem>
+      </ToggleGroup>
 
       {shift && (
         <p className="flex items-center gap-2 text-sm mb-3">
@@ -103,11 +132,20 @@ export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMo
         </div>
       )}
 
-      {occurrences.length === 0 ? (
-        <p className="text-sm text-muted-foreground flex items-center gap-2">
-          <CalendarPlus className="w-4 h-4 shrink-0 text-muted-foreground/70" />
-          Brak terminów tego dnia.
-        </p>
+      {view === "axis" ? (
+        <>
+          {occurrences.length === 0 && emptyHint}
+          <DayTimeline
+            occurrences={occurrences}
+            titleOf={titleOf}
+            shift={shift}
+            onEdit={onEdit}
+            onMoveByDays={onMoveByDays}
+            onOpenSeriesSource={onOpenSeriesSource}
+          />
+        </>
+      ) : occurrences.length === 0 ? (
+        emptyHint
       ) : (
         <ul className="space-y-1.5">
           {occurrences.map((occ, i) => {
