@@ -3513,3 +3513,12 @@ lub grupę”.
 - **Błąd naprawiony:** kompozytor zapisywał „Lista na sobotę” jako „Lista na” z przypomnieniem na sobotę.
 - **Testy:** `src/lib/quickCapture.test.ts` (38, w tym trzy nowe dla tytułu). Sprawdzone w prawdziwym Chrome (puppeteer-core, `scratchpad/test-chrome.mjs`): karta ma tytuł „Lista na sobotę”.
 - **Commit:** 6e95430, 2026-10-19.
+
+## Notatki — pole tytułu w kompozytorze to `TitleField` (faza 1 planu Notatek, 2026-10-19)
+
+- **Co robi:** tytuł nowej notatki zawija się na telefonie tak samo jak tytuł w edytorze (wcześniej w kompozytorze był zwykły `<input>`, który przewijał długi tytuł i ucinał jego początek).
+- **Gdzie jest:** `src/components/TitleField.tsx` (komponent) i `src/components/AddNoteBar.tsx` (kompozytor, pole tytułu i fokus przez `titleRef`).
+- **Jak działa:** `TitleField` to `<textarea>` z automatyczną wysokością. Przyjmuje `ref` od rodzica (kompozytor ustawia na nim fokus) i łączy go z własnym refem do pomiaru. `onEnter` dostaje zdarzenie klawisza, więc kompozytor zachowuje skróty: Enter przenosi do treści, Ctrl+Enter zamyka, Ctrl+Shift+Enter zapisuje i zostawia pusty szkic.
+- **Ograniczenia i pułapki:** w DOM pole tytułu to `textarea`, a jego treść liczy się jako tekst. Testy e2e szukające tytułu przez `getByText` mogą trafić w pole, gdy kompozytor jeszcze się zwija. Stąd `getByRole("heading", …)` w `e2e/quick-capture.spec.ts` (Ctrl+Shift+L w edycji).
+- **Testy:** `e2e/quick-capture.spec.ts` (10/10), `e2e/composer.spec.ts`, `e2e/editing.spec.ts`. W prawdziwym Chrome (`scratchpad/test-chrome.mjs`, 390 px): długi tytuł zawija się na co najmniej dwie linie, nie przewija w bok i zapisuje się w całości.
+- **Commit:** patrz następna linia.

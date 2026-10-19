@@ -100,7 +100,8 @@ test("Ctrl+Shift+L w edycji istniejącej notatki zamienia bieżącą linię", as
   await body(page).fill("alfa\nbeta");
   await page.getByRole("button", { name: "Zapisz", exact: true }).click();
 
-  await page.getByText(title).click();
+  // Nagłówek karty, a nie tekst: pole tytułu kompozytora (textarea) też ma tę treść, póki zamyka się animacją.
+  await page.getByRole("heading", { name: title, exact: true }).click();
   const ta = body(page).last();
   await ta.evaluate((el: HTMLTextAreaElement) => { el.focus(); el.setSelectionRange(el.value.length, el.value.length); });
   await page.keyboard.press("Control+Shift+L");

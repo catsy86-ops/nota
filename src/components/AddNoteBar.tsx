@@ -16,6 +16,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import type { NoteColor, ChecklistItem } from "@/hooks/useNotes";
 import { imageStore } from "@/lib/imageStore";
 import { NoteImage } from "./NoteImage";
+import { TitleField } from "./TitleField";
 import { AttachmentsPanel, type AttachmentsPanelHandle } from "./AttachmentsPanel";
 import { canRecordVoice } from "@/lib/voiceSupport";
 import type { Attachment } from "@/lib/attachments";
@@ -176,7 +177,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
   const [ignored, setIgnored] = useState<ReadonlySet<string>>(new Set());
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLInputElement>(null);
+  const titleRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [pendingAction, setPendingAction] = useState<ComposerAction | null>(null);
@@ -511,10 +512,8 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
                 })}
               </div>
             )}
-            <input ref={titleRef} value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Tytuł"
-              onKeyDown={(e) => {
-                if (e.key !== "Enter") return;
-                e.preventDefault();
+            <TitleField ref={titleRef} value={title} onChange={setTitle} placeholder="Tytuł"
+              onEnter={(e) => {
                 if (e.ctrlKey || e.metaKey) { if (e.shiftKey) saveAndNext(); else handleClose(); }
                 else textareaRef.current?.focus();
               }}
