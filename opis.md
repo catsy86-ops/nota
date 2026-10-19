@@ -3672,4 +3672,4 @@ lub grupę”.
 - **Co zmieniono:** próg wejściowego JS (gzip) w `e2e/bundle.spec.ts` podniesiony z 386 do 387 KB.
 - **Dlaczego:** po terminach z Praca na Dziś i w Terminach paczka startowa ma 395 319 B (386,0 KB) przy progu 386 KB. Właściciel zdecydował o podniesieniu progu.
 - **Testy:** `e2e/bundle.spec.ts`: 6/6.
-- **Commit:** patrz następna linia.
+- **Commit:** 647f312, 2026-10-19.
