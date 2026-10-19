@@ -204,7 +204,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         // Siatka (`NoteGrid`) rozciąga kafel w edycji na dwie kolumny.
         data-tile-editing={isEditing && !fullEditor ? "" : undefined}
         className={cn(
-          "group note-card relative rounded-2xl border note-shadow transition-[box-shadow,border-color,translate] duration-base ease-out-soft overflow-hidden",
+          "group note-card relative rounded-card border note-shadow transition-[box-shadow,border-color,translate] duration-base ease-out-soft overflow-hidden",
           colorClasses[note.color],
           selected ? "note-glow-active border-transparent" : "border-border/50"
         )}

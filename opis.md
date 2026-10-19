@@ -3552,3 +3552,12 @@ lub grupę”.
 - **Pułapki:** grupy pojawiają się w widoku „Notatki” tylko przy przypiętych notatkach albo ustawionym grupowaniu (`kaczy.viewPrefs.v1`, `groupBy`). W testach ustawiać `groupBy: "label"` przed załadowaniem.
 - **Testy:** `scratchpad/test-chrome.mjs` (Chrome, jasny i ciemny motyw wymuszone przez `kaczy-theme`): jedna pieczątka, zero starych pigułek, kontrast jak wyżej. E2E `note-groups`, `contrast`: 9/9. Vitest 1411/1411.
 - **Commit:** 707e7a0, 2026-10-19.
+
+## Notatki — kafel notatki: promień z tokenu, uniesienie tylko dla myszy (faza 5 planu Notatek, 2026-10-19)
+
+- **Co robi:** kafel notatki ma promień z tokenu `rounded-card` (1 rem, `--r-card`) zamiast `rounded-2xl`. Wizualnie bez zmiany (obie wartości to 16 px). Uniesienie kafla przy najechaniu jest tylko dla wskaźnika myszy, a na telefonie kafel stoi w miejscu.
+- **Gdzie jest:** `src/components/NoteCard.tsx` (klasy kafla), `src/index.css` (`note-shadow` = `--elevation-1`, jeden poziom; uniesienie w `@media (hover: hover) and (pointer: fine)` przy `.note-lift:hover .note-card`).
+- **Jak działa:** cień spoczynkowy to jeden poziom (`--elevation-1`), a `note-shadow-hover` / uniesienie `translate: 0 -2px` działają tylko przy `hover:hover` i `pointer:fine`. Na dotyku hover nie istnieje, więc brak „przyklejonego” uniesienia po stuknięciu.
+- **Czego nie zmieniano:** obramowanie `border-border/50` i 46 innych miejsc z `rounded-2xl` w innych komponentach (osobny, kosmetyczny PR, zob. plan).
+- **Testy:** `scratchpad/test-chrome.mjs` — promień 16 px, `hoverFine=false` i `translate=none` na dotyku, zero poziomego przewijania przy 390 px. E2E `touch-targets`, `card-images`: 8/8. Vitest: patrz wpis commitu.
+- **Commit:** patrz następna linia.
