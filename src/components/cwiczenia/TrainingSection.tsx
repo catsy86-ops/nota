@@ -1,21 +1,27 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dumbbell, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { localDayKey } from "@/lib/dayDone";
+import { nextReminderAt } from "@/lib/supplements/model";
 import { EXERCISES, exerciseById, MUSCLE_GROUPS, type MuscleGroup } from "@/lib/training/catalog";
-import { byTrainingTime, planLine, progressByExercise, TRAINING_KG_MAX, TRAINING_NOTE_MAX, TRAINING_REPS_MAX, volumeOf, type PlanDay, type TrainingEntry, type TrainingSet } from "@/lib/training/model";
-import { addPlanDay, addTrainingEntry, removePlanDay, removeTrainingEntry, restorePlanDay, restoreTrainingEntry, useTrainingEntries, useTrainingPlans } from "@/lib/training/store";
+import { byTrainingTime, planLine, progressByExercise, TRAINING_KG_MAX, TRAINING_NOTE_MAX, TRAINING_REMINDER_DEFAULT, TRAINING_REPS_MAX, TRAINING_WINDOW_END, volumeOf, type PlanDay, type TrainingEntry, type TrainingReminder, type TrainingSet } from "@/lib/training/model";
+import { addPlanDay, addTrainingEntry, removePlanDay, removeTrainingEntry, restorePlanDay, restoreTrainingEntry, setTrainingReminder, useTrainingEntries, useTrainingPlans, useTrainingReminder } from "@/lib/training/store";
 import { toastWithUndo } from "@/lib/undoToast";
+import { useNotesContext } from "@/hooks/NotesProvider";
 
-/** Trening w dziale Ćwiczenia: plany dni, dziennik serii z podpowiedzią ostatniej sesji, dziś i progres. */
+/** Czas przerwy między seriami w sekundach. */
+const REST_SECONDS = 90;
+
+/** Trening w dziale Ćwiczenia: przypomnienie, plany dni, dziennik serii z przerwą, dziś i progres. */
 export function TrainingSection() {
   const entries = useTrainingEntries();
   const plans = useTrainingPlans();
   const today = localDayKey();
   const todays = useMemo(() => entries.filter((e) => e.day === today).sort(byTrainingTime), [entries, today]);
   const progress = useMemo(() => progressByExercise(entries), [entries]);
+  const [restUntil, setRestUntil] = useState<number | null>(null);
 
   return (
     <section aria-labelledby="training-title" className="rounded-card border border-border bg-card p-4 sm:p-5 space-y-5">
@@ -24,8 +30,10 @@ export function TrainingSection() {
         Trening
       </h2>
 
+      <TrainingReminderControl />
       <PlanList plans={plans} />
-      <LogForm entries={entries} />
+      <LogForm entries={entries} plans={plans} onSaved={() => setRestUntil(Date.now() + REST_SECONDS * 1000)} />
+      {restUntil !== null && <RestTimer until={restUntil} onStop={() => setRestUntil(null)} />}
 
       {todays.length > 0 && (
         <div>
@@ -115,10 +123,18 @@ function parseNum(text: string, max: number, integer: boolean): number | undefin
   return n;
 }
 
-function LogForm({ entries }: { entries: TrainingEntry[] }) {
+function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans: PlanDay[]; onSaved: () => void }) {
   const [exerciseId, setExerciseId] = useState(EXERCISES[0].id);
   const [rows, setRows] = useState<SetRow[]>([emptyRow(), emptyRow(), emptyRow()]);
   const [note, setNote] = useState("");
+
+  /** Wybór dnia planu: ustawia pierwsze ćwiczenie dnia i tyle serii, ile zaplanowano. */
+  const pickPlan = (planId: string) => {
+    const plan = plans.find((p) => p.id === planId);
+    if (!plan) return;
+    setExerciseId(plan.exerciseIds[0]);
+    setRows(Array.from({ length: plan.targetSets }, () => ({ reps: String(plan.targetReps), kg: "" })));
+  };
 
   const last = useMemo(() => {
     const own = entries.filter((e) => e.exerciseId === exerciseId).sort(byTrainingTime);
@@ -136,11 +152,25 @@ function LogForm({ entries }: { entries: TrainingEntry[] }) {
     if (!addTrainingEntry({ exerciseId, sets, note, time: nowHHMM() })) return;
     setRows([emptyRow(), emptyRow(), emptyRow()]);
     setNote("");
+    onSaved();
   };
 
   return (
     <form className="space-y-3 border-t border-dashed border-border pt-4" onSubmit={(e) => { e.preventDefault(); save(); }}>
       <p className="text-xs font-medium text-muted-foreground">Zapisz trening</p>
+      {plans.length > 0 && (
+        <label className="block text-sm">
+          <span className="sr-only">Dzień planu</span>
+          <select
+            defaultValue=""
+            onChange={(e) => pickPlan(e.target.value)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm coarse:h-11"
+          >
+            <option value="" disabled>Wybierz dzień planu (opcjonalnie)</option>
+            {plans.map((p) => <option key={p.id} value={p.id}>{planLine(p)}</option>)}
+          </select>
+        </label>
+      )}
       <label className="block text-sm">
         <span className="sr-only">Ćwiczenie</span>
         <select
@@ -246,6 +276,75 @@ function AddPlanForm() {
       </div>
       <Button type="submit" size="sm" disabled={!valid} className="coarse:h-11">Dodaj dzień planu</Button>
     </form>
+  );
+}
+
+/**
+ * Przypomnienie o treningu (domyślnie 18:00, okno do 20:00). Tworzy notatkę z dziennym powtarzaniem
+ * w Przypomnieniach; zmiana godziny albo wyłączenie sprząta poprzednią notatkę.
+ */
+function TrainingReminderControl() {
+  const reminder = useTrainingReminder();
+  const notes = useNotesContext();
+  const [time, setTime] = useState(reminder?.time ?? TRAINING_REMINDER_DEFAULT);
+  const on = reminder !== null;
+
+  const apply = (next: TrainingReminder | null) => {
+    if (reminder?.noteId) notes.trashNote(reminder.noteId);
+    if (!next) {
+      setTrainingReminder(null);
+      return;
+    }
+    const noteId = notes.addNote(
+      `Trening — ${next.time}–${TRAINING_WINDOW_END}`,
+      `Trening po pracy. Okno: ${next.time}–${TRAINING_WINDOW_END}.`,
+      "default",
+      [],
+      nextReminderAt(next.time, Date.now()),
+    );
+    notes.updateNote(noteId, { reminderRepeat: "daily" });
+    setTrainingReminder({ time: next.time, noteId });
+  };
+
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border/60 px-3 py-2">
+      <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+        <Checkbox checked={on} onCheckedChange={(v) => apply(v === true ? { time } : null)} className="coarse:h-6 coarse:w-6" />
+        Przypominaj o treningu, codziennie o
+      </label>
+      <Input
+        type="time"
+        aria-label="Godzina przypomnienia o treningu"
+        value={time}
+        disabled={!on}
+        onChange={(e) => {
+          setTime(e.target.value);
+          if (on && /^\d{2}:\d{2}$/.test(e.target.value)) apply({ time: e.target.value });
+        }}
+        className="w-auto coarse:h-11"
+      />
+      <span className="text-xs text-muted-foreground">okno do {TRAINING_WINDOW_END}</span>
+    </div>
+  );
+}
+
+/** Licznik przerwy po zapisie serii; sam się kończy, „Pomiń” kończy wcześniej. */
+function RestTimer({ until, onStop }: { until: number; onStop: () => void }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 500);
+    return () => clearInterval(id);
+  }, []);
+  const left = Math.max(0, Math.ceil((until - now) / 1000));
+  useEffect(() => {
+    if (left === 0) onStop();
+  }, [left, onStop]);
+
+  return (
+    <div role="status" aria-live="polite" className="flex items-center justify-between gap-3 rounded-lg border border-primary/40 px-3 py-2 text-sm" data-testid="rest-timer">
+      <span>Przerwa: <span className="font-mono tabular-nums">{Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}</span></span>
+      <Button variant="ghost" size="sm" className="coarse:h-11" onClick={onStop}>Pomiń</Button>
+    </div>
   );
 }
 

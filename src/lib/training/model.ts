@@ -46,6 +46,25 @@ export interface PlanDay {
   created: number;
 }
 
+/** Przypomnienie o treningu: godzina „HH:MM” (domyślnie 18:00, okno do 20:00) i id notatki-przypomnienia. */
+export interface TrainingReminder {
+  time: string;
+  noteId?: string;
+}
+
+export const TRAINING_REMINDER_DEFAULT = "18:00";
+/** Koniec okna treningowego — tylko do opisu w przypomnieniu. */
+export const TRAINING_WINDOW_END = "20:00";
+
+/** Czyszczenie ustawienia przypomnienia; zła godzina = brak przypomnienia (`null`). */
+export function cleanTrainingReminder(raw: unknown): TrainingReminder | null {
+  const r = raw as Partial<TrainingReminder> | null;
+  if (!r || typeof r !== "object") return null;
+  if (typeof r.time !== "string" || !TIME_RE.test(r.time)) return null;
+  const noteId = typeof r.noteId === "string" && r.noteId && r.noteId.length <= 64 ? r.noteId : undefined;
+  return noteId ? { time: r.time, noteId } : { time: r.time };
+}
+
 /** Ciężar: liczba ≥ 0 do 500 kg, zaokrąglona do pół kilo; inaczej `undefined`. */
 export function cleanKg(v: unknown): number | undefined {
   if (typeof v !== "number" || !Number.isFinite(v) || v < 0 || v > TRAINING_KG_MAX) return undefined;

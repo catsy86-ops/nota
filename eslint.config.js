@@ -60,6 +60,7 @@ export default tseslint.config(
       // Trening: warstwa Yjs w dokumencie notatek (ten sam wzorzec), testy na własnym Y.Doc.
       "src/lib/training/yTraining.ts",
       "src/lib/training/yTraining.test.ts",
+      "src/lib/training/reminder.test.ts",
       "src/lib/tabSync.ts",
       "src/lib/tabSync.test.ts",
       // Buduje plik synchronizacji w starym formacie jako dane testowe.

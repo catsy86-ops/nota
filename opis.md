@@ -4262,6 +4262,9 @@ lub grupę”.
   - **Zapis treningu:** wybór ćwiczenia z katalogu (pogrupowane: klatka, biceps, triceps), wskazówka wykonania,
     3 serie na start (dodawanie do 30). Każda seria: powtórki (całkowite, 1–100) i ciężar w kg (co 0,5, opcjonalny).
     Uwagi (≤200 znaków). Zapis w bieżącej godzinie, dziś.
+  - **Wybór dnia planu** nad formularzem: ustawia pierwsze ćwiczenie dnia i tyle serii, ile zaplanowano, z celem powtórek.
+  - **Przerwa:** po zapisie serii licznik 1:30 („Pomiń” kończy wcześniej).
+  - **Przypomnienie o treningu:** pole wyboru i godzina (domyślnie 18:00, okno do 20:00). Tworzy notatkę z dziennym powtarzaniem.
   - **Podpowiedź:** „Ostatnio (DD.MM): 10×20 kg, 8×22 kg” i przycisk „Użyj ostatnich”, który wypełnia serie.
   - **Dziś:** dzisiejsze wpisy z sumą serii i objętością (suma powtórek × kg).
   - **Progres:** per ćwiczenie — rekord ciężaru (kg, dzień) i liczba sesji.
@@ -4288,18 +4291,21 @@ lub grupę”.
   - Kopia scala (dodaje brakujące wpisy i plany, nic nie kasuje).
 - **Ograniczenia i pułapki.**
   - Wpisy zawsze na dziś (formularz nie wybiera daty), tak jak w diecie.
-  - Brak licznika przerw między seriami i brak przycisku „Zrób ten dzień planu” (plan jest tylko listą celów;
-    serie wpisujesz ręcznie). Brak wykresu progresu — jest lista rekordów.
+  - Wybór dnia planu tylko ustawia ćwiczenie i liczbę serii (cel powtórek); ciężary wpisujesz ręcznie.
+    Brak wykresu progresu — jest lista rekordów.
+  - Przerwa (licznik 1:30) startuje po każdym zapisie serii, tylko na tym ekranie; nie zapisuje się w danych i nie wibruje.
   - Brak ustawienia sprzętu (np. maksymalny ciężar hantli): sprzęt to tylko informacja w katalogu.
-  - Brak przypomnienia o treningu wieczorem — tylko kreatyna ma przypomnienie. Do ustalenia z właścicielem.
+  - Przypomnienie o treningu: domyślnie 18:00, opis podaje okno do 20:00. Zmiana godziny lub wyłączenie
+    sprząta poprzednią notatkę (idzie do kosza). Przypomnienie to notatka z dziennym powtarzaniem, jak kreatyna.
   - Ciężar co 0,5 kg; powtórki tylko całkowite; limit 5 000 wpisów treningu i 20 planów.
 - **Testy.**
   - `src/lib/training/model.test.ts` (katalog, czyszczenie serii i wpisów, plany, rekord, objętość, progres, kolejność).
   - `src/lib/training/yTraining.test.ts` (dodawanie, usuwanie i cofnięcie, plany, origin, scalanie).
+  - `src/lib/training/reminder.test.ts` (domyślna godzina, czyszczenie przypomnienia, zapis i scalanie z kopii).
   - `src/components/cwiczenia/TrainingSection.test.tsx` (pusty plan, zapis serii, walidacja ułamków,
     „Użyj ostatnich”, dziś i progres).
   - `src/lib/fullBackup.test.ts` (trening i plany w kopii, przywracanie scala).
-  - Vitest: 192 pliki, 1706 testów zielone. E2E nie uruchamiano.
+  - Vitest: 193 pliki, 1714 testów zielone. E2E nie uruchamiano.
 - **Budżet paczki.** Wejściowy JS 390,4 KB gzip; próg 392 KB.
-- **Lint.** `eslint.config.js`: `src/lib/training/yTraining.ts` i jego test na liście dozwolonych importów `yjs`.
-- **Commit:** `c7736f0` (2026-10-20, kroki 4–5 planu Ćwiczeń: trening).
+- **Lint.** `eslint.config.js`: `src/lib/training/yTraining.ts` i jego testy na liście dozwolonych importów `yjs`.
+- **Commit:** `c7736f0` (kroki 4–5 planu Ćwiczeń: trening) oraz przypomnienie o treningu, przerwa i wybór dnia planu (2026-10-20, hash poniżej).

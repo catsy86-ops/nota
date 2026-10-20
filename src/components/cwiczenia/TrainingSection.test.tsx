@@ -3,13 +3,18 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { PlanDay, TrainingEntry } from "@/lib/training/model";
 import { localDayKey } from "@/lib/dayDone";
 
-const { fixture, addEntryMock } = vi.hoisted(() => ({
-  fixture: { entries: [] as TrainingEntry[], plans: [] as PlanDay[] },
+const { fixture, addEntryMock, setReminderMock, notesMock } = vi.hoisted(() => ({
+  fixture: { entries: [] as TrainingEntry[], plans: [] as PlanDay[], reminder: null as { time: string; noteId?: string } | null },
   addEntryMock: vi.fn(),
+  setReminderMock: vi.fn(),
+  notesMock: { addNote: vi.fn(() => "note-1"), updateNote: vi.fn(), trashNote: vi.fn(), restoreFromTrash: vi.fn() },
 }));
+vi.mock("@/hooks/NotesProvider", () => ({ useNotesContext: () => notesMock }));
 vi.mock("@/lib/training/store", () => ({
   useTrainingEntries: () => fixture.entries,
   useTrainingPlans: () => fixture.plans,
+  useTrainingReminder: () => fixture.reminder,
+  setTrainingReminder: (r: unknown) => setReminderMock(r),
   addTrainingEntry: (input: unknown) => addEntryMock(input),
   removeTrainingEntry: vi.fn(() => null),
   restoreTrainingEntry: vi.fn(),
@@ -24,7 +29,12 @@ afterEach(() => {
   cleanup();
   fixture.entries = [];
   fixture.plans = [];
+  fixture.reminder = null;
   addEntryMock.mockReset();
+  setReminderMock.mockReset();
+  notesMock.addNote.mockClear();
+  notesMock.updateNote.mockClear();
+  notesMock.trashNote.mockClear();
 });
 
 describe("TrainingSection", () => {
@@ -63,6 +73,41 @@ describe("TrainingSection", () => {
     fireEvent.click(screen.getByRole("button", { name: "Użyj ostatnich" }));
     expect((screen.getByLabelText("Powtórki, seria 2") as HTMLInputElement).value).toBe("8");
     expect((screen.getByLabelText("Ciężar kg, seria 2") as HTMLInputElement).value).toBe("22");
+  });
+
+  it("przypomnienie o 18:00 tworzy notatkę z dziennym powtarzaniem i zapisuje jej id", () => {
+    render(<TrainingSection />);
+    fireEvent.click(screen.getByRole("checkbox", { name: /Przypominaj o treningu/ }));
+    expect(notesMock.addNote).toHaveBeenCalledWith("Trening — 18:00–20:00", expect.any(String), "default", [], expect.any(Number));
+    expect(notesMock.updateNote).toHaveBeenCalledWith("note-1", { reminderRepeat: "daily" });
+    expect(setReminderMock).toHaveBeenCalledWith({ time: "18:00", noteId: "note-1" });
+  });
+
+  it("wyłączenie przypomnienia sprząta jego notatkę", () => {
+    fixture.reminder = { time: "18:00", noteId: "old-note" };
+    render(<TrainingSection />);
+    fireEvent.click(screen.getByRole("checkbox", { name: /Przypominaj o treningu/ }));
+    expect(notesMock.trashNote).toHaveBeenCalledWith("old-note");
+    expect(setReminderMock).toHaveBeenCalledWith(null);
+  });
+
+  it("po zapisie serii pokazuje się przerwa 1:30", () => {
+    addEntryMock.mockReturnValue({ id: "t1" });
+    render(<TrainingSection />);
+    fireEvent.change(screen.getByLabelText("Powtórki, seria 1"), { target: { value: "10" } });
+    fireEvent.click(screen.getByRole("button", { name: "Zapisz serie" }));
+    expect(screen.getByTestId("rest-timer").textContent).toContain("1:30");
+    fireEvent.click(screen.getByRole("button", { name: "Pomiń" }));
+    expect(screen.queryByTestId("rest-timer")).toBeNull();
+  });
+
+  it("wybór dnia planu ustawia ćwiczenie i liczbę serii", () => {
+    fixture.plans = [{ id: "p1", name: "Ramiona", exerciseIds: ["biceps-mlotkowe"], targetSets: 2, targetReps: 12, created: 1 }];
+    render(<TrainingSection />);
+    fireEvent.change(screen.getByRole("combobox", { name: "Dzień planu" }), { target: { value: "p1" } });
+    expect((screen.getByRole("combobox", { name: "Ćwiczenie" }) as HTMLSelectElement).value).toBe("biceps-mlotkowe");
+    expect((screen.getByLabelText("Powtórki, seria 2") as HTMLInputElement).value).toBe("12");
+    expect(screen.queryByLabelText("Powtórki, seria 3")).toBeNull();
   });
 
   it("dzisiejsze wpisy są na liście, a progres pokazuje rekord", () => {

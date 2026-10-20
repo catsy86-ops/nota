@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { yjsStore } from "@/lib/yjsStore";
 import { localDayKey } from "@/lib/dayDone";
-import { cleanEntry, cleanPlanDay, type PlanDay, type TrainingEntry, type TrainingSet } from "./model";
+import { cleanEntry, cleanPlanDay, type PlanDay, type TrainingEntry, type TrainingReminder, type TrainingSet } from "./model";
 import { createYTraining } from "./yTraining";
 
 /**
@@ -87,4 +87,13 @@ export function trainingDump() {
 /** Scalenie treningu z kopii — bez kasowania tego, co już jest na telefonie. */
 export function mergeTrainingDump(raw: unknown): void {
   yTraining.mergeDump(raw);
+}
+
+export function useTrainingReminder(): TrainingReminder | null {
+  return useSyncExternalStore(yTraining.subscribe, yTraining.getReminder);
+}
+
+/** Zapis ustawienia przypomnienia (`null` = wyłączone). Notatkę-przypomnienie tworzy widok. */
+export function setTrainingReminder(r: TrainingReminder | null): void {
+  yTraining.setReminder(r);
 }
