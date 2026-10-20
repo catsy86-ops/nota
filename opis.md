@@ -4302,4 +4302,4 @@ lub grupę”.
   - Vitest: 192 pliki, 1706 testów zielone. E2E nie uruchamiano.
 - **Budżet paczki.** Wejściowy JS 390,4 KB gzip; próg 392 KB.
 - **Lint.** `eslint.config.js`: `src/lib/training/yTraining.ts` i jego test na liście dozwolonych importów `yjs`.
-- **Commit:** `TBD` (2026-10-20, kroki 4–5 planu Ćwiczeń: trening).
+- **Commit:** `c7736f0` (2026-10-20, kroki 4–5 planu Ćwiczeń: trening).
