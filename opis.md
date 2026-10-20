@@ -4052,3 +4052,30 @@ lub grupę”.
 - **Testy:**
   - `src/lib/reminderAgenda.test.ts` — „pusta lista” i „odłożenie o godzinę”.
   - e2e: pełny przebieg chromium 389/389 przy progu bundla 390 KB.
+
+## Przypomnienia — fazy 2–3 planu wg decyzji D1–D4 (2026-10-20, ebe2567)
+
+- **Co robi:**
+  - „Gotowe” przy każdym terminie w widoku Terminy, nie tylko zaległym (D2). Poza Terminami przycisk działa jak dotąd, tylko dla zaległych.
+  - „Gotowe” na serii kończy bieżące wystąpienie i przechodzi do następnego, jak powiadomienie (D3). Koniec serii albo zwykły termin zdejmuje przypomnienie. Cofnij przywraca termin, dzień serii i odłożenie.
+  - „Jutro rano” i „+1 h” nie przepisują dnia serii (2b). Wcześniej `updateNote` wyprowadzał `reminderDay` z nowej godziny.
+  - Po „Gotowe”, „Jutro” i „+1 h” fokus przechodzi na sąsiedni kafel w grupie, a gdy go nie ma — na nagłówek grupy (2c).
+  - Archiwum ma osobną sekcję „W archiwum” na dole Terminów, z wyszukiwaniem, i nie wchodzi do grup „Zaległe”/„Nadchodzące” ani do licznika (D4).
+  - Licznik zaległych na pasku bocznym i w tytule karty liczy też terminy Pracy, czyli tę samą listę co Terminy (D1).
+- **Gdzie jest:**
+  - `src/hooks/NoteViewActionsContext.tsx` — pole `reminderActions`; `src/components/NoteGrid.tsx` i `src/components/NoteCard.tsx` — przekazanie do kafla.
+  - `src/components/NoteCardBody.tsx` — przyciski terminu, `focusAfterRemoval`, `doneTarget` / `seriesDay` z `reminderRepeat.ts`.
+  - `src/pages/Index.tsx` — `reminderGroups`, `archivedRows`, `reminderRowCount`, sekcja „W archiwum”, `useOverdueBadge(notes, useStudyOverdueCount())`, montowanie `StudyOverdueSync`.
+  - `src/hooks/useOverdueBadge.ts` — drugi argument `extra` (zaległości spoza notatek) w tym samym liczniku co tytuł i ikona.
+  - `src/lib/studyOverdueCount.ts` — mały store (`setStudyOverdueCount`, `useStudyOverdueCount`), bez danych Pracy.
+  - `src/components/review/StudyOverdueSync.tsx` — leniwy komponent bez wyglądu, który liczy `studyDueRows` i podaje liczbę do store.
+- **Ograniczenia i pułapki:**
+  - Liczba z Pracy zawiera też serwis przypadający dziś — tak jak lista Terminów. Licznik nie jest więc „po terminie” w sensie ścisłym.
+  - `StudyOverdueSync` montuje się zawsze, więc dane Pracy ładują się przy starcie (leniwy chunk, ale nie tylko na widoku Pracy).
+  - Liczba z Pracy jest liczona przy renderze; zmiana doby bez zmiany dziennika odświeża ją dopiero po zmianie danych.
+  - Fokus po akcji wybiera pierwszy przycisk sąsiedniego kafla, a nie zawsze „Gotowe”.
+  - Nie zrobione: 3b (duplikaty `endOfDay` i sortowania), tekst odznaki 12 px (1c), przycisk „Nowa notatka” w pustym stanie (1d), ogłoszenie po odhaczeniu (1e), odświeżanie „zaległości” bez zmiany listy (1g).
+- **Testy:**
+  - `src/hooks/useOverdueBadge.test.ts` — „adds terminy Pracy do tytułu i ikony”.
+  - `e2e/reminders-phase2.spec.ts` — „Gotowe” przy nadchodzącym terminie zdejmuje go z Terminów.
+  - e2e pełny przebieg chromium: 391/391 (Commit: ebe2567).
