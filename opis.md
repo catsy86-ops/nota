@@ -4470,4 +4470,4 @@ lub grupę”.
 - **Testy.** `src/lib/study/whatsappSupplier.test.ts` (3): link bez numeru, z numerem, zepsuty numer.
   `src/lib/backupConfirm.test.ts` (1): bez pominięć nie pyta. Ścieżki odmowy nie testuje żaden test (wymagałaby załącznika,
   który nie wchodzi do budżetu w teście) — do sprawdzenia ręcznie albo e2e.
-- **Commit:** `TBD` (2026-10-20, U7 i D3).
+- **Commit:** `f39af01` (2026-10-20, U7 i D3).
