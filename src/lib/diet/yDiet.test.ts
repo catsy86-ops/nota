@@ -28,6 +28,14 @@ describe("createYDiet", () => {
     expect(y.get()[0]).toMatchObject({ id: "a", time: "09:00", kcal: 200 });
   });
 
+  it("dwa odczyty celów bez zmiany zwracają ten sam obiekt (inaczej React zapętla renderowanie)", () => {
+    const y = createYDiet(new Y.Doc());
+    y.setGoals({ kcal: 2000 });
+    expect(y.getGoals()).toBe(y.getGoals());
+    y.setGoals({ kcal: 2100 });
+    expect(y.getGoals()).toEqual({ kcal: 2100 });
+  });
+
   it("cele zapisują się w osobnej mapie i czytają jako czyste liczby", () => {
     const y = createYDiet(new Y.Doc());
     y.setGoals({ kcal: 2400, protein: 150 });

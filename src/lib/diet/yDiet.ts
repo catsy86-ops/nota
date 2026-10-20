@@ -22,7 +22,9 @@ export function createYDiet(doc: Y.Doc) {
   const listeners = new Set<() => void>();
   const emit = () => listeners.forEach((l) => l());
   meals.observe(() => { snapshot = null; emit(); });
-  meta.observe(emit);
+  // Cele czytane przez useSyncExternalStore: odczyt musi zwracać ten sam obiekt, dopóki mapa się nie zmieni.
+  let goalsSnap: DietGoals | null = null;
+  meta.observe(() => { goalsSnap = null; emit(); });
 
   /** Oczyszczone posiłki, od najstarszego dnia; w dniu wg godziny. */
   function get(): Meal[] {
@@ -37,7 +39,8 @@ export function createYDiet(doc: Y.Doc) {
   }
 
   function getGoals(): DietGoals {
-    return cleanGoals(meta.get("goals"));
+    if (!goalsSnap) goalsSnap = cleanGoals(meta.get("goals"));
+    return goalsSnap;
   }
 
   function subscribe(cb: () => void): () => void {
