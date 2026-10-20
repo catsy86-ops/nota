@@ -108,6 +108,8 @@ export interface FullBackup {
   supplements?: string;
   /** Dieta: posiłki i cele (`lib/diet/yDiet.ts`, JSON `{ meals, goals }`); kształt waliduje `mergeDietDump`. */
   diet?: string;
+  /** Trening: dziennik serii i plany dni (`lib/training/yTraining.ts`, JSON `{ entries, plans }`); kształt waliduje `mergeTrainingDump`. */
+  training?: string;
   /**
    * v3: bajty załączników (hash SHA-256 → data URL), każdy raz. Manifesty są
    * w `notes[].attachments`; plik większy niż budżet backupu jest pominięty —
@@ -144,6 +146,7 @@ export const fullBackupSchema = z.object({
   study: z.string().optional().catch(undefined),
   supplements: z.string().optional().catch(undefined),
   diet: z.string().optional().catch(undefined),
+  training: z.string().optional().catch(undefined),
   attachmentBlobs: z.record(z.string()).optional().catch(undefined),
   skipped: z.object({ tooLarge: z.number(), missing: z.number(), journalPhotos: z.number(), siteDocs: z.number(), recordings: z.number().optional().catch(undefined) }).optional().catch(undefined),
   // Starsze kopie nie mają sekcji — wtedy po prostu brak definicji.

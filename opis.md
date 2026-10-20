@@ -4253,3 +4253,53 @@ lub grupę”.
 - **Budżet paczki.** Wejściowy JS 390,3 KB gzip; próg 392 KB (ustawiony w kroku odżywek).
 - **Lint.** `eslint.config.js`: `src/lib/diet/yDiet.ts` i jego test na liście dozwolonych importów `yjs`, jak odżywki.
 - **Commit:** `ccce384` (2026-10-20, krok 3 planu Ćwiczeń: dieta).
+
+## Ćwiczenia — trening: katalog, dziennik serii, progres, plany dni (plan Ćwiczeń, kroki 4–5, 2026-10-20)
+
+- **Co robi.** Na stronie Ćwiczeń karta „Trening” (nad dietą):
+  - **Plan dni:** lista dni z ćwiczeniami i celem (np. „Klatka · 3 × 10”). Dodawanie: nazwa, ćwiczenia z katalogu
+    (do 12), cel serii i powtórek. Usuwanie z „Cofnij”.
+  - **Zapis treningu:** wybór ćwiczenia z katalogu (pogrupowane: klatka, biceps, triceps), wskazówka wykonania,
+    3 serie na start (dodawanie do 30). Każda seria: powtórki (całkowite, 1–100) i ciężar w kg (co 0,5, opcjonalny).
+    Uwagi (≤200 znaków). Zapis w bieżącej godzinie, dziś.
+  - **Podpowiedź:** „Ostatnio (DD.MM): 10×20 kg, 8×22 kg” i przycisk „Użyj ostatnich”, który wypełnia serie.
+  - **Dziś:** dzisiejsze wpisy z sumą serii i objętością (suma powtórek × kg).
+  - **Progres:** per ćwiczenie — rekord ciężaru (kg, dzień) i liczba sesji.
+- **Katalog startowy** (`src/lib/training/catalog.ts`): klatka (wyciskanie hantli na płaskiej i skosie, rozpiętki),
+  biceps (uginanie ze sztangielkami, młotkowe, na ławce skośnej), triceps (wyprost nad głową, w opadzie,
+  prostowanie leżąc). Każde ćwiczenie ma sprzęt (`ławka`, `hantle`) i krótką wskazówkę. Treść do sprawdzenia przez właściciela.
+- **Gdzie jest.**
+  - `src/lib/training/catalog.ts` — `EXERCISES`, `MUSCLE_GROUPS`, `exerciseById`, `isKnownExercise`.
+  - `src/lib/training/model.ts` — `TrainingSet`, `TrainingEntry`, `PlanDay`, `cleanKg`, `cleanSet`, `cleanEntry`,
+    `cleanPlanDay`, `bestKg`, `volumeOf`, `byTrainingTime`, `progressByExercise`, `planLine`.
+  - `src/lib/training/yTraining.ts` — `createYTraining(doc)`: mapy Y `trainingLog` (id → wpis) i `trainingPlans`
+    (id → plan), origin `TRAINING_ORIGIN`, `dump()` / `mergeDump()` do kopii.
+  - `src/lib/training/store.ts` — hooki `useTrainingEntries()`, `useTrainingPlans()` i akcje `addTrainingEntry`,
+    `removeTrainingEntry`, `restoreTrainingEntry`, `addPlanDay`, `removePlanDay`, `restorePlanDay`, `trainingDump`,
+    `mergeTrainingDump`.
+  - `src/components/cwiczenia/TrainingSection.tsx` — karta (plany, formularz zapisu, dziś, progres, formularz planu).
+  - Kopia: `src/lib/noteSchema.ts` (pole `training`), `src/lib/exportNotes.ts` (zapis w buildzie, scalanie w przywracaniu).
+- **Jak działa i dlaczego.**
+  - Ten sam wzorzec co odżywki i dieta: dane w dokumencie Yjs, jeden klucz na wpis i na plan, więc dwa telefony
+    scalają się bez strat. Zapis i odczyt przechodzą przez `cleanEntry` / `cleanPlanDay`; obce ćwiczenie odrzuca cały wpis.
+  - Rekord ciężaru bierze najcięższą serię z całej historii i zapisuje dzień, w którym ją zrobiono. Ostatnia sesja
+    to ostatni wpis tego ćwiczenia w kolejności dzień → godzina → czas dodania.
+  - Plany nie zmieniają dziennika: usunięcie dnia planu zostawia wpisy treningu.
+  - Kopia scala (dodaje brakujące wpisy i plany, nic nie kasuje).
+- **Ograniczenia i pułapki.**
+  - Wpisy zawsze na dziś (formularz nie wybiera daty), tak jak w diecie.
+  - Brak licznika przerw między seriami i brak przycisku „Zrób ten dzień planu” (plan jest tylko listą celów;
+    serie wpisujesz ręcznie). Brak wykresu progresu — jest lista rekordów.
+  - Brak ustawienia sprzętu (np. maksymalny ciężar hantli): sprzęt to tylko informacja w katalogu.
+  - Brak przypomnienia o treningu wieczorem — tylko kreatyna ma przypomnienie. Do ustalenia z właścicielem.
+  - Ciężar co 0,5 kg; powtórki tylko całkowite; limit 5 000 wpisów treningu i 20 planów.
+- **Testy.**
+  - `src/lib/training/model.test.ts` (katalog, czyszczenie serii i wpisów, plany, rekord, objętość, progres, kolejność).
+  - `src/lib/training/yTraining.test.ts` (dodawanie, usuwanie i cofnięcie, plany, origin, scalanie).
+  - `src/components/cwiczenia/TrainingSection.test.tsx` (pusty plan, zapis serii, walidacja ułamków,
+    „Użyj ostatnich”, dziś i progres).
+  - `src/lib/fullBackup.test.ts` (trening i plany w kopii, przywracanie scala).
+  - Vitest: 192 pliki, 1706 testów zielone. E2E nie uruchamiano.
+- **Budżet paczki.** Wejściowy JS 390,4 KB gzip; próg 392 KB.
+- **Lint.** `eslint.config.js`: `src/lib/training/yTraining.ts` i jego test na liście dozwolonych importów `yjs`.
+- **Commit:** `TBD` (2026-10-20, kroki 4–5 planu Ćwiczeń: trening).

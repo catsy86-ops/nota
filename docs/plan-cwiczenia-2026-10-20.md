@@ -1,6 +1,6 @@
 # Plan: dział Ćwiczenia (zapisany 2026-10-20, realizacja później)
 
-Status: **kroki 1 (odżywki) i 3 (dieta) zrobione** — odżywki: lista, odhaczenia, przypomnienie codzienne, kopia; dieta: posiłki, kalorie i białko, cele dzienne, kopia. Trening jeszcze nie istnieje. Szczegóły: `opis.md`, sekcja „Ćwiczenia — odżywki”.
+Status: **kroki 1 (odżywki), 3 (dieta) i 4–5 (trening) zrobione** — odżywki: lista, odhaczenia, przypomnienie codzienne, kopia; dieta: posiłki, kalorie i białko, cele dzienne, kopia; trening: katalog, dziennik serii, progres, plany dni, kopia. Do ustalenia: przerwy między seriami, przypomnienie o treningu wieczorem, ustawienie sprzętu. Szczegóły: `opis.md`, sekcja „Ćwiczenia — odżywki”.
 
 ## Cel
 

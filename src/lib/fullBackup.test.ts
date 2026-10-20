@@ -9,6 +9,7 @@ import { imageStore } from "./imageStore";
 import { yStudy } from "./study/data";
 import { addSupplement, removeSupplement, setSupplementTaken, supplementDump } from "./supplements/store";
 import { addMeal, dietDump, removeMeal, setDietGoals } from "./diet/store";
+import { addTrainingEntry, addPlanDay, removeTrainingEntry, trainingDump } from "./training/store";
 import { cleanDump } from "./study/yStudy";
 import type { Note } from "@/hooks/useNotes";
 
@@ -280,6 +281,19 @@ describe("Nauka w pełnej kopii", () => {
     addMeal({ text: "Kolacja", day: "2026-10-20" });
     await restoreFullBackup(backup, ALL);
     expect(dietDump().meals.map((x) => x.text).sort()).toEqual(["Kolacja", "Owsianka"]);
+  });
+
+  it("trening: dziennik serii i plany wracają z kopii; przywracanie scala", async () => {
+    const e = addTrainingEntry({ exerciseId: "triceps-nad-glowa", sets: [{ reps: 10, kg: 8 }], day: "2026-10-20" });
+    expect(e).not.toBeNull();
+    addPlanDay({ name: "Triceps", exerciseIds: ["triceps-nad-glowa"], targetSets: 3, targetReps: 12 });
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
+    expect(JSON.parse(backup.training!).entries).toHaveLength(1);
+
+    removeTrainingEntry(e!.id);
+    expect(trainingDump().entries).toEqual([]);
+    await restoreFullBackup(backup, ALL);
+    expect(trainingDump()).toMatchObject({ entries: [{ exerciseId: "triceps-nad-glowa" }], plans: [{ name: "Triceps" }] });
   });
 
   it("czyta starą kopię, w której Nauka była tylko wśród ustawień", async () => {

@@ -99,7 +99,7 @@ describe("CwiczeniaView — odżywki", () => {
     addSupplementMock.mockImplementation((input: object) => ({ id: "s2", ...input }));
     render(<CwiczeniaView />);
     fireEvent.change(screen.getByRole("textbox", { name: "Nazwa odżywki" }), { target: { value: "Omega" } });
-    fireEvent.click(screen.getByRole("checkbox"));
+    fireEvent.click(screen.getByLabelText(/Przypominaj codziennie/));
     fireEvent.click(screen.getByRole("button", { name: "Dodaj" }));
     expect(notesMock.addNote).not.toHaveBeenCalled();
     expect(addSupplementMock).toHaveBeenCalledWith(expect.objectContaining({ name: "Omega", remindAt: undefined }));

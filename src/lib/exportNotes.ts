@@ -118,7 +118,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
   await versionsStore.load();
   await shiftsReady();
   // Dane działu Praca ładowane dopiero tu — nie wchodzą do paczki startowej.
-  const [{ studyReady, yStudy }, { stateFromDump }, { supplementDump: supplementsDump }, { dietDump }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy"), import("@/lib/supplements/store"), import("@/lib/diet/store")]);
+  const [{ studyReady, yStudy }, { stateFromDump }, { supplementDump: supplementsDump }, { dietDump }, { trainingDump }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy"), import("@/lib/supplements/store"), import("@/lib/diet/store"), import("@/lib/training/store")]);
   await studyReady();
   const { blobs, report } = await collectAttachmentBlobs(opts.attachmentBudget ?? BACKUP_ATTACHMENTS_BUDGET_BYTES);
   const study = yStudy.dump();
@@ -144,6 +144,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     // Odżywki i odhaczenia w osobnej sekcji; scalane przy przywracaniu, bez kasowania (stara kopia bez niej działa dalej).
     supplements: JSON.stringify(supplementsDump()),
     diet: JSON.stringify(dietDump()),
+    training: JSON.stringify(trainingDump()),
     ...(Object.keys(blobs).length ? { attachmentBlobs: blobs } : {}),
     // Same liczby (bez treści) — okno przywracania mówi, czego w pliku nie ma; zera = nic nie pominięto.
     skipped: { tooLarge: report.tooLarge.length, missing: report.missing.length, journalPhotos: report.journalPhotos, siteDocs: report.siteDocs, recordings: report.recordings },
@@ -254,6 +255,12 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
       const { mergeDietDump } = await import("@/lib/diet/store");
       mergeDietDump(JSON.parse(backup.diet));
     } catch (err) { logDiag("warn", "backup", "cannot restore diet", err); }
+  }
+  if (backup.training) {
+    try {
+      const { mergeTrainingDump } = await import("@/lib/training/store");
+      mergeTrainingDump(JSON.parse(backup.training));
+    } catch (err) { logDiag("warn", "backup", "cannot restore training", err); }
   }
   // Metadane skarbca z pliku: bez nich zablokowane notatki z backupu byłyby nie do odszyfrowania.
   if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);
