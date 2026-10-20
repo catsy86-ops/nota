@@ -2148,7 +2148,7 @@ i nie będące podnotatkami. Przeniesienie do folderu albo nadanie etykiety usuw
 - **Poprawka:** dwa przyciski pędzla godzin (`BrushHours.tsx`, „zmiana” i „dodaj”) miały 40 px na dotyku; teraz 44 px (`coarse:h-11`).
 - **Zostaje (decyzje właściciela):** udostępnienie grafiku jako obraz, premie w rachunku, wiele grafików (z listy konkurencji
   w `roadmap.md`).
-- **Commit:** `TBD` (2026-10-20, Grafik — przegląd).
+- **Commit:** `370d656` (2026-10-20, Grafik — przegląd).
 
 **Testy.** `src/lib/inbox.test.ts` (reguła skrzynki, podział tekstu), `src/components/InboxCapture.test.tsx` (Enter,
 pusty tekst), `e2e/inbox-today.spec.ts` (zapis, licznik w pasku, „Cofnij”, pusta skrzynka).
