@@ -2179,7 +2179,7 @@ przejście z „dziś” do zaległych po zmianie doby — `focus` i przesunięt
 `e2e/today-study.spec.ts` (runda quizu, następnego dnia karta „10”, „Powtórz” → quiz „Na dziś”).
 
 **Commit.** `32f51b7`, `25ed6cb`, `ddf6765` (powtórki) (2026-10-16). Poprawki Fazy 1 (odświeżanie po zmianie doby,
-granice błędów, pusty stan), 2026-10-20: `TBD`.
+granice błędów, pusty stan), 2026-10-20: `f720739`.
 
 ## Praca — własne pytania i punkty listy (N5)
 
