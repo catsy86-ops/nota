@@ -4080,7 +4080,7 @@ lub grupę”.
   - `e2e/reminders-phase2.spec.ts` — „Gotowe” przy nadchodzącym terminie zdejmuje go z Terminów.
   - e2e pełny przebieg chromium: 391/391 (Commit: ebe2567).
 
-## Przypomnienia — dokończenie fazy 1 planu (2026-10-20, bez hasha)
+## Przypomnienia — dokończenie fazy 1 planu (2026-10-20, 018d791)
 
 - **Co robi:**
   - Pusty widok Terminy ma przycisk „Nowa notatka”, który otwiera edytor (1d). Pokazuje się tylko w Terminach, gdy nie ma żadnego wiersza.
