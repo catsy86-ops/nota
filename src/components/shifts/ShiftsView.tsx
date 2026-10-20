@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDayClock } from "@/lib/dayClock";
 import { addMonths, format, isSameMonth, startOfMonth } from "date-fns";
 import { pl } from "date-fns/locale";
-import { CalendarArrowDown, CalendarRange, FileSpreadsheet, ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarArrowDown, CalendarRange, FileSpreadsheet, ChevronLeft, ChevronRight, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { dayKey, expandOccurrences, groupByDay, type Occurrence } from "@/lib/reminderOccurrences";
 import type { Note } from "@/hooks/useNotes";
@@ -250,6 +250,23 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
     });
   }
 
+  /** Grafik miesiąca jako PNG: moduły ładowane dopiero tu, poza paczką startową. */
+  async function exportImage() {
+    try {
+      const [{ monthImageLayout }, { renderMonthCanvas, canvasToPng, shareMonthPng }] = await Promise.all([
+        import("@/lib/shifts/monthImage"),
+        import("@/lib/shifts/monthImageDraw"),
+      ]);
+      const layout = monthImageLayout(data, shownMonth.getFullYear(), shownMonth.getMonth());
+      const blob = await canvasToPng(renderMonthCanvas(layout));
+      const result = await shareMonthPng(blob, `grafik-${format(shownMonth, "yyyy-MM")}.png`, `Grafik — ${layout.title}`);
+      if (result === "downloaded") toast.success("Pobrano obraz grafiku (.png)");
+      else if (result === "shared") toast.success("Udostępniono grafik");
+    } catch {
+      toast.error("Nie udało się przygotować obrazu grafiku");
+    }
+  }
+
   function exportCsv() {
     const csv = buildTimesheetCsv(data, shownMonth.getFullYear(), shownMonth.getMonth());
     download(csv, `karta-czasu-${format(shownMonth, "yyyy-MM")}.csv`, "text/csv;charset=utf-8");
@@ -348,6 +365,10 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           <button type="button" onClick={exportIcs}
             className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
             <CalendarArrowDown className="w-4 h-4" /> Do kalendarza (.ics)
+          </button>
+          <button type="button" onClick={exportImage}
+            className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+            <ImageIcon className="w-4 h-4" /> Obraz miesiąca (.png)
           </button>
         </div>
 
