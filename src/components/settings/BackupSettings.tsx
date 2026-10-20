@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Download, Database, ShieldCheck, ShieldAlert, FileCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { useViewPrefs, setViewPref } from "@/lib/viewPrefs";
+import { useViewPrefs, setViewPref, VIEW_PREF_GROUPS } from "@/lib/viewPrefs";
 import { describeSkippedAttachments, exportFullBackup, pickFullBackup, restoreFullBackup, type RestoreOptions } from "@/lib/exportNotes";
 import { describeBackupSkipped } from "@/lib/backupSkipped";
 import type { FullBackup } from "@/lib/noteSchema";
@@ -12,7 +12,7 @@ import { daysSinceBackup, LAST_AUTO_EXPORT_KEY } from "@/lib/backupReminder";
 import { requestPersistentStorage, getStorageInfo, type StorageInfo } from "@/lib/storagePersistence";
 import { isFileSystemAccessSupported, pickBackupFile, clearBackupFile, getBackupFileName } from "@/lib/backupFileHandle";
 import { toast } from "sonner";
-import { Section } from "./SettingsShared";
+import { ResetSectionButton, Section } from "./SettingsShared";
 
 function formatBytes(bytes: number | null): string {
   if (bytes === null) return "?";
@@ -267,6 +267,8 @@ export function BackupSettings() {
         <Download className="w-4 h-4" /> Pobierz pełny backup teraz
       </Button>
       <RestoreBackup />
+
+      <ResetSectionButton title="kopia" keys={VIEW_PREF_GROUPS.kopia} />
 
       <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-1">
         <p className="font-semibold text-foreground">💡 Wskazówka</p>

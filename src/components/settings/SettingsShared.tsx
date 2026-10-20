@@ -1,5 +1,42 @@
-import { useId } from "react";
+import { useId, useState } from "react";
+import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { changedViewPrefs, resetViewPrefKeys, useViewPrefs, VIEW_PREF_LABELS, type ViewPrefs } from "@/lib/viewPrefs";
+
+/**
+ * Reset tylko ustawień z jednej sekcji (faza 3a). Potwierdzenie wymienia, co się zmieni; gdy wszystko
+ * już jest domyślne, przycisk jest wyłączony — nie ma czego resetować.
+ */
+export function ResetSectionButton({ title, keys }: { title: string; keys: readonly (keyof ViewPrefs)[] }) {
+  useViewPrefs(); // przerysowanie po zmianie ustawień, żeby lista była aktualna
+  const [open, setOpen] = useState(false);
+  const changed = changedViewPrefs(keys);
+  return (
+    <div className="flex justify-end">
+      <Button type="button" variant="ghost" size="sm" disabled={changed.length === 0} onClick={() => setOpen(true)} className="coarse:h-11">
+        Przywróć domyślne w tej sekcji
+      </Button>
+      <AlertDialog open={open} onOpenChange={setOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Przywrócić domyślne: {title}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Zmienią się: {changed.map((k) => VIEW_PREF_LABELS[k]).join(", ") || "nic — wszystko już jest domyślne"}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { resetViewPrefKeys(keys); toast.success(`Przywrócono domyślne: ${title}`); }}>
+              Przywróć
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
 
 /** Small labeled section wrapper shared by every settings tab. Tytuł to nagłówek, nie akapit. */
 export function Section({ title, children }: { title: string; children: React.ReactNode }) {

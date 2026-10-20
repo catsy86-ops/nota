@@ -6,6 +6,7 @@ import { Settings, LayoutGrid, Pencil, Database, Wifi } from "lucide-react";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
 import { BackupSettings } from "@/components/settings/BackupSettings";
+import { settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
 import { SyncFileSection } from "@/components/settings/SyncFileSection";
 
 // qrcode.react (used only here, for device pairing) kept out of the eager
@@ -21,6 +22,18 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState("appearance");
   const [joinPrefill, setJoinPrefill] = useState("");
+
+  // Link ?settings=<karta> otwiera Ustawienia na tej karcie (faza 3c); parametr znika z adresu.
+  useEffect(() => {
+    const tab = settingsTabFromParam(searchParams.get(SETTINGS_PARAM));
+    if (!tab) return;
+    setActiveTab(tab);
+    onOpenChange(true);
+    const next = new URLSearchParams(searchParams);
+    next.delete(SETTINGS_PARAM);
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // A QR code from another device links here as ?pair=<code> — jump straight
   // to the Sync tab with the code pre-filled and open the dialog if needed.

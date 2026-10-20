@@ -87,6 +87,58 @@ export function resetViewPrefs() {
   store.set({ ...DEFAULTS });
 }
 
+/**
+ * Ustawienia według sekcji, dla resetu per sekcja (faza 3a). Wygląd ma reset globalny z Wyglądu,
+ * więc tu tylko reszta. Każdy klucz jest w dokładnie jednej grupie.
+ */
+export const VIEW_PREF_GROUPS = {
+  edytor: ["defaultNoteColor", "spellcheck", "autosaveSeconds"],
+  przypomnienia: ["todayReminderHours", "todayReminderTime", "weekReminderTime", "weekReminderDay"],
+  kopia: ["autoExportDays", "backupReminderDays"],
+} as const satisfies Record<string, readonly (keyof ViewPrefs)[]>;
+
+/** Nazwy ustawień po polsku — do listy „co się zmieni” w potwierdzeniu resetu. */
+export const VIEW_PREF_LABELS: Record<keyof ViewPrefs, string> = {
+  density: "gęstość",
+  layout: "układ",
+  columns: "liczba kolumn",
+  autoColumns: "automatyczne kolumny",
+  sortKey: "sortowanie",
+  sortDir: "kierunek sortowania",
+  groupBy: "grupowanie",
+  collapsedGroups: "zwinięte grupy",
+  filterColor: "filtr koloru",
+  filterLabel: "filtr etykiety",
+  filterHasReminder: "filtr przypomnień",
+  filterPriority: "filtr priorytetu",
+  defaultNoteColor: "kolor nowej notatki",
+  spellcheck: "sprawdzanie pisowni",
+  autosaveSeconds: "autosave",
+  autoExportDays: "auto-backup",
+  backupReminderDays: "przypomnienie o kopii",
+  todayReminderHours: "przypomnienie „Dziś”",
+  todayReminderTime: "godzina „Dziś”",
+  weekReminderTime: "przypomnienie „Ten tydzień”",
+  weekReminderDay: "dzień „Ten tydzień”",
+  showReadingTime: "czas czytania",
+  showBacklinks: "backlinki",
+};
+
+const sameValue = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+
+/** Ustawienia z podanego zbioru, które różnią się od domyślnych — to, co zmieni się po resecie. */
+export function changedViewPrefs(keys: readonly (keyof ViewPrefs)[] = Object.keys(DEFAULTS) as (keyof ViewPrefs)[]): (keyof ViewPrefs)[] {
+  const cur = store.get();
+  return keys.filter((k) => !sameValue(cur[k], DEFAULTS[k]));
+}
+
+/** Przywraca domyślne tylko w podanych kluczach; pozostałe zostają bez zmian. */
+export function resetViewPrefKeys(keys: readonly (keyof ViewPrefs)[]) {
+  const next: Record<string, unknown> = { ...store.get() };
+  for (const k of keys) next[k] = DEFAULTS[k];
+  store.set(next as unknown as ViewPrefs);
+}
+
 export function useViewPrefs(): ViewPrefs {
   return store.use();
 }

@@ -3,6 +3,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { Wifi, WifiOff, Copy, Check, LogOut } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
@@ -11,14 +12,14 @@ import { pl } from "date-fns/locale";
 import {
   useSyncState, type SyncState, startPairing, joinWithCode, pauseSync, resumeSync, forgetPairing, formatCode,
   getSignalingServers, setSignalingServers, parseSignalingList, wasShortCodeDropped, getLegacyRoom, setLegacyRoom,
-  codeFromPaste, CODE_LENGTH, CODE_PATTERN,
+  codeFromPaste, CODE_LENGTH, CODE_PATTERN, getDeviceName, setDeviceName,
 } from "@/lib/yjsSync";
 
 /** Jedno zdanie o tym, na którym etapie synchronizacja stoi (bez żargonu). */
 function diagnosis(s: SyncState): string {
   if (s.lastError) return "Nie udało się uruchomić połączenia. Sprawdź internet i spróbuj ponownie.";
   if (s.status === "connected" && s.peerCount === 0) return "Połączono z serwerami. Drugie urządzenie jeszcze nie dołączyło — otwórz tu sam kod na nim.";
-  if (s.signalingTotal > 0 && s.signalingUp === 0) return "Nie ma połączenia z serwerami wymiany. Sprawdź internet; połączenie wznowi się samo.";
+  if (s.signalingTotal > 0 && s.signalingUp === 0) return "Nie ma połączenia z serwerem łączącym urządzenia. Sprawdź internet; połączenie wznowi się samo.";
   if (s.status === "connecting") return `Łączenie z serwerami (${s.signalingUp} z ${s.signalingTotal || "?"}).`;
   return "";
 }
@@ -42,10 +43,17 @@ export function SyncSettings({ prefillCode }: Props) {
   const [copied, setCopied] = useState(false);
   const [forgetOpen, setForgetOpen] = useState(false);
   const [legacyRoom, setLegacyRoomState] = useState(() => getLegacyRoom());
+  const [deviceName, setDeviceNameDraft] = useState(() => getDeviceName());
 
   useEffect(() => {
     if (prefillCode) setJoinInput(codeFromPaste(prefillCode));
   }, [prefillCode]);
+
+  function handleRename() {
+    setDeviceName(deviceName);
+    setDeviceNameDraft(getDeviceName());
+    toast.success("Zapisano nazwę urządzenia");
+  }
 
   function handleToggle(checked: boolean) {
     if (checked) {
@@ -67,7 +75,7 @@ export function SyncSettings({ prefillCode }: Props) {
   function handleForget() {
     forgetPairing();
     setJoinInput("");
-    toast.success("Opuszczono grupę synchronizacji");
+    toast.success("Odłączono to urządzenie");
   }
 
   async function handleCopy() {
@@ -122,8 +130,35 @@ export function SyncSettings({ prefillCode }: Props) {
         <Switch checked={syncState.status !== "disabled"} onCheckedChange={handleToggle} aria-label="Synchronizacja między urządzeniami" />
       </div>
 
+      <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-3">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Urządzenia w grupie</p>
+        {syncState.devices.length > 0 ? (
+          <ul className="space-y-1 text-sm" aria-label="Połączone urządzenia">
+            {syncState.devices.map((d) => (
+              <li key={d.id} className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-success shrink-0" aria-hidden="true" />
+                {d.name}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-xs text-muted-foreground">Żadne inne urządzenie nie jest teraz połączone.</p>
+        )}
+        <form
+          className="flex items-end gap-2"
+          onSubmit={(e) => { e.preventDefault(); handleRename(); }}
+        >
+          <div className="flex-1 min-w-0 space-y-1">
+            <label htmlFor="sync-device-name" className="text-xs text-muted-foreground">Nazwa tego urządzenia</label>
+            <Input id="sync-device-name" value={deviceName} maxLength={40} onChange={(e) => setDeviceNameDraft(e.target.value)} />
+          </div>
+          <Button type="submit" variant="outline" className="coarse:h-11">Zapisz</Button>
+        </form>
+      </div>
+
       {syncState.code && (
         <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-3 text-center">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dodaj urządzenie</p>
           <p className="text-xs text-muted-foreground">
             Zeskanuj kod aparatem na drugim urządzeniu albo wpisz go ręcznie poniżej.
           </p>
@@ -139,21 +174,21 @@ export function SyncSettings({ prefillCode }: Props) {
             </Button>
           </div>
           <Button type="button" variant="ghost" size="sm" onClick={() => setForgetOpen(true)} className="text-muted-foreground hover:text-destructive-ink gap-1.5 coarse:h-11">
-            <LogOut className="w-3.5 h-3.5" /> Zapomnij i zacznij od nowa
+            <LogOut className="w-3.5 h-3.5" /> Odłącz to urządzenie
           </Button>
-          {/* Zapomnienie rozłącza to urządzenie od grupy; bez potwierdzenia łatwo to kliknąć przez pomyłkę. */}
+          {/* Odłączenie działa tylko na tym urządzeniu; bez potwierdzenia łatwo to kliknąć przez pomyłkę. */}
           <AlertDialog open={forgetOpen} onOpenChange={setForgetOpen}>
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Opuścić grupę synchronizacji?</AlertDialogTitle>
+                <AlertDialogTitle>Odłączyć to urządzenie?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  To urządzenie przestanie się synchronizować z pozostałymi i dostanie nowy kod. Dane w tej przeglądarce zostaną.
-                  Żeby wrócić do grupy, trzeba będzie ponownie wpisać kod z innego urządzenia.
+                  Pozostałe urządzenia zostaną w grupie i dalej się ze sobą synchronizują. Ta przeglądarka przestanie się synchronizować
+                  i dostanie nowy kod. Dane w niej zostaną. Żeby wrócić, trzeba wpisać kod z innego urządzenia.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Anuluj</AlertDialogCancel>
-                <AlertDialogAction onClick={() => { setForgetOpen(false); handleForget(); }}>Opuść grupę</AlertDialogAction>
+                <AlertDialogAction onClick={() => { setForgetOpen(false); handleForget(); }}>Odłącz</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -261,13 +296,13 @@ function SignalingServers() {
     setSignalingServers(valid);
     setSaved(valid);
     setDraft(valid.join("\n"));
-    toast.success(valid.length ? "Zapisano serwery sygnalizacyjne" : "Przywrócono domyślne serwery");
+    toast.success(valid.length ? "Zapisano serwery łączące urządzenia" : "Przywrócono domyślne serwery");
   }
 
   return (
     <details className="group rounded-xl border border-border/60 bg-muted/20 p-3 text-xs" open={saved.length > 0 || undefined}>
       <summary className="cursor-pointer font-semibold text-foreground select-none">
-        Serwery sygnalizacyjne {saved.length > 0 ? `(własne: ${saved.length})` : "(domyślne)"}
+        Serwery łączące urządzenia {saved.length > 0 ? `(własne: ${saved.length})` : "(domyślne)"}
       </summary>
       <div className="mt-3 space-y-2">
         <p className="text-muted-foreground">

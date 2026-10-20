@@ -83,6 +83,7 @@ import { VaultHost } from "@/components/vault/VaultHost";
 // first load only pays for the code the note grid itself needs.
 import { CardSkeleton, ViewSkeleton } from "@/components/ViewSkeleton";
 import { loadCalendarView, loadShiftsView, loadStudyView } from "@/lib/viewPreload";
+import { settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
 const ShortcutsDialog = lazy(() => import("@/components/ShortcutsDialog").then((m) => ({ default: m.ShortcutsDialog })));
 const PropDefsDialog = lazy(() => import("@/components/PropDefsDialog").then((m) => ({ default: m.PropDefsDialog })));
 const TodayDueList = lazy(() => import("@/components/review/TodayDueList").then((m) => ({ default: m.TodayDueList })));
@@ -179,7 +180,11 @@ const Index = () => {
   const [actionsOpen, setActionsOpen] = useState(false);
   // Link z kodu QR (`?pair=…`) otwiera Ustawienia → Sync; kod odczytuje i usuwa z adresu
   // `SettingsDialog`, który montuje się dopiero po otwarciu.
-  const [settingsOpen, setSettingsOpen] = useState(() => new URLSearchParams(window.location.search).has("pair"));
+  // Link `?settings=<karta>` (faza 3c) otwiera Ustawienia od razu na tej karcie.
+  const [settingsOpen, setSettingsOpen] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.has("pair") || settingsTabFromParam(params.get(SETTINGS_PARAM)) !== null;
+  });
   const [statsOpen, setStatsOpen] = useState(false);
   const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [propDefsOpen, setPropDefsOpen] = useState(false);
@@ -291,6 +296,8 @@ const Index = () => {
   });
 
   useDayDoneReward(view === "today" && !search ? displayNotes : null);
+  // W Terminach archiwum zostaje w liście (dzwoni), więc „Brak przypomnień” nie może mówić prawdy tylko o `displayNotes` (1d planu).
+  const reminderRowCount = view === "reminders" ? groupReminders([...others, ...archivedNotes]).reduce((n, g) => n + g.notes.length, 0) : 0;
 
   // Sekcje widoku: „Przypięte” (zwijane od 4 notatek) i reszta, opcjonalnie podzielona na grupy.
   // `visibleNotes` = to, co faktycznie jest na ekranie (bez zwiniętych) w kolejności widoku.
@@ -784,7 +791,7 @@ const Index = () => {
             <ViewErrorBoundary name="Kalendarz">
               <Suspense fallback={<ViewSkeleton view="calendar" />}>
                 <ReminderCalendarView
-                  notes={[...notes, ...archivedNotes]}
+                  notes={reminderNotes}
                   onCreateNote={(title, reminder, repeat) => {
                     const id = addNote(title, "", prefs.defaultNoteColor, [], reminder);
                     // `addNote` nie przyjmuje powtarzania, więc serię dostawiamy
@@ -827,7 +834,7 @@ const Index = () => {
             {deferredSearch && view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" ? `${displayNotes.length} ${pluralPl(displayNotes.length, ["wynik", "wyniki", "wyników"])}` : ""}
           </p>
           <AnimatePresence>
-            {view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && displayNotes.length === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} />}
+            {view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && displayNotes.length === 0 && reminderRowCount === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} />}
           </AnimatePresence>
           {view === "notes" && displayNotes.length > 0 && !deferredSearch && <DailyQuote />}
         </main>

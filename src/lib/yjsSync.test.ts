@@ -6,17 +6,48 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 // for browser-only APIs.
 const providerInstances: MockProvider[] = [];
 
+/** Awareness y-protocols w pigułce: stany per clientID i `remote()` udający innego peera. */
+class MockAwareness {
+  clientID: number;
+  states = new Map<number, Record<string, unknown>>();
+  private changeHandlers: (() => void)[] = [];
+
+  constructor(clientID: number) {
+    this.clientID = clientID;
+    this.states.set(clientID, {});
+  }
+
+  setLocalStateField(field: string, value: unknown) {
+    this.states.set(this.clientID, { ...this.states.get(this.clientID), [field]: value });
+  }
+
+  getStates() {
+    return this.states;
+  }
+
+  on(_event: string, cb: () => void) {
+    this.changeHandlers.push(cb);
+  }
+
+  remote(clientID: number, state: Record<string, unknown>) {
+    this.states.set(clientID, state);
+    this.changeHandlers.forEach((cb) => cb());
+  }
+}
+
 class MockProvider {
   roomName: string;
   doc: unknown;
   opts: unknown;
   handlers: Record<string, ((arg: unknown) => void)[]> = {};
   destroyed = false;
+  awareness: MockAwareness;
 
   constructor(roomName: string, doc: unknown, opts: unknown) {
     this.roomName = roomName;
     this.doc = doc;
     this.opts = opts;
+    this.awareness = new MockAwareness(1000 + providerInstances.length);
     providerInstances.push(this);
   }
 
@@ -254,6 +285,54 @@ describe("yjsSync", () => {
     joinWithCode("ABCDEFGHJKMN");
     forgetPairing();
     expect(getSignalingServers()).toEqual(["wss://sig.example.com"]);
+  });
+});
+
+describe("yjsSync - urządzenia w grupie (faza 4)", () => {
+  beforeEach(() => {
+    localStorage.clear();
+    providerInstances.length = 0;
+    vi.resetModules();
+  });
+
+  it("nazwa domyślna zależy od przeglądarki, a własna jest zapamiętana i rozgłaszana", async () => {
+    const { startPairing, setDeviceName, getDeviceName, defaultDeviceName } = await import("./yjsSync");
+    expect(defaultDeviceName("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0)")).toBe("Telefon");
+    expect(defaultDeviceName("Mozilla/5.0 (Windows NT 10.0)")).toBe("Komputer");
+
+    startPairing();
+    // Tryb zgodności jest wyłączony domyślnie, więc działa tylko pokój v2.
+    await waitForMainProvider(1);
+    const v2 = mainProviders()[0];
+    expect(v2.awareness.getStates().get(v2.awareness.clientID)).toMatchObject({ device: { name: getDeviceName() } });
+
+    setDeviceName("  Tablet kuchnia  ");
+    expect(getDeviceName()).toBe("Tablet kuchnia");
+    expect(v2.awareness.getStates().get(v2.awareness.clientID)).toMatchObject({ device: { name: "Tablet kuchnia" } });
+  });
+
+  it("pusta nazwa wraca do domyślnej, a nazwa jest przycinana do 40 znaków", async () => {
+    const { setDeviceName, getDeviceName } = await import("./yjsSync");
+    setDeviceName("x".repeat(60));
+    expect(getDeviceName()).toHaveLength(40);
+    setDeviceName("   ");
+    expect(localStorage.getItem("kaczy.sync.deviceName")).toBeNull();
+    expect(getDeviceName()).toMatch(/^(Telefon|Komputer)$/);
+  });
+
+  it("lista pokazuje innych peerów z nazwą (bez siebie) i czyści się przy odłączeniu", async () => {
+    const { startPairing, forgetPairing, getSyncState } = await import("./yjsSync");
+    startPairing();
+    // Tryb zgodności jest wyłączony domyślnie, więc działa tylko pokój v2.
+    await waitForMainProvider(1);
+    const v2 = mainProviders()[0];
+
+    v2.awareness.remote(7, { device: { name: "Telefon" } });
+    v2.awareness.remote(8, {});
+    expect(getSyncState().devices).toEqual([{ id: 7, name: "Telefon" }]);
+
+    forgetPairing();
+    expect(getSyncState().devices).toEqual([]);
   });
 });
 

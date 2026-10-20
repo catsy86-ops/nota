@@ -86,3 +86,30 @@ describe("normalizePushServer — adres serwera push", () => {
     expect(normalizePushServer("   ")).toBeNull();
   });
 });
+
+describe("reset per sekcja (faza 3a)", () => {
+  it("changedViewPrefs wymienia tylko ustawienia różne od domyślnych", async () => {
+    const m = await loadFresh<typeof import("./viewPrefs")>("./viewPrefs");
+    expect(m.changedViewPrefs()).toEqual([]);
+    m.setViewPref("columns", 3);
+    m.setViewPref("autosaveSeconds", 15);
+    expect(m.changedViewPrefs()).toEqual(expect.arrayContaining(["columns", "autosaveSeconds"]));
+    expect(m.changedViewPrefs(m.VIEW_PREF_GROUPS.kopia)).toEqual([]);
+  });
+
+  it("resetViewPrefKeys przywraca tylko podane klucze", async () => {
+    const m = await loadFresh<typeof import("./viewPrefs")>("./viewPrefs");
+    m.setViewPref("autosaveSeconds", 15);
+    m.setViewPref("autoExportDays", 3);
+    m.resetViewPrefKeys(m.VIEW_PREF_GROUPS.edytor);
+    expect(m.getViewPrefs().autosaveSeconds).toBe(0);
+    expect(m.getViewPrefs().autoExportDays).toBe(3);
+  });
+
+  it("grupy są rozłączne i każda ma etykietę po polsku", async () => {
+    const m = await loadFresh<typeof import("./viewPrefs")>("./viewPrefs");
+    const all = Object.values(m.VIEW_PREF_GROUPS).flat();
+    expect(new Set(all).size).toBe(all.length);
+    for (const k of all) expect(m.VIEW_PREF_LABELS[k]).toBeTruthy();
+  });
+});

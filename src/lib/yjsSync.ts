@@ -75,9 +75,17 @@ function writePrefs(prefs: SyncPrefs) {
 
 export type SyncStatus = "disabled" | "connecting" | "connected";
 
+/** Inne urządzenie w grupie, widoczne przez awareness (nazwa z jego ustawień). */
+export interface SyncDevice {
+  id: number;
+  name: string;
+}
+
 export interface SyncState {
   status: SyncStatus;
   peerCount: number;
+  /** Nazwy innych urządzeń połączonych teraz (z pokoju v2; patrz `refreshDevices`). */
+  devices: SyncDevice[];
   code: string | null;
   /** Kiedy ostatnio przyszła zmiana od innego urządzenia (ms). Tylko w tej sesji. */
   lastSyncedAt: number | null;
@@ -88,7 +96,7 @@ export interface SyncState {
   signalingTotal: number;
 }
 
-const DEFAULT_STATE: SyncState = { status: "disabled", peerCount: 0, code: null, lastSyncedAt: null, lastError: null, signalingUp: 0, signalingTotal: 0 };
+const DEFAULT_STATE: SyncState = { status: "disabled", peerCount: 0, devices: [], code: null, lastSyncedAt: null, lastError: null, signalingUp: 0, signalingTotal: 0 };
 // Ponowne łączenie po powrocie do karty albo odzyskaniu sieci — nie częściej niż co tyle ms.
 const RECONNECT_MIN_GAP_MS = 10_000;
 let lastConnectAt = 0;
@@ -255,6 +263,54 @@ export function isShortCode(code: string | null): boolean {
   return !!code && code.length < CODE_LENGTH;
 }
 
+const DEVICE_NAME_KEY = "kaczy.sync.deviceName";
+const DEVICE_NAME_MAX = 40;
+
+/** Nazwa z przeglądarki, gdy użytkownik nie nazwał urządzenia. */
+export function defaultDeviceName(ua: string = typeof navigator !== "undefined" ? navigator.userAgent : ""): string {
+  return /Mobi|Android|iPhone|iPad/i.test(ua) ? "Telefon" : "Komputer";
+}
+
+export function getDeviceName(): string {
+  try {
+    const saved = localStorage.getItem(DEVICE_NAME_KEY)?.trim();
+    if (saved) return saved.slice(0, DEVICE_NAME_MAX);
+  } catch { /* brak dostępu do localStorage — zostaje nazwa domyślna */ }
+  return defaultDeviceName();
+}
+
+/** Zapisuje nazwę tego urządzenia i od razu rozgłasza ją pozostałym (pusta = domyślna). */
+export function setDeviceName(name: string): void {
+  const clean = name.trim().slice(0, DEVICE_NAME_MAX);
+  try {
+    if (clean) localStorage.setItem(DEVICE_NAME_KEY, clean);
+    else localStorage.removeItem(DEVICE_NAME_KEY);
+  } catch (err) { logDiag("warn", "yjsSync", "cannot persist device name", err); }
+  providers.forEach((p) => p.awareness.setLocalStateField("device", { name: getDeviceName() }));
+}
+
+// Id-ki awareness widziane przy poprzednim odczycie — nowe ponad to to „połączono”.
+let previousDeviceIds = new Set<number>();
+
+/**
+ * Lista innych urządzeń z awareness pierwszego pokoju (v2). Każdy provider ma własny
+ * awareness i własne clientID, więc urządzenie widoczne tylko w starym pokoju (tryb
+ * zgodności) nie pojawi się tu — świadomie, bo lista ma być prosta.
+ */
+function refreshDevices() {
+  const awareness = providers[0]?.awareness;
+  if (!awareness) return;
+  const devices: SyncDevice[] = [];
+  awareness.getStates().forEach((s, id) => {
+    const name = (s as { device?: { name?: unknown } }).device?.name;
+    if (id !== awareness.clientID && typeof name === "string" && name) devices.push({ id, name });
+  });
+  const ids = new Set(devices.map((d) => d.id));
+  devices.filter((d) => !previousDeviceIds.has(d.id)).forEach((d) => toast.success(`Połączono z: ${d.name}`));
+  previousDeviceIds = ids;
+  setState({ devices });
+}
+
 function setState(patch: Partial<SyncState>) {
   state = { ...state, ...patch };
   emit();
@@ -275,6 +331,8 @@ function connect(code: string) {
     const peers = rooms.map(() => 0);
     providers = rooms.map((room, i) => {
       const p = new WebrtcProvider(room, yjsStore.doc, providerOptions(code));
+      p.awareness.setLocalStateField("device", { name: getDeviceName() });
+      p.awareness.on("change", refreshDevices);
       p.on("status", ({ connected: c }: { connected: boolean }) => {
         logDiag("info", "yjsSync", `${c ? "signaling connected" : "signaling disconnected"} (room ${i})`);
         connected[i] = c;
@@ -318,7 +376,8 @@ function disconnectProvider() {
   providers.forEach((p) => p.destroy());
   providers = [];
   stopImageSync();
-  setState({ signalingUp: 0, signalingTotal: 0 });
+  previousDeviceIds = new Set();
+  setState({ signalingUp: 0, signalingTotal: 0, devices: [] });
 }
 
 /** Generates a fresh pairing code, enables sync and connects. Returns the code. */

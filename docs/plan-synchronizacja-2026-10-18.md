@@ -78,3 +78,9 @@ Decyzje użytkownika: brak hostingu (bez TURN, publiczne serwery), bez synchroni
 - ⏳ Faza 5 (testy dwóch kontekstów, reconnect po `setOffline`): częściowo — brak nowego e2e.
 
 Blokada: wejściowy JS przekracza próg o 186 B. Wymagana decyzja o progu albo oszczędnościach.
+
+## Status 2026-10-20
+
+- ✅ Faza 4 (bez commita): lista „Urządzenia w grupie” z nazwami (awareness), nazwa tego urządzenia, toast „Połączono z: …”, „Dodaj urządzenie”, „Odłącz to urządzenie” z potwierdzeniem, bez słowa „sygnalizacja” w UI.
+- ⏸ Punkt 3 (toast z tytułem notatki) — nie zrobiony, wymaga porównania dokumentu przed i po zmianie.
+- ⚠ Bundle: faza 4 dodaje ok. 700 B gzip do eager; próg `bundle.spec.ts` przekroczony. Decyzja: podnieść próg albo odchudzić `yjsSync`.

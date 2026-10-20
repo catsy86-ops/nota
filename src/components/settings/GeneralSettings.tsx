@@ -5,12 +5,12 @@ import { ShiftSettingsDialog } from "@/components/shifts/ShiftSettingsDialog";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { useViewPrefs, setViewPref } from "@/lib/viewPrefs";
+import { useViewPrefs, setViewPref, VIEW_PREF_GROUPS } from "@/lib/viewPrefs";
 import { colorClasses } from "@/components/ColorPicker";
 import { useConfirmPrefs, setConfirmPref } from "@/lib/confirmPrefs";
 import type { NoteColor } from "@/hooks/useNotes";
 import { cn } from "@/lib/utils";
-import { Section, ToggleRow } from "./SettingsShared";
+import { ResetSectionButton, Section, ToggleRow } from "./SettingsShared";
 import { ReviewSettings } from "./ReviewSettings";
 import { VaultSettings } from "./VaultSettings";
 import { ClipperSettings } from "./ClipperSettings";
@@ -183,6 +183,8 @@ export function GeneralSettings() {
         </p>
       </Section>
 
+      <ResetSectionButton title="przypomnienia" keys={VIEW_PREF_GROUPS.przypomnienia} />
+
       <ToggleRow
         label="Liczba zaległych w tytule karty i na ikonie"
         desc="Pokazuje liczbę zaległych przypomnień jako „(3) NOTKI” na karcie i znaczek na ikonie zainstalowanej aplikacji."
@@ -236,6 +238,8 @@ export function GeneralSettings() {
           </div>
         ))}
       </div>
+
+      <ResetSectionButton title="edytor" keys={VIEW_PREF_GROUPS.edytor} />
 
       <div className="pt-2"><WorkSettingsLink /></div>
 

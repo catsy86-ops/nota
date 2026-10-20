@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Sun, Moon, Monitor, Zap, Accessibility, HardHat, CircleOff, Contrast } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { useViewPrefs, setViewPref, resetViewPrefs, type Density, type Layout } from "@/lib/viewPrefs";
+import { useViewPrefs, setViewPref, resetViewPrefs, changedViewPrefs, VIEW_PREF_LABELS, type Density, type Layout } from "@/lib/viewPrefs";
 import { changeView } from "@/lib/viewChange";
 import { useEffectsSettings } from "@/lib/effectsSettings";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
@@ -201,8 +201,7 @@ export function AppearanceSettings() {
           <AlertDialogHeader>
             <AlertDialogTitle>Przywrócić domyślne ustawienia widoku?</AlertDialogTitle>
             <AlertDialogDescription>
-              Wrócą do domyślnych: gęstość, układ i kolumny; sortowanie, grupowanie i filtry; kolor nowej notatki; pisownia;
-              autosave; przypomnienia o kopii, o dzisiejszych zadaniach i o przeglądzie tygodnia; czas czytania i backlinki.
+              Zmienią się: {changedViewPrefs().map((k) => VIEW_PREF_LABELS[k]).join(", ") || "nic — wszystko już jest domyślne"}.
               Nie zmienią się: skórka, czcionka, tryb ruchu, motyw sezonowy, efekty, potwierdzenia, sync, kopia, sejf i powiadomienia push.
             </AlertDialogDescription>
           </AlertDialogHeader>
