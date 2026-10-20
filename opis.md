@@ -1149,430 +1149,121 @@ Dział opisany w jednym miejscu: rdzeń (dotąd nieopisany) i dodatki z 2026-10-
 - `b779947` (2026-10-20) — poprawki z przeglądu (H1, M4–M6, M8, L12, L13, L14, L15).
 - `1380f10` (2026-10-20) — udostępnianie obrazu bez `await` (L14).
 
-## Praca — nagłówek i tablica tematów
+## Praca — stan aktualny (nauka, quiz, tablica, statystyki, zakładki)
+
+Dział Praca to dziennik instalatora wod-kan połączony z nauką materiału G-HEAT. Dane w dokumencie Yjs notatek; zakładka i preferencje widoku na urządzeniu. Dziennik budowy (wpisy, raport, WhatsApp, „Tu jestem”, dyktowanie) jest w osobnej sekcji „Praca → Dziennik budowy”.
 
-`/praca` (`src/components/study/StudyView.tsx`): nagłówek „Instalacje wod-kan”, pasek opanowania
-i zakładki Quiz / Tablica / Lista / Dziennik.
+### Nazwa i wejście
 
-**Nazwa działu.** Do 2026-10-15 dział nazywał się „Nauka” (`/nauka`). W interfejsie jest „Praca” z ikoną kasku
-(`HardHat`): pasek boczny (`sidebar/sidebarItems.ts`), „Więcej” (`BottomNav.tsx`), paleta poleceń, nagłówek (`AppHeader.tsx`),
-szkielet ładowania, kopia zapasowa („Praca i dziennik z budowy”), skrót PWA „Wpis z budowy” (`/praca?wpis=1`
-w `public/manifest.webmanifest`). `src/lib/viewRoute.ts` mapuje `praca` i `nauka` na widok `study`; linki budują
-`/praca`, stary adres dalej działa (zakładki, zainstalowana aplikacja ze starym manifestem). Kod, klucze zapisu
-i typy zostają przy `study` — zmiana nazwy nie rusza danych. Notatki tworzone z tematów dalej mają tytuł
-„Nauka: …” i etykietę `nauka` — to opis treści (temat do nauki), nie nazwa działu.
-Testy: `src/lib/viewRoute.test.ts`, `e2e/study.spec.ts` („stary adres /nauka nadal otwiera dział Praca”).
-Commit: `b610ff6` (2026-10-15).
-
-### Pasek opanowania
-
-**Co robi.** Pokazuje, ile z 18 tematów jest w kolumnie „Umiem”, z podziałem na moduły
-(Woda użytkowa, Kanalizacja, Wspólne). Każdy temat to kratka jak w zeszycie w rzędzie modułu.
-Gdy cały moduł jest w „Umiem”, przy jego nazwie pojawia się krzywo ułożona pieczątka „Umiem”.
-Dotknięcie lub kliknięcie kratki podpisuje temat i jego stan pod paskiem — na telefonie nie ma najechania kursorem.
-
-**Gdzie jest.** `MasteryStrip` w `src/components/study/StudyView.tsx`; dane z `useStudy`,
-`columnOf` (`store.ts`), `MODULES` i `TOPICS` (`content.ts`).
-
-**Jak działa.** Moduły stoją obok siebie (`flex-wrap`, na wąskim ekranie zawijają się), a kratki
-w module też się zawijają. Kratka to kwadrat 20 px (`size-5`) w polu 28 px (`size-7`), a na dotyku
-44 px (`coarse:size-11`). Kolor: pełna = „Umiem”, połowa = „W trakcie”, pusta = „Do nauki”. Pusta kratka ma
-obwódkę `border-foreground/50` (nie `border-border`), bo na papierze jasna obwódka była prawie niewidoczna
-i stan „Do nauki” niósł tylko kolor. Wartość dobrana szacunkowo pod ~3:1 (nie zmierzono narzędziem); zrzuty w obu motywach czytelne. Każda
-kratka to przycisk (`aria-label` „Temat: stan”, `aria-pressed`). Pieczątka `data-mastery-stamp`
-pokazuje się, gdy `modDone === topics.length`, i jest obrócona o −3°, w kolorze `success-ink`.
-Podpis pod paskiem ma `aria-live="polite"`. Wybór żyje tylko w stanie komponentu.
-Licznik jest w JetBrains Mono (`font-mono tabular-nums`), bo w kroju nagłówków „1” wyglądała jak „l”.
-Poprzednio odcinki miały szerokość proporcjonalną do liczby tematów (`flexGrow`) i były cienkimi paskami.
-
-**Ograniczenia i pułapki.** Pieczątka pojawia się tylko przy pełnym module; moduł z jednym tematem
-dostaje ją od razu po jego przeniesieniu do „Umiem”. Pieczątka jest tekstem, nie obrazkiem, więc czytnik ekranu czyta ją jako „Umiem” przy nazwie modułu.
-
-**Testy.** e2e `e2e/study.spec.ts` („tablica: temat przechodzi między kolumnami…”: licznik
-modułu i podpis po kliknięciu kratki; „pasek opanowania: pieczątka „Umiem” dopiero, gdy cały moduł jest w „Umiem””),
-`e2e/resilience.spec.ts` (`mastery-count`).
-
-**Commit.** `7f780d9` (2026-10-16).
-
-### Karty tematów na tablicy
-
-**Co robi.** Temat wędruje „Do nauki” → „W trakcie” → „Umiem” strzałkami przy tytule.
-Pod opisem są przyciski z podpisami: „Wpis” (arkusz wpisu z tym tematem), „Ćwicz”
-(runda quizu z tematu), „Do notatki” (notatka z listą kontrolną tematu).
-
-**Gdzie jest.** `TopicCard` i `StudyBoard` w `src/components/study/StudyBoard.tsx`;
-`moveTopic`, `practiceByTopic` (`store.ts`), `topicToNote` (`toNote.ts`).
-
-**Jak działa.** Etykiety dostępności mają postać „Temat: wpis z budowy”, „Temat: ćwicz pytania”,
-„Temat: do notatki”, „Temat: przenieś do „…””. Podpis widoczny jest zawarty w nazwie
-dostępnej (WCAG 2.5.3). Na dotyku przyciski mają 44 px (`coarse:`), na komputerze 28 px.
-Przesunięcie animuje `framer-motion` (`layoutId`).
-
-**Testy.** e2e `e2e/study.spec.ts` (tablica, „Ćwicz”, „Do notatki”, wpis z karty tematu).
-
-**Commit.** N1 `4c951fa` (2026-10-15).
-
-## Praca — zapamiętana zakładka
-
-**Co robi.** Dział Praca otwiera się na zakładce, na której go zostawiono. Bez zapisu telefon zaczyna od Dziennika
-(wpis z budowy), komputer od Quizu.
-
-**Gdzie jest.** `src/lib/study/tab.ts` (`readStudyTab`, `writeStudyTab`, klucz localStorage `kaczy.study.tab.v1`),
-`src/components/study/StudyView.tsx` (`setTab` zapisuje każdą zmianę, też przejście do Quizu z „Ćwicz” i do Dziennika
-przy otwarciu arkusza wpisu).
-
-**Jak działa i dlaczego.** Zapis na urządzeniu, nie w Yjs: telefon i komputer służą do czego innego, więc
-synchronizowana zakładka przeszkadzałaby. Telefon = `MOBILE_QUERY` (`hooks/use-mobile.tsx`), ten sam co dolny pasek.
-
-**Ograniczenia i pułapki.** Nieznana wartość w kluczu (np. stara wersja) — domyślna zakładka. Testy e2e z 390 px
-muszą ustawić rozmiar okna przed wejściem na /praca, inaczej startuje Quiz.
-
-**Testy.** `src/lib/study/tab.test.ts`, `e2e/study.spec.ts` („zakładka działu Praca jest zapamiętana…”, „telefon bez
-zapisanej zakładki zaczyna od Dziennika”).
-
-**Commit.** `78a4538` (2026-10-15).
-
----
-
-## Praca — powtórki pytań („Na dziś”)
-
-**Co robi.** Każde pytanie, na które odpowiesz w quizie, wraca do powtórki: po dobrej odpowiedzi coraz rzadziej
-(1 dzień, 3 dni, potem coraz dłużej), po błędzie — następnego dnia. Pod paskiem opanowania pojawia się „Na dziś: N
-powtórek” (z każdej zakładki), a w Quizie ramka „Na dziś: N pytań do powtórki” z „Powtórz”. Runda powtórek bierze
-najbardziej zaległe pytania (do 10). Gdy na dziś nic nie ma, Quiz mówi, kiedy następne („jutro”, „za 3 dni”, „24.10”).
-
-**Gdzie jest.**
-- `src/lib/study/srs.ts`: `ReviewCard`, `reviewCard` (następny stan po odpowiedzi), `dueIds(reviews, today)` (samo
-  filtrowanie po terminie i sortowanie; parametr „znanych pytań” usunięty — znane pytania filtruje `sanitizeStudy`), `cleanCard`.
-- `src/lib/study/yStudy.ts`: mapa Yjs `studyReview` (id pytania → karta), `StudyDump.review`, `StudyState.review`;
-  `recordRound` aktualizuje karty w tej samej transakcji co runda; `replaceAll`/`mergeIn` (nowsza `last` wygrywa).
-- `src/lib/study/store.ts`: `dueToday`, filtr kart po znanych pytaniach w `sanitizeStudy`.
-- `src/components/study/QuizPanel.tsx`: zakres `{ kind: "due" }`, ramka „Na dziś”, „Następne: …”;
-  `StudyView.tsx`: `DueTodayChip`.
-
-**Jak działa i dlaczego.**
-- SM-2 „lite” z oceną automatyczną (decyzja z planu): dobra odpowiedź = q 4 (łatwość bez zmian), zła = q 1 (od nowa,
-  łatwość −0,2, min. 1,3). Bez pytania o samoocenę — jedno stuknięcie na budowie. Odstęp maks. 180 dni.
-- Dni jako klucze lokalnego dnia („2026-10-15”), nie milisekundy: „jutro” znaczy jutro niezależnie od godziny rundy.
-- Druga dobra odpowiedź tego samego dnia („Jeszcze raz”) nie wydłuża odstępu — inaczej powtarzanie rundy
-  „przewijałoby” pytania o tygodnie. Błąd liczy się zawsze (licznik `lapses` — trudne pytania, pod N4).
-- Klucz mapy per pytanie: dwa telefony odpowiadające na różne pytania scalają się bez strat; to samo pytanie — ostatni
-  zapis wygrywa (Yjs).
-- Kopia zapasowa: sekcja `study` niesie `review`; kopie sprzed N3 czytają się z pustymi powtórkami. Karty pytań
-  usuniętych z materiału są pomijane w widoku.
-
-**Ograniczenia i pułapki.**
-- Pytania, na które jeszcze nigdy nie odpowiedziano, nie są „na dziś” — trafiają do zwykłej rundy.
-- „Powtórka błędów” (`studyMissed`) zostaje osobno: to lista ostatnich błędów, powtórki to harmonogram.
-
-**Testy.** `src/lib/study/srs.test.ts`, `src/lib/study/yStudy.test.ts` (terminy, scalanie dwóch telefonów, kopia,
-`mergeIn` nie cofa nowszej karty), `src/lib/study/study.test.ts`, `e2e/study.spec.ts` („powtórki: pytania z rundy
-wracają następnego dnia…” — zegar przestawiony na następny dzień).
-
-**Commit.** `82b7366` (2026-10-15).
-
----
-
-## Praca — powiązanie problemów z budowy z nauką
-
-**Co robi.** Problem z budowy przypisany do tematu wraca do nauki: w dzienniku otwarty problem ma przycisk
-„Ćwicz teraz” (runda pytań z tego tematu), a karta tematu na tablicy pokazuje ostatni problem — otwarty wyróżniony
-(„Problem na budowie (14.10): …”), rozwiązany przygaszony. Przycisk „Ćwicz” na karcie mówi, ile pytań tematu jest
-do powtórki dziś („2 na dziś”).
-
-**Gdzie jest.**
-- `src/lib/study/store.ts`: `TopicPractice.lastProblem` w `practiceByTopic` (otwarty ma pierwszeństwo przed nowszym
-  rozwiązanym, wśród równych — najnowszy).
-- `src/components/study/StudyBoard.tsx`: `TopicCard` (`data-topic-problem="open|resolved"`, licznik `topic-due`),
-  `dueByTopic` z `dueToday` (N3).
-- `src/components/study/StudyJournal.tsx`: „Ćwicz teraz” obok „Oznacz jako rozwiązany” (`aria-label` z nazwą tematu).
-
-**Jak działa i dlaczego.** Wszystko liczone z dziennika i powtórek przy renderze — bez nowych danych w Yjs. Problem
-przy temacie z „Umiem” już wcześniej cofał temat do „W trakcie”; teraz od razu prowadzi do ćwiczenia. Na karcie tylko
-pierwsza linia opisu — karta ma zostać krótka.
-
-**Ograniczenia i pułapki.** Wpis bez tematu nie ma „Ćwicz teraz”. Chip tematu we wpisie dalej też startuje ćwiczenie.
-
-**Testy.** `src/lib/study/study.test.ts` („ostatni problem tematu: otwarty wygrywa…”), `e2e/study.spec.ts` („problem z
-tematem: karta tematu pokazuje go, „Ćwicz teraz”…”).
-
-**Commit.** `95f9c65` (2026-10-15).
-
----
-
-## Praca — tablica i lista na telefonie
-
-**Co robi.** Na telefonie tablica tematów pokazuje jedną kolumnę naraz, a nad nią przełącznik „Do nauki / W trakcie /
-Umiem” z liczbą tematów (start od „W trakcie”, gdy coś tam jest). Przeniesienie tematu strzałką pokazuje dymek, dokąd
-poszedł (karta znika z widocznej kolumny). Na liście „Wyczyść odhaczenia” działa bez pytania, z „Cofnij” w dymku;
-pigułka „Tylko punkty krytyczne” i przycisk mają 44 px na dotyku.
-
-**Gdzie jest.**
-- `src/components/study/StudyBoard.tsx`: `ToggleGroup` „Kolumna tablicy” (`md:hidden`), `phoneCol`, sekcje
-  `max-md:hidden` poza wybraną; `moveTo` (dymek tylko przy `MOBILE_QUERY`).
-- `src/components/study/StudyChecklist.tsx`: `toastWithUndo` przy czyszczeniu.
-- `src/lib/study/store.ts`: `resetChecklist()` zwraca wyczyszczone id, `restoreChecklist(ids)`;
-  `yStudy.restoreChecked` — przywrócenie jedną transakcją.
-
-**Jak działa i dlaczego.** Trzy kolumny pod sobą na telefonie to kilka ekranów przewijania, zanim dojdzie się do
-„Umiem”. Od `md` (768 px) widać wszystkie trzy jak dotąd. „Cofnij” zamiast okna potwierdzenia — jak w reszcie aplikacji.
-
-**Ograniczenia i pułapki.** Wybrana kolumna nie jest zapamiętywana (start zawsze od „W trakcie”/„Do nauki”). „Cofnij”
-przywraca odhaczenia, ale punkty odhaczone w międzyczasie na drugim telefonie zostają.
-
-**Testy.** `e2e/study.spec.ts` („telefon: tablica pokazuje jedną kolumnę z przełącznikiem, lista czyści odhaczenia
-z „Cofnij””), `e2e/study.spec.ts` („lista do nauki…”).
-
-**Commit.** `b87ef5b` (2026-10-15).
-
----
-
-## Praca — statystyki
-
-**Co robi.** Przycisk „Statystyki” pod paskiem opanowania otwiera okno z:
-- kaflami: trafność ogółem (z liczbą odpowiedzi), dni nauki w ostatnich 30 dniach, seria, wpisy z budowy i otwarte problemy;
-- trafnością per temat — poziome słupki od najsłabszego tematu, z procentem i „dobre/wszystkie”;
-- najtrudniejszymi pytaniami (najwięcej pomyłek, do 5);
-- siatką dni nauki z 12 tygodni (kratka = dzień z rundą quizu, dziś obwiedzione);
-- wpisami z budowy per miesiąc (6 miesięcy, puste miesiące jako linia bazowa) i per budowa (do 6, reszta jako
-  „Pozostałe”, z liczbą otwartych problemów).
-
-**Gdzie jest.**
-- `src/lib/study/stats.ts`: `overallAccuracy`, `accuracyByTopic`, `hardestQuestions`, `studyDaysGrid`, `daysInLast`,
-  `entriesByMonth`, `entriesBySite` — czyste funkcje, bez importu materiału.
-- `src/lib/study/srs.ts`: liczniki `seen`/`right` w `ReviewCard` (rosną przy każdej odpowiedzi, także drugiej tego
-  samego dnia — harmonogram dalej liczy się raz na dzień).
-- `src/lib/study/yStudy.ts` / `store.ts`: `StudyState.days` (dni z rundą, rosnąco) ze `studyDays`.
-- `src/components/study/StudyStats.tsx`: `StudyStatsDialog`; przycisk w `StudyView.tsx`.
-
-**Jak działa i dlaczego.**
-- Trafność liczona z kart powtórek, nie z rund: karta zna każde pytanie z osobna, więc da się ją zsumować per temat.
-  Karty sprzed N4 nie mają liczników — `cleanCard` szacuje je z pomyłek i dobrych odpowiedzi z rzędu.
-- Wykresy jednoseryjne, jeden odcień (`primary`), bez biblioteki (recharts dodałby ~100 KB do paczki Pracy). Wartość
-  zawsze podpisana tekstem obok słupka, więc kolor niczego nie koduje sam i legenda jest zbędna; `title` daje dymek z
-  dokładną liczbą, a siatka dni ma `aria-label` z sumą.
-- Na telefonie podpis tematu nad słupkiem (obok zostawało kilka liter); od `sm` w jednym wierszu.
-
-**Ograniczenia i pułapki.**
-- Trafność obejmuje odpowiedzi od wdrożenia powtórek (N3); starsze rundy znały tylko wynik całej rundy.
-- Dni nauki to dni z rundą quizu — same wpisy z budowy ich nie dodają.
-- Zero wpisów w miesiącu to linia 2 px (widać, że miesiąc jest, tylko pusty).
-
-**Testy.** `src/lib/study/stats.test.ts`, `src/lib/study/srs.test.ts` (liczniki, stare karty), `e2e/study.spec.ts`
-(„statystyki: trafność per temat, dzień nauki i wpisy po rundzie quizu”), `e2e/a11y.spec.ts`.
-
-**Commit.** `94e16fc` (2026-10-15).
-
----
-
-### Karta doświadczenia
-
-**Co robi.** Na dole statystyk: budowy z wpisami, liczba prób szczelności (z pozytywnymi), opanowane tematy
-z 18 (z nazwami) i trafność quizu. Przyciski „Kopiuj” (schowek) i „Pobierz .md” (`karta-doswiadczenia-RRRR-MM-DD.md`)
-wysyłają ten sam tekst. Bez rund quizu trafność pokazuje „jeszcze bez rund”.
-
-**Gdzie jest.** `src/lib/study/experience.ts`: `buildExperience(input)` (czysta funkcja, `ExperienceCard`) i
-`experienceText(card, today)` (Markdown). Dialog: `src/components/study/StudyStats.tsx` (`StatsBody`, sekcja
-„Karta doświadczenia”, `ExperienceRows` — podgląd jako lista definicji, `copyCard`, `downloadCard`).
-Dane: trafność z `overallAccuracy` (`stats.ts`), budowy z `siteDirectory`, „Umiem” z `columnOf` (`store.ts`).
-
-**Jak działa i dlaczego.** Liczenie jest w czystej funkcji, żeby tekst dało się przetestować bez przeglądarki.
-Budowy liczą się, gdy mają wpisy (`count > 0`), także archiwalne — były budowami. Odmiana „odpowiedź / odpowiedzi”
-przez `pluralPl`. Podgląd nie renderuje Markdownu: to te same liczby w czytelniejszej formie.
-
-**Ograniczenia i pułapki.** Trafność to suma kart powtórek (`seen`/`right`), a nie tylko ostatnia runda.
-Próby liczą się z wpisów z protokołem (`test`), bez względu na datę. Plik nazywa się po dniu lokalnym —
-pobranie tego samego dnia nadpisze poprzedni plik w pobranych.
-
-**Testy.** `src/lib/study/experience.test.ts` (liczenie, pusty stan, format i odmiana), `e2e/study.spec.ts`
-(„statystyki: karta doświadczenia na pustym stanie i pobranie pliku .md”).
-
-**Commit.** `16cc7e5` (2026-10-16).
-
-## Praca — kolory z motywu, ikony ostrzeżeń, cele dotyku (P1)
-
-**Co robi.** Zielony „OK”/„dobrze” w dzienniku i quizie oraz znaki punktów krytycznych biorą kolor z motywu (działają
-w ciemnym motywie i stylach Neon/Zorza/Miedź), punkty krytyczne mają jedną ikonę `TriangleAlert` w kolorze ostrzeżenia
-(wcześniej znak ⚠ raz bursztynowy, raz ostrzegawczy). Wynik rundy w kroju mono jak inne liczby. Pigułka tematu we
-wpisie filtruje dziennik po temacie (wcześniej niespodziewanie startowała quiz — ćwiczenie jest pod „Ćwicz teraz”).
-Licznik „Otwarte problemy” i pigułka tematu mają 44 px na dotyku.
-
-**Gdzie jest.** `tailwind.config.ts` (`success.ink`, `warning.ink`), `study/JournalEntrySheet.tsx` (`KindIcon`,
-`KIND_ON`), `study/QuizPanel.tsx`, `study/StudyChecklist.tsx`, `study/StudyBoard.tsx`, `study/StudyJournal.tsx`
-(`JournalItem` dostał `onTopic`).
-
-**Jak działa i dlaczego.** `success-ink`/`warning-ink` to ten sam wzór co `primary-ink`: `color-mix` koloru z czernią
-wg `--ink-mix` (62% w jasnym, 100% w ciemnym i stylach ciemnych). Sam `--success` w jasnym motywie miał ~2,6:1 na
-białym — za mało na ikonę; wersja „ink” przechodzi 3:1 dla ikon i 4,5:1 dla tekstu.
-
-**Ograniczenia i pułapki.** Tła stanów zostają na `bg-success/10` (dekoracja), tylko krawędź i ikona w „ink”.
-
-**Testy.** `e2e/study.spec.ts` (pigułka tematu filtruje, „Ćwicz teraz” startuje quiz), `e2e/a11y.spec.ts`,
-`e2e/skins.spec.ts`, `e2e/touch-targets.spec.ts`.
-
-**Commit.** `b61aba1` (2026-10-15).
-
----
-
-## Praca — zwinięty nagłówek na Dzienniku (P2)
-
-**Co robi.** Na zakładce Dziennik nagłówek działu to jeden wiersz: „Instalacje wod-kan”, licznik opanowanych tematów
-„2/18” (stuknięcie otwiera Tablicę), „Na dziś: N” i ikona statystyk. Pełny nagłówek z paskiem opanowania i opisem
-materiału zostaje na Quizie, Tablicy i Liście.
-
-**Gdzie jest.** `src/components/study/StudyView.tsx` (`data-study-header="compact" | "full"`, `masteredCount`).
-
-**Jak działa i dlaczego.** Na telefonie pełny nagłówek zajmował ~200 px nad „+ Wpis” i listą wpisów — a na budowie
-Dziennik jest główną zakładką (N2). Licznik zostaje jako skrót do nauki.
-
-**Ograniczenia i pułapki.** `data-testid="mastery-count"` jest w obu wariantach (testy smoke).
-
-**Testy.** `e2e/study.spec.ts` („telefon bez zapisanej zakładki zaczyna od Dziennika” — zwinięty nagłówek, licznik
-otwiera Tablicę z pełnym nagłówkiem).
-
-**Commit.** `5dc3359` (2026-10-15).
-
----
-
-## Praca — quiz pod kciuk i ściąga wysokości (P3)
-
-**Co robi.** Na telefonie odpowiedzi w quizie mają co najmniej 56 px wysokości i większy tekst, a „Dalej” jest
-przyklejony nad dolnym paskiem na całą szerokość — po odpowiedzi nie trzeba przewijać pod objaśnienie. Plakietka
-„Zapisano” idzie wtedy wyżej, żeby nie zasłaniać przycisku. Ściąga „Wysokości podejść” (standard G-HEAT, duże cyfry
-w kroju mono) otwiera się z nagłówka działu (pigułka „Wysokości”, na Dzienniku ikona miarki) i z arkusza wpisu, gdy
-temat to „Punkty wodne i wysokości”.
-
-**Gdzie jest.**
-- `src/components/study/HeightsSheet.tsx`: `HeightsButton` (`pill` | `icon` | `link`) z oknem tabeli `HEIGHTS`.
-- `src/components/study/QuizPanel.tsx`: `coarse:min-h-14` na odpowiedziach, blok „Dalej” z `data-sticky-action`
-  i `phone:sticky` jako bezpośrednie dziecko sekcji.
-- `src/components/OfflineStatus.tsx` (klasa `save-status`) + reguła w `src/index.css`:
-  `html:has([data-sticky-action]) .save-status` na telefonie wyżej.
-- `StudyView.tsx` (przyciski w obu nagłówkach), `JournalEntrySheet.tsx` (link przy temacie `punkty`).
-
-**Jak działa i dlaczego.** `sticky` działa tylko w obrębie rodzica — przycisk siedzący w krótkim bloku objaśnienia nie
-mógł się przykleić, dlatego jest osobnym dzieckiem sekcji quizu (sięga pod dolny pasek). Plakietka zapisu stała
-dokładnie na wysokości przyklejonego przycisku i pojawia się po każdej odpowiedzi (zapis rundy) — `:has()` przesuwa ją
-tylko, gdy na ekranie jest przyklejona akcja. Ściąga zostaje też na dole Listy (zwijany blok).
-
-**Ograniczenia i pułapki.** Objaśnienie odpowiedzi może schodzić pod przyklejony pasek — czyta się je, przewijając,
-a „Dalej” jest zawsze pod kciukiem. Lista znanych wyjątków axe (`e2e/a11y.spec.ts`) jest teraz pusta: na telefonie
-skan widzi Dziennik ze zwiniętym nagłówkiem; pasek opanowania na innych zakładkach dalej ma wąskie komórki (wyjątek
-„równoważna kontrolka”).
-
-**Testy.** `e2e/study.spec.ts` („telefon: „Dalej” w quizie bez przewijania, ściąga wysokości z nagłówka i z arkusza
-wpisu”), `e2e/a11y.spec.ts`.
-
-**Commit.** `8abb8f4` (2026-10-15).
-
----
-
-## Praca — zdjęcia „przed zakryciem” (P4)
-
-**Co robi.** Wpis z budowy mieści 5 zdjęć (było 4). Przy każdej miniaturze w arkuszu wpisu jest przycisk „Podpis na
-zdjęciu” (ikona T): wpisany tekst — np. „Łazienka, pion 58 cm” albo z pigułek „Przed zakryciem”, „Łazienka”,
-„Kuchnia”, „Kotłownia” — i data wpisu są wtapiane w dolny pasek zdjęcia. W dzienniku powiększone zdjęcie ma
-strzałki „Poprzednie/Następne”, licznik „2/5” i obsługę ←/→ — przewija wszystkie zdjęcia wpisu.
-
-**Gdzie jest.**
-- `src/lib/study/photoCaption.ts`: `captionLayout` (czcionka ~4,5% krótszego boku, min. 14 px; najwyżej 2 linie,
-  druga z wielokropkiem), `captionText` (tekst do 80 znaków + „dd.mm.rrrr”), `captionPhoto` (canvas → JPEG 0,85).
-- `src/components/study/JournalEntrySheet.tsx`: `burnCaption`, stan `captioning`/`captionDraft`, formularz podpisu.
-- `src/components/study/StudyJournal.tsx`: stan `zoom` = `{ refs, index }`, galeria w oknie.
-- `src/lib/study/yStudy.ts`: `JOURNAL_MAX_IMAGES = 5`.
-
-**Jak działa i dlaczego.**
-- Podpis wtopiony w piksele, nie trzymany obok: zdjęcie wysłane szefowi lub inwestorowi (WhatsApp, „Udostępnij”,
-  paczka) niesie opis i datę ze sobą — to dowód „było zrobione przed zakryciem”. Nowy obraz przechodzi przez
-  `prepareImage` (limit 2 MB) i zastępuje stary we wpisie; oryginał zostaje w magazynie do odśmiecenia (7 dni bez
-  odwołań).
-- Pasek półprzezroczysty czarny (62%) z białym tekstem — czytelny na każdym tle; białe podłoże pod zdjęciem, bo
-  JPEG nie ma przezroczystości.
-- Data to moment wpisu (pole „Kiedy”), nie chwila podpisania — wpis „za wczoraj” ma wczorajszą datę.
-
-**Ograniczenia i pułapki.**
-- Podpisu nie da się zdjąć (to inny plik) — usuń zdjęcie i dodaj ponownie.
-- Starsza wersja aplikacji (limit 4) pokaże 4 zdjęcia wpisu, a edytując go, piąte zgubi.
-- Kilka podpisów pod rząd = kilka nowych plików; nieużywane znikają przy odśmiecaniu.
-
-**Testy.** `src/lib/study/photoCaption.test.ts`, `e2e/journal-photos.spec.ts` (limit 5 z komunikatem, podpis
-podmienia zdjęcie, galeria: przyciski i strzałki).
-
-**Commit.** `bd14a71` (2026-10-15).
-
----
-
-## Praca — protokół próby szczelności (P5a)
-
-**Co robi.** Przy tematach „Płukanie i próba szczelności” i „Próba kanalizacji na zalanie” arkusz wpisu ma przycisk
-„Dodaj protokół próby szczelności”: czym próba (Powietrze / Woda / Zalanie), ciśnienie [bar], czas [min], spadek na
-manometrze [bar] i wynik (Szczelna / Nieszczelna). Start: powietrze 6 bar (próba robocza z materiału), dla kanalizacji
-— zalanie bez ciśnienia. Wpis pokazuje linię „Próba szczelności (woda, 9 bar, 30 min, spadek 0,1 bar): szczelna”
-(zielona albo czerwona), a raport, notatka z raportu i wiadomość do szefa mają ją pod wpisem. Sam protokół (bez
-tekstu) wystarcza, żeby zapisać wpis.
-
-**Gdzie jest.**
-- `src/lib/study/pressureTest.ts`: `PressureTest`, `TEST_TOPICS`, `defaultTest`, `cleanTest`, `testLine`.
-- `src/lib/study/yStudy.ts` (`JournalEntry.test`, `cleanEntry`), `store.ts` (`NewJournalEntry.test`, `entryFields`,
-  `sanitizeStudy`), `draft.ts` (`JournalDraft.test` w szkicu), `entrySheet.ts` (edycja), `report.ts` (`entryLine`).
-- `src/components/study/PressureTestFields.tsx` (pola, `NumField` z przecinkiem dziesiętnym),
-  `JournalEntrySheet.tsx` (sekcja pod tematem), `StudyJournal.tsx` (`data-testid="journal-test"`).
-
-**Jak działa i dlaczego.** Pole wpisu, nie nowy rodzaj (decyzja): `cleanEntry` starszej wersji odrzuca nieznane
-rodzaje — wpis by zniknął — a nieznane pole tylko pomija. Przy kanalizacji ciśnienie i spadek są zerowane
-(`cleanTest`), żeby protokół nie niósł danych bez sensu. Pole liczby trzyma tekst lokalnie, więc „0,” nie znika
-w trakcie pisania; liczby z przecinkiem jak na budowie.
-
-**Ograniczenia i pułapki.** Starsza wersja aplikacji nie pokaże protokołu, a edytując wpis, zgubi go. Brak
-podpisu/pieczątki w samym protokole — to część raportu (P5b).
-
-**Testy.** `src/lib/study/pressureTest.test.ts`, `e2e/journal-pressure-test.spec.ts` (woda z wartościami → lista
-i tekst raportu; zalanie bez ciśnienia, sam protokół zapisuje wpis).
-
-**Commit.** `dcb1d66` (2026-10-15).
-
----
-
-## Praca — raport jak druk firmowy i jedna główna akcja (P5b)
-
-**Co robi.** Raport z budowy (podgląd, wydruk/PDF) ma: zestawienie dni na górze (od dwóch dni: dzień, godziny pracy
-z Grafiku, liczba wpisów i problemów), linię protokołu próby przy wpisie, sekcję „Próby szczelności” ze wszystkimi
-próbami okresu (nieszczelne na czerwono), a na końcu miejsca na podpisy „Wykonawca” i „Odbierający / kierownik”
-oraz datę sporządzenia. Stopka okna: główna akcja to wysłanie przez WhatsApp (szefowi / do grupy / dodaj odbiorców),
-obok „Udostępnij” (gdy telefon pozwala) i „Więcej” z „Kopiuj tekst”, „Do notatki”, „Drukuj / PDF”.
-
-**Gdzie jest.** `src/components/study/JournalReport.tsx`: stopka (`DropdownMenu`), `ReportPaper` (`DaysTable`,
-`data-report-test`, `data-report-tests`, `data-report-signatures`).
-
-**Jak działa i dlaczego.** Siedem równorzędnych przycisków chowało to, po co się raport otwiera — wysłanie szefowi.
-Raport z próbami, godzinami i podpisami służy jako dokument odbioru („było zrobione przed zakryciem”). Podgląd
-i druk to ten sam komponent, więc wyglądają tak samo; w druku kolory zamieniają się na czarny (`index.css`).
-
-**Ograniczenia i pułapki.** Zestawienie dni tylko przy raporcie z co najmniej dwóch dni. Menu „Więcej” otwiera się
-w portalu — w testach `page.getByRole("menuitem", …)`, nie wewnątrz okna.
-
-**Testy.** `e2e/journal-pressure-test.spec.ts` (protokół w podglądzie, zestawienie prób, podpisy), `e2e/study.spec.ts`
-(„raport budowy…” przez menu „Więcej”), `e2e/report-whatsapp.spec.ts`.
-
-**Commit.** `e9355ca` (2026-10-15).
-
----
-
-## Praca — kształtki we wpisie
-
-**Co robi.** Arkusz wpisu ma „Dodaj kształtki”: pozycje „nazwa + sztuki” (decyzja: tylko sztuki), podpowiedzi nazw z poprzednich wpisów i pigułki najczęstszych, duże −/+ (przy 1 sztuce „−” usuwa pozycję). Wpis pokazuje „Kolano 16 × 3, Mufa 32 × 1”; raport ma linię przy wpisie i sekcję „Kształtki (suma)” z okresu (też w tekście dla szefa).
-
-**Gdzie jest.** `src/lib/study/fittings.ts` (`cleanFittings`, `sumFittings`, `fittingsLine`, `suggestFittingNames`), pole `fittings` w `yStudy.ts`, `store.ts`, `draft.ts`, `entrySheet.ts`, `report.ts` (`JournalReport.fittings`); `components/study/FittingsFields.tsx`, `JournalEntrySheet.tsx`, `StudyJournal.tsx`, `JournalReport.tsx`.
-
-**Jak działa i dlaczego.** Pole wpisu jak protokół próby (starsza wersja je pomija). Ta sama nazwa w różnej pisowni sumuje się (`fittingKey`: bez wielkości liter, spacji i ogonków). Wiersze z pustą nazwą czyści dopiero zapis. `<fieldset>` ma `min-w-0` — domyślne `min-inline-size: min-content` rozpychało arkusz w bok na 390 px.
-
-**Ograniczenia.** Do 20 pozycji, nazwa do 40 znaków, bez metrów rury.
-
-**Testy.** `src/lib/study/fittings.test.ts`, `e2e/journal-fittings.spec.ts`.
-
-**Commit.** `feb318e` (2026-10-15).
-
----
+- Dział nazywa się „Praca” (ikona kasku, `HardHat`) w pasku bocznym, w „Więcej”, w palecie poleceń, w nagłówku i w kopii („Praca i dziennik z budowy”). Adres `/praca`; stary `/nauka` nadal otwiera dział (`src/lib/viewRoute.ts` mapuje `praca` i `nauka` na widok `study`).
+- Kod, klucze zapisu i typy zostają przy `study` — zmiana nazwy nie rusza danych. Notatki tworzone z tematów mają tytuł „Nauka: …” i etykietę `nauka` (opis treści, nie nazwa działu).
+- Skrót PWA „Wpis z budowy” otwiera `/praca?wpis=1` (`public/manifest.webmanifest`).
+- Zakładki: Quiz, Tablica, Lista, Dziennik. Zakładka jest zapamiętana na urządzeniu (klucz `kaczy.study.tab.v1`, `src/lib/study/tab.ts`); bez zapisu telefon zaczyna od Dziennika, komputer od Quizu. Nieznana wartość daje domyślną zakładkę.
+
+### Nagłówek i pasek opanowania
+
+- Nagłówek „Instalacje wod-kan” z paskiem opanowania: ile z 18 tematów jest w „Umiem”, z podziałem na moduły (Woda użytkowa, Kanalizacja, Wspólne). Każdy temat to kratka: pełna = „Umiem”, połowa = „W trakcie”, pusta = „Do nauki”. Pusta kratka ma obwódkę `border-foreground/50`, bo jasna obwódka na papierze była prawie niewidoczna.
+- Kratka to przycisk (`aria-label` „Temat: stan”, `aria-pressed`); na dotyku 44 px. Dotknięcie podpisuje temat pod paskiem (`aria-live="polite"`).
+- Gdy cały moduł jest w „Umiem”, przy jego nazwie pojawia się obrócona pieczątka „Umiem” (`data-mastery-stamp`). Pieczątka jest tekstem, więc czytnik czyta ją przy nazwie modułu.
+- Licznik w JetBrains Mono (`font-mono tabular-nums`).
+- Na Dzienniku nagłówek jest zwinięty do jednego wiersza: nazwa działu, licznik „2/18” (stuknięcie otwiera Tablicę), „Na dziś: N” i ikona statystyk (`data-study-header="compact" | "full"`). Na telefonie pełny nagłówek zajmował ok. 200 px nad listą wpisów.
+
+### Tablica tematów i lista
+
+- Temat wędruje „Do nauki” → „W trakcie” → „Umiem” strzałkami przy tytule (`moveTopic`, `TopicCard`, `StudyBoard`). Pod opisem trzy przyciski: „Wpis” (arkusz wpisu z tym tematem), „Ćwicz” (runda quizu z tematu), „Do notatki” (notatka z listą kontrolną tematu). Etykiety dostępności mają postać „Temat: wpis z budowy”, podpis jest w nazwie dostępnej (WCAG 2.5.3). Przesunięcie animuje `framer-motion` (`layoutId`).
+- Na telefonie tablica pokazuje jedną kolumnę naraz, z przełącznikiem „Do nauki / W trakcie / Umiem” (`ToggleGroup`, `md:hidden`). Przeniesienie tematu pokazuje dymek, dokąd poszedł (tylko na telefonie). Wybrana kolumna nie jest zapamiętywana.
+- Lista: „Wyczyść odhaczenia” działa bez pytania, z „Cofnij” w dymku (`resetChecklist` zwraca wyczyszczone id, `restoreChecklist`). „Cofnij” nie przywraca punktów odhaczonych w międzyczasie na drugim telefonie.
+- Problem z budowy przypisany do tematu wraca do nauki: w dzienniku otwarty problem ma „Ćwicz teraz”; karta tematu pokazuje ostatni problem (otwarty wyróżniony, rozwiązany przygaszony) i licznik „2 na dziś”. Liczone przy renderze z dziennika i powtórek, bez nowych danych w Yjs (`TopicPractice.lastProblem` w `practiceByTopic`).
+
+### Quiz i powtórki („Na dziś”)
+
+- Po odpowiedzi pytanie wraca do powtórki: po dobrej coraz rzadziej (1 dzień, 3 dni, dalej dłużej), po błędzie następnego dnia. Pod paskiem „Na dziś: N powtórek” z każdej zakładki; w Quizie ramka z „Powtórz”. Runda powtórek bierze najbardziej zaległe pytania (do 10). Gdy nic nie ma na dziś, Quiz podaje, kiedy następne.
+- SM-2 „lite” z oceną automatyczną: dobra odpowiedź = q 4, zła = q 1 (od nowa, łatwość −0,2, min. 1,3). Bez pytania o samoocenę. Odstęp maks. 180 dni.
+- Dni jako klucze lokalnego dnia („2026-10-15”), nie milisekundy. Druga dobra odpowiedź tego samego dnia nie wydłuża odstępu; błąd zawsze się liczy (`lapses`).
+- Karty w mapie Yjs `studyReview` (klucz = id pytania): dwa telefony odpowiadające na różne pytania scalają się bez strat. `recordRound` aktualizuje karty w tej samej transakcji co runda.
+- „Powtórka błędów” (`studyMissed`) zostaje osobno: lista ostatnich błędów, nie harmonogram.
+- Pytania, na które nigdy nie odpowiedziano, nie są „na dziś”. Karty pytań usuniętych z materiału są pomijane.
+- Statystyki: liczniki `seen`/`right` w karcie. Karty sprzed N4 nie mają liczników — `cleanCard` szacuje je z pomyłek i dobrych odpowiedzi z rzędu.
+
+### Statystyki i karta doświadczenia
+
+- Okno „Statystyki”: trafność ogółem (z liczbą odpowiedzi), dni nauki w 30 dniach, seria, wpisy z budowy, otwarte problemy; trafność per temat (słupki od najsłabszego); najtrudniejsze pytania (do 5); siatka dni nauki z 12 tygodni; wpisy z budowy per miesiąc (6 miesięcy) i per budowa (do 6, reszta „Pozostałe”).
+- Trafność liczona z kart powtórek, nie z rund. Dni nauki to dni z rundą quizu. Wykresy jednoseryjne, bez biblioteki (recharts dodałby ok. 100 KB do paczki).
+- Karta doświadczenia na dole statystyk: budowy z wpisami, liczba prób szczelności, opanowane tematy, trafność. „Kopiuj” i „Pobierz .md” (`karta-doswiadczenia-RRRR-MM-DD.md`). Liczenie w czystej funkcji (`experience.ts`: `buildExperience`, `experienceText`). Plik nazywa się po dniu lokalnym — pobranie tego samego dnia nadpisze poprzedni.
+
+### Kolory, dotyk, ściąga, kalkulatory
+
+- Zielony „OK” i znaki punktów krytycznych biorą kolor z motywu (`success-ink`, `warning-ink`: `color-mix` z czernią, wg `--ink-mix`). Punkty krytyczne mają jedną ikonę `TriangleAlert`.
+- Quiz na telefonie: odpowiedzi co najmniej 56 px wysokości, „Dalej” przyklejone nad dolnym paskiem (`data-sticky-action`, `phone:sticky` jako bezpośrednie dziecko sekcji). Plakietka „Zapisano” (`save-status`) przesuwa się wyżej, gdy akcja jest przyklejona (`html:has([data-sticky-action])`).
+- Ściąga „Wysokości podejść” (standard G-HEAT, `HeightsSheet`, `HeightsButton`) z nagłówka działu i z arkusza wpisu, gdy temat to „Punkty wodne i wysokości”.
+- Kalkulatory (`CalculatorsSheet`, `src/lib/study/calc.ts`):
+  - **Spadek kanalizacji:** z długości i spadku — różnica wysokości (szybkie 2 / 2,5 / 3%), albo z długości i różnicy — spadek w %. Poza typowym zakresem podpowiedź „sprawdź wymagany spadek dla tej średnicy”.
+  - **Próba wodna:** z ciśnienia roboczego — ciśnienie próbne (1,5 × robocze) i najmniejszy zakres manometru (+50%), z przypomnieniem o podziałce 0,1 bar.
+  - **Pojemność instalacji:** kilka odcinków rur (16×2, 20×2, 25×2,5, 32×3, inna średnica wewnętrzna) i suma litrów.
+  - Liczby normowe tylko z materiału G-HEAT (`content.ts`); reszta to geometria. Wartości nie zapisują się.
+  - Brak doboru średnic — materiał każe brać je z projektu.
+
+### Zdjęcia, protokół, kształtki (wpis z budowy)
+
+- **Zdjęcia „przed zakryciem”:** wpis mieści 5 zdjęć (`JOURNAL_MAX_IMAGES`). Przy miniaturze „Podpis na zdjęciu”: tekst (do 80 znaków) i data wpisu są wtopione w dolny pasek zdjęcia (`photoCaption.ts`: `captionLayout`, `captionText`, `captionPhoto` — canvas → JPEG 0,85). Podpis w pikselach, więc zdjęcie wysłane dalej niesie opis. Data to moment wpisu, nie chwila podpisania. W dzienniku galeria ze strzałkami i licznikiem „2/5”, ←/→. Podpisu nie da się zdjąć — usuń i dodaj ponownie.
+- **Protokół próby szczelności:** pole wpisu (nie nowy rodzaj) przy tematach „Płukanie i próba szczelności” i „Próba kanalizacji na zalanie”. Czym próba (Powietrze / Woda / Zalanie), ciśnienie [bar], czas [min], spadek na manometrze [bar], wynik (Szczelna / Nieszczelna). Start: powietrze 6 bar; dla kanalizacji zalanie bez ciśnienia. Linia „Próba szczelności (woda, 9 bar, 30 min, spadek 0,1 bar): szczelna” w wpisie, raporcie i wiadomości do szefa. Sam protokół wystarcza do zapisu wpisu. Starsza wersja pomija pole, a edytując wpis, zgubi je (`cleanEntry` odrzuca nieznane rodzaje, nieznane pole tylko pomija).
+- **Kształtki:** „Dodaj kształtki” — pozycje „nazwa + sztuki” (tylko sztuki), podpowiedzi nazw z poprzednich wpisów, pigułki najczęstszych. Ta sama nazwa w różnej pisowni sumuje się (`fittingKey`). Do 20 pozycji, nazwa do 40 znaków, bez metrów rury. Raport ma linię przy wpisie i sekcję „Kształtki (suma)” z okresu.
+
+### Własne pytania i punkty listy (N5)
+
+- Własne pytanie do quizu (poprawna odpowiedź i trzy błędne, plus wyjaśnienie) i własny punkt listy, przypięty do tematu. Liczą się jak materiał: pula quizu, powtórki, statystyki, postęp tematu, arkusz wpisu. Oznaczone „własny”.
+- Materiał G-HEAT zostaje statyczny w `content.ts`; własne wpisy są w mapie Yjs `studyCustom` (klucz = id, `c-…`), synchronizują się i jadą w kopii. Limit 200 łącznie, tekst 300, odpowiedź 200, wyjaśnienie 500.
+- Walidacja tematu w `store.ts`, nie w `custom.ts`: `yStudy.ts` nie może importować materiału. Wpis z obcym tematem od peera jest pomijany.
+- Usunięcie czyści `review`, `missed` i `checked` dla tego id (z „Cofnij”).
+- Komponenty czytające materiał biorą listy z `useStudyLists()`, nie z `CHECKLIST`/`QUESTIONS`.
+- Okno „Moje pytania” (`CustomQuestionsDialog`), sekcja „Własne punkty” (`CustomChecklistForm`).
+- Import plików (PDF, tekst) do Nauki — poza zakresem.
+
+### Gdzie jest (ten fragment)
+
+- Nagłówek i zakładki: `src/components/study/StudyView.tsx` (`MasteryStrip`, `DueTodayChip`, przyciski Statystyki, Kalkulatory, Wysokości), `src/lib/study/tab.ts`.
+- Tablica i lista: `src/components/study/StudyBoard.tsx` (`TopicCard`, `StudyBoard`, `ToggleGroup` kolumny), `src/components/study/StudyChecklist.tsx`, `src/lib/study/store.ts` (`moveTopic`, `practiceByTopic`, `resetChecklist`, `restoreChecklist`), `src/lib/study/content.ts` (`MODULES`, `TOPICS`, `CHECKLIST`, `QUESTIONS`), `src/lib/study/toNote.ts`.
+- Quiz i powtórki: `src/components/study/QuizPanel.tsx`, `src/lib/study/srs.ts` (`ReviewCard`, `reviewCard`, `dueIds`, `cleanCard`), `src/lib/study/yStudy.ts` (`studyReview`, `recordRound`).
+- Statystyki: `src/components/study/StudyStats.tsx`, `src/lib/study/stats.ts`, `src/lib/study/experience.ts`.
+- Dziennik — elementy: `src/components/study/JournalEntrySheet.tsx`, `StudyJournal.tsx`, `src/components/study/PressureTestFields.tsx`, `src/components/study/FittingsFields.tsx`, `src/components/study/HeightsSheet.tsx`, `src/components/study/CustomChecklistForm.tsx`, `src/components/study/CustomQuestionsDialog.tsx`.
+- Biblioteki: `src/lib/study/photoCaption.ts`, `src/lib/study/pressureTest.ts`, `src/lib/study/fittings.ts`, `src/lib/study/custom.ts`, `src/lib/study/customActions.ts`, `src/lib/study/calc.ts`.
+- Raport (podpis i protokół): `src/components/study/JournalReport.tsx`.
+
+### Jak działa i dlaczego (ten fragment)
+
+- **Dane w Yjs, ustawienia na urządzeniu.** Wszystkie wpisy, karty powtórek, własne pytania i punkty są w dokumencie notatek (synchronizacja i kopia). Zakładka i preferencje widoku są lokalne: telefon i komputer służą do czego innego.
+- **Jeden klucz na pozycję** (wpis, kartę, własne pytanie, pozycję listy): dwa telefony dopisujące różne rzeczy scalają się bez strat. To samo pole — ostatni zapis wygrywa.
+- **Pola zamiast nowych rodzajów** (protokół, kształtki): starsza wersja pomija nieznane pole, zamiast odrzucać wpis.
+- **Podpis w pikselach**: zdjęcie wysłane szefowi lub inwestorowi niesie opis i datę. To dowód „było zrobione przed zakryciem”.
+- **Trafność z kart**, nie z rund: karta zna każde pytanie z osobna, więc da się ją zsumować per temat.
+- **Materiał statyczny, własne wpisy w Yjs**: materiał G-HEAT nie zmienia się; własne wpisy mają id z prefiksem `c-`, żeby nie kolidowały.
+
+### Ograniczenia i pułapki (ten fragment)
+
+- Starsza wersja aplikacji nie pokaże protokołu, kształtek ani własnych pytań; edytując wpis, zgubi pola. Własne wpisy są dla niej niewidoczne, ale nic nie psują.
+- Pytania i punkty własne muszą mieć cztery różne odpowiedzi (lub unikalną treść punktu); duplikaty odrzuca `cleanCustom`.
+- Pieczątka „Umiem” pojawia się tylko przy pełnym module.
+- Trafność obejmuje odpowiedzi od wdrożenia powtórek; starsze rundy znały tylko wynik całej rundy.
+- Testy e2e z 390 px muszą ustawić rozmiar okna przed wejściem na `/praca`, inaczej startuje Quiz.
+- Objaśnienie odpowiedzi w quizie może schodzić pod przyklejony pasek — „Dalej” jest zawsze pod kciukiem.
+
+### Testy (ten fragment)
+
+- Jednostkowe: `src/lib/study/srs.test.ts`, `stats.test.ts`, `experience.test.ts`, `tab.test.ts`, `photoCaption.test.ts`, `pressureTest.test.ts`, `fittings.test.ts`, `custom.test.ts`, `customStore.test.ts`, `calc.test.ts` (6), `study.test.ts`, `yStudy.test.ts` (własne wpisy w Yjs, powtórki, kopia, `mergeIn` nie cofa nowszej karty).
+- E2E: `study.spec.ts` (tablica, „Ćwicz”, „Do notatki”, zakładki, powtórki z przestawionym zegarem, statystyki, karta doświadczenia, quiz pod kciuk, raport przez „Więcej”), `journal-photos.spec.ts`, `journal-pressure-test.spec.ts`, `journal-fittings.spec.ts`, `study-custom.spec.ts`, `calculators.spec.ts` (regresja `study.spec.ts` 29/29), `resilience.spec.ts`, `a11y.spec.ts`, `skins.spec.ts`, `touch-targets.spec.ts`.
+
+### Commity (ten fragment)
+
+- `b610ff6` (2026-10-15) — nazwa „Praca”.
+- `7f780d9` (2026-10-16) — pasek opanowania. `4c951fa` (2026-10-15) — karty tematów (N1).
+- `78a4538` (2026-10-15) — zapamiętana zakładka. `82b7366` (2026-10-15) — powtórki „Na dziś”.
+- `95f9c65` (2026-10-15) — problemy z budowy a nauka. `b87ef5b` (2026-10-15) — tablica i lista na telefonie.
+- `94e16fc` (2026-10-15) — statystyki. `16cc7e5` (2026-10-16) — karta doświadczenia.
+- `b61aba1` (2026-10-15) — kolory z motywu (P1). `5dc3359` (2026-10-15) — zwinięty nagłówek (P2).
+- `8abb8f4` (2026-10-15) — quiz pod kciuk (P3). `bd14a71` (2026-10-15) — zdjęcia przed zakryciem (P4).
+- `dcb1d66` (2026-10-15) — protokół szczelności (P5a). `e9355ca` (2026-10-15) — raport (P5b).
+- `feb318e` (2026-10-15) — kształtki. `8725703` (2026-10-16) — własne pytania i punkty (N5).
+- `7740d29` (2026-10-16) — kalkulatory (`c2c112b` — skrócenie opisu rury).
 
 ## Skrzynka — stan aktualny (szybkie przechwycenie, prywatność)
 
@@ -1686,55 +1377,6 @@ przejście z „dziś” do zaległych po zmianie doby — `focus` i przesunięt
 **Commit.** `32f51b7`, `25ed6cb`, `ddf6765` (powtórki) (2026-10-16). Poprawki Fazy 1 (odświeżanie po zmianie doby,
 granice błędów, pusty stan), 2026-10-20: `f720739` (Faza 1), `687756d` (Fazy 2–3, dotyk i jedna definicja zaległości), `585d4a5` (potwierdzenie kosza w przeglądzie), `5168b98` (potwierdzenie archiwizacji).
 
-## Praca — własne pytania i punkty listy (N5)
-
-**Co robi.** Możesz dodać własne pytanie do quizu (z czterema odpowiedziami: poprawna i trzy błędne, plus wyjaśnienie)
-i własny punkt do listy kontrolnej, przypięty do tematu. Własne wpisy liczą się jak materiał: są w puli quizu, w
-powtórkach „Na dziś”, w statystykach trafności, w postępie tematu na tablicy i w arkuszu wpisu z budowy. Oznaczone
-podpisem „własny”. Usunięcie daje „Cofnij”.
-
-**Gdzie jest.**
-- `src/lib/study/custom.ts`: typy `CustomQuestion` / `CustomItem` / `CustomEntry`, `cleanCustom`, `cleanCustomList`,
-  `questionOptions` (poprawna pierwsza, jak w materiale), limity (`CUSTOM_MAX` 200, tekst 300, odpowiedź 200,
-  wyjaśnienie 500 — za długie przycinane).
-- `src/lib/study/yStudy.ts`: mapa Yjs `studyCustom` (klucz = id), pole `custom` w `StudyState` i w `StudyDump`
-  (sekcja `study` kopii, opcjonalna), `addCustom`, `removeCustom` (też powtórki, błędy i odhaczenie), `restoreCustom`.
-- `src/lib/study/store.ts`: `studyLists(custom)` (materiał + własne), hook `useStudyLists()`, `addCustomItem`,
-  `addCustomQuestion`, `removeCustomEntry`, `restoreCustomEntry`; `sanitizeStudy` waliduje własne wpisy temat po temacie.
-- `src/lib/study/customActions.ts`: `deleteCustom` — usunięcie z „Cofnij”.
-- `src/components/study/CustomChecklistForm.tsx`: sekcja „Własne punkty” (zwijana, pod listą), `TopicSelect`.
-- `src/components/study/CustomQuestionsDialog.tsx`: okno „Moje pytania” (formularz + lista), `draftError` z komunikatami.
-- `src/components/study/QuizPanel.tsx`: przycisk „Moje pytania (n)” na ekranie startowym; pule rund z `lists.questions`.
-- Komponenty czytające materiał (`StudyBoard`, `StudyStats`, `StudyJournal`, `JournalEntrySheet`, `StudyChecklist`)
-  biorą listy z `useStudyLists()` zamiast importować `CHECKLIST` / `QUESTIONS` wprost.
-
-**Jak działa i dlaczego.**
-- Materiał G-HEAT zostaje statyczny w `content.ts`; własne wpisy są w Yjs, więc synchronizują się z sparowanymi
-  telefonami i jadą w kopii, bez zmiany materiału. Id zaczynają się od `c-`, żeby nie kolidowały z materiałem.
-- Każdy wpis to osobny klucz mapy — dwa telefony dodające różne pytania scalają się bez strat (jak dziennik i powtórki).
-- Walidacja tematu jest w `store.ts`, nie w `custom.ts`: `yStudy.ts` nie może importować materiału (patrz komentarz
-  na górze pliku), a tylko store zna listę tematów. Wpis z obcym tematem od peera jest po prostu pomijany.
-- Usunięcie czyści `review`, `missed` i `checked` dla tego id. Bez tego zostałyby osierocone wpisy, które przy
-  przywróceniu (cofnięciu) pojawiłyby się z historią, której użytkownik się pozbył.
-- Pytanie własne ma poprawną odpowiedź zawsze pierwszą (jak w materiale); `buildRound` miesza ją sam.
-
-**Ograniczenia i pułapki.**
-- Import plików (PDF, tekst) do Nauki — poza zakresem N5 (`import plików później`).
-- Pytania i punkty muszą mieć cztery różne odpowiedzi (lub unikalną treść punktu); duplikaty odrzuca `cleanCustom`.
-- Starsza wersja aplikacji nie zna mapy `studyCustom`: własne wpisy jej nie pokażą, ale nic nie zepsuje (klucze
-  materiału są nietknięte). Wpis dziennika odwołujący się do własnego punktu zachowuje id; po usunięciu punktu
-  odhaczenie znika z wpisu (filtr przy odczycie).
-- Limit 200 własnych wpisów łącznie; po przekroczeniu dodanie zwraca `null` i formularz pokazuje komunikat.
-- Kopia zapasowa sprzed N5 nie ma pola `custom` — `cleanDump` traktuje brak jako pusty zbiór.
-
-**Testy.** `src/lib/study/custom.test.ts` (walidacja, limity, odpowiedzi), `src/lib/study/customStore.test.ts`
-(scalenie z materiałem, dodanie, usunięcie z powtórkami i cofnięcie, odrzucanie obcych tematów),
-`src/lib/study/yStudy.test.ts` („własne wpisy Nauki w Yjs”: synchronizacja, usunięcie na drugim telefonie, scalanie
-i przywracanie kopii), `e2e/study-custom.spec.ts` (punkt: dodanie, przeładowanie, usunięcie z „Cofnij”; pytanie:
-walidacja formularza, zapis, licznik quizu).
-
-**Commit.** `8725703` (2026-10-16).
-
 ## Wydajność — paczka startowa i precache (2026-10-16)
 
 **Co robi.** Dla użytkownika: szybszy pierwszy start (mniej kodu do pobrania i uruchomienia) i mniej danych przy
@@ -1778,37 +1420,6 @@ kopia zapasowa (`images.spec.ts`, `search-backup.spec.ts`, `private-notes.spec.t
 **Commit.** `3d31b58`, `a7bfb5a` (czytnik, 2026-10-16). Testy czytnika po zmianie: `reader`, `reader-step`,
 `note-links`, `note-props-view`, `routes`, `subpages`, `wiki-heading`, `wikilinks`, `attachments`, `board-table`,
 `reminders-calendar`, `toggle-group`, `search-highlight`, `bundle` — 56/56; telefon (`mobile`, `mobile-layout`) 17/17.
-
-## Praca — kalkulatory na budowę
-
-**Co robi.** Przycisk „Kalkulatory” w nagłówku działu (obok „Wysokości”; na Dzienniku jako ikona) otwiera okno z trzema
-kalkulatorami:
-- **Spadek kanalizacji** — z długości i spadku liczy różnicę wysokości (szybkie 2 / 2,5 / 3%), albo z długości
-  i różnicy wysokości — spadek w %. Poza typowymi 2–3% pokazuje podpowiedź „sprawdź wymagany spadek dla tej średnicy”.
-- **Próba wodna** — z ciśnienia roboczego: ciśnienie próbne (1,5 × robocze) i najmniejszy zakres manometru (+50%),
-  z przypomnieniem o podziałce 0,1 bar, odpowietrzeniu i o próbie roboczej 6 bar / protokole 9 bar.
-- **Pojemność instalacji** — kilka odcinków (rura 16×2, 20×2, 25×2,5, 32×3 albo inna średnica wewnętrzna) i suma litrów.
-
-**Gdzie jest.** `src/lib/study/calc.ts` (`parseNum`, `plNum`, `slopeDrop`, `slopeFromDrop`, `slopeNote`, `SLOPE_TYPICAL`,
-`waterTest`, `PIPES`, `pipeLiters`); `src/components/study/CalculatorsSheet.tsx` (`CalculatorsButton`, okno
-`data-testid="calculators"`); przyciski w `StudyView.tsx`.
-
-**Jak działa i dlaczego.** Liczby normowe tylko z materiału G-HEAT (`content.ts`: spadki „ok. 2–3%”, próba wodna
-1,5 × robocze, manometr +50% i podziałka 0,1 bar, próba robocza 6 bar, protokół 9 bar) — aplikacja nie dopisuje norm
-z zewnątrz. Reszta to geometria: 1% = 1 cm na metr, pojemność π·r²·L, średnica wewnętrzna = zewnętrzna − 2 × ścianka.
-Pola przyjmują przecinek i kropkę; wyniki po polsku, dużym krojem mono (czytane z wyciągniętej ręki).
-
-**Ograniczenia i pułapki.**
-- Nie ma doboru średnic — materiał każe brać je z projektu, a w razie wątpliwości pytać Grzegorza.
-- Spadek „typowy” to podpowiedź; wymagany spadek zależy od średnicy (materiał nie podaje tabeli).
-- Wartości nie zapisują się (kalkulator jest na chwilę).
-
-**Testy.** `src/lib/study/calc.test.ts` (6: liczby z przecinkiem, zapis po polsku, spadek w obie strony, podpowiedź
-2–3%, próba wodna, pojemność i wymiary rur). `e2e/calculators.spec.ts` (spadek w obie strony z podpowiedzią, próba
-wodna, pojemność dwóch odcinków). Regresja: `study.spec.ts` 29/29 (z kalkulatorami), układ telefonu `iphone-14` 19/19.
-Zrzuty z telefonu (390 px) obejrzane; opis rury w polu wyboru skrócony do „16×2 · 12 mm”, bo się ucinał (`c2c112b`).
-
-**Commit.** `7740d29` (2026-10-16).
 
 ## Praca → Dziennik budowy
 
