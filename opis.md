@@ -1650,24 +1650,111 @@ edycja w czytniku i sortowanie w arkuszu na telefonie), `e2e/note-props.spec.ts`
 
 **Commit.** `a5976a1` (2026-10-16) — pola i tabela; eksport MD/ZIP `fd377a5` (2026-10-16); sortowanie, filtr i telefon: `5bb3966` (2026-10-16); import pól z ZIP-a `f64dd9d` (2026-10-16).
 
-## Grafik — czytelność drobnych znaczników
+## Grafik — stan aktualny (zmiany, rachunek, eksporty, wiele grafików)
 
-**Co robi.** W siatce miesiąca na telefonie strzałka nadgodzin (↑/↓) przy numerze dnia ma 11 px zamiast 9 px.
-Podpis „Nowa odznaka” / „Pierwszy raz!” na pieczątce osiągnięcia też ma 11 px zamiast 10 px.
+Dział opisany w jednym miejscu: rdzeń (dotąd nieopisany) i dodatki z 2026-10-09…20. Przegląd audytu z 2026-10-09 jest uwzględniony.
 
-**Gdzie jest.** `src/components/shifts/ShiftMonthGrid.tsx` (znacznik `entry.extraMin`, tylko `sm:hidden`),
-`src/components/AchievementStamp.tsx` (podpis nad emoji).
+### Co robi
 
-**Jak działa i dlaczego.** Oba używają tokenu `text-2xs` (0,6875 rem / 16 px wiersza, `tailwind.config.ts`) —
-najmniejszego rozmiaru w aplikacji; wartości poniżej 11 px są nieczytelne w słońcu.
+- **Siatka miesiąca** (`ShiftMonthGrid`): dni tygodnia od poniedziałku, w komórce numer dnia, skrót rodzaju zmiany w kolorze i strzałka nadgodzin (↑/↓) na telefonie. Nawigacja miesiąca; widok tygodnia (`ShiftWeekView`). Siatka to `role="grid"` ze strzałkami; ←/→ i ↑/↓ przesuwają dzień (`dayKeyCommand`).
+- **Rodzaje zmian** (`ShiftType`): nazwa, skrót 1–3 znaki, kolor, godziny start–koniec, przerwa (minuty, opcjonalnie „o której”), stawka (opcjonalna), alarm w eksporcie do kalendarza, rodzaj `work` lub `absence` (urlop, chorobowe, inna). Domyślne: „Praca na budowie (10 h)” i „Dniówka 8–16”, dodawane raz na grafik (`addPresetOnce`).
+- **Wpis dnia** (`DayEntry`): rodzaj, notatka, odchylenie od planu w minutach (`extraMin`: + zostałem dłużej, − wyszedłem wcześniej), praca w dzień wolny według grafiku (`offSchedule`) lub w zamian za niedzielę/święto (`inLieu`), własne godziny dnia (`customHours`).
+- **Pędzel** (`BrushBar`, `BrushHours`): wybrany rodzaj nanosi się kliknięciem lub przeciągnięciem; osobny tryb godzin. Przeciąganie kafli przenosi wpis (`ShiftDnd`, `planTransfer`).
+- **Cykle** (`ShiftPattern`): lista kroków (rodzaj albo dzień wolny), powtarzana od wybranej daty do końca miesiąca (`applyPattern`, `daysUntilMonthEnd`). `PatternDialog`.
+- **Kopiowanie:** wpis i tydzień można przenieść lub skopiować na inny dzień (`transferDay`, `pasteDay`, `copyWeekToNext`). Cofnięcie przywraca poprzedni stan dni (`restoreDays`).
+- **Wyszukiwanie dni** (`searchShiftDays`) i **fokus z palety poleceń** (`requestShiftDay` / `takeShiftDay`): „Pokaż dzień” otwiera właściwy miesiąc i dzień.
+- **Karta „Teraz”** (`NowCard`): bieżąca lub następna zmiana (`currentAndNextShift`, horyzont 60 dni).
+- **Podpowiedź wieczorna** (`eveningNudge`): opcjonalne przypomnienie wieczorem (godziny 18–22 do wyboru); godzina w localStorage tego urządzenia.
+- **Rachunek miesiąca** (`ShiftSummary`, `monthSummary`): dni w pracy, przepracowane godziny, godziny nocne, norma po odjęciu nieobecności, nadgodziny (dobowe i ponad normę okresu), z tego z dodatkiem 100%, zarobek brutto, premie, krótkie odpoczynki poniżej 11 h. Okresy rozliczeniowe dłuższe niż miesiąc (`settlementPeriod`) pokazują podsumowanie okresu.
+- **Urlop** (`leaveBalance`): wymiar roczny (`leaveDays`, domyślnie 20), wykorzystanie i saldo na dziś.
+- **Podsumowanie roku** (`YearSummaryDialog`, `yearSummary`): wiersze miesięcy i sumy.
+- **Eksporty:** plik `.ics` do kalendarza (`buildShiftsIcs`; zmiany odwołane po stronie grafiku dostają status anulowania, wysłane dni pamiętane w `kaczy:shifts.icsExported`), karta czasu CSV (`buildTimesheetCsv`), obraz miesiąca PNG (sekcja niżej).
+- **Premie** i **wiele grafików** — opisane niżej.
 
-**Ograniczenia i pułapki.** Strzałka ma `leading-none`, więc nie podnosi wysokości nagłówka komórki.
+### Ustawienia grafiku (`ShiftSettingsDialog`)
 
-**Testy.** `e2e/shifts.spec.ts`, `e2e/touch-targets.spec.ts` (bez zmian, przechodzą).
+- **Stawka za godzinę** (zł, 0 = nie licz zarobku). Stawka rodzaju nadpisuje domyślną.
+- **System czasu pracy** (`workSystem`): `basic` — dobowy limit 8 h (art. 129 KP) albo `equivalent` — do 12 h wg grafiku (art. 135 KP).
+- **Okres rozliczeniowy** (`settlementMonths` 1, 2, 3, 4, 6, 12) i miesiąc startu (`settlementStart`), np. kwartały od lutego. Nadgodziny ponad normę rozlicza się w ostatnim miesiącu okresu.
+- **Etat** (`fte`, (0, 1]; norma proporcjonalna) i próg nadgodzin przy niepełnym etacie (`overtimeFrom`).
+- **Niedziela i święto** (`sundayFrom`, domyślnie 6:00 następnego dnia) i **pora nocna** (`nightFrom`: 21, 22 albo 23; trwa 8 h).
+- **Święta** (`polishHolidays`, wyliczenie Wielkanocy): dzień świąteczny wpływa na normę (`isNormDay`, `workNormMinutes`) i na dodatki.
 
-**Commit.** `6442da5` (2026-10-15).
+### Premie w rachunku
 
----
+- Premia jednorazowa w miesiącu (nazwa do 40 znaków, kwota brutto > 0 do 1 000 000 zł), do 500 na grafik.
+- Dolicza się do zarobku miesiąca, osobna linia „Premia: …” w rachunku, panel „Premie w tym miesiącu” z dodawaniem i usuwaniem (z „Cofnij”). Dodatek za nadgodziny liczy się bez premii.
+- Tylko kwota stała — brak premii procentowej, brak podatków i składek (kwota brutto, jak reszta zarobku).
+
+### Obraz miesiąca (PNG)
+
+- Przycisk „Obraz miesiąca (.png)”: siatka miesiąca (od poniedziałku), skróty i kolory rodzajów, podsumowanie (dni w pracy, godziny, nieobecności, zarobek brutto, jeśli jest stawka).
+- Na telefonie otwiera systemowe okno udostępniania z plikiem; gdy go nie ma, pobiera plik. Anulowanie okna nie jest błędem.
+- Obraz jest w jasnych kolorach, niezależnie od motywu. Tylko jeden miesiąc.
+
+### Wiele grafików
+
+- Przełącznik na górze widoku (`ScheduleSwitcher`): wybór, „Nowy grafik”, zmiana nazwy, usunięcie z potwierdzeniem. Grafik główny istnieje zawsze i nie da się go usunąć; maksymalnie 10 grafików.
+- Każdy grafik ma własne rodzaje, dni, cykle i premie. Widoki (dziś, tydzień, podsumowanie, eksporty) pokazują aktywny grafik.
+
+### Gdzie jest
+
+- **Model i czas:** `src/lib/shifts/model.ts` (`ShiftType`, `DayEntry`, `ShiftPattern`, `ShiftBonus`, `ShiftData`, `cleanBonus`, `migrate`, `DEFAULT_SHIFT_TYPES`, `DEFAULT_PATTERNS`), `time.ts` (minuty, noc, DST, `formatMoney`, `formatDuration`), `holidays.ts`, `color.ts` (`shiftInk` — kontrast tekstu na kolorze).
+- **Rachunek:** `summary.ts` (`monthSummary`, `dailyOvertimeSpans`, `premium100Minutes`, `shortRests`, `settlementPeriod`, `currentAndNextShift`), `leave.ts` (`leaveBalance`, `yearSummary`), `timesheet.ts`.
+- **Dane (Yjs):** `yShifts.ts` — `createYShifts(doc, scheduleId)`, mapy `shiftTypes`, `shiftDays`, `shiftPatterns`, `shiftBonuses`, `shiftMeta`, `shiftMigrations`; origin `SHIFTS_ORIGIN`. `schedules.ts` — rejestr grafików (`createScheduleRegistry`, `isScheduleId`, `cleanScheduleName`, `SCHEDULES_MAX` = 10).
+- **Store:** `store.ts` — `useShifts`, `useShiftsReady`, `setDayShift`, `setDayEntry`, `saveShiftType`, `deleteShiftType`, `savePattern`, `saveBonus`, `deleteBonus`, `setHourlyRate`, `setWorkSystem`, `setSettlementMonths`, `setFte`, `setLeaveDays`, `bindSchedule`, `createSchedule`, `renameSchedule`, `removeSchedule`, `mainShiftData`, `extraSchedulesDump`, `restoreExtraSchedule`, `restoreShifts`.
+- **Ruch i wyszukiwanie:** `move.ts` (`transferredEntry`, `planTransfer`, `planPaste`, `planWeekCopy`, `dayKeyCommand`), `searchDays.ts`, `focusDay.ts`, `eveningNudge.ts`, `pattern.ts`.
+- **Eksporty:** `ics.ts` (`buildShiftsIcs`, `exportableShiftDays`, `cancelledShiftDays`), `timesheet.ts`, `monthImage.ts` (układ, czysty), `monthImageDraw.ts` (canvas i udostępnianie, ładowane leniwie).
+- **Komponenty** (`src/components/shifts/`): `ShiftsView.tsx` (widok, `exportImage`, podpięcie przełącznika), `ShiftMonthGrid.tsx`, `ShiftWeekView.tsx`, `ShiftSummary.tsx` (`Receipt`, `BonusPanel`), `NowCard.tsx`, `DayDialog.tsx`, `ShiftTypeDialog.tsx`, `PatternDialog.tsx`, `ShiftSettingsDialog.tsx`, `YearSummaryDialog.tsx`, `BrushBar.tsx`, `BrushHours.tsx`, `ShiftDnd.tsx`, `TimeStepper.tsx`, `CountUp.tsx`, `ScheduleSwitcher.tsx`, `labels.ts`, `dayLabel.ts`.
+- **Kopia:** `src/lib/noteSchema.ts` (pola `shifts`, `shiftSchedules`), `src/lib/exportNotes.ts` (zapis w buildzie i przywracanie; grafik główny zastępuje, dodatkowe są dokładane).
+- **Podpięcie:** `src/pages/Index.tsx` (leniwy widok), `src/hooks/useFilteredNotes.ts`, `src/lib/viewRoute.ts`, pasek boczny, `BottomNav.tsx`, paleta poleceń. Telefon w poziomie: wariant `short:` w `tailwind.config.ts`.
+
+### Jak działa i dlaczego
+
+- **Dane w Yjs.** Grafik jest w dokumencie notatek, więc synchronizuje się między urządzeniami i wchodzi do pełnej kopii. Każdy dzień, rodzaj, cykl i premia to osobny klucz mapy: dwa telefony wpisujące różne dni scalają się bez strat.
+- **Zapis i odczyt przez `clean*` / `migrate`.** Złe rekordy od peera lub z kopii są odrzucane przy odczycie. `migrate` przyjmuje też dane sprzed `version: 2`.
+- **Migracja z localStorage.** Dawny zapis w `kaczy:shifts` jest przenoszony do dokumentu raz na urządzenie (znacznik `device` w dokumencie, nie w localStorage). Stary klucz zostaje jako kopia; uszkodzony zapis zostaje nietknięty i jest zgłaszany w logu.
+- **Stabilne odczyty.** `useShifts` i pochodne zwracają cache; zmiany powiadamiają przez `emitStore`.
+- **Wiele grafików.** Grafik główny używa dawnych nazw map (dane sprzed wprowadzenia grafików zostają na miejscu), pozostałe mają prefiks `id:`. Rejestr nazw jest w dokumencie; wybór aktywnego grafiku jest w localStorage tego urządzenia, bo to preferencja widoku. Jeśli zapamiętany grafik zniknął (usunięty na innym urządzeniu), wracamy do głównego (H1). Usunięcie czyści mapy w tej samej transakcji.
+- **Funkcje zamiast aliasów.** Eksporty store są funkcjami delegującymi do aktywnego grafiku, nie zamrożonymi referencjami — inaczej przepinanie grafiku nie działałoby.
+- **Zarobek.** Dodatki (nocne, niedziela, święto, ponad normę okresu) liczone w `summary.ts`; stawka okresowa dla dodatku to średnia z zarobku okresu i jego godzin (M6). Premie dolicza się na końcu, więc nie zmieniają dodatków.
+- **Eksport `.ics`.** Pamięta wysłane dni, żeby zmiany odwołane po stronie grafiku dostały anulowanie, a nie zostały w kalendarzu.
+
+### Ograniczenia i pułapki
+
+- Eksport `.ics`, karta czasu i obraz dotyczą aktywnego grafiku, tak jak widok.
+- Aktywny grafik nie jest synchronizowany między urządzeniami (każde ma swój wybór).
+- Kopia: przywrócenie grafiku głównego zastępuje go w całości; dodatkowe grafiki są tylko dokładane. Premie z kopii bez pola `bonuses` nie kasują premii na telefonie (M8).
+- Brak testu komponentu przełącznika grafików i brak testu przepinania przez store (pokryte przez e2e, do uruchomienia później).
+- Obraz miesiąca: rysowanie na canvasie nie ma testu jednostkowego (jsdom nie ma canvasa); sprawdzić na telefonie. Udostępnianie: `canvasToPng` jest synchroniczne, więc `navigator.share` jest wołane w tym samym kliknięciu.
+- Telefon w poziomie: zrzut `fullPage` w Playwright powiększa okno i wyłącza wariant `short:` — sprawdzaj zwykłym zrzutem 844×390.
+- Czytelność: strzałka nadgodzin i podpis pieczątki mają 11 px / 10 px (`text-2xs` jest najmniejszym tokenem; poniżej 11 px nieczytelne w słońcu).
+
+### Testy
+
+- `src/lib/shifts/shifts.test.ts`, `yShifts.test.ts` (mapy, migracje), `timesheet.test.ts`, `leave.test.ts`, `move.test.ts`, `searchDays.test.ts`, `eveningNudge.test.ts`.
+- `src/lib/shifts/bonus.test.ts` (6): czyszczenie, wpływ na zarobek co do grosza, migracja, Yjs (zapis, usunięcie, scalanie).
+- `src/lib/shifts/monthImage.test.ts` (5): początek tygodnia, skróty i kolory, dzień bez wpisu, tytuł i podsumowanie.
+- `src/lib/shifts/schedules.test.ts` (9): nazwy, nazewnictwo map, izolacja grafików, rejestr (sortowanie, główny nieusuwalny, usunięcie czyści dane, limit).
+- `src/lib/shifts/reviewFixes.test.ts` (3): `isScheduleId`, zaokrąglenie premii 0,004 vs 0,005, niezależność stawki okresowej.
+- `src/components/shifts/TimeStepper.test.tsx`.
+- E2E: `e2e/shifts.spec.ts`, `e2e/shifts-week.spec.ts`, `e2e/shifts-landscape.spec.ts`, `e2e/touch-targets.spec.ts`, `e2e/mobile-layout.spec.ts`. Z ostatnich zmian e2e nie uruchomiono.
+
+### Lint i budżet
+
+- `eslint.config.js`: `yShifts.ts` i jego testy, `schedules.ts` i test rejestru są na liście dozwolonych importów `yjs`.
+- Próg `eagerJsGzip` (393 KB). Ostatni pomiar po przeglądzie: 392,3 KB — niewiele zapasu, moduły grafiku są leniwe.
+
+### Commity
+
+- `6442da5` (2026-10-15) — czytelność drobnych znaczników.
+- `c8b9817` (2026-10-16) — przegląd po audycie z 2026-10-09 (część).
+- `370d656` (2026-10-20) — przegląd po audycie, dotyk pędzla 44 px.
+- `fcf76c1` (2026-10-20) — obraz miesiąca.
+- `520e47a` (2026-10-20) — premie w rachunku.
+- `cccd483` (2026-10-20) — wiele grafików.
+- `b779947` (2026-10-20) — poprawki z przeglądu (H1, M4–M6, M8, L12, L13, L14, L15).
+- `1380f10` (2026-10-20) — udostępnianie obrazu bez `await` (L14).
 
 ## Praca — nagłówek i tablica tematów
 
@@ -2094,66 +2181,52 @@ w portalu — w testach `page.getByRole("menuitem", …)`, nie wewnątrz okna.
 
 ---
 
-## Skrzynka — szybkie przechwycenie do posortowania (punkt 4 planu)
+## Skrzynka — stan aktualny (szybkie przechwycenie, prywatność)
 
-**Co robi.** Widok „Skrzynka” w pasku bocznym (licznik = liczba notatek do posortowania). Na górze pole:
-Enter zapisuje tekst od razu, bez tytułu, folderu i etykiet. Pierwsza linia staje się tytułem (do 120 znaków),
-reszta treścią. Dymek „Zapisano w skrzynce” ma „Cofnij”. Skrzynka pokazuje notatki bez folderu, bez etykiet
-i nie będące podnotatkami. Przeniesienie do folderu albo nadanie etykiety usuwa notatkę ze skrzynki.
+Dział opisany w jednym miejscu. Skrzynka to widok „do posortowania”: notatki bez folderu i bez etykiet.
 
-**Gdzie jest.**
-- `src/lib/inbox.ts`: `isInboxNote` (reguła), `captureParts` (tekst → tytuł i treść), `INBOX_TITLE_MAX`.
-- `src/components/InboxCapture.tsx`: pole na górze widoku, czyści się po zapisie.
-- `src/hooks/useFilteredNotes.ts`: typ `View` z `"inbox"`, filtr w `filterNotes`.
-- `src/lib/viewRoute.ts`: adres `/skrzynka`.
-- `src/components/EmptyState.tsx`: nagłówek i opis pustej skrzynki.
-- `src/components/sidebar/sidebarItems.ts`: pozycja „Skrzynka” z licznikiem; `src/pages/Index.tsx`: `inboxCount`, handler
-  `captureToInbox`, render `InboxCapture`.
+### Co robi
 
-**Jak działa i dlaczego.**
-- Brak nowego pola w danych: skrzynka to reguła nad istniejącymi notatkami. Nie trzeba migracji, synchronizacja
-  i kopia zapasowa działają bez zmian, a sortowanie od razu opróżnia skrzynkę.
-- Zapis idzie przez `handleAddNoteGlow`, tak jak w kompozytorze i udostępnianiu, więc widok `inbox` nie dokłada
-  folderu ani etykiety (`activeLabel` jest pusty poza widokiem etykiety).
-- Pole zapisuje się tylko dla niepustego tekstu; pusty Enter nic nie robi.
+- **Widok „Skrzynka”** w pasku bocznym, w palecie poleceń i w menu „Więcej” na telefonie. Licznik = liczba notatek do posortowania (na telefonie też na kafelku w „Więcej”).
+- **Szybkie przechwycenie.** Na górze widoku pole: Enter zapisuje tekst od razu, bez tytułu, folderu i etykiet. Pierwsza linia staje się tytułem (do 120 znaków), reszta treścią. Dymek „Zapisano w skrzynce” ma „Cofnij”. Pusty tekst nic nie robi. Pole czyści się po zapisie.
+- **Co jest w skrzynce:** aktywne notatki bez folderu, bez etykiet i nie będące podnotatkami. Przeniesienie do folderu albo nadanie etykiety usuwa notatkę ze skrzynki.
+- **Prywatność.** Notatka prywatna (zablokowana) nigdy nie trafia do skrzynki: ani na liście, ani w liczniku. Wcześniej prywatna notatka bez folderu i etykiet była liczona i pokazywana jako pusta karta.
 
-**Ograniczenia i pułapki.**
-- Notatki w koszu i archiwum nie są w skrzynce (reguła działa na aktywnych notatkach).
+### Gdzie jest
+
+- `src/lib/inbox.ts` — `isInboxNote` (reguła; warunek `!n.locked`), `captureParts` (tekst → tytuł i treść), `INBOX_TITLE_MAX`.
+- `src/components/InboxCapture.tsx` — pole na górze widoku.
+- `src/hooks/useFilteredNotes.ts` — typ `View` z `"inbox"`, filtr w `filterNotes`.
+- `src/lib/viewRoute.ts` — adres `/skrzynka`.
+- `src/components/EmptyState.tsx` — nagłówek i opis pustej skrzynki.
+- `src/components/sidebar/sidebarItems.ts` — pozycja „Skrzynka” z licznikiem.
+- `src/components/BottomNav.tsx` — prop `inboxCount`, kafelek „Skrzynka” w arkuszu „Więcej”, `inbox` w `isMoreActive`.
+- `src/components/CommandPalette.tsx` — wpis w palecie poleceń.
+- `src/pages/Index.tsx` — `inboxCount` (z notatek aktywnych), handler `captureToInbox`, render `InboxCapture`, przekazanie licznika do `BottomNav`.
+
+### Jak działa i dlaczego
+
+- **Bez nowego pola w danych.** Skrzynka to reguła nad istniejącymi notatkami. Nie trzeba migracji; synchronizacja i kopia działają bez zmian, a sortowanie od razu opróżnia skrzynkę.
+- **Zapis przez ten sam kanał co kompozytor.** Idzie przez `handleAddNoteGlow`, więc widok `inbox` nie dokłada folderu ani etykiety (`activeLabel` jest pusty poza widokiem etykiety).
+- **Prywatność przez regułę.** Zablokowana notatka odpada w `isInboxNote`, więc nie pojawia się ani na liście, ani w liczniku.
+
+### Ograniczenia i pułapki
+
+- Notatki w koszu i archiwum nie są w skrzynce (reguła działa na notatkach aktywnych).
 - Starsze notatki bez folderu i etykiet też trafiają do skrzynki. To zamierzone: to „do posortowania”.
-- Pasek „Zapisz notatkę…” nie pojawia się w skrzynce. Nowe notatki z szablonami robi się dalej w widoku Notatek.
-- Jest wpis „Skrzynka” w palecie poleceń (`CommandPalette.tsx`) i w menu „Więcej” na telefonie (od 2026-10-20, z licznikiem).
+- Pasek „Zapisz notatkę…” nie pojawia się w skrzynce. Nowe notatki z szablonami robi się w widoku Notatek.
+- Kafelek w arkuszu „Więcej” nie ma testu komponentu (brak testu `BottomNav`); sprawdza go e2e przy przeglądzie telefonu.
 
-## Skrzynka — prywatność i dostęp z telefonu (2026-10-20)
+### Testy
 
-- **Co robi.**
-  - Notatka prywatna (zablokowana) nigdy nie trafia do skrzynki: ani na liście, ani w liczniku. Wcześniej prywatna
-    notatka bez folderu i etykiet była liczona i pokazywana jako pusta karta.
-  - Na telefonie Skrzynka jest w menu „Więcej” (grupa „Przejdź do”) z licznikiem notatek do posortowania.
-    Pasek dolny zostaje bez zmian (miejsca jest mało).
-- **Gdzie jest.**
-  - `src/lib/inbox.ts` — `isInboxNote` z warunkiem `!n.locked`.
-  - `src/components/BottomNav.tsx` — prop `inboxCount`, kafelek „Skrzynka” w arkuszu „Więcej”, `inbox` w `isMoreActive`.
-  - `src/pages/Index.tsx` — `inboxCount={inboxCount}` przekazany do `BottomNav`.
-- **Testy.** `src/lib/inbox.test.ts` (9, w tym prywatność: zablokowana notatka poza skrzynką). Kafelka w arkuszu nie
-  testuje komponent (brak testu `BottomNav`); sprawdzi go e2e przy okazji przeglądu telefonu.
-- **Commit:** `ba47169` (2026-10-20, Skrzynka).
+- `src/lib/inbox.test.ts` (9) — reguła skrzynki, podział tekstu, prywatność (zablokowana notatka poza skrzynką).
+- `src/components/InboxCapture.test.tsx` — Enter, pusty tekst.
+- `e2e/inbox-today.spec.ts` — zapis, licznik w pasku, „Cofnij”, pusta skrzynka.
 
-## Grafik — przegląd po audycie z 2026-10-09 (2026-10-20)
+### Commity
 
-- **Co zrobiono.** Sprawdzono w kodzie punkty z audytu (`grafik-audyt`). Były już naprawione: nieobecność tylko w dni normy,
-  podpowiedź liczby mnogiej, walidacja stawki (`migrate`, `rate`), usuwanie rodzaju z potwierdzeniem i „Cofnij”, kontrast
-  (`shiftInk`), siatka `role=grid` i strzałki, okresy rozliczeniowe i dodatki, DST, `.ics` (`SEQUENCE`, `LAST-MODIFIED`, kolejność
-  właściwości), kopia uszkodzonych danych, zegar w e2e (`shifts.spec.ts`, `shifts-week.spec.ts`).
-  Synchronizacja między kartami działa: Grafik jest w dokumencie Yjs, a `startTabSync` przenosi cały dokument.
-- **Poprawka:** dwa przyciski pędzla godzin (`BrushHours.tsx`, „zmiana” i „dodaj”) miały 40 px na dotyku; teraz 44 px (`coarse:h-11`).
-- **Te trzy pozycje zostały zrobione tego samego dnia — patrz niżej (obraz, premie, wiele grafików).** Wcześniej było: udostępnienie grafiku jako obraz, premie w rachunku, wiele grafików (z listy konkurencji
-  w `roadmap.md`).
-- **Commit:** `370d656` (2026-10-20, Grafik — przegląd).
-
-**Testy.** `src/lib/inbox.test.ts` (reguła skrzynki, podział tekstu), `src/components/InboxCapture.test.tsx` (Enter,
-pusty tekst), `e2e/inbox-today.spec.ts` (zapis, licznik w pasku, „Cofnij”, pusta skrzynka).
-
-**Commit.** `c8b9817` (2026-10-16).
+- `c8b9817` (2026-10-16) — szybkie przechwycenie do posortowania.
+- `ba47169` (2026-10-20) — prywatność i dostęp z telefonu (`bcbe1be` — hash w `opis.md`).
 
 ## Dziś — karta zmiany, zaległe i terminy, powtórki (punkt 3 planu)
 
@@ -3447,14 +3520,6 @@ lub grupę”.
 - **Testy:** `src/lib/study/geo.test.ts`, `src/lib/study/study.test.ts` („Tu jestem”), e2e `journal-geo.spec.ts`.
 - **Commit:** brak — zmiany niezacommitowane.
 
-## Grafik — telefon w poziomie (plan mobilny M3.1, 2026-10-18)
-
-- **Co robi:** na niskim ekranie dotykowym w poziomie przełącznik „Miesiąc/Tydzień” i nawigacja miesiąca są w jednym rzędzie, paleta zmian w jednym przewijanym rzędzie, podpowiedzi o nanoszeniu i przenoszeniu schowane (zostają dla czytnika ekranu przez `aria-describedby`). Siatka miesiąca zaczyna się tuż pod paletą zamiast półtora ekranu niżej.
-- **Gdzie jest:** `tailwind.config.ts` (wariant `short:` — `(orientation: landscape) and (max-height: 500px) and (pointer: coarse)`); `src/components/shifts/ShiftsView.tsx` (`short:grid` z dwiema kolumnami, `short:col-span-2` na pozostałych sekcjach, `short:hidden` na podpowiedziach); `src/components/shifts/BrushBar.tsx` (`short:flex-nowrap!`).
-- **Ograniczenia i pułapki:** zrzut `fullPage` w Playwright powiększa wysokość okna i wyłącza wariant — sprawdzaj zwykłym zrzutem 844×390.
-- **Testy:** e2e `shifts-landscape.spec.ts` (Chromium, iPhone 14, Pixel 7), `mobile-layout.spec.ts`, `shifts*.spec.ts`.
-- **Commit:** brak — zmiany niezacommitowane.
-
 ## Wydajność — panel statusu synchronizacji leniwie (2026-10-18)
 
 - **Co robi:** panel po stuknięciu pigułki statusu zapisu (`OfflineQueuePanel`) ładuje się przy pierwszym otwarciu i zostaje zamontowany (animacja zamykania działa).
@@ -3540,29 +3605,70 @@ lub grupę”.
 - **Testy:** 1397 jednostkowych; e2e site-hours, report-nudge, weekly-review, today-study, bundle — 21/21.
 - **Commit:** zapisany poniżej.
 
-## Długi — pożyczki i spłaty (nowy dział, 2026-10-19)
+## Długi — stan aktualny (pożyczki i spłaty)
 
-- **Co robi:** zapisujesz, komu ile pożyczyłeś i ile już oddał. Góra: „Są nam winni” i „My jesteśmy winni”. Pod spodem lista osób z saldem i paskiem spłaty. Stuknięcie w osobę otwiera jej historię, z przyciskiem „Oddał całość” i usuwaniem wpisów (z „Cofnij”).
-- **Gdzie jest:**
-  - `src/components/debts/DebtsView.tsx` — widok: `Summary`, `AddForm` (rodzaj, osoba z podpowiedziami, kwota, dzień, „za co”), `People`, `PersonSheet`/`PersonHistory`.
-  - `src/lib/debts/model.ts` — czysty model: `cleanDebt`, `parseAmount`, `formatAmount`, `balances`, `totals`, `knownPeople`, `personKey`.
-  - `src/lib/debts/yDebts.ts` — `createYDebts(doc)`: mapa `debts` w Y.Doc (klucz = id wpisu).
-  - `src/lib/debts/store.ts` — `useDebts()` i akcje `addDebt`, `addDebtFromText`, `removeDebt`, `restoreDebt` na `yjsStore.doc`.
-  - Podpięcie: `hooks/useFilteredNotes.ts` (typ `View` = `"debts"`), `pages/Index.tsx` (leniwy widok, bez listy notatek i wyszukiwarki), `components/BottomNav.tsx` (kafel „Długi” w „Więcej”), `components/sidebar/sidebarItems.ts`, `components/CommandPalette.tsx`, `components/AppHeader.tsx` (tytuł), `lib/viewRoute.ts` (adres `/dlugi`).
-- **Jak działa:**
-  - Każdy wpis to osobny klucz mapy Yjs, więc dwa telefony dopisujące pożyczki scalają się bez strat (jak Grafik i listy budowy).
-  - Kwoty w groszach (liczby całkowite). `parseAmount` przyjmuje „1 234,5”, „1234.50”, „80”; odrzuca zero, litery, więcej niż dwa miejsca po przecinku i ponad 1 000 000 zł.
-  - Saldo osoby = pożyczki − spłaty. Dodatnie: jest nam winna. Ujemne: my jesteśmy winni (tylko gdy ktoś oddał więcej, niż pożyczył). Osoby grupowane bez względu na wielkość liter („Anna” = „anna”). Kolejność: nam winni, my winni, rozliczeni.
-  - Po zapisie zostaje osoba i data, czyszczona jest kwota i notatka, a fokus wraca do pola kwoty. Komunikat „Cofnij” usuwa właśnie dodany wpis.
-  - „Oddał całość” dodaje wpis spłaty na pełne saldo.
-- **Ograniczenia i pułapki:**
-  - Tylko dwa rodzaje: „Pożyczyłem” i „Oddał mi”. Nie ma jeszcze zapisu długu wobec innych osób (pożyczyłeś od kogoś).
-  - Limit 2000 wpisów (`DEBT_MAX_ENTRIES`), 40 znaków na osobę, 200 na notatkę.
-  - Nieprawidłowe wpisy od peera są pomijane po cichu przy odczycie (`cleanDebt`).
-  - Waluta to zawsze złote (zł).
-  - Dane są w dokumencie notatek, więc idą z synchronizacją i z kopią pełną. Nie są w eksporcie tylko Nauki/Grafiku, bo ich tam nie ma.
-- **Testy:** `src/lib/debts/model.test.ts` (kwoty, czyszczenie, salda, sortowanie), `src/lib/debts/yDebts.test.ts` (scalanie dwóch dokumentów, usunięcie i przywrócenie, śmieci od peera, powiadomienia). Ręcznie sprawdzone w przeglądarce na szerokości telefonu: zapis, saldo i „Cofnij”.
-- **Commit:** 94434d5, 2026-10-19.
+Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie rozliczenia, poprawka L9) są uwzględnione.
+
+### Co robi
+
+- **Widok.** Góra: „Są nam winni” i „My jesteśmy winni”. Pod spodem lista osób z saldem i paskiem spłaty. Stuknięcie w osobę otwiera arkusz z historią.
+- **Cztery rodzaje wpisu** (siatka 2×2 w formularzu):
+  - „Pożyczyłem” (`lent`) — ta osoba jest nam winna (+).
+  - „Oddał mi” (`repaid`) — spłata od tej osoby (−).
+  - „Pożyczyłem od” (`borrowed`) — my jesteśmy winni (−).
+  - „Oddałem” (`returned`) — spłata z naszej strony (+).
+  
+  Jedna osoba może mieć długi w obie strony. Saldo to suma znaków; dodatnie = jest nam winna, ujemne = my jesteśmy winni.
+- **Formularz dodawania:** rodzaj, osoba (z podpowiedziami z wcześniejszych wpisów), kwota, dzień, „za co”. Po zapisie zostaje osoba i data, czyszczona jest kwota i notatka, fokus wraca do kwoty. „Cofnij” w toście usuwa właśnie dodany wpis.
+- **Oddał całość / Oddałem całość.** Dodaje wpis wyrównujący saldo do zera. Toast ma „Cofnij”, które usuwa ten wpis.
+- **Historia osoby.** Lista wpisów z usuwaniem (z „Cofnij”, które przywraca wpis z tym samym id i datą) i edycją.
+- **Edycja wpisu.** Ołówek przy wpisie otwiera `EditDebtForm` w miejscu: rodzaj, osoba, kwota, dzień, notatka. Zapis zachowuje id i datę dodania. Zła kwota blokuje zapis z komunikatem.
+- **Kopia zapasowa.** Pożyczki są w pełnej kopii. Przywracanie tylko dodaje brakujące wpisy (po id), niczego nie kasuje i nie nadpisuje wpisu o tym samym id, który już jest na telefonie.
+
+### Gdzie jest
+
+- `src/lib/debts/model.ts` — czysty model: `DebtKind`, `DEBT_KINDS`, `KIND_SIGN`, `DebtEntry`, `cleanDebt`, `normalizeName`, `personKey` (grupowanie bez wielkości liter), `parseAmount`, `formatAmount`, `byNewest`, `balances`, `totals`, `knownPeople`. Stałe: `DEBT_MAX_ENTRIES` 2000, `DEBT_PERSON_MAX` 40, `DEBT_NOTE_MAX` 200, `DEBT_MAX_AMOUNT` 100 000 000 gr (1 000 000 zł).
+- `src/lib/debts/yDebts.ts` — `createYDebts(doc)`: mapa Y `debts` (klucz = id wpisu), origin `DEBTS_ORIGIN`. `get`, `add`, `remove`, `restore`, `replace` (zmiana w miejscu), `dump`, `mergeDump`.
+- `src/lib/debts/store.ts` — `useDebts()`, `addDebt`, `addDebtFromText`, `removeDebt`, `restoreDebt`, `updateDebt` (przez `cleanDebt`), `debtsDump`, `mergeDebtsDump`. Działają na `yjsStore.doc`.
+- `src/components/debts/DebtsView.tsx` — `Summary`, `AddForm`, `People`, `PersonSheet`, `PersonHistory` (historia, „Oddał całość”, cofnięcie), `EditDebtForm`.
+- **Podpięcie:** `src/hooks/useFilteredNotes.ts` (typ `View` = `"debts"`), `src/pages/Index.tsx` (leniwy widok, bez listy notatek i wyszukiwarki), `src/components/BottomNav.tsx` (kafel „Długi” w „Więcej”), `src/components/sidebar/sidebarItems.ts`, `src/components/CommandPalette.tsx`, `src/components/AppHeader.tsx` (tytuł), `src/lib/viewRoute.ts` (adres `/dlugi`).
+- **Kopia:** `src/lib/noteSchema.ts` (pole `debts` w `fullBackupSchema`), `src/lib/exportNotes.ts` (zapis w `buildFullBackupWithReport`, scalanie w `restoreFullBackup`, przez dynamiczny import).
+
+### Jak działa i dlaczego
+
+- **Klucz na wpis.** Każdy wpis to osobny klucz mapy Yjs, więc dwa telefony dopisujące pożyczki scalają się bez strat. Ten sam wpis edytowany równocześnie wygrywa w całości.
+- **Kwoty w groszach** (liczby całkowite). `parseAmount` przyjmuje „1 234,5”, „1234.50”, „80”; odrzuca zero, litery, więcej niż dwa miejsca po przecinku i ponad 1 000 000 zł.
+- **Saldo i kolejność.** Saldo osoby = suma `KIND_SIGN × kwota`. Kolejność: nam winni, my winni, rozliczeni. Osoby grupowane bez względu na wielkość liter („Anna” = „anna”).
+- **Nieprawidłowe wpisy od peera** są pomijane po cichu przy odczycie (`cleanDebt` zwraca `null`).
+- **Usuwanie uszkodzonego wpisu.** `remove` kasuje też wpis, którego `cleanDebt` nie przepuszcza. Inaczej zajmowałby miejsce w limicie 2000 (L9).
+- **Waluta.** Zawsze złote (zł).
+- **Scalanie kopii.** Przywrócona kopia nie kasuje długów. Wpis usunięty na jednym telefonie wróci, jeśli przywracamy kopię sprzed usunięcia — tak samo jak w pozostałych działach.
+
+### Ograniczenia i pułapki
+
+- Zmiana imienia w edycji przenosi wpis do innej osoby (grupowanie po nazwie).
+- Długi są w dokumencie notatek, więc idą z synchronizacją i z pełną kopią; nie ma ich w eksporcie tylko Nauki lub Grafiku, bo tam ich nie ma.
+- Nie ma zapisu długu w innej walucie.
+
+### Testy
+
+- `src/lib/debts/model.test.ts` — kwoty, czyszczenie, znaki salda dla czterech rodzajów, sortowanie.
+- `src/lib/debts/yDebts.test.ts` — scalanie dwóch dokumentów, usunięcie i przywrócenie, śmieci od peera, powiadomienia.
+- `src/lib/debts/yDebts.edit.test.ts` — `replace` i scalanie z kopii bez nadpisania.
+- `src/components/debts/DebtsView.test.tsx` — podsumowanie, pusta lista, edycja kwoty (ten sam id i grosze), zła kwota, zmiana rodzaju, „Oddał całość”.
+- `src/lib/fullBackup.test.ts` — długi w kopii, przywracanie scala.
+- Ręcznie w przeglądarce na szerokości telefonu: zapis, saldo, „Cofnij”, cztery rodzaje, „Oddałem całość”.
+
+### Lint
+
+- `eslint.config.js`: `src/lib/debts/yDebts.ts` i testy Długów są na liście dozwolonych importów `yjs`.
+
+### Commity
+
+- `94434d5` (2026-10-19) — dział Długi.
+- `dada7f1` (2026-10-19) — rodzaje „Pożyczyłem od” i „Oddałem”.
+- `011be10` (2026-10-20) — kopia zapasowa, edycja wpisu, cofnięcie rozliczenia.
+- `1b8bcf8` (2026-10-20) — poprawka L9 (usuwanie uszkodzonego wpisu).
 
 ## Wspólne — arkusz „Nowa” z przycisku „+” (wygląd i opisy)
 
@@ -3686,14 +3792,6 @@ lub grupę”.
 - **Jak działa:** na tych trzech widokach jedyny widoczny h1 to blok tytułowy. Nagłówek go ukrywa (`hidden` usuwa też z drzewa dostępności), więc czytnik ekranu nie widzi dwóch nagłówków poziomu 1.
 - **Decyzja:** B4 z planu wizualnego (`docs/plan-wizualny-2026-10-18.md`) zrobiony jako dom tytułu z datą. Nie dodano innych widoków.
 - **Testy:** w Chrome (390 px): na /dzis, /praca, /grafik jeden widoczny h1 z właściwą nazwą i wiersz z datą. E2E `routes`, `shifts`: 32/33 (jeden test offline Grafiku niestabilny pod obciążeniem, przechodzi osobno).
-- **Commit:** dada7f1, 2026-10-19.
-
-## Długi — rodzaje „Pożyczyłem od” i „Oddałem” (2026-10-19)
-
-- **Co robi:** cztery rodzaje wpisu: „Pożyczyłem” i „Oddał mi” (jak dotąd) oraz „Pożyczyłem od” i „Oddałem”. Jedna osoba może mieć długi w obie strony. Saldo to: pożyczyłem (+), oddał mi (−), pożyczyłem od (−), oddałem (+). Dodatnie saldo: ta osoba jest nam winna. Ujemne: my jesteśmy winni i pojawia się przycisk „Oddałem całość”.
-- **Gdzie jest:** `src/lib/debts/model.ts` (`DebtKind`, `DEBT_KINDS`, `KIND_SIGN`, `balances`, `cleanDebt`), `src/components/debts/DebtsView.tsx` (wybór rodzaju w siatce 2×2, ikony i kolory według znaku, `PersonHistory`).
-- **Kompatybilność:** stare wpisy („lent”, „repaid”) bez zmian, saldo liczone tak samo.
-- **Testy:** `src/lib/debts/model.test.ts` (znak salda dla nowych rodzajów, czyszczenie). W Chrome: cztery rodzaje w wyborze, „Pożyczyłem od 120” daje sumę „My jesteśmy winni” 120,00 zł, saldo ujemne i „Oddałem całość”. Vitest 1427/1427.
 - **Commit:** dada7f1, 2026-10-19.
 
 ## Przypomnienia — jedno odpalenie zaległej serii (krok 1 planu kalendarza/przypomnień, 2026-10-19)
@@ -3940,86 +4038,76 @@ lub grupę”.
   - Nagrywania w przeglądarce (mikrofon) nie testowano e2e — brak fake mikrofonu w zestawie; wymaga ręcznego sprawdzenia na telefonie.
 - **Commit:** 5581ece, 2026-10-19; poprawka raportu kopii f6867bd, 2026-10-19.
 
-## Ustawienia — dopracowanie, faza 1 (2026-10-19, cb2ecff)
+## Ustawienia — stan aktualny (okno, karty, reset, linki, zgoda na dyktowanie)
 
-- **Co robi:** okno Ustawienia (cztery karty: Wygląd, Ogólne, Dane, Sync) jest bardziej bezpieczne i dostępne. Reset „Przywróć domyślne” w Wyglądzie i „Zapomnij i zacznij od nowa” w Sync pytają najpierw o potwierdzenie. Reset nadal kasuje cały widok (decyzja właściciela), a potwierdzenie wymienia, co wróci do domyślnych, i czego reset nie dotyczy. Przełączniki mają nazwę dla czytników ekranu. Opis okna nie obiecuje już, że wszystko działa tylko w tej przeglądarce.
-- **Gdzie jest:**
-  - `src/components/SettingsDialog.tsx` — opis okna; szkielet zamiast pustego ekranu przy ładowaniu karty Sync.
-  - `src/components/settings/AppearanceSettings.tsx` — reset z `AlertDialog` (`resetOpen`), treść potwierdzenia.
-  - `src/components/SyncSettings.tsx` — „Zapomnij” z `AlertDialog` (`forgetOpen`); nazwa dla przełącznika synchronizacji i przycisku kopiowania kodu.
-  - `src/components/settings/SettingsShared.tsx` — `ToggleRow` łączy etykietę z przełącznikiem (`useId` + `aria-labelledby`); tytuł sekcji to `h3`.
-  - `src/components/settings/GeneralSettings.tsx` — kolory: `aria-label` po polsku (`COLOR_LABEL`) i `aria-pressed`; suwak autosave ma nazwę; przycisk „Test” na dotyku 44 px.
-  - `src/components/settings/BackupSettings.tsx` — nazwy suwaków kopii i przypomnień, pól godziny i dnia; linki „wyczyść”/„wyłącz” na dotyku 44 px.
-  - `src/components/ui/switch.tsx`, `tabs.tsx`, `slider.tsx` — cele dotyku 44 px na dotyku (przełącznik przez pseudo-element, bez zmiany wyglądu); `Slider` przekazuje `aria-label` do kciuka.
-  - `src/lib/viewPrefs.ts`, `effectsSettings.ts`, `confirmPrefs.ts` — `merge` wraca do domyślnych, gdy zapis nie jest obiektem (np. uszkodzony JSON).
-- **Jak działa i dlaczego:**
-  - Uszkodzony zapis: `persistedStore` przy błędnym JSON przekazuje surowy tekst do `merge`. Wcześniej `{...defaults, ...stored}` rozsypywało znaki tekstu w klucze „0”, „1”… w stanie. Teraz domyślne wartości wracają w całości. Domyślne wartości przeżywały wcześniej, więc to nie była utrata danych.
-  - Reset zostaje pełny (decyzja „Wszystko”): potwierdzenie jest tekstem listy, żeby było widać, co dokładnie zniknie.
-- **Ograniczenia i pułapki:**
-  - Cele dotyku dla przełącznika są powiększone pseudo-elementem tylko na dotyku; wizualnie przełącznik się nie zmienił.
-  - Nazwy kolorów są po polsku w kodzie (`COLOR_LABEL`); dodanie koloru wymaga wpisu.
-  - Nie sprawdzono QA na telefonie (zakładki, dotyk, klawiatura) — zgodnie z decyzją, później.
-- **Testy:**
-  - `src/lib/settingsPrefs.test.ts` — uszkodzony JSON i tekst zamiast obiektu w `viewPrefs`, częściowy zapis, reset, `confirmPrefs` (domyślne, uszkodzony JSON, zapis jednego klucza), `normalizePushServer` (ukośnik, http dla zdalnego hosta, localhost, pusty tekst).
-  - E2e (chromium, 106 testów): `mobile`, `skins`, `clipper`, `push`, `diagnostics`, `sync-code`, `search-backup`, `private-notes`, `shifts`, `a11y`, `toggle-group`, `site-mode`, `card-motion` — zielone.
-- **Commit:** cb2ecff, 2026-10-19.
+Dział opisany w jednym miejscu; obejmuje fazy 1–3 planu z 2026-10-19 i zgodę na dyktowanie z 2026-10-20.
 
-## Ustawienia — struktura, faza 2 (2026-10-19, 430379d)
+### Co robi
 
-- **Co robi:** cztery karty zostają, ale rozłożone inaczej. Karta „Dane” nazywa się „Kopia i dane”. Przypomnienia „Dziś” i „Ten tydzień” są w Ogólne, obok przeglądu tygodnia. Synchronizacja przez plik jest w karcie Sync, obok parowania. Efekty i zabawa są w Wyglądzie. Ogólne ma sekcję „Praca i Grafik” z przyciskiem „Ustawienia Grafiku”. Przypomnienie o kopii zostaje w karcie Kopii.
-- **Gdzie jest:**
-  - `src/components/SettingsDialog.tsx` — nazwa karty „Kopia i dane” (zakładki na wiele wierszy, `h-auto`); `SyncFileSection` w karcie Sync; usunięta niekontrolowana gałąź `trigger`, prop `open`/`onOpenChange` wymagane.
-  - `src/components/settings/GeneralSettings.tsx` — przypomnienia „Dziś”/„Ten tydzień” po `<ReviewSettings />`; `WorkSettingsLink` (sekcja „Praca i Grafik”, otwiera `ShiftSettingsDialog`); efekty usunięte stąd.
-  - `src/components/settings/EffectsSettings.tsx` (nowy) — sekcja „Efekty i zabawa” i `previewEffect`, przeniesione z Ogólne.
-  - `src/components/settings/AppearanceSettings.tsx` — renderuje `EffectsSettings` przed resetem.
-  - `src/components/settings/SyncFileSection.tsx` (nowy) — „Synchronizacja przez plik” i jej obsługa (`exportSyncNow`, `mergeSyncNow`, `newNotesLabel`), przeniesione z `BackupSettings.tsx`.
-  - `src/components/settings/BackupSettings.tsx` — bez sekcji przypomnień Dziś/Ten tydzień i bez synchronizacji pliku; używa `LAST_AUTO_EXPORT_KEY`.
-  - `src/lib/backupReminder.ts` — `LAST_AUTO_EXPORT_KEY`, jedna stała dla klucza ostatniej kopii.
-  - `src/lib/viewPrefs.ts` — domyślny `weekReminderDay` to 0 (niedziela), tak jak dzień przeglądu tygodnia.
-- **Jak działa i dlaczego:**
-  - Przypomnienia „Dziś”/„Ten tydzień” to ustawienia powiadomień, nie kopii, więc są razem z przeglądem tygodnia. Przypomnienie o kopii zostaje w Kopii, bo mierzy czas od ostatniego backupu.
-  - Synchronizacja przez plik jest w karcie Sync, bo to też synchronizacja między urządzeniami.
-  - Efekty przeniesione do Wyglądu zamiast trzeciej karty: pięć kart na telefonie nie mieści się w jednym wierszu.
-  - Domyślny dzień przypomnienia ustawiono na niedzielę, bo przegląd tygodnia ma niedzielę. To zmienia tylko nowe ustawienia; zapisane dni zostają.
-- **Ograniczenia i pułapki:**
-  - Istniejące kopie i zapisane ustawienia nie zmieniają się. Zmienia się tylko domyślny dzień, gdy użytkownik nigdy nie ustawił godziny.
-  - E2e szukające karty „Dane” — `mobile.spec.ts` używa teraz „Kopia i dane”; testy synchronizacji pliku (`file-sync`, `live-text`, `live-text-focused`, `images`) otwierają kartę Sync.
-  - Nie zrobiono fazy 3 (reset per sekcja, linki `?settings=`). Wyszukiwanie ustawień odrzucone decyzją właściciela.
-  - QA na telefonie nie sprawdzono (zgodnie z decyzją, później). Szczególnie: zakładka „Kopia i dane” zawija się na wąskim ekranie.
-- **Testy:**
-  - `src/lib/settingsPrefs.test.ts` — domyślny dzień tygodnia to 0.
-  - Pełny e2e chromium: 386/386 zielone.
-- **Commit:** 430379d, 2026-10-19.
+- **Okno Ustawień** ma cztery karty: **Wygląd**, **Ogólne**, **Kopia i dane**, **Sync**. Na telefonie zakładki zawijają się na wiele wierszy.
+  - **Wygląd:** motyw i skórka, efekty i zabawa (`EffectsSettings`), globalny reset.
+  - **Ogólne:** edytor (autosave), przypomnienia „Dziś” i „Ten tydzień” (obok przeglądu tygodnia), sekcja „Praca i Grafik” z przyciskiem „Ustawienia Grafiku” (`ShiftSettingsDialog`), sekcja „Dyktowanie głosem”.
+  - **Kopia i dane:** kopia zapasowa, przypomnienie o kopii (mierzy czas od ostatniej kopii), automatyczne kopie.
+  - **Sync:** parowanie urządzeń, kody, „Zapomnij”, synchronizacja przez plik (`SyncFileSection`).
+- **Opis okna** nie obiecuje, że wszystko działa tylko w tej przeglądarce.
+- **Reset „Przywróć domyślne” w Wyglądzie** kasuje cały widok (decyzja właściciela: „Wszystko”). Potwierdzenie to lista tego, co wróci do domyślnych, i tego, czego reset nie dotyczy. Lista zmian liczona jest z aktualnego stanu przy każdym renderze.
+- **Reset w sekcji.** W Ogólne (edytor, przypomnienia) i w Kopii i danych jest przycisk „Przywróć domyślne w tej sekcji”. Wyłącza się, gdy nic w sekcji nie różni się od domyślnych; potwierdzenie wymienia tylko ustawienia, które faktycznie się zmienią (np. „Zmienią się: autosave”).
+- **Link do karty** `?settings=wyglad|ogolne|kopia|sync` otwiera Ustawienia na tej karcie i znika z adresu. Nieznana wartość nie otwiera okna. Działa przy otwieraniu aplikacji i przy zmianie adresu w otwartym oknie; nie zmienia otwartej aplikacji, jeśli adres zmieni się bez przeładowania.
+- **Zgoda na dyktowanie głosem** (Ogólne → „Dyktowanie głosem”): pokazuje stan zgody i przycisk „Cofnij zgodę”. Po cofnięciu następne dyktowanie znowu pyta o zgodę. Nie rusza uprawnienia mikrofonu w przeglądarce.
+- **Dostępność.** Przełączniki mają nazwy dla czytników ekranu (`ToggleRow` łączy etykietę z przełącznikiem przez `useId` i `aria-labelledby`); kolory mają polskie `aria-label` (`COLOR_LABEL`) i `aria-pressed`; suwak autosave i suwaki kopii mają nazwy; pola godziny i dnia też.
+- **Cele dotyku 44 px** na dotyku dla przełączników, zakładek, suwaka i przycisków „Test”, „wyczyść”, „wyłącz”. Przełącznik powiększa pseudo-element tylko na dotyku; wygląd się nie zmienił.
 
-## Ustawienia — reset per sekcja i linki, faza 3 (2026-10-19, 842db18)
+### Gdzie jest
 
-- **Co robi:**
-  - Reset per sekcja: w Ogólne (edytor, przypomnienia) i w Kopii jest przycisk „Przywróć domyślne w tej sekcji”. Wyłącza się, gdy nic w sekcji nie różni się od domyślnych. Potwierdzenie wymienia tylko ustawienia, które faktycznie się zmienią, np. „Zmienią się: autosave”.
-  - Globalny reset w Wyglądzie też wymienia zmiany zamiast ogólnego opisu.
-  - Link `?settings=wyglad|ogolne|kopia|sync` otwiera Ustawienia na tej karcie. Parametr znika z adresu. Nieznana wartość nie otwiera okna.
-- **Gdzie jest:**
-  - `src/lib/viewPrefs.ts` — `VIEW_PREF_GROUPS` (grupy kluczy, rozłączne), `VIEW_PREF_LABELS` (nazwy po polsku), `changedViewPrefs(keys)` (co różni się od domyślnych), `resetViewPrefKeys(keys)` (reset tylko podanych kluczy).
-  - `src/components/settings/SettingsShared.tsx` — `ResetSectionButton({ title, keys })`: przycisk i potwierdzenie.
-  - `src/components/settings/GeneralSettings.tsx` — przyciski „edytor” (po autosave) i „przypomnienia” (po Ten tydzień).
-  - `src/components/settings/BackupSettings.tsx` — przycisk „kopia”, przed wskazówką.
-  - `src/components/settings/AppearanceSettings.tsx` — globalny reset z listą zmian.
-  - `src/lib/settingsDeepLink.ts` — `SETTINGS_PARAM`, `SETTINGS_TABS` (polskie nazwy → karty), `settingsTabFromParam`.
-  - `src/components/SettingsDialog.tsx` — efekt czytający `?settings=` (obok `?pair=`).
-  - `src/pages/Index.tsx` — stan początkowy `settingsOpen` otwiera okno dla poprawnego `?settings=`.
-- **Jak działa i dlaczego:**
-  - Grupy są rozłączne i testowane — każdy klucz ma dokładnie jeden reset per sekcja.
-  - Wygląd nie ma resetu per sekcja: jego globalny reset już wymienia zmiany, więc drugi przycisk byłby zbędny. Sortowanie i filtry są tylko w globalnym resecie, bo ustawia je arkusz widoku.
-  - Lista zmian liczona z aktualnego stanu, przy każdym renderze — potwierdzenie nigdy nie pokazuje zmian, których już nie ma.
-  - Nazwy w linkach po polsku, ale bez znaków spoza ASCII, żeby dały się wkleić w wiadomości.
-- **Ograniczenia i pułapki:**
-  - Reset per sekcja nie obejmuje ustawień poza `viewPrefs` (efekty, potwierdzenia, sejf, push, skórka).
-  - Link działa przy otwieraniu aplikacji i przy zmianie adresu w otwartym oknie. Nie zmienia otwartej już aplikacji, jeśli adres zmieni się bez przeładowania.
-  - Wyszukiwanie ustawień nie jest zrobione (decyzja właściciela).
-- **Testy:**
-  - `src/lib/settingsPrefs.test.ts` — `changedViewPrefs`, `resetViewPrefKeys` (tylko podane klucze), rozłączność grup i etykiety.
-  - `src/lib/settingsDeepLink.test.ts` — mapowanie nazw, nieznane i puste wartości, nazwy z prototypu.
-  - `e2e/settings-links.spec.ts` — `?settings=kopia` otwiera kartę i czyści adres; nieznana karta nie otwiera okna; reset w sekcji zmienia tylko edytor (auto-backup zostaje).
-- **Commit:** 842db18 (2026-10-20)
+- `src/components/SettingsDialog.tsx` — okno, karty, opis, szkielet przy ładowaniu karty Sync, efekt czytający `?settings=` (obok `?pair=`). Prop `open` / `onOpenChange` wymagany; niekontrolowana gałąź `trigger` usunięta.
+- `src/components/settings/AppearanceSettings.tsx` — globalny reset (`resetOpen`, `AlertDialog`) z listą zmian; renderuje `EffectsSettings` przed resetem.
+- `src/components/settings/EffectsSettings.tsx` — sekcja „Efekty i zabawa” i `previewEffect`.
+- `src/components/settings/GeneralSettings.tsx` — przypomnienia po `<ReviewSettings />`, `WorkSettingsLink`, `DictationConsentRow`, przyciski resetu „edytor” i „przypomnienia”.
+- `src/components/settings/BackupSettings.tsx` — kopia i jej przypomnienie, przycisk resetu „kopia”; używa `LAST_AUTO_EXPORT_KEY`.
+- `src/components/settings/SyncFileSection.tsx` — „Synchronizacja przez plik” (`exportSyncNow`, `mergeSyncNow`, `newNotesLabel`).
+- `src/components/SyncSettings.tsx` — „Zapomnij” z `AlertDialog` (`forgetOpen`); nazwy przełącznika synchronizacji i przycisku kopiowania kodu.
+- `src/components/settings/SettingsShared.tsx` — `ToggleRow`, `ResetSectionButton({ title, keys })`, tytuł sekcji jako `h3`.
+- `src/lib/viewPrefs.ts` — `VIEW_PREF_GROUPS` (rozłączne grupy kluczy), `VIEW_PREF_LABELS` (nazwy po polsku), `changedViewPrefs(keys)`, `resetViewPrefKeys(keys)`; domyślny `weekReminderDay` = 0 (niedziela).
+- `src/lib/settingsDeepLink.ts` — `SETTINGS_PARAM`, `SETTINGS_TABS` (polskie nazwy → karty), `settingsTabFromParam`. `src/pages/Index.tsx` ustawia stan początkowy `settingsOpen` dla poprawnego parametru.
+- `src/lib/effectsSettings.ts`, `src/lib/confirmPrefs.ts`, `src/lib/viewPrefs.ts` — `merge` wraca do domyślnych, gdy zapis nie jest obiektem.
+- `src/lib/backupReminder.ts` — `LAST_AUTO_EXPORT_KEY` (jedna stała dla klucza ostatniej kopii).
+- `src/components/ui/switch.tsx`, `tabs.tsx`, `slider.tsx` — cele dotyku; `Slider` przekazuje `aria-label` do kciuka.
+- `src/hooks/useDictation.ts` — `hasDictationConsent()`, `withdrawDictationConsent()` (używane też w `toggle`).
+
+### Jak działa i dlaczego
+
+- **Uszkodzony zapis.** `persistedStore` przy błędnym JSON przekazuje surowy tekst do `merge`. Wcześniej `{...defaults, ...stored}` rozsypywało znaki tekstu w klucze „0”, „1”… w stanie. Teraz wracają wartości domyślne w całości.
+- **Reset pełny w Wyglądzie, cząstkowy w sekcjach.** Grupy są rozłączne, więc każdy klucz ma dokładnie jeden reset per sekcja. Wygląd nie ma resetu per sekcja, bo globalny już wymienia zmiany. Sortowanie i filtry są tylko w globalnym resecie, bo ustawia je arkusz widoku.
+- **Przypomnienia „Dziś”/„Ten tydzień”** są w Ogólne, bo to ustawienia powiadomień, nie kopii. Przypomnienie o kopii zostaje w Kopii, bo mierzy czas od ostatniej kopii.
+- **Synchronizacja przez plik** jest w Sync, bo to też synchronizacja między urządzeniami.
+- **Efekty w Wyglądzie** zamiast piątej karty: pięć kart na telefonie nie mieści się w jednym wierszu.
+- **Domyślny dzień przeglądu tygodnia** to niedziela. Zmienia tylko nowe ustawienia; zapisane dni zostają.
+- **Nazwy w linkach** są po polsku, bez znaków spoza ASCII, żeby dały się wkleić w wiadomości.
+- **Zgoda na dyktowanie** to osobny stan, wycofywany z Ustawień; mikrofon w przeglądarce zarządza przeglądarka.
+
+### Ograniczenia i pułapki
+
+- Reset per sekcja nie obejmuje ustawień spoza `viewPrefs` (efekty, potwierdzenia, sejf, push, skórka).
+- Istniejące kopie i zapisane ustawienia się nie zmieniają; zmienia się tylko domyślny dzień przeglądu, gdy użytkownik nigdy nie ustawił godziny.
+- Nazwy kolorów są po polsku w kodzie (`COLOR_LABEL`); nowy kolor wymaga wpisu.
+- Zakładka „Kopia i dane” może się zawijać na wąskim ekranie — QA na telefonie nie zrobiono.
+- **Wyszukiwanie ustawień nie jest zrobione** (decyzja właściciela — odrzucone).
+- Porządki: usunięto nieużywane eksporty `getEffectsSettings`, `getSeasonPref`, `getBadgeEnabled`, `getAutoLockMinutes`. Klucz `kaczy.lastAutoExport` jest jedną stałą.
+
+### Testy
+
+- `src/lib/settingsPrefs.test.ts` — uszkodzony JSON i tekst zamiast obiektu, częściowy zapis, reset, `confirmPrefs`, `normalizePushServer`, `changedViewPrefs`, `resetViewPrefKeys` (tylko podane klucze), rozłączność grup i etykiety, domyślny dzień tygodnia.
+- `src/lib/settingsDeepLink.test.ts` — mapowanie nazw, nieznane i puste wartości, nazwy z prototypu.
+- `src/hooks/useDictation.consent.test.ts` (2) — zgoda i jej cofnięcie.
+- E2E: `e2e/settings-links.spec.ts` (link otwiera kartę i czyści adres; nieznana karta nie otwiera okna; reset w sekcji zmienia tylko edytor), `mobile.spec.ts` (karta „Kopia i dane”), `file-sync`, `live-text`, `live-text-focused`, `images` (karta Sync), `skins`, `clipper`, `push`, `diagnostics`, `sync-code`, `search-backup`, `private-notes`, `a11y`, `toggle-group`, `site-mode`, `card-motion`. Pełne e2e z 2026-10-19 było zielone (386/386) przed fazą 3 i zmianami z 2026-10-20 — nieuruchomione od tamtego czasu.
+
+### Commity
+
+- `cb2ecff` (2026-10-19) — faza 1: potwierdzenia resetu i zapomnienia, dostępność.
+- `430379d` (2026-10-19) — faza 2: struktura kart, „Kopia i dane”.
+- `842db18` (2026-10-19 / 2026-10-20) — faza 3: reset per sekcja i linki `?settings=`.
+- `c2eeb7f` (2026-10-20) — zgoda na dyktowanie i porządki.
+- `ed7d2ce` — hash w `opis.md`.
 
 ## Synchronizacja — urządzenia w grupie i nazwy, faza 4 planu synchronizacji (2026-10-20, 842db18)
 
@@ -4179,255 +4267,111 @@ lub grupę”.
 - **Ograniczenia i pułapki:** porównanie obejmuje też lokalne edycje od ostatniego zdalnego zapisu, więc przy kilku zmianach naraz tytuł może wskazać lokalną notatkę. Toast nadal co 30 s, tak jak wcześniej.
 - **Testy:** e2e pełny przebieg 393/393. `src/lib/yjsSync.test.ts` przechodzi bez zmian (25/25). Sam toast nie ma testu jednostkowego; do sprawdzenia na dwóch urządzeniach.
 
-## Ćwiczenia — odżywki: lista, dzienne odhaczenia, przypomnienie (plan Ćwiczeń, krok 1, 2026-10-20)
+## Ćwiczenia — stan aktualny (odżywki, dieta, trening)
 
-- **Co robi.** Osobna pozycja „Ćwiczenia” w menu, na pasku dolnym (w „Więcej”), w palecie poleceń i w pasku bocznym.
-  Dział ma kartę „Odżywki”: lista pogrupowana rano / w ciągu dnia / wieczorem, każdą pozycję odhacza się na dziś
-  (licznik „dziś N z M”). Pusta lista ma przycisk „Dodaj kreatynę (rano, 1 łyżka)”, który od razu tworzy przypomnienie
-  o 7:30. Formularz: nazwa, dawka, pora, „Przypominaj codziennie o” z godziną (domyślnie 7:30 / 12:00 / 20:00 wg pory).
+Dział opisany w jednym miejscu; zmiany z przeglądu L1–L20 są już uwzględnione.
+
+### Co robi
+
+- **Wejście.** Osobna pozycja „Ćwiczenia” w menu, na pasku dolnym (w „Więcej”), w palecie poleceń i w pasku bocznym.
+- **Odżywki** (karta na górze). Lista pogrupowana rano / w ciągu dnia / wieczorem; każdą pozycję odhacza się na dziś (licznik „dziś N z M”).
+  Pusta lista ma przycisk „Dodaj kreatynę (rano, 1 łyżka)”, który od razu tworzy przypomnienie o 7:30.
+  Formularz: nazwa, dawka, pora, „Przypominaj codziennie o” z godziną (domyślnie 7:30 / 12:00 / 20:00 wg pory).
   Usunięcie z „Cofnij”, które przywraca odżywkę i jej przypomnienie z kosza.
-- **Gdzie jest.**
-  - `src/lib/supplements/model.ts` — typy `Supplement`, `SupplementWhen`, `cleanSupplement` (wejście z dokumentu, kopii i peera),
-    `logKey` / `parseLogKey` (klucz odhaczenia `dzień|id`), `bySupplementOrder`. Przypomnienie „HH:MM” liczy `nextReminderAt` z `src/lib/timeOfDay.ts` (wspólne z Treningiem).
-  - `src/lib/supplements/ySupplements.ts` — `createYSupplements(doc)`: mapy Y `supplements` (id → odżywka) i `supplementLog`
-    (`dzień|id` → true), origin `SUPPLEMENTS_ORIGIN`, `dump()` / `mergeDump()` do kopii. `getGoals()` zwraca zamrożony obiekt z cache (stabilny dla `useSyncExternalStore`); `restore` pilnuje limitu `DIET_MAX_MEALS` (ponad limit posiłek nie wchodzi, zwraca `false`).
-  - `src/lib/supplements/store.ts` — hooki `useSupplements()`, `useSupplementsTaken()` i akcje `addSupplement`,
-    `removeSupplement`, `restoreSupplement`, `setSupplementTaken`, `supplementDump`, `mergeSupplementDump`.
-  - `src/components/cwiczenia/CwiczeniaView.tsx` — widok, `createSupplement` (dodaje odżywkę i notatkę-przypomnienie),
-    `deleteSupplement`, `removeWithUndo`, `AddSupplementForm`.
-  - Podłączenie działu: `src/hooks/useFilteredNotes.ts` (typ `View` i brak listy notatek), `src/hooks/useSelectionGestures.ts`,
-    `src/lib/viewRoute.ts` (`/cwiczenia`), `src/components/sidebar/sidebarItems.ts`, `src/components/BottomNav.tsx`,
-    `src/components/CommandPalette.tsx`, `src/components/AppHeader.tsx`, `src/components/EmptyState.tsx`, `src/pages/Index.tsx`
-    (leniwy import i render w `ViewErrorBoundary`).
-  - Kopia: `src/lib/noteSchema.ts` (pole `supplements`, zod), `src/lib/exportNotes.ts` (zapis w `buildFullBackupWithReport`,
-    scalanie w `restoreFullBackup`, oba przez dynamiczny import, żeby nie dokładać do paczki startowej).
-- **Jak działa i dlaczego.**
-  - Dane są w tym samym dokumencie Yjs co notatki, więc działają synchronizacja między urządzeniami, kopia i plik.
-    Każda odżywka i każde odhaczenie to osobny klucz mapy — dwa telefony dopisujące różne pozycje scalają się bez strat.
-    Wzór jak w Długach (`src/lib/debts/yDebts.ts`).
-  - Odhaczenie to wpis `dzień|id` w `supplementLog`. Odznaczenie kasuje wpis, a usunięcie odżywki kasuje wszystkie
-    jej odhaczenia w tej samej transakcji (nie zostają osierocone).
-  - Przypomnienie to zwykła notatka z `reminder` o najbliższej godzinie i `reminderRepeat: "daily"` — tym samym mechanizmem co
-    Przypomnienia (powiadomienia, „Dziś”, serie). Id notatki zapisane w odżywce (`reminderNoteId`), żeby usunięcie
-    odżywki mogło przenieść przypomnienie do kosza. Zapis odrzucony (np. pełna lista) sprząta świeżo utworzoną notatkę.
-  - Zapis i odczyt przechodzą przez `cleanSupplement`: zła godzina albo id nie wejdą do dokumentu.
-  - Kopia: przywracanie tylko **scala** (dodaje brakujące odżywki i odhaczenia, niczego nie kasuje). Odżywka dodana
-    na telefonie po wykonaniu kopii zostaje po przywróceniu.
-- **Ograniczenia i pułapki.**
-  - Przypomnienie jest w dwóch miejscach: odżywka odhacza się w Ćwiczeniach, a przycisk „Gotowe” w Przypomnieniach
-    przesuwa tylko serię tej notatki. Odhaczenie w Ćwiczeniach nie zamyka przypomnienia, i odwrotnie.
-  - Odhaczenia nie są przywracane przez „Cofnij” przy usunięciu odżywki (świadomie: dzienny stan jest zbędny po usunięciu).
-  - Notatka-przypomnienie jest zwykłą notatką: widać ją na liście notatek i w koszu. Nie ukrywamy jej, żeby nie
-    dublować mechanizmu Przypomnień.
-  - Trening i dieta jeszcze nie istnieją (kolejne kroki planu).
-  - Kopia: sekcja `supplements` jest opcjonalna; plik sprzed tej zmiany przywraca się bez zmian.
-- **Testy.**
-  - `src/lib/supplements/model.test.ts` (czyszczenie, klucze, kolejność, przypomnienie; `nextReminderAt` testuje z `lib/timeOfDay.ts`).
-  - `src/lib/supplements/ySupplements.test.ts` (dodawanie, duplikaty, odhaczenia, usuwanie z odhaczeniami, śmieci od peera, origin).
-  - `src/components/cwiczenia/CwiczeniaView.test.tsx` (pusty stan, grupy i postęp, odhaczenie, formularz, przypomnienie
-    i sprzątanie po odrzuconym zapisie). Magazyn i notatki podmienione atrapami.
-  - `src/lib/fullBackup.test.ts` (odżywki w kopii, przywracanie scala bez kasowania).
-  - `src/test/setup.ts` — stub `ResizeObserver` dla komponentów Radix (Checkbox), którego jsdom nie ma.
-  - Vitest: 186 plików, 1663 testów zielone. E2E nie uruchamiano (zgodnie z ustaleniem: pełne e2e później).
-- **Budżet paczki.** Wejściowy JS 390,1 KB gzip (było 390; nowe ikony w menu i kopia). Próg podniesiony do 392 KB
-  w `e2e/bundle.spec.ts` z datowanym komentarzem.
-- **Lint.** `eslint.config.js`: `src/lib/supplements/ySupplements.ts` i jego test na liście dozwolonych importów `yjs`,
-  tak jak `yStudy.ts`. (`src/lib/debts/yDebts.ts` importuje `yjs` bez wpisu na liście — istniejące naruszenie, nie ruszane.)
-- **Commit:** `cd83ffc` (2026-10-20, krok 1 planu Ćwiczeń: odżywki).
-
-## Ćwiczenia — dieta: posiłki, kalorie i białko, cele dzienne (plan Ćwiczeń, krok 3, 2026-10-20)
-
-- **Co robi.** Na stronie Ćwiczeń, pod odżywkami, karta „Dieta”:
-  - **Dziś:** suma kcal i białka z dzisiejszych posiłków, z celem (jeśli ustawiony) i liczbą posiłków bez wartości.
-  - **Lista posiłków dnia** wg godziny (bez godziny na końcu). Usuwanie z „Cofnij”.
-  - **Dodawanie:** opis, godzina (domyślnie teraz), kalorie i białko (oba opcjonalne). Nie-liczba lub wartość poza zakresem
-    blokuje przycisk i oznacza pole jako niepoprawne.
-  - **Cele dzienne:** kcal i białko, puste = bez celu.
-  - **Ostatnie 7 dni:** dzień (DD.MM), suma kcal i białka; dni bez posiłków to „—”.
-- **Gdzie jest.**
-  - `src/lib/diet/model.ts` — `Meal`, `DietGoals`, `cleanMeal`, `cleanGoals`, `cleanAmount`, `byMealOrder`, `summarizeDay`,
-    `summarizeRange(meals, endDay, days, addDays)` (funkcja dat wstrzykiwana, żeby model był czysty).
-  - `src/lib/diet/yDiet.ts` — `createYDiet(doc)`: mapa Y `dietMeals` (id → posiłek), `dietMeta` (`goals`), origin `DIET_ORIGIN`,
-    `dump()` / `mergeDump()` do kopii.
-  - `src/lib/diet/store.ts` — hooki `useMeals()`, `useDietGoals()` i akcje `addMeal`, `removeMeal`, `restoreMeal`,
-    `setDietGoals`, `dietDump`, `mergeDietDump`.
-  - `src/components/cwiczenia/DietSection.tsx` — sekcja (podsumowanie, lista, formularze, tydzień). Podpięta w
-    `src/components/cwiczenia/CwiczeniaView.tsx`.
-  - Kopia: `src/lib/noteSchema.ts` (pole `diet`), `src/lib/exportNotes.ts` (zapis w buildzie, scalanie w przywracaniu,
-    dynamiczny import).
-- **Jak działa i dlaczego.**
-  - Ten sam wzorzec co odżywki: dane w dokumencie Yjs (synchronizacja, kopia, plik), jeden klucz na posiłek,
-    więc dwa telefony dopisujące posiłki scalają się bez strat. Zapis przechodzi przez `cleanMeal`, odczyt też.
-  - Sumy liczą tylko podane wartości; posiłek bez kalorii jest na liście i w liczniku posiłków, ale nie zaniża sumy
-    (pokazujemy, ile takich jest, żeby sumę dało się ocenić).
-  - Cele są jednym kluczem `goals` w osobnej mapie; zapis celów nadpisuje wartość na tym telefonie.
-  - Dzień to lokalny `localDayKey()`; posiłki z przyszłych dni nie są ukrywane (wpis „wczoraj” jest możliwy tylko przez dzień,
-    nie przez czas — dodawanie z innym dniem jest w modelu, ale formularz zawsze używa dziś).
-- **Ograniczenia i pułapki.**
-  - Brak bazy produktów i brak liczenia kalorii z gramatury — wartości wpisujesz ręcznie. Świadomie: bez zewnętrznych danych.
-  - Limit opisu 200 znaków, kcal do 10 000, białko do 1 000 g na posiłek; wartości są zaokrąglane do całości.
-  - Lista posiłków w dokumencie ma limit 5 000 wpisów.
-  - Przywracanie kopii scala (dodaje brakujące posiłki, niczego nie kasuje). Cele z kopii trafiają tylko wtedy,
-    gdy na telefonie celów nie ma.
-  - Usunięty posiłek przywracany przez „Cofnij” zachowuje id i godzinę.
-- **Testy.**
-  - `src/lib/diet/model.test.ts` (czyszczenie, zakresy, kolejność, sumy dnia i zakresu).
-  - `src/lib/diet/yDiet.test.ts` (dodawanie, duplikaty, usunięcie i cofnięcie, cele, origin, scalanie bez kasowania).
-  - `src/components/cwiczenia/DietSection.test.tsx` (pusty dzień, sumy i brak kalorii, dodawanie, walidacja pola, cele).
-  - `src/lib/fullBackup.test.ts` (posiłki i cele w kopii, przywracanie scala).
-  - Vitest: 189 plików, 1683 testy zielone. E2E nie uruchamiano (pełne e2e później, zgodnie z ustaleniem).
-- **Budżet paczki.** Wejściowy JS 390,3 KB gzip; próg 392 KB (ustawiony w kroku odżywek).
-- **Lint.** `eslint.config.js`: `src/lib/diet/yDiet.ts` i jego test na liście dozwolonych importów `yjs`, jak odżywki.
-- **Commit:** `ccce384` (2026-10-20, krok 3 planu Ćwiczeń: dieta).
-
-## Ćwiczenia — trening: katalog, dziennik serii, progres, plany dni (plan Ćwiczeń, kroki 4–5, 2026-10-20)
-
-- **Co robi.** Na stronie Ćwiczeń karta „Trening” (nad dietą):
-  - **Plan dni:** lista dni z ćwiczeniami i celem (np. „Klatka · 3 × 10”). Dodawanie: nazwa, ćwiczenia z katalogu
-    (do 12), cel serii i powtórek. Usuwanie z „Cofnij”.
-  - **Zapis treningu:** wybór ćwiczenia z katalogu (pogrupowane: klatka, biceps, triceps), wskazówka wykonania,
-    3 serie na start (dodawanie do 30). Każda seria: powtórki (całkowite, 1–100) i ciężar w kg (co 0,5, opcjonalny).
-    Uwagi (≤200 znaków). Zapis w bieżącej godzinie, dziś.
+- **Trening** (karta, nad dietą):
+  - **Plan dni:** lista dni z ćwiczeniami i celem (np. „Klatka · 3 × 10”). Dodawanie: nazwa, ćwiczenia z katalogu (do 12), cel serii i powtórek. Usuwanie z „Cofnij”.
+  - **Zapis treningu:** wybór ćwiczenia z katalogu (pogrupowane: klatka, biceps, triceps), wskazówka wykonania, 3 serie na start (do 30).
+    Każda seria: powtórki (całkowite, 1–100) i ciężar w kg (co 0,5, opcjonalny). Uwagi do 200 znaków. Zapis w bieżącej godzinie, dziś.
   - **Wybór dnia planu** nad formularzem: ustawia pierwsze ćwiczenie dnia i tyle serii, ile zaplanowano, z celem powtórek.
   - **Przerwa:** po zapisie serii licznik 1:30 („Pomiń” kończy wcześniej). Na końcu krótka wibracja (`haptic("success")`).
-  - **Sprzęt:** największy ciężar hantli (kg). Ciężar powyżej tego limitu w ćwiczeniu z hantlami pokazuje ostrzeżenie
-    (zapis nadal możliwy).
+  - **Sprzęt:** największy ciężar hantli (kg). Ciężar powyżej tego limitu w ćwiczeniu z hantlami pokazuje ostrzeżenie (zapis nadal możliwy).
+    „Usuń limit” czyści ustawienie. Zapis wymaga wartości > 0.
   - **Wykres progresu:** przy ćwiczeniu z co najmniej dwiema sesjami z ciężarem — sparklajn (SVG) rekordów kolejnych sesji.
   - **Przypomnienie o treningu:** pole wyboru i godzina (domyślnie 18:00, okno do 20:00). Tworzy notatkę z dziennym powtarzaniem.
   - **Podpowiedź:** „Ostatnio (DD.MM): 10×20 kg, 8×22 kg” i przycisk „Użyj ostatnich”, który wypełnia serie.
   - **Dziś:** dzisiejsze wpisy z sumą serii i objętością (suma powtórek × kg).
   - **Progres:** per ćwiczenie — rekord ciężaru (kg, dzień) i liczba sesji.
-- **Katalog startowy** (`src/lib/training/catalog.ts`): klatka (wyciskanie hantli na płaskiej i skosie, rozpiętki),
-  biceps (uginanie ze sztangielkami, młotkowe, na ławce skośnej), triceps (wyprost nad głową, w opadzie,
-  prostowanie leżąc). Każde ćwiczenie ma sprzęt (`ławka`, `hantle`) i krótką wskazówkę. Treść do sprawdzenia przez właściciela.
-- **Gdzie jest.**
+  - Katalog startowy: klatka (wyciskanie hantli na płaskiej i skosie, rozpiętki), biceps (uginanie ze sztangielkami, młotkowe, na ławce skośnej), triceps (wyprost nad głową, w opadzie, prostowanie leżąc). Treść wskazówek do sprawdzenia przez właściciela.
+- **Dieta** (karta na dole):
+  - **Dziś:** suma kcal i białka z dzisiejszych posiłków, z celem (jeśli ustawiony) i liczbą posiłków bez wartości.
+  - **Lista posiłków dnia** wg godziny. Usuwanie z „Cofnij”.
+  - **Dodawanie:** opis, godzina (domyślnie teraz), kalorie i białko (oba opcjonalne). Nie-liczba lub wartość poza zakresem blokuje przycisk i oznacza pole.
+  - **Cele dzienne:** kcal i białko, puste = bez celu.
+  - **Ostatnie 7 dni:** dzień (DD.MM), suma kcal i białka; dni bez posiłków to „—”.
+
+### Gdzie jest
+
+- **Odżywki:**
+  - `src/lib/supplements/model.ts` — `Supplement`, `SupplementWhen`, `cleanSupplement` (wejście z dokumentu, kopii i peera), `logKey` / `parseLogKey` (klucz `dzień|id`), `bySupplementOrder`.
+  - `src/lib/timeOfDay.ts` — `nextReminderAt(hhmm, now)`: najbliższy moment „HH:MM” (dziś, a jeśli minął — jutro). Wspólne dla Odżywek i Treningu.
+  - `src/lib/supplements/ySupplements.ts` — `createYSupplements(doc)`: mapy Y `supplements` (id → odżywka) i `supplementLog` (`dzień|id` → true), origin `SUPPLEMENTS_ORIGIN`, `dump()` / `mergeSupplementDump`.
+  - `src/lib/supplements/store.ts` — `useSupplements()`, `useSupplementsTaken()`, `addSupplement`, `removeSupplement`, `restoreSupplement`, `setSupplementTaken`, `supplementDump`, `mergeSupplementDump`.
+  - `src/components/cwiczenia/CwiczeniaView.tsx` — widok, `createSupplement` (odżywka + notatka-przypomnienie), `deleteSupplement`, `removeWithUndo`, `AddSupplementForm`.
+- **Dieta:**
+  - `src/lib/diet/model.ts` — `Meal`, `DietGoals`, `cleanMeal`, `cleanGoals`, `cleanAmount`, `byMealOrder`, `summarizeDay`, `summarizeRange(meals, endDay, days, addDays)` (funkcja dat wstrzykiwana, model czysty).
+  - `src/lib/diet/yDiet.ts` — `createYDiet(doc)`: mapa `dietMeals` (id → posiłek), `dietMeta` (`goals`), origin `DIET_ORIGIN`. `getGoals()` zwraca zamrożony obiekt z cache (stabilny dla `useSyncExternalStore`). `restore` pilnuje limitu `DIET_MAX_MEALS` (ponad limit posiłek nie wchodzi, zwraca `false`).
+  - `src/lib/diet/store.ts` — `useMeals()`, `useDietGoals()`, `addMeal`, `removeMeal`, `restoreMeal`, `setDietGoals`, `dietDump`, `mergeDietDump`.
+  - `src/components/cwiczenia/DietSection.tsx` — sekcja (podsumowanie, lista, formularze, tydzień).
+- **Trening:**
   - `src/lib/training/catalog.ts` — `EXERCISES`, `MUSCLE_GROUPS`, `exerciseById`, `isKnownExercise`.
-  - `src/lib/training/model.ts` — `TrainingSet`, `TrainingEntry`, `PlanDay`, `cleanKg`, `cleanSet`, `cleanEntry`,
-    `cleanPlanDay`, `bestKg`, `volumeOf`, `byTrainingTime`, `progressByExercise`, `planLine`.
-  - `src/lib/training/yTraining.ts` — `createYTraining(doc)`: mapy Y `trainingLog` (id → wpis) i `trainingPlans`
-    (id → plan), origin `TRAINING_ORIGIN`, `dump()` / `mergeDump()` do kopii.
-  - `src/lib/training/store.ts` — hooki `useTrainingEntries()`, `useTrainingPlans()` i akcje `addTrainingEntry`,
-    `removeTrainingEntry`, `restoreTrainingEntry`, `addPlanDay`, `removePlanDay`, `restorePlanDay`, `trainingDump`,
-    `mergeTrainingDump`.
-  - `src/components/cwiczenia/TrainingSection.tsx` — karta (plany, formularz zapisu, dziś, progres, formularz planu).
-  - Kopia: `src/lib/noteSchema.ts` (pole `training`), `src/lib/exportNotes.ts` (zapis w buildzie, scalanie w przywracaniu).
-- **Jak działa i dlaczego.**
-  - Ten sam wzorzec co odżywki i dieta: dane w dokumencie Yjs, jeden klucz na wpis i na plan, więc dwa telefony
-    scalają się bez strat. Zapis i odczyt przechodzą przez `cleanEntry` / `cleanPlanDay`; obce ćwiczenie odrzuca cały wpis.
-  - Rekord ciężaru bierze najcięższą serię z całej historii i zapisuje dzień, w którym ją zrobiono. Ostatnia sesja
-    to ostatni wpis tego ćwiczenia w kolejności dzień → godzina → czas dodania.
-  - Plany nie zmieniają dziennika: usunięcie dnia planu zostawia wpisy treningu.
-  - Kopia scala (dodaje brakujące wpisy i plany, nic nie kasuje).
-- **Ograniczenia i pułapki.**
-  - Wpisy zawsze na dziś (formularz nie wybiera daty), tak jak w diecie.
-  - Wybór dnia planu tylko ustawia ćwiczenie i liczbę serii (cel powtórek); ciężary wpisujesz ręcznie.
-  - Przerwa (licznik 1:30) startuje po każdym zapisie serii, tylko na tym ekranie; nie zapisuje się w danych.
-  - Wibracja tylko tam, gdzie przeglądarka ma `navigator.vibrate` (Android); na iPhonie i na komputerze jej nie będzie.
-    Respektuje przełącznik „Wibracje na telefonie” w ustawieniach efektów.
-  - Wykres to sparklajn bez osi i dat — pokazuje kierunek, nie wartości; dokładne liczby są w „rekord … kg”.
-  - Przypomnienie o treningu: domyślnie 18:00, opis podaje okno do 20:00. Zmiana godziny lub wyłączenie
-    sprząta poprzednią notatkę (idzie do kosza). Przypomnienie to notatka z dziennym powtarzaniem, jak kreatyna.
-  - Ciężar co 0,5 kg; powtórki tylko całkowite; limit 5 000 wpisów treningu i 20 planów.
-- **Testy.**
-  - `src/lib/training/model.test.ts` (katalog, czyszczenie serii i wpisów, plany, rekord, objętość, progres, kolejność).
-  - `src/lib/training/yTraining.test.ts` (dodawanie, usuwanie i cofnięcie, plany, origin, scalanie).
-  - `src/lib/training/reminder.test.ts` (domyślna godzina, czyszczenie przypomnienia, zapis i scalanie z kopii,
-    stabilny odczyt dla `useSyncExternalStore`).
-  - `src/lib/training/equipment.test.ts` (limit hantli, ostrzeżenie, rekordy kolejnych sesji dla wykresu).
-  - `src/components/cwiczenia/TrainingSection.test.tsx` (pusty plan, zapis serii, walidacja ułamków,
-    „Użyj ostatnich”, dziś i progres).
-  - `src/lib/fullBackup.test.ts` (trening i plany w kopii, przywracanie scala).
-  - Vitest: 194 pliki, 1723 testy zielone. E2E nie uruchamiano.
-- **Budżet paczki.** Wejściowy JS 390,4 KB gzip; próg 392 KB.
-- **Lint.** `eslint.config.js`: `src/lib/training/yTraining.ts` i jego testy na liście dozwolonych importów `yjs`.
-- **Commit:** `c7736f0` (kroki 4–5 planu Ćwiczeń: trening), `9d8e57e` (przypomnienie o treningu, przerwa i wybór dnia planu),
-  oraz `22e2495` (wibracja, sprzęt, wykres progresu i poprawka stabilnego odczytu ustawień, 2026-10-20).
+  - `src/lib/training/model.ts` — `TrainingSet`, `TrainingEntry`, `PlanDay`, `TrainingReminder`, `TrainingEquipment`, `cleanKg`, `cleanSet`, `cleanEntry`, `cleanPlanDay`, `cleanTrainingReminder`, `cleanEquipment`, `overDumbbell`, `bestKg`, `bestKgSeries`, `volumeOf`, `byTrainingTime`, `progressByExercise`, `planLine`.
+  - `src/lib/training/yTraining.ts` — `createYTraining(doc)`: mapy `trainingLog` (id → wpis) i `trainingPlans` (id → plan); meta `reminder` i `equipment` (typ `unknown`, odczyt przez `metaSnapshot` z cache). Origin `TRAINING_ORIGIN`. `setReminder` czyści przez `cleanTrainingReminder`. `mergeDump(raw, hasNote?)`.
+  - `src/lib/training/store.ts` — `useTrainingEntries()`, `useTrainingPlans()`, `addTrainingEntry`, `removeTrainingEntry`, `restoreTrainingEntry`, `addPlanDay`, `removePlanDay`, `restorePlanDay`, `trainingDump`, `mergeTrainingDump(raw, hasNote?)`.
+  - `src/components/cwiczenia/TrainingSection.tsx` — karta: `TrainingReminderControl`, `EquipmentForm`, `LogForm`, `RestTimer` (`REST_SECONDS` = 90), `ProgressList` ze `Sparkline`, formularz planu.
+- **Kopia:** `src/lib/noteSchema.ts` (pola `supplements`, `diet`, `training` w `fullBackupSchema`, zod z `.catch(undefined)`), `src/lib/exportNotes.ts` (zapis w `buildFullBackupWithReport`, scalanie w `restoreFullBackup`; oba przez dynamiczny import, żeby nie dokładać do paczki startowej).
+- **Podłączenie działu:** `src/hooks/useFilteredNotes.ts` (typ `View`), `src/hooks/useSelectionGestures.ts`, `src/lib/viewRoute.ts` (`/cwiczenia`), `src/components/sidebar/sidebarItems.ts`, `src/components/BottomNav.tsx`, `src/components/CommandPalette.tsx`, `src/components/AppHeader.tsx`, `src/components/EmptyState.tsx`, `src/pages/Index.tsx` (leniwy import, render w `ViewErrorBoundary`).
 
-## Długi — kopia zapasowa, edycja wpisu, cofnięcie rozliczenia (2026-10-20)
+### Jak działa i dlaczego
 
-- **Co robi.**
-  - **Kopia zapasowa:** pożyczki są w pełnej kopii (wcześniej nie były — przywrócenie kopii mogło je zgubić).
-    Przywracanie tylko dodaje brakujące wpisy (po id), niczego nie kasuje i nie nadpisuje wpisu o tym samym id.
-  - **Edycja wpisu:** ołówek przy wpisie w historii osoby otwiera formularz w miejscu: rodzaj, osoba, kwota, dzień, notatka.
-    Zapis zachowuje id i datę dodania. Zła kwota blokuje zapis z komunikatem.
-  - **Cofnięcie rozliczenia:** „Oddał całość” / „Oddałem całość” ma teraz „Cofnij” w toście, który usuwa wpis wyrównujący saldo.
-- **Gdzie jest.**
-  - `src/lib/debts/yDebts.ts` — `replace(entry)` (zmiana w miejscu), `dump()`, `mergeDump(raw)`.
-  - `src/lib/debts/store.ts` — `updateDebt(entry)` (przez `cleanDebt`), `debtsDump()`, `mergeDebtsDump(raw)`.
-  - `src/components/debts/DebtsView.tsx` — `EditDebtForm`, przycisk edycji w `PersonHistory`, cofnięcie w `settle`.
-  - Kopia: `src/lib/noteSchema.ts` (pole `debts`), `src/lib/exportNotes.ts` (zapis w buildzie, scalanie w przywracaniu).
-- **Ograniczenia i pułapki.**
-  - Zmiana imienia w edycji przenosi wpis do innej osoby (grupowanie po nazwie bez wielkości liter).
-  - Saldo jest liczone na podstawie wpisów; przy kopii scalanej z innego telefonu wpis usunięty na jednym telefonie
-    wróci przy przywracaniu kopii sprzed usunięcia (tak samo jak we wszystkich działach — scalanie, bez kasowania).
-  - Kwota w groszach, limit 1 000 000 zł na wpis, 2000 wpisów.
-- **Testy.**
-  - `src/components/debts/DebtsView.test.tsx` (6): podsumowanie, pusta lista, edycja kwoty (ten sam id i grosze), zła kwota,
-    zmiana rodzaju, „Oddał całość”.
-  - `src/lib/debts/yDebts.edit.test.ts` (2): `replace` i scalanie z kopii bez nadpisania.
-  - `src/lib/fullBackup.test.ts`: długi w kopii, przywracanie scala.
-- **Lint.** `eslint.config.js`: `src/lib/debts/yDebts.ts` i testy Długów na liście dozwolonych importów `yjs`
-  (dawne naruszenie lintu w tym module jest zamknięte).
-- **Commit:** `011be10` (2026-10-20, Długi).
+- **Dane w Yjs.** Wszystkie trzy części są w tym samym dokumencie co notatki: działają synchronizacja, kopia i plik. Każda odżywka, posiłek, wpis treningu i plan to osobny klucz mapy, więc dwa telefony dopisujące różne pozycje scalają się bez strat. Zapis i odczyt przechodzą przez `clean*`; zła wartość nie wejdzie do dokumentu.
+- **Odhaczenia.** Odhaczenie to wpis `dzień|id`. Odznaczenie kasuje wpis; usunięcie odżywki kasuje wszystkie jej odhaczenia w tej samej transakcji.
+- **Przypomnienie (odżywki i trening).** To zwykła notatka z `reminder` o najbliższej godzinie i `reminderRepeat: "daily"` — ten sam mechanizm co Przypomnienia (powiadomienia, „Dziś”, serie). Id notatki zapisane w odżywce (`reminderNoteId`), żeby usunięcie odżywki mogło przenieść przypomnienie do kosza. Zapis odrzucony (np. pełna lista) sprząta świeżo utworzoną notatkę. Zmiana godziny lub wyłączenie treningu sprząta poprzednią notatkę.
+- **Rekord i progres.** Rekord ciężaru to najcięższa seria z całej historii, z dniem jej wykonania. Ostatnia sesja to ostatni wpis ćwiczenia w kolejności dzień → godzina → czas dodania.
+- **Plany.** Nie zmieniają dziennika: usunięcie dnia planu zostawia wpisy treningu.
+- **Dieta — sumy.** Liczą tylko podane wartości; posiłek bez kalorii jest na liście i w liczniku, ale nie zaniża sumy.
+- **Cele diety.** Jeden klucz `goals`; zapis celów nadpisuje wartość na tym telefonie.
+- **Kopia — scalanie.** Przywracanie tylko dodaje brakujące odżywki, odhaczenia, posiłki, wpisy i plany; niczego nie kasuje. Cele diety z kopii trafiają tylko, gdy na telefonie celów nie ma. Przypomnienie treningu wraca tylko, gdy istnieje jego notatka (`hasNote`). Odżywka dodana na telefonie po wykonaniu kopii zostaje.
+- **Stabilny odczyt.** Hooki zwracają obiekty z cache, bo `useSyncExternalStore` przy każdym odczycie porównuje referencje. Brak tego cache powodował błąd `/cwiczenia` (commit `68ac7d9`).
+- **Dzień.** Lokalny `localDayKey()`. Formularze wpisów (dieta, trening) zawsze używają dziś.
 
-## Grafik — obraz miesiąca do udostępnienia (2026-10-20, fcf76c1)
+### Ograniczenia i pułapki
 
-- **Co robi.** Przycisk „Obraz miesiąca (.png)” w widoku Grafiku: PNG z siatką miesiąca (od poniedziałku), skrótami
-  i kolorami rodzajów zmian oraz podsumowaniem (dni w pracy, przepracowane godziny, nieobecności, zarobek brutto, jeśli jest stawka).
-  Na telefonie otwiera systemowe okno udostępniania z plikiem; gdy go nie ma, pobiera plik.
-- **Gdzie jest.**
-  - `src/lib/shifts/monthImage.ts` — `monthImageLayout(data, year, month)` (układ siatki i podsumowania; czysty).
-  - `src/lib/shifts/monthImageDraw.ts` — `renderMonthCanvas`, `canvasToPng`, `shareMonthPng` (canvas i udostępnianie). Bez `roundRect` (stare przeglądarki) rysuje prostokąt; `revokeObjectURL` po 1 s.
-  - `src/components/shifts/ShiftsView.tsx` — `exportImage`, ładowany leniwie (poza paczką startową).
-- **Ograniczenia.** Rysowanie na canvasie nie ma testu jednostkowego (jsdom nie ma canvasa); sprawdzić na telefonie.
-  Obraz jest w jasnych kolorach, niezależnie od motywu. Tylko jeden miesiąc. Udostępnianie: `canvasToPng` jest synchroniczne, więc `navigator.share` jest wołane w tym samym kliknięciu (bez `await` przed nim, poza importem już załadowanym). Do sprawdzenia na telefonie.
-- **Testy.** `src/lib/shifts/monthImage.test.ts` (5): początek tygodnia, skróty i kolory, dzień bez wpisu, tytuł i podsumowanie.
+- Przypomnienie jest w dwóch miejscach: odżywka odhacza się w Ćwiczeniach, a „Gotowe” w Przypomnieniach przesuwa tylko serię tej notatki. Nie zamykają się nawzajem.
+- Odhaczenia nie wracają przez „Cofnij” przy usunięciu odżywki (dzienny stan jest zbędny po usunięciu).
+- Notatka-przypomnienie jest zwykłą notatką: widać ją na liście i w koszu.
+- Brak bazy produktów; kalorie i białko wpisujesz ręcznie. Limity: opis posiłku 200 znaków, kcal do 10 000, białko do 1 000 g; wartości zaokrąglane do całości.
+- Limity danych: 5 000 posiłków, 5 000 wpisów treningu, 20 planów.
+- Wpisy treningu: ciężar co 0,5 kg, powtórki całkowite. Wybór dnia planu tylko ustawia ćwiczenie i serie; ciężary wpisujesz ręcznie.
+- Przerwa (licznik 1:30) startuje po zapisie serii, tylko na tym ekranie; nie zapisuje się w danych.
+- Wibracja tylko tam, gdzie przeglądarka ma `navigator.vibrate` (Android). Respektuje „Wibracje na telefonie” w ustawieniach efektów.
+- Wykres to sparklajn bez osi i dat — pokazuje kierunek; dokładne liczby są w „rekord … kg”.
+- Przypomnienie o treningu: domyślnie 18:00, opis podaje okno do 20:00.
+- Kopia: sekcje `supplements`, `diet`, `training` są opcjonalne; plik sprzed tych zmian przywraca się bez zmian.
 
-## Grafik — premie w rachunku (2026-10-20, 520e47a)
+### Testy
 
-- **Co robi.** Premia jednorazowa w miesiącu (nazwa, kwota brutto). Dolicza się do zarobku miesiąca i jest osobną linią rachunku
-  „Premia: …”. Panel „Premie w tym miesiącu” pod rachunkiem: dodawanie i usuwanie z „Cofnij”.
-  Dodatek za nadgodziny liczy się bez premii, więc rachunek się zgadza.
-- **Gdzie jest.**
-  - `src/lib/shifts/model.ts` — `ShiftBonus`, `cleanBonus`, pole `bonuses` w `ShiftData` (i w `migrate`).
-  - `src/lib/shifts/summary.ts` — `monthSummary`: `bonuses`, `bonusTotal`, `earnings` z premiami.
-  - `src/lib/shifts/yShifts.ts` — mapa `shiftBonuses`, `saveBonus`, `deleteBonus`, udział w `replaceAll` i `mergeIn`.
-  - `src/lib/shifts/store.ts` — `saveBonus`, `deleteBonus`.
-  - `src/components/shifts/ShiftSummary.tsx` — `Receipt` (osobne linie premii), `BonusPanel`.
-- **Jak działa i dlaczego.** Premie są w dokumencie Yjs (jak dni), więc synchronizują się i trafiają do kopii w `shifts`
-  razem z grafikiem. Kwota jest zaokrąglana do groszy; limit 500 premii na grafik i 1 000 000 zł na premię.
-- **Ograniczenia.** Tylko kwota stała (brak premii procentowej). Premie nie są w eksporcie CSV karty czasu.
-  Brak podatków i składek — to kwota brutto, jak reszta zarobku.
-- **Testy.** `src/lib/shifts/bonus.test.ts` (6): czyszczenie, wpływ na zarobek co do grosza, migracja, Yjs (zapis, usunięcie, scalanie).
+- `src/lib/supplements/model.test.ts` (czyszczenie, klucze, kolejność, przypomnienie; `nextReminderAt` z `lib/timeOfDay.ts`).
+- `src/lib/supplements/ySupplements.test.ts` (dodawanie, duplikaty, odhaczenia, usuwanie z odhaczeniami, śmieci od peera, origin).
+- `src/components/cwiczenia/CwiczeniaView.test.tsx` (pusty stan, grupy i postęp, odhaczenie, formularz, przypomnienie, sprzątanie po odrzuconym zapisie).
+- `src/lib/diet/model.test.ts`, `src/lib/diet/yDiet.test.ts` (w tym regresja: dwa odczyty celów to ten sam obiekt), `src/components/cwiczenia/DietSection.test.tsx`.
+- `src/lib/training/model.test.ts`, `yTraining.test.ts`, `reminder.test.ts` (domyślna godzina, czyszczenie, kopia, stabilny odczyt), `reminderRestore.test.ts` (H2, M2, M3), `equipment.test.ts` (limit, ostrzeżenie, rekordy dla wykresu).
+- `src/components/cwiczenia/TrainingSection.test.tsx` (pusty plan, zapis serii, walidacja ułamków, „Użyj ostatnich”, dziś i progres).
+- `src/lib/fullBackup.test.ts` (odżywki, posiłki, cele i trening w kopii; przywracanie scala).
+- `src/test/setup.ts` — stub `ResizeObserver` dla Radix (Checkbox), którego jsdom nie ma.
+- E2E tego działu nie uruchamiano (pełne e2e odłożone).
 
-## Grafik — wiele grafików (2026-10-20, cccd483)
+### Budżet paczki i lint
 
-- **Co robi.** Przełącznik na górze widoku Grafiku: wybór grafiku, „Nowy grafik”, zmiana nazwy, usunięcie (z potwierdzeniem).
-  Każdy grafik ma własne rodzaje zmian, dni, cykle i premie. Widoki (dziś, tydzień, podsumowanie, eksporty) pokazują
-  aktywny grafik. Grafik główny istnieje zawsze i nie da się go usunąć; maksymalnie 10 grafików.
-- **Gdzie jest.**
-  - `src/lib/shifts/yShifts.ts` — `shiftsMapName(scheduleId, base)`: grafik główny używa dawnych nazw map, pozostałe mają prefiks `id:`.
-  - `src/lib/shifts/schedules.ts` — rejestr: `createScheduleRegistry(doc)` (lista, dodawanie, zmiana nazwy, usunięcie, cache dla hooka).
-  - `src/lib/shifts/store.ts` — aktywny grafik (`bindSchedule`, `setActiveSchedule`), `useSchedules`, `useActiveScheduleId`,
-    `createSchedule`, `renameSchedule`, `removeSchedule`, kopia: `mainShiftData`, `extraSchedulesDump`, `restoreExtraSchedule`.
-  - `src/components/shifts/ScheduleSwitcher.tsx` — przełącznik i formularze.
-  - Kopia: `src/lib/noteSchema.ts` (pole `shiftSchedules`), `src/lib/exportNotes.ts` (zapis i przywracanie).
-- **Jak działa i dlaczego.**
-  - Każdy grafik to zestaw map Yjs, więc synchronizacja obejmuje wszystkie grafiki bez zmian w transporcie.
-  - Rejestr (nazwy) jest w dokumencie; wybór aktywnego grafiku jest w localStorage tego urządzenia, bo to preferencja widoku, nie dane.
-    Jeśli zapamiętany grafik zniknął (usunięty na innym urządzeniu), wracamy do głównego.
-  - Usunięcie grafiku czyści jego mapy w tej samej transakcji, więc nic nie zostaje osierocone.
-  - Wcześniejsze aliasy eksportów store (`export const setDayShift = yShifts.setDayShift`) zamieniono na funkcje,
-    bo przepinanie aktywnego grafiku nie działałoby na zamrożonych referencjach.
-- **Ograniczenia i pułapki.**
-  - Eksport `.ics` i karta czasu dotyczą aktywnego grafiku, tak jak widok.
-  - Przywracanie kopii: grafik główny zastępuje, dodatkowe grafiki są tylko dokładane (bez kasowania).
-  - Aktywny grafik nie jest synchronizowany między urządzeniami (każde ma swój wybór).
-  - Paczka startowa jest na progu: 391,9 KB przy 392 KB — następna zmiana w tym module wymaga podniesienia progu albo odchudzenia.
-  - Brak testu komponentu przełącznika i brak testu przepinania przez store (test całości: e2e, do uruchomienia później).
-- **Testy.** `src/lib/shifts/schedules.test.ts` (9): nazwy, nazewnictwo map, izolacja grafików, rejestr (sortowanie,
-  główny nieusuwalny, usunięcie czyści dane, limit, stabilna lista).
-- **Commit:** `cccd483` (wiele grafików).
+- Próg `eagerJsGzip` w `e2e/bundle.spec.ts`: 393 KB (datowany komentarz). Ostatni pomiar po przeglądzie: 392,3 KB.
+- `eslint.config.js`: na liście dozwolonych importów `yjs` są `supplements/ySupplements.ts` i testy, `diet/yDiet.ts` i testy, `training/yTraining.ts` i testy.
+
+### Commity
+
+- `cd83ffc` — odżywki (krok 1 planu Ćwiczeń).
+- `ccce384` — dieta (krok 3).
+- `c7736f0`, `9d8e57e`, `22e2495` — trening: katalog i dziennik, przypomnienie i przerwa, wibracja, sprzęt, wykres.
+- `68ac7d9` — poprawka błędu `/cwiczenia` (stabilny odczyt celów diety).
+- `b779947` — poprawki z przeglądu (H2, M2, M3); `1b8bcf8` — niskie punkty L1–L20 (L3, L4, L6, L7, L9).
 
 ## Notatki — dopracowanie z planu (2026-10-20)
 
@@ -4441,18 +4385,6 @@ lub grupę”.
   Podział `AddNoteBar.tsx` (763 linie) — ryzyko bez e2e. Zrzuty telefonu — wymagają przeglądarki.
 - **Testy.** Komponenty (25 plików, 161 testów) zielone; typecheck i lint czyste; paczka 391,9 KB przy progu 392 KB.
 - **Commit:** `02c1560` (2026-10-20, Notatki — dopracowanie).
-
-## Ustawienia — zgoda na dyktowanie i porządki (2026-10-20)
-
-- **Co robi.** W Ustawieniach → Ogólne sekcja „Dyktowanie głosem”: stan zgody i przycisk „Cofnij zgodę”. Po cofnięciu
-  następne dyktowanie znowu pokaże pytanie o zgodę. Cofnięcie nie rusza uprawnienia mikrofonu w przeglądarce.
-- **Gdzie jest.** `src/hooks/useDictation.ts` — `hasDictationConsent()`, `withdrawDictationConsent()` (używane też w `toggle`);
-  `src/components/settings/GeneralSettings.tsx` — `DictationConsentRow`.
-- **Porządki.** Usunięto nieużywane eksporty `getEffectsSettings` (`effectsSettings.ts`), `getSeasonPref` (`seasonTheme.ts`),
-  `getBadgeEnabled` (`overdueBadge.ts`), `getAutoLockMinutes` (`vaultAutoLock.ts`). Sprawdzono z planu: zduplikowany klucz
-  `kaczy.lastAutoExport` jest już jedną stałą (`LAST_AUTO_EXPORT_KEY`), a martwej gałęzi `trigger` w `SettingsDialog` nie ma.
-- **Testy.** `src/hooks/useDictation.consent.test.ts` (2).
-- **Commit:** `c2eeb7f` (2026-10-20, Ustawienia — zgoda i porządki).
 
 ## Budowa — telefon hurtowni i ostrzeżenie przed kopią (U7, D3, 2026-10-20)
 
@@ -4474,7 +4406,7 @@ lub grupę”.
 
 ## Przegląd kodu — niskie punkty L1–L20 (2026-10-20)
 
-Poprawki z `docs/code-review-2026-10-20.md` (status pozycji tam). Sekcje działów powyżej nie zostały przepisane na nowy stan — poniżej jest lista zmian; przy następnym dotknięciu tych funkcji opis działu trzeba poprawić.
+Poprawki z `docs/code-review-2026-10-20.md` (status pozycji tam). Opisy działów Ćwiczeń, Długów, Grafiku, Skrzynki i Ustawień zostały przepisane do stanu aktualnego (sekcje „stan aktualny”); poniżej lista zmian z tego przeglądu.
 
 - **Kopia (L1).** `src/lib/exportNotes.ts`: `errName(err)` — komunikaty `logDiag` przy przywracaniu zawierają tylko nazwę błędu, bez treści kopii.
 - **Ćwiczenia (L3, L4, L6, L7).** `src/components/cwiczenia/TrainingSection.tsx`: `EquipmentForm` zapisuje tylko wartość > 0, ma przycisk „Usuń limit”; formularze godziny przypomnienia i ciężaru synchronizują się z danymi z Yjs. `src/lib/diet/yDiet.ts`: `getGoals` zwraca zamrożony obiekt z cache, `restore` pilnuje `DIET_MAX_MEALS` i zwraca `boolean`. `nextReminderAt` przeniesiono do `src/lib/timeOfDay.ts` (dawniej `lib/supplements/model.ts`); importy w `CwiczeniaView.tsx`, `TrainingSection.tsx` i `model.test.ts` zmienione.
