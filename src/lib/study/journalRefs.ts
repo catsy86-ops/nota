@@ -1,4 +1,5 @@
 import { isImageRef } from "@/lib/imageStore";
+import { journalFields } from "./journalFields";
 
 type MapLike = { forEach(cb: (value: unknown, key: string) => void): void };
 
@@ -32,7 +33,7 @@ export function siteDocRefsIn(doc: { getMap(name: string): MapLike }): Set<strin
 export function journalRefsIn(doc: { getMap(name: string): MapLike }, syncable = false): Set<string> {
   const refs = new Set<string>();
   doc.getMap("studyJournal").forEach((e) => {
-    const entry = e as { images?: unknown; recordings?: unknown } | null;
+    const entry = journalFields(e) as { images?: unknown; recordings?: unknown } | null;
     const images = entry?.images;
     if (Array.isArray(images)) for (const r of images) if (typeof r === "string" && isImageRef(r)) refs.add(r);
     // Nagrania (U8): ten sam magazyn; do innego urządzenia jadą jak załączniki do 2 MB.
@@ -62,7 +63,7 @@ export function journalRefsIn(doc: { getMap(name: string): MapLike }, syncable =
 export function recordingRefsIn(doc: { getMap(name: string): MapLike }): Set<string> {
   const refs = new Set<string>();
   doc.getMap("studyJournal").forEach((e) => {
-    const list = (e as { recordings?: unknown } | null)?.recordings;
+    const list = (journalFields(e) as { recordings?: unknown } | null)?.recordings;
     if (!Array.isArray(list)) return;
     for (const r of list) {
       const hash = (r as { hash?: unknown } | null)?.hash;

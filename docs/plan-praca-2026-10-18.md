@@ -12,7 +12,7 @@ Uwaga: wejściowy JS jest na progu (próg podniesiony do 385 KB). Nowy kod w gł
 | D2 ✅ | Przywracanie kopii najpierw kasuje wpisy, potem zapisuje oczyszczone; wpisy nieznanego rodzaju i zdjęcia z błędnym kluczem znikają bez śladu | `yStudy.ts:550-551,150,198`, `store.ts:69` | Walidować przed kasowaniem; liczyć i logować odrzucone (`logDiag`); pokazać liczbę w oknie przywracania | M |
 | D3 ✅ | Kopia zapasowa: przekroczenie budżetu 40 MB gubi zdjęcia i pliki budów po cichu; plany (PDF) liczą się jako „zdjęcia dziennika"; brak testu gałęzi przekroczenia | `attachments.ts:36`, `exportNotes.ts:91`, `journalRefs.ts`, `fullBackup.test.ts:175` | Test przekroczenia; osobna etykieta dla dokumentów budów; raport o pominiętych plikach | M |
 | D4 ✅ | Wpis z referencją do nieobecnego zdjęcia: nie sprawdzono, czy przeżywa import | `fullBackup.test.ts:186`, `cleanDump`/`sanitizeStudy` | Test importu z brakującym obrazem; raport wymienia zdjęcie | S |
-| D5 | Edycja tego samego wpisu na dwóch telefonach gubi pola: cały wpis to jeden klucz `Y.Map` | `yStudy.ts:433,442-467` | Pola wpisu jako osobne klucze (jak listy budowy w `siteItems.ts`) — zmiana modelu, osobna decyzja | L |
+| D5 ✅ | Edycja tego samego wpisu na dwóch telefonach gubi pola: cały wpis to jeden klucz `Y.Map` (naprawione 2026-10-20: wpis to mapa pól, `yStudy.ts` `writeEntry`/`readEntry`, `journalFields.ts`; zgodność: stare aplikacje nie czytają nowych wpisów) | `yStudy.ts:433,442-467` | Pola wpisu jako osobne klucze (jak listy budowy w `siteItems.ts`) — zmiana modelu, osobna decyzja | L |
 
 ## Priorytet 2 — jedna logika zamiast kilku kopii
 

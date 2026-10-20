@@ -348,3 +348,46 @@ describe("dokumenty budowy w dokumencie", () => {
     expect(s.get().sites.a.docs?.map((d) => d.name)).toEqual(["rzut.jpg", "maly.pdf", "duzy.pdf"]);
   });
 });
+
+describe("Nauka — wpis jako mapa pól (D5)", () => {
+  it("edycja różnych pól tego samego wpisu na dwóch telefonach scala się bez strat", () => {
+    const { a, b, sync } = pair();
+    a.addEntry(entry("w", 1, { kind: "problem", topic: "t1", text: "stary tekst" }));
+    sync();
+    // Telefon A zmienia tekst, telefon B rozwiązuje problem — równocześnie, bez synchronizacji.
+    a.updateEntry({ ...a.get().journal.find((e) => e.id === "w")!, text: "nowy tekst" });
+    b.setResolved("w", 555);
+    sync();
+    for (const s of [a, b]) {
+      const w = s.get().journal.find((e) => e.id === "w")!;
+      expect(w.text).toBe("nowy tekst");
+      expect(w.resolved).toBe(555);
+    }
+  });
+
+  it("usunięte pole znika z wpisu (np. cofnięte rozwiązanie)", () => {
+    const { a, b, sync } = pair();
+    a.addEntry(entry("p", 1, { kind: "problem", resolved: 7 }));
+    sync();
+    a.setResolved("p", null);
+    sync();
+    expect(b.get().journal.find((e) => e.id === "p")!.resolved).toBeUndefined();
+  });
+
+  it("starszy zapis (zwykły obiekt w dokumencie) czyta się i przy edycji zamienia na mapę pól", () => {
+    const doc = new Y.Doc();
+    doc.getMap("studyJournal").set("old", entry("old", 1, { text: "sprzed D5" }));
+    const s = createYStudy(doc);
+    expect(s.get().journal.find((e) => e.id === "old")?.text).toBe("sprzed D5");
+    s.updateEntry({ ...s.get().journal.find((e) => e.id === "old")!, text: "po edycji" });
+    expect(doc.getMap("studyJournal").get("old")).toBeInstanceOf(Y.Map);
+    expect(s.get().journal.find((e) => e.id === "old")?.text).toBe("po edycji");
+  });
+
+  it("kopia zapasowa nadal zawiera wpis jako zwykły obiekt (format bez zmian)", () => {
+    const { a } = pair();
+    a.addEntry(entry("k", 1, { checked: ["c1"] }));
+    const d = a.dump();
+    expect(d.journal.find((e) => e.id === "k")).toMatchObject({ id: "k", checked: ["c1"] });
+  });
+});

@@ -1,5 +1,6 @@
 import * as Y from "yjs";
 import { cleanFittings, type Fitting } from "./fittings";
+import { journalFields } from "./journalFields";
 import { isImageRef } from "@/lib/imageStore";
 import type { Attachment } from "@/lib/attachments";
 import { addDaysToKey } from "@/lib/week";
@@ -314,7 +315,8 @@ export function stateFromDump(d: StudyDump): StudyState {
 export { journalRefsIn } from "./journalRefs";
 
 export function createYStudy(doc: Y.Doc) {
-  const journal = doc.getMap<JournalEntry>("studyJournal");
+  /** Wpisy dziennika: id → mapa pól (D5), starsze zapisy to zwykłe obiekty (`journalFields`). */
+  const journal = doc.getMap<unknown>("studyJournal");
   const board = doc.getMap<Column>("studyBoard");
   const checked = doc.getMap<true>("studyChecked");
   const missed = doc.getMap<true>("studyMissed");
@@ -339,7 +341,29 @@ export function createYStudy(doc: Y.Doc) {
     snapshot = null;
     listeners.forEach((l) => l());
   };
-  for (const m of [journal, board, checked, missed, days, rounds, meta, sites, review, custom, siteItems] as Y.Map<unknown>[]) m.observe(onChange);
+  for (const m of [board, checked, missed, days, rounds, meta, sites, review, custom, siteItems] as Y.Map<unknown>[]) m.observe(onChange);
+  // Pola wpisu są w mapach zagnieżdżonych — zmiana pola to zdarzenie głębokie.
+  journal.observeDeep(onChange);
+
+  /** Wpis jako mapa pól: zmiana jednego pola nie kasuje zmian innych pól z drugiego telefonu (D5). */
+  function writeEntry(id: string, entry: JournalEntry): void {
+    const cur = journal.get(id);
+    const next = entry as unknown as Record<string, unknown>;
+    if (!(cur instanceof Y.Map)) {
+      journal.set(id, new Y.Map<unknown>(Object.entries(next).filter(([, v]) => v !== undefined)));
+      return;
+    }
+    for (const k of Array.from(cur.keys())) if (next[k] === undefined) cur.delete(k);
+    // Pole zapisujemy tylko, gdy się zmieniło — brak zbędnych zapisów, które nadpisywałyby cudze zmiany.
+    for (const [k, v] of Object.entries(next)) {
+      if (v !== undefined && JSON.stringify(cur.get(k)) !== JSON.stringify(v)) cur.set(k, v);
+    }
+  }
+
+  /** Wpis dziennika jako obiekt (po oczyszczeniu); `null` gdy brak lub uszkodzony. */
+  function readEntry(id: string): JournalEntry | null {
+    return cleanEntry(journalFields(journal.get(id)));
+  }
 
   /** Dokument jako zwykły obiekt, przez `cleanDump` — śmieci od peera nie wywrócą widoku. */
   function dump(): StudyDump {
@@ -347,7 +371,7 @@ export function createYStudy(doc: Y.Doc) {
       board: Object.fromEntries(board.entries()),
       checked: Object.fromEntries(checked.entries()),
       missed: Object.fromEntries(missed.entries()),
-      journal: Array.from(journal.values()),
+      journal: Array.from(journal.values(), journalFields),
       days: Array.from(days.keys()),
       rounds: Object.fromEntries(rounds.entries()),
       site: meta.get("site"),
@@ -468,7 +492,7 @@ export function createYStudy(doc: Y.Doc) {
   function addEntry(entry: JournalEntry, newSite?: SiteCard): void {
     transact(() => {
       if (newSite && !sites.has(newSite.id)) sites.set(newSite.id, newSite);
-      journal.set(entry.id, entry);
+      writeEntry(entry.id, entry);
       if (entry.kind === "problem" && entry.topic && board.get(entry.topic) === "done") board.set(entry.topic, "doing");
     });
   }
@@ -480,8 +504,8 @@ export function createYStudy(doc: Y.Doc) {
   function updateEntry(entry: JournalEntry, newSite?: SiteCard): void {
     transact(() => {
       if (newSite && !sites.has(newSite.id)) sites.set(newSite.id, newSite);
-      const prev = journal.get(entry.id);
-      journal.set(entry.id, entry);
+      const prev = readEntry(entry.id);
+      writeEntry(entry.id, entry);
       const newProblem = entry.kind === "problem" && entry.topic && (prev?.kind !== "problem" || prev.topic !== entry.topic);
       if (newProblem && board.get(entry.topic!) === "done") board.set(entry.topic!, "doing");
     });
@@ -489,24 +513,24 @@ export function createYStudy(doc: Y.Doc) {
 
   /** Problem rozwiązany (`at`) albo z powrotem otwarty (`null`). */
   function setResolved(id: string, at: number | null): void {
-    const e = journal.get(id);
+    const e = readEntry(id);
     if (!e || e.kind !== "problem") return;
     const { resolved: _, ...rest } = e;
-    transact(() => journal.set(id, at === null ? rest : { ...rest, resolved: at }));
+    transact(() => writeEntry(id, at === null ? rest : { ...rest, resolved: at }));
   }
 
   /** Opis rozwiązania problemu; pusty tekst usuwa opis. Inny rodzaj wpisu — nic. */
   function setSolution(id: string, text: string): void {
-    const e = journal.get(id);
+    const e = readEntry(id);
     if (!e || e.kind !== "problem") return;
     const { solution: _, ...rest } = e;
     const t = text.trim().slice(0, JOURNAL_SOLUTION_MAX);
-    transact(() => journal.set(id, t ? { ...rest, solution: t } : rest));
+    transact(() => writeEntry(id, t ? { ...rest, solution: t } : rest));
   }
 
   /** Przywraca usunięty wpis (Cofnij); wpis, który w międzyczasie wrócił, zostaje. */
   function restoreEntry(entry: JournalEntry): void {
-    transact(() => { if (!journal.has(entry.id)) journal.set(entry.id, entry); });
+    transact(() => { if (!journal.has(entry.id)) writeEntry(entry.id, entry); });
   }
 
   function removeEntry(id: string): JournalEntry | null {
@@ -586,7 +610,7 @@ export function createYStudy(doc: Y.Doc) {
     const d = cleanDump(data);
     transact(() => {
       for (const m of [journal, board, checked, missed, days, rounds, sites, review, custom, siteItems] as Y.Map<unknown>[]) for (const k of Array.from(m.keys())) m.delete(k);
-      for (const e of d.journal) journal.set(e.id, e);
+      for (const e of d.journal) writeEntry(e.id, e);
       for (const [k, v] of Object.entries(d.board)) board.set(k, v);
       for (const k of Object.keys(d.checked)) checked.set(k, true);
       for (const k of Object.keys(d.missed)) missed.set(k, true);
@@ -612,7 +636,7 @@ export function createYStudy(doc: Y.Doc) {
     const d = cleanDump(data);
     transact(() => {
       if (marker) migrations.set(marker, Date.now());
-      for (const e of d.journal) if (!journal.has(e.id)) journal.set(e.id, e);
+      for (const e of d.journal) if (!journal.has(e.id)) writeEntry(e.id, e);
       for (const [k, v] of Object.entries(d.board)) if (!board.has(k)) board.set(k, v);
       for (const k of Object.keys(d.checked)) if (!checked.has(k)) checked.set(k, true);
       for (const k of Object.keys(d.missed)) if (!missed.has(k)) missed.set(k, true);

@@ -2443,11 +2443,13 @@ z notatkami i trafiają do kopii zapasowej.
 - `src/lib/study/keys.ts` — klucze localStorage.
 
 **Jak działa.**
-- Mapy Yjs w dokumencie notatek: `studyJournal` (id → wpis), `studySites` (id → karta budowy),
+- Mapy Yjs w dokumencie notatek: `studyJournal` (id → mapa pól wpisu, D5), `studySites` (id → karta budowy),
   `studyBoard`, `studyChecked`, `studyMissed`, `studyDays`, `studyRounds` (per urządzenie),
   `studyMeta` (m.in. `site` — bieżąca budowa arkusza), `studyMigrations`.
 - Każdy wpis i każda karta to osobny klucz mapy, więc dwa telefony dopisujące wpisy offline
   scalają się bez strat.
+- **Pola wpisu osobno (D5, 2026-10-20).** Wpis dziennika to `Y.Map` z kluczem na każde pole. Edycja różnych pól tego samego wpisu na dwóch telefonach scala się (np. tekst na jednym, rozwiązanie na drugim); to samo pole — ostatni zapis wygrywa. `writeEntry` zapisuje tylko zmienione pola i usuwa pola, których już nie ma (np. cofnięte rozwiązanie). Stare wpisy (zwykły obiekt) czyta się bez zmian i zamienia na mapę przy pierwszej edycji. `dump()` i kopia nadal zawierają wpis jako zwykły obiekt, więc format kopii się nie zmienia.
+- **Uwaga zgodności.** Starsze wersje aplikacji nie czytają wpisów zapisanych jako mapa pól (`cleanEntry` odrzuca `Y.Map`). Dopóki wszystkie urządzenia nie mają tej wersji, nowe lub edytowane wpisy są na nich niewidoczne.
 - `yStudy.ts` nie importuje materiału (`content.ts`), bo jest w głównej paczce (odśmiecanie
   zdjęć, kopia). Przynależność do materiału sprawdza `store.ts`.
 - Wpis (`JournalEntry`): `id`, `at` (ms), `kind` (`ok` | `problem` | `note`), `topic`, `text`,
@@ -3975,7 +3977,7 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - **Nie zrobione (z planu Pracy):** brak — T2 zamknięte, wszystkie komponenty działu mają test.
   - T5 — `report-nudge.spec.ts` nie ma już `waitForTimeout` (usunięty wcześniej); `journal-geo.spec.ts` celowo akceptuje dwa komunikaty (zależne od przeglądarki); `today-study.spec.ts` przechodzi, a wynik nie zależy od odpowiedzi (wszystkie 10 pytań wraca następnego dnia). Bez zmian.
   - U8 — decyzja właściciela: nagranie jako osobny załącznik. Zrobione w kolejnej sesji (bez commita) — patrz „Praca — nagranie głosowe w wpisie (U8)”.
-  - D5 — decyzja właściciela: zostaje obecny model wpisu (jeden klucz Y.Map), bez przebudowy.
+  - D5 — pierwotnie zostawiono model wpisu (jeden klucz Y.Map). 2026-10-20 właściciel zdecydował „rób D5” i model został zmieniony — patrz „Pola wpisu osobno (D5)” w sekcji „Praca → Dziennik budowy”.
   - P3 — decyzja: odłożenie dotyczy tylko jednego wystąpienia. Nie zrobione: dziś „Odłóż” z powiadomienia zapisuje nowy `reminder` notatki, czyli przesuwa kotwicę całej serii. Zrobione w kolejnej sesji (2026-10-19, bez commita) — patrz „Przypomnienia — odłożenie jednego wystąpienia serii”.
 - **Commit:** 19f2ade, 2026-10-19; testy T2 w 4fdd64f, 2026-10-19.
 
@@ -4025,7 +4027,7 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
   - `src/components/study/JournalEntrySheet.tsx` — przycisk „Nagraj”, lista nagrań z `AudioPreview` i „Usuń nagranie”, `addRecordingFile`. `VoiceRecorder` i `AudioPreview` są leniwe (`VoiceAttachmentParts.tsx`), więc startowa paczka nie rośnie.
 - **Jak działa i dlaczego:**
   - Nagranie to załącznik audio, nie zdjęcie: osobna lista `recordings`, bo raport i kopia opisują zdjęcia jako obrazy. Bajty trzymają się tego samego magazynu co załączniki notatek (`imageStore`), więc odśmiecanie, kopia (`exportNotes` / backup v3 przez `journalImageRefs`) i przywracanie (`putDataUrl`, bez filtra na `image/`) działają bez nowych ścieżek.
-  - Wpis to jeden klucz w mapie Yjs (LWW na cały wpis), więc nagrania jadą z wpisem; nie ma nowego modelu synchronizacji.
+  - Wpis to mapa pól w `studyJournal` (D5); nagrania to pole `recordings` i jadą z wpisem jako wartość tego pola (LWW na samo pole).
   - Sync do innego urządzenia: nagrania do 2 MB; większe zostają lokalnie — tak jak załączniki notatek i dokumenty budów.
 - **Ograniczenia i pułapki:**
   - Raport kopii (`exportNotes`) liczy pominięte nagrania osobno (`recordings`, z `recordingRefsIn` w `journalRefs.ts`), nie jako zdjęcia. Starsze kopie bez tego pola działają jak dotąd (pole opcjonalne w `noteSchema.ts`).
