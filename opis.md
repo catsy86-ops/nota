@@ -2337,7 +2337,8 @@ z notatkami i trafiają do kopii zapasowej.
 - `src/lib/study/data.ts` — jedyna instancja `yStudy` na `yjsStore.doc`, `studyDevice()`,
   migracja ze starego zapisu, `useStudyReady`.
 - `src/lib/study/store.ts` — fasada dla widoków: `useStudy`, `getStudy`, `sanitizeStudy`
-  (projekcja przefiltrowana przez materiał z `content.ts`) i akcje (`addJournalEntry`,
+  (projekcja przefiltrowana przez materiał z `content.ts`; każdy wpis przechodzi przez `cleanEntry` z `yStudy.ts`,
+  czyli tę samą regułę co kopia i dokument, a `sanitizeStudy` dokłada tylko filtr tematu i odhaczeń) i akcje (`addJournalEntry`,
   `updateJournalEntry`, `removeJournalEntry`, `restoreJournalEntry`, `setProblemResolved`,
   `setSite`, `saveSiteCard`, `setSiteArchived`).
 - `src/lib/study/keys.ts` — klucze localStorage.
@@ -2380,7 +2381,8 @@ poprawia zapisany wpis i go usuwa (z „Cofnij”).
   `useJournalSheet`) i formularz edycji (`openJournalEdit`, `patchJournalEditForm`,
   `getJournalEditForm`).
 - `src/lib/study/draft.ts` — szkic nowego wpisu (`useJournalDraft`, `patchJournalDraft`,
-  `clearJournalDraft`, `setJournalDraftTopic`).
+  `clearJournalDraft`, `setJournalDraftTopic`). Pola czyści `cleanEntryParts` (ta sama funkcja co dziennik i kopia);
+  szkic, w przeciwieństwie do wpisu, nie odrzuca pustego zapisu.
 - `src/lib/study/images.ts` — `journalImageRefs()` chroni zdjęcia przed odśmiecaniem.
 
 **Jak działa.**
@@ -3490,7 +3492,10 @@ lub grupę”.
 - **Dane z zewnątrz (L5):** `siteItems.ts` czyści pozycje listy budowy (braki, zamówienia, wizyty serwisowe, dokumenty, godziny) funkcjami `clean*`, zamiast rzutować `as`. Pozycja, której nie da się oczyścić, jest pomijana zamiast trafić do stanu jako surowa.
 - **Ślad przy przywracaniu (D2, dokończone):** `restoreFullBackup` zwraca liczbę pominiętych wpisów Nauki; okno przywracania pokazuje ją w komunikacie i wydłuża czas do odświeżenia.
 - **Testy:** 1393 jednostkowe; e2e kopia, Nauka, listy budowy (etapy, braki, zamówienia), bundle — 50/50.
-- **Commit:** brak — zmiany niezacommitowane.
+  Dopisane 2026-10-20: `src/lib/fullBackup.test.ts` (wpis Nauki o nieznanym rodzaju odpada, `studyDropped` = 1),
+  `src/lib/study/siteItems.test.ts` (`composeSiteLists`, `stripLists`), `src/lib/study/workLine.test.ts`
+  (`workLine`, `workMinutesOf`). Pełny Vitest: 183 pliki zielone.
+- **Commit:** `TBD` (2026-10-20, plan Pracy: D2 test, D3 i L2 sprawdzone, L1 częściowo, T3).
 
 ## Praca — komunikaty, dotyk zakładek, testy dokumentów budowy (U2, U6, U4, T2, 2026-10-18)
 

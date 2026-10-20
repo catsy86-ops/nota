@@ -237,6 +237,14 @@ describe("Nauka w pełnej kopii", () => {
     expect(localStorage.getItem("kaczy.study.v1")).toBeNull();
   });
 
+  it("wpis Nauki o nieznanym rodzaju odpada przy przywracaniu, a liczba odrzuconych wraca do UI", async () => {
+    const bad = { ...entry, id: "bad", kind: "nieznany" };
+    const old = { version: 3, exportedAt: 1, notes: [], labels: [], folders: [], study: JSON.stringify({ journal: [entry, bad] }) };
+    const { studyDropped } = await restoreFullBackup(await parseFullBackup(JSON.stringify(old)), ALL);
+    expect(studyDropped).toBe(1);
+    expect(yStudy.get().journal).toEqual([entry]);
+  });
+
   it("czyta starą kopię, w której Nauka była tylko wśród ustawień", async () => {
     const legacy = { journal: [entry], rounds: 3, bestPercent: 90, streak: 2, lastDay: "2026-10-12", board: { spadki: "doing" } };
     const old = { version: 3, exportedAt: 1, notes: [], labels: [], folders: [], settings: { "kaczy.study.v1": JSON.stringify(legacy) } };

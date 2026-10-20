@@ -10,7 +10,7 @@ Uwaga: wejściowy JS jest na progu (próg podniesiony do 385 KB). Nowy kod w gł
 |---|---------|-------|---------|--------|
 | D1 ✅ | Wpis z samymi odhaczeniami znika po usunięciu punktu listy (pustość liczona po filtrze materiału); `removeCustom` nie czyści wpisów | `store.ts:67,75`, `yStudy.ts:529-539` | Sprawdzać pustość przed filtrem; czyścić `checked` we wpisach przy usuwaniu punktu; test | S |
 | D2 ✅ | Przywracanie kopii najpierw kasuje wpisy, potem zapisuje oczyszczone; wpisy nieznanego rodzaju i zdjęcia z błędnym kluczem znikają bez śladu | `yStudy.ts:550-551,150,198`, `store.ts:69` | Walidować przed kasowaniem; liczyć i logować odrzucone (`logDiag`); pokazać liczbę w oknie przywracania | M |
-| D3 | Kopia zapasowa: przekroczenie budżetu 40 MB gubi zdjęcia i pliki budów po cichu; plany (PDF) liczą się jako „zdjęcia dziennika"; brak testu gałęzi przekroczenia | `attachments.ts:36`, `exportNotes.ts:91`, `journalRefs.ts`, `fullBackup.test.ts:175` | Test przekroczenia; osobna etykieta dla dokumentów budów; raport o pominiętych plikach | M |
+| D3 ✅ | Kopia zapasowa: przekroczenie budżetu 40 MB gubi zdjęcia i pliki budów po cichu; plany (PDF) liczą się jako „zdjęcia dziennika"; brak testu gałęzi przekroczenia | `attachments.ts:36`, `exportNotes.ts:91`, `journalRefs.ts`, `fullBackup.test.ts:175` | Test przekroczenia; osobna etykieta dla dokumentów budów; raport o pominiętych plikach | M |
 | D4 ✅ | Wpis z referencją do nieobecnego zdjęcia: nie sprawdzono, czy przeżywa import | `fullBackup.test.ts:186`, `cleanDump`/`sanitizeStudy` | Test importu z brakującym obrazem; raport wymienia zdjęcie | S |
 | D5 | Edycja tego samego wpisu na dwóch telefonach gubi pola: cały wpis to jeden klucz `Y.Map` | `yStudy.ts:433,442-467` | Pola wpisu jako osobne klucze (jak listy budowy w `siteItems.ts`) — zmiana modelu, osobna decyzja | L |
 
@@ -18,23 +18,23 @@ Uwaga: wejściowy JS jest na progu (próg podniesiony do 385 KB). Nowy kod w gł
 
 | # | Problem | Gdzie | Naprawa | Nakład |
 |---|---------|-------|---------|--------|
-| L1 | Trzy kopie czyszczenia wpisu (`sanitizeStudy`, `cleanEntry`, `entryFields`) i częściowa (`draft.ts`); to samo dla `cleanSites`, `cleanReviews`, `isColumn` | `store.ts:36-110,218-240`, `yStudy.ts:138-228`, `draft.ts:33-48` | Jeden `cleanEntry(raw, {topics, items})` dla projekcji, zrzutu, szkicu i zapisu | S–M |
-| L2 | Dwa źródła „Na dziś": karta czyta surową kopię, widok — projekcję bez materiału | `review/TodayStudyCard.tsx:38-40`, `StudyView.tsx:108`, `store.ts:108` | Jedna funkcja `dueToday` dla obu | S |
+| L1 ◐ | Trzy kopie czyszczenia wpisu (`sanitizeStudy`, `cleanEntry`, `entryFields`) i częściowa (`draft.ts`); to samo dla `cleanSites`, `cleanReviews`, `isColumn` | `store.ts:36-110,218-240`, `yStudy.ts:138-228`, `draft.ts:33-48` | Jeden `cleanEntry(raw, {topics, items})` dla projekcji, zrzutu, szkicu i zapisu | S–M |
+| L2 ✅ | Dwa źródła „Na dziś": karta czyta surową kopię, widok — projekcję bez materiału | `review/TodayStudyCard.tsx:38-40`, `StudyView.tsx:108`, `store.ts:108` | Jedna funkcja `dueToday` dla obu | S |
 | L3 ✅ | Cykl importów `sites.ts` ↔ `siteHours.ts` (w czasie działania) | `sites.ts:5`, `siteHours.ts:1` | Wydzielić `entrySiteId` i `cleanSiteHours` do modułu bez zwrotnej zależności | S |
 | L4 ✅ | Duplikaty pomocników: klucz dnia (ok. 15 miejsc), `shortDate` (7 wersji, 2 formaty), normalizatory ogonków (2) | `report.ts:114,146`, `dayDone.ts:18`, `yShifts.ts:30`, `fittings.ts:21`, `sites.ts:61` | Jeden moduł `lib/dates`, jeden `shortDate`, jeden normalizator | S |
 | L5 ✅ | Rzutowania `as` na danych z zewnątrz (bez walidacji) | `siteItems.ts:88-106`, `store.ts:318,332,428`, `CustomQuestionsDialog.tsx:47,58` | Type guardy | S |
-| L6 | Martwy kod i mylące komentarze: parametr `known` w `srs.ts:58`, JSDoc `saveBoss` nad `addCustomEntry`, zdublowany komentarz, odwołanie do nieistniejącego `HandoverPrint.tsx`, `resetStudyForTests` w paczce produkcyjnej | jw. | Usunąć, poprawić | S |
+| L6 ✅ | Martwy kod i mylące komentarze: parametr `known` w `srs.ts:58`, JSDoc `saveBoss` nad `addCustomEntry`, zdublowany komentarz, odwołanie do nieistniejącego `HandoverPrint.tsx`, `resetStudyForTests` w paczce produkcyjnej | jw. | Usunąć, poprawić | S |
 
 ## Priorytet 3 — testy (wartość wysoka, nakład ok. 2 dni)
 
 | # | Co brakuje | Nakład |
 |---|-----------|--------|
 | T1 ✅ | Round-trip wrapperów list budowy: `setSiteStages/Shortages/Docs/Service/Warranty`, `markSiteOrdered` z `base` z innego zapisu (drugi telefon) | M |
-| T2 | Komponenty działu bez testów jednostkowych (SiteDocs, SiteService, SiteStages, SiteShortages, SiteOrder, JournalEntrySheet, DayHours, Calculators); `addSiteDocFiles` z limitami i deduplikacją | S dla funkcji, M dla komponentów |
-| T3 (parseHours ✅) | Funkcje liczące: `workLine`/`workMinutesOf`, `composeSiteLists`, `stripLists`, `reviewCard` („błąd, potem dobra tego samego dnia"), `deleteCustom`, `downloadSiteZip`; `parseHours` przepuszcza „6:70" jako 7 h 10 min | S każde |
+| T2 ✅ | Komponenty działu bez testów jednostkowych (SiteDocs, SiteService, SiteStages, SiteShortages, SiteOrder, JournalEntrySheet, DayHours, Calculators); `addSiteDocFiles` z limitami i deduplikacją | S dla funkcji, M dla komponentów |
+| T3 ◐ (parseHours, workLine, composeSiteLists, stripLists ✅) | Funkcje liczące: `workLine`/`workMinutesOf`, `composeSiteLists`, `stripLists`, `reviewCard` („błąd, potem dobra tego samego dnia"), `deleteCustom`, `downloadSiteZip`; `parseHours` przepuszcza „6:70" jako 7 h 10 min | S każde |
 | T4 | Dawny zapis w localStorage z ważnymi zdjęciami (ścieżka, którą GC może skasować) | S |
-| T5 | Flaki w e2e: `report-nudge.spec.ts:41,49` (`waitForTimeout` przed negatywną asercją), słabe asercje (`journal-geo.spec.ts:57` akceptuje dwa komunikaty; `today-study.spec.ts` zawsze pierwsza odpowiedź) | S |
-| T6 | Testy zależne od zegara bez mocków: `TodayDueList.test.tsx`, `recordRound` i `addJournalEntry` bez jawnego `now` | S |
+| T5 ◐ | Flaki w e2e: `report-nudge.spec.ts:41,49` (`waitForTimeout` przed negatywną asercją), słabe asercje (`journal-geo.spec.ts:57` akceptuje dwa komunikaty; `today-study.spec.ts` zawsze pierwsza odpowiedź) | S |
+| T6 ✅ | Testy zależne od zegara bez mocków: `TodayDueList.test.tsx`, `recordRound` i `addJournalEntry` bez jawnego `now` | S |
 | T7 ✅ | Usunięcie wpisu ze zdjęciami i „Cofnij" — brak testu, że zdjęcia wracają | S |
 
 ## Priorytet 4 — UX (wartość dla użytkownika w terenie)
@@ -45,10 +45,10 @@ Uwaga: wejściowy JS jest na progu (próg podniesiony do 385 KB). Nowy kod w gł
 | U2 ✅ (było już) | **Seria wpisów z jednej budowy:** po „Zapisz wpis" zostaje budowa i rodzaj, czyszczony tekst i zdjęcia | S | wpis w złej budowie — nazwa budowy widoczna w nagłówku |
 | U3 ✅ (zakładka) | **Jedna nazwa na każdą rzecz:** „Wpis" / „Dokończ wpis" / „Wpis z budowy"; „Lista" → „Lista kontrolna"; w notatkach „Tablica" to układ kolumn, w Pracy tablica tematów | S | e2e szukające tekstów do poprawy (zmieniamy etykiety, nie klucze) |
 | U4 ✅ | **Rękawice:** sprawdzić, czy zakładki Quiz/Tablica/Lista/Dziennik mają 44 px na dotyku | S | na telefonie niesprawdzone |
-| U5 | **Szybki wpis głosowy ze skrótu** (`?wpis=1` z włączonym dyktowaniem) | S–M | dyktowanie przeglądarkowe wymaga sieci i słabo działa na iOS |
+| U5 ✅ | **Szybki wpis głosowy ze skrótu** (`?wpis=1` z włączonym dyktowaniem) | S–M | dyktowanie przeglądarkowe wymaga sieci i słabo działa na iOS |
 | U6 ✅ | **Puste stany i błędy z następnym krokiem:** „Brak wpisów" bez przycisku „+ Wpis"; „Brakuje miejsca w pamięci" bez wskazówki (usuń stare zdjęcia) | S | minimalne |
 | U7 | **Zamówienie do hurtowni przez WhatsApp** (dziś tylko „Kopiuj") | S–M | numer hurtowni trafia do sync i kopii |
-| U8 | Nagranie głosowe w wpisie jako plan B (`VoiceRecorder` z notatek) | M | sync wymaga, by oba urządzenia były online; bez transkrypcji nie trafia do raportu |
+| U8 ✅ | Nagranie głosowe w wpisie jako plan B (`VoiceRecorder` z notatek) | M | sync wymaga, by oba urządzenia były online; bez transkrypcji nie trafia do raportu |
 
 ## Kolejność
 

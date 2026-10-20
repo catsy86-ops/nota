@@ -18,7 +18,7 @@ import { cleanSiteHours, type SiteHours } from "./siteHours";
 import { cleanSiteDocs, type SiteDoc } from "./siteDocs";
 import { cleanServiceCalls, type ServiceCall } from "./service";
 import {
-  cleanEntryParts, JOURNAL_KINDS, JOURNAL_SOLUTION_MAX, SITE_MAX,
+  cleanEntry, cleanEntryParts, SITE_MAX,
   type Column, type JournalEntry, type JournalKind, type StudyState,
 } from "./yStudy";
 
@@ -57,30 +57,12 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
   for (const [id, v] of Object.entries(s.missed ?? {})) if (v === true && questionIds.has(id)) missed[id] = true;
   const journal: JournalEntry[] = [];
   for (const raw of Array.isArray(s.journal) ? s.journal : []) {
-    const e = raw as Partial<JournalEntry> | null;
-    if (!e || typeof e !== "object") continue;
-    if (typeof e.id !== "string" || !e.id || e.id.length > 64) continue;
-    if (typeof e.at !== "number" || !Number.isFinite(e.at)) continue;
-    if (!JOURNAL_KINDS.includes(e.kind as JournalKind)) continue;
-    const parts = cleanEntryParts(e);
-    // Pustość przed odrzuceniem nieznanych punktów: wpis z odhaczeniami, których punkt już nie istnieje,
-    // zostaje jako zapis (wcześniej znikał z dziennika, raportów i serii, a zostawał w kopii).
-    if (parts.empty) continue;
-    const topic = typeof e.topic === "string" && topicIds.has(e.topic) ? e.topic : null;
-    journal.push({
-      id: e.id, at: e.at, kind: e.kind as JournalKind, topic, text: parts.text,
-      site: typeof e.site === "string" ? e.site.slice(0, SITE_MAX) : "",
-      ...(typeof e.siteId === "string" && e.siteId && e.siteId.length <= 64 ? { siteId: e.siteId } : {}),
-      checked: parts.checked.filter((id) => itemIds.has(id)),
-      images: parts.images,
-      ...(parts.recordings.length ? { recordings: parts.recordings } : {}),
-      ...(e.kind === "problem" && typeof e.resolved === "number" && Number.isFinite(e.resolved) ? { resolved: e.resolved } : {}),
-      ...(e.kind === "problem" && typeof e.solution === "string" && e.solution.trim() ? { solution: e.solution.trim().slice(0, JOURNAL_SOLUTION_MAX) } : {}),
-      ...(parts.test ? { test: parts.test } : {}),
-      ...(parts.fittings.length ? { fittings: parts.fittings } : {}),
-      ...(parts.stage ? { stage: parts.stage } : {}),
-      ...(parts.geo ? { geo: parts.geo } : {}),
-    });
+    // Kształt wpisu i pustość liczy `cleanEntry` (ta sama reguła co w kopii i dokumencie). Tu dochodzi
+    // tylko filtr materiału: temat i odhaczenia muszą istnieć. Wpis z odhaczeniami bez punktu zostaje jako zapis.
+    const base = cleanEntry(raw);
+    if (!base) continue;
+    const topic = base.topic && topicIds.has(base.topic) ? base.topic : null;
+    journal.push({ ...base, topic, checked: base.checked.filter((id) => itemIds.has(id)) });
   }
   journal.sort((a, b) => a.at - b.at);
   const sites: Record<string, SiteCard> = {};

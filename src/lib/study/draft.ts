@@ -1,10 +1,9 @@
 import { createPersistedStore } from "@/lib/persistedStore";
-import { cleanFittings, type Fitting } from "./fittings";
-import { cleanTest, type PressureTest } from "./pressureTest";
-import { isImageRef } from "@/lib/imageStore";
+import { type Fitting } from "./fittings";
+import { type PressureTest } from "./pressureTest";
 import { JOURNAL_DRAFT_KEY } from "./keys";
-import { cleanGeo, type GeoPoint } from "./geo";
-import { cleanRecordings, JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, type JournalKind } from "./yStudy";
+import { type GeoPoint } from "./geo";
+import { cleanEntryParts, JOURNAL_KINDS, type JournalKind } from "./yStudy";
 import type { Attachment } from "@/lib/attachments";
 
 /**
@@ -36,18 +35,20 @@ export const EMPTY_DRAFT: JournalDraft = { topic: "", kind: "ok", text: "", chec
 export function sanitizeDraft(defaults: JournalDraft, stored: unknown): JournalDraft {
   if (!stored || typeof stored !== "object") return defaults;
   const s = stored as Partial<JournalDraft>;
+  // Pola wpisu czyści ta sama funkcja co w dzienniku i w kopii (`cleanEntryParts`); szkic nie odrzuca pustego wpisu.
+  const parts = cleanEntryParts(s);
   return {
     topic: typeof s.topic === "string" ? s.topic.slice(0, 64) : "",
     kind: JOURNAL_KINDS.includes(s.kind as JournalKind) ? (s.kind as JournalKind) : "ok",
-    text: typeof s.text === "string" ? s.text.slice(0, JOURNAL_MAX_TEXT) : "",
-    checked: Array.isArray(s.checked) ? s.checked.filter((id): id is string => typeof id === "string").slice(0, 60) : [],
-    images: Array.isArray(s.images) ? s.images.filter((r): r is string => typeof r === "string" && isImageRef(r)).slice(0, JOURNAL_MAX_IMAGES) : [],
-    recordings: cleanRecordings(s.recordings),
-    test: cleanTest(s.test),
-    fittings: cleanFittings(s.fittings),
+    text: parts.text,
+    checked: parts.checked,
+    images: parts.images,
+    recordings: parts.recordings,
+    test: parts.test,
+    fittings: parts.fittings,
     at: typeof s.at === "number" && Number.isFinite(s.at) ? s.at : null,
-    stage: typeof s.stage === "string" && s.stage && s.stage.length <= 40 ? s.stage : null,
-    geo: cleanGeo(s.geo) ?? null,
+    stage: parts.stage ?? null,
+    geo: parts.geo ?? null,
   };
 }
 
