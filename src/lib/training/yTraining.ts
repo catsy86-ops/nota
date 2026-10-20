@@ -1,5 +1,5 @@
 import * as Y from "yjs";
-import { byTrainingTime, cleanEntry, cleanPlanDay, cleanTrainingReminder, PLAN_MAX_DAYS, TRAINING_MAX_ENTRIES, type PlanDay, type TrainingEntry, type TrainingReminder } from "./model";
+import { byTrainingTime, cleanEntry, cleanEquipment, cleanPlanDay, cleanTrainingReminder, PLAN_MAX_DAYS, TRAINING_MAX_ENTRIES, type PlanDay, type TrainingEntry, type TrainingEquipment, type TrainingReminder } from "./model";
 
 /**
  * Trening w Y.Doc notatek — ten sam dokument co synchronizacja, plik i kopia.
@@ -13,29 +13,46 @@ export interface TrainingDump {
   entries: TrainingEntry[];
   plans: PlanDay[];
   reminder: TrainingReminder | null;
+  equipment?: TrainingEquipment;
 }
 
 export function createYTraining(doc: Y.Doc) {
   const log = doc.getMap<TrainingEntry>("trainingLog");
   const plans = doc.getMap<PlanDay>("trainingPlans");
-  const meta = doc.getMap<TrainingReminder>("trainingMeta");
+  // Ustawienia treningu (przypomnienie, sprzęt): wartości czyszczone przy odczycie, więc typ `unknown`.
+  const meta = doc.getMap<unknown>("trainingMeta");
   let entriesSnap: TrainingEntry[] | null = null;
   let plansSnap: PlanDay[] | null = null;
   const listeners = new Set<() => void>();
   const emit = () => listeners.forEach((l) => l());
   log.observe(() => { entriesSnap = null; emit(); });
   plans.observe(() => { plansSnap = null; emit(); });
-  meta.observe(emit);
+  // Ustawienia są czytane przez useSyncExternalStore: odczyt musi zwracać ten sam obiekt, dopóki mapa się nie zmieni.
+  let metaSnap: { reminder: TrainingReminder | null; equipment: TrainingEquipment } | null = null;
+  const metaSnapshot = () => {
+    if (!metaSnap) metaSnap = { reminder: cleanTrainingReminder(meta.get("reminder")), equipment: cleanEquipment(meta.get("equipment")) };
+    return metaSnap;
+  };
+  meta.observe(() => { metaSnap = null; emit(); });
 
   /** Ustawienie przypomnienia o treningu; `null` = wyłączone. */
   function getReminder(): TrainingReminder | null {
-    return cleanTrainingReminder(meta.get("reminder"));
+    return metaSnapshot().reminder;
   }
 
   function setReminder(r: TrainingReminder | null): void {
     doc.transact(() => {
       if (r) meta.set("reminder", r); else meta.delete("reminder");
     }, TRAINING_ORIGIN);
+  }
+
+  /** Sprzęt w domu (największy ciężar hantli). */
+  function getEquipment(): TrainingEquipment {
+    return metaSnapshot().equipment;
+  }
+
+  function setEquipment(e: TrainingEquipment): void {
+    doc.transact(() => meta.set("equipment", cleanEquipment(e) as TrainingEquipment), TRAINING_ORIGIN);
   }
 
   /** Oczyszczony dziennik, chronologicznie. */
@@ -102,7 +119,7 @@ export function createYTraining(doc: Y.Doc) {
   }
 
   function dump(): TrainingDump {
-    return { entries: getEntries(), plans: getPlans(), reminder: getReminder() };
+    return { entries: getEntries(), plans: getPlans(), reminder: getReminder(), equipment: getEquipment() };
   }
 
   /**
@@ -114,12 +131,14 @@ export function createYTraining(doc: Y.Doc) {
     const inEntries = Array.isArray(d?.entries) ? d.entries.map(cleanEntry).filter((e): e is TrainingEntry => !!e) : [];
     const inPlans = Array.isArray(d?.plans) ? d.plans.map(cleanPlanDay).filter((p): p is PlanDay => !!p) : [];
     const inReminder = cleanTrainingReminder(d?.reminder);
+    const inEquipment = cleanEquipment(d?.equipment);
     doc.transact(() => {
       for (const e of inEntries) if (!log.has(e.id) && log.size < TRAINING_MAX_ENTRIES) log.set(e.id, e);
       for (const p of inPlans) if (!plans.has(p.id) && plans.size < PLAN_MAX_DAYS) plans.set(p.id, p);
       if (inReminder && !getReminder()) meta.set("reminder", inReminder);
+      if (inEquipment.dumbbellMaxKg !== undefined && getEquipment().dumbbellMaxKg === undefined) meta.set("equipment", inEquipment);
     }, TRAINING_ORIGIN);
   }
 
-  return { getEntries, getPlans, getReminder, setReminder, subscribe, addEntry, removeEntry, restoreEntry, addPlan, removePlan, restorePlan, dump, mergeDump };
+  return { getEntries, getPlans, getReminder, setReminder, getEquipment, setEquipment, subscribe, addEntry, removeEntry, restoreEntry, addPlan, removePlan, restorePlan, dump, mergeDump };
 }

@@ -17,6 +17,24 @@ describe("przypomnienie o treningu — czyszczenie", () => {
   });
 });
 
+describe("ustawienia treningu — stabilny odczyt dla useSyncExternalStore", () => {
+  it("dwa odczyty bez zmiany zwracają ten sam obiekt (inaczej React zapętla renderowanie)", () => {
+    const y = createYTraining(new Y.Doc());
+    y.setReminder({ time: "18:00" });
+    y.setEquipment({ dumbbellMaxKg: 20 });
+    expect(y.getReminder()).toBe(y.getReminder());
+    expect(y.getEquipment()).toBe(y.getEquipment());
+  });
+
+  it("zmiana ustawienia daje nowy obiekt", () => {
+    const y = createYTraining(new Y.Doc());
+    const before = y.getEquipment();
+    y.setEquipment({ dumbbellMaxKg: 24 });
+    expect(y.getEquipment()).not.toBe(before);
+    expect(y.getEquipment()).toEqual({ dumbbellMaxKg: 24 });
+  });
+});
+
 describe("przypomnienie o treningu — Yjs i kopia", () => {
   it("ustawienie zapisuje się i zdejmuje", () => {
     const y = createYTraining(new Y.Doc());

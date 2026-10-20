@@ -6,9 +6,10 @@ import { Input } from "@/components/ui/input";
 import { localDayKey } from "@/lib/dayDone";
 import { nextReminderAt } from "@/lib/supplements/model";
 import { EXERCISES, exerciseById, MUSCLE_GROUPS, type MuscleGroup } from "@/lib/training/catalog";
-import { byTrainingTime, planLine, progressByExercise, TRAINING_KG_MAX, TRAINING_NOTE_MAX, TRAINING_REMINDER_DEFAULT, TRAINING_REPS_MAX, TRAINING_WINDOW_END, volumeOf, type PlanDay, type TrainingEntry, type TrainingReminder, type TrainingSet } from "@/lib/training/model";
-import { addPlanDay, addTrainingEntry, removePlanDay, removeTrainingEntry, restorePlanDay, restoreTrainingEntry, setTrainingReminder, useTrainingEntries, useTrainingPlans, useTrainingReminder } from "@/lib/training/store";
+import { bestKgSeries, byTrainingTime, overDumbbell, planLine, progressByExercise, TRAINING_KG_MAX, TRAINING_NOTE_MAX, TRAINING_REMINDER_DEFAULT, TRAINING_REPS_MAX, TRAINING_WINDOW_END, volumeOf, type PlanDay, type TrainingEntry, type TrainingReminder, type TrainingSet } from "@/lib/training/model";
+import { addPlanDay, addTrainingEntry, removePlanDay, removeTrainingEntry, restorePlanDay, restoreTrainingEntry, setTrainingEquipment, setTrainingReminder, useTrainingEntries, useTrainingEquipment, useTrainingPlans, useTrainingReminder } from "@/lib/training/store";
 import { toastWithUndo } from "@/lib/undoToast";
+import { haptic } from "@/lib/haptics";
 import { useNotesContext } from "@/hooks/NotesProvider";
 
 /** Czas przerwy między seriami w sekundach. */
@@ -31,6 +32,7 @@ export function TrainingSection() {
       </h2>
 
       <TrainingReminderControl />
+      <EquipmentForm />
       <PlanList plans={plans} />
       <LogForm entries={entries} plans={plans} onSaved={() => setRestUntil(Date.now() + REST_SECONDS * 1000)} />
       {restUntil !== null && <RestTimer until={restUntil} onStop={() => setRestUntil(null)} />}
@@ -44,7 +46,7 @@ export function TrainingSection() {
         </div>
       )}
 
-      <ProgressList progress={progress} />
+      <ProgressList progress={progress} entries={entries} />
       <AddPlanForm />
     </section>
   );
@@ -145,6 +147,10 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
   const filled = parsed.filter((p) => p.reps !== undefined);
   const invalid = parsed.some((p) => p.reps === null || p.kg === null || (p.reps === undefined && p.kg !== undefined));
   const valid = !invalid && filled.length > 0 && note.length <= TRAINING_NOTE_MAX;
+  const equipment = useTrainingEquipment();
+  const exercise = exerciseById(exerciseId);
+  // Ostrzeżenie, nie blokada: ciężar ponad hantle z ustawienia da się zapisać (np. po zmianie hantli).
+  const overLimit = parsed.some((p) => p.kg !== undefined && p.kg !== null && overDumbbell(p.kg, exercise?.equipment ?? [], equipment));
 
   const save = () => {
     if (!valid) return;
@@ -211,29 +217,86 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
         </div>
       </div>
 
+      {overLimit && (
+        <p role="status" className="text-xs text-destructive-ink">
+          Ciężar powyżej Twoich hantli ({equipment.dumbbellMaxKg} kg) — sprawdź wpis albo zmień ustawienie sprzętu.
+        </p>
+      )}
       <Input aria-label="Uwagi do treningu" placeholder="Uwagi (opcjonalnie)" maxLength={TRAINING_NOTE_MAX} value={note} onChange={(e) => setNote(e.target.value)} />
       <Button type="submit" size="sm" disabled={!valid} className="coarse:h-11">Zapisz serie</Button>
     </form>
   );
 }
 
-function ProgressList({ progress }: { progress: ReturnType<typeof progressByExercise> }) {
+function ProgressList({ progress, entries }: { progress: ReturnType<typeof progressByExercise>; entries: TrainingEntry[] }) {
   const rows = [...progress.values()];
   if (rows.length === 0) return null;
   return (
     <div className="border-t border-dashed border-border pt-4">
       <h3 className="text-xs font-medium text-muted-foreground">Progres</h3>
-      <ul className="mt-2 space-y-1 text-sm" data-testid="training-progress">
-        {rows.map((p) => (
-          <li key={p.exerciseId} className="flex justify-between gap-3">
-            <span className="min-w-0 truncate">{exerciseById(p.exerciseId)?.name ?? p.exerciseId}</span>
-            <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
-              {p.bestKg !== undefined ? `rekord ${p.bestKg} kg (${shortDay(p.bestDay ?? "")})` : "bez ciężaru"} · {p.sessions}×
-            </span>
-          </li>
-        ))}
+      <ul className="mt-2 space-y-2 text-sm" data-testid="training-progress">
+        {rows.map((p) => {
+          const series = bestKgSeries(entries, p.exerciseId);
+          return (
+            <li key={p.exerciseId}>
+              <div className="flex justify-between gap-3">
+                <span className="min-w-0 truncate">{exerciseById(p.exerciseId)?.name ?? p.exerciseId}</span>
+                <span className="shrink-0 font-mono tabular-nums text-muted-foreground">
+                  {p.bestKg !== undefined ? `rekord ${p.bestKg} kg (${shortDay(p.bestDay ?? "")})` : "bez ciężaru"} · {p.sessions}×
+                </span>
+              </div>
+              {series.length >= 2 && <Sparkline values={series} label={`Rekordy kolejnych sesji: ${series.join(", ")} kg`} />}
+            </li>
+          );
+        })}
       </ul>
     </div>
+  );
+}
+
+/** Wykres kreskowy rekordów (SVG, bez biblioteki). Czytnik dostaje listę wartości w etykiecie. */
+function Sparkline({ values, label }: { values: number[]; label: string }) {
+  const w = 160;
+  const h = 28;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const span = max - min || 1;
+  const step = values.length > 1 ? w / (values.length - 1) : w;
+  const points = values.map((v, i) => `${(i * step).toFixed(1)},${(h - 2 - ((v - min) / span) * (h - 4)).toFixed(1)}`).join(" ");
+  return (
+    <svg role="img" aria-label={label} viewBox={`0 0 ${w} ${h}`} className="mt-1 h-7 w-40 text-primary-ink" preserveAspectRatio="none">
+      <polyline points={points} fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+    </svg>
+  );
+}
+
+/** Największy ciężar hantli w domu — używany w ostrzeżeniu przy zapisie serii. */
+function EquipmentForm() {
+  const equipment = useTrainingEquipment();
+  const [kg, setKg] = useState(equipment.dumbbellMaxKg !== undefined ? String(equipment.dumbbellMaxKg) : "");
+  const value = parseNum(kg, TRAINING_KG_MAX, false);
+  return (
+    <form
+      className="flex flex-wrap items-center gap-3 rounded-lg border border-border/60 px-3 py-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (value === null) return;
+        setTrainingEquipment({ dumbbellMaxKg: value && value > 0 ? value : undefined });
+      }}
+    >
+      <label className="text-sm">
+        Największy ciężar hantli (kg)
+        <Input
+          inputMode="decimal"
+          aria-invalid={value === null}
+          value={kg}
+          placeholder="np. 24"
+          onChange={(e) => setKg(e.target.value)}
+          className="ml-2 inline-block w-24 coarse:h-11"
+        />
+      </label>
+      <Button type="submit" variant="outline" size="sm" disabled={value === null} className="coarse:h-11">Zapisz sprzęt</Button>
+    </form>
   );
 }
 
@@ -337,7 +400,10 @@ function RestTimer({ until, onStop }: { until: number; onStop: () => void }) {
   }, []);
   const left = Math.max(0, Math.ceil((until - now) / 1000));
   useEffect(() => {
-    if (left === 0) onStop();
+    if (left !== 0) return;
+    // Koniec przerwy: wibracja (jeśli telefon ją ma i jest włączona), potem zamknięcie licznika.
+    haptic("success");
+    onStop();
   }, [left, onStop]);
 
   return (

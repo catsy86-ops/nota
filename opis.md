@@ -4263,7 +4263,10 @@ lub grupę”.
     3 serie na start (dodawanie do 30). Każda seria: powtórki (całkowite, 1–100) i ciężar w kg (co 0,5, opcjonalny).
     Uwagi (≤200 znaków). Zapis w bieżącej godzinie, dziś.
   - **Wybór dnia planu** nad formularzem: ustawia pierwsze ćwiczenie dnia i tyle serii, ile zaplanowano, z celem powtórek.
-  - **Przerwa:** po zapisie serii licznik 1:30 („Pomiń” kończy wcześniej).
+  - **Przerwa:** po zapisie serii licznik 1:30 („Pomiń” kończy wcześniej). Na końcu krótka wibracja (`haptic("success")`).
+  - **Sprzęt:** największy ciężar hantli (kg). Ciężar powyżej tego limitu w ćwiczeniu z hantlami pokazuje ostrzeżenie
+    (zapis nadal możliwy).
+  - **Wykres progresu:** przy ćwiczeniu z co najmniej dwiema sesjami z ciężarem — sparklajn (SVG) rekordów kolejnych sesji.
   - **Przypomnienie o treningu:** pole wyboru i godzina (domyślnie 18:00, okno do 20:00). Tworzy notatkę z dziennym powtarzaniem.
   - **Podpowiedź:** „Ostatnio (DD.MM): 10×20 kg, 8×22 kg” i przycisk „Użyj ostatnich”, który wypełnia serie.
   - **Dziś:** dzisiejsze wpisy z sumą serii i objętością (suma powtórek × kg).
@@ -4292,20 +4295,24 @@ lub grupę”.
 - **Ograniczenia i pułapki.**
   - Wpisy zawsze na dziś (formularz nie wybiera daty), tak jak w diecie.
   - Wybór dnia planu tylko ustawia ćwiczenie i liczbę serii (cel powtórek); ciężary wpisujesz ręcznie.
-    Brak wykresu progresu — jest lista rekordów.
-  - Przerwa (licznik 1:30) startuje po każdym zapisie serii, tylko na tym ekranie; nie zapisuje się w danych i nie wibruje.
-  - Brak ustawienia sprzętu (np. maksymalny ciężar hantli): sprzęt to tylko informacja w katalogu.
+  - Przerwa (licznik 1:30) startuje po każdym zapisie serii, tylko na tym ekranie; nie zapisuje się w danych.
+  - Wibracja tylko tam, gdzie przeglądarka ma `navigator.vibrate` (Android); na iPhonie i na komputerze jej nie będzie.
+    Respektuje przełącznik „Wibracje na telefonie” w ustawieniach efektów.
+  - Wykres to sparklajn bez osi i dat — pokazuje kierunek, nie wartości; dokładne liczby są w „rekord … kg”.
   - Przypomnienie o treningu: domyślnie 18:00, opis podaje okno do 20:00. Zmiana godziny lub wyłączenie
     sprząta poprzednią notatkę (idzie do kosza). Przypomnienie to notatka z dziennym powtarzaniem, jak kreatyna.
   - Ciężar co 0,5 kg; powtórki tylko całkowite; limit 5 000 wpisów treningu i 20 planów.
 - **Testy.**
   - `src/lib/training/model.test.ts` (katalog, czyszczenie serii i wpisów, plany, rekord, objętość, progres, kolejność).
   - `src/lib/training/yTraining.test.ts` (dodawanie, usuwanie i cofnięcie, plany, origin, scalanie).
-  - `src/lib/training/reminder.test.ts` (domyślna godzina, czyszczenie przypomnienia, zapis i scalanie z kopii).
+  - `src/lib/training/reminder.test.ts` (domyślna godzina, czyszczenie przypomnienia, zapis i scalanie z kopii,
+    stabilny odczyt dla `useSyncExternalStore`).
+  - `src/lib/training/equipment.test.ts` (limit hantli, ostrzeżenie, rekordy kolejnych sesji dla wykresu).
   - `src/components/cwiczenia/TrainingSection.test.tsx` (pusty plan, zapis serii, walidacja ułamków,
     „Użyj ostatnich”, dziś i progres).
   - `src/lib/fullBackup.test.ts` (trening i plany w kopii, przywracanie scala).
-  - Vitest: 193 pliki, 1714 testów zielone. E2E nie uruchamiano.
+  - Vitest: 194 pliki, 1723 testy zielone. E2E nie uruchamiano.
 - **Budżet paczki.** Wejściowy JS 390,4 KB gzip; próg 392 KB.
 - **Lint.** `eslint.config.js`: `src/lib/training/yTraining.ts` i jego testy na liście dozwolonych importów `yjs`.
-- **Commit:** `c7736f0` (kroki 4–5 planu Ćwiczeń: trening) oraz `9d8e57e` (przypomnienie o treningu, przerwa i wybór dnia planu, 2026-10-20).
+- **Commit:** `c7736f0` (kroki 4–5 planu Ćwiczeń: trening), `9d8e57e` (przypomnienie o treningu, przerwa i wybór dnia planu),
+  oraz wibracja, sprzęt, wykres progresu i poprawka stabilnego odczytu ustawień (2026-10-20, hash poniżej).

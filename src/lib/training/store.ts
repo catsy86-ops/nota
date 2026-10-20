@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { yjsStore } from "@/lib/yjsStore";
 import { localDayKey } from "@/lib/dayDone";
-import { cleanEntry, cleanPlanDay, type PlanDay, type TrainingEntry, type TrainingReminder, type TrainingSet } from "./model";
+import { cleanEntry, cleanPlanDay, type PlanDay, type TrainingEntry, type TrainingEquipment, type TrainingReminder, type TrainingSet } from "./model";
 import { createYTraining } from "./yTraining";
 
 /**
@@ -96,4 +96,12 @@ export function useTrainingReminder(): TrainingReminder | null {
 /** Zapis ustawienia przypomnienia (`null` = wyłączone). Notatkę-przypomnienie tworzy widok. */
 export function setTrainingReminder(r: TrainingReminder | null): void {
   yTraining.setReminder(r);
+}
+
+export function useTrainingEquipment(): TrainingEquipment {
+  return useSyncExternalStore(yTraining.subscribe, yTraining.getEquipment);
+}
+
+export function setTrainingEquipment(e: TrainingEquipment): void {
+  yTraining.setEquipment(e);
 }

@@ -65,6 +65,33 @@ export function cleanTrainingReminder(raw: unknown): TrainingReminder | null {
   return noteId ? { time: r.time, noteId } : { time: r.time };
 }
 
+/** Sprzęt w domu: największy ciężar hantli (kg). Brak = nieznany, nic nie ostrzega. */
+export interface TrainingEquipment {
+  dumbbellMaxKg?: number;
+}
+
+/** Czyszczenie sprzętu: liczba w zakresie 0–500 kg (i większa od zera), inaczej brak. */
+export function cleanEquipment(raw: unknown): TrainingEquipment {
+  const e = raw as Partial<TrainingEquipment> | null;
+  if (!e || typeof e !== "object") return {};
+  const max = cleanKg(e.dumbbellMaxKg);
+  return max !== undefined && max > 0 ? { dumbbellMaxKg: max } : {};
+}
+
+/** Czy ciężar przekracza hantle z ustawienia (tylko dla ćwiczeń z hantlami i znanym limitem). */
+export function overDumbbell(kg: number | undefined, exerciseEquipment: readonly string[], equipment: TrainingEquipment): boolean {
+  return kg !== undefined && equipment.dumbbellMaxKg !== undefined && exerciseEquipment.includes("hantle") && kg > equipment.dumbbellMaxKg;
+}
+
+/** Ciężary rekordowe kolejnych sesji ćwiczenia (od najstarszej), tylko sesje z ciężarem — dane do wykresu. */
+export function bestKgSeries(entries: readonly TrainingEntry[], exerciseId: string): number[] {
+  return [...entries]
+    .filter((e) => e.exerciseId === exerciseId)
+    .sort(byTrainingTime)
+    .map((e) => bestKg(e.sets))
+    .filter((kg): kg is number => kg !== undefined);
+}
+
 /** Ciężar: liczba ≥ 0 do 500 kg, zaokrąglona do pół kilo; inaczej `undefined`. */
 export function cleanKg(v: unknown): number | undefined {
   if (typeof v !== "number" || !Number.isFinite(v) || v < 0 || v > TRAINING_KG_MAX) return undefined;
