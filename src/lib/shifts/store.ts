@@ -1,17 +1,56 @@
-import { useSyncExternalStore } from "react";
+﻿import { useSyncExternalStore } from "react";
 import { yjsStore } from "@/lib/yjsStore";
 import { logDiag } from "@/lib/diagnostics";
-import { migrate, type DayEntry, type SettlementMonths, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
+import { migrate, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
 import { applyPattern } from "./pattern";
 import { planPaste, planTransfer, planWeekCopy, type TransferMode, type WeekCopyPlan } from "./move";
-import { createYShifts, type DeletedShiftType } from "./yShifts";
+import { createYShifts, MAIN_SCHEDULE_ID, type DeletedShiftType, type YShifts } from "./yShifts";
+import { createScheduleRegistry, type ShiftSchedule } from "./schedules";
 
 /**
  * Grafik żyje w dokumencie Yjs notatek (`yShifts.ts`), więc synchronizuje się
  * razem z nimi. Komponenty czytają przez `useShifts()` i zmieniają wyłącznie
  * akcjami poniżej.
+ *
+ * Grafików może być kilka (`schedules.ts`). Aktywny jest jeden naraz — wybór
+ * trzymamy w tym urządzeniu (localStorage), bo to preferencja widoku, nie dane.
+ * Wszystkie akcje działają na aktywnym grafiku; `yShifts` przepinane jest przy zmianie.
  */
-const yShifts = createYShifts(yjsStore.doc);
+const yjsDoc = yjsStore.doc;
+const registry = createScheduleRegistry(yjsDoc);
+// Literał, nie `SHIFTS_STORAGE_KEY`: ta stała jest niżej w pliku, a tu liczymy wartość od razu.
+const ACTIVE_KEY = "kaczy:shifts.active";
+
+function readActiveId(): string {
+  try {
+    return localStorage.getItem(ACTIVE_KEY) || MAIN_SCHEDULE_ID;
+  } catch {
+    return MAIN_SCHEDULE_ID;
+  }
+}
+
+let activeId = readActiveId();
+let yShifts: YShifts = createYShifts(yjsDoc, activeId);
+const storeListeners = new Set<() => void>();
+const emitStore = () => storeListeners.forEach((l) => l());
+const subscribeStore = (cb: () => void) => {
+  storeListeners.add(cb);
+  return () => { storeListeners.delete(cb); };
+};
+let unsubscribeActive = yShifts.subscribe(emitStore);
+
+/** Przepina aktywny grafik: zapamiętuje wybór w tym urządzeniu i powiadamia widoki. */
+function bindSchedule(id: string): void {
+  unsubscribeActive();
+  activeId = id;
+  yShifts = createYShifts(yjsDoc, id);
+  unsubscribeActive = yShifts.subscribe(emitStore);
+  try { localStorage.setItem(ACTIVE_KEY, id); } catch { /* prywatne okno — wybór zostanie w pamięci */ }
+  emitStore();
+}
+
+/** Grafik główny niezależnie od aktywnego — dla kopii i migracji. */
+const mainShifts = () => createYShifts(yjsDoc, MAIN_SCHEDULE_ID);
 
 /** Dawny zapis Grafiku w localStorage — dziś tylko źródło jednorazowej migracji. */
 export const SHIFTS_STORAGE_KEY = "kaczy:shifts";
@@ -30,14 +69,14 @@ function migrateFromLocalStorage(): void {
     if (!raw) return;
     let device = localStorage.getItem(DEVICE_KEY);
     if (!device) { device = newShiftId("dev-"); localStorage.setItem(DEVICE_KEY, device); }
-    if (yShifts.isMerged(device)) return;
+    if (mainShifts().isMerged(device)) return;
     let parsed: unknown;
     try { parsed = JSON.parse(raw); } catch { parsed = undefined; }
     if (parsed === undefined) {
       logDiag("error", "shifts", `uszkodzony stary grafik — zostaje w ${SHIFTS_STORAGE_KEY}`);
       return;
     }
-    yShifts.mergeIn(migrate(parsed), device);
+    mainShifts().mergeIn(migrate(parsed), device);
     logDiag("info", "shifts", "grafik przeniesiony z localStorage do Yjs");
   } catch (err) {
     logDiag("error", "shifts", "migracja grafiku nie powiodła się", err);
@@ -49,9 +88,13 @@ const readyListeners = new Set<() => void>();
 const readyPromise = yjsStore.ready().then(() => {
   migrateFromLocalStorage();
   // Praca na budowie (10 h) — dodana do rodzajów startowych 2026-10-09.
-  yShifts.addPresetOnce("presetBudowa", "b");
+  mainShifts().addPresetOnce("presetBudowa", "b");
   // Dniówka 8–16 — dodana 2026-10-09.
-  yShifts.addPresetOnce("presetDniowka", "e");
+  mainShifts().addPresetOnce("presetDniowka", "e");
+  // Zapamiętany grafik mógł zniknąć (usunięty na innym urządzeniu) — wtedy wracamy do głównego.
+  if (activeId !== MAIN_SCHEDULE_ID && !registry.has(activeId)) bindSchedule(MAIN_SCHEDULE_ID);
+  // Dokument jest już wczytany — widoki czytające grafik mają przeliczyć się na właściwych danych.
+  emitStore();
   ready = true;
   readyListeners.forEach((l) => l());
 });
@@ -59,12 +102,16 @@ const readyPromise = yjsStore.ready().then(() => {
 /** Czeka na wczytanie dokumentu i migrację (testy, kopia zapasowa). */
 export const shiftsReady = () => readyPromise;
 
+/** Aktywny grafik (widoki) — kopia zapasowa używa `mainShiftData` i `scheduleDump`. */
 export const shiftStore = {
-  get: yShifts.get,
-  subscribe: yShifts.subscribe,
+  get: () => yShifts.get(),
+  subscribe: subscribeStore,
 };
 
-export const useShifts = () => useSyncExternalStore(yShifts.subscribe, yShifts.get);
+export const useShifts = () => useSyncExternalStore(subscribeStore, () => yShifts.get());
+
+/** Grafik główny niezależnie od wyboru widoku — trafia do kopii jako `shifts`. */
+export const mainShiftData = (): ShiftData => mainShifts().get();
 
 /** Czy dokument jest już wczytany — wcześniej widok pokazałby pusty grafik. */
 export const useShiftsReady = () => useSyncExternalStore(
@@ -72,8 +119,8 @@ export const useShiftsReady = () => useSyncExternalStore(
   () => ready,
 );
 
-export const setDayShift = yShifts.setDayShift;
-export const setDayEntry = yShifts.setDayEntry;
+export const setDayShift: YShifts["setDayShift"] = (...args) => yShifts.setDayShift(...args);
+export const setDayEntry: YShifts["setDayEntry"] = (...args) => yShifts.setDayEntry(...args);
 
 /** Poprzednie wartości zmienionych dni (`null` = dzień był pusty) — dla „Cofnij”. */
 export type DaysBefore = Record<string, DayEntry | null>;
@@ -113,22 +160,22 @@ export function copyWeekToNext(weekOf: string, todayKey: string): { before: Days
   return { before: yShifts.writeDays(plan.changes), plan };
 }
 
-export const saveShiftType:(type: ShiftType) => void = yShifts.saveShiftType;
-export const deleteShiftType: (id: string) => DeletedShiftType | null = yShifts.deleteShiftType;
-export const restoreShiftType = yShifts.restoreShiftType;
-export const addDefaultShiftTypes = yShifts.addDefaultShiftTypes;
+export const saveShiftType = (type: ShiftType): void => yShifts.saveShiftType(type);
+export const deleteShiftType = (id: string): DeletedShiftType | null => yShifts.deleteShiftType(id);
+export const restoreShiftType: YShifts["restoreShiftType"] = (...args) => yShifts.restoreShiftType(...args);
+export const addDefaultShiftTypes: YShifts["addDefaultShiftTypes"] = (...args) => yShifts.addDefaultShiftTypes(...args);
 export type { DeletedShiftType };
 
 /** Cały Grafik naraz — przywrócenie kopii zapasowej. */
 export function restoreShifts(data: ShiftData): void {
-  yShifts.replaceAll(migrate(data));
+  mainShifts().replaceAll(migrate(data));
 }
 
-export const savePattern: (pattern: ShiftPattern) => void = yShifts.savePattern;
-export const deletePattern = yShifts.deletePattern;
+export const savePattern = (pattern: ShiftPattern): void => yShifts.savePattern(pattern);
+export const deletePattern = (id: string): void => yShifts.deletePattern(id);
 /** Premie w rachunku: zapis (dodanie albo poprawka), usunięcie zwraca premię do cofnięcia. */
-export const saveBonus: (bonus: import("./model").ShiftBonus) => boolean = yShifts.saveBonus;
-export const deleteBonus: (id: string) => import("./model").ShiftBonus | null = yShifts.deleteBonus;
+export const saveBonus = (bonus: ShiftBonus): boolean => yShifts.saveBonus(bonus);
+export const deleteBonus = (id: string): ShiftBonus | null => yShifts.deleteBonus(id);
 
 const positive = (n: number) => (Number.isFinite(n) && n > 0 ? n : 0);
 
@@ -176,4 +223,57 @@ export function setNightFrom(hour: number): void {
 /** Losowe id — `Date.now()` z dwóch telefonów w tej samej milisekundzie dałby kolizję po scaleniu. */
 export function newShiftId(prefix: string): string {
   return `${prefix}${crypto.randomUUID().replace(/-/g, "").slice(0, 12)}`;
+}
+
+/** Lista grafików (główny pierwszy). Stabilny obiekt, dopóki lista się nie zmieni. */
+export const useSchedules = (): ShiftSchedule[] => useSyncExternalStore(registry.subscribe, registry.list);
+
+export const activeScheduleId = (): string => activeId;
+
+/** Id aktywnego grafiku jako stan dla widoku (zmienia się przy przełączeniu). */
+export const useActiveScheduleId = (): string => useSyncExternalStore(subscribeStore, () => activeId);
+
+/** Przełącza widok na inny grafik; nieznany id zostaje bez zmian. */
+export function setActiveSchedule(id: string): void {
+  if (id === activeId || !registry.has(id)) return;
+  bindSchedule(id);
+}
+
+/** Nowy grafik (pusty). `null` = pusta nazwa albo limit grafików. */
+export function createSchedule(name: string): ShiftSchedule | null {
+  return registry.add(name);
+}
+
+export function renameSchedule(id: string, name: string): boolean {
+  return registry.rename(id, name);
+}
+
+/** Usuwa grafik z danymi. Główny nie da się usunąć; gdy był aktywny, wraca widok do głównego. */
+export function removeSchedule(id: string): boolean {
+  if (!registry.remove(id)) return false;
+  if (id === activeId) bindSchedule(MAIN_SCHEDULE_ID);
+  else emitStore();
+  return true;
+}
+
+/** Zrzut danych jednego grafiku (dla kopii zapasowej). */
+export function scheduleDump(id: string): ShiftData {
+  return createYShifts(yjsDoc, id).get();
+}
+
+/** Grafiki poza głównym, z nazwami — do kopii zapasowej. */
+export function extraSchedulesDump(): { id: string; name: string; data: ShiftData }[] {
+  return registry.list().filter((s) => s.id !== MAIN_SCHEDULE_ID).map((s) => ({ id: s.id, name: s.name, data: scheduleDump(s.id) }));
+}
+
+/**
+ * Przywraca dodatkowy grafik z kopii: tworzy go pod tym samym id i dokłada brakujące dane (bez kasowania).
+ * Zwraca `false`, gdy nie ma już miejsca na nowy grafik.
+ */
+export function restoreExtraSchedule(id: string, name: string, data: ShiftData): boolean {
+  if (!registry.has(id)) {
+    if (!registry.add(name, id)) return false;
+  }
+  createYShifts(yjsDoc, id).mergeIn(migrate(data));
+  return true;
 }

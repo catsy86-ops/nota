@@ -25,6 +25,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ShiftSummary } from "./ShiftSummary";
+import { ScheduleSwitcher } from "./ScheduleSwitcher";
 import { ShiftSettingsDialog } from "./ShiftSettingsDialog";
 import { ShiftTypeDialog } from "./ShiftTypeDialog";
 import { DayDialog } from "./DayDialog";
@@ -279,6 +280,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
     // przy malowaniu dni i przewijaniu (plan UI 2.3).
     <div className="flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start xl:gap-8 short:grid short:grid-cols-[auto_minmax(0,1fr)] short:items-center short:gap-x-3 short:gap-y-2">
       <div className="contents xl:flex xl:flex-col xl:gap-5 xl:min-w-0">
+        <div className="order-0 w-full"><ScheduleSwitcher /></div>
         <div className="order-2 flex flex-wrap items-center justify-between gap-2">
           <div role="group" aria-label="Widok Grafiku" className="flex rounded-xl bg-muted p-0.5">
             {([["month", "Miesiąc"], ["week", "Tydzień"]] as const).map(([id, text]) => (

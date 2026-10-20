@@ -14,7 +14,7 @@ import { imageStore, isEmbeddableImageDataUrl } from "@/lib/imageStore";
 import { journalImageRefs } from "@/lib/study/images";
 import { recordingRefsIn, siteDocRefsIn } from "@/lib/study/journalRefs";
 import { STUDY_STORAGE_KEY } from "@/lib/study/keys";
-import { restoreShifts, shiftStore, shiftsReady } from "@/lib/shifts/store";
+import { extraSchedulesDump, mainShiftData, restoreExtraSchedule, restoreShifts, shiftsReady } from "@/lib/shifts/store";
 import { migrate } from "@/lib/shifts/model";
 import { BACKUP_ATTACHMENTS_BUDGET_BYTES, formatFileSize, type Attachment } from "@/lib/attachments";
 
@@ -139,7 +139,9 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     settings: { ...readKeys(SETTINGS_KEYS), [STUDY_STORAGE_KEY]: JSON.stringify(stateFromDump(study)) },
     achievements: readKeys([ACHIEVEMENTS_KEY])[ACHIEVEMENTS_KEY],
     // Ten sam JSON co dawny zapis w localStorage — starsze wersje aplikacji go odczytają.
-    shifts: JSON.stringify(shiftStore.get()),
+    // Grafik główny w `shifts` (jak dawniej, starsze wersje go odczytają); pozostałe grafiki osobno.
+    shifts: JSON.stringify(mainShiftData()),
+    ...(extraSchedulesDump().length ? { shiftSchedules: JSON.stringify(extraSchedulesDump()) } : {}),
     study: JSON.stringify(study),
     // Odżywki i odhaczenia w osobnej sekcji; scalane przy przywracaniu, bez kasowania (stara kopia bez niej działa dalej).
     supplements: JSON.stringify(supplementsDump()),
@@ -286,6 +288,10 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
     try {
       await shiftsReady();
       restoreShifts(migrate(JSON.parse(backup.shifts)));
+      // Dodatkowe grafiki: dokładane pod ich id (bez kasowania tego, co jest na telefonie).
+      for (const s of backup.shiftSchedules ? JSON.parse(backup.shiftSchedules) as { id: string; name: string; data: unknown }[] : []) {
+        if (typeof s?.id === "string" && typeof s?.name === "string") restoreExtraSchedule(s.id, s.name, migrate(s.data));
+      }
     } catch (err) { logDiag("warn", "backup", "cannot restore shifts", err); }
   }
   const legacyStudy = backup.settings?.[STUDY_STORAGE_KEY];

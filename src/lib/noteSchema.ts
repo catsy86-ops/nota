@@ -112,6 +112,8 @@ export interface FullBackup {
   training?: string;
   /** Długi (lib/debts/yDebts.ts, JSON tablica pożyczek); kształt waliduje cleanDebt przy scalaniu. */
   debts?: string;
+  /** Grafiki poza głównym (`lib/shifts/schedules.ts`, JSON tablica `{ id, name, data }`); scalane przy przywracaniu. */
+  shiftSchedules?: string;
   /**
    * v3: bajty załączników (hash SHA-256 → data URL), każdy raz. Manifesty są
    * w `notes[].attachments`; plik większy niż budżet backupu jest pominięty —
@@ -150,6 +152,7 @@ export const fullBackupSchema = z.object({
   diet: z.string().optional().catch(undefined),
   training: z.string().optional().catch(undefined),
   debts: z.string().optional().catch(undefined),
+  shiftSchedules: z.string().optional().catch(undefined),
   attachmentBlobs: z.record(z.string()).optional().catch(undefined),
   skipped: z.object({ tooLarge: z.number(), missing: z.number(), journalPhotos: z.number(), siteDocs: z.number(), recordings: z.number().optional().catch(undefined) }).optional().catch(undefined),
   // Starsze kopie nie mają sekcji — wtedy po prostu brak definicji.

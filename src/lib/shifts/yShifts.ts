@@ -31,14 +31,24 @@ const localDayKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).
 
 const byOrder = <T extends { order?: number }>(a: T, b: T) => (a.order ?? 0) - (b.order ?? 0);
 
-export function createYShifts(doc: Y.Doc) {
-  const types = doc.getMap<ShiftType>("shiftTypes");
-  const days = doc.getMap<DayEntry>("shiftDays");
-  const patterns = doc.getMap<ShiftPattern>("shiftPatterns");
-  const bonuses = doc.getMap<ShiftBonus>("shiftBonuses");
-  const meta = doc.getMap<unknown>("shiftMeta");
+/** Nazwy map jednego grafiku (bez prefiksu). Pierwszy grafik („main”) używa ich wprost — dane sprzed wielu grafików zostają na miejscu. */
+export const SHIFTS_MAP_BASE_NAMES = ["shiftTypes", "shiftDays", "shiftPatterns", "shiftBonuses", "shiftMeta", "shiftMigrations"] as const;
+export const MAIN_SCHEDULE_ID = "main";
+
+/** Nazwa mapy dla danego grafiku: „main” bez prefiksu, pozostałe z identyfikatorem. */
+export function shiftsMapName(scheduleId: string, base: (typeof SHIFTS_MAP_BASE_NAMES)[number]): string {
+  return scheduleId === MAIN_SCHEDULE_ID ? base : `${scheduleId}:${base}`;
+}
+
+/** Grafik jako zestaw map w dokumencie. Każdy grafik ma własne `types`, `days`, cykle, premie i migracje. */
+export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID) {
+  const types = doc.getMap<ShiftType>(shiftsMapName(scheduleId, "shiftTypes"));
+  const days = doc.getMap<DayEntry>(shiftsMapName(scheduleId, "shiftDays"));
+  const patterns = doc.getMap<ShiftPattern>(shiftsMapName(scheduleId, "shiftPatterns"));
+  const bonuses = doc.getMap<ShiftBonus>(shiftsMapName(scheduleId, "shiftBonuses"));
+  const meta = doc.getMap<unknown>(shiftsMapName(scheduleId, "shiftMeta"));
   /** Urządzenia, których stary zapis jest już w dokumencie (id urządzenia → czas). */
-  const migrations = doc.getMap<number>("shiftMigrations");
+  const migrations = doc.getMap<number>(shiftsMapName(scheduleId, "shiftMigrations"));
 
   let snapshot: ShiftData | null = null;
   const listeners = new Set<() => void>();
