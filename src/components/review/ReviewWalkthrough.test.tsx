@@ -39,11 +39,21 @@ describe("ReviewWalkthrough — kosz wymaga potwierdzenia", () => {
     expect(onTrash).toHaveBeenCalledWith("a");
   });
 
-  it("skróty K i A działają bez potwierdzenia (archiwum ma „Cofnij”)", () => {
+  it("skrót A otwiera potwierdzenie archiwizacji; po potwierdzeniu notatka idzie do archiwum", () => {
     const { onArchive } = setup();
     fireEvent.keyDown(window, { key: "a" });
-    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(screen.getByText("Zarchiwizować?")).toBeTruthy();
+    expect(onArchive).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Archiwizuj" }));
     expect(onArchive).toHaveBeenCalledWith("a");
+  });
+
+  it("skrót K działa bez potwierdzenia (nic nie zmienia)", () => {
+    const { onArchive, onTrash } = setup();
+    fireEvent.keyDown(window, { key: "k" });
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(onArchive).not.toHaveBeenCalled();
+    expect(onTrash).not.toHaveBeenCalled();
   });
 
   it("pod otwartym potwierdzeniem skróty nie przechodzą dalej", () => {

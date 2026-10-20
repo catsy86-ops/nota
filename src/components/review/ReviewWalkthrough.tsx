@@ -65,7 +65,13 @@ export default function ReviewWalkthrough({ queue, onArchive, onTrash, onFinish,
   };
 
   const keep = () => advance({ kept: 1 });
-  const archive = () => { onArchive(current.note.id); advance({ archived: 1 }); };
+  // Archiwizacja też pyta (A i przycisk), jak kosz; „Nie pytaj ponownie” jest wspólne dla obu.
+  const archive = () => confirmAction({
+    kind: "archive",
+    title: "Zarchiwizować?",
+    description: `„${current.note.title.trim() || "Bez tytułu"}” trafi do archiwum.`,
+    run: () => { onArchive(current.note.id); advance({ archived: 1 }); },
+  });
   // Kosz pyta o potwierdzenie (też przy skrócie D); „Nie pytaj ponownie” działa jak w reszcie aplikacji.
   const trash = () => confirmAction({
     kind: "trash",
