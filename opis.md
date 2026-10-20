@@ -2136,7 +2136,7 @@ i nie będące podnotatkami. Przeniesienie do folderu albo nadanie etykiety usuw
   - `src/pages/Index.tsx` — `inboxCount={inboxCount}` przekazany do `BottomNav`.
 - **Testy.** `src/lib/inbox.test.ts` (9, w tym prywatność: zablokowana notatka poza skrzynką). Kafelka w arkuszu nie
   testuje komponent (brak testu `BottomNav`); sprawdzi go e2e przy okazji przeglądu telefonu.
-- **Commit:** `TBD` (2026-10-20, Skrzynka).
+- **Commit:** `ba47169` (2026-10-20, Skrzynka).
 
 **Testy.** `src/lib/inbox.test.ts` (reguła skrzynki, podział tekstu), `src/components/InboxCapture.test.tsx` (Enter,
 pusty tekst), `e2e/inbox-today.spec.ts` (zapis, licznik w pasku, „Cofnij”, pusta skrzynka).
