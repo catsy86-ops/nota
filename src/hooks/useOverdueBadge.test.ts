@@ -66,6 +66,12 @@ describe("useOverdueBadge", () => {
     expect(setAppBadge).toHaveBeenLastCalledWith(2);
   });
 
+  it("adds terminy Pracy do tytułu i ikony, tak jak do listy (D1)", () => {
+    const { result } = renderHook(() => useOverdueBadge([note("a", NOW - 1000)], 2));
+    expect(result.current).toBe(3);
+    expect(document.title).toBe("(3) NOTKI");
+  });
+
   it("restores the plain title and clears the badge at zero", () => {
     const { result } = renderHook(() => useOverdueBadge([note("a", NOW + 1000)]));
     expect(result.current).toBe(0);

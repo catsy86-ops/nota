@@ -109,3 +109,11 @@ Przed startem każdego działu: osobny plan w `docs/`, zatwierdzenie zakresu, co
 - ✅ Faza 1: punkty 1b (nagłówki `<h2>`), 1a (cele dotyku 44 px), 1c (prefiks „Zaległe:”, bez zmiany rozmiaru tekstu), 1e (chip „+1 h”), 1f (obrys fokusu), 1d (pusty stan z archiwum), 1g (komentarz `useOverdueBadge`).
 - ⏸ Nie zrobione z fazy 1: 1g część „odświeżany `now`”, 2 (fokus po akcji — faza 2), 12 (przycisk w pustym stanie), 15 (12 px), 17 (ogłoszenie po odhaczeniu).
 - ⏸ Fazy 2 i 3 czekają na decyzje D1–D4.
+
+## Status 2026-10-20 — decyzje D1–D4 (bez commita)
+
+Decyzje właściciela: D1 ujednolicić liczbę (pasek i tytuł liczą to samo co lista, z Pracą); D2 „Gotowe” od razu przy każdym terminie w Terminach; D3 „Gotowe” kończy wystąpienie; D4 archiwum pokazywane i przeszukiwane, poza „Zaległe” i licznikiem.
+
+- ✅ 2a (Gotowe dla wszystkich, wystąpienie w serii), 2b (odłożenie nie przepisuje `reminderDay`), 2c (fokus po akcji), 2d (archiwum w wyszukiwaniu i poza grupami).
+- ✅ 3a w zakresie D1 (liczba Pracy na pasku i w tytule), 3b częściowo — brak sprzątania duplikatów (`endOfDay`, sortowania).
+- Szczegóły i ograniczenia w `opis.md`, sekcja „Przypomnienia — fazy 2–3 planu wg decyzji D1–D4”.

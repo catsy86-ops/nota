@@ -20,6 +20,8 @@ import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
 import { useViewRoute } from "@/hooks/useViewRoute";
 import { parseViewRoute } from "@/lib/viewRoute";
 import { groupReminders } from "@/lib/reminderAgenda";
+import { useStudyOverdueCount } from "@/lib/studyOverdueCount";
+import { searchNotes } from "@/lib/searchNotes";
 import { resolveWikiTarget, splitWikiTarget } from "@/lib/wikiLinks";
 import { requestHeading } from "@/lib/wikiHeading";
 import { useLatestRef } from "@/hooks/useLatestRef";
@@ -110,6 +112,7 @@ const ReminderCalendarView = lazy(() => loadCalendarView().then((m) => ({ defaul
 const DailyReportNudge = lazy(() => import("@/components/study/DailyReportNudge"));
 // Harmonogram dla serwera push — tylko przy włączonych powiadomieniach przy zamkniętej aplikacji.
 const PushScheduleSync = lazy(() => import("@/components/PushScheduleSync"));
+const StudyOverdueSync = lazy(() => import("@/components/review/StudyOverdueSync"));
 // Czytnik notatek poza paczką startową; doczytywany w tle, gdy przeglądarka odpocznie (patrz efekt w `Index`),
 // więc pierwsze otwarcie notatki nie czeka.
 const loadNoteReader = () => import("@/components/NoteReader");
@@ -297,7 +300,13 @@ const Index = () => {
 
   useDayDoneReward(view === "today" && !search ? displayNotes : null);
   // W Terminach archiwum zostaje w liście (dzwoni), więc „Brak przypomnień” nie może mówić prawdy tylko o `displayNotes` (1d planu).
-  const reminderRowCount = view === "reminders" ? groupReminders([...others, ...archivedNotes]).reduce((n, g) => n + g.notes.length, 0) : 0;
+  // Archiwum nie wchodzi do grup „Zaległe”/„Nadchodzące” (D4): ma własną sekcję na dole, z wyszukiwaniem.
+  const reminderGroups = useMemo(() => (view === "reminders" ? groupReminders(others) : []), [view, others]);
+  const archivedRows = useMemo(
+    () => (view === "reminders" ? (deferredSearch ? searchNotes(archivedNotes, deferredSearch) : archivedNotes) : []),
+    [view, deferredSearch, archivedNotes],
+  );
+  const reminderRowCount = view === "reminders" ? reminderGroups.reduce((n, g) => n + g.notes.length, 0) + archivedRows.length : 0;
 
   // Sekcje widoku: „Przypięte” (zwijane od 4 notatek) i reszta, opcjonalnie podzielona na grupy.
   // `visibleNotes` = to, co faktycznie jest na ekranie (bez zwiniętych) w kolejności widoku.
@@ -484,7 +493,8 @@ const Index = () => {
 
   // Licznik w pasku bocznym tylko przy tym, co wymaga uwagi: zaległe przypomnienia i Kosz.
   // Ta sama liczba ląduje w tytule karty i na ikonie aplikacji (useOverdueBadge).
-  const overdueCount = useOverdueBadge(reminderNotes);
+  // Zaległości: aktywne notatki plus terminy Pracy (D1); archiwum nie liczy się (D4).
+  const overdueCount = useOverdueBadge(notes, useStudyOverdueCount());
   // Trwałe usunięcie zabiera ze sobą historię wersji — inaczej zostawałaby
   // w `localStorage` na zawsze i zjadała limit.
   const deleteNoteForever = useCallback((id: string) => { deleteNote(id); deleteVersions(id); }, [deleteNote, deleteVersions]);
@@ -526,6 +536,7 @@ const Index = () => {
       onArchive={view === "archive" ? undefined : view === "trash" ? undefined : handleArchiveSingle}
       onUnarchive={view === "archive" ? unarchiveNote : view === "trash" ? restoreFromTrash : undefined}
       isArchived={view === "archive" || view === "trash"}
+      reminderActions={view === "reminders"}
       onMoveToFolder={view === "trash" ? undefined : handleMoveToFolderGlow}
       getVersions={getVersions}
       onSaveVersion={addVersion}
@@ -704,11 +715,16 @@ const Index = () => {
               <StudyDueRows onOpenStudy={() => go("study")} />
             </Suspense>
           )}
-          {view === "reminders" && groupReminders([...others, ...archivedNotes]).map((group, i) => (
+          {view === "reminders" && reminderGroups.map((group, i) => (
             <NoteGroupSection key={group.key} groupKey={`reminders-${group.key}`} label={group.label} count={group.notes.length} tone={group.key === "overdue" || group.key === "missed" ? "alert" : "default"}>
               {renderGrid(group.notes, i)}
             </NoteGroupSection>
           ))}
+          {view === "reminders" && archivedRows.length > 0 && (
+            <NoteGroupSection groupKey="reminders-archive" label="W archiwum" count={archivedRows.length}>
+              {renderGrid(archivedRows, reminderGroups.length)}
+            </NoteGroupSection>
+          )}
           {view === "reminders" && (
             <Suspense fallback={null}>
               <SeriesForecastSection notes={reminderNotes} />
@@ -844,6 +860,9 @@ const Index = () => {
     <Suspense fallback={null}>
       <DailyReportNudge onOpenWork={() => setView("study")} />
       {pushEnabled && <PushScheduleSync notes={reminderNotes} />}
+      <Suspense fallback={null}>
+        <StudyOverdueSync />
+      </Suspense>
     </Suspense>
 
     {paletteOpen && (

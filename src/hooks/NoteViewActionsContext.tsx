@@ -36,6 +36,8 @@ export interface NoteViewActions {
    * każdą kartę przy każdej zmianie listy — wtedy wyłączona.
    */
   animateLayout?: boolean;
+  /** Widok Terminy: „Gotowe” przy każdym terminie, nie tylko zaległym (decyzja D2). */
+  reminderActions?: boolean;
 }
 
 const NoteViewActionsContext = createContext<NoteViewActions | null>(null);

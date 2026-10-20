@@ -25,24 +25,26 @@ export function applyAppBadge(count: number, nav: BadgeNavigator = navigator): v
 /**
  * Liczba zaległych przypomnień w tytule karty i na ikonie aplikacji.
  * Zwraca tę liczbę, żeby pasek boczny nie liczył jej drugi raz.
- * `notes` to notatki z przypomnieniami poza koszem — archiwum też, bo jego przypomnienia dzwonią (jak w Terminach).
+ * `notes` to aktywne notatki z przypomnieniami (bez kosza i archiwum — D4 planu Przypomnień).
+ * `extra` to zaległości spoza notatek (terminy Pracy), żeby pasek i tytuł liczyły to samo co lista.
  */
-export function useOverdueBadge(notes: Note[]): number {
+export function useOverdueBadge(notes: Note[], extra = 0): number {
   const enabled = useBadgeEnabled();
   // Po powrocie do karty i po północy liczymy od razu, bez czekania na odpytanie.
   const tick = useDayClock();
   const [, force] = useReducer((x: number) => x + 1, 0);
   const notesRef = useLatestRef(notes);
-  const count = countOverdue(notes);
+  const extraRef = useLatestRef(extra);
+  const count = countOverdue(notes) + extra;
   const shown = useRef(count);
   shown.current = count;
   // Terminy mijają bez zmiany listy notatek — pilnujemy tego co kilkanaście sekund.
   useEffect(() => {
     const id = window.setInterval(() => {
-      if (countOverdue(notesRef.current) !== shown.current) force();
+      if (countOverdue(notesRef.current) + extraRef.current !== shown.current) force();
     }, RECHECK_MS);
     return () => window.clearInterval(id);
-  }, [notesRef]);
+  }, [notesRef, extraRef]);
 
   useEffect(() => {
     if (!enabled) {

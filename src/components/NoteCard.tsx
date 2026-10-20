@@ -48,7 +48,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
   const {
     onUpdate, onDelete, onTogglePin, onArchive, onUnarchive, onDuplicate, onMoveToFolder,
     isArchived, getVersions, onSaveVersion, onRestoreVersion, onPresent, knownTitles, onWikiClick,
-    wikiIndex, onOpenNote, selectionMode, onToggleSelect, animateLayout = true,
+    wikiIndex, onOpenNote, selectionMode, onToggleSelect, animateLayout = true, reminderActions,
   } = useNoteViewActions();
   const noteVersions = getVersions?.(note.id);
   const prefs = useViewPrefs();
@@ -305,6 +305,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
             <NoteCardBody
               note={note}
               isArchived={isArchived}
+              reminderActions={reminderActions}
               selectable={!!onToggleSelect}
               snippet={snippet}
               searchTerms={searchTerms}
