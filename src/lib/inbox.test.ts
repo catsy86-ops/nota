@@ -13,6 +13,13 @@ describe("isInboxNote", () => {
   });
 });
 
+describe("isInboxNote — prywatność", () => {
+  it("zablokowana (prywatna) notatka bez folderu nie trafia do skrzynki ani do licznika", () => {
+    expect(isInboxNote({ folderId: null, labels: [], parentId: null, locked: true })).toBe(false);
+    expect(isInboxNote({ folderId: null, labels: [], parentId: null, locked: false })).toBe(true);
+  });
+});
+
 describe("captureParts", () => {
   it("jednolinijkowy wpis staje się tytułem, bez dublowania w treści", () => {
     expect(captureParts("Kupić rury")).toEqual({ title: "Kupić rury", content: "" });

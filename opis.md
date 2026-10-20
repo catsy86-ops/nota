@@ -2121,8 +2121,22 @@ i nie będące podnotatkami. Przeniesienie do folderu albo nadanie etykiety usuw
 - Notatki w koszu i archiwum nie są w skrzynce (reguła działa na aktywnych notatkach).
 - Starsze notatki bez folderu i etykiet też trafiają do skrzynki. To zamierzone: to „do posortowania”.
 - Pasek „Zapisz notatkę…” nie pojawia się w skrzynce. Nowe notatki z szablonami robi się dalej w widoku Notatek.
-- Jest wpis „Skrzynka” w palecie poleceń (`CommandPalette.tsx`). Brak pozycji w dolnej nawigacji telefonu (miejsce
-  na pasku jest ograniczone) — tam skrzynkę otwiera się z paska bocznego albo z palety.
+- Jest wpis „Skrzynka” w palecie poleceń (`CommandPalette.tsx`) i w menu „Więcej” na telefonie (od 2026-10-20, z licznikiem).
+
+## Skrzynka — prywatność i dostęp z telefonu (2026-10-20)
+
+- **Co robi.**
+  - Notatka prywatna (zablokowana) nigdy nie trafia do skrzynki: ani na liście, ani w liczniku. Wcześniej prywatna
+    notatka bez folderu i etykiet była liczona i pokazywana jako pusta karta.
+  - Na telefonie Skrzynka jest w menu „Więcej” (grupa „Przejdź do”) z licznikiem notatek do posortowania.
+    Pasek dolny zostaje bez zmian (miejsca jest mało).
+- **Gdzie jest.**
+  - `src/lib/inbox.ts` — `isInboxNote` z warunkiem `!n.locked`.
+  - `src/components/BottomNav.tsx` — prop `inboxCount`, kafelek „Skrzynka” w arkuszu „Więcej”, `inbox` w `isMoreActive`.
+  - `src/pages/Index.tsx` — `inboxCount={inboxCount}` przekazany do `BottomNav`.
+- **Testy.** `src/lib/inbox.test.ts` (9, w tym prywatność: zablokowana notatka poza skrzynką). Kafelka w arkuszu nie
+  testuje komponent (brak testu `BottomNav`); sprawdzi go e2e przy okazji przeglądu telefonu.
+- **Commit:** `TBD` (2026-10-20, Skrzynka).
 
 **Testy.** `src/lib/inbox.test.ts` (reguła skrzynki, podział tekstu), `src/components/InboxCapture.test.tsx` (Enter,
 pusty tekst), `e2e/inbox-today.spec.ts` (zapis, licznik w pasku, „Cofnij”, pusta skrzynka).

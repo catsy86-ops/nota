@@ -1007,6 +1007,7 @@ const Index = () => {
       onOpenSettings={() => setSettingsOpen(true)}
       onOpenActions={() => setActionsOpen(true)}
       trashCount={trashedNotes.length}
+      inboxCount={inboxCount}
       dark={dark}
       onToggleTheme={toggleTheme}
     />

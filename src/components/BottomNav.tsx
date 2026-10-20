@@ -1,6 +1,6 @@
-import { forwardRef, useRef, useState } from "react";
+﻿import { forwardRef, useRef, useState } from "react";
 import { m as motion, LayoutGroup } from "framer-motion";
-import { StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, Settings as SettingsIcon, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
+import { StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, Settings as SettingsIcon, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Inbox, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
 import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
 import { openJournalSheet } from "@/lib/study/entrySheet";
@@ -24,6 +24,8 @@ interface BottomNavProps {
   onOpenSettings: () => void;
   onOpenActions?: () => void;
   trashCount?: number;
+  /** Liczba notatek do posortowania (licznik przy Skrzynce w menu „Więcej”). */
+  inboxCount?: number;
   dark?: boolean;
   onToggleTheme?: () => void;
   /** Import z JSON — eksport i import są na telefonie tutaj, nie w nagłówku. */
@@ -43,7 +45,7 @@ const slotsRight = [
   { key: "reminders" as View, label: "Terminy", Icon: Bell },
 ] as const;
 
-export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, dark = false, onToggleTheme, onImport, onGoFilter, search = "" }: BottomNavProps) {
+export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, inboxCount = 0, dark = false, onToggleTheme, onImport, onGoFilter, search = "" }: BottomNavProps) {
   const { filters } = useSavedFilters();
   const [moreOpen, setMoreOpen] = useState(false);
   // Długie przytrzymanie „+” otwiera arkusz „Nowa”: lista, dyktowanie, zdjęcie, rysunek.
@@ -79,7 +81,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
     const input = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="search"]')).find((el) => el.offsetParent !== null);
     input?.focus({ preventScroll: true });
   };
-  const isMoreActive = ["archive", "trash", "calendar", "shifts", "study", "debts", "cwiczenia", "folder", "label"].includes(view);
+  const isMoreActive = ["inbox", "archive", "trash", "calendar", "shifts", "study", "debts", "cwiczenia", "folder", "label"].includes(view);
 
   return (
     <>
@@ -170,6 +172,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             <SheetTile Icon={Search} label="Szukaj" onClick={() => { setMoreOpen(false); onGo("notes"); window.setTimeout(focusSearch, 400); }} />
           </SheetGroup>
           <SheetGroup title="Przejdź do">
+            <SheetTile Icon={Inbox} label="Skrzynka" active={view === "inbox"} badge={inboxCount || undefined} onClick={() => { onGo("inbox"); setMoreOpen(false); }} />
             <SheetTile Icon={Archive} label="Archiwum" active={view === "archive"} onClick={() => { onGo("archive"); setMoreOpen(false); }} />
             <SheetTile Icon={Trash} label="Kosz" active={view === "trash"} badge={trashCount || undefined} onClick={() => { onGo("trash"); setMoreOpen(false); }} />
             <SheetTile Icon={CalendarRange} label="Kalendarz" active={view === "calendar"} onPointerDown={() => preloadView("calendar")} onClick={() => { onGo("calendar"); setMoreOpen(false); }} />
