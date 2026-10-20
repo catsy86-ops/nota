@@ -4484,4 +4484,5 @@ Poprawki z `docs/code-review-2026-10-20.md` (status pozycji tam). Sekcje dział�
 - **Testy.** Istniejące: `src/lib/debts/yDebts.edit.test.ts` (L11), `src/lib/shifts/reviewFixes.test.ts`, `src/lib/training/reminderRestore.test.ts`. Nowych testów tej serii nie dodano.
 - **Ograniczenia.** L14: udostępnianie obrazu wymaga sprawdzenia na telefonie (kod jest synchroniczny do `navigator.share`). L17: asercje w `e2e/bundle.spec.ts` nie są uruchomione. Paczka startowa: 392,2 KB gzip (próg 393 KB).
 - **Commit:** `1b8bcf8` (2026-10-20, L1–L20).
+- **Commit (L14, udostępnianie):** `1380f10` (2026-10-20).
 
