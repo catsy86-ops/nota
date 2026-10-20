@@ -4452,4 +4452,4 @@ lub grupę”.
   `getBadgeEnabled` (`overdueBadge.ts`), `getAutoLockMinutes` (`vaultAutoLock.ts`). Sprawdzono z planu: zduplikowany klucz
   `kaczy.lastAutoExport` jest już jedną stałą (`LAST_AUTO_EXPORT_KEY`), a martwej gałęzi `trigger` w `SettingsDialog` nie ma.
 - **Testy.** `src/hooks/useDictation.consent.test.ts` (2).
-- **Commit:** `TBD` (2026-10-20, Ustawienia — zgoda i porządki).
+- **Commit:** `c2eeb7f` (2026-10-20, Ustawienia — zgoda i porządki).
