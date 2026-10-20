@@ -9,459 +9,145 @@ Pozostałe działy (Notatki, Grafik, Kalendarz, reszta Nauki) dopisuj, gdy zadan
 
 ---
 
-## Wspólne — warstwa UI (React 19, Tailwind 4)
-
-**Co robi.** Podstawa wszystkich widoków: React 19 i Tailwind CSS 4. Dla użytkownika nic się nie zmienia — wygląd jest
-taki sam jak na Tailwind 3 (różnica zrzutów ≤ 0,02%).
-
-**Gdzie jest.**
-- `package.json`: `react`/`react-dom` 19, `react-day-picker` 9, `tailwindcss` 4 z `@tailwindcss/postcss`
-  (`postcss.config.js`, bez `autoprefixer`), `tw-animate-css` zamiast `tailwindcss-animate`, `tailwind-merge` 3.
-- `src/index.css`: `@import 'tailwindcss'`, `@import 'tw-animate-css'`, `@config '../tailwind.config.ts'`.
-  Własne klasy (`paper-grid`, `note-glow-active` i inne) są zapisane jako `@utility`, nie `@layer components`.
-- `tailwind.config.ts`: kolory, cienie i fonty zostają w konfiguracji JS (ładowanej przez `@config`). Warianty `coarse:`
-  (palec) i `desk:` (układ z paskiem bocznym) są zwykłymi funkcjami `addVariant`, bez `tailwindcss/plugin`.
-- `src/components/ui/calendar.tsx`: API react-day-picker 9 (wzór shadcn); strzałki miesiąca z 70% krycia, 44 px na dotyku.
-- `src/components/ui/sonner.tsx`: kolory toastów przez zmienne CSS biblioteki.
-
-**Jak działa i dlaczego tak.**
-- Zgodność z v3 w `index.css`: domyślny kolor krawędzi `gray-200` (v4 daje `currentcolor`), `cursor: pointer`
-  na przyciskach (v4 go zdjął), placeholder w kolorze `gray-400`.
-- Style `sonner` leżą poza warstwami CSS, więc w v4 wygrywają z klasami — stąd kolory przez zmienne, a nie klasy
-  (inaczej toast w ciemnym motywie był czarny).
-- Nagłówki `Sheet`/`Dialog`/`AlertDialog` mają `gap` zamiast `space-y`: ukryty opis `sr-only` dostawał margines i przesuwał
-  tytuł.
-- Ujemne marginesy (`-mt-*`) w dzieciach `space-y` usunięte (Grafik, `ShiftTypeDialog`, `ReminderPicker`, `BrushHours`):
-  w v3 nie działały, v4 je stosuje — wygląd został jak dotąd.
-- React 19: `RefObject<T | null>`, `useRef` z argumentem, `ReactNode` zamiast globalnego `JSX`. W `vite.config.ts` paczka
-  `vendor-react` obejmuje `react-dom/client` i `scheduler` (tam jest renderer React 19).
-
-**Kolory krawędzi i fokusu (jasny motyw, `src/index.css` `:root`).** Trzy tokeny mają różne zadania:
-- `--border` (220 14% 90%) — krawędź dekoracyjna kart i podziałów; może być jasna.
-- `--input` (220 14% 54%) — krawędź pól, `ui/button` „outline”, tor wyłączonego `ui/switch`. Kontrast ≥3:1 na tle,
-  karcie, `muted`, `secondary` i jasnych notatkach (WCAG 1.4.11). Wcześniej był równy `--border` (~1,3:1) i pola na
-  białej karcie prawie nie miały krawędzi.
-- `--ring` (34 88% 39%) — obwódka fokusu (`ring-ring`, globalna reguła `:focus-visible`, `.card-action`, aktywny kafel
-  w `NoteGrid`). Ten sam bursztyn co `--primary`, ciemniejszy: ≥3:1 wszędzie (wcześniej 2,6:1 na tle).
-Ciemny motyw bez zmian. Kontrast liczony skryptem wzorem WCAG; axe dojdzie w punkcie 2.7. Testy: Vitest, e2e smoke, zrzuty przed/po (Grafik, Ustawienia). Commit `ee3d51f` (2026-10-15).
-
-**Ograniczenia i pułapki.**
-- React 19 dodaje ok. 37 KB gzip; budżet wejściowego JS w `e2e/bundle.spec.ts` podniesiony z 375 do 400 KB. Do odzyskania
-  przez `LazyMotion` (plan UI 2026-10-15, 3.4).
-- Konfiguracja wciąż przez `@config` (tryb zgodności). Przeniesienie tokenów do `@theme` w CSS to osobny krok, jeśli
-  będzie potrzebne.
-- W react-day-picker 9 dzień w kalendarzu to przycisk w komórce `gridcell` — selektory e2e są do tego dopasowane.
-
-**Testy.** Bez nowych testów jednostkowych; całość sprawdzona typecheckiem, lintem, Vitest (1017), buildem, pełnym e2e
-(`e2e/reminders-calendar.spec.ts`, `e2e/reminders-agenda.spec.ts`, `e2e/bundle.spec.ts` poprawione pod nowe API i budżet)
-oraz porównaniem zrzutów v3/v4 (6 widoków + arkusz, 390/1440 px, jasny/ciemny).
-
-**Commit.** `544773c` (React 19), `2f5ff5b`, `18e7808`, `12fe855` (Tailwind 4) — 2026-10-15.
-
----
-
-## Wspólne — biblioteki UI (Radix, lucide, sonner)
-
-**Co robi.** Okna, menu, przełączniki i podpowiedzi (Radix), wszystkie ikony (lucide) i dymki z „Cofnij” (sonner)
-działają na aktualnych wersjach bibliotek. Dla użytkownika zmienia się tylko rysunek części ikon — lucide przerysował je w nowszych wersjach
-(np. kosz, kalendarz, ikony plików, księżyc, ustawienia, lejek filtra). Układ i działanie bez zmian.
-
-**Gdzie jest.**
-- `package.json`: 12 paczek `@radix-ui/react-*` podniesionych do najnowszych w swoim majorze (np. `react-dialog` 1.3,
-  `react-dropdown-menu` 2.2, `react-popover` 1.3, `react-slider` 1.6, `react-tooltip` 1.4, `react-slot` 1.5);
-  `lucide-react` 0.462 → 1.57; `sonner` 1.7.4 → 2.0.8.
-- `src/components/ui/sonner.tsx` (`Toaster`) i nadpisania `[data-sonner-toast]`/`[data-sonner-toaster]` w
-  `src/index.css` — bez zmian po przejściu na sonner 2.
-- Importy ikon w 38 plikach `src/` (`from "lucide-react"`), m.in. `AppSidebar.tsx`, `BottomNav.tsx`, `NoteCard.tsx`,
-  `study/JournalEntrySheet.tsx`, `InstallAppButton.tsx`.
-
-**Jak działa i dlaczego tak.**
-- Radix: tylko podbicie w obrębie majora, bez zmian w `src/components/ui/*` — API się nie zmieniło. Przy okazji
-  zniknęły zdublowane wewnętrzne paczki Radix (część komponentów miała własne kopie `dismissable-layer`, `portal`
-  itd. w starszych wersjach), stąd mniejszy `package-lock.json`.
-- lucide 1.x usunął tylko ikony marek (żadnej nie używamy) i UMD. Stare nazwy zostały jako aliasy, ale importy
-  przeszły na nazwy kanoniczne, żeby kod zgadzał się z dokumentacją lucide i nie zależał od aliasów:
-  `AlertTriangle`→`TriangleAlert`, `CheckCircle2`→`CircleCheck`, `CheckSquare`→`SquareCheckBig`,
-  `HelpCircle`→`CircleQuestionMark`, `Loader2`→`LoaderCircle`, `MoreHorizontal`→`Ellipsis`,
-  `MoreVertical`→`EllipsisVertical`, `PlusSquare`→`SquarePlus`, `Wand2`→`WandSparkles`, `Filter`→`Funnel`,
-  `History`→`RotateCcwClock`, `FileJson`→`FileBraces`, `FilePlus2`→`FilePlusCorner`, `Smile`→`FaceSlightlySmiling`,
-  `Trash2`→`Trash`.
-- `Trash2` w 1.x to alias `Trash`: kosz z pionowymi kreskami jest teraz jedynym koszem. Tam, gdzie wcześniej był
-  goły `Trash` (paleta poleceń, lista działów w `sidebar/sidebarItems.ts`), też są kreski — cała aplikacja ma jeden kosz.
-- lucide 1.x domyślnie dodaje `aria-hidden="true"`, chyba że ikona dostanie `aria-*`, `role` albo `title`. Ikony
-  z własną etykietą zostają widoczne dla czytnika ekranu; ozdobne nie trzeba już ręcznie ukrywać.
-- sonner 2: API, którego używamy (`toast`, `toast.success/error`, `action`, `duration`, `classNames`, zmienne
-  `--normal-*`, atrybuty `data-sonner-*`), się nie zmieniło — typy, testy i zrzuty dymków (Zeszyt na komputerze, Neon
-  na telefonie) bez poprawek w kodzie. Kolory dymków idą z tokenów, więc pasują do każdego stylu.
-- Klasa CSS ikony (`lucide-<nazwa>`) bierze się z nazwy kanonicznej, nie z importu — selektor `svg.lucide-repeat`
-  w `e2e/composer.spec.ts` działa bez zmian.
-
-**Ograniczenia i pułapki.**
-- Porównanie rysunków 0.462 i 1.57 (skrypt na `iconNode`): 65 ze 153 używanych ikon ma inny zapis SVG — część
-  tylko formalnie (`polyline` → `path`, kolejność elementów), reszta zwykle drobnie (zaokrąglenia, kalendarz o 1 px wyżej). Największe różnice: `Smile` (inna buzia), `Filter`/`Funnel`,
-  `Flame`, `Moon`, `Settings`, `Sparkles`, `Zap`, `Expand`. Zrzuty 390 i 1440 px (pasek boczny, arkusz „Więcej”,
-  akcje karty) wyglądają poprawnie.
-- `NoteCard.tsx` zawiera bajty NUL i CRLF — zmieniany tylko skryptem na bajtach, nie edytorem.
-- Następny krok z tej grupy: `LazyMotion` (plan UI 3.4).
-
-**Testy.** Bez nowych testów. Typecheck (`tsc -p tsconfig.app.json`), ESLint (0 błędów), Vitest 1024/1024, build,
-`e2e/bundle.spec.ts` (budżety bez zmian), pełne e2e Chromium 255/255 (jeden test `view-change.spec.ts` niestabilny
-przy obciążeniu — osobno 3/3), iPhone 14 + Pixel 7: 28 zaliczonych, 2 pominięte (CDP tylko w Chromium).
-
-sonner 2: Vitest 1030/1030, pełne e2e Chromium 281/281, iPhone 14 + Pixel 7: 27 zaliczonych, 2 pominięte, jeden
-test WebKit niestabilny (`mobile.spec.ts:121`, osobno 3/3).
+## Wspólne — stan aktualny (stos UI, telefon, układ, stany, wygląd, ruch, dostępność, push, build)
 
-**Commit.** `ee5a23f` (Radix, lucide), `4e96f34` (sonner) — 2026-10-15.
+Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i kolejne etapy planów są w commitach.
 
----
+### Stos i biblioteki UI
 
-## Wspólne — cele dotyku (44 px)
+- **React 19 i Tailwind 4.** `package.json`: `react`/`react-dom` 19, `tailwindcss` 4 z `@tailwindcss/postcss` (bez `autoprefixer`), `tw-animate-css` zamiast `tailwindcss-animate`, `tailwind-merge` 3, `react-day-picker` 9. `src/index.css` ładuje Tailwind przez `@import` i konfigurację przez `@config '../tailwind.config.ts'`. Własne klasy są `@utility`. Warianty `coarse:` (palec), `desk:` (z paskiem bocznym) i `phone:` (`max-width: 767px` lub niski ekran dotykowy) to funkcje `addVariant`.
+- **Zgodność z v3** w `index.css`: domyślna krawędź `gray-200`, `cursor: pointer` na przyciskach, placeholder `gray-400`. Style `sonner` leżą poza warstwami — kolory toastów idą przez zmienne CSS.
+- **Okna.** Nagłówki `Sheet`/`Dialog`/`AlertDialog` używają `gap` zamiast `space-y` (ukryty opis `sr-only` nie przesuwa tytułu). Ujemne marginesy w dzieciach `space-y` usunięte.
+- **Radix i ikony.** 12 paczek `@radix-ui/react-*` w najnowszym majorze; `lucide-react` 1.x; `sonner` 2. Importy ikon na nazwach kanonicznych (`TriangleAlert`, `CircleCheck`, `Trash`, `Funnel`, `Ellipsis` itd.; stare nazwy są aliasami). Kosz z kreskami to jedyny kosz w aplikacji. Ikony lucide mają `aria-hidden`, chyba że dostaną etykietę.
+- **Kontrolki.** `ui/icon-button.tsx`, `ui/button.tsx`, `ui/toggle-group.tsx` (`ToggleGroup`, warianty `segment` i `plain`), `ui/responsive-dialog.tsx`, `ui/input-otp.tsx` (parowanie).
+- **Kalendarz w UI.** `ui/calendar.tsx` na API react-day-picker 9; strzałki miesiąca 44 px na dotyku.
+- **Paczka React.** `vite.config.ts` — `vendor-react` obejmuje `react-dom/client` i `scheduler`.
 
-**Co robi.** Na ekranie dotykowym (`pointer: coarse`) małe przyciski łapią palec w polu co najmniej 44 × 44 px, bez
-zmiany wyglądu na komputerze z myszą.
+### Kolory krawędzi i fokusu
 
-**Gdzie jest i jak.**
-- Wzorzec: widoczny przycisk 36 px (`coarse:h-9 coarse:w-9`) + niewidzialne `::after` z `coarse:after:-inset-1`
-  (po 4 px z każdej strony) — tak robi `ui/icon-button.tsx` (`size="sm"`), więc przyciski zostają małe wizualnie.
-- Pasek boczny: ✓/✕ przy zmianie nazwy folderu, etykiety i filtra oraz przy dodawaniu podfolderu to `IconButton size="sm"`
-  (`sidebar/SidebarFolderItem.tsx`, `SidebarLabelItem.tsx`, `SidebarFilterItem.tsx`); „⋯” (`SidebarRowMenu` w
-  `sidebar/SidebarRow.tsx`) i strzałka podfolderów dostały `::after`. Odstęp za strzałką (`w-6 coarse:w-9`) trzyma
-  wyrównanie folderów bez podfolderów.
-- Grafik (`shifts/ShiftsView.tsx`): „Miesiąc/Tydzień”, „Ten tydzień”, „Skopiuj ten tydzień na następny” mają
-  `coarse:h-11`; „Rozumiem” w akapicie podpowiedzi ma 32 px i `::after` −6 px w pionie, żeby nie rozpychać tekstu.
-- Strzałki miesiąca w `ui/calendar.tsx` mają 44 px na dotyku od migracji 3.3.
-
-**Ograniczenia.** `::after` strzałki podfolderów zachodzi 4 px na wiersz folderu — stuknięcie tuż przy strzałce ją
-rozwija zamiast otwierać folder. Test mierzy pseudo-element z `getComputedStyle(el, "::after")` — inne sposoby powiększania
-celu (np. padding rodzica) nie zostaną policzone.
-
-**Testy.** `e2e/touch-targets.spec.ts` (tablet 1180 × 820 z dotykiem: pasek boczny i Grafik; na kodzie sprzed zmiany
-pada z 36 i 32 px).
-
-**Commit.** `b06445b` (2026-10-15).
-
----
-
-## Wspólne — dwie kolumny na szerokim ekranie (Grafik, Kalendarz, Dziennik)
-
-**Co robi.** Od szerokości `xl` (1280 px) widoki z siatką mają panel boczny przyklejony przy przewijaniu:
-- **Grafik:** po lewej przełącznik Miesiąc/Tydzień, nawigacja, podpowiedzi, siatka i eksport; po prawej „Teraz”,
-  paleta zmian (z „Własne godziny”) i podsumowanie miesiąca — paleta jest obok siatki podczas malowania dni.
-- **Kalendarz:** po lewej miesiąc, pasek tygodnia i siatka; po prawej najbliższe terminy i panel wybranego dnia —
-  szczegóły dnia pojawiają się obok kliknięcia, a nie pod siatką.
-- **Praca → Dziennik:** wpisy w kolumnie do 48 rem, po prawej panel „Filtry” (szukanie, rodzaj wpisu z „Otwarte”,
-  budowy, temat); chipy w panelu się zawijają zamiast przewijać w bok.
-Na telefonie i laptopie wszystko zostaje w jednej kolumnie w dawnej kolejności.
-
-**Gdzie jest.** `src/components/shifts/ShiftsView.tsx` (`<aside aria-label="Panel Grafiku">`),
-`src/components/shifts/ShiftSummary.tsx` (kafle `@lg:grid-cols-4`),
-`src/components/calendar/ReminderCalendarView.tsx` (`<aside aria-label="Wybrany dzień i najbliższe terminy">`),
-`src/components/study/StudyJournal.tsx` (sekcja „Wpisy” jako siatka, `role="search"` „Filtry dziennika”).
-
-**Jak działa i dlaczego.**
-- Grafik i Kalendarz: dwa opakowania (treść, `<aside>`) mają `contents` poniżej `xl` — ich dzieci są wtedy
-  zwykłymi elementami jednej kolumny `flex`, a klasy `order-*` odtwarzają dawną kolejność (np. „Teraz” → przełącznik
-  → nawigacja → paleta → podpowiedzi → siatka → eksport → podsumowanie). Od `xl` opakowania stają się kolumnami
-  siatki `minmax(0,1fr) + 22/24 rem`; `<aside>` ma `sticky top-24` i własne przewijanie (`max-h: 100dvh − 7rem`).
-- Puste opakowania (brak „Teraz”, brak sekcji „Nie ma rodzajów zmian”) mają `empty:hidden`, żeby nie dokładać odstępu.
-- Kafle podsumowania Grafiku liczą kolumny od szerokości kontenera (`@container` na opakowaniu, `@lg:grid-cols-4`):
-  w panelu 22 rem są dwie, na tablecie cztery jak dawniej.
-- Dziennik: elementy sekcji leżą we fragmencie Reacta, więc siatka `xl:grid` przypisuje je wprost
-  (`col-start-1` — nagłówek, wpisy, „Pokaż starsze”; filtry `col-start-2 row-span-3 sticky`).
-
-**Ograniczenia i pułapki.**
-- Okna dialogowe (Radix) w tych widokach nie renderują nic w miejscu, więc nie zajmują komórek siatki. Nowy element
-  renderujący DOM w korzeniu widoku trzeba wstawić do jednego z opakowań, inaczej na `xl` dostanie własną komórkę.
-- `contents` zdejmuje opakowaniu rolę dla starszych czytników tylko wizualnie — `<aside>` z etykietą zostaje
-  w drzewie dostępności na każdej szerokości.
-
-**Testy.** `e2e/desktop-columns.spec.ts` (1440: panel na prawo od siatki i `sticky` w Grafiku i Kalendarzu, wpisy
-≤ 48 rem z filtrami obok; 390 `@mobile`: paleta nad siatką, filtry nad wpisami i `static`).
-
-**Commit.** `9bfb12e` (2026-10-15).
-
----
-
-## Wspólne — dolny pasek nawigacji (telefon)
-
-**Co robi.** Dolny pasek: Notatki, Dziś, „+”, Terminy, Więcej. Podpisy mają 12 px. Aktywna pozycja ma trzy
-znaki naraz — kolor marki z pogrubionym podpisem i grubszą kreską ikony, pigułkę za ikoną i pasek akcentu wiszący
-z górnej krawędzi paska — więc widać ją kątem oka i bez rozróżniania kolorów. Pigułka i pasek przejeżdżają
-sprężyną do nowej pozycji.
-
-**Gdzie jest.** `src/components/BottomNav.tsx`: `slots`, `slotsRight`, `NavItem` (`layoutId="bottom-nav-active"`
-i `"bottom-nav-bar"` w `LayoutGroup id="bottom-nav"`).
-
-**Jak działa i dlaczego.**
-- „Terminy” zamiast „Przypomnienia” (decyzja D3): pełne słowo nie mieściło się w kolumnie przy 12 px. Nagłówek
-  widoku, pasek boczny i adres (`/przypomnienia`) zostają bez zmian.
-- Grubsza kreska ikony przez `[&_svg]:stroke-[2.5]` na aktywnym przycisku — bez osobnych wariantów ikon.
-- Pasek akcentu ma `-top-3`, czyli zaczyna się dokładnie na górnej krawędzi paska nawigacji (przycisk siedzi
-  12 px niżej, bo lista ma `items-end` i wysokość 64 px).
-
-**Ograniczenia i pułapki.** Wysokość paska jest w px (64), więc w trybie budowa nie rośnie; rosną podpisy i ikony.
-
-**Testy.** `e2e/mobile.spec.ts` („dolny pasek: podpisy 12 px mieszczą się w kolumnach także na 320 px (2.2)”,
-„Przypomnienia mają własną zakładkę…” — teraz po nazwie „Terminy”), też w projektach iPhone 14 i Pixel 7.
-
-**Commit.** `ec86276` (2026-10-15).
-
----
-
-## Wspólne — klawiatura ekranowa i dolny pasek
-
-**Co robi.** Na telefonie podczas pisania (otwarta klawiatura, fokus w polu tekstowym) dolny pasek nawigacji zjeżdża
-w dół i znika, więc nad klawiaturą zostaje więcej miejsca na tekst. Po schowaniu klawiatury albo wyjściu z pola pasek wraca.
-Pełnoekranowe edytory na iOS trzymają pasek z „Zapisz” nad klawiaturą.
-
-**Gdzie jest.**
-- `src/lib/keyboardInset.ts`: `installKeyboardInset()` (wołane w `src/main.tsx`) i `isTextEntry(el)`.
-- `src/components/BottomNav.tsx`: `motion.nav` z klasami `in-data-typing:translate-y-full in-data-typing:invisible`
-  i przejściem `transition-[translate,visibility]` (bez animacji przy `prefers-reduced-motion`).
-- `src/components/AddNoteBar.tsx`: pełny ekran kompozytora kończy się na `bottom-(--kb-inset,0px)`.
-
-**Jak działa.** Na `<html>` ustawiane są:
-- `--kb-inset` i `data-keyboard` — ile klawiatury zasłania dół (`innerHeight − visualViewport.height − offsetTop`,
-  próg 80 px, poniżej to pasek adresu). Na iOS > 0; na Androidzie 0, bo `interactive-widget=resizes-content`
-  w `index.html` zmniejsza całe okno.
-- `data-typing` — `isTextEntry(document.activeElement)` **i** klawiatura otwarta: `--kb-inset` > 0 (iOS) albo okno
-  niższe o > 80 px od najwyższego widzianego przy tej samej szerokości (Android). Sam fokus nie wystarcza: klawiaturę
-  można schować „wstecz”, a pole zostaje aktywne. Zmiana szerokości (obrót) zeruje wysokość odniesienia.
-- Przeliczenie na `resize`/`scroll` z `visualViewport`, `resize` okna, `focusin` i `focusout` (po `setTimeout 0`,
-  bo przy przejściu między polami `activeElement` chwilę wskazuje `<body>`).
-- `isTextEntry`: `textarea` i `input` tekstowe bez `readOnly`, element `contentEditable`; przyciski, pola wyboru,
-  suwaki itp. nie.
-- Pasek chowa się właściwością CSS `translate`, nie `transform` — `transform` należy do animacji wejścia z `motion`.
-  `invisible` zabiera go z kolejności Tab; przejście `visibility` trzyma go widocznym do końca zjazdu.
-
-**Ograniczenia i pułapki.**
-- Android w trybie `overlays-content` (inne przeglądarki) nie zmienia okna — pasek wtedy zostaje, ale klawiatura i tak go
-  zasłania.
-- Zmniejszenie okna o > 80 px przy fokusie w polu bez zmiany szerokości (np. okno w podziale ekranu) liczy się jako
-  klawiatura. Na komputerze bez znaczenia — dolny pasek jest `desk:hidden`.
-
-**Testy.** `src/lib/keyboardInset.test.ts` (iOS, Android, „wstecz”, obrót, `isTextEntry`), `e2e/mobile.spec.ts`
-„dolny pasek chowa się, gdy klawiatura Androida zmniejsza okno przy pisaniu”.
-
-**Commit.** `c62282f` (2026-10-15).
-
----
-
-## Wspólne — formularze jako arkusz na telefonie
-
-**Co robi.** Okna z formularzem (decyzja D2) na telefonie wysuwają się od dołu jak arkusz, także gdy telefon leży
-poziomo; pasek z „Zapisz” / „Nałóż cykl” jest przyklejony do dołu arkusza, więc długi formularz nie chowa go pod
-przewinięciem. Na komputerze i tablecie to zwykłe okno na środku. Pozostałe okna (podgląd, statystyki, skróty,
-samouczek) są na telefonie wyśrodkowane z marginesem (1.3).
-
-**Gdzie jest.**
-- `src/components/ui/responsive-dialog.tsx`: `ResponsiveDialogContent` (= `DialogContent` z `sheet`),
-  `ResponsiveDialogFooter` (= `DialogFooter`).
-- `src/components/ui/dialog.tsx`: klasy arkusza na wariancie `phone:`; atrybuty `data-dialog-sheet`
-  (`DialogContent`) i `data-dialog-footer` (`DialogFooter`).
-- `tailwind.config.ts`: wariant `phone:` — `@media (max-width: 767px), (max-height: 500px) and (pointer: coarse)`,
-  dokładne przeciwieństwo `desk:`.
-- `src/index.css`: `[data-dialog-sheet] [data-dialog-footer]` — `position: sticky` na dole, tło, kreska, safe-area.
-- Formularze na `ResponsiveDialogContent`: `CustomTemplateDialog`, `ImportExternalDialog`, `vault/VaultDialogs`,
-  `calendar/ReminderQuickAddDialog`, `shifts/DayDialog`, `ShiftTypeDialog`, `PatternDialog`,
-  `ShiftSettingsDialog`, wybór przenieś/kopiuj w `ShiftsView` (`TransferChooser`), `study/JournalReport`,
-  `study/SiteCardDialog`.
-
-**Jak działa i dlaczego.**
-- Dawny prop `sheet` działał tylko poniżej 640 px (`max-sm:`) — telefon w poziomie dostawał wąskie okno na środku
-  niskiego ekranu. `phone:` pokrywa się z tym, kiedy aplikacja pokazuje dolny pasek zamiast bocznego.
-- Pasek przycisków: `bottom` i `margin-bottom` równe ujemnemu dolnemu odstępowi arkusza, więc pasek dochodzi do
-  krawędzi ekranu; `margin-inline: -1.5rem` + ten sam `padding` daje pełną szerokość z wyrównaniem do treści.
-- Osobny komponent zamiast propa: jedno miejsce mówi „to formularz”; zmiana zachowania formularzy nie wymaga
-  przeszukiwania wywołań `DialogContent`.
-
-**Ograniczenia i pułapki.**
-- Okna z `p-0` (raport, karta budowy) nie mają `DialogFooter` — ich przyciski nie są przyklejane.
-- Nowy formularz: `ResponsiveDialogContent` + `ResponsiveDialogFooter`; nie dodawać `sheet` do `DialogContent`
-  okien pełnoekranowych (ustawiają własne wymiary).
-
-**Testy.** `e2e/mobile.spec.ts` („formularz na telefonie to arkusz od dołu z przyklejonym „Zapisz” — także w
-poziomie (2.5)”: Cykl zmian dochodzi do dołu ekranu, „Nałóż cykl” widoczny; 390 × 844 i 844 × 390) oraz dotychczasowe
-testy Grafiku, Kalendarza, skarbca i Dziennika.
-
-**Commit.** `07bbc03` (2026-10-15).
-
----
-
-## Wspólne — okna dialogowe na telefonie
-
-**Co robi.** Na telefonie zwykłe okna (`Dialog`) i potwierdzenia (`AlertDialog`) są wyśrodkowane, mają margines 1 rem
-z każdej strony i zaokrąglone rogi. Długie okna przewijają się w środku i nie wychodzą poza ekran, także gdy pasek
-adresu przeglądarki się chowa lub pokazuje. Formularze oznaczone `sheet` dalej wysuwają się od dołu jako arkusz.
-
-**Gdzie jest.**
-- `src/components/ui/dialog.tsx` (`DialogContent`) i `src/components/ui/alert-dialog.tsx` (`AlertDialogContent`):
-  bazowo `max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl`, na telefonie `max-sm:max-w-[calc(100%-2rem)]`.
-- Arkusz (`sheet` w `DialogContent`) nadpisuje to: `max-sm:max-w-none max-sm:rounded-b-none`, `max-sm:max-h-[92dvh]`.
-- Wysokości okien w `dvh` zamiast `vh`: `DrawingCanvas`, `FocusMode`, `ImportExternalDialog`, `ShortcutsDialog`,
-  `StatsDialog`, `VersionHistory`, `SettingsDialog`, `shifts/ShiftSettingsDialog`, `shifts/YearSummaryDialog`.
-
-**Jak działa i dlaczego.**
-- Decyzja D2 (plan UI 2026-10-15): arkusz od dołu tylko dla formularzy, reszta wyśrodkowana. Potwierdzenia
-  (`AlertDialog`) wcześniej były arkuszem — teraz są oknem na środku.
-- Margines idzie przez `max-sm:max-w-…`, nie przez `w-…`: okna podają własne `max-w-md` itp. bez wariantu, a
-  wariant `max-sm:` wygrywa w CSS, więc margines działa bez zmian w każdym oknie.
-- `vh` na telefonie liczy się z ukrytym paskiem adresu, więc okno `90vh` mogło wystawać pod pasek; `dvh` śledzi
-  widoczną wysokość.
-- Pełnoekranowe okna muszą to wyłączyć: `FocusMode` (`max-sm:max-w-none max-h-none h-dvh rounded-none`),
-  `SettingsDialog` na telefonie (`max-sm:max-w-none max-h-none rounded-none`, od `sm:` `rounded-2xl`),
-  `DrawingCanvas` (`max-sm:max-w-[95vw]`).
-
-**Ograniczenia i pułapki.** Nowe okno pełnoekranowe musi samo dodać `max-sm:max-w-none max-h-none`, inaczej dostanie
-margines. `overflow-y-auto` jest bazowe — element pozycjonowany absolutnie w oknie (bez portalu) zostanie przycięty.
-
-**Testy.** `e2e/mobile.spec.ts` „zwykłe okno na telefonie jest wyśrodkowane z marginesem 1 rem i zaokrąglone (1.3)”
-(okno samouczka, 390 × 844) i „Ustawienia na telefonie zajmują cały ekran…”.
-
-**Commit.** `9ed219c` (2026-10-15).
-
----
-
-## Wspólne — ładowanie Kalendarza, Grafiku i Nauki
-
-**Co robi.** Przy pierwszym wejściu do Kalendarza, Grafiku albo Nauki na wolnym łączu zamiast pustego ekranu widać
-zarys widoku (pasek miesiąca, kafle podsumowania, siatka dni / zakładki i karty). Paczka widoku zaczyna się pobierać
-już przy najechaniu kursorem albo dotknięciu pozycji w nawigacji, więc po kliknięciu zwykle jest gotowa.
-
-**Gdzie jest.**
-- `src/lib/viewPreload.ts`: `loadCalendarView`, `loadShiftsView`, `loadStudyView`, `preloadView(view)`,
-  `isLazyView`, typ `LazyView`.
-- `src/components/ViewSkeleton.tsx`: `ViewSkeleton({ view })` — wariant dla `calendar`, `shifts`, `study`.
-- `src/pages/Index.tsx`: `lazy()` widoków używa loaderów z `viewPreload`; `Suspense fallback={<ViewSkeleton … />}`.
-- `src/components/AppSidebar.tsx` (`NavRow`, `onPointerEnter`/`onPointerDown` przez `buttonProps`) i
-  `src/components/BottomNav.tsx` (kafle arkusza „Więcej”, `onPointerDown`).
-- `src/index.css`: `.view-skeleton`, `.view-skeleton-bone`.
-
-**Jak działa i dlaczego.**
-- Jedna zapamiętana obietnica importu na widok (`Map` w `viewPreload`) — `lazy()` i wstępne ładowanie dostają tę
-  samą, więc paczka pobiera się raz. Nieudane pobranie jest usuwane z pamięci, żeby następna próba poszła od nowa.
-- `preloadView` połyka błędy: wstępne ładowanie jest tylko podpowiedzią, błąd i tak obsłuży `lazy()` +
-  `ViewErrorBoundary`.
-- Szkielet pojawia się z opóźnieniem 180 ms (`animation-delay`), więc szybkie ładowanie nie miga. Pulsowanie kości
-  jest wyłączone przy `prefers-reduced-motion` i `html[data-motion='reduced']`.
-- Dostępność: `role="status"` z tekstem dla czytnika („Ładowanie grafiku…”), kości mają `aria-hidden`.
-
-**Ograniczenia i pułapki.** Nowy widok ładowany leniwie trzeba dopisać do `loaders` w `viewPreload.ts` i do `LABELS`
-w `ViewSkeleton.tsx`. Paleta poleceń nie ładuje wstępnie. Pozostałe `Suspense fallback={null}` w `Index.tsx`
-dotyczą okien i paneli, nie widoków — tam szkielet nie jest potrzebny.
-
-**Testy.** `src/lib/viewPreload.test.ts` (wspólna obietnica, widoki spoza listy), `e2e/view-skeleton.spec.ts`
-(wstrzymana paczka Grafiku → szkielet, potem widok; najechanie na „Kalendarz” pobiera paczkę przed kliknięciem).
-
-**Commit.** `8a5b5da` (2026-10-15).
-
----
-
-## Wspólne — pusty widok, błąd, brak sieci, brak wyników (`StatusPanel`)
-
-**Co robi.** Każdy pusty widok, „nic nie znaleziono”, awaria widoku i widok niedostępny bez internetu wygląda tak
-samo: rysunek kreską długopisu (lekko przekrzywiony, jak w zeszycie), nagłówek, jedno zdanie, co zrobić, i ewentualnie
-przycisk. Bez sieci niepobrany jeszcze widok (Grafik, Kalendarz, Praca) mówi wprost, że czeka na internet i że
-notatki działają dalej, zamiast pokazywać ogólny błąd.
-
-**Gdzie jest.**
-- `src/components/StatusPanel.tsx`: `StatusPanel`, typ `StatusTone` (`empty` | `no-results` | `error` | `offline`).
-  Propsy: `title`, `description`, `actions`, `icon` (domyślna ikona rodzaju; `null` — bez), `art` (własna
-  ilustracja), `size` (`page` | `inline`), `headingLevel`.
-- Użycia: `EmptyState` (pusty widok notatek i „Brak wyników w …” z chipami „znaleziono gdzie indziej”),
-  `ViewErrorBoundary` (błąd i brak sieci), `study/StudyJournal` (brak wpisów z przyciskiem „Dodaj wpis”, brak
-  wyników filtra), `study/JournalReport` (pusty okres), `RecentActionsPanel` (brak akcji / brak wyników).
-
-**Jak działa i dlaczego.**
-- `page` — cały widok: duży rysunek, `h2`, wejście z ruchem (pusty widok z opóźnieniem 0,3 s jak dotąd, błąd od
-  razu). `inline` — fragment widoku: przerywana ramka (błąd w czerwonej), mała ikona; bez opisu tytuł jest
-  przygaszony.
-- Kolor kreski koduje rodzaj: akcent — pustka, `muted-foreground` — brak wyników, `destructive` — błąd,
-  `primary-ink` — brak sieci.
-- Dostępność: błąd ma `role="alert"`, brak sieci `role="status"`, pustka i brak wyników nic (to nie zdarzenie).
-  Ikony `aria-hidden`. Każdy panel ma `data-status="<rodzaj>"` (testy, style).
-- Brak sieci w `ViewErrorBoundary`: błąd ładowania paczki (`dynamically imported module` / `Loading chunk` /
-  `Failed to fetch`) przy `navigator.onLine === false`. Przy sieci ten sam błąd zostaje błędem z „Odśwież stronę”.
-- Pusty Dziennik był dotąd całym klikanym przyciskiem; teraz to panel z wyraźnym przyciskiem „Dodaj wpis”.
-- Ilustracja pustego widoku to `EmptySketch` (`src/components/EmptyIllustration.tsx`, ścieżki z `src/lib/emptyGlyphs.ts`).
-  `EmptyIllustration` bierze szkic po `View` (Notatki), a Dziennik Pracy przekazuje własny: `JOURNAL_GLYPH` (kartka
-  z marginesem, wiersze i długopis). Wariant `inline` też przyjmuje `art` — zwykła ikona ma wtedy `icon={null}`.
-
-**Ograniczenia i pułapki.**
-- Bardzo małe puste miejsca zostają zwykłym tekstem: kolumna tablicy tematów (`StudyBoard`, cel upuszczania), „Brak
-  terminów” w `DayPanel`/`UpcomingDays`, `CommandEmpty` w palecie, `LabelPicker`.
-- Leniwie ładowane części poza widokami (np. `OnboardingTour`) nie mają własnej granicy błędu — bez sieci i bez
-  service workera ich błąd pobrania przejmuje globalna granica w `App.tsx`. Na zainstalowanej aplikacji SW ma je w
-  pamięci, więc dotyczy to głównie testów (SW zablokowany) i pierwszej wizyty.
-- Nowy pusty stan: użyj `StatusPanel`, nie własnego `<p>` w przerywanej ramce.
-
-**Testy.** `e2e/shifts.spec.ts` („awaria widoku Grafiku nie zabiera reszty aplikacji”, „bez internetu niepobrany
-Grafik mówi, że czeka na sieć” — `role="status"`, bez `alert`), `e2e/search-backup.spec.ts` („Brak wyników w
-Notatkach”), `e2e/study.spec.ts` (brak wyników filtra Dziennika; „dziennik bez wpisów: szkic zeszytu…”), `e2e/a11y.spec.ts` (puste widoki w obu motywach).
-
-**Commit.** `7c47e4b` (2026-10-15); szkic zeszytu w Dzienniku — `59063d5` (2026-10-16).
-
----
-
-## Wspólne — animacje w tle wstrzymane
-
-**Co robi.** Gdy karta z aplikacją jest w tle (inna karta, zminimalizowane okno, zablokowany telefon), zapętlone
-animacje (poświata notatki, oddech „dziś”, puls „teraz”, połysk paska, logo N, szkielety ładowania, zorza w stylu
-Zorza) stoją. Po powrocie ruszają od miejsca, w którym stanęły.
-
-**Gdzie jest.** `src/lib/pageHidden.ts` (`installPageHidden`, wołane w `src/main.tsx`), reguła `html[data-hidden]`
-na końcu `src/index.css`.
-
-**Jak działa i dlaczego.** `visibilitychange` przełącza `data-hidden` na `<html>`; CSS ustawia wszystkim elementom i
-pseudoelementom `animation-play-state: paused`. Jedna reguła zamiast pilnowania każdej animacji z osobna — obejmuje
-też przyszłe. Animacje framer-motion (np. połysk w `NotatnikWordmark`) jadą na `requestAnimationFrame`, który
-przeglądarka w tle i tak zatrzymuje.
-
-**Ograniczenia i pułapki.** Przejścia (`transition`) nie są wstrzymywane — są krótkie i jednorazowe. Animacja, która
-w tle miała się skończyć i coś odsłonić, dokończy się dopiero po powrocie (dziś żadna taka nie jest zapętlona).
-
-**Testy.** `src/lib/pageHidden.test.ts`.
-
-**Commit.** `75ea68d` (2026-10-15).
-
----
-
-## Wspólne — grupy „jedna z kilku” (`ToggleGroup`)
-
-**Co robi.** Przełączniki segmentowe i kafle wyboru działają z klawiatury jak jedna kontrolka: Tab wchodzi do grupy
-na wybraną pozycję, strzałki przenoszą fokus (w kółko), Spacja/Enter wybiera. Kliknięcie wybranej pozycji jej nie
-odznacza. Czytnik ekranu słyszy „grupa opcji, przycisk opcji, zaznaczony”.
-
-**Gdzie jest.**
-- `src/components/ui/toggle-group.tsx`: `ToggleGroup`, `ToggleGroupItem` (shadcn Toggle Group na
-  `@radix-ui/react-toggle-group` 1.2, zawsze `type="single"`). Warianty: `segment` (tor `bg-muted/60`, wybrana
-  pozycja `bg-card` + `text-primary-ink`, 36 px / 44 px na dotyku) i `plain` (bez wyglądu — wywołujący styluje kafle).
-- Użycia: `settings/Segmented.tsx` (Jasność, Tryb budowa, Ruch i animacje — z przesuwanym tłem `layoutId`),
-  `ViewSheet.tsx` (Układ — pionowo, Kolumny, Gęstość, Grupuj), `shifts/ShiftTypeDialog.tsx` (Rodzaj, Rodzaj
-  nieobecności), `study/JournalEntrySheet.tsx` (Rodzaj wpisu).
-
-**Jak działa i dlaczego.**
-- Radix w trybie `single` renderuje `role="radiogroup"` i pozycje `role="radio"` z `aria-checked` (wcześniej
-  `Segmented` w Ustawieniach miał `role="group"` + `aria-pressed`, pozostałe ręczne `radiogroup` bez obsługi strzałek).
-- `onValueChange` ignoruje `""` (Radix oddaje je przy kliknięciu wybranej pozycji) — zawsze coś jest wybrane.
-- Wartości są tekstem; `ViewSheet` mapuje liczby kolumn przez `String` i z powrotem przez wyszukanie opcji.
-- Wariant przekazywany pozycjom przez kontekst, więc `<ToggleGroup variant="plain">` nie wymaga powtarzania go w
-  każdej pozycji.
-
-**Ograniczenia i pułapki.**
-- Strzałka tylko przenosi fokus, nie wybiera (zachowanie Radix) — wybór Spacją/Enterem albo kliknięciem.
-- Pozycje mają zawsze `tabindex="-1"`; przystankiem Tab jest sama grupa (`tabindex="0"`), która przekazuje fokus
-  wybranej pozycji. W testach fokusuj grupę, nie pozycję.
-- Nie przeniesione (mają własną obsługę klawiatury lub złożoną treść): pędzle Grafiku (`BrushBar`, `onRadioKey`),
-  wybór zmiany w `DayDialog`, galerie stylu/kroju (`SkinPicker`, `FontPicker`, `aria-pressed`) i paski filtrów.
-
-**Testy.** `e2e/toggle-group.spec.ts` (strzałki, Spacja, brak odznaczania), `e2e/site-mode.spec.ts`,
-`e2e/skins.spec.ts` (selektory `radiogroup`/`radio`), `e2e/view-change.spec.ts`, `e2e/shifts.spec.ts`,
-`e2e/study.spec.ts`, `e2e/a11y.spec.ts`.
-
-**Commit.** `d3c5c4b` (2026-10-15).
-
----
+- `--border` (220 14% 90%) — krawędź dekoracyjna kart i podziałów.
+- `--input` (220 14% 54%) — krawędź pól, przycisk „outline”, tor wyłączonego przełącznika; kontrast ≥3:1 (WCAG 1.4.11).
+- `--ring` (34 88% 39%) — obwódka fokusu, ≥3:1 na tle.
+- Ciemny motyw ma własne wartości (krawędź pola ≥3:1). Tokeny kontrastu liczy test `src/lib/contrastTokens.test.ts`.
+
+### Telefon: dolny pasek, klawiatura, arkusze, okna
+
+- **Dolny pasek** (`BottomNav.tsx`): Notatki, Dziś, „+”, Terminy („Przypomnienia” na pasku zmienione na „Terminy”, bo pełne słowo nie mieściło się przy 12 px), Więcej. Aktywna pozycja: kolor marki, pogrubienie, pigułka i pasek akcentu (`layoutId`, sprężyna).
+- **„+” na pasku:** stuknięcie otwiera nową notatkę; przytrzymanie — arkusz „Nowa” (Notatka, Lista zadań, Dyktuj, Zdjęcie, Rysunek; „Dyktuj” tylko tam, gdzie jest rozpoznawanie mowy). Pierwsze stuknięcie pokazuje jednorazową podpowiedź o przytrzymaniu (`kaczy.fab.hint.v1`).
+- **Klawiatura ekranowa** (`src/lib/keyboardInset.ts`, wołane w `main.tsx`): na `<html>` ustawiane są `--kb-inset`, `data-keyboard` i `data-typing`. `data-typing` = fokus w polu tekstowym i klawiatura otwarta (iOS: `--kb-inset` > 0; Android: okno niższe o >80 px od najwyższego widzianego). Pasek nawigacji zjeżdża `translate` i znika (`in-data-typing:`), bez `transform`, który należy do animacji wejścia. Pełny ekran kompozytora kończy się nad klawiaturą (`--kb-inset`).
+- **Formularze jako arkusz.** `ResponsiveDialogContent` (= `DialogContent` z trybem `sheet`) na telefonie (`phone:`) wysuwa się od dołu także w poziomie; pasek `ResponsiveDialogFooter` (przycisk „Zapisz”) jest przyklejony do dołu arkusza. Na komputerze zwykłe okno na środku. Formularze: `CustomTemplateDialog`, `ImportExternalDialog`, `VaultDialogs`, `ReminderQuickAddDialog`, `DayDialog`, `ShiftTypeDialog`, `PatternDialog`, `ShiftSettingsDialog`, `JournalReport`, `SiteCardDialog`. Okna z `p-0` (raport, karta budowy) nie mają stopki.
+- **Zwykłe okna na telefonie** są wyśrodkowane z marginesem 1 rem, zaokrąglone, przewijają się w środku (`max-h-[calc(100dvh-2rem)]`; `dvh`, nie `vh`, bo pasek adresu). Arkusz nadpisuje wymiary (`max-sm:max-w-none`, `max-h-[92dvh]`). Okna pełnoekranowe (`FocusMode`, ustawienia na telefonie, rysownik) ustawiają `max-sm:max-w-none max-h-none` same — inaczej dostają margines.
+- **Pasek zbiorczy** (`BulkActionBar.tsx`) na telefonie zawija akcje w drugi rząd (`max-sm:flex-wrap`), zamiast chować je za przewijaniem w bok. Przy 320 i 390 px żadna z 9 tras nie przewija się w bok (`mobile-layout.spec.ts`).
+
+### Cele dotyku (44 px)
+
+- Na `pointer: coarse` małe przyciski mają pole co najmniej 44 × 44 px bez zmiany wyglądu: widoczny przycisk 36 px + niewidzialne `::after` (`coarse:after:-inset-1`). Wzorzec w `ui/icon-button.tsx` (`size="sm"`), również w pasku bocznym (ikony folderów, etykiet, filtra, „⋯”).
+- Grafik: przyciski miesiąca i „Skopiuj ten tydzień” mają `coarse:h-11`. Zakładki działu Praca mają `coarse:min-h-11`.
+- Ograniczenie: `::after` strzałki podfolderu zachodzi na wiersz folderu — stuknięcie tuż przy strzałce ją rozwija.
+
+### Tryb budowa
+
+- Ustawienia → Wygląd → „Tryb budowa” (Wyłączony / Włączony / Automatycznie; „Automatycznie” włącza się, gdy system prosi o większy kontrast). `src/lib/siteMode.ts`, klucz `kaczy.siteMode.v1` (w kopii).
+- Skala 112,5% przez `font-size` na `html` (`src/styles/site.css`): tekst 18 px, przyciski ikonowe co najmniej 54 px (`--tap: 3rem`, niewidzialne `::after`), mocniejsze krawędzie i tekst pomocniczy, gładkie tło bez kratki, dymki „Cofnij” 8 s.
+- Elementy w px (dolny pasek 64 px, kafle) nie rosną. Nowy przycisk ikonowy poza `IconButton`/`Button` potrzebuje klasy `.tap-target`.
+
+### Wibracje
+
+- `src/lib/haptics.ts`: `haptic(kind)` (`tap`, `success`, `warn`, `selection`). Krótkie drgnięcie na Androidzie (`navigator.vibrate`) przy zapisie, odhaczeniu, przejściu w pasku, odpowiedzi w quizie, zapisie wpisu.
+- Po cichu nic nie robi, gdy: nie ma API (iOS, komputer), wskaźnik jest precyzyjny (mysz), efekt wyłączony (przełącznik „Wibracje na telefonie” w Ustawieniach → Ogólne) albo wibracja rzuciła wyjątek. Ograniczony ruch wibracji nie wyłącza.
+
+### Układ szerokiego ekranu
+
+- Od `xl` (1280 px) widoki z siatką mają panel boczny przyklejony przy przewijaniu: Grafik (przełącznik, nawigacja, paleta zmian, podsumowanie po prawej), Kalendarz (miesiąc po lewej, najbliższe terminy i wybrany dzień po prawej), Dziennik Pracy (wpisy do 48 rem, filtry po prawej; `role="search"`).
+- Mechanizm: opakowania mają `contents` poniżej `xl`, więc ich dzieci są jedną kolumną `flex`, a klasy `order-*` odtwarzają kolejność telefonu. Od `xl` to siatka `minmax(0,1fr) + 22/24 rem`, a `<aside>` ma `sticky top-24`.
+- Pułapka: okna Radix nie zajmują komórek siatki; nowy element DOM w korzeniu widoku trzeba wstawić do jednego z opakowań.
+
+### Stany: pusty widok, błąd, brak sieci (`StatusPanel`)
+
+- Jeden wygląd dla pustego widoku, „nic nie znaleziono”, błędu i braku sieci: rysunek kreską długopisu, nagłówek, jedno zdanie, co zrobić, opcjonalnie przycisk. Tony: `empty`, `no-results`, `error`, `offline`; kolor kreski koduje rodzaj. Rozmiary: `page` (cały widok) i `inline` (fragment, przerywana ramka).
+- Dostępność: błąd z `role="alert"`, brak sieci z `role="status"`, pustka i brak wyników bez roli. Każdy panel ma `data-status`.
+- Brak sieci w `ViewErrorBoundary`: błąd pobrania paczki przy `navigator.onLine === false` pokazuje, że widok czeka na internet, a notatki działają dalej.
+- Nowy pusty stan: `StatusPanel`, nie własny `<p>` w ramce. Bardzo małe miejsca (kolumna tablicy, „Brak terminów”, paleta) zostają tekstem.
+
+### Ładowanie widoków i animacje w tle
+
+- `src/lib/viewPreload.ts`: jedna zapamiętana obietnica importu na widok (`loadCalendarView`, `loadShiftsView`, `loadStudyView`). Najechanie kursorem lub dotknięcie pozycji nawigacji zaczyna pobieranie. Szkielet `ViewSkeleton` pojawia się po 180 ms (bez migania przy szybkim ładowaniu); pulsowanie wyłączone przy ograniczonym ruchu. Nowy widok leniwy: dopisać do `loaders` i `LABELS`.
+- `src/lib/pageHidden.ts`: gdy karta jest w tle, `html[data-hidden]` wstrzymuje wszystkie zapętlone animacje (`animation-play-state: paused`). Przejścia nie są wstrzymywane.
+
+### Ruch: framer-motion, przejścia, mikrointerakcje
+
+- **LazyMotion.** `App.tsx` owija aplikację w `<LazyMotion features={loadMotionFeatures} strict>`; pełny zestaw funkcji (`src/lib/motionFeatures.ts`) jest w osobnej paczce tuż po starcie. Komponenty importują `m as motion` (pełne `motion` w trybie `strict` to błąd). Wejściowy JS po tej zmianie 372,4 KB gzip. Do załadowania funkcji animacje wejścia nie grają.
+- **Czasy i sprężyny** z `src/lib/motion.ts` (`spring.snap`, `spring.soft`, `tween.enter`). Animowane są tylko `transform` i `opacity`. Ograniczony ruch obsługuje `MotionConfig` w `App.tsx`.
+- **Przełączniki** (`settings/Segmented.tsx`, `SkinPicker`): podświetlenie przesuwa się sprężyną (`layoutId` w `LayoutGroup` z `useId`). `RollingNumber` (licznik notatek) przewija cyfrę. Ikona słońca/księżyca obraca się.
+- **Listy:** zwijanie grupy w Notatkach opada wysokością; wiersz tabeli usunięty lub zarchiwizowany gaśnie, nowy wjeżdża (bez animacji przy pierwszym montażu); szkielet kart Dziś rezerwuje miejsce; pusty stan gaśnie.
+- **Mikrointerakcje stanów:** pole z błędem (`aria-invalid`) ma czerwoną ramkę; przełączniki i checkboxy podświetlają się po najechaniu; suwak ma halo; tosty mają przycisk × (błąd 9 s można zamknąć); Enter i Spacja po dotyku nie włączają ramki fokusu (`src/lib/inputModality.ts`). Przycisk „ładuje” (wspólny prop `loading`) nie jest zrobiony.
+- **Podpis wciśnięcia** przycisków to klasa `pressable`, nie skala framer-motion.
+- **Przejście motywu** kołem (View Transitions, `clip-path: circle()` od ostatniego dotknięcia, ≤1,5 s). Wyłączone przy ograniczonym ruchu i efekcie „themeFade”.
+- **Przejście widoku** przez `document.startViewTransition` z `flushSync` w `Index.tsx`; bez View Transitions zmiana natychmiastowa.
+
+### Wygląd: style, kroje, tokeny, pieczątki
+
+- **Style** (`src/lib/skins.ts`, `skinStore`, klucz `kaczy.skin.v1` w kopii; CSS w `src/styles/skins.css`): Zeszyt (domyślny, kratka, bursztyn, niebieski długopis; słucha przełącznika Jasność), Plan (ciemny, rysunek techniczny, granat, nagłówki Barlow Condensed, tabliczka rysunkowa tylko na komputerze), Neon (ciemny, nagłówki Unbounded, logo z mrugnięciem), Zorza (ciemny, dryfująca zorza tylko przez `transform`, szklane kafle na komputerze, Fraunces), Miedź (jasny, beton, miedziana rura przy pasku bocznym, Bricolage Grotesque). Każdy styl ma schemat jasny/ciemny (`SKIN_SCHEME`); `html[data-skin]` jest zawsze ustawiony. Nowy styl: dopisać do `SKINS`, `SKIN_SCHEME`, `SKIN_THEME_COLOR`, `SKIN_META`, `skins.css` i listy w `e2e/a11y.spec.ts`.
+- **Motyw** (`src/hooks/useTheme.ts`): jeden wspólny stan (`useSyncExternalStore`); zmiana trafia do DOM w jednym miejscu (`applyCurrent`). Przełącznik jasny/ciemny w stylu z własnym schematem przechodzi do Zeszytu w przeciwnej jasności.
+- **Kolor paska przeglądarki** (`theme-color`) to stała hex; po zmianie tła Zeszytu trzeba ją zaktualizować ręcznie.
+- **Krój tekstu** (`src/lib/appFont.ts`, klucz `kaczy.font.v1`): Domyślny plus Inter, Nunito, Atkinson Hyperlegible Next, Literata, Manrope, Lexend. Atrybut `html[data-font]`; reguła ma niską specyficzność, więc nagłówki stylów zachowują swoje kroje. Logo i cyfry rachunku mają własne kroje. Pliki krojów ładują się przy pierwszym użyciu (`skin-fonts`, CacheFirst). Offline przed pierwszym użyciem krój nie jest w pamięci.
+- **Tokeny i tekst.** Ink to osobny token tekstu (`destructive-ink`, `primary-ink`, `success-ink`, `warning-ink`: `color-mix` z czernią). Tło przycisków zostaje `destructive`. Kolory folderów i notatek idą z tych samych zmiennych (`data-swatch`).
+- **Rytm i promienie.** Gęstość siatki notatek w kroku 4 px; odstępy między sekcjami 32/40 px. Trzy nazwane promienie: `control` 8 px, `field` 12 px, `card` 16 px (`rounded-card`; 51 miejsc `rounded-2xl` zamienione na token, wygląd bez zmian).
+- **Tabliczka i ołówek** (komputer): w rogu tła nazwa widoku („NOTKI · ARKUSZ 1/1”, `PaperBackdrop`); kreska ołówka rysuje się przy „Zapisano” (`.pencil-stroke`). Tabliczka na Grafiku przechodzi na lewy dolny róg. Czerwony margines Zeszytu nie jest rysowany (tło nie zna szerokości paska bocznego).
+- **Efekty domyślnie.** Zostają tylko przywrócenie z kosza (konfetti) i zamknięty dzień; iskierki, deszcz emoji, fajerwerki, serduszka, bąbelki, tęcza, motyw sezonowy, cytat dnia i odznaka są wyłączone (migracja `kaczy.effectsSettings.defaults2`, późniejsze wybory zostają). Skutek: pinezka przy przypięciu jest częścią „Iskierek”, więc domyślnie jej nie ma.
+- **Pieczątki.** Odznaki statusu i liczniki, które nie są przyciskami (zaległe na Dziś, przegląd tygodnia, „na dziś” przy temacie, status przypomnienia, liczba w nagłówku grupy), mają klasę `.stamp-tag`: obwódka i tekst w jednym kolorze, bez wypełnienia, mono. Przyciski zostają chipami z wypełnieniem.
+- **Kolory** w callout Markdownu, ikonach kopii, sejfie, płomieniu serii i ostrzeżeniu synchronizacji idą z tokenów.
+- **Kontrast Zeszytu.** Czerwony tekst w ciemnym motywie ≥4,5:1; etykiety sekcji (`section-label`) zdaniem zamiast wersalików; tytuł strony wagi 700.
+- **Nagłówek.** Pasek nagłówka ma w Zeszycie tylko cienką kreskę; tytuł widoku w Fraunces.
+
+### Dostępność
+
+- **Test axe** (`e2e/a11y.spec.ts`): pięć widoków (Notatki, Przypomnienia, Kalendarz, Grafik, Nauka) w WCAG 2.2 AA, jasny i ciemny motyw, 390 i 1440 px — 20 skanów. Lista wyjątków `KNOWN` może tylko maleć; każdy wpis ma uzasadnienie. Jedyny wyjątek: `target-size` pasków opanowania Nauki na telefonie (równoważne kontrolki na tablicy).
+- **Grupy „jedna z kilku”** (`ToggleGroup`, Radix, `type="single"`): Tab wchodzi do grupy na wybraną pozycję, strzałki przenoszą fokus (w kółko), Spacja/Enter wybiera, kliknięcie wybranej nie odznacza. Czytnik słyszy „grupa opcji, zaznaczony”. Pędzle Grafiku, galerie stylów i krojów oraz paski filtrów mają własną obsługę klawiatury.
+- **Kontrast krawędzi.** `--input` daje ≥3:1 na białej karcie, `muted`, `secondary` i jasnych notatkach.
+- **Dźwięk i ruch.** Ograniczony ruch zeruje animacje; wibracje działają mimo to.
+
+### Powiadomienia przy zamkniętej aplikacji (Web Push)
+
+- **Wymaga własnego serwera** z https (Caddy albo nginx przed portem 4455). Bez niego przypomnienia działają tylko przy otwartej aplikacji. Serwer: `push-server/` (Node; `core.js` — czysta logika, `server.js` — `GET /vapid`, `PUT /schedule`, `POST /test`, `POST /unsubscribe`, `GET /health`, obieg co 20 s; `Dockerfile`, `README.md`). Klucze VAPID tworzone przy pierwszym starcie (`DATA_DIR/vapid.json`).
+- **Ustawienia → Ogólne → „Powiadomienia przy zamkniętej aplikacji”:** adres serwera, „Włącz”, „Wyślij próbne”, „Wyłącz”. Pod polem stan: liczba zaplanowanych terminów i czas ostatniej wysyłki albo błąd. iPhone obsługuje push tylko w aplikacji dodanej do ekranu początkowego.
+- **Aplikacja liczy, serwer wysyła.** Notatki, Grafik i dziennik żyją w Yjs, więc serwer ich nie zna. Aplikacja liczy terminy na 14 dni (`src/lib/push/schedule.ts`, `buildPushSchedule`, limit 200 pozycji) tymi samymi funkcjami co timery strony i wysyła listę przez `PUT /schedule`; serwer zastępuje nią poprzednią listę urządzenia.
+- **Kiedy lista idzie:** 3 s po zmianie notatek, Grafiku lub dziennika; co godzinę; przy schowaniu aplikacji (`keepalive`). Co 6 godzin wysyłana zawsze, nawet bez zmian (horyzont się przesuwa).
+- **Bez podwójnych powiadomień.** Ten sam termin może przyjść z serwera i z timera strony. Obie drogi zapisują klucz (`pushKey`: `n:<id>:<termin>`, `rd:<dzień>`, `e:<jutro>`) w Cache Storage `notki-push`, który widzą strona i service worker. Push nie pokazuje nic, gdy aplikacja jest widoczna.
+- **Prywatność.** Na serwer trafiają terminy, tytuły i krótkie opisy. Z notatek tylko tytuł; notatka prywatna ma stały tytuł „Przypomnienie z notatki prywatnej”. Ustawienie jest urządzenia, nie dokumentu.
+- **Co przychodzi:** przypomnienia notatek (w tym kolejne terminy serii), Grafik na jutro (o godzinie wieczornego przypomnienia), „Raport dnia gotowy”, „Raport tygodnia gotowy”, zaległe zamówienie, serwis dziś. Nieudanej wysyłki serwer nie ponawia; termin spóźniony o ponad godzinę (serwer nie działał) przepada.
+- **Ograniczenia.** Przyciski w powiadomieniu („Odłóż 10 min”, „Gotowe”) są tylko w powiadomieniach z timera strony; z serwera powiadomienie otwiera aplikację. Lista na serwerze jest najwyżej tak świeża jak ostatnie otwarcie aplikacji. Nie sprawdzone na prawdziwym telefonie — serwer sprawdzony lokalnie.
+- **Nie działa:** „próba bez protokołu” (nie ma momentu w czasie; zostaje w pasku Dziennika).
+
+### Budowanie, PWA, service worker
+
+- Aplikacja bez śladów szablonu Lovable: w budowaniu nie działa `lovable-tagger`, service worker rejestruje się na każdym hoście produkcyjnym, offline obsługuje każdą nawigację (`vite.config.ts`: `workbox.runtimeCaching` → `html-navigations`).
+- `src/lib/registerSW.ts` pomija rejestrację tylko w dev, w ramce (iframe) i przy `?sw=off` (wtedy wyrejestrowuje workera). Trasa `/~oauth` nie jest już wyjątkiem.
+- Kroje stylów i kroje poza precache (budżet precache 4,3 MB) trafiają do cache `skin-fonts` przy pierwszym użyciu. Skróty PWA i udostępnianie z innej aplikacji: `public/manifest.webmanifest`, `public/sw-share.js`.
+
+### Testy e2e na telefonach
+
+- Testy `@mobile` uruchamiają się w profilach iPhone 14 (WebKit) i Pixel 7 (Chrome na Androidzie): `npm run test:e2e:mobile`. Zwykłe `npm run test:e2e` uruchamia wszystkie projekty (`playwright.config.ts`, `grep: /@mobile/`).
+- `serviceWorkers: "block"` w obu projektach (WebKit w Playwright przenosi workera między kontekstami). Dwa testy dotykowe przez CDP są tylko w Chromium.
+- WebKit na Windows to nie prawdziwy iOS — nie odtwarza klawiatury ekranowej ani `visualViewport` iPhone'a. WebKit trzeba pobrać: `npx playwright install webkit`.
+
+### Testy (ogólnie)
+
+- Jednostkowe: `src/lib/keyboardInset.test.ts`, `haptics.test.ts`, `pageHidden.test.ts`, `viewPreload.test.ts`, `inputModality.test.ts`, `appFont.test.ts`, `siteMode.test.ts`, `skins.test.ts`, `useTheme.test.ts`, `contrastTokens.test.ts`, `push/schedule.test.ts`, `push-server/core.test.js`.
+- E2E: `mobile.spec.ts`, `mobile-layout.spec.ts`, `touch-targets.spec.ts`, `desktop-columns.spec.ts`, `toggle-group.spec.ts`, `skins.spec.ts`, `site-mode.spec.ts`, `a11y.spec.ts`, `view-skeleton.spec.ts`, `pwa.spec.ts`, `push.spec.ts`, `view-change.spec.ts`.
+
+### Commity
+
+- `544773c`, `2f5ff5b`, `18e7808`, `12fe855` (2026-10-15) — React 19 i Tailwind 4; `ee3d51f` — kolory krawędzi i fokusu.
+- `ee5a23f` (Radix, lucide), `4e96f34` (sonner 2).
+- `b06445b` — cele dotyku; `9bfb12e` — dwie kolumny; `ec86276` — dolny pasek; `c62282f` — klawiatura; `07bbc03` — arkusze formularzy; `9ed219c` — okna na telefonie.
+- `8a5b5da` — ładowanie widoków; `7c47e4b` (2026-10-15) i `59063d5` — stany (`StatusPanel`).
+- `75ea68d` — animacje w tle; `d3c5c4b` — `ToggleGroup`; `6442da5` — wibracje; `21f2442` — krój tekstu; `d0e244b` — tryb budowa.
+- `95ca98f` — style i motyw; `cba3989` — bez Lovable; `35ed5a3` — audyt axe i testy na telefonach; `e2c8b95` — układ telefonu i pasek zbiorczy.
+- `fe01dcd` (2026-10-16) — Web Push.
+- `c630cb4`, `30427f2` (2026-10-18) — ruch; `84490c6` — mikrointerakcje; `2cafa53` (2026-10-19) — podpowiedź „+”; `9b7f7b2` (2026-10-19) — promienie `rounded-card`.
+- Plan wizualny (2026-10-18): fazy A–E, C, D, E4 i tabliczka — w historii commitów; kilka z nich nie ma osobnego hasha w dokumencie.
+- Pasek boczny (aktywny wiersz): w historii commitów.
 
 ## Synchronizacja — stan aktualny (parowanie, kody, urządzenia, diagnoza)
 
@@ -516,389 +202,6 @@ Dział opisany w jednym miejscu. Synchronizacja działa przez WebRTC (y-webrtc) 
 - `adbe848` — krótkie kody odrzucone, diagnostyka, ponowne łączenie (plan synchronizacji, fazy 0, 1, 3).
 - `842db18` (2026-10-20) — urządzenia w grupie i nazwy (faza 4).
 - `89f1546` (2026-10-20) — toast z tytułem notatki (punkt 3).
-
-## Wspólne — wibracje (haptyka)
-
-**Co robi.** Na telefonie z Androidem krótkie drgnięcie potwierdza akcje: zapis notatki, odhaczenie listy, przejście
-w dolnym pasku, odpowiedź w quizie, zapis wpisu w Dzienniku. Działa także przy ograniczonym ruchu — wyłącza je tylko
-przełącznik „Wibracje na telefonie” w Ustawieniach → Ogólne.
-
-**Gdzie jest.** `src/lib/haptics.ts`: `haptic(kind)`, typ `HapticKind` (`tap`, `success`, `warn`, `selection`),
-wzorce w `PATTERNS`. Przełącznik: klucz `haptics` w `src/lib/effectsSettings.ts`, podgląd w
-`src/components/settings/GeneralSettings.tsx` (`previewEffect`).
-
-**Jak działa i dlaczego.** `haptic` po cichu nic nie robi, gdy nie ma `navigator.vibrate` (iOS, komputer), gdy
-wskaźnik jest precyzyjny (`pointer: fine` — mysz), gdy efekt `haptics` jest wyłączony, albo gdy wibracja rzuci
-wyjątek. Ograniczony ruch (`prefers-reduced-motion`, `html[data-motion='reduced']`) celowo jej nie wyłącza:
-wibracja nie jest animacją, a w rękawicach i w hałasie bywa jedynym potwierdzeniem akcji.
-
-**Ograniczenia i pułapki.** iOS Safari nie ma `navigator.vibrate` — tam wibracji nie ma wcale. Przy myszy przycisk
-podglądu w Ustawieniach jest ukryty (`pointer-fine:hidden`).
-
-**Testy.** `src/lib/haptics.test.ts` (różne wzorce, mysz, ograniczony ruch nadal wibruje, wyłączony przełącznik,
-brak API i wyjątek).
-
-**Commit.** `6442da5` (2026-10-15).
-
----
-
-## Wspólne — krój tekstu
-
-**Co robi.** Ustawienia → Wygląd → „Krój tekstu”: Domyślny (krój stylu) i sześć do wyboru — Inter (neutralny,
-gęsty), Nunito (zaokrąglony), Atkinson Hyperlegible Next (najczytelniejszy, wyraźne I/l/1 i 0/O — dobry na budowę),
-Literata (szeryfowy do czytania), Manrope (geometryczny), Lexend (szeroki, spokojny). Każdy kafel pokazuje nazwę
-i próbkę z polskimi znakami swoim krojem.
-
-**Gdzie jest.**
-- `src/lib/appFont.ts`: typ `AppFont`, `APP_FONTS`, `APP_FONT_META`, `isAppFont`, `useAppFont`, `setAppFont`;
-  klucz `kaczy.font.v1` (w `SETTINGS_KEYS` kopii zapasowej). Atrybut `html[data-font]` ustawiany przy imporcie
-  (`src/main.tsx`), „Domyślny” go zdejmuje.
-- `src/styles/fonts.css`: `--app-font` dla każdego kroju i reguła na `body`, `.font-body`, `.font-display`, pola
-  formularzy i przyciski.
-- `src/components/settings/FontPicker.tsx` (kafle z `layoutId="font-active"`), `AppearanceSettings.tsx`.
-- `src/main.tsx`: `@fontsource-variable/{inter,nunito,atkinson-hyperlegible-next,literata,manrope,lexend}/wght.css`;
-  `vite.config.ts`: te kroje poza precache, w cache `skin-fonts` przy pierwszym użyciu.
-
-**Jak działa i dlaczego.**
-- Reguła w `:where(...)` ma specyficzność samego `html[data-font]` (0,1,1): wygrywa z klasami Tailwinda (są
-  w warstwie), ale przegrywa z krojami nagłówków stylów (`html[data-skin] h1`, 0,1,2). Plan, Neon, Zorza i Miedź
-  zachowują więc swoje nagłówki (Ustawienia mówią o tym pod wyborem), a w Zeszycie nagłówki idą za wybranym krojem.
-- Logo (`.font-logo`) i cyfry rachunku (`.font-mono`) mają własne kroje i nie zmieniają się.
-- Pliki krojów pobierają się dopiero, gdy krój jest użyty; otwarcie Ustawień pobiera wszystkie sześć do próbek.
-
-**Ograniczenia i pułapki.**
-- Wczytane są tylko osie wagi (`wght.css`) bez kursywy — kursywa (np. cytat dnia) jest pochylana przez przeglądarkę.
-- Offline przed pierwszym użyciem krój nie jest w pamięci — tekst spada do Plus Jakarta Sans.
-- Większe kroje (Lexend, Literata) dają dłuższe wiersze — tytuły kafli częściej się zawijają.
-
-**Testy.** `src/lib/appFont.test.ts` (6 krojów, atrybut), `e2e/skins.spec.ts` („krój tekstu: Literata…” — tekst
-w Literacie, nagłówek stylu Plan zostaje w Barlow Condensed, wybór przeżywa odświeżenie).
-
-**Commit.** `21f2442` (2026-10-15).
-
----
-
-## Wspólne — tryb budowa
-
-**Co robi.** Ustawienia → Wygląd → „Tryb budowa” (Wyłączony / Włączony / Automatycznie) — do pracy w rękawicach
-i w słońcu. Cała aplikacja w skali 112,5% (tekst 18 px), przyciski ikonowe łapią palec na co najmniej 54 px,
-tekst pomocniczy i krawędzie są mocniejsze, tło gładkie (bez kratki i dekoracji stylów), a dymki z „Cofnij”
-trwają 8 s zamiast 5 s. „Automatycznie” włącza tryb, gdy system prosi o większy kontrast.
-
-**Gdzie jest.**
-- `src/lib/siteMode.ts`: typ `SiteMode`, `resolveSiteMode`, `isSiteModeActive`, `useSiteMode`, `setSiteMode`,
-  `undoToastDuration`; klucz `kaczy.siteMode.v1` (też w `SETTINGS_KEYS` kopii zapasowej).
-- `src/styles/site.css`: `html[data-site]` — `font-size: 112.5%`, `--tap: 3rem`, tokeny `--muted-foreground`,
-  `--border`, `--input` dla jasnego i ciemnego schematu, wyłączenie `.paper-grid::before/::after`, cele `.tap-target`
-  i `.card-action` na dotyku.
-- `.tap-target`: `ui/icon-button.tsx` (wszystkie rozmiary), `ui/button.tsx` (rozmiary `icon`, `icon-sm`).
-- `src/lib/undoToast.ts` (`toastWithUndo` → `undoToastDuration`), `src/main.tsx` (import CSS i modułu przed
-  pierwszym malowaniem), `src/components/settings/AppearanceSettings.tsx` (przełącznik `Segmented`).
-
-**Jak działa i dlaczego.**
-- Skala przez `font-size` na `html`: wszystko w rem (tekst, odstępy, wysokości przycisków) rośnie razem, bez
-  przepisywania ~110 klas `coarse:h-11` w komponentach. Elementy w px (dolny pasek 64 px) zostają.
-- Cel dotyku przez niewidzialne `::after` wyśrodkowane na przycisku (`max(100%, var(--tap))`) — widoczny przycisk
-  się nie powiększa, więc nagłówek na 320 px dalej się mieści.
-- Tokeny kontrastu w `html[data-site]:not(.dark)` / `html[data-site].dark` mają wyższą specyficzność niż tokeny
-  stylów (`html[data-skin]`), więc działają nad każdym stylem.
-- `auto` słucha `matchMedia("(prefers-contrast: more)")` na żywo; atrybut `data-site` ustawiany przy imporcie modułu.
-
-**Ograniczenia i pułapki.**
-- Kafle i podpisy w px nie rosną. Nowy przycisk ikonowy poza `IconButton`/`Button` potrzebuje klasy `.tap-target`.
-- Tokeny kontrastu są neutralne (szare) — w stylach o mocnym odcieniu tekst pomocniczy traci odcień stylu.
-
-**Testy.** `src/lib/siteMode.test.ts` (auto, atrybut, czas „Cofnij”), `e2e/site-mode.spec.ts` (`@mobile`: 18 px,
-brak kratki, cel ≥ 52 px w nagłówku, „Cofnij” 8000 ms, przeżywa odświeżenie; też iPhone 14 i Pixel 7).
-
-**Commit.** `d0e244b` (2026-10-15).
-
----
-
-## Wspólne — style aplikacji (Zeszyt, Plan, Neon, Zorza, Miedź)
-
-**Co robi.** Ustawienia → Wygląd → „Styl” to galeria pięciu wyglądów całej aplikacji. Każda miniatura pokazuje
-styl w małej skali: tło, kafel, akcent i „Aa” krojem nagłówków. Po wyborze nowy wygląd rozlewa się kołem od
-miejsca kliknięcia.
-- **Zeszyt** — domyślny: kratka, bursztyn, niebieski długopis; jedyny słucha przełącznika „Jasność”.
-- **Plan** (ciemny) — rysunek techniczny: granat, kratka 12/60 px, znaczniki narożników na kaflach, tabliczka
-  rysunkowa w rogu (tylko komputer), czerwona kreska poprawki jako margines, nagłówki Barlow Condensed.
-- **Neon** (ciemny) — bar po fajrancie: ceglana ściana w półmroku, różowa i błękitna poświata, nagłówki widoków
-  świecą (Unbounded), logo „zapala się” z mrugnięciem po wybraniu stylu.
-- **Zorza** (ciemny) — nocne niebo z gwiazdami i dryfującą zorzą (28 s, tylko `transform`), szklane kafle na
-  komputerze, nagłówki Fraunces (oś SOFT), logo w barwach zorzy.
-- **Miedź** (jasny) — beton architektoniczny: ziarno, styki płyt szalunkowych, otwory po ściągach; krawędź paska
-  bocznego to miedziana rura, przycisk główny lśni jak polerowana miedź, linki w kolorze patyny; nagłówki
-  Bricolage Grotesque.
-
-**Gdzie jest.**
-- `src/lib/skins.ts`: typ `Skin`, `SKINS`, `SKIN_SCHEME`, `SKIN_THEME_COLOR`, `isSkin`, `skinStore`
-  (klucz `kaczy.skin.v1`), `useSkin`, `setSkin`.
-- `src/lib/skinGallery.ts`: `SKIN_META` (nazwa, opis, kolory miniatury, krój) — tylko dla galerii.
-- `src/styles/skins.css`: tokeny pod `html[data-skin="…"]`, tła (`.paper-grid::before/::after` z `PaperBackdrop`),
-  logo (`.notki-glyph`), kroje `h1–h3`, miniatury `.skin-thumb`, reguły przejścia `html.theme-reveal`.
-- `src/hooks/useTheme.ts`: `resolveDark`, `revealRadius`, `setThemeMode`, `applyAppearance`, hook `useTheme`
-  (`mode`, `dark`, `skin`, `setMode`, `setSkin`, `toggle`).
-- `src/components/settings/SkinPicker.tsx` (galeria), `Segmented.tsx` (przełączniki „Jasność” i „Ruch”),
-  `AppearanceSettings.tsx`.
-- `src/main.tsx`: import krojów i `skins.css`; `vite.config.ts`: kroje stylów poza precache + cache `skin-fonts`.
-- `src/lib/exportNotes.ts`: `kaczy.skin.v1` w `SETTINGS_KEYS` (pełna kopia zapasowa).
-
-**Jak działa i dlaczego.**
-- Styl i jasność to dwie osie. `resolveDark`: styl z własnym schematem (`SKIN_SCHEME`) wygrywa; Zeszyt bierze
-  jasny/ciemny/system. Klasa `.dark` jest zawsze zgodna ze schematem, więc warianty `dark:` w komponentach działają
-  w każdym stylu. `html[data-skin]` jest zawsze ustawiony (także `zeszyt`).
-- `skins.css` jest poza warstwami Tailwinda (`@layer base` w `index.css`), więc nadpisuje tokeny bez walki
-  o specyficzność. Dekoracje siedzą w tle i w kilku akcentach — treść notatek nie zmienia układu.
-- Jeden wspólny stan motywu w module `useTheme` (`useSyncExternalStore`) — wcześniej każdy `useTheme()` miał
-  własną kopię i nagłówek nie widział zmiany z Ustawień. Zmiana trafia do DOM w jednym miejscu (`applyCurrent`),
-  idempotentnie, więc dwa wywołania nie psują przejścia.
-- Przejście: View Transitions + `clip-path: circle()` na `::view-transition-new(root)` od ostatniego
-  `pointerdown` (≤1,5 s) albo od środka górnej krawędzi. Wyłączone przy ograniczonym ruchu i gdy efekt „themeFade”
-  jest wyłączony; bez View Transitions zostaje krótkie przejście CSS.
-- Przełącznik jasny/ciemny w nagłówku, pasku bocznym i „Więcej”: w stylu z własnym schematem przechodzi do
-  Zeszytu w przeciwnej jasności — przycisk zawsze robi to, co mówi.
-- Kroje: `@font-face` z fontsource pobiera plik dopiero, gdy styl go użyje. Pliki krojów stylów są poza precache
-  (budżet 4,3 MB) i trafiają do `skin-fonts` (CacheFirst, rok) przy pierwszym użyciu. Neon używa Unbounded tylko
-  w `h1/h2`, bo szeroki krój ucinał tytuły kafli na telefonie.
-- Zorza: rozmycie kafli (`backdrop-filter`) tylko przy `pointer: fine` — na telefonie to kosztowne.
-- Kolor paska stanu/PWA z `SKIN_THEME_COLOR` (Zeszyt ciemny: `#0f0d10`).
-
-**Ograniczenia i pułapki.**
-- Offline przed pierwszym użyciem stylu jego krój nie jest w pamięci — nagłówki spadają do Plus Jakarta Sans.
-- Nowy styl: dopisz go w `SKINS`, `SKIN_SCHEME`, `SKIN_THEME_COLOR`, `SKIN_META`, `skins.css` (tokeny,
-  `--note-*`, tło, miniatura) i w `SKINS` w `e2e/a11y.spec.ts`.
-- Nowe tło dla `.paper-grid` musi ustawić `mask-image` (Zeszyt maskuje kratkę ku dołowi).
-- Wejściowy JS: opisy galerii są w `skinGallery.ts`, żeby nie trafiły do paczki startowej; próg w
-  `e2e/bundle.spec.ts` podniesiony do 404 KB (po zmianie 400,3 KB).
-
-**Testy.** `src/lib/skins.test.ts`, `src/hooks/useTheme.test.ts` (`resolveDark`, `revealRadius`), `e2e/skins.spec.ts`
-(wybór Neonu, zablokowana jasność, odświeżenie, kolor paska; przełącznik w nagłówku wraca z Miedzi do Zeszytu),
-`e2e/a11y.spec.ts` (każdy styl na Notatkach, Kalendarzu i Grafiku, 390 i 1440 — bez naruszeń).
-
-**Commit.** `95ca98f` (2026-10-15).
-
----
-
-## Wspólne — mikrointerakcje (framer-motion)
-
-**Co robi.** Drobny ruch tam, gdzie zmienia się stan:
-- przełączniki „Jasność” i „Ruch i animacje” — podświetlenie przesuwa się sprężyną do wybranej opcji;
-- galeria stylów — miniatura unosi się pod kursorem i wciska przy dotknięciu, obwódka wyboru przejeżdża do nowego
-  stylu, znaczek ✓ wskakuje z obrotem; dotknięcie daje krótką wibrację (`haptic("selection")`);
-- ikona słońce/księżyc w nagłówku zamienia się obrotem;
-- licznik „N notatek” w nagłówku przewija cyfrę w górę przy wzroście i w dół przy spadku;
-- przejście motywu kołem i efekty stylów (zapalanie neonu, dryf zorzy, odblask miedzi) — opis wyżej.
-
-**Gdzie jest.** `src/components/settings/Segmented.tsx` (`layoutId="segmented-active"` w `LayoutGroup` z `useId`),
-`src/components/settings/SkinPicker.tsx` (`layoutId="skin-active"`, `whileHover`, `whileTap`),
-`src/components/RollingNumber.tsx`, `src/components/AppHeader.tsx` (`AnimatePresence mode="wait"` przy ikonie).
-
-**Jak działa i dlaczego.**
-- Animowane tylko `transform` i `opacity` (bez przeliczania układu); czasy i sprężyny z `src/lib/motion.ts`
-  (`spring.snap`, `spring.soft`, `tween.enter`) — jeden język ruchu w całej aplikacji.
-- Ograniczony ruch obsługuje `MotionConfig` w `App.tsx` — komponenty nie sprawdzają go osobno.
-- Wciśnięcie przycisków przełącznika to klasa `pressable` (podpis wciśnięcia aplikacji), nie skala framer-motion.
-- `RollingNumber`: kierunek ze stanu pochodnego ustawianego w renderze (nie z refa — bezpieczne w StrictMode);
-  czytnik ekranu dostaje liczbę z `sr-only`, animowane cyfry mają `aria-hidden`.
-- `LayoutGroup id` z `useId`: kilka przełączników na jednej stronie nie dzieli jednego `layoutId`.
-
-**Ładowanie (LazyMotion).** `App.tsx` owija aplikację w `<LazyMotion features={loadMotionFeatures} strict>`;
-pełny zestaw funkcji (`domMax`: animacje, gesty, przeciąganie, `layout`/`layoutId`) jest w `src/lib/motionFeatures.ts`
-i przychodzi osobną paczką (~18 KB gzip) zaraz po starcie. Komponenty importują lekkie `m` jako `motion`
-(`import { m as motion } from "framer-motion"`) — samo `m` kolidowałoby z lokalnymi zmiennymi `m` (np.
-`MODULES.map((m) => …)`). `vite.config.ts` nie ma już ręcznej paczki `vendor-motion`, bo wciągała całe
-framer-motion do startu. Wejściowy JS: 400,3 → 372,4 KB gzip; próg w `e2e/bundle.spec.ts` obniżony do 376 KB.
-
-**Ograniczenia i pułapki.**
-- Nowy komponent z animacją: importuj `m as motion`. Pełne `motion` w trybie `strict` to błąd.
-- Do załadowania funkcji (pierwsze ułamki sekundy, wolne łącze) animacje wejścia nie grają — elementy stoją
-  w stanie `initial` i ruszają po załadowaniu paczki.
-
-**Testy.** `e2e/skins.spec.ts` (galeria, przełączniki), `e2e/a11y.spec.ts`; ruch sprawdzony na zrzutach.
-
-**Commit.** `95ca98f` (2026-10-15).
-
----
-
-## Wspólne — budowanie i service worker (bez Lovable)
-
-**Co robi.** Aplikacja nie ma już śladów szablonu Lovable: w budowaniu nie działa wtyczka `lovable-tagger`, service
-worker rejestruje się na każdym hoście produkcyjnym, a offline obsługuje każdą nawigację.
-
-**Gdzie jest.** `vite.config.ts` (lista wtyczek, `workbox.runtimeCaching` → `html-navigations`), `src/lib/registerSW.ts`
-(`registerServiceWorker`), `package.json` (bez `lovable-tagger`).
-
-**Jak działa i dlaczego.**
-- `registerServiceWorker` pomija rejestrację tylko w dev, w ramce (iframe) i przy `?sw=off` — wtedy wyrejestrowuje
-  własnego workera. Lista hostów podglądu Lovable (`*.lovableproject.com`, `*.beta.lovable.dev`, `preview--…`)
-  zniknęła razem z `isBlockedHost`.
-- Bez wyjątku `/~oauth` w `navigateFallbackDenylist` i w regule `html-navigations` — to trasa logowania Lovable
-  Cloud, której aplikacja nie ma.
-
-**Ograniczenia i pułapki.** Wzmianki o Lovable w `roadmap.md` to historia zadań, nie kod.
-
-**Testy.** `e2e/pwa.spec.ts` (rejestracja i aktywacja workera, offline), typecheck, build.
-
-**Commit.** `cba3989` (2026-10-15).
-
----
-
-## Wspólne — automatyczny audyt dostępności (axe)
-
-**Co robi.** Test e2e sprawdza narzędziem axe-core pięć głównych widoków (Notatki, Przypomnienia, Kalendarz, Grafik,
-Nauka) pod kątem WCAG 2.2 AA — w jasnym i ciemnym motywie, na telefonie (390 × 844) i komputerze (1440 × 900),
-razem 20 skanów. Nowe naruszenie wywraca test.
-
-**Gdzie jest.** `e2e/a11y.spec.ts`: stałe `TAGS` (`wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `wcag22aa`), `VIEWS`,
-`SIZES`, `THEMES`, lista wyjątków `KNOWN`, funkcja `scan(page)`. Zależność `@axe-core/playwright` (dev).
-
-**Jak działa i dlaczego.**
-- Każdy test seeduje dwie notatki, ustawia motyw (`kaczy-theme`) i ograniczony ruch (`kaczy.motion.v1` + emulacja
-  `prefers-reduced-motion`), żeby skan nie trafił na kolory w połowie animacji, i czeka, aż zniknie `ViewSkeleton`.
-- Zapadka: `KNOWN` mapuje `widok/rozmiar/motyw` → reguły axe. Test porównuje listę dokładnie, więc naprawione
-  naruszenie też go wywraca — trzeba je usunąć z `KNOWN`. Lista może tylko maleć. Każdy wpis ma uzasadnienie.
-- Jedyny wyjątek: `target-size` w Nauce na telefonie — komórki paska opanowania (`StudyView.tsx`) są węższe niż 24 px.
-  Te same tematy są na tablicy poniżej (wyjątek „równoważna kontrolka” z WCAG 2.5.8).
-- Naprawione przy wprowadzaniu testu:
-  - `AnimatedTagline.tsx`: `aria-label` na `<p>` (zabronione) → tekst w `<span className="sr-only">`.
-  - `AppSidebar.tsx`: stopka „NOTKI v1.0” z `text-muted-foreground/40` i skrót ⌘K z `opacity-70` → pełny kolor.
-  - Nagłówki sobota/niedziela: `weekdayHeadClass` w `calendar/dayCellStyles.ts` (`text-primary/80`), `WeekStrip.tsx`
-    i `ShiftWeekView.tsx` (`text-primary-ink/80`) → `text-primary-ink`.
-
-**Ograniczenia i pułapki.** Skanowane są widoki, nie otwarte okna ani menu. Log `[a11y]` w wyniku testu podaje regułę
-i pierwsze trzy elementy. axe nie ocenia kontrastu tekstu na obrazkach ani w trakcie animacji.
-
-**Testy.** `e2e/a11y.spec.ts` (20 testów).
-
-**Commit.** `35ed5a3` (2026-10-15).
-
----
-
-## Wspólne — testy e2e na prawdziwych silnikach telefonów
-
-**Co robi.** Testy oznaczone `@mobile` uruchamiają się także w profilach iPhone 14 (WebKit, czyli silnik Safari)
-i Pixel 7 (Chrome na Androidzie): `npm run test:e2e:mobile`. Zwykłe `npm run test:e2e` uruchamia wszystkie projekty.
-
-**Gdzie jest.** `playwright.config.ts` (projekty `iphone-14`, `pixel-7` z `grep: /@mobile/`), `package.json`
-(`test:e2e:mobile`), tagi `@mobile` w `e2e/mobile.spec.ts` (wszystkie testy) i `e2e/touch-targets.spec.ts`.
-
-**Jak działa i dlaczego.**
-- Tylko `@mobile`, bo pozostałe testy zakładają układ komputera (pasek „Zapisz notatkę...”, pasek boczny).
-- `test.use` w plikach nadpisuje rozmiar okna (390 × 844 albo tablet 1180 × 820), ale silnik i user agent zostają
-  z profilu urządzenia.
-- `serviceWorkers: "block"` w obu projektach: WebKit w Playwright przenosi service workera między kontekstami
-  i od drugiego testu pokazuje dymek „Dostępna nowa wersja aplikacji”, który zasłania przyciski. Na prawdziwym
-  telefonie to nie występuje; service workera sprawdza `e2e/pwa.spec.ts` w Chromium.
-- Dwa testy (przytrzymanie kafla, przeciągnięcie arkusza) symulują dotyk przez CDP, które jest tylko w Chromium —
-  na WebKit są pomijane (`test.skip(browserName !== "chromium")`).
-
-**Ograniczenia i pułapki.** WebKit trzeba pobrać raz: `npx playwright install webkit`. WebKit na Windows to nie
-prawdziwy iOS — nie odtwarza klawiatury ekranowej ani `visualViewport` iPhone'a.
-
-**Testy.** `e2e/mobile.spec.ts`, `e2e/touch-targets.spec.ts` w projektach `iphone-14` i `pixel-7`.
-
-**Commit.** `35ed5a3` (2026-10-15).
-
----
-
-## Wspólne — układ telefonu bez przewijania w bok, pasek zbiorczy
-
-**Co robi.** Pasek zbiorczy (po zaznaczeniu notatek) na telefonie zawija akcje w drugi rząd, zamiast chować archiwum
-i kosz za przewijaniem w bok. Test pilnuje, że żadna trasa nie przewija się w bok przy 320 i 390 px i że „wstecz”
-zamyka edytor notatki.
-
-**Gdzie jest.** `src/components/BulkActionBar.tsx` (`max-sm:flex-wrap max-sm:justify-center`, separatory ukryte na
-telefonie), `e2e/mobile-layout.spec.ts`.
-
-**Jak działa i dlaczego.** Przy celach dotyku 44 px dziesięć akcji potrzebuje ~440 px, a pasek na 390 px ma ~374 px —
-przewijany w bok pasek ukrywał 70 px akcji bez żadnej wskazówki. Od `sm` pasek zostaje jednorzędowy. Test przewijania
-pomija elementy wewnątrz kontenerów z własnym `overflow-x` (paski pigułek) i wypisuje pierwsze trzy winne elementy.
-
-**Ograniczenia i pułapki.** Trasy z parametrem (folder, etykieta) nie są w pętli testu.
-
-**Testy.** `e2e/mobile-layout.spec.ts` (320/390 px: 9 tras bez przewijania w bok; pasek zbiorczy bez przewijania;
-„wstecz” zamyka edytor), `e2e/templates-bulk.spec.ts`, `e2e/mobile.spec.ts`.
-
-**Commit.** `e2c8b95` (2026-10-15).
-
----
-
-## Wspólne — powiadomienia przy zamkniętej aplikacji (Web Push)
-
-**Co robi.** Przypomnienia przychodzą o czasie także wtedy, gdy NOTKI są zamknięte. Działa to po włączeniu w
-**Ustawienia → Ogólne → Powiadomienia przy zamkniętej aplikacji**: wpisujesz adres własnego serwera, stukasz
-„Włącz”, a potem możesz sprawdzić działanie przyciskiem „Wyślij próbne”. Przez serwer idą:
-- przypomnienia notatek, w tym kolejne terminy serii;
-- Grafik na jutro, o godzinie wieczornego przypomnienia;
-- „Raport dnia gotowy” i „Raport tygodnia gotowy”;
-- problem z budowy otwarty od 3 dni;
-- materiał zamówiony 3 dni temu, który jeszcze nie dojechał.
-
-Pod polem adresu widać stan: liczbę zaplanowanych terminów i czas ostatniej wysyłki albo błąd.
-
-**Gdzie jest.**
-- `push-server/`: osobny serwer Node.
-  - `core.js` — czysta logika: `cleanSubscription`, `cleanItems`, `dueItems`, `cleanStore`, `payloadOf`.
-  - `server.js` — HTTP (`GET /vapid`, `PUT /schedule`, `POST /test`, `POST /unsubscribe`, `GET /health`) i obieg co 20 s.
-  - `Dockerfile` i `README.md` z wdrożeniem i limitami.
-- `src/lib/push/schedule.ts`: `buildPushSchedule(input)` zwraca `PushItem[]` (`key`, `at`, `title`, `body`, `url`).
-  Ma też `outsideQuietHours` i stałe `PUSH_HORIZON_DAYS` (14) i `PUSH_MAX_ITEMS` (200).
-- `src/lib/push/client.ts`: `pushSupport`, `enablePush`, `disablePush`, `sendTestPush`, `uploadSchedule`.
-- `src/lib/push/prefs.ts`: store `pushPrefs` (localStorage `kaczy.push.v1`: `server`, `enabled`, `sentHash`, `last`)
-  i `normalizePushServer`.
-- `src/lib/push/shown.ts`: `pushKey` (klucze terminów), `wasShown`, `markShown` (Cache Storage `notki-push`, wpis `/__push-shown`).
-- `src/components/PushScheduleSync.tsx`: ładowany leniwie z `Index.tsx`, tylko gdy `pushPrefs.enabled`.
-- `src/components/settings/PushSettings.tsx`: sekcja w `GeneralSettings.tsx`.
-- `public/sw-notifications.js`: obsługa zdarzenia `push`.
-- `src/lib/systemNotification.ts`: nowe pole `key` w `showSystemNotification`. Podają je `useReminderNotifications`,
-  `useShiftEveningNudge` i `DailyReportNudge`.
-
-**Jak działa i dlaczego.**
-- **Aplikacja liczy, serwer tylko wysyła.** Notatki, Grafik i dziennik żyją w Yjs na urządzeniu, więc serwer ich
-  nie zna. Aplikacja liczy terminy na 14 dni tymi samymi funkcjami co timery strony (`nextInSeries`,
-  `eveningNudgeFor`, `reportDueMinute`, progi z `reminders.ts`) i wysyła całą listę przez `PUT /schedule`.
-  Serwer zastępuje nią poprzednią listę urządzenia.
-- **Kiedy lista idzie na serwer.** Trzy sekundy po każdej zmianie notatek, Grafiku albo dziennika, co godzinę
-  i od razu przy schowaniu aplikacji (`visibilitychange`, `fetch` z `keepalive`). To ostatnie łapie typowy
-  przypadek: ktoś ustawia przypomnienie i od razu zamyka aplikację. Skrót listy (`sentHash`) blokuje
-  wysyłanie bez zmian, ale co 6 godzin lista idzie i tak: horyzont się przesuwa, a serwer mógł stracić dane.
-- **Warunki „na teraz” liczone z bieżącego stanu.** Raport dnia trafia na listę tylko wtedy, gdy dziś są już wpisy.
-  Problem rozwiązany albo materiał dostarczony znika z listy przy najbliższej wysyłce. Progi „od 3 dni” wypadające
-  między 21:00 a 7:00 przesuwamy na 7:00 (`outsideQuietHours`).
-- **Bez podwójnych powiadomień.** Ten sam termin może przyjść z serwera i z timera strony. Obie drogi zapisują
-  klucz terminu (`pushKey`, np. `n:<id>:<termin>`, `rd:<dzień>`, `e:<jutro>`) w Cache Storage, które widzą
-  i strona, i service worker. Druga droga pomija klucz już pokazany. Dodatkowo push nie pokazuje nic, gdy
-  aplikacja jest widoczna, bo wtedy przypomina sama (dymek i powiadomienie z timera). Wyjątek: powiadomienie
-  próbne (`test:…`) pokazuje się zawsze.
-- **Prywatność.** Na serwer trafiają terminy, tytuły i krótkie opisy. Z notatek idzie tylko tytuł, bez treści,
-  a notatka prywatna ma stały tytuł „Przypomnienie z notatki prywatnej”. Ustawienie jest urządzenia, nie dokumentu
-  Yjs: dwa telefony z tą samą listą dostałyby każde przypomnienie dwa razy.
-- **Klucze VAPID.** Serwer tworzy je przy pierwszym starcie (`DATA_DIR/vapid.json`). `enablePush` porównuje klucz
-  istniejącej subskrypcji z kluczem serwera i przy zmianie subskrybuje od nowa.
-
-**Ograniczenia i pułapki.**
-- Wymaga własnego serwera z https (Caddy lub nginx przed portem 4455). Bez niego wszystko działa jak dotąd:
-  przypomnienia tylko przy otwartej aplikacji.
-- iPhone obsługuje push tylko w aplikacji dodanej do ekranu początkowego; w Safari sekcja to mówi.
-- Przyciski w powiadomieniu („Odłóż 10 min”, „Gotowe”) są tylko w powiadomieniach z timera strony. Powiadomienie
-  z serwera tylko otwiera aplikację pod adresem notatki albo działu.
-- Seria przypomnień przesuwa `reminder` notatki dopiero przy otwartej aplikacji. Kolejne terminy serii są jednak
-  na liście, więc przy zamkniętej aplikacji też przyjdą.
-- Termin spóźniony o ponad godzinę (serwer nie działał) przepada. Nieudanej wysyłki serwer nie ponawia.
-- Nie da się wysłać przypomnienia „próba bez protokołu” (`no-test`): nie ma ono momentu w czasie. Zostaje jako
-  pasek w Dzienniku.
-- Lista na serwerze jest najwyżej tak świeża jak ostatnie otwarcie aplikacji. Wpis dodany na innym telefonie
-  trafi na tę listę dopiero po synchronizacji i otwarciu aplikacji na tym urządzeniu.
-- Nie sprawdzone na prawdziwym telefonie (headless Chromium nie ma usługi push). Serwer sprawdzony lokalnie:
-  zapisał termin, o czasie wysłał go do FCM, a po 404/410 dla fikcyjnej subskrypcji ją usunął.
-
-**Testy.** `src/lib/push/schedule.test.ts` (notatki i serie, notatka prywatna, Grafik, raport dnia i tygodnia,
-problemy, braki, noc), `push-server/core.test.js` (`npm test` w `push-server`: walidacja, limity, termin
-należny i przepadły, uszkodzony plik), `e2e/push.spec.ts` (włączenie z podstawioną subskrypcją i serwerem:
-`PUT /schedule`, „Wyślij próbne”, „Wyłącz”; błędny adres).
-
-**Commit.** `fe01dcd` (2026-10-16).
 
 ## Notatki — stan aktualny (kafel, edytor, czytnik, kompozytor, lista, wyszukiwanie, właściwości)
 
@@ -1029,19 +332,6 @@ Dział opisany w jednym miejscu. Refaktor `Index.tsx` i `NoteCard.tsx` (etapy 4 
 - Scalanie: `5f003ca` (2026-10-18). Kopiuj Markdown: `d0c6eed` (2026-10-18).
 - Kompozytor i wygląd (2026-10-19): `6e95430`, `280f294`, `2745eaf`, `d3f446f`, `707e7a0`, `bb48640`, `f5e418c`, `0284db6`.
 - Dopracowanie (2026-10-20): `02c1560`.
-
-## Wspólne — aktywny wiersz paska bocznego (wygląd)
-
-**Co robi.** Aktywny wiersz paska bocznego (Notatki, Skrzynka, folder, etykieta) ma bursztynową pigułkę jak dotąd
-i dodatkowo cienką kreskę przy lewej krawędzi, jak zapis na marginesie zeszytu. Kreska przejeżdża razem z pigułką.
-
-**Gdzie jest.** `src/components/sidebar/SidebarRow.tsx`: `motion.span` z `layoutId="sidebar-active-pill"` ma w środku
-dziecko `span` (`absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-primary`).
-
-**Ograniczenia.** Kreska jest w tym samym `layoutId`, więc animacja przejścia między wierszami obejmuje też ją.
-Na telefonie pasek boczny jest arkuszem, a ten sam wiersz wygląda tak samo.
-
-**Testy.** Brak dedykowanego testu wyglądu; Vitest przechodzi (1349). Zrzut jasnego motywu sprawdzony.
 
 ## Grafik — stan aktualny (zmiany, rachunek, eksporty, wiele grafików)
 
@@ -1544,73 +834,6 @@ Dziennik instalatora wod-kan: co zrobione, jakie problemy, zdjęcia, na której 
 
 **Testy.** `npm run typecheck` czysty, `npx eslint .` 0 błędów (11 ostrzeżeń `react-refresh`), `npx vitest run` 144 pliki zielone. E2e wybrane (`subpages`, `composer`, `notes`, `editing`, `note-groups`, `qol`) 21/21 przy jednym workerze.
 
-## Wspólne — ruch (animacje i przejścia, 2026-10-18)
-
-- **Co robi:** zwijanie grupy w Notatkach opada wysokością zamiast skakać; wiersz tabeli usunięty lub zarchiwizowany gaśnie, nowy łagodnie wjeżdża; karty „Dziś” rezerwują miejsce szkieletem, więc lista nie przesuwa się po dociągnięciu danych; pusty stan gaśnie, gdy pojawią się notatki. Przy ograniczonym ruchu zmiany są natychmiastowe.
-- **Gdzie jest:** `src/components/NoteGroupSection.tsx` (AnimatePresence + `m.div`, wysokość i przezroczystość), `src/components/NoteTable.tsx` (`m.tr` w AnimatePresence `initial={false}`), `src/components/StatusPanel.tsx` (exit w trybie page), `src/components/ViewSkeleton.tsx` (`CardSkeleton`, wchodzi po 180 ms przez klasę `.view-skeleton`), `src/pages/Index.tsx` (cztery `Suspense fallback={null}` kart Dziś → `CardSkeleton`; `EmptyState` w AnimatePresence, `key="empty"`).
-- **Jak działa:** korzysta z istniejącego LazyMotion; `overflow` grupy wraca do `visible` po wjeździe, żeby nie ucinać focus ringu kafli.
-- **Ograniczenia i pułapki:** wiersze tabeli nie animują się przy pierwszym montażu widoku (celowo). Jeśli karta Dziś po załadowaniu renderuje `null`, szkielet znika i lista się przesuwa — uznano to za mniejsze zło niż skok bez szkieletu.
-- **Testy:** `src/components` i `src/hooks` (jednostkowe); e2e warto potwierdzić na `e2e/` przy tabeli i zwijaniu grup. Nie sprawdzano wizualnie na telefonie.
-- **Commit:** c630cb4, 30427f2 (2026-10-18), scalone do master (merge e3492b9 i poprzednie).
-
-## Wspólne — mikrointerakcje i stany (2026-10-18)
-
-- **Co robi:** pole z błędem (`aria-invalid`) ma czerwoną ramkę i czerwony fokus; przełączniki i checkboxy podświetlają się po najechaniu (osobno dla włączonego i wyłączonego); suwak ma halo przy najechaniu i przeciąganiu; tosty mają przycisk × (błąd z 9 s można zamknąć od razu); Enter i Spacja po dotyku nie włączają ramki fokusu z klawiatury.
-- **Gdzie jest:** `src/components/ui/input.tsx`, `switch.tsx`, `checkbox.tsx`, `slider.tsx`, `sonner.tsx` (prop `closeButton`, kolory ze zmiennych Sonnera); `src/lib/inputModality.ts` (+ `inputModality.test.ts`).
-- **Jak działa:** `inputModality` wykrywa Enter/Spację na przycisku po dotyku; pola tekstowe i textarea są wykluczone, bo klawiatura ekranowa wysyła te klawisze i pole dostałoby ramkę fokusu.
-- **Ograniczenia i pułapki:** przycisk w stanie „ładuje” (wspólny prop `loading`) nie zrobiony — wymagałby zmiany API w wielu dialogach. Hover i wygląd × na tostach nieprzejrzane na zrzutach.
-- **Testy:** `src/lib/inputModality.test.ts`; e2e `a11y.spec.ts` i `skins.spec.ts` (47/47 w worktree).
-- **Commit:** 84490c6 (2026-10-18), scalone do master.
-- **Budżet:** wejściowy JS 381 KB gzip, próg w `e2e/bundle.spec.ts` 384 KB — zapas mały.
-
-## Wspólne — kontrast tokenów i skala nagłówków (plan wizualny, fazy A i B, 2026-10-18)
-
-- **Co robi:** czerwony tekst w ciemnym Zeszycie czytelny (≥4,5:1); krawędź pól ≥3:1 w ciemnym motywie (1.4.11); podpowiedzi w polach szare, z tokenu; priorytety notatek w ciemniejszym odcieniu na jasnym tle, jaśniejszym w ciemnym; tytuł strony najgrubszy (700, ciaśniej), podtytuły 600; etykiety sekcji Notatek i „Przypomnienia” na Dziś zdaniem zamiast wersalików, a w Zeszycie z cienką kreską marginesu.
-- **Gdzie jest:** `src/index.css` — `:root` i `.dark` (`--destructive-ink`, `--input` w ciemnym); reguła `h1` w `@layer base`; klasa `.section-label` w `@layer components`; `tailwind.config.ts` — `colors.destructive.ink`. `src/lib/notePriority.ts` (`PRIORITY_COLOR_CLASS` z wariantem `dark:`). `text-destructive` zastąpione przez `text-destructive-ink` w całym `src` (poza tłem przycisku, które zostaje `bg-destructive` z `foreground`). `JournalEntrySheet.tsx` (`text-primary-ink`). `AppHeader.tsx` (h1 bez `font-extrabold`). `shifts/ShiftsView.tsx` (przycisk miesiąca `font-semibold`). `NoteGroupSection.tsx` i `review/TodayDueList.tsx` (`section-label`).
-- **Jak działa:** ink to osobny token tekstu, a `destructive` zostaje tłem przycisków (biały tekst na nim ma 4,8:1). Krawędź pól w ciemnym motywie jest osobnym tokenem `--input`; obwódka dekoracyjna `--border` zostaje ciemna.
-- **Ograniczenia i pułapki:** `text-destructive` pozostaje tylko jako tło z `destructive/…`; skórki nie definiują `--destructive-ink`, więc dziedziczą wartość z motywu. Neon ustawia wagę h1 jawnie na 600 (Unbounded), więc nie zmienia się. Zorza dziedziczy bazowe h1 i dostaje 700 (Fraunces). Pozostałe 63 miejsca z `uppercase tracking-wider` nie zostały zmienione. Fazy B3 (Fraunces w Zeszycie) i B4 (blok tytułowy widoku) czekają na decyzje użytkownika.
-- **Testy:** `src/lib/contrastTokens.test.ts` (4 testy, liczy kontrast z tokenów w `index.css`); e2e `a11y.spec.ts` i `skins.spec.ts` (47/47 na zmienionym kodzie).
-- **Commit:** brak — zmiany niezacommitowane w `master`.
-
-## Wspólne — rytm, metadane kafla i promienie (plan wizualny, faza C, 2026-10-18)
-
-- **Co robi:** domyślna gęstość siatki notatek to krok 4 px (kafle 12/16 px zamiast 10/12 px), odstęp między sekcjami widoku 32/40 px zamiast 24/32 px; metadane kafla (czas, liczba słów) w czcionce mono 11 px; trzy nazwane promienie systemu: przyciski i ikony 8 px, pola 12 px, karty i kafle 16 px. Wygląd promieni się nie zmienił.
-- **Gdzie jest:** `src/components/NoteGrid.tsx` (`gap`, `listGap`, `columnGap`, `rowGap` dla gęstości „normalnej”; zwarta i wygodna bez zmian); `src/pages/Index.tsx` (`main` — `gap-8 sm:gap-10`); `src/components/NoteCardBody.tsx` (wiersz `.card-meta`: `font-mono text-[11px]`); `src/index.css` (`--r-control`, `--r-field`, `--r-card` w `:root`; `.card-action` i `.note-flash` na tokenach; `@utility stats-card` na `rounded-card`); `tailwind.config.ts` (`borderRadius.control|field|card`).
-- **Jak działa:** tokeny promieni są zmiennymi CSS, więc klasy `rounded-card` itd. czytają je w obu motywach. Gęstość „zwarta” i „wygodna” mają własne wartości i nie są ruszane.
-- **Ograniczenia i pułapki:** większe odstępy oznaczają mniej kafli na ekranie bez przewijania. Tylko trzy miejsca z promieniem zamieniono na tokeny; pozostałe 46 użyć `rounded-2xl` w komponentach to nadal wartość 16 px, zamiana na `rounded-card` jest czysto kosmetyczna i do zrobienia osobno.
-- **Testy:** testy jednostkowe (147 plików, 1372 testy); e2e `bundle.spec.ts`, `mobile-layout.spec.ts`, `a11y.spec.ts`, `notes.spec.ts`, `touch-targets.spec.ts` — 73/73.
-- **Commit:** brak — zmiany niezacommitowane w `master`.
-
-## Wspólne — tabliczka rysunkowa, ołówek, tło Zeszytu, efekty domyślnie (plan wizualny, faza D i B3, 2026-10-18)
-
-- **Co robi:** w prawym dolnym rogu tła (komputer, wszystkie skórki) tabliczka z nazwą widoku („NOTKI · ARKUSZ 1/1 · SKALA 1:1”, „GRAFIK · ARKUSZ 1/1” itd.); pod napisem „Zapisano” w pigułce statusu kreska rysuje się przy każdym zapisie; w Zeszycie delikatne ziarno papieru (tylko na komputerze; czerwony margines zrezygnowany, patrz niżej); pusta lista Notatek pokazuje szkic kartki z długopisem zamiast wordmarku; nagłówki Zeszytu w Fraunces; zmiana widoku przenika się ze starym (View Transitions); na telefonie zorza bez rozmycia i dryfu.
-- **Gdzie jest:** `src/components/PaperBackdrop.tsx` (`<span className="paper-stamp">`); `src/index.css` (warstwa `components`: `.paper-stamp` i napisy po `html[data-view]`, `.pencil-stroke`, ziarno `html:not([data-skin]) .paper-grid` (media `pointer: fine`), Fraunces dla `h1` w Zeszycie); `src/styles/skins.css` (stara tabliczka Planu usunięta; zorza `@media (pointer: coarse)`); `src/components/OfflineStatus.tsx` (kreska przy `saved`); `src/pages/Index.tsx` (`data-view` na `<html>` w efekcie; `setView` z `startViewTransition` + `flushSync`); `src/lib/emptyGlyphs.ts` (`notes`); `src/components/ui/button.tsx` (`[&_svg]:[stroke-width:1.75]`); `src/lib/effectsSettings.ts`.
-- **Jak działa:** napis tabliczki wybiera CSS z atrybutu `data-view`, który `Index` ustawia z routera; bez JS poza tym jednym efektem. Przejście widoku: gdy przeglądarka nie ma View Transitions albo jest ograniczony ruch, zmiana jest natychmiastowa. Kreska ołówka to CSS na elemencie montowanym przy `saved`, więc rysuje się przy każdym zapisie bez stanu.
-- **Efekty domyślnie:** zostają tylko przywrócenie z kosza (konfetti) i zamknięty dzień; wyłączone: iskierki, deszcz emoji, fajerwerki, serduszka, bąbelki, tęcza, motyw sezonowy, cytat dnia, odznaka. Migracja jednorazowa (`kaczy.effectsSettings.defaults2`) wyłącza je także u osób z już zapisanymi ustawieniami; późniejsze wybory użytkownika są zachowane.
-- **Skutki wyłączenia efektów (do wiedzy):** pinezka przy przypięciu to część efektu „Iskierki” (`markPinned` działa tylko przy `sparkle`), więc domyślnie jej nie ma. Pieczątka odznaki wyłączona oznacza, że toast osiągnięcia pojawia się od razu i — naprawione: toast osiągnięcia czeka 400 ms (`useAchievementToasts.ts`), żeby toasty tej samej akcji zdążyły się zamontować, i nie zasłania „Cofnij”.
-- **Ograniczenia i pułapki:** czerwony margines Zeszytu (plan D7) nie jest rysowany: tło nie zna szerokości paska bocznego, więc linia leżała pod paskiem (komputer) albo pod kartami (telefon). Na Grafiku tabliczka przechodzi na lewy dolny róg (`html[data-view="shifts"]`), bo prawy dolny zajmuje panel podsumowania. Ołówek jest pod „Zapisano” w pigułce statusu, a nie pod tytułem notatki (plan mówił o tytule; to wymagałoby stanu w edytorze). Tabliczka nie pokazuje dat ani numeru, tylko stałe napisy. Przejście widoków to ogólne przenikanie, bez nazwanych elementów. Blok tytułowy widoku (B4) nie zrobiony — decyzja użytkownika.
-- **Testy:** testy jednostkowe 147 plików / 1372 testy; e2e z zestawu `a11y`, `bundle`, `skins`, `view-change`, `mobile-layout`, `notes`, `qol`, `routes`, `touch-targets`, `resilience`, `parked-drafts`.
-- **Commit:** brak — zmiany niezacommitowane w `master`.
-
-## Wspólne — spójność kolorów z tokenów (plan wizualny, faza E, 2026-10-18)
-
-- **Co robi:** kolor paska przeglądarki w ciemnym Zeszycie to ciepła ciemność tła (`#15110e`), a nie chłodny fiolet; awaryjne kolory konfetti to bursztyn, niebieski długopis i zieleń marki; callouty w Markdownie (informacja, wskazówka, uwaga, ważne) używają tokenów akcentu, sukcesu, ostrzeżenia i destructive; kropki kolorów folderów mają kolory kafli; ikony kopii zapasowej, pasek siły hasła w sejfie, płomień serii i ostrzeżenie synchronizacji używają tokenów.
-- **Gdzie jest:** `src/hooks/useTheme.ts` (`paint`, `theme-color`); `src/lib/celebrate.ts` (`themeColors`); `src/components/MarkdownRendererImpl.tsx` (`CALLOUTS`); `src/components/FolderPicker.tsx` (`folderColorDot`, `data-swatch`); `src/components/sidebar/SidebarFolderItem.tsx` (kropka i wybór koloru z `data-swatch`); `src/components/SyncSettings.tsx`; `src/components/settings/BackupSettings.tsx`; `src/components/vault/VaultDialogs.tsx`; `src/components/StatsDialog.tsx`.
-- **Jak działa:** kropki folderów używają `bg-[hsl(var(--note-ink))]`, a wartość zmiennej ustawia atrybut `data-swatch` z `index.css` (ten sam zestaw co kafle), więc kolory folderów i notatek nie rozjadą się. Kolory priorytetów (faza A) mają wariant `dark:`.
-- **Ograniczenia i pułapki:** kolor paska przeglądarki to stała hex, bo `theme-color` nie przyjmuje zmiennych CSS; po zmianie `--background` Zeszytu trzeba ją zaktualizować ręcznie.
-- **E4:** wykonane w osobnym wpisie „odznaki statusu jako pieczątki, cienie”.
-- **Testy:** testy jednostkowe 147 plików / 1372 testy; e2e `a11y`, `skins`, `folder-progress`, `search-backup`, `sync-code`, `bundle` — 58/58. Wcześniejszy zestaw fazy D: 95/95.
-- **Commit:** brak — zmiany niezacommitowane w `master`.
-
-## Wspólne — odznaki statusu jako pieczątki, cienie (plan wizualny, E4, 2026-10-18)
-
-- **Co robi:** odznaki statusu i liczniki, które nie są przyciskami, są pieczątkami: obwiedzina i tekst w tym samym kolorze, bez wypełnienia, czcionka mono. Dotyczy: licznik zaległych na Dziś, licznik przeglądu tygodnia, „na dziś” przy temacie Nauki, status przypomnienia (czas z dzwonkiem; czerwony po terminie). Przyciski („Gotowe”, „Przywróć”, chipy wyboru) zostają chipami z wypełnieniem, bo muszą wyglądać jak przyciski.
-- **Gdzie jest:** `src/index.css` (klasa `.stamp-tag` w `@layer components`); `src/components/review/TodayDueList.tsx`, `src/components/review/WeeklyReviewCard.tsx`, `src/components/study/StudyBoard.tsx`, `src/components/ReminderPicker.tsx`.
-- **Cienie:** karta błędu (`ErrorBoundary.tsx`), płótno rysunku (`DrawingCanvas.tsx`) i kciuk przełącznika (`ui/switch.tsx`) mają `shadow-sm` zamiast `shadow-lg`. Cienie okien, menu, podpowiedzi i tostów zostają — to uniesienie.
-- **Ograniczenia i pułapki:** w aplikacji zostają pigułki z wypełnieniem na przyciskach (świadomie). Odznaki pieczątek nie mają animacji, bo są stanem, nie zdarzeniem. Nie zrobiono wizualnego przeglądu tych czterech miejsc.
-- **Testy:** testy jednostkowe 147 plików / 1372 testy; e2e `a11y`, `inbox-today`, `reminders-agenda`, `reminder-toast`, `study`, `study-custom`, `today-study`, `weekly-review` — 95/95.
-- **Commit:** brak — zmiany niezacommitowane w `master`.
-
 ## Telefon — przyciski w powiadomieniach i jedno okno aplikacji (plan mobilny M1.1, M1.2, 2026-10-18)
 
 - **Co robi:** powiadomienie o przypomnieniu z serwera push (aplikacja zamknięta) ma te same przyciski co powiadomienie ze strony: „Gotowe” i — dla przypomnień jednorazowych — „Odłóż 10 min”. Gdy żadna karta aplikacji nie jest otwarta, przycisk otwiera aplikację i wykonuje akcję po wczytaniu notatek (toast „Przypomnienie odhaczone” / „Odłożono o 10 minut”). Skrót z ikony, udostępnienie i powiadomienie otwierają istniejące okno aplikacji zamiast nowego.
@@ -1709,36 +932,12 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - `011be10` (2026-10-20) — kopia zapasowa, edycja wpisu, cofnięcie rozliczenia.
 - `1b8bcf8` (2026-10-20) — poprawka L9 (usuwanie uszkodzonego wpisu).
 
-## Wspólne — arkusz „Nowa” z przycisku „+” (wygląd i opisy)
-
-- **Co robi:** przytrzymanie „+” na dolnym pasku otwiera arkusz „Nowa” z pięcioma kafelkami (Notatka, Lista zadań, Dyktuj, Zdjęcie, Rysunek). Każdy ma teraz ikonę w kolorze rodzaju i jedno zdanie, co się stanie. Stuknięcie „+” nadal od razu otwiera nową notatkę.
-- **Gdzie jest:** `src/components/BottomNav.tsx` — `QuickTile` (kafel z tonem `primary`/`success`/`warning`), arkusz `quickOpen`.
-- **Jak działa:** na telefonie kafle w dwóch kolumnach; „Dyktuj” tylko tam, gdzie przeglądarka ma rozpoznawanie mowy. Kafel „Długi” dodany też do arkusza „Więcej” (sekcja „Przejdź do”).
-- **Ograniczenia:** zachowanie stuknięcia bez zmian — arkusz pokazuje się po przytrzymaniu lub z „Więcej → Dodaj…”. Podpowiedź o przytrzymaniu pojawia się po czwartym stuknięciu (jak dotąd).
-- **Testy:** typecheck czysty; pełny Vitest 1409/1409. Sprawdzone wizualnie w przeglądarce (telefon 390 px).
-
-## Wspólne — podpowiedź o przytrzymaniu „+” od pierwszego stuknięcia (faza 7 planu Notatek, 2026-10-19)
-
-- **Co robi:** po pierwszym stuknięciu „+” na dolnym pasku pojawia się jednorazowy komunikat: „Przytrzymaj „+”, by od razu dodać listę, zdjęcie, rysunek albo dyktować”. Dawniej pokazywał się dopiero po czwartym stuknięciu, czyli często wcale.
-- **Gdzie jest:** `src/components/BottomNav.tsx` — `hintOnce`.
-- **Jak działa:** flaga `kaczy.fab.hint.v1` w localStorage ustawiana przy pierwszym pokazaniu. Licznik `kaczy.fab.taps` już nie jest używany (stary klucz zostaje w przeglądarkach, nic nie czyta). Ci, którzy już widzieli podpowiedź po czwartym stuknięciu, nie dostaną jej drugi raz.
-- **Ograniczenia:** w trybie bez localStorage (prywatne okno) podpowiedzi nie ma — tak jak wcześniej. Komunikat wisi 6 s; w tym czasie kolejne stuknięcia go nie powtarzają.
-- **Testy:** osobny skrypt z czystym profilem (`scratchpad/fab.mjs`): po pierwszym stuknięciu komunikat jest, po ponownym (po zniknięciu tostu) już nie. E2E `mobile`: 44/44. Vitest 1423/1423.
-- **Commit:** 2cafa53, 2026-10-19.
-
 ## Budżet paczki startowej — próg 386 KB (decyzja właściciela, 2026-10-19)
 
 - **Co zmieniono:** próg wejściowego JS (gzip) w `e2e/bundle.spec.ts` podniesiony z 385 do 386 KB.
 - **Dlaczego:** po funkcjach Długów, pasku „+” i poprawkach pustych stanów paczka startowa ma 385,4 KB. Właściciel projektu zdecydował o podniesieniu progu zamiast przenoszenia arkusza „Nowa” do leniwego modułu.
 - **Testy:** `e2e/bundle.spec.ts`: 6/6.
 - **Commit:** edec40f, 2026-10-19.
-
-## Wspólne — promień z tokenu `rounded-card` zamiast `rounded-2xl` (2026-10-19)
-
-- **Co zmieniono:** 51 wystąpień `rounded-2xl` w 36 plikach `src` (bez testów) zamieniono na `rounded-card`.
-- **Dlaczego:** token `--r-card` (`src/index.css`) to 1 rem we wszystkich stylach, tyle samo co `rounded-2xl`. Zmiana nie zmienia wyglądu, a promienie kart mają jedno źródło prawdy.
-- **Testy:** Vitest 1424/1424, typecheck czysty, Chrome: promień kafla 16 px (30/30 sprawdzeń).
-- **Commit:** 9b7f7b2, 2026-10-19.
 
 ## Dziś, Praca, Grafik — blok tytułowy widoku (B4, 2026-10-19)
 
@@ -2159,21 +1358,12 @@ Dział opisany w jednym miejscu; zmiany z przeglądu L1–L20 są już uwzględn
 
 ## Budowa — telefon hurtowni i ostrzeżenie przed kopią (U7, D3, 2026-10-20)
 
-- **U7 — co robi.** Karta budowy ma pole „Telefon hurtowni (WhatsApp zamówień)”. Przycisk „WhatsApp” w panelu zamówień
-  otwiera rozmowę z tą hurtownią (`wa.me/<cyfry>`). Bez numeru zostaje dawne zachowanie (WhatsApp pyta o odbiorcę).
-  Decyzja właściciela: numer jest zapisywany w karcie, więc trafia do synchronizacji i kopii.
-- **U7 — gdzie jest.** `src/lib/study/sites.ts` (pole `supplierPhone`, czyszczenie), `src/lib/study/store.ts` (`SiteCardInput`, zachowanie
-  pola przy edycji), `src/components/study/SiteCardDialog.tsx` (pole), `src/lib/study/order.ts` (`whatsappOrderUrl(text, phone?)`),
-  `src/components/study/SiteOrderPanel.tsx` (przekazanie numeru z karty).
-- **D3 — co robi.** Ręczny „Pobierz pełny backup teraz” pokazuje okno „Kopia będzie niepełna”, gdy kopia pominie
-  załączniki (budżet albo brak bajtów), zanim zapisze plik. „Zapisz mimo to” zapisuje; „Anuluj” nic nie zapisuje.
-- **D3 — gdzie jest.** `src/lib/exportNotes.ts` (`exportFullBackup` z opcją `confirm`, wynik `cancelled`),
-  `src/components/settings/BackupSettings.tsx` (okno `AlertDialog`, `exportNow` z potwierdzeniem).
-  Automatyczne kopie (`useBackupReminders`) nie pytają — nie mają okna, a zapis jest w tle.
-- **Testy.** `src/lib/study/whatsappSupplier.test.ts` (3): link bez numeru, z numerem, zepsuty numer.
-  `src/lib/backupConfirm.test.ts` (1): bez pominięć nie pyta. Ścieżki odmowy nie testuje żaden test (wymagałaby załącznika,
-  który nie wchodzi do budżetu w teście) — do sprawdzenia ręcznie albo e2e.
-- **Commit:** `f39af01` (2026-10-20, U7 i D3).
+- **U7 — co robi.** Karta budowy ma pole „Telefon hurtowni (WhatsApp zamówień)”. Przycisk „WhatsApp” w panelu zamówień otwiera rozmowę z tą hurtownią (`wa.me/<cyfry>`). Bez numeru zostaje zachowanie domyślne (WhatsApp pyta o odbiorcę). Decyzja właściciela: numer jest zapisywany w karcie, więc trafia do synchronizacji i kopii.
+- **U7 — gdzie jest.** `src/lib/study/sites.ts` (pole `supplierPhone`, czyszczenie), `src/lib/study/store.ts` (`SiteCardInput`, zachowanie pola przy edycji), `src/components/study/SiteCardDialog.tsx` (pole), `src/lib/study/order.ts` (`whatsappOrderUrl(text, phone?)`), `src/components/study/SiteOrderPanel.tsx` (przekazanie numeru z karty).
+- **D3 — co robi.** Ręczny „Pobierz pełny backup teraz” pokazuje okno „Kopia będzie niepełna”, gdy kopia pominie załączniki (budżet albo brak bajtów), zanim zapisze plik. „Zapisz mimo to” zapisuje; „Anuluj” nic nie zapisuje.
+- **D3 — gdzie jest.** `src/lib/exportNotes.ts` (`exportFullBackup` z opcją `confirm`, wynik `cancelled`), `src/components/settings/BackupSettings.tsx` (okno `AlertDialog`, `exportNow` z potwierdzeniem). Automatyczne kopie (`useBackupReminders`) nie pytają — nie mają okna, a zapis idzie w tle.
+- **Testy.** `src/lib/study/whatsappSupplier.test.ts` (3): link bez numeru, z numerem, zepsuty numer. `src/lib/backupConfirm.test.ts` (1): bez pominięć nie pyta. Ścieżki odmowy nie testuje żaden test — do sprawdzenia ręcznie albo w e2e.
+- **Commit:** `f39af01` (2026-10-20, U7 i D3); hash dokumentacji `64cda55`.
 
 ## Przegląd kodu — niskie punkty L1–L20 (2026-10-20)
 
