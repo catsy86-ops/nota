@@ -39,7 +39,8 @@ export function createYDiet(doc: Y.Doc) {
   }
 
   function getGoals(): DietGoals {
-    if (!goalsSnap) goalsSnap = cleanGoals(meta.get("goals"));
+    // L6: zamrożony — wywołujący nie zmieni cache przez referencję.
+    if (!goalsSnap) goalsSnap = Object.freeze(cleanGoals(meta.get("goals"))) as DietGoals;
     return goalsSnap;
   }
 
@@ -61,9 +62,11 @@ export function createYDiet(doc: Y.Doc) {
     return prev;
   }
 
-  /** Cofnięcie usunięcia: posiłek wraca z tym samym id i godziną. */
-  function restore(m: Meal): void {
+  /** Cofnięcie usunięcia: posiłek wraca z tym samym id i godziną; `false` gdy lista jest pełna (L6: limit obowiązuje także tu). */
+  function restore(m: Meal): boolean {
+    if (meals.size >= DIET_MAX_MEALS && !meals.has(m.id)) return false;
     doc.transact(() => meals.set(m.id, m), DIET_ORIGIN);
+    return true;
   }
 
   function setGoals(goals: DietGoals): void {

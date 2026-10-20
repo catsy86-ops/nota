@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { bySupplementOrder, cleanSupplement, logKey, nextReminderAt, parseLogKey, takenCount, type Supplement } from "./model";
+import { nextReminderAt } from "../timeOfDay";
+import { bySupplementOrder, cleanSupplement, logKey, parseLogKey, takenCount, type Supplement } from "./model";
 
 const sup = (id: string, when: Supplement["when"], created = 0): Supplement => ({ id, name: id, dose: "", when, created });
 

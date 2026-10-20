@@ -65,7 +65,9 @@ export function renderMonthCanvas(layout: MonthImageLayout, scale = 2): HTMLCanv
         const cy = top + ROW_H / 2 + 8;
         ctx.fillStyle = c.color ?? "#e5e7eb";
         ctx.beginPath();
-        ctx.roundRect(x + 14, cy - chipH / 2, chipW, chipH, 10);
+        // L14: starsze przeglądarki nie mają roundRect — zwykły prostokąt zamiast wyjątku.
+        if (ctx.roundRect) ctx.roundRect(x + 14, cy - chipH / 2, chipW, chipH, 10);
+        else ctx.rect(x + 14, cy - chipH / 2, chipW, chipH);
         ctx.fill();
         ctx.fillStyle = INK;
         ctx.font = `700 18px ${FONT}`;
@@ -111,6 +113,7 @@ export async function shareMonthPng(blob: Blob, filename: string, title: string)
   a.href = url;
   a.download = filename;
   a.click();
-  URL.revokeObjectURL(url);
+  // L14: zwolnienie adresu po chwili — Safari potrafi go zwolnić zanim pobieranie ruszy.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
   return "downloaded";
 }

@@ -44,7 +44,11 @@ export function createYDebts(doc: Y.Doc) {
 
   function remove(id: string): DebtEntry | null {
     const prev = cleanDebt(entries.get(id));
-    if (!prev) return null;
+    // L9: uszkodzony wpis (nie przechodzi czyszczenia) też da się usunąć — inaczej zajmuje miejsce w limicie.
+    if (!prev) {
+      if (entries.has(id)) doc.transact(() => entries.delete(id), DEBTS_ORIGIN);
+      return null;
+    }
     doc.transact(() => entries.delete(id), DEBTS_ORIGIN);
     return prev;
   }

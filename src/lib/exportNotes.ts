@@ -245,6 +245,9 @@ export interface RestoreOptions { versions: boolean; settings: boolean; achievem
  * po przeładowaniu strony, które i tak następuje po przywróceniu.
  */
 /** Wynik przywracania: ile wpisów Nauki odrzucono przy czyszczeniu kopii (0 = wszystko przeszło). */
+/** L1: w dzienniku diagnostycznym zostaje tylko nazwa błędu — komunikat `JSON.parse` może zawierać fragment kopii. */
+const errName = (e: unknown): string => (e instanceof Error ? e.name : "błąd");
+
 export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions): Promise<{ studyDropped: number; schedulesSkipped: number }> {
   let studyDropped = 0;
   let schedulesSkipped = 0;
@@ -257,26 +260,26 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
     try {
       const { mergeSupplementDump } = await import("@/lib/supplements/store");
       mergeSupplementDump(JSON.parse(backup.supplements));
-    } catch (err) { logDiag("warn", "backup", "cannot restore supplements", err); }
+    } catch (err) { logDiag("warn", "backup", "cannot restore supplements", errName(err)); }
   }
   if (backup.diet) {
     try {
       const { mergeDietDump } = await import("@/lib/diet/store");
       mergeDietDump(JSON.parse(backup.diet));
-    } catch (err) { logDiag("warn", "backup", "cannot restore diet", err); }
+    } catch (err) { logDiag("warn", "backup", "cannot restore diet", errName(err)); }
   }
   if (backup.training) {
     try {
       const { mergeTrainingDump } = await import("@/lib/training/store");
       // Notatki z kopii są już wczytane (wyżej), więc można sprawdzić, czy przypomnienie ma swoją notatkę.
       mergeTrainingDump(JSON.parse(backup.training), (id) => yjsStore.projectNotes().some((n) => n.id === id));
-    } catch (err) { logDiag("warn", "backup", "cannot restore training", err); }
+    } catch (err) { logDiag("warn", "backup", "cannot restore training", errName(err)); }
   }
   if (backup.debts) {
     try {
       const { mergeDebtsDump } = await import("@/lib/debts/store");
       mergeDebtsDump(JSON.parse(backup.debts));
-    } catch (err) { logDiag("warn", "backup", "cannot restore debts", err); }
+    } catch (err) { logDiag("warn", "backup", "cannot restore debts", errName(err)); }
   }
   // Metadane skarbca z pliku: bez nich zablokowane notatki z backupu byłyby nie do odszyfrowania.
   if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);
@@ -296,16 +299,16 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
       const raw = JSON.parse(backup.shifts);
       // M8: bez pola `bonuses` (kopia sprzed premii) premie z tego telefonu zostają.
       restoreShifts(migrate(raw), Array.isArray(raw?.bonuses));
-    } catch (err) { logDiag("warn", "backup", "cannot restore shifts", err); }
+    } catch (err) { logDiag("warn", "backup", "cannot restore shifts", errName(err)); }
     // M4: dodatkowe grafiki — każdy osobno; odrzucone (limit, zły id, zły kształt) są liczone i zgłaszane.
     try {
       const extra = backup.shiftSchedules ? JSON.parse(backup.shiftSchedules) as { id: string; name: string; data: unknown }[] : [];
       for (const s of Array.isArray(extra) ? extra : []) {
         try {
           if (typeof s?.id !== "string" || typeof s?.name !== "string" || !restoreExtraSchedule(s.id, s.name, migrate(s.data))) schedulesSkipped++;
-        } catch (err) { schedulesSkipped++; logDiag("warn", "backup", "cannot restore schedule", err); }
+        } catch (err) { schedulesSkipped++; logDiag("warn", "backup", "cannot restore schedule", errName(err)); }
       }
-    } catch (err) { logDiag("warn", "backup", "cannot read schedules", err); }
+    } catch (err) { logDiag("warn", "backup", "cannot read schedules", errName(err)); }
     if (schedulesSkipped) logDiag("warn", "backup", `przywracanie grafików: pominięto ${schedulesSkipped}`);
   }
   const legacyStudy = backup.settings?.[STUDY_STORAGE_KEY];
@@ -323,7 +326,7 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
         logDiag("warn", "backup", `przywracanie Nauki: pominięto ${studyDropped} wpisów`);
       }
       yStudy.replaceAll(dump);
-    } catch (err) { logDiag("warn", "backup", "cannot restore study", err); }
+    } catch (err) { logDiag("warn", "backup", "cannot restore study", errName(err)); }
   }
   for (const [k, v] of Object.entries(writes)) {
     try { localStorage.setItem(k, v); } catch (err) { logDiag("warn", "backup", `cannot restore ${k}`, err); }

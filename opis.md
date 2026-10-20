@@ -4471,3 +4471,17 @@ lub grupę”.
   `src/lib/backupConfirm.test.ts` (1): bez pominięć nie pyta. Ścieżki odmowy nie testuje żaden test (wymagałaby załącznika,
   który nie wchodzi do budżetu w teście) — do sprawdzenia ręcznie albo e2e.
 - **Commit:** `f39af01` (2026-10-20, U7 i D3).
+
+## Przegląd kodu — niskie punkty L1–L20 (2026-10-20)
+
+Poprawki z `docs/code-review-2026-10-20.md` (status pozycji tam). Sekcje działów powyżej nie zostały przepisane na nowy stan — poniżej jest lista zmian; przy następnym dotknięciu tych funkcji opis działu trzeba poprawić.
+
+- **Kopia (L1).** `src/lib/exportNotes.ts`: `errName(err)` — komunikaty `logDiag` przy przywracaniu zawierają tylko nazwę błędu, bez treści kopii.
+- **Ćwiczenia (L3, L4, L6, L7).** `src/components/cwiczenia/TrainingSection.tsx`: `EquipmentForm` zapisuje tylko wartość > 0, ma przycisk „Usuń limit”; formularze godziny przypomnienia i ciężaru synchronizują się z danymi z Yjs. `src/lib/diet/yDiet.ts`: `getGoals` zwraca zamrożony obiekt z cache, `restore` pilnuje `DIET_MAX_MEALS` i zwraca `boolean`. `nextReminderAt` przeniesiono do `src/lib/timeOfDay.ts` (dawniej `lib/supplements/model.ts`); importy w `CwiczeniaView.tsx`, `TrainingSection.tsx` i `model.test.ts` zmienione.
+- **Długi (L9).** `src/lib/debts/yDebts.ts` `remove`: uszkodzony wpis (`cleanDebt` → `null`) jest usuwany z mapy, nie zajmuje miejsca w limicie.
+- **Grafik (L12–L15).** `src/lib/shifts/store.ts`: `instanceFor(id)` z cache zamiast nowego `createYShifts` przy każdym odczycie. `src/lib/shifts/monthImage.ts`: kwota zarobku przez `formatMoney`. `src/lib/shifts/monthImageDraw.ts`: fallback `roundRect` na `rect`, `URL.revokeObjectURL` po 1 s. `src/components/shifts/ShiftSummary.tsx` `BonusPanel`: `toast.error` przy nieudanym zapisie premii.
+- **Notatki (L8).** `src/lib/noteSchema.ts`: usunięty BOM na początku pliku.
+- **Testy.** Istniejące: `src/lib/debts/yDebts.edit.test.ts` (L11), `src/lib/shifts/reviewFixes.test.ts`, `src/lib/training/reminderRestore.test.ts`. Nowych testów tej serii nie dodano.
+- **Ograniczenia.** L14: aktywacja `navigator.share` po `await` nie była zmieniona — przy udostępnianiu obrazu na telefonie może spaść na pobieranie; wymaga sprawdzenia ręcznego. L17: asercje w `e2e/bundle.spec.ts` nie są uruchomione. Paczka startowa: 392,2 KB gzip (próg 393 KB).
+- **Commit:** (uzupełnione po commicie)
+

@@ -30,7 +30,15 @@ function readActiveId(): string {
 }
 
 let activeId = readActiveId();
-let yShifts: YShifts = createYShifts(yjsDoc, activeId);
+// L12: jedna instancja na grafik — każde createYShifts dokłada obserwatory do dokumentu.
+const instances = new Map<string, YShifts>();
+const instanceFor = (id: string): YShifts => {
+  let inst = instances.get(id);
+  if (!inst) { inst = createYShifts(yjsDoc, id); instances.set(id, inst); }
+  return inst;
+};
+
+let yShifts: YShifts = instanceFor(activeId);
 const storeListeners = new Set<() => void>();
 const emitStore = () => storeListeners.forEach((l) => l());
 const subscribeStore = (cb: () => void) => {
@@ -43,14 +51,14 @@ let unsubscribeActive = yShifts.subscribe(emitStore);
 function bindSchedule(id: string): void {
   unsubscribeActive();
   activeId = id;
-  yShifts = createYShifts(yjsDoc, id);
+  yShifts = instanceFor(id);
   unsubscribeActive = yShifts.subscribe(emitStore);
   try { localStorage.setItem(ACTIVE_KEY, id); } catch { /* prywatne okno — wybór zostanie w pamięci */ }
   emitStore();
 }
 
 /** Grafik główny niezależnie od aktywnego — dla kopii i migracji. */
-const mainShifts = () => createYShifts(yjsDoc, MAIN_SCHEDULE_ID);
+const mainShifts = () => instanceFor(MAIN_SCHEDULE_ID);
 
 // H1: aktywny grafik może zniknąć na innym urządzeniu (synchronizacja przychodzi w trakcie pracy).
 // Wtedy wracamy do głównego — inaczej zmiany trafiałyby do osieroconych map.
@@ -268,7 +276,7 @@ export function removeSchedule(id: string): boolean {
 
 /** Zrzut danych jednego grafiku (dla kopii zapasowej). */
 export function scheduleDump(id: string): ShiftData {
-  return createYShifts(yjsDoc, id).get();
+  return instanceFor(id).get();
 }
 
 /** Grafiki poza głównym, z nazwami — do kopii zapasowej. */
@@ -286,6 +294,6 @@ export function restoreExtraSchedule(id: string, name: string, data: ShiftData):
   if (!registry.has(id)) {
     if (!registry.add(name, id)) return false;
   }
-  createYShifts(yjsDoc, id).mergeIn(migrate(data));
+  instanceFor(id).mergeIn(migrate(data));
   return true;
 }

@@ -4,6 +4,7 @@ import { pl } from "date-fns/locale";
 import { TriangleAlert, CalendarRange, Settings2, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
 import { pluralPl } from "@/lib/plural";
 import { deleteBonus, FTE_OPTIONS, formatDuration, formatHoursShort, formatMoney, leaveBalance, saveBonus, useShifts, type MonthSummary, type PeriodSummary, type SettlementMonths, type ShiftBonus, type WorkSystem } from "@/lib/shifts";
@@ -251,7 +252,11 @@ function BonusPanel({ monthKey, bonuses }: { monthKey: string; bonuses: ShiftBon
 
   const add = () => {
     if (!valid) return;
-    if (!saveBonus({ id: `b-${crypto.randomUUID()}`, month: monthKey, name, amount: value })) return;
+    // L15: odrzucony zapis (limit premii albo złe dane) mówi, dlaczego, zamiast zostać po cichu.
+    if (!saveBonus({ id: `b-${crypto.randomUUID()}`, month: monthKey, name, amount: value })) {
+      toast.error("Nie zapisano premii", { description: "Sprawdź kwotę i nazwę albo limit premii w miesiącu." });
+      return;
+    }
     setName("");
     setAmount("");
   };

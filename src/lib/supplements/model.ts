@@ -54,15 +54,6 @@ export function cleanSupplement(raw: unknown): Supplement | null {
   };
 }
 
-/** Najbliższy moment „HH:MM” po `now`: dziś, a jeśli ta godzina minęła — jutro. Czas lokalny. */
-export function nextReminderAt(hhmm: string, now: number): number {
-  const [h, m] = hhmm.split(":").map(Number);
-  const t = new Date(now);
-  t.setHours(h, m, 0, 0);
-  if (t.getTime() <= now) t.setDate(t.getDate() + 1);
-  return t.getTime();
-}
-
 /** Klucz odhaczenia: dzień i odżywka. Znak `|` nie występuje w dniu ani w id, więc klucz jest jednoznaczny. */
 export function logKey(day: string, supplementId: string): string {
   return `${day}|${supplementId}`;

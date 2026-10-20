@@ -1,6 +1,7 @@
 import { formatDayKey } from "@/lib/week";
 import type { ShiftData } from "./model";
 import { monthSummary } from "./summary";
+import { formatMoney } from "./time";
 
 /**
  * Grafik miesiąca jako obraz do udostępnienia (PNG). Układ liczony tu jest czysty i testowalny;
@@ -53,7 +54,7 @@ export function monthImageLayout(data: ShiftData, year: number, month: number): 
     `Dni w pracy: ${s.daysWorked}`,
     `Przepracowane: ${formatMinutesHM(s.minutes)}`,
     s.absenceDays > 0 ? `Dni nieobecności: ${s.absenceDays}` : "",
-    s.earnings > 0 ? `Zarobek brutto: ${s.earnings.toFixed(2)} zł` : "",
+    s.earnings > 0 ? `Zarobek brutto: ${formatMoney(s.earnings)}` : "",
   ].filter(Boolean);
 
   const monthName = new Date(year, month, 1).toLocaleDateString("pl-PL", { month: "long", year: "numeric" });

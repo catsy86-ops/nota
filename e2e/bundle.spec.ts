@@ -56,6 +56,10 @@ test("heavy optional libraries stay out of the eager page load @smoke", async ()
   expect(chunksMatching(eager, /rdp-months/), "react-day-picker loads with the date picker").toEqual([]);
   expect(chunksMatching(eager, /Pattern length exceeds max of/), "fuse.js loads in idle time / on first search").toEqual([]);
   expect(chunksMatching(eager, /PERTAL²/), "study material (content.ts) loads with the Nauka view").toEqual([]);
+  // L17 (przegląd 2026-10-20): nowe działy i ich ciężkie części muszą być leniwe.
+  expect(chunksMatching(eager, /Pobrano obraz grafiku/), "obraz miesiąca (canvas/share) loads on click").toEqual([]);
+  expect(chunksMatching(eager, /Premie w tym miesiącu/), "panel premii loads with the Grafik view").toEqual([]);
+  expect(chunksMatching(eager, /Telefon hurtowni/), "pola karty budowy load with the Nauka view").toEqual([]);
 
   // And jsPDF must actually still be *somewhere* — otherwise this test would
   // also pass if PDF export had silently been dropped from the build.

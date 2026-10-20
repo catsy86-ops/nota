@@ -1,4 +1,4 @@
-﻿import { z } from "zod";
+import { z } from "zod";
 import type { Note, Folder, NoteColor, FolderColor, ChecklistItem } from "@/hooks/useNotes";
 import type { NoteVersion } from "@/lib/versionsStore";
 import { normalizeAttachments } from "@/lib/attachments";

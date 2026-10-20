@@ -145,7 +145,30 @@ Kolejność wg sekcji „Proponowana kolejność napraw”.
 | L13 zaokrąglenie premii | ✅ | Najpierw grosze, potem sprawdzenie |
 | M9 testy ścieżek błędów | ◐ | Dodane: `training/reminderRestore.test.ts` (H2, M2, M3), `shifts/reviewFixes.test.ts` (M5, L13, M6). Testy komponentów nadal mockują cały store (ścieżka zapisu niećwiczona w komponencie) |
 
-**Nie zrobione (niskie L1–L20):** do zrobienia przy okazji, po potwierdzeniu. Najważniejsze z nich: L1 (logowanie błędów z treścią kopii), L2 (nazwiska i kwoty w toastach), L14 (przeglądarki przy udostępnianiu obrazu), L18 (walidacja kształtu w kopii).
+**Niskie L1–L20 (status):**
+
+| Pozycja | Status | Co zrobiono |
+|---|---|---|
+| L1 komunikaty błędów z treścią kopii | ✅ | `exportNotes.ts`: `errName(err)` — w logu tylko nazwa błędu, bez treści |
+| L2 nazwiska i kwoty w toastach | ➖ | Świadomie bez zmiany: toast widoczny tylko na ekranie właściciela |
+| L3 puste hantle czyszczą sprzęt | ✅ | `EquipmentForm`: zapis tylko dla wartości > 0, osobny „Usuń limit” |
+| L4 stan godziny/ciężaru z jednego odczytu | ✅ | Synchronizacja stanu formularzy z danymi z Yjs (`useEffect`) |
+| L5 cele wyczyszczone nadpisywane z kopii | ➖ | Zaakceptowane (zgodne z zasadą „nie kasuje”), opisane w `opis.md` |
+| L6 `restore` omija limit posiłków; współdzielony cache | ✅ | `yDiet.ts`: limit `DIET_MAX_MEALS`, `getGoals` zwraca zamrożony obiekt |
+| L7 import `nextReminderAt` z modelu Odżywek | ✅ | Przeniesione do `src/lib/timeOfDay.ts`; importy w Ćwiczeniach i testach zmienione |
+| L8 BOM w `noteSchema.ts` | ✅ | Usunięty `EF BB BF` z początku pliku |
+| L9 uszkodzony wpis długu nie do usunięcia | ✅ | `yDebts.remove`: usuwa surowy wpis, gdy `cleanDebt` go odrzuca |
+| L10 przywrócenie kopii wskrzesza długi | ➖ | Zaakceptowane, zgodne z opisem kopii |
+| L11 test scalania z lokalnym wpisem | ✅ | Pokryte przez `yDebts.edit.test.ts` |
+| L12 obserwatory Yjs przy każdym odczycie | ✅ | `shifts/store.ts`: `instanceFor(id)` z cache zamiast nowego `createYShifts` |
+| L13 premia 0,004 zł | ✅ | Zaokrąglenie do groszy przed sprawdzeniem |
+| L14 obraz miesiąca w przeglądarkach | ◐ | Zrobione: fallback `roundRect`, opóźnione `revokeObjectURL`, kwota przez `formatMoney`. **Niezrobione:** aktywacja `navigator.share` po `await` nie była zmieniona; nieprzetestowane w przeglądarce |
+| L15 formularz premii bez komunikatu błędu | ✅ | `ShiftSummary.BonusPanel`: `toast.error` przy nieudanym zapisie |
+| L16 licznik Skrzynki po usunięciu notatek | ✅ | Sprawdzone: `Index.tsx` używa notatek aktywnych (bez archiwum i kosza) — bez zmian |
+| L17 próg bundla bez pilnowania nowych modułów | ◐ | Dodane asercje `chunksMatching` w `e2e/bundle.spec.ts` (3 napisy). **Niezweryfikowane:** e2e nie uruchomione |
+| L18 zły typ nowego klucza kopii znika bez logu | ➖ | Zaakceptowane: kształt sprawdza scalanie; brak logu to świadomy kompromis |
+| L19 asymetria przywracania grafiku głównego i dodatkowych | ➖ | Zaakceptowane (sprzed zakresu, opisane w decyzjach) |
+| L20 `wa.me` w `JournalReport.tsx` | ➖ | Poza zakresem tego przeglądu |
 
 **Uwagi:**
 - Próg paczki wejściowej podniesiony z 392 do 393 KB (datowany komentarz w `e2e/bundle.spec.ts`). Poprawki dodały kilkaset bajtów; paczka była już na granicy.

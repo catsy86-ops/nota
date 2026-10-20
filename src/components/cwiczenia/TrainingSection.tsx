@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { localDayKey } from "@/lib/dayDone";
-import { nextReminderAt } from "@/lib/supplements/model";
+import { nextReminderAt } from "@/lib/timeOfDay";
 import { EXERCISES, exerciseById, MUSCLE_GROUPS, type MuscleGroup } from "@/lib/training/catalog";
 import { bestKgSeries, byTrainingTime, overDumbbell, planLine, progressByExercise, TRAINING_KG_MAX, TRAINING_NOTE_MAX, TRAINING_REMINDER_DEFAULT, TRAINING_REPS_MAX, TRAINING_WINDOW_END, volumeOf, type PlanDay, type TrainingEntry, type TrainingReminder, type TrainingSet } from "@/lib/training/model";
 import { addPlanDay, addTrainingEntry, removePlanDay, removeTrainingEntry, restorePlanDay, restoreTrainingEntry, setTrainingEquipment, setTrainingReminder, useTrainingEntries, useTrainingEquipment, useTrainingPlans, useTrainingReminder } from "@/lib/training/store";
@@ -274,14 +274,19 @@ function Sparkline({ values, label }: { values: number[]; label: string }) {
 function EquipmentForm() {
   const equipment = useTrainingEquipment();
   const [kg, setKg] = useState(equipment.dumbbellMaxKg !== undefined ? String(equipment.dumbbellMaxKg) : "");
+  // L4: pole nadąża za zmianą z innego urządzenia (nie tylko za pierwszym renderem).
+  useEffect(() => {
+    setKg(equipment.dumbbellMaxKg !== undefined ? String(equipment.dumbbellMaxKg) : "");
+  }, [equipment.dumbbellMaxKg]);
   const value = parseNum(kg, TRAINING_KG_MAX, false);
   return (
     <form
       className="flex flex-wrap items-center gap-3 rounded-lg border border-border/60 px-3 py-2"
       onSubmit={(e) => {
         e.preventDefault();
-        if (value === null) return;
-        setTrainingEquipment({ dumbbellMaxKg: value && value > 0 ? value : undefined });
+        // L3: pusty formularz nie kasuje limitu po cichu — do tego służy osobny przycisk „Usuń limit”.
+        if (value === null || value === undefined || value <= 0) return;
+        setTrainingEquipment({ dumbbellMaxKg: value });
       }}
     >
       <label className="text-sm">
@@ -295,7 +300,10 @@ function EquipmentForm() {
           className="ml-2 inline-block w-24 coarse:h-11"
         />
       </label>
-      <Button type="submit" variant="outline" size="sm" disabled={value === null} className="coarse:h-11">Zapisz sprzęt</Button>
+      <Button type="submit" variant="outline" size="sm" disabled={value === null || value === undefined || value <= 0} className="coarse:h-11">Zapisz sprzęt</Button>
+      {equipment.dumbbellMaxKg !== undefined && (
+        <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={() => setTrainingEquipment({})}>Usuń limit</Button>
+      )}
     </form>
   );
 }
@@ -350,6 +358,8 @@ function TrainingReminderControl() {
   const reminder = useTrainingReminder();
   const notes = useNotesContext();
   const [time, setTime] = useState(reminder?.time ?? TRAINING_REMINDER_DEFAULT);
+  // L4: godzina nadąża za zmianą z innego urządzenia.
+  useEffect(() => { if (reminder?.time) setTime(reminder.time); }, [reminder?.time]);
   // M1/H2: przypomnienie bez swojej notatki (usunięta trwale albo po przywróceniu kopii) jest wyłączone.
   const noteExists = !!reminder?.noteId && [...notes.notes, ...notes.archivedNotes, ...notes.trashedNotes].some((n) => n.id === reminder.noteId);
   const on = reminder !== null && noteExists;
