@@ -117,3 +117,10 @@ Decyzje właściciela: D1 ujednolicić liczbę (pasek i tytuł liczą to samo co
 - ✅ 2a (Gotowe dla wszystkich, wystąpienie w serii), 2b (odłożenie nie przepisuje `reminderDay`), 2c (fokus po akcji), 2d (archiwum w wyszukiwaniu i poza grupami).
 - ✅ 3a w zakresie D1 (liczba Pracy na pasku i w tytule), 3b częściowo — brak sprzątania duplikatów (`endOfDay`, sortowania).
 - Szczegóły i ograniczenia w `opis.md`, sekcja „Przypomnienia — fazy 2–3 planu wg decyzji D1–D4”.
+
+## Status 2026-10-20 — dokończenie fazy 1
+
+- ✅ 1d (przycisk „Nowa notatka” w pustym widoku Terminy), 15 (odznaka 12 px), 1g część „odświeżany `now`” (`useReminderPassed`).
+- ✅ 17 bez zmian w kodzie: sonner ma `aria-live="polite"`.
+- Testy: `src/hooks/useReminderPassed.test.ts`, e2e „Nowa notatka” w `e2e/reminders-phase2.spec.ts`.
+- Pozostaje z planu: 3b (duplikaty `endOfDay` i sortowania), czyli faza 3 bez sprzątania; następny dział — Dziś.

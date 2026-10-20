@@ -31,3 +31,10 @@ test("Gotowe działa przy nadchodzącym terminie w Terminach i zdejmuje go z lis
 
   await expect(card).toHaveCount(0);
 });
+
+test("pusty widok Terminów: „Nowa notatka” otwiera edytor (1d)", async ({ page }) => {
+  await page.getByRole("button", { name: "Przypomnienia" }).first().click();
+  await expect(page.getByText("Brak przypomnień")).toBeVisible();
+  await page.getByRole("button", { name: "Nowa notatka", exact: true }).click();
+  await expect(page.getByPlaceholder("Tytuł").first()).toBeVisible();
+});

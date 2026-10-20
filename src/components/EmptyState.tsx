@@ -66,7 +66,7 @@ const ELSEWHERE_LABELS: { key: keyof Elsewhere; view: View; name: string }[] = [
 
 const HERE: Partial<Record<View, string>> = { notes: "Notatkach", archive: "Archiwum", trash: "Koszu" };
 
-export function EmptyState({ view, search, elsewhere, onGo }: { view: View; search: string; elsewhere?: Elsewhere; onGo?: (view: View) => void }) {
+export function EmptyState({ view, search, elsewhere, onGo, onNew }: { view: View; search: string; elsewhere?: Elsewhere; onGo?: (view: View) => void; onNew?: () => void }) {
   if (search) {
     const hits = ELSEWHERE_LABELS.filter((e) => (elsewhere?.[e.key] ?? 0) > 0);
     return (
@@ -108,6 +108,18 @@ export function EmptyState({ view, search, elsewhere, onGo }: { view: View; sear
       title={HEADINGS[view]}
       description={DESCRIPTIONS[view]}
     >
+      {view === "reminders" && onNew && (
+        // Pusty widok Terminów: termin dodaje się do notatki, więc przycisk otwiera nową notatkę (1d planu).
+        <div className="mt-6 flex justify-center">
+          <button
+            type="button"
+            onClick={onNew}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-4 py-2 text-sm font-medium text-primary-ink hover:bg-primary/20 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            Nowa notatka
+          </button>
+        </div>
+      )}
       {view === "notes" && (
         <motion.div
           initial={{ opacity: 0 }}

@@ -10,6 +10,7 @@ import { REMINDER_REPEAT_LABELS, endOfDay, type ReminderRepeat } from "@/lib/rem
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
 import { composeReminderTimestamp, dayInputValue, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
 import { QuickReminderInput } from "@/components/QuickReminderInput";
+import { useReminderPassed } from "@/hooks/useReminderPassed";
 
 interface ReminderPickerProps {
   reminder: number | null;
@@ -189,15 +190,15 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
 }
 
 export function ReminderBadge({ reminder, reminderRepeat, reminderAllDay }: { reminder: number | null; reminderRepeat?: ReminderRepeat; reminderAllDay?: boolean }) {
+  const passed = useReminderPassed(reminder ?? 0);
   if (!reminder) return null;
-  const isPast = reminder < Date.now();
   return (
     <div className={cn(
-      "stamp-tag text-2xs mt-2 w-fit",
-      isPast ? "text-destructive-ink" : "text-primary-ink"
+      "stamp-tag text-xs mt-2 w-fit",
+      passed ? "text-destructive-ink" : "text-primary-ink"
     )}>
       <Bell className="w-2.5 h-2.5" />
-      {isPast && <span className="sr-only">Zaległe: </span>}
+      {passed && <span className="sr-only">Zaległe: </span>}
       {formatReminderShort(reminder, new Date(), reminderAllDay === true)}
       {reminderRepeat && reminderRepeat !== "none" && <Repeat className="w-2.5 h-2.5" />}
     </div>

@@ -4047,7 +4047,7 @@ lub grupę”.
   - `src/hooks/useOverdueBadge.ts` — poprawiony komentarz (archiwum liczy się).
   - `src/index.css` — usunięta reguła zdejmująca obrys na dotyku.
 - **Ograniczenia i pułapki:**
-  - Nie zrobione z fazy 1: wiersze „Gotowe” dla nadchodzących (decyzja D2), komunikat przy nieistniejącym terminie, odświeżanie „zaległości” bez zmiany listy (1g, część o `now`), szerokość 12 px dla terminów, przycisk „Nowa notatka” w pustym stanie (1d/12), ogłoszenie po odhaczeniu.
+  - Wiersze „Gotowe” dla nadchodzących (D2) są w fazach 2–3 niżej. Odznaka terminu ma 12 px, a „Zaległe” przełącza się bez odświeżania listy (`useReminderPassed`) — patrz „Przypomnienia — dokończenie fazy 1”.
   - Usunięcie blanket obrysu jest zmianą wyglądu na dotyku — do sprawdzenia na telefonie.
 - **Testy:**
   - `src/lib/reminderAgenda.test.ts` — „pusta lista” i „odłożenie o godzinę”.
@@ -4074,11 +4074,32 @@ lub grupę”.
   - `StudyOverdueSync` montuje się zawsze, więc dane Pracy ładują się przy starcie (leniwy chunk, ale nie tylko na widoku Pracy).
   - Liczba z Pracy jest liczona przy renderze; zmiana doby bez zmiany dziennika odświeża ją dopiero po zmianie danych.
   - Fokus po akcji wybiera pierwszy przycisk sąsiedniego kafla, a nie zawsze „Gotowe”.
-  - Nie zrobione: 3b (duplikaty `endOfDay` i sortowania), tekst odznaki 12 px (1c), przycisk „Nowa notatka” w pustym stanie (1d), ogłoszenie po odhaczeniu (1e), odświeżanie „zaległości” bez zmiany listy (1g).
+  - Nie zrobione: 3b (duplikaty `endOfDay` i sortowania). Resztę fazy 1 (odznaka 12 px, „Nowa notatka”, odświeżanie terminu) domknięto w „Przypomnienia — dokończenie fazy 1”.
 - **Testy:**
   - `src/hooks/useOverdueBadge.test.ts` — „adds terminy Pracy do tytułu i ikony”.
   - `e2e/reminders-phase2.spec.ts` — „Gotowe” przy nadchodzącym terminie zdejmuje go z Terminów.
   - e2e pełny przebieg chromium: 391/391 (Commit: ebe2567).
+
+## Przypomnienia — dokończenie fazy 1 planu (2026-10-20, bez hasha)
+
+- **Co robi:**
+  - Pusty widok Terminy ma przycisk „Nowa notatka”, który otwiera edytor (1d). Pokazuje się tylko w Terminach, gdy nie ma żadnego wiersza.
+  - Odznaka terminu na kaflu ma 12 px zamiast 11 px (15).
+  - Kafel przełącza się na „Gotowe” i „Zaległe” w chwili, gdy termin minie, nawet gdy lista notatek się nie zmienia (14). Dawniej warunek liczył się tylko przy renderze.
+  - Ogłoszenie po odhaczeniu (17) nie wymagało zmian: toasty sonnera mają `aria-live="polite"`.
+- **Gdzie jest:**
+  - `src/hooks/useReminderPassed.ts` — `useReminderPassed(at)`: boolean, który przełącza się przez `setTimeout` co najwyżej do terminu (dłuższe terminy w kilku krokach, bo `setTimeout` ma limit ok. 24,8 dnia).
+  - `src/components/NoteCardBody.tsx` — warunek przycisków terminu korzysta z `useReminderPassed`.
+  - `src/components/ReminderPicker.tsx` — `ReminderBadge` używa tego samego hooka do koloru i prefiksu „Zaległe:”.
+  - `src/components/EmptyState.tsx` — prop `onNew` i przycisk „Nowa notatka”; `src/pages/Index.tsx` podaje `onNew={() => expandAddNote()}`.
+- **Ograniczenia i pułapki:**
+  - Każda odznaka z przyszłym terminem ma jeden `setTimeout`. Odznaki bez terminu nie mają timera.
+  - Przycisk „Nowa notatka” otwiera zwykły kompozytor, nie kompozytor z terminem. Termin dodaje się w kompozytorze albo w widoku Kalendarza.
+  - Odznaka 12 px zwiększa wysokość kafla, jeśli ma zawijać się w wąskim kaflu — do sprawdzenia na telefonie.
+- **Testy:**
+  - `src/hooks/useReminderPassed.test.ts` — przełączenie co do milisekundy, termin już minął, termin dalej niż limit `setTimeout`, zmiana terminu.
+  - `e2e/reminders-phase2.spec.ts` — „pusty widok Terminów: „Nowa notatka” otwiera edytor”.
+  - e2e: 30 testów związanych z przypomnieniami i kaflami na chromium przechodzi; pełny przebieg nie był uruchamiany w tej sesji.
 
 ## Kalendarz — fazy 2d, 2f, 3a, 3b planu (2026-10-20, 11ef99f)
 

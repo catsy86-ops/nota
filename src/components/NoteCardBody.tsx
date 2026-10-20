@@ -19,6 +19,7 @@ import { MarkdownRenderer } from "./MarkdownRenderer";
 import { ChecklistCount, ChecklistPreview } from "./ChecklistEditor";
 import { LabelBadges } from "./LabelPicker";
 import { ReminderBadge } from "./ReminderPicker";
+import { useReminderPassed } from "@/hooks/useReminderPassed";
 import { PriorityBadge } from "./PriorityPicker";
 import { AttachmentsBadge } from "./AttachmentsList";
 import { NoteCoverStrip } from "./NoteLookPicker";
@@ -86,6 +87,8 @@ export function NoteCardBody({
   wordCount: number;
   readMin: number;
 } & Pick<Actions, "onUpdate" | "onOpenNote" | "onUnarchive">) {
+  // Termin mija w trakcie oglądania listy — przycisk „Gotowe” pojawia się wtedy bez odświeżania.
+  const reminderPassed = useReminderPassed(note.reminder ?? 0);
   return (
     <>
               <NoteCoverStrip cover={note.cover} className="-mx-3.5 -mt-3 mb-2.5 w-[calc(100%+1.75rem)] rounded-t-[inherit]" />
@@ -125,7 +128,7 @@ export function NoteCardBody({
                 <AttachmentsBadge attachments={note.attachments} />
               </div>
               {/* Termin: odhaczenie i odłożenie bez otwierania notatki. W Terminach dotyczy każdego terminu (D2), w innych tylko zaległych. */}
-              {onUpdate && note.reminder !== null && (reminderActions || note.reminder <= Date.now()) && !note.trashed && !isArchived && !note.locked && (
+              {onUpdate && note.reminder !== null && (reminderActions || reminderPassed) && !note.trashed && !isArchived && !note.locked && (
                 <div className="mt-2 flex flex-wrap items-center gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
                   <button
                     type="button"
