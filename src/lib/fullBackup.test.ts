@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+﻿import { describe, it, expect, beforeEach, vi } from "vitest";
 import { describeBackupSkipped } from "./backupSkipped";
 import { buildFullBackup, buildFullBackupWithReport, describeSkippedAttachments, parseFullBackup, restoreFullBackup, SETTINGS_KEYS, ACHIEVEMENTS_KEY } from "./exportNotes";
 import { setDayShift, shiftStore } from "./shifts/store";
@@ -9,6 +9,7 @@ import { imageStore } from "./imageStore";
 import { yStudy } from "./study/data";
 import { addSupplement, removeSupplement, setSupplementTaken, supplementDump } from "./supplements/store";
 import { addMeal, dietDump, removeMeal, setDietGoals } from "./diet/store";
+import { addDebt, debtsDump, removeDebt } from "./debts/store";
 import { addTrainingEntry, addPlanDay, removeTrainingEntry, trainingDump } from "./training/store";
 import { cleanDump } from "./study/yStudy";
 import type { Note } from "@/hooks/useNotes";
@@ -294,6 +295,22 @@ describe("Nauka w pełnej kopii", () => {
     expect(trainingDump().entries).toEqual([]);
     await restoreFullBackup(backup, ALL);
     expect(trainingDump()).toMatchObject({ entries: [{ exerciseId: "triceps-nad-glowa" }], plans: [{ name: "Triceps" }] });
+  });
+
+  it("długi wracają z kopii; przywracanie scala i nie kasuje", async () => {
+    const d = addDebt({ person: "Ania", kind: "lent", amount: 12_500, at: "2026-10-20" });
+    expect(d).not.toBeNull();
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
+    expect(JSON.parse(backup.debts!).map((x: { person: string }) => x.person)).toEqual(["Ania"]);
+
+    removeDebt(d!.id);
+    expect(debtsDump()).toEqual([]);
+    await restoreFullBackup(backup, ALL);
+    expect(debtsDump().map((x) => x.person)).toEqual(["Ania"]);
+
+    addDebt({ person: "Marek", kind: "borrowed", amount: 500, at: "2026-10-20" });
+    await restoreFullBackup(backup, ALL);
+    expect(debtsDump().map((x) => x.person).sort()).toEqual(["Ania", "Marek"]);
   });
 
   it("czyta starą kopię, w której Nauka była tylko wśród ustawień", async () => {

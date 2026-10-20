@@ -49,10 +49,33 @@ export function createYDebts(doc: Y.Doc) {
     return prev;
   }
 
+  /** Zmiana istniejącego wpisu (ten sam id): kwota, dzień, notatka, rodzaj, osoba. `false` gdy wpisu nie ma. */
+  function replace(entry: DebtEntry): boolean {
+    if (!entries.has(entry.id)) return false;
+    doc.transact(() => entries.set(entry.id, entry), DEBTS_ORIGIN);
+    return true;
+  }
+
   /** Cofnięcie usunięcia: wpis wraca z tym samym id i datą. */
   function restore(entry: DebtEntry): void {
     doc.transact(() => entries.set(entry.id, entry), DEBTS_ORIGIN);
   }
 
-  return { get, subscribe, add, remove, restore };
+  /** Zrzut do kopii zapasowej: wszystkie pożyczki jako zwykłe dane. */
+  function dump(): DebtEntry[] {
+    return get();
+  }
+
+  /**
+   * Scala zrzut z kopii: dodaje pożyczki, których jeszcze nie ma (po id), w limicie. Niczego nie kasuje
+   * i nie nadpisuje wpisu o tym samym id, który już jest na tym telefonie.
+   */
+  function mergeDump(raw: unknown): void {
+    const incoming = Array.isArray(raw) ? raw.map(cleanDebt).filter((e): e is DebtEntry => !!e) : [];
+    doc.transact(() => {
+      for (const e of incoming) if (!entries.has(e.id) && entries.size < DEBT_MAX_ENTRIES) entries.set(e.id, e);
+    }, DEBTS_ORIGIN);
+  }
+
+  return { get, subscribe, add, remove, restore, replace, dump, mergeDump };
 }

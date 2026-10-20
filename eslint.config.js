@@ -1,4 +1,4 @@
-import js from "@eslint/js";
+﻿import js from "@eslint/js";
 import globals from "globals";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
@@ -61,6 +61,10 @@ export default tseslint.config(
       "src/lib/training/yTraining.ts",
       "src/lib/training/yTraining.test.ts",
       "src/lib/training/reminder.test.ts",
+      // Długi: warstwa Yjs (ten sam wzorzec co pozostałe działy), testy na własnym Y.Doc.
+      "src/lib/debts/yDebts.ts",
+      "src/lib/debts/yDebts.test.ts",
+      "src/lib/debts/yDebts.edit.test.ts",
       "src/lib/tabSync.ts",
       "src/lib/tabSync.test.ts",
       // Buduje plik synchronizacji w starym formacie jako dane testowe.

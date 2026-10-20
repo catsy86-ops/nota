@@ -4316,3 +4316,30 @@ lub grupę”.
 - **Lint.** `eslint.config.js`: `src/lib/training/yTraining.ts` i jego testy na liście dozwolonych importów `yjs`.
 - **Commit:** `c7736f0` (kroki 4–5 planu Ćwiczeń: trening), `9d8e57e` (przypomnienie o treningu, przerwa i wybór dnia planu),
   oraz `22e2495` (wibracja, sprzęt, wykres progresu i poprawka stabilnego odczytu ustawień, 2026-10-20).
+
+## Długi — kopia zapasowa, edycja wpisu, cofnięcie rozliczenia (2026-10-20)
+
+- **Co robi.**
+  - **Kopia zapasowa:** pożyczki są w pełnej kopii (wcześniej nie były — przywrócenie kopii mogło je zgubić).
+    Przywracanie tylko dodaje brakujące wpisy (po id), niczego nie kasuje i nie nadpisuje wpisu o tym samym id.
+  - **Edycja wpisu:** ołówek przy wpisie w historii osoby otwiera formularz w miejscu: rodzaj, osoba, kwota, dzień, notatka.
+    Zapis zachowuje id i datę dodania. Zła kwota blokuje zapis z komunikatem.
+  - **Cofnięcie rozliczenia:** „Oddał całość” / „Oddałem całość” ma teraz „Cofnij” w toście, który usuwa wpis wyrównujący saldo.
+- **Gdzie jest.**
+  - `src/lib/debts/yDebts.ts` — `replace(entry)` (zmiana w miejscu), `dump()`, `mergeDump(raw)`.
+  - `src/lib/debts/store.ts` — `updateDebt(entry)` (przez `cleanDebt`), `debtsDump()`, `mergeDebtsDump(raw)`.
+  - `src/components/debts/DebtsView.tsx` — `EditDebtForm`, przycisk edycji w `PersonHistory`, cofnięcie w `settle`.
+  - Kopia: `src/lib/noteSchema.ts` (pole `debts`), `src/lib/exportNotes.ts` (zapis w buildzie, scalanie w przywracaniu).
+- **Ograniczenia i pułapki.**
+  - Zmiana imienia w edycji przenosi wpis do innej osoby (grupowanie po nazwie bez wielkości liter).
+  - Saldo jest liczone na podstawie wpisów; przy kopii scalanej z innego telefonu wpis usunięty na jednym telefonie
+    wróci przy przywracaniu kopii sprzed usunięcia (tak samo jak we wszystkich działach — scalanie, bez kasowania).
+  - Kwota w groszach, limit 1 000 000 zł na wpis, 2000 wpisów.
+- **Testy.**
+  - `src/components/debts/DebtsView.test.tsx` (6): podsumowanie, pusta lista, edycja kwoty (ten sam id i grosze), zła kwota,
+    zmiana rodzaju, „Oddał całość”.
+  - `src/lib/debts/yDebts.edit.test.ts` (2): `replace` i scalanie z kopii bez nadpisania.
+  - `src/lib/fullBackup.test.ts`: długi w kopii, przywracanie scala.
+- **Lint.** `eslint.config.js`: `src/lib/debts/yDebts.ts` i testy Długów na liście dozwolonych importów `yjs`
+  (dawne naruszenie lintu w tym module jest zamknięte).
+- **Commit:** `TBD` (2026-10-20, Długi).

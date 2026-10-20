@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { yjsStore } from "@/lib/yjsStore";
 import { localDayKey } from "@/lib/dayDone";
-import { DEBT_NOTE_MAX, DEBT_PERSON_MAX, normalizeName, parseAmount, personKey, type DebtEntry, type DebtKind } from "./model";
+import { cleanDebt, DEBT_NOTE_MAX, DEBT_PERSON_MAX, normalizeName, parseAmount, personKey, type DebtEntry, type DebtKind } from "./model";
 import { createYDebts } from "./yDebts";
 
 /**
@@ -54,4 +54,24 @@ export function removeDebt(id: string): DebtEntry | null {
 
 export function restoreDebt(entry: DebtEntry): void {
   yDebts.restore(entry);
+}
+
+/**
+ * Poprawka istniejącego wpisu. Dane przechodzą przez to samo czyszczenie co przy zapisie;
+ * `null` = niepoprawne dane albo wpisu już nie ma (np. usunięty na drugim telefonie).
+ */
+export function updateDebt(entry: DebtEntry): DebtEntry | null {
+  const clean = cleanDebt(entry);
+  if (!clean) return null;
+  return yDebts.replace(clean) ? clean : null;
+}
+
+/** Zrzut Długów do kopii zapasowej. */
+export function debtsDump(): DebtEntry[] {
+  return yDebts.dump();
+}
+
+/** Scalenie Długów z kopii — bez kasowania tego, co już jest na telefonie. */
+export function mergeDebtsDump(raw: unknown): void {
+  yDebts.mergeDump(raw);
 }

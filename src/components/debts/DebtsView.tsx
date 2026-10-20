@@ -1,5 +1,5 @@
 import { useId, useMemo, useRef, useState } from "react";
-import { ArrowDownLeft, ArrowUpRight, Check, HandCoins, Trash2, Undo2 } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Check, HandCoins, Pencil, Trash2, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,8 +7,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { localDayKey } from "@/lib/dayDone";
-import { addDebt, addDebtFromText, removeDebt, restoreDebt, useDebts } from "@/lib/debts/store";
-import { balances, DEBT_KINDS, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, parseAmount, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
+import { addDebt, addDebtFromText, removeDebt, restoreDebt, updateDebt, useDebts } from "@/lib/debts/store";
+import { balances, DEBT_KINDS, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
 
 /**
  * Długi: kto ile u nas pożyczył i ile oddał. Góra — podsumowanie i szybki wpis,
@@ -222,11 +222,14 @@ function PersonSheet({ person, onClose }: { person: PersonDebts | null; onClose:
 }
 
 function PersonHistory({ person, onDone }: { person: PersonDebts; onDone: () => void }) {
+  const [editingId, setEditingId] = useState<string | null>(null);
   const settle = () => {
     // Saldo dodatnie: oni oddają nam. Ujemne: oddajemy my.
-    addDebt({ person: person.name, kind: person.balance > 0 ? "repaid" : "returned", amount: Math.abs(person.balance) });
+    const created = addDebt({ person: person.name, kind: person.balance > 0 ? "repaid" : "returned", amount: Math.abs(person.balance) });
     haptic("tap");
-    toast.success(`Oddane w całości: ${person.name}`);
+    toast.success(`Oddane w całości: ${person.name}`, {
+      action: { label: "Cofnij", onClick: () => { if (created) removeDebt(created.id); } },
+    });
   };
   const remove = (e: DebtEntry) => {
     const prev = removeDebt(e.id);
@@ -250,28 +253,109 @@ function PersonHistory({ person, onDone }: { person: PersonDebts; onDone: () => 
       )}
 
       <ol className="mt-5 space-y-2" aria-label="Historia">
-        {person.entries.map((e) => (
-          <li key={e.id} className="flex items-center gap-3 rounded-xl border border-border/60 bg-background p-3">
-            <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full", KIND_SIGN[e.kind] > 0 ? "bg-warning/15 text-warning-ink" : "bg-success/15 text-success-ink")} aria-hidden>
-              {KIND_SIGN[e.kind] > 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownLeft className="h-4 w-4" />}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium">{KIND_LABEL[e.kind]} · <span className="tabular-nums">{formatAmount(e.amount)}</span></p>
-              <p className="text-xs text-muted-foreground">
-                {formatDay(e.at)}{e.note ? ` · ${e.note}` : ""}
-              </p>
-            </div>
-            <Button variant="ghost" size="icon" aria-label={`Usuń wpis: ${KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => remove(e)}>
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </li>
-        ))}
+        {person.entries.map((e) =>
+          editingId === e.id ? (
+            <li key={e.id}>
+              <EditDebtForm entry={e} onDone={() => setEditingId(null)} />
+            </li>
+          ) : (
+            <li key={e.id} className="flex items-center gap-3 rounded-xl border border-border/60 bg-background p-3">
+              <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full", KIND_SIGN[e.kind] > 0 ? "bg-warning/15 text-warning-ink" : "bg-success/15 text-success-ink")} aria-hidden>
+                {KIND_SIGN[e.kind] > 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownLeft className="h-4 w-4" />}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium">{KIND_LABEL[e.kind]} · <span className="tabular-nums">{formatAmount(e.amount)}</span></p>
+                <p className="text-xs text-muted-foreground">
+                  {formatDay(e.at)}{e.note ? ` · ${e.note}` : ""}
+                </p>
+              </div>
+              <Button variant="ghost" size="icon" aria-label={`Edytuj wpis: ${KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => setEditingId(e.id)}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" aria-label={`Usuń wpis: ${KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => remove(e)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </li>
+          ),
+        )}
       </ol>
       <p className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
         <Undo2 className="h-3.5 w-3.5" aria-hidden />
         Usunięty wpis można cofnąć z komunikatu na dole ekranu.
       </p>
     </>
+  );
+}
+
+/**
+ * Poprawka wpisu w miejscu: kwota, dzień, notatka, rodzaj i nazwa osoby. Zmiana imienia przenosi wpis
+ * do innej osoby (grupowanie idzie po nazwie bez wielkości liter).
+ */
+function EditDebtForm({ entry, onDone }: { entry: DebtEntry; onDone: () => void }) {
+  const uid = useId();
+  const [person, setPerson] = useState(entry.person);
+  const [kind, setKind] = useState<DebtKind>(entry.kind);
+  const [amount, setAmount] = useState((entry.amount / 100).toFixed(2).replace(".", ","));
+  const [at, setAt] = useState(entry.at);
+  const [note, setNote] = useState(entry.note);
+  const [error, setError] = useState<string | null>(null);
+
+  const save = () => {
+    if (!normalizeName(person)) { setError("Podaj, kto to jest — imię albo nazwę."); return; }
+    const grosze = parseAmount(amount);
+    if (grosze === null) { setError("Wpisz kwotę większą od zera, np. 150 albo 99,90."); return; }
+    if (!at) { setError("Podaj dzień wpisu."); return; }
+    const updated = updateDebt({ ...entry, person: normalizeName(person), kind, amount: grosze, at, note: note.trim() });
+    if (!updated) { setError("Nie udało się zapisać — wpis mógł zostać usunięty."); return; }
+    haptic("tap");
+    toast.success("Wpis poprawiony");
+    onDone();
+  };
+
+  return (
+    <form
+      onSubmit={(e) => { e.preventDefault(); save(); }}
+      aria-label="Edycja wpisu"
+      className="space-y-3 rounded-xl border border-primary/40 bg-background p-3"
+    >
+      <div role="radiogroup" aria-label="Rodzaj wpisu" className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+        {DEBT_KINDS.map((k) => (
+          <button
+            key={k}
+            type="button"
+            role="radio"
+            aria-checked={kind === k}
+            onClick={() => setKind(k)}
+            className={cn("rounded-md px-2 py-1.5 text-xs font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring", kind === k ? "bg-card shadow-elevation-up" : "text-muted-foreground")}
+          >
+            {KIND_LABEL[k]}
+          </button>
+        ))}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <label htmlFor={`${uid}-person`} className="text-sm font-medium">Kto</label>
+          <Input id={`${uid}-person`} value={person} maxLength={DEBT_PERSON_MAX} onChange={(e) => setPerson(e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor={`${uid}-amount`} className="text-sm font-medium">Kwota (zł)</label>
+          <Input id={`${uid}-amount`} inputMode="decimal" value={amount} className="tabular-nums" onChange={(e) => setAmount(e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor={`${uid}-date`} className="text-sm font-medium">Dzień</label>
+          <Input id={`${uid}-date`} type="date" value={at} max={localDayKey()} onChange={(e) => setAt(e.target.value)} />
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor={`${uid}-note`} className="text-sm font-medium">Za co</label>
+          <Input id={`${uid}-note`} value={note} maxLength={DEBT_NOTE_MAX} onChange={(e) => setNote(e.target.value)} />
+        </div>
+      </div>
+      {error && <p role="alert" className="text-sm text-destructive-ink">{error}</p>}
+      <div className="flex gap-2">
+        <Button type="submit" size="sm" className="h-11 flex-1">Zapisz zmiany</Button>
+        <Button type="button" variant="ghost" size="sm" className="h-11" onClick={onDone}>Anuluj</Button>
+      </div>
+    </form>
   );
 }
 
