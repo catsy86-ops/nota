@@ -2146,7 +2146,7 @@ i nie będące podnotatkami. Przeniesienie do folderu albo nadanie etykiety usuw
   właściwości), kopia uszkodzonych danych, zegar w e2e (`shifts.spec.ts`, `shifts-week.spec.ts`).
   Synchronizacja między kartami działa: Grafik jest w dokumencie Yjs, a `startTabSync` przenosi cały dokument.
 - **Poprawka:** dwa przyciski pędzla godzin (`BrushHours.tsx`, „zmiana” i „dodaj”) miały 40 px na dotyku; teraz 44 px (`coarse:h-11`).
-- **Zostaje (decyzje właściciela):** udostępnienie grafiku jako obraz, premie w rachunku, wiele grafików (z listy konkurencji
+- **Te trzy pozycje zostały zrobione tego samego dnia — patrz niżej (obraz, premie, wiele grafików).** Wcześniej było: udostępnienie grafiku jako obraz, premie w rachunku, wiele grafików (z listy konkurencji
   w `roadmap.md`).
 - **Commit:** `370d656` (2026-10-20, Grafik — przegląd).
 
@@ -4369,3 +4369,62 @@ lub grupę”.
 - **Lint.** `eslint.config.js`: `src/lib/debts/yDebts.ts` i testy Długów na liście dozwolonych importów `yjs`
   (dawne naruszenie lintu w tym module jest zamknięte).
 - **Commit:** `011be10` (2026-10-20, Długi).
+
+## Grafik — obraz miesiąca do udostępnienia (2026-10-20, fcf76c1)
+
+- **Co robi.** Przycisk „Obraz miesiąca (.png)” w widoku Grafiku: PNG z siatką miesiąca (od poniedziałku), skrótami
+  i kolorami rodzajów zmian oraz podsumowaniem (dni w pracy, przepracowane godziny, nieobecności, zarobek brutto, jeśli jest stawka).
+  Na telefonie otwiera systemowe okno udostępniania z plikiem; gdy go nie ma, pobiera plik.
+- **Gdzie jest.**
+  - `src/lib/shifts/monthImage.ts` — `monthImageLayout(data, year, month)` (układ siatki i podsumowania; czysty).
+  - `src/lib/shifts/monthImageDraw.ts` — `renderMonthCanvas`, `canvasToPng`, `shareMonthPng` (canvas i udostępnianie).
+  - `src/components/shifts/ShiftsView.tsx` — `exportImage`, ładowany leniwie (poza paczką startową).
+- **Ograniczenia.** Rysowanie na canvasie nie ma testu jednostkowego (jsdom nie ma canvasa); sprawdzić na telefonie.
+  Obraz jest w jasnych kolorach, niezależnie od motywu. Tylko jeden miesiąc.
+- **Testy.** `src/lib/shifts/monthImage.test.ts` (5): początek tygodnia, skróty i kolory, dzień bez wpisu, tytuł i podsumowanie.
+
+## Grafik — premie w rachunku (2026-10-20, 520e47a)
+
+- **Co robi.** Premia jednorazowa w miesiącu (nazwa, kwota brutto). Dolicza się do zarobku miesiąca i jest osobną linią rachunku
+  „Premia: …”. Panel „Premie w tym miesiącu” pod rachunkiem: dodawanie i usuwanie z „Cofnij”.
+  Dodatek za nadgodziny liczy się bez premii, więc rachunek się zgadza.
+- **Gdzie jest.**
+  - `src/lib/shifts/model.ts` — `ShiftBonus`, `cleanBonus`, pole `bonuses` w `ShiftData` (i w `migrate`).
+  - `src/lib/shifts/summary.ts` — `monthSummary`: `bonuses`, `bonusTotal`, `earnings` z premiami.
+  - `src/lib/shifts/yShifts.ts` — mapa `shiftBonuses`, `saveBonus`, `deleteBonus`, udział w `replaceAll` i `mergeIn`.
+  - `src/lib/shifts/store.ts` — `saveBonus`, `deleteBonus`.
+  - `src/components/shifts/ShiftSummary.tsx` — `Receipt` (osobne linie premii), `BonusPanel`.
+- **Jak działa i dlaczego.** Premie są w dokumencie Yjs (jak dni), więc synchronizują się i trafiają do kopii w `shifts`
+  razem z grafikiem. Kwota jest zaokrąglana do groszy; limit 500 premii na grafik i 1 000 000 zł na premię.
+- **Ograniczenia.** Tylko kwota stała (brak premii procentowej). Premie nie są w eksporcie CSV karty czasu.
+  Brak podatków i składek — to kwota brutto, jak reszta zarobku.
+- **Testy.** `src/lib/shifts/bonus.test.ts` (6): czyszczenie, wpływ na zarobek co do grosza, migracja, Yjs (zapis, usunięcie, scalanie).
+
+## Grafik — wiele grafików (2026-10-20, cccd483)
+
+- **Co robi.** Przełącznik na górze widoku Grafiku: wybór grafiku, „Nowy grafik”, zmiana nazwy, usunięcie (z potwierdzeniem).
+  Każdy grafik ma własne rodzaje zmian, dni, cykle i premie. Widoki (dziś, tydzień, podsumowanie, eksporty) pokazują
+  aktywny grafik. Grafik główny istnieje zawsze i nie da się go usunąć; maksymalnie 10 grafików.
+- **Gdzie jest.**
+  - `src/lib/shifts/yShifts.ts` — `shiftsMapName(scheduleId, base)`: grafik główny używa dawnych nazw map, pozostałe mają prefiks `id:`.
+  - `src/lib/shifts/schedules.ts` — rejestr: `createScheduleRegistry(doc)` (lista, dodawanie, zmiana nazwy, usunięcie, cache dla hooka).
+  - `src/lib/shifts/store.ts` — aktywny grafik (`bindSchedule`, `setActiveSchedule`), `useSchedules`, `useActiveScheduleId`,
+    `createSchedule`, `renameSchedule`, `removeSchedule`, kopia: `mainShiftData`, `extraSchedulesDump`, `restoreExtraSchedule`.
+  - `src/components/shifts/ScheduleSwitcher.tsx` — przełącznik i formularze.
+  - Kopia: `src/lib/noteSchema.ts` (pole `shiftSchedules`), `src/lib/exportNotes.ts` (zapis i przywracanie).
+- **Jak działa i dlaczego.**
+  - Każdy grafik to zestaw map Yjs, więc synchronizacja obejmuje wszystkie grafiki bez zmian w transporcie.
+  - Rejestr (nazwy) jest w dokumencie; wybór aktywnego grafiku jest w localStorage tego urządzenia, bo to preferencja widoku, nie dane.
+    Jeśli zapamiętany grafik zniknął (usunięty na innym urządzeniu), wracamy do głównego.
+  - Usunięcie grafiku czyści jego mapy w tej samej transakcji, więc nic nie zostaje osierocone.
+  - Wcześniejsze aliasy eksportów store (`export const setDayShift = yShifts.setDayShift`) zamieniono na funkcje,
+    bo przepinanie aktywnego grafiku nie działałoby na zamrożonych referencjach.
+- **Ograniczenia i pułapki.**
+  - Eksport `.ics` i karta czasu dotyczą aktywnego grafiku, tak jak widok.
+  - Przywracanie kopii: grafik główny zastępuje, dodatkowe grafiki są tylko dokładane (bez kasowania).
+  - Aktywny grafik nie jest synchronizowany między urządzeniami (każde ma swój wybór).
+  - Paczka startowa jest na progu: 391,9 KB przy 392 KB — następna zmiana w tym module wymaga podniesienia progu albo odchudzenia.
+  - Brak testu komponentu przełącznika i brak testu przepinania przez store (test całości: e2e, do uruchomienia później).
+- **Testy.** `src/lib/shifts/schedules.test.ts` (9): nazwy, nazewnictwo map, izolacja grafików, rejestr (sortowanie,
+  główny nieusuwalny, usunięcie czyści dane, limit, stabilna lista).
+- **Commit:** `cccd483` (wiele grafików).
