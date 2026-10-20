@@ -4342,4 +4342,4 @@ lub grupę”.
   - `src/lib/fullBackup.test.ts`: długi w kopii, przywracanie scala.
 - **Lint.** `eslint.config.js`: `src/lib/debts/yDebts.ts` i testy Długów na liście dozwolonych importów `yjs`
   (dawne naruszenie lintu w tym module jest zamknięte).
-- **Commit:** `TBD` (2026-10-20, Długi).
+- **Commit:** `011be10` (2026-10-20, Długi).
