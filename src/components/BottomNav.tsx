@@ -1,6 +1,6 @@
 import { forwardRef, useRef, useState } from "react";
 import { m as motion, LayoutGroup } from "framer-motion";
-import { StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, Settings as SettingsIcon, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
+import { StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, Settings as SettingsIcon, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
 import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
 import { openJournalSheet } from "@/lib/study/entrySheet";
@@ -79,7 +79,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
     const input = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="search"]')).find((el) => el.offsetParent !== null);
     input?.focus({ preventScroll: true });
   };
-  const isMoreActive = ["archive", "trash", "calendar", "shifts", "study", "debts", "folder", "label"].includes(view);
+  const isMoreActive = ["archive", "trash", "calendar", "shifts", "study", "debts", "cwiczenia", "folder", "label"].includes(view);
 
   return (
     <>
@@ -176,6 +176,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
             <SheetTile Icon={BriefcaseBusiness} label="Grafik" active={view === "shifts"} onPointerDown={() => preloadView("shifts")} onClick={() => { onGo("shifts"); setMoreOpen(false); }} />
             <SheetTile Icon={HardHat} label="Praca" active={view === "study"} onPointerDown={() => preloadView("study")} onClick={() => { onGo("study"); setMoreOpen(false); }} />
             <SheetTile Icon={HandCoins} label="Długi" active={view === "debts"} onClick={() => { onGo("debts"); setMoreOpen(false); }} />
+            <SheetTile Icon={Dumbbell} label="Ćwiczenia" active={view === "cwiczenia"} onClick={() => { onGo("cwiczenia"); setMoreOpen(false); }} />
           </SheetGroup>
           {onGoFilter && filters.length > 0 && (
             <SheetGroup title="Filtry">

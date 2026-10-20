@@ -106,6 +106,7 @@ const FocusMode = lazy(() => import("@/components/FocusMode").then((m) => ({ def
 // Loadery wspólne z nawigacją (`preloadView` przy `pointerdown`), patrz lib/viewPreload.ts.
 const StudyView = lazy(loadStudyView);
 const DebtsView = lazy(() => import("@/components/debts/DebtsView").then((m) => ({ default: m.DebtsView })));
+const CwiczeniaView = lazy(() => import("@/components/cwiczenia/CwiczeniaView").then((m) => ({ default: m.CwiczeniaView })));
 const ShiftsView = lazy(() => loadShiftsView().then((m) => ({ default: m.ShiftsView })));
 const ReminderCalendarView = lazy(() => loadCalendarView().then((m) => ({ default: m.ReminderCalendarView })));
 // Przypomnienie „Raport dnia gotowy” (dział Praca) — leniwie, żeby dziennik nie wchodził do głównej paczki.
@@ -315,7 +316,7 @@ const Index = () => {
   // Sekcje widoku: „Przypięte” (zwijane od 4 notatek) i reszta, opcjonalnie podzielona na grupy.
   // `visibleNotes` = to, co faktycznie jest na ekranie (bez zwiniętych) w kolejności widoku.
   // Tablica / tabela mają sens tylko w widokach z listą notatek (nie w agendzie, koszu, kalendarzu, grafiku).
-  const listView = view !== "reminders" && view !== "trash" && view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts";
+  const listView = view !== "reminders" && view !== "trash" && view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia";
   const boardMode = prefs.layout === "board" && listView;
   const tableMode = prefs.layout === "table" && listView;
   // Kolumny tablicy potrzebują podziału: bez wybranego domyślnie idą po etykiecie.
@@ -612,7 +613,7 @@ const Index = () => {
         {/* `flex gap`, nie `space-y`: ukryta na sm+ wyszukiwarka nie dokłada marginesu nad treścią. */}
         <main ref={mainRef} className="flex-1 max-w-352 mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col gap-8 sm:gap-10 pb-safe">
           {isTitleBlockView(view) && <ViewTitle view={view} count={view === "today" ? displayNotes.length : undefined} />}
-          {view !== "shifts" && view !== "calendar" && view !== "study" && view !== "debts" && (
+          {view !== "shifts" && view !== "calendar" && view !== "study" && view !== "debts" && view !== "cwiczenia" && (
             <div data-view-static className="sm:hidden">
               <SearchBar value={search} onChange={setSearch} />
             </div>
@@ -845,6 +846,14 @@ const Index = () => {
             </ViewErrorBoundary>
           )}
 
+          {view === "cwiczenia" && (
+            <ViewErrorBoundary name="Ćwiczenia">
+              <Suspense fallback={<div className="min-h-[60dvh]" aria-hidden />}>
+                <CwiczeniaView />
+              </Suspense>
+            </ViewErrorBoundary>
+          )}
+
           {view === "debts" && (
             <ViewErrorBoundary name="Długi">
               <Suspense fallback={<div className="min-h-[60dvh]" aria-hidden />}>
@@ -863,10 +872,10 @@ const Index = () => {
 
           {/* Liczba wyników dla czytnika ekranu — lista zmienia się bez żadnego komunikatu. */}
           <p role="status" aria-live="polite" className="sr-only">
-            {deferredSearch && view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" ? `${displayNotes.length} ${pluralPl(displayNotes.length, ["wynik", "wyniki", "wyników"])}` : ""}
+            {deferredSearch && view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia" ? `${displayNotes.length} ${pluralPl(displayNotes.length, ["wynik", "wyniki", "wyników"])}` : ""}
           </p>
           <AnimatePresence>
-            {view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && displayNotes.length === 0 && reminderRowCount === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} onNew={() => expandAddNote()} />}
+            {view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia" && displayNotes.length === 0 && reminderRowCount === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} onNew={() => expandAddNote()} />}
           </AnimatePresence>
           {view === "notes" && displayNotes.length > 0 && !deferredSearch && <DailyQuote />}
         </main>

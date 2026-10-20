@@ -118,7 +118,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
   await versionsStore.load();
   await shiftsReady();
   // Dane działu Praca ładowane dopiero tu — nie wchodzą do paczki startowej.
-  const [{ studyReady, yStudy }, { stateFromDump }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy")]);
+  const [{ studyReady, yStudy }, { stateFromDump }, { supplementDump: supplementsDump }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy"), import("@/lib/supplements/store")]);
   await studyReady();
   const { blobs, report } = await collectAttachmentBlobs(opts.attachmentBudget ?? BACKUP_ATTACHMENTS_BUDGET_BYTES);
   const study = yStudy.dump();
@@ -141,6 +141,8 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     // Ten sam JSON co dawny zapis w localStorage — starsze wersje aplikacji go odczytają.
     shifts: JSON.stringify(shiftStore.get()),
     study: JSON.stringify(study),
+    // Odżywki i odhaczenia w osobnej sekcji; scalane przy przywracaniu, bez kasowania (stara kopia bez niej działa dalej).
+    supplements: JSON.stringify(supplementsDump()),
     ...(Object.keys(blobs).length ? { attachmentBlobs: blobs } : {}),
     // Same liczby (bez treści) — okno przywracania mówi, czego w pliku nie ma; zera = nic nie pominięto.
     skipped: { tooLarge: report.tooLarge.length, missing: report.missing.length, journalPhotos: report.journalPhotos, siteDocs: report.siteDocs, recordings: report.recordings },
@@ -240,6 +242,12 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   const notes = await withStoredImages(backup.notes);
   if (backup.attachmentBlobs) await imageStore.ingest(Object.values(backup.attachmentBlobs));
   yjsStore.replaceAll(notes, backup.folders, backup.labels, backup.propDefs ?? []);
+  if (backup.supplements) {
+    try {
+      const { mergeSupplementDump } = await import("@/lib/supplements/store");
+      mergeSupplementDump(JSON.parse(backup.supplements));
+    } catch (err) { logDiag("warn", "backup", "cannot restore supplements", err); }
+  }
   // Metadane skarbca z pliku: bez nich zablokowane notatki z backupu byłyby nie do odszyfrowania.
   if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);
   if (opts.versions && backup.versions) {

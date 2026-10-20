@@ -23,6 +23,7 @@ const SIMPLE: Record<string, View> = {
   kalendarz: "calendar",
   grafik: "shifts",
   dlugi: "debts",
+  cwiczenia: "cwiczenia",
   // Dawny adres działu Praca (był „Nauka”) — stare zakładki i skróty dalej działają.
   nauka: "study",
   praca: "study",

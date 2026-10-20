@@ -4152,3 +4152,59 @@ lub grupę”.
 - **Gdzie jest:** `src/lib/yjsSync.ts` — `changedNoteTitle()` porównuje `updatedAt` notatek z poprzednim zdalnym zapisem (`remoteSeenUpdated`), wywoływane w handlerze `yjsStore.doc.on("update")`.
 - **Ograniczenia i pułapki:** porównanie obejmuje też lokalne edycje od ostatniego zdalnego zapisu, więc przy kilku zmianach naraz tytuł może wskazać lokalną notatkę. Toast nadal co 30 s, tak jak wcześniej.
 - **Testy:** e2e pełny przebieg 393/393. `src/lib/yjsSync.test.ts` przechodzi bez zmian (25/25). Sam toast nie ma testu jednostkowego; do sprawdzenia na dwóch urządzeniach.
+
+## Ćwiczenia — odżywki: lista, dzienne odhaczenia, przypomnienie (plan Ćwiczeń, krok 1, 2026-10-20)
+
+- **Co robi.** Osobna pozycja „Ćwiczenia” w menu, na pasku dolnym (w „Więcej”), w palecie poleceń i w pasku bocznym.
+  Dział ma kartę „Odżywki”: lista pogrupowana rano / w ciągu dnia / wieczorem, każdą pozycję odhacza się na dziś
+  (licznik „dziś N z M”). Pusta lista ma przycisk „Dodaj kreatynę (rano, 1 łyżka)”, który od razu tworzy przypomnienie
+  o 7:30. Formularz: nazwa, dawka, pora, „Przypominaj codziennie o” z godziną (domyślnie 7:30 / 12:00 / 20:00 wg pory).
+  Usunięcie z „Cofnij”, które przywraca odżywkę i jej przypomnienie z kosza.
+- **Gdzie jest.**
+  - `src/lib/supplements/model.ts` — typy `Supplement`, `SupplementWhen`, `cleanSupplement` (wejście z dokumentu, kopii i peera),
+    `logKey` / `parseLogKey` (klucz odhaczenia `dzień|id`), `bySupplementOrder`, `nextReminderAt(hhmm, now)`.
+  - `src/lib/supplements/ySupplements.ts` — `createYSupplements(doc)`: mapy Y `supplements` (id → odżywka) i `supplementLog`
+    (`dzień|id` → true), origin `SUPPLEMENTS_ORIGIN`, `dump()` / `mergeDump()` do kopii.
+  - `src/lib/supplements/store.ts` — hooki `useSupplements()`, `useSupplementsTaken()` i akcje `addSupplement`,
+    `removeSupplement`, `restoreSupplement`, `setSupplementTaken`, `supplementDump`, `mergeSupplementDump`.
+  - `src/components/cwiczenia/CwiczeniaView.tsx` — widok, `createSupplement` (dodaje odżywkę i notatkę-przypomnienie),
+    `deleteSupplement`, `removeWithUndo`, `AddSupplementForm`.
+  - Podłączenie działu: `src/hooks/useFilteredNotes.ts` (typ `View` i brak listy notatek), `src/hooks/useSelectionGestures.ts`,
+    `src/lib/viewRoute.ts` (`/cwiczenia`), `src/components/sidebar/sidebarItems.ts`, `src/components/BottomNav.tsx`,
+    `src/components/CommandPalette.tsx`, `src/components/AppHeader.tsx`, `src/components/EmptyState.tsx`, `src/pages/Index.tsx`
+    (leniwy import i render w `ViewErrorBoundary`).
+  - Kopia: `src/lib/noteSchema.ts` (pole `supplements`, zod), `src/lib/exportNotes.ts` (zapis w `buildFullBackupWithReport`,
+    scalanie w `restoreFullBackup`, oba przez dynamiczny import, żeby nie dokładać do paczki startowej).
+- **Jak działa i dlaczego.**
+  - Dane są w tym samym dokumencie Yjs co notatki, więc działają synchronizacja między urządzeniami, kopia i plik.
+    Każda odżywka i każde odhaczenie to osobny klucz mapy — dwa telefony dopisujące różne pozycje scalają się bez strat.
+    Wzór jak w Długach (`src/lib/debts/yDebts.ts`).
+  - Odhaczenie to wpis `dzień|id` w `supplementLog`. Odznaczenie kasuje wpis, a usunięcie odżywki kasuje wszystkie
+    jej odhaczenia w tej samej transakcji (nie zostają osierocone).
+  - Przypomnienie to zwykła notatka z `reminder` o najbliższej godzinie i `reminderRepeat: "daily"` — tym samym mechanizmem co
+    Przypomnienia (powiadomienia, „Dziś”, serie). Id notatki zapisane w odżywce (`reminderNoteId`), żeby usunięcie
+    odżywki mogło przenieść przypomnienie do kosza. Zapis odrzucony (np. pełna lista) sprząta świeżo utworzoną notatkę.
+  - Zapis i odczyt przechodzą przez `cleanSupplement`: zła godzina albo id nie wejdą do dokumentu.
+  - Kopia: przywracanie tylko **scala** (dodaje brakujące odżywki i odhaczenia, niczego nie kasuje). Odżywka dodana
+    na telefonie po wykonaniu kopii zostaje po przywróceniu.
+- **Ograniczenia i pułapki.**
+  - Przypomnienie jest w dwóch miejscach: odżywka odhacza się w Ćwiczeniach, a przycisk „Gotowe” w Przypomnieniach
+    przesuwa tylko serię tej notatki. Odhaczenie w Ćwiczeniach nie zamyka przypomnienia, i odwrotnie.
+  - Odhaczenia nie są przywracane przez „Cofnij” przy usunięciu odżywki (świadomie: dzienny stan jest zbędny po usunięciu).
+  - Notatka-przypomnienie jest zwykłą notatką: widać ją na liście notatek i w koszu. Nie ukrywamy jej, żeby nie
+    dublować mechanizmu Przypomnień.
+  - Trening i dieta jeszcze nie istnieją (kolejne kroki planu).
+  - Kopia: sekcja `supplements` jest opcjonalna; plik sprzed tej zmiany przywraca się bez zmian.
+- **Testy.**
+  - `src/lib/supplements/model.test.ts` (czyszczenie, klucze, kolejność, przypomnienie i `nextReminderAt`).
+  - `src/lib/supplements/ySupplements.test.ts` (dodawanie, duplikaty, odhaczenia, usuwanie z odhaczeniami, śmieci od peera, origin).
+  - `src/components/cwiczenia/CwiczeniaView.test.tsx` (pusty stan, grupy i postęp, odhaczenie, formularz, przypomnienie
+    i sprzątanie po odrzuconym zapisie). Magazyn i notatki podmienione atrapami.
+  - `src/lib/fullBackup.test.ts` (odżywki w kopii, przywracanie scala bez kasowania).
+  - `src/test/setup.ts` — stub `ResizeObserver` dla komponentów Radix (Checkbox), którego jsdom nie ma.
+  - Vitest: 186 plików, 1663 testów zielone. E2E nie uruchamiano (zgodnie z ustaleniem: pełne e2e później).
+- **Budżet paczki.** Wejściowy JS 390,1 KB gzip (było 390; nowe ikony w menu i kopia). Próg podniesiony do 392 KB
+  w `e2e/bundle.spec.ts` z datowanym komentarzem.
+- **Lint.** `eslint.config.js`: `src/lib/supplements/ySupplements.ts` i jego test na liście dozwolonych importów `yjs`,
+  tak jak `yStudy.ts`. (`src/lib/debts/yDebts.ts` importuje `yjs` bez wpisu na liście — istniejące naruszenie, nie ruszane.)
+- **Commit:** `TBD` (2026-10-20, krok 1 planu Ćwiczeń: odżywki).

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { Inbox, Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy } from "lucide-react";
+import { Inbox, Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes, useSearchReady } from "@/lib/searchNotes";
@@ -31,7 +31,7 @@ interface Props {
   onOpenNote: (id: string) => void;
   onNewNote: () => void;
   onDailyNote: () => void;
-  onGo: (view: "notes" | "inbox" | "today" | "week" | "archive" | "reminders" | "calendar" | "shifts" | "study" | "debts" | "trash" | "widget") => void;
+  onGo: (view: "notes" | "inbox" | "today" | "week" | "archive" | "reminders" | "calendar" | "shifts" | "study" | "debts" | "cwiczenia" | "trash" | "widget") => void;
   onToggleTheme: () => void;
   onOpenSettings: () => void;
   onOpenStats: () => void;
@@ -196,6 +196,9 @@ export function CommandPalette({
           </CommandItem>
           <CommandItem onSelect={() => run(() => onGo("debts"))}>
             <HandCoins className="w-4 h-4 mr-2" /> Długi
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => onGo("cwiczenia"))}>
+            <Dumbbell className="w-4 h-4 mr-2" /> Ćwiczenia
           </CommandItem>
           <CommandItem onSelect={() => run(() => onGo("archive"))}>
             <Archive className="w-4 h-4 mr-2" /> Archiwum

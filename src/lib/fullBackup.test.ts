@@ -7,6 +7,7 @@ import { versionsStore } from "./versionsStore";
 import { clearAllStorage } from "./notesStore";
 import { imageStore } from "./imageStore";
 import { yStudy } from "./study/data";
+import { addSupplement, removeSupplement, setSupplementTaken, supplementDump } from "./supplements/store";
 import { cleanDump } from "./study/yStudy";
 import type { Note } from "@/hooks/useNotes";
 
@@ -243,6 +244,24 @@ describe("Nauka w pełnej kopii", () => {
     const { studyDropped } = await restoreFullBackup(await parseFullBackup(JSON.stringify(old)), ALL);
     expect(studyDropped).toBe(1);
     expect(yStudy.get().journal).toEqual([entry]);
+  });
+
+  it("odżywki i odhaczenia wracają z kopii, a przywracanie nie kasuje tego, co dodano później", async () => {
+    const s = addSupplement({ name: "Kreatyna", dose: "1 łyżka", when: "rano" });
+    expect(s).not.toBeNull();
+    setSupplementTaken(s!.id, true, "2026-10-20");
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
+    expect(JSON.parse(backup.supplements!).list.map((x: { name: string }) => x.name)).toEqual(["Kreatyna"]);
+
+    removeSupplement(s!.id);
+    expect(supplementDump().list).toEqual([]);
+    await restoreFullBackup(backup, ALL);
+    expect(supplementDump()).toMatchObject({ list: [{ name: "Kreatyna" }], taken: ["2026-10-20|" + s!.id] });
+
+    // Odżywka dodana po kopii zostaje, gdy kopia ją przywraca (scalanie, nie zastępowanie).
+    addSupplement({ name: "Omega", when: "wieczorem" });
+    await restoreFullBackup(backup, ALL);
+    expect(supplementDump().list.map((x) => x.name).sort()).toEqual(["Kreatyna", "Omega"]);
   });
 
   it("czyta starą kopię, w której Nauka była tylko wśród ustawień", async () => {
