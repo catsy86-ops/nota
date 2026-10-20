@@ -4252,4 +4252,4 @@ lub grupę”.
   - Vitest: 189 plików, 1683 testy zielone. E2E nie uruchamiano (pełne e2e później, zgodnie z ustaleniem).
 - **Budżet paczki.** Wejściowy JS 390,3 KB gzip; próg 392 KB (ustawiony w kroku odżywek).
 - **Lint.** `eslint.config.js`: `src/lib/diet/yDiet.ts` i jego test na liście dozwolonych importów `yjs`, jak odżywki.
-- **Commit:** `TBD` (2026-10-20, krok 3 planu Ćwiczeń: dieta).
+- **Commit:** `ccce384` (2026-10-20, krok 3 planu Ćwiczeń: dieta).
