@@ -900,417 +900,135 @@ należny i przepadły, uszkodzony plik), `e2e/push.spec.ts` (włączenie z podst
 
 **Commit.** `fe01dcd` (2026-10-16).
 
-## Notatki — skróty z ikony aplikacji (PWA)
-
-**Co robi.** Przytrzymanie ikony zainstalowanej aplikacji pokazuje skróty: Nowa notatka, Wpis z budowy, Grafik,
-Szukaj, Nowa lista, Dziś, Przypomnienia. „Nowa lista” otwiera kompozytor od razu z listą do odhaczania, „Szukaj”
-stawia kursor w polu wyszukiwania. „Wpis głosowy” (drugi po „Wpis z budowy”) otwiera ten sam arkusz wpisu i od razu
-startuje dyktowanie — `/praca?wpis=1&glos=1`, patrz „Praca — dyktowanie wpisu ze skrótu” niżej (U5).
-Przez to na Androidzie „Grafik” i dalsze skróty przesunęły się o jedno miejsce.
-
-**Gdzie jest.** `public/manifest.webmanifest` (`shortcuts`), obsługa adresów w `src/hooks/useLaunchIntents.ts` (efekt przy starcie, wołany z `Index.tsx`:
-`?new=1`, `?new=list` → `expandComposer("list")`, `?szukaj=1` → fokus na widocznym `input[type="search"]`); parametr
-znika z adresu, więc odświeżenie nie powtarza akcji.
-
-**Jak działa i dlaczego.** Kolejność skrótów jest celowa: Android pokazuje tylko kilka pierwszych (zwykle 4), więc na
-początku to, co najczęściej robi się na budowie. Pole wyszukiwania szukane jako widoczne, bo telefon i komputer mają
-osobne pola.
-
-**Ograniczenia i pułapki.** Bez gestu użytkownika iOS nie otworzy klawiatury przy „Szukaj” (kursor jest, klawiatura po
-stuknięciu w pole); Android otwiera. Udostępnianie z innej aplikacji (tekst, obrazy, PDF) — patrz „Notatki — udostępnianie z innej aplikacji”.
-
-**Testy.** `src/lib/manifest.test.ts` (kolejność i adresy skrótów), `e2e/routes.spec.ts` („skróty PWA „Nowa lista”
-i „Szukaj”…”, „skrót PWA /?new=1…”).
-
-**Commit.** `c1a431f` (2026-10-15).
-
----
-
-## Notatki — wyróżnianie trafień w kaflach (plan Notatek, etap 1.2)
-
-**Co robi.** Gdy szukasz, trafienia są zaznaczone w tytule kafla. Jeśli trafienie jest tylko w treści, kafel pokazuje
-fragment z zaznaczeniem (kilka słów wokół), zamiast początku treści. Dopasowanie jest bez ogonków i bez wielkości liter:
-„zolw” zaznacza „żółw”.
-
-**Gdzie jest.**
-- `src/lib/searchHighlight.ts`: `matchParts(text, tokens)` (podział na fragmenty z trafieniem i bez), `firstSnippet`
-  (pierwsze trafienie z kontekstem, przycinane wielokropkiem).
-- `src/lib/searchTerms.ts`: magazyn fraz (`setSearchTerms`, hook `useSearchTerms`). Ustawia je `Index.tsx` z `?q=`/pola szukania.
-- `src/components/SearchMarks.tsx`: komponent `Marked` (zaznaczony tekst).
-- `src/components/NoteCard.tsx`: tytuł przez `Marked`; przy trafieniu w treści zamiast Markdownu pokazuje `snippet`.
-- `src/lib/searchQuery.ts`: poprawka `fold` (patrz niżej).
-
-**Jak działa i dlaczego.**
-- Frazy idą magazynem, nie przez props: `NoteCard` jest zapamiętany, a zmiana zapytania nie musi przechodzić przez
-  `NoteGrid` do każdego kafla. Hook przerysowuje tylko kafle, gdy zmieni się fraza.
-- Dopasowanie idzie po tym samym `fold`, co wyszukiwarka, a każdy znak zachowuje pozycję w oryginale — zaznaczenie
-  obejmuje dokładnie to, co widać.
-
-**Poprawka błędu w wyszukiwarce.** `fold` zamieniał „ł” na „l” przed zamianą na małe litery, więc wielkie „Ł” zostawało
-i „Łódź” nie trafiało w „lodz”. Kolejność odwrócona. Poprawka dotyczy też operatorów (`etykieta:`, `folder:` itd.).
-
-**Ograniczenia.** Zapowiedź fragmentu zastępuje na kafelku Markdown (formatowanie nie jest pokazywane w trakcie
-wyszukiwania). Kafel bez wyszukiwania działa jak dotąd.
-
-**Testy.** `src/lib/searchHighlight.test.ts` (bez ogonków, wielkość liter, łączenie zakresów, fragment z przycinaniem),
-`src/lib/searchQuery` (dotychczasowe testy po poprawce), `e2e/search-highlight.spec.ts` (tytuł z ogonkami, fragment
-z treści).
-
-**Commit.** `8f01351` (2026-10-16).
-
-## Notatki — czytnik wydzielony z Index (plan Notatek, etap 4, pierwszy krok refaktoru)
-
-**Co robi.** Bez zmian dla użytkownika. Logika czytnika i prezentacji została przeniesiona z `Index.tsx` do hooka.
-
-**Gdzie jest.**
-- `src/hooks/useReaderNav.ts`: `useReaderNav({ notes, archivedNotes, trashedNotes, visibleNotes, presentingNoteId, setPresentingNoteId, paletteOpen, selectedIds, openNote })`.
-  Zwraca `previewId`, `readerId`, `readerNote`, `readerSteps`, `copyTarget`, `closeReader`, `showInReader`, `stepReader`, `editFromReader`.
-- `src/pages/Index.tsx`: wywołanie hooka w miejscu dawnego bloku; stan `presentingNoteId` zostaje w `Index`, bo ustawia go też klawiatura siatki.
-
-**Jak działa i dlaczego.** Hook nie trzyma własnego stanu poza tym, co było już w `gridKeyboardNav` i w `Index`, więc
-zachowanie się nie zmienia. Stan prezentacji zostawiony w `Index` (dwa miejsca go ustawiają: siatka i czytnik).
-
-**Stan etapu 4.** Zrobione też: sesja edycji kafla (`useNoteEditSession`), obrazy kafla (`useNoteImages`), akcje kafla
-(`NoteCardActions`), edytor kafla i okna (`NoteEditor`), gesty kafla (`useCardGestures`), arkusz, podgląd i
-usuwanie (`NoteCardDialogs`), podgląd zawartości (`NoteCardBody`), efekty ruchu (`useCardMotion`), patrz niżej.
-Pozostają: otoczka kafla w `NoteCard.tsx` oraz reszta `Index.tsx` (po `useBulkNoteOps` i reszcie — patrz „start,
-operacje zbiorcze i indeks linków” — 961 linii; zostały widoki i okna leniwe).
-
-**Testy.** Charakteryzujące: `e2e/reader.spec.ts`, `reader-step.spec.ts`, `wikilinks.spec.ts`, `notes.spec.ts`,
-`editing.spec.ts`, `routes.spec.ts`, `tabs.spec.ts`, `search-highlight.spec.ts` — 28/28.
-
-**Commit.** `1ccb86d` (2026-10-16).
-
-## Notatki — sesja edycji kafla w hooku (plan Notatek, etap 4, refaktor NoteCard)
-
-**Co robi.** Bez zmian dla użytkownika. Edycja tytułu, treści i listy w kaflu, autozapis, „Zapisz”, zapis przy
-zamknięciu, wysokość pola, skróty w polu treści (Ctrl+F/H, lista, Tab, Alt+↑/↓), podpowiedzi `[[` i `/`
-oraz pasek formatowania działają jak wcześniej.
-
-**Gdzie jest.**
-- `src/hooks/useNoteEditSession.ts`: `useNoteEditSession({ note, autosaveSeconds, onUpdate, onSaveVersion, wikiTitles })`.
-  Zwraca stan (`isEditing`, `editTitle`, `editContent`, `editChecklist`, `showChecklist`, `showPreview`, `fullEditor`,
-  `findOpen`) wraz z setterami, `textareaRef`, `wiki`, `slash`, `handleEditSelect`, `handleEditKeyDown`,
-  `handleFormatInsert`, `commitDraft`, `handleSave`, `begin`.
-- `src/components/NoteCard.tsx`: wywołanie hooka na początku komponentu (po `prefs`); `begin()` w kliknięciu kafla
-  zastępuje dawny blok ustawień. `wikiTitles` to `wikiIndex?.titles ?? NO_TITLES`. Usunięte importy hooków i funkcji
-  edytora, które przeszły do hooka.
-
-**Jak działa i dlaczego.** Szkic siedzi w hooku razem z `draftRef` i `versionSavedRef`, bo `commitDraft` jest wołane
-z cleanupu efektu przy odmontowaniu. Kolejność efektów została ta sama: wysokość pola, autozapis, tekst na żywo,
-podpowiedzi, potem `endNoteTextEdit` przy odmontowaniu. `begin()` bierze treść z `beginNoteTextEdit`, a nie z `note`, żeby
-pokazać to, co widzi peer. Obsługa klawiszy (`handleEditKeyDown`) ma tę samą kolejność priorytetów: lista zadań,
-Ctrl+F/H, menu „/”, lista `[[`, skróty edytora. Wklejanie obrazów (`handleEditPaste`) i dodawanie obrazów zostają w
-`NoteCard`, bo zależą od `addImages` i `imageStore`.
-
-**Ograniczenia.** `handleEditPaste` i `addImages` nadal w `NoteCard` — przeniesienie wymaga, żeby hook przyjął
-obsługę obrazów. Pozostają też `FindReplaceBar` (renderowany w `NoteCard`) i cały podział widoku.
-
-**Testy.** Charakteryzujące, bez nowych testów: `e2e/editing.spec.ts`, `editor-keys.spec.ts`, `editor-open.spec.ts`,
-`checklist.spec.ts`, `composer.spec.ts`, `live-text.spec.ts`, `live-text-focused.spec.ts`, `note-props.spec.ts`,
-`parked-drafts.spec.ts`, `read-only-note.spec.ts`, `wikilinks.spec.ts`, `note-links.spec.ts`, `wiki-heading.spec.ts`,
-`daily-note.spec.ts` — 39/39 (`--workers=1`). Testy jednostkowe `src/components`, `src/hooks`, `src/lib`:
-1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
-
-**Commit.** `3342c00` (2026-10-16) — sesja edycji; `ff09430` (2026-10-16) — klawisze, podpowiedzi i Ctrl+F.
-
-## Notatki — zaznaczenie notatek w useSelection (refaktor Index.tsx)
-
-**Co robi.** Bez zmian dla użytkownika. Zaznaczone notatki w widoku listy: pasek zbiorczy pokazuje liczbę,
-a Esc albo „wyczyść” zdejmuje zaznaczenie. Zaznaczenie znika przy zmianie widoku, etykiety lub folderu.
-
-**Gdzie jest.**
-- `src/hooks/useSelection.ts`: `useSelection({ view, activeLabel, activeFolder })` zwraca `selectedIds`,
-  `setSelectedIds`, `selectionMode` (`selectedIds.size > 0`), `lastSelectedRef` i `clearSelection`. Wywołanie w
-  `src/pages/Index.tsx` stoi w miejscu dawnego stanu zaznaczenia.
-- `src/hooks/useSelectionGestures.ts`: `useSelectionGestures({ view, visibleNotesRef, previewId, presentingNoteId,
-  setSelectedIds, lastSelectedRef })` zwraca `toggleSelect` (klik i Shift-zakres) i obsługuje skrót Ctrl/Cmd+A.
-  Wywołanie w `Index.tsx` stoi zaraz po czytniku (`useReaderNav`), bo potrzebuje `previewId` i `visibleNotesRef`.
-
-**Jak działa i dlaczego.** Pierwszy hook zawiera tylko to, co zależy od widoku. Drugi dostaje wartości z `Index`
-jako parametry, więc jego wywołanie musi stać po ich wyliczeniu. Do tablic zależności dopisano `setSelectedIds` i
-`lastSelectedRef` — są stabilne, więc zachowanie się nie zmienia, a lint jest czysty. Ctrl+A nic nie robi, gdy otwarte
-jest okno, czytnik albo prezentacja, i nie działa w kalendarzu, grafiku ani nauce.
-
-**Ograniczenia.** `visibleNotesRef` i `previewId` muszą być policzone przed wywołaniem `useSelectionGestures`. Zmiana
-kolejności `visibleNotes` albo czytnika w `Index` wymaga sprawdzenia tej zależności.
-
-**Testy.** Charakteryzujące (chromium, `--workers=1`): `notes`, `note-groups`, `templates-bulk`, `reminders-calendar`,
-`quick-capture`, `search-highlight`, `reader`, `note-links`, `editor-keys` — 62/62 po pierwszym kroku i 50/50 po
-przeniesieniu klika i Ctrl+A (`notes`, `note-groups`, `templates-bulk`, `editor-keys`, `reader`, `quick-capture`,
-`note-links`, `search-highlight`). Na `iphone-14` (`@mobile`): `mobile`, `mobile-layout` — 17/17 (przytrzymanie kafla
-zaznacza go). Testy jednostkowe `src/components`, `src/hooks`, `src/lib`, `src/pages`: 1209/1209. `tsc` i eslint bez
-błędów. Nie uruchamiano pełnego e2e.
-
-**Commit.** `bea4f33` (stan zaznaczenia, 2026-10-16), `c513247` (klik, Shift i Ctrl+A, 2026-10-16).
-
-## Notatki — odznaki w useAchievementToasts (refaktor Index.tsx)
-
-**Co robi.** Bez zmian dla użytkownika. Nowa odznaka pokazuje pieczątkę (przy włączonych efektach, gdy nie ma otwartego
-okna ani edytora nowej notatki) albo jeden cichy toast „Nowa odznaka” / „Nowe odznaki: N”, który podmienia poprzedni
-(stałe `id`). Przycisk „Zobacz” otwiera Statystyki.
-
-**Gdzie jest.** `src/hooks/useAchievementToasts.ts`: `useAchievementToasts({ notes, archivedNotes, allLabels, folders,
-onOpenStats })`. Wywołanie w `src/pages/Index.tsx` (w miejscu dawnego bloku odznak). `onOpenStats` idzie przez
-`useLatestRef`, więc toast nie trzyma starego callbacku.
-
-**Jak działa i dlaczego.** Logika bez zmian: `useAchievementTracker` z `src/lib/achievements.ts` wykrywa odblokowanie,
-a hook decyduje, czy pokazać pieczątkę, czy dopisać do paczki. Gdy otwarte jest okno, toast czeka (1 s ponowienia),
-a pieczątka czeka do 40 prób po 800 ms.
-
-**Ograniczenia.** Hook nie ma testu e2e. Logika odznak i pieczątki są w `src/lib/achievements.test.ts` i
-`achievementStamp.test.ts`; samego zachowania toastów (paczkowanie, podmiana, „Zobacz”) nie sprawdza żaden test.
-
-**Testy.** Jednostkowe: `src/lib/achievements.test.ts`, `achievementStamp.test.ts`. e2e (chromium, `--workers=1`) przechodzące
-przy wyciągnięciu: `notes`, `routes`, `tabs`, `composer`, `reminders-calendar`, `search-backup`, `board-table`, `reader`,
-`quick-capture`, `weekly-review` — 57/57. Testy jednostkowe `src/components`, `src/hooks`, `src/lib`, `src/pages`:
-1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
-
-**Commit.** `39231e6` (2026-10-16).
-
-## Notatki — start, operacje zbiorcze i indeks linków poza Index (refaktor Index.tsx)
-
-**Co robi.** Bez zmian dla użytkownika. `Index.tsx` zmalał z 1143 do 961 linii.
-
-**Gdzie jest.**
-- `src/hooks/useLaunchIntents.ts`: `useLaunchIntents({ navigate, addNote, openNote, expandComposer })` — raz przy
-  starcie: udostępnianie (`/share`, `?inbox=` z plikami), skróty PWA `?new=1`, `?new=list`, `?szukaj=1`.
-- `src/hooks/useBulkNoteOps.ts`: `useBulkNoteOps({ view, groupBy, folders, notesRef, selectedIds, … moveToFolder })` →
-  `restoreSelected`, `pinSelected`, `moveSelectedToFolder`, `labelSelected` (pasek zbiorczy) i `moveToColumn`
-  (przeciąganie na tablicy, `useNoteDnd`). Kosz, archiwum i kolor zostają w `useNoteActions`.
-- `src/hooks/useWikiLinkIndex.ts`: `useWikiLinkIndex(notes, archivedNotes)` → `allNotesForLinks`, `knownTitles`,
-  `wikiIndex` (stabilne obiekty przez `useStableByKey`).
-- `src/components/TrashConfirmDialogs.tsx`: `DeleteForeverDialog`, `EmptyTrashDialog`.
-- `src/components/sidebar/sidebarItems.ts`: `SidebarItem`, `sidebarItems({ inbox, overdue, trash })` — lista działów
-  paska bocznego (typ przeniesiony z `AppSidebar.tsx`).
-- `Index.tsx`: przypięte i grupy przypomnień rysuje ten sam `renderGrid` co reszta (wcześniej dwie skopiowane długie
-  linie `NoteGrid` z tymi samymi propsami — w widokach, gdzie się pojawiają, `renderGrid` daje identyczne propsy).
-
-**Jak działa i dlaczego.** Kod przeniesiony bez zmian logiki. `useLaunchIntents` czyta funkcje przez `useLatestRef`,
-więc efekt biegnie raz (jak dawne `useEffect(…, [])` z wyłączonym lintem), a zapis po `whenNotesReady` używa
-najnowszego `handleAddNoteGlow`. `useBulkNoteOps` musi stać po `groupBy` i `handleMoveToFolderGlow`, a przed
-`useNoteDnd` (dawniej `moveToColumn` było deklaracją funkcji wynoszoną na górę).
-
-**Ograniczenia.** Zostały w `Index`: stan okien (paleta, ustawienia, statystyki…) i ich leniwe renderowanie, sekcje
-„Dziś” i widoki — dalszy podział wymagałby przeniesienia stanu okien do osobnego magazynu.
-
-**Testy.** Bez nowych; pełne e2e chromium (`--workers=1`): 365/365. Vitest 1314/1314, `tsc` i eslint bez błędów,
-build i budżet paczki w progach.
-
-**Commit.** `6ab66bf` (2026-10-16).
-
-## Notatki — efekty ruchu kafla w useCardMotion (plan Notatek, etap 4, refaktor NoteCard)
-
-**Co robi.** Bez zmian dla użytkownika. Kafel ma lekki przechył 3D przy najechaniu (gdy włączony w ustawieniach),
-animację wyjścia (kosz/archiwum), iskrę „klik pinezki” po przypięciu i pieczątkę „gotowe” po odhaczeniu ostatniego
-zadania listy. Przy redukcji ruchu (systemowej lub w aplikacji) przechyłu, animacji wyjścia i iskier nie ma.
-
-**Gdzie jest.** `src/hooks/useCardMotion.ts`: `useCardMotion({ note, isEditing })` zwraca `reduce`, `fx` (ustawienia
-efektów), `tilt`, `showFx`, `cardVariants`, `pinFx`/`setPinFx`, `stampKey`/`setStampKey`. `NoteCard.tsx` czyta je na
-początku komponentu i przekazuje do `useCardGestures` (przechył, iskra przy przypięciu gestem) oraz do `motion.div`.
-
-**Jak działa i dlaczego.** Logika bez zmian. Pinezka: `consumePin` zdejmuje znacznik po przypięciu, a `pinFx` pokazuje
-falę na nowej karcie w innej sekcji. Pieczątka: wyzwala ją przejście `allDone` z fałszu na prawdę, poza edycją i koszem.
-
-**Ograniczenia.** Efekt pieczątki celowo reaguje tylko na zmianę `allDone` (eslint-disable w pliku), jak wcześniej.
-
-**Testy.** Charakteryzujące (chromium, `--workers=1`): `card-motion`, `checklist`, `notes`, `note-groups`, `board-table`,
-`subpages`, `editing`, `reader`, `view-change`, `desktop-columns` — 45/45. Na `iphone-14` (`@mobile`): `mobile`,
-`mobile-layout`, `editor-open`, `touch-targets` — 20/20. Testy jednostkowe `src/components`, `src/hooks`, `src/lib`:
-1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
-
-**Commit.** `2141f60` (2026-10-16).
-
-## Notatki — podgląd zawartości kafla w NoteCardBody (plan Notatek, etap 4, refaktor NoteCard)
-
-**Co robi.** Bez zmian dla użytkownika. Tryb podglądu kafla: okładka, tytuł (z ikoną i kłódką przy zablokowanej),
-treść albo fragment trafienia wyszukiwania, lista zadań, etykiety, przypomnienie, priorytet, załączniki, „Gotowe” /
-„Jutro” przy zaległym terminie, link zwrotny (jeden, reszta „+N”), nadrzędna notatka i liczba podstron, odliczanie
-kosza z „Przywróć”, czas czytania i data.
-
-**Gdzie jest.** `src/components/NoteCardBody.tsx`: `NoteCardBody({ note, isArchived, selectable, snippet, searchTerms,
-knownTitles, onWikiClick, onUpdate, onOpenNote, onUnarchive, handleChecklistToggle, backlinks, subpage, trashCountdown,
-showReadingTime, wordCount, readMin })`. Stała `BACKLINKS_SHOWN` przeniesiona tutaj. `NoteCard.tsx` renderuje ją w
-miejscu dawnej gałęzi „nie edytuj” i przekazuje wyliczone wartości (`backlinks`, `subpage`, `trashCountdown`).
-
-**Jak działa i dlaczego.** Komponent ma propy o tych samych nazwach co dawne zmienne, więc treść JSX nie zmieniła się.
-Jedyna zmiana: `selectable` zamiast `onToggleSelect`, a `showReadingTime` zamiast `prefs.showReadingTime`.
-Zaznaczanie kafla i akcje klikalne zostają w `NoteCard` (obsługa kliknięcia kafla), a tu są już tylko treść i
-przyciski „Gotowe”/„Jutro”, które wywołują `onUpdate` z propsów.
-
-**Ograniczenia.** Typ `subpage` jest pisany ręcznie (kształt z `wikiIndex.tree`); zmiana kształtu `wikiIndex` wymaga
-poprawki tutaj.
-
-**Testy.** Charakteryzujące (chromium, `--workers=1`): `notes`, `note-links`, `subpages`, `reminders-calendar`,
-`reminder-toast`, `search-highlight`, `checklist`, `note-look`, `note-groups`, `reminders-agenda`, `saved-filters`,
-`private-notes`, `card-motion`, `desktop-columns` — 58/58; `board-table`, `wikilinks`, `wiki-heading`, `reader`,
-`reader-step`, `view-change`, `editing`, `card-images`, `read-only-note`, `note-props-view`, `note-wide-large`,
-`masonry` — 30/30. Na `iphone-14` (`@mobile`): `mobile`, `mobile-layout`, `editor-open`, `touch-targets` — 20/20.
-Testy jednostkowe `src/components`, `src/hooks`, `src/lib`: 1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
-
-**Commit.** `a8ae0a5` (2026-10-16).
-
-## Notatki — arkusz „⋯”, podgląd obrazu i usuwanie w NoteCardDialogs (plan Notatek, etap 4, refaktor NoteCard)
-
-**Co robi.** Bez zmian dla użytkownika. Arkusz „⋯” na dotyku (tytuł, kolor, szybkie akcje, „Więcej”), podgląd
-obrazka na pełnym ekranie i potwierdzenie trwałego usunięcia z kosza.
-
-**Gdzie jest.** `src/components/NoteCardDialogs.tsx`:
-- `ActionSheet({ open, onOpenChange, note, isArchived, pinSparkle, onAskDeleteConfirm, more, … })` — `more` to element
-  budowany w `NoteCard` (`moreActions`), ten sam co w rozwinięciu.
-- `ImagePreviewDialog({ imageRef, onClose })`.
-- `DeleteNoteDialog({ open, onOpenChange, note, onDelete })`.
-`NoteCard.tsx` trzyma stan otwarcia (`sheetOpen`, `previewImage`, `showDeleteConfirm`) i montowanie „leniwe” (`useLatch`).
-
-**Jak działa i dlaczego.** Arkusz zatrzymuje zdarzenia na `SheetContent`, bo płyną drzewem Reacta do kafla. Zamknięcie
-po akcji idzie przez `onOpenChange(false)`, tak samo jak wcześniej `setSheetOpen(false)`.
-
-**Ograniczenia.** Dialog podglądu zamyka się przez `onClose`, który czyści `previewImage` (dawniej `setPreviewImage(null)`).
-
-**Testy.** Charakteryzujące: `e2e/notes.spec.ts`, `editing.spec.ts` (usuwanie do kosza), `card-images.spec.ts`,
-`images.spec.ts`, `subpages.spec.ts`, `private-notes.spec.ts`, `card-motion.spec.ts`, `note-props.spec.ts`,
-`reminder-toast.spec.ts`, `read-only-note.spec.ts` — 31/31 (chromium, `--workers=1`). Na profilu `iphone-14` (`@mobile`):
-`mobile.spec.ts`, `mobile-layout.spec.ts`, `editor-open.spec.ts`, `touch-targets.spec.ts` — 19/20 przy pierwszym
-przebiegu; jedna porażka (`320 px: żadna trasa…`) to timeout `page.goto` na zimnym starcie, a sam test przechodzi (1/1).
-Testy jednostkowe `src/components`, `src/hooks`, `src/lib`: 1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
-
-**Commit.** `3596e41` (2026-10-16).
-
-## Notatki — gesty kafla w useCardGestures (plan Notatek, etap 4, refaktor NoteCard)
-
-**Co robi.** Bez zmian dla użytkownika. Na dotyku: przesunięcie kafla w prawo (przypnij/odepnij) lub w lewo
-(archiwizuj, w Archiwum przywróć), z podpisami w tle przy pierwszych gestach; przytrzymanie 450 ms zaznacza kafel.
-Przy myszy: przechył 3D, gdy włączony w ustawieniach i bez redukcji ruchu.
-
-**Gdzie jest.** `src/hooks/useCardGestures.ts`: `useCardGestures({ note, isArchived, isEditing, selectionMode, cardRef,
-tilt, pinSparkle, onToggleSelect, onTogglePin, onArchive, onUnarchive })`. Zwraca `isTouch`, `canSwipePin`,
-`canSwipeArchive`, `swipeEnabled`, `swipeX`, `swipeControls`, `swiping`, `swipeLabels`, `pinOpacity`, `archiveOpacity`,
-`handleSwipeStart`, `handleSwipeEnd`, `handleLongPressStart`, `handleLongPressMove`, `cancelLongPress`, `longPressed`,
-`rotX`, `rotY`, `handleMove`, `handleLeave`. `NoteCard.tsx` podpina je do `motion.div` kafla i do tła gestu.
-
-**Jak działa i dlaczego.** Gest startuje ręcznie przez `swipeControls` — dotyk na uchwycie przeciągania należy do dnd-kit
-(kolejność, kolumny tablicy), nie do przesunięcia. Kosz nie ma gestu, żeby przypadkowy ruch niczego nie usuwał.
-Iskry przy przypięciu gestem liczy `NoteCard` (`pinSparkle`), bo zależą od ustawień efektów i ruchu.
-
-**Ograniczenia.** `isTouch` liczone przy renderze przez `matchMedia`, nie reaguje na zmianę urządzenia w trakcie sesji (jak wcześniej).
-
-**Testy.** Charakteryzujące: `e2e/mobile.spec.ts`, `mobile-layout.spec.ts`, `card-motion.spec.ts`, `board-table.spec.ts`,
-`desktop-columns.spec.ts`, `editor-open.spec.ts`, `touch-targets.spec.ts`, `notes.spec.ts`, `card-images.spec.ts`,
-`view-change.spec.ts`, `reminder-toast.spec.ts` — 49/49 (`--workers=1`, chromium); z `@mobile` na `iphone-14` 20/20.
-Testy jednostkowe `src/components`, `src/hooks`, `src/lib`: 1209/1209. `tsc` i eslint bez błędów. Nie uruchamiano pełnego e2e.
-
-**Commit.** `c55f50e` (2026-10-16).
-
-## Notatki — edytor kafla i okna w NoteEditor (plan Notatek, etap 4, refaktor NoteCard)
-
-**Co robi.** Bez zmian dla użytkownika. Edytor w kaflu i w oknie pełnoekranowym: tytuł, pasek formatowania,
-podgląd Markdown, lista zadań, załączniki, licznik i „Zapisz”.
-
-**Gdzie jest.** `src/components/NoteEditor.tsx`: `NoteEditor({ full, note, session, spellcheck, editorScrolled,
-knownTitles, onWikiClick, onUpdate, onPaste })`. Stan i handlery z `session` (typ `NoteEditSession` z
-`src/hooks/useNoteEditSession.ts`). `NoteCard.tsx` ma `renderEditor(full)`, który tylko zwraca `<NoteEditor/>`,
-i używa go w kaflu (`full={false}`) i w `Dialog` (`full`).
-
-**Jak działa i dlaczego.** Jedna sesja edycji dla obu miejsc, więc rozwinięcie okna nie zmienia ścieżki zapisu.
-Przekazanie całego obiektu sesji zamiast kilkudziesięciu props. `onBlur` na korzeniu zapisuje szkic przy wyjściu
-fokusem, ale nie zamyka edytora.
-
-**Ograniczenia.** `NoteEditor` czyta `session` przez destrukturyzację — nowe pole sesji trzeba dopisać do listy w tym pliku.
-
-**Testy.** Charakteryzujące: `e2e/editing.spec.ts`, `editor-keys.spec.ts`, `editor-open.spec.ts`, `checklist.spec.ts`,
-`live-text.spec.ts`, `live-text-focused.spec.ts`, `wikilinks.spec.ts`, `note-links.spec.ts`, `wiki-heading.spec.ts`,
-`images.spec.ts`, `card-images.spec.ts`, `paste-html.spec.ts`, `attachments.spec.ts`, `read-only-note.spec.ts`,
-`parked-drafts.spec.ts`, `notes.spec.ts`, `daily-note.spec.ts`, `composer.spec.ts` — 49/49 (`--workers=1`).
-Testy jednostkowe `src/components`, `src/hooks`, `src/lib`: 1209/1209. `tsc` i eslint bez błędów.
-Nie uruchamiano pełnego e2e.
-
-**Commit.** `ad2df94` (2026-10-16).
-
-## Notatki — akcje kafla w NoteCardActions (plan Notatek, etap 4, refaktor NoteCard)
-
-**Co robi.** Bez zmian dla użytkownika. Na stopce kafla (mysz) albo w arkuszu „⋯” (dotyk) są: przypnij, kolor,
-przypomnienie, priorytet, archiwizuj, usuń; w „Więcej opcji” (rozwinięcie lub arkusz) reszta: ikona, ulubione,
-szerokość, większy tekst, blokada, podstrona, obraz, rysunek, etykiety, folder, prywatna, udostępnij, wersje,
-prezentacja, duplikat.
-
-**Gdzie jest.** `src/components/NoteCardActions.tsx`:
-- `ActionBtn` — przycisk ikony na stopce (przeniesiony z `NoteCard.tsx`, dalej tylko tam używany).
-- `PrimaryActions({ note, isArchived, inSheet, pinSparkle, onClose, onToggleColors, onAskDeleteConfirm, … })`.
-- `MoreActions({ note, isArchived, noteVersions, folders, allLabels, onCreateLabel, onAddImage, onDraw, … })`.
-`NoteCard.tsx` buduje `moreActions` (jeden element dla rozwinięcia i arkusza) i wywołuje `PrimaryActions` dwa razy:
-w stopce (`inSheet={false}`) i w arkuszu (`inSheet`, `onClose` zamyka arkusz).
-
-**Jak działa i dlaczego.** Komponenty dostają wszystko przez props, nie przez zamknięcia z `NoteCard`. Iskry przy
-przypięciu liczy `NoteCard` (`showFx && fx.sparkle`), bo zależą od ustawień efektów i ruchu. Usunięcie notatki z kosza
-idzie przez `onAskDeleteConfirm` — dialog zostaje w `NoteCard`. `handleLabelToggle` przeniesiony do `MoreActions`
-(czyta tylko `note` i `onUpdate`).
-
-**Ograniczenia.** `isArchived` jest opcjonalne w kontekście, więc w propsach też opcjonalne (działa jak `!isArchived`).
-Dodanie nowej akcji wymaga dopisania jej w obu miejscach, czyli zmiany `NoteCardActions.tsx`, nie `NoteCard.tsx`.
-
-**Testy.** Charakteryzujące: `e2e/notes.spec.ts`, `card-images.spec.ts`, `card-motion.spec.ts`, `note-look.spec.ts`,
-`note-props.spec.ts`, `subpages.spec.ts`, `private-notes.spec.ts`, `read-only-note.spec.ts`, `reminder-toast.spec.ts`,
-`reminders-calendar.spec.ts`, `mobile.spec.ts`, `editing.spec.ts`, `attachments.spec.ts`, `board-table.spec.ts` — 66/66
-(`--workers=1`). Testy jednostkowe `src/components`, `src/hooks`, `src/lib`: 1209/1209. `tsc` i eslint bez błędów.
-Nie uruchamiano pełnego e2e.
-
-**Commit.** `7437879` (2026-10-16).
-
-## Notatki — obrazy kafla w hooku useNoteImages (plan Notatek, etap 4, refaktor NoteCard)
-
-**Co robi.** Bez zmian dla użytkownika. Obrazy z pliku („Dodaj obrazek”), wklejony zrzut do pola treści,
-rysunek z płótna i usuwanie z „Cofnij” działają jak wcześniej.
-
-**Gdzie jest.** `src/hooks/useNoteImages.ts`: `useNoteImages({ note, onUpdate })` zwraca `fileInputRef`,
-`handleImageUpload`, `handleEditPaste`, `addDrawing(dataUrl)`, `removeImage(idx)`. `NoteCard.tsx` wywołuje go
-na początku komponentu i podpina `fileInputRef` do `<input type="file">`, `handleEditPaste` do pól treści,
-`addDrawing` do `DrawingCanvas`. Stan podglądu (`previewImage`) i otwarcia rysownika (`showDrawing`) zostaje w `NoteCard`.
-
-**Jak działa i dlaczego.** Obraz przechodzi przez `prepareImage` (skalowanie do limitu 2 MB), bajty idą do
-`imageStore`, a do notatki trafia tylko referencja (klucz SHA-256). Obrazy, których nie da się przeskalować,
-są liczone i pokazywane w jednym komunikacie. Usuwanie zapisuje poprzednią listę, żeby „Cofnij” ją przywrócił.
-
-**Ograniczenia.** Wklejenie zrzutu do pola treści nie ma jeszcze e2e (jest tylko kod `handleEditPaste`).
-„Dodaj obrazek” jest w rozwijanym menu „Więcej opcji”, nie na pasku kafla.
-
-**Testy.** `e2e/card-images.spec.ts` (dodanie z menu, przeładowanie, usunięcie z „Cofnij”). Charakteryzujące:
-`e2e/images.spec.ts`, `paste-html.spec.ts`, `attachments.spec.ts`, `editing.spec.ts`,
-`editor-keys.spec.ts`, `composer.spec.ts`, `note-look.spec.ts`, `note-props.spec.ts`, `checklist.spec.ts`,
-`live-text.spec.ts`, `parked-drafts.spec.ts`, `read-only-note.spec.ts` — 36/36 (`--workers=1`).
-Testy jednostkowe `src/components`, `src/hooks`, `src/lib`: 1209/1209. `tsc` i eslint bez błędów.
-
-**Commit.** `53e7886` (2026-10-16).
-
-## Notatki — tekst peera na żywo w otwartym edytorze (plan Notatek, etap 4, weryfikacja)
-
-**Co robi.** Gdy edytujesz notatkę, a drugie urządzenie dopisuje do niej tekst, ten tekst pojawia się w Twoim polu
-od razu, bez zapisu i bez wychodzenia z pola. Karetka zostaje przy znaku, który piszesz.
-
-**Gdzie jest.** `src/hooks/useLiveNoteText.ts` (podpięty w `useNoteEditSession`, od `3342c00` także nie w `NoteCard`): zdalna zmiana → `rebaseNoteTextEdit` → wstawienie
-do szkicu i przywrócenie zaznaczenia.
-
-**Stan.** Działało już wcześniej, ale test sprawdzał tekst dopiero po `blur`. Dodany test `e2e/live-text-focused.spec.ts`
-sprawdza przypadek z fokusem: tekst peera wchodzi do pola, a karetka zostaje za własnym tekstem. Zielony.
-
-**Commit.** `1ccb86d` (2026-10-16).
-
-## Notatki — zwinięty pasek „Zapisz notatkę...” (wygląd)
-
-**Co robi.** Zwinięty pasek nad siatką kafli to teraz kafelek z bursztynowym plusem w zaokrąglonym polu (jak
-zakładka w zeszycie). Po najechaniu tło plusa mocniej się wypełnia, a po kliknięciu kafelek lekko się zmniejsza.
-Tekst i działanie bez zmian: kliknięcie rozwija kompozytor.
-
-**Gdzie jest.** `src/components/AddNoteBar.tsx`, przycisk w gałęzi `!expanded` (klasa `group` na przycisku,
-kafelek to `span aria-hidden`). Kolory z tokenów `primary` / `primary-ink`, czas z `--dur-fast`.
-
-**Jak działa.** Sama zmiana stylu, bez nowego stanu. Tekst „Zapisz notatkę...” zostaje w tym samym miejscu DOM,
-więc selektory w e2e (`getByText`) działają jak dawniej.
-
-**Ograniczenia i pułapki.** Pasek jest ukryty na telefonie (`max-md:hidden`), tam działa dolny przycisk „+”.
-Kafelek ma `aria-hidden`, więc czytnik ekranu czyta tylko tekst.
-
-**Testy.** Brak dedykowanego testu wyglądu. Pełny zestaw Vitest przechodzi (1349). Regresja: `e2e/composer.spec.ts`
-(uruchomiono tylko Vitest, e2e nie puszczano).
+## Notatki — stan aktualny (kafel, edytor, czytnik, kompozytor, lista, wyszukiwanie, właściwości)
+
+Dział opisany w jednym miejscu. Refaktor `Index.tsx` i `NoteCard.tsx` (etapy 4 planu) jest uwzględniony jako struktura kodu, nie jako historia.
+
+### Co robi
+
+- **Kafel notatki** (`NoteCard`): tryb podglądu (okładka, tytuł z ikoną i kłódką, treść albo fragment trafienia, lista zadań, etykiety, przypomnienie, priorytet, załączniki, „Gotowe”/„Jutro” przy zaległym terminie, link zwrotny, podstrony, odliczanie kosza z „Przywróć”, czas czytania) oraz tryb edycji w kaflu. Przypięcie, kolor, przypomnienie, priorytet, archiwizacja i usuwanie są na stopce (mysz) albo w arkuszu „⋯” (dotyk). „Więcej opcji” zawiera resztę: ikona, ulubione, szerokość, większy tekst, blokada, podstrona, obraz, rysunek, etykiety, folder, prywatna, udostępnij, wersje, prezentacja, duplikat, kopiuj jako Markdown (nie dla notatek prywatnych).
+- **Edycja w kaflu:** tytuł, treść, lista zadań, autozapis, „Zapisz”, zapis przy zamknięciu, skróty w polu treści (Ctrl+F/H, lista, Tab, Alt+↑/↓), podpowiedzi `[[` i `/`, pasek formatowania, podgląd Markdown.
+- **Pełny edytor** (na telefonie każde otwarcie notatki, na komputerze „Pełny ekran”): okno rośnie z kafla, który stuknięto, i przy zamknięciu wraca do niego. U góry pasek koloru notatki; nagłówek dostaje cień po przewinięciu treści.
+- **Gesty na dotyku:** przesunięcie w prawo przypina (albo odpina), w lewo archiwizuje (w Archiwum przywraca). Po przypięciu dymek „Przypięto”/„Odpięto” z „Cofnij”. Przytrzymanie 450 ms zaznacza kafel. Kosz nie ma gestu. Przy myszy: przechył 3D, gdy włączony w ustawieniach i bez redukcji ruchu.
+- **Efekty:** animacja wyjścia (kosz, archiwum), iskra „klik pinezki” przy przypięciu, pieczątka „gotowe” po odhaczeniu ostatniego zadania. Przy redukcji ruchu bez przechyłu, animacji i iskier.
+- **Obrazy kafla:** „Dodaj obrazek” (w „Więcej opcji”), wklejony zrzut do pola treści, rysunek z płótna, usuwanie z „Cofnij”.
+- **Czytnik** (`NoteReader`): podgląd i pełny ekran. ←/→ i przyciski „Poprzednia/Następna notatka” przechodzą po widocznej liście (bez notatek prywatnych); ←/→ są ignorowane w polach tekstowych i przy modyfikatorach.
+- **Kompozytor nowej notatki** (`AddNoteBar`): zwinięty pasek to kafelek z bursztynowym plusem; rozwinięty ma pole tytułu (`TitleField`, zawija się), treść, rozpoznawanie fraz (`#etykieta`, `@folder`, `!`/`!!`, daty „jutro 9:00”, „za 2h”), „Odłóż” na listę roboczą szkiców, wklejanie HTML jako Markdown.
+- **Lista robocza szkiców:** „Odłóż” zapisuje szkic na listę (rząd „Odłożone” nad tytułem); kliknięcie wznawia, „×” usuwa z „Cofnij”. Limit 20, najstarszy odpada. Lokalna dla przeglądarki.
+- **Lista (checklista):** każda nieodhaczona pozycja ma „Przesuń w górę/w dół” (wyłączane na krawędzi, na komputerze po najechaniu, na dotyku zawsze). Alt+↑/↓ działa jak dotąd. Przeciąganie pozycji odłożone.
+- **Scalanie zaznaczonych notatek:** przycisk „Scal zaznaczone w jedną notatkę” na pasku zbiorczym (tylko lista). Pierwsza notatka dostaje treść pozostałych (pogrubiony tytuł, oddzielone `---`), etykiety, obrazy, załączniki, listy, najwyższy priorytet; termin pierwszej, a gdy go nie ma — najwcześniejszy z pozostałych. Pozostałe idą do kosza. „Cofnij” przywraca wszystko. Odmowa: mniej niż 2 notatki, prywatna, tylko do odczytu, archiwum, kosz, podstrony, otwarty edytor celu.
+- **Udostępnianie z innej aplikacji** (Share Target): „Udostępnij → NOTKI” tworzy notatkę. Tekst i link do treści (link bez dubla). Obrazy stają się zdjęciami, PDF załącznikiem; inne typy są pomijane z komunikatem. Maks. 30 plików na udostępnienie.
+- **Skróty PWA** (przytrzymanie ikony): Nowa notatka, Wpis z budowy, Wpis głosowy, Grafik, Szukaj, Nowa lista, Dziś, Przypomnienia. Kolejność celowa: Android pokazuje kilka pierwszych.
+- **Wyszukiwanie:** trafienia zaznaczone w tytule kafla; przy trafieniu tylko w treści kafel pokazuje fragment z zaznaczeniem. Dopasowanie bez ogonków i wielkości liter („zolw” zaznacza „żółw”). Pole „Szukaj notatek...” ma stałą etykietę; podpowiedzi operatorów (`etykieta:`, `ma:`, `starsze:`, `pole:`) pokazują się w zdaniu pustego wyniku.
+- **Widok:** trzy ikony po prawej w nagłówku (układ, sortowanie, filtry) na jasnej kartce. W stylu Zeszyt tytuł widoku jest w Fraunces, pasek nagłówka ma tylko cienką kreskę. Liczba notatek przy nagłówku grupy jest pieczątką (obwódka). Kafel ma promień `rounded-card` (16 px); uniesienie przy najechaniu tylko dla myszy.
+- **Puste stany:** każdy pusty widok (Notatki, Archiwum, Kosz, Przypomnienia, Kalendarz, Grafik, Dziś, Tydzień, etykieta, folder, Skrzynka) ma nagłówek i zdanie z następnym krokiem. Bez przycisków — następny krok to działanie na kaflu lub w kompozytorze.
+- **Właściwości notatek** (pola własne): tekst, liczba, data, wybór z listy. Okno „Pola notatek” nad tabelą; wartości wpisuje się w komórki tabeli (kolumna na każde pole). Sortowanie po polu (nagłówek kolumny, menu „Sortuj wg”), filtr `pole:Nazwa=wartość`, wiersz „Nazwa: wartość” pod tytułem na telefonie, sekcja „Pola” w czytniku, eksport (Markdown wiersz `*Pole: …*`, ZIP klucz `props`), import z ZIP-a (dopasowanie po nazwie, typ z wartości).
+- **Podział widoku w Index:** `Index.tsx` (ok. 960 linii) zostawia stan okien (paleta, ustawienia, statystyki) i widoki.
+
+### Gdzie jest
+
+**Kafel (`NoteCard` i hooki):**
+- `src/components/NoteCard.tsx` — otoczka kafla: przechył, `motion.div`, stany okien, `renderEditor(full)`, `useLatch` dla leniwego montowania.
+- `src/components/NoteCardBody.tsx` — tryb podglądu (`BACKLINKS_SHOWN`, `subpage`, `trashCountdown`, „Gotowe”/„Jutro”).
+- `src/components/NoteCardActions.tsx` — `ActionBtn`, `PrimaryActions` (stopka i arkusz), `MoreActions` (rozwinięcie i arkusz), kopiuj Markdown.
+- `src/components/NoteCardDialogs.tsx` — `ActionSheet`, `ImagePreviewDialog`, `DeleteNoteDialog`.
+- `src/components/NoteEditor.tsx` — edytor w kaflu i w oknie (`NoteEditSession` z `useNoteEditSession`).
+- `src/hooks/useNoteEditSession.ts` — sesja edycji: stan, `handleEditKeyDown`, `handleFormatInsert`, autozapis, `commitDraft`, `begin`.
+- `src/hooks/useLiveNoteText.ts` — tekst peera w otwartym polu: zdalna zmiana → `rebaseNoteTextEdit` → wstawienie do szkicu z zachowaniem zaznaczenia.
+- `src/hooks/useNoteImages.ts` — `handleImageUpload`, `handleEditPaste`, `addDrawing`, `removeImage` (przez `prepareImage` i `imageStore`; usuwanie zapisuje poprzednią listę dla „Cofnij”).
+- `src/hooks/useCardMotion.ts` — przechył, `cardVariants`, `pinFx`, `stampKey`.
+- `src/hooks/useCardGestures.ts` — gesty dotykowe (`useDragControls`, `touch-action: pan-y`, próg 110 px albo 60 px przy szybkim ruchu), długie przytrzymanie, przechył myszą.
+- `src/hooks/useOriginFromTile.ts` — origin animacji okna z kafla; wspólny z czytnikiem.
+- `src/lib/swipeHint.ts` — `showSwipeLabels`, `countSwipe`, klucz `kaczy.swipeHints.v1` (maks. 3 podpisy).
+- `src/components/AddNoteBar.tsx` — kompozytor (zwinięty pasek, pole treści, „Odłóż”, `handleContentPaste`).
+- `src/components/TitleField.tsx` — pole tytułu jako `textarea` z automatyczną wysokością.
+
+**Index i hooki widoku:**
+- `src/hooks/useReaderNav.ts` — czytnik: `previewId`, `readerId`, `readerNote`, `readerSteps`, `closeReader`, `stepReader`, `editFromReader`.
+- `src/hooks/useSelection.ts` — `selectedIds`, `selectionMode`, `clearSelection`; zmiana widoku, etykiety lub folderu zdejmuje zaznaczenie.
+- `src/hooks/useSelectionGestures.ts` — klik, Shift-zakres, Ctrl/Cmd+A (nie działa przy otwartym oknie, czytniku, prezentacji ani w kalendarzu, grafiku i nauce).
+- `src/hooks/useAchievementToasts.ts` — pieczątka odznaki albo paczkowany cichy toast „Nowe odznaki: N” (stałe `id`); „Zobacz” otwiera Statystyki.
+- `src/hooks/useLaunchIntents.ts` — raz przy starcie: udostępnianie (`/share`, `?inbox=`), skróty PWA (`?new=1`, `?new=list`, `?szukaj=1`); parametr znika z adresu.
+- `src/hooks/useBulkNoteOps.ts` — `restoreSelected`, `pinSelected`, `moveSelectedToFolder`, `labelSelected`, `moveToColumn`, `mergeSelected`.
+- `src/hooks/useWikiLinkIndex.ts` — `allNotesForLinks`, `knownTitles`, `wikiIndex` (stabilne przez `useStableByKey` z `src/hooks/useLatestRef.ts`).
+- `src/hooks/useNoteActions.ts` — kosz, archiwum, kolor.
+- `src/hooks/useFilteredNotes.ts` — typ `View`, `sortNotes`, filtry, `filterNotes`.
+- `src/components/TrashConfirmDialogs.tsx` — `DeleteForeverDialog`, `EmptyTrashDialog`.
+- `src/components/sidebar/sidebarItems.ts` — pozycje paska bocznego.
+- `src/components/BulkActionBar.tsx` — pasek zbiorczy z „Scal”.
+- `src/lib/mergeNotes.ts` — `planMerge` (czysta funkcja scalania).
+- `src/lib/readerStep.ts` — `readerNeighbors(ids, current)`.
+- `src/components/NoteReader.tsx` — czytnik (`onStep`, `canPrev`, `canNext`, sekcja „Pola”, kopiuj Markdown/tekst).
+- `src/lib/noteMarkdown.ts` — `copyNoteToClipboard(note, "markdown" | "text")`, eksport Markdown i ZIP.
+
+**Lista, widok, wyszukiwanie:**
+- `src/components/ChecklistEditor.tsx` — `canMove(id, dir)`, przyciski przesuwania; przesuwanie przez `moveItem`.
+- `src/components/NoteGrid.tsx` — `DENSITY_GAPS` (gęstość w jednej tabeli).
+- `src/components/ViewControls.tsx` — grupa trzech ikon w nagłówku.
+- `src/components/AppHeader.tsx` — nagłówek (`app-header`, `app-title`).
+- `src/components/NoteGroupSection.tsx` — nagłówek grupy, licznik jako `stamp-tag`.
+- `src/components/EmptyState.tsx` — `HEADINGS` (krótkie etykiety) i `DESCRIPTIONS` (zdania z następnym krokiem).
+- `src/lib/htmlToMarkdown.ts` — `htmlToMarkdown(html)` (DOMParser, wybrane znaczniki).
+- `src/lib/quickCapture.ts` — `scanField`, `applyCapture`, `PREPOSITION_BEFORE_RE`.
+- `src/lib/parkedDrafts.ts` — `addParked`, `removeParked`, `parkedLabel`, `PARKED_MAX` = 20; klucz `kaczy.drafts.v1`.
+- `src/lib/shareInbox.ts`, `src/lib/shareTarget.ts`, `public/sw-share.js` (przechwytuje `POST /share`, cache `share-inbox-v1`), `public/manifest.webmanifest` (`shortcuts`, `share_target`).
+- `src/lib/searchHighlight.ts`, `src/lib/searchTerms.ts`, `src/components/SearchMarks.tsx`, `src/components/SearchBar.tsx`, `src/lib/searchQuery.ts` (`fold`, `parseSearchQuery`, `matchesProp`).
+- `src/lib/skins.ts` — `data-skin` na `<html>` (domyślnie `zeszyt`).
+
+**Właściwości (pola własne):**
+- `src/lib/noteProps.ts` — `PropDef`, `PropType` (`text | number | date | select`), `cleanPropDef(s)`, `cleanNoteProps`, `parsePropInput`, `propDisplayText`, `comparePropsForSort`, `filledPropEntries`, `PROP_LIMITS`.
+- `src/lib/yjsStore.ts` — mapa `propDefs` w korzeniu dokumentu, pole `props` na notatce, `applyPropsDiff`, `upsertPropDef`, `deletePropDef`.
+- `src/hooks/useNotes.ts` — `Note.props`, `propDefs`, `addPropDef`, `updatePropDef`, `deletePropDef`.
+- `src/components/NoteTable.tsx` — kolumny pól, `PropCell`.
+- `src/components/PropDefsDialog.tsx` — okno „Pola notatek” (leniwe).
+- `src/lib/sortOptions.ts` — jedna lista opcji sortowania dla menu i arkusza telefonu.
+- `src/lib/import/markdown.ts` (`parsePropsFrontmatter`), `src/lib/import/commit.ts` (`inferPropType`, `resolvePropDefs`, `undoImport`).
+
+### Jak działa i dlaczego
+
+- **Stan w kafelku przez hooki, nie props.** Logika kafla jest podzielona na hooki (`useNoteEditSession`, `useCardMotion`, `useCardGestures`, `useNoteImages`), a komponenty (`NoteCardBody`, `NoteCardActions`, `NoteCardDialogs`, `NoteEditor`) dostają wartości przez props. Jedna sesja edycji obsługuje kafel i pełne okno, więc rozwinięcie nie zmienia ścieżki zapisu.
+- **Hook sesji trzyma szkic** (`draftRef`, `versionSavedRef`), bo `commitDraft` jest wołane z cleanupu przy odmontowaniu. `begin()` bierze treść z `beginNoteTextEdit`, a nie z `note`, żeby pokazać to, co widzi peer.
+- **Obrazy:** skalowanie do 2 MB (`prepareImage`), bajty w `imageStore`, do notatki trafia klucz SHA-256. Obrazy, których nie da się przeskalować, są liczone w jednym komunikacie.
+- **Gest startuje ręcznie** (`useDragControls`) poza uchwytem przeciągania należącym do dnd-kit. Kosz bez gestu, żeby przypadkowy ruch nie usuwał. Archiwizacja gestem idzie przez `runWithoutConfirm` — jest odwracalna „Cofnij”.
+- **Origin animacji okna** to środek kafla. Element okna trzymany w stanie, nie w `useRef`: treść `Dialog` montuje się w portalu po otwarciu. Bez `layoutId`, bo kolidowałoby z dnd-kit.
+- **Czytnik i zaznaczenie** korzystają z widocznej listy (`visibleNotes`), nie z wszystkich notatek; notatka spoza listy nie ma sąsiadów.
+- **Share Target** działa w dwóch etapach, bo POST nie ma gdzie wylądować: SW odkłada pliki w cache i przekierowuje na `/share?inbox=<id>`, aplikacja odbiera je po starcie. Meta zapisywana ostatnia — przerwany zapis nie daje notatki bez plików.
+- **Scalanie** jest funkcją czystą (`planMerge`), więc odmowa i wynik są testowane bez UI.
+- **Właściwości:** definicja w `propDefs` (klucz = id), wartość w `props` notatki (klucz = id definicji). Zmiana nazwy pola nie rusza wartości. Zapis tylko różnic. Walidacja tym samym `clean*` przy odczycie, przywracaniu kopii i wejściu z komórki; zły wpis jest pomijany.
+- **Notatka prywatna** nie dostaje właściwości: nie ma ich w szyfrogramie, zapis jest pomijany w `applyPatch`.
+- **Lista robocza szkiców** ma osobny klucz, nie rozszerza `kaczy.draft.v1`, więc starsze wersje i przywracanie szkicu działają jak dawniej.
+
+### Ograniczenia i pułapki
+
+- Kafel: przeciąganie kolejności tablicy jest w `useNoteDnd` (nie w kaflu); na telefonie kolumny tablicy są poza ekranem przy 390 px.
+- Przechył 3D i `isTouch` liczone przy renderze przez `matchMedia`; zmiana urządzenia w trakcie sesji nie jest wykrywana.
+- Edytor: `NoteEditor` czyta `session` przez destrukturyzację — nowe pole sesji trzeba dopisać w tym pliku.
+- Dodanie akcji kafla wymaga zmiany w `NoteCardActions.tsx` (w obu miejscach: stopka/arkusz i „Więcej”).
+- Wklejanie zrzutu do pola treści nie ma e2e; „Dodaj obrazek” jest w menu „Więcej”, nie na pasku kafla.
+- Kompozytor: `htmlToMarkdown` nie obsługuje tabel, zagnieżdżonych list i obrazów; działa tylko w kompozytorze nowej notatki, nie w edytorze.
+- Kompozytor: „Spotkanie w piątek” w tytule nie ustawi przypomnienia (przyimek przed datą); „Zadzwonić jutro 9:00” w tytule nadal ustawia.
+- Lista robocza i licznik szkiców są lokalne dla przeglądarki; nie synchronizują się.
+- Czytnik: notatka otwarta z linku spoza bieżącej listy nie ma sąsiadów — krok nic nie robi.
+- Udostępnianie z plikiem wymaga aktywnego SW; po aktualizacji SW pierwsze udostępnienie z plikiem może trafić na 405.
+- Wyszukiwanie: na telefonie są dwa pola `input[type=search][aria-label="Szukaj w notatkach"]` (jedno ukryte). Testy muszą brać widoczne (`offsetParent !== null`).
+- Właściwości: edycja tylko w tabeli (od `md`) i w czytniku; typ pola jest stały po utworzeniu; usunięcie opcji nie kasuje wartości, które jej używały.
+- Właściwości: z `props` w imporcie nie idzie pojedynczy wiersz `*Pole: …*` — tylko frontmatter ZIP-a.
+- Scalanie nie przenosi właściwości ani kolorów; wikilinki do scalonych tytułów po wyrzuceniu do kosza przestają wskazywać na żywą notatkę.
+- Eager bundle: właściwości podniosły próg; ostatni pomiar 392,4 KB przy progu 393 KB.
+
+### Testy
+
+- Jednostkowe: `src/lib/searchHighlight.test.ts`, `src/lib/readerStep.test.ts`, `src/lib/mergeNotes.test.ts` (14), `src/lib/quickCapture.test.ts` (38), `src/lib/parkedDrafts.test.ts`, `src/lib/htmlToMarkdown.test.ts`, `src/lib/swipeHint.test.ts`, `src/lib/shareInbox.test.ts`, `src/lib/shareTarget.test.ts`, `src/lib/manifest.test.ts`, `src/lib/noteProps.test.ts`, `src/lib/yjsStore.props.test.ts`, `src/lib/noteSchema.props.test.ts`, `src/lib/searchQuery.test.ts`, `src/lib/import/markdown.test.ts`, `src/lib/import/commit.test.ts`, `src/lib/achievements.test.ts`, `src/lib/achievementStamp.test.ts`, `src/components/EmptyState.copy.test.ts` (12), `src/lib/exportZip.test.ts`.
+- E2E (chromium, z zapisanych przebiegów): `notes`, `editing`, `editor-keys`, `editor-open`, `reader`, `reader-step`, `wikilinks`, `live-text`, `live-text-focused`, `checklist`, `checklist-move`, `composer`, `quick-capture`, `paste-html`, `parked-drafts`, `card-images`, `card-motion`, `card-copy`, `merge-notes`, `note-props`, `note-props-view`, `search-highlight`, `search-backup`, `share-files`, `board-table`, `mobile`, `mobile-layout`, `touch-targets`, `editor-open`, `note-groups`, `subpages`, `private-notes`, `read-only-note`, `reminder-toast`, `routes`, `pwa`. Ostatnie pełne przebiegi: 365/365 (2026-10-16), później punktowe; przy zmianach z 2026-10-19/20 e2e nie uruchamiano w całości.
+
+### Commity
+
+- Skróty PWA: `c1a431f` (2026-10-15). Kafel, hooki i gesty (etap 4): `1ccb86d`, `3342c00`, `ff09430`, `bea4f33`, `c513247`, `39231e6`, `6ab66bf`, `2141f60`, `a8ae0a5`, `3596e41`, `c55f50e`, `ad2df94`, `7437879`, `53e7886`, `1ca6108`, `b091505`, `1d1811c` (gesty na telefonie, 2026-10-15).
+- Wyszukiwanie: `8f01351` (2026-10-16). Kompozytor i listy: `682f69f`, `4b02b6f`, `86479bf`, `0aa1c77`.
+- Właściwości: `a5976a1`, `fd377a5`, `5bb3966`, `f64dd9d` (2026-10-16).
+- Scalanie: `5f003ca` (2026-10-18). Kopiuj Markdown: `d0c6eed` (2026-10-18).
+- Kompozytor i wygląd (2026-10-19): `6e95430`, `280f294`, `2745eaf`, `d3f446f`, `707e7a0`, `bb48640`, `f5e418c`, `0284db6`.
+- Dopracowanie (2026-10-20): `02c1560`.
 
 ## Wspólne — aktywny wiersz paska bocznego (wygląd)
 
@@ -1324,343 +1042,6 @@ dziecko `span` (`absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-primary`).
 Na telefonie pasek boczny jest arkuszem, a ten sam wiersz wygląda tak samo.
 
 **Testy.** Brak dedykowanego testu wyglądu; Vitest przechodzi (1349). Zrzut jasnego motywu sprawdzony.
-
-## Notatki — grupa widoku w nagłówku (wygląd)
-
-**Co robi.** Trzy ikony po prawej w nagłówku (układ, sortowanie, filtry) siedzą na jasnej kartce z cieniem
-zamiast na szarej plamie. Działanie bez zmian.
-
-**Gdzie jest.** `src/components/ViewControls.tsx`, kontener `div` zwracany przez komponent (klasy `bg-card/80`,
-`border-border/60`, `shadow-elevation-1`). Wstawiany w `AppHeader.tsx`.
-
-**Testy.** Brak dedykowanego testu wyglądu; Vitest przechodzi. Zrzuty sprawdzone w jasnym i ciemnym motywie.
-
-## Notatki — lista robocza szkiców (plan Notatek, etap 3.4)
-
-**Co robi.** W kompozytorze nowej notatki „Odłóż” zapisuje bieżący szkic na listę roboczą i otwiera pusty kompozytor.
-Odłożone szkice są w rzędzie „Odłożone” nad tytułem. Kliknięcie wznawia szkic; jeśli bieżący szkic był rozpoczęty,
-najpierw sam trafia na listę, więc nic nie przepada. „×” usuwa szkic z listy, z „Cofnij”.
-
-**Gdzie jest.**
-- `src/lib/parkedDrafts.ts`: `addParked` (najnowszy pierwszy, limit `PARKED_MAX` = 20), `removeParked`, `parkedLabel`
-  (tytuł → pierwsza linia treści → pierwsza pozycja listy → „Bez tytułu”, do 40 znaków).
-- `src/components/AddNoteBar.tsx`: klucz `kaczy.drafts.v1`, `readParked` / `writeParked`, `sanitizeDraft` (wydzielone
-  z `readDraft`, używane przez obie ścieżki), `parkCurrent`, `resumeParked`, `deleteParked`, rząd „Odłożone szkice”.
-
-**Jak działa i dlaczego.**
-- Oddzielny klucz, nie rozszerzenie `kaczy.draft.v1`: dotychczasowy szkic bieżący zostaje bez zmian, więc starsze wersje
-  i obecne przywracanie działają jak dawniej.
-- Każdy wpis listy przechodzi przez tę samą walidację co szkic (`sanitizeDraft`); uszkodzone pozycje odpadają po cichu.
-- Zdjęć i plików nie odkłada się (nie są zapisywane w szkicu): „Odłóż” i wznowienie wtedy zgłaszają to komunikatem,
-  zamiast cicho je zgubić.
-- Usunięcie z listy ma „Cofnij”, które przywraca całą listę sprzed usunięcia.
-
-**Ograniczenia.** Lista jest lokalna dla przeglądarki (jak szkic), nie synchronizuje się z innymi urządzeniami.
-Rząd jest widoczny po rozwinięciu kompozytora. Limit 20 szkiców; najstarszy odpada.
-
-**Testy.** `src/lib/parkedDrafts.test.ts` (etykieta, limit, kolejność, usuwanie), `e2e/parked-drafts.spec.ts`
-(odłóż, wznów z odłożeniem bieżącego, przeładowanie, usuń z „Cofnij”). Regresja: `composer.spec.ts`,
-`quick-capture.spec.ts`, `notes.spec.ts`, `paste-html.spec.ts`, `resilience.spec.ts` — 23/23.
-
-**Commit.** `682f69f` (2026-10-16).
-
-## Notatki — wklejanie HTML jako Markdown w kompozytorze (plan Notatek, etap 3.1)
-
-**Co robi.** Wklejenie treści skopiowanej ze strony lub dokumentu w polu treści nowej notatki zamienia formatowanie
-na Markdown i wstawia go w miejscu kursora. Obsługiwane: nagłówki, pogrubienie, kursywa, listy (punktowane i numerowane),
-linki (tylko http/https), kod, bloki kodu, cytaty. Zwykły tekst bez formatowania wkleja się jak dotąd.
-
-**Gdzie jest.**
-- `src/lib/htmlToMarkdown.ts`: `htmlToMarkdown(html)` — DOMParser, tylko wybrane znaczniki, skrypty/style/obrazy pomijane.
-- `src/components/AddNoteBar.tsx`: `handleContentPaste` (kolejność: obrazy → na pustym szkicu adres z tytułem jak dotąd
-  → `pasteHtmlAsMarkdown`).
-
-**Jak działa i dlaczego.**
-- Linki na pustym szkicu zachowują pierwszeństwo: wklejony adres dostaje tytuł strony (istniejąca obsługa).
-- Gdy wynik Markdownu jest taki sam jak zwykły tekst, wklejanie zostaje domyślne — nie ma czego zamieniać.
-- Tylko adresy http/https stają się linkami; `javascript:` i inne schematy zostają zwykłym tekstem.
-- Wklejanie idzie w miejsce kursora (zaznaczony fragment jest zastępowany), a kursor ląduje za wklejonym tekstem.
-
-**Ograniczenia.** Konwerter nie obsługuje tabel (tekst wierszy zostaje w kolejności), zagnieżdżonych list i obrazów
-(świadomie pomijane). Edytor istniejącej notatki (`NoteCard`) nie ma tej zmiany — tylko kompozytor nowej notatki.
-
-**Testy.** `src/lib/htmlToMarkdown.test.ts` (nagłówki, listy, linki, kod, cytat, pomijanie skryptów, pusty wynik),
-`e2e/paste-html.spec.ts` (wklejenie z HTML do kompozytora, w miejscu kursora). Regresja: `e2e/composer.spec.ts`,
-`quick-capture.spec.ts`, `editing.spec.ts`, `editor-keys.spec.ts`, `notes.spec.ts`, `mentions.spec.ts`,
-`slash-menu.spec.ts`, `live-text.spec.ts` — 40/40.
-
-**Commit.** `4b02b6f` (2026-10-16).
-
-## Notatki — przesuwanie pozycji listy przyciskami (plan Notatek, etap 2)
-
-**Co robi.** W edytorze listy każda nieodhaczona pozycja ma dwa przyciski: „Przesuń w górę” i „Przesuń w dół”.
-Wyłączają się na krawędzi listy. Na komputerze pojawiają się po najechaniu lub fokusie, na dotyku są zawsze widoczne.
-
-**Gdzie jest.** `src/components/ChecklistEditor.tsx`: `canMove(id, dir)`, przyciski w wierszu pozycji (obok „Usuń”).
-Przesuwanie używa istniejącego `moveItem`, który zamienia pozycję z sąsiadem wśród nieodhaczonych.
-
-**Jak działa i dlaczego.**
-- Przeciąganie (dnd) odłożone: na dotyku jest zawodne przy przewijaniu, a przyciski są czytelne dla klawiatury
-  i czytnika ekranu. Skrót Alt+↑/↓ działa jak dotąd.
-- Odhaczone pozycje nie mają przycisków: nie są przesuwane, tak jak w `moveItem`.
-- Kolejność zapisuje się przez `onChange` w tym samym polu `checklist`, więc synchronizacja i kopia działają bez zmian.
-
-**Ograniczenia.** Przyciski są tylko w edytorze. Czytnik (podgląd) pozostaje tylko do odhaczania.
-Przeciąganie pozycji jest odłożone; jeśli będzie potrzebne, to osobny etap.
-
-**Testy.** `e2e/checklist-move.spec.ts` (kolejność po przesunięciach, wyłączenie na krawędzi).
-Regresja: `e2e/checklist.spec.ts`, `e2e/reader.spec.ts` przechodzą.
-
-**Commit.** `1ca6108` (2026-10-16).
-
-## Notatki — nawigacja ←/→ w czytniku (plan Notatek, etap 1.1)
-
-**Co robi.** W czytniku (podgląd i pełny ekran) ←/→ przechodzi do poprzedniej i następnej notatki z listy,
-którą widzisz. Na pasku czytnika są też przyciski „Poprzednia notatka” i „Następna notatka” (dla dotyku).
-Na krawędzi listy przycisk jest nieaktywny.
-
-**Gdzie jest.**
-- `src/lib/readerStep.ts`: `readerNeighbors(ids, current)` — sąsiedzi w liście; notatka spoza listy nie ma sąsiadów.
-- `src/components/NoteReader.tsx`: props `onStep`, `canPrev`, `canNext`; efekt ←/→ w obu trybach; przyciski na pasku.
-- `src/pages/Index.tsx`: `readerSteps` (sąsiedzi z `visibleNotes` bez notatek prywatnych), `stepReader`
-  (przełącza w tym samym trybie: podgląd zostaje podglądem, prezentacja prezentacją).
-
-**Jak działa i dlaczego.**
-- Lista to `visibleNotes` — kolejność widoku, bez zwiniętych grup. Krok idzie po tym, co widzisz, a nie po wszystkich notatkach.
-- ←/→ są ignorowane w polach tekstowych, w `SELECT` i przy klawiszach z modyfikatorami (Ctrl, Alt, Shift),
-  żeby nie kraść strzałek z edycji.
-- Notatki prywatne są pomijane w krokach (czytnik ich nie otwiera).
-
-**Ograniczenia.** Notatka otwarta z wyniku innego widoku (np. z linku) nie ma sąsiadów w bieżącej liście i krok nic nie robi.
-
-**Testy.** `src/lib/readerStep.test.ts` (sąsiedzi w środku, na krawędzi, spoza listy, pojedyncza notatka),
-`e2e/reader-step.spec.ts` (Spacja → ←/→ → przyciski, nieaktywne krawędzie, tryb podglądu zostaje).
-
-**Commit.** `86479bf` (2026-10-16).
-
-## Notatki — udostępnianie z innej aplikacji (Share Target)
-
-**Co robi.** „Udostępnij → NOTKI” z innej aplikacji tworzy nową notatkę. Tytuł, tekst i link trafiają do treści (link
-bez dubla, jeśli już jest w tekście). Obrazy stają się zdjęciami notatki, PDF — załącznikiem. Inne typy (np. `.txt`,
-`.docx`) są pomijane, a toast mówi, których nie przyjęto. Po zapisie toast „Zapisano w NOTKACH” z „Otwórz”.
-
-**Gdzie jest.**
-- `public/manifest.webmanifest` → `share_target`: `POST /share`, `multipart/form-data`, pola `title`, `text`, `url`
-  oraz `files` z `accept: ["image/*", "application/pdf"]`.
-- `public/sw-share.js` (dołączany przez `workbox.importScripts` w `vite.config.ts`): przechwytuje `POST /share`,
-  zapisuje pliki do Cache Storage `share-inbox-v1` i przekierowuje (303) na `/share?inbox=<id>`.
-- `src/lib/shareInbox.ts`: `takeShareInbox(id)` — odbiera i kasuje wpis; `importSharedFiles(files, used)` — obrazy
-  przez `prepareImage` + `imageStore.putBlob` (jak w pasku dodawania), PDF przez `addAttachmentFiles`.
-- `src/lib/shareTarget.ts`: `parseShare` (tekst i link z GET, jak wcześniej) — odbiór z pliku przechodzi przez niego
-  z zapisanymi polami.
-- `src/hooks/useLaunchIntents.ts` (wołany z `Index.tsx`): efekt montowania — gałąź `?inbox=` przed starą gałęzią `/share`.
-
-**Jak działa i dlaczego.**
-- Dwa etapy, bo POST nie ma gdzie wylądować: aplikacja może się nie załadować w chwili udostępnienia, a SW jest
-  jedynym miejscem, które przechwyci żądanie. Dlatego SW odkłada dane i przekierowuje, a aplikacja odbiera je po starcie
-  (po `whenNotesReady`).
-- Klucze w cache: `/share-inbox/<id>/f<i>` (bajty pliku, nazwa URI-zakodowana w `x-name`) i `/share-inbox/<id>/meta`
-  (JSON: `title`, `text`, `url`, `files`). **Meta zapisywana ostatnia** — przerwany zapis nie da notatki bez plików.
-- Pliki wędrują tą samą drogą co załączniki z edytora (SHA-256, deduplikacja, limity 10 MB na plik, 100 MB łącznie),
-  więc PDF z udostępnienia jest taki sam jak dodany ręcznie. Obrazy nie idą do załączników — zostają zdjęciami.
-- Wpis w cache jest kasowany przy odbiorze (także gdy plików brakuje), żeby nie zostawał.
-
-**Ograniczenia i pułapki.**
-- Działa tylko w zainstalowanej PWA i tylko z aktywnym SW. Stara wersja SW nie przechwyci POST-a — po aktualizacji
-  pierwsze udostępnienie z plikiem może trafić na zwykłą stronę 405 zamiast do aplikacji (do ponownego udostępnienia).
-- `?inbox=0` oznacza, że SW nie zapisał (np. brak miejsca w cache); aplikacja pokazuje „Nie udało się odebrać”.
-- Maks. 30 plików w jednym udostępnieniu; obrazy powyżej 2 MB są zmniejszane, a jeśli się nie dają — pomijane z toastem.
-- Tekst ucinany do 20 000 znaków, tytuł do 200 (jak przy GET).
-- Dedup `claimShare` dotyczy tylko udostępnień tekstowych; wpis z plikami jest jednorazowy z natury (kasowany).
-
-**Testy.** `src/lib/shareInbox.test.ts` (odbiór, kasowanie, brak meta, ograniczenie liczby plików, rozdział typów),
-`src/lib/manifest.test.ts` (POST, `accept`), `src/lib/shareTarget.test.ts` (tekst bez zmian),
-`e2e/share-files.spec.ts` (PDF → załącznik, zdjęcie → obraz; formularz POST przez SW), `e2e/routes.spec.ts` (tekst z GET).
-
-**Commit.** `0aa1c77` (2026-10-16).
-
-## Notatki — przesunięcie kafla (telefon)
-
-**Co robi.** Na ekranie dotykowym przesunięcie kafla w prawo przypina go (albo odpina przypięty), w lewo archiwizuje
-(w Archiwum: przywraca). Po przypięciu dymek „Przypięto”/„Odpięto” z „Cofnij”, po archiwizacji jak dotąd
-„Zarchiwizowano” z „Cofnij”. Kosz nie ma gestu — jest w arkuszu akcji „⋯”, żeby przypadkowy ruch kciuka niczego nie
-usuwał. Przy pierwszych 3 gestach tło obok ikony podpisuje akcję („Przypnij”, „Archiwizuj”), potem zostają ikony.
-
-**Gdzie jest.**
-- `src/components/NoteCard.tsx`: `canSwipePin`, `canSwipeArchive`, `swipeEnabled`, `handleSwipeEnd`, tła gestu
-  `data-swipe-bg="pin"` / `"archive"` (renderowane tylko w trakcie gestu), stan `swipeLabels`.
-- `src/lib/swipeHint.ts`: `showSwipeLabels`, `countSwipe`, klucz localStorage `kaczy.swipeHints.v1` (liczba
-  wykonanych gestów, maks. `SWIPE_HINT_LIMIT` = 3).
-- `src/components/OnboardingTour.tsx`: opis gestu w kroku 2 na telefonie.
-
-**Jak działa i dlaczego.**
-- Gest startuje ręcznie (`useDragControls`) poza uchwytem przeciągania (`[data-drag-handle]` należy do dnd-kit),
-  `touch-action: pan-y` — przewijanie w pionie działa dalej. Próg 110 px albo 60 px przy szybkim ruchu.
-- Przypięcie przez `onTogglePin` z `NoteViewActions` (ta sama ścieżka co przycisk pinezki, z iskrą `markPinned`);
-  archiwizacja przez `runWithoutConfirm` — gest jest odwracalny „Cofnij”, więc bez okna potwierdzenia.
-- Kierunki: w Archiwum tylko w lewo (przywróć), w Koszu brak gestu, w trybie zaznaczania i w edycji brak gestu.
-- Licznik podpisów czytany na starcie gestu, liczony przy wykonanym geście (nie przy cofniętym w połowie).
-
-**Ograniczenia i pułapki.**
-- Licznik jest na urządzeniu (localStorage), nie w synchronizacji.
-- Na tablicy pierwsza kolumna to „Przypięte” — w testach na 390 px kolumny dalej są poza ekranem.
-
-**Testy.** `src/lib/swipeHint.test.ts`, `e2e/board-table.spec.ts` („dotyk: przesunięcie kafla w prawo przypina, w
-lewo archiwizuje; podpisy tylko na początku”, „przytrzymanie uchwytu … ” — ruch na uchwycie nie przypina ani nie
-archiwizuje).
-
-**Commit.** `1d1811c` (2026-10-15).
-
----
-
-## Notatki — otwarcie pełnego edytora z kafla
-
-**Co robi.** Pełny edytor (na telefonie każde otwarcie notatki, na komputerze „Pełny ekran”) rośnie z kafla, który
-stuknięto, i przy zamknięciu do niego wraca — zamiast pojawiać się na środku ekranu. U góry okna jest pasek koloru
-notatki, jak na kaflu. Tytuł i pasek narzędzi tworzą nagłówek, który dostaje cień dopiero wtedy, gdy treść pod nim
-jest przewinięta.
-
-**Gdzie jest.**
-- `src/hooks/useOriginFromTile.ts`: `useOriginFromTile(panel, noteId, active, cssScale)` — wspólny z czytnikiem
-  (`NoteReader.tsx`, wcześniej lokalna funkcja).
-- `src/components/NoteCard.tsx`: stan `editorPanel` (ref-callback na `DialogContent`), `editorScrolled`,
-  `onScrollCapture` na oknie, nagłówek `data-editor-header` / `data-scrolled` w `renderEditor(true)`,
-  `data-note-color` na oknie.
-
-**Jak działa i dlaczego.**
-- Origin transformacji = środek kafla (`[data-note-id-wrap]`) we współrzędnych okna. Okno animuje `tw-animate-css`
-  (`ui/dialog.tsx`), więc hook nadpisuje w stylu zmienne `--tw-enter/exit-scale` (0,9) i zeruje
-  `--tw-enter/exit-translate-x/y` — okno rośnie z kafla zamiast wjeżdżać z góry. Bez `layoutId`, bo wspólny układ z
-  kartą gryzłby się z dnd-kit.
-- Element okna trzymany w stanie, nie w `useRef`: treść `Dialog` montuje się w portalu Radix render po otwarciu,
-  więc zwykły ref był pusty w chwili pomiaru.
-- Cień: zdarzenie `scroll` nie bąbelkuje, więc `onScrollCapture` na oknie łapie przewinięcie każdego przewijanego
-  elementu (pole treści, lista, podgląd); nagłówek jest `sticky`, gdy przewija się samo okno.
-- Pasek koloru to ta sama reguła `[data-note-color]` / `--note-ink` co na kaflu (3 px tła u góry).
-
-**Ograniczenia i pułapki.**
-- Kafel poza ekranem (np. otwarcie z palety lub z innego widoku) — okno rośnie ze środka.
-- Przy ograniczonym ruchu działa jak dotąd (animacje okien wyłącza globalne ustawienie).
-
-**Testy.** `e2e/editor-open.spec.ts` (origin, brak przesunięcia, skala, kolor, cień po przewinięciu i znika po powrocie
-na górę), `e2e/reader.spec.ts` (czytnik na wspólnym hooku), `e2e/mobile.spec.ts`, `e2e/editing.spec.ts`.
-
-**Commit.** `b091505` (2026-10-15).
-
----
-
-## Notatki — właściwości notatek (4b)
-
-**Co robi.** Własne pola przy notatkach, jak w Notionie: tekst, liczba, data albo wybór z listy opcji. Pola zarządza się
-oknem „Pola” nad tabelą (dodaj, zmień nazwę, zmień opcje wyboru, usuń). Wartości wpisuje się prosto w komórki
-tabeli — kolumna na każde pole, przed „Zmieniono”. Wartości zostają po odświeżeniu i synchronizują się między
-urządzeniami.
-
-**Gdzie jest.**
-- `src/lib/noteProps.ts`: typy `PropDef`, `PropType` (`text | number | date | select`), `PropValue`, `NoteProps`;
-  `cleanPropDef`, `cleanPropDefs`, `cleanNoteProps`, `parsePropInput`, `propValueFor`, `propDisplayText`,
-  `withPropValue`, `propNameTaken`, `makePropDef`; limity w `PROP_LIMITS`.
-- `src/lib/yjsStore.ts`: mapa `propDefs` (korzeń dokumentu), pole `props` na notatce, `applyPropsDiff`,
-  `plainPropsFromY`, `projectPropDefs`, `upsertPropDef`, `deletePropDef`, `replaceAll(…, propDefs)`.
-- `src/hooks/useNotes.ts`: `Note.props`, stan `propDefs` (obserwator `yjsStore.propDefsMap`), akcje `addPropDef`,
-  `updatePropDef`, `deletePropDef`.
-- `src/components/NoteTable.tsx`: kolumny pól w nagłówku i `PropCell` (edycja na miejscu).
-- `src/components/PropDefsDialog.tsx`: okno „Pola notatek” (lazy, `Index.tsx`).
-- `src/pages/Index.tsx`: przycisk „Pola (n)” nad tabelą, `onUpdate={updateNote}`.
-- `src/lib/noteSchema.ts`: `props` w `noteSchema`, `propDefs` w `fullBackupSchema`.
-- `src/lib/exportNotes.ts`: `buildFullBackupWithReport` zapisuje `propDefs` (tylko gdy są), `restoreFullBackup`
-  przekazuje je do `replaceAll`.
-
-**Jak działa i dlaczego.**
-- **Dwa miejsca danych.** Definicja żyje w mapie `propDefs` w korzeniu Y.Doc (klucz = id, pola: `name`, `type`,
-  `options`, `order`). Wartość żyje w `props` (Y.Map) konkretnej notatki, klucz = id definicji. Dzięki temu dwie
-  równoległe zmiany różnych pól tej samej notatki się łączą (CRDT na kluczach), a zmiana nazwy pola nie rusza
-  wartości — wiążą się przez id, nie przez nazwę.
-- **Zapis tylko różnic.** `applyPropsDiff` zmienia klucze, które się zmieniły, i kasuje te, których nie ma w nowym
-  słowniku — jak checklista. Pusta mapa po wyczyszczeniu wszystkich pól jest kasowana z projekcji (`props` znika).
-- **Walidacja trzy razy tak samo.** Ten sam `cleanPropDef`/`cleanNoteProps` działa przy odczycie z dokumentu (może
-  go zmienić peer), przy przywracaniu kopii i przy wejściu z komórki. Zły wpis jest pomijany, nie unieważnia notatki.
-- **Liczba** przyjmuje przecinek i kropkę, pokazuje się z przecinkiem (`propDisplayText`). **Data** to tylko
-  prawdziwa data `YYYY-MM-DD` (28.02 OK, 29.02 w nie-przestępnym roku odrzucone). **Wybór** przyjmuje tylko opcje
-  z listy.
-- **Usunięcie pola** kasuje definicję i jego wartości we wszystkich notatkach w jednej transakcji. Dlatego okno
-  pyta w linii („Usunąć pole … i jego wartości?”) zamiast od razu usuwać.
-- **Kopia zapasowa:** sekcja `propDefs` jest opcjonalna (jak `shifts`/`study`), więc wersja `version: 3` bez zmian.
-  Kopia bez pól nie ma sekcji — wygląda jak dawniej. Stara aplikacja ignoruje nieznane pola.
-- **Notatka prywatna** (`locked`) nie dostaje właściwości: nie ma ich w szyfrogramie, więc zapis do niej jest po
-  cichu pomijany w `applyPatch`, a projekcja nie zwraca `props`. Komórki takiej notatki są tylko do odczytu (pusta).
-
-**Ograniczenia i pułapki.**
-- **Edycja tylko w tabeli** (widok „Tabela”, od `md`). Na telefonie kolumny są ukryte, więc tam pól nie wpiszesz —
-  czytnik i edytor nie mają jeszcze sekcji właściwości.
-- Typ pola jest stały po utworzeniu (zmiana typu wymagałaby konwersji wartości).
-- Usunięcie opcji z listy nie kasuje wartości, które jej używały — taka wartość wyświetla się jako pusta (nie da się jej
-  już wybrać), ale zostaje w dokumencie do czasu wyczyszczenia.
-- Limity: 30 pól, nazwa 40 znaków, tekst 500, 20 opcji po 40 znaków, liczba do ±10¹².
-- Próg `eagerJsGzip` w `e2e/bundle.spec.ts` podniesiony z 376 do 384 KB (zmierzone 380 KB po tej funkcji — koszt
-  głównie w eager `NoteTable`/Yjs); do odzyskania przy LazyMotion i deduplikacji Radix.
-
-**Testy.** `src/lib/noteProps.test.ts` (walidacja, formatowanie, nazwy), `src/lib/yjsStore.props.test.ts` (zapis,
-patch, łączenie równoległych zmian, notatka prywatna, usunięcie pola, `replaceAll`, synchronizacja),
-`src/lib/noteSchema.props.test.ts` (czyszczenie w kopii, stara kopia bez sekcji), `e2e/note-props.spec.ts` (dodanie
-pola i wartość po odświeżeniu, walidacja liczby i wybór z listy, usunięcie z potwierdzeniem), `e2e/bundle.spec.ts`
-(budżet JS).
-
-**Commit.** `a5976a1` (2026-10-16).
-
----
-
-- **Eksport.** Markdown (`exportToMarkdown`) dostaje wiersz `*Pole: wartość · …*` pod przypomnieniem, ZIP (`noteToMarkdownFile`, `buildNotesZip`, `downloadNotesZip`) klucz frontmatter `props` z mapą JSON (poprawny YAML). Jeden klucz, a nie klucz na pole, bo nazwa pola (np. `title`) zderzyłaby się z kluczami importu. Pola puste pomijane, kolejność jak w tabeli, liczby z przecinkiem jak w UI (`filledPropEntries` w `noteProps.ts`). Import czyta ten klucz z powrotem (patrz „Import z ZIP-a” niżej).
-  Testy: `exportZip.test.ts`, `noteProps.test.ts`.
-
-**Import z ZIP-a.** Pola z frontmattera `props` wracają do właściwości przy imporcie Markdown. Pole dopasowuje się do
-istniejącej definicji po nazwie (bez wielkości liter i spacji na brzegach). Nieznane pole powstaje na nowo, o ile
-mieści się w limicie 30 pól; typ wybiera się z wartości: wszystkie liczby (także z przecinkiem) → Liczba, wszystkie
-`YYYY-MM-DD` → Data, w pozostałych przypadkach → Tekst. Pola typu Wybór nie da się wywnioskować, więc wartość trafia
-tylko do istniejącej definicji wyboru i tylko wtedy, gdy opcja jest na liście; inaczej jest pomijana. Import tworzy
-definicje przed notatkami i zapisuje wartości tą samą walidacją co UI (`parsePropInput`). Cofnięcie importu usuwa
-utworzone przez niego definicje, ale tylko te, których żadna notatka nie używa (`ImportResult.createdPropDefIds`).
-
-- `src/lib/import/markdown.ts`: `parsePropsFrontmatter` (JSON → mapa nazwa → wartość; zły JSON, tablica i wartości
-  innych typów są pomijane; klucz `__proto__` odrzucany), `parseMarkdownNote` dokłada `props` tylko gdy są.
-- `src/lib/import/types.ts`: `ParsedNote.props?: Record<string, PropValue>` (klucz to nazwa pola, nie id).
-- `src/lib/import/commit.ts`: `inferPropType`, `resolvePropDefs`, obsługa `props` w `commitImportPlan`, usuwanie w
-  `undoImport`.
-- `src/lib/noteProps.ts`: `propNameKey` (wspólne porównanie nazw), `findPropDefByName`.
-
-Import nie zmienia ani nie usuwa istniejących pól — dopisuje tylko brakujące definicje i wartości notatek importowanych.
-
-  Testy: `src/lib/import/markdown.test.ts` (parser i pełny obieg eksport → parser), `src/lib/import/commit.test.ts`
-  (dopasowanie po nazwie, typy, opcje wyboru, cofnięcie, pole użyte poza importem).
-
-**Sortowanie i filtr po polach.** Nagłówek kolumny pola sortuje tabelę (`SortKey` = `prop:<id>`). Menu „Sortuj wg”
-na komputerze i sekcja „Sortuj wg” w arkuszu „Widok i kolumny” na telefonie biorą opcje z jednego miejsca
-(`src/lib/sortOptions.ts`). Puste wartości są zawsze na końcu, w obu kierunkach (`comparePropsForSort` w
-`noteProps.ts`); liczby porównuje jak liczby, tekst z polskim porządkiem. Preferencja wskazująca usunięte pole
-wraca do sortowania po dacie zmiany (`useFilteredNotes.ts`, `sortNotes`).
-
-**Filtr `pole:`.** `pole:Nazwa=wartość` (wartość ze spacją w cudzysłowie: `pole:"Status=w toku"`),
-`pole:Nazwa` znaczy „pole ma jakąkolwiek wartość”, `-pole:…` to negacja. Nazwa dopasowuje się bez wielkości
-liter i ogonków; wartość też, a przecinek i kropka w liczbach są równoważne. Parser i dopasowanie: `searchQuery.ts`
-(`parseSearchQuery`, `matchesProp`); definicje idą `propDefs` przez `useFilteredNotes` → `searchNotes` →
-`matchesClauses`. Nieznana nazwa nie pasuje do niczego (a `-pole:` przepuszcza wszystko).
-
-**Telefon.** W tabeli pod tytułem jest wiersz „Nazwa: wartość · …”, widoczny tylko poniżej `md` (`NoteTable.tsx`).
-Czytnik ma sekcję „Pola” pod załącznikami (`NoteReader.tsx`): każde pole z definicji, także puste, z tym samym
-`PropCell` co w tabeli, więc wartości da się zmienić bez wchodzenia w kartę. Escape w polu tylko cofa edycję
-(jak w tabeli), czytnik zamyka przycisk „Zamknij”. Pusta wartość w tabeli i w czytniku pokazuje „—”.
-
-**Ograniczenia i pułapki.** Sortowanie po polu obowiązuje we wszystkich widokach z listą, nie tylko w tabeli. Sekcja
-"Sortuj wg" w arkuszu telefonu pojawia się tam, gdzie pokazuje się menu sortowania (`groupable` w `ViewSheet.tsx`).
-Import pól z ZIP-a działa (patrz wyżej). Z `props` w imporcie Markdown nie idą pola z pojedynczego pliku `*Pole: …*`
-(wiersz eksportu Markdown) — tylko frontmatter ZIP-a.
-
-**Testy.** `src/lib/searchQuery.test.ts` (operator `pole:`), `src/lib/noteProps.test.ts` (`comparePropsForSort`,
-`filledPropEntries`), `e2e/note-props-view.spec.ts` (sortowanie i filtr na komputerze; wartości pod tytułem,
-edycja w czytniku i sortowanie w arkuszu na telefonie), `e2e/note-props.spec.ts` (istniejący), `e2e/bundle.spec.ts`
-(budżet wejściowego JS).
-
-**Commit.** `a5976a1` (2026-10-16) — pola i tabela; eksport MD/ZIP `fd377a5` (2026-10-16); sortowanie, filtr i telefon: `5bb3966` (2026-10-16); import pól z ZIP-a `f64dd9d` (2026-10-16).
 
 ## Grafik — stan aktualny (zmiany, rachunek, eksporty, wiele grafików)
 
@@ -3444,22 +2825,6 @@ lub grupę”.
 - **Commit:** 84490c6 (2026-10-18), scalone do master.
 - **Budżet:** wejściowy JS 381 KB gzip, próg w `e2e/bundle.spec.ts` 384 KB — zapas mały.
 
-## Notatki — scalanie zaznaczonych notatek (2026-10-18)
-
-- **Co robi:** przycisk „Scal zaznaczone w jedną notatkę” na pasku zbiorczym (tylko lista). Pierwsza notatka na liście dostaje treść pozostałych (z pogrubionym tytułem, oddzielone `---`), etykiety, obrazy, załączniki, checklisty i najwyższy priorytet. Termin zostaje pierwszej, a gdy go nie ma — najwcześniejszy z pozostałych. Pozostałe idą do kosza. „Cofnij” przywraca pola i notatki.
-- **Gdzie jest:** `src/lib/mergeNotes.ts` (`planMerge`, czysta funkcja), `src/hooks/useBulkNoteOps.ts` (`mergeSelected`), `src/components/BulkActionBar.tsx` (prop `onMerge`, ikona `Combine`), `src/pages/Index.tsx` (podpięcie).
-- **Odmowa z komunikatem:** mniej niż 2 notatki, notatka prywatna, tylko do odczytu, archiwum lub kosz, podstrony, otwarty edytor celu.
-- **Ograniczenia i pułapki:** scalanie nie przenosi właściwości (`props`) ani kolorów pozostałych notatek. Wikilinki do scalonych tytułów po wyrzuceniu do kosza przestają wskazywać na żywą notatkę.
-- **Testy:** `src/lib/mergeNotes.test.ts` (14), `e2e/merge-notes.spec.ts` (2).
-- **Commit:** 5f003ca (2026-10-18), scalone do master.
-
-## Notatki — kopiuj jako Markdown w menu kafla (2026-10-18)
-
-- **Co robi:** w menu „Więcej opcji” kafla (także w arkuszu na telefonie) akcja kopiuje notatkę jako Markdown. Ukryta dla notatek prywatnych.
-- **Gdzie jest:** `src/components/NoteCardActions.tsx` (`MoreActions`), używa istniejącego `copyNoteToClipboard`.
-- **Testy:** `e2e/card-copy.spec.ts`.
-- **Commit:** d0c6eed (2026-10-18), scalone do master.
-
 ## Wspólne — kontrast tokenów i skala nagłówków (plan wizualny, fazy A i B, 2026-10-18)
 
 - **Co robi:** czerwony tekst w ciemnym Zeszycie czytelny (≥4,5:1); krawędź pól ≥3:1 w ciemnym motywie (1.4.11); podpowiedzi w polach szare, z tokenu; priorytety notatek w ciemniejszym odcieniu na jasnym tle, jaśniejszym w ciemnym; tytuł strony najgrubszy (700, ciaśniej), podtytuły 600; etykiety sekcji Notatek i „Przypomnienia” na Dziś zdaniem zamiast wersalików, a w Zeszycie z cienką kreską marginesu.
@@ -3684,73 +3049,6 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - **Ograniczenia:** zachowanie stuknięcia bez zmian — arkusz pokazuje się po przytrzymaniu lub z „Więcej → Dodaj…”. Podpowiedź o przytrzymaniu pojawia się po czwartym stuknięciu (jak dotąd).
 - **Testy:** typecheck czysty; pełny Vitest 1409/1409. Sprawdzone wizualnie w przeglądarce (telefon 390 px).
 
-## Notatki — rozpoznawanie fraz w kompozytorze (`quickCapture`, poprawka tytułu, 2026-10-19)
-
-- **Co robi:** w kompozytorze nowej notatki `#etykieta`, `@folder`, `!`/`!!` (priorytet) i frazy daty na końcu pola („jutro 9:00”, „za 2h”, „w piątek”) zamieniają się w cechy notatki, a ich tekst znika z pola.
-- **Gdzie jest:** `src/lib/quickCapture.ts` — `scanField` (rozpoznawanie), `applyCapture` (wycinanie tekstu), `PREPOSITION_BEFORE_RE`.
-- **Jak działa:** data na końcu pola to `DATE_END_RE`. W **tytule** nie jest traktowana jako termin, gdy stoi po przyimku (na, do, w, we, od, o, dla, przed, po). Dzięki temu „Lista na sobotę” zostaje tytułem bez przypomnienia. W **treści** zachowanie bez zmian: „zadzwonić do lekarza jutro 9:00” nadal ustawia przypomnienie i wycina frazę.
-- **Ograniczenia:** „Spotkanie w piątek” w tytule też nie ustawi przypomnienia (świadoma decyzja, plan: `docs/plan-notatki-2026-10-19.md`, opcja A). Tytuł bez przyimka („Zadzwonić jutro 9:00”) nadal zamienia datę w przypomnienie i wycina ją z tytułu.
-- **Błąd naprawiony:** kompozytor zapisywał „Lista na sobotę” jako „Lista na” z przypomnieniem na sobotę.
-- **Testy:** `src/lib/quickCapture.test.ts` (38, w tym trzy nowe dla tytułu). Sprawdzone w prawdziwym Chrome (puppeteer-core, `scratchpad/test-chrome.mjs`): karta ma tytuł „Lista na sobotę”.
-- **Commit:** 6e95430, 2026-10-19.
-
-## Notatki — pole tytułu w kompozytorze to `TitleField` (faza 1 planu Notatek, 2026-10-19)
-
-- **Co robi:** tytuł nowej notatki zawija się na telefonie tak samo jak tytuł w edytorze (wcześniej w kompozytorze był zwykły `<input>`, który przewijał długi tytuł i ucinał jego początek).
-- **Gdzie jest:** `src/components/TitleField.tsx` (komponent) i `src/components/AddNoteBar.tsx` (kompozytor, pole tytułu i fokus przez `titleRef`).
-- **Jak działa:** `TitleField` to `<textarea>` z automatyczną wysokością. Przyjmuje `ref` od rodzica (kompozytor ustawia na nim fokus) i łączy go z własnym refem do pomiaru. `onEnter` dostaje zdarzenie klawisza, więc kompozytor zachowuje skróty: Enter przenosi do treści, Ctrl+Enter zamyka, Ctrl+Shift+Enter zapisuje i zostawia pusty szkic.
-- **Ograniczenia i pułapki:** w DOM pole tytułu to `textarea`, a jego treść liczy się jako tekst. Testy e2e szukające tytułu przez `getByText` mogą trafić w pole, gdy kompozytor jeszcze się zwija. Stąd `getByRole("heading", …)` w `e2e/quick-capture.spec.ts` (Ctrl+Shift+L w edycji).
-- **Testy:** `e2e/quick-capture.spec.ts` (10/10), `e2e/composer.spec.ts`, `e2e/editing.spec.ts`. W prawdziwym Chrome (`scratchpad/test-chrome.mjs`, 390 px): długi tytuł zawija się na co najmniej dwie linie, nie przewija w bok i zapisuje się w całości.
-- **Commit:** 280f294, 2026-10-19.
-
-## Notatki — nagłówek widoku w Zeszycie (faza 2 planu Notatek, 2026-10-19)
-
-- **Co robi:** w stylu Zeszyt (domyślnym) tytuł widoku („Notatki”, „Dziś”, „Długi”…) jest w Fraunces, a pasek nagłówka ma tylko cienką kreskę pod sobą, bez cienia uniesienia. Pozostałe style bez zmian.
-- **Gdzie jest:** `src/components/AppHeader.tsx` (klasy `app-header` na `<header>`, `app-title` na `<h1>`), `src/index.css` (reguły `html[data-skin="zeszyt"] .app-title` i `.app-header` obok `@utility header-glow`).
-- **Jak działa:** `data-skin` na `<html>` jest zawsze ustawiony (domyślnie `zeszyt`, `src/lib/skins.ts`). Dawna reguła `html:not([data-skin]) h1` nigdy nie pasowała, więc Fraunces w nagłówku w ogóle się nie pokazywał. Zastąpiona selektorem `data-skin="zeszyt"` ograniczonym do klas nagłówka, żeby nie zmienić krojów wszystkich `h1` w aplikacji.
-- **Szkło:** klasa `glass` to już tylko pełne tło (bez rozmycia od wcześniejszych zmian), więc nie zmieniałem jej. Usunięto cień uniesienia, a zostaje linia.
-- **Czas przejścia:** nagłówek używa tokenu `duration-base` zamiast `duration-300`.
-- **Pułapki:** reguły z `:not([data-skin])` nie działają w tej aplikacji. Każdy styl dla domyślnego wyglądu pisać jako `[data-skin="zeszyt"]`.
-- **Testy:** w prawdziwym Chrome (`scratchpad/test-chrome.mjs`): tytuł w Fraunces, pasek z samą linią. Vitest 1411/1411. E2E `a11y` 56/56 w pełni. E2E `mobile-layout` 53 zaliczone, 3 niezaliczone: `/praca` przy 320 px jest szersza niż ekran (`chromium`, `iphone-14`, `pixel-7`). Ten sam test nie przechodzi na HEAD przed tą zmianą, więc to osobny, wcześniejszy problem widoku Praca, nie nagłówka.
-- **Commit:** 2745eaf, 2026-10-19.
-
-## Notatki — pasek wyszukiwania: stała etykieta, podpowiedzi filtrów w pustym wyniku (faza 3 planu Notatek, 2026-10-19)
-
-- **Co robi:** pole „Szukaj notatek...” ma stałą etykietę. Dawniej zmieniało ją co 3,2 s („Spróbuj: etykieta:praca” itd.), co było nieczytelne. Podpowiedzi filtrów (`etykieta:`, `ma:`, `starsze:`) pokazują się teraz, gdy wyszukiwanie nic nie znajdzie: w zdaniu pustego wyniku.
-- **Gdzie jest:** `src/components/SearchBar.tsx` (stała `PLACEHOLDER`; usunięte `HINTS`, licznik i interwał), `src/components/EmptyState.tsx` (gałąź `search`, zdanie w opisie).
-- **Jak działa:** placeholder jest stały. Podpowiedzi operatorów z listy usuniętej z pola są w opisie „Brak wyników”, bo tam użytkownik szuka właściwego sposobu. Podpowiedź „Naciśnij / aby wyszukać” usunięta z pola (skrót jest w oknie skrótów).
-- **Pułapki:** na telefonie są dwa pola `input[type=search][aria-label="Szukaj w notatkach"]` — jedno w nagłówku, ukryte na małych ekranach, drugie w treści. Testy muszą brać widoczne (`offsetParent !== null`), inaczej piszą w ukryte pole.
-- **Testy:** `scratchpad/test-chrome.mjs` (w Chrome: placeholder po 3,6 s bez zmiany; pusty wynik zawiera „etykieta:praca” i „ma:przypomnienie”). E2E: `saved-filters`, `search-highlight`, `search-backup` — 6/6. Vitest: patrz wpis commitu.
-- **Commit:** d3f446f, 2026-10-19.
-
-## Notatki — licznik grupy jako pieczątka (faza 4 planu Notatek, 2026-10-19)
-
-- **Co robi:** liczba notatek przy nagłówku grupy („Przypięte”, „Inne”, etykiety) jest pieczątką (obwódka, bez wypełnienia), a nie wypełnioną pigułką. Zgodnie z regułą pieczątek liczniki, które nie są przyciskami, mają wyglądać jak stempel.
-- **Gdzie jest:** `src/components/NoteGroupSection.tsx` — licznik to `<span className="stamp-tag …">`. Styl `.stamp-tag` (obwódka `currentColor`, mono 11 px) już istniał w `src/index.css`.
-- **Jak działa:** pieczątka dziedziczy kolor z nagłówka grupy, więc zmienia się z motywem. Nie ma osobnego koloru: kontrast wynika z tokenów `--foreground` i tła.
-- **Kontrast (zmierzony w Chrome):** jasny motyw 15,54:1 (tło `rgb(252,251,246)`, tekst `rgb(29,33,43)`), ciemny 15,14:1 (tło `rgb(21,17,14)`, tekst `rgb(235,230,224)`). Próg planu: 4,5:1.
-- **Pułapki:** grupy pojawiają się w widoku „Notatki” tylko przy przypiętych notatkach albo ustawionym grupowaniu (`kaczy.viewPrefs.v1`, `groupBy`). W testach ustawiać `groupBy: "label"` przed załadowaniem.
-- **Testy:** `scratchpad/test-chrome.mjs` (Chrome, jasny i ciemny motyw wymuszone przez `kaczy-theme`): jedna pieczątka, zero starych pigułek, kontrast jak wyżej. E2E `note-groups`, `contrast`: 9/9. Vitest 1411/1411.
-- **Commit:** 707e7a0, 2026-10-19.
-
-## Notatki — kafel notatki: promień z tokenu, uniesienie tylko dla myszy (faza 5 planu Notatek, 2026-10-19)
-
-- **Co robi:** kafel notatki ma promień z tokenu `rounded-card` (1 rem, `--r-card`) zamiast `rounded-2xl`. Wizualnie bez zmiany (obie wartości to 16 px). Uniesienie kafla przy najechaniu jest tylko dla wskaźnika myszy, a na telefonie kafel stoi w miejscu.
-- **Gdzie jest:** `src/components/NoteCard.tsx` (klasy kafla), `src/index.css` (`note-shadow` = `--elevation-1`, jeden poziom; uniesienie w `@media (hover: hover) and (pointer: fine)` przy `.note-lift:hover .note-card`).
-- **Jak działa:** cień spoczynkowy to jeden poziom (`--elevation-1`), a `note-shadow-hover` / uniesienie `translate: 0 -2px` działają tylko przy `hover:hover` i `pointer:fine`. Na dotyku hover nie istnieje, więc brak „przyklejonego” uniesienia po stuknięciu.
-- **Czego nie zmieniano:** obramowanie `border-border/50` i 46 innych miejsc z `rounded-2xl` w innych komponentach (osobny, kosmetyczny PR, zob. plan).
-- **Testy:** `scratchpad/test-chrome.mjs` — promień 16 px, `hoverFine=false` i `translate=none` na dotyku, zero poziomego przewijania przy 390 px. E2E `touch-targets`, `card-images`: 8/8. Vitest: patrz wpis commitu.
-- **Commit:** bb48640, 2026-10-19.
-
-## Notatki — puste stany z następnym krokiem (faza 6 planu Notatek, 2026-10-19)
-
-- **Co robi:** każdy pusty widok listy (Notatki, Archiwum, Kosz, Przypomnienia, Kalendarz, Grafik, Dziś, Tydzień, etykieta, folder, Skrzynka) ma nagłówek i jedno–dwa zdania, które mówią, co zrobić dalej. Dawniej większość mówiła tylko, że „coś pojawi się tutaj”.
-- **Gdzie jest:** `src/components/EmptyState.tsx` — słowniki `HEADINGS` i `DESCRIPTIONS` (teraz eksportowane do testów). Komponent `StatusPanel` bez zmian.
-- **Zasady tekstów:** bez wykrzykników, bez przepraszania, zdania w trybie rozkazującym lub z podmiotem „notatka”. Opisane gesty i menu są sprawdzone w kodzie: archiwizacja w lewo (dotyk) i „Archiwizuj” w menu, kosz z 30 dniami, `#etykieta` i `@folder` w kompozytorze, `jutro 9:00` jako przypomnienie.
-- **Czego nie dodano:** przycisków w pustych stanach. Plan mówi „gdzie sensowne”, a tu następny krok to już działanie na kaflu albo w kompozytorze („+”), więc przycisk dublowałby ten sam skrót. Do rozważenia później.
-- **Testy:** `src/components/EmptyState.copy.test.ts` (12: nagłówek i krok w każdym widoku, długość, brak wykrzykników). W Chrome (`scratchpad/test-chrome.mjs`): /kosz, /archiwum, /przypomnienia pokazują nowe zdania. E2E `reminders-calendar`, `search-backup`: 14/14. Vitest: patrz wpis commitu.
-- **Commit:** f5e418c, 2026-10-19.
-
 ## Wspólne — podpowiedź o przytrzymaniu „+” od pierwszego stuknięcia (faza 7 planu Notatek, 2026-10-19)
 
 - **Co robi:** po pierwszym stuknięciu „+” na dolnym pasku pojawia się jednorazowy komunikat: „Przytrzymaj „+”, by od razu dodać listę, zdjęcie, rysunek albo dyktować”. Dawniej pokazywał się dopiero po czwartym stuknięciu, czyli często wcale.
@@ -3767,15 +3065,6 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - **Przyczyna:** „Lista kontrolna” z `whitespace-nowrap` nie mieściła się w czwartej części paska, więc przycisk „Dziennik” wychodził poza ekran o 2 px. Przez to cała strona była szersza od ekranu, a warstwy `fixed` (tło, dolny pasek, nakładki) dziedziczyły tę szerokość.
 - **Testy:** `e2e/mobile-layout.spec.ts`: 12/12 (wszystkie trasy przy 320 i 390 px, iPhone 14 i Pixel 7). Test `e2e/diagnostics.spec.ts`: w tym samym przebiegu sprawdzono tekst notatki przez nagłówek karty, a nie `getByText` (pole tytułu kompozytora ma tę samą treść, póki się zamyka). Vitest 1423/1423.
 - **Commit:** 9a85c10, 2026-10-19.
-
-## Notatki — poprawka pustych stanów i selektorów e2e po pełnym przebiegu (2026-10-19)
-
-- **Błąd z fazy 6, naprawiony:** skrypt zmiany zapisał nowe zdania w `HEADINGS` (nagłówki), a `DESCRIPTIONS` zostały ze starymi tekstami. Teraz nagłówki są krótkimi etykietami („Kosz jest pusty”), a nowe zdania są w `DESCRIPTIONS`. Test `EmptyState.copy.test.ts` pilnuje, że nagłówek to etykieta bez kropki (do 60 znaków).
-- **Skrzynka:** ten sam błąd wpisał nowe zdanie jako nagłówek „Skrzynka jest pusta”; przywrócone.
-- **E2E po zmianie kompozytora (faza 1) i wyszukiwania (faza 3):** testy szukające tytułu przez `getByText` trafiały też w pole tytułu (`textarea` ma tę treść) i w ukryte pole wyszukiwania. Zmienione na `getByRole("heading", …)` oraz `getByRole("searchbox", { name: "Szukaj w notatkach" })`: `live-text`, `live-text-focused`, `pwa`, `qol`, `tabs`, `note-links`.
-- **Wynik:** 20/20 w tych plikach; Vitest 1424/1424; Chrome 30/30.
-- **Nierozwiązane:** budżet wejściowego JS w `e2e/bundle.spec.ts` (385,4 KB gzip przy progu 385 KB). Decyzja o progu należy do właściciela projektu.
-- **Commit:** 0284db6, 2026-10-19.
 
 ## Budżet paczki startowej — próg 386 KB (decyzja właściciela, 2026-10-19)
 
@@ -4276,19 +3565,6 @@ Dział opisany w jednym miejscu; zmiany z przeglądu L1–L20 są już uwzględn
 - `c7736f0`, `9d8e57e`, `22e2495` — trening: katalog i dziennik, przypomnienie i przerwa, wibracja, sprzęt, wykres.
 - `68ac7d9` — poprawka błędu `/cwiczenia` (stabilny odczyt celów diety).
 - `b779947` — poprawki z przeglądu (H2, M2, M3); `1b8bcf8` — niskie punkty L1–L20 (L3, L4, L6, L7, L9).
-
-## Notatki — dopracowanie z planu (2026-10-20)
-
-- **Co zrobiono.** Plan `docs/plan-notatki-2026-10-19.md` sprawdzono punkt po punkcie w kodzie. Większość była już zrobiona
-  (patrz status na górze planu). W tej rundzie zmieniono dwie rzeczy:
-  - `src/components/NoteGrid.tsx`: cztery warunki gęstości (`gap`, `listGap`, `columnGap`, `rowGap`) zastąpiono tabelą
-    `DENSITY_GAPS`. Wygląd bez zmian; kolejna zmiana gęstości jest w jednym miejscu.
-  - `src/components/NoteCard.tsx`: przejście zoomu zdjęcia w kaflu z `duration-300` na token `duration-base`,
-    z `motion-reduce:transition-none`.
-- **Świadomie nie zrobione.** Zdjęcie szkła w nagłówku (`backdrop-filter`) — użytkownik zdecydował „zostaw”.
-  Podział `AddNoteBar.tsx` (763 linie) — ryzyko bez e2e. Zrzuty telefonu — wymagają przeglądarki.
-- **Testy.** Komponenty (25 plików, 161 testów) zielone; typecheck i lint czyste; paczka 391,9 KB przy progu 392 KB.
-- **Commit:** `02c1560` (2026-10-20, Notatki — dopracowanie).
 
 ## Budowa — telefon hurtowni i ostrzeżenie przed kopią (U7, D3, 2026-10-20)
 
