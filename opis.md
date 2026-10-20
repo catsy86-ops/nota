@@ -4188,9 +4188,9 @@ lub grupę”.
   Usunięcie z „Cofnij”, które przywraca odżywkę i jej przypomnienie z kosza.
 - **Gdzie jest.**
   - `src/lib/supplements/model.ts` — typy `Supplement`, `SupplementWhen`, `cleanSupplement` (wejście z dokumentu, kopii i peera),
-    `logKey` / `parseLogKey` (klucz odhaczenia `dzień|id`), `bySupplementOrder`, `nextReminderAt(hhmm, now)`.
+    `logKey` / `parseLogKey` (klucz odhaczenia `dzień|id`), `bySupplementOrder`. Przypomnienie „HH:MM” liczy `nextReminderAt` z `src/lib/timeOfDay.ts` (wspólne z Treningiem).
   - `src/lib/supplements/ySupplements.ts` — `createYSupplements(doc)`: mapy Y `supplements` (id → odżywka) i `supplementLog`
-    (`dzień|id` → true), origin `SUPPLEMENTS_ORIGIN`, `dump()` / `mergeDump()` do kopii.
+    (`dzień|id` → true), origin `SUPPLEMENTS_ORIGIN`, `dump()` / `mergeDump()` do kopii. `getGoals()` zwraca zamrożony obiekt z cache (stabilny dla `useSyncExternalStore`); `restore` pilnuje limitu `DIET_MAX_MEALS` (ponad limit posiłek nie wchodzi, zwraca `false`).
   - `src/lib/supplements/store.ts` — hooki `useSupplements()`, `useSupplementsTaken()` i akcje `addSupplement`,
     `removeSupplement`, `restoreSupplement`, `setSupplementTaken`, `supplementDump`, `mergeSupplementDump`.
   - `src/components/cwiczenia/CwiczeniaView.tsx` — widok, `createSupplement` (dodaje odżywkę i notatkę-przypomnienie),
@@ -4222,7 +4222,7 @@ lub grupę”.
   - Trening i dieta jeszcze nie istnieją (kolejne kroki planu).
   - Kopia: sekcja `supplements` jest opcjonalna; plik sprzed tej zmiany przywraca się bez zmian.
 - **Testy.**
-  - `src/lib/supplements/model.test.ts` (czyszczenie, klucze, kolejność, przypomnienie i `nextReminderAt`).
+  - `src/lib/supplements/model.test.ts` (czyszczenie, klucze, kolejność, przypomnienie; `nextReminderAt` testuje z `lib/timeOfDay.ts`).
   - `src/lib/supplements/ySupplements.test.ts` (dodawanie, duplikaty, odhaczenia, usuwanie z odhaczeniami, śmieci od peera, origin).
   - `src/components/cwiczenia/CwiczeniaView.test.tsx` (pusty stan, grupy i postęp, odhaczenie, formularz, przypomnienie
     i sprzątanie po odrzuconym zapisie). Magazyn i notatki podmienione atrapami.
@@ -4377,10 +4377,10 @@ lub grupę”.
   Na telefonie otwiera systemowe okno udostępniania z plikiem; gdy go nie ma, pobiera plik.
 - **Gdzie jest.**
   - `src/lib/shifts/monthImage.ts` — `monthImageLayout(data, year, month)` (układ siatki i podsumowania; czysty).
-  - `src/lib/shifts/monthImageDraw.ts` — `renderMonthCanvas`, `canvasToPng`, `shareMonthPng` (canvas i udostępnianie).
+  - `src/lib/shifts/monthImageDraw.ts` — `renderMonthCanvas`, `canvasToPng`, `shareMonthPng` (canvas i udostępnianie). Bez `roundRect` (stare przeglądarki) rysuje prostokąt; `revokeObjectURL` po 1 s.
   - `src/components/shifts/ShiftsView.tsx` — `exportImage`, ładowany leniwie (poza paczką startową).
 - **Ograniczenia.** Rysowanie na canvasie nie ma testu jednostkowego (jsdom nie ma canvasa); sprawdzić na telefonie.
-  Obraz jest w jasnych kolorach, niezależnie od motywu. Tylko jeden miesiąc.
+  Obraz jest w jasnych kolorach, niezależnie od motywu. Tylko jeden miesiąc. **Otwarte (L14):** `shareMonthPng` wołane po `await canvasToPng`, więc w części przeglądarek `navigator.share` może odmówić (brak aktywacji użytkownika) i obraz pójdzie po cichu do pobrania.
 - **Testy.** `src/lib/shifts/monthImage.test.ts` (5): początek tygodnia, skróty i kolory, dzień bez wpisu, tytuł i podsumowanie.
 
 ## Grafik — premie w rachunku (2026-10-20, 520e47a)
