@@ -11,7 +11,7 @@ import { holidayName } from "@/lib/shifts/holidays";
 import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
 import { dayCellClass, dayNumberClass, holidayDotClass, holidayNameClass } from "./dayCellStyles";
 import { pluralPl } from "@/lib/plural";
-import type { StudyDayMarks } from "@/lib/study/calendarMarks";
+import { studySummary, type StudyDayMarks } from "@/lib/study/calendarMarks";
 
 /** Ile chipów mieści się w komórce, zanim reszta zwinie się w „+N". */
 const MAX_CHIPS = 3;
@@ -66,14 +66,6 @@ interface DayCellProps {
 }
 
 /** Podsumowanie Pracy dla czytnika i tytułu: „2 wizyty, 1 dostawa”; `null`, gdy nic nie ma. */
-function studySummary(study: StudyDayMarks | undefined): string | null {
-  if (!study || (study.service === 0 && study.delivery === 0)) return null;
-  const parts: string[] = [];
-  if (study.service > 0) parts.push(`${study.service} ${pluralPl(study.service, ["wizyta", "wizyty", "wizyt"])}`);
-  if (study.delivery > 0) parts.push(`${study.delivery} ${pluralPl(study.delivery, ["dostawa", "dostawy", "dostaw"])}`);
-  return `Praca: ${parts.join(", ")}`;
-}
-
 export function DayCell({ day, month, occurrences, titleOf, selected, focused, onSelect, cellRef, shift, study }: DayCellProps) {
   const { setNodeRef, isOver } = useDroppable({ id: `day-drop-${dayKey(day)}`, data: { day } });
   const inMonth = isSameMonth(day, month);
@@ -93,6 +85,7 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
     <div
       ref={(el) => { setNodeRef(el); cellRef?.(el); }}
       role="gridcell"
+      data-day-key={dayKey(day)}
       aria-label={label}
       aria-selected={selected}
       aria-current={today ? "date" : undefined}
@@ -151,7 +144,8 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
               key={`${occ.noteId}-${occ.at}`}
               className={cn(
                 "w-1.5 h-1.5 rounded-full",
-                occ.isSeries && !occ.isNext ? "bg-primary/40" : "bg-primary",
+                // Prognoza serii to pusty krąg, a zapisany termin pełny — różni się kształtem, nie tylko odcieniem.
+                occ.isSeries && !occ.isNext ? "bg-transparent ring-1 ring-primary" : "bg-primary",
               )}
             />
           ))}

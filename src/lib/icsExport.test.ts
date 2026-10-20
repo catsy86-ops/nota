@@ -92,8 +92,9 @@ describe("exportableReminders", () => {
 });
 
 describe("koniec serii w .ics", () => {
-  it("RRULE dostaje UNTIL w UTC", () => {
+  it("RRULE dostaje UNTIL tego samego typu co DTSTART (lokalny, bez Z)", () => {
     const until = new Date(Date.UTC(2026, 11, 31, 22, 59, 59)).getTime();
-    expect(buildIcs([note({ reminderRepeat: "weekly", reminderRepeatUntil: until })], NOW)).toContain("RRULE:FREQ=WEEKLY;UNTIL=20261231T225959Z\r\n");
+    // Strefa testów to Europe/Warsaw: 22:59:59 UTC to 23:59:59 lokalnie, bez „Z”.
+    expect(buildIcs([note({ reminderRepeat: "weekly", reminderRepeatUntil: until })], NOW)).toContain("RRULE:FREQ=WEEKLY;UNTIL=20261231T235900\r\n");
   });
 });

@@ -14,6 +14,7 @@ import { pl } from "date-fns/locale";
 import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences";
 import { nextInSeries, nextOccurrence, seriesDay } from "@/lib/reminderRepeat";
 import { toast } from "sonner";
+import { composeReminderTimestamp } from "@/lib/reminderTime";
 import { dayType, setDayEntry, useShifts } from "@/lib/shifts";
 import { useStudyDayMarks } from "./useStudyDayMarks";
 import { DayDialog } from "@/components/shifts/DayDialog";
@@ -137,10 +138,18 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     };
   }
 
+  /**
+   * Po akcji na terminie jego chip może zniknąć (przeniesiony, pominięty, usunięty),
+   * więc fokus ląduje na komórce dnia, a nie wraca na początek strony (2a planu).
+   */
+  function focusDay(day: Date) {
+    requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-day-key="${dayKey(day)}"]`)?.focus());
+  }
+
   function handleAttach(noteId: string, reminder: number, repeat: ReminderRepeat) {
     const before = previousOf(noteId);
     onSetReminder(noteId, reminder, repeat);
-    toastWithUndo("Termin zapisany", () => onSetReminder(noteId, before.reminder, before.repeat, before.day), { icon: "🔔" });
+    toastWithUndo("Termin zapisany", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base), { icon: "🔔" });
   }
 
   /**
@@ -156,7 +165,11 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     // Pominięcie ostatniego terminu serii kończy ją — nie ma już czego przypominać.
     if (next === null) onSetReminder(noteId, null, "none");
     else onSetReminder(noteId, next, repeat, before.day, undefined);
-    toastWithUndo("Wystąpienie pominięte", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base), { icon: "⏭️" });
+    // Ostatni termin serii: pominięcie ją kończy — komunikat mówi to wprost, nie jak zwykłe pominięcie.
+    const undo = () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base);
+    if (next === null) toastWithUndo("Seria zakończona", undo, { icon: "🏁", description: "To był ostatni termin serii." });
+    else toastWithUndo("Wystąpienie pominięte", undo, { icon: "⏭️" });
+    focusDay(new Date(at));
   }
 
   /**
@@ -179,7 +192,8 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
   function handleClear(noteId: string) {
     const before = previousOf(noteId);
     onSetReminder(noteId, null, "none");
-    toastWithUndo("Termin usunięty", () => onSetReminder(noteId, before.reminder, before.repeat, before.day), { icon: "🔕" });
+    toastWithUndo("Termin usunięty", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base), { icon: "🔕" });
+    focusDay(selectedDay);
   }
 
   // Własny `DndContext`: zagnieżdżony kontekst przechwytuje przeciągnięcia
@@ -194,7 +208,14 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
   function moveToDay(occ: Occurrence, day: Date) {
     const from = new Date(occ.at);
     if (isSameDay(from, day)) return;
-    const to = new Date(day.getFullYear(), day.getMonth(), day.getDate(), from.getHours(), from.getMinutes());
+    // Ta sama godzina może nie istnieć w dniu docelowym (zmiana czasu) — wtedy nie przesuwamy po cichu.
+    const clock = `${String(from.getHours()).padStart(2, "0")}:${String(from.getMinutes()).padStart(2, "0")}`;
+    const ts = composeReminderTimestamp(day, clock);
+    if (ts === null) {
+      toast.error("Tej godziny nie ma tego dnia", { description: "Przestawiono zegar (zmiana czasu). Zmień godzinę w edycji." });
+      return;
+    }
+    const to = new Date(ts);
     const before = previousOf(occ.noteId);
     markMoved(occ.noteId);
     onSetReminder(occ.noteId, to.getTime(), occ.repeat);
@@ -202,9 +223,10 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     if (!isSameMonth(to, month)) setMonth(new Date(to.getFullYear(), to.getMonth(), 1));
     toastWithUndo(
       `Termin przeniesiony na ${format(to, "d MMMM", { locale: pl })}`,
-      () => onSetReminder(occ.noteId, before.reminder, before.repeat, before.day),
+      () => onSetReminder(occ.noteId, before.reminder, before.repeat, before.day, before.base),
       { icon: "📅", description: occ.isSeries ? "Cała seria liczy się od nowego terminu." : undefined },
     );
+    focusDay(to);
   }
 
   function handleDragEnd({ active, over }: DragEndEvent) {
@@ -266,7 +288,8 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
           >
             <ChevronRight className="w-4 h-4" />
           </button>
-          {!isThisMonth && (
+          {/* Przycisk zostaje także wtedy, gdy wybrany dzień jest inny niż dziś, nawet w bieżącym miesiącu. */}
+          {(!isThisMonth || !isSameDay(selectedDay, new Date())) && (
             <button
               onClick={goToToday}
               aria-label="Wróć do bieżącego miesiąca"
@@ -354,12 +377,14 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
             occurrences={selectedOccurrences}
             titleOf={titleOf}
             shift={shiftOf(dayKey(selectedDay))}
+            study={studyMarks.get(dayKey(selectedDay))}
             onEditShift={shifts.types.length > 0 ? () => setShiftDay(dayKey(selectedDay)) : undefined}
             onCopyPrevShift={shifts.types.length > 0 && !shifts.days[dayKey(selectedDay)] && prevShiftEntry(dayKey(selectedDay))
               ? () => copyPrevShift(dayKey(selectedDay)) : undefined}
             onAdd={() => openAdd(selectedDay)}
             onEdit={openEdit}
             onExport={exportOne}
+            onSkip={(occ) => handleSkip(occ.noteId, occ.at, occ.repeat)}
             onMoveByDays={(occ, days) => moveToDay(occ, addDays(new Date(occ.at), days))}
             onOpenSeriesSource={openSeriesSource}
           />

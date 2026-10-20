@@ -110,3 +110,20 @@ describe("formatReminderShort — cały dzień", () => {
     expect(formatReminderShort(at(20), now)).toBe("jutro, 09:00");
   });
 });
+
+describe("composeReminderTimestamp — zmiana czasu (Europe/Warsaw)", () => {
+  // 29.03.2026: 02:00 → 03:00, więc 02:30 nie istnieje. 25.10.2026: 03:00 → 02:00.
+  it("godzina z przeskoku wiosennego daje null, a nie cichą zmianę na 03:30", () => {
+    expect(composeReminderTimestamp(new Date(2026, 2, 29), "02:30")).toBeNull();
+  });
+
+  it("godziny po przeskoku i dni bez zmiany działają jak zwykle", () => {
+    const after = composeReminderTimestamp(new Date(2026, 2, 29), "03:30");
+    expect(after).not.toBeNull();
+    expect(new Date(after!).getHours()).toBe(3);
+    expect(new Date(after!).getMinutes()).toBe(30);
+
+    const normal = composeReminderTimestamp(new Date(2026, 2, 28), "02:30");
+    expect(new Date(normal!).getHours()).toBe(2);
+  });
+});

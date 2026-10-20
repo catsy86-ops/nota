@@ -179,3 +179,25 @@ describe("cały dzień", () => {
     expect(occ[0].allDay).toBe(false);
   });
 });
+
+describe("expandOccurrences — seria zapisana dawno temu (2g planu)", () => {
+  it("dzienna seria sprzed ponad roku nadal pokazuje cały bieżący miesiąc", () => {
+    // Zapisany termin ~2 lata przed widokiem: stary limit 400 kroków zjadał go, zanim doszedł do marca.
+    const note = makeNote({ reminder: at(2024, 1, 10), reminderRepeat: "daily" });
+    const occ = expandOccurrences([note], MARCH.start, MARCH.end);
+    expect(occ).toHaveLength(31);
+    expect(occ[0].at).toBe(at(2026, 3, 1));
+  });
+
+  it("prognoza poza zapisanym terminem nie jest oznaczona jako najbliższa do edycji", () => {
+    const note = makeNote({ reminder: at(2024, 1, 10), reminderRepeat: "daily" });
+    const occ = expandOccurrences([note], MARCH.start, MARCH.end);
+    expect(occ.filter((o) => o.isNext)).toHaveLength(0);
+  });
+
+  it("zapisany termin w zakresie pozostaje najbliższym (isNext)", () => {
+    const note = makeNote({ reminder: at(2026, 3, 5), reminderRepeat: "weekly" });
+    const occ = expandOccurrences([note], MARCH.start, MARCH.end);
+    expect(occ.find((o) => o.at === at(2026, 3, 5))?.isNext).toBe(true);
+  });
+});

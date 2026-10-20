@@ -205,6 +205,22 @@ export function ReminderQuickAddDialog({
         )}
 
         <div className="flex flex-wrap items-center gap-3">
+          {/* W edycji dzień zmienia się tutaj, a nie przez przeciąganie — telefon tego nie obsługuje (P0 planu). */}
+          {isEdit && (
+            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              Dzień:
+              <input
+                type="date"
+                value={format(effectiveDay, "yyyy-MM-dd")}
+                onChange={(e) => {
+                  const [y, m, d] = e.target.value.split("-").map(Number);
+                  if (y && m && d) setDayOverride(new Date(y, m - 1, d));
+                }}
+                aria-label="Dzień przypomnienia"
+                className="text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring text-foreground"
+              />
+            </label>
+          )}
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             Godzina:
             <input
@@ -230,6 +246,11 @@ export function ReminderQuickAddDialog({
             </select>
           </label>
         </div>
+
+        {/* Godzina wpisana poprawnie, ale nieistniejąca tego dnia (przeskok zmiany czasu): zapis jest zablokowany, więc mówimy dlaczego. */}
+        {time && timestamp === null && /^\d{1,2}:\d{2}$/.test(time) && (
+          <p className="text-xs text-destructive-ink">Tej godziny nie ma tego dnia — przestawiono zegar (zmiana czasu). Wybierz inną.</p>
+        )}
 
         {past && (
           <p className="text-xs text-destructive-ink">

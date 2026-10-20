@@ -1,3 +1,4 @@
+import { pluralPl } from "@/lib/plural";
 import { dueDayValue } from "./shortages";
 import type { SiteCard } from "./sites";
 
@@ -11,6 +12,15 @@ export interface StudyDayMarks {
   service: number;
   /** Zamówione pozycje z datą dostawy tego dnia, jeszcze niedostarczone. */
   delivery: number;
+}
+
+/** „Praca: 2 wizyty, 1 dostawa” albo `null`, gdy dzień jest czysty. Wspólne dla komórki i panelu dnia. */
+export function studySummary(study: StudyDayMarks | undefined): string | null {
+  if (!study || (study.service === 0 && study.delivery === 0)) return null;
+  const parts: string[] = [];
+  if (study.service > 0) parts.push(`${study.service} ${pluralPl(study.service, ["wizyta", "wizyty", "wizyt"])}`);
+  if (study.delivery > 0) parts.push(`${study.delivery} ${pluralPl(study.delivery, ["dostawa", "dostawy", "dostaw"])}`);
+  return `Praca: ${parts.join(", ")}`;
 }
 
 export function studyDayMarks(

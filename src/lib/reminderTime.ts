@@ -25,7 +25,7 @@ export function defaultReminderTimeFor(day: Date, now: Date = new Date()): strin
 }
 
 /**
- * Data + „HH:mm” → timestamp, albo `null` gdy godzina jest niepełna.
+ * Data + „HH:mm” → timestamp, albo `null` gdy godzina jest niepełna albo nie istnieje tego dnia (zmiana czasu).
  *
  * `null` zamiast rzucania lub `NaN`: `<input type="time">` bywa pusty (da się
  * go wyczyścić), a `new Date().setHours(NaN)` dawało cicho `NaN` zapisywane
@@ -40,6 +40,9 @@ export function composeReminderTimestamp(date: Date, time: string): number | nul
 
   const d = new Date(date);
   d.setHours(hours, minutes, 0, 0);
+  // Dzień zmiany czasu: godziny z przeskoku (np. 02:30) nie istnieją — JS cicho przesunąłby je na 03:30.
+  // Zwracamy `null`, żeby okno pokazało, że tej godziny tego dnia nie ma.
+  if (d.getHours() !== hours || d.getMinutes() !== minutes) return null;
   const ts = d.getTime();
   return Number.isNaN(ts) ? null : ts;
 }

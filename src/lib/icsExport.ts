@@ -90,8 +90,9 @@ function eventLines(note: Note, now: number): string[] {
     `SUMMARY:${escapeText(titleOf(note))}`,
   ];
   if (repeat !== "none") {
-    // UNTIL w UTC (RFC 5545, gdy DTSTART ma czas) — koniec serii z `reminderRepeatUntil`.
-    const until = note.reminderRepeatUntil !== undefined ? `;UNTIL=${formatUtc(note.reminderRepeatUntil)}` : "";
+    // UNTIL musi mieć ten sam typ co DTSTART (RFC 5545). DTSTART jest lokalny (bez „Z”),
+    // więc UNTIL też lokalny — UTC przy lokalnym DTSTART ścisłe importery odrzucają.
+    const until = note.reminderRepeatUntil !== undefined ? `;UNTIL=${formatLocal(note.reminderRepeatUntil)}` : "";
     lines.push(`RRULE:${rruleFor(repeat, seriesDay(note))}${until}`);
   }
   const body = note.content.trim();

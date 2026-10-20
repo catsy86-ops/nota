@@ -35,6 +35,8 @@ export interface Occurrence {
  * ogromny, a pętla nie może się zapętlić na zawsze.
  */
 const MAX_OCCURRENCES_PER_NOTE = 400;
+/** Kroki przewijania do początku zakresu (bez zbierania wyników). Dzienna seria ~137 lat wstecz. */
+const MAX_SKIP_STEPS = 50_000;
 
 function isCandidate(note: Note): boolean {
   // Kosz nie należy do kalendarza; archiwum owszem — powiadomienia też je widzą.
@@ -65,10 +67,19 @@ export function expandOccurrences(notes: Note[], rangeStart: number, rangeEnd: n
     }
 
     let at = start;
-    for (let index = 0; index < MAX_OCCURRENCES_PER_NOTE; index++) {
+    let index = 0;
+    // Najpierw przechodzimy bez zbierania do początku zakresu: seria zapisana dawno temu
+    // nie może zużyć limitu wystąpień, zanim dojdzie do widoku (2g planu).
+    for (; at < rangeStart && index < MAX_SKIP_STEPS; index++) {
+      const next = nextOccurrence(note, at);
+      if (next === null || next <= at) { at = Number.POSITIVE_INFINITY; break; }
+      at = next;
+    }
+    for (let n = 0; n < MAX_OCCURRENCES_PER_NOTE; n++, index++) {
       if (at > rangeEnd) break;
       if (at >= rangeStart) {
-        out.push({ noteId: note.id, at, isSeries: true, index, isNext: index === 0, repeat, allDay });
+        // Realny jest tylko zapisany termin; kolejne wystąpienia to prognoza.
+        out.push({ noteId: note.id, at, isSeries: true, index, isNext: at === start, repeat, allDay });
       }
       const next = nextOccurrence(note, at);
       // Koniec serii albo nieruchomy krok — inaczej pętla stałaby w miejscu.

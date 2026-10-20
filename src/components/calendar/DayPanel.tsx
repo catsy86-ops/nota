@@ -1,11 +1,13 @@
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { useState } from "react";
-import { CalendarPlus, Plus, Pencil, ArrowRight, Download, Clock, Copy, List } from "lucide-react";
+import { CalendarPlus, Plus, Pencil, ArrowRight, Download, Clock, Copy, List, HardHat, SkipForward } from "lucide-react";
+import { studySummary, type StudyDayMarks } from "@/lib/study/calendarMarks";
 import { ReminderChip } from "./ReminderChip";
 import { DayTimeline } from "./DayTimeline";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { Occurrence } from "@/lib/reminderOccurrences";
+import { REMINDER_REPEAT_LABELS } from "@/lib/reminderRepeat";
 import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
 
 /**
@@ -24,12 +26,16 @@ interface DayPanelProps {
   titleOf: (noteId: string) => string;
   /** Zmiana z Grafiku w tym dniu — pokazana nad terminami, żeby „co mam tego dnia” było w jednym miejscu. */
   shift?: ShiftType;
+  /** Wizyty i dostawy z Pracy tego dnia — w komórce są tylko liczniki, tu pełna informacja (1d planu). */
+  study?: StudyDayMarks;
   onAdd: () => void;
   onEdit: (occurrence: Occurrence) => void;
   /** Shift+←/→ na terminie — klawiaturowy odpowiednik przeciągania (WCAG 2.5.7). */
   onMoveByDays: (occurrence: Occurrence, days: number) => void;
   /** Pobiera `.ics` z tym terminem — kalendarz systemowy przypomni przy zamkniętej aplikacji. */
   onExport: (occurrence: Occurrence) => void;
+  /** Pomija wystąpienie serii bez otwierania dialogu. Brak = przycisku nie ma. */
+  onSkip?: (occurrence: Occurrence) => void;
   /** Klik w prognozę serii — prowadzi do najbliższego, zapisanego terminu. */
   onOpenSeriesSource: (occurrence: Occurrence) => void;
   /** Otwiera okno dnia z Grafiku (rodzaj zmiany i godziny wpisane ręcznie). Brak = tylko podgląd. */
@@ -40,8 +46,27 @@ interface DayPanelProps {
 
 type DayView = "list" | "axis";
 
-export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMoveByDays, onExport, onOpenSeriesSource, onEditShift, onCopyPrevShift }: DayPanelProps) {
-  const [view, setView] = useState<DayView>("list");
+const DAY_VIEW_KEY = "kaczy.calendar.dayView";
+
+/** Wybór listy/osi zapamiętany w tej przeglądarce (2c planu). Błąd dostępu = domyślna lista. */
+function readDayView(): DayView {
+  try {
+    return localStorage.getItem(DAY_VIEW_KEY) === "axis" ? "axis" : "list";
+  } catch {
+    return "list";
+  }
+}
+
+function writeDayView(view: DayView) {
+  try { localStorage.setItem(DAY_VIEW_KEY, view); } catch { /* bez zapisu zostaje wybór na czas sesji */ }
+}
+
+export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdit, onMoveByDays, onExport, onSkip, onOpenSeriesSource, onEditShift, onCopyPrevShift }: DayPanelProps) {
+  const [view, setViewState] = useState<DayView>(readDayView);
+  function setView(next: DayView) {
+    setViewState(next);
+    writeDayView(next);
+  }
   const emptyHint = (
     <p className="text-sm text-muted-foreground flex items-center gap-2">
       <CalendarPlus className="w-4 h-4 shrink-0 text-muted-foreground/70" />
@@ -79,6 +104,13 @@ export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMo
           Oś godzin
         </ToggleGroupItem>
       </ToggleGroup>
+
+      {studySummary(study) && (
+        <p className="flex items-center gap-2 text-sm mb-3">
+          <HardHat className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden />
+          <span>{studySummary(study)}</span>
+        </p>
+      )}
 
       {shift && (
         <p className="flex items-center gap-2 text-sm mb-3">
@@ -176,7 +208,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMo
                       e.preventDefault();
                       onMoveByDays(occ, e.key === "ArrowRight" ? 1 : -1);
                     }}
-                    aria-label={`Edytuj termin: ${title.trim() || "Bez tytułu"}`}
+                    aria-label={`Edytuj termin: ${title.trim() || "Bez tytułu"}, ${format(new Date(occ.at), "HH:mm")}${occ.repeat !== "none" ? `, powtarza się: ${REMINDER_REPEAT_LABELS[occ.repeat].toLowerCase()}` : ""}`}
                     aria-keyshortcuts="Shift+ArrowLeft Shift+ArrowRight"
                     title="Shift+←/→ — przesuń o dzień"
                     className="group w-full flex items-center gap-2 rounded-lg hover:bg-muted/60 transition-colors p-1 -m-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
@@ -192,6 +224,17 @@ export function DayPanel({ day, occurrences, titleOf, shift, onAdd, onEdit, onMo
                   >
                     <Download className="w-3.5 h-3.5" />
                   </button>
+                  {/* Pominięcie bez wchodzenia w edycję — w wierszu serii, a nie tylko w dialogu (2b planu). */}
+                  {onSkip && occ.repeat !== "none" && (
+                    <button
+                      onClick={() => onSkip(occ)}
+                      aria-label={`Pomiń to wystąpienie: ${title.trim() || "Bez tytułu"}`}
+                      title="Pomiń to wystąpienie — seria przesunie się na następne"
+                      className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <SkipForward className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                   </div>
                 )}
               </li>
