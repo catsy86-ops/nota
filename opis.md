@@ -4453,3 +4453,21 @@ lub grupę”.
   `kaczy.lastAutoExport` jest już jedną stałą (`LAST_AUTO_EXPORT_KEY`), a martwej gałęzi `trigger` w `SettingsDialog` nie ma.
 - **Testy.** `src/hooks/useDictation.consent.test.ts` (2).
 - **Commit:** `c2eeb7f` (2026-10-20, Ustawienia — zgoda i porządki).
+
+## Budowa — telefon hurtowni i ostrzeżenie przed kopią (U7, D3, 2026-10-20)
+
+- **U7 — co robi.** Karta budowy ma pole „Telefon hurtowni (WhatsApp zamówień)”. Przycisk „WhatsApp” w panelu zamówień
+  otwiera rozmowę z tą hurtownią (`wa.me/<cyfry>`). Bez numeru zostaje dawne zachowanie (WhatsApp pyta o odbiorcę).
+  Decyzja właściciela: numer jest zapisywany w karcie, więc trafia do synchronizacji i kopii.
+- **U7 — gdzie jest.** `src/lib/study/sites.ts` (pole `supplierPhone`, czyszczenie), `src/lib/study/store.ts` (`SiteCardInput`, zachowanie
+  pola przy edycji), `src/components/study/SiteCardDialog.tsx` (pole), `src/lib/study/order.ts` (`whatsappOrderUrl(text, phone?)`),
+  `src/components/study/SiteOrderPanel.tsx` (przekazanie numeru z karty).
+- **D3 — co robi.** Ręczny „Pobierz pełny backup teraz” pokazuje okno „Kopia będzie niepełna”, gdy kopia pominie
+  załączniki (budżet albo brak bajtów), zanim zapisze plik. „Zapisz mimo to” zapisuje; „Anuluj” nic nie zapisuje.
+- **D3 — gdzie jest.** `src/lib/exportNotes.ts` (`exportFullBackup` z opcją `confirm`, wynik `cancelled`),
+  `src/components/settings/BackupSettings.tsx` (okno `AlertDialog`, `exportNow` z potwierdzeniem).
+  Automatyczne kopie (`useBackupReminders`) nie pytają — nie mają okna, a zapis jest w tle.
+- **Testy.** `src/lib/study/whatsappSupplier.test.ts` (3): link bez numeru, z numerem, zepsuty numer.
+  `src/lib/backupConfirm.test.ts` (1): bez pominięć nie pyta. Ścieżki odmowy nie testuje żaden test (wymagałaby załącznika,
+  który nie wchodzi do budżetu w teście) — do sprawdzenia ręcznie albo e2e.
+- **Commit:** `TBD` (2026-10-20, U7 i D3).

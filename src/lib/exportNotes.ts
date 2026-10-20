@@ -167,9 +167,13 @@ export async function buildFullBackup(): Promise<FullBackup> {
  */
 export async function exportFullBackup(
   filename?: string,
-  { allowDownload = true }: { allowDownload?: boolean } = {},
-): Promise<{ filename: string; size: number; savedToFile: boolean; downloaded: boolean; attachments: BackupAttachmentReport }> {
+  { allowDownload = true, confirm }: { allowDownload?: boolean; confirm?: (report: BackupAttachmentReport) => Promise<boolean> } = {},
+): Promise<{ filename: string; size: number; savedToFile: boolean; downloaded: boolean; attachments: BackupAttachmentReport; cancelled: boolean }> {
   const { backup, attachments } = await buildFullBackupWithReport();
+  // D3: gdy kopia pominie załączniki, pytamy przed zapisem (kopia jest już zbudowana, nic nie buduje się drugi raz).
+  if (confirm && describeSkippedAttachments(attachments) && !(await confirm(attachments))) {
+    return { filename: "", size: 0, savedToFile: false, downloaded: false, attachments, cancelled: true };
+  }
   const data = JSON.stringify(backup, null, 2);
   const name = filename || `kaczy-full-backup-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
   const savedToFile = await tryWriteBackupToFile(data);
@@ -177,7 +181,7 @@ export async function exportFullBackup(
   // auto-backup przekazuje `allowDownload: false` i prosi o kliknięcie.
   const downloaded = !savedToFile && allowDownload;
   if (downloaded) download(data, name, "application/json");
-  return { filename: name, size: new Blob([data]).size, savedToFile, downloaded, attachments };
+  return { filename: name, size: new Blob([data]).size, savedToFile, downloaded, attachments, cancelled: false };
 }
 
 // Załączniki (do 40 MB surowych, ~53 MB jako base64) mieszczą się obok notatek i obrazów.

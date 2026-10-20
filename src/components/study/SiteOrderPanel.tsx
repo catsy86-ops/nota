@@ -33,7 +33,7 @@ export function SiteOrderPanel({ site }: { site: SiteInfo }) {
 
   function sendWhatsApp() {
     haptic("tap");
-    window.open(whatsappOrderUrl(orderText(site.name, order)), "_blank", "noopener");
+    window.open(whatsappOrderUrl(orderText(site.name, order), site.supplierPhone), "_blank", "noopener");
   }
 
   function markOrdered() {

@@ -357,6 +357,7 @@ export interface SiteCardInput {
   phone?: string;
   manager?: string;
   managerPhone?: string;
+  supplierPhone?: string;
   access?: string;
 }
 
@@ -370,10 +371,10 @@ export function saveSiteCard(id: string, input: SiteCardInput, now: number = Dat
   const s = getStudy();
   const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
   // Reszta karty (archiwum, zamówienia, etapy, braki…) zostaje — edycja zmienia tylko pola formularza.
-  const { stored: _s, count: _c, open: _o, first: _f, last: _l, phone: _p, manager: _m, managerPhone: _mp, access: _a, ...rest } =
+  const { stored: _s, count: _c, open: _o, first: _f, last: _l, phone: _p, manager: _m, managerPhone: _mp, supplierPhone: _sp, access: _a, ...rest } =
     prev ?? ({} as Partial<SiteInfo>);
   // Pola kontaktu z formularza; pole pominięte w `input` zostaje takie, jak było.
-  const keep = (k: "phone" | "manager" | "managerPhone" | "access") => input[k] ?? prev?.[k];
+  const keep = (k: "phone" | "manager" | "managerPhone" | "supplierPhone" | "access") => input[k] ?? prev?.[k];
   const card = cleanSite({
     ...rest,
     id, name,

@@ -25,7 +25,7 @@ import { mapsHref, prettyPhone, smsHref, SITE_ACCESS_MAX, SITE_PHONE_MAX, telHre
 
 const topicTitle = (id: string) => TOPICS.find((t) => t.id === id)?.title ?? null;
 
-const EMPTY_FORM = { name: "", address: "", investor: "", phone: "", manager: "", managerPhone: "", access: "" };
+const EMPTY_FORM = { name: "", address: "", investor: "", phone: "", manager: "", managerPhone: "", supplierPhone: "", access: "" };
 type SiteForm = typeof EMPTY_FORM;
 const formOf = (s: Partial<SiteForm>): SiteForm => ({ ...EMPTY_FORM, ...Object.fromEntries(Object.entries(s).filter(([k, v]) => k in EMPTY_FORM && typeof v === "string")) });
 
@@ -267,6 +267,19 @@ export function SiteCardDialog({
                     onChange={setField("managerPhone")}
                     maxLength={SITE_PHONE_MAX}
                     placeholder="600 100 200"
+                    autoComplete="off"
+                    className={fieldClass}
+                  />
+                </label>
+                <label className="block min-w-0 space-y-1 text-xs text-muted-foreground">
+                  Telefon hurtowni (WhatsApp zamówień)
+                  <input
+                    type="tel"
+                    inputMode="tel"
+                    value={form.supplierPhone}
+                    onChange={setField("supplierPhone")}
+                    maxLength={SITE_PHONE_MAX}
+                    placeholder="np. hurtownia 22 000 00 00"
                     autoComplete="off"
                     className={fieldClass}
                   />

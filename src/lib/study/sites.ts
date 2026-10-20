@@ -27,6 +27,8 @@ export interface SiteCard {
   /** Kierownik budowy albo osoba na miejscu. */
   manager?: string;
   managerPhone?: string;
+  /** Telefon hurtowni do zamówień przez WhatsApp (`order.ts`); brak = bez numeru, WhatsApp pyta o odbiorcę. */
+  supplierPhone?: string;
   /** Dostęp do budowy: kod do bramy, gdzie klucze, od której wejście. */
   access?: string;
   /** Moment założenia karty (ms). */
@@ -84,6 +86,7 @@ export function cleanSite(raw: unknown): SiteCard | null {
     ...optionalText("phone", s.phone, SITE_PHONE_MAX),
     ...optionalText("manager", s.manager, SITE_FIELD_MAX),
     ...optionalText("managerPhone", s.managerPhone, SITE_PHONE_MAX),
+    ...optionalText("supplierPhone", s.supplierPhone, SITE_PHONE_MAX),
     ...optionalText("access", s.access, SITE_ACCESS_MAX),
     created: typeof s.created === "number" && Number.isFinite(s.created) ? s.created : 0,
     ...(typeof s.archived === "number" && Number.isFinite(s.archived) ? { archived: s.archived } : {}),

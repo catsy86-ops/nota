@@ -1,6 +1,7 @@
 import type { JournalEntry } from "./yStudy";
 import { entrySiteId } from "./sites";
 import { sumFittings, type Fitting } from "./fittings";
+import { normalizePhone } from "./boss";
 
 /**
  * Zamówienie kształtek dla budowy (punkt „Do zamówienia” w karcie budowy). Liczy kształtki
@@ -42,7 +43,11 @@ export function orderText(siteName: string, order: SiteOrder): string {
 }
 
 /**
- * Link „wyślij przez WhatsApp” z tekstem zamówienia. Bez numeru: WhatsApp pyta, do kogo wysłać,
- * więc numer hurtowni nigdzie nie trafia (ani do synchronizacji, ani do kopii).
+ * Link „wyślij przez WhatsApp” z tekstem zamówienia. Z numerem hurtowni z karty (U7, 2026-10-20)
+ * otwiera rozmowę z nią; bez numeru WhatsApp pyta, do kogo wysłać. Numer jest zapisany w karcie budowy
+ * (trafia do synchronizacji i kopii — decyzja właściciela).
  */
-export const whatsappOrderUrl = (text: string): string => `https://wa.me/?text=${encodeURIComponent(text)}`;
+export const whatsappOrderUrl = (text: string, phone?: string): string => {
+  const digits = phone ? normalizePhone(phone) : null;
+  return `https://wa.me/${digits ?? ""}?text=${encodeURIComponent(text)}`;
+};

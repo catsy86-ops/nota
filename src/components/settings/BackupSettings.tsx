@@ -3,7 +3,7 @@ import { Download, Database, ShieldCheck, ShieldAlert, FileCog } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useViewPrefs, setViewPref, VIEW_PREF_GROUPS } from "@/lib/viewPrefs";
-import { describeSkippedAttachments, exportFullBackup, pickFullBackup, restoreFullBackup, type RestoreOptions } from "@/lib/exportNotes";
+import { describeSkippedAttachments, exportFullBackup, pickFullBackup, restoreFullBackup, type BackupAttachmentReport, type RestoreOptions } from "@/lib/exportNotes";
 import { describeBackupSkipped } from "@/lib/backupSkipped";
 import type { FullBackup } from "@/lib/noteSchema";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -130,9 +130,14 @@ function handleAutoExportChange(v: number) {
   }
 }
 
-async function exportNow() {
+/** D3: pytanie, gdy kopia pominie załączniki. Zwraca `true`, gdy użytkownik chce zapisać mimo to. */
+type SkipConfirm = (report: BackupAttachmentReport) => Promise<boolean>;
+
+async function exportNow(confirm: SkipConfirm) {
   try {
-    const { savedToFile, attachments } = await exportFullBackup();
+    const res = await exportFullBackup(undefined, { confirm });
+    if (res.cancelled) return;
+    const { savedToFile, attachments } = res;
     try { localStorage.setItem(LAST_AUTO_EXPORT_KEY, String(Date.now())); } catch { /* ignore */ }
     const skipped = describeSkippedAttachments(attachments);
     toast.success(savedToFile ? "Backup zapisany 💾" : "Backup pobrany 💾", skipped ? { description: skipped, duration: 12000 } : undefined);
@@ -232,6 +237,10 @@ function RestoreBackup() {
 /** "Dane" tab: auto-backup, backup/today/week reminders, manual export/import. */
 export function BackupSettings() {
   const prefs = useViewPrefs();
+  const [skipPrompt, setSkipPrompt] = useState<{ text: string; resolve: (ok: boolean) => void } | null>(null);
+  const askSkip: SkipConfirm = (report) => new Promise<boolean>((resolve) => {
+    setSkipPrompt({ text: describeSkippedAttachments(report) ?? "", resolve: (ok) => { setSkipPrompt(null); resolve(ok); } });
+  });
 
   return (
     <div className="space-y-4">
@@ -266,9 +275,23 @@ export function BackupSettings() {
         </p>
       </Section>
 
-      <Button onClick={exportNow} className="w-full gap-2">
+      <Button onClick={() => exportNow(askSkip)} className="w-full gap-2">
         <Download className="w-4 h-4" /> Pobierz pełny backup teraz
       </Button>
+      <AlertDialog open={!!skipPrompt} onOpenChange={(o) => { if (!o) skipPrompt?.resolve(false); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Kopia będzie niepełna</AlertDialogTitle>
+            <AlertDialogDescription>
+              {skipPrompt?.text} Zapisać kopię mimo to?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => skipPrompt?.resolve(false)}>Anuluj</AlertDialogCancel>
+            <AlertDialogAction onClick={() => skipPrompt?.resolve(true)}>Zapisz mimo to</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <RestoreBackup />
 
       <ResetSectionButton title="kopia" keys={VIEW_PREF_GROUPS.kopia} />
