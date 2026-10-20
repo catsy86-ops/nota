@@ -4207,4 +4207,4 @@ lub grupę”.
   w `e2e/bundle.spec.ts` z datowanym komentarzem.
 - **Lint.** `eslint.config.js`: `src/lib/supplements/ySupplements.ts` i jego test na liście dozwolonych importów `yjs`,
   tak jak `yStudy.ts`. (`src/lib/debts/yDebts.ts` importuje `yjs` bez wpisu na liście — istniejące naruszenie, nie ruszane.)
-- **Commit:** `TBD` (2026-10-20, krok 1 planu Ćwiczeń: odżywki).
+- **Commit:** `cd83ffc` (2026-10-20, krok 1 planu Ćwiczeń: odżywki).
