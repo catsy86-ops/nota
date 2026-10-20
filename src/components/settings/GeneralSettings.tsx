@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { FileDown } from "lucide-react";
 import { useShifts } from "@/lib/shifts";
 import { ShiftSettingsDialog } from "@/components/shifts/ShiftSettingsDialog";
@@ -17,6 +17,7 @@ import { ClipperSettings } from "./ClipperSettings";
 import { PushSettings } from "./PushSettings";
 import { getNotificationPermission } from "@/lib/notificationPermission";
 import { MOD_KEY } from "@/lib/platform";
+import { hasDictationConsent, withdrawDictationConsent } from "@/hooks/useDictation";
 import { setBadgeEnabled, useBadgeEnabled } from "@/lib/overdueBadge";
 
 const PERMISSION_TEXT = {
@@ -192,6 +193,8 @@ export function GeneralSettings() {
         onCheck={setBadgeEnabled}
       />
 
+      <DictationConsentRow />
+
       <ToggleRow
         label="Sprawdzanie pisowni"
         desc="Włącza wbudowane sprawdzanie pisowni przeglądarki w polach edycji."
@@ -269,4 +272,34 @@ async function handleDownloadReport() {
   } catch {
     toast.error("Nie udało się przygotować raportu");
   }
+}
+
+
+/** Zgoda na dyktowanie: stan i „Cofnij zgodę”. Bez zgody pierwsze dyktowanie zapyta ponownie. */
+function DictationConsentRow() {
+  const [consent, setConsent] = useState(hasDictationConsent);
+  return (
+    <Section title="Dyktowanie głosem">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          {consent
+            ? "Zgoda udzielona. Nagranie głosu idzie do rozpoznawania mowy przeglądarki (w Chrome: Google). Notatki zostają na urządzeniu."
+            : "Zgody nie udzielono. Pierwsze dyktowanie zapyta o nią."}
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={!consent}
+          className="coarse:h-11"
+          onClick={() => {
+            withdrawDictationConsent();
+            setConsent(false);
+            toast("Cofnięto zgodę na dyktowanie");
+          }}
+        >
+          Cofnij zgodę
+        </Button>
+      </div>
+    </Section>
+  );
 }

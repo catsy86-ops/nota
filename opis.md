@@ -4441,3 +4441,15 @@ lub grupę”.
   Podział `AddNoteBar.tsx` (763 linie) — ryzyko bez e2e. Zrzuty telefonu — wymagają przeglądarki.
 - **Testy.** Komponenty (25 plików, 161 testów) zielone; typecheck i lint czyste; paczka 391,9 KB przy progu 392 KB.
 - **Commit:** `02c1560` (2026-10-20, Notatki — dopracowanie).
+
+## Ustawienia — zgoda na dyktowanie i porządki (2026-10-20)
+
+- **Co robi.** W Ustawieniach → Ogólne sekcja „Dyktowanie głosem”: stan zgody i przycisk „Cofnij zgodę”. Po cofnięciu
+  następne dyktowanie znowu pokaże pytanie o zgodę. Cofnięcie nie rusza uprawnienia mikrofonu w przeglądarce.
+- **Gdzie jest.** `src/hooks/useDictation.ts` — `hasDictationConsent()`, `withdrawDictationConsent()` (używane też w `toggle`);
+  `src/components/settings/GeneralSettings.tsx` — `DictationConsentRow`.
+- **Porządki.** Usunięto nieużywane eksporty `getEffectsSettings` (`effectsSettings.ts`), `getSeasonPref` (`seasonTheme.ts`),
+  `getBadgeEnabled` (`overdueBadge.ts`), `getAutoLockMinutes` (`vaultAutoLock.ts`). Sprawdzono z planu: zduplikowany klucz
+  `kaczy.lastAutoExport` jest już jedną stałą (`LAST_AUTO_EXPORT_KEY`), a martwej gałęzi `trigger` w `SettingsDialog` nie ma.
+- **Testy.** `src/hooks/useDictation.consent.test.ts` (2).
+- **Commit:** `TBD` (2026-10-20, Ustawienia — zgoda i porządki).

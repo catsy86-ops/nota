@@ -1,4 +1,4 @@
-import { createPersistedStore } from "@/lib/persistedStore";
+﻿import { createPersistedStore } from "@/lib/persistedStore";
 
 export type EffectKey =
   | "confetti"
@@ -75,10 +75,6 @@ try {
   }
 } catch {
   // Bez localStorage zostają domyślne wartości z DEFAULTS.
-}
-
-export function getEffectsSettings(): EffectsSettings {
-  return store.get();
 }
 
 export function isEffectEnabled(key: EffectKey): boolean {

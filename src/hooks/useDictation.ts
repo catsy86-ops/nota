@@ -24,6 +24,16 @@ function getCtor(): Ctor | null {
 
 const CONSENT_KEY = "kaczy.dictation.consent";
 
+/** Czy użytkownik zgodził się na dyktowanie (usługa przeglądarki). */
+export function hasDictationConsent(): boolean {
+  try { return localStorage.getItem(CONSENT_KEY) === "1"; } catch { return false; }
+}
+
+/** Cofa zgodę: następne dyktowanie znowu zapyta. Nie rusza uprawnienia mikrofonu w przeglądarce. */
+export function withdrawDictationConsent(): void {
+  try { localStorage.removeItem(CONSENT_KEY); } catch { /* bez localStorage nie ma czego cofać */ }
+}
+
 const ERRORS: Record<string, string> = {
   "not-allowed": "Brak zgody na mikrofon. Zezwól na nią w ustawieniach przeglądarki.",
   "service-not-allowed": "Przeglądarka zablokowała rozpoznawanie mowy.",
@@ -69,9 +79,7 @@ export function useDictation(onText: (text: string) => void) {
 
   const toggle = useCallback(() => {
     if (recRef.current) { stop(); return; }
-    let agreed = false;
-    try { agreed = localStorage.getItem(CONSENT_KEY) === "1"; } catch { /* bez localStorage */ }
-    if (!agreed) {
+    if (!hasDictationConsent()) {
       toast("Dyktowanie używa usługi przeglądarki", {
         description: "W Chrome nagranie głosu jest wysyłane do rozpoznawania mowy Google. Notatki zostają na urządzeniu.",
         duration: 12000,

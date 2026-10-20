@@ -1,4 +1,4 @@
-import { createPersistedStore } from "@/lib/persistedStore";
+﻿import { createPersistedStore } from "@/lib/persistedStore";
 import type { PrivateNotes } from "@/lib/privateNotes";
 
 /** Minuty bezczynności do automatycznej blokady; 0 = nigdy (do zamknięcia karty). */
@@ -11,7 +11,6 @@ const store = createPersistedStore<number>("kaczy.vault.autolock.v1", DEFAULT_AU
   merge: (def, stored) => ((AUTOLOCK_CHOICES as readonly number[]).includes(Number(stored)) ? Number(stored) : def),
 });
 
-export const getAutoLockMinutes = () => store.get();
 export const setAutoLockMinutes = (m: number) => store.set(m);
 export const useAutoLockMinutes = () => store.use();
 

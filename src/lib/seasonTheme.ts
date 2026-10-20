@@ -1,4 +1,4 @@
-import { getCurrentSeason, type Season } from "@/lib/season";
+﻿import { getCurrentSeason, type Season } from "@/lib/season";
 import { createPersistedStore } from "@/lib/persistedStore";
 
 export type SeasonPref = "auto" | Season;
@@ -17,10 +17,6 @@ function isValidPref(v: unknown): v is SeasonPref {
 const store = createPersistedStore<SeasonPref>("kaczy.seasonTheme.v1", "auto", {
   merge: (defaults, stored) => (isValidPref(stored) ? stored : defaults),
 });
-
-export function getSeasonPref(): SeasonPref {
-  return store.get();
-}
 
 /** Resolves "auto" to the season derived from today's date. */
 export function resolveSeason(pref: SeasonPref = store.get()): Season {
