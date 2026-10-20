@@ -1,5 +1,5 @@
 import { cleanFittings, fittingsLine, type Fitting } from "./fittings";
-import { endOfDay } from "../dueTerms";
+import { endOfDayOffset } from "../dueTerms";
 import { dayInputValue } from "../reminderTime";
 
 /**
@@ -132,7 +132,7 @@ export function setShortageDue(list: readonly Shortage[], id: string, due: numbe
  */
 export function orderLateFrom(s: Shortage): number | null {
   if (s.status !== "ordered") return null;
-  return s.due !== undefined ? endOfDay(s.due) : (s.changed ?? s.at) + ORDER_LATE_DAYS * DAY_MS;
+  return s.due !== undefined ? endOfDayOffset(s.due) : (s.changed ?? s.at) + ORDER_LATE_DAYS * DAY_MS;
 }
 
 /** Data dostawy jako wartość pola `type="date"` (lokalna, `YYYY-MM-DD`); pusta = brak. */

@@ -1,5 +1,5 @@
 import type { Note } from "@/hooks/useNotes";
-import { endOfDay } from "@/lib/dueTerms";
+import { endOfDayOffset } from "@/lib/dueTerms";
 import { expandOccurrences } from "@/lib/reminderOccurrences";
 
 export interface SeriesForecast {
@@ -16,8 +16,8 @@ export interface SeriesForecast {
  * Osobny moduł (nie `reminderAgenda`), żeby rozwijanie wystąpień nie wchodziło do paczki startowej.
  */
 export function weekSeriesForecasts(notes: Note[], now: number = Date.now()): SeriesForecast[] {
-  const from = endOfDay(now) + 1;
-  const to = endOfDay(now, 7);
+  const from = endOfDayOffset(now) + 1;
+  const to = endOfDayOffset(now, 7);
   const counts = new Map<string, number>();
   for (const occ of expandOccurrences(notes, from, to)) {
     if (!occ.isSeries || occ.isNext) continue;

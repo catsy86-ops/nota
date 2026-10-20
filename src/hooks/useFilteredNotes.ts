@@ -9,6 +9,7 @@ import { useLastOpened, type LastOpenedMap } from "@/lib/lastOpened";
 import { useDayClock } from "@/lib/dayClock";
 import { comparePropsForSort, type PropDef } from "@/lib/noteProps";
 import { isInboxNote } from "@/lib/inbox";
+import { byReminderAsc } from "@/lib/reminderAgenda";
 
 const NO_OPENED: LastOpenedMap = {};
 
@@ -128,7 +129,7 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
     // (grupy Zaległe/Dziś/… układa `groupReminders` w widoku).
     const agenda = view === "reminders";
     const displayNotes = agenda
-      ? [...filteredByPrefs].sort((a, b) => (a.reminder ?? 0) - (b.reminder ?? 0))
+      ? [...filteredByPrefs].sort(byReminderAsc)
       : sortNotes(filteredByPrefs, prefs, opened, propDefs);
     // Archiwum też bez „Przypiętych”: archiwizacja odpina, ale stara kopia/import może mieć oba pola —
     // bez tego taka notatka znikałaby z widoku (sekcji przypiętych archiwum nie pokazuje).

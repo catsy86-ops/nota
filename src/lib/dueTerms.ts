@@ -1,4 +1,4 @@
-import { endOfDay as endOfDayOf } from "./reminderRepeat";
+import { endOfDay } from "./reminderRepeat";
 /**
  * Jedna definicja tego, gdzie leży termin względem „teraz”. Licznik zaległych,
  * widok Terminy i „Dziś” liczą przez tę funkcję, więc nie rozjeżdżają się.
@@ -8,16 +8,16 @@ import { endOfDay as endOfDayOf } from "./reminderRepeat";
 export type TermStatus = "overdue" | "today" | "week" | "later";
 
 /** Koniec dnia lokalnego dla `t`, opcjonalnie przesunięty o `plusDays` dni. */
-export function endOfDay(t: number, plusDays = 0): number {
+export function endOfDayOffset(t: number, plusDays = 0): number {
   const d = new Date(t);
   d.setDate(d.getDate() + plusDays);
-  return endOfDayOf(d);
+  return endOfDay(d);
 }
 
 /** Zaległy: termin minął. Dziś: do końca dzisiejszego dnia. Najbliższe 7 dni. Później. */
 export function termStatus(at: number, now: number): TermStatus {
   if (at < now) return "overdue";
-  if (at <= endOfDay(now)) return "today";
-  if (at <= endOfDay(now, 7)) return "week";
+  if (at <= endOfDayOffset(now)) return "today";
+  if (at <= endOfDayOffset(now, 7)) return "week";
   return "later";
 }

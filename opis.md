@@ -4074,7 +4074,7 @@ lub grupę”.
   - `StudyOverdueSync` montuje się zawsze, więc dane Pracy ładują się przy starcie (leniwy chunk, ale nie tylko na widoku Pracy).
   - Liczba z Pracy jest liczona przy renderze; zmiana doby bez zmiany dziennika odświeża ją dopiero po zmianie danych.
   - Fokus po akcji wybiera pierwszy przycisk sąsiedniego kafla, a nie zawsze „Gotowe”.
-  - Nie zrobione: 3b (duplikaty `endOfDay` i sortowania). Resztę fazy 1 (odznaka 12 px, „Nowa notatka”, odświeżanie terminu) domknięto w „Przypomnienia — dokończenie fazy 1”.
+  - Porządki (3b): jedna definicja końca dnia (`endOfDay(date)` w `reminderRepeat.ts`); funkcja z `dueTerms.ts` przemianowana na `endOfDayOffset(t, plusDays)`. Jedno sortowanie agendy (`byReminderAsc`) dla listy Terminów i grup.
 - **Testy:**
   - `src/hooks/useOverdueBadge.test.ts` — „adds terminy Pracy do tytułu i ikony”.
   - `e2e/reminders-phase2.spec.ts` — „Gotowe” przy nadchodzącym terminie zdejmuje go z Terminów.

@@ -124,3 +124,8 @@ Decyzje właściciela: D1 ujednolicić liczbę (pasek i tytuł liczą to samo co
 - ✅ 17 bez zmian w kodzie: sonner ma `aria-live="polite"`.
 - Testy: `src/hooks/useReminderPassed.test.ts`, e2e „Nowa notatka” w `e2e/reminders-phase2.spec.ts`.
 - Pozostaje z planu: 3b (duplikaty `endOfDay` i sortowania), czyli faza 3 bez sprzątania; następny dział — Dziś.
+
+## Status 2026-10-20 — 3b zrobione
+
+- ✅ 3b: `endOfDayOffset` (dawny `endOfDay` z `dueTerms.ts`, różnił się sygnaturą od `reminderRepeat.ts`) i wspólny komparator `byReminderAsc` w `reminderAgenda.ts`, użyty też w `useFilteredNotes.ts`.
+- Testy: unit 1502 w `src/lib` i `src/hooks` zielone; e2e reminders-agenda/calendar/phase2 16/16.

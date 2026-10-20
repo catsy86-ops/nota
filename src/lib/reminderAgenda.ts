@@ -1,6 +1,11 @@
 import type { Note } from "@/hooks/useNotes";
 import { termStatus } from "@/lib/dueTerms";
 
+/** Porządek agendy: po terminie rosnąco (wspólny dla listy Terminów i grup). */
+export function byReminderAsc(a: Pick<Note, "reminder">, b: Pick<Note, "reminder">): number {
+  return (a.reminder ?? 0) - (b.reminder ?? 0);
+}
+
 export type AgendaGroupKey = "overdue" | "missed" | "today" | "week" | "later";
 
 /**
@@ -31,7 +36,7 @@ const LABELS: Record<AgendaGroupKey, string> = {
  */
 export function groupReminders(notes: Note[], now: number = Date.now()): AgendaGroup[] {
   const byKey: Record<AgendaGroupKey, Note[]> = { overdue: [], missed: [], today: [], week: [], later: [] };
-  const sorted = notes.filter((n) => n.reminder !== null).sort((a, b) => (a.reminder as number) - (b.reminder as number));
+  const sorted = notes.filter((n) => n.reminder !== null).sort(byReminderAsc);
   for (const n of sorted) {
     const t = n.reminder as number;
     const status = termStatus(t, now);
