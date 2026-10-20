@@ -54,6 +54,9 @@ export default tseslint.config(
       // Odżywki: warstwa Yjs w dokumencie notatek (wzorem yStudy/yDebts), testy na własnym Y.Doc.
       "src/lib/supplements/ySupplements.ts",
       "src/lib/supplements/ySupplements.test.ts",
+      // Dieta: warstwa Yjs w dokumencie notatek (ten sam wzorzec), testy na własnym Y.Doc.
+      "src/lib/diet/yDiet.ts",
+      "src/lib/diet/yDiet.test.ts",
       "src/lib/tabSync.ts",
       "src/lib/tabSync.test.ts",
       // Buduje plik synchronizacji w starym formacie jako dane testowe.

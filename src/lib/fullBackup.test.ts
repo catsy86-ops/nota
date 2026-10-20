@@ -8,6 +8,7 @@ import { clearAllStorage } from "./notesStore";
 import { imageStore } from "./imageStore";
 import { yStudy } from "./study/data";
 import { addSupplement, removeSupplement, setSupplementTaken, supplementDump } from "./supplements/store";
+import { addMeal, dietDump, removeMeal, setDietGoals } from "./diet/store";
 import { cleanDump } from "./study/yStudy";
 import type { Note } from "@/hooks/useNotes";
 
@@ -262,6 +263,23 @@ describe("Nauka w pełnej kopii", () => {
     addSupplement({ name: "Omega", when: "wieczorem" });
     await restoreFullBackup(backup, ALL);
     expect(supplementDump().list.map((x) => x.name).sort()).toEqual(["Kreatyna", "Omega"]);
+  });
+
+  it("dieta: posiłki i cele wracają z kopii; przywracanie scala i nie kasuje", async () => {
+    const m = addMeal({ text: "Owsianka", time: "08:00", kcal: 400, protein: 14, day: "2026-10-20" });
+    expect(m).not.toBeNull();
+    setDietGoals({ kcal: 2400 });
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
+    expect(JSON.parse(backup.diet!).meals.map((x: { text: string }) => x.text)).toEqual(["Owsianka"]);
+
+    removeMeal(m!.id);
+    expect(dietDump().meals).toEqual([]);
+    await restoreFullBackup(backup, ALL);
+    expect(dietDump()).toMatchObject({ meals: [{ text: "Owsianka", kcal: 400 }], goals: { kcal: 2400 } });
+
+    addMeal({ text: "Kolacja", day: "2026-10-20" });
+    await restoreFullBackup(backup, ALL);
+    expect(dietDump().meals.map((x) => x.text).sort()).toEqual(["Kolacja", "Owsianka"]);
   });
 
   it("czyta starą kopię, w której Nauka była tylko wśród ustawień", async () => {

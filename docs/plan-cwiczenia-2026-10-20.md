@@ -1,6 +1,6 @@
 # Plan: dział Ćwiczenia (zapisany 2026-10-20, realizacja później)
 
-Status: **krok 1 (odżywki) zrobiony** — lista, dzienne odhaczenia, przypomnienie codzienne, kopia. Trening i dieta jeszcze nie istnieją. Szczegóły: `opis.md`, sekcja „Ćwiczenia — odżywki”.
+Status: **kroki 1 (odżywki) i 3 (dieta) zrobione** — odżywki: lista, odhaczenia, przypomnienie codzienne, kopia; dieta: posiłki, kalorie i białko, cele dzienne, kopia. Trening jeszcze nie istnieje. Szczegóły: `opis.md`, sekcja „Ćwiczenia — odżywki”.
 
 ## Cel
 
@@ -59,7 +59,7 @@ Sprzęt jest zapisywany w Ustawieniach działu (lista „mój sprzęt”), a ćw
 
 1. ✅ Odżywki: lista, kreatyna rano 1 łyżka z przypomnieniem codziennym (Przypomnienia).
 2. Model danych i kopia zapasowa (przed UI, żeby nie dorabiać później).
-3. Dziennik posiłków z kaloriami i białkiem na dzień (dane osobiste, lekkie UI).
+3. ✅ Dziennik posiłków z kaloriami i białkiem na dzień (dane osobiste, lekkie UI).
 4. Katalog startowy (klatka, biceps, triceps) + dziennik treningu + sprzęt.
 5. Plan treningowy i progres.
 6. Testy jednostkowe dla logiki (progres, przypomnienia dawek, sumy kalorii i białka) i e2e dla zapisu treningu i dawki.

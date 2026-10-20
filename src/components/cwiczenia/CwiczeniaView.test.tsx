@@ -11,6 +11,14 @@ const { notesMock, addSupplementMock, removeSupplementMock } = vi.hoisted(() => 
   removeSupplementMock: vi.fn((_id?: unknown) => null),
 }));
 vi.mock("@/hooks/NotesProvider", () => ({ useNotesContext: () => notesMock }));
+vi.mock("@/lib/diet/store", () => ({
+  useMeals: () => [],
+  useDietGoals: () => ({}),
+  addMeal: vi.fn(),
+  removeMeal: vi.fn(),
+  restoreMeal: vi.fn(),
+  setDietGoals: vi.fn(),
+}));
 vi.mock("@/lib/supplements/store", () => ({
   useSupplements: () => fixture.list,
   useSupplementsTaken: () => fixture.taken,

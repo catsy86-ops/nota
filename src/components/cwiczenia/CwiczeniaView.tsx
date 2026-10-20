@@ -8,6 +8,7 @@ import { logKey, nextReminderAt, SUPPLEMENT_DOSE_MAX, SUPPLEMENT_NAME_MAX, SUPPL
 import { addSupplement, removeSupplement, restoreSupplement, setSupplementTaken, useSupplements, useSupplementsTaken } from "@/lib/supplements/store";
 import { toastWithUndo } from "@/lib/undoToast";
 import { useNotesContext } from "@/hooks/NotesProvider";
+import { DietSection } from "./DietSection";
 
 /** Domyślna godzina przypomnienia dla pory dnia (edytowalna w formularzu). */
 const DEFAULT_TIME: Record<SupplementWhen, string> = { rano: "07:30", w_ciagu_dnia: "12:00", wieczorem: "20:00" };
@@ -41,8 +42,8 @@ function deleteSupplement(notes: NotesActions, s: Supplement): Supplement | null
 }
 
 /**
- * Dział Ćwiczenia (osobna pozycja w menu). Na razie tylko odżywki: lista, dzienne odhaczenia i przypomnienia.
- * Trening i dieta dojdą w kolejnych krokach (plan: docs/plan-cwiczenia-2026-10-20.md).
+ * Dział Ćwiczenia (osobna pozycja w menu): odżywki (lista, dzienne odhaczenia, przypomnienia) i dieta
+ * (posiłki, kalorie i białko, cele). Trening dojdzie w kolejnym kroku (plan: docs/plan-cwiczenia-2026-10-20.md).
  */
 export function CwiczeniaView() {
   const supplements = useSupplements();
@@ -79,6 +80,10 @@ export function CwiczeniaView() {
 
         <AddSupplementForm notes={notes} />
       </section>
+
+      <div className="mt-6">
+        <DietSection />
+      </div>
     </section>
   );
 }

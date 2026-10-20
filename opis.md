@@ -4208,3 +4208,48 @@ lub grupę”.
 - **Lint.** `eslint.config.js`: `src/lib/supplements/ySupplements.ts` i jego test na liście dozwolonych importów `yjs`,
   tak jak `yStudy.ts`. (`src/lib/debts/yDebts.ts` importuje `yjs` bez wpisu na liście — istniejące naruszenie, nie ruszane.)
 - **Commit:** `cd83ffc` (2026-10-20, krok 1 planu Ćwiczeń: odżywki).
+
+## Ćwiczenia — dieta: posiłki, kalorie i białko, cele dzienne (plan Ćwiczeń, krok 3, 2026-10-20)
+
+- **Co robi.** Na stronie Ćwiczeń, pod odżywkami, karta „Dieta”:
+  - **Dziś:** suma kcal i białka z dzisiejszych posiłków, z celem (jeśli ustawiony) i liczbą posiłków bez wartości.
+  - **Lista posiłków dnia** wg godziny (bez godziny na końcu). Usuwanie z „Cofnij”.
+  - **Dodawanie:** opis, godzina (domyślnie teraz), kalorie i białko (oba opcjonalne). Nie-liczba lub wartość poza zakresem
+    blokuje przycisk i oznacza pole jako niepoprawne.
+  - **Cele dzienne:** kcal i białko, puste = bez celu.
+  - **Ostatnie 7 dni:** dzień (DD.MM), suma kcal i białka; dni bez posiłków to „—”.
+- **Gdzie jest.**
+  - `src/lib/diet/model.ts` — `Meal`, `DietGoals`, `cleanMeal`, `cleanGoals`, `cleanAmount`, `byMealOrder`, `summarizeDay`,
+    `summarizeRange(meals, endDay, days, addDays)` (funkcja dat wstrzykiwana, żeby model był czysty).
+  - `src/lib/diet/yDiet.ts` — `createYDiet(doc)`: mapa Y `dietMeals` (id → posiłek), `dietMeta` (`goals`), origin `DIET_ORIGIN`,
+    `dump()` / `mergeDump()` do kopii.
+  - `src/lib/diet/store.ts` — hooki `useMeals()`, `useDietGoals()` i akcje `addMeal`, `removeMeal`, `restoreMeal`,
+    `setDietGoals`, `dietDump`, `mergeDietDump`.
+  - `src/components/cwiczenia/DietSection.tsx` — sekcja (podsumowanie, lista, formularze, tydzień). Podpięta w
+    `src/components/cwiczenia/CwiczeniaView.tsx`.
+  - Kopia: `src/lib/noteSchema.ts` (pole `diet`), `src/lib/exportNotes.ts` (zapis w buildzie, scalanie w przywracaniu,
+    dynamiczny import).
+- **Jak działa i dlaczego.**
+  - Ten sam wzorzec co odżywki: dane w dokumencie Yjs (synchronizacja, kopia, plik), jeden klucz na posiłek,
+    więc dwa telefony dopisujące posiłki scalają się bez strat. Zapis przechodzi przez `cleanMeal`, odczyt też.
+  - Sumy liczą tylko podane wartości; posiłek bez kalorii jest na liście i w liczniku posiłków, ale nie zaniża sumy
+    (pokazujemy, ile takich jest, żeby sumę dało się ocenić).
+  - Cele są jednym kluczem `goals` w osobnej mapie; zapis celów nadpisuje wartość na tym telefonie.
+  - Dzień to lokalny `localDayKey()`; posiłki z przyszłych dni nie są ukrywane (wpis „wczoraj” jest możliwy tylko przez dzień,
+    nie przez czas — dodawanie z innym dniem jest w modelu, ale formularz zawsze używa dziś).
+- **Ograniczenia i pułapki.**
+  - Brak bazy produktów i brak liczenia kalorii z gramatury — wartości wpisujesz ręcznie. Świadomie: bez zewnętrznych danych.
+  - Limit opisu 200 znaków, kcal do 10 000, białko do 1 000 g na posiłek; wartości są zaokrąglane do całości.
+  - Lista posiłków w dokumencie ma limit 5 000 wpisów.
+  - Przywracanie kopii scala (dodaje brakujące posiłki, niczego nie kasuje). Cele z kopii trafiają tylko wtedy,
+    gdy na telefonie celów nie ma.
+  - Usunięty posiłek przywracany przez „Cofnij” zachowuje id i godzinę.
+- **Testy.**
+  - `src/lib/diet/model.test.ts` (czyszczenie, zakresy, kolejność, sumy dnia i zakresu).
+  - `src/lib/diet/yDiet.test.ts` (dodawanie, duplikaty, usunięcie i cofnięcie, cele, origin, scalanie bez kasowania).
+  - `src/components/cwiczenia/DietSection.test.tsx` (pusty dzień, sumy i brak kalorii, dodawanie, walidacja pola, cele).
+  - `src/lib/fullBackup.test.ts` (posiłki i cele w kopii, przywracanie scala).
+  - Vitest: 189 plików, 1683 testy zielone. E2E nie uruchamiano (pełne e2e później, zgodnie z ustaleniem).
+- **Budżet paczki.** Wejściowy JS 390,3 KB gzip; próg 392 KB (ustawiony w kroku odżywek).
+- **Lint.** `eslint.config.js`: `src/lib/diet/yDiet.ts` i jego test na liście dozwolonych importów `yjs`, jak odżywki.
+- **Commit:** `TBD` (2026-10-20, krok 3 planu Ćwiczeń: dieta).
