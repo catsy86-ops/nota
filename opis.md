@@ -1421,990 +1421,117 @@ kopia zapasowa (`images.spec.ts`, `search-backup.spec.ts`, `private-notes.spec.t
 `note-links`, `note-props-view`, `routes`, `subpages`, `wiki-heading`, `wikilinks`, `attachments`, `board-table`,
 `reminders-calendar`, `toggle-group`, `search-highlight`, `bundle` — 56/56; telefon (`mobile`, `mobile-layout`) 17/17.
 
-## Praca → Dziennik budowy
+## Praca → Dziennik budowy — stan aktualny (wpisy, problemy, karty budów, raporty, przypomnienia)
 
-Zakładka „Dziennik” na `/nauka` (`src/components/study/StudyJournal.tsx`). Dziennik instalatora
-wod-kan: co zrobione, jakie problemy, zdjęcia, na której budowie — połączone z tematami
-materiału do nauki.
+Dziennik instalatora wod-kan: co zrobione, jakie problemy, zdjęcia, na której budowie, połączone z tematami materiału do nauki (zakładka Dziennik w `/praca`, `src/components/study/StudyJournal.tsx`). Opis obejmuje wszystkie etapy od 2026-10-15 do 2026-10-20.
 
-### Model danych i synchronizacja
+### Dane i synchronizacja
 
-**Co robi.** Wpisy, karty budów i postęp Nauki synchronizują się między urządzeniami razem
-z notatkami i trafiają do kopii zapasowej.
+- **Gdzie.** `src/lib/study/yStudy.ts` (`createYStudy(doc)`, `JournalEntry`, `StudyState`, `StudyDump`, `cleanEntryParts`, `cleanEntry`, `cleanDump`, `dumpFromLegacy`, `stateFromDump`, `journalRefsIn`); `src/lib/study/data.ts` (jedyna instancja na `yjsStore.doc`, `studyDevice()`, `useStudyReady`); `src/lib/study/store.ts` (fasada dla widoków: `useStudy`, `sanitizeStudy`, akcje wpisów, budów i list); `src/lib/study/keys.ts` (klucze localStorage).
+- **Mapy Yjs** w dokumencie notatek: `studyJournal` (id → wpis), `studySites` (id → karta budowy), `studyBoard`, `studyChecked`, `studyMissed`, `studyDays`, `studyRounds` (per urządzenie), `studyMeta` (`site` — bieżąca budowa arkusza; `boss`, `waGroup`), `studyMigrations`, `studySiteItems` (pozycje list karty budowy).
+- **Wpis jako mapa pól (D5, 2026-10-20).** Wpis to `Y.Map` z kluczem na każde pole. Edycja różnych pól tego samego wpisu na dwóch telefonach scala się; to samo pole — ostatni zapis wygrywa. `writeEntry` zapisuje tylko zmienione pola i usuwa te, których już nie ma; `readEntry` i `journalFields` (`src/lib/study/journalFields.ts`) czytają obie postacie. Stare wpisy (zwykły obiekt) są czytane bez zmian i zamieniane na mapę przy pierwszej edycji. `dump()` i kopia zawierają wpis jako zwykły obiekt, więc format kopii się nie zmienił. Commit `4167846`.
+- **Zgodność.** Starsze wersje aplikacji nie czytają wpisów zapisanych jako mapa pól (`cleanEntry` odrzuca `Y.Map`). Dopóki wszystkie urządzenia nie mają tej wersji, nowe lub edytowane wpisy są na nich niewidoczne.
+- **Listy karty budowy** (etapy, braki, zamówienia, godziny, dokumenty, zgłoszenia serwisowe) są w osobnych kluczach `budowa␁rodzaj␁id` (`siteItems.ts`, bez importu `yjs`). Zapis porównuje bazę (`base`, lista z ekranu) z nową listą: usuwa tylko pozycje z bazy i zapisuje zmienione, więc pozycje dopisane na drugim telefonie zostają. Znacznik `budowa␁meta␁rodzaj` odróżnia pustą listę od „jeszcze niezapisanej”. Pozycje, których nie da się oczyścić (`clean*`), są pomijane. Commit `395c311` (wprowadzenie kluczy), `304bbe8` (porządek i odporność).
+- **Migracja.** Dawny zapis `kaczy.study.v1` z localStorage przenoszony raz na urządzenie (`mergeIn` + znacznik w `studyMigrations`, w tej samej transakcji). Stary klucz zostaje jako kopia. Zdjęcia ze starego zapisu są widoczne dla odśmiecania.
+- **Kopia zapasowa.** Sekcja `study` (`StudyDump`, z kartami budów i listami) oraz Nauka w dawnym kształcie w `settings` dla starszych wersji. Przy przywracaniu osobny przełącznik „Nauka i dziennik z budowy”; `replaceAll` zastępuje dane, `mergeIn` scala. Wpisy odrzucone przy czyszczeniu są liczone i pokazywane w oknie przywracania (`studyDropped`).
+- **Granice.** `yStudy.ts` nie importuje materiału (`content.ts`), bo jest w głównej paczce. Przynależność do materiału sprawdza `store.ts`. Wpis: `id`, `at` (ms), `kind` (`ok` | `problem` | `note`), `topic`, `text`, `site` (kopia nazwy), `siteId?`, `checked`, `images`, `recordings?`, `resolved?`, `solution?`, `test?`, `fittings?`, `stage?`, `geo?`. Tekst do 2000 znaków, do 5 zdjęć (`JOURNAL_MAX_IMAGES`), do 3 nagrań, nazwa budowy do 120 znaków.
 
-**Gdzie jest.**
-- `src/lib/study/yStudy.ts` — `createYStudy(doc)`, typy `JournalEntry`, `StudyState`, `StudyDump`,
-  czyszczenie wejścia `cleanEntryParts` (wspólna część wpisu: tekst, odhaczenia, zdjęcia, próba, kształtki, etap,
-  lokalizacja, flaga `empty`), `cleanEntry` (kształt wpisu, z `cleanEntryParts`), `cleanDump`, `dumpFromLegacy`,
-  `stateFromDump`, `journalRefsIn`.
-- `src/lib/study/data.ts` — jedyna instancja `yStudy` na `yjsStore.doc`, `studyDevice()`,
-  migracja ze starego zapisu, `useStudyReady`.
-- `src/lib/study/store.ts` — fasada dla widoków: `useStudy`, `getStudy`, `sanitizeStudy`
-  (projekcja przefiltrowana przez materiał z `content.ts`; każdy wpis przechodzi przez `cleanEntry` z `yStudy.ts`,
-  czyli tę samą regułę co kopia i dokument, a `sanitizeStudy` dokłada tylko filtr tematu i odhaczeń) i akcje (`addJournalEntry`,
-  `updateJournalEntry`, `removeJournalEntry`, `restoreJournalEntry`, `setProblemResolved`,
-  `setSite`, `saveSiteCard`, `setSiteArchived`).
-- `src/lib/study/keys.ts` — klucze localStorage.
+### Wpis i arkusz
 
-**Jak działa.**
-- Mapy Yjs w dokumencie notatek: `studyJournal` (id → mapa pól wpisu, D5), `studySites` (id → karta budowy),
-  `studyBoard`, `studyChecked`, `studyMissed`, `studyDays`, `studyRounds` (per urządzenie),
-  `studyMeta` (m.in. `site` — bieżąca budowa arkusza), `studyMigrations`.
-- Każdy wpis i każda karta to osobny klucz mapy, więc dwa telefony dopisujące wpisy offline
-  scalają się bez strat.
-- **Pola wpisu osobno (D5, 2026-10-20).** Wpis dziennika to `Y.Map` z kluczem na każde pole. Edycja różnych pól tego samego wpisu na dwóch telefonach scala się (np. tekst na jednym, rozwiązanie na drugim); to samo pole — ostatni zapis wygrywa. `writeEntry` zapisuje tylko zmienione pola i usuwa pola, których już nie ma (np. cofnięte rozwiązanie). Stare wpisy (zwykły obiekt) czyta się bez zmian i zamienia na mapę przy pierwszej edycji. `dump()` i kopia nadal zawierają wpis jako zwykły obiekt, więc format kopii się nie zmienia.
-- **Commit (D5):** `4167846` (2026-10-20).
-- **Uwaga zgodności.** Starsze wersje aplikacji nie czytają wpisów zapisanych jako mapa pól (`cleanEntry` odrzuca `Y.Map`). Dopóki wszystkie urządzenia nie mają tej wersji, nowe lub edytowane wpisy są na nich niewidoczne.
-- `yStudy.ts` nie importuje materiału (`content.ts`), bo jest w głównej paczce (odśmiecanie
-  zdjęć, kopia). Przynależność do materiału sprawdza `store.ts`.
-- Wpis (`JournalEntry`): `id`, `at` (ms), `kind` (`ok` | `problem` | `note`), `topic`, `text`,
-  `site` (kopia nazwy budowy), `siteId?`, `checked` (punkty listy kontrolnej), `images`
-  (klucze `imageStore`), `resolved?` (tylko problem).
-- Migracja: dawny zapis `kaczy.study.v1` z localStorage przenoszony raz na urządzenie
-  (`mergeIn` + znacznik urządzenia w `studyMigrations` w tej samej transakcji). Stary klucz
-  zostaje jako kopia.
-- Kopia zapasowa: sekcja `study` (`StudyDump`, z kartami budów) oraz Nauka w dawnym
-  kształcie w `settings` dla starszych wersji aplikacji. Przy przywracaniu jest osobny
-  przełącznik „Nauka i dziennik z budowy”; `replaceAll` zastępuje dane, nie scala.
+- **Arkusz wpisu** (`JournalEntrySheet.tsx`, od dołu na telefonie): rodzaj (trzy duże przyciski), budowa, kiedy, tekst, zdjęcia, nagrania, temat z listą kontrolną, pola protokołu i kształtek. Ten sam arkusz tworzy i poprawia wpis (z „Cofnij” przy usunięciu). Stan w `entrySheet.ts`, szkic nowego wpisu w `draft.ts` (localStorage `kaczy.study.draft.v1`; przeżywa zmianę zakładki i odświeżenie). Edycja ma osobny formularz w pamięci — poprawka starego wpisu nie rusza szkicu.
+- **Wejścia:** „+ Wpis” w nagłówku dziennika, „+” w dolnym pasku, skrót PWA „Wpis z budowy” (`/praca?wpis=1`), „Wpis z budowy” z karty tematu, skrót „Wpis głosowy” (`/praca?wpis=1&glos=1`, `requestVoiceOnOpen` — dyktowanie startuje od razu; bez zgody zapisanej na urządzeniu pokazuje się pytanie o zgodę).
+- **Budowa.** Pigułki: przy pustej budowie 3 ostatnie, przy wpisywaniu do 6 pasujących (`suggestSites`, bez polskich znaków). Archiwalne się nie podpowiadają. Pigułka nie zabiera fokusu z pola. Nazwa budowy musi być unikalna (bez ogonków i wielkości liter).
+- **Data.** Pigułka „Kiedy” (`datetime-local`, „Teraz”): wpis „za wczoraj” jest możliwy; przyszłość przycinana do chwili zapisu.
+- **Podpowiedzi tekstu.** Pusty nowy wpis na budowie pokazuje pigułki „Jak wczoraj” (tekst najnowszego wpisu tej budowy z poprzedniego dnia kalendarzowego) i do 3 ostatnich różnych tekstów. Znikają, gdy pole ma treść. „Jak wczoraj” kopiuje tylko tekst, nie rodzaj ani temat.
+- **Pusty wpis** (bez tekstu, punktów, zdjęć, nagrań, protokołu i kształtek) się nie zapisuje. Wpis z samym etapem, próbą albo kształtkami jest poprawny.
+- **Zdjęcia.** `prepareImage` → `imageStore`; w trakcie obróbki kafelek z kółkiem i zablokowany zapis. Limit liczony z góry. Podpis wtopiony w piksele (dolny pasek, data = moment wpisu, `photoCaption.ts`). Galeria w dzienniku ze strzałkami i ←/→. Podpisu nie da się zdjąć — usuń i dodaj ponownie. Rysowanie po zdjęciu (`DrawingCanvas`, warstwa kresek nad tłem, zapis podmienia zdjęcie, do 1600 px, JPEG 0,9); rysunek się wtapia i nie da się go potem edytować osobno.
+- **Nagrania głosowe** (U8): przycisk „Nagraj”, do 3 min, do 3 nagrań, osobny załącznik audio (`recordings`), nie zdjęcie. Przeglądarka nagrywa w `audio/webm`, `audio/ogg` lub `audio/mp4`. Nagranie nie jest transkrybowane i nie trafia do raportu. Nagrywanie nie jest testowane e2e (brak fake mikrofonu).
+- **Dyktowanie** (`useDictation`, Web Speech `pl-PL`, zgoda przy pierwszym użyciu). Dopisuje zdanie na końcu tekstu. Cały wpis jedną wypowiedzią (`parseSpokenEntry`, `spokenEntry.ts`): budowa tylko na początku (pełna nazwa albo jednoznaczne pierwsze słowo przed przecinkiem lub rodzajem), rodzaj tylko jako pierwsze słowo po budowie, kształtki z liczbą za nazwą. Dymek mówi, co rozpoznano. Mikrofon przy „Dyktuj kształtki” (`spokenFittings.ts`) sumuje sztuki tej samej nazwy. Braki dyktowane z treści („Lipowa, brakuje kleju…”) trafiają do karty budowy, nie do treści wpisu. „Etap … zrobiony” odhacza etap w karcie. Web Speech w Chrome idzie do usługi Google; bez internetu nie działa. Nie testowane z prawdziwym mikrofonem.
+- **Tu jestem** (M2.1): przycisk w arkuszu zapisuje lokalizację wpisu tylko po stuknięciu, z dokładnością („Tu (±12 m)”, link do map, ×). Gdy w promieniu 300 m jest budowa z zapisaną lokalizacją — „Budowa obok”. Współrzędne zaokrąglone do ~1 m (`geo.ts`). Lokalizacja trafia do raportu jako link „Mapa (±12 m)” (M2.2); raport nie ma przełącznika „bez lokalizacji”.
+- **Etap przy wpisie.** Pigułki „Zrobione” z trzema następnymi niezrobionymi etapami (stuknięcie odhacza etap z dymkiem „Cofnij”). Odhaczony z wpisu etap przypina się do wpisu (pasek „Etap: …”, ✕). Zapisany wpis przypina się do etapu w edycji polem „Zdjęcia do protokołu przy etapie”; stan etapu w karcie się wtedy nie zmienia.
+- **Pola protokołu i kształtek** (pola wpisu, nie nowe rodzaje — starsza wersja je pomija, a nie odrzuca wpisu):
+  - **Próba szczelności** (tematy „Płukanie i próba szczelności”, „Próba kanalizacji na zalanie”): czym (Powietrze / Woda / Zalanie), ciśnienie [bar], czas [min], spadek [bar], wynik (Szczelna / Nieszczelna). Start: powietrze 6 bar; kanalizacja — zalanie bez ciśnienia (`pressureTest.ts`, `PressureTestFields.tsx`). Linia „Próba szczelności (woda, 9 bar, 30 min, spadek 0,1 bar): szczelna” w wpisie, raporcie i wiadomości.
+  - **Kształtki** („Dodaj kształtki”, `fittings.ts`): „nazwa + sztuki”, podpowiedzi z poprzednich wpisów, pigułki najczęstszych. Ta sama nazwa w różnej pisowni sumuje się (`fittingKey`). Do 20 pozycji, nazwa do 40 znaków. Bez metrów rury.
+- **Tematy.** Temat wpisu z kolumny „Umiem” cofa temat do „W trakcie” (także przy edycji wpisu na problem lub zmianie tematu problemu). Chip tematu we wpisie filtruje dziennik po temacie.
 
-**Ograniczenia.** Bez limitu liczby wpisów. Tekst do 2000 znaków (`JOURNAL_MAX_TEXT`),
-4 zdjęcia na wpis (`JOURNAL_MAX_IMAGES`), nazwa budowy do 120 znaków.
+### Problemy
 
-**Testy.** `src/lib/study/yStudy.test.ts` (dwa dokumenty Yjs), `src/lib/study/study.test.ts`,
-`src/lib/fullBackup.test.ts`, e2e `e2e/study.spec.ts` (migracja ze starego zapisu).
-
-**Commity.** D1 `6045b5a` (2026-10-15).
-
-### Arkusz wpisu (nowy wpis i edycja)
-
-**Co robi.** Szybki wpis z telefonu: rodzaj (3 duże przyciski), budowa, kiedy, tekst
-z dyktowaniem, zdjęcia z aparatu lub galerii, temat z listą kontrolną. Ten sam arkusz
-poprawia zapisany wpis i go usuwa (z „Cofnij”).
-
-**Gdzie jest.**
-- `src/components/study/JournalEntrySheet.tsx` — arkusz (od dołu na telefonie, z boku na komputerze).
-- `src/lib/study/entrySheet.ts` — stan otwarcia (`openJournalSheet`, `closeJournalSheet`,
-  `useJournalSheet`) i formularz edycji (`openJournalEdit`, `patchJournalEditForm`,
-  `getJournalEditForm`).
-- `src/lib/study/draft.ts` — szkic nowego wpisu (`useJournalDraft`, `patchJournalDraft`,
-  `clearJournalDraft`, `setJournalDraftTopic`). Pola czyści `cleanEntryParts` (ta sama funkcja co dziennik i kopia);
-  szkic, w przeciwieństwie do wpisu, nie odrzuca pustego zapisu.
-- `src/lib/study/images.ts` — `journalImageRefs()` chroni zdjęcia przed odśmiecaniem.
-
-**Jak działa.**
-- Szkic nowego wpisu żyje w localStorage `kaczy.study.draft.v1`. Przeżywa zmianę zakładki,
-  „Wpis z budowy” z karty tematu (zmienia tylko temat) i odświeżenie strony.
-- Edycja ma osobny formularz tylko w pamięci, więc poprawka starego wpisu nie rusza
-  szkicu. Zamknięcie arkusza bez zapisu porzuca edycję.
-- Zdjęcia: `prepareImage` → `imageStore`, w trakcie obróbki kafelek z kółkiem i zablokowany
-  zapis. Limit miejsc liczony z góry, więc dwa szybkie wybory nie przekroczą 4 zdjęć.
-  Przy pierwszym zdjęciu aplikacja prosi o trwały zapis (`requestPersistentStorage`).
-- Zdjęcia szkicu, edycji i starego zapisu (przed migracją) są w `journalImageRefs()` —
-  bez tego odśmiecanie skasowałoby je po karencji.
-- Pigułka „Kiedy” (`datetime-local`, „Teraz”) pozwala na wpis „za wczoraj”. Przyszłość jest
-  przycinana do chwili zapisu.
-- Pigułka budowy: przy pustej budowie pokazuje 3 ostatnie budowy, przy edycji pola do
-  6 pasujących (`suggestSites` w `journalView.ts`, bez polskich znaków). Archiwalne budowy
-  się nie podpowiadają. Kliknięcie pigułki nie zabiera fokusu z pola (`onPointerDown`
-  z `preventDefault`).
-- Dyktowanie (`useDictation`) dopisuje rozpoznane zdanie na końcu tekstu. Bez Web Speech
-  albo bez internetu jest podpowiedź o mikrofonie klawiatury.
-- **Praca — dyktowanie wpisu ze skrótu (U5).** `/praca?wpis=1&glos=1` otwiera arkusz i włącza dyktowanie od razu
-  (`glos=1` bez `wpis` nic nie robi). `StudyView.tsx` czyta `glos`, zdejmuje oba parametry z adresu i ustawia
-  żądanie (`requestVoiceOnOpen`, `takeVoiceRequest` w `lib/study/entrySheet.ts` — jednorazowe). `JournalEntrySheet.tsx`
-  przy otwarciu bierze żądanie i wywołuje `toggle()` z `useDictation`. Bez zgody zapisanej na urządzeniu `toggle()`
-  pokazuje dotychczasowe pytanie o zgodę, więc pierwsze użycie zawsze wymaga kliknięcia. Bez Web Speech dyktowanie
-  po prostu się nie zaczyna. Skrót PWA: `public/manifest.webmanifest`. Testy: `e2e/study.spec.ts` („skrót „Wpis
-  głosowy””), `src/lib/manifest.test.ts` (kolejność i adresy skrótów).
-- Problem przy temacie z kolumny „Umiem” cofa temat do „W trakcie” (też przy edycji
-  wpisu na problem lub zmianie tematu problemu).
-- Wejścia: „+ Wpis” w nagłówku dziennika, „+” w dolnym pasku na `/nauka`, skrót PWA
-  „Wpis z budowy” (`/nauka?wpis=1`), „Wpis z budowy” z karty tematu (temat rozwinięty).
-
-**Ograniczenia i pułapki.** Pusty wpis (bez tekstu, punktów i zdjęć) się nie zapisuje.
-W e2e otwarty arkusz ukrywa zakładki z drzewa dostępności — w testach `includeHidden: true`.
-
-**Testy.** `src/lib/study/study.test.ts` (szkic, edycja, problemy), e2e `e2e/study.spec.ts`
-(szkic ze zdjęciem po odświeżeniu, wpis „za wczoraj”, usuwanie z „Cofnij”, dyktowanie,
-telefon: „+” i skrót).
-
-**Commity.** D0 `df308d5`, D2 `92c1015`, D3 `1c40b26`, pigułki budów D4a `b41e3c9` (2026-10-15).
-
-### Problemy otwarte i rozwiązane
-
-**Co robi.** Problem zostaje otwarty, dopóki nie oznaczysz go jako rozwiązanego. Licznik
-„Otwarte problemy: N” w nagłówku dziennika filtruje do nich.
-
-**Gdzie jest.** Pole `resolved` w `JournalEntry`; `setProblemResolved`, `openProblems`
-w `store.ts`; `yStudy.setResolved`; przyciski „Oznacz jako rozwiązany” / „Otwórz ponownie”
-w `StudyJournal.tsx`.
-
-**Jak działa.** `resolved` to moment rozwiązania (ms). Brak pola oznacza problem otwarty.
-`cleanEntry` trzyma `resolved` tylko przy rodzaju `problem`. Filtr rodzaju `open` w `filterJournal`.
-
-**Testy.** `study.test.ts`, `yStudy.test.ts` (rozwiązanie przechodzi na drugi telefon), e2e.
-
-**Commit.** D3 `1c40b26`.
+- **Otwarte i rozwiązane.** Problem zostaje otwarty, dopóki nie oznaczysz go jako rozwiązanego (`resolved` = moment, ms). Licznik „Otwarte problemy: N” w nagłówku filtruje do nich. Przyciski „Oznacz jako rozwiązany” / „Otwórz ponownie”. Rozwiązanie przechodzi na drugi telefon.
+- **„Jak rozwiązane?”** Po oznaczeniu pod problemem pole opisu rozwiązania (do 500 znaków, `solution`). „Pomiń” zamyka pole, a przycisk „Jak rozwiązane?” zostaje. Opis jest pod wpisem („Rozwiązanie: …”), w raporcie (linia pod problemem), w szukaniu dziennika i na tablicy przy temacie („Moje rozwiązania (N)”). Ponowne otwarcie zostawia opis; zmiana rodzaju na inny niż problem go usuwa. Opisu nie dyktuje się osobnym mikrofonem.
+- **Przypomnienie o problemie.** Otwarty problem starszy niż 3 dni (od chwili wpisu, nie od rozwiązania) pojawia się w pasku „Przypomnienia” nad listą.
+- **Nie zrobione:** zamiana rozwiązania na własne pytanie quizu jednym stuknięciem (pytanie wymaga trzech błędnych odpowiedzi).
 
 ### Oś czasu i filtry
 
-**Co robi.** Wpisy pogrupowane dzień → budowa, z przyklejonym nagłówkiem dnia. Szukanie
-bez polskich znaków, filtry rodzaju, budowy i tematu. Bez filtra widać ostatnie 30 dni,
-reszta jest za „Pokaż starsze”.
-
-**Gdzie jest.** `src/lib/study/journalView.ts` — czyste funkcje: `filterJournal`,
-`groupJournal`, `splitRecent`, `suggestSites`, `isFiltered`, `NO_FILTER`, etykiety
-(`dayLabel`, `whenLabel`, `entriesPl`, `problemsPl`). Widok w `StudyJournal.tsx`.
-
-**Jak działa.**
-- `JournalFilter.site` to id budowy (`entrySiteId`), a `""` oznacza wpisy bez budowy.
-- Szukanie: każde słowo musi wystąpić w tekście, budowie, nazwie tematu albo rodzaju
-  (`fold` z `sites.ts` usuwa ogonki i wielkość liter).
-- Każdy filtr szuka w całym dzienniku. Bez filtra działa okno `RECENT_DAYS` = 30 dni od północy.
-- Budowy w filtrze to pigułki od ostatnio używanej. Archiwalne są schowane za pigułką
-  „Archiwum (n)”, chyba że są wybrane.
-- Nagłówek budowy w grupie (`[data-journal-site]`) jest przyciskiem do karty budowy.
-
-**Testy.** `study.test.ts` („dziennik — oś czasu i filtry”), e2e „oś czasu dzień → budowa…”.
-
-**Commity.** D5 `cb35c04`, pigułki budów D4a `b41e3c9`.
-
-### Karty budów
-
-**Co robi.** Każda budowa ma kartę: nazwę, adres, inwestora i archiwum. Karta pokazuje liczbę
-wpisów, otwarte problemy i okres od–do. Z karty można przejść do „Pokaż wpisy”, „Raport”
-i „Do archiwum” / „Przywróć z archiwum”.
-
-**Gdzie jest.**
-- `src/lib/study/sites.ts` — `SiteCard`, `SiteInfo`, `siteKey`, `entrySiteId`, `cleanSite`,
-  `siteDirectory`, `findSiteByName`, `resolveSite`, `fold`, `foldName`.
-- `src/components/study/SiteCardDialog.tsx` — okno karty.
-- `store.ts` — `saveSiteCard`, `setSiteArchived`. Rozwiązywanie nazwy na budowę
-  w `addJournalEntry` i `updateJournalEntry`.
-- `yStudy.ts` — mapa `studySites`, `saveSite`, `addEntry`/`updateEntry` z opcjonalną nową kartą.
-
-**Jak działa.**
-- Wpis trzyma `siteId` i kopię nazwy w `site`. Starsza wersja aplikacji i tekst raportu widzą nazwę.
-- Migracja bez przepisywania dokumentu: wpis sprzed kart (sama nazwa) dostaje budowę
-  `siteKey(nazwa)` — deterministyczny skrót FNV-1a z nazwy bez ogonków, wielkości liter
-  i podwójnych spacji (`n-xxxxxxxx`). Dzieje się to przy odczycie, więc każde urządzenie
-  liczy to samo id i nie powstają dwie karty jednej budowy.
-- `siteDirectory` łączy karty z dokumentu z budowami znanymi tylko z nazw we wpisach
-  (`stored: false`) i sortuje od ostatnio używanej. Karta trafia do dokumentu dopiero przy
-  zapisie: przy pierwszym wpisie z nową nazwą albo przy edycji karty.
-- Projekcja `sanitizeStudy` ustawia każdemu wpisowi z budową `siteId` i aktualną nazwę
-  z karty, więc po zmianie nazwy stare wpisy pokazują nową.
-- `resolveSite`: nazwa z arkusza → istniejąca budowa (porównanie `foldName`, czynna przed
-  archiwalną) albo nowa karta. Jeśli id `siteKey(nazwa)` zajmuje karta o zmienionej nazwie,
-  nowa karta dostaje losowe id `s-…`.
-- Zmiana nazwy przenosi bieżącą budowę arkusza (`studyMeta.site`), jeśli to była ta —
-  inaczej następny wpis założyłby starą budowę od nowa.
-- Nazwa jest wymagana i unikalna (bez ogonków i wielkości liter): „Jest już budowa „…””.
-- Archiwum (`archived` = moment) chowa budowę z pigułek arkusza i filtra. Wpisy zostają na osi czasu.
-
-**Ograniczenia.** Nazwa do 120 znaków (`SITE_NAME_MAX`), adres i inwestor do 200
-(`SITE_FIELD_MAX`). Starsza wersja aplikacji przy edycji wpisu gubi `siteId`. Budowa wraca
-wtedy z nazwy, chyba że w międzyczasie zmieniono nazwę karty.
-
-**Testy.** `study.test.ts` („budowy — karty”), `yStudy.test.ts` („karty budów w Yjs”),
-`report.test.ts`, e2e „karta budowy — nazwa, adres, inwestor, raport z karty i archiwum”.
-
-**Commit.** D4b `e3096c4` (2026-10-15).
-
-### Raport z budowy
-
-**Co robi.** Raport dnia albo okresu dla jednej budowy lub wszystkich, z godzinami pracy
-z Grafiku. Można go udostępnić (tekst i zdjęcia), skopiować, dodać jako notatkę
-z etykietą `budowa` albo wydrukować / zapisać jako PDF.
-
-**Gdzie jest.**
-- `src/lib/study/report.ts` — `buildJournalReport`, `reportBody`, `reportText`, `reportSummary`,
-  `workOn`, `periodLabel`, `dayKeyOf`, `shiftKey`.
-- `src/lib/study/toNote.ts` — `reportToNote`.
-- `src/components/study/JournalReport.tsx` — `JournalReportDialog`, podgląd `ReportPaper`, wydruk `ReportPrint`
-  (przez wspólny `PrintRoot.tsx`, ten sam co protokół odbioru).
-
-**Jak działa.**
-- `ReportOptions.siteId`: `null` = wszystkie budowy, `""` = bez budowy. `siteCard` daje
-  nazwę, adres i inwestora do nagłówka i początku tekstu („Adres: …”, „Inwestor: …”).
-- Godziny: `workOn` bierze zmianę z Grafiku w dniu z wpisem (z odchyleniem). Nieobecność
-  pojawia się jako „Grafik: Urlop” z 0 h. Dni bez wpisów się nie liczą.
-- Przy otwarciu: budowa z filtra, z karty albo ostatnio używana, a okres to dzień jej
-  ostatniego wpisu. Okresy: Dziś / Wczoraj / 7 dni / Ten miesiąc / Wybierz.
-- Udostępnianie: zdjęcia (do 10) wczytane z góry do `navigator.share` — po kliknięciu
-  przeglądarka daje mało czasu. Bez share albo przy błędzie raport idzie do schowka.
-- „Do notatki”: te same klucze zdjęć, bez kopiowania bajtów.
-- Wydruk: kontener `#report-print` i klasa `html.printing-report` (style w `index.css`); logika w `PrintRoot.tsx`.
-  Podgląd w oknie ma ten sam układ co wydruk.
-
-**Testy.** `src/lib/study/report.test.ts`, e2e „raport budowy z godzinami z Grafiku…” i „karta budowy…”.
-
-**Commity.** D6 `d73d951`, adres i inwestor w raporcie D4b `e3096c4` (2026-10-15).
-
----
-
-### Paczka ZIP budowy
-
-**Co robi.** W karcie budowy przycisk „Paczka ZIP” pobiera jeden plik `.zip` z całą budową: `raport.md`
-(ten sam tekst co „Kopiuj” w raporcie, od pierwszego do ostatniego wpisu) i zdjęcia z wpisów w katalogu
-`zdjecia/`, numerowane od najstarszego (`01.jpg`, `02.png`…). Nazwa pliku to tytuł raportu. PDF nie wchodzi
-do paczki: „Drukuj / PDF” w raporcie (menu „Więcej”) daje PDF w oknie drukowania.
-
-**Gdzie jest.** `src/lib/study/siteZip.ts` (`buildSiteZip(report, read?, now?)`, `downloadSiteZip(report)`),
-składanie ZIP-a w `buildZip` z `src/lib/exportZip.ts` (bez kompresji — zdjęcia są już JPEG-ami). Przycisk
-i stan „Pakuję…” w `SiteCardDialog.tsx` (`zip()`); raport budowany tak jak w `JournalReportDialog`: `buildJournalReport`
-z `useShifts()` (godziny z Grafiku) i zakresem od `site.first` do `site.last`.
-
-**Jak działa i dlaczego.** Zdjęcia czytane są z `imageStore.get` po kluczu z `report.images` — tej samej
-kolejności, co w raporcie. Brak bajtów na tym urządzeniu (zdjęcie jeszcze nie dotarło synchronizacją) nie
-przerywa paczki: zdjęcie się pomija, a toast podaje, ile pominięto. Błąd odczytu jednego zdjęcia liczy się tak samo.
-
-**Ograniczenia i pułapki.** Cała paczka składa się w pamięci (`Uint8Array`), więc budowa z setkami zdjęć
-to duży bufor — przy bardzo dużych budowach warto dzielić na okresy (raport z zakresem dat). Brak PDF:
-generowanie PDF wymagałoby osobnego układu (jak `exportPdf.ts` dla notatek), na razie nie robiono.
-Wpisy bez budowy nie mają karty, więc paczki też nie mają.
-
-**Testy.** `src/lib/study/siteZip.test.ts` (3 testy: nazwy i numeracja zdjęć, pominięcie brakujących,
-paczka bez zdjęć, błąd odczytu nie przerywa). `e2e/study.spec.ts` („karta budowy…”: pobranie `Raport Dom Nowaków … .zip`,
-toast „Paczka gotowa: raport i 0 zdjęć”).
-
-**Commit.** `50842a6` (2026-10-16).
-
-### Listy karty budowy w dokumencie (etapy, braki, zamówienia)
-
-**Co robi.** Dla użytkownika: zmiany etapów, braków i historii zamówień z dwóch telefonów tej samej budowy łączą
-się — np. odhaczenie etapu na jednym i usunięcie innego na drugim zostaje po obu stronach. Usunięta pozycja nie
-wraca przez to, że drugi telefon miał starszą listę.
-
-**Gdzie jest.**
-- `src/lib/study/siteItems.ts`: klucze `budowa␁rodzaj␁id` (`itemKey`) i znacznik listy `budowa␁meta␁rodzaj` (`metaKey`),
-  rodzaje `stage`, `short`, `order`; `composeSiteLists` (mapa → listy per budowa), `listItemId`, `listItemValue`,
-  `sameItem`, `stripLists`. Bez importu `yjs`.
-- `src/lib/study/yStudy.ts`: mapa `studySiteItems`; `setSiteList(siteId, kind, next, base)` zapisuje różnicę;
-  `migrateCardLists` przenosi dawne pola karty; `dump()` składa karty z listami (`withSiteLists`); `saveSite` zapisuje
-  kartę bez list; `replaceAll` / `mergeIn` rozkładają listy z kopii do mapy.
-- `src/lib/study/store.ts`: `setSiteStages(id, next, base?)`, `setSiteShortages(id, next, base?)`, `markSiteOrdered`
-  (historia przez `setSiteList`), `siteListBase` (lista jeszcze nie zapisana = pusta baza, inaczej niezmienione
-  domyślne etapy nie trafiłyby do zapisu).
-- Panele (`SiteStagesPanel`, `SiteShortagesPanel`) i dyktowanie braków przekazują `base` — listę z ekranu.
-
-**Jak działa i dlaczego.** Zapis porównuje `base` (lista, od której zaczął użytkownik) z `next`: usuwa tylko pozycje,
-które były w `base`, a zapisuje tylko zmienione — pozycje dopisane w tym czasie na drugim telefonie zostają. Kolejność
-etapu zapisuje się raz, przy dodaniu (nowy — na koniec), więc usunięcie innego etapu nie przepisuje sąsiednich (co
-mogłoby nadpisać równoczesne odhaczenie). Znacznik listy odróżnia pustą listę od „jeszcze nie zapisanej” (usunięte
-wszystkie etapy nie wracają do domyślnych). Stan i kopia zapasowa nadal mają listy w kartach — widoki i format kopii
-bez zmian.
-
-**Ograniczenia i pułapki.**
-- Ta sama pozycja zmieniona naraz na dwóch telefonach — wygrywa ostatni zapis tej pozycji.
-- Karta zapisana w starszej wersji aplikacji może dostać z powrotem dawne pola list — są ignorowane, gdy lista jest już
-  w mapie (znacznik), a starsza wersja nie widzi nowych zmian.
-- `yStudy.ts` jest w paczce startowej — dodatkowy kod tu zużywa budżet paczki (po tej zmianie zapas ~44 B).
-
-**Testy.** `src/lib/study/yStudy.test.ts` („listy karty budowy”, 6: dwa telefony — etap odhaczony i inny usunięty;
-braki dopisane i zmienione; stara lista nie wskrzesza usuniętej pozycji; migracja dawnych pól; zapis karty i kopia
-zapasowa w obie strony; pusta lista etapów). e2e działu Praca i kopii (`site-stages`, `site-shortages`, `site-order`,
-`site-handover`, `entry-dictation`, `study`, `report-nudge`, `images`, `search-backup`) — 48/48. Vitest 1305/1305.
-
-**Commit.** `395c311` (2026-10-16).
-
-### Kontakt i dojazd w karcie budowy (H1)
-
-**Co robi.** Karta budowy ma dodatkowe pola: „Telefon inwestora”, „Kierownik budowy”, „Telefon kierownika” i „Dostęp do
-budowy” (np. kod do bramy, gdzie są klucze). Po zapisie pod nagłówkiem karty jest pasek szybkich akcji:
-- **Nawiguj** — Mapy Google z trasą do adresu;
-- **telefon z imieniem inwestora** — połączenie;
-- **SMS** — wiadomość do inwestora;
-- **telefon z imieniem kierownika** — połączenie.
-
-Pod paskiem jest wyróżniona notka z dostępem (ikona klucza).
-
-**Gdzie jest.**
-- `src/lib/study/contact.ts`: `telHref`, `smsHref`, `prettyPhone`, `mapsHref` i limity `SITE_PHONE_MAX` (40)
-  i `SITE_ACCESS_MAX` (300). Numer czyści `normalizePhone` z `boss.ts`, ten sam co numer szefa: 9 cyfr dostaje +48,
-  a `00` zamienia się na `+`.
-- `src/lib/study/sites.ts`: opcjonalne pola `SiteCard.phone`, `manager`, `managerPhone`, `access`. `cleanSite` pomija
-  puste i ucina długie (`optionalText`).
-- `src/lib/study/store.ts`: `SiteCardInput` z polami kontaktu; `saveSiteCard` składa kartę przez `cleanSite`.
-- `src/components/study/SiteCardDialog.tsx`: `QuickLink` (link jako przycisk), pasek `[data-testid=site-quick]`,
-  notka `[data-testid=site-access]` i pola formularza (`EMPTY_FORM`, `formOf`).
-
-**Jak działa i dlaczego.**
-- Szybkie akcje liczą się z zapisanej karty, nie z pisanego formularza. Dzięki temu numer w trakcie wpisywania
-  niczego nie wybiera, a pasek pokazuje dokładnie to, co jest w dokumencie.
-- Pola pominięte w `SiteCardInput` zostają bez zmian. Zapis z samą nazwą (np. z innego miejsca) nie kasuje telefonów.
-  Pusty tekst usuwa pole z karty.
-- Link Map w formie `google.com/maps/dir/?api=1&destination=…`: na Androidzie otwiera aplikację Mapy, na iPhonie
-  i komputerze stronę. Działa bez klucza API.
-- Przyciski pokazują tylko imię z ikoną słuchawki, bo „Zadzwoń: Jan Nowak” ucinało się na telefonie. Pełny opis
-  z numerem jest w `aria-label` („Zadzwoń do inwestora: +48 600 100 200”).
-
-**Ograniczenia i pułapki.**
-- Starsza wersja aplikacji nie zna nowych pól: zapis karty w niej je zgubi (jak przy etapach).
-- Numer, którego `normalizePhone` nie rozpozna (np. „u sąsiada”), zostaje w polu, ale nie daje przycisku.
-- Kontakt nie trafia do raportu ani protokołu odbioru, bo to dane robocze, nie dla inwestora.
-- Pułapka e2e: etykieta „Telefon inwestora” zawiera „Inwestor”, więc `getByLabel("Inwestor")` wymaga `exact: true`
-  (poprawione w `study.spec.ts` i `site-handover.spec.ts`).
-
-**Testy.** `src/lib/study/contact.test.ts` (linki, Mapy, zapis numeru, czyszczenie pól karty), `study.test.ts`
-(„kontakt i dostęp w karcie”: zapis, pole pominięte zostaje, pusty tekst usuwa), `e2e/site-contact.spec.ts`
-(pasek akcji z hrefami, dostęp, po przeładowaniu). Obejrzane na zrzutach 390 px i na komputerze, w obu motywach.
-
-**Commit.** `95159d1` (2026-10-16).
-
-### Godziny na budowach (H2)
-
-**Co robi.** Przy dniu z wpisami z kilku budów nagłówek dnia w Dzienniku ma przycisk z zegarem. Pokazuje on „podziel
-godziny” (kolor ostrzeżenia), dopóki dzień nie jest podzielony, a potem podział, np. „3,5 + 6,5 h”.
-
-Przycisk otwiera okno „Godziny na budowach”. Okno pokazuje zmianę z Grafiku i ma pole godzin przy każdej budowie
-(„6”, „6,5”, „6:30”). Pod polami jest podpowiedź („Puste pole dostanie resztę: 3 h 30 min”), a przyciski to
-„Po równo” i „Zapisz”.
-
-Przy nazwie budowy w Dzienniku widać jej godziny. Raport jednej budowy liczy tylko jej część dnia,
-np. „3 h 30 min na tej budowie (z 10 h, Budowa 07:00–17:00)”. Raport wszystkich budów pokazuje cały dzień
-z podziałem w nawiasie.
-
-**Gdzie jest.**
-- `src/lib/study/siteHours.ts`:
-  - typ `SiteHours` (`id` = dzień, `minutes`);
-  - `cleanSiteHours`, `parseHours`;
-  - `dayHours(journal, cards, work, key, dayKeyOf)` zwraca `DayHours` z budowami dnia, minutami (albo `null`)
-    i flagą `set`;
-  - `siteMinutesOn`.
-- `src/lib/study/siteItems.ts`: rodzaj listy `hours` w mapie `studySiteItems` (`budowa␁hours␁dzień` → `{ minutes }`).
-- `src/lib/study/sites.ts`: `SiteCard.hours`. `src/lib/study/store.ts`: `setDayHours(day, { siteId: minuty })`.
-- `src/lib/study/report.ts`:
-  - `ReportOptions.sites` (wszystkie karty);
-  - `ReportWork.site` (minuty tej budowy albo `null`) i `ReportWork.bySite`;
-  - `splitWork`, `workMinutesOf`, `workLine`. Ten sam opis dnia trafia na ekran, do tekstu i na wydruk.
-- `src/components/study/DayHoursDialog.tsx` (okno); `StudyJournal.tsx` (`hoursByDay`, przycisk `[data-day-hours]`,
-  godziny przy budowie `[data-site-hours]`); `JournalReport.tsx` i `SiteCardDialog.tsx` (paczka ZIP) przekazują
-  wszystkie karty.
-
-**Jak działa i dlaczego.**
-- Zasada bez wpisanych godzin:
-  - wpisany podział wygrywa;
-  - jedyna budowa dnia dostaje cały dzień z Grafiku;
-  - jedyna budowa bez wpisu przy innych wpisanych dostaje resztę;
-  - kilka budów bez podziału to „nierozdzielone”.
-
-  Wcześniej raport każdej z dwóch budów tego samego dnia liczył pełne 10 h, więc suma dla szefa była zawyżona.
-  Teraz taki dzień ma w raporcie budowy opis „godziny nierozdzielone” i nie wchodzi do sumy.
-- Godziny to lista karty budowy w osobnych kluczach mapy, tak jak etapy i braki. Każdy dzień to osobna pozycja,
-  więc dwa telefony wpisujące różne dni się scalają. Kopia zapasowa i stara karta z polem `hours` przechodzą
-  przez ogólne `migrateCardLists`.
-- Godzin nie zapisujemy w Grafiku: Grafik to dzień pracy, a podział między budowy to sprawa dziennika.
-  Grafik zostaje jedynym źródłem długości dnia.
-- `dayHours` dostaje minuty pracy i `dayKeyOf` z zewnątrz, bo `report.ts` importuje `siteHours.ts` (bez cyklu importów).
-- Kolejność w nagłówku dnia idzie za grupami budów pod nim (od najnowszej).
-
-**Ograniczenia i pułapki.**
-- Wpisane godziny mogą przekroczyć dzień z Grafiku. Okno to pokazuje („Wpisano … więcej niż w Grafiku”), ale nie blokuje.
-- Bez zmiany w Grafiku (lub przy nieobecności) przycisk pojawia się tylko, gdy coś już wpisano. Raport wtedy
-  nie liczy godzin, bo nie ma dnia pracy.
-- Starsza wersja aplikacji nie zna rodzaju `hours`: nie pokaże podziału, ale też go nie skasuje (osobne klucze mapy).
-- Pułapka testów: dane z dwiema budowami tego samego dnia dają teraz „nierozdzielone”. Dlatego `report.test.ts`
-  i `study.spec.ts` (raport z Grafikiem) mają poprawione oczekiwania i dane.
-
-**Testy.** `src/lib/study/siteHours.test.ts` (`parseHours`, `cleanSiteHours`, zasady `dayHours`, raport jednej i wszystkich
-budów), `study.test.ts` („godziny na budowach”: dzień zmienia tylko swoją pozycję, 0 usuwa), `report.test.ts`,
-`e2e/site-hours.spec.ts` (podział z podpowiedzią reszty, godziny przy budowach, raport po przeładowaniu; błędna liczba).
-Vitest 1339/1339, e2e Pracy 53/53. Obejrzane na zrzutach 390 px i na komputerze, w obu motywach.
-
-**Commit.** `f5186f5` (2026-10-16).
-
-### Plany i dokumenty budowy (H3)
-
-**Co robi.** Karta budowy ma panel „Plany i dokumenty”. Przycisk „Dodaj plan lub dokument” przyjmuje zdjęcia
-(rzut, zdjęcie tablicy) i PDF-y (projekt), także kilka naraz. Zdjęcia są miniaturami: stuknięcie powiększa,
-„100%” pokazuje obraz w pełnej rozdzielczości z przewijaniem (do odczytu wymiarów), a „Dopasuj” wraca do widoku
-całości. PDF to wiersz z rozmiarem i przyciskiem „Otwórz”, który zapisuje plik i otwiera go aplikacją telefonu.
-Usunięcie ma „Cofnij”. Wszystko leży na urządzeniu, więc działa bez zasięgu. Paczka ZIP budowy ma katalog
-`dokumenty/` z tymi plikami pod ich nazwami.
-
-**Gdzie jest.**
-- `src/lib/study/siteDocs.ts`: `SiteDoc` (`id` = klucz w `imageStore`, `name`, `size`, `type`, `at`), `cleanSiteDocs`
-  (tylko `image/*` i `application/pdf`, limit `SITE_DOCS_MAX` = 30), `isImageDoc`, `docLabel`.
-- `src/lib/study/siteDocsAdd.ts` (doczytywany przy dodawaniu): `addSiteDocFiles`. Obrazy idą przez `prepareImage`
-  i `imageStore.putBlob`, a PDF-y przez `addAttachmentFiles` (10 MB na plik, łączny limit załączników).
-- `src/lib/study/siteItems.ts`: rodzaj listy `docs` (`budowa␁docs␁klucz` → `{ name, size, type, at }`). `sites.ts`:
-  `SiteCard.docs`. `store.ts`: `setSiteDocs(id, next, base)`.
-- `src/lib/study/journalRefs.ts`: `journalRefsIn(doc, syncable)` zbiera też klucze dokumentów z `studySiteItems`.
-  `yjsStore.syncableRefs` woła je z `syncable = true`.
-- `src/lib/study/siteZip.ts`: `buildSiteZip(…, siteDocs)` i `downloadSiteZip(report, docs)`. Pola wyniku `docs`
-  i `missingDocs`, a druga kopia nazwy dostaje dopisek „(2)”.
-- `src/components/study/SiteDocsPanel.tsx` (panel w `SiteCardDialog.tsx` pod brakami).
-
-**Jak działa i dlaczego.**
-- Obrazy i PDF-y mają klucze w tym samym formacie (SHA-256 bajtów w `imageStore`), więc jedna lista wystarcza.
-  Ten sam plik dodany drugi raz nie dubluje się.
-- Rdzeń widzi dokumenty przez `journalRefsIn`:
-  - sprzątanie magazynu ich nie usuwa (`referencedImages`);
-  - kopia zapasowa zabiera je razem ze zdjęciami dziennika (`journalImageRefs`, ten sam budżet);
-  - synchronizacja wysyła obrazy zawsze, a PDF-y do 2 MB, jak załączniki notatek.
-- „Otwórz” używa `downloadAttachment`: aplikacja nie wyświetla PDF-a u siebie (zasada załączników). Telefon otwiera
-  pobrany plik swoją przeglądarką PDF.
-- Obraz do 2 MB zostaje bez zmian (plan musi być czytelny), większy zmniejsza `prepareImage`.
-
-**Ograniczenia i pułapki.**
-- PDF powyżej 2 MB zostaje na telefonie, który go dodał. Na drugim „Otwórz” mówi, że pliku tu nie ma.
-- Łączny limit załączników (100 MB) przy dodawaniu PDF-a budowy liczy załączniki notatek i PDF-y tej budowy, ale nie
-  innych budów. Przy dodawaniu załącznika notatki PDF-y budów się nie liczą.
-- Komunikat o limicie liczby plików z `describeRejections` mówi o „notatce” (wspólny tekst załączników).
-- Starsza wersja aplikacji nie widzi dokumentów i nie chroni ich bajtów przed swoim sprzątaniem (karencja daje czas
-  na aktualizację).
-- Pułapka lintu: `yjs` wolno importować tylko w wymienionych plikach. Test na `Y.Doc` jest więc w `yStudy.test.ts`,
-  nie w `siteDocs.test.ts`.
-
-**Testy.** `src/lib/study/siteDocs.test.ts` (czyszczenie, podpis), `yStudy.test.ts` („dokumenty budowy w dokumencie”:
-odniesienia i duży PDF poza synchronizacją), `siteZip.test.ts` (katalog `dokumenty/`, ta sama nazwa, brak bajtów),
-`e2e/site-docs.spec.ts` (zdjęcie i PDF, powiększenie i „100%”, pobranie, „Cofnij”, po przeładowaniu; inny typ
-pominięty). Vitest 1343/1343, e2e Pracy i kopii 56/56. Obejrzane na zrzutach 390 px w obu motywach.
-
-**Commit.** `0f78d36` (2026-10-16).
-
-### Serwis i gwarancja (H4)
-
-**Co robi.** Karta budowy ma panel „Serwis i gwarancja”. Zgłoszenie po odbiorze („cieknie syfon w łazience”) dostaje
-datę zgłoszenia i opcjonalny termin wizyty. Pozycja jest „otwarta”, dopóki nie zamkniesz jej przyciskiem „Załatwione”,
-który prosi o krótki opis („wymieniona uszczelka”). Załatwione chowają się pod licznikiem „Załatwione (n)” razem z opisem,
-a „↺” otwiera je ponownie. Obok jest pole „Gwarancja do” z liczbą dni do końca (od 30 dni na żółto). Zgłoszenia działają
-także na budowie w archiwum, bo serwis zwykle przychodzi po odbiorze. Zgłoszenie z terminem na dziś albo zaległe trafia do
-przypomnień nad Dziennikiem („Serwis „X” na dziś: …”) i do powiadomień push rano w dniu wizyty.
-
-**Gdzie jest.**
-- `src/lib/study/service.ts`: typ `ServiceCall` (`id`, `text`, `at`, `due?` dzień, `done?`, `solution?`), `cleanServiceCalls`
-  (limit `SERVICE_MAX` = 50, tekst `SERVICE_TEXT_MAX` = 200), `addServiceCall`, `closeServiceCall`, `reopenServiceCall`,
-  `openServiceCalls` (z terminem najpierw, najbliższy wyżej), `dueServiceCalls(list, dziś)`, `warrantyDaysLeft`,
-  `serviceDayKey` (dzień lokalny).
-- `src/lib/study/sites.ts`: `SiteCard.service` (lista) i `SiteCard.warranty` (ostatni dzień gwarancji, „2028-10-16”);
-  `cleanSite` czyści oba (zły format daty odpada).
-- `src/lib/study/siteItems.ts`: rodzaj listy `service` (`budowa␁service␁id` → wartość bez `id`); `composeSiteLists`
-  i `stripLists` znają to pole.
-- `src/lib/study/store.ts`: `setSiteService(id, calls, base)` i `setSiteWarranty(id, dzień|null)`. Gwarancja idzie przez
-  `yStudy.saveSite`, bo jest polem karty, a nie listą.
-- `src/lib/study/reminders.ts`: rodzaj przypomnienia `service-due` (dla budów w archiwum też).
-- `src/lib/push/schedule.ts`: `studyItems` dodaje powiadomienie „Serwis dziś: …” o 7:00 w dniu wizyty; klucz
-  `pushKey.service(id, due)` w `shown.ts` chroni przed podwójnym powiadomieniem.
-- `src/components/study/SiteServicePanel.tsx` (panel w `SiteCardDialog.tsx` pod dokumentami). `StudyJournal.tsx`:
-  przypomnienie `service-due` otwiera kartę budowy.
-
-**Jak działa i dlaczego.**
-- Zgłoszenia są pozycjami listy karty w mapie Yjs `studySiteItems` (jak braki i godziny), więc dwie osoby dopisujące
-  różne zgłoszenia nie nadpisują się nawzajem. Przy zapisie rodzaj `service` dostaje `siteListBase`, tak samo jak reszta.
-- Termin to dzień („2026-10-20”), nie godzina. Wizyta „dziś” znaczy cały dzień, a push idzie rano, nie o konkretnej porze.
-- Przypomnienie w Dzienniku liczy się przy każdym renderze (`studyReminders` jest czysta) i znika samo po zamknięciu
-  zgłoszenia albo po zmianie terminu. Nie ma osobnego stanu „odhaczone przypomnienie”.
-- Zamknięcie zapisuje `done` (ms) i opcjonalne `solution`. Ponowne otwarcie zdejmuje `done`, a opis zostaje.
-- Gwarancja: „po gwarancji” gdy liczba dni jest ujemna, „ostatni dzień” gdy zero. Liczenie dni idzie przez
-  `Date.UTC`, więc zmiana czasu letniego nie przesuwa wyniku.
-
-**Ograniczenia i pułapki.**
-- Push wysyła tylko zgłoszenia z terminem na dziś. Zaległe zgłoszenia są widoczne w Dzienniku, ale nie w powiadomieniach
-  (inaczej co rano dzwoniłoby to samo).
-- Zgłoszenie bez terminu nie generuje ani przypomnienia, ani powiadomienia. Pole „Wizyta” ma `min=dziś`, ale wpisanego
-  daty z przeszłości nie blokuje (zaległe są celowe).
-- Starsza wersja aplikacji nie zna pól `service` i `warranty`; przy zapisie karty może je zgubić (tak samo jak wcześniej
-  listy H1–H3). Nie sprawdzono, czy zgubione zgłoszenia wracają po aktualizacji.
-- Limit 50 zgłoszeń na budowę; po przekroczeniu „Dodaj” jest nieaktywne.
-- Pułapka e2e: przycisk „Załatwione” jest też w podciągu „Załatwione (1)” po zamknięciu pierwszego zgłoszenia, więc
-  `getByRole` z samym tekstem trafia w dwa elementy — w teście używaj nazwy dokładnej albo kolejności.
-
-**Testy.** `src/lib/study/service.test.ts` (dodanie, zamknięcie i ponowne otwarcie, kolejność, czyszczenie karty,
-dni gwarancji, przypomnienie na budowie w archiwum, powiadomienie push tylko rano w dniu wizyty),
-`e2e/site-service.spec.ts` (gwarancja, zgłoszenie na dziś, przypomnienie → karta, zamknięcie z opisem, po przeładowaniu).
-Vitest study+push 265/265, e2e serwisu i zamówień 3/3, budżet paczki 6/6.
-
-**Commit.** `d61e8a2` (2026-10-17, kod); opis w osobnym commicie `docs(opis)`.
-
-### Etapy budowy
-
-**Co robi.** Karta budowy ma listę etapów instalacji w domku jednorodzinnym: domyślnie kanalizacja podposadzkowa,
-rozprowadzenie wody, piony i podejścia kanalizacji, próba szczelności, zakrycie instalacji, biały montaż, odbiór.
-Odhaczenie zapisuje datę, pasek pokazuje postęp, a „Następny:” — pierwszy niezrobiony etap. Własny etap dopisuje się na
-końcu, usunięcie ma „Cofnij”. Przy nazwie budowy w dzienniku widać „etapy 3/7”, a raport budowy dla szefa ma w
-podsumowaniu „postęp: 3/7 etapów” i sekcję „Etapy (3/7)” z datami (WhatsApp: ✅ / ⬜).
-Etap odhacza się też bez otwierania karty: w nowym wpisie z rodzajem „Zrobione” pod rodzajem są pigułki z trzema
-następnymi niezrobionymi etapami wybranej budowy (stuknięcie odhacza od razu, dymek ma „Cofnij”), a dyktowanie
-„Lipowa, etap próba szczelności zrobiony, …” odhacza etap głosem (patrz „Dyktowanie”). Odhaczony z wpisu etap
-przypina się do wpisu (pasek „Etap: …” w arkuszu, z ✕ do odpięcia) — zdjęcia wpisu idą do protokołu odbioru pod tym
-etapem. Zapisany wpis (np. zdjęcia „przed zakryciem” zrobione przed odhaczeniem) przypina się w edycji polem „Zdjęcia do
-protokołu przy etapie” — lista wszystkich etapów karty (zrobione z ✓); stan etapu w karcie się wtedy nie zmienia.
-
-**Gdzie jest.**
-- `src/lib/study/stages.ts`: `SiteStage { id, name, done? }`, `DEFAULT_STAGES`, `siteStages(card)`, `cleanStages`,
-  `stageProgress`, `toggleStage`, `addStage`, `removeStage`, `matchStage(stages, phrase)`; limity `STAGES_MAX` (20),
-  `STAGE_NAME_MAX` (60).
-- `src/lib/study/sites.ts`: pole `SiteCard.stages?`; `cleanSite` czyści je przez `cleanStages`.
-- `src/lib/study/store.ts`: `setSiteStages(id, stages)` (przez `patchSiteCard`, tak samo jak `markSiteOrdered`);
-  `saveSiteCard` przenosi `stages` przy edycji karty.
-- `src/components/study/SiteStagesPanel.tsx` (`data-testid="site-stages"`) w `SiteCardDialog.tsx` nad „Do zamówienia”.
-- `src/components/study/JournalEntrySheet.tsx`: `siteCard`, `nextStages`, `markStage`, `entryStage` — pigułki
-  `data-testid="journal-stage-chips"` (tylko nowy wpis, rodzaj „Zrobione”, budowa z kartą lub wpisami, wpis jeszcze
-  bez etapu) i pasek `journal-entry-stage`.
-- Pole wpisu `JournalEntry.stage?` (id etapu; `yStudy.ts`, czyszczone `cleanEntryStage` w `cleanEntry` i
-  `sanitizeStudy`), w szkicu `JournalDraft.stage` (`draft.ts`, starszy szkic bez pola = `null`), w formularzu edycji
-  (`entrySheet.ts`), przez `NewJournalEntry.stage` w `addJournalEntry`/`updateJournalEntry` (`store.ts`). Wpis z samym
-  etapem (bez tekstu i zdjęć) jest poprawny.
-- `src/components/ui/sheet.tsx`: klik w dymek (`[data-sonner-toaster]`) nie zamyka arkusza — jak w `dialog.tsx`; bez
-  tego „Cofnij” w dymku zamykał arkusz wpisu.
-- `src/components/study/StudyJournal.tsx`: `stagesBySite`, znacznik `[data-site-progress]` obok przycisku budowy.
-- `src/lib/study/report.ts`: `JournalReport.stages`, postęp w `reportSummary`, sekcja w `reportBody`, znaczki w
-  `reportWhatsApp`; `JournalReport.tsx`: `[data-report-stages]`.
-
-**Jak działa i dlaczego.** Karta bez własnej listy pokazuje domyślną, ale niczego nie zapisuje; pierwsza zmiana zapisuje
-całą listę w karcie (mapa Yjs `studySites`). Dzięki temu postęp w dzienniku i w raporcie pojawia się tylko przy budowach,
-na których ktoś faktycznie odhacza etapy — reszta raportów się nie zmienia. Znacznik postępu stoi obok przycisku budowy,
-nie w nim, żeby nazwa budowy (i jej `aria-label`) zostały czyste. Pigułki pokazują się tylko przy „Zrobione”, bo
-etap kończy się wpisem o zrobionej robocie; przy „Problem” i „Notatka” byłyby szumem. `matchStage` porównuje bez
-ogonków i wielkości liter: najpierw cała nazwa, potem początek nazwy („odbiór”), potem wszystkie słowa wypowiedzi jako
-początki słów nazwy („piony”, „bialy montaz”); gdy pasuje kilka etapów tak samo („grzejniki” przy „Grzejniki parter” i
-„Grzejniki piętro”) — nic, zamiast zgadywać.
-
-**Ograniczenia i pułapki.**
-- Od `395c311` każdy etap to osobny klucz mapy `studySiteItems` (patrz „Listy karty budowy w dokumencie”): dwa
-  telefony zmieniające różne etapy tej samej budowy scalają się. Ten sam etap zmieniony naraz — wygrywa ostatni zapis.
-- Starsza wersja aplikacji (sprzed `395c311`) widzi etapy tylko z dawnego pola karty — nowych zmian nie zobaczy.
-- Etapów nie da się przestawiać ani zmieniać im nazw (usuń i dodaj nowy). Z arkusza wpisu tylko się odhacza (cofnięcie
-  — „Cofnij” w dymku albo w karcie); w edycji zapisanego wpisu zamiast pigułek jest lista do przypięcia (bez odhaczania). Odhaczenie z pigułki zapisuje się od razu,
-  nawet gdy wpis potem odrzucisz. „Cofnij” w dymku cofa też przypięcie. Zmiana budowy po odhaczeniu nie czyści
-  `stage` — pasek znika (etapu nie ma w nowej karcie), a protokół takiego wpisu nie przypisze do etapu.
-- Starsza wersja aplikacji nie zna `stage`: przy edycji wpisu pole może zginąć (wpis wraca do „Pozostałych”).
-
-**Testy.** `src/lib/study/stages.test.ts` (10: domyślne jako kopia, odhaczanie i cofanie, postęp i następny, wszystko
-zrobione, własny etap i duplikaty, limit, usuwanie, `cleanStages`, `cleanSite`, `matchStage` — trafienia i
-niejednoznaczne). `src/lib/study/report.test.ts`
-(„etapy budowy”: postęp, sekcja z datami, znaczki WhatsApp; bez sekcji bez własnej listy i w raporcie wszystkich budów).
-`e2e/site-stages.spec.ts` (odhaczenie z datą, własny etap, usunięcie z „Cofnij”, raport, postęp przy budowie po
-przeładowaniu; pigułki przy „Zrobione”: odhaczenie, „Cofnij” bez zamykania arkusza, stan w karcie). Regresja działu Praca
-41/41 (chromium), układ telefonu 6/6 (`iphone-14`); po `b82dda3`: wpis, zdjęcia, kształtki, próba, szkice, `study.spec`
-(31), karta na telefonie — wszystko zielone. Nie sprawdzone ręcznie na telefonie.
-
-Pole `stage`: `study.test.ts` (szkic, wpis z samym etapem, `sanitizeStudy`), `e2e/site-handover.spec.ts`.
-
-Przypięcie w edycji: `e2e/site-handover.spec.ts` (zapisany wpis ze zdjęciem → etap z listy → etap w karcie nadal
-nieodhaczony, zdjęcie w grupie etapu na wydruku).
-
-**Commit.** `a25958a` (2026-10-16), `b82dda3` (odhaczanie z wpisu i głosem, 2026-10-16), `5ee9858` (przypięcie wpisu
-do etapu, 2026-10-16), `f31f65f` (przypięcie w edycji, 2026-10-16).
-
-### Do zamówienia (kształtki)
-
-**Co robi.** W karcie budowy sekcja „Do zamówienia” pokazuje kształtki zużyte na tej budowie od ostatniego
-zamówienia (suma sztuk per nazwa). „Kopiuj listę” kopiuje gotowy tekst do wysłania dostawcy albo do grupy,
-a „Oznacz jako zamówione” zapisuje moment zamówienia — od tej chwili lista zaczyna się od zera i rośnie z
-kolejnymi wpisami. Bez kształtek wszystkie przyciski są nieaktywne. „WhatsApp” (U7) otwiera `wa.me/?text=…` z tym
-samym tekstem: WhatsApp sam pyta o odbiorcę, więc numer hurtowni nie jest zapisywany ani w karcie, ani w sync, ani w kopii
-(decyzja domyślna — wybór numeru zapisywanego w karcie czeka na zgodę właściciela). Ta sama lista idzie w raporcie budowy dla szefa
-(ekran, wydruk, tekst, WhatsApp) jako sekcja „Do zamówienia” — w jednej wiadomości postęp i brakujący materiał.
-
-**Gdzie jest.**
-- `src/lib/study/report.ts`: `JournalReport.toOrder` (z `siteOrder`, tylko raport jednej budowy), sekcja
-  `## Do zamówienia` w `reportBody` (WhatsApp: `*Do zamówienia*`); `ReportOptions.siteCard` niesie `orderedAt`.
-  Tabela `[data-report-to-order]` w `JournalReport.tsx`.
-- `src/lib/study/order.ts`: `siteOrder(journal, siteId, orderedAt?)` → `{ items, entries, since }` (czysta funkcja),
-  `orderText(siteName, order)` — tekst bez znaczników formatowania, `whatsappOrderUrl(text)` — link `wa.me` (U7).
-  Test: `src/components/study/SiteOrderPanel.test.tsx` (klik „WhatsApp” otwiera `wa.me` z treścią; pusta lista = wyłączony),
-  `src/lib/study/order.test.ts` (kodowanie tekstu w linku).
-- `src/lib/study/sites.ts`: pole `SiteCard.orderedAt?` (ms); `cleanSite` zachowuje je, gdy jest liczbą.
-- `src/lib/study/store.ts`: `markSiteOrdered(id, now)` (zapisuje też, co zamówiono, w historii `orders` — patrz „Braki
-  materiału”); `saveSiteCard` zachowuje wszystkie pola karty poza nazwą, adresem i inwestorem.
-- `src/components/study/SiteOrderPanel.tsx` (`data-testid="site-order"`), wstawiony w `SiteCardDialog.tsx` pod formularzem.
-
-**Jak działa i dlaczego.** Liczymy od ostatniego zamówienia, a nie od początku budowy — inaczej lista rosłaby bez
-końca i nie mówiłaby, czego brakuje. Wpis należy do budowy przez `entrySiteId` (karta albo nazwa ze starszych wpisów);
-liczą się tylko wpisy z `at` późniejszym niż `orderedAt` (wpis z dokładnie tą chwilą uznajemy za zamówiony). Nazwy
-sumuje `sumFittings` (bez wielkości liter i ogonków). Zamówienie zapisuje się w karcie (mapa Yjs `studySites`), więc
-synchronizuje się z drugim telefonem tak jak reszta karty. Budowa znana tylko z nazw we wpisach dostaje kartę przy
-pierwszym oznaczeniu zamówienia.
-
-**Ograniczenia i pułapki.**
-- Liczy tylko kształtki (decyzja z 2026-10-15: bez metrów rury).
-- Starsza wersja aplikacji nie zna `orderedAt`: pokaże kartę bez sekcji, ale zapis karty w starej wersji
-  pole zgubi (wtedy lista znów liczy się od początku budowy).
-- „Oznacz jako zamówione” zamawia całą listę naraz — nie da się zamówić części pozycji. Historia zamówień jest
-  (ostatnie 20, „Poprzednie zamówienia”).
-- `orderText` formatuje datę przez `toLocaleDateString("pl-PL")` (strefa urządzenia).
-
-**Testy.** `src/lib/study/order.test.ts` (10: suma i kolejność, granica `orderedAt`, inne budowy i wpisy bez kształtek,
-`siteId` przed nazwą, tekst z datą i bez pozycji, `cleanSite` z `orderedAt`). `e2e/site-order.spec.ts` (suma budowy
-bez obcej budowy, kopia listy, oznaczenie zeruje listę i blokuje przyciski, stan po przeładowaniu; raport z karty ma
-sekcję na ekranie i w kopiowanym tekście). `src/lib/study/report.test.ts` („materiał do zamówienia”: niezależnie od
-okresu raportu, bez sekcji w raporcie wszystkich budów). Regresja działu: `e2e/study.spec.ts`, `journal-fittings.spec.ts`,
-`site-order.spec.ts` — zielone (chromium, `--workers=1`). Nie sprawdzone ręcznie na telefonie.
-
-**Commit.** `98e625a` (karta, 2026-10-16), `a8cf1a9` (raport, 2026-10-16).
-
-### Braki materiału i historia zamówień
-
-**Co robi.** W karcie budowy sekcja „Braki materiału”: dopisujesz, czego brakuje, z ilością („Rura PEX 16 · 50 m”,
-„Klej PCV”). Stuknięcie w status przełącza *Brakuje → Zamówione → Dostarczone* (data zmiany się zapisuje); kolory:
-czerwony, bursztynowy, zielony — „Brakuje” celowo czerwone, bo bursztyn motywu i ostrzeżenie są prawie tym samym kolorem. „Kopiuj braki”
-kopiuje tekst dla dostawcy albo szefa, „Wyczyść dostarczone” sprząta listę (z „Cofnij”), usunięcie pozycji też ma
-„Cofnij”. Raport budowy dla szefa ma w podsumowaniu „braki materiału: N” i sekcję z tym, co jeszcze nie dojechało.
-Pod „Do zamówienia” (kształtki) jest zwinięta lista „Poprzednie zamówienia” — każde „Oznacz jako zamówione” zapisuje
-datę i zamówione pozycje.
-
-**Gdzie jest.**
-- `src/lib/study/shortages.ts`: `Shortage { id, text, qty, status, at, changed? }`, `addShortage`, `nextStatus`,
-  `setShortageStatus`, `removeShortage`, `clearDelivered`, `openShortages`, `shortageLine`, `shortagesText`,
-  `cleanShortages`; historia: `OrderLogEntry { at, items }`, `logOrder`, `cleanOrderLog`, `orderLogLine`.
-  Limity: 40 braków, 80 znaków nazwy, 20 znaków ilości, 20 zamówień w historii.
-- `src/lib/study/sites.ts`: pola `SiteCard.shortages?` i `SiteCard.orders?`, czyszczone w `cleanSite`.
-- `src/lib/study/store.ts`: `setSiteShortages`, `markSiteOrdered` (dopisuje do `orders`), wspólne `patchSiteCard`.
-- `src/components/study/SiteShortagesPanel.tsx` (`data-testid="site-shortages"`) w `SiteCardDialog.tsx` pod „Do zamówienia”;
-  historia w `SiteOrderPanel.tsx` (`site-order-history`).
-- `src/lib/study/report.ts`: `JournalReport.shortages` (otwarte, tylko raport jednej budowy), sekcja „Braki materiału”
-  w `reportBody`; `JournalReport.tsx`: `[data-report-shortages]`.
-
-**Jak działa i dlaczego.** Kształtki liczą się same z wpisów (zużycie), a braki to rzeczy, których nie widać we wpisach
-— rury w metrach, kleje, otuliny. Dlatego osobna, ręczna lista ze statusem, a nie liczenie. Ta sama nazwa dopisana
-ponownie, dopóki nie dojechała, nie robi duplikatu (najwyżej podmienia ilość). W raporcie tylko „brakuje” i „zamówione”,
-brakujące najpierw. Dane w karcie budowy (mapa Yjs `studySites`), więc synchronizują się jak reszta karty.
-
-**Ograniczenia i pułapki.**
-- Decyzja z 2026-10-15 („obmiary tylko kształtki”) dotyczyła liczenia zużycia; braki to osobna, ręczna lista —
-  wprowadzone 2026-10-16 na prośbę („rób po kolei” po propozycji punktu 3).
-- Od `395c311` każdy brak i każde zamówienie to osobny klucz mapy `studySiteItems`: zmiany różnych pozycji z dwóch
-  telefonów scalają się. Starsza wersja aplikacji (sprzed `395c311`) widzi tylko dawne pola karty.
-- Braki dyktuje się głosem przy treści wpisu („Lipowa, brakuje …” — patrz „Dyktowanie”); przypomnienie o materiale
-  „zamówionym” ponad 3 dni — w „Przypomnieniach nad listą”.
-
-**Testy.** `src/lib/study/shortages.test.ts` (10: dopisanie i duplikaty, dostarczona nie blokuje, statusy, otwarte i
-czyszczenie, limit, linia i tekst, `cleanShortages`, historia i limit, `cleanOrderLog`, `cleanSite`).
-`src/lib/study/report.test.ts` („braki materiału”). `e2e/site-shortages.spec.ts` (dopisanie, status, kopia, czyszczenie z
-„Cofnij”, historia zamówień, raport, stan po przeładowaniu). `e2e/site-card-mobile.spec.ts` (`@mobile`, iPhone 14 i
-Pixel 7, 320 i 390 px: karta z etapami, zamówieniem i brakami bez przewijania w bok, cele dotyku ≥ 44 px; `26cf71f`).
-Regresja działu Praca 39/39 (chromium). Zrzuty karty obejrzane w jasnym i ciemnym motywie (390 px).
-
-**Commit.** `f10d6dd` (2026-10-16).
-
-### Protokół odbioru dla inwestora
-
-**Co robi.** Przycisk „Protokół odbioru” w karcie budowy drukuje jedną kartkę (albo PDF przez „Zapisz jako PDF” w oknie
-drukowania): nazwa budowy, adres, inwestor, okres prac, data protokołu, etapy z datami (☑/☐), próby szczelności z
-wpisów z wynikiem, uwagi (otwarte problemy; bez nich „Brak uwag”), do 12 zdjęć i dwa pola „Wykonawca / Inwestor —
-data i podpis”. Zdjęcia z wpisów, które odhaczyły etap (patrz „Etapy budowy”), stoją pod nazwą tego etapu, w
-kolejności etapów; reszta pod „Pozostałe” (bez żadnego przypiętego — jedna siatka bez nagłówka).
-
-**Gdzie jest.**
-- `src/lib/study/handover.ts`: `buildHandover(journal, site, now)` → `Handover`, `handoverText(h)` (ta sama treść jako
-  tekst, bez zdjęć; liczy zdjęcia etapów: „5 zdjęć (Próba szczelności: 2, …)”), `HANDOVER_PHOTOS_MAX` (12),
-  `HandoverPhotoGroup { stage, photos }` w `Handover.photoGroups` (obok płaskiego `photos`).
-- `src/components/study/HandoverPaper.tsx` — kartka (klasa `.report-paper`, czarno na białym na papierze); grupy
-  zdjęć `[data-handover-photo-group]` z nagłówkiem etapu, `break-inside-avoid-page`.
-- `src/components/study/PrintRoot.tsx` — wspólny wydruk (raport i protokół): korzeń `#report-print` pod `body`, klasa
-  `html.printing-report`, czekanie na zdjęcia (do 3 s), sprzątanie po `afterprint` albo pierwszym dotknięciu.
-- `src/components/study/SiteCardDialog.tsx`: przycisk, stan `handover`, `<PrintRoot testId="handover-print">`.
-
-**Jak działa i dlaczego.** Protokół składa się z danych, które już są: karta (adres, inwestor, etapy), wpisy (próby
-`test`, problemy bez `resolved`, zdjęcia). Najpierw zdjęcia przypięte do etapów (wpis z `stage`, w kolejności listy
-etapów), potem pozostałe od najstarszych, bo „przed zakryciem” są zwykle na początku budowy. Limit 12 tnie od końca,
-więc zdjęcia etapów mają pierwszeństwo; reszta jest w paczce ZIP. Wpis z `stage` etapu, którego już nie ma w karcie,
-idzie do pozostałych. Przycisk jest aktywny, gdy budowa ma wpisy albo własną listę etapów.
-
-**Ograniczenia i pułapki.**
-- Bez podglądu przed drukiem — od razu okno drukowania (jak „Drukuj” w raporcie).
-- Zdjęcie trafia pod etap tylko przez wpis przypięty do etapu: odhaczenie z wpisu (pigułka, głos) albo wybór w edycji
-  zapisanego wpisu. Etap odhaczony w samej karcie nie przypina żadnego wpisu.
-- Grupy idą po liście etapów karty, a gdy karta nie ma własnej listy — po domyślnych (`siteStages`); sekcja „Zakres prac”
-  nadal pokazuje się tylko przy własnej liście (`stages: null`).
-- „Tekst protokołu” (obok „Protokół odbioru”) wysyła ten sam protokół jako tekst, bez zdjęć: udostępnianie systemowe
-  na telefonie, a bez niego — schowek (`shareHandover` w `SiteCardDialog.tsx`, `f5dc1f6`).
-
-**Testy.** `src/lib/study/handover.test.ts` (4: dane, okres, próby i uwagi tylko z tej budowy; etapy i limit zdjęć;
-budowa bez wpisów; tekst; + 3 „zdjęcia przy etapach”: kolejność grup i tekst, limit tnie od pozostałych, bez
-przypiętych jedna grupa). `e2e/site-handover.spec.ts` (karta z adresem i inwestorem, odhaczony etap, treść wydruku z
-próbą, uwagą i podpisami; `window.print` podmienione; wpis ze zdjęciem odhacza etap pigułką → po przeładowaniu zdjęcie
-w grupie etapu na wydruku). Regresja działu Praca 37/37 (w tym wydruk raportu); po `5ee9858` 40/40 + bundle.
-Nie drukowane na prawdziwej drukarce ani do PDF w telefonie.
-
-**Commit.** `9b169ad` (2026-10-16), `5ee9858` (zdjęcia przy etapach, 2026-10-16), `f31f65f` (grupy po domyślnych
-etapach, 2026-10-16; test „karta bez własnej listy” w `handover.test.ts`).
-
-### Rysowanie po zdjęciu
-
-**Co robi.** Na miniaturce zdjęcia w arkuszu wpisu jest przycisk „Rysuj na zdjęciu” (ołówek, prawy dolny róg).
-Otwiera płótno ze zdjęciem w jego proporcjach: strzałka, wymiar, zaznaczenie kolorem. „Zapisz rysunek” podmienia
-zdjęcie we wpisie na wersję z rysunkiem (jak wtopiony podpis), więc rysunek jedzie do szefa, raportu i paczki ZIP.
-
-**Gdzie jest.**
-- `src/components/study/JournalEntrySheet.tsx`: stan `drawing { ref, url }`, `openDrawing` (bajty z `imageStore` →
-  adres `blob:`), `saveDrawing` (`dataURL` → `prepareImage` → `imageStore.putBlob` → podmiana w `images`).
-- `src/components/DrawingCanvas.tsx` (wspólne z Notatkami): `paintStrokes`, `compose`, tło wczytywane raz (`bg`),
-  rozmiar płótna z proporcji zdjęcia, eksport w rozdzielczości zdjęcia (do `PHOTO_EXPORT_MAX` = 1600 px, JPEG 0,9).
-
-**Jak działa i dlaczego.** Kreski są rysowane na osobnej warstwie nakładanej na tło, więc gumka ściera tylko kreski,
-a nie zdjęcie (wcześniej `destination-out` wycinało dziury w tle). Płótno bez zdjęcia (rysunek w Notatkach) wygląda
-i zapisuje się jak dotąd (PNG na białym tle). Oryginał zdjęcia zostaje w magazynie do odśmiecenia, jak przy podpisie.
-
-**Ograniczenia i pułapki.**
-- Rysunek się „wtapia” — nie da się go potem edytować osobno od zdjęcia (można usunąć zdjęcie i dodać oryginał).
-- Kreska zaczęta, zanim zdjęcie się wczyta, może się przesunąć, gdy płótno zmieni rozmiar (zdjęcie wczytuje się szybko).
-- e2e: współrzędne płótna liczyć dopiero po ustaniu animacji okna (`canvas.hover()` + chwila).
-
-**Testy.** `e2e/photo-drawing.spec.ts` (proporcje 4:3, kreska, zapis podmienia zdjęcie). `e2e/card-images.spec.ts`
-(„rysunek z menu Więcej opcji” — płótno w Notatkach po zmianie). Regresja zdjęć dziennika i notatek 35/35.
-Nie sprawdzone palcem na telefonie.
-
-**Commit.** `b1f3842` (2026-10-16).
-
-### „Jak rozwiązane?” — baza własnych rozwiązań
-
-**Co robi.** Po „Oznacz jako rozwiązany” pod problemem otwiera się pole „Jak rozwiązane?” (np. „wymieniona złączka,
-dokręcony śrubunek”). „Zapisz” albo Enter zapisuje opis, „Pomiń” zamyka pole — wtedy zostaje przycisk „Jak
-rozwiązane?”, żeby dopisać później; zapisany opis ma „Zmień”. Opis jest:
-- pod wpisem („Rozwiązanie: …”),
-- w raporcie dla szefa (linia „Rozwiązanie:” pod problemem, też na wydruku),
-- w szukaniu dziennika (słowo z rozwiązania znajduje wpis),
-- na tablicy Nauki przy temacie: zwinięte „Moje rozwiązania (N)” — problem i „→ jak rozwiązano”, od najnowszego.
-
-**Gdzie jest.**
-- `src/lib/study/yStudy.ts`: pole `JournalEntry.solution?` (tylko `problem`), `JOURNAL_SOLUTION_MAX` (500),
-  `setSolution(id, text)`; czyszczenie w `cleanEntry` (kopia, drugi telefon).
-- `src/lib/study/store.ts`: `setProblemSolution`, czyszczenie w `sanitizeStudy`, `updateJournalEntry` zachowuje opis
-  przy edycji w arkuszu (formularz go nie zna), `practiceByTopic` → `TopicPractice.solutions`.
-- `src/lib/study/journalView.ts`: `filterJournal` szuka też w `solution`.
-- `src/lib/study/report.ts` (`entryLine`), `src/components/study/JournalReport.tsx` (`[data-report-solution]`).
-- `src/components/study/StudyJournal.tsx`: `SolutionLine` (pole, opis, „Zmień”); `StudyBoard.tsx`: `[data-topic-solutions]`.
-
-**Jak działa i dlaczego.** Dziennik już wiedział, że problem rozwiązano, ale nie jak — a to jest wiedza, której
-potrzeba przy następnym takim problemie. Opis jest opcjonalny i nie blokuje oznaczenia (szybkość na budowie).
-Ponowne otwarcie problemu zostawia opis (przy kolejnym rozwiązaniu jest pod ręką); zmiana rodzaju wpisu na inny niż
-problem go usuwa.
-
-**Ograniczenia i pułapki.**
-- Nie ma zamiany rozwiązania na własne pytanie quizu jednym stuknięciem — pytanie potrzebuje trzech błędnych
-  odpowiedzi, których aplikacja nie wymyśli; własne pytania dodaje się jak dotąd („Moje pytania”).
-- Opisu nie dyktuje się osobnym mikrofonem (można dyktować klawiaturą telefonu).
-- Starsza wersja aplikacji nie zna `solution`: edycja wpisu w starej wersji opis zgubi.
-
-**Testy.** `src/lib/study/study.test.ts` („jak rozwiązano problem”: zapis, przycięcie, usunięcie, tylko problem;
-edycja i ponowne otwarcie nie gubią opisu, zmiana rodzaju tak; „Moje rozwiązania” i szukanie; `sanitizeStudy`).
-`src/lib/study/yStudy.test.ts` (synchronizacja dwóch telefonów, `cleanDump`). `src/lib/study/report.test.ts`
-(linia „Rozwiązanie:”). `e2e/journal-solution.spec.ts` (2: pole po oznaczeniu, po przeładowaniu, szukanie, tablica;
-„Pomiń” i dopisanie później). Regresja działu Praca 34/34; Vitest 1289/1289.
-
-**Commit.** `415b7a5` (2026-10-16).
-
-### Dyktowanie: cały wpis i kształtki
-
-**Co robi.**
-- **Cały wpis jedną wypowiedzią** — mikrofon „Dyktuj” przy treści wpisu. Np. „Lipowa, problem, przeciek przy trójniku,
-  kolano 16 cztery sztuki”: budowa zmienia się na Lipowa 5, rodzaj na „Problem”, do tekstu idzie „przeciek przy
-  trójniku”, a kształtka trafia na listę. Dymek mówi, co rozpoznano („Z wypowiedzi: budowa Lipowa 5 · Problem ·
-  kształtki: Kolano 16 × 4”). Zwykłe zdanie bez budowy, rodzaju i kształtek dopisuje się do tekstu bez zmian (jak dawniej).
-- **Braki materiału** — ten sam mikrofon: „Lipowa, brakuje kleju do PCV i rury PEX 16 pięćdziesiąt metrów” (także
-  „zamówić …”, „do zamówienia …”) dopisuje pozycje do „Braków materiału” w karcie budowy (wskazanej albo bieżącej),
-  z ilością, gdy padła liczba z jednostką („50 m”, „3 szt.”, „2 worki”). Do treści wpisu nic nie trafia; bez budowy —
-  komunikat „Braki zapisują się w karcie budowy”.
-- **Etap zrobiony** — „Lipowa, etap próba szczelności zrobiony, ciśnienie trzymało”: etap odhacza się w karcie budowy
-  (jeśli już był odhaczony — zostaje z pierwszą datą), rodzaj wpisu ustawia się na „Zrobione” (chyba że padł inny), a
-  reszta idzie do tekstu. Nazwa kończy się słowem zrobiony/gotowy/skończony/zakończony (każda forma) albo przecinkiem.
-  Nieznana nazwa albo brak budowy — komunikat błędu, reszta wypowiedzi i tak trafia do wpisu.
-- **Same kształtki** — mikrofon „Dyktuj kształtki” w polu kształtek: „kolano szesnaście cztery sztuki, trójnik 16 dwa”.
-  Ta sama nazwa sumuje sztuki zamiast nowego wiersza. Gdy nic nie rozpozna, dymek pokazuje usłyszany tekst i przykład.
-
-**Gdzie jest.**
-- `src/lib/study/spokenEntry.ts`: `parseSpokenEntry(spoken, { sites, fittings })` → `{ site?, kind?, stage?, fittings,
-  text, shortages, structured }`; braki: `SHORTAGE_MARKERS`, `UNIT_SHORT`, `parseShortages`, `numberize`; etap:
-  `STAGE_DONE` (słowa kończące nazwę), znacznik „etap” zaraz po budowie/rodzaju.
-- `src/lib/study/spokenFittings.ts`: `parseSpokenFittings(text, known)`, `mergeFittings(current, added)`, `wordsToDigits`;
-  wspólne słowniki (`UNITS`, `TENS`, `SINGULAR`, `QTY_WORD`, `fold`).
-- `src/components/study/JournalEntrySheet.tsx`: obsługa dyktowania treści (`useDictation` → `parseSpokenEntry`; budowa
-  przez `pickSite`, rodzaj i kształtki przez `patch`, kształtki scalane `mergeFittings`; etap — `matchStage` na liście
-  karty i `setSiteStages` z bazą).
-- `src/components/study/FittingsFields.tsx`: przycisk „Dyktuj kształtki” przy „Dodaj kształtki” i przy „Kolejna”.
-- Oba przez `useDictation` (Web Speech API, `pl-PL`, zgoda przy pierwszym użyciu — `kaczy.dictation.consent`).
-
-**Jak działa i dlaczego.** Rozpoznawanie mowy zwykle nie stawia przecinków, więc reguły całego wpisu są ostrożne:
-budowa tylko na początku (pełna nazwa znanej budowy albo jej jednoznaczne pierwsze słowo, za którym stoi przecinek
-albo słowo rodzaju; opcjonalnie „budowa …”), rodzaj tylko jako pierwsze słowo po budowie (problem/usterka/awaria,
-notatka/uwaga, zrobione/gotowe), kształtka tylko jako nazwa kształtki z co najmniej jedną liczbą za nią („trójnik 16 dwa”;
-„trójniki rozsunięte trzydzieści centymetrów” zostaje tekstem). Zapowiedź „kształtki” i spójnik przed kształtką nie
-zostają w tekście. Kształtki: liczebniki zamienia `wordsToDigits`; sztuki — po mnożniku („x 3”), przed „sztuk/szt/razy/x”,
-na początku („4 kolana 16”) albo ostatnia z dwóch liczb („trójnik 16 2”); bez liczby — 1; „20 na 16” to wymiar
-(„Redukcja 20/16”). Liczba mnoga pierwszego słowa wraca do pojedynczej, nazwa znana z historii przyjmuje jej pisownię.
-
-**Ograniczenia i pułapki.**
-- Budowa rozpoznaje się tylko spośród znanych (z kart i wpisów, bez archiwum) i w mianowniku („Lipowa”, nie „na Lipowej”).
-- Po „brakuje” pierwsze słowo wraca z dopełniacza do mianownika dla częstych materiałów („kleju” → „Klej”, „rury” →
-  „Rura”; słownik `GENITIVE_TO_NOMINATIVE`, `ddb87d0`); nieznane słowa i reszta pozycji zostają, jak padły. Po „do
-  zamówienia” nic się nie zmienia (tam mówi się w mianowniku). Słowo „brak” (nie „brakuje”) to zwykły tekst problemu.
-  Ilość bez jednostki („rura 16”) to wymiar, nie ilość.
-- Pierwsze słowo budowy bez przecinka i bez słowa rodzaju za nim nie wystarcza („polna droga zalana” to tekst).
-- „Dyktuj kształtki” bierze każdy kawałek jako pozycję: przypadkowe słowa („coś tam”) zostaną pozycją — usuwa się „−”.
-- Web Speech API: w Chrome nagranie idzie do usługi Google; bez internetu nie działa. Na iPhonie (Safari) zależnie od
-  wersji — przy braku wsparcia mikrofonów nie ma (zostaje dyktowanie z klawiatury telefonu).
-- W e2e: „Dyktuj” (treść) wymaga `exact: true`, bo obok jest „Dyktuj kształtki”.
-
-**Testy.** `src/lib/study/spokenEntry.test.ts` (8: bez przecinków, z przecinkami i liczbą słownie, zwykłe zdanie bez
-zmian, pierwsze słowo budowy tylko przed przecinkiem/rodzajem, niejednoznaczne „dom”, „budowa …” i rodzaj bez budowy,
-zapowiedź „kształtki” i nazwa wielowyrazowa, „20 na 16”). `src/lib/study/spokenFittings.test.ts` (10). e2e z udawanym
-`SpeechRecognition`: `e2e/entry-dictation.spec.ts` (zmiana budowy z Polnej na Lipową, rodzaj, tekst, kształtka, zapis na
-właściwej budowie), `e2e/fittings-dictation.spec.ts` (dwie wypowiedzi, suma sztuk), `e2e/study.spec.ts` (zwykłe zdanie).
-Nie sprawdzone z prawdziwym mikrofonem.
-
-**Commit.** `b65d58c` (kształtki, 2026-10-16), `b61b737` (cały wpis, 2026-10-16), `db490f7` (braki głosem, 2026-10-16).
-Testy braków: `spokenEntry.test.ts` („braki materiału głosem”, 4), `e2e/entry-dictation.spec.ts` („brakuje …” → karta).
-Etap głosem: `b82dda3` (2026-10-16); `spokenEntry.test.ts` („etap głosem”, 3), `e2e/entry-dictation.spec.ts` („etap …
-zrobiony” → odhaczony w karcie, 1/7).
-
-### Przypomnienia o raporcie (dzień i tydzień)
-
-**Co robi.**
-- **Raport dnia** — raz dziennie, po końcu dzisiejszej zmiany z Grafiku (bez zmiany albo przy nieobecności i zmianie
-  przez północ — o 17:00), jeśli dziś są wpisy: dymek „Raport dnia gotowy” i — przy zgodzie — powiadomienie systemowe.
-- **Raport tygodnia** — w piątek po końcu dnia pracy (albo w sobotę/niedzielę, jeśli w piątek nie było okazji), raz na
-  tydzień, gdy w ostatnich 7 dniach są wpisy: „Raport tygodnia gotowy”. Tego dnia zastępuje raport dnia (obejmuje dziś).
-- „Otwórz raport” przechodzi do Pracy i otwiera okno raportu z tym zakresem: dzień ostatniego wpisu albo 7 dni.
-  Przy kilku budowach (dziś / w tygodniu) od razu „Wszystkie budowy”, żeby żadna nie wypadła. Stamtąd raport idzie
-  do szefa (WhatsApp) albo do grupy jednym stuknięciem.
-- Powiadomienie systemowe otwiera `/praca?raport=dzis`, `dzis-wszystkie`, `tydzien` albo `tydzien-wszystkie`.
-
-**Gdzie jest.**
-- `src/lib/study/reportNudge.ts`: `reportDueMinute`, `dailyReportNudge`, `weeklyReportNudge`, `weekKeyOf`;
-  klucze `REPORT_NUDGE_KEY` (`kaczy.study.reportNudged.v1`, dzień) i `WEEK_REPORT_NUDGE_KEY`
-  (`kaczy.study.weekReportNudged.v1`, poniedziałek tygodnia); `REPORT_NUDGE_FALLBACK` (`17:00`).
-- `src/lib/study/reportLink.ts`: prośba `JournalReportRequest { allSites, range }` (`requestJournalReport`,
-  `consumeJournalReportRequest`, `useJournalReportRequest`), parametr `raport` (`reportParam` / `parseReportParam`).
-- `src/components/study/DailyReportNudge.tsx`: sprawdzenie przy starcie i co minutę (najpierw tydzień, potem dzień);
-  montowany leniwie w `src/pages/Index.tsx` (`onOpenWork` → widok `study`).
-- `StudyView.tsx` przełącza na Dziennik i zdejmuje `?raport=` z adresu; `StudyJournal.tsx` otwiera okno raportu
-  z `initialRequest`; `JournalReport.tsx` (`JournalReportDialog`): `allSites` → „Wszystkie budowy”, `week` → preset 7 dni.
-
-**Jak działa i dlaczego.** Godzina z Grafiku, bo to koniec dnia pracy; stała godzina, gdy Grafiku brak. Raz dziennie /
-raz na tydzień (klucze w `localStorage`), żeby nie nękać. W piątek tydzień ma pierwszeństwo — szef dostaje jedno
-podsumowanie zamiast dwóch. Komponent czyta dziennik przez `yStudy` z `data.ts`, a nie przez `store.ts` — ten importuje
-materiał do nauki, który nie musi się ładować przy każdym starcie aplikacji. Zwykłe otwarcie raportu (przycisk, karta
-budowy) czyści prośbę, więc nie dziedziczy zakresu z przypomnienia.
-
-**Ograniczenia i pułapki.**
-- Bez serwera push: przypomnienia działają tylko przy otwartej aplikacji (jak reszta przypomnień).
-- Wysłanie do szefa zostaje jednym stuknięciem w oknie raportu — automatyczna wysyłka WhatsApp wymagałaby serwera.
-- Tydzień = ostatnie 7 dni (jak preset „7 dni”), nie tydzień kalendarzowy od poniedziałku.
-- e2e bez stałego zegara: w piątek po 17:00 albo w weekend dymek może się pojawić w niezwiązanym teście, który tworzy
-  wpisy (`docs/GOTCHAS.md`). Testy przypomnień ustawiają `page.clock`.
-- Komponent dokłada ~1 KB do paczki startowej (leniwy import). Budżet paczki — patrz „Wydajność — paczka startowa
-  i precache” (od `3d31b58` w progach).
-
-**Testy.** `src/lib/study/reportNudge.test.ts` (11: godzina z Grafiku, nieobecność i brak zmiany, zmiana przez północ,
-po i przed końcem zmiany, raz dziennie, bez wpisów; tydzień: piątek po pracy, przed, inny dzień, już przypomniane,
-pusty tydzień, weekend, klucz tygodnia; parametr adresu w obie strony). `e2e/report-nudge.spec.ts` (6: dymek dnia
-prowadzi do raportu z dziś i nie wraca; przed końcem dnia go nie ma; `?raport=dzis`; kilka budów → „Wszystkie budowy”;
-piątek → raport tygodnia bez raportu dnia; `?raport=tydzien-wszystkie`). Testy „nie ma dymku” czekają 1,5 s — nie
-wykluczają dymku pokazanego później.
-
-**Commit.** `5d6008e` (raport dnia, 2026-10-16), `83a6383` (tydzień, kilka budów, 2026-10-16).
-
-### Przypomnienia nad listą
-
-**Co robi.** Nad listą wpisów Dziennika pojawia się pasek „Przypomnienia” (tylko gdy coś jest do zrobienia):
-- **Problemy otwarte od ponad 3 dni** — „N problemów otwartych od ponad 3 dni”, przycisk „Pokaż otwarte” (filtr „Otwarte”).
-- **Budowa z montażem bez protokołu próby** — „Budowa „X”: montaż bez protokołu próby. Zapisz próbę przed zakryciem.”,
-  przycisk „Pokaż wpisy budowy” (filtr tej budowy).
-- **Materiał zamówiony, a niedostarczony** — „Budowa „X”: zamówione ponad 3 dni temu i nie dojechało — klej, rura…”
-  (do 3 nazw i „i N więcej”), przycisk „Karta budowy” otwiera kartę, gdzie zmienia się status braku.
-
-Pasek znika sam, gdy warunek przestanie być prawdziwy (problem rozwiązany, protokół dopisany, materiał „dostarczony”).
-
-**Gdzie jest.** Reguła: `src/lib/study/reminders.ts` (`studyReminders(journal, now, siteCards)`, stałe
-`REMINDER_PROBLEM_DAYS = 3`, `REMINDER_ORDER_DAYS = 3`, typ `StudyReminder` z rodzajami `stale-problems`, `no-test`,
-`late-order`). Pasek: `ReminderRow` w `src/components/study/StudyJournal.tsx` (`data-testid="journal-reminders"`).
-
-**Jak działa.**
-- Problem przypomina, gdy jest otwarty i `now − at > 3 dni` (od chwili wpisu problemu, nie od rozwiązania). Dokładnie 3 dni — jeszcze bez przypomnienia.
-- „Montaż” budowy = wpis z kształtkami (`fittings`) albo wpis z tematu próby (`TEST_TOPICS`: `proba-wody`, `proba-kan`).
-  Budowa z montażem, w której **żaden** wpis nie ma `test`, dostaje przypomnienie. Próba zapisana w innej budowie go nie zdejmuje.
-- Wpisy bez budowy (`entrySiteId` = `""`) są pomijane. Nazwa budowy z najnowszego wpisu.
-- Zamówienia: brak ze statusem „zamówione”, którego ostatnia zmiana statusu (`changed`, bez niej — dopisanie `at`)
-  była ponad 3 dni temu; jedno przypomnienie na budowę; budowy w archiwum pomijane.
-- Liczone w `useMemo` na zmianie dziennika — bez timera. Jeśli strona stoi otwarta, a problem przekroczy 3 dni bez zmiany
-  dziennika, pasek pojawi się dopiero po następnym renderze (np. po przejściu zakładki).
-
-**Ograniczenia i pułapki.** Heurystyka montażu jest przybliżona: wpis z tematu „Próba” bez protokołu też uruchamia przypomnienie.
-Przypomnienie nie ma przycisku „Dodaj protokół” — arkusz wpisu nie przyjmuje z góry budowy, więc przycisk pokazuje wpisy budowy.
-Pasek nie jest zapamiętywany (brak „ukryj”), bo znika sam.
-
-**Testy.** `src/lib/study/reminders.test.ts` (10: w tym zamówienia — nazwy, archiwum, świeże, bez daty zmiany).
-`e2e/site-shortages.spec.ts` („zamówione ponad 3 dni temu…”: zegar +4 dni, przypomnienie, „Karta budowy”, po
-„Dostarczone” znika). Problemy i protokół — przez `e2e/study.spec.ts`.
-
-**Commit.** `d41bd89` (2026-10-16), `7f95fe9` (zamówienia, 2026-10-16).
-
----
-
-### Podpowiedzi tekstu z budowy
-
-**Co robi.** Pusty nowy wpis na wybranej budowie pokazuje pod polem „Co się dzieje?” pigułki: „Jak wczoraj” (tekst najnowszego wpisu tej budowy z poprzedniego dnia kalendarzowego) i do 3 ostatnich różnych tekstów z tej budowy, od najnowszego. Stuknięcie wstawia tekst do pola. Znikają, gdy pole ma treść, i nie pojawiają się przy edycji wpisu.
-
-**Gdzie jest.** Funkcje czyste: `src/lib/study/journalView.ts` (`recentSiteTexts(journal, siteId, limit = 3)`, `yesterdaySiteText(journal, siteId, now)`). UI: `src/components/study/JournalEntrySheet.tsx` (`siteId`, `textSuggestions`, `yesterdayText`; `data-testid="journal-text-suggestions"`).
-
-**Jak działa i dlaczego.** Id budowy liczy się z nazwy w polu przez `findSiteByName(siteDirectory(...))`, więc porównanie idzie po tym samym `entrySiteId`, co oś czasu i raport (wpisy sprzed kart dopasowują się po nazwie). Pigułki są w `journal-text-suggestions` tylko przy pustym polu — nie zasłaniają pisania. Przycisk ma `onPointerDown` z `preventDefault`, żeby nie tracić fokusu z pola (jak pigułki budów). „Jak wczoraj” kopiuje tylko tekst, nie rodzaj ani temat — świadomie, żeby nie zgadywać, czy wczorajszy wpis był o tym samym temacie.
-
-**Ograniczenia i pułapki.** Teksty są deduplikowane po przycięciu spacji (różnica wielkości liter zostaje jako osobna pozycja). Pigułki obcinają długi tekst jedną linią (`title` pokazuje całość). „Wczoraj” liczy się wg czasu lokalnego, nie 24 h wstecz. Podpowiedzi nie działają dla wpisu bez budowy.
-
-**Testy.** `src/lib/study/journalView.test.ts` (7 testów: kolejność, limit, dedup, pusta budowa, wczoraj vs. dziś/przedwczoraj, obce budowy); `e2e/study.spec.ts` („pusty wpis na budowie podpowiada wcześniejsze teksty tej budowy”). Cały `study.spec.ts` 31/31 (w tym telefony).
-
-**Commit.** `7fcff9a` (2026-10-16).
-
-### Wpis jako linijka w zeszycie
-
-**Co robi.** Wpis na liście dziennika wygląda jak linijka w zeszycie: godzina (mono) stoi na marginesie po lewej, oddzielona pionową linią, a wpisy dzieli przerywana linia zamiast osobnej ramki z tłem. Ikona rodzaju, treść, zdjęcia i przyciski działają jak wcześniej.
-
-**Gdzie jest.** `src/components/study/StudyJournal.tsx`: funkcja `JournalItem` (`<li>` jako siatka `grid-cols-[3.25rem_minmax(0,1fr)]`, element `<time>` z `dateTime`), lista wpisów w `StudyJournal` (`<ul>` bez `space-y-2`, bo odstęp daje `py-3` wpisu).
-
-**Jak działa i dlaczego.** Godzina przeniesiona z wiersza meta na margines, żeby czas czytało się pionowo jak w zeszycie i nie konkurowało z pigułkami tematu. Linia pionowa to `border-r` kolumny godziny; oddzielenie wpisów `border-b border-dashed` z `last:border-b-0`. Usunięto ramkę `rounded-xl border bg-card`, bo przy wielu wpisach na dzień karty zlewały się w bloki. Przy pierwszym wpisie `first:pt-1`, żeby nie dublować odstępu pod nagłówkiem dnia.
-
-**Ograniczenia i pułapki.** Wpis z problemem nadal ma ikonę ostrzegawczą, a rozwiązany — szary znacznik `CircleCheck` (teraz z `mt-0.5`, żeby stał równo z pierwszą linią). Na bardzo wąskim ekranie kolumna godziny zajmuje 52 px, więc treść zostaje ok. 280 px. Nie testowano wizualnie w przeglądarce, tylko przez e2e (układ nie jest tam sprawdzany).
-
-**Testy.** `e2e/study.spec.ts` (37/37 razem z `desktop-columns.spec.ts`, w tym telefony iPhone 14 i Pixel 7). Selektory używają `data-journal-entry`, nie klas. Typecheck i lint pliku czyste.
-
-**Commit.** `162dcdf` (2026-10-16).
-
----
-
-## Praca → Dziennik: raport do szefa i grupy w WhatsApp
-
-**Co robi.** W oknie „Raport z budowy” zapisujesz odbiorców: szefa (imię i numer WhatsApp) i/lub grupę (nazwa,
-opcjonalnie link zaproszenia). Potem jednym stuknięciem:
-- **„Szefowi”** otwiera czat WhatsApp z szefem z gotowym tekstem raportu — zostaje tylko „Wyślij”.
-- **„Do grupy”** otwiera systemowe „Udostępnij” z tekstem i zdjęciami — w WhatsApp wybierasz grupę. Gdy przeglądarka
-  nie ma udostępniania (komputer), tekst trafia do schowka, a link zaproszenia otwiera grupę — wklejasz.
-Odbiorców zmienia przycisk „Odbiorcy” (na telefonie ikona). Bez odbiorców jest jeden przycisk „WhatsApp: dodaj szefa
-lub grupę”.
-
-**Gdzie jest.**
-- `src/lib/study/boss.ts`: `Boss`, `WaGroup`, `normalizePhone` (+48, 0048, 9 cyfr → `48…`), `formatPhone`,
-  `cleanBoss`, `normalizeGroupLink` (tylko `chat.whatsapp.com/…`), `cleanGroup`, `whatsappUrl` (`wa.me/<numer>?text=`,
-  przycięcie do 3500 znaków na granicy linii z dopiskiem „raport skrócony”).
-- `src/lib/study/report.ts`: `reportWhatsApp` — tytuł i dni jako `*pogrubienie*` zamiast nagłówków markdown.
-- `src/lib/study/yStudy.ts`: klucze `boss` i `waGroup` w mapie `studyMeta`, pola `boss`/`group` w `StudyDump` i
-  `StudyState`, `setBoss`/`setGroup`; `replaceAll` i `mergeIn` je przenoszą.
-- `src/lib/study/store.ts`: `saveBoss(name, phone)`, `saveGroup(name, link)` (pusty numer/nazwa usuwa, zły → `false`).
-- `src/components/study/JournalReport.tsx`: `sendToBoss`, `sendToGroup`, formularz `RecipientsForm`.
-
-**Jak działa i dlaczego.**
-- Aplikacja nie ma serwera, więc nie wysyła sama — otwiera WhatsApp, a wysyła użytkownik. Oficjalne API (WhatsApp
-  Cloud API) wymaga konta firmowego, serwera i tokenu, którego nie wolno trzymać w aplikacji na telefonie; nieoficjalne
-  klienty (np. serwery MCP na whatsmeow) łamią regulamin WhatsApp i grożą blokadą numeru — świadomie nie.
-- `wa.me` otwiera tylko czat z osobą (numer), nie grupę — dlatego grupa idzie przez `navigator.share`, który przy okazji
-  niesie zdjęcia (te same pliki co „Udostępnij”, do 10). Link zaproszenia grupy otwiera czat grupy, ale nie wstawia tekstu.
-- Odbiorcy są w dokumencie Yjs (`studyMeta`), więc są na każdym sparowanym telefonie i w kopii zapasowej (sekcja `study`).
-- Na telefonie przyciski bez imienia/nazwy (nie mieszczą się obok siebie); pełna nazwa zostaje w `aria-label`.
-- Pole linku bez `type="url"`: link bez `https://` zatrzymałaby walidacja przeglądarki, a `normalizeGroupLink` go przyjmuje.
-
-**Ograniczenia i pułapki.**
-- Zdjęcia nie idą przez „Szefowi” (`wa.me` przenosi tylko tekst) — toast podpowiada „Do grupy”/„Udostępnij”.
-- Długi raport (np. miesiąc) w czacie z szefem jest przycinany; pełny tekst: „Kopiuj tekst” albo „Udostępnij”.
-- Numer szefa i link grupy trafiają do synchronizacji z własnymi urządzeniami i do kopii — nigdzie dalej.
-
-**Testy.** `src/lib/study/boss.test.ts`, `src/lib/study/report.test.ts` („reportWhatsApp…”),
-`src/lib/study/yStudy.test.ts` („szef: zapis przechodzi na drugi telefon i do kopii…”),
-`e2e/report-whatsapp.spec.ts` (walidacja, czat z szefem, udostępnienie do grupy, odświeżenie; grupa bez udostępniania).
-
-**Commit.** `364279d` (2026-10-15).
+- Wpisy pogrupowane dzień → budowa, z przyklejonym nagłówkiem dnia (`journalView.ts`: `filterJournal`, `groupJournal`, `splitRecent`, `suggestSites`). Bez filtra ostatnie 30 dni (`RECENT_DAYS`), reszta za „Pokaż starsze”.
+- Szukanie bez polskich znaków: każde słowo musi wystąpić w tekście, budowie, temacie, rodzaju lub rozwiązaniu. Filtry: rodzaju, budowy (`JournalFilter.site` = id budowy, `""` = bez budowy), tematu. Każdy filtr przeszukuje cały dziennik.
+- Budowy w filtrze od ostatnio używanej; archiwalne za „Archiwum (n)”, chyba że wybrane. Nagłówek budowy w grupie to przycisk do karty.
+- Wygląd wpisu: linijka w zeszycie — godzina na marginesie (`grid-cols-[3.25rem_minmax(0,1fr)]`), przerywany podział między wpisami. Ikona problemu i szary znacznik rozwiązanego.
+- Godziny na budowach (H2): przy dniu z wpisami z kilku budów przycisk z zegarem („podziel godziny”) otwiera okno „Godziny na budowach” z polem godzin przy każdej budowie („6”, „6,5”, „6:30”), resztą dnia i „Po równo” (`evenShare`, zaokrąglenie do 5 min). Zasada bez wpisanych godzin: wpisany podział wygrywa; jedyna budowa dnia dostaje cały dzień z Grafiku; kilka budów bez podziału to „nierozdzielone” i nie wchodzi do sumy (wcześniej każda z budów liczyła pełne 10 h). Godziny to lista karty budowy (`hours`, klucz `budowa␁hours␁dzień`), nie zapis w Grafiku. Wpisane godziny mogą przekroczyć dzień z Grafiku — okno ostrzega, nie blokuje (`siteHours.ts`: `dayHours`, `parseHours`, `cleanSiteHours`; `report.ts`: `splitWork`, `workLine`).
+
+### Karta budowy
+
+- **Dane.** Nazwa, adres, inwestor (`SiteCardDialog.tsx`, `SiteCard` w `sites.ts`, `cleanSite`). Archiwum (`archived` = moment) chowa budowę z pigułek i filtra; wpisy zostają na osi.
+- **Rozwiązywanie nazwy** (`resolveSite`): nazwa z arkusza → istniejąca budowa (porównanie `foldName`) albo nowa karta. Budowa sprzed kart dostaje id `siteKey(nazwa)` (deterministyczny skrót FNV-1a, `siteKey.ts`), liczony przy odczycie, więc urządzenia nie tworzą dwóch kart. Zmiana nazwy aktualizuje projekcję wpisów i bieżącą budowę arkusza (`studyMeta.site`).
+- **Kontakt i dojazd** (`contact.ts`): pola „Telefon inwestora”, „Kierownik budowy”, „Telefon kierownika”, „Dostęp do budowy” (np. kod do bramy). Pasek szybkich akcji liczony z zapisanej karty: Nawiguj (link Map z trasą, bez klucza API), telefon i SMS do inwestora, telefon do kierownika. Numer czyści `normalizePhone` z `boss.ts`. Pola pominięte w zapisie zostają bez zmian; kontakt nie trafia do raportu ani protokołu.
+- **Lokalizacja budowy.** „Zapisz jako lokalizację budowy” w arkuszu (budowa z kartą) albo w toaście po zapisie nowej budowy (`setSiteGeo`).
+- **Etapy** (`stages.ts`): domyślnie kanalizacja podposadzkowa, rozprowadzenie wody, piony i podejścia, próba szczelności, zakrycie instalacji, biały montaż, odbiór. Odhaczenie zapisuje datę; „Następny:” — pierwszy niezrobiony; własny etap na końcu, usunięcie z „Cofnij”. Nazwy nie zmieniają się, nie przestawiają się (usuń i dodaj). `matchStage` rozpoznaje etap z wypowiedzi bez ogonków; przy niejednoznacznym dopasowaniu nic nie robi. Postęp „etapy 3/7” przy budowie w dzienniku. Pierwsza zmiana zapisuje całą listę w karcie.
+- **Braki materiału** (`shortages.ts`): dopisujesz, czego brakuje, z ilością. Status *Brakuje → Zamówione → Dostarczone* (data zmiany). „Brakuje” celowo czerwone (bursztyn motywu jest bliski ostrzeżeniu). „Kopiuj braki” do dostawcy lub szefa, „Wyczyść dostarczone” (z „Cofnij”). Ta sama nazwa dopisana ponownie nie tworzy duplikatu. Data dostawy („dostawa dd.mm”, `due`) — zaległe zamówienie dzwoni po końcu dnia dostawy. Limity: 40 braków, 80 znaków nazwy, 20 zamówień w historii.
+- **Do zamówienia** (`order.ts`): suma kształtek zużytych od ostatniego zamówienia (`siteOrder`, `orderText`, `whatsappOrderUrl`). „Kopiuj listę”, „WhatsApp” (`wa.me` z tekstem, odbiorcę wybiera WhatsApp — numer hurtowni nie jest zapisywany), „Oznacz jako zamówione” (zapisuje `orderedAt` i wpis historii; od tej chwili lista zaczyna od zera). Historia „Poprzednie zamówienia”. Liczy tylko kształtki, bez metrów rury. Numer hurtowni w karcie (`supplierPhone`) pojawia się w sekcji zamówień (U7) i jest w kopii. Wpisy starsze niż `orderedAt` są pomijane.
+- **Dokumenty i plany** (`siteDocs.ts`, `siteDocsAdd.ts`): zdjęcia (rzut, tablica) i PDF-y (projekt), także kilka naraz; limit 30. Zdjęcia jako miniatury z powiększeniem i „100%”. PDF jako wiersz z „Otwórz” (zapisuje plik i otwiera go aplikacją telefonu, bo aplikacja nie pokazuje PDF-ów u siebie). Obrazy do 2 MB zostają bez zmian. PDF powyżej 2 MB zostaje na telefonie, który go dodał. Ten sam plik drugi raz się nie dubluje.
+- **Serwis i gwarancja** (`service.ts`): zgłoszenia po odbiorze z datą, opcjonalnym terminem wizyty (dzień, nie godzina) i „Załatwione” z opisem (`solution`). Załatwione chowają się pod licznikiem; „↺” otwiera ponownie. Pole „Gwarancja do” z liczbą dni (od 30 dni na żółto; po terminie „po gwarancji”). Zgłoszenia działają także przy budowie w archiwum. Zgłoszenie z terminem na dziś lub zaległe trafia do przypomnień nad Dziennikiem. Push idzie tylko rano w dniu wizyty i tylko dla terminu na dziś — zaległe widać w dzienniku, nie w powiadomieniach. Limit 50 zgłoszeń na budowę. Gwarancja jest polem karty (`saveSite`), zgłoszenia są listą.
+- **Protokół odbioru dla inwestora** (`handover.ts`, `HandoverPaper.tsx`): jedna kartka do wydruku lub PDF — nazwa, adres, inwestor, okres prac, etapy z datami (☑/☐), próby szczelności z wpisów, uwagi (otwarte problemy; bez nich „Brak uwag”), do 12 zdjęć, dwa pola podpisów. Zdjęcia wpisów przypiętych do etapu stoją pod nazwą tego etapu, reszta pod „Pozostałe”. „Tekst protokołu” wysyła ten sam dokument jako tekst bez zdjęć (udostępnianie albo schowek).
+
+### Raporty
+
+- **Raport z budowy** (`report.ts`: `buildJournalReport`, `reportBody`, `reportText`, `reportSummary`, `reportWhatsApp`; `JournalReport.tsx`). Dzień albo okres dla jednej budowy lub wszystkich. Zestawienie dni od dwóch dni (godziny z Grafiku, liczba wpisów i problemów), linia protokołu przy wpisie, sekcja „Próby szczelności”, „Kształtki (suma)”, „Do zamówienia”, „Braki materiału”, „Etapy (3/7)” z datami, „Rozwiązanie:” przy problemach, miejsca na podpisy „Wykonawca” i „Odbierający / kierownik”. Okres: Dziś / Wczoraj / 7 dni / Ten miesiąc / Wybierz. Przy kilku budowach „Wszystkie budowy”.
+- **Akcje raportu.** Główna: wysłanie szefowi (czat WhatsApp `wa.me` z tekstem; zdjęcia tą drogą nie idą) albo do grupy (systemowe „Udostępnij” z tekstem i zdjęciami do 10; w komputerze tekst do schowka). Odbiorców zapisuje się w `studyMeta` (`boss`, `waGroup`, `boss.ts`), trafiają do synchronizacji i kopii. Pozostałe przez menu „Więcej”: „Kopiuj tekst”, „Do notatki” (te same klucze zdjęć, bez kopiowania bajtów), „Drukuj / PDF” (`PrintRoot`, `html.printing-report`).
+- **Dlaczego bez automatycznej wysyłki.** Aplikacja nie ma serwera ani konta firmowego do WhatsApp Cloud API; nieoficjalne klienty łamią regulamin. Wysyłka zostaje jednym stuknięciem użytkownika.
+- **Paczka ZIP budowy** (`siteZip.ts`): „Paczka ZIP” w karcie — `raport.md` (ten sam tekst co „Kopiuj”) i zdjęcia w `zdjecia/` (numerowane od najstarszego), dokumenty w `dokumenty/`. Brak bajtów na tym urządzeniu pomija pozycję i podaje liczbę pominiętych w toaście. PDF nie wchodzi do paczki (osobny układ byłby potrzebny). Cała paczka składa się w pamięci — przy bardzo dużych budowach warto dzielić na okresy.
+
+### Przypomnienia
+
+- **Przypomnienia nad listą** (`reminders.ts`: `studyReminders(journal, now, siteCards)`; pasek `ReminderRow` w `StudyJournal.tsx`): znikają same, gdy warunek przestaje być prawdziwy.
+  - **Problem otwarty ponad 3 dni** (`stale-problems`).
+  - **Montaż bez protokołu próby** (`no-test`): budowa z montażem (kształtki albo temat próby), w której żaden wpis nie ma próby.
+  - **Materiał zamówiony, a niedostarczony** (`late-order`): status „zamówione” dłużej niż 3 dni (od końca dnia dostawy, jeśli podano). Jedno przypomnienie na budowę; archiwum pomijane.
+  - **Próba przed zakryciem** (`pre-cover-test`, U1): odhaczony etap instalacji, a bez odhaczonej próby, bez zakrycia i bez wpisu o montażu lub próbie. Pokazuje się w Dzienniku i w Dziś. Nie idzie do push.
+- Liczone przy renderze (`useMemo` na zmianie dziennika), bez timera. Jeśli strona stoi otwarta i przypomnienie przekroczy próg bez zmiany dziennika, pojawi się po następnym renderze.
+- **Raport dnia i tygodnia** (`reportNudge.ts`, `DailyReportNudge.tsx`): raz dziennie po końcu dzisiejszej zmiany z Grafiku (bez zmiany — o 17:00), jeśli są dziś wpisy, dymek „Raport dnia gotowy” i przy zgodzie powiadomienie. W piątek (albo w weekend, jeśli piątku nie było okazji) raport tygodnia, raz na tydzień, zastępuje raport dnia. „Otwórz raport” przechodzi do Dziennika z zakresem (`?raport=dzis`, `dzis-wszystkie`, `tydzien`, `tydzien-wszystkie`). Bez serwera przypomnienia działają tylko przy otwartej aplikacji.
+- **Zamówienia i serwis w push** (`push/schedule.ts`): zamówienie z datą dostawy, serwis dziś o 7:00 (`pushKey.service`, bez podwójnych powiadomień).
+
+### Wydajność i struktura
+
+- Dziennik i karta budowy są leniwe. `store.ts` ciągnie materiał (`content.ts`, ok. 22 KB); karta Dziś ładuje go przez `dueToday(useStudy())`. Komponent raportu dnia czyta dziennik przez `yStudy` z `data.ts`, nie przez `store.ts`, żeby nie dokładać materiału do startowej paczki.
+- `yStudy.ts` jest w paczce startowej; każdy nowy kod tam zużywa budżet (`e2e/bundle.spec.ts`, próg 393 KB; ostatni pomiar 392,4 KB).
+- `cleanEntryParts` (`yStudy.ts`) jest jedną funkcją czyszczenia wpisu dla zapisu z arkusza, kopii, drugiego telefonu i projekcji. Różnica zostaje świadoma: projekcja filtruje odhaczenia po materiale przed decyzją o pustości (`empty`), zapis — po niej.
+
+### Ograniczenia i pułapki
+
+- Starsza wersja aplikacji nie zna nowych pól (`recordings`, `solution`, `stage`, `test`, `fittings`, `geo`, `service`, `warranty`, `hours`, `docs`) i przy edycji wpisu lub zapisie karty może je zgubić. Po aktualizacji niektóre listy wracają z kopii, nie zawsze wszystko.
+- Ta sama pozycja listy zmieniona naraz na dwóch telefonach: wygrywa ostatni zapis tej pozycji.
+- Rozpoznawanie mowy nie stawia przecinków, więc reguły są ostrożne. Pierwsze słowo budowy bez przecinka i bez rodzaju za nim to tekst. „Brak” (nie „brakuje”) to zwykły tekst problemu.
+- Przypomnienie „montaż bez próby” jest heurystyczne: wpis z tematu „Próba” bez protokołu też je uruchamia.
+- Przycisk „Dodaj protokół” w przypomnieniu nie istnieje — przycisk pokazuje wpisy budowy.
+- Podpis zdjęcia i rysunek są wtopione w piksele: zmiany nie da się cofnąć bez usunięcia zdjęcia.
+- Podpowiedzi „Jak wczoraj” liczą wczoraj wg czasu lokalnego, nie 24 h wstecz.
+- Test e2e pułapki: etykieta „Telefon inwestora” zawiera „Inwestor” (`exact: true`); przycisk „Załatwione” w podciągu „Załatwione (1)”; „Dyktuj” (treść) wymaga `exact: true` przy „Dyktuj kształtki”; w e2e otwarty arkusz ukrywa zakładki z drzewa dostępności (`includeHidden: true`).
+- Dzienne przypomnienia o raporcie: e2e bez stałego zegara może pokazać dymek w niezwiązanym teście — testy przypomnień ustawiają `page.clock`.
+- Nie sprawdzone ręcznie na telefonie: udostępnianie zdjęć, wydruk na prawdziwej drukarce, PDF w telefonie, dyktowanie z prawdziwym mikrofonem, nagrywanie głosu, „Tu jestem”, układ karty na 320 px (po poprawkach zakładek przechodzi e2e).
+
+### Testy
+
+- Jednostkowe: `src/lib/study/yStudy.test.ts` (dwa dokumenty Yjs, D5, listy karty, dokumenty, serwis, szef, kopia), `study.test.ts` (szkic, edycja, problemy, budowy, godziny, „Jak rozwiązano”, „Tu jestem”), `srs.test.ts`, `report.test.ts`, `siteZip.test.ts` (3), `siteDocs.test.ts`, `siteDocsAdd.test.ts`, `siteItems.test.ts`, `siteHours.test.ts`, `stages.test.ts` (10), `shortages.test.ts` (10), `order.test.ts` (10), `handover.test.ts` (4 + 3), `service.test.ts`, `contact.test.ts`, `geo.test.ts`, `boss.test.ts`, `reminders.test.ts` (10 + grupa U1), `reportNudge.test.ts` (11), `journalView.test.ts` (7), `spokenEntry.test.ts`, `spokenFittings.test.ts` (10), `recordings.test.ts`, `workLine.test.ts`, `pressureTest.test.ts`, `photoCaption.test.ts`, `fittings.test.ts`, `dueRows.test.ts`.
+- Komponenty: `SiteOrderPanel.test.tsx`, `SiteShortagesPanel.test.tsx`, `SiteStagesPanel.test.tsx`, `SiteDocsPanel.test.tsx`, `DayHoursDialog.test.tsx`, `SiteServicePanel.test.tsx`, `CalculatorsSheet.test.tsx`, `JournalEntrySheet.test.tsx`, `TodayStudyCard`, `StudyDueRows.test.tsx`.
+- E2E: `study.spec.ts` (31), `study-custom.spec.ts`, `journal-photos.spec.ts`, `journal-pressure-test.spec.ts`, `journal-fittings.spec.ts`, `journal-solution.spec.ts`, `journal-geo.spec.ts`, `entry-dictation.spec.ts`, `fittings-dictation.spec.ts`, `report-whatsapp.spec.ts`, `report-nudge.spec.ts`, `site-stages.spec.ts`, `site-shortages.spec.ts`, `site-order.spec.ts`, `site-handover.spec.ts`, `site-contact.spec.ts`, `site-hours.spec.ts`, `site-docs.spec.ts`, `site-service.spec.ts`, `site-card-mobile.spec.ts` (`@mobile`), `photo-drawing.spec.ts`, `today-study.spec.ts`, `weekly-review.spec.ts`, `mobile-layout.spec.ts`, `bundle.spec.ts`.
+- Zgłoszone przebiegi działu: 53/53 (2026-10-18, dział Praca), kopia i listy karty 50/50 (2026-10-20). Po zmianach z 2026-10-19/20 (D5, U8, zakładki 320 px) — punktowe; pełne e2e nieuruchomione.
+
+### Commity
+
+- Model i synchronizacja: D1 `6045b5a`, D0 `df308d5`, D2 `92c1015`, D3 `1c40b26` (2026-10-15); pigułki budów D4a `b41e3c9`; oś czasu (plan D5 z 2026-10-15) `cb35c04`; karty budów D4b `e3096c4`; raport D6 `d73d951`; paczka ZIP `50842a6` (2026-10-16).
+- Listy karty w dokumencie `395c311` (2026-10-16); kontakt `95159d1`; godziny na budowach `f5186f5`; dokumenty i plany `0f78d36`; serwis i gwarancja `d61e8a2` (kod 2026-10-17); etapy `a25958a`, `b82dda3`, `5ee9858`, `f31f65f`; zamówienia `98e625a`, `a8cf1a9`; braki `f10d6dd`; protokół odbioru `9b169ad`; rysowanie `b1f3842`; „Jak rozwiązane?” `415b7a5`; dyktowanie `b65d58c`, `b61b737`, `db490f7`; raport dnia `5d6008e`, tydzień `83a6383`; przypomnienia nad listą `d41bd89`, `7f95fe9`; podpowiedzi tekstu `7fcff9a`; linijka w zeszycie `162dcdf`.
+- Porządki i poprawki: `304bbe8` (2026-10-20, odporność danych); `9a85c10` (zakładki 320 px); `7fd412a` (próba przed zakryciem, U1); `668c7ba` (data dostawy, T4); `19f2ade` (porządki po planie); `5581ece` (nagranie głosowe, U8); `f6867bd` (poprawka raportu kopii); `4167846` (D5, pola wpisu osobno, 2026-10-20).
+- Tu jestem (M2.1, `bcf79ce`) i mapa w raporcie (M2.2, `c3387b4`), 2026-10-18.
 
 ## Porządki — ostrzeżenia lintera w Notatkach, Kalendarzu i Grafiku
 
@@ -2502,29 +1629,11 @@ lub grupę”.
 - **Testy:** `src/lib/voiceRecorder.test.ts`; e2e `voice-note.spec.ts` (sztuczny mikrofon Chromium).
 - **Commit:** brak — zmiany niezacommitowane.
 
-## Praca → Dziennik budowy — „Tu jestem” (plan mobilny M2.1, 2026-10-18)
-
-- **Co robi:** w arkuszu wpisu przycisk „Tu jestem” zapisuje lokalizację wpisu (tylko po stuknięciu, nigdy w tle) z dokładnością („Tu (±12 m)”, link do map, × usuwa). Jeśli w promieniu 300 m jest budowa z zapisaną lokalizacją, pojawia się „Budowa obok: …”. Lokalizację budowy zapisuje „Zapisz jako lokalizację budowy” w arkuszu (budowa z kartą) albo akcja w toaście „Zapisano wpis” (nowa budowa — karta powstaje przy zapisie). Na liście Dziennika wpis z lokalizacją ma link „Mapa”.
-- **Gdzie jest:** `src/lib/study/geo.ts` (`GeoPoint`, `cleanGeo`, `distanceM`, `nearestSite`, `mapsUrl`, `accuracyLabel`); pole `geo` w `JournalEntry` (`yStudy.ts`, `cleanEntry`), `SiteCard` (`sites.ts`, `cleanSite`), `JournalDraft` (`draft.ts`), `NewJournalEntry`/`entryFields` i `sanitizeStudy` (`store.ts`), `openJournalEdit` (`entrySheet.ts`); `setSiteGeo` w `store.ts`; UI w `JournalEntrySheet.tsx` i `StudyJournal.tsx`.
-- **Jak działa:** współrzędne zaokrąglone do ~1 m, dokładność w metrach. Sama lokalizacja nie czyni wpisu niepustym.
-- **Ograniczenia i pułapki:** lokalizacja jest tylko w aplikacji — raport dla szefa jej nie zawiera (decyzja domyślna; M2.2 „mapa w raporcie” nie robione). `sanitizeStudy` w `store.ts` ma własną kopię czyszczenia wpisu — nowe pola wpisu trzeba dodać w obu miejscach (`cleanEntry` i `sanitizeStudy`). Bez zgody przeglądarki — komunikat i brak lokalizacji.
-- **Testy:** `src/lib/study/geo.test.ts`, `src/lib/study/study.test.ts` („Tu jestem”), e2e `journal-geo.spec.ts`.
-- **Commit:** brak — zmiany niezacommitowane.
-
 ## Wydajność — panel statusu synchronizacji leniwie (2026-10-18)
 
 - **Co robi:** panel po stuknięciu pigułki statusu zapisu (`OfflineQueuePanel`) ładuje się przy pierwszym otwarciu i zostaje zamontowany (animacja zamykania działa).
 - **Gdzie jest:** `src/components/OfflineStatus.tsx` (`lazy`, `panelMounted`).
 - **Dlaczego:** funkcje mobilne dodały ok. 1,1 KB do wejściowego JS; przed nimi zapas do progu 384 KB wynosił ok. 0,5 KB. Po przeniesieniu panelu wejściowy JS to 393 200 B przy progu 393 216 B — **zapas 16 B**; następna zmiana w głównej paczce musi czymś się zrównoważyć.
-
-## Praca → raport z budowy — mapa przy wpisie (plan mobilny M2.2, 2026-10-18)
-
-- **Co robi:** wpis z lokalizacją „Tu jestem” ma w raporcie punkt „Mapa (±12 m): <link>”. Link otwiera miejsce w aplikacji map. Dotyczy tekstu raportu (schowek, WhatsApp, notatka) i podglądu/wydruku.
-- **Gdzie jest:** `src/lib/study/report.ts` (`entryLine` — dopisuje linię „Mapa”); `src/components/study/JournalReport.tsx` (`ReportPaper` — link w punkcie, `data-report-geo`); helpery `accuracyLabel`, `mapsUrl` z `src/lib/study/geo.ts`.
-- **Decyzja:** w raporcie trafiają tylko współrzędne przy wpisach, które same je mają. Adresu budowy w tym miejscu nie ma. Wcześniej otwarte pytanie (czy lokalizacja w ogóle może iść do szefa) rozstrzygnięto: raport dostaje link, bo użytkownik poprosił o M2.2. Wpisy bez „Tu jestem” są bez zmian.
-- **Ograniczenia i pułapki:** link wysyła się razem z raportem — kto dostanie raport, zobaczy miejsce wpisu. Współrzędne są zaokrąglone do ~1 m. Raport nie ma osobnego przełącznika „bez lokalizacji”.
-- **Testy:** `src/lib/study/report.test.ts` („Tu jestem” w treści); e2e `report-nudge.spec.ts`, `report-whatsapp.spec.ts`, `study.spec.ts`, `journal-geo.spec.ts`.
-- **Commit:** brak — zmiany niezacommitowane.
 
 ## Poprawki po audycie (2026-10-18)
 
@@ -2534,58 +1643,6 @@ lub grupę”.
 - **Etykiety:** przełącznik motywu ma stałą nazwę „Tryb ciemny” z `aria-pressed` (AppHeader, AppSidebar); pasek boczny z tą samą etykietą widoczną; „Import i eksport” → „Import / Eksport” w dolnym menu; „Nie dało się” → „Nie udało się” (`ViewErrorBoundary`).
 - **Korekty audytu:** „Widok i kolumny” nie występuje dwa razy naraz (inna gałąź telefon/komputer); `aria-expanded` na filtrach i sortowaniu ustawia Radix; `ui/calendar.tsx` i `ui/overlay-back.tsx` są używane.
 - **Budżet:** wejściowy JS 393 208 B przy progu 393 216 B (zapas 8 B).
-
-## Praca — wpisy bez utraty danych (plan działu Praca, D1, D4, T7, 2026-10-18)
-
-- **Co robi:** wpis, który ma tylko odhaczone punkty listy, nie znika z dziennika, raportów i serii, gdy jego punkt został usunięty; stare odhaczenia są po prostu pomijane, a sam wpis zostaje. Wpis ze zdjęciem, którego bajtów nie ma w kopii, przeżywa import z zachowaną referencją. Usunięcie wpisu ze zdjęciami i „Cofnij” przywraca wpis z tymi samymi zdjęciami.
-- **Gdzie jest:** `src/lib/study/store.ts` (`sanitizeStudy` — pustość liczona przed odrzuceniem nieznanych punktów przez `cleanEntryParts(...).empty`, patrz „Praca — porządki po planie” niżej).
-- **Testy:** `src/lib/study/study.test.ts` — trzy nowe testy (wpis z odhaczeniami usuniętego punktu, referencja do brakującego zdjęcia, usunięcie i „Cofnij” ze zdjęciami).
-- **Nie zrobione z planu:** D2 (przywracanie kopii — walidacja przed kasowaniem), D3 (budżet kopii 40 MB), D5 (model wpisu), reszta planu — czekają na decyzje z planu działu Praca.
-- **Commit:** brak — zmiany niezacommitowane.
-
-## Praca — kolejne poprawki z planu (D2 częściowo, U3, T3, 2026-10-18)
-
-- **Przywracanie kopii (D2):** wpisy Nauki odrzucone przy czyszczeniu kopii są liczone i zapisywane w diagnostyce (`exportNotes.ts`, ostrzeżenie „pominięto N wpisów”). Ta sama kopia nie jest już czyszczona dwukrotnie. Brakuje jeszcze pokazania liczby w oknie przywracania.
-- **Nazwa zakładki (U3):** „Lista” → „Lista kontrolna” (`StudyView.tsx`). Testy e2e działu nie wymagały zmian (dopasowanie po podciągu).
-- **Godziny (T3):** `parseHours` odrzuca minuty powyżej 59 (`6:70` to błąd, a nie 7 h 10 min). Test w `siteHours.test.ts`.
-- **Testy:** 1391 jednostkowych; e2e study, study-custom, bundle, today-study — 43/43.
-- **Commit:** brak — zmiany niezacommitowane.
-
-## Praca — testy listy budowy z podstawą (T1, 2026-10-18)
-
-- **Co sprawdzają:** `setSiteStages` z podstawą (`base`) nie kasuje pozycji dodanych na drugim urządzeniu; `markSiteOrdered` zapisuje moment zamówienia na karcie.
-- **Gdzie:** `src/lib/study/study.test.ts` — dwa nowe testy (blok „listy budowy: zapis z podstawą”).
-- **Testy:** 1393 jednostkowe; e2e bundle i study — 40/40.
-- **Commit:** brak — zmiany niezacommitowane.
-
-## Praca — porządek w kodzie i odporność danych (plan działu Praca: L3, L4, L5, D2, 2026-10-18)
-
-- **Cykl importów (L3):** `siteKey`, `foldName`, `fold` i `entrySiteId` przeniesione do `src/lib/study/siteKey.ts` (bez zależności od reszty działu). `sites.ts` re-eksportuje je, więc importy w innych plikach nie zmieniły się; `siteHours.ts` importuje z `siteKey.ts` — cykl `sites` ↔ `siteHours` zniknął.
-- **Normalizator nazw kształtek (L4):** `fittingKey` korzysta z tej samej funkcji `foldName` (wynik identyczny dla polskich znaków).
-- **Dane z zewnątrz (L5):** `siteItems.ts` czyści pozycje listy budowy (braki, zamówienia, wizyty serwisowe, dokumenty, godziny) funkcjami `clean*`, zamiast rzutować `as`. Pozycja, której nie da się oczyścić, jest pomijana zamiast trafić do stanu jako surowa.
-- **Ślad przy przywracaniu (D2, dokończone):** `restoreFullBackup` zwraca liczbę pominiętych wpisów Nauki; okno przywracania pokazuje ją w komunikacie i wydłuża czas do odświeżenia.
-- **Testy:** 1393 jednostkowe; e2e kopia, Nauka, listy budowy (etapy, braki, zamówienia), bundle — 50/50.
-  Dopisane 2026-10-20: `src/lib/fullBackup.test.ts` (wpis Nauki o nieznanym rodzaju odpada, `studyDropped` = 1),
-  `src/lib/study/siteItems.test.ts` (`composeSiteLists`, `stripLists`), `src/lib/study/workLine.test.ts`
-  (`workLine`, `workMinutesOf`). Pełny Vitest: 183 pliki zielone.
-- **Commit:** `304bbe8` (2026-10-20, plan Pracy: D2 test, D3 i L2 sprawdzone, L1 częściowo, T3).
-
-## Praca — komunikaty, dotyk zakładek, testy dokumentów budowy (U2, U6, U4, T2, 2026-10-18)
-
-- **Seria wpisów (U2):** już działa — po zapisie zostają budowa i rodzaj, czyści się treść; test w `study.test.ts` pilnuje tego zachowania.
-- **Brak miejsca (U6):** każdy komunikat o braku miejsca w pamięci podpowiada, co zrobić (usunąć stare zdjęcia albo obrazy, zrobić kopię zapasową) — `JournalEntrySheet.tsx`, `AddNoteBar.tsx`, `useNoteImages.ts`.
-- **Dotyk (U4):** cztery zakładki działu Praca (Quiz, Tablica, Lista kontrolna, Dziennik) mają na dotyku minimalną wysokość 44 px (`coarse:min-h-11`, `StudyView.tsx`). Wspólny komponent zakładek bez zmian.
-- **Testy (T2):** `src/lib/study/siteDocsAdd.test.ts` — odrzucenie nieobsługiwanego typu pliku, limit liczby dokumentów przy pełnej liście, brak plików.
-- **Testy:** 1396 jednostkowych; e2e study, study-custom, touch-targets, site-docs, journal-geo, bundle — 52/52.
-- **Commit:** brak — zmiany niezacommitowane.
-
-## Praca — testy bez zależności od czasu i flaki (T5, T6, podział godzin, 2026-10-18)
-
-- **Flaki (T5):** `report-nudge.spec.ts` — negatywne asercje („przypomnienia nie ma”) nie czekają już 1,5 s na sztywno, tylko przesuwają zegar Playwrighta o dwie minuty.
-- **Zegar (T6):** `TodayDueList.test.tsx` ma stały „teraz” i sfałszowany zegar `Date`.
-- **Podział godzin:** reguła „po równo” wydzielona do `evenShare` w `siteHours.ts` (zaokrąglenie do 5 min), z testem; `DayHoursDialog` jej używa.
-- **Testy:** 1397 jednostkowych; e2e site-hours, report-nudge, weekly-review, today-study, bundle — 21/21.
-- **Commit:** zapisany poniżej.
 
 ## Długi — stan aktualny (pożyczki i spłaty)
 
@@ -2668,14 +1725,6 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - **Ograniczenia:** w trybie bez localStorage (prywatne okno) podpowiedzi nie ma — tak jak wcześniej. Komunikat wisi 6 s; w tym czasie kolejne stuknięcia go nie powtarzają.
 - **Testy:** osobny skrypt z czystym profilem (`scratchpad/fab.mjs`): po pierwszym stuknięciu komunikat jest, po ponownym (po zniknięciu tostu) już nie. E2E `mobile`: 44/44. Vitest 1423/1423.
 - **Commit:** 2cafa53, 2026-10-19.
-
-## Praca — zakładki na 320 px bez przelewania strony (poprawka, 2026-10-19)
-
-- **Co robi:** na wąskich telefonach (320 px) cztery zakładki Pracy (Quiz, Tablica, Lista kontrolna, Dziennik) mieszczą się w szerokości ekranu. Etykiety zawijają się w dwie linie zamiast rozpychać pasek. Od 640 px (`sm`) zakładki wyglądają jak dotąd, w jednej linii.
-- **Gdzie jest:** `src/components/study/StudyView.tsx` — `TabsTrigger` z klasami `min-w-0 flex-1 whitespace-normal text-center leading-tight sm:flex-none sm:whitespace-nowrap coarse:min-h-11`.
-- **Przyczyna:** „Lista kontrolna” z `whitespace-nowrap` nie mieściła się w czwartej części paska, więc przycisk „Dziennik” wychodził poza ekran o 2 px. Przez to cała strona była szersza od ekranu, a warstwy `fixed` (tło, dolny pasek, nakładki) dziedziczyły tę szerokość.
-- **Testy:** `e2e/mobile-layout.spec.ts`: 12/12 (wszystkie trasy przy 320 i 390 px, iPhone 14 i Pixel 7). Test `e2e/diagnostics.spec.ts`: w tym samym przebiegu sprawdzono tekst notatki przez nagłówek karty, a nie `getByText` (pole tytułu kompozytora ma tę samą treść, póki się zamyka). Vitest 1423/1423.
-- **Commit:** 9a85c10, 2026-10-19.
 
 ## Budżet paczki startowej — próg 386 KB (decyzja właściciela, 2026-10-19)
 
@@ -2910,26 +1959,6 @@ Dział opisany w jednym miejscu. Kalendarz pokazuje terminy przypomnień (`remin
 - `518871f` (2026-10-20) — fazy 1 i 2 planu.
 - `11ef99f` (2026-10-20) — fazy 2d, 2f, 3a, 3b.
 
-## Praca — próba przed zakryciem z etapów karty (U1 planu Pracy, 2026-10-19)
-
-- **Co robi:** gdy na karcie budowy odhaczono etap instalacji (kanalizacja podposadzkowa, rozprowadzenie wody, piony), a nie ma odhaczonej próby szczelności ani protokołu w dzienniku, i nie odhaczono zakrycia — pojawia się przypomnienie „Próba przed zakryciem”. Widać je w Dzienniku (lista przypomnień, przycisk „Karta budowy”) i jako wiersz na Dziś w dziale Praca.
-- **Gdzie jest:** `src/lib/study/reminders.ts` (typ `StudyReminder` kind `pre-cover-test`, stałe `INSTALL_STAGE_IDS`, `TEST_STAGE_ID`, `COVER_STAGE_ID`, pętla po kartach), `src/lib/study/dueRows.ts` (wiersz kind `test`), `src/components/study/StudyJournal.tsx` (`ReminderRow`).
-- **Jak działa:** warunek to instalacja odhaczona AND NOT(próba odhaczona) AND NOT(zakrycie odhaczone) AND NOT(dziennik ma wpis o montażu lub próbie dla tej budowy). Ostatni warunek wyłącza duplikat z „no-test”, który wisi już z wpisów dziennika. Budowy w archiwum pomijane. Przypomnienie znika samo, gdy odhaczysz próbę lub zakrycie, albo gdy dopiszesz protokół w dzienniku.
-- **Decyzje:** identyfikatory etapów z `DEFAULT_STAGES` (`stages.ts`), stałe trzymane w `reminders.ts`, żeby nie wprowadzać cyklu importów. Przypomnienie nie idzie do push: to ostrzeżenie na czas budowy, a nie termin, więc zostaje w aplikacji (Dziś i Dziennik).
-- **Ograniczenie:** etap „Próba szczelności” jest tylko odhaczeniem; nie zastępuje protokołu z wynikiem (ciśnienie, czas, spadek). Nazwy etapów własnych nie są rozpoznawane, tylko identyfikatory domyślne.
-- **Testy:** `src/lib/study/reminders.test.ts` (grupa „próba przed zakryciem z etapów karty (U1)”: bez zakrycia, odhaczone zakrycie/próba, archiwum, duplikat z „no-test”, protokół w dzienniku), `src/lib/study/dueRows.test.ts` (wiersz na Dziś). Vitest `src/lib/study` 287/287, tsc czysty.
-- **Commit:** 7fd412a, 2026-10-19.
-
-## Praca — data dostawy zamówienia (T4 planu kalendarza/przypomnień, 2026-10-19)
-
-- **Co robi:** przy braku „zamówione” pojawia się pole daty dostawy. Zaległe zamówienie dzwoni dopiero po końcu dnia dostawy, a nie po trzech dniach od zamówienia. Bez daty działa dawna reguła. Linia do wysłania (`shortagesText`) pokazuje „dostawa dd.mm”.
-- **Gdzie jest:** `src/lib/study/shortages.ts` (pole `Shortage.due`, `setShortageDue`, `orderLateFrom`, `dueDayValue`, `dueFromDayValue`, `ORDER_LATE_DAYS`), `src/lib/study/reminders.ts` (przypomnienie „zamówione, a nie dojechało”), `src/lib/push/schedule.ts` (ten sam próg dla push), `src/components/study/SiteShortagesPanel.tsx` (pole `type="date"` przy zamówionym).
-- **Jak działa:** `orderLateFrom` jest jedynym źródłem progu i dla przypomnienia w aplikacji, i dla push. Z `due`: koniec dnia dostawy (`endOfDay` z `dueTerms`). Bez `due`: `changed ?? at` + 3 dni. Klucz powiadomienia push to `due`, gdy jest, więc zmiana daty wysyła nowe powiadomienie. Czyszczenie pola ustawia brak daty.
-- **Model danych:** `due` to opcjonalne pole w pozycji listy braków (ms, północ lokalna). Zapisuje się w tym samym kluczu co reszta pozycji, więc konflikt dwóch telefonów rozstrzyga cała lista, jak dotąd. Stare dane bez `due` działają bez zmian; `cleanShortages` odrzuca `NaN`.
-- **Ograniczenie:** `setShortageDue` nie ustawia daty dla pozycji spoza „zamówione” (zmiana statusu na inny nie czyści `due`, ale jest ignorowane, dopóki pozycja nie wróci do „zamówione”).
-- **Testy:** `src/lib/study/shortages.test.ts` (grupa „data dostawy braku”), `src/lib/study/reminders.test.ts` (zaległe po końcu dnia dostawy). Vitest: `src/lib/study` i `src/lib/push` 300/300, `tsc` i eslint czyste.
-- **Commit:** 668c7ba, 2026-10-19.
-
 ## Terminy — prognoza serii w „Najbliższe 7 dni” (T2 planu kalendarza/przypomnień, 2026-10-19)
 
 - **Co robi:** w widoku Terminy, pod grupami, jest blok „Prognoza serii (najbliższe 7 dni)” — jeden wiersz na powtarzalne przypomnienie z liczbą jego kolejnych wystąpień w tym tygodniu, np. „+4 wystąpienia (prognoza)”. Wiersze są tylko do odczytu.
@@ -2950,55 +1979,6 @@ Dział opisany w jednym miejscu. Kalendarz pokazuje terminy przypomnień (`remin
 - **Ograniczenie:** `skipped` to liczby z chwili eksportu. Przywrócenie nie odzyskuje pominiętych zdjęć — tylko je nazywa.
 - **Testy:** `src/lib/fullBackup.test.ts` — przekroczenie budżetu (`attachmentBudget: 0`) rozdziela załącznik, zdjęcie dziennika i plan oraz składa komunikat; bez przekroczenia plan wchodzi do kopii i nie jest raportowany. Vitest 1469/1469, typecheck czysty.
 - **Commit:** 6a97a92 (kod), testy budżetu — w commicie z tym wpisem, 2026-10-19; okno przywracania z `skipped` — 5fa3fbd, 2026-10-19.
-
-## Praca — porządki po planie (L1, L2, L6, T4, T6, T2 częściowo, C4 — 2026-10-19)
-
-- **Co robi:** bez zmiany zachowania dla użytkownika, poza licznikiem „Na dziś” na karcie Dziś (L2 — teraz z tą samą projekcją co Praca). Wpisy zapisywane, z kopii i z projekcji są czyszczone jedną funkcją.
-- **Gdzie jest:**
-  - `src/lib/study/yStudy.ts` — `cleanEntryParts(e)` (L1): tekst, odhaczenia (tylko id, bez materiału), zdjęcia, próba, kształtki, etap, lokalizacja i flaga `empty`; `cleanEntry` (kopia, drugi telefon) korzysta z niej.
-  - `src/lib/study/store.ts` — `sanitizeStudy` (projekcja) i `entryFields` (zapis z arkusza) też korzystają z `cleanEntryParts`. Różnice, które zostają świadomie: projekcja filtruje odhaczenia po materiale już *po* sprawdzeniu pustości (D1), zapis filtruje je *przed* sprawdzeniem.
-  - `src/lib/study/srs.ts` — `dueIds(reviews, today)`: usunięty nieużywany parametr `known` (L6).
-  - `src/components/review/TodayStudyCard.tsx` — `dueToday(useStudy())` zamiast `dueIds` na surowej kopii (L2).
-  - `src/lib/study/store.ts` — JSDoc `saveBoss` wrócił nad swoją funkcją (L6, wcześniej wisiał nad `addCustomEntry`); `handover.ts` wskazuje `HandoverPaper.tsx` (L6).
-  - `docs/GOTCHAS.md` — wpis o strefie czasowej (C4): termin to chwila, nie godzina ścienna.
-- **Jak działa i dlaczego:** L2 — karta Dziś ładuje `store.ts`, który ciągnie `content.ts` (22 KB materiału). Karta jest leniwa, więc materiał trafia do jej fragmentu, nie do startowego. Zrobione tak, bo zgodność liczby z Pracą jest ważniejsza niż ten kawałek bajtów; pilnuje tego budżet wejściowego JS w `e2e/bundle.spec.ts` — uruchomiony po buildzie, 6/6 zielone.
-- **Testy:**
-  - `src/lib/study/yStudy.test.ts` — migracja dawnego zapisu zachowuje zdjęcia i są widoczne dla odśmiecania (T4).
-  - `src/lib/study/study.test.ts`, `src/lib/study/customStore.test.ts` — zegar zamrożony w `freshStudy` (`vi.setSystemTime`), bo `recordRound` i `addJournalEntry` brały dzień z prawdziwego zegara (T6). `TodayDueList.test.tsx` i `StudyDueRows.test.tsx` już miały zamrożony `Date`.
-  - `src/lib/study/srs.test.ts` — po usunięciu parametru `known` został test samego sortowania.
-  - T2 — testy komponentów działu Praca: `SiteOrderPanel.test.tsx` (WhatsApp), `SiteShortagesPanel.test.tsx` (dopisanie, status, data dostawy, usuwanie z „Cofnij”, czyszczenie), `SiteStagesPanel.test.tsx` (domyślne etapy, odhaczenie z datą, postęp, własny etap), `SiteDocsPanel.test.tsx` (miniatury i PDF-y, „Otwórz”, usuwanie, podgląd 100%), `DayHoursDialog.test.tsx` (zapis godzin, błędny format, reszta dnia, ostrzeżenie o nadmiarze). Biblioteka i store zamockowane, bez zależności od prawdziwego zegara. Dochodzą: `SiteServicePanel.test.tsx` (zgłoszenia z terminem, zaległe i dziś, zamknięcie z opisem, „Cofnij”, gwarancja, załatwione i „Otwórz ponownie”), `CalculatorsSheet.test.tsx` (spadek w obu trybach z podpowiedzią, próba wodna, pojemność z kolejnym odcinkiem i „Inna rura”), `JournalEntrySheet.test.tsx` (rodzaj w szkicu, pusty wpis, zapis z tekstem, edycja, „Usuń” z „Cofnij”; store zapisu zamockowany, szkic i stan arkusza prawdziwe).
-- **Nie zrobione (z planu Pracy):** brak — T2 zamknięte, wszystkie komponenty działu mają test.
-  - T5 — `report-nudge.spec.ts` nie ma już `waitForTimeout` (usunięty wcześniej); `journal-geo.spec.ts` celowo akceptuje dwa komunikaty (zależne od przeglądarki); `today-study.spec.ts` przechodzi, a wynik nie zależy od odpowiedzi (wszystkie 10 pytań wraca następnego dnia). Bez zmian.
-  - U8 — decyzja właściciela: nagranie jako osobny załącznik. Zrobione w kolejnej sesji (bez commita) — patrz „Praca — nagranie głosowe w wpisie (U8)”.
-  - D5 — pierwotnie zostawiono model wpisu (jeden klucz Y.Map). 2026-10-20 właściciel zdecydował „rób D5” i model został zmieniony — patrz „Pola wpisu osobno (D5)” w sekcji „Praca → Dziennik budowy”.
-  - P3 — decyzja: odłożenie dotyczy tylko jednego wystąpienia. Nie zrobione: dziś „Odłóż” z powiadomienia zapisuje nowy `reminder` notatki, czyli przesuwa kotwicę całej serii. Zrobione w kolejnej sesji (2026-10-19, bez commita) — patrz „Przypomnienia — odłożenie jednego wystąpienia serii”.
-- **Commit:** 19f2ade, 2026-10-19; testy T2 w 4fdd64f, 2026-10-19.
-
-## Praca — nagranie głosowe w wpisie (U8, 2026-10-19, 5581ece)
-
-- **Co robi:** we wpisie z budowy można nagrać głos przyciskiem „Nagraj” (do 3 min, do 3 nagrań w wpisie). Nagranie to osobny załącznik audio — pod zdjęciami na liście, z odtwarzaczem i „Usuń”. Samo nagranie wystarcza, by zapisać wpis. Działa w nowym wpisie i w edycji.
-- **Gdzie jest:**
-  - `src/lib/study/yStudy.ts` — pole `JournalEntry.recordings?: Attachment[]`, stała `JOURNAL_MAX_RECORDINGS = 3`, `cleanRecordings` (tylko manifesty audio z kluczem 64-znakowym w `imageStore`), `cleanEntryParts` i `cleanEntry` (nagranie czyni wpis niepustym).
-  - `src/lib/study/store.ts` — `NewJournalEntry.recordings`, `entryFields` (zapis), `sanitizeStudy` (projekcja).
-  - `src/lib/study/draft.ts` — `JournalDraft.recordings` (szkic zostaje po zamknięciu arkusza, czyści się po zapisie), `sanitizeDraft` (starszy szkic → `[]`).
-  - `src/lib/study/entrySheet.ts` — `openJournalEdit` przepisuje nagrania do formularza edycji.
-  - `src/lib/study/recordings.ts` — `addRecording(file, current)`: limit 3 w wpisie, `addAttachmentFiles` (limity, hash, dedup, quota jak w notatkach), `used` liczy załączniki notatek i nagrania wszystkich wpisów.
-  - `src/lib/study/journalRefs.ts` — `journalRefsIn` zbiera klucze nagrań; w trybie sync tylko do 2 MB (jak dokumenty budów).
-  - `src/components/study/JournalEntrySheet.tsx` — przycisk „Nagraj”, lista nagrań z `AudioPreview` i „Usuń nagranie”, `addRecordingFile`. `VoiceRecorder` i `AudioPreview` są leniwe (`VoiceAttachmentParts.tsx`), więc startowa paczka nie rośnie.
-- **Jak działa i dlaczego:**
-  - Nagranie to załącznik audio, nie zdjęcie: osobna lista `recordings`, bo raport i kopia opisują zdjęcia jako obrazy. Bajty trzymają się tego samego magazynu co załączniki notatek (`imageStore`), więc odśmiecanie, kopia (`exportNotes` / backup v3 przez `journalImageRefs`) i przywracanie (`putDataUrl`, bez filtra na `image/`) działają bez nowych ścieżek.
-  - Wpis to mapa pól w `studyJournal` (D5); nagrania to pole `recordings` i jadą z wpisem jako wartość tego pola (LWW na samo pole).
-  - Sync do innego urządzenia: nagrania do 2 MB; większe zostają lokalnie — tak jak załączniki notatek i dokumenty budów.
-- **Ograniczenia i pułapki:**
-  - Raport kopii (`exportNotes`) liczy pominięte nagrania osobno (`recordings`, z `recordingRefsIn` w `journalRefs.ts`), nie jako zdjęcia. Starsze kopie bez tego pola działają jak dotąd (pole opcjonalne w `noteSchema.ts`).
-  - Limit łączny 100 MB liczy wszystkie załączniki w aplikacji (`used`). Nagranie usunięte z wpisu zostaje w magazynie do odśmiecania (po karencji).
-  - Przeglądarki nagrywają w `audio/webm`, `audio/ogg` albo `audio/mp4`; `cleanRecordings` odrzuca każdy inny typ.
-  - Dyktowanie (`useDictation`) i nagrywanie są niezależne — nagranie nie jest transkrybowane i nie trafia do raportu.
-- **Testy:**
-  - `src/lib/study/recordings.test.ts` — `cleanRecordings` (typy, klucze, rozmiary, limit), wpis z samym nagraniem, `journalRefsIn` (także tryb sync do 2 MB), limit w `addRecording`.
-  - `e2e/bundle.spec.ts` — budżet startowej paczki zielony po dodaniu nagrań.
-  - Nagrywania w przeglądarce (mikrofon) nie testowano e2e — brak fake mikrofonu w zestawie; wymaga ręcznego sprawdzenia na telefonie.
-- **Commit:** 5581ece, 2026-10-19; poprawka raportu kopii f6867bd, 2026-10-19.
 
 ## Ustawienia — stan aktualny (okno, karty, reset, linki, zgoda na dyktowanie)
 
