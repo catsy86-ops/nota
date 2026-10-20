@@ -4315,4 +4315,4 @@ lub grupę”.
 - **Budżet paczki.** Wejściowy JS 390,4 KB gzip; próg 392 KB.
 - **Lint.** `eslint.config.js`: `src/lib/training/yTraining.ts` i jego testy na liście dozwolonych importów `yjs`.
 - **Commit:** `c7736f0` (kroki 4–5 planu Ćwiczeń: trening), `9d8e57e` (przypomnienie o treningu, przerwa i wybór dnia planu),
-  oraz wibracja, sprzęt, wykres progresu i poprawka stabilnego odczytu ustawień (2026-10-20, hash poniżej).
+  oraz `22e2495` (wibracja, sprzęt, wykres progresu i poprawka stabilnego odczytu ustawień, 2026-10-20).
