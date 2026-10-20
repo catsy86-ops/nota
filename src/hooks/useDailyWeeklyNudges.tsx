@@ -2,7 +2,7 @@ import { useLatestRef } from "@/hooks/useLatestRef";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import type { Note } from "@/hooks/useNotes";
-import { getTodayRange, getWeekRange } from "@/lib/dateRanges";
+import { getTodayRange, getWeekRange, inRange } from "@/lib/dateRanges";
 import { ReminderToast } from "@/components/ReminderToast";
 import { pluralPl } from "@/lib/plural";
 
@@ -74,7 +74,7 @@ export function useDailyWeeklyNudges(prefs: DailyWeeklyNudgePrefs, notes: Note[]
       snoozeKey: "kaczy.todaySnoozeUntil",
       getCount: () => {
         const { start, end } = getTodayRange();
-        return notesRef.current.filter((n) => (n.createdAt >= start && n.createdAt <= end) || (n.updatedAt >= start && n.updatedAt <= end)).length;
+        return notesRef.current.filter((n) => inRange(n, start, end)).length;
       },
       isDue: (lastNudge, now) => {
         if (fixedTime && /^\d{1,2}:\d{2}$/.test(fixedTime)) {
@@ -112,7 +112,7 @@ export function useDailyWeeklyNudges(prefs: DailyWeeklyNudgePrefs, notes: Note[]
       snoozeKey: "kaczy.weekSnoozeUntil",
       getCount: () => {
         const { start, end } = getWeekRange();
-        return notesRef.current.filter((n) => (n.createdAt >= start && n.createdAt <= end) || (n.updatedAt >= start && n.updatedAt <= end)).length;
+        return notesRef.current.filter((n) => inRange(n, start, end)).length;
       },
       isDue: (lastNudge, now) => {
         const nowDate = new Date(now);

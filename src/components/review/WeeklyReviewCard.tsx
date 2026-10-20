@@ -93,7 +93,7 @@ function FolderMenu({ note, folders, onMove }: { note: Note; folders: Folder[]; 
   );
 }
 
-const rowBtn = "pressable p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/5 coarse:p-2.5";
+const rowBtn = "pressable p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/5 coarse:p-2.5 coarse:min-h-11 coarse:min-w-11";
 
 function CategoryBlock({ cat, a }: { cat: ReviewCategory; a: WeeklyReviewActions }) {
   const Icon = ICONS[cat.key];
@@ -210,7 +210,7 @@ export function WeeklyReviewCard(a: WeeklyReviewActions) {
               {review.total} {pluralPl(review.total, ["notatka czeka", "notatki czekają", "notatek czeka"])} na szybki rzut oka.
             </p>
           </div>
-          <Button size="sm" variant="outline" onClick={() => setWalking(reviewQueue(review))}>
+          <Button size="sm" variant="outline" onClick={() => setWalking(reviewQueue(review))} className="coarse:h-11">
             Przejrzyj po kolei
           </Button>
         </header>
@@ -224,6 +224,7 @@ export function WeeklyReviewCard(a: WeeklyReviewActions) {
             size="sm"
             variant="ghost"
             onClick={() => { snoozeReview(now); toast("Przypomnimy jutro", { duration: 2500 }); }}
+            className="coarse:h-11"
           >
             Przypomnij jutro
           </Button>
@@ -231,6 +232,7 @@ export function WeeklyReviewCard(a: WeeklyReviewActions) {
             size="sm"
             variant="secondary"
             onClick={() => finish(handled > 0, handled > 0 ? "Przegląd tygodnia domknięty" : "Przegląd pominięty do przyszłego tygodnia")}
+            className="coarse:h-11"
           >
             Zamknij na ten tydzień
           </Button>

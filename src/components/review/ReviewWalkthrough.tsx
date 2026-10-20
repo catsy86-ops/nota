@@ -114,13 +114,13 @@ export default function ReviewWalkthrough({ queue, onArchive, onTrash, onFinish,
               <p className="mt-3 text-sm text-foreground/80 wrap-break-word line-clamp-5">{preview(current.note)}</p>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" onClick={keep}><Check className="w-4 h-4 mr-1.5" />Zostaw <kbd className="ml-1.5 font-mono text-2xs opacity-60">K</kbd></Button>
-              <Button variant="outline" onClick={archive}><Archive className="w-4 h-4 mr-1.5" />Archiwizuj <kbd className="ml-1.5 font-mono text-2xs opacity-60">A</kbd></Button>
-              <Button variant="outline" onClick={trash}><Trash className="w-4 h-4 mr-1.5" />Do kosza <kbd className="ml-1.5 font-mono text-2xs opacity-60">D</kbd></Button>
-              <Button variant="ghost" onClick={skip}>Dalej<ArrowRight className="w-4 h-4 ml-1.5" /></Button>
+              <Button variant="outline" onClick={keep} className="coarse:h-11"><Check className="w-4 h-4 mr-1.5" />Zostaw <kbd className="ml-1.5 font-mono text-2xs opacity-60">K</kbd></Button>
+              <Button variant="outline" onClick={archive} className="coarse:h-11"><Archive className="w-4 h-4 mr-1.5" />Archiwizuj <kbd className="ml-1.5 font-mono text-2xs opacity-60">A</kbd></Button>
+              <Button variant="outline" onClick={trash} className="coarse:h-11"><Trash className="w-4 h-4 mr-1.5" />Do kosza <kbd className="ml-1.5 font-mono text-2xs opacity-60">D</kbd></Button>
+              <Button variant="ghost" onClick={skip} className="coarse:h-11">Dalej<ArrowRight className="w-4 h-4 ml-1.5" /></Button>
             </div>
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <button type="button" onClick={back} disabled={index === 0} className="inline-flex items-center gap-1 disabled:opacity-40 hover:text-foreground">
+              <button type="button" onClick={back} disabled={index === 0} className="inline-flex items-center gap-1 coarse:min-h-11 disabled:opacity-40 hover:text-foreground">
                 <ArrowLeft className="w-3.5 h-3.5" />Wstecz
               </button>
               <span>Strzałki ← → przechodzą, K / A / D działają od razu</span>

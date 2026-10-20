@@ -3,7 +3,7 @@ import type { Note, Folder } from "@/hooks/useNotes";
 import { getDescendantFolderIds } from "@/hooks/useNotes";
 import type { ViewPrefs } from "@/lib/viewPrefs";
 import { searchNotes, useSearchReady, loadSearchIndex } from "@/lib/searchNotes";
-import { getTodayRange, getWeekRange } from "@/lib/dateRanges";
+import { getTodayRange, getWeekRange, inRange } from "@/lib/dateRanges";
 import { PRIORITY_ORDER } from "@/lib/notePriority";
 import { useLastOpened, type LastOpenedMap } from "@/lib/lastOpened";
 import { useDayClock } from "@/lib/dayClock";
@@ -42,11 +42,11 @@ function filterNotes(list: Note[], source: Note[], { view, activeLabel, activeFo
   }
   if (view === "today") {
     const { start, end } = getTodayRange();
-    filtered = filtered.filter((n) => (n.createdAt >= start && n.createdAt <= end) || (n.updatedAt >= start && n.updatedAt <= end));
+    filtered = filtered.filter((n) => inRange(n, start, end));
   }
   if (view === "week") {
     const { start, end } = getWeekRange();
-    filtered = filtered.filter((n) => (n.createdAt >= start && n.createdAt <= end) || (n.updatedAt >= start && n.updatedAt <= end));
+    filtered = filtered.filter((n) => inRange(n, start, end));
   }
   if (view === "inbox") {
     filtered = filtered.filter(isInboxNote);

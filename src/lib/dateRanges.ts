@@ -17,7 +17,8 @@ export function getWeekRange(): { start: number; end: number } {
   return { start: start.getTime(), end: end.getTime() };
 }
 
-function inRange(note: Pick<Note, "createdAt" | "updatedAt">, start: number, end: number): boolean {
+/** Notatka „dotknięta” w zakresie: utworzona albo edytowana w `[start, end]`. Jedna definicja dla Dziś, Tygodnia i podpowiedzi. */
+export function inRange(note: Pick<Note, "createdAt" | "updatedAt">, start: number, end: number): boolean {
   return (note.createdAt >= start && note.createdAt <= end) || (note.updatedAt >= start && note.updatedAt <= end);
 }
 

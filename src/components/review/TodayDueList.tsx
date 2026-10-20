@@ -29,7 +29,7 @@ export function TodayDueList({ notes, onOpen, onOpenReminders }: { notes: Note[]
   const total = groups.reduce((n, g) => n + g.notes.length, 0);
 
   return (
-    <section aria-label="Zaległe i dziś" data-testid="today-due" className="rounded-card border border-border bg-card p-4 sm:p-5 space-y-3">
+    <section aria-label="Przypomnienia" data-testid="today-due" className="rounded-card border border-border bg-card p-4 sm:p-5 space-y-3">
       <div className="flex items-center justify-between gap-3">
         <h2 className="section-label gap-2">
           <BellRing className="h-3.5 w-3.5" aria-hidden />
@@ -68,7 +68,7 @@ export function TodayDueList({ notes, onOpen, onOpenReminders }: { notes: Note[]
                 ))}
               </ul>
               {rest > 0 && (
-                <button type="button" onClick={onOpenReminders} className="mt-1 text-xs text-muted-foreground hover:text-foreground">
+                <button type="button" onClick={onOpenReminders} className="mt-1 inline-flex items-center text-xs text-muted-foreground hover:text-foreground coarse:min-h-11">
                   i jeszcze {rest} w Przypomnieniach
                 </button>
               )}

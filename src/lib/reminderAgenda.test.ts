@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { groupReminders, snoozeTimes, countOverdue } from "./reminderAgenda";
+import { groupReminders, snoozeTimes, countOverdue, countDueToday } from "./reminderAgenda";
 import { weekSeriesForecasts } from "@/lib/reminderForecast";
 import type { Note } from "@/hooks/useNotes";
 
@@ -86,5 +86,19 @@ describe("reminderAgenda — pusta lista i odłożenie o godzinę (faza 1 Przypo
   it("odłożenie o godzinę liczy się od teraz, nie od północy", () => {
     const now = at(2026, 10, 1, 14, 20);
     expect(snoozeTimes(now).inHour).toBe(at(2026, 10, 1, 15, 20));
+  });
+
+  it("countDueToday: zaległe i dzisiejsze, bez przyszłych i kosza; archiwum liczy się", () => {
+    const now = at(2026, 10, 20, 12);
+    const trashed = { ...note("bin", now - 60_000), trashed: true };
+    const archived = { ...note("arch", now - 60_000), archived: true };
+    const notes = [
+      note("late", now - 3 * 3600_000), // przegapione
+      note("soon", now + 3600_000), // dziś
+      note("week", now + 3 * 86_400_000), // tydzień — nie na Dziś
+      trashed,
+      archived,
+    ];
+    expect(countDueToday(notes, now)).toBe(3);
   });
 });
