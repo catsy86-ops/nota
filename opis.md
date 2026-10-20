@@ -2449,6 +2449,7 @@ z notatkami i trafiają do kopii zapasowej.
 - Każdy wpis i każda karta to osobny klucz mapy, więc dwa telefony dopisujące wpisy offline
   scalają się bez strat.
 - **Pola wpisu osobno (D5, 2026-10-20).** Wpis dziennika to `Y.Map` z kluczem na każde pole. Edycja różnych pól tego samego wpisu na dwóch telefonach scala się (np. tekst na jednym, rozwiązanie na drugim); to samo pole — ostatni zapis wygrywa. `writeEntry` zapisuje tylko zmienione pola i usuwa pola, których już nie ma (np. cofnięte rozwiązanie). Stare wpisy (zwykły obiekt) czyta się bez zmian i zamienia na mapę przy pierwszej edycji. `dump()` i kopia nadal zawierają wpis jako zwykły obiekt, więc format kopii się nie zmienia.
+- **Commit (D5):** `4167846` (2026-10-20).
 - **Uwaga zgodności.** Starsze wersje aplikacji nie czytają wpisów zapisanych jako mapa pól (`cleanEntry` odrzuca `Y.Map`). Dopóki wszystkie urządzenia nie mają tej wersji, nowe lub edytowane wpisy są na nich niewidoczne.
 - `yStudy.ts` nie importuje materiału (`content.ts`), bo jest w głównej paczce (odśmiecanie
   zdjęć, kopia). Przynależność do materiału sprawdza `store.ts`.
