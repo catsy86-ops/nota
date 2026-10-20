@@ -47,20 +47,21 @@ Sprzęt jest zapisywany w Ustawieniach działu (lista „mój sprzęt”), a ćw
 - **Nie diagnozować:** dieta i kreatyna to dziennik i przypomnienia, nie porady. Teksty w aplikacji bez zaleceń medycznych.
 - **Dostęp do menu:** dział jest w nawigacji i w palecie poleceń po dodaniu, z trasą `/cwiczenia` (zgodnie z `viewRoute.ts`).
 
-## Pytania do właściciela (przed realizacją)
+## Decyzje właściciela (2026-10-20)
 
-1. Czy dział ma być osobną pozycją w menu, czy w Dziś (karta „Trening na dziś”)?
-2. Które ćwiczenia z ławeczki i hantli mają być w katalogu startowym? (Lista z własnych zapisów byłaby najlepsza.)
-3. Dieta: sam dziennik czy także kalorie i białko?
-4. Kreatyna: dawka i godzina przypomnienia; czy wystarczy codziennie?
-5. Priorytet: najpierw trening, czy najpierw odżywki?
+1. **Osobna pozycja w menu** (nie karta w Dziś).
+2. **Katalog startowy:** klatka, biceps, triceps — ćwiczenia z ławeczki i hantli na te partie.
+3. **Dieta:** dziennik posiłków **oraz** kalorie i białko na dzień.
+4. **Kreatyna:** rano, 1 łyżka, codziennie (przypomnienie o tej porze, przez Przypomnienia).
+5. **Priorytet:** odżywki, potem trening. Odpowiedź zawierała też słowo „praca”, którego znaczenia w tym kontekście nie ustalono; do wyjaśnienia przed realizacją (może chodzić o dział Praca albo o pracę nad planem).
 
 ## Kolejność realizacji (propozycja)
 
-1. Ustalić pytania 1–5 i katalog startowy.
+1. Odżywki: lista, kreatyna rano 1 łyżka z przypomnieniem codziennym (Przypomnienia).
 2. Model danych i kopia zapasowa (przed UI, żeby nie dorabiać później).
-3. Dziennik treningu + sprzęt + katalog.
-4. Plan treningowy i progres.
-5. Kreatyna i odżywki z przypomnieniami.
-6. Dziennik posiłków (ostatni, bo najbardziej osobisty).
-7. Testy jednostkowe dla logiki (progres, przypomnienia dawek) i e2e dla przepływu zapisu treningu.
+3. Dziennik posiłków z kaloriami i białkiem na dzień (dane osobiste, lekkie UI).
+4. Katalog startowy (klatka, biceps, triceps) + dziennik treningu + sprzęt.
+5. Plan treningowy i progres.
+6. Testy jednostkowe dla logiki (progres, przypomnienia dawek, sumy kalorii i białka) i e2e dla zapisu treningu i dawki.
+
+Kolejność wynika z decyzji 5: odżywki przed treningiem. Dieta (punkt 3) ustawiona między nimi, bo dzieli z odżywkami dane o żywieniu; do potwierdzenia.
