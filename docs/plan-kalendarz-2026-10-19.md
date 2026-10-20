@@ -88,3 +88,11 @@
 - ✅ Faza 2: fokus po akcji (2a), pominięcie w wierszu (2b), zapamiętany widok (2c), DST (2e: `composeReminderTimestamp`, `moveToDay`, `UNTIL` w ICS), zakres serii (2g).
 - ⏸ 2d (całodniowe w dialogu) — wymaga przekazania `allDay` przez `onCreateNote`. 2f (duplikaty) — nie zrobione.
 - ⏸ Faza 3 (widok tygodnia na telefonie, druk, historia serii) — czeka na decyzję właściciela z planu.
+
+## Status 2026-10-20, druga część (bez commita)
+
+- ✅ 2d: „Cały dzień” w dialogu (flaga przez zapis, edycję, przeciąganie i cofnięcie).
+- ✅ 2f (część): `endOfDay` w `dueTerms.ts` używa wspólnej funkcji. Odznaka zmiany i etykiety „Bez tytułu” zostają.
+- ✅ 3a: przełącznik „Miesiąc / Tydzień” na telefonie (pasek tygodnia zamiast siatki).
+- ✅ 3b: przycisk „Drukuj” — lista terminów miesiąca przez `PrintRoot`.
+- ⏸ 3c (historia serii) — decyzja właściciela, nie zrobiona.

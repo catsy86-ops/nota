@@ -6,7 +6,9 @@ import {
 } from "@dnd-kit/core";
 import { m as motion } from "framer-motion";
 import { tween } from "@/lib/motion";
-import { ChevronLeft, ChevronRight, Download, Keyboard } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Keyboard, Printer } from "lucide-react";
+import { PrintRoot } from "@/components/study/PrintRoot";
+import { CalendarPrintList } from "./CalendarPrintList";
 import { buildIcs, exportableReminders } from "@/lib/icsExport";
 import { download } from "@/lib/exportNotes";
 import { addDays, format, isSameDay, isSameMonth } from "date-fns";
@@ -40,10 +42,10 @@ import type { Note } from "@/hooks/useNotes";
 interface ReminderCalendarViewProps {
   /** Notatki z terminami — bez kosza, tak samo jak karmione są powiadomienia. */
   notes: Note[];
-  onCreateNote: (title: string, reminder: number, repeat: ReminderRepeat) => void;
+  onCreateNote: (title: string, reminder: number, repeat: ReminderRepeat, allDay: boolean) => void;
   /** `reminderDay` podany = przesunięcie w obrębie serii (bez zmiany jej dnia); brak = nowy termin. */
   /** `reminderBase` — termin serii przy odłożonym wystąpieniu (`undefined` = zwykły termin, czyści odłożenie). */
-  onSetReminder: (noteId: string, reminder: number | null, repeat: ReminderRepeat, reminderDay?: number, reminderBase?: number) => void;
+  onSetReminder: (noteId: string, reminder: number | null, repeat: ReminderRepeat, reminderDay?: number, reminderBase?: number, reminderAllDay?: boolean) => void;
 }
 
 function monthBounds(month: Date) {
@@ -61,6 +63,10 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
   const [selectedDay, setSelectedDay] = useState(() => new Date());
   const [showKeys, setShowKeys] = useState(false);
   const [dialogDay, setDialogDay] = useState<Date | null>(null);
+  // Telefon: miesiąc (siatka) albo tydzień (pasek 7 dni). Na większym ekranie oba są zawsze.
+  const [phoneView, setPhoneView] = useState<"month" | "week">("month");
+  // Wydruk miesiąca (3b planu): `PrintRoot` schowa resztę strony i otworzy okno drukowania.
+  const [printing, setPrinting] = useState(false);
   const [editTarget, setEditTarget] = useState<ReminderEditTarget | null>(null);
 
   // Siatka pokazuje też dni sąsiednich miesięcy, więc zakres jest o tydzień
@@ -122,7 +128,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
   }
 
   function openEdit(occ: Occurrence) {
-    setEditTarget({ noteId: occ.noteId, at: occ.at, repeat: occ.repeat, isSeries: occ.isSeries });
+    setEditTarget({ noteId: occ.noteId, at: occ.at, repeat: occ.repeat, isSeries: occ.isSeries, allDay: occ.allDay });
     setDialogDay(new Date(occ.at));
   }
 
@@ -135,6 +141,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
       day: note ? seriesDay(note) : undefined,
       until: note?.reminderRepeatUntil,
       base: note?.reminderBase,
+      allDay: note?.reminderAllDay === true,
     };
   }
 
@@ -146,10 +153,10 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-day-key="${dayKey(day)}"]`)?.focus());
   }
 
-  function handleAttach(noteId: string, reminder: number, repeat: ReminderRepeat) {
+  function handleAttach(noteId: string, reminder: number, repeat: ReminderRepeat, allDay: boolean) {
     const before = previousOf(noteId);
-    onSetReminder(noteId, reminder, repeat);
-    toastWithUndo("Termin zapisany", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base), { icon: "🔔" });
+    onSetReminder(noteId, reminder, repeat, undefined, undefined, allDay);
+    toastWithUndo("Termin zapisany", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay), { icon: "🔔" });
   }
 
   /**
@@ -164,9 +171,9 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     const next = note ? nextOccurrence(note, at) : nextInSeries(at, repeat, before.day, before.until);
     // Pominięcie ostatniego terminu serii kończy ją — nie ma już czego przypominać.
     if (next === null) onSetReminder(noteId, null, "none");
-    else onSetReminder(noteId, next, repeat, before.day, undefined);
+    else onSetReminder(noteId, next, repeat, before.day, undefined, before.allDay);
     // Ostatni termin serii: pominięcie ją kończy — komunikat mówi to wprost, nie jak zwykłe pominięcie.
-    const undo = () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base);
+    const undo = () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay);
     if (next === null) toastWithUndo("Seria zakończona", undo, { icon: "🏁", description: "To był ostatni termin serii." });
     else toastWithUndo("Wystąpienie pominięte", undo, { icon: "⏭️" });
     focusDay(new Date(at));
@@ -182,7 +189,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     const source = new Date(note.reminder);
     setMonth(new Date(source.getFullYear(), source.getMonth(), 1));
     setSelectedDay(source);
-    setEditTarget({ noteId: note.id, at: note.reminder, repeat: note.reminderRepeat ?? "none", isSeries: true });
+    setEditTarget({ noteId: note.id, at: note.reminder, repeat: note.reminderRepeat ?? "none", isSeries: true, allDay: note.reminderAllDay === true });
     setDialogDay(source);
     toast("To była prognoza serii", {
       description: `Otwarty został najbliższy zapisany termin: ${format(source, "d MMMM, HH:mm", { locale: pl })}.`,
@@ -192,7 +199,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
   function handleClear(noteId: string) {
     const before = previousOf(noteId);
     onSetReminder(noteId, null, "none");
-    toastWithUndo("Termin usunięty", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base), { icon: "🔕" });
+    toastWithUndo("Termin usunięty", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay), { icon: "🔕" });
     focusDay(selectedDay);
   }
 
@@ -218,12 +225,12 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     const to = new Date(ts);
     const before = previousOf(occ.noteId);
     markMoved(occ.noteId);
-    onSetReminder(occ.noteId, to.getTime(), occ.repeat);
+    onSetReminder(occ.noteId, to.getTime(), occ.repeat, undefined, undefined, occ.allDay);
     setSelectedDay(to);
     if (!isSameMonth(to, month)) setMonth(new Date(to.getFullYear(), to.getMonth(), 1));
     toastWithUndo(
       `Termin przeniesiony na ${format(to, "d MMMM", { locale: pl })}`,
-      () => onSetReminder(occ.noteId, before.reminder, before.repeat, before.day, before.base),
+      () => onSetReminder(occ.noteId, before.reminder, before.repeat, before.day, before.base, before.allDay),
       { icon: "📅", description: occ.isSeries ? "Cała seria liczy się od nowego terminu." : undefined },
     );
     focusDay(to);
@@ -319,7 +326,35 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
           >
             <Keyboard className="w-4 h-4" aria-hidden />
           </button>
+          <button
+            type="button"
+            onClick={() => setPrinting(true)}
+            aria-label="Drukuj terminy tego miesiąca"
+            title="Drukuj terminy tego miesiąca"
+            className="shrink-0 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 coarse:min-h-11 coarse:min-w-11 coarse:justify-center rounded-lg transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Printer className="w-3.5 h-3.5" aria-hidden />
+            <span className="hidden sm:inline">Drukuj</span>
+          </button>
         </header>
+        {printing && (
+          <PrintRoot testId="calendar-print" onDone={() => setPrinting(false)}>
+            <CalendarPrintList month={month} byDay={byDay} titleOf={titleOf} />
+          </PrintRoot>
+        )}
+        <div role="group" aria-label="Widok na telefonie" className="order-3 flex gap-1 sm:hidden">
+            {(["month", "week"] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                aria-pressed={phoneView === v}
+                onClick={() => setPhoneView(v)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-medium coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring ${phoneView === v ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                {v === "month" ? "Miesiąc" : "Tydzień"}
+              </button>
+            ))}
+        </div>
         {showKeys && (
           <p id="calendar-keys-hint" className="order-2 -mt-2 px-1 text-xs text-muted-foreground">
             Strzałki — przechodzenie po dniach · PgUp / PgDn — miesiąc · Enter — dodaj termin · Z — zmiana i godziny z Grafiku · Shift+←/→ — przesuń wybrany termin o dzień (albo przeciągnij go myszą).
@@ -327,7 +362,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
         )}
 
         {/* Telefon: bieżący tydzień i tak jest wierszem siatki miesiąca tuż pod spodem — pasek go dublował. */}
-        <div className="order-4 max-sm:hidden">
+        <div className={phoneView === "month" ? "order-4 max-sm:hidden" : "order-4"}>
         <WeekStrip
           day={selectedDay}
           byDay={byDay}
@@ -339,7 +374,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
         />
         </div>
 
-        <div className="order-5">
+        <div className={phoneView === "week" ? "order-5 max-sm:hidden" : "order-5"}>
           <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
           <MonthGrid
             month={month}

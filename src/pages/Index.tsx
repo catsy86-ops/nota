@@ -808,14 +808,14 @@ const Index = () => {
               <Suspense fallback={<ViewSkeleton view="calendar" />}>
                 <ReminderCalendarView
                   notes={reminderNotes}
-                  onCreateNote={(title, reminder, repeat) => {
+                  onCreateNote={(title, reminder, repeat, allDay) => {
                     const id = addNote(title, "", prefs.defaultNoteColor, [], reminder);
                     // `addNote` nie przyjmuje powtarzania, więc serię dostawiamy
                     // patchem po utworzeniu — stąd id zwracane przez `addNote`.
-                    if (repeat !== "none") updateNote(id, { reminderRepeat: repeat });
+                    if (repeat !== "none" || allDay) updateNote(id, { reminderRepeat: repeat, ...(allDay ? { reminderAllDay: true } : {}) });
                   }}
-                  onSetReminder={(id, reminder, repeat, reminderDay, reminderBase) =>
-                    updateNote(id, { reminder, reminderRepeat: repeat, ...(reminderDay === undefined ? {} : { reminderDay }), reminderBase })}
+                  onSetReminder={(id, reminder, repeat, reminderDay, reminderBase, reminderAllDay) =>
+                    updateNote(id, { reminder, reminderRepeat: repeat, ...(reminderDay === undefined ? {} : { reminderDay }), reminderBase, reminderAllDay: reminderAllDay === true ? true : undefined })}
                 />
               </Suspense>
             </ViewErrorBoundary>

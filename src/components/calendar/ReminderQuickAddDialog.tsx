@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { searchNotes } from "@/lib/searchNotes";
 import { parseNaturalDate } from "@/lib/parseNaturalDate";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
-import { composeReminderTimestamp, isPastReminder, toTimeInputValue, formatReminderShort, defaultReminderTimeFor } from "@/lib/reminderTime";
+import { composeReminderTimestamp, isPastReminder, toTimeInputValue, formatReminderShort, defaultReminderTimeFor, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
 import { REMINDER_REPEAT_LABELS, type ReminderRepeat } from "@/lib/reminderRepeat";
 import type { Note } from "@/hooks/useNotes";
 import { cn } from "@/lib/utils";
@@ -41,6 +41,7 @@ export interface ReminderEditTarget {
   at: number;
   repeat: ReminderRepeat;
   isSeries: boolean;
+  allDay?: boolean;
 }
 
 interface ReminderQuickAddDialogProps {
@@ -51,8 +52,8 @@ interface ReminderQuickAddDialogProps {
   /** Ustawiony, gdy dialog edytuje istniejący termin zamiast dodawać nowy. */
   edit?: ReminderEditTarget | null;
   notes: Note[];
-  onCreateNote: (title: string, reminder: number, repeat: ReminderRepeat) => void;
-  onAttachReminder: (noteId: string, reminder: number, repeat: ReminderRepeat) => void;
+  onCreateNote: (title: string, reminder: number, repeat: ReminderRepeat, allDay: boolean) => void;
+  onAttachReminder: (noteId: string, reminder: number, repeat: ReminderRepeat, allDay: boolean) => void;
   onClearReminder: (noteId: string) => void;
   /** Pomija najbliższe wystąpienie serii, przesuwając termin na kolejne. */
   onSkipOccurrence: (noteId: string, at: number, repeat: ReminderRepeat) => void;
@@ -66,6 +67,8 @@ export function ReminderQuickAddDialog({
   const [query, setQuery] = useState("");
   const [time, setTime] = useState(() => (edit ? toTimeInputValue(edit.at) : defaultReminderTimeFor(day)));
   const [repeat, setRepeat] = useState<ReminderRepeat>(() => edit?.repeat ?? "none");
+  // Cały dzień: termin stoi na 9:00 i nie pokazuje godziny (2d planu, jak w `ReminderPicker`).
+  const [allDay, setAllDay] = useState(() => edit?.allDay === true);
   // Dzień może przesunąć język naturalny („jutro”, „w piątek”) wpisany w pole.
   const [dayOverride, setDayOverride] = useState<Date | null>(null);
 
@@ -96,7 +99,7 @@ export function ReminderQuickAddDialog({
 
   const effectiveDay = dayOverride ?? parsed?.date ?? day;
   const title = (parsed ? parsed.title : query).trim();
-  const timestamp = composeReminderTimestamp(effectiveDay, time);
+  const timestamp = composeReminderTimestamp(effectiveDay, allDay ? DEFAULT_REMINDER_TIME : time);
   const past = isPastReminder(timestamp);
 
   const suggestions = useMemo(() => {
@@ -113,6 +116,7 @@ export function ReminderQuickAddDialog({
     setQuery("");
     setTime(defaultReminderTimeFor(day));
     setRepeat("none");
+    setAllDay(false);
     setDayOverride(null);
   }
 
@@ -124,21 +128,21 @@ export function ReminderQuickAddDialog({
   function handleCreate() {
     if (timestamp === null || !title) return;
     requestNotificationPermissionOnIntent();
-    onCreateNote(title, timestamp, repeat);
+    onCreateNote(title, timestamp, repeat, allDay);
     close();
   }
 
   function handleAttach(noteId: string) {
     if (timestamp === null) return;
     requestNotificationPermissionOnIntent();
-    onAttachReminder(noteId, timestamp, repeat);
+    onAttachReminder(noteId, timestamp, repeat, allDay);
     close();
   }
 
   function handleSaveEdit() {
     if (!edit || timestamp === null) return;
     requestNotificationPermissionOnIntent();
-    onAttachReminder(edit.noteId, timestamp, repeat);
+    onAttachReminder(edit.noteId, timestamp, repeat, allDay);
     close();
   }
 
@@ -205,6 +209,10 @@ export function ReminderQuickAddDialog({
         )}
 
         <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} className="size-4 accent-primary" />
+            Cały dzień
+          </label>
           {/* W edycji dzień zmienia się tutaj, a nie przez przeciąganie — telefon tego nie obsługuje (P0 planu). */}
           {isEdit && (
             <label className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -221,6 +229,7 @@ export function ReminderQuickAddDialog({
               />
             </label>
           )}
+          {!allDay && (
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             Godzina:
             <input
@@ -231,6 +240,7 @@ export function ReminderQuickAddDialog({
               className="text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring text-foreground"
             />
           </label>
+          )}
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <Repeat className="w-3 h-3" />
             <span className="sr-only">Powtarzanie</span>
