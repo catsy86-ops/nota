@@ -4079,3 +4079,31 @@ lub grupę”.
   - `src/hooks/useOverdueBadge.test.ts` — „adds terminy Pracy do tytułu i ikony”.
   - `e2e/reminders-phase2.spec.ts` — „Gotowe” przy nadchodzącym terminie zdejmuje go z Terminów.
   - e2e pełny przebieg chromium: 391/391 (Commit: ebe2567).
+
+## Kalendarz — fazy 2d, 2f, 3a, 3b planu (2026-10-20, 11ef99f)
+
+- **Co robi:**
+  - Dialog terminu ma „Cały dzień”: godziny nie widać, termin stoi na 9:00. Flaga `reminderAllDay` idzie przy tworzeniu, edycji, przeciąganiu i cofnięciu (2d).
+  - Na telefonie przełącznik „Miesiąc / Tydzień”: tydzień pokazuje pasek 7 dni (`WeekStrip`) zamiast siatki. Na większym ekranie bez zmian (3a).
+  - Przycisk „Drukuj” w nagłówku: drukuje listę terminów bieżącego miesiąca, dzień po dniu, z oznaczeniem prognozy serii (3b).
+  - Duplikat `endOfDay` w `dueTerms.ts` używa wspólnej funkcji z `reminderRepeat.ts` (2f, część — odznaka zmiany i etykiety „Bez tytułu” zostają).
+- **Gdzie jest:**
+  - `src/components/calendar/ReminderQuickAddDialog.tsx` — `allDay` w stanie, checkbox „Cały dzień”, `DEFAULT_REMINDER_TIME` zamiast godziny.
+  - `src/components/calendar/ReminderCalendarView.tsx` — `onSetReminder` ma szósty argument `reminderAllDay`; `previousOf` zapamiętuje `allDay`; przełącznik `phoneView`; przycisk „Drukuj” i `PrintRoot`.
+  - `src/components/calendar/CalendarPrintList.tsx` — lista wydruku (`report-paper`, `PrintRoot`).
+  - `src/pages/Index.tsx` — `onCreateNote` i `onSetReminder` przekazują `reminderAllDay`.
+  - `src/lib/dueTerms.ts` — `endOfDay` nakładka na `endOfDay` z `reminderRepeat.ts`.
+- **Ograniczenia i pułapki:**
+  - Tydzień na telefonie jest przełącznikiem, nie stałym widokiem; wybór nie jest zapamiętywany między wejściami.
+  - Wydruk pokazuje tylko terminy kalendarza (nie Pracę), a na papierze prognozy są oznaczone tekstem.
+  - Nie zrobione: 3c (historia serii) — decyzja właściciela z planu, bez zmiany.
+- **Testy:**
+  - `src/components/calendar/CalendarPrintList.test.tsx` — wydruk: godzina, „cały dzień”, prognoza, pusty miesiąc.
+  - `e2e/calendar-phase2.spec.ts` — „Cały dzień” bez godziny; przełącznik Miesiąc / Tydzień na 375 px.
+
+## Synchronizacja — toast z tytułem notatki, punkt 3 planu (2026-10-20, 89f1546)
+
+- **Co robi:** po zmianie z innego urządzenia toast mówi, która notatka się zmieniła („Zaktualizowano: …”). Notatki prywatne i bez tytułu pokazują zwykły komunikat.
+- **Gdzie jest:** `src/lib/yjsSync.ts` — `changedNoteTitle()` porównuje `updatedAt` notatek z poprzednim zdalnym zapisem (`remoteSeenUpdated`), wywoływane w handlerze `yjsStore.doc.on("update")`.
+- **Ograniczenia i pułapki:** porównanie obejmuje też lokalne edycje od ostatniego zdalnego zapisu, więc przy kilku zmianach naraz tytuł może wskazać lokalną notatkę. Toast nadal co 30 s, tak jak wcześniej.
+- **Testy:** e2e pełny przebieg 393/393. `src/lib/yjsSync.test.ts` przechodzi bez zmian (25/25). Sam toast nie ma testu jednostkowego; do sprawdzenia na dwóch urządzeniach.
