@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import type { Note } from "@/hooks/useNotes";
 import type { ReviewCategoryKey } from "@/lib/weeklyReview";
 import { pluralPl } from "@/lib/plural";
+import { useConfirmAction } from "@/components/ConfirmActionDialog";
 
 export interface WalkthroughSummary {
   kept: number;
@@ -48,6 +49,7 @@ export default function ReviewWalkthrough({ queue, onArchive, onTrash, onFinish,
   const [index, setIndex] = useState(0);
   const [summary, setSummary] = useState<WalkthroughSummary>({ kept: 0, archived: 0, trashed: 0, skipped: 0 });
   const [done, setDone] = useState(false);
+  const { confirmAction, confirmDialog } = useConfirmAction();
   const current = queue[index];
 
   const advance = (patch: Partial<WalkthroughSummary>) => {
@@ -64,7 +66,13 @@ export default function ReviewWalkthrough({ queue, onArchive, onTrash, onFinish,
 
   const keep = () => advance({ kept: 1 });
   const archive = () => { onArchive(current.note.id); advance({ archived: 1 }); };
-  const trash = () => { onTrash(current.note.id); advance({ trashed: 1 }); };
+  // Kosz pyta o potwierdzenie (też przy skrócie D); „Nie pytaj ponownie” działa jak w reszcie aplikacji.
+  const trash = () => confirmAction({
+    kind: "trash",
+    title: "Przenieść do kosza?",
+    description: `„${current.note.title.trim() || "Bez tytułu"}” trafi do kosza.`,
+    run: () => { onTrash(current.note.id); advance({ trashed: 1 }); },
+  });
   const skip = () => advance({ skipped: 1 });
   const back = () => setIndex((i) => Math.max(0, i - 1));
 
@@ -74,6 +82,8 @@ export default function ReviewWalkthrough({ queue, onArchive, onTrash, onFinish,
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       const t = e.target as HTMLElement | null;
       if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      // Otwarte okno potwierdzenia (kosz) ma pierwszeństwo: skróty nie działają pod nim.
+      if (document.querySelector('[role="alertdialog"]')) return;
       const key = e.key.toLowerCase();
       if (key === "arrowright") skip();
       else if (key === "arrowleft") back();
@@ -88,6 +98,7 @@ export default function ReviewWalkthrough({ queue, onArchive, onTrash, onFinish,
   });
 
   return (
+    <>
     <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-w-md" data-testid="review-walkthrough">
         <DialogHeader>
@@ -129,5 +140,7 @@ export default function ReviewWalkthrough({ queue, onArchive, onTrash, onFinish,
         )}
       </DialogContent>
     </Dialog>
+      {confirmDialog}
+    </>
   );
 }

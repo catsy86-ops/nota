@@ -2170,11 +2170,16 @@ Wszystko znika przy aktywnym wyszukiwaniu.
 - Jedna definicja zaległości: `termStatus` z `lib/dueTerms.ts` (lista Dziś, licznik w pasku, przegląd tygodnia).
   Jedna definicja „dotknięte w zakresie” (utworzone albo edytowane): `inRange` z `lib/dateRanges.ts`, używana przez
   filtr widoków Dziś i Tydzień oraz przez oba nudge'y (dzień, tydzień).
+- Przegląd „po kolei” (`ReviewWalkthrough.tsx`): kosz (przycisk „Do kosza” i skrót D) pyta o potwierdzenie przez
+  `useConfirmAction` z `ConfirmActionDialog.tsx`, z „Nie pytaj ponownie” jak w reszcie aplikacji. Archiwizacja (A)
+  działa od razu, z „Cofnij” w toście; „Zostaw” (K) nic nie zmienia. Skróty są ignorowane, gdy otwarte jest okno potwierdzenia
+  (`[role="alertdialog"]`). Test: `src/components/review/ReviewWalkthrough.test.tsx` (4).
 - Dotyk: przyciski przeglądu tygodnia, „Przejrzyj po kolei”, przyciski trybu „po kolei” i link „i jeszcze N”
   mają `coarse:` do 44 px. Nazwa sekcji przypomnień to „Przypomnienia”, jak nagłówek.
 
 **Ograniczenia.** Sekcja terminów pokazuje tylko zaległe i dzisiejsze; przyszłe terminy są w Przypomnieniach.
-Notatki w koszu i archiwum są pomijane.
+Notatki w koszu są pomijane. Przypomnienia z archiwum są pokazywane — ich terminy nadal dzwonią (decyzja właściciela,
+2026-10-20). Przegląd tygodnia wyklucza archiwum, więc ta jedna różnica jest świadoma.
 
 **Testy.** `src/components/review/TodayDueList.test.tsx` (grupy, limit 4, archiwum i kosz pominięte, kliknięcie,
 przejście z „dziś” do zaległych po zmianie doby — `focus` i przesunięty zegar),
