@@ -3940,3 +3940,115 @@ lub grupę”.
   - `src/lib/settingsPrefs.test.ts` — domyślny dzień tygodnia to 0.
   - Pełny e2e chromium: 386/386 zielone.
 - **Commit:** 430379d, 2026-10-19.
+
+## Ustawienia — reset per sekcja i linki, faza 3 (2026-10-19, 842db18)
+
+- **Co robi:**
+  - Reset per sekcja: w Ogólne (edytor, przypomnienia) i w Kopii jest przycisk „Przywróć domyślne w tej sekcji”. Wyłącza się, gdy nic w sekcji nie różni się od domyślnych. Potwierdzenie wymienia tylko ustawienia, które faktycznie się zmienią, np. „Zmienią się: autosave”.
+  - Globalny reset w Wyglądzie też wymienia zmiany zamiast ogólnego opisu.
+  - Link `?settings=wyglad|ogolne|kopia|sync` otwiera Ustawienia na tej karcie. Parametr znika z adresu. Nieznana wartość nie otwiera okna.
+- **Gdzie jest:**
+  - `src/lib/viewPrefs.ts` — `VIEW_PREF_GROUPS` (grupy kluczy, rozłączne), `VIEW_PREF_LABELS` (nazwy po polsku), `changedViewPrefs(keys)` (co różni się od domyślnych), `resetViewPrefKeys(keys)` (reset tylko podanych kluczy).
+  - `src/components/settings/SettingsShared.tsx` — `ResetSectionButton({ title, keys })`: przycisk i potwierdzenie.
+  - `src/components/settings/GeneralSettings.tsx` — przyciski „edytor” (po autosave) i „przypomnienia” (po Ten tydzień).
+  - `src/components/settings/BackupSettings.tsx` — przycisk „kopia”, przed wskazówką.
+  - `src/components/settings/AppearanceSettings.tsx` — globalny reset z listą zmian.
+  - `src/lib/settingsDeepLink.ts` — `SETTINGS_PARAM`, `SETTINGS_TABS` (polskie nazwy → karty), `settingsTabFromParam`.
+  - `src/components/SettingsDialog.tsx` — efekt czytający `?settings=` (obok `?pair=`).
+  - `src/pages/Index.tsx` — stan początkowy `settingsOpen` otwiera okno dla poprawnego `?settings=`.
+- **Jak działa i dlaczego:**
+  - Grupy są rozłączne i testowane — każdy klucz ma dokładnie jeden reset per sekcja.
+  - Wygląd nie ma resetu per sekcja: jego globalny reset już wymienia zmiany, więc drugi przycisk byłby zbędny. Sortowanie i filtry są tylko w globalnym resecie, bo ustawia je arkusz widoku.
+  - Lista zmian liczona z aktualnego stanu, przy każdym renderze — potwierdzenie nigdy nie pokazuje zmian, których już nie ma.
+  - Nazwy w linkach po polsku, ale bez znaków spoza ASCII, żeby dały się wkleić w wiadomości.
+- **Ograniczenia i pułapki:**
+  - Reset per sekcja nie obejmuje ustawień poza `viewPrefs` (efekty, potwierdzenia, sejf, push, skórka).
+  - Link działa przy otwieraniu aplikacji i przy zmianie adresu w otwartym oknie. Nie zmienia otwartej już aplikacji, jeśli adres zmieni się bez przeładowania.
+  - Wyszukiwanie ustawień nie jest zrobione (decyzja właściciela).
+- **Testy:**
+  - `src/lib/settingsPrefs.test.ts` — `changedViewPrefs`, `resetViewPrefKeys` (tylko podane klucze), rozłączność grup i etykiety.
+  - `src/lib/settingsDeepLink.test.ts` — mapowanie nazw, nieznane i puste wartości, nazwy z prototypu.
+  - `e2e/settings-links.spec.ts` — `?settings=kopia` otwiera kartę i czyści adres; nieznana karta nie otwiera okna; reset w sekcji zmienia tylko edytor (auto-backup zostaje).
+- **Commit:** 842db18 (2026-10-20)
+
+## Synchronizacja — urządzenia w grupie i nazwy, faza 4 planu synchronizacji (2026-10-20, 842db18)
+
+- **Co robi:**
+  - Karta „Urządzenia w grupie” w Ustawieniach → Synchronizacja: lista innych urządzeń połączonych teraz (nazwy), pole „Nazwa tego urządzenia” (domyślnie „Telefon” albo „Komputer” wg przeglądarki).
+  - Po połączeniu nowego urządzenia pojawia się toast „Połączono z: [nazwa]”.
+  - Sekcja kodu nazywa się „Dodaj urządzenie” (QR i kod, bez zmian w działaniu).
+  - „Zapomnij i zacznij od nowa” zmienione na „Odłącz to urządzenie”, z potwierdzeniem, które mówi, że pozostałe urządzenia zostają w grupie.
+  - Serwery sygnalizacyjne nazwane „Serwery łączące urządzenia”; diagnoza bez słowa „sygnalizacja”.
+- **Gdzie jest:**
+  - `src/lib/yjsSync.ts` — `SyncDevice`, `SyncState.devices`, `getDeviceName` / `setDeviceName` / `defaultDeviceName` (klucz `kaczy.sync.deviceName`), `refreshDevices` (awareness pierwszego pokoju v2), wpięcie w `connect()` i `disconnectProvider()`.
+  - `src/components/SyncSettings.tsx` — lista urządzeń, formularz nazwy, nowe napisy przycisku i potwierdzenia.
+- **Jak działa i dlaczego:**
+  - Nazwa idzie przez awareness y-webrtc (`setLocalStateField("device", …)`), więc nie zmienia protokołu ani danych w Yjs. Każde urządzenie ma własne `clientID`, a lista pomija własne.
+  - „Odłącz” działa tylko lokalnie: wspólny kod nie daje sposobu, by z zewnątrz wyrzucić jedno urządzenie. Stąd rozdzielenie na „to urządzenie” i listę pozostałych.
+- **Ograniczenia i pułapki:**
+  - Lista pokazuje tylko urządzenia w pokoju v2. Przy włączonej zgodności ze starą wersją urządzenie widoczne tylko w starym pokoju się nie pojawi (każdy provider ma własne `clientID`).
+  - „Ostatnia synchronizacja” per urządzenie nie istnieje — awareness jej nie niesie. Zostaje globalna z kafla diagnozy.
+  - Komunikat o zmianie z konkretnym tytułem notatki (punkt 3 planu) **nie zrobiony**: wymaga porównania dokumentu przed i po zmianie.
+  - Ten kod wchodzi do bundla eager (`yjsSync` jest importowany przez `NotesProvider`): ok. +700 B gzip, co przekracza próg `bundle.spec.ts`. Patrz decyzja w planie synchronizacji.
+- **Testy:**
+  - `src/lib/yjsSync.test.ts` — blok „urządzenia w grupie (faza 4)”: nazwa domyślna i zapamiętana, przycinanie, pusta nazwa, lista bez siebie i czyszczenie przy odłączeniu. `MockProvider` ma teraz `awareness`.
+  - `e2e/sync-code.spec.ts` przechodzi bez zmian.
+
+## Kalendarz — fazy 1 i 2 planu (2026-10-20, 518871f)
+
+- **Co robi:**
+  - W edycji terminu pole „Dzień” przenosi termin na inny dzień (telefon nie przeciąga chipów). Działa też dla serii: przesuwa całą serię.
+  - Pominięcie ostatniego terminu serii pokazuje „Seria zakończona”, nie zwykłe „Wystąpienie pominięte”.
+  - Cofnięcie (Cofnij) przywraca też odłożenie (`reminderBase`) — przed zmianą zapamiętywane przez `previousOf`.
+  - Dzień z Pracy (wizyty i dostawy) widać w panelu dnia, nie tylko w komórce.
+  - Etykieta edycji podaje godzinę i powtarzanie; prognoza serii to pusty krąg, zapisany termin pełny kropka (różnica kształtem).
+  - „Dziś” widać także w bieżącym miesiącu, gdy wybrany dzień to nie dziś.
+  - Pominięcie wystąpienia serii z wiersza panelu dnia (bez otwierania dialogu).
+  - Po przesunięciu, pominięciu i usunięciu fokus wraca na komórkę dnia.
+  - Wybór listy/osi godzin zapamiętany w `kaczy.calendar.dayView`.
+  - Zmiana czasu: godzina z przeskoku wiosennego (np. 02:30) jest odrzucana i pokazany jest komunikat; przeniesienie na taki dzień nie przesuwa po cichu.
+  - ICS: `UNTIL` ma ten sam typ co `DTSTART` (lokalny, bez „Z”), zgodnie z RFC 5545.
+  - Seria zapisana dawno temu (>400 kroków wstecz) nadal pokazuje bieżący miesiąc.
+- **Gdzie jest:**
+  - `src/components/calendar/ReminderQuickAddDialog.tsx` — pole „Dzień” (tylko w edycji), komunikat o nieistniejącej godzinie.
+  - `src/components/calendar/ReminderCalendarView.tsx` — `handleSkip` (komunikat końca serii), `previousOf` w cofnięciach, `moveToDay` (odmowa przy nieistniejącej godzinie), `focusDay`, przycisk „Dziś”, `studyMarks` do `DayPanel`.
+  - `src/components/calendar/DayPanel.tsx` — linia Pracy, przycisk pominięcia, `readDayView` / `writeDayView`, etykieta edycji.
+  - `src/components/calendar/DayCell.tsx` — `data-day-key`, kształt kropki.
+  - `src/lib/study/calendarMarks.ts` — `studySummary` (przeniesione z `DayCell`).
+  - `src/lib/reminderTime.ts` — `composeReminderTimestamp` zwraca `null` dla godzin nieistniejących.
+  - `src/lib/icsExport.ts` — `eventLines`, `UNTIL` przez `formatLocal`.
+  - `src/lib/reminderOccurrences.ts` — `expandOccurrences` przewija do `rangeStart` (`MAX_SKIP_STEPS`); `isNext` tylko dla zapisanego terminu.
+  - `src/pages/Index.tsx` — kalendarz dostaje `reminderNotes` (wcześniej nowa tablica przy każdym renderze).
+- **Ograniczenia i pułapki:**
+  - Nie zrobione z fazy 1: pole całodniowe w dialogu, odwołanie `formatUtc` z `DTSTART` (już nie dotyczy).
+  - Nie zrobione z fazy 2: całodniowe w dialogu (2d, wymaga przekazania `allDay` przez `onCreateNote`), scalenie duplikatów (2f), widok tygodnia (3a), druk (3b), historia serii (3c — decyzja właściciela).
+  - Szerokość komórki siatki na 320 px to ok. 42 px, poniżej 44 px; wysokość 56 px jest ok. Pełne 44 px wymaga zmiany układu.
+- **Testy:**
+  - `src/lib/reminderTime.test.ts` — blok „zmiana czasu (Europe/Warsaw)”.
+  - `src/lib/icsExport.test.ts` — „RRULE dostaje UNTIL tego samego typu co DTSTART”.
+  - `src/lib/reminderOccurrences.test.ts` — „seria zapisana dawno temu”, `isNext` tylko dla zapisanego terminu.
+  - `e2e/calendar-phase1.spec.ts` — pole „Dzień” w edycji przenosi termin.
+
+## Przypomnienia — faza 1 planu (2026-10-20, 0ae3808)
+
+- **Co robi:**
+  - Grupy w widoku Terminy mają nagłówki `<h2>` (nawigacja po nagłówkach).
+  - Przyciski „Gotowe” i „Jutro” na zaległym terminie mają cel dotyku 44 px na dotyku.
+  - Zaległy termin ma dla czytnika ekranu prefiks „Zaległe:”.
+  - Nowy chip „+1 h” obok „Jutro” (odłożenie o godzinę, `snoozeTimes().inHour`).
+  - Pusty stan („Brak przypomnień”) nie pokazuje się, gdy w Terminach są wiersze z archiwum.
+  - Obrys fokusu z klawiatury zostaje także na dotyku (usunięte blanket `outline: none !important`).
+- **Gdzie jest:**
+  - `src/components/NoteGroupSection.tsx` — nagłówek grupy.
+  - `src/components/NoteCardBody.tsx` — przyciski „Gotowe”, „Jutro”, „+1 h”.
+  - `src/components/ReminderPicker.tsx` — `ReminderBadge` z prefiksem `sr-only`.
+  - `src/pages/Index.tsx` — `reminderRowCount` w warunku pustego stanu.
+  - `src/lib/reminderAgenda.ts` — `snoozeTimes` zwraca `inHour`.
+  - `src/hooks/useOverdueBadge.ts` — poprawiony komentarz (archiwum liczy się).
+  - `src/index.css` — usunięta reguła zdejmująca obrys na dotyku.
+- **Ograniczenia i pułapki:**
+  - Nie zrobione z fazy 1: wiersze „Gotowe” dla nadchodzących (decyzja D2), komunikat przy nieistniejącym terminie, odświeżanie „zaległości” bez zmiany listy (1g, część o `now`), szerokość 12 px dla terminów, przycisk „Nowa notatka” w pustym stanie (1d/12), ogłoszenie po odhaczeniu.
+  - Usunięcie blanket obrysu jest zmianą wyglądu na dotyku — do sprawdzenia na telefonie.
+- **Testy:**
+  - `src/lib/reminderAgenda.test.ts` — „pusta lista” i „odłożenie o godzinę”.
+  - e2e: pełny przebieg chromium 389/389 przy progu bundla 390 KB.
