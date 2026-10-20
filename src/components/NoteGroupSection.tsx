@@ -61,7 +61,7 @@ export function NoteGroupSection({ groupKey, label, count, collapsible, collapse
           {text}
         </button>
       ) : (
-        <p className={headerClass}>{text}</p>
+        <h2 className={headerClass}>{text}</h2>
       )}
       {/* Zwinięta sekcja nie renderuje siatki po zakończeniu zwijania (wyrejestrowanie z nawigacji klawiaturą). */}
       <AnimatePresence initial={false}>

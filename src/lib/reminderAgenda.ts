@@ -54,9 +54,9 @@ export function countOverdue(notes: Pick<Note, "reminder">[], now: number = Date
 }
 
 /** Terminy drzemki z toastu przypomnienia. */
-export function snoozeTimes(now: number = Date.now()): { in10min: number; tomorrow9: number } {
+export function snoozeTimes(now: number = Date.now()): { in10min: number; inHour: number; tomorrow9: number } {
   const t = new Date(now);
   t.setDate(t.getDate() + 1);
   t.setHours(9, 0, 0, 0);
-  return { in10min: now + 10 * 60 * 1000, tomorrow9: t.getTime() };
+  return { in10min: now + 10 * 60 * 1000, inHour: now + 60 * 60 * 1000, tomorrow9: t.getTime() };
 }

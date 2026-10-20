@@ -197,6 +197,7 @@ export function ReminderBadge({ reminder, reminderRepeat, reminderAllDay }: { re
       isPast ? "text-destructive-ink" : "text-primary-ink"
     )}>
       <Bell className="w-2.5 h-2.5" />
+      {isPast && <span className="sr-only">Zaległe: </span>}
       {formatReminderShort(reminder, new Date(), reminderAllDay === true)}
       {reminderRepeat && reminderRepeat !== "none" && <Repeat className="w-2.5 h-2.5" />}
     </div>

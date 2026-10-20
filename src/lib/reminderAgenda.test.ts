@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { groupReminders, snoozeTimes } from "./reminderAgenda";
+import { groupReminders, snoozeTimes, countOverdue } from "./reminderAgenda";
 import { weekSeriesForecasts } from "@/lib/reminderForecast";
 import type { Note } from "@/hooks/useNotes";
 
@@ -74,5 +74,17 @@ describe("snoozeTimes", () => {
     const { in10min, tomorrow9 } = snoozeTimes(at(2026, 9, 30, 23, 55));
     expect(in10min).toBe(at(2026, 10, 1, 0, 5));
     expect(tomorrow9).toBe(at(2026, 10, 1, 9, 0));
+  });
+});
+
+describe("reminderAgenda — pusta lista i odłożenie o godzinę (faza 1 Przypomnień)", () => {
+  it("pusta lista daje puste grupy, a liczba zaległych to zero", () => {
+    expect(groupReminders([]).every((g) => g.notes.length === 0)).toBe(true);
+    expect(countOverdue([])).toBe(0);
+  });
+
+  it("odłożenie o godzinę liczy się od teraz, nie od północy", () => {
+    const now = at(2026, 10, 1, 14, 20);
+    expect(snoozeTimes(now).inHour).toBe(at(2026, 10, 1, 15, 20));
   });
 });

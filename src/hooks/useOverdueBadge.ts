@@ -25,7 +25,7 @@ export function applyAppBadge(count: number, nav: BadgeNavigator = navigator): v
 /**
  * Liczba zaległych przypomnień w tytule karty i na ikonie aplikacji.
  * Zwraca tę liczbę, żeby pasek boczny nie liczył jej drugi raz.
- * `notes` to aktywne notatki (bez kosza i archiwum).
+ * `notes` to notatki z przypomnieniami poza koszem — archiwum też, bo jego przypomnienia dzwonią (jak w Terminach).
  */
 export function useOverdueBadge(notes: Note[]): number {
   const enabled = useBadgeEnabled();

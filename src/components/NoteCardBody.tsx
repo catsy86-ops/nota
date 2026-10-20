@@ -116,7 +116,7 @@ export function NoteCardBody({
                       onUpdate(note.id, { reminder: null });
                       toastWithUndo("Przypomnienie odhaczone", () => onUpdate(note.id, { reminder: prev }), { id: `rem-done-${note.id}` });
                     }}
-                    className="pressable inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 sm:px-2.5 py-1 coarse:py-2 text-2xs font-medium text-primary-ink hover:bg-primary/20"
+                    className="pressable inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 sm:px-2.5 py-1 coarse:min-h-11 text-2xs font-medium text-primary-ink hover:bg-primary/20"
                   >
                     <Check className="w-3 h-3" aria-hidden /> Gotowe
                   </button>
@@ -128,11 +128,25 @@ export function NoteCardBody({
                       onUpdate(note.id, { reminder: snoozeTimes().tomorrow9 });
                       toastWithUndo("Przesunięto na jutro, 9:00", () => onUpdate(note.id, { reminder: prev }), { id: `rem-snooze-${note.id}` });
                     }}
-                    className="pressable inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 sm:px-2.5 py-1 coarse:py-2 text-2xs font-medium text-muted-foreground hover:text-foreground"
+                    className="pressable inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 sm:px-2.5 py-1 coarse:min-h-11 text-2xs font-medium text-muted-foreground hover:text-foreground"
                     aria-label="Jutro rano"
                   >
                     {/* Na telefonie samo „Jutro” — z „rano” oba przyciski nie mieściły się w wąskim kaflu i szły w pion. */}
                     Jutro<span className="max-sm:hidden">rano</span>
+                  </button>
+                  {/* Krótkie odłożenie: karta miała tylko „jutro”, a „za godzinę” to najczęstszy wybór przy zaległym terminie (1e planu). */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const prev = note.reminder;
+                      haptic("tap");
+                      onUpdate(note.id, { reminder: snoozeTimes().inHour });
+                      toastWithUndo("Przesunięto o godzinę", () => onUpdate(note.id, { reminder: prev }), { id: `rem-snooze-${note.id}` });
+                    }}
+                    className="pressable inline-flex items-center rounded-full bg-foreground/5 px-2 sm:px-2.5 py-1 coarse:min-h-11 text-2xs font-medium text-muted-foreground hover:text-foreground"
+                    aria-label="Za godzinę"
+                  >
+                    +1 h
                   </button>
                 </div>
               )}

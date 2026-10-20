@@ -1083,7 +1083,7 @@ html:not([data-input="touch"]) .note-card:has(:focus-visible) { box-shadow: var(
 
 /* Po dotyku bez ramki fokusu: fokus wraca programowo po zamknięciu okna/menu i przeglądarka
    rysowała wtedy grubą obwódkę na kaflu i przycisku. Z klawiatury (Tab/strzałki) ramka zostaje. */
-html[data-input="touch"] :focus-visible { outline: none !important; box-shadow: none !important; }
+/* Obrys fokusu zostaje też na dotyku: `:focus-visible` pojawia się przy klawiaturze, a zdjęcie go tu gasiło fokus dla klawiatury na tablecie. */
 
 /* Uniesienie tylko dla wskaźnika myszy: `translate` jest niezależne od `transform`
    framer-motion (layout, kaskada), a trafienie liczymy na nieruchomym kontenerze,
