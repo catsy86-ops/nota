@@ -226,6 +226,11 @@ function PersonHistory({ person, onDone }: { person: PersonDebts; onDone: () => 
   const settle = () => {
     // Saldo dodatnie: oni oddają nam. Ujemne: oddajemy my.
     const created = addDebt({ person: person.name, kind: person.balance > 0 ? "repaid" : "returned", amount: Math.abs(person.balance) });
+    // M7: `null` = zapis odrzucony (np. pełna lista) — saldo nie zeruje się, więc nie mówimy „rozliczone”.
+    if (!created) {
+      toast.error("Nie udało się rozliczyć", { description: "Lista długów jest pełna albo dane są nieprawidłowe." });
+      return;
+    }
     haptic("tap");
     toast.success(`Oddane w całości: ${person.name}`, {
       action: { label: "Cofnij", onClick: () => { if (created) removeDebt(created.id); } },

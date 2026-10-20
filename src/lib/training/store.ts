@@ -85,8 +85,8 @@ export function trainingDump() {
 }
 
 /** Scalenie treningu z kopii — bez kasowania tego, co już jest na telefonie. */
-export function mergeTrainingDump(raw: unknown): void {
-  yTraining.mergeDump(raw);
+export function mergeTrainingDump(raw: unknown, hasNote?: (id: string) => boolean): void {
+  yTraining.mergeDump(raw, hasNote);
 }
 
 export function useTrainingReminder(): TrainingReminder | null {

@@ -17,6 +17,9 @@ export const SCHEDULES_MAX = 10;
 export const MAIN_SCHEDULE_NAME = "Główny";
 const REGISTRY_MAP = "shiftSchedules";
 
+/** Id nadawane przez `add`: `s-` i UUID. Id z pliku kopii musi mieć ten kształt (M5). */
+export const isScheduleId = (id: string): boolean => /^s-[A-Za-z0-9-]{8,64}$/.test(id);
+
 /** Czyszczenie nazwy: bez nadmiaru spacji, w limicie długości. `null` = pusta. */
 export function cleanScheduleName(name: string): string | null {
   const n = name.replace(/\s+/g, " ").trim().slice(0, SCHEDULE_NAME_MAX);

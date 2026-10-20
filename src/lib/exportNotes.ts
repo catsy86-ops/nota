@@ -241,8 +241,9 @@ export interface RestoreOptions { versions: boolean; settings: boolean; achievem
  * po przeładowaniu strony, które i tak następuje po przywróceniu.
  */
 /** Wynik przywracania: ile wpisów Nauki odrzucono przy czyszczeniu kopii (0 = wszystko przeszło). */
-export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions): Promise<{ studyDropped: number }> {
+export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions): Promise<{ studyDropped: number; schedulesSkipped: number }> {
   let studyDropped = 0;
+  let schedulesSkipped = 0;
   await yjsStore.ready();
   // Obrazy i załączniki najpierw: błąd zapisu (brak miejsca) przerywa przed destrukcyjnym replaceAll.
   const notes = await withStoredImages(backup.notes);
@@ -263,7 +264,8 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   if (backup.training) {
     try {
       const { mergeTrainingDump } = await import("@/lib/training/store");
-      mergeTrainingDump(JSON.parse(backup.training));
+      // Notatki z kopii są już wczytane (wyżej), więc można sprawdzić, czy przypomnienie ma swoją notatkę.
+      mergeTrainingDump(JSON.parse(backup.training), (id) => yjsStore.projectNotes().some((n) => n.id === id));
     } catch (err) { logDiag("warn", "backup", "cannot restore training", err); }
   }
   if (backup.debts) {
@@ -287,12 +289,20 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   if (opts.shifts && backup.shifts !== undefined) {
     try {
       await shiftsReady();
-      restoreShifts(migrate(JSON.parse(backup.shifts)));
-      // Dodatkowe grafiki: dokładane pod ich id (bez kasowania tego, co jest na telefonie).
-      for (const s of backup.shiftSchedules ? JSON.parse(backup.shiftSchedules) as { id: string; name: string; data: unknown }[] : []) {
-        if (typeof s?.id === "string" && typeof s?.name === "string") restoreExtraSchedule(s.id, s.name, migrate(s.data));
-      }
+      const raw = JSON.parse(backup.shifts);
+      // M8: bez pola `bonuses` (kopia sprzed premii) premie z tego telefonu zostają.
+      restoreShifts(migrate(raw), Array.isArray(raw?.bonuses));
     } catch (err) { logDiag("warn", "backup", "cannot restore shifts", err); }
+    // M4: dodatkowe grafiki — każdy osobno; odrzucone (limit, zły id, zły kształt) są liczone i zgłaszane.
+    try {
+      const extra = backup.shiftSchedules ? JSON.parse(backup.shiftSchedules) as { id: string; name: string; data: unknown }[] : [];
+      for (const s of Array.isArray(extra) ? extra : []) {
+        try {
+          if (typeof s?.id !== "string" || typeof s?.name !== "string" || !restoreExtraSchedule(s.id, s.name, migrate(s.data))) schedulesSkipped++;
+        } catch (err) { schedulesSkipped++; logDiag("warn", "backup", "cannot restore schedule", err); }
+      }
+    } catch (err) { logDiag("warn", "backup", "cannot read schedules", err); }
+    if (schedulesSkipped) logDiag("warn", "backup", `przywracanie grafików: pominięto ${schedulesSkipped}`);
   }
   const legacyStudy = backup.settings?.[STUDY_STORAGE_KEY];
   if (opts.study && (backup.study !== undefined || legacyStudy !== undefined)) {
@@ -314,7 +324,7 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   for (const [k, v] of Object.entries(writes)) {
     try { localStorage.setItem(k, v); } catch (err) { logDiag("warn", "backup", `cannot restore ${k}`, err); }
   }
-  return { studyDropped };
+  return { studyDropped, schedulesSkipped };
 }
 
 export function download(content: string, filename: string, type: string) {

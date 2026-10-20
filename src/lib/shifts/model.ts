@@ -170,8 +170,11 @@ export function cleanBonus(raw: unknown): ShiftBonus | null {
   if (typeof b.id !== "string" || !b.id || b.id.length > 64) return null;
   if (typeof b.month !== "string" || !MONTH_RE.test(b.month)) return null;
   if (typeof b.name !== "string" || !b.name.trim()) return null;
-  if (typeof b.amount !== "number" || !Number.isFinite(b.amount) || b.amount <= 0 || b.amount > BONUS_MAX_AMOUNT) return null;
-  return { id: b.id, month: b.month, name: b.name.trim().slice(0, BONUS_NAME_MAX), amount: Math.round(b.amount * 100) / 100 };
+  if (typeof b.amount !== "number" || !Number.isFinite(b.amount)) return null;
+  // L13: najpierw grosze, potem sprawdzenie — 0,004 zł to 0 zł i nie jest premią.
+  const amount = Math.round(b.amount * 100) / 100;
+  if (amount <= 0 || amount > BONUS_MAX_AMOUNT) return null;
+  return { id: b.id, month: b.month, name: b.name.trim().slice(0, BONUS_NAME_MAX), amount };
 }
 
 export const SHIFT_COLORS = ["#f59e0b", "#3b82f6", "#4f46e5", "#10b981", "#ef4444", "#ec4899", "#14b8a6", "#64748b"] as const;

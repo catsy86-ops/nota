@@ -40,9 +40,11 @@ export function createYTraining(doc: Y.Doc) {
     return metaSnapshot().reminder;
   }
 
+  /** Zapis przechodzi przez czyszczenie: zła godzina nie trafia do dokumentu (M2, M3). */
   function setReminder(r: TrainingReminder | null): void {
+    const clean = r ? cleanTrainingReminder(r) : null;
     doc.transact(() => {
-      if (r) meta.set("reminder", r); else meta.delete("reminder");
+      if (clean) meta.set("reminder", clean); else meta.delete("reminder");
     }, TRAINING_ORIGIN);
   }
 
@@ -126,16 +128,20 @@ export function createYTraining(doc: Y.Doc) {
    * Scala zrzut z kopii: dodaje to, czego nie ma, i niczego nie kasuje. Przypomnienie z kopii
    * trafia tylko wtedy, gdy na tym telefonie go nie ma.
    */
-  function mergeDump(raw: unknown): void {
+  function mergeDump(raw: unknown, hasNote?: (id: string) => boolean): void {
     const d = raw as Partial<TrainingDump> | null;
     const inEntries = Array.isArray(d?.entries) ? d.entries.map(cleanEntry).filter((e): e is TrainingEntry => !!e) : [];
     const inPlans = Array.isArray(d?.plans) ? d.plans.map(cleanPlanDay).filter((p): p is PlanDay => !!p) : [];
     const inReminder = cleanTrainingReminder(d?.reminder);
     const inEquipment = cleanEquipment(d?.equipment);
+    // Przypomnienie żyje, gdy jego notatka istnieje (H2): po przywróceniu kopii notatki są inne.
+    const alive = (r: TrainingReminder | null) => !!r && (!r.noteId || !hasNote || hasNote(r.noteId));
+    const localReminder = getReminder();
     doc.transact(() => {
       for (const e of inEntries) if (!log.has(e.id) && log.size < TRAINING_MAX_ENTRIES) log.set(e.id, e);
       for (const p of inPlans) if (!plans.has(p.id) && plans.size < PLAN_MAX_DAYS) plans.set(p.id, p);
-      if (inReminder && !getReminder()) meta.set("reminder", inReminder);
+      if (localReminder && !alive(localReminder)) meta.delete("reminder");
+      if (inReminder && alive(inReminder) && !alive(getReminder())) meta.set("reminder", inReminder);
       if (inEquipment.dumbbellMaxKg !== undefined && getEquipment().dumbbellMaxKg === undefined) meta.set("equipment", inEquipment);
     }, TRAINING_ORIGIN);
   }

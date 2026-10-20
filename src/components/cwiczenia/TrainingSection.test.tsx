@@ -8,7 +8,7 @@ const { fixture, addEntryMock, setReminderMock, setEquipmentMock, notesMock } = 
   addEntryMock: vi.fn(),
   setReminderMock: vi.fn(),
   setEquipmentMock: vi.fn(),
-  notesMock: { addNote: vi.fn(() => "note-1"), updateNote: vi.fn(), trashNote: vi.fn(), restoreFromTrash: vi.fn() },
+  notesMock: { notes: [] as { id: string }[], archivedNotes: [] as { id: string }[], trashedNotes: [] as { id: string }[], addNote: vi.fn(() => "note-1"), updateNote: vi.fn(), trashNote: vi.fn(), restoreFromTrash: vi.fn() },
 }));
 vi.mock("@/hooks/NotesProvider", () => ({ useNotesContext: () => notesMock }));
 vi.mock("@/lib/training/store", () => ({
@@ -41,6 +41,7 @@ afterEach(() => {
   setEquipmentMock.mockReset();
   addEntryMock.mockReset();
   setReminderMock.mockReset();
+  notesMock.notes = [];
   notesMock.addNote.mockClear();
   notesMock.updateNote.mockClear();
   notesMock.trashNote.mockClear();
@@ -94,6 +95,7 @@ describe("TrainingSection", () => {
 
   it("wyłączenie przypomnienia sprząta jego notatkę", () => {
     fixture.reminder = { time: "18:00", noteId: "old-note" };
+    notesMock.notes = [{ id: "old-note" }];
     render(<TrainingSection />);
     fireEvent.click(screen.getByRole("checkbox", { name: /Przypominaj o treningu/ }));
     expect(notesMock.trashNote).toHaveBeenCalledWith("old-note");

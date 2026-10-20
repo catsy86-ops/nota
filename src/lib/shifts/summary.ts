@@ -333,7 +333,12 @@ export function monthSummary(data: ShiftData, year: number, month: number): Mont
   const periodOvertime = isLast ? Math.max(0, worked - sum((m) => m.overtimeNormMinutes)) : 0;
   const extraTime = isLast ? Math.max(0, worked - periodNorm) - periodOvertime : 0;
   // Przekroczenie normy okresu zawsze 100% (art. 151¹ § 2 KP).
-  const premium = c.dailyPremium + (periodOvertime / 60) * data.hourlyRate;
+  // M6: nadgodziny okresowe wyceniamy średnią stawką godzinową okresu (zarobek z godzin / godziny),
+  // a nie ogólną stawką — rodzaje z własną stawką zmieniają wartość godziny.
+  const periodMinutes = sum((m) => m.minutes);
+  const periodBase = sum((m) => m.base);
+  const periodRate = periodMinutes > 0 && periodBase > 0 ? periodBase / (periodMinutes / 60) : data.hourlyRate;
+  const premium = c.dailyPremium + (periodOvertime / 60) * periodRate;
   const prefix = monthPrefix(year, month);
   // Premie tego miesiąca (kwoty brutto) dolicza się do zarobku, nie do godzin ani norm.
   const monthKey = prefix.slice(0, -1);

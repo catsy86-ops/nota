@@ -5,7 +5,7 @@ import { migrate, type DayEntry, type SettlementMonths, type ShiftBonus, type Sh
 import { applyPattern } from "./pattern";
 import { planPaste, planTransfer, planWeekCopy, type TransferMode, type WeekCopyPlan } from "./move";
 import { createYShifts, MAIN_SCHEDULE_ID, type DeletedShiftType, type YShifts } from "./yShifts";
-import { createScheduleRegistry, type ShiftSchedule } from "./schedules";
+import { createScheduleRegistry, isScheduleId, type ShiftSchedule } from "./schedules";
 
 /**
  * Grafik żyje w dokumencie Yjs notatek (`yShifts.ts`), więc synchronizuje się
@@ -51,6 +51,12 @@ function bindSchedule(id: string): void {
 
 /** Grafik główny niezależnie od aktywnego — dla kopii i migracji. */
 const mainShifts = () => createYShifts(yjsDoc, MAIN_SCHEDULE_ID);
+
+// H1: aktywny grafik może zniknąć na innym urządzeniu (synchronizacja przychodzi w trakcie pracy).
+// Wtedy wracamy do głównego — inaczej zmiany trafiałyby do osieroconych map.
+registry.subscribe(() => {
+  if (activeId !== MAIN_SCHEDULE_ID && !registry.has(activeId)) bindSchedule(MAIN_SCHEDULE_ID);
+});
 
 /** Dawny zapis Grafiku w localStorage — dziś tylko źródło jednorazowej migracji. */
 export const SHIFTS_STORAGE_KEY = "kaczy:shifts";
@@ -167,8 +173,12 @@ export const addDefaultShiftTypes: YShifts["addDefaultShiftTypes"] = (...args) =
 export type { DeletedShiftType };
 
 /** Cały Grafik naraz — przywrócenie kopii zapasowej. */
-export function restoreShifts(data: ShiftData): void {
-  mainShifts().replaceAll(migrate(data));
+export function restoreShifts(data: ShiftData, bonusesProvided = true): void {
+  const main = mainShifts();
+  // M8: kopia sprzed premii nie ma ich w pliku — zachowujemy premie dodane na tym telefonie.
+  const keep = bonusesProvided ? [] : main.get().bonuses;
+  main.replaceAll(migrate(data));
+  for (const b of keep) main.saveBonus(b);
 }
 
 export const savePattern = (pattern: ShiftPattern): void => yShifts.savePattern(pattern);
@@ -271,6 +281,8 @@ export function extraSchedulesDump(): { id: string; name: string; data: ShiftDat
  * Zwraca `false`, gdy nie ma już miejsca na nowy grafik.
  */
 export function restoreExtraSchedule(id: string, name: string, data: ShiftData): boolean {
+  // M5: id z pliku trafia do nazw map — tylko format nadawany przez `createSchedule`, nigdy „main”.
+  if (id === MAIN_SCHEDULE_ID || !isScheduleId(id)) return false;
   if (!registry.has(id)) {
     if (!registry.add(name, id)) return false;
   }

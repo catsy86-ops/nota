@@ -102,7 +102,8 @@ const BUDGET = {
   // 2026-10-19: 396 282 B (387,0 KB) po oknie przywracania z raportem pominiętych załączników — próg 388 KB (decyzja użytkownika).
   // 2026-10-20: 389 KB po fazach Ustawień 3, Synchronizacji 4 (lista urządzeń), Kalendarza 1–2, Przypomnień 1 — próg 390 KB (decyzja użytkownika).
   // 2026-10-20: 390,1 KB po dziale Ćwiczenia (ikony w menu i palecie, odżywki w kopii) — próg 392 KB; widok leniwie, do odzyskania przy LazyMotion/Radix.
-  eagerJsGzip: 392 * KB,
+  // 2026-10-20: 392,1 KB po poprawkach przeglądu kodu (przywracanie grafików, przypomnienie treningu, stawka dodatku) — próg 393 KB.
+  eagerJsGzip: 393 * KB,
   // 2026-10-11: 357 KB (index 214 + react/motion/radix/dnd)
   // 2026-10-16: 4,37 → 4,03 MB — `includeAssets` dublował 6 plików z `public/` (łapie je `globPatterns`).
   // 2026-10-17: 4,09 → 3,00 MB — PDF (jsPDF/html2canvas/purify), Statystyki poza precache (cache `static-assets` po pierwszym użyciu).

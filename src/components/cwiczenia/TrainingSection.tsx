@@ -350,9 +350,14 @@ function TrainingReminderControl() {
   const reminder = useTrainingReminder();
   const notes = useNotesContext();
   const [time, setTime] = useState(reminder?.time ?? TRAINING_REMINDER_DEFAULT);
-  const on = reminder !== null;
+  // M1/H2: przypomnienie bez swojej notatki (usunięta trwale albo po przywróceniu kopii) jest wyłączone.
+  const noteExists = !!reminder?.noteId && [...notes.notes, ...notes.archivedNotes, ...notes.trashedNotes].some((n) => n.id === reminder.noteId);
+  const on = reminder !== null && noteExists;
+  // M2: pusta albo zepsuta godzina nie tworzy przypomnienia.
+  const timeOk = /^([01]\d|2[0-3]):[0-5]\d$/.test(time);
 
   const apply = (next: TrainingReminder | null) => {
+    if (next && !/^([01]\d|2[0-3]):[0-5]\d$/.test(next.time)) return;
     if (reminder?.noteId) notes.trashNote(reminder.noteId);
     if (!next) {
       setTrainingReminder(null);
@@ -372,7 +377,7 @@ function TrainingReminderControl() {
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border/60 px-3 py-2">
       <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-        <Checkbox checked={on} onCheckedChange={(v) => apply(v === true ? { time } : null)} className="coarse:h-6 coarse:w-6" />
+        <Checkbox checked={on} disabled={!on && !timeOk} onCheckedChange={(v) => apply(v === true ? { time } : null)} className="coarse:h-6 coarse:w-6" />
         Przypominaj o treningu, codziennie o
       </label>
       <Input

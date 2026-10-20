@@ -66,6 +66,8 @@ export default tseslint.config(
       "src/lib/training/yTraining.ts",
       "src/lib/training/yTraining.test.ts",
       "src/lib/training/reminder.test.ts",
+      "src/lib/training/reminderRestore.test.ts",
+      "src/lib/yjsStore.reminder.test.ts",
       // Długi: warstwa Yjs (ten sam wzorzec co pozostałe działy), testy na własnym Y.Doc.
       "src/lib/debts/yDebts.ts",
       "src/lib/debts/yDebts.test.ts",

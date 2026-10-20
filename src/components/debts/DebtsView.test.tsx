@@ -17,7 +17,7 @@ vi.mock("@/lib/debts/store", () => ({
   restoreDebt: vi.fn(),
   updateDebt: (entry: unknown) => updateMock(entry),
 }));
-vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { success: vi.fn() }) }));
+vi.mock("sonner", () => ({ toast: Object.assign(vi.fn(), { success: vi.fn(), error: vi.fn() }) }));
 
 import { DebtsView } from "./DebtsView";
 
