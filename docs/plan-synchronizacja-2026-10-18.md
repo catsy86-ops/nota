@@ -84,3 +84,7 @@ Blokada: wejściowy JS przekracza próg o 186 B. Wymagana decyzja o progu albo o
 - ✅ Faza 4 (bez commita): lista „Urządzenia w grupie” z nazwami (awareness), nazwa tego urządzenia, toast „Połączono z: …”, „Dodaj urządzenie”, „Odłącz to urządzenie” z potwierdzeniem, bez słowa „sygnalizacja” w UI.
 - ⏸ Punkt 3 (toast z tytułem notatki) — nie zrobiony, wymaga porównania dokumentu przed i po zmianie.
 - ⚠ Bundle: faza 4 dodaje ok. 700 B gzip do eager; próg `bundle.spec.ts` przekroczony. Decyzja: podnieść próg albo odchudzić `yjsSync`.
+
+## Status 2026-10-20, punkt 3 (bez commita)
+
+- ✅ Punkt 3: toast po zmianie z innego urządzenia mówi, która notatka się zmieniła (`changedNoteTitle` w `yjsSync.ts`). Ograniczenie: lokalne edycje od ostatniego zdalnego zapisu też biorą udział w porównaniu.

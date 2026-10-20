@@ -359,14 +359,37 @@ function connect(code: string) {
 
 // Zmiana przyszła od peera wtedy, gdy jej źródłem jest pokój y-webrtc —
 // `readSyncMessage(…, room)` nadaje go jako origin transakcji.
+/** `updatedAt` notatek przy poprzednim zdalnym zapisie — po różnicy wiadomo, którą notatkę zmieniono. */
+let remoteSeenUpdated: Map<string, number> | null = null;
+
+/**
+ * Tytuł notatki zmienionej zdalnie (najnowsza z różnic względem poprzedniego zdalnego zapisu).
+ * Notatki prywatne i bez tytułu → `null`. Lokalne edycje między zdalnymi zapisami też trafiają
+ * do porównania, więc przy kilku zmianach naraz to przybliżenie.
+ */
+function changedNoteTitle(): string | null {
+  const notes = yjsStore.projectNotes();
+  const prev = remoteSeenUpdated;
+  remoteSeenUpdated = new Map(notes.map((n) => [n.id, n.updatedAt]));
+  if (!prev) return null;
+  let best: { title: string; at: number } | null = null;
+  for (const n of notes) {
+    const old = prev.get(n.id);
+    if (n.locked || (old !== undefined && n.updatedAt <= old)) continue;
+    if (!best || n.updatedAt > best.at) best = { title: n.title, at: n.updatedAt };
+  }
+  return best?.title.trim() || null;
+}
+
 yjsStore.doc.on("update", (_update: Uint8Array, origin: unknown) => {
   if (!origin || !providers.some((p) => origin === p.room)) return;
   const now = Date.now();
+  const changed = changedNoteTitle();
   if (state.lastSyncedAt && now - state.lastSyncedAt < SYNCED_AT_THROTTLE_MS) return;
   // Komunikat tylko na widocznej karcie i co najwyżej raz na 30 s — seria zmian to jedno powiadomienie.
   if (document.visibilityState === "visible" && now - lastRemoteToastAt > REMOTE_TOAST_GAP_MS) {
     lastRemoteToastAt = now;
-    toast("Zmiana z innego urządzenia", { description: "Notatki są już zaktualizowane." });
+    toast("Zmiana z innego urządzenia", { description: changed ? `Zaktualizowano: ${changed}` : "Notatki są już zaktualizowane." });
   }
   setState({ lastSyncedAt: now });
 });
