@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback, memo, useMemo, useState, forwardRef } from "react";
+﻿import { useRef, useEffect, useCallback, memo, useMemo, useState, forwardRef } from "react";
 import type { CardExitIntent } from "@/lib/cardMotion";
 import { AnimatePresence } from "framer-motion";
 import { useSortable, SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
@@ -10,6 +10,13 @@ import { NoteViewActionsProvider, type NoteViewActions } from "@/hooks/NoteViewA
 import type { useNotes } from "@/hooks/useNotes";
 import { registerGridNavSection, useIsGridNavFocused, setGridNavFocus } from "@/lib/gridKeyboardNav";
 import { useMasonrySpans } from "@/hooks/useMasonrySpans";
+
+/** Odstępy kafli dla każdej gęstości — jedna tabela zamiast czterech warunków. Domyślna na krok 4 px (12/16 px zamiast 10/12 px). */
+const DENSITY_GAPS: Record<string, { gap: string; listGap: string; columnGap: string; rowGap: string }> = {
+  compact: { gap: "gap-2", listGap: "space-y-2", columnGap: "gap-x-2", rowGap: "mb-2" },
+  normal: { gap: "gap-3 sm:gap-4", listGap: "space-y-3 sm:space-y-4", columnGap: "gap-x-3 sm:gap-x-4", rowGap: "mb-3 sm:mb-4" },
+  comfy: { gap: "gap-5", listGap: "space-y-5", columnGap: "gap-x-5", rowGap: "mb-5" },
+};
 import { getPendingAnchorId } from "@/lib/viewChange";
 
 
@@ -168,10 +175,7 @@ export function NoteGrid({
   }, [navOrder, noteIdsKey, onDelete, onArchive, onTogglePin, onDuplicate, isArchived, colsCount]);
 
   // Domyślna gęstość na krok 4 px (12/16 px zamiast 10/12 px); zwarta i wygodna bez zmian.
-  const gap = prefs.density === "compact" ? "gap-2" : prefs.density === "comfy" ? "gap-5" : "gap-3 sm:gap-4";
-  const listGap = prefs.density === "compact" ? "space-y-2" : prefs.density === "comfy" ? "space-y-5" : "space-y-3 sm:space-y-4";
-  const columnGap = prefs.density === "compact" ? "gap-x-2" : prefs.density === "comfy" ? "gap-x-5" : "gap-x-3 sm:gap-x-4";
-  const rowGap = prefs.density === "compact" ? "mb-2" : prefs.density === "comfy" ? "mb-5" : "mb-3 sm:mb-4";
+  const { gap, listGap, columnGap, rowGap } = DENSITY_GAPS[prefs.density] ?? DENSITY_GAPS.normal;
 
   let containerClass: string;
   if (prefs.layout === "list") {

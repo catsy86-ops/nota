@@ -1,5 +1,19 @@
 # Plan: dopracowanie i upiększenie działu Notatki (2026-10-19)
 
+**Status 2026-10-20 (sprawdzone w kodzie):**
+- ✅ F0 tytuł z przyimkiem (`6e95430`, test w `quickCapture.test.ts`).
+- ✅ F1 pole tytułu w kompozytorze to `TitleField` (`AddNoteBar.tsx`).
+- ✅ F3 placeholder wyszukiwarki jest stały („Szukaj notatek...”), bez rotacji.
+- ✅ F4 liczniki grup to `.stamp-tag`.
+- ✅ F5 kafel: `rounded-card`, bez cienia, hover tylko przy `pointer: fine`.
+- ✅ F7 podpowiedź „+” pojawia się przy pierwszym stuknięciu (`BottomNav.tsx`).
+- ✅ F6 (czas ruchu zdjęcia w kaflu) → token `duration-base` + `motion-reduce` (`NoteCard.tsx`). Mikrocopy pustych stanów: nie sprawdzane w tej rundzie.
+- ✅ F15 progi gęstości w jednej tabeli `DENSITY_GAPS` (`NoteGrid.tsx`), wygląd bez zmian.
+- ◐ F2 nagłówek: cień Zeszytu zdjęty (`index.css`). Szkło (`backdrop-filter`) zostaje — użytkownik zdecydował „zostaw” przy rozmyciu tła.
+- ✗ F14 `AddNoteBar.tsx` ma 763 linie — nie dzielony (ryzyko przy zmianach bez e2e).
+- ✗ Zrzuty telefonu (F5, F2, punkt 13) — wymagają przeglądarki, nie zrobione.
+- ◐ F8 budżet: paczka wejściowa 391,9 KB przy progu 392 KB — na granicy; każda zmiana w tym module wymaga podniesienia progu albo odchudzenia.
+
 Plan przygotowany przez agenta w trybie odczytu — kod nie był zmieniany. Liczby z `opis.md` są szacunkami, a nie zmierzonymi wartościami.
 
 ## 1. Diagnoza

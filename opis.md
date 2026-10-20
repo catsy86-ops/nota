@@ -4428,3 +4428,16 @@ lub grupę”.
 - **Testy.** `src/lib/shifts/schedules.test.ts` (9): nazwy, nazewnictwo map, izolacja grafików, rejestr (sortowanie,
   główny nieusuwalny, usunięcie czyści dane, limit, stabilna lista).
 - **Commit:** `cccd483` (wiele grafików).
+
+## Notatki — dopracowanie z planu (2026-10-20)
+
+- **Co zrobiono.** Plan `docs/plan-notatki-2026-10-19.md` sprawdzono punkt po punkcie w kodzie. Większość była już zrobiona
+  (patrz status na górze planu). W tej rundzie zmieniono dwie rzeczy:
+  - `src/components/NoteGrid.tsx`: cztery warunki gęstości (`gap`, `listGap`, `columnGap`, `rowGap`) zastąpiono tabelą
+    `DENSITY_GAPS`. Wygląd bez zmian; kolejna zmiana gęstości jest w jednym miejscu.
+  - `src/components/NoteCard.tsx`: przejście zoomu zdjęcia w kaflu z `duration-300` na token `duration-base`,
+    z `motion-reduce:transition-none`.
+- **Świadomie nie zrobione.** Zdjęcie szkła w nagłówku (`backdrop-filter`) — użytkownik zdecydował „zostaw”.
+  Podział `AddNoteBar.tsx` (763 linie) — ryzyko bez e2e. Zrzuty telefonu — wymagają przeglądarki.
+- **Testy.** Komponenty (25 plików, 161 testów) zielone; typecheck i lint czyste; paczka 391,9 KB przy progu 392 KB.
+- **Commit:** `TBD` (2026-10-20, Notatki — dopracowanie).
