@@ -85,10 +85,13 @@ export function renderMonthCanvas(layout: MonthImageLayout, scale = 2): HTMLCanv
   return canvas;
 }
 
-export function canvasToPng(canvas: HTMLCanvasElement): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("nie udało się zapisać obrazu"))), "image/png");
-  });
+/**
+ * Synchronicznie (przez data URL, nie `toBlob`): udostępnianie musi ruszyć w tym samym kliknięciu,
+ * a każde `await` przed `navigator.share` może zgubić aktywację użytkownika (L14).
+ */
+export function canvasToPng(canvas: HTMLCanvasElement): Blob {
+  const bytes = Uint8Array.from(atob(canvas.toDataURL("image/png").split(",")[1]), (c) => c.charCodeAt(0));
+  return new Blob([bytes], { type: "image/png" });
 }
 
 /**

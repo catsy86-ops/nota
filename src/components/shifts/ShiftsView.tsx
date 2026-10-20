@@ -252,6 +252,12 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   }
 
   /** Grafik miesiąca jako PNG: moduły ładowane dopiero tu, poza paczką startową. */
+  // Moduły obrazu dociągane przy wejściu w Grafik, żeby kliknięcie nie czekało na sieć (L14).
+  useEffect(() => {
+    void import("@/lib/shifts/monthImage");
+    void import("@/lib/shifts/monthImageDraw");
+  }, []);
+
   async function exportImage() {
     try {
       const [{ monthImageLayout }, { renderMonthCanvas, canvasToPng, shareMonthPng }] = await Promise.all([
@@ -259,7 +265,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         import("@/lib/shifts/monthImageDraw"),
       ]);
       const layout = monthImageLayout(data, shownMonth.getFullYear(), shownMonth.getMonth());
-      const blob = await canvasToPng(renderMonthCanvas(layout));
+      const blob = canvasToPng(renderMonthCanvas(layout));
       const result = await shareMonthPng(blob, `grafik-${format(shownMonth, "yyyy-MM")}.png`, `Grafik — ${layout.title}`);
       if (result === "downloaded") toast.success("Pobrano obraz grafiku (.png)");
       else if (result === "shared") toast.success("Udostępniono grafik");

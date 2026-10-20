@@ -162,7 +162,7 @@ Kolejność wg sekcji „Proponowana kolejność napraw”.
 | L11 test scalania z lokalnym wpisem | ✅ | Pokryte przez `yDebts.edit.test.ts` |
 | L12 obserwatory Yjs przy każdym odczycie | ✅ | `shifts/store.ts`: `instanceFor(id)` z cache zamiast nowego `createYShifts` |
 | L13 premia 0,004 zł | ✅ | Zaokrąglenie do groszy przed sprawdzeniem |
-| L14 obraz miesiąca w przeglądarkach | ◐ | Zrobione: fallback `roundRect`, opóźnione `revokeObjectURL`, kwota przez `formatMoney`. **Niezrobione:** aktywacja `navigator.share` po `await` nie była zmieniona; nieprzetestowane w przeglądarce |
+| L14 obraz miesiąca w przeglądarkach | ✅ | Fallback `roundRect`, opóźnione `revokeObjectURL`, kwota przez `formatMoney`, PNG synchronicznie (`toDataURL`) i moduły obrazu dociągane przy wejściu w Grafik — udostępnianie rusza w tym samym kliknięciu. Nieprzetestowane na telefonie |
 | L15 formularz premii bez komunikatu błędu | ✅ | `ShiftSummary.BonusPanel`: `toast.error` przy nieudanym zapisie |
 | L16 licznik Skrzynki po usunięciu notatek | ✅ | Sprawdzone: `Index.tsx` używa notatek aktywnych (bez archiwum i kosza) — bez zmian |
 | L17 próg bundla bez pilnowania nowych modułów | ◐ | Dodane asercje `chunksMatching` w `e2e/bundle.spec.ts` (3 napisy). **Niezweryfikowane:** e2e nie uruchomione |
