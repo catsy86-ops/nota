@@ -6,9 +6,9 @@ import { createPersistedStore } from "@/lib/persistedStore";
  * jeden, zaprojektowany schemat (`SKIN_SCHEME`). Tokeny i tła: `src/styles/skins.css`
  * pod `html[data-skin="…"]`.
  */
-export type Skin = "zeszyt" | "plan" | "neon" | "zorza" | "miedz";
+export type Skin = "zeszyt" | "plan" | "neon" | "zorza" | "miedz" | "matrix" | "hydraulika";
 
-export const SKINS: readonly Skin[] = ["zeszyt", "plan", "neon", "zorza", "miedz"];
+export const SKINS: readonly Skin[] = ["zeszyt", "plan", "neon", "zorza", "miedz", "matrix", "hydraulika"];
 
 /** Schemat stylu: `null` = jasny lub ciemny według przełącznika (tylko Zeszyt). */
 export const SKIN_SCHEME: Record<Skin, "light" | "dark" | null> = {
@@ -17,6 +17,8 @@ export const SKIN_SCHEME: Record<Skin, "light" | "dark" | null> = {
   neon: "dark",
   zorza: "dark",
   miedz: "light",
+  matrix: "dark",
+  hydraulika: "dark",
 };
 
 /** Kolor paska stanu / okna PWA. Opisy i miniatury galerii: `skinGallery.ts` (tylko Ustawienia). */
@@ -26,6 +28,8 @@ export const SKIN_THEME_COLOR: Record<Skin, string> = {
   neon: "#130a1b",
   zorza: "#060a17",
   miedz: "#ae5a28",
+  matrix: "#020a03",
+  hydraulika: "#0b1e2b",
 };
 
 export function isSkin(v: unknown): v is Skin {

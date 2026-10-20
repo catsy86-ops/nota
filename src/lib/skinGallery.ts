@@ -43,4 +43,16 @@ export const SKIN_META: Record<Skin, SkinMeta> = {
     preview: { bg: "#e6e3df", card: "#fcfbf9", ink: "#24201d", accent: "#ae5a28", muted: "#2f7a83" },
     font: "'Bricolage Grotesque Variable', sans-serif",
   },
+  matrix: {
+    label: "Matryca",
+    blurb: "Zielony deszcz znaków na czarnym tle, jak w terminalu.",
+    preview: { bg: "#020a03", card: "#06140a", ink: "#b8ffc9", accent: "#00ff41", muted: "#1d6b2e" },
+    font: "'JetBrains Mono Variable', monospace",
+  },
+  hydraulika: {
+    label: "Hydraulika",
+    blurb: "Miedziane rury, płynąca woda i bąbelki w instalacji.",
+    preview: { bg: "#0b1e2b", card: "#12293a", ink: "#e6f4fa", accent: "#d08a4e", muted: "#4fc3f7" },
+    font: "'Barlow Condensed', sans-serif",
+  },
 };

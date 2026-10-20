@@ -411,3 +411,183 @@ html.theme-reveal::view-transition-new(root) { z-index: 2; }
     linear-gradient(rgb(170 160 150 / 0.6) 1px, transparent 1px), linear-gradient(90deg, rgb(170 160 150 / 0.6) 1px, transparent 1px);
   background-size: 120px 60px;
 }
+
+/* ─────────────────────── MATRYCA — zielony deszcz znaków na czarnym tle ─────────────────────── */
+/* Deszcz rysuje płótno (`components/skins/MatrixRain.tsx`, ładowane leniwie). Tu tylko kolory i wyciszenie siatki. */
+html[data-skin="matrix"] {
+  --background: 120 60% 2%;
+  --foreground: 120 40% 86%;
+  --card: 120 50% 4%;
+  --card-foreground: 120 40% 86%;
+  --popover: 120 50% 4%;
+  --popover-foreground: 120 40% 86%;
+  --primary: 125 100% 55%;
+  --ink-mix: 100%;
+  --primary-foreground: 120 100% 4%;
+  --secondary: 120 40% 9%;
+  --secondary-foreground: 120 40% 86%;
+  --muted: 120 40% 8%;
+  --muted-foreground: 120 22% 68%;
+  --accent: 150 100% 60%;
+  --accent-foreground: 120 100% 4%;
+  --destructive: 0 85% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 120 50% 13%;
+  --input: 120 26% 44%;
+  --ring: 125 100% 55%;
+  --grid: 120 60% 60%;
+  --margin: 125 100% 50%;
+
+  --note-default: 120 50% 5%;
+  --note-coral: 0 30% 8%;
+  --note-peach: 30 30% 7%;
+  --note-sand: 50 25% 7%;
+  --note-mint: 150 35% 6%;
+  --note-sage: 160 25% 6%;
+  --note-sky: 200 30% 7%;
+  --note-lavender: 260 24% 9%;
+  --note-rose: 330 24% 8%;
+
+  --elevation-1: 0 1px 2px hsl(120 100% 2% / 0.6), inset 0 1px 0 hsl(125 100% 60% / 0.06);
+  --elevation-2: 0 8px 20px -6px hsl(120 100% 2% / 0.7), inset 0 1px 0 hsl(125 100% 60% / 0.08);
+  --elevation-3: 0 18px 40px -12px hsl(120 100% 2% / 0.8), 0 0 30px -10px hsl(125 100% 55% / 0.35), inset 0 1px 0 hsl(125 100% 60% / 0.1);
+  --elevation-up: 0 -8px 24px -12px hsl(120 100% 2% / 0.7);
+  --glow-primary: 0 10px 30px -8px hsl(125 100% 55% / 0.6);
+}
+/* Siatka papieru znika — tło to deszcz z płótna. */
+html[data-skin="matrix"] .paper-grid::before,
+html[data-skin="matrix"] .paper-grid::after { display: none; }
+html[data-skin="matrix"] h1,
+html[data-skin="matrix"] h2,
+html[data-skin="matrix"] h3 {
+  font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 12px hsl(125 100% 55% / 0.35);
+}
+html[data-skin="matrix"] .notki-logo { filter: drop-shadow(0 0 12px hsl(125 100% 55% / 0.6)); }
+/* Karta trochę przezroczysta na komputerze: deszcz prześwituje, tekst czyta się na ciemnym tle. */
+@media (pointer: fine) {
+  html[data-skin="matrix"] .note-card[data-note-color="default"] {
+    background-color: hsl(var(--card) / 0.86);
+  }
+}
+
+/* ─────────────────────── HYDRAULIKA — miedź, stal i płynąca woda ─────────────────────── */
+html[data-skin="hydraulika"] {
+  --background: 205 45% 8%;
+  --foreground: 200 40% 92%;
+  --card: 205 40% 11%;
+  --card-foreground: 200 40% 92%;
+  --popover: 205 40% 11%;
+  --popover-foreground: 200 40% 92%;
+  --primary: 24 70% 58%;
+  --ink-mix: 100%;
+  --primary-foreground: 205 45% 8%;
+  --secondary: 205 30% 16%;
+  --secondary-foreground: 200 40% 92%;
+  --muted: 205 30% 14%;
+  --muted-foreground: 200 20% 74%;
+  --accent: 196 90% 62%;
+  --accent-foreground: 205 50% 7%;
+  --destructive: 0 75% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 205 26% 20%;
+  --input: 200 22% 52%;
+  --ring: 24 70% 58%;
+  --grid: 200 40% 80%;
+  --margin: 24 60% 50%;
+
+  --note-default: 205 40% 11%;
+  --note-coral: 10 30% 13%;
+  --note-peach: 24 30% 12%;
+  --note-sand: 42 24% 12%;
+  --note-mint: 170 26% 11%;
+  --note-sage: 160 18% 12%;
+  --note-sky: 196 36% 13%;
+  --note-lavender: 250 22% 14%;
+  --note-rose: 340 20% 13%;
+
+  --elevation-1: 0 1px 2px hsl(205 60% 3% / 0.5), inset 0 1px 0 hsl(200 80% 90% / 0.05);
+  --elevation-2: 0 8px 20px -6px hsl(205 60% 3% / 0.6), inset 0 1px 0 hsl(200 80% 90% / 0.06);
+  --elevation-3: 0 18px 40px -12px hsl(205 60% 3% / 0.7), 0 0 30px -10px hsl(24 70% 58% / 0.3), inset 0 1px 0 hsl(200 80% 90% / 0.08);
+  --elevation-up: 0 -8px 24px -12px hsl(205 60% 3% / 0.6);
+  --glow-primary: 0 10px 30px -8px hsl(24 70% 58% / 0.5);
+}
+/* Rury: miedziane pasy w siatce 120 px (statyczne). Przepływ wody to drugi pseudo-element. */
+html[data-skin="hydraulika"] .paper-grid::before {
+  background-image:
+    linear-gradient(90deg, transparent 0 46px, hsl(24 60% 52% / 0.28) 46px 52px, hsl(24 60% 70% / 0.12) 52px 53px, transparent 53px),
+    linear-gradient(transparent 0 46px, hsl(24 60% 52% / 0.22) 46px 52px, transparent 52px);
+  background-size: 120px 120px;
+  -webkit-mask-image: linear-gradient(#000 0%, rgb(0 0 0 / 0.55) 60%, transparent 100%);
+  mask-image: linear-gradient(#000 0%, rgb(0 0 0 / 0.55) 60%, transparent 100%);
+}
+/* Woda płynie w poziomie: pasy o okresie 120 px przesuwane o dokładnie jeden okres (pętla bez skoku). Tylko transform. */
+html[data-skin="hydraulika"] .paper-grid::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -130px;
+  right: -130px;
+  background-image: repeating-linear-gradient(90deg, transparent 0 34px, hsl(196 90% 62% / 0.13) 34px 48px, transparent 48px 120px);
+  animation: hydro-flow 9s linear infinite;
+  will-change: transform;
+}
+@keyframes hydro-flow {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-120px, 0, 0); }
+}
+/* Bąbelki unoszą się z dołu ekranu. Elementy tworzy PaperBackdrop tylko dla tego stylu. */
+.hydro-bubbles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.hydro-bubble {
+  position: absolute;
+  bottom: -14px;
+  border-radius: 50%;
+  border: 1px solid hsl(196 90% 78% / 0.55);
+  background: radial-gradient(circle at 30% 28%, hsl(0 0% 100% / 0.55), transparent 42%);
+  opacity: 0;
+  animation-name: hydro-rise;
+  animation-timing-function: ease-in;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+@keyframes hydro-rise {
+  0% { transform: translate3d(0, 0, 0) scale(0.7); opacity: 0; }
+  12% { opacity: 0.85; }
+  85% { opacity: 0.55; }
+  100% { transform: translate3d(var(--x, 0px), -105vh, 0) scale(1.08); opacity: 0; }
+}
+/* Telefon: mniej bąbelków (koszt przy długim działaniu). */
+@media (pointer: coarse) {
+  html[data-skin="hydraulika"] .hydro-bubble:nth-child(n + 5) { display: none; }
+}
+html[data-skin="hydraulika"] h1,
+html[data-skin="hydraulika"] h2,
+html[data-skin="hydraulika"] h3 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+/* Ograniczony ruch: rury zostają, woda i bąbelki stoją. */
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="hydraulika"] .paper-grid::after,
+  html[data-skin="hydraulika"] .hydro-bubble { animation: none; }
+  html[data-skin="hydraulika"] .hydro-bubble { display: none; }
+}
+html[data-motion="reduced"][data-skin="hydraulika"] .paper-grid::after,
+html[data-motion="reduced"][data-skin="hydraulika"] .hydro-bubble { animation: none; }
+html[data-motion="reduced"][data-skin="hydraulika"] .hydro-bubble { display: none; }
+
+/* Miniatury galerii stylów. */
+.skin-thumb[data-thumb="matrix"]::before {
+  background-color: #020a03;
+  background-image: linear-gradient(90deg, rgb(0 255 65 / 0.4) 1px, transparent 1px), linear-gradient(90deg, rgb(0 255 65 / 0.12) 1px, transparent 1px);
+  background-size: 9px 100%, 5px 100%;
+}
+.skin-thumb[data-thumb="hydraulika"]::before {
+  background-image:
+    linear-gradient(90deg, transparent 0 9px, rgb(208 138 78 / 0.7) 9px 12px, transparent 12px 30px),
+    linear-gradient(rgb(79 195 247 / 0.35) 0 40%, transparent 40%);
+  background-color: #0b1e2b;
+}
