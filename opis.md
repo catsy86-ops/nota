@@ -463,47 +463,59 @@ odznacza. Czytnik ekranu słyszy „grupa opcji, przycisk opcji, zaznaczony”.
 
 ---
 
-## Synchronizacja — pole kodu parowania (`InputOTP`)
+## Synchronizacja — stan aktualny (parowanie, kody, urządzenia, diagnoza)
 
-**Co robi.** W Ustawieniach → Sync kod z drugiego urządzenia wpisuje się w 12 kratek w trzech grupach po 4 — tak samo,
-jak kod jest wyświetlany (`ABCD EFGH JKMN`). Pole przyjmuje tylko znaki z alfabetu kodu (bez I, L, O, 0, 1), małe
-litery zamienia na wielkie, a wklejenie przyjmuje też kod ze spacjami/myślnikami albo cały link `?pair=…`.
-„Dołącz” jest aktywne przy 12 znakach albo przy starym, 8-znakowym kodzie. Link z kodu QR otwiera Ustawienia → Sync
-z wypełnionymi kratkami.
+Dział opisany w jednym miejscu. Synchronizacja działa przez WebRTC (y-webrtc) na dokumencie Yjs notatek; bez własnego serwera danych.
 
-**Gdzie jest.**
-- `src/components/ui/input-otp.tsx`: `InputOTP`, `InputOTPGroup`, `InputOTPSlot`, `InputOTPSeparator` (shadcn Input
-  OTP na paczce `input-otp` 1.5). Animacja udawanej karetki `caret-blink` w `tailwind.config.ts`.
-- `src/components/SyncSettings.tsx`: formularz „Dołącz do istniejącej grupy”, stała `LEGACY_CODE_LENGTH`, `joinReady`.
-- `src/lib/yjsSync.ts`: `CODE_LENGTH` (eksport), `CODE_PATTERN` (regex dla pola), `codeFromPaste` (link → kod, odrzuca
-  znaki spoza alfabetu, tnie do 12).
-- `src/pages/Index.tsx`: `settingsOpen` startuje jako `true`, gdy adres ma `?pair=`.
+### Co robi
 
-**Jak działa i dlaczego.**
-- Pod kratkami jest jedno niewidoczne `<input>` (z `aria-label` „Kod z innego urządzenia” i podpowiedzią przez
-  `aria-describedby`), więc wklejanie, autouzupełnianie i czytniki ekranu działają jak w zwykłym polu. Kratki to
-  tylko obraz wartości.
-- Na telefonie kratki rozciągają się na całą szerokość (`flex-1`), przycisk jest pod nimi; od `sm:` stała szerokość
-  36 px i przycisk obok. Kratki mają 44 px wysokości (cel dotyku).
-- Bez automatycznego dołączania po wpisaniu ostatniego znaku — dołączenie zmienia grupę synchronizacji, więc zostaje
-  świadome „Dołącz” (Enter w polu też działa — to `<form>`).
-- `?pair=` naprawione: od przeniesienia Ustawień do leniwej paczki (`1f24bb8`) okno montuje się dopiero po otwarciu,
-  więc jego efekt czytający `?pair=` nigdy nie ruszał i link z QR tylko otwierał aplikację. Teraz `Index` otwiera
-  okno od startu, a `SettingsDialog` jak dotąd przełącza na Sync, wpisuje kod i usuwa parametr z adresu.
+- **Parowanie kodem.** W Ustawieniach → Sync kod z drugiego urządzenia wpisuje się w 12 kratek w trzech grupach po 4 (`ABCD EFGH JKMN`). Pole przyjmuje tylko znaki alfabetu kodu (bez I, L, O, 0, 1), małe litery zamienia na wielkie, a wklejenie przyjmuje kod ze spacjami/myślnikami albo cały link `?pair=…`.
+  „Dołącz” jest aktywne przy 12 znakach. Kod 9–11 znaków nie aktywuje przycisku.
+- **Link z kodu QR** (`?pair=`) otwiera Ustawienia → Sync z wypełnionymi kratkami. `Index` otwiera okno od startu; okno przełącza na Sync, wpisuje kod i usuwa parametr z adresu.
+- **Krótkie kody odrzucone.** Kody muszą mieć 12 znaków. Zapisany 8-znakowy kod jest usuwany przy starcie i pokazuje komunikat „Synchronizacja wyłączona: kod był za krótki” z przyciskiem „Wygeneruj nowy kod”.
+- **Diagnoza** (jedno zdanie w Ustawieniach): brak połączenia z serwerami, połączono bez drugiego urządzenia, albo łączenie (ile serwerów odpowiada). Po powrocie do karty albo odzyskaniu sieci sync łączy się ponownie, nie częściej niż co 10 s.
+- **Urządzenia w grupie.** Karta „Urządzenia w grupie”: lista innych urządzeń połączonych teraz (nazwy) i pole „Nazwa tego urządzenia” (domyślnie „Telefon” albo „Komputer” wg przeglądarki). Po połączeniu nowego urządzenia pojawia się toast „Połączono z: [nazwa]”.
+- **Odłączenie.** „Odłącz to urządzenie” (z potwierdzeniem: pozostałe urządzenia zostają w grupie). Sekcja kodu nazywa się „Dodaj urządzenie” (QR i kod).
+- **Toast po zmianie z innego urządzenia** podaje tytuł notatki: „Zaktualizowano: …”. Notatki prywatne i bez tytułu pokazują zwykły komunikat.
 
-**Ograniczenia i pułapki.**
-- Kody spoza alfabetu (np. ręcznie zmienione) nie dadzą się wpisać — wszystkie generowane kody, stare i nowe, są z
-  tego samego alfabetu.
-- Kod 9–11 znaków nie aktywuje „Dołącz” (to zawsze literówka).
-- PIN skarbca nie korzysta z `InputOTP`: skarbiec ma hasło dowolnej długości, nie PIN.
-- `fill()` w Playwright nie przechodzi przez `pasteTransformer` ani filtr — w testach wpisuj `pressSequentially`.
+### Gdzie jest
 
-**Testy.** `src/lib/yjsSync.test.ts` („codeFromPaste wyciąga kod z linku i grup”), `e2e/sync-code.spec.ts` (link
-`?pair=` wypełnia kratki; 8/12 znaków, odrzucanie „O” i „0”).
+- `src/components/ui/input-otp.tsx` — `InputOTP`, `InputOTPGroup`, `InputOTPSlot`, `InputOTPSeparator` (shadcn Input OTP na paczce `input-otp` 1.5). Animacja karetki `caret-blink` w `tailwind.config.ts`.
+- `src/components/SyncSettings.tsx` — formularz „Dołącz do istniejącej grupy” (`joinReady`, `LEGACY_CODE_LENGTH`), diagnoza, lista urządzeń, nazwa urządzenia, potwierdzenia „Odłącz”.
+- `src/lib/yjsSync.ts` — `CODE_LENGTH`, `CODE_PATTERN`, `codeFromPaste` (link → kod, odrzuca znaki spoza alfabetu, tnie do 12), `readPrefs` (odrzucenie krótkiego kodu, pole `shortCodeDropped`), `joinWithCode` (`null` dla złej długości), `wasShortCodeDropped`, `SyncState.signalingUp/signalingTotal`, `reconnectIfNeeded` i listener `visibilitychange` w `initSync`, `SyncDevice`, `SyncState.devices`, `getDeviceName` / `setDeviceName` / `defaultDeviceName` (klucz `kaczy.sync.deviceName`), `refreshDevices` (awareness pierwszego pokoju v2), `changedNoteTitle()` (porównuje `updatedAt` z `remoteSeenUpdated`, wołane w `yjsStore.doc.on("update")`).
+- `src/pages/Index.tsx` — `settingsOpen` startuje jako `true`, gdy adres ma `?pair=`.
 
-**Commit.** `75a026c` (2026-10-15).
+### Jak działa i dlaczego
 
----
+- **Pole kodu bez automatycznego dołączania.** Pod kratkami jest jedno niewidoczne `<input>` (`aria-label` „Kod z innego urządzenia”, podpowiedź przez `aria-describedby`), więc wklejanie, autouzupełnianie i czytniki działają jak w zwykłym polu; kratki są tylko obrazem wartości. Dołączenie zmienia grupę synchronizacji, więc zostaje świadome „Dołącz” (Enter też działa — to `<form>`).
+- **Nazwa urządzenia przez awareness.** Nazwa idzie przez `setLocalStateField("device", …)`, więc nie zmienia protokołu ani danych w Yjs. Każde urządzenie ma własne `clientID`; lista pomija własne.
+- **„Odłącz” działa tylko lokalnie.** Wspólny kod nie daje sposobu, by z zewnątrz wyrzucić jedno urządzenie, stąd rozdzielenie na „to urządzenie” i listę pozostałych.
+- **Toast z tytułem** porównuje notatki z poprzednim zdalnym zapisem; nie jest wysyłany częściej niż co 30 s.
+
+### Ograniczenia i pułapki
+
+- Brak TURN (decyzja użytkownika, brak hostingu): połączenie przez część sieci komórkowych może się nie udać. Oba urządzenia muszą być online jednocześnie.
+- Kody spoza alfabetu nie dadzą się wpisać — wszystkie generowane kody są z tego samego alfabetu.
+- PIN skarbca nie korzysta z `InputOTP` (skarbiec ma hasło dowolnej długości).
+- Lista urządzeń pokazuje tylko te w pokoju v2. Przy włączonej zgodności ze starą wersją urządzenie widoczne tylko w starym pokoju się nie pojawi.
+- „Ostatnia synchronizacja” per urządzenie nie istnieje — awareness jej nie niesie; zostaje globalna z kafla diagnozy.
+- Toast przy kilku zmianach naraz może wskazać lokalną notatkę (porównanie obejmuje lokalne edycje od ostatniego zdalnego zapisu).
+- `fill()` w Playwright nie przechodzi przez `pasteTransformer` — w testach wpisuj `pressSequentially`.
+- Budżet: `yjsSync` jest w paczce startowej (`NotesProvider`); próg eager w `e2e/bundle.spec.ts`, ostatni pomiar 392,4 KB.
+
+### Testy
+
+- `src/lib/yjsSync.test.ts` — `codeFromPaste`, krótki kod, urządzenia w grupie (nazwa, lista bez siebie, czyszczenie przy odłączeniu), `changedNoteTitle`.
+- `e2e/sync-code.spec.ts` — link `?pair=` wypełnia kratki; 8/12 znaków; odrzucanie „O” i „0”.
+- `e2e/file-sync.spec.ts` — synchronizacja przez plik.
+- E2E nie uruchamiano od zmian z 2026-10-20 (pełne e2e odłożone).
+
+### Commity
+
+- `75a026c` (2026-10-15) — pole kodu parowania (`InputOTP`).
+- `adbe848` — krótkie kody odrzucone, diagnostyka, ponowne łączenie (plan synchronizacji, fazy 0, 1, 3).
+- `842db18` (2026-10-20) — urządzenia w grupie i nazwy (faza 4).
+- `89f1546` (2026-10-20) — toast z tytułem notatki (punkt 3).
 
 ## Wspólne — wibracje (haptyka)
 
@@ -3547,15 +3559,6 @@ lub grupę”.
 - **Korekty audytu:** „Widok i kolumny” nie występuje dwa razy naraz (inna gałąź telefon/komputer); `aria-expanded` na filtrach i sortowaniu ustawia Radix; `ui/calendar.tsx` i `ui/overlay-back.tsx` są używane.
 - **Budżet:** wejściowy JS 393 208 B przy progu 393 216 B (zapas 8 B).
 
-## Synchronizacja — krótkie kody odrzucone, diagnostyka, ponowne łączenie (plan synchronizacji, fazy 0, 1, 3, 2026-10-18)
-
-- **Co robi:** kody parowania muszą mieć 12 znaków (8-znakowe kody nie są przyjmowane ani przy wpisywaniu, ani w zapisanych ustawieniach — zapisany krótki kod jest usuwany i pokazuje się komunikat „Synchronizacja wyłączona: kod był za krótki” z przyciskiem „Wygeneruj nowy kod”). Ustawienia mają jedno zdanie diagnozy: brak połączenia z serwerami, połączono bez drugiego urządzenia, łączenie (ile serwerów odpowiada). Po powrocie do karty albo odzyskaniu sieci sync łączy się ponownie, nie częściej niż co 10 s.
-- **Gdzie jest:** `src/lib/yjsSync.ts` (`readPrefs` — odrzucenie krótkiego kodu i pole `shortCodeDropped`; `joinWithCode` zwraca `null` dla złej długości; `wasShortCodeDropped`; `SyncState.signalingUp/signalingTotal`; `reconnectIfNeeded` i listener `visibilitychange` w `initSync`); `src/components/SyncSettings.tsx` (`diagnosis`, alert o skróconym kodzie).
-- **Ograniczenia i pułapki:** nie dodano TURN (brak hostingu — decyzja użytkownika); połączenie przez część sieci komórkowych może się nie udać. Synchronizacja nadal wymaga, by oba urządzenia były online jednocześnie. Listener `online` kosztuje 3 B — zostawiony.
-- **Budżet:** wejściowy JS to 393 402 B przy progu 393 216 B — **przekroczenie o 186 B**. Zmiana czeka na decyzję: podniesienie progu albo oszczędności.
-- **Testy:** `src/lib/yjsSync.test.ts` (22/22; dwa testy uodpornione na kolejność — liczą tylko instancje z własnego testu; nowy test zapisanego krótkiego kodu); e2e `sync-code.spec.ts` (kod 12 znaków), `file-sync.spec.ts`.
-- **Commit:** brak — zmiany niezacommitowane.
-
 ## Praca — wpisy bez utraty danych (plan działu Praca, D1, D4, T7, 2026-10-18)
 
 - **Co robi:** wpis, który ma tylko odhaczone punkty listy, nie znika z dziennika, raportów i serii, gdy jego punkt został usunięty; stare odhaczenia są po prostu pomijane, a sam wpis zostaje. Wpis ze zdjęciem, którego bajtów nie ma w kopii, przeżywa import z zachowaną referencją. Usunięcie wpisu ze zdjęciami i „Cofnij” przywraca wpis z tymi samymi zdjęciami.
@@ -3797,15 +3800,83 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - **Testy:** w Chrome (390 px): na /dzis, /praca, /grafik jeden widoczny h1 z właściwą nazwą i wiersz z datą. E2E `routes`, `shifts`: 32/33 (jeden test offline Grafiku niestabilny pod obciążeniem, przechodzi osobno).
 - **Commit:** dada7f1, 2026-10-19.
 
-## Przypomnienia — jedno odpalenie zaległej serii (krok 1 planu kalendarza/przypomnień, 2026-10-19)
+## Przypomnienia — stan aktualny (terminy, serie, odłożenie, dymki, widok Terminy)
 
-- **Co robi:** seria przypomnień (codziennie, co tydzień, co miesiąc), która minęła o kilka cykli (np. aplikacja była zamknięta), odpala się RAZ. Dymek lub powiadomienie pokazuje „pominięto N”, a termin przesuwa się na najbliższy przyszły. Wcześniej każdy zaległy cykl dawał osobny dymek i powiadomienie.
-- **Gdzie jest:** `src/lib/reminderDue.ts` (`planDueReminders` — czysta funkcja: co odpalić, z liczbą pominiętych wystąpień), `src/hooks/useReminderNotifications.ts` (wykonuje efekty: dymki, powiadomienia, przesunięcie serii).
-- **Jak działa:** funkcja dostaje notatki, rejestr „już odpalone” i mapę `handled` (id → termin już obsłużony). Termin obsłużony nie odpala się drugi raz, dopóki zapis przesunięcia nie dotrze do listy notatek. Wpis `handled` znika, gdy termin się zmieni albo notatka zniknie. Jednorazowe przypomnienia działają jak dotąd.
-- **Decyzja:** przyjęto zalecaną wersję („jeden dymek, pominięto N”). Pytanie 3 z planu nie zostało jeszcze potwierdzone przez właściciela.
-- **Ograniczenia:** zabezpieczenie 1000 wystąpień wstecz. Przy absurdalnie starym terminie pominięte są najwyżej tysiąc cykli.
-- **Testy:** `src/lib/reminderDue.test.ts` (10: na czas, zaległa seria 5 dni, koniec serii, miesiąc z 31., rejestr, `handled`, brak terminu). E2E `reminder-toast`, `reminders-calendar`: 16/16. Vitest 1437/1437. Typecheck czysty.
-- **Commit:** 0d6e497, 2026-10-19.
+Dział opisany w jednym miejscu. Przypomnienie to termin na notatce; z jego zapisu liczą się wystąpienia, powiadomienia, push i widok Terminy.
+
+### Co robi
+
+- **Termin i powtarzanie** (`ReminderPicker`): godzina, dzień, powtarzanie (codziennie, tygodniowo, miesięcznie), koniec serii. Flaga „Cały dzień (o 9:00)” — zamiast godziny zapisuje się 9:00 wybranego dnia; na kaflu i w Terminach widać samą datę („dziś”, „jutro”, „25 paź”).
+- **Seria zaległa** (np. aplikacja była zamknięta przez kilka cykli) odpala się RAZ. Dymek lub powiadomienie pokazuje „pominięto N”, a termin przesuwa się na najbliższy przyszły. Zabezpieczenie: najwyżej 1000 wystąpień wstecz.
+- **Odłożenie** („Odłóż”, 10 minut, jutro o 9:00, +1 h) działa też dla serii i odkłada tylko jedno wystąpienie. Kolejne wystąpienia są od swojego terminu, nie od chwili odłożenia.
+- **„Gotowe”:** przy każdym terminie w widoku Terminy; na serii kończy bieżące wystąpienie i przechodzi do następnego. Koniec serii albo zwykły termin zdejmuje przypomnienie. Cofnij przywraca termin, dzień serii i odłożenie.
+- **„Jutro rano” i „+1 h”** nie przepisują dnia serii.
+- **Widok Terminy:** grupy „Zaległe” / „Nadchodzące” z nagłówkami `<h2>`, osobna sekcja „W archiwum” na dole z wyszukiwaniem (nie wchodzi do grup ani licznika). Pusty widok ma przycisk „Nowa notatka”.
+- **Zaległości:** licznik na pasku bocznym i w tytule karty liczy też terminy Pracy (ta sama lista co Terminy). Zaległy termin ma prefiks „Zaległe:” dla czytnika ekranu.
+- **Fokus po akcji** (Gotowe, Jutro, +1 h, przesunięcie, usunięcie) przechodzi na sąsiedni kafel w grupie, a gdy go nie ma — na nagłówek grupy.
+
+### Gdzie jest
+
+- `src/lib/reminderSpec.ts` — `ReminderState` (w tym `reminderAllDay`, `reminderBase`), `REMINDER_FIELDS`, `specOf`, `readSpec`, `mergeSpec`, `projectReminder`. Całe przypomnienie to jedna wartość `reminderSpec` w Y.Map notatki.
+- `src/lib/yjsStore.ts` — `readReminderState`, zapis w `applyPatch` i przy tworzeniu notatki, projekcja w `plainFromYNote`.
+- `src/lib/reminderRepeat.ts` — `nextOccurrence(note, at)`, `snoozeTarget(note, at, now)`, `doneTarget`, `seriesDay`, `endOfDay(date)`.
+- `src/lib/reminderOccurrences.ts` — `expandOccurrences` (przewija do `rangeStart`, limit `MAX_SKIP_STEPS`), `isNext` tylko dla zapisanego terminu, `Occurrence.allDay`.
+- `src/lib/reminderDue.ts` — `planDueReminders` (czysta funkcja: co odpalić i ile pominięto), rejestr „już odpalone”, mapa `handled`.
+- `src/hooks/useReminderNotifications.ts` — wykonuje efekty: dymki, powiadomienia, przesunięcie serii, `markDone`, `applyActionRef` (akcja z SW i z kolejki przy starcie).
+- `src/components/ReminderDueToast.tsx` — dymek z „Odłóż” zawsze.
+- `src/components/NoteCardBody.tsx` — przyciski terminu („Gotowe”, „Jutro”, „+1 h”), `focusAfterRemoval`.
+- `src/components/ReminderPicker.tsx` — `ReminderBadge` (kolor, prefiks „Zaległe:”, `useReminderPassed`).
+- `src/hooks/useReminderPassed.ts` — przełącza się przez `setTimeout` co najwyżej do terminu (dłuższe terminy w krokach, limit ok. 24,8 dnia).
+- `src/lib/reminderAgenda.ts` — `snoozeTimes` (w tym `inHour`), `byReminderAsc` (jedno sortowanie dla Terminów i grup).
+- `src/lib/reminderTime.ts` — `formatReminderShort(ts, now, allDay)`, `composeReminderTimestamp` (`null` dla godziny nieistniejącej w czasie letnim).
+- `src/lib/push/schedule.ts` — harmonogram push; `push-server/core.js` (komentarz: „Odłóż” też dla serii).
+- `src/lib/studyOverdueCount.ts` — mały store licznika zaległości Pracy; `src/components/review/StudyOverdueSync.tsx` — leniwy komponent bez wyglądu, który go zasila.
+- `src/hooks/useOverdueBadge.ts` — drugi argument `extra` (zaległości spoza notatek).
+- `src/pages/Index.tsx` — `reminderGroups`, `archivedRows`, `reminderRowCount`, sekcja „W archiwum”, `onNew`, przekazanie `reminderBase` do `updateNote`.
+- `src/components/NoteGroupSection.tsx` — nagłówek grupy.
+
+### Jak działa i dlaczego
+
+- **Jeden zapis całego terminu** (`reminderSpec`, LWW): termin, powtarzanie, dzień serii, koniec, odłożenie i flaga dnia są jedną wartością, więc konflikt dwóch urządzeń nie zostawia mieszanki. Stare pola (`reminder`, `reminderRepeat`, `reminderDay`, `reminderRepeatUntil`) są dalej zapisywane tą samą wartością dla starszych odczytów. Odczyt: najpierw `reminderSpec`, gdy go nie ma — stare pola. Nic nie trzeba migrować.
+- **Odłożenie** zapisuje `reminder` = odłożona chwila i `reminderBase` = termin serii, który zastępuje. Kolejne wystąpienia liczą się od bazy. Odłożona chwila zawsze wypada przed następnym terminem (`snoozeTarget` zastępuje ją zwykłym terminem, gdyby wypadała później). Zaległości: `snoozeTarget` przesuwa bazę na ostatnie minione wystąpienie.
+- **Odpalenie** nie zależy od flagi dnia: przypomnienie idzie o zapisanej godzinie (9:00 dla „cały dzień”), w aplikacji i w push.
+- **Cały dzień = 9:00, nie północ**, bo północ dzwoniłaby w nocy. Zaległość liczy się od 9:00.
+- **Liczba z Pracy** w liczniku zawiera też serwis przypadający dziś — tak jak lista Terminów.
+- **Zmiana terminu w kalendarzu** (przeciągnięcie, „Termin zapisany”) czyści odłożenie: to nowy termin serii.
+- **Licznik i odznaka** przełączają się na „Zaległe” w chwili, gdy termin minie, nawet gdy lista notatek się nie zmienia.
+
+### Ograniczenia i pułapki
+
+- Kompozytor nowej notatki (`AddNoteBar`) nie ma pola „Cały dzień” — termin wymaga tam godziny. „Nowa notatka” z pustych Terminów otwiera zwykły kompozytor, nie kompozytor z terminem.
+- Notatki zapisane przez starszą wersję nie mają `reminderSpec`, dopóki nie zostaną zmienione; konflikt całości obejmuje dopiero zmienione notatki.
+- Liczba z Pracy jest liczona przy renderze; zmiana doby bez zmiany dziennika odświeża ją dopiero po zmianie danych.
+- Każda odznaka z przyszłym terminem ma jeden `setTimeout`; odznaki bez terminu nie mają timera.
+- Odznaka terminu ma 12 px i może zwiększyć wysokość kafla w wąskim kaflu — do sprawdzenia na telefonie.
+- Wybór dnia, który już minął (np. 9:00 dziś po czasie), jest blokowany komunikatem jak przeszła godzina.
+- Fokus po akcji wybiera pierwszy przycisk sąsiedniego kafla, a nie zawsze „Gotowe”.
+- Brak e2e dla odłożenia serii i testu na telefonie.
+
+### Testy
+
+- `src/lib/reminderDue.test.ts` — na czas, zaległa seria, koniec serii, miesiąc z 31., rejestr, `handled`, brak terminu, odłożone wystąpienie odpala się raz.
+- `src/lib/reminderRepeat.test.ts` — `nextOccurrence` i `snoozeTarget` (jednorazowa, seria, zaległe, seria zakończona).
+- `src/lib/reminderSpec.test.ts` — zapis i odczyt, czyszczenie przy nowym terminie, flaga „cały dzień”.
+- `src/lib/reminderTime.test.ts` — `formatReminderShort`, zmiana czasu (Europe/Warsaw).
+- `src/lib/reminderAgenda.test.ts`, `src/lib/reminderOccurrences.test.ts`.
+- `src/lib/yjsStore.reminder.test.ts` — dwa dokumenty: równoległa zmiana terminu i powtarzania daje jedną całość; baza wraca po synchronizacji; flaga przez dwa dokumenty.
+- `src/hooks/useOverdueBadge.test.ts`, `src/hooks/useReminderPassed.test.ts`.
+- `src/components/ReminderDueToast.tsx` — testy istniejące, bez zmian.
+- E2E: `reminder-toast`, `reminders-calendar`, `reminders-agenda`, `reminders-phase2` (Gotowe, pusty widok Terminów). Pełny przebieg chromium ostatnio na 2026-10-20 (391/391 przed kolejnymi zmianami); od tego czasu nie uruchamiany.
+
+### Commity
+
+- `a235912` (2026-10-19) — przypomnienie na cały dzień (P6).
+- `831ab76` (2026-10-19) — cały termin w jednym zapisie `reminderSpec` (C3).
+- `0d6e497` (2026-10-19) — jedno odpalenie zaległej serii (krok 1).
+- `3c07051` (2026-10-19) — odłożenie jednego wystąpienia serii (P3).
+- `0ae3808` (2026-10-20) — faza 1 planu (grupy, dotyk, „+1 h”).
+- `018d791` (2026-10-20) — dokończenie fazy 1 („Nowa notatka”, odświeżany termin, odznaka 12 px).
+- `ebe2567` (2026-10-20) — fazy 2–3 wg decyzji D1–D4 („Gotowe” przy każdym terminie, archiwum, licznik Pracy).
 
 ## Terminy — jedna definicja zaległych, archiwum liczone (krok 2 planu kalendarza/przypomnień, 2026-10-19)
 
@@ -3867,15 +3938,77 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - **Stan weryfikacji:** pełny przebieg e2e nie został dotąd zakończony bez przerwania (brak pamięci). Zmiany sprawdzone osobno: `shifts`, `routes` i powiązane specy przechodzą.
 - **Commit:** bdba60c, 2026-10-19.
 
-## Kalendarz — znaczniki Pracy w komórkach (K2 planu kalendarza/przypomnień, 2026-10-19)
+## Kalendarz — stan aktualny (siatka, dzień, oś godzin, skróty, wydruk, eksport)
 
-- **Co robi:** w siatce miesiąca dzień z wizytą serwisową albo dostawą ma małą ikonę kasku z liczbą (np. „2”). Po najechaniu i w czytniku ekranu: „Praca: 2 wizyty, 1 dostawa”. Tylko odczyt, bez edycji.
-- **Gdzie jest:** `src/lib/study/calendarMarks.ts` (`studyDayMarks`, typ `StudyDayMarks`), `src/components/calendar/useStudyDayMarks.ts` (hook: czeka na `studyReady`, potem liczy), `src/components/calendar/ReminderCalendarView.tsx` (`studyOf` do siatki), `src/components/calendar/MonthGrid.tsx` (prop `studyOf`), `src/components/calendar/DayCell.tsx` (ikona i `studySummary` w `aria-label`).
-- **Jak działa:** wizyta to otwarte zgłoszenie serwisowe z terminem (`due`, dzień `yyyy-MM-dd`), dostawa to pozycja „zamówione” z `due` (T4). Klucz dnia to ta sama postać co w `dueDayValue`. Budowy w archiwum pomijane, tak jak w przypomnieniach.
-- **Ograniczenie:** znaczniki są tylko w siatce miesiąca; widok tygodnia (`WeekStrip`) i „najbliższe dni” (`UpcomingDays`) ich nie pokazują. Dane Praca ładują się leniwie, więc do gotowości dokumentu kalendarz pokazuje brak znaczników i przelicza się po wczytaniu.
-- **Paczka:** kalendarz jest już leniwy; `useStudyDayMarks` wciąga `store.ts` Pracy do paczki kalendarza, a nie do startowej. Próg paczki startowej 388 KB (od 2026-10-19) (`e2e/bundle.spec.ts`).
-- **Testy:** `src/lib/study/calendarMarks.test.ts` (liczenie po dniach, otwarte/zamknięte, dostawa po dacie, archiwum). E2E `reminders-calendar`, `reminders-agenda`, `reminder-toast` 17/17 po wszystkich krokach.
-- **Commit:** 42e1c83, 2026-10-19.
+Dział opisany w jednym miejscu. Kalendarz pokazuje terminy przypomnień (`reminderSpec`), znaczniki dnia z Pracy i zmiany z Grafiku.
+
+### Co robi
+
+- **Siatka miesiąca** (`MonthGrid`, `DayCell`): dzień z terminami; dzień z wizytą serwisową albo dostawą ma ikonę kasku z liczbą (np. „2”), a dla czytnika „Praca: 2 wizyty, 1 dostawa”. Tylko odczyt. Przycisk „Dziś” wraca do bieżącego dnia (także gdy wybrany dzień to nie dziś, „Dziś” jest widoczne w miesiącu).
+- **Panel dnia** (`DayPanel`): przełącznik „Lista | Oś godzin” (lista domyślna, wybór zapamiętany w `kaczy.calendar.dayView`). Panel pokazuje zmianę z Grafiku, linię Pracy (wizyty i dostawy), terminy i przycisk pominięcia wystąpienia serii.
+- **Oś godzin** (`DayTimeline`): wiersze po godzinach od 07:00; pasek zmiany z Grafiku w lewej kolumnie (przerwa jaśniejsza), każdy termin w swojej godzinie z dokładnym czasem. Terminy „cały dzień” nad osią.
+- **Dialog terminu** (`ReminderQuickAddDialog`): tytuł, dzień, godzina, powtarzanie, „Cały dzień” (termin na 9:00, godziny nie widać). W edycji pole „Dzień” przenosi termin (także serię). Etykieta podaje godzinę i powtarzanie.
+- **Skróty:** Ctrl+Enter (⌘+Enter na Macu) z dowolnego pola okna tworzy notatkę z terminem, a w edycji zapisuje termin. Zwykły Enter w polu tekstu działa jak dotąd. Przycisk ma `aria-keyshortcuts`.
+- **Prognoza serii:** pusty krąg; zapisany termin — pełna kropka. Klik w termin otwiera edycję; Shift+←/→ przesuwa o dzień.
+- **Wydruk** („Drukuj” w nagłówku): lista terminów bieżącego miesiąca dzień po dniu, z oznaczeniem prognozy serii tekstem. Wydruk nie zawiera Pracy.
+- **Telefon:** przełącznik „Miesiąc / Tydzień”; tydzień pokazuje pasek 7 dni (`WeekStrip`). Wybór nie jest zapamiętywany między wejściami.
+- **Eksport `.ics`** z listy: `UNTIL` ma ten sam typ co `DTSTART` (lokalny, bez „Z”), zgodnie z RFC 5545.
+
+### Gdzie jest
+
+- `src/components/calendar/ReminderCalendarView.tsx` — widok: `handleSkip` (komunikat końca serii), `previousOf` (cofnięcie z odłożeniem i `allDay`), `moveToDay` (odmowa przy nieistniejącej godzinie), `focusDay`, `studyMarks`, przełącznik `phoneView`, przycisk „Drukuj”, `PrintRoot`.
+- `src/components/calendar/MonthGrid.tsx` (prop `studyOf`), `src/components/calendar/DayCell.tsx` (ikona, `studySummary` w `aria-label`, `data-day-key`, kształt kropki).
+- `src/components/calendar/DayPanel.tsx` — linia Pracy, przycisk pominięcia, `readDayView` / `writeDayView`, etykieta edycji.
+- `src/components/calendar/DayTimeline.tsx` — oś, `TimelineItem`. `src/lib/dayTimeline.ts` — `shiftPieces`, `timelineHours`, `hourBackground`, `minutesOfDay` (czysta logika).
+- `src/components/calendar/ReminderQuickAddDialog.tsx` — dialog, `allDay` w stanie, `handleShortcut` na `ResponsiveDialogContent`.
+- `src/components/calendar/WeekStrip.tsx` — widok tygodnia na telefonie.
+- `src/components/calendar/CalendarPrintList.tsx` — lista wydruku.
+- `src/components/calendar/useStudyDayMarks.ts` — hook: czeka na `studyReady`, potem liczy znaczniki.
+- `src/lib/study/calendarMarks.ts` — `studyDayMarks`, `StudyDayMarks`, `studySummary`. Wizyta to otwarte zgłoszenie z terminem `due`; dostawa to pozycja „zamówione” z `due`. Budowy w archiwum są pomijane.
+- `src/lib/reminderOccurrences.ts`, `src/lib/reminderTime.ts`, `src/lib/icsExport.ts` (`eventLines`, `UNTIL` przez `formatLocal`), `src/lib/dueTerms.ts` (`endOfDay` nakładka na `reminderRepeat.ts`).
+- `src/pages/Index.tsx` — kalendarz dostaje `reminderNotes` (stała tablica), `onCreateNote` i `onSetReminder` z `reminderAllDay`.
+
+### Jak działa i dlaczego
+
+- **Znaczniki Pracy są w osobnym module**, który ładuje się leniwie: `useStudyDayMarks` wciąga store Pracy do paczki kalendarza, a nie do startowej. Do gotowości dokumentu kalendarz pokazuje brak znaczników i przelicza się po wczytaniu.
+- **Zakres osi** to co najmniej 7–21 i rozszerza się, gdy zmiana albo termin wychodzi poza przedział (w granicach doby). Pasek zmiany to gradient CSS w każdym wierszu, więc wiersz może rosnąć od wielu terminów bez przesunięć paska.
+- **Oś ma sens tylko dla zmiany** (ma godziny). Przypomnienie zostaje punktem, a nie blokiem. Lista zostaje domyślna, bo tam są eksport `.ics` i opisy prognoz. Przerwa i pasek korzystają z `shiftSpan` / `breakOffset` z `lib/shifts/time.ts`, więc są spójne z eksportem i sumą godzin. Urlop nie ma paska.
+- **Zmiana czasu:** godzina z przeskoku wiosennego (np. 02:30) jest odrzucana (`composeReminderTimestamp` zwraca `null`), pokazany jest komunikat; przeniesienie na taki dzień nie przesuwa po cichu.
+- **Seria zapisana dawno temu** (>400 kroków wstecz) pokazuje się w bieżącym miesiącu: `expandOccurrences` przewija do `rangeStart`.
+- **Skrót nie zapisuje**, gdy godzina jest niepoprawna, a przy dodawaniu wymaga tytułu.
+
+### Ograniczenia i pułapki
+
+- Znaczniki Pracy są tylko w siatce miesiąca; widok tygodnia (`WeekStrip`) i „najbliższe dni” (`UpcomingDays`) ich nie pokazują.
+- Zmiana przez północ rysuje się na osi tylko do 24:00. Przerwa bez godziny (`breakAt`) nie ma miejsca na osi — zmiana rysuje się jako jeden odcinek.
+- Oś nie pokazuje minut na skali; dokładny czas jest w tekście terminu.
+- Podpowiedzi skrótów nie są widoczne w interfejsie (tylko `aria-keyshortcuts` i zachowanie).
+- Szerokość komórki na 320 px to ok. 42 px, poniżej 44 px; pełne 44 px wymaga zmiany układu.
+- Wydruk na papierze: prognozy oznaczone tekstem.
+- Nie zrobione: całodniowe w dialogu przy tworzeniu z kompozytora, scalenie duplikatów, historia serii (decyzja właściciela).
+
+### Testy
+
+- `src/lib/study/calendarMarks.test.ts` — liczenie po dniach, otwarte/zamknięte, dostawa po dacie, archiwum.
+- `src/lib/dayTimeline.test.ts` — odcinki zmiany, przerwa, urlop, zakres osi, gradient, minuty.
+- `src/lib/reminderOccurrences.test.ts` — „cały dzień”, „seria zapisana dawno temu”, `isNext`.
+- `src/lib/reminderTime.test.ts` — zmiana czasu (Europe/Warsaw).
+- `src/lib/icsExport.test.ts` — `UNTIL` tego samego typu co `DTSTART`.
+- `src/components/calendar/CalendarPrintList.test.tsx` — wydruk: godzina, „cały dzień”, prognoza, pusty miesiąc.
+- E2E: `reminders-calendar` (w tym Ctrl+Enter), `reminders-agenda`, `day-timeline` (360 px bez poziomego przewijania), `calendar-phase1` (pole „Dzień”), `calendar-phase2` (Cały dzień, przełącznik na 375 px). Od zmian z 2026-10-20 nieuruchamiane.
+
+### Paczka
+
+- Kalendarz jest leniwy. Próg paczki startowej w `e2e/bundle.spec.ts` to 393 KB (eager); ostatni pomiar 392,4 KB.
+
+### Commity
+
+- `42e1c83` (2026-10-19) — znaczniki Pracy w komórkach (K2).
+- `0236f73` (2026-10-19) — poprawka typu `ToggleGroup` w `DayPanel`.
+- `K1` — widok dnia z osią godzin (2026-10-19; hash w commicie z tym wpisem).
+- `19f2ade` (2026-10-19) — skróty w oknie terminu (K3).
+- `518871f` (2026-10-20) — fazy 1 i 2 planu.
+- `11ef99f` (2026-10-20) — fazy 2d, 2f, 3a, 3b.
 
 ## Praca — próba przed zakryciem z etapów karty (U1 planu Pracy, 2026-10-19)
 
@@ -3886,16 +4019,6 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - **Ograniczenie:** etap „Próba szczelności” jest tylko odhaczeniem; nie zastępuje protokołu z wynikiem (ciśnienie, czas, spadek). Nazwy etapów własnych nie są rozpoznawane, tylko identyfikatory domyślne.
 - **Testy:** `src/lib/study/reminders.test.ts` (grupa „próba przed zakryciem z etapów karty (U1)”: bez zakrycia, odhaczone zakrycie/próba, archiwum, duplikat z „no-test”, protokół w dzienniku), `src/lib/study/dueRows.test.ts` (wiersz na Dziś). Vitest `src/lib/study` 287/287, tsc czysty.
 - **Commit:** 7fd412a, 2026-10-19.
-
-## Przypomnienia — cały dzień (P6 planu kalendarza/przypomnień, 2026-10-19)
-
-- **Co robi:** w wyborze przypomnienia na notatce jest pole „Cały dzień (o 9:00)”. Zamiast godziny zapisuje się 9:00 wybranego dnia, a na kaflu i w Terminach widać samą datę („dziś”, „jutro”, „25 paź”).
-- **Gdzie jest:** `src/lib/reminderSpec.ts` (`reminderAllDay` w `ReminderState`, `REMINDER_FIELDS`, `specOf`, `readSpec`), `src/lib/yjsStore.ts` (zapis w `reminderSpec` przy tworzeniu i przy zmianie, projekcja), `src/components/ReminderPicker.tsx` (pole wyboru, `ReminderBadge`), `src/lib/reminderTime.ts` (`formatReminderShort(ts, now, allDay)`, `dayInputValue`, wspólne z `shortages.ts`), `src/components/NoteCardActions.tsx` (przekazanie flagi do `onUpdate`), `src/lib/mergeNotes.ts`, `src/lib/noteSchema.ts`, `src/hooks/useNotes.ts` (typ `Note.reminderAllDay`).
-- **Jak działa:** flaga siedzi w `reminderSpec` razem z terminem, więc konflikt dwóch urządzeń rozstrzyga cała całość, jak przy C3. Flaga zapisuje się tylko gdy `true`; zwykły termin jej nie ma. Odpalanie nie zmieniło się: przypomnienie idzie o zapisanej godzinie (9:00), w aplikacji i w push. Zmiana na zwykły termin przez `reminderAllDay: undefined` gasi flagę.
-- **Decyzje:** „cały dzień” to 9:00, a nie północ, bo północ dzwoniłaby w nocy. Zaległość liczy się od 9:00, więc termin „cały dzień” na dziś staje się zaległy o 9:00 i wpada do „Zaległe”/„Przegapione” jak każdy inny. Wybór dnia, który już minął (9:00 dziś przeszło), jest blokowany tym samym komunikatem co przeszła godzina.
-- **Ograniczenie:** kompozytor nowej notatki (`AddNoteBar`) nie ma pola „Cały dzień” — tam termin nadal wymaga godziny. Do dodania osobno wraz z szkicem (`Draft`), bo tam jest osobny stan i zapis szkicu.
-- **Testy:** `src/lib/reminderSpec.test.ts` (grupa „reminderAllDay”), `src/lib/reminderTime.test.ts` (`formatReminderShort` z flagą), `src/lib/yjsStore.reminder.test.ts` (flaga przez dwa dokumenty Yjs, włącz i wyłącz). Vitest 1482/1482, tsc i eslint czyste. E2E nie uruchomione (pamięć).
-- **Commit:** a235912, 2026-10-19.
 
 ## Praca — data dostawy zamówienia (T4 planu kalendarza/przypomnień, 2026-10-19)
 
@@ -3918,16 +4041,6 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - **Testy:** `src/lib/reminderAgenda.test.ts` (`weekSeriesForecasts`: zaległa seria 7 wystąpień, seria od jutra 6, jednorazowe pominięte, seria poza oknem i kosz). Vitest 1489/1489 po wszystkich krokach.
 - **Commit:** 392f197, 2026-10-19.
 
-## Przypomnienia — cały termin w jednym zapisie `reminderSpec` (C3 planu kalendarza/przypomnień, 2026-10-19)
-
-- **Problem:** termin, powtarzanie, dzień serii i koniec były czterema osobnymi polami Yjs, z osobnym rozstrzyganiem konfliktów. Dwa urządzenia zmieniające ten sam termin naraz mogły zostawić niezgodną mieszankę (np. nowy termin ze starym dniem serii).
-- **Rozwiązanie:** całe przypomnienie jest zapisane jako jedna wartość `reminderSpec` w Y.Map notatki. Konflikt wygrywa w całości. Starsze pola (`reminder`, `reminderRepeat`, `reminderDay`, `reminderRepeatUntil`) są nadal zapisywane tą samą wartością, żeby starsze odczyty działały.
-- **Odczyt:** najpierw `reminderSpec`; gdy go nie ma (notatki sprzed zmiany), stare pola. Nic nie trzeba migrować w dokumencie.
-- **Gdzie jest:** `src/lib/reminderSpec.ts` (`specOf`, `mergeSpec`, `readSpec`, `projectReminder`), `src/lib/yjsStore.ts` (`readReminderState`, zapis w `applyPatch` i przy tworzeniu notatki, projekcja w `plainFromYNote`).
-- **Ograniczenie:** notatki zapisane przez starszą wersję aplikacji nie mają `reminderSpec`, dopóki nie zostaną zmienione — wtedy czyta się je ze starych pól, co jest poprawne, ale konflikt całości obejmuje dopiero zmienione notatki.
-- **Testy:** `src/lib/reminderSpec.test.ts` (8), `src/lib/yjsStore.reminder.test.ts` (dwa urządzenia, równoległa zmiana terminu i powtarzania daje jedną całość). E2E `reminders-calendar`, `reminder-toast`, `reminders-agenda`, `notes`: 22/22. Vitest 1466+. Budżet bundla: w progu 387 KB.
-- **Commit:** 831ab76, 2026-10-19.
-
 ## Kopia zapasowa — pliki budów osobno od zdjęć dziennika (D3, 2026-10-19)
 
 - **Co robi:** raport kopii rozdziela pominięte bajty na trzy kategorie: załączniki notatek, zdjęcia dziennika i pliki budów (plany, PDF). Toast po zapisie kopii podaje każdą kategorię osobno. Plan nie jest już nazywany zdjęciem dziennika.
@@ -3937,27 +4050,6 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - **Ograniczenie:** `skipped` to liczby z chwili eksportu. Przywrócenie nie odzyskuje pominiętych zdjęć — tylko je nazywa.
 - **Testy:** `src/lib/fullBackup.test.ts` — przekroczenie budżetu (`attachmentBudget: 0`) rozdziela załącznik, zdjęcie dziennika i plan oraz składa komunikat; bez przekroczenia plan wchodzi do kopii i nie jest raportowany. Vitest 1469/1469, typecheck czysty.
 - **Commit:** 6a97a92 (kod), testy budżetu — w commicie z tym wpisem, 2026-10-19; okno przywracania z `skipped` — 5fa3fbd, 2026-10-19.
-
-## Kalendarz — widok dnia z osią godzin (K1 planu kalendarza/przypomnień, 2026-10-19)
-
-- **Poprawka typu (2026-10-19, 0236f73):** `src/components/calendar/DayPanel.tsx` — usunięty zbędny prop `type="single"` z `ToggleGroup`; wrapper z `src/components/ui/toggle-group.tsx` ustawia go sam. Błąd `tsc` zgłaszany od 5aa530e znika (`npx tsc -p tsconfig.app.json --noEmit` czysty).
-
-- **Co robi:** w panelu wybranego dnia przełącznik „Lista | Oś godzin”. Lista zostaje domyślna. Oś to wiersze po godzinach z napisem `07:00`; zmiana z Grafiku jest paskiem w lewej kolumnie (przerwa jaśniejsza), a każdy termin stoi w swojej godzinie z dokładnym czasem i pełnym tytułem. Terminy „cały dzień” są nad osią, bez godziny.
-- **Gdzie jest:** `src/lib/dayTimeline.ts` (czysta logika: `shiftPieces`, `timelineHours`, `hourBackground`, `minutesOfDay`), `src/components/calendar/DayTimeline.tsx` (widok osi, `TimelineItem`), `src/components/calendar/DayPanel.tsx` (przełącznik `ToggleGroup`, stan `view`, warunkowe renderowanie), `src/lib/reminderOccurrences.ts` (pole `Occurrence.allDay` z `note.reminderAllDay`).
-- **Jak działa:** zakres osi to co najmniej 7–21, a rozszerza się, gdy zmiana albo termin wychodzi poza ten przedział (w granicach doby). Pasek zmiany to gradient CSS w każdym wierszu: każdy wiersz dostaje tylko swój fragment (np. zmiana od 14:30 daje połowę wiersza 14:00). Dzięki temu wiersz może rosnąć od wielu terminów bez przesunięć paska. Klik w termin otwiera edycję, Shift+←/→ przesuwa o dzień, prognoza serii otwiera najbliższy zapisany termin — tak jak w liście.
-- **Decyzje:** oś ma sens tylko dla zmiany, bo ma godziny; przypomnienie zostaje punktem, a nie blokiem (stary komentarz w `DayPanel` o braku osi został zastąpiony). Lista zostaje domyślna, bo tam są eksport `.ics` i opisy prognoz. Przerwa i pasek korzystają z `shiftSpan`/`breakOffset` z `lib/shifts/time.ts`, więc są spójne z eksportem i sumą godzin. Urlop nie ma paska.
-- **Ograniczenie:** zmiana przez północ rysuje się tylko do 24:00 (część po północy nie wchodzi na oś tego dnia). Przerwa bez godziny (`breakAt`) nie ma miejsca na osi — zmiana rysuje się jako jeden odcinek. Oś nie pokazuje minut na skali (wiersz to godzina, a dokładny czas jest w tekście terminu). Kompozytor nowej notatki nie zmienia się.
-- **Testy:** `src/lib/dayTimeline.test.ts` (odcinki zmiany, przerwa, urlop, zakres osi, gradient w godzinie, minuty), `src/lib/reminderOccurrences.test.ts` (grupa „cały dzień”: flaga w wystąpieniach jednorazowych i serii). E2E `e2e/day-timeline.spec.ts`: termin ląduje w wierszu 23:00 na osi, lista jest domyślna; 360 px bez poziomego przewijania (zrzut sprawdzony).
-- **Commit:** w commicie z tym wpisem, 2026-10-19.
-
-## Kalendarz — skróty w oknie terminu (K3 planu kalendarza/przypomnień, 2026-10-19)
-
-- **Co robi:** Ctrl+Enter (na Macu ⌘+Enter) z dowolnego pola okna „Nowy termin” (także z godziny i powtarzania) tworzy notatkę z terminem, a w edycji zapisuje termin — to samo co przycisk. Zwykły Enter w polu tekstu działa jak dotąd. Przycisk ma `aria-keyshortcuts`.
-- **Gdzie jest:** `src/components/calendar/ReminderQuickAddDialog.tsx` (`handleShortcut` na `ResponsiveDialogContent`, `onKeyDown`).
-- **Jak działa:** skrót nie zapisuje, gdy godzina jest niepoprawna (`timestamp === null`), a przy dodawaniu wymaga tytułu. Przyjmuje się zdarzenie z całego okna, więc działa z fokusem w każdym polu.
-- **Testy:** `e2e/reminders-calendar.spec.ts` („Ctrl+Enter z pola godziny tworzy notatkę z terminem (K3)”) — sprawdza, że okno się zamyka i dzień ma jeden termin. Uruchomiony: przechodzi.
-- **Nie zrobione z K3:** podpowiedzi skrótów widoczne w interfejsie (tylko `aria-keyshortcuts` i zachowanie).
-- **Commit:** 19f2ade, 2026-10-19.
 
 ## Praca — porządki po planie (L1, L2, L6, T4, T6, T2 częściowo, C4 — 2026-10-19)
 
@@ -3981,39 +4073,6 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
   - D5 — pierwotnie zostawiono model wpisu (jeden klucz Y.Map). 2026-10-20 właściciel zdecydował „rób D5” i model został zmieniony — patrz „Pola wpisu osobno (D5)” w sekcji „Praca → Dziennik budowy”.
   - P3 — decyzja: odłożenie dotyczy tylko jednego wystąpienia. Nie zrobione: dziś „Odłóż” z powiadomienia zapisuje nowy `reminder` notatki, czyli przesuwa kotwicę całej serii. Zrobione w kolejnej sesji (2026-10-19, bez commita) — patrz „Przypomnienia — odłożenie jednego wystąpienia serii”.
 - **Commit:** 19f2ade, 2026-10-19; testy T2 w 4fdd64f, 2026-10-19.
-
-## Przypomnienia — odłożenie jednego wystąpienia serii (P3, 2026-10-19, 3c07051)
-
-- **Co robi:** „Odłóż” (10 minut, jutro o 9:00), także z powiadomienia systemowego i push, działa dla przypomnień cyklicznych. Odkłada tylko to jedno wystąpienie: kolejne są jak wcześniej, od swojego terminu, a nie od chwili odłożenia. Dotąd „Odłóż” było ukryte dla serii, a z powiadomienia przesuwało całą serię.
-- **Gdzie jest:**
-  - `src/lib/reminderSpec.ts` — pole `reminderBase` (termin serii, który zastępuje odłożona chwila w `reminder`). `mergeSpec`: zapis `reminder` bez jawnego `reminderBase` go czyści, więc zwykła zmiana terminu nie zostawia starego odłożenia.
-  - `src/lib/reminderRepeat.ts` — `nextOccurrence(note, at)`: następne wystąpienie serii; gdy `at` to odłożone wystąpienie, liczy od `reminderBase`. `snoozeTarget(note, at, now)`: zapis po odłożeniu.
-  - `src/hooks/useReminderNotifications.ts` — `applyActionRef` (akcja z SW i z kolejki przy starcie) i przyciski dymku zapisują przez `snoozeTarget`; `onReminderFired` dostaje czwarty argument `reminderBase`.
-  - `src/components/ReminderDueToast.tsx` — usunięty prop `canSnooze`; „Odłóż” zawsze w dymku.
-  - `src/pages/Index.tsx` — callbacki przekazują `reminderBase` do `updateNote`; `onSetReminder` kalendarza też.
-  - Liczenie serii, które zmieniły się na `nextOccurrence`: `src/lib/reminderDue.ts` (planer odpaleń), `src/lib/reminderOccurrences.ts` (kalendarz i Dziś), `src/lib/push/schedule.ts` (harmonogram push), `src/components/calendar/ReminderCalendarView.tsx` („Pomiń” wystąpienie).
-  - Przepływ danych: `src/hooks/useNotes.ts` (typ `Note.reminderBase`), `src/lib/noteSchema.ts`, `src/lib/mergeNotes.ts` (scalanie kopii), `src/lib/yjsStore.ts` (zapis i projekcja `reminderSpec`).
-  - `push-server/core.js` — tylko komentarz: przycisk „Odłóż” dla serii też.
-- **Jak działa i dlaczego:**
-  - Odłożenie zapisuje `reminder` = odłożona chwila i `reminderBase` = termin serii, który ona zastępuje. Dzięki temu kolejne wystąpienia nie przesuwają się — wszystkie czytniki `nextOccurrence` liczą od bazy.
-  - Odłożona chwila zawsze wypada przed następnym terminem serii (`snoozeTarget` zastępuje ją zwykłym terminem, gdyby wypadała później). Dzięki temu nie ma dwóch przypomnień w kolejności odwrotnej ani podwójnego odpalenia.
-  - Zaległości: po nieobecności aplikacji `snoozeTarget` przesuwa bazę na ostatnie wystąpienie, które już minęło (`now`), więc odłożenie nie wraca od razu.
-  - Dlaczego pole w spec, a nie osobna struktura: całe przypomnienie idzie jednym zapisem `reminderSpec` (LWW), więc konflikt dwóch urządzeń nie może zostawić mieszanki bazy i terminu.
-- **Ograniczenia i pułapki:**
-  - „Gotowe” w serii przechodzi do następnego wystąpienia (`doneTarget` w `reminderRepeat.ts`); koniec serii zapisuje `reminder = null`. Zaległe wystąpienia są pomijane. Decyzja właściciela 2026-10-19.
-  - Stare notatki bez `reminderBase` działają jak dotąd.
-  - Przesunięcie serii w kalendarzu (przeciągnięcie, „Termin zapisany”) czyści odłożenie: to nowy termin serii.
-- **Testy:**
-  - `src/lib/reminderRepeat.test.ts` — `nextOccurrence` (bez i z bazą, tygodniowa, jednorazowa) i `snoozeTarget` (jednorazowa, przed kolejnym terminem, po nim, zaległe, seria zakończona).
-  - `src/lib/reminderSpec.test.ts` — zapis i odczyt bazy, czyszczenie przy nowym terminie, jawne `undefined`.
-  - `src/lib/reminderDue.test.ts` — odłożone wystąpienie odpala się raz, następne od terminu serii.
-  - `src/lib/yjsStore.reminder.test.ts` — baza wraca po synchronizacji i gaśnie przy zwykłym terminie.
-  - Istniejące testy (`reminderOccurrences`, `push/*`, `ReminderDueToast`) przechodzą bez zmian.
-  - e2e nie uruchomiono (pamięć); na telefonie nie sprawdzono.
-- **Nie zrobione / do potwierdzenia:**
-  - Decyzja właściciela (2026-10-19): „Gotowe” w serii przechodzi do następnego wystąpienia — wdrożone (`markDone` w `useReminderNotifications.ts`, `doneTarget` w `reminderRepeat.ts`, testy w `reminderRepeat.test.ts`).
-  - Brak e2e dla odłożenia serii i testu na telefonie.
-- **Commit:** 3c07051, 2026-10-19.
 
 ## Praca — nagranie głosowe w wpisie (U8, 2026-10-19, 5581ece)
 
@@ -4111,164 +4170,6 @@ Dział opisany w jednym miejscu; obejmuje fazy 1–3 planu z 2026-10-19 i zgodę
 - `842db18` (2026-10-19 / 2026-10-20) — faza 3: reset per sekcja i linki `?settings=`.
 - `c2eeb7f` (2026-10-20) — zgoda na dyktowanie i porządki.
 - `ed7d2ce` — hash w `opis.md`.
-
-## Synchronizacja — urządzenia w grupie i nazwy, faza 4 planu synchronizacji (2026-10-20, 842db18)
-
-- **Co robi:**
-  - Karta „Urządzenia w grupie” w Ustawieniach → Synchronizacja: lista innych urządzeń połączonych teraz (nazwy), pole „Nazwa tego urządzenia” (domyślnie „Telefon” albo „Komputer” wg przeglądarki).
-  - Po połączeniu nowego urządzenia pojawia się toast „Połączono z: [nazwa]”.
-  - Sekcja kodu nazywa się „Dodaj urządzenie” (QR i kod, bez zmian w działaniu).
-  - „Zapomnij i zacznij od nowa” zmienione na „Odłącz to urządzenie”, z potwierdzeniem, które mówi, że pozostałe urządzenia zostają w grupie.
-  - Serwery sygnalizacyjne nazwane „Serwery łączące urządzenia”; diagnoza bez słowa „sygnalizacja”.
-- **Gdzie jest:**
-  - `src/lib/yjsSync.ts` — `SyncDevice`, `SyncState.devices`, `getDeviceName` / `setDeviceName` / `defaultDeviceName` (klucz `kaczy.sync.deviceName`), `refreshDevices` (awareness pierwszego pokoju v2), wpięcie w `connect()` i `disconnectProvider()`.
-  - `src/components/SyncSettings.tsx` — lista urządzeń, formularz nazwy, nowe napisy przycisku i potwierdzenia.
-- **Jak działa i dlaczego:**
-  - Nazwa idzie przez awareness y-webrtc (`setLocalStateField("device", …)`), więc nie zmienia protokołu ani danych w Yjs. Każde urządzenie ma własne `clientID`, a lista pomija własne.
-  - „Odłącz” działa tylko lokalnie: wspólny kod nie daje sposobu, by z zewnątrz wyrzucić jedno urządzenie. Stąd rozdzielenie na „to urządzenie” i listę pozostałych.
-- **Ograniczenia i pułapki:**
-  - Lista pokazuje tylko urządzenia w pokoju v2. Przy włączonej zgodności ze starą wersją urządzenie widoczne tylko w starym pokoju się nie pojawi (każdy provider ma własne `clientID`).
-  - „Ostatnia synchronizacja” per urządzenie nie istnieje — awareness jej nie niesie. Zostaje globalna z kafla diagnozy.
-  - Komunikat o zmianie z konkretnym tytułem notatki (punkt 3 planu) **nie zrobiony**: wymaga porównania dokumentu przed i po zmianie.
-  - Ten kod wchodzi do bundla eager (`yjsSync` jest importowany przez `NotesProvider`): ok. +700 B gzip, co przekracza próg `bundle.spec.ts`. Patrz decyzja w planie synchronizacji.
-- **Testy:**
-  - `src/lib/yjsSync.test.ts` — blok „urządzenia w grupie (faza 4)”: nazwa domyślna i zapamiętana, przycinanie, pusta nazwa, lista bez siebie i czyszczenie przy odłączeniu. `MockProvider` ma teraz `awareness`.
-  - `e2e/sync-code.spec.ts` przechodzi bez zmian.
-
-## Kalendarz — fazy 1 i 2 planu (2026-10-20, 518871f)
-
-- **Co robi:**
-  - W edycji terminu pole „Dzień” przenosi termin na inny dzień (telefon nie przeciąga chipów). Działa też dla serii: przesuwa całą serię.
-  - Pominięcie ostatniego terminu serii pokazuje „Seria zakończona”, nie zwykłe „Wystąpienie pominięte”.
-  - Cofnięcie (Cofnij) przywraca też odłożenie (`reminderBase`) — przed zmianą zapamiętywane przez `previousOf`.
-  - Dzień z Pracy (wizyty i dostawy) widać w panelu dnia, nie tylko w komórce.
-  - Etykieta edycji podaje godzinę i powtarzanie; prognoza serii to pusty krąg, zapisany termin pełny kropka (różnica kształtem).
-  - „Dziś” widać także w bieżącym miesiącu, gdy wybrany dzień to nie dziś.
-  - Pominięcie wystąpienia serii z wiersza panelu dnia (bez otwierania dialogu).
-  - Po przesunięciu, pominięciu i usunięciu fokus wraca na komórkę dnia.
-  - Wybór listy/osi godzin zapamiętany w `kaczy.calendar.dayView`.
-  - Zmiana czasu: godzina z przeskoku wiosennego (np. 02:30) jest odrzucana i pokazany jest komunikat; przeniesienie na taki dzień nie przesuwa po cichu.
-  - ICS: `UNTIL` ma ten sam typ co `DTSTART` (lokalny, bez „Z”), zgodnie z RFC 5545.
-  - Seria zapisana dawno temu (>400 kroków wstecz) nadal pokazuje bieżący miesiąc.
-- **Gdzie jest:**
-  - `src/components/calendar/ReminderQuickAddDialog.tsx` — pole „Dzień” (tylko w edycji), komunikat o nieistniejącej godzinie.
-  - `src/components/calendar/ReminderCalendarView.tsx` — `handleSkip` (komunikat końca serii), `previousOf` w cofnięciach, `moveToDay` (odmowa przy nieistniejącej godzinie), `focusDay`, przycisk „Dziś”, `studyMarks` do `DayPanel`.
-  - `src/components/calendar/DayPanel.tsx` — linia Pracy, przycisk pominięcia, `readDayView` / `writeDayView`, etykieta edycji.
-  - `src/components/calendar/DayCell.tsx` — `data-day-key`, kształt kropki.
-  - `src/lib/study/calendarMarks.ts` — `studySummary` (przeniesione z `DayCell`).
-  - `src/lib/reminderTime.ts` — `composeReminderTimestamp` zwraca `null` dla godzin nieistniejących.
-  - `src/lib/icsExport.ts` — `eventLines`, `UNTIL` przez `formatLocal`.
-  - `src/lib/reminderOccurrences.ts` — `expandOccurrences` przewija do `rangeStart` (`MAX_SKIP_STEPS`); `isNext` tylko dla zapisanego terminu.
-  - `src/pages/Index.tsx` — kalendarz dostaje `reminderNotes` (wcześniej nowa tablica przy każdym renderze).
-- **Ograniczenia i pułapki:**
-  - Nie zrobione z fazy 1: pole całodniowe w dialogu, odwołanie `formatUtc` z `DTSTART` (już nie dotyczy).
-  - Nie zrobione z fazy 2: całodniowe w dialogu (2d, wymaga przekazania `allDay` przez `onCreateNote`), scalenie duplikatów (2f), widok tygodnia (3a), druk (3b), historia serii (3c — decyzja właściciela).
-  - Szerokość komórki siatki na 320 px to ok. 42 px, poniżej 44 px; wysokość 56 px jest ok. Pełne 44 px wymaga zmiany układu.
-- **Testy:**
-  - `src/lib/reminderTime.test.ts` — blok „zmiana czasu (Europe/Warsaw)”.
-  - `src/lib/icsExport.test.ts` — „RRULE dostaje UNTIL tego samego typu co DTSTART”.
-  - `src/lib/reminderOccurrences.test.ts` — „seria zapisana dawno temu”, `isNext` tylko dla zapisanego terminu.
-  - `e2e/calendar-phase1.spec.ts` — pole „Dzień” w edycji przenosi termin.
-
-## Przypomnienia — faza 1 planu (2026-10-20, 0ae3808)
-
-- **Co robi:**
-  - Grupy w widoku Terminy mają nagłówki `<h2>` (nawigacja po nagłówkach).
-  - Przyciski „Gotowe” i „Jutro” na zaległym terminie mają cel dotyku 44 px na dotyku.
-  - Zaległy termin ma dla czytnika ekranu prefiks „Zaległe:”.
-  - Nowy chip „+1 h” obok „Jutro” (odłożenie o godzinę, `snoozeTimes().inHour`).
-  - Pusty stan („Brak przypomnień”) nie pokazuje się, gdy w Terminach są wiersze z archiwum.
-  - Obrys fokusu z klawiatury zostaje także na dotyku (usunięte blanket `outline: none !important`).
-- **Gdzie jest:**
-  - `src/components/NoteGroupSection.tsx` — nagłówek grupy.
-  - `src/components/NoteCardBody.tsx` — przyciski „Gotowe”, „Jutro”, „+1 h”.
-  - `src/components/ReminderPicker.tsx` — `ReminderBadge` z prefiksem `sr-only`.
-  - `src/pages/Index.tsx` — `reminderRowCount` w warunku pustego stanu.
-  - `src/lib/reminderAgenda.ts` — `snoozeTimes` zwraca `inHour`.
-  - `src/hooks/useOverdueBadge.ts` — poprawiony komentarz (archiwum liczy się).
-  - `src/index.css` — usunięta reguła zdejmująca obrys na dotyku.
-- **Ograniczenia i pułapki:**
-  - Wiersze „Gotowe” dla nadchodzących (D2) są w fazach 2–3 niżej. Odznaka terminu ma 12 px, a „Zaległe” przełącza się bez odświeżania listy (`useReminderPassed`) — patrz „Przypomnienia — dokończenie fazy 1”.
-  - Usunięcie blanket obrysu jest zmianą wyglądu na dotyku — do sprawdzenia na telefonie.
-- **Testy:**
-  - `src/lib/reminderAgenda.test.ts` — „pusta lista” i „odłożenie o godzinę”.
-  - e2e: pełny przebieg chromium 389/389 przy progu bundla 390 KB.
-
-## Przypomnienia — fazy 2–3 planu wg decyzji D1–D4 (2026-10-20, ebe2567)
-
-- **Co robi:**
-  - „Gotowe” przy każdym terminie w widoku Terminy, nie tylko zaległym (D2). Poza Terminami przycisk działa jak dotąd, tylko dla zaległych.
-  - „Gotowe” na serii kończy bieżące wystąpienie i przechodzi do następnego, jak powiadomienie (D3). Koniec serii albo zwykły termin zdejmuje przypomnienie. Cofnij przywraca termin, dzień serii i odłożenie.
-  - „Jutro rano” i „+1 h” nie przepisują dnia serii (2b). Wcześniej `updateNote` wyprowadzał `reminderDay` z nowej godziny.
-  - Po „Gotowe”, „Jutro” i „+1 h” fokus przechodzi na sąsiedni kafel w grupie, a gdy go nie ma — na nagłówek grupy (2c).
-  - Archiwum ma osobną sekcję „W archiwum” na dole Terminów, z wyszukiwaniem, i nie wchodzi do grup „Zaległe”/„Nadchodzące” ani do licznika (D4).
-  - Licznik zaległych na pasku bocznym i w tytule karty liczy też terminy Pracy, czyli tę samą listę co Terminy (D1).
-- **Gdzie jest:**
-  - `src/hooks/NoteViewActionsContext.tsx` — pole `reminderActions`; `src/components/NoteGrid.tsx` i `src/components/NoteCard.tsx` — przekazanie do kafla.
-  - `src/components/NoteCardBody.tsx` — przyciski terminu, `focusAfterRemoval`, `doneTarget` / `seriesDay` z `reminderRepeat.ts`.
-  - `src/pages/Index.tsx` — `reminderGroups`, `archivedRows`, `reminderRowCount`, sekcja „W archiwum”, `useOverdueBadge(notes, useStudyOverdueCount())`, montowanie `StudyOverdueSync`.
-  - `src/hooks/useOverdueBadge.ts` — drugi argument `extra` (zaległości spoza notatek) w tym samym liczniku co tytuł i ikona.
-  - `src/lib/studyOverdueCount.ts` — mały store (`setStudyOverdueCount`, `useStudyOverdueCount`), bez danych Pracy.
-  - `src/components/review/StudyOverdueSync.tsx` — leniwy komponent bez wyglądu, który liczy `studyDueRows` i podaje liczbę do store.
-- **Ograniczenia i pułapki:**
-  - Liczba z Pracy zawiera też serwis przypadający dziś — tak jak lista Terminów. Licznik nie jest więc „po terminie” w sensie ścisłym.
-  - `StudyOverdueSync` montuje się zawsze, więc dane Pracy ładują się przy starcie (leniwy chunk, ale nie tylko na widoku Pracy).
-  - Liczba z Pracy jest liczona przy renderze; zmiana doby bez zmiany dziennika odświeża ją dopiero po zmianie danych.
-  - Fokus po akcji wybiera pierwszy przycisk sąsiedniego kafla, a nie zawsze „Gotowe”.
-  - Porządki (3b): jedna definicja końca dnia (`endOfDay(date)` w `reminderRepeat.ts`); funkcja z `dueTerms.ts` przemianowana na `endOfDayOffset(t, plusDays)`. Jedno sortowanie agendy (`byReminderAsc`) dla listy Terminów i grup.
-- **Testy:**
-  - `src/hooks/useOverdueBadge.test.ts` — „adds terminy Pracy do tytułu i ikony”.
-  - `e2e/reminders-phase2.spec.ts` — „Gotowe” przy nadchodzącym terminie zdejmuje go z Terminów.
-  - e2e pełny przebieg chromium: 391/391 (Commit: ebe2567).
-
-## Przypomnienia — dokończenie fazy 1 planu (2026-10-20, 018d791)
-
-- **Co robi:**
-  - Pusty widok Terminy ma przycisk „Nowa notatka”, który otwiera edytor (1d). Pokazuje się tylko w Terminach, gdy nie ma żadnego wiersza.
-  - Odznaka terminu na kaflu ma 12 px zamiast 11 px (15).
-  - Kafel przełącza się na „Gotowe” i „Zaległe” w chwili, gdy termin minie, nawet gdy lista notatek się nie zmienia (14). Dawniej warunek liczył się tylko przy renderze.
-  - Ogłoszenie po odhaczeniu (17) nie wymagało zmian: toasty sonnera mają `aria-live="polite"`.
-- **Gdzie jest:**
-  - `src/hooks/useReminderPassed.ts` — `useReminderPassed(at)`: boolean, który przełącza się przez `setTimeout` co najwyżej do terminu (dłuższe terminy w kilku krokach, bo `setTimeout` ma limit ok. 24,8 dnia).
-  - `src/components/NoteCardBody.tsx` — warunek przycisków terminu korzysta z `useReminderPassed`.
-  - `src/components/ReminderPicker.tsx` — `ReminderBadge` używa tego samego hooka do koloru i prefiksu „Zaległe:”.
-  - `src/components/EmptyState.tsx` — prop `onNew` i przycisk „Nowa notatka”; `src/pages/Index.tsx` podaje `onNew={() => expandAddNote()}`.
-- **Ograniczenia i pułapki:**
-  - Każda odznaka z przyszłym terminem ma jeden `setTimeout`. Odznaki bez terminu nie mają timera.
-  - Przycisk „Nowa notatka” otwiera zwykły kompozytor, nie kompozytor z terminem. Termin dodaje się w kompozytorze albo w widoku Kalendarza.
-  - Odznaka 12 px zwiększa wysokość kafla, jeśli ma zawijać się w wąskim kaflu — do sprawdzenia na telefonie.
-- **Testy:**
-  - `src/hooks/useReminderPassed.test.ts` — przełączenie co do milisekundy, termin już minął, termin dalej niż limit `setTimeout`, zmiana terminu.
-  - `e2e/reminders-phase2.spec.ts` — „pusty widok Terminów: „Nowa notatka” otwiera edytor”.
-  - e2e: 30 testów związanych z przypomnieniami i kaflami na chromium przechodzi; pełny przebieg nie był uruchamiany w tej sesji.
-
-## Kalendarz — fazy 2d, 2f, 3a, 3b planu (2026-10-20, 11ef99f)
-
-- **Co robi:**
-  - Dialog terminu ma „Cały dzień”: godziny nie widać, termin stoi na 9:00. Flaga `reminderAllDay` idzie przy tworzeniu, edycji, przeciąganiu i cofnięciu (2d).
-  - Na telefonie przełącznik „Miesiąc / Tydzień”: tydzień pokazuje pasek 7 dni (`WeekStrip`) zamiast siatki. Na większym ekranie bez zmian (3a).
-  - Przycisk „Drukuj” w nagłówku: drukuje listę terminów bieżącego miesiąca, dzień po dniu, z oznaczeniem prognozy serii (3b).
-  - Duplikat `endOfDay` w `dueTerms.ts` używa wspólnej funkcji z `reminderRepeat.ts` (2f, część — odznaka zmiany i etykiety „Bez tytułu” zostają).
-- **Gdzie jest:**
-  - `src/components/calendar/ReminderQuickAddDialog.tsx` — `allDay` w stanie, checkbox „Cały dzień”, `DEFAULT_REMINDER_TIME` zamiast godziny.
-  - `src/components/calendar/ReminderCalendarView.tsx` — `onSetReminder` ma szósty argument `reminderAllDay`; `previousOf` zapamiętuje `allDay`; przełącznik `phoneView`; przycisk „Drukuj” i `PrintRoot`.
-  - `src/components/calendar/CalendarPrintList.tsx` — lista wydruku (`report-paper`, `PrintRoot`).
-  - `src/pages/Index.tsx` — `onCreateNote` i `onSetReminder` przekazują `reminderAllDay`.
-  - `src/lib/dueTerms.ts` — `endOfDay` nakładka na `endOfDay` z `reminderRepeat.ts`.
-- **Ograniczenia i pułapki:**
-  - Tydzień na telefonie jest przełącznikiem, nie stałym widokiem; wybór nie jest zapamiętywany między wejściami.
-  - Wydruk pokazuje tylko terminy kalendarza (nie Pracę), a na papierze prognozy są oznaczone tekstem.
-  - Nie zrobione: 3c (historia serii) — decyzja właściciela z planu, bez zmiany.
-- **Testy:**
-  - `src/components/calendar/CalendarPrintList.test.tsx` — wydruk: godzina, „cały dzień”, prognoza, pusty miesiąc.
-  - `e2e/calendar-phase2.spec.ts` — „Cały dzień” bez godziny; przełącznik Miesiąc / Tydzień na 375 px.
-
-## Synchronizacja — toast z tytułem notatki, punkt 3 planu (2026-10-20, 89f1546)
-
-- **Co robi:** po zmianie z innego urządzenia toast mówi, która notatka się zmieniła („Zaktualizowano: …”). Notatki prywatne i bez tytułu pokazują zwykły komunikat.
-- **Gdzie jest:** `src/lib/yjsSync.ts` — `changedNoteTitle()` porównuje `updatedAt` notatek z poprzednim zdalnym zapisem (`remoteSeenUpdated`), wywoływane w handlerze `yjsStore.doc.on("update")`.
-- **Ograniczenia i pułapki:** porównanie obejmuje też lokalne edycje od ostatniego zdalnego zapisu, więc przy kilku zmianach naraz tytuł może wskazać lokalną notatkę. Toast nadal co 30 s, tak jak wcześniej.
-- **Testy:** e2e pełny przebieg 393/393. `src/lib/yjsSync.test.ts` przechodzi bez zmian (25/25). Sam toast nie ma testu jednostkowego; do sprawdzenia na dwóch urządzeniach.
 
 ## Ćwiczenia — stan aktualny (odżywki, dieta, trening)
 
