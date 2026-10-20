@@ -49,6 +49,8 @@ export default tseslint.config(
       "src/lib/imageSync.test.ts",
       "src/lib/shifts/yShifts.ts",
       "src/lib/shifts/yShifts.test.ts",
+      // Premie: test synchronizacji w dokumencie Yjs (ten sam wzorzec co yShifts).
+      "src/lib/shifts/bonus.test.ts",
       "src/lib/study/yStudy.ts",
       "src/lib/study/yStudy.test.ts",
       // Odżywki: warstwa Yjs w dokumencie notatek (wzorem yStudy/yDebts), testy na własnym Y.Doc.

@@ -416,7 +416,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
 
         </div>
         <div className="order-10 @container short:col-span-2">
-          <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(shownMonth, "LLLL yyyy", { locale: pl })} onOpenSettings={() => setSettingsOpen(true)} />
+          <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(shownMonth, "LLLL yyyy", { locale: pl })} monthKey={format(shownMonth, "yyyy-MM")} onOpenSettings={() => setSettingsOpen(true)} />
         </div>
       </aside>
 

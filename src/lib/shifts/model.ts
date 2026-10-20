@@ -144,6 +144,34 @@ export interface ShiftData {
   /** Początek pory nocnej: 21, 22 albo 23 — trwa 8 h, między 21 a 7 (art. 151⁷ KP). */
   nightFrom: number;
   patterns: ShiftPattern[];
+  /** Premie w rachunku (zł brutto), przypisane do miesiąca. Doliczane do zarobku tego miesiąca. */
+  bonuses: ShiftBonus[];
+}
+
+/** Premia jednorazowa w danym miesiącu (np. nagroda, dodatek za wyjazd). */
+export interface ShiftBonus {
+  id: string;
+  /** Miesiąc `YYYY-MM`, do którego należy premia. */
+  month: string;
+  name: string;
+  /** Kwota brutto w zł, > 0. */
+  amount: number;
+}
+
+export const BONUS_NAME_MAX = 40;
+export const BONUS_MAX_AMOUNT = 1_000_000;
+export const BONUS_MAX_PER_DATA = 500;
+const MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+/** Dane premii z zewnątrz (kopia, peer) → poprawna premia albo `null`. */
+export function cleanBonus(raw: unknown): ShiftBonus | null {
+  const b = raw as Partial<ShiftBonus> | null;
+  if (!b || typeof b !== "object") return null;
+  if (typeof b.id !== "string" || !b.id || b.id.length > 64) return null;
+  if (typeof b.month !== "string" || !MONTH_RE.test(b.month)) return null;
+  if (typeof b.name !== "string" || !b.name.trim()) return null;
+  if (typeof b.amount !== "number" || !Number.isFinite(b.amount) || b.amount <= 0 || b.amount > BONUS_MAX_AMOUNT) return null;
+  return { id: b.id, month: b.month, name: b.name.trim().slice(0, BONUS_NAME_MAX), amount: Math.round(b.amount * 100) / 100 };
 }
 
 export const SHIFT_COLORS = ["#f59e0b", "#3b82f6", "#4f46e5", "#10b981", "#ef4444", "#ec4899", "#14b8a6", "#64748b"] as const;
@@ -194,6 +222,7 @@ export const EMPTY_SHIFT_DATA: ShiftData = {
   sundayFrom: 6,
   nightFrom: 22,
   patterns: DEFAULT_PATTERNS,
+  bonuses: [],
 };
 
 export const DEFAULT_LEAVE_DAYS = 20;
@@ -299,5 +328,6 @@ export function migrate(stored: unknown): ShiftData {
     sundayFrom: Number.isInteger(s.sundayFrom) && (s.sundayFrom as number) >= 0 && (s.sundayFrom as number) < 24 ? (s.sundayFrom as number) : 6,
     nightFrom: s.nightFrom === 21 || s.nightFrom === 23 ? s.nightFrom : 22,
     patterns: Array.isArray(s.patterns) ? s.patterns.filter(isPattern) : EMPTY_SHIFT_DATA.patterns,
+    bonuses: Array.isArray(s.bonuses) ? s.bonuses.slice(0, BONUS_MAX_PER_DATA).map(cleanBonus).filter((b): b is ShiftBonus => !!b) : [],
   };
 }

@@ -1,9 +1,12 @@
 import { useMemo, useState, type ReactNode } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { TriangleAlert, CalendarRange, Settings2 } from "lucide-react";
+import { TriangleAlert, CalendarRange, Settings2, Trash } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { toastWithUndo } from "@/lib/undoToast";
 import { pluralPl } from "@/lib/plural";
-import { FTE_OPTIONS, formatDuration, formatHoursShort, formatMoney, leaveBalance, useShifts, type MonthSummary, type PeriodSummary, type SettlementMonths, type WorkSystem } from "@/lib/shifts";
+import { deleteBonus, FTE_OPTIONS, formatDuration, formatHoursShort, formatMoney, leaveBalance, saveBonus, useShifts, type MonthSummary, type PeriodSummary, type SettlementMonths, type ShiftBonus, type WorkSystem } from "@/lib/shifts";
 import { PERIOD_LABELS } from "./labels";
 import { CountUp } from "./CountUp";
 import { LeaveMeter, YearSummaryDialog } from "./YearSummaryDialog";
@@ -20,6 +23,8 @@ interface ShiftSummaryProps {
   fte: number;
   /** „październik 2026” — nagłówek rachunku. */
   monthLabel: string;
+  /** `YYYY-MM` — miesiąc, do którego dodaje się premie. */
+  monthKey: string;
   onOpenSettings: () => void;
 }
 
@@ -33,7 +38,7 @@ const monthName = (year: number, month: number, pattern = "LLLL") => format(new 
  * Podsumowanie miesiąca. Sercem jest pasek normy: wypełnia się do wymiaru
  * czasu pracy, a nadwyżka (nadgodziny) dosuwa się za nim w kolorze akcentu.
  */
-export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths, fte, monthLabel, onOpenSettings }: ShiftSummaryProps) {
+export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths, fte, monthLabel, monthKey, onOpenSettings }: ShiftSummaryProps) {
   const { minutes, normMinutes, overtimeMinutes, dailyOvertimeMinutes, overtime100Minutes } = summary;
   const scale = Math.max(normMinutes, minutes, 1);
   // Nadgodziny dobowe mogą być i poniżej normy miesiąca — pasek dzieli faktycznie przepracowane godziny.
@@ -103,6 +108,8 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
       )}
 
       {summary.byType.length > 0 && <Receipt summary={summary} hourlyRate={hourlyRate} monthLabel={monthLabel} />}
+      <BonusPanel monthKey={monthKey} bonuses={summary.bonuses} />
+
 
       {/* Bieżące ustawienia w jednej linii — pola są w oknie „Ustawienia grafiku”. */}
       <button type="button" onClick={onOpenSettings} aria-label="Ustawienia grafiku"
@@ -187,7 +194,8 @@ function Receipt({ summary, hourlyRate, monthLabel }: { summary: MonthSummary; h
   });
   const base = lines.reduce((sum, l) => sum + (l.amount ?? 0), 0);
   // Reszta zarobku to dodatek za nadgodziny (50/100%) — w podstawie każda godzina już jest.
-  const premium = round2(summary.earnings - base);
+  // Premie w rachunku są osobnymi liniami, więc odejmujemy je przed wyliczeniem dodatku.
+  const premium = round2(summary.earnings - summary.bonusTotal - base);
 
   return (
     <div className="receipt font-mono text-xs sm:text-[0.8125rem] tabular-nums">
@@ -209,6 +217,9 @@ function Receipt({ summary, hourlyRate, monthLabel }: { summary: MonthSummary; h
           <ReceiptLine label={<span className="font-body font-medium">Dodatek za nadgodziny</span>}
             hours={formatDuration(summary.overtimeMinutes)} amount={formatMoney(premium)} />
         )}
+        {paid && summary.bonuses.map((b) => (
+          <ReceiptLine key={b.id} label={<span className="font-body font-medium truncate">Premia: {b.name}</span>} hours="" amount={formatMoney(b.amount)} />
+        ))}
       </ul>
       {paid && (
         <p className="mt-3 pt-2 border-t-[3px] border-double border-foreground/40 flex items-baseline justify-between gap-3">
@@ -228,5 +239,51 @@ function ReceiptLine({ label, hours, amount }: { label: ReactNode; hours: string
       <span className="shrink-0">{hours}</span>
       {amount !== undefined && <span className="shrink-0 w-26 text-right font-semibold">{amount}</span>}
     </li>
+  );
+}
+
+/** Premie w rachunku tego miesiąca: lista z usuwaniem (z „Cofnij”) i dodawanie. Kwoty brutto w zł. */
+function BonusPanel({ monthKey, bonuses }: { monthKey: string; bonuses: ShiftBonus[] }) {
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState("");
+  const value = Number(amount.trim().replace(",", "."));
+  const valid = name.trim().length > 0 && amount.trim() !== "" && Number.isFinite(value) && value > 0;
+
+  const add = () => {
+    if (!valid) return;
+    if (!saveBonus({ id: `b-${crypto.randomUUID()}`, month: monthKey, name, amount: value })) return;
+    setName("");
+    setAmount("");
+  };
+
+  const remove = (b: ShiftBonus) => {
+    const prev = deleteBonus(b.id);
+    if (prev) toastWithUndo("Usunięto premię", () => saveBonus(prev), { description: prev.name });
+  };
+
+  return (
+    <section aria-labelledby="bonus-title" className="rounded-card border border-border/60 bg-card p-4 space-y-3">
+      <h3 id="bonus-title" className="text-sm font-medium">Premie w tym miesiącu</h3>
+      {bonuses.length === 0 ? (
+        <p className="text-sm text-muted-foreground">Brak premii. Dodane kwoty doliczają się do zarobku brutto.</p>
+      ) : (
+        <ul className="divide-y divide-border/50" data-testid="bonus-list">
+          {bonuses.map((b) => (
+            <li key={b.id} className="flex items-center gap-3 py-2">
+              <span className="min-w-0 flex-1 truncate text-sm">{b.name}</span>
+              <span className="shrink-0 font-mono text-sm tabular-nums">{formatMoney(b.amount)}</span>
+              <Button variant="ghost" size="sm" className="coarse:h-11" aria-label={`Usuń premię: ${b.name}`} onClick={() => remove(b)}>
+                <Trash className="h-4 w-4" aria-hidden />
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <form className="grid gap-2 sm:grid-cols-[1fr_9rem_auto]" onSubmit={(e) => { e.preventDefault(); add(); }}>
+        <Input aria-label="Nazwa premii" placeholder="np. premia kwartalna" maxLength={40} value={name} onChange={(e) => setName(e.target.value)} />
+        <Input aria-label="Kwota premii (zł)" inputMode="decimal" placeholder="0,00" value={amount} onChange={(e) => setAmount(e.target.value)} className="tabular-nums" />
+        <Button type="submit" size="sm" disabled={!valid} className="coarse:h-11">Dodaj premię</Button>
+      </form>
+    </section>
   );
 }

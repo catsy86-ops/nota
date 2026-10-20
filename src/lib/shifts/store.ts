@@ -126,6 +126,9 @@ export function restoreShifts(data: ShiftData): void {
 
 export const savePattern: (pattern: ShiftPattern) => void = yShifts.savePattern;
 export const deletePattern = yShifts.deletePattern;
+/** Premie w rachunku: zapis (dodanie albo poprawka), usunięcie zwraca premię do cofnięcia. */
+export const saveBonus: (bonus: import("./model").ShiftBonus) => boolean = yShifts.saveBonus;
+export const deleteBonus: (id: string) => import("./model").ShiftBonus | null = yShifts.deleteBonus;
 
 const positive = (n: number) => (Number.isFinite(n) && n > 0 ? n : 0);
 

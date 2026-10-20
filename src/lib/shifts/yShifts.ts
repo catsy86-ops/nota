@@ -1,5 +1,5 @@
 import * as Y from "yjs";
-import { DEFAULT_LEAVE_DAYS, DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, shiftHours, type DayEntry, type SettlementMonths, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
+import { BONUS_MAX_PER_DATA, cleanBonus, DEFAULT_LEAVE_DAYS, DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, shiftHours, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
 
 /**
  * Grafik w Y.Doc — tym samym, który niosą synchronizacja P2P i plik, więc
@@ -35,6 +35,7 @@ export function createYShifts(doc: Y.Doc) {
   const types = doc.getMap<ShiftType>("shiftTypes");
   const days = doc.getMap<DayEntry>("shiftDays");
   const patterns = doc.getMap<ShiftPattern>("shiftPatterns");
+  const bonuses = doc.getMap<ShiftBonus>("shiftBonuses");
   const meta = doc.getMap<unknown>("shiftMeta");
   /** Urządzenia, których stary zapis jest już w dokumencie (id urządzenia → czas). */
   const migrations = doc.getMap<number>("shiftMigrations");
@@ -45,7 +46,7 @@ export function createYShifts(doc: Y.Doc) {
     snapshot = null;
     listeners.forEach((l) => l());
   };
-  for (const m of [types, days, patterns, meta]) m.observe(onChange);
+  for (const m of [types, days, patterns, bonuses, meta]) m.observe(onChange);
 
   /** Projekcja dokumentu na `ShiftData`, przez `migrate` — śmieci od peera nie wywrócą widoku. */
   function get(): ShiftData {
@@ -58,6 +59,7 @@ export function createYShifts(doc: Y.Doc) {
       types: meta.get("typesInit") ? Array.from(types.values()).sort(byOrder) : undefined,
       patterns: meta.get("patternsInit") ? Array.from(patterns.values()).sort(byOrder) : undefined,
       days: Object.fromEntries(days.entries()),
+      bonuses: Array.from(bonuses.values()),
     });
     return snapshot;
   }
@@ -202,6 +204,23 @@ export function createYShifts(doc: Y.Doc) {
     transact(() => { ensurePatterns(); patterns.delete(id); });
   }
 
+  /** Zapis premii (dodanie albo poprawka o tym samym id). `false` = niepoprawne dane albo pełna lista. */
+  function saveBonus(bonus: ShiftBonus): boolean {
+    const clean = cleanBonus(bonus);
+    if (!clean) return false;
+    if (!bonuses.has(clean.id) && bonuses.size >= BONUS_MAX_PER_DATA) return false;
+    transact(() => bonuses.set(clean.id, clean));
+    return true;
+  }
+
+  /** Usunięcie premii; zwraca ją, żeby dało się cofnąć. */
+  function deleteBonus(id: string): ShiftBonus | null {
+    const prev = cleanBonus(bonuses.get(id));
+    if (!prev) return null;
+    transact(() => bonuses.delete(id));
+    return prev;
+  }
+
   function setMeta(key: Meta, value: number | WorkSystem | SettlementMonths | boolean): void {
     transact(() => { if (meta.get(key) !== value) meta.set(key, value); });
   }
@@ -209,9 +228,10 @@ export function createYShifts(doc: Y.Doc) {
   /** Cały Grafik naraz (przywrócenie kopii) — zastępuje, nie scala. */
   function replaceAll(data: ShiftData): void {
     transact(() => {
-      for (const m of [types, days, patterns] as Y.Map<unknown>[]) for (const k of Array.from(m.keys())) m.delete(k);
+      for (const m of [types, days, patterns, bonuses] as Y.Map<unknown>[]) for (const k of Array.from(m.keys())) m.delete(k);
       data.types.forEach((t, i) => types.set(t.id, { ...t, order: i }));
       data.patterns.forEach((p, i) => patterns.set(p.id, { ...p, order: i }));
+      for (const b of data.bonuses ?? []) if (cleanBonus(b)) bonuses.set(b.id, cleanBonus(b) as ShiftBonus);
       for (const [k, e] of Object.entries(data.days)) days.set(k, e);
       meta.set("hourlyRate", data.hourlyRate);
       meta.set("workSystem", data.workSystem);
@@ -252,6 +272,10 @@ export function createYShifts(doc: Y.Doc) {
         for (const p of data.patterns) if (!patterns.has(p.id)) patterns.set(p.id, { ...p, order: order++ });
       }
       for (const [k, e] of Object.entries(data.days)) if (!days.has(k)) days.set(k, e);
+      for (const b of data.bonuses ?? []) {
+        const clean = cleanBonus(b);
+        if (clean && !bonuses.has(clean.id) && bonuses.size < BONUS_MAX_PER_DATA) bonuses.set(clean.id, clean);
+      }
       if (!meta.has("hourlyRate") && data.hourlyRate) meta.set("hourlyRate", data.hourlyRate);
       if (!meta.has("workSystem")) meta.set("workSystem", data.workSystem);
       if (!meta.has("settlementMonths") && data.settlementMonths !== 1) meta.set("settlementMonths", data.settlementMonths);
@@ -270,7 +294,7 @@ export function createYShifts(doc: Y.Doc) {
     get, subscribe, isMerged,
     setDayShift, setDayEntry, writeDays,
     saveShiftType, deleteShiftType, restoreShiftType, addDefaultShiftTypes, addPresetOnce,
-    savePattern, deletePattern, setMeta, replaceAll, mergeIn,
+    savePattern, deletePattern, saveBonus, deleteBonus, setMeta, replaceAll, mergeIn,
   };
 }
 
