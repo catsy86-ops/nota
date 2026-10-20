@@ -4440,4 +4440,4 @@ lub grupę”.
 - **Świadomie nie zrobione.** Zdjęcie szkła w nagłówku (`backdrop-filter`) — użytkownik zdecydował „zostaw”.
   Podział `AddNoteBar.tsx` (763 linie) — ryzyko bez e2e. Zrzuty telefonu — wymagają przeglądarki.
 - **Testy.** Komponenty (25 plików, 161 testów) zielone; typecheck i lint czyste; paczka 391,9 KB przy progu 392 KB.
-- **Commit:** `TBD` (2026-10-20, Notatki — dopracowanie).
+- **Commit:** `02c1560` (2026-10-20, Notatki — dopracowanie).
