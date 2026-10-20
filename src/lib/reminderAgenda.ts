@@ -58,6 +58,16 @@ export function countOverdue(notes: Pick<Note, "reminder">[], now: number = Date
   return n;
 }
 
+/**
+ * Przypomnienia do załatwienia dziś: zaległe, przegapione i na dziś (to, co widać na „Dziś”).
+ * Bez kosza; archiwum liczy się jak w `groupReminders`.
+ */
+export function countDueToday(notes: Note[], now: number = Date.now()): number {
+  return groupReminders(notes.filter((n) => !n.trashed), now)
+    .filter((g) => g.key === "overdue" || g.key === "missed" || g.key === "today")
+    .reduce((sum, g) => sum + g.notes.length, 0);
+}
+
 /** Terminy drzemki z toastu przypomnienia. */
 export function snoozeTimes(now: number = Date.now()): { in10min: number; inHour: number; tomorrow9: number } {
   const t = new Date(now);

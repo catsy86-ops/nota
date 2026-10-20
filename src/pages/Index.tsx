@@ -19,7 +19,7 @@ import { useViewPrefs, toggleGroupCollapsed } from "@/lib/viewPrefs";
 import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
 import { useViewRoute } from "@/hooks/useViewRoute";
 import { parseViewRoute } from "@/lib/viewRoute";
-import { groupReminders } from "@/lib/reminderAgenda";
+import { countDueToday, groupReminders } from "@/lib/reminderAgenda";
 import { useStudyOverdueCount } from "@/lib/studyOverdueCount";
 import { searchNotes } from "@/lib/searchNotes";
 import { resolveWikiTarget, splitWikiTarget } from "@/lib/wikiLinks";
@@ -306,7 +306,11 @@ const Index = () => {
     () => (view === "reminders" ? (deferredSearch ? searchNotes(archivedNotes, deferredSearch) : archivedNotes) : []),
     [view, deferredSearch, archivedNotes],
   );
-  const reminderRowCount = view === "reminders" ? reminderGroups.reduce((n, g) => n + g.notes.length, 0) + archivedRows.length : 0;
+  // Na „Dziś” liczą się zaległe i dzisiejsze przypomnienia, żeby „Brak notatek z dzisiaj” nie stał obok ich listy.
+  // Bez `useMemo`: Index i tak renderuje się po północy (useOverdueBadge → useDayClock).
+  const reminderRowCount = view === "reminders"
+    ? reminderGroups.reduce((n, g) => n + g.notes.length, 0) + archivedRows.length
+    : view === "today" ? countDueToday(reminderNotes) : 0;
 
   // Sekcje widoku: „Przypięte” (zwijane od 4 notatek) i reszta, opcjonalnie podzielona na grupy.
   // `visibleNotes` = to, co faktycznie jest na ekranie (bez zwiniętych) w kolejności widoku.
@@ -616,37 +620,49 @@ const Index = () => {
           {view === "notes" && <InstallBanner ready={notes.length >= 3} />}
           {view === "inbox" && !deferredSearch && <InboxCapture onCapture={captureToInbox} />}
 
+          {/* Każda karta Dziś ma własną granicę: błąd w danych Pracy nie kładzie całego widoku, który jest punktem wejścia. */}
           {view === "today" && !deferredSearch && (
-            <Suspense fallback={<CardSkeleton />}>
-              <TodayShiftCard onOpenShifts={() => go("shifts")} onDailyNote={openDailyNote} />
-            </Suspense>
+            <ViewErrorBoundary name="Grafik">
+              <Suspense fallback={<CardSkeleton />}>
+                <TodayShiftCard onOpenShifts={() => go("shifts")} onDailyNote={openDailyNote} />
+              </Suspense>
+            </ViewErrorBoundary>
           )}
 
           {view === "today" && !deferredSearch && (
-            <>
+            <ViewErrorBoundary name="Przypomnienia">
               <Suspense fallback={<CardSkeleton />}>
                 <TodayDueList notes={reminderNotes} onOpen={openNote} onOpenReminders={() => go("reminders")} />
               </Suspense>
+            </ViewErrorBoundary>
+          )}
+
+          {view === "today" && !deferredSearch && (
+            <ViewErrorBoundary name="Praca">
               <Suspense fallback={null}>
                 <StudyDueRows onOpenStudy={() => go("study")} />
               </Suspense>
-            </>
+            </ViewErrorBoundary>
           )}
 
           {view === "today" && !deferredSearch && (
-            <Suspense fallback={<CardSkeleton />}>
-              <TodayStudyCard onPractice={() => navigate("/praca?powtorka=1")} />
-            </Suspense>
+            <ViewErrorBoundary name="Powtórki">
+              <Suspense fallback={<CardSkeleton />}>
+                <TodayStudyCard onPractice={() => navigate("/praca?powtorka=1")} />
+              </Suspense>
+            </ViewErrorBoundary>
           )}
 
           {view === "today" && !deferredSearch && (
-            <Suspense fallback={<CardSkeleton />}>
-              <WeeklyReviewCard
-                notes={notes} folders={folders} onOpen={openNote} onTogglePin={togglePin}
-                onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow}
-                archiveNote={archiveNote} unarchiveNote={unarchiveNote} trashNote={trashNote} restoreFromTrash={restoreFromTrash}
-              />
-            </Suspense>
+            <ViewErrorBoundary name="Przegląd tygodnia">
+              <Suspense fallback={<CardSkeleton />}>
+                <WeeklyReviewCard
+                  notes={notes} folders={folders} onOpen={openNote} onTogglePin={togglePin}
+                  onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow}
+                  archiveNote={archiveNote} unarchiveNote={unarchiveNote} trashNote={trashNote} restoreFromTrash={restoreFromTrash}
+                />
+              </Suspense>
+            </ViewErrorBoundary>
           )}
 
           {canCompose && (

@@ -1,5 +1,5 @@
 import { describe, it, expect, afterEach, beforeAll, afterAll, vi } from "vitest";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
 import { TodayDueList } from "./TodayDueList";
 import type { Note } from "@/hooks/useNotes";
 
@@ -50,6 +50,18 @@ describe("TodayDueList", () => {
     render(<TodayDueList notes={notes} onOpen={() => {}} onOpenReminders={() => {}} />);
     expect(screen.getByText("i jeszcze 1 w Przypomnieniach")).toBeTruthy();
     expect(screen.getByTestId("today-due-count").textContent).toBe("6");
+  });
+
+  it("po zmianie doby przypomnienie, które minęło, przechodzi z „dziś” do zaległych", () => {
+    // Termin za pół godziny: na liście „dziś”. Potem zegar idzie dalej i karta wraca na pierwszy plan.
+    render(<TodayDueList notes={[note("x", now + HOUR / 2)]} onOpen={() => {}} onOpenReminders={() => {}} />);
+    expect(document.querySelector('[data-due-group="today"]')).toBeTruthy();
+    act(() => {
+      vi.setSystemTime(now + 2 * HOUR);
+      window.dispatchEvent(new Event("focus"));
+    });
+    expect(document.querySelector('[data-due-group="today"]')).toBeNull();
+    expect(screen.getByText("T-x")).toBeTruthy();
   });
 
   it("kliknięcie notatki zgłasza jej id", () => {

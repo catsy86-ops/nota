@@ -1,7 +1,7 @@
-import { useMemo } from "react";
 import { BellRing, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Note } from "@/hooks/useNotes";
+import { useDayClock } from "@/lib/dayClock";
 import { groupReminders, type AgendaGroupKey } from "@/lib/reminderAgenda";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { cn } from "@/lib/utils";
@@ -21,11 +21,11 @@ const GROUP_TONE: Record<Extract<AgendaGroupKey, "overdue" | "missed" | "today">
  * dalsze terminy są w Przypomnieniach.
  */
 export function TodayDueList({ notes, onOpen, onOpenReminders }: { notes: Note[]; onOpen: (id: string) => void; onOpenReminders: () => void }) {
-  const groups = useMemo(
-    // Archiwum też: jego przypomnienia nadal dzwonią, więc muszą być widoczne i liczone jak reszta.
-    () => groupReminders(notes.filter((n) => !n.trashed)).filter((g) => g.key === "overdue" || g.key === "missed" || g.key === "today"),
-    [notes],
-  );
+  // Subskrypcja zmiany doby (północ, powrót na kartę): po niej komponent renderuje się ponownie,
+  // a `Date.now()` poniżej jest świeże. Bez tego przypomnienie, które minęło, nie przechodzi do „Zaległe”.
+  useDayClock();
+  // Archiwum też: jego przypomnienia nadal dzwonią, więc muszą być widoczne i liczone jak reszta.
+  const groups = groupReminders(notes.filter((n) => !n.trashed), Date.now()).filter((g) => g.key === "overdue" || g.key === "missed" || g.key === "today");
   const total = groups.reduce((n, g) => n + g.notes.length, 0);
 
   return (

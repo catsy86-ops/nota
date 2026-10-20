@@ -1,7 +1,7 @@
-import { useMemo } from "react";
 import { HardHat, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useStudyReady } from "@/lib/study/data";
+import { useDayClock } from "@/lib/dayClock";
 import { useStudy } from "@/lib/study/store";
 import { studyReminders } from "@/lib/study/reminders";
 import { studyDueRows } from "@/lib/study/dueRows";
@@ -19,8 +19,10 @@ export function StudyDueRows({ onOpenStudy }: { onOpenStudy: () => void }) {
 
 function StudyDueRowsList({ onOpenStudy }: { onOpenStudy: () => void }) {
   const study = useStudy();
-  // Godzina z renderu: terminy Pracy zmieniają się wraz z dziennikiem i listami, a nie co minutę.
-  const rows = useMemo(() => studyDueRows(studyReminders(study.journal, Date.now(), study.sites)), [study.journal, study.sites]);
+  // Subskrypcja zmiany doby: po północy serwis i zamówienia z terminem „na dziś” mają przejść do listy,
+  // a `Date.now()` poniżej jest wtedy świeże.
+  useDayClock();
+  const rows = studyDueRows(studyReminders(study.journal, Date.now(), study.sites));
   if (rows.length === 0) return null;
   return (
     <section aria-label="Terminy z Praca" data-testid="study-due" className="rounded-card border border-border bg-card p-4 sm:p-5 space-y-3">
