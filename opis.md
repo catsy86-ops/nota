@@ -2138,6 +2138,18 @@ i nie będące podnotatkami. Przeniesienie do folderu albo nadanie etykiety usuw
   testuje komponent (brak testu `BottomNav`); sprawdzi go e2e przy okazji przeglądu telefonu.
 - **Commit:** `ba47169` (2026-10-20, Skrzynka).
 
+## Grafik — przegląd po audycie z 2026-10-09 (2026-10-20)
+
+- **Co zrobiono.** Sprawdzono w kodzie punkty z audytu (`grafik-audyt`). Były już naprawione: nieobecność tylko w dni normy,
+  podpowiedź liczby mnogiej, walidacja stawki (`migrate`, `rate`), usuwanie rodzaju z potwierdzeniem i „Cofnij”, kontrast
+  (`shiftInk`), siatka `role=grid` i strzałki, okresy rozliczeniowe i dodatki, DST, `.ics` (`SEQUENCE`, `LAST-MODIFIED`, kolejność
+  właściwości), kopia uszkodzonych danych, zegar w e2e (`shifts.spec.ts`, `shifts-week.spec.ts`).
+  Synchronizacja między kartami działa: Grafik jest w dokumencie Yjs, a `startTabSync` przenosi cały dokument.
+- **Poprawka:** dwa przyciski pędzla godzin (`BrushHours.tsx`, „zmiana” i „dodaj”) miały 40 px na dotyku; teraz 44 px (`coarse:h-11`).
+- **Zostaje (decyzje właściciela):** udostępnienie grafiku jako obraz, premie w rachunku, wiele grafików (z listy konkurencji
+  w `roadmap.md`).
+- **Commit:** `TBD` (2026-10-20, Grafik — przegląd).
+
 **Testy.** `src/lib/inbox.test.ts` (reguła skrzynki, podział tekstu), `src/components/InboxCapture.test.tsx` (Enter,
 pusty tekst), `e2e/inbox-today.spec.ts` (zapis, licznik w pasku, „Cofnij”, pusta skrzynka).
 

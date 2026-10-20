@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Clock, RotateCcw } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,7 +56,7 @@ export function BrushHours({ type, hours, onChange }: BrushHoursProps) {
   if (!open) {
     return (
       <button type="button" onClick={() => setOpen(true)}
-        className="pressable flex items-center gap-1.5 h-9 coarse:h-10 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+        className="pressable flex items-center gap-1.5 h-9 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
         <Clock className="w-4 h-4" /> Własne godziny dla „{type.name}”
       </button>
     );
@@ -83,7 +83,7 @@ export function BrushHours({ type, hours, onChange }: BrushHoursProps) {
           return (
             <button key={label} type="button" disabled={disabled}
               onClick={() => edit({ end: fromMin(toMin(draft.start) + h * 60) })}
-              className={cn("pressable h-8 coarse:h-10 px-2.5 rounded-lg border border-border/60 text-xs font-medium tabular-nums hover:bg-muted disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+              className={cn("pressable h-8 coarse:h-11 px-2.5 rounded-lg border border-border/60 text-xs font-medium tabular-nums hover:bg-muted disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
                 span === h * 60 && "bg-muted")}>
               {label}
             </button>
