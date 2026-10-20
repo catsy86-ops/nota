@@ -3495,7 +3495,7 @@ lub grupę”.
   Dopisane 2026-10-20: `src/lib/fullBackup.test.ts` (wpis Nauki o nieznanym rodzaju odpada, `studyDropped` = 1),
   `src/lib/study/siteItems.test.ts` (`composeSiteLists`, `stripLists`), `src/lib/study/workLine.test.ts`
   (`workLine`, `workMinutesOf`). Pełny Vitest: 183 pliki zielone.
-- **Commit:** `TBD` (2026-10-20, plan Pracy: D2 test, D3 i L2 sprawdzone, L1 częściowo, T3).
+- **Commit:** `304bbe8` (2026-10-20, plan Pracy: D2 test, D3 i L2 sprawdzone, L1 częściowo, T3).
 
 ## Praca — komunikaty, dotyk zakładek, testy dokumentów budowy (U2, U6, U4, T2, 2026-10-18)
 
