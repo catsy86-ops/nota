@@ -3,7 +3,7 @@ import { Download, Database, ShieldCheck, ShieldAlert, FileCog, FileDown } from 
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useViewPrefs, setViewPref, VIEW_PREF_GROUPS } from "@/lib/viewPrefs";
-import { describeSkippedAttachments, exportFullBackup, pickFullBackup, restoreFullBackup, type BackupAttachmentReport, type RestoreOptions } from "@/lib/exportNotes";
+import { buildFullBackup, describeSkippedAttachments, download, exportFullBackup, pickFullBackup, restoreFullBackup, type BackupAttachmentReport, type RestoreOptions } from "@/lib/exportNotes";
 import { describeBackupSkipped } from "@/lib/backupSkipped";
 import { dniPl } from "@/lib/plural";
 import type { FullBackup } from "@/lib/noteSchema";
@@ -171,6 +171,15 @@ function RestoreBackup() {
     if (!backup) return;
     setBusy(true);
     try {
+      // Najpierw kopia tego, co jest teraz — przywrócenie nadpisuje dane, a ten plik jest drogą powrotu.
+      try {
+        const current = await buildFullBackup();
+        download(JSON.stringify(current), `kaczy-przed-przywroceniem-${new Date().toISOString().slice(0, 10)}.json`, "application/json");
+      } catch (err) {
+        setBusy(false);
+        toast.error("Nie zapisałem kopii sprzed przywrócenia, więc przywracanie wstrzymane" + (err instanceof Error ? ": " + err.message : ""));
+        return;
+      }
       const { studyDropped, schedulesSkipped } = await restoreFullBackup(backup, opts);
       const notes: string[] = [];
       if (studyDropped > 0) notes.push(`Pominięto ${studyDropped} ${studyDropped === 1 ? "wpis Nauki" : "wpisy Nauki"} o nieznanym kształcie`);

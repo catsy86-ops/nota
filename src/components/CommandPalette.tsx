@@ -5,6 +5,7 @@ import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes, useSearchReady } from "@/lib/searchNotes";
 import { loadRecentSearches, saveRecentSearch } from "@/lib/recentSearches";
+import { loadRecentCommands, saveRecentCommand } from "@/lib/recentCommands";
 import { requestShiftDay, searchShiftDays, useShifts } from "@/lib/shifts";
 import { modShortcut } from "@/lib/platform";
 import { useNotesContext } from "@/hooks/NotesProvider";
@@ -42,6 +43,21 @@ interface Props {
   onCopyNote?: (format: "markdown" | "text") => void;
 }
 
+type NavItem = { id: Parameters<Props["onGo"]>[0]; label: string; Icon: typeof StickyNote; hint?: string };
+const NAV_ITEMS: NavItem[] = [
+  { id: "notes", label: "Notatki", Icon: StickyNote },
+  { id: "inbox", label: "Skrzynka", Icon: Inbox },
+  { id: "today", label: "Dziś", Icon: Calendar, hint: "Alt+T" },
+  { id: "reminders", label: "Przypomnienia", Icon: Bell },
+  { id: "calendar", label: "Kalendarz", Icon: CalendarRange },
+  { id: "shifts", label: "Grafik zmian", Icon: BriefcaseBusiness },
+  { id: "study", label: "Praca", Icon: HardHat },
+  { id: "debts", label: "Długi", Icon: HandCoins },
+  { id: "cwiczenia", label: "Ćwiczenia", Icon: Dumbbell },
+  { id: "archive", label: "Archiwum", Icon: Archive },
+  { id: "trash", label: "Kosz", Icon: Trash },
+];
+
 export function CommandPalette({
   open,
   onOpenChange,
@@ -75,6 +91,15 @@ export function CommandPalette({
     return searchShiftDays(search, shifts.days, types);
   }, [shifts, search]);
 
+  // Nawigacja jako dane: ta sama lista rysuje grupę i „Ostatnio użyte”.
+  const navKnown = NAV_ITEMS.map((n) => n.id);
+  const [recentCmds, setRecentCmds] = useState<string[]>(() => loadRecentCommands(navKnown));
+  const recentNav = recentCmds.map((id) => NAV_ITEMS.find((n) => n.id === id)).filter((n): n is NavItem => n !== undefined);
+  function goNav(id: NavItem["id"]) {
+    setRecentCmds(saveRecentCommand(navKnown, id));
+    onGo(id);
+  }
+
   function run(fn: () => void) {
     onOpenChange(false);
     setTimeout(fn, 0);
@@ -98,6 +123,18 @@ export function CommandPalette({
             )}
           </div>
         </CommandEmpty>
+        {recentNav.length > 0 && !search.trim() && (
+          <>
+            <CommandGroup heading="Ostatnio użyte">
+              {recentNav.map((n) => (
+                <CommandItem key={`recent-${n.id}`} value={`ostatnio ${n.label}`} onSelect={() => run(() => goNav(n.id))}>
+                  <n.Icon className="w-4 h-4 mr-2" /> {n.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
         {recent.length > 0 && !search.trim() && (
           <>
             <CommandGroup heading="Ostatnio szukane">
@@ -173,39 +210,12 @@ export function CommandPalette({
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="Nawigacja">
-          <CommandItem onSelect={() => run(() => onGo("notes"))}>
-            <StickyNote className="w-4 h-4 mr-2" /> Notatki
-          </CommandItem>
-          <CommandItem onSelect={() => run(() => onGo("inbox"))}>
-            <Inbox className="w-4 h-4 mr-2" /> Skrzynka
-          </CommandItem>
-          <CommandItem onSelect={() => run(() => onGo("today"))}>
-            <Calendar className="w-4 h-4 mr-2" /> Dziś <span className="ml-auto text-xs text-muted-foreground">Alt+T</span>
-          </CommandItem>
-          <CommandItem onSelect={() => run(() => onGo("reminders"))}>
-            <Bell className="w-4 h-4 mr-2" /> Przypomnienia
-          </CommandItem>
-          <CommandItem onSelect={() => run(() => onGo("calendar"))}>
-            <CalendarRange className="w-4 h-4 mr-2" /> Kalendarz
-          </CommandItem>
-          <CommandItem onSelect={() => run(() => onGo("shifts"))}>
-            <BriefcaseBusiness className="w-4 h-4 mr-2" /> Grafik zmian
-          </CommandItem>
-          <CommandItem onSelect={() => run(() => onGo("study"))}>
-            <HardHat className="w-4 h-4 mr-2" /> Praca
-          </CommandItem>
-          <CommandItem onSelect={() => run(() => onGo("debts"))}>
-            <HandCoins className="w-4 h-4 mr-2" /> Długi
-          </CommandItem>
-          <CommandItem onSelect={() => run(() => onGo("cwiczenia"))}>
-            <Dumbbell className="w-4 h-4 mr-2" /> Ćwiczenia
-          </CommandItem>
-          <CommandItem onSelect={() => run(() => onGo("archive"))}>
-            <Archive className="w-4 h-4 mr-2" /> Archiwum
-          </CommandItem>
-          <CommandItem onSelect={() => run(() => onGo("trash"))}>
-            <Trash className="w-4 h-4 mr-2" /> Kosz
-          </CommandItem>
+          {NAV_ITEMS.map((n) => (
+            <CommandItem key={n.id} value={`nawigacja ${n.label}`} onSelect={() => run(() => goNav(n.id))}>
+              <n.Icon className="w-4 h-4 mr-2" /> {n.label}
+              {n.hint && <span className="ml-auto text-xs text-muted-foreground">{n.hint}</span>}
+            </CommandItem>
+          ))}
         </CommandGroup>
         {shiftHits.length > 0 && (
           <>

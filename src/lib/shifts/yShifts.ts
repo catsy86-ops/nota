@@ -18,6 +18,8 @@ import { BONUS_MAX_PER_DATA, cleanBonus, DEFAULT_LEAVE_DAYS, DEFAULT_PATTERNS, D
 type Meta = "hourlyRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "leaveDays" | "overtimeFrom" | "sundayFrom" | "nightFrom" | "typesInit" | "patternsInit" | "presetBudowa" | "presetDniowka";
 
 /** Origin transakcji Grafiku — odróżnia lokalne zmiany od tych z sieci i z migracji. */
+/** Zmiany bez cofania: import, przywracanie kopii, migracje i Cofnij z tostu. Nie trafiają na stos Ctrl+Z. */
+export const SHIFTS_SYSTEM_ORIGIN = "shifts-system";
 export const SHIFTS_ORIGIN = "shifts";
 
 /** Do „Cofnij” po usunięciu rodzaju: tylko to, co usunięcie zabrało. */
@@ -80,6 +82,11 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
   }
 
   const transact = (fn: () => void, origin: string = SHIFTS_ORIGIN) => doc.transact(fn, origin);
+  const transactSystem = (fn: () => void) => doc.transact(fn, SHIFTS_SYSTEM_ORIGIN);
+
+  // Cofnij (Ctrl+Z) dla Grafiku: tylko lokalne zmiany dni. Zmiany z innego urządzenia (origin dostawcy)
+  // i zapisy systemowe nie są śledzone, więc Ctrl+Z nie cofa cudzych ani importowanych danych.
+  const undoManager = new Y.UndoManager([days], { trackedOrigins: new Set([SHIFTS_ORIGIN]), captureTimeout: 400 });
 
   /** Przed pierwszą zmianą rodzajów zapisuje widoczne startowe — od teraz żyją w dokumencie. */
   function ensureTypes() {
@@ -120,7 +127,7 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
    * wartości — „Cofnij” przywraca tylko te dni, a nie cały grafik, więc nie
    * kasuje tego, co w międzyczasie przyszło z innego urządzenia.
    */
-  function writeDays(next: Record<string, DayEntry | null>): Record<string, DayEntry | null> {
+  function writeDays(next: Record<string, DayEntry | null>, origin: string = SHIFTS_ORIGIN): Record<string, DayEntry | null> {
     const before: Record<string, DayEntry | null> = {};
     transact(() => {
       for (const [k, entry] of Object.entries(next)) {
@@ -128,7 +135,7 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
         if (entry) days.set(k, entry);
         else days.delete(k);
       }
-    });
+    }, origin);
     return before;
   }
 
@@ -237,7 +244,7 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
 
   /** Cały Grafik naraz (przywrócenie kopii) — zastępuje, nie scala. */
   function replaceAll(data: ShiftData): void {
-    transact(() => {
+    transactSystem(() => {
       for (const m of [types, days, patterns, bonuses] as Y.Map<unknown>[]) for (const k of Array.from(m.keys())) m.delete(k);
       data.types.forEach((t, i) => types.set(t.id, { ...t, order: i }));
       data.patterns.forEach((p, i) => patterns.set(p.id, { ...p, order: i }));
@@ -303,6 +310,8 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
   return {
     get, subscribe, isMerged,
     setDayShift, setDayEntry, writeDays,
+    undo: (): boolean => undoManager.undo() !== null,
+    canUndo: (): boolean => undoManager.canUndo(),
     saveShiftType, deleteShiftType, restoreShiftType, addDefaultShiftTypes, addPresetOnce,
     savePattern, deletePattern, saveBonus, deleteBonus, setMeta, replaceAll, mergeIn,
   };

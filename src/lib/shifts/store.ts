@@ -4,7 +4,7 @@ import { logDiag } from "@/lib/diagnostics";
 import { migrate, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
 import { applyPattern } from "./pattern";
 import { planPaste, planTransfer, planWeekCopy, type TransferMode, type WeekCopyPlan } from "./move";
-import { createYShifts, MAIN_SCHEDULE_ID, type DeletedShiftType, type YShifts } from "./yShifts";
+import { createYShifts, MAIN_SCHEDULE_ID, SHIFTS_SYSTEM_ORIGIN, type DeletedShiftType, type YShifts } from "./yShifts";
 import { createScheduleRegistry, isScheduleId, type ShiftSchedule } from "./schedules";
 
 /**
@@ -152,8 +152,12 @@ export function applyPatternToStore(steps: (string | null)[], startKey: string, 
 
 /** Przywraca dni zwrócone przez `applyPatternToStore`. */
 export function restoreDays(before: DaysBefore): void {
-  yShifts.writeDays(before);
+  yShifts.writeDays(before, SHIFTS_SYSTEM_ORIGIN);
 }
+
+/** Cofa ostatnią lokalną zmianę w Grafiku (Ctrl+Z). `false`, gdy nie ma czego cofać. */
+export const undoShifts = (): boolean => yShifts.undo();
+export const canUndoShifts = (): boolean => yShifts.canUndo();
 
 /** Przenosi albo kopiuje wpis dnia; zwraca poprzednie wartości dni (do „Cofnij”) albo `null`, gdy nic się nie zmieniło. */
 export function transferDay(from: string, to: string, mode: TransferMode, todayKey: string): DaysBefore | null {

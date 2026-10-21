@@ -139,6 +139,16 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
 
   const thisWeek = startOfWeekKey(dayKey(new Date()));
 
+  // Cofnij po nadpisaniu wpisu malowaniem: przywraca poprzedni wpis dnia (z notatką i godzinami).
+  const toastReplaced = useCallback((key: string, previous: DayEntry, nextId: string) => {
+    const [y, m, d] = key.split("-").map(Number);
+    const was = typesById.get(previous.type)?.name ?? "zmiana";
+    const now = typesById.get(nextId)?.name ?? "zmiana";
+    toastWithUndo(`Zmieniono ${format(new Date(y, m - 1, d), "d MMMM", { locale: pl })} na ${now}`, () => restoreDays({ [key]: previous }), {
+      description: `Było: ${was}`,
+    });
+  }, [typesById]);
+
   // Stabilna referencja — siatka jest `memo` i nie musi się przerysowywać przy otwieraniu okien.
   const onDay = useCallback((key: string) => {
     if (brush.kind === "inspect") return setOpenDay(key);
@@ -151,11 +161,14 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
       if (same) { setDayShift(key, null); return; }
       setDayEntry(key, { type: brush.id, ...(entry?.note ? { note: entry.note } : {}), hours: h, customHours: true });
       setAnnounce(`${shortDate(key)}: ${typesById.get(brush.id)?.name ?? "zmiana"} ${h.start}–${h.end}`);
+      // Nadpisanie istniejącego wpisu — dajemy Cofnij, bo malowanie nie ma gumki na jeden dzień.
+      if (entry) toastReplaced(key, entry, brush.id);
       return;
     }
     const clear = brush.kind === "erase" || entry?.type === brush.id;
     setDayShift(key, clear ? null : brush.id);
     setAnnounce(clear ? `${shortDate(key)}: wyczyszczono` : `${shortDate(key)}: ${typesById.get(brush.id)?.name ?? "zmiana"}`);
+    if (!clear && entry && entry.type !== brush.id) toastReplaced(key, entry, brush.id);
     // Notatki i odchylenia nie da się odtworzyć jednym stuknięciem — stąd „Cofnij”.
     if (clear && entry && (entry.note || entry.extraMin)) {
       const [y, m, d] = key.split("-").map(Number);
@@ -163,7 +176,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         description: entry.note ? `Razem z notatką „${entry.note}”` : "Razem z odchyleniem od planu",
       });
     }
-  }, [brush, activeHours, typesById]);
+  }, [brush, activeHours, typesById, toastReplaced]);
 
   // Przenoszenie i kopiowanie wpisów — jedna ścieżka dla myszy, dotyku i klawiatury.
   const transfer = useCallback((from: string, to: string, mode: TransferMode) => {

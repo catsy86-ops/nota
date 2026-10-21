@@ -1253,6 +1253,13 @@ Dział opisany w jednym miejscu; obejmuje fazy 1–3 planu z 2026-10-19 i zgodę
 - **Wygląd:** globalny reset „Przywróć domyślne” jest nieaktywny, gdy nie ma czego resetować.
 - **Kopie:** w tekstach zamiast „Backupy” jest „Kopie” (spójnie z resztą zakładki).
 - **Świadomie bez zmian:** etykiety „wyczyść”/„wyłącz” (różne znaczenie), przełącznik „Zgodność ze starszą wersją” jako checkbox (zmiana wyglądu bez zysku), `aria-pressed` w skórkach i krojach (zmiana semantyki wymaga osobnego przeglądu).
+
+**QOL — top 5 (2026-10-21):**
+- **Cofnij przy nadpisaniu w Grafiku** (`ShiftsView.tsx`, `toastReplaced`): malowanie zmianą innego rodzaju (albo zmianą godzin) pokazuje toast „Cofnij” z poprzednim wpisem (`restoreDays`). Test: `e2e/shifts-undo.spec.ts`.
+- **Ctrl+Z w Grafiku** (`yShifts.ts`, `undoManager`; `store.ts`, `undoShifts`/`canUndoShifts`; `Index.tsx`, `onUndo`): `Y.UndoManager` na mapie dni, tylko zmiany z `SHIFTS_ORIGIN`. Sync z innego urządzenia, import, przywracanie i migracje idą z `SHIFTS_SYSTEM_ORIGIN` i nie trafiają na stos. Poza widokiem Grafiku Ctrl+Z działa jak dotąd. Testy: `src/lib/shifts/undo.test.ts`.
+- **Kopia sprzed przywrócenia** (`BackupSettings.tsx`, `RestoreBackup.restore`): przed każdym przywróceniem pobiera się `kaczy-przed-przywroceniem-RRRR-MM-DD.json`. Gdy zapis się nie uda, przywracanie się zatrzymuje. Przywrócenie tego pliku cofa przywracanie.
+- **Ostatnio użyte w palecie** (`CommandPalette.tsx`, `NAV_ITEMS`; `src/lib/recentCommands.ts`): grupa Nawigacja jest tablicą danych; ostatnie 3 użyte widoki pokazują się przy pustym polu wyszukiwania. Testy: `src/lib/recentCommands.test.ts`.
+- **Budżet paczki startowej:** po Ctrl+Z w Grafiku 400,33 KB przy progu 400 KB — `e2e/bundle.spec.ts` nie przechodzi do czasu decyzji o progu.
 - **Reset „Przywróć domyślne” w Wyglądzie** kasuje cały widok (decyzja właściciela: „Wszystko”). Potwierdzenie to lista tego, co wróci do domyślnych, i tego, czego reset nie dotyczy. Lista zmian liczona jest z aktualnego stanu przy każdym renderze.
 - **Reset w sekcji.** W Ogólne (edytor, przypomnienia) i w Kopii i danych jest przycisk „Przywróć domyślne w tej sekcji”. Wyłącza się, gdy nic w sekcji nie różni się od domyślnych; potwierdzenie wymienia tylko ustawienia, które faktycznie się zmienią (np. „Zmienią się: autosave”).
 - **Link do karty** `?settings=wyglad|ogolne|kopia|sync` otwiera Ustawienia na tej karcie i znika z adresu. Nieznana wartość nie otwiera okna. Działa przy otwieraniu aplikacji i przy zmianie adresu w otwartym oknie; nie zmienia otwartej aplikacji, jeśli adres zmieni się bez przeładowania.

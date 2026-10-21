@@ -72,6 +72,8 @@ export default tseslint.config(
       "src/lib/debts/yDebts.ts",
       "src/lib/debts/yDebts.test.ts",
       "src/lib/debts/yDebts.edit.test.ts",
+      // Cofnij w Grafiku: test na własnym Y.Doc (ten sam wzorzec co pozostałe działy).
+      "src/lib/shifts/undo.test.ts",
       "src/lib/tabSync.ts",
       "src/lib/tabSync.test.ts",
       // Buduje plik synchronizacji w starym formacie jako dane testowe.

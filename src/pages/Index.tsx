@@ -77,6 +77,7 @@ import { QuickTemplates } from "@/components/QuickTemplates";
 import { useConfirmAction } from "@/components/ConfirmActionDialog";
 import { BulkActionBar } from "@/components/BulkActionBar";
 import { registerUndoHandlers, undoLastAction } from "@/lib/actionHistory";
+import { canUndoShifts, undoShifts } from "@/lib/shifts/store";
 import { BottomNav } from "@/components/BottomNav";
 import { VaultHost } from "@/components/vault/VaultHost";
 
@@ -263,6 +264,12 @@ const Index = () => {
     hasSelection: () => selectedIds.size > 0,
     onEscapeSelection: clearSelection,
     onUndo: () => {
+      // Na widoku Grafiku Ctrl+Z cofa ostatnią zmianę w Grafiku (zanim sięgnie po kosz/archiwum).
+      if (view === "shifts" && canUndoShifts()) {
+        undoShifts();
+        toast("Cofnięto zmianę w Grafiku", { icon: "↩️" });
+        return;
+      }
       const done = undoLastAction();
       if (done) {
         toast.success(done.kind === "trash" ? "Cofnięto usunięcie" : "Cofnięto archiwizację", {
