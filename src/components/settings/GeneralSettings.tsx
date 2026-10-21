@@ -20,6 +20,7 @@ import { getNotificationPermission } from "@/lib/notificationPermission";
 import { MOD_KEY } from "@/lib/platform";
 import { hasDictationConsent, withdrawDictationConsent } from "@/hooks/useDictation";
 import { setBadgeEnabled, useBadgeEnabled } from "@/lib/overdueBadge";
+import { setReportNudges, useReportNudges } from "@/lib/study/reportNudgePrefs";
 
 const PERMISSION_TEXT = {
   granted: "Włączone — przypomnienia pokażą się jako powiadomienia systemowe, gdy aplikacja jest otwarta (przy zamkniętej — patrz niżej).",
@@ -121,6 +122,7 @@ export function GeneralSettings() {
   const confirmPrefs = useConfirmPrefs();
   const prefs = useViewPrefs();
   const badgeEnabled = useBadgeEnabled();
+  const reportNudges = useReportNudges();
 
   return (
     <div className="space-y-4">
@@ -207,6 +209,13 @@ export function GeneralSettings() {
               : "Ustaw godzinę, aby otrzymywać cotygodniowe przypomnienie."}
           </p>
         </Section>
+
+        <ToggleRow
+          label="Podpowiedzi „Raport dnia/tygodnia gotowy”"
+          desc="Po końcu zmiany dymek w aplikacji, a przy zgodzie powiadomienie systemowe. Osobno od powiadomień przy zamkniętej aplikacji."
+          checked={reportNudges}
+          onCheck={setReportNudges}
+        />
 
         <ResetSectionButton title="przypomnienia" keys={VIEW_PREF_GROUPS.przypomnienia} />
       </div>

@@ -2,10 +2,11 @@ import { KeyRound, Lock, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useVault } from "@/hooks/usePrivateNotes";
 import { privateNotes } from "@/lib/privateNotes";
-import { AUTOLOCK_CHOICES, lockEverywhere, setAutoLockMinutes, useAutoLockMinutes } from "@/lib/vaultAutoLock";
+import { AUTOLOCK_CHOICES, HIDDEN_LOCK_CHOICES, lockEverywhere, setAutoLockMinutes, setHiddenLockMinutes, useAutoLockMinutes, useHiddenLockMinutes } from "@/lib/vaultAutoLock";
 import { vaultUi } from "@/lib/vaultUi";
 import { Section } from "./SettingsShared";
 
+const HIDDEN_LABEL = (m: number) => (m === 0 ? "Nie blokuj" : m === 1 ? "Po 1 minucie" : `Po ${m} minutach`);
 const CHOICE_LABEL = (m: number) => (m === 0 ? "Nigdy (do zamknięcia karty)" : m === 1 ? "Po 1 minucie" : `Po ${m} minutach`);
 
 const STATUS = {
@@ -19,6 +20,7 @@ const STATUS = {
 export function VaultSettings() {
   const vault = useVault();
   const minutes = useAutoLockMinutes();
+  const hiddenMinutes = useHiddenLockMinutes();
   const has = vault.phase !== "none";
 
   return (
@@ -61,7 +63,18 @@ export function VaultSettings() {
             {AUTOLOCK_CHOICES.map((m) => <option key={m} value={m}>{CHOICE_LABEL(m)}</option>)}
           </select>
         </div>
-        <p className="text-2xs text-muted-foreground">Dodatkowo skarbiec blokuje się, gdy karta jest ukryta dłużej niż minutę.</p>
+        <div className="flex items-center justify-between gap-3">
+          <label htmlFor="vault-hidden-lock" className="text-sm font-semibold">Blokuj po schowaniu karty</label>
+          <select
+            id="vault-hidden-lock"
+            value={hiddenMinutes}
+            onChange={(e) => setHiddenLockMinutes(Number(e.target.value))}
+            className="h-9 coarse:h-11 rounded-md border border-input bg-background px-2 text-sm"
+          >
+            {HIDDEN_LOCK_CHOICES.map((m) => <option key={m} value={m}>{HIDDEN_LABEL(m)}</option>)}
+          </select>
+        </div>
+        <p className="text-2xs text-muted-foreground">Skarbiec blokuje się też, gdy karta jest ukryta dłużej niż wybrany czas.</p>
       </div>
 
       <details className="rounded-xl border border-border/60 px-4 py-3 text-xs leading-relaxed text-muted-foreground" data-testid="vault-howto">

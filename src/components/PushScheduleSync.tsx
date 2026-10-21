@@ -1,6 +1,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { useLatestRef } from "@/hooks/useLatestRef";
 import { uploadSchedule } from "@/lib/push/client";
+import { pushPrefs } from "@/lib/push/prefs";
 import { buildPushSchedulePlan, PUSH_MAX_ITEMS, type PushNote } from "@/lib/push/schedule";
 import { PUSH_SUMMARY_KEY } from "@/lib/push/summary";
 import { EVENING_NUDGED_KEY, readEveningNudgeTime, useShifts, useShiftsReady } from "@/lib/shifts";
@@ -25,6 +26,7 @@ export default function PushScheduleSync({ notes }: { notes: readonly PushNote[]
   const notesRef = useLatestRef(notes);
   const shiftsRef = useLatestRef(shifts);
   const studyRef = useLatestRef(study);
+  const off = pushPrefs.use().off;
   const ready = shiftsReady && studyReady;
 
   useEffect(() => {
@@ -40,6 +42,7 @@ export default function PushScheduleSync({ notes }: { notes: readonly PushNote[]
         eveningNudged: read(EVENING_NUDGED_KEY),
         reportNudged: read(REPORT_NUDGE_KEY),
         weekReportNudged: read(WEEK_REPORT_NUDGE_KEY),
+        off,
       });
       // Podsumowanie dla Ustawień: ile wysłano z ilu i ile odpadło przy limicie. Tylko na tym urządzeniu.
       try { localStorage.setItem(PUSH_SUMMARY_KEY, JSON.stringify({ sent: plan.items.length, total: plan.total, dropped: plan.dropped, limit: PUSH_MAX_ITEMS, at: Date.now() })); } catch { /* bez localStorage — bez podsumowania */ }
@@ -54,7 +57,7 @@ export default function PushScheduleSync({ notes }: { notes: readonly PushNote[]
       clearInterval(hourly);
       document.removeEventListener("visibilitychange", onHide);
     };
-  }, [ready, notes, shifts, study, notesRef, shiftsRef, studyRef]);
+  }, [ready, notes, shifts, study, off, notesRef, shiftsRef, studyRef]);
 
   return null;
 }

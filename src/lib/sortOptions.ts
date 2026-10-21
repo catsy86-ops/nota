@@ -2,7 +2,7 @@ import type { SortKey } from "@/lib/viewPrefs";
 import type { PropDef } from "@/lib/noteProps";
 
 /** Stałe kryteria sortowania; własne pola dochodzą za nimi. */
-const BASE_SORTS: { v: SortKey; label: string }[] = [
+export const BASE_SORTS: { v: SortKey; label: string }[] = [
   { v: "updated", label: "Data modyfikacji" },
   { v: "created", label: "Data utworzenia" },
   { v: "opened", label: "Ostatnio otwierane" },

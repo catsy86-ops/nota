@@ -344,6 +344,13 @@ describe("ustawienia w kopii — zakres i push", () => {
     };
     await restoreFullBackup(backup, { versions: false, settings: true, achievements: false, shifts: false, study: false });
     const restored = JSON.parse(localStorage.getItem("kaczy.push.v1")!);
-    expect(restored).toEqual({ server: "https://push.example.com", enabled: false });
+    expect(restored).toEqual({ server: "https://push.example.com", enabled: false, off: [] });
+  });
+
+  it("keeps switched-off push categories when restoring", async () => {
+    const backup = await buildFullBackup();
+    backup.settings = { ...backup.settings, "kaczy.push.v1": JSON.stringify({ server: "https://p.example.com", enabled: true, off: ["raporty", "serwis"] }) };
+    await restoreFullBackup(backup, { versions: false, settings: true, achievements: false, shifts: false, study: false });
+    expect(JSON.parse(localStorage.getItem("kaczy.push.v1")!).off).toEqual(["raporty", "serwis"]);
   });
 });

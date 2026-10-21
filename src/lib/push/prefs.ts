@@ -22,11 +22,21 @@ export interface PushPrefs {
   /** Skrót ostatnio wysłanej listy — bez zmian nie wysyłamy jej ponownie. */
   sentHash?: string;
   last?: PushSyncResult;
+  /** Wyłączone kategorie przypomnień (`PUSH_CATEGORIES` w `schedule.ts`). Brak = wszystkie włączone. */
+  off?: string[];
 }
 
-export const pushPrefs = createPersistedStore<PushPrefs>(PUSH_PREFS_KEY, { server: "", enabled: false }, {
-  merge: (d, s) => (s && typeof s === "object" ? { ...d, ...s, enabled: s.enabled === true && typeof s.server === "string" && s.server !== "" } : d),
+export const pushPrefs = createPersistedStore<PushPrefs>(PUSH_PREFS_KEY, { server: "", enabled: false, off: [] }, {
+  merge: (d, s) => (s && typeof s === "object"
+    ? { ...d, ...s, enabled: s.enabled === true && typeof s.server === "string" && s.server !== "", off: Array.isArray(s.off) ? s.off.filter((x): x is string => typeof x === "string") : [] }
+    : d),
 });
+
+/** Włącza albo wyłącza jedną kategorię przypomnień. Zmiana wysyła harmonogram od nowa (`PushScheduleSync`). */
+export function setPushCategory(id: string, on: boolean): void {
+  const off = pushPrefs.get().off ?? [];
+  pushPrefs.set({ ...pushPrefs.get(), off: on ? off.filter((x) => x !== id) : [...off.filter((x) => x !== id), id] });
+}
 
 export const updatePushPrefs = (patch: Partial<PushPrefs>) => pushPrefs.set({ ...pushPrefs.get(), ...patch });
 

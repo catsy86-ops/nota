@@ -28,9 +28,10 @@ const PUSH_RESTORE_KEY = PUSH_PREFS_KEY;
 function pushPrefsForRestore(raw: string): string {
   try {
     const p = JSON.parse(raw) as Partial<PushPrefs>;
-    return JSON.stringify({ server: typeof p.server === "string" ? p.server : "", enabled: false });
+    const off = Array.isArray(p.off) ? p.off.filter((x): x is string => typeof x === "string") : [];
+    return JSON.stringify({ server: typeof p.server === "string" ? p.server : "", enabled: false, off });
   } catch {
-    return JSON.stringify({ server: "", enabled: false });
+    return JSON.stringify({ server: "", enabled: false, off: [] });
   }
 }
 

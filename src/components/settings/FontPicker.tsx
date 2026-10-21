@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 import { APP_FONTS, APP_FONT_META, type AppFont } from "@/lib/appFont";
 import { spring } from "@/lib/motion";
 import { haptic } from "@/lib/haptics";
+import { moveRadio } from "./SettingsShared";
 
 interface FontPickerProps {
   value: AppFont;
@@ -17,7 +18,7 @@ interface FontPickerProps {
 export function FontPicker({ value, onChange }: FontPickerProps) {
   return (
     <LayoutGroup id="font-picker">
-      <div role="group" aria-label="Krój tekstu" className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-2">
+      <div role="radiogroup" aria-label="Krój tekstu" className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-2">
         {APP_FONTS.map((f) => {
           const meta = APP_FONT_META[f];
           const active = f === value;
@@ -25,7 +26,10 @@ export function FontPicker({ value, onChange }: FontPickerProps) {
             <motion.button
               key={f}
               type="button"
-              aria-pressed={active}
+              role="radio"
+              aria-checked={active}
+              tabIndex={active ? 0 : -1}
+              onKeyDown={(e) => moveRadio(e, APP_FONTS, value, onChange)}
               data-font-option={f}
               onClick={() => { if (!active) { haptic("selection"); onChange(f); } }}
               whileHover={{ y: -2 }}

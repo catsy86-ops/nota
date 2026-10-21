@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Wifi, WifiOff, Copy, Check, LogOut } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { ToggleRow } from "@/components/settings/SettingsShared";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -253,21 +254,12 @@ export function SyncSettings({ prefillCode }: Props) {
 
       <SignalingServers />
 
-      <label className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/20 p-3 text-xs cursor-pointer">
-        <input
-          type="checkbox"
-          className="mt-0.5"
-          checked={legacyRoom}
-          onChange={(e) => { setLegacyRoom(e.target.checked); setLegacyRoomState(e.target.checked); }}
-        />
-        <span className="space-y-0.5">
-          <span className="block font-semibold text-foreground">Zgodność ze starszą wersją aplikacji</span>
-          <span className="block text-muted-foreground">
-            Włącz tylko na czas wymiany starego urządzenia. Stary pokój ma słabą nazwę, z której serwer
-            sygnalizacyjny może odzyskać kod parowania — po aktualizacji wszystkich urządzeń wyłącz.
-          </span>
-        </span>
-      </label>
+      <ToggleRow
+        label="Zgodność ze starszą wersją aplikacji"
+        desc="Włącz tylko na czas wymiany starego urządzenia. Stary pokój ma słabą nazwę, z której serwer sygnalizacyjny może odzyskać kod parowania — po aktualizacji wszystkich urządzeń wyłącz."
+        checked={legacyRoom}
+        onCheck={(on) => { setLegacyRoom(on); setLegacyRoomState(on); }}
+      />
 
       <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-2">
         <h3 className="font-semibold text-foreground">Jak to działa</h3>

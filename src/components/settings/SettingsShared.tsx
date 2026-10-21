@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId, useState, type KeyboardEvent } from "react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -52,6 +52,22 @@ export function Section({ title, children }: { title: string; children: React.Re
  * Label + description + switch row shared by every settings tab. Przełącznik ma nazwę dostępną
  * (etykieta z `aria-labelledby`), żeby czytnik ekranu mówił, czym jest.
  */
+/**
+ * Strzałki w grupie radio (wzorzec ARIA): przechodzą do następnej/poprzedniej opcji z zawijaniem,
+ * zaznaczają ją i przenoszą fokus. Działa dla przycisków z `role="radio"` w `role="radiogroup"`.
+ */
+export function moveRadio<T>(e: KeyboardEvent<HTMLElement>, values: readonly T[], current: T, onChange: (v: T) => void) {
+  const step = e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+  if (!step) return;
+  e.preventDefault();
+  const i = values.indexOf(current);
+  const nextIndex = (i + step + values.length) % values.length;
+  onChange(values[nextIndex]);
+  const group = e.currentTarget.closest<HTMLElement>("[role=\"radiogroup\"]");
+  const radios = Array.from(group?.querySelectorAll<HTMLElement>("[role=\"radio\"]") ?? []);
+  requestAnimationFrame(() => radios[nextIndex]?.focus());
+}
+
 export function ToggleRow({ label, desc, checked, onCheck }: { label: string; desc: string; checked: boolean; onCheck: (v: boolean) => void }) {
   const labelId = useId();
   return (

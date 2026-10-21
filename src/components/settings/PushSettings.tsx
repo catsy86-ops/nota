@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input";
 import { formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
 import { disablePush, enablePush, pushSupport, sendTestPush } from "@/lib/push/client";
-import { normalizePushServer, pushPrefs } from "@/lib/push/prefs";
+import { normalizePushServer, pushPrefs, setPushCategory } from "@/lib/push/prefs";
+import { PUSH_CATEGORIES } from "@/lib/push/schedule";
 import { PUSH_SUMMARY_KEY, readPushSummary } from "@/lib/push/summary";
 import { cn } from "@/lib/utils";
-import { Section } from "./SettingsShared";
+import { Section, ToggleRow } from "./SettingsShared";
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : "Coś poszło nie tak.");
 
@@ -111,6 +112,18 @@ export function PushSettings() {
             </div>
           </>
         )}
+      </div>
+      <div className="mt-3 space-y-2">
+        <p className="text-xs text-muted-foreground">Co ma przypominać, gdy NOTKI są zamknięte:</p>
+        {PUSH_CATEGORIES.map((c) => (
+          <ToggleRow
+            key={c.id}
+            label={c.label}
+            desc={`Wyłączone: terminy tej kategorii nie trafiają na serwer.`}
+            checked={!(prefs.off ?? []).includes(c.id)}
+            onCheck={(on) => setPushCategory(c.id, on)}
+          />
+        ))}
       </div>
     </Section>
   );

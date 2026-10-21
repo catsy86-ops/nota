@@ -24,7 +24,7 @@ test("styl Neon: ciemne kolory, jasność zablokowana, wybór przeżywa odświe�
   await openAppearance(page);
   const neon = page.locator('[data-skin-option="neon"]');
   await neon.click();
-  await expect(neon).toHaveAttribute("aria-pressed", "true");
+  await expect(neon).toHaveAttribute("aria-checked", "true");
   await expect(html).toHaveAttribute("data-skin", "neon");
   await expect(html).toHaveClass(/\bdark\b/);
   await expect(page.getByRole("radiogroup", { name: "Jasność" }).getByRole("radio", { name: "Jasny" })).toBeDisabled();

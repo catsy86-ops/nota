@@ -32,6 +32,27 @@ export interface PushItem {
 }
 
 export const PUSH_HORIZON_DAYS = 14;
+
+/**
+ * Kategorie przypomnień, które użytkownik może wyłączyć w Ustawieniach. Klucz terminu zaczyna się
+ * od prefiksu z `pushKey` (`lib/push/shown.ts`), więc kategoria wynika z samego klucza.
+ */
+export const PUSH_CATEGORIES = [
+  { id: "notatki", label: "Przypomnienia notatek", prefixes: ["n:"] },
+  { id: "grafik", label: "Grafik na jutro", prefixes: ["e:"] },
+  { id: "raporty", label: "Raport dnia i tygodnia", prefixes: ["rd:", "rw:"] },
+  { id: "problemy", label: "Problem w dzienniku budowy", prefixes: ["p:"] },
+  { id: "serwis", label: "Serwis dziś i zaległy", prefixes: ["v:"] },
+  { id: "zamowienia", label: "Materiał zamówiony, a nie dojechał", prefixes: ["o:"] },
+] as const;
+export type PushCategoryId = (typeof PUSH_CATEGORIES)[number]["id"];
+
+/** Czy termin należy do kategorii wyłączonej przez użytkownika. */
+export function isPushCategoryOff(key: string, off: readonly string[] | undefined): boolean {
+  if (!off?.length) return false;
+  const cat = PUSH_CATEGORIES.find((c) => c.prefixes.some((p) => key.startsWith(p)));
+  return cat !== undefined && off.includes(cat.id);
+}
 /** Limit serwera (`push-server/core.js`, `LIMITS.items`). */
 export const PUSH_MAX_ITEMS = 200;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -70,6 +91,8 @@ export interface PushInput {
   eveningNudged?: string | null;
   reportNudged?: string | null;
   weekReportNudged?: string | null;
+  /** Wyłączone kategorie (`PUSH_CATEGORIES`) — ich terminów nie planujemy wcale, więc nie zajmują limitu. */
+  off?: readonly string[];
 }
 
 const clip = (s: string, max: number) => (s.length > max ? `${s.slice(0, max - 1)}…` : s);
@@ -229,7 +252,7 @@ export function buildPushSchedulePlan(input: PushInput): { items: PushItem[]; to
     noteItems(input.notes, now, end),
     studyItems(input, now, end),
     [...eveningItems(input, now), ...reportItems(input, now)],
-  ].map((g) => g.sort((a, b) => a.at - b.at));
+  ].map((g) => g.filter((i) => !isPushCategoryOff(i.key, input.off)).sort((a, b) => a.at - b.at));
   const total = groups.reduce((n, g) => n + g.length, 0);
   const chosen = groups.flat().slice(0, PUSH_MAX_ITEMS);
   return { items: chosen.sort((a, b) => a.at - b.at), total, dropped: total - chosen.length };

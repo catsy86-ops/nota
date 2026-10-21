@@ -17,6 +17,7 @@ import { SkinPicker } from "./SkinPicker";
 import { FontPicker } from "./FontPicker";
 import { setAppFont, useAppFont } from "@/lib/appFont";
 import { SKIN_SCHEME } from "@/lib/skins";
+import { BASE_SORTS } from "@/lib/sortOptions";
 import { SKIN_META } from "@/lib/skinGallery";
 import { setSiteMode, useSiteMode, type SiteMode } from "@/lib/siteMode";
 
@@ -144,6 +145,35 @@ export function AppearanceSettings() {
             >{l === "masonry" ? "Mozaika" : l === "grid" ? "Siatka" : l === "list" ? "Lista" : l === "board" ? "Tablica" : "Tabela"}</button>
           ))}
         </div>
+      </Section>
+
+      <Section title="Domyślne sortowanie i grupowanie">
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+            Sortuj wg
+            <select
+              value={prefs.sortKey}
+              onChange={(e) => changeView(() => setViewPref("sortKey", e.target.value as typeof prefs.sortKey))}
+              className="h-9 coarse:h-11 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+            >
+              {BASE_SORTS.map((s) => <option key={s.v} value={s.v}>{s.label}</option>)}
+            </select>
+          </label>
+          <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+            Grupuj wg
+            <select
+              value={prefs.groupBy}
+              onChange={(e) => changeView(() => setViewPref("groupBy", e.target.value as typeof prefs.groupBy))}
+              className="h-9 coarse:h-11 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+            >
+              <option value="none">Brak</option>
+              <option value="date">Data</option>
+              <option value="label">Etykieta</option>
+              <option value="folder">Folder</option>
+            </select>
+          </label>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1.5">Ustawienie startowe widoku. Własne pola notatek sortuje się w widoku.</p>
       </Section>
 
       <Section title="Gęstość">

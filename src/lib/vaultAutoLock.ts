@@ -4,8 +4,10 @@ import type { PrivateNotes } from "@/lib/privateNotes";
 /** Minuty bezczynności do automatycznej blokady; 0 = nigdy (do zamknięcia karty). */
 export const AUTOLOCK_CHOICES = [1, 5, 15, 30, 0] as const;
 export const DEFAULT_AUTOLOCK_MINUTES = 5;
-/** Ukrycie karty dłużej niż tyle blokuje skarbiec. */
-export const HIDDEN_LOCK_MS = 60_000;
+/** Ukrycie karty dłużej niż wybrany czas blokuje skarbiec. Domyślnie minuta; 0 = nie blokuj po ukryciu. */
+export const HIDDEN_LOCK_CHOICES = [1, 5, 15, 0] as const;
+export const DEFAULT_HIDDEN_LOCK_MINUTES = 1;
+export const HIDDEN_LOCK_MS = DEFAULT_HIDDEN_LOCK_MINUTES * 60_000;
 
 const store = createPersistedStore<number>("kaczy.vault.autolock.v1", DEFAULT_AUTOLOCK_MINUTES, {
   merge: (def, stored) => ((AUTOLOCK_CHOICES as readonly number[]).includes(Number(stored)) ? Number(stored) : def),
@@ -13,6 +15,13 @@ const store = createPersistedStore<number>("kaczy.vault.autolock.v1", DEFAULT_AU
 
 export const setAutoLockMinutes = (m: number) => store.set(m);
 export const useAutoLockMinutes = () => store.use();
+
+const hiddenStore = createPersistedStore<number>("kaczy.vault.hiddenLock.v1", DEFAULT_HIDDEN_LOCK_MINUTES, {
+  merge: (def, stored) => ((HIDDEN_LOCK_CHOICES as readonly number[]).includes(Number(stored)) ? Number(stored) : def),
+});
+
+export const setHiddenLockMinutes = (m: number) => hiddenStore.set(m);
+export const useHiddenLockMinutes = () => hiddenStore.use();
 
 const CHANNEL = "kaczy-vault";
 
@@ -56,12 +65,15 @@ export function startAutoLock(pn: PrivateNotes): () => void {
     if (document.visibilityState === "hidden") {
       hiddenAt = Date.now();
       if (hiddenTimer) clearTimeout(hiddenTimer);
-      hiddenTimer = setTimeout(() => { hiddenTimer = null; if (pn.isUnlocked()) void pn.lock(); }, HIDDEN_LOCK_MS);
+      const hiddenMs = hiddenStore.get() * 60_000;
+      if (hiddenMs === 0) return;
+      hiddenTimer = setTimeout(() => { hiddenTimer = null; if (pn.isUnlocked()) void pn.lock(); }, hiddenMs);
     } else {
       if (hiddenTimer) { clearTimeout(hiddenTimer); hiddenTimer = null; }
       const away = hiddenAt === null ? 0 : Date.now() - hiddenAt;
       hiddenAt = null;
-      if (away >= HIDDEN_LOCK_MS && pn.isUnlocked()) { void pn.lock(); return; }
+      const limit = hiddenStore.get() * 60_000;
+      if (limit > 0 && away >= limit && pn.isUnlocked()) { void pn.lock(); return; }
       lastActivity = Date.now();
       armIdle();
     }

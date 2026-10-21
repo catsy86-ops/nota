@@ -9,6 +9,7 @@ import { useStudyReady, yStudy } from "@/lib/study/data";
 import { entriesPl } from "@/lib/study/journalView";
 import { dailyReportNudge, REPORT_NUDGE_KEY, WEEK_REPORT_NUDGE_KEY, weeklyReportNudge } from "@/lib/study/reportNudge";
 import { JOURNAL_REPORT_PARAM, reportParam, requestJournalReport, type JournalReportRequest } from "@/lib/study/reportLink";
+import { reportNudgesStore } from "@/lib/study/reportNudgePrefs";
 
 /**
  * Po końcu dzisiejszej zmiany (Grafik) przypomina raz dziennie: „Raport dnia gotowy” — dymek
@@ -47,6 +48,8 @@ export default function DailyReportNudge({ onOpenWork }: { onOpenWork: () => voi
     }
 
     function check() {
+      // Wyłączone w Ustawieniach: nie ruszamy ani dymku, ani znaczników (push ma osobną kategorię).
+      if (!reportNudgesStore.get()) return;
       const now = new Date();
       // Piątek po pracy (albo weekend): raport tygodnia zamiast dnia — obejmuje też dzisiejsze wpisy.
       const week = weeklyReportNudge(journalRef.current, shiftsRef.current, now, read(WEEK_REPORT_NUDGE_KEY));

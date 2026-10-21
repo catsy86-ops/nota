@@ -5,6 +5,7 @@ import { SKIN_META } from "@/lib/skinGallery";
 import { spring } from "@/lib/motion";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
+import { moveRadio } from "./SettingsShared";
 
 interface SkinPickerProps {
   value: Skin;
@@ -19,7 +20,7 @@ interface SkinPickerProps {
 export function SkinPicker({ value, onChange }: SkinPickerProps) {
   return (
     <LayoutGroup id="skin-picker">
-      <div role="group" aria-label="Styl aplikacji" className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <div role="radiogroup" aria-label="Styl aplikacji" className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {SKINS.map((s) => {
           const meta = SKIN_META[s];
           const active = s === value;
@@ -28,7 +29,10 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
             <motion.button
               key={s}
               type="button"
-              aria-pressed={active}
+              role="radio"
+              aria-checked={active}
+              tabIndex={active ? 0 : -1}
+              onKeyDown={(e) => moveRadio(e, SKINS, value, onChange)}
               data-skin-option={s}
               onClick={() => { if (!active) { haptic("selection"); onChange(s); } }}
               whileHover={{ y: -3 }}
