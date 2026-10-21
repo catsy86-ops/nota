@@ -714,6 +714,10 @@ doczytują się przy pierwszym otwarciu (ułamek sekundy).
   `buildFullBackupWithReport` i przy przywracaniu kopii.
 - `vite.config.ts`: bez `includeAssets` — ikony i `offline.html` z `public/` łapie `globPatterns`, a oba naraz dublowały
   6 plików w liście precache `sw.js`.
+- Strona offline: `public/offline.html` ładuje `public/offline.js` (`defer`) zamiast inline-skryptu, żeby CSP
+  `script-src 'self'` nie zgłaszał naruszenia. `offline.js` trafia do precache przez `globPatterns`. Nagłówek CSP
+  w `netlify.toml` nadal `Report-Only`. Testy: `e2e/pwa.spec.ts` (offline przeładowanie).
+- Budowanie: Vite 8 (rolldown). `vite.config.ts` → `build.rolldownOptions.output.codeSplitting`: grupy `vendor-react`, `vendor-dnd`, `vendor-radix` dopasowane regexem po ścieżce w `node_modules` (obiekt `manualChunks` nie działa w rolldown). `workbox.globIgnores` dla PDF: nazwy chunków to `exportPdf-*`, `html2canvas-*` (bez `.esm`), `purify.es-*`, `index.es-*`, `StatsDialog-*`. Budżety w `e2e/bundle.spec.ts`: wejściowy JS 400 KB gzip, precache 3,2 MB. `tsconfig.app.json`: `node` w `types` (Vitest 4 nie ciągnie typów Node).
 - `vite.config.ts` → `workbox.globIgnores`: `exportPdf`, `index.es` (jsPDF), `html2canvas.esm`, `purify.es`, `StatsDialog` są poza
   precache. Trafiają do cache `static-assets` (CacheFirst na `/assets/*.js`) dopiero przy pierwszym użyciu.
 

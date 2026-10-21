@@ -51,8 +51,8 @@
 # Nagłówki bezpieczeństwa. CSP idzie najpierw jako Report-Only: naruszenia trafiają do
 # diagnostyki (`securitypolicyviolation`), a po tygodniu bez zgłoszeń zmień nazwę
 # nagłówka na Content-Security-Policy. `connect-src` zostawia wss:/https: — adresy
-# serwerów sygnalizacyjnych ustawia użytkownik. public/offline.html ma jeden
-# inline-skrypt i do czasu przeniesienia go zgłosi naruszenie.
+# serwerów sygnalizacyjnych ustawia użytkownik. Skrypt public/offline.html jest w
+# public/offline.js (bez inline), więc nie ma naruszeń do zgłoszenia z tej strony.
 [[headers]]
   for = "/*"
   [headers.values]

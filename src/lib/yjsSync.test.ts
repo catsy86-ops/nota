@@ -194,13 +194,14 @@ describe("yjsSync", () => {
   });
 
   it("pauseSync disconnects both providers but keeps the code; resumeSync reconnects to the same group", async () => {
-    const { startPairing, pauseSync, resumeSync, getSyncState } = await import("./yjsSync");
-    // Tylko providery z tego testu — poprzednie testy zostawiają własne instancje.
-    const before = providerInstances.length;
+    const { startPairing, pauseSync, resumeSync, getSyncState, roomNamesFor } = await import("./yjsSync");
     const code = startPairing();
-    await waitForMainProvider();
-    await vi.waitFor(() => { if (providerInstances.length - before < 2 * ROOMS_PER_CONNECT) throw new Error("not all up"); });
-    const firstRound = providerInstances.slice(before);
+    // Pokoje tego kodu. Asercje tylko na nich: asynchroniczny connect z poprzedniego testu
+    // (po vi.resetModules) może jeszcze dołożyć providery z innego kodu, których ten test nie kontroluje.
+    const rooms = (await roomNamesFor(code)).flatMap((r) => [r, `${r}-img2`]);
+    const mine = () => providerInstances.filter((p) => rooms.includes(p.roomName));
+    await vi.waitFor(() => { if (mine().length < 2 * ROOMS_PER_CONNECT) throw new Error("not all up"); });
+    const firstRound = mine();
 
     pauseSync();
     for (const p of firstRound) expect(p.destroyed).toBe(true);
@@ -208,10 +209,10 @@ describe("yjsSync", () => {
     expect(getSyncState().code).toBe(code); // remembered
 
     resumeSync();
-    await waitForMainProvider(2 * ROOMS_PER_CONNECT);
-    const resumed = mainProviders().slice(ROOMS_PER_CONNECT);
-    expect(resumed).toHaveLength(ROOMS_PER_CONNECT);
-    for (const p of resumed) expect(p.opts).toEqual({ password: code });
+    await vi.waitFor(() => { if (mine().filter((p) => !p.destroyed).length < 2 * ROOMS_PER_CONNECT) throw new Error("not resumed yet"); });
+    const resumed = mine().filter((p) => !p.destroyed && !firstRound.includes(p));
+    expect(resumed.filter((p) => !p.roomName.endsWith("-img2"))).toHaveLength(ROOMS_PER_CONNECT);
+    for (const p of resumed.filter((p) => !p.roomName.endsWith("-img2"))) expect(p.opts).toEqual({ password: code });
   });
 
   it("forgetPairing disconnects and clears the code entirely", async () => {

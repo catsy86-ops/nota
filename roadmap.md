@@ -6,13 +6,13 @@
 ## Stan na 2026-10-21 — otwarte punkty
 
 - [ ] **QA na prawdziwym telefonie** (punkt 5.3 niżej): klawiatura w kompozytorze, haptyka, gesty, przewijanie z paskiem adresu, instalacja PWA.
-- [ ] **Web Push:** serwer `push-server/` jest zrobiony (`fe01dcd`), ale nie wdrożony i nie przetestowany na telefonie. Bez niego przypomnienia działają tylko przy otwartej aplikacji. Decyzja 2026-10-21: zostaje lokalnie, bez wdrożenia.
-- [ ] **Vite 8 / Vitest 4 — odłożone (decyzja 2026-10-21).** Próba: Vite 8 (rolldown) przerywa build na `manualChunks` w `vite.config.ts` (`manualChunks is not a function`); do przepisania na API rolldown. Vitest 4.1.12 obsługuje Vite 8. Wracamy do tego później, po zakończeniu reszty.
-- [ ] **Próg paczki startowej 394 KB** (`e2e/bundle.spec.ts`) zostaje; decyzja 2026-10-21.
+- [ ] **Web Push:** serwer `push-server/` jest zrobiony (`fe01dcd`), ale nie wdrożony i nie przetestowany na telefonie. Bez niego przypomnienia działają tylko przy otwartej aplikacji. Decyzja 2026-10-21: zostaje lokalnie, bez wdrożenia (potwierdzona 2026-10-21 — Web Push nie jest dodawany).
+- [x] **Vite 8 / Vitest 4 — zrobione (2026-10-21).** Vite 8.3.5, Vitest 4.1.12, `@vitest/coverage-v8` 4.1.12, `@vitejs/plugin-react-swc` 4.3.3. `manualChunks` przepisane na `build.rolldownOptions.output.codeSplitting` (grupy po ścieżce w `node_modules`). `globIgnores` dla eksportu PDF: Rolldown nazywa `html2canvas` bez `.esm`. Testy: `tsconfig.app.json` ma `node` w `types` (Vitest 4 nie dokłada typów Node), `exportNotes.test.ts` bindowane do prototypu, `yjsSync.test.ts` liczy tylko pokoje bieżącego kodu.
+- [x] **Próg paczki startowej** — podniesiony do 400 KB (2026-10-21: 398,3 KB przy Vite 8, 57 plików startowych; poprzednio 393,1 KB przy Vite 5). Precache 3,09 MB przy progu 3,2 MB.
 - [ ] **Wdrożenie hostingu:** konfiguracje Vercel i Netlify są w repo; brak połączenia repo z kontem (decyzja użytkownika).
-- [ ] **Decyzje z 2026-10-11 (bez rozstrzygnięcia w repo):** (2) Android push — odłożony; (3) import własnych materiałów do Nauki — bez decyzji; (4) egzekwowanie CSP — nagłówek nadal `Content-Security-Policy-Report-Only` w `netlify.toml`, do przeniesienia inline-skryptu z `offline.html`.
-- [ ] **Zgodność wersji przed D5:** stara aplikacja nie czyta wpisów dziennika w nowym formacie (potwierdzone testem). Propozycja: okres przejściowy albo aktualizacja wszystkich urządzeń przed użyciem. Decyzja użytkownika.
-- [ ] **Pełny e2e po ostatnich zmianach:** przebieg 2026-10-21 dał 464 zaliczone, 2 pominięte, 3 niezaliczone (Grafik w poziomie). Ten test naprawiono w `ccefb42`, ale pełnego przebiegu po naprawie nie robiono.
+- [ ] **Decyzje z 2026-10-11 (bez rozstrzygnięcia w repo):** (2) Android push — odłożony; (3) import własnych materiałów do Nauki — bez decyzji; (4) egzekwowanie CSP — inline-skrypt z `offline.html` przeniesiony do `public/offline.js` (2026-10-21). Nagłówek nadal `Report-Only` w `netlify.toml`; przełączenie na egzekwowanie po tygodniu bez naruszeń — decyzja użytkownika.
+- [x] **Zgodność wersji przed D5 — decyzja 2026-10-21: wymóg.** Przed użyciem D5 wszystkie urządzenia muszą mieć nową wersję aplikacji (bez okresu przejściowego). Stara aplikacja nie czyta wpisów dziennika w nowym formacie (potwierdzone testem).
+- [x] **Pełny e2e po ostatnich zmianach** — 2026-10-21 po `2f8662e`: 469 zaliczonych, 2 pominięte, 2 niezaliczone (timeout `beforeEach` w `reminders-calendar` i `mobile`); obie przechodzą po samodzielnym uruchomieniu.
 
 Zamknięte 2026-10-21: krój tekstu w nagłówkach Zeszytu, motyw pory roku (działa od razu, tło Zeszytu), testy Matrycy i Hydrauliki (`e2e/skin-motion.spec.ts`), Grafik w poziomie (`ccefb42`), dokumentacja serwerów i README, usunięte zrealizowane plany.
 

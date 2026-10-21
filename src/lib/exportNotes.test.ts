@@ -47,7 +47,8 @@ beforeEach(() => {
     revokeObjectURL: vi.fn(),
   });
 
-  const realCreateElement = document.createElement.bind(document);
+  // Z prototypu, nie z `document.createElement`: po poprzednim teście to już szpieg, a bind na nim zapętla się rekurencyjnie (Vitest 4).
+  const realCreateElement = Document.prototype.createElement.bind(document);
   vi.spyOn(document, "createElement").mockImplementation((tag: string) => {
     const el = realCreateElement(tag);
     if (tag === "a") {

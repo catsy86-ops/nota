@@ -66,7 +66,7 @@ export default defineConfig(() => ({
           "**/unbounded-latin*.woff2",
           // Eksport PDF (jsPDF + html2canvas + purify + index.es) i Statystyki: ~1,1 MB, rzadko używane.
           // Nie w precache — trafiają do cache `static-assets` przy pierwszym użyciu (offline wcześniej: błąd).
-          "**/{exportPdf,index.es,html2canvas.esm,purify.es,StatsDialog}-*.js",
+          "**/{exportPdf,index.es,html2canvas,html2canvas.esm,purify.es,StatsDialog}-*.js",
         ],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         cleanupOutdatedCaches: true,
@@ -121,23 +121,22 @@ export default defineConfig(() => ({
   },
 
   build: {
-    rollupOptions: {
+    rolldownOptions: {
       output: {
-        manualChunks: {
-          // React 19: renderer jest w `react-dom/client` (samo `react-dom` to cienka nakładka).
-          "vendor-react": ["react", "react-dom", "react-dom/client", "scheduler", "react-router-dom"],
-          // Bez „vendor-motion”: ręczna paczka wciągnęłaby całe framer-motion (z `domMax`) do startu.
-          // LazyMotion (App.tsx) ładuje funkcje animacji osobnym importem — Rollup sam je wydziela.
-          "vendor-dnd": ["@dnd-kit/core", "@dnd-kit/sortable", "@dnd-kit/utilities"],
-          // Deliberately no "vendor-pdf": jspdf is reachable only through the
-          // dynamic import() in exportPdf.ts, so Rollup isolates it in that
-          // async chunk on its own. Forcing it into a manual chunk made the
-          // shared __vitePreload helper land there too, which gave the main
-          // chunk a *static* import of vendor-pdf — the browser then
-          // modulepreloaded all 391 KB of jsPDF on every page load.
-          "vendor-radix": [
-            "@radix-ui/react-dialog", "@radix-ui/react-dropdown-menu", "@radix-ui/react-popover",
-            "@radix-ui/react-tooltip", "@radix-ui/react-alert-dialog",
+        // Vite 8 (rolldown): `codeSplitting` zamiast `manualChunks`. Grupy dopasowane po ścieżce w node_modules.
+        // React 19: renderer w `react-dom/client` (samo `react-dom` to cienka nakładka).
+        // Bez „vendor-motion”: ręczna paczka wciągnęłaby całe framer-motion (z `domMax`) do startu; LazyMotion (App.tsx)
+        // ładuje funkcje animacji osobno.
+        // Deliberately no "vendor-pdf": jspdf is reachable only through the dynamic import() in exportPdf.ts. Forcing it
+        // into a manual chunk made the shared __vitePreload helper land there too, so the main chunk got a *static*
+        // import of vendor-pdf and the browser modulepreloaded all 391 KB of jsPDF on every page load.
+        // minSize: rolldown dzieli startowy kod na wiele drobnych chunków (każdy z narzutem); scalamy je z sąsiadami.
+        codeSplitting: {
+          minSize: 20_000,
+          groups: [
+            { name: "vendor-react", test: /[/\\]node_modules[/\\](react|react-dom|scheduler|react-router|react-router-dom)[/\\]/ },
+            { name: "vendor-dnd", test: /[/\\]node_modules[/\\]@dnd-kit[/\\]/ },
+            { name: "vendor-radix", test: /[/\\]node_modules[/\\]@radix-ui[/\\]/ },
           ],
         },
       },
