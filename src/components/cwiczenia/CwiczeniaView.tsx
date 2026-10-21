@@ -45,7 +45,7 @@ function deleteSupplement(notes: NotesActions, s: Supplement): Supplement | null
 
 /**
  * Dział Ćwiczenia (osobna pozycja w menu): odżywki (lista, dzienne odhaczenia, przypomnienia), trening
- * (plany dni, dziennik serii, progres) i dieta (posiłki, kalorie i białko, cele). Plan: docs/plan-cwiczenia-2026-10-20.md.
+ * (plany dni, dziennik serii, progres) i dieta (posiłki, kalorie i białko, cele).
  */
 export function CwiczeniaView() {
   const supplements = useSupplements();

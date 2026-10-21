@@ -73,7 +73,7 @@ for (const size of SIZES) {
 
 // Style (Ustawienia → Wygląd → Styl): każdy ma własne tokeny kolorów — ten sam audyt na Notatkach,
 // Kalendarzu i Grafiku (siatki dni, weekendy, kolorowe kafle).
-const SKINS = ["plan", "neon", "zorza", "miedz"] as const;
+const SKINS = ["plan", "neon", "zorza", "miedz", "matrix", "hydraulika"] as const;
 const SKIN_VIEWS = VIEWS.filter((v) => v.name === "notatki" || v.name === "kalendarz" || v.name === "grafik");
 
 for (const size of SIZES) {

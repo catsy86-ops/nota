@@ -4,7 +4,7 @@ Lokalna aplikacja notatkowa (PWA) — React + TypeScript + Vite + shadcn/ui, z w
 
 Dane żyją w przeglądarce (IndexedDB, przez Yjs). Aplikacja nie ma backendu ani konta użytkownika, ale **ma prawdziwą synchronizację między urządzeniami**: CRDT (Yjs) + transport P2P przez WebRTC (`y-webrtc`) — opt-in, wyłączony domyślnie, włącza się parowaniem kodem/QR w Ustawienia → Sync.
 
-Ten plik jest pełną dokumentacją projektu: funkcje, obsługa, architektura, bezpieczeństwo, uruchomienie i wdrożenie. Historia decyzji i audytów: [`roadmap.md`](./roadmap.md) oraz [`docs/FEATURES-LOG.md`](./docs/FEATURES-LOG.md).
+Ten plik to przegląd projektu: uruchomienie, architektura, bezpieczeństwo i wdrożenie. Pełny opis techniczny każdego działu (stan aktualny, pliki, pułapki, testy) jest w [`opis.md`](./opis.md) — tam są też Nauka, Praca, Dziennik budowy, Ćwiczenia, Długi i Skrzynka, których ten plik nie omawia szczegółowo. Otwarte zadania i historia decyzji: [`roadmap.md`](./roadmap.md).
 
 ## Spis treści
 
@@ -65,7 +65,7 @@ Notatki, Dziś, Ten tydzień, Przypomnienia (agenda: zaległe/dziś/…), **Kale
 
 ### PWA
 
-Instalacja jako aplikacja, praca offline (service worker, `offline.html`), skrót „Nowa notatka”, **Web Share Target** (tekst i linki z innych aplikacji), znaczek z liczbą zaległych przypomnień „(N) NOTKI”, odświeżanie „dziś” po północy i po wznowieniu karty.
+Instalacja jako aplikacja, praca offline (service worker, `offline.html`), skrót „Nowa notatka”, **Web Share Target** (tekst, linki, obrazy i PDF z innych aplikacji), znaczek z liczbą zaległych przypomnień „(N) NOTKI”, odświeżanie „dziś” po północy i po wznowieniu karty.
 
 ## Grafik zmian
 
@@ -89,7 +89,7 @@ Osobny dział (`/grafik`) do planowania i rozliczania pracy zmianowej. Dane Graf
 - Nadgodziny dobowe w dobie pracowniczej (24 h od początku zmiany); dodatek **100%**: pora nocna (21–7, 8 h wg ustawienia), niedziela i święto wolne wg grafiku, dzień wolny za niedzielę/święto, przekroczenie normy okresu; pozostałe **50%**.
 - Niepełny etat: godziny ponadwymiarowe bez dodatku do granicy z umowy.
 - Odpoczynek dobowy: ostrzeżenie przy mniej niż 11 h (art. 132 KP). Święta ustawowe wyliczane automatycznie.
-- Zarobek brutto ze stawką domyślną i stawkami per rodzaj zmiany.
+- Zarobek brutto ze stawką domyślną i stawkami per rodzaj zmiany, plus **premie jednorazowe** w miesiącu (osobna linia w rachunku, bez wpływu na dodatek za nadgodziny).
 - **Urlop:** roczny wymiar (20/26 lub własny), licznik wykorzystany/planowany/pozostały, podsumowanie roku (`YearSummaryDialog`).
 
 **Eksport**
@@ -101,7 +101,7 @@ Osobny dział (`/grafik`) do planowania i rozliczania pracy zmianowej. Dane Graf
 
 - **Przypomnienia:** jednorazowe i cykliczne (serie z końcem), język naturalny w polu („jutro 9:00”, „za 2 godziny”), odkładanie (10 min / jutro 9:00), przesuwanie terminu w Kalendarzu.
 - **Powiadomienia systemowe** (`lib/systemNotification.ts`): przez service worker, z przyciskami **„Odłóż 10 min”** i **„Gotowe”**, wibracją i pozostawaniem na ekranie do reakcji. Kliknięcie otwiera notatkę (`public/sw-notifications.js` → wiadomość do otwartej karty). Przy notatkach prywatnych treść nie jest pokazywana.
-- **Ważne ograniczenie:** aplikacja nie ma serwera push, więc powiadomienia wystrzeliwują tylko przy otwartej aplikacji (sprawdzanie co 15 s). Przy zamkniętej karcie przypomni dopiero kalendarz systemowy po imporcie `.ics`. Prawdziwy Web Push wymagałby serwera z kluczami VAPID.
+- **Bez otwartej aplikacji:** powiadomienia Web Push wysyła własny serwer [`push-server/`](./push-server/README.md) (VAPID, wymaga https). Aplikacja co kilka godzin i po zmianach wysyła mu listę terminów na 14 dni; ustawienie jest w Ustawienia → Ogólne → „Powiadomienia przy zamkniętej aplikacji”. Bez tego serwera przypomnienia działają tylko przy otwartej aplikacji (sprawdzanie co 15 s). Stan na 2026-10-21: serwer sprawdzony lokalnie, nie na prawdziwym telefonie. Szczegóły w `opis.md`.
 - Zgoda na powiadomienia jest proszona przy ustawianiu terminu, nie na starcie.
 
 ## Prywatne notatki (skarbiec)
@@ -155,7 +155,7 @@ Pełna lista pod `?` w aplikacji. Najważniejsze:
 ```
 src/
   pages/Index.tsx        główny ekran: składa widoki, skróty, powiadomienia
-  components/            UI (shadcn/ui + Radix); podkatalogi: calendar, shifts, settings, sidebar, vault, review
+  components/            UI (shadcn/ui + Radix); podkatalogi: calendar, shifts, settings, sidebar, vault, review, cwiczenia, debts
   hooks/                 useNotes, useFilteredNotes, useReminderNotifications, useViewRoute, useDictation, …
   lib/
     yjsStore.ts          dokument Yjs + projekcja inkrementalna notatek (źródło prawdy)
@@ -222,11 +222,11 @@ GitHub Pages serwuje projekt pod ścieżką `/<nazwa-repo>/`, a nie pod rootem. 
 
 ## Znane ograniczenia i plan rozwoju
 
-- **Brak prawdziwego Web Push** (zamknięta aplikacja nie powiadomi) — wymaga serwera VAPID.
+- **Web Push** wymaga uruchomionego `push-server/` z https i nie został jeszcze przetestowany na telefonie (szczegóły w `opis.md`).
 - **Zależności:** pozostałe podatności runtime wymagają przejścia na react-router 7 (zmiana łamiąca).
 - **Skarbiec:** hasło min. 8 znaków i metadane (sól, `wrapped`) dostępne dla każdego, kto ma kopię/dostęp do pokoju sync — atak offline możliwy; w planie dłuższe hasło i walidacja metadanych.
-- **Grafik:** jeden grafik na dokument; brak wymiany zmian, premii w rachunku, udostępniania grafiku jako obrazu.
-- **Notatki:** brak Share Target dla plików/obrazów, wyróżniania trafień w kaflach, OCR i notatek audio (świadomie odrzucone).
+- **Grafik:** brak wymiany zmian i premii procentowych (są tylko kwoty stałe); udostępniania grafiku jako obrazu nie ma (jest eksport obrazu miesiąca).
+- **Notatki:** brak wyróżniania trafień w kaflach, OCR i notatek audio (świadomie odrzucone).
 - **Nie przetestowane na żywo:** ścieżka dotykowa przenoszenia zmian, import na prawdziwym Takeout, dyktowanie w przeglądarkach innych niż Chrome.
 
 Pełna lista zrobionych zadań, audytów i planów: [`roadmap.md`](./roadmap.md).

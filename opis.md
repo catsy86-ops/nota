@@ -7,6 +7,27 @@ Zasady prowadzenia: `CLAUDE.md`, sekcja „Dokumentacja techniczna”.
 Działy opisane do tej pory: **Wspólne — style, krój tekstu, tryb budowa i mikrointerakcje**, **Wspólne — warstwa UI**, **Wspólne — biblioteki UI (Radix, lucide, sonner)**, **Wspólne — audyt dostępności i testy na telefonach**, **Wspólne — klawiatura ekranowa**, **Wspólne — cele dotyku**, **Praca** (nagłówek i tablica) i **Praca → Dziennik budowy**.
 Pozostałe działy (Notatki, Grafik, Kalendarz, reszta Nauki) dopisuj, gdy zadanie ich dotyczy.
 
+## Dokumenty usunięte (2026-10-21)
+
+Z repozytorium usunięto dokumenty bez otwartych zadań: zrealizowane plany, przegląd kodu, archiwum i dziennik wdrażania. Zostały w historii git do commitu `cb8e4f8` (`git show cb8e4f8:<ścieżka>`). Żywe zadania są w `roadmap.md` (jedyne otwarte: 5.3, QA na telefonie). Zostają: `README.md`, `CLAUDE.md`, `AGENTS.md`, `opis.md`, `roadmap.md`, `docs/GOTCHAS.md`, `push-server/README.md`, `signaling-server/README.md` oraz pliki w `.claude/`.
+
+| Plik | Był | Status |
+| --- | --- | --- |
+| `docs/plan-audyt-2026-10-18.md` | plan po audycie | zrealizowany |
+| `docs/plan-wizualny-2026-10-18.md` | plan upiększenia | zrealizowany (B4 zrobione) |
+| `docs/plan-mobile-rozbudowa-2026-10-18.md` | plan telefonu | zrealizowany |
+| `docs/plan-synchronizacja-2026-10-18.md` | plan sync | zrealizowany |
+| `docs/plan-praca-2026-10-18.md` | plan Pracy | zrealizowany |
+| `docs/plan-notatki-2026-10-19.md` | plan Notatek | zrealizowany |
+| `docs/plan-kalendarz-2026-10-19.md` | plan Kalendarza | zrealizowany |
+| `docs/plan-kalendarz-przypomnienia-2026-10-19.md` | plan przypomnień w Kalendarzu | zrealizowany |
+| `docs/plan-ustawienia-2026-10-19.md` | plan Ustawień | zrealizowany (fazy 1–3) |
+| `docs/plan-przypomnienia-2026-10-20.md` | plan Terminów | zrealizowany |
+| `docs/plan-cwiczenia-2026-10-20.md` | plan Ćwiczeń | zrealizowany; opis działu w sekcji „Ćwiczenia” |
+| `docs/code-review-2026-10-20.md` | przegląd kodu | poprawki zrobione (b779947, 1b8bcf8, 1380f10) |
+| `docs/archiwum/noti.md` | archiwum planu kont | nieaktualne (opisywało konta, których aplikacja nie ma) |
+| `docs/FEATURES-LOG.md` | dziennik wdrażania | historia; najnowsze wpisy w `roadmap.md` |
+
 ---
 
 ## Wspólne — stan aktualny (stos UI, telefon, układ, stany, wygląd, ruch, dostępność, push, build)
@@ -87,7 +108,7 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 
 ### Wygląd: style, kroje, tokeny, pieczątki
 
-- **Style** (`src/lib/skins.ts`, `skinStore`, klucz `kaczy.skin.v1` w kopii; CSS w `src/styles/skins.css`): Zeszyt (domyślny, kratka, bursztyn, niebieski długopis; słucha przełącznika Jasność), Plan (ciemny, rysunek techniczny, granat, nagłówki Barlow Condensed, tabliczka rysunkowa tylko na komputerze), Neon (ciemny, nagłówki Unbounded, logo z mrugnięciem), Zorza (ciemny, dryfująca zorza tylko przez `transform`, szklane kafle na komputerze, Fraunces), Miedź (jasny, beton, miedziana rura przy pasku bocznym, Bricolage Grotesque). Każdy styl ma schemat jasny/ciemny (`SKIN_SCHEME`); `html[data-skin]` jest zawsze ustawiony. Nowy styl: dopisać do `SKINS`, `SKIN_SCHEME`, `SKIN_THEME_COLOR`, `SKIN_META`, `skins.css` i listy w `e2e/a11y.spec.ts`.
+- **Style** (`src/lib/skins.ts`, `skinStore`, klucz `kaczy.skin.v1` w kopii; CSS w `src/styles/skins.css`): Zeszyt (domyślny, kratka, bursztyn, niebieski długopis; słucha przełącznika Jasność), Plan (ciemny, rysunek techniczny, granat, nagłówki Barlow Condensed, tabliczka rysunkowa tylko na komputerze), Neon (ciemny, nagłówki Unbounded, logo z mrugnięciem), Zorza (ciemny, dryfująca zorza tylko przez `transform`, szklane kafle na komputerze, Fraunces), Miedź (jasny, beton, miedziana rura przy pasku bocznym, Bricolage Grotesque), Matryca (ciemny, zielone znaki spadające na płótnie `src/components/skins/MatrixRain.tsx`, ~24 klatki/s, DPR ≤1,5, wstrzymany w ukrytej karcie; ograniczony ruch = statyczny obraz; parametry w `matrixParams.ts`, płótno ładowane leniwie przez `PaperBackdrop.tsx`) i Hydraulika (ciemny, woda animowana tylko przez `transform` (`hydro-flow`), bąbelki (`hydro-rise`) w CSS). Każdy styl ma schemat jasny/ciemny (`SKIN_SCHEME`); `html[data-skin]` jest zawsze ustawiony. Nowy styl: dopisać do `SKINS`, `SKIN_SCHEME`, `SKIN_THEME_COLOR`, `SKIN_META`, `skins.css` i listy w `e2e/a11y.spec.ts`.
 - **Motyw** (`src/hooks/useTheme.ts`): jeden wspólny stan (`useSyncExternalStore`); zmiana trafia do DOM w jednym miejscu (`applyCurrent`). Przełącznik jasny/ciemny w stylu z własnym schematem przechodzi do Zeszytu w przeciwnej jasności.
 - **Kolor paska przeglądarki** (`theme-color`) to stała hex; po zmianie tła Zeszytu trzeba ją zaktualizować ręcznie.
 - **Krój tekstu** (`src/lib/appFont.ts`, klucz `kaczy.font.v1`): Domyślny plus Inter, Nunito, Atkinson Hyperlegible Next, Literata, Manrope, Lexend. Atrybut `html[data-font]`; reguła ma niską specyficzność, więc nagłówki stylów zachowują swoje kroje. Logo i cyfry rachunku mają własne kroje. Pliki krojów ładują się przy pierwszym użyciu (`skin-fonts`, CacheFirst). Offline przed pierwszym użyciem krój nie jest w pamięci.
@@ -691,7 +712,7 @@ doczytują się przy pierwszym otwarciu (ułamek sekundy).
 **Wynik.** Paczka startowa (gzip) 390 → 383 KB, potem (osobne pozycje list budowy, `395c311`) 384,0 KB, a po leniwym
 czytniku 378,7 KB — zapas 5,3 KB do progu 384. Precache 4,37 → 4,03 MB (próg 4,3), 90 → 84 pliki.
 
-**Stan 2026-10-17:** precache 4,09 → **3,00 MB, 88 plików** (próg 3,1 MB w `e2e/bundle.spec.ts`). Cel z roadmapy
+**Stan 2026-10-17:** precache 4,09 → **3,00 MB, 88 plików** (próg 3,1 MB w `e2e/bundle.spec.ts`; od 2026-10-21 próg 3,2 MB po stylach Matryca i Hydraulika, 3,12 MB / 106 plików). Cel z roadmapy
 1,5 MB nieosiągnięty — wymagałby Nauki (`StudyView`), Grafiku (`ShiftsView`) i Markdownu poza precache, a to psuje
 offline-first tych działów. Wirtualizacja listy: nie robimy (`content-visibility` + render progresywny wystarczają).
 
@@ -944,7 +965,7 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 - **Co robi:** na Dziś, Praca i Grafik nad treścią stoi tytuł h1 (font display, 3xl) i wiersz mono z dzisiejszą datą. Na Dziś dochodzi licznik notatek („2 notatki”). Pasek nagłówka na tych widokach nie pokazuje już nazwy widoku, żeby nie powielać tytułu.
 - **Gdzie jest:** `src/components/ViewTitle.tsx` (`ViewTitle`, `isTitleBlockView`, lista `TITLE_BLOCK_VIEWS`), `src/pages/Index.tsx` (pierwsze dziecko `<main>`), `src/components/AppHeader.tsx` (h1 z klasą `hidden` na tych widokach).
 - **Jak działa:** na tych trzech widokach jedyny widoczny h1 to blok tytułowy. Nagłówek go ukrywa (`hidden` usuwa też z drzewa dostępności), więc czytnik ekranu nie widzi dwóch nagłówków poziomu 1.
-- **Decyzja:** B4 z planu wizualnego (`docs/plan-wizualny-2026-10-18.md`) zrobiony jako dom tytułu z datą. Nie dodano innych widoków.
+- **Decyzja:** B4 z planu wizualnego (plan `plan-wizualny-2026-10-18.md`, usunięty — patrz „Dokumenty usunięte”) zrobiony jako dom tytułu z datą. Nie dodano innych widoków.
 - **Testy:** w Chrome (390 px): na /dzis, /praca, /grafik jeden widoczny h1 z właściwą nazwą i wiersz z datą. E2E `routes`, `shifts`: 32/33 (jeden test offline Grafiku niestabilny pod obciążeniem, przechodzi osobno).
 - **Commit:** dada7f1, 2026-10-19.
 
@@ -1367,7 +1388,7 @@ Dział opisany w jednym miejscu; zmiany z przeglądu L1–L20 są już uwzględn
 
 ## Przegląd kodu — niskie punkty L1–L20 (2026-10-20)
 
-Poprawki z `docs/code-review-2026-10-20.md` (status pozycji tam). Opisy działów Ćwiczeń, Długów, Grafiku, Skrzynki i Ustawień zostały przepisane do stanu aktualnego (sekcje „stan aktualny”); poniżej lista zmian z tego przeglądu.
+Poprawki z przeglądu kodu z 2026-10-20 (`code-review-2026-10-20.md`, usunięty — patrz „Dokumenty usunięte”). Opisy działów Ćwiczeń, Długów, Grafiku, Skrzynki i Ustawień zostały przepisane do stanu aktualnego (sekcje „stan aktualny”); poniżej lista zmian z tego przeglądu.
 
 - **Kopia (L1).** `src/lib/exportNotes.ts`: `errName(err)` — komunikaty `logDiag` przy przywracaniu zawierają tylko nazwę błędu, bez treści kopii.
 - **Ćwiczenia (L3, L4, L6, L7).** `src/components/cwiczenia/TrainingSection.tsx`: `EquipmentForm` zapisuje tylko wartość > 0, ma przycisk „Usuń limit”; formularze godziny przypomnienia i ciężaru synchronizują się z danymi z Yjs. `src/lib/diet/yDiet.ts`: `getGoals` zwraca zamrożony obiekt z cache, `restore` pilnuje `DIET_MAX_MEALS` i zwraca `boolean`. `nextReminderAt` przeniesiono do `src/lib/timeOfDay.ts` (dawniej `lib/supplements/model.ts`); importy w `CwiczeniaView.tsx`, `TrainingSection.tsx` i `model.test.ts` zmienione.

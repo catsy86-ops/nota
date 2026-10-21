@@ -112,7 +112,8 @@ const BUDGET = {
   // 2026-10-16: 4,37 → 4,03 MB — `includeAssets` dublował 6 plików z `public/` (łapie je `globPatterns`).
   // 2026-10-17: 4,09 → 3,00 MB — PDF (jsPDF/html2canvas/purify), Statystyki poza precache (cache `static-assets` po pierwszym użyciu).
   // Cel 1,5 MB wymagałby też Nauki, Grafiku i Markdownu poza precache — nie zrobione, bo łamie offline-first tych działów.
-  precacheBytes: 3.1 * KB * KB, // 2026-10-11: 3,85 MB, 72 pliki
+  // 2026-10-21: 3 276 392 B (3,12 MB, 106 plików) po stylach Matryca i Hydraulika (MatrixRain, skins.css) — próg 3,2 MB (decyzja użytkownika).
+  precacheBytes: 3.2 * KB * KB, // 2026-10-11: 3,85 MB, 72 pliki
   domPhone: 10_500, // 2026-10-11: 9 763 przy 300 notatkach (mozaika)
   domDesktop: 20_500, // 2026-10-11: 19 220 — akcje kafla w DOM dla najechania
 };
