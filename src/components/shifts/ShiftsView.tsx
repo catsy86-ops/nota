@@ -284,7 +284,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
     // Telefon i laptop: jedna kolumna w dawnej kolejności (`contents` + `order`). Szeroki ekran (xl):
     // siatka po lewej, po prawej przyklejony panel — „Teraz”, paleta zmian i podsumowanie są pod ręką
     // przy malowaniu dni i przewijaniu (plan UI 2.3).
-    <div className="flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start xl:gap-8 short:grid short:grid-cols-[auto_minmax(0,1fr)] short:items-center short:gap-x-3 short:gap-y-2">
+    <div className="flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start xl:gap-8 short:grid short:grid-cols-[auto_minmax(0,1fr)_auto] short:items-center short:gap-x-3 short:gap-y-2">
       <div className="contents xl:flex xl:flex-col xl:gap-5 xl:min-w-0">
         <div className="order-0 w-full"><ScheduleSwitcher /></div>
         <div className="order-2 flex flex-wrap items-center justify-between gap-2">
@@ -333,7 +333,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           </button>
         </div>
 
-        <div className="order-7 space-y-5 short:col-span-2">
+        <div className="order-7 space-y-5 short:col-span-full">
           <p role="status" aria-live="polite" className="sr-only">{announce}</p>
           <p aria-live="polite" className="sr-only">{isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl })}</p>
 
@@ -354,7 +354,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           </p>
 
         </div>
-        <div className="order-8 short:col-span-2">
+        <div className="order-8 short:col-span-full">
           <ShiftDnd days={data.days} typesById={typesById} onTransfer={onDrop}>
             {isWeek ? (
               <ShiftWeekView weekStart={weekStart} days={data.days} typesById={typesById} remindersByDay={remindersByDay} titleOf={titleOf}
@@ -365,7 +365,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           </ShiftDnd>
 
         </div>
-        <div className="order-9 flex flex-wrap justify-end gap-1 short:col-span-2">
+        <div className="order-9 flex flex-wrap justify-end gap-1 short:col-span-full">
           <button type="button" onClick={exportCsv}
             className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
             <FileSpreadsheet className="w-4 h-4" /> Karta czasu (.csv)
@@ -383,10 +383,10 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
       </div>
 
       <aside aria-label="Panel Grafiku" className="contents xl:flex xl:flex-col xl:gap-5 xl:sticky xl:top-24 xl:max-h-[calc(100dvh-7rem)] xl:overflow-y-auto xl:overscroll-contain xl:pb-2">
-        <div className="order-1 empty:hidden short:col-span-2">
+        <div className="order-1 empty:hidden short:col-span-full">
           <NowCard data={data} />
         </div>
-        <div className="order-4 space-y-5 short:col-span-2 short:space-y-1">
+        <div className="order-4 space-y-5 short:col-span-full short:space-y-1">
           <BrushBar
             types={data.types}
             brush={brush}
@@ -402,7 +402,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           )}
 
         </div>
-        <div className="order-6 empty:hidden short:col-span-2">
+        <div className="order-6 empty:hidden short:col-span-full">
           {data.types.length === 0 && (
             <section aria-label="Brak rodzajów zmian" className="rounded-3xl border border-dashed border-border p-4 space-y-3">
               <p className="text-sm">
@@ -423,7 +423,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           )}
 
         </div>
-        <div className="order-10 @container short:col-span-2">
+        <div className="order-10 @container short:col-span-full">
           <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(shownMonth, "LLLL yyyy", { locale: pl })} monthKey={format(shownMonth, "yyyy-MM")} onOpenSettings={() => setSettingsOpen(true)} />
         </div>
       </aside>

@@ -359,6 +359,8 @@ Dział opisany w jednym miejscu. Refaktor `Index.tsx` i `NoteCard.tsx` (etapy 4 
 
 Dział opisany w jednym miejscu: rdzeń (dotąd nieopisany) i dodatki z 2026-10-09…20. Przegląd audytu z 2026-10-09 jest uwzględniony.
 
+**Telefon w poziomie (844×390):** `ShiftsView.tsx` — wariant `short:` ustawia siatkę na trzy kolumny: przełącznik grafików, przełącznik Miesiąc/Tydzień i nawigacja miesiąca w jednym rzędzie; paleta zmian w jednym przewijanym rzędzie; podpowiedzi (`#shift-brush-hint`) schowane. Elementy pełnej szerokości mają `short:col-span-full`, bo liczba kolumn się zmieniła. Test: `e2e/shifts-landscape.spec.ts` (chromium, iphone-14, pixel-7).
+
 ### Co robi
 
 - **Siatka miesiąca** (`ShiftMonthGrid`): dni tygodnia od poniedziałku, w komórce numer dnia, skrót rodzaju zmiany w kolorze i strzałka nadgodzin (↑/↓) na telefonie. Nawigacja miesiąca; widok tygodnia (`ShiftWeekView`). Siatka to `role="grid"` ze strzałkami; ←/→ i ↑/↓ przesuwają dzień (`dayKeyCommand`).
