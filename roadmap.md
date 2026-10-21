@@ -1,5 +1,19 @@
 # Roadmap
 
+> Ten plik to historia decyzji i audytów (od 2026-09-22), z wpisami w kolejności powstawania.
+> **Aktualny stan funkcji** jest w `opis.md`. Poniżej stan na 2026-10-21 — tylko to, co nadal otwarte.
+
+## Stan na 2026-10-21 — otwarte punkty
+
+- [ ] **QA na prawdziwym telefonie** (punkt 5.3 niżej): klawiatura w kompozytorze, haptyka, gesty, przewijanie z paskiem adresu, instalacja PWA.
+- [ ] **Web Push:** serwer `push-server/` jest zrobiony (`fe01dcd`), ale nie wdrożony i nie przetestowany na telefonie. Bez niego przypomnienia działają tylko przy otwartej aplikacji.
+- [ ] **Wdrożenie hostingu:** konfiguracje Vercel i Netlify są w repo; brak połączenia repo z kontem (decyzja użytkownika).
+- [ ] **Decyzje z 2026-10-11 (bez rozstrzygnięcia w repo):** (2) Android push — odłożony; (3) import własnych materiałów do Nauki — bez decyzji; (4) egzekwowanie CSP — nagłówek nadal `Content-Security-Policy-Report-Only` w `netlify.toml`, do przeniesienia inline-skryptu z `offline.html`.
+- [ ] **Zgodność wersji przed D5:** stara aplikacja nie czyta wpisów dziennika w nowym formacie (potwierdzone testem). Propozycja: okres przejściowy albo aktualizacja wszystkich urządzeń przed użyciem. Decyzja użytkownika.
+- [ ] **Pełny e2e po ostatnich zmianach:** przebieg 2026-10-21 dał 464 zaliczone, 2 pominięte, 3 niezaliczone (Grafik w poziomie). Ten test naprawiono w `ccefb42`, ale pełnego przebiegu po naprawie nie robiono.
+
+Zamknięte 2026-10-21: krój tekstu w nagłówkach Zeszytu, motyw pory roku (działa od razu, tło Zeszytu), testy Matrycy i Hydrauliki (`e2e/skin-motion.spec.ts`), Grafik w poziomie (`ccefb42`), dokumentacja serwerów i README, usunięte zrealizowane plany.
+
 - [x] Panel kolejki offline: liczba oczekujących zmian, status, ręczna synchronizacja
 - [x] Mobile UI: karta notatki i panel „Ostatnie akcje” dobrze mieszczą się na ekranie telefonu
 

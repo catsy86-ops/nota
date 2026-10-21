@@ -8,9 +8,10 @@ Jak to działa:
 1. W **Ustawienia → Ogólne → Powiadomienia przy zamkniętej aplikacji** wpisujesz adres
    serwera i stukasz **Włącz**. Telefon tworzy subskrypcję Web Push z kluczem serwera.
 2. Aplikacja liczy terminy na 14 dni i wysyła je na serwer (`PUT /schedule`). Wysyła je ponownie
-   przy każdej zmianie danych, co godzinę i przy chowaniu aplikacji. Lista obejmuje przypomnienia
-   notatek, Grafik na jutro, raport dnia i tygodnia, problem otwarty od 3 dni i materiał
-   zamówiony 3 dni temu.
+   przy każdej zmianie danych, co godzinę i przy chowaniu aplikacji. Lista obejmuje: przypomnienia
+   notatek (także kolejne terminy serii), Grafik na jutro, „Raport dnia gotowy”, „Raport tygodnia
+   gotowy”, problem w dzienniku budowy otwarty od 3 dni, materiał zamówiony 3 dni temu i nie
+   dojechał oraz serwis dziś lub zaległy (karta budowy).
 3. Serwer co 20 s sprawdza terminy i wysyła należne przez usługę push przeglądarki
    (FCM, Mozilla, Apple).
 

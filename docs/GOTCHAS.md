@@ -32,7 +32,7 @@ i sprawdzenie, jak to zweryfikować. Historia decyzji: [`roadmap.md`](../roadmap
   Testy z dymkami: ustaw stały zegar na dzień roboczy przed 17:00 (np. środa 14.10.2026, 12:00).
 - **Precache: nie dubluj `includeAssets` z `globPatterns`.** Pliki z `public/` łapie już `globPatterns`;
   `includeAssets` dopisywało je drugi raz do `sw.js` i test budżetu liczył je podwójnie (stan od `3d31b58`).
-- **Zapas paczki startowej ~5 KB (2026-10-16, po leniwym czytniku).** Rzadko otwierane okna i narzędzia ładuj leniwie (`lazy` + `Suspense`),
+- **Zapas paczki startowej jest mały (próg gzip 393 KB i precache 3,2 MB w `e2e/bundle.spec.ts`; test budżetu przechodzi, 2026-10-21).** Rzadko otwierane okna i narzędzia ładuj leniwie (`lazy` + `Suspense`),
   dane działu Praca w głównej paczce tylko przez `study/data.ts` (bez `store.ts`, który ciągnie materiał).
 - **Budżet bundla.** `e2e/bundle.spec.ts` pilnuje wejściowego JS (gzip). Lazy-ładowane karty widoków
   nie wchodzą do budżetu; nowy kod dodawany statycznie do `Index.tsx` — tak.

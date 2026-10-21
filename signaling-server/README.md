@@ -2,20 +2,25 @@
 
 Notatnik synchronizuje notatki i obrazy między urządzeniami peer-to-peer
 przez WebRTC (`y-webrtc`, patrz `src/lib/yjsSync.ts` i `src/lib/imageSync.ts`).
-Do nawiązania połączenia P2P (WebRTC) potrzebny jest serwer sygnalizacyjny —
-domyślnie apka używa publicznych serwerów udostępnianych przez projekt
-`y-webrtc`. **Treść notatek nigdy przez ten serwer nie przechodzi** — służy
-wyłącznie do wymiany danych potrzebnych do nawiązania bezpośredniego
-połączenia (offer/answer/ICE), sam jest ślepy na to, co się synchronizuje.
+Do nawiązania połączenia P2P potrzebny jest serwer sygnalizacyjny, który tylko
+wymienia dane połączenia (offer/answer/ICE). **Treść notatek nigdy przez ten
+serwer nie przechodzi** — jest na nią ślepy.
 
-Ten folder to gotowy do uruchomienia, samodzielny serwer sygnalizacyjny —
-oficjalna implementacja z pakietu `y-webrtc` (`bin/server.js`), wydzielona
-tutaj, żeby dało się ją wdrożyć własnym kosztem zamiast (lub obok) polegania
-na publicznych serwerach.
+Domyślnie aplikacja używa publicznych serwerów z pakietu `y-webrtc`. Ten folder
+to gotowy, samodzielny serwer (`y-webrtc-signaling`, czyli oficjalna
+implementacja z `y-webrtc`), który można postawić na własnym VPS i wskazać
+w aplikacji zamiast albo obok publicznych.
 
-**Nie jest to wpięte do apki jako domyślne** — to świadoma decyzja: wdrożenie
-własnego serwera wymaga miejsca do hostowania, którego na razie nie ma.
-Kod jest gotowy, gdy zajdzie taka potrzeba.
+## Wskazanie serwera w aplikacji
+
+Ustawienia → Sync → **Własne serwery sygnalizacyjne**: po jednym adresie w linii,
+w formacie `wss://…` (zalecane) albo `ws://…`. Adresy można oddzielić też spacją lub
+przecinkiem. Wpis, który nie jest adresem `ws://`/`wss://`, nie zostaje zapisany —
+aplikacja wymienia go pod polem. Pusta lista przywraca domyślne serwery.
+
+Adresy są zapisane na urządzeniu (nie w dokumencie Yjs). Tekst notatek i obrazy
+używają tej samej listy (`providerOptions` w `yjsSync.ts`), więc nie rozjeżdżają się
+na różne serwery. Stan połączeń (ile serwerów odpowiada) widać w Sync i w diagnostyce.
 
 ## Uruchomienie lokalnie
 
@@ -33,26 +38,10 @@ docker build -t kaczy-signaling .
 docker run -p 4444:4444 kaczy-signaling
 ```
 
-Wdrożenie na dowolnym VPS z Dockerem: skopiuj ten folder, zbuduj obraz,
-wystaw port za reverse proxy z TLS (np. Caddy/nginx + certyfikat) — WebRTC
-signaling przez `wss://` (nie `ws://`) jest wymagany przez przeglądarki
-poza `localhost`.
+## Wdrożenie
 
-## Podpięcie własnego serwera do apki
-
-Obecnie `src/lib/yjsSync.ts` i `src/lib/imageSync.ts` tworzą `WebrtcProvider`
-bez opcji `signaling`, więc używane są domyślne publiczne serwery z pakietu
-`y-webrtc`. Żeby użyć własnego serwera zamiast (lub obok) nich, dodaj opcję
-`signaling` przy tworzeniu obu providerów:
-
-```ts
-new WebrtcProvider(roomNameFor(code), yjsStore.doc, {
-  password: code,
-  signaling: ["wss://twoj-serwer.example.com"],
-});
-```
-
-To samo w `imageSync.ts` przy tworzeniu providera dla transportu obrazów.
-Adres serwera warto trzymać w zmiennej środowiskowej Vite (`VITE_SIGNALING_URL`),
-nie na sztywno w kodzie — to osobna, mała zmiana do zrobienia w momencie
-wdrożenia własnego serwera.
+Na dowolnym VPS z Dockerem: skopiuj ten folder, zbuduj obraz i wystaw port za
+reverse proxy z TLS (np. Caddy albo nginx z certyfikatem). Przeglądarki poza
+`localhost` wymagają `wss://` (nie `ws://`), więc samo otwarte gniazdo nie wystarczy.
+Potem wpisz adres `wss://…` w Ustawienia → Sync na każdym urządzeniu, które ma się
+synchronizować.
