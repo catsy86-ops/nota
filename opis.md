@@ -145,7 +145,12 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 
 - Aplikacja bez śladów szablonu Lovable: w budowaniu nie działa `lovable-tagger`, service worker rejestruje się na każdym hoście produkcyjnym, offline obsługuje każdą nawigację (`vite.config.ts`: `workbox.runtimeCaching` → `html-navigations`).
 - `src/lib/registerSW.ts` pomija rejestrację tylko w dev, w ramce (iframe) i przy `?sw=off` (wtedy wyrejestrowuje workera). Trasa `/~oauth` nie jest już wyjątkiem.
-- Kroje stylów i kroje poza precache (budżet precache 4,3 MB) trafiają do cache `skin-fonts` przy pierwszym użyciu. Skróty PWA i udostępnianie z innej aplikacji: `public/manifest.webmanifest`, `public/sw-share.js`.
+- Kroje stylów i kroje poza precache (budżet precache 3,2 MB) trafiają do cache `skin-fonts` przy pierwszym użyciu. Skróty PWA i udostępnianie z innej aplikacji: `public/manifest.webmanifest`, `public/sw-share.js`.
+- **Biblioteka:** `vite-plugin-pwa` 2.0.0 (Workbox 7.4), `registerType: "autoUpdate"`, ale `skipWaiting: false` — nowy worker czeka, aż aplikacja sama go podmieni (niżej).
+- **Odświeżanie aktualizacji** (`src/lib/registerSW.ts`): czekająca wersja podmienia się sama, gdy karta jest schowana i `hasUnsavedWork()` jest fałszem (`canApplyWaitingUpdate`). Przy otwartej karcie pokazuje się dymek „Dostępna nowa wersja” (`src/main.tsx`); „Odśwież” przy niezapisanej pracy nie przeładowuje, tylko prosi o chwilę. Sprawdzanie: po powrocie do karty (co ≥30 min) i co godzinę (`UPDATE_CHECK_MS`). Testy: `src/lib/registerSW.test.ts`.
+- **Otwieranie plików z systemu** (File Handling API, tylko Chromium): `file_handlers` w manifeście dla `.md`, `.markdown`, `.json`, `.zip`. `src/lib/fileLaunch.ts` (`setupFileLaunch`, bufor `takeLaunchFiles`) odbiera je z `launchQueue`; `useExternalImport` (`src/hooks/useImportExport.ts`) otwiera import z tymi plikami. Testy: `src/lib/fileLaunch.test.ts`, `e2e/file-launch.spec.ts` (atrapa `launchQueue`, bo Playwright jej nie symuluje).
+- **Manifest:** `display_override` (standalone, minimal-ui), `handle_links: "preferred"`, `prefer_related_applications: false`.
+- **Próg paczki startowej** w `e2e/bundle.spec.ts`: 394 KB gzip (po PWA: 402 581 B). Podniesione z 393 KB — do potwierdzenia.
 
 ### Testy e2e na telefonach
 

@@ -25,6 +25,8 @@ import "./styles/site.css";
 import "./lib/siteMode";
 import "./lib/appFont";
 import { registerServiceWorker, applyServiceWorkerUpdate, SW_UPDATE_EVENT } from "./lib/registerSW";
+import { hasUnsavedWork } from "./lib/saveStatus";
+import { setupFileLaunch } from "./lib/fileLaunch";
 import { requestPersistentStorage } from "./lib/storagePersistence";
 import { installGlobalDiagHandlers } from "./lib/diagnostics";
 import { startTabSync } from "./lib/tabSync";
@@ -44,6 +46,7 @@ createRoot(document.getElementById("root")!).render(<App />);
 hideBootSplash(yjsStore.ready());
 
 registerServiceWorker();
+setupFileLaunch();
 void requestPersistentStorage();
 
 window.addEventListener(SW_UPDATE_EVENT, (e) => {
@@ -53,7 +56,14 @@ window.addEventListener(SW_UPDATE_EVENT, (e) => {
     duration: Infinity,
     action: {
       label: "Odśwież",
-      onClick: () => applyServiceWorkerUpdate(registration),
+      // Z niezapisaną pracą przeładowanie zgubiłoby ją: najpierw zapis, potem wersja.
+      onClick: () => {
+        if (hasUnsavedWork()) {
+          toast("Poczekaj, aż zapisze się ostatnia zmiana", { description: "Wtedy wersja podmieni się bez utraty tekstu." });
+          return;
+        }
+        applyServiceWorkerUpdate(registration);
+      },
     },
   });
 });

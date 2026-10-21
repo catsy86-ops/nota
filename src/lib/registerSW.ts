@@ -2,7 +2,20 @@
  * Jedyne miejsce rejestracji service workera aplikacji.
  * Nigdy nie rejestruje w dev ani w iframe (`?sw=off` też wyłącza).
  */
+import { hasUnsavedWork } from "@/lib/saveStatus";
+
 const SW_URL = "/sw.js";
+
+/** Co tyle sprawdzamy, czy jest nowa wersja, gdy karta stoi otwarta. */
+export const UPDATE_CHECK_MS = 60 * 60_000;
+
+/**
+ * Czy oczekującą wersję można już podmienić bez straty: karta jest schowana (użytkownik wyszedł)
+ * i nic nie czeka na zapis. Wtedy reload nie zabierze żadnej pracy.
+ */
+export function canApplyWaitingUpdate(state: { hidden: boolean; unsaved: boolean; waiting: boolean }): boolean {
+  return state.waiting && state.hidden && !state.unsaved;
+}
 
 async function unregisterAppSW() {
   if (!("serviceWorker" in navigator)) return;
@@ -58,6 +71,15 @@ function watchForUpdates(registration: ServiceWorkerRegistration, hadControllerA
     });
   });
 
+  // Oczekująca wersja podmienia się sama, gdy użytkownik wychodzi z aplikacji i nie ma
+  // niezapisanych zmian. Przy otwartej karcie zostaje dymek „Dostępna nowa wersja”.
+  document.addEventListener("visibilitychange", () => {
+    const hidden = document.visibilityState === "hidden";
+    if (canApplyWaitingUpdate({ hidden, unsaved: hasUnsavedWork(), waiting: !!registration.waiting })) {
+      applyServiceWorkerUpdate(registration);
+    }
+  });
+
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     // Pierwsze wejście: strona startuje bez kontrolera, a `clientsClaim: true`
     // sprawia, że świeżo aktywowany worker ją przejmuje — `controllerchange`
@@ -91,13 +113,16 @@ export function registerServiceWorker() {
       .register(SW_URL, { scope: "/" })
       .then((registration) => {
         watchForUpdates(registration, hadControllerAtLoad);
-        // Zainstalowana PWA bywa tygodniami „w tle”: po powrocie do aplikacji sprawdź nową wersję (co ≥30 min).
+        // Zainstalowana PWA bywa tygodniami „w tle”: po powrocie do aplikacji sprawdź nową wersję (co ≥30 min),
+        // a gdy karta stoi otwarta, co godzinę. `update()` offline się nie udaje — to nic nie szkodzi.
+        const checkForUpdate = () => { registration.update().catch(() => { /* offline */ }); };
         let lastCheck = Date.now();
         document.addEventListener("visibilitychange", () => {
           if (document.visibilityState !== "visible" || Date.now() - lastCheck < 30 * 60_000) return;
           lastCheck = Date.now();
-          registration.update().catch(() => { /* offline */ });
+          checkForUpdate();
         });
+        setInterval(checkForUpdate, UPDATE_CHECK_MS);
       })
       .catch(() => {
         /* noop */

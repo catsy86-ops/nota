@@ -7,6 +7,19 @@
   "scope": "/",
   "display": "standalone",
   "launch_handler": { "client_mode": ["navigate-existing", "auto"] },
+  "display_override": ["standalone", "minimal-ui"],
+  "handle_links": "preferred",
+  "prefer_related_applications": false,
+  "file_handlers": [
+    {
+      "action": "/",
+      "accept": {
+        "text/markdown": [".md", ".markdown"],
+        "application/json": [".json"],
+        "application/zip": [".zip"]
+      }
+    }
+  ],
   "background_color": "#15110e",
   "theme_color": "#f0b429",
   "lang": "pl",

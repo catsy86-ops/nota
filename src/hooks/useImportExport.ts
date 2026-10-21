@@ -8,6 +8,7 @@ import { pluralPl } from "@/lib/plural";
 import { parseShareParam } from "@/lib/shareLink";
 import { logSecurity } from "@/lib/diagnostics";
 import type { ImportPlan } from "@/lib/import";
+import { LAUNCH_FILES_EVENT, takeLaunchFiles } from "@/lib/fileLaunch";
 
 type AddNote = ReturnType<typeof useNotes>["addNote"];
 
@@ -120,6 +121,20 @@ export function useExternalImport() {
       setStage("summary");
     }
   }, [plan, reset]);
+
+  // Plik otwarty z systemu (File Handling): od razu w imporcie. Bufor wypełniony przed montażem
+  // (launchQueue działa wcześniej niż React) oddajemy tutaj, a późniejsze pliki przez zdarzenie.
+  useEffect(() => {
+    const drain = () => {
+      const files = takeLaunchFiles();
+      if (!files.length) return;
+      openDialog();
+      void pickFiles(files);
+    };
+    drain();
+    window.addEventListener(LAUNCH_FILES_EVENT, drain);
+    return () => window.removeEventListener(LAUNCH_FILES_EVENT, drain);
+  }, [openDialog, pickFiles]);
 
   return { open, stage, plan, error, openDialog, close, pickFiles, confirm, backToPick: reset };
 }
