@@ -59,7 +59,7 @@ export function PushSettings() {
       <div className="space-y-3 rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
         <p className="text-xs text-muted-foreground">
           Przypomnienia notatek, Grafik na jutro, raport dnia i tygodnia, problemy i materiał z budowy przyjdą o czasie także wtedy,
-          gdy NOTKI są zamknięte. Wysyła je Twój serwer powiadomień (folder <code className="font-mono whitespace-nowrap">push-server</code>).
+          gdy NOTKI są zamknięte. Wysyła je Twój serwer powiadomień.
           Trafiają na niego terminy i tytuły na 14 dni — bez treści notatek, a z notatek prywatnych bez tytułów.
         </p>
         {support !== "ok" ? (

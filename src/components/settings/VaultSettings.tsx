@@ -24,7 +24,7 @@ export function VaultSettings() {
   return (
     <Section title="Prywatne notatki">
       <div className="rounded-xl border border-border/60 bg-muted/30 px-4 py-3 space-y-3">
-        <p className="text-xs text-muted-foreground flex items-start gap-2" data-testid="vault-status">
+        <p role="status" className="text-xs text-muted-foreground flex items-start gap-2" data-testid="vault-status">
           <ShieldCheck className="w-4 h-4 shrink-0 text-primary-ink" aria-hidden />
           <span>{STATUS[vault.phase]}</span>
         </p>
@@ -56,7 +56,7 @@ export function VaultSettings() {
             id="vault-autolock"
             value={minutes}
             onChange={(e) => setAutoLockMinutes(Number(e.target.value))}
-            className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+            className="h-9 coarse:h-11 rounded-md border border-input bg-background px-2 text-sm"
           >
             {AUTOLOCK_CHOICES.map((m) => <option key={m} value={m}>{CHOICE_LABEL(m)}</option>)}
           </select>

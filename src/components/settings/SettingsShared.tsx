@@ -1,7 +1,7 @@
 import { useId, useState } from "react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { changedViewPrefs, resetViewPrefKeys, useViewPrefs, VIEW_PREF_LABELS, type ViewPrefs } from "@/lib/viewPrefs";
 
@@ -28,7 +28,7 @@ export function ResetSectionButton({ title, keys }: { title: string; keys: reado
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Anuluj</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { resetViewPrefKeys(keys); toast.success(`Przywrócono domyślne: ${title}`); }}>
+            <AlertDialogAction className={buttonVariants({ variant: "destructive" })} onClick={() => { resetViewPrefKeys(keys); toast.success(`Przywrócono domyślne: ${title}`); }}>
               Przywróć
             </AlertDialogAction>
           </AlertDialogFooter>

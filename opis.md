@@ -1224,6 +1224,35 @@ Dział opisany w jednym miejscu; obejmuje fazy 1–3 planu z 2026-10-19 i zgodę
   - **Kopia i dane:** kopia zapasowa, przypomnienie o kopii (mierzy czas od ostatniej kopii), automatyczne kopie.
   - **Sync:** parowanie urządzeń, kody, „Zapomnij”, synchronizacja przez plik (`SyncFileSection`).
 - **Opis okna** nie obiecuje, że wszystko działa tylko w tej przeglądarce.
+
+**Przegląd P1 (2026-10-21):**
+- **Globalny reset** (`AppearanceSettings.tsx`) kasuje też ustawienia kopii (`autoExportDays`, `backupReminderDays`) — opis w potwierdzeniu nie mówi już, że kopia zostaje. Reset jest pełny z potwierdzeniem (decyzja z 19.10).
+- **Stan wyboru dla czytnika:** Układ, Gęstość i Liczba kolumn mają `aria-pressed`.
+- **Kopia do jednego pliku** (`BackupSettings.tsx`): opis mówi, że każdy kolejny backup, także automatyczny, nadpisuje poprzedni.
+- **Zakres kopii** (`exportNotes.ts` → `SETTINGS_KEYS`): dodane `kaczy:review.day`, `kaczy:badge.enabled`, `kaczy.vault.autolock.v1` oraz `kaczy.push.v1`. Przy przywracaniu push zostaje z adresem serwera, ale wyłączony, a `sentHash`/`last` są czyszczone (`pushPrefsForRestore`). Zgoda na dyktowanie (`kaczy.dictation.consent`) i parowanie sync są celowo poza kopią.
+- **Destrukcyjny styl** potwierdzeń: „Odłącz to urządzenie”, „Przywróć backup”, reset globalny i reset sekcji używają `buttonVariants({ variant: "destructive" })`.
+- **Serwery sync** (`SyncSettings.tsx`): ostrzeżenie w opisie — zmiana tylko na jednym urządzeniu może je odłączyć od grupy.
+- Testy: `src/lib/fullBackup.test.ts` (blok „ustawienia w kopii — zakres i push”).
+
+**Przegląd P2 (2026-10-21):**
+- **„Ogólne” — kolejność i skoki:** `GeneralSettings.tsx`. Na górze pasek skoków (`JumpNav`, `sticky`) do grup: Powiadomienia, Przypomnienia, Edytor, Praca, Prywatne, Skróty. Kotwice `#ogolne-*` z `scroll-mt-14`. Każdy reset (`ResetSectionButton`) stoi na końcu swojej grupy; lista skrótów na dole.
+- **Powiadomienia:** status przeglądarki, Push, odznaka. **Przypomnienia:** przegląd tygodnia, „Dziś”, „Ten tydzień”. Web clipper i dyktowanie przeniesione na dół.
+- **Diagnostyka** przeniesiona z „Ogólne” do „Kopia i dane” (`BackupSettings.tsx`, `handleDownloadReport`).
+- **„Przywracanie z kopii”:** nagłówek sekcji wokół przycisku przywracania w „Kopia i dane”.
+- **Etykiety:** „Autozapis” (było „Autosave”), „Zakładka do zapisu stron w NOTKI” (było „Web clipper (zakładka w przeglądarce)”), „Tryb budowa: większy tekst i przyciski” (nazwa radiogrupy „Tryb budowa” zostaje — testy ją używają).
+- **Cele dotykowe 44 px** (`coarse:`): godziny i dzień przypomnień, kolumny w Wyglądzie, wybór auto-blokady skarbca.
+- **Skarbiec:** status w `role="status"`, żeby czytnik ogłaszał „Zablokuj teraz”.
+
+**Przegląd P3 (2026-10-21):**
+- **Odmiana:** `src/lib/plural.ts` → `dniPl` („1 dzień”, „2 dni”) i `godzinPl` (biernik: „1 godzinę”, „22 godziny”, „12 godzin”). Używają ich Kopia (auto-backup, przypomnienie, „N dni temu”) i Ogólne („Dziś”, 24 h+). Testy: `src/lib/plural.test.ts`.
+- **Dni tygodnia** w „Ten tydzień” z `REVIEW_DAY_NAMES` (`weeklyReview.ts`), jak w przeglądzie.
+- **Nazwa Grafiku** małą literą jak w oknie („Ustawienia grafiku”) — e2e szuka tej nazwy.
+- **Sync:** podpowiedź mówi, że 8-znakowy kod już nie działa; nagłówki podsekcji to `h3`.
+- **Push:** z opisu zniknęła nazwa folderu `push-server`.
+- **Efekty:** przycisk „Test” → „Podgląd”.
+- **Wygląd:** globalny reset „Przywróć domyślne” jest nieaktywny, gdy nie ma czego resetować.
+- **Kopie:** w tekstach zamiast „Backupy” jest „Kopie” (spójnie z resztą zakładki).
+- **Świadomie bez zmian:** etykiety „wyczyść”/„wyłącz” (różne znaczenie), przełącznik „Zgodność ze starszą wersją” jako checkbox (zmiana wyglądu bez zysku), `aria-pressed` w skórkach i krojach (zmiana semantyki wymaga osobnego przeglądu).
 - **Reset „Przywróć domyślne” w Wyglądzie** kasuje cały widok (decyzja właściciela: „Wszystko”). Potwierdzenie to lista tego, co wróci do domyślnych, i tego, czego reset nie dotyczy. Lista zmian liczona jest z aktualnego stanu przy każdym renderze.
 - **Reset w sekcji.** W Ogólne (edytor, przypomnienia) i w Kopii i danych jest przycisk „Przywróć domyślne w tej sekcji”. Wyłącza się, gdy nic w sekcji nie różni się od domyślnych; potwierdzenie wymienia tylko ustawienia, które faktycznie się zmienią (np. „Zmienią się: autosave”).
 - **Link do karty** `?settings=wyglad|ogolne|kopia|sync` otwiera Ustawienia na tej karcie i znika z adresu. Nieznana wartość nie otwiera okna. Działa przy otwieraniu aplikacji i przy zmianie adresu w otwartym oknie; nie zmienia otwartej aplikacji, jeśli adres zmieni się bez przeładowania.

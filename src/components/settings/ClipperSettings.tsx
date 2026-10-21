@@ -14,7 +14,7 @@ export function ClipperSettings() {
   useEffect(() => { linkRef.current?.setAttribute("href", code); }, [code]);
 
   return (
-    <Section title="Web clipper (zakładka w przeglądarce)">
+    <Section title="Zakładka do zapisu stron w NOTKI">
       <p className="text-xs text-muted-foreground">
         Przeciągnij przycisk poniżej na pasek zakładek. Na dowolnej stronie kliknij zakładkę — tytuł, adres
         i zaznaczony fragment trafią do nowej notatki w NOTKI.

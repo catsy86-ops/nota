@@ -10,6 +10,12 @@ export function pluralPl(n: number, forms: [string, string, string]): string {
   return last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14) ? forms[1] : forms[2];
 }
 
+/** „1 dzień”, „3 dni”, „12 dni”. */
+export const dniPl = (n: number) => `${n} ${pluralPl(n, ["dzień", "dni", "dni"])}`;
+
+/** Biernik po „raz na”: „1 godzinę”, „3 godziny”, „22 godziny”, „12 godzin”. */
+export const godzinPl = (n: number) => `${n} ${pluralPl(n, ["godzinę", "godziny", "godzin"])}`;
+
 /** „1 słowo”, „3 słowa”, „5 słów”. */
 export const wordsPl = (n: number) => `${n} ${pluralPl(n, ["słowo", "słowa", "słów"])}`;
 

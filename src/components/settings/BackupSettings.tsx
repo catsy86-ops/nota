@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Download, Database, ShieldCheck, ShieldAlert, FileCog } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Download, Database, ShieldCheck, ShieldAlert, FileCog, FileDown } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useViewPrefs, setViewPref, VIEW_PREF_GROUPS } from "@/lib/viewPrefs";
 import { describeSkippedAttachments, exportFullBackup, pickFullBackup, restoreFullBackup, type BackupAttachmentReport, type RestoreOptions } from "@/lib/exportNotes";
 import { describeBackupSkipped } from "@/lib/backupSkipped";
+import { dniPl } from "@/lib/plural";
 import type { FullBackup } from "@/lib/noteSchema";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -90,7 +91,7 @@ function BackupFileTarget() {
     const ok = await pickBackupFile(`kaczy-full-backup-${new Date().toISOString().slice(0, 10)}.json`);
     if (ok) {
       setFileName(await getBackupFileName());
-      toast.success("Backupy będą teraz nadpisywać ten plik zamiast pobierać nowe");
+      toast.success("Kopie będą teraz nadpisywać ten plik zamiast pobierać nowe");
     }
   }
 
@@ -109,8 +110,8 @@ function BackupFileTarget() {
           <FileCog className="w-4 h-4 text-muted-foreground shrink-0" />
           <p className="text-foreground">
             {fileName
-              ? <>Backupy nadpisują <span className="font-semibold">{fileName}</span> zamiast pobierać nowy plik.</>
-              : "Domyślnie każdy backup to nowy plik w Pobranych. Możesz zamiast tego wskazać jeden plik, który będzie nadpisywany."}
+              ? <>Kopie nadpisują <span className="font-semibold">{fileName}</span> zamiast pobierać nowy plik. Każdy kolejny backup, także automatyczny, zastępuje poprzedni — starszych kopii w tym pliku nie będzie.</>
+              : "Domyślnie każdy backup to nowy plik w Pobranych. Możesz zamiast tego wskazać jeden plik, który będzie nadpisywany — wtedy każdy kolejny backup, także automatyczny, zastąpi poprzedni, a starsze kopie przepadną."}
           </p>
         </div>
         {fileName ? (
@@ -226,7 +227,7 @@ function RestoreBackup() {
           </div>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={busy}>Anuluj</AlertDialogCancel>
-            <AlertDialogAction disabled={busy} onClick={(e) => { e.preventDefault(); void restore(); }}>Przywróć backup</AlertDialogAction>
+            <AlertDialogAction className={buttonVariants({ variant: "destructive" })} disabled={busy} onClick={(e) => { e.preventDefault(); void restore(); }}>Przywróć backup</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -234,7 +235,16 @@ function RestoreBackup() {
   );
 }
 
-/** "Dane" tab: auto-backup, backup/today/week reminders, manual export/import. */
+async function handleDownloadReport() {
+  try {
+    const { downloadDiagReport } = await import("@/lib/diagnosticsReport");
+    await downloadDiagReport();
+  } catch {
+    toast.error("Nie udało się przygotować raportu");
+  }
+}
+
+/** "Kopia i dane" tab: auto-backup, backup/today/week reminders, manual export/import. */
 export function BackupSettings() {
   const prefs = useViewPrefs();
   const [skipPrompt, setSkipPrompt] = useState<{ text: string; resolve: (ok: boolean) => void } | null>(null);
@@ -247,7 +257,7 @@ export function BackupSettings() {
       <StoragePersistenceStatus />
       <BackupFileTarget />
 
-      <Section title={`Auto-backup ${prefs.autoExportDays === 0 ? "(wyłączony)" : `co ${prefs.autoExportDays} dni`}`}>
+      <Section title={`Auto-backup ${prefs.autoExportDays === 0 ? "(wyłączony)" : `co ${dniPl(prefs.autoExportDays)}`}`}>
         <Slider
           value={[prefs.autoExportDays]}
           min={0} max={30} step={1}
@@ -259,7 +269,7 @@ export function BackupSettings() {
         </p>
       </Section>
 
-      <Section title={`Przypomnienie ${prefs.backupReminderDays === 0 ? "(wyłączone)" : `co ${prefs.backupReminderDays} dni`}`}>
+      <Section title={`Przypomnienie ${prefs.backupReminderDays === 0 ? "(wyłączone)" : `co ${dniPl(prefs.backupReminderDays)}`}`}>
         <Slider
           value={[prefs.backupReminderDays]}
           min={0} max={60} step={1}
@@ -270,7 +280,7 @@ export function BackupSettings() {
           {(() => {
             const d = daysSinceBackup();
             if (d === null) return "Nie ma jeszcze backupu.";
-            return `Ostatni backup: ${d === 0 ? "dziś" : `${d} dni temu`}.`;
+            return `Ostatni backup: ${d === 0 ? "dziś" : `${dniPl(d)} temu`}.`;
           })()}
         </p>
       </Section>
@@ -292,7 +302,9 @@ export function BackupSettings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      <RestoreBackup />
+      <Section title="Przywracanie z kopii">
+        <RestoreBackup />
+      </Section>
 
       <ResetSectionButton title="kopia" keys={VIEW_PREF_GROUPS.kopia} />
 
@@ -300,6 +312,20 @@ export function BackupSettings() {
         <p className="font-semibold text-foreground">💡 Wskazówka</p>
         <p>Pełny backup zawiera wszystkie notatki (w tym archiwum i kosz), etykiety, foldery, historię wersji, ustawienia oraz odznaki. Nie zawiera kodu parowania urządzeń. Przywrócenie zastąpi notatki w tej przeglądarce i odświeży aplikację.</p>
       </div>
+
+      <Section title="Diagnostyka">
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold">Raport diagnostyczny</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Plik tekstowy z wersją aplikacji, stanem pamięci i synchronizacji oraz ostatnimi błędami. Bez treści notatek i bez kodu parowania. Nic nie jest wysyłane.
+            </p>
+          </div>
+          <Button type="button" size="sm" variant="outline" onClick={handleDownloadReport} className="shrink-0 gap-1.5">
+            <FileDown className="w-3.5 h-3.5" />Pobierz
+          </Button>
+        </div>
+      </Section>
     </div>
   );
 }

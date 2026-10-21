@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Sun, Moon, Monitor, Zap, Accessibility, HardHat, CircleOff, Contrast } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useViewPrefs, setViewPref, resetViewPrefs, changedViewPrefs, VIEW_PREF_LABELS, type Density, type Layout } from "@/lib/viewPrefs";
 import { changeView } from "@/lib/viewChange";
@@ -76,7 +76,7 @@ export function AppearanceSettings() {
         </p>
       </Section>
 
-      <Section title="Tryb budowa">
+      <Section title="Tryb budowa: większy tekst i przyciski">
         <Segmented label="Tryb budowa" options={siteOptions} value={siteMode} onChange={setSiteMode} />
         <p className="text-xs text-muted-foreground mt-1.5">
           {siteMode === "auto"
@@ -136,6 +136,7 @@ export function AppearanceSettings() {
             <button
               key={l}
               onClick={() => changeView(() => setViewPref("layout", l))}
+              aria-pressed={prefs.layout === l}
               className={cn(
                 "p-3 rounded-xl border text-xs font-medium transition-all capitalize",
                 prefs.layout === l ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
@@ -151,6 +152,7 @@ export function AppearanceSettings() {
             <button
               key={d}
               onClick={() => changeView(() => setViewPref("density", d))}
+              aria-pressed={prefs.density === d}
               className={cn(
                 "p-3 rounded-xl border text-xs font-medium transition-all",
                 prefs.density === d ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
@@ -164,6 +166,7 @@ export function AppearanceSettings() {
         <div className="flex items-center gap-2">
           <button
             onClick={() => changeView(() => setViewPref("autoColumns", true))}
+            aria-pressed={prefs.autoColumns}
             className={cn("flex-1 px-3 py-2 rounded-xl border text-xs font-medium",
               prefs.autoColumns ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60")}
           >Auto (responsywne)</button>
@@ -171,7 +174,8 @@ export function AppearanceSettings() {
             <button
               key={c}
               onClick={() => changeView(() => { setViewPref("autoColumns", false); setViewPref("columns", c); })}
-              className={cn("w-10 h-10 rounded-xl border text-sm font-bold",
+              aria-pressed={!prefs.autoColumns && prefs.columns === c}
+              className={cn("w-10 h-10 coarse:size-11 rounded-xl border text-sm font-bold",
                 !prefs.autoColumns && prefs.columns === c ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60")}
             >{c}</button>
           ))}
@@ -193,7 +197,7 @@ export function AppearanceSettings() {
 
       <div className="pt-2"><EffectsSettings /></div>
 
-      <Button variant="ghost" size="sm" onClick={() => setResetOpen(true)}>
+      <Button variant="ghost" size="sm" disabled={changedViewPrefs().length === 0} onClick={() => setResetOpen(true)}>
         Przywróć domyślne
       </Button>
 
@@ -204,12 +208,12 @@ export function AppearanceSettings() {
             <AlertDialogTitle>Przywrócić domyślne ustawienia widoku?</AlertDialogTitle>
             <AlertDialogDescription>
               Zmienią się: {changedViewPrefs().map((k) => VIEW_PREF_LABELS[k]).join(", ") || "nic — wszystko już jest domyślne"}.
-              Nie zmienią się: skórka, czcionka, tryb ruchu, motyw sezonowy, efekty, potwierdzenia, sync, kopia, sejf i powiadomienia push.
+              Nie zmienią się: skórka, czcionka, tryb ruchu, motyw sezonowy, efekty, potwierdzenia, sync, sejf i powiadomienia push.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Anuluj</AlertDialogCancel>
-            <AlertDialogAction onClick={() => { resetViewPrefs(); toast.success("Przywrócono domyślne ustawienia widoku"); }}>
+            <AlertDialogAction className={buttonVariants({ variant: "destructive" })} onClick={() => { resetViewPrefs(); toast.success("Przywrócono domyślne ustawienia widoku"); }}>
               Przywróć domyślne
             </AlertDialogAction>
           </AlertDialogFooter>

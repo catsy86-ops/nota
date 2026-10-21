@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Wifi, WifiOff, Copy, Check, LogOut } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
@@ -131,7 +131,7 @@ export function SyncSettings({ prefillCode }: Props) {
       </div>
 
       <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Urządzenia w grupie</p>
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Urządzenia w grupie</h3>
         {syncState.devices.length > 0 ? (
           <ul className="space-y-1 text-sm" aria-label="Połączone urządzenia">
             {syncState.devices.map((d) => (
@@ -158,7 +158,7 @@ export function SyncSettings({ prefillCode }: Props) {
 
       {syncState.code && (
         <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-3 text-center">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dodaj urządzenie</p>
+          <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dodaj urządzenie</h3>
           <p className="text-xs text-muted-foreground">
             Zeskanuj kod aparatem na drugim urządzeniu albo wpisz go ręcznie poniżej.
           </p>
@@ -188,7 +188,7 @@ export function SyncSettings({ prefillCode }: Props) {
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Anuluj</AlertDialogCancel>
-                <AlertDialogAction onClick={() => { setForgetOpen(false); handleForget(); }}>Odłącz</AlertDialogAction>
+                <AlertDialogAction className={buttonVariants({ variant: "destructive" })} onClick={() => { setForgetOpen(false); handleForget(); }}>Odłącz</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
@@ -197,7 +197,7 @@ export function SyncSettings({ prefillCode }: Props) {
 
       {wasShortCodeDropped() && (
         <div role="alert" className="rounded-xl border border-warning/40 bg-warning/10 p-3 text-xs space-y-2">
-          <p className="font-semibold text-foreground">Synchronizacja wyłączona: kod był za krótki</p>
+          <h3 className="font-semibold text-foreground">Synchronizacja wyłączona: kod był za krótki</h3>
           <p className="text-muted-foreground">
             Kody z 8 znaków dało się odgadnąć z nazwy pokoju widocznej dla serwera sygnalizacyjnego,
             więc ich już nie przyjmujemy. Wygeneruj nowy, 12-znakowy kod i wpisz go na pozostałych urządzeniach.
@@ -214,7 +214,7 @@ export function SyncSettings({ prefillCode }: Props) {
       )}
 
       <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-2">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dołącz do istniejącej grupy</p>
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dołącz do istniejącej grupy</h3>
         <form
           className="flex flex-col gap-2 sm:flex-row sm:items-center"
           onSubmit={(e) => { e.preventDefault(); handleJoin(); }}
@@ -247,7 +247,7 @@ export function SyncSettings({ prefillCode }: Props) {
           <Button type="submit" disabled={!joinReady} className="coarse:h-11">Dołącz</Button>
         </form>
         <p id="sync-join-hint" className="text-2xs text-muted-foreground">
-          12 znaków z drugiego urządzenia — możesz wkleić cały link. Starszy, 8-znakowy kod też zadziała.
+          12 znaków z drugiego urządzenia — możesz wkleić cały link. Starszy, 8-znakowy kod już nie zadziała — wygeneruj nowy.
         </p>
       </div>
 
@@ -270,7 +270,7 @@ export function SyncSettings({ prefillCode }: Props) {
       </label>
 
       <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-2">
-        <p className="font-semibold text-foreground">Jak to działa</p>
+        <h3 className="font-semibold text-foreground">Jak to działa</h3>
         <ul className="list-disc pl-4 space-y-1">
           <li>Urządzenia łączą się bezpośrednio, bez chmury i konta. Publiczne serwery pomagają tylko nawiązać połączenie — treść notatek przez nie nie przechodzi.</li>
           <li>Zmiany wymieniają się, gdy oba urządzenia są online w tym samym czasie. Jeśli jedno jest offline, dogoni przy najbliższym wspólnym połączeniu.</li>
@@ -308,6 +308,9 @@ function SignalingServers() {
         <p className="text-muted-foreground">
           Pomagają urządzeniom się odnaleźć — treść notatek przez nie nie przechodzi. Puste pole to
           publiczne serwery Yjs. Wszystkie urządzenia w grupie muszą mieć tę samą listę.
+        </p>
+        <p className="text-foreground">
+          Uwaga: zmiana tylko na jednym urządzeniu może je odłączyć od grupy — tam, gdzie lista się nie zgadza, urządzenia się nie znajdą. Zmień listę na wszystkich urządzeniach tak samo, zanim wrócisz do synchronizacji.
         </p>
         <label htmlFor="signaling-servers" className="sr-only">Adresy serwerów, po jednym w linii</label>
         <textarea

@@ -15,11 +15,12 @@ test("raport diagnostyczny pobiera się bez treści notatek @smoke", async ({ pa
   await expect(page.getByRole("heading", { name: secret, exact: true })).toBeVisible();
 
   await page.getByRole("button", { name: "Ustawienia" }).first().click();
-  await page.getByRole("tab", { name: "Ogólne" }).click();
+  // Diagnostyka mieszka w „Kopia i dane” (przeniesiona z „Ogólne” w P2).
+  await page.getByRole("tab", { name: "Kopia i dane" }).click();
 
   const [download] = await Promise.all([
     page.waitForEvent("download"),
-    page.getByRole("button", { name: "Pobierz" }).click(),
+    page.getByRole("button", { name: "Pobierz", exact: true }).click(),
   ]);
   expect(download.suggestedFilename()).toMatch(/^notatnik-diagnostyka-.*\.txt$/);
 

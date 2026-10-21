@@ -17,6 +17,22 @@ import { STUDY_STORAGE_KEY } from "@/lib/study/keys";
 import { extraSchedulesDump, mainShiftData, restoreExtraSchedule, restoreShifts, shiftsReady } from "@/lib/shifts/store";
 import { migrate } from "@/lib/shifts/model";
 import { BACKUP_ATTACHMENTS_BUDGET_BYTES, formatFileSize, type Attachment } from "@/lib/attachments";
+import { PUSH_PREFS_KEY, type PushPrefs } from "@/lib/push/prefs";
+
+const PUSH_RESTORE_KEY = PUSH_PREFS_KEY;
+
+/**
+ * Przywracanie ustawień push: adres serwera zostaje, a push się wyłącza (subskrypcja i
+ * „ostatnio wysłane” należą do przeglądarki, na której była kopia — nie do nowego telefonu).
+ */
+function pushPrefsForRestore(raw: string): string {
+  try {
+    const p = JSON.parse(raw) as Partial<PushPrefs>;
+    return JSON.stringify({ server: typeof p.server === "string" ? p.server : "", enabled: false });
+  } catch {
+    return JSON.stringify({ server: "", enabled: false });
+  }
+}
 
 /**
  * Granica plików: na zewnątrz obrazy jadą jako data URL-e (plik ma działać
@@ -195,6 +211,10 @@ const MAX_IMPORT_FILE_SIZE = 120 * 1024 * 1024; // 120 MB
 export const SETTINGS_KEYS = [
   "kaczy.viewPrefs.v1", "kaczy-theme", "kaczy.motion.v1", "kaczy.confirmPrefs.v1",
   "kaczy.effectsSettings.v1", "kaczy.seasonTheme.v1", "kaczy.templates.v1", "kaczy.skin.v1", "kaczy.siteMode.v1", "kaczy.font.v1",
+  // Dzień przeglądu, odznaka, auto-blokada skarbca — zwykłe preferencje, bez sekretów.
+  "kaczy:review.day", "kaczy:badge.enabled", "kaczy.vault.autolock.v1",
+  // Push: wpis jest, ale przy przywracaniu push wyłączamy (patrz `PUSH_RESTORE_KEY`) — subskrypcja jest na urządzeniu.
+  PUSH_RESTORE_KEY,
 ];
 export const ACHIEVEMENTS_KEY = "kaczy.achievements.v1";
 
@@ -290,7 +310,10 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   }
   const writes: Record<string, string> = {};
   if (opts.settings && backup.settings) {
-    for (const k of SETTINGS_KEYS) if (k in backup.settings) writes[k] = backup.settings[k];
+    for (const k of SETTINGS_KEYS) {
+      if (!(k in backup.settings)) continue;
+      writes[k] = k === PUSH_RESTORE_KEY ? pushPrefsForRestore(backup.settings[k]) : backup.settings[k];
+    }
   }
   if (opts.achievements && backup.achievements !== undefined) writes[ACHIEVEMENTS_KEY] = backup.achievements;
   if (opts.shifts && backup.shifts !== undefined) {

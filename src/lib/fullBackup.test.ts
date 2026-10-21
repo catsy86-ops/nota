@@ -320,3 +320,30 @@ describe("Nauka w pełnej kopii", () => {
     expect(yStudy.get()).toMatchObject({ journal: [entry], rounds: 3, bestPercent: 90, streak: 2, lastDay: "2026-10-12", board: { spadki: "doing" } });
   });
 });
+
+describe("ustawienia w kopii — zakres i push", () => {
+  it("carries review day, badge and vault auto-lock, but not the sync pairing code or dictation consent", async () => {
+    localStorage.setItem("kaczy:review.day", "5");
+    localStorage.setItem("kaczy:badge.enabled", "false");
+    localStorage.setItem("kaczy.vault.autolock.v1", "10");
+    localStorage.setItem("kaczy.dictation.consent", "yes");
+    localStorage.setItem("kaczy.sync.v1", JSON.stringify({ code: "SEKRET" }));
+    const backup = await buildFullBackup();
+    expect(backup.settings?.["kaczy:review.day"]).toBe("5");
+    expect(backup.settings?.["kaczy:badge.enabled"]).toBe("false");
+    expect(backup.settings?.["kaczy.vault.autolock.v1"]).toBe("10");
+    expect(backup.settings?.["kaczy.dictation.consent"]).toBeUndefined();
+    expect(JSON.stringify(backup)).not.toContain("SEKRET");
+  });
+
+  it("restores push with the server address but switched off and without device state", async () => {
+    const backup = await buildFullBackup();
+    backup.settings = {
+      ...backup.settings,
+      "kaczy.push.v1": JSON.stringify({ server: "https://push.example.com", enabled: true, sentHash: "abc", last: { at: 1, ok: true } }),
+    };
+    await restoreFullBackup(backup, { versions: false, settings: true, achievements: false, shifts: false, study: false });
+    const restored = JSON.parse(localStorage.getItem("kaczy.push.v1")!);
+    expect(restored).toEqual({ server: "https://push.example.com", enabled: false });
+  });
+});
