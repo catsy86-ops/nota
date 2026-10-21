@@ -21,7 +21,7 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
   return (
     <LayoutGroup id="skin-picker">
       <div role="radiogroup" aria-label="Styl aplikacji" className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {SKINS.map((s) => {
+        {SKINS.map((s, i) => {
           const meta = SKIN_META[s];
           const active = s === value;
           const p = meta.preview;
@@ -38,7 +38,11 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
               whileHover={{ y: -3 }}
               whileTap={{ scale: 0.96 }}
               transition={spring.snap}
-              className="group relative rounded-card p-1.5 text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              // Nieparzysta liczba stylów zostawia pustą kratkę — ostatni kafel na telefonie bierze cały wiersz.
+              className={cn(
+                "group relative rounded-card p-1.5 text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                i === SKINS.length - 1 && SKINS.length % 2 === 1 && "col-span-2 sm:col-span-1",
+              )}
             >
               {active && (
                 <motion.span
@@ -51,7 +55,10 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
               <span
                 data-thumb={s}
                 aria-hidden
-                className="skin-thumb relative block aspect-[16/10] rounded-xl shadow-sm ring-1 ring-black/5 transition-shadow duration-base group-hover:shadow-md"
+                className={cn(
+                  "skin-thumb relative block aspect-[16/10] rounded-xl shadow-sm ring-1 ring-black/5 transition-shadow duration-base group-hover:shadow-md",
+                  i === SKINS.length - 1 && SKINS.length % 2 === 1 && "max-sm:aspect-[16/6]",
+                )}
                 style={{ backgroundColor: p.bg, color: p.ink }}
               >
                 <span className="absolute left-2.5 top-1.5 text-[1.375rem] leading-none" style={{ fontFamily: meta.font, fontWeight: 600 }}>Aa</span>

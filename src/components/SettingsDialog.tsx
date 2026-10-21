@@ -64,11 +64,11 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
           {/* Na telefonie same nazwy (ikona bez podpisu nie mówi, co jest w zakładce). */}
           <TabsList className="grid grid-cols-4 w-full h-auto">
-            <TabsTrigger value="appearance" className="gap-1.5"><LayoutGrid className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Wygląd</span></TabsTrigger>
-            <TabsTrigger value="general" className="gap-1.5"><Pencil className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Ogólne</span></TabsTrigger>
+            <TabsTrigger value="appearance" className="gap-1.5 max-sm:text-xs"><LayoutGrid className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Wygląd</span></TabsTrigger>
+            <TabsTrigger value="general" className="gap-1.5 max-sm:text-xs"><Pencil className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Ogólne</span></TabsTrigger>
             {/* „Kopia i dane” może się zawinąć na wąskim ekranie — zakładka nie ma mieć stałej wysokości na jeden wiersz. */}
-            <TabsTrigger value="backup" className="gap-1.5 whitespace-normal text-center leading-tight"><Database className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Kopia i dane</span></TabsTrigger>
-            <TabsTrigger value="sync" className="gap-1.5"><Wifi className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Sync</span></TabsTrigger>
+            <TabsTrigger value="backup" className="gap-1.5 max-sm:text-xs"><Database className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Kopia i dane</span></TabsTrigger>
+            <TabsTrigger value="sync" className="gap-1.5 max-sm:text-xs"><Wifi className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Sync</span></TabsTrigger>
           </TabsList>
 
           {/* -mx-1 px-1: pierścień zaznaczenia przy lewej krawędzi nie jest przycinany. */}

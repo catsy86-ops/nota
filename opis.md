@@ -1260,6 +1260,12 @@ Dział opisany w jednym miejscu; obejmuje fazy 1–3 planu z 2026-10-19 i zgodę
 - **Kopia sprzed przywrócenia** (`BackupSettings.tsx`, `RestoreBackup.restore`): przed każdym przywróceniem pobiera się `kaczy-przed-przywroceniem-RRRR-MM-DD.json`. Gdy zapis się nie uda, przywracanie się zatrzymuje. Przywrócenie tego pliku cofa przywracanie.
 - **Ostatnio użyte w palecie** (`CommandPalette.tsx`, `NAV_ITEMS`; `src/lib/recentCommands.ts`): grupa Nawigacja jest tablicą danych; ostatnie 3 użyte widoki pokazują się przy pustym polu wyszukiwania. Testy: `src/lib/recentCommands.test.ts`.
 - **Budżet paczki startowej:** po Ctrl+Z w Grafiku 400,33 KB; próg podniesiony do 401 KB (decyzja użytkownika), `e2e/bundle.spec.ts` przechodzi.
+
+**Wygląd telefonu (2026-10-21):**
+- **Siatka miesiąca** (`ShiftMonthGrid.tsx`): nagłówki i komórki dni są w tej samej siatce `grid-cols-7` — pomiar na 390 px potwierdził równe kolumny. Test regresyjny: `e2e/shifts-grid.spec.ts`.
+- **Zakładki Ustawień** (`SettingsDialog.tsx`): na telefonie `max-sm:text-xs`, „Kopia i dane” w jednej linii.
+- **Style** (`SkinPicker.tsx`): nieparzysta liczba stylów — ostatni kafel na telefonie zajmuje cały wiersz, z niższą miniaturą (`max-sm:aspect-[16/6]`).
+- **Kroje** (`FontPicker.tsx`): dwie kolumny od 340 px (wcześniej od 400 px).
 - **Reset „Przywróć domyślne” w Wyglądzie** kasuje cały widok (decyzja właściciela: „Wszystko”). Potwierdzenie to lista tego, co wróci do domyślnych, i tego, czego reset nie dotyczy. Lista zmian liczona jest z aktualnego stanu przy każdym renderze.
 - **Reset w sekcji.** W Ogólne (edytor, przypomnienia) i w Kopii i danych jest przycisk „Przywróć domyślne w tej sekcji”. Wyłącza się, gdy nic w sekcji nie różni się od domyślnych; potwierdzenie wymienia tylko ustawienia, które faktycznie się zmienią (np. „Zmienią się: autosave”).
 - **Link do karty** `?settings=wyglad|ogolne|kopia|sync` otwiera Ustawienia na tej karcie i znika z adresu. Nieznana wartość nie otwiera okna. Działa przy otwieraniu aplikacji i przy zmianie adresu w otwartym oknie; nie zmienia otwartej aplikacji, jeśli adres zmieni się bez przeładowania.

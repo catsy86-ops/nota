@@ -18,7 +18,7 @@ interface FontPickerProps {
 export function FontPicker({ value, onChange }: FontPickerProps) {
   return (
     <LayoutGroup id="font-picker">
-      <div role="radiogroup" aria-label="Krój tekstu" className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-2">
+      <div role="radiogroup" aria-label="Krój tekstu" className="grid grid-cols-1 min-[340px]:grid-cols-2 gap-2">
         {APP_FONTS.map((f) => {
           const meta = APP_FONT_META[f];
           const active = f === value;
