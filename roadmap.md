@@ -6,7 +6,9 @@
 ## Stan na 2026-10-21 — otwarte punkty
 
 - [ ] **QA na prawdziwym telefonie** (punkt 5.3 niżej): klawiatura w kompozytorze, haptyka, gesty, przewijanie z paskiem adresu, instalacja PWA.
-- [ ] **Web Push:** serwer `push-server/` jest zrobiony (`fe01dcd`), ale nie wdrożony i nie przetestowany na telefonie. Bez niego przypomnienia działają tylko przy otwartej aplikacji.
+- [ ] **Web Push:** serwer `push-server/` jest zrobiony (`fe01dcd`), ale nie wdrożony i nie przetestowany na telefonie. Bez niego przypomnienia działają tylko przy otwartej aplikacji. Decyzja 2026-10-21: zostaje lokalnie, bez wdrożenia.
+- [ ] **Vite 8 / Vitest 4 — odłożone (decyzja 2026-10-21).** Próba: Vite 8 (rolldown) przerywa build na `manualChunks` w `vite.config.ts` (`manualChunks is not a function`); do przepisania na API rolldown. Vitest 4.1.12 obsługuje Vite 8. Wracamy do tego później, po zakończeniu reszty.
+- [ ] **Próg paczki startowej 394 KB** (`e2e/bundle.spec.ts`) zostaje; decyzja 2026-10-21.
 - [ ] **Wdrożenie hostingu:** konfiguracje Vercel i Netlify są w repo; brak połączenia repo z kontem (decyzja użytkownika).
 - [ ] **Decyzje z 2026-10-11 (bez rozstrzygnięcia w repo):** (2) Android push — odłożony; (3) import własnych materiałów do Nauki — bez decyzji; (4) egzekwowanie CSP — nagłówek nadal `Content-Security-Policy-Report-Only` w `netlify.toml`, do przeniesienia inline-skryptu z `offline.html`.
 - [ ] **Zgodność wersji przed D5:** stara aplikacja nie czyta wpisów dziennika w nowym formacie (potwierdzone testem). Propozycja: okres przejściowy albo aktualizacja wszystkich urządzeń przed użyciem. Decyzja użytkownika.
