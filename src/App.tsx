@@ -21,9 +21,10 @@ const App = () => {
   const { pref: seasonPref } = useSeasonPref();
   const { seasonalTheme } = useEffectsSettings();
 
-  // Paint <html data-season> so seasonal colors apply app-wide.
+  // Paint <html data-season> so seasonal colors apply app-wide. Wybrana konkretna pora roku
+  // działa od razu; „Auto” wymaga włączonego efektu „Motyw sezonowy”.
   useEffect(() => {
-    if (seasonalTheme) applySeasonAttr();
+    if (seasonalTheme || seasonPref !== "auto") applySeasonAttr();
     else delete document.documentElement.dataset.season;
   }, [seasonPref, seasonalTheme]);
 

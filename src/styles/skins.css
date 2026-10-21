@@ -455,8 +455,21 @@ html[data-skin="matrix"] {
   --glow-primary: 0 10px 30px -8px hsl(125 100% 55% / 0.6);
 }
 /* Siatka papieru znika — tło to deszcz z płótna. */
-html[data-skin="matrix"] .paper-grid::before,
-html[data-skin="matrix"] .paper-grid::after { display: none; }
+html[data-skin="matrix"] .paper-grid::before { display: none; }
+/* Deszcz: przygaszony, schodzi pod pasek nagłówka i „Zapisz notatkę” (górne ~260 px gaśnie),
+   a za środkiem ekranu (pusty stan, tekst) leży ciemna winieta, żeby znaki nie mieszały się z tekstem. */
+html[data-skin="matrix"] .paper-grid > canvas {
+  opacity: 0.6;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 110px, #000 260px);
+  mask-image: linear-gradient(to bottom, transparent 0, transparent 110px, #000 260px);
+}
+html[data-skin="matrix"] .paper-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(40% 36% at 50% 50%, hsl(125 90% 3% / 0.9), hsl(125 90% 3% / 0.45) 60%, transparent 100%);
+}
 html[data-skin="matrix"] h1,
 html[data-skin="matrix"] h2,
 html[data-skin="matrix"] h3 {
@@ -516,8 +529,8 @@ html[data-skin="hydraulika"] {
 /* Rury: miedziane pasy w siatce 120 px (statyczne). Przepływ wody to drugi pseudo-element. */
 html[data-skin="hydraulika"] .paper-grid::before {
   background-image:
-    linear-gradient(90deg, transparent 0 46px, hsl(24 60% 52% / 0.28) 46px 52px, hsl(24 60% 70% / 0.12) 52px 53px, transparent 53px),
-    linear-gradient(transparent 0 46px, hsl(24 60% 52% / 0.22) 46px 52px, transparent 52px);
+    linear-gradient(90deg, transparent 0 46px, hsl(24 60% 52% / 0.17) 46px 52px, hsl(24 60% 70% / 0.08) 52px 53px, transparent 53px),
+    linear-gradient(transparent 0 46px, hsl(24 60% 52% / 0.14) 46px 52px, transparent 52px);
   background-size: 120px 120px;
   -webkit-mask-image: linear-gradient(#000 0%, rgb(0 0 0 / 0.55) 60%, transparent 100%);
   mask-image: linear-gradient(#000 0%, rgb(0 0 0 / 0.55) 60%, transparent 100%);
@@ -530,7 +543,7 @@ html[data-skin="hydraulika"] .paper-grid::after {
   bottom: 0;
   left: -130px;
   right: -130px;
-  background-image: repeating-linear-gradient(90deg, transparent 0 34px, hsl(196 90% 62% / 0.13) 34px 48px, transparent 48px 120px);
+  background-image: repeating-linear-gradient(90deg, transparent 0 34px, hsl(196 90% 62% / 0.09) 34px 48px, transparent 48px 120px);
   animation: hydro-flow 9s linear infinite;
   will-change: transform;
 }

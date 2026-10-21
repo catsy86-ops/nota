@@ -120,11 +120,13 @@ export function AppearanceSettings() {
           })}
         </div>
         <p className="text-xs text-muted-foreground mt-1.5">
-          {settings.seasonalTheme
-            ? seasonPref === "auto"
-              ? `Kolory akcentów dopasowują się do daty (teraz: ${SEASON_META[activeSeason].label.toLowerCase()}).`
-              : `Wymuszona kolorystyka: ${SEASON_META[activeSeason].label.toLowerCase()}.`
-            : "Włącz „Motyw sezonowy” w zakładce Efekty, aby zobaczyć zmiany kolorów."}
+          {skin !== "zeszyt"
+            ? `Motyw pory roku zmienia styl Zeszyt. ${SKIN_META[skin].label} ma własne kolory i zostaje bez zmian.`
+            : seasonPref === "auto"
+              ? settings.seasonalTheme
+                ? `Dopasowany do daty (teraz: ${SEASON_META[activeSeason].label.toLowerCase()}). Tło papieru i akcenty.`
+                : "Auto wymaga włączonego „Motyw sezonowy” w zakładce Efekty. Wybrana pora działa od razu."
+              : `Wymuszona kolorystyka: ${SEASON_META[activeSeason].label.toLowerCase()}. Tło papieru i akcenty.`}
         </p>
       </Section>
 

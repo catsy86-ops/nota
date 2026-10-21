@@ -15,3 +15,13 @@ html[data-font="lexend"] { --app-font: 'Lexend Variable', 'Plus Jakarta Sans Var
 html[data-font] :where(body, .font-body, .font-display, input, textarea, select, button) {
   font-family: var(--app-font);
 }
+
+/* Nagłówki w Zeszycie idą za wybranym krojem: `h1–h4` (reguła bazowa z `--font-display`)
+   i tytuł aplikacji (`.app-title`, Fraunces z `index.css`). Nagłówki stylów (`html[data-skin] h1`,
+   0,1,2) dalej wygrywają, bo są wyższej specyficzności. */
+html[data-font] :where(h1, h2, h3, h4) {
+  font-family: var(--app-font);
+}
+html[data-font][data-skin="zeszyt"] .app-title {
+  font-family: var(--app-font);
+}

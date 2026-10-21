@@ -512,6 +512,22 @@ html[data-skin="zeszyt"] .app-header {
     --season-blob-3: 260 60% 75%;
     --accent: 260 65% 60%;
   }
+  /* Siła poświaty: w ciemnym motywie przygaszona, żeby nie zalewała notatek. */
+  html[data-season] { --season-glow: 1; }
+  html.dark[data-season] { --season-glow: 0.42; }
+}
+
+/* Zeszyt w porze roku: światło wpada z górnych rogów i od dołu, kolorami sezonu.
+   Tylko styl Zeszyt — pozostałe style mają własne tła i nie są tu ruszane. */
+html[data-skin="zeszyt"][data-season] .paper-grid::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(62% 48% at 100% 0%, hsl(var(--season-blob-1) / calc(0.34 * var(--season-glow))), transparent 72%),
+    radial-gradient(52% 40% at 0% 0%, hsl(var(--season-blob-2) / calc(0.24 * var(--season-glow))), transparent 70%),
+    radial-gradient(70% 46% at 50% 100%, hsl(var(--season-blob-3) / calc(0.2 * var(--season-glow))), transparent 75%);
 }
 
 @layer base {

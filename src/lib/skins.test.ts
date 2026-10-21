@@ -5,7 +5,9 @@ import { SKIN_META } from "./skinGallery";
 describe("skins", () => {
   it("rozpoznaje tylko znane style", () => {
     expect(isSkin("neon")).toBe(true);
-    expect(isSkin("matrix")).toBe(false);
+    expect(isSkin("matrix")).toBe(true);
+    expect(isSkin("hydraulika")).toBe(true);
+    expect(isSkin("sepia")).toBe(false);
     expect(isSkin(null)).toBe(false);
   });
   it("tylko Zeszyt nie ma własnego schematu", () => {
