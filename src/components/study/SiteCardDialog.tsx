@@ -136,18 +136,28 @@ export function SiteCardDialog({
     }
   }
 
-  /** Zamknięcie okna z niezapisaną zmianą zapisuje kartę — nie gubimy wpisanych danych po cichu. */
+  /** Niezapisana zmiana idzie do karty przed każdym wyjściem z okna — nie gubimy wpisanych danych po cichu. */
+  function persistDirty(): boolean {
+    if (!site || !dirty || error) return false;
+    saveSiteCard(site.id, form);
+    return true;
+  }
+
   function close(open: boolean) {
-    if (!open && site && dirty && !error) {
-      saveSiteCard(site.id, form);
-      toast.success("Zapisano kartę budowy");
-    }
+    if (!open && persistDirty()) toast.success("Zapisano kartę budowy");
     onOpenChange(open);
+  }
+
+  /** „Pokaż wpisy” i „Raport” zamykają kartę w rodzicu — najpierw zapis, potem przejście. */
+  function leaveTo(go: (siteId: string) => void) {
+    if (!site) return;
+    persistDirty();
+    go(site.id);
   }
 
   function toggleArchive() {
     if (!site) return;
-    if (dirty && !error) saveSiteCard(site.id, form);
+    persistDirty();
     const archive = site.archived === undefined;
     setSiteArchived(site.id, archive);
     haptic("tap");
@@ -317,10 +327,10 @@ export function SiteCardDialog({
             </div>
 
             <div className="grid grid-cols-2 gap-2 border-t border-border px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-              <Button variant="outline" onClick={() => onShowEntries(site.id)} disabled={site.count === 0} className="coarse:h-11">
+              <Button variant="outline" onClick={() => leaveTo(onShowEntries)} disabled={site.count === 0} className="coarse:h-11">
                 <ListFilter className="mr-1.5 h-4 w-4" aria-hidden />Pokaż wpisy
               </Button>
-              <Button variant="outline" onClick={() => onReport(site.id)} disabled={site.count === 0} className="coarse:h-11">
+              <Button variant="outline" onClick={() => leaveTo(onReport)} disabled={site.count === 0} className="coarse:h-11">
                 <FileText className="mr-1.5 h-4 w-4" aria-hidden />Raport
               </Button>
               <Button

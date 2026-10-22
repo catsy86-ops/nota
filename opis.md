@@ -1589,3 +1589,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/components/shifts/ShiftsView.tsx` (wiersz `order-9`: dwa warianty `sm:hidden` / `hidden sm:flex`; `DropdownMenu`).
 - **Nie zrobione z pozycji „Mniej nad siatką”:** przełącznik „Grafik ▾” przy tytule (`ScheduleSwitcher`) zostaje bez zmian.
 - **Testy:** `e2e/shifts.spec.ts` — "telefon: eksporty Grafiku …" (@mobile); pełny plik na desktopie 26/26.
+
+## Dziennik — karta budowy zapisuje zmianę przy wyjściu (Fala 4, 2026-10-22)
+
+- **Co robi:** „Pokaż wpisy” i „Raport” z karty budowy najpierw zapisują niezapisaną zmianę w karcie, potem przechodzą dalej. Wcześniej rodzic zamykał okno bez zapisu i wpisane dane przepadały. Zamknięcie krzyżykiem, Esc i „Archiwum” działają jak dotąd.
+- **Gdzie:** `src/components/study/SiteCardDialog.tsx` — `persistDirty()` (wspólne dla `close`, `toggleArchive`), `leaveTo(go)` (przyciski z `onShowEntries` / `onReport`).
+- **Testy:** `e2e/study.spec.ts` — "dziennik: karta budowy zapisuje niezapisaną zmianę przy „Pokaż wpisy”"; cały plik 30/30 na desktopie.

@@ -801,3 +801,25 @@ test("statystyki: karta doświadczenia na pustym stanie i pobranie pliku .md", a
   ]);
   expect(download.suggestedFilename()).toMatch(/^karta-doswiadczenia-\d{4}-\d{2}-\d{2}\.md$/);
 });
+
+test("dziennik: karta budowy zapisuje niezapisaną zmianę przy „Pokaż wpisy”", async ({ page }) => {
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem("seeded")) return;
+    sessionStorage.setItem("seeded", "1");
+    const now = Date.now();
+    const e = (id: string, at: number, kind: string, site: string, text: string) => ({ id, at, kind, topic: null, text, site, checked: [], images: [] });
+    localStorage.setItem("kaczy.study.v1", JSON.stringify({
+      journal: [e("a", now - 60_000, "ok", "Lipowa 5", "Próba szczelności pionu")],
+    }));
+  });
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  const journal = page.getByTestId("study-journal");
+  await journal.getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
+  const card = page.getByTestId("site-card");
+  await card.getByLabel("Adres").fill("ul. Testowa 9, Gdańsk");
+  // Bez zapisania kartą — „Pokaż wpisy” ma najpierw zapisać adres.
+  await card.getByRole("button", { name: /Pokaż wpisy/ }).click();
+  await journal.getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
+  await expect(page.getByTestId("site-card").getByLabel("Adres")).toHaveValue("ul. Testowa 9, Gdańsk");
+});
