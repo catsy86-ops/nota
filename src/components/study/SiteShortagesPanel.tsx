@@ -149,6 +149,9 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
         </ul>
       )}
 
+      {list.length >= SHORTAGES_MAX && (
+        <p className="text-xs text-muted-foreground">Lista pełna ({SHORTAGES_MAX}). Usuń dostarczone, żeby dodać nowe braki.</p>
+      )}
       {list.length < SHORTAGES_MAX && (
         <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); add(); }}>
           <input

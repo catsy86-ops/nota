@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   addShortage, cleanOrderLog, cleanShortages, clearDelivered, dueDayValue, dueFromDayValue, logOrder, nextStatus, openShortages,
   orderLateFrom, orderLogLine, ORDER_LATE_DAYS, ORDER_LOG_MAX, removeShortage, setShortageDue, setShortageStatus, shortageLine,
-  shortagesText, SHORTAGES_MAX, spokenShortageLabel,
+  shortagesText, SHORTAGES_MAX, spokenShortageLabel, cleanShortagesCounted,
 } from "./shortages";
 import { cleanSite } from "./sites";
 
@@ -135,5 +135,27 @@ describe("spokenShortageLabel", () => {
   });
   it("pusty wynik zostaje pusty", () => {
     expect(spokenShortageLabel("   ")).toBe("");
+  });
+});
+
+describe("cleanShortages — limit 40 (charakteryzacja)", () => {
+  it("przy 41 poprawnych pozycjach zostaje 40 pierwszych w kolejności wejścia", () => {
+    const raw = Array.from({ length: 41 }, (_, i) => ({ id: `b${i + 1}`, text: `Brak ${i + 1}`, qty: "", status: "missing", at: i + 1 }));
+    const out = cleanShortages(raw) ?? [];
+    expect(out).toHaveLength(40);
+    expect(out.at(-1)?.id).toBe("b40");
+  });
+});
+
+describe("cleanShortagesCounted", () => {
+  it("liczy pozycje poprawne, które nie weszły przez limit", () => {
+    const raw = Array.from({ length: 43 }, (_, i) => ({ id: `c${i + 1}`, text: `Brak ${i + 1}`, qty: "", status: "missing", at: i + 1 }));
+    const { list, dropped } = cleanShortagesCounted(raw);
+    expect(list).toHaveLength(40);
+    expect(dropped).toBe(3);
+  });
+  it("śmieci i duplikaty nie są liczone jako odrzucone", () => {
+    const { dropped } = cleanShortagesCounted([{ id: "x", text: "A" }, { id: "x", text: "A" }, null, { text: "bez id" }]);
+    expect(dropped).toBe(0);
   });
 });

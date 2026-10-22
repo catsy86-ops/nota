@@ -47,3 +47,16 @@ describe("stripLists", () => {
     expect(stripLists(card)).toEqual({ id: "A", name: "Lipowa", contact: "x" });
   });
 });
+
+describe("composeSiteLists — braki ponad limit (charakteryzacja)", () => {
+  it("składanie nie przycina: 41 braków zostaje posortowanych rosnąco po czasie", () => {
+    const entries: [string, unknown][] = Array.from({ length: 41 }, (_, i) => [
+      key("A", "short", `b${i + 1}`),
+      { id: `b${i + 1}`, text: `Brak ${i + 1}`, qty: "", status: "missing", at: i + 1 },
+    ]);
+    const shortages = composeSiteLists(entries).get("A")?.shortages ?? [];
+    expect(shortages).toHaveLength(41);
+    expect(shortages[0].id).toBe("b1");
+    expect(shortages[40].id).toBe("b41");
+  });
+});

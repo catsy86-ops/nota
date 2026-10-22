@@ -82,4 +82,11 @@ describe("SiteShortagesPanel — braki materiału", () => {
     render(<SiteShortagesPanel site={siteWith([short({ id: "a", status: "delivered" })])} />);
     expect(screen.getByRole("button", { name: /Kopiuj braki/ })).toBeDisabled();
   });
+
+  it("pełna lista (40) mówi, co zrobić, i nie pokazuje pola dodawania", () => {
+    const full = Array.from({ length: 40 }, (_, i) => short({ id: `p${i}`, text: `Pozycja ${i}`, at: i + 1 }));
+    render(<SiteShortagesPanel site={siteWith(full)} />);
+    expect(screen.getByText(/Lista pełna \(40\)/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Czego brakuje")).toBeNull();
+  });
 });

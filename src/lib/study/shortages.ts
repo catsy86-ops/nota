@@ -45,17 +45,22 @@ const STATUSES: ShortageStatus[] = ["missing", "ordered", "delivered"];
 
 const clip = (v: unknown, max: number) => (typeof v === "string" ? v.trim().replace(/\s+/g, " ").slice(0, max) : "");
 
-/** Dowolne wejście z dokumentu → lista braków; `undefined` = karta bez listy. */
-export function cleanShortages(raw: unknown): Shortage[] | undefined {
-  if (!Array.isArray(raw)) return undefined;
+/**
+ * Dowolne wejście z dokumentu → lista braków (najwyżej `SHORTAGES_MAX`, w kolejności wejścia) i liczba
+ * poprawnych pozycji, których nie weszło przez limit. `list` = `undefined` dla karty bez listy.
+ */
+export function cleanShortagesCounted(raw: unknown): { list: Shortage[] | undefined; dropped: number } {
+  if (!Array.isArray(raw)) return { list: undefined, dropped: 0 };
   const out: Shortage[] = [];
   const seen = new Set<string>();
+  let dropped = 0;
   for (const v of raw) {
     if (!v || typeof v !== "object") continue;
     const s = v as Partial<Shortage>;
     const text = clip(s.text, SHORTAGE_TEXT_MAX);
     if (typeof s.id !== "string" || !s.id || s.id.length > 40 || seen.has(s.id) || !text) continue;
     seen.add(s.id);
+    if (out.length >= SHORTAGES_MAX) { dropped++; continue; }
     out.push({
       id: s.id,
       text,
@@ -65,9 +70,13 @@ export function cleanShortages(raw: unknown): Shortage[] | undefined {
       ...(typeof s.changed === "number" && Number.isFinite(s.changed) ? { changed: s.changed } : {}),
       ...(typeof s.due === "number" && Number.isFinite(s.due) ? { due: s.due } : {}),
     });
-    if (out.length >= SHORTAGES_MAX) break;
   }
-  return out;
+  return { list: out, dropped };
+}
+
+/** Lista braków bez liczby odrzuconych (ścieżki, które jej nie pokazują). */
+export function cleanShortages(raw: unknown): Shortage[] | undefined {
+  return cleanShortagesCounted(raw).list;
 }
 
 /** Historia zamówień kształtek: od najstarszego, ostatnie `ORDER_LOG_MAX`; `undefined` = brak historii. */

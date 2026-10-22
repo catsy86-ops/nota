@@ -1722,3 +1722,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Co robi:** zdjęcia we wpisie mają numerowany tekst alternatywny ("Zdjęcie 2 z 3 we wpisie"). Pusty stan dziennika ma przyciski „Dodaj wpis” i „Nowa budowa” o wysokości 44 px na dotyku.
 - **Gdzie:** `src/components/study/JournalEntrySheet.tsx` (alt z indeksem); `src/components/study/StudyJournal.tsx` (`coarse:h-11` w pustym stanie).
 - **Testy:** `e2e/touch-targets.spec.ts` — nowy test „praca: zakładki działu i „Dodaj wpis”” (@mobile), pełny plik 3/3; `e2e/journal-photos.spec.ts` przechodzi.
+
+## Praca — limit braków: charakteryzacja i widoczność (Faza 2.1–2.2, 2026-10-22)
+
+- **Co robi:** pełna lista braków (40) pokazuje komunikat, co zrobić, zamiast ukrywać formularz bez wyjaśnienia. `cleanShortagesCounted` zwraca listę i liczbę pozycji, które nie weszły przez limit.
+- **Zachowanie utrwalone testami:** składanie list nie przycina (41 pozycji zostaje posortowanych po czasie); czyszczenie zostawia 40 pierwszych w kolejności wejścia (najstarsze), najnowsze się nie zapisują.
+- **Ograniczenie:** licznik `dropped` jest liczony, ale nie jest jeszcze pokazywany w UI dla pozycji od innego urządzenia. Decyzja „zostawić najstarsze czy najnowsze” czeka na właściciela.
+- **Testy:** `src/lib/study/shortages.test.ts`, `src/lib/study/siteItems.test.ts`, `src/components/study/SiteShortagesPanel.test.tsx` (pełna lista); `e2e/site-shortages.spec.ts` 3/3.
