@@ -2,8 +2,11 @@ import type { Note } from "@/hooks/useNotes";
 import { CHECKLIST, MODULES, QUESTIONS, TOPICS, type StudyTopic } from "./content";
 import { reportBody, type JournalReport } from "./report";
 
+/** Stałe id notatki tematu: ten sam temat to ta sam notatka na każdym urządzeniu, więc nie powstają duplikaty. */
+export const topicNoteId = (topicId: string) => `study-topic-${topicId}`;
+
 /** Treść notatki z tematu: streszczenie, punkty jako lista kontrolna i skutki pominięcia. */
-export function topicToNote(topic: StudyTopic, now: number = Date.now(), id: string = crypto.randomUUID()): Note {
+export function topicToNote(topic: StudyTopic, now: number = Date.now(), id: string = topicNoteId(topic.id)): Note {
   const items = CHECKLIST.filter((c) => c.topic === topic.id);
   const risks = items.filter((c) => c.risk).map((c) => `- ${c.risk}`);
   const moduleLabel = MODULES.find((m) => m.id === topic.module)?.label ?? "";

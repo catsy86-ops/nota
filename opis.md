@@ -1660,3 +1660,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/components/study/SiteShortagesPanel.tsx` (`useDictation`, `listRef`, przycisk mikrofonu w formularzu). Logika dodawania bez zmian: `addShortage` w `src/lib/study/shortages.ts`.
 - **Ograniczenie:** rozpoznawanie mowy zależy od przeglądarki (przycisk pojawia się tylko, gdy jest obsługiwane). Słowo „dokupić” zostaje w treści. Ilość trzeba wpisać ręcznie.
 - **Testy:** `e2e/site-shortages.spec.ts`, `e2e/site-card-mobile.spec.ts` (ręczne dodawanie) 4/4; jednostkowe `study` 57/57. Dyktowania głosem nie ma w e2e (brak mowy w headless).
+
+## Praca — „Do notatki” bez duplikatów (Faza 0.2, 2026-10-22)
+
+- **Co robi:** notatka z tematu (Tablica → „Do notatki”) ma stałe id `study-topic-<temat>`. Drugie kliknięcie pokazuje „już istnieje” zamiast tworzyć kopię. Dwa telefony tworzą tę samą notatkę, a nie dwie.
+- **Gdzie:** `src/lib/study/toNote.ts` (`topicNoteId`, domyślne id w `topicToNote`); `src/components/study/StudyBoard.tsx` (sprawdzenie `yjsStore.notesMap`).
+- **Ograniczenie:** notatka w koszu też blokuje ponowne utworzenie; przywrócenie z kosza działa.
+- **Testy:** `e2e/study-topic-note.spec.ts`.

@@ -5,7 +5,7 @@ import { useDayClock } from "@/lib/dayClock";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { MOBILE_QUERY } from "@/hooks/use-mobile";
 import { yjsStore } from "@/lib/yjsStore";
-import { topicToNote } from "@/lib/study/toNote";
+import { topicNoteId, topicToNote } from "@/lib/study/toNote";
 import { LayoutGroup, m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { MODULES, TOPICS, type StudyTopic } from "@/lib/study/content";
@@ -145,6 +145,11 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
           <button
             type="button"
             onClick={() => {
+              // Notatka tematu ma stałe id: jeśli już istnieje (także w koszu), nie tworzymy drugiej.
+              if (yjsStore.notesMap.has(topicNoteId(topic.id))) {
+                toast(`Notatka „${topic.title}” już istnieje`, { description: "Nie dodaję drugiej." });
+                return;
+              }
               const note = topicToNote(topic);
               yjsStore.upsertNote(note);
               toast.success(`Dodano notatkę „${note.title}”`);
