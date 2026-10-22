@@ -29,13 +29,52 @@ export const EXERCISES: Exercise[] = [
   { id: "triceps-francuski", name: "Prostowanie ramion leżąc na ławce", group: "triceps", equipment: ["ławka", "hantle"], hint: "Tylko przedramiona się ruszają, łokcie wskazują w górę." },
 ];
 
-const BY_ID = new Map(EXERCISES.map((e) => [e.id, e]));
+/**
+ * Własne ćwiczenia (Yjs `trainingExercises`) dokładane do katalogu. Rejestr ustawia `setCustomExercises`
+ * przy każdej zmianie mapy, więc `isKnownExercise` zna je przed odczytem dziennika i planów.
+ */
+export const CUSTOM_PREFIX = "wlasne-";
+export const CUSTOM_MAX = 30;
+export const CUSTOM_NAME_MAX = 40;
+export const CUSTOM_HINT_MAX = 120;
+const EQUIPMENT: Equipment[] = ["ławka", "hantle"];
+
+let custom: Exercise[] = [];
+let BY_ID = new Map(EXERCISES.map((e) => [e.id, e]));
+
+/** Ustawia listę własnych ćwiczeń (już oczyszczoną) i przebudowuje rejestr. Stałe ćwiczenia zostają. */
+export function setCustomExercises(list: readonly Exercise[]): void {
+  custom = list.filter((e) => e.id.startsWith(CUSTOM_PREFIX)).slice(0, CUSTOM_MAX);
+  BY_ID = new Map([...EXERCISES, ...custom].map((e) => [e.id, e]));
+}
+
+export function customExercises(): Exercise[] {
+  return custom;
+}
+
+/** Katalog stały i własne razem, w kolejności: najpierw stałe. */
+export function allExercises(): Exercise[] {
+  return [...EXERCISES, ...custom];
+}
+
+/** Dowolne wejście (kopia, inne urządzenie) → poprawne własne ćwiczenie albo `null`. */
+export function cleanCustomExercise(raw: unknown): Exercise | null {
+  const e = raw as Partial<Exercise> | null;
+  if (!e || typeof e !== "object") return null;
+  if (typeof e.id !== "string" || !e.id.startsWith(CUSTOM_PREFIX) || e.id.length > 64) return null;
+  const name = typeof e.name === "string" ? e.name.replace(/\s+/g, " ").trim().slice(0, CUSTOM_NAME_MAX) : "";
+  if (!name) return null;
+  if (!MUSCLE_GROUPS.includes(e.group as MuscleGroup)) return null;
+  const equipment = Array.isArray(e.equipment) ? e.equipment.filter((x): x is Equipment => EQUIPMENT.includes(x as Equipment)) : [];
+  const hint = typeof e.hint === "string" ? e.hint.trim().slice(0, CUSTOM_HINT_MAX) : "";
+  return { id: e.id, name, group: e.group as MuscleGroup, equipment: [...new Set(equipment)], hint };
+}
 
 export function exerciseById(id: string): Exercise | undefined {
   return BY_ID.get(id);
 }
 
-/** Czy id jest w katalogu — zapis i odczyt dziennika odrzucają obce id. */
+/** Czy id jest w katalogu albo wśród własnych — zapis i odczyt dziennika odrzucają obce id. */
 export function isKnownExercise(id: unknown): id is string {
   return typeof id === "string" && BY_ID.has(id);
 }

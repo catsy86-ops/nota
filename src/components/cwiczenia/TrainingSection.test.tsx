@@ -13,6 +13,9 @@ const { fixture, addEntryMock, setReminderMock, setEquipmentMock, notesMock } = 
 vi.mock("@/hooks/NotesProvider", () => ({ useNotesContext: () => notesMock }));
 vi.mock("@/lib/training/store", () => ({
   useTrainingEntries: () => fixture.entries,
+  useCustomExercises: () => [],
+  addCustomExercise: () => null,
+  removeCustomExercise: () => false,
   useTrainingPlans: () => fixture.plans,
   useTrainingReminder: () => fixture.reminder,
   setTrainingReminder: (r: unknown) => setReminderMock(r),

@@ -3,6 +3,7 @@ import { yjsStore } from "@/lib/yjsStore";
 import { localDayKey } from "@/lib/dayDone";
 import { cleanEntry, cleanPlanDay, type PlanDay, type TrainingEntry, type TrainingEquipment, type TrainingReminder, type TrainingSet } from "./model";
 import { createYTraining } from "./yTraining";
+import { CUSTOM_PREFIX, type Exercise, type Equipment, type MuscleGroup } from "./catalog";
 
 /**
  * Trening żyje w dokumencie Yjs notatek (`yTraining.ts`). Komponenty czytają przez hooki,
@@ -16,6 +17,29 @@ export function useTrainingEntries(): TrainingEntry[] {
 
 export function useTrainingPlans(): PlanDay[] {
   return useSyncExternalStore(yTraining.subscribe, yTraining.getPlans);
+}
+
+/** Własne ćwiczenia (bez katalogu stałego). */
+export function useCustomExercises(): Exercise[] {
+  return useSyncExternalStore(yTraining.subscribe, yTraining.getCustom);
+}
+
+export interface NewCustomExerciseInput {
+  name: string;
+  group: MuscleGroup;
+  equipment: Equipment[];
+  hint?: string;
+}
+
+/** Dodaje własne ćwiczenie; `null` = niepoprawne dane albo pełna lista. */
+export function addCustomExercise(input: NewCustomExerciseInput): Exercise | null {
+  const e: Exercise = { id: `${CUSTOM_PREFIX}${crypto.randomUUID().slice(0, 8)}`, name: input.name, group: input.group, equipment: input.equipment, hint: input.hint ?? "" };
+  return yTraining.addCustom(e) ? e : null;
+}
+
+/** Usuwa własne ćwiczenie, jeśli nie ma wpisów ani planów. */
+export function removeCustomExercise(id: string): boolean {
+  return yTraining.removeCustom(id);
 }
 
 export interface NewTrainingEntryInput {

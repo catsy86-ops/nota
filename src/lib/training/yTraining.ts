@@ -1,4 +1,5 @@
 import * as Y from "yjs";
+import { CUSTOM_MAX, cleanCustomExercise, customExercises, setCustomExercises, type Exercise } from "./catalog";
 import { byTrainingTime, cleanEntry, cleanEquipment, cleanPlanDay, cleanTrainingReminder, PLAN_MAX_DAYS, TRAINING_MAX_ENTRIES, type PlanDay, type TrainingEntry, type TrainingEquipment, type TrainingReminder } from "./model";
 
 /**
@@ -21,6 +22,8 @@ export function createYTraining(doc: Y.Doc) {
   const plans = doc.getMap<PlanDay>("trainingPlans");
   // Ustawienia treningu (przypomnienie, sprzęt): wartości czyszczone przy odczycie, więc typ `unknown`.
   const meta = doc.getMap<unknown>("trainingMeta");
+  // Własne ćwiczenia: czyszczone przy odczycie; rejestr w `catalog.ts` musi być aktualny przed czytaniem wpisów.
+  const customMap = doc.getMap<unknown>("trainingExercises");
   let entriesSnap: TrainingEntry[] | null = null;
   let plansSnap: PlanDay[] | null = null;
   const listeners = new Set<() => void>();
@@ -34,6 +37,43 @@ export function createYTraining(doc: Y.Doc) {
     return metaSnap;
   };
   meta.observe(() => { metaSnap = null; emit(); });
+
+  function readCustom(): Exercise[] {
+    const out: Exercise[] = [];
+    for (const raw of customMap.values()) {
+      const e = cleanCustomExercise(raw);
+      if (e) out.push(e);
+    }
+    return out.slice(0, CUSTOM_MAX).sort((a, b) => a.name.localeCompare(b.name, "pl"));
+  }
+  // Każda zmiana własnych ćwiczeń przebudowuje rejestr i unieważnia wpisy, które od niego zależą.
+  const syncCustom = () => {
+    setCustomExercises(readCustom());
+    entriesSnap = null;
+    plansSnap = null;
+    emit();
+  };
+  customMap.observe(syncCustom);
+  syncCustom();
+
+  function getCustom(): Exercise[] {
+    return customExercises();
+  }
+
+  function addCustom(e: Exercise): boolean {
+    const clean = cleanCustomExercise(e);
+    if (!clean || customMap.size >= CUSTOM_MAX || customMap.has(clean.id)) return false;
+    doc.transact(() => customMap.set(clean.id, clean), TRAINING_ORIGIN);
+    return true;
+  }
+
+  /** Usunięcie tylko, gdy ćwiczenie nie ma wpisów ani planów — inaczej zgubiłoby ich dane. */
+  function removeCustom(id: string): boolean {
+    if (!customMap.has(id)) return false;
+    if (getEntries().some((e) => e.exerciseId === id) || getPlans().some((p) => p.exerciseIds.includes(id))) return false;
+    doc.transact(() => customMap.delete(id), TRAINING_ORIGIN);
+    return true;
+  }
 
   /** Ustawienie przypomnienia o treningu; `null` = wyłączone. */
   function getReminder(): TrainingReminder | null {
@@ -146,5 +186,5 @@ export function createYTraining(doc: Y.Doc) {
     }, TRAINING_ORIGIN);
   }
 
-  return { getEntries, getPlans, getReminder, setReminder, getEquipment, setEquipment, subscribe, addEntry, removeEntry, restoreEntry, addPlan, removePlan, restorePlan, dump, mergeDump };
+  return { getEntries, getPlans, getReminder, setReminder, getEquipment, setEquipment, getCustom, addCustom, removeCustom, subscribe, addEntry, removeEntry, restoreEntry, addPlan, removePlan, restorePlan, dump, mergeDump };
 }

@@ -5,10 +5,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { localDayKey } from "@/lib/dayDone";
 import { nextReminderAt } from "@/lib/timeOfDay";
-import { EXERCISES, exerciseById, MUSCLE_GROUPS, type MuscleGroup } from "@/lib/training/catalog";
+import { CUSTOM_HINT_MAX, CUSTOM_NAME_MAX, CUSTOM_PREFIX, EXERCISES, exerciseById, MUSCLE_GROUPS, type Equipment, type MuscleGroup } from "@/lib/training/catalog";
 import { bestKgSeries, byTrainingTime, overDumbbell, planLine, progressByExercise, TRAINING_KG_MAX, TRAINING_NOTE_MAX, TRAINING_REMINDER_DEFAULT, TRAINING_REPS_MAX, TRAINING_WINDOW_END, volumeOf, type PlanDay, type TrainingEntry, type TrainingReminder, type TrainingSet } from "@/lib/training/model";
-import { addPlanDay, addTrainingEntry, removePlanDay, removeTrainingEntry, restorePlanDay, restoreTrainingEntry, setTrainingEquipment, setTrainingReminder, useTrainingEntries, useTrainingEquipment, useTrainingPlans, useTrainingReminder } from "@/lib/training/store";
+import { addPlanDay, addTrainingEntry, removePlanDay, removeTrainingEntry, restorePlanDay, restoreTrainingEntry, setTrainingEquipment, setTrainingReminder, useTrainingEntries, useTrainingEquipment, useTrainingPlans, useTrainingReminder, useCustomExercises, addCustomExercise, removeCustomExercise } from "@/lib/training/store";
 import { toastWithUndo } from "@/lib/undoToast";
+import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
 import { useNotesContext } from "@/hooks/NotesProvider";
 
@@ -132,10 +133,60 @@ function parseKg(text: string): number | undefined | null {
   return Number.isInteger(n * 2) ? n : null;
 }
 
+/** Nowe własne ćwiczenie: nazwa, partia, sprzęt i wskazówka. Po zapisie ćwiczenie zostaje wybrane. */
+function NewExerciseForm({ onCreated }: { onCreated: (id: string) => void }) {
+  const [name, setName] = useState("");
+  const [group, setGroup] = useState<MuscleGroup>("klatka");
+  const [equipment, setEquipment] = useState<Equipment[]>(["hantle"]);
+  const [hint, setHint] = useState("");
+  const valid = name.trim().length > 0 && equipment.length > 0;
+
+  const save = () => {
+    if (!valid) return;
+    const e = addCustomExercise({ name: name.trim(), group, equipment, hint: hint.trim() });
+    if (!e) { toast.error("Nie udało się dodać ćwiczenia", { description: "Lista własnych ćwiczeń jest pełna." }); return; }
+    haptic("tap");
+    onCreated(e.id);
+  };
+
+  return (
+    // Nie <form>: ten blok siedzi wewnątrz formularza wpisu treningu, a zagnieżdżony form przejmuje wysłanie i przeładowuje stronę.
+    <div role="group" className="space-y-2 rounded-xl border border-border/60 p-3" aria-label="Nowe ćwiczenie">
+      <Input aria-label="Nazwa ćwiczenia" placeholder="np. Pompki na poręczach" maxLength={CUSTOM_NAME_MAX} value={name} onChange={(e) => setName(e.target.value)}
+        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); save(); } }} />
+      <div className="flex flex-wrap items-center gap-3">
+        <select aria-label="Partia mięśniowa" value={group} onChange={(e) => setGroup(e.target.value as MuscleGroup)} className="rounded-md border border-input bg-background px-3 py-2 text-sm coarse:h-11">
+          {MUSCLE_GROUPS.map((g) => <option key={g} value={g}>{g[0].toUpperCase() + g.slice(1)}</option>)}
+        </select>
+        {(EQUIPMENT_OPTIONS).map((eq) => (
+          <label key={eq} className="flex items-center gap-1.5 text-sm">
+            <Checkbox checked={equipment.includes(eq)} onCheckedChange={(v) => setEquipment(v === true ? [...equipment, eq] : equipment.filter((x) => x !== eq))} />
+            {eq}
+          </label>
+        ))}
+      </div>
+      <Input aria-label="Wskazówka (nieobowiązkowa)" placeholder="np. łokcie blisko ciała" maxLength={CUSTOM_HINT_MAX} value={hint} onChange={(e) => setHint(e.target.value)} />
+      <Button type="button" size="sm" disabled={!valid} className="coarse:h-11" onClick={save}>Dodaj ćwiczenie</Button>
+    </div>
+  );
+}
+
+const EQUIPMENT_OPTIONS: Equipment[] = ["ławka", "hantle"];
+
 function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans: PlanDay[]; onSaved: () => void }) {
   const [exerciseId, setExerciseId] = useState(EXERCISES[0].id);
   const [rows, setRows] = useState<SetRow[]>([emptyRow(), emptyRow(), emptyRow()]);
   const [note, setNote] = useState("");
+  const custom = useCustomExercises();
+  const all = useMemo(() => [...EXERCISES, ...custom], [custom]);
+  const [newOpen, setNewOpen] = useState(false);
+
+  /** Usuwa własne ćwiczenie bez wpisów i planów; z wpisami zostaje, a komunikat mówi dlaczego. */
+  const deleteCustom = (id: string) => {
+    if (!removeCustomExercise(id)) { toast.error("Ćwiczenia z wpisami albo w planie nie da się usunąć"); return; }
+    setExerciseId(EXERCISES[0].id);
+    toast.success("Usunięto własne ćwiczenie");
+  };
 
   /** Wybór dnia planu: ustawia pierwsze ćwiczenie dnia i tyle serii, ile zaplanowano. */
   const pickPlan = (planId: string) => {
@@ -194,12 +245,19 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
         >
           {MUSCLE_GROUPS.map((g: MuscleGroup) => (
             <optgroup key={g} label={g[0].toUpperCase() + g.slice(1)}>
-              {EXERCISES.filter((e) => e.group === g).map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
+              {all.filter((e) => e.group === g).map((e) => <option key={e.id} value={e.id}>{e.name}</option>)}
             </optgroup>
           ))}
         </select>
       </label>
       <p className="text-xs text-muted-foreground">{exerciseById(exerciseId)?.hint}</p>
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <Button type="button" variant="ghost" size="sm" className="coarse:h-11" aria-expanded={newOpen} onClick={() => setNewOpen((v) => !v)}>{newOpen ? "Zamknij" : "+ Nowe ćwiczenie"}</Button>
+        {exerciseId.startsWith(CUSTOM_PREFIX) && (
+          <Button type="button" variant="ghost" size="sm" className="coarse:h-11 text-destructive-ink" onClick={() => deleteCustom(exerciseId)}>Usuń to ćwiczenie</Button>
+        )}
+      </div>
+      {newOpen && <NewExerciseForm onCreated={(id) => { setExerciseId(id); setNewOpen(false); }} />}
       {last ? (
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span>Ostatnio ({shortDay(last.day)}): {setsLine(last.sets)}</span>
@@ -322,6 +380,7 @@ function AddPlanForm() {
   const [picked, setPicked] = useState<string[]>([]);
   const [targetSets, setTargetSets] = useState("3");
   const [targetReps, setTargetReps] = useState("10");
+  const custom = useCustomExercises();
   const sets = parseNum(targetSets, 10, true);
   const reps = parseNum(targetReps, TRAINING_REPS_MAX, true);
   const valid = name.trim().length > 0 && picked.length > 0 && sets !== null && sets !== undefined && reps !== null && reps !== undefined;
@@ -339,7 +398,7 @@ function AddPlanForm() {
       <Input aria-label="Nazwa dnia planu" placeholder="np. Klatka i triceps" value={name} onChange={(e) => setName(e.target.value)} />
       <fieldset className="space-y-1">
         <legend className="sr-only">Ćwiczenia w dniu</legend>
-        {EXERCISES.map((e) => (
+        {[...EXERCISES, ...custom].map((e) => (
           <label key={e.id} className="flex items-center gap-2 text-sm cursor-pointer">
             <Checkbox
               checked={picked.includes(e.id)}

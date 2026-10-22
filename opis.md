@@ -1645,3 +1645,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/lib/debts/model.ts` (`DebtEntry.dueNoteId`, zachowywane przez `cleanDebt`); `src/components/debts/DebtsView.tsx` (`AddForm`: pole terminu, walidacja, tworzenie notatki przez prop `addReminderNote`); `src/pages/Index.tsx` (przekazuje `addNote`). Prop zamiast kontekstu, żeby widok dało się testować bez dostawcy notatek.
 - **Ograniczenie:** termin ustawia się przy dodawaniu wpisu, nie przy edycji. Usunięcie wpisu nie kasuje notatki z przypomnieniem (notatka zostaje świadomie, żeby nie zgubić zobowiązania).
 - **Testy:** `e2e/debts-due.spec.ts` (notatka w Przypomnieniach; odrzucenie terminu w przeszłości); `src/components/debts` + `src/lib/debts` 26/26.
+
+## Ćwiczenia — własne ćwiczenia treningu (Fala 5, pkt 6, 2026-10-22)
+
+- **Co robi:** w Treningu można dodać własne ćwiczenie (nazwa, partia mięśniowa, sprzęt ławka/hantle, nieobowiązkowa wskazówka). Pojawia się w liście wyboru wpisu i w planie dnia. Usunąć można tylko własne ćwiczenie bez wpisów i bez dnia planu; inaczej komunikat mówi, dlaczego.
+- **Gdzie:** `src/lib/training/catalog.ts` (rejestr `setCustomExercises`, `allExercises`, `cleanCustomExercise`, prefiks `wlasne-`, limit 30); `src/lib/training/yTraining.ts` (mapa Yjs `trainingExercises`, `addCustom`, `removeCustom`, synchronizacja rejestru przy każdej zmianie); `src/lib/training/store.ts` (`useCustomExercises`, `addCustomExercise`, `removeCustomExercise`); `src/components/cwiczenia/TrainingSection.tsx` (`NewExerciseForm`, lista wyboru, usuwanie).
+- **Pułapka (naprawiona):** formularz nowego ćwiczenia jest w formularzu wpisu treningu. Zagnieżdżony `<form>` przejmował wysłanie i przeładowywał stronę, więc nic się nie zapisywało. Dlatego to `div` z przyciskiem `type="button"` i Enterem w polu nazwy.
+- **Uwaga na starsze wersje:** wpisy i plany z własnymi ćwiczeniami czyta tylko wersja z tą zmianą. Starsza wersja odrzuci obce id (`isKnownExercise`) i przy zapisie może zgubić ćwiczenie z planu. Nie używać starszej wersji na urządzeniu, które dodaje własne ćwiczenia.
+- **Testy:** `src/lib/training/customExercises.test.ts`; `src/components/cwiczenia/TrainingSection.test.tsx` (mock rozszerzony o nowe funkcje); `e2e/cwiczenia-wlasne.spec.ts` (dodanie i usunięcie). Jednostkowe trening 60/60; e2e Ćwiczeń 3/3.
