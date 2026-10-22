@@ -1563,3 +1563,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 **Fala 3 zamknięta.**
 
 **Commit:** `2dea8e5` (2026-10-22), poprzedni krok `c36100b`.
+
+## Wydajność — Fala 4: leniwe okna z „Więcej” (2026-10-22)
+
+- **Udostępnij** (`ShareNote.tsx`, `ShareNoteDialog.tsx`): przycisk na kaflu zostaje eager, okno ładuje się przy pierwszym kliknięciu i zostaje zamontowane (animacja zamknięcia). Kopiuj tekst, Kopiuj link, Udostępnij…, Pobierz .md.
+- **Historia wersji** (`VersionHistory.tsx`, `VersionHistoryDialog.tsx`): ten sam wzorzec; przycisk i licznik wersji eager, lista z Markdownem leniwie. Przywrócenie zamyka okno.
+- **Zysk:** wejściowy JS 411 708 B → 411 136 B (401,50 KB; próg 402 KB w `e2e/bundle.spec.ts`). Mały, bo Radix i Markdown są też w paczce startowej. `NoteLookPicker` (ikona i okładka) zostaje eager — `NoteCoverStrip` z tego samego pliku jest potrzebny na kaflu.
+- **Testy:** `e2e/share-files.spec.ts`, `search-backup.spec.ts`, `reader.spec.ts`, `a11y.spec.ts` (65/65), `bundle.spec.ts` (budżet wejściowego JS).
