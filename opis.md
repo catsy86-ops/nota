@@ -1616,3 +1616,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/lib/reminderActions.ts` (czyste funkcje: `doneReminderUpdate`, `snoozeReminderUpdate`, `reminderFields`); `src/components/ReminderQuickActions.tsx` (przyciski, toast, fokus po usunięciu wiersza); użycie w `NoteCardBody.tsx`, `review/TodayDueList.tsx` (prop `onUpdate` z `Index.tsx`), `calendar/DayPanel.tsx` (`noteOf`, `onUpdateNote`; z `ReminderCalendarView.tsx`).
 - **Testy:** `src/lib/reminderActions.test.ts`; `e2e/dzis-terminy.spec.ts` (Dziś: „Jutro rano” zdejmuje zaległy termin z listy; Kalendarz: „Za godzinę” w panelu). Regresja przypomnień: `reminders-phase2`, `weekly-review`, `reminders-calendar`, `reminder-toast` 25/25.
 - **Uwaga:** `e2e/composer.spec.ts` „przypomnienie z paska” nie przechodzi także na czystym HEAD (zduplikowany przycisk „Usuń przypomnienie”) — problem sprzed tej zmiany.
+
+## Skrzynka — tryb porządkowania (Fala 5, pkt 2, 2026-10-22)
+
+- **Co robi:** przycisk „Porządkuj skrzynkę (N)” pod polem przechwytywania otwiera okno, które pokazuje notatki ze Skrzynki po jednej. Chipy folderów i etykiet przenoszą notatkę z Skrzynki (folder albo etykieta zdejmuje ją z reguły skrzynki). Archiwizuj i Kosz działają od razu. „Zostaw w skrzynce” przechodzi dalej bez zmian. „Cofnij” cofa ostatnią akcję (stos w oknie). Skróty 1–9 wybierają pierwsze dziewięć chipów (najpierw foldery, potem etykiety).
+- **Gdzie:** `src/components/InboxTriage.tsx` (okno, kolejka zamrożona przy otwarciu w efekcie na `open`); `src/pages/Index.tsx` (leniwy import, przycisk i montowanie przy pierwszym otwarciu, `triageOpen`/`triageMounted`). Reguła skrzynki: `src/lib/inbox.ts` (`isInboxNote`).
+- **Testy:** `e2e/inbox-triage.spec.ts` (archiwizacja, cofnięcie, kosz, zostawienie, stan „Gotowe”). Skrótów 1–9 jeszcze nie pokrywa test e2e (brak folderów w teście). Regresja: `inbox-today` 3/3, `InboxCapture` + `inbox` 13/13.

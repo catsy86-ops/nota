@@ -109,6 +109,8 @@ const FocusMode = lazy(() => import("@/components/FocusMode").then((m) => ({ def
 const StudyView = lazy(loadStudyView);
 const DebtsView = lazy(() => import("@/components/debts/DebtsView").then((m) => ({ default: m.DebtsView })));
 const CwiczeniaView = lazy(() => import("@/components/cwiczenia/CwiczeniaView").then((m) => ({ default: m.CwiczeniaView })));
+// Porządkowanie Skrzynki — okno ładuje się przy pierwszym otwarciu.
+const InboxTriage = lazy(() => import("@/components/InboxTriage").then((m) => ({ default: m.InboxTriage })));
 const ShiftsView = lazy(() => loadShiftsView().then((m) => ({ default: m.ShiftsView })));
 const ReminderCalendarView = lazy(() => loadCalendarView().then((m) => ({ default: m.ReminderCalendarView })));
 // Przypomnienie „Raport dnia gotowy” (dział Praca) — leniwie, żeby dziennik nie wchodził do głównej paczki.
@@ -179,6 +181,8 @@ const Index = () => {
   // i nie przesuwał całej treści przy każdym wczytaniu strony.
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window !== "undefined" && window.innerWidth >= 768);
   const [confirmEmptyTrash, setConfirmEmptyTrash] = useState(false);
+  const [triageOpen, setTriageOpen] = useState(false);
+  const [triageMounted, setTriageMounted] = useState(false);
   const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[] | null>(null);
   const addNoteRef = useRef<{ expand: (action?: ComposerAction) => void }>(null);
   const logoClicksRef = useRef<{ count: number; lastTs: number }>({ count: 0, lastTs: 0 });
@@ -631,6 +635,17 @@ const Index = () => {
           )}
           {view === "notes" && <InstallBanner ready={notes.length >= 3} />}
           {view === "inbox" && !deferredSearch && <InboxCapture onCapture={captureToInbox} />}
+          {view === "inbox" && !deferredSearch && inboxCount > 0 && (
+            <button type="button" onClick={() => { setTriageMounted(true); setTriageOpen(true); }}
+              className="self-start inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-primary-ink hover:bg-primary/10 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+              Porządkuj skrzynkę ({inboxCount})
+            </button>
+          )}
+          {triageMounted && (
+            <Suspense fallback={null}>
+              <InboxTriage open={triageOpen} onOpenChange={setTriageOpen} />
+            </Suspense>
+          )}
 
           {/* Każda karta Dziś ma własną granicę: błąd w danych Pracy nie kładzie całego widoku, który jest punktem wejścia. */}
           {view === "today" && !deferredSearch && (
