@@ -1556,6 +1556,10 @@ Budżet paczki startowej: po tej zmianie 411 696 B (próg 410 624 B). Przekrocze
 
 Zrobione w tej sesji: fokus po odpowiedzi w quizie (patrz wyżej). Sprawdzone bez zmian: Długi już mają `role="radio"` w grupie (`DebtsView.tsx`); Ustawienia używają `aria-pressed` przy przyciskach wyboru i `Segmented` (ToggleGroup, strzałki) — zostawione.
 
-Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.tsx`) i dnia (`DayPanel.tsx`) ogłaszają jedną zmianę każdy; bez nich czytnik nie powiedziałby, na który dzień przeszło. Nie zrobione z Fali 3: okno notatki jako niemodalne (podgląd vs prezentacja — większa zmiana).
+Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.tsx`) i dnia (`DayPanel.tsx`) ogłaszają jedną zmianę każdy; bez nich czytnik nie powiedziałby, na który dzień przeszło.
+
+- **Czytnik notatki — podgląd niemodalny** (`NoteReader.tsx`): `aria-modal` tylko w trybie `present` (prezentacja). Podgląd (Spacja na kaflu) ma `role="dialog"` bez `aria-modal`, bo siatka pod spodem pozostaje sterowalna (`gridKeyboardNav`). Klik w tło nadal zamyka podgląd. Testy: `e2e/reader.spec.ts`, `reader-step.spec.ts`, `note-links.spec.ts`, `a11y.spec.ts` (67/67).
+
+**Fala 3 zamknięta.**
 
 **Commit:** `c36100b` (2026-10-22).

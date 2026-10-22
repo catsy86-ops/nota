@@ -243,7 +243,9 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
         exit={{ opacity: 0, scale: ENTER_SCALE, transition: tween.exit }}
         transition={tween.enter}
         role="dialog"
-        aria-modal="true"
+        // Podgląd jest niemodalny: siatka pod spodem zostaje w drzewie dostępności (strzałki
+        // przewijają ją przez gridKeyboardNav). Modalna jest tylko prezentacja.
+        aria-modal={present ? "true" : "false"}
         aria-label={note.title || "Notatka bez tytułu"}
         data-state={present ? "open" : undefined}
         data-reader-mode={mode}
