@@ -1710,3 +1710,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Co robi:** usuwanie dokumentu z karty budowy i usuwanie lokalizacji wpisu mają na ekranie dotykowym 44 px. Wcześniej 36 px i ok. 34 px.
 - **Gdzie:** `src/components/study/SiteDocsPanel.tsx` (`coarse:h-11 coarse:w-11`); `src/components/study/JournalEntrySheet.tsx` (przycisk lokalizacji: `coarse:size-11`, ujemny margines, wysokość wiersza bez zmian).
 - **Testy:** `e2e/site-docs.spec.ts` (@mobile: pomiar 44×44). Lokalizacja: `e2e/journal-geo.spec.ts` przechodzi, ale rozmiaru przycisku nie mierzy.
+
+## Praca — dostępność: wybór budowy przy wejściu i ikony quizu (Faza 1.6–1.7, 2026-10-22)
+
+- **Co robi:** wybór budowy w „Przed wejściem” to grupa przycisków z `aria-pressed` (zamiast niepełnego `radiogroup` bez strzałek). Ikony poprawnej i błędnej odpowiedzi w quizie mają rolę `img`, więc czytnik je zapowiada.
+- **Gdzie:** `src/components/study/EntryCheck.tsx`; `src/components/study/QuizPanel.tsx`.
+- **Testy:** `e2e/entry-check.spec.ts` (1/1); `study.spec.ts` i `today-study.spec.ts` przechodzą.

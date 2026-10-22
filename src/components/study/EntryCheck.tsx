@@ -85,13 +85,12 @@ export function EntryCheckCard() {
             <HardHat className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />Przed wejściem
           </h4>
           {choices.length > 1 ? (
-            <div className="mt-1.5 flex flex-wrap gap-1.5" role="radiogroup" aria-label="Budowa na dziś">
+            <div className="mt-1.5 flex flex-wrap gap-1.5" role="group" aria-label="Budowa na dziś">
               {choices.map((s) => (
                 <button
                   key={s.id}
                   type="button"
-                  role="radio"
-                  aria-checked={s.id === site.id}
+                  aria-pressed={s.id === site.id}
                   onClick={() => { setPicked(s.id); setFresh(false); }}
                   className={cn(
                     "pressable max-w-40 truncate rounded-full border px-2.5 py-0.5 text-xs coarse:min-h-11 coarse:px-3 coarse:text-sm",

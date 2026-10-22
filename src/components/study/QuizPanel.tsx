@@ -247,7 +247,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
               )}
             >
               <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border border-border font-mono text-2xs text-muted-foreground">
-                {answered && isCorrect ? <Check className="w-3.5 h-3.5 text-success-ink" aria-label="Poprawna" /> : answered && isPicked ? <X className="w-3.5 h-3.5 text-destructive-ink" aria-label="Błędna" /> : LETTERS[i]}
+                {answered && isCorrect ? <Check className="w-3.5 h-3.5 text-success-ink" role="img" aria-label="Poprawna" /> : answered && isPicked ? <X className="w-3.5 h-3.5 text-destructive-ink" role="img" aria-label="Błędna" /> : LETTERS[i]}
               </span>
               <span className="flex-1">{opt}</span>
             </button>
