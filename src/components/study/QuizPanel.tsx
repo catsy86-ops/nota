@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDayClock } from "@/lib/dayClock";
 import { ArrowRight, Check, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
@@ -116,6 +116,17 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
     return () => window.removeEventListener("keydown", onKey);
   }, [current, result, picked, answer, next]);
 
+  // Fokus po odpowiedzi: przycisk odpowiedzi znika (disabled), więc fokus przechodzi na „Dalej”;
+  // po „Dalej” na nagłówek nowego pytania, żeby czytnik i klawiatura nie wracały na początek strony.
+  const nextBtnRef = useRef<HTMLButtonElement>(null);
+  const questionRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (picked !== null) nextBtnRef.current?.focus();
+  }, [picked]);
+  useEffect(() => {
+    if (index > 0 && picked === null) questionRef.current?.focus();
+  }, [index]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (result && round) {
     const percent = Math.round((result.correct / round.length) * 100);
     return (
@@ -215,7 +226,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
       <div className="h-1 rounded-full bg-muted overflow-hidden" aria-hidden>
         <div className="h-full bg-primary transition-[width] duration-300" style={{ width: `${((index + (answered ? 1 : 0)) / round.length) * 100}%` }} />
       </div>
-      <h2 className="font-display text-lg sm:text-xl leading-snug">{current.question}</h2>
+      <h2 ref={questionRef} tabIndex={-1} className="font-display text-lg sm:text-xl leading-snug outline-hidden">{current.question}</h2>
       <div role="group" aria-label="Odpowiedzi" className="grid gap-2">
         {current.options.map((opt, i) => {
           const isCorrect = i === current.correct;
@@ -253,7 +264,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
           Bezpośrednio w sekcji: `sticky` działa tylko w obrębie rodzica, a sekcja sięga pod dolny pasek. */}
       {answered && (
         <div data-sticky-action className="phone:sticky phone:bottom-[calc(5.5rem+env(safe-area-inset-bottom))] phone:z-10 phone:-mx-5 phone:bg-card/95 phone:px-5 phone:py-2 phone:backdrop-blur-sm">
-          <Button onClick={next} className="phone:h-12 phone:w-full phone:text-base">
+          <Button ref={nextBtnRef} onClick={next} className="phone:h-12 phone:w-full phone:text-base">
             {index < round.length - 1 ? "Dalej" : "Zobacz wynik"}
             <ArrowRight className="w-4 h-4 ml-1.5" />
           </Button>

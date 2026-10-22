@@ -1545,7 +1545,8 @@ Budżet paczki startowej: po tej zmianie 411 696 B (próg 410 624 B). Przekrocze
 ## Plan działów — Fala 3 (dostępność, częściowo, 2026-10-22)
 
 - **Karty notatek:** `ActionBtn` przekazuje `aria-pressed` do DOM i ma `type="button"`; ulubione mają stan (`NoteCardActions.tsx`).
-- **Pigułka zapisu** (`OfflineStatus.tsx`): przycisk bez roli `status`; komunikat w osobnym `sr-only` z `role="status"`; w stanie biernym pigułka nie łapie fokusu.
+- **Pigułka zapisu** (`OfflineStatus.tsx`): przycisk bez roli `status`; komunikat w osobnym `sr-only` z `role="status"` brzmi „Stan zapisu: …” (prefiks, żeby nie powielać widocznego napisu w DOM — testy szukają go dokładnie); w stanie biernym pigułka nie łapie fokusu.
+- **Quiz — fokus po odpowiedzi** (`study/QuizPanel.tsx`): po wyborze odpowiedzi fokus przechodzi na „Dalej” (przyciski odpowiedzi stają się `disabled`); po „Dalej” na nagłówek pytania (`tabIndex=-1`). Testy: `e2e/study.spec.ts`, `e2e/today-study.spec.ts` (30/30 desktop, 3/3 iPhone 14).
 - **Pasek boczny na telefonie** (`AppSidebar.tsx`): rola `dialog`, `aria-modal`, fokus wchodzi do środka, Tab zapętla się, Esc zamyka, fokus wraca na przycisk otwierający.
 - **Płótno rysowania** (`DrawingCanvas.tsx`): przyciski narzędzi i kolory mają nazwy i `aria-pressed`.
 - **Tryb skupienia** (`FocusMode.tsx`) i **przypomnienie** (`ReminderPicker.tsx`): nazwane przyciski zamknięcia i usunięcia.
@@ -1553,4 +1554,6 @@ Budżet paczki startowej: po tej zmianie 411 696 B (próg 410 624 B). Przekrocze
 - **Skarbiec** (`VaultDialogs.tsx`): miernik hasła ogłasza zmianę poziomu, nie każdy znak; natywne pola wyboru zamienione na `Checkbox` (większe na dotyku).
 - **Synchronizacja** (`SyncSettings.tsx`): stan połączenia jako `role="status"`.
 
-Nie zrobione z Fali 3: przełączniki w Ustawieniach (`aria-pressed` zamiast ToggleGroup), Długi (ToggleGroup), kalendarz (ograniczenie `aria-live`), fokus po odpowiedzi w quizie, okno notatki jako niemodalne (podgląd vs prezentacja).
+Zrobione w tej sesji: fokus po odpowiedzi w quizie (patrz wyżej). Sprawdzone bez zmian: Długi już mają `role="radio"` w grupie (`DebtsView.tsx`); Ustawienia używają `aria-pressed` przy przyciskach wyboru i `Segmented` (ToggleGroup, strzałki) — zostawione.
+
+Nie zrobione z Fali 3: kalendarz (`aria-live` na nagłówku dnia i miesiąca — do decyzji, czy zawęzić), okno notatki jako niemodalne (podgląd vs prezentacja — większa zmiana).

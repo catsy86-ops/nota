@@ -111,8 +111,9 @@ export function OfflineStatus() {
           {saved && !saving && <span className="pencil-stroke" aria-hidden />}
         </span>
       </button>
-      {/* Komunikat dla czytnika: zmiana stanu zapisu jest ogłaszana, a przycisk nie dostaje roli „status”. */}
-      <span role="status" aria-live="polite" className="sr-only">{label}</span>
+      {/* Komunikat dla czytnika: zmiana stanu zapisu jest ogłaszana, a przycisk nie dostaje roli „status”.
+          Z przedrostkiem, żeby tekst nie powielał widocznego napisu (testy szukają go dokładnie). */}
+      <span role="status" aria-live="polite" className="sr-only">Stan zapisu: {label}</span>
       {panelMounted && <Suspense fallback={null}><OfflineQueuePanel open={panelOpen} onOpenChange={setPanelOpen} offline={offline} /></Suspense>}
     </>
   );
