@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { folderProgress } from "@/lib/folderProgress";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { useDroppable } from "@dnd-kit/core";
 import {
-  Settings as SettingsIcon, CircleQuestionMark, Tag, Moon, Sun, FolderOpen, Command, RotateCcwClock, Trophy, Brain, Ellipsis, ChevronDown, Funnel, Star,
+  Settings as SettingsIcon, CircleQuestionMark, Tag, Moon, Sun, FolderOpen, Command, RotateCcwClock, Trophy, Brain, BrainCircuit, ExternalLink, Ellipsis, ChevronDown, Funnel, Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotesContext } from "@/hooks/NotesProvider";
@@ -24,6 +24,7 @@ import { useSavedFilters, sameQuery } from "@/lib/savedFilters";
 import { searchNotes, useSearchReady } from "@/lib/searchNotes";
 import { preloadView } from "@/lib/viewPreload";
 import type { SidebarItem } from "@/components/sidebar/sidebarItems";
+import { NEUROKLIK_URL } from "@/lib/neuroklik";
 
 const MAX_FAVORITES = 10;
 
@@ -81,6 +82,31 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const [moreOpen, setMoreOpen] = useState(false);
   const isMobile = useIsMobile();
+  const asideRef = useRef<HTMLElement>(null);
+  // Telefon: pasek to okno modalne — fokus wchodzi do środka, Tab zapętla się w nim, Esc zamyka,
+  // a po zamknięciu fokus wraca na przycisk, który go otworzył.
+  useEffect(() => {
+    const aside = asideRef.current;
+    if (!open || !isMobile || !aside) return;
+    const opener = document.activeElement as HTMLElement | null;
+    const focusables = () => Array.from(aside.querySelectorAll<HTMLElement>("button:not([disabled]), a[href], input:not([disabled])"));
+    focusables()[0]?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { e.preventDefault(); onClose(); return; }
+      if (e.key !== "Tab") return;
+      const f = focusables();
+      if (f.length === 0) return;
+      const first = f[0];
+      const last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      opener?.focus?.();
+    };
+  }, [open, isMobile, onClose]);
   const { notes, allLabels, folders, renameLabel, removeLabel, addFolder, updateFolder, deleteFolder } = useNotesContext();
   const progressByFolder = useMemo(() => folderProgress(notes, folders), [notes, folders]);
   const { filters, rename: renameFilter, remove: removeFilter } = useSavedFilters();
@@ -113,6 +139,10 @@ export function AppSidebar({
       <AnimatePresence initial={false}>
         {open && (
           <motion.aside
+            ref={asideRef}
+            role={isMobile ? "dialog" : undefined}
+            aria-modal={isMobile ? true : undefined}
+            aria-label={isMobile ? "Menu działów" : undefined}
             // Telefon: arkusz wjeżdża z krawędzi nad treścią. Desktop: pasek jest w układzie,
             // więc animujemy szerokość — treść odsuwa się razem z nim, zamiast skakać na końcu.
             initial={isMobile ? { x: "-100%" } : { width: 0 }}
@@ -257,6 +287,13 @@ export function AppSidebar({
                   buttonProps={{ "aria-label": "Tryb ciemny", "aria-pressed": dark }}
                 />
                 <SidebarRow icon={<SettingsIcon className="w-[18px] h-[18px]" />} label="Ustawienia" onClick={() => onSettingsOpenChange(true)} />
+                <SidebarRow
+                  icon={<BrainCircuit className="w-[18px] h-[18px]" />}
+                  label="Trening mózgu"
+                  onClick={() => window.open(NEUROKLIK_URL, "_blank", "noopener,noreferrer")}
+                  trailing={<ExternalLink className="w-3.5 h-3.5 shrink-0 text-muted-foreground" aria-hidden />}
+                  buttonProps={{ "aria-label": "Trening mózgu (otwiera się w nowej karcie)" }}
+                />
 
                 {/* Akcje drugorzędne zwinięte — sidebar ma się mieścić na 900 px. */}
                 <SidebarRow

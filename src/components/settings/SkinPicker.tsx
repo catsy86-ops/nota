@@ -38,10 +38,10 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
               whileHover={{ y: -3 }}
               whileTap={{ scale: 0.96 }}
               transition={spring.snap}
-              // Nieparzysta liczba stylów zostawia pustą kratkę — ostatni kafel na telefonie bierze cały wiersz.
+              // Zeszyt (domyślny) bierze całą szerokość u góry; pozostałe sześć układa się w siatkę 2×3 / 3×2.
               className={cn(
                 "group relative rounded-card p-1.5 text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
-                i === SKINS.length - 1 && SKINS.length % 2 === 1 && "col-span-2 sm:col-span-1",
+                i === 0 && "col-span-2 sm:col-span-3",
               )}
             >
               {active && (
@@ -56,8 +56,8 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
                 data-thumb={s}
                 aria-hidden
                 className={cn(
-                  "skin-thumb relative block aspect-[16/10] rounded-xl shadow-sm ring-1 ring-black/5 transition-shadow duration-base group-hover:shadow-md",
-                  i === SKINS.length - 1 && SKINS.length % 2 === 1 && "max-sm:aspect-[16/6]",
+                  "skin-thumb relative block aspect-[16/10] rounded-xl shadow-sm ring-1 ring-foreground/10 transition-shadow duration-base group-hover:shadow-md",
+                  i === 0 && "aspect-[16/7]",
                 )}
                 style={{ backgroundColor: p.bg, color: p.ink }}
               >

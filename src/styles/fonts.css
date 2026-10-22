@@ -1,7 +1,7 @@
 /*
   Krój tekstu (`html[data-font]`, src/lib/appFont.ts). Reguły w `:where()` mają
   specyficzność samego `html[data-font]` (0,1,1) — przegrywają z krojami nagłówków
-  stylów (`html[data-skin] h1`, 0,1,2), więc Plan/Neon/Zorza/Miedź zachowują nagłówki,
+  stylów (`html[data-skin] h1`, 0,1,2), więc Plan/Neon/Zorza/Miedź/Matryca/Hydraulika zachowują nagłówki (h1, h2 — h3 idą za krojem tekstu),
   a w Zeszycie nagłówki (`.font-display`) idą za wybranym krojem. Logo i cyfry
   (`.font-logo`, `.font-mono`) mają własne kroje i nie są tu wymienione.
 */

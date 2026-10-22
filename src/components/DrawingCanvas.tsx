@@ -10,6 +10,8 @@ const COLORS = [
   "#1a1a2e", "#e74c3c", "#e67e22", "#f1c40f",
   "#2ecc71", "#3498db", "#9b59b6", "#ffffff",
 ];
+/** Nazwy kolorów dla czytnika ekranu — w tej samej kolejności co `COLORS`. */
+const COLOR_NAMES = ["granatowy", "czerwony", "pomarańczowy", "żółty", "zielony", "niebieski", "fioletowy", "biały"];
 
 interface Point {
   x: number;
@@ -242,6 +244,9 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
             {COLORS.map((c) => (
               <motion.button
                 key={c}
+                type="button"
+                aria-label={`Kolor: ${COLOR_NAMES[COLORS.indexOf(c)]}`}
+                aria-pressed={color === c && tool === "pen"}
                 onClick={() => { setColor(c); setTool("pen"); }}
                 className={cn(
                   "pressable w-6 h-6 rounded-full border-2 transition-all",
@@ -323,7 +328,10 @@ function ToolBtn({ icon, onClick, title, active, disabled, className }: {
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
+      aria-label={title}
+      aria-pressed={active}
       disabled={disabled}
       className={cn(
         "pressable p-2 rounded-lg transition-colors",

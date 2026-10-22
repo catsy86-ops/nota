@@ -191,7 +191,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
             Zapisz
           </Button>
           {reminder && (
-            <Button size="sm" variant="outline" onClick={handleClear}>
+            <Button size="sm" variant="outline" onClick={handleClear} aria-label="Usuń przypomnienie">
               <X className="w-3 h-3" />
             </Button>
           )}

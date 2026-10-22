@@ -1,11 +1,13 @@
 import type { ShiftData } from "@/lib/shifts/model";
 import { currentAndNextShift, recentlyEndedShift } from "@/lib/shifts/summary";
+import { NEUROKLIK_URL } from "@/lib/neuroklik";
+
+export { NEUROKLIK_URL };
 
 /**
  * Neuroklik (codzienny trening mózgu, osobna aplikacja www) na stronie „Dziś”. Notatnik nie ma
  * dostępu do jej danych — karta tylko otwiera stronę i pozwala ustawić przypomnienie na właściwą porę.
  */
-export const NEUROKLIK_URL = "https://neuroklik.vercel.app/";
 
 /** Przed zmianą — rozgrzewka w tym oknie; po zmianie — odpoczynek w tym oknie. */
 export const BEFORE_SHIFT_MS = 3 * 60 * 60 * 1000;

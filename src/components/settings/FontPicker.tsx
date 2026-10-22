@@ -49,8 +49,10 @@ export function FontPicker({ value, onChange }: FontPickerProps) {
                 <span className="text-base font-semibold text-foreground">{meta.label}</span>
                 {active && <Check className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />}
               </span>
-              <span className="relative mt-0.5 block truncate text-sm text-foreground/80" style={{ fontFamily: meta.family }} aria-hidden>
-                Zażółć gęślą jaźń · Il1 O0
+              {/* Próbka zawija się zamiast się ucinać — znaki „Il1 O0” są tym, po co ludzie porównują kroje. */}
+              <span className="relative mt-0.5 block text-sm leading-snug text-foreground/80 break-words" style={{ fontFamily: meta.family }} aria-hidden>
+                Zażółć gęślą jaźń
+                <span className="block font-mono text-xs opacity-80" style={{ fontFamily: meta.family }}>Il1 O0 · 0123456789</span>
               </span>
               <span className="relative mt-1 block text-2xs text-muted-foreground">{meta.blurb}</span>
             </motion.button>

@@ -85,7 +85,7 @@ export function FocusMode({ open, onOpenChange, initialTitle = "", initialConten
             {mode === "work" ? <Brain className="w-4 h-4 text-primary-ink" /> : <Coffee className="w-4 h-4 text-accent" />}
             <span>{mode === "work" ? "Skupienie" : "Przerwa"}</span>
           </div>
-          <button onClick={close} className="p-2 rounded-lg hover:bg-muted">
+          <button type="button" onClick={close} aria-label="Zamknij tryb skupienia" className="p-2 rounded-lg hover:bg-muted">
             <X className="w-5 h-5" />
           </button>
         </div>

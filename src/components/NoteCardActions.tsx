@@ -21,13 +21,16 @@ import { NoteLookPicker } from "./NoteLookPicker";
 type Actions = ReturnType<typeof useNoteViewActions>;
 
 /** Przycisk akcji na stopce kafla (ikona, bez tekstu; podpowiedź w `data-tip`). */
-export function ActionBtn({ icon, onClick, title, className = "", "aria-expanded": ariaExpanded }: { icon: ReactNode; onClick: (e: React.MouseEvent<HTMLButtonElement>) => void; title: string; className?: string; "aria-expanded"?: boolean }) {
+export function ActionBtn({ icon, onClick, title, className = "", "aria-expanded": ariaExpanded, "aria-pressed": ariaPressed }: { icon: ReactNode; onClick: (e: React.MouseEvent<HTMLButtonElement>) => void; title: string; className?: string; "aria-expanded"?: boolean; "aria-pressed"?: boolean }) {
   return (
     // Podpowiedź przez wspólny `HoverTip` (`data-tip`), nie osobny Radix Tooltip na każdy przycisk każdej karty.
+    // `aria-pressed` podaje czytnikowi stan przełącznika (ulubione, szerokość, większy tekst, blokada).
     <button
+      type="button"
       onClick={(e) => { e.stopPropagation(); onClick(e); }}
       aria-label={title}
       aria-expanded={ariaExpanded}
+      aria-pressed={ariaPressed}
       data-tip={title}
       className={cn("card-action text-muted-foreground", className)}
     >
@@ -158,6 +161,7 @@ export function MoreActions({
           icon={<Star className={cn("w-4 h-4", note.favorite && "fill-current")} />}
           onClick={() => { haptic("tap"); onUpdate?.(note.id, { favorite: note.favorite ? undefined : true }); }}
           title={note.favorite ? "Usuń z ulubionych" : "Dodaj do ulubionych"}
+          aria-pressed={!!note.favorite}
           className={cn(note.favorite && "text-primary-ink")}
         />
       )}

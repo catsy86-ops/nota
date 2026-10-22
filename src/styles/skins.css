@@ -1,5 +1,5 @@
 /*
-  Style aplikacji (`html[data-skin]`, src/lib/skins.ts). Poza warstwami Tailwinda, więc
+  Style aplikacji (`html[data-skin]`, src/lib/skins.ts; siedem: Zeszyt, Plan, Neon, Zorza, Miedź, Matryca, Hydraulika). Poza warstwami Tailwinda, więc
   nadpisują tokeny z `index.css` (:root / .dark w @layer base) bez podnoszenia specyficzności.
   Każdy styl ma jeden schemat (Plan, Neon, Zorza — ciemne; Miedź — jasna); klasa `.dark`
   jest ustawiana zgodnie z nim, więc warianty `dark:` w komponentach dalej działają.
@@ -26,7 +26,9 @@ html[data-skin="plan"] {
   /* Żółty ołówek — linki i [[linki]]. */
   --accent: 50 96% 68%;
   --accent-foreground: 212 75% 12%;
-  --destructive: 4 80% 52%;
+  /* Biały tekst na „Usuń” ≥4.5:1 (było 4.35). */
+  --destructive: 4 80% 48.5%;
+  --destructive-ink: 0 82% 76%;
   --destructive-foreground: 0 0% 100%;
   --border: 207 45% 34%;
   --input: 205 45% 58%;
@@ -70,8 +72,7 @@ html[data-skin="plan"] .notki-glyph {
 }
 html[data-skin="plan"] .notki-logo { filter: none; }
 html[data-skin="plan"] h1,
-html[data-skin="plan"] h2,
-html[data-skin="plan"] h3 {
+html[data-skin="plan"] h2 {
   font-family: 'Barlow Condensed', 'Plus Jakarta Sans Variable', sans-serif;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -113,7 +114,7 @@ html[data-skin="neon"] {
   --muted-foreground: 290 22% 76%;
   --accent: 186 100% 62%;
   --accent-foreground: 285 60% 8%;
-  --destructive: 352 90% 56%;
+  --destructive: 352 90% 47.5%;
   --destructive-foreground: 0 0% 100%;
   --border: 288 28% 21%;
   --input: 296 30% 52%;
@@ -205,7 +206,7 @@ html[data-skin="zorza"] {
   --muted-foreground: 220 24% 76%;
   --accent: 262 92% 80%;
   --accent-foreground: 230 60% 8%;
-  --destructive: 352 84% 56%;
+  --destructive: 352 84% 48.5%;
   --destructive-foreground: 0 0% 100%;
   --border: 226 30% 21%;
   --input: 222 26% 52%;
@@ -276,8 +277,7 @@ html[data-motion="reduced"][data-skin="zorza"] .paper-grid::after { animation: n
   }
 }
 html[data-skin="zorza"] h1,
-html[data-skin="zorza"] h2,
-html[data-skin="zorza"] h3 {
+html[data-skin="zorza"] h2 {
   font-family: 'Fraunces Variable', Georgia, serif;
   font-variation-settings: "SOFT" 100, "WONK" 0;
   letter-spacing: -0.005em;
@@ -345,8 +345,7 @@ html[data-skin="miedz"] .paper-grid::before {
   mask-image: none;
 }
 html[data-skin="miedz"] h1,
-html[data-skin="miedz"] h2,
-html[data-skin="miedz"] h3 {
+html[data-skin="miedz"] h2 {
   font-family: 'Bricolage Grotesque Variable', 'Plus Jakarta Sans Variable', sans-serif;
   letter-spacing: -0.015em;
 }
@@ -430,7 +429,7 @@ html[data-skin="matrix"] {
   --muted-foreground: 120 22% 68%;
   --accent: 150 100% 60%;
   --accent-foreground: 120 100% 4%;
-  --destructive: 0 85% 60%;
+  --destructive: 0 85% 48.5%;
   --destructive-foreground: 0 0% 100%;
   --border: 120 50% 13%;
   --input: 120 26% 44%;
@@ -471,8 +470,7 @@ html[data-skin="matrix"] .paper-grid::after {
   background: radial-gradient(40% 36% at 50% 50%, hsl(125 90% 3% / 0.9), hsl(125 90% 3% / 0.45) 60%, transparent 100%);
 }
 html[data-skin="matrix"] h1,
-html[data-skin="matrix"] h2,
-html[data-skin="matrix"] h3 {
+html[data-skin="matrix"] h2 {
   font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
   letter-spacing: -0.02em;
   text-shadow: 0 0 12px hsl(125 100% 55% / 0.35);
@@ -487,30 +485,30 @@ html[data-skin="matrix"] .notki-logo { filter: drop-shadow(0 0 12px hsl(125 100%
 
 /* ─────────────────────── HYDRAULIKA — miedź, stal i płynąca woda ─────────────────────── */
 html[data-skin="hydraulika"] {
-  --background: 205 45% 8%;
+  --background: 205 42% 12%;
   --foreground: 200 40% 92%;
-  --card: 205 40% 11%;
+  --card: 205 38% 16%;
   --card-foreground: 200 40% 92%;
-  --popover: 205 40% 11%;
+  --popover: 205 38% 15%;
   --popover-foreground: 200 40% 92%;
   --primary: 24 70% 58%;
   --ink-mix: 100%;
-  --primary-foreground: 205 45% 8%;
-  --secondary: 205 30% 16%;
+  --primary-foreground: 205 45% 10%;
+  --secondary: 205 28% 21%;
   --secondary-foreground: 200 40% 92%;
-  --muted: 205 30% 14%;
+  --muted: 205 28% 19%;
   --muted-foreground: 200 20% 74%;
   --accent: 196 90% 62%;
   --accent-foreground: 205 50% 7%;
-  --destructive: 0 75% 60%;
+  --destructive: 0 75% 51%;
   --destructive-foreground: 0 0% 100%;
-  --border: 205 26% 20%;
+  --border: 205 24% 27%;
   --input: 200 22% 52%;
   --ring: 24 70% 58%;
   --grid: 200 40% 80%;
   --margin: 24 60% 50%;
 
-  --note-default: 205 40% 11%;
+  --note-default: 205 38% 16%;
   --note-coral: 10 30% 13%;
   --note-peach: 24 30% 12%;
   --note-sand: 42 24% 12%;
@@ -575,12 +573,16 @@ html[data-skin="hydraulika"] .paper-grid::after {
 @media (pointer: coarse) {
   html[data-skin="hydraulika"] .hydro-bubble:nth-child(n + 5) { display: none; }
 }
-html[data-skin="hydraulika"] h1,
-html[data-skin="hydraulika"] h2,
-html[data-skin="hydraulika"] h3 {
-  font-family: 'Barlow Condensed', sans-serif;
+html[data-skin="hydraulika"] h1 {
+  font-family: 'Barlow Condensed', 'Plus Jakarta Sans Variable', sans-serif;
   font-weight: 600;
   letter-spacing: 0.01em;
+}
+/* h2 w Hydraulice: czytelny krój tekstu, nie wąski Barlow (tytuły okien i sekcji). */
+html[data-skin="hydraulika"] h2 {
+  font-family: 'Plus Jakarta Sans Variable', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
 }
 /* Ograniczony ruch: rury zostają, woda i bąbelki stoją. */
 @media (prefers-reduced-motion: reduce) {
@@ -599,8 +601,12 @@ html[data-motion="reduced"][data-skin="hydraulika"] .hydro-bubble { display: non
   background-size: 9px 100%, 5px 100%;
 }
 .skin-thumb[data-thumb="hydraulika"]::before {
+  /* Rury powtarzają się co 30 px, a woda to pas u dołu — każda warstwa ma własny rozmiar i powtórzenie. */
   background-image:
     linear-gradient(90deg, transparent 0 9px, rgb(208 138 78 / 0.7) 9px 12px, transparent 12px 30px),
-    linear-gradient(rgb(79 195 247 / 0.35) 0 40%, transparent 40%);
+    linear-gradient(rgb(79 195 247 / 0.35), rgb(79 195 247 / 0.35));
+  background-size: 30px 100%, 100% 42%;
+  background-position: 0 0, 0 100%;
+  background-repeat: repeat-x, no-repeat;
   background-color: #0b1e2b;
 }

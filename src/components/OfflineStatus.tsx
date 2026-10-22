@@ -88,12 +88,12 @@ export function OfflineStatus() {
 
   return (
     <>
+      {/* Przycisk otwiera panel. W stanie biernym (zapisano) pigułka nie łapie fokusu. */}
       <button
         type="button"
-        role="status"
-        aria-live="polite"
         onClick={() => { setPanelMounted(true); setPanelOpen(true); }}
-        aria-label="Otwórz status zapisu i synchronizacji"
+        aria-label={`Status zapisu i synchronizacji: ${label}`}
+        tabIndex={passive ? -1 : undefined}
         className={`save-status glass-strong fixed bottom-24 left-1/2 z-50 flex max-w-[92vw] -translate-x-1/2 items-center gap-2 rounded-full border border-border/60 px-3 py-1.5 text-xs text-muted-foreground shadow-lg transition-colors hover:text-foreground sm:bottom-6 ${passive ? "pointer-events-none" : "cursor-pointer"}`}
       >
         {saveFailed ? (
@@ -111,6 +111,8 @@ export function OfflineStatus() {
           {saved && !saving && <span className="pencil-stroke" aria-hidden />}
         </span>
       </button>
+      {/* Komunikat dla czytnika: zmiana stanu zapisu jest ogłaszana, a przycisk nie dostaje roli „status”. */}
+      <span role="status" aria-live="polite" className="sr-only">{label}</span>
       {panelMounted && <Suspense fallback={null}><OfflineQueuePanel open={panelOpen} onOpenChange={setPanelOpen} offline={offline} /></Suspense>}
     </>
   );

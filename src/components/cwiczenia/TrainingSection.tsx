@@ -434,8 +434,10 @@ function RestTimer({ until, onStop }: { until: number; onStop: () => void }) {
   }, [left, onStop]);
 
   return (
-    <div role="status" aria-live="polite" className="flex items-center justify-between gap-3 rounded-lg border border-primary/40 px-3 py-2 text-sm" data-testid="rest-timer">
-      <span>Przerwa: <span className="font-mono tabular-nums">{Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}</span></span>
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-primary/40 px-3 py-2 text-sm" data-testid="rest-timer">
+      {/* Licznik co sekundę tylko dla oka; czytnik ogłasza wyłącznie koniec przerwy. */}
+      <span>Przerwa: <span className="font-mono tabular-nums" aria-hidden>{Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}</span></span>
+      <span role="status" className="sr-only">{left <= 0 ? "Przerwa skończona" : ""}</span>
       <Button variant="ghost" size="sm" className="coarse:h-11" onClick={onStop}>Pomiń</Button>
     </div>
   );

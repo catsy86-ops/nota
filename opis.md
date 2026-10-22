@@ -1524,3 +1524,33 @@ Gdzie:
 Ograniczenia: Notatnik nie ma dostępu do danych Neuroklik (wynik, serie); karta tylko otwiera stronę. Osadzenie w ramce odrzucone przy wyborze — strona jest otwierana w nowej karcie. Przypomnienie to zwykła notatka z terminem (działa jak inne przypomnienia, także offline).
 
 Testy: `src/lib/brainTraining.test.ts` (4 przypadki). Budżet paczki startowej: +124 B w `Index.tsx` (już wcześniej przekroczony, patrz sekcja Fala 1).
+
+## Motywy i kroje — Fala 2 (2026-10-22)
+
+Co zmieniono:
+- **Kontrast stylów (WCAG AA).** Czerwień „Usuń” (`--destructive`) przyciemniona tak, żeby biały tekst miał ≥4.5:1 w Planie, Neonie, Zorzy, Matrycy i Hydraulice (`src/styles/skins.css`). Plan dostał własny `--destructive-ink` (tekst błędu na karcie, 4.33 → ≥4.9). Test: `src/lib/skinContrast.test.ts` sprawdza każdy styl i schemat (Zeszyt jasny i ciemny).
+- **Hydraulika.** Tła podniesione (tło 8% → 12%, karta 11% → 16%, muted 14% → 19%, krawędź 20% → 27%), bo była wyraźnie ciemniejsza od reszty. Miniatura: warstwy rur i wody mają własny `background-size` (wcześniej jedna kreska i pusty pas).
+- **Nagłówki stylów.** Krój stylu tylko na `h1` i `h2` (Plan, Zorza, Miedź, Matryca). `h3` (małe etykiety sekcji w Ustawieniach) idzie za krojem tekstu. Hydraulika: Barlow Condensed tylko na `h1`, `h2` w Plus Jakarta, plus awaryjny krój.
+- **Galeria stylów** (`src/components/settings/SkinPicker.tsx`): Zeszyt na pełną szerokość, pod nim sześć stylów w siatce. Obwódka miniatur `ring-foreground/10` (działa w ciemnym motywie).
+- **Kroje** (`src/components/settings/FontPicker.tsx`, `src/lib/appFont.ts`): próbka zawija się zamiast się ucinać, „Il1 O0” jest w osobnej linii. Opisy w jednym wzorze „do czego · cecha”; „Domyślny · Plus Jakarta Sans”.
+
+Nie zmienione (świadomie): amber domyślnego Zeszytu na papierze ma 2.65:1 — to kolor marki, zmiana wymaga decyzji właściciela (test go nie egzekwuje, bo to kolor ikon/linków, nie tekst).
+
+## Pasek boczny — „Trening mózgu” (2026-10-22)
+
+Pozycja w stopce paska bocznego (`src/components/AppSidebar.tsx`, nad „Narzędzia”), otwiera https://neuroklik.vercel.app/ w nowej karcie. Adres w małym module `src/lib/neuroklik.ts` (pasek boczny jest w paczce startowej, więc nie ciągnie tam logiki zmian). Ta sama strona jest na karcie Dziś (`BrainTrainingCard`).
+
+Budżet paczki startowej: po tej zmianie 411 696 B (próg 410 624 B). Przekroczenie rośnie razem z falą 3 (fokus i rola okna na pasku bocznym na telefonie, aria w notatkach).
+
+## Plan działów — Fala 3 (dostępność, częściowo, 2026-10-22)
+
+- **Karty notatek:** `ActionBtn` przekazuje `aria-pressed` do DOM i ma `type="button"`; ulubione mają stan (`NoteCardActions.tsx`).
+- **Pigułka zapisu** (`OfflineStatus.tsx`): przycisk bez roli `status`; komunikat w osobnym `sr-only` z `role="status"`; w stanie biernym pigułka nie łapie fokusu.
+- **Pasek boczny na telefonie** (`AppSidebar.tsx`): rola `dialog`, `aria-modal`, fokus wchodzi do środka, Tab zapętla się, Esc zamyka, fokus wraca na przycisk otwierający.
+- **Płótno rysowania** (`DrawingCanvas.tsx`): przyciski narzędzi i kolory mają nazwy i `aria-pressed`.
+- **Tryb skupienia** (`FocusMode.tsx`) i **przypomnienie** (`ReminderPicker.tsx`): nazwane przyciski zamknięcia i usunięcia.
+- **Licznik przerwy** (`TrainingSection.tsx`): czytnik ogłasza tylko koniec przerwy.
+- **Skarbiec** (`VaultDialogs.tsx`): miernik hasła ogłasza zmianę poziomu, nie każdy znak; natywne pola wyboru zamienione na `Checkbox` (większe na dotyku).
+- **Synchronizacja** (`SyncSettings.tsx`): stan połączenia jako `role="status"`.
+
+Nie zrobione z Fali 3: przełączniki w Ustawieniach (`aria-pressed` zamiast ToggleGroup), Długi (ToggleGroup), kalendarz (ograniczenie `aria-live`), fokus po odpowiedzi w quizie, okno notatki jako niemodalne (podgląd vs prezentacja).

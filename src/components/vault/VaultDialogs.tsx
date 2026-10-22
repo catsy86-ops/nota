@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { TriangleAlert, Copy, Download, KeyRound, Lock, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -66,7 +67,9 @@ function StrengthMeter({ password }: { password: string }) {
   const s = passwordStrength(password);
   const tone = s.score >= 3 ? "bg-primary" : s.score === 2 ? "bg-warning" : "bg-destructive";
   return (
-    <div aria-live="polite" data-testid="password-strength">
+    <div data-testid="password-strength">
+      {/* Czytnik słyszy tylko zmianę poziomu siły, nie każdy znak. */}
+      <span role="status" className="sr-only">{password ? s.label : ""}</span>
       <div className="flex gap-1" aria-hidden>
         {[1, 2, 3, 4].map((i) => (
           <span key={i} className={cn("h-1.5 flex-1 rounded-full", s.score >= i ? tone : "bg-muted")} />
@@ -212,11 +215,11 @@ function SetupForm({ onCreated }: { onCreated: (recoveryCode: string | null) => 
         {mismatch && <p role="alert" className="text-xs text-destructive-ink">Hasła się różnią.</p>}
       </div>
       <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" className="mt-1" checked={withRecovery} onChange={(e) => setWithRecovery(e.target.checked)} />
+        <Checkbox className="mt-0.5 coarse:h-6 coarse:w-6" checked={withRecovery} onCheckedChange={(v) => setWithRecovery(v === true)} />
         <span>Wygeneruj kod awaryjny <span className="text-muted-foreground">— pokażę go raz; pozwoli wrócić do notatek po zapomnieniu hasła.</span></span>
       </label>
       <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" className="mt-1" checked={ack} onChange={(e) => setAck(e.target.checked)} />
+        <Checkbox className="mt-0.5 coarse:h-6 coarse:w-6" checked={ack} onCheckedChange={(v) => setAck(v === true)} />
         <span>Rozumiem, że zapomnianego hasła nie da się odzyskać.</span>
       </label>
       {error && <p role="alert" className="text-xs text-destructive-ink">{error}</p>}
@@ -282,7 +285,7 @@ function ChangeForm({ onChanged }: { onChanged: (recoveryCode: string | null) =>
       </div>
       <NewPasswordFields password={password} setPassword={setPassword} confirm={confirm} setConfirm={setConfirm} />
       <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" className="mt-1" checked={withRecovery} onChange={(e) => setWithRecovery(e.target.checked)} />
+        <Checkbox className="mt-0.5 coarse:h-6 coarse:w-6" checked={withRecovery} onCheckedChange={(v) => setWithRecovery(v === true)} />
         <span>Wygeneruj nowy kod awaryjny <span className="text-muted-foreground">— stary przestanie działać.</span></span>
       </label>
       {error && <p role="alert" className="text-xs text-destructive-ink">{error}</p>}
@@ -363,7 +366,7 @@ function RecoveryCodeStep({ code, onClose }: { code: string; onClose: () => void
         <Button type="button" variant="outline" size="sm" onClick={download}><Download className="w-3.5 h-3.5 mr-1.5" />Pobierz .txt</Button>
       </div>
       <label className="flex items-start gap-2 text-sm">
-        <input type="checkbox" className="mt-1" checked={saved} onChange={(e) => setSaved(e.target.checked)} />
+        <Checkbox className="mt-0.5 coarse:h-6 coarse:w-6" checked={saved} onCheckedChange={(v) => setSaved(v === true)} />
         <span>Zapisałem kod w bezpiecznym miejscu.</span>
       </label>
       <ResponsiveDialogFooter>

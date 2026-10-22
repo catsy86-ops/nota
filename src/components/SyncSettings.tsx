@@ -112,7 +112,7 @@ export function SyncSettings({ prefillCode }: Props) {
           )}
           <div className="min-w-0">
             <p className="text-sm font-semibold">Synchronizacja między urządzeniami</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{statusLabel}</p>
+            <p className="text-xs text-muted-foreground mt-0.5" role="status" aria-live="polite">{statusLabel}</p>
             {syncState.status !== "disabled" && (
               <p className="text-xs text-muted-foreground mt-1" data-testid="sync-diagnosis">{diagnosis(syncState)}</p>
             )}
