@@ -190,3 +190,22 @@ export function spokenShortageLabel(spoken: string): string {
   const phrase = spoken.trim().replace(/\s+/g, " ");
   return phrase ? phrase.charAt(0).toUpperCase() + phrase.slice(1) : "";
 }
+
+/**
+ * Dopisuje braki z wypowiedzi do listy budowy. Zwraca nową listę i liczbę pozycji, których nie weszło
+ * przez limit `SHORTAGES_MAX` (duplikaty łączą się z istniejącą pozycją i nie liczą się jako odrzucone).
+ */
+export function addShortagesFromDictation(
+  base: readonly Shortage[],
+  items: readonly { text: string; qty: string }[],
+  now: number,
+  makeId: () => string = newId,
+): { list: Shortage[]; rejected: number } {
+  let rejected = 0;
+  const list = items.reduce((cur, x) => {
+    const next = addShortage(cur, x.text, x.qty, now, makeId);
+    if (next.length === cur.length && cur.length >= SHORTAGES_MAX && !cur.some((s) => s.status !== "delivered" && key(s.text) === key(x.text))) rejected++;
+    return next;
+  }, [...base]);
+  return { list, rejected };
+}

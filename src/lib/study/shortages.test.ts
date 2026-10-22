@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   addShortage, cleanOrderLog, cleanShortages, clearDelivered, dueDayValue, dueFromDayValue, logOrder, nextStatus, openShortages,
   orderLateFrom, orderLogLine, ORDER_LATE_DAYS, ORDER_LOG_MAX, removeShortage, setShortageDue, setShortageStatus, shortageLine,
-  shortagesText, SHORTAGES_MAX, spokenShortageLabel, cleanShortagesCounted,
+  shortagesText, SHORTAGES_MAX, spokenShortageLabel, cleanShortagesCounted, addShortagesFromDictation,
 } from "./shortages";
 import { cleanSite } from "./sites";
 
@@ -157,5 +157,20 @@ describe("cleanShortagesCounted", () => {
   it("śmieci i duplikaty nie są liczone jako odrzucone", () => {
     const { dropped } = cleanShortagesCounted([{ id: "x", text: "A" }, { id: "x", text: "A" }, null, { text: "bez id" }]);
     expect(dropped).toBe(0);
+  });
+});
+
+describe("addShortagesFromDictation", () => {
+  const item = (i: number) => ({ id: `d${i}`, text: `Brak ${i}`, qty: "", status: "missing" as const, at: i });
+  it("przy pełnej liście liczy tylko nowe pozycje, nie duplikaty", () => {
+    const full = Array.from({ length: 40 }, (_, i) => item(i + 1));
+    const { list, rejected } = addShortagesFromDictation(full, [{ text: "Brak 1", qty: "" }, { text: "Nowy", qty: "" }], 99, () => "n1");
+    expect(list).toHaveLength(40);
+    expect(rejected).toBe(1);
+  });
+  it("przy wolnym miejscu nic nie odrzuca", () => {
+    const { list, rejected } = addShortagesFromDictation([], [{ text: "Rura", qty: "2" }], 5, () => "r1");
+    expect(list.map((s) => s.text)).toEqual(["Rura"]);
+    expect(rejected).toBe(0);
   });
 });

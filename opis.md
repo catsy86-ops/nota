@@ -1729,3 +1729,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Zachowanie utrwalone testami:** składanie list nie przycina (41 pozycji zostaje posortowanych po czasie); czyszczenie zostawia 40 pierwszych w kolejności wejścia (najstarsze), najnowsze się nie zapisują.
 - **Ograniczenie:** licznik `dropped` jest liczony, ale nie jest jeszcze pokazywany w UI dla pozycji od innego urządzenia. Decyzja „zostawić najstarsze czy najnowsze” czeka na właściciela.
 - **Testy:** `src/lib/study/shortages.test.ts`, `src/lib/study/siteItems.test.ts`, `src/components/study/SiteShortagesPanel.test.tsx` (pełna lista); `e2e/site-shortages.spec.ts` 3/3.
+
+## Praca — porządki w stanie danych (Faza 2.3–2.5, 2026-10-22)
+
+- **2.3 replaceAll:** zachowanie „zastępuje cały stan” było już pokryte testem w `yStudy.test.ts` ("replaceAll zastępuje wszystko…"). Bez zmian.
+- **2.4 (częściowo):** z `JournalEntrySheet` wyciągnięto czystą funkcję `addShortagesFromDictation` (`lib/study/shortages.ts`): dopisuje braki z wypowiedzi i zwraca liczbę odrzuconych przy pełnej liście. Testy w `shortages.test.ts`. Reszta komponentu (906 linii) bez zmian — kolejne kroki to osobne funkcje z tego samego pliku.
+- **2.5:** siedem powtórzeń `siteDirectory(...).find((x) => x.id === id)` w `store.ts` zastąpiono helperem `findSite(s, id)`. Zachowanie bez zmian.
+- **Testy:** `src/lib/study` + `src/components/study` 387/387; `e2e/journal-*.spec.ts` i `e2e/site-shortages.spec.ts` 11/11.

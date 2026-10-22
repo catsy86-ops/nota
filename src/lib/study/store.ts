@@ -365,11 +365,16 @@ export interface SiteCardInput {
  * Zapisuje kartę budowy (też budowy znanej tylko z nazw we wpisach — wtedy karta powstaje).
  * Pusta nazwa → `false`, nic się nie zmienia.
  */
+/** Karta budowy o tym id wraz z jej listami (z dziennika, gdy karty nie ma). */
+function findSite(s: StudyState, id: string) {
+  return siteDirectory(s.sites, s.journal).find((x) => x.id === id);
+}
+
 export function saveSiteCard(id: string, input: SiteCardInput, now: number = Date.now()): boolean {
   const name = input.name.trim().slice(0, SITE_NAME_MAX);
   if (!name) return false;
   const s = getStudy();
-  const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
+  const prev = findSite(s, id);
   // Reszta karty (archiwum, zamówienia, etapy, braki…) zostaje — edycja zmienia tylko pola formularza.
   const { stored: _s, count: _c, open: _o, first: _f, last: _l, phone: _p, manager: _m, managerPhone: _mp, supplierPhone: _sp, access: _a, ...rest } =
     prev ?? ({} as Partial<SiteInfo>);
@@ -395,7 +400,7 @@ export function saveSiteCard(id: string, input: SiteCardInput, now: number = Dat
  */
 function patchSiteCard(id: string, patch: Partial<Pick<SiteCard, "orderedAt">>) {
   const s = getStudy();
-  const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
+  const prev = findSite(s, id);
   if (!prev) return;
   const { stored: _s, count: _c, open: _o, first: _f, last: _l, ...card } = prev;
   yStudy.saveSite({ ...card, ...patch });
@@ -408,7 +413,7 @@ function patchSiteCard(id: string, patch: Partial<Pick<SiteCard, "orderedAt">>) 
  */
 function siteListBase<T>(id: string, field: "stages" | "shortages" | "orders" | "hours" | "docs" | "service", uiBase: readonly T[] | undefined): readonly T[] | null {
   const s = getStudy();
-  const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
+  const prev = findSite(s, id);
   if (!prev) return null;
   if (!prev.stored) patchSiteCard(id, {});
   const stored = prev[field] as T[] | undefined;
@@ -419,7 +424,7 @@ function siteListBase<T>(id: string, field: "stages" | "shortages" | "orders" | 
 /** Zaznacza zamówienie kształtek na teraz: od tej chwili lista „do zamówienia” zaczyna się od zera. */
 export function markSiteOrdered(id: string, now: number = Date.now()) {
   const s = getStudy();
-  const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
+  const prev = findSite(s, id);
   if (!prev) return;
   // Co właśnie zamówiono — do historii zamówień w karcie.
   const items = siteOrder(s.journal, id, prev.orderedAt).items;
@@ -476,7 +481,7 @@ export function setSiteService(id: string, calls: ServiceCall[], base?: readonly
 /** Koniec gwarancji („2028-10-16”) albo `null` — bez gwarancji. */
 export function setSiteWarranty(id: string, warranty: string | null) {
   const s = getStudy();
-  const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
+  const prev = findSite(s, id);
   if (!prev) return;
   const { stored: _s, count: _c, open: _o, first: _f, last: _l, warranty: _w, ...card } = prev;
   yStudy.saveSite(warranty ? { ...card, warranty } : card);
@@ -485,7 +490,7 @@ export function setSiteWarranty(id: string, warranty: string | null) {
 /** Lokalizacja budowy zapisana na miejscu („Zapisz lokalizację budowy”); `null` usuwa. */
 export function setSiteGeo(id: string, geo: GeoPoint | null) {
   const s = getStudy();
-  const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
+  const prev = findSite(s, id);
   if (!prev) return;
   const { stored: _s, count: _c, open: _o, first: _f, last: _l, geo: _g, ...card } = prev;
   const clean = cleanGeo(geo);
@@ -495,7 +500,7 @@ export function setSiteGeo(id: string, geo: GeoPoint | null) {
 /** Budowa do archiwum (`true`) albo z powrotem czynna. */
 export function setSiteArchived(id: string, archived: boolean, now: number = Date.now()) {
   const s = getStudy();
-  const prev = siteDirectory(s.sites, s.journal).find((x) => x.id === id);
+  const prev = findSite(s, id);
   if (!prev) return;
   const { archived: _, stored: _s, count: _c, open: _o, first: _f, last: _l, ...card } = prev;
   yStudy.saveSite(archived ? { ...card, archived: now } : card);
