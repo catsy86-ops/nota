@@ -68,3 +68,16 @@ test("inny typ pliku jest pomijany z komunikatem", async ({ page }) => {
   ]);
   await expect(page.getByText("Pominięte: notatki.txt (tylko zdjęcia i PDF).")).toBeVisible();
 });
+
+test("plany i dokumenty na dotyku: przycisk usunięcia ma co najmniej 44 px @mobile", async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.includes("iphone"), "pomiar dotyku tylko na telefonie");
+  await page.goto("/praca");
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
+  const docs = page.getByTestId("site-docs");
+  await docs.getByLabel("Wybierz plany i dokumenty").setInputFiles([{ name: "Rzut.png", mimeType: "image/png", buffer: PNG }]);
+  const remove = docs.getByRole("button", { name: /^Usuń: Rzut/ });
+  await expect(remove).toBeVisible();
+  const box = await remove.boundingBox();
+  expect(box?.width ?? 0).toBeGreaterThanOrEqual(44);
+  expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+});

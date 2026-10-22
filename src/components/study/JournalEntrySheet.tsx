@@ -516,7 +516,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-border bg-muted/50 pl-3 text-sm coarse:min-h-11" data-testid="journal-geo">
                 <LocateFixed className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
                 <a href={mapsUrl(geo)} target="_blank" rel="noopener noreferrer" className="truncate underline-offset-2 hover:underline">Tu ({accuracyLabel(geo)})</a>
-                <button type="button" onClick={() => patch({ geo: null })} aria-label="Usuń lokalizację wpisu" className="pressable rounded-full p-1.5 text-muted-foreground hover:text-foreground coarse:p-2.5">
+                <button type="button" onClick={() => patch({ geo: null })} aria-label="Usuń lokalizację wpisu" className="pressable rounded-full p-1.5 text-muted-foreground hover:text-foreground coarse:-my-2.5 coarse:-mr-1 coarse:inline-flex coarse:size-11 coarse:items-center coarse:justify-center">
                   <X className="h-3.5 w-3.5" aria-hidden />
                 </button>
               </span>

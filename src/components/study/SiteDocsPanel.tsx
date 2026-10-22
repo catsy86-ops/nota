@@ -87,7 +87,7 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
                 type="button"
                 onClick={() => remove(d)}
                 aria-label={`Usuń: ${docLabel(d)}`}
-                className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-background/90 text-muted-foreground shadow-sm hover:text-destructive-ink coarse:h-9 coarse:w-9"
+                className="absolute right-1 top-1 flex h-7 w-7 items-center justify-center rounded-full bg-background/90 text-muted-foreground shadow-sm hover:text-destructive-ink coarse:h-11 coarse:w-11"
               >
                 <X className="h-3.5 w-3.5" aria-hidden />
               </button>

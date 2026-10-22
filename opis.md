@@ -1704,3 +1704,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Co robi:** po otwarciu arkusza „Wpis z budowy” fokus idzie na tytuł. Na telefonie pole tekstu nie wywołuje klawiatury od razu, a czytnik zaczyna od nazwy arkusza.
 - **Gdzie:** `src/components/study/JournalEntrySheet.tsx` (`titleRef`, `onOpenAutoFocus`).
 - **Testy:** `e2e/entry-sheet-focus.spec.ts`; `e2e/journal-*.spec.ts` 8/8.
+
+## Praca — przyciski usuwania na dotyku 44 px (Faza 1.4–1.5, 2026-10-22)
+
+- **Co robi:** usuwanie dokumentu z karty budowy i usuwanie lokalizacji wpisu mają na ekranie dotykowym 44 px. Wcześniej 36 px i ok. 34 px.
+- **Gdzie:** `src/components/study/SiteDocsPanel.tsx` (`coarse:h-11 coarse:w-11`); `src/components/study/JournalEntrySheet.tsx` (przycisk lokalizacji: `coarse:size-11`, ujemny margines, wysokość wiersza bez zmian).
+- **Testy:** `e2e/site-docs.spec.ts` (@mobile: pomiar 44×44). Lokalizacja: `e2e/journal-geo.spec.ts` przechodzi, ale rozmiaru przycisku nie mierzy.
