@@ -1716,3 +1716,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Co robi:** wybór budowy w „Przed wejściem” to grupa przycisków z `aria-pressed` (zamiast niepełnego `radiogroup` bez strzałek). Ikony poprawnej i błędnej odpowiedzi w quizie mają rolę `img`, więc czytnik je zapowiada.
 - **Gdzie:** `src/components/study/EntryCheck.tsx`; `src/components/study/QuizPanel.tsx`.
 - **Testy:** `e2e/entry-check.spec.ts` (1/1); `study.spec.ts` i `today-study.spec.ts` przechodzą.
+
+## Praca — alt zdjęć i cele dotyku na /praca (Faza 1.8–1.9, 2026-10-22)
+
+- **Co robi:** zdjęcia we wpisie mają numerowany tekst alternatywny ("Zdjęcie 2 z 3 we wpisie"). Pusty stan dziennika ma przyciski „Dodaj wpis” i „Nowa budowa” o wysokości 44 px na dotyku.
+- **Gdzie:** `src/components/study/JournalEntrySheet.tsx` (alt z indeksem); `src/components/study/StudyJournal.tsx` (`coarse:h-11` w pustym stanie).
+- **Testy:** `e2e/touch-targets.spec.ts` — nowy test „praca: zakładki działu i „Dodaj wpis”” (@mobile), pełny plik 3/3; `e2e/journal-photos.spec.ts` przechodzi.

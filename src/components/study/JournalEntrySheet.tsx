@@ -774,9 +774,9 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             )}
             {(images.length > 0 || processing > 0) && (
               <ul className="flex flex-wrap gap-2" aria-label="Zdjęcia we wpisie">
-                {images.map((ref) => (
+                {images.map((ref, i) => (
                   <li key={ref} className="relative">
-                    <NoteImage imageRef={ref} alt="Zdjęcie z budowy" className="h-20 w-20 rounded-lg object-cover" placeholderClassName="h-20 w-20 rounded-lg" />
+                    <NoteImage imageRef={ref} alt={`Zdjęcie ${i + 1} z ${images.length} we wpisie`} className="h-20 w-20 rounded-lg object-cover" placeholderClassName="h-20 w-20 rounded-lg" />
                     <button
                       type="button"
                       onClick={() => {

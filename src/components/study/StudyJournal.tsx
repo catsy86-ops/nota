@@ -195,7 +195,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
             art={<EmptySketch paths={JOURNAL_GLYPH} className="relative mx-auto mb-3 h-20 w-28 text-primary-ink" />}
             title="Brak wpisów"
             description="Zapisz, co robisz na budowie — dziennik połączy to z tematami, które przerabiasz."
-            actions={<div className="flex flex-wrap justify-center gap-2"><Button size="sm" onClick={() => openJournalSheet()}><Plus className="h-4 w-4" aria-hidden />Dodaj wpis</Button><Button size="sm" variant="outline" onClick={() => setNewSiteOpen(true)}>Nowa budowa</Button></div>}
+            actions={<div className="flex flex-wrap justify-center gap-2"><Button size="sm" className="coarse:h-11" onClick={() => openJournalSheet()}><Plus className="h-4 w-4" aria-hidden />Dodaj wpis</Button><Button size="sm" variant="outline" className="coarse:h-11" onClick={() => setNewSiteOpen(true)}>Nowa budowa</Button></div>}
             className="xl:col-start-1"
           />
         ) : (

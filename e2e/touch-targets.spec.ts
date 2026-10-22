@@ -68,3 +68,12 @@ test("Grafik: przełącznik widoku, „Ten tydzień”, kopiowanie tygodnia, „
   await page.getByRole("button", { name: "Następny tydzień" }).click();
   await expectTarget(page.getByRole("button", { name: "Ten tydzień", exact: true }));
 });
+
+test("praca: zakładki działu i „Dodaj wpis” mają cele dotyku ≥ 44 px @mobile", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  for (const tab of ["Quiz", "Tablica", "Lista", "Dziennik"]) {
+    await expectTarget(page.getByRole("tab", { name: tab }));
+  }
+  await expectTarget(page.getByRole("button", { name: "Dodaj wpis" }).first());
+});
