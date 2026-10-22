@@ -1556,4 +1556,6 @@ Budżet paczki startowej: po tej zmianie 411 696 B (próg 410 624 B). Przekrocze
 
 Zrobione w tej sesji: fokus po odpowiedzi w quizie (patrz wyżej). Sprawdzone bez zmian: Długi już mają `role="radio"` w grupie (`DebtsView.tsx`); Ustawienia używają `aria-pressed` przy przyciskach wyboru i `Segmented` (ToggleGroup, strzałki) — zostawione.
 
-Nie zrobione z Fali 3: kalendarz (`aria-live` na nagłówku dnia i miesiąca — do decyzji, czy zawęzić), okno notatki jako niemodalne (podgląd vs prezentacja — większa zmiana).
+Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.tsx`) i dnia (`DayPanel.tsx`) ogłaszają jedną zmianę każdy; bez nich czytnik nie powiedziałby, na który dzień przeszło. Nie zrobione z Fali 3: okno notatki jako niemodalne (podgląd vs prezentacja — większa zmiana).
+
+**Commit:** `c36100b` (2026-10-22).
