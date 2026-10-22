@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { dayKey, expandOccurrences, groupByDay, type Occurrence } from "@/lib/reminderOccurrences";
 import type { Note } from "@/hooks/useNotes";
 import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
-import { DEFAULT_SHIFT_TYPES, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
@@ -238,8 +238,8 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
     });
   }
 
-  function applyPattern(steps: (string | null)[], startKey: string, length: number) {
-    const before = applyPatternToStore(steps, startKey, length);
+  function applyPattern(steps: (string | null)[], startKey: string, length: number, anchorKey: string) {
+    const before = applyPatternToStore(steps, startKey, length, anchorKey);
     toast.success(`Nałożono cykl na ${length} ${pluralPl(length, ["dzień", "dni", "dni"])}`, {
       action: { label: "Cofnij", onClick: () => restoreDays(before) },
     });
@@ -461,7 +461,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
 
         </div>
         <div className="order-10 @container short:col-span-full">
-          <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(shownMonth, "LLLL yyyy", { locale: pl })} monthKey={format(shownMonth, "yyyy-MM")} onOpenSettings={() => setSettingsOpen(true)} />
+          <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} nightRate={nightRateFor(shownMonth.getFullYear(), data.nightRate)} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(shownMonth, "LLLL yyyy", { locale: pl })} monthKey={format(shownMonth, "yyyy-MM")} onOpenSettings={() => setSettingsOpen(true)} />
         </div>
       </aside>
 

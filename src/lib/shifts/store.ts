@@ -140,9 +140,9 @@ export const setDayEntry: YShifts["setDayEntry"] = (...args) => yShifts.setDayEn
 export type DaysBefore = Record<string, DayEntry | null>;
 
 /** Nakłada cykl; zwraca poprzednie wartości dni, które się zmieniły. */
-export function applyPatternToStore(steps: (string | null)[], startKey: string, length: number): DaysBefore {
+export function applyPatternToStore(steps: (string | null)[], startKey: string, length: number, anchorKey?: string): DaysBefore {
   const current = yShifts.get().days;
-  const next = applyPattern(current, steps, startKey, length);
+  const next = applyPattern(current, steps, startKey, length, anchorKey);
   const changed: DaysBefore = {};
   for (const k of new Set([...Object.keys(current), ...Object.keys(next)])) {
     if (current[k] !== next[k]) changed[k] = next[k] ?? null;
@@ -203,6 +203,11 @@ const positive = (n: number) => (Number.isFinite(n) && n > 0 ? n : 0);
 
 export function setHourlyRate(rate: number): void {
   yShifts.setMeta("hourlyRate", positive(rate));
+}
+
+/** Dodatek nocny w zł/h; 0 = liczony z minimalnej stawki roku. */
+export function setNightRate(rate: number): void {
+  yShifts.setMeta("nightRate", positive(rate));
 }
 
 export function setWorkSystem(workSystem: WorkSystem): void {

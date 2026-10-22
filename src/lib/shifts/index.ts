@@ -12,3 +12,4 @@ export * from "./eveningNudge";
 export * from "./searchDays";
 export * from "./focusDay";
 export * from "./timesheet";
+export * from "./nightAllowance";

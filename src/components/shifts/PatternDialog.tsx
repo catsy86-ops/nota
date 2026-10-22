@@ -8,7 +8,7 @@ import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { daysUntilMonthEnd, deletePattern, newShiftId, savePattern, shiftInk, shiftTextOnCard, type ShiftPattern, type ShiftType } from "@/lib/shifts";
+import { addDaysKey, dayDiff, daysUntilMonthEnd, deletePattern, newShiftId, savePattern, shiftInk, shiftTextOnCard, type ShiftPattern, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 import { toastWithUndo } from "@/lib/undoToast";
 import { TAP } from "@/lib/platform";
@@ -20,7 +20,8 @@ interface PatternDialogProps {
   patterns: ShiftPattern[];
   /** Domyślny pierwszy dzień — początek oglądanego miesiąca. */
   defaultStart: string;
-  onApply: (steps: (string | null)[], startKey: string, length: number) => void;
+  /** `anchorKey` — dzień pierwszego kroku cyklu; faza każdego dnia liczy się od niego. */
+  onApply: (steps: (string | null)[], startKey: string, length: number, anchorKey: string) => void;
 }
 
 const RANGES = [
@@ -51,19 +52,46 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
   const [start, setStart] = useState(defaultStart);
   const [range, setRange] = useState(0);
   const [name, setName] = useState("");
+  // Zapisany cykl, którego kroki są wczytane (do „Przedłuż cykl” i zapisu kotwicy).
+  const [selected, setSelected] = useState<ShiftPattern | null>(null);
+  const [anchor, setAnchor] = useState(defaultStart);
   const typesById = useMemo(() => new Map(types.map((t) => [t.id, t])), [types]);
 
   const length = start ? daysUntilMonthEnd(start, RANGES[range].months) : 0;
-  const valid = steps.length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(start);
+  const anchorOk = /^\d{4}-\d{2}-\d{2}$/.test(anchor);
+  const valid = steps.length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(start) && anchorOk;
   const preview = Array.from({ length: PREVIEW_DAYS }, (_, i) => {
     const [y, m, d] = start.split("-").map(Number);
-    return { date: new Date(y, m - 1, d + i), step: steps.length ? steps[i % steps.length] : undefined };
+    const offset = anchorOk ? dayDiff(anchor, addDaysKey(start, i)) : i;
+    return { date: new Date(y, m - 1, d + i), step: steps.length ? steps[((offset % steps.length) + steps.length) % steps.length] : undefined };
   });
+
+  function loadPattern(p: ShiftPattern) {
+    setSteps(p.steps);
+    setSelected(p);
+    setAnchor(p.anchor ?? start);
+  }
 
   function apply() {
     if (!valid) return;
-    if (name.trim()) savePattern({ id: newShiftId("c"), name: name.trim(), steps });
-    onApply(steps, start, length);
+    const meta = { anchor, appliedUntil: addDaysKey(start, length - 1) };
+    onApply(steps, start, length, anchor);
+    if (name.trim()) savePattern({ id: newShiftId("c"), name: name.trim(), steps, ...meta });
+    else if (selected) savePattern({ ...selected, steps, ...meta });
+    onOpenChange(false);
+  }
+
+  // Przedłużenie: od dnia po ostatnim nałożonym, z fazą od kotwicy zapisanego cyklu.
+  const extendKey = selected?.appliedUntil ? addDaysKey(selected.appliedUntil, 1) : null;
+  const extendFrom = extendKey ? (() => { const [y, m, d] = extendKey.split("-").map(Number); return new Date(y, m - 1, d); })() : null;
+
+  function extend() {
+    if (!selected?.appliedUntil || !extendKey) return;
+    const from = extendKey;
+    const len = daysUntilMonthEnd(from, RANGES[range].months);
+    const kotwica = selected.anchor ?? selected.appliedUntil;
+    onApply(selected.steps, from, len, kotwica);
+    savePattern({ ...selected, anchor: kotwica, appliedUntil: addDaysKey(from, len - 1) });
     onOpenChange(false);
   }
 
@@ -81,7 +109,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
             <ul className="space-y-1.5">
               {patterns.map((p) => (
                 <li key={p.id} className="flex items-center gap-1">
-                  <button type="button" onClick={() => setSteps(p.steps)}
+                  <button type="button" onClick={() => loadPattern(p)}
                     className="pressable flex-1 min-w-0 text-left px-3 py-2 rounded-xl border border-border/60 bg-card/50 hover:bg-muted text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                     <span className="block font-medium truncate">{p.name}</span>
                     <span className="block text-2xs text-muted-foreground font-mono truncate">
@@ -162,11 +190,22 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
         )}
 
         <div className="space-y-1.5">
+          <Label htmlFor="pattern-anchor">Kotwica: pierwszy dzień cyklu</Label>
+          <Input id="pattern-anchor" type="date" value={anchor} onChange={(e) => setAnchor(e.target.value)} className="min-w-0" />
+          <p className="text-2xs text-muted-foreground">Każdy dzień ma krok liczony od tej daty, więc nakładanie od innego dnia trzyma rytm.</p>
+        </div>
+
+        <div className="space-y-1.5">
           <Label htmlFor="pattern-name">Zapisz cykl jako (opcjonalnie)</Label>
           <Input id="pattern-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="np. Mój system 12 h" />
         </div>
 
         <ResponsiveDialogFooter className="sticky bottom-0 -mx-1 bg-background/95 px-1 pt-2 pb-[max(0.25rem,env(safe-area-inset-bottom))] backdrop-blur-xs">
+          {extendFrom && (
+            <Button type="button" variant="outline" onClick={extend} disabled={steps.length === 0}>
+              Przedłuż cykl od {format(extendFrom, "d MMM", { locale: pl })}
+            </Button>
+          )}
           <Button type="submit" disabled={!valid}>Nałóż cykl</Button>
         </ResponsiveDialogFooter>
       </form>

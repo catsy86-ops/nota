@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
 import { pluralPl } from "@/lib/plural";
-import { deleteBonus, FTE_OPTIONS, formatDuration, formatHoursShort, formatMoney, leaveBalance, saveBonus, useShifts, type MonthSummary, type PeriodSummary, type SettlementMonths, type ShiftBonus, type WorkSystem } from "@/lib/shifts";
+import { deleteBonus, FTE_OPTIONS, formatDuration, formatHoursShort, formatMoney, leaveBalance, nightAllowance, saveBonus, useShifts, type MonthSummary, type PeriodSummary, type SettlementMonths, type ShiftBonus, type WorkSystem } from "@/lib/shifts";
 import { PERIOD_LABELS } from "./labels";
 import { CountUp } from "./CountUp";
 import { LeaveMeter, YearSummaryDialog } from "./YearSummaryDialog";
@@ -19,6 +19,8 @@ import { cn } from "@/lib/utils";
 interface ShiftSummaryProps {
   summary: MonthSummary;
   hourlyRate: number;
+  /** Stawka dodatku nocnego (zł/h) już rozstrzygnięta: ręczna albo 20% minimalnej stawki roku. */
+  nightRate: number;
   workSystem: WorkSystem;
   settlementMonths: SettlementMonths;
   fte: number;
@@ -39,7 +41,7 @@ const monthName = (year: number, month: number, pattern = "LLLL") => format(new 
  * Podsumowanie miesiąca. Sercem jest pasek normy: wypełnia się do wymiaru
  * czasu pracy, a nadwyżka (nadgodziny) dosuwa się za nim w kolorze akcentu.
  */
-export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths, fte, monthLabel, monthKey, onOpenSettings }: ShiftSummaryProps) {
+export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settlementMonths, fte, monthLabel, monthKey, onOpenSettings }: ShiftSummaryProps) {
   const { minutes, normMinutes, overtimeMinutes, dailyOvertimeMinutes, overtime100Minutes } = summary;
   const scale = Math.max(normMinutes, minutes, 1);
   // Nadgodziny dobowe mogą być i poniżej normy miesiąca — pasek dzieli faktycznie przepracowane godziny.
@@ -83,7 +85,9 @@ export function ShiftSummary({ summary, hourlyRate, workSystem, settlementMonths
             dailyOvertimeMinutes > 0 ? `dobowe ${formatDuration(dailyOvertimeMinutes)}` : null,
             overtime100Minutes > 0 ? `z dodatkiem 100% ${formatDuration(overtime100Minutes)}` : null,
           ].filter(Boolean).join(" · ") || undefined : undefined} />
-        <Stat label="W nocy" value={<CountUp value={summary.nightMinutes} format={formatDuration} />} />
+        {/* Dodatek nocny wpisany tylko jako informacja: dodatek 100% za porę nocną już jest w rachunku, więc nie dodajemy go drugi raz. */}
+        <Stat label="W nocy" value={<CountUp value={summary.nightMinutes} format={formatDuration} />}
+          hint={summary.nightMinutes > 0 && nightRate > 0 ? `dodatek ${formatMoney(nightAllowance(summary.nightMinutes, nightRate))} · ${formatMoney(nightRate)}/h` : undefined} />
         <Stat label="Do normy" value={<CountUp value={Math.max(0, normMinutes - minutes)} format={durationOrDash} />} />
         {extra > 0 && (
           <Stat label="Ponadwymiarowe" value={<CountUp value={extra} format={formatDuration} />} hint="ponad etat, bez dodatku" />

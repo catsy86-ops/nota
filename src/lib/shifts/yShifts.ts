@@ -15,7 +15,7 @@ import { BONUS_MAX_PER_DATA, cleanBonus, DEFAULT_LEAVE_DAYS, DEFAULT_PATTERNS, D
  * od razu, mogłoby przy scaleniu nadpisać czyjeś poprawki tych samych id.
  */
 
-type Meta = "hourlyRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "leaveDays" | "overtimeFrom" | "sundayFrom" | "nightFrom" | "typesInit" | "patternsInit" | "presetBudowa" | "presetDniowka";
+type Meta = "hourlyRate" | "nightRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "leaveDays" | "overtimeFrom" | "sundayFrom" | "nightFrom" | "typesInit" | "patternsInit" | "presetBudowa" | "presetDniowka";
 
 /** Origin transakcji Grafiku — odróżnia lokalne zmiany od tych z sieci i z migracji. */
 /** Zmiany bez cofania: import, przywracanie kopii, migracje i Cofnij z tostu. Nie trafiają na stos Ctrl+Z. */
@@ -64,7 +64,7 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
   function get(): ShiftData {
     if (snapshot) return snapshot;
     const settings: Record<string, unknown> = {};
-    for (const k of ["hourlyRate", "workSystem", "settlementMonths", "settlementStart", "fte", "leaveDays", "overtimeFrom", "sundayFrom", "nightFrom"] as const) if (meta.has(k)) settings[k] = meta.get(k);
+    for (const k of ["hourlyRate", "nightRate", "workSystem", "settlementMonths", "settlementStart", "fte", "leaveDays", "overtimeFrom", "sundayFrom", "nightFrom"] as const) if (meta.has(k)) settings[k] = meta.get(k);
     snapshot = migrate({
       version: 2,
       ...settings,
@@ -251,6 +251,7 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
       for (const b of data.bonuses ?? []) if (cleanBonus(b)) bonuses.set(b.id, cleanBonus(b) as ShiftBonus);
       for (const [k, e] of Object.entries(data.days)) days.set(k, e);
       meta.set("hourlyRate", data.hourlyRate);
+      meta.set("nightRate", data.nightRate ?? 0);
       meta.set("workSystem", data.workSystem);
       meta.set("settlementMonths", data.settlementMonths);
       meta.set("settlementStart", data.settlementStart);
@@ -294,6 +295,7 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
         if (clean && !bonuses.has(clean.id) && bonuses.size < BONUS_MAX_PER_DATA) bonuses.set(clean.id, clean);
       }
       if (!meta.has("hourlyRate") && data.hourlyRate) meta.set("hourlyRate", data.hourlyRate);
+      if (!meta.has("nightRate") && data.nightRate) meta.set("nightRate", data.nightRate);
       if (!meta.has("workSystem")) meta.set("workSystem", data.workSystem);
       if (!meta.has("settlementMonths") && data.settlementMonths !== 1) meta.set("settlementMonths", data.settlementMonths);
       if (!meta.has("settlementStart") && data.settlementStart !== 0) meta.set("settlementStart", data.settlementStart);

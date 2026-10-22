@@ -108,6 +108,10 @@ export interface ShiftPattern {
   name: string;
   steps: (string | null)[];
   order?: number;
+  /** Kotwica: dzień pierwszego kroku cyklu (dayKey). Faza każdego dnia liczy się od niej; brak = od dnia nałożenia. */
+  anchor?: string;
+  /** Ostatni dzień, na który cykl został nałożony (dayKey). „Przedłuż cykl” zaczyna od następnego. */
+  appliedUntil?: string;
 }
 
 export interface ShiftData {
@@ -117,6 +121,8 @@ export interface ShiftData {
   days: Record<string, DayEntry>;
   /** Domyślna stawka za godzinę (zł). 0 = nie licz zarobku. */
   hourlyRate: number;
+  /** Dodatek nocny w zł/h (ręcznie). 0 = z minimalnej stawki roku (art. 151⁸ KP) — `nightAllowance.ts`. */
+  nightRate: number;
   /**
    * System czasu pracy — od niego zależy dobowy limit przed nadgodzinami:
    * `basic` 8 h (art. 129 KP), `equivalent` do 12 h wg grafiku (art. 135 KP).
@@ -216,6 +222,7 @@ export const EMPTY_SHIFT_DATA: ShiftData = {
   types: DEFAULT_SHIFT_TYPES,
   days: {},
   hourlyRate: 0,
+  nightRate: 0,
   workSystem: "basic",
   settlementMonths: 1,
   settlementStart: 0,
@@ -322,6 +329,7 @@ export function migrate(stored: unknown): ShiftData {
     types: Array.isArray(s.types) ? s.types.filter(isShiftType).map(cleanType) : EMPTY_SHIFT_DATA.types,
     days,
     hourlyRate: Math.max(0, num(s.hourlyRate, 0)),
+    nightRate: Math.max(0, num(s.nightRate, 0)),
     workSystem: s.workSystem === "equivalent" ? "equivalent" : "basic",
     fte: typeof s.fte === "number" && s.fte > 0 && s.fte <= 1 ? s.fte : 1,
     leaveDays: Number.isInteger(s.leaveDays) && (s.leaveDays as number) >= 0 && (s.leaveDays as number) <= 99 ? (s.leaveDays as number) : DEFAULT_LEAVE_DAYS,

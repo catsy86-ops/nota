@@ -378,3 +378,20 @@ test("telefon: eksporty Grafiku są w menu „Udostępnij” @mobile", async ({ 
   await expect(page.getByRole("menuitem", { name: /Karta czasu/ })).toBeVisible();
   await expect(page.getByRole("menuitem", { name: /Obraz miesiąca/ })).toBeVisible();
 });
+
+test("cykl: „Przedłuż cykl” zaczyna od dnia po ostatnim nałożonym", async ({ page }) => {
+  await page.getByRole("button", { name: "Cykl" }).click();
+  let dialog = page.getByRole("dialog");
+  // Wczytanie zapisanego cyklu (pierwszy na liście), żeby zapamiętać kotwicę i ostatni dzień.
+  await dialog.locator("fieldset").first().getByRole("button").first().click();
+  await dialog.getByRole("button", { name: "Nałóż cykl" }).click();
+  await expect(dialog).toBeHidden();
+
+  await page.getByRole("button", { name: "Cykl" }).click();
+  dialog = page.getByRole("dialog");
+  await dialog.locator("fieldset").first().getByRole("button").first().click();
+  await expect(dialog.getByRole("button", { name: /^Przedłuż cykl od / })).toBeVisible();
+  await dialog.getByRole("button", { name: /^Przedłuż cykl od / }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByText(/Nałożono cykl na \d+ dni/).first()).toBeVisible();
+});
