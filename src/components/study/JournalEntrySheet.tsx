@@ -35,7 +35,7 @@ import { findSiteByName, siteDirectory } from "@/lib/study/sites";
 import { accuracyLabel, cleanGeo, mapsUrl, nearestSite } from "@/lib/study/geo";
 import { fittingsLine, suggestFittingNames } from "@/lib/study/fittings";
 import { mergeFittings } from "@/lib/study/spokenFittings";
-import { addShortage } from "@/lib/study/shortages";
+import { addShortage, SHORTAGES_MAX } from "@/lib/study/shortages";
 import { parseSpokenEntry } from "@/lib/study/spokenEntry";
 import { matchStage, siteStages, toggleStage } from "@/lib/study/stages";
 
@@ -242,7 +242,15 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     else if (parsed.shortages.length > 0 && card) {
       const now = Date.now();
       const base = card.shortages ?? [];
-      setSiteShortages(card.id, parsed.shortages.reduce((list, x) => addShortage(list, x.text, x.qty, now), base), base);
+      // Pełna lista (SHORTAGES_MAX) cicho odrzuca nowe pozycje — liczymy je, żeby komunikat mówił prawdę.
+      let rejected = 0;
+      const result = parsed.shortages.reduce((list, x) => {
+        const next = addShortage(list, x.text, x.qty, now);
+        if (next.length === list.length && list.length >= SHORTAGES_MAX) rejected++;
+        return next;
+      }, base);
+      setSiteShortages(card.id, result, base);
+      if (rejected > 0) toast.error(`Nie dodano ${rejected} ${rejected === 1 ? "braku" : "braków"}: lista braków budowy jest pełna (${SHORTAGES_MAX})`, { id: "entry-dictation-full" });
       done.push(`braki (${card.name}): ${parsed.shortages.map((x) => (x.qty ? `${x.text} ${x.qty}` : x.text)).join(", ")}`);
     }
     append(parsed.text);

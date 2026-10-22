@@ -1667,3 +1667,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/lib/study/toNote.ts` (`topicNoteId`, domyślne id w `topicToNote`); `src/components/study/StudyBoard.tsx` (sprawdzenie `yjsStore.notesMap`).
 - **Ograniczenie:** notatka w koszu też blokuje ponowne utworzenie; przywrócenie z kosza działa.
 - **Testy:** `e2e/study-topic-note.spec.ts`.
+
+## Praca — pełna lista braków w wpisie z dyktowania (Faza 0.3, 2026-10-22)
+
+- **Co robi:** gdy wypowiedź dodaje braki do budowy, a lista ma już 40 pozycji, arkusz wpisu pokazuje błąd z liczbą nieodłożonych braków. Wcześniej nowe pozycje znikały po cichu, a komunikat mówił, że zostały dodane.
+- **Gdzie:** `src/components/study/JournalEntrySheet.tsx` (pętla z licznikiem `rejected` przy `SHORTAGES_MAX`).
+- **Ograniczenie:** komunikat sukcesu nadal wymienia wszystkie pozycje z wypowiedzi, także odrzucone. Pozycje dodane przez innego peera przy 40 limicie nadal mogą zniknąć z widoku — to osobna pozycja w planie (Faza 2).
