@@ -6,7 +6,8 @@ import {
 } from "@dnd-kit/core";
 import { m as motion } from "framer-motion";
 import { tween } from "@/lib/motion";
-import { ChevronLeft, ChevronRight, Download, Keyboard, Printer } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Keyboard, MoreHorizontal, Printer } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { PrintRoot } from "@/components/study/PrintRoot";
 import { CalendarPrintList } from "./CalendarPrintList";
 import { buildIcs, exportableReminders } from "@/lib/icsExport";
@@ -305,11 +306,12 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
               Dziś
             </button>
           )}
+          {/* Na telefonie „.ics” i „Drukuj” są w menu „⋯” — nagłówek ma miejsce tylko na strzałki i miesiąc. */}
           <button
             onClick={exportAll}
             aria-label="Eksportuj nadchodzące terminy do kalendarza (.ics)"
             title="Eksportuj nadchodzące terminy do kalendarza (.ics)"
-            className="ml-auto sm:ml-0 order-last shrink-0 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 coarse:min-h-11 coarse:min-w-11 coarse:justify-center rounded-lg transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            className="ml-auto sm:ml-0 order-last shrink-0 hidden sm:inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 coarse:min-h-11 coarse:min-w-11 coarse:justify-center rounded-lg transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Download className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">.ics</span>
@@ -331,11 +333,33 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
             onClick={() => setPrinting(true)}
             aria-label="Drukuj terminy tego miesiąca"
             title="Drukuj terminy tego miesiąca"
-            className="shrink-0 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 coarse:min-h-11 coarse:min-w-11 coarse:justify-center rounded-lg transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            className="shrink-0 hidden sm:inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 coarse:min-h-11 coarse:min-w-11 coarse:justify-center rounded-lg transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Printer className="w-3.5 h-3.5" aria-hidden />
-            <span className="hidden sm:inline">Drukuj</span>
+            <span>Drukuj</span>
           </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Więcej akcji kalendarza"
+                title="Więcej akcji"
+                className="ml-auto order-last shrink-0 sm:hidden coarse:min-h-11 coarse:min-w-11 inline-flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <MoreHorizontal className="w-4 h-4" aria-hidden />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onSelect={() => exportAll()}>
+                <Download className="w-4 h-4 mr-2" aria-hidden />
+                Pobierz .ics (nadchodzące terminy)
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setPrinting(true)}>
+                <Printer className="w-4 h-4 mr-2" aria-hidden />
+                Drukuj terminy miesiąca
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </header>
         {printing && (
           <PrintRoot testId="calendar-print" onDone={() => setPrinting(false)}>

@@ -378,3 +378,14 @@ test("terminy da się pobrać jako plik .ics", async ({ page }) => {
   ]);
   expect(all.suggestedFilename()).toMatch(/^przypomnienia-.*\.ics$/);
 });
+
+test("telefon: .ics i Drukuj są w menu „Więcej akcji” @mobile", async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.includes("iphone"), "tylko układ telefonu");
+  await page.goto("/kalendarz");
+  await expect(page.getByRole("button", { name: "Więcej akcji kalendarza" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Eksportuj nadchodzące terminy do kalendarza (.ics)" })).toBeHidden();
+  await expect(page.getByRole("button", { name: "Drukuj terminy tego miesiąca" })).toBeHidden();
+  await page.getByRole("button", { name: "Więcej akcji kalendarza" }).click();
+  await expect(page.getByRole("menuitem", { name: /Pobierz .ics/ })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: /Drukuj terminy miesiąca/ })).toBeVisible();
+});

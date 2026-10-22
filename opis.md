@@ -1576,3 +1576,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Co robi:** na telefonie (`phone:`) nagłówek czytnika zostaje z tytułem, Pełnym ekranem i Zamknij. Kopiuj, Edytuj, Poprzednia i Następna są w dolnym pasku 44 px (Poprzednia, Kopiuj, Edytuj, Następna). Podpowiedzi klawiszy na telefonie są ukryte.
 - **Gdzie:** `src/components/NoteReader.tsx` (nagłówek: klasy `phone:hidden`; pasek: `hidden phone:flex` przed stopką z podpowiedziami).
 - **Testy:** `e2e/reader.spec.ts` — "telefon: dolny pasek …" (@mobile, iphone-14). Wysokość mierzona przez `expect.poll`, bo czytnik wchodzi ze skalą 0,94. Regresja reader/reader-step/mobile: 36/36.
+
+## Kalendarz — nagłówek na telefonie: menu „Więcej akcji” (Fala 4, 2026-10-22)
+
+- **Co robi:** na telefonie nagłówek ma strzałki, miesiąc, „Dziś” i przycisk „⋯”. Menu zawiera „Pobierz .ics (nadchodzące terminy)” i „Drukuj terminy miesiąca”. Na szerszych ekranach przyciski „.ics” i „Drukuj” są jak dotąd.
+- **Gdzie:** `src/components/calendar/ReminderCalendarView.tsx` (nagłówek `<header>`; `DropdownMenu` z `components/ui/dropdown-menu`; `exportAll`, `setPrinting`).
+- **Testy:** `e2e/reminders-calendar.spec.ts` — "telefon: .ics i Drukuj są w menu …" (@mobile) oraz istniejący test .ics (desktop). Regresja kalendarza na desktopie: 15/15 z `calendar-shift-edit`.
