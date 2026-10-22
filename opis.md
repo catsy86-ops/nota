@@ -1562,4 +1562,4 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 
 **Fala 3 zamknięta.**
 
-**Commit:** `c36100b` (2026-10-22).
+**Commit:** `2dea8e5` (2026-10-22), poprzedni krok `c36100b`.
