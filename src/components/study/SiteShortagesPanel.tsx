@@ -30,6 +30,9 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
   const list = site.shortages ?? [];
   const [text, setText] = useState("");
   const [qty, setQty] = useState("");
+  // Fokus wraca do pola dodawania po usunięciu (wiersz znika); komunikat dla czytnika po zmianie statusu.
+  const addRef = useRef<HTMLInputElement>(null);
+  const [announce, setAnnounce] = useState("");
   const open = list.filter((s) => s.status !== "delivered").length;
   const delivered = list.length - open;
 
@@ -62,6 +65,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
     if (!item) return;
     const status = nextStatus(item.status);
     haptic(status === "delivered" ? "success" : "selection");
+    setAnnounce(`${item.text}: ${STATUS_LABEL[status]}`);
     setSiteShortages(site.id, setShortageStatus(list, id, status, Date.now()), list);
   }
 
@@ -74,6 +78,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
     const after = removeShortage(list, id);
     const label = list.find((s) => s.id === id)?.text ?? "pozycję";
     setSiteShortages(site.id, after, before);
+    requestAnimationFrame(() => addRef.current?.focus());
     toastWithUndo(`Usunięto „${label}”`, () => setSiteShortages(site.id, before, after));
   }
 
@@ -96,6 +101,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
 
   return (
     <section aria-label="Braki materiału" data-testid="site-shortages" className="space-y-2 rounded-xl border border-border bg-card p-3">
+      <p role="status" className="sr-only">{announce}</p>
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <PackageX className="h-3.5 w-3.5" aria-hidden />Braki materiału
@@ -146,6 +152,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
       {list.length < SHORTAGES_MAX && (
         <form className="flex gap-2" onSubmit={(e) => { e.preventDefault(); add(); }}>
           <input
+            ref={addRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
             maxLength={SHORTAGE_TEXT_MAX}

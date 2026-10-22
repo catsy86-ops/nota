@@ -104,3 +104,18 @@ test("zamówione ponad 3 dni temu i niedostarczone: przypomnienie nad dziennikie
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("journal-reminders").locator('[data-reminder="late-order"]')).toHaveCount(0);
 });
+
+test("braki: po zmianie statusu czytnik dostaje komunikat, po usunięciu fokus wraca do pola dodawania", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
+  const panel = page.getByTestId("site-card").getByTestId("site-shortages");
+
+  await panel.getByLabel("Czego brakuje").fill("Złączka 20");
+  await panel.getByRole("button", { name: "Dodaj brak" }).click();
+  await panel.getByRole("button", { name: /Złączka 20: Brakuje/ }).click();
+  await expect(panel.getByRole("status")).toHaveText("Złączka 20: Zamówione");
+
+  await panel.getByRole("button", { name: "Usuń brak: Złączka 20" }).click();
+  await expect(panel.getByLabel("Czego brakuje")).toBeFocused();
+});

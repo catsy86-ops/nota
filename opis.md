@@ -1686,3 +1686,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/lib/study/yStudy.ts` (`JOURNAL_ENTRY_KEYS`, `writeEntry`).
 - **Ograniczenie:** to chroni tylko przed nową wersją zapisującą pola starszej. Starsza wersja, która już działa na telefonie, dalej kasuje nieznane pola — to nie da się naprawić bez jej aktualizacji.
 - **Testy:** `src/lib/study/yStudy.test.ts` (zachowanie pola nieznanego; usunięcie znanego pola nadal działa).
+
+## Praca — braki: fokus i komunikat dla czytnika (Faza 1.1, 2026-10-22)
+
+- **Co robi:** po zmianie statusu braku czytnik ogłasza nowy stan („Złączka 20: Zamówione”). Po usunięciu braku fokus wraca do pola „Czego brakuje”, zamiast ginąć na początku strony.
+- **Gdzie:** `src/components/study/SiteShortagesPanel.tsx` (`announce` + `role="status"`, `addRef`, `remove`).
+- **Testy:** `e2e/site-shortages.spec.ts` (3/3).
