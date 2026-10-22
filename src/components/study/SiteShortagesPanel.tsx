@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { Copy, PackageX, Plus, X } from "lucide-react";
+import { useRef, useState } from "react";
+import { Copy, Mic, PackageX, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { haptic } from "@/lib/haptics";
+import { useDictation } from "@/hooks/useDictation";
 import { cn } from "@/lib/utils";
 import { toastWithUndo } from "@/lib/undoToast";
 import { setSiteShortages } from "@/lib/study/store";
@@ -31,6 +32,22 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
   const [qty, setQty] = useState("");
   const open = list.filter((s) => s.status !== "delivered").length;
   const delivered = list.length - open;
+
+  // Wynik mowy od razu idzie do listy: ref, żeby dwa wyniki z rzędu nie gubiły się między renderami.
+  const listRef = useRef(list);
+  listRef.current = list;
+  const dictation = useDictation((spoken) => {
+    const phrase = spoken.trim().replace(/s+/g, " ");
+    if (!phrase) return;
+    const label = phrase.charAt(0).toUpperCase() + phrase.slice(1);
+    const cur = listRef.current;
+    const next = addShortage(cur, label, "", Date.now());
+    if (next.length === cur.length) { toast("Nie udało się dodać braku", { id: "shortage-dictation", description: `Usłyszałem: „${spoken}”.` }); return; }
+    listRef.current = next;
+    setSiteShortages(site.id, next, cur);
+    haptic("success");
+    toast.success(`Dodano brak: ${label}`, { id: "shortage-dictation" });
+  });
 
   function add() {
     const next = addShortage(list, text, qty, Date.now());
@@ -147,6 +164,18 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
             autoComplete="off"
             className="h-9 w-20 shrink-0 rounded-lg border border-input bg-background px-2.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
           />
+          {dictation.supported && (
+            <button
+              type="button"
+              onClick={() => { haptic("tap"); dictation.toggle(); }}
+              aria-pressed={dictation.listening}
+              aria-label={dictation.listening ? "Zakończ dyktowanie braku" : "Dyktuj brak"}
+              title="Powiedz np. „dokupić trójnik fi 32”"
+              className={cn("pressable grid size-9 shrink-0 place-items-center rounded-lg border coarse:size-11", dictation.listening ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:bg-muted")}
+            >
+              <Mic className={cn("h-4 w-4", dictation.listening && "animate-pulse")} aria-hidden />
+            </button>
+          )}
           <button
             type="submit"
             disabled={!text.trim()}

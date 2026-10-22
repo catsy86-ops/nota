@@ -1653,3 +1653,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Pułapka (naprawiona):** formularz nowego ćwiczenia jest w formularzu wpisu treningu. Zagnieżdżony `<form>` przejmował wysłanie i przeładowywał stronę, więc nic się nie zapisywało. Dlatego to `div` z przyciskiem `type="button"` i Enterem w polu nazwy.
 - **Uwaga na starsze wersje:** wpisy i plany z własnymi ćwiczeniami czyta tylko wersja z tą zmianą. Starsza wersja odrzuci obce id (`isKnownExercise`) i przy zapisie może zgubić ćwiczenie z planu. Nie używać starszej wersji na urządzeniu, które dodaje własne ćwiczenia.
 - **Testy:** `src/lib/training/customExercises.test.ts`; `src/components/cwiczenia/TrainingSection.test.tsx` (mock rozszerzony o nowe funkcje); `e2e/cwiczenia-wlasne.spec.ts` (dodanie i usunięcie). Jednostkowe trening 60/60; e2e Ćwiczeń 3/3.
+
+## Praca — braki materiału dyktowane głosem (2026-10-22)
+
+- **Co robi:** w karcie budowy (Dziennik) przy „Braki materiału” jest przycisk Dyktuj. Powiedziana fraza, np. „dokupić trójnik fi 32”, staje się brakiem (pierwsza litera wielka, ilość pusta). Wpisanie ręczne działa jak dotąd.
+- **Gdzie:** `src/components/study/SiteShortagesPanel.tsx` (`useDictation`, `listRef`, przycisk mikrofonu w formularzu). Logika dodawania bez zmian: `addShortage` w `src/lib/study/shortages.ts`.
+- **Ograniczenie:** rozpoznawanie mowy zależy od przeglądarki (przycisk pojawia się tylko, gdy jest obsługiwane). Słowo „dokupić” zostaje w treści. Ilość trzeba wpisać ręcznie.
+- **Testy:** `e2e/site-shortages.spec.ts`, `e2e/site-card-mobile.spec.ts` (ręczne dodawanie) 4/4; jednostkowe `study` 57/57. Dyktowania głosem nie ma w e2e (brak mowy w headless).
