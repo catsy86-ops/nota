@@ -78,3 +78,4 @@ Faza 4 zaczyna się dopiero po decyzji o zakresie. Nie wpisywać jej w inne fazy
 - **Faza 1 — zrobiona:** 1.1 (`601f0f1`), 1.2 (`02e026f`), 1.3 (`d71c400`), 1.4–1.5 (`89ada1d`), 1.6–1.7 (`86e0144`, poprawka `450a905`), 1.8–1.9 (`68f6a79`).
 - **Nie zrobione z Fali 1:** brak. Fokus po akcjach w listach (1.1, 1.2) sprawdzony e2e; pozostałe elementy wg audytu nie mają e2e na rozmiar (np. przycisk lokalizacji).
 - **Następnie:** Faza 2 (testy charakteryzujące i limity), potem 3.
+- **Faza 2 — w toku (2026-10-22):** 2.1 charakteryzacja limitu braków (`a6a0446`); 2.2 liczba odrzuconych i komunikat przy pełnej liście (`a6a0446`), **nie** pokazano jeszcze pozycji od innych urządzeń; 2.3 replaceAll pokryty istniejącym testem; 2.4 częściowo (`e058881`, braki z wypowiedzi wydzielone), reszta `JournalEntrySheet` do zrobienia; 2.5 findSite (`e058881`).
