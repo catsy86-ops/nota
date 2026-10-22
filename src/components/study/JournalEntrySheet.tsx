@@ -383,7 +383,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     // Nowa budowa ma kartę dopiero po zapisie — lokalizację budowy proponujemy w toaście, jawnie.
     const savedGeo = form.geo ?? null;
     const siteForGeo = entry.siteId;
-    if (shouldOfferSiteGeo(savedGeo, siteForGeo, !!siteCard?.geo)) {
+    if (savedGeo && siteForGeo && shouldOfferSiteGeo(savedGeo, siteForGeo, !!siteCard?.geo)) {
       toast.success(message, {
         action: { label: "Zapisz lokalizację budowy", onClick: () => { setSiteGeo(siteForGeo, savedGeo); toast.success(`Zapisano lokalizację budowy „${entry.site}”`); } },
       });

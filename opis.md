@@ -1743,3 +1743,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/lib/study/store.ts` (`droppedShortages`, `getStudy` dokłada `shortagesDropped`); `src/lib/study/yStudy.ts` (pole pochodne w `StudyState`, nie zapisywane); `src/components/study/SiteShortagesPanel.tsx`.
 - **Ograniczenie:** licznik policzony z dokumentu przed przycięciem; zostają najstarsze 40 (decyzja o najnowszych czeka na właściciela).
 - **Testy:** `src/components/study/SiteShortagesPanel.test.tsx` (ostrzeżenie); `src/lib/study` 352/352 razem z panelem.
+
+## Praca — reguły arkusza wpisu wydzielone (Faza 2.4, 2026-10-22)
+
+- **Co robi:** komunikaty po zapisie (nowy wpis, poprawka), cofnięcie tematu do powtórki po edycji i propozycja lokalizacji budowy są liczone w czystych funkcjach. Zachowanie bez zmian.
+- **Gdzie:** `src/lib/study/entrySheetRules.ts` (`newEntryMessage`, `editSavedMessage`, `editDemotesTopic`, `shouldOfferSiteGeo`); `src/components/study/JournalEntrySheet.tsx` (`submit`, `saveEdit` ich używają).
+- **Testy:** `src/lib/study/entrySheetRules.test.ts` 6/6; `e2e/journal-*.spec.ts`, `entry-sheet-focus`, `journal-geo` 9/9.
+- **Nie zrobione:** `JournalEntrySheet.tsx` nadal ma ok. 900 linii w jednym komponencie (funkcje dyktowania, zdjęć i szkiców). Kolejne wydzielenia to osobne kroki.
