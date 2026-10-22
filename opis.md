@@ -1602,3 +1602,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/components/cwiczenia/CwiczeniaView.tsx` — stan `tab`, pasek `role="group" aria-label="Dział Ćwiczeń"` (`sm:hidden`), klasa `max-sm:hidden` na sekcjach poza wybraną. Sekcje są w DOM zawsze, więc testy jednostkowe i zapis danych nie zależą od zakładki.
 - **Testy:** `e2e/cwiczenia-zakladki.spec.ts` (telefon @mobile i komputer); jednostkowe `cwiczenia/*.test.tsx` 25/25.
 - **Nie zrobione z Fali 4:** kroje latin-ext (zawężenie @font-face wymaga kopii CSS z przepisanymi ścieżkami albo rezygnacji z cyrylicy/greki/wietnamskiego — decyzja właściciela; CSS startowy 45,8 KB gzip).
+
+## Dziś — ciaśniejsze odstępy na telefonie (Fala 4, 2026-10-22)
+
+- **Co robi:** na telefonie karty Dziś mają odstęp 16 px (zamiast 32 px), mniej przewijania na 390 px. Na komputerze 40 px jak dotąd. Pozostałe widoki bez zmian.
+- **Gdzie:** `src/pages/Index.tsx` — `<main>` (`gap-4 sm:gap-10` dla `view === "today"`).
+- **Nie zrobione z pozycji „Mniej przewijania”:** „Praca+Powtórki w jednym rzędzie” — wymaga decyzji po zobaczeniu wypełnionego widoku.
+- **Testy:** `e2e/dzis-phone.spec.ts` (telefon 16 px, komputer 40 px); `today-study.spec.ts` na desktopie OK.
