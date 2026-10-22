@@ -15,12 +15,12 @@ import { haptic } from "@/lib/haptics";
 import { NoteImage } from "@/components/NoteImage";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { TOPICS } from "@/lib/study/content";
-import { JOURNAL_SOLUTION_MAX, openProblems, setProblemResolved, setProblemSolution, useStudy, useStudyLists, type JournalEntry } from "@/lib/study/store";
+import { JOURNAL_SOLUTION_MAX, openProblems, setProblemResolved, setProblemSolution, setSite, useStudy, useStudyLists, type JournalEntry } from "@/lib/study/store";
 import {
   entriesPl, filterJournal, groupJournal, isFiltered, KIND_LABEL, NO_FILTER, problemsPl, RECENT_DAYS, splitRecent,
   type JournalFilter, type KindFilter,
 } from "@/lib/study/journalView";
-import { useJournalDraft } from "@/lib/study/draft";
+import { patchJournalDraft, useJournalDraft } from "@/lib/study/draft";
 import { openJournalEdit, openJournalSheet } from "@/lib/study/entrySheet";
 import { JournalEntrySheet, KindIcon } from "./JournalEntrySheet";
 import { JournalReportDialog } from "./JournalReport";
@@ -182,7 +182,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
               <ReminderRow
                 key={r.kind === "stale-problems" ? "stale" : `${r.kind}-${r.siteId}`}
                 reminder={r}
-                onShow={() => (r.kind === "stale-problems" ? patch({ kind: "open" }) : r.kind === "late-order" || r.kind === "service-due" || r.kind === "pre-cover-test" ? setCard(r.siteId) : patch({ site: r.siteId }))}
+                onShow={() => (r.kind === "stale-problems" ? patch({ kind: "open" }) : r.kind === "late-order" || r.kind === "service-due" || r.kind === "pre-cover-test" ? setCard(r.siteId) : openTestEntry(r.site))}
               />
             ))}
           </ul>
@@ -453,6 +453,13 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
 }
 
 /** Jeden wiersz przypomnienia: ⚠ w kolorze ostrzeżenia, treść i przycisk pokazujący wpisy, których dotyczy. */
+/** Arkusz nowego wpisu z budową i tematem próby — dla przypomnienia „montaż bez protokołu próby”. */
+function openTestEntry(siteName: string) {
+  setSite(siteName);
+  patchJournalDraft({ topic: "proba-wody" });
+  openJournalSheet();
+}
+
 function ReminderRow({ reminder: r, onShow }: { reminder: StudyReminder; onShow: () => void }) {
   const text =
     r.kind === "stale-problems"
@@ -473,7 +480,7 @@ function ReminderRow({ reminder: r, onShow }: { reminder: StudyReminder; onShow:
         onClick={onShow}
         className="pressable shrink-0 self-center rounded-full border border-warning/60 px-2.5 py-1 text-xs font-medium text-foreground hover:bg-warning/20 coarse:min-h-11 coarse:px-3.5 coarse:text-sm"
       >
-        {r.kind === "stale-problems" ? "Pokaż otwarte" : r.kind === "late-order" || r.kind === "service-due" || r.kind === "pre-cover-test" ? "Karta budowy" : "Pokaż wpisy budowy"}
+        {r.kind === "stale-problems" ? "Pokaż otwarte" : r.kind === "late-order" || r.kind === "service-due" || r.kind === "pre-cover-test" ? "Karta budowy" : r.kind === "no-test" ? "Dodaj próbę" : "Pokaż wpisy budowy"}
       </button>
     </li>
   );

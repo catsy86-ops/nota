@@ -1673,3 +1673,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Co robi:** gdy wypowiedź dodaje braki do budowy, a lista ma już 40 pozycji, arkusz wpisu pokazuje błąd z liczbą nieodłożonych braków. Wcześniej nowe pozycje znikały po cichu, a komunikat mówił, że zostały dodane.
 - **Gdzie:** `src/components/study/JournalEntrySheet.tsx` (pętla z licznikiem `rejected` przy `SHORTAGES_MAX`).
 - **Ograniczenie:** komunikat sukcesu nadal wymienia wszystkie pozycje z wypowiedzi, także odrzucone. Pozycje dodane przez innego peera przy 40 limicie nadal mogą zniknąć z widoku — to osobna pozycja w planie (Faza 2).
+
+## Praca — przypomnienie „bez protokołu próby” z akcją (Faza 0.4, 2026-10-22)
+
+- **Co robi:** przypomnienie „montaż bez protokołu próby” ma przycisk „Dodaj próbę”. Otwiera arkusz wpisu z tą budową i tematem próby (`proba-wody`). Wcześniej przycisk tylko filtrował listę.
+- **Gdzie:** `src/components/study/StudyJournal.tsx` (`openTestEntry`, gałąź `no-test` w `ReminderRow`); reguła przypomnienia w `src/lib/study/reminders.ts`.
+- **Testy:** `e2e/study-test-reminder.spec.ts`; cały `study.spec.ts` 30/30.
