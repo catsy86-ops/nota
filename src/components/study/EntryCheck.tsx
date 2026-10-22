@@ -85,7 +85,7 @@ export function EntryCheckCard() {
             <HardHat className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />Przed wejściem
           </h4>
           {choices.length > 1 ? (
-            <div className="mt-1.5 flex flex-wrap gap-1.5" role="group" aria-label="Budowa na dziś">
+            <div className="mt-1.5 flex flex-wrap gap-1.5" role="group" aria-label="Wybór budowy na dziś">
               {choices.map((s) => (
                 <button
                   key={s.id}
