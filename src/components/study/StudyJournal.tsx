@@ -25,6 +25,7 @@ import { openJournalEdit, openJournalSheet } from "@/lib/study/entrySheet";
 import { JournalEntrySheet, KindIcon } from "./JournalEntrySheet";
 import { JournalReportDialog } from "./JournalReport";
 import { SiteCardDialog } from "./SiteCardDialog";
+import { NewSiteDialog } from "./NewSiteDialog";
 import { DayHoursDialog } from "./DayHoursDialog";
 import { EntryCheckCard } from "./EntryCheck";
 import { useShifts } from "@/lib/shifts";
@@ -94,7 +95,9 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
     [dir],
   );
   // Pigułki: budowy z wpisami; archiwalne za „Archiwum”, chyba że wybrana.
-  const used = useMemo(() => dir.filter((x) => x.count > 0), [dir]);
+  // Budowy z wpisami i zapisane karty bez wpisów (nowa budowa), żeby nowa była od razu na liście.
+  const used = useMemo(() => dir.filter((x) => x.count > 0 || x.stored), [dir]);
+  const [newSiteOpen, setNewSiteOpen] = useState(false);
   const archivedCount = used.filter((x) => x.archived !== undefined).length;
   const sites = used.filter((x) => x.archived === undefined || showArchived || x.id === filter.site);
   const hasUnsited = useMemo(() => used.length > 0 && study.journal.some((e) => !entrySiteId(e)), [used, study.journal]);
@@ -192,7 +195,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
             art={<EmptySketch paths={JOURNAL_GLYPH} className="relative mx-auto mb-3 h-20 w-28 text-primary-ink" />}
             title="Brak wpisów"
             description="Zapisz, co robisz na budowie — dziennik połączy to z tematami, które przerabiasz."
-            actions={<Button size="sm" onClick={() => openJournalSheet()}><Plus className="h-4 w-4" aria-hidden />Dodaj wpis</Button>}
+            actions={<div className="flex flex-wrap justify-center gap-2"><Button size="sm" onClick={() => openJournalSheet()}><Plus className="h-4 w-4" aria-hidden />Dodaj wpis</Button><Button size="sm" variant="outline" onClick={() => setNewSiteOpen(true)}>Nowa budowa</Button></div>}
             className="xl:col-start-1"
           />
         ) : (
@@ -230,7 +233,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                   );
                 })}
               </div>
-              {used.length > 0 && (
+              {(
                 <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] xl:flex-wrap xl:overflow-visible" role="group" aria-label="Budowa">
                   {[null, ...sites, ...(hasUnsited ? [""] : [])].map((x) => {
                     const id = typeof x === "object" && x !== null ? x.id : x;
@@ -252,6 +255,13 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                       </button>
                     );
                   })}
+                  <button
+                    type="button"
+                    onClick={() => setNewSiteOpen(true)}
+                    className="pressable inline-flex shrink-0 items-center gap-1 rounded-full border border-dashed border-border px-3 py-1 text-xs text-primary-ink hover:bg-primary/10 coarse:min-h-11 coarse:px-4 coarse:text-sm"
+                  >
+                    + Nowa budowa
+                  </button>
                   {archivedCount > 0 && (
                     <button
                       type="button"
@@ -388,6 +398,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
         )}
       </section>
       <JournalEntrySheet onPractice={onPractice} />
+      <NewSiteDialog open={newSiteOpen} onOpenChange={setNewSiteOpen} dir={dir} onCreated={(id) => setCard(id)} />
       <JournalReportDialog open={report} onOpenChange={setReport} journal={study.journal} sites={dir} initialSite={reportSite ?? filter.site} initialRequest={reportRequest} />
       <DayHoursDialog day={hoursDay?.key ?? null} label={hoursDay?.label ?? ""} onOpenChange={(o) => { if (!o) setHoursDay(null); }} />
       <SiteCardDialog

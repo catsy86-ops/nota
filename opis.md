@@ -1631,3 +1631,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Otwarte, do decyzji:** dodatku nocnego **nie dodaję do zarobku**, bo dodatek 100% za porę nocną już jest w rachunku (`summary.ts`). Trzeba sprawdzić z kadrami, czy 20% przysługuje dodatkowo do tego dodatku, czy wchodzi w jego miejsce. Stawka 2026 w tabeli (31,40 zł/h) wymaga sprawdzenia z obwieszczeniem.
 - **Gdzie:** `src/lib/shifts/pattern.ts` (`applyPattern` z `anchorKey`, `addDaysKey`, `dayDiff`), `model.ts` (pola `anchor`, `appliedUntil`, `nightRate`), `PatternDialog.tsx`, `ShiftSettingsDialog.tsx` (`RateField` z etykietą i zapisem), `ShiftSummary.tsx`, `ShiftsView.tsx`.
 - **Testy:** `src/lib/shifts/pattern.test.ts`, `nightAllowance.test.ts`; `e2e/shifts.spec.ts` — "cykl: „Przedłuż cykl” …" (27/27 z całym plikiem). Jednostkowe `lib/shifts` + `components/shifts` 151/151.
+
+## Dziennik budowy — lista budów i „Nowa budowa” bez wpisu (Fala 5, pkt 4, 2026-10-22)
+
+- **Co robi:** zapisana karta budowy bez wpisów pokazuje się na liście budów (pasek filtrów). „+ Nowa budowa” w pasku i „Nowa budowa” w pustym dzienniku otwierają okno z samą nazwą; po zapisie od razu otwiera się karta, żeby dopisać adres i resztę. Nazwa zajęta przez inną budowę (bez wielkości liter i ogonków) jest odrzucana.
+- **Gdzie:** `src/components/study/NewSiteDialog.tsx` (okno, id = `siteKey(nazwa)`, zapis `saveSiteCard`); `src/components/study/StudyJournal.tsx` (filtr `used` = budowy z wpisami albo zapisane; pasek budów zawsze; przycisk; pusty stan z drugą akcją). Sprawdzanie nazw: `findSiteByName` w `src/lib/study/sites.ts`.
+- **Ograniczenie:** pasek budów pojawia się dopiero przy pierwszym wpisie albo w tym samym miejscu co wcześniej; w pustym dzienniku nowa budowa jest dostępna i otwiera kartę, ale nie ma jeszcze paska. Lista w pustym dzienniku to świadomy wybór.
+- **Testy:** `e2e/site-new.spec.ts` (utworzenie i otwarcie karty, odrzucenie zajętej nazwy). `e2e/study.spec.ts` 30/30; `lib/study` + `components/study` 376/376.
