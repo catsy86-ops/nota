@@ -1601,7 +1601,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Co robi:** na telefonie (<640 px) u góry są zakładki Odżywki / Trening / Dieta i widoczna jest tylko wybrana sekcja. Na komputerze wszystkie trzy sekcje są jedna pod drugą jak dotąd, bez zakładek.
 - **Gdzie:** `src/components/cwiczenia/CwiczeniaView.tsx` — stan `tab`, pasek `role="group" aria-label="Dział Ćwiczeń"` (`sm:hidden`), klasa `max-sm:hidden` na sekcjach poza wybraną. Sekcje są w DOM zawsze, więc testy jednostkowe i zapis danych nie zależą od zakładki.
 - **Testy:** `e2e/cwiczenia-zakladki.spec.ts` (telefon @mobile i komputer); jednostkowe `cwiczenia/*.test.tsx` 25/25.
-- **Nie zrobione z Fali 4:** kroje latin-ext (zawężenie @font-face wymaga kopii CSS z przepisanymi ścieżkami albo rezygnacji z cyrylicy/greki/wietnamskiego — decyzja właściciela; CSS startowy 45,8 KB gzip).
+- **Kroje latin + latin-ext (Fala 4, 2026-10-22):** bez cyrylicy, greki i wietnamskiego (decyzja właściciela). `scripts/latin-fonts.mjs` tworzy z pakietów @fontsource kopie CSS z samymi blokami `latin` i `latin-ext` w `src/styles/fonts-latin/` (nagłówek każdego pliku mówi, skąd pochodzi). `src/main.tsx` importuje te pliki zamiast pakietów. CSS startowy: 45 777 → 35 113 B gzip. Po zmianie wersji @fontsource uruchom skrypt ponownie. Tekst w innym alfabecie spada na czcionkę systemową.
 
 ## Dziś — ciaśniejsze odstępy na telefonie (Fala 4, 2026-10-22)
 

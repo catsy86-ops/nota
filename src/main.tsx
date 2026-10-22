@@ -2,23 +2,23 @@ import { createRoot } from "react-dom/client";
 import { toast } from "sonner";
 import App from "./App.tsx";
 import "@/lib/inputModality";
-import "@fontsource-variable/plus-jakarta-sans";
+import "./styles/fonts-latin/@fontsource-variable-plus-jakarta-sans-index.css";
 // Cyfry o stałej szerokości (rachunek w Grafiku); `wght.css` bez kursywy.
-import "@fontsource-variable/jetbrains-mono/wght.css";
+import "./styles/fonts-latin/@fontsource-variable-jetbrains-mono-wght.css";
 import "./index.css";
 // Kroje stylów (Ustawienia → Wygląd). @font-face pobiera plik dopiero, gdy styl go użyje.
-import "@fontsource/barlow-condensed/600.css";
-import "@fontsource-variable/unbounded/wght.css";
-import "@fontsource-variable/fraunces/soft.css";
-import "@fontsource-variable/bricolage-grotesque/wght.css";
+import "./styles/fonts-latin/@fontsource-barlow-condensed-600.css";
+import "./styles/fonts-latin/@fontsource-variable-unbounded-wght.css";
+import "./styles/fonts-latin/@fontsource-variable-fraunces-soft.css";
+import "./styles/fonts-latin/@fontsource-variable-bricolage-grotesque-wght.css";
 import "./styles/skins.css";
 // Kroje tekstu do wyboru (Wygląd → „Krój tekstu”) — plik pobiera się dopiero po wyborze.
-import "@fontsource-variable/inter/wght.css";
-import "@fontsource-variable/nunito/wght.css";
-import "@fontsource-variable/atkinson-hyperlegible-next/wght.css";
-import "@fontsource-variable/literata/wght.css";
-import "@fontsource-variable/manrope/wght.css";
-import "@fontsource-variable/lexend/wght.css";
+import "./styles/fonts-latin/@fontsource-variable-inter-wght.css";
+import "./styles/fonts-latin/@fontsource-variable-nunito-wght.css";
+import "./styles/fonts-latin/@fontsource-variable-atkinson-hyperlegible-next-wght.css";
+import "./styles/fonts-latin/@fontsource-variable-literata-wght.css";
+import "./styles/fonts-latin/@fontsource-variable-manrope-wght.css";
+import "./styles/fonts-latin/@fontsource-variable-lexend-wght.css";
 import "./styles/fonts.css";
 import "./styles/site.css";
 // Tryb budowa ustawia `html[data-site]` przy imporcie — przed pierwszym malowaniem.
