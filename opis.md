@@ -1692,3 +1692,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Co robi:** po zmianie statusu braku czytnik ogłasza nowy stan („Złączka 20: Zamówione”). Po usunięciu braku fokus wraca do pola „Czego brakuje”, zamiast ginąć na początku strony.
 - **Gdzie:** `src/components/study/SiteShortagesPanel.tsx` (`announce` + `role="status"`, `addRef`, `remove`).
 - **Testy:** `e2e/site-shortages.spec.ts` (3/3).
+
+## Praca — tablica: fokus po przesunięciu tematu (Faza 1.2, 2026-10-22)
+
+- **Co robi:** strzałka przesuwa temat do innej kolumny i fokus zostaje na tej samej karcie. Wcześniej karta była odmontowywana, a fokus ginął na początku strony.
+- **Gdzie:** `src/components/study/StudyBoard.tsx` (`moveTo` + `tabIndex={-1}` na `li[data-topic]`).
+- **Testy:** `e2e/study-board-focus.spec.ts`; `study.spec.ts` przechodzi.

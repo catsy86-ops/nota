@@ -29,6 +29,8 @@ const moduleLabel = (id: StudyTopic["module"]) => MODULES.find((m) => m.id === i
  */
 function moveTo(topic: StudyTopic, column: Column) {
   moveTopic(topic.id, column);
+  // Karta zmienia kolumnę (inny rodzic), więc zostaje odmontowana: fokus wraca na nią po wyrenderowaniu.
+  requestAnimationFrame(() => document.querySelector<HTMLElement>(`li[data-topic="${topic.id}"]`)?.focus());
   if (window.matchMedia?.(MOBILE_QUERY).matches) toast(`„${topic.title}” → ${COLUMN_LABEL[column]}`);
 }
 
@@ -46,10 +48,11 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
       layoutId={`topic-${topic.id}`}
       transition={{ type: "spring", stiffness: 500, damping: 40 }}
       className={cn(
-        "rounded-xl border bg-card p-3 text-sm shadow-sm",
+        "rounded-xl border bg-card p-3 text-sm shadow-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
         column === "done" ? "border-primary/40" : "border-border",
       )}
       data-topic={topic.id}
+      tabIndex={-1}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
