@@ -175,3 +175,9 @@ export function shortagesText(siteName: string, list: readonly Shortage[]): stri
 
 /** „14.10 — Kolano 16 × 5, Trójnik 16 × 1” — do historii zamówień. */
 export const orderLogLine = (o: OrderLogEntry) => `${shortDate(o.at)} — ${fittingsLine(o.items)}`;
+
+/** Wynik dyktowania → tekst braku: pojedyncze spacje, pierwsza litera wielka; pusty wynik = `""`. */
+export function spokenShortageLabel(spoken: string): string {
+  const phrase = spoken.trim().replace(/\s+/g, " ");
+  return phrase ? phrase.charAt(0).toUpperCase() + phrase.slice(1) : "";
+}

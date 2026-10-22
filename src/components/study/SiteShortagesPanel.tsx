@@ -10,7 +10,7 @@ import { setSiteShortages } from "@/lib/study/store";
 import type { SiteInfo } from "@/lib/study/sites";
 import {
   addShortage, clearDelivered, dueDayValue, dueFromDayValue, nextStatus, removeShortage, setShortageDue, setShortageStatus,
-  shortagesText, SHORTAGE_QTY_MAX, SHORTAGE_TEXT_MAX, SHORTAGES_MAX, STATUS_LABEL, type ShortageStatus,
+  shortagesText, spokenShortageLabel, SHORTAGE_QTY_MAX, SHORTAGE_TEXT_MAX, SHORTAGES_MAX, STATUS_LABEL, type ShortageStatus,
 } from "@/lib/study/shortages";
 
 const STATUS_CLASS: Record<ShortageStatus, string> = {
@@ -37,9 +37,8 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
   const listRef = useRef(list);
   listRef.current = list;
   const dictation = useDictation((spoken) => {
-    const phrase = spoken.trim().replace(/s+/g, " ");
-    if (!phrase) return;
-    const label = phrase.charAt(0).toUpperCase() + phrase.slice(1);
+    const label = spokenShortageLabel(spoken);
+    if (!label) return;
     const cur = listRef.current;
     const next = addShortage(cur, label, "", Date.now());
     if (next.length === cur.length) { toast("Nie udało się dodać braku", { id: "shortage-dictation", description: `Usłyszałem: „${spoken}”.` }); return; }

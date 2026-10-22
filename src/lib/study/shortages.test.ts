@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   addShortage, cleanOrderLog, cleanShortages, clearDelivered, dueDayValue, dueFromDayValue, logOrder, nextStatus, openShortages,
   orderLateFrom, orderLogLine, ORDER_LATE_DAYS, ORDER_LOG_MAX, removeShortage, setShortageDue, setShortageStatus, shortageLine,
-  shortagesText, SHORTAGES_MAX,
+  shortagesText, SHORTAGES_MAX, spokenShortageLabel,
 } from "./shortages";
 import { cleanSite } from "./sites";
 
@@ -125,5 +125,15 @@ describe("historia zamówień kształtek", () => {
     expect(card?.orders).toHaveLength(1);
     expect(cleanSite(base)).not.toHaveProperty("shortages");
     expect(cleanSite(base)).not.toHaveProperty("orders");
+  });
+});
+
+describe("spokenShortageLabel", () => {
+  it("nie rusza liter w środku słów i wielkość pierwszej litery", () => {
+    expect(spokenShortageLabel("dokupić stalowe kolano")).toBe("Dokupić stalowe kolano");
+    expect(spokenShortageLabel("  rura   pex  16 ")).toBe("Rura pex 16");
+  });
+  it("pusty wynik zostaje pusty", () => {
+    expect(spokenShortageLabel("   ")).toBe("");
   });
 });
