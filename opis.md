@@ -1595,3 +1595,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Co robi:** „Pokaż wpisy” i „Raport” z karty budowy najpierw zapisują niezapisaną zmianę w karcie, potem przechodzą dalej. Wcześniej rodzic zamykał okno bez zapisu i wpisane dane przepadały. Zamknięcie krzyżykiem, Esc i „Archiwum” działają jak dotąd.
 - **Gdzie:** `src/components/study/SiteCardDialog.tsx` — `persistDirty()` (wspólne dla `close`, `toggleArchive`), `leaveTo(go)` (przyciski z `onShowEntries` / `onReport`).
 - **Testy:** `e2e/study.spec.ts` — "dziennik: karta budowy zapisuje niezapisaną zmianę przy „Pokaż wpisy”"; cały plik 30/30 na desktopie.
+
+## Ćwiczenia — zakładki na telefonie (Fala 4, 2026-10-22)
+
+- **Co robi:** na telefonie (<640 px) u góry są zakładki Odżywki / Trening / Dieta i widoczna jest tylko wybrana sekcja. Na komputerze wszystkie trzy sekcje są jedna pod drugą jak dotąd, bez zakładek.
+- **Gdzie:** `src/components/cwiczenia/CwiczeniaView.tsx` — stan `tab`, pasek `role="group" aria-label="Dział Ćwiczeń"` (`sm:hidden`), klasa `max-sm:hidden` na sekcjach poza wybraną. Sekcje są w DOM zawsze, więc testy jednostkowe i zapis danych nie zależą od zakładki.
+- **Testy:** `e2e/cwiczenia-zakladki.spec.ts` (telefon @mobile i komputer); jednostkowe `cwiczenia/*.test.tsx` 25/25.
+- **Nie zrobione z Fali 4:** kroje latin-ext (zawężenie @font-face wymaga kopii CSS z przepisanymi ścieżkami albo rezygnacji z cyrylicy/greki/wietnamskiego — decyzja właściciela; CSS startowy 45,8 KB gzip).

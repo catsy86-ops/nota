@@ -47,12 +47,22 @@ function deleteSupplement(notes: NotesActions, s: Supplement): Supplement | null
  * Dział Ćwiczenia (osobna pozycja w menu): odżywki (lista, dzienne odhaczenia, przypomnienia), trening
  * (plany dni, dziennik serii, progres) i dieta (posiłki, kalorie i białko, cele).
  */
+type CwiczeniaTab = "odzywki" | "trening" | "dieta";
+const CWICZENIA_TABS: { id: CwiczeniaTab; label: string }[] = [
+  { id: "odzywki", label: "Odżywki" },
+  { id: "trening", label: "Trening" },
+  { id: "dieta", label: "Dieta" },
+];
+
 export function CwiczeniaView() {
   const supplements = useSupplements();
   const taken = useSupplementsTaken();
   const notes = useNotesContext();
   const today = localDayKey();
   const doneToday = supplements.filter((s) => taken.has(logKey(today, s.id))).length;
+  // Na telefonie jedna sekcja naraz (zakładki); na większym ekranie wszystkie jak dotąd. Sekcje są w DOM zawsze.
+  const [tab, setTab] = useState<CwiczeniaTab>("odzywki");
+  const phoneHide = (id: CwiczeniaTab) => (tab === id ? undefined : "max-sm:hidden");
 
   return (
     <section aria-labelledby="cwiczenia-title" className="mx-auto w-full max-w-2xl px-4 pb-32 pt-6 desk:pt-8">
@@ -61,7 +71,21 @@ export function CwiczeniaView() {
         <h1 id="cwiczenia-title" className="font-display text-3xl font-bold tracking-tight">Ćwiczenia</h1>
       </header>
 
-      <section aria-labelledby="supplements-title" className="rounded-card border border-border bg-card p-4 sm:p-5 space-y-4">
+      <div role="group" aria-label="Dział Ćwiczeń" className="mb-4 flex gap-1 rounded-xl bg-muted p-0.5 sm:hidden">
+        {CWICZENIA_TABS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            aria-pressed={tab === t.id}
+            onClick={() => setTab(t.id)}
+            className={`flex-1 h-11 rounded-[0.65rem] text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring ${tab === t.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <section aria-labelledby="supplements-title" className={`rounded-card border border-border bg-card p-4 sm:p-5 space-y-4 ${phoneHide("odzywki") ?? ""}`}>
         <div className="flex items-baseline justify-between gap-3">
           <h2 id="supplements-title" className="section-label gap-2">
             <Pill className="h-3.5 w-3.5" aria-hidden />
@@ -84,8 +108,8 @@ export function CwiczeniaView() {
       </section>
 
       <div className="mt-6 space-y-6">
-        <TrainingSection />
-        <DietSection />
+        <div className={phoneHide("trening")}><TrainingSection /></div>
+        <div className={phoneHide("dieta")}><DietSection /></div>
       </div>
     </section>
   );
