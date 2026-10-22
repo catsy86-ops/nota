@@ -1,21 +1,18 @@
 import type { ComponentProps } from "react";
-import { Check, CornerLeftUp, Link2, Lock, RotateCcw, Trash } from "lucide-react";
+import { CornerLeftUp, Link2, Lock, RotateCcw, Trash } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import type { Note } from "@/hooks/useNotes";
 import type { useNoteViewActions } from "@/hooks/NoteViewActionsContext";
 import type { useTrashCountdown } from "@/hooks/useTrashCountdown";
 import { backlinksOf } from "@/lib/wikiLinks";
-import { haptic } from "@/lib/haptics";
 import { celebrate } from "@/lib/celebrate";
-import { toastWithUndo } from "@/lib/undoToast";
-import { snoozeTimes } from "@/lib/reminderAgenda";
-import { doneTarget, seriesDay, snoozeTarget } from "@/lib/reminderRepeat";
 import { pluralPl } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 import { firstSnippet } from "@/lib/searchHighlight";
 import { Marked } from "@/components/SearchMarks";
 import { MarkdownRenderer } from "./MarkdownRenderer";
+import { ReminderQuickActions } from "./ReminderQuickActions";
 import { ChecklistCount, ChecklistPreview } from "./ChecklistEditor";
 import { LabelBadges } from "./LabelPicker";
 import { ReminderBadge } from "./ReminderPicker";
@@ -28,21 +25,6 @@ type Actions = ReturnType<typeof useNoteViewActions>;
 
 /** Na kaflu jeden link zwrotny i „+N” — pełna lista jest w czytniku. */
 const BACKLINKS_SHOWN = 1;
-
-/**
- * Po odhaczeniu albo odłożeniu kafel znika z listy, więc fokus nie może wrócić na początek strony.
- * Zwraca funkcję wywoływaną po zapisie: sąsiedni kafel w tej samej grupie, a gdy go nie ma — nagłówek grupy (2c planu).
- */
-function focusAfterRemoval(el: HTMLElement): () => void {
-  const wrap = el.closest<HTMLElement>("[data-note-id-wrap]");
-  const neighbour = (wrap?.nextElementSibling ?? wrap?.previousElementSibling) as HTMLElement | null | undefined;
-  const heading = el.closest("section")?.querySelector<HTMLElement>("h2") ?? null;
-  return () => requestAnimationFrame(() => {
-    const target = neighbour?.isConnected ? neighbour.querySelector<HTMLElement>("button") : null;
-    if (target) { target.focus(); return; }
-    if (heading) { heading.tabIndex = -1; heading.focus(); }
-  });
-}
 
 /**
  * Zawartość kafla w trybie podglądu (nie edycji): okładka, tytuł, treść (albo fragment
@@ -129,61 +111,7 @@ export function NoteCardBody({
               </div>
               {/* Termin: odhaczenie i odłożenie bez otwierania notatki. W Terminach dotyczy każdego terminu (D2), w innych tylko zaległych. */}
               {onUpdate && note.reminder !== null && (reminderActions || reminderPassed) && !note.trashed && !isArchived && !note.locked && (
-                <div className="mt-2 flex flex-wrap items-center gap-1 sm:gap-1.5" onClick={(e) => e.stopPropagation()}>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      const prev = { reminder: note.reminder, reminderDay: note.reminderDay, reminderBase: note.reminderBase };
-                      // Jak przy powiadomieniu: seria przechodzi do następnego wystąpienia (D3), koniec serii albo zwykły termin zdejmuje przypomnienie.
-                      const next = doneTarget(note, Date.now());
-                      const focus = focusAfterRemoval(e.currentTarget);
-                      haptic("success");
-                      if (next === null) onUpdate(note.id, { reminder: null });
-                      else onUpdate(note.id, { reminder: next, reminderDay: seriesDay(note), reminderBase: undefined });
-                      toastWithUndo(
-                        next === null ? "Przypomnienie odhaczone" : "Wystąpienie odhaczone — następne w serii",
-                        () => onUpdate(note.id, prev),
-                        { id: `rem-done-${note.id}` },
-                      );
-                      focus();
-                    }}
-                    className="pressable inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 sm:px-2.5 py-1 coarse:min-h-11 text-2xs font-medium text-primary-ink hover:bg-primary/20"
-                  >
-                    <Check className="w-3 h-3" aria-hidden /> Gotowe
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const prev = { reminder: note.reminder, reminderDay: note.reminderDay, reminderBase: note.reminderBase };
-                      haptic("tap");
-                      // Odłożenie nie przepisuje dnia serii: bez jawnego `reminderDay` `updateNote` wyprowadziłby go z nowej godziny (2b planu).
-                      // Odłożenie jednego wystąpienia serii (`snoozeTarget`), nie przesunięcie całej serii.
-                      const snz = snoozeTarget(note, snoozeTimes().tomorrow9, Date.now());
-                      onUpdate(note.id, { reminder: snz.reminder, reminderDay: note.reminderDay, reminderBase: snz.reminderBase });
-                      toastWithUndo("Przesunięto na jutro, 9:00", () => onUpdate(note.id, prev), { id: `rem-snooze-${note.id}` });
-                    }}
-                    className="pressable inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 sm:px-2.5 py-1 coarse:min-h-11 text-2xs font-medium text-muted-foreground hover:text-foreground"
-                    aria-label="Jutro rano"
-                  >
-                    {/* Na telefonie samo „Jutro” — z „rano” oba przyciski nie mieściły się w wąskim kaflu i szły w pion. */}
-                    Jutro<span className="max-sm:hidden">rano</span>
-                  </button>
-                  {/* Krótkie odłożenie: karta miała tylko „jutro”, a „za godzinę” to najczęstszy wybór przy zaległym terminie (1e planu). */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const prev = { reminder: note.reminder, reminderDay: note.reminderDay, reminderBase: note.reminderBase };
-                      haptic("tap");
-                      const snz = snoozeTarget(note, snoozeTimes().inHour, Date.now());
-                      onUpdate(note.id, { reminder: snz.reminder, reminderDay: note.reminderDay, reminderBase: snz.reminderBase });
-                      toastWithUndo("Przesunięto o godzinę", () => onUpdate(note.id, prev), { id: `rem-snooze-${note.id}` });
-                    }}
-                    className="pressable inline-flex items-center rounded-full bg-foreground/5 px-2 sm:px-2.5 py-1 coarse:min-h-11 text-2xs font-medium text-muted-foreground hover:text-foreground"
-                    aria-label="Za godzinę"
-                  >
-                    +1 h
-                  </button>
-                </div>
+                <ReminderQuickActions note={note} onUpdate={onUpdate} className="mt-2" />
               )}
               {backlinks.length > 0 && (
                 <div className="mt-1.5 flex items-center gap-1 min-w-0 text-2xs text-muted-foreground" title="Linkują tu">

@@ -644,7 +644,7 @@ const Index = () => {
           {view === "today" && !deferredSearch && (
             <ViewErrorBoundary name="Przypomnienia">
               <Suspense fallback={<CardSkeleton />}>
-                <TodayDueList notes={reminderNotes} onOpen={openNote} onOpenReminders={() => go("reminders")} />
+                <TodayDueList notes={reminderNotes} onOpen={openNote} onOpenReminders={() => go("reminders")} onUpdate={updateNote} />
               </Suspense>
             </ViewErrorBoundary>
           )}

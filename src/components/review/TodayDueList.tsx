@@ -4,6 +4,7 @@ import type { Note } from "@/hooks/useNotes";
 import { useDayClock } from "@/lib/dayClock";
 import { groupReminders, type AgendaGroupKey } from "@/lib/reminderAgenda";
 import { formatReminderShort } from "@/lib/reminderTime";
+import { ReminderQuickActions } from "@/components/ReminderQuickActions";
 import { cn } from "@/lib/utils";
 
 /** Ile pozycji z grupy pokazujemy na „Dziś”; reszta jest w widoku Przypomnień. */
@@ -20,7 +21,7 @@ const GROUP_TONE: Record<Extract<AgendaGroupKey, "overdue" | "missed" | "today">
  * Przypomnień (`groupReminders`), więc liczby się zgadzają. Pokazujemy tylko te dwie grupy —
  * dalsze terminy są w Przypomnieniach.
  */
-export function TodayDueList({ notes, onOpen, onOpenReminders }: { notes: Note[]; onOpen: (id: string) => void; onOpenReminders: () => void }) {
+export function TodayDueList({ notes, onOpen, onOpenReminders, onUpdate }: { notes: Note[]; onOpen: (id: string) => void; onOpenReminders: () => void; /** Brak = wiersze bez akcji „Gotowe / Jutro / +1 h”. */ onUpdate?: (id: string, patch: Partial<Note>) => void }) {
   // Subskrypcja zmiany doby (północ, powrót na kartę): po niej komponent renderuje się ponownie,
   // a `Date.now()` poniżej jest świeże. Bez tego przypomnienie, które minęło, nie przechodzi do „Zaległe”.
   useDayClock();
@@ -53,17 +54,18 @@ export function TodayDueList({ notes, onOpen, onOpenReminders }: { notes: Note[]
               <h3 className={cn("text-xs font-medium", GROUP_TONE[key])}>{g.label}</h3>
               <ul className="mt-1 divide-y divide-border/50">
                 {shown.map((n) => (
-                  <li key={n.id}>
+                  <li key={n.id} className="flex items-center gap-2 py-2">
                     <button
                       type="button"
                       onClick={() => onOpen(n.id)}
-                      className="pressable flex w-full items-center gap-3 py-2 text-left coarse:min-h-11"
+                      className="pressable flex min-w-0 flex-1 items-center gap-3 text-left coarse:min-h-11"
                     >
                       <span className="min-w-0 flex-1 truncate text-sm">{n.title || n.content.trim().split("\n")[0] || "Bez tytułu"}</span>
                       <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
                         {n.reminder !== null ? formatReminderShort(n.reminder) : ""}
                       </span>
                     </button>
+                    {onUpdate && <ReminderQuickActions note={n} onUpdate={onUpdate} className="shrink-0 justify-end" />}
                   </li>
                 ))}
               </ul>

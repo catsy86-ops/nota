@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNotesContext } from "@/hooks/NotesProvider";
 import { pluralPl } from "@/lib/plural";
 import { useDayClock } from "@/lib/dayClock";
 import {
@@ -57,6 +58,7 @@ function monthBounds(month: Date) {
 }
 
 export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: ReminderCalendarViewProps) {
+  const { updateNote } = useNotesContext();
   // „Dziś” w siatce, pasku tygodnia i najbliższych dniach liczone przy renderze —
   // sygnał zegara dnia przerysowuje je po północy i po powrocie do karty.
   useDayClock();
@@ -446,6 +448,8 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
             onSkip={(occ) => handleSkip(occ.noteId, occ.at, occ.repeat)}
             onMoveByDays={(occ, days) => moveToDay(occ, addDays(new Date(occ.at), days))}
             onOpenSeriesSource={openSeriesSource}
+            noteOf={(id) => notes.find((n) => n.id === id)}
+            onUpdateNote={updateNote}
           />
 
         </div>

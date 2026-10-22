@@ -1,3 +1,5 @@
+import { ReminderQuickActions } from "@/components/ReminderQuickActions";
+import type { Note } from "@/hooks/useNotes";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { useState } from "react";
@@ -36,6 +38,9 @@ interface DayPanelProps {
   onExport: (occurrence: Occurrence) => void;
   /** Pomija wystąpienie serii bez otwierania dialogu. Brak = przycisku nie ma. */
   onSkip?: (occurrence: Occurrence) => void;
+  /** Notatka wystąpienia — potrzebna do „Gotowe / Jutro / +1 h” przy aktualnym terminie. Brak = bez akcji. */
+  noteOf?: (noteId: string) => Note | undefined;
+  onUpdateNote?: (id: string, patch: Partial<Note>) => void;
   /** Klik w prognozę serii — prowadzi do najbliższego, zapisanego terminu. */
   onOpenSeriesSource: (occurrence: Occurrence) => void;
   /** Otwiera okno dnia z Grafiku (rodzaj zmiany i godziny wpisane ręcznie). Brak = tylko podgląd. */
@@ -61,7 +66,7 @@ function writeDayView(view: DayView) {
   try { localStorage.setItem(DAY_VIEW_KEY, view); } catch { /* bez zapisu zostaje wybór na czas sesji */ }
 }
 
-export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdit, onMoveByDays, onExport, onSkip, onOpenSeriesSource, onEditShift, onCopyPrevShift }: DayPanelProps) {
+export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdit, onMoveByDays, onExport, onSkip, onOpenSeriesSource, onEditShift, onCopyPrevShift, noteOf, onUpdateNote }: DayPanelProps) {
   const [view, setViewState] = useState<DayView>(readDayView);
   function setView(next: DayView) {
     setViewState(next);
@@ -200,7 +205,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdi
                     </p>
                   </>
                 ) : (
-                  <div className="flex items-center gap-1">
+                  <div className="flex flex-wrap items-center gap-1">
                   <button
                     onClick={() => onEdit(occ)}
                     onKeyDown={(e) => {
@@ -235,6 +240,8 @@ export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdi
                       <SkipForward className="w-3.5 h-3.5" />
                     </button>
                   )}
+                  {/* Akcje tylko przy aktualnym terminie notatki — odłożenie zawsze dotyczy `note.reminder`. */}
+                  {(() => { const note = noteOf?.(occ.noteId); return note && onUpdateNote && note.reminder === occ.at ? <ReminderQuickActions note={note} onUpdate={onUpdateNote} className="w-full pl-1" /> : null; })()}
                   </div>
                 )}
               </li>

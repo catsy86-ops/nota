@@ -1609,3 +1609,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/pages/Index.tsx` — `<main>` (`gap-4 sm:gap-10` dla `view === "today"`).
 - **Nie zrobione z pozycji „Mniej przewijania”:** „Praca+Powtórki w jednym rzędzie” — wymaga decyzji po zobaczeniu wypełnionego widoku.
 - **Testy:** `e2e/dzis-phone.spec.ts` (telefon 16 px, komputer 40 px); `today-study.spec.ts` na desktopie OK.
+
+## Przypomnienia — akcje na terminie w Dziś i Kalendarzu (Fala 5, pkt 1, 2026-10-22)
+
+- **Co robi:** „Gotowe”, „Jutro rano” i „+1 h” przy terminie działają tak samo na kaflu notatki, na liście Dziś (zaległe i dziś) i w panelu wybranego dnia w Kalendarzu. Cofnięcie w toaście. W Kalendarzu akcje są tylko przy aktualnym terminie notatki, żeby nie odłożyć innego wystąpienia serii.
+- **Gdzie:** `src/lib/reminderActions.ts` (czyste funkcje: `doneReminderUpdate`, `snoozeReminderUpdate`, `reminderFields`); `src/components/ReminderQuickActions.tsx` (przyciski, toast, fokus po usunięciu wiersza); użycie w `NoteCardBody.tsx`, `review/TodayDueList.tsx` (prop `onUpdate` z `Index.tsx`), `calendar/DayPanel.tsx` (`noteOf`, `onUpdateNote`; z `ReminderCalendarView.tsx`).
+- **Testy:** `src/lib/reminderActions.test.ts`; `e2e/dzis-terminy.spec.ts` (Dziś: „Jutro rano” zdejmuje zaległy termin z listy; Kalendarz: „Za godzinę” w panelu). Regresja przypomnień: `reminders-phase2`, `weekly-review`, `reminders-calendar`, `reminder-toast` 25/25.
+- **Uwaga:** `e2e/composer.spec.ts` „przypomnienie z paska” nie przechodzi także na czystym HEAD (zduplikowany przycisk „Usuń przypomnienie”) — problem sprzed tej zmiany.
