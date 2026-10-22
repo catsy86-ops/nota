@@ -36,6 +36,7 @@ import { accuracyLabel, cleanGeo, mapsUrl, nearestSite } from "@/lib/study/geo";
 import { fittingsLine, suggestFittingNames } from "@/lib/study/fittings";
 import { mergeFittings } from "@/lib/study/spokenFittings";
 import { addShortagesFromDictation, SHORTAGES_MAX } from "@/lib/study/shortages";
+import { editDemotesTopic, editSavedMessage, newEntryMessage, shouldOfferSiteGeo } from "@/lib/study/entrySheetRules";
 import { parseSpokenEntry } from "@/lib/study/spokenEntry";
 import { matchStage, siteStages, toggleStage } from "@/lib/study/stages";
 
@@ -378,11 +379,11 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     haptic("success");
     clearJournalDraft();
     closeJournalSheet();
-    const message = kind === "problem" && wasDone ? "Zapisano problem — temat wraca do powtórki" : "Zapisano wpis";
+    const message = newEntryMessage(kind, !!wasDone);
     // Nowa budowa ma kartę dopiero po zapisie — lokalizację budowy proponujemy w toaście, jawnie.
     const savedGeo = form.geo ?? null;
     const siteForGeo = entry.siteId;
-    if (savedGeo && siteForGeo && !siteCard?.geo) {
+    if (shouldOfferSiteGeo(savedGeo, siteForGeo, !!siteCard?.geo)) {
       toast.success(message, {
         action: { label: "Zapisz lokalizację budowy", onClick: () => { setSiteGeo(siteForGeo, savedGeo); toast.success(`Zapisano lokalizację budowy „${entry.site}”`); } },
       });
@@ -395,7 +396,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     const f = getJournalEditForm();
     if (!f) return;
     const prev = study.journal.find((e) => e.id === f.id);
-    const demotes = f.kind === "problem" && !!f.topic && columnOf(study, f.topic) === "done" && (prev?.kind !== "problem" || prev.topic !== f.topic);
+    const demotes = editDemotesTopic({ kind: f.kind, topic: f.topic }, prev, !!f.topic && columnOf(study, f.topic) === "done");
     const saved = updateJournalEntry(f.id, {
       kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, recordings: f.recordings, at: f.at, site: f.site, resolved: f.resolved, test: f.test, fittings: f.fittings, stage: f.stage, geo: f.geo ?? null,
     });
@@ -407,7 +408,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     }
     haptic("success");
     closeJournalSheet();
-    toast.success(demotes ? "Zapisano zmiany — temat wraca do powtórki" : "Zapisano zmiany");
+    toast.success(editSavedMessage(demotes));
   }
 
   function remove() {
