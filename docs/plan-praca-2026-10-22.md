@@ -79,3 +79,8 @@ Faza 4 zaczyna się dopiero po decyzji o zakresie. Nie wpisywać jej w inne fazy
 - **Nie zrobione z Fali 1:** brak. Fokus po akcjach w listach (1.1, 1.2) sprawdzony e2e; pozostałe elementy wg audytu nie mają e2e na rozmiar (np. przycisk lokalizacji).
 - **Następnie:** Faza 2 (testy charakteryzujące i limity), potem 3.
 - **Faza 2 — w toku (2026-10-22):** 2.1 charakteryzacja limitu braków (`a6a0446`); 2.2 liczba odrzuconych i komunikat przy pełnej liście (`a6a0446`), **nie** pokazano jeszcze pozycji od innych urządzeń; 2.3 replaceAll pokryty istniejącym testem; 2.4 częściowo (`e058881`, braki z wypowiedzi wydzielone), reszta `JournalEntrySheet` do zrobienia; 2.5 findSite (`e058881`).
+
+## Stan na koniec dnia (2026-10-22)
+
+- Faza 2: 2.1, 2.3, 2.5 zrobione; 2.2 licznik ukrytych braków w panelu zrobiony (`1f2ae48`) — decyzja, czy zostawiać najstarsze czy najnowsze 40, czeka na właściciela; 2.4 reguły arkusza wpisu wydzielone (`9be57d0`), `JournalEntrySheet` nadal ~900 linii do dalszego podziału.
+- Następny krok: dokończyć podział `JournalEntrySheet` (dyktowanie, zdjęcia, szkice) osobnymi commitami; potem Faza 3.
