@@ -83,6 +83,8 @@ function useOnline() {
  * (`openJournalEdit`) — wtedy na formularzu edycji, a w stopce jest też „Usuń”.
  */
 export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string) => void }) {
+  // Fokus po otwarciu idzie na tytuł, nie na pole tekstu: na telefonie pole od razu wywołałoby klawiaturę.
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const { open, topicFirst, editing } = useJournalSheet();
   const isMobile = useIsMobile();
   const study = useStudy();
@@ -472,10 +474,10 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
         side={isMobile ? "bottom" : "right"}
         className={cn("flex flex-col gap-0 overflow-hidden p-0", isMobile ? "max-h-[94dvh] rounded-t-3xl pb-0" : "w-full sm:max-w-md")}
         data-testid="journal-entry-sheet"
-        onOpenAutoFocus={(e) => e.preventDefault()}
+        onOpenAutoFocus={(e) => { e.preventDefault(); titleRef.current?.focus(); }}
       >
         <SheetHeader className="shrink-0 px-5 pb-2 pt-5 text-left">
-          <SheetTitle className="font-display">{isEdit ? "Edytuj wpis" : "Wpis z budowy"}</SheetTitle>
+          <SheetTitle ref={titleRef} tabIndex={-1} className="font-display outline-hidden">{isEdit ? "Edytuj wpis" : "Wpis z budowy"}</SheetTitle>
           <SheetDescription className="sr-only">
             {isEdit ? "Popraw rodzaj, opis, zdjęcia, temat albo datę wpisu." : "Rodzaj, opis, zdjęcia i temat z materiału. Szkic zostaje po zamknięciu."}
           </SheetDescription>

@@ -1698,3 +1698,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Co robi:** strzałka przesuwa temat do innej kolumny i fokus zostaje na tej samej karcie. Wcześniej karta była odmontowywana, a fokus ginął na początku strony.
 - **Gdzie:** `src/components/study/StudyBoard.tsx` (`moveTo` + `tabIndex={-1}` na `li[data-topic]`).
 - **Testy:** `e2e/study-board-focus.spec.ts`; `study.spec.ts` przechodzi.
+
+## Praca — arkusz wpisu: fokus na tytule po otwarciu (Faza 1.3, 2026-10-22)
+
+- **Co robi:** po otwarciu arkusza „Wpis z budowy” fokus idzie na tytuł. Na telefonie pole tekstu nie wywołuje klawiatury od razu, a czytnik zaczyna od nazwy arkusza.
+- **Gdzie:** `src/components/study/JournalEntrySheet.tsx` (`titleRef`, `onOpenAutoFocus`).
+- **Testy:** `e2e/entry-sheet-focus.spec.ts`; `e2e/journal-*.spec.ts` 8/8.
