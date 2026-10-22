@@ -106,3 +106,26 @@ test("czytnik: spis treści z nagłówków przewija do wybranej sekcji", async (
   await toc.getByRole("button", { name: "Koniec" }).click();
   await expect(reader.getByRole("heading", { name: "Koniec" })).toBeInViewport();
 });
+
+test("telefon: dolny pasek czytnika (44 px), w nagłówku bez Kopiuj i Edytuj @mobile", async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.includes("iphone"), "tylko układ telefonu");
+  const title = `Telefon ${Date.now()}`;
+  await page.getByRole("button", { name: "Nowa notatka" }).click();
+  await page.getByPlaceholder("Tytuł").fill(title);
+  await page.getByPlaceholder("Treść notatki...").fill("Treść do przeczytania na telefonie");
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
+  const card = page.locator("[data-note-idx]").filter({ hasText: title });
+  await card.getByRole("button", { name: "Więcej opcji" }).click();
+  await page.getByRole("dialog", { name: title }).getByRole("button", { name: "Prezentacja" }).click();
+
+  // Sam panel czytnika (arkusz „Więcej opcji” może jeszcze się zamykać z tą samą nazwą).
+  const reader = page.locator("[data-reader-mode]");
+  await expect(reader).toBeVisible();
+  // Na telefonie Edytuj i Kopiuj są tylko w dolnym pasku (nagłówkowe są ukryte), więc każdy jest jeden.
+  const edit = reader.getByRole("button", { name: "Edytuj", exact: true });
+  await expect(edit).toHaveCount(1);
+  await expect(edit).toBeVisible();
+  // Czytnik wchodzi ze skalą 0,94, więc wysokość mierzymy dopiero po animacji.
+  await expect.poll(async () => Math.round((await edit.boundingBox())?.height ?? 0)).toBeGreaterThanOrEqual(44);
+  await expect(reader.getByRole("button", { name: "Kopiuj jako Markdown" })).toHaveCount(1);
+});

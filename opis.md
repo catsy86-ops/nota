@@ -1570,3 +1570,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Historia wersji** (`VersionHistory.tsx`, `VersionHistoryDialog.tsx`): ten sam wzorzec; przycisk i licznik wersji eager, lista z Markdownem leniwie. Przywrócenie zamyka okno.
 - **Zysk:** wejściowy JS 411 708 B → 411 136 B (401,50 KB; próg 402 KB w `e2e/bundle.spec.ts`). Mały, bo Radix i Markdown są też w paczce startowej. `NoteLookPicker` (ikona i okładka) zostaje eager — `NoteCoverStrip` z tego samego pliku jest potrzebny na kaflu.
 - **Testy:** `e2e/share-files.spec.ts`, `search-backup.spec.ts`, `reader.spec.ts`, `a11y.spec.ts` (65/65), `bundle.spec.ts` (budżet wejściowego JS).
+
+## Notatki — czytnik na telefonie: dolny pasek (Fala 4, 2026-10-22)
+
+- **Co robi:** na telefonie (`phone:`) nagłówek czytnika zostaje z tytułem, Pełnym ekranem i Zamknij. Kopiuj, Edytuj, Poprzednia i Następna są w dolnym pasku 44 px (Poprzednia, Kopiuj, Edytuj, Następna). Podpowiedzi klawiszy na telefonie są ukryte.
+- **Gdzie:** `src/components/NoteReader.tsx` (nagłówek: klasy `phone:hidden`; pasek: `hidden phone:flex` przed stopką z podpowiedziami).
+- **Testy:** `e2e/reader.spec.ts` — "telefon: dolny pasek …" (@mobile, iphone-14). Wysokość mierzona przez `expect.poll`, bo czytnik wchodzi ze skalą 0,94. Regresja reader/reader-step/mobile: 36/36.

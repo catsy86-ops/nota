@@ -292,8 +292,9 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                 </Button>
               </>
             )}
+            {/* Na telefonie Kopiuj, Edytuj i kroki przechodzą do dolnego paska — tytuł ma miejsce. */}
             <Button
-              size="icon" variant="ghost" className="h-8 w-8"
+              size="icon" variant="ghost" className="h-8 w-8 phone:hidden"
               onClick={(e) => { void copyNoteToClipboard(note, e.shiftKey ? "text" : "markdown"); }}
               title="Kopiuj jako Markdown (Shift — jako tekst)"
               aria-label="Kopiuj jako Markdown"
@@ -301,16 +302,16 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
               <Copy className="w-4 h-4" />
             </Button>
             {canEdit && (
-              <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs" onClick={() => onEdit(note.id)} title="Edytuj (Enter)">
+              <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-xs phone:hidden" onClick={() => onEdit(note.id)} title="Edytuj (Enter)">
                 <Pencil className="w-3.5 h-3.5" /> Edytuj
               </Button>
             )}
             {onStep && (
               <>
-                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onStep(-1)} disabled={!canPrev} title="Poprzednia notatka (←)" aria-label="Poprzednia notatka">
+                <Button size="icon" variant="ghost" className="h-8 w-8 phone:hidden" onClick={() => onStep(-1)} disabled={!canPrev} title="Poprzednia notatka (←)" aria-label="Poprzednia notatka">
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
-                <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => onStep(1)} disabled={!canNext} title="Następna notatka (→)" aria-label="Następna notatka">
+                <Button size="icon" variant="ghost" className="h-8 w-8 phone:hidden" onClick={() => onStep(1)} disabled={!canNext} title="Następna notatka (→)" aria-label="Następna notatka">
                   <ChevronRight className="w-4 h-4" />
                 </Button>
               </>
@@ -517,7 +518,29 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
           </div>
         </div>
 
-        <div className="border-t border-border/40 px-4 py-1.5 text-2xs text-center text-muted-foreground">
+        {/* Telefon: dolny pasek 44 px zamiast podpowiedzi klawiszy (klawiatury tam nie ma). */}
+        <div className="hidden phone:flex items-stretch gap-1 border-t border-border/40 px-2 py-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))]">
+          {onStep && (
+            <Button variant="ghost" className="h-11 flex-1 gap-1 text-xs" onClick={() => onStep(-1)} disabled={!canPrev} aria-label="Poprzednia notatka">
+              <ChevronLeft className="w-4 h-4" /> Poprzednia
+            </Button>
+          )}
+          <Button variant="ghost" className="h-11 flex-1 gap-1 text-xs" onClick={() => { void copyNoteToClipboard(note, "markdown"); }} aria-label="Kopiuj jako Markdown">
+            <Copy className="w-4 h-4" /> Kopiuj
+          </Button>
+          {canEdit && (
+            <Button variant="ghost" className="h-11 flex-1 gap-1 text-xs" onClick={() => onEdit(note.id)} aria-label="Edytuj">
+              <Pencil className="w-4 h-4" /> Edytuj
+            </Button>
+          )}
+          {onStep && (
+            <Button variant="ghost" className="h-11 flex-1 gap-1 text-xs" onClick={() => onStep(1)} disabled={!canNext} aria-label="Następna notatka">
+              Następna <ChevronRight className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
+
+        <div className="border-t border-border/40 px-4 py-1.5 text-2xs text-center text-muted-foreground phone:hidden">
           {present
             ? <><kbd className="font-mono">+</kbd>/<kbd className="font-mono">-</kbd> czcionka · <kbd className="font-mono">0</kbd> reset · <kbd className="font-mono">Enter</kbd> edytuj · <kbd className="font-mono">Esc</kbd> zamknij</>
             : <><kbd className="font-mono">↑</kbd>/<kbd className="font-mono">↓</kbd> PgUp/PgDn przewiń · <kbd className="font-mono">Enter</kbd> edytuj · Spacja/<kbd className="font-mono">Esc</kbd> zamknij</>}
