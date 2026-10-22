@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDayClock } from "@/lib/dayClock";
 import { addMonths, format, isSameMonth, startOfMonth } from "date-fns";
 import { pl } from "date-fns/locale";
-import { CalendarArrowDown, CalendarRange, FileSpreadsheet, ChevronLeft, ChevronRight, Image as ImageIcon } from "lucide-react";
+import { CalendarArrowDown, CalendarRange, FileSpreadsheet, ChevronLeft, ChevronRight, Image as ImageIcon, Share2 } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { dayKey, expandOccurrences, groupByDay, type Occurrence } from "@/lib/reminderOccurrences";
 import type { Note } from "@/hooks/useNotes";
@@ -380,7 +381,28 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           </ShiftDnd>
 
         </div>
-        <div className="order-9 flex flex-wrap justify-end gap-1 short:col-span-full">
+        {/* Telefon: eksporty w jednym menu „Udostępnij” — pod siatką nie ma trzech wrapujących się przycisków. */}
+        <div className="order-9 flex justify-end sm:hidden short:col-span-full">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button type="button" className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                <Share2 className="w-4 h-4" /> Udostępnij
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuItem onSelect={() => exportCsv()}>
+                <FileSpreadsheet className="w-4 h-4 mr-2" aria-hidden /> Karta czasu (.csv)
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => exportIcs()}>
+                <CalendarArrowDown className="w-4 h-4 mr-2" aria-hidden /> Do kalendarza (.ics)
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => { void exportImage(); }}>
+                <ImageIcon className="w-4 h-4 mr-2" aria-hidden /> Obraz miesiąca (.png)
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div className="order-9 hidden sm:flex flex-wrap justify-end gap-1 short:col-span-full">
           <button type="button" onClick={exportCsv}
             className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
             <FileSpreadsheet className="w-4 h-4" /> Karta czasu (.csv)

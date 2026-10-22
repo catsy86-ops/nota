@@ -369,3 +369,12 @@ test("paleta poleceń znajduje dzień grafiku i otwiera jego okno", async ({ pag
   await expect(page.getByRole("heading", { name: "Grafik", level: 1 })).toBeVisible();
   await expect(page.getByRole("dialog")).toContainText("14 października");
 });
+
+test("telefon: eksporty Grafiku są w menu „Udostępnij” @mobile", async ({ page }, testInfo) => {
+  test.skip(!testInfo.project.name.includes("iphone"), "tylko układ telefonu");
+  await page.goto("/grafik");
+  await page.getByRole("button", { name: "Udostępnij", exact: true }).click();
+  await expect(page.getByRole("menuitem", { name: /Do kalendarza \(\.ics\)/ })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: /Karta czasu/ })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: /Obraz miesiąca/ })).toBeVisible();
+});

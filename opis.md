@@ -1582,3 +1582,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Co robi:** na telefonie nagłówek ma strzałki, miesiąc, „Dziś” i przycisk „⋯”. Menu zawiera „Pobierz .ics (nadchodzące terminy)” i „Drukuj terminy miesiąca”. Na szerszych ekranach przyciski „.ics” i „Drukuj” są jak dotąd.
 - **Gdzie:** `src/components/calendar/ReminderCalendarView.tsx` (nagłówek `<header>`; `DropdownMenu` z `components/ui/dropdown-menu`; `exportAll`, `setPrinting`).
 - **Testy:** `e2e/reminders-calendar.spec.ts` — "telefon: .ics i Drukuj są w menu …" (@mobile) oraz istniejący test .ics (desktop). Regresja kalendarza na desktopie: 15/15 z `calendar-shift-edit`.
+
+## Grafik — eksporty na telefonie w menu „Udostępnij” (Fala 4, 2026-10-22)
+
+- **Co robi:** na telefonie pod siatką zamiast trzech wrapujących się przycisków jest jeden „Udostępnij” z menu: Karta czasu (.csv), Do kalendarza (.ics), Obraz miesiąca (.png). Na szerszych ekranach bez zmian.
+- **Gdzie:** `src/components/shifts/ShiftsView.tsx` (wiersz `order-9`: dwa warianty `sm:hidden` / `hidden sm:flex`; `DropdownMenu`).
+- **Nie zrobione z pozycji „Mniej nad siatką”:** przełącznik „Grafik ▾” przy tytule (`ScheduleSwitcher`) zostaje bez zmian.
+- **Testy:** `e2e/shifts.spec.ts` — "telefon: eksporty Grafiku …" (@mobile); pełny plik na desktopie 26/26.
