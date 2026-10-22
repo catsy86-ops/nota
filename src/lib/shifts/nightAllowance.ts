@@ -6,7 +6,8 @@
 
 /** Minimalna stawka godzinowa wg roku (zł). Aktualizować przy zmianie minimalnego wynagrodzenia. */
 export const MIN_HOURLY_WAGE: Readonly<Record<number, number>> = {
-  // Do sprawdzenia przed rozliczeniem: wartość na 2026 z obwieszczenia o minimalnym wynagrodzeniu.
+  // 2026: rozporządzenie Rady Ministrów z 11.09.2025 r. (Dz.U. 2025 poz. 1242) — 31,40 zł brutto.
+  // 2027 jeszcze nieustalone (projekt przyjęty 9.06.2026, rozporządzenie do 15.09); dopisać po publikacji.
   2026: 31.4,
 };
 
