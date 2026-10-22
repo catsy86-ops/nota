@@ -110,7 +110,8 @@ const BUDGET = {
   // 2026-10-21: 402 581 B po PWA (odświeżanie aktualizacji przy schowaniu karty, otwieranie plików z systemu) — próg 394 KB (decyzja do potwierdzenia).
   // 2026-10-21: 393,1 KB (402 565 B) — próg podniesiony do 396 KB (decyzja użytkownika).
   // 2026-10-21: 400,33 KB po Cofnij w Grafiku (UndoManager w Yjs) — próg 401 KB (decyzja użytkownika).
-  eagerJsGzip: 401 * KB,
+  // 2026-10-22: 411 708 B (402,06 KB) po Fali 3 (quiz, czytnik niemodalny, pigułka zapisu) — próg 403 KB (decyzja użytkownika).
+  eagerJsGzip: 403 * KB,
   // 2026-10-11: 357 KB (index 214 + react/motion/radix/dnd)
   // 2026-10-16: 4,37 → 4,03 MB — `includeAssets` dublował 6 plików z `public/` (łapie je `globPatterns`).
   // 2026-10-17: 4,09 → 3,00 MB — PDF (jsPDF/html2canvas/purify), Statystyki poza precache (cache `static-assets` po pierwszym użyciu).
