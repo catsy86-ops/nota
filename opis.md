@@ -1638,3 +1638,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/components/study/NewSiteDialog.tsx` (okno, id = `siteKey(nazwa)`, zapis `saveSiteCard`); `src/components/study/StudyJournal.tsx` (filtr `used` = budowy z wpisami albo zapisane; pasek budów zawsze; przycisk; pusty stan z drugą akcją). Sprawdzanie nazw: `findSiteByName` w `src/lib/study/sites.ts`.
 - **Ograniczenie:** pasek budów pojawia się dopiero przy pierwszym wpisie albo w tym samym miejscu co wcześniej; w pustym dzienniku nowa budowa jest dostępna i otwiera kartę, ale nie ma jeszcze paska. Lista w pustym dzienniku to świadomy wybór.
 - **Testy:** `e2e/site-new.spec.ts` (utworzenie i otwarcie karty, odrzucenie zajętej nazwy). `e2e/study.spec.ts` 30/30; `lib/study` + `components/study` 376/376.
+
+## Długi — termin zwrotu z przypomnieniem (Fala 5, pkt 5, 2026-10-22)
+
+- **Co robi:** przy wpisie „Pożyczyłem” albo „Pożyczyłem od” można podać termin zwrotu (nieobowiązkowy, nie wcześniej niż dziś). Powstaje notatka „Zwrot od …” albo „Oddać …” z przypomnieniem o 9:00 tego dnia, więc trafia do Dziś, Terminów i powiadomień. Wpis pamięta id tej notatki (`dueNoteId`).
+- **Gdzie:** `src/lib/debts/model.ts` (`DebtEntry.dueNoteId`, zachowywane przez `cleanDebt`); `src/components/debts/DebtsView.tsx` (`AddForm`: pole terminu, walidacja, tworzenie notatki przez prop `addReminderNote`); `src/pages/Index.tsx` (przekazuje `addNote`). Prop zamiast kontekstu, żeby widok dało się testować bez dostawcy notatek.
+- **Ograniczenie:** termin ustawia się przy dodawaniu wpisu, nie przy edycji. Usunięcie wpisu nie kasuje notatki z przypomnieniem (notatka zostaje świadomie, żeby nie zgubić zobowiązania).
+- **Testy:** `e2e/debts-due.spec.ts` (notatka w Przypomnieniach; odrzucenie terminu w przeszłości); `src/components/debts` + `src/lib/debts` 26/26.

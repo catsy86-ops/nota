@@ -14,7 +14,8 @@ import { balances, DEBT_KINDS, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIN
  * Długi: kto ile u nas pożyczył i ile oddał. Góra — podsumowanie i szybki wpis,
  * dół — osoby z saldem; stuknięcie w osobę otwiera jej historię.
  */
-export function DebtsView() {
+/** `addReminderNote` — tworzy notatkę z przypomnieniem (`Index`); bez niego termin zwrotu nie zapisuje przypomnienia. */
+export function DebtsView({ addReminderNote }: { addReminderNote?: (title: string, content: string, at: number) => string }) {
   const entries = useDebts();
   const people = useMemo(() => balances(entries), [entries]);
   const sums = useMemo(() => totals(people), [people]);
@@ -30,7 +31,7 @@ export function DebtsView() {
       </header>
 
       <Summary owedToMe={sums.owedToMe} iOwe={sums.iOwe} />
-      <AddForm entries={entries} />
+      <AddForm entries={entries} addReminderNote={addReminderNote} />
       <People people={people} onOpen={setOpenKey} />
 
       <PersonSheet person={openPerson} onClose={() => setOpenKey(null)} />
@@ -56,13 +57,15 @@ function Summary({ owedToMe, iOwe }: { owedToMe: number; iOwe: number }) {
 const KIND_LABEL: Record<DebtKind, string> = { lent: "Pożyczyłem", repaid: "Oddał mi", borrowed: "Pożyczyłem od", returned: "Oddałem" };
 
 /** Dodawanie: osoba, rodzaj, kwota, dzień i notatka. Po zapisie zostaje osoba — kolejne pozycje dopisuje się szybciej. */
-function AddForm({ entries }: { entries: DebtEntry[] }) {
+function AddForm({ entries, addReminderNote }: { entries: DebtEntry[]; addReminderNote?: (title: string, content: string, at: number) => string }) {
   const [person, setPerson] = useState("");
   const [kind, setKind] = useState<DebtKind>("lent");
   const [amount, setAmount] = useState("");
   const [at, setAt] = useState(localDayKey());
   const [note, setNote] = useState("");
-  const [error, setError] = useState<{ field: "person" | "amount"; text: string } | null>(null);
+  // Termin zwrotu (dzień, 9:00) — tylko przy pożyczce i długu; zapisuje się jako notatka z przypomnieniem.
+  const [due, setDue] = useState("");
+  const [error, setError] = useState<{ field: "person" | "amount" | "due"; text: string } | null>(null);
   const amountRef = useRef<HTMLInputElement>(null);
   const uid = useId();
   const people = useMemo(() => knownPeople(entries), [entries]);
@@ -71,11 +74,21 @@ function AddForm({ entries }: { entries: DebtEntry[] }) {
     e.preventDefault();
     if (!person.trim()) { setError({ field: "person", text: "Podaj, kto to jest — imię albo nazwę." }); return; }
     if (parseAmount(amount) === null) { setError({ field: "amount", text: "Wpisz kwotę większą od zera, np. 150 albo 99,90." }); return; }
+    const withDue = (kind === "lent" || kind === "borrowed") && !!due;
+    if (withDue && due < localDayKey()) { setError({ field: "due", text: "Termin zwrotu nie może być w przeszłości." }); return; }
     const entry = addDebtFromText(person, kind, amount, note, at || undefined);
     if (!entry) { setError({ field: "person", text: "Nie udało się zapisać — sprawdź nazwę i datę." }); return; }
+    if (withDue && addReminderNote) {
+      // Notatka z przypomnieniem trafia do Dziś, Terminów i powiadomień; wpis pamięta jej id.
+      const reminderAt = new Date(`${due}T09:00:00`).getTime();
+      const title = kind === "lent" ? `Zwrot od ${entry.person}: ${formatAmount(entry.amount)}` : `Oddać ${entry.person}: ${formatAmount(entry.amount)}`;
+      const noteId = addReminderNote(title, entry.note, reminderAt);
+      updateDebt({ ...entry, dueNoteId: noteId });
+    }
     setError(null);
     setAmount("");
     setNote("");
+    setDue("");
     haptic("tap");
     toast.success(`${KIND_LABEL[kind]}: ${entry.person}, ${formatAmount(entry.amount)}`, {
       action: { label: "Cofnij", onClick: () => { removeDebt(entry.id); } },
@@ -151,6 +164,21 @@ function AddForm({ entries }: { entries: DebtEntry[] }) {
           <Input id={`${uid}-note`} value={note} maxLength={DEBT_NOTE_MAX} placeholder="np. zaliczka na materiał" onChange={(e) => setNote(e.target.value)} />
         </div>
       </div>
+
+      {(kind === "lent" || kind === "borrowed") && (
+        <div className="space-y-1.5">
+          <label htmlFor={`${uid}-due`} className="text-sm font-medium">Termin zwrotu <span className="font-normal text-muted-foreground">(z przypomnieniem o 9:00, nieobowiązkowe)</span></label>
+          <Input
+            id={`${uid}-due`}
+            type="date"
+            value={due}
+            min={localDayKey()}
+            aria-invalid={error?.field === "due" || undefined}
+            aria-describedby={error?.field === "due" ? `${uid}-err` : undefined}
+            onChange={(e) => { setDue(e.target.value); setError(null); }}
+          />
+        </div>
+      )}
 
       {error && <p id={`${uid}-err`} role="alert" className="text-sm text-destructive-ink">{error.text}</p>}
 

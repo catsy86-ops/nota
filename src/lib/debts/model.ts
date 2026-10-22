@@ -27,6 +27,8 @@ export interface DebtEntry {
   note: string;
   /** Kiedy wpis dodano (ms) — tie-break przy tym samym dniu. */
   created: number;
+  /** Notatka z przypomnieniem o zwrocie (termin ustawiony przy dodawaniu). Brak = bez terminu. */
+  dueNoteId?: string;
 }
 
 export const DEBT_PERSON_MAX = 40;
@@ -50,7 +52,8 @@ export function cleanDebt(raw: unknown): DebtEntry | null {
   if (typeof e.at !== "string" || !DAY_RE.test(e.at)) return null;
   const created = typeof e.created === "number" && Number.isFinite(e.created) ? e.created : 0;
   const note = typeof e.note === "string" ? e.note.trim().slice(0, DEBT_NOTE_MAX) : "";
-  return { id: e.id, person, kind: e.kind as DebtKind, amount: e.amount, at: e.at, note, created };
+  const dueNoteId = typeof e.dueNoteId === "string" && e.dueNoteId && e.dueNoteId.length <= ID_MAX ? e.dueNoteId : undefined;
+  return { id: e.id, person, kind: e.kind as DebtKind, amount: e.amount, at: e.at, note, created, ...(dueNoteId ? { dueNoteId } : {}) };
 }
 
 /** Spacje na brzegach i w środku → jedna spacja. */

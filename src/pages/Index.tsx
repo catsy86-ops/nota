@@ -886,7 +886,7 @@ const Index = () => {
           {view === "debts" && (
             <ViewErrorBoundary name="Długi">
               <Suspense fallback={<div className="min-h-[60dvh]" aria-hidden />}>
-                <DebtsView />
+                <DebtsView addReminderNote={(title, content, at) => addNote(title, content, prefs.defaultNoteColor, [], at)} />
               </Suspense>
             </ViewErrorBoundary>
           )}
