@@ -5,7 +5,8 @@ import type { Shortage } from "@/lib/study/shortages";
 
 const setSiteShortages = vi.fn();
 const toastWithUndo = vi.fn();
-vi.mock("@/lib/study/store", () => ({ setSiteShortages: (...a: unknown[]) => setSiteShortages(...a) }));
+const studyMock = vi.fn((): { shortagesDropped?: Record<string, number> } => ({}));
+vi.mock("@/lib/study/store", () => ({ setSiteShortages: (...a: unknown[]) => setSiteShortages(...a), useStudy: () => studyMock() }));
 vi.mock("@/lib/undoToast", () => ({ toastWithUndo: (...a: unknown[]) => toastWithUndo(...a) }));
 vi.mock("@/lib/haptics", () => ({ haptic: vi.fn() }));
 
@@ -88,5 +89,12 @@ describe("SiteShortagesPanel — braki materiału", () => {
     render(<SiteShortagesPanel site={siteWith(full)} />);
     expect(screen.getByText(/Lista pełna \(40\)/)).toBeInTheDocument();
     expect(screen.queryByLabelText("Czego brakuje")).toBeNull();
+  });
+
+  it("braki ponad limit od innego urządzenia: panel mówi, ile nie widać", () => {
+    studyMock.mockReturnValue({ shortagesDropped: { dom: 3 } });
+    render(<SiteShortagesPanel site={siteWith([short({ id: "q1" })])} />);
+    expect(screen.getByText(/Ponad 40 braków: 3 braki nie widać/)).toBeInTheDocument();
+    studyMock.mockReturnValue({});
   });
 });

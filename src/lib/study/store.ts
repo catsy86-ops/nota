@@ -12,7 +12,7 @@ import { cleanGeo, type GeoPoint } from "./geo";
 import { BOSS_NAME_MAX, cleanBoss, cleanGroup, normalizeGroupLink, normalizePhone } from "./boss";
 import { cleanSite, entrySiteId, resolveSite, siteDirectory, SITE_NAME_MAX, type SiteCard, type SiteInfo } from "./sites";
 import { cleanStages, type SiteStage } from "./stages";
-import { cleanShortages, logOrder, type OrderLogEntry, type Shortage } from "./shortages";
+import { cleanShortages, cleanShortagesCounted, logOrder, type OrderLogEntry, type Shortage } from "./shortages";
 import { siteOrder } from "./order";
 import { cleanSiteHours, type SiteHours } from "./siteHours";
 import { cleanSiteDocs, type SiteDoc } from "./siteDocs";
@@ -106,6 +106,16 @@ export function useStudyLists() {
   return useMemo(() => studyLists(custom), [custom]);
 }
 
+/** Braki ponad limit na budowę — liczone z surowego dokumentu, zanim `cleanSite` je przytnie. */
+function droppedShortages(sites: Record<string, { shortages?: unknown }>): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const [id, card] of Object.entries(sites)) {
+    const d = cleanShortagesCounted(card.shortages).dropped;
+    if (d > 0) out[id] = d;
+  }
+  return out;
+}
+
 const DEFAULTS: StudyState = { board: {}, checked: {}, bestPercent: null, rounds: 0, missed: {}, journal: [], site: "", sites: {}, streak: 0, lastDay: null, review: {}, boss: null, group: null, days: [], custom: [] };
 
 let lastRaw: StudyState | null = null;
@@ -114,7 +124,7 @@ let lastClean: StudyState = DEFAULTS;
 /** Projekcja dokumentu przefiltrowana przez materiał; ta sama referencja, dopóki dokument się nie zmieni. */
 export function getStudy(): StudyState {
   const raw = yStudy.get();
-  if (raw !== lastRaw) { lastRaw = raw; lastClean = sanitizeStudy(DEFAULTS, raw); }
+  if (raw !== lastRaw) { lastRaw = raw; lastClean = { ...sanitizeStudy(DEFAULTS, raw), shortagesDropped: droppedShortages(raw.sites) }; }
   return lastClean;
 }
 

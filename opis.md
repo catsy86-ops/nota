@@ -1736,3 +1736,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **2.4 (częściowo):** z `JournalEntrySheet` wyciągnięto czystą funkcję `addShortagesFromDictation` (`lib/study/shortages.ts`): dopisuje braki z wypowiedzi i zwraca liczbę odrzuconych przy pełnej liście. Testy w `shortages.test.ts`. Reszta komponentu (906 linii) bez zmian — kolejne kroki to osobne funkcje z tego samego pliku.
 - **2.5:** siedem powtórzeń `siteDirectory(...).find((x) => x.id === id)` w `store.ts` zastąpiono helperem `findSite(s, id)`. Zachowanie bez zmian.
 - **Testy:** `src/lib/study` + `src/components/study` 387/387; `e2e/journal-*.spec.ts` i `e2e/site-shortages.spec.ts` 11/11.
+
+## Praca — licznik braków ukrytych ponad limit (Faza 2.2, 2026-10-22)
+
+- **Co robi:** gdy budowa ma więcej niż 40 braków (także od innego urządzenia), panel pokazuje ostrzeżenie z liczbą ukrytych pozycji i wyjaśnieniem, że nie widać najnowszych.
+- **Gdzie:** `src/lib/study/store.ts` (`droppedShortages`, `getStudy` dokłada `shortagesDropped`); `src/lib/study/yStudy.ts` (pole pochodne w `StudyState`, nie zapisywane); `src/components/study/SiteShortagesPanel.tsx`.
+- **Ograniczenie:** licznik policzony z dokumentu przed przycięciem; zostają najstarsze 40 (decyzja o najnowszych czeka na właściciela).
+- **Testy:** `src/components/study/SiteShortagesPanel.test.tsx` (ostrzeżenie); `src/lib/study` 352/352 razem z panelem.

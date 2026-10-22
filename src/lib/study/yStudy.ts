@@ -79,6 +79,8 @@ export const JOURNAL_SOLUTION_MAX = 500;
 export const SITE_MAX = 120;
 
 export interface StudyState {
+  /** Pochodne (nie zapisywane): ile braków każdej budowy nie weszło przez limit i nie jest widoczne. */
+  shortagesDropped?: Record<string, number>;
   /** Kolumna tablicy per temat; brak wpisu = „Do nauki”. */
   board: Record<string, Column>;
   /** Odhaczone punkty listy do nauki. */

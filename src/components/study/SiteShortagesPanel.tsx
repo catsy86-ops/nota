@@ -6,7 +6,8 @@ import { haptic } from "@/lib/haptics";
 import { useDictation } from "@/hooks/useDictation";
 import { cn } from "@/lib/utils";
 import { toastWithUndo } from "@/lib/undoToast";
-import { setSiteShortages } from "@/lib/study/store";
+import { setSiteShortages, useStudy } from "@/lib/study/store";
+import { pluralPl } from "@/lib/plural";
 import type { SiteInfo } from "@/lib/study/sites";
 import {
   addShortage, clearDelivered, dueDayValue, dueFromDayValue, nextStatus, removeShortage, setShortageDue, setShortageStatus,
@@ -28,6 +29,8 @@ const STATUS_CLASS: Record<ShortageStatus, string> = {
  */
 export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
   const list = site.shortages ?? [];
+  // Pozycje ponad limit od innego urządzenia: nie są widoczne (zostają najstarsze), więc mówimy o tym wprost.
+  const dropped = useStudy().shortagesDropped?.[site.id] ?? 0;
   const [text, setText] = useState("");
   const [qty, setQty] = useState("");
   // Fokus wraca do pola dodawania po usunięciu (wiersz znika); komunikat dla czytnika po zmianie statusu.
@@ -149,6 +152,9 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
         </ul>
       )}
 
+      {dropped > 0 && (
+        <p role="status" className="text-xs text-warning-ink">Ponad {SHORTAGES_MAX} braków: {dropped} {pluralPl(dropped, ["brak", "braki", "braków"])} nie widać (najnowsze). Usuń dostarczone, żeby zrobić miejsce.</p>
+      )}
       {list.length >= SHORTAGES_MAX && (
         <p className="text-xs text-muted-foreground">Lista pełna ({SHORTAGES_MAX}). Usuń dostarczone, żeby dodać nowe braki.</p>
       )}
