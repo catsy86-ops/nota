@@ -391,3 +391,27 @@ describe("Nauka — wpis jako mapa pól (D5)", () => {
     expect(d.journal.find((e) => e.id === "k")).toMatchObject({ id: "k", checked: ["c1"] });
   });
 });
+
+describe("zapis wpisu a pola z nowszej wersji", () => {
+  it("pole nieznane tej wersji zostaje przy zapisie wpisu bez niego", () => {
+    const doc = new Y.Doc();
+    const study = createYStudy(doc);
+    const entry = { id: "w1", at: 1_700_000_000_000, kind: "ok", topic: null, text: "Montaż", site: "Lipowa 9", checked: [], images: [] } as unknown as JournalEntry;
+    study.addEntry(entry);
+    (doc.getMap("studyJournal").get("w1") as Y.Map<unknown>).set("przyszlePole", 42);
+    study.updateEntry({ ...entry, text: "Montaż poprawiony" });
+    const map = doc.getMap("studyJournal").get("w1") as Y.Map<unknown>;
+    expect(map.get("przyszlePole")).toBe(42);
+    expect(map.get("text")).toBe("Montaż poprawiony");
+  });
+
+  it("znane pole usunięte z wpisu nadal znika", () => {
+    const doc = new Y.Doc();
+    const study = createYStudy(doc);
+    const entry = { id: "w2", at: 1_700_000_000_000, kind: "ok", topic: null, text: "A", site: "X", checked: [], images: [], solution: "naprawione" } as unknown as JournalEntry;
+    study.addEntry(entry);
+    const { solution: _s, ...without } = entry as JournalEntry & { solution?: string };
+    study.updateEntry(without as JournalEntry);
+    expect((doc.getMap("studyJournal").get("w2") as Y.Map<unknown>).has("solution")).toBe(false);
+  });
+});

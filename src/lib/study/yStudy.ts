@@ -314,6 +314,15 @@ export function stateFromDump(d: StudyDump): StudyState {
 // Klucze zdjęć dziennika w dokumencie — w osobnym, małym module (rdzeń synchronizacji go używa).
 export { journalRefsIn } from "./journalRefs";
 
+/**
+ * Pola wpisu, które ta wersja zna. Przy zapisie kasujemy tylko te, których brak w `next`;
+ * pola z nowszej wersji (nieznane tutaj) zostają, żeby stara edycja ich nie wycinała.
+ */
+export const JOURNAL_ENTRY_KEYS: ReadonlySet<string> = new Set([
+  "id", "at", "kind", "topic", "text", "site", "siteId", "checked", "images", "recordings",
+  "resolved", "solution", "test", "fittings", "stage", "geo",
+]);
+
 export function createYStudy(doc: Y.Doc) {
   /** Wpisy dziennika: id → mapa pól (D5), starsze zapisy to zwykłe obiekty (`journalFields`). */
   const journal = doc.getMap<unknown>("studyJournal");
@@ -353,7 +362,7 @@ export function createYStudy(doc: Y.Doc) {
       journal.set(id, new Y.Map<unknown>(Object.entries(next).filter(([, v]) => v !== undefined)));
       return;
     }
-    for (const k of Array.from(cur.keys())) if (next[k] === undefined) cur.delete(k);
+    for (const k of Array.from(cur.keys())) if (next[k] === undefined && JOURNAL_ENTRY_KEYS.has(k)) cur.delete(k);
     // Pole zapisujemy tylko, gdy się zmieniło — brak zbędnych zapisów, które nadpisywałyby cudze zmiany.
     for (const [k, v] of Object.entries(next)) {
       if (v !== undefined && JSON.stringify(cur.get(k)) !== JSON.stringify(v)) cur.set(k, v);
