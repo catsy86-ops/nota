@@ -13,6 +13,7 @@ import { useStudyReady } from "@/lib/study/data";
 import { closeJournalSheet, JOURNAL_ENTRY_PARAM, JOURNAL_VOICE_PARAM, openJournalSheet, requestVoiceOnOpen, useJournalSheet } from "@/lib/study/entrySheet";
 import { JOURNAL_REPORT_PARAM, parseReportParam, requestJournalReport, useJournalReportRequest } from "@/lib/study/reportLink";
 import { useEffect, useState } from "react";
+import { useDayClock } from "@/lib/dayClock";
 import { MOBILE_QUERY } from "@/hooks/use-mobile";
 import { readStudyTab, writeStudyTab } from "@/lib/study/tab";
 import { QuizPanel, type QuizScope } from "./QuizPanel";
@@ -105,6 +106,8 @@ function MasteryStrip() {
 /** „Na dziś: N” pod paskiem opanowania — skrót do rundy powtórek z każdej zakładki. */
 function DueTodayChip({ onClick }: { onClick: () => void }) {
   const study = useStudy();
+  // Po północy liczba „na dziś” ma się przeliczyć sama, bez przeładowania.
+  useDayClock();
   const n = dueToday(study).length;
   if (n === 0) return null;
   return (

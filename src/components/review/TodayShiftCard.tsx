@@ -2,6 +2,7 @@ import { CalendarClock, NotebookPen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { localDayKey } from "@/lib/dayDone";
 import { useShifts, useShiftsReady } from "@/lib/shifts";
+import { dayType } from "@/lib/shifts/model";
 
 /**
  * Pierwsza rzecz w widoku „Dziś”: dzisiejsza zmiana z Grafiku (albo „wolne”), obok skrótów
@@ -18,7 +19,11 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote }: { onOpenShifts: ()
   let shift: string;
   if (!ready) shift = "Grafik się wczytuje…";
   else if (!entry) shift = "Dziś nie ma zmiany w grafiku.";
-  else if (type) shift = `${type.name}, ${type.start}–${type.end}`;
+  // Godziny wpisane na ten dzień wygrywają z godzinami rodzaju (tak jak w Kalendarzu); nieobecność bez godzin.
+  else if (type) {
+    const t = dayType(type, entry);
+    shift = t.kind === "absence" ? t.name : `${t.name}, ${t.start}–${t.end}`;
+  }
   else shift = "Zaplanowana zmiana (rodzaj usunięty).";
 
   return (

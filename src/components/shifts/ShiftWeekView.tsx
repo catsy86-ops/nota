@@ -3,7 +3,7 @@ import { format, isSameDay } from "date-fns";
 import { pl } from "date-fns/locale";
 import { StickyNote } from "lucide-react";
 import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
-import { dayKeyCommand, dayType, entryMinutes, formatDuration, formatHoursShort, holidayName, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType } from "@/lib/shifts";
+import { dayKeyCommand, dayType, entryMinutesOn, formatDuration, formatHoursShort, holidayName, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType } from "@/lib/shifts";
 import { addDaysToKey, parseDayKey, weekKeys } from "@/lib/week";
 import { cn } from "@/lib/utils";
 import { useToday } from "@/hooks/useToday";
@@ -167,7 +167,7 @@ export const ShiftWeekView = memo(function ShiftWeekView({
                         </span>
                         {!absence && (
                           <span className="text-xs tabular-nums text-muted-foreground">
-                            {type.start}–{type.end} · {formatHoursShort(entryMinutes(type, entry))} h
+                            {type.start}–{type.end} · {formatHoursShort(entryMinutesOn(type, entry, key))} h
                           </span>
                         )}
                       </span>

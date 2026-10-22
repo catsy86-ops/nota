@@ -1454,3 +1454,73 @@ Poprawki z przeglądu kodu z 2026-10-20 (`code-review-2026-10-20.md`, usunięty 
 - **Commit:** `1b8bcf8` (2026-10-20, L1–L20).
 - **Commit (L14, udostępnianie):** `1380f10` (2026-10-20).
 
+
+## Praca → Dziennik budowy — lista przed wejściem na budowę (2026-10-22)
+
+Co robi: na górze Dziennika karta „Przed wejściem” dla dzisiejszej budowy. Lista stałych punktów (ochrona, narzędzia, materiał, zgłoszenie u kierownika, zawór, miejsce pracy, apteczka) plus punkty z karty budowy, które dziś mają znaczenie: dostęp do bramy, braki, dostawa na dziś, następny etap, otwarte problemy, zgłoszenia serwisowe. Odhaczasz punkty i „Wchodzę” zapisuje godzinę wejścia; karta pokazuje pieczątkę „Wejście 07:12”. Stałą listę można zmienić („Zmień listę”), wspólną dla wszystkich budów; „Przywróć domyślną” cofa do wzorca.
+
+Gdzie:
+- `src/lib/study/entryCheck.ts` — czysta logika: `DEFAULT_CHECK_ITEMS`, `siteContextItems` (punkty z karty), `checkStatus`, `toggleCheck`, `enterSite`, `reopenCheck`, `addCheckItem`, `cleanCheckItems`, `cleanRecord`, `keepFrom`, `checkLine`.
+- `src/lib/study/yEntryCheck.ts` — warstwa Yjs: mapa `studyEntryCheck` (klucz `items` = własna lista, klucze `r␁budowa␁dzień` = odhaczenia). `setRecord` przy zapisie usuwa dni starsze niż 120.
+- `src/lib/study/entryCheckStore.ts` — hook `useEntryCheck` i akcje dla widoków.
+- `src/components/study/EntryCheck.tsx` — `EntryCheckCard` (karta nad Dziennikiem, wybór budowy, pieczątka), `EntryCheckDialog` (okno z dużymi polami), `ItemsEditor` (zmiana listy).
+- `src/components/study/StudyJournal.tsx` — montaż karty przed przypomnieniami.
+- `src/lib/exportNotes.ts`, `src/lib/noteSchema.ts` — pole `entryCheck` w kopii (sekcja `entryCheck` obok `debts`); przywracanie scala, nie kasuje.
+- `src/index.css` — `.entry-stamp` i animacja `entry-stamp` (wyłączona przy `reduced motion`).
+- `eslint.config.js` — `yEntryCheck.ts` i jego test na liście wyjątków od importu `yjs` (jak `yDebts`).
+
+Jak działa: domyślna budowa to ta z dzisiejszym wpisem, potem bieżąca budowa arkusza, potem ostatnio używana. Odhaczenia są per budowa i dzień, więc nowy dzień zaczyna od zera. Id punktów z karty (`ctx-…`) są stałe dla rodzaju punktu, więc odhaczenie przeżywa zmianę treści (np. dojście kolejnego braku). Postęp liczy tylko punkty, które są dziś na liście — odhaczenie usuniętego punktu nie zawyża wyniku. Stałe punkty mają id `k-…` (własne) albo domyślne; zapis listy zastępuje całą listę (ostatni zapis wygrywa).
+
+Ograniczenia i pułapki:
+- Etap z karty pojawia się tylko, gdy budowa ma zapisaną listę etapów (nie z listy domyślnej).
+- Dostawa „na dziś” to zamówienie z datą dostawy ≤ koniec dzisiejszego dnia.
+- Starsza wersja aplikacji nie zna pola `entryCheck` i przy zapisie kopii je pomija; odhaczenia z nowszego telefonu nie wrócą ze starszej kopii.
+- Budżet paczki startowej (401 KB) został zachowany: moduły listy są leniwe, a w `exportNotes.ts` ładowane tylko przy kopii. Wcześniej zmiana przekraczała próg o ~100 B; zwolniono to usunięciem nieczytanego pola `emoji` w `sidebarItems.ts`.
+
+Testy:
+- `src/lib/study/entryCheck.test.ts` — model (czyszczenie, odhaczanie, postęp, punkty z karty, granica 120 dni).
+- `src/lib/study/yEntryCheck.test.ts` — dwa dokumenty Yjs (lista i odhaczenia scalają się, kopia nie nadpisuje).
+- `src/lib/fullBackup.test.ts` — „lista przed wejściem wraca z kopii”.
+- `e2e/entry-check.spec.ts` — punkt z karty, odhaczanie, własny punkt, „Wchodzę” z godziną, po przeładowaniu „Cofnij wejście”.
+
+Commit: brak (zmiany niezacommitowane, na prośbę).
+
+## Plan działów — Fala 1 (błędy i utrata danych, 2026-10-22)
+
+Źródło: `docs/plan-dzialy-2026-10-22.md`. Zmiany niezacommitowane.
+
+- **Grafik — noc zmiany czasu.** Komórka siatki, okno dnia i widok tygodnia liczą czas przez `entryMinutesOn(type, entry, dzień)` (`src/components/shifts/ShiftMonthGrid.tsx`, `DayDialog.tsx`, `ShiftWeekView.tsx`), więc 25.10 pokazuje 9 h jak rachunek. Test: `src/lib/shifts/shifts.test.ts`.
+- **Grafik — start = koniec.** `ShiftTypeDialog.tsx` (`sameHours`) i `DayDialog.tsx` (`customOk`, `invalid`) odrzucają równe godziny zamiast zapisać 24 h.
+- **Grafik — `.ics` wielu grafików.** `src/lib/shifts/ics.ts`: `icsScope(scheduleId)` daje klucz listy wysłanych dni i prefiks UID. Grafik główny zachowuje dawne wartości (`shift-…`, `kaczy:shifts.icsExported`), pozostałe mają własne. `ShiftsView.tsx` `exportIcs` używa zakresu aktywnego grafiku. Test: `shifts.test.ts`.
+- **Grafik — „Skończyłem teraz” po końcu zmiany.** `summary.ts` `recentlyEndedShift` (okno `FINISH_GRACE_MS` = 4 h); `NowCard.tsx` `EndedCard` pokazuje zakończoną zmianę z przyciskiem. Test: `shifts.test.ts`.
+- **Terminy — „Jutro” i „+1 h” na kaflu.** `NoteCardBody.tsx` używa `snoozeTarget` (odłożenie jednego wystąpienia), zamiast przesuwać całą serię.
+- **Terminy — stary termin w pickerze.** `ReminderPicker.tsx` `openChange` odświeża stan z notatki przy każdym otwarciu.
+- **Kalendarz — edycja odłożonego wystąpienia.** `ReminderCalendarView.tsx` `openEdit` przekazuje `base` (termin serii), `handleAttach` zapisuje go z powrotem; `ReminderQuickAddDialog.tsx` `handleSaveEdit` przekazuje `edit.base`. Seria nie przesuwa się.
+- **Kalendarz — godzina z języka naturalnego.** `ReminderQuickAddDialog.tsx` (`parsed`): godzina zaraz po dacie („jutro 15:00”, „jutro o 15”) trafia do pola czasu, nie do tytułu. Samotna liczba („jutro 2 kupić”) nie jest godziną. Bez osobnego testu jednostkowego (logika w komponencie); sprawdzone ręcznie tylko w testach istniejących.
+- **Skrzynka.** `InboxCapture.tsx` to wieloliniowe pole: Enter zapisuje, Shift+Enter nowa linia, widoczny fokus (`focus-within`). `inbox.ts` `captureParts`: za długa pierwsza linia nie ginie — początek to tytuł, reszta idzie do treści. `Index.tsx` `expandAddNote`: w Skrzynce „+” ustawia kursor w polu zamiast przechodzić do Notatek. Testy: `InboxCapture.test.tsx`.
+- **Dziennik — dyktowanie.** `JournalEntrySheet.tsx`: braki bez budowy nie przerywają zapisu tekstu; błąd pokazywany po dopisaniu treści.
+- **Dziennik — nagrania i podpis.** `StudyJournal.tsx`: nagrania wpisu widoczne na liście (`AudioPreview`, leniwie); podpis „Nagranie” / „Zdjęcie” / „Wpis” zamiast „Sprawdzone punkty listy” przy samym zdjęciu.
+- **Dziennik — zamknięcie karty budowy.** `SiteCardDialog.tsx` `close`: zamknięcie z niezapisaną zmianą zapisuje kartę (toast potwierdza).
+- **Dziennik — zdjęcia.** `JournalEntrySheet.tsx`: przyciski na zdjęciu mają 44 px pola dotyku na telefonie (`coarse:after:`), usunięcie zdjęcia ma „Cofnij” (zdjęcie wraca na swoje miejsce).
+- **Dziennik i Nauka — „na dziś” po północy.** `useDayClock()` w `StudyView.tsx` (`DueTodayChip`), `QuizPanel.tsx`, `StudyBoard.tsx`, `StudyJournal.tsx` (przypomnienia).
+- **Ćwiczenia — godzina przypomnienia.** `TrainingSection.tsx`: zapis przy wyjściu z pola (albo Enter), nie przy każdym znaku — wcześniej każdy znak przenosił notatkę do kosza.
+- **Ćwiczenia — ciężar.** `parseKg`: wartość spoza kroku 0,5 kg jest odrzucana z komunikatem, zamiast zapisać zaokrągloną po cichu.
+- **Długi — pasek spłaty.** `src/lib/debts/model.ts` `repaidShare(entries)`: liczy spłatę z obu stron salda, 100% tylko przy zerze, `floor` (maks. 99). Test: `model.test.ts`. Kolory historii (`DebtsView.tsx`) zgodne z listą.
+- **Skarbiec — wykrycie rozjazdu.** `privateNotes.ts`: sesja pamięta odcisk metadanych (`sessionFingerprint`: epoch, sól, klucz opakowany, kod sprawdzający). Sam `epoch` nie wystarcza — dwa skarbce założone offline mają oba epoch 1. Test: `privateNotes.test.ts` („dwa skarbce założone offline…”).
+
+Testy zielone: `npx vitest run` 1826/1826, `npx eslint .` bez błędów (16 ostrzeżeń jak przed zmianami), e2e działów: `entry-check`, `study`, `journal-*`, `entry-dictation`, `shifts*`, `calendar-shift-edit`, `reminders-calendar`, `inbox-today`, `site-*`, `today-study`, `private-notes`, `mobile-layout`.
+
+**Budżet paczki startowej: przekroczony** (410 791 B wobec progu 410 624 B, +167 B). Zmiany w komponentach ładowanych od razu: `ReminderPicker.tsx` (~52 B), `Index.tsx` (~19 B), `NoteCardBody.tsx` (~20 B) i drobne pozostałe. Próg podnosi wyłącznie właściciel — decyzja otwarta.
+
+## Dziś — karta „Trening mózgu” (Neuroklik, 2026-10-22)
+
+Co robi: na stronie Dziś karta z podpowiedzią względem dzisiejszej zmiany z Grafiku: „Rozgrzewka przed pracą” (do 3 h przed startem), „Trening mózgu po zmianie” (w trakcie zmiany), „Trening po pracy” (do 2 h po końcu) albo „Codzienny trening mózgu” (dzień bez zmiany). Przycisk „Otwórz trening” otwiera https://neuroklik.vercel.app/ w nowej karcie. „Przypomnij” tworzy notatkę z przypomnieniem: 30 min przed startem, albo 10 min po końcu zmiany w trakcie pracy.
+
+Gdzie:
+- `src/lib/brainTraining.ts` — `NEUROKLIK_URL`, `brainPlan(data, now)` (tryby przed/w pracy/po/wolne i godzina przypomnienia).
+- `src/components/review/BrainTrainingCard.tsx` — karta (leniwa).
+- `src/pages/Index.tsx` — montaż pod kartą powtórek na Dziś; `onRemind` tworzy notatkę przez `addNote`.
+
+Ograniczenia: Notatnik nie ma dostępu do danych Neuroklik (wynik, serie); karta tylko otwiera stronę. Osadzenie w ramce odrzucone przy wyborze — strona jest otwierana w nowej karcie. Przypomnienie to zwykła notatka z terminem (działa jak inne przypomnienia, także offline).
+
+Testy: `src/lib/brainTraining.test.ts` (4 przypadki). Budżet paczki startowej: +124 B w `Index.tsx` (już wcześniej przekroczony, patrz sekcja Fala 1).

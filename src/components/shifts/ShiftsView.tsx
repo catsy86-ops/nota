@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { dayKey, expandOccurrences, groupByDay, type Occurrence } from "@/lib/reminderOccurrences";
 import type { Note } from "@/hooks/useNotes";
 import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
-import { DEFAULT_SHIFT_TYPES, addDefaultShiftTypes, SHIFTS_EXPORTED_KEY, applyPatternToStore, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
@@ -39,7 +39,7 @@ function brushHint(brush: Brush, typesById: Map<string, ShiftType>, hours: Shift
   return `${TAP} dzień, żeby nanieść: ${name}${hours ? ` ${hours.start}–${hours.end}` : ""}. Ponownie — zdejmuje.`;
 }
 
-const exportedStore = createPersistedStore<string[]>(SHIFTS_EXPORTED_KEY, [], {
+const exportedStoreFor = (key: string) => createPersistedStore<string[]>(key, [], {
   merge: (defaults, stored) => (Array.isArray(stored) ? stored.filter((k): k is string => typeof k === "string") : defaults),
 });
 
@@ -251,13 +251,15 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   function exportIcs() {
     const from = dayKey(shownMonth);
     const keys = exportableShiftDays(data, from);
-    const cancelled = cancelledShiftDays(data, exportedStore.get(), from);
+    const scope = icsScope(activeScheduleId());
+    const exported = exportedStoreFor(scope.exportedKey);
+    const cancelled = cancelledShiftDays(data, exported.get(), from);
     if (keys.length === 0 && cancelled.length === 0) {
       toast("Brak zmian do eksportu", { description: "Nanieś zmiany w tym lub kolejnych miesiącach." });
       return;
     }
-    download(buildShiftsIcs(data, keys, { cancelled }), `grafik-${format(shownMonth, "yyyy-MM")}.ics`, "text/calendar;charset=utf-8");
-    exportedStore.set(exportedAfter(exportedStore.get(), keys, from));
+    download(buildShiftsIcs(data, keys, { cancelled, uidPrefix: scope.uidPrefix }), `grafik-${format(shownMonth, "yyyy-MM")}.ics`, "text/calendar;charset=utf-8");
+    exported.set(exportedAfter(exported.get(), keys, from));
     const removed = cancelled.length ? ` Odwołuje ${cancelled.length} ${pluralPl(cancelled.length, ["wyczyszczony dzień", "wyczyszczone dni", "wyczyszczonych dni"])}.` : "";
     toast.success(`Pobrano ${keys.length} ${pluralPl(keys.length, ["dzień", "dni", "dni"])} grafiku (.ics)`, {
       description: `Otwórz plik, żeby dodać zmiany do kalendarza telefonu. Ponowny import aktualizuje wpisy.${removed}`,

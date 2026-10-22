@@ -110,6 +110,22 @@ describe("privateNotes — model i sesja", () => {
     expect(b.pn.peek("n1")).toMatchObject({ title: "Z A", content: "tekst z urządzenia A" });
   });
 
+  it("dwa skarbce założone offline (oba epoch 1): po synchronizacji tylko jedna sesja zostaje odblokowana", async () => {
+    const a = fresh();
+    a.store.upsertNote(makeNote({ title: "Z A", content: "tekst A" }));
+    await a.pn.setup(PW);
+    expect(a.pn.phase()).toBe("unlocked");
+
+    const b = fresh();
+    await b.pn.setup("inne-haslo-do-testow-999");
+    expect(b.pn.phase()).toBe("unlocked");
+
+    // Dokument scala się w obie strony: wygrywają jedne metadane, klucz drugiego urządzenia przestaje pasować.
+    a.store.mergeSyncState(b.store.encodeSyncState());
+    b.store.mergeSyncState(a.store.encodeSyncState());
+    await vi.waitFor(() => expect([a.pn.phase(), b.pn.phase()].sort()).toEqual(["locked", "unlocked"]));
+  });
+
   it("szyfrogram przeniesiony na inną notatkę nie daje się odszyfrować (AAD)", async () => {
     const { store, pn } = fresh();
     store.upsertNote(makeNote({ id: "a", content: "AAA" }));

@@ -136,6 +136,15 @@ export function SiteCardDialog({
     }
   }
 
+  /** Zamknięcie okna z niezapisaną zmianą zapisuje kartę — nie gubimy wpisanych danych po cichu. */
+  function close(open: boolean) {
+    if (!open && site && dirty && !error) {
+      saveSiteCard(site.id, form);
+      toast.success("Zapisano kartę budowy");
+    }
+    onOpenChange(open);
+  }
+
   function toggleArchive() {
     if (!site) return;
     if (dirty && !error) saveSiteCard(site.id, form);
@@ -157,7 +166,7 @@ export function SiteCardDialog({
   const period = site?.first != null && site.last != null ? periodLabel(dayKeyOf(site.first), dayKeyOf(site.last)) : null;
 
   return (
-    <Dialog open={!!site} onOpenChange={onOpenChange}>
+    <Dialog open={!!site} onOpenChange={close}>
       <ResponsiveDialogContent className="max-h-[92dvh] gap-0 overflow-y-auto p-0 sm:max-w-md" data-testid="site-card">
         {site && (
           <>

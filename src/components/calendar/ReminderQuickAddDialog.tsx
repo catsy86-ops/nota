@@ -42,6 +42,8 @@ export interface ReminderEditTarget {
   repeat: ReminderRepeat;
   isSeries: boolean;
   allDay?: boolean;
+  /** Termin serii, gdy edytujemy jedno odłożone wystąpienie — zmiana zostaje w tym wystąpieniu, seria nie przesuwa się. */
+  base?: number;
 }
 
 interface ReminderQuickAddDialogProps {
@@ -53,7 +55,7 @@ interface ReminderQuickAddDialogProps {
   edit?: ReminderEditTarget | null;
   notes: Note[];
   onCreateNote: (title: string, reminder: number, repeat: ReminderRepeat, allDay: boolean) => void;
-  onAttachReminder: (noteId: string, reminder: number, repeat: ReminderRepeat, allDay: boolean) => void;
+  onAttachReminder: (noteId: string, reminder: number, repeat: ReminderRepeat, allDay: boolean, base?: number) => void;
   onClearReminder: (noteId: string) => void;
   /** Pomija najbliższe wystąpienie serii, przesuwając termin na kolejne. */
   onSkipOccurrence: (noteId: string, at: number, repeat: ReminderRepeat) => void;
@@ -92,14 +94,27 @@ export function ReminderQuickAddDialog({
     for (let take = 1; take <= Math.min(3, words.length); take++) {
       const head = words.slice(0, take).join(" ");
       const date = parseNaturalDate(head);
-      if (date) return { date, title: words.slice(take).join(" ") };
+      if (!date) continue;
+      // Godzina zaraz po dacie („jutro 15:00 dentysta”, „jutro o 15 dentysta”) zostaje w polu czasu, nie w tytule.
+      // Samotna liczba („jutro 2 kupić”) to nie godzina — wymagamy „:” / minut albo słowa „o”.
+      let end = take;
+      let clock: string | null = null;
+      const withO = /^o$/i.test(words[end] ?? "");
+      const at = withO ? end + 1 : end;
+      const m = at < words.length ? /^(\d{1,2})(?::(\d{2}))?$/.exec(words[at]) : null;
+      if (m && Number(m[1]) <= 23 && (m[2] !== undefined || withO)) {
+        clock = `${m[1].padStart(2, "0")}:${m[2] ?? "00"}`;
+        end = at + 1;
+      }
+      return { date, title: words.slice(end).join(" "), clock };
     }
     return null;
   }, [query]);
 
   const effectiveDay = dayOverride ?? parsed?.date ?? day;
   const title = (parsed ? parsed.title : query).trim();
-  const timestamp = composeReminderTimestamp(effectiveDay, allDay ? DEFAULT_REMINDER_TIME : time);
+  const effectiveTime = parsed?.clock ?? time;
+  const timestamp = composeReminderTimestamp(effectiveDay, allDay ? DEFAULT_REMINDER_TIME : effectiveTime);
   const past = isPastReminder(timestamp);
 
   const suggestions = useMemo(() => {
@@ -142,7 +157,7 @@ export function ReminderQuickAddDialog({
   function handleSaveEdit() {
     if (!edit || timestamp === null) return;
     requestNotificationPermissionOnIntent();
-    onAttachReminder(edit.noteId, timestamp, repeat, allDay);
+    onAttachReminder(edit.noteId, timestamp, repeat, allDay, edit.base);
     close();
   }
 

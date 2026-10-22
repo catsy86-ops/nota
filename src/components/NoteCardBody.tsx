@@ -10,7 +10,7 @@ import { haptic } from "@/lib/haptics";
 import { celebrate } from "@/lib/celebrate";
 import { toastWithUndo } from "@/lib/undoToast";
 import { snoozeTimes } from "@/lib/reminderAgenda";
-import { doneTarget, seriesDay } from "@/lib/reminderRepeat";
+import { doneTarget, seriesDay, snoozeTarget } from "@/lib/reminderRepeat";
 import { pluralPl } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 import { firstSnippet } from "@/lib/searchHighlight";
@@ -157,7 +157,9 @@ export function NoteCardBody({
                       const prev = { reminder: note.reminder, reminderDay: note.reminderDay, reminderBase: note.reminderBase };
                       haptic("tap");
                       // Odłożenie nie przepisuje dnia serii: bez jawnego `reminderDay` `updateNote` wyprowadziłby go z nowej godziny (2b planu).
-                      onUpdate(note.id, { reminder: snoozeTimes().tomorrow9, reminderDay: note.reminderDay });
+                      // Odłożenie jednego wystąpienia serii (`snoozeTarget`), nie przesunięcie całej serii.
+                      const snz = snoozeTarget(note, snoozeTimes().tomorrow9, Date.now());
+                      onUpdate(note.id, { reminder: snz.reminder, reminderDay: note.reminderDay, reminderBase: snz.reminderBase });
                       toastWithUndo("Przesunięto na jutro, 9:00", () => onUpdate(note.id, prev), { id: `rem-snooze-${note.id}` });
                     }}
                     className="pressable inline-flex items-center gap-1 rounded-full bg-foreground/5 px-2 sm:px-2.5 py-1 coarse:min-h-11 text-2xs font-medium text-muted-foreground hover:text-foreground"
@@ -172,7 +174,8 @@ export function NoteCardBody({
                     onClick={() => {
                       const prev = { reminder: note.reminder, reminderDay: note.reminderDay, reminderBase: note.reminderBase };
                       haptic("tap");
-                      onUpdate(note.id, { reminder: snoozeTimes().inHour, reminderDay: note.reminderDay });
+                      const snz = snoozeTarget(note, snoozeTimes().inHour, Date.now());
+                      onUpdate(note.id, { reminder: snz.reminder, reminderDay: note.reminderDay, reminderBase: snz.reminderBase });
                       toastWithUndo("Przesunięto o godzinę", () => onUpdate(note.id, prev), { id: `rem-snooze-${note.id}` });
                     }}
                     className="pressable inline-flex items-center rounded-full bg-foreground/5 px-2 sm:px-2.5 py-1 coarse:min-h-11 text-2xs font-medium text-muted-foreground hover:text-foreground"

@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, applyPattern, currentAndNextShift, daysUntilMonthEnd, easterSunday,
   entryMinutes, formatDuration, formatHoursShort, holidayName, migrate, monthSummary, nightMinutes, parseHm,
-  shiftMinutes, workNormMinutes, breakOffset, buildShiftsIcs, shortRests, settlementPeriod, isNormDay, cancelledShiftDays, exportedAfter, exportableShiftDays, SHIFT_COLORS, shiftInk, contrastRatio, dstShiftMinutes, restoreShifts, setDayShift, shiftStore, type ShiftData,
+  shiftMinutes, workNormMinutes, breakOffset, buildShiftsIcs, shortRests, settlementPeriod, isNormDay, cancelledShiftDays, exportedAfter, exportableShiftDays, SHIFT_COLORS, shiftInk, contrastRatio, dstShiftMinutes, entryMinutesOn, icsScope, recentlyEndedShift, restoreShifts, setDayShift, shiftStore, type ShiftData,
 } from "./index";
 
 const [day, afternoon, night, leave] = DEFAULT_SHIFT_TYPES;
@@ -453,6 +453,31 @@ describe("zmiana czasu", () => {
     expect(oct.nightMinutes).toBe(540);
     const mar = monthSummary(data({ types: [night], days: { "2026-03-28": { type: "n" } } }), 2026, 2);
     expect(mar.minutes).toBe(420);
+  });
+
+  it("eksport dwóch grafików nie miesza UID ani listy wysłanych dni", () => {
+    expect(icsScope("main")).toEqual({ exportedKey: "kaczy:shifts.icsExported", uidPrefix: "shift-" });
+    expect(icsScope("b1")).toEqual({ exportedKey: "kaczy:shifts.icsExported.b1", uidPrefix: "shift-b1-" });
+    const d = data({ types: [day], days: { "2026-10-24": { type: day.id } } });
+    const main = buildShiftsIcs(d, ["2026-10-24"], { now: 0 });
+    const other = buildShiftsIcs(d, ["2026-10-24"], { now: 0, uidPrefix: icsScope("b1").uidPrefix });
+    expect(main).toContain("UID:shift-2026-10-24@notatnik");
+    expect(other).toContain("UID:shift-b1-2026-10-24@notatnik");
+    expect(other).not.toContain("UID:shift-2026-10-24@notatnik");
+  });
+
+  it("zmiana zakończona przed chwilą zostaje do wyjścia z okna łaski (nadgodziny)", () => {
+    const d = data({ types: [day], days: { "2026-10-22": { type: day.id } } });
+    // Dzień 06:00–14:00 (zob. DEFAULT_SHIFT_TYPES); 15:00 — godzinę po końcu.
+    expect(recentlyEndedShift(d, new Date(2026, 9, 22, 15, 0))?.dayKey).toBe("2026-10-22");
+    expect(recentlyEndedShift(d, new Date(2026, 9, 22, 13, 0))).toBeNull();
+    expect(recentlyEndedShift(d, new Date(2026, 9, 22, 19, 0))).toBeNull();
+  });
+
+  it("komórka, okno dnia i rachunek pokazują ten sam czas nocy zmiany czasu", () => {
+    expect(entryMinutesOn(night, undefined, "2026-10-24")).toBe(540);
+    expect(entryMinutesOn(night, { extraMin: 30 }, "2026-10-24")).toBe(570);
+    expect(entryMinutesOn(night, undefined, "2026-10-09")).toBe(480);
   });
 });
 

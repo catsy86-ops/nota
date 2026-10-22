@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { dayType, entryMinutes, formatDuration, holidayName, isAbsence, setDayEntry, shiftHours, shiftInk, type DayEntry, type ShiftHours, type ShiftType } from "@/lib/shifts";
+import { dayType, entryMinutesOn, formatDuration, holidayName, isAbsence, setDayEntry, shiftHours, shiftInk, type DayEntry, type ShiftHours, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 import { TimeStepper } from "./TimeStepper";
 
@@ -64,7 +64,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
   // Godziny wpisane ręcznie to osobny stan (`custom`), nie godziny rodzaju.
   const keepHours = typeId === entry?.type && !entry?.customHours ? entry?.hours : undefined;
   const stored = base && dayType(base, { hours: keepHours });
-  const customOk = !!custom && HM.test(custom.start) && HM.test(custom.end)
+  const customOk = !!custom && HM.test(custom.start) && HM.test(custom.end) && custom.start !== custom.end
     && custom.breakMin !== "" && Number.isInteger(Number(custom.breakMin)) && Number(custom.breakMin) >= 0;
   const customHours: ShiftHours | null = custom && customOk
     ? { start: custom.start, end: custom.end, breakMin: Number(custom.breakMin) } : null;
@@ -158,7 +158,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Czas tego dnia: <span className="font-semibold text-foreground">{formatDuration(entryMinutes(type, { extraMin: extra }))}</span>
+                Czas tego dnia: <span className="font-semibold text-foreground">{formatDuration(entryMinutesOn(type, { extraMin: extra }, dayKey))}</span>
               </p>
             </div>
           )}
@@ -168,9 +168,9 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
               <legend className="text-sm font-medium mb-1.5">Godziny tego dnia</legend>
               <div className="grid grid-cols-2 gap-x-2 gap-y-2">
                 <TimeStepper id="day-start" label="Od" value={custom?.start ?? stored.start}
-                  invalid={!!custom && !HM.test(custom.start)} onChange={(v) => editHours({ start: v })} />
+                  invalid={!!custom && (!HM.test(custom.start) || custom.end === custom.start)} onChange={(v) => editHours({ start: v })} />
                 <TimeStepper id="day-end" label="Do" value={custom?.end ?? stored.end}
-                  invalid={!!custom && !HM.test(custom.end)} onChange={(v) => editHours({ end: v })} />
+                  invalid={!!custom && (!HM.test(custom.end) || custom.end === custom.start)} onChange={(v) => editHours({ end: v })} />
                 <div className="space-y-1 col-span-2">
                   <Label htmlFor="day-break" className="text-xs text-muted-foreground">Przerwa (min)</Label>
                   <Input id="day-break" type="number" min={0} step={5} inputMode="numeric" value={custom?.breakMin ?? String(stored.breakMin)}
@@ -180,7 +180,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
               <div className="flex items-center justify-between gap-2 min-h-8">
                 <p className="text-xs text-muted-foreground">
                   {custom
-                    ? hoursInvalid ? "Uzupełnij godziny." : `Ręcznie wpisane — zamiast ${base?.start}–${base?.end}.`
+                    ? hoursInvalid ? (custom?.start === custom?.end ? "Początek i koniec muszą się różnić." : "Uzupełnij godziny.") : `Ręcznie wpisane — zamiast ${base?.start}–${base?.end}.`
                     : `Wg zmiany „${base?.name}”.`}
                 </p>
                 {custom && (

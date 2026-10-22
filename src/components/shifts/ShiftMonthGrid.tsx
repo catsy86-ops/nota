@@ -2,7 +2,7 @@ import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { addDays, addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, startOfMonth, startOfWeek } from "date-fns";
 import { pl } from "date-fns/locale";
 import { dayKey } from "@/lib/reminderOccurrences";
-import { dayKeyCommand, dayType, entryMinutes, formatHoursShort, holidayName, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType } from "@/lib/shifts";
+import { dayKeyCommand, dayType, entryMinutesOn, formatHoursShort, holidayName, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType } from "@/lib/shifts";
 import { addDaysToKey } from "@/lib/week";
 import { cn } from "@/lib/utils";
 import { useToday } from "@/hooks/useToday";
@@ -172,7 +172,7 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                         <span className="block font-display font-bold text-sm">{type.short}</span>
                         {!absence && (
                           <span className="hidden sm:block text-2xs opacity-90 tabular-nums">
-                            {formatHoursShort(entryMinutes(type, entry))} h{entry?.extraMin ? (entry.extraMin > 0 ? " ↑" : " ↓") : ""}
+                            {formatHoursShort(entryMinutesOn(type, entry, key))} h{entry?.extraMin ? (entry.extraMin > 0 ? " ↑" : " ↓") : ""}
                           </span>
                         )}
                       </span>

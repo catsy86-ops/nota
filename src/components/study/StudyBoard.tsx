@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, FilePlusCorner, NotebookPen, Play, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useDayClock } from "@/lib/dayClock";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { MOBILE_QUERY } from "@/hooks/use-mobile";
 import { yjsStore } from "@/lib/yjsStore";
@@ -165,7 +166,8 @@ export function StudyBoard({ onPractice, onJournal }: { onPractice: (topicId: st
   const study = useStudy();
   const lists = useStudyLists();
   const practice = practiceByTopic(study.journal);
-  // Pytania do powtórki dziś, policzone per temat (N3).
+  // Pytania do powtórki dziś, policzone per temat (N3); przeliczane po północy.
+  useDayClock();
   const dueByTopic = new Map<string, number>();
   for (const id of dueToday(study)) {
     const topic = lists.questions.find((q) => q.id === id)?.topic;

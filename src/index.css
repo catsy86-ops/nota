@@ -1135,6 +1135,17 @@ html:not([data-input="touch"]) .note-card:has(:focus-visible) { box-shadow: var(
   100% { opacity: 0; transform: scale(2.2); }
 }
 
+/* Lista przed wejściem: pieczątka „Wejście 07:12” stoi lekko krzywo; świeżo wbita opada raz. */
+.entry-stamp { transform: rotate(-4deg); }
+.entry-stamp[data-fresh] { animation: entry-stamp 520ms var(--ease-out); }
+@keyframes entry-stamp {
+  0%   { opacity: 0; transform: rotate(-12deg) scale(1.7); }
+  60%  { opacity: 1; transform: rotate(-4deg) scale(0.95); }
+  100% { opacity: 1; transform: rotate(-4deg) scale(1); }
+}
+html[data-motion="reduced"] .entry-stamp[data-fresh] { animation: none; }
+@media (prefers-reduced-motion: reduce) { .entry-stamp[data-fresh] { animation: none; } }
+
 /* Pieczątka „gotowe” po ukończeniu listy: opada na kartę i lekko odbija. */
 .card-stamp {
   position: absolute; z-index: 15; left: 50%; top: 42%;

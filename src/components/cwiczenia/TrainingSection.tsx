@@ -125,6 +125,13 @@ function parseNum(text: string, max: number, integer: boolean): number | undefin
   return n;
 }
 
+/** Ciężar: co pół kilo (jak zapisuje model). Wpis 22,3 odrzucamy z podpowiedzią, zamiast zapisać 22,5 po cichu. */
+function parseKg(text: string): number | undefined | null {
+  const n = parseNum(text, TRAINING_KG_MAX, false);
+  if (n === undefined || n === null) return n;
+  return Number.isInteger(n * 2) ? n : null;
+}
+
 function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans: PlanDay[]; onSaved: () => void }) {
   const [exerciseId, setExerciseId] = useState(EXERCISES[0].id);
   const [rows, setRows] = useState<SetRow[]>([emptyRow(), emptyRow(), emptyRow()]);
@@ -143,7 +150,8 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
     return own[own.length - 1];
   }, [entries, exerciseId]);
 
-  const parsed = rows.map((r) => ({ reps: parseNum(r.reps, TRAINING_REPS_MAX, true), kg: parseNum(r.kg, TRAINING_KG_MAX, false) }));
+  const parsed = rows.map((r) => ({ reps: parseNum(r.reps, TRAINING_REPS_MAX, true), kg: parseKg(r.kg) }));
+  const badKg = rows.some((r, i) => parsed[i].kg === null && r.kg.trim() !== "");
   const filled = parsed.filter((p) => p.reps !== undefined);
   const invalid = parsed.some((p) => p.reps === null || p.kg === null || (p.reps === undefined && p.kg !== undefined));
   const valid = !invalid && filled.length > 0 && note.length <= TRAINING_NOTE_MAX;
@@ -223,6 +231,7 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
         </p>
       )}
       <Input aria-label="Uwagi do treningu" placeholder="Uwagi (opcjonalnie)" maxLength={TRAINING_NOTE_MAX} value={note} onChange={(e) => setNote(e.target.value)} />
+      {badKg && <p role="alert" className="w-full text-xs text-destructive-ink">Ciężar wpisz co pół kilo, np. 22 albo 22,5.</p>}
       <Button type="submit" size="sm" disabled={!valid} className="coarse:h-11">Zapisz serie</Button>
     </form>
   );
@@ -278,7 +287,7 @@ function EquipmentForm() {
   useEffect(() => {
     setKg(equipment.dumbbellMaxKg !== undefined ? String(equipment.dumbbellMaxKg) : "");
   }, [equipment.dumbbellMaxKg]);
-  const value = parseNum(kg, TRAINING_KG_MAX, false);
+  const value = parseKg(kg);
   return (
     <form
       className="flex flex-wrap items-center gap-3 rounded-lg border border-border/60 px-3 py-2"
@@ -395,10 +404,13 @@ function TrainingReminderControl() {
         aria-label="Godzina przypomnienia o treningu"
         value={time}
         disabled={!on}
-        onChange={(e) => {
-          setTime(e.target.value);
-          if (on && /^\d{2}:\d{2}$/.test(e.target.value)) apply({ time: e.target.value });
+        onChange={(e) => setTime(e.target.value)}
+        // Zapis dopiero po wyjściu z pola (albo Enter): każdy znak osobno przenosił notatkę do kosza.
+        onBlur={(e) => {
+          const v = e.target.value;
+          if (on && /^\d{2}:\d{2}$/.test(v) && v !== reminder?.time) apply({ time: v });
         }}
+        onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
         className="w-auto coarse:h-11"
       />
       <span className="text-xs text-muted-foreground">okno do {TRAINING_WINDOW_END}</span>

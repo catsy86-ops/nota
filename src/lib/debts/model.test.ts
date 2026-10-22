@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { balances, cleanDebt, formatAmount, knownPeople, parseAmount, personKey, totals, type DebtEntry } from "./model";
+import { balances, cleanDebt, formatAmount, knownPeople, parseAmount, personKey, repaidShare, totals, type DebtEntry, type DebtKind } from "./model";
 
 const e = (over: Partial<DebtEntry>): DebtEntry => ({
   id: "d-1", person: "Anna", kind: "lent", amount: 10000, at: "2026-10-10", note: "", created: 1, ...over,
@@ -99,5 +99,19 @@ describe("cztery rodzaje wpisu i znak salda", () => {
   it("cleanDebt przepuszcza wszystkie cztery rodzaje, a obce odrzuca", () => {
     for (const kind of ["lent", "repaid", "borrowed", "returned"]) expect(cleanDebt(e({ kind: kind as never }))?.kind).toBe(kind);
     expect(cleanDebt(e({ kind: "gift" as never }))).toBeNull();
+  });
+});
+
+describe("repaidShare — pasek spłaty z obu stron", () => {
+  const e = (kind: DebtKind, amount: number) => ({ id: `${kind}${amount}`, person: "Ania", kind, amount, at: "2026-10-01", note: "", created: 1 }) as DebtEntry;
+  it("pożyczka od nas: liczy spłaty", () => {
+    expect(repaidShare([e("lent", 1000), e("repaid", 250)])).toBe(25);
+  });
+  it("pożyczka od niej: pokazuje też nasze spłaty (wcześniej pasek był pusty)", () => {
+    expect(repaidShare([e("borrowed", 1000), e("returned", 400)])).toBe(40);
+  });
+  it("99,6% nie jest 100%; zero salda to 100%", () => {
+    expect(repaidShare([e("lent", 10000), e("repaid", 9960)])).toBe(99);
+    expect(repaidShare([e("lent", 1000), e("repaid", 1000)])).toBe(100);
   });
 });

@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { fittingsLine } from "@/lib/study/fittings";
 import { testLine } from "@/lib/study/pressureTest";
-import { Archive, Check, ChevronLeft, Clock, Gauge, Package, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Play, Plus, Search, TriangleAlert, Wrench, X } from "lucide-react";
+import { Archive, Check, ChevronLeft, Clock, Gauge, Mic, Package, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Play, Plus, Search, TriangleAlert, Wrench, X } from "lucide-react";
 import { mapsUrl } from "@/lib/study/geo";
 import { pluralPl } from "@/lib/plural";
 import { studyReminders, type StudyReminder } from "@/lib/study/reminders";
+import { useDayClock } from "@/lib/dayClock";
 import { Button } from "@/components/ui/button";
 import { StatusPanel } from "@/components/StatusPanel";
 import { EmptySketch } from "@/components/EmptyIllustration";
@@ -25,6 +26,7 @@ import { JournalEntrySheet, KindIcon } from "./JournalEntrySheet";
 import { JournalReportDialog } from "./JournalReport";
 import { SiteCardDialog } from "./SiteCardDialog";
 import { DayHoursDialog } from "./DayHoursDialog";
+import { EntryCheckCard } from "./EntryCheck";
 import { useShifts } from "@/lib/shifts";
 import { formatHoursShort } from "@/lib/shifts/time";
 import { dayKeyOf, workOn } from "@/lib/study/report";
@@ -32,6 +34,8 @@ import { dayHours, type DayHours } from "@/lib/study/siteHours";
 import { consumeJournalReportRequest, useJournalReportRequest, type JournalReportRequest } from "@/lib/study/reportLink";
 import { stageProgress } from "@/lib/study/stages";
 import { entrySiteId, siteDirectory } from "@/lib/study/sites";
+
+const AudioPreview = lazy(() => import("@/components/VoiceAttachmentParts").then((m) => ({ default: m.AudioPreview })));
 
 const topicTitle = (id: string | null) => TOPICS.find((t) => t.id === id)?.title ?? null;
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -78,6 +82,8 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   const [hoursDay, setHoursDay] = useState<{ key: string; label: string } | null>(null);
   const shifts = useShifts();
   const [showArchived, setShowArchived] = useState(false);
+  // Przypomnienia „> 3 dni” liczą się od dzisiaj — po północy lista ma się odświeżyć sama.
+  const dayTick = useDayClock();
   const patch = (p: Partial<JournalFilter>) => setFilter((f) => ({ ...f, ...p }));
   const filtered = isFiltered(filter);
 
@@ -123,7 +129,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
     return { all: recent.length, problems: recent.filter((e) => e.kind === "problem").length };
   }, [study.journal]);
   const open = useMemo(() => openProblems(study.journal), [study.journal]);
-  const reminders = useMemo(() => studyReminders(study.journal, Date.now(), study.sites), [study.journal, study.sites]);
+  const reminders = useMemo(() => { void dayTick; return studyReminders(study.journal, Date.now(), study.sites); }, [study.journal, study.sites, dayTick]);
 
   return (
     <div className="space-y-6" data-testid="study-journal">
@@ -164,6 +170,8 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
             </Button>
           </div>
         </header>
+
+        <EntryCheckCard />
 
         {reminders.length > 0 && (
           <ul aria-label="Przypomnienia" className="mb-4 space-y-2 xl:col-start-1" data-testid="journal-reminders">
@@ -485,7 +493,7 @@ function JournalItem({ entry: e, onPractice, onTopic, onZoom }: { entry: Journal
       <div className="flex min-w-0 items-start gap-2.5">
         {resolved ? <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden /> : <KindIcon kind={e.kind} />}
         <div className="min-w-0 flex-1">
-          <p className="whitespace-pre-wrap wrap-break-word text-sm leading-snug">{e.text || (e.test ? "Próba szczelności" : e.fittings?.length ? "Kształtki" : "Sprawdzone punkty listy")}</p>
+          <p className="whitespace-pre-wrap wrap-break-word text-sm leading-snug">{e.text || (e.test ? "Próba szczelności" : e.fittings?.length ? "Kształtki" : e.checked.length ? "Sprawdzone punkty listy" : e.recordings?.length ? "Nagranie" : e.images.length ? "Zdjęcie" : "Wpis")}</p>
           {e.fittings && e.fittings.length > 0 && (
             <p className="mt-1 inline-flex items-start gap-1.5 text-xs text-muted-foreground" data-testid="journal-fittings">
               <Package className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{fittingsLine(e.fittings)}
@@ -545,6 +553,17 @@ function JournalItem({ entry: e, onPractice, onTopic, onZoom }: { entry: Journal
             </div>
           )}
           {resolved && <SolutionLine entry={e} editing={solving} onEditing={setSolving} />}
+          {e.recordings && e.recordings.length > 0 && (
+            <ul className="mt-2 space-y-2" aria-label="Nagrania wpisu">
+              {e.recordings.map((a) => (
+                <li key={a.hash} className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Mic className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                  <span className="min-w-0 flex-1 truncate">{a.name}</span>
+                  <Suspense fallback={null}><AudioPreview attachment={a} /></Suspense>
+                </li>
+              ))}
+            </ul>
+          )}
           {e.images.length > 0 && (
             <ul className="mt-2 flex flex-wrap gap-2" aria-label="Zdjęcia wpisu">
               {e.images.map((ref) => (

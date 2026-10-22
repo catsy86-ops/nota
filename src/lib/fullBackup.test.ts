@@ -10,6 +10,7 @@ import { yStudy } from "./study/data";
 import { addSupplement, removeSupplement, setSupplementTaken, supplementDump } from "./supplements/store";
 import { addMeal, dietDump, removeMeal, setDietGoals } from "./diet/store";
 import { addDebt, debtsDump, removeDebt } from "./debts/store";
+import { entryCheckDump, saveEntryCheckItems, resetEntryCheckItems, toggleEntryCheck } from "./study/entryCheckStore";
 import { addTrainingEntry, addPlanDay, removeTrainingEntry, trainingDump } from "./training/store";
 import { cleanDump } from "./study/yStudy";
 import type { Note } from "@/hooks/useNotes";
@@ -295,6 +296,19 @@ describe("Nauka w pełnej kopii", () => {
     expect(trainingDump().entries).toEqual([]);
     await restoreFullBackup(backup, ALL);
     expect(trainingDump()).toMatchObject({ entries: [{ exerciseId: "triceps-nad-glowa" }], plans: [{ name: "Triceps" }] });
+  });
+
+  it("lista przed wejściem wraca z kopii (własne punkty i odhaczenia)", async () => {
+    saveEntryCheckItems([{ id: "k-1", text: "Klucz do skrzynki" }]);
+    toggleEntryCheck("s1", "2026-10-22", "k-1");
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
+    expect(JSON.parse(backup.entryCheck!).items).toEqual([{ id: "k-1", text: "Klucz do skrzynki" }]);
+
+    resetEntryCheckItems();
+    expect(entryCheckDump().items).toBeUndefined();
+    await restoreFullBackup(backup, ALL);
+    expect(entryCheckDump().items).toEqual([{ id: "k-1", text: "Klucz do skrzynki" }]);
+    expect(entryCheckDump().records.some((r) => r.site === "s1" && r.done.includes("k-1"))).toBe(true);
   });
 
   it("długi wracają z kopii; przywracanie scala i nie kasuje", async () => {

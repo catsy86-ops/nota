@@ -409,3 +409,24 @@ export function currentAndNextShift(data: ShiftData, now: Date, horizonDays = 60
   }
   return { current, next };
 }
+
+/** Ile po planowanym końcu zmiany nadal da się ją zamknąć przyciskiem „Skończyłem teraz” (nadgodziny). */
+export const FINISH_GRACE_MS = 4 * 60 * 60 * 1000;
+
+/**
+ * Zmiana, która właśnie się skończyła (w oknie łaski) i nie trwa już teraz — ktoś zostaje dłużej,
+ * więc karta ma nadal pokazać „Skończyłem teraz”. Najnowsza, jeśli takich kilka.
+ */
+export function recentlyEndedShift(data: ShiftData, now: Date, graceMs = FINISH_GRACE_MS): ShiftOccurrence | null {
+  const typesById = new Map(data.types.map((t) => [t.id, t]));
+  let found: ShiftOccurrence | null = null;
+  for (let i = -1; i <= 0; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+    const k = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    const occ = occurrence(data, k, typesById);
+    if (!occ) continue;
+    const end = occ.end.getTime();
+    if (end <= now.getTime() && now.getTime() - end < graceMs && (!found || end > found.end.getTime())) found = occ;
+  }
+  return found;
+}

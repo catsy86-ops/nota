@@ -128,7 +128,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
   }
 
   function openEdit(occ: Occurrence) {
-    setEditTarget({ noteId: occ.noteId, at: occ.at, repeat: occ.repeat, isSeries: occ.isSeries, allDay: occ.allDay });
+    setEditTarget({ noteId: occ.noteId, at: occ.at, repeat: occ.repeat, isSeries: occ.isSeries, allDay: occ.allDay, base: notes.find((n) => n.id === occ.noteId)?.reminderBase });
     setDialogDay(new Date(occ.at));
   }
 
@@ -153,9 +153,9 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-day-key="${dayKey(day)}"]`)?.focus());
   }
 
-  function handleAttach(noteId: string, reminder: number, repeat: ReminderRepeat, allDay: boolean) {
+  function handleAttach(noteId: string, reminder: number, repeat: ReminderRepeat, allDay: boolean, base?: number) {
     const before = previousOf(noteId);
-    onSetReminder(noteId, reminder, repeat, undefined, undefined, allDay);
+    onSetReminder(noteId, reminder, repeat, undefined, base, allDay);
     toastWithUndo("Termin zapisany", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay), { icon: "🔔" });
   }
 

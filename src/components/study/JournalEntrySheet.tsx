@@ -236,18 +236,18 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
       }
     }
     // „brakuje …” — braki idą od razu do karty budowy (wskazanej w wypowiedzi albo bieżącej), nie do wpisu.
-    if (parsed.shortages.length > 0) {
-      if (!card) {
-        toast.error("Braki zapisują się w karcie budowy", { description: "Najpierw wybierz budowę wpisu albo powiedz jej nazwę na początku." });
-        return;
-      }
+    // Bez budowy braki się nie zapiszą, ale treść wpisu ma się dopisać — błąd pokazujemy dopiero po niej.
+    let shortageError = false;
+    if (parsed.shortages.length > 0 && !card) shortageError = true;
+    else if (parsed.shortages.length > 0 && card) {
       const now = Date.now();
       const base = card.shortages ?? [];
       setSiteShortages(card.id, parsed.shortages.reduce((list, x) => addShortage(list, x.text, x.qty, now), base), base);
       done.push(`braki (${card.name}): ${parsed.shortages.map((x) => (x.qty ? `${x.text} ${x.qty}` : x.text)).join(", ")}`);
     }
     append(parsed.text);
-    toast.success(`Z wypowiedzi: ${done.join(" · ")}`, { id: "entry-dictation" });
+    if (shortageError) toast.error("Braki zapisują się w karcie budowy", { description: "Najpierw wybierz budowę wpisu albo powiedz jej nazwę na początku.", id: "entry-dictation" });
+    else toast.success(`Z wypowiedzi: ${done.join(" · ")}`, { id: "entry-dictation" });
   });
   // Skrót „Wpis głosowy” (`?wpis=1&glos=1`): arkusz otwarty z żądaniem startuje dyktowanie od razu.
   // Bez zgody na usługę mowy pokaże się zwykłe pytanie o zgodę — zgodę zawsze daje kliknięcie.
@@ -769,9 +769,18 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                     <NoteImage imageRef={ref} alt="Zdjęcie z budowy" className="h-20 w-20 rounded-lg object-cover" placeholderClassName="h-20 w-20 rounded-lg" />
                     <button
                       type="button"
-                      onClick={() => patch({ images: getForm().images.filter((r) => r !== ref) })}
+                      onClick={() => {
+                        const before = getForm().images;
+                        patch({ images: before.filter((r) => r !== ref) });
+                        // Cofnij: zdjęcie wraca na swoje miejsce (zapisane dopiero przy „Zapisz wpis”).
+                        const at = before.indexOf(ref);
+                        toastWithUndo("Usunięto zdjęcie z wpisu", () => {
+                          const cur = getForm().images;
+                          if (!cur.includes(ref)) patch({ images: [...cur.slice(0, at), ref, ...cur.slice(at)] });
+                        }, { id: `photo-remove-${ref}` });
+                      }}
                       aria-label="Usuń zdjęcie z wpisu"
-                      className="absolute -right-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full bg-destructive text-destructive-foreground coarse:h-8 coarse:w-8"
+                      className="absolute -right-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full bg-destructive text-destructive-foreground coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -781,7 +790,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                       aria-label="Podpis na zdjęciu"
                       aria-pressed={captioning === ref}
                       className={cn(
-                        "absolute -bottom-1.5 -left-1.5 grid h-6 w-6 place-items-center rounded-full border border-border bg-card text-foreground shadow-sm coarse:h-8 coarse:w-8",
+                        "absolute -bottom-1.5 -left-1.5 grid h-6 w-6 place-items-center rounded-full border border-border bg-card text-foreground shadow-sm coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']",
                         captioning === ref && "border-primary bg-primary text-primary-foreground",
                       )}
                     >
@@ -792,7 +801,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                       onClick={() => void openDrawing(ref)}
                       aria-label="Rysuj na zdjęciu"
                       title="Strzałka, wymiar, zaznaczenie — rysunek zostaje na zdjęciu"
-                      className="absolute -bottom-1.5 -right-1.5 grid h-6 w-6 place-items-center rounded-full border border-border bg-card text-foreground shadow-sm coarse:h-8 coarse:w-8"
+                      className="absolute -bottom-1.5 -right-1.5 grid h-6 w-6 place-items-center rounded-full border border-border bg-card text-foreground shadow-sm coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']"
                     >
                       <PenTool className="h-3.5 w-3.5" aria-hidden />
                     </button>

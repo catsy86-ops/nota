@@ -1,6 +1,7 @@
 import { escapeText, foldLine, formatLocal } from "@/lib/icsExport";
 import { dayType, isAbsence, type ShiftData } from "./model";
 import { shiftSpan } from "./time";
+import { MAIN_SCHEDULE_ID } from "./yShifts";
 
 /**
  * Grafik → iCalendar (RFC 5545), żeby zmiany były w kalendarzu telefonu.
@@ -12,6 +13,17 @@ import { shiftSpan } from "./time";
 
 /** Dni wysłane do kalendarza z tego urządzenia — żeby przy następnym eksporcie odwołać wyczyszczone. */
 export const SHIFTS_EXPORTED_KEY = "kaczy:shifts.icsExported";
+
+/**
+ * Klucz listy wysłanych dni i prefiks UID dla grafiku. Główny zostaje przy dawnych wartościach
+ * (zdarzenia już zaimportowane nie zdublują się); dodatkowe grafiki mają własne, więc eksport jednego
+ * nie nadpisuje ani nie odwołuje zdarzeń drugiego.
+ */
+export function icsScope(scheduleId: string): { exportedKey: string; uidPrefix: string } {
+  return scheduleId === MAIN_SCHEDULE_ID
+    ? { exportedKey: SHIFTS_EXPORTED_KEY, uidPrefix: "shift-" }
+    : { exportedKey: `${SHIFTS_EXPORTED_KEY}.${scheduleId}`, uidPrefix: `shift-${scheduleId}-` };
+}
 
 /** Minuty od 2020 r. jako SEQUENCE — mieści się w liczbie 32-bitowej przez ~4000 lat. */
 const SEQUENCE_EPOCH = Date.UTC(2020, 0, 1);
@@ -47,7 +59,7 @@ export function exportedAfter(prev: string[], sent: string[], fromKey: string): 
   return [...prev.filter((k) => k < fromKey), ...sent].sort();
 }
 
-export function buildShiftsIcs(data: ShiftData, dayKeys: string[], { alarmMinutes = 60, now = Date.now(), cancelled = [] as string[] } = {}): string {
+export function buildShiftsIcs(data: ShiftData, dayKeys: string[], { alarmMinutes = 60, now = Date.now(), cancelled = [] as string[], uidPrefix = "shift-" } = {}): string {
   const typesById = new Map(data.types.map((t) => [t.id, t]));
   const events: string[] = [];
   const sequence = Math.max(0, Math.floor((now - SEQUENCE_EPOCH) / 60_000));
@@ -59,7 +71,7 @@ export function buildShiftsIcs(data: ShiftData, dayKeys: string[], { alarmMinute
     const type = dayType(base, entry);
     // SEQUENCE rośnie z każdym eksportem — kalendarze, które znają już ten UID,
     // traktują wpis jako nowszą wersję zamiast go pomijać.
-    const lines = ["BEGIN:VEVENT", `UID:shift-${key}@notatnik`, `DTSTAMP:${utcStamp(now)}`, `LAST-MODIFIED:${utcStamp(now)}`, `SEQUENCE:${sequence}`];
+    const lines = ["BEGIN:VEVENT", `UID:${uidPrefix}${key}@notatnik`, `DTSTAMP:${utcStamp(now)}`, `LAST-MODIFIED:${utcStamp(now)}`, `SEQUENCE:${sequence}`];
     // RFC 5545: właściwości wydarzenia przed blokami VALARM.
     const note = entry.note ? `DESCRIPTION:${escapeText(Array.from(entry.note).slice(0, 1000).join(""))}` : null;
 
@@ -85,7 +97,7 @@ export function buildShiftsIcs(data: ShiftData, dayKeys: string[], { alarmMinute
   }
 
   for (const key of cancelled) {
-    events.push("BEGIN:VEVENT", `UID:shift-${key}@notatnik`, `DTSTAMP:${utcStamp(now)}`, `LAST-MODIFIED:${utcStamp(now)}`, `SEQUENCE:${sequence}`,
+    events.push("BEGIN:VEVENT", `UID:${uidPrefix}${key}@notatnik`, `DTSTAMP:${utcStamp(now)}`, `LAST-MODIFIED:${utcStamp(now)}`, `SEQUENCE:${sequence}`,
       `DTSTART;VALUE=DATE:${dateOnly(key)}`, `DTEND;VALUE=DATE:${dateOnly(key, 1)}`, "SUMMARY:Wolne", "STATUS:CANCELLED", "TRANSP:TRANSPARENT", "END:VEVENT");
   }
 

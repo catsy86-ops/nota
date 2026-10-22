@@ -8,7 +8,7 @@ import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { localDayKey } from "@/lib/dayDone";
 import { addDebt, addDebtFromText, removeDebt, restoreDebt, updateDebt, useDebts } from "@/lib/debts/store";
-import { balances, DEBT_KINDS, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
+import { balances, DEBT_KINDS, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, repaidShare, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
 
 /**
  * Długi: kto ile u nas pożyczył i ile oddał. Góra — podsumowanie i szybki wpis,
@@ -175,8 +175,7 @@ function People({ people, onOpen }: { people: PersonDebts[]; onOpen: (key: strin
     <ul className="space-y-2" aria-label="Osoby i salda">
       {people.map((p) => {
         const lent = p.entries.filter((e) => e.kind === "lent").reduce((s, e) => s + e.amount, 0);
-        const repaid = p.entries.filter((e) => e.kind === "repaid").reduce((s, e) => s + e.amount, 0);
-        const share = lent > 0 ? Math.min(100, Math.round((repaid / lent) * 100)) : 100;
+        const share = repaidShare(p.entries);
         const settled = p.balance === 0;
         return (
           <li key={p.key}>
@@ -265,7 +264,7 @@ function PersonHistory({ person, onDone }: { person: PersonDebts; onDone: () => 
             </li>
           ) : (
             <li key={e.id} className="flex items-center gap-3 rounded-xl border border-border/60 bg-background p-3">
-              <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full", KIND_SIGN[e.kind] > 0 ? "bg-warning/15 text-warning-ink" : "bg-success/15 text-success-ink")} aria-hidden>
+              <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full", KIND_SIGN[e.kind] > 0 ? "bg-success/15 text-success-ink" : "bg-warning/15 text-warning-ink")} aria-hidden>
                 {KIND_SIGN[e.kind] > 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownLeft className="h-4 w-4" />}
               </span>
               <div className="min-w-0 flex-1">

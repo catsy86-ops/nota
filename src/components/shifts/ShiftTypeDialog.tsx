@@ -48,7 +48,9 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
   // Godzina przerwy liczy się tylko przy przerwie dłuższej niż 0 i musi mieścić się w zmianie.
   const placedBreak = draft.kind !== "absence" && draft.breakMin > 0 && !!draft.breakAt;
   const breakOutside = placedBreak && breakOffset(draft) === null;
-  const valid = draft.name.trim() !== "" && shiftSpan(draft) !== null && !breakOutside;
+  // Ta sama godzina na początku i końcu to nie zmiana 24 h — zapis wymaga różnych godzin.
+  const sameHours = draft.kind !== "absence" && draft.start === draft.end;
+  const valid = draft.name.trim() !== "" && shiftSpan(draft) !== null && !breakOutside && !sameHours;
   const parsedRate = parseFloat(rate.replace(",", "."));
   const absence = draft.kind === "absence";
   // Nowy rodzaj: gotowe rodzaje startowe, których nie ma w grafiku (np. usunięte albo „Budowa” z nowszej wersji).
@@ -202,7 +204,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
         </fieldset>
         {!valid && !breakOutside && (
           <p role="alert" className="text-xs text-destructive-ink">
-            {draft.name.trim() === "" ? "Podaj nazwę rodzaju zmiany." : "Godzina rozpoczęcia i końca muszą się różnić."}
+            {draft.name.trim() === "" ? "Podaj nazwę rodzaju zmiany." : "Godzina rozpoczęcia i końca muszą się różnić — zmiana 24 h nie jest zapisywana po cichu."}
           </p>
         )}
         <ResponsiveDialogFooter className="gap-2 sm:justify-between">

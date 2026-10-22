@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useDayClock } from "@/lib/dayClock";
 import { ArrowRight, Check, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,8 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
     [study],
   );
 
-  const due = useMemo(() => dueToday(study), [study]);
+  const day = useDayClock();
+  const due = useMemo(() => { void day; return dueToday(study); }, [study, day]);
   // Najbliższy termin, gdy na dziś nic nie ma — żeby było wiadomo, kiedy wrócić.
   const nextDue = useMemo(() => {
     const today = localDayKey();

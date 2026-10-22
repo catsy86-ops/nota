@@ -21,6 +21,10 @@ export function captureParts(raw: string): { title: string; content: string } | 
   const first = (lines[0] ?? "").trim();
   const rest = lines.slice(1).join("\n").trim();
   if (!first && !rest) return null;
-  if (!first) return { title: rest.slice(0, INBOX_TITLE_MAX), content: "" };
-  return { title: first.slice(0, INBOX_TITLE_MAX), content: rest };
+  if (!first) return { title: rest.slice(0, INBOX_TITLE_MAX), content: rest.slice(INBOX_TITLE_MAX) };
+  // Za długa pierwsza linia: tytuł to początek, reszta idzie do treści — nic nie przepada.
+  const head = first.slice(0, INBOX_TITLE_MAX);
+  const tail = first.slice(INBOX_TITLE_MAX).trim();
+  const content = [tail, rest].filter(Boolean).join("\n");
+  return { title: head, content };
 }

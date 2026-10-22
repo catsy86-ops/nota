@@ -135,7 +135,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
   await versionsStore.load();
   await shiftsReady();
   // Dane działu Praca ładowane dopiero tu — nie wchodzą do paczki startowej.
-  const [{ studyReady, yStudy }, { stateFromDump }, { supplementDump: supplementsDump }, { dietDump }, { trainingDump }, { debtsDump }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy"), import("@/lib/supplements/store"), import("@/lib/diet/store"), import("@/lib/training/store"), import("@/lib/debts/store")]);
+  const [{ studyReady, yStudy }, { stateFromDump }, { supplementDump: supplementsDump }, { dietDump }, { trainingDump }, { debtsDump }, { entryCheckDump }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy"), import("@/lib/supplements/store"), import("@/lib/diet/store"), import("@/lib/training/store"), import("@/lib/debts/store"), import("@/lib/study/entryCheckStore")]);
   await studyReady();
   const { blobs, report } = await collectAttachmentBlobs(opts.attachmentBudget ?? BACKUP_ATTACHMENTS_BUDGET_BYTES);
   const study = yStudy.dump();
@@ -166,6 +166,8 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     training: JSON.stringify(trainingDump()),
     // Długi: pożyczki są w dokumencie Yjs, więc bez tej sekcji kopia by je gubiła.
     debts: JSON.stringify(debtsDump()),
+    // Lista przed wejściem na budowę (punkty i odhaczenia dni) — osobna mapa, scalana przy przywracaniu.
+    entryCheck: JSON.stringify(entryCheckDump()),
     ...(Object.keys(blobs).length ? { attachmentBlobs: blobs } : {}),
     // Same liczby (bez treści) — okno przywracania mówi, czego w pliku nie ma; zera = nic nie pominięto.
     skipped: { tooLarge: report.tooLarge.length, missing: report.missing.length, journalPhotos: report.journalPhotos, siteDocs: report.siteDocs, recordings: report.recordings },
@@ -302,6 +304,8 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
       mergeDebtsDump(JSON.parse(backup.debts));
     } catch (err) { logDiag("warn", "backup", "cannot restore debts", errName(err)); }
   }
+  // Lista przed wejściem: scalanie bez kasowania; uszkodzona sekcja po prostu się pomija.
+  if (backup.entryCheck) await import("@/lib/study/entryCheckStore").then((m) => m.mergeEntryCheckDump(JSON.parse(backup.entryCheck!))).catch(() => {});
   // Metadane skarbca z pliku: bez nich zablokowane notatki z backupu byłyby nie do odszyfrowania.
   if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);
   if (opts.versions && backup.versions) {

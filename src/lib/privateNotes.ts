@@ -119,6 +119,8 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
 
   let key: CryptoKey | null = null;
   let sessionEpoch = 0;
+  /** Odcisk metadanych, z którymi odblokowano sesję. Sam `epoch` nie wystarcza: dwa urządzenia zakładające skarbiec offline mają oba epoch 1. */
+  let sessionFingerprint = "";
   let locking = false;
   let version = 0;
   let snapshot: VaultSnapshot = { phase: "none", version: 0 };
@@ -132,6 +134,8 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
   let compactTimer: ReturnType<typeof setTimeout> | null = null;
 
   let rejectedMetaLogged = false;
+  const fingerprint = (m: VaultMeta) => [m.epoch, m.salt, m.wrapped, m.check].join("|");
+
   function meta(): VaultMeta | null {
     const m = store.getVaultMeta();
     if (isValidMeta(m)) { rejectedMetaLogged = false; return m; }
@@ -156,9 +160,11 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
   snapshot = { phase: phase(), version };
 
   // Metadane zmienione z zewnątrz (sync): pojawił się skarbiec albo hasło zmieniono na innym urządzeniu.
+  // Porównujemy cały odcisk (sól, klucz opakowany, kod sprawdzający), nie tylko epoch — przy równoległym
+  // zakładaniu skarbca offline oba urządzenia mają epoch 1, a klucz tego przegranego przestałby pasować.
   store.observeVaultMeta(() => {
     const m = meta();
-    if (key && (!m || m.epoch !== sessionEpoch)) void lock();
+    if (key && (!m || m.epoch !== sessionEpoch || (sessionFingerprint !== "" && fingerprint(m) !== sessionFingerprint))) void lock();
     else emit();
   });
 
@@ -280,6 +286,8 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
   async function adoptKey(newKey: CryptoKey, epoch: number): Promise<void> {
     key = newKey;
     sessionEpoch = epoch;
+    const current = meta();
+    sessionFingerprint = current ? fingerprint(current) : "";
     locking = false;
     failed.clear();
     await decryptAll();
@@ -431,6 +439,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     if (!store.rekeyVault(created.meta, next)) throw new Error("Notatki zmieniły się w trakcie zmiany hasła — spróbuj ponownie");
     key = created.dataKey;
     sessionEpoch = created.meta.epoch;
+    sessionFingerprint = fingerprint(created.meta);
     locking = false;
     for (const [id, n] of next) {
       const e = cache.get(id);

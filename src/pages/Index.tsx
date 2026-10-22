@@ -94,6 +94,7 @@ const StudyDueRows = lazy(() => import("@/components/review/StudyDueRows"));
 const SeriesForecastSection = lazy(() => import("@/components/calendar/SeriesForecastSection"));
 const TodayShiftCard = lazy(() => import("@/components/review/TodayShiftCard").then((m) => ({ default: m.TodayShiftCard })));
 const TodayStudyCard = lazy(() => import("@/components/review/TodayStudyCard").then((m) => ({ default: m.TodayStudyCard })));
+const BrainTrainingCard = lazy(() => import("@/components/review/BrainTrainingCard").then((m) => ({ default: m.BrainTrainingCard })));
 const WeeklyReviewCard = lazy(() => import("@/components/review/WeeklyReviewCard").then((m) => ({ default: m.WeeklyReviewCard })));
 const RecentActionsPanel = lazy(() => import("@/components/RecentActionsPanel").then((m) => ({ default: m.RecentActionsPanel })));
 const OnboardingTour = lazy(() => import("@/components/OnboardingTour").then((m) => ({ default: m.OnboardingTour })));
@@ -251,6 +252,8 @@ const Index = () => {
     : view === "label" ? `#${activeLabel}` : null;
 
   function expandAddNote(action?: ComposerAction) {
+    // W Skrzynce nie ma kompozytora: „+” ustawia kursor w polu przechwycenia, bez zmiany działu.
+    if (view === "inbox") { document.querySelector<HTMLTextAreaElement>("[data-inbox-capture]")?.focus(); return; }
     if (!canCompose) setView("notes");
     setTimeout(() => addNoteRef.current?.expand(action), 100);
   }
@@ -657,6 +660,9 @@ const Index = () => {
             <ViewErrorBoundary name="Powtórki">
               <Suspense fallback={<CardSkeleton />}>
                 <TodayStudyCard onPractice={() => navigate("/praca?powtorka=1")} />
+              </Suspense>
+              <Suspense fallback={null}>
+                <BrainTrainingCard onRemind={(at, title) => addNote(title, "", "default", [], at)} />
               </Suspense>
             </ViewErrorBoundary>
           )}

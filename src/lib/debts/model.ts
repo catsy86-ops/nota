@@ -112,6 +112,26 @@ export function balances(entries: readonly DebtEntry[]): PersonDebts[] {
   return [...groups.values()].sort((a, b) => rank(a.balance) - rank(b.balance) || Math.abs(b.balance) - Math.abs(a.balance) || a.name.localeCompare(b.name, "pl"));
 }
 
+/**
+ * Procent rozliczenia z jednej strony salda. Kwoty „nam winna” (lent, returned) zwiększają saldo,
+ * kwoty „my winni” (repaid, borrowed) je zmniejszają. Liczymy spłaconą część tej strony, która
+ * jest winna: przy dodatnim saldzie — spłaty od niej, przy ujemnym — nasze spłaty jej.
+ * 100 tylko przy zerowym saldzie; `floor` i maks. 99, żeby 99,6% nie wyglądało na zamknięte.
+ */
+export function repaidShare(entries: readonly DebtEntry[]): number {
+  let owed = 0; // kwoty, które zwiększają saldo (nam winna)
+  let settled = 0; // kwoty, które je zmniejszają (spłaty / zaciągnięte przez nas)
+  for (const e of entries) {
+    if (KIND_SIGN[e.kind] > 0) owed += e.amount; else settled += e.amount;
+  }
+  const balance = owed - settled;
+  if (balance === 0) return 100;
+  const side = balance > 0 ? owed : settled;
+  if (side <= 0) return 0;
+  const done = balance > 0 ? settled : owed;
+  return Math.min(99, Math.floor((done / side) * 100));
+}
+
 /** Podsumowanie: ile ludzie są nam winni i ile my im. */
 export function totals(people: readonly PersonDebts[]): { owedToMe: number; iOwe: number } {
   let owedToMe = 0;

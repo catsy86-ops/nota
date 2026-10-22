@@ -47,6 +47,18 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
   const [allDay, setAllDay] = useState(reminderAllDay === true);
   const [untilText, setUntilText] = useState(reminderRepeatUntil !== undefined ? dayInputValue(reminderRepeatUntil) : "");
 
+  /** Przy każdym otwarciu stan wraca do bieżącej notatki — seria mogła przeskoczyć albo ktoś zmienił termin na drugim telefonie. */
+  function openChange(next: boolean) {
+    if (next) {
+      setDate(reminder ? new Date(reminder) : undefined);
+      setTime(reminder ? toTimeInputValue(reminder) : DEFAULT_REMINDER_TIME);
+      setRepeat(reminderRepeat ?? "none");
+      setAllDay(reminderAllDay === true);
+      setUntilText(reminderRepeatUntil !== undefined ? dayInputValue(reminderRepeatUntil) : "");
+    }
+    setOpen(next);
+  }
+
   function handleQuickParsed(parsed: Date) {
     setDate(parsed);
     setTime(toTimeInputValue(parsed.getTime()));
@@ -79,7 +91,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
   }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={openChange}>
       <PopoverTrigger asChild>
         {trigger ?? (
           <motion.button

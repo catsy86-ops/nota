@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { format, formatDistanceStrict, isToday, isTomorrow } from "date-fns";
 import { pl } from "date-fns/locale";
 import { toast } from "sonner";
-import { currentAndNextShift, formatDuration, setDayEntry, shiftInk, type ShiftData, type ShiftOccurrence } from "@/lib/shifts";
+import { currentAndNextShift, formatDuration, recentlyEndedShift, setDayEntry, shiftInk, type ShiftData, type ShiftOccurrence } from "@/lib/shifts";
 import { toastWithUndo } from "@/lib/undoToast";
 
 /** Kończy zmianę „teraz”: odchylenie od planu = różnica między teraz a planowanym końcem. */
@@ -34,10 +34,33 @@ function when(occ: ShiftOccurrence): string {
   return `${format(occ.start, "EEEE d MMMM", { locale: pl })}, ${time}`;
 }
 
+/** Zakończona przed chwilą zmiana: „Skończyłem teraz” zapisze nadgodziny jednym stuknięciem. */
+function EndedCard({ occ }: { occ: ShiftOccurrence }) {
+  return (
+    <section aria-label="Zakończona zmiana" className="relative overflow-hidden rounded-3xl border border-border/60 bg-card p-4 flex items-center gap-4">
+      <span aria-hidden className="absolute inset-y-0 left-0 w-1.5" style={{ backgroundColor: occ.type.color }} />
+      <div className="min-w-0 flex-1">
+        <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Zmiana się skończyła</p>
+        <p className="font-display font-bold line-clamp-2 wrap-anywhere">
+          {occ.type.name} <span className="font-normal text-muted-foreground tabular-nums">do {format(occ.end, "HH:mm")}</span>
+        </p>
+        <p className="text-xs text-muted-foreground">Zostajesz dłużej? Zapisz koniec, zanim zmiana zniknie z karty.</p>
+      </div>
+      <button type="button" onClick={() => finishNow(occ)}
+        className="pressable shrink-0 h-10 coarse:h-11 px-3 rounded-xl border border-border/60 text-sm font-medium hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+        Skończyłem teraz
+      </button>
+    </section>
+  );
+}
+
 /** Co teraz i co dalej — pierwsza rzecz, której szuka ktoś pracujący na zmiany. */
 export function NowCard({ data }: { data: ShiftData }) {
   const now = useNow();
   const { current, next } = useMemo(() => currentAndNextShift(data, now), [data, now]);
+  // Zmiana skończona przed chwilą (nadgodziny): karta zostaje, z odchyleniem liczonym od planu.
+  const ended = !current ? recentlyEndedShift(data, now) : null;
+  if (ended && !next) return <EndedCard occ={ended} />;
   if (!current && !next) return null;
 
   const main = current ?? next!;
