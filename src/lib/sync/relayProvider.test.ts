@@ -264,6 +264,9 @@ describe("RelayProvider", () => {
 
     b.doc.transact(() => b.text.insert(0, "obce "));
     b.provider.flushNow();
+    // Bez gniazda (brak WS w teście) pobiera się ręcznie; czekanie na ponowienie byłoby kruche.
+    await until(() => [...server.rooms.values()][0]?.last === 2);
+    a.sync();
     await until(() => doc.getText("t").toString() === "obce moje");
     expect(remote).toBeGreaterThan(0);
     a.stop();
