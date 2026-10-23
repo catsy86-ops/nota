@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { cn } from "@/lib/utils";
-import { caretCoordinates } from "@/lib/textareaCaret";
+import { getCaretCoords, type TextControl } from "@/lib/textControl";
 import { applyEdit } from "@/lib/editorKeysDom";
 import {
   applySlashCommand, filterSlashCommands, slashQueryAt, type SlashCommand, type SlashQuery,
 } from "@/lib/slashMenu";
 
 interface Options {
-  textareaRef: RefObject<HTMLTextAreaElement | null>;
+  textareaRef: RefObject<TextControl | null>;
   /** Bieżący tekst — zmiana (też z zewnątrz) odświeża menu. */
   value: string;
   /** Gdy inna lista podpowiedzi (np. `[[`) jest otwarta, menu „/” się nie pokazuje. */
@@ -43,7 +43,7 @@ export function useSlashMenu({ textareaRef, value, disabled = false }: Options) 
     const q = slashQueryAt(ta.value, caret);
     if (!q) { dismissedAt.current = null; setOpen(null); return; }
     if (dismissedAt.current === q.start) { setOpen(null); return; }
-    const c = caretCoordinates(ta, caret);
+    const c = getCaretCoords(ta, caret);
     setOpen((prev) =>
       prev && prev.caret === caret && prev.q.start === q.start && prev.q.query === q.query
         ? prev
@@ -74,7 +74,7 @@ export function useSlashMenu({ textareaRef, value, disabled = false }: Options) 
     setOpen(null);
   }, [open]);
 
-  const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const onKeyDown = useCallback((e: React.KeyboardEvent<Element>) => {
     if (!isOpen || e.nativeEvent.isComposing) return;
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();

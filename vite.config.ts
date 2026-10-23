@@ -67,6 +67,8 @@ export default defineConfig(() => ({
           // Eksport PDF (jsPDF + html2canvas + purify + index.es) i Statystyki: ~1,1 MB, rzadko używane.
           // Nie w precache — trafiają do cache `static-assets` przy pierwszym użyciu (offline wcześniej: błąd).
           "**/{exportPdf,index.es,html2canvas,html2canvas.esm,purify.es,StatsDialog}-*.js",
+          // Edytor CodeMirror (~500 KB) za flagą `cmEditor`: tylko na żądanie, poza precache (plan rozbudowy, Faza 1a).
+          "**/CmEditor-*.js",
         ],
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         cleanupOutdatedCaches: true,

@@ -2,11 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, X } from "lucide-react";
 import { findMatches, replaceAll, replaceAt } from "@/lib/findReplace";
 import { cn } from "@/lib/utils";
+import type { TextControl } from "@/lib/textControl";
 
 interface FindReplaceBarProps {
   value: string;
   onChange: (value: string) => void;
-  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  textareaRef: React.RefObject<TextControl | null>;
   onClose: () => void;
 }
 
@@ -39,10 +40,13 @@ export function FindReplaceBar({ value, onChange, textareaRef, onClose }: FindRe
     if (!ta || matches.length === 0) return;
     const at = matches[i];
     ta.setSelectionRange(at, at + query.length);
-    // `setSelectionRange` nie przewija — ustawiamy pozycję wg numeru linii.
-    const line = value.slice(0, at).split("\n").length - 1;
-    const total = value.split("\n").length;
-    ta.scrollTop = Math.max(0, (line / total) * ta.scrollHeight - ta.clientHeight / 2);
+    // `setSelectionRange` nie przewija textarea — ustawiamy pozycję wg numeru linii.
+    // W CM przewija sam `scrollIntoView` z `setSelectionRange`.
+    if (ta instanceof HTMLTextAreaElement) {
+      const line = value.slice(0, at).split("\n").length - 1;
+      const total = value.split("\n").length;
+      ta.scrollTop = Math.max(0, (line / total) * ta.scrollHeight - ta.clientHeight / 2);
+    }
   }
 
   function go(step: 1 | -1) {

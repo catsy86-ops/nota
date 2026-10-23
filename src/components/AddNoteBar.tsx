@@ -346,7 +346,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
     if (slash.isOpen && !e.ctrlKey && !e.metaKey && !e.altKey) { slash.onKeyDown(e); return; }
     if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "Enter") { e.preventDefault(); saveAndNext(); return; }
     // Ctrl+B/I/K, Ctrl+Enter (zapis), listy, Tab, Alt+↑/↓ — zob. editorKeys.ts.
-    if (!isChecklistShortcut(e)) { handleEditorKey(e, { onSave: handleClose }); return; }
+    if (!isChecklistShortcut(e)) { const ta = textareaRef.current; if (ta) handleEditorKey(e, ta, { onSave: handleClose }); return; }
     e.preventDefault();
     const ta = e.currentTarget;
     const r = selectionToChecklist(content, ta.selectionStart, ta.selectionEnd, checklist);

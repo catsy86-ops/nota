@@ -1,4 +1,5 @@
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
+import type { TextControl } from "@/lib/textControl";
 import {
   continueList, duplicateLines, indentList, insertLink, isListLineAt, moveLines, toggleWrap,
   type Edit,
@@ -10,7 +11,7 @@ import {
  * `input` leci samo, więc React dostaje `onChange`). Bez execCommand (jsdom,
  * część przeglądarek) — `setRangeText` + ręczne zdarzenie `input`.
  */
-export function applyEdit(ta: HTMLTextAreaElement, edit: Edit): void {
+export function applyEdit(ta: TextControl, edit: Edit): void {
   const old = ta.value;
   if (edit.value !== old) {
     const next = edit.value;
@@ -23,6 +24,12 @@ export function applyEdit(ta: HTMLTextAreaElement, edit: Edit): void {
     const to = old.length - q;
     const insert = next.slice(p, next.length - q);
 
+    if (!(ta instanceof HTMLTextAreaElement)) {
+      // Adapter CM: jedna transakcja, którą cofa historia edytora.
+      ta.setRangeText(insert, from, to, "end");
+      ta.setSelectionRange(edit.selStart, edit.selEnd);
+      return;
+    }
     ta.setSelectionRange(from, to);
     let done = false;
     try {
@@ -62,9 +69,9 @@ function consume(e: ReactKeyboardEvent) {
  * Podpowiedzi `[[` mają pierwszeństwo — wołaj to dopiero, gdy lista jest zamknięta
  * (albo z Ctrl/Cmd/Alt, których lista nie używa).
  */
-export function handleEditorKey(e: ReactKeyboardEvent<HTMLTextAreaElement>, opts: EditorKeyOptions = {}): boolean {
+export function handleEditorKey(e: ReactKeyboardEvent<Element>, ta: TextControl, opts: EditorKeyOptions = {}): boolean {
   if (e.nativeEvent.isComposing) return false;
-  const ta = e.currentTarget;
+
   const { value, selectionStart: s, selectionEnd: end } = ta;
   const mod = e.ctrlKey || e.metaKey;
   const key = e.key;

@@ -1,5 +1,6 @@
 import { memo, useDeferredValue, useEffect, useMemo, useState, type RefObject } from "react";
 import { cn } from "@/lib/utils";
+import type { TextControl } from "@/lib/textControl";
 import { statsLabel } from "@/lib/textStats";
 
 const SELECTION_EVENTS = ["selectionchange", "select", "keyup", "mouseup", "touchend", "input"] as const;
@@ -15,7 +16,7 @@ export const EditorStats = memo(function EditorStats({
   value,
   className,
 }: {
-  textareaRef: RefObject<HTMLTextAreaElement | null>;
+  textareaRef: RefObject<TextControl | null>;
   value: string;
   className?: string;
 }) {

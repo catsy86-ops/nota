@@ -22,7 +22,7 @@ export function useNoteImages({ note, onUpdate }: { note: Note } & Pick<ReturnTy
   }
 
   /** Wklejony zrzut ekranu albo skopiowany obraz trafia do notatki zamiast do pola tekstu. */
-  function handleEditPaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+  function handleEditPaste(e: React.ClipboardEvent<Element>) {
     const pasted = Array.from(e.clipboardData.files).filter((f) => f.type.startsWith("image/"));
     if (pasted.length === 0) return;
     e.preventDefault();

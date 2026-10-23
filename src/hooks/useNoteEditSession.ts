@@ -8,6 +8,7 @@ import { useSlashMenu } from "@/hooks/useSlashMenu";
 import { haptic } from "@/lib/haptics";
 import { isChecklistShortcut, selectionToChecklist } from "@/lib/checklistPaste";
 import { handleEditorKey } from "@/lib/editorKeysDom";
+import type { TextControl } from "@/lib/textControl";
 
 /**
  * Sesja edycji tekstu w kaflu: tytuł, treść, lista, tryb pełnego edytora i podgląd.
@@ -37,14 +38,15 @@ export function useNoteEditSession({
   const [showPreview, setShowPreview] = useState(false);
   const [fullEditor, setFullEditor] = useState(false);
   const [findOpen, setFindOpen] = useState(false);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  /** Pole treści: `textarea` albo adapter CM (`TextControl`), zależnie od flagi `cmEditor`. */
+  const textareaRef = useRef<TextControl | null>(null);
 
   // Edycja w kaflu rośnie z treścią (do ~60% ekranu), zamiast pokazywać 2 linie.
   // Pełny ekran bez listy ma własną wysokość (`h-full`), tam nie ruszamy;
   // z listą treść rośnie do ~35% ekranu, a resztę dostaje lista.
   useLayoutEffect(() => {
     const ta = textareaRef.current;
-    if (!isEditing || (fullEditor && !showChecklist) || !ta) return;
+    if (!isEditing || (fullEditor && !showChecklist) || !(ta instanceof HTMLTextAreaElement)) return;
     ta.style.height = "auto";
     ta.style.height = `${Math.min(ta.scrollHeight + 2, Math.round(window.innerHeight * (fullEditor ? 0.35 : 0.6)))}px`;
   }, [isEditing, fullEditor, showChecklist, showPreview, editContent]);
@@ -110,10 +112,12 @@ export function useNoteEditSession({
   }
 
   /** Ctrl+Shift+L zamienia zaznaczone linie (albo bieżącą) na pozycje listy zadań; reszta klawiszy trafia do podpowiedzi wikilinków. */
-  function handleEditKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+  function handleEditKeyDown(e: React.KeyboardEvent<Element>) {
+    const ta = textareaRef.current;
+    if (!ta) return;
     if (isChecklistShortcut(e)) {
       e.preventDefault();
-      const r = selectionToChecklist(editContent, e.currentTarget.selectionStart, e.currentTarget.selectionEnd, editChecklist);
+      const r = selectionToChecklist(editContent, ta.selectionStart, ta.selectionEnd, editChecklist);
       if (r) { setEditContent(r.content); setEditChecklist(r.checklist); setShowChecklist(true); }
       return;
     }
@@ -127,7 +131,7 @@ export function useNoteEditSession({
     if (slash.isOpen && !e.ctrlKey && !e.metaKey && !e.altKey) { slash.onKeyDown(e); return; }
     // Otwarta lista `[[` ma pierwszeństwo dla Enter/Tab/strzałek/Esc; Ctrl/Alt jej nie dotyczą.
     if (wiki.isOpen && !e.ctrlKey && !e.metaKey && !e.altKey) { wiki.textareaProps.onKeyDown(e); return; }
-    if (handleEditorKey(e, { onSave: handleSave })) return;
+    if (handleEditorKey(e, ta, { onSave: handleSave })) return;
     wiki.textareaProps.onKeyDown(e);
   }
 

@@ -2,6 +2,7 @@ import { Eye, EyeOff, Expand, ListChecks, Minimize2, Type } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 import type { NoteEditSession } from "@/hooks/useNoteEditSession";
 import { cn } from "@/lib/utils";
+import { useFeatureFlags } from "@/lib/featureFlags";
 import { TitleField } from "./TitleField";
 import { MarkdownRenderer, FormatToolbar } from "./MarkdownRenderer";
 import { AttachmentsPanel } from "./AttachmentsPanel";
@@ -11,6 +12,9 @@ import { lazy, Suspense } from "react";
 
 /** Pasek „Znajdź i zamień” (Ctrl+F/H) ładowany przy pierwszym użyciu. */
 const FindReplaceBar = lazy(() => import("./FindReplaceBar").then((m) => ({ default: m.FindReplaceBar })));
+
+/** Edytor CodeMirror 6 (krok 1a, za flagą `cmEditor`) — ładowany dopiero po włączeniu flagi. */
+const CmEditor = lazy(() => import("./editor/CmEditor").then((m) => ({ default: m.CmEditor })));
 
 /**
  * Edytor notatki: tytuł, pasek narzędzi, treść (z podglądem), lista zadań, załączniki
@@ -37,7 +41,7 @@ export function NoteEditor({
   knownTitles: Set<string> | undefined;
   onWikiClick: ((title: string) => void) | undefined;
   onUpdate: ((id: string, updates: Partial<Omit<Note, "id" | "createdAt">>) => void) | undefined;
-  onPaste: (e: React.ClipboardEvent<HTMLTextAreaElement>) => void;
+  onPaste: (e: React.ClipboardEvent<Element>) => void;
 }) {
   const {
     editTitle, setEditTitle,
@@ -63,6 +67,44 @@ export function NoteEditor({
   const textareaCls = full
     ? cn("w-full bg-transparent text-base leading-relaxed text-foreground/90 outline-hidden resize-none", contentFills && "h-full")
     : "w-full bg-transparent text-sm text-foreground/80 outline-hidden resize-none";
+  // Pole treści: zwykłe `textarea` albo CodeMirror za flagą `cmEditor` (plan rozbudowy, Faza 1a).
+  // Oba dostają to samo `textareaRef` (`TextControl`) i te same zdarzenia, więc reszta edytora nie zależy od silnika.
+  const cmOn = useFeatureFlags().cmEditor;
+  function renderEditor(cls: string) {
+    if (cmOn) {
+      return (
+        <Suspense fallback={<div className={cn(cls, "min-h-[60px]")} aria-busy="true" />}>
+          <CmEditor
+            value={editContent}
+            onChange={setEditContent}
+            onSelect={handleEditSelect}
+            onKeyDown={handleEditKeyDown}
+            onPaste={onPaste}
+            textControlRef={textareaRef}
+            spellcheck={spellcheck}
+            placeholder="Treść notatki..."
+            ariaLabel="Treść notatki"
+            className={cls}
+          />
+        </Suspense>
+      );
+    }
+    return (
+      <textarea
+        spellCheck={spellcheck}
+        ref={(el) => { textareaRef.current = el; }}
+        value={editContent}
+        onChange={(e) => setEditContent(e.target.value)}
+        {...wiki.textareaProps}
+        onSelect={handleEditSelect}
+        onKeyDown={handleEditKeyDown}
+        onPaste={onPaste}
+        className={cls}
+        placeholder="Treść notatki..."
+      />
+    );
+  }
+
   return (
     <div
       className={full ? "flex flex-col gap-3 h-full min-h-0" : "space-y-2"}
@@ -111,13 +153,13 @@ export function NoteEditor({
       <div className={cn("relative", contentFills && "flex-1 min-h-0")}>
         {showPreview ? (
           <div className={cn("grid grid-cols-2 gap-2", contentFills && "h-full")}>
-            <textarea spellCheck={spellcheck} ref={textareaRef} value={editContent} onChange={(e) => setEditContent(e.target.value)} {...wiki.textareaProps} onSelect={handleEditSelect} onKeyDown={handleEditKeyDown} onPaste={onPaste} className={cn(textareaCls, "border border-border/30 rounded-lg p-2", !contentFills && "min-h-[80px]")} placeholder="Treść notatki..." />
+            {renderEditor(cn(textareaCls, "border border-border/30 rounded-lg p-2", !contentFills && "min-h-[80px]"))}
             <div className={cn("bg-muted/20 rounded-lg p-2 overflow-y-auto border border-border/30", contentFills ? "h-full" : "min-h-[80px]")}>
               {editContent ? <MarkdownRenderer content={editContent} knownTitles={knownTitles} onWikiClick={onWikiClick} /> : <p className="text-xs text-muted-foreground italic">Podgląd...</p>}
             </div>
           </div>
         ) : (
-          <textarea spellCheck={spellcheck} ref={textareaRef} value={editContent} onChange={(e) => setEditContent(e.target.value)} {...wiki.textareaProps} onSelect={handleEditSelect} onKeyDown={handleEditKeyDown} onPaste={onPaste} className={cn(textareaCls, !full && "min-h-[60px]")} placeholder="Treść notatki..." />
+          renderEditor(cn(textareaCls, !full && "min-h-[60px]"))
         )}
         {wiki.popup()}{slash.popup()}
       </div>

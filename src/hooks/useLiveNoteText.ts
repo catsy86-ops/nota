@@ -1,11 +1,12 @@
 import { useEffect, useLayoutEffect, useRef, type RefObject } from "react";
 import { onRemoteNoteTextChange, rebaseNoteTextEdit } from "@/hooks/useNotes";
+import { isTextControlFocused, type TextControl } from "@/lib/textControl";
 
 interface LiveNoteTextOptions {
   noteId: string;
   /** Czy sesja edycji jest otwarta (`beginNoteTextEdit` już zawołane). */
   active: boolean;
-  textareaRef: RefObject<HTMLTextAreaElement | null>;
+  textareaRef: RefObject<TextControl | null>;
   /** Bieżący szkic treści — czytany w chwili zdarzenia, nie z domknięcia. */
   getDraft: () => string;
   setDraft: (text: string) => void;
@@ -30,7 +31,7 @@ export function useLiveNoteText({ noteId, active, textareaRef, getDraft, setDraf
       const sel: [number, number] = ta ? [ta.selectionStart, ta.selectionEnd] : [0, 0];
       const res = rebaseNoteTextEdit(noteId, getDraftRef.current(), sel);
       if (!res) return;
-      if (ta && document.activeElement === ta) pendingSelection.current = res.selection;
+      if (ta && isTextControlFocused(ta)) pendingSelection.current = res.selection;
       setDraftRef.current(res.text);
     });
   }, [active, noteId, textareaRef]);

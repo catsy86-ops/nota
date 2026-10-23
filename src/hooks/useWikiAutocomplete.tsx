@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { cn } from "@/lib/utils";
-import { caretCoordinates } from "@/lib/textareaCaret";
+import { getCaretCoords, type TextControl } from "@/lib/textControl";
 import { completeWikiLink, suggestWikiTitles, wikiQueryAt, type WikiQuery } from "@/lib/wikiLinks";
 import { completeMention, mentionQueryAt, suggestMentions, type MentionItem } from "@/lib/mentions";
 
 interface Options {
-  textareaRef: RefObject<HTMLTextAreaElement | null>;
+  textareaRef: RefObject<TextControl | null>;
   value: string;
   onChange: (text: string) => void;
   /** Tytuły do podpowiedzi (`WikiIndex.titles`). */
@@ -53,7 +53,7 @@ export function useWikiAutocomplete({ textareaRef, value, onChange, titles, excl
     const kind = wiki ? "wiki" : "mention";
     if (!q) { dismissedAt.current = null; setOpen(null); return; }
     if (dismissedAt.current === q.start) { setOpen(null); return; }
-    const c = caretCoordinates(ta, caret);
+    const c = getCaretCoords(ta, caret);
     setOpen((prev) =>
       prev && prev.caret === caret && prev.kind === kind && prev.q.start === q.start && prev.q.query === q.query
         ? prev
@@ -91,7 +91,7 @@ export function useWikiAutocomplete({ textareaRef, value, onChange, titles, excl
     setOpen(null);
   }, [open]);
 
-  const onKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const onKeyDown = useCallback((e: React.KeyboardEvent<Element>) => {
     if (!isOpen) return;
     if (e.key === "ArrowDown" || e.key === "ArrowUp") {
       e.preventDefault();
