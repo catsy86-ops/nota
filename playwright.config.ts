@@ -1,4 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 
 // Runs against the real production build (`vite build` + `vite preview`), not
 // the dev server: the service worker is disabled in dev (`devOptions.enabled:
@@ -20,12 +22,23 @@ export default defineConfig({
     baseURL: "http://localhost:4173",
     trace: "on-first-retry",
   },
-  webServer: {
-    command: "npm run build && npm run preview -- --port 4173 --strictPort",
-    url: "http://localhost:4173",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: [
+    {
+      command: "npm run build && npm run preview -- --port 4173 --strictPort",
+      url: "http://localhost:4173",
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+    // Prawdziwy przekaźnik synchronizacji (e2e/relay-sync.spec.ts). Wymaga `npm install` w relay-server/.
+    {
+      command: "node server.js",
+      cwd: "relay-server",
+      url: "http://127.0.0.1:4466/health",
+      env: { PORT: "4466", DATA_DIR: join(tmpdir(), "notki-e2e-relay") },
+      reuseExistingServer: !process.env.CI,
+      timeout: 30_000,
+    },
+  ],
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     // Ten sam zestaw testów edytora z włączoną flagą `cmEditor` (CodeMirror 6, plan rozbudowy Faza 1a).

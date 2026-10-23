@@ -23,6 +23,8 @@ export type RelayStatus = "idle" | "connecting" | "online" | "offline" | "error"
 export interface RelayState {
   cursor: number;
   compactedAt: number;
+  /** Wektor stanu z ostatniego udanego wysłania: od niego liczymy, co wysłać przy starcie. */
+  sv?: Uint8Array;
 }
 
 /** Trwałość: kolejka i kursor. Implementacja produkcyjna — IndexedDB (`relayRuntime.ts`). */
@@ -90,7 +92,7 @@ export class RelayProvider {
   constructor(private readonly opts: RelayOptions) {
     this.base = opts.baseUrl.replace(/\/+$/, "");
     this.aad = relayAad(opts.keys.roomId);
-    this.fetchFn = opts.fetch ?? fetch;
+    this.fetchFn = opts.fetch ?? fetch.bind(globalThis); // natywny fetch wymaga właściwego this
   }
 
   get cursor(): number {
@@ -107,6 +109,10 @@ export class RelayProvider {
     const [pending, state] = await Promise.all([this.opts.store.loadPending(), this.opts.store.loadState()]);
     if (pending) this.pending = [pending];
     this.state = state;
+    // Zmiany sprzed startu nie przeszły przez nasłuch `update`: dokładamy różnicę względem `sv`.
+    // Pusta różnica to dwa bajty (`[0,0]`) i jej nie wysyłamy.
+    const initial = Y.encodeStateAsUpdate(this.opts.doc, this.state.sv);
+    if (initial.length > 2) this.pending.push(initial);
     this.setStatus("connecting");
     this.opts.doc.on("update", this.onLocalUpdate);
     this.connectSocket();
@@ -267,6 +273,7 @@ export class RelayProvider {
 
   private async flushTask(): Promise<void> {
     if (!this.started || this.pending.length === 0) return;
+    const sv = Y.encodeStateVector(this.opts.doc);
     const parts = this.pending;
     this.pending = [];
     const merged = Y.mergeUpdates(parts);
@@ -282,10 +289,9 @@ export class RelayProvider {
     }
     await this.persistPending();
     // Jeśli nasz wpis dostał numer zaraz za kursorem, dokument już go zawiera — nie trzeba go pobierać.
-    if (res.seq === this.state.cursor + 1) {
-      this.state = { ...this.state, cursor: res.seq };
-      await this.persistState();
-    }
+    const cursor = res.seq === this.state.cursor + 1 ? res.seq : this.state.cursor;
+    this.state = { ...this.state, cursor, sv };
+    await this.persistState();
     this.retryMs = RETRY_MIN_MS;
     this.setStatus("online");
     await this.compactTask();

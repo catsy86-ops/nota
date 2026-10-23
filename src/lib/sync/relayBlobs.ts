@@ -61,7 +61,7 @@ export class RelayBlobs {
 
   constructor(private readonly opts: RelayBlobsOptions) {
     this.base = opts.baseUrl.replace(/\/+$/, "");
-    this.fetchFn = opts.fetch ?? fetch;
+    this.fetchFn = opts.fetch ?? fetch.bind(globalThis); // natywny fetch wymaga właściwego this
   }
 
   async sync(): Promise<BlobSyncResult> {

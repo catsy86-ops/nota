@@ -169,6 +169,42 @@ describe("RelayProvider", () => {
     b.provider.stop();
   });
 
+  it("zmiany zrobione przed startem przekaźnika też trafiają na serwer", async () => {
+    const server = fakeServer();
+    const keys = await deriveRelayKeys(CODE, ITER);
+    // Notatka powstała, zanim włączono synchronizację — bez wysłania przy starcie zostałaby lokalnie.
+    const early = new Y.Doc();
+    early.getText("t").insert(0, "sprzed startu");
+    const store = new MemStore();
+    const a = new RelayProvider({ baseUrl: "https://relay.test", keys, doc: early, store, fetch: server.fetchFn, flushMs: 5 });
+    await a.start();
+    const b = await device(keys, server);
+    await until(() => b.text.toString() === "sprzed startu");
+    a.stop();
+    b.provider.stop();
+  });
+
+  it("kolejny start wysyła tylko różnicę względem zapamiętanego stanu", async () => {
+    const server = fakeServer();
+    const keys = await deriveRelayKeys(CODE, ITER);
+    const doc = new Y.Doc();
+    const store = new MemStore();
+    doc.getText("t").insert(0, "pierwsze");
+    const a1 = new RelayProvider({ baseUrl: "https://relay.test", keys, doc, store, fetch: server.fetchFn, flushMs: 5 });
+    await a1.start();
+    await until(() => [...server.rooms.values()][0]?.last === 1);
+    a1.stop();
+    doc.getText("t").insert(0, "drugie ");
+    const a2 = new RelayProvider({ baseUrl: "https://relay.test", keys, doc, store, fetch: server.fetchFn, flushMs: 5 });
+    await a2.start();
+    await until(() => [...server.rooms.values()][0]?.last === 2);
+    const room = [...server.rooms.values()][0];
+    // Druga wysyłka to tylko „drugie ”, nie cały dokument od nowa.
+    const second = room.entries[1].data;
+    expect(second.length).toBeLessThan(room.entries[0].data.length + 60);
+    a2.stop();
+  });
+
   it("kolejka offline przeżywa restart (zapisana w magazynie)", async () => {
     const server = fakeServer();
     const keys = await deriveRelayKeys(CODE, ITER);
