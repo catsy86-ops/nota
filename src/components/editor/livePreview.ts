@@ -1,16 +1,20 @@
 import { ensureSyntaxTree, syntaxTree } from "@codemirror/language";
 import { EditorState, type Extension, type Range } from "@codemirror/state";
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from "@codemirror/view";
+import { Decoration, type DecorationSet, EditorView, WidgetType, ViewPlugin, type ViewUpdate } from "@codemirror/view";
 
 /**
  * Podgląd na żywo w CodeMirror (plan rozbudowy, Faza 1, krok 1c).
  * Znaczniki Markdown (`#`, `**`, `*`, `` ` ``, `~~`, `[]()`, `>`) są ukryte poza linią, na której stoi kursor,
  * a treść dostaje styl (nagłówek, pochylenie, pogrubienie, kod, link, cytat).
  *
- * Dokument się nie zmienia — to tylko dekoracje widoku. Ukryte znaczniki są „atomowe”,
+ * Widżety: pole zadania `- [ ]` (zawsze widoczne, klik odhacza), pozioma linia `---` (poza kursorem)
+ * i `[[link]]` (nawiasy znikają poza kursorem, tekst dostaje styl wikilinku).
+ *
+ * Dokument się nie zmienia — to tylko dekoracje widoku. Ukryte znaczniki i widżety są „atomowe”,
  * więc strzałki przeskakują przez nie zamiast wchodzić do środka.
  *
- * Świadomie bez widżetów (pole zadania, obraz, tabela, `[[link]]`) — to kolejne kroki Fazy 1.
+ * Świadomie bez widżetów: obraz, tabela, podgląd wzoru i klik w `[[link]]` (otwarcie notatki wymaga
+ * callbacku z aplikacji — kolejny krok Fazy 1).
  */
 
 const HIDDEN = Decoration.replace({});
@@ -19,6 +23,69 @@ const STRONG = Decoration.mark({ class: "cm-lp-strong" });
 const CODE = Decoration.mark({ class: "cm-lp-code" });
 const STRIKE = Decoration.mark({ class: "cm-lp-strike" });
 const LINK = Decoration.mark({ class: "cm-lp-link" });
+const WIKI = Decoration.mark({ class: "cm-lp-wiki" });
+
+/** Węzły kodu — `[[...]]` wewnątrz nich zostaje dosłowne. */
+const CODE_NODES = new Set(["InlineCode", "FencedCode", "CodeBlock", "CodeText"]);
+
+/** Ten sam kształt co `[[tytuł#nagłówek]]` i `[[cel|tekst]]` w aplikacji (`lib/wikiLinks.ts`). */
+const WIKI_LINK = /\[\[[^[\]\n]+\]\]/g;
+
+function insideCode(tree: ReturnType<typeof syntaxTree>, pos: number): boolean {
+  for (let node: ReturnType<typeof tree.resolveInner> | null = tree.resolveInner(pos, 1); node; node = node.parent) {
+    if (CODE_NODES.has(node.name)) return true;
+  }
+  return false;
+}
+
+/**
+ * Pole zadania. Klik zmienia `[ ]` na `[x]` i odwrotnie w dokumencie (przez transakcję CM),
+ * więc stan zostaje w tekście notatki, a nie w widżecie.
+ */
+class TaskWidget extends WidgetType {
+  constructor(readonly checked: boolean) {
+    super();
+  }
+
+  eq(other: TaskWidget) {
+    return other.checked === this.checked;
+  }
+
+  toDOM(view: EditorView) {
+    const box = document.createElement("input");
+    box.type = "checkbox";
+    box.className = "cm-lp-task";
+    box.checked = this.checked;
+    box.setAttribute("aria-label", this.checked ? "Zrobione" : "Do zrobienia");
+    // Klik obsługujemy sami: przeglądarka nie zmienia stanu pola, o nim decyduje dokument.
+    box.addEventListener("mousedown", (e) => e.preventDefault());
+    box.addEventListener("click", (e) => {
+      e.preventDefault();
+      const from = view.posAtDOM(box);
+      const mark = view.state.doc.sliceString(from + 1, from + 2);
+      if (view.state.doc.sliceString(from, from + 1) !== "[" || !/[ xX]/.test(mark)) return;
+      const next = mark === " " ? "x" : " ";
+      view.dispatch({ changes: { from: from + 1, to: from + 2, insert: next } });
+    });
+    return box;
+  }
+
+  ignoreEvent() {
+    return true;
+  }
+}
+
+class RuleWidget extends WidgetType {
+  eq() {
+    return true;
+  }
+
+  toDOM() {
+    const hr = document.createElement("hr");
+    hr.className = "cm-lp-hr";
+    return hr;
+  }
+}
 
 const HEADING_LEVEL: Record<string, number> = {
   ATXHeading1: 1,
@@ -66,6 +133,18 @@ export function buildLivePreview(state: EditorState, from = 0, to = state.doc.le
   };
 
   const tree = ensureSyntaxTree(state, to, 200) ?? syntaxTree(state);
+
+  // `[[link]]` nie jest składnią GFM, więc szukamy go w tekście widocznych linii, z pominięciem kodu.
+  // Parser widzi go jako link `[Tytuł]` z zewnętrznym `[` w tekście — stąd mapa początek → koniec.
+  const wikiAt = new Map<number, number>();
+  for (let n = doc.lineAt(from).number; n <= doc.lineAt(to).number; n++) {
+    const line = doc.line(n);
+    for (const m of line.text.matchAll(WIKI_LINK)) {
+      const start = line.from + (m.index ?? 0);
+      if (!insideCode(tree, start)) wikiAt.set(start, start + m[0].length);
+    }
+  }
+
   tree.iterate({
     from,
     to,
@@ -73,6 +152,10 @@ export function buildLivePreview(state: EditorState, from = 0, to = state.doc.le
       const name = node.name;
       const parent = node.node.parent?.name ?? "";
       const onActiveLine = active.has(doc.lineAt(node.from).number);
+
+      // `[[cel]]` parser Markdown bierze za link z zagnieżdżonym `[...]`. Wikilinki obsługuje skan niżej,
+      // a `false` pomija dzieci węzła, żeby nawiasy nie były ukrywane dwa razy.
+      if (name === "Link" && wikiAt.get(node.from - 1) === node.to + 1) return false;
 
       const level = HEADING_LEVEL[name];
       if (level) {
@@ -93,6 +176,22 @@ export function buildLivePreview(state: EditorState, from = 0, to = state.doc.le
       else if (name === "Strikethrough") ranges.push(STRIKE.range(node.from, node.to));
       else if (name === "Link") ranges.push(LINK.range(node.from, node.to));
 
+      if (name === "TaskMarker") {
+        // Pole zadania jest zawsze widoczne, także na linii z kursorem (jak w Obsidianie).
+        const checked = /[xX]/.test(doc.sliceString(node.from + 1, node.from + 2));
+        const box = Decoration.replace({ widget: new TaskWidget(checked) });
+        ranges.push(box.range(node.from, node.to));
+        hiddenRanges.push(box.range(node.from, node.to));
+        return;
+      }
+      if (name === "HorizontalRule") {
+        if (onActiveLine) return;
+        const rule = Decoration.replace({ widget: new RuleWidget() });
+        ranges.push(rule.range(node.from, node.to));
+        hiddenRanges.push(rule.range(node.from, node.to));
+        return;
+      }
+
       if (onActiveLine) return;
       if (name === "HeaderMark" && parent.startsWith("ATXHeading")) hideWithSpace(node.from, node.to);
       else if (name === "QuoteMark") hideWithSpace(node.from, node.to);
@@ -102,6 +201,17 @@ export function buildLivePreview(state: EditorState, from = 0, to = state.doc.le
       else if ((name === "LinkMark" || name === "URL") && parent === "Link") hide(node.from, node.to);
     },
   });
+
+  // Poza kursorem nawiasy wikilinku znikają, a cel dostaje styl.
+  for (const [start, end] of wikiAt) {
+    if (active.has(doc.lineAt(start).number)) {
+      ranges.push(WIKI.range(start, end));
+    } else {
+      hide(start, start + 2);
+      ranges.push(WIKI.range(start + 2, end - 2));
+      hide(end - 2, end);
+    }
+  }
 
   return {
     decorations: Decoration.set(ranges, true),
@@ -154,6 +264,16 @@ const livePreviewTheme = EditorView.baseTheme({
     padding: "0 0.2em",
   },
   ".cm-lp-link": { color: "hsl(var(--primary))", textDecoration: "underline" },
+  ".cm-lp-wiki": { color: "hsl(var(--primary))", textDecoration: "underline dotted" },
+  ".cm-lp-task": {
+    width: "1.1em",
+    height: "1.1em",
+    margin: "0 0.35em 0 0",
+    verticalAlign: "-0.15em",
+    accentColor: "hsl(var(--primary))",
+    cursor: "pointer",
+  },
+  ".cm-lp-hr": { border: "0", borderTop: "1px solid hsl(var(--border))", margin: "0.9em 0" },
   ".cm-lp-quote": {
     borderLeft: "3px solid hsl(var(--border))",
     paddingLeft: "0.75em",

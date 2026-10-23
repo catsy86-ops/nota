@@ -110,3 +110,24 @@ test("tekst trafia do notatki bez „Zapisz” (zapis przez dokument Yjs)", asyn
   await page.getByRole("heading", { name: title, exact: true }).click();
   await expect.poll(() => readEditorText(editorBody(page))).toBe("nie kliknięto Zapisz");
 });
+
+test("pole zadania w CM odhacza zadanie w treści, a [[link]] poza kursorem traci nawiasy", async ({ page }) => {
+  const title = `CM-podglad ${Date.now()}`;
+  await addNote(page, title);
+  const body = await openEditor(page, title);
+  await body.fill("- [ ] kupić mleko\n\nZobacz [[Dom]]");
+  // Kursor jest na ostatniej linii: pole zadania jest widoczne, a `[[` na tej linii — w całości.
+  await expect(page.locator("input.cm-lp-task")).toHaveCount(1);
+  await expect.poll(() => cmText(body)).toBe("- [ ] kupić mleko\n\nZobacz [[Dom]]");
+  await page.locator("input.cm-lp-task").click();
+  await expect.poll(() => cmText(body)).toBe("- [x] kupić mleko\n\nZobacz [[Dom]]");
+  // Kursor na pierwszej linii: nawiasy `[[` i `]]` znikają, tekst „Dom” zostaje ze stylem wikilinku.
+  await body.press("ArrowUp");
+  await body.press("ArrowUp");
+  await expect.poll(() => cmText(body)).toBe("- [x] kupić mleko\n\nZobacz Dom");
+  await expect(page.locator(".cm-lp-wiki")).toHaveText("Dom");
+  // Kursor wraca na linię z linkiem: nawiasy wracają do tekstu.
+  await body.press("ArrowDown");
+  await body.press("ArrowDown");
+  await expect.poll(() => cmText(body)).toBe("- [x] kupić mleko\n\nZobacz [[Dom]]");
+});

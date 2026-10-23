@@ -90,3 +90,46 @@ describe("livePreview w widoku CodeMirror", () => {
     view.destroy();
   });
 });
+
+describe("livePreview — widżety", () => {
+  it("pole zadania jest zawsze atomowym widżetem, także na linii z kursorem", () => {
+    const doc = "- [ ] zrobić\n- [x] gotowe\n\nkoniec";
+    const state = stateAt(doc, 3);
+    const widgets: boolean[] = [];
+    buildLivePreview(state).hidden.between(0, doc.length, (from, to) => {
+      if (doc.slice(from, to).startsWith("[")) widgets.push(doc.slice(from, to) === "[ ]");
+    });
+    expect(widgets).toEqual([true, false]);
+  });
+
+  it("klik w pole odhacza zadanie w dokumencie, a drugi klik cofa", () => {
+    const view = new EditorView({
+      state: EditorState.create({ doc: "- [ ] zrobić\n\nkoniec", selection: { anchor: 19 }, extensions: buildCmExtensions() }),
+    });
+    const box = view.contentDOM.querySelector<HTMLInputElement>("input.cm-lp-task");
+    expect(box).not.toBeNull();
+    expect(box?.checked).toBe(false);
+    box?.click();
+    expect(view.state.doc.toString()).toBe("- [x] zrobić\n\nkoniec");
+    view.contentDOM.querySelector<HTMLInputElement>("input.cm-lp-task")?.click();
+    expect(view.state.doc.toString()).toBe("- [ ] zrobić\n\nkoniec");
+    view.destroy();
+  });
+
+  it("linia pozioma poza kursorem jest ukryta jako widżet, a na linii z kursorem zostaje", () => {
+    const doc = "przed\n\n---\n\nza";
+    expect(hiddenText(doc)).toEqual(["---"]);
+    expect(hiddenText(doc, 9)).toEqual([]);
+  });
+
+  it("[[link]] traci nawiasy poza kursorem i zostaje tekst z tytułem i nagłówkiem", () => {
+    const doc = "Zobacz [[Tytuł#Sekcja]] tutaj\n\nkoniec";
+    expect(hiddenText(doc)).toEqual(["[[", "]]"]);
+    expect(hiddenText(doc, 6)).toEqual([]);
+  });
+
+  it("[[...]] w kodzie zostaje dosłowne", () => {
+    const doc = "a `[[nie]]` b\n\nkoniec";
+    expect(hiddenText(doc)).toEqual(["`", "`"]);
+  });
+});

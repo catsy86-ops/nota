@@ -22,6 +22,10 @@ export async function readEditorText(body: Locator): Promise<string> {
       .map((line) => {
         const clone = line.cloneNode(true) as HTMLElement;
         clone.querySelectorAll(".cm-placeholder").forEach((n) => n.remove());
+        // Pole zadania w podglądzie zastępuje `[ ]`/`[x]`; w tekście dokumentu znacznik zostaje.
+        clone.querySelectorAll<HTMLInputElement>("input.cm-lp-task").forEach((box) => {
+          box.replaceWith(box.checked ? "[x]" : "[ ]");
+        });
         return clone.textContent ?? "";
       })
       .join("\n");
