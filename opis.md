@@ -1930,3 +1930,34 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - Zorza: wstęgi przesuwa `translate`, więc działa tylko w przeglądarkach z tą właściwością (wszystkie aktualne).
 - **Testy:** `src/lib/skinSignal.test.ts`, `src/lib/scrollParallax.test.ts`; `e2e/skin-signatures.spec.ts` (13 przypadków, w tym view/dawn/pin/plan/zorza). Regresja: `skin-motion`, `a11y`, `seasons`, `editor-cm` — 81/81 w `chromium`; `vitest` 1898/1898; typy i lint czyste.
 - **Commit:** `9d41492` (2026-10-23).
+
+## Edytor CodeMirror — podgląd na żywo Markdown (Faza 1c, 2026-10-23)
+
+- **Co robi:** w edytorze CM (flaga `cmEditor`) znaczniki Markdown znikają z linii, na której nie ma kursora: `#` nagłówka (wraz ze spacją), `**`, `*`, `` ` `` w kodzie, `~~`, nawiasy i adres linku `[tekst](adres)`, `>` cytatu. Treść dostaje styl: nagłówki H1–H6, pochylenie, pogrubienie, kod, przekreślenie, link, pionowa kreska cytatu. Kursor albo zaznaczenie na danej linii przywraca znaczniki do edycji.
+- **Gdzie:**
+  - `src/components/editor/livePreview.ts` — `buildLivePreview(state, from, to)` (czysta funkcja: dekoracje i zbiór ukrytych zakresów), `activeLineNumbers(state)`, `livePreview()` (rozszerzenie: `ViewPlugin` + `EditorView.atomicRanges` + `baseTheme` z klasami `cm-lp-*`).
+  - `src/components/editor/cmExtensions.ts` — `livePreview()` dodane po `markdown(...)` w `buildCmExtensions`.
+  - `src/components/EditorStats.tsx` — poprawka typów (patrz niżej).
+- **Jak działa:**
+  - Drzewo składni z `@codemirror/lang-markdown` (Lezer). `ensureSyntaxTree` z limitem 200 ms, potem iteracja tylko po `view.viewport`.
+  - Linia aktywna = linia każdego zaznaczenia (`activeLineNumbers`). Znacznik ukrywa się, gdy jego linia nie jest aktywna. Ukrycie to `Decoration.replace({})`, więc dokument się nie zmienia, a zapis, Yjs i kopie działają jak dotąd.
+  - Przebudowa dekoracji tylko przy zmianie tekstu, widoku albo zestawu aktywnych linii (klucz tekstowy). Ruch kursora w tej samej linii nic nie kosztuje.
+  - Ukryte zakresy są „atomowe” (`atomicRanges`): strzałka i Backspace przeskakują przez znacznik, zamiast wchodzić w środek.
+  - Nagłówek to dekoracja linii (`Decoration.line`), więc wygląd zostaje, nawet gdy `#` jest ukryte.
+- **Ograniczenia i pułapki:**
+  - Tekst w DOM nie jest dokumentem: poza linią kursora `textContent` nie zawiera `**`. Testy czytające `.cm-line` widzą wtedy treść bez znaczników. Źródłem prawdy jest zawsze `state.doc`.
+  - `Setext` (podkreślenie `===`/`---`) nie ukrywa podkreślenia, tylko styluje linię tytułu.
+  - Przekreślenie `~~` pojawia się tylko, jeśli parser je zwraca. Konfiguracja `markdown({ base: markdownLanguage })` nie włącza GFM; nie sprawdzono, czy `~~` jest wtedy rozpoznawane.
+  - Viewport: dekoracje powstają tylko dla widocznego fragmentu. Przy bardzo długiej notatce parser może nie zdążyć w 200 ms; wtedy część stylu pojawia się dopiero po przewinięciu.
+  - Obrazy, pola zadań, tabele, `[[linki]]` i KaTeX nie mają jeszcze widżetów; ich znaczniki są widoczne jak dotąd.
+- **Naprawy przy okazji (typecheck był czerwony od commitów 1a/1b):**
+  - `EditorStats.tsx`: porównania `e.target` i `document.activeElement` z `TextControl` (typy się nie łączyły). Fokus sprawdza `isTextControlFocused`. Dla CM oznacza to, że licznik liczy zaznaczenie także w adapterze CM (wcześniej warunek zawsze kończył wczesnym `return`).
+  - `cmExtensions.ts`: `undoManager` idzie do `yCollab` tylko, gdy istnieje, w przeciwnym razie `undefined` (domyślny menedżer biblioteki, jak wcześniej).
+- **Testy:**
+  - Jednostkowe: `src/components/editor/livePreview.test.ts` (9 testów: ukrywanie `**`/`*`, nagłówek z kursorem i bez, `` ` ``, link, cytat, dokument niezmieniony, klasa nagłówka; DOM w `EditorView`: klasa `cm-lp-h1` i powrót znacznika po przesunięciu kursora). Reszta `cmExtensions.test.ts`.
+  - E2E z flagą (`--project=chromium-cm`): 34/34, w tym `editor-keys`, `editor-cm`, `checklist`, `mentions`, `slash-menu`, `wikilinks`.
+  - E2E bez flagi: `bundle`, `editing`, `editor-keys`, `live-text`, `checklist` — 27/27.
+  - Vitest pełny: 231 plików, 1907 testów. Typecheck (`tsconfig.app.json`) i lint czyste.
+  - Brak e2e w przeglądarce sprawdzającego samo znikanie znaczników; pokrywa to test DOM w jsdom.
+- **Nie zrobione (kolejne kroki Fazy 1):** widżety (klik w pole zadania, obraz, tabela, `[[link]]`, podgląd wzoru), pasek formatowania nad klawiaturą na telefonie, test IME i autokorekty Androida na prawdziwym urządzeniu, przegląd na Pixel 7 / iPhone.
+- **Commit:** `b4864a0` (2026-10-23).
