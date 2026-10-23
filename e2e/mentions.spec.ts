@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { editorBody, expectEditorText } from "./helpers/editor";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
@@ -21,20 +22,20 @@ test("@ podpowiada daty i notatki, wstawia [[link]] albo datę", async ({ page }
   await addNote(page, source);
 
   await page.getByText(source).click();
-  const editor = page.locator("[data-note-id]").getByPlaceholder("Treść notatki...");
+  const editor = editorBody(page.locator("[data-note-id]"));
   await editor.click();
 
   await editor.pressSequentially("Zob. @wzm");
   await expect(page.getByRole("listbox", { name: "Wzmianki: daty i notatki" })).toBeVisible();
   await editor.press("Enter");
-  await expect(editor).toHaveValue(`Zob. [[${target}]]`);
+  await expectEditorText(editor, `Zob. [[${target}]]`);
 
   await editor.pressSequentially(" na @ju");
   await expect(page.getByRole("option", { name: /Jutro/ })).toBeVisible();
   await editor.press("Enter");
   const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
   const long = tomorrow.toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long" });
-  await expect(editor).toHaveValue(`Zob. [[${target}]] na ${long}`);
+  await expectEditorText(editor, `Zob. [[${target}]] na ${long}`);
 
   // adres e-mail nie otwiera listy
   await editor.pressSequentially(" jan@firma");

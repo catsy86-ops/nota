@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { editorBody, expectEditorText } from "./helpers/editor";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
@@ -7,7 +8,7 @@ test.beforeEach(async ({ page }) => {
 
 test("menu „/” wstawia nagłówek i zadanie w nowej notatce", async ({ page }) => {
   await page.getByText("Zapisz notatkę...").click();
-  const body = page.getByPlaceholder("Treść notatki...");
+  const body = editorBody(page);
   await body.click();
 
   await body.pressSequentially("/naglo");
@@ -17,16 +18,16 @@ test("menu „/” wstawia nagłówek i zadanie w nowej notatce", async ({ page 
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Enter");
   await expect(menu).toBeHidden();
-  await expect(body).toHaveValue("## ");
+  await expectEditorText(body, "## ");
 
   await body.pressSequentially("Plan\n/zad");
   await page.keyboard.press("Enter");
-  await expect(body).toHaveValue("## Plan\n- [ ] ");
+  await expectEditorText(body, "## Plan\n- [ ] ");
 });
 
 test("Esc chowa menu „/”, a adres z ukośnikami go nie otwiera", async ({ page }) => {
   await page.getByText("Zapisz notatkę...").click();
-  const body = page.getByPlaceholder("Treść notatki...");
+  const body = editorBody(page);
   await body.click();
 
   await body.pressSequentially("/kod");
@@ -34,7 +35,7 @@ test("Esc chowa menu „/”, a adres z ukośnikami go nie otwiera", async ({ pa
   await expect(menu).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
-  await expect(body).toHaveValue("/kod");
+  await expectEditorText(body, "/kod");
 
   await body.fill("");
   await body.pressSequentially("https://example.com/kod");
@@ -49,30 +50,30 @@ test("menu „/” działa też przy edycji istniejącej notatki", async ({ page
   await expect(page.getByText("Zapisz notatkę...")).toBeVisible();
 
   await page.getByText(title).click();
-  const body = page.getByPlaceholder("Treść notatki...");
+  const body = editorBody(page);
   await body.click();
   await body.pressSequentially("/cyt");
   await expect(page.getByRole("listbox", { name: "Wstaw blok" })).toBeVisible();
   await page.keyboard.press("Enter");
-  await expect(body).toHaveValue("> ");
+  await expectEditorText(body, "> ");
 });
 
 test("menu „/” wstawia tabelę, callout i blok zwijany, a kafel je renderuje", async ({ page }) => {
   const title = `Bloki ${Date.now()}`;
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
-  const body = page.getByPlaceholder("Treść notatki...");
+  const body = editorBody(page);
   await body.click();
 
   await body.pressSequentially("/tabe");
   await page.keyboard.press("Enter");
-  await expect(body).toHaveValue("| Kolumna 1 | Kolumna 2 |\n| --- | --- |\n|  |  |");
+  await expectEditorText(body, "| Kolumna 1 | Kolumna 2 |\n| --- | --- |\n|  |  |");
 
   await body.press("Control+End");
   await body.pressSequentially("\n\n/callo");
   await page.keyboard.press("Enter");
   await body.pressSequentially("Termin");
-  await expect(body).toHaveValue(/> \[!info\] Termin\n> $/);
+  await expectEditorText(body, /> \[!info\] Termin\n> $/);
 
   await page.getByRole("button", { name: "Zapisz", exact: true }).click();
   await expect(page.getByText("Zapisz notatkę...")).toBeVisible();

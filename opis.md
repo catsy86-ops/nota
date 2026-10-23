@@ -1845,3 +1845,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - Nie sprawdzone jeszcze: IME i autokorekta Androida, pasek formatowania na telefonie, zdalna zmiana tekstu (`live-text`) przy włączonej fladze.
 - **Testy:** `src/components/editor/cmTextControl.test.ts` (adapter, `setRangeText`, `applyEdit`); `src/components/editor/CmEditor.test.tsx`, `cmExtensions.test.ts`; `e2e/editor-cm.spec.ts` (4 przypadki z flagą: zapis, Ctrl+B/Ctrl+Z, lista, `[[`). Regresja z flagą wyłączoną: `editing`, `editor-keys`, `slash-menu`, `wikilinks`, `mentions`, `live-text` — 25/25. `bundle.spec.ts` 6/6 po wykluczeniu chunka CM z precache.
 - **Commit:** `a5e5404` (2026-10-23).
+
+## Edytor CodeMirror — domknięcie Fazy 1a (2026-10-23)
+
+- **Projekt `chromium-cm`** (`playwright.config.ts`): te same testy edytora z zapisaną flagą `cmEditor` (`e2e/fixtures/cm-on.storage.json`). Uruchomienie: `npx playwright test --project=chromium-cm`. Stan 32/32.
+- **Wspólny helper** `e2e/helpers/editor.ts`: `editorBody(scope)` znajduje pole treści w obu trybach (textarea albo textbox CM); `readEditorText` czyta tekst (dla CM z linii `.cm-line`, bez placeholdera); `expectEditorText` to asercja z ponawianiem. Testy `checklist`, `editing`, `editor-keys`, `live-text`, `live-text-focused`, `mentions`, `slash-menu`, `wikilinks` używają go zamiast `getByPlaceholder("Treść notatki...")` i `toHaveValue`. Pola inne niż treść (tytuł, pozycje listy) bez zmian.
+- **Fokus po Enter w tytule:** CM ładuje się leniwie, więc Enter może przyjść przed montażem. `NoteEditor` zapamiętuje żądanie (`bodyFocusPending`), a `CmEditor` przyjmuje `autoFocus` i ustawia fokus przy montażu. Chunk CM ładuje się też od razu po otwarciu edytora (prefetch w `useEffect`).
+- **Regresja bez flagi:** 33/33 (`--project=chromium`, pliki edytora razem z `editor-cm.spec.ts`).
+- **Zostaje:** pełna przeglądarka mobilna (iPhone, Pixel) z flagą; IME i autokorekta Androida na prawdziwym telefonie.

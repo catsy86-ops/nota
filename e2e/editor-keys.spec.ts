@@ -1,4 +1,5 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
+import { editorBody, expectEditorText } from "./helpers/editor";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
@@ -8,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 /** Rozwija pasek nowej notatki i zwraca pole treści. */
 async function openComposer(page: Page): Promise<Locator> {
   await page.getByText("Zapisz notatkę...").click();
-  const body = page.getByPlaceholder("Treść notatki...");
+  const body = editorBody(page);
   await body.click();
   return body;
 }
@@ -26,13 +27,13 @@ test("Ctrl+B i Ctrl+I otaczają zaznaczenie, a ponowne użycie zdejmuje znacznik
   await body.pressSequentially("zażółć gęślą");
   await body.press("Shift+Home");
   await body.press("Control+b");
-  await expect(body).toHaveValue("**zażółć gęślą**");
+  await expectEditorText(body, "**zażółć gęślą**");
   await body.press("Control+b");
-  await expect(body).toHaveValue("zażółć gęślą");
+  await expectEditorText(body, "zażółć gęślą");
   await body.press("Control+i");
-  await expect(body).toHaveValue("*zażółć gęślą*");
+  await expectEditorText(body, "*zażółć gęślą*");
   await body.press("Control+i");
-  await expect(body).toHaveValue("zażółć gęślą");
+  await expectEditorText(body, "zażółć gęślą");
 });
 
 test("Ctrl+Z cofa pogrubienie natywnie", async ({ page }) => {
@@ -40,9 +41,9 @@ test("Ctrl+Z cofa pogrubienie natywnie", async ({ page }) => {
   await body.pressSequentially("tekst");
   await body.press("Shift+Home");
   await body.press("Control+b");
-  await expect(body).toHaveValue("**tekst**");
+  await expectEditorText(body, "**tekst**");
   await body.press("Control+z");
-  await expect(body).toHaveValue("tekst");
+  await expectEditorText(body, "tekst");
 });
 
 test("Ctrl+K wstawia link zamiast otwierać paletę poleceń", async ({ page }) => {
@@ -50,15 +51,15 @@ test("Ctrl+K wstawia link zamiast otwierać paletę poleceń", async ({ page }) 
   await body.pressSequentially("moja strona");
   await body.press("Shift+Home");
   await body.press("Control+k");
-  await expect(body).toHaveValue("[moja strona](url)");
+  await expectEditorText(body, "[moja strona](url)");
   // „url” jest zaznaczone — pisanie je zastępuje.
   await body.pressSequentially("https://example.com");
-  await expect(body).toHaveValue("[moja strona](https://example.com)");
+  await expectEditorText(body, "[moja strona](https://example.com)");
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   // Ponownie na linku: zostaje sam tekst.
   await body.press("Control+k");
-  await expect(body).toHaveValue("moja strona");
+  await expectEditorText(body, "moja strona");
 });
 
 test("Ctrl+K poza polem treści nadal otwiera paletę", async ({ page }) => {
@@ -71,31 +72,31 @@ test("Enter kontynuuje listę, a pusty znacznik ją kończy", async ({ page }) =
   const body = await openComposer(page);
   await body.pressSequentially("- jabłka");
   await body.press("Enter");
-  await expect(body).toHaveValue("- jabłka\n- ");
+  await expectEditorText(body, "- jabłka\n- ");
   await body.pressSequentially("gruszki");
   await body.press("Enter");
   await body.press("Enter");
-  await expect(body).toHaveValue("- jabłka\n- gruszki\n");
+  await expectEditorText(body, "- jabłka\n- gruszki\n");
 
   await body.fill("");
   await body.pressSequentially("1. pierwsze");
   await body.press("Enter");
-  await expect(body).toHaveValue("1. pierwsze\n2. ");
+  await expectEditorText(body, "1. pierwsze\n2. ");
 
   await body.fill("");
   await body.pressSequentially("- [x] zrobione");
   await body.press("Enter");
-  await expect(body).toHaveValue("- [x] zrobione\n- [ ] ");
+  await expectEditorText(body, "- [x] zrobione\n- [ ] ");
 });
 
 test("Tab wcina pozycję listy, Shift+Tab cofa; poza listą Tab zostaje domyślny", async ({ page }) => {
   const body = await openComposer(page);
   await body.pressSequentially("- punkt");
   await body.press("Tab");
-  await expect(body).toHaveValue("  - punkt");
+  await expectEditorText(body, "  - punkt");
   await expect(body).toBeFocused();
   await body.press("Shift+Tab");
-  await expect(body).toHaveValue("- punkt");
+  await expectEditorText(body, "- punkt");
 
   // Poza listą Tab wychodzi z pola (nie pułapkuje fokusu).
   await body.fill("zwykły tekst");
@@ -111,7 +112,7 @@ test("Esc na linii listy zwalnia pułapkę Tab", async ({ page }) => {
   if (await body.count() === 0) return;
   await body.focus();
   await body.press("Tab");
-  await expect(body).toHaveValue("- punkt");
+  await expectEditorText(body, "- punkt");
 });
 
 test("Alt+↑/↓ przenosi linię, Shift+Alt+↓ ją duplikuje", async ({ page }) => {
@@ -120,18 +121,18 @@ test("Alt+↑/↓ przenosi linię, Shift+Alt+↓ ją duplikuje", async ({ page }
   await body.press("Enter");
   await body.pressSequentially("druga");
   await body.press("Alt+ArrowUp");
-  await expect(body).toHaveValue("druga\npierwsza");
+  await expectEditorText(body, "druga\npierwsza");
   await body.press("Alt+ArrowDown");
-  await expect(body).toHaveValue("pierwsza\ndruga");
+  await expectEditorText(body, "pierwsza\ndruga");
   await body.press("Shift+Alt+ArrowDown");
-  await expect(body).toHaveValue("pierwsza\ndruga\ndruga");
+  await expectEditorText(body, "pierwsza\ndruga\ndruga");
 });
 
 test("Ctrl+Enter zapisuje notatkę i zamyka pasek", async ({ page }) => {
   const title = `Zebranie jutrzejsze ${Date.now()}`;
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
-  const body = page.getByPlaceholder("Treść notatki...");
+  const body = editorBody(page);
   await body.click();
   await body.pressSequentially("treść do zapisu");
   await body.press("Control+Enter");
@@ -156,17 +157,17 @@ test("w edytorze notatki: Ctrl+B, [[ + Enter i Ctrl+Enter zapisu", async ({ page
   await addNote(page, source);
 
   await page.getByText(source).click();
-  const editor = page.locator("[data-note-id]").getByPlaceholder("Treść notatki...");
+  const editor = editorBody(page.locator("[data-note-id]"));
   await editor.click();
   await editor.pressSequentially("ważne");
   await editor.press("Shift+Home");
   await editor.press("Control+b");
-  await expect(editor).toHaveValue("**ważne**");
+  await expectEditorText(editor, "**ważne**");
   await editor.press("End");
   await editor.pressSequentially(" patrz [[zak");
   await expect(page.getByRole("option", { name: target })).toBeVisible();
   await editor.press("Enter");
-  await expect(editor).toHaveValue(`**ważne** patrz [[${target}]]`);
+  await expectEditorText(editor, `**ważne** patrz [[${target}]]`);
 
   await editor.press("Control+Enter");
   await expect(page.getByRole("button", { name: "Zapisz", exact: true })).toHaveCount(0);
@@ -196,7 +197,7 @@ test("w edytorze notatki: Ctrl+F otwiera „Znajdź i zamień”, „Zamień wsz
   const title = `Remont ${Date.now()}`;
   await addNote(page, title);
   await page.getByText(title).click();
-  const editor = page.locator("[data-note-id]").getByPlaceholder("Treść notatki...");
+  const editor = editorBody(page.locator("[data-note-id]"));
   await editor.click();
   await editor.fill("rura PEX, druga rura, trzecia rura");
   await editor.press("Control+f");
@@ -207,7 +208,7 @@ test("w edytorze notatki: Ctrl+F otwiera „Znajdź i zamień”, „Zamień wsz
   await bar.getByRole("textbox", { name: "Znajdź" }).fill("rura");
   await bar.getByRole("textbox", { name: "Zamień na" }).fill("rurka");
   await bar.getByRole("button", { name: "Zamień wszystkie" }).click();
-  await expect(editor).toHaveValue("rurka PEX, druga rurka, trzecia rurka");
+  await expectEditorText(editor, "rurka PEX, druga rurka, trzecia rurka");
   await bar.getByRole("button", { name: "Zamknij pasek" }).click();
   await expect(bar).toHaveCount(0);
 });

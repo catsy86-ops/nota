@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { editorBody, expectEditorText } from "./helpers/editor";
 
 const CONTENT = "Treść notatki...";
 
@@ -40,7 +41,7 @@ test("tekst z innego urządzenia pojawia się w otwartym edytorze bez utraty szk
   await open(a);
   await a.getByText("Zapisz notatkę...").click();
   await a.getByPlaceholder("Tytuł").fill(title);
-  await a.getByPlaceholder("Treść notatki...").fill("środek");
+  await editorBody(a).fill("środek");
   await a.getByRole("button", { name: "Zapisz", exact: true }).click();
   await expect(a.getByRole("heading", { name: title, exact: true })).toBeVisible();
 
@@ -50,20 +51,20 @@ test("tekst z innego urządzenia pojawia się w otwartym edytorze bez utraty szk
 
   // A dopisuje początek i zapisuje.
   await a.getByRole("heading", { name: title, exact: true }).click();
-  await a.getByPlaceholder(CONTENT).fill("POCZĄTEK środek");
+  await editorBody(a).fill("POCZĄTEK środek");
   await a.getByRole("button", { name: "Zapisz", exact: true }).click();
   const fileA = await exportSync(a);
 
   // B edytuje w kaflu, dopisuje koniec, i w trakcie scala plik z A.
   await b.getByRole("heading", { name: title, exact: true }).click();
-  const editor = b.getByPlaceholder(CONTENT);
+  const editor = editorBody(b);
   await editor.click();
   await editor.press("End");
   await editor.pressSequentially(" KONIEC");
-  await expect(editor).toHaveValue("środek KONIEC");
+  await expectEditorText(editor, "środek KONIEC");
 
   // Scalenie przez plik to też zmiana „zdalna” — ta sama ścieżka co WebRTC.
   await b.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
   await mergeSync(b, fileA);
-  await expect(editor).toHaveValue("POCZĄTEK środek KONIEC");
+  await expectEditorText(editor, "POCZĄTEK środek KONIEC");
 });

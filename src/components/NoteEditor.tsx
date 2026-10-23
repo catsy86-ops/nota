@@ -8,7 +8,7 @@ import { MarkdownRenderer, FormatToolbar } from "./MarkdownRenderer";
 import { AttachmentsPanel } from "./AttachmentsPanel";
 import { ChecklistConvertButtons, ChecklistEditor } from "./ChecklistEditor";
 import { EditorStats } from "./EditorStats";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 
 /** Pasek „Znajdź i zamień” (Ctrl+F/H) ładowany przy pierwszym użyciu. */
 const FindReplaceBar = lazy(() => import("./FindReplaceBar").then((m) => ({ default: m.FindReplaceBar })));
@@ -70,6 +70,11 @@ export function NoteEditor({
   // Pole treści: zwykłe `textarea` albo CodeMirror za flagą `cmEditor` (plan rozbudowy, Faza 1a).
   // Oba dostają to samo `textareaRef` (`TextControl`) i te same zdarzenia, więc reszta edytora nie zależy od silnika.
   const cmOn = useFeatureFlags().cmEditor;
+  // Enter w tytule zanim CM zamontuje się (chunk ładuje się leniwie): fokus wejdzie przy montażu.
+  const [bodyFocusPending, setBodyFocusPending] = useState(false);
+  // Chunk CM ładujemy od razu przy otwarciu edytora, a nie dopiero przy pierwszym renderze pola —
+  // inaczej szybki Enter w tytule trafia przed montażem i fokus nie wchodzi do treści.
+  useEffect(() => { if (cmOn) void import("./editor/CmEditor"); }, [cmOn]);
   function renderEditor(cls: string) {
     if (cmOn) {
       return (
@@ -81,6 +86,7 @@ export function NoteEditor({
             onKeyDown={handleEditKeyDown}
             onPaste={onPaste}
             textControlRef={textareaRef}
+            autoFocus={bodyFocusPending}
             spellcheck={spellcheck}
             placeholder="Treść notatki..."
             ariaLabel="Treść notatki"
@@ -125,7 +131,7 @@ export function NoteEditor({
         ) : "space-y-2"}
       >
       {/* W oknie `pr-*` zostawia miejsce na ✕ w prawym górnym rogu. */}
-      <TitleField spellCheck={spellcheck} autoFocus value={editTitle} onChange={setEditTitle} onEnter={() => textareaRef.current?.focus()} className={cn("w-full bg-transparent font-display font-semibold text-foreground outline-hidden", full && "text-2xl pr-8 coarse:pr-12")} placeholder="Tytuł" />
+      <TitleField spellCheck={spellcheck} autoFocus value={editTitle} onChange={setEditTitle} onEnter={() => { if (textareaRef.current) textareaRef.current.focus(); else setBodyFocusPending(true); }} className={cn("w-full bg-transparent font-display font-semibold text-foreground outline-hidden", full && "text-2xl pr-8 coarse:pr-12")} placeholder="Tytuł" />
       {findOpen && <Suspense fallback={null}><FindReplaceBar value={editContent} onChange={setEditContent} textareaRef={textareaRef} onClose={() => setFindOpen(false)} /></Suspense>}
       <div className="flex items-center gap-1">
         <FormatToolbar onInsert={handleFormatInsert} nowrap={!full} />

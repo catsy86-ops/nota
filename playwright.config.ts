@@ -28,6 +28,12 @@ export default defineConfig({
   },
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    // Ten sam zestaw testów edytora z włączoną flagą `cmEditor` (CodeMirror 6, plan rozbudowy Faza 1a).
+    {
+      name: "chromium-cm",
+      use: { ...devices["Desktop Chrome"], storageState: "e2e/fixtures/cm-on.storage.json" },
+      testMatch: /(editing|editor-keys|slash-menu|wikilinks|mentions|live-text|checklist|editor-cm)\.spec\.ts/,
+    },
     // Prawdziwe telefony: silnik WebKit (Safari na iOS) i Chrome na Androidzie. Tylko testy
     // oznaczone @mobile — reszta zakłada układ komputera. `npm run test:e2e:mobile`.
     // Service worker zablokowany: WebKit w Playwright przenosi go między kontekstami i od

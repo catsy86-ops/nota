@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { editorBody, expectEditorText } from "./helpers/editor";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
@@ -19,7 +20,7 @@ test("edycja nie ginie, gdy kafel wypada z filtra wyszukiwania", async ({ page }
   await addNote(page, title);
 
   await page.getByText(title).click();
-  const body = page.getByPlaceholder("Treść notatki...");
+  const body = editorBody(page);
   await body.fill("akapit, którego nikt nie zapisał ręcznie");
 
   // Wpisanie czegoś w wyszukiwanie odmontowuje kafel bez kliknięcia „Zapisz”.
@@ -74,7 +75,7 @@ test("pełnoekranowy edytor zapisuje treść po zamknięciu klawiszem Esc", asyn
   await expect(dialog).toBeVisible();
   // Rozwinięcie przenosi szkic, a nie zaczyna od nowa.
   await expect(dialog.getByPlaceholder("Tytuł")).toHaveValue(title);
-  await dialog.getByPlaceholder("Treść notatki...").fill("notatka ze spotkania w dużym oknie");
+  await editorBody(dialog).fill("notatka ze spotkania w dużym oknie");
 
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
@@ -95,5 +96,5 @@ test("długi tytuł w edytorze kafla jest widoczny w całości, Enter przechodzi
   await field.press("End");
   await field.press("Enter");
   await expect(field).toHaveValue(title);
-  await expect(page.locator("[data-note-id]").getByPlaceholder("Treść notatki...")).toBeFocused();
+  await expect(editorBody(page.locator("[data-note-id]"))).toBeFocused();
 });

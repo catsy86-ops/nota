@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { editorBody, expectEditorText } from "./helpers/editor";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
@@ -9,25 +10,25 @@ test("Zamień na listę i z powrotem na tekst w edytorze notatki @smoke", async 
   const title = `E2E-konwersja ${Date.now()}`;
   await page.getByText("Zapisz notatkę...").click();
   await page.getByPlaceholder("Tytuł").fill(title);
-  await page.getByPlaceholder("Treść notatki...").fill("jabłka\ngruszki");
+  await editorBody(page).fill("jabłka\ngruszki");
   await page.getByRole("button", { name: "Zapisz", exact: true }).click();
   await expect(page.getByText("Zapisz notatkę...")).toBeVisible();
 
   await page.getByText(title).click();
-  const body = page.getByPlaceholder("Treść notatki...");
+  const body = editorBody(page);
   await page.getByRole("button", { name: "Zamień na listę" }).click();
   await expect(page.getByLabel("Odhacz: jabłka")).toBeVisible();
-  await expect(body).toHaveValue("");
+  await expectEditorText(body, "");
 
   await page.getByLabel("Odhacz: gruszki").click();
   await page.getByRole("button", { name: "Zamień na tekst" }).click();
-  await expect(body).toHaveValue("- [ ] jabłka\n- [x] gruszki");
+  await expectEditorText(body, "- [ ] jabłka\n- [x] gruszki");
   await expect(page.getByLabel(/^Odhacz: |^Odznacz: /)).toHaveCount(0);
 });
 
 test("Zamień na listę w pasku nowej notatki", async ({ page }) => {
   await page.getByText("Zapisz notatkę...").click();
-  await page.getByPlaceholder("Treść notatki...").fill("- mleko\n- [x] chleb");
+  await editorBody(page).fill("- mleko\n- [x] chleb");
   await page.getByRole("button", { name: "Zamień na listę" }).click();
   await expect(page.getByLabel("Odhacz: mleko")).toBeVisible();
   await expect(page.getByLabel("Odznacz: chleb")).toBeVisible();
@@ -36,7 +37,7 @@ test("Zamień na listę w pasku nowej notatki", async ({ page }) => {
 
 test("lista: Enter dodaje pozycję pod spodem, Tab robi podzadanie, Backspace na pustej usuwa, „Usuń ukończone” ma Cofnij", async ({ page }) => {
   await page.getByText("Zapisz notatkę...").click();
-  await page.getByPlaceholder("Treść notatki...").fill("mleko\nchleb");
+  await editorBody(page).fill("mleko\nchleb");
   await page.getByRole("button", { name: "Zamień na listę" }).click();
 
   const mleko = page.locator('input[data-checklist-item]').first();

@@ -27,10 +27,12 @@ export interface CmEditorProps extends Omit<CmExtensionOptions, "onChange"> {
   onPaste?: (e: ClipboardEvent<HTMLDivElement>) => void;
   /** Adapter `TextControl` widoku (ustawiany po montażu, zerowany przy odmontowaniu). */
   textControlRef?: MutableRefObject<TextControl | null>;
+  /** Fokus na treści zaraz po montażu (np. Enter w tytule, zanim edytor się załadował). */
+  autoFocus?: boolean;
   className?: string;
 }
 
-export function CmEditor({ value, onChange, onSelect, onKeyDown, onPaste, textControlRef, className, ...opts }: CmEditorProps) {
+export function CmEditor({ value, onChange, onSelect, onKeyDown, onPaste, textControlRef, autoFocus, className, ...opts }: CmEditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useLatestRef(onChange);
@@ -58,6 +60,7 @@ export function CmEditor({ value, onChange, onSelect, onKeyDown, onPaste, textCo
     });
     viewRef.current = view;
     if (textControlRef) textControlRef.current = createCmTextControl(view);
+    if (autoFocus) view.focus();
     return () => {
       if (textControlRef) textControlRef.current = null;
       view.destroy();

@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { editorBody, expectEditorText } from "./helpers/editor";
 
 const CONTENT = "Treść notatki...";
 
@@ -40,7 +41,7 @@ test("tekst peera wpada do sfokusowanego edytora bez blur, a karetka zostaje prz
   await open(a);
   await a.getByText("Zapisz notatkę...").click();
   await a.getByPlaceholder("Tytuł").fill(title);
-  await a.getByPlaceholder("Treść notatki...").fill("środek");
+  await editorBody(a).fill("środek");
   await a.getByRole("button", { name: "Zapisz", exact: true }).click();
   await expect(a.getByRole("heading", { name: title, exact: true })).toBeVisible();
 
@@ -50,22 +51,22 @@ test("tekst peera wpada do sfokusowanego edytora bez blur, a karetka zostaje prz
 
   // A dopisuje początek i zapisuje.
   await a.getByRole("heading", { name: title, exact: true }).click();
-  await a.getByPlaceholder(CONTENT).fill("POCZĄTEK środek");
+  await editorBody(a).fill("POCZĄTEK środek");
   await a.getByRole("button", { name: "Zapisz", exact: true }).click();
   const fileA = await exportSync(a);
 
   // B pisze w otwartym, sfokusowanym edytorze i NIE wychodzi z pola.
   await b.getByRole("heading", { name: title, exact: true }).click();
-  const editor = b.getByPlaceholder(CONTENT);
+  const editor = editorBody(b);
   await editor.click();
   await editor.press("End");
   await editor.pressSequentially(" KONIEC");
-  await expect(editor).toHaveValue("środek KONIEC");
+  await expectEditorText(editor, "środek KONIEC");
   await expect(editor).toBeFocused();
 
   // Scalenie z pliku A przychodzi, gdy pole ma fokus.
   await mergeSync(b, fileA);
-  await expect(editor).toHaveValue("POCZĄTEK środek KONIEC", { timeout: 10_000 });
+  await expectEditorText(editor, "POCZĄTEK środek KONIEC", { timeout: 10_000 });
   // Karetka wciąż stoi za własnym tekstem („KONIEC”), a nie na początku pola.
   const caret = await editor.evaluate((el: HTMLTextAreaElement) => el.selectionStart);
   expect(caret).toBe("POCZĄTEK środek KONIEC".length);

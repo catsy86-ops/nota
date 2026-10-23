@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { editorBody, expectEditorText } from "./helpers/editor";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
@@ -23,13 +24,13 @@ test("[[ podpowiada tytuły, a notatka docelowa pokazuje backlink", async ({ pag
   await addNote(page, source);
 
   await page.getByText(source).click();
-  const editor = page.locator("[data-note-id]").getByPlaceholder("Treść notatki...");
+  const editor = editorBody(page.locator("[data-note-id]"));
   await editor.click();
   await editor.pressSequentially("Patrz [[zak");
   const option = page.getByRole("option", { name: target });
   await expect(option).toBeVisible();
   await editor.press("Enter");
-  await expect(editor).toHaveValue(`Patrz [[${target}]]`);
+  await expectEditorText(editor, `Patrz [[${target}]]`);
   await expect(page.getByRole("listbox")).toHaveCount(0);
   await page.getByRole("button", { name: "Zapisz", exact: true }).click();
 
@@ -45,7 +46,7 @@ test("Esc chowa podpowiedzi bez zamykania edytora", async ({ page }) => {
   await addNote(page, `Źródło ${stamp}`);
 
   await page.getByText(`Źródło ${stamp}`).click();
-  const editor = page.locator("[data-note-id]").getByPlaceholder("Treść notatki...");
+  const editor = editorBody(page.locator("[data-note-id]"));
   await editor.click();
   await editor.pressSequentially("[[Cel");
   await expect(page.getByRole("option", { name: `Cel ${stamp}` })).toBeVisible();
