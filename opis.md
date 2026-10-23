@@ -1844,3 +1844,4 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - Wysokość: w trybie pełnym ekranu bez listy edytor wypełnia okno; autosize (`useNoteEditSession`) działa tylko dla textarea.
   - Nie sprawdzone jeszcze: IME i autokorekta Androida, pasek formatowania na telefonie, zdalna zmiana tekstu (`live-text`) przy włączonej fladze.
 - **Testy:** `src/components/editor/cmTextControl.test.ts` (adapter, `setRangeText`, `applyEdit`); `src/components/editor/CmEditor.test.tsx`, `cmExtensions.test.ts`; `e2e/editor-cm.spec.ts` (4 przypadki z flagą: zapis, Ctrl+B/Ctrl+Z, lista, `[[`). Regresja z flagą wyłączoną: `editing`, `editor-keys`, `slash-menu`, `wikilinks`, `mentions`, `live-text` — 25/25. `bundle.spec.ts` 6/6 po wykluczeniu chunka CM z precache.
+- **Commit:** `a5e5404` (2026-10-23).
