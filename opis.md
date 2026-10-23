@@ -2026,4 +2026,5 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - `relayProvider.test.ts` (10 testów): dwa `Y.Doc` z atrapą serwera o tym samym protokole. Wymiana, nowe urządzenie z historią, zapis offline, kolejka po restarcie, zły klucz danych, zły token, kompaktowanie po 500 wpisach, `stop()`.
   - `relayServer.integration.test.ts` (3 testy): klient ↔ prawdziwy `relay-server/server.js` jako proces. Wymiana, izolacja pokoi, odrzucenie złego tokenu.
   - Klucze (`deriveRelayKeys`) — dwa testy w `relayProvider.test.ts`; `validRelayUrl` — `relayRuntime.test.ts`.
-- **Commit:** `1207987` (2026-10-23).
+- **Testy przycisku i powiadomienia (dopisane później):** przycisk „Testuj” (`checkRelay` w `relayRuntime.ts`: `GET /health`, bez kodu i tokenu; zwraca liczbę pokoi albo powód błędu, nie wysyła zapytania pod niepoprawny adres) i powiadomienie „Zmiana z innego urządzenia” (`onRemoteChange` w `RelayProvider`: tylko gdy Yjs realnie zmienił dokument po pobraniu, nie przy echu własnego wpisu; w `relayRuntime.ts` co 30 s, tylko na widocznej karcie). Testy: `relayRuntime.test.ts` (`checkRelay`), `relayProvider.test.ts` (powiadomienie), `e2e/relay-settings.spec.ts` (3 testy: walidacja i zapis, wyczyszczenie, „Testuj” pod nieosiągalnym adresem).
+- **Commit:** `1207987` (2026-10-23); dodatki w osobnym commicie.

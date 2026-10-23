@@ -49,3 +49,13 @@ test("przekaźnik: pusty adres wyłącza i czyści zapis", async ({ page }) => {
   const stored = await page.evaluate(() => localStorage.getItem("kaczy.relay.v1"));
   expect(stored).toBeNull();
 });
+
+test("przekaźnik: „Testuj” pokazuje brak odpowiedzi pod adresem, na którym nic nie słucha", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Ustawienia" }).first().click();
+  await page.getByRole("tab", { name: "Sync" }).click();
+  await page.getByText("Przekaźnik (wyłączony)").click();
+  await page.getByLabel("Adres przekaźnika").fill("http://localhost:9");
+  await page.getByRole("button", { name: "Testuj" }).click();
+  await expect(page.getByText("Brak odpowiedzi — sprawdź adres i sieć")).toBeVisible();
+});

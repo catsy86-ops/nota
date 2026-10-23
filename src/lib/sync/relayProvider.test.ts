@@ -244,6 +244,32 @@ describe("RelayProvider", () => {
     c.provider.stop();
   }, 60_000);
 
+  it("onRemoteChange: tylko przy realnej zmianie od innego urządzenia, nie przy echu własnego wpisu", async () => {
+    const server = fakeServer();
+    const keys = await deriveRelayKeys(CODE, ITER);
+    const doc = new Y.Doc();
+    let remote = 0;
+    const a = new RelayProvider({
+      baseUrl: "https://relay.test", keys, doc, store: new MemStore(), fetch: server.fetchFn, flushMs: 5,
+      onRemoteChange: () => remote++,
+    });
+    await a.start();
+    const b = await device(keys, server);
+
+    doc.transact(() => doc.getText("t").insert(0, "moje"));
+    await until(() => [...server.rooms.values()][0]?.last === 1);
+    a.sync(); // pobranie własnego wpisu: echo, bez zmiany dokumentu
+    await new Promise((r) => setTimeout(r, 50));
+    expect(remote).toBe(0);
+
+    b.doc.transact(() => b.text.insert(0, "obce "));
+    b.provider.flushNow();
+    await until(() => doc.getText("t").toString() === "obce moje");
+    expect(remote).toBeGreaterThan(0);
+    a.stop();
+    b.provider.stop();
+  });
+
   it("stop() odpina nasłuch: późniejsze zmiany nie wychodzą", async () => {
     const server = fakeServer();
     const keys = await deriveRelayKeys(CODE, ITER);

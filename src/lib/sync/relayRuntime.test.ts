@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { validRelayUrl } from "@/lib/sync/relayRuntime";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { checkRelay, validRelayUrl } from "@/lib/sync/relayRuntime";
 
 describe("validRelayUrl", () => {
   it("przyjmuje https i http tylko dla localhost", () => {
@@ -18,5 +18,36 @@ describe("validRelayUrl", () => {
     expect(validRelayUrl("javascript:alert(1)")).toBeNull();
     expect(validRelayUrl("nie-url")).toBeNull();
     expect(validRelayUrl("   ")).toBeNull();
+  });
+});
+
+describe("checkRelay", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("zwraca liczbę pokoi, gdy /health odpowiada jak przekaźnik", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ ok: true, rooms: 3 }), { status: 200 })));
+    expect(await checkRelay("https://sync.example.pl")).toEqual({ ok: true, rooms: 3 });
+  });
+
+  it("odrzuca odpowiedź, która nie jest przekaźnikiem", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("<html>", { status: 200 })));
+    const r = await checkRelay("https://sync.example.pl");
+    expect(r.ok).toBe(false);
+  });
+
+  it("zgłasza kod HTTP i brak połączenia", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("{}", { status: 503 })));
+    expect(await checkRelay("https://sync.example.pl")).toEqual({ ok: false, reason: "Serwer odpowiedział kodem 503" });
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("Failed to fetch"); }));
+    expect((await checkRelay("https://sync.example.pl")).ok).toBe(false);
+  });
+
+  it("nie wysyła zapytania pod niepoprawny adres", async () => {
+    const spy = vi.fn();
+    vi.stubGlobal("fetch", spy);
+    expect((await checkRelay("http://obcy.example")).ok).toBe(false);
+    expect(spy).not.toHaveBeenCalled();
   });
 });

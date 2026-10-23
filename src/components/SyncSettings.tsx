@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
-import { getRelayUrl, setRelayUrl, startRelay, useRelayView, validRelayUrl, type RelayView } from "@/lib/sync/relayRuntime";
+import { checkRelay, getRelayUrl, setRelayUrl, startRelay, useRelayView, validRelayUrl, type RelayView } from "@/lib/sync/relayRuntime";
 import { formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
 import {
@@ -289,6 +289,15 @@ function RelayServer() {
   const valid = validRelayUrl(draft);
   // Pusty pole znaczy „wyłącz”; niepoprawny adres nie da się zapisać.
   const nextUrl = draft.trim() === "" ? "" : valid;
+  const [probe, setProbe] = useState<string | null>(null);
+
+  async function handleTest() {
+    const target = valid ?? saved;
+    if (!target) return;
+    setProbe("Sprawdzam…");
+    const r = await checkRelay(target);
+    setProbe(r.ok ? `Przekaźnik odpowiada (pokoi: ${r.rooms}).` : r.reason);
+  }
 
   function handleSave() {
     setRelayUrl(draft);
@@ -325,8 +334,10 @@ function RelayServer() {
           <p className="text-destructive-ink">Adres musi zaczynać się od https:// (albo http://localhost).</p>
         )}
         <p className="text-foreground" aria-live="polite">{relayStatusText(view, sync.status)}</p>
+        {probe && <p className="text-muted-foreground" aria-live="polite">{probe}</p>}
         <div className="flex justify-end gap-2">
           {saved && <Button type="button" size="sm" variant="ghost" onClick={() => setDraft("")}>Wyczyść</Button>}
+          <Button type="button" size="sm" variant="outline" onClick={handleTest} disabled={!(valid ?? saved)}>Testuj</Button>
           <Button type="button" size="sm" onClick={handleSave} disabled={nextUrl === null || nextUrl === saved}>
             Zapisz przekaźnik
           </Button>

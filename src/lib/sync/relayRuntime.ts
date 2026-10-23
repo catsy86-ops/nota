@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import { createStore, get as idbGet, set as idbSet, del as idbDel, type UseStore } from "idb-keyval";
 import { yjsStore } from "@/lib/yjsStore";
 import { logDiag } from "@/lib/diagnostics";
+import { toast } from "sonner";
 import { deriveRelayKeys } from "@/lib/sync/relayKeys";
 import { RelayProvider, type RelayState, type RelayStatus, type RelayStore } from "@/lib/sync/relayProvider";
 
@@ -62,6 +63,21 @@ function setView(next: Partial<RelayView>) {
   listeners.forEach((l) => l());
 }
 
+/** Sprawdza, czy pod adresem odpowiada przekaźnik (`GET /health`). Nie wymaga kodu ani tokenu. */
+export async function checkRelay(url: string, timeoutMs = 5000): Promise<{ ok: true; rooms: number } | { ok: false; reason: string }> {
+  const base = validRelayUrl(url);
+  if (!base) return { ok: false, reason: "Zły adres" };
+  try {
+    const res = await fetch(`${base}/health`, { cache: "no-store", signal: AbortSignal.timeout(timeoutMs) });
+    if (!res.ok) return { ok: false, reason: `Serwer odpowiedział kodem ${res.status}` };
+    const json = (await res.json()) as { ok?: unknown; rooms?: unknown };
+    if (json.ok !== true) return { ok: false, reason: "To nie wygląda na przekaźnik NOTKI" };
+    return { ok: true, rooms: typeof json.rooms === "number" ? json.rooms : 0 };
+  } catch {
+    return { ok: false, reason: "Brak odpowiedzi — sprawdź adres i sieć" };
+  }
+}
+
 export function getRelayView(): RelayView {
   return view;
 }
@@ -106,6 +122,8 @@ function idbRelayStore(roomId: string): RelayStore {
 // ── start / stop ─────────────────────────────────────────────────────────────
 
 let provider: RelayProvider | null = null;
+const REMOTE_TOAST_GAP_MS = 30_000;
+let lastRemoteToastAt = 0;
 let startToken = 0;
 let onVisibility: (() => void) | null = null;
 let onOnline: (() => void) | null = null;
@@ -125,6 +143,13 @@ export async function startRelay(code: string): Promise<void> {
       doc: yjsStore.doc,
       store: idbRelayStore(keys.roomId),
       openSocket: (wsUrl) => new WebSocket(wsUrl),
+      onRemoteChange: () => {
+        // Jak w yjsSync: tylko na widocznej karcie i co 30 s, seria zmian to jedno powiadomienie.
+        const now = Date.now();
+        if (document.visibilityState !== "visible" || now - lastRemoteToastAt < REMOTE_TOAST_GAP_MS) return;
+        lastRemoteToastAt = now;
+        toast("Zmiana z innego urządzenia", { description: "Przyszła przez przekaźnik." });
+      },
       onStatus: (status, detail) => {
         if (token !== startToken) return;
         setView({ status, detail, ...(status === "online" ? { syncedAt: Date.now() } : {}) });

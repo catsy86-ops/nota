@@ -43,6 +43,8 @@ export interface RelayOptions {
   /** Gniazdo do powiadomień; bez niego działa na samym pobieraniu i ponawianiu. */
   openSocket?: (url: string) => WebSocket;
   onStatus?: (status: RelayStatus, detail?: string) => void;
+  /** Dokument realnie się zmienił po pobraniu (nie tylko echo naszych wpisów). */
+  onRemoteChange?: () => void;
   flushMs?: number;
 }
 
@@ -204,6 +206,12 @@ export class RelayProvider {
 
   private async pullTask(): Promise<void> {
     if (!this.started) return;
+    // Yjs emituje `update` tylko przy realnej zmianie dokumentu, więc samo echo naszych wpisów nie liczy się jako zmiana.
+    let changed = false;
+    const watch = (_u: Uint8Array, origin: unknown) => {
+      if (origin === this.origin) changed = true;
+    };
+    this.opts.doc.on("update", watch);
     try {
       for (;;) {
         const page = await this.http<Page>(`${this.roomPath}/updates?since=${this.state.cursor}`, { method: "GET" });
@@ -220,8 +228,10 @@ export class RelayProvider {
         if (!page.hasMore) break;
       }
     } finally {
+      this.opts.doc.off("update", watch);
       await this.persistState();
     }
+    if (changed) this.opts.onRemoteChange?.();
     this.retryMs = RETRY_MIN_MS;
     this.setStatus("online");
     await this.compactTask();
