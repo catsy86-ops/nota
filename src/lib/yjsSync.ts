@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import type { WebrtcProvider } from "y-webrtc";
 import { yjsStore } from "@/lib/yjsStore";
 import { startImageSync, stopImageSync } from "@/lib/imageSync";
+import { startRelay, stopRelay } from "@/lib/sync/relayRuntime";
 import { logDiag } from "@/lib/diagnostics";
 import { toast } from "sonner";
 
@@ -355,6 +356,7 @@ function connect(code: string) {
     setState({ lastError: err instanceof Error ? err.message : String(err) });
   });
   startImageSync(code);
+  void startRelay(code);
 }
 
 // Zmiana przyszła od peera wtedy, gdy jej źródłem jest pokój y-webrtc —
@@ -399,6 +401,7 @@ function disconnectProvider() {
   providers.forEach((p) => p.destroy());
   providers = [];
   stopImageSync();
+  stopRelay();
   previousDeviceIds = new Set();
   setState({ signalingUp: 0, signalingTotal: 0, devices: [] });
 }

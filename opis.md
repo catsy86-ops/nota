@@ -1999,3 +1999,31 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - Klient (`src/lib/sync/relayProvider.ts`) jeszcze nie istnieje — serwer działa, ale aplikacja z niego nie korzysta.
 - **Testy:** `relay-server/core.test.js` (19 testów logiki, `npm test`). Ręcznie sprawdzone na uruchomionym serwerze: rejestracja tokenem, 401/403/404, odczyt po `since`, snapshot, odrzucenie złego base64, WebSocket: `ready`, powiadomienie `updated` po zapisie, zamknięcie 4003 dla nieznanego pokoju.
 - **Commit:** `adfb099` (2026-10-23).
+
+## Synchronizacja — przekaźnik E2E, klient (Faza 2, 2026-10-23)
+
+- **Co robi:** z włączonym przekaźnikiem zmiany w notatkach (cały `yjsStore.doc`: notatki, teksty, metadane) idą na serwer zaszyfrowane i wracają na inne urządzenia, nawet gdy nadawca jest już wyłączony. Działa równolegle z P2P. Bez adresu przekaźnika nic się nie zmienia. Obrazy i załączniki nadal idą tylko P2P.
+- **Gdzie jest:**
+  - `src/lib/sync/relayKeys.ts`: `deriveRelayKeys(code)` (PBKDF2 → `roomId`, `token`, klucz danych), `sealBytes` / `openBytes`, `relayAad(roomId)`.
+  - `src/lib/sync/relayProvider.ts`: `RelayProvider` (kolejka wysyłania, pobieranie stronicowane, kursor, snapshot, WebSocket, ponawianie). Interfejs `RelayStore` (trwałość) i `RelayStatus`.
+  - `src/lib/sync/relayRuntime.ts`: `startRelay(code)` / `stopRelay()` (wołane z `yjsSync.ts` w `connect()` i `disconnectProvider()`), `validRelayUrl`, `getRelayUrl` / `setRelayUrl` (klucz `localStorage` `kaczy.relay.v1`), `useRelayView()` (status dla UI), magazyn w IndexedDB (`kaczy-relay`).
+  - `src/components/SyncSettings.tsx`: sekcja „Przekaźnik” (`RelayServer`, `relayStatusText`).
+- **Jak działa:**
+  - Klucze: `kod → PBKDF2-SHA-256 (sól stała, 200 000 iteracji) → master`. Z `master`: `roomId` = SHA-256(`notki-relay-room:` ‖ master) w hex, `token` = HKDF(`notki-relay-auth-v1`), klucz danych AES-GCM = HKDF(`notki-relay-data-v1`), niewyodrębnialny. PBKDF2 jest po to, że kod ma ok. 59 bitów i sam HKDF nie utrudniłby zgadywania operatorowi serwera.
+  - Wysyłanie: `doc.on("update")` zbiera zmiany (poza własnym źródłem `origin`), co 1 s scala je (`Y.mergeUpdates`), szyfruje i `POST`. Zmiany są w `RelayStore` do chwili potwierdzenia, więc przeżywają zamknięcie karty. Przy schowaniu karty wysyłane od razu (`flushNow`), przy powrocie `sync()`.
+  - Pobieranie: `GET since=kursor`, po 500 wpisach stronami, każdy wpis odszyfrowywany i stosowany `Y.applyUpdate` z własnym `origin`. Kursor zapisywany po każdej stronie.
+  - Numer swojego wpisu: jeśli serwer przydzielił `kursor + 1`, dokument już go ma, więc kursor rośnie bez pobierania.
+  - Snapshot: po 500 wpisach od poprzedniego snapshotu wysyłany jest `Y.encodeStateAsUpdate(doc)` z `upto = kursor`. Obejmuje też lokalne, jeszcze niewysłane zmiany; ich późniejsze wysłanie jest bez skutku.
+  - WebSocket (`/ws`): po `subscribe` serwer wysyła `ready` (wtedy `sync()`) i `updated` (wtedy pobranie, gdy `last > kursor`). Po zamknięciu ponawianie 2 s, 4 s … do 60 s.
+  - Wszystkie operacje sieciowe idą jedną kolejką (`run`), więc nie przeplatają się.
+- **Decyzje i ograniczenia:**
+  - Błędy: sieć/5xx/429 → status `offline`, ponawianie. 401/403 → `error` („Serwer nie przyjął kodu”), bez ponawiania. Wpis, którego nie da się odszyfrować → `error`, kursor nie idzie dalej. Nie nadpisujemy danych ani nie pomijamy wpisu po cichu.
+  - Wpis większy niż limit serwera (512 KB) albo snapshot większy niż limit daje błąd; duży dokument tekstowy może tego dotknąć. Brak dzielenia wpisów.
+  - Powiadomienie „Zmiana z innego urządzenia” (toast w `yjsSync.ts`) działa tylko dla P2P, bo sprawdza `origin` providera P2P.
+  - Pierwsze połączenie wyprowadza klucze (PBKDF2, ok. 200 000 iteracji) — chwila na telefonie przy każdym starcie synchronizacji.
+  - Adres przekaźnika tylko `https://` (albo `http://localhost` do testów); w `localStorage` ze względu na prostotę, nie jest sekretem.
+- **Testy:**
+  - `relayProvider.test.ts` (10 testów): dwa `Y.Doc` z atrapą serwera o tym samym protokole. Wymiana, nowe urządzenie z historią, zapis offline, kolejka po restarcie, zły klucz danych, zły token, kompaktowanie po 500 wpisach, `stop()`.
+  - `relayServer.integration.test.ts` (3 testy): klient ↔ prawdziwy `relay-server/server.js` jako proces. Wymiana, izolacja pokoi, odrzucenie złego tokenu.
+  - Klucze (`deriveRelayKeys`) — dwa testy w `relayProvider.test.ts`; `validRelayUrl` — `relayRuntime.test.ts`.
+- **Commit:** w historii poniżej.

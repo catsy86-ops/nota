@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
+import { getRelayUrl, setRelayUrl, startRelay, useRelayView, validRelayUrl, type RelayView } from "@/lib/sync/relayRuntime";
 import { formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
 import {
@@ -254,6 +255,8 @@ export function SyncSettings({ prefillCode }: Props) {
 
       <SignalingServers />
 
+      <RelayServer />
+
       <ToggleRow
         label="Zgodność ze starszą wersją aplikacji"
         desc="Włącz tylko na czas wymiany starego urządzenia. Stary pokój ma słabą nazwę, z której serwer sygnalizacyjny może odzyskać kod parowania — po aktualizacji wszystkich urządzeń wyłącz."
@@ -272,6 +275,82 @@ export function SyncSettings({ prefillCode }: Props) {
       </div>
     </div>
   );
+}
+
+/**
+ * Przekaźnik E2E (opcjonalny): zmiany docierają także wtedy, gdy drugie urządzenie jest wyłączone.
+ * Serwer widzi tylko zaszyfrowane wpisy — patrz `relay-server/README.md`.
+ */
+function RelayServer() {
+  const sync = useSyncState();
+  const view = useRelayView();
+  const [saved, setSaved] = useState(() => getRelayUrl());
+  const [draft, setDraft] = useState(() => saved);
+  const valid = validRelayUrl(draft);
+  // Pusty pole znaczy „wyłącz”; niepoprawny adres nie da się zapisać.
+  const nextUrl = draft.trim() === "" ? "" : valid;
+
+  function handleSave() {
+    setRelayUrl(draft);
+    const url = getRelayUrl();
+    setSaved(url);
+    setDraft(url);
+    // Zmiana adresu działa od razu, jeśli synchronizacja już trwa.
+    if (sync.status !== "disabled" && sync.code) void startRelay(sync.code);
+    toast.success(url ? "Zapisano przekaźnik" : "Wyłączono przekaźnik");
+  }
+
+  return (
+    <details className="group rounded-xl border border-border/60 bg-muted/20 p-3 text-xs" open={saved !== "" || undefined}>
+      <summary className="cursor-pointer font-semibold text-foreground select-none">
+        Przekaźnik {saved ? "(włączony)" : "(wyłączony)"}
+      </summary>
+      <div className="mt-3 space-y-2">
+        <p className="text-muted-foreground">
+          Zmiany dochodzą nawet wtedy, gdy drugie urządzenie jest wyłączone. Serwer przechowuje
+          zaszyfrowany zapis i nie zna treści ani kodu synchronizacji. Pusty adres = tylko połączenie
+          bezpośrednie między urządzeniami.
+        </p>
+        <label htmlFor="relay-url" className="sr-only">Adres przekaźnika</label>
+        <Input
+          id="relay-url"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="https://sync.example.com"
+          spellCheck={false}
+          inputMode="url"
+          className="font-mono text-base sm:text-xs"
+        />
+        {draft.trim() !== "" && !valid && (
+          <p className="text-destructive-ink">Adres musi zaczynać się od https:// (albo http://localhost).</p>
+        )}
+        <p className="text-foreground" aria-live="polite">{relayStatusText(view, sync.status)}</p>
+        <div className="flex justify-end gap-2">
+          {saved && <Button type="button" size="sm" variant="ghost" onClick={() => setDraft("")}>Wyczyść</Button>}
+          <Button type="button" size="sm" onClick={handleSave} disabled={nextUrl === null || nextUrl === saved}>
+            Zapisz przekaźnik
+          </Button>
+        </div>
+      </div>
+    </details>
+  );
+}
+
+function relayStatusText(view: RelayView, syncStatus: string): string {
+  if (!getRelayUrl()) return "Wyłączony.";
+  if (syncStatus === "disabled") return "Synchronizacja jest wyłączona — przekaźnik wystartuje razem z nią.";
+  switch (view.status) {
+    case "online":
+      return view.syncedAt ? `Połączono. Ostatnio zsynchronizowano ${formatDistanceToNow(view.syncedAt, { addSuffix: true, locale: pl })}.` : "Połączono.";
+    case "connecting":
+      return "Łączenie z przekaźnikiem…";
+    case "offline":
+      return "Brak połączenia z przekaźnikiem. Ponowię samo, gdy sieć wróci.";
+    case "error":
+      return view.detail ?? "Przekaźnik zgłasza błąd.";
+    default:
+      return "Czeka na start.";
+  }
 }
 
 /**
