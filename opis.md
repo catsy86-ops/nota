@@ -1929,3 +1929,4 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - Wszystkie sygnały są jednorazowe (`pulseSkinSignal` zdejmuje atrybut po czasie); ograniczony ruch wyłącza animacje i zostawia stan spoczynku.
   - Zorza: wstęgi przesuwa `translate`, więc działa tylko w przeglądarkach z tą właściwością (wszystkie aktualne).
 - **Testy:** `src/lib/skinSignal.test.ts`, `src/lib/scrollParallax.test.ts`; `e2e/skin-signatures.spec.ts` (13 przypadków, w tym view/dawn/pin/plan/zorza). Regresja: `skin-motion`, `a11y`, `seasons`, `editor-cm` — 81/81 w `chromium`; `vitest` 1898/1898; typy i lint czyste.
+- **Commit:** `9d41492` (2026-10-23).
