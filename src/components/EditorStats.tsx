@@ -1,6 +1,6 @@
 import { memo, useDeferredValue, useEffect, useMemo, useState, type RefObject } from "react";
 import { cn } from "@/lib/utils";
-import type { TextControl } from "@/lib/textControl";
+import { isTextControlFocused, type TextControl } from "@/lib/textControl";
 import { statsLabel } from "@/lib/textStats";
 
 const SELECTION_EVENTS = ["selectionchange", "select", "keyup", "mouseup", "touchend", "input"] as const;
@@ -26,8 +26,8 @@ export const EditorStats = memo(function EditorStats({
   useEffect(() => {
     function read(e: Event) {
       const ta = textareaRef.current;
-      if (!ta || (e.target !== ta && e.type !== "selectionchange")) return;
-      if (document.activeElement !== ta) return;
+      if (!ta || ((e.target as unknown) !== ta && e.type !== "selectionchange")) return;
+      if (!isTextControlFocused(ta)) return;
       const a = ta.selectionStart;
       const b = ta.selectionEnd;
       setSel((prev) => (prev[0] === a && prev[1] === b ? prev : [a, b]));

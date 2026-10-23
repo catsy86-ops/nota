@@ -5,6 +5,7 @@ import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
 import type { NoteUndoManager, NoteYText as YText } from "@/hooks/useNotes";
+import { livePreview } from "./livePreview";
 
 /**
  * Konfiguracja edytora CodeMirror 6 (plan rozbudowy, Faza 1, krok 1a/1b).
@@ -32,6 +33,7 @@ export function buildCmExtensions(opts: CmExtensionOptions = {}): Extension[] {
     drawSelection(),
     EditorView.lineWrapping,
     markdown({ base: markdownLanguage }),
+    livePreview(),
     syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
     keymap.of(opts.yText ? defaultKeymap : [...defaultKeymap, ...historyKeymap]),
     placeholder(opts.placeholder ?? ""),
@@ -49,7 +51,9 @@ export function buildCmExtensions(opts: CmExtensionOptions = {}): Extension[] {
   ];
   if (opts.yText) {
     // Historia należy do Y.UndoManager: Ctrl+Z cofa też to, co zrobiła podpowiedź albo skrót.
-    exts.push(yCollab(opts.yText, null, { undoManager: opts.yUndoManager }), keymap.of(yUndoManagerKeymap));
+    // Brak własnego menedżera = domyślny z biblioteki (`undefined` nie może trafić do opcji wprost).
+    const collabOptions = opts.yUndoManager ? { undoManager: opts.yUndoManager } : undefined;
+    exts.push(yCollab(opts.yText, null, collabOptions), keymap.of(yUndoManagerKeymap));
   } else {
     exts.unshift(history());
   }
