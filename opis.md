@@ -1934,8 +1934,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 ## Edytor CodeMirror — podgląd na żywo Markdown (Faza 1c, 2026-10-23)
 
 - **Co robi:** w edytorze CM (flaga `cmEditor`) znaczniki Markdown znikają z linii, na której nie ma kursora: `#` nagłówka (wraz ze spacją), `**`, `*`, `` ` `` w kodzie, `~~`, nawiasy i adres linku `[tekst](adres)`, `>` cytatu. Treść dostaje styl: nagłówki H1–H6, pochylenie, pogrubienie, kod, przekreślenie, link, pionowa kreska cytatu. Kursor albo zaznaczenie na danej linii przywraca znaczniki do edycji.
+  Widżety: **pole zadania** `- [ ]`/`- [x]` jest zawsze widoczne jako pole wyboru (klik odhacza w treści notatki); **linia pozioma** `---` poza kursorem jest kreską; **`[[link]]`** poza kursorem traci nawiasy, a tekst dostaje styl wikilinku (kropkowane podkreślenie).
 - **Gdzie:**
-  - `src/components/editor/livePreview.ts` — `buildLivePreview(state, from, to)` (czysta funkcja: dekoracje i zbiór ukrytych zakresów), `activeLineNumbers(state)`, `livePreview()` (rozszerzenie: `ViewPlugin` + `EditorView.atomicRanges` + `baseTheme` z klasami `cm-lp-*`).
+  - `src/components/editor/livePreview.ts` — `buildLivePreview(state, from, to)` (czysta funkcja: dekoracje i zbiór ukrytych zakresów), `activeLineNumbers(state)`, `livePreview()` (rozszerzenie: `ViewPlugin` + `EditorView.atomicRanges` + `baseTheme` z klasami `cm-lp-*`). Widżety: `TaskWidget` (pole zadania, klik przez `view.posAtDOM` zmienia znak w `[ ]`), `RuleWidget` (`<hr>`); stałe `WIKI_LINK`, `CODE_NODES`, funkcja `insideCode`.
   - `src/components/editor/cmExtensions.ts` — `livePreview()` dodane po `markdown(...)` w `buildCmExtensions`.
   - `src/components/EditorStats.tsx` — poprawka typów (patrz niżej).
 - **Jak działa:**
@@ -1944,20 +1945,26 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - Przebudowa dekoracji tylko przy zmianie tekstu, widoku albo zestawu aktywnych linii (klucz tekstowy). Ruch kursora w tej samej linii nic nie kosztuje.
   - Ukryte zakresy są „atomowe” (`atomicRanges`): strzałka i Backspace przeskakują przez znacznik, zamiast wchodzić w środek.
   - Nagłówek to dekoracja linii (`Decoration.line`), więc wygląd zostaje, nawet gdy `#` jest ukryte.
+  - Pole zadania i linia pozioma to `Decoration.replace({ widget })`, dodane też do zbioru `hidden`, więc są atomowe. Pole zadania nie zależy od kursora. Klik nie zmienia stanu widżetu: wysyła transakcję zmieniającą jeden znak (`[ ]`↔`[x]`), a widżet przerysowuje się z tekstu. Dzięki temu odhaczenie trafia do Yjs i do zapisu jak zwykła edycja.
+  - `[[link]]` nie jest składnią GFM. Skan (`WIKI_LINK`, ten sam kształt co `lib/wikiLinks.ts`) działa na widocznych liniach i pomija fragmenty kodu (`insideCode`). Parser widzi `[[Tytuł]]` jako link `[Tytuł]` z zewnętrznym `[` w tekście, więc `enter` zwraca `false` dla takiego węzła `Link` (pomija dzieci). Bez tego nawiasy byłyby ukrywane podwójnie.
 - **Ograniczenia i pułapki:**
   - Tekst w DOM nie jest dokumentem: poza linią kursora `textContent` nie zawiera `**`. Testy czytające `.cm-line` widzą wtedy treść bez znaczników. Źródłem prawdy jest zawsze `state.doc`.
   - `Setext` (podkreślenie `===`/`---`) nie ukrywa podkreślenia, tylko styluje linię tytułu.
   - Przekreślenie `~~` pojawia się tylko, jeśli parser je zwraca. Konfiguracja `markdown({ base: markdownLanguage })` nie włącza GFM; nie sprawdzono, czy `~~` jest wtedy rozpoznawane.
   - Viewport: dekoracje powstają tylko dla widocznego fragmentu. Przy bardzo długiej notatce parser może nie zdążyć w 200 ms; wtedy część stylu pojawia się dopiero po przewinięciu.
-  - Obrazy, pola zadań, tabele, `[[linki]]` i KaTeX nie mają jeszcze widżetów; ich znaczniki są widoczne jak dotąd.
+  - Obrazy, tabele i KaTeX nie mają jeszcze widżetów; ich znaczniki są widoczne jak dotąd.
+  - `[[link]]` nie otwiera notatki po kliku. To wymaga callbacku z aplikacji do `livePreview()` (w kolejnym kroku). Dopóki go nie ma, klik tylko ustawia kursor.
+  - Pole zadania ma 1,1 em (ok. 18 px), a cel dotyku ma być 44 px (zasada z planu). Na telefonie to do poprawy po QA na urządzeniu.
+  - Pole zadania i linia pozioma są widżetami, więc ich wpisy nie pojawiają się w `textContent`. Testy czytające tekst muszą to uwzględniać (`e2e/helpers/editor.ts` zamienia pole z powrotem na `[ ]`/`[x]`).
+  - Zachowanie dla `[[a|b]]` (alias) jest takie samo jak dla zwykłego linku: nawiasy znikają, cały tekst z `|` zostaje widoczny.
 - **Naprawy przy okazji (typecheck był czerwony od commitów 1a/1b):**
   - `EditorStats.tsx`: porównania `e.target` i `document.activeElement` z `TextControl` (typy się nie łączyły). Fokus sprawdza `isTextControlFocused`. Dla CM oznacza to, że licznik liczy zaznaczenie także w adapterze CM (wcześniej warunek zawsze kończył wczesnym `return`).
   - `cmExtensions.ts`: `undoManager` idzie do `yCollab` tylko, gdy istnieje, w przeciwnym razie `undefined` (domyślny menedżer biblioteki, jak wcześniej).
 - **Testy:**
-  - Jednostkowe: `src/components/editor/livePreview.test.ts` (9 testów: ukrywanie `**`/`*`, nagłówek z kursorem i bez, `` ` ``, link, cytat, dokument niezmieniony, klasa nagłówka; DOM w `EditorView`: klasa `cm-lp-h1` i powrót znacznika po przesunięciu kursora). Reszta `cmExtensions.test.ts`.
-  - E2E z flagą (`--project=chromium-cm`): 34/34, w tym `editor-keys`, `editor-cm`, `checklist`, `mentions`, `slash-menu`, `wikilinks`.
+  - Jednostkowe: `src/components/editor/livePreview.test.ts` (14 testów: ukrywanie `**`/`*`, nagłówek z kursorem i bez, `` ` ``, link, cytat, dokument niezmieniony, klasa nagłówka; widżety: pole zadania zawsze, klik odhacza i cofa w DOM `EditorView`, linia pozioma, `[[link]]` z kursorem i bez, `[[...]]` w kodzie zostaje). Reszta `cmExtensions.test.ts`.
+  - E2E z flagą (`--project=chromium-cm`): 35/35, w tym `editor-keys`, `editor-cm` (nowy test: pole zadania i `[[link]]` poza kursorem), `checklist`, `mentions`, `slash-menu`, `wikilinks`.
   - E2E bez flagi: `bundle`, `editing`, `editor-keys`, `live-text`, `checklist` — 27/27.
-  - Vitest pełny: 231 plików, 1907 testów. Typecheck (`tsconfig.app.json`) i lint czyste.
+  - Vitest pełny: 231 plików, 1912 testów. Typecheck (`tsconfig.app.json`) i lint czyste.
   - Brak e2e w przeglądarce sprawdzającego samo znikanie znaczników; pokrywa to test DOM w jsdom.
-- **Nie zrobione (kolejne kroki Fazy 1):** widżety (klik w pole zadania, obraz, tabela, `[[link]]`, podgląd wzoru), pasek formatowania nad klawiaturą na telefonie, test IME i autokorekty Androida na prawdziwym urządzeniu, przegląd na Pixel 7 / iPhone.
-- **Commit:** `b4864a0` (2026-10-23).
+- **Nie zrobione (kolejne kroki Fazy 1):** widżety obraz, tabela i podgląd wzoru; klik w `[[link]]` otwierający notatkę; pasek formatowania nad klawiaturą na telefonie, test IME i autokorekty Androida na prawdziwym urządzeniu, przegląd na Pixel 7 / iPhone; cel dotyku 44 px dla pola zadania.
+- **Commit:** `b9e2e11` (2026-10-23).
