@@ -15,6 +15,8 @@ import {
   parseSince,
   validRoomId,
   validToken,
+  validBlobId,
+  blobFits,
 } from "./core.js";
 
 const ROOM = "a".repeat(64);
@@ -181,4 +183,29 @@ test("expiredRooms: pokój nieruszany dłużej niż TTL", () => {
   store.rooms[ROOM] = { authHash: "h", last: 0, touched: NOW - LIMITS.ROOM_TTL_MS - 1, entries: [] };
   store.rooms["b".repeat(64)] = { authHash: "h", last: 0, touched: NOW, entries: [] };
   assert.deepEqual(expiredRooms(store, NOW), [ROOM]);
+});
+
+const BID = "b".repeat(64);
+test("identyfikator bloba: 64 cyfry hex", () => {
+  assert.equal(validBlobId(BID), true);
+  assert.equal(validBlobId("B".repeat(64)), false);
+  assert.equal(validBlobId("../x"), false);
+});
+
+test("blob: limit rozmiaru pojedynczego i pokoju, istniejący się nie liczy drugi raz", () => {
+  const room = { blobs: {} };
+  assert.equal(blobFits(room, BID, 0).error, 413);
+  assert.equal(blobFits(room, BID, LIMITS.MAX_BLOB_BYTES + 1).error, 413);
+  assert.deepEqual(blobFits(room, BID, 100), { ok: true, existing: false });
+  room.blobs[BID] = 100;
+  assert.deepEqual(blobFits(room, BID, 100), { ok: true, existing: true });
+  room.blobs = { [BID]: LIMITS.MAX_ROOM_BLOB_BYTES - 10 };
+  assert.equal(blobFits(room, "c".repeat(64), 11).error, 507);
+  assert.equal(blobFits(room, "c".repeat(64), 10).ok, true);
+});
+
+test("cleanStore zachowuje poprawne bloby, odrzuca śmieci", () => {
+  const raw = { rooms: { [ROOM]: { authHash: "h", last: 0, touched: NOW, entries: [], blobs: { [BID]: 5, bad: 3, ["d".repeat(64)]: -1 } } } };
+  const store = cleanStore(raw, NOW);
+  assert.deepEqual(store.rooms[ROOM].blobs, { [BID]: 5 });
 });

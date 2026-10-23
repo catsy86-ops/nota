@@ -24,6 +24,8 @@ export interface RelayKeys {
   roomId: string;
   token: string;
   dataKey: CryptoKey;
+  /** HMAC do wyliczania identyfikatorów blobów z hasha treści (serwer nie zna hasha). */
+  blobIdKey: CryptoKey;
 }
 
 function concat(...parts: Uint8Array[]): Uint8Array {
@@ -59,7 +61,40 @@ export async function deriveRelayKeys(code: string, iterations: number = RELAY_K
     ["encrypt", "decrypt"],
   );
 
-  return { roomId, token, dataKey };
+  const blobIdKey = await crypto.subtle.deriveKey(
+    hkdfParams("notki-relay-blobid-v1"),
+    hkdf,
+    { name: "HMAC", hash: "SHA-256", length: 256 },
+    false,
+    ["sign"],
+  );
+
+  return { roomId, token, dataKey, blobIdKey };
+}
+
+/** Identyfikator bloba na serwerze: HMAC(klucz pokoju, SHA-256 treści). Bez klucza nie da się go sprawdzić. */
+export async function blobIdOf(keys: RelayKeys, contentHash: string): Promise<string> {
+  const sig = await crypto.subtle.sign("HMAC", keys.blobIdKey, enc.encode(contentHash));
+  return hex(new Uint8Array(sig));
+}
+
+export const blobAad = (roomId: string, blobId: string) => `notki:relay:blob:v1:${roomId}:${blobId}`;
+
+/** Szyfrowanie surowych bajtów (bloby) bez base64: wynik to IV ‖ szyfrogram. */
+export async function sealRaw(key: CryptoKey, plain: Uint8Array, aad: string): Promise<Uint8Array> {
+  const iv = crypto.getRandomValues(new Uint8Array(IV_BYTES));
+  const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: enc.encode(aad) }, key, plain));
+  return concat(iv, ct);
+}
+
+export async function openRaw(key: CryptoKey, raw: Uint8Array, aad: string): Promise<Uint8Array> {
+  if (raw.length <= IV_BYTES) throw new Error("relay: za krótki blob");
+  const plain = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: raw.subarray(0, IV_BYTES), additionalData: enc.encode(aad) },
+    key,
+    raw.subarray(IV_BYTES),
+  );
+  return new Uint8Array(plain);
 }
 
 /** Szyfruje bajty; wynik to base64url(IV ‖ szyfrogram). AAD wiąże wpis z pokojem. */

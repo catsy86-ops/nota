@@ -2029,3 +2029,25 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Testy przycisku i powiadomienia (dopisane później):** przycisk „Testuj” (`checkRelay` w `relayRuntime.ts`: `GET /health`, bez kodu i tokenu; zwraca liczbę pokoi albo powód błędu, nie wysyła zapytania pod niepoprawny adres) i powiadomienie „Zmiana z innego urządzenia” (`onRemoteChange` w `RelayProvider`: tylko gdy Yjs realnie zmienił dokument po pobraniu, nie przy echu własnego wpisu; w `relayRuntime.ts` co 30 s, tylko na widocznej karcie). Testy: `relayRuntime.test.ts` (`checkRelay`), `relayProvider.test.ts` (powiadomienie), `e2e/relay-settings.spec.ts` (3 testy: walidacja i zapis, wyczyszczenie, „Testuj” pod nieosiągalnym adresem).
 - **Commit:** `1207987` (2026-10-23); dodatki w osobnym commicie.
 - **Wdrożenie:** decyzja 2026-10-23 — przekaźnik zostaje lokalny (bez hostingu). Adres wpisuje się w Ustawieniach → Sync → Przekaźnik; kod nie zawiera adresu serwera.
+
+## Synchronizacja — obrazy i załączniki przez przekaźnik (Faza 2, 2026-10-23)
+
+- **Co robi:** obrazy i załączniki notatek docierają na inne urządzenie także wtedy, gdy nadawca jest wyłączony (przy włączonym przekaźniku). Działa obok P2P i nie zmienia tego, co już jest.
+- **Gdzie jest:**
+  - `src/lib/sync/relayBlobs.ts`: `RelayBlobs` (przebieg: wysyłanie brakujących blobów przez HEAD → PUT, pobieranie referencji bez lokalnego obrazu przez GET), `packBlob` / `unpackBlob` (nagłówek MIME + bajty).
+  - `src/lib/sync/relayKeys.ts`: `blobIdOf` (HMAC z klucza `notki-relay-blobid-v1` nad SHA-256 treści), `sealRaw` / `openRaw`, `blobAad`.
+  - `src/lib/sync/relayRuntime.ts`: `scheduleBlobs` / `runBlobs` — przebieg przy starcie, 3 s po zmianie notatek (`notesMap.observeDeep`) i po zmianie z przekaźnika; jeden przebieg naraz.
+  - `relay-server/core.js` (`validBlobId`, `blobFits`, limity), `relay-server/server.js` (`handleBlob`, pliki w `DATA_DIR/blobs`).
+- **Jak działa:**
+  - Referencje: `yjsStore.syncableRefs()` (te same co w P2P). Lokalny obraz, którego serwer nie ma → PUT. Referencja bez lokalnego obrazu → GET, odszyfrowanie, `putBytes(bytes, type, hash)`: obraz o złym SHA-256 jest odrzucany przez `imageStore`.
+  - Serwer widzi tylko identyfikator (HMAC — nie da się sprawdzić, czy ma znany obraz, bez kodu), rozmiar i zaszyfrowane bajty. Typ MIME jest w zaszyfrowanej treści.
+  - Odczyt i zapis wymagają tokenu pokoju; GET obcego kodu daje 404 (inny pokój).
+- **Ograniczenia:**
+  - Bloby większe niż 24 MB (zaszyfrowane) są odrzucane; obraz lokalny nadal działa, tylko nie wyjdzie na serwer.
+  - Pierwszy przebieg po starcie sprawdza każdą referencję HEAD-em; przy wielu obrazach to dużo małych zapytań. Cache `known` obowiązuje tylko w sesji.
+  - Nieudane przebiegi są liczone i zapisywane jako ostrzeżenie w diagnostyce, bez ponawiania poza następnym wywołaniem.
+- **Testy:**
+  - `relayBlobs.integration.test.ts` (5 testów): pakowanie, niebezpieczny MIME, wysyłka A → B bajt w bajt bez ponownego wysłania, obcy kod nie czyta, brak bloba = brak błędu.
+  - `relay-server/core.test.js` (+3 testy: identyfikator, limity pojedynczy i pokoju, czyszczenie magazynu).
+  - Smoke na uruchomionym serwerze: PUT, ponowny PUT, HEAD, GET bajt w bajt, zły token 403, brak 404, zły identyfikator 400, brak tokenu 401.
+- **Commit:** w historii poniżej.

@@ -5,6 +5,7 @@ import { logDiag } from "@/lib/diagnostics";
 import { toast } from "sonner";
 import { deriveRelayKeys } from "@/lib/sync/relayKeys";
 import { RelayProvider, type RelayState, type RelayStatus, type RelayStore } from "@/lib/sync/relayProvider";
+import { RelayBlobs } from "@/lib/sync/relayBlobs";
 
 /**
  * Uruchamianie przekaźnika razem z synchronizacją (`yjsSync.ts` woła `startRelay`
@@ -122,6 +123,41 @@ function idbRelayStore(roomId: string): RelayStore {
 // ── start / stop ─────────────────────────────────────────────────────────────
 
 let provider: RelayProvider | null = null;
+// Bloby (obrazy, załączniki): przebieg po zmianach notatek, z opóźnieniem, jeden naraz.
+let blobs: RelayBlobs | null = null;
+let blobTimer: ReturnType<typeof setTimeout> | null = null;
+let blobRunning = false;
+let blobRerun = false;
+let unobserveNotes: (() => void) | null = null;
+
+function scheduleBlobs(delayMs = 3000): void {
+  if (!blobs) return;
+  if (blobTimer) clearTimeout(blobTimer);
+  blobTimer = setTimeout(runBlobs, delayMs);
+}
+
+async function runBlobs(): Promise<void> {
+  blobTimer = null;
+  const current = blobs;
+  if (!current) return;
+  if (blobRunning) {
+    blobRerun = true;
+    return;
+  }
+  blobRunning = true;
+  try {
+    const r = await current.sync();
+    if (r.failed > 0) logDiag("warn", "relay", `bloby: ${r.failed} nieudanych przebiegów`);
+  } catch (err) {
+    logDiag("warn", "relay", "przebieg blobów nieudany", err);
+  } finally {
+    blobRunning = false;
+    if (blobRerun && blobs) {
+      blobRerun = false;
+      scheduleBlobs(0);
+    }
+  }
+}
 const REMOTE_TOAST_GAP_MS = 30_000;
 let lastRemoteToastAt = 0;
 let startToken = 0;
@@ -144,6 +180,7 @@ export async function startRelay(code: string): Promise<void> {
       store: idbRelayStore(keys.roomId),
       openSocket: (wsUrl) => new WebSocket(wsUrl),
       onRemoteChange: () => {
+        scheduleBlobs(0);
         // Jak w yjsSync: tylko na widocznej karcie i co 30 s, seria zmian to jedno powiadomienie.
         const now = Date.now();
         if (document.visibilityState !== "visible" || now - lastRemoteToastAt < REMOTE_TOAST_GAP_MS) return;
@@ -157,6 +194,10 @@ export async function startRelay(code: string): Promise<void> {
       },
     });
     provider = p;
+    blobs = new RelayBlobs({ baseUrl: url, keys, refs: () => yjsStore.syncableRefs(), images: yjsStore.images });
+    const onNotes = () => scheduleBlobs();
+    yjsStore.notesMap.observeDeep(onNotes);
+    unobserveNotes = () => yjsStore.notesMap.unobserveDeep(onNotes);
     // Karta chowana: wysyłamy od razu, zanim system zamrozi stronę. Wracamy: nadrabiamy.
     onVisibility = () => {
       if (document.visibilityState === "hidden") p.flushNow();
@@ -181,5 +222,11 @@ export function stopRelay(): void {
   onOnline = null;
   provider?.stop();
   provider = null;
+  blobs = null;
+  if (blobTimer) clearTimeout(blobTimer);
+  blobTimer = null;
+  blobRerun = false;
+  unobserveNotes?.();
+  unobserveNotes = null;
   setView({ status: "idle", detail: undefined });
 }

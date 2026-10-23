@@ -42,6 +42,8 @@ Stan do przeglądu: `security-review` przed wdrożeniem.
 | `GET /rooms/:id/updates?since=n` | wpisy o numerze > n (najwyżej 500), `last`, `hasMore` |
 | `POST /rooms/:id/updates` | `{data}` dopisuje wpis, zwraca `{seq, last}` |
 | `PUT /rooms/:id/snapshot` | `{upto, data}` zastępuje wpisy ≤ upto jednym (kompaktowanie) |
+| `PUT /rooms/:id/blobs/:bid` | surowe bajty zaszyfrowanego bloba (obraz/załącznik), `bid` = HMAC z hasha treści; ponowny zapis tego samego `bid` nic nie zmienia |
+| `GET` / `HEAD /rooms/:id/blobs/:bid` | pobranie bloba (`404`, gdy go nie ma) albo samo sprawdzenie, czy jest |
 | `WS /ws` | po połączeniu wysyłasz `{type:"subscribe", room, token}`; serwer odpowiada `ready` albo zamyka z kodem 4003; po każdym zapisie przychodzi `{type:"updated", last}` |
 
 Token idzie w nagłówku `Authorization: Bearer …` (HTTP) lub w pierwszej wiadomości (WS),
@@ -55,6 +57,7 @@ Pierwszy zapis do pokoju ustawia jego token. Później wymagany jest ten sam tok
 - pokój: 50 MB zaszyfrowanych danych, 5000 wpisów (powyżej klient musi zrobić snapshot);
 - serwer: 5000 pokoi; pokój nieruszany 180 dni znika;
 - zapytania: 300/min na IP (`RATE_PER_MIN`); ciało żądania do 1 MB;
+- bloby: 24 MB na jeden (zaszyfrowany obraz do 20 MB), 300 MB i 5000 blobów na pokój;
 - WebSocket: 20 gniazd na pokój, 4 KB na wiadomość.
 
 ## Uruchomienie
@@ -81,4 +84,4 @@ ustawione). Bez proxy i z `TRUST_PROXY=1` każdy może podać własny `X-Forward
 
 - `core.js` — czysta logika (tokeny, log, snapshot, limity), bez I/O;
 - `core.test.js` — 19 testów logiki;
-- `server.js` — HTTP, WebSocket, zapis do `DATA_DIR/relay.json` (atomowo, co 0,5 s po zmianie).
+- `server.js` — HTTP, WebSocket, zapis do `DATA_DIR/relay.json` (atomowo, co 0,5 s po zmianie); bloby jako pliki w `DATA_DIR/blobs/<pokój>/<bid>`.

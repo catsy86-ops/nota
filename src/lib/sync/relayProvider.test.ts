@@ -267,7 +267,9 @@ describe("RelayProvider", () => {
     // Bez gniazda (brak WS w teście) pobiera się ręcznie; czekanie na ponowienie byłoby kruche.
     await until(() => [...server.rooms.values()][0]?.last === 2);
     a.sync();
-    await until(() => doc.getText("t").toString() === "obce moje");
+    // Kolejność dwóch wstawek na tej samej pozycji zależy od identyfikatorów klientów Yjs — sprawdzamy obecność obu.
+    await until(() => doc.getText("t").toString().includes("obce"));
+    expect(doc.getText("t").toString()).toContain("moje");
     expect(remote).toBeGreaterThan(0);
     a.stop();
     b.provider.stop();

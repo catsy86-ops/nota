@@ -3,13 +3,14 @@
 // synchronizacji ani treści — widzi identyfikator pokoju, hash tokenu i bloby base64url.
 // Dane w jednym pliku JSON w DATA_DIR (jak push-server; bez natywnych modułów).
 import { createServer } from "node:http";
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { createReadStream, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { WebSocketServer } from "ws";
 import {
   LIMITS,
   appendEntry,
   applySnapshot,
+  blobFits,
   cleanStore,
   emptyStore,
   entriesSince,
@@ -17,6 +18,7 @@ import {
   openRoomForRead,
   openRoomForWrite,
   parseSince,
+  validBlobId,
 } from "./core.js";
 
 const PORT = Number(process.env.PORT) || 4466;
@@ -30,6 +32,7 @@ const SWEEP_MS = 60 * 60 * 1000;
 
 mkdirSync(DATA_DIR, { recursive: true });
 const STORE_FILE = join(DATA_DIR, "relay.json");
+const BLOB_DIR = join(DATA_DIR, "blobs");
 
 let store = emptyStore();
 try {
@@ -75,7 +78,7 @@ function cors(req, res) {
     res.setHeader("Access-Control-Allow-Origin", origin);
     res.setHeader("Vary", "Origin");
   }
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, OPTIONS");
+  res.setHeader("Access-Control-Allow-Methods", "GET, HEAD, POST, PUT, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.setHeader("Access-Control-Max-Age", "86400");
 }
@@ -105,6 +108,25 @@ function readJson(req) {
         reject(Object.assign(new Error("Zły JSON"), { status: 400 }));
       }
     });
+    req.on("error", reject);
+  });
+}
+
+/** Surowe bajty (bloby), z tym samym limitem co `readJson`, ale bez JSON-a. */
+function readRaw(req, max) {
+  return new Promise((resolve, reject) => {
+    let size = 0;
+    const chunks = [];
+    req.on("data", (c) => {
+      size += c.length;
+      if (size > max) {
+        reject(Object.assign(new Error("Za duże"), { status: 413 }));
+        req.destroy();
+        return;
+      }
+      chunks.push(c);
+    });
+    req.on("end", () => resolve(Buffer.concat(chunks)));
     req.on("error", reject);
   });
 }
@@ -158,6 +180,45 @@ wss.on("connection", (ws) => {
 
 // ── trasy HTTP ───────────────────────────────────────────────────────────────
 
+/**
+ * Bloby (obrazy, załączniki): zaszyfrowane bajty pod identyfikatorem, który wylicza klient
+ * (HMAC z hasha treści). Autoryzacja przed czytaniem treści, żeby nieuwierzytelniony nie
+ * wpychał 24 MB do pamięci.
+ */
+async function handleBlob(req, res, roomId, blobId) {
+  if (!validBlobId(blobId)) return send(res, 400, { error: "Zły identyfikator bloba" });
+  const path = join(BLOB_DIR, roomId, blobId);
+
+  if (req.method === "PUT") {
+    const r = openRoomForWrite(store, roomId, tokenOf(req), Date.now());
+    if (r.error) return send(res, r.error, { error: r.message });
+    const bytes = await readRaw(req, LIMITS.MAX_BLOB_BYTES);
+    const fit = blobFits(r.room, blobId, bytes.length);
+    if (fit.error) return send(res, fit.error, { error: fit.message });
+    if (fit.existing) return send(res, 200, { ok: true, existing: true });
+    mkdirSync(join(BLOB_DIR, roomId), { recursive: true });
+    const tmp = `${path}.tmp`;
+    writeFileSync(tmp, bytes);
+    renameSync(tmp, path);
+    r.room.blobs[blobId] = bytes.length;
+    scheduleSave();
+    return send(res, 200, { ok: true, existing: false });
+  }
+
+  if (req.method === "GET" || req.method === "HEAD") {
+    const r = openRoomForRead(store, roomId, tokenOf(req));
+    if (r.error) return send(res, r.error, { error: r.message });
+    const size = r.room.blobs[blobId];
+    if (!size || !existsSync(path)) return send(res, 404, { error: "Nie ma takiego bloba" });
+    res.writeHead(200, { "Content-Type": "application/octet-stream", "Content-Length": size, "Cache-Control": "no-store" });
+    if (req.method === "HEAD") return res.end();
+    createReadStream(path).pipe(res);
+    return;
+  }
+
+  return send(res, 405, { error: "Metoda niedozwolona" });
+}
+
 async function handle(req, res) {
   cors(req, res);
   if (req.method === "OPTIONS") {
@@ -169,6 +230,9 @@ async function handle(req, res) {
   if (req.method === "GET" && url.pathname === "/health") {
     return send(res, 200, { ok: true, rooms: Object.keys(store.rooms).length });
   }
+
+  const blob = url.pathname.match(/^\/rooms\/([^/]+)\/blobs\/([^/]+)$/);
+  if (blob) return handleBlob(req, res, blob[1], blob[2]);
 
   const m = url.pathname.match(/^\/rooms\/([^/]+)\/(updates|snapshot)$/);
   if (!m) return send(res, 404, { error: "Nie ma takiej trasy" });
@@ -225,7 +289,10 @@ server.on("upgrade", (req, socket, head) => {
 
 setInterval(() => {
   const gone = expiredRooms(store, Date.now());
-  for (const id of gone) delete store.rooms[id];
+  for (const id of gone) {
+    delete store.rooms[id];
+    rmSync(join(BLOB_DIR, id), { recursive: true, force: true });
+  }
   if (gone.length) scheduleSave();
 }, SWEEP_MS).unref();
 

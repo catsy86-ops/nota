@@ -10,11 +10,30 @@ export const LIMITS = {
   MAX_ROOMS: 5_000,
   ROOM_TTL_MS: 180 * 24 * 3600 * 1000, // pokój bez zapisu dłużej niż pół roku znika
   PAGE: 500, // wpisów w jednej odpowiedzi GET
+  MAX_BLOB_BYTES: 24 * 1024 * 1024, // zaszyfrowany obraz/załącznik (plaintext do 20 MB + narzut)
+  MAX_ROOM_BLOB_BYTES: 300 * 1024 * 1024,
+  MAX_BLOBS: 5_000,
 };
 
 const ROOM_ID = /^[a-f0-9]{64}$/;
 const TOKEN = /^[A-Za-z0-9_-]{43}$/; // 32 bajty w base64url
 const BASE64URL = /^[A-Za-z0-9_-]+$/;
+const BLOB_ID = /^[a-f0-9]{64}$/;
+
+export function validBlobId(id) {
+  return typeof id === "string" && BLOB_ID.test(id);
+}
+
+/** Czy blob o tym id i rozmiarze zmieści się w pokoju. Istniejący blob nie liczy się drugi raz. */
+export function blobFits(room, id, size) {
+  const blobs = room.blobs ?? {};
+  if (id in blobs) return { ok: true, existing: true };
+  if (!Number.isSafeInteger(size) || size <= 0 || size > LIMITS.MAX_BLOB_BYTES) return { error: 413, message: "Blob ma zły rozmiar" };
+  if (Object.keys(blobs).length >= LIMITS.MAX_BLOBS) return { error: 507, message: "Za dużo blobów w pokoju" };
+  const used = Object.values(blobs).reduce((n, b) => n + b, 0);
+  if (used + size > LIMITS.MAX_ROOM_BLOB_BYTES) return { error: 507, message: "Pokój pełny" };
+  return { ok: true, existing: false };
+}
 
 export function validRoomId(id) {
   return typeof id === "string" && ROOM_ID.test(id);
@@ -49,11 +68,18 @@ export function cleanStore(raw, now) {
     const entries = Array.isArray(room.entries)
       ? room.entries.filter((e) => e && Number.isSafeInteger(e.seq) && e.seq > 0 && typeof e.data === "string")
       : [];
+    const blobs = {};
+    if (room.blobs && typeof room.blobs === "object") {
+      for (const [bid, size] of Object.entries(room.blobs)) {
+        if (validBlobId(bid) && Number.isSafeInteger(size) && size > 0) blobs[bid] = size;
+      }
+    }
     store.rooms[id] = {
       authHash: room.authHash,
       last: Number.isSafeInteger(room.last) ? room.last : 0,
       touched: Number.isFinite(room.touched) ? room.touched : now,
       entries,
+      blobs,
     };
   }
   return store;
@@ -70,7 +96,7 @@ export function openRoomForWrite(store, id, token, now) {
   let room = store.rooms[id];
   if (!room) {
     if (Object.keys(store.rooms).length >= LIMITS.MAX_ROOMS) return { error: 507, message: "Serwer pełny" };
-    room = { authHash: hashToken(token), last: 0, touched: now, entries: [] };
+    room = { authHash: hashToken(token), last: 0, touched: now, entries: [], blobs: {} };
     store.rooms[id] = room;
   } else if (!tokenMatches(room.authHash, token)) {
     return { error: 403, message: "Zły token" };
