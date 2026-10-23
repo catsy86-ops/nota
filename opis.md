@@ -214,7 +214,7 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 
 ### Commity
 
-- Nie zacommitowane (2026-10-23): trwa Faza 0.
+- `5f6fe63` (2026-10-23) — fundamenty Fazy 0 (flagi, RPC dla Workerów, pomiary).
 
 ## Synchronizacja — stan aktualny (parowanie, kody, urządzenia, diagnoza)
 
