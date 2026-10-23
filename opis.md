@@ -1882,3 +1882,4 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - E2E z flagą (`chromium-cm`, 34/34): `e2e/editor-cm.spec.ts` (w tym Ctrl+Z osobno od pisania i zapis bez „Zapisz”), `live-text.spec.ts` (zdalna zmiana, dopisek na początku), `checklist`, `editing`, `editor-keys`, `mentions`, `slash-menu`, `wikilinks`.
   - E2E bez flagi (`chromium`, 41/41), w tym `bundle.spec.ts`.
 - **Nie zrobione:** Faza 1b w planie „motywy” (animacje per styl) — osobny krok. Telefon (IME, pasek formatowania) nadal bez przeglądu na urządzeniu.
+- **Commit:** `afa048e` (2026-10-23).
