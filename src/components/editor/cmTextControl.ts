@@ -1,12 +1,13 @@
 import type { EditorView } from "@codemirror/view";
 import type { TextControl } from "@/lib/textControl";
+import type { NoteUndoManager } from "@/hooks/useNotes";
 
 /**
  * Adapter `TextControl` na widoku CodeMirror (plan rozbudowy, Faza 1a).
  * Zmiany idą przez transakcje, więc Ctrl+Z cofa też wstawienia z podpowiedzi
  * i skrótów (`applyEdit`), a nie tylko pisanie z klawiatury.
  */
-export function createCmTextControl(view: EditorView): TextControl {
+export function createCmTextControl(view: EditorView, undoManager?: NoteUndoManager): TextControl {
   const clamp = (n: number) => Math.max(0, Math.min(n, view.state.doc.length));
   return {
     get value() { return view.state.doc.toString(); },
@@ -29,11 +30,14 @@ export function createCmTextControl(view: EditorView): TextControl {
     setRangeText(text: string, start: number, end: number, mode?: "end") {
       const from = clamp(start);
       const to = clamp(end);
+      // Operacja z podpowiedzi, skrótu lub paska to osobna jednostka cofania (nie scala się z pisaniem obok).
+      undoManager?.stopCapturing();
       view.dispatch({
         changes: { from, to, insert: text },
         selection: mode === "end" ? { anchor: from + text.length } : undefined,
         userEvent: "input",
       });
+      undoManager?.stopCapturing();
     },
     focus() { view.focus(); },
     caretCoords(pos: number) {

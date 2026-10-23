@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { Text as YText, UndoManager } from "yjs";
 import { yjsStore } from "@/lib/yjsStore";
 import { versionsStore } from "@/lib/versionsStore";
 import { privateNotes } from "@/lib/privateNotes";
@@ -474,4 +475,17 @@ export function onRemoteNoteTextChange(id: string, listener: () => void): () => 
 /** Rozwiązuje się, gdy dokument jest wczytany z IndexedDB (i po migracji). */
 export function whenNotesReady(): Promise<void> {
   return yjsStore.ready();
+}
+
+/** Żywy `Y.Text` treści do wiązania edytora CM (plan Fazy 1b); `null` dla notatek prywatnych. */
+export type NoteYText = YText;
+
+export function getNoteYText(id: string): YText | null {
+  return yjsStore.getNoteText(id);
+}
+
+/** Cofanie edycji treści w trybie wiązania CM (Faza 1b). Jeden na sesję edytora; `stopCapturing` rozdziela operacje. */
+export type NoteUndoManager = UndoManager;
+export function newNoteUndoManager(text: YText): NoteUndoManager {
+  return new UndoManager(text);
 }

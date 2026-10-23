@@ -1853,3 +1853,32 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Fokus po Enter w tytule:** CM ładuje się leniwie, więc Enter może przyjść przed montażem. `NoteEditor` zapamiętuje żądanie (`bodyFocusPending`), a `CmEditor` przyjmuje `autoFocus` i ustawia fokus przy montażu. Chunk CM ładuje się też od razu po otwarciu edytora (prefetch w `useEffect`).
 - **Regresja bez flagi:** 33/33 (`--project=chromium`, pliki edytora razem z `editor-cm.spec.ts`).
 - **Zostaje:** pełna przeglądarka mobilna (iPhone, Pixel) z flagą; IME i autokorekta Androida na prawdziwym telefonie.
+
+## Notatki — edytor wiązany z dokumentem Yjs (Faza 1b, 2026-10-23)
+
+- **Co robi:** z flagą `cmEditor` w edytorze otwartej notatki (nie prywatnej) każda zmiana tekstu trafia od razu do dokumentu Yjs i do IndexedDB. Zdalne zmiany pojawiają się w otwartym edytorze bez scalania szkicu. Ctrl+Z cofa przez historię Yjs (osobno pisanie, osobno formatowanie i podpowiedzi). „Zapisz” nie jest potrzebne, żeby tekst przetrwał przeładowanie.
+- **Gdzie:**
+  - `src/components/editor/CmEditor.tsx` — prop `yText`: tworzy stan z `Y.Text`, nie synchronizuje `value`, tworzy `Y.UndoManager` na sesję i czyści ref tylko własnego adaptera.
+  - `src/components/editor/cmExtensions.ts` — `buildCmExtensions({ yText, yUndoManager })`: `yCollab` (y-codemirror.next 0.3.6, przypięty) i `yUndoManagerKeymap` zamiast `history()`.
+  - `src/components/editor/cmTextControl.ts` — `setRangeText` zamyka grupę cofania przed i po operacji (`stopCapturing`).
+  - `src/hooks/useNoteEditSession.ts` — `collab`/`collabText`, `writeContent` (wszystkie zapisy treści), `commitDraft` bez treści w trybie wiązania, `savedContentRef` i `openContentRef` (wersja z chwili otwarcia).
+  - `src/lib/yjsStore.ts` — `getNoteText(id)`: `Y.Text` notatki, `null` dla zaszyfrowanej.
+  - `src/hooks/useNotes.ts` — `getNoteYText`, `newNoteUndoManager`, typy `NoteYText`, `NoteUndoManager` (jedyne miejsce, gdzie wolno importować `yjs` w edytorze).
+  - `src/components/NoteEditor.tsx` — `yText` i `key` zależny od trybu; wszystkie zapisy treści przez `writeContent`.
+- **Jak działa:**
+  - Tryb wiązania włącza się, gdy flaga jest włączona i `getNoteYText` zwraca `Y.Text` (czyli notatka nie jest prywatna). Inaczej działa stara ścieżka szkicu (`beginTextEdit`/`rebaseTextEdit`).
+  - `commitDraft` w tym trybie zapisuje tylko tytuł i listę. Wersję historii robi raz na sesję z treścią z chwili otwarcia. Zapis treści ponawia się tylko wtedy, gdy zmieniła się od ostatniego zapisu (`savedContentRef`), żeby autozapis nie podbijał `updatedAt` co 5 s.
+  - `writeContent` z adaptera CM (`applyEdit`) albo, gdy CM jeszcze się nie zamontował (chunk ładuje się leniwie), bezpośrednio do `Y.Text` w jednej transakcji. Edytor wchodzi potem z aktualnym tekstem.
+  - Wybór podpowiedzi `[[`/`@` idzie przez `writeContent` (wcześniej przez szkic — w trybie wiązania tekst nie wchodził do dokumentu).
+- **Ograniczenia i pułapki:**
+  - `fill` w Playwright (i zastąpienie całej treści) to w CRDT usunięcie i ponowne wstawienie wszystkiego. Współbieżne dopiski drugiego urządzenia zostają przed nowym tekstem. W testach dopisuje się na początku (Ctrl+Home), a nie zastępuje całość.
+  - Undo grupuje zmiany w oknie `captureTimeout` (500 ms). Bez `stopCapturing` przy operacjach dyskretnych Ctrl+Z cofał pisanie razem z pogrubieniem.
+  - Ref adaptera: po zmianie `key` stara instancja nie może wyzerować nowej (sprawdzane po własnym adapterze).
+  - Notatki prywatne (szyfrogram, `locked`) zostają przy ścieżce szkicu, bez `Y.Text`.
+  - Każdy `UndoManager` żyje tyle, ile montaż edytora: po zamknięciu edycji historia cofania się zaczyna od nowa (jak w textarea).
+  - Test „bez Zapisz” czeka 1,5 s na zapis IndexedDB przed przeładowaniem. To świadome, bo zapis jest asynchroniczny.
+- **Testy:**
+  - Jednostkowe: `src/components/editor/cmTextControl.test.ts`, `CmEditor.test.tsx`, `cmExtensions.test.ts`.
+  - E2E z flagą (`chromium-cm`, 34/34): `e2e/editor-cm.spec.ts` (w tym Ctrl+Z osobno od pisania i zapis bez „Zapisz”), `live-text.spec.ts` (zdalna zmiana, dopisek na początku), `checklist`, `editing`, `editor-keys`, `mentions`, `slash-menu`, `wikilinks`.
+  - E2E bez flagi (`chromium`, 41/41), w tym `bundle.spec.ts`.
+- **Nie zrobione:** Faza 1b w planie „motywy” (animacje per styl) — osobny krok. Telefon (IME, pasek formatowania) nadal bez przeglądu na urządzeniu.

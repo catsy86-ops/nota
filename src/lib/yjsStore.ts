@@ -659,6 +659,16 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     return base.text;
   }
 
+  /**
+   * Żywy `Y.Text` treści notatki dla edytora CM, który wiąże się z dokumentem (plan Fazy 1b).
+   * `null` dla notatek prywatnych (szyfrogram, brak `Y.Text`) — one zostają przy zapisie przez sesję.
+   */
+  function getNoteText(id: string): Y.Text | null {
+    if (notesMap.get(id)?.get("locked") === true) return null;
+    const text = notesMap.get(id)?.get("content");
+    return text instanceof Y.Text ? text : null;
+  }
+
   function endTextEdit(id: string): void {
     textBases.delete(id);
   }
@@ -1002,7 +1012,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     addLabel, removeLabelEverywhere, renameLabelEverywhere,
     replaceAll, resetForTests, diagStats, encodeSyncState, mergeSyncState,
     referencedImages, referencedAttachments, syncableRefs, remapImageRefs,
-    beginTextEdit, endTextEdit, isTextEditOpen, rebaseTextEdit, onRemoteTextChange,
+    beginTextEdit, endTextEdit, isTextEditOpen, rebaseTextEdit, onRemoteTextChange, getNoteText,
     readPlainNote, isLocked, lockedNoteIds, getVault, lockNote, setVault, unlockNote,
     getVaultMeta, setVaultMeta, observeVaultMeta, rekeyVault, setLockedWriteSink, compactPersistence,
   };

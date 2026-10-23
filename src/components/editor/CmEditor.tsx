@@ -3,6 +3,7 @@ import { Annotation, EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { useLatestRef } from "@/hooks/useLatestRef";
 import type { TextControl } from "@/lib/textControl";
+import { newNoteUndoManager, type NoteYText as YText } from "@/hooks/useNotes";
 import { buildCmExtensions, type CmExtensionOptions } from "./cmExtensions";
 import { createCmTextControl } from "./cmTextControl";
 
@@ -27,12 +28,14 @@ export interface CmEditorProps extends Omit<CmExtensionOptions, "onChange"> {
   onPaste?: (e: ClipboardEvent<HTMLDivElement>) => void;
   /** Adapter `TextControl` widoku (ustawiany po montażu, zerowany przy odmontowaniu). */
   textControlRef?: MutableRefObject<TextControl | null>;
+  /** Wiązanie z `Y.Text` (Faza 1b): dokument jest źródłem prawdy, `value` tylko odzwierciedla. */
+  yText?: YText;
   /** Fokus na treści zaraz po montażu (np. Enter w tytule, zanim edytor się załadował). */
   autoFocus?: boolean;
   className?: string;
 }
 
-export function CmEditor({ value, onChange, onSelect, onKeyDown, onPaste, textControlRef, autoFocus, className, ...opts }: CmEditorProps) {
+export function CmEditor({ value, onChange, onSelect, onKeyDown, onPaste, textControlRef, autoFocus, yText, className, ...opts }: CmEditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useLatestRef(onChange);
@@ -43,12 +46,14 @@ export function CmEditor({ value, onChange, onSelect, onKeyDown, onPaste, textCo
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
+    // Cofanie w trybie wiązania: własny menedżer na sesję edytora, żeby adapter mógł zamykać grupy operacji.
+    const undoManager = yText ? newNoteUndoManager(yText) : undefined;
     const view = new EditorView({
       parent: host,
       state: EditorState.create({
-        doc: value,
+        doc: yText ? yText.toString() : value,
         extensions: [
-          ...buildCmExtensions({ ...opts, onChange: undefined }),
+          ...buildCmExtensions({ ...opts, yText, yUndoManager: undoManager, onChange: undefined }),
           EditorView.updateListener.of((u) => {
             if (u.docChanged && !u.transactions.some((t) => t.annotation(External))) {
               onChangeRef.current(u.state.doc.toString());
@@ -59,11 +64,14 @@ export function CmEditor({ value, onChange, onSelect, onKeyDown, onPaste, textCo
       }),
     });
     viewRef.current = view;
-    if (textControlRef) textControlRef.current = createCmTextControl(view);
+    const control = createCmTextControl(view, undoManager);
+    if (textControlRef) textControlRef.current = control;
     if (autoFocus) view.focus();
     return () => {
-      if (textControlRef) textControlRef.current = null;
+      // Czyścimy tylko własny adapter: starsza instancja (np. po zmianie `key`) nie może wyzerować nowej.
+      if (textControlRef && textControlRef.current === control) textControlRef.current = null;
       view.destroy();
+      undoManager?.destroy();
       viewRef.current = null;
     };
     // Widok tworzony raz: opcje czytane tylko przy starcie (zmiana trybu tylko do odczytu wymaga nowego montażu).
@@ -72,7 +80,8 @@ export function CmEditor({ value, onChange, onSelect, onKeyDown, onPaste, textCo
 
   useEffect(() => {
     const view = viewRef.current;
-    if (!view) return;
+    // Z wiązaniem Yjs tekst przychodzi z dokumentu (yCollab), nie z `value`.
+    if (!view || yText) return;
     const current = view.state.doc.toString();
     if (current === value) return;
     // Najmniejsza zmiana: wspólny prefiks i sufiks zostają, więc zaznaczenie poza zmianą nie znika.
@@ -85,7 +94,7 @@ export function CmEditor({ value, onChange, onSelect, onKeyDown, onPaste, textCo
       changes: { from: p, to: current.length - q, insert: value.slice(p, value.length - q) },
       annotations: External.of(true),
     });
-  }, [value]);
+  }, [value, yText]);
 
   return (
     <div

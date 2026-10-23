@@ -1,4 +1,5 @@
 import { test, expect, type Locator, type Page } from "@playwright/test";
+import { editorBody, readEditorText } from "./helpers/editor";
 
 /**
  * Edytor CodeMirror 6 za flagą `cmEditor` (plan rozbudowy, Faza 1a).
@@ -31,7 +32,7 @@ async function openEditor(page: Page, title: string): Promise<Locator> {
 
 /** Tekst z zachowaniem nowych linii (innerText kontentu CM). */
 function cmText(body: Locator) {
-  return body.evaluate((el) => (el as HTMLElement).innerText.replace(/\n+$/, ""));
+  return readEditorText(body);
 }
 
 test("edycja w CM zapisuje treść po „Zapisz”", async ({ page }) => {
@@ -78,4 +79,34 @@ test("[[ podpowiada tytuł i wstawia link w CM", async ({ page }) => {
   await expect(list.getByRole("option", { name: target })).toBeVisible();
   await body.press("Enter");
   await expect.poll(() => cmText(body)).toBe(`[[${target}]]`);
+});
+
+test("Ctrl+Z cofa formatowanie osobno od pisania (wiązanie z Yjs)", async ({ page }) => {
+  const title = `CM-undo ${Date.now()}`;
+  await addNote(page, title);
+  const body = await openEditor(page, title);
+  await body.pressSequentially("tekst");
+  await body.press("Shift+Home");
+  await body.press("Control+b");
+  await expect.poll(() => cmText(body)).toBe("**tekst**");
+  await body.press("Control+z");
+  await expect.poll(() => cmText(body)).toBe("tekst");
+  // Drugie cofnięcie cofa samo pisanie, a nie tylko część słowa.
+  await body.press("Control+z");
+  await expect.poll(() => cmText(body)).toBe("");
+});
+
+test("tekst trafia do notatki bez „Zapisz” (zapis przez dokument Yjs)", async ({ page }) => {
+  const title = `CM-bez-zapisu ${Date.now()}`;
+  await addNote(page, title);
+  const body = await openEditor(page, title);
+  await body.pressSequentially("nie kliknięto Zapisz");
+  // Zamknięcie edycji klawiszem Esc, bez przycisku „Zapisz”.
+  await body.press("Escape");
+  // Yjs zapisuje każdą zmianę do IndexedDB; dajemy chwilę na flush przed przeładowaniem.
+  await page.waitForTimeout(1500);
+  await page.reload();
+  await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
+  await page.getByRole("heading", { name: title, exact: true }).click();
+  await expect.poll(() => readEditorText(editorBody(page))).toBe("nie kliknięto Zapisz");
 });

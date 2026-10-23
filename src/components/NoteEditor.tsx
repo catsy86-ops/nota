@@ -45,7 +45,7 @@ export function NoteEditor({
 }) {
   const {
     editTitle, setEditTitle,
-    editContent, setEditContent,
+    editContent, setEditContent, writeContent, collabText,
     editChecklist, setEditChecklist,
     showChecklist, setShowChecklist,
     showPreview, setShowPreview,
@@ -80,6 +80,7 @@ export function NoteEditor({
       return (
         <Suspense fallback={<div className={cn(cls, "min-h-[60px]")} aria-busy="true" />}>
           <CmEditor
+            key={collabText ? `${note.id}:collab` : `${note.id}:plain`}
             value={editContent}
             onChange={setEditContent}
             onSelect={handleEditSelect}
@@ -87,6 +88,7 @@ export function NoteEditor({
             onPaste={onPaste}
             textControlRef={textareaRef}
             autoFocus={bodyFocusPending}
+            yText={collabText ?? undefined}
             spellcheck={spellcheck}
             placeholder="Treść notatki..."
             ariaLabel="Treść notatki"
@@ -132,7 +134,7 @@ export function NoteEditor({
       >
       {/* W oknie `pr-*` zostawia miejsce na ✕ w prawym górnym rogu. */}
       <TitleField spellCheck={spellcheck} autoFocus value={editTitle} onChange={setEditTitle} onEnter={() => { if (textareaRef.current) textareaRef.current.focus(); else setBodyFocusPending(true); }} className={cn("w-full bg-transparent font-display font-semibold text-foreground outline-hidden", full && "text-2xl pr-8 coarse:pr-12")} placeholder="Tytuł" />
-      {findOpen && <Suspense fallback={null}><FindReplaceBar value={editContent} onChange={setEditContent} textareaRef={textareaRef} onClose={() => setFindOpen(false)} /></Suspense>}
+      {findOpen && <Suspense fallback={null}><FindReplaceBar value={editContent} onChange={writeContent} textareaRef={textareaRef} onClose={() => setFindOpen(false)} /></Suspense>}
       <div className="flex items-center gap-1">
         <FormatToolbar onInsert={handleFormatInsert} nowrap={!full} />
         <button
@@ -182,7 +184,7 @@ export function NoteEditor({
         <ChecklistConvertButtons
           content={editContent}
           checklist={editChecklist}
-          onConvert={(r, toList) => { setEditContent(r.content); setEditChecklist(r.checklist); setShowChecklist(toList); }}
+          onConvert={(r, toList) => { writeContent(r.content); setEditChecklist(r.checklist); setShowChecklist(toList); }}
         />
       </div>
 

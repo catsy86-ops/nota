@@ -51,7 +51,11 @@ test("tekst peera wpada do sfokusowanego edytora bez blur, a karetka zostaje prz
 
   // A dopisuje początek i zapisuje.
   await a.getByRole("heading", { name: title, exact: true }).click();
-  await editorBody(a).fill("POCZĄTEK środek");
+  // Dopisek na początku, a nie zamiana całej treści: w CRDT `fill` to usunięcie i ponowne wstawienie wszystkiego.
+  const aBody = editorBody(a);
+  await aBody.click();
+  await a.keyboard.press("Control+Home");
+  await aBody.pressSequentially("POCZĄTEK ");
   await a.getByRole("button", { name: "Zapisz", exact: true }).click();
   const fileA = await exportSync(a);
 
