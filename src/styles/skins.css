@@ -753,3 +753,102 @@ html[data-season]:not([data-skin="zeszyt"]) .paper-grid {
     radial-gradient(52% 40% at 0% 0%, hsl(var(--season-blob-2) / calc(0.16 * var(--season-glow))), transparent 70%),
     radial-gradient(70% 46% at 50% 100%, hsl(var(--season-blob-3) / calc(0.14 * var(--season-glow))), transparent 75%);
 }
+
+/* Zmiana widoku (`html[data-sig="view"]`): Zeszyt przewraca kartkę, Matryca spływa kaskadą kolumn.
+   Pseudo-elementy są w spoczynku niewidoczne albo nie istnieją, więc ruch pojawia się tylko na sygnał. */
+html[data-sig="view"][data-skin="zeszyt"] .paper-grid::before {
+  animation: zeszyt-flip var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes zeszyt-flip {
+  from { opacity: 0.35; transform: perspective(900px) rotateY(-70deg); transform-origin: left center; }
+  to { opacity: 1; transform: none; }
+}
+
+html[data-sig="view"][data-skin="matrix"] .paper-grid::before {
+  display: block;
+  background-image: repeating-linear-gradient(90deg, transparent 0 22px, hsl(125 100% 55% / 0.35) 22px 23px);
+  background-size: auto;
+  animation: matrix-cascade var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes matrix-cascade {
+  from { opacity: 0.9; transform: translateY(-100%); }
+  to { opacity: 0; transform: translateY(100%); }
+}
+
+/* Zorza — paralaksa: `translate` to osobna właściwość, więc nie zmienia animacji `transform` dryfu. */
+html[data-skin="zorza"] .paper-grid::after {
+  translate: 0 calc(var(--sig-scroll, 0) * -0.12px);
+}
+
+/* Neon — pierwsze uruchomienie dnia: nagłówek mruga jak zapalana rurka (ten sam przebieg co logo). */
+html[data-sig="dawn"][data-skin="neon"] h1 {
+  animation: neon-ignite 1.4s steps(1, end) 1 both;
+}
+
+html[data-motion="reduced"][data-sig][data-skin="zeszyt"] .paper-grid::before,
+html[data-motion="reduced"][data-sig][data-skin="neon"] h1 { animation: none; }
+html[data-motion="reduced"][data-sig="view"][data-skin="matrix"] .paper-grid::before { animation: none; display: none; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-sig="view"][data-skin="zeszyt"] .paper-grid::before,
+  html[data-sig="dawn"][data-skin="neon"] h1 { animation: none; }
+  html[data-sig="view"][data-skin="matrix"] .paper-grid::before { animation: none; display: none; }
+}
+
+/* Wymiarowanie (Plan): zaznaczony kafel dostaje linię wymiarową przy dolnej krawędzi, która się rysuje. */
+html[data-skin="plan"] .note-card::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 6px;
+  height: 1px;
+  background: hsl(var(--primary) / 0.8);
+  transform-origin: left center;
+  opacity: 0;
+  pointer-events: none;
+}
+html[data-skin="plan"] .note-card[data-selected]::after {
+  opacity: 1;
+  animation: plan-dimension var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes plan-dimension {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Neon: przypięcie — kafle przypięte krótko rozbłyskują (`::before`, bo `::after` ma poświatę fokusu). */
+html[data-skin="neon"] .note-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: inset 0 0 0 1px hsl(var(--primary) / 0.8), inset 0 0 22px hsl(var(--primary) / 0.45);
+}
+html[data-sig="pin"][data-skin="neon"] .note-card[data-pinned]::before {
+  animation: neon-pin var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes neon-pin {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Zorza: zmiana na tę skórkę — gwiazdy wpływają falą z prawej (przez opacity i translate). */
+html[data-sig="skin"][data-skin="zorza"] .paper-grid::before {
+  animation: zorza-wave var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes zorza-wave {
+  from { opacity: 0; translate: 12% 0; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+html[data-motion="reduced"][data-skin="plan"] .note-card[data-selected]::after,
+html[data-motion="reduced"][data-sig="pin"][data-skin="neon"] .note-card[data-pinned]::before,
+html[data-motion="reduced"][data-sig="skin"][data-skin="zorza"] .paper-grid::before { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="plan"] .note-card[data-selected]::after,
+  html[data-sig="pin"][data-skin="neon"] .note-card[data-pinned]::before,
+  html[data-sig="skin"][data-skin="zorza"] .paper-grid::before { animation: none; }
+}

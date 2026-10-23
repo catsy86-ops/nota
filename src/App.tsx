@@ -10,6 +10,8 @@ import { useMotionPref } from "./hooks/useMotionPref";
 import { useEffect } from "react";
 import { applySeasonAttr, useSeasonPref } from "./lib/seasonTheme";
 import { useEffectsSettings } from "./lib/effectsSettings";
+import { startScrollParallax } from "./lib/scrollParallax";
+import { pulseDawnIfNewDay } from "./lib/skinSignal";
 import { NotesProvider } from "./hooks/NotesProvider";
 
 // Funkcje animacji dociągane po starcie (osobna paczka). `strict`: pełny `motion` zamiast
@@ -27,6 +29,10 @@ const App = () => {
     if (seasonalTheme || seasonPref !== "auto") applySeasonAttr();
     else delete document.documentElement.dataset.season;
   }, [seasonPref, seasonalTheme]);
+
+  // Zorza: paralaksa wstęg przy przewijaniu; Neon: rozbłysk nagłówka przy pierwszym uruchomieniu dnia.
+  useEffect(() => startScrollParallax(), []);
+  useEffect(() => { pulseDawnIfNewDay(); }, []);
 
   // "system" lets framer-motion follow the OS setting; "reduced"/"full" force it.
   const reducedMotion = mode === "system" ? "user" : mode === "reduced" ? "always" : "never";

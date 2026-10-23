@@ -1,3 +1,4 @@
+import { pulseSkinSignal } from "@/lib/skinSignal";
 import { createPersistedStore } from "@/lib/persistedStore";
 
 /**
@@ -41,4 +42,7 @@ export const skinStore = createPersistedStore<Skin>("kaczy.skin.v1", "zeszyt", {
 });
 
 export const useSkin = () => skinStore.use();
-export const setSkin = (s: Skin) => skinStore.set(s);
+export const setSkin = (s: Skin) => {
+  skinStore.set(s);
+  pulseSkinSignal("skin");
+};

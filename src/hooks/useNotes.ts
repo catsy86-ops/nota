@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Text as YText, UndoManager } from "yjs";
+import { pulseSkinSignal } from "@/lib/skinSignal";
 import { yjsStore } from "@/lib/yjsStore";
 import { versionsStore } from "@/lib/versionsStore";
 import { privateNotes } from "@/lib/privateNotes";
@@ -300,6 +301,7 @@ export function useNotes() {
     const current = yjsStore.projectNotes().find((n) => n.id === id);
     if (!current) return;
     yjsStore.patchNote(id, { pinned: !current.pinned });
+    if (!current.pinned) pulseSkinSignal("pin");
   }, []);
 
   const duplicateNote = useCallback((id: string) => {

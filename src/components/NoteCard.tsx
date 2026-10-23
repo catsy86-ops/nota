@@ -201,6 +201,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         aria-label={note.locked ? "Notatka prywatna" : note.title.trim() || "Notatka bez tytułu"}
         data-note-id={note.id}
         data-note-color={note.color}
+        data-selected={selected || undefined}
+        data-pinned={note.pinned || undefined}
         // Siatka (`NoteGrid`) rozciąga kafel w edycji na dwie kolumny.
         data-tile-editing={isEditing && !fullEditor ? "" : undefined}
         className={cn(
@@ -395,6 +397,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           ref={setEditorPanel}
           // Pasek koloru notatki u góry okna (ta sama reguła `--note-ink` co na kaflu).
           data-note-color={note.color}
+        data-selected={selected || undefined}
+        data-pinned={note.pinned || undefined}
           // Przewinięcie czegokolwiek w oknie (treść, lista, podgląd) — zdarzenie `scroll` nie bąbelkuje.
           onScrollCapture={(e) => setEditorScrolled((e.target as HTMLElement).scrollTop > 0)}
           // Telefon: od krawędzi do krawędzi, bez prześwitu nawigacji; od `sm` okno.

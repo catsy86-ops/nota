@@ -1,3 +1,4 @@
+import { pulseSkinSignal } from "@/lib/skinSignal";
 import { useState, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { flushSync } from "react-dom";
 import { isMotionReduced } from "@/hooks/useMotionPref";
@@ -148,7 +149,13 @@ const Index = () => {
     }
   }, [go]);
   // Tabliczka rysunkowa w tle zmienia napis według widoku (CSS: `html[data-view]`).
-  useEffect(() => { document.documentElement.dataset.view = view; }, [view]);
+  // Zmiana widoku odpala sygnał stylu (Zeszyt przewraca kartkę, Matryca spływa kaskadą); pierwsze wejście bez sygnału.
+  const firstViewRef = useRef(true);
+  useEffect(() => {
+    document.documentElement.dataset.view = view;
+    if (firstViewRef.current) { firstViewRef.current = false; return; }
+    pulseSkinSignal("view");
+  }, [view]);
   // Pole wyszukiwania ma własny stan (karetka nie może czekać na router);
   // adres dostaje go z opóźnieniem zerowym, a „wstecz/dalej” wlewa z powrotem.
   const [search, setSearch] = useState(route.search);

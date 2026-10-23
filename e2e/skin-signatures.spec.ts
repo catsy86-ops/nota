@@ -95,3 +95,89 @@ test("Hydraulika: zapis wypełnia rurę falą, a przy ograniczonym ruchu nie ma 
   const reduced = await page.locator(".hydro-bubbles").evaluate((el) => getComputedStyle(el, "::after").animationName);
   expect(reduced).toBe("none");
 });
+
+test("Matryca: zmiana widoku spływa kaskadą kolumn (sygnał view)", async ({ page }) => {
+  await open(page, "matrix");
+  await page.getByRole("button", { name: "Dziś", exact: true }).first().click();
+  const anim = await page.locator(".paper-grid").evaluate((el) => ({
+    sig: document.documentElement.dataset.sig,
+    name: getComputedStyle(el, "::before").animationName,
+  }));
+  expect(anim.sig).toBe("view");
+  expect(anim.name).toBe("matrix-cascade");
+});
+
+test("Zeszyt: zmiana widoku przewraca kartkę", async ({ page }) => {
+  await open(page, "zeszyt");
+  await page.getByRole("button", { name: "Dziś", exact: true }).first().click();
+  const name = await page.locator(".paper-grid").evaluate((el) => getComputedStyle(el, "::before").animationName);
+  expect(name).toBe("zeszyt-flip");
+});
+
+test("Neon: pierwsze uruchomienie dnia rozbłyska nagłówek", async ({ page }) => {
+  await open(page, "neon");
+  const info = await page.evaluate(() => ({
+    sig: document.documentElement.dataset.sig,
+    anim: getComputedStyle(document.querySelector("h1")!).animationName,
+  }));
+  expect(info.sig).toBe("dawn");
+  expect(info.anim).toBe("neon-ignite");
+});
+
+test("Zorza: wstęgi są przesuwane zmienną paralaksy (translate), a nie zmieniają dryfu", async ({ page }) => {
+  await open(page, "zorza");
+  const t = await page.locator(".paper-grid").evaluate((el) => {
+    const cs = getComputedStyle(el, "::after");
+    return { translate: cs.translate, anim: cs.animationName };
+  });
+  expect(t.anim).toBe("aurora-drift");
+  expect(t.translate).not.toBe("none");
+});
+
+test("Neon: przypięcie notatki rozbłyskuje przypięte kafle (sygnał pin)", async ({ page }) => {
+  await open(page, "neon");
+  const title = `Neon-pin ${Date.now()}`;
+  await page.getByText("Zapisz notatkę...").click();
+  await page.getByPlaceholder("Tytuł").fill(title);
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
+  await expect(page.getByText("Zapisz notatkę...")).toBeVisible();
+
+  await page.getByRole("article", { name: title }).hover();
+  await page.getByRole("button", { name: "Przypnij" }).first().click({ force: true });
+  const info = await page.locator(".note-card[data-pinned]").first().evaluate((el) => ({
+    sig: document.documentElement.dataset.sig,
+    anim: getComputedStyle(el, "::before").animationName,
+  }));
+  expect(info.sig).toBe("pin");
+  expect(info.anim).toBe("neon-pin");
+});
+
+test("Plan: zaznaczony kafel dostaje linię wymiarową, która się rysuje", async ({ page }) => {
+  await open(page, "plan");
+  const title = `Plan-wymiar ${Date.now()}`;
+  await page.getByText("Zapisz notatkę...").click();
+  await page.getByPlaceholder("Tytuł").fill(title);
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
+  await expect(page.getByText("Zapisz notatkę...")).toBeVisible();
+
+  const card = page.getByRole("article", { name: title });
+  // Zaznaczenie w trybie zbiorczym ustawia `data-selected` (ta sama flaga, której używa `NoteCard`).
+  await card.evaluate((el) => el.setAttribute("data-selected", ""));
+  const anim = await card.evaluate((el) => getComputedStyle(el, "::after").animationName);
+  expect(anim).toBe("plan-dimension");
+});
+
+test("Zorza: zmiana na tę skórkę wpływa falą gwiazd", async ({ page }) => {
+  await open(page, "plan");
+  await page.getByRole("button", { name: "Ustawienia" }).first().click();
+  await page.getByRole("tab", { name: "Wygląd" }).click();
+  await page.locator('[data-skin-option="zorza"]').click();
+  await page.keyboard.press("Escape");
+  await expect(page.locator("html")).toHaveAttribute("data-skin", "zorza");
+  const info = await page.evaluate(() => ({
+    sig: document.documentElement.dataset.sig,
+    anim: getComputedStyle(document.querySelector(".paper-grid")!, "::before").animationName,
+  }));
+  expect(info.sig).toBe("skin");
+  expect(info.anim).toBe("zorza-wave");
+});

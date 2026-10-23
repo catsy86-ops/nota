@@ -1912,3 +1912,20 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/styles/skins.css` (ostatni blok, „Pora roku w każdym stylu”). Zachowanie wyboru bez zmian: `src/lib/seasonTheme.ts`, `src/App.tsx`.
 - **Świadoma decyzja:** akcent sezonu nie nadpisuje palety pozostałych stylów. Gdyby właściciel chciał zmiany akcentu, to osobna decyzja (kontrast trzeba sprawdzić na każdej palecie).
 - **Testy:** `e2e/seasons.spec.ts` — test „Plan” zmieniony z „tło nie jest malowane” na „tło jest malowane na papierze”; `e2e/a11y.spec.ts` 56/56; `src/lib/skinContrast.test.ts` 12/12.
+
+## Style — sygnały widoku, zapisu, przypięcia i zmiany skórki (Faza 1b, część 3, 2026-10-23)
+
+- **Co robi:** sygnały na `html[data-sig]` (`src/lib/skinSignal.ts`, `pulseSkinSignal`, ok. 1,4 s):
+  - `save` — zapis: Miedź (para), Hydraulika (fala). Już wcześniej.
+  - `view` — zmiana widoku (`Index.tsx`): Zeszyt przewraca kartkę (`zeszyt-flip` na `.paper-grid::before`), Matryca spływa kaskadą (`matrix-cascade`, `::before` odsłonięte tylko na sygnał).
+  - `dawn` — pierwsze uruchomienie dnia (`pulseDawnIfNewDay` z `App.tsx`, klucz `kaczy.sig.dawn.v1`): Neon rozbłyskuje nagłówek.
+  - `pin` — przypięcie w `useNotes.togglePin`: Neon rozbłyskuje kafle z `data-pinned`.
+  - `skin` — zmiana skórki w `setSkin` (`src/lib/skins.ts`): Zorza, fala gwiazd (`zorza-wave`).
+- **Paralaksa Zorzy:** `src/lib/scrollParallax.ts` ustawia `--sig-scroll` na `<html>` przy przewijaniu (przechwytywanie, jedna klatka); CSS przesuwa wstęgi przez `translate` (nie koliduje z animacją `transform`). Start z `App.tsx`.
+- **Plan — wymiarowanie:** zaznaczony kafel (`data-selected`, atrybut z `NoteCard`) dostaje linię wymiarową, która się rysuje (`plan-dimension` na `.note-card::after`).
+- **Atrybuty kafla:** `NoteCard` ma `data-selected` i `data-pinned` (dla stylów i testów).
+- **Ograniczenia i pułapki:**
+  - Matryca: „znaki zbierają się w kursor przy najechaniu” NIE jest zrobione — wymaga zmian w płótnie `MatrixRain` (śledzenie kursora). Zostaje na później.
+  - Wszystkie sygnały są jednorazowe (`pulseSkinSignal` zdejmuje atrybut po czasie); ograniczony ruch wyłącza animacje i zostawia stan spoczynku.
+  - Zorza: wstęgi przesuwa `translate`, więc działa tylko w przeglądarkach z tą właściwością (wszystkie aktualne).
+- **Testy:** `src/lib/skinSignal.test.ts`, `src/lib/scrollParallax.test.ts`; `e2e/skin-signatures.spec.ts` (13 przypadków, w tym view/dawn/pin/plan/zorza). Regresja: `skin-motion`, `a11y`, `seasons`, `editor-cm` — 81/81 w `chromium`; `vitest` 1898/1898; typy i lint czyste.
