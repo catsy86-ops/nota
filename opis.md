@@ -2113,3 +2113,23 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Testy:** `src/lib/labelTree.test.ts` (9); `src/lib/yjsStore.test.ts` (przepinanie gałęzi); `e2e/label-tree.spec.ts` (wcięcie dziecka, filtr po rodzicu).
 - **Commit:** w historii poniżej.
 
+## Sieć wiedzy — osadzanie notatek `![[…]]` (Faza 3.3, 2026-10-23)
+
+- **Co robi:** linia zawierająca tylko `![[Tytuł]]` albo `![[Tytuł#Nagłówek]]` pokazuje treść notatki (albo tylko sekcję od nagłówka do następnego nagłówka tego samego lub wyższego poziomu) w ramce, tylko do odczytu. Zagnieżdżenie idzie dalej, ale najwyżej 3 poziomy. Cykl (A osadza B, B osadza A) kończy się komunikatem. Notatka prywatna, brakujący tytuł lub nagłówek też dają komunikat zamiast treści.
+- **Gdzie jest:**
+  - `src/lib/embeds.ts` — `extractSection`, `splitEmbedTarget`, `isBlockEmbed` (`^id` rozpoznane, ale jeszcze nieobsługiwane), `MAX_EMBED_DEPTH` = 3, typ `EmbedContext` (poziom + łańcuch odwiedzonych notatek).
+  - `src/components/WikiEmbed.tsx` — rozwiązuje cel (`lookupWikiTarget`), sprawdza cykl, głębokość, prywatność; renderuje treść przez `MarkdownRenderer` z `embed` o poziom wyżej.
+  - `src/components/MarkdownRendererImpl.tsx` — `MarkdownRendererImpl` wycina linie będące wyłącznie osadzeniem (`EMBED_LINE_RX`) i renderuje je jako `WikiEmbed`; reszta idzie przez `MarkdownBlocks` (dawny renderer bez zmian).
+  - `src/components/MarkdownRenderer.tsx` — prop `embed` (wewnętrzny).
+- **Dlaczego bloki, a nie znaczniki w tekście:** próbowałem zastąpić `![[…]]` znacznikami Unicode przed parsowaniem, ale Markdown (`![` to początek obrazu) rozbijał tekst tak, że osadzenie znikało. Blok (cała linia) omija parser.
+- **Ograniczenia:**
+  - Osadzenie w środku zdania (`Zobacz ![[X]] tutaj`) zostaje surowym tekstem; obsługa wymagałaby parsera inline.
+  - Edytor CodeMirror nie pokazuje podglądu osadzenia (plan wymienia widżet w CM — do zrobienia osobno).
+  - Osadzenie `![[^id]]` pokazuje komunikat „w przygotowaniu” — obsługa bloków to 3.4.
+  - Notatka, która osadza samą siebie, pokazuje się raz więcej niż należy: łańcuch zaczyna się od pustego, bo renderer nie zna id notatki-właściciela.
+- **Testy:**
+  - `src/lib/embeds.test.ts` (6): sekcje, poziomy, dopasowanie, cele, limit.
+  - `e2e/note-embeds.spec.ts` (2): sekcja z nagłówkiem zamiast całej notatki; cykl A ↔ B kończy się komunikatem.
+  - Istniejące `MarkdownRenderer*` i e2e linków wiki przechodzą.
+- **Commit:** w historii poniżej.
+

@@ -12,6 +12,7 @@ interface MarkdownRendererProps {
   className?: string;
   onWikiClick?: (title: string) => void;
   knownTitles?: Set<string>; // lowercase titles
+  embed?: EmbedContext;
 }
 
 const CALLOUT_STYLE: Record<CalloutKind, { box: string; icon: typeof Info; label: string }> = {
@@ -50,15 +51,19 @@ function Callout({ kind, collapse, title, children }: { kind: CalloutKind; colla
 }
 
 import { splitWikiTarget } from "@/lib/wikiLinks";
+import { splitEmbedTarget, type EmbedContext } from "@/lib/embeds";
+import { WikiEmbed } from "@/components/WikiEmbed";
 
+/** `[[link]]` w tekście; osadzenia `![[…]]` są osobnymi blokami (patrz `MarkdownRendererImpl`). */
 const WIKI_RX = /\[\[([^[\]\n]+?)\]\]/g;
 
 function renderWithWiki(text: string, onWikiClick?: (t: string) => void, known?: Set<string>) {
-  if (!onWikiClick && !known) return text;
+  if (!onWikiClick && !known && !text.includes("[[")) return text;
   const parts: ReactNode[] = [];
   let last = 0;
   let m: RegExpExecArray | null;
   let idx = 0;
+  WIKI_RX.lastIndex = 0;
   while ((m = WIKI_RX.exec(text)) !== null) {
     if (m.index > last) parts.push(text.slice(last, m.index));
     const { title, heading, display } = splitWikiTarget(m[1]);
@@ -70,7 +75,8 @@ function renderWithWiki(text: string, onWikiClick?: (t: string) => void, known?:
   return parts.length > 1 ? <>{parts.map((p, i) => <Fragment key={i}>{p}</Fragment>)}</> : text;
 }
 
-export const MarkdownRendererImpl = memo(function MarkdownRendererImpl({ content, className, onWikiClick, knownTitles }: MarkdownRendererProps) {
+/** Zwykły Markdown z linkami wiki; bez osadzeń (te wycina `MarkdownRendererImpl`). */
+function MarkdownBlocks({ content, className, onWikiClick, knownTitles }: MarkdownRendererProps) {
   const renderText = (children: ReactNode) => {
     if (typeof children === "string") return renderWithWiki(children, onWikiClick, knownTitles);
     if (Array.isArray(children)) {
@@ -143,4 +149,38 @@ export const MarkdownRendererImpl = memo(function MarkdownRendererImpl({ content
       {content}
     </ReactMarkdown>
   );
+}
+
+/** Linia, która jest tylko osadzeniem: `![[Tytuł]]` albo `![[Tytuł#Nagłówek]]`. */
+const EMBED_LINE_RX = /^[ \t]*!\[\[([^[\]\n]+?)\]\][ \t]*$/;
+
+/**
+ * Markdown notatki. Linie będące wyłącznie osadzeniem wycinamy przed parsowaniem i renderujemy
+ * `WikiEmbed`; reszta idzie przez zwykły renderer. Osadzenie w środku zdania zostaje tekstem.
+ */
+export const MarkdownRendererImpl = memo(function MarkdownRendererImpl({ content, className, onWikiClick, knownTitles, embed = { depth: 0, chain: [] } }: MarkdownRendererProps) {
+  const lines = content.split("\n");
+  if (!lines.some((l) => EMBED_LINE_RX.test(l))) {
+    return <MarkdownBlocks content={content} className={className} onWikiClick={onWikiClick} knownTitles={knownTitles} />;
+  }
+  const blocks: ReactNode[] = [];
+  let chunk: string[] = [];
+  const flush = () => {
+    if (chunk.length === 0) return;
+    const text = chunk.join("\n");
+    if (text.trim()) blocks.push(<MarkdownBlocks key={`m-${blocks.length}`} content={text} onWikiClick={onWikiClick} knownTitles={knownTitles} />);
+    chunk = [];
+  };
+  for (const line of lines) {
+    const m = EMBED_LINE_RX.exec(line);
+    if (!m) {
+      chunk.push(line);
+      continue;
+    }
+    flush();
+    const { title, heading } = splitEmbedTarget(m[1]);
+    blocks.push(<WikiEmbed key={`e-${blocks.length}`} title={title} heading={heading} embed={embed} onWikiClick={onWikiClick} knownTitles={knownTitles} />);
+  }
+  flush();
+  return <div className={cn("prose-note leading-relaxed", className)}>{blocks}</div>;
 });

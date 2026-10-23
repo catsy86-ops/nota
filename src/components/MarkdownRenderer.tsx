@@ -1,5 +1,6 @@
 import { lazy, memo, Suspense } from "react";
 import { cn } from "@/lib/utils";
+import type { EmbedContext } from "@/lib/embeds";
 import { Bold, Code, Heading2, Italic, Link2, List, Quote } from "lucide-react";
 
 interface MarkdownRendererProps {
@@ -7,6 +8,8 @@ interface MarkdownRendererProps {
   className?: string;
   onWikiClick?: (title: string) => void;
   knownTitles?: Set<string>; // lowercase titles
+  /** Zagnieżdżenie osadzeń (wewnętrzne): poziom i notatki otwarte wyżej. */
+  embed?: EmbedContext;
 }
 
 // react-markdown z ekosystemem mdast/micromark/hast to kilkadziesiąt KB — ładujemy je
