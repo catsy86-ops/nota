@@ -1980,3 +1980,22 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - Brak e2e w przeglądarce sprawdzającego samo znikanie znaczników; pokrywa to test DOM w jsdom.
 - **Nie zrobione (kolejne kroki Fazy 1):** podgląd wzoru (KaTeX, Faza 6); pasek formatowania nad klawiaturą na telefonie, test IME i autokorekty Androida na prawdziwym urządzeniu, przegląd na Pixel 7 / iPhone; QA celu dotyku pola zadania na telefonie (44 px zrobione).
 - **Commit:** `b9e2e11` (widżety), `a2c58f0` (klik w `[[link]]`), `075384b` (tabele i obrazy), 2026-10-23.
+
+## Synchronizacja — przekaźnik E2E, serwer (Faza 2, 2026-10-23)
+
+- **Co robi:** zmiany w notatkach docierają na drugie urządzenie także wtedy, gdy pierwsze jest wyłączone. Serwer przechowuje tylko zaszyfrowany log aktualizacji Yjs i nie zna treści ani kodu synchronizacji. Sam serwer nie ma jeszcze klienta w aplikacji (patrz „Ograniczenia”).
+- **Gdzie jest:** `relay-server/` — `core.js` (czysta logika: tokeny, log, snapshot, limity, sprzątanie), `server.js` (HTTP i WebSocket), `Dockerfile`, `README.md` (model zagrożeń, protokół, limity).
+- **Jak działa:**
+  - Pokój ma identyfikator 64 znaki hex (klient wylicza go z kodu). Pierwszy zapis zakłada pokój i ustawia jego token; serwer przechowuje tylko `SHA-256(token)` (`hashToken`, porównanie `timingSafeEqual` w `tokenMatches`).
+  - Wpisy mają rosnące numery `seq` (`appendEntry`). `GET updates?since=n` zwraca wpisy > n, najwyżej 500 na stronę (`entriesSince`, `hasMore`).
+  - Snapshot (`applySnapshot`) zastępuje wpisy ≤ `upto` jednym wpisem o numerze `upto`; numeracja się nie cofa, więc klient na `upto` nie pobiera nic nowego.
+  - Token idzie w nagłówku `Authorization: Bearer` albo w pierwszej wiadomości WS (`subscribe`), nigdy w adresie.
+  - WS (`/ws`) tylko powiadamia `{type:"updated", last}` po zapisie; treść zawsze idzie przez GET.
+  - Dane w `DATA_DIR/relay.json`, zapis atomowy (plik tymczasowy + `rename`), grupowany co 0,5 s.
+- **Decyzje:** zamiast SQLite (`better-sqlite3`, natywna kompilacja) zwykły plik JSON jak w `push-server` — mniej zależności i prostszy Docker. Limity w `LIMITS` (`core.js`): wpis 700 000 znaków, pokój 50 MB i 5000 wpisów, 5000 pokoi, TTL pokoju 180 dni bez zapisu.
+- **Ograniczenia i pułapki:**
+  - Zapis całego pliku JSON skaluje się źle przy dużych danych; przy wielu aktywnych pokojach trzeba będzie przejść na bazę.
+  - `TRUST_PROXY=1` (ustawione w obrazie Dockera) ufa `X-Forwarded-For`; bez reverse proxy nie wolno go ustawiać.
+  - Klient (`src/lib/sync/relayProvider.ts`) jeszcze nie istnieje — serwer działa, ale aplikacja z niego nie korzysta.
+- **Testy:** `relay-server/core.test.js` (19 testów logiki, `npm test`). Ręcznie sprawdzone na uruchomionym serwerze: rejestracja tokenem, 401/403/404, odczyt po `since`, snapshot, odrzucenie złego base64, WebSocket: `ready`, powiadomienie `updated` po zapisie, zamknięcie 4003 dla nieznanego pokoju.
+- **Commit:** w historii poniżej (wpis dopisany po commicie serwera).

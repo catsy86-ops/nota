@@ -1,0 +1,17 @@
+{
+  "name": "notki-relay-server",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Przekaźnik synchronizacji E2E dla NOTKI — przechowuje zaszyfrowane aktualizacje Yjs, gdy drugie urządzenie jest wyłączone. Nie zna treści.",
+  "type": "module",
+  "engines": {
+    "node": ">=18.18.0"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
+  }
+}
