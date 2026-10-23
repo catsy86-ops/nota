@@ -2056,3 +2056,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **E2E z prawdziwym serwerem:** `playwright.config.ts` ma drugi `webServer` (`node server.js` w `relay-server/`, port 4466, `DATA_DIR` w katalogu tymczasowym; wymaga `npm install` w `relay-server/`). `e2e/relay-sync.spec.ts` (2 testy): A zapisuje notatkę i zamyka się, B z tym samym kodem ją dostaje; obcy kod nie dostaje. Czeka na POST wywołany po zapisie — pierwszy POST po starcie niesie stan początkowy.
 - **Ograniczenie:** zamknięcie karty w ciągu sekundy od zmiany może przerwać wysyłkę. Zmiana zostaje w kolejce IndexedDB i wyśle się przy następnym uruchomieniu; drugie urządzenie jej nie zobaczy, dopóki pierwsze nie wróci online.
 - **Commit:** `12dd69b` (bloby), `0f04d0a` (keepalive); poprawki z e2e w commicie poniżej.
+
+## Sync — status przekaźnika z kropką (poprawka wizualna, 2026-10-23)
+
+- **Co robi:** przy statusie przekaźnika w Ustawieniach → Sync jest kropka w kolorze stanu: zielona (połączono), szara pulsująca (łączenie, tylko przy dozwolonym ruchu), żółta (brak połączenia, ponowi samo), czerwona (błąd), szara (wyłączony). Tekst zostaje i mówi to samo, więc kolor nie jest jedyną informacją.
+- **Gdzie jest:** `src/components/SyncSettings.tsx` — `relayDotClass` (obok `relayStatusText`), w komponencie `RelayServer`. Kolory z tokenów `success`, `warning`, `destructive` i `muted-foreground`.
+- **Testy:** `e2e/relay-settings.spec.ts` (3 testy, bez zmian). Zrzut sprawdzony na komputerze i telefonie.
+- **Naprawa testów e2e (nie kodu aplikacji):** `composer.spec.ts` — przycisk „Usuń przypomnienie” jest dwa razy, asercja na pierwszym widocznym; `resilience.spec.ts` — komunikat „Nie zapisano” jest dwa razy (widoczny i dla czytnika), asercja na pierwszym.
+

@@ -333,7 +333,10 @@ function RelayServer() {
         {draft.trim() !== "" && !valid && (
           <p className="text-destructive-ink">Adres musi zaczynać się od https:// (albo http://localhost).</p>
         )}
-        <p className="text-foreground" aria-live="polite">{relayStatusText(view, sync.status)}</p>
+        <p className="flex items-start gap-2 text-foreground" aria-live="polite">
+          <span aria-hidden className={`mt-1 inline-block size-2 shrink-0 rounded-full ${relayDotClass(view.status, sync.status)}`} />
+          <span>{relayStatusText(view, sync.status)}</span>
+        </p>
         {probe && <p className="text-muted-foreground" aria-live="polite">{probe}</p>}
         <div className="flex justify-end gap-2">
           {saved && <Button type="button" size="sm" variant="ghost" onClick={() => setDraft("")}>Wyczyść</Button>}
@@ -345,6 +348,23 @@ function RelayServer() {
       </div>
     </details>
   );
+}
+
+/** Kropka przy statusie: kolor niesie stan wizualnie, tekst obok mówi to samo dla czytnika. */
+function relayDotClass(status: RelayView["status"], syncStatus: string): string {
+  if (!getRelayUrl() || syncStatus === "disabled") return "bg-muted-foreground/40";
+  switch (status) {
+    case "online":
+      return "bg-success";
+    case "connecting":
+      return "bg-muted-foreground motion-safe:animate-pulse";
+    case "offline":
+      return "bg-warning";
+    case "error":
+      return "bg-destructive";
+    default:
+      return "bg-muted-foreground/40";
+  }
 }
 
 function relayStatusText(view: RelayView, syncStatus: string): string {

@@ -27,7 +27,8 @@ test("przypomnienie z paska: szybki termin i powtarzanie trafiają do notatki @s
   await expect(picker.getByRole("grid")).toBeVisible();
   await picker.getByRole("button", { name: "Zapisz", exact: true }).click();
 
-  await expect(page.getByRole("button", { name: "Usuń przypomnienie" })).toBeVisible();
+  // Przycisk „Usuń przypomnienie” jest dwa razy (na karcie i w pasku); wystarczy, że któryś jest widoczny.
+  await expect(page.getByRole("button", { name: "Usuń przypomnienie" }).first()).toBeVisible();
   await expect(picker).toHaveCount(0);
   await page.getByRole("button", { name: "Zapisz", exact: true }).click();
 

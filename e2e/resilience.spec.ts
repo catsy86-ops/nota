@@ -56,7 +56,8 @@ test.describe("odporność na uszkodzone dane i błędy zapisu", () => {
     await page.getByPlaceholder("Tytuł").fill("Nie zapisze się");
     await page.getByRole("button", { name: "Zapisz", exact: true }).click();
 
-    await expect(page.getByText(/Nie zapisano/)).toBeVisible();
+    // Komunikat widoczny na pasku, a drugi, sr-only, jest dla czytnika (ten sam tekst).
+    await expect(page.getByText(/Nie zapisano/).first()).toBeVisible();
   });
 
   test("dwie karty: zmiana z jednej pojawia się w drugiej bez utraty lokalnych notatek", async ({ browser }) => {
