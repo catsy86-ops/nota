@@ -3,6 +3,26 @@
 > Ten plik to historia decyzji i audytów (od 2026-09-22), z wpisami w kolejności powstawania.
 > **Aktualny stan funkcji** jest w `opis.md`. Poniżej stan na 2026-10-21 — tylko to, co nadal otwarte.
 
+## Plan rozbudowy — 2026-10-23 (`docs/plan-rozbudowa-2026-10-23.md`)
+
+Plan do poziomu Notion/Obsidian, zatwierdzony. Kolejność: 0 → 1 → 2 → 3 → 4 → 6 → 5 → 7 → 8 → 9; motywy (1b) po Fazie 1.
+
+- [ ] **Faza 0 — fundamenty:** flagi funkcji (`src/lib/featureFlags.ts`, karta w Ustawieniach), RPC dla Workerów (`src/workers/rpc.ts`), zestaw do pomiarów (`src/test/fixtures/bigVault.ts`, `e2e/perf.spec.ts` z `PERF=1`).
+  - Punkt odniesienia 2026-10-23, 1000 notatek, Chromium: pierwsza notatka 1,2 s, lista ustabilizowana 10,7 s, wyszukiwanie 1,8 s, otwarcie czytnika 21 s. Do zbadania przed Fazą 4 (otwarcie czytnika przy dużej liczbie notatek).
+- [ ] **Faza 1 — edytor CodeMirror 6 z podglądem na żywo.**
+- [ ] **Faza 1b — motywy:** własne animacje, mikrointerakcje i przejścia dla każdego z 7 stylów (prośba właściciela 2026-10-23, po Fazie 1).
+- [ ] **Faza 2 — przekaźnik synchronizacji E2E** (serwer `relay-server/`, szyfrowanie po stronie klienta).
+- [ ] **Faza 3 — sieć wiedzy:** aliasy, etykiety zagnieżdżone, osadzanie, lokalny graf, karty.
+- [ ] **Faza 4 — wyszukiwanie z indeksem** w Workerze.
+- [ ] **Faza 5 — bazy** (typy pól, formuły, zapisane widoki).
+- [ ] **Faza 6 — bogate treści** (matematyka, Mermaid, kolorowanie kodu, podgląd PDF).
+- [ ] **Faza 7 — folder `.md` na dysku** (Chrome/Edge na komputerze).
+- [ ] **Faza 8 — kanwa** (JSON Canvas).
+- [ ] **Faza 9 — lokalne AI** w przeglądarce, za flagą.
+- [ ] **Faza 10 — jakość** (wirtualizacja przy pomiarach, podział `Index.tsx`/`yjsStore.ts`, testy własnościowe CRDT, CSP).
+
+---
+
 ## Stan na 2026-10-21 — otwarte punkty
 
 - [ ] **QA na prawdziwym telefonie** (punkt 5.3 niżej): klawiatura w kompozytorze, haptyka, gesty, przewijanie z paskiem adresu, instalacja PWA.
@@ -260,6 +280,8 @@ Diagnoza: appka ma imponującą **szerokość** (rysowanie, gamifikacja, P2P CRD
 **Hosting:** oba audyty stawiały hosting statyczny wysoko (bez adresu HTTPS nie zainstalujesz PWA na telefonie i nie sprawdzisz P2P na dwóch realnych urządzeniach — dług „wymaga manualnego QA" odnotowany już trzy razy). Decyzją użytkownika z 2026-09-27 configi są przygotowane, ale wdrożenie odłożone — patrz sekcja „Wdrożenie". Dopóki go nie ma, wszystko wymagające QA na dwóch urządzeniach zostaje niesprawdzalne.
 
 ### Świadomie NIE robimy
+
+> **Zmiany 2026-10-23:** w planie rozbudowy (`docs/plan-rozbudowa-2026-10-23.md`) właściciel odblokował: KaTeX/Mermaid/kod, etykiety zagnieżdżone i aliasy, kanwę, folder `.md` na dysku, lokalne AI (bez wysyłania danych) i przekaźnik synchronizacji E2E (zaszyfrowany, bez konta). Pozostałe wpisy z tej listy bez zmian.
 
 - **Web Push / powiadomienia przy zamkniętej appce** — wymaga serwera push i kluczy VAPID utrzymywanych bezterminowo, dla appki bez konta i bez backendu. Notification Triggers nie są wspierane. `ReminderPicker` i `useReminderNotifications` już uczciwie informują o ograniczeniu — to właściwa odpowiedź.
 - **Konto użytkownika / sync przez chmurę** — sprzeczne z tożsamością projektu; P2P + sync przez plik pokrywają realną potrzebę „mam to na telefonie i na laptopie".

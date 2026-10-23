@@ -15,6 +15,7 @@ import { ResetSectionButton, Section, ToggleRow } from "./SettingsShared";
 import { ReviewSettings } from "./ReviewSettings";
 import { VaultSettings } from "./VaultSettings";
 import { ClipperSettings } from "./ClipperSettings";
+import { FeatureFlagsSettings } from "./FeatureFlagsSettings";
 import { PushSettings } from "./PushSettings";
 import { getNotificationPermission } from "@/lib/notificationPermission";
 import { MOD_KEY } from "@/lib/platform";
@@ -291,6 +292,8 @@ export function GeneralSettings() {
         <DictationConsentRow />
         <ClipperSettings />
       </div>
+
+      <FeatureFlagsSettings />
 
       {/* Skróty klawiszowe są bezużyteczne na telefonie. */}
       <div id="ogolne-skroty" className="scroll-mt-14 pt-2 space-y-2 [@media(pointer:coarse)]:hidden">

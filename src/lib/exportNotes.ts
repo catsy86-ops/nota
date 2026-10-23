@@ -216,6 +216,8 @@ export const SETTINGS_KEYS = [
   "kaczy.effectsSettings.v1", "kaczy.seasonTheme.v1", "kaczy.templates.v1", "kaczy.skin.v1", "kaczy.siteMode.v1", "kaczy.font.v1",
   // Dzień przeglądu, odznaka, auto-blokada skarbca — zwykłe preferencje, bez sekretów.
   "kaczy:review.day", "kaczy:badge.enabled", "kaczy.vault.autolock.v1",
+  // Flagi funkcji w przygotowaniu (src/lib/featureFlags.ts) — zwykłe przełączniki.
+  "kaczy.features.v1",
   // Push: wpis jest, ale przy przywracaniu push wyłączamy (patrz `PUSH_RESTORE_KEY`) — subskrypcja jest na urządzeniu.
   PUSH_RESTORE_KEY,
 ];

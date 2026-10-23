@@ -176,6 +176,46 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 - Plan wizualny (2026-10-18): fazy A–E, C, D, E4 i tabliczka — w historii commitów; kilka z nich nie ma osobnego hasha w dokumencie.
 - Pasek boczny (aktywny wiersz): w historii commitów.
 
+## Wspólne — flagi funkcji i RPC dla Workerów (Faza 0 planu rozbudowy, 2026-10-23)
+
+### Co robi
+
+- **Flagi funkcji w przygotowaniu.** Ustawienia → Ogólne → „Funkcje w przygotowaniu”: dziewięć przełączników (edytor, przekaźnik, graf, szybkie wyszukiwanie, bazy, treści, folder `.md`, kanwa, lokalne AI). Na razie tylko zapisują stan; funkcji jeszcze nie podpinają.
+- **Warstwa RPC dla Web Workerów** — bez funkcji dla użytkownika, używana przez kolejne fazy planu.
+
+### Gdzie jest
+
+- `src/lib/featureFlags.ts` — `FEATURE_IDS`, `FeatureId`, `FEATURE_DEFAULTS` (wszystkie `false`), `cleanFeatureFlags`, `isFeatureOn`, `setFeature`, `useFeatureFlags`. Klucz `kaczy.features.v1`, przez `createPersistedStore`.
+- `src/components/settings/FeatureFlagsSettings.tsx` — karta; opisy w `FEATURE_COPY`. Wstawiona w `GeneralSettings.tsx` przed skrótami.
+- `src/workers/rpc.ts` — `serveRpc` (strona Workera), `createRpcClient` (strona strony, z `idleMs`), `workerTransport` (`Worker` → `RpcTransport`), typy `RpcRequest`, `RpcResponse`, `RpcTransport`.
+- `src/test/fixtures/bigVault.ts` — `makeBigVault(count, seed)`: deterministyczne notatki (każda 5. linkuje do poprzedniej, co 7. ma etykietę, co 11. przypięta).
+- `e2e/perf.spec.ts` — pomiar: start, ustabilizowanie listy, wyszukiwanie, otwarcie czytnika.
+
+### Jak działa i dlaczego
+
+- **Flagi w `createPersistedStore`**, jak inne ustawienia (`siteMode`, `confirmPrefs`). Walidacja `cleanFeatureFlags` odrzuca nieznane klucze i wartości nie-boolowskie, więc starsza wersja z nowszymi flagami nie psuje się i odwrotnie.
+- **Klucz jest w kopii ustawień** (`SETTINGS_KEYS` w `src/lib/exportNotes.ts`).
+- **RPC z wstrzykiwanym transportem.** Transport nie jest tworzony w środku, więc testy działają w jsdom (brak `Worker`). Błędy wracają jako tekst, bo Worker nie przenosi klas błędów.
+- **Bezczynny Worker się zamyka.** `createRpcClient` zamyka transport po `idleMs` bez oczekujących wywołań i otwiera go przy następnym; wywołanie w toku blokuje zamknięcie.
+- **Pomiar nie jest w zwykłym e2e.** `perf.spec.ts` pomija się bez `PERF=1` (`PERF_N` ustawia liczbę notatek, domyślnie 1000).
+
+### Ograniczenia i pułapki
+
+- Flagi jeszcze niczego nie zmieniają — włączenie przełącznika nie daje efektu, dopóki faza nie podłączy funkcji.
+- Lista renderuje notatki partiami (`useProgressiveCount` w `NoteGrid.tsx`), więc liczba nagłówków rośnie w czasie. Pomiar czeka na ustabilizowanie, nie na pierwszy nagłówek.
+- Otwarcie czytnika przy 1000 notatkach zmierzone na ok. 21 s (2026-10-23). Nie zbadane — może to być ładowanie leniwej paczki, może renderowanie listy w tle.
+
+### Testy
+
+- `src/workers/rpc.test.ts` — wynik i błąd, nieznana metoda, zamknięcie po bezczynności i ponowne otwarcie, brak zamknięcia w toku, `dispose`.
+- `src/lib/featureFlags.test.ts` — domyślne, zapis, czyszczenie, dane zepsute.
+- `src/test/fixtures/bigVault.test.ts` — deterministyczność i linki.
+- `e2e/perf.spec.ts` — tylko z `PERF=1`.
+
+### Commity
+
+- Nie zacommitowane (2026-10-23): trwa Faza 0.
+
 ## Synchronizacja — stan aktualny (parowanie, kody, urządzenia, diagnoza)
 
 Dział opisany w jednym miejscu. Synchronizacja działa przez WebRTC (y-webrtc) na dokumencie Yjs notatek; bez własnego serwera danych.
