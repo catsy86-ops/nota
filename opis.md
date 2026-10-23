@@ -2076,4 +2076,6 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - `src/styles/skins.css` — `.sig-layer` i jego style per skórka, `@keyframes zorza-wave`, `@keyframes matrix-scan`, wyłączenie przy `data-motion="reduced"` i `prefers-reduced-motion`.
 - **Testy:** `e2e/skin-signatures.spec.ts` (+2: Zorza, Matryca oraz Matryca przy ograniczonym ruchu). Cały zestaw `skin-motion`, `a11y` i `skin-signatures` przechodzi (74 testy, chromium).
 - **Ograniczenia:** efekt kursora sprawdzony logicznie i testami, nie oceniony wizualnie na zrzucie. Warstwa `.sig-layer` nie ma wpisu w trybie budowy (sygnał jest krótki i przejściowy).
+- **Odchylenie od planu (Faza 1b):** plan mówi o krzywych per styl w `src/lib/motion.ts`. Zrealizowane są jako tokeny CSS `--sig-ease` / `--sig-dur` w `src/styles/skins.css` (sekcja „Sygnatury”), bo są używane przez same animacje CSS. `motion.ts` zostaje dla framer-motion i nie dubluje tych wartości.
+- **Stan Fazy 1b:** sygnatury wszystkich siedmiu stylów są wdrożone (Zeszyt, Plan, Neon, Zorza, Miedź, Matryca, Hydraulika), ograniczony ruch je wyłącza, testy `skin-signatures`, `skin-motion`, `a11y` przechodzą.
 
