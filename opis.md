@@ -2064,3 +2064,16 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Testy:** `e2e/relay-settings.spec.ts` (3 testy, bez zmian). Zrzut sprawdzony na komputerze i telefonie.
 - **Naprawa testów e2e (nie kodu aplikacji):** `composer.spec.ts` — przycisk „Usuń przypomnienie” jest dwa razy, asercja na pierwszym widocznym; `resilience.spec.ts` — komunikat „Nie zapisano” jest dwa razy (widoczny i dla czytnika), asercja na pierwszym.
 
+## Motywy — Matryca (kursor) i sygnał zapisu dla Zorzy i Matrycy (Faza 1b, 2026-10-23)
+
+- **Co robi:**
+  - **Matryca:** znaki w pobliżu kursora myszy ciągną się w jego stronę (głowa kolumny w promieniu 150 px przesuwa się ku kursorowi, im bliżej, tym mocniej). Tylko przy myszy, nie na dotyku i nie przy ograniczonym ruchu.
+  - **Zorza:** przy zapisie przelatuje w poprzek tła fala barw (`zorza-wave`).
+  - **Matryca:** przy zapisie linia skanu zjeżdża z góry (`matrix-scan`, czas z `--sig-dur` stylu, 0,25 s).
+- **Gdzie jest:**
+  - `src/components/skins/MatrixRain.tsx` — stałe `GATHER_RADIUS`, stan `px`/`py`, `onPointer` (`pointermove`), `onPointerOut` (wyjście z okna), podpięte tylko gdy `hover = !coarse && !reduced`.
+  - `src/components/PaperBackdrop.tsx` — `<span className="sig-layer" />` dla Zorzy i Matrycy (pseudo-elementy tych stylów są zajęte przez tło).
+  - `src/styles/skins.css` — `.sig-layer` i jego style per skórka, `@keyframes zorza-wave`, `@keyframes matrix-scan`, wyłączenie przy `data-motion="reduced"` i `prefers-reduced-motion`.
+- **Testy:** `e2e/skin-signatures.spec.ts` (+2: Zorza, Matryca oraz Matryca przy ograniczonym ruchu). Cały zestaw `skin-motion`, `a11y` i `skin-signatures` przechodzi (74 testy, chromium).
+- **Ograniczenia:** efekt kursora sprawdzony logicznie i testami, nie oceniony wizualnie na zrzucie. Warstwa `.sig-layer` nie ma wpisu w trybie budowy (sygnał jest krótki i przejściowy).
+

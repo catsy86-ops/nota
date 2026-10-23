@@ -181,3 +181,24 @@ test("Zorza: zmiana na tę skórkę wpływa falą gwiazd", async ({ page }) => {
   expect(info.sig).toBe("skin");
   expect(info.anim).toBe("zorza-wave");
 });
+
+test("Zorza: fala barw przelatuje przez tło przy zapisie, a w spoczynku jest niewidoczna", async ({ page }) => {
+  await open(page, "zorza");
+  const layer = page.locator(".sig-layer");
+  await expect(layer).toHaveCount(1);
+  expect(await layer.evaluate((el) => getComputedStyle(el).opacity)).toBe("0");
+  await page.evaluate(() => document.documentElement.setAttribute("data-sig", "save"));
+  expect(await layer.evaluate((el) => getComputedStyle(el).animationName)).toBe("zorza-wave");
+});
+
+test("Matryca: linia skanu zjeżdża przy zapisie, a przy ograniczonym ruchu nie animuje się", async ({ page }) => {
+  await open(page, "matrix");
+  const layer = page.locator(".sig-layer");
+  await expect(layer).toHaveCount(1);
+  await page.evaluate(() => document.documentElement.setAttribute("data-sig", "save"));
+  expect(await layer.evaluate((el) => getComputedStyle(el).animationName)).toBe("matrix-scan");
+
+  await open(page, "matrix", "reduced");
+  await page.evaluate(() => document.documentElement.setAttribute("data-sig", "save"));
+  expect(await page.locator(".sig-layer").evaluate((el) => getComputedStyle(el).animationName)).toBe("none");
+});

@@ -10,6 +10,8 @@ import { MATRIX_FRAME_MS, MATRIX_GLYPHS, matrixColumns, matrixFontPx } from "./m
  */
 
 const FADE = "rgba(0, 0, 0, 0.09)";
+/** Promień, w którym znaki zbierają się w kursor (px). Tylko myszą — na dotyku nie ma najechania. */
+const GATHER_RADIUS = 150;
 const HEAD = "#d7ffe0";
 const TRAIL = "#00ff41";
 
@@ -35,6 +37,9 @@ export default function MatrixRain() {
     let raf = 0;
     let last = 0;
     let resizeTimer = 0;
+    // Pozycja kursora w układzie płótna; poza ekranem (domyślnie) efekt nie działa.
+    let px = -1e5;
+    let py = -1e5;
 
     const fill = () => {
       ctx.fillStyle = "#000";
@@ -63,7 +68,16 @@ export default function MatrixRain() {
         const y = drops[i] * fontPx;
         const glyph = MATRIX_GLYPHS[Math.floor(Math.random() * MATRIX_GLYPHS.length)];
         ctx.fillStyle = HEAD;
-        ctx.fillText(glyph, x, y);
+        // Głowa kolumny blisko kursora ciągnie się w jego stronę: im bliżej, tym mocniej.
+        const dx = px - x;
+        const dy = py - y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < GATHER_RADIUS) {
+          const k = (1 - dist / GATHER_RADIUS) * 0.6;
+          ctx.fillText(glyph, x + dx * k, y + dy * k);
+        } else {
+          ctx.fillText(glyph, x, y);
+        }
         // Ogon tuż za głową: zwykły kolor, nie cień.
         ctx.fillStyle = TRAIL;
         ctx.fillText(MATRIX_GLYPHS[Math.floor(Math.random() * MATRIX_GLYPHS.length)], x, y - fontPx);
@@ -93,6 +107,16 @@ export default function MatrixRain() {
       raf = 0;
     };
     const onVisibility = () => (document.hidden ? stop() : start());
+    const onPointer = (e: PointerEvent) => {
+      px = e.clientX;
+      py = e.clientY;
+    };
+    // Mysz opuszcza okno: przeglądarka wysyła `pointerout` bez elementu docelowego.
+    const onPointerOut = (e: PointerEvent) => {
+      if (e.relatedTarget) return;
+      px = -1e5;
+      py = -1e5;
+    };
     const onResize = () => {
       window.clearTimeout(resizeTimer);
       resizeTimer = window.setTimeout(resize, 200);
@@ -102,11 +126,21 @@ export default function MatrixRain() {
     start();
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("resize", onResize);
+    // Najechanie tylko przy myszy i bez ograniczonego ruchu.
+    const hover = !coarse && !reduced;
+    if (hover) {
+      window.addEventListener("pointermove", onPointer);
+      window.addEventListener("pointerout", onPointerOut);
+    }
     return () => {
       stop();
       window.clearTimeout(resizeTimer);
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("resize", onResize);
+      if (hover) {
+        window.removeEventListener("pointermove", onPointer);
+        window.removeEventListener("pointerout", onPointerOut);
+      }
     };
   }, []);
 

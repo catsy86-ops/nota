@@ -38,6 +38,9 @@ export function PaperBackdrop() {
           <MatrixRain />
         </Suspense>
       )}
+      {/* Warstwa sygnału zapisu dla Zorzy (fala) i Matrycy (linia skanu). Pseudo-elementy są zajęte
+          przez tło tych stylów, więc sygnał ma własny, pusty element; CSS w skins.css. */}
+      {(skin === "zorza" || skin === "matrix") && <span className="sig-layer" />}
       {skin === "hydraulika" && (
         <span className="hydro-bubbles">
           {BUBBLES.map((b, i) => (

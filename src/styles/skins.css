@@ -737,6 +737,45 @@ html[data-sig="save"][data-skin="hydraulika"] .hydro-bubbles::after {
   100% { opacity: 0; transform: translateY(0); }
 }
 
+/* Zorza — fala barw przelatuje w poprzek przy zapisie. Matryca — linia skanu zjeżdża z góry.
+   Warstwa `.sig-layer` (PaperBackdrop) jest niewidoczna w spoczynku; tylko `transform` i `opacity`. */
+.sig-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+}
+html[data-skin="zorza"] .sig-layer {
+  background: linear-gradient(100deg, transparent 30%, hsl(var(--primary) / 0.22) 45%, hsl(var(--accent) / 0.2) 55%, transparent 70%);
+  transform: translateX(-100%);
+}
+html[data-sig="save"][data-skin="zorza"] .sig-layer {
+  animation: zorza-wave var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes zorza-wave {
+  0% { opacity: 0; transform: translateX(-100%); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(100%); }
+}
+html[data-skin="matrix"] .sig-layer {
+  background: linear-gradient(to bottom, transparent 55%, hsl(125 100% 60% / 0.3) 92%, hsl(125 100% 80% / 0.65));
+  transform: translateY(-100%);
+}
+html[data-sig="save"][data-skin="matrix"] .sig-layer {
+  animation: matrix-scan var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes matrix-scan {
+  0% { opacity: 0; transform: translateY(-100%); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(100%); }
+}
+html[data-motion="reduced"][data-sig][data-skin="zorza"] .sig-layer,
+html[data-motion="reduced"][data-sig][data-skin="matrix"] .sig-layer { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-sig="save"][data-skin="zorza"] .sig-layer,
+  html[data-sig="save"][data-skin="matrix"] .sig-layer { animation: none; }
+}
+
 html[data-motion="reduced"][data-sig][data-skin="miedz"] .paper-grid::after,
 html[data-motion="reduced"][data-sig][data-skin="hydraulika"] .hydro-bubbles::after { animation: none; }
 @media (prefers-reduced-motion: reduce) {
