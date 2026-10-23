@@ -9,6 +9,8 @@ interface Props {
   title: string;
   /** Nagłówek z `[[tytuł#nagłówek]]` — klik przewija czytnik do niego. */
   heading?: string | null;
+  /** Tekst z `[[cel|tekst]]`; bez niego pokazujemy cel. */
+  label?: string | null;
   exists: boolean;
   onWikiClick?: (title: string) => void;
 }
@@ -26,7 +28,7 @@ function plain(line: string): string {
  * `[[link]]` z podglądem notatki docelowej: po najechaniu myszą, po fokusie
  * klawiatury i po przytrzymaniu palca. Brak notatki → jedno kliknięcie tworzy ją.
  */
-export function WikiLink({ title, heading = null, exists, onWikiClick }: Props) {
+export function WikiLink({ title, heading = null, label = null, exists, onWikiClick }: Props) {
   const target_ = heading ? `${title}#${heading}` : title;
   const [open, setOpen] = useState(false);
   const timer = useRef<number | undefined>(undefined);
@@ -89,7 +91,7 @@ export function WikiLink({ title, heading = null, exists, onWikiClick }: Props) 
           aria-haspopup="dialog"
           aria-expanded={open}
         >
-          {title}
+          {label ?? title}
           {heading && <span className="text-muted-foreground font-normal"> › {heading}</span>}
         </button>
       </PopoverPrimitive.Anchor>

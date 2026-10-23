@@ -2079,3 +2079,25 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Odchylenie od planu (Faza 1b):** plan mówi o krzywych per styl w `src/lib/motion.ts`. Zrealizowane są jako tokeny CSS `--sig-ease` / `--sig-dur` w `src/styles/skins.css` (sekcja „Sygnatury”), bo są używane przez same animacje CSS. `motion.ts` zostaje dla framer-motion i nie dubluje tych wartości.
 - **Stan Fazy 1b:** sygnatury wszystkich siedmiu stylów są wdrożone (Zeszyt, Plan, Neon, Zorza, Miedź, Matryca, Hydraulika), ograniczony ruch je wyłącza, testy `skin-signatures`, `skin-motion`, `a11y` przechodzą.
 
+## Sieć wiedzy — aliasy notatek i `[[cel|tekst]]` (Faza 3.1, 2026-10-23)
+
+- **Co robi:**
+  - **Aliasy:** notatka może mieć inne nazwy (np. „łazienka”, „PL”). `[[alias]]` prowadzi do niej tak samo jak do tytułu. Ustawiane w „Więcej opcji” kafla (przycisk „Aliasy”, pole oddzielone przecinkami, Enter zapisuje). Tytuł zawsze wygrywa z aliasem, więc alias nie przesłania istniejącej notatki.
+  - **`[[cel|tekst]]`:** cel prowadzi tak jak zwykły link, a w czytniku widać `tekst` zamiast celu.
+  - Aliasy są w podpowiedziach `[[` po tytułach, bez duplikatów, i liczą się jako wsteczne linki do notatki.
+- **Gdzie jest:**
+  - `src/lib/wikiLinks.ts` — `splitWikiTarget` (zwraca `display`), `resolveWikiTarget` (tytuł, potem alias), `buildWikiIndex` (aliasy w `titles`), `backlinksOf` (po tytule i aliasach), `cleanAliases` (przycinanie, duplikaty, limity `ALIAS_MAX_COUNT` = 20, `ALIAS_MAX_LENGTH` = 200).
+  - `src/hooks/useNotes.ts` — pole `aliases?: string[]` w `Note` (opcjonalne, starsze notatki go nie mają).
+  - `src/lib/noteSchema.ts`, `src/lib/safeProjection.ts` (`REMOTE_LIMITS.aliases`), `src/lib/yjsStore.ts` — zapis do Yjs (`y.set("aliases")`, tylko niepuste), odczyt w projekcji (pole dołączane tylko gdy niepuste), `aliases` w `NOTE_SCALAR_FIELDS` (patch).
+  - `src/components/AliasPicker.tsx` — popover z polem; `src/components/NoteCardActions.tsx` — przycisk w „Więcej opcji”, nie dla zaszyfrowanych i zarchiwizowanych.
+  - `src/components/WikiLinkPreview.tsx` — prop `label` (tekst wyświetlany), `src/components/MarkdownRendererImpl.tsx` przekazuje `display`.
+- **Ograniczenia:**
+  - Podgląd w edytorze CodeMirror (Faza 1c) pokazuje `[[cel|tekst]]` jako `cel|tekst` bez nawiasów; czytnik pokazuje sam tekst. Ujednolicenie w CM to osobny krok.
+  - Aliasy nie są jeszcze w eksporcie Markdown/ZIP ani w imporcie (plan Fazy 3.1 wymienia frontmatter); notatka wyeksportowana i zaimportowana gubi aliasy.
+  - Pole w menu jest tylko na komputerze i w arkuszu „Więcej opcji”; brak osobnego widoku zarządzania aliasami.
+- **Testy:**
+  - `src/lib/wikiLinks.test.ts` — split z `|`, aliasy w resolve/indeksie/backlinkach, `cleanAliases` (wraz z dotychczasowymi).
+  - `src/lib/yjsStore.test.ts` — aliasy przez zapis, patch i synchronizację, brak pola przy pustej liście.
+  - `e2e/note-aliases.spec.ts` — alias z menu, link po aliasie, `[[cel|tekst]]`, klik otwiera cel.
+  - Istniejące e2e linków (`note-links`, `wikilinks`, `wiki-heading`) przechodzą.
+

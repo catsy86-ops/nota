@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   extractWikiLinks, resolveWikiTarget,
-  renameLinkTargets, buildWikiIndex, backlinksOf, wikiQueryAt, suggestWikiTitles, completeWikiLink, splitWikiTarget,
+  renameLinkTargets, buildWikiIndex, backlinksOf, wikiQueryAt, suggestWikiTitles, completeWikiLink, splitWikiTarget, cleanAliases,
 } from "./wikiLinks";
 import type { Note } from "@/hooks/useNotes";
 
@@ -147,10 +147,17 @@ describe("renameLinkTargets", () => {
 
 describe("[[tytuł#nagłówek]]", () => {
   it("splitWikiTarget rozdziela tytuł i nagłówek", () => {
-    expect(splitWikiTarget("Plan")).toEqual({ title: "Plan", heading: null });
-    expect(splitWikiTarget(" Plan # Etap 2 ")).toEqual({ title: "Plan", heading: "Etap 2" });
-    expect(splitWikiTarget("Plan#")).toEqual({ title: "Plan", heading: null });
-    expect(splitWikiTarget("#Etap")).toEqual({ title: "", heading: "Etap" });
+    expect(splitWikiTarget("Plan")).toEqual({ title: "Plan", heading: null, display: null });
+    expect(splitWikiTarget(" Plan # Etap 2 ")).toEqual({ title: "Plan", heading: "Etap 2", display: null });
+    expect(splitWikiTarget("Plan#")).toEqual({ title: "Plan", heading: null, display: null });
+    expect(splitWikiTarget("#Etap")).toEqual({ title: "", heading: "Etap", display: null });
+  });
+
+  it("[[cel|tekst]]: cel prowadzi, tekst tylko wyświetla się", () => {
+    expect(splitWikiTarget("Plan|Plan budowy")).toEqual({ title: "Plan", heading: null, display: "Plan budowy" });
+    expect(splitWikiTarget("Plan#Etap 2|etap")).toEqual({ title: "Plan", heading: "Etap 2", display: "etap" });
+    // Pusty tekst po `|` nie jest etykietą — pokazujemy cel.
+    expect(splitWikiTarget("Plan|  ")).toEqual({ title: "Plan", heading: null, display: null });
   });
 
   it("extractWikiLinks liczy link do nagłówka jako link do notatki", () => {
@@ -160,5 +167,52 @@ describe("[[tytuł#nagłówek]]", () => {
   it("renameLinkTargets zachowuje nagłówek", () => {
     expect(renameLinkTargets("Zob. [[Plan#Etap 2]] i [[Plan]]", "plan", "Harmonogram"))
       .toBe("Zob. [[Harmonogram#Etap 2]] i [[Harmonogram]]");
+  });
+});
+
+describe("aliasy notatek", () => {
+  const withAlias: Note = makeNote({ id: "a", title: "Projekt łazienki", aliases: ["łazienka", "PL"] });
+  const plain: Note = makeNote({ id: "b", title: "Łazienka" });
+
+  it("link po aliasie trafia w notatkę", () => {
+    expect(resolveWikiTarget("PL", [withAlias])?.id).toBe("a");
+    expect(resolveWikiTarget("łazienka", [withAlias])?.id).toBe("a");
+  });
+
+  it("tytuł wygrywa z aliasem, więc alias nie przesłania istniejącej notatki", () => {
+    expect(resolveWikiTarget("Łazienka", [withAlias, plain])?.id).toBe("b");
+  });
+
+  it("aliasy są w podpowiedziach po tytułach, bez duplikatów", () => {
+    const idx = buildWikiIndex([withAlias, { ...plain, aliases: ["PL"] }]);
+    // Tytuły najpierw, potem aliasy; alias równy tytułowi (łazienka) nie dubluje się.
+    expect(idx.titles.map((t) => t.toLowerCase())).toEqual(["projekt łazienki", "łazienka", "pl"]);
+  });
+
+  it("notatki linkujące po aliasie są wsteczne linkami do notatki", () => {
+    const linker = makeNote({ id: "c", title: "Notatka dnia", content: "Zobacz [[PL]] i [[Projekt łazienki]]." });
+    const idx = buildWikiIndex([withAlias, linker]);
+    expect(backlinksOf(withAlias, idx).map((r) => r.id)).toEqual(["c"]);
+  });
+
+  it("starsze notatki bez aliasów działają jak dotąd", () => {
+    expect(resolveWikiTarget("Łazienka", [plain])?.id).toBe("b");
+    expect(resolveWikiTarget("nic", [plain])).toBeUndefined();
+  });
+});
+
+describe("cleanAliases", () => {
+  it("przycina, odrzuca puste i duplikaty bez względu na wielkość liter", () => {
+    expect(cleanAliases(["  łazienka ", "", "Łazienka", "PL", "pl"], "Projekt")).toEqual(["łazienka", "PL"]);
+  });
+
+  it("odrzuca alias równy tytułowi notatki", () => {
+    expect(cleanAliases(["projekt", "Projekt łazienki"], "Projekt")).toEqual(["Projekt łazienki"]);
+  });
+
+  it("pilnuje limitów długości i liczby", () => {
+    expect(cleanAliases(["x".repeat(201), "ok"], "T")).toEqual(["ok"]);
+    const many = Array.from({ length: 30 }, (_, i) => `a${i}`);
+    expect(cleanAliases(many, "T")).toHaveLength(20);
   });
 });

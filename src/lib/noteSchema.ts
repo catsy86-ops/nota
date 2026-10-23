@@ -28,6 +28,7 @@ export const noteSchema = z.object({
   trashed: z.boolean().catch(false),
   trashedAt: z.number().nullable().catch(null),
   labels: z.array(z.string()).catch([]),
+  aliases: z.array(z.string().max(200)).max(20).optional().catch(undefined),
   reminder: z.number().nullable().catch(null),
   reminderRepeat: z.enum(["none", "daily", "weekly", "monthly"]).optional().catch(undefined),
   reminderDay: z.number().int().min(1).max(31).optional().catch(undefined),

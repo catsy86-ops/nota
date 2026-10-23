@@ -57,6 +57,21 @@ describe("yjsStore — field-level CRDT merge", () => {
     }
   });
 
+  it("aliases przechodzą przez zapis, patch i synchronizację; bez aliasów pola nie ma", () => {
+    const a = createYjsStore(`alias-a-${crypto.randomUUID()}`);
+    const b = createYjsStore(`alias-b-${crypto.randomUUID()}`);
+    a.upsertNote(makeNote({ id: "n1", aliases: ["łazienka", "PL"] }));
+    a.upsertNote(makeNote({ id: "n2" }));
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+    const seen = b.projectNotes();
+    expect(seen.find((n) => n.id === "n1")?.aliases).toEqual(["łazienka", "PL"]);
+    expect("aliases" in seen.find((n) => n.id === "n2")!).toBe(false);
+
+    a.patchNote("n2", { aliases: ["zmiana"] });
+    Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
+    expect(b.projectNotes().find((n) => n.id === "n2")?.aliases).toEqual(["zmiana"]);
+  });
+
   it("keeps dailyDate through upsert, patch and sync, and omits it on ordinary notes", () => {
     const a = createYjsStore(`daily-a-${crypto.randomUUID()}`);
     const b = createYjsStore(`daily-b-${crypto.randomUUID()}`);

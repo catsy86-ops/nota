@@ -61,9 +61,9 @@ function renderWithWiki(text: string, onWikiClick?: (t: string) => void, known?:
   let idx = 0;
   while ((m = WIKI_RX.exec(text)) !== null) {
     if (m.index > last) parts.push(text.slice(last, m.index));
-    const { title, heading } = splitWikiTarget(m[1]);
+    const { title, heading, display } = splitWikiTarget(m[1]);
     const exists = known?.has(title.toLowerCase());
-    parts.push(<WikiLink key={`w-${idx++}`} title={title} heading={heading} exists={!!exists} onWikiClick={onWikiClick} />);
+    parts.push(<WikiLink key={`w-${idx++}`} title={title} heading={heading} label={display} exists={!!exists} onWikiClick={onWikiClick} />);
     last = m.index + m[0].length;
   }
   if (last < text.length) parts.push(text.slice(last));

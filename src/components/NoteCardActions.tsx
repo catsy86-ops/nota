@@ -13,6 +13,7 @@ import { ReminderPicker } from "./ReminderPicker";
 import { PriorityPicker } from "./PriorityPicker";
 import { LabelPicker } from "./LabelPicker";
 import { FolderPicker } from "./FolderPicker";
+import { AliasPicker } from "./AliasPicker";
 import { PrivateNoteButton } from "./vault/PrivateNoteButton";
 import { ShareNote } from "./ShareNote";
 import { VersionHistory } from "./VersionHistory";
@@ -207,6 +208,9 @@ export function MoreActions({
       {!note.locked && <ActionBtn icon={<PenTool className="w-4 h-4" />} onClick={onDraw} title="Rysuj" />}
       {!isArchived && (
         <LabelPicker allLabels={allLabels} selected={note.labels} onToggle={handleLabelToggle} onCreateLabel={onCreateLabel} />
+      )}
+      {!isArchived && !note.locked && (
+        <AliasPicker title={note.title} aliases={note.aliases ?? []} onSave={(aliases) => onUpdate?.(note.id, { aliases })} />
       )}
       {onMoveToFolder && folders && folders.length > 0 && (
         <FolderPicker folders={folders} currentFolderId={note.folderId} onSelect={(fId) => onMoveToFolder(note.id, fId)} />

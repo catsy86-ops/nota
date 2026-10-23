@@ -67,7 +67,7 @@ function readReminderState(y: YNote): ReminderState {
 
 const NOTE_SCALAR_FIELDS = [
   "title", "color", "pinned", "archived", "trashed", "trashedAt",
-  "labels", "reminder", "reminderRepeat", "reminderDay", "reminderRepeatUntil", "priority", "dailyDate",
+  "labels", "aliases", "reminder", "reminderRepeat", "reminderDay", "reminderRepeatUntil", "priority", "dailyDate",
   "icon", "cover", "favorite", "readOnly", "parentId", "wide", "largeText", "folderId", "order", "createdAt", "updatedAt",
 ] as const;
 
@@ -259,6 +259,7 @@ function yNoteFromPlain(note: Note): YNote {
   y.set("trashed", note.trashed);
   y.set("trashedAt", note.trashedAt);
   y.set("labels", locked ? [] : note.labels.slice());
+  if (note.aliases?.length && !locked) y.set("aliases", note.aliases.slice());
   y.set("reminder", note.reminder);
   if (note.reminderRepeat !== undefined) y.set("reminderRepeat", note.reminderRepeat);
   if (note.reminderDay !== undefined) y.set("reminderDay", note.reminderDay);
@@ -334,6 +335,7 @@ function plainFromYNote(id: string, y: YNote): Note {
   const images = y.get("imageHashes");
   const attachments = plainAttachments(y.get("attachments"));
   const labels = y.get("labels");
+  const aliases = y.get("aliases");
   const props = plainPropsFromY(y.get("props"));
   return {
     ...common,
@@ -343,6 +345,7 @@ function plainFromYNote(id: string, y: YNote): Note {
     labels: Array.isArray(labels) && labels.length ? safeStringArray(labels, LIM.labels, LIM.label) : NO_LABELS,
     images: Array.isArray(images) && images.length ? safeStringArray(images, LIM.imageRefs, LIM.imageRef) : NO_IMAGES,
     ...(attachments.length ? { attachments } : {}),
+    ...(Array.isArray(aliases) && aliases.length ? { aliases: safeStringArray(aliases, LIM.aliases, LIM.label) } : {}),
     checklist: plainChecklistFromY(y.get("checklist")),
   };
 }

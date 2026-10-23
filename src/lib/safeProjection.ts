@@ -19,6 +19,7 @@ export const REMOTE_LIMITS = {
   title: 20_000,
   label: 500,
   labels: 200,
+  aliases: 20,
   imageRefs: 200,
   imageRef: 200,
   folderName: 2_000,

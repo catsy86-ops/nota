@@ -48,6 +48,8 @@ export interface Note {
   trashed: boolean;
   trashedAt: number | null;
   labels: string[];
+  /** Inne nazwy notatki: `[[alias]]` prowadzi tutaj (opcjonalne, starsze notatki ich nie mają). */
+  aliases?: string[];
   reminder: number | null;
   reminderRepeat?: "none" | "daily" | "weekly" | "monthly";
   /**

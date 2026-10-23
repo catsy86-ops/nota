@@ -3,12 +3,27 @@ import { buildSubpageIndex, type SubpageInfo } from "@/lib/subpages";
 
 const RX = /\[\[([^[\]\n]+?)\]\]/g;
 
-/** `Tytuł#Nagłówek` → tytuł notatki i (opcjonalnie) nagłówek, do którego link przewija. */
-export function splitWikiTarget(raw: string): { title: string; heading: string | null } {
-  const i = raw.indexOf("#");
-  if (i < 0) return { title: raw.trim(), heading: null };
-  const heading = raw.slice(i + 1).trim();
-  return { title: raw.slice(0, i).trim(), heading: heading || null };
+export interface WikiTarget {
+  /** Tytuł albo alias notatki, do której link prowadzi. */
+  title: string;
+  /** Nagłówek, do którego przewija czytnik (`[[tytuł#nagłówek]]`). */
+  heading: string | null;
+  /** Tekst wyświetlany zamiast celu (`[[cel|tekst]]`); `null` = pokaż cel. */
+  display: string | null;
+}
+
+/**
+ * `Tytuł#Nagłówek|tekst` → cel, nagłówek i tekst wyświetlany. Część po `|` nie jest celem:
+ * `[[Plan|Plan budowy]]` prowadzi do „Plan”, ale pokazuje „Plan budowy”.
+ */
+export function splitWikiTarget(raw: string): WikiTarget {
+  const bar = raw.indexOf("|");
+  const display = bar < 0 ? null : raw.slice(bar + 1).trim() || null;
+  const head = bar < 0 ? raw : raw.slice(0, bar);
+  const i = head.indexOf("#");
+  if (i < 0) return { title: head.trim(), heading: null, display };
+  const heading = head.slice(i + 1).trim();
+  return { title: head.slice(0, i).trim(), heading: heading || null, display };
 }
 
 /** Extract note titles referenced via [[Title]] or [[Title#Heading]] syntax. */
@@ -36,10 +51,39 @@ export function renameLinkTargets(content: string, oldTitle: string, newTitle: s
   });
 }
 
-/** Resolve a wiki target title → note id (case-insensitive). */
+/** Limit długości i liczby aliasów (zgodny z walidacją w `noteSchema` i `REMOTE_LIMITS`). */
+export const ALIAS_MAX_COUNT = 20;
+export const ALIAS_MAX_LENGTH = 200;
+
+/**
+ * Czyści listę aliasów z pola tekstowego: przycina, odrzuca puste i za długie, usuwa duplikaty
+ * (bez względu na wielkość liter) i alias równy tytułowi notatki (nic by nie dodał).
+ */
+export function cleanAliases(raw: string[], title: string): string[] {
+  const own = title.trim().toLowerCase();
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const item of raw) {
+    const alias = item.trim();
+    if (!alias || alias.length > ALIAS_MAX_LENGTH) continue;
+    const key = alias.toLowerCase();
+    if (key === own || seen.has(key)) continue;
+    seen.add(key);
+    out.push(alias);
+    if (out.length >= ALIAS_MAX_COUNT) break;
+  }
+  return out;
+}
+
+/**
+ * Cel linku → notatka (bez względu na wielkość liter). Najpierw tytuł, potem alias:
+ * tytuł zawsze wygrywa, więc alias nie przesłania istniejącej notatki.
+ */
 export function resolveWikiTarget(title: string, all: Note[]): Note | undefined {
   const t = title.trim().toLowerCase();
-  return all.find((n) => n.title.trim().toLowerCase() === t);
+  if (!t) return undefined;
+  return all.find((n) => n.title.trim().toLowerCase() === t)
+    ?? all.find((n) => (n.aliases ?? []).some((a) => a.trim().toLowerCase() === t));
 }
 
 export interface WikiLinkRef {
@@ -63,10 +107,13 @@ export interface WikiIndex {
 export function buildWikiIndex(notes: Note[]): WikiIndex {
   const seen = new Set<string>();
   const titles: string[] = [];
-  for (const n of [...notes].sort((a, b) => b.updatedAt - a.updatedAt)) {
-    const t = n.title.trim();
+  const add = (t: string) => {
     if (t && !seen.has(t.toLowerCase())) { seen.add(t.toLowerCase()); titles.push(t); }
-  }
+  };
+  const byRecency = [...notes].sort((a, b) => b.updatedAt - a.updatedAt);
+  // Tytuły przed aliasami: podpowiedź najpierw proponuje prawdziwe nazwy notatek.
+  for (const n of byRecency) add(n.title.trim());
+  for (const n of byRecency) for (const a of n.aliases ?? []) add(a.trim());
   const backlinks = new Map<string, WikiLinkRef[]>();
   for (const n of notes) {
     for (const target of extractWikiLinks(n.content)) {
@@ -86,10 +133,18 @@ export function wikiIndexKey(index: WikiIndex): string {
 }
 
 /** Notatki linkujące do tej (bez niej samej). */
-export function backlinksOf(note: Pick<Note, "id" | "title">, index: WikiIndex): WikiLinkRef[] {
-  const title = note.title.trim().toLowerCase();
-  if (!title) return [];
-  return (index.backlinks.get(title) ?? []).filter((r) => r.id !== note.id);
+export function backlinksOf(note: Pick<Note, "id" | "title"> & { aliases?: string[] }, index: WikiIndex): WikiLinkRef[] {
+  const keys = [note.title, ...(note.aliases ?? [])].map((t) => t.trim().toLowerCase()).filter(Boolean);
+  const out: WikiLinkRef[] = [];
+  const seen = new Set<string>();
+  for (const key of keys) {
+    for (const r of index.backlinks.get(key) ?? []) {
+      if (r.id === note.id || seen.has(r.id)) continue;
+      seen.add(r.id);
+      out.push(r);
+    }
+  }
+  return out;
 }
 
 export interface WikiQuery {
