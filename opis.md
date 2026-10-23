@@ -1824,3 +1824,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/lib/study/entrySheetRules.ts` (`newEntryMessage`, `editSavedMessage`, `editDemotesTopic`, `shouldOfferSiteGeo`); `src/components/study/JournalEntrySheet.tsx` (`submit`, `saveEdit` ich używają).
 - **Testy:** `src/lib/study/entrySheetRules.test.ts` 6/6; `e2e/journal-*.spec.ts`, `entry-sheet-focus`, `journal-geo` 9/9.
 - **Nie zrobione:** `JournalEntrySheet.tsx` nadal ma ok. 900 linii w jednym komponencie (funkcje dyktowania, zdjęć i szkiców). Kolejne wydzielenia to osobne kroki.
+
+## Plan rozbudowy — stan Fazy 0 i 1a (2026-10-23)
+
+- **Faza 0 zamknięta.** Flagi (`src/lib/featureFlags.ts`, karta w Ustawieniach), RPC dla Workerów (`src/workers/rpc.ts`), zestaw pomiarów (`src/test/fixtures/bigVault.ts`, `e2e/perf.spec.ts` z `PERF=1`), próg paczki startowej 500 KB (decyzja właściciela, `e2e/bundle.spec.ts`). Fala 3 zamknięta wcześniej (2dea8e5).
+- **Faza 1a — komponent edytora (bez podłączenia):** `src/components/editor/cmExtensions.ts` (`buildCmExtensions`, czysta konfiguracja CM6 z Markdownem i historią; bez `indentWithTab`, żeby Tab nie zatrzymał klawiatury), `src/components/editor/CmEditor.tsx` (`value`/`onChange`, widok tworzony raz, zewnętrzna zmiana `value` nadpisuje dokument). Testy: `cmExtensions.test.ts`, `CmEditor.test.tsx`. `NoteEditor.tsx` bez zmian.
+- **Nie zrobione (następny krok 1a):** podłączenie `CmEditor` za flagą `cmEditor` zamiast `<textarea>`. Wymaga przepięcia `textareaRef` (50 użyć w `useNoteEditSession`, `useWikiAutocomplete`, `useSlashMenu`, `FindReplaceBar`, `EditorStats`, `AddNoteBar`, `useLiveNoteText`) na interfejs selekcji/wstawiania obsługiwany przez CM. Dopiero potem e2e na obu ścieżkach.

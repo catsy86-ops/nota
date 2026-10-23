@@ -7,7 +7,7 @@
 
 Plan do poziomu Notion/Obsidian, zatwierdzony. Kolejność: 0 → 1 → 2 → 3 → 4 → 6 → 5 → 7 → 8 → 9; motywy (1b) po Fazie 1.
 
-- [ ] **Faza 0 — fundamenty:** flagi funkcji (`src/lib/featureFlags.ts`, karta w Ustawieniach), RPC dla Workerów (`src/workers/rpc.ts`), zestaw do pomiarów (`src/test/fixtures/bigVault.ts`, `e2e/perf.spec.ts` z `PERF=1`).
+- [x] **Faza 0 — fundamenty:** flagi funkcji (`src/lib/featureFlags.ts`, karta w Ustawieniach), RPC dla Workerów (`src/workers/rpc.ts`), zestaw do pomiarów (`src/test/fixtures/bigVault.ts`, `e2e/perf.spec.ts` z `PERF=1`).
   - Punkt odniesienia 2026-10-23, 1000 notatek, Chromium: pierwsza notatka 1,2 s, lista ustabilizowana 10,7 s, wyszukiwanie 1,8 s, otwarcie czytnika 21 s. Do zbadania przed Fazą 4 (otwarcie czytnika przy dużej liczbie notatek).
 - [ ] **Faza 1 — edytor CodeMirror 6 z podglądem na żywo.**
 - [ ] **Faza 1b — motywy:** własne animacje, mikrointerakcje i przejścia dla każdego z 7 stylów (prośba właściciela 2026-10-23, po Fazie 1).
