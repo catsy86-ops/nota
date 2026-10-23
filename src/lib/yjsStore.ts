@@ -13,6 +13,7 @@ import { NOTE_COVERS } from "@/lib/noteLook";
 import { cleanNoteProps, cleanPropDef, cleanPropDefs, type NoteProps, type PropDef } from "@/lib/noteProps";
 import { mergeSpec, projectReminder, readSpec, REMINDER_FIELDS, specOf, type ReminderState } from "@/lib/reminderSpec";
 import { journalRefsIn } from "@/lib/study/journalRefs";
+import { cleanLabelPath, isUnderLabel, renameLabelBranch } from "@/lib/labelTree";
 import {
   NOTE_COLORS, PRIORITIES, REMINDER_REPEATS, REMOTE_LIMITS as LIM,
   safeBool, safeDailyDate, safeEnum, safeNullableNumber, safeNullableString, safeNumber,
@@ -555,7 +556,14 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   }
 
   function projectLabels(): string[] {
-    return Array.from(labelsMap.keys()).sort((a, b) => a.localeCompare(b));
+    // Zbiór etykiet + te, których używa jakaś notatka: notatka z etykietą spoza zbioru (np. z importu)
+    // nie może znikać z paska bocznego.
+    const all = new Set(labelsMap.keys());
+    notesMap.forEach((y) => {
+      const raw = y.get("labels");
+      if (Array.isArray(raw)) for (const l of raw) if (typeof l === "string" && l) all.add(l);
+    });
+    return Array.from(all).sort((a, b) => a.localeCompare(b));
   }
 
   /** Definicje właściwości po kolejności; uszkodzony wpis od peera jest pomijany. */
@@ -807,16 +815,23 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   }
 
   /** Renames a label in the label set and in every note referencing it, in one transaction. */
+  /**
+   * Zmiana nazwy etykiety wraz z jej poddrzewem (`budowa` → `dom`: także `budowa/łazienka` → `dom/łazienka`).
+   * Dotyczy zbioru etykiet i każdej notatki, która ma którąkolwiek z przepinanych etykiet.
+   */
   function renameLabelEverywhere(oldLabel: string, newLabel: string): void {
+    const target = cleanLabelPath(newLabel);
+    if (!target || target === oldLabel) return;
     doc.transact(() => {
-      if (labelsMap.has(oldLabel)) labelsMap.delete(oldLabel);
-      labelsMap.set(newLabel, true);
+      const branch = [...labelsMap.keys()].filter((k) => isUnderLabel(k, oldLabel));
+      for (const k of branch) labelsMap.delete(k);
+      for (const k of branch) labelsMap.set(renameLabelBranch([k], oldLabel, target)[0], true);
+      if (!branch.length) labelsMap.set(target, true);
       notesMap.forEach((y) => {
         const raw = y.get("labels");
         const labels = Array.isArray(raw) ? (raw as string[]) : [];
-        if (labels.includes(oldLabel)) {
-          y.set("labels", labels.map((l) => (l === oldLabel ? newLabel : l)));
-        }
+        if (!labels.some((l) => isUnderLabel(l, oldLabel))) return;
+        y.set("labels", renameLabelBranch(labels, oldLabel, target));
       });
     });
   }

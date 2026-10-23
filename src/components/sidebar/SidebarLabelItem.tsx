@@ -4,8 +4,14 @@ import { SidebarRow, SidebarRowMenu } from "@/components/sidebar/SidebarRow";
 import { IconButton } from "@/components/ui/icon-button";
 import { DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 
-export function SidebarLabelItem({ label, isActive, onSelect, onRename, onDelete }: {
-  label: string; isActive: boolean; onSelect: () => void; onRename: (n: string) => void; onDelete: () => void;
+export function SidebarLabelItem({ label, displayName = label, depth = 1, isActive, onSelect, onRename, onDelete }: {
+  /** Pełna ścieżka etykiety (`budowa/łazienka`) — po niej filtrujemy i zmieniamy nazwę. */
+  label: string;
+  /** Ostatni segment, czyli to, co widać w wierszu. */
+  displayName?: string;
+  /** Głębokość w drzewie: wcięcie 12 px na poziom. */
+  depth?: number;
+  isActive: boolean; onSelect: () => void; onRename: (n: string) => void; onDelete: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(label);
@@ -23,7 +29,7 @@ export function SidebarLabelItem({ label, isActive, onSelect, onRename, onDelete
 
   if (editing) {
     return (
-      <div className="flex items-center gap-1 px-2 py-1">
+      <div className="flex items-center gap-1 px-2 py-1" style={{ paddingLeft: (depth - 1) * 12 + 8 }}>
         <input ref={inputRef} value={name} onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setName(label); setEditing(false); } }}
           className="flex-1 text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground min-w-0" />
@@ -34,9 +40,10 @@ export function SidebarLabelItem({ label, isActive, onSelect, onRename, onDelete
   }
 
   return (
+    <div style={{ paddingLeft: (depth - 1) * 12 }} title={label}>
     <SidebarRow
       icon={<Tag className="w-3.5 h-3.5" />}
-      label={label}
+      label={displayName}
       active={isActive}
       onClick={onSelect}
       actions={
@@ -51,5 +58,6 @@ export function SidebarLabelItem({ label, isActive, onSelect, onRename, onDelete
         </SidebarRowMenu>
       }
     />
+    </div>
   );
 }

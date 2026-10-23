@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotesContext } from "@/hooks/NotesProvider";
+import { buildLabelRows } from "@/lib/labelTree";
 import { SidebarLabelItem } from "@/components/sidebar/SidebarLabelItem";
 import { SidebarFolderItem } from "@/components/sidebar/SidebarFolderItem";
 import { SidebarFilterItem } from "@/components/sidebar/SidebarFilterItem";
@@ -228,14 +229,16 @@ export function AppSidebar({
                     Etykiety
                   </p>
                   <div className="space-y-0.5">
-                    {allLabels.map((label) => (
+                    {buildLabelRows(allLabels).map((row) => (
                       <SidebarLabelItem
-                        key={label}
-                        label={label}
-                        isActive={view === "label" && activeLabel === label}
-                        onSelect={() => onGoLabel(label)}
-                        onRename={(newName) => renameLabel(label, newName)}
-                        onDelete={() => removeLabel(label)}
+                        key={row.label}
+                        label={row.label}
+                        displayName={row.name}
+                        depth={row.depth}
+                        isActive={view === "label" && activeLabel === row.label}
+                        onSelect={() => onGoLabel(row.label)}
+                        onRename={(newName) => renameLabel(row.label, newName)}
+                        onDelete={() => removeLabel(row.label)}
                       />
                     ))}
                   </div>

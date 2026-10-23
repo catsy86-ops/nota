@@ -13,6 +13,7 @@ import { addSubpage as addSubpageImpl, setParent as setParentImpl } from "@/lib/
 import type { NotePriority } from "@/lib/notePriority";
 import type { Attachment } from "@/lib/attachments";
 import type { NoteCover } from "@/lib/noteLook";
+import { cleanLabelPath } from "@/lib/labelTree";
 import { cleanPropDef, makePropDef, propNameTaken, type NoteProps, type PropDef, type PropType } from "@/lib/noteProps";
 
 export type NoteColor = "default" | "coral" | "peach" | "sand" | "mint" | "sage" | "sky" | "lavender" | "rose";
@@ -333,7 +334,8 @@ export function useNotes() {
   }, []);
 
   const addLabel = useCallback((label: string) => {
-    yjsStore.addLabel(label);
+    const clean = cleanLabelPath(label);
+    if (clean) yjsStore.addLabel(clean);
   }, []);
 
   const removeLabel = useCallback((label: string) => {
@@ -352,7 +354,7 @@ export function useNotes() {
   }, []);
 
   const renameLabel = useCallback((oldLabel: string, newLabel: string) => {
-    const trimmed = newLabel.trim();
+    const trimmed = cleanLabelPath(newLabel);
     if (!trimmed || trimmed === oldLabel) return;
     yjsStore.renameLabelEverywhere(oldLabel, trimmed);
   }, []);

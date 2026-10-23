@@ -10,6 +10,7 @@ import { useDayClock } from "@/lib/dayClock";
 import { comparePropsForSort, type PropDef } from "@/lib/noteProps";
 import { isInboxNote } from "@/lib/inbox";
 import { byReminderAsc } from "@/lib/reminderAgenda";
+import { noteMatchesLabel } from "@/lib/labelTree";
 
 const NO_OPENED: LastOpenedMap = {};
 
@@ -35,7 +36,7 @@ interface FilterArgs {
 function filterNotes(list: Note[], source: Note[], { view, activeLabel, activeFolder, folders, search, propDefs }: Pick<FilterArgs, "view" | "activeLabel" | "activeFolder" | "folders" | "search" | "propDefs">) {
   let filtered = list;
   if (activeLabel && view === "label") {
-    filtered = filtered.filter((n) => n.labels.includes(activeLabel));
+    filtered = filtered.filter((n) => noteMatchesLabel(n.labels, activeLabel));
   }
   if (view === "reminders") {
     filtered = filtered.filter((n) => n.reminder !== null);
@@ -119,7 +120,7 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
 
     const filteredByPrefs = view === "trash" ? baseNotes : baseNotes.filter((n) => {
       if (prefs.filterColor !== "all" && n.color !== prefs.filterColor) return false;
-      if (prefs.filterLabel !== "all" && !n.labels.includes(prefs.filterLabel)) return false;
+      if (prefs.filterLabel !== "all" && !noteMatchesLabel(n.labels, prefs.filterLabel)) return false;
       if (prefs.filterHasReminder && !n.reminder) return false;
       if (prefs.filterPriority !== "all" && (n.priority ?? "none") !== prefs.filterPriority) return false;
       return true;

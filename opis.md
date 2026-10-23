@@ -2101,3 +2101,15 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - `e2e/note-aliases.spec.ts` — alias z menu, link po aliasie, `[[cel|tekst]]`, klik otwiera cel.
   - Istniejące e2e linków (`note-links`, `wikilinks`, `wiki-heading`) przechodzą.
 
+## Sieć wiedzy — etykiety zagnieżdżone (Faza 3.2, 2026-10-23)
+
+- **Co robi:** etykieta `budowa/łazienka` to etykieta „łazienka” wewnątrz „budowa”. Pasek boczny pokazuje drzewo z wcięciem; klik w rodzica filtruje też jego dzieci; zmiana nazwy rodzica przepina całe poddrzewo (w notatkach i w zbiorze etykiet). Etykieta użyta w notatce zawsze jest w pasku bocznym, nawet gdy nie została dodana osobno (np. z importu).
+- **Gdzie jest:**
+  - `src/lib/labelTree.ts` — `cleanLabelPath` (przycina segmenty, usuwa puste, limit `LABEL_MAX_DEPTH` = 6), `isUnderLabel`, `noteMatchesLabel` (filtr po rodzicu), `renameLabelBranch`, `buildLabelRows` (spłaszczone drzewo: głębokość, nazwa, czy ma dzieci).
+  - `src/lib/yjsStore.ts` — `renameLabelEverywhere` przepina poddrzewo; `projectLabels` = zbiór etykiet + etykiety używane w notatkach.
+  - `src/hooks/useNotes.ts` — `addLabel` i `renameLabel` czyszczą ścieżkę; `src/hooks/useFilteredNotes.ts` — filtr po rodzicu.
+  - `src/components/AppSidebar.tsx` (lista z `buildLabelRows`), `src/components/sidebar/SidebarLabelItem.tsx` (prop `displayName`, `depth` → wcięcie 12 px na poziom).
+- **Ograniczenia:** brak składni `#budowa/łazienka` w treści (model etykiet to wybór z menu, nie parsowanie tekstu). Zwijania gałęzi w pasku bocznym jeszcze nie ma — drzewo jest zawsze rozwinięte.
+- **Testy:** `src/lib/labelTree.test.ts` (9); `src/lib/yjsStore.test.ts` (przepinanie gałęzi); `e2e/label-tree.spec.ts` (wcięcie dziecka, filtr po rodzicu).
+- **Commit:** w historii poniżej.
+

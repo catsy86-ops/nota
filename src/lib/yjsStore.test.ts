@@ -57,6 +57,20 @@ describe("yjsStore — field-level CRDT merge", () => {
     }
   });
 
+  it("zmiana nazwy etykiety przepina całe poddrzewo w notatkach i w zbiorze etykiet", () => {
+    const a = createYjsStore(`branch-a-${crypto.randomUUID()}`);
+    a.addLabel("budowa");
+    a.addLabel("budowa/łazienka");
+    a.upsertNote(makeNote({ id: "n1", labels: ["budowa/łazienka", "praca"] }));
+    a.renameLabelEverywhere("budowa", "dom/remont");
+    const n1 = a.projectNotes().find((n) => n.id === "n1")!;
+    expect(n1.labels).toEqual(["dom/remont/łazienka", "praca"]);
+    const names = a.projectLabels();
+    expect(names).toContain("dom/remont");
+    expect(names).toContain("dom/remont/łazienka");
+    expect(names).not.toContain("budowa");
+  });
+
   it("aliases przechodzą przez zapis, patch i synchronizację; bez aliasów pola nie ma", () => {
     const a = createYjsStore(`alias-a-${crypto.randomUUID()}`);
     const b = createYjsStore(`alias-b-${crypto.randomUUID()}`);
