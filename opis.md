@@ -1998,4 +1998,4 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - `TRUST_PROXY=1` (ustawione w obrazie Dockera) ufa `X-Forwarded-For`; bez reverse proxy nie wolno go ustawiać.
   - Klient (`src/lib/sync/relayProvider.ts`) jeszcze nie istnieje — serwer działa, ale aplikacja z niego nie korzysta.
 - **Testy:** `relay-server/core.test.js` (19 testów logiki, `npm test`). Ręcznie sprawdzone na uruchomionym serwerze: rejestracja tokenem, 401/403/404, odczyt po `since`, snapshot, odrzucenie złego base64, WebSocket: `ready`, powiadomienie `updated` po zapisie, zamknięcie 4003 dla nieznanego pokoju.
-- **Commit:** w historii poniżej (wpis dopisany po commicie serwera).
+- **Commit:** `adfb099` (2026-10-23).
