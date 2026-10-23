@@ -58,3 +58,40 @@ test("Neon: poświata kafla przy fokusie klawiatury", async ({ page }) => {
   const anim = await page.locator(".note-card:focus-within").first().evaluate((el) => getComputedStyle(el, "::after").animationName);
   expect(anim).toBe("neon-flare");
 });
+
+async function saveNoteAndReadSignal(page: Page, title: string): Promise<string | undefined> {
+  await page.getByText("Zapisz notatkę...").click();
+  await page.getByPlaceholder("Tytuł").fill(title);
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
+  return page.evaluate(() => document.documentElement.dataset.sig);
+}
+
+test("Miedź: zapis puszcza parę z rury (animacja na paper-grid::after)", async ({ page }) => {
+  await open(page, "miedz");
+  const title = `Miedz-para ${Date.now()}`;
+  await page.getByText("Zapisz notatkę...").click();
+  await page.getByPlaceholder("Tytuł").fill(title);
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
+  // Sygnał trwa ~1,4 s; odczyt zaraz po zapisie.
+  const anim = await page.locator(".paper-grid").evaluate((el) => {
+    return { sig: document.documentElement.dataset.sig, anim: getComputedStyle(el, "::after").animationName };
+  });
+  expect(anim.sig).toBe("save");
+  expect(anim.anim).toBe("miedz-steam");
+});
+
+test("Hydraulika: zapis wypełnia rurę falą, a przy ograniczonym ruchu nie ma animacji", async ({ page }) => {
+  await open(page, "hydraulika");
+  const title = `Hydro-fala ${Date.now()}`;
+  const sig = await saveNoteAndReadSignal(page, title);
+  expect(sig).toBe("save");
+  const anim = await page.locator(".hydro-bubbles").evaluate((el) => getComputedStyle(el, "::after").animationName);
+  expect(anim).toBe("hydro-fill");
+
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.reload();
+  const again = await saveNoteAndReadSignal(page, `${title} r`);
+  expect(again).toBe("save");
+  const reduced = await page.locator(".hydro-bubbles").evaluate((el) => getComputedStyle(el, "::after").animationName);
+  expect(reduced).toBe("none");
+});

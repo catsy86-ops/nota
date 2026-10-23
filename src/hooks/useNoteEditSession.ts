@@ -6,6 +6,7 @@ import { useLiveNoteText } from "@/hooks/useLiveNoteText";
 import { useWikiAutocomplete } from "@/hooks/useWikiAutocomplete";
 import { useSlashMenu } from "@/hooks/useSlashMenu";
 import { haptic } from "@/lib/haptics";
+import { pulseSkinSignal } from "@/lib/skinSignal";
 import { isChecklistShortcut, selectionToChecklist } from "@/lib/checklistPaste";
 import { applyEdit, handleEditorKey } from "@/lib/editorKeysDom";
 import { useFeatureFlags } from "@/lib/featureFlags";
@@ -123,6 +124,7 @@ export function useNoteEditSession({
 
   function handleSave() {
     haptic("success");
+    pulseSkinSignal("save");
     commitDraft();
     endNoteTextEdit(note.id);
     setIsEditing(false);

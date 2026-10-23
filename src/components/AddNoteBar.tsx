@@ -40,6 +40,7 @@ import { parsePastedUrl } from "@/lib/urlTitle";
 import { handleEditorKey } from "@/lib/editorKeysDom";
 import { EditorStats } from "./EditorStats";
 import { haptic } from "@/lib/haptics";
+import { pulseSkinSignal } from "@/lib/skinSignal";
 import { useLatch } from "@/hooks/useLatch";
 
 /** Od czego zaczyna się nowa notatka (długie przytrzymanie „+” na telefonie). */
@@ -278,6 +279,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
       const remindAt = r.reminder ? r.reminder.getTime() : reminder;
       if (r.reminder) requestNotificationPermissionOnIntent();
       haptic("success");
+      pulseSkinSignal("save");
       const extras: ComposerExtras = {
         ...(remindAt !== null && reminderRepeat !== "none" ? { reminderRepeat, ...(reminderUntil !== undefined ? { reminderRepeatUntil: reminderUntil } : {}) } : {}),
         ...(parentId && (!parentOptions || parentOptions.some((o) => o.id === parentId)) ? { parentId } : {}),

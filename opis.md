@@ -1897,3 +1897,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - Nie zrobione z planu (wymagają JS i hooków): Miedź (para przy zapisie), Hydraulika (fala napełniania przy zapisie), Zorza (paralaksa przy przewijaniu, fala barw przy zmianie motywu), Matryca (kaskada kolumn przy zmianie widoku, zbieranie znaków w kursor), Plan (wymiarowanie przy zaznaczeniu), Zeszyt (przewracanie kartki przy zmianie widoku), Neon (rozbłysk przy przypięciu, mruganie nagłówka przy pierwszym uruchomieniu dnia).
 - **Testy:** `e2e/skin-signatures.spec.ts` (4 przypadki: animacja Zeszytu, stan końcowy Zeszytu przy ograniczonym ruchu, siatka Planu i jej stan przy ograniczonym ruchu, poświata Neonu przy fokusie). Regresja: `e2e/skin-motion.spec.ts` i `e2e/a11y.spec.ts` — razem 63/63 w projekcie `chromium`.
 - **Commit:** `3295c4d` (2026-10-23).
+
+## Style — sygnały zapisu, druga część (Faza 1b, 2026-10-23)
+
+- **Co robi:** zapis notatki (edytor i pasek nowej notatki) wywołuje `html[data-sig="save"]` na ok. 1,4 s. Miedź puszcza z prawego dołu obłoczek pary, Hydraulika napełnia rurę falą od dołu.
+- **Gdzie:** `src/lib/skinSignal.ts` (`pulseSkinSignal`, przerysunek przy każdym sygnale), `src/lib/skinSignal.test.ts`; wywołania w `src/hooks/useNoteEditSession.ts` (`handleSave`) i `src/components/AddNoteBar.tsx`; CSS w `src/styles/skins.css` (sekcja „Zapis”): `.paper-grid::after` dla Miedzi, `.hydro-bubbles::after` dla Hydrauliki.
+- **Ograniczenia:** Zorza i Matryca nadal bez sygnału — `::before`/`::after` ich tła są zajęte (Zorza: dryf; Matryca: winieta). Do zrobienia po przeniesieniu winiety na inny element.
+- **Testy:** `e2e/skin-signatures.spec.ts` (Miedź, Hydraulika, także stan przy ograniczonym ruchu); `src/lib/skinSignal.test.ts`. Regresja `skin-motion`, `a11y`, `skin-signatures` — 65/65 w `chromium`.

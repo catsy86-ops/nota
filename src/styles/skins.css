@@ -687,3 +687,59 @@ html[data-motion="reduced"][data-skin="neon"] .note-card:focus-within::after { a
   html[data-skin="plan"] .paper-grid::before { animation: none; opacity: 1; transform: none; }
   html[data-skin="neon"] .note-card:focus-within::after { animation: none; opacity: 0.35; }
 }
+
+/* Zapis (`html[data-sig="save"]`, src/lib/skinSignal.ts). Pseudo-elementy są niewidoczne w spoczynku,
+   więc przy ograniczonym ruchu nic nie pojawia się ani nie zostaje. */
+
+/* Miedź — para z rury: obłoczek wznosi się z prawego dołu i gaśnie. */
+html[data-skin="miedz"] .paper-grid::after {
+  content: "";
+  position: absolute;
+  right: 8%;
+  bottom: 0;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, hsl(var(--primary) / 0.45), transparent);
+  opacity: 0;
+  transform: translateY(0) scale(0.6);
+  pointer-events: none;
+}
+html[data-sig="save"][data-skin="miedz"] .paper-grid::after {
+  animation: miedz-steam var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes miedz-steam {
+  0% { opacity: 0; transform: translateY(0) scale(0.6); }
+  30% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-160px) scale(1.4); }
+}
+
+/* Hydraulika — fala napełnia rurę od dołu przy zapisie. */
+html[data-skin="hydraulika"] .hydro-bubbles::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 45%;
+  background: linear-gradient(to top, hsl(var(--primary) / 0.32), transparent);
+  opacity: 0;
+  transform: translateY(100%);
+  pointer-events: none;
+}
+html[data-sig="save"][data-skin="hydraulika"] .hydro-bubbles::after {
+  animation: hydro-fill var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes hydro-fill {
+  0% { opacity: 0; transform: translateY(100%); }
+  35% { opacity: 1; }
+  70% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(0); }
+}
+
+html[data-motion="reduced"][data-sig][data-skin="miedz"] .paper-grid::after,
+html[data-motion="reduced"][data-sig][data-skin="hydraulika"] .hydro-bubbles::after { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-sig="save"][data-skin="miedz"] .paper-grid::after,
+  html[data-sig="save"][data-skin="hydraulika"] .hydro-bubbles::after { animation: none; }
+}
