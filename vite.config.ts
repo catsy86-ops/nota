@@ -58,12 +58,12 @@ export default defineConfig(() => ({
         // Fonty: offline potrzebne są tylko podzbiory łacińskie (polski siedzi
         // w latin-ext); cyrylica/greka/wietnamski i tak ładują się tylko na żądanie.
         // Kroje stylów (Plan, Neon, Zorza, Miedź) i kroje tekstu do wyboru poza precache — pobiera je dopiero wybrany styl,
-        // potem trzyma `skin-fonts` niżej. Logo („unbounded-notki”) zostaje w precache.
+        // potem trzyma `skin-fonts` niżej. Logo „G” używa Unbounded latin (wght), więc ten plik zostaje w precache.
         globIgnores: [
           "**/screenshot-wide.png",
           "**/*-{cyrillic,cyrillic-ext,greek,greek-ext,vietnamese}-*.woff2",
           "**/{barlow-condensed,fraunces,bricolage-grotesque,inter,nunito,atkinson-hyperlegible-next,literata,manrope,lexend}-*.woff2",
-          "**/unbounded-latin*.woff2",
+          "**/unbounded-latin-ext*.woff2",
           // Eksport PDF (jsPDF + html2canvas + purify + index.es) i Statystyki: ~1,1 MB, rzadko używane.
           // Nie w precache — trafiają do cache `static-assets` przy pierwszym użyciu (offline wcześniej: błąd).
           "**/{exportPdf,index.es,html2canvas,html2canvas.esm,purify.es,StatsDialog}-*.js",

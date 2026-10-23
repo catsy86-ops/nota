@@ -7,11 +7,11 @@ interface NotkiLogoProps {
   className?: string;
 }
 
-const LETTERS = ["N", "O", "T", "K", "I"];
+const LETTERS = ["G"];
 
 /**
- * Wordmark „NOTKI”: litery wjeżdżają kaskadą z rozmycia, jakby słowo było
- * właśnie zapisywane, po nich miga kursor. Wypełnienie gradientem marki,
+ * Logo „G”: litera wjeżdża z rozmycia, jakby była
+ * właśnie zapisywana, po niej miga kursor. Wypełnienie gradientem marki,
  * co kilka sekund przez litery przechodzi błysk (CSS, patrz `.notki-*`
  * w index.css). Przy `prefers-reduced-motion` wszystko stoi.
  */
@@ -20,7 +20,7 @@ export function NotkiLogo({ size = "lg", className }: NotkiLogoProps) {
   return (
     <span
       role="img"
-      aria-label="NOTKI"
+      aria-label="G"
       className={cn("notki-logo font-logo font-extrabold", size === "lg" ? "text-[1.6rem]" : "text-lg", className)}
     >
       {LETTERS.map((letter, i) => (

@@ -6,7 +6,7 @@ test("ustawienia pokazują zakładkę web clippera z kodem wskazującym na /shar
   await page.getByRole("button", { name: "Ustawienia" }).first().click();
   await page.getByRole("tab", { name: "Ogólne" }).click();
 
-  const link = page.getByText("Zapisz w NOTKI", { exact: true });
+  const link = page.getByText("Zapisz w G", { exact: true });
   await expect(link).toBeVisible();
   const href = await link.getAttribute("href");
   expect(href).toMatch(/^javascript:\(function\(\)\{/);

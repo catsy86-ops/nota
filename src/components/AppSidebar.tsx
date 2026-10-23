@@ -156,7 +156,7 @@ export function AppSidebar({
                   type="button"
                   onClick={onLogoClick}
                   className="pressable relative shrink-0 grid place-items-center w-12 h-12 rounded-card bg-linear-to-br from-primary/15 via-accent/10 to-transparent ring-1 ring-border/60"
-                  aria-label="NOTKI"
+                  aria-label="G"
                 >
                   <div className="absolute inset-0 rounded-card bg-primary/20 blur-lg opacity-70 -z-10" />
                   <NMonogramLogo />
@@ -312,7 +312,7 @@ export function AppSidebar({
                   </div>
                 )}
                 <InstallAppButton />
-                <p className="text-2xs text-muted-foreground text-center font-medium">NOTKI v1.0 • Notuj, zanim zapomnisz</p>
+                <p className="text-2xs text-muted-foreground text-center font-medium">G v1.0 • Notuj, zanim zapomnisz</p>
               </div>
             </div>
           </motion.aside>

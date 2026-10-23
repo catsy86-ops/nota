@@ -55,22 +55,26 @@ class TaskWidget extends WidgetType {
   }
 
   toDOM(view: EditorView) {
+    // Otoczka 44 × 44 px (cel dotyku WCAG 2.5.5); pole zostaje wizualnie małe, bo marginesy ujemne.
+    const hit = document.createElement("span");
+    hit.className = "cm-lp-task-hit";
     const box = document.createElement("input");
     box.type = "checkbox";
     box.className = "cm-lp-task";
     box.checked = this.checked;
     box.setAttribute("aria-label", this.checked ? "Zrobione" : "Do zrobienia");
+    hit.appendChild(box);
     // Klik obsługujemy sami: przeglądarka nie zmienia stanu pola, o nim decyduje dokument.
-    box.addEventListener("mousedown", (e) => e.preventDefault());
-    box.addEventListener("click", (e) => {
+    hit.addEventListener("mousedown", (e) => e.preventDefault());
+    hit.addEventListener("click", (e) => {
       e.preventDefault();
-      const from = view.posAtDOM(box);
+      const from = view.posAtDOM(hit);
       const mark = view.state.doc.sliceString(from + 1, from + 2);
       if (view.state.doc.sliceString(from, from + 1) !== "[" || !/[ xX]/.test(mark)) return;
       const next = mark === " " ? "x" : " ";
       view.dispatch({ changes: { from: from + 1, to: from + 2, insert: next } });
     });
-    return box;
+    return hit;
   }
 
   ignoreEvent() {
@@ -419,11 +423,20 @@ const livePreviewTheme = EditorView.baseTheme({
   },
   ".cm-lp-link": { color: "hsl(var(--primary))", textDecoration: "underline" },
   ".cm-lp-wiki": { color: "hsl(var(--primary))", textDecoration: "underline dotted", cursor: "pointer" },
+  ".cm-lp-task-hit": {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    verticalAlign: "middle",
+    width: "44px",
+    height: "44px",
+    margin: "-10px -6px -10px -6px",
+    cursor: "pointer",
+  },
   ".cm-lp-task": {
     width: "1.1em",
     height: "1.1em",
-    margin: "0 0.35em 0 0",
-    verticalAlign: "-0.15em",
+    margin: "0",
     accentColor: "hsl(var(--primary))",
     cursor: "pointer",
   },

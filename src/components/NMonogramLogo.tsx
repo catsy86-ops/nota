@@ -5,11 +5,11 @@ interface NMonogramLogoProps {
   className?: string;
 }
 
-/** Obrys litery „N” (viewBox 24×24) — wspólny dla linii i kropki biegnącej po niej. */
-const N_PATH = "M6 19V5l12 14V5";
+/** Obrys litery „G” (viewBox 24×24) — wspólny dla linii i kropki biegnącej po niej. */
+const G_PATH = "M17.36 7.5 A7 7 0 1 0 19 12 H12.5";
 
 /**
- * Animowany monogram „N”: litera rysuje się gradientową linią, chwilę świeci,
+ * Animowany monogram „G”: litera rysuje się gradientową linią, chwilę świeci,
  * po czym wymazuje się w tym samym kierunku, a po jej obrysie biegnie jasna kropka.
  * Czysty SVG + CSS (`stroke-dashoffset`, `offset-distance`, `opacity`) — style
  * `.n-mark-*` w `index.css`; przy `prefers-reduced-motion` litera stoi w miejscu.
@@ -27,9 +27,9 @@ export function NMonogramLogo({ className }: NMonogramLogoProps) {
       </defs>
 
       {/* poświata pod literą */}
-      <path className="n-mark-glow" d={N_PATH} pathLength={100} fill="none" stroke={`url(#${grad})`} strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path className="n-mark-glow" d={G_PATH} pathLength={100} fill="none" stroke={`url(#${grad})`} strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
       {/* litera */}
-      <path className="n-mark-line" d={N_PATH} pathLength={100} fill="none" stroke={`url(#${grad})`} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path className="n-mark-line" d={G_PATH} pathLength={100} fill="none" stroke={`url(#${grad})`} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
       {/* kropka biegnąca po obrysie */}
       <circle className="n-mark-dot" r="1.6" fill="hsl(var(--primary-foreground, 0 0% 100%))" />
     </svg>

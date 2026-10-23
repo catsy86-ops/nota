@@ -1,7 +1,7 @@
 /**
  * Web clipper jako zakładka: kod `javascript:` otwiera `/share` tej aplikacji
  * z tytułem, adresem i zaznaczonym fragmentem aktualnej strony — dalej działa
- * ten sam tor co „Udostępnij → NOTKI” (`parseShare`, odsiew powtórzeń).
+ * ten sam tor co „Udostępnij → G” (`parseShare`, odsiew powtórzeń).
  */
 export const CLIPPER_MAX_SELECTION = 5000;
 

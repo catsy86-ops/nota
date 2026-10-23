@@ -134,7 +134,7 @@ export function GeneralSettings() {
         <PushSettings />
         <ToggleRow
           label="Liczba zaległych w tytule karty i na ikonie"
-          desc="Pokazuje liczbę zaległych przypomnień jako „(3) NOTKI” na karcie i znaczek na ikonie zainstalowanej aplikacji."
+          desc="Pokazuje liczbę zaległych przypomnień jako „(3) G” na karcie i znaczek na ikonie zainstalowanej aplikacji."
           checked={badgeEnabled}
           onCheck={setBadgeEnabled}
         />

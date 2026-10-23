@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { buildClipperBookmarklet } from "@/lib/clipperBookmarklet";
 import { Section } from "./SettingsShared";
 
-/** Zakładka „Zapisz w NOTKI”: przeciągnij na pasek zakładek, klikaj na dowolnej stronie. */
+/** Zakładka „Zapisz w G”: przeciągnij na pasek zakładek, klikaj na dowolnej stronie. */
 export function ClipperSettings() {
   const linkRef = useRef<HTMLAnchorElement>(null);
   const code = buildClipperBookmarklet(window.location.origin);
@@ -14,10 +14,10 @@ export function ClipperSettings() {
   useEffect(() => { linkRef.current?.setAttribute("href", code); }, [code]);
 
   return (
-    <Section title="Zakładka do zapisu stron w NOTKI">
+    <Section title="Zakładka do zapisu stron w G">
       <p className="text-xs text-muted-foreground">
         Przeciągnij przycisk poniżej na pasek zakładek. Na dowolnej stronie kliknij zakładkę — tytuł, adres
-        i zaznaczony fragment trafią do nowej notatki w NOTKI.
+        i zaznaczony fragment trafią do nowej notatki w G.
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <a
@@ -26,7 +26,7 @@ export function ClipperSettings() {
           onClick={(e) => { e.preventDefault(); toast("Przeciągnij ten przycisk na pasek zakładek"); }}
           className="inline-flex items-center rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-sm font-medium cursor-grab"
         >
-          Zapisz w NOTKI
+          Zapisz w G
         </a>
         <Button
           variant="outline"

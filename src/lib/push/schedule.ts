@@ -113,7 +113,7 @@ function noteItems(notes: readonly PushNote[], now: number, end: number): PushIt
     if (!n.reminder) continue;
     // Notatka prywatna: ani tytułu, ani treści na serwerze.
     const title = n.locked ? "Przypomnienie z notatki prywatnej" : clip(n.title.trim() || firstLine(n.content) || "Przypomnienie", 120);
-    const body = n.locked ? "Otwórz NOTKI i odblokuj skarbiec, aby zobaczyć notatkę." : "Przypomnienie z NOTKI";
+    const body = n.locked ? "Otwórz G i odblokuj skarbiec, aby zobaczyć notatkę." : "Przypomnienie z G";
     const repeat = n.reminderRepeat ?? "none";
     let at: number | null = n.reminder;
     // Seria: kolejne terminy też — strona przesuwa `reminder` dopiero, gdy jest otwarta.

@@ -14,7 +14,7 @@ const WED_NOON = at(14, 12);
 describe("buildPushSchedule — notatki", () => {
   it("jednorazowe przypomnienie w przyszłości, przeszłe pomija", () => {
     const items = buildPushSchedule({ now: WED_NOON, notes: [note({ reminder: at(14, 15) }), note({ id: "n2", reminder: at(14, 11) })] });
-    expect(items).toEqual([{ key: `n:n1:${at(14, 15)}`, at: at(14, 15), title: "Zadzwonić do hurtowni", body: "Przypomnienie z NOTKI", url: "/notatka/n1", snooze: true }]);
+    expect(items).toEqual([{ key: `n:n1:${at(14, 15)}`, at: at(14, 15), title: "Zadzwonić do hurtowni", body: "Przypomnienie z G", url: "/notatka/n1", snooze: true }]);
   });
 
   it("seria: kolejne terminy w horyzoncie", () => {

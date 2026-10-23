@@ -346,7 +346,7 @@ function RecoveryCodeStep({ code, onClose }: { code: string; onClose: () => void
     try { await navigator.clipboard.writeText(code); toast.success("Skopiowano kod awaryjny"); } catch { toast.error("Nie udało się skopiować — przepisz kod ręcznie"); }
   }
   function download() {
-    const blob = new Blob([`Kod awaryjny skarbca NOTKI\n\n${code}\n\nKto zna ten kod, może odblokować Twoje prywatne notatki. Trzymaj go osobno od urządzeń.\n`], { type: "text/plain" });
+    const blob = new Blob([`Kod awaryjny skarbca G\n\n${code}\n\nKto zna ten kod, może odblokować Twoje prywatne notatki. Trzymaj go osobno od urządzeń.\n`], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;

@@ -60,13 +60,13 @@ export function PushSettings() {
       <div className="space-y-3 rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
         <p className="text-xs text-muted-foreground">
           Przypomnienia notatek, Grafik na jutro, raport dnia i tygodnia, problemy i materiał z budowy przyjdą o czasie także wtedy,
-          gdy NOTKI są zamknięte. Wysyła je Twój serwer powiadomień.
+          gdy G są zamknięte. Wysyła je Twój serwer powiadomień.
           Trafiają na niego terminy i tytuły na 14 dni — bez treści notatek, a z notatek prywatnych bez tytułów.
         </p>
         {support !== "ok" ? (
           <p className="text-xs text-destructive-ink">
             {support === "ios-browser"
-              ? "Na iPhonie dodaj NOTKI do ekranu początkowego (Udostępnij → Do ekranu początkowego) i otwórz je stamtąd."
+              ? "Na iPhonie dodaj G do ekranu początkowego (Udostępnij → Do ekranu początkowego) i otwórz je stamtąd."
               : "Ta przeglądarka nie obsługuje powiadomień push."}
           </p>
         ) : (
@@ -114,7 +114,7 @@ export function PushSettings() {
         )}
       </div>
       <div className="mt-3 space-y-2">
-        <p className="text-xs text-muted-foreground">Co ma przypominać, gdy NOTKI są zamknięte:</p>
+        <p className="text-xs text-muted-foreground">Co ma przypominać, gdy G są zamknięte:</p>
         {PUSH_CATEGORIES.map((c) => (
           <ToggleRow
             key={c.id}

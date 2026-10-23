@@ -1,5 +1,5 @@
 /**
- * Web Share Target: „Udostępnij → NOTKI” z innej aplikacji.
+ * Web Share Target: „Udostępnij → G” z innej aplikacji.
  * Tekst i link: manifest kieruje GET na `/share?title=&text=&url=`; starsze
  * instalacje wysyłają jeszcze `/?share-title=&share-text=&share-url=`, więc
  * obie postacie są obsługiwane. Pliki (obrazy, PDF) idą POST-em do service

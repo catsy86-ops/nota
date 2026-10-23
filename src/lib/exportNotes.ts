@@ -256,7 +256,7 @@ export function pickFullBackup(): Promise<FullBackup> {
 export async function parseFullBackup(text: string): Promise<FullBackup> {
   const raw = JSON.parse(text);
   if (!raw || typeof raw !== "object" || !Array.isArray((raw as Record<string, unknown>).notes)) {
-    throw new Error("To nie jest plik pełnego backupu aplikacji NOTKI");
+    throw new Error("To nie jest plik pełnego backupu aplikacji G");
   }
   const { fullBackupSchema } = await loadSchemas();
   return fullBackupSchema.parse(raw);
@@ -376,7 +376,7 @@ export function download(content: string, filename: string, type: string) {
 
 export async function exportToMarkdown(notes: Note[], propDefs: PropDef[] = []) {
   const lines: string[] = [];
-  lines.push(`# NOTKI — eksport`);
+  lines.push(`# G — eksport`);
   lines.push(`> ${format(new Date(), "d MMMM yyyy, HH:mm", { locale: pl })}`);
   lines.push("");
 
@@ -422,7 +422,7 @@ export async function exportToHTML(notes: Note[]) {
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NOTKI — eksport</title>
+<title>G — eksport</title>
 <style>
 body{font-family:system-ui,sans-serif;max-width:720px;margin:2rem auto;padding:0 1rem;background:#fafafa;color:#1a1a1a}
 h1{font-size:1.8rem;margin-bottom:.2rem}
@@ -440,7 +440,7 @@ h1{font-size:1.8rem;margin-bottom:.2rem}
 </style>
 </head>
 <body>
-<h1>NOTKI</h1>
+<h1>G</h1>
 <p class="date">Eksport: ${escape(dateStr)}</p>
 `;
 

@@ -40,7 +40,7 @@ function manualSteps(isIos: boolean, isAndroid: boolean): { intro: string; steps
       steps: [
         { icon: <EllipsisVertical className="w-4 h-4" />, text: <>Otwórz menu przeglądarki <strong>⋮</strong> (prawy górny róg).</> },
         { icon: <Download className="w-4 h-4" />, text: <>Wybierz <strong>„Zainstaluj aplikację”</strong> albo <strong>„Dodaj do ekranu głównego”</strong>.</> },
-        { icon: <CircleCheck className="w-4 h-4" />, text: <>Potwierdź — ikona NOTKI pojawi się na ekranie głównym.</> },
+        { icon: <CircleCheck className="w-4 h-4" />, text: <>Potwierdź — ikona G pojawi się na ekranie głównym.</> },
       ],
     };
   }
@@ -70,7 +70,7 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
     }
     const outcome = await install();
     if (outcome === "accepted") {
-      toast.success("Zainstalowano! 🎉", { description: "NOTKI są teraz na ekranie głównym." });
+      toast.success("Zainstalowano! 🎉", { description: "G są teraz na ekranie głównym." });
       onDone?.();
     }
   };
@@ -115,7 +115,7 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2">
-              <Download className="w-5 h-5 text-primary-ink" /> Zainstaluj NOTKI
+              <Download className="w-5 h-5 text-primary-ink" /> Zainstaluj G
             </DialogTitle>
             <DialogDescription>{help.intro}</DialogDescription>
           </DialogHeader>

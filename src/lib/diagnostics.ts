@@ -181,7 +181,7 @@ function redact(text: string, secrets: string[]): string {
  */
 export function buildDiagReport(snapshot: DiagSnapshot, log: readonly DiagEntry[], secrets: string[] = [], security: readonly SecurityEvent[] = []): string {
   const lines = [
-    "Notatnik — raport diagnostyczny",
+    "G — raport diagnostyczny",
     "(bez treści notatek i bez kodu parowania)",
     "",
     `build: ${snapshot.build}`,

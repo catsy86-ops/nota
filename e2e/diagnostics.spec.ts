@@ -25,7 +25,7 @@ test("raport diagnostyczny pobiera się bez treści notatek @smoke", async ({ pa
   expect(download.suggestedFilename()).toMatch(/^notatnik-diagnostyka-.*\.txt$/);
 
   const text = await readFile((await download.path())!, "utf8");
-  expect(text).toContain("Notatnik — raport diagnostyczny");
+  expect(text).toContain("G — raport diagnostyczny");
   expect(text).toMatch(/notatki: [1-9]/);
   expect(text).not.toMatch(/build: dev/);
   expect(text).not.toContain(secret);

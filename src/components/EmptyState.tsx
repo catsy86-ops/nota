@@ -48,7 +48,7 @@ export const DESCRIPTIONS: Record<View, string> = {
 
 /**
  * Rysunek kreską „długopisem” (cienka linia w kolorze akcentu, lekko przekrzywiona)
- * w pustych widokach. Notatki mają zamiast niego odręczny napis „Notatnik”.
+ * w pustych widokach. Notatki mają zamiast niego odręczna litera „G”.
  */
 const SKETCHES: Partial<Record<View, LucideIcon>> = {
   archive: Archive,

@@ -169,8 +169,8 @@ export function useReminderNotifications(
           // Przyciski w powiadomieniu działają przez SW → wiadomość do otwartej karty (niżej).
           // Przy zamkniętej aplikacji termin wysyła serwer push (`lib/push/`), jeśli jest włączony —
           // klucz `pushKey.note` nie pozwala pokazać go tu drugi raz.
-          showSystemNotification(note.locked ? "Przypomnienie z notatki prywatnej" : note.title || "Notatnik — Przypomnienie", {
-            body: note.locked ? "Otwórz NOTKI i odblokuj skarbiec, aby zobaczyć notatkę." : note.content || "Czas na tę notatkę!",
+          showSystemNotification(note.locked ? "Przypomnienie z notatki prywatnej" : note.title || "G — Przypomnienie", {
+            body: note.locked ? "Otwórz G i odblokuj skarbiec, aby zobaczyć notatkę." : note.content || "Czas na tę notatkę!",
             tag: note.id,
             key: pushKey.note(note.id, note.reminder),
             url: notePath(note.id),

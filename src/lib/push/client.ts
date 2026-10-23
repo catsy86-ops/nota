@@ -54,7 +54,7 @@ export async function enablePush(server: string): Promise<void> {
   const permission = Notification.requestPermission();
   if ((await permission) !== "granted") throw new Error("Brak zgody na powiadomienia w przeglądarce.");
   const { publicKey } = (await (await call(server, "/vapid", "GET")).json()) as { publicKey?: string };
-  if (typeof publicKey !== "string") throw new Error("To nie jest serwer powiadomień NOTKI.");
+  if (typeof publicKey !== "string") throw new Error("To nie jest serwer powiadomień G.");
   const key = keyBytes(publicKey);
   const reg = await navigator.serviceWorker.ready;
   let sub = await reg.pushManager.getSubscription();

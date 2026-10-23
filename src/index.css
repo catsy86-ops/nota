@@ -594,7 +594,7 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
     color: hsl(var(--muted-foreground) / 0.7);
     white-space: nowrap;
   }
-  .paper-stamp::after { content: "NOTKI · ARKUSZ 1/1 · SKALA 1:1"; }
+  .paper-stamp::after { content: "G · ARKUSZ 1/1 · SKALA 1:1"; }
   html[data-view="today"] .paper-stamp::after { content: "DZIŚ · PRZEGLĄD DNIA"; }
   html[data-view="week"] .paper-stamp::after { content: "TYDZIEŃ · PRZEGLĄD"; }
   html[data-view="archive"] .paper-stamp::after { content: "ARCHIWUM · ARKUSZ 1/1"; }
@@ -989,7 +989,7 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
   100% { stroke-dashoffset: -100; }
 }
 .n-mark-dot {
-  offset-path: path("M6 19V5l12 14V5");
+  offset-path: path("M17.36 7.5 A7 7 0 1 0 19 12 H12.5");
   offset-rotate: 0deg;
   offset-distance: 0%;
   opacity: 0;
@@ -1028,16 +1028,7 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
   .tagline-char { animation: none; opacity: 1; }
 }
 
-/* ── Wordmark „NOTKI” (NotkiLogo.tsx) ─────────────────────────────────── */
-/* Podzbiór Unbounded: tylko litery N O T K I, grubość 800 (852 B zamiast ~50 KB).
-   Generowany z @fontsource-variable/unbounded przez subset-font
-   (tekst "NOTKI", variationAxes { wght: 800 }) — przy zmianie liter w logo wygeneruj ponownie. */
-@font-face {
-  font-family: "Unbounded NOTKI";
-  src: url("./assets/unbounded-notki-800.woff2") format("woff2");
-  font-weight: 100 900;
-  font-display: swap;
-}
+/* ── Logo „G” (NotkiLogo.tsx) ───────────────────────────────────────── */
 .notki-logo {
   display: inline-flex;
   align-items: baseline;
