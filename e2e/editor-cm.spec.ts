@@ -147,3 +147,18 @@ test("klik w [[link]] poza kursorem otwiera notatkę, a na linii z kursorem tylk
   await page.locator(".cm-lp-wiki").click();
   await expect(page.getByText("TRESC-CELU-KLIK")).toBeVisible();
 });
+
+test("tabela GFM i obraz poza kursorem są renderowane, a kursor w nich pokazuje tekst", async ({ page }) => {
+  const title = `CM-tabela ${Date.now()}`;
+  await addNote(page, title);
+  const body = await openEditor(page, title);
+  await body.fill("| Imię | Wiek |\n| --- | --- |\n| Ala | 7 |\n\n![kot](https://example.com/kot.png)\n\nkoniec");
+  // Kursor na ostatniej linii: tabela to <table>, obraz to etykieta, a adres nie jest ładowany.
+  await expect(page.locator("table.cm-lp-table th")).toHaveText(["Imię", "Wiek"]);
+  await expect(page.locator(".cm-lp-image")).toHaveText("obraz: kot");
+  await expect(page.locator(".cm-content img:not(.cm-widgetBuffer)")).toHaveCount(0);
+  // Klik w tabelę przenosi kursor do jej tekstu, więc <table> znika i wraca dopiero tekst z `|`.
+  await page.locator("table.cm-lp-table").click();
+  await expect(page.locator("table.cm-lp-table")).toHaveCount(0);
+  await expect.poll(() => cmText(body)).toContain("| Ala | 7 |");
+});

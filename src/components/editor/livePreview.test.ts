@@ -2,12 +2,13 @@ import { describe, expect, it } from "vitest";
 import { EditorState, type Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import { GFM } from "@lezer/markdown";
 import { buildCmExtensions } from "./cmExtensions";
-import { buildLivePreview, wikiTargetAt } from "./livePreview";
+import { buildLivePreview, tableCells, wikiTargetAt } from "./livePreview";
 
 /** Stan z Markdownem i kursorem na podanej pozycji (domyślnie koniec dokumentu). */
 function stateAt(doc: string, cursor = doc.length): EditorState {
-  const extensions: Extension[] = [markdown({ base: markdownLanguage })];
+  const extensions: Extension[] = [markdown({ base: markdownLanguage, extensions: [GFM] })];
   return EditorState.create({ doc, selection: { anchor: cursor }, extensions });
 }
 
@@ -150,5 +151,53 @@ describe("wikiTargetAt — klik w [[link]] poza kursorem", () => {
     const doc = "zwykły tekst\n\na `[[nie]]` b\n\nkoniec";
     expect(wikiTargetAt(stateAt(doc, doc.length), 2)).toBeNull();
     expect(wikiTargetAt(stateAt(doc, doc.length), doc.indexOf("nie"))).toBeNull();
+  });
+});
+
+describe("tableCells — wiersz tabeli GFM", () => {
+  it("dzieli komórki po | i obcina skrajne kreski", () => {
+    expect(tableCells("| a | b |")).toEqual(["a", "b"]);
+    expect(tableCells("a|b")).toEqual(["a", "b"]);
+  });
+
+  it("kreska zapisana z ukośnikiem zostaje w komórce", () => {
+    expect(tableCells("| a \\| b | c |")).toEqual(["a | b", "c"]);
+  });
+});
+
+describe("livePreview — tabele i obrazy w widoku CodeMirror", () => {
+  const table = "| Imię | Wiek |\n| --- | --- |\n| Ala | 7 |";
+
+  it("tabela poza kursorem jest renderowana jako <table>, z nagłówkiem i wierszami", () => {
+    const view = new EditorView({
+      state: EditorState.create({ doc: `${table}\n\nkoniec`, selection: { anchor: table.length + 4 }, extensions: buildCmExtensions() }),
+    });
+    const cells = [...view.contentDOM.querySelectorAll("table.cm-lp-table th, table.cm-lp-table td")].map((c) => c.textContent);
+    expect(cells).toEqual(["Imię", "Wiek", "Ala", "7"]);
+    expect(view.state.doc.toString()).toBe(`${table}\n\nkoniec`);
+    view.destroy();
+  });
+
+  it("kursor w tabeli pokazuje ją jako tekst, a klik w tabelę przenosi tam kursor", () => {
+    const view = new EditorView({
+      state: EditorState.create({ doc: `${table}\n\nkoniec`, selection: { anchor: 2 }, extensions: buildCmExtensions() }),
+    });
+    expect(view.contentDOM.querySelector("table.cm-lp-table")).toBeNull();
+    view.dispatch({ selection: { anchor: table.length + 4 } });
+    expect(view.contentDOM.querySelector("table.cm-lp-table")).not.toBeNull();
+    view.destroy();
+  });
+
+  it("obraz poza kursorem to etykieta bez ładowania, a znaczniki wracają na linii z kursorem", () => {
+    const doc = "![kot](https://example.com/kot.png)\n\nkoniec";
+    const view = new EditorView({
+      state: EditorState.create({ doc, selection: { anchor: doc.length }, extensions: buildCmExtensions() }),
+    });
+    expect(view.contentDOM.querySelector("img:not(.cm-widgetBuffer)")).toBeNull();
+    expect(view.contentDOM.querySelector(".cm-lp-image")?.textContent).toBe("obraz: kot");
+    view.dispatch({ selection: { anchor: 3 } });
+    expect(view.contentDOM.querySelector(".cm-lp-image")).toBeNull();
+    expect(view.state.doc.toString()).toBe(doc);
+    view.destroy();
   });
 });

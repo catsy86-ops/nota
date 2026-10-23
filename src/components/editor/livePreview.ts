@@ -1,5 +1,5 @@
 import { ensureSyntaxTree, syntaxTree } from "@codemirror/language";
-import { EditorState, type Extension, type Range } from "@codemirror/state";
+import { EditorState, StateField, type Extension, type Range } from "@codemirror/state";
 import { Decoration, type DecorationSet, EditorView, WidgetType, ViewPlugin, type ViewUpdate } from "@codemirror/view";
 import { splitWikiTarget } from "@/lib/wikiLinks";
 
@@ -15,7 +15,9 @@ import { splitWikiTarget } from "@/lib/wikiLinks";
  * Dokument się nie zmienia — to tylko dekoracje widoku. Ukryte znaczniki i widżety są „atomowe”,
  * więc strzałki przeskakują przez nie zamiast wchodzić do środka.
  *
- * Świadomie bez widżetów: obraz, tabela i podgląd wzoru (kolejne kroki Fazy 1).
+ * Obraz `![alt](…)` poza kursorem to etykieta „obraz: opis” (nic nie ładujemy z sieci, jak w czytniku).
+ * Tabela GFM poza kursorem to prawdziwa tabela (blok, liczy ją `tableField`).
+ * Świadomie bez widżetu: podgląd wzoru (KaTeX, Faza 6 — wymaga nowej zależności).
  */
 
 const HIDDEN = Decoration.replace({});
@@ -87,6 +89,129 @@ class RuleWidget extends WidgetType {
     return hr;
   }
 }
+
+/**
+ * Obraz `![alt](adres)` poza kursorem. Tak jak czytnik, nic nie ładuje z sieci (piksel śledzący),
+ * więc pokazuje etykietę „obraz: opis”. Klik przenosi kursor w znaczniki, żeby dało się je edytować.
+ */
+class ImageWidget extends WidgetType {
+  constructor(readonly alt: string) {
+    super();
+  }
+
+  eq(other: ImageWidget) {
+    return other.alt === this.alt;
+  }
+
+  toDOM(view: EditorView) {
+    const chip = document.createElement("span");
+    chip.className = "cm-lp-image";
+    chip.textContent = `obraz: ${this.alt || "zdalny obraz"}`;
+    chip.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      view.dispatch({ selection: { anchor: view.posAtDOM(chip) } });
+    });
+    return chip;
+  }
+}
+
+/** Komórki wiersza tabeli GFM (`| a | b |`). Kreskę `\|` traktuje jako zwykły znak, nie jako separator. */
+export function tableCells(line: string): string[] {
+  let s = line.trim();
+  if (s.startsWith("|")) s = s.slice(1);
+  if (s.endsWith("|") && !s.endsWith("\\|")) s = s.slice(0, -1);
+  return s.split(/(?<!\\)\|/).map((cell) => cell.trim().replace(/\\\|/g, "|"));
+}
+
+/**
+ * Tabela poza kursorem. Komórki to zwykły tekst (bez stylu Markdown w środku — w czytniku jest),
+ * a klik przenosi kursor do tabeli, żeby ją edytować jako tekst.
+ */
+class TableWidget extends WidgetType {
+  constructor(readonly rows: string[][]) {
+    super();
+  }
+
+  eq(other: TableWidget) {
+    return JSON.stringify(other.rows) === JSON.stringify(this.rows);
+  }
+
+  toDOM(view: EditorView) {
+    const wrap = document.createElement("div");
+    wrap.className = "cm-lp-table-wrap";
+    const table = document.createElement("table");
+    table.className = "cm-lp-table";
+    const [head, ...body] = this.rows;
+    const thead = table.createTHead();
+    const headRow = thead.insertRow();
+    for (const cell of head ?? []) {
+      const th = document.createElement("th");
+      th.textContent = cell;
+      headRow.appendChild(th);
+    }
+    const tbody = table.createTBody();
+    for (const row of body) {
+      const tr = tbody.insertRow();
+      for (const cell of row) tr.insertCell().textContent = cell;
+    }
+    wrap.appendChild(table);
+    wrap.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      view.dispatch({ selection: { anchor: view.posAtDOM(wrap) } });
+    });
+    return wrap;
+  }
+}
+
+/**
+ * Tabela jest blokiem (kilka linii), a ViewPlugin nie może dawać dekoracji blokowych,
+ * więc widżety tabel liczy osobne pole (`tableField`). Tabela z kursorem w którejkolwiek linii zostaje tekstem.
+ */
+function tableIsRendered(state: EditorState, node: { from: number; to: number }, active: Set<number>): boolean {
+  const doc = state.doc;
+  const first = doc.lineAt(node.from);
+  const last = doc.lineAt(node.to);
+  // Blok zamienia całe linie; tabela wcięta albo kończąca się w połowie linii zostaje tekstem.
+  if (first.from !== node.from || last.to !== node.to) return false;
+  for (let n = first.number; n <= last.number; n++) if (active.has(n)) return false;
+  return true;
+}
+
+function buildTables(state: EditorState): DecorationSet {
+  const doc = state.doc;
+  const active = activeLineNumbers(state);
+  const tree = ensureSyntaxTree(state, doc.length, 200) ?? syntaxTree(state);
+  const ranges: Range<Decoration>[] = [];
+  tree.iterate({
+    enter: (node) => {
+      if (node.name !== "Table") return;
+      if (!tableIsRendered(state, node, active)) return false;
+      const rows: string[][] = [];
+      const first = doc.lineAt(node.from).number;
+      const last = doc.lineAt(node.to).number;
+      for (let n = first; n <= last; n++) {
+        // Drugi wiersz to linia separatora (`|---|---|`), nie dane.
+        if (n === first + 1) continue;
+        rows.push(tableCells(doc.line(n).text));
+      }
+      ranges.push(Decoration.replace({ widget: new TableWidget(rows), block: true }).range(node.from, node.to));
+      return false;
+    },
+  });
+  return Decoration.set(ranges, true);
+}
+
+const tableField = StateField.define<DecorationSet>({
+  create: buildTables,
+  update(value, tr) {
+    // Tabele zależą tylko od tekstu i od tego, które linie są aktywne; ruch kursora w tej samej linii nic nie zmienia.
+    return tr.docChanged || tr.selection ? buildTables(tr.state) : value;
+  },
+  provide: (field) => [
+    EditorView.decorations.from(field),
+    EditorView.atomicRanges.of((view) => view.state.field(field)),
+  ],
+});
 
 const HEADING_LEVEL: Record<string, number> = {
   ATXHeading1: 1,
@@ -174,6 +299,17 @@ export function buildLivePreview(state: EditorState, from = 0, to = state.doc.le
       // `[[cel]]` parser Markdown bierze za link z zagnieżdżonym `[...]`. Wikilinki obsługuje skan niżej,
       // a `false` pomija dzieci węzła, żeby nawiasy nie były ukrywane dwa razy.
       if (name === "Link" && wikiAt.get(node.from - 1) === node.to + 1) return false;
+
+      // Tabela wyrenderowana przez `tableField` — jej środka nie ruszamy.
+      if (name === "Table" && tableIsRendered(state, node, active)) return false;
+      if (name === "Image") {
+        if (onActiveLine) return;
+        const alt = /^!\[([^\]]*)\]/.exec(doc.sliceString(node.from, node.to))?.[1] ?? "";
+        const image = Decoration.replace({ widget: new ImageWidget(alt) });
+        ranges.push(image.range(node.from, node.to));
+        hiddenRanges.push(image.range(node.from, node.to));
+        return false;
+      }
 
       const level = HEADING_LEVEL[name];
       if (level) {
@@ -292,6 +428,24 @@ const livePreviewTheme = EditorView.baseTheme({
     cursor: "pointer",
   },
   ".cm-lp-hr": { border: "0", borderTop: "1px solid hsl(var(--border))", margin: "0.9em 0" },
+  ".cm-lp-image": {
+    display: "inline-block",
+    padding: "0 0.4em",
+    borderRadius: "3px",
+    backgroundColor: "hsl(var(--muted))",
+    color: "hsl(var(--muted-foreground))",
+    fontStyle: "italic",
+    cursor: "pointer",
+  },
+  ".cm-lp-table-wrap": { overflowX: "auto", margin: "0.4em 0", cursor: "text" },
+  ".cm-lp-table": { borderCollapse: "collapse", fontSize: "0.9em" },
+  ".cm-lp-table th, .cm-lp-table td": {
+    border: "1px solid hsl(var(--border))",
+    padding: "0.25em 0.6em",
+    textAlign: "left",
+    verticalAlign: "top",
+  },
+  ".cm-lp-table th": { fontWeight: "600", backgroundColor: "hsl(var(--muted))" },
   ".cm-lp-quote": {
     borderLeft: "3px solid hsl(var(--border))",
     paddingLeft: "0.75em",
@@ -306,7 +460,7 @@ export interface LivePreviewOptions {
 
 /** Rozszerzenie CodeMirror: podgląd na żywo Markdown. */
 export function livePreview(opts: LivePreviewOptions = {}): Extension {
-  const exts: Extension[] = [livePreviewPlugin, livePreviewTheme];
+  const exts: Extension[] = [livePreviewPlugin, tableField, livePreviewTheme];
   if (opts.onWikiClick) {
     const onWikiClick = opts.onWikiClick;
     // `mousedown`, nie `click`: kliknięcie w link poza kursorem ma otworzyć notatkę, a nie przesuwać kursor.

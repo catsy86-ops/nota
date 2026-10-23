@@ -2,6 +2,7 @@ import { EditorState, type Extension } from "@codemirror/state";
 import { EditorView, drawSelection, keymap, placeholder } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import { GFM } from "@lezer/markdown";
 import { defaultHighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { yCollab, yUndoManagerKeymap } from "y-codemirror.next";
 import type { NoteUndoManager, NoteYText as YText } from "@/hooks/useNotes";
@@ -34,7 +35,8 @@ export function buildCmExtensions(opts: CmExtensionOptions = {}): Extension[] {
   const exts: Extension[] = [
     drawSelection(),
     EditorView.lineWrapping,
-    markdown({ base: markdownLanguage }),
+    // GFM daje tabele (i przekreślenie); bez tego `| a |` to zwykły tekst.
+    markdown({ base: markdownLanguage, extensions: [GFM] }),
     livePreview({ onWikiClick: opts.onWikiClick }),
     syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
     keymap.of(opts.yText ? defaultKeymap : [...defaultKeymap, ...historyKeymap]),
