@@ -199,10 +199,7 @@ export async function startRelay(code: string): Promise<void> {
     yjsStore.notesMap.observeDeep(onNotes);
     unobserveNotes = () => yjsStore.notesMap.unobserveDeep(onNotes);
     // Karta chowana: wysyłamy od razu, zanim system zamrozi stronę. Wracamy: nadrabiamy.
-    onVisibility = () => {
-      if (document.visibilityState === "hidden") p.flushNow();
-      else p.sync();
-    };
+    onVisibility = () => p.setHidden(document.visibilityState === "hidden");
     onOnline = () => p.sync();
     document.addEventListener("visibilitychange", onVisibility);
     window.addEventListener("online", onOnline);

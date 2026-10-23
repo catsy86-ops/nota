@@ -2050,4 +2050,5 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - `relayBlobs.integration.test.ts` (5 testów): pakowanie, niebezpieczny MIME, wysyłka A → B bajt w bajt bez ponownego wysłania, obcy kod nie czyta, brak bloba = brak błędu.
   - `relay-server/core.test.js` (+3 testy: identyfikator, limity pojedynczy i pokoju, czyszczenie magazynu).
   - Smoke na uruchomionym serwerze: PUT, ponowny PUT, HEAD, GET bajt w bajt, zły token 403, brak 404, zły identyfikator 400, brak tokenu 401.
-- **Commit:** w historii poniżej.
+- **Keepalive (dopisane po commicie blobów):** `RelayProvider.setHidden(hidden)` — karta schowana: `flushNow` i ping `{"type":"ping"}` co `KEEPALIVE_MS` (20 s) na otwartym gnieździe; karta wróciła: ping zatrzymany i `sync()`. Serwer ignoruje wiadomości po subskrypcji, więc ping nie wymaga zmian po stronie serwera. Test: `relayProvider.test.ts` (fałszywe timery tylko dla interwałów).
+- **Commit:** `12dd69b` (bloby); keepalive w osobnym commicie.

@@ -50,6 +50,8 @@ export interface RelayOptions {
 
 export const FLUSH_MS = 1000;
 export const COMPACT_AFTER = 500;
+/** Ping na gnieździe, gdy karta jest schowana: pośrednicy zamykają bezczynne połączenia. */
+export const KEEPALIVE_MS = 20_000;
 const RETRY_MIN_MS = 2000;
 const RETRY_MAX_MS = 60_000;
 
@@ -79,6 +81,7 @@ export class RelayProvider {
   private chain: Promise<void> = Promise.resolve();
   private flushTimer: ReturnType<typeof setTimeout> | null = null;
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
+  private keepAliveTimer: ReturnType<typeof setInterval> | null = null;
   private socket: WebSocket | null = null;
   private retryMs = RETRY_MIN_MS;
   private started = false;
@@ -110,9 +113,34 @@ export class RelayProvider {
     this.sync();
   }
 
+  /**
+   * Karta schowana: zapisujemy zaległości od razu i pingujemy gniazdo.
+   * Karta wraca: zatrzymujemy ping i nadrabiamy to, co przyszło w międzyczasie.
+   */
+  setHidden(hidden: boolean): void {
+    if (!this.started) return;
+    if (hidden) {
+      this.flushNow();
+      if (!this.keepAliveTimer) {
+        this.keepAliveTimer = setInterval(() => {
+          if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify({ type: "ping" }));
+        }, KEEPALIVE_MS);
+      }
+    } else {
+      this.stopKeepAlive();
+      this.sync();
+    }
+  }
+
+  private stopKeepAlive(): void {
+    if (this.keepAliveTimer) clearInterval(this.keepAliveTimer);
+    this.keepAliveTimer = null;
+  }
+
   stop(): void {
     if (!this.started) return;
     this.started = false;
+    this.stopKeepAlive();
     this.opts.doc.off("update", this.onLocalUpdate);
     if (this.flushTimer) clearTimeout(this.flushTimer);
     if (this.retryTimer) clearTimeout(this.retryTimer);

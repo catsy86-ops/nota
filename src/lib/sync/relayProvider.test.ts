@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import * as Y from "yjs";
-import { RelayProvider, COMPACT_AFTER, type RelayState, type RelayStatus, type RelayStore } from "@/lib/sync/relayProvider";
+import { RelayProvider, COMPACT_AFTER, KEEPALIVE_MS, type RelayState, type RelayStatus, type RelayStore } from "@/lib/sync/relayProvider";
 import { deriveRelayKeys, type RelayKeys } from "@/lib/sync/relayKeys";
 
 /** Atrapa serwera o tym samym protokole co `relay-server/server.js` (bez limitów rozmiaru). */
@@ -273,6 +273,32 @@ describe("RelayProvider", () => {
     expect(remote).toBeGreaterThan(0);
     a.stop();
     b.provider.stop();
+  });
+
+  it("schowana karta pinguje gniazdo, a powrót wyłącza ping", async () => {
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
+    try {
+      const server = fakeServer();
+      const keys = await deriveRelayKeys(CODE, ITER);
+      const sent: string[] = [];
+      const socket = { readyState: 1, send: (m: string) => sent.push(m), close: () => {}, onopen: null, onmessage: null, onclose: null };
+      const doc = new Y.Doc();
+      const p = new RelayProvider({
+        baseUrl: "https://relay.test", keys, doc, store: new MemStore(), fetch: server.fetchFn,
+        openSocket: () => socket as unknown as WebSocket,
+      });
+      await p.start();
+      p.setHidden(true);
+      vi.advanceTimersByTime(KEEPALIVE_MS * 2);
+      expect(sent.filter((m) => m.includes('"ping"')).length).toBe(2);
+      p.setHidden(false);
+      sent.length = 0;
+      vi.advanceTimersByTime(KEEPALIVE_MS * 2);
+      expect(sent.filter((m) => m.includes('"ping"')).length).toBe(0);
+      p.stop();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("stop() odpina nasłuch: późniejsze zmiany nie wychodzą", async () => {
