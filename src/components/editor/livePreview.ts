@@ -1,6 +1,7 @@
 import { ensureSyntaxTree, syntaxTree } from "@codemirror/language";
 import { EditorState, type Extension, type Range } from "@codemirror/state";
 import { Decoration, type DecorationSet, EditorView, WidgetType, ViewPlugin, type ViewUpdate } from "@codemirror/view";
+import { splitWikiTarget } from "@/lib/wikiLinks";
 
 /**
  * Podgląd na żywo w CodeMirror (plan rozbudowy, Faza 1, krok 1c).
@@ -8,13 +9,13 @@ import { Decoration, type DecorationSet, EditorView, WidgetType, ViewPlugin, typ
  * a treść dostaje styl (nagłówek, pochylenie, pogrubienie, kod, link, cytat).
  *
  * Widżety: pole zadania `- [ ]` (zawsze widoczne, klik odhacza), pozioma linia `---` (poza kursorem)
- * i `[[link]]` (nawiasy znikają poza kursorem, tekst dostaje styl wikilinku).
+ * i `[[link]]` (nawiasy znikają poza kursorem, tekst dostaje styl wikilinku; klik na wyrenderowany link
+ * otwiera notatkę przez `onWikiClick`, a na linii z kursorem klik tylko ustawia kursor).
  *
  * Dokument się nie zmienia — to tylko dekoracje widoku. Ukryte znaczniki i widżety są „atomowe”,
  * więc strzałki przeskakują przez nie zamiast wchodzić do środka.
  *
- * Świadomie bez widżetów: obraz, tabela, podgląd wzoru i klik w `[[link]]` (otwarcie notatki wymaga
- * callbacku z aplikacji — kolejny krok Fazy 1).
+ * Świadomie bez widżetów: obraz, tabela i podgląd wzoru (kolejne kroki Fazy 1).
  */
 
 const HIDDEN = Decoration.replace({});
@@ -103,6 +104,23 @@ export interface LivePreview {
   decorations: DecorationSet;
   /** Tylko ukryte znaczniki — zbiór atomowy dla klawiatury. */
   hidden: DecorationSet;
+}
+
+/**
+ * Tytuł notatki z `[[link]]`, w którym leży `pos`, albo `null`, gdy `pos` nie jest w wikilinku
+ * albo wikilink leży na linii z kursorem (wtedy klik ma tylko ustawić kursor, żeby edytować znaczniki).
+ */
+export function wikiTargetAt(state: EditorState, pos: number): string | null {
+  const line = state.doc.lineAt(pos);
+  if (activeLineNumbers(state).has(line.number)) return null;
+  for (const m of line.text.matchAll(WIKI_LINK)) {
+    const start = line.from + (m.index ?? 0);
+    const end = start + m[0].length;
+    if (pos < start || pos > end) continue;
+    if (insideCode(syntaxTree(state), start)) return null;
+    return splitWikiTarget(m[0].slice(2, -2)).title || null;
+  }
+  return null;
 }
 
 /** Numery linii, na których jest kursor albo zaznaczenie. Na nich znaczniki zostają widoczne. */
@@ -264,7 +282,7 @@ const livePreviewTheme = EditorView.baseTheme({
     padding: "0 0.2em",
   },
   ".cm-lp-link": { color: "hsl(var(--primary))", textDecoration: "underline" },
-  ".cm-lp-wiki": { color: "hsl(var(--primary))", textDecoration: "underline dotted" },
+  ".cm-lp-wiki": { color: "hsl(var(--primary))", textDecoration: "underline dotted", cursor: "pointer" },
   ".cm-lp-task": {
     width: "1.1em",
     height: "1.1em",
@@ -281,7 +299,29 @@ const livePreviewTheme = EditorView.baseTheme({
   },
 });
 
+export interface LivePreviewOptions {
+  /** Klik na wyrenderowany `[[link]]` — dostaje tytuł notatki (jak `onWikiClick` w czytniku). */
+  onWikiClick?: (title: string) => void;
+}
+
 /** Rozszerzenie CodeMirror: podgląd na żywo Markdown. */
-export function livePreview(): Extension {
-  return [livePreviewPlugin, livePreviewTheme];
+export function livePreview(opts: LivePreviewOptions = {}): Extension {
+  const exts: Extension[] = [livePreviewPlugin, livePreviewTheme];
+  if (opts.onWikiClick) {
+    const onWikiClick = opts.onWikiClick;
+    // `mousedown`, nie `click`: kliknięcie w link poza kursorem ma otworzyć notatkę, a nie przesuwać kursor.
+    exts.push(EditorView.domEventHandlers({
+      mousedown(e, view) {
+        if (e.button !== 0 || !(e.target instanceof Element) || !e.target.closest(".cm-lp-wiki")) return false;
+        const pos = view.posAtCoords({ x: e.clientX, y: e.clientY });
+        if (pos === null) return false;
+        const title = wikiTargetAt(view.state, pos);
+        if (!title) return false;
+        e.preventDefault();
+        onWikiClick(title);
+        return true;
+      },
+    }));
+  }
+  return exts;
 }

@@ -131,3 +131,19 @@ test("pole zadania w CM odhacza zadanie w treści, a [[link]] poza kursorem trac
   await body.press("ArrowDown");
   await expect.poll(() => cmText(body)).toBe("- [x] kupić mleko\n\nZobacz [[Dom]]");
 });
+
+test("klik w [[link]] poza kursorem otwiera notatkę, a na linii z kursorem tylko ustawia kursor", async ({ page }) => {
+  const target = `CM-klik-cel ${Date.now()}`;
+  const source = `CM-klik-zrodlo ${Date.now()}`;
+  await addNote(page, target);
+  const targetBody = await openEditor(page, target);
+  await targetBody.fill("TRESC-CELU-KLIK");
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
+  await addNote(page, source);
+  const body = await openEditor(page, source);
+  await body.fill(`[[${target}]]\n\nkoniec`);
+  // Kursor na ostatniej linii: link na pierwszej jest wyrenderowany, więc klik go otwiera.
+  await expect(page.locator(".cm-lp-wiki")).toHaveText(target);
+  await page.locator(".cm-lp-wiki").click();
+  await expect(page.getByText("TRESC-CELU-KLIK")).toBeVisible();
+});

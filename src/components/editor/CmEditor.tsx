@@ -26,6 +26,8 @@ export interface CmEditorProps extends Omit<CmExtensionOptions, "onChange"> {
   onSelect?: () => void;
   onKeyDown?: (e: KeyboardEvent<HTMLDivElement>) => void;
   onPaste?: (e: ClipboardEvent<HTMLDivElement>) => void;
+  /** Klik na `[[link]]` poza kursorem (Faza 1, podgląd na żywo). */
+  onWikiClick?: (title: string) => void;
   /** Adapter `TextControl` widoku (ustawiany po montażu, zerowany przy odmontowaniu). */
   textControlRef?: MutableRefObject<TextControl | null>;
   /** Wiązanie z `Y.Text` (Faza 1b): dokument jest źródłem prawdy, `value` tylko odzwierciedla. */
@@ -35,11 +37,13 @@ export interface CmEditorProps extends Omit<CmExtensionOptions, "onChange"> {
   className?: string;
 }
 
-export function CmEditor({ value, onChange, onSelect, onKeyDown, onPaste, textControlRef, autoFocus, yText, className, ...opts }: CmEditorProps) {
+export function CmEditor({ value, onChange, onSelect, onKeyDown, onPaste, onWikiClick, textControlRef, autoFocus, yText, className, ...opts }: CmEditorProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const onChangeRef = useLatestRef(onChange);
   const onSelectRef = useLatestRef(onSelect);
+  // Widok tworzy się raz, więc klik w link czyta aktualną funkcję przez ref (jak `onChange`).
+  const onWikiClickRef = useLatestRef(onWikiClick);
   const onKeyDownRef = useLatestRef(onKeyDown);
   const onPasteRef = useLatestRef(onPaste);
 
@@ -53,7 +57,13 @@ export function CmEditor({ value, onChange, onSelect, onKeyDown, onPaste, textCo
       state: EditorState.create({
         doc: yText ? yText.toString() : value,
         extensions: [
-          ...buildCmExtensions({ ...opts, yText, yUndoManager: undoManager, onChange: undefined }),
+          ...buildCmExtensions({
+            ...opts,
+            yText,
+            yUndoManager: undoManager,
+            onChange: undefined,
+            onWikiClick: onWikiClickRef.current ? (title) => onWikiClickRef.current?.(title) : undefined,
+          }),
           EditorView.updateListener.of((u) => {
             if (u.docChanged && !u.transactions.some((t) => t.annotation(External))) {
               onChangeRef.current(u.state.doc.toString());

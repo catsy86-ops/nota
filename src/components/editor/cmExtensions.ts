@@ -19,6 +19,8 @@ export interface CmExtensionOptions {
   readOnly?: boolean;
   ariaLabel?: string;
   onChange?: (text: string) => void;
+  /** Klik na wyrenderowany `[[link]]` otwiera notatkę (Faza 1, podgląd na żywo). */
+  onWikiClick?: (title: string) => void;
   /**
    * Wiązanie z `Y.Text` notatki (Faza 1b): zmiany idą od razu do dokumentu, a cofanie
    * przechodzi przez `Y.UndoManager` (zamiast historii CM). Bez tego — zwykły widok bez Yjs.
@@ -33,7 +35,7 @@ export function buildCmExtensions(opts: CmExtensionOptions = {}): Extension[] {
     drawSelection(),
     EditorView.lineWrapping,
     markdown({ base: markdownLanguage }),
-    livePreview(),
+    livePreview({ onWikiClick: opts.onWikiClick }),
     syntaxHighlighting(defaultHighlightStyle, { fallback: true }),
     keymap.of(opts.yText ? defaultKeymap : [...defaultKeymap, ...historyKeymap]),
     placeholder(opts.placeholder ?? ""),

@@ -3,7 +3,7 @@ import { EditorState, type Extension } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { buildCmExtensions } from "./cmExtensions";
-import { buildLivePreview } from "./livePreview";
+import { buildLivePreview, wikiTargetAt } from "./livePreview";
 
 /** Stan z Markdownem i kursorem na podanej pozycji (domyślnie koniec dokumentu). */
 function stateAt(doc: string, cursor = doc.length): EditorState {
@@ -131,5 +131,24 @@ describe("livePreview — widżety", () => {
   it("[[...]] w kodzie zostaje dosłowne", () => {
     const doc = "a `[[nie]]` b\n\nkoniec";
     expect(hiddenText(doc)).toEqual(["`", "`"]);
+  });
+});
+
+describe("wikiTargetAt — klik w [[link]] poza kursorem", () => {
+  it("zwraca tytuł linku, gdy kliknięcie trafia w wikilink na linii bez kursora", () => {
+    const doc = "start\n\nzobacz [[Budowa#Fundament]] tutaj\n\nkoniec";
+    const at = doc.indexOf("Budowa") + 2;
+    expect(wikiTargetAt(stateAt(doc, 0), at)).toBe("Budowa");
+  });
+
+  it("na linii z kursorem zwraca null, żeby klik tylko ustawił kursor", () => {
+    const doc = "[[Budowa]] tekst";
+    expect(wikiTargetAt(stateAt(doc, 3), 3)).toBeNull();
+  });
+
+  it("poza wikilinkiem i w kodzie zwraca null", () => {
+    const doc = "zwykły tekst\n\na `[[nie]]` b\n\nkoniec";
+    expect(wikiTargetAt(stateAt(doc, doc.length), 2)).toBeNull();
+    expect(wikiTargetAt(stateAt(doc, doc.length), doc.indexOf("nie"))).toBeNull();
   });
 });
