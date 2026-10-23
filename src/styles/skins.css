@@ -610,3 +610,80 @@ html[data-motion="reduced"][data-skin="hydraulika"] .hydro-bubble { display: non
   background-repeat: repeat-x, no-repeat;
   background-color: #0b1e2b;
 }
+
+/* ─────────────────────── RUCH I SYGNATURY (plan rozbudowy, Faza 1b) ───────────────────────
+   Każdy styl ma własną krzywą i czas (`--sig-ease`, `--sig-dur`) oraz jedną sygnaturę.
+   Efekty tylko w `transform` i `opacity` (poza poświatą fokusu, która jest wskaźnikiem, nie ozdobą).
+   Ograniczony ruch: animacja się nie uruchamia, a element od razu pokazuje stan końcowy.
+   Testy: e2e/skin-signatures.spec.ts. */
+
+html[data-skin="zeszyt"] { --sig-ease: cubic-bezier(0.3, 0.1, 0.2, 1); --sig-dur: 0.55s; }
+html[data-skin="plan"] { --sig-ease: cubic-bezier(0.65, 0, 0.35, 1); --sig-dur: 0.9s; }
+html[data-skin="neon"] { --sig-ease: cubic-bezier(0.2, 0, 0, 1); --sig-dur: 0.45s; }
+html[data-skin="zorza"] { --sig-ease: ease-in-out; --sig-dur: 2.4s; }
+html[data-skin="miedz"] { --sig-ease: cubic-bezier(0.34, 1.3, 0.64, 1); --sig-dur: 0.6s; }
+html[data-skin="matrix"] { --sig-ease: linear; --sig-dur: 0.25s; }
+html[data-skin="hydraulika"] { --sig-ease: cubic-bezier(0.45, 0, 0.55, 1); --sig-dur: 0.8s; }
+
+/* Zeszyt — pióro podkreśla nagłówek przy każdym pojawieniu się (kreska rośnie od lewej). */
+html[data-skin="zeszyt"] h1,
+html[data-skin="zeszyt"] h2 { position: relative; }
+html[data-skin="zeszyt"] h1::after,
+html[data-skin="zeszyt"] h2::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.2em;
+  height: 2px;
+  border-radius: 2px;
+  background: hsl(var(--primary) / 0.7);
+  transform-origin: left center;
+  transform: scaleX(0);
+  animation: zeszyt-pen var(--sig-dur) var(--sig-ease) 1 both;
+  pointer-events: none;
+}
+@keyframes zeszyt-pen {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Plan — siatka kreślarska „wjeżdża” przy otwarciu okna (skala i przezroczystość, bez clip-path). */
+html[data-skin="plan"] .paper-grid::before {
+  animation: plan-draw var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes plan-draw {
+  from { opacity: 0; transform: scale(1.04); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Neon — poświata kafla przy fokusie klawiatury: wewnętrzny pierścień, który gaśnie do stanu stałego. */
+html[data-skin="neon"] .note-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: inset 0 0 0 1px hsl(var(--primary) / 0.7), inset 0 0 18px hsl(var(--primary) / 0.4);
+}
+html[data-skin="neon"] .note-card:focus-within::after {
+  animation: neon-flare var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes neon-flare {
+  0% { opacity: 0; }
+  35% { opacity: 1; }
+  100% { opacity: 0.35; }
+}
+
+/* Ograniczony ruch: bez animacji, ale z tym samym stanem końcowym co na końcu animacji. */
+html[data-motion="reduced"][data-skin="zeszyt"] h1::after,
+html[data-motion="reduced"][data-skin="zeszyt"] h2::after { animation: none; transform: scaleX(1); }
+html[data-motion="reduced"][data-skin="plan"] .paper-grid::before { animation: none; opacity: 1; transform: none; }
+html[data-motion="reduced"][data-skin="neon"] .note-card:focus-within::after { animation: none; opacity: 0.35; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="zeszyt"] h1::after,
+  html[data-skin="zeszyt"] h2::after { animation: none; transform: scaleX(1); }
+  html[data-skin="plan"] .paper-grid::before { animation: none; opacity: 1; transform: none; }
+  html[data-skin="neon"] .note-card:focus-within::after { animation: none; opacity: 0.35; }
+}

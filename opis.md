@@ -1883,3 +1883,16 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - E2E bez flagi (`chromium`, 41/41), w tym `bundle.spec.ts`.
 - **Nie zrobione:** Faza 1b w planie „motywy” (animacje per styl) — osobny krok. Telefon (IME, pasek formatowania) nadal bez przeglądu na urządzeniu.
 - **Commit:** `afa048e` (2026-10-23).
+
+## Style — sygnatury ruchu, pierwsza część (Faza 1b, 2026-10-23)
+
+- **Co robi:** każdy styl ma własną krzywą i czas ruchu (`--sig-ease`, `--sig-dur`). Trzy sygnatury działają już w CSS:
+  - **Zeszyt:** pióro podkreśla nagłówki h1/h2 przy każdym pojawieniu się (kreska rośnie od lewej).
+  - **Plan:** siatka kreślarska wjeżdża (skala i przezroczystość) przy otwarciu okna.
+  - **Neon:** poświata kafla przy fokusie klawiatury (wewnętrzny pierścień gaśnie do stanu stałego).
+- **Gdzie:** `src/styles/skins.css`, sekcja „RUCH I SYGNATURY” na końcu pliku. Tokeny per styl na początku sekcji. Tokeny dla Zorzy, Miedzi, Matrycy i Hydrauliki są zdefiniowane, ale jeszcze nieużyte (czekają na sygnatury wymagające JS).
+- **Jak działa:** animacje tylko w `transform` i `opacity`, z wyjątkiem poświaty Neonu (`box-shadow` na wewnętrznym `::after`), która jest wskaźnikiem fokusu, a nie ozdobą. Przy `html[data-motion="reduced"]` i `prefers-reduced-motion` animacja się nie uruchamia, a element pokazuje stan końcowy (kreska pełna, siatka widoczna, poświata przygaszona).
+- **Ograniczenia i pułapki:**
+  - Animacje działają przy montażu elementu. Podkreślenie Zeszytu ponownie „pisze się” po każdym pojawieniu się nagłówka, nie tylko przy pierwszym otwarciu.
+  - Nie zrobione z planu (wymagają JS i hooków): Miedź (para przy zapisie), Hydraulika (fala napełniania przy zapisie), Zorza (paralaksa przy przewijaniu, fala barw przy zmianie motywu), Matryca (kaskada kolumn przy zmianie widoku, zbieranie znaków w kursor), Plan (wymiarowanie przy zaznaczeniu), Zeszyt (przewracanie kartki przy zmianie widoku), Neon (rozbłysk przy przypięciu, mruganie nagłówka przy pierwszym uruchomieniu dnia).
+- **Testy:** `e2e/skin-signatures.spec.ts` (4 przypadki: animacja Zeszytu, stan końcowy Zeszytu przy ograniczonym ruchu, siatka Planu i jej stan przy ograniczonym ruchu, poświata Neonu przy fokusie). Regresja: `e2e/skin-motion.spec.ts` i `e2e/a11y.spec.ts` — razem 63/63 w projekcie `chromium`.
