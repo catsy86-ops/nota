@@ -216,6 +216,40 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 
 - `5f6fe63` (2026-10-23) — fundamenty Fazy 0 (flagi, RPC dla Workerów, pomiary).
 
+## Edytor CodeMirror 6 — krok 1a, bez podłączenia (plan rozbudowy, Faza 1, 2026-10-23)
+
+### Co robi
+
+- Na razie nic widocznego: komponent edytora Markdown na CodeMirror 6 gotowy do podłączenia za flagą `cmEditor` (Ustawienia → Ogólne → „Funkcje w przygotowaniu”). `NoteEditor` nadal używa zwykłego pola tekstowego.
+
+### Gdzie jest
+
+- `src/components/editor/cmExtensions.ts` — `buildCmExtensions(opts)`: czysta konfiguracja (historia, zaznaczenie, zawijanie, język Markdown, kolory składni, klawisze domyślne, placeholder, `spellcheck`, `aria-label`, motyw z tokenów `--foreground`/`--ring`/`--app-font`, tryb tylko do odczytu, `onChange`).
+- `src/components/editor/CmEditor.tsx` — `CmEditor({ value, onChange, … })`: opakowanie o kształcie zwykłego pola.
+- Zależności (wersje przypięte, starsze niż 2 tygodnie): `@codemirror/state` 6.7.6, `view` 6.43.13, `commands` 6.11.1, `language` 6.13.1, `lang-markdown` 6.5.2, `autocomplete` 6.20.3, `search` 6.7.2, `@lezer/markdown` 1.8.0.
+
+### Jak działa i dlaczego
+
+- **Widok tworzony raz.** Zmiana `value` z zewnątrz podmienia dokument; zmiana z klawiatury wraca przez `onChange` jako ta sama wartość, więc nie resetuje kursora.
+- **Brak `indentWithTab`.** Tab zostaje w przeglądarce, żeby klawiatura nie utknęła w edytorze (dostępność).
+- **`onChange` przez `useLatestRef`** — zmiana callbacku nie tworzy widoku od nowa.
+- **Paczka.** Nic w aplikacji jeszcze nie importuje edytora, więc paczka startowa go nie zawiera. Podłączenie zrobi go leniwym (`lazy`).
+
+### Ograniczenia i pułapki
+
+- Nie ma jeszcze: podpowiedzi `[[`, menu `/`, `@`, skrótów z `editorKeys.ts`, przycisków formatowania, podglądu na żywo (dekoracje), synchronizacji z Yjs (`y-codemirror.next`). Każdy z tych punktów to osobny krok Fazy 1.
+- Zewnętrzna zmiana `value` podmienia cały dokument i resetuje kursor. Dla notatek w Yjs (krok 1b) zastąpi to wiązanie `yCollab`.
+- W jsdom CodeMirror zgłasza brak `getClientRects`; to szum testów, nie błąd logiki.
+
+### Testy
+
+- `src/components/editor/cmExtensions.test.ts` — stan i język, `onChange`, tryb tylko do odczytu, atrybuty `spellcheck`/`aria-label`.
+- `src/components/editor/CmEditor.test.tsx` — render z wartością, zewnętrzna zmiana wartości.
+
+### Commity
+
+- Nie zacommitowane (2026-10-23): krok 1a, czeka na podłączenie za flagą.
+
 ## Synchronizacja — stan aktualny (parowanie, kody, urządzenia, diagnoza)
 
 Dział opisany w jednym miejscu. Synchronizacja działa przez WebRTC (y-webrtc) na dokumencie Yjs notatek; bez własnego serwera danych.
