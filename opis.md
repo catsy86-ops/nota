@@ -1904,3 +1904,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/lib/skinSignal.ts` (`pulseSkinSignal`, przerysunek przy każdym sygnale), `src/lib/skinSignal.test.ts`; wywołania w `src/hooks/useNoteEditSession.ts` (`handleSave`) i `src/components/AddNoteBar.tsx`; CSS w `src/styles/skins.css` (sekcja „Zapis”): `.paper-grid::after` dla Miedzi, `.hydro-bubbles::after` dla Hydrauliki.
 - **Ograniczenia:** Zorza i Matryca nadal bez sygnału — `::before`/`::after` ich tła są zajęte (Zorza: dryf; Matryca: winieta). Do zrobienia po przeniesieniu winiety na inny element.
 - **Testy:** `e2e/skin-signatures.spec.ts` (Miedź, Hydraulika, także stan przy ograniczonym ruchu); `src/lib/skinSignal.test.ts`. Regresja `skin-motion`, `a11y`, `skin-signatures` — 65/65 w `chromium`.
+
+## Motyw pory roku — działa we wszystkich stylach (2026-10-23)
+
+- **Zgłoszenie:** „motywy pory roku nie działają”. Odtworzone: `html[data-season]` ustawiał się poprawnie, ale plama światła na papierze była tylko w stylu Zeszyt (`.paper-grid::after`). W pozostałych stylach wybrany sezon nie było widać w tle.
+- **Co robi teraz:** w każdym stylu poza Zeszytem tło papieru (`.paper-grid`) dostaje plamę światła w kolorach sezonu (`--season-blob-*`, z przygaszeniem w ciemnym motywie przez `--season-glow`). Akcent stylu zostaje bez zmian, bo to jego tożsamość; poświata aktywnej notatki dalej używa koloru sezonu.
+- **Gdzie:** `src/styles/skins.css` (ostatni blok, „Pora roku w każdym stylu”). Zachowanie wyboru bez zmian: `src/lib/seasonTheme.ts`, `src/App.tsx`.
+- **Świadoma decyzja:** akcent sezonu nie nadpisuje palety pozostałych stylów. Gdyby właściciel chciał zmiany akcentu, to osobna decyzja (kontrast trzeba sprawdzić na każdej palecie).
+- **Testy:** `e2e/seasons.spec.ts` — test „Plan” zmieniony z „tło nie jest malowane” na „tło jest malowane na papierze”; `e2e/a11y.spec.ts` 56/56; `src/lib/skinContrast.test.ts` 12/12.

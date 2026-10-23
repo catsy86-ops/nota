@@ -743,3 +743,13 @@ html[data-motion="reduced"][data-sig][data-skin="hydraulika"] .hydro-bubbles::af
   html[data-sig="save"][data-skin="miedz"] .paper-grid::after,
   html[data-sig="save"][data-skin="hydraulika"] .hydro-bubbles::after { animation: none; }
 }
+
+/* Pora roku w każdym stylu (nie tylko w Zeszycie): plama światła w kolorach sezonu na samym papierze.
+   Zeszyt ma tę samą plamę w `.paper-grid::after` (wyżej), więc go wykluczamy. Akcent stylu zostaje,
+   bo to jego tożsamość; sezon dochodzi przez tło i poświatę aktywnej notatki. */
+html[data-season]:not([data-skin="zeszyt"]) .paper-grid {
+  background-image:
+    radial-gradient(62% 48% at 100% 0%, hsl(var(--season-blob-1) / calc(0.22 * var(--season-glow))), transparent 72%),
+    radial-gradient(52% 40% at 0% 0%, hsl(var(--season-blob-2) / calc(0.16 * var(--season-glow))), transparent 70%),
+    radial-gradient(70% 46% at 50% 100%, hsl(var(--season-blob-3) / calc(0.14 * var(--season-glow))), transparent 75%);
+}

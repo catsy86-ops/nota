@@ -31,15 +31,14 @@ test("motyw pory roku: wybrane Lato działa od razu i maluje tło Zeszytu", asyn
   expect(await washOf(page)).toContain("radial-gradient");
 });
 
-test("motyw pory roku nie maluje tła w stylu Plan (ma własne kolory)", async ({ page }) => {
+test("motyw pory roku maluje tło także w stylu Plan (plama na papierze, nie w ::after)", async ({ page }) => {
   await openAppearance(page);
   await page.getByRole("button", { name: "Zima", exact: true }).click();
   await expect(page.locator("html")).toHaveAttribute("data-season", "winter");
-  expect(await washOf(page)).toContain("radial-gradient");
-
   await page.locator('[data-skin-option="plan"]').click();
   await page.keyboard.press("Escape");
-  expect(await washOf(page)).toBe("none");
+  const paper = await page.locator(".paper-grid").evaluate((el) => getComputedStyle(el).backgroundImage);
+  expect(paper).toContain("radial-gradient");
 });
 
 test("krój tekstu w Zeszycie zmienia też tytuł aplikacji i nagłówki", async ({ page }) => {
