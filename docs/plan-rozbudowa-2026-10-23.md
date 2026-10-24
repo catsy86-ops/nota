@@ -105,7 +105,7 @@ Cel: każdy z 7 stylów (Zeszyt, Plan, Neon, Zorza, Miedź, Matryca, Hydraulika)
 - **Panel boczny na komputerze** (od `xl`): Konspekt, Linki zwrotne, Niepowiązane wzmianki, Pola, Lokalny graf w zakładkach.
 - **Karty i podział okna (komputer):** dwie notatki obok siebie, Ctrl+klik otwiera link w drugim panelu. Stan w `viewPrefs`.
 - **Notatki okresowe:** tydzień i miesiąc obok dziennej (`lib/dailyNote.ts`), szablon z `templateVars`.
-- **Wyodrębnij zaznaczenie do nowej notatki** z `[[linkiem]]` (otwarty punkt z planu działów).
+- **Wyodrębnij zaznaczenie do nowej notatki** z `[[linkiem]]` (otwarty punkt z planu działów) — zrobione (3.9): przycisk w pasku edytora, `lib/extractNote.ts`.
 
 ## Faza 4 — Wyszukiwanie z indeksem (M)
 

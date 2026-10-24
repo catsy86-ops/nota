@@ -5,7 +5,10 @@ import { useDraftAutosave } from "@/hooks/useDraftAutosave";
 import { useLiveNoteText } from "@/hooks/useLiveNoteText";
 import { useWikiAutocomplete } from "@/hooks/useWikiAutocomplete";
 import { useSlashMenu } from "@/hooks/useSlashMenu";
+import { toast } from "sonner";
 import { haptic } from "@/lib/haptics";
+import { replaceSelectionWithLink } from "@/lib/extractNote";
+import { createNoteFromSelection } from "@/lib/wikiNoteActions";
 import { pulseSkinSignal } from "@/lib/skinSignal";
 import { isChecklistShortcut, selectionToChecklist } from "@/lib/checklistPaste";
 import { applyEdit, handleEditorKey } from "@/lib/editorKeysDom";
@@ -208,6 +211,30 @@ export function useNoteEditSession({
     }, 0);
   }
 
+  /**
+   * „Wyodrębnij”: zaznaczenie idzie do nowej notatki, a w tej zostaje `[[tytuł]]` na jego miejscu.
+   * Nową notatkę zapisujemy od razu; bieżąca treść idzie szkicem jak każda edycja (autozapis / odmontowanie).
+   */
+  function handleExtractSelection() {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const start = Math.min(ta.selectionStart, ta.selectionEnd);
+    const end = Math.max(ta.selectionStart, ta.selectionEnd);
+    const selected = editContent.slice(start, end);
+    if (!selected.trim()) {
+      toast("Zaznacz tekst, który chcesz wyodrębnić");
+      return;
+    }
+    const created = createNoteFromSelection(selected);
+    const { content, caret } = replaceSelectionWithLink(editContent, start, end, created.title);
+    writeContent(content, [caret, caret]);
+    toast.success(`Wyodrębniono do notatki „${created.title}”`);
+    setTimeout(() => {
+      ta.focus();
+      ta.setSelectionRange(caret, caret);
+    }, 0);
+  }
+
   return {
     isEditing,
     editTitle, setEditTitle,
@@ -223,6 +250,7 @@ export function useNoteEditSession({
     handleEditSelect,
     handleEditKeyDown,
     handleFormatInsert,
+    handleExtractSelection,
     writeContent,
     /** Tryb wiązania z `Y.Text` (Faza 1b); `null` poza nim. */
     collabText,

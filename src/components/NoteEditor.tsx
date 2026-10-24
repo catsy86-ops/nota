@@ -1,4 +1,4 @@
-import { Eye, EyeOff, Expand, ListChecks, Minimize2, Type } from "lucide-react";
+import { Eye, EyeOff, Expand, ListChecks, Minimize2, Scissors, Type } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 import type { NoteEditSession } from "@/hooks/useNoteEditSession";
 import { cn } from "@/lib/utils";
@@ -57,6 +57,7 @@ export function NoteEditor({
     handleEditSelect,
     handleEditKeyDown,
     handleFormatInsert,
+    handleExtractSelection,
     commitDraft,
     handleSave,
   } = session;
@@ -137,6 +138,14 @@ export function NoteEditor({
       {findOpen && <Suspense fallback={null}><FindReplaceBar value={editContent} onChange={writeContent} textareaRef={textareaRef} onClose={() => setFindOpen(false)} /></Suspense>}
       <div className="flex items-center gap-1">
         <FormatToolbar onInsert={handleFormatInsert} nowrap={!full} />
+        <button
+          onClick={handleExtractSelection}
+          className="p-1 rounded text-muted-foreground hover:text-foreground transition-colors shrink-0"
+          title="Wyodrębnij zaznaczenie do nowej notatki"
+          aria-label="Wyodrębnij zaznaczenie do nowej notatki"
+        >
+          <Scissors className="w-3.5 h-3.5" />
+        </button>
         <button
           onClick={() => setShowPreview(!showPreview)}
           className={cn("p-1 rounded text-2xs transition-colors ml-auto", showPreview ? "text-primary-ink bg-primary/10" : "text-muted-foreground hover:text-foreground")}

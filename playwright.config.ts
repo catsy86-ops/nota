@@ -45,7 +45,7 @@ export default defineConfig({
     {
       name: "chromium-cm",
       use: { ...devices["Desktop Chrome"], storageState: "e2e/fixtures/cm-on.storage.json" },
-      testMatch: /(editing|editor-keys|slash-menu|wikilinks|mentions|live-text|checklist|editor-cm)\.spec\.ts/,
+      testMatch: /(editing|editor-keys|slash-menu|wikilinks|mentions|live-text|checklist|editor-cm|extract-note)\.spec\.ts/,
     },
     // Prawdziwe telefony: silnik WebKit (Safari na iOS) i Chrome na Androidzie. Tylko testy
     // oznaczone @mobile — reszta zakłada układ komputera. `npm run test:e2e:mobile`.
