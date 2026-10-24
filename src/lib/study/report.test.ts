@@ -213,3 +213,35 @@ describe("raport: wpis bez tekstu (Etap 0.3)", () => {
     expect(body.match(/Sprawdzone punkty listy/g)).toHaveLength(1);
   });
 });
+
+describe("raport: godziny w dniach bez wpisu (Etap 0.1)", () => {
+  const lipowa = siteKey("Lipowa 5");
+
+  it("wszystkie budowy: dzień pracy z Grafiku bez wpisu liczy się do sumy, ale tylko do dziś", () => {
+    const r = buildJournalReport(journal, { siteId: null, from: "2026-10-14", to: "2026-10-16", shifts, today: "2026-10-24" });
+    expect(r.days.map((d) => d.key)).toEqual(["2026-10-14", "2026-10-15", "2026-10-16"]);
+    expect(r.days[2].entries).toEqual([]);
+    expect(r.days[2].work).toEqual({ label: "Budowa 07:00–17:00", minutes: 600 });
+    expect(r.workMinutes).toBe(630 + 600);
+    expect(r.count).toBe(5);
+    expect(reportBody(r)).toContain("## piątek, 16 października\nPraca: Budowa 07:00–17:00 · 10 h");
+
+    const planned = buildJournalReport(journal, { siteId: null, from: "2026-10-14", to: "2026-10-16", shifts, today: "2026-10-15" });
+    expect(planned.days.map((d) => d.key)).toEqual(["2026-10-14", "2026-10-15"]);
+  });
+
+  it("jedna budowa: dzień z godzinami wpisanymi na tej budowie, także bez zmiany w Grafiku", () => {
+    const siteCard = { name: "Lipowa 5", address: "", investor: "", hours: [{ id: "2026-10-16", minutes: 300 }, { id: "2026-10-17", minutes: 240 }] };
+    const r = buildJournalReport(journal, { siteId: lipowa, siteCard, from: "2026-10-16", to: "2026-10-17", shifts, today: "2026-10-24" });
+    expect(r.count).toBe(0);
+    expect(r.days.map((d) => d.key)).toEqual(["2026-10-16", "2026-10-17"]);
+    expect(r.days[1].work).toEqual({ label: "Godziny na budowie", minutes: 240 });
+    expect(r.workMinutes).toBe(300 + 240);
+  });
+
+  it("jedna budowa bez wpisanych godzin: dzień z samą zmianą w Grafiku nie trafia do raportu", () => {
+    const r = buildJournalReport(journal, { siteId: lipowa, from: "2026-10-16", to: "2026-10-16", shifts, today: "2026-10-24" });
+    expect(r.days).toEqual([]);
+    expect(reportBody(r)).toBe("0 wpisów");
+  });
+});

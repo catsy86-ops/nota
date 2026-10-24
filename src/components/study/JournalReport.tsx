@@ -183,7 +183,7 @@ export function JournalReportDialog({
   }
 
   const canShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
-  const empty = report.count === 0;
+  const empty = report.days.length === 0;
 
   return (
     <>
@@ -443,7 +443,7 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
 
       {report.days.length > 1 && <DaysTable report={report} />}
 
-      {report.count === 0 ? (
+      {report.days.length === 0 ? (
         <StatusPanel size="inline" tone="no-results" title="Brak wpisów z tej budowy w tym okresie." description="Zmień budowę albo okres." className="my-4" />
       ) : (
         <div className="divide-y divide-border/70">
@@ -591,7 +591,7 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
       )}
 
       {/* Druk firmowy: miejsce na podpisy i datę sporządzenia — raport jako dokument odbioru. */}
-      {report.count > 0 && (
+      {report.days.length > 0 && (
         <footer className="mt-4 grid grid-cols-2 gap-6 border-t border-border pt-6 text-xs text-muted-foreground break-inside-avoid-page" data-report-signatures>
           <div>
             <div className="h-10 border-b border-dashed border-foreground/50" />

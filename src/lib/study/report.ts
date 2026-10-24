@@ -15,7 +15,7 @@ import type { JournalEntry } from "./yStudy";
 /**
  * Raport z dziennika budowy: dzień albo zakres dni, jedna budowa albo wszystkie.
  * Czysta funkcja — ekran raportu, „Udostępnij”, „Do notatki” i wydruk biorą
- * ten sam wynik. Godziny pracy z Grafiku (dzień z wpisem w raporcie i zmianą).
+ * ten sam wynik. Godziny pracy z Grafiku i z godzin wpisanych na budowach — także w dniach bez wpisu.
  */
 
 export interface ReportOptions {
@@ -33,6 +33,8 @@ export interface ReportOptions {
   to: string;
   shifts?: ShiftData | null;
   topicTitle?: (id: string) => string | null;
+  /** Dzisiejszy dzień lokalny — dni bez wpisu liczą się tylko do dziś (Grafik ma zmiany zaplanowane naprzód). */
+  today?: string;
 }
 
 export interface ReportWork {
@@ -158,12 +160,33 @@ export function workOn(shifts: ShiftData | null | undefined, key: string): Repor
   return { label: `${t.name} ${t.start}–${t.end}`, minutes: entryMinutesOn(t, entry, key) };
 }
 
-/** Praca w dniu z podziałem między budowy (`siteHours.ts`) — tylko gdy dzień jest na kilku budowach albo podzielony. */
+/** Karty do podziału godzin: wszystkie albo sama karta wybranej budowy. */
+const hoursCards = (opts: ReportOptions): Readonly<Record<string, Pick<SiteCard, "name" | "hours">>> =>
+  opts.sites ?? (opts.siteId && opts.siteCard ? { [opts.siteId]: opts.siteCard } : {});
+
+/** Ręcznie wpisane godziny budów w dniu `key` (tylko budowa raportu, gdy raport jednej budowy). */
+function setMinutesOn(opts: ReportOptions, key: string): number {
+  let sum = 0;
+  for (const [id, card] of Object.entries(hoursCards(opts))) {
+    if (opts.siteId && id !== opts.siteId) continue;
+    sum += card.hours?.find((h) => h.id === key)?.minutes ?? 0;
+  }
+  return sum;
+}
+
+/**
+ * Praca w dniu z podziałem między budowy (`siteHours.ts`) — tylko gdy dzień jest na kilku budowach albo podzielony.
+ * Bez zmiany w Grafiku liczą się godziny wpisane ręcznie na budowie (H2) — inaczej przepadłyby z sumy.
+ */
 function splitWork(journal: readonly JournalEntry[], opts: ReportOptions, key: string): ReportWork | null {
   const work = workOn(opts.shifts, key);
-  if (!work || work.minutes <= 0) return work;
-  const cards = opts.sites ?? (opts.siteId && opts.siteCard ? { [opts.siteId]: opts.siteCard } : {});
-  const day = dayHours(journal, cards, work.minutes, key, dayKeyOf);
+  if (!work) {
+    if (opts.siteId === "") return null;
+    const set = setMinutesOn(opts, key);
+    return set > 0 ? { label: opts.siteId ? "Godziny na budowie" : "Godziny na budowach", minutes: set } : null;
+  }
+  if (work.minutes <= 0) return work;
+  const day = dayHours(journal, hoursCards(opts), work.minutes, key, dayKeyOf);
   if (opts.siteId === null) {
     return day.sites.length > 1 ? { ...work, bySite: day.sites.map((s) => ({ site: s.site, minutes: s.minutes })) } : work;
   }
@@ -200,6 +223,26 @@ export function buildJournalReport(journal: readonly JournalEntry[], opts: Repor
     };
     day.entries.push(item);
     if (isOpen) open.push(item);
+  }
+
+  // Dni bez wpisu, ale z godzinami: raport wszystkich budów — każdy dzień pracy z Grafiku; raport jednej
+  // budowy — dzień z godzinami wpisanymi na tej budowie. Bez nich suma godzin w raporcie była zaniżona.
+  // Tylko do dziś: zaplanowana zmiana jutro to jeszcze nie przepracowane godziny.
+  if (opts.siteId !== "") {
+    const have = new Set(days.map((d) => d.key));
+    const keys = new Set<string>();
+    if (opts.siteId === null) for (const k of Object.keys(opts.shifts?.days ?? {})) keys.add(k);
+    for (const [id, card] of Object.entries(hoursCards(opts))) {
+      if (opts.siteId && id !== opts.siteId) continue;
+      for (const h of card.hours ?? []) keys.add(h.id);
+    }
+    const last = opts.today ?? dayKeyOf(Date.now());
+    for (const key of keys) {
+      if (key < from || key > to || key > last || have.has(key)) continue;
+      const work = splitWork(journal, opts, key);
+      if (work && workMinutesOf(work) > 0) days.push({ key, label: dayTitle(key), work, entries: [] });
+    }
+    days.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
   }
 
   const period = periodLabel(from, to);
@@ -256,7 +299,7 @@ export function reportBody(r: JournalReport): string {
   if (r.address) lines.push(`Adres: ${r.address}`);
   if (r.investor) lines.push(`Inwestor: ${r.investor}`);
   lines.push(reportSummary(r));
-  if (r.count === 0) return lines.join("\n");
+  if (r.days.length === 0) return lines.join("\n");
   for (const d of r.days) {
     lines.push("", `## ${d.label}`);
     if (d.work) lines.push(d.work.minutes > 0 ? `Praca: ${workLine(d.work)}` : `Grafik: ${d.work.label}`);
