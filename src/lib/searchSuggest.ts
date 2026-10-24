@@ -15,6 +15,7 @@ export interface SuggestContext {
 const OPERATORS: Suggestion[] = [
   { label: "etykieta:", insert: "etykieta:" },
   { label: "folder:", insert: "folder:" },
+  { label: "ścieżka:", insert: "ścieżka:" },
   { label: "ma:przypomnienie", insert: "ma:przypomnienie " },
   { label: "ma:obraz", insert: "ma:obraz " },
   { label: "ma:lista", insert: "ma:lista " },

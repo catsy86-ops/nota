@@ -17,6 +17,8 @@ import { extractWikiLinks } from "@/lib/wikiLinks";
  *   priorytet:wysoki|sredni|niski   ma:zalacznik   brak:etykiety  brak:folderu
  *   pole:Nazwa=wartość        (własne pole notatki; bez „=” = pole ma jakąkolwiek wartość;
  *                             wartość ze spacją: pole:"Status=w toku")
+ *   pole:Nazwa>5  <  >=  <=   (porównanie: liczby numerycznie, daty i tekst leksykalnie)
+ *   ścieżka:Praca/Budowa      (folder o dokładnie tej ścieżce; bez podfolderów — w odróżnieniu od folder:)
  *   -operator:wartość         (negacja, np. -etykieta:praca)
  * Wartość ze spacją w cudzysłowie: etykieta:"moja praca". Wiele operatorów = AND.
  * Nieznany operator i wszystko inne to zwykły tekst dla silnika tekstowego.
@@ -41,7 +43,11 @@ export type Clause =
   | { type: "noLabel" }
   | { type: "noFolder" }
   | { type: "prop"; name: string; value?: string }
+  | { type: "propCompare"; name: string; op: CompareOp; value: string }
+  | { type: "path"; value: string }
   | { type: "not"; clause: Clause };
+
+export type CompareOp = ">" | "<" | ">=" | "<=";
 
 export interface ParsedQuery {
   clauses: Clause[];
@@ -96,6 +102,8 @@ function clauseFor(key: string, rawValue: string): Clause | null {
       return { type: "link", value };
     case "folder":
       return { type: "folder", value };
+    case "sciezka": case "path":
+      return { type: "path", value };
     case "color": case "kolor":
       return { type: "color", value };
     case "ma": case "has":
@@ -114,6 +122,14 @@ function clauseFor(key: string, rawValue: string): Clause | null {
       return map[v] ? { type: "priority", value: map[v] } : null;
     }
     case "pole": case "field": {
+      // Porównanie: `Nazwa>5`, `Nazwa>=5` itd. — operator zaraz po nazwie.
+      const cmp = value.match(/^([^=<>]*)(>=|<=|>|<)(.*)$/);
+      if (cmp) {
+        const name = cmp[1].trim();
+        const want = cmp[3].trim();
+        if (!name || !want) return null;
+        return { type: "propCompare", name, op: cmp[2] as CompareOp, value: want };
+      }
       // Nazwa pola i wartość rozdziela pierwszy „=”; nazwa dopasowywana bez wielkości liter i ogonków.
       const eq = value.indexOf("=");
       const name = (eq < 0 ? value : value.slice(0, eq)).trim();
@@ -210,6 +226,50 @@ function matchesProp(note: MatchNote, name: string, want: string | undefined, de
   return norm(text) === norm(want);
 }
 
+/** `pole:Nazwa>x`: liczba liczy się numerycznie (przecinek = kropka), reszta leksykalnie po `fold` (daty ISO też). */
+function matchesPropCompare(note: MatchNote, name: string, op: CompareOp, want: string, defs: PropDef[]): boolean {
+  const def = defs.find((d) => fold(d.name) === fold(name));
+  if (!def) return false;
+  const raw = propValueFor(def, note.props);
+  if (raw === undefined || raw === "") return false;
+  let order: number;
+  if (def.type === "number") {
+    const x = Number(raw);
+    const y = Number(want.replace(",", "."));
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
+    order = x - y;
+  } else {
+    const x = fold(String(raw));
+    const y = fold(want);
+    order = x < y ? -1 : x > y ? 1 : 0;
+  }
+  switch (op) {
+    case ">": return order > 0;
+    case "<": return order < 0;
+    case ">=": return order >= 0;
+    case "<=": return order <= 0;
+  }
+}
+
+/** Ścieżka folderu od korzenia, np. „praca/budowa” (małe litery bez ogonków). */
+function folderPathOf(id: string, folders: MatchFolder[]): string {
+  const names: string[] = [];
+  const seen = new Set<string>();
+  let cur = folders.find((f) => f.id === id);
+  while (cur && !seen.has(cur.id)) {
+    seen.add(cur.id);
+    names.unshift(fold(cur.name));
+    const parentId: string | null | undefined = cur.parentId;
+    cur = parentId ? folders.find((f) => f.id === parentId) : undefined;
+  }
+  return names.join("/");
+}
+
+/** Ścieżka z zapytania w tej samej postaci co `folderPathOf`: `Praca / Budowa` → `praca/budowa`. */
+function normalizePath(value: string): string {
+  return value.split("/").map((s) => fold(s.trim())).filter(Boolean).join("/");
+}
+
 export function matchesClauses(note: MatchNote, clauses: Clause[], ctx: MatchContext = {}): boolean {
   const now = ctx.now ?? Date.now();
   return clauses.every(function test(c: Clause): boolean {
@@ -231,6 +291,12 @@ export function matchesClauses(note: MatchNote, clauses: Clause[], ctx: MatchCon
       case "pinned": return note.pinned;
       case "openList": return (note.checklist ?? []).some((i) => !i.checked);
       case "prop": return matchesProp(note, c.name, c.value, ctx.propDefs ?? []);
+      case "propCompare": return matchesPropCompare(note, c.name, c.op, c.value, ctx.propDefs ?? []);
+      case "path": {
+        if (!note.folderId) return false;
+        const want = normalizePath(c.value);
+        return !!want && folderPathOf(note.folderId, ctx.folders ?? []) === want;
+      }
       case "older": return note.updatedAt < now - c.days * DAY_MS;
       case "newer": return note.updatedAt >= now - c.days * DAY_MS;
     }

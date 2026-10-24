@@ -182,3 +182,53 @@ describe("operator pole:", () => {
     expect(matchesClauses(withProps({ c: 1 }), parseSearchQuery("-pole:Nieznane").clauses, ctx)).toBe(true);
   });
 });
+
+describe("operator pole: porównania i ścieżka:", () => {
+  const defs: PropDef[] = [
+    { id: "c", name: "Cena", type: "number", order: 0 },
+    { id: "t", name: "Termin", type: "date", order: 1 },
+    { id: "s", name: "Status", type: "select", options: ["w toku", "gotowe"], order: 2 },
+  ];
+  const ctx = { propDefs: defs, now: NOW };
+  const cmp = (q: string, props: MatchNote["props"]) => matchesClauses(note({ props }), parseSearchQuery(q).clauses, ctx);
+
+  it("parsuje >, <, >=, <= i odrzuca pusty operand", () => {
+    expect(parseSearchQuery("pole:Cena>5").clauses).toEqual([{ type: "propCompare", name: "Cena", op: ">", value: "5" }]);
+    expect(parseSearchQuery("pole:Cena>=5").clauses).toEqual([{ type: "propCompare", name: "Cena", op: ">=", value: "5" }]);
+    expect(parseSearchQuery("pole:Cena<=5").clauses).toEqual([{ type: "propCompare", name: "Cena", op: "<=", value: "5" }]);
+    expect(parseSearchQuery("pole:Cena>").clauses).toEqual([]);
+    expect(parseSearchQuery("pole:>5").clauses).toEqual([]);
+  });
+
+  it("liczby porównuje numerycznie (przecinek i kropka); brak wartości nie pasuje", () => {
+    expect(cmp("pole:Cena>9", { c: 10 })).toBe(true);
+    expect(cmp("pole:Cena>10", { c: 10 })).toBe(false);
+    expect(cmp("pole:Cena>=10", { c: 10 })).toBe(true);
+    expect(cmp("pole:Cena<12,5", { c: 9.5 })).toBe(true);
+    expect(cmp("pole:Cena<=9.5", { c: 9.5 })).toBe(true);
+    expect(cmp("pole:Cena<100", {})).toBe(false);
+    expect(cmp("pole:Cena<100", { c: 2 })).toBe(true);
+  });
+
+  it("daty ISO porównują się leksykalnie; tekst po fold", () => {
+    expect(cmp("pole:Termin<2026-11-01", { t: "2026-10-24" })).toBe(true);
+    expect(cmp("pole:Termin>2026-11-01", { t: "2026-10-24" })).toBe(false);
+    expect(cmp("pole:Status>GOTOWE", { s: "w toku" })).toBe(true);
+  });
+
+  it("ścieżka: dopasowuje dokładną ścieżkę folderów, bez podfolderów", () => {
+    const folders = [
+      { id: "p", name: "Praca" },
+      { id: "b", name: "Budowa", parentId: "p" },
+      { id: "e", name: "Etap 1", parentId: "b" },
+    ];
+    const at = (folderId: string | null) => (q: string) =>
+      matchesClauses(note({ folderId }), parseSearchQuery(q).clauses, { folders, now: NOW });
+    expect(at("b")("ścieżka:Praca/Budowa")).toBe(true);
+    expect(at("b")('sciezka:"praca / budowa"')).toBe(true);
+    expect(at("b")("ścieżka:Praca")).toBe(false);
+    expect(at("e")("ścieżka:Praca/Budowa")).toBe(false);
+    expect(at(null)("ścieżka:Praca")).toBe(false);
+    expect(at("e")("-ścieżka:Praca")).toBe(true);
+  });
+});
