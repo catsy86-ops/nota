@@ -2213,3 +2213,25 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - `e2e/note-links.spec.ts`, `e2e/wikilinks.spec.ts`: bez zmian, przechodzą (linki zwrotne i wzmianki na xl są w panelu).
 - **Commit:** `40b25bb`, 2026-10-24.
 
+## Sieć wiedzy — podział czytnika: Ctrl+klik otwiera notatkę „Obok” (Faza 3.7, 2026-10-24)
+
+- **Co robi:** na szerokim ekranie (od xl, nie w prezentacji) Ctrl+klik (Cmd na Macu) na `[[link]]` w treści czytanej notatki nie przenosi czytnika, tylko otwiera tę notatkę w zakładce **Obok** bocznego panelu. Czytana notatka zostaje na miejscu, a zakładka przełącza się sama. Zakładka pokazuje tytuł (klik otwiera notatkę w czytniku), treść renderowaną jak w czytniku i przycisk zamknięcia. Zwykły klik nadal przechodzi do notatki.
+- **Gdzie jest:**
+  - `src/lib/viewPrefs.ts` — pole `readerSplitId: string | null` (stan w viewPrefs, zgodnie z planem); wpis w `VIEW_PREF_LABELS` („panel obok w czytniku”).
+  - `src/hooks/useReaderNav.ts` — `splitNote` (notatka z `readerSplitId`, bez prywatnych i bez tej, którą już czytasz) i `setSplit`.
+  - `src/pages/Index.tsx` — przekazuje `splitNote` i `onSplit` do `NoteReader`.
+  - `src/components/NoteReader.tsx` — `splitClickRef` (ostatni klik miał Ctrl/Cmd; zapisywany przez `onClickCapture` na treści i na panelu), w `handleWiki` gałąź Ctrl+klik, zakładka `split` w `SIDE_TABS`, panel z `data-split-note`.
+- **Jak działa i dlaczego:**
+  - Podział to panel, nie drugi czytnik. Czytnik jest nakładką z własnym tłem, historią (`useOverlayHistory`) i klawiaturą; dwie nakładki obok siebie wymagałyby przebudowy tego wszystkiego. Panel daje „dwie notatki obok siebie” bez ryzyka dla klawiatury i historii.
+  - Ctrl wykrywa się w fazie capture (`onClickCapture`), bo `WikiLink` przekazuje do `onWikiClick` tylko tekst, bez zdarzenia.
+  - Stan w viewPrefs przeżywa przeładowanie. Odczyt sprawdza `typeof`, więc uszkodzony zapis to brak notatki, a nie błąd.
+- **Ograniczenia i pułapki:**
+  - Tylko jedna notatka obok (nie lista kart). Karty (kilka notatek w pasku) to osobny krok, jeśli będzie potrzebny.
+  - Na węższym ekranie Ctrl+klik działa jak zwykły klik (brak panelu).
+  - Klik w link w panelu „Obok” przenosi czytaną notatkę (nie zmienia panelu) — zwykły klik, bez Ctrl.
+  - Konspekt nadal w treści, nie w panelu (jak w 3.6).
+- **Testy:**
+  - `e2e/reader-side-panel.spec.ts`: Ctrl+klik na `[[Plan]]` przełącza na „Obok”, pokazuje „Cel”, a „Zakupy” zostaje czytana.
+  - `src/hooks/useFilteredNotes.test.ts` i `viewPrefs` (typy): dopisane pole `readerSplitId`.
+- **Commit:** `47c93fe`, 2026-10-24.
+
