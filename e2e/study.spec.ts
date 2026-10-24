@@ -649,6 +649,13 @@ test("dziennik: raport budowy z godzinami z Grafiku — udostępnij, kopiuj, do 
   await expect(summary).toContainText("4 wpisy");
   await dialog.getByRole("combobox", { name: "Budowa raportu" }).selectOption({ label: "Lipowa 5" });
 
+  // „Poprzedni miesiąc” (1.8 planu Praca 2026-10-24): wrzesień bez wpisów, potem z powrotem 7 dni.
+  await dialog.getByRole("button", { name: "Poprzedni miesiąc" }).click();
+  await expect(dialog.getByRole("button", { name: "Poprzedni miesiąc" })).toHaveAttribute("aria-pressed", "true");
+  await expect(dialog.locator("[data-report-day]")).toHaveCount(0);
+  await dialog.getByRole("button", { name: "7 dni" }).click();
+  await expect(summary).toHaveText("3 wpisy · godziny pracy: 10 h · otwarte problemy: 1");
+
   await dialog.getByRole("button", { name: /Udostępnij/ }).click();
   const shared = await page.evaluate(() => (window as unknown as { __shared: ShareData }).__shared);
   expect(shared.title).toBe("Raport: Lipowa 5 — 8–14 października 2026");

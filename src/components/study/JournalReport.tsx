@@ -20,7 +20,8 @@ import { topicTitle } from "@/lib/study/content";
 import { saveBoss, saveGroup, useStudy, type Boss, type JournalEntry, type SiteInfo, type WaGroup } from "@/lib/study/store";
 import { formatPhone, whatsappUrl } from "@/lib/study/boss";
 import { entrySiteId } from "@/lib/study/sites";
-import { buildJournalReport, dayKeyOf, reportSummary, workLine, workMinutesOf, reportText, reportWhatsApp, shiftKey, type JournalReport as Report } from "@/lib/study/report";
+import { buildJournalReport, dayKeyOf, reportSummary, workLine, workMinutesOf, reportText, reportWhatsApp, type JournalReport as Report } from "@/lib/study/report";
+import { presetOf, presetRange, REPORT_PRESETS } from "@/lib/study/reportPresets";
 import { entryHeadline } from "@/lib/study/journalView";
 import { shortageLine } from "@/lib/study/shortages";
 import { PrintRoot } from "./PrintRoot";
@@ -30,30 +31,6 @@ import { KindIcon } from "./JournalEntrySheet";
 
 /** Ile zdjęć dołączać do „Udostępnij” — komunikatory i tak tną więcej. */
 const SHARE_MAX_FILES = 10;
-
-type Preset = "today" | "yesterday" | "week" | "month" | "custom";
-const PRESETS: { value: Preset; label: string }[] = [
-  { value: "today", label: "Dziś" },
-  { value: "yesterday", label: "Wczoraj" },
-  { value: "week", label: "7 dni" },
-  { value: "month", label: "Ten miesiąc" },
-  { value: "custom", label: "Wybierz" },
-];
-
-function presetRange(p: Exclude<Preset, "custom">, today: string): [string, string] {
-  if (p === "today") return [today, today];
-  if (p === "yesterday") { const y = shiftKey(today, -1); return [y, y]; }
-  if (p === "week") return [shiftKey(today, -6), today];
-  return [`${today.slice(0, 8)}01`, today];
-}
-
-function presetOf(from: string, to: string, today: string): Preset {
-  for (const p of ["today", "yesterday", "week", "month"] as const) {
-    const [a, b] = presetRange(p, today);
-    if (a === from && b === to) return p;
-  }
-  return "custom";
-}
 
 const fieldClass =
   "h-9 min-w-0 w-full rounded-md border border-input bg-background px-2 text-base focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 md:text-sm";
@@ -209,7 +186,7 @@ export function JournalReportDialog({
               </select>
             </label>
             <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none]" role="group" aria-label="Okres raportu">
-              {PRESETS.map((p) => {
+              {REPORT_PRESETS.map((p) => {
                 const on = p.value === "custom" ? showDates : !custom && preset === p.value;
                 return (
                   <button
