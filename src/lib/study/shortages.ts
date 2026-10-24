@@ -48,6 +48,10 @@ const clip = (v: unknown, max: number) => (typeof v === "string" ? v.trim().repl
 /**
  * Dowolne wejście z dokumentu → lista braków (najwyżej `SHORTAGES_MAX`, w kolejności wejścia) i liczba
  * poprawnych pozycji, których nie weszło przez limit. `list` = `undefined` dla karty bez listy.
+ * Ponad limitem zostaje 40 najnowszych: najpierw odpadają dostarczone (od najdawniej zmienionych), potem
+ * najstarsze (`at`) — decyzja 24.10, 1.12 planu Praca. Przycinanie jest tylko w odczycie: zapis listy
+ * zapisuje różnicę względem widocznej listy (`writeListItems`), więc ukryte pozycje zostają w dokumencie.
+ * Starsza wersja aplikacji przycina odwrotnie (pierwsze 40 w kolejności wejścia) — też tylko w odczycie.
  */
 export function cleanShortagesCounted(raw: unknown): { list: Shortage[] | undefined; dropped: number } {
   if (!Array.isArray(raw)) return { list: undefined, dropped: 0 };
@@ -60,7 +64,6 @@ export function cleanShortagesCounted(raw: unknown): { list: Shortage[] | undefi
     const text = clip(s.text, SHORTAGE_TEXT_MAX);
     if (typeof s.id !== "string" || !s.id || s.id.length > 40 || seen.has(s.id) || !text) continue;
     seen.add(s.id);
-    if (out.length >= SHORTAGES_MAX) { dropped++; continue; }
     out.push({
       id: s.id,
       text,
@@ -70,6 +73,17 @@ export function cleanShortagesCounted(raw: unknown): { list: Shortage[] | undefi
       ...(typeof s.changed === "number" && Number.isFinite(s.changed) ? { changed: s.changed } : {}),
       ...(typeof s.due === "number" && Number.isFinite(s.due) ? { due: s.due } : {}),
     });
+  }
+  if (out.length > SHORTAGES_MAX) {
+    dropped = out.length - SHORTAGES_MAX;
+    const order = (x: Shortage) => [x.status === "delivered" ? 0 : 1, x.status === "delivered" ? x.changed ?? x.at : x.at] as const;
+    const gone = new Set(
+      [...out]
+        .sort((a, b) => { const [ga, ta] = order(a); const [gb, tb] = order(b); return ga - gb || ta - tb || (a.id < b.id ? -1 : 1); })
+        .slice(0, dropped)
+        .map((x) => x.id),
+    );
+    return { list: out.filter((x) => !gone.has(x.id)), dropped };
   }
   return { list: out, dropped };
 }

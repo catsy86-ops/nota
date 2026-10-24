@@ -1818,12 +1818,13 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/components/study/JournalEntrySheet.tsx` (alt z indeksem); `src/components/study/StudyJournal.tsx` (`coarse:h-11` w pustym stanie).
 - **Testy:** `e2e/touch-targets.spec.ts` — nowy test „praca: zakładki działu i „Dodaj wpis”” (@mobile), pełny plik 3/3; `e2e/journal-photos.spec.ts` przechodzi.
 
-## Praca — limit braków: charakteryzacja i widoczność (Faza 2.1–2.2, 2026-10-22)
+## Praca — limit braków: 40 najnowszych (Faza 2.1–2.2 z 2026-10-22, 1.12 planu 2026-10-24)
 
-- **Co robi:** pełna lista braków (40) pokazuje komunikat, co zrobić, zamiast ukrywać formularz bez wyjaśnienia. `cleanShortagesCounted` zwraca listę i liczbę pozycji, które nie weszły przez limit.
-- **Zachowanie utrwalone testami:** składanie list nie przycina (41 pozycji zostaje posortowanych po czasie); czyszczenie zostawia 40 pierwszych w kolejności wejścia (najstarsze), najnowsze się nie zapisują.
-- **Ograniczenie:** licznik `dropped` jest liczony, ale nie jest jeszcze pokazywany w UI dla pozycji od innego urządzenia. Decyzja „zostawić najstarsze czy najnowsze” czeka na właściciela.
-- **Testy:** `src/lib/study/shortages.test.ts`, `src/lib/study/siteItems.test.ts`, `src/components/study/SiteShortagesPanel.test.tsx` (pełna lista); `e2e/site-shortages.spec.ts` 3/3.
+- **Co robi:** budowa pokazuje najwyżej 40 braków. Gdy w dokumencie jest więcej (np. dopisane na dwóch telefonach naraz), zostaje 40 najnowszych: najpierw chowają się dostarczone (od najdawniej zmienionych, `changed`, inaczej `at`), dopiero potem najstarsze (`at`). Widoczne zostają w swojej kolejności. Pełna lista (40) zamiast pola dodawania pokazuje „Lista pełna (40). Usuń dostarczone…”, a nadmiar — „Ponad 40 braków: N nie widać — najpierw chowają się dostarczone, potem najstarsze”. Decyzja właściciela z 24.10 (wcześniej zostawało 40 pierwszych w kolejności wejścia, czyli najstarsze).
+- **Gdzie:** `cleanShortagesCounted` w `src/lib/study/shortages.ts` (lista + `dropped`); `droppedShortages` w `store.ts` liczy nadmiar z surowego dokumentu (`shortagesDropped`); komunikaty w `SiteShortagesPanel.tsx`.
+- **Dlaczego bezpieczne dla danych:** przycinanie jest tylko w odczycie. Składanie list z mapy (`composeSiteLists`) nie przycina, a zapis listy (`setSiteShortages` → `writeListItems`) zapisuje różnicę względem listy widocznej w panelu i kasuje tylko pozycje, które w niej były — ukryte zostają w dokumencie i wracają po usunięciu innych. Starsza wersja aplikacji przycina odwrotnie (pierwsze 40), ale też tylko w odczycie, więc obie wersje nie kasują sobie pozycji.
+- **Ograniczenia:** dodanie nowego braku przy pełnej liście jest dalej zablokowane (`addShortage`, dyktowanie liczy odrzucone); reguła „najnowsze” dotyczy tylko nadmiaru z dokumentu. Kopia zapasowa zapisuje listę po przycięciu.
+- **Testy:** `src/lib/study/shortages.test.ts` („limit 40 zostawia najnowsze”: najstarszy odpada, dostarczone przed najstarszymi; `cleanShortagesCounted`), `src/lib/study/siteItems.test.ts` (składanie nie przycina), `src/components/study/SiteShortagesPanel.test.tsx` (pełna lista, licznik ukrytych); `e2e/site-shortages.spec.ts`.
 
 ## Praca — porządki w stanie danych (Faza 2.3–2.5, 2026-10-22)
 
@@ -1834,9 +1835,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 
 ## Praca — licznik braków ukrytych ponad limit (Faza 2.2, 2026-10-22)
 
-- **Co robi:** gdy budowa ma więcej niż 40 braków (także od innego urządzenia), panel pokazuje ostrzeżenie z liczbą ukrytych pozycji i wyjaśnieniem, że nie widać najnowszych.
+- **Co robi:** gdy budowa ma więcej niż 40 braków (także od innego urządzenia), panel pokazuje ostrzeżenie z liczbą ukrytych pozycji i wyjaśnieniem, które się chowają (dostarczone, potem najstarsze — patrz „limit braków: 40 najnowszych”).
 - **Gdzie:** `src/lib/study/store.ts` (`droppedShortages`, `getStudy` dokłada `shortagesDropped`); `src/lib/study/yStudy.ts` (pole pochodne w `StudyState`, nie zapisywane); `src/components/study/SiteShortagesPanel.tsx`.
-- **Ograniczenie:** licznik policzony z dokumentu przed przycięciem; zostają najstarsze 40 (decyzja o najnowszych czeka na właściciela).
+- **Ograniczenie:** licznik policzony z dokumentu przed przycięciem.
 - **Testy:** `src/components/study/SiteShortagesPanel.test.tsx` (ostrzeżenie); `src/lib/study` 352/352 razem z panelem.
 
 ## Praca — reguły arkusza wpisu wydzielone (Faza 2.4, 2026-10-22)

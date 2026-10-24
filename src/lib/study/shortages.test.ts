@@ -138,12 +138,28 @@ describe("spokenShortageLabel", () => {
   });
 });
 
-describe("cleanShortages — limit 40 (charakteryzacja)", () => {
-  it("przy 41 poprawnych pozycjach zostaje 40 pierwszych w kolejności wejścia", () => {
-    const raw = Array.from({ length: 41 }, (_, i) => ({ id: `b${i + 1}`, text: `Brak ${i + 1}`, qty: "", status: "missing", at: i + 1 }));
-    const out = cleanShortages(raw) ?? [];
+describe("cleanShortages — limit 40 zostawia najnowsze (1.12 planu Praca 2026-10-24)", () => {
+  const item = (i: number, extra: Record<string, unknown> = {}) => ({ id: `b${i}`, text: `Brak ${i}`, qty: "", status: "missing", at: i, ...extra });
+
+  it("przy 41 brakujących odpada najstarszy, kolejność zostaje", () => {
+    const out = cleanShortages(Array.from({ length: 41 }, (_, i) => item(i + 1))) ?? [];
     expect(out).toHaveLength(40);
-    expect(out.at(-1)?.id).toBe("b40");
+    expect(out[0].id).toBe("b2");
+    expect(out.at(-1)?.id).toBe("b41");
+  });
+
+  it("najpierw odpadają dostarczone — od najdawniej zmienionych — dopiero potem najstarsze", () => {
+    const raw = Array.from({ length: 42 }, (_, i) => item(i + 1));
+    raw[29] = item(30, { status: "delivered", changed: 500 });
+    raw[39] = item(40, { status: "delivered", changed: 100 });
+    raw[40] = item(41, { status: "delivered", changed: 900 });
+    const { list, dropped } = cleanShortagesCounted(raw);
+    expect(dropped).toBe(2);
+    const ids = (list ?? []).map((x) => x.id);
+    expect(ids).not.toContain("b40");
+    expect(ids).not.toContain("b30");
+    expect(ids).toContain("b41");
+    expect(ids).toContain("b1");
   });
 });
 

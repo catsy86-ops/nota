@@ -153,7 +153,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
       )}
 
       {dropped > 0 && (
-        <p role="status" className="text-xs text-warning-ink">Ponad {SHORTAGES_MAX} braków: {dropped} {pluralPl(dropped, ["brak", "braki", "braków"])} nie widać (najnowsze). Usuń dostarczone, żeby zrobić miejsce.</p>
+        <p role="status" className="text-xs text-warning-ink">Ponad {SHORTAGES_MAX} braków: {dropped} {pluralPl(dropped, ["brak", "braki", "braków"])} nie widać — najpierw chowają się dostarczone, potem najstarsze. Usuń zbędne pozycje, żeby wróciły.</p>
       )}
       {list.length >= SHORTAGES_MAX && (
         <p className="text-xs text-muted-foreground">Lista pełna ({SHORTAGES_MAX}). Usuń dostarczone, żeby dodać nowe braki.</p>
