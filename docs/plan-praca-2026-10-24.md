@@ -169,3 +169,4 @@ Etap 5 iść równolegle albo przed Etapem 1, jeśli ruszamy arkusz wpisu.
 ## Status
 
 - 2026-10-24: plan zapisany; decyzje: Dziennik budowy przed Nauką, limit braków zostawia najnowsze 40, model danych odłożony.
+- 2026-10-24: **Etap 0 zrobiony** — 0.1 `62c8aa1`, 0.2 `f668fc9`, 0.3 `e771615`, 0.4 `6b729dc`, 0.5 `3483967`, 0.6 `b0023bd` (helper `downloadBlob` objął też kopię zapasową, notatkę `.md` i kod skarbca). e2e Praca + bundle: 62/62. Następnie: 5.1–5.3, potem Etap 1.
