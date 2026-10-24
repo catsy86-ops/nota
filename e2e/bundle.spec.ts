@@ -54,7 +54,7 @@ test("heavy optional libraries stay out of the eager page load @smoke", async ()
   expect(chunksMatching(eager, /ZodError/), "zod (noteSchema) only loads for import/backup").toEqual([]);
   expect(chunksMatching(eager, /transferControlToOffscreen/), "canvas-confetti loads on the first effect").toEqual([]);
   expect(chunksMatching(eager, /rdp-months/), "react-day-picker loads with the date picker").toEqual([]);
-  expect(chunksMatching(eager, /Pattern length exceeds max of/), "fuse.js loads in idle time / on first search").toEqual([]);
+  expect(chunksMatching(eager, /Levenshtein matrix/), "minisearch loads in idle time / on first search").toEqual([]);
   expect(chunksMatching(eager, /PERTAL²/), "study material (content.ts) loads with the Nauka view").toEqual([]);
   // L17 (przegląd 2026-10-20): nowe działy i ich ciężkie części muszą być leniwe.
   expect(chunksMatching(eager, /Pobrano obraz grafiku/), "obraz miesiąca (canvas/share) loads on click").toEqual([]);

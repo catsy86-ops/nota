@@ -1,10 +1,14 @@
 import { propDisplayText, propValueFor, type NoteProps, type PropDef } from "@/lib/noteProps";
+import { extractWikiLinks } from "@/lib/wikiLinks";
 
 /**
- * Parser zapytania wyszukiwarki — czysty, bez zależności od React ani Fuse.
+ * Parser zapytania wyszukiwarki — czysty, bez zależności od React ani silnika tekstowego.
  *
  * Operatory (wielkość liter i polskie znaki nie mają znaczenia):
  *   etykieta:x  label:x       folder:x        color:x
+ *   alias:x                   (notatka ma alias x)
+ *   link:x                    (notatka linkuje [[x]] — do „x” prowadzi wikilink)
+ *   zadanie:otwarte           (to samo co lista:otwarte)
  *   ma:przypomnienie  ma:obraz  ma:lista     (has:reminder / image / checklist)
  *   brak:przypomnienia
  *   przypięte
@@ -15,11 +19,13 @@ import { propDisplayText, propValueFor, type NoteProps, type PropDef } from "@/l
  *                             wartość ze spacją: pole:"Status=w toku")
  *   -operator:wartość         (negacja, np. -etykieta:praca)
  * Wartość ze spacją w cudzysłowie: etykieta:"moja praca". Wiele operatorów = AND.
- * Nieznany operator i wszystko inne to zwykły tekst dla Fuse.
+ * Nieznany operator i wszystko inne to zwykły tekst dla silnika tekstowego.
  */
 
 export type Clause =
   | { type: "label"; value: string }
+  | { type: "alias"; value: string }
+  | { type: "link"; value: string }
   | { type: "folder"; value: string }
   | { type: "color"; value: string }
   | { type: "reminder" }
@@ -39,7 +45,7 @@ export type Clause =
 
 export interface ParsedQuery {
   clauses: Clause[];
-  /** Reszta zapytania — idzie do Fuse. */
+  /** Reszta zapytania — idzie do silnika tekstowego (`searchNotes`). */
   text: string;
 }
 
@@ -84,6 +90,10 @@ function clauseFor(key: string, rawValue: string): Clause | null {
   switch (key) {
     case "etykieta": case "label":
       return { type: "label", value };
+    case "alias":
+      return { type: "alias", value };
+    case "link": case "odnosnik":
+      return { type: "link", value };
     case "folder":
       return { type: "folder", value };
     case "color": case "kolor":
@@ -111,7 +121,7 @@ function clauseFor(key: string, rawValue: string): Clause | null {
       const want = eq < 0 ? "" : value.slice(eq + 1).trim();
       return { type: "prop", name, value: want || undefined };
     }
-    case "lista":
+    case "lista": case "zadanie": case "task":
       if (["otwarte", "otwarta", "open"].includes(v)) return { type: "openList" };
       return null;
     case "starsze": case "older": {
@@ -156,6 +166,9 @@ export function highlightTokens(query: string | undefined): string[] {
 
 export interface MatchNote {
   labels: string[];
+  /** Potrzebne operatorom `alias:` i `link:`. */
+  aliases?: string[];
+  content?: string;
   color: string;
   folderId: string | null;
   reminder: number | null;
@@ -207,6 +220,8 @@ export function matchesClauses(note: MatchNote, clauses: Clause[], ctx: MatchCon
       case "noLabel": return note.labels.length === 0;
       case "noFolder": return !note.folderId;
       case "label": { const v = fold(c.value); return note.labels.some((l) => fold(l) === v); }
+      case "alias": { const v = fold(c.value); return (note.aliases ?? []).some((a) => fold(a) === v); }
+      case "link": { const v = fold(c.value); return extractWikiLinks(note.content ?? "").some((t) => fold(t) === v); }
       case "folder": return !!note.folderId && folderIdsByName(c.value, ctx.folders ?? []).has(note.folderId);
       case "color": return fold(note.color) === fold(c.value);
       case "reminder": return !!note.reminder;

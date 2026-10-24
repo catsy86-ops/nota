@@ -11,7 +11,7 @@ import { noteSchema } from "@/lib/noteSchema";
 import { VaultError, looksLikeVaultToken } from "@/lib/vault";
 import type { Note } from "@/hooks/useNotes";
 
-// Fuse ładuje się osobno — wyszukiwanie w testach ma być rozmyte jak w aplikacji.
+// MiniSearch ładuje się osobno — wyszukiwanie w testach ma być rozmyte jak w aplikacji.
 beforeAll(() => loadSearchIndex());
 
 const IT = 1000;

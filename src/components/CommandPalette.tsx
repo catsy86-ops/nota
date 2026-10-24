@@ -85,7 +85,7 @@ export function CommandPalette({
   // Notatki prywatne nie pojawiają się w palecie (ani tytułem, ani treścią) — także po odblokowaniu.
   const publicNotes = useMemo(() => notes.filter((n) => !n.locked), [notes]);
   const searchReady = useSearchReady();
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- `searchReady`: przeliczenie po wczytaniu Fuse
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `searchReady`: przeliczenie po wczytaniu silnika
   const matched = useMemo(() => searchNotes(publicNotes, search, { folders }), [publicNotes, search, folders, searchReady]);
   const vault = useVault();
   const shifts = useShifts();
@@ -252,7 +252,7 @@ export function CommandPalette({
             {/* Filtruje `searchNotes` (ten sam silnik co pasek wyszukiwania, z
                 checklistami i operatorami), a dopiero potem tniemy — inaczej
                 paleta widziałaby tylko 30 najnowszych notatek. `forceMount`, bo
-                wynik Fuse nie musi przejść wewnętrznego filtra cmdk. */}
+                wynik wyszukiwania nie musi przejść wewnętrznego filtra cmdk. */}
             <CommandGroup
               heading={matched.length > NOTE_LIMIT ? `Notatki — pokazano ${NOTE_LIMIT} z ${matched.length}` : "Notatki"}
               forceMount={matched.length > 0}

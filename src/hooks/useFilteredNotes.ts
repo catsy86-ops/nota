@@ -88,7 +88,7 @@ function sortNotes(list: Note[], prefs: ViewPrefs, opened: LastOpenedMap, propDe
 
 /** Pure filter/sort pipeline: view + label/folder + prefs + search + sort, split into pinned/others. */
 export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs, propDefs = [] }: FilterArgs) {
-  // Search rebuilds a fresh Fuse index over the filtered pool on every call —
+  // Search runs over the shared MiniSearch index (synced incrementally, see searchNotes.ts) —
   // fine for hundreds of notes, but worth memoizing so it only reruns when
   // an input actually changes, not on every unrelated re-render (typing
   // elsewhere, a note being edited, etc.).
@@ -98,7 +98,7 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
   // Granice „Dziś” i „Ten tydzień” liczy filtr — po północy i po powrocie do karty
   // muszą się przeliczyć mimo niezmienionych notatek.
   const dayTick = useDayClock();
-  // Fuse poza główną paczką: wczytujemy w wolnej chwili, a po dojściu wyniki się przeliczają.
+  // MiniSearch poza główną paczką: wczytujemy w wolnej chwili, a po dojściu wyniki się przeliczają.
   const searchReady = useSearchReady();
   useEffect(() => {
     if (searchReady) return;
@@ -109,7 +109,7 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
   }, [searchReady]);
   return useMemo(() => {
     // Kalendarz rysuje własną projekcję (`expandOccurrences`) i nie korzysta
-    // z siatki notatek — nie ma po co filtrować ani budować indeksu Fuse.
+    // z siatki notatek — nie ma po co filtrować ani przeszukiwać indeksu.
     if (view === "calendar" || view === "shifts" || view === "study" || view === "debts" || view === "cwiczenia") return { displayNotes: [], pinned: [], others: [], elsewhere: NO_ELSEWHERE };
 
     const baseNotes = view === "archive"
@@ -149,7 +149,7 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
     };
 
     return { displayNotes, pinned, others, elsewhere };
-    // `dayTick` i `searchReady` nie są czytane w środku — wymuszają przeliczenie granic „Dziś” i wyników po wczytaniu Fuse.
+    // `dayTick` i `searchReady` nie są czytane w środku — wymuszają przeliczenie granic „Dziś” i wyników po wczytaniu silnika.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search, prefs, opened, dayTick, searchReady]);
 }

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import type Fuse from "fuse.js";
+import type MiniSearch from "minisearch";
 import type { Note } from "@/hooks/useNotes";
 import { parseSearchQuery, matchesClauses, fold, type MatchFolder } from "@/lib/searchQuery";
 import type { PropDef } from "@/lib/noteProps";
@@ -13,20 +13,20 @@ export interface SearchContext {
 }
 
 /**
- * Fuse ładuje się osobno (poza główną paczką): w wolnej chwili po starcie albo przy pierwszym
+ * MiniSearch ładuje się osobno (poza główną paczką): w wolnej chwili po starcie albo przy pierwszym
  * wyszukiwaniu. Do tego czasu tekst jest dopasowywany dokładnie (bez ogonków i wielkości liter),
  * a `useSearchReady` przelicza wyniki, gdy biblioteka dojdzie.
  */
-let FuseLib: typeof Fuse | null = null;
-let fuseLoading: Promise<void> | null = null;
+let Engine: typeof MiniSearch | null = null;
+let engineLoading: Promise<void> | null = null;
 const readyListeners = new Set<() => void>();
 
 export function loadSearchIndex(): Promise<void> {
-  fuseLoading ??= import("fuse.js").then((m) => {
-    FuseLib = m.default;
+  engineLoading ??= import("minisearch").then((m) => {
+    Engine = m.default;
     readyListeners.forEach((l) => l());
   });
-  return fuseLoading;
+  return engineLoading;
 }
 
 function subscribeReady(cb: () => void) {
@@ -36,10 +36,10 @@ function subscribeReady(cb: () => void) {
 
 /** `true`, gdy wyszukiwanie rozmyte jest gotowe — w zależnościach `useMemo` z `searchNotes`. */
 export function useSearchReady(): boolean {
-  return useSyncExternalStore(subscribeReady, () => FuseLib !== null, () => false);
+  return useSyncExternalStore(subscribeReady, () => Engine !== null, () => false);
 }
 
-/** Przed załadowaniem Fuse: każde słowo musi wystąpić w tytule, treści, etykietach albo liście. */
+/** Przed załadowaniem silnika: każde słowo musi wystąpić w tytule, treści, etykietach albo liście. */
 function exactHits(source: Note[], words: string[]): Note[] {
   return source.filter((n) => {
     if (n.locked) return false;
@@ -49,48 +49,121 @@ function exactHits(source: Note[], words: string[]): Note[] {
 }
 
 /**
- * Indeks Fuse jest drogi (przechodzi całą treść), a zapytanie zmienia się co znak —
- * stąd jeden indeks na tablicę notatek. `useNotes` zachowuje tożsamość tablicy,
- * dopóki nic się nie zmieni, więc kolejne znaki w wyszukiwarce tylko szukają.
+ * Dokument indeksu: każde pole osobno, żeby MiniSearch liczył trafność per pole (tytuł waży więcej
+ * niż treść). Aliasy, etykiety i pozycje listy to teksty złączone znakiem nowej linii.
  */
-const indexCache = new WeakMap<Note[], Fuse<Note>>();
+interface IndexDoc {
+  id: string;
+  title: string;
+  aliases: string;
+  labels: string;
+  checklist: string;
+  content: string;
+}
 
-function indexFor(source: Note[], Fuse: typeof import("fuse.js").default): Fuse<Note> {
-  let fuse = indexCache.get(source);
-  if (!fuse) {
-    // Notatki prywatne nie biorą udziału w wyszukiwaniu tekstu — nawet po odblokowaniu skarbca.
-    fuse = new Fuse(source.filter((n) => !n.locked), {
-      keys: [
-        { name: "title", weight: 0.5 },
-        { name: "content", weight: 0.3 },
-        { name: "labels", weight: 0.2 },
-        // Pozycje checklisty to treść jak każda inna — zadanie zapisane tylko
-        // w liście musi dać się znaleźć.
-        { name: "checklist.text", weight: 0.3 },
-      ],
-      threshold: 0.38,
-      ignoreLocation: true,
-      includeScore: true,
-      // Indeks bez ogonków i wielkości liter: „zolta” znajduje „żółta”.
-      getFn: (obj, path) => {
-        const v = Fuse.config.getFn(obj, path);
-        // Dla tablic (etykiety, pozycje listy) Fuse oddaje albo teksty, albo `{ v, i }`.
-        const f = (s: unknown) => (typeof s === "string" ? fold(s) : s && typeof s === "object" && "v" in s ? { ...(s as { v: string; i: number }), v: fold((s as { v: string }).v) } : s);
-        return (Array.isArray(v) ? v.map(f) : f(v)) as never;
-      },
-    });
-    indexCache.set(source, fuse);
-  }
-  return fuse;
+const FIELDS: (keyof Omit<IndexDoc, "id">)[] = ["title", "aliases", "labels", "checklist", "content"];
+
+/** Waga pól przy trafności (BM25 per pole, sumowane). */
+const BOOST: Record<(typeof FIELDS)[number], number> = { title: 4, aliases: 3, labels: 2, checklist: 1.5, content: 1 };
+
+/**
+ * Podział na słowa po zdjęciu ogonków: „Żółta, kartka” → `zolta`, `kartka`. Ten sam podział
+ * dotyczy zapytania, więc „zolta” trafia w „żółta”, a „kupić” w „kupic”.
+ */
+function tokenize(text: string): string[] {
+  return fold(text).split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+}
+
+function toDoc(n: Note): IndexDoc {
+  return {
+    id: n.id,
+    title: n.title,
+    aliases: (n.aliases ?? []).join("\n"),
+    labels: n.labels.join("\n"),
+    checklist: (n.checklist ?? []).map((c) => c.text).join("\n"),
+    content: n.content,
+  };
+}
+
+function sameDoc(a: IndexDoc, b: IndexDoc): boolean {
+  return FIELDS.every((f) => a[f] === b[f]);
 }
 
 /**
- * Wyszukiwanie: operatory (patrz `searchQuery.ts`) zawężają pulę, a reszta
- * tekstu jest dopasowywana rozmyto do tytułu/treści/etykiet/pozycji listy.
+ * Dokument policzony raz na obiekt notatki: kolejne widoki (archiwum, kosz, kafle) dostają te same
+ * obiekty, więc nie sklejamy pól od nowa przy każdym renderze. Zmieniona notatka to nowy obiekt.
+ */
+const docCache = new WeakMap<Note, IndexDoc>();
+function docOf(n: Note): IndexDoc {
+  let doc = docCache.get(n);
+  if (!doc) { doc = toDoc(n); docCache.set(n, doc); }
+  return doc;
+}
+
+/**
+ * Jeden indeks dla wszystkich notatek, dokładany przyrostowo: przy zmianie tablicy porównujemy każdą
+ * notatkę z tym, co już jest w indeksie, i przebudowujemy tylko zmienione dokumenty. Dzięki temu
+ * edycja jednej notatki nie buduje całości od nowa, a widoki (archiwum, kosz, pasek boczny) dzielą
+ * ten sam indeks. Wyniki są zawężane do tablicy wywołania (`source`), więc notatki z kosza nie
+ * wypływają w widoku notatek.
+ */
+interface IndexState {
+  engine: MiniSearch<IndexDoc>;
+  /** Id → dokument w indeksie (do porównania przy następnej synchronizacji). */
+  docs: Map<string, IndexDoc>;
+  /** Id → notatka z ostatniej synchronizowanej tablicy (zamiana trafień na obiekty). */
+  byId: Map<string, Note>;
+  source: Note[] | null;
+}
+
+let state: IndexState | null = null;
+
+/**
+ * Doprowadza indeks do stanu `source`. Notatki zablokowane (prywatne) są z indeksu usuwane, a po
+ * odblokowaniu wracają przy najbliższej synchronizacji, bo zmiana `locked` zmienia tablicę wejściową.
+ */
+function syncIndex(source: Note[]): IndexState {
+  if (!state) {
+    const Ctor = Engine!;
+    state = {
+      engine: new Ctor<IndexDoc>({
+        fields: FIELDS,
+        storeFields: [],
+        idField: "id",
+        tokenize,
+        searchOptions: { prefix: true, fuzzy: 0.2, combineWith: "AND", boost: BOOST },
+      }),
+      docs: new Map(),
+      byId: new Map(),
+      source: null,
+    };
+  }
+  if (state.source === source) return state;
+  const s = state;
+  s.source = source;
+  s.byId = new Map();
+  for (const n of source) {
+    s.byId.set(n.id, n);
+    const prev = s.docs.get(n.id);
+    if (n.locked) {
+      if (prev) { s.engine.discard(n.id); s.docs.delete(n.id); }
+      continue;
+    }
+    const doc = docOf(n);
+    if (prev === doc || (prev && sameDoc(prev, doc))) continue;
+    if (prev) s.engine.replace(doc);
+    else s.engine.add(doc);
+    s.docs.set(n.id, doc);
+  }
+  return s;
+}
+
+/**
+ * Wyszukiwanie: operatory (patrz `searchQuery.ts`) zawężają pulę, a reszta tekstu idzie do indeksu.
+ * Wszystkie słowa muszą wystąpić (AND), kolejność nie ma znaczenia, literówki i prefiksy są dozwolone.
  *
- * `source` — tablica, z której pochodzi `notes` (np. wszystkie notatki, gdy `notes`
- * jest przefiltrowane do folderu). Indeks jest budowany i cache'owany dla niej,
- * a wynik zawężany do `notes`.
+ * `source` — tablica, z której pochodzi `notes` (np. wszystkie notatki, gdy `notes` jest
+ * przefiltrowane do folderu). Wynik jest zawężany do `notes`.
  */
 export function searchNotes(notes: Note[], query: string, ctx: SearchContext = {}, source: Note[] = notes): Note[] {
   const q = query.trim();
@@ -102,27 +175,15 @@ export function searchNotes(notes: Note[], query: string, ctx: SearchContext = {
   const free = text.trim();
   if (!free) return pool;
 
-  // Każde słowo musi się znaleźć (AND) — kolejność słów nie ma znaczenia; trafność = suma wyników.
-  const words = fold(free).split(/\s+/).filter(Boolean);
   let hits: Note[];
-  if (!FuseLib) {
+  if (!Engine) {
     void loadSearchIndex();
-    hits = exactHits(source, words);
-  } else if (words.length <= 1) {
-    hits = indexFor(source, FuseLib).search(words[0] ?? "").map((r) => r.item);
+    hits = exactHits(source, fold(free).split(/\s+/).filter(Boolean));
   } else {
-    const fuse = indexFor(source, FuseLib);
-    const scores = new Map<Note, number>();
-    words.forEach((w, i) => {
-      const found = new Map(fuse.search(w).map((r) => [r.item, r.score ?? 0] as const));
-      if (i === 0) found.forEach((s, n) => scores.set(n, s));
-      else for (const n of [...scores.keys()]) {
-        const s = found.get(n);
-        if (s === undefined) scores.delete(n);
-        else scores.set(n, (scores.get(n) ?? 0) + s);
-      }
-    });
-    hits = [...scores.entries()].sort((a, b) => a[1] - b[1]).map(([n]) => n);
+    const s = syncIndex(source);
+    hits = s.engine.search(free)
+      .map((r) => s.byId.get(String(r.id)))
+      .filter((n): n is Note => n !== undefined);
   }
   if (pool === source) return hits;
   const allowed = new Set(pool);

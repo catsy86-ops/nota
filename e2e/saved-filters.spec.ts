@@ -24,7 +24,7 @@ const search = (page: Page) => page.getByRole("searchbox").first();
 const filters = (page: Page) => page.locator("[data-saved-filters]");
 
 test("zapisany filtr: zapis, użycie z paska, reload i usunięcie", async ({ page }) => {
-  // Każdy test ma świeży kontekst; różne słowa, żeby Fuse nie zlewał obu notatek.
+  // Każdy test ma świeży kontekst; różne słowa, żeby wyszukiwanie rozmyte nie zlewało obu notatek.
   const alpha = "Kalafior";
   const beta = "Rutabaga";
   await addNote(page, alpha);

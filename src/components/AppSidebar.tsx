@@ -111,7 +111,7 @@ export function AppSidebar({
   const { notes, allLabels, folders, renameLabel, removeLabel, addFolder, updateFolder, deleteFolder } = useNotesContext();
   const progressByFolder = useMemo(() => folderProgress(notes, folders), [notes, folders]);
   const { filters, rename: renameFilter, remove: removeFilter } = useSavedFilters();
-  // Liczniki od startu — po wczytaniu Fuse (wyszukiwanie rozmyte) liczone jeszcze raz.
+  // Liczniki od startu — po wczytaniu silnika (wyszukiwanie rozmyte) liczone jeszcze raz.
   const searchReady = useSearchReady();
   const counts = useMemo(
     () => filters.map((f) => searchNotes(notes, f.query, { folders }).length),

@@ -144,10 +144,10 @@ describe("searchNotes — diakrytyki i wiele słów", () => {
   });
 });
 
-// Fuse ładuje się osobno — reszta testów sprawdza wyszukiwanie rozmyte, więc czeka na bibliotekę.
+// Silnik ładuje się osobno — reszta testów sprawdza wyszukiwanie rozmyte, więc czeka na bibliotekę.
 beforeAll(() => loadSearchIndex());
 
-describe("przed wczytaniem Fuse", () => {
+describe("przed wczytaniem silnika", () => {
   it("dopasowuje dokładnie (bez ogonków i wielkości liter), z pominięciem notatek prywatnych", async () => {
     vi.resetModules();
     const fresh = await import("./searchNotes");
@@ -158,5 +158,60 @@ describe("przed wczytaniem Fuse", () => {
     ];
     expect(fresh.searchNotes(notes, "zolt").map((n) => n.id)).toEqual(["a", "b"]);
     expect(fresh.searchNotes(notes, "zolat")).toEqual([]);
+  });
+});
+
+describe("searchNotes — operatory alias, link i zadanie", () => {
+  const notes = [
+    makeNote({ id: "a", title: "Dom", aliases: ["Mieszkanie"], content: "Zobacz [[Budowa|plan]]" }),
+    makeNote({ id: "b", title: "Budowa", content: "Stan prac" }),
+    makeNote({ id: "c", title: "Lista", checklist: [{ id: "x", text: "kupić", checked: false }] }),
+    makeNote({ id: "d", title: "Gotowe", checklist: [{ id: "y", text: "zrobione", checked: true }] }),
+  ];
+
+  it("alias:x znajduje notatkę po aliasie", () => {
+    expect(searchNotes(notes, "alias:mieszkanie").map((n) => n.id)).toEqual(["a"]);
+  });
+
+  it("link:x znajduje notatki linkujące do x (cel bez części po | i #)", () => {
+    expect(searchNotes(notes, "link:budowa").map((n) => n.id)).toEqual(["a"]);
+  });
+
+  it("zadanie:otwarte to to samo co lista:otwarte", () => {
+    expect(searchNotes(notes, "zadanie:otwarte").map((n) => n.id)).toEqual(["c"]);
+    expect(searchNotes(notes, "lista:otwarte").map((n) => n.id)).toEqual(["c"]);
+  });
+});
+
+describe("searchNotes — indeks przyrostowy i wydajność", () => {
+  it("edycja treści zmienia wynik bez przebudowy całości", () => {
+    const before = [makeNote({ id: "p", title: "Pierwsza", content: "stara treść" }), makeNote({ id: "q", title: "Druga" })];
+    expect(searchNotes(before, "ksiezyc").map((n) => n.id)).toEqual([]);
+    const after = [makeNote({ id: "p", title: "Pierwsza", content: "nowy księżyc" }), before[1]];
+    expect(searchNotes(after, "ksiezyc").map((n) => n.id)).toEqual(["p"]);
+    expect(searchNotes(before, "stara").map((n) => n.id)).toEqual(["p"]);
+  });
+
+  it("notatka zablokowana znika z wyników przy kolejnym wywołaniu", () => {
+    const open = [makeNote({ id: "s", title: "Sekret plan" })];
+    expect(searchNotes(open, "sekret").map((n) => n.id)).toEqual(["s"]);
+    const locked = [makeNote({ id: "s", title: "Sekret plan", locked: true })];
+    expect(searchNotes(locked, "sekret")).toEqual([]);
+  });
+
+  it("5000 notatek: zapytanie mieści się w 50 ms po zbudowaniu indeksu", () => {
+    const words = ["zakupy", "plan", "budowa", "faktura", "mleko", "praca", "dom", "lista", "tydzień", "żółta"];
+    const big = Array.from({ length: 5000 }, (_, i) => makeNote({
+      id: `n${i}`,
+      title: `${words[i % 10]} ${words[(i * 7) % 10]} ${i}`,
+      content: Array.from({ length: 20 }, (_, j) => words[(i + j * 3) % 10]).join(" "),
+      updatedAt: i,
+    }));
+    searchNotes(big, "zakupy");
+    const t0 = performance.now();
+    const hits = searchNotes(big, "faktura mleko");
+    const ms = performance.now() - t0;
+    expect(hits.length).toBeGreaterThan(0);
+    expect(ms).toBeLessThan(50);
   });
 });
