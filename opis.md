@@ -1533,7 +1533,7 @@ Poprawki z przeglądu kodu z 2026-10-20 (`code-review-2026-10-20.md`, usunięty 
 
 ## Praca → Dziennik budowy — lista przed wejściem na budowę (2026-10-22)
 
-Co robi: na górze Dziennika karta „Przed wejściem” dla dzisiejszej budowy. Lista stałych punktów (ochrona, narzędzia, materiał, zgłoszenie u kierownika, zawór, miejsce pracy, apteczka) plus punkty z karty budowy, które dziś mają znaczenie: dostęp do bramy, braki, dostawa na dziś, następny etap, otwarte problemy, zgłoszenia serwisowe. Odhaczasz punkty i „Wchodzę” zapisuje godzinę wejścia; karta pokazuje pieczątkę „Wejście 07:12”. Stałą listę można zmienić („Zmień listę”), wspólną dla wszystkich budów; „Przywróć domyślną” cofa do wzorca.
+Co robi: na górze Dziennika karta „Przed wejściem” dla dzisiejszej budowy. Lista stałych punktów (ochrona, narzędzia, materiał, zgłoszenie u kierownika, zawór, miejsce pracy, apteczka) plus punkty z karty budowy, które dziś mają znaczenie: dostęp do bramy, braki, dostawa na dziś, następny etap, otwarte problemy, zgłoszenia serwisowe. Odhaczasz punkty i „Wchodzę” zapisuje godzinę wejścia; karta pokazuje pieczątkę „Wejście 07:12”. „Wchodzę” ustawia też bieżącą budowę (`setSite`), więc następny „+ Wpis” idzie na tę budowę (Etap 0.4 planu 2026-10-24). Stałą listę można zmienić („Zmień listę”), wspólną dla wszystkich budów; „Przywróć domyślną” cofa do wzorca.
 
 Gdzie:
 - `src/lib/study/entryCheck.ts` — czysta logika: `DEFAULT_CHECK_ITEMS`, `siteContextItems` (punkty z karty), `checkStatus`, `toggleCheck`, `enterSite`, `reopenCheck`, `addCheckItem`, `cleanCheckItems`, `cleanRecord`, `keepFrom`, `checkLine`.

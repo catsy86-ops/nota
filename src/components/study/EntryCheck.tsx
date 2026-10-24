@@ -15,7 +15,7 @@ import {
 import {
   enterEntryCheck, reopenEntryCheck, resetEntryCheckItems, saveEntryCheckItems, toggleEntryCheck, useEntryCheck,
 } from "@/lib/study/entryCheckStore";
-import { useStudy } from "@/lib/study/store";
+import { setSite, useStudy } from "@/lib/study/store";
 import { entrySiteId, findSiteByName, siteDirectory, type SiteInfo } from "@/lib/study/sites";
 
 const hhmm = (at: number) => new Date(at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
@@ -206,6 +206,8 @@ function EntryCheckDialog({ site, today, onEntered, onOpenChange }: {
 
   function enter() {
     enterEntryCheck(site.id, today);
+    // Następny „+ Wpis” ma iść na tę budowę, nie na wczoraj używaną (Etap 0.4).
+    setSite(site.name);
     haptic("success");
     onEntered();
     toast.success(left === 0 ? `Wejście na budowę ${site.name} zapisane` : `Wejście zapisane — bez ${pointsPl(left)}`);
