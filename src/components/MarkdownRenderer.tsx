@@ -22,8 +22,11 @@ const Impl = lazy(() => import("./MarkdownRendererImpl").then((m) => ({ default:
  */
 const MARKDOWN_HINT = /[*_`#>[\]|~<&\\]|https?:|www\.|@|^\s*(?:[-+]|\d+[.)])\s|^\s*[-=]{2,}\s*$/m;
 
+/** Znacznik bloku `^id` na końcu linii: chowa go tylko renderer Markdown (Faza 3.4). */
+const BLOCK_ID_HINT = /(?:^|\s)\^[\p{L}\p{N}-]{1,32}[ \t]*$/mu;
+
 export function needsMarkdown(content: string): boolean {
-  return MARKDOWN_HINT.test(content);
+  return MARKDOWN_HINT.test(content) || BLOCK_ID_HINT.test(content);
 }
 
 /**

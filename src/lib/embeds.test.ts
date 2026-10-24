@@ -35,7 +35,7 @@ describe("cele osadzeń", () => {
     expect(splitEmbedTarget("Plan")).toEqual({ title: "Plan", heading: null });
   });
 
-  it("blok ^id rozpoznajemy, ale nie obsługujemy go jeszcze", () => {
+  it("nagłówek z ^ to osadzenie bloku", () => {
     expect(isBlockEmbed("^abc")).toBe(true);
     expect(isBlockEmbed("Etap")).toBe(false);
     expect(isBlockEmbed(null)).toBe(false);

@@ -15,7 +15,7 @@ export interface EmbedContext {
 /** Najgłębsze zagnieżdżenie: notatka w notatce w notatce. Dalej kafel robi się nieczytelny. */
 export const MAX_EMBED_DEPTH = 3;
 
-/** Osadzenie bloku `^id` — obsługa przychodzi z odnośnikami do bloków (Faza 3.4). */
+/** Osadzenie bloku `^id` (`![[notatka#^id]]`): nagłówek zaczynający się od `^`. Blok liczy `blockRefs.ts`. */
 export function isBlockEmbed(heading: string | null): boolean {
   return heading !== null && heading.startsWith("^");
 }

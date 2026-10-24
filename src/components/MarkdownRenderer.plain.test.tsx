@@ -7,6 +7,9 @@ describe("needsMarkdown", () => {
   it("zwykły tekst — bez parsera", () => {
     expect(needsMarkdown("Kupić mleko i chleb.\nZadzwonić do mamy.")).toBe(false);
     expect(needsMarkdown("Spotkanie o 14:30, sala 2 (piętro 3).")).toBe(false);
+    // Znacznik bloku `^id` chowa tylko renderer Markdown, więc taki tekst musi tam trafić.
+    expect(needsMarkdown("Pomysł na szafkę ^szafka")).toBe(true);
+    expect(needsMarkdown("2^3 to potęga")).toBe(false);
   });
 
   it.each([

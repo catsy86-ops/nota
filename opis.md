@@ -2117,7 +2117,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 
 - **Co robi:** linia zawierająca tylko `![[Tytuł]]` albo `![[Tytuł#Nagłówek]]` pokazuje treść notatki (albo tylko sekcję od nagłówka do następnego nagłówka tego samego lub wyższego poziomu) w ramce, tylko do odczytu. Zagnieżdżenie idzie dalej, ale najwyżej 3 poziomy. Cykl (A osadza B, B osadza A) kończy się komunikatem. Notatka prywatna, brakujący tytuł lub nagłówek też dają komunikat zamiast treści.
 - **Gdzie jest:**
-  - `src/lib/embeds.ts` — `extractSection`, `splitEmbedTarget`, `isBlockEmbed` (`^id` rozpoznane, ale jeszcze nieobsługiwane), `MAX_EMBED_DEPTH` = 3, typ `EmbedContext` (poziom + łańcuch odwiedzonych notatek).
+  - `src/lib/embeds.ts` — `extractSection`, `splitEmbedTarget`, `isBlockEmbed` (nagłówek zaczynający się od `^` = blok, patrz 3.4), `MAX_EMBED_DEPTH` = 3, typ `EmbedContext` (poziom + łańcuch odwiedzonych notatek).
   - `src/components/WikiEmbed.tsx` — rozwiązuje cel (`lookupWikiTarget`), sprawdza cykl, głębokość, prywatność; renderuje treść przez `MarkdownRenderer` z `embed` o poziom wyżej.
   - `src/components/MarkdownRendererImpl.tsx` — `MarkdownRendererImpl` wycina linie będące wyłącznie osadzeniem (`EMBED_LINE_RX`) i renderuje je jako `WikiEmbed`; reszta idzie przez `MarkdownBlocks` (dawny renderer bez zmian).
   - `src/components/MarkdownRenderer.tsx` — prop `embed` (wewnętrzny).
@@ -2125,11 +2125,36 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Ograniczenia:**
   - Osadzenie w środku zdania (`Zobacz ![[X]] tutaj`) zostaje surowym tekstem; obsługa wymagałaby parsera inline.
   - Edytor CodeMirror nie pokazuje podglądu osadzenia (plan wymienia widżet w CM — do zrobienia osobno).
-  - Osadzenie `![[^id]]` pokazuje komunikat „w przygotowaniu” — obsługa bloków to 3.4.
   - Notatka, która osadza samą siebie, pokazuje się raz więcej niż należy: łańcuch zaczyna się od pustego, bo renderer nie zna id notatki-właściciela.
 - **Testy:**
   - `src/lib/embeds.test.ts` (6): sekcje, poziomy, dopasowanie, cele, limit.
   - `e2e/note-embeds.spec.ts` (2): sekcja z nagłówkiem zamiast całej notatki; cykl A ↔ B kończy się komunikatem.
   - Istniejące `MarkdownRenderer*` i e2e linków wiki przechodzą.
-- **Commit:** w historii poniżej.
+- **Commit:** w historii (Sieć wiedzy 3.3, `1852153`).
+
+## Sieć wiedzy — bloki `^id` i `![[…#^id]]` (Faza 3.4, 2026-10-24)
+
+- **Co robi:** na końcu linii (po spacji) można oznaczyć blok znacznikiem `^id`, np. `Pomysł na szafkę ^szafka`. Znacznik nie jest widoczny w czytniku. `![[Notatka#^szafka]]` osadza tylko ten blok, a `[[Notatka#^szafka]]` otwiera notatkę i przewija do akapitu. Podczas pisania `[[Notatka#^` lista podpowiada id bloków tej notatki. Blok bez id nie ma adresu, więc nie da się do niego linkować.
+- **Gdzie jest:**
+  - `src/lib/blockRefs.ts` — `blockIdOfLine`, `stripBlockId`, `blockIdOfHeading`, `findBlock` (tekst bloku bez znacznika), `listBlockIds` (kolejność, bez duplikatów), `blockRefQuery` (rozbija `Tytuł#^pre`).
+  - `src/components/MarkdownRendererImpl.tsx` — `splitParagraphId` chowa znacznik na końcu akapitu i ustawia `data-block-id`.
+  - `src/components/MarkdownRenderer.tsx` — `needsMarkdown` zwraca `true` dla linii z `^id`, żeby taka notatka przeszła przez renderer, który go chowa (zwykły tekst by go pokazał).
+  - `src/components/WikiEmbed.tsx` — osadzenie `^id` bierze `findBlock`; brak bloku → komunikat „Nie ma bloku ^id”.
+  - `src/lib/wikiHeading.ts` — `findBlockElement` i `scrollToHeading` przewijają do `[data-block-id]`, gdy cel zaczyna się od `^`.
+  - `src/hooks/useWikiAutocomplete.tsx` — po `#^` podpowiedzi to id bloków z `lookupWikiTarget`, wstawiane jako `[[Tytuł#^id]]`.
+- **Jak działa:** blok to grupa linii między pustymi liniami. Punkt listy i nagłówek zaczynają nowy blok, a nagłówek jest zawsze jednolinijkowy, więc `![[…#^id]]` przy liście nie wciąga całej listy. Znacznik jest częścią tekstu w Yjs (nie osobną mapą), więc działa na każdym urządzeniu i w eksporcie bez zmian w modelu danych. Dopasowanie id bez względu na wielkość liter.
+- **Dlaczego znacznik w tekście, a nie osobna mapa:** osobna mapa rozjechałaby się przy edycji tekstu (przesunięte akapity). Tekst jest źródłem prawdy, a id wyciągamy z niego przy każdym renderze.
+- **Ograniczenia i pułapki:**
+  - Brak generatora id: id wpisuje się ręcznie (`^szafka`). Nie ma przycisku „Kopiuj link do bloku”.
+  - Linki zwrotne na poziomie bloku (plan 3.4) **nie są zrobione**: panel „Linki zwrotne” pokazuje tylko linki do całej notatki.
+  - `^id` w środku linii nie jest znacznikiem (`2^3` zostaje tekstem); id musi być na końcu linii.
+  - W edytorze CodeMirror znacznik widać surowo (podgląd bloku w CM to osobna praca, jak przy osadzeniach).
+  - Dwa bloki z tym samym id: wygrywa pierwszy w kolejności tekstu.
+  - Przewijanie do bloku działa tylko w czytniku (`NoteReader`, ta sama ścieżka co nagłówki `[[…#nagłówek]]`).
+- **Testy:**
+  - `src/lib/blockRefs.test.ts` (10): znacznik, polskie litery, granice bloków (akapit, lista, nagłówek), brak id, podpowiedzi.
+  - `src/lib/embeds.test.ts`: nagłówek `^` to osadzenie bloku.
+  - `src/components/MarkdownRenderer.plain.test.tsx`: `needsMarkdown` dla `^id` i dla `2^3`.
+  - `e2e/note-block-refs.spec.ts` (2): osadzenie samego akapitu bez znacznika; brak bloku pokazuje komunikat.
+- **Commit:** w historii (Sieć wiedzy 3.4).
 

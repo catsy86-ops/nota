@@ -52,6 +52,7 @@ function Callout({ kind, collapse, title, children }: { kind: CalloutKind; colla
 
 import { splitWikiTarget } from "@/lib/wikiLinks";
 import { splitEmbedTarget, type EmbedContext } from "@/lib/embeds";
+import { blockIdOfLine, stripBlockId } from "@/lib/blockRefs";
 import { WikiEmbed } from "@/components/WikiEmbed";
 
 /** `[[link]]` w tekście; osadzenia `![[…]]` są osobnymi blokami (patrz `MarkdownRendererImpl`). */
@@ -73,6 +74,22 @@ function renderWithWiki(text: string, onWikiClick?: (t: string) => void, known?:
   }
   if (last < text.length) parts.push(text.slice(last));
   return parts.length > 1 ? <>{parts.map((p, i) => <Fragment key={i}>{p}</Fragment>)}</> : text;
+}
+
+/**
+ * Znacznik `^id` na końcu akapitu: w czytniku niewidoczny, a jego id trafia do `data-block-id`,
+ * żeby `[[notatka#^id]]` mogło przewinąć do akapitu.
+ */
+function splitParagraphId(children: ReactNode): { children: ReactNode; id: string | null } {
+  if (typeof children === "string") {
+    const id = blockIdOfLine(children);
+    return id ? { children: stripBlockId(children), id } : { children, id: null };
+  }
+  if (!Array.isArray(children)) return { children, id: null };
+  const last = children[children.length - 1];
+  const id = typeof last === "string" ? blockIdOfLine(last) : null;
+  if (!id || typeof last !== "string") return { children, id: null };
+  return { children: [...children.slice(0, -1), stripBlockId(last)], id };
 }
 
 /** Zwykły Markdown z linkami wiki; bez osadzeń (te wycina `MarkdownRendererImpl`). */
@@ -97,7 +114,10 @@ function MarkdownBlocks({ content, className, onWikiClick, knownTitles }: Markdo
         h1: ({ children }) => <h1 className="text-base font-display font-bold text-foreground mb-1 in-[.note-card]:text-sm in-[.note-card]:font-semibold">{renderText(children)}</h1>,
         h2: ({ children }) => <h2 className="text-sm font-display font-bold text-foreground mb-1 in-[.note-card]:font-semibold">{renderText(children)}</h2>,
         h3: ({ children }) => <h3 className="text-sm font-display font-semibold text-foreground mb-0.5">{renderText(children)}</h3>,
-        p: ({ children }) => <p className="text-sm text-foreground/80 leading-relaxed mb-1 last:mb-0">{renderText(children)}</p>,
+        p: ({ children }) => {
+          const block = splitParagraphId(children);
+          return <p data-block-id={block.id ?? undefined} className="text-sm text-foreground/80 leading-relaxed mb-1 last:mb-0">{renderText(block.children)}</p>;
+        },
         strong: ({ children }) => <strong className="font-semibold text-foreground">{renderText(children)}</strong>,
         em: ({ children }) => <em className="italic">{renderText(children)}</em>,
         ul: ({ children, className }) => (

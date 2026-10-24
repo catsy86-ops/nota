@@ -38,10 +38,21 @@ export function findHeading(root: ParentNode, heading: string): HTMLElement | nu
     ?? null;
 }
 
-/** Przewija do nagłówka; `false`, gdy go (jeszcze) nie ma w treści. */
+/**
+ * Akapit z blokiem `^id` (`data-block-id` ustawia renderer). Cel `^id` z `[[notatka#^id]]`
+ * przewija do akapitu, nie do nagłówka.
+ */
+export function findBlockElement(root: ParentNode, blockId: string): HTMLElement | null {
+  const id = blockId.trim();
+  if (!id) return null;
+  const all = Array.from(root.querySelectorAll<HTMLElement>("[data-block-id]"));
+  return all.find((el) => el.dataset.blockId?.toLowerCase() === id.toLowerCase()) ?? null;
+}
+
+/** Przewija do nagłówka (albo, dla `^id`, do bloku); `false`, gdy go (jeszcze) nie ma w treści. */
 export function scrollToHeading(root: ParentNode | null, heading: string): boolean {
   if (!root) return false;
-  const el = findHeading(root, heading);
+  const el = heading.startsWith("^") ? findBlockElement(root, heading.slice(1)) : findHeading(root, heading);
   if (!el) return false;
   el.scrollIntoView({ behavior: "smooth", block: "start" });
   el.classList.add("note-flash");

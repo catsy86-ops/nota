@@ -3,6 +3,8 @@ import { cn } from "@/lib/utils";
 import { getCaretCoords, type TextControl } from "@/lib/textControl";
 import { completeWikiLink, suggestWikiTitles, wikiQueryAt, type WikiQuery } from "@/lib/wikiLinks";
 import { completeMention, mentionQueryAt, suggestMentions, type MentionItem } from "@/lib/mentions";
+import { blockRefQuery, listBlockIds } from "@/lib/blockRefs";
+import { lookupWikiTarget } from "@/lib/wikiNoteActions";
 
 interface Options {
   textareaRef: RefObject<TextControl | null>;
@@ -71,6 +73,16 @@ export function useWikiAutocomplete({ textareaRef, value, onChange, titles, excl
   const suggestions = useMemo<MentionItem[]>(() => {
     if (query === null) return [];
     if (kind === "mention") return skipMention?.(query) ? [] : suggestMentions(query, titles, exclude);
+    // `[[Tytuł#^` podpowiada id bloków tej notatki; wybór wstawia `[[Tytuł#^id]]`.
+    const ref = blockRefQuery(query);
+    if (ref) {
+      const target = lookupWikiTarget(ref.title);
+      if (!target) return [];
+      return listBlockIds(target.content)
+        .filter((id) => id.toLowerCase().startsWith(ref.prefix))
+        .slice(0, 6)
+        .map((id) => ({ key: id, label: `${target.title.trim()}#^${id}`, hint: "notatka" as const, text: `[[${target.title.trim()}#^${id}]]` }));
+    }
     return suggestWikiTitles(query, titles, exclude).map((t) => ({ key: t, label: t, hint: "notatka" as const, text: `[[${t}]]` }));
   }, [query, kind, titles, exclude, skipMention]);
   const isOpen = suggestions.length > 0;
