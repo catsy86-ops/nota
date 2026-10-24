@@ -14,7 +14,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { TOPICS, topicTitle } from "@/lib/study/content";
 import { openProblems, setSite, useSiteDirectory, useStudy, useStudyLists } from "@/lib/study/store";
 import {
-  entriesPl, filterJournal, groupJournal, isFiltered, NO_FILTER, OLDER_STEP, problemsPl, RECENT_DAYS, splitRecent,
+  contextSiteName, entriesPl, filterJournal, groupJournal, isFiltered, NO_FILTER, OLDER_STEP, problemsPl, RECENT_DAYS, splitRecent,
   type JournalFilter, type KindFilter,
 } from "@/lib/study/journalView";
 import { patchJournalDraft, useHasJournalDraft } from "@/lib/study/draft";
@@ -94,9 +94,16 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   const practice = useCallback((topicId: string) => practiceRef.current(topicId), [practiceRef]);
   const showTopic = useCallback((topic: string) => setFilter((f) => ({ ...f, topic })), []);
   const zoomPhoto = useCallback((refs: string[], index: number) => setZoom({ refs, index }), []);
+  /** Nowy wpis na tej budowie (`""` = bez budowy): z filtra dziennika albo z „+ Wpis tutaj” w karcie. */
+  function openEntryAt(siteName: string | null) {
+    if (siteName !== null) setSite(siteName);
+    openJournalSheet();
+  }
   const filtered = isFiltered(filter);
 
   const dir = useSiteDirectory();
+  // „+ Wpis” przy filtrze budowy zaczyna wpis na tej budowie; „Dokończ wpis” zostawia budowę szkicu.
+  const newEntry = () => openEntryAt(hasDraft ? null : contextSiteName(filter.site, dir));
   // Postęp etapów przy nazwie budowy — tylko budowy z własną listą (ktoś już odhaczał).
   const stagesBySite = useMemo(
     () => new Map(dir.filter((x) => x.stages).map((x) => [x.id, stageProgress(x.stages!)] as const)),
@@ -177,7 +184,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                 <FileText className="h-4 w-4 sm:mr-1" aria-hidden /><span className="max-sm:sr-only">Raport</span>
               </Button>
             )}
-            <Button onClick={() => openJournalSheet()} className="coarse:h-11">
+            <Button onClick={newEntry} className="coarse:h-11">
               <Plus className="mr-1 h-4 w-4" aria-hidden />{hasDraft ? "Dokończ wpis" : "Wpis"}
             </Button>
           </div>
@@ -415,6 +422,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
         onOpenChange={(o) => { if (!o) setCard(null); }}
         onShowEntries={(id) => { setCard(null); setFilter({ ...NO_FILTER, site: id }); }}
         onReport={(id) => { setCard(null); setReportSite(id); setReportRequest(null); setReport(true); }}
+        onNewEntry={(id) => { setCard(null); openEntryAt(contextSiteName(id, dir)); }}
       />
       <Dialog open={zoom !== null} onOpenChange={(o) => { if (!o) setZoom(null); }}>
         <DialogContent

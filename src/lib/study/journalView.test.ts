@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { JournalEntry } from "./yStudy";
-import { entryHeadline, recentSiteTexts, yesterdaySiteText } from "./journalView";
+import { contextSiteName, entryHeadline, recentSiteTexts, yesterdaySiteText } from "./journalView";
 import { siteKey } from "./sites";
 
 const day = (d: number, h = 12) => new Date(2026, 9, d, h).getTime();
@@ -64,5 +64,17 @@ describe("entryHeadline", () => {
     expect(entryHeadline({ ...base, recordings: ["r"], images: ["a"] } as unknown as Parameters<typeof entryHeadline>[0])).toBe("Nagranie");
     expect(entryHeadline({ ...base, images: ["a"] })).toBe("Zdjęcie");
     expect(entryHeadline(base)).toBe("Wpis");
+  });
+});
+
+describe("contextSiteName — budowa nowego wpisu z filtra dziennika", () => {
+  const dir = [{ id: "a1", name: "Lipowa 5" }, { id: "b2", name: "Polna 2" }];
+  it("id budowy daje jej nazwę, „Bez budowy” pusty napis", () => {
+    expect(contextSiteName("b2", dir)).toBe("Polna 2");
+    expect(contextSiteName("", dir)).toBe("");
+  });
+  it("wszystkie budowy albo nieznane id — bez kontekstu", () => {
+    expect(contextSiteName(null, dir)).toBeNull();
+    expect(contextSiteName("zniknęła", dir)).toBeNull();
   });
 });

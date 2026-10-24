@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Archive, ArchiveRestore, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Phone, Share2 } from "lucide-react";
+import { Archive, ArchiveRestore, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Phone, Share2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -50,13 +50,15 @@ const fieldClass =
  * Archiwum chowa budowę z pigułek — wpisy zostają na osi czasu.
  */
 export function SiteCardDialog({
-  siteId, onOpenChange, onShowEntries, onReport,
+  siteId, onOpenChange, onShowEntries, onReport, onNewEntry,
 }: {
   /** Otwarta karta; `null` = zamknięta. */
   siteId: string | null;
   onOpenChange: (open: boolean) => void;
   onShowEntries: (siteId: string) => void;
   onReport: (siteId: string) => void;
+  /** „+ Wpis tutaj” — arkusz nowego wpisu z tą budową. */
+  onNewEntry: (siteId: string) => void;
 }) {
   const study = useStudy();
   const shifts = useShifts();
@@ -147,7 +149,7 @@ export function SiteCardDialog({
     onOpenChange(open);
   }
 
-  /** „Pokaż wpisy” i „Raport” zamykają kartę w rodzicu — najpierw zapis, potem przejście. */
+  /** „Pokaż wpisy”, „Raport” i „+ Wpis tutaj” zamykają kartę w rodzicu — najpierw zapis, potem przejście. */
   function leaveTo(go: (siteId: string) => void) {
     if (!site) return;
     persistDirty();
@@ -326,6 +328,9 @@ export function SiteCardDialog({
             </div>
 
             <div className="grid grid-cols-2 gap-2 border-t border-border px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              <Button onClick={() => leaveTo(onNewEntry)} className="col-span-2 coarse:h-11">
+                <Plus className="mr-1.5 h-4 w-4" aria-hidden />Wpis tutaj
+              </Button>
               <Button variant="outline" onClick={() => leaveTo(onShowEntries)} disabled={site.count === 0} className="coarse:h-11">
                 <ListFilter className="mr-1.5 h-4 w-4" aria-hidden />Pokaż wpisy
               </Button>

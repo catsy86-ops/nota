@@ -207,3 +207,14 @@ export function yesterdaySiteText(journal: readonly JournalEntry[], siteId: stri
 export function sameJournalEntry(a: JournalEntry, b: JournalEntry): boolean {
   return a === b || JSON.stringify(a) === JSON.stringify(b);
 }
+
+/**
+ * Budowa nowego wpisu z kontekstu dziennika: filtr budowy (`JournalFilter.site`) → nazwa do arkusza.
+ * `null` = brak kontekstu (wszystkie budowy albo nieznane id), arkusz zostaje przy bieżącej budowie;
+ * `""` = filtr „Bez budowy”, wpis bez budowy.
+ */
+export function contextSiteName(siteId: string | null, dir: readonly { id: string; name: string }[]): string | null {
+  if (siteId === null) return null;
+  if (siteId === "") return "";
+  return dir.find((x) => x.id === siteId)?.name ?? null;
+}
