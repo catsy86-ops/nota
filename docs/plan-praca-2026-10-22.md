@@ -1,5 +1,7 @@
 # Plan: ulepszenie i dopracowanie działu Praca (2026-10-22)
 
+> **Zastąpiony przez [`plan-praca-2026-10-24.md`](plan-praca-2026-10-24.md)** — Faza 3 i nierozliczone punkty przeniesione tam.
+
 Źródło: trzy audyty tylko do odczytu (funkcje i UX; dostępność i telefon 390 px; model danych i ryzyka).
 Punkty oznaczone **[zweryfikowane]** sprawdziłem w kodzie. Pozostałe to ustalenia agentów z numerami linii, które wymagają potwierdzenia przy wdrażaniu.
 

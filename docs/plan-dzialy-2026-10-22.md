@@ -255,6 +255,8 @@ Oznaczenia: priorytet **W/Ś/N**, nakład **S/M/L**, **[paczka]** = dotyka paczk
 
 ## 8. Praca → Nauka
 
+> Otwarte punkty §8–9 przeniesione do [`plan-praca-2026-10-24.md`](plan-praca-2026-10-24.md).
+
 **Budżet:** do paczki startowej trafia tylko `yStudy.ts` (+ `data.ts`, `journalRefs.ts`) — nowy model w `store.ts`/`sites.ts`/`siteItems.ts`.
 
 ### Poprawa
