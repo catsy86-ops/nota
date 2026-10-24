@@ -84,3 +84,8 @@ export function safeReminderDay(v: unknown): number | undefined {
 export function safeDailyDate(v: unknown): string | undefined {
   return typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined;
 }
+
+/** `YYYY-Www` (tydzień) albo `YYYY-MM` (miesiąc), inaczej `undefined`. */
+export function safePeriodKey(v: unknown): string | undefined {
+  return typeof v === "string" && /^\d{4}-(W\d{2}|\d{2})$/.test(v) ? v : undefined;
+}

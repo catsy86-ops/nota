@@ -4,6 +4,7 @@ import { Inbox, Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Se
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes, useSearchReady } from "@/lib/searchNotes";
+import type { PeriodKind } from "@/lib/periodNote";
 import { loadRecentSearches, saveRecentSearch } from "@/lib/recentSearches";
 import { loadRecentCommands, saveRecentCommand } from "@/lib/recentCommands";
 import { requestShiftDay, searchShiftDays, useShifts } from "@/lib/shifts";
@@ -32,6 +33,7 @@ interface Props {
   onOpenNote: (id: string) => void;
   onNewNote: () => void;
   onDailyNote: () => void;
+  onPeriodNote: (kind: PeriodKind) => void;
   onGo: (view: "notes" | "inbox" | "today" | "week" | "archive" | "reminders" | "calendar" | "shifts" | "study" | "debts" | "cwiczenia" | "trash" | "widget") => void;
   onToggleTheme: () => void;
   onOpenSettings: () => void;
@@ -65,6 +67,7 @@ export function CommandPalette({
   onOpenNote,
   onNewNote,
   onDailyNote,
+  onPeriodNote,
   onGo,
   onToggleTheme,
   onOpenSettings,
@@ -168,6 +171,12 @@ export function CommandPalette({
           </CommandItem>
           <CommandItem onSelect={() => run(onDailyNote)}>
             <BookOpen className="w-4 h-4 mr-2" /> Notatka dnia
+          </CommandItem>
+          <CommandItem value="notatka tygodnia" onSelect={() => run(() => onPeriodNote("week"))}>
+            <CalendarRange className="w-4 h-4 mr-2" /> Notatka tygodnia
+          </CommandItem>
+          <CommandItem value="notatka miesiaca" onSelect={() => run(() => onPeriodNote("month"))}>
+            <CalendarRange className="w-4 h-4 mr-2" /> Notatka miesiąca
           </CommandItem>
           {onCopyNote && (
             <>

@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState } from "react";
-import { Lightbulb, ListChecks, Users, BookOpen, Plane, Coffee, Plus, Pencil } from "lucide-react";
+import { Lightbulb, ListChecks, Users, BookOpen, CalendarRange, Plane, Coffee, Plus, Pencil } from "lucide-react";
 import type { NoteColor, ChecklistItem } from "@/hooks/useNotes";
+import type { PeriodKind } from "@/lib/periodNote";
 // Okno własnego szablonu ładowane przy pierwszym otwarciu.
 const CustomTemplateDialog = lazy(() => import("@/components/CustomTemplateDialog").then((m) => ({ default: m.CustomTemplateDialog })));
 import { useCustomTemplates, type CustomTemplate } from "@/lib/customTemplates";
@@ -85,11 +86,13 @@ interface Props {
   onCreateLabel: (label: string) => void;
   /** Notatka dnia nie jest szablonem: otwiera (albo tworzy) jedną notatkę na dzień. */
   onDailyNote: () => void;
+  /** Tydzień i miesiąc działają jak notatka dnia: jedna notatka na okres. */
+  onPeriodNote: (kind: PeriodKind) => void;
 }
 
 const chipClass = "group shrink-0 flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-xs font-medium border border-border/60 bg-card hover:border-primary/40 hover:bg-primary/5 hover:text-primary-ink transition-colors";
 
-export function QuickTemplates({ onPick, onCreateLabel, onDailyNote }: Props) {
+export function QuickTemplates({ onPick, onCreateLabel, onDailyNote, onPeriodNote }: Props) {
   const custom = useCustomTemplates();
   // `undefined` = dialog zamknięty, `null` = nowy szablon, obiekt = edycja.
   const [editing, setEditing] = useState<CustomTemplate | null | undefined>(undefined);
@@ -111,6 +114,24 @@ export function QuickTemplates({ onPick, onCreateLabel, onDailyNote }: Props) {
       >
         <BookOpen className="w-3.5 h-3.5" />
         <span>Notatka dnia</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => onPeriodNote("week")}
+        title="Jedna notatka na tydzień — kolejne kliknięcie otwiera tę samą"
+        className={chipClass}
+      >
+        <CalendarRange className="w-3.5 h-3.5" />
+        <span>Notatka tygodnia</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => onPeriodNote("month")}
+        title="Jedna notatka na miesiąc — kolejne kliknięcie otwiera tę samą"
+        className={chipClass}
+      >
+        <CalendarRange className="w-3.5 h-3.5" />
+        <span>Notatka miesiąca</span>
       </button>
       {TEMPLATES.map((t) => {
         const Icon = t.icon;

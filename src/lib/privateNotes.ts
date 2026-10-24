@@ -409,7 +409,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     const content: PrivateContent = { ...entry.content, title: entry.content.title ? `${entry.content.title} (kopia)` : "" };
     const token = await encryptString(k, JSON.stringify(content), noteAad(newId));
     const t = now();
-    const { dailyDate: _daily, ...rest } = original;
+    const { dailyDate: _daily, periodKey: _period, ...rest } = original;
     store.upsertNote({ ...rest, id: newId, locked: true, vault: token, pinned: false, createdAt: t, updatedAt: t });
     cache.set(newId, { vault: token, content, dirty: false });
     emit();

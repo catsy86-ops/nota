@@ -71,6 +71,8 @@ export interface Note {
   priority: NotePriority;
   /** Notatka dnia: lokalna data `YYYY-MM-DD` (patrz `lib/dailyNote.ts`); brak = zwykła notatka. */
   dailyDate?: string;
+  /** Notatka tygodnia (`2026-W43`) albo miesiąca (`2026-10`): patrz `lib/periodNote.ts`. */
+  periodKey?: string;
   /** Ikona notatki (emoji) — brak = bez ikony. Strukturalna: zostaje jawna także w notatce prywatnej. */
   icon?: string;
   /** Okładka kafla: jeden z gotowych wzorów (`lib/noteLook.ts`). */
@@ -320,7 +322,7 @@ export function useNotes() {
     const now = Date.now();
     // Kopia notatki dnia jest zwykłą notatką — inaczej byłyby dwie „notatki dnia” na ten sam dzień.
     // Ulubioną jest oryginał, nie jego kopia.
-    const { dailyDate: _daily, favorite: _fav, ...rest } = original;
+    const { dailyDate: _daily, periodKey: _period, favorite: _fav, ...rest } = original;
     const copy: Note = { ...rest, id: crypto.randomUUID(), title: original.title ? `${original.title} (kopia)` : "", pinned: false, createdAt: now, updatedAt: now };
     yjsStore.upsertNote(copy);
   }, []);

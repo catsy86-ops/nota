@@ -17,7 +17,7 @@ import { cleanLabelPath, isUnderLabel, renameLabelBranch } from "@/lib/labelTree
 import {
   NOTE_COLORS, PRIORITIES, REMINDER_REPEATS, REMOTE_LIMITS as LIM,
   safeBool, safeDailyDate, safeEnum, safeNullableNumber, safeNullableString, safeNumber,
-  safeOptionalEnum, safeOptionalNumber, safeReminderDay, safeString, safeStringArray,
+  safeOptionalEnum, safeOptionalNumber, safePeriodKey, safeReminderDay, safeString, safeStringArray,
 } from "@/lib/safeProjection";
 
 /**
@@ -68,7 +68,7 @@ function readReminderState(y: YNote): ReminderState {
 
 const NOTE_SCALAR_FIELDS = [
   "title", "color", "pinned", "archived", "trashed", "trashedAt",
-  "labels", "aliases", "reminder", "reminderRepeat", "reminderDay", "reminderRepeatUntil", "priority", "dailyDate",
+  "labels", "aliases", "reminder", "reminderRepeat", "reminderDay", "reminderRepeatUntil", "priority", "dailyDate", "periodKey",
   "icon", "cover", "favorite", "readOnly", "parentId", "wide", "largeText", "folderId", "order", "createdAt", "updatedAt",
 ] as const;
 
@@ -268,6 +268,7 @@ function yNoteFromPlain(note: Note): YNote {
   y.set("reminderSpec", specOf({ reminder: note.reminder, reminderRepeat: note.reminderRepeat, reminderDay: note.reminderDay, reminderRepeatUntil: note.reminderRepeatUntil, reminderAllDay: note.reminderAllDay, reminderBase: note.reminderBase }));
   y.set("priority", note.priority);
   if (note.dailyDate !== undefined) y.set("dailyDate", note.dailyDate);
+  if (note.periodKey !== undefined) y.set("periodKey", note.periodKey);
   if (note.icon) y.set("icon", note.icon);
   if (note.cover) y.set("cover", note.cover);
   if (note.favorite) y.set("favorite", true);
@@ -296,12 +297,14 @@ function yNoteFromPlain(note: Note): YNote {
 function plainFromYNote(id: string, y: YNote): Note {
   const vaultRaw = y.get("locked") === true ? y.get("vault") : undefined;
   const dailyDate = safeDailyDate(y.get("dailyDate"));
+  const periodKey = safePeriodKey(y.get("periodKey"));
   const icon = safeString(y.get("icon"), "", LIM.emoji);
   const cover = safeOptionalEnum(y.get("cover"), NOTE_COVERS);
   const parentId = safeString(y.get("parentId"), "", LIM.id);
   const rem = readReminderState(y);
   const common = {
     ...(dailyDate ? { dailyDate } : {}),
+    ...(periodKey ? { periodKey } : {}),
     ...(icon ? { icon } : {}),
     ...(cover ? { cover } : {}),
     ...(parentId ? { parentId } : {}),

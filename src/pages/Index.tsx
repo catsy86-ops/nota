@@ -35,6 +35,7 @@ import { playEnter, tween } from "@/lib/motion";
 import { useNavigate, useNavigationType } from "react-router-dom";
 import { whenNotesReady, isNoteTextEditOpen } from "@/hooks/useNotes";
 import { DAILY_LABEL, DAILY_TEMPLATE, appendTimestamp, dailyKey, dailyTitle, findDailyNote } from "@/lib/dailyNote";
+import { PERIOD_LABEL, PERIOD_TEMPLATE, findPeriodNote, periodKey, periodTitle, type PeriodKind } from "@/lib/periodNote";
 import { useNoteActions } from "@/hooks/useNoteActions";
 import { useNoteDnd } from "@/hooks/useNoteDnd";
 import { useImportExport, useExternalImport } from "@/hooks/useImportExport";
@@ -423,6 +424,24 @@ const Index = () => {
     revealNote(id, "notes", false, true);
   }, [notes, archivedNotes, updateNote, openNote, addLabel, addNote, revealNote]);
 
+  /**
+   * Notatka tygodnia / miesiąca: jest → otwórz; nie ma → utwórz z szablonem.
+   * Rozpoznanie po `periodKey`, nie tytule (patrz `lib/periodNote.ts`).
+   */
+  const openPeriodNote = useCallback((kind: PeriodKind) => {
+    const now = Date.now();
+    const key = periodKey(kind, now);
+    const existing = findPeriodNote([...notes, ...archivedNotes], key);
+    if (existing) {
+      openNote(existing.id, false, true);
+      return;
+    }
+    addLabel(PERIOD_LABEL[kind]);
+    const id = addNote(periodTitle(kind, now), PERIOD_TEMPLATE[kind], "lavender", [PERIOD_LABEL[kind]]);
+    updateNote(id, { periodKey: key });
+    revealNote(id, "notes", false, true);
+  }, [notes, archivedNotes, updateNote, openNote, addLabel, addNote, revealNote]);
+
   // `/notatka/:id` (link, klik w powiadomienie): otwieramy dopiero po
   // wczytaniu bazy — wcześniej każda notatka wyglądałaby na usuniętą.
   const [notesLoaded, setNotesLoaded] = useState(false);
@@ -713,6 +732,7 @@ const Index = () => {
                       onPick={(...args) => { done(); handleAddNoteGlow(...args); }}
                       onCreateLabel={addLabel}
                       onDailyNote={() => { done(); openDailyNote(); }}
+                      onPeriodNote={(kind) => { done(); openPeriodNote(kind); }}
                     />
                   )}
                 />
@@ -935,6 +955,7 @@ const Index = () => {
           onOpenNote={openNote}
           onNewNote={expandAddNote}
           onDailyNote={openDailyNote}
+          onPeriodNote={openPeriodNote}
           onGo={(v) => go(v)}
           onGoFilter={goFilter}
           onToggleTheme={toggleTheme}
