@@ -2158,3 +2158,34 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - `e2e/note-block-refs.spec.ts` (2): osadzenie samego akapitu bez znacznika; brak bloku pokazuje komunikat.
 - **Commit:** `c197808`, 2026-10-24.
 
+## Sieć wiedzy — lokalny graf w czytniku (Faza 3.5, 2026-10-24)
+
+- **Co robi:** na dole czytnika (nie w trybie prezentacji, nie w koszu i nie przy notatce prywatnej) jest sekcja „Lokalny graf”: notatka otwarta i jej sąsiedzi do dwóch kroków po linkach w obu kierunkach. Notatka otwarta jest w środku i ma pogrubiony obrys. Filtry nad rysunkiem: **Etykieta** (notatki z tą etykietą i z jej dziećmi, np. „praca” łapie „praca/projekt”) i **Folder** (notatki z tego folderu i podfolderów). Filtr dotyczy sąsiadów, nie notatki otwartej, która zawsze zostaje. Klik w węzeł otwiera tę notatkę w czytniku. Bez połączeń albo bez pasujących sąsiadów pokazuje się komunikat zamiast rysunku.
+- **Gdzie jest:**
+  - `src/lib/noteGraph.ts` — `localGraph(notes, centerId, { depth, label, folderIds }, limit)` (BFS wszerz od środka, sortowanie: najbliżej, potem najwięcej linków, potem tytuł); `collectEdges` wspólne dla grafu lokalnego i globalnego (`buildGraph`).
+  - `src/components/NoteGraph.tsx` — prop `centerId` (+ `folders`) przełącza na tryb lokalny; filtry etykiety i folderu (`data-testid="graph-filter-label"`, `graph-filter-folder`). Układ przychodzi asynchronicznie, rysowanie jak wcześniej (rozkładanie z okręgu).
+  - `src/components/NoteReader.tsx` — sekcja `[data-local-graph]` z leniwym `NoteGraph` (osobny kawałek bundla); dane z `treeNotes` (żywe i zarchiwizowane), folder z `useNotesContext`.
+  - `src/workers/graphLayout.ts` — klient: `layoutGraph(nodes, edges, w, h)` wysyła do Workera przez RPC; bez `Worker` (jsdom) albo przy błędzie liczy `forceLayout` w wątku. Bezczynny Worker zamyka się po 30 s.
+  - `src/workers/graphLayout.worker.ts` — punkt wejścia Workera (`serveRpc` na `workerScopeTransport(self)`).
+  - `src/workers/graphLayoutHandlers.ts` — metoda `layout`; zwraca pary `[id, punkt]`, bo `Map` nie jest potrzebny po drugiej stronie.
+  - `src/workers/rpc.ts` — dodany `workerScopeTransport` (transport po stronie Workera) i typ `WorkerScope` (bez typów `WebWorker` w tsconfig).
+- **Jak działa i dlaczego:**
+  - Sąsiedzi liczą się po krawędziach całej bazy (bez notatek w koszu i prywatnych), więc prywatna notatka nie przecieka do grafu jawnej.
+  - Filtr działa na sąsiadach, a nie na środku: inaczej otwarta notatka mogłaby zniknąć z własnego grafu.
+  - Układ siłowy idzie do Workera, bo przy setkach węzłów liczy się dziesiątki-setki milisekund w wątku UI. Wynik jest deterministyczny, więc Worker i wątek dają ten sam rysunek (test to sprawdza).
+  - Przy zmianie notatek graf przelicza się i układ też (jak wcześniej w globalnym). Poprzednie pozycje zostają na ekranie do czasu nowego układu, więc nie ma migotania.
+  - Aliasy (3.1) liczą się też w grafie globalnym: cel linku to tytuł, a dopiero potem alias — tak jak `resolveWikiTarget`.
+- **Ograniczenia i pułapki:**
+  - Limit `GRAPH_NODE_LIMIT` (150) obowiązuje też lokalnie; przy obcięciu zostają najbliżsi, potem najbardziej połączeni.
+  - Brak filtra głębokości w UI — zawsze dwa kroki (`depth` jest w funkcji, nie w interfejsie).
+  - Jeśli Worker zawiesi się bez błędu (nie zgłosi `error`), układ nie przyjdzie: transport RPC nie podpina `onerror`. Dotąd nie zaobserwowane; do rozważenia timeout.
+  - Filtry nie są zapamiętane między notatkami (stan komponentu, nie `viewPrefs`).
+  - Folder w filtrze to `Note.folderId` (foldery), a nie podstrony (`parentId`) — podstrony są w sekcji „Podstrony”.
+- **Testy:**
+  - `src/lib/localGraph.test.ts` (8): dwa kroki, depth 1, notatka bez połączeń, kosz i prywatne, etykieta z dziećmi, folder z podfolderami, limit, alias.
+  - `src/workers/graphLayout.test.ts` (2): metoda Workera równa się `forceLayout`; `layoutGraph` bez Workera daje ten sam wynik.
+  - `src/lib/noteGraph.test.ts` (dotychczasowe, bez zmian): globalny graf i układ.
+  - `e2e/local-graph.spec.ts` (2): sąsiedzi i filtr etykiety w czytniku; klik w węzeł otwiera notatkę.
+  - `e2e/bundle.spec.ts`: budżet wejściowego JS bez zmian (graf jest leniwy).
+- **Commit:** `6c05814`, 2026-10-24.
+
