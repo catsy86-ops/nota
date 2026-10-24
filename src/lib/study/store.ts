@@ -12,7 +12,7 @@ import { cleanGeo, type GeoPoint } from "./geo";
 import { BOSS_NAME_MAX, cleanBoss, cleanGroup, normalizeGroupLink, normalizePhone } from "./boss";
 import { cleanSite, entrySiteId, resolveSite, siteDirectory, SITE_NAME_MAX, type SiteCard, type SiteInfo } from "./sites";
 import { cleanStages, type SiteStage } from "./stages";
-import { cleanShortages, cleanShortagesCounted, logOrder, type OrderLogEntry, type Shortage } from "./shortages";
+import { cleanShortages, cleanShortagesCounted, logOrder, markMissingOrdered, type OrderLogEntry, type Shortage } from "./shortages";
 import { siteOrder } from "./order";
 import { cleanSiteHours, type SiteHours } from "./siteHours";
 import { cleanSiteDocs, type SiteDoc } from "./siteDocs";
@@ -425,7 +425,10 @@ function patchSiteCard(id: string, patch: Partial<Pick<SiteCard, "orderedAt">>) 
   const prev = findSite(s, id);
   if (!prev) return;
   const { stored: _s, count: _c, open: _o, first: _f, last: _l, ...card } = prev;
-  yStudy.saveSite({ ...card, ...patch });
+  const next: SiteCard = { ...card, ...patch };
+  // `orderedAt: undefined` (cofnięcie pierwszego zamówienia) zdejmuje pole, zamiast zapisywać pusty klucz.
+  if ("orderedAt" in patch && patch.orderedAt === undefined) delete next.orderedAt;
+  yStudy.saveSite(next);
 }
 
 /**
@@ -444,15 +447,42 @@ function siteListBase<T>(id: string, field: "stages" | "shortages" | "orders" | 
 }
 
 /** Zaznacza zamówienie kształtek na teraz: od tej chwili lista „do zamówienia” zaczyna się od zera. */
-export function markSiteOrdered(id: string, now: number = Date.now()) {
+/** Stan sprzed „Oznacz jako zamówione” — do „Cofnij” w toaście (`undoSiteOrdered`). */
+export interface SiteOrderUndo {
+  id: string;
+  orderedAt?: number;
+  ordersBefore: OrderLogEntry[];
+  ordersAfter: OrderLogEntry[];
+  shortagesBefore: Shortage[];
+  shortagesAfter: Shortage[];
+}
+
+/**
+ * Zaznacza zamówienie na teraz: od tej chwili lista „do zamówienia” zaczyna się od zera, kształtki idą do
+ * historii, a braki „Brakuje” przechodzą na „Zamówione” (1.7). Zwraca stan do cofnięcia.
+ */
+export function markSiteOrdered(id: string, now: number = Date.now()): SiteOrderUndo | null {
   const s = getStudy();
   const prev = findSite(s, id);
-  if (!prev) return;
+  if (!prev) return null;
   // Co właśnie zamówiono — do historii zamówień w karcie.
   const items = siteOrder(s.journal, id, prev.orderedAt).items;
+  const ordersBefore = prev.orders ?? [];
+  const ordersAfter = logOrder(prev.orders, items, now);
+  const shortagesBefore = prev.shortages ?? [];
+  const shortagesAfter = markMissingOrdered(shortagesBefore, now);
   patchSiteCard(id, { orderedAt: now });
   const base = siteListBase<OrderLogEntry>(id, "orders", undefined) ?? [];
-  yStudy.setSiteList(id, "order", logOrder(prev.orders, items, now), base);
+  yStudy.setSiteList(id, "order", ordersAfter, base);
+  if (shortagesBefore.some((x) => x.status === "missing")) setSiteShortages(id, shortagesAfter, shortagesBefore);
+  return { id, ...(prev.orderedAt !== undefined ? { orderedAt: prev.orderedAt } : {}), ordersBefore, ordersAfter, shortagesBefore, shortagesAfter };
+}
+
+/** „Cofnij” po zamówieniu: poprzednia data zamówienia, historia i statusy braków (zapis różnicy — zmiany z drugiego telefonu w innych pozycjach zostają). */
+export function undoSiteOrdered(u: SiteOrderUndo) {
+  patchSiteCard(u.id, { orderedAt: u.orderedAt });
+  yStudy.setSiteList(u.id, "order", u.ordersBefore, u.ordersAfter);
+  if (u.shortagesBefore.some((x) => x.status === "missing")) setSiteShortages(u.id, u.shortagesBefore, u.shortagesAfter);
 }
 
 /**

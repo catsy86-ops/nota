@@ -2,6 +2,7 @@ import type { JournalEntry } from "./yStudy";
 import { entrySiteId } from "./sites";
 import { sumFittings, type Fitting } from "./fittings";
 import { normalizePhone } from "./boss";
+import type { Shortage } from "./shortages";
 
 /**
  * Zamówienie kształtek dla budowy (punkt „Do zamówienia” w karcie budowy). Liczy kształtki
@@ -51,3 +52,20 @@ export const whatsappOrderUrl = (text: string, phone?: string): string => {
   const digits = phone ? normalizePhone(phone) : null;
   return `https://wa.me/${digits ?? ""}?text=${encodeURIComponent(text)}`;
 };
+
+/**
+ * Jedna wiadomość do hurtowni (1.7 planu Praca 2026-10-24): braki „Brakuje” i kształtki od ostatniego
+ * zamówienia. Bez braków — ten sam tekst co `orderText`. Braki „Zamówione” i dostarczone się nie powtarzają.
+ */
+export function supplierOrderText(siteName: string, order: SiteOrder, shortages: readonly Shortage[]): string {
+  const missing = shortages.filter((s) => s.status === "missing");
+  if (missing.length === 0) return orderText(siteName, order);
+  const lines = [`Zamówienie — ${siteName}`, "Braki:", ...missing.map((s) => `- ${s.text}${s.qty ? `: ${s.qty}` : ""}`)];
+  if (order.items.length > 0) {
+    lines.push("Kształtki:", ...order.items.map((f) => `- ${f.name}: ${f.qty} szt.`));
+    lines.push(order.since === null
+      ? "Kształtki liczone od początku budowy."
+      : `Kształtki liczone od ${new Date(order.since).toLocaleDateString("pl-PL")}.`);
+  }
+  return lines.join("\n");
+}

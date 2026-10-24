@@ -223,3 +223,8 @@ export function addShortagesFromDictation(
   }, [...base]);
   return { list, rejected };
 }
+
+/** „Oznacz jako zamówione” w karcie: braki „Brakuje” przechodzą na „Zamówione” z datą zmiany (1.7 planu Praca 2026-10-24). */
+export function markMissingOrdered(list: readonly Shortage[], now: number): Shortage[] {
+  return list.map((s) => (s.status === "missing" ? { ...s, status: "ordered" as const, changed: now } : { ...s }));
+}

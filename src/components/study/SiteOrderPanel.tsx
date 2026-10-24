@@ -3,27 +3,31 @@ import { PackageCheck, Copy, Check, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { haptic } from "@/lib/haptics";
-import { markSiteOrdered, useStudy } from "@/lib/study/store";
+import { markSiteOrdered, undoSiteOrdered, useStudy } from "@/lib/study/store";
+import { toastWithUndo } from "@/lib/undoToast";
 import type { SiteInfo } from "@/lib/study/sites";
-import { orderText, siteOrder, whatsappOrderUrl } from "@/lib/study/order";
+import { siteOrder, supplierOrderText, whatsappOrderUrl } from "@/lib/study/order";
 import { orderLogLine } from "@/lib/study/shortages";
 
 /**
- * „Do zamówienia” w karcie budowy: kształtki zużyte od ostatniego zamówienia, kopia tekstu
- * do wysłania dostawcy i zaznaczenie zamówienia (od tej chwili lista zaczyna się od zera).
- * Dane tylko do odczytu z wpisów; zmienia się `orderedAt` karty i historia zamówień (`orders`).
+ * „Do zamówienia” w karcie budowy: kształtki zużyte od ostatniego zamówienia i braki „Brakuje” w jednej
+ * wiadomości do hurtowni (kopia albo WhatsApp na numer z karty) oraz zaznaczenie zamówienia — lista
+ * kształtek zaczyna się od zera, a braki przechodzą na „Zamówione”; w toaście „Cofnij” (1.7 planu Praca).
+ * Zmienia się `orderedAt` karty, historia zamówień (`orders`) i statusy braków.
  */
 export function SiteOrderPanel({ site }: { site: SiteInfo }) {
   const study = useStudy();
   const order = useMemo(() => siteOrder(study.journal, site.id, site.orderedAt), [study.journal, site.id, site.orderedAt]);
-  const empty = order.items.length === 0;
+  const missing = (site.shortages ?? []).filter((x) => x.status === "missing").length;
+  const empty = order.items.length === 0 && missing === 0;
+  const text = () => supplierOrderText(site.name, order, site.shortages ?? []);
   const since = site.orderedAt
     ? `od ${new Date(site.orderedAt).toLocaleDateString("pl-PL")} (od ostatniego zamówienia)`
     : "od początku budowy";
 
   async function copy() {
     try {
-      await navigator.clipboard.writeText(orderText(site.name, order));
+      await navigator.clipboard.writeText(text());
       haptic("tap");
       toast.success("Skopiowano listę zamówienia");
     } catch {
@@ -33,13 +37,15 @@ export function SiteOrderPanel({ site }: { site: SiteInfo }) {
 
   function sendWhatsApp() {
     haptic("tap");
-    window.open(whatsappOrderUrl(orderText(site.name, order), site.supplierPhone), "_blank", "noopener");
+    window.open(whatsappOrderUrl(text(), site.supplierPhone), "_blank", "noopener");
   }
 
   function markOrdered() {
     haptic("success");
-    markSiteOrdered(site.id);
-    toast.success("Zapisano: kształtki zamówione");
+    const undo = markSiteOrdered(site.id);
+    if (!undo) return;
+    const what = [order.items.length > 0 && "kształtki", missing > 0 && `${missing} ${missing === 1 ? "brak" : "braki"}`].filter(Boolean).join(" i ");
+    toastWithUndo(`Zamówione: ${what}`, () => undoSiteOrdered(undo));
   }
 
   return (
@@ -48,8 +54,14 @@ export function SiteOrderPanel({ site }: { site: SiteInfo }) {
         <PackageCheck className="h-3.5 w-3.5" aria-hidden />
         Do zamówienia
       </h3>
-      {empty ? (
-        <p className="text-sm text-muted-foreground">Nic do zamówienia {site.orderedAt ? "od ostatniego zamówienia" : "— na budowie nie zużyto kształtek"}.</p>
+      {missing > 0 && (
+        <p className="text-sm" data-testid="site-order-missing">
+          + braki do zamówienia: <span className="font-mono tabular-nums">{missing}</span>
+          <span className="text-muted-foreground"> (lista w „Braki materiału”)</span>
+        </p>
+      )}
+      {order.items.length === 0 ? (
+        missing === 0 && <p className="text-sm text-muted-foreground">Nic do zamówienia {site.orderedAt ? "od ostatniego zamówienia" : "— na budowie nie zużyto kształtek"}.</p>
       ) : (
         <ul className="space-y-1 text-sm" data-testid="site-order-items">
           {order.items.map((f) => (

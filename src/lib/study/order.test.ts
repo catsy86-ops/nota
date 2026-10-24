@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { JournalEntry } from "./yStudy";
-import { orderText, siteOrder, whatsappOrderUrl } from "./order";
+import { orderText, siteOrder, supplierOrderText, whatsappOrderUrl } from "./order";
+import { markMissingOrdered, type Shortage } from "./shortages";
 import { cleanSite, siteKey } from "./sites";
 
 const day = (d: number, h = 12) => new Date(2026, 9, d, h).getTime();
@@ -103,5 +104,30 @@ describe("whatsappOrderUrl (U7)", () => {
     const url = whatsappOrderUrl("Zamówienie: kolano 16 — 2 szt.\nTrójnik");
     expect(url.startsWith("https://wa.me/?text=")).toBe(true);
     expect(decodeURIComponent(url.slice("https://wa.me/?text=".length))).toBe("Zamówienie: kolano 16 — 2 szt.\nTrójnik");
+  });
+});
+
+describe("wiadomość do hurtowni: braki i kształtki (1.7 planu Praca 2026-10-24)", () => {
+  const list: Shortage[] = [
+    { id: "a", text: "Klej PCV", qty: "2 opak.", status: "missing", at: 1 },
+    { id: "b", text: "Rura PEX 16", qty: "", status: "missing", at: 2 },
+    { id: "c", text: "Zawór", qty: "1", status: "ordered", at: 3 },
+  ];
+
+  it("braki „Brakuje” i kształtki w jednym tekście; zamówione braki się nie powtarzają", () => {
+    const order = siteOrder([entry("1", day(14), [{ name: "kolano 16", qty: 4 }], "Dom Kowalski", SITE)], SITE);
+    expect(supplierOrderText("Dom Kowalski", order, list).split(String.fromCharCode(10))).toEqual([
+      "Zamówienie — Dom Kowalski", "Braki:", "- Klej PCV: 2 opak.", "- Rura PEX 16",
+      "Kształtki:", "- kolano 16: 4 szt.", "Kształtki liczone od początku budowy.",
+    ]);
+  });
+
+  it("bez braków — dotychczasowy tekst zamówienia kształtek", () => {
+    const order = siteOrder([entry("1", day(14), [{ name: "kolano 16", qty: 4 }], "Dom Kowalski", SITE)], SITE);
+    expect(supplierOrderText("Dom Kowalski", order, [])).toBe(orderText("Dom Kowalski", order));
+  });
+
+  it("markMissingOrdered zmienia tylko „Brakuje”, z datą zmiany", () => {
+    expect(markMissingOrdered(list, 9).map((s) => [s.status, s.changed])).toEqual([["ordered", 9], ["ordered", 9], ["ordered", undefined]]);
   });
 });

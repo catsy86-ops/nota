@@ -12,7 +12,7 @@ import {
   addJournalEntry, removeJournalEntry, restoreJournalEntry, setSite, practiceByTopic,
   updateJournalEntry, setProblemResolved, openProblems, saveSiteCard, setSiteArchived, setDayHours,
   setProblemSolution, JOURNAL_SOLUTION_MAX, setSiteGeo, setSiteStages, markSiteOrdered,
-  siteDirectoryOf,
+  siteDirectoryOf, undoSiteOrdered, setSiteShortages,
 } from "./store";
 import { resetStudyForTests, yStudy } from "./data";
 import { yjsStore } from "@/lib/yjsStore";
@@ -678,5 +678,30 @@ describe("listy budowy: zapis z podstawą (cofnij, drugi telefon)", () => {
     const e = addJournalEntry({ kind: "ok", topic: null, text: "start" }, 1000)!;
     markSiteOrdered(e.siteId!, 5000);
     expect(siteDirectory(getStudy().sites, getStudy().journal).find((x) => x.id === e.siteId)?.orderedAt).toBe(5000);
+  });
+});
+
+describe("„Oznacz jako zamówione” z brakami i „Cofnij” (1.7 planu Praca 2026-10-24)", () => {
+  beforeEach(freshStudy);
+
+  it("braki „Brakuje” przechodzą na „Zamówione”, kształtki do historii; cofnięcie przywraca wszystko", () => {
+    setSite("Lipowa 9");
+    const e = addJournalEntry({ kind: "ok", topic: null, text: "montaż", fittings: [{ name: "kolano 16", qty: 4 }] }, 1000)!;
+    const id = e.siteId!;
+    setSiteShortages(id, [
+      { id: "b1", text: "Klej", qty: "2", status: "missing", at: 1 },
+      { id: "b2", text: "Rura", qty: "", status: "delivered", at: 2, changed: 3 },
+    ], []);
+    const site = () => siteDirectoryOf(getStudy()).find((x) => x.id === id)!;
+
+    const undo = markSiteOrdered(id, 5000)!;
+    expect(site().orderedAt).toBe(5000);
+    expect(site().orders).toHaveLength(1);
+    expect(site().shortages?.map((x) => [x.id, x.status])).toEqual([["b1", "ordered"], ["b2", "delivered"]]);
+
+    undoSiteOrdered(undo);
+    expect(site().orderedAt).toBeUndefined();
+    expect(site().orders ?? []).toHaveLength(0);
+    expect(site().shortages?.map((x) => [x.id, x.status])).toEqual([["b1", "missing"], ["b2", "delivered"]]);
   });
 });
