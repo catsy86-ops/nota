@@ -60,3 +60,40 @@ test("lista przed wejściem: punkt z karty, odhaczanie, wejście z godziną, wł
   await again.getByRole("button", { name: "Cofnij wejście" }).click();
   await expect(again.getByTestId("entry-check-enter")).toBeVisible();
 });
+
+// 1.2 planu Praca 2026-10-24: szybkie akcje z karty budowy i wybór budowy po zmianie widoku.
+test("przed wejściem: Nawiguj, Zadzwoń, „Wpis tutaj” i wybrana budowa po powrocie", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  const journal = page.getByTestId("study-journal");
+  const card = page.getByTestId("entry-check");
+  const actions = card.getByTestId("entry-check-actions");
+  // Bez adresu i numeru zostaje sam wpis.
+  await expect(actions.getByRole("link")).toHaveCount(0);
+  await expect(actions.getByRole("button", { name: "Wpis tutaj" })).toBeVisible();
+
+  await journal.getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
+  const site = page.getByTestId("site-card");
+  await site.getByLabel("Adres", { exact: true }).fill("ul. Lipowa 5, Kraków");
+  await site.getByLabel("Telefon kierownika").fill("700 800 900");
+  await site.getByRole("button", { name: "Zapisz kartę" }).click();
+  await page.keyboard.press("Escape");
+  await expect(site).toBeHidden();
+
+  await expect(actions.getByRole("link", { name: "Nawiguj" })).toHaveAttribute("href", /destination=ul\.%20Lipowa%205/);
+  await expect(actions.getByRole("link", { name: "Zadzwoń do kierownika: +48 700 800 900" })).toHaveAttribute("href", "tel:+48700800900");
+
+  // Druga budowa: wybór w karcie przeżywa wyjście z działu i powrót.
+  await journal.getByRole("button", { name: /Nowa budowa/ }).first().click();
+  await page.getByLabel("Nazwa budowy").fill("Polna 2");
+  await page.getByRole("button", { name: "Utwórz budowę" }).click();
+  await page.keyboard.press("Escape");
+  await card.getByRole("group", { name: "Wybór budowy na dziś" }).getByRole("button", { name: "Polna 2" }).click();
+  await expect(actions.getByRole("link")).toHaveCount(0);
+  await reloadWhenSaved(page);
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await expect(page.getByTestId("entry-check").getByRole("button", { name: "Polna 2" })).toHaveAttribute("aria-pressed", "true");
+
+  await page.getByTestId("entry-check-actions").getByRole("button", { name: "Wpis tutaj" }).click();
+  await expect(page.getByTestId("journal-entry-sheet").getByRole("button", { name: "Budowa: Polna 2. Zmień" })).toBeVisible();
+});

@@ -20,6 +20,7 @@ import { SiteDocsPanel } from "./SiteDocsPanel";
 import { SiteServicePanel } from "./SiteServicePanel";
 import { PrintRoot } from "./PrintRoot";
 import { HandoverPaper } from "./HandoverPaper";
+import { QuickLink } from "./QuickLink";
 import { buildHandover, handoverText, type Handover } from "@/lib/study/handover";
 import { mapsHref, prettyPhone, smsHref, SITE_ACCESS_MAX, SITE_PHONE_MAX, telHref } from "@/lib/study/contact";
 
@@ -27,19 +28,6 @@ import { mapsHref, prettyPhone, smsHref, SITE_ACCESS_MAX, SITE_PHONE_MAX, telHre
 const EMPTY_FORM = { name: "", address: "", investor: "", phone: "", manager: "", managerPhone: "", supplierPhone: "", access: "" };
 type SiteForm = typeof EMPTY_FORM;
 const formOf = (s: Partial<SiteForm>): SiteForm => ({ ...EMPTY_FORM, ...Object.fromEntries(Object.entries(s).filter(([k, v]) => k in EMPTY_FORM && typeof v === "string")) });
-
-/** Szybka akcja w karcie: link (telefon, SMS, Mapy) wyglądający jak przycisk. */
-function QuickLink({ href, icon: Icon, children, label }: { href: string; icon: typeof Phone; children: React.ReactNode; label?: string }) {
-  const external = href.startsWith("https:");
-  return (
-    <Button asChild variant="outline" size="sm" className="pressable h-10 min-w-0 justify-start gap-1.5 coarse:h-11">
-      <a href={href} aria-label={label} {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
-        <Icon className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
-        <span className="truncate">{children}</span>
-      </a>
-    </Button>
-  );
-}
 
 const fieldClass =
   "w-full rounded-lg border border-border bg-background px-3 py-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring sm:text-sm";

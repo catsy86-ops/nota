@@ -1546,11 +1546,14 @@ Poprawki z przeglądu kodu z 2026-10-20 (`code-review-2026-10-20.md`, usunięty 
 
 Co robi: na górze Dziennika karta „Przed wejściem” dla dzisiejszej budowy. Lista stałych punktów (ochrona, narzędzia, materiał, zgłoszenie u kierownika, zawór, miejsce pracy, apteczka) plus punkty z karty budowy, które dziś mają znaczenie: dostęp do bramy, braki, dostawa na dziś, następny etap, otwarte problemy, zgłoszenia serwisowe. Odhaczasz punkty i „Wchodzę” zapisuje godzinę wejścia; karta pokazuje pieczątkę „Wejście 07:12”. „Wchodzę” ustawia też bieżącą budowę (`setSite`), więc następny „+ Wpis” idzie na tę budowę (Etap 0.4 planu 2026-10-24). Stałą listę można zmienić („Zmień listę”), wspólną dla wszystkich budów; „Przywróć domyślną” cofa do wzorca.
 
+Szybkie akcje (1.2 planu 2026-10-24): pod kratkami „Nawiguj” (adres z karty, `mapsHref`), „Zadzwoń” (inwestor, a bez jego numeru kierownik — `primaryCall` w `contact.ts`) i „+ Wpis tutaj” (arkusz z tą budową, `onNewEntry` → `openEntryAt` w `StudyJournal.tsx`). Linki pokazują się tylko przy zapisanym adresie lub numerze; „Wpis tutaj” jest zawsze. Wybrana w karcie budowa jest w `sessionStorage` (`kaczy.study.entryPick.v1`), więc przeżywa przejście na inny widok i odświeżenie w tej samej karcie przeglądarki; nowa karta przeglądarki zaczyna od budowy domyślnej. Budowa z archiwum albo usunięta wraca do domyślnej.
+
 Gdzie:
 - `src/lib/study/entryCheck.ts` — czysta logika: `DEFAULT_CHECK_ITEMS`, `siteContextItems` (punkty z karty), `checkStatus`, `toggleCheck`, `enterSite`, `reopenCheck`, `addCheckItem`, `cleanCheckItems`, `cleanRecord`, `keepFrom`, `checkLine`.
 - `src/lib/study/yEntryCheck.ts` — warstwa Yjs: mapa `studyEntryCheck` (klucz `items` = własna lista, klucze `r␁budowa␁dzień` = odhaczenia). `setRecord` przy zapisie usuwa dni starsze niż 120.
 - `src/lib/study/entryCheckStore.ts` — hook `useEntryCheck` i akcje dla widoków.
-- `src/components/study/EntryCheck.tsx` — `EntryCheckCard` (karta nad Dziennikiem, wybór budowy, pieczątka), `EntryCheckDialog` (okno z dużymi polami), `ItemsEditor` (zmiana listy).
+- `src/components/study/EntryCheck.tsx` — `EntryCheckCard` (karta nad Dziennikiem, wybór budowy, pieczątka, szybkie akcje), `EntryCheckDialog` (okno z dużymi polami), `ItemsEditor` (zmiana listy).
+- `src/components/study/QuickLink.tsx` — link-przycisk szybkiej akcji, wspólny z kartą budowy (`SiteCardDialog.tsx`).
 - `src/components/study/StudyJournal.tsx` — montaż karty przed przypomnieniami.
 - `src/lib/exportNotes.ts`, `src/lib/noteSchema.ts` — pole `entryCheck` w kopii (sekcja `entryCheck` obok `debts`); przywracanie scala, nie kasuje.
 - `src/index.css` — `.entry-stamp` i animacja `entry-stamp` (wyłączona przy `reduced motion`).
@@ -1568,7 +1571,8 @@ Testy:
 - `src/lib/study/entryCheck.test.ts` — model (czyszczenie, odhaczanie, postęp, punkty z karty, granica 120 dni).
 - `src/lib/study/yEntryCheck.test.ts` — dwa dokumenty Yjs (lista i odhaczenia scalają się, kopia nie nadpisuje).
 - `src/lib/fullBackup.test.ts` — „lista przed wejściem wraca z kopii”.
-- `e2e/entry-check.spec.ts` — punkt z karty, odhaczanie, własny punkt, „Wchodzę” z godziną, po przeładowaniu „Cofnij wejście”.
+- `e2e/entry-check.spec.ts` — punkt z karty, odhaczanie, własny punkt, „Wchodzę” z godziną, po przeładowaniu „Cofnij wejście”; szybkie akcje i wybrana budowa po odświeżeniu (1.2).
+- `src/lib/study/contact.test.ts` — `primaryCall`.
 
 Commit: brak (zmiany niezacommitowane, na prośbę).
 

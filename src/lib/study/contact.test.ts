@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapsHref, prettyPhone, smsHref, telHref } from "./contact";
+import { mapsHref, prettyPhone, primaryCall, smsHref, telHref } from "./contact";
 import { cleanSite } from "./sites";
 
 describe("kontakt z karty budowy", () => {
@@ -25,5 +25,13 @@ describe("kontakt z karty budowy", () => {
     expect(card?.phone).toBe("600 100 200");
     expect(card && "manager" in card).toBe(false);
     expect(card?.access).toHaveLength(300);
+  });
+});
+
+describe("primaryCall — telefon w „Przed wejściem”", () => {
+  it("najpierw inwestor, bez jego numeru kierownik, bez numerów nic", () => {
+    expect(primaryCall({ phone: "600 100 200", managerPhone: "700 800 900" })).toEqual({ href: "tel:+48600100200", label: "Zadzwoń do inwestora: +48 600 100 200" });
+    expect(primaryCall({ phone: "brak", managerPhone: "700 800 900" })?.label).toBe("Zadzwoń do kierownika: +48 700 800 900");
+    expect(primaryCall({})).toBeNull();
   });
 });

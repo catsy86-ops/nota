@@ -190,7 +190,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
           </div>
         </header>
 
-        <EntryCheckCard />
+        <EntryCheckCard onNewEntry={openEntryAt} />
 
         {reminders.length > 0 && (
           <ul aria-label="Przypomnienia" className="mb-4 space-y-2 xl:col-start-1" data-testid="journal-reminders">

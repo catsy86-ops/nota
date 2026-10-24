@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, HardHat, MapPin, Pencil, Plus, RotateCcw, X } from "lucide-react";
+import { Check, HardHat, MapPin, Navigation, Pencil, Phone, Plus, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -17,6 +17,8 @@ import {
 } from "@/lib/study/entryCheckStore";
 import { setSite, useSiteDirectory, useStudy } from "@/lib/study/store";
 import { entrySiteId, findSiteByName, type SiteInfo } from "@/lib/study/sites";
+import { mapsHref, primaryCall } from "@/lib/study/contact";
+import { QuickLink } from "./QuickLink";
 
 const hhmm = (at: number) => new Date(at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
 const pointsPl = (n: number) => `${n} ${pluralPl(n, ["punktu", "punktów", "punktów"])}`;
@@ -24,6 +26,12 @@ const endOfToday = () => { const d = new Date(); d.setHours(23, 59, 59, 999); re
 
 /** Ile budów naraz w przełączniku karty — reszta i tak jest w filtrze dziennika. */
 const PICK_MAX = 4;
+
+/** Budowa wybrana w karcie (id) — w `sessionStorage`, żeby przetrwała przejście na inny widok i powrót. */
+const PICK_KEY = "kaczy.study.entryPick.v1";
+const session = () => { try { return typeof sessionStorage === "undefined" ? null : sessionStorage; } catch { return null; } };
+const readPick = () => { try { return session()?.getItem(PICK_KEY) ?? null; } catch { return null; } };
+const writePick = (id: string) => { try { session()?.setItem(PICK_KEY, id); } catch { /* bez pamięci karty wybór żyje do zmiany widoku */ } };
 
 /**
  * Dzisiejsza budowa listy: ta z dzisiejszym wpisem, potem bieżąca budowa arkusza, potem ostatnio
@@ -52,16 +60,18 @@ function useSiteCheck(site: SiteInfo | null, today: string) {
 }
 
 /**
- * Karta „Przed wejściem” nad dziennikiem: dzisiejsza budowa, kratki postępu i „Sprawdź listę”.
+ * Karta „Przed wejściem” nad dziennikiem: dzisiejsza budowa, kratki postępu i „Sprawdź listę”,
+ * pod spodem Nawiguj / Zadzwoń / + Wpis tutaj z karty budowy (1.2 planu Praca 2026-10-24).
  * Po „Wchodzę” karta zwija się do pieczątki z godziną wejścia — zostaje jako ślad na dziś.
  */
-export function EntryCheckCard() {
+export function EntryCheckCard({ onNewEntry }: { onNewEntry: (siteName: string) => void }) {
   useDayClock();
   const today = localDayKey();
   const study = useStudy();
   const dir = useSiteDirectory();
   const active = useMemo(() => dir.filter((s) => s.archived === undefined), [dir]);
-  const [picked, setPicked] = useState<string | null>(null);
+  const [picked, setPickedState] = useState<string | null>(readPick);
+  const setPicked = (id: string) => { setPickedState(id); writePick(id); };
   const [open, setOpen] = useState(false);
   /** Pieczątka wbita przed chwilą — tylko wtedy animacja. */
   const [fresh, setFresh] = useState(false);
@@ -69,6 +79,9 @@ export function EntryCheckCard() {
   const site = active.find((s) => s.id === siteId) ?? null;
   const { status } = useSiteCheck(site, today);
   if (!site) return null;
+
+  const nav = mapsHref(site.address);
+  const call = primaryCall(site);
 
   const choices = active.slice(0, PICK_MAX);
   if (!choices.some((s) => s.id === site.id)) choices[choices.length - 1] = site;
@@ -126,6 +139,14 @@ export function EntryCheckCard() {
           className="ml-auto shrink-0 coarse:h-11"
         >
           {status.entered ? "Pokaż listę" : status.done > 0 ? "Dokończ listę" : "Sprawdź listę"}
+        </Button>
+      </div>
+
+      <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label={`Szybkie akcje: ${site.name}`} data-testid="entry-check-actions">
+        {nav && <QuickLink href={nav} icon={Navigation}>Nawiguj</QuickLink>}
+        {call && <QuickLink href={call.href} icon={Phone} label={call.label}>Zadzwoń</QuickLink>}
+        <Button size="sm" variant="outline" onClick={() => onNewEntry(site.name)} className="pressable h-10 gap-1.5 coarse:h-11">
+          <Plus className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />Wpis tutaj
         </Button>
       </div>
 

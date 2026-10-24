@@ -28,3 +28,12 @@ export function mapsHref(address: string): string | null {
   if (!a) return null;
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(a)}`;
 }
+
+/** Telefon jednym stuknięciem: do inwestora, a bez jego numeru — do kierownika. `null` = brak numeru. */
+export function primaryCall(site: { phone?: string; managerPhone?: string }): { href: string; label: string } | null {
+  const investor = site.phone ? telHref(site.phone) : null;
+  if (investor) return { href: investor, label: `Zadzwoń do inwestora: ${prettyPhone(site.phone!)}` };
+  const manager = site.managerPhone ? telHref(site.managerPhone) : null;
+  if (manager) return { href: manager, label: `Zadzwoń do kierownika: ${prettyPhone(site.managerPhone!)}` };
+  return null;
+}
