@@ -1578,7 +1578,7 @@ Commit: brak (zmiany niezacommitowane, na prośbę).
 - **Dziennik — nagrania i podpis.** `StudyJournal.tsx`: nagrania wpisu widoczne na liście (`AudioPreview`, leniwie); podpis „Nagranie” / „Zdjęcie” / „Wpis” zamiast „Sprawdzone punkty listy” przy samym zdjęciu.
 - **Dziennik — zamknięcie karty budowy.** `SiteCardDialog.tsx` `close`: zamknięcie z niezapisaną zmianą zapisuje kartę (toast potwierdza).
 - **Dziennik — zdjęcia.** `JournalEntrySheet.tsx`: przyciski na zdjęciu mają 44 px pola dotyku na telefonie (`coarse:after:`), usunięcie zdjęcia ma „Cofnij” (zdjęcie wraca na swoje miejsce).
-- **Dziennik i Nauka — „na dziś” po północy.** `useDayClock()` w `StudyView.tsx` (`DueTodayChip`), `QuizPanel.tsx`, `StudyBoard.tsx`, `StudyJournal.tsx` (przypomnienia).
+- **Dziennik i Nauka — „na dziś” po północy.** `useDayClock()` w `StudyView.tsx` (`DueTodayChip`), `QuizPanel.tsx`, `StudyBoard.tsx`, `StudyJournal.tsx` (przypomnienia i licznik „7 dni: N wpisów”, Etap 0.5 planu 2026-10-24).
 - **Ćwiczenia — godzina przypomnienia.** `TrainingSection.tsx`: zapis przy wyjściu z pola (albo Enter), nie przy każdym znaku — wcześniej każdy znak przenosił notatkę do kosza.
 - **Ćwiczenia — ciężar.** `parseKg`: wartość spoza kroku 0,5 kg jest odrzucana z komunikatem, zamiast zapisać zaokrągloną po cichu.
 - **Długi — pasek spłaty.** `src/lib/debts/model.ts` `repaidShare(entries)`: liczy spłatę z obu stron salda, 100% tylko przy zerze, `floor` (maks. 99). Test: `model.test.ts`. Kolory historii (`DebtsView.tsx`) zgodne z listą.

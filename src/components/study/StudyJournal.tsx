@@ -127,10 +127,11 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   }, [view.days, shifts, study.journal, study.sites]);
 
   const week = useMemo(() => {
+    void dayTick;
     const since = Date.now() - 7 * DAY_MS;
     const recent = study.journal.filter((e) => e.at >= since);
     return { all: recent.length, problems: recent.filter((e) => e.kind === "problem").length };
-  }, [study.journal]);
+  }, [study.journal, dayTick]);
   const open = useMemo(() => openProblems(study.journal), [study.journal]);
   const reminders = useMemo(() => { void dayTick; return studyReminders(study.journal, Date.now(), study.sites); }, [study.journal, study.sites, dayTick]);
 
