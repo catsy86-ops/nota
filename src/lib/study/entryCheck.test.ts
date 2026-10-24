@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   addCheckItem, checkLine, checkStatus, cleanCheckItems, cleanRecord, DEFAULT_CHECK_ITEMS, enterSite, keepFrom,
-  reopenCheck, siteContextItems, toggleCheck, CHECK_ITEMS_MAX,
+  leaveSite, presenceMinutes, reopenCheck, siteContextItems, toggleCheck, unleaveSite, CHECK_ITEMS_MAX,
 } from "./entryCheck";
 import type { JournalEntry } from "./yStudy";
 
@@ -90,5 +90,37 @@ describe("lista przed wejściem — model", () => {
 
   it("granica przechowywania: 120 dni wstecz", () => {
     expect(keepFrom("2026-10-22")).toBe("2026-06-24");
+  });
+});
+
+describe("„Wychodzę” (1.6 planu Praca 2026-10-24)", () => {
+  const t = (h: number, m = 0) => new Date(2026, 9, 22, h, m).getTime();
+  const entered = enterSite(undefined, "s1", "2026-10-22", t(7, 12));
+
+  it("wyjście tylko po wejściu i nie przed nim; odhaczanie go nie gubi", () => {
+    const left = leaveSite(entered, t(15, 31));
+    expect(left.leftAt).toBe(t(15, 31));
+    expect(toggleCheck(left, "s1", "2026-10-22", "ochrona").leftAt).toBe(t(15, 31));
+    expect(leaveSite({ site: "s1", day: "2026-10-22", done: [] }, t(15)).leftAt).toBeUndefined();
+    expect(leaveSite(entered, t(6)).leftAt).toBeUndefined();
+  });
+
+  it("cofnięcie wyjścia zostawia wejście, cofnięcie wejścia zdejmuje oba", () => {
+    const left = leaveSite(entered, t(15));
+    expect(unleaveSite(left)).toEqual(entered);
+    expect(reopenCheck(left).at).toBeUndefined();
+    expect(reopenCheck(left).leftAt).toBeUndefined();
+  });
+
+  it("czyszczenie odrzuca wyjście bez wejścia albo przed nim", () => {
+    expect(cleanRecord({ site: "s1", day: "2026-10-22", done: [], leftAt: 5 })?.leftAt).toBeUndefined();
+    expect(cleanRecord({ site: "s1", day: "2026-10-22", done: [], at: 10, leftAt: 5 })?.leftAt).toBeUndefined();
+    expect(cleanRecord({ site: "s1", day: "2026-10-22", done: [], at: 5, leftAt: 10 })?.leftAt).toBe(10);
+  });
+
+  it("czas obecności zaokrąglony do 5 min, linia raportu z wyjściem", () => {
+    expect(presenceMinutes(leaveSite(entered, t(15, 31)))).toBe(8 * 60 + 20);
+    expect(presenceMinutes(entered)).toBeNull();
+    expect(checkLine(checkStatus([], leaveSite(entered, t(15, 30))))).toBe("Lista przed wejściem: 0/0, wejście 07:12, wyjście 15:30");
   });
 });

@@ -98,3 +98,34 @@ test("przed wejściem: Nawiguj, Zadzwoń, „Wpis tutaj” i wybrana budowa po p
   await page.getByTestId("entry-check-actions").getByRole("button", { name: "Wpis tutaj" }).click();
   await expect(page.getByTestId("journal-entry-sheet").getByRole("button", { name: "Budowa: Polna 2. Zmień" })).toBeVisible();
 });
+
+// 1.6 planu Praca 2026-10-24: „Wychodzę” — wyjście na pieczątce i podpowiedź godzin budowy.
+test("„Wychodzę”: pieczątka 07:12–15:30, „Cofnij wyjście”, godziny z wejścia i wyjścia w oknie godzin", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  const card = page.getByTestId("entry-check");
+  await expect(card.getByTestId("entry-check-leave")).toHaveCount(0);
+  await card.getByRole("button", { name: "Sprawdź listę" }).click();
+  await page.getByTestId("entry-check-enter").click();
+  await expect(card.getByTestId("entry-check-stamp")).toHaveText("Wejście 07:12");
+
+  await page.clock.setFixedTime(new Date(2026, 9, 22, 15, 30).getTime());
+  await card.getByTestId("entry-check-leave").click();
+  await expect(card.getByTestId("entry-check-stamp")).toHaveText("07:12–15:30");
+  await expect(page.getByText("Wyjście 15:30 — 8,33 h na budowie")).toBeVisible();
+  await expect(card.getByTestId("entry-check-leave")).toHaveCount(0);
+
+  await card.getByRole("button", { name: "Pokaż listę" }).click();
+  const dialog = page.getByTestId("entry-check-dialog");
+  await expect(dialog).toContainText("Wejście 07:12, wyjście 15:30");
+  await dialog.getByRole("button", { name: "Cofnij wyjście" }).click();
+  await expect(card.getByTestId("entry-check-stamp")).toHaveText("Wejście 07:12");
+  await page.keyboard.press("Escape");
+  await card.getByTestId("entry-check-leave").click();
+
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
+  await page.getByTestId("site-card").getByRole("button", { name: "Wpisz godziny" }).click();
+  const hours = page.getByTestId("day-hours");
+  await expect(hours.getByLabel("Godziny: Lipowa 5")).toHaveValue("8,33");
+  await expect(hours.getByTestId("day-hours-presence")).toBeVisible();
+});

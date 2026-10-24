@@ -18,6 +18,8 @@ vi.mock("@/lib/study/report", async (importOriginal) => {
   return { ...real, workOn: () => ({ minutes: 480, label: "Dniówka" }) };
 });
 vi.mock("@/lib/haptics", () => ({ haptic: vi.fn() }));
+let records = new Map<string, unknown>();
+vi.mock("@/lib/study/entryCheckStore", () => ({ useEntryCheck: () => ({ items: [], custom: false, records }) }));
 
 const { DayHoursDialog } = await import("./DayHoursDialog");
 
@@ -30,6 +32,7 @@ const entry = (id: string, siteId: string, name: string): JournalEntry => ({
 beforeEach(() => {
   setDayHours.mockReset();
   journal = [entry("e1", "a", "Dom A"), entry("e2", "b", "Dom B")];
+  records = new Map();
 });
 
 afterEach(() => {
@@ -97,5 +100,17 @@ describe("DayHoursDialog — godziny na budowach", () => {
     fireEvent.change(screen.getByLabelText("Godziny: Dom C"), { target: { value: "3,5" } });
     fireEvent.click(screen.getByRole("button", { name: "Zapisz" }));
     expect(setDayHours).toHaveBeenCalledWith(DAY, { c: 210 });
+  });
+
+  it("„Wchodzę” i „Wychodzę” podpowiadają godziny budowy bez wpisanych; ręczna wartość wygrywa (1.6)", async () => {
+    const { recordKey } = await import("@/lib/study/entryCheck");
+    const at = new Date(2026, 9, 14, 7, 0).getTime();
+    records = new Map([[recordKey("a", DAY), { site: "a", day: DAY, done: [], at, leftAt: at + 330 * 60_000 }]]);
+    render(<DayHoursDialog day={DAY} label="środa" onOpenChange={vi.fn()} />);
+    expect(screen.getByLabelText("Godziny: Dom A")).toHaveValue("5,5");
+    expect(screen.getByTestId("day-hours-presence")).toHaveTextContent("z wejścia i wyjścia");
+    fireEvent.change(screen.getByLabelText("Godziny: Dom A"), { target: { value: "6" } });
+    fireEvent.click(screen.getByRole("button", { name: "Zapisz" }));
+    expect(setDayHours).toHaveBeenCalledWith(DAY, { a: 360, b: 0 });
   });
 });

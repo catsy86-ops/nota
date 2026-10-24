@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Check, HardHat, MapPin, Navigation, Pencil, Phone, Plus, RotateCcw, X } from "lucide-react";
+import { Check, DoorOpen, HardHat, MapPin, Navigation, Pencil, Phone, Plus, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -10,15 +10,17 @@ import { haptic } from "@/lib/haptics";
 import { pluralPl } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 import {
-  addCheckItem, checkStatus, CHECK_ITEM_MAX, CHECK_ITEMS_MAX, recordKey, siteContextItems, type CheckItem,
+  addCheckItem, checkStatus, CHECK_ITEM_MAX, CHECK_ITEMS_MAX, presenceMinutes, recordKey, siteContextItems, type CheckItem,
 } from "@/lib/study/entryCheck";
 import {
-  enterEntryCheck, reopenEntryCheck, resetEntryCheckItems, saveEntryCheckItems, toggleEntryCheck, useEntryCheck,
+  enterEntryCheck, leaveEntryCheck, reopenEntryCheck, resetEntryCheckItems, saveEntryCheckItems, toggleEntryCheck, unleaveEntryCheck, useEntryCheck,
 } from "@/lib/study/entryCheckStore";
 import { setSite, useSiteDirectory, useStudy } from "@/lib/study/store";
 import { entrySiteId, findSiteByName, type SiteInfo } from "@/lib/study/sites";
 import { mapsHref, primaryCall } from "@/lib/study/contact";
 import { QuickLink } from "./QuickLink";
+import { toastWithUndo } from "@/lib/undoToast";
+import { formatHoursShort } from "@/lib/shifts/time";
 
 const hhmm = (at: number) => new Date(at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
 const pointsPl = (n: number) => `${n} ${pluralPl(n, ["punktu", "punktów", "punktów"])}`;
@@ -77,8 +79,19 @@ export function EntryCheckCard({ onNewEntry }: { onNewEntry: (siteName: string) 
   const [fresh, setFresh] = useState(false);
   const siteId = picked && active.some((s) => s.id === picked) ? picked : defaultSite(active, dir, study, today);
   const site = active.find((s) => s.id === siteId) ?? null;
-  const { status } = useSiteCheck(site, today);
+  const { status, record } = useSiteCheck(site, today);
   if (!site) return null;
+
+  /** „Wychodzę”: godzina wyjścia; czas na budowie podpowie godziny w oknie „Godziny na budowach”. */
+  function leave() {
+    if (!site) return;
+    const at = Date.now();
+    leaveEntryCheck(site.id, today, at);
+    haptic("success");
+    const min = record ? presenceMinutes({ ...record, leftAt: at }) : null;
+    const id = site.id;
+    toastWithUndo(min ? `Wyjście ${hhmm(at)} — ${formatHoursShort(min)} h na budowie` : `Wyjście ${hhmm(at)} zapisane`, () => unleaveEntryCheck(id, today));
+  }
 
   const nav = mapsHref(site.address);
   const call = primaryCall(site);
@@ -124,7 +137,7 @@ export function EntryCheckCard({ onNewEntry }: { onNewEntry: (siteName: string) 
             data-fresh={fresh || undefined}
             data-testid="entry-check-stamp"
           >
-            Wejście {hhmm(status.at!)}
+            {status.leftAt !== undefined ? `${hhmm(status.at!)}–${hhmm(status.leftAt)}` : `Wejście ${hhmm(status.at!)}`}
           </span>
         )}
       </div>
@@ -143,6 +156,11 @@ export function EntryCheckCard({ onNewEntry }: { onNewEntry: (siteName: string) 
       </div>
 
       <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label={`Szybkie akcje: ${site.name}`} data-testid="entry-check-actions">
+        {status.entered && status.leftAt === undefined && (
+          <Button size="sm" onClick={leave} className="pressable h-10 gap-1.5 coarse:h-11" data-testid="entry-check-leave">
+            <DoorOpen className="h-4 w-4 shrink-0" aria-hidden />Wychodzę
+          </Button>
+        )}
         {nav && <QuickLink href={nav} icon={Navigation}>Nawiguj</QuickLink>}
         {call && <QuickLink href={call.href} icon={Phone} label={call.label}>Zadzwoń</QuickLink>}
         <Button size="sm" variant="outline" onClick={() => onNewEntry(site.name)} className="pressable h-10 gap-1.5 coarse:h-11">
@@ -276,10 +294,18 @@ function EntryCheckDialog({ site, today, onEntered, onOpenChange }: {
             <p className="sr-only" role="status">{status.done} z {status.total}</p>
             {status.entered ? (
               <div className="flex items-center justify-between gap-3">
-                <span className="stamp-tag text-primary-ink">Wejście {hhmm(status.at!)}</span>
-                <Button variant="outline" onClick={() => { reopenEntryCheck(site.id, today); haptic("tap"); }} className="coarse:h-11">
-                  <RotateCcw className="h-4 w-4" aria-hidden />Cofnij wejście
-                </Button>
+                <span className="stamp-tag text-primary-ink">
+                  Wejście {hhmm(status.at!)}{status.leftAt !== undefined && `, wyjście ${hhmm(status.leftAt)}`}
+                </span>
+                {status.leftAt !== undefined ? (
+                  <Button variant="outline" onClick={() => { unleaveEntryCheck(site.id, today); haptic("tap"); }} className="coarse:h-11">
+                    <RotateCcw className="h-4 w-4" aria-hidden />Cofnij wyjście
+                  </Button>
+                ) : (
+                  <Button variant="outline" onClick={() => { reopenEntryCheck(site.id, today); haptic("tap"); }} className="coarse:h-11">
+                    <RotateCcw className="h-4 w-4" aria-hidden />Cofnij wejście
+                  </Button>
+                )}
               </div>
             ) : (
               <Button onClick={enter} className="h-11 w-full text-base coarse:h-12" data-testid="entry-check-enter">

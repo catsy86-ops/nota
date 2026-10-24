@@ -27,7 +27,16 @@ export interface CheckRecord {
   done: string[];
   /** Wejście na budowę (ms) — „Wchodzę”; brak = lista jeszcze otwarta. */
   at?: number;
+  /**
+   * Wyjście z budowy (ms) — „Wychodzę” (1.6 planu Praca 2026-10-24). Tylko przy `at`; para podpowiada
+   * godziny budowy w oknie „Godziny na budowach”. Starsza wersja aplikacji pole pomija (i może je zgubić
+   * przy własnym zapisie odhaczeń tego dnia).
+   */
+  leftAt?: number;
 }
+
+/** Klucze rekordu znane tej wersji — reszta (z nowszej wersji) zostaje przy zapisie (`yEntryCheck.setRecord`). */
+export const RECORD_KEYS: readonly string[] = ["site", "day", "done", "at", "leftAt"];
 
 export const CHECK_ITEM_MAX = 80;
 export const CHECK_ITEMS_MAX = 20;
@@ -79,7 +88,9 @@ export function cleanRecord(raw: unknown): CheckRecord | null {
   const done = Array.isArray(r.done)
     ? [...new Set(r.done.filter((x): x is string => typeof x === "string" && !!x && x.length <= 40))].slice(0, CHECK_ITEMS_MAX + 10)
     : [];
-  return { site: r.site, day: r.day, done, ...(typeof r.at === "number" && Number.isFinite(r.at) ? { at: r.at } : {}) };
+  const at = typeof r.at === "number" && Number.isFinite(r.at) ? r.at : undefined;
+  const leftAt = at !== undefined && typeof r.leftAt === "number" && Number.isFinite(r.leftAt) && r.leftAt >= at ? r.leftAt : undefined;
+  return { site: r.site, day: r.day, done, ...(at !== undefined ? { at } : {}), ...(leftAt !== undefined ? { leftAt } : {}) };
 }
 
 const listLine = (names: readonly string[], max = 3) =>
@@ -126,6 +137,8 @@ export interface CheckStatus {
   /** Wejście zapisane („Wchodzę”). */
   entered: boolean;
   at?: number;
+  /** Wyjście zapisane („Wychodzę”). */
+  leftAt?: number;
 }
 
 /** Postęp: liczą się tylko punkty, które są dziś na liście (odhaczenie usuniętego punktu nie zawyża). */
@@ -136,22 +149,49 @@ export function checkStatus(items: readonly CheckItem[], record: CheckRecord | u
     total: items.length,
     entered: record?.at !== undefined,
     ...(record?.at !== undefined ? { at: record.at } : {}),
+    ...(record?.leftAt !== undefined ? { leftAt: record.leftAt } : {}),
   };
 }
 
 export function toggleCheck(record: CheckRecord | undefined, site: string, day: string, itemId: string): CheckRecord {
   const done = new Set(record?.done ?? []);
   if (done.has(itemId)) done.delete(itemId); else done.add(itemId);
-  return { site, day, done: [...done], ...(record?.at !== undefined ? { at: record.at } : {}) };
+  return {
+    site, day, done: [...done],
+    ...(record?.at !== undefined ? { at: record.at } : {}),
+    ...(record?.leftAt !== undefined ? { leftAt: record.leftAt } : {}),
+  };
 }
 
 export function enterSite(record: CheckRecord | undefined, site: string, day: string, at: number): CheckRecord {
   return { site, day, done: [...(record?.done ?? [])], at };
 }
 
-/** Cofnięcie wejścia: odhaczenia zostają, lista znów otwarta. */
+/** Cofnięcie wejścia: odhaczenia zostają, lista znów otwarta (wyjście bez wejścia też znika). */
 export function reopenCheck(record: CheckRecord): CheckRecord {
   return { site: record.site, day: record.day, done: [...record.done] };
+}
+
+/** „Wychodzę”: zapisuje wyjście; bez wejścia (albo przed nim) — bez zmian. */
+export function leaveSite(record: CheckRecord, at: number): CheckRecord {
+  if (record.at === undefined || at < record.at) return { ...record, done: [...record.done] };
+  return { ...record, done: [...record.done], leftAt: at };
+}
+
+/** Cofnięcie wyjścia: wejście i odhaczenia zostają. */
+export function unleaveSite(record: CheckRecord): CheckRecord {
+  const { leftAt: _l, ...rest } = record;
+  return { ...rest, done: [...record.done] };
+}
+
+/**
+ * Czas od „Wchodzę” do „Wychodzę” w minutach, zaokrąglony do 5 min (jak pole godzin) — podpowiedź
+ * godzin budowy. `null` = brak pary albo ponad dobę.
+ */
+export function presenceMinutes(record: CheckRecord | undefined): number | null {
+  if (record?.at === undefined || record.leftAt === undefined) return null;
+  const min = Math.round((record.leftAt - record.at) / 60_000 / 5) * 5;
+  return min > 0 && min <= 24 * 60 ? min : null;
 }
 
 /** Nowy punkt na końcu listy; pusty tekst albo pełna lista — bez zmian. */
@@ -170,8 +210,9 @@ export function keepFrom(today: string, days = CHECK_KEEP_DAYS): string {
 
 const hhmm = (at: number) => new Date(at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
 
-/** Linia do raportu dnia: „Lista przed wejściem: 8/8, wejście 07:12”. */
+/** Linia do raportu dnia: „Lista przed wejściem: 8/8, wejście 07:12, wyjście 15:30”. */
 export function checkLine(status: CheckStatus): string {
   const base = `Lista przed wejściem: ${status.done}/${status.total}`;
-  return status.at !== undefined ? `${base}, wejście ${hhmm(status.at)}` : base;
+  if (status.at === undefined) return base;
+  return status.leftAt !== undefined ? `${base}, wejście ${hhmm(status.at)}, wyjście ${hhmm(status.leftAt)}` : `${base}, wejście ${hhmm(status.at)}`;
 }

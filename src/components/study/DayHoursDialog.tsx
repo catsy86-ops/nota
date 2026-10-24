@@ -13,6 +13,8 @@ import { dayKeyOf, workOn } from "@/lib/study/report";
 import { dayHours, parseHours } from "@/lib/study/siteHours";
 import { dayLabel } from "@/lib/study/journalView";
 import { setDayHours, useSiteDirectory, useStudy } from "@/lib/study/store";
+import { useEntryCheck } from "@/lib/study/entryCheckStore";
+import { presenceMinutes, recordKey } from "@/lib/study/entryCheck";
 import { cn } from "@/lib/utils";
 
 const fieldClass =
@@ -28,6 +30,8 @@ const noonOf = (key: string) => { const [y, m, d] = key.split("-").map(Number); 
  * budowa bez godzin dostaje resztę dnia); podpowiedź w polu pokazuje, ile by wyszło.
  * Otwierane z nagłówka każdego dnia albo z karty budowy (`siteId`: ta budowa zawsze na liście, dzień do
  * zmiany w oknie). „+ Budowa” dokłada budowę bez wpisu tego dnia (1.5 planu Praca 2026-10-24).
+ * Budowa bez wpisanych godzin, ale z „Wchodzę” i „Wychodzę” tego dnia, dostaje w polu czas obecności —
+ * podpowiedź do zatwierdzenia albo poprawki; wpisane ręcznie godziny zawsze wygrywają (1.6).
  */
 export function DayHoursDialog({ day, label, siteId, onOpenChange }: {
   /** Dzień „2026-10-14”; `null` = zamknięte. */
@@ -47,7 +51,10 @@ function DayHoursBody({ day, label, siteId, onOpenChange }: { day: string; label
   const study = useStudy();
   const dir = useSiteDirectory();
   const shifts = useShifts();
+  const check = useEntryCheck();
   const [current, setCurrent] = useState(day);
+  /** Czas od „Wchodzę” do „Wychodzę” budowy w tym dniu, jako tekst pola; `""` = brak pary. */
+  const presence = (id: string) => { const m = presenceMinutes(check.records.get(recordKey(id, current))); return m ? formatHoursShort(m) : ""; };
   /** Budowy dołożone ręcznie (bez wpisu tego dnia); budowa z karty — od razu. */
   const [extras, setExtras] = useState<string[]>(siteId ? [siteId] : []);
   const work = workOn(shifts, current);
@@ -64,7 +71,7 @@ function DayHoursBody({ day, label, siteId, onOpenChange }: { day: string; label
   const [values, setValues] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    setValues(Object.fromEntries(split.sites.map((s) => [s.siteId, s.set ? formatHoursShort(s.minutes ?? 0) : ""])));
+    setValues(Object.fromEntries(rows.map((s) => [s.siteId, s.set ? formatHoursShort(s.minutes ?? 0) : presence(s.siteId)])));
     // Tylko przy zmianie dnia — zmiana z drugiego telefonu nie kasuje wpisywanych liczb.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [current]);
@@ -128,6 +135,9 @@ function DayHoursBody({ day, label, siteId, onOpenChange }: { day: string; label
                   <span className="min-w-0 truncate">
                     {s.site}
                     {s.extra && <span className="ml-1.5 text-xs text-muted-foreground">bez wpisu</span>}
+                    {!s.set && presence(s.siteId) !== "" && (
+                      <span className="ml-1.5 text-xs text-muted-foreground" data-testid="day-hours-presence">z wejścia i wyjścia</span>
+                    )}
                   </span>
                   <span className="flex shrink-0 items-center gap-1.5">
                     <input
@@ -150,7 +160,13 @@ function DayHoursBody({ day, label, siteId, onOpenChange }: { day: string; label
             <select
               aria-label="Dodaj budowę bez wpisu tego dnia"
               value=""
-              onChange={(e) => { const id = e.target.value; if (id) setExtras((x) => [...x, id]); }}
+              onChange={(e) => {
+                const id = e.target.value;
+                if (!id) return;
+                setExtras((x) => [...x, id]);
+                const hint = presence(id);
+                if (hint) setValues((v) => ({ ...v, [id]: hint }));
+              }}
               className={selectClass}
             >
               <option value="">+ Budowa bez wpisu tego dnia</option>

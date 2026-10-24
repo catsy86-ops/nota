@@ -1,5 +1,5 @@
 import * as Y from "yjs";
-import { cleanCheckItems, cleanRecord, DEFAULT_CHECK_ITEMS, isRecordKey, keepFrom, recordKey, type CheckItem, type CheckRecord } from "./entryCheck";
+import { cleanCheckItems, cleanRecord, DEFAULT_CHECK_ITEMS, isRecordKey, keepFrom, RECORD_KEYS, recordKey, type CheckItem, type CheckRecord } from "./entryCheck";
 
 /**
  * Lista przed wejściem w Y.Doc notatek — synchronizacja, plik i kopia jak reszta danych. Mapa
@@ -57,8 +57,14 @@ export function createYEntryCheck(doc: Y.Doc) {
     const clean = cleanRecord(record);
     if (!clean) return;
     const from = keepFrom(clean.day);
+    const key = recordKey(clean.site, clean.day);
+    // Pola z nowszej wersji aplikacji zostają — nadpisujemy tylko klucze znane tej wersji.
+    const prev = map.get(key);
+    const foreign = prev && typeof prev === "object"
+      ? Object.fromEntries(Object.entries(prev as Record<string, unknown>).filter(([k]) => !RECORD_KEYS.includes(k)))
+      : {};
     doc.transact(() => {
-      map.set(recordKey(clean.site, clean.day), clean);
+      map.set(key, { ...foreign, ...clean });
       for (const [k, v] of Array.from(map.entries())) {
         if (!isRecordKey(k)) continue;
         const r = cleanRecord(v);

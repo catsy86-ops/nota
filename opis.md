@@ -1552,6 +1552,8 @@ Poprawki z przeglądu kodu z 2026-10-20 (`code-review-2026-10-20.md`, usunięty 
 
 Co robi: na górze Dziennika karta „Przed wejściem” dla dzisiejszej budowy. Lista stałych punktów (ochrona, narzędzia, materiał, zgłoszenie u kierownika, zawór, miejsce pracy, apteczka) plus punkty z karty budowy, które dziś mają znaczenie: dostęp do bramy, braki, dostawa na dziś, następny etap, otwarte problemy, zgłoszenia serwisowe. Odhaczasz punkty i „Wchodzę” zapisuje godzinę wejścia; karta pokazuje pieczątkę „Wejście 07:12”. „Wchodzę” ustawia też bieżącą budowę (`setSite`), więc następny „+ Wpis” idzie na tę budowę (Etap 0.4 planu 2026-10-24). Stałą listę można zmienić („Zmień listę”), wspólną dla wszystkich budów; „Przywróć domyślną” cofa do wzorca.
 
+„Wychodzę” (1.6 planu 2026-10-24): po wejściu pierwszy przycisk w rzędzie akcji karty zapisuje godzinę wyjścia (`leftAt` w `CheckRecord`; `leaveSite`, `unleaveSite`, `leaveEntryCheck`, `unleaveEntryCheck`). Pieczątka pokazuje wtedy „07:12–15:30”, a toast — „Wyjście 15:30 — 8,33 h na budowie” z „Cofnij”. W oknie listy „Cofnij wyjście” (wejście zostaje); „Cofnij wejście” zdejmuje oba. Para wejście–wyjście podpowiada godziny budowy w oknie „Godziny na budowach” (`presenceMinutes`, zaokrąglenie do 5 min, najwyżej doba): budowa bez wpisanych godzin dostaje tę liczbę w polu z dopiskiem „z wejścia i wyjścia” — trzeba ją zatwierdzić „Zapisz”; wpisane ręcznie godziny nigdy nie są nadpisywane. `checkLine` dopisuje „wyjście 15:30”. Wyjście bez wejścia albo przed nim jest odrzucane (`cleanRecord`). Zgodność: `setRecord` (`yEntryCheck.ts`) przy zapisie zostawia klucze rekordu nieznane tej wersji (`RECORD_KEYS`), ale starsza wersja aplikacji `leftAt` nie zna i przy własnym odhaczeniu tego dnia może je zgubić.
+
 Szybkie akcje (1.2 planu 2026-10-24): pod kratkami „Nawiguj” (adres z karty, `mapsHref`), „Zadzwoń” (inwestor, a bez jego numeru kierownik — `primaryCall` w `contact.ts`) i „+ Wpis tutaj” (arkusz z tą budową, `onNewEntry` → `openEntryAt` w `StudyJournal.tsx`). Linki pokazują się tylko przy zapisanym adresie lub numerze; „Wpis tutaj” jest zawsze. Wybrana w karcie budowa jest w `sessionStorage` (`kaczy.study.entryPick.v1`), więc przeżywa przejście na inny widok i odświeżenie w tej samej karcie przeglądarki; nowa karta przeglądarki zaczyna od budowy domyślnej. Budowa z archiwum albo usunięta wraca do domyślnej.
 
 Gdzie:
@@ -1579,6 +1581,7 @@ Testy:
 - `src/lib/fullBackup.test.ts` — „lista przed wejściem wraca z kopii”.
 - `e2e/entry-check.spec.ts` — punkt z karty, odhaczanie, własny punkt, „Wchodzę” z godziną, po przeładowaniu „Cofnij wejście”; szybkie akcje i wybrana budowa po odświeżeniu (1.2).
 - `src/lib/study/contact.test.ts` — `primaryCall`.
+- `src/lib/study/entryCheck.test.ts` („Wychodzę”: kolejność, cofanie, czyszczenie, czas obecności, linia raportu), `yEntryCheck.test.ts` (pola nowszej wersji zostają, wyjście na drugim telefonie), `DayHoursDialog.test.tsx` (podpowiedź z wejścia i wyjścia), `e2e/entry-check.spec.ts` („Wychodzę”).
 
 Commit: brak (zmiany niezacommitowane, na prośbę).
 

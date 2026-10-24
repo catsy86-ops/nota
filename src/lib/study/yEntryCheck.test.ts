@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as Y from "yjs";
-import { DEFAULT_CHECK_ITEMS } from "./entryCheck";
+import { DEFAULT_CHECK_ITEMS, recordKey } from "./entryCheck";
 import { createYEntryCheck } from "./yEntryCheck";
 
 describe("lista przed wejściem — dokument Yjs", () => {
@@ -43,5 +43,17 @@ describe("lista przed wejściem — dokument Yjs", () => {
     expect([...c.get().records.values()][0].done).toEqual([]);
     c.mergeDump("śmieć");
     expect(c.get().records.size).toBe(1);
+  });
+
+  it("zapis zostawia pola z nowszej wersji, a wyjście przechodzi na drugi telefon", () => {
+    const [a, b] = pair();
+    const doc = new Y.Doc();
+    const c = createYEntryCheck(doc);
+    doc.getMap("studyEntryCheck").set(recordKey("s1", "2026-10-22"), { site: "s1", day: "2026-10-22", done: [], at: 5, przyszle: "x" });
+    c.setRecord({ site: "s1", day: "2026-10-22", done: ["ochrona"], at: 5, leftAt: 9 });
+    expect(doc.getMap("studyEntryCheck").get(recordKey("s1", "2026-10-22"))).toMatchObject({ przyszle: "x", leftAt: 9, done: ["ochrona"] });
+
+    a.setRecord({ site: "s2", day: "2026-10-22", done: [], at: 5, leftAt: 9 });
+    expect([...b.get().records.values()][0]).toMatchObject({ at: 5, leftAt: 9 });
   });
 });
