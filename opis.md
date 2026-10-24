@@ -2235,3 +2235,32 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - `src/hooks/useFilteredNotes.test.ts` i `viewPrefs` (typy): dopisane pole `readerSplitId`.
 - **Commit:** `47c93fe`, 2026-10-24.
 
+## Sieć wiedzy — notatki tygodnia i miesiąca (Faza 3.8, 2026-10-24)
+
+- **Co robi:** obok notatki dnia są teraz notatka tygodnia (np. „Tydzień 43 · 2026”) i notatka miesiąca („Październik 2026”). Klik w chip w composerze („Notatka tygodnia”, „Notatka miesiąca”) albo pozycja w palecie poleceń otwiera notatkę okresu, a jeśli jej nie ma, tworzy ją z szablonem (cele, co wyszło, wnioski). Jedna notatka na okres: kolejne kliknięcie otwiera tę samą.
+- **Gdzie jest:**
+  - `src/lib/periodNote.ts` — logika: `isoWeek` (tydzień ISO 8601, poniedziałek na początku), `periodKey(kind, now)` (`YYYY-Www` / `YYYY-MM`), `periodTitle`, `findPeriodNote`, stałe `PERIOD_LABEL` (etykiety „tydzień”, „miesiąc”) i `PERIOD_TEMPLATE`. Typ `PeriodKind = "week" | "month"`.
+  - `src/lib/safeProjection.ts` — `safePeriodKey` (walidacja wartości z Yjs).
+  - `src/lib/yjsStore.ts` — pole `periodKey` w `NOTE_SCALAR_FIELDS`, zapis i odczyt.
+  - `src/lib/noteSchema.ts` — `periodKey` w schemacie notatki (zod, `catch(undefined)`).
+  - `src/hooks/useNotes.ts` — typ `Note.periodKey`; kopia notatki go pomija.
+  - `src/lib/privateNotes.ts` — kopia notatki prywatnej też go pomija.
+  - `src/pages/Index.tsx` — `openPeriodNote(kind)`, przekazywane do `CommandPalette` i `QuickTemplates`.
+  - `src/components/QuickTemplates.tsx` — dwa chipy obok „Notatka dnia”.
+  - `src/components/CommandPalette.tsx` — dwie pozycje w grupie „Akcje”.
+- **Jak działa i dlaczego:**
+  - Notatka okresu rozpoznawana jest po polu `periodKey`, nie po tytule — tak jak notatka dnia po `dailyDate`. Tytuł można zmienić, a wikilinki i tak wskazują po tytule, więc duplikaty tytułów by psuły oba mechanizmy.
+  - Osobne pole zamiast rozszerzenia `dailyDate`: nie zmienia się format danych notatki dnia, a starsze wersje aplikacji ignorują nieznane pole (zod `catch`, `safe*` zwracają `undefined`).
+  - Klucz tygodnia to rok ISO, nie rok kalendarzowy: 2026-01-01 należy do `2026-W01`, a 2025-12-29 też do `2026-W01`.
+  - Liczenie tygodnia idzie na dacie UTC zbudowanej z lokalnych składowych, więc strefa czasowa nie przesuwa dnia.
+  - Duplikaty (dwa urządzenia offline) — wygrywa starsza notatka, jak przy notatce dnia.
+- **Ograniczenia i pułapki:**
+  - Brak szablonów zmiennych (`templateVars`) — szablon jest stały; plan przewidywał ewentualne zmienne, na razie nie są potrzebne.
+  - Brak wpisu w „Dziś” i w przypomnieniach. Notatka okresu nie dopisuje znacznika godziny (w przeciwieństwie do dziennej).
+  - Kosz się nie liczy (przy ponownym kliknięciu powstaje nowa notatka), Archiwum tak.
+  - Stare wersje aplikacji nie pokazują pola `periodKey`, ale nie gubią notatki — pole jest po prostu nieznane.
+- **Testy:**
+  - `src/lib/periodNote.test.ts` — tydzień ISO na granicy roku (2025-12-29, 2026-12-31 → W53), klucze, tytuły, wybór po kluczu, kosz, duplikaty, `safePeriodKey`.
+  - `e2e/period-note.spec.ts` — chip „Notatka tygodnia” tworzy raz i kolejne kliknięcie nie dubluje; „Notatka miesiąca” ma osobny klucz.
+  - `e2e/daily-note.spec.ts` i `e2e/bundle.spec.ts` — bez zmian w zachowaniu, zielone.
+- **Commit:** `19f3eb3`, 2026-10-24.
