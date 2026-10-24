@@ -109,11 +109,12 @@ export function SiteCardDialog({
       haptic("success");
       const photos = `${res.photos} ${pluralPl(res.photos, ["zdjęcie", "zdjęcia", "zdjęć"])}`;
       const docs = res.docs > 0 ? `, ${res.docs} ${pluralPl(res.docs, ["dokument", "dokumenty", "dokumentów"])}` : "";
-      const missing = res.missingPhotos + res.missingDocs;
+      const audio = res.recordings > 0 ? `, ${res.recordings} ${pluralPl(res.recordings, ["nagranie", "nagrania", "nagrań"])}` : "";
+      const missing = res.missingPhotos + res.missingDocs + res.missingRecordings;
       toast.success(
         missing > 0
-          ? `Paczka gotowa: raport i ${photos}${docs}. ${missing} bez bajtów na tym urządzeniu — pominięte.`
-          : `Paczka gotowa: raport i ${photos}${docs}`,
+          ? `Paczka gotowa: raport i ${photos}${docs}${audio}. ${missing} bez bajtów na tym urządzeniu — pominięte.`
+          : `Paczka gotowa: raport i ${photos}${docs}${audio}`,
       );
     } catch {
       toast.error("Nie udało się przygotować paczki");

@@ -11,6 +11,7 @@ import { stageName, stageProgress, type SiteStage } from "./stages";
 import { openShortages, shortageLine, type Shortage } from "./shortages";
 import { dayHours, siteMinutesOn } from "./siteHours";
 import type { JournalEntry } from "./yStudy";
+import type { Attachment } from "@/lib/attachments";
 
 /**
  * Raport z dziennika budowy: dzień albo zakres dni, jedna budowa albo wszystkie.
@@ -98,6 +99,8 @@ export interface JournalReport {
   open: ReportEntry[];
   /** Zdjęcia wszystkich wpisów, od najstarszego. */
   images: string[];
+  /** Nagrania głosowe wpisów, od najstarszego — do paczki ZIP (1.10). */
+  recordings: Attachment[];
   /** Suma kształtek z wpisów raportu, od największej liczby. */
   fittings: Fitting[];
   /**
@@ -261,6 +264,7 @@ export function buildJournalReport(journal: readonly JournalEntry[], opts: Repor
     workMinutes: days.reduce((s, d) => s + (d.work ? workMinutesOf(d.work) : 0), 0),
     open,
     images: picked.flatMap((e) => e.images),
+    recordings: picked.flatMap((e) => e.recordings ?? []),
     fittings: sumFittings(picked.map((e) => e.fittings)),
     toOrder: opts.siteId ? siteOrder(journal, opts.siteId, opts.siteCard?.orderedAt).items : [],
     stages: opts.siteId && opts.siteCard?.stages ? opts.siteCard.stages.map((s) => ({ ...s })) : null,
@@ -269,11 +273,13 @@ export function buildJournalReport(journal: readonly JournalEntry[], opts: Repor
 }
 
 const photosPl = (n: number) => `${n} ${pluralPl(n, ["zdjęcie", "zdjęcia", "zdjęć"])}`;
+const recordingsPl = (n: number) => `${n} ${pluralPl(n, ["nagranie", "nagrania", "nagrań"])}`;
 
 /** Jednowierszowy opis wpisu bez godziny: „Problem otwarty: Żółta rura przecieka · temat · 2 zdjęcia”. */
 function entryLine(r: ReportEntry): string {
   const text = entryHeadline(r.entry);
-  const extra = [r.site, r.stage && `etap: ${r.stage}`, r.topic && `temat: ${r.topic}`, r.entry.images.length > 0 && photosPl(r.entry.images.length)].filter(Boolean);
+  const extra = [r.site, r.stage && `etap: ${r.stage}`, r.topic && `temat: ${r.topic}`, r.entry.images.length > 0 && photosPl(r.entry.images.length),
+    (r.entry.recordings?.length ?? 0) > 0 && recordingsPl(r.entry.recordings!.length)].filter(Boolean);
   // Kolejne linie tekstu wcięte — zostają w tym samym punkcie listy.
   const test = r.entry.test ? `\n  ${testLine(r.entry.test)}` : "";
   const fit = r.entry.fittings?.length ? `\n  Kształtki: ${fittingsLine(r.entry.fittings)}` : "";

@@ -248,7 +248,7 @@ describe("raport: godziny w dniach bez wpisu (Etap 0.1)", () => {
 
 describe("etap przypięty do wpisu w raporcie (1.9 planu Praca 2026-10-24)", () => {
   const id = siteKey("Lipowa 5");
-  const card = { name: "Lipowa 5", stages: [{ id: "piony", name: "Piony i podejścia" }] };
+  const card = { name: "Lipowa 5", address: "", investor: "", stages: [{ id: "piony", name: "Piony i podejścia" }] };
   const withStage = [
     e("s1", at(14, 9), "ok", "Lipowa 5", "Piony gotowe", { stage: "piony" }),
     e("s2", at(14, 10), "ok", "Lipowa 5", "Stary etap", { stage: "usuniety" }),
@@ -268,3 +268,14 @@ describe("etap przypięty do wpisu w raporcie (1.9 planu Praca 2026-10-24)", () 
   });
 });
 
+describe("nagrania w raporcie (1.10 planu Praca 2026-10-24)", () => {
+  const rec = (hash: string) => ({ hash, name: `Nagranie ${hash}.webm`, size: 10, type: "audio/webm" });
+  it("liczba nagrań w linii wpisu, lista nagrań do paczki", () => {
+    const r = buildJournalReport(
+      [e("n1", at(14, 9), "note", "Lipowa 5", "Opis do szefa", { recordings: [rec("x"), rec("y")] })],
+      { siteId: siteKey("Lipowa 5"), from: "2026-10-14", to: "2026-10-14" },
+    );
+    expect(reportBody(r)).toContain("Notatka: Opis do szefa (2 nagrania)");
+    expect(r.recordings.map((a) => a.hash)).toEqual(["x", "y"]);
+  });
+});

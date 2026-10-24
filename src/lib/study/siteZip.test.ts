@@ -21,6 +21,7 @@ const report: JournalReport = {
   toOrder: [],
   stages: null,
   shortages: [],
+  recordings: [],
 };
 
 const bytes = (...b: number[]) => new Uint8Array(b).buffer;
@@ -79,5 +80,24 @@ describe("buildSiteZip — dokumenty budowy", () => {
     expect(names).toContain("dokumenty/Rzut parteru.pdf");
     expect(names).toContain("dokumenty/Rzut parteru (2).pdf");
     expect(zip).toMatchObject({ docs: 2, missingDocs: 1, photos: 0 });
+  });
+});
+
+describe("nagrania w paczce (1.10 planu Praca 2026-10-24)", () => {
+  it("nagrania idą do `nagrania/` pod własnymi nazwami; brak bajtów liczy się osobno", async () => {
+    const withAudio: JournalReport = {
+      ...report,
+      images: [],
+      recordings: [
+        { hash: "h1", name: "Nagranie 2026-10-14 08-15.webm", size: 3, type: "audio/webm" },
+        { hash: "h2", name: "Nagranie 2026-10-14 08-15.webm", size: 3, type: "audio/webm" },
+        { hash: "h3", name: "Nagranie 2026-10-14 09-00.webm", size: 3, type: "audio/webm" },
+      ],
+    };
+    const read = async (ref: string) => (ref === "h3" ? undefined : { bytes: bytes(1, 2, 3), type: "audio/webm" });
+    const zip = await buildSiteZip(withAudio, read, new Date(2026, 9, 14));
+    expect([zip.recordings, zip.missingRecordings]).toEqual([2, 1]);
+    expect(text(zip.bytes)).toContain("nagrania/Nagranie 2026-10-14 08-15.webm");
+    expect(text(zip.bytes)).toContain("nagrania/Nagranie 2026-10-14 08-15 (2).webm");
   });
 });
