@@ -115,7 +115,7 @@ Cel: każdy z 7 stylów (Zeszyt, Plan, Neon, Zorza, Miedź, Matryca, Hydraulika)
 - Paleta poleceń: szybki przełącznik notatek z trafieniami w nagłówkach i blokach.
 - Test: wynik wyszukiwania zgodny z obecnym na zestawie z `searchNotes.test.ts`; `perf.spec.ts` dla 5000 notatek < 50 ms na zapytanie.
 
-**Status (2026-10-24):** zrobione — MiniSearch zamiast Fuse (`fuse.js` usunięty), jeden indeks dokładany przyrostowo, wagi pól, prefiksy i literówki, `alias:`, `link:`, `zadanie:otwarte`, test 5000 notatek < 50 ms. Odłożone: indeks w Workerze (wyszukiwanie jest synchroniczne w kilku miejscach — przejście na async to osobny krok), zrzut do IndexedDB, `pole>`/`pole<` i `ścieżka:`, wyniki nagłówków i bloków w palecie poleceń.
+**Status (2026-10-24, kod w `f89c1c9`):** zrobione — MiniSearch zamiast Fuse (`fuse.js` usunięty), jeden indeks dokładany przyrostowo, wagi pól, prefiksy i literówki, `alias:`, `link:`, `zadanie:otwarte`, test 5000 notatek < 50 ms. Dołożone: `pole:Nazwa>x` / `<` / `>=` / `<=` i `ścieżka:` (dokładna ścieżka folderu). Odłożone: indeks w Workerze (wyszukiwanie jest synchroniczne w kilku miejscach — przejście na async to osobny krok), zrzut do IndexedDB, wyniki nagłówków i bloków w palecie poleceń.
 
 ## Faza 5 — Bazy w stylu Notion (L)
 
