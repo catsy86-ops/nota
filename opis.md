@@ -2264,3 +2264,28 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - `e2e/period-note.spec.ts` — chip „Notatka tygodnia” tworzy raz i kolejne kliknięcie nie dubluje; „Notatka miesiąca” ma osobny klucz.
   - `e2e/daily-note.spec.ts` i `e2e/bundle.spec.ts` — bez zmian w zachowaniu, zielone.
 - **Commit:** `19f3eb3`, 2026-10-24.
+
+## Sieć wiedzy — wyodrębnij zaznaczenie do nowej notatki (Faza 3.9, 2026-10-24)
+
+- **Co robi:** w pasku narzędzi edytora notatki jest przycisk z nożyczkami („Wyodrębnij zaznaczenie do nowej notatki”). Zaznaczony fragment treści trafia do nowej notatki, a w bieżącej w tym samym miejscu zostaje `[[tytuł]]`. Tytuł nowej notatki to pierwsza niepusta linia zaznaczenia (bez znaczników Markdown, do 60 znaków). Jeśli tytuł jest już zajęty przez inną żywą notatkę, dostaje sufiks „(2)”, żeby link nie wskazał na starą notatkę. Bez zaznaczenia pojawia się podpowiedź i nic się nie zmienia.
+- **Gdzie jest:**
+  - `src/lib/extractNote.ts` — `titleFromSelection`, `uniqueNoteTitle`, `replaceSelectionWithLink`, stałe `EXTRACT_TITLE_MAX` i `EXTRACT_TITLE_FALLBACK`.
+  - `src/lib/wikiNoteActions.ts` — `createNoteFromSelection(selected)` tworzy notatkę; `createNoteWithTitle` dostało drugi parametr `content` (domyślnie pusty).
+  - `src/hooks/useNoteEditSession.ts` — `handleExtractSelection`: czyta zaznaczenie z `textareaRef`, podmienia treść przez `writeContent`, pokazuje toast i ustawia kursor za linkiem.
+  - `src/components/NoteEditor.tsx` — przycisk (ikona `Scissors`) tuż za paskiem formatowania.
+- **Jak działa i dlaczego:**
+  - Zaznaczenie bierze się z `TextControl` (`selectionStart`/`selectionEnd`), tak jak „Pogrubienie”, więc działa w obu silnikach edytora (textarea i CodeMirror).
+  - Kolejność: najpierw powstaje nowa notatka, potem podmiana w bieżącej. Zmiana bieżącej idzie szkicem, więc zapisze ją autozapis, „Zapisz” albo odmontowanie.
+  - Nowa notatka idzie przez `yjsStore.upsertNote` tą samą ścieżką co notatka z wikilinka — bez osobnej logiki zapisu.
+  - Tytuł musi być unikalny, bo `resolveWikiTarget` bierze pierwszą notatkę o danym tytule. Sprawdzane są tylko żywe notatki, tak jak przy rozwiązywaniu linków (kosz się nie liczy).
+  - Znaki `[ ] | #` są usuwane z tytułu, bo złamałyby składnię `[[cel|tekst#nagłówek]]`.
+- **Ograniczenia i pułapki:**
+  - Brak przycisku „Cofnij” — toast jest informacyjny. Nową notatkę usuwa się ręcznie.
+  - Zaznaczenie obejmujące część istniejącego `[[linku]]` nie jest pilnowane; wynik może być zepsutym linkiem, jak przy każdej ręcznej edycji.
+  - Nowa notatka nie otwiera się sama — użytkownik zostaje w bieżącej.
+  - Przycisk jest zawsze widoczny, także bez zaznaczenia. Nie śledzimy stanu zaznaczenia po każdym ruchu kursora.
+  - Tytuł przycinany do granicy słowa przy 60 znakach.
+- **Testy:**
+  - `src/lib/extractNote.test.ts` — tytuł z Markdown i znaków składni, przycinanie, tytuł zastępczy, unikalność bez względu na wielkość liter, podmiana i rozpoznanie nowego linku.
+  - `e2e/extract-note.spec.ts` — zaznaczenie wyodrębnia się, a w bieżącej zapisuje się `[[link]]`; bez zaznaczenia tylko podpowiedź. Spec działa w `chromium` i w `chromium-cm` (dopisany do `testMatch` w `playwright.config.ts`).
+- **Commit:** `ec05e34`, 2026-10-24.
