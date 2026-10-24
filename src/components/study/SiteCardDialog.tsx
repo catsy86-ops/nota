@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Archive, ArchiveRestore, ChevronDown, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, Phone, Share2, Plus } from "lucide-react";
+import { Archive, ArchiveRestore, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, Phone, Share2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -11,7 +11,11 @@ import { topicTitle } from "@/lib/study/content";
 import { saveSiteCard, setSiteArchived, useSiteDirectory, useStudy } from "@/lib/study/store";
 import { findSiteByName, SITE_FIELD_MAX, SITE_NAME_MAX } from "@/lib/study/sites";
 import { entriesPl, problemsPl } from "@/lib/study/journalView";
-import { buildJournalReport, periodLabel, dayKeyOf } from "@/lib/study/report";
+import { buildJournalReport, periodLabel, dayKeyOf, workOn } from "@/lib/study/report";
+import { siteMinutesInRange } from "@/lib/study/siteHours";
+import { formatHoursShort } from "@/lib/shifts/time";
+import { localDayKey } from "@/lib/dayDone";
+import { useDayClock } from "@/lib/dayClock";
 import { downloadSiteZip } from "@/lib/study/siteZip";
 import { siteTally, type SiteTally } from "@/lib/study/siteTally";
 import { cn } from "@/lib/utils";
@@ -170,6 +174,19 @@ export function SiteCardDialog({
 
   const period = site?.first != null && site.last != null ? periodLabel(dayKeyOf(site.first), dayKeyOf(site.last)) : null;
   const tally = useMemo(() => (site ? siteTally(site, study.journal) : null), [site, study.journal]);
+  // Godziny budowy (1.4): łącznie i w bieżącym miesiącu, do dziś — Grafik ma zmiany zaplanowane naprzód.
+  const dayTick = useDayClock();
+  const hours = useMemo(() => {
+    void dayTick;
+    if (!site) return null;
+    const today = localDayKey();
+    const cards = Object.fromEntries(dir.map((x) => [x.id, x]));
+    const workOf = (key: string) => workOn(shifts, key)?.minutes ?? 0;
+    return {
+      total: siteMinutesInRange(study.journal, cards, site.id, "0000-01-01", today, workOf, dayKeyOf),
+      month: siteMinutesInRange(study.journal, cards, site.id, `${today.slice(0, 8)}01`, today, workOf, dayKeyOf),
+    };
+  }, [site, dir, study.journal, shifts, dayTick]);
   /** Zwinięte dane w jednej linijce — widać, co jest w karcie, bez rozwijania. */
   const summary = site ? [site.address, site.investor, site.manager && `kier. ${site.manager}`].filter(Boolean).join(" · ") : "";
 
@@ -191,6 +208,16 @@ export function SiteCardDialog({
                   site.archived !== undefined && "w archiwum",
                 ].filter(Boolean).join(" · ")}
               </DialogDescription>
+              {hours && (hours.total.minutes > 0 || hours.total.unsplit > 0) && (
+                <p className="font-mono text-xs tabular-nums text-muted-foreground" data-testid="site-card-hours">
+                  <Clock className="mr-1.5 inline h-3.5 w-3.5 align-[-2px] text-primary-ink" aria-hidden />
+                  <span className="text-foreground">{formatHoursShort(hours.total.minutes)} h</span> łącznie
+                  {" · "}<span className="text-foreground">{formatHoursShort(hours.month.minutes)} h</span> w tym miesiącu
+                  {hours.total.unsplit > 0 && (
+                    <span className="text-warning-ink">{` · ${hours.total.unsplit} ${pluralPl(hours.total.unsplit, ["dzień", "dni", "dni"])} do podziału`}</span>
+                  )}
+                </p>
+              )}
             </div>
 
             {(nav || call || callManager || site.access) && (

@@ -112,3 +112,38 @@ export function siteMinutesOn(day: DayHours, siteId: string): number | null {
 export function evenShare(work: number, count: number): number {
   return count > 0 ? Math.round(work / count / 5) * 5 : 0;
 }
+
+export interface SiteMinutesSum {
+  /** Suma minut budowy w zakresie (dni nierozdzielone liczą się jako 0). */
+  minutes: number;
+  /** Dni z kilkoma budowami bez podziału — tych godzin nie da się jeszcze przypisać tej budowie. */
+  unsplit: number;
+}
+
+/**
+ * Godziny budowy w dniach `from`–`to` (włącznie, „RRRR-MM-DD”) — suma `siteMinutesOn` po dniach,
+ * w których budowa ma wpis albo wpisane godziny (inne dni nic jej nie dają). `workOf` = czas pracy dnia
+ * z Grafiku (`workOn` w `report.ts`). Dziennik grupowany raz po dniach — `dayHours` dostaje tylko wpisy dnia.
+ */
+export function siteMinutesInRange(
+  journal: readonly JournalEntry[], cards: HoursCards, siteId: string, from: string, to: string,
+  workOf: (key: string) => number, dayKeyOf: (at: number) => string,
+): SiteMinutesSum {
+  const byDay = new Map<string, JournalEntry[]>();
+  const days = new Set<string>();
+  for (const e of journal) {
+    const key = dayKeyOf(e.at);
+    if (key < from || key > to) continue;
+    const list = byDay.get(key);
+    if (list) list.push(e); else byDay.set(key, [e]);
+    if (entrySiteId(e) === siteId) days.add(key);
+  }
+  for (const h of cards[siteId]?.hours ?? []) if (h.id >= from && h.id <= to) days.add(h.id);
+  let minutes = 0;
+  let unsplit = 0;
+  for (const key of days) {
+    const m = siteMinutesOn(dayHours(byDay.get(key) ?? [], cards, workOf(key), key, dayKeyOf), siteId);
+    if (m === null) unsplit++; else minutes += m;
+  }
+  return { minutes, unsplit };
+}

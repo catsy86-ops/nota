@@ -45,6 +45,8 @@ test("godziny na budowach: podział dnia, reszta dla drugiej budowy, raport budo
 
   await reloadWhenSaved(page);
   await page.getByTestId("study-journal").getByRole("button", { name: "Polna 2: karta budowy" }).click();
+  // Suma godzin na karcie (1.4 planu Praca 2026-10-24).
+  await expect(page.getByTestId("site-card-hours")).toHaveText("3,5 h łącznie · 3,5 h w tym miesiącu");
   await page.getByTestId("site-card").getByRole("button", { name: "Raport" }).click();
   await expect(page.getByText("3 h 30 min na tej budowie (z 10 h, Budowa 07:00–17:00)")).toBeVisible();
 });
@@ -56,4 +58,10 @@ test("błędna liczba godzin nie zapisuje", async ({ page }) => {
   await dialog.getByLabel("Godziny: Lipowa 5").fill("dużo");
   await expect(dialog.getByRole("alert")).toHaveText("Wpisz godziny jak 6, 6,5 albo 6:30.");
   await expect(dialog.getByRole("button", { name: "Zapisz" })).toBeDisabled();
+});
+
+test("karta budowy: dzień z dwiema budowami bez podziału jest „do podziału”", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
+  await expect(page.getByTestId("site-card-hours")).toHaveText("0 h łącznie · 0 h w tym miesiącu · 1 dzień do podziału");
 });

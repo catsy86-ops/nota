@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_SHIFT_DATA, type ShiftData } from "@/lib/shifts/model";
 import { buildJournalReport, dayKeyOf, reportBody } from "./report";
-import { cleanSiteHours, dayHours, evenShare, parseHours, siteMinutesOn } from "./siteHours";
+import { cleanSiteHours, dayHours, evenShare, parseHours, siteMinutesInRange, siteMinutesOn } from "./siteHours";
 import { siteKey } from "./sites";
 import type { JournalEntry } from "./yStudy";
 
@@ -101,5 +101,26 @@ describe("evenShare", () => {
     expect(evenShare(480, 3)).toBe(160);
     expect(evenShare(470, 3)).toBe(155);
     expect(evenShare(480, 0)).toBe(0);
+  });
+});
+
+describe("siteMinutesInRange — suma godzin budowy (1.4 planu Praca 2026-10-24)", () => {
+  const workOf = (key: string) => (shifts.days[key] ? WORK : 0);
+
+  it("jedyna budowa dnia dostaje cały dzień, dzień z dwiema budowami bez podziału jest nierozdzielony", () => {
+    expect(siteMinutesInRange(journal, {}, A, "2026-10-01", "2026-10-31", workOf, dayKeyOf)).toEqual({ minutes: WORK, unsplit: 1 });
+    expect(siteMinutesInRange(journal, {}, B, "2026-10-01", "2026-10-31", workOf, dayKeyOf)).toEqual({ minutes: 0, unsplit: 1 });
+  });
+
+  it("wpisany podział wygrywa, a druga budowa dostaje resztę dnia", () => {
+    const cards = { [A]: { name: "Lipowa 5", hours: [{ id: "2026-10-14", minutes: 6 * 60 }] } };
+    expect(siteMinutesInRange(journal, cards, A, "2026-10-01", "2026-10-31", workOf, dayKeyOf)).toEqual({ minutes: 6 * 60 + WORK, unsplit: 0 });
+    expect(siteMinutesInRange(journal, cards, B, "2026-10-01", "2026-10-31", workOf, dayKeyOf)).toEqual({ minutes: 4 * 60, unsplit: 0 });
+  });
+
+  it("zakres przycina dni, godziny bez wpisu też się liczą", () => {
+    expect(siteMinutesInRange(journal, {}, A, "2026-10-15", "2026-10-15", workOf, dayKeyOf)).toEqual({ minutes: WORK, unsplit: 0 });
+    const cards = { [B]: { name: "Polna 2", hours: [{ id: "2026-10-20", minutes: 3 * 60 }] } };
+    expect(siteMinutesInRange(journal, cards, B, "2026-10-16", "2026-10-31", workOf, dayKeyOf)).toEqual({ minutes: 3 * 60, unsplit: 0 });
   });
 });
