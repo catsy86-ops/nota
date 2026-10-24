@@ -74,6 +74,7 @@ test("przed wejściem: Nawiguj, Zadzwoń, „Wpis tutaj” i wybrana budowa po p
 
   await journal.getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
   const site = page.getByTestId("site-card");
+  await site.getByRole("button", { name: /^Edytuj dane/ }).click();
   await site.getByLabel("Adres", { exact: true }).fill("ul. Lipowa 5, Kraków");
   await site.getByLabel("Telefon kierownika").fill("700 800 900");
   await site.getByRole("button", { name: "Zapisz kartę" }).click();

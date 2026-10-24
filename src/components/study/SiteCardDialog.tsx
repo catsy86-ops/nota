@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { Archive, ArchiveRestore, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Phone, Share2, Plus } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Archive, ArchiveRestore, ChevronDown, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, Phone, Share2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -13,6 +13,8 @@ import { findSiteByName, SITE_FIELD_MAX, SITE_NAME_MAX } from "@/lib/study/sites
 import { entriesPl, problemsPl } from "@/lib/study/journalView";
 import { buildJournalReport, periodLabel, dayKeyOf } from "@/lib/study/report";
 import { downloadSiteZip } from "@/lib/study/siteZip";
+import { siteTally, type SiteTally } from "@/lib/study/siteTally";
+import { cn } from "@/lib/utils";
 import { SiteOrderPanel } from "./SiteOrderPanel";
 import { SiteStagesPanel } from "./SiteStagesPanel";
 import { SiteShortagesPanel } from "./SiteShortagesPanel";
@@ -33,8 +35,9 @@ const fieldClass =
   "w-full rounded-lg border border-border bg-background px-3 py-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring sm:text-sm";
 
 /**
- * Karta budowy: nazwa, adres i inwestor (trafiają do raportu), ile wpisów i otwartych
- * problemów, od kiedy do kiedy. Z karty prosto do wpisów tej budowy albo raportu.
+ * Karta budowy: na górze to, co na budowie się zmienia — „+ Wpis tutaj”, liczniki i panele etapów,
+ * braków i zamówienia; dane (nazwa, adres, inwestor, telefony) zwinięte za „Edytuj dane”, bo
+ * wpisuje się je raz (1.3 planu Praca 2026-10-24). Z karty prosto do wpisów tej budowy albo raportu.
  * Archiwum chowa budowę z pigułek — wpisy zostają na osi czasu.
  */
 export function SiteCardDialog({
@@ -54,12 +57,15 @@ export function SiteCardDialog({
   const site = siteId ? dir.find((s) => s.id === siteId) ?? null : null;
   const [form, setForm] = useState<SiteForm>(EMPTY_FORM);
   const [zipping, setZipping] = useState(false);
+  /** Formularz danych rozwinięty; każda karta otwiera się zwinięta. */
+  const [editing, setEditing] = useState(false);
   /** Protokół odbioru w trakcie drukowania; `null` = nie drukujemy. */
   const [handover, setHandover] = useState<Handover | null>(null);
   const endHandover = useCallback(() => setHandover(null), []);
 
   useEffect(() => {
     if (site) setForm(formOf(site));
+    setEditing(false);
     // Tylko przy otwarciu innej karty — zmiany z drugiego telefonu nie kasują pisanego tekstu.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteId]);
@@ -163,6 +169,9 @@ export function SiteCardDialog({
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
   const period = site?.first != null && site.last != null ? periodLabel(dayKeyOf(site.first), dayKeyOf(site.last)) : null;
+  const tally = useMemo(() => (site ? siteTally(site, study.journal) : null), [site, study.journal]);
+  /** Zwinięte dane w jednej linijce — widać, co jest w karcie, bez rozwijania. */
+  const summary = site ? [site.address, site.investor, site.manager && `kier. ${site.manager}`].filter(Boolean).join(" · ") : "";
 
   return (
     <Dialog open={!!site} onOpenChange={close}>
@@ -203,8 +212,36 @@ export function SiteCardDialog({
               </div>
             )}
 
+            <div className="space-y-3 px-5 pt-4">
+              <Button onClick={() => leaveTo(onNewEntry)} className="w-full coarse:h-11">
+                <Plus className="mr-1.5 h-4 w-4" aria-hidden />Wpis tutaj
+              </Button>
+              {tally && <SiteTallyBar tally={tally} />}
+              <SiteStagesPanel site={site} />
+              <SiteShortagesPanel site={site} />
+              <SiteOrderPanel site={site} />
+            </div>
+
+            <div className="mx-5 mt-3 rounded-xl border border-border bg-card" data-testid="site-data">
+              <button
+                type="button"
+                onClick={() => setEditing((v) => !v)}
+                aria-expanded={editing}
+                aria-controls="site-card-form"
+                className="pressable flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left coarse:min-h-11"
+              >
+                <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                <span className="shrink-0 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Edytuj dane</span>
+                <span className={cn("min-w-0 flex-1 truncate text-sm", !summary && "text-muted-foreground")}>
+                  {editing ? "" : summary || "bez adresu i kontaktów"}
+                </span>
+                {dirty && !editing && <span className="shrink-0 text-xs text-warning-ink">niezapisane</span>}
+                <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", editing && "rotate-180")} aria-hidden />
+              </button>
+              {editing && (
             <form
-              className="space-y-3 px-5 py-4"
+              id="site-card-form"
+              className="space-y-3 border-t border-border px-3 py-3"
               onSubmit={(e) => { e.preventDefault(); save(); }}
             >
               <label className="block space-y-1 text-xs text-muted-foreground">
@@ -306,19 +343,15 @@ export function SiteCardDialog({
               </label>
               <Button type="submit" disabled={!dirty || !!error} className="w-full coarse:h-11">Zapisz kartę</Button>
             </form>
+              )}
+            </div>
 
-            <div className="space-y-3 px-5 pb-4">
-              <SiteStagesPanel site={site} />
-              <SiteOrderPanel site={site} />
-              <SiteShortagesPanel site={site} />
+            <div className="space-y-3 px-5 py-3">
               <SiteDocsPanel site={site} />
               <SiteServicePanel site={site} />
             </div>
 
             <div className="grid grid-cols-2 gap-2 border-t border-border px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-              <Button onClick={() => leaveTo(onNewEntry)} className="col-span-2 coarse:h-11">
-                <Plus className="mr-1.5 h-4 w-4" aria-hidden />Wpis tutaj
-              </Button>
               <Button variant="outline" onClick={() => leaveTo(onShowEntries)} disabled={site.count === 0} className="coarse:h-11">
                 <ListFilter className="mr-1.5 h-4 w-4" aria-hidden />Pokaż wpisy
               </Button>
@@ -367,5 +400,48 @@ export function SiteCardDialog({
         </PrintRoot>
       )}
     </Dialog>
+  );
+}
+
+/** Przewija kartę do panelu (etapy, braki, zamówienie) — przy długiej liście etapów braki są daleko w dół. */
+function scrollToPanel(testId: string) {
+  const el = document.querySelector(`[data-testid="site-card"] [data-testid="${testId}"]`);
+  const reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  el?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+}
+
+const positionsPl = (n: number) => pluralPl(n, ["pozycja", "pozycje", "pozycji"]);
+
+/**
+ * Trzy liczniki budowy jak rubryki w zeszycie: etapy, braki do zamówienia, kształtki do zamówienia.
+ * Stuknięcie przewija do panelu. „Brakuje” na czerwono (jak w panelu braków), zero wyciszone.
+ */
+function SiteTallyBar({ tally }: { tally: SiteTally }) {
+  const cells = [
+    { id: "site-stages", label: "Etapy", value: `${tally.stages.done}/${tally.stages.total}`, tone: "plain", sub: null,
+      aria: `Etapy: ${tally.stages.done} z ${tally.stages.total}` },
+    { id: "site-shortages", label: "Braki", value: String(tally.missing), tone: tally.missing > 0 ? "alarm" : "quiet",
+      sub: tally.ordered > 0 ? `w drodze ${tally.ordered}` : null,
+      aria: `Braki: ${tally.missing} do zamówienia${tally.ordered > 0 ? `, ${tally.ordered} w drodze` : ""}` },
+    { id: "site-order", label: "Zamówić", value: String(tally.order), tone: tally.order > 0 ? "plain" : "quiet",
+      sub: tally.order > 0 ? positionsPl(tally.order) : null,
+      aria: `Do zamówienia: ${tally.order} ${positionsPl(tally.order)} kształtek` },
+  ] as const;
+  return (
+    <nav aria-label="Stan budowy" className="grid grid-cols-3 divide-x divide-dashed divide-border rounded-xl border border-border bg-muted/30" data-testid="site-tally">
+      {cells.map((c) => (
+        <button
+          key={c.id}
+          type="button"
+          onClick={() => scrollToPanel(c.id)}
+          aria-label={c.aria}
+          className="pressable flex min-w-0 flex-col items-start gap-1 px-3 py-2 text-left first:rounded-l-xl last:rounded-r-xl hover:bg-muted/60 coarse:min-h-11"
+        >
+          <span className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{c.label}</span>
+          <span className={cn("font-mono text-lg leading-none tabular-nums", c.tone === "alarm" ? "text-destructive-ink" : c.tone === "quiet" ? "text-muted-foreground" : "text-foreground")}>{c.value}</span>
+          {c.sub && <span className="max-w-full truncate text-2xs text-muted-foreground">{c.sub}</span>}
+        </button>
+      ))}
+    </nav>
   );
 }

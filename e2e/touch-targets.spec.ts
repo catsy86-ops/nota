@@ -77,3 +77,27 @@ test("praca: zakładki działu i „Dodaj wpis” mają cele dotyku ≥ 44 px @m
   }
   await expectTarget(page.getByRole("button", { name: "Dodaj wpis" }).first());
 });
+
+// Etap 1 planu Praca 2026-10-24: „Wpis tutaj” i szybkie akcje „Przed wejściem”, liczniki i „Edytuj dane” w karcie budowy.
+test("praca: „Przed wejściem” i karta budowy mają cele dotyku ≥ 44 px @mobile", async ({ page }) => {
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem("seeded-touch-site")) return;
+    sessionStorage.setItem("seeded-touch-site", "1");
+    localStorage.setItem("kaczy.study.v1", JSON.stringify({
+      site: "Lipowa 5",
+      journal: [{ id: "a", at: Date.now() - 60_000, kind: "ok", topic: null, text: "Piony", site: "Lipowa 5", checked: [], images: [] }],
+    }));
+  });
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await expectTarget(page.getByTestId("entry-check-actions").getByRole("button", { name: "Wpis tutaj" }));
+
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
+  const card = page.getByTestId("site-card");
+  // Okno otwiera się z lekkim powiększeniem — mierzymy po animacji, nie w jej trakcie.
+  await card.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished)));
+  await expectTarget(card.getByRole("button", { name: "Wpis tutaj" }));
+  for (const name of [/^Etapy:/, /^Braki:/, /^Do zamówienia:/, /^Edytuj dane/]) {
+    await expectTarget(card.getByRole("button", { name }));
+  }
+});

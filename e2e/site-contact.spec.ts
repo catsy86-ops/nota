@@ -28,6 +28,8 @@ test("kontakt i dojazd: Nawiguj, Zadzwoń, SMS, kierownik i dostęp z karty budo
   // Bez adresu i telefonów nie ma paska szybkich akcji.
   await expect(card.getByTestId("site-quick")).toHaveCount(0);
 
+  // Dane karty zwinięte za „Edytuj dane” (1.3 planu Praca 2026-10-24).
+  await card.getByRole("button", { name: /^Edytuj dane/ }).click();
   await card.getByLabel("Adres", { exact: true }).fill("ul. Lipowa 5, Kraków");
   await card.getByLabel("Inwestor", { exact: true }).fill("Nowak");
   await card.getByLabel("Telefon inwestora").fill("600 100 200");
@@ -45,6 +47,8 @@ test("kontakt i dojazd: Nawiguj, Zadzwoń, SMS, kierownik i dostęp z karty budo
 
   await reloadWhenSaved(page);
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
+  await expect(page.getByTestId("site-data")).toContainText("ul. Lipowa 5, Kraków · Nowak · kier. Marek");
+  await page.getByTestId("site-card").getByRole("button", { name: /^Edytuj dane/ }).click();
   await expect(page.getByTestId("site-card").getByLabel("Telefon kierownika")).toHaveValue("+48 700-800-900");
   await expect(page.getByTestId("site-access")).toContainText("Kod do bramy 1234#");
 });

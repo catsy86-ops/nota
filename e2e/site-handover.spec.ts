@@ -35,6 +35,7 @@ test("protokół odbioru: dane z karty, etap, próba szczelności, uwagi i podpi
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
   const card = page.getByTestId("site-card");
 
+  await card.getByRole("button", { name: /^Edytuj dane/ }).click();
   await card.getByLabel("Adres").fill("ul. Lipowa 5, Kraków");
   await card.getByLabel("Inwestor", { exact: true }).fill("Jan Kowalski");
   await card.getByRole("button", { name: "Zapisz kartę" }).click();

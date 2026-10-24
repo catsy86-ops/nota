@@ -694,6 +694,7 @@ test("dziennik: karta budowy — nazwa, adres, inwestor, raport z karty i archiw
   await journal.getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
   const card = page.getByTestId("site-card");
   await expect(card.getByTestId("site-card-stats")).toContainText("2 wpisy · otwarte: 1 problem");
+  await card.getByRole("button", { name: /^Edytuj dane/ }).click();
   await card.getByLabel("Nazwa").fill("polna 2");
   await expect(card.getByRole("alert")).toHaveText("Jest już budowa „Polna 2”");
   await expect(card.getByRole("button", { name: "Zapisz kartę" })).toBeDisabled();
@@ -746,6 +747,7 @@ test("dziennik: karta budowy — nazwa, adres, inwestor, raport z karty i archiw
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await expect(journal.locator("[data-journal-site]")).toHaveText(["Dom Nowaków", "Polna 2"]);
   await journal.getByRole("button", { name: "Dom Nowaków: karta budowy" }).click();
+  await card.getByRole("button", { name: /^Edytuj dane/ }).click();
   await expect(card.getByLabel("Inwestor", { exact: true })).toHaveValue("Jan Nowak");
   await expect(card.getByTestId("site-card-stats")).toContainText("w archiwum");
 });
@@ -817,9 +819,11 @@ test("dziennik: karta budowy zapisuje niezapisaną zmianę przy „Pokaż wpisy�
   const journal = page.getByTestId("study-journal");
   await journal.getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
   const card = page.getByTestId("site-card");
+  await card.getByRole("button", { name: /^Edytuj dane/ }).click();
   await card.getByLabel("Adres").fill("ul. Testowa 9, Gdańsk");
   // Bez zapisania kartą — „Pokaż wpisy” ma najpierw zapisać adres.
   await card.getByRole("button", { name: /Pokaż wpisy/ }).click();
   await journal.getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
-  await expect(page.getByTestId("site-card").getByLabel("Adres")).toHaveValue("ul. Testowa 9, Gdańsk");
+  // Zwinięte dane pokazują zapisany adres w linijce podsumowania.
+  await expect(page.getByTestId("site-data")).toContainText("ul. Testowa 9, Gdańsk");
 });
