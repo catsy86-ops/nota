@@ -16,6 +16,8 @@ interface Props {
   /** Lokalny graf wokół tej notatki (czytnik). Bez niego — cała baza. */
   centerId?: string;
   folders?: Folder[];
+  /** Węższy panel (boczny czytnika): większe etykiety, bo rysunek jest skalowany w dół. */
+  compact?: boolean;
 }
 
 /** Stała „losowość” z id — każdy węzeł ma swoje drgnięcie ręki, ale to samo przy każdym rysunku. */
@@ -65,7 +67,8 @@ function short(title: string, max = 22): string {
  * Graf powiązań w stylu zeszytu: węzły-kółka rysowane długopisem, krawędzie
  * jak odręczne kreski. Układ liczy Worker (`workers/graphLayout`), tu tylko rysunek.
  */
-export default function NoteGraph({ notes, onOpenNote, centerId, folders = [] }: Props) {
+export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], compact: narrow = false }: Props) {
+  const labelSize = narrow ? 34 : 15;
   const { reduced } = useMotionPref();
   const filterId = useId().replace(/:/g, "");
   const [label, setLabel] = useState<string | null>(null);
@@ -266,14 +269,14 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [] }:
                   x={p.x}
                   y={p.y + r + 17}
                   textAnchor="middle"
-                  fontSize={15}
+                  fontSize={labelSize}
                   fill="currentColor"
                   stroke="hsl(var(--card))"
-                  strokeWidth={4}
+                  strokeWidth={narrow ? 9 : 4}
                   paintOrder="stroke"
                   fontWeight={hot ? 700 : 500}
                 >
-                  {short(n.title)}
+                  {short(n.title, narrow ? 12 : 22)}
                 </text>
               )}
             </g>

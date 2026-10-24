@@ -36,6 +36,8 @@ test("lokalny graf pokazuje sąsiadów do dwóch kroków i filtr etykiety go zaw
   await openFirstInReader(page);
   const reader = page.getByRole("dialog", { name: "Zakupy" });
   await expect(reader).toBeVisible();
+  // Na szerokim ekranie graf siedzi w zakładce „Graf” bocznego panelu (od xl).
+  await reader.getByRole("tab", { name: "Graf" }).click();
 
   const local = reader.locator("[data-local-graph]");
   await expect(local.getByTestId("link-graph")).toBeVisible();
@@ -58,6 +60,7 @@ test("klik w węzeł lokalnego grafu otwiera tę notatkę", async ({ page }) => 
   await openFirstInReader(page);
   const reader = page.getByRole("dialog", { name: "Zakupy" });
   await expect(reader).toBeVisible();
+  await reader.getByRole("tab", { name: "Graf" }).click();
   await reader.locator('[data-local-graph] [data-graph-node="p"]').click();
   await expect(page.getByRole("dialog", { name: "Plan" })).toBeVisible();
 });

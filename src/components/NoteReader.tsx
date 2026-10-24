@@ -1,6 +1,8 @@
 import { splitWikiTarget } from "@/lib/wikiLinks";
 import { onHeadingRequest, requestHeading, scrollToHeading, takePendingHeading } from "@/lib/wikiHeading";
-import { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useOriginFromTile } from "@/hooks/useOriginFromTile";
 import { m as motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Copy, CornerDownRight, FilePlusCorner, Link2, Maximize2, Minimize2, Minus, Pencil, Plus, X } from "lucide-react";
@@ -32,6 +34,14 @@ import type { PropDef } from "@/lib/noteProps";
 
 // Lokalny graf ładujemy dopiero przy czytaniu (osobny kawałek bundla).
 const NoteGraph = lazy(() => import("@/components/NoteGraph"));
+
+/** Zakładki bocznego panelu na szerokim ekranie (3.6). */
+type SideTab = "links" | "props" | "graph";
+const SIDE_TABS: { id: SideTab; label: string }[] = [
+  { id: "links", label: "Linki" },
+  { id: "props", label: "Pola" },
+  { id: "graph", label: "Graf" },
+];
 
 /**
  * Jedno miejsce czytania notatki (wcześniej: szybki podgląd w `NoteGrid`
@@ -107,6 +117,12 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
   const contentRef = useRef<HTMLDivElement>(null);
   useOriginFromTile(panelRef, note.id);
   const { showBacklinks } = useViewPrefs();
+  // Od xl (1280 px) linki, pola i graf idą do bocznego panelu; węższy ekran zostawia je pod treścią.
+  // Bloki renderuje się w jednym miejscu, a na szerokim ekranie przenosi je portal do panelu.
+  const wide = useMediaQuery("(min-width: 1280px)") && !present;
+  const [sideTab, setSideTab] = useState<SideTab>("links");
+  const [sideEl, setSideEl] = useState<HTMLDivElement | null>(null);
+  const sideSlot = (tab: SideTab, node: ReactNode) => (!wide ? node : sideEl && sideTab === tab ? createPortal(node, sideEl) : null);
   const canEdit = !note.trashed;
   // Prezentacja (często na stojaku, bez dotykania ekranu) nie może zgasnąć.
   useWakeLock(present);
@@ -254,7 +270,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
         data-reader-mode={mode}
         className={cn(
           "pointer-events-auto flex flex-col rounded-card border border-border/60 bg-card/95 backdrop-blur-md shadow-2xl",
-          present ? "w-[min(56rem,95vw)] h-[90dvh]" : "w-full max-w-2xl max-h-[80dvh]",
+          present ? "w-[min(56rem,95vw)] h-[90dvh]" : wide ? "w-full max-w-5xl max-h-[80dvh]" : "w-full max-w-2xl max-h-[80dvh]",
         )}
         onClick={(e) => e.stopPropagation()}
         onWheelCapture={(e) => e.stopPropagation()}
@@ -333,7 +349,8 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
           </div>
         </div>
 
-        <div ref={setScrollEl} tabIndex={-1} className={cn("flex-1 min-h-0 overflow-y-auto overscroll-contain outline-hidden", present ? "px-6 sm:px-12 py-8" : "px-6 py-4")}>
+        <div className="flex min-h-0 flex-1">
+        <div ref={setScrollEl} tabIndex={-1} className={cn("min-w-0 flex-1 overflow-y-auto overscroll-contain outline-hidden", present ? "px-6 sm:px-12 py-8" : "px-6 py-4")}>
           <div className={cn(present && "max-w-3xl mx-auto")} style={present ? { fontSize: `${zoom}rem`, lineHeight: 1.65 } : undefined}>
             {present && note.title && (
               <h1 className="font-display font-extrabold text-foreground mb-4" style={{ fontSize: `${zoom * 2.2}rem`, lineHeight: 1.15 }}>
@@ -401,7 +418,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
 
             <AttachmentsReadOnlyList attachments={note.attachments} />
 
-            {propDefs.length > 0 && (
+            {propDefs.length > 0 && sideSlot("props", (
               <section aria-label="Pola notatki" className="mt-6 pt-3 border-t border-border/50" style={present ? { fontSize: "0.95rem" } : undefined}>
                 <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Pola</p>
                 <dl>
@@ -415,9 +432,9 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                   ))}
                 </dl>
               </section>
-            )}
+            ))}
 
-            {backlinks.length > 0 && (
+            {backlinks.length > 0 && sideSlot("links", (
               <div className="mt-8 pt-4 border-t border-border/50" style={present ? { fontSize: "0.95rem" } : undefined}>
                 <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                   Linkują tutaj ({backlinks.length})
@@ -435,16 +452,16 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                   ))}
                 </div>
               </div>
-            )}
+            ))}
 
-            {!present && !note.trashed && !note.locked && (
-              <section aria-label="Lokalny graf" className="mt-8 pt-4 border-t border-border/50" data-local-graph="">
-                <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Lokalny graf</p>
+            {!present && !note.trashed && !note.locked && sideSlot("graph", (
+              <section aria-label="Lokalny graf" className={cn(!wide && "mt-8 pt-4 border-t border-border/50")} data-local-graph="">
+                {!wide && <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Lokalny graf</p>}
                 <Suspense fallback={<div className="h-40 rounded-xl bg-muted/30" />}>
-                  <NoteGraph notes={treeNotes} centerId={note.id} folders={folders} onOpenNote={(id) => onShow(id, mode)} />
+                  <NoteGraph notes={treeNotes} centerId={note.id} folders={folders} compact={wide} onOpenNote={(id) => onShow(id, mode)} />
                 </Suspense>
               </section>
-            )}
+            ))}
 
             {(subpages.length > 0 || (canEdit && !note.locked)) && (
               <div className="mt-8 pt-4 border-t border-border/50" data-subpages="" style={present ? { fontSize: "0.95rem" } : undefined}>
@@ -497,7 +514,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
               </div>
             )}
 
-            {mentions.length > 0 && (
+            {mentions.length > 0 && sideSlot("links", (
               <div className={cn("pt-4 border-t border-border/50", backlinks.length > 0 ? "mt-4" : "mt-8")} data-unlinked-mentions="" style={present ? { fontSize: "0.95rem" } : undefined}>
                 <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                   Niepołączone wzmianki ({mentions.length})
@@ -526,8 +543,44 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                   ))}
                 </ul>
               </div>
-            )}
+            ))}
           </div>
+        </div>
+        {wide && (
+          <aside aria-label="Panel notatki" className="flex w-80 shrink-0 flex-col border-l border-border/40 min-h-0" data-reader-side="">
+            <div role="tablist" aria-label="Sekcje panelu" className="flex gap-1 border-b border-border/40 px-3 py-2">
+              {SIDE_TABS.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="tab"
+                  id={`reader-side-tab-${t.id}`}
+                  aria-selected={sideTab === t.id}
+                  aria-controls="reader-side-panel"
+                  onClick={() => setSideTab(t.id)}
+                  className={cn(
+                    "rounded-md px-2.5 py-1 text-xs font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                    sideTab === t.id ? "bg-primary/15 text-primary-ink" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                  )}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+            <div
+              id="reader-side-panel"
+              role="tabpanel"
+              aria-labelledby={`reader-side-tab-${sideTab}`}
+              ref={setSideEl}
+              className="min-h-0 flex-1 overflow-y-auto px-4 py-3"
+            >
+              {sideTab === "links" && !backlinks.length && !mentions.length && (
+                <p className="text-xs text-muted-foreground">Nic tu nie linkuje i nie ma niepołączonych wzmianek.</p>
+              )}
+              {sideTab === "props" && propDefs.length === 0 && <p className="text-xs text-muted-foreground">Ta notatka nie ma pól.</p>}
+            </div>
+          </aside>
+        )}
         </div>
 
         {/* Telefon: dolny pasek 44 px zamiast podpowiedzi klawiszy (klawiatury tam nie ma). */}
