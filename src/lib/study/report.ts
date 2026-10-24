@@ -3,7 +3,7 @@ import { fittingsLine, sumFittings, type Fitting } from "./fittings";
 import { testLine } from "./pressureTest";
 import { dayType, isAbsence, type ShiftData } from "@/lib/shifts/model";
 import { entryMinutesOn, formatDuration } from "@/lib/shifts/time";
-import { entriesPl, KIND_LABEL } from "./journalView";
+import { entriesPl, entryHeadline, KIND_LABEL } from "./journalView";
 import { entrySiteId, type SiteCard } from "./sites";
 import { accuracyLabel, mapsUrl } from "./geo";
 import { siteOrder } from "./order";
@@ -226,7 +226,7 @@ const photosPl = (n: number) => `${n} ${pluralPl(n, ["zdjęcie", "zdjęcia", "zd
 
 /** Jednowierszowy opis wpisu bez godziny: „Problem otwarty: Żółta rura przecieka · temat · 2 zdjęcia”. */
 function entryLine(r: ReportEntry): string {
-  const text = r.entry.text.trim() || "Sprawdzone punkty listy";
+  const text = entryHeadline(r.entry);
   const extra = [r.site, r.topic && `temat: ${r.topic}`, r.entry.images.length > 0 && photosPl(r.entry.images.length)].filter(Boolean);
   // Kolejne linie tekstu wcięte — zostają w tym samym punkcie listy.
   const test = r.entry.test ? `\n  ${testLine(r.entry.test)}` : "";

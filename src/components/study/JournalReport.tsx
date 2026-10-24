@@ -21,6 +21,7 @@ import { saveBoss, saveGroup, useStudy, type Boss, type JournalEntry, type SiteI
 import { formatPhone, whatsappUrl } from "@/lib/study/boss";
 import { entrySiteId } from "@/lib/study/sites";
 import { buildJournalReport, dayKeyOf, reportSummary, workLine, workMinutesOf, reportText, reportWhatsApp, shiftKey, type JournalReport as Report } from "@/lib/study/report";
+import { entryHeadline } from "@/lib/study/journalView";
 import { shortageLine } from "@/lib/study/shortages";
 import { PrintRoot } from "./PrintRoot";
 import type { JournalReportRequest } from "@/lib/study/reportLink";
@@ -463,7 +464,7 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
                     <span className="pt-px font-mono text-xs tabular-nums text-muted-foreground">{r.time}</span>
                     <KindIcon kind={r.entry.kind} className="mt-0.5 h-4 w-4" />
                     <div className="min-w-0">
-                      <p className="whitespace-pre-wrap wrap-break-word leading-snug">{r.entry.text.trim() || "Sprawdzone punkty listy"}</p>
+                      <p className="whitespace-pre-wrap wrap-break-word leading-snug">{entryHeadline(r.entry)}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         <span className={cn(r.status === "Problem otwarty" && "font-medium text-foreground")}>{r.status}</span>
                         {r.site && <> · {r.site}</>}

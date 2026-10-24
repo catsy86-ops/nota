@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { JournalEntry } from "./yStudy";
-import { recentSiteTexts, yesterdaySiteText } from "./journalView";
+import { entryHeadline, recentSiteTexts, yesterdaySiteText } from "./journalView";
 import { siteKey } from "./sites";
 
 const day = (d: number, h = 12) => new Date(2026, 9, d, h).getTime();
@@ -51,5 +51,18 @@ describe("yesterdaySiteText", () => {
 
   it("bez id budowy → null", () => {
     expect(yesterdaySiteText(journal, "", NOW)).toBeNull();
+  });
+});
+
+describe("entryHeadline", () => {
+  const base = { text: "", checked: [] as string[], images: [] as string[] };
+  it("tekst wygrywa; bez tekstu kolejno próba, kształtki, lista, nagranie, zdjęcie, „Wpis”", () => {
+    expect(entryHeadline({ ...base, text: "  Pion  " })).toBe("Pion");
+    expect(entryHeadline({ ...base, test: { medium: "air", bar: 6, minutes: 30, drop: 0, ok: true }, checked: ["x"] })).toBe("Próba szczelności");
+    expect(entryHeadline({ ...base, fittings: [{ kind: "kolano", count: 1 }] as unknown as JournalEntry["fittings"] })).toBe("Kształtki");
+    expect(entryHeadline({ ...base, checked: ["x"], images: ["a"] })).toBe("Sprawdzone punkty listy");
+    expect(entryHeadline({ ...base, recordings: ["r"], images: ["a"] } as unknown as Parameters<typeof entryHeadline>[0])).toBe("Nagranie");
+    expect(entryHeadline({ ...base, images: ["a"] })).toBe("Zdjęcie");
+    expect(entryHeadline(base)).toBe("Wpis");
   });
 });

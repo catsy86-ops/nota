@@ -11,6 +11,21 @@ export function dayLabel(at: number, now: number = Date.now()): string {
   return d.toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long", ...(otherYear ? { year: "numeric" } : {}) });
 }
 
+/**
+ * Nagłówek wpisu: tekst, a bez tekstu — to, co wpis zawiera (próba, kształtki, lista, nagranie, zdjęcie).
+ * Wspólny dla osi dziennika, okna raportu i tekstu raportu (WhatsApp, wydruk).
+ */
+export function entryHeadline(e: Pick<JournalEntry, "text" | "test" | "fittings" | "checked" | "recordings" | "images">): string {
+  const text = e.text.trim();
+  if (text) return text;
+  if (e.test) return "Próba szczelności";
+  if (e.fittings?.length) return "Kształtki";
+  if (e.checked.length) return "Sprawdzone punkty listy";
+  if (e.recordings?.length) return "Nagranie";
+  if (e.images.length) return "Zdjęcie";
+  return "Wpis";
+}
+
 export const entriesPl = (n: number) => `${n} ${pluralPl(n, ["wpis", "wpisy", "wpisów"])}`;
 export const problemsPl = (n: number) => `${n} ${pluralPl(n, ["problem", "problemy", "problemów"])}`;
 

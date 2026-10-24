@@ -17,7 +17,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { TOPICS } from "@/lib/study/content";
 import { JOURNAL_SOLUTION_MAX, openProblems, setProblemResolved, setProblemSolution, setSite, useStudy, useStudyLists, type JournalEntry } from "@/lib/study/store";
 import {
-  entriesPl, filterJournal, groupJournal, isFiltered, KIND_LABEL, NO_FILTER, problemsPl, RECENT_DAYS, splitRecent,
+  entriesPl, entryHeadline, filterJournal, groupJournal, isFiltered, KIND_LABEL, NO_FILTER, problemsPl, RECENT_DAYS, splitRecent,
   type JournalFilter, type KindFilter,
 } from "@/lib/study/journalView";
 import { patchJournalDraft, useJournalDraft } from "@/lib/study/draft";
@@ -512,7 +512,7 @@ function JournalItem({ entry: e, onPractice, onTopic, onZoom }: { entry: Journal
       <div className="flex min-w-0 items-start gap-2.5">
         {resolved ? <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden /> : <KindIcon kind={e.kind} />}
         <div className="min-w-0 flex-1">
-          <p className="whitespace-pre-wrap wrap-break-word text-sm leading-snug">{e.text || (e.test ? "Próba szczelności" : e.fittings?.length ? "Kształtki" : e.checked.length ? "Sprawdzone punkty listy" : e.recordings?.length ? "Nagranie" : e.images.length ? "Zdjęcie" : "Wpis")}</p>
+          <p className="whitespace-pre-wrap wrap-break-word text-sm leading-snug">{entryHeadline(e)}</p>
           {e.fittings && e.fittings.length > 0 && (
             <p className="mt-1 inline-flex items-start gap-1.5 text-xs text-muted-foreground" data-testid="journal-fittings">
               <Package className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{fittingsLine(e.fittings)}

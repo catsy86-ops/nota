@@ -198,3 +198,18 @@ describe("raport: „Tu jestem” w treści", () => {
     expect(plain).not.toContain("Mapa (");
   });
 });
+
+describe("raport: wpis bez tekstu (Etap 0.3)", () => {
+  it("nagłówek mówi, co wpis zawiera — jak na osi dziennika", () => {
+    const j = [
+      e("z", at(14, 9), "ok", "Lipowa 5", "", { images: [IMG("z")] }),
+      e("n", at(14, 10), "note", "Lipowa 5", "  ", { recordings: ["r1"] } as unknown as Partial<JournalEntry>),
+      e("c", at(14, 11), "ok", "Lipowa 5", "", { checked: ["x"] }),
+    ];
+    const body = reportBody(buildJournalReport(j, { siteId: null, from: "2026-10-14", to: "2026-10-14" }));
+    expect(body).toContain("Zrobione: Zdjęcie");
+    expect(body).toContain("Notatka: Nagranie");
+    expect(body).toContain("Zrobione: Sprawdzone punkty listy");
+    expect(body.match(/Sprawdzone punkty listy/g)).toHaveLength(1);
+  });
+});
