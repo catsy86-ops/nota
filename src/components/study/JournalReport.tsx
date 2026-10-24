@@ -17,8 +17,8 @@ import { useShifts } from "@/lib/shifts";
 import { imageStore } from "@/lib/imageStore";
 import { yjsStore } from "@/lib/yjsStore";
 import { topicTitle } from "@/lib/study/content";
-import { saveBoss, saveGroup, useStudy, type Boss, type JournalEntry, type SiteInfo, type WaGroup } from "@/lib/study/store";
-import { formatPhone, whatsappUrl } from "@/lib/study/boss";
+import { useStudy, type JournalEntry, type SiteInfo } from "@/lib/study/store";
+import { whatsappUrl } from "@/lib/study/boss";
 import { entrySiteId } from "@/lib/study/sites";
 import { buildJournalReport, dayKeyOf, reportSummary, workLine, workMinutesOf, reportText, reportWhatsApp, type JournalReport as Report } from "@/lib/study/report";
 import { presetOf, presetRange, REPORT_PRESETS } from "@/lib/study/reportPresets";
@@ -28,6 +28,7 @@ import { PrintRoot } from "./PrintRoot";
 import type { JournalReportRequest } from "@/lib/study/reportLink";
 import { reportToNote } from "@/lib/study/toNote";
 import { KindIcon } from "./JournalEntrySheet";
+import { RecipientsForm } from "./RecipientsForm";
 
 /** Ile zdjęć dołączać do „Udostępnij” — komunikatory i tak tną więcej. */
 const SHARE_MAX_FILES = 10;
@@ -289,89 +290,6 @@ export function JournalReportDialog({
       </Dialog>
       {printing && <ReportPrint report={report} onDone={() => setPrinting(false)} />}
     </>
-  );
-}
-
-/** Odbiorcy raportu w WhatsApp — szef (numer) i grupa; zapisani w danych Pracy, więc są na każdym sparowanym telefonie. */
-function RecipientsForm({ boss, group, onDone }: { boss: Boss | null; group: WaGroup | null; onDone: () => void }) {
-  const [name, setName] = useState(boss?.name ?? "");
-  const [phone, setPhone] = useState(boss ? formatPhone(boss.phone) : "");
-  const [groupName, setGroupName] = useState(group?.name ?? "");
-  const [groupLink, setGroupLink] = useState(group?.link ?? "");
-  const [phoneError, setPhoneError] = useState(false);
-  const [linkError, setLinkError] = useState(false);
-  function save() {
-    const phoneOk = saveBoss(name, phone);
-    const linkOk = saveGroup(groupName, groupLink);
-    setPhoneError(!phoneOk);
-    setLinkError(!linkOk);
-    if (!phoneOk || !linkOk) return;
-    haptic("success");
-    toast.success("Zapisano odbiorców");
-    onDone();
-  }
-  return (
-    <form
-      className="space-y-4 border-b border-border px-5 py-4 sm:px-6"
-      aria-label="Odbiorcy raportu w WhatsApp"
-      onSubmit={(ev) => { ev.preventDefault(); save(); }}
-    >
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium">Szef</legend>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <label className="text-xs text-muted-foreground">
-            Imię
-            <input value={name} onChange={(ev) => setName(ev.target.value)} autoComplete="name" placeholder="np. Marek" className={cn(fieldClass, "mt-1")} />
-          </label>
-          <label className="text-xs text-muted-foreground">
-            Numer WhatsApp
-            <input
-              value={phone}
-              onChange={(ev) => { setPhone(ev.target.value); setPhoneError(false); }}
-              type="tel" inputMode="tel" autoComplete="tel" placeholder="600 100 200"
-              aria-invalid={phoneError}
-              aria-describedby="boss-phone-hint"
-              className={cn(fieldClass, "mt-1 font-mono tabular-nums", phoneError && "border-destructive")}
-            />
-          </label>
-        </div>
-        <p id="boss-phone-hint" className={cn("text-xs", phoneError ? "text-destructive-ink" : "text-muted-foreground")}>
-          {phoneError
-            ? "To nie wygląda na numer — 9 cyfr albo z kierunkowym, np. +48 600 100 200."
-            : "Raport otworzy się w czacie z szefem — wysyłasz Ty. Pusty numer usuwa szefa."}
-        </p>
-      </fieldset>
-      <fieldset className="space-y-2">
-        <legend className="text-sm font-medium">Grupa</legend>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <label className="text-xs text-muted-foreground">
-            Nazwa grupy
-            <input value={groupName} onChange={(ev) => setGroupName(ev.target.value)} placeholder="np. Brygada Lipowa" className={cn(fieldClass, "mt-1")} />
-          </label>
-          <label className="text-xs text-muted-foreground">
-            Link zaproszenia (opcjonalnie)
-            <input
-              value={groupLink}
-              onChange={(ev) => { setGroupLink(ev.target.value); setLinkError(false); }}
-              // Bez `type="url"`: link bez „https://” zatrzymałaby walidacja przeglądarki — `normalizeGroupLink` go przyjmuje.
-              inputMode="url" autoCapitalize="none" spellCheck={false} placeholder="chat.whatsapp.com/…"
-              aria-invalid={linkError}
-              aria-describedby="group-link-hint"
-              className={cn(fieldClass, "mt-1", linkError && "border-destructive")}
-            />
-          </label>
-        </div>
-        <p id="group-link-hint" className={cn("text-xs", linkError ? "text-destructive-ink" : "text-muted-foreground")}>
-          {linkError
-            ? "To nie jest link grupy — w WhatsApp: grupa → Zaproś przez link → Kopiuj."
-            : "Raport ze zdjęciami idzie przez „Udostępnij” — w WhatsApp wybierz tę grupę. Link przydaje się, gdy telefon nie ma udostępniania. Pusta nazwa usuwa grupę."}
-        </p>
-      </fieldset>
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" size="sm" className="coarse:h-11">Zapisz</Button>
-        <Button type="button" size="sm" variant="ghost" onClick={onDone} className="coarse:h-11">Anuluj</Button>
-      </div>
-    </form>
   );
 }
 
