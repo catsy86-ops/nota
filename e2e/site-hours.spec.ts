@@ -65,3 +65,20 @@ test("karta budowy: dzień z dwiema budowami bez podziału jest „do podziału�
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
   await expect(page.getByTestId("site-card-hours")).toHaveText("0 h łącznie · 0 h w tym miesiącu · 1 dzień do podziału");
 });
+
+test("karta budowy: „Wpisz godziny” na dzień bez wpisu, karta zostaje otwarta (1.5)", async ({ page }) => {
+  await page.goto("/praca");
+  await page.getByTestId("study-journal").getByRole("button", { name: "Polna 2: karta budowy" }).click();
+  const card = page.getByTestId("site-card");
+  await card.getByRole("button", { name: "Wpisz godziny" }).click();
+  const dialog = page.getByTestId("day-hours");
+  await expect(dialog.getByLabel("Dzień")).toHaveValue("2026-10-14");
+  await dialog.getByLabel("Dzień").fill("2026-10-13");
+  await expect(dialog.getByLabel("Godziny: Polna 2")).toBeVisible();
+  await expect(dialog).toContainText("bez wpisu");
+  await dialog.getByLabel("Godziny: Polna 2").fill("4");
+  await dialog.getByRole("button", { name: "Zapisz" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(card).toBeVisible();
+  await expect(page.getByTestId("site-card-hours")).toHaveText("4 h łącznie · 4 h w tym miesiącu · 1 dzień do podziału");
+});

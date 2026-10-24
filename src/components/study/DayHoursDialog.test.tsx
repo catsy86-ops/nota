@@ -4,9 +4,11 @@ import type { JournalEntry } from "@/lib/study/yStudy";
 
 const setDayHours = vi.fn();
 let journal: JournalEntry[] = [];
-const sites = { a: { name: "Dom A" }, b: { name: "Dom B" } };
+const sites = { a: { name: "Dom A" }, b: { name: "Dom B" }, c: { name: "Dom C" } };
+const dir = [{ id: "a", name: "Dom A" }, { id: "b", name: "Dom B" }, { id: "c", name: "Dom C" }, { id: "z", name: "Stary dom", archived: 1 }];
 vi.mock("@/lib/study/store", () => ({
   useStudy: () => ({ journal, sites }),
+  useSiteDirectory: () => dir,
   setDayHours: (...a: unknown[]) => setDayHours(...a),
 }));
 // Dzień ma 8 godzin pracy z Grafiku.
@@ -73,5 +75,27 @@ describe("DayHoursDialog — godziny na budowach", () => {
     fireEvent.change(screen.getByLabelText("Godziny: Dom B"), { target: { value: "2" } });
 
     expect(screen.getByTestId("day-hours-left")).toHaveTextContent(/więcej niż w Grafiku/);
+  });
+
+  it("„+ Budowa” dokłada budowę bez wpisu (bez archiwum); pusta nic nie zapisuje i nie zabiera reszty dnia", () => {
+    render(<DayHoursDialog day={DAY} label="środa" onOpenChange={vi.fn()} />);
+    const add = screen.getByRole("combobox", { name: "Dodaj budowę bez wpisu tego dnia" });
+    expect(screen.queryByRole("option", { name: "Stary dom" })).toBeNull();
+    fireEvent.change(add, { target: { value: "c" } });
+    expect(screen.getByLabelText("Godziny: Dom C")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Godziny: Dom A"), { target: { value: "6" } });
+    // Jedno puste pole z wpisem (Dom B) dostaje resztę — dołożona Dom C się nie liczy.
+    expect(screen.getByTestId("day-hours-left")).toHaveTextContent(/Puste pole dostanie resztę/);
+    fireEvent.click(screen.getByRole("button", { name: "Zapisz" }));
+    expect(setDayHours).toHaveBeenCalledWith(DAY, { a: 360, b: 0 });
+  });
+
+  it("z karty budowy: ta budowa na liście mimo braku wpisu, dzień do zmiany", () => {
+    journal = [];
+    render(<DayHoursDialog day={DAY} siteId="c" onOpenChange={vi.fn()} />);
+    expect(screen.getByLabelText("Dzień")).toHaveValue(DAY);
+    fireEvent.change(screen.getByLabelText("Godziny: Dom C"), { target: { value: "3,5" } });
+    fireEvent.click(screen.getByRole("button", { name: "Zapisz" }));
+    expect(setDayHours).toHaveBeenCalledWith(DAY, { c: 210 });
   });
 });

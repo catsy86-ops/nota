@@ -91,13 +91,15 @@ test("praca: „Przed wejściem” i karta budowy mają cele dotyku ≥ 44 px @m
   await page.goto("/praca");
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await expectTarget(page.getByTestId("entry-check-actions").getByRole("button", { name: "Wpis tutaj" }));
+  // Zegar w nagłówku każdego dnia (1.5) — także przy jednej budowie.
+  await expectTarget(page.locator("[data-day-hours]").first());
 
   await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).click();
   const card = page.getByTestId("site-card");
   // Okno otwiera się z lekkim powiększeniem — mierzymy po animacji, nie w jej trakcie.
   await card.evaluate((el) => Promise.all(el.getAnimations({ subtree: true }).map((a) => a.finished)));
   await expectTarget(card.getByRole("button", { name: "Wpis tutaj" }));
-  for (const name of [/^Etapy:/, /^Braki:/, /^Do zamówienia:/, /^Edytuj dane/]) {
+  for (const name of [/^Etapy:/, /^Braki:/, /^Do zamówienia:/, /^Edytuj dane/, "Wpisz godziny"]) {
     await expectTarget(card.getByRole("button", { name }));
   }
 });

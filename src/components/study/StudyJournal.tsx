@@ -130,13 +130,14 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
     return { days: groupJournal(recent), shown: recent.length, older };
   }, [study.journal, filter, filtered, olderShown]);
 
-  // Podział godzin tylko dla dni z kilkoma budowami albo z wpisanymi godzinami (H2, `siteHours.ts`).
+  // Podział godzin każdego dnia (H2, `siteHours.ts`): zegar w nagłówku otwiera okno zawsze (1.5 planu
+  // Praca 2026-10-24); godziny przy budowach i „a + b h” tylko przy kilku budowach albo wpisanych godzinach.
   const hoursByDay = useMemo(() => {
-    const out = new Map<string, DayHours>();
+    const out = new Map<string, { split: DayHours; detailed: boolean }>();
     for (const d of view.days) {
       const work = workOn(shifts, d.key)?.minutes ?? 0;
       const split = dayHours(study.journal, study.sites, work, d.key, dayKeyOf);
-      if (split.sites.length > 1 || split.sites.some((s) => s.set)) out.set(d.key, split);
+      out.set(d.key, { split, detailed: split.sites.length > 1 || split.sites.some((s) => s.set) });
     }
     return out;
   }, [view.days, shifts, study.journal, study.sites]);
@@ -334,8 +335,9 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                       <span className="min-w-0 truncate">{d.label}</span>
                       <span className="flex shrink-0 items-baseline gap-2">
                         {hoursByDay.has(d.key) && (() => {
-                          const h = hoursByDay.get(d.key)!;
+                          const { split: h, detailed } = hoursByDay.get(d.key)!;
                           const unsplit = h.work > 0 && h.sites.some((s) => s.minutes === null);
+                          const sum = h.sites.reduce((t, s) => t + (s.minutes ?? 0), 0);
                           // Jak grupy budów pod nagłówkiem (od najnowszej); budowa z samymi godzinami — na końcu.
                           const order = (id: string) => { const i = d.sites.findIndex((g) => g.siteId === id); return i < 0 ? d.sites.length : i; };
                           return (
@@ -343,14 +345,18 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                               type="button"
                               onClick={() => setHoursDay({ key: d.key, label: d.label })}
                               className={cn(
-                                "-my-1 inline-flex items-center gap-1 rounded px-1 py-1 font-mono normal-case tracking-normal tabular-nums hover:bg-muted coarse:min-h-11",
+                                "-my-1 inline-flex items-center justify-center gap-1 rounded px-1 py-1 font-mono normal-case tracking-normal tabular-nums hover:bg-muted coarse:min-h-11 coarse:min-w-11",
                                 unsplit ? "text-warning-ink" : "text-muted-foreground",
                               )}
                               aria-label={unsplit ? `${d.label}: podziel godziny między budowy` : `${d.label}: godziny na budowach`}
                               data-day-hours={d.key}
                             >
                               <Clock className="h-3.5 w-3.5" aria-hidden />
-                              {unsplit ? "podziel godziny" : [...h.sites].sort((x, y) => order(x.siteId) - order(y.siteId)).map((s) => formatHoursShort(s.minutes ?? 0)).join(" + ") + " h"}
+                              {unsplit
+                                ? "podziel godziny"
+                                : detailed
+                                  ? [...h.sites].sort((x, y) => order(x.siteId) - order(y.siteId)).map((s) => formatHoursShort(s.minutes ?? 0)).join(" + ") + " h"
+                                  : sum > 0 && `${formatHoursShort(sum)} h`}
                             </button>
                           );
                         })()}
@@ -374,7 +380,8 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                                 <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
                               </button>
                               {(() => {
-                                const m = hoursByDay.get(d.key)?.sites.find((s) => s.siteId === g.siteId)?.minutes;
+                                const hd = hoursByDay.get(d.key);
+                                const m = hd?.detailed ? hd.split.sites.find((s) => s.siteId === g.siteId)?.minutes : undefined;
                                 return typeof m === "number" && m > 0 && (
                                   <span className="shrink-0 font-mono text-2xs tabular-nums text-muted-foreground" data-site-hours title="Godziny na tej budowie">
                                     {formatHoursShort(m)} h

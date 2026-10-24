@@ -27,6 +27,7 @@ import { SiteServicePanel } from "./SiteServicePanel";
 import { PrintRoot } from "./PrintRoot";
 import { HandoverPaper } from "./HandoverPaper";
 import { QuickLink } from "./QuickLink";
+import { DayHoursDialog } from "./DayHoursDialog";
 import { buildHandover, handoverText, type Handover } from "@/lib/study/handover";
 import { mapsHref, prettyPhone, smsHref, SITE_ACCESS_MAX, SITE_PHONE_MAX, telHref } from "@/lib/study/contact";
 
@@ -63,6 +64,8 @@ export function SiteCardDialog({
   const [zipping, setZipping] = useState(false);
   /** Formularz danych rozwinięty; każda karta otwiera się zwinięta. */
   const [editing, setEditing] = useState(false);
+  /** Okno „Godziny na budowach” nad kartą — dzień do zmiany w oknie, ta budowa zawsze na liście. */
+  const [hoursOpen, setHoursOpen] = useState(false);
   /** Protokół odbioru w trakcie drukowania; `null` = nie drukujemy. */
   const [handover, setHandover] = useState<Handover | null>(null);
   const endHandover = useCallback(() => setHandover(null), []);
@@ -208,8 +211,9 @@ export function SiteCardDialog({
                   site.archived !== undefined && "w archiwum",
                 ].filter(Boolean).join(" · ")}
               </DialogDescription>
-              {hours && (hours.total.minutes > 0 || hours.total.unsplit > 0) && (
-                <p className="font-mono text-xs tabular-nums text-muted-foreground" data-testid="site-card-hours">
+              <div className="flex items-start justify-between gap-2">
+              {hours && (hours.total.minutes > 0 || hours.total.unsplit > 0) ? (
+                <p className="min-w-0 pt-0.5 font-mono text-xs tabular-nums text-muted-foreground" data-testid="site-card-hours">
                   <Clock className="mr-1.5 inline h-3.5 w-3.5 align-[-2px] text-primary-ink" aria-hidden />
                   <span className="text-foreground">{formatHoursShort(hours.total.minutes)} h</span> łącznie
                   {" · "}<span className="text-foreground">{formatHoursShort(hours.month.minutes)} h</span> w tym miesiącu
@@ -217,7 +221,17 @@ export function SiteCardDialog({
                     <span className="text-warning-ink">{` · ${hours.total.unsplit} ${pluralPl(hours.total.unsplit, ["dzień", "dni", "dni"])} do podziału`}</span>
                   )}
                 </p>
+              ) : (
+                <p className="pt-0.5 font-mono text-xs text-muted-foreground">Bez godzin</p>
               )}
+                <button
+                  type="button"
+                  onClick={() => setHoursOpen(true)}
+                  className="pressable -my-1 inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-1 text-xs font-medium text-primary-ink hover:bg-primary/10 coarse:min-h-11"
+                >
+                  <Clock className="h-3.5 w-3.5" aria-hidden />Wpisz godziny
+                </button>
+              </div>
             </div>
 
             {(nav || call || callManager || site.access) && (
@@ -421,6 +435,9 @@ export function SiteCardDialog({
           </>
         )}
       </ResponsiveDialogContent>
+      {site && (
+        <DayHoursDialog day={hoursOpen ? localDayKey() : null} siteId={site.id} onOpenChange={(o) => { if (!o) setHoursOpen(false); }} />
+      )}
       {handover && (
         <PrintRoot testId="handover-print" onDone={endHandover}>
           <HandoverPaper handover={handover} />
