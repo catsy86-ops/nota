@@ -2160,11 +2160,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 
 ## Sieć wiedzy — lokalny graf w czytniku (Faza 3.5, 2026-10-24)
 
-- **Co robi:** na dole czytnika (nie w trybie prezentacji, nie w koszu i nie przy notatce prywatnej) jest sekcja „Lokalny graf”: notatka otwarta i jej sąsiedzi do dwóch kroków po linkach w obu kierunkach. Notatka otwarta jest w środku i ma pogrubiony obrys. Filtry nad rysunkiem: **Etykieta** (notatki z tą etykietą i z jej dziećmi, np. „praca” łapie „praca/projekt”) i **Folder** (notatki z tego folderu i podfolderów). Filtr dotyczy sąsiadów, nie notatki otwartej, która zawsze zostaje. Klik w węzeł otwiera tę notatkę w czytniku. Bez połączeń albo bez pasujących sąsiadów pokazuje się komunikat zamiast rysunku.
+- **Co robi:** w czytniku (nie w trybie prezentacji, nie w koszu i nie przy notatce prywatnej) jest „Lokalny graf” — od xl w zakładce „Graf” bocznego panelu, poniżej xl jako sekcja pod treścią (`useMediaQuery`, zob. Sieć wiedzy — boczny panel czytnika): notatka otwarta i jej sąsiedzi do dwóch kroków po linkach w obu kierunkach. Notatka otwarta jest w środku i ma pogrubiony obrys. Filtry nad rysunkiem: **Etykieta** (notatki z tą etykietą i z jej dziećmi, np. „praca” łapie „praca/projekt”) i **Folder** (notatki z tego folderu i podfolderów). Filtr dotyczy sąsiadów, nie notatki otwartej, która zawsze zostaje. Klik w węzeł otwiera tę notatkę w czytniku. Bez połączeń albo bez pasujących sąsiadów pokazuje się komunikat zamiast rysunku.
 - **Gdzie jest:**
   - `src/lib/noteGraph.ts` — `localGraph(notes, centerId, { depth, label, folderIds }, limit)` (BFS wszerz od środka, sortowanie: najbliżej, potem najwięcej linków, potem tytuł); `collectEdges` wspólne dla grafu lokalnego i globalnego (`buildGraph`).
   - `src/components/NoteGraph.tsx` — prop `centerId` (+ `folders`) przełącza na tryb lokalny; filtry etykiety i folderu (`data-testid="graph-filter-label"`, `graph-filter-folder`). Układ przychodzi asynchronicznie, rysowanie jak wcześniej (rozkładanie z okręgu).
-  - `src/components/NoteReader.tsx` — sekcja `[data-local-graph]` z leniwym `NoteGraph` (osobny kawałek bundla); dane z `treeNotes` (żywe i zarchiwizowane), folder z `useNotesContext`.
+  - `src/components/NoteReader.tsx` — sekcja `[data-local-graph]` z leniwym `NoteGraph` (osobny kawałek bundla); dane z `treeNotes` (żywe i zarchiwizowane), folder z `useNotesContext`. Od 3.6 blok jest w `sideSlot("graph", …)`.
   - `src/workers/graphLayout.ts` — klient: `layoutGraph(nodes, edges, w, h)` wysyła do Workera przez RPC; bez `Worker` (jsdom) albo przy błędzie liczy `forceLayout` w wątku. Bezczynny Worker zamyka się po 30 s.
   - `src/workers/graphLayout.worker.ts` — punkt wejścia Workera (`serveRpc` na `workerScopeTransport(self)`).
   - `src/workers/graphLayoutHandlers.ts` — metoda `layout`; zwraca pary `[id, punkt]`, bo `Map` nie jest potrzebny po drugiej stronie.
@@ -2188,4 +2188,28 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - `e2e/local-graph.spec.ts` (2): sąsiedzi i filtr etykiety w czytniku; klik w węzeł otwiera notatkę.
   - `e2e/bundle.spec.ts`: budżet wejściowego JS bez zmian (graf jest leniwy).
 - **Commit:** `6c05814`, 2026-10-24.
+
+## Sieć wiedzy — boczny panel czytnika (Faza 3.6, 2026-10-24)
+
+- **Co robi:** od szerokości xl (1280 px) czytnik notatki (nie w trybie prezentacji) jest szerszy (`max-w-5xl`) i ma z prawej panel z trzema zakładkami: **Linki** (Linkują tutaj i Niepołączone wzmianki; bez obu — komunikat), **Pola** (pola notatki albo „Ta notatka nie ma pól”), **Graf** (lokalny graf, zob. wyżej). Zakładki to `role="tablist"`, domyślnie „Linki”. Poniżej xl panel znika, a te same sekcje stoją pod treścią jak dotąd.
+- **Gdzie jest:**
+  - `src/hooks/useMediaQuery.ts` — `useMediaQuery(query)`: `matchMedia` z reakcją na zmianę; bez `matchMedia` (jsdom) zwraca `false`.
+  - `src/components/NoteReader.tsx` — `wide` (xl i nie prezentacja), `sideTab`, `sideEl` (kontener panelu), `sideSlot(tab, node)`: w wąskim układzie zwraca węzeł w miejscu, w szerokim — `createPortal` do panelu, jeśli zakładka jest aktywna. Typ `SideTab` i `SIDE_TABS`. Blok `<aside data-reader-side>` z zakładkami; wewnętrzny układ czytnika to teraz `flex` z kolumną treści i panelem.
+  - `src/components/NoteGraph.tsx` — prop `compact`: w panelu etykiety 34 jednostki zamiast 15 i krótsze tytuły (rysunek jest skalowany w dół, bez tego były nieczytelne).
+- **Jak działa i dlaczego:**
+  - Bloki (Linki, Pola, Graf) są napisane raz, w tym samym miejscu JSX. Portal przenosi je do panelu tylko w szerokim układzie, więc nie ma podwójnego DOM-u ani zduplikowanych `data-testid`.
+  - Graf jest montowany tylko, gdy jego zakładka jest aktywna — obliczenia układu nie idą bez potrzeby.
+  - Prezentacja (`present`) zawsze ma układ bez panelu.
+  - Kolejność sekcji pod treścią (wąski ekran) zostaje jak w 3.5.
+- **Ograniczenia i pułapki:**
+  - Konspekt (spis treści `ReaderToc`) został **w treści**, nie w panelu, jak było w planie 3.6: spis jest zbudowany z DOM-u treści i wymagałby osobnego przeniesienia. Do decyzji.
+  - Zakładki zamiast jednej listy: „Linki” łączy dwie sekcje; na wąskim ekranie są one nadal osobno.
+  - Szerokość panelu stała (`w-80`, 320 px); na 1280 px treść czytnika ma ~640 px.
+  - Klasy `mt-8 pt-4 border-t` z sekcji zostają także w panelu (lekki odstęp u góry zakładki).
+  - Zakładka nie zapamiętuje wyboru między notatkami (stan komponentu, nie `viewPrefs`).
+- **Testy:**
+  - `e2e/reader-side-panel.spec.ts` (2): na 1440 px panel z zakładkami, „Linki” pokazuje linkującą notatkę, „Graf” rysuje 3 węzły; na 900 px panelu nie ma, a linki i graf są pod treścią.
+  - `e2e/local-graph.spec.ts` (2): teraz klika zakładkę „Graf” (na desktopie graf jest w panelu).
+  - `e2e/note-links.spec.ts`, `e2e/wikilinks.spec.ts`: bez zmian, przechodzą (linki zwrotne i wzmianki na xl są w panelu).
+- **Commit:** `40b25bb`, 2026-10-24.
 
