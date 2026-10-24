@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { Inbox, Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy } from "lucide-react";
+import { Inbox, Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes, useSearchReady } from "@/lib/searchNotes";
+import { sectionHits } from "@/lib/sectionHits";
+import { requestHeading } from "@/lib/wikiHeading";
 import type { PeriodKind } from "@/lib/periodNote";
 import { loadRecentSearches, saveRecentSearch } from "@/lib/recentSearches";
 import { loadRecentCommands, saveRecentCommand } from "@/lib/recentCommands";
@@ -87,6 +89,8 @@ export function CommandPalette({
   const searchReady = useSearchReady();
   // eslint-disable-next-line react-hooks/exhaustive-deps -- `searchReady`: przeliczenie po wczytaniu silnika
   const matched = useMemo(() => searchNotes(publicNotes, search, { folders }), [publicNotes, search, folders, searchReady]);
+  // Nagłówki i bloki pasujące do tekstu (bez operatorów): skok prosto do sekcji.
+  const sections = useMemo(() => sectionHits(publicNotes, search, { folders }), [publicNotes, search, folders]);
   const vault = useVault();
   const shifts = useShifts();
   const shiftHits = useMemo(() => {
@@ -241,6 +245,26 @@ export function CommandPalette({
                   <BriefcaseBusiness className="w-4 h-4 mr-2 text-muted-foreground" />
                   <span className="truncate first-letter:uppercase">{h.dateLabel}</span>
                   <span className="ml-2 truncate text-xs text-muted-foreground">{h.shiftLabel}{h.note ? ` · ${h.note}` : ""}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </>
+        )}
+        {sections.length > 0 && (
+          <>
+            <CommandSeparator />
+            {/* Jak grupa Grafik: `sectionHits` filtruje sam, więc `forceMount`. */}
+            <CommandGroup heading="Nagłówki i bloki" forceMount>
+              {sections.map((h, i) => (
+                <CommandItem
+                  key={`${h.note.id}-${h.target}-${i}`}
+                  forceMount
+                  value={`sekcja-${h.note.id}-${i}`}
+                  onSelect={() => { setRecent(saveRecentSearch(search)); run(() => { requestHeading(h.target); onOpenNote(h.note.id); }); }}
+                >
+                  {h.kind === "heading" ? <Heading className="w-4 h-4 mr-2 text-muted-foreground" /> : <Hash className="w-4 h-4 mr-2 text-muted-foreground" />}
+                  <span className="truncate">{h.text}</span>
+                  <span className="ml-2 truncate text-xs text-muted-foreground">{h.note.title || "(bez tytułu)"}</span>
                 </CommandItem>
               ))}
             </CommandGroup>
