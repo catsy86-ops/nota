@@ -41,6 +41,9 @@ export const TOPICS: StudyTopic[] = [
   { id: "dokumentacja", module: "wspolne", title: "Zdjęcia i dokumentacja przed zakryciem", summary: "Trasy i punkty z miarą lub opisem — chroni przed przewierceniem rury." },
 ];
 
+/** Nazwa tematu po id; `null` = temat spoza materiału (albo brak tematu). */
+export const topicTitle = (id: string | null): string | null => TOPICS.find((t) => t.id === id)?.title ?? null;
+
 export interface ChecklistItem {
   id: string;
   topic: string;

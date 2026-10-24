@@ -149,12 +149,23 @@ export function groupJournal<E extends JournalEntry>(entries: readonly E[], now:
 
 export const RECENT_DAYS = 30;
 
-/** Wpisy z ostatnich `RECENT_DAYS` dni (od północy) i liczba starszych — reszta za „Pokaż starsze”. */
-export function splitRecent<E extends JournalEntry>(entries: readonly E[], now: number = Date.now()): { recent: E[]; older: number } {
+/** Porcja „Pokaż starsze”: tyle starszych wpisów dochodzi na oś za jednym kliknięciem. */
+export const OLDER_STEP = 50;
+
+/**
+ * Wpisy z ostatnich `RECENT_DAYS` dni (od północy) i liczba starszych — reszta za „Pokaż starsze”.
+ * `extra` = ile najnowszych spośród starszych dołożyć (porcje po `OLDER_STEP`), w górę do pełnego dnia,
+ * żeby dzień na osi nie urwał się w połowie, a licznik w nagłówku dnia się zgadzał.
+ */
+export function splitRecent<E extends JournalEntry>(entries: readonly E[], now: number = Date.now(), extra = 0): { recent: E[]; older: number } {
   const d = new Date(now);
   const since = new Date(d.getFullYear(), d.getMonth(), d.getDate() - (RECENT_DAYS - 1)).getTime();
   const recent = entries.filter((e) => e.at >= since);
-  return { recent, older: entries.length - recent.length };
+  if (extra <= 0) return { recent, older: entries.length - recent.length };
+  const older = entries.filter((e) => e.at < since).sort((a, b) => b.at - a.at);
+  let n = Math.min(extra, older.length);
+  while (n > 0 && n < older.length && dayKey(older[n].at) === dayKey(older[n - 1].at)) n++;
+  return { recent: [...recent, ...older.slice(0, n)], older: older.length - n };
 }
 
 /**
@@ -187,4 +198,12 @@ export function yesterdaySiteText(journal: readonly JournalEntry[], siteId: stri
     if (!best || e.at > best.at) best = e;
   }
   return best?.text.trim() ?? null;
+}
+
+/**
+ * Ten sam wpis po treści. Każda zmiana dokumentu buduje wpisy od nowa (`getStudy`), więc porównanie
+ * referencji przerysowałoby całą oś; wpis jest mały, a klucze idą zawsze w tej samej kolejności (`cleanEntry`).
+ */
+export function sameJournalEntry(a: JournalEntry, b: JournalEntry): boolean {
+  return a === b || JSON.stringify(a) === JSON.stringify(b);
 }

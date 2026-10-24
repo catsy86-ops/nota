@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Archive, ArchiveRestore, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Phone, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -7,9 +7,9 @@ import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { haptic } from "@/lib/haptics";
 import { useShifts } from "@/lib/shifts";
 import { pluralPl } from "@/lib/plural";
-import { TOPICS } from "@/lib/study/content";
-import { saveSiteCard, setSiteArchived, useStudy } from "@/lib/study/store";
-import { findSiteByName, siteDirectory, SITE_FIELD_MAX, SITE_NAME_MAX } from "@/lib/study/sites";
+import { topicTitle } from "@/lib/study/content";
+import { saveSiteCard, setSiteArchived, useSiteDirectory, useStudy } from "@/lib/study/store";
+import { findSiteByName, SITE_FIELD_MAX, SITE_NAME_MAX } from "@/lib/study/sites";
 import { entriesPl, problemsPl } from "@/lib/study/journalView";
 import { buildJournalReport, periodLabel, dayKeyOf } from "@/lib/study/report";
 import { downloadSiteZip } from "@/lib/study/siteZip";
@@ -23,7 +23,6 @@ import { HandoverPaper } from "./HandoverPaper";
 import { buildHandover, handoverText, type Handover } from "@/lib/study/handover";
 import { mapsHref, prettyPhone, smsHref, SITE_ACCESS_MAX, SITE_PHONE_MAX, telHref } from "@/lib/study/contact";
 
-const topicTitle = (id: string) => TOPICS.find((t) => t.id === id)?.title ?? null;
 
 const EMPTY_FORM = { name: "", address: "", investor: "", phone: "", manager: "", managerPhone: "", supplierPhone: "", access: "" };
 type SiteForm = typeof EMPTY_FORM;
@@ -61,7 +60,7 @@ export function SiteCardDialog({
 }) {
   const study = useStudy();
   const shifts = useShifts();
-  const dir = useMemo(() => siteDirectory(study.sites, study.journal), [study.sites, study.journal]);
+  const dir = useSiteDirectory();
   const site = siteId ? dir.find((s) => s.id === siteId) ?? null : null;
   const [form, setForm] = useState<SiteForm>(EMPTY_FORM);
   const [zipping, setZipping] = useState(false);

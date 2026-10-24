@@ -16,7 +16,7 @@ import { formatDuration } from "@/lib/shifts/time";
 import { useShifts } from "@/lib/shifts";
 import { imageStore } from "@/lib/imageStore";
 import { yjsStore } from "@/lib/yjsStore";
-import { TOPICS } from "@/lib/study/content";
+import { topicTitle } from "@/lib/study/content";
 import { saveBoss, saveGroup, useStudy, type Boss, type JournalEntry, type SiteInfo, type WaGroup } from "@/lib/study/store";
 import { formatPhone, whatsappUrl } from "@/lib/study/boss";
 import { entrySiteId } from "@/lib/study/sites";
@@ -28,7 +28,6 @@ import type { JournalReportRequest } from "@/lib/study/reportLink";
 import { reportToNote } from "@/lib/study/toNote";
 import { KindIcon } from "./JournalEntrySheet";
 
-const topicTitle = (id: string) => TOPICS.find((t) => t.id === id)?.title ?? null;
 /** Ile zdjęć dołączać do „Udostępnij” — komunikatory i tak tną więcej. */
 const SHARE_MAX_FILES = 10;
 

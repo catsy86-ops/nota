@@ -7,14 +7,13 @@ import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
 import { localDayKey } from "@/lib/dayDone";
-import { TOPICS } from "@/lib/study/content";
-import { activeStreak, columnOf, openProblems, useStudy, useStudyLists } from "@/lib/study/store";
-import { siteDirectory } from "@/lib/study/sites";
+import { TOPICS, topicTitle } from "@/lib/study/content";
+import { activeStreak, columnOf, openProblems, siteDirectoryOf, useStudy, useStudyLists } from "@/lib/study/store";
 import { buildExperience, experienceText, type ExperienceCard } from "@/lib/study/experience";
 import { accuracyByTopic, daysInLast, entriesByMonth, entriesBySite, hardestQuestions, overallAccuracy, studyDaysGrid } from "@/lib/study/stats";
 import { downloadBlob } from "@/lib/downloadBlob";
 
-const topicTitle = (id: string) => TOPICS.find((t) => t.id === id)?.title ?? id;
+const topicName = (id: string) => topicTitle(id) ?? id;
 const WEEKDAYS = ["pn", "wt", "śr", "cz", "pt", "sb", "nd"];
 
 /**
@@ -53,7 +52,7 @@ function StatsBody() {
       card: buildExperience({
         journal: study.journal,
         review: study.review,
-        sites: siteDirectory(study.sites, study.journal),
+        sites: siteDirectoryOf(study),
         doneTopics: TOPICS.filter((t) => columnOf(study, t.id) === "done").map((t) => t.title),
         totalTopics: TOPICS.length,
       }),
@@ -80,7 +79,7 @@ function StatsBody() {
         ) : (
           <ul className="space-y-2" data-testid="stats-topics">
             {s.topics.map((r) => (
-              <BarRow key={r.topic} label={topicTitle(r.topic)} ratio={r.percent! / 100} value={`${r.percent}%`} detail={`${r.right}/${r.seen}`} title={`${topicTitle(r.topic)}: ${r.percent}% (${r.right} z ${r.seen})`} />
+              <BarRow key={r.topic} label={topicName(r.topic)} ratio={r.percent! / 100} value={`${r.percent}%`} detail={`${r.right}/${r.seen}`} title={`${topicName(r.topic)}: ${r.percent}% (${r.right} z ${r.seen})`} />
             ))}
           </ul>
         )}

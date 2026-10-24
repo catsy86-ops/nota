@@ -130,6 +130,18 @@ export function getStudy(): StudyState {
 
 export const useStudy = () => useSyncExternalStore(yStudy.subscribe, getStudy);
 
+const directories = new WeakMap<StudyState, SiteInfo[]>();
+
+/** Spis budów (`siteDirectory`) liczony raz na stan dokumentu — dziennik, arkusz, karta i wejście dzielą jeden wynik. */
+export function siteDirectoryOf(s: StudyState): SiteInfo[] {
+  let dir = directories.get(s);
+  if (!dir) { dir = siteDirectory(s.sites, s.journal); directories.set(s, dir); }
+  return dir;
+}
+
+/** Spis budów bieżącego stanu; ta sama referencja, dopóki dokument się nie zmieni. */
+export const useSiteDirectory = () => siteDirectoryOf(useStudy());
+
 /** Seria, która jeszcze trwa: ostatnia runda dziś albo wczoraj; starsza już przepadła. */
 export function activeStreak(state: Pick<StudyState, "streak" | "lastDay">, today = localDayKey()): number {
   if (!state.lastDay) return 0;
@@ -242,7 +254,7 @@ export function addJournalEntry(input: NewJournalEntry, now: number = Date.now()
   const fields = entryFields(input, now);
   if (!fields) return null;
   const s = getStudy();
-  const { siteId, site, card } = resolveSite(siteDirectory(s.sites, s.journal), s.site, now);
+  const { siteId, site, card } = resolveSite(siteDirectoryOf(s), s.site, now);
   const entry: JournalEntry = { id: crypto.randomUUID(), ...fields, site, ...(siteId ? { siteId } : {}) };
   yStudy.addEntry(entry, card);
   return entry;
@@ -259,7 +271,7 @@ export function updateJournalEntry(id: string, input: JournalEdit, now: number =
   const fields = entryFields(input, now);
   if (!fields) return null;
   const s = getStudy();
-  const { siteId, site, card } = resolveSite(siteDirectory(s.sites, s.journal), input.site, now);
+  const { siteId, site, card } = resolveSite(siteDirectoryOf(s), input.site, now);
   // Opis rozwiązania nie jest w formularzu arkusza — zostaje z zapisanego wpisu, dopóki to problem.
   const prevSolution = s.journal.find((e) => e.id === id)?.solution;
   const entry: JournalEntry = {
@@ -377,7 +389,7 @@ export interface SiteCardInput {
  */
 /** Karta budowy o tym id wraz z jej listami (z dziennika, gdy karty nie ma). */
 function findSite(s: StudyState, id: string) {
-  return siteDirectory(s.sites, s.journal).find((x) => x.id === id);
+  return siteDirectoryOf(s).find((x) => x.id === id);
 }
 
 export function saveSiteCard(id: string, input: SiteCardInput, now: number = Date.now()): boolean {

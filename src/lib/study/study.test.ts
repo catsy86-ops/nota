@@ -3,7 +3,7 @@ import { CHECKLIST, QUESTIONS, TOPICS } from "./content";
 import { buildRound, missedTopics, scoreRound } from "./quiz";
 import { topicToNote } from "./toNote";
 import { journalImageRefs } from "./images";
-import { clearJournalDraft, getJournalDraft, patchJournalDraft, sanitizeDraft, setJournalDraftTopic, EMPTY_DRAFT } from "./draft";
+import { clearJournalDraft, draftHasContent, getJournalDraft, patchJournalDraft, sanitizeDraft, setJournalDraftTopic, EMPTY_DRAFT } from "./draft";
 import { dayLabel, entriesPl, filterJournal, fromLocalInput, groupJournal, NO_FILTER, suggestSites, problemsPl, splitRecent, toLocalInput, whenLabel } from "./journalView";
 import { entrySiteId, findSiteByName, resolveSite, siteDirectory, siteKey } from "./sites";
 import { closeJournalSheet, getJournalEditForm, openJournalEdit, patchJournalEditForm } from "./entrySheet";
@@ -12,6 +12,7 @@ import {
   addJournalEntry, removeJournalEntry, restoreJournalEntry, setSite, practiceByTopic,
   updateJournalEntry, setProblemResolved, openProblems, saveSiteCard, setSiteArchived, setDayHours,
   setProblemSolution, JOURNAL_SOLUTION_MAX, setSiteGeo, setSiteStages, markSiteOrdered,
+  siteDirectoryOf,
 } from "./store";
 import { resetStudyForTests, yStudy } from "./data";
 import { yjsStore } from "@/lib/yjsStore";
@@ -191,6 +192,15 @@ describe("dziennik z budowy", () => {
     expect(siteDirectory(getStudy().sites, getStudy().journal).find((s) => s.id === e.siteId)?.geo).toEqual(geo);
     setSiteGeo(e.siteId!, null);
     expect(siteDirectory(getStudy().sites, getStudy().journal).find((s) => s.id === e.siteId)?.geo).toBeUndefined();
+  });
+
+  it("siteDirectoryOf: jeden spis budów na stan dokumentu, nowy po zmianie", () => {
+    addJournalEntry({ kind: "ok", topic: null, text: "Pion" }, 1000);
+    const before = siteDirectoryOf(getStudy());
+    expect(siteDirectoryOf(getStudy())).toBe(before);
+    expect(before).toEqual(siteDirectory(getStudy().sites, getStudy().journal));
+    addJournalEntry({ kind: "ok", topic: null, text: "Drugi" }, 2000);
+    expect(siteDirectoryOf(getStudy())).not.toBe(before);
   });
 
   it("usunięcie wpisu ze zdjęciami i „Cofnij” przywraca wpis z tymi samymi zdjęciami", () => {
@@ -401,6 +411,14 @@ describe("szkic wpisu", () => {
     expect(journalImageRefs().has(img)).toBe(false);
   });
 
+  it("draftHasContent: pusty szkic, sam temat albo same spacje to brak szkicu", () => {
+    expect(draftHasContent(EMPTY_DRAFT)).toBe(false);
+    expect(draftHasContent({ ...EMPTY_DRAFT, topic: "spadki", kind: "problem", text: "  " })).toBe(false);
+    expect(draftHasContent({ ...EMPTY_DRAFT, text: "rura" })).toBe(true);
+    expect(draftHasContent({ ...EMPTY_DRAFT, recordings: [{ hash: "a", name: "n.webm", mime: "audio/webm", size: 1 }] as never })).toBe(true);
+    expect(draftHasContent({ ...EMPTY_DRAFT, fittings: [{ name: "kolano", qty: 1 }] as never })).toBe(true);
+  });
+
   it("sanitizeDraft odrzuca śmieci", () => {
     expect(sanitizeDraft(EMPTY_DRAFT, { kind: "?", text: 5, images: ["nie-klucz", "f".repeat(64)], checked: [1, "a"], at: "wczoraj" }))
       .toEqual({ ...EMPTY_DRAFT, images: ["f".repeat(64)], checked: ["a"] });
@@ -462,6 +480,21 @@ describe("dziennik — oś czasu i filtry", () => {
     const { recent, older } = splitRecent([...entries, old, edge], at(15, 12));
     expect(recent.map((x) => x.id)).toEqual(["a", "b", "c", "d", "y"]);
     expect(older).toBe(1);
+  });
+
+  it("„Pokaż starsze” dokłada porcję starszych wpisów, w górę do pełnego dnia", () => {
+    const now = at(15, 12);
+    const day = (d: number, h: number) => new Date(2026, 7, d, h).getTime();
+    const old = [e("o1", day(30, 9), "ok", ""), e("o2", day(30, 8), "ok", ""), e("o3", day(29, 9), "ok", ""), e("o4", day(28, 9), "ok", "")];
+    const all = [...entries, ...old];
+    expect(splitRecent(all, now, 0).older).toBe(4);
+    // Porcja 1 trafia w środek 30 sierpnia — dochodzi cały dzień (o1 i o2).
+    const one = splitRecent(all, now, 1);
+    expect(one.recent.map((x) => x.id).slice(-2)).toEqual(["o1", "o2"]);
+    expect(one.older).toBe(2);
+    expect(splitRecent(all, now, 3).older).toBe(1);
+    expect(splitRecent(all, now, 99)).toEqual({ recent: expect.any(Array), older: 0 });
+    expect(splitRecent(all, now, 99).recent).toHaveLength(entries.length + 4);
   });
 
   it("podpowiada budowy: bez bieżącej, po wpisanych słowach bez ogonków, z limitem", () => {

@@ -25,13 +25,11 @@ import { imageStore } from "@/lib/imageStore";
 import { CAPTION_MAX, captionPhoto, captionText } from "@/lib/study/photoCaption";
 import { requestPersistentStorage } from "@/lib/storagePersistence";
 import { MODULES, TOPICS } from "@/lib/study/content";
-import {
-  addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, setSiteGeo, setSiteShortages, setSiteStages, updateJournalEntry, useStudy, useStudyLists, type JournalKind,
-} from "@/lib/study/store";
+import { addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, setSiteGeo, setSiteShortages, setSiteStages, updateJournalEntry, useSiteDirectory, useStudy, useStudyLists, type JournalKind } from "@/lib/study/store";
 import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft, type JournalDraft } from "@/lib/study/draft";
 import { closeJournalSheet, getJournalEditForm, patchJournalEditForm, takeVoiceRequest, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
 import { fromLocalInput, KIND_LABEL, recentSiteTexts, suggestSites, toLocalInput, whenLabel, yesterdaySiteText } from "@/lib/study/journalView";
-import { findSiteByName, siteDirectory } from "@/lib/study/sites";
+import { findSiteByName } from "@/lib/study/sites";
 import { accuracyLabel, cleanGeo, mapsUrl, nearestSite } from "@/lib/study/geo";
 import { fittingsLine, suggestFittingNames } from "@/lib/study/fittings";
 import { mergeFittings } from "@/lib/study/spokenFittings";
@@ -111,6 +109,10 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const [editingSite, setEditingSite] = useState(false);
   /** Budowa w chwili otwarcia pola — dopóki jej nie zmienisz, pigułki pokazują wszystkie ostatnie. */
   const [siteAtOpen, setSiteAtOpen] = useState("");
+  /** Tekst pola budowy w trakcie pisania — do Yjs (albo formularza edycji) trafia dopiero przy zatwierdzeniu. */
+  const [siteText, setSiteText] = useState("");
+  /** Niezatwierdzona budowa i tryb, w którym ją wpisano; `null` = pole zamknięte albo już zapisane. */
+  const pendingSite = useRef<{ text: string; edit: boolean } | null>(null);
   const [editingWhen, setEditingWhen] = useState(false);
   /** Nagrywanie w toku (pasek z licznikiem zamiast przycisku); nagranie trafia do załączników wpisu. */
   const [recording, setRecording] = useState(false);
@@ -123,17 +125,20 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     patch({ text: typeof next === "function" ? next(getForm().text) : next });
 
   useEffect(() => {
+    // Arkusz zamknięty albo przełączony w trakcie pisania budowy: nowy wpis zachowuje wpisaną budowę
+    // (jak szkic), a niezapisana poprawka wpisu przepada razem z całą edycją.
+    const pending = pendingSite.current;
+    pendingSite.current = null;
+    if (pending && !pending.edit) setSite(pending.text);
     setEditingSite(false);
     setEditingWhen(false);
     if (open) setTopicOpen(topicFirst);
   }, [open, topicFirst, editing]);
 
-  const recentSites = useMemo(
-    () => siteDirectory(study.sites, study.journal).filter((s) => s.archived === undefined).map((s) => s.name),
-    [study.sites, study.journal],
-  );
+  const dir = useSiteDirectory();
+  const recentSites = useMemo(() => dir.filter((s) => s.archived === undefined).map((s) => s.name), [dir]);
   /** Id budowy wybranej w polu (`""` = bez budowy albo nieznana nazwa) — dla podpowiedzi tekstu. */
-  const siteCard = useMemo(() => findSiteByName(siteDirectory(study.sites, study.journal), site), [study.sites, study.journal, site]);
+  const siteCard = useMemo(() => findSiteByName(dir, site), [dir, site]);
   const siteId = siteCard?.id ?? "";
   /** Najbliższe nieodhaczone etapy budowy — przy „Zrobione” do odhaczenia jednym stuknięciem. */
   const nextStages = useMemo(() => (siteCard ? siteStages(siteCard).filter((s) => s.done === undefined).slice(0, 3) : []), [siteCard]);
@@ -159,16 +164,29 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const textSuggestions = useMemo(() => (isEdit ? [] : recentSiteTexts(study.journal, siteId)), [isEdit, study.journal, siteId]);
   const yesterdayText = useMemo(() => (isEdit ? null : yesterdaySiteText(study.journal, siteId)), [isEdit, study.journal, siteId]);
   const siteChips = editingSite
-    ? suggestSites(recentSites, site === siteAtOpen ? "" : site, site)
+    ? suggestSites(recentSites, siteText === siteAtOpen ? "" : siteText, siteText)
     : !site ? suggestSites(recentSites, "", "", 3) : [];
 
   function openSiteEditor() {
     setSiteAtOpen(site);
+    setSiteText(site);
+    pendingSite.current = { text: site, edit: isEdit };
     setEditingSite(true);
   }
 
+  function writeSite(next: string) {
+    pendingSite.current = null;
+    if (isEdit) patchJournalEditForm({ site: next }); else if (next !== study.site) setSite(next);
+  }
+
+  /** Zatwierdza wpisaną budowę (blur, Enter, zapis wpisu) — jeden zapis zamiast zapisu przy każdym klawiszu. */
+  function commitSite() {
+    if (pendingSite.current) writeSite(pendingSite.current.text);
+    setEditingSite(false);
+  }
+
   function pickSite(next: string) {
-    if (isEdit) patchJournalEditForm({ site: next }); else setSite(next);
+    writeSite(next);
     haptic("selection");
     setEditingSite(false);
   }
@@ -177,7 +195,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const [locating, setLocating] = useState(false);
   const geo = form.geo ?? null;
   /** Budowa z zapisaną lokalizacją w promieniu 300 m — jeden dotyk zamiast wybierania. */
-  const nearby = useMemo(() => (geo ? nearestSite(siteDirectory(study.sites, study.journal), geo) : null), [geo, study.sites, study.journal]);
+  const nearby = useMemo(() => (geo ? nearestSite(dir, geo) : null), [geo, dir]);
   function locate() {
     if (typeof navigator === "undefined" || !("geolocation" in navigator)) {
       toast.error("Ta przeglądarka nie udostępnia lokalizacji");
@@ -223,7 +241,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
       done.push(`kształtki: ${fittingsLine(parsed.fittings)}`);
     }
     const name = parsed.site ?? site;
-    const card = name ? findSiteByName(siteDirectory(study.sites, study.journal), name) : undefined;
+    const card = name ? findSiteByName(dir, name) : undefined;
     // „etap próba szczelności zrobiony” — odhacza etap w karcie budowy (już odhaczony zostaje z pierwszą datą).
     if (parsed.stage) {
       const stages = siteStages(card);
@@ -367,6 +385,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
 
   function submit() {
     if (processing > 0) return;
+    commitSite();
     if (isEdit) { saveEdit(); return; }
     const wasDone = topic && columnOf(study, topic) === "done";
     const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, recordings: form.recordings, at, test: form.test, fittings: form.fittings, stage: form.stage, geo: form.geo ?? null });
@@ -486,10 +505,10 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 Inwestycja / adres
                 <input
                   autoFocus
-                  value={site}
-                  onChange={(e) => (isEdit ? patchJournalEditForm({ site: e.target.value }) : setSite(e.target.value))}
-                  onBlur={() => setEditingSite(false)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setEditingSite(false); } }}
+                  value={siteText}
+                  onChange={(e) => { setSiteText(e.target.value); pendingSite.current = { text: e.target.value, edit: isEdit }; }}
+                  onBlur={commitSite}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commitSite(); } }}
                   placeholder="np. Dom Kowalskich, ul. Leśna 4"
                   enterKeyHint="done"
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"

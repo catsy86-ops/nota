@@ -4,7 +4,7 @@ import { ArrowRight, Check, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { TOPICS } from "@/lib/study/content";
+import { TOPICS, topicTitle } from "@/lib/study/content";
 import { buildRound, missedTopics, scoreRound, type RoundQuestion } from "@/lib/study/quiz";
 import { activeStreak, columnOf, dueToday, recordRound, useStudy, useStudyLists } from "@/lib/study/store";
 import { CustomQuestionsDialog } from "./CustomQuestionsDialog";
@@ -15,7 +15,7 @@ import { pluralPl } from "@/lib/plural";
 
 const ROUND_SIZE = 10;
 const LETTERS = ["A", "B", "C", "D"];
-const topicTitle = (id: string) => TOPICS.find((t) => t.id === id)?.title ?? id;
+const topicName = (id: string) => topicTitle(id) ?? id;
 const streakLabel = (n: number) => `${n} ${n === 1 ? "dzień" : "dni"}`;
 
 /** Z czego składa się runda: wszystko, jeden temat, pytania, które ostatnio poszły źle, albo powtórki na dziś. */
@@ -150,7 +150,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
               {result.missed.map((id) => (
                 <li key={id} className="flex items-center gap-2 text-sm">
                   <X className="w-4 h-4 text-destructive-ink shrink-0" aria-hidden />
-                  {topicTitle(id)}
+                  {topicName(id)}
                 </li>
               ))}
             </ul>
@@ -220,7 +220,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
       <div className="flex items-center justify-between gap-3 text-xs">
         <span className="font-mono tabular-nums text-muted-foreground">Pytanie {index + 1} z {round.length}</span>
         <span className="rounded-full bg-muted px-2.5 py-0.5 text-muted-foreground truncate">
-          {scope.kind === "missed" ? "Powtórka błędów · " : scope.kind === "due" ? "Na dziś · " : ""}{topicTitle(current.topic)}
+          {scope.kind === "missed" ? "Powtórka błędów · " : scope.kind === "due" ? "Na dziś · " : ""}{topicName(current.topic)}
         </span>
       </div>
       <div className="h-1 rounded-full bg-muted overflow-hidden" aria-hidden>

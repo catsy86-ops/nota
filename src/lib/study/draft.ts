@@ -1,3 +1,4 @@
+import { useSyncExternalStore } from "react";
 import { createPersistedStore } from "@/lib/persistedStore";
 import { type Fitting } from "./fittings";
 import { type PressureTest } from "./pressureTest";
@@ -56,6 +57,14 @@ const store = createPersistedStore<JournalDraft>(JOURNAL_DRAFT_KEY, EMPTY_DRAFT,
 
 export const useJournalDraft = () => store.use();
 export const getJournalDraft = () => store.get();
+
+/** Szkic ma treść (tekst, zdjęcia, nagrania, odhaczenia, próba albo kształtki) — „Dokończ wpis” zamiast „Wpis”. */
+export function draftHasContent(d: JournalDraft): boolean {
+  return !!d.text.trim() || d.images.length > 0 || d.recordings.length > 0 || d.checked.length > 0 || d.test !== null || d.fittings.length > 0;
+}
+
+/** Samo „czy jest szkic” — pisanie w arkuszu nie przerysowuje dziennika, bo wartość zmienia się tylko na granicy pusty/niepusty. */
+export const useHasJournalDraft = () => useSyncExternalStore(store.subscribe, () => draftHasContent(store.get()));
 
 export function patchJournalDraft(patch: Partial<JournalDraft>) {
   store.set({ ...store.get(), ...patch });

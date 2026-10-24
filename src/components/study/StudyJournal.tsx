@@ -1,8 +1,5 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
-import { fittingsLine } from "@/lib/study/fittings";
-import { testLine } from "@/lib/study/pressureTest";
-import { Archive, Check, ChevronLeft, Clock, Gauge, Mic, Package, CircleCheck, ChevronRight, FileText, MapPin, Pencil, Play, Plus, Search, TriangleAlert, Wrench, X } from "lucide-react";
-import { mapsUrl } from "@/lib/study/geo";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Archive, ChevronLeft, Clock, ChevronRight, FileText, MapPin, Plus, Search, TriangleAlert, X } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
 import { studyReminders, type StudyReminder } from "@/lib/study/reminders";
 import { useDayClock } from "@/lib/dayClock";
@@ -11,18 +8,19 @@ import { StatusPanel } from "@/components/StatusPanel";
 import { EmptySketch } from "@/components/EmptyIllustration";
 import { JOURNAL_GLYPH } from "@/lib/emptyGlyphs";
 import { cn } from "@/lib/utils";
-import { haptic } from "@/lib/haptics";
+import { useLatestRef } from "@/hooks/useLatestRef";
 import { NoteImage } from "@/components/NoteImage";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { TOPICS } from "@/lib/study/content";
-import { JOURNAL_SOLUTION_MAX, openProblems, setProblemResolved, setProblemSolution, setSite, useStudy, useStudyLists, type JournalEntry } from "@/lib/study/store";
+import { TOPICS, topicTitle } from "@/lib/study/content";
+import { openProblems, setSite, useSiteDirectory, useStudy, useStudyLists } from "@/lib/study/store";
 import {
-  entriesPl, entryHeadline, filterJournal, groupJournal, isFiltered, KIND_LABEL, NO_FILTER, problemsPl, RECENT_DAYS, splitRecent,
+  entriesPl, filterJournal, groupJournal, isFiltered, NO_FILTER, OLDER_STEP, problemsPl, RECENT_DAYS, splitRecent,
   type JournalFilter, type KindFilter,
 } from "@/lib/study/journalView";
-import { patchJournalDraft, useJournalDraft } from "@/lib/study/draft";
-import { openJournalEdit, openJournalSheet } from "@/lib/study/entrySheet";
+import { patchJournalDraft, useHasJournalDraft } from "@/lib/study/draft";
+import { openJournalSheet } from "@/lib/study/entrySheet";
 import { JournalEntrySheet, KindIcon } from "./JournalEntrySheet";
+import { JournalItem } from "./JournalItem";
 import { JournalReportDialog } from "./JournalReport";
 import { SiteCardDialog } from "./SiteCardDialog";
 import { NewSiteDialog } from "./NewSiteDialog";
@@ -34,11 +32,8 @@ import { dayKeyOf, workOn } from "@/lib/study/report";
 import { dayHours, type DayHours } from "@/lib/study/siteHours";
 import { consumeJournalReportRequest, useJournalReportRequest, type JournalReportRequest } from "@/lib/study/reportLink";
 import { stageProgress } from "@/lib/study/stages";
-import { entrySiteId, siteDirectory } from "@/lib/study/sites";
+import { entrySiteId } from "@/lib/study/sites";
 
-const AudioPreview = lazy(() => import("@/components/VoiceAttachmentParts").then((m) => ({ default: m.AudioPreview })));
-
-const topicTitle = (id: string | null) => TOPICS.find((t) => t.id === id)?.title ?? null;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const KIND_CHIPS: { value: KindFilter | null; label: string }[] = [
@@ -56,16 +51,24 @@ const selectClass =
  * Dziennik z budowy: na górze to, co już zapisane, nowy wpis w arkuszu („+ Wpis”, „+” w dolnym
  * pasku, skrót z ekranu głównego). Problem cofa temat do powtórki, a „Zrobione” liczy się jako praktyka.
  * Problem zostaje otwarty, dopóki nie oznaczysz go jako rozwiązanego; poprawka i usunięcie wpisu — w arkuszu.
- * Oś czasu: dzień → budowa, ostatnie 30 dni (starsze za „Pokaż starsze” albo po filtrze).
+ * Oś czasu: dzień → budowa, ostatnie 30 dni (starsze porcjami za „Pokaż starsze” albo po filtrze).
+ * Pisanie w arkuszu nie przerysowuje osi: dziennik słucha tylko „czy jest szkic”, a wiersze są w `memo`.
  */
 export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => void }) {
   const study = useStudy();
-  const draft = useJournalDraft();
-  const hasDraft = !!draft.text.trim() || draft.images.length > 0 || draft.checked.length > 0;
+  const hasDraft = useHasJournalDraft();
+  const lists = useStudyLists();
+  /** Punkty listy kontrolnej na temat — „punkty 3/7” przy wpisie. */
+  const pointsByTopic = useMemo(() => {
+    const out = new Map<string, number>();
+    for (const c of lists.checklist) out.set(c.topic, (out.get(c.topic) ?? 0) + 1);
+    return out;
+  }, [lists]);
   /** Powiększone zdjęcia wpisu i bieżące — galeria przewija wszystkie zdjęcia jednego wpisu. */
   const [zoom, setZoom] = useState<{ refs: string[]; index: number } | null>(null);
   const [filter, setFilter] = useState<JournalFilter>(NO_FILTER);
-  const [showOlder, setShowOlder] = useState(false);
+  /** Ile starszych niż 30 dni wpisów pokazać — „Pokaż starsze” dokłada `OLDER_STEP`. */
+  const [olderShown, setOlderShown] = useState(0);
   const [report, setReport] = useState(false);
   /** Budowa raportu otwartego z karty; `null` = z filtra albo ostatnia. */
   const [reportSite, setReportSite] = useState<string | null>(null);
@@ -86,9 +89,14 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   // Przypomnienia „> 3 dni” liczą się od dzisiaj — po północy lista ma się odświeżyć sama.
   const dayTick = useDayClock();
   const patch = (p: Partial<JournalFilter>) => setFilter((f) => ({ ...f, ...p }));
+  // Stabilne callbacki dla wierszy w `memo` — `onPractice` z widoku bywa nowy przy każdym renderze.
+  const practiceRef = useLatestRef(onPractice);
+  const practice = useCallback((topicId: string) => practiceRef.current(topicId), [practiceRef]);
+  const showTopic = useCallback((topic: string) => setFilter((f) => ({ ...f, topic })), []);
+  const zoomPhoto = useCallback((refs: string[], index: number) => setZoom({ refs, index }), []);
   const filtered = isFiltered(filter);
 
-  const dir = useMemo(() => siteDirectory(study.sites, study.journal), [study.sites, study.journal]);
+  const dir = useSiteDirectory();
   // Postęp etapów przy nazwie budowy — tylko budowy z własną listą (ktoś już odhaczał).
   const stagesBySite = useMemo(
     () => new Map(dir.filter((x) => x.stages).map((x) => [x.id, stageProgress(x.stages!)] as const)),
@@ -110,10 +118,10 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   const view = useMemo(() => {
     const matches = filterJournal(study.journal, filter, topicTitle);
 
-    if (filtered || showOlder) return { days: groupJournal(matches), shown: matches.length, older: 0 };
-    const { recent, older } = splitRecent(matches);
+    if (filtered) return { days: groupJournal(matches), shown: matches.length, older: 0 };
+    const { recent, older } = splitRecent(matches, Date.now(), olderShown);
     return { days: groupJournal(recent), shown: recent.length, older };
-  }, [study.journal, filter, filtered, showOlder]);
+  }, [study.journal, filter, filtered, olderShown]);
 
   // Podział godzin tylko dla dni z kilkoma budowami albo z wpisanymi godzinami (H2, `siteHours.ts`).
   const hoursByDay = useMemo(() => {
@@ -380,7 +388,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                             </p>
                           )}
                           <ul>
-                            {g.entries.map((e) => <JournalItem key={e.id} entry={e} onPractice={onPractice} onTopic={(t) => patch({ topic: t })} onZoom={(refs, index) => setZoom({ refs, index })} />)}
+                            {g.entries.map((e) => <JournalItem key={e.id} entry={e} total={(e.topic && pointsByTopic.get(e.topic)) || 0} onPractice={practice} onTopic={showTopic} onZoom={zoomPhoto} />)}
                           </ul>
                         </div>
                       ))}
@@ -391,7 +399,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
             )}
 
             {view.older > 0 && (
-              <Button variant="outline" className="mt-4 w-full coarse:h-11 xl:col-start-1 xl:self-start" onClick={() => setShowOlder(true)}>
+              <Button variant="outline" className="mt-4 w-full coarse:h-11 xl:col-start-1 xl:self-start" onClick={() => setOlderShown((n) => n + OLDER_STEP)}>
                 Pokaż starsze ({entriesPl(view.older)})
               </Button>
             )}
@@ -484,176 +492,5 @@ function ReminderRow({ reminder: r, onShow }: { reminder: StudyReminder; onShow:
         {r.kind === "stale-problems" ? "Pokaż otwarte" : r.kind === "late-order" || r.kind === "service-due" || r.kind === "pre-cover-test" ? "Karta budowy" : r.kind === "no-test" ? "Dodaj próbę" : "Pokaż wpisy budowy"}
       </button>
     </li>
-  );
-}
-
-function JournalItem({ entry: e, onPractice, onTopic, onZoom }: { entry: JournalEntry; onPractice: (topicId: string) => void; onTopic: (topicId: string) => void; onZoom: (refs: string[], index: number) => void }) {
-  const lists = useStudyLists();
-  const total = lists.checklist.filter((c) => c.topic === e.topic).length;
-  const resolved = e.kind === "problem" && e.resolved !== undefined;
-  /** Pole „Jak rozwiązane?” otwarte — samo po oznaczeniu problemu jako rozwiązanego, jeśli brak opisu. */
-  const [solving, setSolving] = useState(false);
-
-  function toggleResolved() {
-    haptic(resolved ? "tap" : "success");
-    setProblemResolved(e.id, !resolved);
-    setSolving(!resolved && !e.solution);
-  }
-
-  return (
-    // Wpis jak linijka w zeszycie: godzina na marginesie, linia oddziela wpisy zamiast ramki.
-    <li className="grid grid-cols-[3.25rem_minmax(0,1fr)] gap-x-3 border-b border-dashed border-border/70 py-3 first:pt-1 last:border-b-0" data-journal-entry={e.kind} data-resolved={resolved || undefined}>
-      <time
-        dateTime={new Date(e.at).toISOString()}
-        className="border-r border-primary/30 pr-2 pt-0.5 text-right font-mono text-xs tabular-nums text-muted-foreground"
-      >
-        {new Date(e.at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}
-      </time>
-      <div className="flex min-w-0 items-start gap-2.5">
-        {resolved ? <CircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden /> : <KindIcon kind={e.kind} />}
-        <div className="min-w-0 flex-1">
-          <p className="whitespace-pre-wrap wrap-break-word text-sm leading-snug">{entryHeadline(e)}</p>
-          {e.fittings && e.fittings.length > 0 && (
-            <p className="mt-1 inline-flex items-start gap-1.5 text-xs text-muted-foreground" data-testid="journal-fittings">
-              <Package className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{fittingsLine(e.fittings)}
-            </p>
-          )}
-          {e.test && (
-            <p className={cn("mt-1 inline-flex items-start gap-1.5 text-xs font-medium", e.test.ok ? "text-success-ink" : "text-destructive-ink")} data-testid="journal-test">
-              <Gauge className="mt-px h-3.5 w-3.5 shrink-0" aria-hidden />{testLine(e.test)}
-            </p>
-          )}
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-            <span>{resolved ? "Problem rozwiązany" : KIND_LABEL[e.kind]}</span>
-            {e.geo && (
-              // „Tu jestem” — gdzie zapisano wpis; link do map, tylko w aplikacji (raport tego nie zawiera).
-              <a href={mapsUrl(e.geo)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-foreground hover:underline" data-testid="journal-entry-geo">
-                <MapPin className="h-3 w-3" aria-hidden />Mapa
-              </a>
-            )}
-            {e.topic && (
-              // Pigułka tematu filtruje dziennik po temacie — ćwiczenie jest pod jawnym „Ćwicz teraz”.
-              <button
-                type="button"
-                onClick={() => onTopic(e.topic!)}
-                className="pressable rounded-full bg-muted px-2 py-0.5 hover:bg-primary/10 hover:text-primary-ink coarse:min-h-11 coarse:px-3 coarse:text-sm"
-                title="Pokaż wpisy z tego tematu"
-                aria-label={`Pokaż wpisy z tematu: ${topicTitle(e.topic)}`}
-              >
-                {topicTitle(e.topic)}
-              </button>
-            )}
-            {e.checked.length > 0 && <span className="tabular-nums">punkty {e.checked.length}/{total}</span>}
-          </div>
-          {e.kind === "problem" && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={toggleResolved}
-                className={cn(
-                  "pressable inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs coarse:min-h-11 coarse:px-3.5 coarse:text-sm",
-                  resolved ? "border-border text-muted-foreground hover:text-foreground" : "border-warning/60 bg-warning/10 font-medium text-foreground hover:bg-warning/20",
-                )}
-              >
-                <Check className="h-3.5 w-3.5" aria-hidden />
-                {resolved ? "Otwórz ponownie" : "Oznacz jako rozwiązany"}
-              </button>
-              {/* Otwarty problem z tematem: od razu runda pytań z tego tematu — teoria tam, gdzie praktyka zawiodła. */}
-              {!resolved && e.topic && (
-                <button
-                  type="button"
-                  onClick={() => onPractice(e.topic!)}
-                  aria-label={`Ćwicz teraz: ${topicTitle(e.topic)}`}
-                  className="pressable inline-flex items-center gap-1.5 rounded-full border border-primary/40 px-2.5 py-1 text-xs font-medium text-primary-ink hover:bg-primary/10 coarse:min-h-11 coarse:px-3.5 coarse:text-sm"
-                >
-                  <Play className="h-3.5 w-3.5" aria-hidden />Ćwicz teraz
-                </button>
-              )}
-            </div>
-          )}
-          {resolved && <SolutionLine entry={e} editing={solving} onEditing={setSolving} />}
-          {e.recordings && e.recordings.length > 0 && (
-            <ul className="mt-2 space-y-2" aria-label="Nagrania wpisu">
-              {e.recordings.map((a) => (
-                <li key={a.hash} className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Mic className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                  <span className="min-w-0 flex-1 truncate">{a.name}</span>
-                  <Suspense fallback={null}><AudioPreview attachment={a} /></Suspense>
-                </li>
-              ))}
-            </ul>
-          )}
-          {e.images.length > 0 && (
-            <ul className="mt-2 flex flex-wrap gap-2" aria-label="Zdjęcia wpisu">
-              {e.images.map((ref) => (
-                <li key={ref}>
-                  <button type="button" onClick={() => onZoom(e.images, e.images.indexOf(ref))} aria-label="Powiększ zdjęcie" className="block overflow-hidden rounded-lg">
-                    <NoteImage imageRef={ref} alt="" className="h-16 w-16 object-cover" placeholderClassName="h-16 w-16" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-        <button
-          type="button"
-          onClick={() => openJournalEdit(e)}
-          aria-label="Edytuj wpis"
-          title="Edytuj albo usuń wpis"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground coarse:h-11 coarse:w-11"
-        >
-          <Pencil className="h-4 w-4" />
-        </button>
-      </div>
-    </li>
-  );
-}
-
-/**
- * Jak problem rozwiązano — jedno-dwa zdania pod rozwiązanym problemem („wymieniona złączka, dokręcony
- * śrubunek”). Trafia do raportu i do „Moich rozwiązań” przy temacie na tablicy Nauki.
- */
-function SolutionLine({ entry: e, editing, onEditing }: { entry: JournalEntry; editing: boolean; onEditing: (v: boolean) => void }) {
-  const [text, setText] = useState(e.solution ?? "");
-  useEffect(() => { if (editing) setText(e.solution ?? ""); }, [editing, e.solution]);
-
-  if (editing) {
-    return (
-      <form
-        className="mt-2 flex flex-wrap gap-2"
-        aria-label="Jak rozwiązane"
-        onSubmit={(ev) => { ev.preventDefault(); setProblemSolution(e.id, text); haptic("success"); onEditing(false); }}
-      >
-        <input
-          autoFocus
-          value={text}
-          onChange={(ev) => setText(ev.target.value)}
-          maxLength={JOURNAL_SOLUTION_MAX}
-          placeholder="Jak rozwiązane? np. wymieniona złączka"
-          aria-label="Jak rozwiązane?"
-          className="h-9 min-w-0 flex-1 basis-56 rounded-lg border border-input bg-background px-2.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
-        />
-        <Button type="submit" size="sm" className="coarse:h-11">Zapisz</Button>
-        <Button type="button" size="sm" variant="ghost" onClick={() => onEditing(false)} className="coarse:h-11">Pomiń</Button>
-      </form>
-    );
-  }
-  if (e.solution) {
-    return (
-      <p className="mt-1.5 flex items-start gap-1.5 text-xs text-foreground/80" data-testid="journal-solution">
-        <Wrench className="mt-px h-3.5 w-3.5 shrink-0 text-success-ink" aria-hidden />
-        <span className="min-w-0"><span className="font-medium">Rozwiązanie:</span> {e.solution}</span>
-        <button type="button" onClick={() => onEditing(true)} className="shrink-0 text-muted-foreground underline-offset-2 hover:text-foreground hover:underline coarse:min-h-11">Zmień</button>
-      </p>
-    );
-  }
-  return (
-    <button
-      type="button"
-      onClick={() => onEditing(true)}
-      className="pressable mt-1.5 inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground coarse:min-h-11"
-    >
-      <Wrench className="h-3.5 w-3.5" aria-hidden />Jak rozwiązane?
-    </button>
   );
 }

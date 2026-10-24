@@ -15,8 +15,8 @@ import {
 import {
   enterEntryCheck, reopenEntryCheck, resetEntryCheckItems, saveEntryCheckItems, toggleEntryCheck, useEntryCheck,
 } from "@/lib/study/entryCheckStore";
-import { setSite, useStudy } from "@/lib/study/store";
-import { entrySiteId, findSiteByName, siteDirectory, type SiteInfo } from "@/lib/study/sites";
+import { setSite, useSiteDirectory, useStudy } from "@/lib/study/store";
+import { entrySiteId, findSiteByName, type SiteInfo } from "@/lib/study/sites";
 
 const hhmm = (at: number) => new Date(at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
 const pointsPl = (n: number) => `${n} ${pluralPl(n, ["punktu", "punktów", "punktów"])}`;
@@ -59,7 +59,7 @@ export function EntryCheckCard() {
   useDayClock();
   const today = localDayKey();
   const study = useStudy();
-  const dir = useMemo(() => siteDirectory(study.sites, study.journal), [study.sites, study.journal]);
+  const dir = useSiteDirectory();
   const active = useMemo(() => dir.filter((s) => s.archived === undefined), [dir]);
   const [picked, setPicked] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
