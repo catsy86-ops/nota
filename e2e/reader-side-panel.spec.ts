@@ -50,6 +50,23 @@ test.describe("szeroki ekran (xl)", () => {
   });
 });
 
+test("Ctrl+klik na [[link]] otwiera notatkę w zakładce „Obok”, czytana zostaje", async ({ page }) => {
+  await seed(page, notes);
+  await page.goto("/");
+  await openFirstInReader(page);
+  const reader = page.getByRole("dialog", { name: "Zakupy" });
+  await expect(reader).toBeVisible();
+
+  await page.keyboard.down("Control");
+  await reader.locator(".prose").getByText("Plan", { exact: true }).click();
+  await page.keyboard.up("Control");
+
+  await expect(reader.getByRole("tab", { name: "Obok" })).toHaveAttribute("aria-selected", "true");
+  await expect(reader.locator('[data-split-note="p"]')).toContainText("Cel");
+  // Czytana notatka się nie zmieniła.
+  await expect(page.getByRole("dialog", { name: "Zakupy" })).toBeVisible();
+});
+
 test.describe("wąski ekran (poniżej xl)", () => {
   test.use({ viewport: { width: 900, height: 900 } });
 

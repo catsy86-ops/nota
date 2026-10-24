@@ -35,6 +35,8 @@ export interface ViewPrefs {
   weekReminderDay: number; // 0 = Sunday … 6 = Saturday (default 0 = niedziela, jak przegląd tygodnia)
   showReadingTime: boolean;
   showBacklinks: boolean;
+  /** Notatka w panelu „Obok” czytnika (3.7, Ctrl+klik na [[link]]). `null` = brak. Czyta się przez `typeof`, bo zapis może być uszkodzony. */
+  readerSplitId: string | null;
 }
 
 const DEFAULTS: ViewPrefs = {
@@ -61,6 +63,7 @@ const DEFAULTS: ViewPrefs = {
   weekReminderDay: 0,
   showReadingTime: true,
   showBacklinks: true,
+  readerSplitId: null,
 };
 
 const store = createPersistedStore<ViewPrefs>("kaczy.viewPrefs.v1", DEFAULTS, {
@@ -122,6 +125,7 @@ export const VIEW_PREF_LABELS: Record<keyof ViewPrefs, string> = {
   weekReminderDay: "dzień „Ten tydzień”",
   showReadingTime: "czas czytania",
   showBacklinks: "backlinki",
+  readerSplitId: "panel obok w czytniku",
 };
 
 const sameValue = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);

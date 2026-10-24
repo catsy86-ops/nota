@@ -3,6 +3,7 @@ import { useGridNavPreviewId, getGridNavFocusedId, setGridNavPreview } from "@/l
 import { readerNeighbors } from "@/lib/readerStep";
 import type { Note } from "@/hooks/useNotes";
 import type { ReaderMode } from "@/components/NoteReader";
+import { setViewPref, useViewPrefs } from "@/lib/viewPrefs";
 
 interface ReaderNavArgs {
   notes: Note[];
@@ -46,6 +47,14 @@ export function useReaderNav({
     const id = readerId ?? (selectedIds.size === 1 ? [...selectedIds][0] : getGridNavFocusedId());
     return id ? [...notes, ...archivedNotes, ...trashedNotes].find((n) => n.id === id && !n.locked) ?? null : null;
   }, [paletteOpen, readerId, selectedIds, notes, archivedNotes, trashedNotes]);
+  // Panel „Obok” (3.7): id zapisane w viewPrefs; obcy typ (uszkodzony zapis) to brak notatki.
+  const prefs = useViewPrefs();
+  const splitId = typeof prefs.readerSplitId === "string" ? prefs.readerSplitId : null;
+  const splitNote = useMemo(
+    () => (splitId && splitId !== readerId ? [...notes, ...archivedNotes].find((n) => n.id === splitId && !n.locked) ?? null : null),
+    [splitId, readerId, notes, archivedNotes],
+  );
+  const setSplit = useCallback((id: string | null) => setViewPref("readerSplitId", id), []);
   const closeReader = useCallback(() => { setPresentingNoteId(null); setGridNavPreview(null); }, [setPresentingNoteId]);
   const showInReader = useCallback((id: string, mode: ReaderMode) => {
     if (mode === "present") { setGridNavPreview(null); setPresentingNoteId(id); }
@@ -62,5 +71,5 @@ export function useReaderNav({
     setTimeout(() => openNote(id, false, true), 50);
   }, [closeReader, openNote]);
 
-  return { previewId, readerId, readerNote, readerSteps, copyTarget, closeReader, showInReader, stepReader, editFromReader };
+  return { previewId, readerId, readerNote, readerSteps, copyTarget, closeReader, showInReader, stepReader, editFromReader, splitNote, setSplit };
 }

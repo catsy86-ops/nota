@@ -52,6 +52,7 @@ const basePrefs: ViewPrefs = {
   weekReminderDay: 1,
   showReadingTime: true,
   showBacklinks: true,
+  readerSplitId: null,
 };
 
 const folders: Folder[] = [];

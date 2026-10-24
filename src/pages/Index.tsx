@@ -447,7 +447,7 @@ const Index = () => {
   useEffect(() => { setSearchTerms(highlightTokens(search)); }, [search]);
 
   // Czytnik i prezentacja (logika w `useReaderNav`).
-  const { previewId, readerId, readerNote, readerSteps, copyTarget, closeReader, showInReader, stepReader, editFromReader } = useReaderNav({
+  const { previewId, readerId, readerNote, readerSteps, copyTarget, closeReader, showInReader, stepReader, editFromReader, splitNote, setSplit } = useReaderNav({
     notes, archivedNotes, trashedNotes, visibleNotes, presentingNoteId, setPresentingNoteId, paletteOpen, selectedIds, openNote,
   });
   const { toggleSelect } = useSelectionGestures({ view, visibleNotesRef, previewId, presentingNoteId, setSelectedIds, lastSelectedRef });
@@ -1012,6 +1012,8 @@ const Index = () => {
           canNext={!!readerSteps.next}
           onEdit={editFromReader}
           onShow={showInReader}
+          splitNote={splitNote}
+          onSplit={setSplit}
           resolveTitle={(title) => resolveWikiTarget(title, allNotesForLinks)?.id}
           propDefs={propDefs}
           onUpdateProps={updateNote}

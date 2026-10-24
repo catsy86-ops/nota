@@ -36,11 +36,12 @@ import type { PropDef } from "@/lib/noteProps";
 const NoteGraph = lazy(() => import("@/components/NoteGraph"));
 
 /** Zakładki bocznego panelu na szerokim ekranie (3.6). */
-type SideTab = "links" | "props" | "graph";
+type SideTab = "links" | "props" | "graph" | "split";
 const SIDE_TABS: { id: SideTab; label: string }[] = [
   { id: "links", label: "Linki" },
   { id: "props", label: "Pola" },
   { id: "graph", label: "Graf" },
+  { id: "split", label: "Obok" },
 ];
 
 /**
@@ -71,6 +72,9 @@ interface Props {
   onEdit: (id: string) => void;
   /** Przejście do innej notatki (wikilink, „Linkują tutaj”, przełączenie trybu). */
   onShow: (id: string, mode: ReaderMode) => void;
+  /** Notatka w panelu „Obok” (3.7) i zmiana tej notatki; działa tylko na szerokim ekranie. */
+  splitNote?: Note | null;
+  onSplit?: (id: string | null) => void;
   /** Wikilink → id notatki o tym tytule, jeśli istnieje. */
   resolveTitle: (title: string) => string | undefined;
   /** Odhaczenie pozycji listy prosto w czytniku; brak = lista tylko do odczytu. */
@@ -108,7 +112,7 @@ function buildSnippets(text: string, tokens: string[], max = 3) {
   return out;
 }
 
-export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, onClose, onStep, canPrev = false, canNext = false, onEdit, onShow, resolveTitle, onToggleChecklist, propDefs = [], onUpdateProps }: Props) {
+export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, onClose, onStep, canPrev = false, canNext = false, onEdit, onShow, resolveTitle, onToggleChecklist, propDefs = [], onUpdateProps, splitNote = null, onSplit }: Props) {
   useOverlayHistory(true, onClose);
   const present = mode === "present";
   const [zoom, setZoom] = useState(ZOOM_DEFAULT);
@@ -117,6 +121,8 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
   const contentRef = useRef<HTMLDivElement>(null);
   useOriginFromTile(panelRef, note.id);
   const { showBacklinks } = useViewPrefs();
+  // Czy ostatni klik w treści miał Ctrl/Cmd — `handleWiki` to czyta, bo sama obsługa linku nie dostaje zdarzenia.
+  const splitClickRef = useRef(false);
   // Od xl (1280 px) linki, pola i graf idą do bocznego panelu; węższy ekran zostawia je pod treścią.
   // Bloki renderuje się w jednym miejscu, a na szerokim ekranie przenosi je portal do panelu.
   const wide = useMediaQuery("(min-width: 1280px)") && !present;
@@ -217,6 +223,13 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
     const { title, heading } = splitWikiTarget(raw);
     const id = title ? resolveTitle(title) : note.id;
     if (!id) return;
+    // Ctrl+klik na szerokim ekranie: notatka trafia do panelu „Obok”, czytana notatka zostaje.
+    if (splitClickRef.current && wide && onSplit && id !== note.id) {
+      splitClickRef.current = false;
+      onSplit(id);
+      setSideTab("split");
+      return;
+    }
     if (id === note.id && heading) { scrollToHeading(contentRef.current, heading); return; }
     if (heading) requestHeading(heading);
     onShow(id, mode);
@@ -380,7 +393,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
             {note.content ? (
               <>
               <ReaderToc rootRef={contentRef} resetKey={note.id} />
-              <div ref={contentRef} className={cn(!present && "prose prose-sm dark:prose-invert max-w-none")}>
+              <div ref={contentRef} onClickCapture={(e) => { splitClickRef.current = e.ctrlKey || e.metaKey; }} className={cn(!present && "prose prose-sm dark:prose-invert max-w-none")}>
                 <MarkdownRenderer content={note.content} knownTitles={knownTitles} onWikiClick={handleWiki} />
               </div>
               </>
@@ -578,6 +591,29 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                 <p className="text-xs text-muted-foreground">Nic tu nie linkuje i nie ma niepołączonych wzmianek.</p>
               )}
               {sideTab === "props" && propDefs.length === 0 && <p className="text-xs text-muted-foreground">Ta notatka nie ma pól.</p>}
+              {sideTab === "split" && (splitNote ? (
+                <div data-split-note={splitNote.id}>
+                  <div className="mb-2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onShow(splitNote.id, mode)}
+                      className="min-w-0 flex-1 truncate text-left font-display text-sm font-semibold hover:underline"
+                    >
+                      {splitNote.title.trim() || "Bez tytułu"}
+                    </button>
+                    {onSplit && (
+                      <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0" onClick={() => onSplit(null)} aria-label="Zamknij panel obok" title="Zamknij panel obok">
+                        <X className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="prose prose-sm dark:prose-invert max-w-none" onClickCapture={(e) => { splitClickRef.current = e.ctrlKey || e.metaKey; }}>
+                    <MarkdownRenderer content={splitNote.content} knownTitles={knownTitles} onWikiClick={handleWiki} />
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">Ctrl+klik na [[link]] w treści otwiera tu notatkę obok, a czytana zostaje na miejscu.</p>
+              ))}
             </div>
           </aside>
         )}
