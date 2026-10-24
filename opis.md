@@ -2156,5 +2156,5 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - `src/lib/embeds.test.ts`: nagłówek `^` to osadzenie bloku.
   - `src/components/MarkdownRenderer.plain.test.tsx`: `needsMarkdown` dla `^id` i dla `2^3`.
   - `e2e/note-block-refs.spec.ts` (2): osadzenie samego akapitu bez znacznika; brak bloku pokazuje komunikat.
-- **Commit:** w historii (Sieć wiedzy 3.4).
+- **Commit:** `c197808`, 2026-10-24.
 
