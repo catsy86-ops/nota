@@ -129,6 +129,13 @@ describe("próba przed zakryciem z etapów karty (U1)", () => {
     expect(r).toEqual([{ kind: "no-test", siteId: "k1", site: "Lipowa 5" }]);
   });
 
+  it("„no-test” znika przy budowie w archiwum i przy odhaczonej próbie albo zakryciu na karcie", () => {
+    const e = [entry({ siteId: "k1", site: "Lipowa 5", topic: "proba-wody" })];
+    expect(studyReminders(e, NOW, { k1: card("k1", [installed, cover], { archived: NOW }) })).toEqual([]);
+    expect(studyReminders(e, NOW, { k1: card("k1", [installed, { id: "proba", name: "Próba szczelności", done: NOW }, cover]) })).toEqual([]);
+    expect(studyReminders(e, NOW, { k1: card("k1", [installed, { ...cover, done: NOW }]) })).toEqual([]);
+  });
+
   it("protokół w dzienniku wyłącza przypomnienie z etapów", () => {
     const r = studyReminders([entry({ siteId: "k1", site: "Lipowa 5", topic: "proba-wody", test: { medium: "air", bar: 6, minutes: 15, drop: 0, ok: true } })], NOW, { k1: card("k1", [installed, cover]) });
     expect(r).toEqual([]);

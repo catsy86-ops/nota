@@ -892,7 +892,7 @@ Dziennik instalatora wod-kan: co zrobione, jakie problemy, zdjęcia, na której 
 
 - **Przypomnienia nad listą** (`reminders.ts`: `studyReminders(journal, now, siteCards)`; pasek `ReminderRow` w `StudyJournal.tsx`): znikają same, gdy warunek przestaje być prawdziwy.
   - **Problem otwarty ponad 3 dni** (`stale-problems`).
-  - **Montaż bez protokołu próby** (`no-test`): budowa z montażem (kształtki albo temat próby), w której żaden wpis nie ma próby.
+  - **Montaż bez protokołu próby** (`no-test`): budowa z montażem (kształtki albo temat próby), w której żaden wpis nie ma próby. Pomijane: budowa w archiwum i budowa z odhaczonym na karcie etapem „Próba” albo „Zakrycie” (Etap 0.2 planu 2026-10-24, test w `reminders.test.ts`).
   - **Materiał zamówiony, a niedostarczony** (`late-order`): status „zamówione” dłużej niż 3 dni (od końca dnia dostawy, jeśli podano). Jedno przypomnienie na budowę; archiwum pomijane.
   - **Próba przed zakryciem** (`pre-cover-test`, U1): odhaczony etap instalacji, a bez odhaczonej próby, bez zakrycia i bez wpisu o montażu lub próbie. Pokazuje się w Dzienniku i w Dziś. Nie idzie do push.
 - Liczone przy renderze (`useMemo` na zmianie dziennika), bez timera. Jeśli strona stoi otwarta i przypomnienie przekroczy próg bez zmiany dziennika, pojawi się po następnym renderze.

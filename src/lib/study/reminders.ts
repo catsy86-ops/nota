@@ -26,7 +26,8 @@ export type StudyReminder =
  * Przypomnienia do dziennika:
  * - są problemy otwarte dłużej niż `REMINDER_PROBLEM_DAYS` dni (od momentu wpisu problemu),
  * - budowa ma montaż (wpis z kształtkami albo z tematu próby szczelności), a żaden jej wpis nie ma
- *   protokołu próby — a zakrycie grozi przed próbą, nie po niej,
+ *   protokołu próby — a zakrycie grozi przed próbą, nie po niej (bez archiwum i bez odhaczonej na
+ *   karcie „Próby” albo „Zakrycia”),
  * - braki materiału budowy (`SiteCard.shortages`) „zamówione” ponad `REMINDER_ORDER_DAYS` dni temu
  *   i wciąż niedostarczone — pora zadzwonić do hurtowni (budowy w archiwum pomijamy),
  * - zgłoszenia serwisowe (`service.ts`) z terminem dziś albo zaległym — także na budowie w archiwum.
@@ -57,8 +58,14 @@ export function studyReminders(
     if (e.test) s.tested = true;
     sites.set(id, s);
   }
+  // Budowa w archiwum albo z odhaczoną na karcie próbą lub zakryciem — protokół już nie grozi.
+  const stageDone = (card: (typeof siteCards)[string] | undefined, id: string) =>
+    (card?.stages ?? []).some((x) => x.id === id && x.done !== undefined);
   for (const [siteId, s] of sites) {
-    if (s.install && !s.tested) out.push({ kind: "no-test", siteId, site: s.site });
+    if (!s.install || s.tested) continue;
+    const card = siteCards[siteId];
+    if (card?.archived !== undefined || stageDone(card, TEST_STAGE_ID) || stageDone(card, COVER_STAGE_ID)) continue;
+    out.push({ kind: "no-test", siteId, site: s.site });
   }
 
   // Próba przed zakryciem z etapów: instalacja odhaczona na karcie, a protokołu nie ma ani w dzienniku,
