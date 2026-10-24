@@ -7,7 +7,7 @@ import { entriesPl, entryHeadline, KIND_LABEL } from "./journalView";
 import { entrySiteId, type SiteCard } from "./sites";
 import { accuracyLabel, mapsUrl } from "./geo";
 import { siteOrder } from "./order";
-import { stageProgress, type SiteStage } from "./stages";
+import { stageName, stageProgress, type SiteStage } from "./stages";
 import { openShortages, shortageLine, type Shortage } from "./shortages";
 import { dayHours, siteMinutesOn } from "./siteHours";
 import type { JournalEntry } from "./yStudy";
@@ -27,7 +27,7 @@ export interface ReportOptions {
    * Wszystkie karty budów — do podziału godzin dnia między budowy (`siteHours.ts`). Bez nich liczy się
    * tylko karta wybranej budowy (dzień z kilkoma budowami wyjdzie wtedy jako „nierozdzielony”).
    */
-  sites?: Readonly<Record<string, Pick<SiteCard, "name" | "hours">>>;
+  sites?: Readonly<Record<string, Pick<SiteCard, "name" | "hours" | "stages">>>;
   /** Dni lokalne „2026-10-14”, oba włącznie. */
   from: string;
   to: string;
@@ -72,6 +72,8 @@ export interface ReportEntry {
   topic: string | null;
   /** Budowa wpisu — tylko w raporcie ze wszystkich budów. */
   site: string | null;
+  /** Etap, do którego przypięto wpis (`entry.stage`, nazwa z karty budowy); `null` = bez etapu (1.9). */
+  stage: string | null;
 }
 
 export interface ReportDay {
@@ -220,6 +222,7 @@ export function buildJournalReport(journal: readonly JournalEntry[], opts: Repor
       status: e.kind !== "problem" ? KIND_LABEL[e.kind] : isOpen ? "Problem otwarty" : `Problem rozwiązany ${shortDate(e.resolved!)}`,
       topic: title(e.topic),
       site: opts.siteId === null ? e.site.trim() || "bez budowy" : null,
+      stage: stageName(opts.siteId ? opts.siteCard : opts.sites?.[entrySiteId(e)], e.stage),
     };
     day.entries.push(item);
     if (isOpen) open.push(item);
@@ -270,7 +273,7 @@ const photosPl = (n: number) => `${n} ${pluralPl(n, ["zdjęcie", "zdjęcia", "zd
 /** Jednowierszowy opis wpisu bez godziny: „Problem otwarty: Żółta rura przecieka · temat · 2 zdjęcia”. */
 function entryLine(r: ReportEntry): string {
   const text = entryHeadline(r.entry);
-  const extra = [r.site, r.topic && `temat: ${r.topic}`, r.entry.images.length > 0 && photosPl(r.entry.images.length)].filter(Boolean);
+  const extra = [r.site, r.stage && `etap: ${r.stage}`, r.topic && `temat: ${r.topic}`, r.entry.images.length > 0 && photosPl(r.entry.images.length)].filter(Boolean);
   // Kolejne linie tekstu wcięte — zostają w tym samym punkcie listy.
   const test = r.entry.test ? `\n  ${testLine(r.entry.test)}` : "";
   const fit = r.entry.fittings?.length ? `\n  Kształtki: ${fittingsLine(r.entry.fittings)}` : "";

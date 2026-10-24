@@ -31,7 +31,7 @@ import { formatHoursShort } from "@/lib/shifts/time";
 import { dayKeyOf, workOn } from "@/lib/study/report";
 import { dayHours, type DayHours } from "@/lib/study/siteHours";
 import { consumeJournalReportRequest, useJournalReportRequest, type JournalReportRequest } from "@/lib/study/reportLink";
-import { stageProgress } from "@/lib/study/stages";
+import { stageName, stageProgress } from "@/lib/study/stages";
 import { entrySiteId } from "@/lib/study/sites";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -102,6 +102,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
   const filtered = isFiltered(filter);
 
   const dir = useSiteDirectory();
+  const dirById = useMemo(() => new Map(dir.map((x) => [x.id, x] as const)), [dir]);
   // „+ Wpis” przy filtrze budowy zaczyna wpis na tej budowie; „Dokończ wpis” zostawia budowę szkicu.
   const newEntry = () => openEntryAt(hasDraft ? null : contextSiteName(filter.site, dir));
   // Postęp etapów przy nazwie budowy — tylko budowy z własną listą (ktoś już odhaczał).
@@ -402,7 +403,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                             </p>
                           )}
                           <ul>
-                            {g.entries.map((e) => <JournalItem key={e.id} entry={e} total={(e.topic && pointsByTopic.get(e.topic)) || 0} onPractice={practice} onTopic={showTopic} onZoom={zoomPhoto} />)}
+                            {g.entries.map((e) => <JournalItem key={e.id} entry={e} total={(e.topic && pointsByTopic.get(e.topic)) || 0} stage={e.stage ? stageName(dirById.get(g.siteId), e.stage) : null} onPractice={practice} onTopic={showTopic} onZoom={zoomPhoto} />)}
                           </ul>
                         </div>
                       ))}

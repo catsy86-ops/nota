@@ -245,3 +245,26 @@ describe("raport: godziny w dniach bez wpisu (Etap 0.1)", () => {
     expect(reportBody(r)).toBe("0 wpisów");
   });
 });
+
+describe("etap przypięty do wpisu w raporcie (1.9 planu Praca 2026-10-24)", () => {
+  const id = siteKey("Lipowa 5");
+  const card = { name: "Lipowa 5", stages: [{ id: "piony", name: "Piony i podejścia" }] };
+  const withStage = [
+    e("s1", at(14, 9), "ok", "Lipowa 5", "Piony gotowe", { stage: "piony" }),
+    e("s2", at(14, 10), "ok", "Lipowa 5", "Stary etap", { stage: "usuniety" }),
+  ];
+
+  it("raport budowy podaje nazwę etapu z karty; usunięty etap znika", () => {
+    const r = buildJournalReport(withStage, { siteId: id, siteCard: card, from: "2026-10-14", to: "2026-10-14" });
+    expect(r.days[0].entries.map((x) => x.stage)).toEqual(["Piony i podejścia", null]);
+    expect(reportBody(r)).toContain("Zrobione: Piony gotowe (etap: Piony i podejścia)");
+  });
+
+  it("raport wszystkich budów bierze etap z karty tej budowy (`sites`), bez karty — z listy domyślnej", () => {
+    const all = buildJournalReport(withStage, { siteId: null, sites: { [id]: card }, from: "2026-10-14", to: "2026-10-14" });
+    expect(all.days[0].entries[0].stage).toBe("Piony i podejścia");
+    const def = buildJournalReport([e("s3", at(14, 9), "ok", "Polna 2", "Próba", { stage: "proba" })], { siteId: null, from: "2026-10-14", to: "2026-10-14" });
+    expect(def.days[0].entries[0].stage).toBe("Próba szczelności");
+  });
+});
+

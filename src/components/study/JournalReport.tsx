@@ -444,6 +444,7 @@ function ReportPaper({ report, print = false }: { report: Report; print?: boolea
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         <span className={cn(r.status === "Problem otwarty" && "font-medium text-foreground")}>{r.status}</span>
                         {r.site && <> · {r.site}</>}
+                        {r.stage && <> · etap: {r.stage}</>}
                         {r.topic && <> · {r.topic}</>}
                       </p>
                       {r.entry.geo && (

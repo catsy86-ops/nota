@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addStage, cleanStages, DEFAULT_STAGES, matchStage, removeStage, siteStages, stageProgress, STAGES_MAX, toggleStage } from "./stages";
+import { addStage, cleanStages, DEFAULT_STAGES, matchStage, removeStage, siteStages, stageName, stageProgress, STAGES_MAX, toggleStage } from "./stages";
 import { cleanSite } from "./sites";
 
 describe("etapy budowy", () => {
@@ -77,5 +77,14 @@ describe("matchStage — etap z wypowiedzi", () => {
     expect(matchStage(two, "grzejniki pietro")?.id).toBe("g2");
     expect(matchStage(list, "kocioł")).toBeNull();
     expect(matchStage(list, "  ")).toBeNull();
+  });
+});
+
+describe("stageName", () => {
+  it("nazwa z karty, z listy domyślnej albo null", () => {
+    expect(stageName({ stages: [{ id: "x", name: "Kocioł" }] }, "x")).toBe("Kocioł");
+    expect(stageName(undefined, DEFAULT_STAGES[0].id)).toBe(DEFAULT_STAGES[0].name);
+    expect(stageName({ stages: [] }, "x")).toBeNull();
+    expect(stageName(undefined, null)).toBeNull();
   });
 });

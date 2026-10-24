@@ -110,3 +110,9 @@ export function matchStage(stages: readonly SiteStage[], phrase: string): SiteSt
   const all = names.filter((x) => words.every((w) => x.n.split(" ").some((nw) => nw.startsWith(w))));
   return all.length === 1 ? all[0].s : null;
 }
+
+/** Nazwa etapu, do którego przypięto wpis (`entry.stage`); lista domyślna, gdy karta nie ma własnej. `null` = etap usunięty albo brak. */
+export function stageName(card: { stages?: readonly SiteStage[] } | null | undefined, id: string | null | undefined): string | null {
+  if (!id) return null;
+  return siteStages(card).find((s) => s.id === id)?.name ?? null;
+}

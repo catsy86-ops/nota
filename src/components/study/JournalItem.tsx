@@ -1,5 +1,5 @@
 import { lazy, memo, Suspense, useEffect, useState } from "react";
-import { Check, CircleCheck, Gauge, MapPin, Mic, Package, Pencil, Play, Wrench } from "lucide-react";
+import { Check, CircleCheck, Flag, Gauge, MapPin, Mic, Package, Pencil, Play, Wrench } from "lucide-react";
 import { fittingsLine } from "@/lib/study/fittings";
 import { testLine } from "@/lib/study/pressureTest";
 import { mapsUrl } from "@/lib/study/geo";
@@ -19,6 +19,8 @@ interface JournalItemProps {
   entry: JournalEntry;
   /** Punkty listy kontrolnej tematu wpisu — liczone raz w dzienniku, nie w każdym wierszu. */
   total: number;
+  /** Nazwa etapu, do którego przypięto wpis (`entry.stage`); `null` = bez etapu albo etap usunięty (1.9). */
+  stage: string | null;
   onPractice: (topicId: string) => void;
   onTopic: (topicId: string) => void;
   onZoom: (refs: string[], index: number) => void;
@@ -29,9 +31,9 @@ interface JournalItemProps {
  * wpisów, a przerysować trzeba tylko te, które naprawdę się zmieniły. Callbacki muszą być stabilne.
  */
 export const JournalItem = memo(JournalItemRow, (a, b) =>
-  a.total === b.total && a.onPractice === b.onPractice && a.onTopic === b.onTopic && a.onZoom === b.onZoom && sameJournalEntry(a.entry, b.entry));
+  a.total === b.total && a.stage === b.stage && a.onPractice === b.onPractice && a.onTopic === b.onTopic && a.onZoom === b.onZoom && sameJournalEntry(a.entry, b.entry));
 
-function JournalItemRow({ entry: e, total, onPractice, onTopic, onZoom }: JournalItemProps) {
+function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }: JournalItemProps) {
   const resolved = e.kind === "problem" && e.resolved !== undefined;
   /** Pole „Jak rozwiązane?” otwarte — samo po oznaczeniu problemu jako rozwiązanego, jeśli brak opisu. */
   const [solving, setSolving] = useState(false);
@@ -67,6 +69,11 @@ function JournalItemRow({ entry: e, total, onPractice, onTopic, onZoom }: Journa
           )}
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
             <span>{resolved ? "Problem rozwiązany" : KIND_LABEL[e.kind]}</span>
+            {stage && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-primary-ink" data-testid="journal-entry-stage">
+                <Flag className="h-3 w-3" aria-hidden />Etap: {stage}
+              </span>
+            )}
             {e.geo && (
               // „Tu jestem” — gdzie zapisano wpis; link do map, tylko w aplikacji (raport tego nie zawiera).
               <a href={mapsUrl(e.geo)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-foreground hover:underline" data-testid="journal-entry-geo">
