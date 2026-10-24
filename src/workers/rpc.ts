@@ -129,6 +129,27 @@ export function createRpcClient<H extends RpcHandlers>(
   };
 }
 
+/** Minimalny kształt `self` wewnątrz Workera (bez typów `WebWorker` w tsconfig). */
+export interface WorkerScope {
+  postMessage(message: unknown): void;
+  addEventListener(type: "message", listener: (e: MessageEvent) => void): void;
+  removeEventListener(type: "message", listener: (e: MessageEvent) => void): void;
+  close(): void;
+}
+
+/** Transport po stronie Workera: odpowiedzi idą do strony, która go uruchomiła. */
+export function workerScopeTransport(scope: WorkerScope): RpcTransport {
+  return {
+    send: (message) => scope.postMessage(message),
+    onMessage: (listener) => {
+      const h = (e: MessageEvent) => listener(e.data);
+      scope.addEventListener("message", h);
+      return () => scope.removeEventListener("message", h);
+    },
+    close: () => scope.close(),
+  };
+}
+
 /** Transport nad prawdziwym `Worker` (tylko przeglądarka). */
 export function workerTransport(worker: Worker): RpcTransport {
   return {

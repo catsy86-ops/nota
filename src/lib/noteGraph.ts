@@ -1,5 +1,6 @@
 import type { Note } from "@/hooks/useNotes";
 import { extractWikiLinks } from "@/lib/wikiLinks";
+import { noteMatchesLabel } from "@/lib/labelTree";
 
 /** Powyżej tylu węzłów graf przestaje być czytelny — zostają najbardziej powiązane. */
 export const GRAPH_NODE_LIMIT = 150;
@@ -24,13 +25,25 @@ export interface NoteGraph {
   truncated: boolean;
 }
 
-/** Węzły = notatki z co najmniej jednym wikilinkiem (wychodzącym lub przychodzącym). */
-export function buildGraph(notes: Note[], limit = GRAPH_NODE_LIMIT): NoteGraph {
-  const live = notes.filter((n) => !n.trashed && !n.locked);
+function liveNotes(notes: Note[]): Note[] {
+  return notes.filter((n) => !n.trashed && !n.locked);
+}
+
+/**
+ * Krawędzie całej bazy (linki w obu kierunkach, bez duplikatów) i stopnie węzłów.
+ * Cel linku: tytuł, a dopiero potem alias — tak jak `resolveWikiTarget`.
+ */
+function collectEdges(live: Note[]): { edges: GraphEdge[]; degree: Map<string, number> } {
   const byTitle = new Map<string, Note>();
   for (const n of live) {
     const t = n.title.trim().toLowerCase();
     if (t && !byTitle.has(t)) byTitle.set(t, n);
+  }
+  for (const n of live) {
+    for (const a of n.aliases ?? []) {
+      const t = a.trim().toLowerCase();
+      if (t && !byTitle.has(t)) byTitle.set(t, n);
+    }
   }
   const seen = new Set<string>();
   const edges: GraphEdge[] = [];
@@ -49,6 +62,13 @@ export function buildGraph(notes: Note[], limit = GRAPH_NODE_LIMIT): NoteGraph {
     degree.set(e.a, (degree.get(e.a) ?? 0) + 1);
     degree.set(e.b, (degree.get(e.b) ?? 0) + 1);
   }
+  return { edges, degree };
+}
+
+/** Węzły = notatki z co najmniej jednym wikilinkiem (wychodzącym lub przychodzącym). */
+export function buildGraph(notes: Note[], limit = GRAPH_NODE_LIMIT): NoteGraph {
+  const live = liveNotes(notes);
+  const { edges, degree } = collectEdges(live);
   const all: GraphNode[] = live
     .filter((n) => degree.has(n.id))
     .map((n) => ({ id: n.id, title: n.title.trim() || "Bez tytułu", degree: degree.get(n.id) ?? 0 }))
@@ -60,6 +80,71 @@ export function buildGraph(notes: Note[], limit = GRAPH_NODE_LIMIT): NoteGraph {
     edges: edges.filter((e) => kept.has(e.a) && kept.has(e.b)),
     total: all.length,
     truncated: all.length > nodes.length,
+  };
+}
+
+export interface LocalGraphOptions {
+  /** Ile kroków od notatki (1 = bezpośredni sąsiedzi). */
+  depth?: number;
+  /** Etykieta z drzewa: zostają notatki pasujące do niej albo do jej dzieci. */
+  label?: string | null;
+  /** Foldery (z podfolderami): zostają notatki z tych folderów. `null` = bez filtra. */
+  folderIds?: ReadonlySet<string> | null;
+}
+
+/**
+ * Lokalny graf: notatka `centerId` i jej sąsiedzi do `depth` kroków. Filtry dotyczą
+ * sąsiadów, nie środka — notatka, którą czytasz, zawsze zostaje na rysunku.
+ * Przy limicie tną najdalszych, a w tym samym kroku najmniej połączonych.
+ */
+export function localGraph(
+  notes: Note[],
+  centerId: string,
+  { depth = 2, label = null, folderIds = null }: LocalGraphOptions = {},
+  limit = GRAPH_NODE_LIMIT,
+): NoteGraph {
+  const live = liveNotes(notes);
+  const byId = new Map(live.map((n) => [n.id, n] as const));
+  if (!byId.has(centerId)) return { nodes: [], edges: [], total: 0, truncated: false };
+  const { edges, degree } = collectEdges(live);
+  const allowed = (id: string) => {
+    if (id === centerId) return true;
+    const n = byId.get(id);
+    if (!n) return false;
+    if (label && !noteMatchesLabel(n.labels, label)) return false;
+    return !folderIds || (n.folderId !== null && folderIds.has(n.folderId));
+  };
+  const adj = new Map<string, string[]>();
+  const usable = edges.filter((e) => allowed(e.a) && allowed(e.b));
+  for (const e of usable) {
+    (adj.get(e.a) ?? adj.set(e.a, []).get(e.a)!).push(e.b);
+    (adj.get(e.b) ?? adj.set(e.b, []).get(e.b)!).push(e.a);
+  }
+  // Wszerz od środka: `dist` to najkrótsza liczba kroków do każdego osiągalnego węzła.
+  const dist = new Map<string, number>([[centerId, 0]]);
+  let frontier = [centerId];
+  for (let d = 1; d <= depth && frontier.length; d++) {
+    const next: string[] = [];
+    for (const id of frontier) {
+      for (const nb of adj.get(id) ?? []) {
+        if (dist.has(nb)) continue;
+        dist.set(nb, d);
+        next.push(nb);
+      }
+    }
+    frontier = next;
+  }
+  const title = (id: string) => byId.get(id)?.title.trim() || "Bez tytułu";
+  const ordered = [...dist.keys()].sort((a, b) =>
+    (dist.get(a)! - dist.get(b)!) || ((degree.get(b) ?? 0) - (degree.get(a) ?? 0)) || title(a).localeCompare(title(b), "pl"),
+  );
+  const shown = ordered.slice(0, limit);
+  const kept = new Set(shown);
+  return {
+    nodes: shown.map((id) => ({ id, title: title(id), degree: degree.get(id) ?? 0 })),
+    edges: usable.filter((e) => kept.has(e.a) && kept.has(e.b)),
+    total: ordered.length,
+    truncated: ordered.length > shown.length,
   };
 }
 

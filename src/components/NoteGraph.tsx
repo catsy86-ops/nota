@@ -1,7 +1,9 @@
 import { useEffect, useId, useMemo, useState } from "react";
-import type { Note } from "@/hooks/useNotes";
+import type { Note, Folder } from "@/hooks/useNotes";
+import { getDescendantFolderIds } from "@/hooks/useNotes";
 import { useMotionPref } from "@/hooks/useMotionPref";
-import { buildGraph, circleLayout, forceLayout, GRAPH_NODE_LIMIT, type Point } from "@/lib/noteGraph";
+import { buildGraph, circleLayout, GRAPH_NODE_LIMIT, localGraph, type GraphEdge, type GraphNode, type NoteGraph as Graph, type Point } from "@/lib/noteGraph";
+import { layoutGraph } from "@/workers/graphLayout";
 import { ease, dur } from "@/lib/motion";
 import { pluralPl } from "@/lib/plural";
 
@@ -11,6 +13,9 @@ const H = 620;
 interface Props {
   notes: Note[];
   onOpenNote: (id: string) => void;
+  /** Lokalny graf wokół tej notatki (czytnik). Bez niego — cała baza. */
+  centerId?: string;
+  folders?: Folder[];
 }
 
 /** Stała „losowość” z id — każdy węzeł ma swoje drgnięcie ręki, ale to samo przy każdym rysunku. */
@@ -58,20 +63,42 @@ function short(title: string, max = 22): string {
 
 /**
  * Graf powiązań w stylu zeszytu: węzły-kółka rysowane długopisem, krawędzie
- * jak odręczne kreski. Układ liczy `noteGraph` (siły), tu tylko rysunek.
+ * jak odręczne kreski. Układ liczy Worker (`workers/graphLayout`), tu tylko rysunek.
  */
-export default function NoteGraph({ notes, onOpenNote }: Props) {
+export default function NoteGraph({ notes, onOpenNote, centerId, folders = [] }: Props) {
   const { reduced } = useMotionPref();
   const filterId = useId().replace(/:/g, "");
-  const graph = useMemo(() => buildGraph(notes), [notes]);
-  const target = useMemo(() => compact(forceLayout(graph.nodes, graph.edges, W, H), graph.nodes.length), [graph]);
-  const [pos, setPos] = useState<Map<string, Point>>(target);
+  const [label, setLabel] = useState<string | null>(null);
+  const [folderId, setFolderId] = useState<string | null>(null);
+  const [pos, setPos] = useState<Map<string, Point>>(() => new Map());
+  const [laid, setLaid] = useState<{ nodes: GraphNode[]; target: Map<string, Point> } | null>(null);
   const [active, setActive] = useState<string | null>(null);
+
+  const labels = useMemo(
+    () => [...new Set(notes.flatMap((n) => (n.trashed || n.locked ? [] : n.labels)))].sort((a, b) => a.localeCompare(b, "pl")),
+    [notes],
+  );
+  const graph: Graph = useMemo(() => {
+    if (!centerId) return buildGraph(notes);
+    const folderIds = folderId ? new Set([folderId, ...getDescendantFolderIds(folderId, folders)]) : null;
+    return localGraph(notes, centerId, { label, folderIds });
+  }, [notes, centerId, label, folderId, folders]);
+
+  // Układ z Workera; poprzedni rysunek zostaje do czasu nowego, bez migotania.
+  useEffect(() => {
+    let cancelled = false;
+    void layoutGraph(graph.nodes, graph.edges, W, H).then((l) => {
+      if (!cancelled) setLaid({ nodes: graph.nodes, target: compact(l, graph.nodes.length) });
+    });
+    return () => { cancelled = true; };
+  }, [graph]);
 
   // Rozkładanie z okręgu do układu siłowego; reduced motion → od razu gotowy.
   useEffect(() => {
-    if (reduced || graph.nodes.length < 2) { setPos(target); return; }
-    const from = circleLayout(graph.nodes, W, H);
+    if (!laid) return;
+    const { nodes, target } = laid;
+    if (reduced || nodes.length < 2) { setPos(target); return; }
+    const from = circleLayout(nodes, W, H);
     const ms = dur.slow * 1000 * 2;
     const start = performance.now();
     let raf = 0;
@@ -79,7 +106,7 @@ export default function NoteGraph({ notes, onOpenNote }: Props) {
       const t = Math.min((now - start) / ms, 1);
       const e = 1 - Math.pow(1 - t, 3);
       const next = new Map<string, Point>();
-      for (const n of graph.nodes) {
+      for (const n of nodes) {
         const a = from.get(n.id)!, b = target.get(n.id)!;
         next.set(n.id, { x: a.x + (b.x - a.x) * e, y: a.y + (b.y - a.y) * e });
       }
@@ -88,7 +115,7 @@ export default function NoteGraph({ notes, onOpenNote }: Props) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [graph, target, reduced]);
+  }, [laid, reduced]);
 
   const neighbors = useMemo(() => {
     const m = new Map<string, Set<string>>();
@@ -99,24 +126,74 @@ export default function NoteGraph({ notes, onOpenNote }: Props) {
     return m;
   }, [graph]);
 
-  if (graph.nodes.length === 0) {
+  const filters = centerId && (labels.length > 0 || folders.length > 0) && (
+    <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground" role="group" aria-label="Filtry grafu">
+      {labels.length > 0 && (
+        <label className="flex min-w-0 items-center gap-1.5">
+          Etykieta
+          <select
+            value={label ?? ""}
+            onChange={(e) => setLabel(e.target.value || null)}
+            data-testid="graph-filter-label"
+            className="min-w-0 max-w-44 truncate rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground"
+          >
+            <option value="">Wszystkie</option>
+            {labels.map((l) => <option key={l} value={l}>{l}</option>)}
+          </select>
+        </label>
+      )}
+      {folders.length > 0 && (
+        <label className="flex min-w-0 items-center gap-1.5">
+          Folder
+          <select
+            value={folderId ?? ""}
+            onChange={(e) => setFolderId(e.target.value || null)}
+            data-testid="graph-filter-folder"
+            className="min-w-0 max-w-44 truncate rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground"
+          >
+            <option value="">Wszystkie</option>
+            {folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
+          </select>
+        </label>
+      )}
+    </div>
+  );
+
+  if (graph.nodes.length === 0 || (centerId && graph.edges.length === 0)) {
     return (
-      <div className="rounded-xl border border-dashed border-border/70 bg-muted/20 px-4 py-10 text-center" data-testid="link-graph-empty">
-        <p className="text-sm font-medium">Nic jeszcze nie jest połączone</p>
-        <p className="mt-1 text-xs text-muted-foreground">Wpisz <code className="rounded bg-muted/60 px-1">[[tytuł]]</code> w notatce, a pojawi się tu jako kreska między dwiema notatkami.</p>
+      <div data-testid="link-graph">
+        {filters}
+        <div className="rounded-xl border border-dashed border-border/70 bg-muted/20 px-4 py-10 text-center" data-testid="link-graph-empty">
+          {centerId ? (
+            <>
+              <p className="text-sm font-medium">{label || folderId ? "Brak połączeń w wybranych filtrach" : "Ta notatka nie ma jeszcze połączeń"}</p>
+              <p className="mt-1 text-xs text-muted-foreground">Dopisz <code className="rounded bg-muted/60 px-1">[[tytuł]]</code>, żeby pojawiła się tu jako kreska.</p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-medium">Nic jeszcze nie jest połączone</p>
+              <p className="mt-1 text-xs text-muted-foreground">Wpisz <code className="rounded bg-muted/60 px-1">[[tytuł]]</code> w notatce, a pojawi się tu jako kreska między dwiema notatkami.</p>
+            </>
+          )}
+        </div>
       </div>
     );
   }
 
   const isDim = (id: string) => active !== null && id !== active && !neighbors.get(active)?.has(id);
   const showAllLabels = graph.nodes.length <= 40;
+  const count = centerId ? graph.nodes.length - 1 : graph.nodes.length;
+  const summary = centerId
+    ? `${count} ${pluralPl(count, ["połączona notatka", "połączone notatki", "połączonych notatek"])} w zasięgu dwóch kroków.`
+    : `${graph.nodes.length} ${pluralPl(graph.nodes.length, ["powiązana notatka", "powiązane notatki", "powiązanych notatek"])}, ${graph.edges.length} ${pluralPl(graph.edges.length, ["link", "linki", "linków"])}.`;
 
   return (
     <div data-testid="link-graph">
+      {filters}
       <p className="mb-2 text-xs text-muted-foreground" aria-live="polite">
         {graph.truncated
-          ? `Pokazano ${graph.nodes.length} z ${graph.total} powiązanych notatek (limit ${GRAPH_NODE_LIMIT}) — te z największą liczbą linków.`
-          : `${graph.nodes.length} ${pluralPl(graph.nodes.length, ["powiązana notatka", "powiązane notatki", "powiązanych notatek"])}, ${graph.edges.length} ${pluralPl(graph.edges.length, ["link", "linki", "linków"])}. Kliknij węzeł, żeby otworzyć notatkę.`}
+          ? `Pokazano ${graph.nodes.length} z ${graph.total} powiązanych notatek (limit ${GRAPH_NODE_LIMIT}) — te najbliżej i z największą liczbą linków.`
+          : `${summary} Kliknij węzeł, żeby otworzyć notatkę.`}
       </p>
       <svg
         viewBox={`0 0 ${W} ${H}`}
@@ -133,7 +210,7 @@ export default function NoteGraph({ notes, onOpenNote }: Props) {
           </filter>
         </defs>
         <g filter={`url(#pen-${filterId})`} fill="none" strokeLinecap="round">
-          {graph.edges.map((e) => {
+          {graph.edges.map((e: GraphEdge) => {
             const a = pos.get(e.a), b = pos.get(e.b);
             if (!a || !b) return null;
             const lit = active !== null && (e.a === active || e.b === active);
@@ -155,7 +232,9 @@ export default function NoteGraph({ notes, onOpenNote }: Props) {
           const r = radius(n.degree);
           const seed = hash(n.id);
           const lit = n.id === active;
-          const label = showAllLabels || n.degree >= 2 || lit || (active !== null && neighbors.get(active)?.has(n.id));
+          const center = n.id === centerId;
+          const hot = lit || center;
+          const showLabel = showAllLabels || n.degree >= 2 || hot || (active !== null && neighbors.get(active)?.has(n.id));
           return (
             <g
               key={n.id}
@@ -175,14 +254,14 @@ export default function NoteGraph({ notes, onOpenNote }: Props) {
             >
               <title>{n.title}</title>
               <g filter={`url(#pen-${filterId})`} transform={`translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${(seed * 360).toFixed(0)})`}>
-                <ellipse rx={r} ry={r * 0.92} fill="hsl(var(--card))" stroke={lit ? "hsl(var(--primary))" : "currentColor"} strokeWidth={lit ? 2.8 : 2} />
+                <ellipse rx={r} ry={r * 0.92} fill="hsl(var(--card))" stroke={hot ? "hsl(var(--primary))" : "currentColor"} strokeWidth={hot ? 2.8 : 2} />
                 {/* Druga, lekko przesunięta kreska — jak obrysowane dwa razy. */}
-                <ellipse rx={r * 0.96} ry={r * 0.99} cx={1.2} cy={-0.8} fill="none" stroke={lit ? "hsl(var(--primary))" : "currentColor"} strokeWidth={1} opacity={0.45} />
+                <ellipse rx={r * 0.96} ry={r * 0.99} cx={1.2} cy={-0.8} fill="none" stroke={hot ? "hsl(var(--primary))" : "currentColor"} strokeWidth={1} opacity={0.45} />
                 <circle r={Math.max(2, r * 0.22)} fill="hsl(var(--primary))" opacity={n.degree > 1 ? 0.85 : 0.5} stroke="none" />
               </g>
               {/* Większy cel kliknięcia niż sam obrys. */}
               <rect x={p.x - r - 6} y={p.y - r - 6} width={(r + 6) * 2} height={(r + 6) * 2} fill="transparent" />
-              {label && (
+              {showLabel && (
                 <text
                   x={p.x}
                   y={p.y + r + 17}
@@ -192,7 +271,7 @@ export default function NoteGraph({ notes, onOpenNote }: Props) {
                   stroke="hsl(var(--card))"
                   strokeWidth={4}
                   paintOrder="stroke"
-                  fontWeight={lit ? 700 : 500}
+                  fontWeight={hot ? 700 : 500}
                 >
                   {short(n.title)}
                 </text>

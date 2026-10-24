@@ -1,6 +1,6 @@
 import { splitWikiTarget } from "@/lib/wikiLinks";
 import { onHeadingRequest, requestHeading, scrollToHeading, takePendingHeading } from "@/lib/wikiHeading";
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useOriginFromTile } from "@/hooks/useOriginFromTile";
 import { m as motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Copy, CornerDownRight, FilePlusCorner, Link2, Maximize2, Minimize2, Minus, Pencil, Plus, X } from "lucide-react";
@@ -29,6 +29,9 @@ import { highlightTokens } from "@/lib/searchQuery";
 import { useOverlayHistory } from "@/hooks/useOverlayHistory";
 import { PropCell } from "@/components/NoteTable";
 import type { PropDef } from "@/lib/noteProps";
+
+// Lokalny graf ładujemy dopiero przy czytaniu (osobny kawałek bundla).
+const NoteGraph = lazy(() => import("@/components/NoteGraph"));
 
 /**
  * Jedno miejsce czytania notatki (wcześniej: szybki podgląd w `NoteGrid`
@@ -150,7 +153,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
   const titleHits = tokens.some((t) => note.title.toLowerCase().includes(t.toLowerCase())) ? 1 : 0;
   const backlinks = showBacklinks ? backlinksOf(note, wikiIndex) : [];
   const words = note.content.trim() ? note.content.trim().split(/\s+/).length : 0;
-  const { notes: liveNotes, archivedNotes, updateNote, addSubpage } = useNotesContext();
+  const { notes: liveNotes, archivedNotes, updateNote, addSubpage, folders } = useNotesContext();
   // Drzewo podstron: okruszki nad tytułem i lista dzieci pod treścią.
   const treeNotes = useMemo(() => [...liveNotes, ...archivedNotes], [liveNotes, archivedNotes]);
   const crumbs = useMemo(() => {
@@ -432,6 +435,15 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                   ))}
                 </div>
               </div>
+            )}
+
+            {!present && !note.trashed && !note.locked && (
+              <section aria-label="Lokalny graf" className="mt-8 pt-4 border-t border-border/50" data-local-graph="">
+                <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Lokalny graf</p>
+                <Suspense fallback={<div className="h-40 rounded-xl bg-muted/30" />}>
+                  <NoteGraph notes={treeNotes} centerId={note.id} folders={folders} onOpenNote={(id) => onShow(id, mode)} />
+                </Suspense>
+              </section>
             )}
 
             {(subpages.length > 0 || (canEdit && !note.locked)) && (
