@@ -946,6 +946,7 @@ Dziennik instalatora wod-kan: co zrobione, jakie problemy, zdjęcia, na której 
 - Porządki i poprawki: `304bbe8` (2026-10-20, odporność danych); `9a85c10` (zakładki 320 px); `7fd412a` (próba przed zakryciem, U1); `668c7ba` (data dostawy, T4); `19f2ade` (porządki po planie); `5581ece` (nagranie głosowe, U8); `f6867bd` (poprawka raportu kopii); `4167846` (D5, pola wpisu osobno, 2026-10-20).
 - Tu jestem (M2.1, `bcf79ce`) i mapa w raporcie (M2.2, `c3387b4`), 2026-10-18.
 - Wydajność osi i arkusza, 5.1–5.3 planu 2026-10-24: `7317ccb` (2026-10-24).
+- Etap 1 planu 2026-10-24 (2026-10-24): budowa z kontekstu 1.1 `203f73a`; „Przed wejściem” 1.2 `280f331`; układ karty i liczniki 1.3 `5b415ed`; „Poprzedni miesiąc” 1.8 `71bb66e`; 40 najnowszych braków 1.12 `31d7412`.
 
 ## Porządki — ostrzeżenia lintera w Notatkach, Kalendarzu i Grafiku
 
