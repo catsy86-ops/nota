@@ -12,6 +12,7 @@ import { activeStreak, columnOf, openProblems, useStudy, useStudyLists } from "@
 import { siteDirectory } from "@/lib/study/sites";
 import { buildExperience, experienceText, type ExperienceCard } from "@/lib/study/experience";
 import { accuracyByTopic, daysInLast, entriesByMonth, entriesBySite, hardestQuestions, overallAccuracy, studyDaysGrid } from "@/lib/study/stats";
+import { downloadBlob } from "@/lib/downloadBlob";
 
 const topicTitle = (id: string) => TOPICS.find((t) => t.id === id)?.title ?? id;
 const WEEKDAYS = ["pn", "wt", "śr", "cz", "pt", "sb", "nd"];
@@ -210,12 +211,7 @@ async function copyCard(text: string) {
 
 /** Plik `.md` z kartą; nazwa z dnia, żeby kolejne stany nie nadpisywały się w pobranych. */
 function downloadCard(text: string, today: string) {
-  const url = URL.createObjectURL(new Blob([text], { type: "text/markdown;charset=utf-8" }));
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `karta-doswiadczenia-${today}.md`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadBlob(new Blob([text], { type: "text/markdown;charset=utf-8" }), `karta-doswiadczenia-${today}.md`);
 }
 
 function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {

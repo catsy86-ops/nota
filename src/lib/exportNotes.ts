@@ -18,6 +18,7 @@ import { extraSchedulesDump, mainShiftData, restoreExtraSchedule, restoreShifts,
 import { migrate } from "@/lib/shifts/model";
 import { BACKUP_ATTACHMENTS_BUDGET_BYTES, formatFileSize, type Attachment } from "@/lib/attachments";
 import { PUSH_PREFS_KEY, type PushPrefs } from "@/lib/push/prefs";
+import { downloadBlob } from "@/lib/downloadBlob";
 
 const PUSH_RESTORE_KEY = PUSH_PREFS_KEY;
 
@@ -366,12 +367,7 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
 
 export function download(content: string, filename: string, type: string) {
   const blob = new Blob([content], { type });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadBlob(blob, filename);
 }
 
 export async function exportToMarkdown(notes: Note[], propDefs: PropDef[] = []) {

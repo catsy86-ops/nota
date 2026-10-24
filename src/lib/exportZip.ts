@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import type { Folder, Note } from "@/hooks/useNotes";
 import { filledPropEntries, type PropDef } from "@/lib/noteProps";
+import { downloadBlob } from "@/lib/downloadBlob";
 
 /**
  * Eksport notatek jako ZIP z osobnymi plikami `.md` (frontmatter zgodny z importem
@@ -137,11 +138,6 @@ export function buildNotesZip(notes: Note[], folders: Folder[], now: Date = new 
 /** Pobranie archiwum jako pliku; potwierdza toastem i zwraca liczbę zapisanych notatek. */
 export function downloadNotesZip(notes: Note[], folders: Folder[], filename: string, propDefs: PropDef[] = []): NotesZip {
   const zip = buildNotesZip(notes, folders, new Date(), propDefs);
-  const url = URL.createObjectURL(new Blob([zip.bytes as unknown as BlobPart], { type: "application/zip" }));
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadBlob(new Blob([zip.bytes as unknown as BlobPart], { type: "application/zip" }), filename);
   return zip;
 }

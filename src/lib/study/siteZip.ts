@@ -2,6 +2,7 @@ import { imageStore } from "@/lib/imageStore";
 import { buildZip, safeFileName, type ZipEntry } from "@/lib/exportZip";
 import { reportText, type JournalReport } from "./report";
 import type { SiteDoc } from "./siteDocs";
+import { downloadBlob } from "@/lib/downloadBlob";
 
 /**
  * Paczka budowy: `raport.md` (ten sam tekst co „Kopiuj”) i zdjęcia z raportu w katalogu `zdjecia/`,
@@ -71,11 +72,6 @@ export async function buildSiteZip(
 /** Pobranie paczki jako `.zip`, nazwa z tytułu raportu (np. „Raport: Lipowa — 7–14 października 2026”). */
 export async function downloadSiteZip(report: JournalReport, docs: readonly SiteDoc[] = []): Promise<SiteZip> {
   const zip = await buildSiteZip(report, undefined, undefined, docs);
-  const url = URL.createObjectURL(new Blob([zip.bytes as unknown as BlobPart], { type: "application/zip" }));
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${safeFileName(report.title, "Paczka budowy")}.zip`;
-  a.click();
-  URL.revokeObjectURL(url);
+  downloadBlob(new Blob([zip.bytes as unknown as BlobPart], { type: "application/zip" }), `${safeFileName(report.title, "Paczka budowy")}.zip`);
   return zip;
 }

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import type { Note } from "@/hooks/useNotes";
 import { toast } from "sonner";
 import { encodeShareParam } from "@/lib/shareLink";
+import { downloadBlob } from "@/lib/downloadBlob";
 
 interface ShareNoteDialogProps {
   note: Note;
@@ -66,12 +67,7 @@ export default function ShareNoteDialog({ note, open, onOpenChange }: ShareNoteD
   function downloadAsFile() {
     const text = noteToText();
     const blob = new Blob([text], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${note.title || "notatka"}.md`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, `${note.title || "notatka"}.md`);
     toast.success("Pobrano notatkę");
   }
 

@@ -2290,3 +2290,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - `src/lib/extractNote.test.ts` — tytuł z Markdown i znaków składni, przycinanie, tytuł zastępczy, unikalność bez względu na wielkość liter, podmiana i rozpoznanie nowego linku.
   - `e2e/extract-note.spec.ts` — zaznaczenie wyodrębnia się, a w bieżącej zapisuje się `[[link]]`; bez zaznaczenia tylko podpowiedź. Spec działa w `chromium` i w `chromium-cm` (dopisany do `testMatch` w `playwright.config.ts`).
 - **Commit:** `ec05e34`, 2026-10-24.
+
+## Pobieranie plików — wspólny `downloadBlob` (Praca, Etap 0.6, 2026-10-24)
+
+- **Co robi:** pobrania (karta doświadczenia z Nauki, paczka ZIP budowy, kopia JSON/Markdown, kopia ZIP notatek, notatka `.md`, kod awaryjny skarbca) nie urywają się na Safari i części Androidów.
+- **Gdzie jest:** `src/lib/downloadBlob.ts` (`downloadBlob(blob, filename)`, `DOWNLOAD_REVOKE_MS`). Używają go: `StudyStats.tsx` (`downloadCard`), `lib/study/siteZip.ts` (`downloadSiteZip`), `lib/exportNotes.ts` (`download`), `lib/exportZip.ts` (`downloadNotesZip`), `ShareNoteDialog.tsx`, `vault/VaultDialogs.tsx`.
+- **Jak działa:** ukryty link `<a download>` dodany do `body`, `click()`, usunięcie linku, a `URL.revokeObjectURL` dopiero po 10 s. Wcześniej adres był zwalniany od razu po `click()`, a przeglądarki czytające blob asynchronicznie dostawały pusty albo urwany plik.
+- **Ograniczenia:** `attachments.ts`, `diagnosticsReport.ts` i `monthImageDraw.ts` miały już własne opóźnione zwalnianie i zostały bez zmian.
+- **Testy:** `src/lib/downloadBlob.test.ts`.

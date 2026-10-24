@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { privateNotes, VaultThrottledError } from "@/lib/privateNotes";
 import { MIN_PASSWORD_LENGTH, VaultError, passwordStrength } from "@/lib/vault";
 import { vaultUi, type VaultUiKind } from "@/lib/vaultUi";
+import { downloadBlob } from "@/lib/downloadBlob";
 
 /** Okna skarbca (ładowane na żądanie przez `VaultHost`). */
 export function VaultDialog({ kind, onDone }: { kind: VaultUiKind; onDone?: () => void }) {
@@ -347,12 +348,7 @@ function RecoveryCodeStep({ code, onClose }: { code: string; onClose: () => void
   }
   function download() {
     const blob = new Blob([`Kod awaryjny skarbca G\n\n${code}\n\nKto zna ten kod, może odblokować Twoje prywatne notatki. Trzymaj go osobno od urządzeń.\n`], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "notki-kod-awaryjny.txt";
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, "notki-kod-awaryjny.txt");
   }
 
   return (
