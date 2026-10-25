@@ -21,6 +21,8 @@ interface ShiftMonthGridProps {
   onMonthChange: (month: Date) => void;
   /** Id tekstu opisującego, co zrobi stuknięcie (wybrany pędzel). */
   describedBy?: string;
+  /**Dni, przed którymi za krótki odpoczynek (< 11 h) — znacznik ⚠ w komórce. */
+  shortRestDays?: ReadonlySet<string>;
   /** Przenoszenie i kopiowanie wpisów z klawiatury (Shift+strzałki, Ctrl+C/V). */
   actions: DayActions;
 }
@@ -33,7 +35,7 @@ const WEEK = { weekStartsOn: 1 } as const;
  * siatka to jeden przystanek tabulatora, strzałki po dniach, PageUp/PageDown
  * po miesiącach, Home/End po tygodniu; Enter/Spacja = stuknięcie.
  */
-export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesById, onDay, onMonthChange, describedBy, actions }: ShiftMonthGridProps) {
+export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesById, onDay, onMonthChange, describedBy, shortRestDays, actions }: ShiftMonthGridProps) {
   const today = useToday();
   const direction = useMonthDirection(month);
   const { stamped, cleared } = useStampedDays(`${month.getFullYear()}-${month.getMonth()}`, days, typesById);
@@ -149,6 +151,7 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                         {/* Na telefonie nazwa święta i godziny się nie mieszczą — zostaje znacznik, nie sam kolor. */}
                         {holiday && <span className={holidayDotClass(inMonth)} />}
                         {entry?.extraMin ? <span className="sm:hidden text-2xs leading-none font-bold">{entry.extraMin > 0 ? "↑" : "↓"}</span> : null}
+                        {shortRestDays?.has(key) && <span className="text-2xs leading-none font-bold text-destructive-ink">⚠</span>}
                         {entry?.note && <span className="w-1.5 h-1.5 rounded-full bg-foreground/50" />}
                       </span>
                     </span>

@@ -22,6 +22,9 @@ interface ShiftTypeDialogProps {
 
 const ABSENCE_KIND_LABELS: Record<AbsenceKind, string> = { leave: "Urlop", sick: "L4", other: "Inna" };
 
+/** Zmiana dłuższa niż to, zwykle to pomyłka w godzinach — pokazujemy ostrzeżenie w oknie rodzaju. */
+const LONG_SHIFT_MINUTES = 16 * 60;
+
 const BLANK: ShiftType = { id: "", name: "", short: "", color: SHIFT_COLORS[3], start: "08:00", end: "16:00", breakMin: 0, kind: "work" };
 
 /**
@@ -173,7 +176,11 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
         )}
         <p className="text-sm text-muted-foreground">
           {absence ? "Obniża normę o:" : "Czas pracy:"} <span className="font-semibold text-foreground">{formatDuration(shiftMinutes(draft))}</span>
+          {!absence && draft.end < draft.start && <span className="text-foreground"> · koniec następnego dnia (+1 dzień)</span>}
         </p>
+        {!absence && shiftMinutes(draft) > LONG_SHIFT_MINUTES && (
+          <p className="text-xs text-destructive-ink">Zmiana dłuższa niż 16 h — sprawdź godziny (koniec mógł być wpisany tego samego dnia zamiast następnego).</p>
+        )}
         {type && (type.start !== draft.start || type.end !== draft.end || type.breakMin !== draft.breakMin || (type.breakAt ?? "") !== (placedBreak ? draft.breakAt : "")) && (
           <p className="text-xs text-muted-foreground">Nowe godziny od dziś — dni wcześniejsze zachowają dotychczasowe.</p>
         )}

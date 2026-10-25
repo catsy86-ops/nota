@@ -31,6 +31,8 @@ interface ShiftSummaryProps {
   /** `YYYY-MM` — miesiąc, do którego dodaje się premie. */
   monthKey: string;
   onOpenSettings: () => void;
+  /** Otwiera okno dnia — z listy „Za krótki odpoczynek”. */
+  onOpenDay?: (dayKey: string) => void;
 }
 
 /** Miejscownik („w marcu”) — date-fns go nie zna. */
@@ -43,7 +45,7 @@ const monthName = (year: number, month: number, pattern = "LLLL") => format(new 
  * Podsumowanie miesiąca. Sercem jest pasek normy: wypełnia się do wymiaru
  * czasu pracy, a nadwyżka (nadgodziny) dosuwa się za nim w kolorze akcentu.
  */
-export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settlementMonths, fte, monthLabel, monthKey, onOpenSettings }: ShiftSummaryProps) {
+export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settlementMonths, fte, monthLabel, monthKey, onOpenSettings, onOpenDay }: ShiftSummaryProps) {
   const { minutes, normMinutes, overtimeMinutes, dailyOvertimeMinutes, overtime100Minutes } = summary;
   const scale = Math.max(normMinutes, minutes, 1);
   // Nadgodziny dobowe mogą być i poniżej normy miesiąca — pasek dzieli faktycznie przepracowane godziny.
@@ -108,10 +110,19 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
           <p>
             <span className="font-semibold">Za krótki odpoczynek</span>{" "}
             <span className="text-muted-foreground">(mniej niż 11 h przed zmianą): </span>
-            {summary.shortRests.map((r) => {
+            {summary.shortRests.map((r, i) => {
               const [y, m, d] = r.dayKey.split("-").map(Number);
-              return `${format(new Date(y, m - 1, d), "d MMMM", { locale: pl })} — ${formatDuration(r.restMinutes)}`;
-            }).join(", ")}
+              const label = `${format(new Date(y, m - 1, d), "d MMMM", { locale: pl })} — ${formatDuration(r.restMinutes)}`;
+              return (
+                <span key={r.dayKey}>
+                  {i > 0 && ", "}
+                  <button type="button" onClick={() => onOpenDay?.(r.dayKey)} disabled={!onOpenDay}
+                    className="underline underline-offset-2 font-medium text-destructive-ink outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:no-underline disabled:text-inherit coarse:py-1">
+                    {label}
+                  </button>
+                </span>
+              );
+            })}
           </p>
         </div>
       )}
