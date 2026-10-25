@@ -157,6 +157,52 @@ describe("karty budów w Yjs", () => {
     expect(a.get().journal.map((e) => e.siteId)).toEqual(["n-1", "n-1"]);
   });
 
+  it("dwa telefony zmieniają różne pola tej samej karty: obie zmiany zostają (krok 2 planu Etap 6)", () => {
+    const { a, b, sync } = pair();
+    a.saveSite({ id: "n-3", name: "Dom", address: "", investor: "", created: 1 });
+    sync();
+    a.saveSite({ ...a.get().sites["n-3"], investor: "Kowalski" });
+    b.saveSite({ ...b.get().sites["n-3"], address: "ul. Polna 2" });
+    sync();
+    expect(a.get().sites["n-3"]).toMatchObject({ investor: "Kowalski", address: "ul. Polna 2" });
+    expect(b.get().sites["n-3"]).toMatchObject({ investor: "Kowalski", address: "ul. Polna 2" });
+  });
+
+  it("dwa telefony odhaczają różne punkty tego samego wpisu: oba odhaczenia zostają (krok 3 planu Etap 6)", () => {
+    const { a, b, sync } = pair();
+    a.addEntry(entry("odh-1", 1, { checked: ["p-1"] }));
+    sync();
+    a.updateEntry({ ...a.get().journal.find((e) => e.id === "odh-1")!, checked: ["p-1", "p-2"] });
+    b.updateEntry({ ...b.get().journal.find((e) => e.id === "odh-1")!, checked: ["p-1", "p-3"] });
+    sync();
+    expect([...a.get().journal.find((e) => e.id === "odh-1")!.checked].sort()).toEqual(["p-1", "p-2", "p-3"]);
+    expect([...b.get().journal.find((e) => e.id === "odh-1")!.checked].sort()).toEqual(["p-1", "p-2", "p-3"]);
+  });
+
+  it("odhaczenia zapisane jako tablica (stary zapis) czytają się i zamieniają na mapę przy zmianie", () => {
+    const { a, docA } = pair();
+    docA.transact(() => {
+      const m = new Y.Map<unknown>();
+      docA.getMap<unknown>("studyJournal").set("stary-1", m);
+      m.set("id", "stary-1"); m.set("at", 1); m.set("kind", "ok"); m.set("topic", null); m.set("text", "x");
+      m.set("site", ""); m.set("checked", ["p-9"]); m.set("images", []);
+    });
+    expect(a.get().journal.find((e) => e.id === "stary-1")!.checked).toEqual(["p-9"]);
+    a.updateEntry({ ...a.get().journal.find((e) => e.id === "stary-1")!, checked: ["p-9", "p-10"] });
+    expect(docA.getMap<unknown>("studyJournal").get("stary-1")).toBeInstanceOf(Y.Map);
+    expect([...a.get().journal.find((e) => e.id === "stary-1")!.checked].sort()).toEqual(["p-10", "p-9"]);
+  });
+
+  it("karta zapisana starym sposobem (zwykły obiekt w mapie) nadal się czyta i przechodzi na mapę przy zapisie", () => {
+    const { a, docA, sync } = pair();
+    docA.getMap<unknown>("studySites").set("n-4", { id: "n-4", name: "Stara", address: "", investor: "", created: 1 });
+    expect(a.get().sites["n-4"]).toMatchObject({ name: "Stara" });
+    a.saveSite({ ...a.get().sites["n-4"], name: "Nowa" });
+    expect(docA.getMap("studySites").get("n-4")).toBeInstanceOf(Y.Map);
+    sync();
+    expect(a.get().sites["n-4"]).toMatchObject({ name: "Nowa" });
+  });
+
   it("kopia: karty w zrzucie, śmieci odpadają, replaceAll i mergeIn je przenoszą", () => {
     const d = cleanDump({ sites: { ok: { id: "ok", name: " Polna ", created: 3 }, zly: { id: "inny", name: "x" }, pusty: { id: "pusty", name: "  " } } });
     expect(d.sites).toEqual({ ok: { id: "ok", name: "Polna", address: "", investor: "", created: 3 } });

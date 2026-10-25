@@ -336,7 +336,8 @@ export function createYStudy(doc: Y.Doc) {
   const rounds = doc.getMap<DeviceRounds>("studyRounds");
   const meta = doc.getMap<unknown>("studyMeta");
   /** Karty budów (id → karta). */
-  const sites = doc.getMap<SiteCard>("studySites");
+  // Karta jako mapa pól (krok 2 planu Etap 6): zapis zmienia tylko pola, które się różnią. Stare zapisy (zwykły obiekt) nadal się czytają.
+  const sites = doc.getMap<unknown>("studySites");
   /** Urządzenia, których stary zapis jest już w dokumencie (id urządzenia → czas). */
   const migrations = doc.getMap<number>("studyMigrations");
   /** Powtórki: id pytania → karta SM-2. Klucz per pytanie — dwa telefony scalają różne pytania. */
@@ -352,23 +353,67 @@ export function createYStudy(doc: Y.Doc) {
     snapshot = null;
     listeners.forEach((l) => l());
   };
-  for (const m of [board, checked, missed, days, rounds, meta, sites, review, custom, siteItems] as Y.Map<unknown>[]) m.observe(onChange);
-  // Pola wpisu są w mapach zagnieżdżonych — zmiana pola to zdarzenie głębokie.
+  for (const m of [board, checked, missed, days, rounds, meta, review, custom, siteItems] as Y.Map<unknown>[]) m.observe(onChange);
+  // Pola wpisu i karty są w mapach zagnieżdżonych — zmiana pola to zdarzenie głębokie.
   journal.observeDeep(onChange);
+  sites.observeDeep(onChange);
+
+  /** Karta budowy z mapy; starszy zapis (zwykły obiekt) zwracany jak jest. */
+  function readCard(id: string): SiteCard | undefined {
+    const v = sites.get(id);
+    if (v === undefined) return undefined;
+    return v instanceof Y.Map ? (v.toJSON() as SiteCard) : (v as SiteCard);
+  }
+
+  /** Karta jako mapa pól: zapisuje tylko pola, które się zmieniły, i kasuje te, których już nie ma. */
+  function writeCard(id: string, card: SiteCard): void {
+    const cur = sites.get(id);
+    const fields = Object.entries(card).filter(([, v]) => v !== undefined) as [string, unknown][];
+    if (!(cur instanceof Y.Map)) {
+      sites.set(id, new Y.Map<unknown>(fields));
+      return;
+    }
+    for (const [k, v] of fields) if (JSON.stringify(cur.get(k)) !== JSON.stringify(v)) cur.set(k, v);
+    for (const k of Array.from(cur.keys())) if (!fields.some(([f]) => f === k)) cur.delete(k);
+  }
 
   /** Wpis jako mapa pól: zmiana jednego pola nie kasuje zmian innych pól z drugiego telefonu (D5). */
   function writeEntry(id: string, entry: JournalEntry): void {
     const cur = journal.get(id);
     const next = entry as unknown as Record<string, unknown>;
     if (!(cur instanceof Y.Map)) {
-      journal.set(id, new Y.Map<unknown>(Object.entries(next).filter(([, v]) => v !== undefined)));
+      const m = new Y.Map<unknown>();
+      journal.set(id, m);
+      for (const [k, v] of Object.entries(next)) if (v !== undefined) setEntryField(m, k, v);
       return;
     }
     for (const k of Array.from(cur.keys())) if (next[k] === undefined && JOURNAL_ENTRY_KEYS.has(k)) cur.delete(k);
     // Pole zapisujemy tylko, gdy się zmieniło — brak zbędnych zapisów, które nadpisywałyby cudze zmiany.
     for (const [k, v] of Object.entries(next)) {
-      if (v !== undefined && JSON.stringify(cur.get(k)) !== JSON.stringify(v)) cur.set(k, v);
+      if (v !== undefined) setEntryField(cur, k, v);
     }
+  }
+
+  /**
+   * Pole wpisu. `checked` (odhaczone punkty listy) jest zbiorem, więc to mapa `id → true`: dwa telefony
+   * odhaczające różne punkty nie nadpisują się (krok 3 planu Etap 6). Kolejność nie ma znaczenia.
+   * Pozostałe pola zapisujemy jako wartość; `images` i `fittings` zostają tablicami, bo ich kolejność widać.
+   */
+  function setEntryField(m: Y.Map<unknown>, k: string, v: unknown): void {
+    if (k === "checked" && Array.isArray(v)) {
+      const cur = m.get(k);
+      if (cur instanceof Y.Map) {
+        const want = new Set(v as string[]);
+        for (const id of Array.from(cur.keys())) if (!want.has(id)) cur.delete(id);
+        for (const id of want) if (cur.get(id) !== true) cur.set(id, true);
+      } else {
+        m.set(k, new Y.Map<unknown>());
+        const fresh = m.get(k) as Y.Map<unknown>;
+        for (const id of new Set(v as string[])) fresh.set(id, true);
+      }
+      return;
+    }
+    if (JSON.stringify(m.get(k)) !== JSON.stringify(v)) m.set(k, v);
   }
 
   /** Wpis dziennika jako obiekt (po oczyszczeniu); `null` gdy brak lub uszkodzony. */
@@ -398,7 +443,10 @@ export function createYStudy(doc: Y.Doc) {
   function withSiteLists(): Record<string, SiteCard> {
     const lists = composeSiteLists(siteItems.entries());
     const out: Record<string, SiteCard> = {};
-    for (const [k, card] of sites.entries()) out[k] = { ...card, ...(lists.get(k) ?? {}) };
+    for (const k of Array.from(sites.keys())) {
+      const card = readCard(k);
+      if (card) out[k] = { ...card, ...(lists.get(k) ?? {}) };
+    }
     return out;
   }
 
@@ -434,14 +482,14 @@ export function createYStudy(doc: Y.Doc) {
 
   /** Dawne listy w polach karty (sprzed `studySiteItems`) → mapa; pola znikają z karty. Bez transakcji. */
   function migrateCardLists(siteId: string, source?: SiteCard): void {
-    const stored = sites.get(siteId);
+    const stored = readCard(siteId);
     for (const kind of SITE_LIST_KINDS) {
       if (siteItems.has(metaKey(siteId, kind))) continue;
       const legacy = (stored?.[LIST_FIELD[kind]] ?? source?.[LIST_FIELD[kind]]) as unknown[] | undefined;
       if (legacy && legacy.length > 0) writeListItems(siteId, kind, legacy, []);
       else if (legacy) siteItems.set(metaKey(siteId, kind), true);
     }
-    if (stored && SITE_LIST_KINDS.some((k) => stored[LIST_FIELD[k]] !== undefined)) sites.set(siteId, stripLists(stored));
+    if (stored && SITE_LIST_KINDS.some((k) => stored[LIST_FIELD[k]] !== undefined)) writeCard(siteId, stripLists(stored));
   }
 
   function get(): StudyState {
@@ -502,7 +550,7 @@ export function createYStudy(doc: Y.Doc) {
   /** Dopisuje wpis (z kartą nowej budowy); problem przy temacie z „Umiem” cofa go do „W trakcie”. */
   function addEntry(entry: JournalEntry, newSite?: SiteCard): void {
     transact(() => {
-      if (newSite && !sites.has(newSite.id)) sites.set(newSite.id, newSite);
+      if (newSite && !sites.has(newSite.id)) writeCard(newSite.id, newSite);
       writeEntry(entry.id, entry);
       if (entry.kind === "problem" && entry.topic && board.get(entry.topic) === "done") board.set(entry.topic, "doing");
     });
@@ -514,7 +562,7 @@ export function createYStudy(doc: Y.Doc) {
    */
   function updateEntry(entry: JournalEntry, newSite?: SiteCard): void {
     transact(() => {
-      if (newSite && !sites.has(newSite.id)) sites.set(newSite.id, newSite);
+      if (newSite && !sites.has(newSite.id)) writeCard(newSite.id, newSite);
       const prev = readEntry(entry.id);
       writeEntry(entry.id, entry);
       const newProblem = entry.kind === "problem" && entry.topic && (prev?.kind !== "problem" || prev.topic !== entry.topic);
@@ -572,7 +620,7 @@ export function createYStudy(doc: Y.Doc) {
     transact(() => {
       // Listy karty są w osobnej mapie: tu tylko przeniesienie dawnych pól (stara karta albo kopia), potem sama karta.
       migrateCardLists(card.id, card);
-      sites.set(card.id, stripLists(card));
+      writeCard(card.id, stripLists(card));
       const cur = meta.get("site");
       if (prevName && typeof cur === "string" && foldName(cur) === foldName(prevName) && cur !== card.name) meta.set("site", card.name);
     });
@@ -633,7 +681,7 @@ export function createYStudy(doc: Y.Doc) {
       for (const k of d.days) days.set(k, true);
       for (const [k, v] of Object.entries(d.rounds)) rounds.set(k, v);
       // Kopia niesie listy w kartach — do osobnej mapy, karty bez list.
-      for (const [k, v] of Object.entries(d.sites)) { migrateCardLists(k, v); sites.set(k, stripLists(v)); }
+      for (const [k, v] of Object.entries(d.sites)) { migrateCardLists(k, v); writeCard(k, stripLists(v)); }
       for (const [k, v] of Object.entries(d.review)) review.set(k, v);
       for (const [k, v] of Object.entries(d.custom)) custom.set(k, v);
       meta.set("site", d.site);
@@ -663,7 +711,7 @@ export function createYStudy(doc: Y.Doc) {
         const best = prev.best === null ? v.best : v.best === null ? prev.best : Math.max(prev.best, v.best);
         if (v.rounds > prev.rounds || best !== prev.best) rounds.set(k, { rounds: Math.max(prev.rounds, v.rounds), best });
       }
-      for (const [k, v] of Object.entries(d.sites)) if (!sites.has(k)) { migrateCardLists(k, v); sites.set(k, stripLists(v)); }
+      for (const [k, v] of Object.entries(d.sites)) if (!sites.has(k)) { migrateCardLists(k, v); writeCard(k, stripLists(v)); }
       // Karta z nowszą ostatnią odpowiedzią wygrywa.
       for (const [k, v] of Object.entries(d.review)) {
         const prev = cleanCard(review.get(k));
