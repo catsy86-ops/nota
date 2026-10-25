@@ -123,3 +123,12 @@ export function entriesBySite(journal: readonly JournalEntry[], limit = 6): { si
     { site: "Pozostałe", count: rest.reduce((n, r) => n + r.count, 0), open: rest.reduce((n, r) => n + r.open, 0) },
   ];
 }
+
+/** Próg podpowiedzi „Umiem” (§4.1): co najmniej tyle procent trafień i tyle odpowiedzi. */
+export const SUGGEST_DONE_PERCENT = 90;
+export const SUGGEST_DONE_MIN_SEEN = 10;
+
+/** Czy temat z tą trafnością wygląda na opanowany — tylko podpowiedź, nie przeniesienie. */
+export function suggestsDone(row: { percent: number | null; seen: number }): boolean {
+  return row.percent !== null && row.percent >= SUGGEST_DONE_PERCENT && row.seen >= SUGGEST_DONE_MIN_SEEN;
+}

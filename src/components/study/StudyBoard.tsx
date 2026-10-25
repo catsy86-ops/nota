@@ -10,6 +10,7 @@ import { LayoutGroup, m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { MODULES, QUESTIONS, TOPICS, type StudyTopic } from "@/lib/study/content";
 import { CustomQuestionsDialog } from "./CustomQuestionsDialog";
+import { accuracyByTopic, suggestsDone } from "@/lib/study/stats";
 import { COLUMNS, columnOf, dueToday, moveTopic, practiceByTopic, useStudy, useStudyLists, type Column, type StudyState, type TopicPractice } from "@/lib/study/store";
 
 const COLUMN_LABEL: Record<Column, string> = { todo: "Do nauki", doing: "W trakcie", done: "Umiem" };
@@ -53,6 +54,9 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
   const [ownOpen, setOwnOpen] = useState(false);
   const items = lists.checklist.filter((c) => c.topic === topic.id);
   // Temat z co najwyżej dwoma pytaniami (wbudowane + własne) podpowiada dodanie własnych (Etap 4 § D2).
+  // Podpowiedź „Umiem” (§4.1): tylko sugestia, temat przenosi dopiero klik.
+  const mastery = accuracyByTopic(study.review, lists.questions, [topic.id])[0];
+  const suggestDone = column !== "done" && !!mastery && suggestsDone(mastery);
   const questionCount = QUESTIONS.filter((q) => q.topic === topic.id).length
     + study.custom.filter((c) => c.kind === "question" && c.topic === topic.id).length;
   const checked = items.filter((c) => study.checked[c.id]).length;
@@ -142,6 +146,12 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
             ))}
           </ul>
         </details>
+      )}
+      {suggestDone && (
+        <p className="mt-2 text-xs text-muted-foreground" data-testid="suggest-done">
+          Wychodzi świetnie ({mastery.percent}% z {mastery.seen}).{" "}
+          <button type="button" onClick={() => moveTo(topic, "done")} className="text-primary-ink underline-offset-2 hover:underline">Oznacz jako „Umiem”</button>
+        </p>
       )}
       {questionCount <= 2 && (
         <p className="mt-2 text-xs text-muted-foreground">
