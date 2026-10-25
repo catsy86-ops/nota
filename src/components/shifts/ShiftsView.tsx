@@ -119,6 +119,20 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   const [rangeOpen, setRangeOpen] = useState(false);
   const [imageTheme, setImageTheme] = useState<ImageTheme>("light");
   const [switcherOpen, setSwitcherOpen] = useState(false);
+  // Przełącznik Miesiąc/Tydzień — ten sam JSX w dwóch miejscach (telefon i od sm), jeden jest ukryty.
+  const viewToggle = (
+    <div role="group" aria-label="Widok Grafiku" className="flex rounded-xl bg-muted p-0.5">
+      {([["month", "Miesiąc"], ["week", "Tydzień"]] as const).map(([id, text]) => (
+        <button key={id} type="button" aria-pressed={layout === id} onClick={() => setLayout(id)}
+          className={cn(
+            "pressable h-9 coarse:h-11 px-2.5 sm:px-3.5 rounded-[0.65rem] text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+            layout === id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+          )}>
+          {text}
+        </button>
+      ))}
+    </div>
+  );
   const schedules = useSchedules();
   const activeScheduleName = schedules.find((s) => s.id === activeScheduleId())?.name ?? "Główny";
   // Nakładka: tylko do odczytu, z innego grafiku niż aktywny (4.1).
@@ -440,17 +454,8 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           <p className="order-0 w-full text-xs text-muted-foreground px-1">Wspólne wolne dni w tym miesiącu (w obu grafikach): <span className="font-semibold text-foreground tabular-nums">{commonFree}</span></p>
         )}
         <div className="order-2 flex flex-wrap items-center justify-between gap-2">
-          <div role="group" aria-label="Widok Grafiku" className="flex rounded-xl bg-muted p-0.5">
-            {([["month", "Miesiąc"], ["week", "Tydzień"]] as const).map(([id, text]) => (
-              <button key={id} type="button" aria-pressed={layout === id} onClick={() => setLayout(id)}
-                className={cn(
-                  "pressable h-9 coarse:h-11 px-3.5 rounded-[0.65rem] text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
-                  layout === id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
-                )}>
-                {text}
-              </button>
-            ))}
-          </div>
+          {/* Od sm przełącznik widoku siedzi tutaj; na telefonie — w rzędzie nawigacji (5.5). */}
+          <div className="hidden sm:block">{viewToggle}</div>
           {isWeek && (
             <div className="flex flex-wrap items-center gap-1">
               {weekStart !== thisWeek && (
@@ -471,14 +476,15 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         </div>
 
         <div className="order-3 flex items-center justify-between gap-2 sm:justify-center sm:gap-4">
+          <div className="sm:hidden shrink-0">{viewToggle}</div>
           <button type="button" onClick={() => (isWeek ? setWeekStart((w) => addDaysToKey(w, -7)) : setMonth((m) => addMonths(m, -1)))}
             aria-label={isWeek ? "Poprzedni tydzień" : "Poprzedni miesiąc"} className={navButton}>
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <h2 className="min-w-0 sm:min-w-48 text-center">
+          <h2 className="min-w-0 flex-1 sm:flex-none sm:min-w-48 text-center">
             <button type="button" onClick={() => (isWeek ? setWeekStart(thisWeek) : setMonth(startOfMonth(new Date())))}
               title={isWeek ? "Wróć do bieżącego tygodnia" : "Wróć do bieżącego miesiąca"}
-              className={cn("pressable w-full h-10 coarse:h-11 truncate font-display font-semibold text-lg px-3 rounded-xl hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring", !isWeek && "capitalize")}>
+              className={cn("pressable w-full h-10 coarse:h-11 truncate font-display font-semibold text-base sm:text-lg px-2 sm:px-3 rounded-xl hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring", !isWeek && "capitalize")}>
               {isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl })}
             </button>
           </h2>
