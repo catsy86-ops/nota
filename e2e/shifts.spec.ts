@@ -360,6 +360,8 @@ test("godzinę przypomnienia o zmianie ustawia się w ustawieniach grafiku", asy
 test("paleta poleceń znajduje dzień grafiku i otwiera jego okno", async ({ page }) => {
   await page.getByRole("button", { name: /^14 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first().click();
   await page.goto("/");
+  // Skrót działa dopiero po zamontowaniu aplikacji (nasłuch klawiatury); bez czekania Ctrl+K przepadał.
+  await expect(page.getByText("Zapisz notatkę...").first()).toBeVisible();
   await page.keyboard.press("ControlOrMeta+k");
   const input = page.getByRole("dialog").getByPlaceholder(/Szukaj/i);
   await input.fill("14 października");
