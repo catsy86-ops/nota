@@ -1117,3 +1117,7 @@ Pełny plan: `docs/plan-dzis-2026-10-25.md` (Etapy 1–5: poprawki, karta zmiany
 ## Plan działu Kalendarz — 2026-10-25
 
 Pełny plan: `docs/plan-kalendarz-2026-10-25.md` (Etapy 1–5: poprawki — zaległy ≠ załatwiony, `.ics` cały dzień i seria, adres dnia; codzienna praca — „Otwórz notatkę”, zapamiętany widok, oś bez dziur; rozbudowa — Praca w tygodniu, filtr warstw, agenda, oś tygodnia; wygląd; QA). Czwarty z serii „dział po dziale”. Decyzje K-1…K-3 otwarte.
+
+## Plan działu Terminy — 2026-10-25
+
+Pełny plan: `docs/plan-terminy-2026-10-25.md` (Etapy 1–5: poprawki — grupy z zegarem, DST w serii, parser dat, akcje na prywatnej notatce; jedno menu „Odłóż”, „Zakończ serię”, lista zamiast kafli; rozbudowa — więcej powtarzania, wcześniejsze przypomnienie, „przed zmianą”; wygląd; QA). Piąty z serii „dział po dziale”. Decyzje T-1…T-4 otwarte.
