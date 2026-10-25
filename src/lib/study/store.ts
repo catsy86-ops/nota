@@ -2,6 +2,7 @@ import { useMemo, useSyncExternalStore } from "react";
 import type { Fitting } from "./fittings";
 import type { Attachment } from "@/lib/attachments";
 import { CHECKLIST, QUESTIONS, TOPICS, type ChecklistItem, type Question } from "./content";
+import { CALC_QUESTIONS } from "./calcQuestions";
 import { CUSTOM_MAX, CUSTOM_PREFIX, CUSTOM_TEXT_MAX, cleanCustom, cleanCustomList, questionOptions, type CustomEntry, type CustomItem, type CustomQuestion } from "./custom";
 import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
@@ -92,7 +93,7 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
 /** Materiał G-HEAT i własne wpisy razem — to widzą listy, quiz, tablica i dziennik. */
 export function studyLists(custom: readonly CustomEntry[]): { checklist: ChecklistItem[]; questions: Question[] } {
   const checklist: ChecklistItem[] = [...CHECKLIST];
-  const questions: Question[] = [...QUESTIONS];
+  const questions: Question[] = [...QUESTIONS, ...CALC_QUESTIONS];
   for (const e of custom) {
     if (e.kind === "item") checklist.push({ id: e.id, topic: e.topic, text: e.text });
     else questions.push({ id: e.id, topic: e.topic, question: e.question, options: questionOptions(e), explanation: e.explanation });

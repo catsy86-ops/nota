@@ -208,15 +208,17 @@ test("tablica: „Ćwicz” startuje rundę z jednego tematu, a „Zrób notatk�
   await page.getByRole("tab", { name: "Tablica" }).click();
   await page.getByRole("button", { name: "Spadki kanalizacji: ćwicz pytania" }).click();
 
-  // Temat „Spadki” ma jedno pytanie — runda ma 1 pytanie i wraca do quizu.
+  // Temat „Spadki” ma dwa pytania (wbudowane i z kalkulatora, §4.4) — runda ma 2 pytania i wraca do quizu.
   await expect(page.getByRole("tab", { name: "Quiz" })).toHaveAttribute("data-state", "active");
-  await expect(page.getByText("Pytanie 1 z 1")).toBeVisible();
-  await expect(page.getByText("Jaki typowy spadek zachowujemy")).toBeVisible();
-
-  // Błędna odpowiedź trafia do „Powtórki błędów”.
-  const options = page.getByRole("group", { name: "Odpowiedzi" }).getByRole("button");
-  const wrong = options.filter({ hasNotText: "Ok. 2–3%" }).first();
-  await wrong.click();
+  await expect(page.getByText("Pytanie 1 z 2")).toBeVisible();
+  // Kolejność pytań w rundzie jest losowa: pierwsze dostaje błędną odpowiedź, drugie poprawną.
+  const grp = page.getByRole("group", { name: "Odpowiedzi" }).getByRole("button");
+  const firstIsCalc = await page.getByText("Odcinek kanalizacji").isVisible();
+  const firstCorrect = firstIsCalc ? "20 cm" : "Ok. 2–3%";
+  const secondCorrect = firstIsCalc ? "Ok. 2–3%" : "20 cm";
+  await grp.filter({ hasNotText: firstCorrect }).first().click();
+  await page.getByRole("button", { name: "Dalej" }).click();
+  await grp.filter({ hasText: secondCorrect }).click();
   await page.getByRole("button", { name: "Zobacz wynik" }).click();
   await page.getByRole("button", { name: "Wróć do wszystkich" }).click();
   await expect(page.getByRole("button", { name: /Powtórka błędów \(1\)/ })).toBeVisible();

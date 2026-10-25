@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { CHECKLIST, QUESTIONS } from "./content";
+import { CALC_QUESTIONS } from "./calcQuestions";
 import { studyLists, getStudy, toggleChecked, recordRound, addCustomItem, addCustomQuestion, removeCustomEntry, restoreCustomEntry, sanitizeStudy } from "./store";
 import { resetStudyForTests, yStudy } from "./data";
 import { yjsStore } from "@/lib/yjsStore";
@@ -38,7 +39,7 @@ describe("własne pytania i punkty listy (N5)", () => {
     const saved = addCustomQuestion(question);
     expect(saved).not.toBeNull();
     const pool = studyLists(getStudy().custom).questions;
-    expect(pool.length).toBe(QUESTIONS.length + 1);
+    expect(pool.length).toBe(QUESTIONS.length + CALC_QUESTIONS.length + 1);
     const mine = pool.find((x) => x.id === saved!.id);
     expect(mine?.options).toEqual(["Tak", "Nie", "Może", "Nie wiem"]);
     expect(mine?.explanation).toBe("Bo tak.");
