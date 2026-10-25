@@ -335,6 +335,7 @@ Dział opisany w jednym miejscu. Refaktor `Index.tsx` i `NoteCard.tsx` (etapy 4 
 **Kafel (`NoteCard` i hooki):**
 - `src/components/NoteCard.tsx` — otoczka kafla: przechył, `motion.div`, stany okien, `renderEditor(full)`, `useLatch` dla leniwego montowania.
 - `src/components/NoteCardBody.tsx` — tryb podglądu (`BACKLINKS_SHOWN`, `subpage`, `trashCountdown`, „Gotowe”/„Jutro”).
+- **Godzina w stopce kafla.** Stopka pokazuje datę ostatniej zmiany z godziną (`d MMM, HH:mm`, `updatedAt`). Przypomnienia już pokazują godzinę na odznace (`formatReminderShort`); okna dodawania mają pole „Godzina”. Testy: `src/lib/reminderTime.test.ts`, `e2e/card*.spec.ts`, `e2e/reminder*.spec.ts`, `e2e/composer*.spec.ts`.
 - `src/components/NoteCardActions.tsx` — `ActionBtn`, `PrimaryActions` (stopka i arkusz), `MoreActions` (rozwinięcie i arkusz), kopiuj Markdown.
 - `src/components/NoteCardDialogs.tsx` — `ActionSheet`, `ImagePreviewDialog`, `DeleteNoteDialog`.
 - `src/components/NoteEditor.tsx` — edytor w kaflu i w oknie (`NoteEditSession` z `useNoteEditSession`).
