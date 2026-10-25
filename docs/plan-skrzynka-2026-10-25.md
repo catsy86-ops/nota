@@ -16,7 +16,7 @@ Drugi plan z serii „dział po dziale” (po `docs/plan-notatki-2026-10-25.md`)
 
 | Skąd | Punkt | Dowód |
 |---|---|---|
-| plan-dzialy §3 Dopr. 1 | Brak `enterKeyHint="send"` i widocznego „Zapisz” na telefonie; błysk nowej notatki szuka nieistniejącego `[data-add-note-bar]` (żaden komponent nie ma tego atrybutu) | `InboxCapture.tsx:24`, `Index.tsx:500` |
+| plan-dzialy §3 Dopr. 1 | Brak `enterKeyHint="send"` i widocznego „Zapisz” na telefonie; błysk nowej notatki startuje z `[data-add-note-bar]`, a w Skrzynce tego paska nie ma (`canCompose` bez `inbox`), więc błysku brak | `InboxCapture.tsx:24`, `Index.tsx:500,749` |
 | §3 Dopr. 2 | Brak pieczątki „posortowane” przy zejściu licznika do 0 | — |
 | §3 Rozb. 2 | Frazy `#etykieta @folder jutro 9:00` są w kompozytorze (`lib/quickCapture.ts`, `AddNoteBar.tsx`), ale nie w polu Skrzynki; brak dyktowania (jest `hooks/useDictation.ts`) | `InboxCapture.tsx` |
 | §3 Wygląd 1 | Pole nie wygląda jak zwinięty kompozytor; przycisk „Porządkuj skrzynkę (N)” to zwykły tekst, licznik bez `stamp-tag` | `Index.tsx:676` |
@@ -43,7 +43,7 @@ Legenda: W = wartość (1–3), N = nakład (S/M/L).
 | # | Co | Gdzie | W | N |
 |---|----|-------|---|---|
 | 1.1 | **Telefon:** `enterKeyHint="send"`, przycisk „Zapisz” (ikona strzałki, 44 px) widoczny przy niepustym polu. Na dotyku Enter nadal zapisuje, nowa linia przez przycisk klawiatury „↵” tylko z Shift — zostawić, ale dopisać do podpowiedzi. | `InboxCapture.tsx` | 3 | S |
-| 1.2 | **Błysk nowej notatki:** `handleAddNoteGlow` szuka `[data-add-note-bar]`, którego nie ma nigdzie. Dodać atrybut do paska kompozytora i do formularza Skrzynki (albo przekazać punkt startu z wywołującego). | `Index.tsx:500`, `AddNoteBar.tsx`, `InboxCapture.tsx` | 2 | S |
+| 1.2 | **Błysk nowej notatki:** `handleAddNoteGlow` startuje z `[data-add-note-bar]` (`Index.tsx:749`), którego w Skrzynce nie ma. Przekazać punkt startu z wywołującego (formularz Skrzynki) albo szukać `[data-inbox-capture]` jako drugiego. | `Index.tsx:500`, `InboxCapture.tsx` | 2 | S |
 | 1.3 | **Pusty tytuł w trybie porządkowania:** zamiast „Bez tytułu” pierwsza linia treści (ten sam helper co kafel). | `InboxTriage.tsx:123` | 1 | S |
 | 1.4 | **Testy e2e trybu porządkowania:** folder (chip i skrót 1), etykieta, „Zostaw”, „Gotowe”, cofnięcie po „Gotowe”. | `e2e/inbox-triage.spec.ts` | 2 | S |
 

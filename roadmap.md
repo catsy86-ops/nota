@@ -1109,3 +1109,7 @@ Pełny plan: `docs/plan-notatki-2026-10-25.md` (Etapy 1–8: zaległe drobiazgi,
 ## Plan działu Skrzynka — 2026-10-25
 
 Pełny plan: `docs/plan-skrzynka-2026-10-25.md` (Etapy 1–6: zaległe drobiazgi, szybsze przechwytywanie z frazami i `Alt+K`, lepsze porządkowanie, wygląd, Skrzynka w Dziś i przeglądzie tygodnia, QA). Drugi z serii „dział po dziale”. Decyzje S-1…S-3 otwarte.
+
+## Plan działu Dziś — 2026-10-25
+
+Pełny plan: `docs/plan-dzis-2026-10-25.md` (Etapy 1–5: poprawki, karta zmiany „na teraz” i plan dnia, wygląd z dwiema kolumnami na komputerze, Dziś zbiera działy, QA). Trzeci z serii „dział po dziale”. Decyzje D-1…D-4 otwarte.
