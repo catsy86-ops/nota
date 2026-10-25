@@ -287,7 +287,12 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         )}
 
         <div
-          className={cn("cursor-pointer", isEditing && !fullEditor ? "p-4" : "card-body px-3.5 pt-3 pb-2.5 leading-normal", note.largeText ? "text-base" : "text-sm")}
+          // Klawiatura (§audyt 8): treść kafla dostaje fokus, a Enter/Spacja wykonuje to samo co klik.
+          tabIndex={isEditing ? undefined : 0}
+          onKeyDown={(e) => {
+            if ((e.key === "Enter" || e.key === " ") && e.target === e.currentTarget) { e.preventDefault(); e.currentTarget.click(); }
+          }}
+          className={cn("cursor-pointer rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring", isEditing && !fullEditor ? "p-4" : "card-body px-3.5 pt-3 pb-2.5 leading-normal", note.largeText ? "text-base" : "text-sm")}
           onClick={(e) => {
             if (longPressed.current) { longPressed.current = false; return; }
             if (swiping || Math.abs(swipeX.get()) > 4) return;
