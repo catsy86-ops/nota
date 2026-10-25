@@ -1133,3 +1133,7 @@ Pełny plan: `docs/plan-praca-2026-10-25.md` (Etapy 1–7: zamknięcie planu z 2
 ## Plan działu Długi — 2026-10-25
 
 Pełny plan: `docs/plan-dlugi-2026-10-25.md` (Etapy 1–5: poprawki — spłata zdejmuje przypomnienie o zwrocie, notatka zwrotu poza Skrzynką, pasek spłaty po obu stronach, wybór rodzaju i edycja jak dodawanie, podwójne rozliczenie; codzienne — formularz zwinięty, saldo narastające, „Gotowe” w Terminach jako spłata; rozbudowa — łączenie osób, wyślij stan, ukrywanie kwot, CSV; wygląd; QA). Ósmy z serii „dział po dziale”. Decyzje D-1…D-4 otwarte.
+
+## Plan działu Ćwiczenia — 2026-10-25
+
+Pełny plan: `docs/plan-cwiczenia-2026-10-25.md` (Etapy 1–5: poprawki — więcej partii i sprzętu (dziś tylko klatka, biceps, triceps), przerwa po serii, cele diety, notatki przypomnień poza Skrzynką; codzienne — plan dnia prowadzi przez trening, „Wziąłem” zamyka przypomnienie, szybki posiłek, „wczoraj”, edycja odżywki, serie na czas; rozbudowa — masa ciała, 7 dni odżywek, „Nowy rekord”, historia ćwiczenia; wygląd; QA). Dziewiąty z serii „dział po dziale”. Decyzje C-1…C-4 otwarte.
