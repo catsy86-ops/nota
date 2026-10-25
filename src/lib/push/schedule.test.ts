@@ -97,3 +97,27 @@ describe("push: dostawa dziś (2.2)", () => {
     expect(items).toContainEqual({ key: `d:a:${at(15, 12)}`, at: at(15, 7), title: "Dostawa dziś: Lipowa", body: "Kolano 16 (3)", url: "/praca?budowa=s" });
   });
 });
+
+describe("push: dziś zmiana bez wpisu albo podziału godzin (2.3)", () => {
+  const work = { id: "w", name: "Dzień", short: "D", color: "#000", start: "06:00", end: "14:00", breakMin: 0, kind: "work" as const };
+  const absence = { id: "u", name: "Urlop", short: "U", color: "#000", start: "00:00", end: "00:00", breakMin: 0, kind: "absence" as const };
+  const shifts: ShiftData = { ...EMPTY_SHIFT_DATA, types: [work, absence], days: { "2026-10-14": { type: "w" } } };
+  const hoursSite = { s: { id: "s", name: "Lipowa", hours: [{ id: "2026-10-14", minutes: 480 }] } };
+
+  it("zmiana dziś, brak wpisu: wieczorem przypomnienie o dzienniku", () => {
+    const items = buildPushSchedule({ now: WED_NOON, notes: [], shifts, eveningTime: "20:00" });
+    expect(items).toContainEqual({ key: "z:2026-10-14", at: at(14, 20), title: "Dziś zmiana: brak wpisu w dzienniku", body: expect.any(String), url: "/praca" });
+  });
+
+  it("wpis jest, ale bez podziału godzin: inny tytuł", () => {
+    const items = buildPushSchedule({ now: WED_NOON, notes: [], shifts, eveningTime: "20:00", journal: [entry({ at: WED_NOON })] });
+    expect(items.find((i) => i.key === "z:2026-10-14")?.title).toBe("Dziś zmiana: podziel godziny między budowy");
+  });
+
+  it("wpis i godziny są — nic; urlop i brak zmiany — nic", () => {
+    const withAll = buildPushSchedule({ now: WED_NOON, notes: [], shifts, eveningTime: "20:00", journal: [entry({ at: WED_NOON })], sites: hoursSite });
+    expect(withAll.some((i) => i.key.startsWith("z:"))).toBe(false);
+    const onLeave = buildPushSchedule({ now: WED_NOON, notes: [], shifts: { ...shifts, days: { "2026-10-14": { type: "u" } } }, eveningTime: "20:00" });
+    expect(onLeave.some((i) => i.key.startsWith("z:"))).toBe(false);
+  });
+});

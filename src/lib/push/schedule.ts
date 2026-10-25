@@ -1,7 +1,7 @@
 import { addDays } from "date-fns";
 import { nextOccurrence, type ReminderRepeat } from "@/lib/reminderRepeat";
 import { eveningNudgeFor } from "@/lib/shifts/eveningNudge";
-import type { ShiftData, ShiftType } from "@/lib/shifts/model";
+import { dayType, type ShiftData, type ShiftType } from "@/lib/shifts/model";
 import { REMINDER_ORDER_DAYS, REMINDER_PROBLEM_DAYS } from "@/lib/study/reminders";
 import { reportDueMinute } from "@/lib/study/reportNudge";
 import { entriesPl } from "@/lib/study/journalView";
@@ -11,6 +11,7 @@ import { entrySiteId } from "@/lib/study/sites";
 import { siteCardUrl } from "@/lib/study/siteLink";
 import { orderLateFrom, type Shortage } from "@/lib/study/shortages";
 import type { ServiceCall } from "@/lib/study/service";
+import type { SiteHours } from "@/lib/study/siteHours";
 import type { JournalEntry } from "@/lib/study/yStudy";
 import { notePath } from "@/lib/viewRoute";
 import { pushKey } from "./shown";
@@ -78,6 +79,7 @@ export interface PushSite {
   archived?: number;
   shortages?: Shortage[];
   service?: ServiceCall[];
+  hours?: SiteHours[];
 }
 
 export interface PushInput {
@@ -144,6 +146,24 @@ function eveningItems(input: PushInput, now: number): PushItem[] {
     if (at <= now) continue;
     const nudge = eveningNudgeFor(new Date(at), eveningTime, input.eveningNudged ?? null, shifts.days, typesById);
     if (nudge) out.push({ key: pushKey.evening(nudge.forKey), at, title: nudge.title, body: nudge.description ?? "Grafik na jutro.", url: "/grafik" });
+  }
+  // Dziś była zmiana (2.3): wieczorem przypomnij o wpisie w dzienniku i o podziale godzin, jeśli ich brakuje.
+  const todayKey = dayKeyOf(now);
+  const todayEntry = shifts.days[todayKey];
+  const todayBase = todayEntry && typesById.get(todayEntry.type);
+  const nowDate = new Date(now);
+  const at = new Date(nowDate.getFullYear(), nowDate.getMonth(), nowDate.getDate(), h, m).getTime();
+  if (todayBase && dayType(todayBase, todayEntry).kind === "work" && at > now) {
+    const journalToday = (input.journal ?? []).some((e) => dayKeyOf(e.at) === todayKey);
+    const hoursToday = Object.values(input.sites ?? {}).some((c) => c.hours?.some((x) => x.id === todayKey));
+    if (!journalToday || !hoursToday) {
+      out.push({
+        key: pushKey.shiftCheck(todayKey), at,
+        title: journalToday ? "Dziś zmiana: podziel godziny między budowy" : "Dziś zmiana: brak wpisu w dzienniku",
+        body: "Zapisz, co zrobiono, i ile godzin na której budowie — zanim dzień się skończy.",
+        url: "/praca",
+      });
+    }
   }
   return out;
 }

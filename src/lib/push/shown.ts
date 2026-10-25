@@ -11,6 +11,7 @@ const SHOWN_MAX = 200;
 export const pushKey = {
   note: (id: string, at: number) => `n:${id}:${at}`,
   evening: (forKey: string) => `e:${forKey}`,
+  shiftCheck: (dayKey: string) => `z:${dayKey}`,
   reportDay: (dayKey: string) => `rd:${dayKey}`,
   reportWeek: (weekKey: string) => `rw:${weekKey}`,
   problem: (entryId: string) => `p:${entryId}`,
