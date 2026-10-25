@@ -10,6 +10,7 @@ import { CalculatorsButton } from "./CalculatorsSheet";
 import { STUDY_DUE_PARAM } from "@/components/review/TodayStudyCard";
 import { setJournalDraftTopic } from "@/lib/study/draft";
 import { useStudyReady } from "@/lib/study/data";
+import { CardSkeleton } from "@/components/ViewSkeleton";
 import { closeJournalSheet, JOURNAL_ENTRY_PARAM, JOURNAL_VOICE_PARAM, openJournalSheet, requestVoiceOnOpen, useJournalSheet } from "@/lib/study/entrySheet";
 import { JOURNAL_REPORT_PARAM, parseReportParam, requestJournalReport, useJournalReportRequest } from "@/lib/study/reportLink";
 import { readSiteParam } from "@/lib/study/siteLink";
@@ -125,10 +126,20 @@ function DueTodayChip({ onClick }: { onClick: () => void }) {
   );
 }
 
+/** Szkielet na czas wczytywania Yjs: dwie karty o wysokości prawdziwych, bez migotania przy pierwszym renderze. */
+function StudySkeleton() {
+  return (
+    <div className="space-y-4" aria-busy="true" aria-label="Wczytywanie Pracy" data-testid="study-skeleton">
+      <CardSkeleton />
+      <CardSkeleton />
+    </div>
+  );
+}
+
 /** Dział „Praca” (dawniej „Nauka”): quiz, tablica tematów i lista do nauki z materiałów G-HEAT. */
 export default function StudyView() {
-  // Do wczytania dokumentu nic — pusta Nauka mignęłaby zerami i pustym dziennikiem.
-  return useStudyReady() ? <StudyScreen /> : null;
+  // Do wczytania dokumentu szkielet o kształcie widoku, a nie pusty ekran — pusta Nauka mignęłaby zerami (§8 D3).
+  return useStudyReady() ? <StudyScreen /> : <StudySkeleton />;
 }
 
 function StudyScreen() {
