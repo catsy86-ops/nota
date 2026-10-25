@@ -81,6 +81,11 @@ function useOnline() {
  * (`draft.ts`): zamknięcie nie gubi tekstu ani zdjęć. Ten sam arkusz poprawia zapisany wpis
  * (`openJournalEdit`) — wtedy na formularzu edycji, a w stopce jest też „Usuń”.
  */
+/** Błąd zapisu zdjęcia (pamięć przeglądarki pełna) — ten sam komunikat we wszystkich trzech miejscach arkusza (§5.4). */
+function photoSaveFailed() {
+  toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki. Usuń stare zdjęcia albo zrób kopię zapasową i spróbuj ponownie." });
+}
+
 export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string) => void }) {
   // Fokus po otwarciu idzie na tytuł, nie na pole tekstu: na telefonie pole od razu wywołałoby klawiaturę.
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -327,7 +332,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
       setCaptioning(null);
       setCaptionDraft("");
     } catch {
-      toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki. Usuń stare zdjęcia albo zrób kopię zapasową i spróbuj ponownie." });
+      photoSaveFailed();
     } finally {
       setProcessing((n) => n - 1);
     }
@@ -357,7 +362,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
       if (now.includes(ref)) patch({ images: now.map((r) => (r === ref ? next : r)) });
       haptic("success");
     } catch {
-      toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki. Usuń stare zdjęcia albo zrób kopię zapasową i spróbuj ponownie." });
+      photoSaveFailed();
     } finally {
       setProcessing((n) => n - 1);
     }
@@ -386,7 +391,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
         }
       }
     } catch {
-      toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki. Usuń stare zdjęcia albo zrób kopię zapasową i spróbuj ponownie." });
+      photoSaveFailed();
     }
     if (skipped > 0) toast.error("Nie udało się zmniejszyć zdjęcia do 2 MB");
   }
