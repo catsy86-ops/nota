@@ -66,14 +66,13 @@ export function toTimeInputValue(timestamp: number): string {
 
 /**
  * Krótki podpis terminu: „dziś, 19:10”, „jutro, 08:00”, dalej „3 paź, 19:10”.
- * `allDay`: sama data bez godziny („dziś”, „jutro”, „3 paź”) — termin i tak stoi na 9:00.
+ * Godzina zawsze — także przy „Cały dzień” (stoi na 9:00), żeby data i czas były widoczne wszędzie.
  */
-export function formatReminderShort(timestamp: number, now: Date = new Date(), allDay = false): string {
+export function formatReminderShort(timestamp: number, now: Date = new Date()): string {
   const d = new Date(timestamp);
-  const time = allDay ? "" : format(d, "HH:mm");
-  const withTime = (day: string) => (allDay ? day : `${day}, ${time}`);
-  if (isSameDay(d, now)) return withTime("dziś");
-  if (isSameDay(d, addDays(now, 1))) return withTime("jutro");
-  if (isSameDay(d, addDays(now, -1))) return withTime("wczoraj");
-  return allDay ? format(d, "d MMM", { locale: pl }) : format(d, "d MMM, HH:mm", { locale: pl });
+  const time = format(d, "HH:mm");
+  if (isSameDay(d, now)) return `dziś, ${time}`;
+  if (isSameDay(d, addDays(now, 1))) return `jutro, ${time}`;
+  if (isSameDay(d, addDays(now, -1))) return `wczoraj, ${time}`;
+  return format(d, "d MMM, HH:mm", { locale: pl });
 }

@@ -99,11 +99,11 @@ describe("formatReminderShort — cały dzień", () => {
   const now = new Date(2026, 9, 19, 12, 0);
   const at = (d: number, h = 9) => new Date(2026, 9, d, h, 0).getTime();
 
-  it("bez godziny: dziś, jutro, wczoraj i data dalej", () => {
-    expect(formatReminderShort(at(19), now, true)).toBe("dziś");
-    expect(formatReminderShort(at(20), now, true)).toBe("jutro");
-    expect(formatReminderShort(at(18), now, true)).toBe("wczoraj");
-    expect(formatReminderShort(at(25), now, true)).toBe("25 paź");
+  it("cały dzień: godzina 9:00 zawsze widoczna, także dziś, jutro i wczoraj", () => {
+    expect(formatReminderShort(at(19), now)).toBe("dziś, 09:00");
+    expect(formatReminderShort(at(20), now)).toBe("jutro, 09:00");
+    expect(formatReminderShort(at(18), now)).toBe("wczoraj, 09:00");
+    expect(formatReminderShort(at(25), now)).toBe("25 paź, 09:00");
   });
 
   it("bez flagi zostaje dotychczasowy format z godziną", () => {

@@ -213,7 +213,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
  * (edycja godziny z karty bez menu); bez tego zwykły `div` jak dotąd.
  */
 export const ReminderBadge = forwardRef<HTMLElement, ReminderBadgeProps & HTMLAttributes<HTMLElement>>(function ReminderBadge(
-  { reminder, reminderRepeat, reminderAllDay, interactive = false, onClick, ...rest },
+  { reminder, reminderRepeat, interactive = false, onClick, ...rest },
   ref,
 ) {
   // Klik w odznakę na kaflu nie może otwierać notatki w edytorze (przycisk żyje w kaflu, który ma własny klik).
@@ -229,7 +229,7 @@ export const ReminderBadge = forwardRef<HTMLElement, ReminderBadgeProps & HTMLAt
     <>
       <Bell className="w-2.5 h-2.5" />
       {passed && <span className="sr-only">Zaległe: </span>}
-      {formatReminderShort(reminder, new Date(), reminderAllDay === true)}
+      {formatReminderShort(reminder)}
       {reminderRepeat && reminderRepeat !== "none" && <Repeat className="w-2.5 h-2.5" />}
     </>
   );
