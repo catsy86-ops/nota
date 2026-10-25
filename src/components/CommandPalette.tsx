@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { Inbox, Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
@@ -17,6 +18,10 @@ import { useVault } from "@/hooks/usePrivateNotes";
 import { privateNotes } from "@/lib/privateNotes";
 import { lockEverywhere } from "@/lib/vaultAutoLock";
 import { vaultUi } from "@/lib/vaultUi";
+import { useSiteDirectory, useStudy } from "@/lib/study/store";
+import { siteCardUrl } from "@/lib/study/siteLink";
+import { JOURNAL_REPORT_PARAM, reportParam } from "@/lib/study/reportLink";
+import { entrySiteId, foldName } from "@/lib/study/siteKey";
 
 const NOTE_LIMIT = 30;
 
@@ -92,6 +97,17 @@ export function CommandPalette({
   // Nagłówki i bloki pasujące do tekstu (bez operatorów): skok prosto do sekcji.
   const sections = useMemo(() => sectionHits(publicNotes, search, { folders }), [publicNotes, search, folders]);
   const vault = useVault();
+  const navigate = useNavigate();
+  // Praca w palecie (2.5): budowy i wpisy pasujące do tekstu, plus „Nowy wpis” i „Raport dnia”.
+  const studyState = useStudy();
+  const siteDir = useSiteDirectory();
+  const studyHits = useMemo(() => {
+    const q = foldName(search);
+    if (!q) return { sites: [], entries: [] };
+    const sites = siteDir.filter((x) => x.archived === undefined && foldName(x.name).includes(q)).slice(0, 6);
+    const entries = [...studyState.journal].reverse().filter((e) => foldName(`${e.text} ${e.site}`).includes(q)).slice(0, 6);
+    return { sites, entries };
+  }, [search, siteDir, studyState.journal]);
   const shifts = useShifts();
   const shiftHits = useMemo(() => {
     const types = new Map(shifts.types.map((x) => [x.id, x]));
@@ -169,6 +185,43 @@ export function CommandPalette({
             <CommandSeparator />
           </>
         )}
+        {(studyHits.sites.length > 0 || studyHits.entries.length > 0) && (
+          <>
+            {studyHits.sites.length > 0 && (
+              <CommandGroup heading="Budowy">
+                {studyHits.sites.map((x) => (
+                  <CommandItem key={`site-${x.id}`} value={`budowa ${x.name}`} onSelect={() => run(() => navigate(siteCardUrl(x.id)))}>
+                    <HardHat className="w-4 h-4 mr-2 text-muted-foreground" />
+                    <span className="truncate">Karta budowy: {x.name}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+            {studyHits.entries.length > 0 && (
+              <CommandGroup heading="Wpisy w Pracy">
+                {studyHits.entries.map((e) => {
+                  const id = entrySiteId(e);
+                  return (
+                    <CommandItem key={`entry-${e.id}`} value={`wpis ${e.text} ${e.site}`} onSelect={() => run(() => navigate(id ? siteCardUrl(id) : "/praca"))}>
+                      <HardHat className="w-4 h-4 mr-2 text-muted-foreground" />
+                      <span className="truncate">{e.text.slice(0, 60) || "bez opisu"}</span>
+                      {e.site && <span className="ml-auto text-xs text-muted-foreground">{e.site}</span>}
+                    </CommandItem>
+                  );
+                })}
+              </CommandGroup>
+            )}
+            <CommandSeparator />
+          </>
+        )}
+        <CommandGroup heading="Praca">
+          <CommandItem value="praca nowy wpis" onSelect={() => run(() => navigate("/praca?wpis=1"))}>
+            <Plus className="w-4 h-4 mr-2 text-muted-foreground" /> Nowy wpis w Pracy
+          </CommandItem>
+          <CommandItem value="praca raport dnia" onSelect={() => run(() => navigate(`/praca?${JOURNAL_REPORT_PARAM}=${reportParam({ range: "day", allSites: false })}`))}>
+            <HardHat className="w-4 h-4 mr-2 text-muted-foreground" /> Raport dnia
+          </CommandItem>
+        </CommandGroup>
         <CommandGroup heading="Akcje">
           <CommandItem onSelect={() => run(onNewNote)}>
             <Plus className="w-4 h-4 mr-2" /> Nowa notatka <span className="ml-auto text-xs text-muted-foreground">{modShortcut("N")}</span>
