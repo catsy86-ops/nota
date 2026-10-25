@@ -125,7 +125,7 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 
 ### Dostępność
 
-- **Test axe** (`e2e/a11y.spec.ts`): pięć widoków (Notatki, Przypomnienia, Kalendarz, Grafik, Nauka) w WCAG 2.2 AA, jasny i ciemny motyw, 390 i 1440 px — 20 skanów. Lista wyjątków `KNOWN` może tylko maleć; każdy wpis ma uzasadnienie. Jedyny wyjątek: `target-size` pasków opanowania Nauki na telefonie (równoważne kontrolki na tablicy).
+- **Test axe** (`e2e/a11y.spec.ts`): pięć widoków (Notatki, Przypomnienia, Kalendarz, Grafik, Nauka) w WCAG 2.2 AA, jasny i ciemny motyw oraz każdy z 6 stylów (Plan…Hydraulika, od 2026-10-25 na wszystkich pięciu widokach), 390 i 1440 px. Lista wyjątków `KNOWN` może tylko maleć; każdy wpis ma uzasadnienie. Jedyny wpis: `kalendarz/1440/hydraulika` — `color-contrast` na znaczniku „dziś” (`.today-breath`), do korekty tokenów (plan UI/UX, 1.5/1.7). Komentarz przy `KNOWN` wspomina też pasek opanowania Nauki na telefonie (`target-size`), który skan i tak nie widzi, bo dział startuje ze zwiniętym nagłówkiem.
 - **Grupy „jedna z kilku”** (`ToggleGroup`, Radix, `type="single"`): Tab wchodzi do grupy na wybraną pozycję, strzałki przenoszą fokus (w kółko), Spacja/Enter wybiera, kliknięcie wybranej nie odznacza. Czytnik słyszy „grupa opcji, zaznaczony”. Pędzle Grafiku, galerie stylów i krojów oraz paski filtrów mają własną obsługę klawiatury.
 - **Kontrast krawędzi.** `--input` daje ≥3:1 na białej karcie, `muted`, `secondary` i jasnych notatkach.
 - **Dźwięk i ruch.** Ograniczony ruch zeruje animacje; wibracje działają mimo to.
@@ -176,6 +176,60 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 - `c630cb4`, `30427f2` (2026-10-18) — ruch; `84490c6` — mikrointerakcje; `2cafa53` (2026-10-19) — podpowiedź „+”; `9b7f7b2` (2026-10-19) — promienie `rounded-card`.
 - Plan wizualny (2026-10-18): fazy A–E, C, D, E4 i tabliczka — w historii commitów; kilka z nich nie ma osobnego hasha w dokumencie.
 - Pasek boczny (aktywny wiersz): w historii commitów.
+
+## Wspólne — bezpieczniki wyglądu (Faza 0 planu UI/UX, 2026-10-25)
+
+Plan: `docs/plan-ui-ux-qol-2026-10-25.md`. Faza 0 nie zmienia wyglądu — zbiera narzędzia, które mają wyłapać rozjechanie w Fazie 1.
+
+### Co robi
+
+- **Zrzuty referencyjne wyglądu.** Pięć widoków (Notatki, Przypomnienia, Kalendarz, Grafik, Praca) × siedem stylów (Zeszyt…Hydraulika) × komputer 1440 px i telefon 390 px = 70 zrzutów. Użytkownik nie widzi ich bezpośrednio; służą do wykrywania zmian pikseli.
+- **Audyt axe we wszystkich stylach.** Każdy styl na każdym z pięciu widoków (wcześniej tylko trzy widoki).
+- **Strażnik tokenów.** Test zlicza surowe klasy `rounded-md/lg/xl/3xl`, `shadow-md/lg/2xl` i `z-N` w `src/**/*.tsx`. Nie pozwala, żeby ich przybywało.
+- **Sonda INP i CLS (tylko dev).** W konsoli przeglądarki wypisuje `[perf] INP …` przy każdej nowej najdłuższej interakcji i `[perf] CLS …` przy zmianie sumy przesunięć.
+
+### Gdzie jest
+
+- `e2e/visual.spec.ts` — zrzuty; zrzuty bazowe w `e2e/visual.spec.ts-snapshots/` (11 MB, nazwy z końcówką `-win32`).
+- `playwright.visual.config.ts` — osobna konfiguracja: tylko `@visual`, projekt `chromium`. Skrypt `npm run test:visual` (`package.json`).
+- `playwright.config.ts` — `grepInvert: /@visual/`, więc zwykłe `test:e2e` zrzutów nie uruchamia.
+- `e2e/a11y.spec.ts` — `SKIN_VIEWS = VIEWS`; `KNOWN` ma jeden wpis `kalendarz/1440/hydraulika`.
+- `src/test/designTokens.test.ts` — strażnik; progi w `LIMITS`.
+- `src/lib/perfProbe.ts` — `createPerfTally()` (czysta logika), `installPerfProbe()` (obserwatory). Ładowany w `src/main.tsx` przez `import.meta.env.DEV`.
+- `src/components/DailyQuote.tsx` — atrybut `data-visual-mask` (cytat dnia zmienia się codziennie).
+
+### Jak działa i dlaczego
+
+- **Zegar zamrożony** (`page.clock.setFixedTime`) na 14.10.2026 12:00 — dzień roboczy przed 17:00, więc nie pojawia się dymek „Raport … gotowy” (zob. [`docs/GOTCHAS.md`](docs/GOTCHAS.md), punkt o `DailyReportNudge`).
+- **Ruch wyłączony** dwukrotnie: `kaczy.motion.v1 = "reduced"` i `emulateMedia({ reducedMotion })`, plus `animations: "disabled"` w `toHaveScreenshot`.
+- **Maski:** `[data-visual-mask]` oraz wszystkie `canvas`. Płótno Matrixa (deszcz znaków) animuje się mimo ograniczonego ruchu, więc bez maski zrzut był niestabilny.
+- **Odstęp 800 ms** po `fonts.ready`. Krój stylu dociągany jest przy pierwszym malowaniu, a animacja wejścia jeszcze trwa; bez tego zrzut łapał dwie nakładające się klatki (Praca, Miedź).
+- **Próg `maxDiffPixelRatio: 0.01`.** Różnice antyaliasingu między przebiegami były poniżej tego progu po ustabilizowaniu powyższego.
+- **Progi strażnika** to stan z dnia wprowadzenia (404 / 24 / 46). Plan zakładał próg „po Fazie 1”, ale wtedy test byłby czerwony przez całą Fazę 1; zamiast tego każdy codemod obniża próg w `LIMITS`.
+- **Sonda** liczy INP jako najdłuższą interakcję sesji (nie percentyl), do porównań przed/po wystarczy. CLS pomija przesunięcia z `hadRecentInput`.
+
+### Ograniczenia i pułapki
+
+- **Zrzuty są zależne od systemu.** Bazowe są `-win32`. Na innym OS trzeba je wygenerować od nowa (`npm run test:visual -- --update-snapshots`).
+- **Zrzuty trzeba odnawiać po każdej zmianie maski lub odstępu.** Stare bazowe porównują się z nowym zachowaniem i padają.
+- **Zrzuty nie widzą animacji** (są wyłączone). Ruch sprawdzają osobne testy, np. `e2e/card-motion.spec.ts`; zrzut wyłapuje tylko różnice statyczne.
+- **Wyjątek axe `kalendarz/1440/hydraulika`** (kontrast znacznika „dziś”) zostaje do korekty tokenów. Nie zmieniono tu kolorów.
+- **Sonda nie działa w produkcji** i nie trafia do paczki. Pomiar na telefonie trzeba robić w buildzie dev albo ręcznie przez `PerformanceObserver`.
+- **Test strażnik nie łapie klas tworzonych dynamicznie** (np. `rounded-${x}`). Dziś ich nie ma.
+
+### Testy
+
+- `src/test/designTokens.test.ts` (3 testy, progi),
+- `src/lib/perfProbe.test.ts` (3 testy: INP, zerowe czasy, CLS),
+- `e2e/visual.spec.ts` (70 testów, `@visual`, `npm run test:visual`),
+- `e2e/a11y.spec.ts` (grupa „a11y styl”: 60 testów),
+- `e2e/bundle.spec.ts` — bez zmian progu, przechodzi po dodaniu sondy.
+
+Stan 2026-10-25: pełny Vitest 260 plików / 2143 testy zielone; `test:visual` 70/70 w dwóch kolejnych przebiegach po ustabilizowaniu.
+
+### Commity
+
+- `d1fdab3` (2026-10-25) — Faza 0: zrzuty, axe na wszystkich stylach, strażnik tokenów, sonda INP/CLS.
 
 ## Wspólne — flagi funkcji i RPC dla Workerów (Faza 0 planu rozbudowy, 2026-10-23)
 

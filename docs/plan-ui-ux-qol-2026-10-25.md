@@ -36,10 +36,10 @@ Faza 1 zmienia setki klas. Bez zrzutów referencyjnych nie da się sprawdzić, �
 
 | # | Co | Gdzie | N |
 |---|----|-------|---|
-| 0.1 | Zrzuty referencyjne Playwright (`toHaveScreenshot`): 5 głównych widoków × 7 motywów × (komputer, telefon). Animacje wyłączone, stała data (`page.clock`), maska na zmienne treści (cytat dnia, zegar). Tag `@visual`, poza codziennym `test:e2e`. | nowy `e2e/visual.spec.ts` | M |
-| 0.2 | axe we wszystkich motywach, nie tylko w domyślnym. Dziś znany wyjątek: „kalendarz — hydraulika”. | `e2e/a11y*.spec.ts` | S |
-| 0.3 | Test strażnik w Vitest: liczy surowe `rounded-(lg\|xl\|md\|sm\|3xl)`, `z-[0-9]` i `shadow-(md\|lg\|2xl)` w `src/**/*.tsx`. Próg = stan po Fazie 1, test pada, gdy liczba rośnie. Tani zamiennik reguły ESLint (wtyczki Tailwind słabo wspierają v4). | nowy `src/test/designTokens.test.ts` | S |
-| 0.4 | Pomiar INP i CLS w trybie dev: `PerformanceObserver` (`event`, `layout-shift`) wypisuje w konsoli najgorsze interakcje. Bez nowej zależności, poza paczką produkcyjną. | `src/lib/perfProbe.ts`, `main.tsx` za `import.meta.env.DEV` | S |
+| 0.1 | Zrzuty referencyjne Playwright (`toHaveScreenshot`): 5 głównych widoków × 7 motywów × (komputer, telefon). Animacje wyłączone, stała data (`page.clock`), maska na zmienne treści (cytat dnia, zegar). Tag `@visual`, poza codziennym `test:e2e`. **Zrobione (`d1fdab3`):** 70 zrzutów, `npm run test:visual`; progi różnic 1%. | nowy `e2e/visual.spec.ts` | M |
+| 0.2 | axe we wszystkich motywach, nie tylko w domyślnym. Dziś znany wyjątek: „kalendarz — hydraulika”. **Zrobione (`d1fdab3`):** style na wszystkich widokach; wyjątek w `KNOWN` (kontrast „dziś”, do korekty w Fazie 1). | `e2e/a11y*.spec.ts` | S |
+| 0.3 | Test strażnik w Vitest: liczy surowe `rounded-(lg\|xl\|md\|sm\|3xl)`, `z-[0-9]` i `shadow-(md\|lg\|2xl)` w `src/**/*.tsx`. Próg = stan po Fazie 1, test pada, gdy liczba rośnie. **Zrobione (`d1fdab3`):** próg ustawiony na stan dzisiejszy (404 / 24 / 46), a nie „po Fazie 1”, bo inaczej test byłby czerwony przez całą Fazę 1; każdy codemod obniża próg. Tani zamiennik reguły ESLint (wtyczki Tailwind słabo wspierają v4). | nowy `src/test/designTokens.test.ts` | S |
+| 0.4 | Pomiar INP i CLS w trybie dev: `PerformanceObserver` (`event`, `layout-shift`) wypisuje w konsoli najgorsze interakcje. Bez nowej zależności, poza paczką produkcyjną. **Zrobione (`d1fdab3`).** | `src/lib/perfProbe.ts`, `main.tsx` za `import.meta.env.DEV` | S |
 
 ## Faza 1: system projektowy (fundament „ładnego” wyglądu)
 
