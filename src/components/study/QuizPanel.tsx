@@ -227,6 +227,12 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
           {scope.kind === "missed" ? "Powtórka błędów · " : scope.kind === "due" ? "Na dziś · " : ""}{topicName(current.topic)}
         </span>
       </div>
+      {/* Przerwanie rundy w połowie (§8 P3): wraca do startu; odpowiedzi już zapisane w powtórkach zostają. */}
+      <div className="flex justify-end">
+        <Button variant="ghost" size="sm" onClick={() => { setRound(null); setResult(null); }} aria-label="Przerwij rundę" className="coarse:h-11">
+          Przerwij rundę
+        </Button>
+      </div>
       {/* Postęp kratkami, jedna na pytanie w rundzie (§8 W2): wypełnione — odpowiedziane, jaśniejsza — bieżące. */}
       <div className="flex gap-1" aria-hidden data-testid="quiz-progress">
         {round.map((_, i) => (
