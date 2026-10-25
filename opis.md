@@ -342,6 +342,9 @@ Dział opisany w jednym miejscu. Refaktor `Index.tsx` i `NoteCard.tsx` (etapy 4 
 - **Dziennik budowy, pusty wpis:** komunikat przy polu (`role=alert`, `aria-invalid`, `aria-describedby`), znika przy pisaniu; blokada podwójnego zapisu (`JournalEntrySheet.tsx`). Test: `e2e/journal-empty-entry.spec.ts`.
 - **Kompozytor, podwójny zapis:** `commit` w `AddNoteBar.tsx` ma blokadę `committingRef` zwalnianą przez `setTimeout` (nie mikrozadanie). Test: `e2e/composer-double-save.spec.ts`. Uwaga: duplikat w teście był przejściowy (animacja kafla), trwałego dubla nie odtworzono.
 - **Nie zmienione (wymaga decyzji):** Esc w kompozytorze nadal chowa edytor i zostawia szkic, klik poza edytorem nadal zapisuje.
+- **Widżet jako osobny skrót PWA:** wpis „Na dziś” (`/widget`) na końcu listy skrótów w `public/manifest.webmanifest` (na końcu, bo Android pokazuje tylko kilka pierwszych). Test: `src/lib/manifest.test.ts`, `e2e/grid-reminder-key.spec.ts`.
+- **Klawisz R na kaflu** otwiera okno przypomnienia tego kafla: klika ten sam przycisk dzwonka (`NoteGrid.tsx`, `onOpenReminder`; `gridKeyboardNav.ts`). Test: `e2e/grid-reminder-key.spec.ts`.
+- **Akcent sezonów:** wiosna, lato i zima nie nadpisują już `--accent` (długopis w Zeszycie), tylko `--season-accent` i dekoracje (`src/index.css`). Regresja: `src/lib/skinContrast.test.ts`.
 - **Widżet „Na dziś” (widok `widget`, adres `/widget`).** `src/components/WidgetPanel.tsx`: terminy na dziś (`TodayDueList`), „Nowa notatka”, „Cały dzień”. Widok nie pokazuje siatki (`useFilteredNotes.ts`, `Index.tsx`). Test: `e2e/widget-panel.spec.ts`.
 - **Cofnij (Ctrl+Z) dla zbiorczych zmian.** `useBulkNoteOps.ts`: każdy toast „Cofnij” idzie przez `undoToast`, który dodatkowo zapisuje wpis `kind: "bulk"` w `actionHistory.ts` (tylko w sesji). Ctrl+Z cofa też przypięcie, etykiety, folder, scalanie i priorytet.
 - **Zbiorcze ulubione i priorytet** w pasku zaznaczenia (`BulkActionBar.tsx`): `favoriteSelected`, `prioritySelected` z „Cofnij”.

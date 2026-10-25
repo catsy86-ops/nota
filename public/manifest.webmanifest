@@ -6,29 +6,67 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "launch_handler": { "client_mode": ["navigate-existing", "auto"] },
-  "display_override": ["standalone", "minimal-ui"],
+  "launch_handler": {
+    "client_mode": [
+      "navigate-existing",
+      "auto"
+    ]
+  },
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "handle_links": "preferred",
   "prefer_related_applications": false,
   "file_handlers": [
     {
       "action": "/",
       "accept": {
-        "text/markdown": [".md", ".markdown"],
-        "application/json": [".json"],
-        "application/zip": [".zip"]
+        "text/markdown": [
+          ".md",
+          ".markdown"
+        ],
+        "application/json": [
+          ".json"
+        ],
+        "application/zip": [
+          ".zip"
+        ]
       }
     }
   ],
   "background_color": "#15110e",
   "theme_color": "#f0b429",
   "lang": "pl",
-  "categories": ["productivity", "utilities"],
+  "categories": [
+    "productivity",
+    "utilities"
+  ],
   "icons": [
-    { "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/pwa-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
-    { "src": "/pwa-monochrome-512.png", "sizes": "512x512", "type": "image/png", "purpose": "monochrome" }
+    {
+      "src": "/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/pwa-monochrome-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "monochrome"
+    }
   ],
   "shortcuts": [
     {
@@ -36,56 +74,117 @@
       "short_name": "Nowa notatka",
       "description": "Od razu otwórz pole nowej notatki",
       "url": "/?new=1",
-      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "/pwa-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Wpis z budowy",
       "short_name": "Wpis z budowy",
       "description": "Od razu otwórz nowy wpis w dzienniku z budowy",
       "url": "/praca?wpis=1",
-      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "/pwa-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Wpis głosowy",
       "short_name": "Wpis głosowy",
       "description": "Otwórz wpis z budowy i od razu zacznij dyktować",
       "url": "/praca?wpis=1&glos=1",
-      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "/pwa-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Grafik",
       "short_name": "Grafik",
       "description": "Grafik zmian",
       "url": "/grafik",
-      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "/pwa-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Szukaj",
       "short_name": "Szukaj",
       "description": "Szukaj w notatkach",
       "url": "/?szukaj=1",
-      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "/pwa-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Nowa lista",
       "short_name": "Nowa lista",
       "description": "Od razu otwórz nową listę do odhaczania",
       "url": "/?new=list",
-      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "/pwa-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Dziś",
       "short_name": "Dziś",
       "description": "Notatki z dzisiejszego dnia",
       "url": "/dzis",
-      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "/pwa-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Przypomnienia",
       "short_name": "Przypomnienia",
       "description": "Terminy i zaległe przypomnienia",
       "url": "/przypomnienia",
-      "icons": [{ "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "/pwa-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Na dziś",
+      "short_name": "Na dziś",
+      "description": "Terminy na dziś i szybka notatka",
+      "url": "/widget",
+      "icons": [
+        {
+          "src": "/pwa-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ],
   "share_target": {
@@ -99,7 +198,10 @@
       "files": [
         {
           "name": "files",
-          "accept": ["image/*", "application/pdf"]
+          "accept": [
+            "image/*",
+            "application/pdf"
+          ]
         }
       ]
     }

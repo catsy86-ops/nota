@@ -12,7 +12,8 @@ describe("manifest.webmanifest", () => {
       (manifest.shortcuts as { name: string; url: string }[]).map((s) => [s.name, new URL(s.url, "https://x.test")]),
     );
     // Kolejność ma znaczenie: Android pokazuje tylko kilka pierwszych skrótów.
-    expect(Object.keys(byName)).toEqual(["Nowa notatka", "Wpis z budowy", "Wpis głosowy", "Grafik", "Szukaj", "Nowa lista", "Dziś", "Przypomnienia"]);
+    expect(Object.keys(byName)).toEqual(["Nowa notatka", "Wpis z budowy", "Wpis głosowy", "Grafik", "Szukaj", "Nowa lista", "Dziś", "Przypomnienia", "Na dziś"]);
+    expect(byName["Na dziś"].pathname).toBe("/widget");
     expect(byName["Nowa lista"].searchParams.get("new")).toBe("list");
     expect(byName["Szukaj"].searchParams.get("szukaj")).toBe("1");
     expect(parseViewRoute(byName["Wpis z budowy"].pathname, "").view).toBe("study");

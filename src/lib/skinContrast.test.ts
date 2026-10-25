@@ -84,3 +84,12 @@ describe("kontrast tokenów wszystkich stylów (WCAG AA)", () => {
     });
   }
 });
+
+// Sezony zmieniają `--season-accent` i dekoracje, nie `--accent` (długopis w Zeszycie): inaczej linki wypadają z kontrastu.
+describe("sezony nie nadpisują --accent (długopis w Zeszycie)", () => {
+  it("żaden blok html[data-season] nie definiuje --accent", () => {
+    const blocks = [...index.matchAll(/html\[data-season="[a-z]+"\]\s*\{([^}]*)\}/g)].map((m) => m[1]);
+    expect(blocks.length).toBeGreaterThan(0);
+    for (const body of blocks) expect(body).not.toMatch(/(^|[\s;{])--accent:/);
+  });
+});

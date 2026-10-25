@@ -162,6 +162,11 @@ export function NoteGrid({
       onArchive: isArchived ? undefined : onArchive,
       onTogglePin,
       onDuplicate,
+      onOpenReminder: (id) => {
+        // Ten sam przycisk dzwonka co na kaflu — okno przypomnienia otwiera się w tym samym miejscu.
+        const bell = gridRef.current?.querySelector(`[data-note-id-wrap="${id}"] [title="Przypomnienie"]`) as HTMLElement | null;
+        bell?.click();
+      },
       onToggleFavorite: (id) => {
         const note = notes.find((n) => n.id === id);
         if (note) onUpdate?.(id, { favorite: !note.favorite });
