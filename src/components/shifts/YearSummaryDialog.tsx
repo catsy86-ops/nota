@@ -65,8 +65,9 @@ function YearBody({ data, initialYear }: { data: ShiftData; initialYear: number 
 
       <LeaveMeter balance={balance} />
 
-      <div className="font-mono text-xs sm:text-[0.8125rem] tabular-nums">
-        <table className="w-full table-fixed border-collapse">
+      {/* Na telefonie tabela przewija się w poziomie zamiast ściskać kolumny (5.6). */}
+      <div className="font-mono text-xs sm:text-[0.8125rem] tabular-nums overflow-x-auto">
+        <table className="w-full min-w-[30rem] table-fixed border-collapse">
           <caption className="sr-only">Podsumowanie roku {year} według miesięcy</caption>
           <colgroup>
             <col className="w-[15%]" />

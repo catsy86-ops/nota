@@ -65,8 +65,8 @@ export function ScheduleSwitcher({ overlayId = null, onOverlayChange }: { overla
       )}
       {mode === "none" && (
         <>
-          <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={() => { setName(""); setMode("add"); }}>
-            <Plus className="h-4 w-4" aria-hidden /> Nowy grafik
+          <Button type="button" variant="ghost" size="sm" className="coarse:h-11" aria-label="Nowy grafik" onClick={() => { setName(""); setMode("add"); }}>
+            <Plus className="h-4 w-4" aria-hidden /> <span className="hidden min-[420px]:inline">Nowy grafik</span>
           </Button>
           <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={() => { setName(active.name); setMode("rename"); }} aria-label={`Zmień nazwę grafiku ${active.name}`}>
             <Pencil className="h-4 w-4" aria-hidden />
