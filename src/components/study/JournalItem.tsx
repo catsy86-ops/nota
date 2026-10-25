@@ -69,6 +69,10 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
           )}
           <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
             <span>{resolved ? "Problem rozwiązany" : KIND_LABEL[e.kind]}</span>
+            {/* Pieczątka na osi czasu: problem wciąż otwarty (3.5 § W3 planu Praca 2026-10-24). */}
+            {e.kind === "problem" && !resolved && (
+              <span className="stamp-tag text-warning-ink" data-testid="journal-open-stamp">OTWARTY</span>
+            )}
             {stage && (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-primary-ink" data-testid="journal-entry-stage">
                 <Flag className="h-3 w-3" aria-hidden />Etap: {stage}

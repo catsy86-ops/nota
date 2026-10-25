@@ -350,6 +350,7 @@ test("dziennik: wpis „za wczoraj”, poprawka w arkuszu bez ruszania szkicu, p
   await expect(entry).toContainText("16:30");
   await expect(page.getByRole("heading", { name: yesterday.label })).toBeVisible();
   await expect(page.getByRole("button", { name: "Otwarte (1)" })).toBeVisible();
+  await expect(entry.getByTestId("journal-open-stamp")).toHaveText("OTWARTY");
 
   // Niezapisany szkic nowego wpisu czeka, a edycja starego go nie dotyka.
   await openEntry(page);
@@ -372,6 +373,7 @@ test("dziennik: wpis „za wczoraj”, poprawka w arkuszu bez ruszania szkicu, p
   // Z listy: problem wraca do otwartych i znów da się go zamknąć; stan przeżywa odświeżenie.
   await entry.getByRole("button", { name: "Otwórz ponownie" }).click();
   await expect(page.getByRole("button", { name: "Otwarte (1)" })).toBeVisible();
+  await expect(entry.getByTestId("journal-open-stamp")).toHaveText("OTWARTY");
   await entry.getByRole("button", { name: "Oznacz jako rozwiązany" }).click();
   await expect(page.getByRole("button", { name: "Otwarte", exact: true })).toBeVisible();
   await reloadWhenSaved(page);
