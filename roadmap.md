@@ -1105,3 +1105,7 @@ Pełny plan: `docs/plan-ui-ux-qol-2026-10-25.md` (Fazy 0–6: bezpieczniki zrzut
 ## Plan działu Notatki — 2026-10-25
 
 Pełny plan: `docs/plan-notatki-2026-10-25.md` (Etapy 1–8: zaległe drobiazgi, codzienna praca, wyszukiwanie, wygląd i ruch, bogate treści, bazy, porządki, QA). Pierwszy z serii „dział po dziale”. Decyzje N-2…N-4 otwarte.
+
+## Plan działu Skrzynka — 2026-10-25
+
+Pełny plan: `docs/plan-skrzynka-2026-10-25.md` (Etapy 1–6: zaległe drobiazgi, szybsze przechwytywanie z frazami i `Alt+K`, lepsze porządkowanie, wygląd, Skrzynka w Dziś i przeglądzie tygodnia, QA). Drugi z serii „dział po dziale”. Decyzje S-1…S-3 otwarte.
