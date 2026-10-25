@@ -90,7 +90,7 @@ export function AppHeader({
               animate={{ opacity: 1, scale: 1 }}
               className={view === "notes" ? undefined : "flex sm:block max-[359px]:hidden"}
             >
-              <span className="flex items-center gap-1">
+              <span className="logo-intro flex items-center gap-1">
                 <NMonogramLogo className="w-6 h-6" />
                 {view === "notes" ? <NotkiLogo size="sm" /> : <span className="max-sm:hidden"><NotkiLogo size="sm" /></span>}
               </span>
