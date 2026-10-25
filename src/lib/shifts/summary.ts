@@ -45,6 +45,8 @@ export interface MonthSummary {
   byType: ShiftTypeTotal[];
   /** Zmiany tego miesiąca zaczynające się po odpoczynku krótszym niż 11 h. */
   shortRests: ShortRest[];
+  /** Tygodnie tego miesiąca bez 35 h ciągłego odpoczynku (art. 133 KP). */
+  weeklyRestShort: ShortWeekRest[];
   /** Okres rozliczeniowy dłuższy niż miesiąc; `null` przy miesięcznym. */
   period: PeriodSummary | null;
 }
@@ -216,7 +218,8 @@ export function premium100Minutes({ from, to }: Pick<OvertimeSpan, "from" | "to"
  * niż 11 h. Uproszczenie: art. 132 KP liczy odpoczynek w dobie pracowniczej,
  * ale przy jednej zmianie na dzień to ta sama przerwa między zmianami.
  */
-export function shortRests(data: ShiftData): ShortRest[] {
+/** Przedziały czasu pracy (ms, czas lokalny), posortowane wg początku; bez nieobecności. */
+export function shiftSpansMs(data: ShiftData): { key: string; start: number; end: number }[] {
   const typesById = new Map(data.types.map((t) => [t.id, t]));
   const spans: { key: string; start: number; end: number }[] = [];
   for (const [key, entry] of Object.entries(data.days)) {
@@ -228,7 +231,11 @@ export function shortRests(data: ShiftData): ShortRest[] {
     const [y, m, d] = key.split("-").map(Number);
     spans.push({ key, start: new Date(y, m - 1, d, 0, span.from).getTime(), end: new Date(y, m - 1, d, 0, span.to + (entry.extraMin ?? 0)).getTime() });
   }
-  spans.sort((a, b) => a.start - b.start);
+  return spans.sort((a, b) => a.start - b.start);
+}
+
+export function shortRests(data: ShiftData): ShortRest[] {
+  const spans = shiftSpansMs(data);
   const out: ShortRest[] = [];
   for (let i = 1; i < spans.length; i++) {
     const rest = Math.round((spans[i].start - spans[i - 1].end) / 60_000);
@@ -385,6 +392,7 @@ export function monthSummary(data: ShiftData, year: number, month: number): Mont
     bonusTotal,
     byType,
     shortRests: shortRests(data).filter((r) => r.dayKey.startsWith(prefix)),
+    weeklyRestShort: weeklyRestShort(data, prefix),
     period: p.months === 1 ? null : {
       ...p,
       normMinutes: periodNorm,
@@ -463,4 +471,50 @@ export function recentlyEndedShift(data: ShiftData, now: Date, graceMs = FINISH_
 export function monthSummaryToDate(data: ShiftData, year: number, month: number, todayKey: string): MonthSummary {
   const days = Object.fromEntries(Object.entries(data.days).filter(([k]) => k <= todayKey));
   return monthSummary({ ...data, days, bonuses: [] }, year, month);
+}
+
+/** Tygodniowy odpoczynek ciągły — art. 133 § 1 KP (35 h w każdym 7-dniowym okresie). */
+const WEEK_REST_MINUTES = 35 * 60;
+
+export interface ShortWeekRest {
+  /** Poniedziałek tygodnia, `RRRR-MM-DD`. */
+  weekStart: string;
+  /** Najdłuższy ciągły odpoczynek w tym tygodniu (minuty). */
+  restMinutes: number;
+}
+
+/**
+ * Tygodnie z co najmniej jedną zmianą w miesiącu `prefix` (`RRRR-MM-`), w których najdłuższy
+ * ciągły odpoczynek jest krótszy niż 35 h. Tydzień liczy się od poniedziałku do niedzieli;
+ * przerwa może zaczynać się w poprzednim tygodniu.
+ */
+export function weeklyRestShort(data: ShiftData, prefix: string): ShortWeekRest[] {
+  const spans = shiftSpansMs(data);
+  const mondayOf = (ms: number) => {
+    const d = new Date(ms);
+    const dow = (d.getDay() + 6) % 7;
+    return new Date(d.getFullYear(), d.getMonth(), d.getDate() - dow).getTime();
+  };
+  const keyOf = (ms: number) => { const d = new Date(ms); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+  const weeks = new Map<number, string>();
+  for (const s of spans) if (s.key.startsWith(prefix)) weeks.set(mondayOf(s.start), s.key);
+  const out: ShortWeekRest[] = [];
+  for (const ws of [...weeks.keys()].sort((a, b) => a - b)) {
+    const w = new Date(ws);
+    const we = new Date(w.getFullYear(), w.getMonth(), w.getDate() + 7).getTime();
+    // Przerwa zaczyna się od końca ostatniej zmiany przed tygodniem albo od jego początku.
+    let prevEnd = ws;
+    for (const s of spans) if (s.end <= ws) prevEnd = Math.max(prevEnd, s.end);
+    let cursor = prevEnd;
+    let longest = 0;
+    for (const s of spans) {
+      if (s.start >= we || s.end <= ws) continue;
+      longest = Math.max(longest, s.start - cursor);
+      cursor = Math.max(cursor, s.end);
+    }
+    longest = Math.max(longest, we - cursor);
+    const restMinutes = Math.round(longest / 60_000);
+    if (restMinutes < WEEK_REST_MINUTES) out.push({ weekStart: keyOf(ws), restMinutes });
+  }
+  return out;
 }

@@ -137,6 +137,20 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
         </div>
       )}
 
+      {summary.weeklyRestShort.length > 0 && (
+        <div role="note" className="flex gap-2.5 rounded-card bg-destructive/10 px-3 py-2.5 text-sm">
+          <TriangleAlert className="w-4 h-4 text-destructive-ink shrink-0 mt-0.5" aria-hidden />
+          <p>
+            <span className="font-semibold">Brak 35 h odpoczynku w tygodniu</span>{" "}
+            <span className="text-muted-foreground">(art. 133 KP): </span>
+            {summary.weeklyRestShort.map((w) => {
+              const [y, m, d] = w.weekStart.split("-").map(Number);
+              return `tydzień od ${format(new Date(y, m - 1, d), "d MMMM", { locale: pl })} — najdłuższa przerwa ${formatDuration(w.restMinutes)}`;
+            }).join("; ")}
+          </p>
+        </div>
+      )}
+
       {summary.byType.length > 0 && <Receipt summary={summary} hourlyRate={hourlyRate} monthLabel={monthLabel} />}
       <BonusPanel monthKey={monthKey} bonuses={summary.bonuses} />
 
