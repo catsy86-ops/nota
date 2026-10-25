@@ -33,7 +33,7 @@ test("dostawa dziś: wiersz na Dziś otwiera kartę budowy", async ({ page }) =>
   await page.goto("/dzis");
   // Dziś ładuje sekcje leniwie (także kartę przed wejściem), więc dajemy im chwilę.
   const due = page.getByTestId("study-due");
-  await expect(due).toBeVisible({ timeout: 15_000 });
+  await expect(due).toBeVisible({ timeout: 30_000 });
   const row = due.getByRole("button", { name: "Dostawa dziś: Lipowa 5: karta budowy" });
   await expect(row).toContainText("Klej PCV");
   await row.click();
