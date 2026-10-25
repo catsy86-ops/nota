@@ -33,6 +33,8 @@ interface ShiftSummaryProps {
   onOpenSettings: () => void;
   /** Otwiera okno dnia — z listy „Za krótki odpoczynek”. */
   onOpenDay?: (dayKey: string) => void;
+  /** Podsumowanie tylko do dziś — tylko dla bieżącego miesiąca. */
+  toDate?: MonthSummary | null;
 }
 
 /** Miejscownik („w marcu”) — date-fns go nie zna. */
@@ -45,7 +47,7 @@ const monthName = (year: number, month: number, pattern = "LLLL") => format(new 
  * Podsumowanie miesiąca. Sercem jest pasek normy: wypełnia się do wymiaru
  * czasu pracy, a nadwyżka (nadgodziny) dosuwa się za nim w kolorze akcentu.
  */
-export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settlementMonths, fte, monthLabel, monthKey, onOpenSettings, onOpenDay }: ShiftSummaryProps) {
+export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settlementMonths, fte, monthLabel, monthKey, onOpenSettings, onOpenDay, toDate }: ShiftSummaryProps) {
   const { minutes, normMinutes, overtimeMinutes, dailyOvertimeMinutes, overtime100Minutes } = summary;
   const scale = Math.max(normMinutes, minutes, 1);
   // Nadgodziny dobowe mogą być i poniżej normy miesiąca — pasek dzieli faktycznie przepracowane godziny.
@@ -99,6 +101,14 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
           <Stat label="Ponadwymiarowe" value={<CountUp value={extra} format={formatDuration} />} hint="ponad etat, bez dodatku" />
         )}
       </dl>
+
+      {toDate && (
+        <p className="text-sm text-muted-foreground" aria-label="Prognoza miesiąca">
+          Do dziś: <span className="font-semibold text-foreground tabular-nums">{formatDuration(toDate.minutes)}</span>
+          {toDate.overtimeMinutes > 0 && <> (nadgodziny {formatDuration(toDate.overtimeMinutes)})</>}
+          {" · "}na koniec miesiąca według grafiku: <span className="font-semibold text-foreground tabular-nums">{formatDuration(summary.minutes)}</span>
+        </p>
+      )}
 
       {summary.period && <PeriodProgress period={summary.period} />}
 

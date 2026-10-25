@@ -455,3 +455,12 @@ export function recentlyEndedShift(data: ShiftData, now: Date, graceMs = FINISH_
   }
   return found;
 }
+
+/**
+ * Podsumowanie miesiąca tylko za dni do `todayKey` włącznie — „przepracowane do dziś”.
+ * Premie pomijamy (są miesięczne i wchodzą do prognozy na koniec miesiąca).
+ */
+export function monthSummaryToDate(data: ShiftData, year: number, month: number, todayKey: string): MonthSummary {
+  const days = Object.fromEntries(Object.entries(data.days).filter(([k]) => k <= todayKey));
+  return monthSummary({ ...data, days, bonuses: [] }, year, month);
+}

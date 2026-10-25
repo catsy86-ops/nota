@@ -10,7 +10,7 @@ import type { Note } from "@/hooks/useNotes";
 import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
 import { buildSiteTimesheetCsv } from "@/lib/study/siteTimesheet";
 import { useStudy } from "@/lib/study/store";
-import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, defaultPatternStart, shortRests, swapDays, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, defaultPatternStart, monthSummaryToDate, shortRests, swapDays, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
@@ -150,6 +150,8 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   // W tygodniu podsumowanie dotyczy miesiąca, w którym tydzień leży głównie (czwartek).
   const shownMonth = useMemo(() => (isWeek ? startOfMonth(parseDayKey(addDaysToKey(weekStart, 3))) : month), [isWeek, weekStart, month]);
   const summary = useMemo(() => monthSummary(data, shownMonth.getFullYear(), shownMonth.getMonth()), [data, shownMonth]);
+  // „Do dziś” tylko w bieżącym miesiącu; w innych nie ma czego porównywać.
+  const toDate = useMemo(() => (isSameMonth(shownMonth, new Date()) ? monthSummaryToDate(data, shownMonth.getFullYear(), shownMonth.getMonth(), dayKey(new Date())) : null), [data, shownMonth]);
   // Jeden region „na żywo” (audyt UI, pkt 9): zmiana tygodnia lub miesiąca ogłasza się tym samym regionem co akcje,
   // niezależnie od tego, czy zmieniono ją przyciskiem, gestem czy skrótem.
   const periodLabel = isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl });
@@ -578,7 +580,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
 
         </div>
         <div className="order-10 @container short:col-span-full">
-          <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} nightRate={nightRateFor(shownMonth.getFullYear(), data.nightRate)} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(shownMonth, "LLLL yyyy", { locale: pl })} monthKey={format(shownMonth, "yyyy-MM")} onOpenSettings={() => setSettingsOpen(true)} onOpenDay={setOpenDay} />
+          <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} nightRate={nightRateFor(shownMonth.getFullYear(), data.nightRate)} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(shownMonth, "LLLL yyyy", { locale: pl })} monthKey={format(shownMonth, "yyyy-MM")} onOpenSettings={() => setSettingsOpen(true)} onOpenDay={setOpenDay} toDate={toDate} />
         </div>
       </aside>
 
