@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from "react";
+import { forwardRef, useId, useState, type HTMLAttributes, type MouseEvent, type ReactNode, type Ref } from "react";
 import { Bell, Repeat, X } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -22,6 +22,13 @@ interface ReminderPickerProps {
   onSet: (timestamp: number | null, repeat: ReminderRepeat, until?: number, allDay?: boolean) => void;
   /** Własny przycisk otwierający (np. w pasku nowej notatki); domyślnie ikona dzwonka z kafla. */
   trigger?: ReactNode;
+}
+
+interface ReminderBadgeProps {
+  reminder: number | null;
+  reminderRepeat?: ReminderRepeat;
+  reminderAllDay?: boolean;
+  interactive?: boolean;
 }
 
 /** Szybkie terminy: pierwszy przyszły z listy trafia do pól daty i godziny. */
@@ -201,18 +208,41 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
   );
 }
 
-export function ReminderBadge({ reminder, reminderRepeat, reminderAllDay }: { reminder: number | null; reminderRepeat?: ReminderRepeat; reminderAllDay?: boolean }) {
+/**
+ * Odznaka terminu na kaflu. `interactive`: to przycisk, który otwiera `ReminderPicker` przez `trigger`
+ * (edycja godziny z karty bez menu); bez tego zwykły `div` jak dotąd.
+ */
+export const ReminderBadge = forwardRef<HTMLElement, ReminderBadgeProps & HTMLAttributes<HTMLElement>>(function ReminderBadge(
+  { reminder, reminderRepeat, reminderAllDay, interactive = false, onClick, ...rest },
+  ref,
+) {
+  // Klik w odznakę na kaflu nie może otwierać notatki w edytorze (przycisk żyje w kaflu, który ma własny klik).
+  const handleClick = (e: MouseEvent<HTMLElement>) => { e.stopPropagation(); onClick?.(e); };
   const passed = useReminderPassed(reminder ?? 0);
   if (!reminder) return null;
-  return (
-    <div className={cn(
-      "stamp-tag text-xs mt-2 w-fit",
-      passed ? "text-destructive-ink" : "text-primary-ink"
-    )}>
+  const className = cn(
+    "stamp-tag text-xs mt-2 w-fit",
+    passed ? "text-destructive-ink" : "text-primary-ink",
+    interactive && "pressable coarse:min-h-11",
+  );
+  const content = (
+    <>
       <Bell className="w-2.5 h-2.5" />
       {passed && <span className="sr-only">Zaległe: </span>}
       {formatReminderShort(reminder, new Date(), reminderAllDay === true)}
       {reminderRepeat && reminderRepeat !== "none" && <Repeat className="w-2.5 h-2.5" />}
+    </>
+  );
+  if (interactive) {
+    return (
+      <button type="button" ref={ref as Ref<HTMLButtonElement>} className={className} title="Zmień przypomnienie" onClick={handleClick} {...rest}>
+        {content}
+      </button>
+    );
+  }
+  return (
+    <div ref={ref as Ref<HTMLDivElement>} className={className} {...rest}>
+      {content}
     </div>
   );
-}
+});

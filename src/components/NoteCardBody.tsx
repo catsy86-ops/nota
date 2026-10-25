@@ -15,7 +15,7 @@ import { MarkdownRenderer } from "./MarkdownRenderer";
 import { ReminderQuickActions } from "./ReminderQuickActions";
 import { ChecklistCount, ChecklistPreview } from "./ChecklistEditor";
 import { LabelBadges } from "./LabelPicker";
-import { ReminderBadge } from "./ReminderPicker";
+import { ReminderBadge, ReminderPicker } from "./ReminderPicker";
 import { useReminderPassed } from "@/hooks/useReminderPassed";
 import { PriorityBadge } from "./PriorityPicker";
 import { AttachmentsBadge } from "./AttachmentsList";
@@ -105,7 +105,18 @@ export function NoteCardBody({
               {/* Etykiety, przypomnienie i priorytet w jednym rzędzie — każde w osobnej linii robiło z kafla wieżę. */}
               <div className="flex items-center gap-1 flex-wrap mt-1.5 empty:hidden *:mt-0!">
                 <LabelBadges labels={note.labels} />
-                <ReminderBadge reminder={note.reminder} reminderRepeat={note.reminderRepeat} reminderAllDay={note.reminderAllDay} />
+                {onUpdate && !note.trashed && !isArchived && !note.locked ? (
+                  <ReminderPicker
+                    reminder={note.reminder}
+                    reminderRepeat={note.reminderRepeat}
+                    reminderRepeatUntil={note.reminderRepeatUntil}
+                    reminderAllDay={note.reminderAllDay}
+                    onSet={(r, repeat, until, allDay) => onUpdate(note.id, { reminder: r, reminderRepeat: repeat, reminderRepeatUntil: until, reminderAllDay: allDay })}
+                    trigger={<ReminderBadge interactive reminder={note.reminder} reminderRepeat={note.reminderRepeat} reminderAllDay={note.reminderAllDay} />}
+                  />
+                ) : (
+                  <ReminderBadge reminder={note.reminder} reminderRepeat={note.reminderRepeat} reminderAllDay={note.reminderAllDay} />
+                )}
                 <PriorityBadge priority={note.priority ?? "none"} />
                 <AttachmentsBadge attachments={note.attachments} />
               </div>

@@ -335,6 +335,7 @@ Dział opisany w jednym miejscu. Refaktor `Index.tsx` i `NoteCard.tsx` (etapy 4 
 **Kafel (`NoteCard` i hooki):**
 - `src/components/NoteCard.tsx` — otoczka kafla: przechył, `motion.div`, stany okien, `renderEditor(full)`, `useLatch` dla leniwego montowania.
 - `src/components/NoteCardBody.tsx` — tryb podglądu (`BACKLINKS_SHOWN`, `subpage`, `trashCountdown`, „Gotowe”/„Jutro”).
+- **Edycja terminu z odznaki na karcie.** Odznaka przypomnienia na kaflu (`ReminderBadge` w `ReminderPicker.tsx`, prop `interactive`) jest przyciskiem, który otwiera `ReminderPicker` przez `trigger` — z godziną i pozostałymi polami, bez menu. Klik nie otwiera notatki w edytorze (`stopPropagation`). Tylko przy edytowalnym kaflu (nie w koszu, archiwum, zaszyfrowanej); w innych miejscach zwykły `div`. Test: `e2e/card-reminder-edit.spec.ts`.
 - **Godzina w stopce kafla.** Stopka pokazuje datę ostatniej zmiany z godziną (`d MMM, HH:mm`, `updatedAt`). Przypomnienia już pokazują godzinę na odznace (`formatReminderShort`); okna dodawania mają pole „Godzina”. Testy: `src/lib/reminderTime.test.ts`, `e2e/card*.spec.ts`, `e2e/reminder*.spec.ts`, `e2e/composer*.spec.ts`.
 - `src/components/NoteCardActions.tsx` — `ActionBtn`, `PrimaryActions` (stopka i arkusz), `MoreActions` (rozwinięcie i arkusz), kopiuj Markdown.
 - `src/components/NoteCardDialogs.tsx` — `ActionSheet`, `ImagePreviewDialog`, `DeleteNoteDialog`.
