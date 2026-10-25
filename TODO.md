@@ -3,7 +3,7 @@
 Otwarte pytania i zadania odłożone na później. Źródło: plan Praca (`docs/plan-praca-2026-10-24.md`) i sesje z 2026-10-25.
 
 ## Do decyzji właściciela
-- **4.5 Wyszukiwanie bez polskich znaków.** Dziś tylko dziennik ma pole szukania (i już normalizuje znaki). Czy dodać wyszukiwarkę pytań i list kontrolnych w Nauce?
+- **4.5 Wyszukiwanie bez polskich znaków.** Zrobione w zakresie listy kontrolnej (`StudyChecklist.tsx`). Pytań quizu nie przeszukuje; to osobna decyzja, jeśli będzie potrzebna.
 - **Ziarno papieru w Zeszycie.** Kod ma martwą regułę `html:not([data-skin])` (usunięta). Czy ziarno ma wrócić i w którym stylu?
 - **Widżet `/widget`.** Działa jako osobny skrót PWA „Na dziś”. Czy zostaje w tej formie?
 - **Esc w kompozytorze.** Zapisuje i zamyka (wybrany wariant). Czy wrócić do wariantu „szkic zostaje”?
@@ -12,7 +12,7 @@ Otwarte pytania i zadania odłożone na później. Źródło: plan Praca (`docs/
 - **4.6 Więcej pytań wbudowanych.** Dziś ok. 29 pytań na 18 tematów. Potrzebne źródła (poradnik, listy kontrolne).
 
 ## Do zrobienia później
-- **4.3 Własne tematy.** Nieznany temat jest cicho odrzucany (`store.ts`). Potrzebna mapa tematów w `studyCustom` i decyzja o zakresie.
+- **4.3 Własne tematy.** Nieznany temat jest cicho odrzucany przy wczytaniu (`sanitizeStudy` w `src/lib/study/store.ts`). Obecny UI nie tworzy tematów, więc odrzucenie dotyczy tylko uszkodzonych danych. Pełne własne tematy to nowy model danych (tematy w `studyCustom`, UI tworzenia i kolumny), więc czeka na osobny projekt.
 - **Etap 6 (model danych w Yjs).** Odłożony decyzją z 24.10. Wymaga osobnego planu z migracją: zapis karty budowy, pola-tablice wpisu, `replaceAll`, `version: 1`.
 - **Import własnych materiałów do Nauki** (`roadmap.md`).
 

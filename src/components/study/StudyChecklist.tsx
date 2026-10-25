@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RotateCcw, TriangleAlert } from "lucide-react";
+import { RotateCcw, Search, TriangleAlert } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,7 @@ import { MODULES, TOPICS } from "@/lib/study/content";
 import { resetChecklist, restoreChecklist, toggleChecked, useStudy, useStudyLists } from "@/lib/study/store";
 import { CustomChecklistSection } from "./CustomChecklistForm";
 import { isCustomId } from "@/lib/study/custom";
+import { fold } from "@/lib/study/siteKey";
 import { toastWithUndo } from "@/lib/undoToast";
 
 /** Lista do nauki: punkty z materiałów pogrupowane w moduły i tematy. */
@@ -15,7 +16,15 @@ export function StudyChecklist() {
   const study = useStudy();
   const lists = useStudyLists();
   const [onlyCritical, setOnlyCritical] = useState(false);
-  const visible = lists.checklist.filter((c) => !onlyCritical || c.critical);
+  // Szukanie bez polskich znaków (4.5): „szczelnosc” znajduje „szczelność”. Szuka w punkcie, ryzyku i temacie.
+  const [query, setQuery] = useState("");
+  const needle = fold(query.trim()).replace(/\s+/g, " ");
+  const matches = (c: (typeof lists.checklist)[number]) => {
+    if (!needle) return true;
+    const topic = TOPICS.find((t) => t.id === c.topic)?.title ?? "";
+    return fold(`${c.text} ${c.risk ?? ""} ${topic}`).includes(needle);
+  };
+  const visible = lists.checklist.filter((c) => (!onlyCritical || c.critical) && matches(c));
   const done = lists.checklist.filter((c) => study.checked[c.id]).length;
 
   return (
@@ -50,6 +59,22 @@ export function StudyChecklist() {
           </Button>
         )}
       </div>
+
+      <label className="relative block max-w-md">
+        <span className="sr-only">Szukaj na liście kontrolnej</span>
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
+        <input
+          type="search"
+          value={query}
+          onChange={(ev) => setQuery(ev.target.value)}
+          placeholder="Szukaj: rura, szczelność, pompa…"
+          enterKeyHint="search"
+          className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-base focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 md:text-sm"
+        />
+      </label>
+      {needle && visible.length === 0 && (
+        <p className="text-sm text-muted-foreground" role="status">Nic nie pasuje do „{query.trim()}”.</p>
+      )}
 
       {MODULES.map((mod) => {
         const topics = TOPICS.filter((t) => t.module === mod.id)
