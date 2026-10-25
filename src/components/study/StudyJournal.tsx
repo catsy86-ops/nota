@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Archive, ChevronLeft, Clock, ChevronRight, FileText, MapPin, Plus, Search, TriangleAlert, X } from "lucide-react";
+import { Archive, Clock, ChevronRight, FileText, MapPin, Plus, Search, TriangleAlert, X } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
 import { studyReminders, type StudyReminder } from "@/lib/study/reminders";
 import { useDayClock } from "@/lib/dayClock";
@@ -9,8 +9,6 @@ import { EmptySketch } from "@/components/EmptyIllustration";
 import { JOURNAL_GLYPH } from "@/lib/emptyGlyphs";
 import { cn } from "@/lib/utils";
 import { useLatestRef } from "@/hooks/useLatestRef";
-import { NoteImage } from "@/components/NoteImage";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { TOPICS, topicTitle } from "@/lib/study/content";
 import { openProblems, setSite, useSiteDirectory, useStudy, useStudyLists } from "@/lib/study/store";
 import {
@@ -23,6 +21,7 @@ import { JournalEntrySheet } from "./JournalEntrySheet";
 import { JournalItem } from "./JournalItem";
 import { JournalReportDialog } from "./JournalReport";
 import { SiteCardDialog } from "./SiteCardDialog";
+import { PhotoGalleryDialog } from "./PhotoGallery";
 import { readSiteParam, takeSiteParam } from "@/lib/study/siteLink";
 import { NewSiteDialog } from "./NewSiteDialog";
 import { DayHoursDialog } from "./DayHoursDialog";
@@ -427,47 +426,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
         onReport={(id) => { setCard(null); setReportSite(id); setReportRequest(null); setReport(true); }}
         onNewEntry={(id) => { setCard(null); openEntryAt(contextSiteName(id, dir)); }}
       />
-      <Dialog open={zoom !== null} onOpenChange={(o) => { if (!o) setZoom(null); }}>
-        <DialogContent
-          className="max-w-3xl p-3"
-          data-testid="journal-photo-zoom"
-          onKeyDown={(ev) => {
-            if (!zoom || zoom.refs.length < 2) return;
-            if (ev.key === "ArrowRight") { ev.preventDefault(); setZoom({ ...zoom, index: (zoom.index + 1) % zoom.refs.length }); }
-            if (ev.key === "ArrowLeft") { ev.preventDefault(); setZoom({ ...zoom, index: (zoom.index - 1 + zoom.refs.length) % zoom.refs.length }); }
-          }}
-        >
-          <DialogTitle className="sr-only">Zdjęcie z budowy</DialogTitle>
-          {zoom && (
-            <div className="relative">
-              <NoteImage key={zoom.refs[zoom.index]} imageRef={zoom.refs[zoom.index]} alt={`Zdjęcie z budowy ${zoom.index + 1} z ${zoom.refs.length}`} loading="eager" className="max-h-[80dvh] w-full rounded-lg object-contain" />
-              {zoom.refs.length > 1 && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setZoom({ ...zoom, index: (zoom.index - 1 + zoom.refs.length) % zoom.refs.length })}
-                    aria-label="Poprzednie zdjęcie"
-                    className="pressable absolute left-2 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-black/55 text-white"
-                  >
-                    <ChevronLeft className="h-5 w-5" aria-hidden />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setZoom({ ...zoom, index: (zoom.index + 1) % zoom.refs.length })}
-                    aria-label="Następne zdjęcie"
-                    className="pressable absolute right-2 top-1/2 grid size-11 -translate-y-1/2 place-items-center rounded-full bg-black/55 text-white"
-                  >
-                    <ChevronRight className="h-5 w-5" aria-hidden />
-                  </button>
-                  <p className="absolute top-2 left-1/2 -translate-x-1/2 rounded-full bg-black/55 px-2.5 py-0.5 font-mono text-xs tabular-nums text-white" aria-live="polite" data-testid="journal-photo-counter">
-                    {zoom.index + 1}/{zoom.refs.length}
-                  </p>
-                </>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <PhotoGalleryDialog zoom={zoom} onIndex={(index) => setZoom((z) => (z ? { ...z, index } : z))} onClose={() => setZoom(null)} />
     </div>
   );
 }
