@@ -82,23 +82,23 @@ export function AppHeader({
               {sidebarOpen ? "Schowaj panel" : "Pokaż panel"}
             </TooltipContent>
           </Tooltip>
-          {/* Na telefonie brakuje miejsca na logo i tytuł naraz: w Notatkach
-              logo jest tytułem, w pozostałych widokach zostaje sam tytuł. */}
+          {/* Na telefonie: animowany monogram „h” zawsze (w każdym widoku); pełny napis „hydra” tylko tam,
+              gdzie jest miejsce — w Notatkach. Na komputerze całość jak dotąd. */}
           {!sidebarOpen && (
             <motion.div
               initial={{ opacity: 0, scale: 0.5 }}
               animate={{ opacity: 1, scale: 1 }}
-              className={view === "notes" ? undefined : "hidden sm:block"}
+              className={view === "notes" ? undefined : "flex sm:block max-[359px]:hidden"}
             >
               <span className="flex items-center gap-1">
                 <NMonogramLogo className="w-6 h-6" />
-                <NotkiLogo size="sm" />
+                {view === "notes" ? <NotkiLogo size="sm" /> : <span className="max-sm:hidden"><NotkiLogo size="sm" /></span>}
               </span>
             </motion.div>
           )}
           {!sidebarOpen && <span aria-hidden className="hidden sm:block h-5 w-px bg-border" />}
-          <div className={!sidebarOpen && view === "notes" ? "hidden sm:block" : undefined}>
-            <h1 className={cn("app-title text-lg font-display leading-tight tracking-tight text-foreground", isTitleBlockView(view) && "hidden")}>
+          <div className={!sidebarOpen && view === "notes" ? "hidden sm:block" : "min-w-0"}>
+            <h1 className={cn("app-title truncate text-lg font-display leading-tight tracking-tight text-foreground", isTitleBlockView(view) && "hidden")}>
               {view === "notes" && "Notatki"}
               {view === "today" && (
 "Dziś"
