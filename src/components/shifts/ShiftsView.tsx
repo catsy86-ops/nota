@@ -20,6 +20,8 @@ import { NowCard } from "./NowCard";
 import { subscribeShiftAction, takeShiftAction } from "@/lib/shifts/shiftActions";
 import type { ImageTheme } from "@/lib/shifts/monthImageDraw";
 import { absenceEstimate } from "@/lib/shifts/absenceEstimate";
+import { isoWeek } from "@/lib/periodNote";
+import { haptic } from "@/lib/haptics";
 import { timeOffBalance } from "@/lib/shifts/timeOff";
 import { BrushBar, type Brush } from "./BrushBar";
 import { BrushHours } from "./BrushHours";
@@ -192,7 +194,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   const timeOff = useMemo(() => timeOffBalance(data, shownMonth.getFullYear(), shownMonth.getMonth()), [data, shownMonth]);
   // Jeden region „na żywo” (audyt UI, pkt 9): zmiana tygodnia lub miesiąca ogłasza się tym samym regionem co akcje,
   // niezależnie od tego, czy zmieniono ją przyciskiem, gestem czy skrótem.
-  const periodLabel = isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl });
+  const periodLabel = isWeek ? `${weekRangeLabel(weekStart)} · tydz. ${isoWeek(parseDayKey(weekStart).getTime()).week}` : format(month, "LLLL yyyy", { locale: pl });
   const periodSeen = useRef(periodLabel);
   useEffect(() => {
     if (periodSeen.current === periodLabel) return;
@@ -346,6 +348,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
     toast.success(`Nałożono cykl na ${length} ${pluralPl(length, ["dzień", "dni", "dni"])}`, {
       action: { label: "Cofnij", onClick: () => restoreDays(before) },
     });
+    haptic("success");
   }
 
   /**
@@ -532,7 +535,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
               <ShiftWeekView weekStart={weekStart} days={data.days} typesById={typesById} remindersByDay={remindersByDay} titleOf={titleOf}
                 onDay={onDay} onWeekChange={setWeekStart} describedBy="shift-brush-hint shift-move-hint" actions={actions} />
             ) : (
-              <ShiftMonthGrid month={month} days={data.days} typesById={typesById} onDay={onDay} onMonthChange={setMonth} shortRestDays={shortRestDays} overlay={overlayGrid} describedBy="shift-brush-hint shift-move-hint" actions={actions} />
+              <ShiftMonthGrid month={month} days={data.days} typesById={typesById} onDay={onDay} onMonthChange={setMonth} shortRestDays={shortRestDays} overlay={overlayGrid} nightFrom={data.nightFrom} describedBy="shift-brush-hint shift-move-hint" actions={actions} />
             )}
           </ShiftDnd>
 

@@ -193,11 +193,12 @@ export function cleanBonus(raw: unknown): ShiftBonus | null {
   return { id: b.id, month: b.month, name: b.name.trim().slice(0, BONUS_NAME_MAX), amount };
 }
 
-export const SHIFT_COLORS = ["#f59e0b", "#3b82f6", "#4f46e5", "#10b981", "#ef4444", "#ec4899", "#14b8a6", "#64748b"] as const;
+export const SHIFT_COLORS = ["#f59e0b", "#3b82f6", "#4f46e5", "#10b981", "#ef4444", "#ec4899", "#14b8a6", "#64748b", "#fb923c"] as const;
 
 /** Nazwy kolorów palety dla czytników ekranu — „#f59e0b” nic nie mówi. */
 export const SHIFT_COLOR_NAMES: Record<(typeof SHIFT_COLORS)[number], string> = {
   "#f59e0b": "bursztynowy",
+  "#fb923c": "pomarańczowy",
   "#3b82f6": "niebieski",
   "#4f46e5": "indygo",
   "#10b981": "szmaragdowy",
@@ -208,7 +209,7 @@ export const SHIFT_COLOR_NAMES: Record<(typeof SHIFT_COLORS)[number], string> = 
 };
 
 export const DEFAULT_SHIFT_TYPES: ShiftType[] = [
-  { id: "d", name: "Dzień", short: "D", color: "#f59e0b", start: "06:00", end: "14:00", breakMin: 0, kind: "work" },
+  { id: "d", name: "Dzień", short: "D", color: "#fb923c", start: "06:00", end: "14:00", breakMin: 0, kind: "work" },
   { id: "p", name: "Popołudnie", short: "P", color: "#3b82f6", start: "14:00", end: "22:00", breakMin: 0, kind: "work" },
   { id: "n", name: "Noc", short: "N", color: "#4f46e5", start: "22:00", end: "06:00", breakMin: 0, kind: "work" },
   { id: "u", name: "Urlop", short: "U", color: "#10b981", start: "08:00", end: "16:00", breakMin: 0, kind: "absence" },

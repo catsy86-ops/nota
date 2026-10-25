@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { formatDuration, setDayEntry, shiftInk, type ShiftData, type ShiftOccurrence } from "@/lib/shifts";
 import { useShiftNow } from "@/lib/shifts/useShiftNow";
 import { toastWithUndo } from "@/lib/undoToast";
+import { haptic } from "@/lib/haptics";
 
 /** Kończy zmianę „teraz”: odchylenie od planu = różnica między teraz a planowanym końcem. */
 function finishNow(occ: ShiftOccurrence): void {
@@ -15,6 +16,7 @@ function finishNow(occ: ShiftOccurrence): void {
   setDayEntry(occ.dayKey, extra === 0 ? rest : { ...rest, extraMin: extra });
   const label = extra === 0 ? "zgodnie z planem" : `${extra > 0 ? "+" : "−"}${formatDuration(Math.abs(extra))} względem planu`;
   toastWithUndo(`Zakończono zmianę: ${label}`, () => setDayEntry(occ.dayKey, before));
+  haptic("success");
 }
 
 

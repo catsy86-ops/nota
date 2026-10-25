@@ -2,7 +2,7 @@ import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { addDays, addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, startOfMonth, startOfWeek } from "date-fns";
 import { pl } from "date-fns/locale";
 import { dayKey } from "@/lib/reminderOccurrences";
-import { dayKeyCommand, dayType, entryMinutesOn, formatHoursShort, holidayName, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType } from "@/lib/shifts";
+import { dayKeyCommand, dayType, entryMinutesOn, formatHoursShort, holidayName, nightMinutes, shiftInk, shiftTextOnCard, type DayEntry, type ShiftType } from "@/lib/shifts";
 import { addDaysToKey } from "@/lib/week";
 import { cn } from "@/lib/utils";
 import { useToday } from "@/hooks/useToday";
@@ -27,7 +27,15 @@ interface ShiftMonthGridProps {
   overlay?: { days: Record<string, DayEntry>; typesById: Map<string, ShiftType> } | null;
   /** Przenoszenie i kopiowanie wpisów z klawiatury (Shift+strzałki, Ctrl+C/V). */
   actions: DayActions;
+  /** Od której godziny zaczyna się noc (do znacznika ☾). */
+  nightFrom?: number;
 }
+
+/** Znacznik w komórce dnia; `label` idzie do etykiety dla czytnika ekranu. */
+interface CellMark { id: string; glyph: string; className: string; label: string }
+
+/** Ile znaczników widać w komórce; reszta jest tylko w etykiecie. */
+const MAX_MARKS = 2;
 
 const WEEK = { weekStartsOn: 1 } as const;
 
@@ -37,7 +45,7 @@ const WEEK = { weekStartsOn: 1 } as const;
  * siatka to jeden przystanek tabulatora, strzałki po dniach, PageUp/PageDown
  * po miesiącach, Home/End po tygodniu; Enter/Spacja = stuknięcie.
  */
-export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesById, onDay, onMonthChange, describedBy, shortRestDays, overlay, actions }: ShiftMonthGridProps) {
+export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesById, onDay, onMonthChange, describedBy, shortRestDays, overlay, actions, nightFrom = 22 }: ShiftMonthGridProps) {
   const today = useToday();
   const direction = useMonthDirection(month);
   const { stamped, cleared } = useStampedDays(`${month.getFullYear()}-${month.getMonth()}`, days, typesById);
@@ -127,6 +135,14 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
               const label = dayAriaLabel({ day, today: isToday, holiday, type, entry });
               const ovType = overlay?.days[key] ? overlay.typesById.get(overlay.days[key].type) : undefined;
               const overlayName = ovType ? `, nakładka: ${ovType.name}` : "";
+              // Znaczniki w komórce: najwyżej dwa widoczne, reszta trafia do etykiety dla czytnika.
+              const marks: CellMark[] = [];
+              if (shortRestDays?.has(key)) marks.push({ id: "rest", glyph: "⚠", className: "text-2xs leading-none font-bold text-destructive-ink", label: "krótki odpoczynek" });
+              if (entry?.extraMin) marks.push({ id: "extra", glyph: entry.extraMin > 0 ? "↑" : "↓", className: "sm:hidden text-2xs leading-none font-bold", label: entry.extraMin > 0 ? "nadgodziny" : "wyszedł wcześniej" });
+              if (type && nightMinutes(type, nightFrom) > 0) marks.push({ id: "night", glyph: "☾", className: "text-2xs leading-none", label: "godziny nocne" });
+              if (entry?.offSchedule || entry?.inLieu) marks.push({ id: "off", glyph: "•", className: "text-2xs leading-none font-bold text-muted-foreground", label: entry.offSchedule ? "poza grafikiem" : "w zamian" });
+              if (entry?.note) marks.push({ id: "note", glyph: "•", className: "text-2xs leading-none text-foreground/60", label: "notatka" });
+              const marksLabel = marks.length ? `, ${marks.map((m) => m.label).join(", ")}` : "";
 
               return (
                 <DayDropCell key={key} dayKey={key} draggable={!!entry}>
@@ -138,7 +154,7 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                     tabIndex={isSameDay(day, focused) ? 0 : -1}
                     // Dzień spoza miesiąca przełącza miesiąc — malowanie go było ledwo widoczne.
                     onClick={() => { setFocused(day); if (inMonth) onDay(key); else onMonthChange(startOfMonth(day)); }}
-                    aria-label={inMonth ? `${label}${overlayName}` : `${label} — przejdź do miesiąca`}
+                    aria-label={inMonth ? `${label}${marksLabel}${overlayName}` : `${label} — przejdź do miesiąca`}
                     aria-current={isToday ? "date" : undefined}
                     title={holiday ?? entry?.note}
                     className={cn(
@@ -154,9 +170,9 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                       <span className="flex gap-0.5 mr-0.5" aria-hidden>
                         {/* Na telefonie nazwa święta i godziny się nie mieszczą — zostaje znacznik, nie sam kolor. */}
                         {holiday && <span className={holidayDotClass(inMonth)} />}
-                        {entry?.extraMin ? <span className="sm:hidden text-2xs leading-none font-bold">{entry.extraMin > 0 ? "↑" : "↓"}</span> : null}
-                        {shortRestDays?.has(key) && <span className="text-2xs leading-none font-bold text-destructive-ink">⚠</span>}
-                        {entry?.note && <span className="w-1.5 h-1.5 rounded-full bg-foreground/50" />}
+                        {marks.slice(0, MAX_MARKS).map((m) => (
+                          <span key={m.id} className={m.className}>{m.glyph}</span>
+                        ))}
                       </span>
                     </span>
                     {holiday && <span aria-hidden className={holidayNameClass(inMonth)}>{holiday}</span>}

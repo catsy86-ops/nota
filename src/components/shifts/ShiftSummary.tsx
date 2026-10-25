@@ -56,6 +56,8 @@ const monthName = (year: number, month: number, pattern = "LLLL") => format(new 
  */
 export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settlementMonths, fte, monthLabel, monthKey, onOpenSettings, onOpenDay, toDate, estimate, timeOff }: ShiftSummaryProps) {
   const [includeEstimate, setIncludeEstimate] = useState(true);
+  // „Razem brutto” u góry: zarobek plus szacunki urlopu i L4, jeśli są włączone.
+  const grossTotal = round2(summary.earnings + (includeEstimate && estimate ? estimate.leave.amount + estimate.sick.amount : 0));
   const { minutes, normMinutes, overtimeMinutes, dailyOvertimeMinutes, overtime100Minutes } = summary;
   const scale = Math.max(normMinutes, minutes, 1);
   // Nadgodziny dobowe mogą być i poniżej normy miesiąca — pasek dzieli faktycznie przepracowane godziny.
@@ -79,6 +81,14 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
             <span className="text-base font-semibold text-muted-foreground ml-2">/ <CountUp value={normMinutes} format={formatHoursShort} /> h normy</span>
           </p>
         </div>
+        {summary.earnings > 0 && (
+          <div className="text-right">
+            <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Razem brutto</p>
+            <p className="font-display font-extrabold text-3xl sm:text-4xl tabular-nums leading-none mt-1 text-primary-ink">
+              <CountUp value={grossTotal} format={formatMoney} />
+            </p>
+          </div>
+        )}
         <button type="button" onClick={() => setYearOpen(true)} aria-label="Podsumowanie roku"
           className="pressable shrink-0 flex items-center gap-1.5 h-9 coarse:h-11 px-3 rounded-xl border border-border/60 bg-background hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
           <CalendarRange className="w-4 h-4" aria-hidden /> Rok
@@ -271,6 +281,8 @@ function Receipt({ summary, hourlyRate, monthLabel, estimate, includeEstimate, o
       <p className="flex justify-between gap-2 pb-2 text-2xs uppercase tracking-[0.2em] text-muted-foreground">
         <span>Rachunek</span><span>{monthLabel}</span>
       </p>
+      <details className="group mt-2">
+        <summary className="cursor-pointer select-none list-none font-body text-xs text-muted-foreground py-1 coarse:py-2">Szczegóły rachunku</summary>
       <ul className="space-y-1.5">
         {lines.map((l) => (
           <ReceiptLine key={l.key} label={
@@ -308,14 +320,7 @@ function Receipt({ summary, hourlyRate, monthLabel, estimate, includeEstimate, o
           Wlicz szacunki urlopu i L4
         </label>
       )}
-      {paid && (
-        <p className="mt-3 pt-2 border-t-[3px] border-double border-foreground/40 flex items-baseline justify-between gap-3">
-          <span className="font-body text-2xs font-semibold uppercase tracking-[0.2em]">Razem brutto</span>
-          <span className="font-display font-extrabold text-xl sm:text-2xl text-primary-ink tabular-nums">
-            <CountUp value={summary.earnings + (includeEstimate && estimate ? estimate.leave.amount + estimate.sick.amount : 0)} format={formatMoney} />
-          </span>
-        </p>
-      )}
+      </details>
     </div>
   );
 }
