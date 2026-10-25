@@ -1145,3 +1145,9 @@ Pełny plan: `docs/plan-skarbiec-2026-10-25.md` (Etapy 1–5: opis w `opis.md` (
 ## Plan Ustawień i synchronizacji — 2026-10-25
 
 Pełny plan: `docs/plan-ustawienia-2026-10-25.md` (Etapy 1–6: poprawki — błędy po ludzku, teksty, nazwy plików kopii; synchronizacja — wersja aplikacji na innych urządzeniach z banerem (warunek zmian formatu w innych planach), ostatnio widziane, skaner QR, kolejność karty Sync, duże wpisy przez przekaźnik; kopia — „Wyślij kopię”, podgląd przed przywróceniem, stan danych; „O aplikacji” i „Co nowego”; wygląd; QA). Jedenasty z serii „dział po dziale”. Decyzje U-1…U-4 otwarte.
+
+## Plan powłoki — 2026-10-25
+
+Pełny plan: `docs/plan-powloka-2026-10-25.md` (Etapy 1–5: logo bez pętli, jedna nazwa „hydra” w tekstach, tabela `VIEW_META`, jasność bez cichej zmiany stylu, boczne wycięcie ekranu; grupy i ukrywanie działów, 4. pozycja dolnego paska, kropka sync, więcej poleceń w palecie; samouczek dostępny i z rysunkami; wygląd; QA). Dwunasty i ostatni z serii „dział po dziale”. Decyzje PW-1…PW-4 otwarte.
+
+**Seria „dział po dziale” (2026-10-25) zakończona:** Notatki, Skrzynka, Dziś, Kalendarz, Terminy, Grafik, Praca, Długi, Ćwiczenia, Skarbiec, Ustawienia i synchronizacja, powłoka + przekrojowy plan UI/UX i QoL. Oznaczenia decyzji: N, S, D (Dziś), D (Długi), K, T, G, P, C, V, U, PW.
