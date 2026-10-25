@@ -1141,3 +1141,7 @@ Pełny plan: `docs/plan-cwiczenia-2026-10-25.md` (Etapy 1–5: poprawki — wię
 ## Plan Skarbca — 2026-10-25
 
 Pełny plan: `docs/plan-skarbiec-2026-10-25.md` (Etapy 1–5: opis w `opis.md` (brakuje), odzysk notatek nieodszyfrowywalnych, ostrzeżenie przed auto-blokadą, hasło ≥ 12, menedżer haseł, kod awaryjny do druku; kłódka w nagłówku, notatka prywatna z kompozytora, lista prywatnych, test hasła; format v2, biometria (WebAuthn PRF), szyfrowane pliki — po przeglądzie bezpieczeństwa; wygląd; QA). Dziesiąty z serii „dział po dziale”. Decyzje V-1…V-4 otwarte.
+
+## Plan Ustawień i synchronizacji — 2026-10-25
+
+Pełny plan: `docs/plan-ustawienia-2026-10-25.md` (Etapy 1–6: poprawki — błędy po ludzku, teksty, nazwy plików kopii; synchronizacja — wersja aplikacji na innych urządzeniach z banerem (warunek zmian formatu w innych planach), ostatnio widziane, skaner QR, kolejność karty Sync, duże wpisy przez przekaźnik; kopia — „Wyślij kopię”, podgląd przed przywróceniem, stan danych; „O aplikacji” i „Co nowego”; wygląd; QA). Jedenasty z serii „dział po dziale”. Decyzje U-1…U-4 otwarte.

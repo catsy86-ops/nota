@@ -66,7 +66,7 @@ Legenda: W = wartość (1–3), N = nakład (S/M/L).
 
 | # | Co | W | N |
 |---|----|---|---|
-| 3.1 | **Ostrzeżenie o starszej wersji na innym urządzeniu:** awareness przesyła wersję aplikacji (`device: { name, version }`); gdy połączone urządzenie ma starszą wersję niż ta, która zmieniła format Pracy, baner „Telefon „X” ma starszą wersję — wpisy z Pracy mogą być na nim niewidoczne. Zaktualizuj go.” Dotyczy całej aplikacji, ale najważniejsze dla Pracy. | 3 | S |
+| 3.1 | **Ostrzeżenie o starszej wersji na innym urządzeniu:** awareness przesyła wersję aplikacji (`device: { name, version }`); gdy połączone urządzenie ma starszą wersję niż ta, która zmieniła format Pracy, baner „Telefon „X” ma starszą wersję — wpisy z Pracy mogą być na nim niewidoczne. Zaktualizuj go.” Dotyczy całej aplikacji, ale najważniejsze dla Pracy. **Wdrażane w planie Ustawień jako 2.1** (`docs/plan-ustawienia-2026-10-25.md`). | 3 | S |
 | 3.2 | **Miejsce zajęte przez Pracę:** w karcie budowy i w Ustawieniach → Kopia: „Zdjęcia i nagrania: 340 MB (budowa X: 120 MB)”. Liczone z `imageStore` (rozmiary blobów), leniwie. | 2 | S |
 | 3.3 | **Odchudzenie zakończonej budowy:** przy archiwizacji budowy „Zapisz paczkę ZIP i zmniejsz zdjęcia” — po zapisaniu ZIP-a zdjęcia budowy zastępowane miniaturami (np. 800 px), oryginały tylko w ZIP. Z potwierdzeniem i bez „Cofnij” (dlatego najpierw ZIP). **Decyzja P-4.** | 2 | M |
 | 3.4 | **QA dwóch telefonów** (zaległe z Etapu 6): zdjęcia, odhaczenia, kształtki i karta budowy edytowane równocześnie; wynik w `opis.md`. Najlepiej po 3.1. | 2 | S |
