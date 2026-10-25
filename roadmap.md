@@ -1121,3 +1121,7 @@ Pełny plan: `docs/plan-kalendarz-2026-10-25.md` (Etapy 1–5: poprawki — zale
 ## Plan działu Terminy — 2026-10-25
 
 Pełny plan: `docs/plan-terminy-2026-10-25.md` (Etapy 1–5: poprawki — grupy z zegarem, DST w serii, parser dat, akcje na prywatnej notatce; jedno menu „Odłóż”, „Zakończ serię”, lista zamiast kafli; rozbudowa — więcej powtarzania, wcześniejsze przypomnienie, „przed zmianą”; wygląd; QA). Piąty z serii „dział po dziale”. Decyzje T-1…T-4 otwarte.
+
+## Plan działu Grafik — 2026-10-25
+
+Pełny plan: `docs/plan-grafik-2026-10-25.md` (Etapy 1–6: poprawki — cykl nie zjada urlopu, dodatek za nadgodziny wprost, schowek, pędzel, kwoty; codzienna praca — Cofnij/Ponów na telefonie, odpoczynek w komórce, pusty miesiąc z akcją; rachunek — prognoza, odbiór nadgodzin, urlop w godzinach, 35 h; wiele grafików; wygląd; QA). Szósty z serii „dział po dziale”. Decyzje G-1…G-4 otwarte.
