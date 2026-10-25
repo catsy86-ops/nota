@@ -10,6 +10,8 @@
 
 /* ─────────────────────────── PLAN — rysunek techniczny ─────────────────────────── */
 html[data-skin="plan"] {
+  /* Ostrzeżenie na ciemnej karcie: jaśniejsza baza (6,6:1 na karcie), bo ciemne ostrzeżenie daje 4,3:1. */
+  --warning-ink-base: 38 92% 60%;
   --background: 211 66% 18%;
   --foreground: 205 70% 95%;
   --card: 211 58% 22%;
@@ -292,6 +294,8 @@ html[data-skin="zorza"] .notki-logo { filter: drop-shadow(0 2px 14px hsl(var(--p
 
 /* ─────────────────────────── MIEDŹ — beton i rury ─────────────────────────── */
 html[data-skin="miedz"] {
+  /* Ostrzeżenie na jasnej karcie: ciemniejszy tekst (WCAG AA, 6,0:1 na karcie, 4,8:1 na tle). */
+  --warning-ink-mix: 55%;
   --background: 30 7% 89%;
   --foreground: 22 14% 12%;
   --card: 40 25% 98.5%;

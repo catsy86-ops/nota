@@ -79,7 +79,7 @@ export default {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
           // Tekst i ikony na jasnym tle — jak `primary-ink` (sam kolor ma za mały kontrast).
-          ink: "color-mix(in srgb, hsl(var(--warning)) var(--ink-mix, 62%), black)",
+          ink: "color-mix(in srgb, hsl(var(--warning-ink-base, var(--warning))) var(--warning-ink-mix, var(--ink-mix, 62%)), black)",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",

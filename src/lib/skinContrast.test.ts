@@ -74,6 +74,13 @@ describe("kontrast tokenów wszystkich stylów (WCAG AA)", () => {
       for (const surface of ["background", "card"]) {
         expect(contrast(rgb(t, "input"), rgb(t, surface)), `input na ${surface}`).toBeGreaterThanOrEqual(3);
       }
+      // `warning-ink` = warning zmieszany z czernią w proporcji z tailwind.config.ts (warning-ink-mix, a dalej ink-mix).
+      const inkMix = (t["warning-ink-mix"] ?? t["ink-mix"] ?? 62) as number;
+      const warningBase = (t["warning-ink-base"] ? rgb(t, "warning-ink-base") : rgb(t, "warning"));
+      const warningInk = warningBase.map((c) => c * inkMix / 100) as [number, number, number];
+      for (const surface of ["background", "card"]) {
+        expect(contrast(warningInk, rgb(t, surface)), `warning-ink na ${surface}`).toBeGreaterThanOrEqual(4.5);
+      }
     });
   }
 });
