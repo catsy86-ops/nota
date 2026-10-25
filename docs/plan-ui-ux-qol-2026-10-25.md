@@ -1,0 +1,137 @@
+# Plan: ulepszenie i upiększenie UI/UX oraz QoL (2026-10-25)
+
+## Kontekst
+
+Poprzednie plany UI (`roadmap.md`: „Plan dopracowania UI” 09.10, „Plan dopracowania UI: telefon i komputer” 15.10, plan mobile 11.10) są w większości zrobione. Ten plan nie powtarza ich punktów. Zbiera to, co w kodzie widać dziś: rozjechany system projektowy, nowe techniki przeglądarek, których aplikacja jeszcze nie używa, i drobne tarcia w codziennej pracy.
+
+**Pomiar w kodzie (2026-10-25, `src/**/*.tsx`):**
+
+| Obszar | Stan |
+|---|---|
+| Promienie | Tokeny `rounded-control/field/card` są (`index.css:340`), ale użyte 64 razy. Surowych `rounded-lg/xl/md/sm/3xl/[3px]` jest ok. 400. |
+| Cienie | 8 wariantów (`shadow`, `-sm`, `-md`, `-lg`, `-2xl`, `-elevation`, `-glow`, `-none`) bez skali. |
+| Warstwy | `z-10/20/25/30/40/50/70` wpisywane ręcznie, bez nazwanej skali. |
+| Kolory | Tokeny w HSL (`--primary: 34 88% 47%`), 7 motywów (`skins.css`), `color-mix` w 11 plikach. |
+| Toasty | 144 wywołania `toast.*`, tylko 4 z przyciskiem akcji (np. „Cofnij”). |
+| Potwierdzenia | `window.confirm` w `StatsDialog.tsx:63` (reset odznak), poza wspólnym `ConfirmActionDialog`. |
+| Ładowanie | Spinner (`Loader2`/`animate-spin`) w 6 plikach, szkielet w 3, bez wspólnej reguły. |
+| Nowoczesny CSS | View Transitions tylko przy zmianie motywu i widoku (`useTheme.ts`, `viewChange.ts`). `@container` w 1 miejscu (Grafik). Brak `@starting-style`, animacji sterowanych przewijaniem, `field-sizing`, `text-wrap`, `interpolate-size`. |
+| React | React 19.3, ale bez `useTransition`, `<Activity>` i React Compiler. |
+
+**Ograniczenia:**
+- **Paczka startowa:** próg 401 KB, zapas mały. Każdy punkt ma albo zmniejszać JS (CSS zamiast JS), albo trafiać do leniwych chunków. Pilnuje `e2e/bundle.spec.ts`.
+- **7 motywów:** każda zmiana wyglądu musi działać we wszystkich (`data-skin`). Decyzje D1–D5 z planu 15.10 obowiązują.
+- **Progresywne ulepszanie:** nowe API tylko za `@supports` lub sprawdzeniem funkcji. Bez nich aplikacja ma wyglądać jak dziś, nie gorzej.
+- **Ruch:** wszystko nowe respektuje `prefers-reduced-motion` (`isMotionReduced()`, `useMotionPref`).
+- **Zgodność danych:** bez zmian formatu Yjs. Nowe ustawienia UI w localStorage w `try/catch`.
+- **Kolejność w każdym punkcie:** test → kod → `opis.md` → commit. Przed zmianą wyglądu: skill `frontend-design`.
+
+Legenda: W = wartość dla użytkownika (1–3), N = nakład (S/M/L).
+
+---
+
+## Faza 0: bezpieczniki przed zmianami wyglądu (najpierw)
+
+Faza 1 zmienia setki klas. Bez zrzutów referencyjnych nie da się sprawdzić, że nic się nie rozjechało.
+
+| # | Co | Gdzie | N |
+|---|----|-------|---|
+| 0.1 | Zrzuty referencyjne Playwright (`toHaveScreenshot`): 5 głównych widoków × 7 motywów × (komputer, telefon). Animacje wyłączone, stała data (`page.clock`), maska na zmienne treści (cytat dnia, zegar). Tag `@visual`, poza codziennym `test:e2e`. | nowy `e2e/visual.spec.ts` | M |
+| 0.2 | axe we wszystkich motywach, nie tylko w domyślnym. Dziś znany wyjątek: „kalendarz — hydraulika”. | `e2e/a11y*.spec.ts` | S |
+| 0.3 | Test strażnik w Vitest: liczy surowe `rounded-(lg\|xl\|md\|sm\|3xl)`, `z-[0-9]` i `shadow-(md\|lg\|2xl)` w `src/**/*.tsx`. Próg = stan po Fazie 1, test pada, gdy liczba rośnie. Tani zamiennik reguły ESLint (wtyczki Tailwind słabo wspierają v4). | nowy `src/test/designTokens.test.ts` | S |
+| 0.4 | Pomiar INP i CLS w trybie dev: `PerformanceObserver` (`event`, `layout-shift`) wypisuje w konsoli najgorsze interakcje. Bez nowej zależności, poza paczką produkcyjną. | `src/lib/perfProbe.ts`, `main.tsx` za `import.meta.env.DEV` | S |
+
+## Faza 1: system projektowy (fundament „ładnego” wyglądu)
+
+Spójność daje więcej niż nowe ozdoby. Każdy punkt to głównie codemod plus przegląd zrzutów z 0.1.
+
+| # | Co | W | N |
+|---|----|---|---|
+| 1.1 | **Promienie.** Codemod: `rounded-md` → `rounded-control`, `rounded-lg` → `rounded-field`, `rounded-xl`/`-3xl` → `rounded-card`. `rounded-full` zostaje (pigułki, awatary). Wyjątki opisać komentarzem. Motywy (np. Matryca, Plan) zmieniają wtedy charakter jednym tokenem. | 2 | M |
+| 1.2 | **Cienie: 3 poziomy.** `--elevation-1` (kafel), `-2` (popover, menu), `-3` (okno, arkusz), definiowane per motyw. W ciemnych motywach głębię daje jaśniejsza powierzchnia (`color-mix` z `--foreground`), nie cień, bo cień na czarnym tle ginie. | 2 | M |
+| 1.3 | **Skala warstw.** Tokeny `--z-sticky`, `--z-dropdown`, `--z-overlay`, `--z-modal`, `--z-toast` w `@theme` i klasy `z-sticky` itd. Usuwa `z-25` i `z-70`, wpisane, żeby „przebić” coś innego. | 1 | S |
+| 1.4 | **Typografia.** `text-wrap: balance` w nagłówkach i tytułach kafli (koniec z jednym słowem w drugiej linii). `text-wrap: pretty` w akapitach czytnika. `font-variant-numeric: tabular-nums` w liczbach w kolumnach: godziny Grafiku, sumy, liczniki, zegary. 7 rozmiarów `text-[…]` zamienić na skalę albo opisać. | 2 | S |
+| 1.5 | **Kolory w OKLCH (decyzja D-1).** Tokeny z HSL na OKLCH. Jednakowa jasność odczuwana w motywach, więc łatwiej utrzymać kontrast AA. Stany `hover`/`active` z względnej składni (`oklch(from var(--primary) calc(l - 0.05) c h)`) zamiast osobnych tokenów. Najpierw jeden motyw (Zeszyt), potem reszta. Fallback HSL za `@supports`. | 2 | L |
+| 1.6 | **Ikony.** Jedna grubość kreski lucide jako token (`--icon-stroke`, np. 1.75), a w motywach technicznych (Matryca, Plan) cieńsza. Rozmiary ikon tylko 14/16/20/24. | 1 | S |
+| 1.7 | **Pierścień fokusu.** Jeden token `--ring-focus` i jedna klasa narzędziowa dla `:focus-visible`. Sprawdzić we wszystkich motywach, że ma kontrast 3:1 do tła (WCAG 2.4.11/2.4.13). | 2 | S |
+
+## Faza 2: ruch i nowoczesny CSS (więcej efektu, mniej JS)
+
+| # | Co | W | N |
+|---|----|---|---|
+| 2.1 | **Wspólny element kafel → edytor.** `view-transition-name` na kaflu, tytule i okładce, ten sam na otwartym edytorze. Kafel „rozrasta się” w notatkę. `useOriginFromTile` już liczy punkt startu, więc ta technika go zastępuje tam, gdzie API jest. Bez API zostaje dzisiejsza animacja. | 3 | M |
+| 2.2 | **Przejścia między działami.** Nawigacja Notatki ↔ Grafik ↔ Praca ↔ Kalendarz przez `startViewTransition` (`viewChange.ts` już to robi dla widoków). Kierunek przesunięcia zgodny z kolejnością w `BottomNav`. W react-router 6.x opcja `unstable_viewTransition` na `Link`/`navigate`; sprawdzić w dokumentacji przed użyciem. | 2 | S |
+| 2.3 | **Wejście bez JS.** `@starting-style` + `transition-behavior: allow-discrete` dla popoverów, menu, toastów i pojawiających się wierszy listy. Tam, gdzie framer-motion robi tylko fade/scale na wejściu, zastąpić go CSS. Zysk: mniej pracy na głównym wątku, mniejsze chunki. | 2 | M |
+| 2.4 | **Zwijanie do `height: auto`.** `interpolate-size: allow-keywords` na `:root`. Bloki zwijane, sekcje Ustawień i grupy notatek animują wysokość bez mierzenia w JS. W przeglądarkach bez wsparcia skaczą od razu, jak dziś. | 1 | S |
+| 2.5 | **Animacje sterowane przewijaniem.** Pasek postępu czytania w `NoteReader` (`animation-timeline: scroll()`) i cień nagłówka po zjechaniu ze szczytu (`view()`/`scroll()`). `useHideOnScroll` zostaje, bo zależy od kierunku przewijania, czego CSS nie umie. | 2 | S |
+| 2.6 | **Pola rosnące z treścią.** `field-sizing: content` dla tytułu, szybkiego dodawania i pól wpisu w Pracy; JS autosize tylko jako fallback. | 1 | S |
+| 2.7 | **Mikrointerakcje (jeden zestaw).** Wciśnięcie przycisku (`scale(.97)` na `:active`), rysowanie ptaszka w checkboxie (`stroke-dashoffset`), krótki „pulse” licznika po zmianie (`RollingNumber` już jest), drgnięcie pola przy błędzie. Jeden plik `motion.css` z czasami i krzywymi jako tokeny (`--ease-out-quint`, `--dur-1..3`). | 2 | M |
+| 2.8 | **Haptyka.** Jeden helper `haptic('tap' \| 'success' \| 'warn')` zamiast `navigator.vibrate` w 2 miejscach. Wywołanie przy odhaczeniu, usunięciu, zakończeniu zmiany. Wyłączalne w Ustawieniach, działa tylko na Androidzie. | 1 | S |
+
+Odrzucone: CSS Anchor Positioning i Popover API. Radix już pozycjonuje i obsługuje fokus, a przepisanie nie da nic widocznego.
+
+## Faza 3: UX i QoL (codzienne tarcia)
+
+| # | Co | W | N |
+|---|----|---|---|
+| 3.1 | **„Cofnij” zamiast „Na pewno?”.** Przegląd 144 toastów. Każda akcja odwracalna (usunięcie, archiwizacja, przeniesienie, zmiana priorytetu, odhaczenie serii) dostaje w toaście `action: Cofnij`, opartą na istniejącym cofaniu zbiorczym. Okno potwierdzenia zostaje tylko dla rzeczy nieodwracalnych (reset, kosz na stałe). | 3 | M |
+| 3.2 | `window.confirm` w `StatsDialog.tsx:63` → `ConfirmActionDialog` (spójny wygląd, działa w PWA na iOS, gdzie `confirm` bywa blokowany). | 1 | S |
+| 3.3 | **Reguła ładowania.** Pokazać wskaźnik dopiero po 300 ms (bez mignięcia). Szkielet tam, gdzie znany jest kształt treści (listy, karty), spinner tylko w przycisku, który coś wysyła. Wspólny `useDelayedFlag(300)`. | 2 | S |
+| 3.4 | **Płynność przy ciężkich zmianach.** `useTransition` przy przełączaniu widoku (siatka/tablica/tabela), filtrach i sortowaniu. Pole wyszukiwania reaguje od razu, lista nadrabia. Cel: INP < 200 ms przy 300 notatkach (pomiar z 0.4). | 2 | S |
+| 3.5 | **Powrót bez przeładowania.** `<Activity mode="hidden">` (React 19.2+) dla ostatnio otwartego działu: powrót z Grafiku do Notatek zachowuje przewinięcie, rozwinięte grupy i stan filtrów bez ponownego renderu. Ograniczyć do 1–2 działów (pamięć na telefonie). | 3 | M |
+| 3.6 | **Pamięć stanu widoku.** Przewinięcie per dział, ostatnia zakładka w Pracy i Ustawieniach, zwinięte sekcje. Jeden helper `useViewMemory(key)` na localStorage (`try/catch`, działa bez niego). | 2 | S |
+| 3.7 | **Formularze na telefonie.** Przegląd wszystkich `<input>`: `inputmode` (liczby, godziny), `enterkeyhint` („Dalej”/„Zapisz”), `autocomplete="off"` tam, gdzie podpowiedzi przeglądarki przeszkadzają, `autocapitalize` w tytułach. Test jednostkowy przechodzi po polach formularzy. | 2 | S |
+| 3.8 | **Skróty widoczne w podpowiedziach.** `HoverTip` pokazuje skrót (`<kbd>`) przy akcjach, które go mają. Źródło prawdy: ta sama tabela, z której korzysta `ShortcutsDialog`. | 1 | S |
+| 3.9 | **Paleta poleceń zależna od kontekstu.** W otwartej notatce na górze palety akcje tej notatki (przypnij, przenieś, eksport, historia). W Grafiku: „Dodaj zmianę dziś”, „Skończyłem teraz”. | 2 | M |
+| 3.10 | **Arkusze na telefonie.** Wszystkie arkusze na jednym `ViewSheet` z punktami zatrzymania (pół/pełny) i zamykaniem gestem w dół. Gest przesunięcia kafla czeka na decyzję 4.1 z planu mobile i tu się go nie ruszy. | 2 | M |
+| 3.11 | **Cele dotyku 44 px** (otwarte z 23.10). Test e2e mierzy `getBoundingClientRect` interaktywnych elementów na `pixel-7` i zgłasza mniejsze niż 44×44 (albo 24×24 z odstępem, WCAG 2.5.8). | 2 | S |
+| 3.12 | **Preferencje systemu.** Wariant `prefers-contrast: more` w każdym motywie (grubsze obramowania, mocniejszy tekst pomocniczy), `prefers-reduced-transparency` wyłącza rozmycia (`backdrop-blur`), sprawdzenie `forced-colors`. | 2 | M |
+
+## Faza 4: wydajność odczuwalna
+
+| # | Co | W | N |
+|---|----|---|---|
+| 4.1 | **Wczesne ładowanie chunków.** `import()` leniwego działu na `pointerenter`/`focus` przycisku w `BottomNav`/`AppSidebar` i w `requestIdleCallback` po starcie. Klik w dział nie pokazuje szkieletu. Nie zwiększa paczki startowej. | 2 | S |
+| 4.2 | **Fonty bez skoku układu.** 12 rodzin `@fontsource`: sprawdzić, że ładuje się tylko aktywny krój. Dla fallbacku `size-adjust`/`ascent-override`, żeby podmiana fontu nie przesuwała tekstu (CLS). | 1 | S |
+| 4.3 | **React Compiler (decyzja D-2).** Automatyczna memoizacja usuwa ręczne `useMemo`/`memo` i zbędne rendery (`NoteCard`, `NoteGrid`). Wymaga `babel-plugin-react-compiler`, więc zmiany `@vitejs/plugin-react-swc` na `@vitejs/plugin-react` z Babelem (wolniejszy build). Najpierw próba na gałęzi i pomiar z 0.4. | 2 | M |
+| 4.4 | Wirtualizacja list tylko, jeśli pomiar 0.4 przy 300+ notatkach pokaże problem. Dziś `content-visibility` jest w 4 miejscach i może wystarczyć. | 1 | M |
+
+## Faza 5: upiększenie (charakter, nie tylko porządek)
+
+| # | Co | W | N |
+|---|----|---|---|
+| 5.1 | **Tożsamość działów.** Każdy dział ma swój odcień akcentu (np. Notatki bursztyn, Grafik niebieski, Praca miedź, Kalendarz zieleń) na ikonie w nawigacji, pasku nagłówka i w pustych stanach. Odcień pochodny z `--accent` motywu (`oklch(from …)` po 1.5), więc pasuje do każdego motywu. | 3 | M |
+| 5.2 | **Ziarno papieru w Zeszycie** (decyzja otwarta od 25.10). Szum SVG `feTurbulence` jako `background-image` w data URI (< 1 KB), przezroczystość 3–4%, wyłączany w `prefers-reduced-transparency`. | 2 | S |
+| 5.3 | **Wykresy w barwach motywu.** Recharts (Statystyki, raporty Pracy) bierze kolory z tokenów, nie z wpisanych wartości. Podpowiedzi i osie z `tabular-nums`. | 2 | S |
+| 5.4 | **Puste stany i ilustracje.** Jedna grubość kreski i paleta z tokenów w `EmptyIllustration`. Każdy pusty stan ma jedno główne działanie (przycisk), nie tylko opis. | 2 | S |
+| 5.5 | **Szczegóły kafla.** Delikatne podświetlenie krawędzi przy najechaniu (`box-shadow` z `color-mix` akcentu) zamiast podnoszenia o kilka pikseli, które na siatce masonry wygląda nerwowo. Na dotyku tylko stan `:active`. | 1 | S |
+
+## Faza 6: QA i zamknięcie
+
+- Zrzuty z 0.1 zaktualizowane i przejrzane motyw po motywie.
+- axe bez błędów we wszystkich motywach (0.2), kontrast fokusu (1.7).
+- INP < 200 ms i CLS < 0.1 na `pixel-7` przy 300 notatkach (0.4).
+- Pełne `test:e2e` i `test:e2e:mobile`, próg paczki.
+- Ręczne QA na telefonie: zaległe z poprzednich planów i nowe gesty z 3.10.
+
+---
+
+## Decyzje do podjęcia
+
+| # | Pytanie | Rekomendacja |
+|---|---|---|
+| D-1 | Przejść z HSL na OKLCH (1.5)? | Tak, ale po Fazie 0 i jednym motywie na próbę. Bez tego 5.1 jest trudniejsze. |
+| D-2 | React Compiler kosztem zmiany wtyczki Vite (4.3)? | Próba na gałęzi. Wdrożyć, jeśli INP lub liczba renderów wyraźnie spadnie. |
+| D-3 | Ile framer-motion zastąpić CSS-em (2.3)? | Tylko animacje wejścia i wyjścia. Gesty i układ (`layout`) zostają w framer-motion. |
+| D-4 | Odcienie działów (5.1): stałe czy z motywu? | Z motywu, żeby Matryca i Neon nie dostały obcych kolorów. |
+
+## Kolejność wdrażania
+
+1. Faza 0 (bez niej reszta jest ryzykowna).
+2. Szybkie wygrane o dużej wartości: 3.1, 3.2, 1.3, 1.4, 2.6, 3.3, 3.7.
+3. Fundament: 1.1, 1.2, 1.7, 1.6, potem 1.5 (po D-1).
+4. Ruch: 2.7, 2.3, 2.1, 2.2, 2.4, 2.5, 2.8.
+5. UX: 3.4, 3.5, 3.6, 3.8–3.12, 4.1, 4.2.
+6. Upiększenie: 5.1–5.5.
+7. Eksperyment 4.3, ewentualnie 4.4.
+8. Faza 6.

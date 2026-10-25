@@ -1097,3 +1097,7 @@ Kolejność (po decyzjach): 3.3 Tailwind v4 + React 19 + shadcn (osobne commity:
 - [x] H2 Godziny na budowach: podział godzin dnia z Grafiku między budowy (`siteHours.ts`, okno `DayHoursDialog`); godziny przy budowie w Dzienniku i w raporcie.
 - [x] H3 Plany i dokumenty budowy: zdjęcia i PDF w karcie budowy (`siteDocs.ts`, `SiteDocsPanel`), offline, w paczce ZIP.
 - [x] H4 Serwis i gwarancja: zgłoszenia po odbiorze z terminem, statusem i przypomnieniem; historia w karcie.
+
+## Plan UI/UX i QoL — 2026-10-25
+
+Pełny plan: `docs/plan-ui-ux-qol-2026-10-25.md` (Fazy 0–6: bezpieczniki zrzutów, system projektowy, nowoczesny CSS i ruch, QoL, wydajność odczuwalna, upiększenie, QA). Decyzje D-1…D-4 otwarte. Realizacja nie zaczęta.
