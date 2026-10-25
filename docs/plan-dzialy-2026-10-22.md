@@ -428,6 +428,7 @@ Jeden `SettingsCard` i tokeny promieni (Ś/M), `Section` jako `.section-label` z
 - Skarbiec P1 (wykrycie), Dziś P1, Nauka P1 + Dziennik P5 (`useDayClock`)
 
 **Fala 2 — motywy i kroje (otwarte od wczoraj, tylko CSS)**
+> Status 2026-10-25: zrobione 2026-10-22 (kontrast i test `skinContrast`, Hydraulika, nagłówki, galeria, kroje — `opis.md`, „Motywy i kroje — Fala 2”). Sprawdzone 2026-10-25: selektory Zeszytu (`skins.css`, `fonts.css`) mają hooki w kodzie (`data-thumb`, `app-title`, `paper-grid`, `data-sig`), więc nie są martwe.
 - Kontrast tokenów + test wszystkich stylów, zawężenie krojów nagłówków, Hydraulika, miniatury, galeria, podpisy krojów, martwe selektory Zeszytu.
 
 **Fala 3 — dostępność i spójność**
