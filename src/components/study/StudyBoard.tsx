@@ -8,7 +8,8 @@ import { yjsStore } from "@/lib/yjsStore";
 import { topicNoteId, topicToNote } from "@/lib/study/toNote";
 import { LayoutGroup, m as motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { MODULES, TOPICS, type StudyTopic } from "@/lib/study/content";
+import { MODULES, QUESTIONS, TOPICS, type StudyTopic } from "@/lib/study/content";
+import { CustomQuestionsDialog } from "./CustomQuestionsDialog";
 import { COLUMNS, columnOf, dueToday, moveTopic, practiceByTopic, useStudy, useStudyLists, type Column, type StudyState, type TopicPractice } from "@/lib/study/store";
 
 const COLUMN_LABEL: Record<Column, string> = { todo: "Do nauki", doing: "W trakcie", done: "Umiem" };
@@ -36,7 +37,11 @@ function moveTo(topic: StudyTopic, column: Column) {
 
 function TopicCard({ topic, column, study, practice, due, onPractice, onJournal }: { topic: StudyTopic; column: Column; study: StudyState; practice?: TopicPractice; due: number; onPractice: (topicId: string) => void; onJournal: (topicId: string) => void }) {
   const lists = useStudyLists();
+  const [ownOpen, setOwnOpen] = useState(false);
   const items = lists.checklist.filter((c) => c.topic === topic.id);
+  // Temat z co najwyżej dwoma pytaniami (wbudowane + własne) podpowiada dodanie własnych (Etap 4 § D2).
+  const questionCount = QUESTIONS.filter((q) => q.topic === topic.id).length
+    + study.custom.filter((c) => c.kind === "question" && c.topic === topic.id).length;
   const checked = items.filter((c) => study.checked[c.id]).length;
   const critical = items.some((c) => c.critical);
   const questions = lists.questions.filter((q) => q.topic === topic.id).length;
@@ -125,6 +130,13 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
           </ul>
         </details>
       )}
+      {questionCount <= 2 && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Mało pytań w tym temacie ({questionCount}).{" "}
+          <button type="button" onClick={() => setOwnOpen(true)} className="text-primary-ink underline-offset-2 hover:underline">Dodaj własne</button>
+        </p>
+      )}
+      <CustomQuestionsDialog open={ownOpen} onOpenChange={setOwnOpen} />
       <div className="mt-2">
         {/* Podpisy przy ikonach: na budowie nikt nie zgaduje, co robi ołówek. */}
         <div className="flex flex-wrap gap-1">
