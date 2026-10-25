@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Archive, ArchiveRestore, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, Phone, Share2, Plus } from "lucide-react";
+import { Archive, ArchiveRestore, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, Phone, Send, Share2, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -28,6 +28,7 @@ import { PrintRoot } from "./PrintRoot";
 import { HandoverPaper } from "./HandoverPaper";
 import { QuickLink } from "./QuickLink";
 import { DayHoursDialog } from "./DayHoursDialog";
+import { RecipientsForm } from "./RecipientsForm";
 import { buildHandover, handoverText, type Handover } from "@/lib/study/handover";
 import { mapsHref, prettyPhone, smsHref, SITE_ACCESS_MAX, SITE_PHONE_MAX, telHref } from "@/lib/study/contact";
 
@@ -64,6 +65,8 @@ export function SiteCardDialog({
   const [zipping, setZipping] = useState(false);
   /** Formularz danych rozwinięty; każda karta otwiera się zwinięta. */
   const [editing, setEditing] = useState(false);
+  /** Formularz odbiorców raportu (1.11) rozwinięty; każda karta otwiera się zwinięta. */
+  const [recipientsOpen, setRecipientsOpen] = useState(false);
   /** Okno „Godziny na budowach” nad kartą — dzień do zmiany w oknie, ta budowa zawsze na liście. */
   const [hoursOpen, setHoursOpen] = useState(false);
   /** Protokół odbioru w trakcie drukowania; `null` = nie drukujemy. */
@@ -73,6 +76,7 @@ export function SiteCardDialog({
   useEffect(() => {
     if (site) setForm(formOf(site));
     setEditing(false);
+    setRecipientsOpen(false);
     // Tylko przy otwarciu innej karty — zmiany z drugiego telefonu nie kasują pisanego tekstu.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [siteId]);
@@ -193,6 +197,8 @@ export function SiteCardDialog({
   }, [site, dir, study.journal, shifts, dayTick]);
   /** Zwinięte dane w jednej linijce — widać, co jest w karcie, bez rozwijania. */
   const summary = site ? [site.address, site.investor, site.manager && `kier. ${site.manager}`].filter(Boolean).join(" · ") : "";
+  /** Odbiorcy raportu w jednej linijce — widać, kto dostanie raport, bez rozwijania. */
+  const recipients = [study.boss && (study.boss.name || "szef"), study.group && `„${study.group.name}”`].filter(Boolean).join(" · ");
 
   return (
     <Dialog open={!!site} onOpenChange={close}>
@@ -385,6 +391,29 @@ export function SiteCardDialog({
               </label>
               <Button type="submit" disabled={!dirty || !!error} className="w-full coarse:h-11">Zapisz kartę</Button>
             </form>
+              )}
+            </div>
+
+            {/* Odbiorcy raportu (1.11) — te same dla wszystkich budów, więc formularz jest ten sam co w oknie raportu. */}
+            <div className="mx-5 mt-3 rounded-xl border border-border bg-card" data-testid="site-recipients">
+              <button
+                type="button"
+                onClick={() => setRecipientsOpen((v) => !v)}
+                aria-expanded={recipientsOpen}
+                aria-controls="site-card-recipients"
+                className="pressable flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left coarse:min-h-11"
+              >
+                <Send className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                <span className="shrink-0 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Odbiorcy raportu</span>
+                <span className={cn("min-w-0 flex-1 truncate text-sm", !recipients && "text-muted-foreground")}>
+                  {recipientsOpen ? "" : recipients || "nie ustawieni"}
+                </span>
+                <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform motion-reduce:transition-none", recipientsOpen && "rotate-180")} aria-hidden />
+              </button>
+              {recipientsOpen && (
+                <div id="site-card-recipients" className="border-t border-border px-3 py-3">
+                  <RecipientsForm boss={study.boss} group={study.group} onDone={() => setRecipientsOpen(false)} className="" />
+                </div>
               )}
             </div>
 
