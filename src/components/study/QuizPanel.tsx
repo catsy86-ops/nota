@@ -186,12 +186,16 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
         </p>
         {due.length > 0 ? (
           <div className="flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-3.5 py-3" data-testid="due-today">
-            <p className="text-sm"><span className="font-semibold tabular-nums">Na dziś: {due.length}</span> <span className="text-muted-foreground">{pluralPl(due.length, ["pytanie", "pytania", "pytań"])} do powtórki</span></p>
+            <p className="text-sm"><span className="font-semibold tabular-nums">{Math.min(ROUND_SIZE, due.length)} z {due.length} na dziś</span> <span className="text-muted-foreground">{pluralPl(Math.min(ROUND_SIZE, due.length), ["pytanie", "pytania", "pytań"])} w tej rundzie</span></p>
             <Button size="sm" onClick={() => onScopeChange?.({ kind: "due" })}>Powtórz</Button>
           </div>
         ) : nextDue ? (
           <p className="text-xs text-muted-foreground" data-testid="due-today">Na dziś nic do powtórki. Następne: {nextDue}.</p>
         ) : null}
+        {/* Nowy użytkownik: bez rund i bez zaległości nie wiadomo, od czego zacząć. */}
+        {study.rounds === 0 && due.length === 0 && !nextDue && (
+          <p className="text-sm text-muted-foreground" data-testid="quiz-first-run">Zacznij od pierwszej rundy: {ROUND_SIZE} pytań, bez oceny. Wyniki zapiszą się same i wrócą jako powtórki.</p>
+        )}
         <div className="flex flex-wrap items-center gap-3">
           <Button variant={due.length > 0 ? "outline" : "default"} onClick={() => start({ kind: "all" })}>Zacznij rundę</Button>
           {Object.keys(study.missed).length > 0 && (
@@ -223,8 +227,17 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
           {scope.kind === "missed" ? "Powtórka błędów · " : scope.kind === "due" ? "Na dziś · " : ""}{topicName(current.topic)}
         </span>
       </div>
-      <div className="h-1 rounded-full bg-muted overflow-hidden" aria-hidden>
-        <div className="h-full bg-primary transition-[width] duration-300" style={{ width: `${((index + (answered ? 1 : 0)) / round.length) * 100}%` }} />
+      {/* Postęp kratkami, jedna na pytanie w rundzie (§8 W2): wypełnione — odpowiedziane, jaśniejsza — bieżące. */}
+      <div className="flex gap-1" aria-hidden data-testid="quiz-progress">
+        {round.map((_, i) => (
+          <span
+            key={i}
+            className={cn(
+              "h-1.5 flex-1 rounded-full transition-colors duration-300",
+              i < index + (answered ? 1 : 0) ? "bg-primary" : i === index ? "bg-primary/40" : "bg-muted",
+            )}
+          />
+        ))}
       </div>
       <h2 ref={questionRef} tabIndex={-1} className="font-display text-lg sm:text-xl leading-snug outline-hidden">{current.question}</h2>
       <div role="group" aria-label="Odpowiedzi" className="grid gap-2">

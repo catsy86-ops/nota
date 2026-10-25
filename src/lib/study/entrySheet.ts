@@ -90,3 +90,6 @@ export function takeVoiceRequest(): boolean {
   voiceRequested = false;
   return v;
 }
+
+/** Id wpisu dodanego przed chwilą (podświetlenie na osi czasu); czytane przy montażu wiersza. */
+export const freshEntry: { id: string | null } = { id: null };

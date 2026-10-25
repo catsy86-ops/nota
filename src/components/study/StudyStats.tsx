@@ -115,6 +115,8 @@ function StatsBody() {
                 className={cn(
                   "size-3.5 rounded-[3px] sm:size-4",
                   c.future ? "bg-transparent" : c.studied ? "bg-primary" : "bg-muted",
+                  // Obwódka: dzień nauki ma wyraźny kontur, pusty dzień ledwo widoczny (§8 W3).
+                  !c.future && (c.studied ? "ring-1 ring-primary/70" : "ring-1 ring-border/60"),
                   c.key === today && "ring-1 ring-foreground/40",
                 )}
               />

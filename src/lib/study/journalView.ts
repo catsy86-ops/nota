@@ -1,6 +1,8 @@
 import { pluralPl } from "@/lib/plural";
 import type { JournalEntry, JournalKind } from "./yStudy";
 import { entrySiteId, fold } from "./sites";
+import { fittingsLine } from "./fittings";
+import { testLine } from "./pressureTest";
 
 export const KIND_LABEL: Record<JournalKind, string> = { ok: "Zrobione", problem: "Problem", note: "Notatka" };
 
@@ -88,7 +90,11 @@ export function filterJournal<E extends JournalEntry>(
     if (f.site !== null && entrySiteId(e) !== f.site) return false;
     if (f.topic !== null && e.topic !== f.topic) return false;
     if (words.length === 0) return true;
-    const hay = fold([e.text, e.solution ?? "", e.site, e.topic ? topicTitle(e.topic) ?? "" : "", KIND_LABEL[e.kind]].join(" "));
+    // Kształtki i próba szczelności też są w wyszukiwaniu (§9 D1): „kolano”, „9 bar” znajdą wpis.
+    const hay = fold([
+      e.text, e.solution ?? "", e.site, e.topic ? topicTitle(e.topic) ?? "" : "", KIND_LABEL[e.kind],
+      e.fittings?.length ? fittingsLine(e.fittings) : "", e.test ? testLine(e.test) : "",
+    ].join(" "));
     return words.every((w) => hay.includes(w));
   });
 }

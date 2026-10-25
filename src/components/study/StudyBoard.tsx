@@ -130,20 +130,20 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
         <div className="flex flex-wrap gap-1">
           <button
             type="button"
+            onClick={() => onPractice(topic.id)}
+            aria-label={`${topic.title}: ćwicz pytania${due > 0 ? `, ${due} na dziś` : ""}`}
+            className={cn(actionClass, "border-primary/50 bg-primary/10 font-medium text-primary-ink hover:bg-primary/20 hover:text-primary-ink", due > 0 && "border-primary")}
+          >
+            <Play className="h-3.5 w-3.5 shrink-0" aria-hidden />Ćwicz
+            {due > 0 && <span className="ml-0.5 stamp-tag text-2xs text-primary-ink tabular-nums" data-testid="topic-due">{due} na dziś</span>}
+          </button>
+          <button
+            type="button"
             onClick={() => onJournal(topic.id)}
             aria-label={`${topic.title}: wpis z budowy`}
             className={actionClass}
           >
             <NotebookPen className="h-3.5 w-3.5 shrink-0" aria-hidden />Wpis z budowy
-          </button>
-          <button
-            type="button"
-            onClick={() => onPractice(topic.id)}
-            aria-label={`${topic.title}: ćwicz pytania${due > 0 ? `, ${due} na dziś` : ""}`}
-            className={cn(actionClass, due > 0 && "border-primary/40 text-primary-ink")}
-          >
-            <Play className="h-3.5 w-3.5 shrink-0" aria-hidden />Ćwicz
-            {due > 0 && <span className="ml-0.5 stamp-tag text-2xs text-primary-ink tabular-nums" data-testid="topic-due">{due} na dziś</span>}
           </button>
           <button
             type="button"

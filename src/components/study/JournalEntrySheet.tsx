@@ -27,7 +27,7 @@ import { requestPersistentStorage } from "@/lib/storagePersistence";
 import { MODULES, TOPICS } from "@/lib/study/content";
 import { addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, setSiteGeo, setSiteShortages, setSiteStages, updateJournalEntry, useSiteDirectory, useStudy, useStudyLists, type JournalKind } from "@/lib/study/store";
 import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft, type JournalDraft } from "@/lib/study/draft";
-import { closeJournalSheet, getJournalEditForm, patchJournalEditForm, takeVoiceRequest, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
+import { closeJournalSheet, freshEntry, getJournalEditForm, patchJournalEditForm, takeVoiceRequest, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
 import { fromLocalInput, KIND_LABEL, recentSiteTexts, suggestSites, toLocalInput, whenLabel, yesterdaySiteText } from "@/lib/study/journalView";
 import { findSiteByName } from "@/lib/study/sites";
 import { accuracyLabel, cleanGeo, mapsUrl, nearestSite } from "@/lib/study/geo";
@@ -402,6 +402,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     if (isEdit) { saveEdit(); return; }
     const wasDone = topic && columnOf(study, topic) === "done";
     const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, recordings: form.recordings, at, test: form.test, fittings: form.fittings, stage: form.stage, geo: form.geo ?? null });
+    if (entry) freshEntry.id = entry.id;
     if (!entry) {
       haptic("warn");
       setEmptyAttempt(true);

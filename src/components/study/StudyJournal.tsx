@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Archive, Clock, ChevronRight, FileText, MapPin, Plus, Search, TriangleAlert, X } from "lucide-react";
+import { Archive, Clock, ChevronRight, ClipboardCheck, FileText, Gauge, MapPin, Package, Plus, Search, TriangleAlert, Truck, Wrench, X } from "lucide-react";
 import { pluralPl } from "@/lib/plural";
 import { studyReminders, type StudyReminder } from "@/lib/study/reminders";
 import { useDayClock } from "@/lib/dayClock";
@@ -439,6 +439,15 @@ function openTestEntry(siteName: string) {
   openJournalSheet();
 }
 
+const REMINDER_ICON: Partial<Record<StudyReminder["kind"], typeof TriangleAlert>> = {
+  "stale-problems": TriangleAlert,
+  "late-order": Package,
+  "delivery-today": Truck,
+  "service-due": Wrench,
+  "pre-cover-test": Gauge,
+  "no-test": ClipboardCheck,
+};
+
 function ReminderRow({ reminder: r, onShow }: { reminder: StudyReminder; onShow: () => void }) {
   const text =
     r.kind === "stale-problems"
@@ -452,9 +461,11 @@ function ReminderRow({ reminder: r, onShow }: { reminder: StudyReminder; onShow:
             : r.kind === "pre-cover-test"
             ? `Budowa „${r.site}”: instalacja odhaczona, a protokołu próby nie ma. Zrób próbę przed zakryciem.`
             : `Budowa „${r.site}”: montaż bez protokołu próby. Zapisz próbę przed zakryciem.`;
+  // Każdy rodzaj przypomnienia ma swoją ikonę, żeby dało się je odróżnić bez czytania (§9 W5).
+  const Icon = REMINDER_ICON[r.kind] ?? TriangleAlert;
   return (
     <li className="flex items-start gap-2.5 rounded-xl border border-warning/50 bg-warning/10 p-3 text-sm" data-reminder={r.kind}>
-      <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" aria-hidden />
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" aria-hidden />
       <p className="min-w-0 flex-1 leading-snug">{text}</p>
       <button
         type="button"

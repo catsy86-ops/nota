@@ -953,6 +953,16 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
   }
 }
 
+/* Świeżo dodany wpis w dzienniku: tło rozjaśnia się i gaśnie (§9 W5); bez ruchu przy ograniczonym ruchu. */
+@keyframes journal-fresh {
+  from { background-color: hsl(var(--primary) / 0.2); }
+  to { background-color: transparent; }
+}
+.journal-fresh { animation: journal-fresh 2.4s ease-out 1 both; border-radius: 0.5rem; }
+@media (prefers-reduced-motion: reduce) {
+  .journal-fresh { animation: none; }
+}
+
 /* Wejście logo na telefonie: jedna poświata rozchodzi się za monogramem przy starcie aplikacji (AppHeader). */
 @keyframes logo-ring {
   from { opacity: 0.6; transform: scale(0.55); }

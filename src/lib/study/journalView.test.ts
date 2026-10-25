@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { JournalEntry } from "./yStudy";
-import { contextSiteName, entryHeadline, recentSiteTexts, yesterdaySiteText } from "./journalView";
+import { contextSiteName, entryHeadline, filterJournal, NO_FILTER, recentSiteTexts, yesterdaySiteText } from "./journalView";
 import { siteKey } from "./sites";
 
 const day = (d: number, h = 12) => new Date(2026, 9, d, h).getTime();
@@ -76,5 +76,15 @@ describe("contextSiteName — budowa nowego wpisu z filtra dziennika", () => {
   it("wszystkie budowy albo nieznane id — bez kontekstu", () => {
     expect(contextSiteName(null, dir)).toBeNull();
     expect(contextSiteName("zniknęła", dir)).toBeNull();
+  });
+});
+
+describe("filterJournal: kształtki w wyszukiwaniu (§9 D1)", () => {
+  const base = { id: "", at: 1, kind: "ok" as const, topic: null, text: "Montaż pionu", site: "Lipowa", checked: [], images: [] };
+  it("szuka po nazwie kształtki i jej ilości", () => {
+    const withFit = { ...base, id: "a", fittings: [{ name: "Kolano 16", qty: 3 }] } as unknown as JournalEntry;
+    const plain = { ...base, id: "b" } as unknown as JournalEntry;
+    const found = filterJournal([withFit, plain], { ...NO_FILTER, query: "kolano" });
+    expect(found.map((e) => e.id)).toEqual(["a"]);
   });
 });

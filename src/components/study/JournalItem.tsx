@@ -1,11 +1,12 @@
 import { lazy, memo, Suspense, useEffect, useState } from "react";
 import { Check, CircleCheck, Flag, Gauge, MapPin, Mic, Package, Pencil, Play, Wrench } from "lucide-react";
 import { fittingsLine } from "@/lib/study/fittings";
+import { freshEntry } from "@/lib/study/entrySheet";
+import { cn } from "@/lib/utils";
 import { testLine } from "@/lib/study/pressureTest";
 import { mapsUrl } from "@/lib/study/geo";
 import { Button } from "@/components/ui/button";
 import { NoteImage } from "@/components/NoteImage";
-import { cn } from "@/lib/utils";
 import { haptic } from "@/lib/haptics";
 import { topicTitle } from "@/lib/study/content";
 import { JOURNAL_SOLUTION_MAX, setProblemResolved, setProblemSolution, type JournalEntry } from "@/lib/study/store";
@@ -37,6 +38,8 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
   const resolved = e.kind === "problem" && e.resolved !== undefined;
   /** Pole „Jak rozwiązane?” otwarte — samo po oznaczeniu problemu jako rozwiązanego, jeśli brak opisu. */
   const [solving, setSolving] = useState(false);
+  // Świeżo dodany wpis: podświetlenie przy montażu wiersza (§9 W5); jednorazowe, bez zapamiętywania.
+  const [fresh] = useState(() => freshEntry.id === e.id);
 
   function toggleResolved() {
     haptic(resolved ? "tap" : "success");
@@ -46,7 +49,7 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
 
   return (
     // Wpis jak linijka w zeszycie: godzina na marginesie, linia oddziela wpisy zamiast ramki.
-    <li className="grid grid-cols-[3.25rem_minmax(0,1fr)] gap-x-3 border-b border-dashed border-border/70 py-3 first:pt-1 last:border-b-0" data-journal-entry={e.kind} data-resolved={resolved || undefined}>
+    <li className={cn("grid grid-cols-[3.25rem_minmax(0,1fr)] gap-x-3 border-b border-dashed border-border/70 py-3 first:pt-1 last:border-b-0", fresh && "journal-fresh")} data-fresh={fresh || undefined} data-journal-entry={e.kind} data-resolved={resolved || undefined}>
       <time
         dateTime={new Date(e.at).toISOString()}
         className="border-r border-primary/30 pr-2 pt-0.5 text-right font-mono text-xs tabular-nums text-muted-foreground"
@@ -138,10 +141,12 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
           )}
           {e.images.length > 0 && (
             <ul className="mt-2 flex flex-wrap gap-2" aria-label="Zdjęcia wpisu">
-              {e.images.map((ref) => (
+              {e.images.map((ref, i) => (
                 <li key={ref}>
-                  <button type="button" onClick={() => onZoom(e.images, e.images.indexOf(ref))} aria-label="Powiększ zdjęcie" className="block overflow-hidden rounded-lg">
+                  <button type="button" onClick={() => onZoom(e.images, i)} aria-label={`Powiększ zdjęcie ${i + 1} z ${e.images.length}`} className="relative block overflow-hidden rounded-lg">
                     <NoteImage imageRef={ref} alt="" className="h-16 w-16 object-cover" placeholderClassName="h-16 w-16" />
+                    {/* Numer zdjęcia na miniaturze (§D3): od razu widać, które z kolei jest w galerii. */}
+                    {e.images.length > 1 && <span aria-hidden className="absolute bottom-0.5 right-0.5 rounded bg-black/60 px-1 font-mono text-[10px] leading-4 text-white tabular-nums">{i + 1}</span>}
                   </button>
                 </li>
               ))}
