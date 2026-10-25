@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { pluralPl } from "@/lib/plural";
 import { TOPICS } from "@/lib/study/content";
 import { CUSTOM_ANSWER_MAX, CUSTOM_EXPLANATION_MAX, CUSTOM_TEXT_MAX, type CustomQuestion } from "@/lib/study/custom";
-import { addCustomQuestion, useStudy } from "@/lib/study/store";
+import { addCustomQuestion, updateCustomQuestion, useStudy } from "@/lib/study/store";
 import { TopicSelect } from "./CustomChecklistForm";
 import { deleteCustom } from "@/lib/study/customActions";
 
@@ -38,6 +38,15 @@ export function CustomQuestionsDialog({ open, onOpenChange }: { open: boolean; o
   const questions = study.custom.filter((e): e is CustomQuestion => e.kind === "question");
   const [draft, setDraft] = useState<Draft>(() => EMPTY(TOPICS[0].id));
   const [error, setError] = useState<string | null>(null);
+  // Edycja istniejącego pytania: formularz wypełniony, zapis podmienia treść pod tym samym id (§4 P6).
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const startEdit = (q: CustomQuestion) => {
+    setEditingId(q.id);
+    setError(null);
+    setDraft({ topic: q.topic, question: q.question, correct: q.correct, wrong: [...q.wrong] as Draft["wrong"], explanation: q.explanation });
+  };
+  const cancelEdit = () => { setEditingId(null); setError(null); setDraft(EMPTY(TOPICS[0].id)); };
 
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => {
     setDraft((d) => ({ ...d, [key]: value }));
@@ -51,13 +60,23 @@ export function CustomQuestionsDialog({ open, onOpenChange }: { open: boolean; o
   function save() {
     const problem = draftError(draft);
     if (problem) { setError(problem); return; }
-    const saved = addCustomQuestion({
+    const input = {
       topic: draft.topic,
       question: draft.question.trim(),
       correct: draft.correct.trim(),
       wrong: draft.wrong.map((w) => w.trim()) as Draft["wrong"],
       explanation: draft.explanation.trim(),
-    });
+    };
+    if (editingId) {
+      const updated = updateCustomQuestion(editingId, input);
+      if (!updated) { setError("Nie udało się zapisać zmian."); return; }
+      setEditingId(null);
+      setDraft(EMPTY(draft.topic));
+      setError(null);
+      toast.success("Zapisano zmiany w pytaniu");
+      return;
+    }
+    const saved = addCustomQuestion(input);
     if (!saved) { setError("Nie udało się zapisać. Może są już 200 własnych wpisów."); return; }
     setDraft(EMPTY(draft.topic));
     setError(null);
@@ -103,7 +122,8 @@ export function CustomQuestionsDialog({ open, onOpenChange }: { open: boolean; o
           </div>
           {error && <p role="alert" className="text-xs text-destructive-ink">{error}</p>}
           <div className="flex justify-end">
-            <Button type="submit" className="coarse:h-11">Dodaj pytanie</Button>
+            <Button type="submit" className="coarse:h-11">{editingId ? "Zapisz zmiany" : "Dodaj pytanie"}</Button>
+            {editingId && <Button type="button" variant="ghost" onClick={cancelEdit} className="coarse:h-11">Anuluj</Button>}
           </div>
         </form>
 
@@ -119,6 +139,9 @@ export function CustomQuestionsDialog({ open, onOpenChange }: { open: boolean; o
                     {q.question}
                     <span className="block text-xs text-muted-foreground">{TOPICS.find((t) => t.id === q.topic)?.title ?? q.topic}</span>
                   </span>
+                  <Button variant="ghost" size="sm" aria-label={`Edytuj pytanie: ${q.question}`} onClick={() => startEdit(q)} className="coarse:h-11">
+                    <Pencil className="h-4 w-4" aria-hidden />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"

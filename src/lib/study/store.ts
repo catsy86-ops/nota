@@ -335,6 +335,16 @@ export function addCustomQuestion(input: CustomQuestionInput): CustomQuestion | 
   return addCustomEntry(cleanCustom(raw)) as CustomQuestion | null;
 }
 
+/** Zmiana własnego pytania bez utraty historii powtórek (§4 P6). `null` = nie ma takiego pytania albo treść odrzucona. */
+export function updateCustomQuestion(id: string, input: CustomQuestionInput): CustomQuestion | null {
+  const prev = getStudy().custom.find((e) => e.id === id);
+  if (!prev || prev.kind !== "question" || !TOPICS.some((t) => t.id === input.topic)) return null;
+  const cleaned = cleanCustom({ kind: "question", id, ...input });
+  if (!cleaned || cleaned.kind !== "question") return null;
+  yStudy.updateCustom(cleaned);
+  return cleaned;
+}
+
 /** Usuwa własny wpis; zwraca go do „Cofnij”. */
 export function removeCustomEntry(id: string): CustomEntry | null {
   return yStudy.removeCustom(id);

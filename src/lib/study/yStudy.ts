@@ -611,6 +611,11 @@ export function createYStudy(doc: Y.Doc) {
     return prev;
   }
 
+  /** Edycja własnego wpisu: nowa treść pod tym samym id — powtórki i błędy zostają (§4 P6). */
+  function updateCustom(entry: CustomEntry): void {
+    if (custom.has(entry.id)) custom.set(entry.id, entry);
+  }
+
   /** Cofnięcie usunięcia: wpis wraca z tym samym id (powtórki już nie wrócą). */
   function restoreCustom(entry: CustomEntry): void {
     custom.set(entry.id, entry);
@@ -677,7 +682,7 @@ export function createYStudy(doc: Y.Doc) {
     get, dump, subscribe, isMerged,
     setColumn, setChecked, clearChecked, restoreChecked, recordRound,
     addEntry, updateEntry, setResolved, setSolution, restoreEntry, removeEntry, setSite, saveSite, setSiteList, setBoss, setGroup,
-    addCustom, removeCustom, restoreCustom,
+    addCustom, updateCustom, removeCustom, restoreCustom,
     replaceAll, mergeIn,
   };
 }
