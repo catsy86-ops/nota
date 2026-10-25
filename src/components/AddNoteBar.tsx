@@ -471,12 +471,12 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
     <motion.div ref={containerRef} layout={!fullScreen} data-composer-open={expanded || undefined}
       role={fullScreen ? "dialog" : undefined} aria-modal={fullScreen || undefined} aria-label={fullScreen ? "Nowa notatka" : undefined}
       onKeyDown={(e) => {
-        // Esc zwija edytor bez zapisu — szkic zostaje. Zdarzenia z okienek w portalach (przypomnienie, etykiety) nie liczą się.
+        // Esc zapisuje i zamyka edytor — tak samo jak Ctrl+Enter i klik poza edytorem (puste szkice nic nie tworzą). Zdarzenia z okienek w portalach (przypomnienie, etykiety) nie liczą się.
         if (e.key !== "Escape" || e.defaultPrevented || !expanded) return;
         if (!containerRef.current?.contains(e.target as Node)) return;
         if (wiki.isOpen || slash.isOpen) return;
         e.stopPropagation();
-        setExpanded(false);
+        handleClose();
       }} data-note-color={expanded && color !== "default" ? color : undefined}
       className={cn("w-full max-w-xl rounded-card note-shadow border border-border overflow-hidden transition-[box-shadow,background-color] focus-ring-gradient hover:shadow-elevation-3",
         // Kolor schowany pod ikoną palety — edytor przyjmuje go od razu, żeby było widać wybór.

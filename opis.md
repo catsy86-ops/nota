@@ -341,7 +341,7 @@ Dział opisany w jednym miejscu. Refaktor `Index.tsx` i `NoteCard.tsx` (etapy 4 
 - **Skróty do Ustawień i Statystyk:** Ctrl+, i Alt+I (`useGlobalShortcuts.ts`, dialog skrótów). Test: `e2e/shortcuts-settings-stats.spec.ts`.
 - **Dziennik budowy, pusty wpis:** komunikat przy polu (`role=alert`, `aria-invalid`, `aria-describedby`), znika przy pisaniu; blokada podwójnego zapisu (`JournalEntrySheet.tsx`). Test: `e2e/journal-empty-entry.spec.ts`.
 - **Kompozytor, podwójny zapis:** `commit` w `AddNoteBar.tsx` ma blokadę `committingRef` zwalnianą przez `setTimeout` (nie mikrozadanie). Test: `e2e/composer-double-save.spec.ts`. Uwaga: duplikat w teście był przejściowy (animacja kafla), trwałego dubla nie odtworzono.
-- **Nie zmienione (wymaga decyzji):** Esc w kompozytorze nadal chowa edytor i zostawia szkic, klik poza edytorem nadal zapisuje.
+- **Esc w kompozytorze zapisuje i zamyka** (jak Ctrl+Enter i klik poza edytorem); puste szkice nic nie tworzą (`AddNoteBar.tsx`, `handleClose`). Test: `e2e/composer-escape-saves.spec.ts`. Test „podpowiadają” w `composer.spec.ts` bywa niestabilny pod obciążeniem zestawu, przechodzi osobno.
 - **Widżet jako osobny skrót PWA:** wpis „Na dziś” (`/widget`) na końcu listy skrótów w `public/manifest.webmanifest` (na końcu, bo Android pokazuje tylko kilka pierwszych). Test: `src/lib/manifest.test.ts`, `e2e/grid-reminder-key.spec.ts`.
 - **Klawisz R na kaflu** otwiera okno przypomnienia tego kafla: klika ten sam przycisk dzwonka (`NoteGrid.tsx`, `onOpenReminder`; `gridKeyboardNav.ts`). Test: `e2e/grid-reminder-key.spec.ts`.
 - **Akcent sezonów:** wiosna, lato i zima nie nadpisują już `--accent` (długopis w Zeszycie), tylko `--season-accent` i dekoracje (`src/index.css`). Regresja: `src/lib/skinContrast.test.ts`.
