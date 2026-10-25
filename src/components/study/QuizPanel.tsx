@@ -279,6 +279,8 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
           {current.explanation}
         </p>
       )}
+      {/* Na telefonie przyklejone „Dalej” zasłania koniec długiego objaśnienia: przerwa tej wysokości pozwala przewinąć tekst ponad przycisk (§8 P4). */}
+      {answered && <div aria-hidden className="phone:h-16" />}
       {/* Telefon: „Dalej” przyklejony nad dolnym paskiem — bez przewijania pod objaśnienie po każdej odpowiedzi.
           Bezpośrednio w sekcji: `sticky` działa tylko w obrębie rodzica, a sekcja sięga pod dolny pasek. */}
       {answered && (
