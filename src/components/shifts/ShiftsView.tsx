@@ -17,6 +17,7 @@ import { createPersistedStore } from "@/lib/persistedStore";
 import { pluralPl } from "@/lib/plural";
 import { toastWithUndo } from "@/lib/undoToast";
 import { NowCard } from "./NowCard";
+import { subscribeShiftAction, takeShiftAction } from "@/lib/shifts/shiftActions";
 import { BrushBar, type Brush } from "./BrushBar";
 import { BrushHours } from "./BrushHours";
 import { ShiftMonthGrid } from "./ShiftMonthGrid";
@@ -120,6 +121,25 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
     };
     take();
     return subscribeShiftDay(take);
+  }, []);
+
+  // Polecenia „Grafik zmian” z palety: dodaj zmianę dziś, nałóż cykl, obraz miesiąca.
+  useEffect(() => {
+    const take = () => {
+      const action = takeShiftAction();
+      if (action === "addToday") {
+        const today = new Date();
+        setMonth(startOfMonth(today));
+        setWeekStart(startOfWeekKey(dayKey(today)));
+        setOpenDay(dayKey(today));
+      } else if (action === "pattern") {
+        setPatternOpen(true);
+      } else if (action === "image") {
+        void exportImage();
+      }
+    };
+    take();
+    return subscribeShiftAction(take);
   }, []);
 
   const typesById = useMemo(() => new Map(data.types.map((t) => [t.id, t])), [data.types]);

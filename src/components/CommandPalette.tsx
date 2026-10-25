@@ -11,6 +11,7 @@ import type { PeriodKind } from "@/lib/periodNote";
 import { loadRecentSearches, saveRecentSearch } from "@/lib/recentSearches";
 import { loadRecentCommands, saveRecentCommand } from "@/lib/recentCommands";
 import { requestShiftDay, searchShiftDays, useShifts } from "@/lib/shifts";
+import { requestShiftAction } from "@/lib/shifts/shiftActions";
 import { modShortcut } from "@/lib/platform";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useSavedFilters } from "@/lib/savedFilters";
@@ -220,6 +221,17 @@ export function CommandPalette({
           </CommandItem>
           <CommandItem value="praca raport dnia" onSelect={() => run(() => navigate(`/praca?${JOURNAL_REPORT_PARAM}=${reportParam({ range: "day", allSites: false })}`))}>
             <HardHat className="w-4 h-4 mr-2 text-muted-foreground" /> Raport dnia
+          </CommandItem>
+        </CommandGroup>
+        <CommandGroup heading="Grafik zmian">
+          <CommandItem value="grafik dodaj zmiane dzis" onSelect={() => run(() => { requestShiftAction("addToday"); onGo("shifts"); })}>
+            Dodaj zmianę dziś
+          </CommandItem>
+          <CommandItem value="grafik nałóż cykl" onSelect={() => run(() => { requestShiftAction("pattern"); onGo("shifts"); })}>
+            Nałóż cykl zmian
+          </CommandItem>
+          <CommandItem value="grafik obraz miesiaca png" onSelect={() => run(() => { requestShiftAction("image"); onGo("shifts"); })}>
+            Obraz miesiąca (PNG)
           </CommandItem>
         </CommandGroup>
         <CommandGroup heading="Akcje">
