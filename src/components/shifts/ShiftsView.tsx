@@ -378,12 +378,24 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
 
           <p id="shift-brush-hint" className="text-xs text-muted-foreground px-1 short:hidden">{brushHint(brush, typesById, activeHours)}</p>
 
+          {/* Schowek jako osobny chip: widoczny także po „Rozumiem” i nie znika razem z podpowiedzią. */}
+          {clip && (
+            <div className="flex flex-wrap items-center gap-2 px-1 text-xs">
+              <span className="rounded-md bg-muted px-2 py-1 font-medium text-foreground">
+                Schowek: {typesById.get(clip.type)?.name ?? "wpis"}{clip.note ? " z notatką" : ""}
+              </span>
+              <button type="button" onClick={() => { clipRef.current = null; setClip(null); }}
+                className="rounded-md px-2 py-1 coarse:py-2 font-medium text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                Wyczyść
+              </button>
+            </div>
+          )}
+
           {/* Podpowiedź o przenoszeniu: po „Rozumiem” zostaje tylko dla czytnika ekranu (aria-describedby siatki). */}
           <p id="shift-move-hint" className={cn("text-xs text-muted-foreground px-1 short:hidden", moveHintSeen && "sr-only")}>
             {IS_TOUCH
               ? "Przytrzymaj zmianę i przeciągnij na inny dzień — zapytam, czy przenieść, czy skopiować."
               : `Przeciągnij zmianę na inny dzień, żeby ją przenieść (z Alt — skopiować). Klawiatura: Shift+strzałki przenoszą zmianę, Alt+Shift+strzałki kopiują, ${modShortcut("C")} / ${modShortcut("V")} kopiuje wpis dnia (zmiana, odchylenie, notatka).`}
-            {clip && <span className="font-medium"> Schowek: {typesById.get(clip.type)?.name ?? "wpis"}{clip.note ? " z notatką" : ""}.</span>}
             {!moveHintSeen && (
               <button type="button" onClick={dismissMoveHint}
                 className="relative ml-1 inline-flex items-center rounded-md px-1.5 py-0.5 coarse:py-2 coarse:after:absolute coarse:after:-inset-y-1.5 coarse:after:inset-x-0 coarse:after:content-[''] font-medium text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">

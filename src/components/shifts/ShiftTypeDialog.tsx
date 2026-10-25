@@ -8,6 +8,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { ABSENCE_KINDS, DEFAULT_SHIFT_TYPES, SHIFT_COLORS, SHIFT_COLOR_NAMES, absenceKindOf, breakOffset, deleteShiftType, formatDuration, newShiftId, restoreShiftType, saveShiftType, shiftMinutes, shiftSpan, shiftStore, type AbsenceKind, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
+import { IS_TOUCH } from "@/lib/platform";
 import { toastWithUndo } from "@/lib/undoToast";
 
 interface ShiftTypeDialogProps {
@@ -114,7 +115,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
         <div className="grid grid-cols-[1fr_5rem] gap-3">
           <div className="space-y-1.5">
             <Label htmlFor="shift-name">Nazwa</Label>
-            <Input id="shift-name" value={draft.name} onChange={(e) => patch({ name: e.target.value })} placeholder="np. Ranna" autoFocus />
+            <Input id="shift-name" value={draft.name} onChange={(e) => patch({ name: e.target.value })} placeholder="np. Ranna" autoFocus={!IS_TOUCH} />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="shift-short">Skrót</Label>

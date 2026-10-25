@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
 import { pluralPl } from "@/lib/plural";
+import { useDayClock } from "@/lib/dayClock";
 import { deleteBonus, FTE_OPTIONS, formatDuration, formatHoursShort, formatMoney, leaveBalance, nightAllowance, saveBonus, useShifts, type MonthSummary, type PeriodSummary, type SettlementMonths, type ShiftBonus, type WorkSystem } from "@/lib/shifts";
 import { PERIOD_LABELS } from "./labels";
 import { CountUp } from "./CountUp";
@@ -51,7 +52,9 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
   const [yearOpen, setYearOpen] = useState(false);
   // Rok oglądanego miesiąca z jego etykiety („październik 2026”); bez niej — bieżący.
   const year = Number(/\b(\d{4})\b/.exec(monthLabel)?.[1]) || new Date().getFullYear();
-  const balance = useMemo(() => leaveBalance(data, year, new Date()), [data, year]);
+  // Dzień z zegara zmienia się o północy; bez niego saldo urlopu liczyłoby się do wczoraj.
+  const today = useDayClock();
+  const balance = useMemo(() => leaveBalance(data, year, new Date()), [data, year, today]); // eslint-disable-line react-hooks/exhaustive-deps -- `today`: przeliczenie po zmianie dnia
 
   return (
     <section aria-label="Podsumowanie miesiąca" className="rounded-3xl border border-border/60 bg-card p-4 sm:p-5 space-y-4">
