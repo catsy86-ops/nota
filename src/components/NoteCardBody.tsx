@@ -133,7 +133,7 @@ export function NoteCardBody({
                       key={b.id}
                       type="button"
                       onClick={(e) => { e.stopPropagation(); onOpenNote?.(b.id); }}
-                      className="min-w-0 px-1.5 py-0.5 rounded-full bg-foreground/5 hover:bg-primary/10 hover:text-primary-ink truncate transition-colors"
+                      className="min-w-0 px-1.5 py-0.5 rounded-full bg-muted hover:bg-primary/10 hover:text-primary-ink truncate transition-colors"
                     >
                       {b.title || "Bez tytułu"}
                     </button>
@@ -148,7 +148,7 @@ export function NoteCardBody({
                       type="button"
                       title="Notatka nadrzędna"
                       onClick={(e) => { e.stopPropagation(); onOpenNote?.(subpage.parentId!); }}
-                      className="flex min-w-0 items-center gap-1 px-1.5 py-0.5 rounded-full bg-foreground/5 hover:bg-primary/10 hover:text-primary-ink transition-colors"
+                      className="flex min-w-0 items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted hover:bg-primary/10 hover:text-primary-ink transition-colors"
                     >
                       <CornerLeftUp className="w-3 h-3 shrink-0" aria-hidden />
                       <span className="truncate">{subpage.parentTitle || "Bez tytułu"}</span>

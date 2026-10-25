@@ -67,7 +67,7 @@ const navButton = "pressable shrink-0 w-10 h-10 coarse:w-11 coarse:h-11 rounded-
 const MOVE_HINT_KEY = "kaczy.shifts.moveHint.v1";
 
 /** Przycisk paska narzędzi Grafiku (wspólny wygląd, wysokość h-10 — §audyt 5). */
-const TOOLBAR_BTN = "pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
+const TOOLBAR_BTN = "pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-field text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
 
 export function ShiftsView({ notes = [] }: { notes?: Note[] }) {
   // Do wczytania dokumentu nic — pusty grafik mignąłby i ustawił zły pędzel startowy.

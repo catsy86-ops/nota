@@ -2,6 +2,7 @@ import { lazy, memo, Suspense, useEffect, useState } from "react";
 import { Check, CircleCheck, Flag, Gauge, MapPin, Mic, Package, Pencil, Play, Wrench } from "lucide-react";
 import { fittingsLine } from "@/lib/study/fittings";
 import { freshEntry } from "@/lib/study/entrySheet";
+import { CHIP_ACCENT } from "@/components/ui/chip";
 import { cn } from "@/lib/utils";
 import { testLine } from "@/lib/study/pressureTest";
 import { mapsUrl } from "@/lib/study/geo";
@@ -77,7 +78,7 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
               <span className="stamp-tag text-warning-ink" data-testid="journal-open-stamp">OTWARTY</span>
             )}
             {stage && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-primary-ink" data-testid="journal-entry-stage">
+              <span className={cn("inline-flex items-center gap-1", CHIP_ACCENT)} data-testid="journal-entry-stage">
                 <Flag className="h-3 w-3" aria-hidden />Etap: {stage}
               </span>
             )}

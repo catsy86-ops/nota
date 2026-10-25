@@ -20,9 +20,9 @@ const COLUMN_HINT: Record<Column, string> = {
   done: "Zaliczone w quizie lub liście",
 };
 const actionClass =
-  "pressable inline-flex h-7 items-center gap-1 rounded-md border border-border px-2 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground coarse:h-11 coarse:px-3 coarse:text-sm";
+  "pressable inline-flex h-7 items-center gap-1 rounded-control border border-border px-2 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground coarse:h-11 coarse:px-3 coarse:text-sm";
 const moveClass =
-  "grid h-7 w-7 place-items-center rounded-md border border-border text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30 coarse:h-11 coarse:w-11";
+  "grid h-7 w-7 place-items-center rounded-control border border-border text-muted-foreground transition-colors hover:bg-muted disabled:opacity-30 coarse:h-11 coarse:w-11";
 const moduleLabel = (id: StudyTopic["module"]) => MODULES.find((m) => m.id === id)?.label ?? id;
 
 /**
