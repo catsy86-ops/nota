@@ -349,7 +349,7 @@ test("dziennik: wpis „za wczoraj”, poprawka w arkuszu bez ruszania szkicu, p
   const entry = page.locator('[data-journal-entry="problem"]');
   await expect(entry).toContainText("16:30");
   await expect(page.getByRole("heading", { name: yesterday.label })).toBeVisible();
-  await expect(page.getByTestId("journal-open-problems")).toContainText("Otwarte problemy: 1");
+  await expect(page.getByRole("button", { name: "Otwarte (1)" })).toBeVisible();
 
   // Niezapisany szkic nowego wpisu czeka, a edycja starego go nie dotyka.
   await openEntry(page);
@@ -366,14 +366,14 @@ test("dziennik: wpis „za wczoraj”, poprawka w arkuszu bez ruszania szkicu, p
   await expect(sheet).toHaveCount(0);
   await expect(entry).toContainText("Przeciek na złączce — dokręcona");
   await expect(entry).toContainText("Problem rozwiązany");
-  await expect(page.getByTestId("journal-open-problems")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Otwarte", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Dokończ wpis" })).toBeVisible();
 
   // Z listy: problem wraca do otwartych i znów da się go zamknąć; stan przeżywa odświeżenie.
   await entry.getByRole("button", { name: "Otwórz ponownie" }).click();
-  await expect(page.getByTestId("journal-open-problems")).toContainText("Otwarte problemy: 1");
+  await expect(page.getByRole("button", { name: "Otwarte (1)" })).toBeVisible();
   await entry.getByRole("button", { name: "Oznacz jako rozwiązany" }).click();
-  await expect(page.getByTestId("journal-open-problems")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Otwarte", exact: true })).toBeVisible();
   await reloadWhenSaved(page);
   await page.getByRole("tab", { name: "Dziennik" }).click();
   await expect(page.locator('[data-journal-entry="problem"][data-resolved]')).toHaveCount(1);
@@ -585,7 +585,7 @@ test("dziennik: oś czasu dzień → budowa, szukanie bez ogonków, filtry i „
   await journal.getByRole("button", { name: "Wyczyść filtry" }).click();
 
   // Licznik otwartych problemów filtruje do nich.
-  await journal.getByTestId("journal-open-problems").click();
+  await journal.getByRole("button", { name: /^Otwarte/ }).click();
   await expect(journal.locator("[data-journal-entry]")).toHaveCount(1);
   await expect(journal.getByText("Żółta rura przecieka")).toBeVisible();
   await journal.getByRole("button", { name: "Oznacz jako rozwiązany" }).click();

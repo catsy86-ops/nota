@@ -19,7 +19,7 @@ import {
 } from "@/lib/study/journalView";
 import { patchJournalDraft, useHasJournalDraft } from "@/lib/study/draft";
 import { openJournalSheet } from "@/lib/study/entrySheet";
-import { JournalEntrySheet, KindIcon } from "./JournalEntrySheet";
+import { JournalEntrySheet } from "./JournalEntrySheet";
 import { JournalItem } from "./JournalItem";
 import { JournalReportDialog } from "./JournalReport";
 import { SiteCardDialog } from "./SiteCardDialog";
@@ -172,22 +172,6 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
             <p className="font-mono text-xs text-muted-foreground tabular-nums" data-testid="journal-week">
               7 dni: {entriesPl(week.all)}, {problemsPl(week.problems)}
             </p>
-            {open > 0 && (
-              <button
-                type="button"
-                onClick={() => patch({ kind: filter.kind === "open" ? null : "open" })}
-                aria-pressed={filter.kind === "open"}
-                title="Pokaż tylko otwarte problemy"
-                className={cn(
-                  "pressable mt-1 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-foreground coarse:min-h-11 coarse:px-3 coarse:text-sm",
-                  filter.kind === "open" ? "bg-warning/25 ring-1 ring-warning/60" : "bg-warning/10 hover:bg-warning/20",
-                )}
-                data-testid="journal-open-problems"
-              >
-                <KindIcon kind="problem" className="h-3.5 w-3.5" />
-                Otwarte problemy: <span className="font-mono tabular-nums">{open}</span>
-              </button>
-            )}
           </div>
           <div className="flex shrink-0 gap-2">
             {study.journal.length > 0 && (
@@ -244,6 +228,8 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
               <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] xl:flex-wrap xl:overflow-visible" role="group" aria-label="Rodzaj wpisu">
                 {KIND_CHIPS.map((c) => {
                   const on = filter.kind === c.value;
+                  // Jedno sterowanie „Otwarte” z licznikiem zamiast dawnej pigułki nad listą (3.7).
+                  const label = c.value === "open" && open > 0 ? `Otwarte (${open})` : c.label;
                   return (
                     <button
                       key={c.label}
@@ -255,7 +241,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                         on ? "border-primary bg-primary/10 font-medium text-primary-ink" : "border-border text-muted-foreground hover:text-foreground",
                       )}
                     >
-                      {c.label}
+                      {label}
                     </button>
                   );
                 })}
