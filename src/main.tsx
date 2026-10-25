@@ -38,6 +38,8 @@ import { installPageHidden } from "./lib/pageHidden";
 installGlobalDiagHandlers();
 installKeyboardInset();
 installPageHidden();
+// Pomiar INP/CLS tylko w dev (plan UI/UX 0.4): w produkcji blok znika z paczki.
+if (import.meta.env.DEV) void import("./lib/perfProbe").then((m) => m.installPerfProbe());
 
 // Zmiany notatek i Grafiku od razu w innych kartach tej przeglądarki, także bez P2P.
 startTabSync(yjsStore.doc, "kaczy-yjs-v1", yjsStore.ready(), yjsStore.isPersistenceOrigin);

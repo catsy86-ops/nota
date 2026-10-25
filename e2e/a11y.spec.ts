@@ -26,11 +26,15 @@ const THEMES = ["light", "dark"] as const;
 
 /**
  * Znane naruszenia: klucz `widok/rozmiar/motyw` → identyfikatory reguł axe. Każde z uzasadnieniem.
- * Dziś puste. Uwaga: na telefonie dział Praca startuje od Dziennika ze zwiniętym nagłówkiem (N2, P2),
+ * Dziś jeden wpis: `kalendarz/1440/hydraulika` — `color-contrast` na znaczniku „dziś” (`.today-breath`:
+ * kolor akcentu na lekko zabarwionym tle w stylu Hydraulika). Zostaje do korekty tokenów (plan UI/UX 1.5/1.7),
+ * nie do zmiany kolorów w Fazie 0. Uwaga: na telefonie dział Praca startuje od Dziennika ze zwiniętym nagłówkiem (N2, P2),
  * więc skan nie widzi paska opanowania; na Quizie/Tablicy/Liście jego komórki są węższe niż 24 px —
  * wyjątek „równoważna kontrolka” z WCAG 2.5.8 (te same tematy są na tablicy), komórka ma 26 px wysokości.
  */
-const KNOWN: Record<string, string[]> = {};
+const KNOWN: Record<string, string[]> = {
+  "kalendarz/1440/hydraulika": ["color-contrast"],
+};
 
 async function scan(page: Page): Promise<string[]> {
   const result = await new AxeBuilder({ page }).withTags(TAGS).analyze();
@@ -71,10 +75,10 @@ for (const size of SIZES) {
   });
 }
 
-// Style (Ustawienia → Wygląd → Styl): każdy ma własne tokeny kolorów — ten sam audyt na Notatkach,
-// Kalendarzu i Grafiku (siatki dni, weekendy, kolorowe kafle).
+// Style (Ustawienia → Wygląd → Styl): każdy ma własne tokeny kolorów — ten sam audyt na wszystkich
+// widokach (plan UI/UX 0.2: wcześniej tylko Notatki, Kalendarz i Grafik).
 const SKINS = ["plan", "neon", "zorza", "miedz", "matrix", "hydraulika"] as const;
-const SKIN_VIEWS = VIEWS.filter((v) => v.name === "notatki" || v.name === "kalendarz" || v.name === "grafik");
+const SKIN_VIEWS = VIEWS;
 
 for (const size of SIZES) {
   test.describe(`a11y styl ${size.name}`, () => {

@@ -12,7 +12,9 @@ export function DailyQuote() {
   return (
     // Cichy dopisek pod siatką, nie baner nad polem dodawania — główne
     // zadanie ekranu to zapisanie notatki.
+    // `data-visual-mask`: zrzuty ekranu (e2e/visual.spec.ts) ukrywają cytat, bo zmienia się co dzień.
     <motion.figure
+      data-visual-mask=""
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.4 }}

@@ -14,6 +14,8 @@ export default defineConfig({
   // Przerywa, gdy dist/ jest starszy niż źródła (reuseExistingServer pomija build).
   globalSetup: "./e2e/global-setup.ts",
   forbidOnly: !!process.env.CI,
+  // Zrzuty wyglądu (@visual, e2e/visual.spec.ts) idą osobną konfiguracją: `npm run test:visual`.
+  grepInvert: /@visual/,
   retries: process.env.CI ? 1 : 0,
   // Pierwszy `goto` w `beforeEach` na obciążonym przebiegu bywa powyżej 30 s (domyślny limit testu); 60 s zamiast ponowień.
   timeout: 60_000,
