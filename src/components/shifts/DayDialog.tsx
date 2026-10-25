@@ -49,6 +49,8 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
   const [note, setNote] = useState(entry?.note ?? "");
   const [offSchedule, setOffSchedule] = useState(entry?.offSchedule === true);
   const [inLieu, setInLieu] = useState(entry?.inLieu === true);
+  const [timeOffOn, setTimeOffOn] = useState(entry?.timeOff !== undefined);
+  const [timeOffRate, setTimeOffRate] = useState<1 | 1.5>(entry?.timeOff ?? 1);
   // Ręczne godziny tego dnia; `null` = godziny rodzaju (albo zapisane z dnia).
   const [custom, setCustom] = useState<HoursDraft | null>(
     entry?.customHours && entry.hours
@@ -74,6 +76,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
   // W niedzielę i święto „poza grafikiem” zmienia dodatek za nadgodziny, w pozostałe dni — wolne za niedzielę.
   const askOffSchedule = isWork && (date.getDay() === 0 || !!holiday);
   const askInLieu = isWork && !askOffSchedule;
+  const askTimeOff = !!type && isAbsence(type);
 
   const hoursInvalid = !!custom && !customOk;
 
@@ -111,6 +114,7 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
       ...(note.trim() ? { note: note.trim() } : {}),
       ...(askOffSchedule && offSchedule ? { offSchedule: true as const } : {}),
       ...(askInLieu && inLieu ? { inLieu: true as const } : {}),
+      ...(askTimeOff && timeOffOn ? { timeOff: timeOffRate } : {}),
       ...(customHours && isWork ? { hours: shiftHours(customHours), customHours: true as const } : keepHours ? { hours: keepHours } : {}),
     } : null);
     onOpenChange(false);
@@ -200,6 +204,31 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
                   Ten dzień miał być wolny. Nadgodziny w niedzielę lub święto wolne wg grafiku mają dodatek 100%, w zaplanowane — 50%.
                 </p>
               </div>
+            </div>
+          )}
+
+          {askTimeOff && (
+            <div className="space-y-2">
+              <div className="flex gap-2.5">
+                <Checkbox id="day-time-off" checked={timeOffOn} onCheckedChange={(v) => setTimeOffOn(v === true)}
+                  aria-describedby="day-time-off-hint" className="mt-0.5" />
+                <div className="space-y-0.5">
+                  <Label htmlFor="day-time-off">Odbiór nadgodzin</Label>
+                  <p id="day-time-off-hint" className="text-xs text-muted-foreground">
+                    Ta nieobecność odbiera nadgodziny. Saldo w Grafiku liczy godziny zmiany tego dnia.
+                  </p>
+                </div>
+              </div>
+              {timeOffOn && (
+                <label className="flex items-center gap-2 text-sm ml-7">
+                  <span className="text-muted-foreground">Przelicznik</span>
+                  <select value={timeOffRate} onChange={(e) => setTimeOffRate(Number(e.target.value) as 1 | 1.5)}
+                    className="h-9 rounded-control border border-input bg-background px-2 text-sm">
+                    <option value={1}>1:1 (na wniosek pracownika)</option>
+                    <option value={1.5}>1:1,5 (z inicjatywy pracodawcy)</option>
+                  </select>
+                </label>
+              )}
             </div>
           )}
 

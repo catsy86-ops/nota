@@ -10,6 +10,7 @@ import { toastWithUndo } from "@/lib/undoToast";
 import { pluralPl } from "@/lib/plural";
 import { parseMoney } from "@/lib/shifts/money";
 import { SICK_RATE, type AbsenceEstimate } from "@/lib/shifts/absenceEstimate";
+import type { TimeOffBalance } from "@/lib/shifts/timeOff";
 import { useDayClock } from "@/lib/dayClock";
 import { deleteBonus, FTE_OPTIONS, formatDuration, formatHoursShort, formatMoney, leaveBalance, nightAllowance, saveBonus, useShifts, type MonthSummary, type PeriodSummary, type SettlementMonths, type ShiftBonus, type WorkSystem } from "@/lib/shifts";
 import { PERIOD_LABELS } from "./labels";
@@ -39,6 +40,8 @@ interface ShiftSummaryProps {
   toDate?: MonthSummary | null;
   /** Szacunek urlopu i L4 w zarobku (3.6). */
   estimate?: AbsenceEstimate | null;
+  /** Saldo odbioru nadgodzin w okresie rozliczeniowym (3.2). */
+  timeOff?: TimeOffBalance | null;
 }
 
 /** Miejscownik („w marcu”) — date-fns go nie zna. */
@@ -51,7 +54,7 @@ const monthName = (year: number, month: number, pattern = "LLLL") => format(new 
  * Podsumowanie miesiąca. Sercem jest pasek normy: wypełnia się do wymiaru
  * czasu pracy, a nadwyżka (nadgodziny) dosuwa się za nim w kolorze akcentu.
  */
-export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settlementMonths, fte, monthLabel, monthKey, onOpenSettings, onOpenDay, toDate, estimate }: ShiftSummaryProps) {
+export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settlementMonths, fte, monthLabel, monthKey, onOpenSettings, onOpenDay, toDate, estimate, timeOff }: ShiftSummaryProps) {
   const [includeEstimate, setIncludeEstimate] = useState(true);
   const { minutes, normMinutes, overtimeMinutes, dailyOvertimeMinutes, overtime100Minutes } = summary;
   const scale = Math.max(normMinutes, minutes, 1);
@@ -154,6 +157,14 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
             }).join("; ")}
           </p>
         </div>
+      )}
+
+      {timeOff && (timeOff.owedMin > 0 || timeOff.takenMin > 0) && (
+        <p aria-label="Odbiór nadgodzin" className="text-sm text-muted-foreground">
+          Nadgodziny w okresie: <span className="font-semibold text-foreground tabular-nums">{formatDuration(timeOff.owedMin)}</span>
+          {" · "}odebrane: <span className="font-semibold text-foreground tabular-nums">{formatDuration(timeOff.takenMin)}</span>
+          {" · "}{timeOff.remainingMin < 0 ? "odebrano więcej" : "do odbioru"}: <span className={cn("font-semibold tabular-nums", timeOff.remainingMin < 0 ? "text-destructive-ink" : "text-foreground")}>{formatDuration(Math.abs(timeOff.remainingMin))}</span>
+        </p>
       )}
 
       {summary.byType.length > 0 && (

@@ -79,6 +79,11 @@ export interface DayEntry {
    * Brak = 8 h × etat (wpisy urlopu sprzed tego pola).
    */
   plannedMin?: number;
+  /**
+   * Odbiór nadgodzin tym dniem nieobecności: przelicznik 1 (1:1) albo 1,5 (1:1,5, art. 151² KP).
+   * Dzień odbiera godziny swojej zmiany, przeliczone przez ten przelicznik.
+   */
+  timeOff?: 1 | 1.5;
   hours?: ShiftHours;
   /**
    * `hours` wpisał użytkownik ręcznie dla tego dnia (nie jest to kopia z rodzaju),
@@ -307,6 +312,8 @@ function toEntry(v: unknown): DayEntry | null {
   else delete entry.inLieu;
   if (Number.isInteger(o.plannedMin) && (o.plannedMin as number) > 0 && (o.plannedMin as number) <= 1440) entry.plannedMin = o.plannedMin;
   else delete entry.plannedMin;
+  if (o.timeOff === 1 || o.timeOff === 1.5) entry.timeOff = o.timeOff;
+  else delete entry.timeOff;
   if (isHours(o.hours)) entry.hours = shiftHours(o.hours);
   else delete entry.hours;
   if (o.customHours === true && entry.hours) entry.customHours = true;
