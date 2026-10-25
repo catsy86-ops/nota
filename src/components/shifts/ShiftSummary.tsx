@@ -2,12 +2,14 @@ import { useMemo, useState, type ReactNode } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { TriangleAlert, CalendarRange, Settings2, Trash } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
 import { pluralPl } from "@/lib/plural";
 import { parseMoney } from "@/lib/shifts/money";
+import { SICK_RATE, type AbsenceEstimate } from "@/lib/shifts/absenceEstimate";
 import { useDayClock } from "@/lib/dayClock";
 import { deleteBonus, FTE_OPTIONS, formatDuration, formatHoursShort, formatMoney, leaveBalance, nightAllowance, saveBonus, useShifts, type MonthSummary, type PeriodSummary, type SettlementMonths, type ShiftBonus, type WorkSystem } from "@/lib/shifts";
 import { PERIOD_LABELS } from "./labels";
@@ -35,6 +37,8 @@ interface ShiftSummaryProps {
   onOpenDay?: (dayKey: string) => void;
   /** Podsumowanie tylko do dziś — tylko dla bieżącego miesiąca. */
   toDate?: MonthSummary | null;
+  /** Szacunek urlopu i L4 w zarobku (3.6). */
+  estimate?: AbsenceEstimate | null;
 }
 
 /** Miejscownik („w marcu”) — date-fns go nie zna. */
@@ -47,7 +51,8 @@ const monthName = (year: number, month: number, pattern = "LLLL") => format(new 
  * Podsumowanie miesiąca. Sercem jest pasek normy: wypełnia się do wymiaru
  * czasu pracy, a nadwyżka (nadgodziny) dosuwa się za nim w kolorze akcentu.
  */
-export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settlementMonths, fte, monthLabel, monthKey, onOpenSettings, onOpenDay, toDate }: ShiftSummaryProps) {
+export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settlementMonths, fte, monthLabel, monthKey, onOpenSettings, onOpenDay, toDate, estimate }: ShiftSummaryProps) {
+  const [includeEstimate, setIncludeEstimate] = useState(true);
   const { minutes, normMinutes, overtimeMinutes, dailyOvertimeMinutes, overtime100Minutes } = summary;
   const scale = Math.max(normMinutes, minutes, 1);
   // Nadgodziny dobowe mogą być i poniżej normy miesiąca — pasek dzieli faktycznie przepracowane godziny.
@@ -151,7 +156,10 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
         </div>
       )}
 
-      {summary.byType.length > 0 && <Receipt summary={summary} hourlyRate={hourlyRate} monthLabel={monthLabel} />}
+      {summary.byType.length > 0 && (
+        <Receipt summary={summary} hourlyRate={hourlyRate} monthLabel={monthLabel} estimate={estimate ?? null}
+          includeEstimate={includeEstimate} onToggleEstimate={setIncludeEstimate} />
+      )}
       <BonusPanel monthKey={monthKey} bonuses={summary.bonuses} />
 
 
@@ -224,7 +232,15 @@ const round2 = (n: number) => Math.round(n * 100) / 100;
  * nadgodziny osobną pozycją i „Razem brutto” pod podwójną kreską. Kwoty tylko,
  * gdy jest stawka — bez niej rachunek liczy same godziny.
  */
-function Receipt({ summary, hourlyRate, monthLabel }: { summary: MonthSummary; hourlyRate: number; monthLabel: string }) {
+function Receipt({ summary, hourlyRate, monthLabel, estimate, includeEstimate, onToggleEstimate }: {
+  summary: MonthSummary;
+  hourlyRate: number;
+  monthLabel: string;
+  /** Szacunek urlopu i L4 (3.6); `null`, gdy w miesiącu ich nie ma. */
+  estimate: AbsenceEstimate | null;
+  includeEstimate: boolean;
+  onToggleEstimate: (include: boolean) => void;
+}) {
   const paid = summary.earnings > 0;
   const lines = summary.byType.map(({ type, count, minutes }) => {
     const absence = type.kind === "absence";
@@ -266,11 +282,27 @@ function Receipt({ summary, hourlyRate, monthLabel }: { summary: MonthSummary; h
         {paid && summary.bonuses.map((b) => (
           <ReceiptLine key={b.id} label={<span className="font-body font-medium truncate">Premia: {b.name}</span>} hours="" amount={formatMoney(b.amount)} />
         ))}
+        {paid && estimate && estimate.leave.days > 0 && (
+          <ReceiptLine label={<span className="font-body font-medium text-muted-foreground">Urlop (szacunek)</span>}
+            hours={formatDuration(estimate.leave.minutes)} amount={includeEstimate ? formatMoney(estimate.leave.amount) : "—"} />
+        )}
+        {paid && estimate && estimate.sick.days > 0 && (
+          <ReceiptLine label={<span className="font-body font-medium text-muted-foreground">L4 {Math.round(SICK_RATE * 100)}% (szacunek)</span>}
+            hours={formatDuration(estimate.sick.minutes)} amount={includeEstimate ? formatMoney(estimate.sick.amount) : "—"} />
+        )}
       </ul>
+      {paid && estimate && (
+        <label className="mt-2 flex items-center gap-2 font-body text-xs text-muted-foreground coarse:min-h-11">
+          <Checkbox checked={includeEstimate} onCheckedChange={(v) => onToggleEstimate(v === true)} />
+          Wlicz szacunki urlopu i L4
+        </label>
+      )}
       {paid && (
         <p className="mt-3 pt-2 border-t-[3px] border-double border-foreground/40 flex items-baseline justify-between gap-3">
           <span className="font-body text-2xs font-semibold uppercase tracking-[0.2em]">Razem brutto</span>
-          <span className="font-display font-extrabold text-xl sm:text-2xl text-primary-ink tabular-nums"><CountUp value={summary.earnings} format={formatMoney} /></span>
+          <span className="font-display font-extrabold text-xl sm:text-2xl text-primary-ink tabular-nums">
+            <CountUp value={summary.earnings + (includeEstimate && estimate ? estimate.leave.amount + estimate.sick.amount : 0)} format={formatMoney} />
+          </span>
         </p>
       )}
     </div>

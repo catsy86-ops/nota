@@ -18,6 +18,7 @@ import { pluralPl } from "@/lib/plural";
 import { toastWithUndo } from "@/lib/undoToast";
 import { NowCard } from "./NowCard";
 import { subscribeShiftAction, takeShiftAction } from "@/lib/shifts/shiftActions";
+import { absenceEstimate } from "@/lib/shifts/absenceEstimate";
 import { BrushBar, type Brush } from "./BrushBar";
 import { BrushHours } from "./BrushHours";
 import { ShiftMonthGrid } from "./ShiftMonthGrid";
@@ -152,6 +153,8 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   const summary = useMemo(() => monthSummary(data, shownMonth.getFullYear(), shownMonth.getMonth()), [data, shownMonth]);
   // „Do dziś” tylko w bieżącym miesiącu; w innych nie ma czego porównywać.
   const toDate = useMemo(() => (isSameMonth(shownMonth, new Date()) ? monthSummaryToDate(data, shownMonth.getFullYear(), shownMonth.getMonth(), dayKey(new Date())) : null), [data, shownMonth]);
+  // Szacunek urlopu i L4 w zarobku (3.6): tylko gdy w miesiącu jest urlop albo L4.
+  const estimate = useMemo(() => absenceEstimate(data, shownMonth.getFullYear(), shownMonth.getMonth()), [data, shownMonth]);
   // Jeden region „na żywo” (audyt UI, pkt 9): zmiana tygodnia lub miesiąca ogłasza się tym samym regionem co akcje,
   // niezależnie od tego, czy zmieniono ją przyciskiem, gestem czy skrótem.
   const periodLabel = isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl });
@@ -580,7 +583,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
 
         </div>
         <div className="order-10 @container short:col-span-full">
-          <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} nightRate={nightRateFor(shownMonth.getFullYear(), data.nightRate)} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(shownMonth, "LLLL yyyy", { locale: pl })} monthKey={format(shownMonth, "yyyy-MM")} onOpenSettings={() => setSettingsOpen(true)} onOpenDay={setOpenDay} toDate={toDate} />
+          <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} nightRate={nightRateFor(shownMonth.getFullYear(), data.nightRate)} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(shownMonth, "LLLL yyyy", { locale: pl })} monthKey={format(shownMonth, "yyyy-MM")} onOpenSettings={() => setSettingsOpen(true)} onOpenDay={setOpenDay} toDate={toDate} estimate={estimate} />
         </div>
       </aside>
 
