@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { DayEntry } from "./model";
-import { dayKeyCommand, planMonthCopy, planPaste, planTransfer, planWeekCopy, transferredEntry } from "./move";
+import { dayKeyCommand, planMonthCopy, planPaste, planSwap, planTransfer, planWeekCopy, transferredEntry } from "./move";
 import { addDaysToKey, startOfWeekKey, weekKeys, weekRangeLabel } from "../week";
 
 const TODAY = "2026-10-07";
@@ -135,5 +135,20 @@ describe("planMonthCopy", () => {
     const plan = planMonthCopy(days, "2026-09", "2026-10", "2026-10-25");
     expect(plan.overwritten).toBe(1);
     expect(plan.changes["2026-10-05"]?.type).toBe("n");
+  });
+});
+
+describe("planSwap", () => {
+  it("zamienia dwa dni miejscami, z odchyleniem i notatką", () => {
+    const days = { "2026-10-05": { type: "d", note: "A" }, "2026-10-06": { type: "n", extraMin: 30 } };
+    const plan = planSwap(days, "2026-10-05", "2026-10-06", "2026-10-01")!;
+    expect(plan.changes["2026-10-06"]).toEqual({ type: "d", note: "A" });
+    expect(plan.changes["2026-10-05"]).toEqual({ type: "n", extraMin: 30 });
+  });
+
+  it("nie zamienia z pustym dniem ani z samym sobą", () => {
+    const days = { "2026-10-05": { type: "d" } };
+    expect(planSwap(days, "2026-10-05", "2026-10-06", "2026-10-01")).toBeNull();
+    expect(planSwap(days, "2026-10-05", "2026-10-05", "2026-10-01")).toBeNull();
   });
 });

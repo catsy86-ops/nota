@@ -10,7 +10,7 @@ import type { Note } from "@/hooks/useNotes";
 import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
 import { buildSiteTimesheetCsv } from "@/lib/study/siteTimesheet";
 import { useStudy } from "@/lib/study/store";
-import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, defaultPatternStart, shortRests, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, defaultPatternStart, shortRests, swapDays, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
@@ -45,6 +45,9 @@ function brushHint(brush: Brush, typesById: Map<string, ShiftType>, hours: Shift
 const exportedStoreFor = (key: string) => createPersistedStore<string[]>(key, [], {
   merge: (defaults, stored) => (Array.isArray(stored) ? stored.filter((k): k is string => typeof k === "string") : defaults),
 });
+
+/** Wybór po upuszczeniu zmiany: przenieś, skopiuj albo zamień miejscami z zajętym dniem. */
+type DropChoice = TransferMode | "swap";
 
 type ShiftsLayout = "month" | "week";
 
@@ -199,7 +202,13 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   }, [brush, activeHours, typesById, toastReplaced]);
 
   // Przenoszenie i kopiowanie wpisów — jedna ścieżka dla myszy, dotyku i klawiatury.
-  const transfer = useCallback((from: string, to: string, mode: TransferMode) => {
+  const transfer = useCallback((from: string, to: string, mode: DropChoice) => {
+    if (mode === "swap") {
+      const before = swapDays(from, to, dayKey(new Date()));
+      if (!before) { toast("Nie ma czego zamienić", { description: "Zamienić można dwa dni, w których są zmiany." }); return; }
+      toastWithUndo(`Zamieniono: ${shortDate(from)} ⇄ ${shortDate(to)}`, () => restoreDays(before));
+      return;
+    }
     const days = shiftStore.get().days;
     const src = days[from];
     if (!src) { toast("Ten dzień nie ma zmiany", { description: "Nie ma czego przenosić ani kopiować." }); return; }
@@ -552,6 +561,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
 
       <TransferChooser
         pending={asking}
+        canSwap={!!asking && !!data.days[asking.to]}
         label={asking ? `${typesById.get(data.days[asking.from]?.type ?? "")?.name ?? "Zmiana"}: ${shortDate(asking.from)} → ${shortDate(asking.to)}` : ""}
         onChoose={(mode) => { if (asking) transfer(asking.from, asking.to, mode); setAsking(null); }}
         onClose={() => setAsking(null)}
@@ -596,21 +606,24 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
 }
 
 /** Dotyk nie ma Alta — po upuszczeniu zmiany pytamy, co z nią zrobić. */
-function TransferChooser({ pending, label, onChoose, onClose }: {
+function TransferChooser({ pending, label, canSwap, onChoose, onClose }: {
   pending: { from: string; to: string } | null;
   label: string;
-  onChoose: (mode: TransferMode) => void;
+  /** Dzień docelowy ma zmianę — wtedy można je zamienić miejscami. */
+  canSwap: boolean;
+  onChoose: (mode: DropChoice) => void;
   onClose: () => void;
 }) {
   return (
     <Dialog open={pending !== null} onOpenChange={(o) => { if (!o) onClose(); }}>
       <ResponsiveDialogContent className="max-w-xs">
         <DialogHeader>
-          <DialogTitle>Przenieść czy skopiować?</DialogTitle>
-          <DialogDescription>{label}</DialogDescription>
+          <DialogTitle>{canSwap ? "Przenieść, skopiować czy zamienić?" : "Przenieść czy skopiować?"}</DialogTitle>
+          <DialogDescription>{label}{canSwap ? " Dzień docelowy ma już zmianę." : ""}</DialogDescription>
         </DialogHeader>
         <ResponsiveDialogFooter className="gap-2 sm:gap-2">
           <Button type="button" variant="outline" onClick={() => onChoose("copy")}>Skopiuj</Button>
+          {canSwap && <Button type="button" variant="outline" onClick={() => onChoose("swap")}>Zamień</Button>}
           <Button type="button" onClick={() => onChoose("move")}>Przenieś</Button>
         </ResponsiveDialogFooter>
       </ResponsiveDialogContent>

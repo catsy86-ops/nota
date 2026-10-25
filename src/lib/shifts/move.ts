@@ -71,6 +71,21 @@ export interface WeekCopyPlan {
  * dokłada wpisy, a nie wymazuje tego, co ktoś już zaplanował.
  */
 /**
+ * Zamiana dwóch dni jednym zapisem: wpis z `from` ląduje na `to` i odwrotnie. Zwraca `null`,
+ * gdy któryś dzień jest pusty albo to ten sam dzień.
+ */
+export function planSwap(days: Record<string, DayEntry>, from: string, to: string, todayKey: string): WeekCopyPlan | null {
+  const a = days[from];
+  const b = days[to];
+  if (!a || !b || from === to) return null;
+  const changes: Record<string, DayEntry> = {
+    [to]: transferredEntry(a, to, todayKey),
+    [from]: transferredEntry(b, from, todayKey),
+  };
+  return { changes, copied: 2, overwritten: 2 };
+}
+
+/**
  * Kopia miesiąca `fromMonth` na `toMonth` (`RRRR-MM`) po dniach tygodnia: pn → pn, z tym samym
  * rzędem tygodnia (przesunięcie o wielokrotność 7 dni). Dzień bez pary w miesiącu docelowym się
  * pomija, a kopia nie nadpisuje dni, które już mają wpis.

@@ -3,7 +3,7 @@ import { yjsStore } from "@/lib/yjsStore";
 import { logDiag } from "@/lib/diagnostics";
 import { absenceKindOf, isAbsence, migrate, type AbsenceKind, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
 import { applyPattern, patternOverlap } from "./pattern";
-import { planMonthCopy, planPaste, planTransfer, planWeekCopy, type TransferMode, type WeekCopyPlan } from "./move";
+import { planMonthCopy, planPaste, planSwap, planTransfer, planWeekCopy, type TransferMode, type WeekCopyPlan } from "./move";
 import { createYShifts, MAIN_SCHEDULE_ID, SHIFTS_SYSTEM_ORIGIN, type DeletedShiftType, type YShifts } from "./yShifts";
 import { createScheduleRegistry, isScheduleId, type ShiftSchedule } from "./schedules";
 
@@ -173,6 +173,12 @@ export function patternOverlapInStore(steps: (string | null)[], startKey: string
 }
 
 /** Kopiuje zmiany miesiąca `fromMonth` na `toMonth` po dniach tygodnia; `null`, gdy nie ma czego kopiować. */
+/** Zamienia dwa zajęte dni miejscami; `null`, gdy któregoś nie ma. */
+export function swapDays(from: string, to: string, todayKey: string): DaysBefore | null {
+  const plan = planSwap(yShifts.get().days, from, to, todayKey);
+  return plan ? yShifts.writeDays(plan.changes) : null;
+}
+
 export function copyMonth(fromMonth: string, toMonth: string, todayKey: string): { before: DaysBefore; copied: number; overwritten: number } | null {
   const plan = planMonthCopy(yShifts.get().days, fromMonth, toMonth, todayKey);
   if (!plan.copied) return null;
