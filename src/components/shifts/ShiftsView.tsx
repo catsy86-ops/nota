@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDayClock } from "@/lib/dayClock";
 import { addMonths, format, isSameMonth, startOfMonth } from "date-fns";
 import { pl } from "date-fns/locale";
-import { CalendarArrowDown, CalendarRange, FileSpreadsheet, ChevronLeft, ChevronRight, Image as ImageIcon, Redo2, Share2, Undo2 } from "lucide-react";
+import { CalendarArrowDown, CalendarRange, ChevronDown, FileSpreadsheet, ChevronLeft, ChevronRight, Image as ImageIcon, Redo2, Share2, Undo2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { dayKey, expandOccurrences, groupByDay, type Occurrence } from "@/lib/reminderOccurrences";
@@ -10,7 +10,7 @@ import type { Note } from "@/hooks/useNotes";
 import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
 import { buildSiteTimesheetCsv } from "@/lib/study/siteTimesheet";
 import { useStudy } from "@/lib/study/store";
-import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, copyRange, defaultPatternStart, scheduleDump, monthSummaryToDate, shortRests, swapDays, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, copyRange, defaultPatternStart, scheduleDump, useSchedules, monthSummaryToDate, shortRests, swapDays, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
@@ -118,9 +118,13 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   const [patternOpen, setPatternOpen] = useState(false);
   const [rangeOpen, setRangeOpen] = useState(false);
   const [imageTheme, setImageTheme] = useState<ImageTheme>("light");
+  const [switcherOpen, setSwitcherOpen] = useState(false);
+  const schedules = useSchedules();
+  const activeScheduleName = schedules.find((s) => s.id === activeScheduleId())?.name ?? "Główny";
   // Nakładka: tylko do odczytu, z innego grafiku niż aktywny (4.1).
   const [overlayId, setOverlayId] = useState<string | null>(null);
   const effectiveOverlay = overlayId && overlayId !== activeScheduleId() ? overlayId : null;
+  const overlayScheduleName = schedules.find((s) => s.id === effectiveOverlay)?.name ?? "";
   // `data` w zależnościach: zmiany w grafiku głównym odświeżają też nakładkę (scheduleDump czyta drugi dokument).
   const overlayData = useMemo(() => (effectiveOverlay ? scheduleDump(effectiveOverlay) : null), [effectiveOverlay, data]); // eslint-disable-line react-hooks/exhaustive-deps
   const overlayGrid = useMemo(() => (overlayData ? { days: overlayData.days, typesById: new Map(overlayData.types.map((t) => [t.id, t])) } : null), [overlayData]);
@@ -421,7 +425,17 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
     // przy malowaniu dni i przewijaniu (plan UI 2.3).
     <div className="flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start xl:gap-8 short:grid short:grid-cols-[auto_minmax(0,1fr)_auto] short:items-center short:gap-x-3 short:gap-y-2">
       <div className="contents xl:flex xl:flex-col xl:gap-5 xl:min-w-0">
-        <div className="order-0 w-full"><ScheduleSwitcher overlayId={effectiveOverlay} onOverlayChange={setOverlayId} /></div>
+        {/* Telefon: jeden wiersz „Grafik: …”, przełącznik rozwija się pod nim (5.5). Od sm — zawsze widoczny. */}
+        <div className="order-0 w-full space-y-2">
+          <button type="button" aria-expanded={switcherOpen} aria-controls="shift-schedules" onClick={() => setSwitcherOpen((o) => !o)}
+            className="sm:hidden pressable flex w-full items-center justify-between gap-2 h-10 coarse:h-11 px-3 rounded-control border border-border/60 bg-card text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+            <span className="min-w-0 truncate">Grafik: {activeScheduleName}{effectiveOverlay ? ` · nakładka: ${overlayScheduleName}` : ""}</span>
+            <ChevronDown className={cn("w-4 h-4 shrink-0 transition-transform", switcherOpen && "rotate-180")} aria-hidden />
+          </button>
+          <div id="shift-schedules" className={cn(!switcherOpen && "hidden", "sm:block")}>
+            <ScheduleSwitcher overlayId={effectiveOverlay} onOverlayChange={setOverlayId} />
+          </div>
+        </div>
         {commonFree !== null && (
           <p className="order-0 w-full text-xs text-muted-foreground px-1">Wspólne wolne dni w tym miesiącu (w obu grafikach): <span className="font-semibold text-foreground tabular-nums">{commonFree}</span></p>
         )}
