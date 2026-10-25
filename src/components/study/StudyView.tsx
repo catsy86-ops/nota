@@ -242,7 +242,7 @@ function StudyScreen() {
       ) : (
         <header className="space-y-4" data-study-header="full">
           <div>
-            <h2 className="font-display text-2xl">Nauka: instalacje wod-kan</h2>
+            <h2 className="font-display text-2xl">Nauka</h2>
             <p className="text-sm text-muted-foreground">Poradnik „Woda użytkowa” i listy kontrolne G-HEAT, KAN-therm UltraLine.</p>
           </div>
           <MasteryStrip />

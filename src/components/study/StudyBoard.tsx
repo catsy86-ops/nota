@@ -234,7 +234,7 @@ export function StudyBoard({ onPractice, onJournal }: { onPractice: (topicId: st
       >
         {COLUMNS.map((c) => (
           <ToggleGroupItem key={c} value={c} className="coarse:h-11">
-            {COLUMN_LABEL[c]} <span className="ml-1 font-mono text-xs tabular-nums opacity-70">{counts[c]}</span>
+            {COLUMN_LABEL[c]} <span className="ml-1 rounded-full bg-background px-1.5 font-mono text-xs font-semibold tabular-nums text-foreground">{counts[c]}</span>
           </ToggleGroupItem>
         ))}
       </ToggleGroup>
@@ -246,7 +246,7 @@ export function StudyBoard({ onPractice, onJournal }: { onPractice: (topicId: st
               <header className="px-1 pb-2.5">
                 <h3 className="flex items-baseline gap-2 font-display text-base">
                   {COLUMN_LABEL[col]}
-                  <span className="font-mono text-xs text-muted-foreground tabular-nums" data-testid={`count-${col}`}>{topics.length}</span>
+                  <span className="rounded-full bg-background px-1.5 font-mono text-xs font-semibold text-foreground tabular-nums" data-testid={`count-${col}`}>{topics.length}</span>
                 </h3>
                 <p className="text-xs text-muted-foreground">{COLUMN_HINT[col]}</p>
               </header>
