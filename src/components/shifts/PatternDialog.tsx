@@ -8,7 +8,8 @@ import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { addDaysKey, dayDiff, daysUntilMonthEnd, deletePattern, newShiftId, savePattern, shiftInk, shiftTextOnCard, type ShiftPattern, type ShiftType } from "@/lib/shifts";
+import { addDaysKey, dayDiff, daysUntilMonthEnd, deletePattern, newShiftId, savePattern, shiftInk, shiftTextOnCard, type PatternOverlapKind, type ShiftPattern, type ShiftType } from "@/lib/shifts";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { toastWithUndo } from "@/lib/undoToast";
 import { TAP } from "@/lib/platform";
@@ -20,8 +21,10 @@ interface PatternDialogProps {
   patterns: ShiftPattern[];
   /** Domyślny pierwszy dzień — początek oglądanego miesiąca. */
   defaultStart: string;
-  /** `anchorKey` — dzień pierwszego kroku cyklu; faza każdego dnia liczy się od niego. */
-  onApply: (steps: (string | null)[], startKey: string, length: number, anchorKey: string) => void;
+  /** `anchorKey` — dzień pierwszego kroku cyklu; faza każdego dnia liczy się od niego. `skipProtected` — zostawić urlop, L4 i notatki. */
+  onApply: (steps: (string | null)[], startKey: string, length: number, anchorKey: string, skipProtected: boolean) => void;
+  /** Ile istniejących wpisów nałożenie by zmieniło (przed zatwierdzeniem). */
+  overlapOf: (steps: (string | null)[], startKey: string, length: number, anchorKey: string) => Partial<Record<PatternOverlapKind, number>>;
 }
 
 const RANGES = [
@@ -31,6 +34,19 @@ const RANGES = [
 ] as const;
 
 const PREVIEW_DAYS = 14;
+
+/** Zdanie o tym, co nałożenie zrobi z urlopami, L4 i notatkami. */
+function overlapSummary(overlap: Partial<Record<PatternOverlapKind, number>>, skipProtected: boolean): string {
+  const part = (n: number | undefined, forms: [string, string, string]) => (n ? `${n} ${pluralPl(n, forms)}` : null);
+  const parts = [
+    part(overlap.leave, ["dzień urlopu", "dni urlopu", "dni urlopu"]),
+    part(overlap.sick, ["dzień L4", "dni L4", "dni L4"]),
+    part(overlap.other, ["dzień nieobecności", "dni nieobecności", "dni nieobecności"]),
+    part(overlap.note, ["notatka", "notatki", "notatek"]),
+  ].filter((p): p is string => p !== null);
+  if (parts.length === 0) return "Nie dotyka urlopów, L4 ani notatek.";
+  return `${skipProtected ? "Pominie" : "Zastąpi"}: ${parts.join(", ")}.`;
+}
 
 /**
  * Układanie i nakładanie cyklu zmian, np. D D N N – – – –. Formularz
@@ -47,7 +63,7 @@ export function PatternDialog({ open, onOpenChange, ...form }: PatternDialogProp
   );
 }
 
-function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: Omit<PatternDialogProps, "open">) {
+function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply, overlapOf }: Omit<PatternDialogProps, "open">) {
   const [steps, setSteps] = useState<(string | null)[]>(() => patterns[0]?.steps ?? []);
   const [start, setStart] = useState(defaultStart);
   const [range, setRange] = useState(0);
@@ -55,11 +71,14 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
   // Zapisany cykl, którego kroki są wczytane (do „Przedłuż cykl” i zapisu kotwicy).
   const [selected, setSelected] = useState<ShiftPattern | null>(null);
   const [anchor, setAnchor] = useState(defaultStart);
+  // Domyślnie nie ruszamy urlopów, L4 i notatek — nadpisanie trzeba włączyć świadomie.
+  const [skipProtected, setSkipProtected] = useState(true);
   const typesById = useMemo(() => new Map(types.map((t) => [t.id, t])), [types]);
 
   const length = start ? daysUntilMonthEnd(start, RANGES[range].months) : 0;
   const anchorOk = /^\d{4}-\d{2}-\d{2}$/.test(anchor);
   const valid = steps.length > 0 && /^\d{4}-\d{2}-\d{2}$/.test(start) && anchorOk;
+  const overlap = valid ? overlapOf(steps, start, length, anchor) : {};
   const preview = Array.from({ length: PREVIEW_DAYS }, (_, i) => {
     const [y, m, d] = start.split("-").map(Number);
     const offset = anchorOk ? dayDiff(anchor, addDaysKey(start, i)) : i;
@@ -75,7 +94,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
   function apply() {
     if (!valid) return;
     const meta = { anchor, appliedUntil: addDaysKey(start, length - 1) };
-    onApply(steps, start, length, anchor);
+    onApply(steps, start, length, anchor, skipProtected);
     if (name.trim()) savePattern({ id: newShiftId("c"), name: name.trim(), steps, ...meta });
     else if (selected) savePattern({ ...selected, steps, ...meta });
     onOpenChange(false);
@@ -90,7 +109,7 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
     const from = extendKey;
     const len = daysUntilMonthEnd(from, RANGES[range].months);
     const kotwica = selected.anchor ?? selected.appliedUntil;
-    onApply(selected.steps, from, len, kotwica);
+    onApply(selected.steps, from, len, kotwica, skipProtected);
     savePattern({ ...selected, anchor: kotwica, appliedUntil: addDaysKey(from, len - 1) });
     onOpenChange(false);
   }
@@ -186,6 +205,16 @@ function PatternForm({ onOpenChange, types, patterns, defaultStart, onApply }: O
                 );
               })}
             </div>
+          </div>
+        )}
+
+        {valid && (
+          <div className="space-y-2 rounded-card border border-border/60 p-3">
+            <p className="text-sm" aria-live="polite">{overlapSummary(overlap, skipProtected)}</p>
+            <label className="flex items-center gap-2 text-sm coarse:min-h-11">
+              <Checkbox checked={skipProtected} onCheckedChange={(v) => setSkipProtected(v === true)} />
+              Pomiń dni z nieobecnością i notatką
+            </label>
           </div>
         )}
 

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
 import { pluralPl } from "@/lib/plural";
+import { parseMoney } from "@/lib/shifts/money";
 import { useDayClock } from "@/lib/dayClock";
 import { deleteBonus, FTE_OPTIONS, formatDuration, formatHoursShort, formatMoney, leaveBalance, nightAllowance, saveBonus, useShifts, type MonthSummary, type PeriodSummary, type SettlementMonths, type ShiftBonus, type WorkSystem } from "@/lib/shifts";
 import { PERIOD_LABELS } from "./labels";
@@ -200,10 +201,8 @@ function Receipt({ summary, hourlyRate, monthLabel }: { summary: MonthSummary; h
       amount: absence ? null : round2((minutes / 60) * (type.rate ?? hourlyRate)),
     };
   });
-  const base = lines.reduce((sum, l) => sum + (l.amount ?? 0), 0);
-  // Reszta zarobku to dodatek za nadgodziny (50/100%) — w podstawie każda godzina już jest.
-  // Premie w rachunku są osobnymi liniami, więc odejmujemy je przed wyliczeniem dodatku.
-  const premium = round2(summary.earnings - summary.bonusTotal - base);
+  // Dodatek liczony w `monthSummary` (50/100%, dobowe i okresowe) — linie rachunku sumują się do `earnings` co do grosza.
+  const premium = summary.overtimePremium;
 
   return (
     <div className="receipt font-mono text-xs sm:text-[0.8125rem] tabular-nums">
@@ -254,7 +253,8 @@ function ReceiptLine({ label, hours, amount }: { label: ReactNode; hours: string
 function BonusPanel({ monthKey, bonuses }: { monthKey: string; bonuses: ShiftBonus[] }) {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
-  const value = Number(amount.trim().replace(",", "."));
+  // `parseMoney` przyjmuje też „1 000,50”; nieczytelne daje NaN, więc przycisk „Dodaj” zostaje nieaktywny.
+  const value = parseMoney(amount) ?? Number.NaN;
   const valid = name.trim().length > 0 && amount.trim() !== "" && Number.isFinite(value) && value > 0;
 
   const add = () => {

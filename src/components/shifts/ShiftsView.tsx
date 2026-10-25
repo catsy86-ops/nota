@@ -10,7 +10,7 @@ import type { Note } from "@/hooks/useNotes";
 import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
 import { buildSiteTimesheetCsv } from "@/lib/study/siteTimesheet";
 import { useStudy } from "@/lib/study/store";
-import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, patternOverlapInStore, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
@@ -252,8 +252,8 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
     });
   }
 
-  function applyPattern(steps: (string | null)[], startKey: string, length: number, anchorKey: string) {
-    const before = applyPatternToStore(steps, startKey, length, anchorKey);
+  function applyPattern(steps: (string | null)[], startKey: string, length: number, anchorKey: string, skipProtected: boolean) {
+    const before = applyPatternToStore(steps, startKey, length, anchorKey, skipProtected);
     toast.success(`Nałożono cykl na ${length} ${pluralPl(length, ["dzień", "dni", "dni"])}`, {
       action: { label: "Cofnij", onClick: () => restoreDays(before) },
     });
@@ -381,11 +381,11 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           {/* Schowek jako osobny chip: widoczny także po „Rozumiem” i nie znika razem z podpowiedzią. */}
           {clip && (
             <div className="flex flex-wrap items-center gap-2 px-1 text-xs">
-              <span className="rounded-md bg-muted px-2 py-1 font-medium text-foreground">
+              <span className="rounded-control bg-muted px-2 py-1 font-medium text-foreground">
                 Schowek: {typesById.get(clip.type)?.name ?? "wpis"}{clip.note ? " z notatką" : ""}
               </span>
               <button type="button" onClick={() => { clipRef.current = null; setClip(null); }}
-                className="rounded-md px-2 py-1 coarse:py-2 font-medium text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                className="rounded-control px-2 py-1 coarse:py-2 font-medium text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                 Wyczyść
               </button>
             </div>
@@ -546,6 +546,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         patterns={data.patterns}
         defaultStart={isWeek ? weekStart : dayKey(month)}
         onApply={applyPattern}
+        overlapOf={patternOverlapInStore}
       />
     </div>
   );

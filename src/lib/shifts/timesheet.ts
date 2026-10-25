@@ -1,9 +1,11 @@
 import { dayType, isAbsence, type ShiftData } from "./model";
-import { entryMinutesOn, nightMinutes } from "./time";
+import { entryMinutesOn, nightMinutes, parseHm } from "./time";
 import { monthSummary } from "./summary";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 const hours = (min: number) => (min / 60).toFixed(2).replace(".", ",");
+/** Godzina zegarowa z minut od północy; minuty poza dobą zawijają się (zmiana przez północ). */
+const clock = (min: number) => { const m = ((min % 1440) + 1440) % 1440; return `${pad(Math.floor(m / 60))}:${pad(m % 60)}`; };
 
 /** Pole CSV w cudzysłowie, gdy zawiera separator, cudzysłów albo koniec linii; chroni też przed formułami arkusza. */
 export function cell(v: string | number): string {
@@ -18,7 +20,7 @@ export function cell(v: string | number): string {
  */
 export function buildTimesheetCsv(data: ShiftData, year: number, month: number): string {
   const typesById = new Map(data.types.map((t) => [t.id, t]));
-  const rows: (string | number)[][] = [["Data", "Zmiana", "Od", "Do", "Przerwa (min)", "Godziny", "Z tego noc", "Odchylenie (min)", "Notatka"]];
+  const rows: (string | number)[][] = [["Data", "Zmiana", "Od", "Do", "Do (plan)", "Przerwa (min)", "Godziny", "Z tego noc", "Odchylenie (min)", "Notatka"]];
   const last = new Date(year, month + 1, 0).getDate();
   for (let d = 1; d <= last; d++) {
     const key = `${year}-${pad(month + 1)}-${pad(d)}`;
@@ -31,6 +33,7 @@ export function buildTimesheetCsv(data: ShiftData, year: number, month: number):
       key,
       t.name,
       absence ? "" : t.start,
+      absence ? "" : clock(parseHm(t.end) + (entry.extraMin ?? 0)),
       absence ? "" : t.end,
       absence ? "" : t.breakMin,
       absence ? "" : hours(entryMinutesOn(t, entry, key)),

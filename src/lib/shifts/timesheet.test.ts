@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EMPTY_SHIFT_DATA, type ShiftData } from "./model";
+import { DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, type ShiftData } from "./model";
 import { buildTimesheetCsv } from "./timesheet";
 
 const data: ShiftData = {
@@ -22,8 +22,15 @@ describe("buildTimesheetCsv", () => {
 
   it("liczy godziny zmiany z odchyleniem i neutralizuje formułę w notatce", () => {
     const row = lines.find((l) => l.startsWith("2026-10-05"))!;
-    expect(row).toContain("Dzień;06:00;14:00;0;8,50");
+    expect(row).toContain("Dzień;06:00;14:30;14:00;0;8,50");
     expect(row).toContain("'=SUMA(A1)");
+  });
+
+  it("„Do” to faktyczny koniec, a zmiana przez północ zawija się do doby", () => {
+    const late = { ...DEFAULT_SHIFT_TYPES[0], id: "x", name: "Późna", start: "16:00", end: "23:30" };
+    const wrapped = buildTimesheetCsv({ ...data, types: [...data.types, late], days: { "2026-10-07": { type: "x", extraMin: 45 } } }, 2026, 9)
+      .split("\r\n").find((l) => l.startsWith("2026-10-07"))!;
+    expect(wrapped).toContain(";16:00;00:15;23:30;");
   });
 
   it("nieobecność nie ma godzin pracy", () => {

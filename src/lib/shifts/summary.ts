@@ -30,6 +30,10 @@ export interface MonthSummary {
   absenceDays: number;
   /** Zarobek brutto w zł (z dodatkami za nadgodziny i premiami); 0 gdy brak stawek. */
   earnings: number;
+  /** Podstawa: godziny rodzajów w zł (suma zaokrąglonych pozycji); bez nieobecności. */
+  basePay: number;
+  /** Dodatek za nadgodziny w zł (dobowe i okresowe) — część `earnings`. */
+  overtimePremium: number;
   /** Premie tego miesiąca (już w `earnings`). */
   bonuses: ShiftBonus[];
   /** Suma premii tego miesiąca w zł. */
@@ -344,6 +348,12 @@ export function monthSummary(data: ShiftData, year: number, month: number): Mont
   const monthKey = prefix.slice(0, -1);
   const bonuses = (data.bonuses ?? []).filter((b) => b.month === monthKey);
   const bonusTotal = round2(bonuses.reduce((acc, b) => acc + b.amount, 0));
+  const byType = data.types.map((t) => c.totals.get(t.id)).filter((t): t is ShiftTypeTotal => !!t);
+  // Podstawa liczona jak w rachunku: każda pozycja rodzaju zaokrąglona osobno, żeby suma linii zgadzała się z `earnings` co do grosza.
+  const basePay = round2(byType
+    .filter((t) => !isAbsence(t.type))
+    .reduce((acc, t) => acc + round2((t.minutes / 60) * (t.type.rate ?? data.hourlyRate)), 0));
+  const overtimePremium = round2(premium);
 
   return {
     daysWorked: c.daysWorked,
@@ -355,10 +365,12 @@ export function monthSummary(data: ShiftData, year: number, month: number): Mont
     dailyOvertimeMinutes: c.dailyOvertime,
     overtime100Minutes: c.daily100 + periodOvertime,
     absenceDays: c.absenceDays,
-    earnings: round2(c.base + premium + bonusTotal),
+    earnings: round2(basePay + overtimePremium + bonusTotal),
+    basePay,
+    overtimePremium,
     bonuses,
     bonusTotal,
-    byType: data.types.map((t) => c.totals.get(t.id)).filter((t): t is ShiftTypeTotal => !!t),
+    byType,
     shortRests: shortRests(data).filter((r) => r.dayKey.startsWith(prefix)),
     period: p.months === 1 ? null : {
       ...p,

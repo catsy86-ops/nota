@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -6,6 +6,7 @@ import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { EVENING_NUDGE_HOURS, FTE_OPTIONS, NIGHT_HOURS, NIGHT_STARTS, SETTLEMENT_MONTHS, setFte, setHourlyRate, setLeaveDays, setNightFrom, setNightRate, nightRateFor, formatMoney, setOvertimeFrom, setSettlementMonths, setSettlementStart, setSundayFrom, setWorkSystem, type SettlementMonths, type ShiftData, type WorkSystem } from "@/lib/shifts";
 import { readEveningNudgeTime, writeEveningNudgeTime } from "@/lib/shifts";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
+import { parseMoney } from "@/lib/shifts/money";
 import { cn } from "@/lib/utils";
 import { PERIOD_LABELS, WORK_SYSTEM_LABELS } from "./labels";
 
@@ -18,8 +19,6 @@ interface ShiftSettingsDialogProps {
 }
 
 const monthName = (m: number) => format(new Date(2026, m, 1), "LLLL", { locale: pl });
-
-const parseNum = (s: string) => parseFloat(s.replace(",", "."));
 
 const CONTROL = "w-full h-10 coarse:h-11 rounded-lg border border-input bg-background px-3 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
 
@@ -196,16 +195,27 @@ function RateField({ value, label = "Stawka za godzinę", hint = "Puste pole —
   const shown = (v: number) => (v === 0 ? "" : String(v));
   const [text, setText] = useState(() => shown(value));
   const [editing, setEditing] = useState(false);
+  // Błędny tekst nie zapisuje się — zostaje poprzednia stawka, a pod polem komunikat.
+  const [error, setError] = useState<string | null>(null);
+  const errorId = useId();
   useEffect(() => { if (!editing) setText(value === 0 ? "" : String(value)); }, [value, editing]);
   return (
     <Field label={label} hint={hint}>
       <div className="relative">
-        <input type="number" inputMode="decimal" min={0} step={0.5} value={text} placeholder="0"
+        <input type="text" inputMode="decimal" value={text} placeholder="0" autoComplete="off"
+          aria-invalid={error ? true : undefined} aria-describedby={error ? errorId : undefined}
           onFocus={() => setEditing(true)} onBlur={() => setEditing(false)}
-          onChange={(e) => { setText(e.target.value); onSave(parseNum(e.target.value)); }}
+          onChange={(e) => {
+            setText(e.target.value);
+            const amount = parseMoney(e.target.value);
+            if (amount === null) { setError("Wpisz kwotę, np. 32,50"); return; }
+            setError(null);
+            onSave(amount);
+          }}
           className={`${CONTROL} pr-10 tabular-nums`} />
         <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">zł</span>
       </div>
+      {error && <p id={errorId} className="text-xs text-destructive-ink">{error}</p>}
     </Field>
   );
 }

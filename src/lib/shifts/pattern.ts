@@ -37,6 +37,7 @@ export function applyPattern(
   startKey: string,
   length: number,
   anchorKey: string = startKey,
+  skip?: (entry: DayEntry) => boolean,
 ): Record<string, DayEntry> {
   if (steps.length === 0 || length <= 0) return days;
   const next = { ...days };
@@ -44,10 +45,35 @@ export function applyPattern(
     const k = addDaysKey(startKey, i);
     const offset = dayDiff(anchorKey, k);
     const step = steps[((offset % steps.length) + steps.length) % steps.length];
+    // `skip` chroni istniejący wpis (np. urlop, notatkę) — taki dzień zostaje bez zmian.
+    const prev = next[k];
+    if (prev && skip?.(prev)) continue;
     if (step === null) delete next[k];
-    else if (next[k]?.type !== step) next[k] = { type: step };
+    else if (prev?.type !== step) next[k] = { type: step };
   }
   return next;
+}
+
+/**
+ * Dni istniejących wpisów, które nałożenie cyklu by zmieniło, pogrupowane wg `classify`
+ * (np. urlop, L4, notatka). Wpis bez klasy (zwykła zmiana) się nie liczy.
+ */
+export function patternOverlap<K extends string>(
+  days: Record<string, DayEntry>,
+  steps: (string | null)[],
+  startKey: string,
+  length: number,
+  anchorKey: string,
+  classify: (entry: DayEntry) => K | undefined,
+): Partial<Record<K, number>> {
+  const next = applyPattern(days, steps, startKey, length, anchorKey);
+  const counts: Partial<Record<K, number>> = {};
+  for (const [k, prev] of Object.entries(days)) {
+    if (next[k] === prev) continue;
+    const kind = classify(prev);
+    if (kind) counts[kind] = (counts[kind] ?? 0) + 1;
+  }
+  return counts;
 }
 
 /** Liczba dni od `startKey` do końca miesiąca `monthsAhead` miesięcy dalej (włącznie). */

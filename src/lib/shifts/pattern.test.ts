@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDaysKey, applyPattern, dayDiff } from "./pattern";
+import { addDaysKey, applyPattern, dayDiff, patternOverlap } from "./pattern";
 import type { DayEntry } from "./model";
 
 const types = (days: Record<string, DayEntry>) => Object.fromEntries(Object.entries(days).map(([k, v]) => [k, v.type]));
@@ -40,5 +40,33 @@ describe("applyPattern — kotwica", () => {
     const part1 = applyPattern({}, steps, anchor, 4, anchor);
     const both = applyPattern(part1, steps, "2026-10-05", 5, anchor);
     expect(types(both)).toEqual(types(once));
+  });
+});
+
+describe("cykl nie zjada urlopu, L4 ani notatek", () => {
+  const work = { type: "d" };
+  const leave = { type: "u" };
+  const noted = { type: "d", note: "zastępstwo" };
+  const days = { "2026-10-01": leave, "2026-10-02": noted, "2026-10-03": work };
+  const steps = ["n"];
+  const isProtected = (e: { type: string; note?: string }) => e.type === "u" || !!e.note;
+
+  it("bez pomijania nadpisuje wszystko w zakresie", () => {
+    const next = applyPattern(days, steps, "2026-10-01", 3, "2026-10-01");
+    expect(next["2026-10-01"]).toEqual({ type: "n" });
+    expect(next["2026-10-02"]).toEqual({ type: "n" });
+  });
+
+  it("z pomijaniem zostawia chronione dni i nakłada resztę", () => {
+    const next = applyPattern(days, steps, "2026-10-01", 3, "2026-10-01", isProtected);
+    expect(next["2026-10-01"]).toBe(leave);
+    expect(next["2026-10-02"]).toBe(noted);
+    expect(next["2026-10-03"]).toEqual({ type: "n" });
+  });
+
+  it("patternOverlap liczy dokładnie te dni, które zostałyby zmienione", () => {
+    const kinds: Record<string, string> = { u: "leave" };
+    const classify = (e: { type: string; note?: string }) => (kinds[e.type] as "leave" | "note" | undefined) ?? (e.note ? "note" : undefined);
+    expect(patternOverlap(days, steps, "2026-10-01", 3, "2026-10-01", classify)).toEqual({ leave: 1, note: 1 });
   });
 });

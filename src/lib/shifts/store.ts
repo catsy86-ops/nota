@@ -1,8 +1,8 @@
 ﻿import { useSyncExternalStore } from "react";
 import { yjsStore } from "@/lib/yjsStore";
 import { logDiag } from "@/lib/diagnostics";
-import { migrate, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
-import { applyPattern } from "./pattern";
+import { absenceKindOf, isAbsence, migrate, type AbsenceKind, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
+import { applyPattern, patternOverlap } from "./pattern";
 import { planPaste, planTransfer, planWeekCopy, type TransferMode, type WeekCopyPlan } from "./move";
 import { createYShifts, MAIN_SCHEDULE_ID, SHIFTS_SYSTEM_ORIGIN, type DeletedShiftType, type YShifts } from "./yShifts";
 import { createScheduleRegistry, isScheduleId, type ShiftSchedule } from "./schedules";
@@ -140,14 +140,36 @@ export const setDayEntry: YShifts["setDayEntry"] = (...args) => yShifts.setDayEn
 export type DaysBefore = Record<string, DayEntry | null>;
 
 /** Nakłada cykl; zwraca poprzednie wartości dni, które się zmieniły. */
-export function applyPatternToStore(steps: (string | null)[], startKey: string, length: number, anchorKey?: string): DaysBefore {
+/** Co z istniejącego wpisu ostrzega przy nakładaniu cyklu: rodzaj nieobecności albo sama notatka. */
+export type PatternOverlapKind = AbsenceKind | "note";
+
+function overlapClass(types: ShiftType[]): (entry: DayEntry) => PatternOverlapKind | undefined {
+  const byId = new Map(types.map((t) => [t.id, t]));
+  return (entry) => {
+    const t = byId.get(entry.type);
+    if (t && isAbsence(t)) return absenceKindOf(t) ?? "other";
+    return entry.note ? "note" : undefined;
+  };
+}
+
+/**
+ * Nakłada cykl. `skipProtected` zostawia dni z nieobecnością i notatką (urlop, L4, notatka)
+ * — wtedy cykl nie zjada ich po cichu.
+ */
+export function applyPatternToStore(steps: (string | null)[], startKey: string, length: number, anchorKey?: string, skipProtected = false): DaysBefore {
   const current = yShifts.get().days;
-  const next = applyPattern(current, steps, startKey, length, anchorKey);
+  const classify = overlapClass(shiftStore.get().types);
+  const next = applyPattern(current, steps, startKey, length, anchorKey, skipProtected ? (entry) => classify(entry) !== undefined : undefined);
   const changed: DaysBefore = {};
   for (const k of new Set([...Object.keys(current), ...Object.keys(next)])) {
     if (current[k] !== next[k]) changed[k] = next[k] ?? null;
   }
   return yShifts.writeDays(changed);
+}
+
+/** Ile istniejących dni (urlop, L4, notatki) nałożenie cyklu by zmieniło — do podsumowania przed zatwierdzeniem. */
+export function patternOverlapInStore(steps: (string | null)[], startKey: string, length: number, anchorKey?: string): Partial<Record<PatternOverlapKind, number>> {
+  return patternOverlap(yShifts.get().days, steps, startKey, length, anchorKey ?? startKey, overlapClass(shiftStore.get().types));
 }
 
 /** Przywraca dni zwrócone przez `applyPatternToStore`. */
