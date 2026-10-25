@@ -46,7 +46,7 @@ Legenda: W = wartość (1–3), N = nakład (S/M/L).
 | 1.1 | **Błędy po ludzku:** `lastError` mapowany na zdania („Serwery nie odpowiadają”, „Przeglądarka blokuje połączenie”, „Brak internetu”); surowy tekst tylko w raporcie diagnostycznym. | `SyncSettings.tsx:127`, `yjsSync.ts` (`errorKind`) | 2 | S |
 | 1.2 | **Teksty:** „Drugie urządzenie jeszcze nie dołączyło — wpisz na nim ten kod albo zeskanuj QR”; „styl, krój” zamiast „skórka, czcionka”; „kopia” zamiast „backup” w całym oknie; test słownika (`grep` w teście na zakazane słowa w `components/settings`). | `SyncSettings.tsx:23`, `AppearanceSettings.tsx:241`, `BackupSettings.tsx:113` | 1 | S |
 | 1.3 | **`deviceWord` → `pluralPl`** w obu miejscach. | `SyncSettings.tsx:34`, `OfflineQueuePanel.tsx:9` | 1 | S |
-| 1.4 | **Nazwy plików:** `notki-kopia-RRRR-MM-DD.json`, `notki-przed-przywroceniem-…`, `notki-eksport.md` (po decyzji U-1). Przywracanie przyjmuje stare i nowe nazwy (nazwa nie ma znaczenia przy odczycie — test). | `exportNotes.ts`, `BackupSettings.tsx` | 1 | S |
+| 1.4 | **Nazwy plików:** `hydra-kopia-RRRR-MM-DD.json`, `hydra-przed-przywroceniem-…`, `hydra-eksport.md` (po decyzji U-1). Przywracanie przyjmuje stare i nowe nazwy (nazwa nie ma znaczenia przy odczycie — test). | `exportNotes.ts`, `BackupSettings.tsx` | 1 | S |
 | 1.5 | **Pełne e2e Ustawień i Sync** (lista z `opis.md`) jako punkt odniesienia. | `e2e/` | 2 | S |
 
 ## Etap 2: synchronizacja
@@ -98,7 +98,7 @@ Legenda: W = wartość (1–3), N = nakład (S/M/L).
 
 | # | Pytanie | Rekomendacja |
 |---|---|---|
-| U-1 | Nazwa w plikach kopii (1.4): „notki”, „g”, „notatnik”? Zależy od otwartej decyzji o nazwie aplikacji (plan działów §0). | Ta sama co w manifeście (`name`), małymi literami bez polskich znaków. Do czasu decyzji — zostawić „kaczy”. |
+| U-1 | Nazwa w plikach kopii (1.4)? Aplikacja nazywa się „hydra” (manifest, tytuł, logo — od 2026-10-25). | `hydra-kopia-RRRR-MM-DD.json`, `hydra-przed-przywroceniem-…`, `hydra-eksport.md`. Klucze `kaczy.*` w pamięci przeglądarki zostają. |
 | U-2 | Skaner QR (2.3): lekka biblioteka zapasowa dla iOS czy tylko komunikat? | Biblioteka na żądanie (poza paczką startową) — iPhone to właśnie przypadek, który dziś nie działa. |
 | U-3 | Usunąć „Zgodność ze starszą wersją” (2.6)? | Tak, po 30 dniach bez urządzeń w starym pokoju — automatycznie i z komunikatem. |
 | U-4 | „Co nowego” (4.2): pisać przy każdym wydaniu? | Tak, 3–5 zdań; jeśli wydanie ma tylko poprawki — bez dymka. |
