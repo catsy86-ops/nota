@@ -10,7 +10,7 @@ import { REMINDER_ORDER_DAYS, REMINDER_PROBLEM_DAYS, type StudyReminder } from "
 
 export interface StudyDueRow {
   key: string;
-  kind: "service" | "order" | "problems" | "test";
+  kind: "service" | "delivery" | "order" | "problems" | "test";
   title: string;
   /** Pozycje (np. nazwy kształtek) albo krótki opis; pusty, gdy nie ma czego podać. */
   detail: string;
@@ -23,6 +23,8 @@ export function studyDueRows(reminders: readonly StudyReminder[]): StudyDueRow[]
   for (const r of reminders) {
     if (r.kind === "service-due") {
       rows.push({ key: `service:${r.siteId}`, kind: "service", title: `Serwis: ${r.site}`, detail: r.items.join(", "), siteId: r.siteId });
+    } else if (r.kind === "delivery-today") {
+      rows.push({ key: `delivery:${r.siteId}`, kind: "delivery", title: `Dostawa dziś: ${r.site}`, detail: r.items.join(", "), siteId: r.siteId });
     } else if (r.kind === "late-order") {
       rows.push({
         key: `order:${r.siteId}`,

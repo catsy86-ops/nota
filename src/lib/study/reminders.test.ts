@@ -94,8 +94,8 @@ describe("przypomnienie: zamówione, a nie dojechało", () => {
     const withDue = (due: number, changedDaysAgo: number) => ({ ...item("a", "Klej PCV", "ordered", changedDaysAgo), due });
     // Dostawa wczoraj: zaległa już dziś rano, choć zamówienie świeże.
     expect(studyReminders([], NOW, { k1: card("k1", [withDue(NOW - DAY, 1)]) })).toHaveLength(1);
-    // Dostawa dziś: jeszcze nie zaległa, mimo że zamówione dawno.
-    expect(studyReminders([], NOW, { k1: card("k1", [withDue(NOW, 9)]) })).toEqual([]);
+    // Dostawa dziś: jeszcze nie zaległa (jest tylko „dostawa dziś”, 2.2), mimo że zamówione dawno.
+    expect(studyReminders([], NOW, { k1: card("k1", [withDue(NOW, 9)]) })).toEqual([{ kind: "delivery-today", siteId: "k1", site: "Lipowa 5", items: ["Klej PCV"] }]);
   });
 
   it("bez daty zmiany liczy się od dopisania", () => {
@@ -139,5 +139,25 @@ describe("próba przed zakryciem z etapów karty (U1)", () => {
   it("protokół w dzienniku wyłącza przypomnienie z etapów", () => {
     const r = studyReminders([entry({ siteId: "k1", site: "Lipowa 5", topic: "proba-wody", test: { medium: "air", bar: 6, minutes: 15, drop: 0, ok: true } })], NOW, { k1: card("k1", [installed, cover]) });
     expect(r).toEqual([]);
+  });
+});
+
+describe("dostawa dziś (2.2)", () => {
+  const card = (id: string, shortages: NonNullable<import("./sites").SiteCard["shortages"]>) =>
+    ({ id, name: "Lipowa 5", address: "", investor: "", created: 0, shortages });
+  const item = (id: string, text: string, status: "missing" | "ordered" | "delivered", due?: number) =>
+    ({ id, text, qty: "", status, at: NOW - 10 * DAY, changed: NOW - DAY, ...(due !== undefined ? { due } : {}) });
+
+  it("zamówione z terminem na dziś — przypomnienie z pozycjami; jutro i wczoraj nie", () => {
+    const sites = {
+      k1: card("k1", [item("a", "Klej PCV", "ordered", NOW), item("b", "Rura", "ordered", NOW + DAY), item("c", "Kolano", "ordered", NOW - DAY)]),
+    };
+    const reminders = studyReminders([], NOW, sites);
+    expect(reminders.filter((r) => r.kind === "delivery-today")).toEqual([{ kind: "delivery-today", siteId: "k1", site: "Lipowa 5", items: ["Klej PCV"] }]);
+  });
+
+  it("dostarczone albo bez terminu nie są dostawą dziś", () => {
+    const sites = { k1: card("k1", [item("a", "Klej", "delivered", NOW), item("b", "Rura", "ordered")]) };
+    expect(studyReminders([], NOW, sites).some((r) => r.kind === "delivery-today")).toBe(false);
   });
 });

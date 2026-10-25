@@ -38,3 +38,10 @@ describe("próba przed zakryciem na Dziś (U1)", () => {
     ]);
   });
 });
+
+describe("studyDueRows: dostawa dziś (2.2)", () => {
+  it("dostawa dziś ma wiersz z budową i pozycjami", () => {
+    const rows = studyDueRows([{ kind: "delivery-today", siteId: "s3", site: "Polna", items: ["Kolano 16", "Rura"] }]);
+    expect(rows).toEqual([{ key: "delivery:s3", kind: "delivery", title: "Dostawa dziś: Polna", detail: "Kolano 16, Rura", siteId: "s3" }]);
+  });
+});

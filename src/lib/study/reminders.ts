@@ -1,7 +1,7 @@
 import { TEST_TOPICS } from "./pressureTest";
 import { dueServiceCalls, serviceDayKey } from "./service";
 import { entrySiteId, type SiteCard } from "./sites";
-import { ORDER_LATE_DAYS, orderLateFrom } from "./shortages";
+import { ORDER_LATE_DAYS, dueDayValue, orderLateFrom } from "./shortages";
 import type { JournalEntry } from "./yStudy";
 
 /** Problem otwarty dłużej niż tyle dni dostaje przypomnienie (plan Nauki i Dziennika, 2026-10-15). */
@@ -19,6 +19,7 @@ export type StudyReminder =
   | { kind: "stale-problems"; count: number; oldest: number }
   | { kind: "no-test"; siteId: string; site: string }
   | { kind: "late-order"; siteId: string; site: string; items: string[] }
+  | { kind: "delivery-today"; siteId: string; site: string; items: string[] }
   | { kind: "service-due"; siteId: string; site: string; items: string[] }
   | { kind: "pre-cover-test"; siteId: string; site: string };
 
@@ -84,6 +85,14 @@ export function studyReminders(
     if (card.archived !== undefined) continue;
     const late = (card.shortages ?? []).filter((x) => { const from = orderLateFrom(x); return from !== null && now > from; });
     if (late.length > 0) out.push({ kind: "late-order", siteId: card.id, site: card.name, items: late.map((x) => x.text) });
+  }
+
+  // Dostawa dziś (2.2): zamówione z terminem na dzisiejszy dzień — wiersz na Dziś, zanim zrobi się spóźnienie.
+  const deliveryDay = serviceDayKey(now);
+  for (const card of Object.values(siteCards)) {
+    if (card.archived !== undefined) continue;
+    const arriving = (card.shortages ?? []).filter((x) => x.status === "ordered" && dueDayValue(x.due) === deliveryDay);
+    if (arriving.length > 0) out.push({ kind: "delivery-today", siteId: card.id, site: card.name, items: arriving.map((x) => x.text) });
   }
 
   const today = serviceDayKey(now);

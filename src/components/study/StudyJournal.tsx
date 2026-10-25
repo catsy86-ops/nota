@@ -502,7 +502,9 @@ function ReminderRow({ reminder: r, onShow }: { reminder: StudyReminder; onShow:
         ? `Budowa „${r.site}”: zamówione ponad 3 dni temu i nie dojechało — ${r.items.slice(0, 3).join(", ")}${r.items.length > 3 ? ` i ${r.items.length - 3} więcej` : ""}.`
         : r.kind === "service-due"
           ? `Serwis „${r.site}” na dziś: ${r.items.slice(0, 3).join(", ")}${r.items.length > 3 ? ` i ${r.items.length - 3} więcej` : ""}.`
-          : r.kind === "pre-cover-test"
+          : r.kind === "delivery-today"
+            ? `Dostawa dziś na „${r.site}”: ${r.items.slice(0, 3).join(", ")}${r.items.length > 3 ? ` i ${r.items.length - 3} więcej` : ""}.`
+            : r.kind === "pre-cover-test"
             ? `Budowa „${r.site}”: instalacja odhaczona, a protokołu próby nie ma. Zrób próbę przed zakryciem.`
             : `Budowa „${r.site}”: montaż bez protokołu próby. Zapisz próbę przed zakryciem.`;
   return (

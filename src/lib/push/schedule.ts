@@ -223,6 +223,14 @@ function studyItems(input: PushInput, now: number, end: number): PushItem[] {
   for (const [siteId, site] of Object.entries(input.sites ?? {})) {
     if (site.archived !== undefined) continue;
     for (const s of site.shortages ?? []) {
+      // Dostawa w dniu terminu (2.2): rano tego dnia, zanim zacznie się liczyć spóźnienie.
+      if (s.status === "ordered" && s.due !== undefined) {
+        const dd = new Date(s.due);
+        const morning = new Date(dd.getFullYear(), dd.getMonth(), dd.getDate(), QUIET_TO).getTime();
+        if (morning > now && morning <= end) {
+          out.push({ key: pushKey.delivery(s.id, s.due), at: morning, title: `Dostawa dziś: ${site.name}`, body: clip(`${s.text}${s.qty ? ` (${s.qty})` : ""}`, 200), url: siteCardUrl(siteId) });
+        }
+      }
       const from = orderLateFrom(s);
       if (from === null) continue;
       const at = outsideQuietHours(from);

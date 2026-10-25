@@ -15,6 +15,7 @@ export const pushKey = {
   reportWeek: (weekKey: string) => `rw:${weekKey}`,
   problem: (entryId: string) => `p:${entryId}`,
   order: (shortageId: string, since: number) => `o:${shortageId}:${since}`,
+  delivery: (shortageId: string, due: number) => `d:${shortageId}:${due}`,
   service: (callId: string, due: string) => `v:${callId}:${due}`,
 };
 

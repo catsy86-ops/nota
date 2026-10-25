@@ -87,3 +87,13 @@ describe("outsideQuietHours", () => {
     expect(outsideQuietHours(at(14, 22))).toBe(at(15, 7));
   });
 });
+
+describe("push: dostawa dziś (2.2)", () => {
+  const at = (d: number, h: number) => new Date(2026, 9, d, h).getTime();
+
+  it("rano w dniu dostawy, zanim zamówienie się spóźni", () => {
+    const sites = { s: { id: "s", name: "Lipowa", shortages: [{ id: "a", text: "Kolano 16", qty: "3", status: "ordered", at: at(10, 8), changed: at(10, 8), due: at(15, 12) }] } };
+    const items = buildPushSchedule({ now: at(14, 20), notes: [], sites } as never);
+    expect(items).toContainEqual({ key: `d:a:${at(15, 12)}`, at: at(15, 7), title: "Dostawa dziś: Lipowa", body: "Kolano 16 (3)", url: "/praca?budowa=s" });
+  });
+});
