@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AnimatePresence, m as motion } from "framer-motion";
+import { NotkiLogo } from "@/components/NotkiLogo";
 import { Smartphone, X } from "lucide-react";
 import { usePwaInstall } from "@/hooks/usePwaInstall";
 import { InstallAppButton } from "@/components/InstallAppButton";
@@ -38,7 +39,7 @@ export function InstallBanner({ ready }: { ready: boolean }) {
             <Smartphone className="w-4 h-4" />
           </span>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold font-display leading-tight truncate">Zainstaluj G</p>
+            <p className="text-sm font-semibold font-display leading-tight truncate">Zainstaluj <NotkiLogo size="sm" /></p>
             <p className="text-xs text-muted-foreground truncate">Działa bez internetu</p>
           </div>
           <InstallAppButton variant="compact" onDone={dismiss} />
