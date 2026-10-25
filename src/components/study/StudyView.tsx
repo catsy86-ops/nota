@@ -226,7 +226,7 @@ function StudyScreen() {
           >
             <ChartColumn className="h-4 w-4" aria-hidden />
           </button>
-          <StudyStatsDialog open={statsOpen} onOpenChange={setStatsOpen} />
+          <StudyStatsDialog open={statsOpen} onOpenChange={setStatsOpen} onPractice={() => { setStatsOpen(false); changeScope({ kind: "all" }); setTab("quiz"); }} />
         </header>
       ) : (
         <header className="space-y-4" data-study-header="full">
@@ -247,7 +247,7 @@ function StudyScreen() {
             <HeightsButton />
             <CalculatorsButton />
           </div>
-          <StudyStatsDialog open={statsOpen} onOpenChange={setStatsOpen} />
+          <StudyStatsDialog open={statsOpen} onOpenChange={setStatsOpen} onPractice={() => { setStatsOpen(false); changeScope({ kind: "all" }); setTab("quiz"); }} />
         </header>
       )}
 

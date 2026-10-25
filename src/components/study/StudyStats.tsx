@@ -21,13 +21,18 @@ const WEEKDAYS = ["pn", "wt", "śr", "cz", "pt", "sb", "nd"];
  * wartość zawsze podpisana tekstem obok, więc kolor niczego nie koduje sam i nie trzeba
  * legendy; `title` na każdym znaczniku daje dymek z dokładną liczbą.
  */
-export function StudyStatsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function StudyStatsDialog({ open, onOpenChange, onPractice }: { open: boolean; onOpenChange: (open: boolean) => void; /** Ćwicz prosto z statystyk (§8 D1): zamyka okno i startuje rundę. */ onPractice?: () => void }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <ResponsiveDialogContent className="max-h-[92dvh] overflow-y-auto sm:max-w-2xl" data-testid="study-stats">
-        <div className="pr-8">
-          <DialogTitle className="font-display text-lg">Statystyki</DialogTitle>
-          <DialogDescription className="text-xs">Trafność z quizu i powtórek, dni nauki i wpisy z budowy.</DialogDescription>
+        <div className="flex items-start justify-between gap-3 pr-8">
+          <div>
+            <DialogTitle className="font-display text-lg">Statystyki</DialogTitle>
+            <DialogDescription className="text-xs">Trafność z quizu i powtórek, dni nauki i wpisy z budowy.</DialogDescription>
+          </div>
+          {onPractice && (
+            <Button size="sm" onClick={onPractice} className="coarse:h-11 shrink-0">Ćwicz</Button>
+          )}
         </div>
         {open && <StatsBody />}
       </ResponsiveDialogContent>
