@@ -66,6 +66,9 @@ const navButton = "pressable shrink-0 w-10 h-10 coarse:w-11 coarse:h-11 rounded-
  */
 const MOVE_HINT_KEY = "kaczy.shifts.moveHint.v1";
 
+/** Przycisk paska narzędzi Grafiku (wspólny wygląd, wysokość h-10 — §audyt 5). */
+const TOOLBAR_BTN = "pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
+
 export function ShiftsView({ notes = [] }: { notes?: Note[] }) {
   // Do wczytania dokumentu nic — pusty grafik mignąłby i ustawił zły pędzel startowy.
   return useShiftsReady() ? <ShiftsScreen notes={notes} /> : null;
@@ -336,7 +339,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
                 </button>
               )}
               <button type="button" onClick={copyWeek}
-                className="pressable flex items-center gap-1.5 h-9 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                className={TOOLBAR_BTN}>
                 <CalendarRange className="w-4 h-4" /> Skopiuj ten tydzień na następny
               </button>
             </div>
@@ -397,7 +400,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         <div className="order-9 flex justify-end sm:hidden short:col-span-full">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button type="button" className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+              <button type="button" className={TOOLBAR_BTN}>
                 <Share2 className="w-4 h-4" /> Udostępnij
               </button>
             </DropdownMenuTrigger>
@@ -419,19 +422,19 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         </div>
         <div className="order-9 hidden sm:flex flex-wrap justify-end gap-1 short:col-span-full">
           <button type="button" onClick={exportCsv}
-            className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+            className={TOOLBAR_BTN}>
             <FileSpreadsheet className="w-4 h-4" /> Karta czasu (.csv)
           </button>
           <button type="button" onClick={exportSiteCsv}
-            className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+            className={TOOLBAR_BTN}>
             <FileSpreadsheet className="w-4 h-4" /> Godziny na budowach (.csv)
           </button>
           <button type="button" onClick={exportIcs}
-            className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+            className={TOOLBAR_BTN}>
             <CalendarArrowDown className="w-4 h-4" /> Do kalendarza (.ics)
           </button>
           <button type="button" onClick={exportImage}
-            className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+            className={TOOLBAR_BTN}>
             <ImageIcon className="w-4 h-4" /> Obraz miesiąca (.png)
           </button>
         </div>
