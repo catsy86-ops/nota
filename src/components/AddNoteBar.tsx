@@ -532,7 +532,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                 if (e.ctrlKey || e.metaKey) { if (e.shiftKey) saveAndNext(); else handleClose(); }
                 else textareaRef.current?.focus();
               }}
-              className="w-full bg-transparent text-lg font-display font-semibold text-foreground placeholder:text-muted-foreground/50 outline-hidden" />
+              className="w-full bg-transparent text-lg font-display font-semibold text-foreground placeholder:text-muted-foreground outline-hidden" />
             <FormatToolbar onInsert={(before, after) => {
               const ta = textareaRef.current;
               if (!ta) return;
@@ -542,7 +542,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
             }} />
             <div className={cn("relative", fullScreen && "flex-1")}>
               <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} onPaste={handleContentPaste} aria-autocomplete="list" aria-expanded={wiki.isOpen} onSelect={() => { wiki.textareaProps.onSelect(); slash.refresh(); }} onKeyDown={handleContentKeyDown} placeholder="Treść notatki..." rows={3}
-                className="w-full max-sm:min-h-[35dvh] bg-transparent text-sm max-sm:text-base text-foreground placeholder:text-muted-foreground/50 outline-hidden resize-none" />
+                className="w-full max-sm:min-h-[35dvh] bg-transparent text-sm max-sm:text-base text-foreground placeholder:text-muted-foreground outline-hidden resize-none" />
               {wiki.popup()}{slash.popup()}
             </div>
             {content.length > 0 && <EditorStats textareaRef={textareaRef} value={content} className="block text-2xs text-muted-foreground" />}

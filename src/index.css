@@ -472,7 +472,6 @@ html[data-skin="zeszyt"] .app-header {
   :root {
     /* defaults = autumn-ish warm, overridden by [data-season] below */
     --season-accent: 25 80% 55%;
-    --season-wash: 30 100% 92%;
     --season-blob-1: 14 100% 70%;
     --season-blob-2: 30 100% 65%;
     --season-blob-3: 340 80% 65%;
@@ -482,21 +481,18 @@ html[data-skin="zeszyt"] .app-header {
      (wcześniej zimą cała aplikacja robiła się niebieska, wiosną różowa). */
   html[data-season="spring"] {
     --season-accent: 330 80% 75%;
-    --season-wash: 330 80% 94%;
     --season-blob-1: 330 85% 78%;
     --season-blob-2: 100 60% 70%;
     --season-blob-3: 280 70% 78%;
   }
   html[data-season="summer"] {
     --season-accent: 45 90% 60%;
-    --season-wash: 45 100% 90%;
     --season-blob-1: 45 100% 65%;
     --season-blob-2: 190 90% 62%;
     --season-blob-3: 15 95% 66%;
   }
   html[data-season="autumn"] {
     --season-accent: 25 80% 55%;
-    --season-wash: 30 100% 92%;
     --season-blob-1: 14 100% 70%;
     --season-blob-2: 30 100% 65%;
     --season-blob-3: 340 80% 65%;
@@ -504,7 +500,6 @@ html[data-skin="zeszyt"] .app-header {
   }
   html[data-season="winter"] {
     --season-accent: 200 70% 70%;
-    --season-wash: 200 80% 93%;
     --season-blob-1: 200 85% 72%;
     --season-blob-2: 220 70% 70%;
     --season-blob-3: 260 60% 75%;
@@ -572,9 +567,6 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
 @layer components {
   .section-label {
     @apply flex items-center gap-1.5 text-sm font-semibold text-foreground;
-  }
-  html:not([data-skin]) .section-label {
-    box-shadow: 0 1px 0 hsl(var(--margin) / 0.4);
   }
 
   /* Tabliczka rysunkowa w rogu arkusza: nazwa widoku w każdym skinie. Tylko komputer —
@@ -653,12 +645,6 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
   /* Zeszyt: delikatne ziarno papieru, tylko na komputerze (koszt na telefonie).
      Margines świadomie nie jest tu rysowany: tło nie zna szerokości paska bocznego,
      więc linia lądowałaby pod paskiem albo pod kartami. */
-  @media (pointer: fine) {
-    html:not([data-skin]) .paper-grid {
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
-      background-size: 160px 160px;
-    }
-  }
 
 }
 

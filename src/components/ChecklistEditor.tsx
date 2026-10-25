@@ -280,7 +280,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
       {checked.length > 0 && (
         <div className="pt-1 border-t border-border/30 mt-2">
           <div className="flex items-center justify-between mb-1">
-            <p className="text-2xs text-muted-foreground/50 uppercase tracking-wider">
+            <p className="text-2xs text-muted-foreground uppercase tracking-wider">
               {checked.length} ukończone
             </p>
             {!readOnly && (
@@ -329,7 +329,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
             onKeyDown={(e) => e.key === "Enter" && addItem()}
             onPaste={(e) => handlePaste(e)}
             placeholder="Dodaj element..."
-            className="text-sm bg-transparent outline-hidden text-foreground placeholder:text-muted-foreground/40 flex-1 min-w-0"
+            className="text-sm bg-transparent outline-hidden text-foreground placeholder:text-muted-foreground flex-1 min-w-0"
           />
         </div>
       )}
@@ -384,7 +384,7 @@ export function ChecklistPreview({ items, onToggle, showProgress = true }: { ite
           <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
             <div className="h-full bg-primary/60 rounded-full transition-all" style={{ width: `${(done / items.length) * 100}%` }} />
           </div>
-          <span className="text-2xs text-muted-foreground/50">{done}/{items.length}</span>
+          <span className="text-2xs text-muted-foreground">{done}/{items.length}</span>
         </div>
       )}
     </div>
