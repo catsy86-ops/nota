@@ -93,6 +93,7 @@ const ShortcutsDialog = lazy(() => import("@/components/ShortcutsDialog").then((
 const PropDefsDialog = lazy(() => import("@/components/PropDefsDialog").then((m) => ({ default: m.PropDefsDialog })));
 const TodayDueList = lazy(() => import("@/components/review/TodayDueList").then((m) => ({ default: m.TodayDueList })));
 const StudyDueRows = lazy(() => import("@/components/review/StudyDueRows"));
+const TodaySiteCard = lazy(() => import("@/components/review/TodaySiteCard").then((m) => ({ default: m.TodaySiteCard })));
 const SeriesForecastSection = lazy(() => import("@/components/calendar/SeriesForecastSection"));
 const TodayShiftCard = lazy(() => import("@/components/review/TodayShiftCard").then((m) => ({ default: m.TodayShiftCard })));
 const TodayStudyCard = lazy(() => import("@/components/review/TodayStudyCard").then((m) => ({ default: m.TodayStudyCard })));
@@ -694,6 +695,7 @@ const Index = () => {
             <ViewErrorBoundary name="Praca">
               <Suspense fallback={null}>
                 <StudyDueRows onOpenStudy={(siteId) => go("study", siteId ? { site: siteId } : {})} />
+                <TodaySiteCard />
               </Suspense>
             </ViewErrorBoundary>
           )}

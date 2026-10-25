@@ -31,7 +31,10 @@ test("dostawa dziś: wiersz na Dziś otwiera kartę budowy", async ({ page }) =>
   await page.keyboard.press("Escape");
 
   await page.goto("/dzis");
-  const row = page.getByTestId("study-due").getByRole("button", { name: "Dostawa dziś: Lipowa 5: karta budowy" });
+  // Dziś ładuje sekcje leniwie (także kartę przed wejściem), więc dajemy im chwilę.
+  const due = page.getByTestId("study-due");
+  await expect(due).toBeVisible({ timeout: 15_000 });
+  const row = due.getByRole("button", { name: "Dostawa dziś: Lipowa 5: karta budowy" });
   await expect(row).toContainText("Klej PCV");
   await row.click();
   await expect(page.getByTestId("site-card")).toBeVisible();
