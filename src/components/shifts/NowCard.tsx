@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
 import { format, formatDistanceStrict, isToday, isTomorrow } from "date-fns";
 import { pl } from "date-fns/locale";
 import { toast } from "sonner";
-import { currentAndNextShift, formatDuration, recentlyEndedShift, setDayEntry, shiftInk, type ShiftData, type ShiftOccurrence } from "@/lib/shifts";
+import { formatDuration, setDayEntry, shiftInk, type ShiftData, type ShiftOccurrence } from "@/lib/shifts";
+import { useShiftNow } from "@/lib/shifts/useShiftNow";
 import { toastWithUndo } from "@/lib/undoToast";
 
 /** Kończy zmianę „teraz”: odchylenie od planu = różnica między teraz a planowanym końcem. */
@@ -17,15 +17,6 @@ function finishNow(occ: ShiftOccurrence): void {
   toastWithUndo(`Zakończono zmianę: ${label}`, () => setDayEntry(occ.dayKey, before));
 }
 
-/** Minutowy zegar — karta ma pokazywać „za 3 h”, nie stan sprzed godziny. */
-function useNow(intervalMs = 60_000): Date {
-  const [now, setNow] = useState(() => new Date());
-  useEffect(() => {
-    const id = window.setInterval(() => setNow(new Date()), intervalMs);
-    return () => window.clearInterval(id);
-  }, [intervalMs]);
-  return now;
-}
 
 function when(occ: ShiftOccurrence): string {
   const time = format(occ.start, "HH:mm");
@@ -56,10 +47,8 @@ function EndedCard({ occ }: { occ: ShiftOccurrence }) {
 
 /** Co teraz i co dalej — pierwsza rzecz, której szuka ktoś pracujący na zmiany. */
 export function NowCard({ data }: { data: ShiftData }) {
-  const now = useNow();
-  const { current, next } = useMemo(() => currentAndNextShift(data, now), [data, now]);
+  const { now, current, next, ended } = useShiftNow(data);
   // Zmiana skończona przed chwilą (nadgodziny): karta zostaje, z odchyleniem liczonym od planu.
-  const ended = !current ? recentlyEndedShift(data, now) : null;
   if (ended && !next) return <EndedCard occ={ended} />;
   if (!current && !next) return null;
 
