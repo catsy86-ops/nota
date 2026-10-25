@@ -1,9 +1,10 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LoaderCircle, LocateFixed, MapPin, Mic, NotebookPen, Pencil, PenTool, Play, Trash, Type, X } from "lucide-react";
+import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LoaderCircle, LocateFixed, MapPin, Mic, NotebookPen, Pencil, Play, Trash, X } from "lucide-react";
 import { formatFileSize } from "@/lib/attachments";
 import { addRecording } from "@/lib/study/recordings";
 import { JOURNAL_MAX_RECORDINGS } from "@/lib/study/yStudy";
 import { HeightsButton } from "./HeightsSheet";
+import { PhotoStrip } from "./PhotoStrip";
 import { PressureTestFields } from "./PressureTestFields";
 import { FittingsFields } from "./FittingsFields";
 import { TEST_TOPICS } from "@/lib/study/pressureTest";
@@ -12,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { NoteImage } from "@/components/NoteImage";
 import { DrawingCanvas } from "@/components/DrawingCanvas";
 import { toastWithUndo } from "@/lib/undoToast";
 import { cn } from "@/lib/utils";
@@ -22,7 +22,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useDictation } from "@/hooks/useDictation";
 import { prepareImage } from "@/lib/imagePrepare";
 import { imageStore } from "@/lib/imageStore";
-import { CAPTION_MAX, captionPhoto, captionText } from "@/lib/study/photoCaption";
+import { captionPhoto, captionText } from "@/lib/study/photoCaption";
 import { requestPersistentStorage } from "@/lib/storagePersistence";
 import { MODULES, TOPICS } from "@/lib/study/content";
 import { addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, setSiteGeo, setSiteShortages, setSiteStages, updateJournalEntry, useSiteDirectory, useStudy, useStudyLists, type JournalKind } from "@/lib/study/store";
@@ -808,94 +808,27 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 ))}
               </ul>
             )}
-            {(images.length > 0 || processing > 0) && (
-              <ul className="flex flex-wrap gap-2" aria-label="Zdjęcia we wpisie">
-                {images.map((ref, i) => (
-                  <li key={ref} className="relative">
-                    <NoteImage imageRef={ref} alt={`Zdjęcie ${i + 1} z ${images.length} we wpisie`} className="h-20 w-20 rounded-lg object-cover" placeholderClassName="h-20 w-20 rounded-lg" />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const before = getForm().images;
-                        patch({ images: before.filter((r) => r !== ref) });
-                        // Cofnij: zdjęcie wraca na swoje miejsce (zapisane dopiero przy „Zapisz wpis”).
-                        const at = before.indexOf(ref);
-                        toastWithUndo("Usunięto zdjęcie z wpisu", () => {
-                          const cur = getForm().images;
-                          if (!cur.includes(ref)) patch({ images: [...cur.slice(0, at), ref, ...cur.slice(at)] });
-                        }, { id: `photo-remove-${ref}` });
-                      }}
-                      aria-label="Usuń zdjęcie z wpisu"
-                      className="absolute -right-1.5 -top-1.5 grid h-6 w-6 place-items-center rounded-full bg-destructive text-destructive-foreground coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => { setCaptioning(captioning === ref ? null : ref); setCaptionDraft(""); }}
-                      aria-label="Podpis na zdjęciu"
-                      aria-pressed={captioning === ref}
-                      className={cn(
-                        "absolute -bottom-1.5 -left-1.5 grid h-6 w-6 place-items-center rounded-full border border-border bg-card text-foreground shadow-sm coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']",
-                        captioning === ref && "border-primary bg-primary text-primary-foreground",
-                      )}
-                    >
-                      <Type className="h-3.5 w-3.5" aria-hidden />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void openDrawing(ref)}
-                      aria-label="Rysuj na zdjęciu"
-                      title="Strzałka, wymiar, zaznaczenie — rysunek zostaje na zdjęciu"
-                      className="absolute -bottom-1.5 -right-1.5 grid h-6 w-6 place-items-center rounded-full border border-border bg-card text-foreground shadow-sm coarse:h-6 coarse:w-6 relative coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']"
-                    >
-                      <PenTool className="h-3.5 w-3.5" aria-hidden />
-                    </button>
-                  </li>
-                ))}
-                {Array.from({ length: processing }, (_, i) => (
-                  <li key={`processing-${i}`} className="grid h-20 w-20 place-items-center rounded-lg bg-muted" data-testid="journal-photo-processing">
-                    <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden />
-                    <span className="sr-only">Przygotowuję zdjęcie</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {captioning && images.includes(captioning) && (
-              <form
-                className="space-y-2 rounded-xl border border-primary/40 bg-primary/5 p-3"
-                onSubmit={(ev) => { ev.preventDefault(); void burnCaption(captioning); }}
-                aria-label="Podpis na zdjęciu"
-              >
-                <label className="block space-y-1 text-xs text-muted-foreground">
-                  Podpis na zdjęciu — dopiszę datę wpisu
-                  <input
-                    autoFocus
-                    value={captionDraft}
-                    maxLength={CAPTION_MAX}
-                    onChange={(ev) => setCaptionDraft(ev.target.value)}
-                    placeholder="np. Łazienka, pion 58 cm od posadzki"
-                    className="w-full rounded-lg border border-input bg-background px-3 py-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring sm:text-sm"
-                  />
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {["Przed zakryciem", "Łazienka", "Kuchnia", "Kotłownia"].map((chip) => (
-                    <button
-                      key={chip}
-                      type="button"
-                      onClick={() => setCaptionDraft((d) => (d.trim() ? d.trim() + ", " + chip.toLowerCase() : chip))}
-                      className="pressable rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted coarse:min-h-11 coarse:px-3 coarse:text-sm"
-                    >
-                      {chip}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <Button type="submit" size="sm" disabled={processing > 0} className="coarse:h-11">Wtop podpis</Button>
-                  <Button type="button" size="sm" variant="ghost" onClick={() => setCaptioning(null)} className="coarse:h-11">Anuluj</Button>
-                </div>
-              </form>
-            )}
+            <PhotoStrip
+              images={images}
+              processing={processing}
+              captioning={captioning}
+              captionDraft={captionDraft}
+              onCaptionDraft={setCaptionDraft}
+              onToggleCaption={(ref) => { setCaptioning(captioning === ref ? null : ref); setCaptionDraft(""); }}
+              onCancelCaption={() => setCaptioning(null)}
+              onSubmitCaption={(ref) => void burnCaption(ref)}
+              onDraw={(ref) => void openDrawing(ref)}
+              onRemove={(ref) => {
+                const before = getForm().images;
+                patch({ images: before.filter((r) => r !== ref) });
+                // Cofnij: zdjęcie wraca na swoje miejsce (zapisane dopiero przy „Zapisz wpis”).
+                const at = before.indexOf(ref);
+                toastWithUndo("Usunięto zdjęcie z wpisu", () => {
+                  const cur = getForm().images;
+                  if (!cur.includes(ref)) patch({ images: [...cur.slice(0, at), ref, ...cur.slice(at)] });
+                }, { id: `photo-remove-${ref}` });
+              }}
+            />
           </div>
 
           <div className="space-y-2" data-testid="journal-sections">
