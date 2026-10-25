@@ -1129,3 +1129,7 @@ Pełny plan: `docs/plan-grafik-2026-10-25.md` (Etapy 1–6: poprawki — cykl ni
 ## Plan działu Praca — 2026-10-25
 
 Pełny plan: `docs/plan-praca-2026-10-25.md` (Etapy 1–7: zamknięcie planu z 24.10; dokumentacja i materiał — zdjęcia przed zakryciem, zużycie materiału, rysowanie na planie, podpis zdjęcia jako dane, „Plan na dziś”; dane — ostrzeżenie o starszej wersji, miejsce zajęte przez zdjęcia, odchudzanie budowy; Nauka — pytania, egzamin próbny, import; wygląd; kod; QA). Siódmy z serii „dział po dziale”. Plan z 24.10 prawie zamknięty. Decyzje P-1…P-5 otwarte.
+
+## Plan działu Długi — 2026-10-25
+
+Pełny plan: `docs/plan-dlugi-2026-10-25.md` (Etapy 1–5: poprawki — spłata zdejmuje przypomnienie o zwrocie, notatka zwrotu poza Skrzynką, pasek spłaty po obu stronach, wybór rodzaju i edycja jak dodawanie, podwójne rozliczenie; codzienne — formularz zwinięty, saldo narastające, „Gotowe” w Terminach jako spłata; rozbudowa — łączenie osób, wyślij stan, ukrywanie kwot, CSV; wygląd; QA). Ósmy z serii „dział po dziale”. Decyzje D-1…D-4 otwarte.
