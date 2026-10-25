@@ -91,7 +91,8 @@ test("lista do nauki: odhaczanie, filtr krytycznych i ściąga wysokości", asyn
   await expect(page.getByText("Nasza rura to PERTAL²")).toHaveCount(0);
   await expect(page.getByText(/Tuleja nasunięta DO OPORU/)).toBeVisible();
 
-  await page.getByText(/Ściąga: wysokości/).click();
+  // Jedna ściąga wysokości (§8 P7): arkusz z nagłówka działu, ten sam co w liście kontrolnej.
+  await page.getByRole("button", { name: "Wysokości", exact: true }).first().click();
   await expect(page.getByRole("cell", { name: "Prysznic" })).toBeVisible();
 });
 

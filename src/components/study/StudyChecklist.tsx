@@ -4,7 +4,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
-import { HEIGHTS, MODULES, TOPICS } from "@/lib/study/content";
+import { MODULES, TOPICS } from "@/lib/study/content";
 import { resetChecklist, restoreChecklist, toggleChecked, useStudy, useStudyLists } from "@/lib/study/store";
 import { CustomChecklistSection } from "./CustomChecklistForm";
 import { isCustomId } from "@/lib/study/custom";
@@ -94,32 +94,6 @@ export function StudyChecklist() {
 
       <CustomChecklistSection />
 
-      <details className="rounded-xl border border-border bg-card p-3.5 group">
-        <summary className="cursor-pointer text-sm font-medium">Ściąga: wysokości podejść [cm] — standard G-HEAT</summary>
-        <div className="mt-3 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-xs text-muted-foreground">
-                <th className="py-1 pr-3 font-medium">Punkt</th>
-                <th className="py-1 pr-3 font-medium">Woda</th>
-                <th className="py-1 pr-3 font-medium">Rozstaw c/z</th>
-                <th className="py-1 font-medium">Kanalizacja</th>
-              </tr>
-            </thead>
-            <tbody className="font-mono tabular-nums">
-              {HEIGHTS.map((h) => (
-                <tr key={h.point} className="border-t border-border/60">
-                  <td className="py-1.5 pr-3 font-sans">{h.point}</td>
-                  <td className="py-1.5 pr-3">{h.water}</td>
-                  <td className="py-1.5 pr-3">{h.spacing ?? "—"}</td>
-                  <td className="py-1.5">{h.sewer ?? "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p className="mt-2 text-xs text-muted-foreground">Zmywarka — zwykle jak pralka.</p>
-        </div>
-      </details>
     </div>
   );
 }
