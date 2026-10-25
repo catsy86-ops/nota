@@ -1125,3 +1125,7 @@ Pełny plan: `docs/plan-terminy-2026-10-25.md` (Etapy 1–5: poprawki — grupy 
 ## Plan działu Grafik — 2026-10-25
 
 Pełny plan: `docs/plan-grafik-2026-10-25.md` (Etapy 1–6: poprawki — cykl nie zjada urlopu, dodatek za nadgodziny wprost, schowek, pędzel, kwoty; codzienna praca — Cofnij/Ponów na telefonie, odpoczynek w komórce, pusty miesiąc z akcją; rachunek — prognoza, odbiór nadgodzin, urlop w godzinach, 35 h; wiele grafików; wygląd; QA). Szósty z serii „dział po dziale”. Decyzje G-1…G-4 otwarte.
+
+## Plan działu Praca — 2026-10-25
+
+Pełny plan: `docs/plan-praca-2026-10-25.md` (Etapy 1–7: zamknięcie planu z 24.10; dokumentacja i materiał — zdjęcia przed zakryciem, zużycie materiału, rysowanie na planie, podpis zdjęcia jako dane, „Plan na dziś”; dane — ostrzeżenie o starszej wersji, miejsce zajęte przez zdjęcia, odchudzanie budowy; Nauka — pytania, egzamin próbny, import; wygląd; kod; QA). Siódmy z serii „dział po dziale”. Plan z 24.10 prawie zamknięty. Decyzje P-1…P-5 otwarte.
