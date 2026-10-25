@@ -1,0 +1,23 @@
+# TODO
+
+Otwarte pytania i zadania odłożone na później. Źródło: plan Praca (`docs/plan-praca-2026-10-24.md`) i sesje z 2026-10-25.
+
+## Do decyzji właściciela
+- **4.5 Wyszukiwanie bez polskich znaków.** Dziś tylko dziennik ma pole szukania (i już normalizuje znaki). Czy dodać wyszukiwarkę pytań i list kontrolnych w Nauce?
+- **Ziarno papieru w Zeszycie.** Kod ma martwą regułę `html:not([data-skin])` (usunięta). Czy ziarno ma wrócić i w którym stylu?
+- **Widżet `/widget`.** Działa jako osobny skrót PWA „Na dziś”. Czy zostaje w tej formie?
+- **Esc w kompozytorze.** Zapisuje i zamyka (wybrany wariant). Czy wrócić do wariantu „szkic zostaje”?
+
+## Wymaga materiału od właściciela
+- **4.6 Więcej pytań wbudowanych.** Dziś ok. 29 pytań na 18 tematów. Potrzebne źródła (poradnik, listy kontrolne).
+
+## Do zrobienia później
+- **4.3 Własne tematy.** Nieznany temat jest cicho odrzucany (`store.ts`). Potrzebna mapa tematów w `studyCustom` i decyzja o zakresie.
+- **Etap 6 (model danych w Yjs).** Odłożony decyzją z 24.10. Wymaga osobnego planu z migracją: zapis karty budowy, pola-tablice wpisu, `replaceAll`, `version: 1`.
+- **Import własnych materiałów do Nauki** (`roadmap.md`).
+
+## Techniczne
+- **Miejsce na dysku C.** Zostało ok. 1,6 GB z 465 GB. Mogą padać testy (awaria workera vitest). Sprawdzić cache npm i `node_modules`.
+- **`aria-live` w Grafiku.** Scalony w jeden region. Do sprawdzenia w czytniku ekranu.
+- **Test wydajności wyszukiwania** (`searchNotes.test.ts`, 50 ms) bywa niestabilny pod obciążeniem zestawu.
+- **Test `a11y` „kalendarz — hydraulika”** nie przechodzi (kontrast przy „dziś”, znany problem).
