@@ -13,12 +13,12 @@ const note = (id: string, reminder: number | null): Note => ({
 
 describe("formatBadgeTitle", () => {
   it("prefixes the count only when positive", () => {
-    expect(formatBadgeTitle("G", 3)).toBe("(3) G");
-    expect(formatBadgeTitle("G", 0)).toBe("G");
-    expect(formatBadgeTitle("G", -2)).toBe("G");
+    expect(formatBadgeTitle("hydra", 3)).toBe("(3) hydra");
+    expect(formatBadgeTitle("hydra", 0)).toBe("hydra");
+    expect(formatBadgeTitle("hydra", -2)).toBe("hydra");
   });
   it("caps large counts", () => {
-    expect(formatBadgeTitle("G", 250)).toBe("(99+) G");
+    expect(formatBadgeTitle("hydra", 250)).toBe("(99+) hydra");
   });
 });
 
@@ -53,7 +53,7 @@ describe("useOverdueBadge", () => {
     setAppBadge.mockClear();
     clearAppBadge.mockClear();
     Object.assign(navigator, { setAppBadge, clearAppBadge });
-    document.title = "G";
+    document.title = "hydra";
   });
   afterEach(() => {
     vi.useRealTimers();
@@ -62,35 +62,35 @@ describe("useOverdueBadge", () => {
   it("writes the count to the tab title and app badge", () => {
     const { result } = renderHook(() => useOverdueBadge([note("a", NOW - 1000), note("b", NOW - 5), note("c", NOW + 9999)]));
     expect(result.current).toBe(2);
-    expect(document.title).toBe("(2) G");
+    expect(document.title).toBe("(2) hydra");
     expect(setAppBadge).toHaveBeenLastCalledWith(2);
   });
 
   it("adds terminy Pracy do tytułu i ikony, tak jak do listy (D1)", () => {
     const { result } = renderHook(() => useOverdueBadge([note("a", NOW - 1000)], 2));
     expect(result.current).toBe(3);
-    expect(document.title).toBe("(3) G");
+    expect(document.title).toBe("(3) hydra");
   });
 
   it("restores the plain title and clears the badge at zero", () => {
     const { result } = renderHook(() => useOverdueBadge([note("a", NOW + 1000)]));
     expect(result.current).toBe(0);
-    expect(document.title).toBe("G");
+    expect(document.title).toBe("hydra");
     expect(clearAppBadge).toHaveBeenCalled();
   });
 
   it("picks up a reminder that becomes overdue without the list changing", () => {
     const notes = [note("a", NOW + 10_000)];
     renderHook(() => useOverdueBadge(notes));
-    expect(document.title).toBe("G");
+    expect(document.title).toBe("hydra");
     act(() => { vi.advanceTimersByTime(40_000); });
-    expect(document.title).toBe("(1) G");
+    expect(document.title).toBe("(1) hydra");
   });
 
   it("does nothing when the toggle is off", () => {
     setBadgeEnabled(false);
     renderHook(() => useOverdueBadge([note("a", NOW - 1)]));
-    expect(document.title).toBe("G");
+    expect(document.title).toBe("hydra");
     expect(setAppBadge).not.toHaveBeenCalled();
   });
 });

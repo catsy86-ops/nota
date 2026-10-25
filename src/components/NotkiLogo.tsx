@@ -7,10 +7,10 @@ interface NotkiLogoProps {
   className?: string;
 }
 
-const LETTERS = ["G"];
+const LETTERS = ["h", "y", "d", "r", "a"];
 
 /**
- * Logo „G”: litera wjeżdża z rozmycia, jakby była
+ * Logo „hydra”: litery wjeżdżają z rozmycia, jakby była
  * właśnie zapisywana, po niej miga kursor. Wypełnienie gradientem marki,
  * co kilka sekund przez litery przechodzi błysk (CSS, patrz `.notki-*`
  * w index.css). Przy `prefers-reduced-motion` wszystko stoi.
@@ -20,7 +20,7 @@ export function NotkiLogo({ size = "lg", className }: NotkiLogoProps) {
   return (
     <span
       role="img"
-      aria-label="G"
+      aria-label="hydra"
       className={cn("notki-logo font-logo font-extrabold", size === "lg" ? "text-[1.6rem]" : "text-lg", className)}
     >
       {LETTERS.map((letter, i) => (
