@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { View } from "@/hooks/useFilteredNotes";
 import { parseViewRoute, viewPath, withSearch } from "@/lib/viewRoute";
+import { SITE_PARAM } from "@/lib/study/siteLink";
 
 /** Stan widoku (widok, folder, etykieta, wyszukiwanie) trzymany w adresie. */
 export function useViewRoute() {
@@ -10,9 +11,16 @@ export function useViewRoute() {
   const route = useMemo(() => parseViewRoute(location.pathname, location.search), [location.pathname, location.search]);
 
   /** Przejście do widoku to nowy wpis w historii — „wstecz” wraca. */
-  const go = useCallback((view: View, opts: { label?: string | null; folder?: string | null; search?: string } = {}) => {
+  const go = useCallback((view: View, opts: { label?: string | null; folder?: string | null; search?: string; site?: string } = {}) => {
     const q = opts.search ?? parseViewRoute(window.location.pathname, window.location.search).search;
-    const to = viewPath(view, opts) + withSearch(window.location.search, q);
+    let to = viewPath(view, opts) + withSearch(window.location.search, q);
+    // Karta budowy (`site`): dopisuje `budowa=<id>` do adresu, np. wiersz „Dziś” → `/praca?budowa=…`.
+    if (opts.site) {
+      const [path, query = ""] = to.split("?");
+      const params = new URLSearchParams(query);
+      params.set(SITE_PARAM, opts.site);
+      to = `${path}?${params.toString()}`;
+    }
     if (to === window.location.pathname + window.location.search) return;
     navigate(to);
   }, [navigate]);

@@ -12,6 +12,7 @@ import { setJournalDraftTopic } from "@/lib/study/draft";
 import { useStudyReady } from "@/lib/study/data";
 import { closeJournalSheet, JOURNAL_ENTRY_PARAM, JOURNAL_VOICE_PARAM, openJournalSheet, requestVoiceOnOpen, useJournalSheet } from "@/lib/study/entrySheet";
 import { JOURNAL_REPORT_PARAM, parseReportParam, requestJournalReport, useJournalReportRequest } from "@/lib/study/reportLink";
+import { readSiteParam } from "@/lib/study/siteLink";
 import { useEffect, useState } from "react";
 import { useDayClock } from "@/lib/dayClock";
 import { MOBILE_QUERY } from "@/hooks/use-mobile";
@@ -182,6 +183,8 @@ function StudyScreen() {
     window.history.replaceState(window.history.state, "", window.location.pathname + (rest ? `?${rest}` : ""));
     requestJournalReport(req);
   }, []);
+  // Link do karty budowy (`?budowa=`) ma otworzyć Dziennik, bo tam leży karta.
+  useEffect(() => { if (readSiteParam() !== null) setTab("journal"); }, []);
   // Wyjście z Nauki zamyka arkusz — inaczej otworzyłby się sam przy powrocie.
   useEffect(() => closeJournalSheet, []);
 

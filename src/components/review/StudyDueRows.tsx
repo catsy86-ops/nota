@@ -11,13 +11,13 @@ import { studyDueRows } from "@/lib/study/dueRows";
  * Ładowany leniwie z Dziś i z Terminów, żeby dane Pracy nie weszły do paczki startowej.
  * Bez wierszy nic nie pokazuje.
  */
-export function StudyDueRows({ onOpenStudy }: { onOpenStudy: () => void }) {
+export function StudyDueRows({ onOpenStudy }: { onOpenStudy: (siteId?: string) => void }) {
   const ready = useStudyReady();
   if (!ready) return null;
   return <StudyDueRowsList onOpenStudy={onOpenStudy} />;
 }
 
-function StudyDueRowsList({ onOpenStudy }: { onOpenStudy: () => void }) {
+function StudyDueRowsList({ onOpenStudy }: { onOpenStudy: (siteId?: string) => void }) {
   const study = useStudy();
   // Subskrypcja zmiany doby: po północy serwis i zamówienia z terminem „na dziś” mają przejść do listy,
   // a `Date.now()` poniżej jest wtedy świeże.
@@ -32,15 +32,25 @@ function StudyDueRowsList({ onOpenStudy }: { onOpenStudy: () => void }) {
           Praca
           <span className="stamp-tag normal-case text-primary-ink" data-testid="study-due-count">{rows.length}</span>
         </h2>
-        <Button variant="ghost" size="sm" onClick={onOpenStudy} className="coarse:h-11">
+        <Button variant="ghost" size="sm" onClick={() => onOpenStudy()} className="coarse:h-11">
           Otwórz Pracę<ChevronRight className="ml-0.5 h-4 w-4" aria-hidden />
         </Button>
       </div>
       <ul className="divide-y divide-border/50">
         {rows.map((row) => (
           <li key={row.key} data-study-due={row.kind} className="py-2">
-            <p className="text-sm">{row.title}</p>
-            {row.detail && <p className="mt-0.5 text-xs text-muted-foreground">{row.detail}</p>}
+            {/* Wiersz z budową otwiera jej kartę (`/praca?budowa=`), pozostałe wiersze są tylko informacją. */}
+            {row.siteId ? (
+              <button type="button" onClick={() => onOpenStudy(row.siteId ?? undefined)} aria-label={`${row.title}: karta budowy`} className="pressable block w-full rounded-md text-left coarse:min-h-11">
+                <p className="text-sm">{row.title}</p>
+                {row.detail && <p className="mt-0.5 text-xs text-muted-foreground">{row.detail}</p>}
+              </button>
+            ) : (
+              <>
+                <p className="text-sm">{row.title}</p>
+                {row.detail && <p className="mt-0.5 text-xs text-muted-foreground">{row.detail}</p>}
+              </>
+            )}
           </li>
         ))}
       </ul>

@@ -66,8 +66,8 @@ describe("serwis i gwarancja", () => {
     const items = buildPushSchedule({ now: at(16), notes: [], sites });
     // „Cieknie syfon”: rano dnia wizyty i rano następnego dnia, jeśli nadal otwarta. „Wczoraj” (16. 7:00) już minęło.
     expect(items).toEqual([
-      { key: "v:a:2026-10-20", at: at(20, 7), title: "Serwis dziś: Lipowa", body: "Cieknie syfon", url: "/praca" },
-      { key: "v:a:2026-10-20+1", at: at(21, 7), title: "Serwis zaległy: Lipowa", body: "Cieknie syfon — termin był 2026-10-20", url: "/praca" },
+      { key: "v:a:2026-10-20", at: at(20, 7), title: "Serwis dziś: Lipowa", body: "Cieknie syfon", url: "/praca?budowa=s" },
+      { key: "v:a:2026-10-20+1", at: at(21, 7), title: "Serwis zaległy: Lipowa", body: "Cieknie syfon — termin był 2026-10-20", url: "/praca?budowa=s" },
     ]);
   });
 });

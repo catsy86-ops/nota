@@ -693,7 +693,7 @@ const Index = () => {
           {view === "today" && !deferredSearch && (
             <ViewErrorBoundary name="Praca">
               <Suspense fallback={null}>
-                <StudyDueRows onOpenStudy={() => go("study")} />
+                <StudyDueRows onOpenStudy={(siteId) => go("study", siteId ? { site: siteId } : {})} />
               </Suspense>
             </ViewErrorBoundary>
           )}
@@ -785,7 +785,7 @@ const Index = () => {
 
           {view === "reminders" && (
             <Suspense fallback={null}>
-              <StudyDueRows onOpenStudy={() => go("study")} />
+              <StudyDueRows onOpenStudy={(siteId) => go("study", siteId ? { site: siteId } : {})} />
             </Suspense>
           )}
           {view === "reminders" && reminderGroups.map((group, i) => (

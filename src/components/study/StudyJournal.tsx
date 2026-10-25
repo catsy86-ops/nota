@@ -23,6 +23,7 @@ import { JournalEntrySheet, KindIcon } from "./JournalEntrySheet";
 import { JournalItem } from "./JournalItem";
 import { JournalReportDialog } from "./JournalReport";
 import { SiteCardDialog } from "./SiteCardDialog";
+import { readSiteParam, takeSiteParam } from "@/lib/study/siteLink";
 import { NewSiteDialog } from "./NewSiteDialog";
 import { DayHoursDialog } from "./DayHoursDialog";
 import { EntryCheckCard } from "./EntryCheck";
@@ -103,6 +104,14 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
 
   const dir = useSiteDirectory();
   const dirById = useMemo(() => new Map(dir.map((x) => [x.id, x] as const)), [dir]);
+  // Link `/praca?budowa=<id>` (z Dziś albo z push): karta otwiera się od razu. Parametr zdejmujemy dopiero,
+  // gdy budowa jest znana — katalog mógłby być pusty przy pierwszym renderze.
+  useEffect(() => {
+    const id = readSiteParam();
+    if (id === null || !dirById.has(id)) return;
+    takeSiteParam();
+    setCard(id);
+  }, [dirById]);
   // „+ Wpis” przy filtrze budowy zaczyna wpis na tej budowie; „Dokończ wpis” zostawia budowę szkicu.
   const newEntry = () => openEntryAt(hasDraft ? null : contextSiteName(filter.site, dir));
   // Postęp etapów przy nazwie budowy — tylko budowy z własną listą (ktoś już odhaczał).

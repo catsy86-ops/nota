@@ -8,6 +8,7 @@ import { entriesPl } from "@/lib/study/journalView";
 import { dayKeyOf, shiftKey } from "@/lib/study/report";
 import { JOURNAL_REPORT_PARAM, reportParam } from "@/lib/study/reportLink";
 import { entrySiteId } from "@/lib/study/sites";
+import { siteCardUrl } from "@/lib/study/siteLink";
 import { orderLateFrom, type Shortage } from "@/lib/study/shortages";
 import type { ServiceCall } from "@/lib/study/service";
 import type { JournalEntry } from "@/lib/study/yStudy";
@@ -205,21 +206,21 @@ function studyItems(input: PushInput, now: number, end: number): PushItem[] {
   }
   // Serwis: rano w dniu wizyty — także budowy w archiwum (serwis jest po odbiorze).
   // Wizyta wciąż otwarta następnego dnia rano dostaje drugie przypomnienie („zaległy”) z osobnym kluczem.
-  for (const site of Object.values(input.sites ?? {})) {
+  for (const [siteId, site] of Object.entries(input.sites ?? {})) {
     for (const c of site.service ?? []) {
       if (c.done !== undefined || !c.due) continue;
       const [y, m, d] = c.due.split("-").map(Number);
       const onDay = new Date(y, m - 1, d, QUIET_TO).getTime();
       if (onDay > now && onDay <= end) {
-        out.push({ key: pushKey.service(c.id, c.due), at: onDay, title: `Serwis dziś: ${site.name}`, body: clip(c.text, 200), url: "/praca" });
+        out.push({ key: pushKey.service(c.id, c.due), at: onDay, title: `Serwis dziś: ${site.name}`, body: clip(c.text, 200), url: siteCardUrl(siteId) });
       }
       const late = new Date(y, m - 1, d + 1, QUIET_TO).getTime();
       if (late > now && late <= end) {
-        out.push({ key: pushKey.service(c.id, `${c.due}+1`), at: late, title: `Serwis zaległy: ${site.name}`, body: clip(`${c.text} — termin był ${c.due}`, 200), url: "/praca" });
+        out.push({ key: pushKey.service(c.id, `${c.due}+1`), at: late, title: `Serwis zaległy: ${site.name}`, body: clip(`${c.text} — termin był ${c.due}`, 200), url: siteCardUrl(siteId) });
       }
     }
   }
-  for (const site of Object.values(input.sites ?? {})) {
+  for (const [siteId, site] of Object.entries(input.sites ?? {})) {
     if (site.archived !== undefined) continue;
     for (const s of site.shortages ?? []) {
       const from = orderLateFrom(s);
@@ -233,7 +234,7 @@ function studyItems(input: PushInput, now: number, end: number): PushItem[] {
           `${site.name}: ${s.text}${s.qty ? ` (${s.qty})` : ""} — ${s.due !== undefined ? "dostawa miała być tego dnia" : `zamówione ${REMINDER_ORDER_DAYS} dni temu`}.`,
           200,
         ),
-        url: "/praca",
+        url: siteCardUrl(siteId),
       });
     }
   }
