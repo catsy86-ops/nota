@@ -66,7 +66,7 @@ Spójność daje więcej niż nowe ozdoby. Każdy punkt to głównie codemod plu
 | 2.5 | **Animacje sterowane przewijaniem.** Pasek postępu czytania w `NoteReader` (`animation-timeline: scroll()`) i cień nagłówka po zjechaniu ze szczytu (`view()`/`scroll()`). `useHideOnScroll` zostaje, bo zależy od kierunku przewijania, czego CSS nie umie. | 2 | S |
 | 2.6 | **Pola rosnące z treścią.** `field-sizing: content` dla tytułu, szybkiego dodawania i pól wpisu w Pracy; JS autosize tylko jako fallback. | 1 | S |
 | 2.7 | **Mikrointerakcje (jeden zestaw).** Wciśnięcie przycisku (`scale(.97)` na `:active`), rysowanie ptaszka w checkboxie (`stroke-dashoffset`), krótki „pulse” licznika po zmianie (`RollingNumber` już jest), drgnięcie pola przy błędzie. Jeden plik `motion.css` z czasami i krzywymi jako tokeny (`--ease-out-quint`, `--dur-1..3`). | 2 | M |
-| 2.8 | **Haptyka.** Jeden helper `haptic('tap' \| 'success' \| 'warn')` zamiast `navigator.vibrate` w 2 miejscach. Wywołanie przy odhaczeniu, usunięciu, zakończeniu zmiany. Wyłączalne w Ustawieniach, działa tylko na Androidzie. | 1 | S |
+| 2.8 | **Haptyka.** Helper `lib/haptics.ts` (`tap`/`success`/`warn`/`selection`, wyłączalny w efektach) już jest. Przejrzeć, gdzie go brakuje: zakończenie zmiany w Grafiku, odhaczenie w Terminach, zapis wpisu w Pracy. Działa tylko na Androidzie. | 1 | S |
 
 Odrzucone: CSS Anchor Positioning i Popover API. Radix już pozycjonuje i obsługuje fokus, a przepisanie nie da nic widocznego.
 

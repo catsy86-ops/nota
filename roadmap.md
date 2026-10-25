@@ -1101,3 +1101,7 @@ Kolejność (po decyzjach): 3.3 Tailwind v4 + React 19 + shadcn (osobne commity:
 ## Plan UI/UX i QoL — 2026-10-25
 
 Pełny plan: `docs/plan-ui-ux-qol-2026-10-25.md` (Fazy 0–6: bezpieczniki zrzutów, system projektowy, nowoczesny CSS i ruch, QoL, wydajność odczuwalna, upiększenie, QA). Decyzje D-1…D-4 otwarte. Realizacja nie zaczęta.
+
+## Plan działu Notatki — 2026-10-25
+
+Pełny plan: `docs/plan-notatki-2026-10-25.md` (Etapy 1–8: zaległe drobiazgi, codzienna praca, wyszukiwanie, wygląd i ruch, bogate treści, bazy, porządki, QA). Pierwszy z serii „dział po dziale”. Decyzje N-2…N-4 otwarte.
