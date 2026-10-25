@@ -1,3 +1,4 @@
+import { shareOrCopy } from "@/lib/shareOrCopy";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Archive, ArchiveRestore, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, Phone, Send, Share2, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -131,16 +132,9 @@ export function SiteCardDialog({
   async function shareHandover() {
     if (!site) return;
     const text = handoverText(buildHandover(study.journal, site));
-    const copy = async () => {
-      try { await navigator.clipboard.writeText(text); toast.success("Skopiowano tekst protokołu"); } catch { toast.error("Nie udało się skopiować"); }
-    };
-    if (typeof navigator.share !== "function") { await copy(); return; }
-    try {
-      await navigator.share({ title: `Protokół odbioru — ${site.name}`, text });
-    } catch (e) {
-      // Anulowanie okna udostępniania to nie błąd; inny problem — kopia do schowka.
-      if ((e as { name?: string } | null)?.name !== "AbortError") await copy();
-    }
+    const outcome = await shareOrCopy({ title: `Protokół odbioru — ${site.name}`, text });
+    if (outcome === "copied") toast.success("Skopiowano tekst protokołu");
+    else if (outcome === "failed") toast.error("Nie udało się skopiować");
   }
 
   /** Niezapisana zmiana idzie do karty przed każdym wyjściem z okna — nie gubimy wpisanych danych po cichu. */

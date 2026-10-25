@@ -1,3 +1,4 @@
+import { shareOrCopy } from "@/lib/shareOrCopy";
 import { useEffect, useMemo, useState } from "react";
 import { Clock, Copy, Ellipsis, FilePlusCorner, Gauge, MapPin, MessageCircle, Printer, Share2, UserPen, Users } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -131,22 +132,10 @@ export function JournalReportDialog({
   async function sendToGroup() {
     if (!group) { setBossEdit(true); return; }
     const text = reportWhatsApp(report);
-    if (canShare) {
-      const withFiles = files.length > 0 && navigator.canShare?.({ files, text });
-      try {
-        await navigator.share(withFiles ? { text, files } : { text });
-        haptic("success");
-        return;
-      } catch (err) {
-        if ((err as Error)?.name === "AbortError") return;
-      }
-    }
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      toast.error("Nie udało się skopiować — zaznacz tekst w podglądzie");
-      return;
-    }
+    const outcome = await shareOrCopy({ text, files });
+    if (outcome === "shared") { haptic("success"); return; }
+    if (outcome === "cancelled") return;
+    if (outcome === "failed") { toast.error("Nie udało się skopiować — zaznacz tekst w podglądzie"); return; }
     haptic("success");
     if (group.link) window.open(group.link, "_blank", "noopener,noreferrer");
     toast.success(`Skopiowano raport — wklej w grupie „${group.name}”`);
