@@ -21,7 +21,7 @@ test("protokół próby: wpis z ciśnieniem, czasem i spadkiem trafia na listę 
 
   // Bez tematu próby — tylko po wybraniu tematu.
   await expect(sheet.getByTestId("pressure-test")).toHaveCount(0);
-  await sheet.getByRole("button", { name: /^Temat:/ }).click();
+  await sheet.getByRole("button", { name: /^(\+ |✓ )?Temat/ }).click();
   await sheet.getByLabel("Czego dotyczy").selectOption("proba-wody");
   await sheet.getByRole("button", { name: "Dodaj protokół próby szczelności" }).click();
   const proto = sheet.getByTestId("pressure-test");
@@ -54,7 +54,7 @@ test("protokół na zalanie (kanalizacja): bez ciśnienia, wynik nieszczelna", a
   await page.goto("/praca");
   await page.getByRole("button", { name: /^(Wpis|Dokończ wpis)$/ }).click();
   const sheet = page.getByTestId("journal-entry-sheet");
-  await sheet.getByRole("button", { name: /^Temat:/ }).click();
+  await sheet.getByRole("button", { name: /^(\+ |✓ )?Temat/ }).click();
   await sheet.getByLabel("Czego dotyczy").selectOption("proba-kan");
   await sheet.getByRole("button", { name: "Dodaj protokół próby szczelności" }).click();
   const proto = sheet.getByTestId("pressure-test");

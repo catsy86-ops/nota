@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { TriangleAlert, Camera, CircleCheck, ChevronDown, Clock, ImagePlus, ListChecks, LoaderCircle, LocateFixed, MapPin, Mic, NotebookPen, Pencil, PenTool, Play, Trash, Type, X } from "lucide-react";
+import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LoaderCircle, LocateFixed, MapPin, Mic, NotebookPen, Pencil, PenTool, Play, Trash, Type, X } from "lucide-react";
 import { formatFileSize } from "@/lib/attachments";
 import { addRecording } from "@/lib/study/recordings";
 import { JOURNAL_MAX_RECORDINGS } from "@/lib/study/yStudy";
@@ -110,6 +110,10 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   const [captioning, setCaptioning] = useState<string | null>(null);
   const [captionDraft, setCaptionDraft] = useState("");
   const [topicOpen, setTopicOpen] = useState(false);
+  const [testOpen, setTestOpen] = useState(false);
+  const [fittingsOpen, setFittingsOpen] = useState(false);
+  const testVisible = testOpen || !!form.test || TEST_TOPICS.has(topic);
+  const fittingsVisible = fittingsOpen || (form.fittings?.length ?? 0) > 0;
   const [editingSite, setEditingSite] = useState(false);
   /** Budowa w chwili otwarcia pola — dopóki jej nie zmienisz, pigułki pokazują wszystkie ostatnie. */
   const [siteAtOpen, setSiteAtOpen] = useState("");
@@ -888,31 +892,50 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             )}
           </div>
 
-          <div className="rounded-xl border border-border">
-            <button
-              type="button"
-              aria-expanded={topicOpen}
-              aria-controls="journal-topic"
-              onClick={() => setTopicOpen((o) => !o)}
-              className="flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left text-sm coarse:min-h-12"
-            >
-              <span className="text-muted-foreground">Temat:</span>
-              <span className="min-w-0 flex-1 truncate font-medium">{current?.title ?? "Ogólnie"}</span>
-              {checked.size > 0 && <span className="font-mono text-xs tabular-nums text-muted-foreground">{checked.size}/{items.length}</span>}
-              <ChevronDown className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-fast", topicOpen && "rotate-180")} aria-hidden />
-            </button>
-            {topic === "punkty" && <div className="border-t border-border px-2 py-1"><HeightsButton variant="link" /></div>}
-            {/* Przy tematach prób protokół od razu pod ręką; przy innych — gdy już jest we wpisie. */}
-            {(TEST_TOPICS.has(topic) || form.test) && (
-              <div className="border-t border-border p-2">
+          <div className="space-y-2" data-testid="journal-sections">
+            {/* Sekcje dodaje się pigułką (QoL, § D5): schowane, dopóki nie są potrzebne; te z danymi otwarte same. */}
+            <div className="flex flex-wrap gap-1.5" role="group" aria-label="Dodaj do wpisu">
+              <button
+                type="button"
+                aria-pressed={testVisible}
+                aria-controls="journal-test"
+                onClick={() => setTestOpen((o) => !o)}
+                className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5"
+              >
+                {form.test ? "✓ " : "+ "}Próba
+              </button>
+              <button
+                type="button"
+                aria-pressed={fittingsVisible}
+                aria-controls="journal-fittings"
+                onClick={() => setFittingsOpen((o) => !o)}
+                className="pressable inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5"
+              >
+                {(form.fittings?.length ?? 0) > 0 ? "✓ " : "+ "}Kształtki
+              </button>
+              <button
+                type="button"
+                aria-expanded={topicOpen}
+                aria-controls="journal-topic"
+                onClick={() => setTopicOpen((o) => !o)}
+                className="pressable inline-flex max-w-full items-center gap-1 rounded-full border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted coarse:min-h-11 coarse:px-3.5"
+              >
+                <span className="truncate">{topic ? `Temat: ${current?.title ?? topic}${checked.size > 0 ? ` · ${checked.size}/${items.length}` : ""}` : "+ Temat"}</span>
+              </button>
+            </div>
+            {testVisible && (
+              <div id="journal-test" className="rounded-xl border border-border p-2">
                 <PressureTestFields value={form.test} topic={topic} onChange={(t) => patch({ test: t })} />
               </div>
             )}
-            <div className="border-t border-border p-2">
-              <FittingsFields value={form.fittings ?? []} history={fittingHistory} onChange={(f) => patch({ fittings: f })} />
-            </div>
+            {fittingsVisible && (
+              <div id="journal-fittings" className="rounded-xl border border-border p-2">
+                <FittingsFields value={form.fittings ?? []} history={fittingHistory} onChange={(f) => patch({ fittings: f })} />
+              </div>
+            )}
             {topicOpen && (
-              <div id="journal-topic" className="space-y-3 border-t border-border p-3" data-testid="journal-topic-panel">
+              <div id="journal-topic" className="rounded-xl border border-border" data-testid="journal-topic-panel">
+                {topic === "punkty" && <div className="px-2 py-1"><HeightsButton variant="link" /></div>}
                 <label className="block space-y-1 text-xs text-muted-foreground">
                   Czego dotyczy
                   <select
@@ -960,7 +983,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
         <div className="shrink-0 border-t border-border bg-background px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
           {emptyAttempt && (
             <p id="journal-empty-hint" role="alert" className="text-xs text-destructive-ink">
-              Wpisz, co się dzieje, dodaj zdjęcie albo zaznacz sprawdzone punkty.
+              Wpisz, co się dzieje, albo dodaj zdjęcie, nagranie, próbę, kształtki albo etap.
             </p>
           )}
           <div className="flex gap-2">

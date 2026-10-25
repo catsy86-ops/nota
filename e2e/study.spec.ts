@@ -247,7 +247,7 @@ test("dziennik z budowy: lista kontrolna tematu, wpis liczy praktykę, problem c
   await sheet.getByLabel("Inwestycja / adres").press("Enter");
   await expect(sheet.getByRole("button", { name: "Budowa: Dom testowy. Zmień" })).toBeVisible();
   await sheet.getByLabel(/Zachowaj wymagany spadek/).check();
-  await expect(sheet.getByRole("button", { name: /Temat:/ })).toContainText("1/1");
+  await expect(sheet.getByRole("button", { name: /Temat/ })).toContainText("1/1");
   await sheet.getByRole("radio", { name: "Problem" }).click();
   await sheet.getByLabel("Co się dzieje?").fill("Na odcinku do pionu spadek za mały");
   await sheet.getByRole("button", { name: "Zapisz wpis" }).click();
@@ -277,7 +277,7 @@ test("dziennik: niezapisany wpis ze zdjęciem przeżywa zamknięcie arkusza, „
   await openEntry(page);
   const sheet = page.getByTestId("journal-entry-sheet");
   // Temat zwinięty: na budowie najpierw rodzaj, tekst i zdjęcie.
-  await expect(sheet.getByRole("button", { name: /Temat:/ })).toHaveAttribute("aria-expanded", "false");
+  await expect(sheet.getByRole("button", { name: /Temat/ })).toHaveAttribute("aria-expanded", "false");
   await sheet.getByLabel("Co się dzieje?").fill("Próba ciśnieniowa na 9 bar");
   await sheet.getByTestId("journal-photo-input").setInputFiles({ name: "budowa.png", mimeType: "image/png", buffer: png });
   await expect(sheet.getByRole("button", { name: "Usuń zdjęcie z wpisu" })).toHaveCount(1);
@@ -303,7 +303,7 @@ test("dziennik: niezapisany wpis ze zdjęciem przeżywa zamknięcie arkusza, „
   // Po zapisie szkic pusty, temat zostaje.
   await openEntry(page);
   await expect(sheet.getByLabel("Co się dzieje?")).toHaveValue("");
-  await expect(sheet.getByRole("button", { name: /Temat:/ })).toContainText("Spadki kanalizacji");
+  await expect(sheet.getByRole("button", { name: /Temat/ })).toContainText("Spadki kanalizacji");
   await expect(sheet.getByRole("list", { name: "Zdjęcia we wpisie" })).toHaveCount(0);
 });
 
@@ -312,7 +312,7 @@ test("dziennik: pusty wpis się nie zapisuje, usunięcie wpisu w arkuszu ma Cofn
   await openEntry(page);
   const sheet = page.getByTestId("journal-entry-sheet");
   await sheet.getByRole("button", { name: "Zapisz wpis" }).click();
-  await expect(page.getByText("Wpisz, co się dzieje, dodaj zdjęcie albo zaznacz sprawdzone punkty")).toBeVisible();
+  await expect(page.getByText("Wpisz, co się dzieje, albo dodaj zdjęcie, nagranie, próbę, kształtki albo etap")).toBeVisible();
   await expect(sheet).toBeVisible();
   await sheet.getByLabel("Co się dzieje?").fill("Przejście przez ścianę w tulei");
   await sheet.getByLabel("Co się dzieje?").press("Control+Enter");
@@ -458,7 +458,7 @@ test.describe("dziennik na telefonie", () => {
     await page.getByRole("tab", { name: "Dziennik" }).click();
     await page.getByRole("button", { name: /^(Wpis|Dokończ wpis)$/ }).click();
     const entry = page.getByTestId("journal-entry-sheet");
-    await entry.getByRole("button", { name: /^Temat:/ }).click();
+    await entry.getByRole("button", { name: /^(\+ |✓ )?Temat/ }).click();
     await entry.getByRole("combobox").first().selectOption("punkty");
     await entry.getByRole("button", { name: "Wysokości", exact: true }).click();
     await expect(page.getByTestId("heights-sheet").getByRole("row", { name: /Prysznic/ })).toContainText("110");

@@ -23,6 +23,7 @@ test("kształtki: podpowiedź z poprzednich wpisów, −/+, lista wpisów i suma
   await page.goto("/praca");
   await page.getByRole("button", { name: /^(Wpis|Dokończ wpis)$/ }).click();
   const sheet = page.getByTestId("journal-entry-sheet");
+  await sheet.getByRole("button", { name: /^(\+ |✓ )?Kształtki$/ }).click();
   await sheet.getByRole("button", { name: "Dodaj kształtki" }).click();
   const box = sheet.getByTestId("fittings");
   // Pierwsza (pusta) pozycja + podpowiedzi: najpierw nazwy używane wcześniej.
