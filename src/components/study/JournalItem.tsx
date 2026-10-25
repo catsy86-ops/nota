@@ -2,6 +2,7 @@ import { lazy, memo, Suspense, useEffect, useState } from "react";
 import { Check, CircleCheck, Flag, Gauge, MapPin, Mic, Package, Pencil, Play, Wrench } from "lucide-react";
 import { fittingsLine } from "@/lib/study/fittings";
 import { freshEntry } from "@/lib/study/entrySheet";
+import { requestCustomPrefill } from "@/lib/study/customPrefill";
 import { CHIP_ACCENT } from "@/components/ui/chip";
 import { cn } from "@/lib/utils";
 import { testLine } from "@/lib/study/pressureTest";
@@ -115,6 +116,16 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
                 <Check className="h-3.5 w-3.5" aria-hidden />
                 {resolved ? "Otwórz ponownie" : "Oznacz jako rozwiązany"}
               </button>
+              {/* Rozwiązany problem z opisem i sposobem naprawy: szkic własnego pytania (§4.2). */}
+              {resolved && e.text.trim() && e.solution?.trim() && (
+                <button
+                  type="button"
+                  onClick={() => requestCustomPrefill({ topic: e.topic, question: e.text.trim(), correct: e.solution!.trim() })}
+                  className="pressable inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground coarse:min-h-11 coarse:px-3.5 coarse:text-sm"
+                >
+                  Zamień w pytanie
+                </button>
+              )}
               {/* Otwarty problem z tematem: od razu runda pytań z tego tematu — teoria tam, gdzie praktyka zawiodła. */}
               {!resolved && e.topic && (
                 <button

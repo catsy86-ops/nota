@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { pluralPl } from "@/lib/plural";
 import { TOPICS } from "@/lib/study/content";
 import { CUSTOM_ANSWER_MAX, CUSTOM_EXPLANATION_MAX, CUSTOM_TEXT_MAX, type CustomQuestion } from "@/lib/study/custom";
 import { addCustomQuestion, updateCustomQuestion, useStudy } from "@/lib/study/store";
+import type { CustomPrefill } from "@/lib/study/customPrefill";
 import { TopicSelect } from "./CustomChecklistForm";
 import { deleteCustom } from "@/lib/study/customActions";
 
@@ -33,7 +34,7 @@ function draftError(d: Draft): string | null {
  * Własne pytania do quizu (N5). Formularz jak w quizie: poprawna odpowiedź i trzy
  * błędne, quiz sam miesza kolejność. Pytanie dostaje powtórki SM-2 jak materiał.
  */
-export function CustomQuestionsDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function CustomQuestionsDialog({ open, onOpenChange, prefill }: { open: boolean; onOpenChange: (open: boolean) => void; /** Szkic z rozwiązanego problemu (§4.2); nowy obiekt = nowe wypełnienie. */ prefill?: CustomPrefill | null }) {
   const study = useStudy();
   const questions = study.custom.filter((e): e is CustomQuestion => e.kind === "question");
   const [draft, setDraft] = useState<Draft>(() => EMPTY(TOPICS[0].id));
@@ -47,6 +48,14 @@ export function CustomQuestionsDialog({ open, onOpenChange }: { open: boolean; o
     setDraft({ topic: q.topic, question: q.question, correct: q.correct, wrong: [...q.wrong] as Draft["wrong"], explanation: q.explanation });
   };
   const cancelEdit = () => { setEditingId(null); setError(null); setDraft(EMPTY(TOPICS[0].id)); };
+
+  // Szkic z problemu: pytanie i poprawna odpowiedź od razu, błędne do uzupełnienia.
+  useEffect(() => {
+    if (!prefill) return;
+    setEditingId(null);
+    setError(null);
+    setDraft({ ...EMPTY(prefill.topic && TOPICS.some((t) => t.id === prefill.topic) ? prefill.topic : TOPICS[0].id), question: prefill.question, correct: prefill.correct });
+  }, [prefill]);
 
   const set = <K extends keyof Draft>(key: K, value: Draft[K]) => {
     setDraft((d) => ({ ...d, [key]: value }));

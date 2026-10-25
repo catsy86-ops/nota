@@ -14,6 +14,8 @@ import { CardSkeleton } from "@/components/ViewSkeleton";
 import { closeJournalSheet, JOURNAL_ENTRY_PARAM, JOURNAL_VOICE_PARAM, openJournalSheet, requestVoiceOnOpen, useJournalSheet } from "@/lib/study/entrySheet";
 import { JOURNAL_REPORT_PARAM, parseReportParam, requestJournalReport, useJournalReportRequest } from "@/lib/study/reportLink";
 import { readSiteParam } from "@/lib/study/siteLink";
+import { CUSTOM_PREFILL_EVENT, type CustomPrefill } from "@/lib/study/customPrefill";
+import { CustomQuestionsDialog } from "./CustomQuestionsDialog";
 import { useEffect, useState } from "react";
 import { useDayClock } from "@/lib/dayClock";
 import { MOBILE_QUERY } from "@/hooks/use-mobile";
@@ -152,6 +154,14 @@ function StudyScreen() {
   const masteredCount = TOPICS.filter((t) => columnOf(study, t.id) === "done").length;
   // `run` wymusza świeży start, także gdy ćwiczysz ten sam temat drugi raz.
   const [run, setRun] = useState(0);
+  // Problem zamieniony w pytanie (§4.2): jeden dialog dla całego ekranu, otwierany zdarzeniem.
+  const [prefill, setPrefill] = useState<CustomPrefill | null>(null);
+  const [ownOpen, setOwnOpen] = useState(false);
+  useEffect(() => {
+    const onPrefill = (e: Event) => { setPrefill((e as CustomEvent<CustomPrefill>).detail); setOwnOpen(true); };
+    window.addEventListener(CUSTOM_PREFILL_EVENT, onPrefill);
+    return () => window.removeEventListener(CUSTOM_PREFILL_EVENT, onPrefill);
+  }, []);
   const practice = (topic: string) => { setScope({ kind: "topic", topic }); setRun((n) => n + 1); setTab("quiz"); };
   const changeScope = (s: QuizScope) => { setScope(s); setRun((n) => n + 1); };
   // „Powtórz” z karty na stronie „Dziś” (`/praca?powtorka=1`): od razu quiz „Na dziś”.
@@ -201,6 +211,7 @@ function StudyScreen() {
 
   return (
     <div className="space-y-6" data-testid="study-view">
+      <CustomQuestionsDialog open={ownOpen} onOpenChange={setOwnOpen} prefill={prefill} />
       {/* Na Dzienniku nauka schodzi do jednego wiersza — na budowie liczy się „+ Wpis” i lista, nie pasek opanowania. */}
       {tab === "journal" ? (
         <header className="flex flex-wrap items-center gap-x-3 gap-y-2" data-study-header="compact">
