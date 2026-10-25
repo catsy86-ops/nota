@@ -6,6 +6,8 @@ import { useOverlayHistory } from "@/hooks/useOverlayHistory";
 import { useSlashMenu } from "@/hooks/useSlashMenu";
 import { AudioLines, Plus, Tag, Bell, Mic, ImagePlus, Paperclip, X, PenTool, ListChecks, Palette, Folder, Flag, Hash, CornerDownRight, Repeat, CopyPlus } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
+import { format as formatDate } from "date-fns";
+import { pl as plLocale } from "date-fns/locale";
 import { ColorPicker, colorClasses } from "./ColorPicker";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -155,6 +157,9 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
   // Szkic przeżywa przeładowanie i zamknięcie karty: tytuł, treść i pozycje listy wracają po powrocie.
   const [draft0] = useState(readDraft);
   const [expanded, setExpanded] = useState(draft0 !== null);
+  // Data i czas utworzenia: moment otwarcia formularza (tak zapisze się notatka, gdy nie ma innej daty).
+  const [openedAt, setOpenedAt] = useState(Date.now);
+  useEffect(() => { if (expanded) setOpenedAt(Date.now()); }, [expanded]);
   const [title, setTitle] = useState(draft0?.title ?? "");
   const [content, setContent] = useState(draft0?.content ?? "");
   const [color, setColor] = useState<NoteColor>(draft0?.color ?? "default");
@@ -610,6 +615,10 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
                 <button onClick={() => { setReminder(null); setReminderRepeat("none"); setReminderUntil(undefined); }} aria-label="Usuń przypomnienie" className="ml-1 text-muted-foreground hover:text-foreground coarse:inline-flex coarse:h-11 coarse:w-11 coarse:items-center coarse:justify-center">×</button>
               </div>
             )}
+
+            <time dateTime={new Date(openedAt).toISOString()} className="block text-2xs text-muted-foreground tabular-nums">
+              Data i czas: {formatDate(openedAt, "d MMM yyyy, HH:mm", { locale: plLocale })}
+            </time>
 
             {/* Jeden rząd narzędzi z „Zamknij” — kolory pod ikoną palety, lista zadań jako przełącznik. */}
             <div className={cn("flex gap-2 pt-1", fullScreen ? "items-center sticky bottom-0 z-10 -mx-4 mt-auto border-t border-border/60 bg-inherit px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2" : "items-end")}>
