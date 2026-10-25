@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { dayKey, expandOccurrences, groupByDay, type Occurrence } from "@/lib/reminderOccurrences";
 import type { Note } from "@/hooks/useNotes";
 import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
+import { buildSiteTimesheetCsv } from "@/lib/study/siteTimesheet";
+import { useStudy } from "@/lib/study/store";
 import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
@@ -290,6 +292,16 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
     }
   }
 
+  // Godziny na budowach z kosztem robocizny (2.6): te same dane Nauki, co na karcie budowy.
+  const study = useStudy();
+  function exportSiteCsv() {
+    const y = shownMonth.getFullYear();
+    const m = shownMonth.getMonth();
+    const csv = buildSiteTimesheetCsv({ shifts: data, sites: study.sites, journal: study.journal, year: y, month: m });
+    download(csv, `godziny-na-budowach-${format(shownMonth, "yyyy-MM")}.csv`, "text/csv;charset=utf-8");
+    toast.success("Pobrano godziny na budowach (.csv)", { description: "Z kosztem robocizny wg stawki z Grafiku." });
+  }
+
   function exportCsv() {
     const csv = buildTimesheetCsv(data, shownMonth.getFullYear(), shownMonth.getMonth());
     download(csv, `karta-czasu-${format(shownMonth, "yyyy-MM")}.csv`, "text/csv;charset=utf-8");
@@ -393,6 +405,9 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
               <DropdownMenuItem onSelect={() => exportCsv()}>
                 <FileSpreadsheet className="w-4 h-4 mr-2" aria-hidden /> Karta czasu (.csv)
               </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => exportSiteCsv()}>
+                <FileSpreadsheet className="w-4 h-4 mr-2" aria-hidden /> Godziny na budowach (.csv)
+              </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => exportIcs()}>
                 <CalendarArrowDown className="w-4 h-4 mr-2" aria-hidden /> Do kalendarza (.ics)
               </DropdownMenuItem>
@@ -406,6 +421,10 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           <button type="button" onClick={exportCsv}
             className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
             <FileSpreadsheet className="w-4 h-4" /> Karta czasu (.csv)
+          </button>
+          <button type="button" onClick={exportSiteCsv}
+            className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+            <FileSpreadsheet className="w-4 h-4" /> Godziny na budowach (.csv)
           </button>
           <button type="button" onClick={exportIcs}
             className="pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring">

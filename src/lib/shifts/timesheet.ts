@@ -6,7 +6,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
 const hours = (min: number) => (min / 60).toFixed(2).replace(".", ",");
 
 /** Pole CSV w cudzysłowie, gdy zawiera separator, cudzysłów albo koniec linii; chroni też przed formułami arkusza. */
-function cell(v: string | number): string {
+export function cell(v: string | number): string {
   let s = String(v);
   if (/^[=+\-@\t\r]/.test(s) && typeof v === "string") s = `'${s}`;
   return /[;"\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;

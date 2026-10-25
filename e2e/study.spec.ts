@@ -713,7 +713,7 @@ test("dziennik: karta budowy — nazwa, adres, inwestor, raport z karty i archiw
   await expect(journal.locator("[data-journal-site]")).toHaveText(["Dom Nowaków", "Polna 2"]);
 
   // Raport z karty: ta budowa, adres i inwestor w nagłówku.
-  await card.getByRole("button", { name: "Raport" }).click();
+  await card.getByRole("button", { name: "Raport", exact: true }).click();
   const report = page.getByTestId("journal-report");
   await expect(report.getByRole("combobox", { name: "Budowa raportu" }).locator("option:checked")).toHaveText("Dom Nowaków");
   await expect(report.getByTestId("report-site-card")).toHaveText("ul. Lipowa 5, Kraków · inwestor: Jan Nowak");
