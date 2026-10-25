@@ -234,6 +234,11 @@ function RestoreBackup() {
               </label>
             ))}
           </div>
+          {backup && opts.study && backup.study !== undefined && (
+            <p className="text-sm text-warning-ink" data-testid="restore-study-warning">
+              Praca i dziennik z budowy z tego pliku zastąpią też dane na sparowanych urządzeniach, nie tylko tutaj.
+            </p>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={busy}>Anuluj</AlertDialogCancel>
             <AlertDialogAction className={buttonVariants({ variant: "destructive" })} disabled={busy} onClick={(e) => { e.preventDefault(); void restore(); }}>Przywróć backup</AlertDialogAction>
