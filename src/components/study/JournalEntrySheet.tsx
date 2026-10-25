@@ -40,7 +40,7 @@ import { matchStage, siteStages, toggleStage } from "@/lib/study/stages";
 
 export function KindIcon({ kind, className = "h-4 w-4" }: { kind: JournalKind; className?: string }) {
   if (kind === "ok") return <CircleCheck className={cn(className, "shrink-0 text-success-ink")} aria-hidden />;
-  if (kind === "problem") return <TriangleAlert className={cn(className, "shrink-0 text-warning")} aria-hidden />;
+  if (kind === "problem") return <TriangleAlert className={cn(className, "shrink-0 text-warning-ink")} aria-hidden />;
   return <NotebookPen className={cn(className, "shrink-0 text-muted-foreground")} aria-hidden />;
 }
 

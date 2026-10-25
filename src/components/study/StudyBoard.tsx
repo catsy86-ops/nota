@@ -134,7 +134,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
             aria-label={`${topic.title}: wpis z budowy`}
             className={actionClass}
           >
-            <NotebookPen className="h-3.5 w-3.5 shrink-0" aria-hidden />Wpis
+            <NotebookPen className="h-3.5 w-3.5 shrink-0" aria-hidden />Wpis z budowy
           </button>
           <button
             type="button"

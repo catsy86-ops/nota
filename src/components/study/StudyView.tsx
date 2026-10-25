@@ -193,7 +193,7 @@ function StudyScreen() {
       {/* Na Dzienniku nauka schodzi do jednego wiersza — na budowie liczy się „+ Wpis” i lista, nie pasek opanowania. */}
       {tab === "journal" ? (
         <header className="flex flex-wrap items-center gap-x-3 gap-y-2" data-study-header="compact">
-          <h2 className="font-display text-lg">Instalacje wod-kan</h2>
+          <h2 className="font-display text-lg">Dziennik budowy</h2>
           <button
             type="button"
             onClick={() => setTab("board")}
@@ -220,7 +220,7 @@ function StudyScreen() {
       ) : (
         <header className="space-y-4" data-study-header="full">
           <div>
-            <h2 className="font-display text-2xl">Instalacje wod-kan</h2>
+            <h2 className="font-display text-2xl">Nauka: instalacje wod-kan</h2>
             <p className="text-sm text-muted-foreground">Poradnik „Woda użytkowa” i listy kontrolne G-HEAT, KAN-therm UltraLine.</p>
           </div>
           <MasteryStrip />

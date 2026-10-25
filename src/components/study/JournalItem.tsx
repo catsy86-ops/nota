@@ -76,7 +76,7 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
             )}
             {e.geo && (
               // „Tu jestem” — gdzie zapisano wpis; link do map, tylko w aplikacji (raport tego nie zawiera).
-              <a href={mapsUrl(e.geo)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-foreground hover:underline" data-testid="journal-entry-geo">
+              <a href={mapsUrl(e.geo)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 hover:text-foreground hover:underline coarse:min-h-11 coarse:items-center" data-testid="journal-entry-geo">
                 <MapPin className="h-3 w-3" aria-hidden />Mapa
               </a>
             )}
