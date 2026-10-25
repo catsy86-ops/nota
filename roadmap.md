@@ -1137,3 +1137,7 @@ Pełny plan: `docs/plan-dlugi-2026-10-25.md` (Etapy 1–5: poprawki — spłata 
 ## Plan działu Ćwiczenia — 2026-10-25
 
 Pełny plan: `docs/plan-cwiczenia-2026-10-25.md` (Etapy 1–5: poprawki — więcej partii i sprzętu (dziś tylko klatka, biceps, triceps), przerwa po serii, cele diety, notatki przypomnień poza Skrzynką; codzienne — plan dnia prowadzi przez trening, „Wziąłem” zamyka przypomnienie, szybki posiłek, „wczoraj”, edycja odżywki, serie na czas; rozbudowa — masa ciała, 7 dni odżywek, „Nowy rekord”, historia ćwiczenia; wygląd; QA). Dziewiąty z serii „dział po dziale”. Decyzje C-1…C-4 otwarte.
+
+## Plan Skarbca — 2026-10-25
+
+Pełny plan: `docs/plan-skarbiec-2026-10-25.md` (Etapy 1–5: opis w `opis.md` (brakuje), odzysk notatek nieodszyfrowywalnych, ostrzeżenie przed auto-blokadą, hasło ≥ 12, menedżer haseł, kod awaryjny do druku; kłódka w nagłówku, notatka prywatna z kompozytora, lista prywatnych, test hasła; format v2, biometria (WebAuthn PRF), szyfrowane pliki — po przeglądzie bezpieczeństwa; wygląd; QA). Dziesiąty z serii „dział po dziale”. Decyzje V-1…V-4 otwarte.
