@@ -287,7 +287,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         )}
 
         <div
-          className={cn("cursor-pointer", isEditing && !fullEditor ? "p-4" : "card-body px-3.5 pt-3 pb-2.5 leading-normal", note.largeText ? "text-base" : "text-[0.875rem]")}
+          className={cn("cursor-pointer", isEditing && !fullEditor ? "p-4" : "card-body px-3.5 pt-3 pb-2.5 leading-normal", note.largeText ? "text-base" : "text-sm")}
           onClick={(e) => {
             if (longPressed.current) { longPressed.current = false; return; }
             if (swiping || Math.abs(swipeX.get()) > 4) return;

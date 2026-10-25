@@ -78,7 +78,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-2xs font-medium uppercase tracking-wide text-muted-foreground">{moduleLabel(topic.module)}</p>
+          <p className="section-caps">{moduleLabel(topic.module)}</p>
           <h4 className="mt-0.5 font-medium leading-snug">
             {topic.title}
             {critical && <span className="ml-1.5 inline-flex align-[-2px]" role="img" title="Zawiera punkty krytyczne" aria-label="Zawiera punkty krytyczne"><TriangleAlert className="h-3.5 w-3.5 text-warning-ink" aria-hidden /></span>}

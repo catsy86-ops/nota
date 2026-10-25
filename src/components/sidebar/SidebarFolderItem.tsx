@@ -64,7 +64,7 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
       <div className="flex items-center gap-1 px-2 py-1">
         <input ref={inputRef} value={name} onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setName(folder.name); setEditing(false); } }}
-          className="flex-1 text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground min-w-0" />
+          className="flex-1 text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground min-w-0" />
         <IconButton size="sm" tone="active" onClick={save} aria-label="Zapisz nazwę folderu"><Check className="w-3.5 h-3.5" /></IconButton>
         <IconButton size="sm" onClick={() => { setName(folder.name); setEditing(false); }} aria-label="Anuluj edycję folderu"><X className="w-3.5 h-3.5" /></IconButton>
       </div>
@@ -191,7 +191,7 @@ export function SidebarFolderItem({ folder, folders, isActive, activeFolderId, v
         <div className="flex items-center gap-1 px-6 py-1">
           <input ref={subInputRef} value={subName} onChange={(e) => setSubName(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") submitSub(); if (e.key === "Escape") { setSubName(""); setAddingSub(false); } }}
-            className="flex-1 text-xs bg-muted/60 border border-border rounded-lg px-2 py-0.5 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground min-w-0" placeholder="Subfolder..." />
+            className="flex-1 text-xs bg-muted/60 border border-border rounded-lg px-2 py-0.5 outline-hidden focus:ring-2 focus:ring-ring text-foreground min-w-0" placeholder="Subfolder..." />
           <IconButton size="sm" tone="active" onClick={submitSub} aria-label="Dodaj podfolder"><Check className="w-3.5 h-3.5" /></IconButton>
           <IconButton size="sm" onClick={() => { setSubName(""); setAddingSub(false); }} aria-label="Anuluj dodawanie podfolderu"><X className="w-3.5 h-3.5" /></IconButton>
         </div>

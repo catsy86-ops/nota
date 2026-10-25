@@ -186,7 +186,7 @@ export function NoteCardBody({
                 </div>
               )}
               {/* Liczba słów jest w czytniku — na wąskim kaflu łamała stopkę na trzy linie. */}
-              <div className="card-meta flex items-center gap-1.5 mt-1.5 font-mono text-[11px] text-muted-foreground whitespace-nowrap">
+              <div className="card-meta flex items-center gap-1.5 mt-1.5 font-mono text-2xs text-muted-foreground whitespace-nowrap">
                 {showReadingTime && wordCount > 0 && readMin >= 2 && <><span>~{readMin} min</span><span aria-hidden>·</span></>}
                 <span className="tabular-nums">{format(new Date(note.updatedAt), "d MMM, HH:mm", { locale: pl })}</span>
               </div>

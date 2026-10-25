@@ -18,7 +18,7 @@ export function SidebarAddFolderButton({ onAdd }: { onAdd: (name: string) => voi
       <div className="flex items-center gap-0.5">
         <input ref={inputRef} value={name} onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") submit(); if (e.key === "Escape") { setName(""); setAdding(false); } }}
-          className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground w-24" placeholder="Nazwa..." />
+          className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground w-24" placeholder="Nazwa..." />
         <IconButton size="sm" tone="active" onClick={submit} aria-label="Dodaj folder"><Check className="w-3.5 h-3.5" /></IconButton>
         <IconButton size="sm" onClick={() => { setName(""); setAdding(false); }} aria-label="Anuluj dodawanie folderu"><X className="w-3.5 h-3.5" /></IconButton>
       </div>

@@ -145,7 +145,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
         )}
         {result.missed.length > 0 ? (
           <div>
-            <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground mb-2">Do powtórki</h3>
+            <h3 className="section-caps mb-2">Do powtórki</h3>
             <ul className="space-y-1.5">
               {result.missed.map((id) => (
                 <li key={id} className="flex items-center gap-2 text-sm">

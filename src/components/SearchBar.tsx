@@ -207,7 +207,7 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
             maxLength={MAX_FILTER_NAME}
             onChange={(e) => setName(e.target.value)}
             placeholder="np. Do zrobienia"
-            className="w-full rounded-lg border border-border bg-muted/60 px-2.5 py-1.5 text-sm text-foreground outline-hidden focus:ring-2 focus:ring-primary/30"
+            className="w-full rounded-lg border border-border bg-muted/60 px-2.5 py-1.5 text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
           />
           <p className="truncate font-mono text-2xs text-muted-foreground">{value.trim()}</p>
           <div className="flex justify-end gap-2">

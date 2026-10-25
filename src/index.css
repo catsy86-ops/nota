@@ -568,6 +568,10 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
   .section-label {
     @apply flex items-center gap-1.5 text-sm font-semibold text-foreground;
   }
+  /* Wersalikowy nagłówek grupy (pasek boczny, dolny pasek, tablica, quiz): jeden przepis zamiast czterech (§audyt 1). */
+  .section-caps {
+    @apply text-2xs font-semibold uppercase tracking-wider text-muted-foreground;
+  }
 
   /* Tabliczka rysunkowa w rogu arkusza: nazwa widoku w każdym skinie. Tylko komputer —
      na telefonie w tym miejscu siedzi dolny pasek. Bez JS: napis wybiera `html[data-view]`. */

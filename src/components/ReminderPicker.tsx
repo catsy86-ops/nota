@@ -163,7 +163,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground"
+              className="text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground"
             />
           </div>
         )}
@@ -173,7 +173,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
             id={`${uid}-repeat`}
             value={repeat}
             onChange={(e) => setRepeat(e.target.value as ReminderRepeat)}
-            className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground"
+            className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground"
           >
             {REPEAT_OPTIONS.map((r) => (
               <option key={r} value={r}>{REMINDER_REPEAT_LABELS[r]}</option>
@@ -190,7 +190,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
               min={timestamp !== null ? dayInputValue(timestamp) : undefined}
               onChange={(e) => setUntilText(e.target.value)}
               aria-describedby={`${uid}-until-hint`}
-              className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground"
+              className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground"
             />
             {untilText && (
               <button type="button" onClick={() => setUntilText("")} aria-label="Bez końca serii" className="p-1 rounded text-muted-foreground hover:text-foreground">

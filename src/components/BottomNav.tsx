@@ -261,7 +261,7 @@ function NavItem({ active, current = active, label, onClick, children, badge, bu
 function SheetGroup({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="pt-4">
-      <h3 className="px-1 pb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h3>
+      <h3 className="section-caps px-1 pb-2">{title}</h3>
       <div className="grid grid-cols-3 gap-3">{children}</div>
     </section>
   );

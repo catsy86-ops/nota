@@ -687,7 +687,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                     </div>
                     <div className="flex gap-1.5">
                       <input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleCreateLabel()}
-                        placeholder="Nowa etykieta..." className="flex-1 text-xs max-sm:text-base bg-muted/60 border border-border rounded-lg px-2.5 py-1.5 outline-hidden focus:ring-1 focus:ring-primary/30 text-foreground placeholder:text-muted-foreground" />
+                        placeholder="Nowa etykieta..." className="flex-1 text-xs max-sm:text-base bg-muted/60 border border-border rounded-lg px-2.5 py-1.5 outline-hidden focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground" />
                       <IconButton size="sm" tone="primary" onClick={handleCreateLabel} aria-label="Dodaj etykietę">
                         <Plus className="w-3.5 h-3.5" />
                       </IconButton>
@@ -720,7 +720,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                         value={parentId ?? ""}
                         onChange={(e) => setParentId(e.target.value || null)}
                         aria-label="Notatka nadrzędna"
-                        className="w-full rounded-lg border border-border bg-muted/60 px-2 py-1.5 text-sm text-foreground outline-hidden focus:ring-1 focus:ring-primary/30"
+                        className="w-full rounded-lg border border-border bg-muted/60 px-2 py-1.5 text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
                       >
                         <option value="">Poziom główny</option>
                         {parentOptions.map((o) => <option key={o.id} value={o.id}>{o.title.trim() || "Bez tytułu"}</option>)}

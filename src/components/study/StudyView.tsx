@@ -82,7 +82,7 @@ function MasteryStrip() {
                 <span className="flex shrink-0 items-center gap-1.5">
                   {modDone === topics.length && (
                     // Pieczątka: moduł cały w „Umiem” — krzywo, jak stempel w zeszycie.
-                    <span data-mastery-stamp className="-rotate-3 rounded-sm border-2 border-success-ink px-1.5 text-[0.65rem] font-semibold uppercase leading-4 tracking-widest text-success-ink">Umiem</span>
+                    <span data-mastery-stamp className="-rotate-3 rounded-sm border-2 border-success-ink px-1.5 text-2xs font-semibold uppercase leading-4 tracking-widest text-success-ink">Umiem</span>
                   )}
                   <span className="font-mono tabular-nums">{modDone}/{topics.length}</span>
                 </span>

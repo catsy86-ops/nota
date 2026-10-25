@@ -183,7 +183,7 @@ export function AppSidebar({
 
               {favorites.length > 0 && (
                 <div className="pt-5">
-                  <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground px-3 mb-2 flex items-center gap-1.5">
+                  <p className="section-caps px-3 mb-2 flex items-center gap-1.5">
                     <Star className="w-3 h-3" />
                     Ulubione
                   </p>
@@ -206,7 +206,7 @@ export function AppSidebar({
 
               {filters.length > 0 && (
                 <div className="pt-5">
-                  <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground px-3 mb-2 flex items-center gap-1.5">
+                  <p className="section-caps px-3 mb-2 flex items-center gap-1.5">
                     <Funnel className="w-3 h-3" />
                     Filtry
                   </p>
@@ -229,7 +229,7 @@ export function AppSidebar({
 
               {allLabels.length > 0 && (
                 <div className="pt-5">
-                  <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground px-3 mb-2 flex items-center gap-1.5">
+                  <p className="section-caps px-3 mb-2 flex items-center gap-1.5">
                     <Tag className="w-3 h-3" />
                     Etykiety
                   </p>
@@ -252,7 +252,7 @@ export function AppSidebar({
 
               <div className="pt-5">
                 <div className="flex items-center justify-between pl-3 pr-1 mb-1 min-h-7">
-                  <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <p className="section-caps flex items-center gap-1.5">
                     <FolderOpen className="w-3 h-3" />
                     Foldery
                   </p>
