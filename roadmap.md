@@ -1113,3 +1113,7 @@ Pełny plan: `docs/plan-skrzynka-2026-10-25.md` (Etapy 1–6: zaległe drobiazgi
 ## Plan działu Dziś — 2026-10-25
 
 Pełny plan: `docs/plan-dzis-2026-10-25.md` (Etapy 1–5: poprawki, karta zmiany „na teraz” i plan dnia, wygląd z dwiema kolumnami na komputerze, Dziś zbiera działy, QA). Trzeci z serii „dział po dziale”. Decyzje D-1…D-4 otwarte.
+
+## Plan działu Kalendarz — 2026-10-25
+
+Pełny plan: `docs/plan-kalendarz-2026-10-25.md` (Etapy 1–5: poprawki — zaległy ≠ załatwiony, `.ics` cały dzień i seria, adres dnia; codzienna praca — „Otwórz notatkę”, zapamiętany widok, oś bez dziur; rozbudowa — Praca w tygodniu, filtr warstw, agenda, oś tygodnia; wygląd; QA). Czwarty z serii „dział po dziale”. Decyzje K-1…K-3 otwarte.
