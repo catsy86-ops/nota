@@ -28,6 +28,19 @@ const moduleLabel = (id: StudyTopic["module"]) => MODULES.find((m) => m.id === i
  * Przeniesienie tematu. Na telefonie widać jedną kolumnę naraz, więc karta znika
  * z ekranu — dymek mówi, dokąd poszła.
  */
+const PHONE_COLUMN_KEY = "kaczy.study.boardColumn.v1";
+const readPhoneColumn = (): Column | null => {
+  try {
+    const v = localStorage.getItem(PHONE_COLUMN_KEY);
+    return v === "todo" || v === "doing" || v === "done" ? v : null;
+  } catch {
+    return null;
+  }
+};
+const writePhoneColumn = (col: Column) => {
+  try { localStorage.setItem(PHONE_COLUMN_KEY, col); } catch { /* prywatny tryb — wybór żyje do odświeżenia */ }
+};
+
 function moveTo(topic: StudyTopic, column: Column) {
   moveTopic(topic.id, column);
   // Karta zmienia kolumnę (inny rodzic), więc zostaje odmontowana: fokus wraca na nią po wyrenderowaniu.
@@ -195,7 +208,12 @@ export function StudyBoard({ onPractice, onJournal }: { onPractice: (topicId: st
   }
   const counts = Object.fromEntries(COLUMNS.map((c) => [c, TOPICS.filter((t) => columnOf(study, t.id) === c).length])) as Record<Column, number>;
   // Telefon: jedna kolumna naraz (trzy pod sobą to długie przewijanie); start od „W trakcie”, jeśli coś tam jest.
-  const [phoneCol, setPhoneCol] = useState<Column>(() => (counts.doing > 0 ? "doing" : "todo"));
+  // Kolumna wybrana na telefonie zostaje po przejściu do innego widoku i z powrotem (§8 D4); bez zapisu — domyślna.
+  const [phoneCol, setPhoneColState] = useState<Column>(() => {
+    const saved = readPhoneColumn();
+    return saved ?? (counts.doing > 0 ? "doing" : "todo");
+  });
+  const setPhoneCol = (col: Column) => { setPhoneColState(col); writePhoneColumn(col); };
   return (
     <LayoutGroup>
       <ToggleGroup
