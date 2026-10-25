@@ -95,6 +95,7 @@ const TodayDueList = lazy(() => import("@/components/review/TodayDueList").then(
 const StudyDueRows = lazy(() => import("@/components/review/StudyDueRows"));
 const TodaySiteCard = lazy(() => import("@/components/review/TodaySiteCard").then((m) => ({ default: m.TodaySiteCard })));
 const SeriesForecastSection = lazy(() => import("@/components/calendar/SeriesForecastSection"));
+const WidgetPanel = lazy(() => import("@/components/WidgetPanel").then((m) => ({ default: m.WidgetPanel })));
 const TodayShiftCard = lazy(() => import("@/components/review/TodayShiftCard").then((m) => ({ default: m.TodayShiftCard })));
 const TodayStudyCard = lazy(() => import("@/components/review/TodayStudyCard").then((m) => ({ default: m.TodayStudyCard })));
 const BrainTrainingCard = lazy(() => import("@/components/review/BrainTrainingCard").then((m) => ({ default: m.BrainTrainingCard })));
@@ -339,7 +340,7 @@ const Index = () => {
   // Sekcje widoku: „Przypięte” (zwijane od 4 notatek) i reszta, opcjonalnie podzielona na grupy.
   // `visibleNotes` = to, co faktycznie jest na ekranie (bez zwiniętych) w kolejności widoku.
   // Tablica / tabela mają sens tylko w widokach z listą notatek (nie w agendzie, koszu, kalendarzu, grafiku).
-  const listView = view !== "reminders" && view !== "trash" && view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia";
+  const listView = view !== "reminders" && view !== "trash" && view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia" && view !== "widget";
   const boardMode = prefs.layout === "board" && listView;
   const tableMode = prefs.layout === "table" && listView;
   // Kolumny tablicy potrzebują podziału: bez wybranego domyślnie idą po etykiecie.
@@ -546,7 +547,15 @@ const Index = () => {
   const deleteNoteForever = useCallback((id: string) => { deleteNote(id); deleteVersions(id); }, [deleteNote, deleteVersions]);
   const handleDelete = view === "trash" ? deleteNoteForever : handleTrashSingle;
 
-  const { restoreSelected, pinSelected, moveSelectedToFolder, labelSelected, moveToColumn, mergeSelected } = useBulkNoteOps({
+  /** Eksport zaznaczonych do HTML albo PDF. Prywatne pomijamy (ich treść jest zaszyfrowana). Biblioteki ładujemy leniwie. */
+  async function exportSelectedAs(kind: "html" | "pdf") {
+    const chosen = [...notes, ...archivedNotes, ...trashedNotes].filter((n) => selectedIds.has(n.id) && !n.locked);
+    if (chosen.length === 0) { toast.info("Nic do eksportu", { description: "Zaznaczone notatki są prywatne." }); return; }
+    if (kind === "html") (await import("@/lib/exportNotes")).exportToHTML(chosen);
+    else (await import("@/lib/exportPdf")).exportToPDF(chosen);
+  }
+
+  const { restoreSelected, pinSelected, moveSelectedToFolder, labelSelected, moveToColumn, mergeSelected, favoriteSelected, prioritySelected } = useBulkNoteOps({
     view, groupBy, folders, notesRef, selectedIds, clearSelection, togglePin, updateNote, addLabel,
     unarchiveNote, bulkRestore, bulkTrash, bulkArchive, moveToFolder: handleMoveToFolderGlow,
   });
@@ -679,6 +688,14 @@ const Index = () => {
             <ViewErrorBoundary name="Grafik">
               <Suspense fallback={<CardSkeleton />}>
                 <TodayShiftCard onOpenShifts={() => go("shifts")} onDailyNote={openDailyNote} />
+              </Suspense>
+            </ViewErrorBoundary>
+          )}
+
+          {view === "widget" && (
+            <ViewErrorBoundary name="Widżet">
+              <Suspense fallback={<CardSkeleton />}>
+                <WidgetPanel notes={reminderNotes} onOpen={openNote} onOpenToday={() => go("today")} onNew={() => expandAddNote()} onUpdate={updateNote} />
               </Suspense>
             </ViewErrorBoundary>
           )}
@@ -933,7 +950,7 @@ const Index = () => {
             {deferredSearch && view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia" ? `${displayNotes.length} ${pluralPl(displayNotes.length, ["wynik", "wyniki", "wyników"])}` : ""}
           </p>
           <AnimatePresence>
-            {view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia" && displayNotes.length === 0 && reminderRowCount === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} onNew={() => expandAddNote()} onClearSearch={() => setSearch("")} />}
+            {view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia" && view !== "widget" && displayNotes.length === 0 && reminderRowCount === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} onNew={() => expandAddNote()} onClearSearch={() => setSearch("")} />}
           </AnimatePresence>
           {view === "notes" && displayNotes.length > 0 && !deferredSearch && <DailyQuote />}
         </main>
@@ -1086,6 +1103,10 @@ const Index = () => {
       onMoveToFolder={moveSelectedToFolder}
       onAddLabel={labelSelected}
       onMerge={mergeSelected}
+      onFavorite={favoriteSelected}
+      onExportHtml={() => void exportSelectedAs("html")}
+      onExportPdf={() => void exportSelectedAs("pdf")}
+      onPriority={prioritySelected}
       view={view === "trash" ? "trash" : view === "archive" ? "archive" : "other"}
       onRestore={restoreSelected}
       onDeleteForever={() => setConfirmDeleteIds(Array.from(selectedIds))}

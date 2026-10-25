@@ -1,6 +1,8 @@
 import { m as motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
-import { Archive, ArchiveRestore, Download, Trash, Palette, X, SquareCheckBig, Undo2, Pin, FolderInput, Tag, Combine } from "lucide-react";
+import { Archive, ArchiveRestore, Download, Trash, Palette, X, SquareCheckBig, Undo2, Pin, FolderInput, Tag, Combine, Star, FileText, FileDown } from "lucide-react";
+import { PriorityPicker } from "./PriorityPicker";
+import type { NotePriority } from "@/lib/notePriority";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ColorPicker } from "./ColorPicker";
 import type { Folder, NoteColor } from "@/hooks/useNotes";
@@ -31,9 +33,16 @@ interface Props {
   onAddLabel?: (label: string) => void;
   /** Scalenie zaznaczonych w jedną notatkę (`lib/mergeNotes.ts`); odmowy pokazuje handler. */
   onMerge?: () => void;
+  /** Ulubione zaznaczonych (przełącznik dla całego zaznaczenia). */
+  onFavorite?: () => void;
+  /** Eksport zaznaczonych do jednego pliku HTML albo PDF (bez prywatnych). */
+  onExportHtml?: () => void;
+  onExportPdf?: () => void;
+  /** Priorytet dla wszystkich zaznaczonych. */
+  onPriority?: (p: NotePriority) => void;
 }
 
-export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArchive, onTrash, onColor, view = "other", onRestore, onDeleteForever, onExport, folders = [], allLabels = [], onPin, onMoveToFolder, onAddLabel, onMerge }: Props) {
+export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArchive, onTrash, onColor, view = "other", onRestore, onDeleteForever, onExport, folders = [], allLabels = [], onPin, onMoveToFolder, onAddLabel, onMerge, onFavorite, onPriority, onExportHtml, onExportPdf }: Props) {
   const [newLabel, setNewLabel] = useState("");
   const inTrash = view === "trash";
   const inArchive = view === "archive";
@@ -75,6 +84,22 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
                 <ColorPicker selected="default" onSelect={(c: NoteColor) => onColor(c)} />
               </PopoverContent>
             </Popover>
+          )}
+          {!inTrash && !inArchive && onFavorite && (
+            <IconButton onClick={onFavorite} title="Ulubione: dodaj albo zdejmij zaznaczone" aria-label="Ulubione zaznaczone">
+              <Star className="w-4 h-4" />
+            </IconButton>
+          )}
+          {!inTrash && !inArchive && onPriority && <PriorityPicker priority="none" onSet={onPriority} />}
+          {onExportHtml && (
+            <IconButton onClick={onExportHtml} title="Eksport zaznaczonych do HTML" aria-label="Eksport zaznaczonych do HTML">
+              <FileText className="w-4 h-4" />
+            </IconButton>
+          )}
+          {onExportPdf && (
+            <IconButton onClick={onExportPdf} title="Eksport zaznaczonych do PDF" aria-label="Eksport zaznaczonych do PDF">
+              <FileDown className="w-4 h-4" />
+            </IconButton>
           )}
           {!inTrash && !inArchive && onPin && (
             <IconButton onClick={onPin} title="Przypnij / odepnij zaznaczone" aria-label="Przypnij zaznaczone">

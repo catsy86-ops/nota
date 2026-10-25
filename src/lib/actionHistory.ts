@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { logDiag } from "@/lib/diagnostics";
 
-export type ActionKind = "trash" | "archive";
+export type ActionKind = "trash" | "archive" | "bulk";
 
 export interface ActionEntry {
   id: string;

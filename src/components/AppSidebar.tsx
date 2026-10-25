@@ -118,6 +118,7 @@ export function AppSidebar({
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [filters, notes, folders, searchReady],
   );
+  const favoriteTotal = useMemo(() => notes.filter((n) => n.favorite).length, [notes]);
   const favorites = useMemo(() => notes.filter((n) => n.favorite).slice(0, MAX_FAVORITES), [notes]);
   // Jedna pigułka aktywna naraz: gdy zapytanie jest zapisanym filtrem, „Notatki” gasną.
   const activeFilterId = view === "notes" ? filters.find((f) => sameQuery(search, f.query))?.id ?? null : null;
@@ -195,6 +196,10 @@ export function AppSidebar({
                         onClick={() => onOpenNote(n.id)}
                       />
                     ))}
+                    {/* Lista pokazuje tylko MAX_FAVORITES — reszta nie znika po cichu (QoL). */}
+                    {favoriteTotal > MAX_FAVORITES && (
+                      <p className="px-3 pt-1 text-2xs text-muted-foreground" data-favorites-more>i {favoriteTotal - MAX_FAVORITES} więcej w Notatkach</p>
+                    )}
                   </div>
                 </div>
               )}

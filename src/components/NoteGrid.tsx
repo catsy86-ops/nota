@@ -162,6 +162,10 @@ export function NoteGrid({
       onArchive: isArchived ? undefined : onArchive,
       onTogglePin,
       onDuplicate,
+      onToggleFavorite: (id) => {
+        const note = notes.find((n) => n.id === id);
+        if (note) onUpdate?.(id, { favorite: !note.favorite });
+      },
       openNote: (id) => {
         const target = gridRef.current?.querySelector(`[data-note-id-wrap="${id}"] .cursor-pointer`) as HTMLElement | null;
         target?.click();
@@ -172,7 +176,7 @@ export function NoteGrid({
       },
       colsCount,
     });
-  }, [navOrder, noteIdsKey, onDelete, onArchive, onTogglePin, onDuplicate, isArchived, colsCount]);
+  }, [navOrder, noteIdsKey, onDelete, onArchive, onTogglePin, onDuplicate, onUpdate, notes, isArchived, colsCount]);
 
   // Domyślna gęstość na krok 4 px (12/16 px zamiast 10/12 px); zwarta i wygodna bez zmian.
   const { gap, listGap, columnGap, rowGap } = DENSITY_GAPS[prefs.density] ?? DENSITY_GAPS.normal;

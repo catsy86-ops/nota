@@ -12,7 +12,7 @@ const GROUPS: ShortcutGroup[] = [
     items: [
       { keys: [MOD_KEY, "N"], label: "Nowa notatka" },
       { keys: [MOD_KEY, "K"], label: "Paleta poleceń" },
-      { keys: [MOD_KEY, "Z"], label: "Cofnij usunięcie lub archiwizację" },
+      { keys: [MOD_KEY, "Z"], label: "Cofnij ostatnią akcję" },
       { keys: ["Alt", "N"], label: "Nowa notatka" },
       { keys: ["/"], label: "Fokus na wyszukiwarkę" },
       { keys: ["Alt", "S"], label: "Wyszukiwarka (gdy „/” nie działa)" },

@@ -17,6 +17,8 @@ export interface GridNavHandlers {
   onArchive?: (id: string) => void;
   onTogglePin?: (id: string) => void;
   onDuplicate?: (id: string) => void;
+  /** Ulubiona (klawisz F na kaflu). */
+  onToggleFavorite?: (id: string) => void;
   /** Otwiera edytor notatki (klika kafel). */
   openNote: (id: string) => void;
   /** Przewija kafel do widoku. */
@@ -225,6 +227,10 @@ export function handleGridNavKey(e: KeyboardEvent) {
     case "d":
     case "D":
       if (hasFocus && section?.handlers.onDuplicate) { e.preventDefault(); section.handlers.onDuplicate(focusedId as string); }
+      return;
+    case "f":
+    case "F":
+      if (hasFocus && section?.handlers.onToggleFavorite) { e.preventDefault(); section.handlers.onToggleFavorite(focusedId as string); }
       return;
     default: return;
   }

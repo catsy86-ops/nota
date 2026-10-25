@@ -6,7 +6,15 @@ import { isNoteTextEditOpen } from "@/hooks/useNotes";
 import type { GroupBy } from "@/lib/groupNotes";
 import { labelsForColumn, NONE_COLUMN, PINNED_COLUMN } from "@/lib/boardColumns";
 import { toastWithUndo } from "@/lib/undoToast";
+import { pushAction } from "@/lib/actionHistory";
+import type { NotePriority } from "@/lib/notePriority";
 import { planMerge } from "@/lib/mergeNotes";
+
+/** Toast „Cofnij” plus wpis w historii akcji, żeby Ctrl+Z cofał także zbiorcze zmiany (QoL). */
+function undoToast(message: string, undo: () => void, opts?: Parameters<typeof toastWithUndo>[2]) {
+  toastWithUndo(message, undo, opts);
+  pushAction({ kind: "bulk", label: message, count: 1, noteIds: [], undo });
+}
 
 export interface BulkNoteOpsDeps {
   view: View;
@@ -41,11 +49,11 @@ export function useBulkNoteOps({
     if (view === "trash") {
       bulkRestore(ids);
       clearSelection();
-      toastWithUndo(`Przywrócono ${ids.length} z kosza`, () => bulkTrash(ids));
+      undoToast(`Przywrócono ${ids.length} z kosza`, () => bulkTrash(ids));
     } else {
       ids.forEach(unarchiveNote);
       clearSelection();
-      toastWithUndo(`Przywrócono ${ids.length} z archiwum`, () => bulkArchive(ids));
+      undoToast(`Przywrócono ${ids.length} z archiwum`, () => bulkArchive(ids));
     }
   }
 
@@ -57,7 +65,7 @@ export function useBulkNoteOps({
     const changed = chosen.filter((n) => n.pinned !== pin).map((n) => n.id);
     changed.forEach((id) => togglePin(id));
     clearSelection();
-    toastWithUndo(`${pin ? "Przypięto" : "Odpięto"} ${changed.length}`, () => changed.forEach((id) => togglePin(id)), { icon: "📌" });
+    undoToast(`${pin ? "Przypięto" : "Odpięto"} ${changed.length}`, () => changed.forEach((id) => togglePin(id)), { icon: "📌" });
   }
 
   /**
@@ -84,7 +92,7 @@ export function useBulkNoteOps({
     updateNote(targetId, patch);
     bulkTrash(sourceIds);
     clearSelection();
-    toastWithUndo(`Scalono ${chosen.length} notatek`, () => {
+    undoToast(`Scalono ${chosen.length} notatek`, () => {
       updateNote(targetId, prev);
       bulkRestore(sourceIds);
     }, { icon: "🧩", description: `Pozostałe ${sourceIds.length} są w koszu. Cofnij je przywraca.` });
@@ -97,7 +105,7 @@ export function useBulkNoteOps({
     prev.forEach(([id]) => moveToFolder(id, folderId));
     clearSelection();
     const name = folderId ? folders.find((f) => f.id === folderId)?.name ?? "folder" : "Bez folderu";
-    toastWithUndo(`Przeniesiono ${prev.length} do „${name}”`, () => prev.forEach(([id, from]) => moveToFolder(id, from)), { icon: "📁" });
+    undoToast(`Przeniesiono ${prev.length} do „${name}”`, () => prev.forEach(([id, from]) => moveToFolder(id, from)), { icon: "📁" });
   }
 
   /** Dodaj etykietę do zaznaczonych (istniejące zostają), z „Cofnij”. */
@@ -109,7 +117,7 @@ export function useBulkNoteOps({
     addLabel(name);
     prev.forEach(([id, labels]) => updateNote(id, { labels: [...labels, name] }));
     clearSelection();
-    toastWithUndo(`Dodano #${name} do ${prev.length}`, () => prev.forEach(([id, labels]) => updateNote(id, { labels })), { icon: "🏷️" });
+    undoToast(`Dodano #${name} do ${prev.length}`, () => prev.forEach(([id, labels]) => updateNote(id, { labels })), { icon: "🏷️" });
   }
 
   /** Przeniesienie kart do kolumny tablicy: przypięcie, etykieta albo folder — z „Cofnij”. */
@@ -135,8 +143,28 @@ export function useBulkNoteOps({
       else apply(n.id, { ...n, pinned: false, folderId: key === NONE_COLUMN ? null : key });
     });
     const label = key === PINNED_COLUMN ? "Przypięte" : key === NONE_COLUMN ? (groupBy === "label" ? "Bez etykiety" : "Bez folderu") : groupBy === "label" ? `#${key}` : folders.find((f) => f.id === key)?.name ?? "folder";
-    toastWithUndo(prev.length > 1 ? `Przeniesiono do „${label}” (${prev.length})` : `Przeniesiono do „${label}”`, () => prev.forEach((n) => apply(n.id, n)), { icon: "🗂️" });
+    undoToast(prev.length > 1 ? `Przeniesiono do „${label}” (${prev.length})` : `Przeniesiono do „${label}”`, () => prev.forEach((n) => apply(n.id, n)), { icon: "🗂️" });
   }
 
-  return { restoreSelected, pinSelected, moveSelectedToFolder, labelSelected, moveToColumn, mergeSelected };
+  /** Ulubione zaznaczonych: jeśli któraś nie jest ulubiona, wszystkie zostają ulubione; inaczej zdejmuje z nich. */
+  function favoriteSelected() {
+    const chosen = notesRef.current.filter((n) => selectedIds.has(n.id));
+    if (chosen.length === 0) return;
+    const on = chosen.some((n) => !n.favorite);
+    const changed = chosen.filter((n) => !!n.favorite !== on).map((n) => n.id);
+    changed.forEach((id) => updateNote(id, { favorite: on }));
+    clearSelection();
+    undoToast(`${on ? "Dodano do ulubionych" : "Usunięto z ulubionych"} ${changed.length}`, () => changed.forEach((id) => updateNote(id, { favorite: !on })), { icon: "⭐" });
+  }
+
+  /** Priorytet zaznaczonych, z „Cofnij” przywracającym poprzednie wartości. */
+  function prioritySelected(priority: NotePriority) {
+    const prev = notesRef.current.filter((n) => selectedIds.has(n.id) && (n.priority ?? "none") !== priority).map((n) => [n.id, n.priority ?? "none"] as const);
+    if (prev.length === 0) { clearSelection(); return; }
+    prev.forEach(([id]) => updateNote(id, { priority }));
+    clearSelection();
+    undoToast(`Zmieniono priorytet (${prev.length})`, () => prev.forEach(([id, from]) => updateNote(id, { priority: from })), { icon: "🚩" });
+  }
+
+  return { restoreSelected, pinSelected, moveSelectedToFolder, labelSelected, moveToColumn, mergeSelected, favoriteSelected, prioritySelected };
 }

@@ -110,7 +110,7 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
   return useMemo(() => {
     // Kalendarz rysuje własną projekcję (`expandOccurrences`) i nie korzysta
     // z siatki notatek — nie ma po co filtrować ani przeszukiwać indeksu.
-    if (view === "calendar" || view === "shifts" || view === "study" || view === "debts" || view === "cwiczenia") return { displayNotes: [], pinned: [], others: [], elsewhere: NO_ELSEWHERE };
+    if (view === "calendar" || view === "shifts" || view === "study" || view === "debts" || view === "cwiczenia" || view === "widget") return { displayNotes: [], pinned: [], others: [], elsewhere: NO_ELSEWHERE };
 
     const baseNotes = view === "archive"
       ? filterNotes(archivedNotes, archivedNotes, { view, activeLabel, activeFolder, folders, search, propDefs })
