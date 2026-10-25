@@ -38,7 +38,7 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   notes: Note[];
   onOpenNote: (id: string) => void;
-  onNewNote: () => void;
+  onNewNote: (title?: string) => void;
   onDailyNote: () => void;
   onPeriodNote: (kind: PeriodKind) => void;
   onGo: (view: "notes" | "inbox" | "today" | "week" | "archive" | "reminders" | "calendar" | "shifts" | "study" | "debts" | "cwiczenia" | "trash" | "widget") => void;
@@ -138,7 +138,7 @@ export function CommandPalette({
             {search.trim() && (
               <button
                 type="button"
-                onClick={() => run(onNewNote)}
+                onClick={() => run(() => onNewNote(search.trim()))}
                 className="flex items-center gap-1.5 text-xs text-primary-ink hover:underline"
               >
                 <Plus className="w-3.5 h-3.5" /> Utwórz notatkę „{search.trim()}”

@@ -6,6 +6,10 @@ import { GO_CHORD_WINDOW_MS, viewForChord } from "@/lib/goChord";
 
 export interface GlobalShortcutHandlers {
   onNewNote: () => void;
+  /** Ctrl+, — ustawienia (konwencja przeglądarek i aplikacji). */
+  onOpenSettings?: () => void;
+  /** Alt+I — statystyki. */
+  onOpenStats?: () => void;
   onFocusSearch?: () => void;
   onGoToday: () => void;
   onGoWeek: () => void;
@@ -47,6 +51,10 @@ export function useGlobalShortcuts(handlers: GlobalShortcutHandlers) {
         e.preventDefault();
         handlers.onNewNote();
       }
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key === ",") {
+        e.preventDefault();
+        handlers.onOpenSettings?.();
+      }
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -64,7 +72,8 @@ export function useGlobalShortcuts(handlers: GlobalShortcutHandlers) {
         return;
       }
       if (inField) return;
-      if (key === "t") { e.preventDefault(); handlers.onGoToday(); }
+      if (key === "i") { e.preventDefault(); handlers.onOpenStats?.(); }
+      else if (key === "t") { e.preventDefault(); handlers.onGoToday(); }
       else if (key === "w") { e.preventDefault(); handlers.onGoWeek(); }
       else if (key === "n") { e.preventDefault(); handlers.onNewNote(); }
     }

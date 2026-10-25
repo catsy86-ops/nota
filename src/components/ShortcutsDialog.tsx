@@ -14,6 +14,8 @@ const GROUPS: ShortcutGroup[] = [
       { keys: [MOD_KEY, "K"], label: "Paleta poleceń" },
       { keys: [MOD_KEY, "Z"], label: "Cofnij ostatnią akcję" },
       { keys: ["Alt", "N"], label: "Nowa notatka" },
+      { keys: [MOD_KEY, ","], label: "Ustawienia" },
+      { keys: ["Alt", "I"], label: "Statystyki" },
       { keys: ["/"], label: "Fokus na wyszukiwarkę" },
       { keys: ["Alt", "S"], label: "Wyszukiwarka (gdy „/” nie działa)" },
       { keys: ["Alt", "T"], label: "Przejdź do „Dziś”" },

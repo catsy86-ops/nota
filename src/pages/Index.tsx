@@ -194,7 +194,7 @@ const Index = () => {
   const [triageOpen, setTriageOpen] = useState(false);
   const [triageMounted, setTriageMounted] = useState(false);
   const [confirmDeleteIds, setConfirmDeleteIds] = useState<string[] | null>(null);
-  const addNoteRef = useRef<{ expand: (action?: ComposerAction) => void }>(null);
+  const addNoteRef = useRef<{ expand: (action?: ComposerAction, prefill?: string) => void }>(null);
   const logoClicksRef = useRef<{ count: number; lastTs: number }>({ count: 0, lastTs: 0 });
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [actionsOpen, setActionsOpen] = useState(false);
@@ -265,15 +265,17 @@ const Index = () => {
     ? folders.find((f) => f.id === activeFolder)?.name ?? null
     : view === "label" ? `#${activeLabel}` : null;
 
-  function expandAddNote(action?: ComposerAction) {
+  function expandAddNote(action?: ComposerAction, prefill?: string) {
     // W Skrzynce nie ma kompozytora: „+” ustawia kursor w polu przechwycenia, bez zmiany działu.
     if (view === "inbox") { document.querySelector<HTMLTextAreaElement>("[data-inbox-capture]")?.focus(); return; }
     if (!canCompose) setView("notes");
-    setTimeout(() => addNoteRef.current?.expand(action), 100);
+    setTimeout(() => addNoteRef.current?.expand(action, prefill), 100);
   }
 
   useGlobalShortcuts({
     onNewNote: expandAddNote,
+    onOpenSettings: () => setSettingsOpen(true),
+    onOpenStats: () => setStatsOpen(true),
     onGoToday: () => go("today"),
     onGoWeek: () => go("week"),
     onGoView: (v) => go(v),
@@ -972,7 +974,7 @@ const Index = () => {
           onOpenChange={setPaletteOpen}
           notes={[...notes, ...archivedNotes]}
           onOpenNote={openNote}
-          onNewNote={expandAddNote}
+          onNewNote={(title) => expandAddNote(undefined, title)}
           onDailyNote={openDailyNote}
           onPeriodNote={openPeriodNote}
           onGo={(v) => go(v)}

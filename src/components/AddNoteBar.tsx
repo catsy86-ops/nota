@@ -153,7 +153,7 @@ function writeDraft(d: Draft): void {
   } catch { /* brak miejsca albo localStorage — szkic po prostu nie przeżyje przeładowania */ }
 }
 
-export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void }, AddNoteBarProps>(function AddNoteBar({ onAdd, folders, allLabels, onCreateLabel, destination, templates, wikiTitles, parentOptions }, ref) {
+export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill?: string) => void }, AddNoteBarProps>(function AddNoteBar({ onAdd, folders, allLabels, onCreateLabel, destination, templates, wikiTitles, parentOptions }, ref) {
   // Szkic przeżywa przeładowanie i zamknięcie karty: tytuł, treść i pozycje listy wracają po powrocie.
   const [draft0] = useState(readDraft);
   const [expanded, setExpanded] = useState(draft0 !== null);
@@ -188,8 +188,10 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
 
   const [pendingAction, setPendingAction] = useState<ComposerAction | null>(null);
   useImperativeHandle(ref, () => ({
-    expand: (action) => {
+    expand: (action, prefill) => {
       setExpanded(true);
+      // „Utwórz notatkę „X”” z palety: wpisany tekst staje się tytułem, o ile tytuł jest jeszcze pusty.
+      if (prefill) setTitle((t) => t || prefill);
       // Handlery zdarzeń potrafią podać tu obiekt zdarzenia — przyjmujemy tylko znane akcje.
       if (action === "list" || action === "dictate" || action === "image" || action === "draw") setPendingAction(action);
     },
@@ -275,7 +277,13 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction) => void
     });
   }, [expanded, title, content, allLabels, folders, reminder, priority]);
 
+  // Blokada podwójnego zapisu: dwa szybkie wywołania (np. Ctrl+Enter i klik poza edytorem) widzą jeszcze ten sam, stary szkic.
+  const committingRef = useRef(false);
   const commit = useCallback(() => {
+    if (committingRef.current) return;
+    committingRef.current = true;
+    // setTimeout, nie mikrozadanie: dwa nasłuchy tego samego zdarzenia klawisza idą jeden po drugim i mikrozadanie zdążyłoby zwolnić blokadę.
+    setTimeout(() => { committingRef.current = false; }, 0);
     if (title.trim() || content.trim() || images.length > 0 || attachments.length > 0 || checklist.length > 0) {
       const r = applyCapture({ title, content }, capture, ignored, images.length > 0 || attachments.length > 0 || checklist.length > 0);
       r.newLabels.forEach((l) => onCreateLabel(l));

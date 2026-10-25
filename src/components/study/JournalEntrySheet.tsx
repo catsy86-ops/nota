@@ -100,6 +100,10 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   /** Moment wpisu; `null` = chwila zapisu (tylko nowy wpis). */
   const at = isEdit ? editForm.at : draft.at;
   const [processing, setProcessing] = useState(0);
+  // Pusty wpis: komunikat przy polu (czytany przez czytnik), nie tylko dymek. Znika przy pisaniu.
+  const [emptyAttempt, setEmptyAttempt] = useState(false);
+  // Ochrona przed podwójnym zapisem (dwa szybkie stuknięcia przy zamykaniu arkusza).
+  const submittingRef = useRef(false);
   /** Kształtki z poprzednich wpisów — podpowiedzi nazw. */
   const fittingHistory = useMemo(() => study.journal.map((e) => e.fittings), [study.journal]);
   /** Zdjęcie, któremu wpisujesz podpis („przed zakryciem”); `null` = pole schowane. */
@@ -384,14 +388,19 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   }
 
   function submit() {
-    if (processing > 0) return;
+    if (processing > 0 || submittingRef.current) return;
+    submittingRef.current = true;
+    try { submitOnce(); } finally { submittingRef.current = false; }
+  }
+
+  function submitOnce() {
     commitSite();
     if (isEdit) { saveEdit(); return; }
     const wasDone = topic && columnOf(study, topic) === "done";
     const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, recordings: form.recordings, at, test: form.test, fittings: form.fittings, stage: form.stage, geo: form.geo ?? null });
     if (!entry) {
       haptic("warn");
-      toast("Wpisz, co się dzieje, dodaj zdjęcie albo zaznacz sprawdzone punkty");
+      setEmptyAttempt(true);
       textRef.current?.focus();
       return;
     }
@@ -684,7 +693,9 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 <textarea
                   ref={textRef}
                   value={text}
-                  onChange={(e) => setText(e.target.value)}
+                  onChange={(e) => { setText(e.target.value); setEmptyAttempt(false); }}
+                  aria-invalid={emptyAttempt || undefined}
+                  aria-describedby={emptyAttempt ? "journal-empty-hint" : undefined}
                   onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submit(); } }}
                   rows={4}
                   placeholder={kind === "problem" ? "Co poszło nie tak i co z tym zrobisz?" : "Krótko: gdzie, co zrobione, co zauważyłeś"}
@@ -947,6 +958,11 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
 
         {/* Przycisk poza przewijaną treścią: z klawiaturą na ekranie (`resizes-content`) wisi tuż nad nią. */}
         <div className="shrink-0 border-t border-border bg-background px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
+          {emptyAttempt && (
+            <p id="journal-empty-hint" role="alert" className="text-xs text-destructive-ink">
+              Wpisz, co się dzieje, dodaj zdjęcie albo zaznacz sprawdzone punkty.
+            </p>
+          )}
           <div className="flex gap-2">
             {isEdit && (
               <Button type="button" variant="outline" onClick={remove} className="h-12 shrink-0 text-destructive-ink hover:text-destructive-ink">
