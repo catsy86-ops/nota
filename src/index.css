@@ -963,6 +963,11 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
   .journal-fresh { animation: none; }
 }
 
+/* iOS powiększa stronę przy polu tekstowym mniejszym niż 16 px: na dotyku pola mają co najmniej 16 px (§A). */
+@media (pointer: coarse) {
+  input, textarea, select { font-size: max(16px, 1em); }
+}
+
 /* Wejście logo na telefonie: jedna poświata rozchodzi się za monogramem przy starcie aplikacji (AppHeader). */
 @keyframes logo-ring {
   from { opacity: 0.6; transform: scale(0.55); }

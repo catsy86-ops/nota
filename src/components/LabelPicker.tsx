@@ -67,7 +67,9 @@ export function LabelPicker({ allLabels, selected, onToggle, onCreateLabel }: La
           />
           <button
             onClick={handleCreate}
-            className="pressable p-1.5 rounded-lg bg-primary text-primary-foreground"
+            aria-label="Dodaj etykietę"
+            title="Dodaj etykietę"
+            className="pressable p-1.5 rounded-lg bg-primary text-primary-foreground coarse:min-h-11 coarse:min-w-11"
           >
             <Plus className="w-3 h-3" />
           </button>

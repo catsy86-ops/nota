@@ -237,7 +237,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
                   e.preventDefault();
                   moveItem(item.id, e.key === "ArrowUp" ? -1 : 1);
                 }}
-                className="text-sm bg-transparent outline-hidden text-foreground flex-1 min-w-0"
+                className="text-sm max-sm:text-base bg-transparent outline-hidden focus-visible:ring-2 focus-visible:ring-ring/60 rounded-sm text-foreground flex-1 min-w-0"
               />
             )}
             {!readOnly && !item.checked && (
@@ -329,7 +329,7 @@ export function ChecklistEditor({ items, onChange, readOnly }: ChecklistEditorPr
             onKeyDown={(e) => e.key === "Enter" && addItem()}
             onPaste={(e) => handlePaste(e)}
             placeholder="Dodaj element..."
-            className="text-sm bg-transparent outline-hidden text-foreground placeholder:text-muted-foreground flex-1 min-w-0"
+            className="text-sm max-sm:text-base bg-transparent outline-hidden focus-visible:ring-2 focus-visible:ring-ring/60 rounded-sm text-foreground placeholder:text-muted-foreground flex-1 min-w-0"
           />
         </div>
       )}

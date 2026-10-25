@@ -118,6 +118,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
       <PopoverTrigger asChild>
         {trigger ?? (
           <motion.button
+            aria-label="Przypomnienie"
             className={cn(
               "card-action",
               reminder ? "text-primary-ink" : "text-muted-foreground"

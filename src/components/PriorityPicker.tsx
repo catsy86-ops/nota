@@ -16,6 +16,7 @@ export function PriorityPicker({ priority, onSet }: PriorityPickerProps) {
     <Popover>
       <PopoverTrigger asChild>
         <motion.button
+          aria-label="Priorytet notatki"
           className={cn(
             "card-action",
             priority !== "none" ? PRIORITY_COLOR_CLASS[priority] : "text-muted-foreground"
