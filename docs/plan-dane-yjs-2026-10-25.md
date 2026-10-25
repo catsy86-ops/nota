@@ -1,6 +1,6 @@
 # Etap 6: model danych Nauki w Yjs (plan, bez zmian w kodzie)
 
-Status: **opcja A wdrożona (kroki 1–3, 2026-10-25); opcja B nie robiona.** Szczegóły w `opis.md`, sekcja Nauka. Każda zmiana formatu w Yjs wymaga migracji
+Status: **opcje A i B wdrożone (2026-10-25).** Szczegóły w `opis.md`, sekcja Nauka. Każda zmiana formatu w Yjs wymaga migracji
 i decyzji o zakresie (decyzja 24.10). Ten dokument przygotowuje tę decyzję.
 
 ## Stan obecny, punkt po punkcie
@@ -61,5 +61,6 @@ Opcja B dopiero, gdy będzie potrzeba nowego pola w dumpie.
 
 - Krok 1: ostrzeżenie w oknie przywracania kopii (`BackupSettings.tsx`).
 - Krok 2: karta budowy jako mapa pól, zapis różnicą (`yStudy.ts`, `readCard`/`writeCard`).
-- Krok 3: odhaczenia wpisu jako mapa `id → true` (`yStudy.ts`, `setEntryField`; `journalFields.ts`). `images` i `fittings` zostają tablicami (kolejność).
-- Testy: vitest 2134/2134; e2e study, journal, search-backup, attachments 48/48.
+- Krok 3: odhaczenia wpisu jako mapa `id → true` (`yStudy.ts`, `setEntryField`; `journalFields.ts`).
+- Opcja B: `images` i `fittings` jako `Y.Array` (`setOrderedList`), `StudyDump.version: 2` (kształt kopii bez zmian). Migracja leniwa: stare tablice zamieniają się przy pierwszej zmianie wpisu.
+- Testy: vitest 2137/2137; e2e study, study-delivery, journal, search-backup, attachments, images 51/51.

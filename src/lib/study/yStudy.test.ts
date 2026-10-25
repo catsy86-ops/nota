@@ -136,7 +136,7 @@ describe("Nauka w Yjs", () => {
   });
 
   it("cleanDump odrzuca śmieci zamiast wywracać widok", () => {
-    expect(cleanDump("śmieci")).toEqual({ version: 1, board: {}, checked: {}, missed: {}, journal: [], days: [], rounds: {}, site: "", sites: {}, review: {}, boss: null, group: null, custom: {} });
+    expect(cleanDump("śmieci")).toEqual({ version: 2, board: {}, checked: {}, missed: {}, journal: [], days: [], rounds: {}, site: "", sites: {}, review: {}, boss: null, group: null, custom: {} });
     const d = cleanDump({ board: { a: "done", b: "todo", c: "x" }, checked: { k: true, l: 1 }, days: ["2026-10-01", "wczoraj"], rounds: { x: { rounds: -1 }, y: { rounds: 2.7, best: 140 } }, journal: [entry("ok", 1), entry("pusty", 2, { text: " " })] });
     expect(d).toMatchObject({ board: { a: "done" }, checked: { k: true }, days: ["2026-10-01"], rounds: { y: { rounds: 2, best: null } } });
     expect(d.journal.map((e) => e.id)).toEqual(["ok"]);
@@ -191,6 +191,45 @@ describe("karty budów w Yjs", () => {
     a.updateEntry({ ...a.get().journal.find((e) => e.id === "stary-1")!, checked: ["p-9", "p-10"] });
     expect(docA.getMap<unknown>("studyJournal").get("stary-1")).toBeInstanceOf(Y.Map);
     expect([...a.get().journal.find((e) => e.id === "stary-1")!.checked].sort()).toEqual(["p-10", "p-9"]);
+  });
+
+  it("zdjęcia dodane na dwóch telefonach we wpisie zostają obie, w zachowanej kolejności (wersja 2)", () => {
+    const { a, b, sync } = pair();
+    const r = (c: string) => c.repeat(64);
+    a.addEntry(entry("zd-1", 1, { images: [r("a")] }));
+    sync();
+    const base = a.get().journal.find((e) => e.id === "zd-1")!;
+    a.updateEntry({ ...base, images: [r("a"), r("b")] });
+    b.updateEntry({ ...base, images: [r("c"), r("a")] });
+    sync();
+    const imgs = a.get().journal.find((e) => e.id === "zd-1")!.images;
+    expect(imgs).toEqual(expect.arrayContaining([r("a"), r("b"), r("c")]));
+    expect(imgs).toHaveLength(3);
+    expect(b.get().journal.find((e) => e.id === "zd-1")!.images).toEqual(imgs);
+  });
+
+  it("zdjęcia zapisane starą tablicą czytają się i zamieniają na Y.Array przy zmianie (migracja leniwa)", () => {
+    const { a, docA } = pair();
+    const r = (c: string) => c.repeat(64);
+    docA.transact(() => {
+      const m = new Y.Map<unknown>();
+      docA.getMap<unknown>("studyJournal").set("zd-old", m);
+      m.set("id", "zd-old"); m.set("at", 1); m.set("kind", "ok"); m.set("topic", null); m.set("text", "x");
+      m.set("site", ""); m.set("checked", []); m.set("images", [r("a")]);
+    });
+    expect(a.get().journal.find((e) => e.id === "zd-old")!.images).toEqual([r("a")]);
+    a.updateEntry({ ...a.get().journal.find((e) => e.id === "zd-old")!, images: [r("a"), r("b")] });
+    expect(docA.getMap<unknown>("studyJournal").get("zd-old")).toBeInstanceOf(Y.Map);
+    expect(a.get().journal.find((e) => e.id === "zd-old")!.images).toEqual([r("a"), r("b")]);
+  });
+
+  it("usunięcie i zmiana kolejności zdjęć wpisu trzymają się nowej listy", () => {
+    const { a, docA } = pair();
+    const r = (c: string) => c.repeat(64);
+    a.addEntry(entry("zd-2", 1, { images: [r("a"), r("b"), r("c")] }));
+    a.updateEntry({ ...a.get().journal.find((e) => e.id === "zd-2")!, images: [r("c"), r("a")] });
+    expect(a.get().journal.find((e) => e.id === "zd-2")!.images).toEqual([r("c"), r("a")]);
+    expect(docA.getMap<unknown>("studyJournal").get("zd-2")).toBeInstanceOf(Y.Map);
   });
 
   it("karta zapisana starym sposobem (zwykły obiekt w mapie) nadal się czyta i przechodzi na mapę przy zapisie", () => {

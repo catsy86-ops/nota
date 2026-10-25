@@ -120,7 +120,8 @@ export interface DeviceRounds {
 
 /** Cała Nauka jako zwykły obiekt — sekcja `study` pełnej kopii. */
 export interface StudyDump {
-  version: 1;
+  /** 2: `images` i `fittings` wpisu to uporządkowane listy Yjs (`Y.Array`); kształt kopii bez zmian. */
+  version: 1 | 2;
   board: Record<string, Column>;
   checked: Record<string, true>;
   missed: Record<string, true>;
@@ -232,7 +233,7 @@ export function cleanDump(raw: unknown): StudyDump {
     }
   }
   return {
-    version: 1,
+    version: 2,
     board,
     checked: Object.fromEntries(trueKeys(s.checked).map((k) => [k, true as const])),
     missed: Object.fromEntries(trueKeys(s.missed).map((k) => [k, true as const])),
@@ -316,6 +317,8 @@ export function stateFromDump(d: StudyDump): StudyState {
 // Klucze zdjęć dziennika w dokumencie — w osobnym, małym module (rdzeń synchronizacji go używa).
 export { journalRefsIn } from "./journalRefs";
 
+/** Pola wpisu, które są uporządkowanymi listami `Y.Array` (wersja 2 kopii). */
+const ORDERED_ENTRY_LISTS = new Set<string>(["images", "fittings"]);
 /**
  * Pola wpisu, które ta wersja zna. Przy zapisie kasujemy tylko te, których brak w `next`;
  * pola z nowszej wersji (nieznane tutaj) zostają, żeby stara edycja ich nie wycinała.
@@ -397,7 +400,8 @@ export function createYStudy(doc: Y.Doc) {
   /**
    * Pole wpisu. `checked` (odhaczone punkty listy) jest zbiorem, więc to mapa `id → true`: dwa telefony
    * odhaczające różne punkty nie nadpisują się (krok 3 planu Etap 6). Kolejność nie ma znaczenia.
-   * Pozostałe pola zapisujemy jako wartość; `images` i `fittings` zostają tablicami, bo ich kolejność widać.
+   * `images` i `fittings` to uporządkowane listy `Y.Array` (wersja 2): dodane na dwóch telefonach
+   * zostają obie, a kolejność jest zachowana. Pozostałe pola zapisujemy jako wartość.
    */
   function setEntryField(m: Y.Map<unknown>, k: string, v: unknown): void {
     if (k === "checked" && Array.isArray(v)) {
@@ -413,7 +417,45 @@ export function createYStudy(doc: Y.Doc) {
       }
       return;
     }
+    if (ORDERED_ENTRY_LISTS.has(k) && Array.isArray(v)) {
+      setOrderedList(m, k, v);
+      return;
+    }
     if (JSON.stringify(m.get(k)) !== JSON.stringify(v)) m.set(k, v);
+  }
+
+  /**
+   * Zmienia uporządkowaną listę tak, żeby zapisać tylko różnicę: usuwa pozycje, których nie ma już
+   * w `next`, i wstawia brakujące na właściwe miejsca. Starszy zapis (zwykła tablica) zamienia się
+   * na `Y.Array` przy pierwszym zapisie (migracja leniwa — przy odczycie działa obie postaci).
+   */
+  function setOrderedList(m: Y.Map<unknown>, k: string, next: unknown[]): void {
+    const cur = m.get(k);
+    if (!(cur instanceof Y.Array)) {
+      const arr = new Y.Array<unknown>();
+      m.set(k, arr);
+      if (next.length) arr.push(next);
+      return;
+    }
+    const key = (x: unknown) => JSON.stringify(x);
+    const want = next.map(key);
+    // Zostają pozycje, które da się dopasować w tej samej kolejności do `want`; reszta znika.
+    const have = cur.toArray().map(key);
+    const matched = new Set<number>();
+    let w = 0;
+    have.forEach((h, i) => {
+      const at = want.indexOf(h, w);
+      if (at >= 0) { matched.add(i); w = at + 1; }
+    });
+    for (let i = have.length - 1; i >= 0; i--) if (!matched.has(i)) cur.delete(i, 1);
+    // Teraz to podciąg `want`; brakujące wstawiamy po kolei.
+    let pos = 0;
+    for (let j = 0; j < next.length; j++) {
+      const at = cur.length > pos ? cur.get(pos) : undefined;
+      if (cur.length > pos && key(at) === want[j]) { pos++; continue; }
+      cur.insert(pos, [next[j]]);
+      pos++;
+    }
   }
 
   /** Wpis dziennika jako obiekt (po oczyszczeniu); `null` gdy brak lub uszkodzony. */

@@ -13,7 +13,7 @@ Otwarte pytania i zadania odłożone na później. Źródło: plan Praca (`docs/
 
 ## Do zrobienia później
 - **4.3 Własne tematy.** Nieznany temat jest cicho odrzucany przy wczytaniu (`sanitizeStudy` w `src/lib/study/store.ts`). Obecny UI nie tworzy tematów, więc odrzucenie dotyczy tylko uszkodzonych danych. Pełne własne tematy to nowy model danych (tematy w `studyCustom`, UI tworzenia i kolumny), więc czeka na osobny projekt.
-- **Etap 6 (model danych w Yjs).** Opcja A (kroki 1–3) zrobiona 2026-10-25; zostają `images`/`fittings` jako tablice i opcja B (nowa wersja `StudyDump`). Zob. `docs/plan-dane-yjs-2026-10-25.md`.
+- **Etap 6 (model danych w Yjs).** Opcje A i B zrobione 2026-10-25 (karta i odhaczenia jako mapy, zdjęcia i kształtki jako `Y.Array`, dump wersja 2). Zob. `docs/plan-dane-yjs-2026-10-25.md`. Do zrobienia: ręczne QA z dwoma telefonami (zdjęcia i odhaczenia równocześnie).
 - **Import własnych materiałów do Nauki** (`roadmap.md`).
 
 ## Techniczne
