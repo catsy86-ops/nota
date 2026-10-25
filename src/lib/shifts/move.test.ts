@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { DayEntry } from "./model";
-import { dayKeyCommand, planMonthCopy, planPaste, planSwap, planTransfer, planWeekCopy, transferredEntry } from "./move";
+import { dayKeyCommand, planMonthCopy, planPaste, planRangeCopy, planSwap, planTransfer, planWeekCopy, transferredEntry } from "./move";
 import { addDaysToKey, startOfWeekKey, weekKeys, weekRangeLabel } from "../week";
 
 const TODAY = "2026-10-07";
@@ -150,5 +150,19 @@ describe("planSwap", () => {
     const days = { "2026-10-05": { type: "d" } };
     expect(planSwap(days, "2026-10-05", "2026-10-06", "2026-10-01")).toBeNull();
     expect(planSwap(days, "2026-10-05", "2026-10-05", "2026-10-01")).toBeNull();
+  });
+});
+
+describe("planRangeCopy", () => {
+  it("kopiuje zakres od–do na nowy początek, zachowując odstępy", () => {
+    const days = { "2026-10-05": { type: "d" }, "2026-10-07": { type: "n" }, "2026-10-12": { type: "d" } };
+    const plan = planRangeCopy(days, "2026-10-05", "2026-10-07", "2026-10-19", "2026-10-01");
+    expect(plan.changes).toEqual({ "2026-10-19": { type: "d" }, "2026-10-21": { type: "n" } });
+    expect(plan.overwritten).toBe(0);
+  });
+
+  it("liczy dni, które zostałyby nadpisane", () => {
+    const days = { "2026-10-05": { type: "d" }, "2026-10-19": { type: "n" } };
+    expect(planRangeCopy(days, "2026-10-05", "2026-10-05", "2026-10-19", "2026-10-01").overwritten).toBe(1);
   });
 });

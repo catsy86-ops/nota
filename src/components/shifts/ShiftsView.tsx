@@ -10,7 +10,7 @@ import type { Note } from "@/hooks/useNotes";
 import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
 import { buildSiteTimesheetCsv } from "@/lib/study/siteTimesheet";
 import { useStudy } from "@/lib/study/store";
-import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, defaultPatternStart, monthSummaryToDate, shortRests, swapDays, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, copyRange, defaultPatternStart, scheduleDump, monthSummaryToDate, shortRests, swapDays, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
@@ -18,6 +18,7 @@ import { pluralPl } from "@/lib/plural";
 import { toastWithUndo } from "@/lib/undoToast";
 import { NowCard } from "./NowCard";
 import { subscribeShiftAction, takeShiftAction } from "@/lib/shifts/shiftActions";
+import type { ImageTheme } from "@/lib/shifts/monthImageDraw";
 import { absenceEstimate } from "@/lib/shifts/absenceEstimate";
 import { timeOffBalance } from "@/lib/shifts/timeOff";
 import { BrushBar, type Brush } from "./BrushBar";
@@ -36,6 +37,7 @@ import { ShiftSettingsDialog } from "./ShiftSettingsDialog";
 import { ShiftTypeDialog } from "./ShiftTypeDialog";
 import { DayDialog } from "./DayDialog";
 import { PatternDialog } from "./PatternDialog";
+import { RangeCopyDialog } from "./RangeCopyDialog";
 
 /** Co zrobi stuknięcie w dzień — widoczne pod paskiem i czytane przy siatce. */
 function brushHint(brush: Brush, typesById: Map<string, ShiftType>, hours: ShiftHours | null): string {
@@ -48,6 +50,8 @@ function brushHint(brush: Brush, typesById: Map<string, ShiftType>, hours: Shift
 const exportedStoreFor = (key: string) => createPersistedStore<string[]>(key, [], {
   merge: (defaults, stored) => (Array.isArray(stored) ? stored.filter((k): k is string => typeof k === "string") : defaults),
 });
+
+const IMAGE_THEME_LABEL: Record<ImageTheme, string> = { light: "jasny", dark: "ciemny", style: "aktywny styl" };
 
 /** Wybór po upuszczeniu zmiany: przenieś, skopiuj albo zamień miejscami z zajętym dniem. */
 type DropChoice = TransferMode | "swap";
@@ -109,6 +113,22 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   const [openDay, setOpenDay] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [patternOpen, setPatternOpen] = useState(false);
+  const [rangeOpen, setRangeOpen] = useState(false);
+  const [imageTheme, setImageTheme] = useState<ImageTheme>("light");
+  // Nakładka: tylko do odczytu, z innego grafiku niż aktywny (4.1).
+  const [overlayId, setOverlayId] = useState<string | null>(null);
+  const effectiveOverlay = overlayId && overlayId !== activeScheduleId() ? overlayId : null;
+  // `data` w zależnościach: zmiany w grafiku głównym odświeżają też nakładkę (scheduleDump czyta drugi dokument).
+  const overlayData = useMemo(() => (effectiveOverlay ? scheduleDump(effectiveOverlay) : null), [effectiveOverlay, data]); // eslint-disable-line react-hooks/exhaustive-deps
+  const overlayGrid = useMemo(() => (overlayData ? { days: overlayData.days, typesById: new Map(overlayData.types.map((t) => [t.id, t])) } : null), [overlayData]);
+
+  function copyRangeAction(from: string, to: string, target: string) {
+    const done = copyRange(from, to, target, dayKey(new Date()));
+    if (!done) { toast("W tym zakresie nie ma zmian do skopiowania"); return; }
+    toastWithUndo(`Skopiowano ${done.copied} ${pluralPl(done.copied, ["zmianę", "zmiany", "zmian"])} na ${shortDate(target)}`, () => restoreDays(done.before), {
+      description: done.overwritten ? `Zastąpiono ${done.overwritten} ${pluralPl(done.overwritten, ["wpis", "wpisy", "wpisów"])}` : undefined,
+    });
+  }
 
   // „Pokaż dzień” z palety poleceń: miesiąc tego dnia i jego okno. Prośba mogła
   // przyjść przed załadowaniem widoku, więc odbieramy ją też przy montowaniu.
@@ -151,6 +171,18 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   const isWeek = layout === "week";
   // W tygodniu podsumowanie dotyczy miesiąca, w którym tydzień leży głównie (czwartek).
   const shownMonth = useMemo(() => (isWeek ? startOfMonth(parseDayKey(addDaysToKey(weekStart, 3))) : month), [isWeek, weekStart, month]);
+  // Dni wolne w obu grafikach w oglądanym miesiącu.
+  const commonFree = useMemo(() => {
+    if (!overlayData) return null;
+    const y = shownMonth.getFullYear();
+    const m = shownMonth.getMonth();
+    let n = 0;
+    for (let d = 1; d <= new Date(y, m + 1, 0).getDate(); d++) {
+      const key = dayKey(new Date(y, m, d));
+      if (!data.days[key] && !overlayData.days[key]) n++;
+    }
+    return n;
+  }, [overlayData, data, shownMonth]);
   const summary = useMemo(() => monthSummary(data, shownMonth.getFullYear(), shownMonth.getMonth()), [data, shownMonth]);
   // „Do dziś” tylko w bieżącym miesiącu; w innych nie ma czego porównywać.
   const toDate = useMemo(() => (isSameMonth(shownMonth, new Date()) ? monthSummaryToDate(data, shownMonth.getFullYear(), shownMonth.getMonth(), dayKey(new Date())) : null), [data, shownMonth]);
@@ -345,14 +377,14 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
     void import("@/lib/shifts/monthImageDraw");
   }, []);
 
-  async function exportImage() {
+  async function exportImage(theme: ImageTheme = imageTheme) {
     try {
       const [{ monthImageLayout }, { renderMonthCanvas, canvasToPng, shareMonthPng }] = await Promise.all([
         import("@/lib/shifts/monthImage"),
         import("@/lib/shifts/monthImageDraw"),
       ]);
       const layout = monthImageLayout(data, shownMonth.getFullYear(), shownMonth.getMonth());
-      const blob = canvasToPng(renderMonthCanvas(layout));
+      const blob = canvasToPng(renderMonthCanvas(layout, 2, theme));
       const result = await shareMonthPng(blob, `grafik-${format(shownMonth, "yyyy-MM")}.png`, `Grafik — ${layout.title}`);
       if (result === "downloaded") toast.success("Pobrano obraz grafiku (.png)");
       else if (result === "shared") toast.success("Udostępniono grafik");
@@ -383,7 +415,10 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
     // przy malowaniu dni i przewijaniu (plan UI 2.3).
     <div className="flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start xl:gap-8 short:grid short:grid-cols-[auto_minmax(0,1fr)_auto] short:items-center short:gap-x-3 short:gap-y-2">
       <div className="contents xl:flex xl:flex-col xl:gap-5 xl:min-w-0">
-        <div className="order-0 w-full"><ScheduleSwitcher /></div>
+        <div className="order-0 w-full"><ScheduleSwitcher overlayId={effectiveOverlay} onOverlayChange={setOverlayId} /></div>
+        {commonFree !== null && (
+          <p className="order-0 w-full text-xs text-muted-foreground px-1">Wspólne wolne dni w tym miesiącu (w obu grafikach): <span className="font-semibold text-foreground tabular-nums">{commonFree}</span></p>
+        )}
         <div className="order-2 flex flex-wrap items-center justify-between gap-2">
           <div role="group" aria-label="Widok Grafiku" className="flex rounded-xl bg-muted p-0.5">
             {([["month", "Miesiąc"], ["week", "Tydzień"]] as const).map(([id, text]) => (
@@ -407,6 +442,9 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
               <button type="button" onClick={copyWeek}
                 className={TOOLBAR_BTN}>
                 <CalendarRange className="w-4 h-4" /> Skopiuj ten tydzień na następny
+              </button>
+              <button type="button" onClick={() => setRangeOpen(true)} className={TOOLBAR_BTN}>
+                <CalendarRange className="w-4 h-4" /> Kopiuj zakres dni
               </button>
             </div>
           )}
@@ -494,7 +532,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
               <ShiftWeekView weekStart={weekStart} days={data.days} typesById={typesById} remindersByDay={remindersByDay} titleOf={titleOf}
                 onDay={onDay} onWeekChange={setWeekStart} describedBy="shift-brush-hint shift-move-hint" actions={actions} />
             ) : (
-              <ShiftMonthGrid month={month} days={data.days} typesById={typesById} onDay={onDay} onMonthChange={setMonth} shortRestDays={shortRestDays} describedBy="shift-brush-hint shift-move-hint" actions={actions} />
+              <ShiftMonthGrid month={month} days={data.days} typesById={typesById} onDay={onDay} onMonthChange={setMonth} shortRestDays={shortRestDays} overlay={overlayGrid} describedBy="shift-brush-hint shift-move-hint" actions={actions} />
             )}
           </ShiftDnd>
 
@@ -517,9 +555,11 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
               <DropdownMenuItem onSelect={() => exportIcs()}>
                 <CalendarArrowDown className="w-4 h-4 mr-2" aria-hidden /> Do kalendarza (.ics)
               </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => { void exportImage(); }}>
-                <ImageIcon className="w-4 h-4 mr-2" aria-hidden /> Obraz miesiąca (.png)
-              </DropdownMenuItem>
+              {(["light", "dark", "style"] as const).map((t) => (
+                <DropdownMenuItem key={t} onSelect={() => { void exportImage(t); }}>
+                  <ImageIcon className="w-4 h-4 mr-2" aria-hidden /> Obraz miesiąca — {IMAGE_THEME_LABEL[t]} (.png)
+                </DropdownMenuItem>
+              ))}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -536,7 +576,11 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
             className={TOOLBAR_BTN}>
             <CalendarArrowDown className="w-4 h-4" /> Do kalendarza (.ics)
           </button>
-          <button type="button" onClick={exportImage}
+          <select aria-label="Motyw obrazu miesiąca" value={imageTheme} onChange={(e) => setImageTheme(e.target.value as ImageTheme)}
+            className="h-9 rounded-control border border-input bg-background px-2 text-sm">
+            {(["light", "dark", "style"] as const).map((t) => <option key={t} value={t}>{IMAGE_THEME_LABEL[t]}</option>)}
+          </select>
+          <button type="button" onClick={() => { void exportImage(); }}
             className={TOOLBAR_BTN}>
             <ImageIcon className="w-4 h-4" /> Obraz miesiąca (.png)
           </button>
@@ -623,6 +667,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         onDeleted={() => setBrush({ kind: "inspect" })}
       />
       <DayDialog dayKey={openDay} entry={openDay ? data.days[openDay] : undefined} types={data.types} onOpenChange={(o) => { if (!o) setOpenDay(null); }} />
+      <RangeCopyDialog open={rangeOpen} onOpenChange={setRangeOpen} defaultFrom={isWeek ? weekStart : dayKey(new Date())} onCopy={copyRangeAction} />
       <PatternDialog
         open={patternOpen}
         onOpenChange={setPatternOpen}

@@ -22,8 +22,24 @@ function fitLabel(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
   return out;
 }
 
+/** Motyw obrazu: jasny, ciemny albo kolory aktywnego stylu aplikacji. */
+export type ImageTheme = "light" | "dark" | "style";
+
+interface ImagePalette { bg: string; ink: string; muted: string; empty: string; chipInk: string }
+
+/** Kolory obrazu. Dla „style” bierze tło i tekst z aktywnego motywu (zmienne CSS na `body`). */
+export function imagePalette(theme: ImageTheme): ImagePalette {
+  if (theme === "dark") return { bg: "#111827", ink: "#f9fafb", muted: "#9ca3af", empty: "#374151", chipInk: "#111827" };
+  if (theme === "style" && typeof document !== "undefined") {
+    const cs = getComputedStyle(document.body);
+    return { bg: cs.backgroundColor, ink: cs.color, muted: cs.color, empty: "rgba(128, 128, 128, 0.25)", chipInk: "#111827" };
+  }
+  return { bg: "#ffffff", ink: INK, muted: MUTED, empty: "#e5e7eb", chipInk: INK };
+}
+
 /** Rysuje grafik miesiąca na nowym canvasie. Wysokość zależy od liczby tygodni i wierszy podsumowania. */
-export function renderMonthCanvas(layout: MonthImageLayout, scale = 2): HTMLCanvasElement {
+export function renderMonthCanvas(layout: MonthImageLayout, scale = 2, theme: ImageTheme = "light"): HTMLCanvasElement {
+  const p = imagePalette(theme);
   const cols = 7;
   const cell = (WIDTH - PAD * 2) / cols;
   const height = TITLE_H + HEAD_H + layout.weeks.length * ROW_H + PAD + layout.footer.length * FOOT_LINE_H + PAD;
@@ -33,17 +49,17 @@ export function renderMonthCanvas(layout: MonthImageLayout, scale = 2): HTMLCanv
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("canvas 2d niedostępny");
   ctx.scale(scale, scale);
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = p.bg;
   ctx.fillRect(0, 0, WIDTH, height);
   ctx.textBaseline = "middle";
 
-  ctx.fillStyle = INK;
+  ctx.fillStyle = p.ink;
   ctx.font = `700 30px ${FONT}`;
   ctx.textAlign = "left";
   ctx.fillText(layout.title, PAD, TITLE_H / 2);
 
   ctx.font = `600 16px ${FONT}`;
-  ctx.fillStyle = MUTED;
+  ctx.fillStyle = p.muted;
   ctx.textAlign = "center";
   layout.weekdays.forEach((w, i) => ctx.fillText(w, PAD + cell * i + cell / 2, TITLE_H + HEAD_H / 2));
 
@@ -55,7 +71,7 @@ export function renderMonthCanvas(layout: MonthImageLayout, scale = 2): HTMLCanv
       ctx.lineWidth = 1;
       ctx.strokeRect(x + 0.5, top + 0.5, cell - 1, ROW_H - 1);
       if (c.day === null) return;
-      ctx.fillStyle = MUTED;
+      ctx.fillStyle = p.muted;
       ctx.font = `500 15px ${FONT}`;
       ctx.textAlign = "left";
       ctx.fillText(String(c.day), x + 10, top + 16);
@@ -63,13 +79,13 @@ export function renderMonthCanvas(layout: MonthImageLayout, scale = 2): HTMLCanv
         const chipW = cell - 28;
         const chipH = 36;
         const cy = top + ROW_H / 2 + 8;
-        ctx.fillStyle = c.color ?? "#e5e7eb";
+        ctx.fillStyle = c.color ?? p.empty;
         ctx.beginPath();
         // L14: starsze przeglądarki nie mają roundRect — zwykły prostokąt zamiast wyjątku.
         if (ctx.roundRect) ctx.roundRect(x + 14, cy - chipH / 2, chipW, chipH, 10);
         else ctx.rect(x + 14, cy - chipH / 2, chipW, chipH);
         ctx.fill();
-        ctx.fillStyle = INK;
+        ctx.fillStyle = p.chipInk;
         ctx.font = `700 18px ${FONT}`;
         ctx.textAlign = "center";
         ctx.fillText(fitLabel(ctx, c.label, chipW - 12), x + cell / 2, cy);
@@ -78,7 +94,7 @@ export function renderMonthCanvas(layout: MonthImageLayout, scale = 2): HTMLCanv
   });
 
   const footTop = TITLE_H + HEAD_H + layout.weeks.length * ROW_H + PAD;
-  ctx.fillStyle = INK;
+  ctx.fillStyle = p.ink;
   ctx.font = `500 17px ${FONT}`;
   ctx.textAlign = "left";
   layout.footer.forEach((line, i) => ctx.fillText(line, PAD, footTop + i * FOOT_LINE_H + FOOT_LINE_H / 2));

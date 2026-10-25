@@ -11,7 +11,7 @@ import { createSchedule, removeSchedule, renameSchedule, setActiveSchedule, useA
  * Wybór grafiku (np. praca główna i dorobek). Dane każdego grafiku są osobne; tu wybieramy, który
  * widać i do którego trafiają zmiany. Grafik główny nie da się usunąć.
  */
-export function ScheduleSwitcher() {
+export function ScheduleSwitcher({ overlayId = null, onOverlayChange }: { overlayId?: string | null; onOverlayChange?: (id: string | null) => void } = {}) {
   const schedules = useSchedules();
   const activeId = useActiveScheduleId();
   const [mode, setMode] = useState<"none" | "add" | "rename" | "delete">("none");
@@ -52,6 +52,17 @@ export function ScheduleSwitcher() {
       >
         {schedules.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
       </select>
+      {onOverlayChange && (
+        <select
+          aria-label="Nakładka grafiku"
+          value={overlayId ?? ""}
+          onChange={(e) => onOverlayChange(e.target.value || null)}
+          className="h-10 coarse:h-11 min-w-0 max-w-full rounded-control border border-input bg-background px-3 text-sm"
+        >
+          <option value="">Bez nakładki</option>
+          {schedules.filter((s) => s.id !== active.id).map((s) => <option key={s.id} value={s.id}>Nakładka: {s.name}</option>)}
+        </select>
+      )}
       {mode === "none" && (
         <>
           <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={() => { setName(""); setMode("add"); }}>

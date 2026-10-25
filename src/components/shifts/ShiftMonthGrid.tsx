@@ -23,6 +23,8 @@ interface ShiftMonthGridProps {
   describedBy?: string;
   /**Dni, przed którymi za krótki odpoczynek (< 11 h) — znacznik ⚠ w komórce. */
   shortRestDays?: ReadonlySet<string>;
+  /** Nakładka drugiego grafiku (tylko do odczytu): pasek koloru zmiany w dniu. */
+  overlay?: { days: Record<string, DayEntry>; typesById: Map<string, ShiftType> } | null;
   /** Przenoszenie i kopiowanie wpisów z klawiatury (Shift+strzałki, Ctrl+C/V). */
   actions: DayActions;
 }
@@ -35,7 +37,7 @@ const WEEK = { weekStartsOn: 1 } as const;
  * siatka to jeden przystanek tabulatora, strzałki po dniach, PageUp/PageDown
  * po miesiącach, Home/End po tygodniu; Enter/Spacja = stuknięcie.
  */
-export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesById, onDay, onMonthChange, describedBy, shortRestDays, actions }: ShiftMonthGridProps) {
+export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesById, onDay, onMonthChange, describedBy, shortRestDays, overlay, actions }: ShiftMonthGridProps) {
   const today = useToday();
   const direction = useMonthDirection(month);
   const { stamped, cleared } = useStampedDays(`${month.getFullYear()}-${month.getMonth()}`, days, typesById);
@@ -123,6 +125,8 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
               const isToday = isSameDay(day, today);
               const absence = type?.kind === "absence";
               const label = dayAriaLabel({ day, today: isToday, holiday, type, entry });
+              const ovType = overlay?.days[key] ? overlay.typesById.get(overlay.days[key].type) : undefined;
+              const overlayName = ovType ? `, nakładka: ${ovType.name}` : "";
 
               return (
                 <DayDropCell key={key} dayKey={key} draggable={!!entry}>
@@ -134,7 +138,7 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                     tabIndex={isSameDay(day, focused) ? 0 : -1}
                     // Dzień spoza miesiąca przełącza miesiąc — malowanie go było ledwo widoczne.
                     onClick={() => { setFocused(day); if (inMonth) onDay(key); else onMonthChange(startOfMonth(day)); }}
-                    aria-label={inMonth ? label : `${label} — przejdź do miesiąca`}
+                    aria-label={inMonth ? `${label}${overlayName}` : `${label} — przejdź do miesiąca`}
                     aria-current={isToday ? "date" : undefined}
                     title={holiday ?? entry?.note}
                     className={cn(
@@ -156,6 +160,7 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                       </span>
                     </span>
                     {holiday && <span aria-hidden className={holidayNameClass(inMonth)}>{holiday}</span>}
+                    {ovType && <span aria-hidden className="mt-auto h-1 w-full rounded-full" style={{ backgroundColor: ovType.color }} />}
                     {/* Wyczyszczony dzień: puste, kolorowe „odbicie” gaśnie w miejscu chipa. */}
                     {!type && cleared.has(key) && (
                       <span aria-hidden className="stamp-out absolute inset-x-1 bottom-1 h-7 sm:h-11 rounded-lg"

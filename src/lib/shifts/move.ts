@@ -110,6 +110,26 @@ export function planMonthCopy(days: Record<string, DayEntry>, fromMonth: string,
   return { changes, copied: Object.keys(changes).length, overwritten };
 }
 
+/**
+ * Kopia zakresu dni `fromKey`…`toKey` (włącznie) na początek `targetKey` — przesunięcie o różnicę
+ * początków. Nie nadpisuje po cichu: liczy dni, które już mają wpis (`overwritten`).
+ */
+export function planRangeCopy(days: Record<string, DayEntry>, fromKey: string, toKey: string, targetKey: string, todayKey: string): WeekCopyPlan {
+  const changes: Record<string, DayEntry> = {};
+  let overwritten = 0;
+  const offset = dayDiff(fromKey, targetKey);
+  for (const [src, entry] of Object.entries(days)) {
+    if (src < fromKey || src > toKey) continue;
+    const dst = addDaysToKey(src, offset);
+    const next = transferredEntry(entry, dst, todayKey);
+    const existing = days[dst];
+    if (same(existing, next)) continue;
+    if (existing) overwritten++;
+    changes[dst] = next;
+  }
+  return { changes, copied: Object.keys(changes).length, overwritten };
+}
+
 export function planWeekCopy(
   days: Record<string, DayEntry>,
   weekOf: string,
