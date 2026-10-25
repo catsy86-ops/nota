@@ -21,7 +21,7 @@ interface ImportExternalDialogProps {
   onClose: () => void;
 }
 
-const ACCEPT = ".json,.html,.htm,.md,.markdown,.zip,application/json,text/html,text/markdown,application/zip";
+const ACCEPT = ".json,.html,.htm,.md,.markdown,.zip,.ics,application/json,text/html,text/markdown,application/zip,text/calendar";
 
 /** Wiersz „rejestru”: etykieta, kropkowana prowadnica jak w zeszycie, liczba. */
 function LedgerRow({ label, value, hint, index }: { label: string; value: number; hint?: string; index: number }) {

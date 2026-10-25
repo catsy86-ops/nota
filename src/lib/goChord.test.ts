@@ -15,3 +15,13 @@ describe("goChord", () => {
     expect(new Set(GO_CHORDS.map((c) => c.key)).size).toBe(GO_CHORDS.length);
   });
 });
+
+describe("skróty „g” do pozostałych widoków (QoL)", () => {
+  it("każdy nowy klawisz prowadzi do właściwego widoku", () => {
+    expect(viewForChord("i")).toBe("inbox");
+    expect(viewForChord("z")).toBe("shifts");
+    expect(viewForChord("s")).toBe("study");
+    expect(viewForChord("l")).toBe("debts");
+    expect(viewForChord("t")).toBe("cwiczenia");
+  });
+});

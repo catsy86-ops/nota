@@ -75,3 +75,20 @@ describe("parseNaturalDate", () => {
     expect(parseNaturalDate("jutro 25:00", NOW)).toBeNull();
   });
 });
+
+describe("parseNaturalDate: godzina bez minut, dziś bez godziny, za tydzień (QoL)", () => {
+  const now = new Date(2026, 9, 14, 12, 30);
+  it("„jutro 15” to 15:00 następnego dnia, nie 9:00", () => {
+    expect(parseNaturalDate("jutro 15", now)).toEqual(new Date(2026, 9, 15, 15, 0));
+  });
+  it("„dziś” bez godziny to najbliższa pełna godzina w przyszłości", () => {
+    expect(parseNaturalDate("dziś", now)).toEqual(new Date(2026, 9, 14, 13, 0));
+  });
+  it("„za tydzień” to siedem dni później o tej samej porze", () => {
+    expect(parseNaturalDate("za tydzień", now)).toEqual(new Date(2026, 9, 21, 12, 30));
+  });
+  it("„za 2h” nadal działa, a liczba bez kontekstu nie daje godziny", () => {
+    expect(parseNaturalDate("za 2h", now)).toEqual(new Date(2026, 9, 14, 14, 30));
+    expect(parseNaturalDate("kupić 3 jajka", now)).toBeNull();
+  });
+});

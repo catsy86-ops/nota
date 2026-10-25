@@ -28,9 +28,18 @@ export function parseNaturalDate(input: string, now: Date = new Date()): Date | 
   if (!raw) return null;
 
   const timeMatch = raw.match(/(\d{1,2})[:.](\d{2})/);
-  const hours = timeMatch ? Number(timeMatch[1]) : null;
-  const minutes = timeMatch ? Number(timeMatch[2]) : null;
+  // Sama godzina bez minut, np. „jutro 15” albo „dziś 9” (nie dotyczy „za …”).
+  const bareHour = !timeMatch && !/^za\s/.test(raw) ? raw.match(/(?:^|\s)(\d{1,2})(?:\s|$)/) : null;
+  const hours = timeMatch ? Number(timeMatch[1]) : bareHour ? Number(bareHour[1]) : null;
+  const minutes = timeMatch ? Number(timeMatch[2]) : bareHour ? 0 : null;
   if (hours !== null && (hours > 23 || (minutes as number) > 59)) return null;
+
+  // "za tydzień" — siedem dni później, o tej samej godzinie, jeśli została podana.
+  if (/^za\s+tydzien\b/.test(raw)) {
+    const d = new Date(now);
+    d.setDate(d.getDate() + 7);
+    return hours !== null ? withTime(d, hours, minutes ?? 0) : d;
+  }
 
   // "za X h/godz/min/dni"
   const relMatch = raw.match(/^za\s+(\d+)\s*(godz(?:in[aey]?)?|h|min(?:ut[aey]?)?|m|dni|dzien|dzi[ae]n)/);
@@ -50,7 +59,9 @@ export function parseNaturalDate(input: string, now: Date = new Date()): Date | 
 
   // "dzis", "dzisiaj"
   if (/^dzis(iaj)?\b/.test(raw)) {
-    return withTime(now, hours ?? now.getHours(), minutes ?? 0);
+    if (hours !== null) return withTime(now, hours, minutes ?? 0);
+    // Bez godziny: najbliższa pełna godzina w przyszłości (nie termin w przeszłości), najwyżej 23:00.
+    return withTime(now, Math.min(now.getHours() + 1, 23), 0);
   }
 
   // "jutro"

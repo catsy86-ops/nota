@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { useEffect } from "react";
 import type { View } from "@/hooks/useFilteredNotes";
 import { hasGridNavFocus } from "@/lib/gridKeyboardNav";
@@ -24,9 +25,17 @@ function isTypingTarget(target: EventTarget | null): boolean {
   return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || (target as HTMLElement | null)?.isContentEditable === true;
 }
 
-function focusSearchInput() {
-  const el = document.querySelector<HTMLInputElement>('input[type="search"], input[placeholder*="zukaj" i], input[placeholder*="earch" i]');
+const SEARCH_SELECTOR = 'input[type="search"], input[placeholder*="zukaj" i], input[placeholder*="earch" i]';
+
+/** Pierwsze widoczne pole wyszukiwania (na telefonie część pól jest ukryta — `offsetParent` wyklucza je). */
+function findVisibleSearchInput(): HTMLInputElement | null {
+  return Array.from(document.querySelectorAll<HTMLInputElement>(SEARCH_SELECTOR)).find((el) => el.offsetParent !== null) ?? null;
+}
+
+function focusSearchInput(): boolean {
+  const el = findVisibleSearchInput();
   if (el) el.focus();
+  return el !== null;
 }
 
 /** Wires up every global keyboard shortcut used across the app. */
@@ -67,8 +76,9 @@ export function useGlobalShortcuts(handlers: GlobalShortcutHandlers) {
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "/" && !isTypingTarget(e.target)) {
-        const el = document.querySelector<HTMLInputElement>('input[type="search"], input[placeholder*="zukaj" i], input[placeholder*="earch" i]');
+        const el = findVisibleSearchInput();
         if (el) { e.preventDefault(); el.focus(); }
+        else toast.info("Na tym ekranie nie ma wyszukiwania");
       }
     }
     window.addEventListener("keydown", onKey);

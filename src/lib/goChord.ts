@@ -11,6 +11,11 @@ export const GO_CHORDS: { key: string; view: View; label: string }[] = [
   { key: "c", view: "calendar", label: "Kalendarz" },
   { key: "a", view: "archive", label: "Archiwum" },
   { key: "k", view: "trash", label: "Kosz" },
+  { key: "i", view: "inbox", label: "Skrzynka" },
+  { key: "z", view: "shifts", label: "Grafik zmian" },
+  { key: "s", view: "study", label: "Praca" },
+  { key: "l", view: "debts", label: "Długi" },
+  { key: "t", view: "cwiczenia", label: "Ćwiczenia" },
 ];
 
 /** Widok dla drugiego klawisza sekwencji „g, <litera>” (null = brak). */

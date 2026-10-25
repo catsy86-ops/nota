@@ -1,4 +1,4 @@
-import { forwardRef, useId, useState, type HTMLAttributes, type MouseEvent, type ReactNode, type Ref } from "react";
+import { forwardRef, useEffect, useId, useState, type HTMLAttributes, type MouseEvent, type ReactNode, type Ref } from "react";
 import { Bell, Repeat, X } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -71,6 +71,13 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
     setTime(toTimeInputValue(parsed.getTime()));
   }
 
+  // Wpisany tekst („jutro 15”) zapisuje się od razu po Enter, gdy termin jest poprawny (QoL: bez drugiego kliku).
+  const [saveAfterTyping, setSaveAfterTyping] = useState(false);
+  function handleTypedParsed(parsed: Date) {
+    handleQuickParsed(parsed);
+    setSaveAfterTyping(true);
+  }
+
   // `null` = godzina niepełna (pole `type="time"` da się wyczyścić); wtedy
   // nie ma czego zapisać, a wcześniej szło w dane `NaN`.
   const timestamp = date ? composeReminderTimestamp(date, allDay ? DEFAULT_REMINDER_TIME : time) : null;
@@ -79,6 +86,15 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
   const until = repeat !== "none" && untilText ? endOfDay(new Date(uy, um - 1, ud)) : undefined;
   // Koniec serii przed pierwszym terminem nie ma sensu — seria nie miałaby żadnego wystąpienia.
   const untilTooEarly = until !== undefined && timestamp !== null && until < timestamp;
+
+  useEffect(() => {
+    if (!saveAfterTyping) return;
+    setSaveAfterTyping(false);
+    if (timestamp === null || pastTime || untilTooEarly) return;
+    requestNotificationPermissionOnIntent();
+    onSet(timestamp, repeat, until, allDay || undefined);
+    setOpen(false);
+  }, [saveAfterTyping, timestamp, pastTime, untilTooEarly, repeat, until, allDay, onSet]);
 
   function handleSave() {
     if (timestamp === null || pastTime || untilTooEarly) return;
@@ -126,7 +142,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
             </button>
           ))}
         </div>
-        <QuickReminderInput onParsed={handleQuickParsed} />
+        <QuickReminderInput onParsed={handleTypedParsed} />
         <Calendar
           mode="single"
           selected={date}

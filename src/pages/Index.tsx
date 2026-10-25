@@ -933,7 +933,7 @@ const Index = () => {
             {deferredSearch && view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia" ? `${displayNotes.length} ${pluralPl(displayNotes.length, ["wynik", "wyniki", "wyników"])}` : ""}
           </p>
           <AnimatePresence>
-            {view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia" && displayNotes.length === 0 && reminderRowCount === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} onNew={() => expandAddNote()} />}
+            {view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia" && displayNotes.length === 0 && reminderRowCount === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} onNew={() => expandAddNote()} onClearSearch={() => setSearch("")} />}
           </AnimatePresence>
           {view === "notes" && displayNotes.length > 0 && !deferredSearch && <DailyQuote />}
         </main>

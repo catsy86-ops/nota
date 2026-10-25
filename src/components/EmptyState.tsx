@@ -68,7 +68,7 @@ const ELSEWHERE_LABELS: { key: keyof Elsewhere; view: View; name: string }[] = [
 
 const HERE: Partial<Record<View, string>> = { notes: "Notatkach", archive: "Archiwum", trash: "Koszu" };
 
-export function EmptyState({ view, search, elsewhere, onGo, onNew }: { view: View; search: string; elsewhere?: Elsewhere; onGo?: (view: View) => void; onNew?: () => void }) {
+export function EmptyState({ view, search, elsewhere, onGo, onNew, onClearSearch }: { view: View; search: string; elsewhere?: Elsewhere; onGo?: (view: View) => void; onNew?: () => void; onClearSearch?: () => void }) {
   if (search) {
     const hits = ELSEWHERE_LABELS.filter((e) => (elsewhere?.[e.key] ?? 0) > 0);
     return (
@@ -90,6 +90,16 @@ export function EmptyState({ view, search, elsewhere, onGo, onNew }: { view: Vie
               </button>
             ))}
           </>
+        ) : onClearSearch ? (
+          // QoL: wyjście z pustego wyniku jednym kliknięciem, bez szukania „×” w pasku.
+          <button
+            type="button"
+            onClick={onClearSearch}
+            data-testid="empty-clear-search"
+            className="tap-target text-sm font-medium rounded-full border border-border/60 bg-muted/40 px-3 py-1 text-foreground hover:bg-muted focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            Wyczyść wyszukiwanie
+          </button>
         ) : undefined}
       />
     );
@@ -110,8 +120,9 @@ export function EmptyState({ view, search, elsewhere, onGo, onNew }: { view: Vie
       title={HEADINGS[view]}
       description={DESCRIPTIONS[view]}
     >
-      {view === "reminders" && onNew && (
-        // Pusty widok Terminów: termin dodaje się do notatki, więc przycisk otwiera nową notatkę (1d planu).
+      {view !== "notes" && onNew && (
+        // Pusty widok (poza Notatkami, które mają własne podpowiedzi): termin i notatkę dodaje się od razu,
+        // więc przycisk otwiera nową notatkę (1d planu; QoL — także Archiwum, Kosz, etykiety i foldery).
         <div className="mt-6 flex justify-center">
           <button
             type="button"

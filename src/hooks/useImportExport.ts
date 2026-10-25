@@ -82,6 +82,23 @@ export function useExternalImport() {
 
   const pickFiles = useCallback(async (files: File[]) => {
     if (!files.length) return;
+    // Kalendarz (.ics): od razu zapisuje przypomnienia jako notatki, bez etapu podglądu.
+    if (files.every((f) => /\.ics$/i.test(f.name))) {
+      try {
+        await yjsStore.ready();
+        const { importIcsFiles } = await import("@/lib/icsImport");
+        const { created, skipped } = await importIcsFiles(files, yjsStore.projectNotes());
+        toast.success(created ? `Dodano przypomnienia: ${created}` : "Brak nowych przypomnień", {
+          description: skipped ? `Pominięto ${skipped} (bez czasu albo nieczytelne)` : undefined,
+        });
+        reset();
+        setOpen(false);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Nie udało się odczytać pliku .ics");
+        setStage("pick");
+      }
+      return;
+    }
     const run = ++runRef.current;
     setStage("reading");
     setError(null);
