@@ -58,7 +58,7 @@ test("własna zmiana z przerwą", async ({ page }) => {
 });
 
 test("cykl nakłada się na miesiąc i da się go cofnąć", async ({ page }) => {
-  await page.getByRole("button", { name: "Cykl" }).click();
+  await page.getByRole("button", { name: "Cykl", exact: true }).click();
   const dialog = page.getByRole("dialog");
   // Domyślnie wybrany pierwszy zapisany cykl: 2× Dzień, 2× Noc, 4× wolne.
   await expect(dialog).toContainText("Kolejne dni cyklu (8)");
@@ -174,7 +174,7 @@ test("siatka obsługuje klawiaturę: jeden przystanek Tab, strzałki, Enter nano
 
 test("pędzle: strzałki wybierają sąsiedni, Cykl i + widoczne na telefonie", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 780 });
-  await expect(page.getByRole("button", { name: "Cykl" })).toBeInViewport();
+  await expect(page.getByRole("button", { name: "Cykl", exact: true })).toBeInViewport();
   await expect(page.getByRole("button", { name: "Dodaj rodzaj zmiany" })).toBeInViewport();
   const first = page.getByRole("radio", { name: /Dzień/ });
   await first.focus();
@@ -186,7 +186,7 @@ test("pędzle: strzałki wybierają sąsiedni, Cykl i + widoczne na telefonie", 
 });
 
 test("usunięcie zapisanego cyklu nie kasuje układanych kroków", async ({ page }) => {
-  await page.getByRole("button", { name: "Cykl" }).click();
+  await page.getByRole("button", { name: "Cykl", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toContainText("Kolejne dni cyklu (8)");
   await dialog.getByRole("button", { name: "Dodaj do cyklu: Popołudnie" }).click();
@@ -382,14 +382,14 @@ test("telefon: eksporty Grafiku są w menu „Udostępnij” @mobile", async ({ 
 });
 
 test("cykl: „Przedłuż cykl” zaczyna od dnia po ostatnim nałożonym", async ({ page }) => {
-  await page.getByRole("button", { name: "Cykl" }).click();
+  await page.getByRole("button", { name: "Cykl", exact: true }).click();
   let dialog = page.getByRole("dialog");
   // Wczytanie zapisanego cyklu (pierwszy na liście), żeby zapamiętać kotwicę i ostatni dzień.
   await dialog.locator("fieldset").first().getByRole("button").first().click();
   await dialog.getByRole("button", { name: "Nałóż cykl" }).click();
   await expect(dialog).toBeHidden();
 
-  await page.getByRole("button", { name: "Cykl" }).click();
+  await page.getByRole("button", { name: "Cykl", exact: true }).click();
   dialog = page.getByRole("dialog");
   await dialog.locator("fieldset").first().getByRole("button").first().click();
   await expect(dialog.getByRole("button", { name: /^Przedłuż cykl od / })).toBeVisible();

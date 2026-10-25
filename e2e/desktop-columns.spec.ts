@@ -55,7 +55,7 @@ test.describe("telefon 390", () => {
 
   test("jedna kolumna w dawnej kolejności: paleta nad siatką, filtry nad wpisami @mobile", async ({ page }) => {
     await page.goto("/grafik");
-    const palette = page.getByRole("button", { name: "Cykl" });
+    const palette = page.getByRole("button", { name: "Cykl", exact: true });
     expect((await box(palette)).y).toBeLessThan((await box(page.getByRole("grid").first())).y);
 
     await page.goto("/praca");

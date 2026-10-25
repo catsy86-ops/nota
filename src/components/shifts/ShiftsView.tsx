@@ -10,7 +10,7 @@ import type { Note } from "@/hooks/useNotes";
 import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
 import { buildSiteTimesheetCsv } from "@/lib/study/siteTimesheet";
 import { useStudy } from "@/lib/study/store";
-import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, defaultPatternStart, shortRests, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, defaultPatternStart, shortRests, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
@@ -257,6 +257,18 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
     });
   }
 
+  const monthKey = format(month, "yyyy-MM");
+
+  /** Kopia poprzedniego miesiąca po dniach tygodnia (pn → pn); „Cofnij” w dymku. */
+  function copyPreviousMonth() {
+    const prevKey = format(new Date(month.getFullYear(), month.getMonth() - 1, 1), "yyyy-MM");
+    const done = copyMonth(prevKey, monthKey, dayKey(new Date()));
+    if (!done) { toast("Poprzedni miesiąc nie ma zmian do skopiowania"); return; }
+    toastWithUndo(`Skopiowano ${done.copied} ${pluralPl(done.copied, ["zmianę", "zmiany", "zmian"])} z ${format(new Date(month.getFullYear(), month.getMonth() - 1, 1), "LLLL", { locale: pl })}`, () => restoreDays(done.before), {
+      description: done.overwritten ? `Zastąpiono ${done.overwritten} ${pluralPl(done.overwritten, ["wpis", "wpisy", "wpisów"])}` : undefined,
+    });
+  }
+
   function applyPattern(steps: (string | null)[], startKey: string, length: number, anchorKey: string, skipProtected: boolean) {
     const before = applyPatternToStore(steps, startKey, length, anchorKey, skipProtected);
     toast.success(`Nałożono cykl na ${length} ${pluralPl(length, ["dzień", "dni", "dni"])}`, {
@@ -422,6 +434,21 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
 
         </div>
         <div className="order-8 short:col-span-full">
+          {!isWeek && !Object.keys(data.days).some((k) => k.startsWith(monthKey)) && (
+            <section aria-label="Pusty miesiąc" className="mb-3 rounded-card border border-border/60 bg-card p-4 space-y-3">
+              <p className="text-sm text-muted-foreground">W tym miesiącu nie ma jeszcze zmian.</p>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={() => setPatternOpen(true)}
+                  className="pressable h-10 coarse:h-11 px-4 rounded-control bg-primary text-primary-foreground text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                  Nałóż cykl
+                </button>
+                <button type="button" onClick={copyPreviousMonth}
+                  className="pressable h-10 coarse:h-11 px-4 rounded-xl border border-border/60 hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                  Skopiuj poprzedni miesiąc
+                </button>
+              </div>
+            </section>
+          )}
           <ShiftDnd days={data.days} typesById={typesById} onTransfer={onDrop}>
             {isWeek ? (
               <ShiftWeekView weekStart={weekStart} days={data.days} typesById={typesById} remindersByDay={remindersByDay} titleOf={titleOf}
@@ -506,7 +533,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
               </p>
               <div className="flex flex-wrap gap-2">
                 <button type="button" onClick={() => setEditingType("new")}
-                  className="pressable h-10 coarse:h-11 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                  className="pressable h-10 coarse:h-11 px-4 rounded-control bg-primary text-primary-foreground text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                   Dodaj rodzaj zmiany
                 </button>
                 <button type="button" onClick={() => { addDefaultShiftTypes(); setBrush({ kind: "type", id: DEFAULT_SHIFT_TYPES[0].id }); }}

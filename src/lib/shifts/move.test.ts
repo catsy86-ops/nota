@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { DayEntry } from "./model";
-import { dayKeyCommand, planPaste, planTransfer, planWeekCopy, transferredEntry } from "./move";
+import { dayKeyCommand, planMonthCopy, planPaste, planTransfer, planWeekCopy, transferredEntry } from "./move";
 import { addDaysToKey, startOfWeekKey, weekKeys, weekRangeLabel } from "../week";
 
 const TODAY = "2026-10-07";
@@ -119,5 +119,21 @@ describe("dayKeyCommand", () => {
     expect(dayKeyCommand(k("ArrowRight"), 7)).toBeNull();
     expect(dayKeyCommand(k("a", { ctrlKey: true }), 7)).toBeNull();
     expect(dayKeyCommand(k("Home", { shiftKey: true }), 7)).toBeNull();
+  });
+});
+
+describe("planMonthCopy", () => {
+  it("kopiuje po dniach tygodnia: 1 wrz 2026 (wt) → 6 paź 2026 (wt)", () => {
+    const plan = planMonthCopy({ "2026-09-01": { type: "d" } }, "2026-09", "2026-10", "2026-10-25");
+    expect(plan.changes).toEqual({ "2026-10-06": { type: "d" } });
+    expect(plan.copied).toBe(1);
+  });
+
+  it("nie nadpisuje dni, które już mają wpis, i liczy je osobno", () => {
+    // 7 wrz 2026 (pon) → 5 paź 2026 (pon), tam już jest wpis.
+    const days = { "2026-09-07": { type: "n" }, "2026-10-05": { type: "d" } };
+    const plan = planMonthCopy(days, "2026-09", "2026-10", "2026-10-25");
+    expect(plan.overwritten).toBe(1);
+    expect(plan.changes["2026-10-05"]?.type).toBe("n");
   });
 });

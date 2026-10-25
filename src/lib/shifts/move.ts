@@ -1,5 +1,6 @@
 import type { DayEntry } from "./model";
 import { addDaysToKey, weekKeys } from "../week";
+import { dayDiff } from "./pattern";
 
 /** Przeniesienie zabiera zmianę z dnia źródłowego, kopia ją zostawia. */
 export type TransferMode = "move" | "copy";
@@ -69,6 +70,31 @@ export interface WeekCopyPlan {
  * następny). Dzień pusty w źródle niczego w celu nie czyści — kopiowanie
  * dokłada wpisy, a nie wymazuje tego, co ktoś już zaplanował.
  */
+/**
+ * Kopia miesiąca `fromMonth` na `toMonth` (`RRRR-MM`) po dniach tygodnia: pn → pn, z tym samym
+ * rzędem tygodnia (przesunięcie o wielokrotność 7 dni). Dzień bez pary w miesiącu docelowym się
+ * pomija, a kopia nie nadpisuje dni, które już mają wpis.
+ */
+export function planMonthCopy(days: Record<string, DayEntry>, fromMonth: string, toMonth: string, todayKey: string): WeekCopyPlan {
+  const changes: Record<string, DayEntry> = {};
+  let overwritten = 0;
+  // Przesunięcie o najbliższą wielokrotność 7 dni między pierwszymi dniami miesięcy.
+  const monthGap = dayDiff(`${fromMonth}-01`, `${toMonth}-01`);
+  const shift = Math.round(monthGap / 7) * 7;
+  for (const [src, entry] of Object.entries(days)) {
+    if (!src.startsWith(fromMonth)) continue;
+    // Trzy kandydaty o tym samym dniu tygodnia; ten, który trafia w miesiąc docelowy.
+    const dst = [shift - 7, shift, shift + 7].map((off) => addDaysToKey(src, off)).find((k) => k.startsWith(toMonth));
+    if (!dst) continue;
+    const next = transferredEntry(entry, dst, todayKey);
+    const existing = days[dst];
+    if (same(existing, next)) continue;
+    if (existing) overwritten++;
+    changes[dst] = next;
+  }
+  return { changes, copied: Object.keys(changes).length, overwritten };
+}
+
 export function planWeekCopy(
   days: Record<string, DayEntry>,
   weekOf: string,

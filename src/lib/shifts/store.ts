@@ -3,7 +3,7 @@ import { yjsStore } from "@/lib/yjsStore";
 import { logDiag } from "@/lib/diagnostics";
 import { absenceKindOf, isAbsence, migrate, type AbsenceKind, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
 import { applyPattern, patternOverlap } from "./pattern";
-import { planPaste, planTransfer, planWeekCopy, type TransferMode, type WeekCopyPlan } from "./move";
+import { planMonthCopy, planPaste, planTransfer, planWeekCopy, type TransferMode, type WeekCopyPlan } from "./move";
 import { createYShifts, MAIN_SCHEDULE_ID, SHIFTS_SYSTEM_ORIGIN, type DeletedShiftType, type YShifts } from "./yShifts";
 import { createScheduleRegistry, isScheduleId, type ShiftSchedule } from "./schedules";
 
@@ -170,6 +170,13 @@ export function applyPatternToStore(steps: (string | null)[], startKey: string, 
 /** Ile istniejących dni (urlop, L4, notatki) nałożenie cyklu by zmieniło — do podsumowania przed zatwierdzeniem. */
 export function patternOverlapInStore(steps: (string | null)[], startKey: string, length: number, anchorKey?: string): Partial<Record<PatternOverlapKind, number>> {
   return patternOverlap(yShifts.get().days, steps, startKey, length, anchorKey ?? startKey, overlapClass(shiftStore.get().types));
+}
+
+/** Kopiuje zmiany miesiąca `fromMonth` na `toMonth` po dniach tygodnia; `null`, gdy nie ma czego kopiować. */
+export function copyMonth(fromMonth: string, toMonth: string, todayKey: string): { before: DaysBefore; copied: number; overwritten: number } | null {
+  const plan = planMonthCopy(yShifts.get().days, fromMonth, toMonth, todayKey);
+  if (!plan.copied) return null;
+  return { before: yShifts.writeDays(plan.changes), copied: plan.copied, overwritten: plan.overwritten };
 }
 
 /** Przywraca dni zwrócone przez `applyPatternToStore`. */

@@ -224,7 +224,7 @@ test("formularz na telefonie to arkusz od dołu z przyklejonym „Zapisz” — 
   for (const vp of [{ width: 390, height: 844 }, { width: 844, height: 390 }]) {
     await page.setViewportSize(vp);
     await page.goto("/grafik");
-    await page.getByRole("button", { name: "Cykl" }).click();
+    await page.getByRole("button", { name: "Cykl", exact: true }).click();
     const dialog = page.getByRole("dialog", { name: "Cykl zmian" });
     await expect(dialog).toBeVisible();
     await page.waitForTimeout(400); // koniec wjazdu arkusza
