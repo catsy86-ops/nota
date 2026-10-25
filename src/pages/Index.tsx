@@ -79,7 +79,7 @@ import { QuickTemplates } from "@/components/QuickTemplates";
 import { useConfirmAction } from "@/components/ConfirmActionDialog";
 import { BulkActionBar } from "@/components/BulkActionBar";
 import { registerUndoHandlers, undoLastAction } from "@/lib/actionHistory";
-import { canUndoShifts, undoShifts } from "@/lib/shifts/store";
+import { canRedoShifts, canUndoShifts, redoShifts, undoShifts } from "@/lib/shifts/store";
 import { BottomNav } from "@/components/BottomNav";
 import { VaultHost } from "@/components/vault/VaultHost";
 
@@ -282,6 +282,12 @@ const Index = () => {
     onEasterEgg: () => { megaCelebrate(); toast.success("🎮 KONAMI! Pełen pokaz mocy!"); },
     hasSelection: () => selectedIds.size > 0,
     onEscapeSelection: clearSelection,
+    onRedo: () => {
+      if (view === "shifts" && canRedoShifts()) {
+        redoShifts();
+        toast("Ponowiono zmianę w Grafiku", { icon: "↪️" });
+      }
+    },
     onUndo: () => {
       // Na widoku Grafiku Ctrl+Z cofa ostatnią zmianę w Grafiku (zanim sięgnie po kosz/archiwum).
       if (view === "shifts" && canUndoShifts()) {

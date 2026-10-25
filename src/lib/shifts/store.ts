@@ -1,4 +1,4 @@
-﻿import { useSyncExternalStore } from "react";
+﻿import { useCallback, useSyncExternalStore } from "react";
 import { yjsStore } from "@/lib/yjsStore";
 import { logDiag } from "@/lib/diagnostics";
 import { absenceKindOf, isAbsence, migrate, type AbsenceKind, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
@@ -180,6 +180,18 @@ export function restoreDays(before: DaysBefore): void {
 /** Cofa ostatnią lokalną zmianę w Grafiku (Ctrl+Z). `false`, gdy nie ma czego cofać. */
 export const undoShifts = (): boolean => yShifts.undo();
 export const canUndoShifts = (): boolean => yShifts.canUndo();
+export const redoShifts = (): boolean => yShifts.redo();
+export const canRedoShifts = (): boolean => yShifts.canRedo();
+
+/**
+ * Stan przycisków Cofnij / Ponów: bit 1 = można cofnąć, bit 2 = można ponowić.
+ * Subskrypcja zależy od aktywnego grafiku, bo każdy ma własny stos cofania.
+ */
+export const useShiftUndoState = () => {
+  const scheduleId = activeScheduleId();
+  const subscribe = useCallback((listener: () => void) => yShifts.subscribeUndo(listener), [scheduleId]); // eslint-disable-line react-hooks/exhaustive-deps -- `scheduleId`: nowy stos po przełączeniu grafiku
+  return useSyncExternalStore(subscribe, () => (yShifts.canUndo() ? 1 : 0) | (yShifts.canRedo() ? 2 : 0));
+};
 
 /** Przenosi albo kopiuje wpis dnia; zwraca poprzednie wartości dni (do „Cofnij”) albo `null`, gdy nic się nie zmieniło. */
 export function transferDay(from: string, to: string, mode: TransferMode, todayKey: string): DaysBefore | null {

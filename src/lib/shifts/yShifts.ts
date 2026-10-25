@@ -314,6 +314,14 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
     setDayShift, setDayEntry, writeDays,
     undo: (): boolean => undoManager.undo() !== null,
     canUndo: (): boolean => undoManager.canUndo(),
+    redo: (): boolean => undoManager.redo() !== null,
+    canRedo: (): boolean => undoManager.canRedo(),
+    /** Powiadamia, gdy zmienia się stos cofania/ponawiania (przyciski na telefonie). */
+    subscribeUndo: (listener: () => void): (() => void) => {
+      const events = ["stack-item-added", "stack-item-popped", "stack-cleared"] as const;
+      events.forEach((e) => undoManager.on(e, listener));
+      return () => events.forEach((e) => undoManager.off(e, listener));
+    },
     saveShiftType, deleteShiftType, restoreShiftType, addDefaultShiftTypes, addPresetOnce,
     savePattern, deletePattern, saveBonus, deleteBonus, setMeta, replaceAll, mergeIn,
   };

@@ -19,6 +19,7 @@ export interface GlobalShortcutHandlers {
   onEscapeSelection: () => void;
   hasSelection: () => boolean;
   onUndo: () => void;
+  onRedo?: () => void;
   onCloseSidebar: () => void;
   isSidebarOpen: () => boolean;
   onOpenShortcuts: () => void;
@@ -144,11 +145,12 @@ export function useGlobalShortcuts(handlers: GlobalShortcutHandlers) {
   // Ctrl/Cmd+Z — undo the last trash/archive move
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.altKey) return;
+      if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
       if (e.key.toLowerCase() !== "z") return;
       if (isTypingTarget(e.target)) return;
       e.preventDefault();
-      handlers.onUndo();
+      if (e.shiftKey) handlers.onRedo?.();
+      else handlers.onUndo();
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

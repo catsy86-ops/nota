@@ -66,7 +66,7 @@ test("cykl nakłada się na miesiąc i da się go cofnąć", async ({ page }) =>
 
   const summary = page.getByRole("region", { name: "Podsumowanie miesiąca" });
   await expect(summary).not.toContainText("Dni pracy0");
-  await page.getByRole("button", { name: "Cofnij" }).click();
+  await page.getByRole("button", { name: "Cofnij", exact: true }).click();
   await expect(summary).toContainText("Dni pracy0");
 });
 
@@ -149,7 +149,7 @@ test("usunięcie rodzaju zmiany wymaga potwierdzenia i da się cofnąć", async 
 
   await expect(page.getByRole("radio", { name: /Dzień/ })).toHaveCount(0);
   await expect(page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first()).toBeVisible();
-  await page.getByRole("button", { name: "Cofnij" }).click();
+  await page.getByRole("button", { name: "Cofnij", exact: true }).click();
   await expect(page.getByRole("radio", { name: /Dzień/ })).toHaveCount(1);
   await expect(page.getByRole("button", { name: /^2 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dzień/ }).first()).toBeVisible();
 });
@@ -242,7 +242,7 @@ test("wyczyszczenie dnia z notatką da się cofnąć", async ({ page }) => {
   await page.getByRole("radio", { name: "Wolne" }).click();
   await page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dzień/ }).first().click();
   await expect(page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, wolne$/ }).first()).toBeVisible();
-  await page.getByRole("button", { name: "Cofnij" }).click();
+  await page.getByRole("button", { name: "Cofnij", exact: true }).click();
   await expect(page.getByRole("button", { name: /^1 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Dzień.*notatka: zastępstwo/ }).first()).toBeVisible();
 });
 

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDayClock } from "@/lib/dayClock";
 import { addMonths, format, isSameMonth, startOfMonth } from "date-fns";
 import { pl } from "date-fns/locale";
-import { CalendarArrowDown, CalendarRange, FileSpreadsheet, ChevronLeft, ChevronRight, Image as ImageIcon, Share2 } from "lucide-react";
+import { CalendarArrowDown, CalendarRange, FileSpreadsheet, ChevronLeft, ChevronRight, Image as ImageIcon, Redo2, Share2, Undo2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { dayKey, expandOccurrences, groupByDay, type Occurrence } from "@/lib/reminderOccurrences";
@@ -10,7 +10,7 @@ import type { Note } from "@/hooks/useNotes";
 import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
 import { buildSiteTimesheetCsv } from "@/lib/study/siteTimesheet";
 import { useStudy } from "@/lib/study/store";
-import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, patternOverlapInStore, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, defaultPatternStart, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
@@ -82,6 +82,9 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [weekStart, setWeekStart] = useState(() => startOfWeekKey(dayKey(new Date())));
   const [clip, setClip] = useState<DayEntry | null>(null);
+  const undoState = useShiftUndoState();
+  const canUndo = (undoState & 1) !== 0;
+  const canRedo = (undoState & 2) !== 0;
   const clipRef = useRef<DayEntry | null>(null);
   const [asking, setAsking] = useState<{ from: string; to: string } | null>(null);
   const [confirmCopy, setConfirmCopy] = useState<WeekCopyPlan | null>(null);
@@ -376,6 +379,17 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         <div className="order-7 space-y-5 short:col-span-full">
           <p role="status" aria-live="polite" className="sr-only">{announce}</p>
 
+          <div className="flex justify-end gap-2" role="group" aria-label="Cofnij i ponów zmiany w Grafiku">
+            <button type="button" onClick={() => undoShifts()} disabled={!canUndo} aria-label="Cofnij zmianę w Grafiku"
+              className="pressable h-11 w-11 flex items-center justify-center rounded-control border border-border/60 bg-card hover:bg-muted disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+              <Undo2 className="w-5 h-5" aria-hidden />
+            </button>
+            <button type="button" onClick={() => redoShifts()} disabled={!canRedo} aria-label="Ponów zmianę w Grafiku"
+              className="pressable h-11 w-11 flex items-center justify-center rounded-control border border-border/60 bg-card hover:bg-muted disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+              <Redo2 className="w-5 h-5" aria-hidden />
+            </button>
+          </div>
+
           <p id="shift-brush-hint" className="text-xs text-muted-foreground px-1 short:hidden">{brushHint(brush, typesById, activeHours)}</p>
 
           {/* Schowek jako osobny chip: widoczny także po „Rozumiem” i nie znika razem z podpowiedzią. */}
@@ -544,7 +558,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         onOpenChange={setPatternOpen}
         types={data.types}
         patterns={data.patterns}
-        defaultStart={isWeek ? weekStart : dayKey(month)}
+        defaultStart={isWeek ? weekStart : defaultPatternStart(data.days, dayKey(month).slice(0, 7), dayKey(new Date()))}
         onApply={applyPattern}
         overlapOf={patternOverlapInStore}
       />

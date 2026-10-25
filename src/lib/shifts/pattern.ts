@@ -76,6 +76,18 @@ export function patternOverlap<K extends string>(
   return counts;
 }
 
+/**
+ * Domyślny początek cyklu dla oglądanego miesiąca (`monthKey` = `RRRR-MM`): dziś, gdy to bieżący
+ * miesiąc; w innym — dzień po ostatnim wpisie tego miesiąca; bez wpisów — pierwszy dzień.
+ */
+export function defaultPatternStart(days: Record<string, DayEntry>, monthKey: string, todayKey: string): string {
+  if (todayKey.startsWith(monthKey)) return todayKey;
+  const last = Object.keys(days).filter((k) => k.startsWith(monthKey)).sort().at(-1);
+  if (!last) return `${monthKey}-01`;
+  const next = addDaysKey(last, 1);
+  return next.startsWith(monthKey) ? next : last;
+}
+
 /** Liczba dni od `startKey` do końca miesiąca `monthsAhead` miesięcy dalej (włącznie). */
 export function daysUntilMonthEnd(startKey: string, monthsAhead = 0): number {
   const start = parseKey(startKey);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDaysKey, applyPattern, dayDiff, patternOverlap } from "./pattern";
+import { addDaysKey, applyPattern, dayDiff, defaultPatternStart, patternOverlap } from "./pattern";
 import type { DayEntry } from "./model";
 
 const types = (days: Record<string, DayEntry>) => Object.fromEntries(Object.entries(days).map(([k, v]) => [k, v.type]));
@@ -68,5 +68,23 @@ describe("cykl nie zjada urlopu, L4 ani notatek", () => {
     const kinds: Record<string, string> = { u: "leave" };
     const classify = (e: { type: string; note?: string }) => (kinds[e.type] as "leave" | "note" | undefined) ?? (e.note ? "note" : undefined);
     expect(patternOverlap(days, steps, "2026-10-01", 3, "2026-10-01", classify)).toEqual({ leave: 1, note: 1 });
+  });
+});
+
+describe("defaultPatternStart", () => {
+  it("w bieżącym miesiącu startuje od dziś", () => {
+    expect(defaultPatternStart({}, "2026-10", "2026-10-25")).toBe("2026-10-25");
+  });
+
+  it("w innym miesiącu startuje od dnia po ostatnim wpisie", () => {
+    expect(defaultPatternStart({ "2026-09-03": { type: "d" }, "2026-09-12": { type: "d" } }, "2026-09", "2026-10-25")).toBe("2026-09-13");
+  });
+
+  it("bez wpisów w innym miesiącu startuje od pierwszego dnia", () => {
+    expect(defaultPatternStart({}, "2026-08", "2026-10-25")).toBe("2026-08-01");
+  });
+
+  it("po ostatnim dniu miesiąca nie wychodzi poza ten miesiąc", () => {
+    expect(defaultPatternStart({ "2026-09-30": { type: "d" } }, "2026-09", "2026-10-25")).toBe("2026-09-30");
   });
 });
