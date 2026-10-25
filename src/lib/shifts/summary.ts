@@ -34,6 +34,10 @@ export interface MonthSummary {
   basePay: number;
   /** Dodatek za nadgodziny w zł (dobowe i okresowe) — część `earnings`. */
   overtimePremium: number;
+  /** Z tego dodatek 100% w zł (noc, niedziela, święto, przekroczenie normy okresu). */
+  overtimePremium100: number;
+  /** Z tego dodatek 50% w zł (pozostałe nadgodziny dobowe). */
+  overtimePremium50: number;
   /** Premie tego miesiąca (już w `earnings`). */
   bonuses: ShiftBonus[];
   /** Suma premii tego miesiąca w zł. */
@@ -245,6 +249,9 @@ interface MonthCore {
   totals: Map<string, ShiftTypeTotal>;
   dailyOvertime: number;
   daily100: number;
+  /** Dodatek dobowy: 100% za godziny w porze nocnej, niedzielę i święto, 50% za resztę. */
+  premium100: number;
+  premium50: number;
   dailyPremium: number;
 }
 
@@ -253,7 +260,7 @@ const monthPrefix = (year: number, month: number) => `${year}-${String(month + 1
 function monthCore(data: ShiftData, year: number, month: number, otSpans: OvertimeSpan[], days: PremiumRules): MonthCore {
   const prefix = monthPrefix(year, month);
   const typesById = new Map(data.types.map((t) => [t.id, t]));
-  const c: MonthCore = { minutes: 0, night: 0, base: 0, daysWorked: 0, absenceDays: 0, normMinutes: 0, overtimeNormMinutes: 0, totals: new Map(), dailyOvertime: 0, daily100: 0, dailyPremium: 0 };
+  const c: MonthCore = { minutes: 0, night: 0, base: 0, daysWorked: 0, absenceDays: 0, normMinutes: 0, overtimeNormMinutes: 0, totals: new Map(), dailyOvertime: 0, daily100: 0, premium100: 0, premium50: 0, dailyPremium: 0 };
   let absenceMinutes = 0;
 
   for (const [key, entry] of Object.entries(data.days)) {
@@ -290,6 +297,8 @@ function monthCore(data: ShiftData, year: number, month: number, otSpans: Overti
     const full = premium100Minutes(span, days);
     c.dailyOvertime += all;
     c.daily100 += full;
+    c.premium100 += (span.rate / 60) * full;
+    c.premium50 += (span.rate / 60) * (all - full) * 0.5;
     c.dailyPremium += (span.rate / 60) * (full + (all - full) * 0.5);
   }
   return c;
@@ -342,7 +351,9 @@ export function monthSummary(data: ShiftData, year: number, month: number): Mont
   const periodMinutes = sum((m) => m.minutes);
   const periodBase = sum((m) => m.base);
   const periodRate = periodMinutes > 0 && periodBase > 0 ? periodBase / (periodMinutes / 60) : data.hourlyRate;
-  const premium = c.dailyPremium + (periodOvertime / 60) * periodRate;
+  // Dodatek 100% (noc, niedziela, święto, przekroczenie normy okresu) i 50% (reszta nadgodzin dobowych) — osobno w rachunku.
+  const premium100 = round2(c.premium100 + (periodOvertime / 60) * periodRate);
+  const premium50 = round2(c.premium50);
   const prefix = monthPrefix(year, month);
   // Premie tego miesiąca (kwoty brutto) dolicza się do zarobku, nie do godzin ani norm.
   const monthKey = prefix.slice(0, -1);
@@ -353,7 +364,7 @@ export function monthSummary(data: ShiftData, year: number, month: number): Mont
   const basePay = round2(byType
     .filter((t) => !isAbsence(t.type))
     .reduce((acc, t) => acc + round2((t.minutes / 60) * (t.type.rate ?? data.hourlyRate)), 0));
-  const overtimePremium = round2(premium);
+  const overtimePremium = round2(premium100 + premium50);
 
   return {
     daysWorked: c.daysWorked,
@@ -368,6 +379,8 @@ export function monthSummary(data: ShiftData, year: number, month: number): Mont
     earnings: round2(basePay + overtimePremium + bonusTotal),
     basePay,
     overtimePremium,
+    overtimePremium100: premium100,
+    overtimePremium50: premium50,
     bonuses,
     bonusTotal,
     byType,

@@ -213,7 +213,7 @@ function Receipt({ summary, hourlyRate, monthLabel }: { summary: MonthSummary; h
     };
   });
   // Dodatek liczony w `monthSummary` (50/100%, dobowe i okresowe) — linie rachunku sumują się do `earnings` co do grosza.
-  const premium = summary.overtimePremium;
+  const hours50 = summary.overtimeMinutes - summary.overtime100Minutes;
 
   return (
     <div className="receipt font-mono text-xs sm:text-[0.8125rem] tabular-nums">
@@ -231,9 +231,13 @@ function Receipt({ summary, hourlyRate, monthLabel }: { summary: MonthSummary; h
             </span>
           } hours={formatDuration(l.minutes)} amount={paid ? (l.amount === null ? "—" : formatMoney(l.amount)) : undefined} />
         ))}
-        {paid && premium > 0 && (
-          <ReceiptLine label={<span className="font-body font-medium">Dodatek za nadgodziny</span>}
-            hours={formatDuration(summary.overtimeMinutes)} amount={formatMoney(premium)} />
+        {paid && summary.overtimePremium100 > 0 && (
+          <ReceiptLine label={<span className="font-body font-medium">Dodatek 100%</span>}
+            hours={formatDuration(summary.overtime100Minutes)} amount={formatMoney(summary.overtimePremium100)} />
+        )}
+        {paid && summary.overtimePremium50 > 0 && (
+          <ReceiptLine label={<span className="font-body font-medium">Dodatek 50%</span>}
+            hours={formatDuration(hours50)} amount={formatMoney(summary.overtimePremium50)} />
         )}
         {paid && summary.bonuses.map((b) => (
           <ReceiptLine key={b.id} label={<span className="font-body font-medium truncate">Premia: {b.name}</span>} hours="" amount={formatMoney(b.amount)} />

@@ -124,6 +124,9 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   }, []);
 
   // Polecenia „Grafik zmian” z palety: dodaj zmianę dziś, nałóż cykl, obraz miesiąca.
+  // Ref, nie zależność efektu: prośba zawsze woła eksport z aktualnego renderu, a subskrypcja nie odnawia się co render.
+  const exportImageRef = useRef(exportImage);
+  exportImageRef.current = exportImage;
   useEffect(() => {
     const take = () => {
       const action = takeShiftAction();
@@ -135,7 +138,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
       } else if (action === "pattern") {
         setPatternOpen(true);
       } else if (action === "image") {
-        void exportImage();
+        void exportImageRef.current();
       }
     };
     take();

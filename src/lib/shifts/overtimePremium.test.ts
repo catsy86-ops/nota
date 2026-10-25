@@ -11,7 +11,7 @@ const data: ShiftData = {
     "2026-10-05": { type: "d", extraMin: 120 },
     "2026-10-06": { type: "d", extraMin: 45 },
     "2026-10-07": { type: "d", extraMin: 77 },
-    "2026-10-10": { type: "n" },
+    "2026-10-10": { type: "n", extraMin: 60 },
   },
 };
 
@@ -24,6 +24,12 @@ describe("rachunek: podstawa + dodatek za nadgodziny = zarobek co do grosza", ()
 
   it("zarobek = podstawa + dodatek + premie (bez odejmowania w widoku)", () => {
     expect(s.earnings).toBe(Math.round((s.basePay + s.overtimePremium + s.bonusTotal) * 100) / 100);
+  });
+
+  it("dodatek 50% i 100% w osobnych kwotach sumują się do dodatku za nadgodziny", () => {
+    expect(s.overtimePremium100).toBeGreaterThan(0);
+    expect(s.overtimePremium50).toBeGreaterThan(0);
+    expect(s.overtimePremium).toBe(Math.round((s.overtimePremium100 + s.overtimePremium50) * 100) / 100);
   });
 
   it("podstawa to suma zaokrąglonych pozycji rodzajów, tak jak w rachunku", () => {
