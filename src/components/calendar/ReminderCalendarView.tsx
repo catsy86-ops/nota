@@ -227,14 +227,20 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     }
     const to = new Date(ts);
     const before = previousOf(occ.noteId);
+    // Odłożone wystąpienie (`reminder` ≠ `reminderBase`): przesuwamy tylko je, a termin serii zostaje —
+    // o ile nowy czas wypada przed następnym terminem serii (ta sama reguła co `snoozeTarget`).
+    // Dalej seria liczy się od nowego terminu, jak dotąd.
+    const deferred = before.base !== undefined && before.base !== before.reminder;
+    const seriesNext = deferred ? nextInSeries(before.base as number, occ.repeat, before.day, before.until) : null;
+    const keepSeries = deferred && (seriesNext === null || to.getTime() < seriesNext);
     markMoved(occ.noteId);
-    onSetReminder(occ.noteId, to.getTime(), occ.repeat, undefined, undefined, occ.allDay);
+    onSetReminder(occ.noteId, to.getTime(), occ.repeat, undefined, keepSeries ? before.base : undefined, occ.allDay);
     setSelectedDay(to);
     if (!isSameMonth(to, month)) setMonth(new Date(to.getFullYear(), to.getMonth(), 1));
     toastWithUndo(
       `Termin przeniesiony na ${format(to, "d MMMM", { locale: pl })}`,
       () => onSetReminder(occ.noteId, before.reminder, before.repeat, before.day, before.base, before.allDay),
-      { icon: "📅", description: occ.isSeries ? "Cała seria liczy się od nowego terminu." : undefined },
+      { icon: "📅", description: keepSeries ? "Przesunięte tylko to wystąpienie; seria zostaje." : occ.isSeries ? "Cała seria liczy się od nowego terminu." : undefined },
     );
     focusDay(to);
   }

@@ -421,6 +421,7 @@ Jeden `SettingsCard` i tokeny promieni (Ś/M), `Section` jako `.section-label` z
 ## Proponowana kolejność (fale)
 
 **Fala 1 — błędy i utrata danych (wszystko S, ~1 dzień)**
+> Status 2026-10-25 (sprawdzone w kodzie i testach): Grafik P1, P2, P3, P5 były już zrobione (`icsScope`, `recentlyEndedShift`, `sameHours`, `dstShiftMinutes`; `shifts` 186/186 testów). Terminy P1, P2 i Kalendarz P1, P2 były zrobione w kodzie; Kalendarz P1 uzupełniony o przeciąganie odłożonego wystąpienia (`moveToDay`, zachowuje bazę serii). Do ręcznej weryfikacji na telefonie. Ponowne sprawdzenie 2026-10-25: Skrzynka P1–P3, Dziś P1, Długi P1–P2, Skarbiec P1, Ćwiczenia P1–P2, Dziennik P1–P5 i Nauka P1 są w kodzie (przeczytane, bez osobnego testu/e2e); `npm run typecheck` czysty, `vitest` na działach Fali 1: 426/426.
 - Grafik P5 (DST 25.10 — przed weekendem!), P1 (`.ics`), P3 (24 h), P2 („Skończyłem teraz”)
 - Terminy P1 (snooze na kaflu), P2 (picker), Kalendarz P1–P2
 - Skrzynka P1–P3, Dziennik P1–P4, Ćwiczenia P1–P2, Długi P1–P2

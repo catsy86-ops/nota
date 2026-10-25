@@ -1247,7 +1247,7 @@ Dział opisany w jednym miejscu. Przypomnienie to termin na notatce; z jego zapi
 - **Odpalenie** nie zależy od flagi dnia: przypomnienie idzie o zapisanej godzinie (9:00 dla „cały dzień”), w aplikacji i w push.
 - **Cały dzień = 9:00, nie północ**, bo północ dzwoniłaby w nocy. Zaległość liczy się od 9:00.
 - **Liczba z Pracy** w liczniku zawiera też serwis przypadający dziś — tak jak lista Terminów.
-- **Zmiana terminu w kalendarzu** (przeciągnięcie, „Termin zapisany”) czyści odłożenie: to nowy termin serii.
+- **Zmiana terminu w kalendarzu** (przeciągnięcie, Shift+←/→, „Termin zapisany”) czyści odłożenie: to nowy termin serii. Wyjątek: przeciągnięcie odłożonego wystąpienia (`reminder` ≠ `reminderBase`) przesuwa tylko je, a baza serii zostaje, o ile nowy czas wypada przed następnym terminem serii (`ReminderCalendarView.tsx` `moveToDay`, `keepSeries`). Poza tym regułą seria przesuwa się cała.
 - **Licznik i odznaka** przełączają się na „Zaległe” w chwili, gdy termin minie, nawet gdy lista notatek się nie zmienia.
 
 ### Ograniczenia i pułapki
@@ -1726,7 +1726,7 @@ Commit: brak (zmiany niezacommitowane, na prośbę).
 - **Grafik — „Skończyłem teraz” po końcu zmiany.** `summary.ts` `recentlyEndedShift` (okno `FINISH_GRACE_MS` = 4 h); `NowCard.tsx` `EndedCard` pokazuje zakończoną zmianę z przyciskiem. Test: `shifts.test.ts`.
 - **Terminy — „Jutro” i „+1 h” na kaflu.** `NoteCardBody.tsx` używa `snoozeTarget` (odłożenie jednego wystąpienia), zamiast przesuwać całą serię.
 - **Terminy — stary termin w pickerze.** `ReminderPicker.tsx` `openChange` odświeża stan z notatki przy każdym otwarciu.
-- **Kalendarz — edycja odłożonego wystąpienia.** `ReminderCalendarView.tsx` `openEdit` przekazuje `base` (termin serii), `handleAttach` zapisuje go z powrotem; `ReminderQuickAddDialog.tsx` `handleSaveEdit` przekazuje `edit.base`. Seria nie przesuwa się.
+- **Kalendarz — edycja odłożonego wystąpienia.** `ReminderCalendarView.tsx` `openEdit` przekazuje `base` (termin serii), `handleAttach` zapisuje go z powrotem; `ReminderQuickAddDialog.tsx` `handleSaveEdit` przekazuje `edit.base`. Seria nie przesuwa się. Przeciągnięcie takiego wystąpienia (`moveToDay`) też zachowuje bazę, o ile nowy czas nie wypada po następnym terminie serii; dialog edycji zachowuje bazę zawsze (ograniczenie: po przesunięciu za następny termin serii baza zostaje — do decyzji, czy też zdjąć). Testy: brak automatycznego testu tej ścieżki (logika w komponencie), sprawdzić ręcznie.
 - **Kalendarz — godzina z języka naturalnego.** `ReminderQuickAddDialog.tsx` (`parsed`): godzina zaraz po dacie („jutro 15:00”, „jutro o 15”) trafia do pola czasu, nie do tytułu. Samotna liczba („jutro 2 kupić”) nie jest godziną. Bez osobnego testu jednostkowego (logika w komponencie); sprawdzone ręcznie tylko w testach istniejących.
 - **Skrzynka.** `InboxCapture.tsx` to wieloliniowe pole: Enter zapisuje, Shift+Enter nowa linia, widoczny fokus (`focus-within`). `inbox.ts` `captureParts`: za długa pierwsza linia nie ginie — początek to tytuł, reszta idzie do treści. `Index.tsx` `expandAddNote`: w Skrzynce „+” ustawia kursor w polu zamiast przechodzić do Notatek. Testy: `InboxCapture.test.tsx`.
 - **Dziennik — dyktowanie.** `JournalEntrySheet.tsx`: braki bez budowy nie przerywają zapisu tekstu; błąd pokazywany po dopisaniu treści.
