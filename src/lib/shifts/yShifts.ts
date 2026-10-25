@@ -1,5 +1,6 @@
 import * as Y from "yjs";
 import { BONUS_MAX_PER_DATA, cleanBonus, DEFAULT_LEAVE_DAYS, DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, shiftHours, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
+import { shiftMinutes } from "./time";
 
 /**
  * Grafik w Y.Doc — tym samym, który niosą synchronizacja P2P i plik, więc
@@ -108,12 +109,23 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
    * notatkę i odchylenie; inna zachowuje tylko notatkę — odchylenie dotyczyło
    * poprzedniej zmiany i po cichu zmieniałoby godziny albo normę.
    */
+  /** Godziny zmiany, którą urlop zastępuje w tym dniu (`plannedMin`); `undefined`, gdy to nie urlop nad pracą. */
+  function plannedMinutesFor(typeId: string, prev: DayEntry | undefined): number | undefined {
+    const types = get().types;
+    if (types.find((t) => t.id === typeId)?.kind !== "absence" || !prev) return undefined;
+    const base = types.find((t) => t.id === prev.type);
+    return base && base.kind !== "absence" ? shiftMinutes(base) : undefined;
+  }
+
   function setDayShift(dayKey: string, typeId: string | null): void {
     transact(() => {
       const prev = days.get(dayKey);
       if (!typeId) { if (prev) days.delete(dayKey); return; }
       if (prev?.type === typeId) return;
-      days.set(dayKey, prev?.note ? { type: typeId, note: prev.note } : { type: typeId });
+      const next: DayEntry = prev?.note ? { type: typeId, note: prev.note } : { type: typeId };
+      const planned = plannedMinutesFor(typeId, prev);
+      if (planned) next.plannedMin = planned;
+      days.set(dayKey, next);
     });
   }
 

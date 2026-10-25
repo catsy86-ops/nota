@@ -156,6 +156,15 @@ export function LeaveMeter({ balance }: { balance: LeaveBalance }) {
       <p className="text-2xs text-muted-foreground tabular-nums">
         wykorzystane {used} · zaplanowane {planned}
       </p>
+      {balance.hours && (
+        <p className="text-xs tabular-nums">
+          <span className="text-muted-foreground">W godzinach: </span>
+          <span className={cn("font-semibold", balance.hours.remaining < 0 && "text-destructive-ink")}>
+            {balance.hours.remaining < 0 ? `${formatHoursShort(-balance.hours.remaining)} h ponad wymiar` : `zostało ${formatHoursShort(balance.hours.remaining)} h`}
+          </span>
+          <span className="text-muted-foreground"> z {formatHoursShort(balance.hours.allowance)} h (art. 154² KP)</span>
+        </p>
+      )}
     </section>
   );
 }

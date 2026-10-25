@@ -23,7 +23,12 @@ export interface LeaveBalance {
   planned: number;
   /** Ile zostaje po wykorzystanych i zaplanowanych; ujemne = przekroczony wymiar. */
   remaining: number;
+  /** Tylko system równoważny: urlop w godzinach (art. 154² KP), w minutach. */
+  hours?: { allowance: number; used: number; planned: number; remaining: number };
 }
+
+/** Dobowy wymiar urlopu w godzinach — 8 h, art. 154² KP (przy systemie równoważnym). */
+const LEAVE_DAY_MIN = 8 * 60;
 
 /**
  * Licznik urlopu w roku kalendarzowym. Liczy każdy dzień z rodzajem
@@ -37,12 +42,24 @@ export function leaveBalance(data: ShiftData, year: number, today: Date): LeaveB
   const prefix = `${year}-`;
   let used = 0;
   let planned = 0;
+  let usedMin = 0;
+  let plannedMin = 0;
   for (const key of absenceDays(data, "leave")) {
     if (!key.startsWith(prefix)) continue;
-    if (key <= todayKey) used += 1;
+    const past = key <= todayKey;
+    if (past) used += 1;
     else planned += 1;
+    // Godziny dnia: zmiana, którą urlop zastąpił, a dla starych wpisów 8 h × etat.
+    const minutes = data.days[key]?.plannedMin ?? Math.round(LEAVE_DAY_MIN * data.fte);
+    if (past) usedMin += minutes;
+    else plannedMin += minutes;
   }
-  return { year, allowance: data.leaveDays, used, planned, remaining: data.leaveDays - used - planned };
+  const balance: LeaveBalance = { year, allowance: data.leaveDays, used, planned, remaining: data.leaveDays - used - planned };
+  if (data.workSystem === "equivalent") {
+    const allowance = data.leaveDays * LEAVE_DAY_MIN;
+    balance.hours = { allowance, used: usedMin, planned: plannedMin, remaining: allowance - usedMin - plannedMin };
+  }
+  return balance;
 }
 
 export interface YearMonthRow {

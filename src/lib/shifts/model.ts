@@ -74,6 +74,11 @@ export interface DayEntry {
    * Godziny rodzaju z dnia, w którym była ta zmiana — zapisywane, gdy ktoś
    * później zmieni godziny rodzaju. Brak = bieżące godziny rodzaju.
    */
+  /**
+   * Godziny zmiany, którą ten dzień zastąpił urlopem (minuty z grafiku, art. 154² KP).
+   * Brak = 8 h × etat (wpisy urlopu sprzed tego pola).
+   */
+  plannedMin?: number;
   hours?: ShiftHours;
   /**
    * `hours` wpisał użytkownik ręcznie dla tego dnia (nie jest to kopia z rodzaju),
@@ -300,6 +305,8 @@ function toEntry(v: unknown): DayEntry | null {
   else delete entry.offSchedule;
   if (o.inLieu === true) entry.inLieu = true;
   else delete entry.inLieu;
+  if (Number.isInteger(o.plannedMin) && (o.plannedMin as number) > 0 && (o.plannedMin as number) <= 1440) entry.plannedMin = o.plannedMin;
+  else delete entry.plannedMin;
   if (isHours(o.hours)) entry.hours = shiftHours(o.hours);
   else delete entry.hours;
   if (o.customHours === true && entry.hours) entry.customHours = true;

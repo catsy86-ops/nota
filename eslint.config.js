@@ -77,6 +77,7 @@ export default tseslint.config(
       "src/lib/study/yEntryCheck.test.ts",
       // Cofnij w Grafiku: test na własnym Y.Doc (ten sam wzorzec co pozostałe działy).
       "src/lib/shifts/undo.test.ts",
+      "src/lib/shifts/leaveHours.test.ts",
       "src/lib/tabSync.ts",
       "src/lib/tabSync.test.ts",
       // Buduje plik synchronizacji w starym formacie jako dane testowe.
