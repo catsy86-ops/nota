@@ -119,6 +119,15 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   // W tygodniu podsumowanie dotyczy miesiąca, w którym tydzień leży głównie (czwartek).
   const shownMonth = useMemo(() => (isWeek ? startOfMonth(parseDayKey(addDaysToKey(weekStart, 3))) : month), [isWeek, weekStart, month]);
   const summary = useMemo(() => monthSummary(data, shownMonth.getFullYear(), shownMonth.getMonth()), [data, shownMonth]);
+  // Jeden region „na żywo” (audyt UI, pkt 9): zmiana tygodnia lub miesiąca ogłasza się tym samym regionem co akcje,
+  // niezależnie od tego, czy zmieniono ją przyciskiem, gestem czy skrótem.
+  const periodLabel = isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl });
+  const periodSeen = useRef(periodLabel);
+  useEffect(() => {
+    if (periodSeen.current === periodLabel) return;
+    periodSeen.current = periodLabel;
+    setAnnounce(periodLabel);
+  }, [periodLabel]);
 
   const titleOf = useMemo(() => {
     const titles = new Map(notes.map((n) => [n.id, n.locked ? "Notatka prywatna" : n.title || n.content.slice(0, 40)]));
@@ -366,7 +375,6 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
 
         <div className="order-7 space-y-5 short:col-span-full">
           <p role="status" aria-live="polite" className="sr-only">{announce}</p>
-          <p aria-live="polite" className="sr-only">{isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl })}</p>
 
           <p id="shift-brush-hint" className="text-xs text-muted-foreground px-1 short:hidden">{brushHint(brush, typesById, activeHours)}</p>
 
