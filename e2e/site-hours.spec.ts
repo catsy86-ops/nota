@@ -47,7 +47,7 @@ test("godziny na budowach: podział dnia, reszta dla drugiej budowy, raport budo
   await page.getByTestId("study-journal").getByRole("button", { name: "Polna 2: karta budowy" }).click();
   // Suma godzin na karcie (1.4 planu Praca 2026-10-24).
   await expect(page.getByTestId("site-card-hours")).toHaveText("3,5 h łącznie · 3,5 h w tym miesiącu");
-  await page.getByTestId("site-card").getByRole("button", { name: "Raport" }).click();
+  await page.getByTestId("site-card").getByRole("button", { name: "Raport", exact: true }).click();
   await expect(page.getByText("3 h 30 min na tej budowie (z 10 h, Budowa 07:00–17:00)")).toBeVisible();
 });
 

@@ -66,7 +66,7 @@ test("braki: dopisanie, status, kopia, czyszczenie z Cofnij, raport; historia za
   await card.getByRole("button", { name: "Raport", exact: true }).click();
   const report = page.getByTestId("journal-report");
   const section = report.locator("[data-report-shortages]");
-  await expect(section).toContainText("Rura PEX 16: 50 m — brakuje");
+  await expect(section).toContainText("Rura PEX 16: 50 m — zamówione 14.10");
   await expect(section).not.toContainText("Klej PCV");
   await expect(report).toContainText("braki materiału: 1");
   await page.keyboard.press("Escape");
