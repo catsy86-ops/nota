@@ -9,6 +9,8 @@ import { useToday } from "@/hooks/useToday";
 import { monthEnterClass, useMonthDirection } from "@/hooks/useMonthDirection";
 import { stampKey, useStampedDays } from "@/hooks/useStampedDays";
 import { dayCellClass, dayNumberClass, holidayDotClass, holidayNameClass, weekdayHeadClass } from "@/components/calendar/dayCellStyles";
+import { DELAY_STEP_MS, useCycleWave } from "@/lib/shifts/cycleWave";
+import { useMotionPref } from "@/hooks/useMotionPref";
 import { DayDropCell, type DayActions } from "./ShiftDnd";
 import { dayAriaLabel, dropOverClass } from "./dayLabel";
 
@@ -46,6 +48,8 @@ const WEEK = { weekStartsOn: 1 } as const;
  * po miesiącach, Home/End po tygodniu; Enter/Spacja = stuknięcie.
  */
 export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesById, onDay, onMonthChange, describedBy, shortRestDays, overlay, actions, nightFrom = 22 }: ShiftMonthGridProps) {
+  const wave = useCycleWave();
+  const { reduced } = useMotionPref();
   const today = useToday();
   const direction = useMonthDirection(month);
   const { stamped, cleared } = useStampedDays(`${month.getFullYear()}-${month.getMonth()}`, days, typesById);
@@ -133,6 +137,9 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
               const isToday = isSameDay(day, today);
               const absence = type?.kind === "absence";
               const label = dayAriaLabel({ day, today: isToday, holiday, type, entry });
+              // Fala po nałożeniu cyklu: opóźnienie pieczątki według kolejności dnia (bez tego przy ograniczonym ruchu).
+              const waveIdx = wave.get(key);
+              const waveStyle = waveIdx !== undefined && !reduced ? ({ "--stamp-delay": `${waveIdx * DELAY_STEP_MS}ms` } as React.CSSProperties) : undefined;
               const ovType = overlay?.days[key] ? overlay.typesById.get(overlay.days[key].type) : undefined;
               const overlayName = ovType ? `, nakładka: ${ovType.name}` : "";
               // Znaczniki w komórce: najwyżej dwa widoczne, reszta trafia do etykiety dla czytnika.
@@ -188,10 +195,10 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
                         key={entry ? stampKey(entry) : undefined}
                         aria-hidden
                         // Nieobecność: jasne tło w kolorze rodzaju i cienka ramka. Przerywana ramka wyglądała jak puste miejsce do wypełnienia.
-                        className={cn("relative mt-auto rounded-lg px-1 py-0.5 text-center leading-tight", absence ? "border-[1.5px]" : "shadow-sm", !inMonth && "opacity-50", stamped.has(key) && "stamp-in")}
-                        style={absence
+                        className={cn("relative mt-auto rounded-lg px-1 py-0.5 text-center leading-tight", absence ? "border-[1.5px]" : "shadow-sm ring-1 ring-foreground", !inMonth && "opacity-50", stamped.has(key) && "stamp-in")}
+                        style={{ ...waveStyle, ...(absence
                           ? { borderColor: type.color, backgroundColor: `color-mix(in srgb, ${type.color} 16%, transparent)`, color: shiftTextOnCard(type.color), "--stamp": type.color } as React.CSSProperties
-                          : { backgroundColor: type.color, color: shiftInk(type.color), "--stamp": type.color } as React.CSSProperties}
+                          : { backgroundColor: type.color, color: shiftInk(type.color), "--stamp": type.color } as React.CSSProperties) }}
                       >
                         <span className="block font-display font-bold text-sm">{type.short}</span>
                         {!absence && (

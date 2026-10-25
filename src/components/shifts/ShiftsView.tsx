@@ -22,6 +22,7 @@ import type { ImageTheme } from "@/lib/shifts/monthImageDraw";
 import { absenceEstimate } from "@/lib/shifts/absenceEstimate";
 import { isoWeek } from "@/lib/periodNote";
 import { haptic } from "@/lib/haptics";
+import { setCycleWave } from "@/lib/shifts/cycleWave";
 import { timeOffBalance } from "@/lib/shifts/timeOff";
 import { BrushBar, type Brush } from "./BrushBar";
 import { BrushHours } from "./BrushHours";
@@ -345,6 +346,8 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
 
   function applyPattern(steps: (string | null)[], startKey: string, length: number, anchorKey: string, skipProtected: boolean) {
     const before = applyPatternToStore(steps, startKey, length, anchorKey, skipProtected);
+    // Fala pieczątek po dniach, które cykl faktycznie zmienił (kolejność dat).
+    setCycleWave(Object.keys(before).sort());
     toast.success(`Nałożono cykl na ${length} ${pluralPl(length, ["dzień", "dni", "dni"])}`, {
       action: { label: "Cofnij", onClick: () => restoreDays(before) },
     });
