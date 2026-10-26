@@ -10,6 +10,8 @@ export interface VaultPin {
   salt: string;
   wrapped: string;
   check: string;
+  /** Lista passkeyów i kod awaryjny (przegląd V-4, M-1), w postaci kanonicznej — patrz `extraOf`. */
+  extra: string;
 }
 
 export type PinVerdict =
@@ -19,16 +21,26 @@ export type PinVerdict =
   | "same"
   /** Ten sam klucz, inny numer epoki — nie da się tego wytłumaczyć rotacją hasła: odrzucamy. */
   | "epoch-only"
-  /** Zmienione opakowanie klucza: zwykła zmiana hasła na innym urządzeniu albo podmiana. Przyjmujemy tylko po poprawnym haśle. */
+  /**
+   * Zmienione opakowanie klucza, passkeye albo kod awaryjny: zwykła zmiana hasła na innym urządzeniu, dopisany
+   * passkey albo podmiana. Przyjmujemy tylko po dowodzie znajomości hasła (lub kodu awaryjnego), nie biometrią.
+   */
   | "changed";
 
 const KEY = "kaczy.vault.pin.v1";
+
+/** Pola spoza klucza, które też są pod pinem: passkeye i kod awaryjny. */
+function extraOf(m: VaultMeta): string {
+  return JSON.stringify({ passkeys: m.passkeys ?? null, recovery: m.recovery ?? null });
+}
 
 export function readVaultPin(): VaultPin | null {
   try {
     const r = JSON.parse(localStorage.getItem(KEY) ?? "null") as Partial<VaultPin> | null;
     if (!r || typeof r.epoch !== "number" || typeof r.salt !== "string" || typeof r.wrapped !== "string" || typeof r.check !== "string") return null;
-    return { epoch: r.epoch, salt: r.salt, wrapped: r.wrapped, check: r.check };
+    // Pin sprzed tego pola nie ma `extra` — dostaje wartość, której nigdy nie da się porównać: następne
+    // odblokowanie hasłem ustawia pin od nowa, a biometria czeka na hasło.
+    return { epoch: r.epoch, salt: r.salt, wrapped: r.wrapped, check: r.check, extra: typeof r.extra === "string" ? r.extra : "" };
   } catch {
     return null;
   }
@@ -36,7 +48,7 @@ export function readVaultPin(): VaultPin | null {
 
 export function writeVaultPin(m: VaultMeta): void {
   try {
-    localStorage.setItem(KEY, JSON.stringify({ epoch: m.epoch, salt: m.salt, wrapped: m.wrapped, check: m.check }));
+    localStorage.setItem(KEY, JSON.stringify({ epoch: m.epoch, salt: m.salt, wrapped: m.wrapped, check: m.check, extra: extraOf(m) }));
   } catch {
     // Bez zapisu pin nie działa na tym urządzeniu — wykrywanie zmian jest wtedy słabsze, nie fałszywe.
   }
@@ -45,6 +57,7 @@ export function writeVaultPin(m: VaultMeta): void {
 export function comparePin(pin: VaultPin | null, m: VaultMeta): PinVerdict {
   if (!pin) return "none";
   const sameKey = pin.salt === m.salt && pin.wrapped === m.wrapped && pin.check === m.check;
-  if (sameKey) return pin.epoch === m.epoch ? "same" : "epoch-only";
+  if (sameKey && pin.epoch !== m.epoch) return "epoch-only";
+  if (sameKey && pin.extra === extraOf(m)) return "same";
   return "changed";
 }

@@ -73,6 +73,55 @@ describe("odblokowanie biometrią: przepływ skarbca (V-4)", () => {
     expect(pn.isUnlocked()).toBe(false);
   });
 
+  it("H-1: zmiana meta w trakcie promptu WebAuthn przerywa dodawanie i nie cofa skarbca", async () => {
+    stubWebAuthn(true);
+    const { store, pn } = fresh();
+    await pn.setup(PW);
+    const remote = { ...(store.getVaultMeta() as Record<string, unknown>), wrapped: toB64u(new Uint8Array(40).fill(3)) };
+    // Zdalna zmiana (np. hasło zmienione na innym urządzeniu) pojawia się w trakcie promptu.
+    vi.stubGlobal("navigator", {
+      ...globalThis.navigator,
+      credentials: {
+        create: vi.fn(async () => {
+          store.setVaultMeta(remote);
+          return { rawId: CRED.buffer, getClientExtensionResults: () => ({ prf: { enabled: true } }) };
+        }),
+        get: vi.fn(async () => ({
+          rawId: CRED.buffer,
+          getClientExtensionResults: () => ({ prf: { results: { first: PRF.slice().buffer } } }),
+        })),
+      },
+    });
+    await expect(pn.addPasskey(PW, "Ja")).rejects.toThrow(/zmienił się/);
+    expect(JSON.stringify(store.getVaultMeta())).toBe(JSON.stringify(remote));
+    expect(pn.hasPasskeys()).toBe(false);
+  });
+
+  it("M-2: odblokowanie biometrią nie przyjmuje zmienionej meta bez hasła; hasło ją przyjmuje", async () => {
+    stubWebAuthn(true);
+    const { store, pn } = fresh();
+    await pn.setup(PW);
+    await pn.addPasskey(PW, "Ja");
+    await pn.lock();
+    // Podmiana listy passkeyów w dokumencie (klucz i sól bez zmian): pin tego nie zna.
+    const m = store.getVaultMeta() as { passkeys: { salt: string; entries: { id: string; wrapped: string }[] } } & Record<string, unknown>;
+    const extra = { id: toB64u(new Uint8Array(16).fill(9)), wrapped: m.passkeys.entries[0].wrapped };
+    store.setVaultMeta({ ...m, passkeys: { ...m.passkeys, entries: [...m.passkeys.entries, extra] } });
+    await expect(pn.unlockWithPasskey()).rejects.toMatchObject({ code: "bad-format" });
+    expect(pn.isUnlocked()).toBe(false);
+    await pn.unlock(PW);
+    expect(pn.isUnlocked()).toBe(true);
+  });
+
+  it("M-3: setup nie nadpisuje uszkodzonych metadanych skarbca", async () => {
+    stubWebAuthn(true);
+    const { store, pn } = fresh();
+    const broken = { v: 1, salt: 42 };
+    store.setVaultMeta(broken);
+    await expect(pn.setup(PW)).rejects.toThrow(/uszkodzony/);
+    expect(JSON.stringify(store.getVaultMeta())).toBe(JSON.stringify(broken));
+  });
+
   it("identyfikator passkeya jest w base64url, a sól PRF w metadanych", () => {
     expect(toB64u(CRED)).toMatch(/^[A-Za-z0-9_-]+$/);
   });

@@ -367,7 +367,12 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
 
   /** Pierwsze użycie: zakłada skarbiec. Zwraca kod awaryjny (pokazać raz) albo `null`. */
   async function setup(password: string, { withRecovery = true }: { withRecovery?: boolean } = {}): Promise<{ recoveryCode: string | null }> {
-    if (meta()) throw new Error("Skarbiec już istnieje — odblokuj go");
+    // Surowa wartość pod kluczem (także zepsuta) blokuje zapis. Inaczej uszkodzone meta zostałyby nadpisane
+    // i notatki prywatne straciłyby klucz (przegląd V-4, M-3).
+    const existing = store.getVaultMeta();
+    if (existing !== undefined && existing !== null) {
+      throw new Error(meta() ? "Skarbiec już istnieje — odblokuj go" : "Skarbiec w dokumencie jest uszkodzony — nie nadpisano go");
+    }
     const created = await createVault(password, { iterations, withRecovery });
     store.setVaultMeta(created.meta);
     writeVaultPin(created.meta);
@@ -387,7 +392,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
       throw err;
     }
     recordSuccess();
-    await adoptVerifiedMeta(k, m);
+    await adoptVerifiedMeta(k, m, true);
   }
 
   /**
@@ -395,11 +400,17 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
    * tylko-epoka → odrzucamy (nie da się tego wytłumaczyć zmianą hasła); zmienione opakowanie przy poprawnym
    * haśle → przyjmujemy i informujemy (zwykła zmiana hasła na innym urządzeniu). Po przyjęciu pin się aktualizuje.
    */
-  async function adoptVerifiedMeta(k: CryptoKey, m: VaultMeta): Promise<void> {
+  async function adoptVerifiedMeta(k: CryptoKey, m: VaultMeta, provedSecret: boolean): Promise<void> {
     const verdict = comparePin(readVaultPin(), m);
     if (verdict === "epoch-only") {
       logSecurity("vault-meta-rejected", "epoch changed in the document without a key change — refused");
       throw new VaultError("bad-format", "Skarbiec w dokumencie ma inny numer epoki niż ten, który zna to urządzenie. Nie odblokowano.");
+    }
+    // Biometria dowodzi tylko posiadania klucza, nie hasła. Zmianę w dokumencie przyjmujemy wyłącznie po haśle
+    // albo kodzie awaryjnym (przegląd V-4, M-2).
+    if (verdict === "changed" && !provedSecret) {
+      logSecurity("vault-meta-rejected", "changed meta refused on biometric unlock");
+      throw new VaultError("bad-format", "Skarbiec został zmieniony na innym urządzeniu. Odblokuj hasłem, aby przyjąć zmianę.");
     }
     if (verdict === "changed") toast.info("Skarbiec został zmieniony na innym urządzeniu — odblokowano Twoim hasłem");
     await adoptKey(k, m.epoch);
@@ -420,14 +431,21 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     if (!m) throw new Error("Brak skarbca");
     const entries = m.passkeys?.entries ?? [];
     if (entries.length >= MAX_PASSKEYS) throw new Error("Osiągnięto limit odblokowań biometrią");
+    // Przegląd V-4, H-1: dwa prompty WebAuthn trwają długo. Jeśli w tym czasie meta się zmieni (np. zmiana hasła
+    // z innego urządzenia), zapis cofnąłby skarbiec do starego klucza — notatki nie dałyby się odblokować.
+    const startJson = JSON.stringify(m);
     const raw = await unwrapRawWithPassword(m, password, minIterations);
     try {
       const salt = m.passkeys?.salt ?? toB64u(crypto.getRandomValues(new Uint8Array(32)));
       const { id, prf } = await registerPasskey(userName, fromB64u(salt));
-      const wrapped = await wrapDataKeyForPasskey(raw, prf);
-      prf.fill(0);
+      const wrapped = await wrapDataKeyForPasskey(raw, prf).finally(() => prf.fill(0));
+      // Sprawdzenie i zapis bez await między nimi: zdalna zmiana meta nie wejdzie w środku.
+      if (JSON.stringify(store.getVaultMeta()) !== startJson) {
+        throw new Error("Skarbiec zmienił się w trakcie dodawania biometrii — spróbuj ponownie");
+      }
       const next: VaultMeta = { ...m, passkeys: { salt, entries: [...entries.filter((e) => e.id !== id), { id, wrapped }] } };
       store.setVaultMeta(next);
+      writeVaultPin(next);
     } finally {
       raw.fill(0);
     }
@@ -449,7 +467,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
       prf.fill(0);
     }
     recordSuccess();
-    await adoptVerifiedMeta(k, m);
+    await adoptVerifiedMeta(k, m, false);
   }
 
   async function unlockWithRecoveryCode(code: string): Promise<void> {
@@ -464,7 +482,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
       throw err;
     }
     recordSuccess();
-    await adoptVerifiedMeta(k, m);
+    await adoptVerifiedMeta(k, m, true);
   }
 
   /**
