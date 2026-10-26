@@ -1,5 +1,5 @@
 import type { Note } from "@/hooks/useNotes";
-import { snoozeTimes } from "@/lib/reminderAgenda";
+import { eveningTime, snoozeTimes } from "@/lib/reminderAgenda";
 import { doneTarget, seriesDay, snoozeTarget } from "@/lib/reminderRepeat";
 
 /**
@@ -11,7 +11,7 @@ import { doneTarget, seriesDay, snoozeTarget } from "@/lib/reminderRepeat";
 /** Pola przypomnienia, które te akcje zmieniają. */
 export type ReminderFields = Pick<Note, "reminder" | "reminderDay" | "reminderBase">;
 
-export type SnoozeKind = "inHour" | "tomorrow9";
+export type SnoozeKind = "in10" | "inHour" | "evening" | "tomorrow9";
 
 export interface ReminderUpdate {
   patch: Partial<ReminderFields>;
@@ -42,9 +42,28 @@ export function doneReminderUpdate(note: Note, now: number): ReminderUpdate {
  */
 export function snoozeReminderUpdate(note: Note, kind: SnoozeKind, now: number): ReminderUpdate {
   const times = snoozeTimes(now);
-  const snz = snoozeTarget(note, kind === "inHour" ? times.inHour : times.tomorrow9, now);
+  const at = kind === "in10" ? now + 10 * 60_000 : kind === "inHour" ? times.inHour : kind === "evening" ? (eveningTime(now) ?? times.tomorrow9) : times.tomorrow9;
+  const snz = snoozeTarget(note, at, now);
   return {
     patch: { reminder: snz.reminder, reminderDay: note.reminderDay, reminderBase: snz.reminderBase },
-    message: kind === "inHour" ? "Przesunięto o godzinę" : "Przesunięto na jutro, 9:00",
+    message: SNOOZE_MESSAGE[kind],
   };
 }
+
+/** Pozycje menu „Odłóż” poza przyciskami w rzędzie (2.1): nazwa i chwila odłożenia. */
+export const SNOOZE_MENU: { kind: SnoozeKind; label: string }[] = [
+  { kind: "in10", label: "Za 10 minut" },
+  { kind: "evening", label: "Wieczorem (18:00)" },
+];
+
+/** Pozycje menu dostępne teraz: „Wieczorem” znika po 17:30 (`eveningTime`). */
+export function snoozeMenuAt(now: number): { kind: SnoozeKind; label: string }[] {
+  return SNOOZE_MENU.filter((o) => o.kind !== "evening" || eveningTime(now) !== null);
+}
+
+const SNOOZE_MESSAGE: Record<SnoozeKind, string> = {
+  in10: "Przesunięto o 10 minut",
+  inHour: "Przesunięto o godzinę",
+  evening: "Przesunięto na wieczór, 18:00",
+  tomorrow9: "Przesunięto na jutro, 9:00",
+};

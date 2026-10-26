@@ -2555,3 +2555,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 ## Budżet precache (2026-10-26)
 
 - Próg precache podniesiony z 3,2 do 3,4 MiB w `e2e/bundle.spec.ts` (decyzja właściciela). Po partii Terminów (parser dat, reguły DST, Skrzynka, Powłoka) było 3,20 MiB + 2,8 KB, czyli za próg. Wejściowy JS i DOM bez zmian progów.
+
+## Terminy — menu „Odłóż” na kaflu i w Dziś (2.1, 2026-10-26)
+
+- **Co robi:** przy terminie na kaflu, w Dziś i w Kalendarzu są w rzędzie „Gotowe”, „Jutro rano” i „+1 h”, a obok przycisk „⋯” z pozycjami „Za 10 minut” i „Wieczorem (18:00)” (ta druga znika po 17:30). Odłożenie zawsze dotyczy jednego wystąpienia serii i ma cofnięcie w toaście.
+- **Gdzie:** `src/lib/reminderActions.ts` (`SnoozeKind` z `in10` i `evening`, `SNOOZE_MENU`, `snoozeMenuAt`, komunikaty `SNOOZE_MESSAGE`); `src/components/ReminderQuickActions.tsx` (menu „⋯”). Dymek przypomnienia ma tę samą listę (T-4).
+- **Nie zrobione z 2.1:** jedna wspólna lista dla wszystkich miejsc w rzędzie (dziś każde ma swoje przyciski), powiadomienie systemowe zostaje z dwoma przyciskami.
+- **Testy:** `src/lib/reminderActions.test.ts` (menu, „Za 10 minut”, „Wieczorem”); e2e istniejących przycisków terminów (57 testów zielonych).

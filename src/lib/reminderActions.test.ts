@@ -49,3 +49,24 @@ describe("reminderFields", () => {
     expect(reminderFields(note)).toEqual({ reminder: 5, reminderDay: 7, reminderBase: 9 });
   });
 });
+
+describe("menu „Odłóż” (2.1)", () => {
+  const note = (reminder: number) => ({ reminder, reminderRepeat: "none", reminderDay: undefined, reminderBase: undefined } as never);
+  const at = (h: number, min = 0) => new Date(2026, 9, 19, h, min).getTime();
+
+  it("„Za 10 minut” odkłada o 10 minut od teraz", async () => {
+    const { snoozeReminderUpdate } = await import("./reminderActions");
+    const now = at(12);
+    const { patch, message } = snoozeReminderUpdate(note(now), "in10", now);
+    expect(patch.reminder).toBe(now + 10 * 60_000);
+    expect(message).toBe("Przesunięto o 10 minut");
+  });
+
+  it("„Wieczorem” to 18:00, a po 17:30 pozycji nie ma w menu", async () => {
+    const { snoozeReminderUpdate, snoozeMenuAt } = await import("./reminderActions");
+    const now = at(12);
+    expect(snoozeReminderUpdate(note(now), "evening", now).patch.reminder).toBe(at(18));
+    expect(snoozeMenuAt(now).map((o) => o.kind)).toEqual(["in10", "evening"]);
+    expect(snoozeMenuAt(at(17, 30)).map((o) => o.kind)).toEqual(["in10"]);
+  });
+});
