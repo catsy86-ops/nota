@@ -2551,3 +2551,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Ograniczenie:** notatka bez kotwicy, której seria przeszła przez zmianę czasu przed pierwszym ręcznym ustawieniem, ma już dryf 3:30 i zostaje na nim, dopóki nie ustawi się godziny ponownie. Zmiana terminu z kalendarza (z `reminderDay`) na notatce bez kotwicy też nie zapisuje kotwicy.
 - **Testy:** `src/lib/reminderRepeat.dst.test.ts` (strefa Europe/Warsaw, 28–30.03.2026, kotwica przy dziennej, tygodniowej i miesięcznej serii; `seriesMinutes`).
 - **Nie ma testu integracyjnego** `updateNote` (wymaga Yjs w teście); reguła kotwicy jest w jednym miejscu w `useNotes.ts`.
+
+## Budżet precache (2026-10-26)
+
+- Próg precache podniesiony z 3,2 do 3,4 MiB w `e2e/bundle.spec.ts` (decyzja właściciela). Po partii Terminów (parser dat, reguły DST, Skrzynka, Powłoka) było 3,20 MiB + 2,8 KB, czyli za próg. Wejściowy JS i DOM bez zmian progów.
