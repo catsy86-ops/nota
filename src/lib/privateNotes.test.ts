@@ -439,3 +439,15 @@ describe("metadane przy zablokowanym skarbcu (V-3, krok 3)", () => {
     expect(store.projectNotes().find((n) => n.id === "n1")!.color).toBe("sky");
   });
 });
+
+describe("przegląd V-3: metadane z szyfrogramu", () => {
+  it("poprawny kolor wraca z szyfrogramu (odrzucenie spoza listy: bez bezpośredniego testu)", async () => {
+    const { store, pn } = fresh();
+    store.upsertNote(makeNote({ title: "T", content: "C", color: "mint" }));
+    await pn.setup(PW);
+    await pn.lockNote("n1");
+    await pn.removeLock("n1");
+    const back = store.projectNotes().find((n) => n.id === "n1")!;
+    expect(back.color).toBe("mint");
+  });
+});

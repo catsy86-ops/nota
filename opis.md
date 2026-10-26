@@ -2701,3 +2701,22 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - Przy zdejmowaniu blokady wartość jawna ma pierwszeństwo przed starszą z szyfrogramu.
 - **Ograniczenia:** zablokowana notatka nie ma folderu ani koloru na liście (tylko kafelek zablokowany). Starsze urządzenia czytają treść, ale nie widzą metadanych w szyfrogramie; dlatego zapis tych metadanych idzie za bramką schematu 2.
 - **Testy:** `src/lib/privateNotes.test.ts` (ukrycie w dokumencie, powrót po odblokowaniu, zmiana w odblokowanym skarbcu, fallback przy zablokowanym); e2e `private-notes.spec.ts` (asercja wersji v1 lub v2).
+
+## Przegląd bezpieczeństwa V-3 (kroki 1–3, 2026-10-26)
+
+Przegląd wykonany ręcznie na diffie (nie przez agenta `security-reviewer`; CLAUDE.md wymaga go przy kryptografii, więc to ustalenie do potwierdzenia).
+
+**Sprawdzone, bez zastrzeżeń:**
+- **Wiązanie AAD:** v2 to `notki:v2:<epoka>:<id>`, v1 to `notki:note:<id>`. Prefiksy się nie mieszają. Szyfrogram nie odszyfruje się pod innym id ani w innej epoce (testy `vault.v2.test.ts`, `privateNotes.test.ts`).
+- **Obniżanie wersji:** atakujący, który zmieni prefiks v2 na v1, dostaje błąd AAD, bo AES-GCM weryfikuje dane uwierzytelniające. Bez klucza nie przerobi szyfrogramu.
+- **Metadane:** odczyt z szyfrogramu jest uwierzytelniony, a kolor przechodzi przez listę `NOTE_COLORS` (poprawka z przeglądu). Folder, rodzic i ikona są przycinane do długości.
+- **Brak wycieku przy zablokowanym skarbcu:** metadane idą do sinku tylko przy odblokowanym skarbcu. Przy zablokowanym zostają jawne, co jest świadomym wyjątkiem (patrz niżej).
+
+**Ustalenia (otwarte):**
+1. **Jawne metadane przy zablokowanym skarbcu (wyjątek świadomy).** Zmiana koloru, folderu lub rodzica przy zablokowanym skarbcu trafia jawnie do dokumentu do najbliższej blokady, więc widać ją w dokumentach synchronizacji. To ograniczony wyciek identyfikatorów folderów. Do decyzji: blokować zmianę metadanych przy zablokowanym skarbcu zamiast ją zapisywać jawnie.
+2. **Gate schematu oparty na nieuwierzytelnionej awareness.** Peer może ogłosić `schema: 2`, żeby wymusić zapis v2, którego inne urządzenia nie odczytają (utrata dostępności), albo `schema: 0`, żeby zablokować nowe formaty. To nie wyciek danych, ale zaufanie do grupy synchronizacji. Ta sama zasada obowiązywała wcześniej dla kodu parowania.
+3. **Migracja starych szyfrogramów niepełna.** Notatka v1, której nikt nie edytuje, zostaje w v1 bezterminowo. Plan zakładał migrację przy odblokowaniu, a zrobione jest tylko przy zapisie.
+4. **Odrzucenie błędnego koloru nie ma bezpośredniego testu.** Logika jest, test sprawdza tylko poprawny przypadek.
+5. **Rozpoznawanie zablokowanej notatki po prefiksie.** `isLockedPlain` przyjmuje każdy string zaczynający się od `v1.`/`v2.`. Zepsuty token nie daje wycieku (treść jest w szyfrogramie), ale może ukryć notatkę jako zablokowaną. Ten sam kształt istniał w v1.
+
+**Rekomendacja:** punkt 1 przed V-4 (biometria jest tylko drugim opakowaniem klucza, nie zmienia tego). Punkt 2 i 3 do decyzji właściciela. Przegląd agentem `security-reviewer` nadal zalecany przed wydaniem.

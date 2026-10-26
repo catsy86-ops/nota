@@ -3,6 +3,7 @@ import type { YjsStore } from "@/lib/yjsStore";
 import { yjsStore as defaultStore } from "@/lib/yjsStore";
 import { versionsStore as defaultVersions, type VersionsStore } from "@/lib/versionsStore";
 import { logDiag, logSecurity } from "@/lib/diagnostics";
+import { NOTE_COLORS } from "@/lib/safeProjection";
 import { METADATA_IN_CIPHERTEXT_SCHEMA, writeFormatAllowed } from "@/lib/formatSchema";
 import {
   KDF_ITERATIONS, VaultError, createVault, decryptNoteString, encryptNoteStringV2, encryptString, isValidMeta, noteAad,
@@ -103,7 +104,7 @@ function cleanPrivateMeta(raw: unknown): PrivateMeta | undefined {
   if (!raw || typeof raw !== "object") return undefined;
   const r = raw as Record<string, unknown>;
   const meta: PrivateMeta = {};
-  if (typeof r.color === "string" && r.color.length <= 32) meta.color = r.color as Note["color"];
+  if (typeof r.color === "string" && (NOTE_COLORS as readonly string[]).includes(r.color)) meta.color = r.color as Note["color"];
   if (r.folderId === null || (typeof r.folderId === "string" && r.folderId.length <= 200)) meta.folderId = r.folderId as string | null;
   if (typeof r.parentId === "string" && r.parentId.length <= 200) meta.parentId = r.parentId;
   if (typeof r.icon === "string" && r.icon.length <= 32) meta.icon = r.icon;
