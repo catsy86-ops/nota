@@ -35,6 +35,7 @@ export const noteSchema = z.object({
   reminderRepeatUntil: z.number().finite().optional().catch(undefined),
   reminderAllDay: z.boolean().optional().catch(undefined),
   reminderBase: z.number().finite().optional().catch(undefined),
+  snoozedUntil: z.number().finite().optional().catch(undefined),
   priority: z.enum(["none", "low", "medium", "high"]).catch("none"),
   dailyDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().catch(undefined),
   periodKey: z.string().regex(/^\d{4}-(W\d{2}|\d{2})$/).optional().catch(undefined),

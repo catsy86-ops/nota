@@ -3,11 +3,17 @@
  * Bez osobnego pola w danych: skrzynka to reguła nad istniejącymi notatkami, więc
  * sortowanie (przeniesienie do folderu albo nadanie etykiety) od razu ją opróżnia.
  */
+/** „Odłożona” (S-1): termin odłożenia jeszcze nie minął, więc notatki nie ma w Skrzynce. */
+export function isSnoozed(n: { snoozedUntil?: number }, now: number = Date.now()): boolean {
+  return n.snoozedUntil !== undefined && n.snoozedUntil > now;
+}
+
 /**
  * Notatka prywatna (zablokowana) nigdy nie jest w skrzynce: ani na liście, ani w liczniku.
+ * Odłożona (S-1) też nie, aż do swojego terminu.
  */
-export function isInboxNote(n: { folderId?: string | null; labels: readonly string[]; parentId?: string | null; locked?: boolean }): boolean {
-  return !n.locked && !n.folderId && n.labels.length === 0 && !n.parentId;
+export function isInboxNote(n: { folderId?: string | null; labels: readonly string[]; parentId?: string | null; locked?: boolean; snoozedUntil?: number }): boolean {
+  return !n.locked && !n.folderId && n.labels.length === 0 && !n.parentId && !isSnoozed(n);
 }
 
 export const INBOX_TITLE_MAX = 120;

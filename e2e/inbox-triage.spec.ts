@@ -35,3 +35,16 @@ test("skrzynka: porządkowanie — archiwizacja, cofnięcie, kosz i zostawienie"
   await dialog.getByRole("button", { name: "Zostaw w skrzynce" }).click();
   await expect(dialog).toContainText("Gotowe — skrzynka opróżniona.");
 });
+
+test("skrzynka: „Jutro” odkłada notatkę poza Skrzynkę, „Cofnij” ją przywraca (S-1)", async ({ page }) => {
+  const stamp = Date.now();
+  await capture(page, `Odłożona ${stamp}`);
+
+  await page.getByRole("button", { name: /Porządkuj skrzynkę \(1\)/ }).click();
+  const dialog = page.getByRole("dialog", { name: "Porządkowanie skrzynki" });
+  await dialog.getByRole("button", { name: "Jutro" }).click();
+  await expect(dialog).toContainText("Gotowe — skrzynka opróżniona");
+
+  await dialog.getByRole("button", { name: "Cofnij ostatnią akcję" }).click();
+  await expect(dialog).toContainText("1 z 1");
+});

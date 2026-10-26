@@ -68,7 +68,7 @@ function readReminderState(y: YNote): ReminderState {
 
 const NOTE_SCALAR_FIELDS = [
   "title", "color", "pinned", "archived", "trashed", "trashedAt",
-  "labels", "aliases", "reminder", "reminderRepeat", "reminderDay", "reminderRepeatUntil", "priority", "dailyDate", "periodKey",
+  "labels", "aliases", "reminder", "reminderRepeat", "reminderDay", "reminderRepeatUntil", "priority", "dailyDate", "periodKey", "snoozedUntil",
   "icon", "cover", "favorite", "readOnly", "parentId", "wide", "largeText", "folderId", "order", "createdAt", "updatedAt",
 ] as const;
 
@@ -268,6 +268,7 @@ function yNoteFromPlain(note: Note): YNote {
   y.set("reminderSpec", specOf({ reminder: note.reminder, reminderRepeat: note.reminderRepeat, reminderDay: note.reminderDay, reminderRepeatUntil: note.reminderRepeatUntil, reminderAllDay: note.reminderAllDay, reminderBase: note.reminderBase }));
   y.set("priority", note.priority);
   if (note.dailyDate !== undefined) y.set("dailyDate", note.dailyDate);
+  if (note.snoozedUntil !== undefined) y.set("snoozedUntil", note.snoozedUntil);
   if (note.periodKey !== undefined) y.set("periodKey", note.periodKey);
   if (note.icon) y.set("icon", note.icon);
   if (note.cover) y.set("cover", note.cover);
@@ -297,6 +298,8 @@ function yNoteFromPlain(note: Note): YNote {
 function plainFromYNote(id: string, y: YNote): Note {
   const vaultRaw = y.get("locked") === true ? y.get("vault") : undefined;
   const dailyDate = safeDailyDate(y.get("dailyDate"));
+  const snoozedRaw = y.get("snoozedUntil");
+  const snoozedUntil = typeof snoozedRaw === "number" && Number.isFinite(snoozedRaw) && snoozedRaw > 0 ? snoozedRaw : undefined;
   const periodKey = safePeriodKey(y.get("periodKey"));
   const icon = safeString(y.get("icon"), "", LIM.emoji);
   const cover = safeOptionalEnum(y.get("cover"), NOTE_COVERS);
@@ -304,6 +307,7 @@ function plainFromYNote(id: string, y: YNote): Note {
   const rem = readReminderState(y);
   const common = {
     ...(dailyDate ? { dailyDate } : {}),
+    ...(snoozedUntil ? { snoozedUntil } : {}),
     ...(periodKey ? { periodKey } : {}),
     ...(icon ? { icon } : {}),
     ...(cover ? { cover } : {}),

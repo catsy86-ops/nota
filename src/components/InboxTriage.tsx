@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Archive, RotateCcw, Trash } from "lucide-react";
+import { Archive, Clock, RotateCcw, Trash } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useNotesContext } from "@/hooks/NotesProvider";
@@ -92,6 +92,18 @@ export function InboxTriage({ open, onOpenChange }: InboxTriageProps) {
     advance(() => restoreFromTrash(id));
   }
 
+  /** S-1 „Odłóż”: notatka znika ze Skrzynki do północy wskazanego dnia; „Cofnij” zdejmuje odłożenie. */
+  function snooze(days: number) {
+    if (!current) return;
+    const id = current.id;
+    const prev = current.snoozedUntil ?? 0;
+    const until = new Date();
+    until.setDate(until.getDate() + days);
+    until.setHours(0, 0, 0, 0);
+    updateNote(id, { snoozedUntil: until.getTime() });
+    advance(() => updateNote(id, { snoozedUntil: prev }));
+  }
+
   function leave() {
     if (!current) return;
     setIndex((i) => i + 1);
@@ -171,6 +183,12 @@ export function InboxTriage({ open, onOpenChange }: InboxTriageProps) {
               </Button>
               <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5 text-destructive-ink" onClick={trash}>
                 <Trash className="h-4 w-4" aria-hidden /> Kosz
+              </Button>
+              <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5" onClick={() => snooze(1)}>
+                <Clock className="h-4 w-4" aria-hidden /> Jutro
+              </Button>
+              <Button type="button" variant="ghost" size="sm" className="coarse:h-11 gap-1.5" onClick={() => snooze(7)}>
+                <Clock className="h-4 w-4" aria-hidden /> Za tydzień
               </Button>
               <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={leave}>
                 Zostaw w skrzynce

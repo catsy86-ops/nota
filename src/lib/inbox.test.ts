@@ -47,3 +47,14 @@ describe("captureParts", () => {
     expect(captureParts("A\r\nB")).toEqual({ title: "A", content: "B" });
   });
 });
+
+describe("odłożenie ze Skrzynki (S-1)", () => {
+  const base = { labels: [] as string[], folderId: null, parentId: null };
+  it("odłożona notatka nie jest w Skrzynce do swojego terminu, potem wraca", () => {
+    const now = Date.now();
+    expect(isInboxNote({ ...base, snoozedUntil: now + 60_000 })).toBe(false);
+    expect(isInboxNote({ ...base, snoozedUntil: now - 1 })).toBe(true);
+    expect(isInboxNote({ ...base, snoozedUntil: 0 })).toBe(true);
+    expect(isInboxNote(base)).toBe(true);
+  });
+});

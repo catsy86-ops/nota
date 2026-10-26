@@ -68,6 +68,8 @@ export interface Note {
   reminderAllDay?: boolean;
   /** Odłożone wystąpienie serii: termin serii, który `reminder` zastępuje (patrz `reminderSpec.ts`). */
   reminderBase?: number;
+  /** S-1 (Skrzynka „Odłóż”): notatka nie jest w Skrzynce do tej chwili (ms). Brak lub minęła = w Skrzynce. */
+  snoozedUntil?: number;
   priority: NotePriority;
   /** Notatka dnia: lokalna data `YYYY-MM-DD` (patrz `lib/dailyNote.ts`); brak = zwykła notatka. */
   dailyDate?: string;

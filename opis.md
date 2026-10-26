@@ -2509,3 +2509,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Jak działa:** odczyt odrzuca nieznane wartości i działy stałe, więc uszkodzony zapis nie ukrywa niczego. Ukrycie nie zmienia danych ani tras.
 - **Ograniczenie:** „Przywróć domyślne” w Wyglądzie nie zeruje ukrytych działów (to osobna lista). Ustawienie nie jest w kopii zapasowej.
 - **Testy:** `src/lib/hiddenViews.test.ts`; e2e `e2e/hidden-views.spec.ts`.
+
+## Skrzynka — „Odłóż” (S-1, 2026-10-26)
+
+- **Co robi:** w porządkowaniu Skrzynki (`InboxTriage`) przyciski „Jutro” i „Za tydzień” odkładają notatkę do północy wskazanego dnia. Znika wtedy ze Skrzynki i z jej licznika, a po terminie wraca sama. „Cofnij” zdejmuje odłożenie.
+- **Dane:** nowe pole `snoozedUntil` (ms) w notatce. Brak albo `0` = nieodłożona. Zapis w Yjs jako zwykłe pole notatki (`yjsStore.ts`, `NOTE_SCALAR_FIELDS`), odczyt odrzuca wartości niedodatnie i nieskończone, schemat w `noteSchema.ts` (`catch(undefined)`), typ `Note` w `useNotes.ts`. Starsze dokumenty bez pola działają bez zmian.
+- **Reguła:** `isSnoozed` i `isInboxNote` w `src/lib/inbox.ts`. Notatka odłożona jest też poza filtrem Skrzynki w `useFilteredNotes.ts`.
+- **Ograniczenie:** pole nie jest scalane przez `mergeNotes.ts` (ta lista dotyczy przypomnień). Dwa urządzenia edytujące tę samą notatkę jednocześnie mogą wybrać inne odłożenie, zwykła zasada „ostatni zapis wygrywa”.
+- **Testy:** `src/lib/inbox.test.ts` (odłożenie i powrót po terminie), e2e `e2e/inbox-triage.spec.ts` („Jutro” i „Cofnij”).
