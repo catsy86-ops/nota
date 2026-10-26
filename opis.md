@@ -2759,3 +2759,15 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 **Czego nie dało się ocenić statycznie:** zachowanie y-webrtc przy usuwaniu stanów awareness, wyścig migracji z locka w przeglądarce, zawartość IndexedDB i logu aktualizacji, stare urządzenia w terenie.
 
 **Stan formalny:** przegląd agentem jest wykonany (bez uruchomienia testów). Wymaga potwierdzenia przez człowieka przed wydaniem, zwłaszcza W-1.
+
+## Skarbiec — pin skarbca na urządzeniu (W-1 z przeglądu V-3, 2026-10-26)
+
+- **Problem:** wpis `meta` skarbca (w tym `epoch`) jest w dokumencie Yjs i nie jest uwierzytelniony. Uczestnik grupy z kodem synchronizacji mógł zmienić epokę i uniemożliwić odczyt notatek v2.
+- **Co robi:** każde urządzenie zapamiętuje lokalnie odcisk skarbca (`kaczy.vault.pin.v1`: epoka, sól, opakowanie klucza, kod sprawdzający). Zapis następuje przy zakładaniu skarbca, przy zmianie hasła i przy każdym udanym odblokowaniu (`src/lib/vaultPin.ts`).
+- **Reguły przy odblokowaniu** (`adoptVerifiedMeta` w `privateNotes.ts`):
+  - **Ten sam klucz, inna epoka** (`epoch-only`): odrzucane, bez odblokowania. Zmiana hasła zawsze zmienia opakowanie, więc taki stan nie może wyniknąć z legalnej operacji.
+  - **Zmienione opakowanie** (`changed`): przyjmowane tylko po poprawnym haśle; użytkownik dostaje komunikat „Skarbiec został zmieniony na innym urządzeniu”. To normalny przypadek zmiany hasła na innym telefonie.
+  - **Brak pinu** (pierwsze użycie na tym urządzeniu): zaufanie do dokumentu, jak dotąd. To ograniczenie TOFU: nowe urządzenie nie ma punktu odniesienia.
+- **Ograniczenia:** pin jest lokalny i nie chroni nowego urządzenia przed podmianą w chwili pierwszego użycia. Podmiana całego opakowania (nie tylko epoki) przy zamkniętym skarbcu zostanie zauważona dopiero przez brak poprawnego hasła. Wyczyszczenie danych przeglądarki kasuje pin.
+- **Testy:** `src/lib/vaultPin.test.ts` (porównanie, uszkodzony pin), `src/lib/privateNotes.test.ts` (odrzucenie zmienionej epoki, odblokowanie poprawnym hasłem).
+- **Otwarte z przeglądu:** M-1, M-3, M-4, M-5, L-1, L-2, L-4, L-5 (patrz sekcja „Przegląd V-3 — raport”).

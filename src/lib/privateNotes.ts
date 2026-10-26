@@ -5,6 +5,8 @@ import { versionsStore as defaultVersions, type VersionsStore } from "@/lib/vers
 import { logDiag, logSecurity } from "@/lib/diagnostics";
 import { NOTE_COLORS } from "@/lib/safeProjection";
 import { METADATA_IN_CIPHERTEXT_SCHEMA, writeFormatAllowed } from "@/lib/formatSchema";
+import { comparePin, readVaultPin, writeVaultPin } from "@/lib/vaultPin";
+import { toast } from "sonner";
 import {
   KDF_ITERATIONS, VaultError, createVault, decryptNoteString, encryptNoteStringV2, encryptString, isValidMeta, noteAad,
   unlockWithPassword, unlockWithRecovery, type VaultMeta,
@@ -366,6 +368,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     if (meta()) throw new Error("Skarbiec już istnieje — odblokuj go");
     const created = await createVault(password, { iterations, withRecovery });
     store.setVaultMeta(created.meta);
+    writeVaultPin(created.meta);
     await adoptKey(created.dataKey, created.meta.epoch);
     return { recoveryCode: created.recoveryCode };
   }
@@ -382,7 +385,23 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
       throw err;
     }
     recordSuccess();
+    await adoptVerifiedMeta(k, m);
+  }
+
+  /**
+   * Przegląd V-3, W-1: metadane w dokumencie są niezaufane. Przed przyjęciem sprawdzamy lokalny pin:
+   * tylko-epoka → odrzucamy (nie da się tego wytłumaczyć zmianą hasła); zmienione opakowanie przy poprawnym
+   * haśle → przyjmujemy i informujemy (zwykła zmiana hasła na innym urządzeniu). Po przyjęciu pin się aktualizuje.
+   */
+  async function adoptVerifiedMeta(k: CryptoKey, m: VaultMeta): Promise<void> {
+    const verdict = comparePin(readVaultPin(), m);
+    if (verdict === "epoch-only") {
+      logSecurity("vault-meta-rejected", "epoch changed in the document without a key change — refused");
+      throw new VaultError("bad-format", "Skarbiec w dokumencie ma inny numer epoki niż ten, który zna to urządzenie. Nie odblokowano.");
+    }
+    if (verdict === "changed") toast.info("Skarbiec został zmieniony na innym urządzeniu — odblokowano Twoim hasłem");
     await adoptKey(k, m.epoch);
+    writeVaultPin(m);
   }
 
   async function unlockWithRecoveryCode(code: string): Promise<void> {
@@ -397,7 +416,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
       throw err;
     }
     recordSuccess();
-    await adoptKey(k, m.epoch);
+    await adoptVerifiedMeta(k, m);
   }
 
   /**
@@ -504,6 +523,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     for (const [id, p] of plain) next.set(id, { expected: p.expected, vault: await encryptNoteWrite(created.dataKey, p.json, id, created.meta.epoch) });
     // Zmiana w trakcie (np. edycja z innego urządzenia) — przerywamy bez zapisu.
     if (!store.rekeyVault(created.meta, next)) throw new Error("Notatki zmieniły się w trakcie zmiany hasła — spróbuj ponownie");
+    writeVaultPin(created.meta);
     key = created.dataKey;
     sessionEpoch = created.meta.epoch;
     sessionFingerprint = fingerprint(created.meta);

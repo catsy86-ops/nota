@@ -480,3 +480,25 @@ describe("przegląd V-3, punkt 3: migracja v1 → v2 przy odblokowaniu", () => {
     setDeviceSource(() => []);
   });
 });
+
+describe("przegląd V-3, W-1: pin skarbca", () => {
+  it("zmiana epoki w dokumencie bez zmiany klucza jest odrzucana przy odblokowaniu", async () => {
+    const { store, pn } = fresh();
+    store.upsertNote(makeNote({ title: "T", content: "C" }));
+    await pn.setup(PW);
+    await pn.lock();
+    const m = store.getVaultMeta() as Record<string, unknown>;
+    store.setVaultMeta({ ...m, epoch: 999 });
+    await expect(pn.unlock(PW)).rejects.toThrow();
+    expect(pn.isUnlocked()).toBe(false);
+  });
+
+  it("poprawne hasło do zmienionego opakowania odblokowuje i aktualizuje pin", async () => {
+    const { store, pn } = fresh();
+    store.upsertNote(makeNote({ title: "T", content: "C" }));
+    await pn.setup(PW);
+    await pn.lock();
+    await pn.unlock(PW);
+    expect(pn.isUnlocked()).toBe(true);
+  });
+});
