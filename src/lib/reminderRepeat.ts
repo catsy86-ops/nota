@@ -14,7 +14,7 @@ export const REMINDER_REPEAT_LABELS: Record<ReminderRepeat, string> = {
  * jego ostatni dzień. 31 stycznia → 28/29 lutego → 31 marca. Dawniej `setMonth`
  * przepełniał datę: 31 stycznia → 3 marca.
  */
-export function getNextReminderTime(current: number, repeat: ReminderRepeat, anchorDay?: number): number {
+export function getNextReminderTime(current: number, repeat: ReminderRepeat, anchorDay?: number, anchorMinutes?: number): number {
   const d = new Date(current);
   switch (repeat) {
     case "daily":
@@ -34,6 +34,8 @@ export function getNextReminderTime(current: number, repeat: ReminderRepeat, anc
     default:
       return current;
   }
+  // Godzina serii jest z zapisu, nie z poprzedniego wystąpienia: po przeskoku czasu (2:30 → 3:30) następne wraca na 2:30 (T 1.2).
+  if (anchorMinutes !== undefined) d.setHours(Math.floor(anchorMinutes / 60), anchorMinutes % 60, 0, 0);
   return d.getTime();
 }
 
@@ -42,8 +44,8 @@ export function getNextReminderTime(current: number, repeat: ReminderRepeat, anc
  * Jedyne miejsce, które decyduje, czy seria jeszcze trwa — powiadomienia,
  * kalendarz i „pomiń” liczą to samo.
  */
-export function nextInSeries(current: number, repeat: ReminderRepeat, anchorDay?: number, until?: number): number | null {
-  const next = getNextReminderTime(current, repeat, anchorDay);
+export function nextInSeries(current: number, repeat: ReminderRepeat, anchorDay?: number, until?: number, anchorMinutes?: number): number | null {
+  const next = getNextReminderTime(current, repeat, anchorDay, anchorMinutes);
   return until !== undefined && next > until ? null : next;
 }
 
@@ -52,13 +54,13 @@ export function nextInSeries(current: number, repeat: ReminderRepeat, anchorDay?
  * kolejny jest liczony od terminu serii, nie od chwili odłożenia — odłożenie nie przesuwa serii.
  */
 export function nextOccurrence(
-  note: { reminder: number | null; reminderRepeat?: ReminderRepeat; reminderDay?: number; reminderRepeatUntil?: number; reminderBase?: number },
+  note: { reminder: number | null; reminderRepeat?: ReminderRepeat; reminderDay?: number; reminderRepeatUntil?: number; reminderBase?: number; reminderTime?: number },
   at: number,
 ): number | null {
   const repeat = note.reminderRepeat ?? "none";
   if (repeat === "none") return null;
   const from = note.reminderBase !== undefined && at === note.reminder ? note.reminderBase : at;
-  return nextInSeries(from, repeat, seriesDay(note), note.reminderRepeatUntil);
+  return nextInSeries(from, repeat, seriesDay(note), note.reminderRepeatUntil, seriesMinutes(note));
 }
 
 /**
@@ -67,7 +69,7 @@ export function nextOccurrence(
  * (przypomnienie nie wypada dwa razy). Seria, która się skończyła, zostawia odłożenie jako ostatni termin.
  */
 export function snoozeTarget(
-  note: { reminder: number | null; reminderRepeat?: ReminderRepeat; reminderDay?: number; reminderRepeatUntil?: number; reminderBase?: number },
+  note: { reminder: number | null; reminderRepeat?: ReminderRepeat; reminderDay?: number; reminderRepeatUntil?: number; reminderBase?: number; reminderTime?: number },
   at: number,
   now: number,
 ): { reminder: number; reminderBase: number | undefined } {
@@ -75,10 +77,10 @@ export function snoozeTarget(
   if (repeat === "none") return { reminder: at, reminderBase: undefined };
   // Zaległe wystąpienia (aplikacja była zamknięta): odkładamy ostatnie, które już minęło, nie stary `reminder`.
   let base = note.reminderBase ?? note.reminder ?? at;
-  let seriesNext = nextInSeries(base, repeat, seriesDay(note), note.reminderRepeatUntil);
+  let seriesNext = nextInSeries(base, repeat, seriesDay(note), note.reminderRepeatUntil, seriesMinutes(note));
   for (let i = 0; seriesNext !== null && seriesNext <= now && i < MAX_SERIES_STEPS; i++) {
     base = seriesNext;
-    seriesNext = nextInSeries(base, repeat, seriesDay(note), note.reminderRepeatUntil);
+    seriesNext = nextInSeries(base, repeat, seriesDay(note), note.reminderRepeatUntil, seriesMinutes(note));
   }
   if (seriesNext === null || at < seriesNext) return { reminder: at, reminderBase: base };
   return { reminder: seriesNext, reminderBase: undefined };
@@ -89,14 +91,14 @@ export function snoozeTarget(
  * (zaległe pomijamy, jak przy odpaleniu). `null` = seria jednorazowa albo już się skończyła.
  */
 export function doneTarget(
-  note: { reminder: number | null; reminderRepeat?: ReminderRepeat; reminderDay?: number; reminderRepeatUntil?: number; reminderBase?: number },
+  note: { reminder: number | null; reminderRepeat?: ReminderRepeat; reminderDay?: number; reminderRepeatUntil?: number; reminderBase?: number; reminderTime?: number },
   now: number,
 ): number | null {
   const repeat = note.reminderRepeat ?? "none";
   if (note.reminder === null || repeat === "none") return null;
   let next = nextOccurrence(note, note.reminder);
   for (let i = 0; next !== null && next <= now && i < MAX_SERIES_STEPS; i++) {
-    next = nextInSeries(next, repeat, seriesDay(note), note.reminderRepeatUntil);
+    next = nextInSeries(next, repeat, seriesDay(note), note.reminderRepeatUntil, seriesMinutes(note));
   }
   return next;
 }
@@ -121,4 +123,34 @@ export function seriesDay(note: { reminder: number | null; reminderDay?: number;
 
 function daysInMonth(year: number, month: number): number {
   return new Date(year, month + 1, 0).getDate();
+}
+
+/**
+ * Godzina serii w minutach od północy (T 1.2). Zapisana w notatce (`reminderTime`), żeby seria wracała
+ * na tę samą godzinę po zmianie czasu. Notatki bez zapisu — godzina terminu bazowego, jak dotąd.
+ */
+export function seriesMinutes(note: { reminder: number | null; reminderBase?: number; reminderTime?: number }): number | undefined {
+  if (note.reminderTime !== undefined) return note.reminderTime;
+  const term = note.reminderBase ?? note.reminder;
+  if (term === null || term === undefined) return undefined;
+  const d = new Date(term);
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+/** Minuty od północy czasu lokalnego dla chwili `at`. */
+export function minutesOfDay(at: number): number {
+  const d = new Date(at);
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+/**
+ * Czy `at` to krok serii przesunięty przez zmianę czasu: w tym dniu zmienia się przesunięcie strefy
+ * i godzina różni się od kotwicy dokładnie o godzinę (2:30 → 3:30). Taki krok nie zmienia kotwicy.
+ */
+export function isDstShiftedOccurrence(anchorMinutes: number, at: number): boolean {
+  const d = new Date(at);
+  const startOffset = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTimezoneOffset();
+  const endOffset = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59).getTimezoneOffset();
+  if (startOffset === endOffset) return false;
+  return Math.abs(minutesOfDay(at) - anchorMinutes) === 60;
 }

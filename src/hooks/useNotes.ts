@@ -14,6 +14,7 @@ import type { NotePriority } from "@/lib/notePriority";
 import type { Attachment } from "@/lib/attachments";
 import type { NoteCover } from "@/lib/noteLook";
 import { cleanLabelPath } from "@/lib/labelTree";
+import { isDstShiftedOccurrence, minutesOfDay } from "@/lib/reminderRepeat";
 import { cleanPropDef, makePropDef, propNameTaken, type NoteProps, type PropDef, type PropType } from "@/lib/noteProps";
 
 export type NoteColor = "default" | "coral" | "peach" | "sand" | "mint" | "sage" | "sky" | "lavender" | "rose";
@@ -68,6 +69,8 @@ export interface Note {
   reminderAllDay?: boolean;
   /** Odłożone wystąpienie serii: termin serii, który `reminder` zastępuje (patrz `reminderSpec.ts`). */
   reminderBase?: number;
+  /** Godzina serii w minutach od północy (T 1.2): kotwica, żeby seria nie dryfowała po zmianie czasu. */
+  reminderTime?: number;
   /** S-1 (Skrzynka „Odłóż”): notatka nie jest w Skrzynce do tej chwili (ms). Brak lub minęła = w Skrzynce. */
   snoozedUntil?: number;
   priority: NotePriority;
@@ -249,6 +252,16 @@ export function useNotes() {
   }, []);
 
   const updateNote = useCallback((id: string, updates: Partial<Omit<Note, "id" | "createdAt">>) => {
+    // Godzina serii (T 1.2): ręczne ustawienie terminu zapisuje jego godzinę jako kotwicę. Krok serii
+    // (podaje `reminderDay`) zostawia kotwicę, a krok przesunięty przez zmianę czasu jej nie zmienia.
+    if (typeof updates.reminder === "number" && !("reminderTime" in updates)) {
+      const anchor = yjsStore.projectNotes().find((n) => n.id === id)?.reminderTime;
+      if (anchor !== undefined) {
+        updates = { ...updates, reminderTime: isDstShiftedOccurrence(anchor, updates.reminder) ? anchor : minutesOfDay(updates.reminder) };
+      } else if (!("reminderDay" in updates)) {
+        updates = { ...updates, reminderTime: minutesOfDay(updates.reminder) };
+      }
+    }
     // Ręczne ustawienie terminu wyznacza dzień serii. Przesunięcie serii
     // (odpalenie, „pomiń”) podaje `reminderDay` jawnie, żeby go nie nadpisać.
     if ("reminder" in updates && !("reminderDay" in updates)) {

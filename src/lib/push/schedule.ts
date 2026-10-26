@@ -70,6 +70,7 @@ export interface PushNote {
   reminderDay?: number;
   reminderRepeat?: ReminderRepeat;
   reminderRepeatUntil?: number;
+  reminderTime?: number;
   locked?: boolean;
 }
 

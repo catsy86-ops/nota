@@ -2533,7 +2533,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **1.4 `seriesDay` po odłożeniu.** Dzień serii to `reminderDay`, a bez niego dzień `reminderBase ?? reminder`. Odłożone wystąpienie nie przesuwa dnia serii. Test: `src/lib/reminderRepeat.test.ts`.
 - **1.5 Akcja z powiadomienia na prywatnej notatce.** „Odłóż 10 min” i „Gotowe” nie są już blokowane przez `note.locked` w `useReminderNotifications.ts` (`applyActionRef`). Zmieniają tylko pola terminu, a te są w jawnej projekcji, więc skarbiec nie musi być odblokowany. Dymek „Odblokuj skarbiec” nie jest potrzebny. Automatycznego testu brak (obsługa przycisku SW), sprawdzone e2e skarbca i przypomnień.
 - **1.6 „W archiwum” po terminie.** Sekcja archiwum w Terminach (`Index.tsx`, `archivedRows`) idzie przez `sortArchivedByReminder` (`reminderAgenda.ts`): z terminem rosnąco, bez terminu na końcu. Test: `reminderAgenda.test.ts`.
-- **Nie zrobione z Etapu 1:** 1.2 (DST w serii: następne wystąpienie z godziny bazowej, także w `push/schedule.ts`).
+- **1.2 DST w serii:** zrobione, patrz sekcja „godzina serii przez zmianę czasu” niżej.
 
 ## Dymek przypomnienia — menu „Odłóż” (T-4, 2026-10-26)
 
@@ -2541,3 +2541,13 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/hooks/useReminderNotifications.ts` (`onSnoozeHour`, `onSnoozeEvening`, `eveningTime(now)`); `src/lib/reminderAgenda.ts` (`eveningTime`). Odłożenie zawsze idzie przez `snoozeTarget`, więc odkłada jedno wystąpienie serii.
 - **Testy:** `src/lib/reminderAgenda.test.ts` (`eveningTime`), e2e `e2e/reminder-toast.spec.ts`.
 - **Nie zrobione z planu 2.1:** wspólna lista `SNOOZE_OPTIONS` dla kafla, Dziś i Kalendarza (tam dalej są osobne przyciski), menu „Wybierz…” z datą (2.2), i powiadomienie systemowe z dwoma przyciskami zostaje bez zmian.
+
+## Terminy — godzina serii przez zmianę czasu (1.2, 2026-10-26)
+
+- **Problem:** seria dzienna o 2:30 w dniu przeskoku (29.03) przechodziła na 3:30 i zostawała na 3:30 na zawsze, bo każdy krok liczył się z poprzedniego wystąpienia.
+- **Co robi:** notatka ma pole `reminderTime` (minuty od północy, 0–1439) — kotwicę godziny serii. Kroki serii (`getNextReminderTime`, `nextInSeries`, `nextOccurrence`, `snoozeTarget`, `doneTarget`) ustawiają godzinę z kotwicy, więc po przeskoku seria wraca na 2:30. Krok przesunięty przez zmianę czasu (3:30 tego dnia) nie zmienia kotwicy (`isDstShiftedOccurrence`).
+- **Kiedy kotwica się zmienia:** przy ręcznym ustawieniu terminu w `updateNote` (`useNotes.ts`) godzina nowego terminu staje się kotwicą. Krok serii (podaje `reminderDay`) jej nie zmienia, gdy nie jest przesunięty przez zmianę czasu. Notatki bez kotwicy dostają ją przy pierwszym ręcznym ustawieniu.
+- **Zapis:** `reminderTime` w Yjs (`yjsStore.ts`), schemat (`noteSchema.ts`), typ `Note`, scalanie (`mergeNotes.ts`), typ w `push/schedule.ts`. Starsze notatki bez pola liczą godzinę z terminu bazowego, jak dotąd.
+- **Ograniczenie:** notatka bez kotwicy, której seria przeszła przez zmianę czasu przed pierwszym ręcznym ustawieniem, ma już dryf 3:30 i zostaje na nim, dopóki nie ustawi się godziny ponownie. Zmiana terminu z kalendarza (z `reminderDay`) na notatce bez kotwicy też nie zapisuje kotwicy.
+- **Testy:** `src/lib/reminderRepeat.dst.test.ts` (strefa Europe/Warsaw, 28–30.03.2026, kotwica przy dziennej, tygodniowej i miesięcznej serii; `seriesMinutes`).
+- **Nie ma testu integracyjnego** `updateNote` (wymaga Yjs w teście); reguła kotwicy jest w jednym miejscu w `useNotes.ts`.

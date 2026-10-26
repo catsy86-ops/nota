@@ -8,7 +8,7 @@ export const MERGE_SEPARATOR = "\n\n---\n\n";
 /** Pola, które scalenie zapisuje w notatce docelowej. Tylko te, które faktycznie się zmieniają. */
 export type MergePatch = Partial<Pick<Note,
   "title" | "content" | "checklist" | "labels" | "images" | "attachments" | "priority" | "favorite" | "folderId"
-  | "reminder" | "reminderRepeat" | "reminderRepeatUntil" | "reminderDay" | "reminderAllDay" | "reminderBase"
+  | "reminder" | "reminderRepeat" | "reminderRepeatUntil" | "reminderDay" | "reminderAllDay" | "reminderBase" | "reminderTime"
 >>;
 
 export interface MergePlan {
@@ -98,6 +98,7 @@ export function planMerge(notes: readonly Note[], hasChildren: (id: string) => b
       patch.reminderDay = withReminder.reminderDay;
       patch.reminderAllDay = withReminder.reminderAllDay;
       patch.reminderBase = withReminder.reminderBase;
+      patch.reminderTime = withReminder.reminderTime;
     }
   }
 
