@@ -109,5 +109,5 @@ export async function exportToPDF(notes: Note[]) {
     y += 8;
   }
 
-  doc.save("kaczy-export.pdf");
+  doc.save("hydra-eksport.pdf");
 }

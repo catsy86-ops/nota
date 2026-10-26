@@ -140,6 +140,20 @@ describe("useFilteredNotes", () => {
     expect(result.current.displayNotes.map((n) => n.id)).toEqual(["sky"]);
   });
 
+  it("Skrzynka (S-3): domyślnie najstarsze najpierw; jawne sortowanie w Skrzynce działa normalnie", () => {
+    const notes = [
+      makeNote({ id: "nowa", updatedAt: 3, folderId: null, labels: [] }),
+      makeNote({ id: "stara", updatedAt: 1, folderId: null, labels: [] }),
+    ];
+    const args = { notes, archivedNotes: [], trashedNotes: [], folders, view: "inbox" as const, activeLabel: null, activeFolder: null, search: "" };
+    const { result } = renderHook(() => useFilteredNotes({ ...args, prefs: basePrefs }));
+    expect(result.current.displayNotes.map((n) => n.id)).toEqual(["stara", "nowa"]);
+    const notesView = renderHook(() => useFilteredNotes({ ...args, view: "notes", prefs: basePrefs }));
+    expect(notesView.result.current.displayNotes.map((n) => n.id)).toEqual(["nowa", "stara"]);
+    const explicit = renderHook(() => useFilteredNotes({ ...args, prefs: { ...basePrefs, sortDir: "asc", sortKey: "title" } }));
+    expect(explicit.result.current.displayNotes.map((n) => n.id)).toEqual(["nowa", "stara"]);
+  });
+
   it("sorts by title ascending when configured", () => {
     const notes = [makeNote({ id: "b", title: "Banan" }), makeNote({ id: "a", title: "Ananas" })];
     const { result } = renderHook(() => useFilteredNotes({

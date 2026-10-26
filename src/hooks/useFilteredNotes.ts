@@ -63,6 +63,16 @@ function filterNotes(list: Note[], source: Note[], { view, activeLabel, activeFo
   return filtered;
 }
 
+/**
+ * Skrzynka (S-3, plan Skrzynka 4.3): kolejka do opróżnienia, więc domyślnie „najstarsze najpierw”.
+ * Domyślne sortowanie to ten sam zapis co reszta aplikacji (`updated` / `desc`), więc gdy jest ustawione,
+ * w Skrzynce zamieniamy kierunek na rosnący. Jawny wybór innego sortowania działa normalnie.
+ */
+function inboxPrefs(view: View, prefs: ViewPrefs): ViewPrefs {
+  if (view === "inbox" && prefs.sortKey === "updated" && prefs.sortDir === "desc") return { ...prefs, sortDir: "asc" };
+  return prefs;
+}
+
 function sortNotes(list: Note[], prefs: ViewPrefs, opened: LastOpenedMap, propDefs: PropDef[]): Note[] {
   const dir = prefs.sortDir === "asc" ? 1 : -1;
   if (prefs.sortKey.startsWith("prop:")) {
@@ -131,7 +141,7 @@ export function useFilteredNotes({ notes, archivedNotes, trashedNotes, folders, 
     const agenda = view === "reminders";
     const displayNotes = agenda
       ? [...filteredByPrefs].sort(byReminderAsc)
-      : sortNotes(filteredByPrefs, prefs, opened, propDefs);
+      : sortNotes(filteredByPrefs, inboxPrefs(view, prefs), opened, propDefs);
     // Archiwum też bez „Przypiętych”: archiwizacja odpina, ale stara kopia/import może mieć oba pola —
     // bez tego taka notatka znikałaby z widoku (sekcji przypiętych archiwum nie pokazuje).
     const flat = view === "trash" || view === "archive" || agenda;

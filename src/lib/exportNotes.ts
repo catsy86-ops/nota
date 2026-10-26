@@ -57,7 +57,7 @@ export async function embeddableImages(images: string[]): Promise<string[]> {
 
 export async function exportToJSON(notes: Note[], filename?: string): Promise<{ filename: string; size: number }> {
   const data = JSON.stringify(await withEmbeddedImages(notes), null, 2);
-  const name = filename || `kaczy-backup-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
+  const name = filename || `hydra-kopia-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
   download(data, name, "application/json");
   return { filename: name, size: new Blob([data]).size };
 }
@@ -195,7 +195,7 @@ export async function exportFullBackup(
     return { filename: "", size: 0, savedToFile: false, downloaded: false, attachments, cancelled: true };
   }
   const data = JSON.stringify(backup, null, 2);
-  const name = filename || `kaczy-full-backup-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
+  const name = filename || `hydra-kopia-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
   const savedToFile = await tryWriteBackupToFile(data);
   // Pobranie bez gestu użytkownika przeglądarki blokują albo o nie pytają —
   // auto-backup przekazuje `allowDownload: false` i prosi o kliknięcie.
@@ -405,7 +405,7 @@ export async function exportToMarkdown(notes: Note[], propDefs: PropDef[] = []) 
   }
 
   if (privateCount) lines.push(`*Pominięto notatki prywatne: ${privateCount}. Są tylko w pełnym backupie, jako szyfrogram.*`, "");
-  download(lines.join("\n"), "kaczy-export.md", "text/markdown");
+  download(lines.join("\n"), "hydra-eksport.md", "text/markdown");
 }
 
 export async function exportToHTML(notes: Note[]) {
@@ -469,7 +469,7 @@ h1{font-size:1.8rem;margin-bottom:.2rem}
 
   if (privateCount) html += `<p class="labels">Pominięto notatki prywatne: ${privateCount}.</p>\n`;
   html += `</body></html>`;
-  download(html, "kaczy-export.html", "text/html");
+  download(html, "hydra-eksport.html", "text/html");
 }
 
 export function importFromJSON(): Promise<Note[]> {

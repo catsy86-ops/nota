@@ -3,6 +3,7 @@ import { ArrowDownLeft, ArrowUpRight, Check, HandCoins, Pencil, Trash2, Undo2 } 
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
@@ -15,7 +16,16 @@ import { balances, DEBT_KINDS, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIN
  * dół — osoby z saldem; stuknięcie w osobę otwiera jej historię.
  */
 /** `addReminderNote` — tworzy notatkę z przypomnieniem (`Index`); bez niego termin zwrotu nie zapisuje przypomnienia. */
-export function DebtsView({ addReminderNote }: { addReminderNote?: (title: string, content: string, at: number) => string }) {
+/**
+ * Przypomnienia notatek powiązanych z długiem (1.1, D-4). `clear` zdejmuje termin i zwraca poprzedni
+ * (albo `null`, gdy go nie było); `restore` oddaje termin, gdy użytkownik cofnie.
+ */
+export interface DebtReminderApi {
+  clear: (noteId: string) => number | null;
+  restore: (noteId: string, at: number) => void;
+}
+
+export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: (title: string, content: string, at: number) => string; reminders?: DebtReminderApi }) {
   const entries = useDebts();
   const people = useMemo(() => balances(entries), [entries]);
   const sums = useMemo(() => totals(people), [people]);
@@ -34,7 +44,7 @@ export function DebtsView({ addReminderNote }: { addReminderNote?: (title: strin
       <AddForm entries={entries} addReminderNote={addReminderNote} />
       <People people={people} onOpen={setOpenKey} />
 
-      <PersonSheet person={openPerson} onClose={() => setOpenKey(null)} />
+      <PersonSheet person={openPerson} onClose={() => setOpenKey(null)} reminders={reminders} />
     </section>
   );
 }
@@ -47,7 +57,7 @@ function Summary({ owedToMe, iOwe }: { owedToMe: number; iOwe: number }) {
         <p className="mt-1 font-display text-xl font-bold tabular-nums text-success-ink" data-testid="debts-owed">{formatAmount(owedToMe)}</p>
       </div>
       <div>
-        <p className="text-xs text-muted-foreground">My jesteśmy winni</p>
+        <p className="text-xs text-muted-foreground">Jesteś winien</p>
         <p className="mt-1 font-display text-xl font-bold tabular-nums text-warning-ink" data-testid="debts-owe">{formatAmount(iOwe)}</p>
       </div>
     </div>
@@ -223,7 +233,7 @@ function People({ people, onOpen }: { people: PersonDebts[]; onOpen: (key: strin
                 )}
               </div>
               <div className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
-                <span className="shrink-0">{settled ? "Oddane w całości" : p.balance > 0 ? "Do oddania" : "Ty jesteś winien"}</span>
+                <span className="shrink-0">{settled ? "Oddane w całości" : p.balance > 0 ? "Do oddania" : "Jesteś winien"}</span>
                 {lent > 0 && (
                   <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted" role="img" aria-label={`Oddano ${share}% z ${formatAmount(lent)}`}>
                     <div className="h-full rounded-full bg-success transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${share}%` }} />
@@ -238,18 +248,31 @@ function People({ people, onOpen }: { people: PersonDebts[]; onOpen: (key: strin
   );
 }
 
-function PersonSheet({ person, onClose }: { person: PersonDebts | null; onClose: () => void }) {
+function PersonSheet({ person, onClose, reminders }: { person: PersonDebts | null; onClose: () => void; reminders?: DebtReminderApi }) {
   return (
     <Sheet open={!!person} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
-        {person && <PersonHistory person={person} onDone={onClose} />}
+        {person && <PersonHistory person={person} onDone={onClose} reminders={reminders} />}
       </SheetContent>
     </Sheet>
   );
 }
 
-function PersonHistory({ person, onDone }: { person: PersonDebts; onDone: () => void }) {
+/** Zdejmuje przypomnienia z notatek podanych wpisów; zwraca pary id → poprzedni termin do cofnięcia. */
+function clearDueReminders(entries: DebtEntry[], reminders: DebtReminderApi | undefined): { noteId: string; at: number }[] {
+  if (!reminders) return [];
+  const cleared: { noteId: string; at: number }[] = [];
+  for (const e of entries) {
+    if (!e.dueNoteId) continue;
+    const at = reminders.clear(e.dueNoteId);
+    if (at !== null) cleared.push({ noteId: e.dueNoteId, at });
+  }
+  return cleared;
+}
+
+function PersonHistory({ person, onDone, reminders }: { person: PersonDebts; onDone: () => void; reminders?: DebtReminderApi }) {
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [askRemove, setAskRemove] = useState<DebtEntry | null>(null);
   const settle = () => {
     // Saldo dodatnie: oni oddają nam. Ujemne: oddajemy my.
     const created = addDebt({ person: person.name, kind: person.balance > 0 ? "repaid" : "returned", amount: Math.abs(person.balance) });
@@ -258,22 +281,36 @@ function PersonHistory({ person, onDone }: { person: PersonDebts; onDone: () => 
       toast.error("Nie udało się rozliczyć", { description: "Lista długów jest pełna albo dane są nieprawidłowe." });
       return;
     }
+    // 1.1: saldo zerowe → przypomnienia o zwrocie tej osoby już nie dzwonią (z „Cofnij”).
+    const cleared = clearDueReminders(person.entries, reminders);
     haptic("tap");
     toast.success(`Oddane w całości: ${person.name}`, {
-      action: { label: "Cofnij", onClick: () => { if (created) removeDebt(created.id); } },
+      action: { label: "Cofnij", onClick: () => {
+        removeDebt(created.id);
+        for (const c of cleared) reminders?.restore(c.noteId, c.at);
+      } },
     });
   };
-  const remove = (e: DebtEntry) => {
+  const remove = (e: DebtEntry, withReminder: boolean) => {
     const prev = removeDebt(e.id);
     if (!prev) return;
-    toast("Wpis usunięty", { action: { label: "Cofnij", onClick: () => restoreDebt(prev) } });
+    const cleared = withReminder ? clearDueReminders([e], reminders) : [];
+    toast("Wpis usunięty", { action: { label: "Cofnij", onClick: () => {
+      restoreDebt(prev);
+      for (const c of cleared) reminders?.restore(c.noteId, c.at);
+    } } });
+  };
+  // D-4: wpis z terminem pyta, czy zdjąć też przypomnienie (bo bywa zostawiane celowo).
+  const requestRemove = (e: DebtEntry) => {
+    if (e.dueNoteId && reminders) setAskRemove(e);
+    else remove(e, false);
   };
   return (
     <>
       <SheetHeader className="text-left">
         <SheetTitle className="font-display text-2xl">{person.name}</SheetTitle>
         <SheetDescription>
-          {person.balance === 0 ? "Rozliczone." : person.balance > 0 ? `Do oddania: ${formatAmount(person.balance)}` : `Ty jesteś winien: ${formatAmount(-person.balance)}`}
+          {person.balance === 0 ? "Rozliczone." : person.balance > 0 ? `Do oddania: ${formatAmount(person.balance)}` : `Jesteś winien: ${formatAmount(-person.balance)}`}
         </SheetDescription>
       </SheetHeader>
 
@@ -304,7 +341,7 @@ function PersonHistory({ person, onDone }: { person: PersonDebts; onDone: () => 
               <Button variant="ghost" size="icon" aria-label={`Edytuj wpis: ${KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => setEditingId(e.id)}>
                 <Pencil className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="icon" aria-label={`Usuń wpis: ${KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => remove(e)}>
+              <Button variant="ghost" size="icon" aria-label={`Usuń wpis: ${KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => requestRemove(e)}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             </li>
@@ -315,6 +352,19 @@ function PersonHistory({ person, onDone }: { person: PersonDebts; onDone: () => 
         <Undo2 className="h-3.5 w-3.5" aria-hidden />
         Usunięty wpis można cofnąć z komunikatu na dole ekranu.
       </p>
+      <AlertDialog open={!!askRemove} onOpenChange={(o) => !o && setAskRemove(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Usunąć też przypomnienie o zwrocie?</AlertDialogTitle>
+            <AlertDialogDescription>Wpis zniknie z długów. Notatka z terminem zostanie, jeśli wybierzesz „Zostaw przypomnienie”.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Anuluj</AlertDialogCancel>
+            <Button variant="outline" onClick={() => { if (askRemove) remove(askRemove, false); setAskRemove(null); }}>Zostaw przypomnienie</Button>
+            <AlertDialogAction onClick={() => { if (askRemove) remove(askRemove, true); setAskRemove(null); }}>Usuń też przypomnienie</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

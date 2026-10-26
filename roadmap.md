@@ -3,6 +3,28 @@
 > Ten plik to historia decyzji i audytów (od 2026-09-22), z wpisami w kolejności powstawania.
 > **Aktualny stan funkcji** jest w `opis.md`. Poniżej stan na 2026-10-21 — tylko to, co nadal otwarte.
 
+## Decyzje 2026-10-26 — wg rekomendacji z przeglądu planów
+
+Właściciel zatwierdził rekomendacje ze wszystkich planów działów (tabela decyzji w `docs/plan-*-2026-10-25.md`). Status: **zrobione** = w kodzie i testach; **do wdrożenia** = decyzja zapisana, punkt planu jeszcze nie zrobiony; **odłożone** = zgodnie z rekomendacją nie robimy teraz.
+
+- [x] **U-1** nazwy plików: `hydra-kopia-…json`, `hydra-przed-przywroceniem-…json`, `hydra-eksport.{md,html,pdf}` (`exportNotes.ts`, `exportPdf.ts`, `BackupSettings.tsx`). Przywracanie nadal czyta stare nazwy (nazwa bez znaczenia przy odczycie).
+- [x] **V-1** minimum hasła 12 znaków dla nowych haseł (`MIN_PASSWORD_LENGTH` w `vault.ts`); „Słabe” (score 1) nie przechodzi. Stare hasła odblokowują skarbiec bez zmian.
+- [x] **V-2** odblokowanie: `autoComplete="current-password"` i ukryty login „Skarbiec hydra” dla menedżera haseł (`VaultDialogs.tsx`).
+- [x] **D-1 Dziś** „cały dzień” zaległy dopiero od jutra (plan Dziś 1.1) — zrobione 2026-10-26 (`termStatus` z `allDay`).
+- [ ] **D-2 Dziś** ustawienia kart per urządzenie (4.1); **D-3** Praca+Powtórki w rzędzie — decyzja po zrzucie; **D-4** trening mózgu domyślnie włączony — zostaje, do wyłączenia w 4.1.
+- [ ] **K-1 Kalendarz** przeszłość: ostrzegać i pozwalać zapisać (1.5) — zrobione 2026-10-26 (także w `ReminderPicker`); **K-2** webcal odłożone; **K-3** agenda przed osią tygodnia (3.4 przed 3.3).
+- [ ] **N-2 Notatki** formuły i relacje odłożone (6.5 nie robimy); **N-3** jeden przycisk w pustych stanach (4.6) — zrobione 2026-10-26; **N-4** `.md` na dysku i kanwa osobno, nie w tym planie.
+- [ ] **PW-1 Powłoka** nazwa działu „Terminy” wszędzie (1.3); **PW-2** przełącznik jasności przełącza na Zeszyt z „Cofnij”; **PW-3** ukrywanie działów: wszystko poza Notatkami, Dziś, Archiwum i Koszem; **PW-4** grupy paska: „Codziennie”, „Praca”, „Osobiste”.
+- [ ] **C-1 Ćwiczenia** aktualizacja wszystkich urządzeń przed wdrożeniem nowych partii; **C-2** masa ciała w Ćwiczeniach (zakładka „Waga”); **C-3** bez bazy produktów; **C-4** wskazówki szkicowane w kodzie, akceptacja właściciela.
+- [x] **D-1 Długi** forma „Jesteś winien” (nagłówek i wiersze) — zrobione 2026-10-26. **D-2** długi za skarbcem odłożone; **D-3** inna waluta odłożona; **D-4** usunięcie wpisu z terminem pyta o przypomnienie — zrobione 2026-10-26 (wraz z 1.1: rozliczenie zdejmuje termin).
+- [ ] **P-1 Praca** podpis zdjęcia jako dane (2.4), stare bez zmian, eksport z podpisem na obrazie; **P-2** własne tematy Nauki — osobny projekt; **P-3** egzamin próbny ogólny; **P-4** odchudzanie zdjęć po zapisaniu ZIP-a, domyślnie wyłączone; **P-5** „Plan na dziś” jako lista karty budowy.
+- [ ] **S-1 Skrzynka** pole `snoozedUntil` przez dopisanie (3.3, do wdrożenia); **S-2** notatka z przypomnieniem zostaje w Skrzynce (do sprawdzenia, obecnie tak działa); **S-3** sortowanie „najstarsze najpierw” w Skrzynce — zrobione 2026-10-26.
+- [ ] **T-1 Terminy** zapasowe stare pole `reminderRepeat` dla nowych rodzajów powtarzania (3.1); **T-2** „przed/po zmianie” jako zwykły termin; **T-3** lista na telefonie, kafle na komputerze (przełącznik zapamiętany per urządzenie); **T-4** powiadomienie: „Gotowe” i „Odłóż 10 min”, „Jutro rano” w dymku.
+- [ ] **D-1 UI/UX** kolory OKLCH po jednym motywie na próbę (1.5); **D-2** React Compiler na gałęzi, wdrożyć tylko przy poprawie INP lub renderów; **D-3** CSS tylko dla animacji wejścia/wyjścia, gesty i `layout` w framer-motion; **D-4** odcienie działów z motywu.
+- [ ] **U-2 Ustawienia** skaner QR jako biblioteka ładowana na żądanie (2.3); **U-3** usunąć „Zgodność ze starszą wersją” po 30 dniach bez urządzeń w starym pokoju (2.6); **U-4** „Co nowego” 3–5 zdań, bez dymka przy samych poprawkach (4.2).
+
+Otwarte z wcześniej, bez zmiany: G-1 (dodatek nocny, kadry); Web Push i hosting; QA na telefonie (5.3).
+
 ## Plan rozbudowy — 2026-10-23 (`docs/plan-rozbudowa-2026-10-23.md`)
 
 Plan do poziomu Notion/Obsidian, zatwierdzony. Kolejność: 0 → 1 → 2 → 3 → 4 → 6 → 5 → 7 → 8 → 9; motywy (1b) po Fazie 1.

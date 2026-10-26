@@ -145,8 +145,10 @@ describe("vault — hasło, metadane, kod awaryjny", () => {
   it("miernik hasła: krótkie odrzuca, długie ocenia wyżej", () => {
     expect(passwordStrength("").ok).toBe(false);
     expect(passwordStrength("abc").ok).toBe(false);
-    expect(passwordStrength("kwiatek7").ok).toBe(true);
-    expect(passwordStrength("kwiatek7").score).toBe(1);
+    expect(passwordStrength("kwiatek7").ok).toBe(false);
+    expect(passwordStrength("kwiatekwiatek").score).toBe(1);
+    expect(passwordStrength("kwiatekwiatek").ok).toBe(false);
+    expect(passwordStrength("kwiatek7-lampa").ok).toBe(true);
     expect(passwordStrength("Zażółć-gęślą-jaźń-2026!").score).toBe(4);
   });
 });
@@ -158,7 +160,7 @@ describe("hasło i metadane z zewnątrz (A07/A04)", () => {
       expect(isTrivialPassword(pw), pw).toBe(true);
       expect(passwordStrength(pw).ok, pw).toBe(false);
     }
-    for (const pw of ["stol-krzeslo-lampa-2026", "kwiatek7", "Zażółć-gęślą-jaźń-2026!"]) {
+    for (const pw of ["stol-krzeslo-lampa-2026", "kwiatek7-lampa", "Zażółć-gęślą-jaźń-2026!"]) {
       expect(isTrivialPassword(pw), pw).toBe(false);
       expect(passwordStrength(pw).ok, pw).toBe(true);
     }

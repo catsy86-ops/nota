@@ -88,7 +88,7 @@ function BackupFileTarget() {
   if (!isFileSystemAccessSupported()) return null;
 
   async function handlePick() {
-    const ok = await pickBackupFile(`kaczy-full-backup-${new Date().toISOString().slice(0, 10)}.json`);
+    const ok = await pickBackupFile(`hydra-kopia-${new Date().toISOString().slice(0, 10)}.json`);
     if (ok) {
       setFileName(await getBackupFileName());
       toast.success("Kopie będą teraz nadpisywać ten plik zamiast pobierać nowe");
@@ -174,7 +174,7 @@ function RestoreBackup() {
       // Najpierw kopia tego, co jest teraz — przywrócenie nadpisuje dane, a ten plik jest drogą powrotu.
       try {
         const current = await buildFullBackup();
-        download(JSON.stringify(current), `kaczy-przed-przywroceniem-${new Date().toISOString().slice(0, 10)}.json`, "application/json");
+        download(JSON.stringify(current), `hydra-przed-przywroceniem-${new Date().toISOString().slice(0, 10)}.json`, "application/json");
       } catch (err) {
         setBusy(false);
         toast.error("Nie zapisałem kopii sprzed przywrócenia, więc przywracanie wstrzymane" + (err instanceof Error ? ": " + err.message : ""));

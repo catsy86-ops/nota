@@ -120,9 +120,9 @@ export function EmptyState({ view, search, elsewhere, onGo, onNew, onClearSearch
       title={HEADINGS[view]}
       description={DESCRIPTIONS[view]}
     >
-      {view !== "notes" && onNew && (
-        // Pusty widok (poza Notatkami, które mają własne podpowiedzi): termin i notatkę dodaje się od razu,
-        // więc przycisk otwiera nową notatkę (1d planu; QoL — także Archiwum, Kosz, etykiety i foldery).
+      {onNew && (
+        // Pusty widok: jeden główny przycisk (N-3, plan Notatek 4.6), też w Notatkach — wiersz zapisu bywa schowany na telefonie.
+        // Przycisk otwiera nową notatkę (1d planu).
         <div className="mt-6 flex justify-center">
           <button
             type="button"

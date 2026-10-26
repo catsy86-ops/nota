@@ -396,7 +396,7 @@ Dział opisany w jednym miejscu. Refaktor `Index.tsx` i `NoteCard.tsx` (etapy 4 
 - **Skróty PWA** (przytrzymanie ikony): Nowa notatka, Wpis z budowy, Wpis głosowy, Grafik, Szukaj, Nowa lista, Dziś, Przypomnienia. Kolejność celowa: Android pokazuje kilka pierwszych.
 - **Wyszukiwanie:** trafienia zaznaczone w tytule kafla; przy trafieniu tylko w treści kafel pokazuje fragment z zaznaczeniem. Dopasowanie bez ogonków i wielkości liter („zolw” zaznacza „żółw”). Słowa muszą wystąpić wszystkie (AND), kolejność bez znaczenia; prefiksy i literówki działają („zakup” znajduje „zakupy”). Trafność liczy się z wagami pól: tytuł 4, aliasy 3, etykiety 2, pozycje listy 1,5, treść 1. Pole „Szukaj notatek...” ma stałą etykietę; podpowiedzi operatorów (`etykieta:`, `ma:`, `starsze:`, `pole:`) pokazują się w zdaniu pustego wyniku. Operatory `alias:x` (notatka ma alias), `link:x` (notatka linkuje `[[x]]`) i `zadanie:otwarte` (= `lista:otwarte`) zawężają pulę. `ścieżka:Praca/Budowa` (`path:`, `sciezka:`) dopasowuje folder o dokładnie tej ścieżce od korzenia, bez podfolderów (w odróżnieniu od `folder:`, który je obejmuje); spacje wokół `/` są ignorowane, wartość ze spacją w cudzysłowie. Porównania pól: `pole:Cena>5`, `<`, `>=`, `<=` — liczby numerycznie (przecinek i kropka), daty ISO i tekst leksykalnie po `fold`; notatka bez wartości w polu nie pasuje. **Nagłówki i bloki w palecie poleceń** (`Ctrl+K`): przy wpisanym tekście grupa „Nagłówki i bloki” pokazuje nagłówki (`#`) i bloki z `^id`, które zawierają wszystkie słowa (AND, bez ogonków, bez wielkości liter), z nazwą notatki po prawej. Wybór otwiera notatkę i przewija do sekcji (`requestHeading` z tekstem nagłówka albo `^id`). Grupa respektuje operatory (`etykieta:`, `folder:` itd.), ale nie używa indeksu MiniSearch — to zwykłe dopasowanie linia po linii, limit 20 trafień. Logika w `src/lib/sectionHits.ts` (`sectionHits`), wpis w `src/components/CommandPalette.tsx`. Zablokowane notatki są pomijane. Testy: `src/lib/sectionHits.test.ts` (8).
 - **Widok:** trzy ikony po prawej w nagłówku (układ, sortowanie, filtry) na jasnej kartce. W stylu Zeszyt tytuł widoku jest w Fraunces, pasek nagłówka ma tylko cienką kreskę. Liczba notatek przy nagłówku grupy jest pieczątką (obwódka). Kafel ma promień `rounded-card` (16 px); uniesienie przy najechaniu tylko dla myszy.
-- **Puste stany:** każdy pusty widok (Notatki, Archiwum, Kosz, Przypomnienia, Kalendarz, Grafik, Dziś, Tydzień, etykieta, folder, Skrzynka) ma nagłówek i zdanie z następnym krokiem. Bez przycisków — następny krok to działanie na kaflu lub w kompozytorze.
+- **Puste stany:** każdy pusty widok (Notatki, Archiwum, Kosz, Przypomnienia, Kalendarz, Grafik, Dziś, Tydzień, etykieta, folder, Skrzynka) ma nagłówek i zdanie z następnym krokiem. Jeden główny przycisk „Nowa notatka” (N-3, 2026-10-26) — także w Notatkach, obok podpowiedzi klawiszy (`EmptyState.tsx`, `onNew`). Dawniej w Notatkach bez przycisku.
 - **Właściwości notatek** (pola własne): tekst, liczba, data, wybór z listy. Okno „Pola notatek” nad tabelą; wartości wpisuje się w komórki tabeli (kolumna na każde pole). Sortowanie po polu (nagłówek kolumny, menu „Sortuj wg”), filtr `pole:Nazwa=wartość`, wiersz „Nazwa: wartość” pod tytułem na telefonie, sekcja „Pola” w czytniku, eksport (Markdown wiersz `*Pole: …*`, ZIP klucz `props`), import z ZIP-a (dopasowanie po nazwie, typ z wartości).
 - **Podział widoku w Index:** `Index.tsx` (ok. 960 linii) zostawia stan okien (paleta, ustawienia, statystyki) i widoki.
 
@@ -845,6 +845,7 @@ Dział opisany w jednym miejscu. Skrzynka to widok „do posortowania”: notatk
 ### Jak działa i dlaczego
 
 - **Bez nowego pola w danych.** Skrzynka to reguła nad istniejącymi notatkami. Nie trzeba migracji; synchronizacja i kopia działają bez zmian, a sortowanie od razu opróżnia skrzynkę.
+- **Sortowanie „najstarsze najpierw” (S-3, 2026-10-26).** W Skrzynce domyślne sortowanie (`updated` / `desc` z `viewPrefs`) jest zamieniane na rosnące (`inboxPrefs` w `useFilteredNotes.ts`). Ograniczenie: jawny wybór „Zmieniono / desc” w Skrzynce też dostaje rosnące, bo nie ma osobnego zapisu dla widoku. Test: `useFilteredNotes.test.ts`.
 - **Zapis przez ten sam kanał co kompozytor.** Idzie przez `handleAddNoteGlow`, więc widok `inbox` nie dokłada folderu ani etykiety (`activeLabel` jest pusty poza widokiem etykiety).
 - **Prywatność przez regułę.** Zablokowana notatka odpada w `isInboxNote`, więc nie pojawia się ani na liście, ani w liczniku.
 
@@ -1166,7 +1167,7 @@ Dział opisany w jednym miejscu; zmiany z 2026-10-20 (kopia, edycja, cofnięcie 
 
 ### Co robi
 
-- **Widok.** Góra: „Są nam winni” i „My jesteśmy winni”. Pod spodem lista osób z saldem i paskiem spłaty. Stuknięcie w osobę otwiera arkusz z historią.
+- **Widok.** Góra: „Są nam winni” i „Jesteś winien” (D-1, 2026-10-26; dawniej „My jesteśmy winni”). Pod spodem lista osób z saldem i paskiem spłaty. Stuknięcie w osobę otwiera arkusz z historią.
 - **Cztery rodzaje wpisu** (siatka 2×2 w formularzu):
   - „Pożyczyłem” (`lent`) — ta osoba jest nam winna (+).
   - „Oddał mi” (`repaid`) — spłata od tej osoby (−).
@@ -1247,7 +1248,7 @@ Dział opisany w jednym miejscu. Przypomnienie to termin na notatce; z jego zapi
 
 ### Co robi
 
-- **Termin i powtarzanie** (`ReminderPicker`): godzina, dzień, powtarzanie (codziennie, tygodniowo, miesięcznie), koniec serii. Flaga „Cały dzień (o 9:00)” — zamiast godziny zapisuje się 9:00 wybranego dnia; na kaflu i w Terminach widać samą datę („dziś”, „jutro”, „25 paź”).
+- **Termin i powtarzanie** (`ReminderPicker`): godzina, dzień, powtarzanie (codziennie, tygodniowo, miesięcznie), koniec serii. Flaga „Cały dzień (o 9:00)” — zamiast godziny zapisuje się 9:00 wybranego dnia; na kaflu i w Terminach widać samą datę („dziś”, „jutro”, „25 paź”). Termin w przeszłości (K-1, 2026-10-26): ostrzeżenie „Ten termin jest w przeszłości — przypomnienie odezwie się przy najbliższym otwarciu aplikacji.” i zapis dozwolony, tak jak w dialogu Kalendarza (`ReminderQuickAddDialog`). Blokuje tylko brak godziny i nieprawidłowa seria. Test automatyczny tej reguły w pickerze: brak (sprawdzone tylko, że istniejące testy Kalendarza i Terminów przechodzą).
 - **Seria zaległa** (np. aplikacja była zamknięta przez kilka cykli) odpala się RAZ. Dymek lub powiadomienie pokazuje „pominięto N”, a termin przesuwa się na najbliższy przyszły. Zabezpieczenie: najwyżej 1000 wystąpień wstecz.
 - **Odłożenie** („Odłóż”, 10 minut, jutro o 9:00, +1 h) działa też dla serii i odkłada tylko jedno wystąpienie. Kolejne wystąpienia są od swojego terminu, nie od chwili odłożenia.
 - **„Gotowe”:** przy każdym terminie w widoku Terminy; na serii kończy bieżące wystąpienie i przechodzi do następnego. Koniec serii albo zwykły termin zdejmuje przypomnienie. Cofnij przywraca termin, dzień serii i odłożenie.
@@ -1281,7 +1282,7 @@ Dział opisany w jednym miejscu. Przypomnienie to termin na notatce; z jego zapi
 - **Jeden zapis całego terminu** (`reminderSpec`, LWW): termin, powtarzanie, dzień serii, koniec, odłożenie i flaga dnia są jedną wartością, więc konflikt dwóch urządzeń nie zostawia mieszanki. Stare pola (`reminder`, `reminderRepeat`, `reminderDay`, `reminderRepeatUntil`) są dalej zapisywane tą samą wartością dla starszych odczytów. Odczyt: najpierw `reminderSpec`, gdy go nie ma — stare pola. Nic nie trzeba migrować.
 - **Odłożenie** zapisuje `reminder` = odłożona chwila i `reminderBase` = termin serii, który zastępuje. Kolejne wystąpienia liczą się od bazy. Odłożona chwila zawsze wypada przed następnym terminem (`snoozeTarget` zastępuje ją zwykłym terminem, gdyby wypadała później). Zaległości: `snoozeTarget` przesuwa bazę na ostatnie minione wystąpienie.
 - **Odpalenie** nie zależy od flagi dnia: przypomnienie idzie o zapisanej godzinie (9:00 dla „cały dzień”), w aplikacji i w push.
-- **Cały dzień = 9:00, nie północ**, bo północ dzwoniłaby w nocy. Zaległość liczy się od 9:00.
+- **Cały dzień = 9:00, nie północ**, bo północ dzwoniłaby w nocy. Dzwonienie idzie o 9:00 jak dawniej. Zaległość dla terminu „cały dzień” (D-1, 2026-10-26) liczy się dopiero od następnego dnia: w dniu terminu jest na „Dziś” (`termStatus(at, now, allDay)` w `dueTerms.ts`, używane przez `groupReminders`, `countOverdue`, przegląd tygodnia). Testy: `dueTerms.test.ts`, `reminderAgenda.test.ts`.
 - **Liczba z Pracy** w liczniku zawiera też serwis przypadający dziś — tak jak lista Terminów.
 - **Zmiana terminu w kalendarzu** (przeciągnięcie, Shift+←/→, „Termin zapisany”) czyści odłożenie: to nowy termin serii. Wyjątek: przeciągnięcie odłożonego wystąpienia (`reminder` ≠ `reminderBase`) przesuwa tylko je, a baza serii zostaje, o ile nowy czas wypada przed następnym terminem serii (`ReminderCalendarView.tsx` `moveToDay`, `keepSeries`). Poza tym regułą seria przesuwa się cała.
 - **Licznik i odznaka** przełączają się na „Zaległe” w chwili, gdy termin minie, nawet gdy lista notatek się nie zmienia.
@@ -1517,7 +1518,7 @@ Dział opisany w jednym miejscu; obejmuje fazy 1–3 planu z 2026-10-19 i zgodę
 **QOL — top 5 (2026-10-21):**
 - **Cofnij przy nadpisaniu w Grafiku** (`ShiftsView.tsx`, `toastReplaced`): malowanie zmianą innego rodzaju (albo zmianą godzin) pokazuje toast „Cofnij” z poprzednim wpisem (`restoreDays`). Test: `e2e/shifts-undo.spec.ts`.
 - **Ctrl+Z w Grafiku** (`yShifts.ts`, `undoManager`; `store.ts`, `undoShifts`/`canUndoShifts`; `Index.tsx`, `onUndo`): `Y.UndoManager` na mapie dni, tylko zmiany z `SHIFTS_ORIGIN`. Sync z innego urządzenia, import, przywracanie i migracje idą z `SHIFTS_SYSTEM_ORIGIN` i nie trafiają na stos. Poza widokiem Grafiku Ctrl+Z działa jak dotąd. Testy: `src/lib/shifts/undo.test.ts`.
-- **Kopia sprzed przywrócenia** (`BackupSettings.tsx`, `RestoreBackup.restore`): przed każdym przywróceniem pobiera się `kaczy-przed-przywroceniem-RRRR-MM-DD.json`. Gdy zapis się nie uda, przywracanie się zatrzymuje. Przywrócenie tego pliku cofa przywracanie.
+- **Kopia sprzed przywrócenia** (`BackupSettings.tsx`, `RestoreBackup.restore`): przed każdym przywróceniem pobiera się `hydra-przed-przywroceniem-RRRR-MM-DD.json` (dawniej `kaczy-…`; przywracanie czyta obie nazwy). Gdy zapis się nie uda, przywracanie się zatrzymuje. Przywrócenie tego pliku cofa przywracanie.
 - **Ostatnio użyte w palecie** (`CommandPalette.tsx`, `NAV_ITEMS`; `src/lib/recentCommands.ts`): grupa Nawigacja jest tablicą danych; ostatnie 3 użyte widoki pokazują się przy pustym polu wyszukiwania. Testy: `src/lib/recentCommands.test.ts`.
 - **Budżet paczki startowej:** po Ctrl+Z w Grafiku 400,33 KB; próg podniesiony do 401 KB (decyzja użytkownika), `e2e/bundle.spec.ts` przechodzi.
 
@@ -1819,6 +1820,8 @@ Budżet paczki startowej: po tej zmianie 411 696 B (próg 410 624 B). Przekrocze
 - **Tryb skupienia** (`FocusMode.tsx`) i **przypomnienie** (`ReminderPicker.tsx`): nazwane przyciski zamknięcia i usunięcia.
 - **Licznik przerwy** (`TrainingSection.tsx`): czytnik ogłasza tylko koniec przerwy.
 - **Skarbiec** (`VaultDialogs.tsx`): miernik hasła ogłasza zmianę poziomu, nie każdy znak; natywne pola wyboru zamienione na `Checkbox` (większe na dotyku).
+- **Skarbiec — minimum hasła (V-1, V-2, 2026-10-26).** `MIN_PASSWORD_LENGTH` w `vault.ts` to 12 znaków, a `passwordStrength(...).ok` wymaga poziomu „Średnie” (score ≥ 2), więc „Słabe” nie przechodzi. Minimum dotyczy tylko zakładania i zmiany hasła; odblokowanie nie sprawdza długości, więc stare, krótsze hasła działają. Odblokowanie ma `autoComplete="current-password"` i ukryte pole loginu „Skarbiec hydra” (`autoComplete="username"`), żeby menedżer haseł wiedział, do czego hasło. Testy: `src/lib/vault.test.ts`, e2e `private-notes.spec.ts`.
+- **Nazwy plików kopii (U-1, 2026-10-26).** Pełna kopia i zwykły eksport JSON: `hydra-kopia-…json`; kopia sprzed przywrócenia: `hydra-przed-przywroceniem-…json`; eksport Markdown/HTML/PDF: `hydra-eksport.{md,html,pdf}`. Zmienia się tylko nazwa przy pobieraniu; format danych i odczyt starych nazw bez zmian. Test: `exportNotes.test.ts`.
 - **Synchronizacja** (`SyncSettings.tsx`): stan połączenia jako `role="status"`.
 
 Zrobione w tej sesji: fokus po odpowiedzi w quizie (patrz wyżej). Sprawdzone bez zmian: Długi już mają `role="radio"` w grupie (`DebtsView.tsx`); Ustawienia używają `aria-pressed` przy przyciskach wyboru i `Segmented` (ToggleGroup, strzałki) — zostawione.
@@ -1910,8 +1913,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 
 - **Co robi:** przy wpisie „Pożyczyłem” albo „Pożyczyłem od” można podać termin zwrotu (nieobowiązkowy, nie wcześniej niż dziś). Powstaje notatka „Zwrot od …” albo „Oddać …” z przypomnieniem o 9:00 tego dnia, więc trafia do Dziś, Terminów i powiadomień. Wpis pamięta id tej notatki (`dueNoteId`).
 - **Gdzie:** `src/lib/debts/model.ts` (`DebtEntry.dueNoteId`, zachowywane przez `cleanDebt`); `src/components/debts/DebtsView.tsx` (`AddForm`: pole terminu, walidacja, tworzenie notatki przez prop `addReminderNote`); `src/pages/Index.tsx` (przekazuje `addNote`). Prop zamiast kontekstu, żeby widok dało się testować bez dostawcy notatek.
-- **Ograniczenie:** termin ustawia się przy dodawaniu wpisu, nie przy edycji. Usunięcie wpisu nie kasuje notatki z przypomnieniem (notatka zostaje świadomie, żeby nie zgubić zobowiązania).
-- **Testy:** `e2e/debts-due.spec.ts` (notatka w Przypomnieniach; odrzucenie terminu w przeszłości); `src/components/debts` + `src/lib/debts` 26/26.
+- **Ograniczenie:** termin ustawia się przy dodawaniu wpisu, nie przy edycji.
+- **Termin a rozliczenie i usuwanie (1.1 i D-4, 2026-10-26).** „Oddał całość” / „Oddałem całość” zdejmuje przypomnienie z notatek tej osoby, które mają `dueNoteId` (`reminder: null`, notatka zostaje). „Cofnij” w dymku oddaje poprzednie terminy (`DebtReminderApi` w `DebtsView.tsx`, podpięte w `Index.tsx` jako `debtReminders`). Usunięcie wpisu z terminem pyta: „Usunąć też przypomnienie o zwrocie?” — „Usuń też przypomnienie” zdejmuje termin, „Zostaw przypomnienie” zostawia go. Przy zdejmowaniu terminu notatka nie znika, tylko przestaje dzwonić. Ograniczenie: zmiana wpisu (kwota, osoba) nie przenosi terminu.
+- **Testy:** `e2e/debts-due.spec.ts` (notatka w Przypomnieniach; odrzucenie terminu w przeszłości; rozliczenie zdejmuje termin; pytanie przy usuwaniu i „Zostaw”); `src/components/debts` + `src/lib/debts`.
 
 ## Ćwiczenia — własne ćwiczenia treningu (Fala 5, pkt 6, 2026-10-22)
 

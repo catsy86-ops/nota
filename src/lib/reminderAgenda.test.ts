@@ -12,6 +12,18 @@ const note = (id: string, reminder: number | null, updatedAt = 0): Note => ({
 const NOW = at(2026, 9, 28, 12);
 
 describe("groupReminders", () => {
+  it("cały dzień (D-1): termin z rana to „Dziś”, nie „Zaległe” o 12:00, i nie liczy się jako zaległy", () => {
+    const morning = at(2026, 9, 28, 9);
+    const allDay = { ...note("cały-dzień", morning), reminderAllDay: true };
+    const groups = groupReminders([allDay], NOW);
+    expect(groups.map((g) => [g.key, g.notes.map((n) => n.id)])).toEqual([["today", ["cały-dzień"]]]);
+    expect(countOverdue([allDay], NOW)).toBe(0);
+    // Ten sam termin bez flagi dalej jest zaległy.
+    expect(countOverdue([note("zwykły", morning)], NOW)).toBe(1);
+    // Cały dzień z wczoraj jest zaległy.
+    expect(countOverdue([{ ...note("wczoraj", at(2026, 9, 27, 9)), reminderAllDay: true }], NOW)).toBe(1);
+  });
+
   it("zaległe w ostatniej godzinie zostają w „Zaległe”, starsze idą do „Przegapione”", () => {
     const groups = groupReminders([note("przed-chwila", NOW - 30 * 60_000), note("godzinę-temu", NOW - 60 * 60_000 - 1)], NOW);
     expect(groups.map((g) => [g.key, g.notes.map((n) => n.id)])).toEqual([

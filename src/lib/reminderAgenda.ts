@@ -39,7 +39,7 @@ export function groupReminders(notes: Note[], now: number = Date.now()): AgendaG
   const sorted = notes.filter((n) => n.reminder !== null).sort(byReminderAsc);
   for (const n of sorted) {
     const t = n.reminder as number;
-    const status = termStatus(t, now);
+    const status = termStatus(t, now, n.reminderAllDay === true);
     byKey[status === "overdue" && now - t > MISSED_AFTER_MS ? "missed" : status].push(n);
   }
   return (Object.keys(byKey) as AgendaGroupKey[])
@@ -52,9 +52,9 @@ export function groupReminders(notes: Note[], now: number = Date.now()): AgendaG
  * Jedno źródło dla licznika w pasku bocznym, znaczka aplikacji i tytułu karty.
  * Przyjmuje notatki bez kosza. Archiwum jest liczone: jego przypomnienia nadal dzwonią.
  */
-export function countOverdue(notes: Pick<Note, "reminder">[], now: number = Date.now()): number {
+export function countOverdue(notes: Pick<Note, "reminder" | "reminderAllDay">[], now: number = Date.now()): number {
   let n = 0;
-  for (const note of notes) if (note.reminder !== null && termStatus(note.reminder, now) === "overdue") n++;
+  for (const note of notes) if (note.reminder !== null && termStatus(note.reminder, now, note.reminderAllDay === true) === "overdue") n++;
   return n;
 }
 

@@ -90,14 +90,14 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
   useEffect(() => {
     if (!saveAfterTyping) return;
     setSaveAfterTyping(false);
-    if (timestamp === null || pastTime || untilTooEarly) return;
+    if (timestamp === null || untilTooEarly) return;
     requestNotificationPermissionOnIntent();
     onSet(timestamp, repeat, until, allDay || undefined);
     setOpen(false);
-  }, [saveAfterTyping, timestamp, pastTime, untilTooEarly, repeat, until, allDay, onSet]);
+  }, [saveAfterTyping, timestamp, untilTooEarly, repeat, until, allDay, onSet]);
 
   function handleSave() {
-    if (timestamp === null || pastTime || untilTooEarly) return;
+    if (timestamp === null || untilTooEarly) return;
     requestNotificationPermissionOnIntent();
     onSet(timestamp, repeat, until, allDay || undefined);
     setOpen(false);
@@ -205,13 +205,13 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
           </p>
         )}
         {pastTime && (
-          <p className="text-2xs text-destructive-ink">{allDay ? "Ten dzień już minął. Wybierz dzień w przyszłości." : "Ta godzina już minęła. Wybierz godzinę w przyszłości."}</p>
+          <p className="text-2xs text-destructive-ink">Ten termin jest w przeszłości — przypomnienie odezwie się przy najbliższym otwarciu aplikacji.</p>
         )}
         <p className="text-2xs text-muted-foreground">
           Działa najpewniej, gdy aplikacja zostaje otwarta w tle — bez serwera powiadomień push, zamknięta karta może dostarczyć przypomnienie dopiero po ponownym otwarciu appki.
         </p>
         <div className="flex gap-2">
-          <Button size="sm" onClick={handleSave} disabled={timestamp === null || pastTime || untilTooEarly} className="flex-1">
+          <Button size="sm" onClick={handleSave} disabled={timestamp === null || untilTooEarly} className="flex-1">
             Zapisz
           </Button>
           {reminder && (

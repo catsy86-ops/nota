@@ -272,7 +272,8 @@ export async function unlockWithRecovery(meta: VaultMeta, recoveryCode: string):
 
 // ── miernik hasła ────────────────────────────────────────────────────────────
 
-export const MIN_PASSWORD_LENGTH = 8;
+/** Minimum dla nowych haseł (V-1). Stare, krótsze hasła dalej odblokowują skarbiec — minimum dotyczy tylko zapisu. */
+export const MIN_PASSWORD_LENGTH = 12;
 
 export interface PasswordStrength {
   /** 0–4. */
@@ -330,5 +331,6 @@ export function passwordStrength(pw: string): PasswordStrength {
   if (len >= 20 || (len >= 16 && classes >= 3 && unique >= 10)) score = 4;
   if (len < MIN_PASSWORD_LENGTH) return { score: 0, label: "Za krótkie", ok: false };
   const label = ["Za krótkie", "Słabe", "Średnie", "Dobre", "Mocne"][score];
-  return { score: score as PasswordStrength["score"], label, ok: true };
+  // „Słabe” nie przechodzi: przy minimum 12 znaków liczy się różnorodność (score ≥ 2).
+  return { score: score as PasswordStrength["score"], label, ok: score >= 2 };
 }

@@ -154,9 +154,11 @@ function UnlockForm({ onUnlocked, onRecover }: { onUnlocked: () => void; onRecov
   return (
     <form onSubmit={submit} className="space-y-3">
       <p className="text-sm text-muted-foreground">Wpisz hasło skarbca. Klucz zostaje tylko w pamięci tej karty i znika po zablokowaniu.</p>
+      {/* Ukryty login dla menedżera haseł (V-2): bez niego nie wie, do czego hasło. */}
+      <input type="text" name="username" autoComplete="username" value="Skarbiec hydra" readOnly tabIndex={-1} aria-hidden="true" className="sr-only" />
       <div className="space-y-1.5">
         <Label htmlFor="vault-password">Hasło skarbca</Label>
-        <Input id="vault-password" type="password" autoFocus autoComplete="off" value={password} onChange={(e) => setPassword(e.target.value)} disabled={busy || wait > 0} aria-invalid={!!error} aria-describedby={error ? "vault-error" : undefined} />
+        <Input id="vault-password" type="password" autoFocus autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} disabled={busy || wait > 0} aria-invalid={!!error} aria-describedby={error ? "vault-error" : undefined} />
         {error && <p id="vault-error" role="alert" className="text-xs text-destructive-ink">{error}</p>}
         {wait > 0 && !error && <p role="status" className="text-xs text-muted-foreground">Za dużo błędnych prób — odczekaj {wait} s.</p>}
         {wait > 0 && error && !error.startsWith("Za dużo") && <p role="status" className="text-xs text-muted-foreground">Kolejna próba za {wait} s.</p>}

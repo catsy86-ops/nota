@@ -89,6 +89,7 @@ import { VaultHost } from "@/components/vault/VaultHost";
 import { CardSkeleton, ViewSkeleton } from "@/components/ViewSkeleton";
 import { loadCalendarView, loadShiftsView, loadStudyView } from "@/lib/viewPreload";
 import { settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
+import type { DebtReminderApi } from "@/components/debts/DebtsView";
 const ShortcutsDialog = lazy(() => import("@/components/ShortcutsDialog").then((m) => ({ default: m.ShortcutsDialog })));
 const PropDefsDialog = lazy(() => import("@/components/PropDefsDialog").then((m) => ({ default: m.PropDefsDialog })));
 const TodayDueList = lazy(() => import("@/components/review/TodayDueList").then((m) => ({ default: m.TodayDueList })));
@@ -241,6 +242,16 @@ const Index = () => {
   const openNoteRef = useRef<(id: string) => void>(() => {});
   // Stabilna tablica: nowa w każdym renderze restartowałaby sprawdzanie przy każdym znaku w wyszukiwarce.
   const reminderNotes = useMemo(() => [...notes, ...archivedNotes], [notes, archivedNotes]);
+  // Długi (1.1): rozliczenie zdejmuje termin notatki zwrotu; „Cofnij” oddaje poprzedni.
+  const debtReminders = useMemo<DebtReminderApi>(() => ({
+    clear: (id) => {
+      const n = [...notes, ...archivedNotes, ...trashedNotes].find((x) => x.id === id);
+      if (!n || n.reminder === null) return null;
+      updateNote(id, { reminder: null });
+      return n.reminder;
+    },
+    restore: (id, at) => updateNote(id, { reminder: at }),
+  }), [notes, archivedNotes, trashedNotes, updateNote]);
   const pushEnabled = pushPrefs.use().enabled;
   useReminderNotifications(
     reminderNotes,
@@ -940,7 +951,7 @@ const Index = () => {
           {view === "debts" && (
             <ViewErrorBoundary name="Długi">
               <Suspense fallback={<div className="min-h-[60dvh]" aria-hidden />}>
-                <DebtsView addReminderNote={(title, content, at) => addNote(title, content, prefs.defaultNoteColor, [], at)} />
+                <DebtsView addReminderNote={(title, content, at) => addNote(title, content, prefs.defaultNoteColor, [], at)} reminders={debtReminders} />
               </Suspense>
             </ViewErrorBoundary>
           )}

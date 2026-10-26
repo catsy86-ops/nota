@@ -55,7 +55,7 @@ export function buildWeeklyReview(notes: Note[], now: number = Date.now()): Week
   const lists: Record<ReviewCategoryKey, Note[]> = { overdue: [], openLists: [], stale: [], unsorted: [] };
 
   for (const n of live) {
-    if (n.reminder !== null && termStatus(n.reminder, now) === "overdue") lists.overdue.push(n);
+    if (n.reminder !== null && termStatus(n.reminder, now, n.reminderAllDay === true) === "overdue") lists.overdue.push(n);
     if ((n.checklist ?? []).some((i) => !i.checked) && n.updatedAt <= now - OPEN_LIST_DAYS * DAY_MS) lists.openLists.push(n);
     // Notatka dnia to dziennik, nie zaległość do sprzątania.
     if (n.dailyDate) continue;
