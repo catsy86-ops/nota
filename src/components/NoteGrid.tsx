@@ -8,7 +8,7 @@ import { useViewPrefs, type Layout } from "@/lib/viewPrefs";
 import { PrivateNoteGate } from "@/components/vault/PrivateNoteGate";
 import { NoteViewActionsProvider, type NoteViewActions } from "@/hooks/NoteViewActionsContext";
 import type { useNotes } from "@/hooks/useNotes";
-import { registerGridNavSection, useIsGridNavFocused, setGridNavFocus } from "@/lib/gridKeyboardNav";
+import { registerGridNavSection, useIsGridNavFocused, setGridNavFocus, type GridNavHandlers } from "@/lib/gridKeyboardNav";
 import { useMasonrySpans } from "@/hooks/useMasonrySpans";
 
 /** Odstępy kafli dla każdej gęstości — jedna tabela zamiast czterech warunków. Domyślna na krok 4 px (12/16 px zamiast 10/12 px). */
@@ -156,32 +156,38 @@ export function NoteGrid({
   // Ta siatka tylko zgłasza swoje notatki i akcje; klawiszy nasłuchuje jeden
   // globalny właściciel w `gridKeyboardNav` — patrz komentarz w tym module.
   const noteIdsKey = noteIds.join(",");
+  // Handlery siatki są w ref i aktualne przy każdym renderze. Sekcja rejestruje się tylko przy zmianie kolejności
+  // albo listy kafli: wyrejestrowanie czyści podgląd otwartej notatki (patrz `registerGridNavSection`), więc zmiana
+  // `notes` albo callbacku nie może go wywoływać. Bez tego czytnik zamykał się po Ctrl+kliku na link w panelu „Obok”.
+  const navHandlers = useRef<GridNavHandlers | null>(null);
+  navHandlers.current = {
+    onDelete,
+    onArchive: isArchived ? undefined : onArchive,
+    onTogglePin,
+    onDuplicate,
+    onOpenReminder: (id) => {
+      // Ten sam przycisk dzwonka co na kaflu — okno przypomnienia otwiera się w tym samym miejscu.
+      const bell = gridRef.current?.querySelector(`[data-note-id-wrap="${id}"] [title="Przypomnienie"]`) as HTMLElement | null;
+      bell?.click();
+    },
+    onToggleFavorite: (id) => {
+      const note = notes.find((n) => n.id === id);
+      if (note) onUpdate?.(id, { favorite: !note.favorite });
+    },
+    openNote: (id) => {
+      const target = gridRef.current?.querySelector(`[data-note-id-wrap="${id}"] .cursor-pointer`) as HTMLElement | null;
+      target?.click();
+    },
+    scrollToNote: (id) => {
+      const el = gridRef.current?.querySelector(`[data-note-id-wrap="${id}"]`) as HTMLElement | null;
+      el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    },
+    colsCount,
+  };
   useEffect(() => {
-    return registerGridNavSection(navOrder, noteIdsKey ? noteIdsKey.split(",") : [], {
-      onDelete,
-      onArchive: isArchived ? undefined : onArchive,
-      onTogglePin,
-      onDuplicate,
-      onOpenReminder: (id) => {
-        // Ten sam przycisk dzwonka co na kaflu — okno przypomnienia otwiera się w tym samym miejscu.
-        const bell = gridRef.current?.querySelector(`[data-note-id-wrap="${id}"] [title="Przypomnienie"]`) as HTMLElement | null;
-        bell?.click();
-      },
-      onToggleFavorite: (id) => {
-        const note = notes.find((n) => n.id === id);
-        if (note) onUpdate?.(id, { favorite: !note.favorite });
-      },
-      openNote: (id) => {
-        const target = gridRef.current?.querySelector(`[data-note-id-wrap="${id}"] .cursor-pointer`) as HTMLElement | null;
-        target?.click();
-      },
-      scrollToNote: (id) => {
-        const el = gridRef.current?.querySelector(`[data-note-id-wrap="${id}"]`) as HTMLElement | null;
-        el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-      },
-      colsCount,
-    });
-  }, [navOrder, noteIdsKey, onDelete, onArchive, onTogglePin, onDuplicate, onUpdate, notes, isArchived, colsCount]);
+    const handlers = new Proxy({} as GridNavHandlers, { get: (_, key) => navHandlers.current?.[key as keyof GridNavHandlers] });
+    return registerGridNavSection(navOrder, noteIdsKey ? noteIdsKey.split(",") : [], handlers);
+  }, [navOrder, noteIdsKey]);
 
   // Domyślna gęstość na krok 4 px (12/16 px zamiast 10/12 px); zwarta i wygodna bez zmian.
   const { gap, listGap, columnGap, rowGap } = DENSITY_GAPS[prefs.density] ?? DENSITY_GAPS.normal;
