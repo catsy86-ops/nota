@@ -2675,3 +2675,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
   - **Migracja** starych szyfrogramów v1 na v2 przy odblokowaniu — po bramce.
   - **Przegląd bezpieczeństwa** (CLAUDE.md: `security-reviewer` przy zmianach kryptografii) nie został uruchomiony.
 - **Testy:** `src/lib/vault.v2.test.ts` (v1 przez nowy odczyt, v2 z epoką i id, brak zgodności z zwykłym odczytem, rozpoznawanie tokenów); `src/lib/vault.test.ts` (nieznana wersja to teraz `v9`).
+
+## Ustawienia — wersja i format na innych urządzeniach (2.1, 2026-10-26)
+
+- **Co robi:** każde urządzenie w grupie ogłasza w awareness `device: { name, version, schema }` (`version` = wersja aplikacji z `changelog.ts`, `schema` = numer formatu danych). Lista „Urządzenia w grupie” w Ustawieniach → Synchronizacja pokazuje wersję przy każdym urządzeniu. Gdy któreś ma niższy `schema` niż ten w aplikacji albo nie ogłasza go wcale (wersja sprzed tej zmiany), pojawia się baner: „… ma starszą wersję aplikacji — część danych może być na nim niewidoczna. Zaktualizuj go.”
+- **Bramka zapisu nowego formatu:** `canWriteSchema(required, devices)` w `src/lib/formatSchema.ts` — nowy format zapisuje się tylko, gdy wszystkie widziane urządzenia mają `schema ≥ required`. Na razie żaden zapis z niej nie korzysta; V-3 (przełączenie zapisu na v2) ma ją użyć.
+- **Gdzie:** `src/lib/formatSchema.ts` (`SCHEMA_VERSION = 1`, `canWriteSchema`, `olderDevices`, `localDeviceSchema`); `src/lib/yjsSync.ts` (awareness, `SyncDevice.version/schema`, `refreshDevices`); `src/components/SyncSettings.tsx` (baner i wersja).
+- **Nie zrobione z 2.1:** baner pokazany tylko w Ustawieniach → Synchronizacja, nie na całej aplikacji (plan mówił „baner w aplikacji”).
+- **Testy:** `src/lib/formatSchema.test.ts`.

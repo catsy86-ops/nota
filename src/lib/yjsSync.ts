@@ -1,3 +1,4 @@
+import { localDeviceSchema, type DeviceSchema } from "@/lib/formatSchema";
 import { clearLegacyIdle, legacyIdleExpired, markLegacyEnabled, markLegacySeen, readLegacyIdle } from "@/lib/legacyRoomIdle";
 import { useSyncExternalStore } from "react";
 import type { WebrtcProvider } from "y-webrtc";
@@ -78,7 +79,7 @@ function writePrefs(prefs: SyncPrefs) {
 export type SyncStatus = "disabled" | "connecting" | "connected";
 
 /** Inne urządzenie w grupie, widoczne przez awareness (nazwa z jego ustawień). */
-export interface SyncDevice {
+export interface SyncDevice extends DeviceSchema {
   id: number;
   name: string;
 }
@@ -290,7 +291,7 @@ export function setDeviceName(name: string): void {
     if (clean) localStorage.setItem(DEVICE_NAME_KEY, clean);
     else localStorage.removeItem(DEVICE_NAME_KEY);
   } catch (err) { logDiag("warn", "yjsSync", "cannot persist device name", err); }
-  providers.forEach((p) => p.awareness.setLocalStateField("device", { name: getDeviceName() }));
+  providers.forEach((p) => p.awareness.setLocalStateField("device", { name: getDeviceName(), ...localDeviceSchema() }));
 }
 
 // Id-ki awareness widziane przy poprzednim odczycie — nowe ponad to to „połączono”.
@@ -306,8 +307,11 @@ function refreshDevices() {
   if (!awareness) return;
   const devices: SyncDevice[] = [];
   awareness.getStates().forEach((s, id) => {
-    const name = (s as { device?: { name?: unknown } }).device?.name;
-    if (id !== awareness.clientID && typeof name === "string" && name) devices.push({ id, name });
+    const dev = (s as { device?: { name?: unknown; version?: unknown; schema?: unknown } }).device;
+    const name = dev?.name;
+    if (id !== awareness.clientID && typeof name === "string" && name) {
+      devices.push({ id, name, version: typeof dev?.version === "string" ? dev.version : undefined, schema: typeof dev?.schema === "number" ? dev.schema : undefined });
+    }
   });
   const ids = new Set(devices.map((d) => d.id));
   devices.filter((d) => !previousDeviceIds.has(d.id)).forEach((d) => toast.success(`Połączono z: ${d.name}`));
@@ -335,7 +339,7 @@ function connect(code: string) {
     const peers = rooms.map(() => 0);
     providers = rooms.map((room, i) => {
       const p = new WebrtcProvider(room, yjsStore.doc, providerOptions(code));
-      p.awareness.setLocalStateField("device", { name: getDeviceName() });
+      p.awareness.setLocalStateField("device", { name: getDeviceName(), ...localDeviceSchema() });
       p.awareness.on("change", refreshDevices);
       p.on("status", ({ connected: c }: { connected: boolean }) => {
         logDiag("info", "yjsSync", `${c ? "signaling connected" : "signaling disconnected"} (room ${i})`);
