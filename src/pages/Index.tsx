@@ -6,6 +6,7 @@ import { m as motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ReminderListGroups } from "@/components/reminders/ReminderListGroups";
 import { cn } from "@/lib/utils";
+import { useWhatsNew } from "@/hooks/useWhatsNew";
 import { effectiveRemindersLayout, setRemindersLayout, useRemindersLayoutChoice } from "@/lib/remindersLayout";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
 import { InboxCapture } from "@/components/InboxCapture";
@@ -145,6 +146,7 @@ const Index = () => {
   const { confirmAction, confirmDialog } = useConfirmAction();
   const { dark, toggle: toggleTheme } = useTheme();
   const isMobile = useIsMobile();
+  useWhatsNew();
   const remindersLayout = effectiveRemindersLayout(useRemindersLayoutChoice(), isMobile);
   const prefs = useViewPrefs();
   // Widok, folder, etykieta i zapytanie żyją w adresie (patrz `lib/viewRoute.ts`).

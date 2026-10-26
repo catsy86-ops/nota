@@ -2595,3 +2595,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Domyślnie (decyzja T-3):** lista na telefonie (`useIsMobile`), kafle na komputerze. Wybór zapisuje się na tym urządzeniu (`kaczy.remindersLayout.v1`, `null` = jeszcze nie wybrano). Wybór wygrywa z domyślnym.
 - **Gdzie:** `src/lib/remindersLayout.ts` (store, `effectiveRemindersLayout`); `src/components/reminders/ReminderListGroups.tsx`; `src/pages/Index.tsx` (przełącznik i warunkowy render kafli/listy).
 - **Testy:** `src/lib/remindersLayout.test.ts`; e2e `e2e/reminders-layout.spec.ts` (zapamiętanie po odświeżeniu); istniejące e2e Terminów na desktopie i iPhone 14 zielone.
+
+## Co nowego (U-4, 2026-10-26)
+
+- **Co robi:** po zmianie wersji aplikacji jednorazowy dymek „Co nowego w wersji …” z najwyżej 5 punktami. Pierwsze uruchomienie tylko zapamiętuje wersję, bez dymka.
+- **Źródło:** `src/content/changelog.ts` (ręcznie pisane zdania; `APP_VERSION` i wpisy). Ostatnio widziana wersja w `kaczy.lastSeenVersion.v1` (per urządzenie).
+- **Gdzie:** `src/hooks/useWhatsNew.ts` (wołany z `Index.tsx`), `src/lib/whatsNew.ts` (decyzja `whatsNewDecision`).
+- **Nie zrobione z U-4:** pełna lista zmian w „O aplikacji” (plan 4.2) — dymek pokazuje tylko najnowsze.
+- **Testy:** `src/lib/whatsNew.test.ts`; e2e `e2e/whats-new.spec.ts`.
