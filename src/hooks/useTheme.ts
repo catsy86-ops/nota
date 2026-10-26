@@ -1,4 +1,5 @@
 import { useCallback, useSyncExternalStore } from "react";
+import { toast } from "sonner";
 import { isMotionReduced } from "@/hooks/useMotionPref";
 import { isEffectEnabled } from "@/lib/effectsSettings";
 import { SKIN_SCHEME, SKIN_THEME_COLOR, setSkin, skinStore, useSkin, type Skin } from "@/lib/skins";
@@ -140,11 +141,23 @@ export function useTheme() {
   const setMode = useCallback((m: ThemeMode) => setThemeMode(m), []);
   /** Jasny ↔ ciemny. Styl z własnym schematem wraca do Zeszytu w przeciwnej jasności. */
   const toggle = useCallback(() => {
-    const currentDark = resolveDark(mode, skinStore.get(), systemPrefersDark());
+    const prevSkin = skinStore.get();
+    const prevMode = mode;
+    const currentDark = resolveDark(mode, prevSkin, systemPrefersDark());
     mode = currentDark ? "light" : "dark";
     try { localStorage.setItem(THEME_KEY, mode); } catch { /* ignore */ }
-    if (skinStore.get() !== "zeszyt") setSkin("zeszyt");
-    else applyCurrent();
+    if (prevSkin !== "zeszyt") {
+      // PW-2 (plan Powłoki 1.4): zmiana nie jest cicha — komunikat z „Cofnij” przywraca styl i jasność.
+      setSkin("zeszyt");
+      toast("Ten styl ma jeden tryb — przełączono na Zeszyt", {
+        action: { label: "Cofnij", onClick: () => {
+          mode = prevMode;
+          try { localStorage.setItem(THEME_KEY, prevMode); } catch { /* ignore */ }
+          setSkin(prevSkin);
+          emit();
+        } },
+      });
+    } else applyCurrent();
     emit();
   }, []);
 

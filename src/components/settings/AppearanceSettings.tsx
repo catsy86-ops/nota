@@ -18,6 +18,17 @@ import { FontPicker } from "./FontPicker";
 import { setAppFont, useAppFont } from "@/lib/appFont";
 import { SKIN_SCHEME } from "@/lib/skins";
 import { BASE_SORTS } from "@/lib/sortOptions";
+import { HIDEABLE_VIEWS, setViewHidden, useHiddenViews, type HideableView } from "@/lib/hiddenViews";
+
+const HIDEABLE_LABELS: Record<HideableView, string> = {
+  inbox: "Skrzynka",
+  reminders: "Terminy",
+  calendar: "Kalendarz",
+  shifts: "Grafik",
+  study: "Praca",
+  debts: "Długi",
+  cwiczenia: "Ćwiczenia",
+};
 import { SKIN_META } from "@/lib/skinGallery";
 import { setSiteMode, useSiteMode, type SiteMode } from "@/lib/siteMode";
 
@@ -46,6 +57,7 @@ export function AppearanceSettings() {
   const [resetOpen, setResetOpen] = useState(false);
   const { mode: themeMode, setMode: setThemeMode, skin, setSkin } = useTheme();
   const skinScheme = SKIN_SCHEME[skin];
+  const hiddenViews = useHiddenViews();
   const siteMode = useSiteMode();
   const appFont = useAppFont();
   const { mode: motionMode, reduced: motionReduced, setMode: setMotionMode } = useMotionPref();
@@ -75,6 +87,13 @@ export function AppearanceSettings() {
                 ? "Ciemny motyw ułatwia pracę wieczorem."
                 : "Klasyczny jasny motyw."}
         </p>
+      </Section>
+
+      <Section title="Działy na pasku">
+        <p className="text-xs text-muted-foreground -mt-1">Ukryty dział znika z paska, z „Więcej” i z palety. Dane zostają, a adres działa dalej. Notatki, Dziś, Archiwum i Kosz są zawsze widoczne.</p>
+        {HIDEABLE_VIEWS.map((v) => (
+          <ToggleRow key={v} label={HIDEABLE_LABELS[v]} desc={hiddenViews.includes(v) ? "Ukryty" : "Widoczny"} checked={!hiddenViews.includes(v)} onCheck={(on) => setViewHidden(v, !on)} />
+        ))}
       </Section>
 
       <Section title="Tryb budowa: większy tekst i przyciski">

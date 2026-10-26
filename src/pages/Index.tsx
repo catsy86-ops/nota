@@ -63,6 +63,7 @@ import { markNoteOpened } from "@/lib/lastOpened";
 import { EmptyState } from "@/components/EmptyState";
 import { DeleteForeverDialog, EmptyTrashDialog } from "@/components/TrashConfirmDialogs";
 import { sidebarItems } from "@/components/sidebar/sidebarItems";
+import { useHiddenViews, isViewShown } from "@/lib/hiddenViews";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
 import { downloadNotesZip } from "@/lib/exportZip";
@@ -634,7 +635,8 @@ const Index = () => {
     toastWithUndo("Zapisano w skrzynce", () => deleteNote(id), { icon: "📥", duration: 4000, id: "inbox-capture" });
   }, [handleAddNoteGlow, deleteNote]);
 
-  const navItems = sidebarItems({ inbox: inboxCount, overdue: overdueCount, trash: trashedNotes.length });
+  const hiddenViews = useHiddenViews();
+  const navItems = sidebarItems({ inbox: inboxCount, overdue: overdueCount, trash: trashedNotes.length }).filter((i) => isViewShown(hiddenViews, i.view));
 
   return (
     <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={() => setDraggingNoteId(null)}>

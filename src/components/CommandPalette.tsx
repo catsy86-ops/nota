@@ -23,6 +23,7 @@ import { useSiteDirectory, useStudy } from "@/lib/study/store";
 import { siteCardUrl } from "@/lib/study/siteLink";
 import { JOURNAL_REPORT_PARAM, reportParam } from "@/lib/study/reportLink";
 import { entrySiteId, foldName } from "@/lib/study/siteKey";
+import { isViewShown, useHiddenViews } from "@/lib/hiddenViews";
 
 const NOTE_LIMIT = 30;
 
@@ -116,9 +117,10 @@ export function CommandPalette({
   }, [shifts, search]);
 
   // Nawigacja jako dane: ta sama lista rysuje grupę i „Ostatnio użyte”.
+  const hiddenViews = useHiddenViews();
   const navKnown = NAV_ITEMS.map((n) => n.id);
   const [recentCmds, setRecentCmds] = useState<string[]>(() => loadRecentCommands(navKnown));
-  const recentNav = recentCmds.map((id) => NAV_ITEMS.find((n) => n.id === id)).filter((n): n is NavItem => n !== undefined);
+  const recentNav = recentCmds.map((id) => NAV_ITEMS.find((n) => n.id === id)).filter((n): n is NavItem => n !== undefined && isViewShown(hiddenViews, n.id));
   function goNav(id: NavItem["id"]) {
     setRecentCmds(saveRecentCommand(navKnown, id));
     onGo(id);
@@ -288,7 +290,7 @@ export function CommandPalette({
         </CommandGroup>
         <CommandSeparator />
         <CommandGroup heading="Nawigacja">
-          {NAV_ITEMS.map((n) => (
+          {NAV_ITEMS.filter((n) => isViewShown(hiddenViews, n.id)).map((n) => (
             <CommandItem key={n.id} value={`nawigacja ${n.label}`} onSelect={() => run(() => goNav(n.id))}>
               <n.Icon className="w-4 h-4 mr-2" /> {n.label}
               {n.hint && <span className="ml-auto text-xs text-muted-foreground">{n.hint}</span>}
