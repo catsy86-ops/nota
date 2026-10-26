@@ -16,6 +16,6 @@ test("malowanie nadpisuje inną zmianę i daje Cofnij, który przywraca poprzedn
   await page.getByRole("button", { name: new RegExp(`${day.source}Dzień`) }).first().click();
   await expect(page.getByRole("button", { name: new RegExp(`${day.source}Noc`) }).first()).toBeVisible();
 
-  await page.getByRole("button", { name: "Cofnij" }).click();
+  await page.getByRole("button", { name: "Cofnij", exact: true }).click();
   await expect(page.getByRole("button", { name: new RegExp(`${day.source}Dzień`) }).first()).toBeVisible();
 });

@@ -378,7 +378,7 @@ test("telefon: eksporty Grafiku są w menu „Udostępnij” @mobile", async ({ 
   await page.getByRole("button", { name: "Udostępnij", exact: true }).click();
   await expect(page.getByRole("menuitem", { name: /Do kalendarza \(\.ics\)/ })).toBeVisible();
   await expect(page.getByRole("menuitem", { name: /Karta czasu/ })).toBeVisible();
-  await expect(page.getByRole("menuitem", { name: /Obraz miesiąca/ })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: /Obraz miesiąca/ }).first()).toBeVisible();
 });
 
 test("cykl: „Przedłuż cykl” zaczyna od dnia po ostatnim nałożonym", async ({ page }) => {

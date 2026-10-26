@@ -66,7 +66,7 @@ test("przeciągnięcie przenosi zmianę, Cofnij ją przywraca", async ({ page })
   await expect(page.getByRole("button", { name: day(8, "Dzień") })).toBeVisible();
   await expect(page.getByRole("button", { name: day(5, "wolne$") })).toBeVisible();
 
-  await page.getByRole("button", { name: "Cofnij" }).click();
+  await page.getByRole("button", { name: "Cofnij", exact: true }).click();
   await expect(page.getByRole("button", { name: day(5, "Dzień") })).toBeVisible();
   await expect(page.getByRole("button", { name: day(8, "wolne$") })).toBeVisible();
 });
@@ -120,7 +120,7 @@ test("kopiowanie tygodnia na pusty tydzień da się cofnąć", async ({ page }) 
   await expect(page.getByRole("button", { name: day(13, "Dzień") })).toBeVisible();
   await expect(page.getByRole("button", { name: day(14, "Noc") })).toBeVisible();
 
-  await page.getByRole("button", { name: "Cofnij" }).click();
+  await page.getByRole("button", { name: "Cofnij", exact: true }).click();
   await expect(page.getByRole("button", { name: day(13, "wolne$") })).toBeVisible();
   await expect(page.getByRole("button", { name: day(12, "wolne$") })).toBeVisible();
 });

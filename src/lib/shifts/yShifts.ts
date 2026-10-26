@@ -104,11 +104,6 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
 
   const nextOrder = <T extends { order?: number }>(m: Y.Map<T>) => Math.max(-1, ...Array.from(m.values(), (v) => v.order ?? 0)) + 1;
 
-  /**
-   * Ustawia zmianę na dzień; `null` czyści dzień. Ta sama zmiana zachowuje
-   * notatkę i odchylenie; inna zachowuje tylko notatkę — odchylenie dotyczyło
-   * poprzedniej zmiany i po cichu zmieniałoby godziny albo normę.
-   */
   /** Godziny zmiany, którą urlop zastępuje w tym dniu (`plannedMin`); `undefined`, gdy to nie urlop nad pracą. */
   function plannedMinutesFor(typeId: string, prev: DayEntry | undefined): number | undefined {
     const types = get().types;
@@ -117,12 +112,22 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
     return base && base.kind !== "absence" ? shiftMinutes(base) : undefined;
   }
 
+  /**
+   * Ustawia zmianę na dzień; `null` czyści dzień, ta sama zmiana nic nie robi.
+   * Zmiana rodzaju zachowuje notatkę i szczegóły dnia (`extraMin`, `offSchedule`, `inLieu`):
+   * to, co użytkownik wpisał przy dniu, nie znika przy malowaniu innym pędzlem.
+   * Własne godziny (`hours`, `customHours`) i `timeOff` zdejmowane — należą do starego rodzaju.
+   */
   function setDayShift(dayKey: string, typeId: string | null): void {
     transact(() => {
       const prev = days.get(dayKey);
       if (!typeId) { if (prev) days.delete(dayKey); return; }
       if (prev?.type === typeId) return;
-      const next: DayEntry = prev?.note ? { type: typeId, note: prev.note } : { type: typeId };
+      const next: DayEntry = { type: typeId };
+      if (prev?.note) next.note = prev.note;
+      if (prev?.extraMin) next.extraMin = prev.extraMin;
+      if (prev?.offSchedule) next.offSchedule = true;
+      if (prev?.inLieu) next.inLieu = true;
       const planned = plannedMinutesFor(typeId, prev);
       if (planned) next.plannedMin = planned;
       days.set(dayKey, next);

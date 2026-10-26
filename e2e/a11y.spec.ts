@@ -26,15 +26,10 @@ const THEMES = ["light", "dark"] as const;
 
 /**
  * Znane naruszenia: klucz `widok/rozmiar/motyw` → identyfikatory reguł axe. Każde z uzasadnieniem.
- * Dziś jeden wpis: `kalendarz/1440/hydraulika` — `color-contrast` na znaczniku „dziś” (`.today-breath`:
- * kolor akcentu na lekko zabarwionym tle w stylu Hydraulika). Zostaje do korekty tokenów (plan UI/UX 1.5/1.7),
- * nie do zmiany kolorów w Fazie 0. Uwaga: na telefonie dział Praca startuje od Dziennika ze zwiniętym nagłówkiem (N2, P2),
- * więc skan nie widzi paska opanowania; na Quizie/Tablicy/Liście jego komórki są węższe niż 24 px —
- * wyjątek „równoważna kontrolka” z WCAG 2.5.8 (te same tematy są na tablicy), komórka ma 26 px wysokości.
+ * Dziś pusta: wpis `kalendarz/1440/hydraulika` (`color-contrast` na znaczniku „dziś”) zniknął po korekcie tokenów
+ * stylu Hydraulika i został usunięty — test wymaga, żeby naprawione naruszenie też zdjąć z listy.
  */
-const KNOWN: Record<string, string[]> = {
-  "kalendarz/1440/hydraulika": ["color-contrast"],
-};
+const KNOWN: Record<string, string[]> = {};
 
 async function scan(page: Page): Promise<string[]> {
   const result = await new AxeBuilder({ page }).withTags(TAGS).analyze();

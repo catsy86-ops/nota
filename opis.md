@@ -125,7 +125,7 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 
 ### Dostępność
 
-- **Test axe** (`e2e/a11y.spec.ts`): pięć widoków (Notatki, Przypomnienia, Kalendarz, Grafik, Nauka) w WCAG 2.2 AA, jasny i ciemny motyw oraz każdy z 6 stylów (Plan…Hydraulika, od 2026-10-25 na wszystkich pięciu widokach), 390 i 1440 px. Lista wyjątków `KNOWN` może tylko maleć; każdy wpis ma uzasadnienie. Jedyny wpis: `kalendarz/1440/hydraulika` — `color-contrast` na znaczniku „dziś” (`.today-breath`), do korekty tokenów (plan UI/UX, 1.5/1.7). Komentarz przy `KNOWN` wspomina też pasek opanowania Nauki na telefonie (`target-size`), który skan i tak nie widzi, bo dział startuje ze zwiniętym nagłówkiem.
+- **Test axe** (`e2e/a11y.spec.ts`): pięć widoków (Notatki, Przypomnienia, Kalendarz, Grafik, Nauka) w WCAG 2.2 AA, jasny i ciemny motyw oraz każdy z 6 stylów (Plan…Hydraulika, od 2026-10-25 na wszystkich pięciu widokach), 390 i 1440 px. Lista wyjątków `KNOWN` może tylko maleć; każdy wpis ma uzasadnienie. Lista jest pusta (wyjątek `kalendarz/1440/hydraulika` nie jest już zgłaszany przez axe i został zdjęty). Komentarz przy `KNOWN` wspomina pasek opanowania Nauki na telefonie (`target-size`), którego skan nie widzi, bo dział startuje ze zwiniętym nagłówkiem.
 - **Grupy „jedna z kilku”** (`ToggleGroup`, Radix, `type="single"`): Tab wchodzi do grupy na wybraną pozycję, strzałki przenoszą fokus (w kółko), Spacja/Enter wybiera, kliknięcie wybranej nie odznacza. Czytnik słyszy „grupa opcji, zaznaczony”. Pędzle Grafiku, galerie stylów i krojów oraz paski filtrów mają własną obsługę klawiatury.
 - **Kontrast krawędzi.** `--input` daje ≥3:1 na białej karcie, `muted`, `secondary` i jasnych notatkach.
 - **Dźwięk i ruch.** Ograniczony ruch zeruje animacje; wibracje działają mimo to.
@@ -158,6 +158,22 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 - Testy `@mobile` uruchamiają się w profilach iPhone 14 (WebKit) i Pixel 7 (Chrome na Androidzie): `npm run test:e2e:mobile`. Zwykłe `npm run test:e2e` uruchamia wszystkie projekty (`playwright.config.ts`, `grep: /@mobile/`).
 - `serviceWorkers: "block"` w obu projektach (WebKit w Playwright przenosi workera między kontekstami). Dwa testy dotykowe przez CDP są tylko w Chromium.
 - WebKit na Windows to nie prawdziwy iOS — nie odtwarza klawiatury ekranowej ani `visualViewport` iPhone'a. WebKit trzeba pobrać: `npx playwright install webkit`.
+
+### Grafik na telefonie: układ paska (5.5)
+
+- **Co robi:** na telefonie (poniżej `sm`, 640 px) przełącznik Miesiąc/Tydzień siedzi w tym samym wierszu co „Grafik: … ▾” (przycisk rozwija listę grafików pod nim). Rząd nawigacji zostaje tylko z ‹ tytuł ›, więc pełny tytuł „październik 2026” nie ucina się przy 390 px.
+- **Gdzie jest:** `src/components/shifts/ShiftsView.tsx` — wiersz `order-0` z przyciskiem `sm:hidden` i `viewToggle` (`sm:hidden`); `sm:contents` rozpakowuje wiersz od `sm`. Przełącznik od `sm` nadal w wierszu `order-2`.
+- **Dlaczego tak:** zmierzone na 390 px — tytuł potrzebuje 136 px, a miał 101 px. Przełącznik (145 px) z dwiema strzałkami 44 px nie mieszczą się w jednym rzędzie bez zmniejszania celów dotyku. Odstępstwo od planu 5.5 („przełącznik i nawigacja w jednym rzędzie”).
+- **Testy:** `e2e/shifts.spec.ts`, `e2e/shifts-week.spec.ts`, `e2e/shifts-undo.spec.ts`, `e2e/shifts-landscape.spec.ts`, `e2e/touch-targets.spec.ts`, `e2e/mobile-layout.spec.ts`. W testach „Cofnij” i „Obraz miesiąca” dopasowanie dokładne lub `.first()`, bo w DOM są dwa przyciski Cofnij i trzy pozycje obrazu.
+- **Commit:** niezacommitowane (drzewo na `wip/matryca-hydraulika`, HEAD be4e0bd).
+
+### Grafik: pędzel przy zmianie rodzaju (plan 1.4)
+
+- **Co robi:** malowanie dnia innym rodzajem zostawia notatkę, odchylenie (`extraMin`), „dzień wolny” (`offSchedule`) i „w zamian” (`inLieu`). Własne godziny (`hours`, `customHours`) i `timeOff` są zdejmowane, bo należą do starego rodzaju. Dymek „Zmieniono … na …” pokazuje „Zostało: …”.
+- **Gdzie jest:** `src/lib/shifts/yShifts.ts` — `setDayShift`; `src/components/shifts/ShiftsView.tsx` — `onDay` (ścieżka z godzinami przez `setDayEntry`) i `toastReplaced`.
+- **Dlaczego:** wcześniej odchylenie ginęło po cichu przy zmianie rodzaju. Teraz zostaje, bo zwykle dotyczy dnia, a nie rodzaju. Reguła zmieniona świadomie (decyzja użytkownika, 2026-10-26).
+- **Testy:** `src/lib/shifts/yShifts.test.ts` („pędzel przy zmianie rodzaju”), `src/lib/shifts/shifts.test.ts` („akcje grafiku”), e2e `shifts-undo.spec.ts`.
+- **Commit:** niezacommitowane.
 
 ### Testy (ogólnie)
 
@@ -193,7 +209,7 @@ Plan: `docs/plan-ui-ux-qol-2026-10-25.md`. Faza 0 nie zmienia wyglądu — zbier
 - `e2e/visual.spec.ts` — zrzuty; zrzuty bazowe w `e2e/visual.spec.ts-snapshots/` (11 MB, nazwy z końcówką `-win32`).
 - `playwright.visual.config.ts` — osobna konfiguracja: tylko `@visual`, projekt `chromium`. Skrypt `npm run test:visual` (`package.json`).
 - `playwright.config.ts` — `grepInvert: /@visual/`, więc zwykłe `test:e2e` zrzutów nie uruchamia.
-- `e2e/a11y.spec.ts` — `SKIN_VIEWS = VIEWS`; `KNOWN` ma jeden wpis `kalendarz/1440/hydraulika`.
+- `e2e/a11y.spec.ts` — `SKIN_VIEWS = VIEWS`; `KNOWN` jest pusty.
 - `src/test/designTokens.test.ts` — strażnik; progi w `LIMITS`.
 - `src/lib/perfProbe.ts` — `createPerfTally()` (czysta logika), `installPerfProbe()` (obserwatory). Ładowany w `src/main.tsx` przez `import.meta.env.DEV`.
 - `src/components/DailyQuote.tsx` — atrybut `data-visual-mask` (cytat dnia zmienia się codziennie).
@@ -213,7 +229,7 @@ Plan: `docs/plan-ui-ux-qol-2026-10-25.md`. Faza 0 nie zmienia wyglądu — zbier
 - **Zrzuty są zależne od systemu.** Bazowe są `-win32`. Na innym OS trzeba je wygenerować od nowa (`npm run test:visual -- --update-snapshots`).
 - **Zrzuty trzeba odnawiać po każdej zmianie maski lub odstępu.** Stare bazowe porównują się z nowym zachowaniem i padają.
 - **Zrzuty nie widzą animacji** (są wyłączone). Ruch sprawdzają osobne testy, np. `e2e/card-motion.spec.ts`; zrzut wyłapuje tylko różnice statyczne.
-- **Wyjątek axe `kalendarz/1440/hydraulika`** (kontrast znacznika „dziś”) zostaje do korekty tokenów. Nie zmieniono tu kolorów.
+- **Wyjątek axe `kalendarz/1440/hydraulika`** usunięty: axe nie zgłasza już kontrastu znacznika „dziś” (sprawdzone 2026-10-26, `e2e/a11y.spec.ts` przechodzi bez wyjątku).
 - **Sonda nie działa w produkcji** i nie trafia do paczki. Pomiar na telefonie trzeba robić w buildzie dev albo ręcznie przez `PerformanceObserver`.
 - **Test strażnik nie łapie klas tworzonych dynamicznie** (np. `rounded-${x}`). Dziś ich nie ma.
 

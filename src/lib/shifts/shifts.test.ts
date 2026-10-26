@@ -482,10 +482,10 @@ describe("zmiana czasu", () => {
 });
 
 describe("akcje grafiku", () => {
-  it("inny rodzaj zmiany zachowuje notatkę, ale nie odchylenie", () => {
+  it("inny rodzaj zmiany zachowuje notatkę i odchylenie (plan 1.4)", () => {
     restoreShifts(data({ types: [day, night], days: { "2026-10-01": { type: "d", note: "zastępstwo", extraMin: 120 } } }));
     setDayShift("2026-10-01", "n");
-    expect(shiftStore.get().days["2026-10-01"]).toEqual({ type: "n", note: "zastępstwo" });
+    expect(shiftStore.get().days["2026-10-01"]).toEqual({ type: "n", note: "zastępstwo", extraMin: 120 });
   });
 });
 

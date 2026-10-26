@@ -131,6 +131,24 @@ describe("Grafik w Yjs", () => {
   });
 });
 
+describe("pędzel przy zmianie rodzaju (plan 1.4)", () => {
+  it("zostawia notatkę i szczegóły dnia, zdejmuje własne godziny", () => {
+    const s = createYShifts(new Y.Doc());
+    s.setDayEntry("2026-10-03", { type: "d", note: "wymiana koła", extraMin: 90, offSchedule: true, inLieu: true, hours: { start: "07:00", end: "15:00", breakMin: 0, breakAt: "" }, customHours: true });
+    s.setDayShift("2026-10-03", "n");
+    expect(s.get().days["2026-10-03"]).toEqual({ type: "n", note: "wymiana koła", extraMin: 90, offSchedule: true, inLieu: true });
+  });
+
+  it("ta sama zmiana nic nie zmienia, a czyszczenie usuwa dzień", () => {
+    const s = createYShifts(new Y.Doc());
+    s.setDayEntry("2026-10-03", { type: "d", extraMin: 30 });
+    s.setDayShift("2026-10-03", "d");
+    expect(s.get().days["2026-10-03"]).toEqual({ type: "d", extraMin: 30 });
+    s.setDayShift("2026-10-03", null);
+    expect(s.get().days["2026-10-03"]).toBeUndefined();
+  });
+});
+
 describe("leaveDays w dokumencie Yjs", () => {
   it("jest zapisywany jako meta i scala się między urządzeniami", () => {
     const a = new Y.Doc();

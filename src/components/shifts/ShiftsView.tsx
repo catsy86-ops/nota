@@ -251,8 +251,10 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
     const [y, m, d] = key.split("-").map(Number);
     const was = typesById.get(previous.type)?.name ?? "zmiana";
     const now = typesById.get(nextId)?.name ?? "zmiana";
+    // Pędzel zostawia notatkę i odchylenie (plan 1.4) — dymek mówi, co zostało, a czego nie ma.
+    const kept = [previous.note && "notatka", previous.extraMin && "odchylenie", previous.inLieu && "w zamian", previous.offSchedule && "dzień wolny"].filter(Boolean);
     toastWithUndo(`Zmieniono ${format(new Date(y, m - 1, d), "d MMMM", { locale: pl })} na ${now}`, () => restoreDays({ [key]: previous }), {
-      description: `Było: ${was}`,
+      description: `Było: ${was}.${kept.length ? ` Zostało: ${kept.join(", ")}.` : ""}`,
     });
   }, [typesById]);
 
@@ -266,7 +268,16 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
       const same = entry?.type === brush.id && entry.customHours && entry.hours
         && entry.hours.start === h.start && entry.hours.end === h.end && entry.hours.breakMin === h.breakMin;
       if (same) { setDayShift(key, null); return; }
-      setDayEntry(key, { type: brush.id, ...(entry?.note ? { note: entry.note } : {}), hours: h, customHours: true });
+      // Te same szczegóły dnia co przy zwykłym pędzlu (plan 1.4); godziny zastępuje wpisany przed chwilą zakres.
+      setDayEntry(key, {
+        type: brush.id,
+        ...(entry?.note ? { note: entry.note } : {}),
+        ...(entry?.extraMin ? { extraMin: entry.extraMin } : {}),
+        ...(entry?.offSchedule ? { offSchedule: true as const } : {}),
+        ...(entry?.inLieu ? { inLieu: true as const } : {}),
+        hours: h,
+        customHours: true,
+      });
       setAnnounce(`${shortDate(key)}: ${typesById.get(brush.id)?.name ?? "zmiana"} ${h.start}–${h.end}`);
       // Nadpisanie istniejącego wpisu — dajemy Cofnij, bo malowanie nie ma gumki na jeden dzień.
       if (entry) toastReplaced(key, entry, brush.id);
@@ -439,13 +450,18 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
     // przy malowaniu dni i przewijaniu (plan UI 2.3).
     <div className="flex flex-col gap-5 xl:grid xl:grid-cols-[minmax(0,1fr)_22rem] xl:items-start xl:gap-8 short:grid short:grid-cols-[auto_minmax(0,1fr)_auto] short:items-center short:gap-x-3 short:gap-y-2">
       <div className="contents xl:flex xl:flex-col xl:gap-5 xl:min-w-0">
-        {/* Telefon: jeden wiersz „Grafik: …”, przełącznik rozwija się pod nim (5.5). Od sm — zawsze widoczny. */}
+        {/* Telefon: jeden wiersz „Grafik: …” i przełącznik Miesiąc/Tydzień, grafiki rozwijają się pod nim (5.5).
+            Od sm — zawsze widoczny. Na telefonie przełącznik siedzi tu, a nie w rzędzie nawigacji: tytuł miesiąca
+            („październik 2026”) nie mieści się obok strzałek i przełącznika na 390 px. */}
         <div className="order-0 w-full space-y-2">
-          <button type="button" aria-expanded={switcherOpen} aria-controls="shift-schedules" onClick={() => setSwitcherOpen((o) => !o)}
-            className="sm:hidden pressable flex w-full items-center justify-between gap-2 h-10 coarse:h-11 px-3 rounded-control border border-border/60 bg-card text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-            <span className="min-w-0 truncate">Grafik: {activeScheduleName}{effectiveOverlay ? ` · nakładka: ${overlayScheduleName}` : ""}</span>
-            <ChevronDown className={cn("w-4 h-4 shrink-0 transition-transform", switcherOpen && "rotate-180")} aria-hidden />
-          </button>
+          <div className="flex items-center gap-2 sm:contents">
+            <button type="button" aria-expanded={switcherOpen} aria-controls="shift-schedules" onClick={() => setSwitcherOpen((o) => !o)}
+              className="sm:hidden pressable flex min-w-0 flex-1 items-center justify-between gap-2 h-10 coarse:h-11 px-3 rounded-control border border-border/60 bg-card text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+              <span className="min-w-0 truncate">Grafik: {activeScheduleName}{effectiveOverlay ? ` · nakładka: ${overlayScheduleName}` : ""}</span>
+              <ChevronDown className={cn("w-4 h-4 shrink-0 transition-transform", switcherOpen && "rotate-180")} aria-hidden />
+            </button>
+            <div className="sm:hidden shrink-0">{viewToggle}</div>
+          </div>
           <div id="shift-schedules" className={cn(!switcherOpen && "hidden", "sm:block")}>
             <ScheduleSwitcher overlayId={effectiveOverlay} onOverlayChange={setOverlayId} />
           </div>
@@ -476,7 +492,6 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         </div>
 
         <div className="order-3 flex items-center justify-between gap-2 sm:justify-center sm:gap-4">
-          <div className="sm:hidden shrink-0">{viewToggle}</div>
           <button type="button" onClick={() => (isWeek ? setWeekStart((w) => addDaysToKey(w, -7)) : setMonth((m) => addMonths(m, -1)))}
             aria-label={isWeek ? "Poprzedni tydzień" : "Poprzedni miesiąc"} className={navButton}>
             <ChevronLeft className="w-5 h-5" />
