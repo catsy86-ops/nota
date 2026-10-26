@@ -335,7 +335,25 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     locking = false;
     failed.clear();
     await decryptAll();
+    await migrateToV2();
     emit();
+  }
+
+  /**
+   * Przegląd V-3, punkt 3: stare szyfrogramy v1, których nikt nie edytował, przechodzą na v2 przy odblokowaniu,
+   * ale tylko gdy bramka schematu na to pozwala. Błąd zostawia v1 (następne odblokowanie spróbuje ponownie).
+   */
+  async function migrateToV2(): Promise<void> {
+    if (!key || !writeFormatAllowed(NOTE_FORMAT_V2_SCHEMA)) return;
+    for (const [id, entry] of [...cache]) {
+      if (entry.dirty || !entry.vault.startsWith("v1.") || !store.isLocked(id)) continue;
+      try {
+        const token = await encryptNoteStringV2(key, JSON.stringify(entry.content), id, sessionEpoch);
+        if (store.setVault(id, token, false)) cache.set(id, { ...entry, vault: token });
+      } catch {
+        // zostaje v1
+      }
+    }
   }
 
   // ── cykl życia ──────────────────────────────────────────────────────────────

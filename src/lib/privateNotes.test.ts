@@ -449,3 +449,34 @@ describe("przegląd V-3: metadane z szyfrogramu", () => {
     expect(back.color).toBe("mint");
   });
 });
+
+describe("przegląd V-3, punkt 3: migracja v1 → v2 przy odblokowaniu", () => {
+  it("stary szyfrogram v1 przechodzi na v2 przy odblokowaniu, gdy bramka na to pozwala", async () => {
+    const { setDeviceSource } = await import("./formatSchema");
+    const { store, pn } = fresh();
+    store.upsertNote(makeNote({ title: "Stara", content: "treść v1" }));
+    await pn.setup(PW);
+    setDeviceSource(() => [{ schema: 1 }]);
+    await pn.lockNote("n1");
+    expect(store.projectNotes().find((n) => n.id === "n1")!.vault).toMatch(/^v1\./);
+    await pn.lock();
+    setDeviceSource(() => []);
+    await pn.unlock(PW);
+    expect(store.projectNotes().find((n) => n.id === "n1")!.vault).toMatch(/^v2\./);
+    expect(pn.peek("n1")).toMatchObject({ title: "Stara", content: "treść v1" });
+    setDeviceSource(() => []);
+  });
+
+  it("przy zamkniętej bramce v1 zostaje w v1", async () => {
+    const { setDeviceSource } = await import("./formatSchema");
+    const { store, pn } = fresh();
+    store.upsertNote(makeNote({ title: "Stara", content: "x" }));
+    await pn.setup(PW);
+    setDeviceSource(() => [{ schema: 1 }]);
+    await pn.lockNote("n1");
+    await pn.lock();
+    await pn.unlock(PW);
+    expect(store.projectNotes().find((n) => n.id === "n1")!.vault).toMatch(/^v1\./);
+    setDeviceSource(() => []);
+  });
+});

@@ -76,7 +76,7 @@ describe("yjsStore — właściwości notatek", () => {
 
   it("notatka prywatna nie dostaje właściwości (nie ma ich w szyfrogramie)", () => {
     const store = createYjsStore(`props-locked-${crypto.randomUUID()}`);
-    store.upsertNote(makeNote({ id: "n1", locked: true, vault: "v1.iv.ct", title: "", content: "", labels: [], images: [], checklist: [] }));
+    store.upsertNote(makeNote({ id: "n1", locked: true, vault: "v1.AAAAAAAAAAAAAAAA.BBBBBBBBBBBBBBBBBBBBBB", title: "", content: "", labels: [], images: [], checklist: [] }));
     store.patchNote("n1", { props: { k: "Tajne" } });
 
     const note = store.projectNotes()[0];
@@ -135,5 +135,15 @@ describe("yjsStore — właściwości notatek", () => {
     a.upsertPropDef(amount);
     Y.applyUpdate(b.doc, Y.encodeStateAsUpdate(a.doc));
     expect(b.projectPropDefs()).toEqual([amount]);
+  });
+});
+
+describe("przegląd V-3, punkt 5: zepsuty token nie czyni notatki prywatną", () => {
+  it("zablokowana notatka z tokenem o złym kształcie nie jest traktowana jako prywatna", () => {
+    const store = createYjsStore(`bad-token-${crypto.randomUUID()}`);
+    store.upsertNote(makeNote({ id: "n1", locked: true, vault: "v1.zepsuty", title: "Jawna", content: "tekst", labels: [], images: [], checklist: [] }));
+    const note = store.projectNotes()[0];
+    expect(note.locked).toBeFalsy();
+    expect(note.title).toBe("Jawna");
   });
 });

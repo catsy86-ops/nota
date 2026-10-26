@@ -1,5 +1,6 @@
 import * as Y from "yjs";
 import { toast } from "sonner";
+import { looksLikeVaultToken } from "@/lib/vault";
 import { METADATA_IN_CIPHERTEXT_SCHEMA, writeFormatAllowed } from "@/lib/formatSchema";
 import { applyTextEdit, captureTextBase, mapOffset, type TextBase } from "./yTextEdit";
 import { IndexeddbPersistence } from "y-indexeddb";
@@ -246,8 +247,9 @@ const NO_LABELS: string[] = [];
 
 /** Notatka z poprawnym szyfrogramem — tylko taka jest traktowana jako prywatna. */
 function isLockedPlain(note: Pick<Note, "locked" | "vault">): boolean {
-  // v1 i v2 (V-3): obie wersje to szyfrogram notatki prywatnej; zwykła notatka nie ma tokenu.
-  return note.locked === true && typeof note.vault === "string" && /^v[12]\./.test(note.vault);
+  // Przegląd V-3, punkt 5: pełny kształt tokenu (wersja v1/v2, iv, szyfrogram), nie sam prefiks — zepsuty
+  // token nie może ukryć zwykłej notatki jako zablokowanej.
+  return note.locked === true && typeof note.vault === "string" && looksLikeVaultToken(note.vault);
 }
 
 function yNoteFromPlain(note: Note): YNote {
