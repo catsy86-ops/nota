@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { privateNotes, VaultThrottledError } from "@/lib/privateNotes";
 import { MIN_PASSWORD_LENGTH, VaultError, passwordStrength } from "@/lib/vault";
+import { passkeyApiAvailable } from "@/lib/passkey";
 import { vaultUi, type VaultUiKind } from "@/lib/vaultUi";
 import { downloadBlob } from "@/lib/downloadBlob";
 
@@ -133,6 +134,23 @@ function UnlockForm({ onUnlocked, onRecover }: { onUnlocked: () => void; onRecov
   done.current = onUnlocked;
   useEffect(() => { if (privateNotes.isUnlocked()) done.current(); }, []);
 
+  /** Odblokowanie biometrią (V-4): ten sam przepływ co hasło, tylko z passkeyem. */
+  async function biometric() {
+    if (busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await privateNotes.unlockWithPasskey();
+      setPassword("");
+      onUnlocked();
+    } catch (err) {
+      setError(errorText(err));
+      refresh();
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (busy || !password) return;
@@ -167,6 +185,9 @@ function UnlockForm({ onUnlocked, onRecover }: { onUnlocked: () => void; onRecov
         {hasRecovery ? (
           <Button type="button" variant="ghost" size="sm" onClick={onRecover}>Mam kod awaryjny</Button>
         ) : <span />}
+        {privateNotes.hasPasskeys() && passkeyApiAvailable() && (
+          <Button type="button" variant="outline" disabled={busy || wait > 0} onClick={() => void biometric()}>Odblokuj biometrią</Button>
+        )}
         <Button type="submit" disabled={busy || !password || wait > 0}>
           <KeyRound className="w-4 h-4 mr-1.5" />{busy ? "Sprawdzam…" : "Odblokuj"}
         </Button>

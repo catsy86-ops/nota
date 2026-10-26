@@ -1,7 +1,12 @@
-import { KeyRound, Lock, ShieldCheck } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useVault } from "@/hooks/usePrivateNotes";
+import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 import { privateNotes } from "@/lib/privateNotes";
+import { passkeyApiAvailable, platformAuthenticatorAvailable, PasskeyError } from "@/lib/passkey";
+import { VaultError } from "@/lib/vault";
+import { KeyRound, Lock, ShieldCheck } from "lucide-react";
+import { useVault } from "@/hooks/usePrivateNotes";
 import { AUTOLOCK_CHOICES, HIDDEN_LOCK_CHOICES, lockEverywhere, setAutoLockMinutes, setHiddenLockMinutes, useAutoLockMinutes, useHiddenLockMinutes } from "@/lib/vaultAutoLock";
 import { vaultUi } from "@/lib/vaultUi";
 import { Section } from "./SettingsShared";
@@ -31,6 +36,7 @@ export function VaultSettings() {
           <span>{STATUS[vault.phase]}</span>
         </p>
 
+        {has && <PasskeyEnroll />}
         <div className="flex flex-wrap gap-2">
           {vault.phase === "none" && (
             <Button type="button" size="sm" variant="outline" onClick={() => vaultUi.open("setup")}>
@@ -103,5 +109,45 @@ export function VaultSettings() {
         </div>
       </details>
     </Section>
+  );
+}
+
+/** Dodanie odblokowania biometrią (V-4): hasło potwierdza, a passkey zapisuje się w skarbcu. Tylko przy wsparciu PRF. */
+function PasskeyEnroll() {
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [available, setAvailable] = useState(false);
+  useEffect(() => { void platformAuthenticatorAvailable().then(setAvailable); }, []);
+  if (!passkeyApiAvailable() || !available) return null;
+
+  async function add(e: React.FormEvent) {
+    e.preventDefault();
+    if (busy || !password) return;
+    setBusy(true);
+    try {
+      await privateNotes.addPasskey(password, "hydra");
+      setPassword("");
+      toast.success("Dodano odblokowanie biometrią");
+    } catch (err) {
+      const code = err instanceof PasskeyError ? err.code : err instanceof VaultError ? err.code : null;
+      toast.error(
+        code === "bad-password" ? "Nieprawidłowe hasło skarbca"
+          : code === "prf-unsupported" ? "Ta przeglądarka lub telefon nie obsługuje odblokowania biometrią (PRF)"
+          : code === "cancelled" ? "Anulowano"
+          : "Nie udało się dodać odblokowania biometrią",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={add} className="space-y-2" aria-label="Odblokowanie biometrią">
+      <p className="text-xs text-muted-foreground">Odblokuj skarbiec odciskiem palca albo twarzą zamiast hasła. Hasło dalej działa.</p>
+      <div className="flex gap-2">
+        <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Hasło skarbca" aria-label="Hasło skarbca do dodania odblokowania" autoComplete="current-password" className="coarse:h-11" />
+        <Button type="submit" size="sm" variant="outline" disabled={busy || !password} className="coarse:h-11">Dodaj biometrię</Button>
+      </div>
+    </form>
   );
 }

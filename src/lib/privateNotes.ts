@@ -6,6 +6,8 @@ import { logDiag, logSecurity } from "@/lib/diagnostics";
 import { NOTE_COLORS } from "@/lib/safeProjection";
 import { METADATA_IN_CIPHERTEXT_SCHEMA, writeFormatAllowed } from "@/lib/formatSchema";
 import { comparePin, readVaultPin, writeVaultPin } from "@/lib/vaultPin";
+import { assertPasskey, registerPasskey } from "@/lib/passkey";
+import { MAX_PASSKEYS, unlockWithPasskey as unlockKeyWithPasskey, unwrapRawWithPassword, wrapDataKeyForPasskey, fromB64u, toB64u } from "@/lib/vault";
 import { toast } from "sonner";
 import {
   KDF_ITERATIONS, VaultError, createVault, decryptNoteString, encryptNoteStringV2, encryptString, isValidMeta, noteAad,
@@ -404,6 +406,52 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     writeVaultPin(m);
   }
 
+  /** Czy skarbiec ma zapisany choć jeden passkey (V-4). */
+  function hasPasskeys(): boolean {
+    return (meta()?.passkeys?.entries.length ?? 0) > 0;
+  }
+
+  /**
+   * Dodaje odblokowanie biometrią (V-4). Wymaga hasła, bo surowy klucz danych jest dostępny tylko po jego sprawdzeniu.
+   * Nowe opakowanie dopisuje się obok istniejących; hasło i kod awaryjny działają dalej. Epoka się nie zmienia.
+   */
+  async function addPasskey(password: string, userName: string): Promise<void> {
+    const m = meta();
+    if (!m) throw new Error("Brak skarbca");
+    const entries = m.passkeys?.entries ?? [];
+    if (entries.length >= MAX_PASSKEYS) throw new Error("Osiągnięto limit odblokowań biometrią");
+    const raw = await unwrapRawWithPassword(m, password, minIterations);
+    try {
+      const salt = m.passkeys?.salt ?? toB64u(crypto.getRandomValues(new Uint8Array(32)));
+      const { id, prf } = await registerPasskey(userName, fromB64u(salt));
+      const wrapped = await wrapDataKeyForPasskey(raw, prf);
+      prf.fill(0);
+      const next: VaultMeta = { ...m, passkeys: { salt, entries: [...entries.filter((e) => e.id !== id), { id, wrapped }] } };
+      store.setVaultMeta(next);
+    } finally {
+      raw.fill(0);
+    }
+  }
+
+  /** Odblokowanie passkeyem (V-4): ten sam pin i migracja co przy haśle. */
+  async function unlockWithPasskey(): Promise<void> {
+    const m = meta();
+    if (!m || !m.passkeys?.entries.length) throw new Error("Brak odblokowania biometrią");
+    checkThrottle();
+    const { id, prf } = await assertPasskey(m.passkeys.entries.map((e) => e.id), fromB64u(m.passkeys.salt));
+    let k: CryptoKey;
+    try {
+      k = await unlockKeyWithPasskey(m, id, prf);
+    } catch (err) {
+      recordFailure("vault-unlock-failed");
+      throw err;
+    } finally {
+      prf.fill(0);
+    }
+    recordSuccess();
+    await adoptVerifiedMeta(k, m);
+  }
+
   async function unlockWithRecoveryCode(code: string): Promise<void> {
     const m = meta();
     if (!m) throw new Error("Brak skarbca");
@@ -585,7 +633,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     isUndecryptable: (id: string) => failed.has(id),
     hasRecovery: () => Boolean(meta()?.recovery),
     ensureDecrypted,
-    setup, unlock, unlockWithRecoveryCode, lock, flush,
+    setup, unlock, unlockWithRecoveryCode, unlockWithPasskey, addPasskey, hasPasskeys, lock, flush,
     lockNote, removeLock, duplicate, changePassword, resetPasswordWithRecovery,
     retryInMs,
   };

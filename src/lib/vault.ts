@@ -35,6 +35,7 @@ const RECOVERY_BYTES = 20; // 160 bitów = 32 znaki base32
 
 const AAD_DK = "notki:vault:dk";
 const AAD_DK_RECOVERY = "notki:vault:dk:recovery";
+const AAD_DK_PASSKEY = "notki:vault:dk:passkey";
 const AAD_CHECK = "notki:vault:check";
 const CHECK_PLAINTEXT = "notki-vault-ok";
 
@@ -189,6 +190,8 @@ export interface VaultMeta {
   check: string;
   /** DK zaszyfrowany kodem awaryjnym (brak, gdy użytkownik go nie chce). */
   recovery?: string;
+  /** Odblokowanie biometrią (V-4): wspólna sól PRF i opakowania klucza dla każdego passkeya. Brak = bez passkeya. */
+  passkeys?: PasskeyMeta;
   /** Licznik zmian klucza — inne urządzenie po zmianie hasła widzi, że jego sesja jest nieaktualna. */
   epoch: number;
 }
@@ -212,6 +215,7 @@ export function isValidMeta(m: unknown): m is VaultMeta {
     && x.iter > 0 && x.iter <= MAX_KDF_ITERATIONS
     && typeof x.wrapped === "string" && x.wrapped.length <= 256 && typeof x.check === "string" && x.check.length <= 256
     && (x.recovery === undefined || (typeof x.recovery === "string" && x.recovery.length <= 256))
+    && (x.passkeys === undefined || isValidPasskeyMeta(x.passkeys))
     && typeof x.epoch === "number" && Number.isFinite(x.epoch);
 }
 
@@ -349,4 +353,66 @@ export async function decryptNoteString(key: CryptoKey, token: string, noteId: s
   const version = typeof token === "string" ? token.split(".")[0] : "";
   const aad = version === VAULT_VERSION_V2 ? noteAadV2(noteId, epoch) : noteAad(noteId);
   return decryptString(key, token, aad);
+}
+
+// ── odblokowanie biometrią (V-4, WebAuthn PRF) ───────────────────────────────
+
+/** Passkey z rozszerzeniem PRF: wspólna sól ewaluacji i opakowania klucza danych dla każdego passkeya (id = credentialId, base64url). */
+export interface PasskeyMeta {
+  salt: string;
+  entries: { id: string; wrapped: string }[];
+}
+
+export const MAX_PASSKEYS = 5;
+
+export function isValidPasskeyMeta(x: unknown): x is PasskeyMeta {
+  if (!x || typeof x !== "object") return false;
+  const p = x as Record<string, unknown>;
+  if (typeof p.salt !== "string" || p.salt.length > 64 || !Array.isArray(p.entries) || p.entries.length > MAX_PASSKEYS) return false;
+  return p.entries.every((e) => {
+    const en = e as Record<string, unknown> | null;
+    return !!en && typeof en.id === "string" && en.id.length > 0 && en.id.length <= 256
+      && typeof en.wrapped === "string" && en.wrapped.length <= 256;
+  });
+}
+
+/** Klucz opakowania z wyniku PRF (32 B wysokiej entropii): HKDF, bez soli. */
+async function derivePasskeyKek(prf: Uint8Array): Promise<CryptoKey> {
+  const base = await crypto.subtle.importKey("raw", prf, "HKDF", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey(
+    { name: "HKDF", hash: "SHA-256", salt: new Uint8Array(32), info: enc.encode("notki-vault-passkey-v1") },
+    base,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"],
+  );
+}
+
+/**
+ * Surowy klucz danych dla potwierdzonego hasłem zapisu nowego passkeya. Wynik jest tylko do natychmiastowego
+ * opakowania i wyzerowania przez wołającego. Zły hasło → `bad-password`.
+ */
+export async function unwrapRawWithPassword(meta: VaultMeta, password: string, minIterations: number = KDF_ITERATIONS): Promise<Uint8Array> {
+  if (meta.iter < minIterations) throw new VaultError("weak-params", "Skarbiec ma zbyt słabe parametry KDF");
+  const kek = await deriveKek(password, fromB64u(meta.salt), meta.iter);
+  let raw: Uint8Array;
+  try { raw = await decryptBytes(kek, meta.wrapped, AAD_DK); } catch (e) {
+    if (e instanceof VaultError && e.code === "decrypt-failed") throw new VaultError("bad-password");
+    throw e;
+  }
+  if (raw.length !== DK_BYTES) { raw.fill(0); throw new VaultError("decrypt-failed"); }
+  return raw;
+}
+
+/** Opakowanie klucza danych kluczem z PRF passkeya. */
+export async function wrapDataKeyForPasskey(raw: Uint8Array, prf: Uint8Array): Promise<string> {
+  return encryptBytes(await derivePasskeyKek(prf), raw, AAD_DK_PASSKEY);
+}
+
+/** Odblokowanie passkeyem: znajduje opakowanie po id i odpakowuje je wynikiem PRF. Błąd → `decrypt-failed`. */
+export async function unlockWithPasskey(meta: VaultMeta, credentialId: string, prf: Uint8Array): Promise<CryptoKey> {
+  const entry = meta.passkeys?.entries.find((e) => e.id === credentialId);
+  if (!entry) throw new VaultError("decrypt-failed", "Ten klucz nie jest zapisany w skarbcu");
+  const raw = await decryptBytes(await derivePasskeyKek(prf), entry.wrapped, AAD_DK_PASSKEY);
+  return finishUnlock(meta, raw);
 }
