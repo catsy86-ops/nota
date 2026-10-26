@@ -2534,3 +2534,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **1.5 Akcja z powiadomienia na prywatnej notatce.** „Odłóż 10 min” i „Gotowe” nie są już blokowane przez `note.locked` w `useReminderNotifications.ts` (`applyActionRef`). Zmieniają tylko pola terminu, a te są w jawnej projekcji, więc skarbiec nie musi być odblokowany. Dymek „Odblokuj skarbiec” nie jest potrzebny. Automatycznego testu brak (obsługa przycisku SW), sprawdzone e2e skarbca i przypomnień.
 - **1.6 „W archiwum” po terminie.** Sekcja archiwum w Terminach (`Index.tsx`, `archivedRows`) idzie przez `sortArchivedByReminder` (`reminderAgenda.ts`): z terminem rosnąco, bez terminu na końcu. Test: `reminderAgenda.test.ts`.
 - **Nie zrobione z Etapu 1:** 1.2 (DST w serii: następne wystąpienie z godziny bazowej, także w `push/schedule.ts`).
+
+## Dymek przypomnienia — menu „Odłóż” (T-4, 2026-10-26)
+
+- **Co robi:** w dymku, który wypadł przypomnienie (`ReminderDueToast.tsx`), menu „Odłóż” ma: „Za 10 minut”, „Za godzinę”, „Wieczorem (18:00)” (tylko do 17:30, potem pozycji nie ma), „Jutro rano (9:00)”. Gotowe i Otwórz bez zmian.
+- **Gdzie:** `src/hooks/useReminderNotifications.ts` (`onSnoozeHour`, `onSnoozeEvening`, `eveningTime(now)`); `src/lib/reminderAgenda.ts` (`eveningTime`). Odłożenie zawsze idzie przez `snoozeTarget`, więc odkłada jedno wystąpienie serii.
+- **Testy:** `src/lib/reminderAgenda.test.ts` (`eveningTime`), e2e `e2e/reminder-toast.spec.ts`.
+- **Nie zrobione z planu 2.1:** wspólna lista `SNOOZE_OPTIONS` dla kafla, Dziś i Kalendarza (tam dalej są osobne przyciski), menu „Wybierz…” z datą (2.2), i powiadomienie systemowe z dwoma przyciskami zostaje bez zmian.

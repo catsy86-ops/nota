@@ -14,6 +14,10 @@ interface ReminderDueToastProps {
   onOpen: () => void;
   onSnooze10: () => void;
   onSnoozeTomorrow: () => void;
+  /** Odłożenie na godzinę (T-4). */
+  onSnoozeHour?: () => void;
+  /** „Wieczorem” 18:00; brak = po 17:30 pozycji nie ma (`eveningTime`). */
+  onSnoozeEvening?: () => void;
   onDone: () => void;
 }
 
@@ -22,7 +26,7 @@ interface ReminderDueToastProps {
  * odkładanie w menu. Wcześniej cztery przyciski w dwóch rzędach zajmowały
  * na telefonie piątą część ekranu.
  */
-export function ReminderDueToast({ toastId, title, when, description, onOpen, onSnooze10, onSnoozeTomorrow, onDone }: ReminderDueToastProps) {
+export function ReminderDueToast({ toastId, title, when, description, onOpen, onSnooze10, onSnoozeTomorrow, onSnoozeHour, onSnoozeEvening, onDone }: ReminderDueToastProps) {
   const run = (fn: () => void) => () => { fn(); toast.dismiss(toastId); };
   return (
     <div className="w-full rounded-lg border bg-background text-foreground shadow-lg p-3.5 flex flex-col gap-2.5">
@@ -41,7 +45,9 @@ export function ReminderDueToast({ toastId, title, when, description, onOpen, on
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuItem onSelect={run(onSnooze10)}>Za 10 minut</DropdownMenuItem>
-            <DropdownMenuItem onSelect={run(onSnoozeTomorrow)}>Jutro o 9:00</DropdownMenuItem>
+            {onSnoozeHour && <DropdownMenuItem onSelect={run(onSnoozeHour)}>Za godzinę</DropdownMenuItem>}
+            {onSnoozeEvening && <DropdownMenuItem onSelect={run(onSnoozeEvening)}>Wieczorem (18:00)</DropdownMenuItem>}
+            <DropdownMenuItem onSelect={run(onSnoozeTomorrow)}>Jutro rano (9:00)</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <Button size="sm" className="ml-auto" onClick={run(onOpen)}>Otwórz</Button>

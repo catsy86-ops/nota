@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { groupReminders, snoozeTimes, countOverdue, countDueToday, sortArchivedByReminder } from "./reminderAgenda";
+import { groupReminders, snoozeTimes, countOverdue, countDueToday, eveningTime, sortArchivedByReminder } from "./reminderAgenda";
 import { weekSeriesForecasts } from "@/lib/reminderForecast";
 import type { Note } from "@/hooks/useNotes";
 
@@ -123,5 +123,14 @@ describe("sortArchivedByReminder (T 1.6)", () => {
     const input = [a, b, c];
     expect(sortArchivedByReminder(input).map((n) => n.id)).toEqual(["wczesny", "późny", "bez"]);
     expect(input.map((n) => n.id)).toEqual(["bez", "późny", "wczesny"]);
+  });
+});
+
+describe("eveningTime (T-4 / 2.1)", () => {
+  it("„Wieczorem” to 18:00 do 17:30, potem znika", () => {
+    expect(eveningTime(at(2026, 10, 19, 12))).toBe(at(2026, 10, 19, 18));
+    expect(eveningTime(at(2026, 10, 19, 17, 29))).toBe(at(2026, 10, 19, 18));
+    expect(eveningTime(at(2026, 10, 19, 17, 30))).toBeNull();
+    expect(eveningTime(at(2026, 10, 19, 23))).toBeNull();
   });
 });

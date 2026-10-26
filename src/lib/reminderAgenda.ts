@@ -80,3 +80,16 @@ export function snoozeTimes(now: number = Date.now()): { in10min: number; inHour
 export function sortArchivedByReminder<T extends Pick<Note, "reminder">>(notes: T[]): T[] {
   return [...notes].sort((a, b) => (a.reminder === null ? 1 : 0) - (b.reminder === null ? 1 : 0) || byReminderAsc(a, b));
 }
+
+/**
+ * „Wieczorem” w menu odkładania (T-4 / plan Terminów 2.1): 18:00 tego dnia, a po 17:30 znika (`null`),
+ * bo odłożenie na godzinę wstecz nie ma sensu.
+ */
+export function eveningTime(now: number = Date.now()): number | null {
+  const t = new Date(now);
+  const cutoff = new Date(now);
+  cutoff.setHours(17, 30, 0, 0);
+  if (now >= cutoff.getTime()) return null;
+  t.setHours(18, 0, 0, 0);
+  return t.getTime();
+}

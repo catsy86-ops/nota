@@ -1,6 +1,6 @@
 import { createElement, useEffect, useRef } from "react";
 import { ReminderDueToast } from "@/components/ReminderDueToast";
-import { snoozeTimes } from "@/lib/reminderAgenda";
+import { eveningTime, snoozeTimes } from "@/lib/reminderAgenda";
 import { doneTarget, snoozeTarget } from "@/lib/reminderRepeat";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { notePath } from "@/lib/viewRoute";
@@ -146,6 +146,7 @@ export function useReminderNotifications(
           }
 
           const times = snoozeTimes(now);
+          const evening = eveningTime(now);
           const when = missed > 0 ? `${formatReminderShort(note.reminder)} · pominięto ${missed}` : formatReminderShort(note.reminder);
           if (!grouped) toast.custom((id) => createElement(ReminderDueToast, {
             toastId: id,
@@ -158,6 +159,8 @@ export function useReminderNotifications(
             // Seria: odkładamy tylko to wystąpienie (`snoozeTarget`), reszta serii zostaje.
             onSnooze10: () => { const t = snoozeTarget(note, times.in10min, now); firedCbRef.current(note.id, t.reminder, seriesDay(note), t.reminderBase); },
             onSnoozeTomorrow: () => { const t = snoozeTarget(note, times.tomorrow9, now); firedCbRef.current(note.id, t.reminder, seriesDay(note), t.reminderBase); },
+            onSnoozeHour: () => { const t = snoozeTarget(note, times.inHour, now); firedCbRef.current(note.id, t.reminder, seriesDay(note), t.reminderBase); },
+            onSnoozeEvening: evening === null ? undefined : () => { const t = snoozeTarget(note, evening, now); firedCbRef.current(note.id, t.reminder, seriesDay(note), t.reminderBase); },
             onDone: () => markDone(note, Date.now(), firedCbRef.current),
             onOpen: () => onOpenRef.current?.(note.id),
           }), {
