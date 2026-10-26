@@ -2720,3 +2720,10 @@ Przegląd wykonany ręcznie na diffie (nie przez agenta `security-reviewer`; CLA
 5. **Rozpoznawanie zablokowanej notatki po prefiksie.** `isLockedPlain` przyjmuje każdy string zaczynający się od `v1.`/`v2.`. Zepsuty token nie daje wycieku (treść jest w szyfrogramie), ale może ukryć notatkę jako zablokowaną. Ten sam kształt istniał w v1.
 
 **Rekomendacja:** punkt 1 przed V-4 (biometria jest tylko drugim opakowaniem klucza, nie zmienia tego). Punkt 2 i 3 do decyzji właściciela. Przegląd agentem `security-reviewer` nadal zalecany przed wydaniem.
+
+## Przegląd V-3 — zamknięte punkty 1 i 2 (2026-10-26)
+
+- **Punkt 1 (jawne metadane przy zablokowanym skarbcu) — zamknięty.** Zmiana koloru, folderu, rodzica lub ikony przy zablokowanym skarbcu jest **odrzucana**, a użytkownik dostaje komunikat „Odblokuj skarbiec, aby zmienić…”. Nic nie trafia jawnie do dokumentu. Wyjątek: gdy bramka schematu jest zamknięta (w grupie jest urządzenie sprzed zmiany), zostaje dotychczasowe zachowanie, bo tam metadane były jawne od zawsze (`yjsStore.ts`, `applyPatch`).
+- **Punkt 2 (zaufanie do deklaracji schematu) — złagodzony, ryzyko zostaje.** Deklaracje z awareness są sprawdzane: numer schematu musi być całkowity i w zakresie 0–1000, wersja krótkim napisem. Błędna deklaracja traktowana jest jak brak deklaracji (urządzenie liczone jak sprzed zmiany), więc bramka pozostaje zachowawcza: śmieciowy peer może zablokować nowy format, ale nie wymusi go. **Pozostaje:** peer z poprawną deklaracją `schema: 2` może wymusić zapis v2, którego starsze urządzenie nie odczyta. Usunięcie tego wymagałoby uwierzytelnionych deklaracji (podpis kluczem urządzenia), co jest osobnym zadaniem. Ryzyko dotyczy dostępności, nie poufności: bez klucza skarbca peer nie odczyta treści.
+- **Testy:** `src/lib/privateNotes.test.ts` (odrzucenie zmiany przy zablokowanym skarbcu), `src/lib/formatSchema.test.ts` (walidacja deklaracji).
+- **Nadal otwarte z przeglądu:** punkt 3 (migracja v1 → v2 tylko przy zapisie), punkt 5 (rozpoznawanie zablokowanej notatki po prefiksie).

@@ -1,4 +1,4 @@
-import { localDeviceSchema, setDeviceSource, type DeviceSchema } from "@/lib/formatSchema";
+import { cleanSchemaClaim, cleanVersionClaim, localDeviceSchema, setDeviceSource, type DeviceSchema } from "@/lib/formatSchema";
 import { clearLegacyIdle, legacyIdleExpired, markLegacyEnabled, markLegacySeen, readLegacyIdle } from "@/lib/legacyRoomIdle";
 import { useSyncExternalStore } from "react";
 import type { WebrtcProvider } from "y-webrtc";
@@ -311,7 +311,7 @@ function refreshDevices() {
     const dev = (s as { device?: { name?: unknown; version?: unknown; schema?: unknown } }).device;
     const name = dev?.name;
     if (id !== awareness.clientID && typeof name === "string" && name) {
-      devices.push({ id, name, version: typeof dev?.version === "string" ? dev.version : undefined, schema: typeof dev?.schema === "number" ? dev.schema : undefined });
+      devices.push({ id, name, version: cleanVersionClaim(dev?.version), schema: cleanSchemaClaim(dev?.schema) });
     }
   });
   const ids = new Set(devices.map((d) => d.id));

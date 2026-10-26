@@ -1,4 +1,5 @@
 import * as Y from "yjs";
+import { toast } from "sonner";
 import { METADATA_IN_CIPHERTEXT_SCHEMA, writeFormatAllowed } from "@/lib/formatSchema";
 import { applyTextEdit, captureTextBase, mapOffset, type TextBase } from "./yTextEdit";
 import { IndexeddbPersistence } from "y-indexeddb";
@@ -630,8 +631,12 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
       // Właściwości nie są w szyfrogramie — przy notatce prywatnej pomijamy je po cichu.
       delete rest.props;
       const accepted = Object.keys(priv).length === 0 || (lockedWriteSink?.(id, priv as PrivateFields) ?? false);
-      // Metadane bez odblokowanego skarbca nie mają gdzie się zaszyfrować: zostają jawne do najbliższej blokady.
-      if (!accepted) for (const f of PRIVATE_META) if (f in priv) rest[f] = priv[f];
+      // Przegląd V-3 (punkt 1): metadane przy zablokowanym skarbcu NIE zapisują się jawnie — odrzucamy je
+      // i mówimy o tym użytkownikowi. Przy zamkniętej bramce schematu zostaje dotychczasowe zachowanie (jawne).
+      if (!accepted && metaSecret && (PRIVATE_META as readonly string[]).some((f) => f in priv)) {
+        toast.info("Odblokuj skarbiec, aby zmienić kolor, folder lub rodzica notatki prywatnej", { id: "private-meta-locked" });
+      }
+      if (!accepted && !metaSecret) for (const f of PRIVATE_META) if (f in priv) rest[f] = priv[f];
       updates = rest as typeof updates;
     }
     if (updates.content !== undefined) {

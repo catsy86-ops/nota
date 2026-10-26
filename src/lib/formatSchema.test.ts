@@ -28,3 +28,17 @@ describe("bramka zapisu v2 (V-3)", () => {
     setDeviceSource(() => []);
   });
 });
+
+describe("przegląd V-3, punkt 2: deklaracje wersji z awareness", () => {
+  it("przyjmuje tylko całkowite, rozsądne numery i krótkie wersje", async () => {
+    const { cleanSchemaClaim, cleanVersionClaim, MAX_SCHEMA_CLAIM } = await import("./formatSchema");
+    expect(cleanSchemaClaim(2)).toBe(2);
+    expect(cleanSchemaClaim(2.5)).toBeUndefined();
+    expect(cleanSchemaClaim(-1)).toBeUndefined();
+    expect(cleanSchemaClaim(MAX_SCHEMA_CLAIM + 1)).toBeUndefined();
+    expect(cleanSchemaClaim("2")).toBeUndefined();
+    expect(cleanVersionClaim("2026.10.26")).toBe("2026.10.26");
+    expect(cleanVersionClaim("x".repeat(40))).toBeUndefined();
+    expect(cleanVersionClaim({})).toBeUndefined();
+  });
+});

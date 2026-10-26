@@ -42,3 +42,18 @@ export function writeFormatAllowed(required: number): boolean {
 
 /** Numer formatu, od którego metadane notatki prywatnej (kolor, folder, rodzic, ikona) są w szyfrogramie (V-3, krok 3). */
 export const METADATA_IN_CIPHERTEXT_SCHEMA = 2;
+
+/**
+ * Deklaracje z awareness są od innych urządzeń w grupie, więc nie ufamy im bezwarunkowo (przegląd V-3, punkt 2).
+ * Numer formatu musi być całkowitym, rozsądnym numerem; inaczej traktujemy go jak brak deklaracji (`undefined` →
+ * urządzenie liczone jak sprzed zmiany), co jest zachowawcze: taka bramka blokuje nowy format, nie wymusza go.
+ */
+export const MAX_SCHEMA_CLAIM = 1000;
+export function cleanSchemaClaim(raw: unknown): number | undefined {
+  return typeof raw === "number" && Number.isInteger(raw) && raw >= 0 && raw <= MAX_SCHEMA_CLAIM ? raw : undefined;
+}
+
+/** Wersja aplikacji z deklaracji: tylko krótki napis (inaczej brak). */
+export function cleanVersionClaim(raw: unknown): string | undefined {
+  return typeof raw === "string" && raw.length > 0 && raw.length <= 32 ? raw : undefined;
+}

@@ -423,20 +423,18 @@ describe("metadane notatki prywatnej w szyfrogramie (V-3, krok 3)", () => {
     expect(doc.color).toBe("default");
     expect(doc.folderId ?? null).toBeNull();
   });
-});
 
-describe("metadane przy zablokowanym skarbcu (V-3, krok 3)", () => {
-  it("zmiana koloru bez odblokowanego skarbca nie ginie: zostaje jawna do najbliższej blokady", async () => {
+  it("zmiana koloru przy zablokowanym skarbcu jest odrzucona: nie trafia jawnie do dokumentu", async () => {
     const { store, pn } = fresh();
     store.upsertNote(makeNote({ title: "T", content: "C", color: "default" }));
     await pn.setup(PW);
     await pn.lockNote("n1");
     await pn.lock();
     store.patchNote("n1", { color: "sky" } as never);
-    expect(store.projectNotes().find((n) => n.id === "n1")!.color).toBe("sky");
+    expect(store.projectNotes().find((n) => n.id === "n1")!.color).toBe("default");
     await pn.unlock(PW);
     await pn.removeLock("n1");
-    expect(store.projectNotes().find((n) => n.id === "n1")!.color).toBe("sky");
+    expect(store.projectNotes().find((n) => n.id === "n1")!.color).toBe("default");
   });
 });
 
