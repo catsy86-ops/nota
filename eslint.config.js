@@ -54,6 +54,9 @@ export default tseslint.config(
       // Wiele grafików: rejestr i test izolacji (ten sam dokument Yjs co grafik).
       "src/lib/shifts/schedules.ts",
       "src/lib/shifts/schedules.test.ts",
+      // Masa ciała (C-2): warstwa Yjs w dokumencie notatek (wzorem diety), testy na własnym Y.Doc.
+      "src/lib/weight/yWeight.ts",
+      "src/lib/weight/yWeight.test.ts",
       "src/lib/study/yStudy.ts",
       "src/lib/study/yStudy.test.ts",
       // Odżywki: warstwa Yjs w dokumencie notatek (wzorem yStudy/yDebts), testy na własnym Y.Doc.

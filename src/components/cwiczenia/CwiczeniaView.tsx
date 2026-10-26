@@ -10,6 +10,7 @@ import { addSupplement, removeSupplement, restoreSupplement, setSupplementTaken,
 import { toastWithUndo } from "@/lib/undoToast";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { DietSection } from "./DietSection";
+import { WeightSection } from "./WeightSection";
 import { TrainingSection } from "./TrainingSection";
 
 /** Domyślna godzina przypomnienia dla pory dnia (edytowalna w formularzu). */
@@ -45,13 +46,14 @@ function deleteSupplement(notes: NotesActions, s: Supplement): Supplement | null
 
 /**
  * Dział Ćwiczenia (osobna pozycja w menu): odżywki (lista, dzienne odhaczenia, przypomnienia), trening
- * (plany dni, dziennik serii, progres) i dieta (posiłki, kalorie i białko, cele).
+ * (plany dni, dziennik serii, progres), dieta (posiłki, kalorie i białko, cele) i masa ciała (waga).
  */
-type CwiczeniaTab = "odzywki" | "trening" | "dieta";
+type CwiczeniaTab = "odzywki" | "trening" | "dieta" | "waga";
 const CWICZENIA_TABS: { id: CwiczeniaTab; label: string }[] = [
   { id: "odzywki", label: "Odżywki" },
   { id: "trening", label: "Trening" },
   { id: "dieta", label: "Dieta" },
+  { id: "waga", label: "Waga" },
 ];
 
 export function CwiczeniaView() {
@@ -110,6 +112,7 @@ export function CwiczeniaView() {
       <div className="mt-6 space-y-6">
         <div className={phoneHide("trening")}><TrainingSection /></div>
         <div className={phoneHide("dieta")}><DietSection /></div>
+        <div className={phoneHide("waga")}><WeightSection /></div>
       </div>
     </section>
   );

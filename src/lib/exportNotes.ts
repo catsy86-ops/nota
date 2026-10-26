@@ -138,6 +138,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
   // Dane działu Praca ładowane dopiero tu — nie wchodzą do paczki startowej.
   const [{ studyReady, yStudy }, { stateFromDump }, { supplementDump: supplementsDump }, { dietDump }, { trainingDump }, { debtsDump }, { entryCheckDump }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy"), import("@/lib/supplements/store"), import("@/lib/diet/store"), import("@/lib/training/store"), import("@/lib/debts/store"), import("@/lib/study/entryCheckStore")]);
   await studyReady();
+  const { weightDump } = await import("@/lib/weight/store");
   const { blobs, report } = await collectAttachmentBlobs(opts.attachmentBudget ?? BACKUP_ATTACHMENTS_BUDGET_BYTES);
   const study = yStudy.dump();
   const propDefs = yjsStore.projectPropDefs();
@@ -164,6 +165,8 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     // Odżywki i odhaczenia w osobnej sekcji; scalane przy przywracaniu, bez kasowania (stara kopia bez niej działa dalej).
     supplements: JSON.stringify(supplementsDump()),
     diet: JSON.stringify(dietDump()),
+    // Masa ciała (C-2): jeden wpis na dzień, scalana przy przywracaniu.
+    weight: JSON.stringify(weightDump()),
     training: JSON.stringify(trainingDump()),
     // Długi: pożyczki są w dokumencie Yjs, więc bez tej sekcji kopia by je gubiła.
     debts: JSON.stringify(debtsDump()),
@@ -293,6 +296,12 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
       const { mergeDietDump } = await import("@/lib/diet/store");
       mergeDietDump(JSON.parse(backup.diet));
     } catch (err) { logDiag("warn", "backup", "cannot restore diet", errName(err)); }
+  }
+  if (backup.weight) {
+    try {
+      const { mergeWeightDump } = await import("@/lib/weight/store");
+      mergeWeightDump(JSON.parse(backup.weight));
+    } catch (err) { logDiag("warn", "backup", "cannot restore weight", errName(err)); }
   }
   if (backup.training) {
     try {

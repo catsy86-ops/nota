@@ -112,6 +112,8 @@ export interface FullBackup {
   supplements?: string;
   /** Dieta: posiłki i cele (`lib/diet/yDiet.ts`, JSON `{ meals, goals }`); kształt waliduje `mergeDietDump`. */
   diet?: string;
+  /** Masa ciała (C-2, `lib/weight/yWeight.ts`, JSON tablica `{ day, kg, created }`); czyszczona przy scalaniu. */
+  weight?: string;
   /** Trening: dziennik serii i plany dni (`lib/training/yTraining.ts`, JSON `{ entries, plans }`); kształt waliduje `mergeTrainingDump`. */
   training?: string;
   /** Długi (lib/debts/yDebts.ts, JSON tablica pożyczek); kształt waliduje cleanDebt przy scalaniu. */
