@@ -46,10 +46,11 @@ import { pulseSkinSignal } from "@/lib/skinSignal";
 import { useLatch } from "@/hooks/useLatch";
 
 /** Od czego zaczyna się nowa notatka (długie przytrzymanie „+” na telefonie). */
-export type ComposerAction = "note" | "list" | "dictate" | "image" | "draw";
+export type ComposerAction = "note" | "list" | "dictate" | "image" | "draw" | "reminder";
 
 /** Pola, których nie niesie lista pozycyjna `onAdd` — seria przypomnienia i rodzic. */
 export interface ComposerExtras {
+  reminderAllDay?: boolean;
   reminderRepeat?: ReminderRepeat;
   reminderRepeatUntil?: number;
   parentId?: string;
@@ -170,6 +171,9 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
   const [restored, setRestored] = useState(draft0 !== null);
   const [reminderRepeat, setReminderRepeat] = useState<ReminderRepeat>(draft0?.reminderRepeat ?? "none");
   const [reminderUntil, setReminderUntil] = useState<number | undefined>(draft0?.reminderRepeatUntil);
+  // 2.5: „Cały dzień” z wyboru terminu (termin 9:00 tego dnia, pokazywany jako sama data).
+  const [reminderAllDay, setReminderAllDay] = useState(false);
+  const [reminderOpenSignal, setReminderOpenSignal] = useState(0);
   const [parentId, setParentId] = useState<string | null>(draft0?.parentId ?? null);
   const [newLabel, setNewLabel] = useState("");
   const [images, setImages] = useState<string[]>([]);
@@ -193,12 +197,12 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
       // „Utwórz notatkę „X”” z palety: wpisany tekst staje się tytułem, o ile tytuł jest jeszcze pusty.
       if (prefill) setTitle((t) => t || prefill);
       // Handlery zdarzeń potrafią podać tu obiekt zdarzenia — przyjmujemy tylko znane akcje.
-      if (action === "list" || action === "dictate" || action === "image" || action === "draw") setPendingAction(action);
+      if (action === "list" || action === "dictate" || action === "image" || action === "draw" || action === "reminder") setPendingAction(action);
     },
   }));
 
   const reset = useCallback(() => {
-    setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderRepeat("none"); setReminderUntil(undefined); setParentId(null); setPriority("none"); setImages([]); setAttachments([]); setChecklist([]); setShowChecklist(false); setIgnored(new Set()); setRestored(false); setExpanded(false);
+    setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderRepeat("none"); setReminderUntil(undefined); setReminderAllDay(false); setParentId(null); setPriority("none"); setImages([]); setAttachments([]); setChecklist([]); setShowChecklist(false); setIgnored(new Set()); setRestored(false); setExpanded(false);
   }, []);
 
   // Lista robocza: odłożone szkice nowych notatek (wznawiane z rzędu nad tytułem).
@@ -295,6 +299,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
       pulseSkinSignal("save");
       const extras: ComposerExtras = {
         ...(remindAt !== null && reminderRepeat !== "none" ? { reminderRepeat, ...(reminderUntil !== undefined ? { reminderRepeatUntil: reminderUntil } : {}) } : {}),
+        ...(remindAt !== null && reminderAllDay ? { reminderAllDay: true } : {}),
         ...(parentId && (!parentOptions || parentOptions.some((o) => o.id === parentId)) ? { parentId } : {}),
       };
       onAdd(r.title, r.content, color, allNoteLabels, remindAt, images, checklist, r.priority ?? priority, r.folderId, attachments, extras);
@@ -436,6 +441,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
     else if (a === "draw") setShowDrawing(true);
     else if (a === "image") fileInputRef.current?.click();
     else if (a === "dictate" && dictation.supported && !dictation.listening) dictation.toggle();
+    else if (a === "reminder") setReminderOpenSignal((n) => n + 1);
   }, [pendingAction, expanded, dictation]);
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -620,7 +626,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                 <Bell className="w-3 h-3" />
                 {formatReminderShort(reminder)}
                 {reminderRepeat !== "none" && <Repeat className="w-3 h-3" aria-label="Powtarzane" />}
-                <button onClick={() => { setReminder(null); setReminderRepeat("none"); setReminderUntil(undefined); }} aria-label="Usuń przypomnienie" className="ml-1 text-muted-foreground hover:text-foreground coarse:inline-flex coarse:h-11 coarse:w-11 coarse:items-center coarse:justify-center">×</button>
+                <button onClick={() => { setReminder(null); setReminderRepeat("none"); setReminderUntil(undefined); setReminderAllDay(false); }} aria-label="Usuń przypomnienie" className="ml-1 text-muted-foreground hover:text-foreground coarse:inline-flex coarse:h-11 coarse:w-11 coarse:items-center coarse:justify-center">×</button>
               </div>
             )}
 
@@ -699,7 +705,9 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                   reminder={reminder}
                   reminderRepeat={reminderRepeat}
                   reminderRepeatUntil={reminderUntil}
-                  onSet={(ts, repeat, until) => { setReminder(ts); setReminderRepeat(ts === null ? "none" : repeat); setReminderUntil(ts === null ? undefined : until); }}
+                  reminderAllDay={reminderAllDay}
+                  onSet={(ts, repeat, until, allDay) => { setReminder(ts); setReminderRepeat(ts === null ? "none" : repeat); setReminderUntil(ts === null ? undefined : until); setReminderAllDay(ts !== null && allDay === true); }}
+                  openSignal={reminderOpenSignal}
                   trigger={
                     <IconButton size="sm" tone={reminder ? "active" : "muted"} title="Przypomnienie" aria-label="Przypomnienie">
                       <Bell className={cn("w-4 h-4", reminder && "fill-current")} />

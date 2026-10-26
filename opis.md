@@ -2581,3 +2581,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Co robi:** gdy wypada co najmniej dwa przypomnienia naraz, jest jeden dymek. Przycisk „Odłóż wszystkie o godzinę” odkłada każde wystąpienie o godzinę (`snoozeTarget`, po jednym na notatkę). Jedno „Cofnij” w osobnym dymku przywraca wszystkie terminy. „Zobacz” jest drugim przyciskiem dymku (prowadzi do Terminów).
 - **Gdzie:** `src/hooks/useReminderNotifications.ts` (gałąź `grouped`); cofnięcie przez `firedCbRef` z zapisanymi polami z `reminderFields`.
 - **Testy:** `e2e/reminder-toast.spec.ts` (zbiorczy dymek, odłożenie i cofnięcie).
+
+## Kompozytor — „Cały dzień” i termin z pustych Terminów (2.5, 2.026-10-26)
+
+- **Co robi:** w wyborze terminu paska nowej notatki działa „Cały dzień (o 9:00)” i zapisuje się jako przypomnienie całodzienne (`reminderAllDay`). Przycisk „Nowa notatka” w pustych Terminach otwiera kompozytor z otwartym oknem terminu (akcja `"reminder"` w `ComposerAction`).
+- **Gdzie:** `src/components/AddNoteBar.tsx` (stan `reminderAllDay`, `reminderOpenSignal`, `ComposerExtras.reminderAllDay`, akcja `reminder` w `expand` i w efekcie); `src/components/ReminderPicker.tsx` (`openSignal`, otwarcie po zmianie sygnału); `src/pages/Index.tsx` (zapis `reminderAllDay` w `handleComposerAdd`, `onNew` w pustym widoku Terminów).
+- **Ograniczenie:** flaga „Cały dzień” nie jest zapisywana w szkicu (`Draft`), więc po przywróceniu szkicu trzeba ją zaznaczyć ponownie.
+- **Testy:** `e2e/composer-reminder.spec.ts` (okno terminu po „Nowa notatka”, zapis z „Cały dzień”).

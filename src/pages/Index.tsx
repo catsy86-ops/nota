@@ -533,11 +533,12 @@ const Index = () => {
     const extras = args.length > 10 ? (args[10] as ComposerExtras | undefined) : undefined;
     const id = handleAddNoteGlow(...(args.slice(0, 10) as Parameters<typeof addNote>));
     // Seria przypomnienia i rodzic nie mieszczą się w `addNote` — dopisujemy je zaraz po utworzeniu.
-    if (extras?.reminderRepeat || extras?.parentId) {
+    if (extras?.reminderRepeat || extras?.parentId || extras?.reminderAllDay) {
       updateNote(id, {
         ...(extras.reminderRepeat ? { reminderRepeat: extras.reminderRepeat } : {}),
         ...(extras.reminderRepeatUntil !== undefined ? { reminderRepeatUntil: extras.reminderRepeatUntil } : {}),
         ...(extras.parentId ? { parentId: extras.parentId } : {}),
+        ...(extras.reminderAllDay ? { reminderAllDay: true } : {}),
       });
     }
     toastWithUndo("Dodano notatkę", () => deleteNote(id), { icon: "📝", duration: 4000, id: "composer-added" });
@@ -977,7 +978,7 @@ const Index = () => {
             {deferredSearch && view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia" ? `${displayNotes.length} ${pluralPl(displayNotes.length, ["wynik", "wyniki", "wyników"])}` : ""}
           </p>
           <AnimatePresence>
-            {view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia" && view !== "widget" && displayNotes.length === 0 && reminderRowCount === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} onNew={() => expandAddNote()} onClearSearch={() => setSearch("")} />}
+            {view !== "calendar" && view !== "shifts" && view !== "study" && view !== "debts" && view !== "cwiczenia" && view !== "widget" && displayNotes.length === 0 && reminderRowCount === 0 && <EmptyState key="empty" view={view} search={deferredSearch} elsewhere={elsewhere} onGo={(v) => go(v)} onNew={() => expandAddNote(view === "reminders" ? "reminder" : undefined)} onClearSearch={() => setSearch("")} />}
           </AnimatePresence>
           {view === "notes" && displayNotes.length > 0 && !deferredSearch && <DailyQuote />}
         </main>

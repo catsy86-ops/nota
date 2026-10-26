@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useId, useState, type HTMLAttributes, type MouseEvent, type ReactNode, type Ref } from "react";
+import { forwardRef, useEffect, useId, useRef, useState, type HTMLAttributes, type MouseEvent, type ReactNode, type Ref } from "react";
 import { Bell, Repeat, X } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -22,6 +22,8 @@ interface ReminderPickerProps {
   onSet: (timestamp: number | null, repeat: ReminderRepeat, until?: number, allDay?: boolean) => void;
   /** Własny przycisk otwierający (np. w pasku nowej notatki); domyślnie ikona dzwonka z kafla. */
   trigger?: ReactNode;
+  /** Każda zmiana (np. z akcji „Przypomnienie” w kompozytorze) otwiera okno; pierwsze renderowanie nie otwiera. */
+  openSignal?: number;
 }
 
 interface ReminderBadgeProps {
@@ -45,7 +47,7 @@ function presets(now = new Date()): { label: string; at: Date }[] {
 
 const REPEAT_OPTIONS: ReminderRepeat[] = ["none", "daily", "weekly", "monthly"];
 
-export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, reminderAllDay, onSet, trigger }: ReminderPickerProps) {
+export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, reminderAllDay, onSet, trigger, openSignal }: ReminderPickerProps) {
   const [open, setOpen] = useState(false);
   const uid = useId();
   const [date, setDate] = useState<Date | undefined>(reminder ? new Date(reminder) : undefined);
@@ -65,6 +67,16 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
     }
     setOpen(next);
   }
+
+  // 2.5: sygnał z zewnątrz (akcja „Przypomnienie” w kompozytorze) otwiera okno. Pierwsze renderowanie pomijamy.
+  // Picker może zamontować się już po zwiększeniu sygnału, więc startujemy od „nieznany”, a nie od bieżącej wartości.
+  const seenSignal = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (!openSignal || openSignal === seenSignal.current) return;
+    seenSignal.current = openSignal;
+    openChange(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openSignal]);
 
   function handleQuickParsed(parsed: Date) {
     setDate(parsed);
