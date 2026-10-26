@@ -1,3 +1,4 @@
+import { clearLegacyIdle, legacyIdleExpired, markLegacyEnabled, markLegacySeen, readLegacyIdle } from "@/lib/legacyRoomIdle";
 import { useSyncExternalStore } from "react";
 import type { WebrtcProvider } from "y-webrtc";
 import { yjsStore } from "@/lib/yjsStore";
@@ -251,6 +252,8 @@ export function getLegacyRoom(): boolean {
 export function setLegacyRoom(on: boolean): void {
   const prefs = readPrefs();
   writePrefs({ ...prefs, legacyRoom: on });
+  // U-3: start licznika 30 dni ciszy przy włączeniu; wyłączenie go kasuje.
+  if (on) markLegacyEnabled(); else clearLegacyIdle();
   logDiag("info", "yjsSync", `legacy room: ${on ? "on" : "off"}`);
   if (prefs.enabled && prefs.code) connect(prefs.code);
 }
@@ -341,6 +344,8 @@ function connect(code: string) {
       });
       p.on("peers", ({ webrtcPeers, bcPeers }: { webrtcPeers: string[]; bcPeers: string[] }) => {
         peers[i] = webrtcPeers.length + bcPeers.length;
+        // U-3: pokój nr 1 to stary pokój FNV (`roomNamesFor`); widziane urządzenie przesuwa termin wygaszenia.
+        if (i === 1 && peers[i] > 0) markLegacySeen();
         // Nowe urządzenia są w obu pokojach, stare tylko w starym — suma liczyłaby
         // nowe podwójnie, a maksimum daje liczbę urządzeń.
         const peerCount = Math.max(...peers);
@@ -475,4 +480,17 @@ export function initSync(): void {
     window.addEventListener("online", reconnectIfNeeded);
     document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") reconnectIfNeeded(); });
   }
+}
+
+/**
+ * U-3: po 30 dniach bez urządzenia w starym pokoju wyłącza przełącznik. `true` = właśnie wyłączono
+ * (wywołujący pokazuje komunikat). Włączenie sprzed tej funkcji startuje licznik od teraz.
+ */
+export function expireLegacyRoomIfIdle(now: number = Date.now()): boolean {
+  if (!readPrefs().legacyRoom) return false;
+  const state = readLegacyIdle();
+  if (!state) { markLegacyEnabled(now); return false; }
+  if (!legacyIdleExpired(state, now)) return false;
+  setLegacyRoom(false);
+  return true;
 }

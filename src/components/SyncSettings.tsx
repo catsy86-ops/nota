@@ -15,7 +15,7 @@ import { formatDistanceToNow } from "date-fns";
 import { pl } from "date-fns/locale";
 import {
   useSyncState, type SyncState, startPairing, joinWithCode, pauseSync, resumeSync, forgetPairing, formatCode,
-  getSignalingServers, setSignalingServers, parseSignalingList, wasShortCodeDropped, getLegacyRoom, setLegacyRoom,
+  getSignalingServers, setSignalingServers, parseSignalingList, wasShortCodeDropped, getLegacyRoom, setLegacyRoom, expireLegacyRoomIfIdle,
   codeFromPaste, CODE_LENGTH, CODE_PATTERN, getDeviceName, setDeviceName,
 } from "@/lib/yjsSync";
 
@@ -48,6 +48,13 @@ export function SyncSettings({ prefillCode }: Props) {
   const [copied, setCopied] = useState(false);
   const [forgetOpen, setForgetOpen] = useState(false);
   const [legacyRoom, setLegacyRoomState] = useState(() => getLegacyRoom());
+  // U-3: po 30 dniach bez urządzeń w starym pokoju przełącznik sam się wyłącza, z komunikatem.
+  useEffect(() => {
+    if (expireLegacyRoomIfIdle()) {
+      setLegacyRoomState(false);
+      toast.info("Zgodność ze starszą wersją wyłączona", { description: "Przez 30 dni żadne urządzenie nie łączyło się w starym pokoju." });
+    }
+  }, []);
   const [deviceName, setDeviceNameDraft] = useState(() => getDeviceName());
 
   useEffect(() => {

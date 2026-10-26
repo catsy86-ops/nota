@@ -2611,3 +2611,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/lib/qrScan.ts` (`codeFromScan`, `decodeQrImage`, `barcodeDetectorCtor`); `src/components/sync/QrScanDialog.tsx`; `src/components/SyncSettings.tsx` (przycisk, stan, leniwe okno). `CODE_ALPHABET` w `yjsSync.ts` wyeksportowany.
 - **Ograniczenia:** podgląd kamery działa tylko tam, gdzie jest `BarcodeDetector`; na iPhonie jest wybór zdjęcia. Nie testowano na prawdziwym telefonie. Nowa zależność: wymagany przegląd wydajności (CLAUDE.md) — nie zrobiony.
 - **Testy:** `src/lib/qrScan.test.ts`; e2e `e2e/sync-qr-scan.spec.ts` (okno i zdjęcie bez kodu). Pozostałe e2e synchronizacji i push zielone.
+
+## Ustawienia — zgodność ze starszą wersją wygasa (U-3, 2026-10-26)
+
+- **Co robi:** gdy przełącznik „Zgodność ze starszą wersją aplikacji” jest włączony i przez 30 dni żadne urządzenie nie pojawiło się w starym pokoju, wyłącza się sam. Przy otwarciu Ustawień → Synchronizacja pokazuje się komunikat „Zgodność ze starszą wersją wyłączona”. Włączenie przed tą zmianą zaczyna licznik od teraz.
+- **Jak liczy:** start licznika zapisuje się przy włączeniu, a czas ostatniego urządzenia w starym pokoju przy każdym sygnale z pokoju nr 1 (`yjsSync.ts`, zdarzenie `peers`). Dane: `kaczy.legacyRoomIdle.v1` (per urządzenie).
+- **Gdzie:** `src/lib/legacyRoomIdle.ts` (licznik, `legacyIdleExpired`); `src/lib/yjsSync.ts` (`setLegacyRoom`, `expireLegacyRoomIfIdle`, zapis pojawienia się); `src/components/SyncSettings.tsx` (sprawdzenie przy otwarciu).
+- **Do zrobienia w kodzie później (plan 2.6):** usunięcie samej obsługi starego pokoju, gdy wszystkie urządzenia mają nowszą wersję.
+- **Testy:** `src/lib/legacyRoomIdle.test.ts`; e2e `e2e/legacy-room-idle.spec.ts`.
