@@ -1,6 +1,6 @@
 import type { Note } from "@/hooks/useNotes";
 import { eveningTime, snoozeTimes } from "@/lib/reminderAgenda";
-import { doneTarget, seriesDay, snoozeTarget } from "@/lib/reminderRepeat";
+import { doneTarget, endOfDay, seriesDay, snoozeTarget } from "@/lib/reminderRepeat";
 
 /**
  * Akcje na terminie („Gotowe”, „Jutro”, „+1 h”) bez otwierania notatki. Wspólne dla kafla
@@ -9,7 +9,7 @@ import { doneTarget, seriesDay, snoozeTarget } from "@/lib/reminderRepeat";
  */
 
 /** Pola przypomnienia, które te akcje zmieniają. */
-export type ReminderFields = Pick<Note, "reminder" | "reminderDay" | "reminderBase">;
+export type ReminderFields = Pick<Note, "reminder" | "reminderDay" | "reminderBase" | "reminderRepeatUntil">;
 
 export type SnoozeKind = "in10" | "inHour" | "evening" | "tomorrow9";
 
@@ -21,7 +21,7 @@ export interface ReminderUpdate {
 
 /** Stan sprzed akcji — do cofnięcia. */
 export function reminderFields(note: Note): ReminderFields {
-  return { reminder: note.reminder, reminderDay: note.reminderDay, reminderBase: note.reminderBase };
+  return { reminder: note.reminder, reminderDay: note.reminderDay, reminderBase: note.reminderBase, reminderRepeatUntil: note.reminderRepeatUntil };
 }
 
 /**
@@ -67,3 +67,15 @@ const SNOOZE_MESSAGE: Record<SnoozeKind, string> = {
   evening: "Przesunięto na wieczór, 18:00",
   tomorrow9: "Przesunięto na jutro, 9:00",
 };
+
+/**
+ * „Zakończ serię” (2.4): koniec serii na bieżącym wystąpieniu. Termin zostaje do „Gotowe”, po którym
+ * seria nie ma następnego wystąpienia, więc notatka nie ma już terminu. Cofnięcie w toaście.
+ */
+export function endSeriesUpdate(note: Note): ReminderUpdate | null {
+  if (note.reminder === null || !note.reminderRepeat || note.reminderRepeat === "none") return null;
+  return {
+    patch: { reminderRepeatUntil: endOfDay(new Date(note.reminder)) },
+    message: "Seria zakończona na tym wystąpieniu",
+  };
+}

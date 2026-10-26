@@ -2,7 +2,7 @@ import { Check, MoreHorizontal } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 import { haptic } from "@/lib/haptics";
 import { toastWithUndo } from "@/lib/undoToast";
-import { doneReminderUpdate, reminderFields, snoozeMenuAt, snoozeReminderUpdate, type ReminderFields, type SnoozeKind } from "@/lib/reminderActions";
+import { doneReminderUpdate, reminderFields, endSeriesUpdate, snoozeMenuAt, snoozeReminderUpdate, type ReminderFields, type SnoozeKind } from "@/lib/reminderActions";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
@@ -106,6 +106,19 @@ export function ReminderQuickActions({ note, onUpdate, className }: ReminderQuic
               {o.label}
             </DropdownMenuItem>
           ))}
+          {endSeriesUpdate(note) && (
+            <DropdownMenuItem
+              onSelect={() => {
+                const prev = reminderFields(note);
+                const { patch, message } = endSeriesUpdate(note)!;
+                haptic("tap");
+                onUpdate(id, patch);
+                toastWithUndo(message, () => onUpdate(id, prev), { id: `rem-end-${id}` });
+              }}
+            >
+              Zakończ serię
+            </DropdownMenuItem>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

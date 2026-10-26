@@ -2562,3 +2562,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/lib/reminderActions.ts` (`SnoozeKind` z `in10` i `evening`, `SNOOZE_MENU`, `snoozeMenuAt`, komunikaty `SNOOZE_MESSAGE`); `src/components/ReminderQuickActions.tsx` (menu „⋯”). Dymek przypomnienia ma tę samą listę (T-4).
 - **Nie zrobione z 2.1:** jedna wspólna lista dla wszystkich miejsc w rzędzie (dziś każde ma swoje przyciski), powiadomienie systemowe zostaje z dwoma przyciskami.
 - **Testy:** `src/lib/reminderActions.test.ts` (menu, „Za 10 minut”, „Wieczorem”); e2e istniejących przycisków terminów (57 testów zielonych).
+
+## Terminy — „Zakończ serię” (2.4, 2026-10-26)
+
+- **Co robi:** w menu „⋯” przy terminie serii jest „Zakończ serię”: koniec serii ustawia się na bieżącym wystąpieniu (`reminderRepeatUntil` = koniec dnia tego terminu). Termin zostaje do „Gotowe”, po którym seria nie ma następnego wystąpienia i notatka nie ma terminu. Cofnięcie w toaście.
+- **Gdzie:** `src/lib/reminderActions.ts` (`endSeriesUpdate`, `ReminderFields` z `reminderRepeatUntil`); `src/components/ReminderQuickActions.tsx`.
+- **Testy:** `src/lib/reminderActions.test.ts`.

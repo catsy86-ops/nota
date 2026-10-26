@@ -70,3 +70,15 @@ describe("menu „Odłóż” (2.1)", () => {
     expect(snoozeMenuAt(at(17, 30)).map((o) => o.kind)).toEqual(["in10"]);
   });
 });
+
+describe("„Zakończ serię” (2.4)", () => {
+  it("koniec serii ustawia się na bieżącym wystąpieniu; przy zwykłym terminie nic", async () => {
+    const { endSeriesUpdate } = await import("./reminderActions");
+    const at9 = new Date(2026, 9, 19, 9, 0).getTime();
+    const series = { reminder: at9, reminderRepeat: "daily" } as never;
+    const upd = endSeriesUpdate(series);
+    expect(upd?.patch.reminderRepeatUntil).toBe(new Date(2026, 9, 19, 23, 59, 59, 999).getTime());
+    expect(endSeriesUpdate({ reminder: at9, reminderRepeat: "none" } as never)).toBeNull();
+    expect(endSeriesUpdate({ reminder: null, reminderRepeat: "daily" } as never)).toBeNull();
+  });
+});
