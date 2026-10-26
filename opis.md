@@ -2691,3 +2691,13 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/lib/privateNotes.ts` (`encryptNoteWrite`, odczyt przez `decryptNoteString`, zmiana hasła i duplikat); `src/lib/vault.ts` (v2); `src/lib/formatSchema.ts` (bramka, rejestr źródła urządzeń podpinany przez `yjsSync`); `src/lib/yjsStore.ts` (`isLockedPlain` przyjmuje v1 i v2 — bez tego notatka v2 nie byłaby traktowana jako prywatna).
 - **Nie zrobione w V-3:** metadane w szyfrogramie (kolor, folder, `parentId`, ikona — krok 3 planu; zmienia kształt dokumentu i listę folderów dla zablokowanych notatek) oraz przegląd bezpieczeństwa kryptografii (CLAUDE.md wymaga `security-reviewer`; nie uruchomiony).
 - **Testy:** `src/lib/vault.v2.test.ts`, `src/lib/formatSchema.test.ts` (bramka), `src/lib/privateNotes.test.ts` i `src/lib/yjsStore` (asercje akceptują v1 i v2); e2e `private-notes`, sync, relay, a11y 1440, budżet.
+
+## Skarbiec — metadane notatki prywatnej w szyfrogramie (V-3, krok 3, 2026-10-26)
+
+- **Co robi:** kolor, folder (`folderId`), rodzic (`parentId`) i ikona zablokowanej notatki są w szyfrogramie (pole `meta` treści), a nie jawnie w dokumencie. Po zablokowaniu znikają z dokumentu; po zdjęciu blokady wracają z szyfrogramu. Zmiana tych pól w odblokowanym skarbcu idzie do szyfrogramu (`PRIVATE_META` w `yjsStore.ts`, sink w `privateNotes.ts`).
+- **Zasady:**
+  - Metadane idą do szyfrogramu tylko, gdy format na to pozwala (`writeFormatAllowed(METADATA_IN_CIPHERTEXT_SCHEMA)`); inaczej zostają jak dawniej.
+  - Zmiana przy zablokowanym skarbcu nie ginie: zostaje jawna w dokumencie do najbliższej blokady, wtedy wraca do szyfrogramu.
+  - Przy zdejmowaniu blokady wartość jawna ma pierwszeństwo przed starszą z szyfrogramu.
+- **Ograniczenia:** zablokowana notatka nie ma folderu ani koloru na liście (tylko kafelek zablokowany). Starsze urządzenia czytają treść, ale nie widzą metadanych w szyfrogramie; dlatego zapis tych metadanych idzie za bramką schematu 2.
+- **Testy:** `src/lib/privateNotes.test.ts` (ukrycie w dokumencie, powrót po odblokowaniu, zmiana w odblokowanym skarbcu, fallback przy zablokowanym); e2e `private-notes.spec.ts` (asercja wersji v1 lub v2).

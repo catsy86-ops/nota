@@ -3,7 +3,7 @@ import type { YjsStore } from "@/lib/yjsStore";
 import { yjsStore as defaultStore } from "@/lib/yjsStore";
 import { versionsStore as defaultVersions, type VersionsStore } from "@/lib/versionsStore";
 import { logDiag, logSecurity } from "@/lib/diagnostics";
-import { writeFormatAllowed } from "@/lib/formatSchema";
+import { METADATA_IN_CIPHERTEXT_SCHEMA, writeFormatAllowed } from "@/lib/formatSchema";
 import {
   KDF_ITERATIONS, VaultError, createVault, decryptNoteString, encryptNoteStringV2, encryptString, isValidMeta, noteAad,
   unlockWithPassword, unlockWithRecovery, type VaultMeta,
@@ -20,11 +20,15 @@ import {
  * Treść widzi wyłącznie karta (przez `PrivateNoteGate`), po odblokowaniu.
  */
 
+export type PrivateMeta = Partial<Pick<Note, "color" | "folderId" | "parentId" | "icon">>;
+
 export interface PrivateContent {
   title: string;
   content: string;
   checklist: ChecklistItem[];
   labels: string[];
+  /** Metadane notatki w szyfrogramie (V-3, krok 3); brak w starszych treściach = metadane w dokumencie. */
+  meta?: PrivateMeta;
 }
 
 export type VaultPhase = "none" | "locked" | "unlocked" | "locking";
@@ -51,6 +55,16 @@ export class VaultThrottledError extends Error {
 export const NOTE_FORMAT_V2_SCHEMA = 2;
 
 /** Zapis notatki skarbca: v2 (z epoką w AAD), gdy bramka wersji na to pozwala; inaczej v1 dla starszych urządzeń. */
+/** Metadane notatki do szyfrogramu (krok 3): tylko te, które notatka ma. */
+function privateMetaOf(n: Partial<Pick<Note, "color" | "folderId" | "parentId" | "icon">>): PrivateMeta | undefined {
+  const meta: PrivateMeta = {};
+  if (n.color !== undefined) meta.color = n.color;
+  if (n.folderId !== undefined) meta.folderId = n.folderId;
+  if (n.parentId !== undefined) meta.parentId = n.parentId;
+  if (n.icon !== undefined) meta.icon = n.icon;
+  return Object.keys(meta).length ? meta : undefined;
+}
+
 function encryptNoteWrite(key: CryptoKey, json: string, id: string, epoch: number): Promise<string> {
   return writeFormatAllowed(NOTE_FORMAT_V2_SCHEMA) ? encryptNoteStringV2(key, json, id, epoch) : encryptString(key, json, noteAad(id));
 }
@@ -84,6 +98,18 @@ function writeThrottle(v: { fails: number; until: number } | null) {
 }
 
 
+/** Metadane z treści szyfrogramu: tylko znane pola we właściwych typach; brak pól = undefined. */
+function cleanPrivateMeta(raw: unknown): PrivateMeta | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const r = raw as Record<string, unknown>;
+  const meta: PrivateMeta = {};
+  if (typeof r.color === "string" && r.color.length <= 32) meta.color = r.color as Note["color"];
+  if (r.folderId === null || (typeof r.folderId === "string" && r.folderId.length <= 200)) meta.folderId = r.folderId as string | null;
+  if (typeof r.parentId === "string" && r.parentId.length <= 200) meta.parentId = r.parentId;
+  if (typeof r.icon === "string" && r.icon.length <= 32) meta.icon = r.icon;
+  return Object.keys(meta).length ? meta : undefined;
+}
+
 function parseContent(json: string): PrivateContent {
   const raw = JSON.parse(json) as Partial<PrivateContent> | null;
   if (!raw || typeof raw !== "object") throw new VaultError("bad-format");
@@ -92,11 +118,13 @@ function parseContent(json: string): PrivateContent {
       .filter((i): i is ChecklistItem => !!i && typeof i === "object" && typeof (i as ChecklistItem).id === "string")
       .map((i) => ({ id: i.id, text: typeof i.text === "string" ? i.text : "", checked: Boolean(i.checked), ...(i.indent === 1 ? { indent: 1 as const } : {}) }))
     : [];
+  const meta = cleanPrivateMeta(raw.meta);
   return {
     title: typeof raw.title === "string" ? raw.title : "",
     content: typeof raw.content === "string" ? raw.content : "",
     checklist,
     labels: Array.isArray(raw.labels) ? raw.labels.filter((l): l is string => typeof l === "string") : [],
+    ...(meta ? { meta } : {}),
   };
 }
 
@@ -187,16 +215,22 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     const entry = cache.get(id);
     if (!key || !entry) {
       logDiag("warn", "privateNotes", "write to a private note without an unlocked vault — dropped");
-      return;
+      return false;
     }
     const next: PrivateContent = { ...entry.content };
     if (fields.title !== undefined) next.title = fields.title;
     if (fields.content !== undefined) next.content = fields.content;
     if (fields.checklist !== undefined) next.checklist = fields.checklist.map((i) => ({ ...i }));
     if (fields.labels !== undefined) next.labels = fields.labels.slice();
+    const meta: PrivateMeta = { ...entry.content.meta };
+    for (const f of ["color", "folderId", "parentId", "icon"] as const) {
+      if (f in fields) (meta as Record<string, unknown>)[f] = fields[f];
+    }
+    if (Object.keys(meta).length) next.meta = meta;
     cache.set(id, { ...entry, content: next, dirty: true });
     schedule(id);
     emit();
+    return true;
   });
 
   function schedule(id: string) {
@@ -375,13 +409,15 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
         const plain = store.readPlainNote(id);
         if (!plain) return { ok: false, reason: "missing" };
         if (plain.images.length || plain.attachments?.length) return { ok: false, reason: "has-files" };
-        const content: PrivateContent = { title: plain.title, content: plain.content, checklist: plain.checklist, labels: plain.labels };
+        const meta = writeFormatAllowed(METADATA_IN_CIPHERTEXT_SCHEMA) ? privateMetaOf(plain) : undefined;
+        const content: PrivateContent = { title: plain.title, content: plain.content, checklist: plain.checklist, labels: plain.labels, ...(meta ? { meta } : {}) };
         const json = JSON.stringify(content);
         const token = await encryptNoteWrite(k, json, id, sessionEpoch);
         // Edytor mógł zatwierdzić szkic w trakcie szyfrowania — wtedy powtarzamy.
         const again = store.readPlainNote(id);
-        if (!again || JSON.stringify({ title: again.title, content: again.content, checklist: again.checklist, labels: again.labels }) !== json) continue;
-        if (!store.lockNote(id, token)) return { ok: false, reason: "missing" };
+        const againMeta = writeFormatAllowed(METADATA_IN_CIPHERTEXT_SCHEMA) && again ? privateMetaOf(again) : undefined;
+        if (!again || JSON.stringify({ title: again.title, content: again.content, checklist: again.checklist, labels: again.labels, ...(againMeta ? { meta: againMeta } : {}) }) !== json) continue;
+        if (!store.lockNote(id, token, writeFormatAllowed(METADATA_IN_CIPHERTEXT_SCHEMA))) return { ok: false, reason: "missing" };
         cache.set(id, { vault: token, content, dirty: false });
         versions.remove(id);
         scheduleCompaction();
@@ -402,7 +438,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     if (!entry) return false;
     const t = timers.get(id);
     if (t) { clearTimeout(t); timers.delete(id); }
-    const ok = store.unlockNote(id, entry.content);
+    const ok = store.unlockNote(id, { ...entry.content, ...(entry.content.meta ?? {}) });
     cache.delete(id);
     emit();
     return ok;

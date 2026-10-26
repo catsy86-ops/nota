@@ -149,7 +149,7 @@ test("backup, localStorage i IndexedDB nie zawierają jawnego tekstu; reload zac
   expect(text).not.toContain(TITLE);
   const backup = JSON.parse(text);
   expect(backup.notes[0].locked).toBe(true);
-  expect(backup.notes[0].vault).toMatch(/^v1\./);
+  expect(backup.notes[0].vault).toMatch(/^v[12]\./);
   expect(backup.vault.salt).toBeTruthy();
   expect(JSON.stringify(backup)).not.toContain(PASSWORD);
   await page.keyboard.press("Escape");

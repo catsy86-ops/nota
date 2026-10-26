@@ -391,3 +391,51 @@ describe("prywatne notatki — nic z jawnej treści nie wycieka", () => {
     expect(dumps.exportMd).toContain("Pominięto notatki prywatne: 1");
   });
 });
+
+describe("metadane notatki prywatnej w szyfrogramie (V-3, krok 3)", () => {
+  it("po zablokowaniu kolor i folder nie są jawne w dokumencie; po zdjęciu blokady wracają", async () => {
+    const { store, pn } = fresh();
+    store.upsertNote(makeNote({ title: "T", content: "C", color: "rose", folderId: "f1", icon: "🔒" }));
+    await pn.setup(PW);
+    await pn.lockNote("n1");
+    const locked = store.projectNotes().find((n) => n.id === "n1")!;
+    expect(locked.locked).toBe(true);
+    expect(locked.folderId ?? null).toBeNull();
+    expect(locked.color).toBe("default");
+    expect(locked.icon).toBeUndefined();
+    expect(await pn.removeLock("n1")).toBe(true);
+    const back = store.projectNotes().find((n) => n.id === "n1")!;
+    expect(back.folderId).toBe("f1");
+    expect(back.color).toBe("rose");
+    expect(back.icon).toBe("🔒");
+  });
+
+  it("zmiana koloru w odblokowanym skarbcu idzie do szyfrogramu, nie do dokumentu", async () => {
+    const { store, pn } = fresh();
+    store.upsertNote(makeNote({ title: "T", content: "C", color: "default", folderId: null }));
+    await pn.setup(PW);
+    await pn.lockNote("n1");
+    store.patchNote("n1", { color: "mint", folderId: "f2" } as never);
+    await pn.lock();
+    await pn.unlock(PW);
+    expect(pn.peek("n1")).toMatchObject({ title: "T", content: "C" });
+    const doc = store.projectNotes().find((n) => n.id === "n1")!;
+    expect(doc.color).toBe("default");
+    expect(doc.folderId ?? null).toBeNull();
+  });
+});
+
+describe("metadane przy zablokowanym skarbcu (V-3, krok 3)", () => {
+  it("zmiana koloru bez odblokowanego skarbca nie ginie: zostaje jawna do najbliższej blokady", async () => {
+    const { store, pn } = fresh();
+    store.upsertNote(makeNote({ title: "T", content: "C", color: "default" }));
+    await pn.setup(PW);
+    await pn.lockNote("n1");
+    await pn.lock();
+    store.patchNote("n1", { color: "sky" } as never);
+    expect(store.projectNotes().find((n) => n.id === "n1")!.color).toBe("sky");
+    await pn.unlock(PW);
+    await pn.removeLock("n1");
+    expect(store.projectNotes().find((n) => n.id === "n1")!.color).toBe("sky");
+  });
+});

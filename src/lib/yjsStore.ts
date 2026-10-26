@@ -1,4 +1,5 @@
 import * as Y from "yjs";
+import { METADATA_IN_CIPHERTEXT_SCHEMA, writeFormatAllowed } from "@/lib/formatSchema";
 import { applyTextEdit, captureTextBase, mapOffset, type TextBase } from "./yTextEdit";
 import { IndexeddbPersistence } from "y-indexeddb";
 import { trackPersistence } from "@/lib/saveStatus";
@@ -236,7 +237,9 @@ function plainAttachments(raw: unknown): Attachment[] {
 
 /** Pola, które w notatce prywatnej żyją tylko w zaszyfrowanym `vault`. */
 const PRIVATE_FIELDS = ["title", "content", "checklist", "labels", "images", "attachments"] as const;
-type PrivateFields = Partial<Pick<Note, (typeof PRIVATE_FIELDS)[number]>>;
+/** Metadane notatki prywatnej (V-3, krok 3): idą do szyfrogramu, gdy format na to pozwala. */
+const PRIVATE_META = ["color", "folderId", "parentId", "icon"] as const;
+type PrivateFields = Partial<Pick<Note, (typeof PRIVATE_FIELDS)[number] | (typeof PRIVATE_META)[number]>>;
 const NO_CHECKLIST: ChecklistItem[] = [];
 const NO_LABELS: string[] = [];
 
@@ -400,7 +403,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   const noteCache = new Map<string, Note>();
   const dirtyNotes = new Set<string>();
   /** Odbiorca zapisów treści notatek prywatnych (ustawia `privateNotes.ts`). */
-  let lockedWriteSink: ((id: string, fields: PrivateFields) => void) | null = null;
+  let lockedWriteSink: ((id: string, fields: PrivateFields) => boolean) | null = null;
   const vaultMap = doc.getMap<unknown>("vault");
   notesMap.observeDeep((events) => {
     for (const e of events) {
@@ -618,14 +621,17 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
       // która zaszyfruje je i zapisze `vault` (patrz `privateNotes.ts`).
       const rest: Record<string, unknown> = { ...updates };
       const priv: Record<string, unknown> = {};
-      for (const f of PRIVATE_FIELDS) {
+      const metaSecret = writeFormatAllowed(METADATA_IN_CIPHERTEXT_SCHEMA);
+      for (const f of [...PRIVATE_FIELDS, ...(metaSecret ? PRIVATE_META : [])] as string[]) {
         if (f in rest) { priv[f] = rest[f]; delete rest[f]; }
       }
       delete rest.locked;
       delete rest.vault;
       // Właściwości nie są w szyfrogramie — przy notatce prywatnej pomijamy je po cichu.
       delete rest.props;
-      if (Object.keys(priv).length) lockedWriteSink?.(id, priv as PrivateFields);
+      const accepted = Object.keys(priv).length === 0 || (lockedWriteSink?.(id, priv as PrivateFields) ?? false);
+      // Metadane bez odblokowanego skarbca nie mają gdzie się zaszyfrować: zostają jawne do najbliższej blokady.
+      if (!accepted) for (const f of PRIVATE_META) if (f in priv) rest[f] = priv[f];
       updates = rest as typeof updates;
     }
     if (updates.content !== undefined) {
@@ -877,7 +883,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
    * mapa listy są zastępowane nowymi, więc ich zawartość zostaje odśmiecona),
    * zostaje szyfrogram. Jedna transakcja.
    */
-  function lockNote(id: string, vault: string): boolean {
+  function lockNote(id: string, vault: string, dropMeta = false): boolean {
     const y = notesMap.get(id);
     if (!y || y.get("locked") === true) return false;
     doc.transact(() => {
@@ -887,6 +893,8 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
       y.set("checklist", new Y.Map<YChecklistItem>());
       y.set("imageHashes", []);
       y.delete("attachments");
+      // Metadane idą do szyfrogramu (krok 3): z dokumentu znikają jawne wartości.
+      if (dropMeta) for (const f of PRIVATE_META) y.delete(f);
       y.set("vault", vault);
       y.set("locked", true);
       y.set("updatedAt", Date.now());
@@ -907,7 +915,7 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
   }
 
   /** Zdejmuje blokadę: jawna treść wraca do dokumentu, szyfrogram znika. */
-  function unlockNote(id: string, plain: Pick<Note, "title" | "content" | "checklist" | "labels">): boolean {
+  function unlockNote(id: string, plain: Pick<Note, "title" | "content" | "checklist" | "labels"> & Partial<Pick<Note, "color" | "folderId" | "parentId" | "icon">>): boolean {
     const y = notesMap.get(id);
     if (!y || y.get("locked") !== true) return false;
     doc.transact(() => {
@@ -917,6 +925,9 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
       y.set("title", plain.title);
       y.set("labels", plain.labels.slice());
       y.set("checklist", yChecklistFromPlain(plain.checklist));
+      // Metadane z szyfrogramu wracają do dokumentu, ale tylko tam, gdzie dokument ich nie ma: wartość jawna
+      // (zapisana przy zablokowanym skarbcu) jest świeższa niż ta z szyfrogramu. Starsze treści: zostają jak były.
+      for (const f of PRIVATE_META) if (plain[f] !== undefined && y.get(f) === undefined) y.set(f, plain[f]);
       y.delete("vault");
       y.delete("locked");
       y.set("updatedAt", Date.now());

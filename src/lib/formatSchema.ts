@@ -39,3 +39,6 @@ export function setDeviceSource(fn: () => readonly DeviceSchema[]): void {
 export function writeFormatAllowed(required: number): boolean {
   return canWriteSchema(required, deviceSource());
 }
+
+/** Numer formatu, od którego metadane notatki prywatnej (kolor, folder, rodzic, ikona) są w szyfrogramie (V-3, krok 3). */
+export const METADATA_IN_CIPHERTEXT_SCHEMA = 2;
