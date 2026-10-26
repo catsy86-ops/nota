@@ -34,7 +34,7 @@ export function TodayDueList({ notes, onOpen, onOpenReminders, onUpdate }: { not
       <div className="flex items-center justify-between gap-3">
         <h2 className="section-label gap-2">
           <BellRing className="h-3.5 w-3.5" aria-hidden />
-          Przypomnienia
+          Terminy
           {total > 0 && <span className="stamp-tag normal-case text-primary-ink" data-testid="today-due-count">{total}</span>}
         </h2>
         <Button variant="ghost" size="sm" onClick={onOpenReminders} className="coarse:h-11">

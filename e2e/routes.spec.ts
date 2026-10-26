@@ -95,5 +95,5 @@ test("skróty PWA do widoków otwierają Dziś, Grafik i Przypomnienia", async (
   await page.goto("/grafik");
   await expect(page.getByRole("heading", { name: "Grafik" })).toBeVisible();
   await page.goto("/przypomnienia");
-  await expect(page.getByRole("heading", { name: "Przypomnienia", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Terminy", level: 1 })).toBeVisible();
 });

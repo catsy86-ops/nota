@@ -29,7 +29,7 @@ test("przypomnienia to agenda: grupy po terminie, bez przełącznika sortowania 
   await withReminder(page, "Zebranie jutrzejsze", "11");
   await withReminder(page, "Zebranie dzisiejsze", "10");
 
-  await page.getByRole("button", { name: "Przypomnienia" }).first().click();
+  await page.getByRole("button", { name: "Terminy" }).first().click();
   const sections = page.locator("main section[aria-label]");
   await expect(sections).toHaveCount(3);
   await expect(sections.nth(0)).toHaveAttribute("aria-label", "Dziś");

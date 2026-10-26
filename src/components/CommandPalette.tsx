@@ -58,7 +58,7 @@ const NAV_ITEMS: NavItem[] = [
   { id: "notes", label: "Notatki", Icon: StickyNote },
   { id: "inbox", label: "Skrzynka", Icon: Inbox },
   { id: "today", label: "Dziś", Icon: Calendar, hint: "Alt+T" },
-  { id: "reminders", label: "Przypomnienia", Icon: Bell },
+  { id: "reminders", label: "Terminy", Icon: Bell },
   { id: "calendar", label: "Kalendarz", Icon: CalendarRange },
   { id: "shifts", label: "Grafik zmian", Icon: BriefcaseBusiness },
   { id: "study", label: "Praca", Icon: HardHat },

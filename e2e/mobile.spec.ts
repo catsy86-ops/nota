@@ -69,7 +69,7 @@ test("przytrzymanie kafla zaznacza go i pokazuje pasek zbiorczy @mobile", async 
 test("Przypomnienia mają własną zakładkę w dolnym pasku, Archiwum jest w „Więcej” @mobile", async ({ page }) => {
   const nav = page.getByRole("navigation");
   await nav.getByRole("button", { name: "Terminy" }).click();
-  await expect(page.getByRole("heading", { name: "Przypomnienia", level: 1 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Terminy", level: 1 })).toBeVisible();
   await expect(nav.getByRole("button", { name: "Terminy" })).toHaveAttribute("aria-current", "page");
 
   await page.getByRole("button", { name: "Więcej", exact: true }).click();

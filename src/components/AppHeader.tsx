@@ -114,7 +114,7 @@ export function AppHeader({
               {view === "debts" && "Długi"}
               {view === "cwiczenia" && "Ćwiczenia"}
               {view === "archive" && "Archiwum"}
-              {view === "reminders" && "Przypomnienia"}
+              {view === "reminders" && "Terminy"}
               {view === "trash" && "Kosz"}
               {view === "folder" && (
                 <span className="flex items-center gap-1.5">

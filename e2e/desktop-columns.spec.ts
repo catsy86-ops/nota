@@ -65,3 +65,18 @@ test.describe("telefon 390", () => {
     expect(await filters.evaluate((el) => getComputedStyle(el).position)).toBe("static");
   });
 });
+
+test("pasek boczny: grupy Codziennie / Praca / Osobiste; grupa zwija się i pamięta stan (PW-4)", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
+  await page.goto("/");
+  const aside = page.getByRole("complementary");
+  const praca = aside.locator('[data-sidebar-group="praca"]');
+  const header = praca.locator("button[aria-expanded]");
+  await expect(header).toBeVisible();
+  await header.click();
+  await expect(header).toHaveAttribute("aria-expanded", "false");
+  await expect(praca.getByRole("button", { name: "Grafik" })).toBeHidden();
+  await page.reload();
+  await expect(aside.locator('[data-sidebar-group="praca"] button[aria-expanded]')).toHaveAttribute("aria-expanded", "false");
+});

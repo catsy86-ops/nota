@@ -7,7 +7,7 @@ export const GO_CHORDS: { key: string; view: View; label: string }[] = [
   { key: "n", view: "notes", label: "Notatki" },
   { key: "d", view: "today", label: "Dziś" },
   { key: "w", view: "week", label: "Ten tydzień" },
-  { key: "p", view: "reminders", label: "Przypomnienia" },
+  { key: "p", view: "reminders", label: "Terminy" },
   { key: "c", view: "calendar", label: "Kalendarz" },
   { key: "a", view: "archive", label: "Archiwum" },
   { key: "k", view: "trash", label: "Kosz" },

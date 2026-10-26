@@ -21,9 +21,9 @@ test("pusty Archiwum: „Nowa notatka” otwiera kompozytor", async ({ page }) =
   await expect(page.getByPlaceholder("Tytuł")).toBeVisible();
 });
 
-test("pusta lista Notatek: jeden przycisk „Nowa notatka” (N-3)", async ({ page }) => {
+test("pusta lista Notatek: przycisk „Napisz pierwszą notatkę” otwiera kompozytor (N-3)", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("Zacznij tworzyć").first()).toBeVisible();
-  await page.getByRole("button", { name: "Nowa notatka" }).first().click();
+  await page.getByRole("button", { name: "Napisz pierwszą notatkę" }).first().click();
   await expect(page.getByPlaceholder("Tytuł")).toBeVisible();
 });

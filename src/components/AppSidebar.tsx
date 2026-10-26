@@ -24,10 +24,21 @@ import { dur, ease, tween } from "@/lib/motion";
 import { useSavedFilters, sameQuery } from "@/lib/savedFilters";
 import { searchNotes, useSearchReady } from "@/lib/searchNotes";
 import { preloadView } from "@/lib/viewPreload";
-import type { SidebarItem } from "@/components/sidebar/sidebarItems";
+import { groupSidebarItems, type SidebarGroupKey, type SidebarItem } from "@/components/sidebar/sidebarItems";
 import { NEUROKLIK_URL } from "@/lib/neuroklik";
 
 const MAX_FAVORITES = 10;
+
+/** Zwinięte grupy paska (PW-4): zapamiętane per przeglądarka; błąd dostępu do pamięci = wszystkie otwarte. */
+const SIDEBAR_GROUPS_KEY = "kaczy.sidebarGroups.v1";
+function readCollapsedGroups(): Partial<Record<SidebarGroupKey, boolean>> {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(SIDEBAR_GROUPS_KEY) ?? "{}");
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
 
 // „Notatki” przyjmują upuszczoną notatkę (wyjęcie z folderu); pozostałe pozycje nie.
 function NavRow({ item, active, onClick }: { item: SidebarItem; active: boolean; onClick: () => void }) {
@@ -82,6 +93,14 @@ export function AppSidebar({
   onOpenStats, onOpenFocusMode, onSettingsOpenChange,
 }: AppSidebarProps) {
   const [moreOpen, setMoreOpen] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState(readCollapsedGroups);
+  const toggleGroup = (key: SidebarGroupKey) => {
+    setCollapsedGroups((prev) => {
+      const next = { ...prev, [key]: !prev[key] };
+      try { localStorage.setItem(SIDEBAR_GROUPS_KEY, JSON.stringify(next)); } catch { /* bez zapisu — zwinięcie działa do odświeżenia */ }
+      return next;
+    });
+  };
   const isMobile = useIsMobile();
   const asideRef = useRef<HTMLElement>(null);
   // Telefon: pasek to okno modalne — fokus wchodzi do środka, Tab zapętla się w nim, Esc zamyka,
@@ -170,15 +189,37 @@ export function AppSidebar({
               </div>
 
               {/* Kafle statystyk usunięte — liczniki są już przy pozycjach nawigacji. */}
-              <div className="space-y-0.5">
-                {sidebarItems.map((item) => (
-                  <NavRow
-                    key={item.view}
-                    item={item}
-                    active={view === item.view && view !== "label" && !(item.view === "notes" && activeFilterId)}
-                    onClick={() => onGoView(item.view)}
-                  />
-                ))}
+              <div className="space-y-2">
+                {groupSidebarItems(sidebarItems).map((g) => {
+                  const collapsed = !!collapsedGroups[g.key];
+                  const rows = (
+                    <div className="space-y-0.5" hidden={collapsed}>
+                      {g.items.map((item) => (
+                        <NavRow
+                          key={item.view}
+                          item={item}
+                          active={view === item.view && view !== "label" && !(item.view === "notes" && activeFilterId)}
+                          onClick={() => onGoView(item.view)}
+                        />
+                      ))}
+                    </div>
+                  );
+                  if (!g.label) return <div key={g.key}>{rows}</div>;
+                  return (
+                    <div key={g.key} data-sidebar-group={g.key}>
+                      <button
+                        type="button"
+                        aria-expanded={!collapsed}
+                        onClick={() => toggleGroup(g.key)}
+                        className="section-caps px-3 mb-1 flex w-full items-center justify-between gap-1.5 py-1 rounded-control hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        {g.label}
+                        <ChevronDown className={cn("w-3 h-3 transition-transform motion-reduce:transition-none", collapsed && "-rotate-90")} aria-hidden />
+                      </button>
+                      {rows}
+                    </div>
+                  );
+                })}
               </div>
 
               {favorites.length > 0 && (

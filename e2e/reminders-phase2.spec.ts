@@ -24,7 +24,7 @@ async function withReminder(page: Page, title: string, day: string) {
 test("Gotowe działa przy nadchodzącym terminie w Terminach i zdejmuje go z listy (D2)", async ({ page }) => {
   await withReminder(page, "Zebranie nadchodzące", "11");
 
-  await page.getByRole("button", { name: "Przypomnienia" }).first().click();
+  await page.getByRole("button", { name: "Terminy" }).first().click();
   const card = page.locator("[data-note-id-wrap]", { hasText: "Zebranie nadchodzące" });
   await expect(card).toHaveCount(1);
   await card.getByRole("button", { name: "Gotowe" }).click();
@@ -33,7 +33,7 @@ test("Gotowe działa przy nadchodzącym terminie w Terminach i zdejmuje go z lis
 });
 
 test("pusty widok Terminów: „Nowa notatka” otwiera edytor (1d)", async ({ page }) => {
-  await page.getByRole("button", { name: "Przypomnienia" }).first().click();
+  await page.getByRole("button", { name: "Terminy" }).first().click();
   await expect(page.getByText("Brak przypomnień")).toBeVisible();
   await page.getByRole("button", { name: "Nowa notatka", exact: true }).click();
   await expect(page.getByPlaceholder("Tytuł").first()).toBeVisible();
