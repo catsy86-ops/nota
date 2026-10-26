@@ -2568,3 +2568,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Co robi:** w menu „⋯” przy terminie serii jest „Zakończ serię”: koniec serii ustawia się na bieżącym wystąpieniu (`reminderRepeatUntil` = koniec dnia tego terminu). Termin zostaje do „Gotowe”, po którym seria nie ma następnego wystąpienia i notatka nie ma terminu. Cofnięcie w toaście.
 - **Gdzie:** `src/lib/reminderActions.ts` (`endSeriesUpdate`, `ReminderFields` z `reminderRepeatUntil`); `src/components/ReminderQuickActions.tsx`.
 - **Testy:** `src/lib/reminderActions.test.ts`.
+
+## Terminy — „Odłóż do…” z datą (2.2, 2026-10-26)
+
+- **Co robi:** w menu „⋯” przy terminie jest „Odłóż do…”. Okno przyjmuje tekst z tym samym parserem co przypomnienie („piątek 8:00”, „jutro 15”, „12.11 9:00”), pokazuje „Ustawię na: …” i nie przyjmuje pustego tekstu, daty w przeszłości ani nierozpoznanej. Zapis odkłada jedno wystąpienie serii i ma cofnięcie w toaście.
+- **Ograniczenie serii:** odłożenie po następnym wystąpieniu serii zostaje zastąpione tym wystąpieniem (reguła `snoozeTarget`, bez zmian). Dla serii dziennej dobrze działa wybór przed następnym dniem.
+- **Gdzie:** `src/components/SnoozeUntilDialog.tsx`; `src/components/ReminderQuickActions.tsx` (pozycja menu i okno); `src/lib/reminderActions.ts` (`snoozeToUpdate`).
+- **Testy:** `src/lib/reminderActions.test.ts`; e2e `e2e/dzis-terminy.spec.ts` („Odłóż do…” na Dziś).

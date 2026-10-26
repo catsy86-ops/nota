@@ -79,3 +79,15 @@ export function endSeriesUpdate(note: Note): ReminderUpdate | null {
     message: "Seria zakończona na tym wystąpieniu",
   };
 }
+
+/**
+ * „Odłóż do…” (2.2): jedno wystąpienie na wybraną chwilę (np. z parsera „piątek 8:00”).
+ * Ten sam zapis co przy „Jutro”, czyli `snoozeTarget` — seria nie przesuwa się w całości.
+ */
+export function snoozeToUpdate(note: Note, at: number, now: number): ReminderUpdate {
+  const snz = snoozeTarget(note, at, now);
+  return {
+    patch: { reminder: snz.reminder, reminderDay: note.reminderDay, reminderBase: snz.reminderBase },
+    message: `Odłożono do ${new Date(at).toLocaleString("pl-PL", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}`,
+  };
+}

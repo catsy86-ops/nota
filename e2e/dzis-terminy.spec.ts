@@ -34,3 +34,23 @@ test("kalendarz: „Za godzinę” w panelu dnia odkłada termin i pokazuje cofn
   await panel.getByRole("button", { name: "Za godzinę" }).click();
   await expect(page.getByText("Przesunięto o godzinę")).toBeVisible();
 });
+
+test("dziś: „Odłóż do…” przyjmuje datę z parsera i odkłada termin z listy (2.2)", async ({ page }) => {
+  const title = `Odłóż do ${Date.now()}`;
+  await page.goto("/kalendarz");
+  await page.getByRole("button", { name: "Dodaj termin" }).click();
+  await page.getByLabel("Treść nowej notatki z terminem").fill(title);
+  await page.getByLabel("Godzina przypomnienia").fill("00:01");
+  await page.getByRole("button", { name: /Utwórz notatkę z terminem/ }).click();
+
+  await page.goto("/dzis");
+  const due = page.getByTestId("today-due");
+  await expect(due).toContainText(title);
+  await due.getByRole("button", { name: "Więcej sposobów odłożenia" }).first().click();
+  await page.getByRole("menuitem", { name: "Odłóż do…" }).click();
+  const dialog = page.getByRole("dialog", { name: "Odłóż do…" });
+  await dialog.getByRole("textbox", { name: "Kiedy" }).fill("jutro 15");
+  await expect(dialog).toContainText("Ustawię na:");
+  await dialog.getByRole("button", { name: "Odłóż" }).click();
+  await expect(due).toContainText("Nic nie czeka na dziś.");
+});

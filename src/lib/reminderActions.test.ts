@@ -82,3 +82,18 @@ describe("„Zakończ serię” (2.4)", () => {
     expect(endSeriesUpdate({ reminder: null, reminderRepeat: "daily" } as never)).toBeNull();
   });
 });
+
+describe("„Odłóż do…” (2.2)", () => {
+  it("zwykły termin przechodzi na wybraną chwilę; seria odkłada jedno wystąpienie", async () => {
+    const { snoozeToUpdate } = await import("./reminderActions");
+    const now = new Date(2026, 9, 19, 12).getTime();
+    const pick = new Date(2026, 9, 23, 8, 0).getTime();
+    const plain = snoozeToUpdate({ reminder: now, reminderRepeat: "none" } as never, pick, now);
+    expect(plain.patch.reminder).toBe(pick);
+    expect(plain.message).toMatch(/^Odłożono do /);
+    const beforeNext = new Date(2026, 9, 19, 15).getTime();
+    const series = snoozeToUpdate({ reminder: now, reminderRepeat: "daily", reminderDay: 19 } as never, beforeNext, now);
+    expect(series.patch.reminder).toBe(beforeNext);
+    expect(series.patch.reminderBase).toBeDefined();
+  });
+});

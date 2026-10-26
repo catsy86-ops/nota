@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Check, MoreHorizontal } from "lucide-react";
+import { SnoozeUntilDialog } from "@/components/SnoozeUntilDialog";
 import type { Note } from "@/hooks/useNotes";
 import { haptic } from "@/lib/haptics";
 import { toastWithUndo } from "@/lib/undoToast";
-import { doneReminderUpdate, reminderFields, endSeriesUpdate, snoozeMenuAt, snoozeReminderUpdate, type ReminderFields, type SnoozeKind } from "@/lib/reminderActions";
+import { doneReminderUpdate, reminderFields, endSeriesUpdate, snoozeMenuAt, snoozeReminderUpdate, snoozeToUpdate, type ReminderFields, type SnoozeKind } from "@/lib/reminderActions";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
@@ -34,6 +36,7 @@ interface ReminderQuickActionsProps {
  */
 export function ReminderQuickActions({ note, onUpdate, className }: ReminderQuickActionsProps) {
   const id = note.id;
+  const [untilOpen, setUntilOpen] = useState(false);
 
   return (
     <div className={cn("flex flex-wrap items-center gap-1 sm:gap-1.5", className)} onClick={(e) => e.stopPropagation()}>
@@ -106,6 +109,7 @@ export function ReminderQuickActions({ note, onUpdate, className }: ReminderQuic
               {o.label}
             </DropdownMenuItem>
           ))}
+          <DropdownMenuItem onSelect={() => setUntilOpen(true)}>Odłóż do…</DropdownMenuItem>
           {endSeriesUpdate(note) && (
             <DropdownMenuItem
               onSelect={() => {
@@ -121,6 +125,13 @@ export function ReminderQuickActions({ note, onUpdate, className }: ReminderQuic
           )}
         </DropdownMenuContent>
       </DropdownMenu>
+      <SnoozeUntilDialog open={untilOpen} onOpenChange={setUntilOpen} onPick={(at) => {
+        const prev = reminderFields(note);
+        const { patch, message } = snoozeToUpdate(note, at, Date.now());
+        haptic("tap");
+        onUpdate(id, patch);
+        toastWithUndo(message, () => onUpdate(id, prev), { id: `rem-snooze-${id}` });
+      }} />
     </div>
   );
 }
