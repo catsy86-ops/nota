@@ -1,3 +1,4 @@
+import { SyncStatusDot } from "@/components/sync/SyncStatusDot";
 import { useEffect, useRef } from "react";
 import { AnimatePresence, m as motion } from "framer-motion";
 import { PanelLeftClose, PanelLeftOpen, Moon, Sun, FileDown, FolderOpen, Tag } from "lucide-react";
@@ -30,11 +31,13 @@ interface AppHeaderProps {
   search: string;
   onSearchChange: (v: string) => void;
   onImport: () => void;
+  /** Otwiera Ustawienia na karcie Synchronizacja (kropka stanu, 2.4). */
+  onOpenSync?: () => void;
 }
 
 export function AppHeader({
   selectionMode, sidebarOpen, onToggleSidebar, dark, onToggleTheme,
-  view, activeFolder, activeLabel, displayCount, search, onSearchChange, onImport,
+  view, activeFolder, activeLabel, displayCount, search, onSearchChange, onImport, onOpenSync,
 }: AppHeaderProps) {
   // Stan tutaj, nie w Index: schowanie nagłówka przerysowuje tylko nagłówek, a nie całą stronę z kartami.
   const hideHeader = useHideOnScroll(96);
@@ -169,6 +172,7 @@ export function AppHeader({
           )}
 
           {/* Na telefonie Import/Eksport jest w „Więcej” — nagłówek miał tam pięć ikon. */}
+          {onOpenSync && <SyncStatusDot onOpenSync={onOpenSync} />}
           <ImportExportMenu onImport={onImport}>
             <IconButton aria-label="Import / Eksport" title="Import / Eksport" className="hidden sm:inline-flex">
               <FileDown className="w-5 h-5" />

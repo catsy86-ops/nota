@@ -18,3 +18,16 @@ export function settingsTabFromParam(value: string | null): SettingsTab | null {
   if (!value || !Object.prototype.hasOwnProperty.call(SETTINGS_TABS, value)) return null;
   return SETTINGS_TABS[value as keyof typeof SETTINGS_TABS];
 }
+
+/** Karta, którą ma otworzyć następne otwarcie Ustawień (np. kropka synchronizacji). Zużywana raz. */
+let requestedTab: SettingsTab | null = null;
+
+export function requestSettingsTab(tab: SettingsTab): void {
+  requestedTab = tab;
+}
+
+export function consumeRequestedSettingsTab(): SettingsTab | null {
+  const tab = requestedTab;
+  requestedTab = null;
+  return tab;
+}

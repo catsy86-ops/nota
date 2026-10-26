@@ -16,6 +16,7 @@ import { preloadView } from "@/lib/viewPreload";
 
 import type { View } from "@/hooks/useFilteredNotes";
 import { isViewShown, useHiddenViews } from "@/lib/hiddenViews";
+import { useBottomSlot, type BottomSlotView } from "@/lib/bottomSlot";
 
 interface BottomNavProps {
   view: View;
@@ -41,15 +42,21 @@ const slots = [
   { key: "today" as View, label: "Dziś", Icon: CalendarDays },
 ] as const;
 
-const slotsRight = [
-  // „Terminy” (D3): pełne „Przypomnienia” nie mieściło się w kolumnie przy podpisach 12 px; nagłówek widoku bez zmian.
-  { key: "reminders" as View, label: "Terminy", Icon: Bell },
-] as const;
+const SLOT_META: Record<BottomSlotView, { label: string; Icon: typeof Bell }> = {
+  reminders: { label: "Terminy", Icon: Bell },
+  shifts: { label: "Grafik", Icon: BriefcaseBusiness },
+  study: { label: "Praca", Icon: HardHat },
+  calendar: { label: "Kalendarz", Icon: CalendarRange },
+  inbox: { label: "Skrzynka", Icon: Inbox },
+};
+
+// Prawa pozycja (2.3): wybór z Ustawień, domyślnie Terminy.
 
 export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, inboxCount = 0, dark = false, onToggleTheme, onImport, onGoFilter, search = "" }: BottomNavProps) {
   const { filters } = useSavedFilters();
   const [moreOpen, setMoreOpen] = useState(false);
   const hiddenViews = useHiddenViews();
+  const bottomSlot = useBottomSlot();
   // Długie przytrzymanie „+” otwiera arkusz „Nowa”: lista, dyktowanie, zdjęcie, rysunek.
   const [quickOpen, setQuickOpen] = useState(false);
   const pressTimer = useRef<number | undefined>(undefined);
@@ -134,7 +141,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
               </motion.button>
             </li>
 
-            {slotsRight.map(({ key, label, Icon }) => (
+            {[{ key: bottomSlot as View, ...SLOT_META[bottomSlot] }].map(({ key, label, Icon }) => (
               <NavItem key={key} active={view === key} label={label} onClick={() => onGo(key)}>
                 <Icon className="w-5 h-5" />
               </NavItem>

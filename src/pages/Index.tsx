@@ -95,7 +95,7 @@ import { VaultHost } from "@/components/vault/VaultHost";
 // first load only pays for the code the note grid itself needs.
 import { CardSkeleton, ViewSkeleton } from "@/components/ViewSkeleton";
 import { loadCalendarView, loadShiftsView, loadStudyView } from "@/lib/viewPreload";
-import { settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
+import { requestSettingsTab, settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
 import type { DebtReminderApi } from "@/components/debts/DebtsView";
 const ShortcutsDialog = lazy(() => import("@/components/ShortcutsDialog").then((m) => ({ default: m.ShortcutsDialog })));
 const PropDefsDialog = lazy(() => import("@/components/PropDefsDialog").then((m) => ({ default: m.PropDefsDialog })));
@@ -680,6 +680,7 @@ const Index = () => {
 
       <div className="flex-1 min-w-0 flex flex-col">
         <AppHeader
+          onOpenSync={() => { requestSettingsTab("sync"); setSettingsOpen(true); }}
           selectionMode={selectionMode}
           sidebarOpen={sidebarOpen}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}

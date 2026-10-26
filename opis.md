@@ -2619,3 +2619,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/lib/legacyRoomIdle.ts` (licznik, `legacyIdleExpired`); `src/lib/yjsSync.ts` (`setLegacyRoom`, `expireLegacyRoomIfIdle`, zapis pojawienia się); `src/components/SyncSettings.tsx` (sprawdzenie przy otwarciu).
 - **Do zrobienia w kodzie później (plan 2.6):** usunięcie samej obsługi starego pokoju, gdy wszystkie urządzenia mają nowszą wersję.
 - **Testy:** `src/lib/legacyRoomIdle.test.ts`; e2e `e2e/legacy-room-idle.spec.ts`.
+
+## Powłoka — czwarta pozycja dolnego paska (2.3) i kropka synchronizacji (2.4), 2026-10-26
+
+- **2.3 Czwarta pozycja:** prawa pozycja dolnego paska (obok „+”) pokazuje wybrany dział: Terminy (domyślnie), Grafik, Praca, Kalendarz lub Skrzynka. Wybór w Ustawieniach → Wygląd, „Dolny pasek” (`Segmented`). Zapis per urządzenie (`kaczy.bottomSlot.v1`, `src/lib/bottomSlot.ts`). `BottomNav.tsx` czyta go przez `SLOT_META`. Nieznana wartość wraca do Terminów. Nie zrobione: wybór przez przytrzymanie pozycji na pasku (plan dopuszcza „w Dostosuj”).
+- **2.4 Kropka stanu:** w nagłówku, tylko gdy urządzenie jest w grupie (stan różny od `disabled`). Zielona — połączono; szara — łączenie; żółta — offline (`navigator.onLine`), zmiany czekają; czerwona — błąd (`lastError`). Stuknięcie otwiera Ustawienia na karcie Synchronizacja: `requestSettingsTab("sync")` zapisuje prośbę, a `SettingsDialog` odczytuje ją przy montowaniu (`src/lib/settingsDeepLink.ts`). Komponent: `src/components/sync/SyncStatusDot.tsx`, wstawiony w `AppHeader.tsx`.
+- **Nie zrobione z 2.4:** baner „starsza wersja” (plan Ustawień 2.1) i żółty stan oparty o kolejkę zmian (dziś tylko offline).
+- **Testy:** `src/lib/bottomSlot.test.ts`; e2e `e2e/bottom-slot.spec.ts`, `e2e/sync-status-dot.spec.ts`.

@@ -6,7 +6,7 @@ import { Settings, LayoutGrid, Pencil, Database, Wifi } from "lucide-react";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
 import { BackupSettings } from "@/components/settings/BackupSettings";
-import { settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
+import { consumeRequestedSettingsTab, settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
 import { SyncFileSection } from "@/components/settings/SyncFileSection";
 
 // qrcode.react (used only here, for device pairing) kept out of the eager
@@ -20,7 +20,7 @@ interface SettingsDialogProps {
 
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState("appearance");
+  const [activeTab, setActiveTab] = useState<string>(() => consumeRequestedSettingsTab() ?? "appearance");
   const [joinPrefill, setJoinPrefill] = useState("");
 
   // Link ?settings=<karta> otwiera Ustawienia na tej karcie (faza 3c); parametr znika z adresu.

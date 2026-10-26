@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sun, Moon, Monitor, Zap, Accessibility, HardHat, CircleOff, Contrast } from "lucide-react";
+import { Sun, Moon, Monitor, Zap, Accessibility, HardHat, CircleOff, Contrast, Bell, BriefcaseBusiness, CalendarRange, Inbox } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useViewPrefs, setViewPref, resetViewPrefs, changedViewPrefs, VIEW_PREF_LABELS, type Density, type Layout } from "@/lib/viewPrefs";
@@ -19,6 +19,15 @@ import { setAppFont, useAppFont } from "@/lib/appFont";
 import { SKIN_SCHEME } from "@/lib/skins";
 import { BASE_SORTS } from "@/lib/sortOptions";
 import { HIDEABLE_VIEWS, setViewHidden, useHiddenViews, type HideableView } from "@/lib/hiddenViews";
+import { setBottomSlot, useBottomSlot, type BottomSlotView } from "@/lib/bottomSlot";
+
+const BOTTOM_SLOT_OPTIONS: { value: BottomSlotView; label: string; Icon: typeof Bell }[] = [
+  { value: "reminders", label: "Terminy", Icon: Bell },
+  { value: "shifts", label: "Grafik", Icon: BriefcaseBusiness },
+  { value: "study", label: "Praca", Icon: HardHat },
+  { value: "calendar", label: "Kalendarz", Icon: CalendarRange },
+  { value: "inbox", label: "Skrzynka", Icon: Inbox },
+];
 import { setTodayCard, useTodayCards } from "@/lib/todayCards";
 
 const HIDEABLE_LABELS: Record<HideableView, string> = {
@@ -60,6 +69,7 @@ export function AppearanceSettings() {
   const skinScheme = SKIN_SCHEME[skin];
   const hiddenViews = useHiddenViews();
   const todayCards = useTodayCards();
+  const bottomSlot = useBottomSlot();
   const siteMode = useSiteMode();
   const appFont = useAppFont();
   const { mode: motionMode, reduced: motionReduced, setMode: setMotionMode } = useMotionPref();
@@ -96,6 +106,11 @@ export function AppearanceSettings() {
         {HIDEABLE_VIEWS.map((v) => (
           <ToggleRow key={v} label={HIDEABLE_LABELS[v]} desc={hiddenViews.includes(v) ? "Ukryty" : "Widoczny"} checked={!hiddenViews.includes(v)} onCheck={(on) => setViewHidden(v, !on)} />
         ))}
+      </Section>
+
+      <Section title="Dolny pasek">
+        <p className="text-xs text-muted-foreground -mt-1">Prawa pozycja obok „+”. Wybór zapisuje się na tym urządzeniu.</p>
+        <Segmented label="Czwarta pozycja dolnego paska" options={BOTTOM_SLOT_OPTIONS} value={bottomSlot} onChange={(v) => setBottomSlot(v)} />
       </Section>
 
       <Section title="Karty na Dziś">
