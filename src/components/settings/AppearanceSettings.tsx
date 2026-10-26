@@ -19,6 +19,7 @@ import { setAppFont, useAppFont } from "@/lib/appFont";
 import { SKIN_SCHEME } from "@/lib/skins";
 import { BASE_SORTS } from "@/lib/sortOptions";
 import { HIDEABLE_VIEWS, setViewHidden, useHiddenViews, type HideableView } from "@/lib/hiddenViews";
+import { setTodayCard, useTodayCards } from "@/lib/todayCards";
 
 const HIDEABLE_LABELS: Record<HideableView, string> = {
   inbox: "Skrzynka",
@@ -58,6 +59,7 @@ export function AppearanceSettings() {
   const { mode: themeMode, setMode: setThemeMode, skin, setSkin } = useTheme();
   const skinScheme = SKIN_SCHEME[skin];
   const hiddenViews = useHiddenViews();
+  const todayCards = useTodayCards();
   const siteMode = useSiteMode();
   const appFont = useAppFont();
   const { mode: motionMode, reduced: motionReduced, setMode: setMotionMode } = useMotionPref();
@@ -94,6 +96,12 @@ export function AppearanceSettings() {
         {HIDEABLE_VIEWS.map((v) => (
           <ToggleRow key={v} label={HIDEABLE_LABELS[v]} desc={hiddenViews.includes(v) ? "Ukryty" : "Widoczny"} checked={!hiddenViews.includes(v)} onCheck={(on) => setViewHidden(v, !on)} />
         ))}
+      </Section>
+
+      <Section title="Karty na Dziś">
+        <p className="text-xs text-muted-foreground -mt-1">Zapisuje się tylko na tym urządzeniu, więc telefon i komputer mogą mieć inne karty.</p>
+        <ToggleRow label="Trening mózgu" desc={todayCards.brainTraining ? "Pokazana" : "Ukryta"} checked={todayCards.brainTraining} onCheck={(on) => setTodayCard("brainTraining", on)} />
+        <ToggleRow label="Przegląd tygodnia" desc={todayCards.weeklyReview ? "Pokazany" : "Ukryty"} checked={todayCards.weeklyReview} onCheck={(on) => setTodayCard("weeklyReview", on)} />
       </Section>
 
       <Section title="Tryb budowa: większy tekst i przyciski">

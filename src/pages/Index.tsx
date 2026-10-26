@@ -64,6 +64,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { DeleteForeverDialog, EmptyTrashDialog } from "@/components/TrashConfirmDialogs";
 import { sidebarItems } from "@/components/sidebar/sidebarItems";
 import { useHiddenViews, isViewShown } from "@/lib/hiddenViews";
+import { useTodayCards } from "@/lib/todayCards";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
 import { downloadNotesZip } from "@/lib/exportZip";
@@ -636,6 +637,7 @@ const Index = () => {
   }, [handleAddNoteGlow, deleteNote]);
 
   const hiddenViews = useHiddenViews();
+  const todayCards = useTodayCards();
   const navItems = sidebarItems({ inbox: inboxCount, overdue: overdueCount, trash: trashedNotes.length }).filter((i) => isViewShown(hiddenViews, i.view));
 
   return (
@@ -744,7 +746,7 @@ const Index = () => {
                 <TodayStudyCard onPractice={() => navigate("/praca?powtorka=1")} />
               </Suspense>
               <Suspense fallback={null}>
-                <BrainTrainingCard onRemind={(at, title) => addNote(title, "", "default", [], at)} />
+                {todayCards.brainTraining && <BrainTrainingCard onRemind={(at, title) => addNote(title, "", "default", [], at)} />}
               </Suspense>
             </ViewErrorBoundary>
           )}
@@ -752,11 +754,11 @@ const Index = () => {
           {view === "today" && !deferredSearch && (
             <ViewErrorBoundary name="Przegląd tygodnia">
               <Suspense fallback={<CardSkeleton />}>
-                <WeeklyReviewCard
+                {todayCards.weeklyReview && <WeeklyReviewCard
                   notes={notes} folders={folders} onOpen={openNote} onTogglePin={togglePin}
                   onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow}
                   archiveNote={archiveNote} unarchiveNote={unarchiveNote} trashNote={trashNote} restoreFromTrash={restoreFromTrash}
-                />
+                />}
               </Suspense>
             </ViewErrorBoundary>
           )}

@@ -2517,3 +2517,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Reguła:** `isSnoozed` i `isInboxNote` w `src/lib/inbox.ts`. Notatka odłożona jest też poza filtrem Skrzynki w `useFilteredNotes.ts`.
 - **Ograniczenie:** pole nie jest scalane przez `mergeNotes.ts` (ta lista dotyczy przypomnień). Dwa urządzenia edytujące tę samą notatkę jednocześnie mogą wybrać inne odłożenie, zwykła zasada „ostatni zapis wygrywa”.
 - **Testy:** `src/lib/inbox.test.ts` (odłożenie i powrót po terminie), e2e `e2e/inbox-triage.spec.ts` („Jutro” i „Cofnij”).
+
+## Dziś — karty opcjonalne per urządzenie (D-2, 2026-10-26)
+
+- **Co robi:** w Ustawieniach → Wygląd, sekcja „Karty na Dziś”, przełączniki „Trening mózgu” i „Przegląd tygodnia”. Wyłączona karta znika z widoku Dziś. Domyślnie obie są włączone.
+- **Zakres na tym urządzeniu:** zapis tylko lokalnie (klucz `kaczy.todayCards.v1`), bez synchronizacji. Telefon na budowie i komputer mogą mieć inne karty. Decyzja D-2 z planu.
+- **Gdzie:** `src/lib/todayCards.ts` (`todayCardsStore`, `setTodayCard`, `useTodayCards`); bramki przy kartach w `src/pages/Index.tsx` (widok „today”); przełączniki w `src/components/settings/AppearanceSettings.tsx`.
+- **Odłożone z planu 4.1:** kolejność kart przeciąganiem (`@dnd-kit/sortable`) i „oś dnia”. Oś dnia jest w Kalendarzu (`DayTimeline`), nie na Dziś, więc nie ma tu czego ustawiać. Kolejność zostaje jak dziś.
+- **Testy:** `src/lib/todayCards.test.ts`; e2e `e2e/today-cards-settings.spec.ts`.
