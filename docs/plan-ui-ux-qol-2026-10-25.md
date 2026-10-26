@@ -143,3 +143,9 @@ Odrzucone: CSS Anchor Positioning i Popover API. Radix już pozycjonuje i obsłu
 - **D-3 (animacje wejścia i wyjścia w CSS):** zrobione częściowo: cytat dnia (`DailyQuote.tsx`) i podpowiedzi skrótów w `EmptyState.tsx` używają klasy `fade-quiet` z `index.css` (samo przezroczystość, bez JS, wyłączone przy ograniczonym ruchu). Pozostałe ok. 50 plików z `framer-motion` do przeglądu; paczka nie zmieniła się w praktyce, bo `framer-motion` nadal jest w innych miejscach.
 - **D-4 (odcienie działów z motywu):** nie zrobione. Zależy od tokenu `--accent` po 1.5 (OKLCH); dobór odcieni wymaga decyzji właściciela.
 
+## D-1 — stan przed przerwą (2026-10-26)
+
+- **Zrobione:** odświeżone zrzuty bazowe testów wizualnych (commit `57537d6`), 70/70. Wcześniej 48 z 70 nie zgadzało się z kodem, także na ekranach niezmienianych.
+- **Sprawdzone na sucho:** konwersja tokenów (`docs/tools/d1-oklch/oklch-convert.cjs`): 296 definicji, 41 nazw, odchylenie w przeliczeniu w obie strony 0,000. Konsumenci (`docs/tools/d1-oklch/oklch-consumers.cjs`, tryb sucho): 21 plików, 80 odwołań z przezroczystością, 140 zwykłych.
+- **Decyzja techniczna:** przezroczystość przez `color-mix(in srgb, …)`, nie `in oklab`, żeby mieszanie wypadało tak samo jak dziś (zmiana wizualna ma być zerowa na etapie konwersji). Przestrzeń `oklab` i ponowne dostrojenie jasności to osobny krok, po przeglądzie wizualnym.
+- **Jeszcze nie zrobione:** uruchomienie `--apply` obu skryptów, przebudowa, test wizualny (oczekiwane: brak różnic), pełny e2e, commit. Stan drzewa jest czysty; skrypty nie zmieniają kodu bez `--apply`.
