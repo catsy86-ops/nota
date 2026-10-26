@@ -2650,3 +2650,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/lib/study/planItems.ts` (czyszczenie, `activePlanItems`); `src/lib/study/siteItems.ts` (rodzaj `todo`, składanie listy); `src/lib/study/sites.ts` (pole `plan`); `src/lib/study/store.ts` (`setSitePlan`); `src/components/study/SitePlan.tsx`; `src/components/study/EntryCheck.tsx` (wstawienie sekcji).
 - **Nie zrobione z planu 2.6:** „Zrobione” w raporcie dnia (raport nie czyta jeszcze planu). Przypomnienie „wieczorem dzień wcześniej” (plan jest dostępny o każdej porze, bez powiadomienia).
 - **Testy:** `src/lib/study/planItems.test.ts` (czyszczenie, widok dnia); `src/lib/study/siteItems.plan.test.ts` (składanie z mapy); e2e `e2e/site-plan.spec.ts` (dodanie, odhaczenie, zapis po przeładowaniu).
+
+## Kalendarz — agenda miesiąca na telefonie (K-3, plan 3.4, 2026-10-26)
+
+- **Co robi:** na telefonie przełącznik widoku w Kalendarzu ma trzy tryby: „Miesiąc”, „Tydzień” i „Lista”. „Lista” zamienia siatkę na agendę miesiąca: dni z terminami albo zmianą z Grafiku, jedno pod drugim, bez pustych dni. Każdy dzień to wiersz (stuknięcie otwiera go w panelu i przełącza na „Miesiąc”). Prognozy serii są oznaczone. Pusty miesiąc pokazuje komunikat.
+- **Decyzja K-3:** najpierw agenda, oś tygodnia (plan 3.3) zostaje na później, bo to L i tylko na `xl`.
+- **Gdzie:** `src/components/calendar/MonthAgenda.tsx` (widok; ta sama lista co wydruk, ale z przyciskami); `src/components/calendar/ReminderCalendarView.tsx` (tryb `agenda`, przełącznik, widoczność siatki i tygodnia).
+- **Nie zrobione:** agenda na komputerze (na desktopie siatka zostaje, a tryb „Lista” nie jest widoczny); oś godzin tygodnia (3.3).
+- **Testy:** `src/components/calendar/MonthAgenda.test.tsx`; e2e `e2e/calendar-agenda.spec.ts` (telefon: Lista ↔ Miesiąc).

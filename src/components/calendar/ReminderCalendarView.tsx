@@ -23,6 +23,7 @@ import { dayType, setDayEntry, useShifts } from "@/lib/shifts";
 import { useStudyDayMarks } from "./useStudyDayMarks";
 import { DayDialog } from "@/components/shifts/DayDialog";
 import { MonthGrid } from "./MonthGrid";
+import { MonthAgenda } from "./MonthAgenda";
 import { markMoved } from "./movedSignal";
 import { DayPanel } from "./DayPanel";
 import { UpcomingDays } from "./UpcomingDays";
@@ -67,7 +68,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
   const [showKeys, setShowKeys] = useState(false);
   const [dialogDay, setDialogDay] = useState<Date | null>(null);
   // Telefon: miesiąc (siatka) albo tydzień (pasek 7 dni). Na większym ekranie oba są zawsze.
-  const [phoneView, setPhoneView] = useState<"month" | "week">("month");
+  const [phoneView, setPhoneView] = useState<"month" | "week" | "agenda">("month");
   // Wydruk miesiąca (3b planu): `PrintRoot` schowa resztę strony i otworzy okno drukowania.
   const [printing, setPrinting] = useState(false);
   const [editTarget, setEditTarget] = useState<ReminderEditTarget | null>(null);
@@ -375,7 +376,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
           </PrintRoot>
         )}
         <div role="group" aria-label="Widok na telefonie" className="order-3 flex gap-1 sm:hidden">
-            {(["month", "week"] as const).map((v) => (
+            {(["month", "week", "agenda"] as const).map((v) => (
               <button
                 key={v}
                 type="button"
@@ -383,7 +384,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
                 onClick={() => setPhoneView(v)}
                 className={`rounded-lg px-3 py-1.5 text-xs font-medium coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring ${phoneView === v ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:text-foreground"}`}
               >
-                {v === "month" ? "Miesiąc" : "Tydzień"}
+                {v === "month" ? "Miesiąc" : v === "week" ? "Tydzień" : "Lista"}
               </button>
             ))}
         </div>
@@ -394,7 +395,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
         )}
 
         {/* Telefon: bieżący tydzień i tak jest wierszem siatki miesiąca tuż pod spodem — pasek go dublował. */}
-        <div className={phoneView === "month" ? "order-4 max-sm:hidden" : "order-4"}>
+        <div className={phoneView === "week" ? "order-4" : "order-4 max-sm:hidden"}>
         <WeekStrip
           day={selectedDay}
           byDay={byDay}
@@ -406,7 +407,17 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
         />
         </div>
 
-        <div className={phoneView === "week" ? "order-5 max-sm:hidden" : "order-5"}>
+        {/* K-3 (plan Kalendarza 3.4): agenda miesiąca na telefonie — trzeci widok, bez pustych dni. */}
+        <div className={phoneView === "agenda" ? "order-5 sm:hidden" : "hidden"}>
+          <MonthAgenda
+            month={month}
+            byDay={byDay}
+            titleOf={titleOf}
+            shiftOf={(key) => { const t = shiftOf(key); return t ? `${t.name} ${t.start}–${t.end}` : undefined; }}
+            onSelectDay={(key) => { const [y, m, d] = key.split("-").map(Number); const day = new Date(y, m - 1, d); setSelectedDay(day); setPhoneView("month"); setMonth(new Date(y, m - 1, 1)); }}
+          />
+        </div>
+        <div className={phoneView === "month" ? "order-5" : "order-5 max-sm:hidden"}>
           <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
           <MonthGrid
             month={month}
