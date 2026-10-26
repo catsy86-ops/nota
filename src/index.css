@@ -764,6 +764,11 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
 @keyframes chip-slide { from { opacity: 0; transform: translateX(-6px); } }
 .rise-in { animation: rise-in var(--dur-base) var(--ease-out) calc(var(--i, 0) * 40ms) backwards; }
 .chip-slide { animation: chip-slide var(--dur-base) var(--ease-out) calc(var(--i, 0) * 40ms + 60ms) backwards; }
+/* Cichy wjazd samą przezroczystością (cytat dnia, podpowiedzi skrótów): zamiast framer-motion (D-3). */
+@keyframes fade-quiet { from { opacity: 0; } }
+.fade-quiet { animation: fade-quiet 0.4s var(--ease-out) backwards; }
+.fade-quiet-delayed { animation-delay: 0.5s; }
+@media (prefers-reduced-motion: reduce) { .fade-quiet { animation: none; } }
 /* Zmiana dnia w oknie: treść wjeżdża miękko. */
 @keyframes soft-swap { from { opacity: 0; transform: translateY(4px); } }
 .soft-swap { animation: soft-swap var(--dur-base) var(--ease-out); }

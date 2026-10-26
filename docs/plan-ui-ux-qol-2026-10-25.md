@@ -140,6 +140,6 @@ Odrzucone: CSS Anchor Positioning i Popover API. Radix już pozycjonuje i obsłu
 
 - **D-1 (OKLCH):** nie zrobione. Tokeny są w kanałach HSL używanych w `hsl(var(--…))` (konfiguracja Tailwinda, ok. 77 miejsc w CSS, 51 w TSX). Zmiana wymaga przejścia po wszystkich motywach; plan zaleca najpierw jeden motyw.
 - **D-2 (React Compiler):** nie zrobione. Wymaga nowej wtyczki Babel i pomiaru INP/renderów na gałęzi.
-- **D-3 (animacje wejścia i wyjścia w CSS):** nie zrobione. `framer-motion` w 53 plikach; zmiana po jednym komponencie z pomiarem paczki.
+- **D-3 (animacje wejścia i wyjścia w CSS):** zrobione częściowo: cytat dnia (`DailyQuote.tsx`) i podpowiedzi skrótów w `EmptyState.tsx` używają klasy `fade-quiet` z `index.css` (samo przezroczystość, bez JS, wyłączone przy ograniczonym ruchu). Pozostałe ok. 50 plików z `framer-motion` do przeglądu; paczka nie zmieniła się w praktyce, bo `framer-motion` nadal jest w innych miejscach.
 - **D-4 (odcienie działów z motywu):** nie zrobione. Zależy od tokenu `--accent` po 1.5 (OKLCH); dobór odcieni wymaga decyzji właściciela.
 

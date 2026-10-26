@@ -2519,6 +2519,13 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Test:** `src/lib/study/report.plan.test.ts` (dzień z samym odhaczeniem, zakres dat).
 - **Commit:** niezacommitowane (do commita po zielonym e2e).
 
+## Wygląd — wejścia bez framer-motion (D-3, 2026-10-26)
+
+- **Co robi:** cytat dnia pod siatką i podpowiedzi skrótów na pustym ekranie Notatek pojawiają się płynnie samą przezroczystością.
+- **Gdzie:** klasa `.fade-quiet` (+ `.fade-quiet-delayed` dla opóźnienia 0,5 s) w `src/index.css`; używają ją `src/components/DailyQuote.tsx` i `src/components/EmptyState.tsx`. Przy `prefers-reduced-motion` animacja jest wyłączona.
+- **Ograniczenia:** tylko te dwa miejsca. Inne komponenty z `framer-motion` zostają (plan D-3 zakłada przegląd po jednym komponencie z pomiarem).
+- **Testy:** `e2e/empty-states-qol.spec.ts`, `e2e/bundle.spec.ts`; jednostkowe `EmptyState.copy.test.ts`.
+
 ## Ćwiczenia — masa ciała (C-2), Powłoka — nazwy widoków (VIEW_META 1.3) (2026-10-26)
 
 - **Masa ciała (C-2):** czwarta zakładka „Waga” w Ćwiczeniach (`CwiczeniaView.tsx`, komponent `WeightSection.tsx`). Zapis ważenia dnia (masa 20–300 kg, z przecinkiem albo kropką, zaokrąglenie do 0,1), jeden wpis na dzień, lista ostatnich 14, zmiana względem poprzedniego ważenia i średnia z 7. Usunięcie z „Cofnij”.

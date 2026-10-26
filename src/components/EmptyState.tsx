@@ -1,4 +1,3 @@
-import { m as motion } from "framer-motion";
 import { Archive, Bell, CalendarDays, CalendarRange, FolderOpen, Tag, Trash, type LucideIcon } from "lucide-react";
 import { NotatnikWordmark } from "@/components/NotatnikWordmark";
 import type { View, Elsewhere } from "@/hooks/useFilteredNotes";
@@ -134,12 +133,7 @@ export function EmptyState({ view, search, elsewhere, onGo, onNew, onClearSearch
         </div>
       )}
       {view === "notes" && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="coarse:hidden mt-6 flex flex-wrap items-center justify-center gap-2 max-w-md mx-auto"
-        >
+        <div className="fade-quiet fade-quiet-delayed coarse:hidden mt-6 flex flex-wrap items-center justify-center gap-2 max-w-md mx-auto">
           {[
             { k: modShortcut("K"), l: "paleta poleceń" },
             { k: modShortcut("N"), l: "nowa notatka" },
@@ -149,7 +143,7 @@ export function EmptyState({ view, search, elsewhere, onGo, onNew, onClearSearch
               <span>— {s.l}</span>
             </span>
           ))}
-        </motion.div>
+        </div>
       )}
     </StatusPanel>
   );
