@@ -1,6 +1,8 @@
 import { createElement, useEffect, useRef } from "react";
 import { ReminderDueToast } from "@/components/ReminderDueToast";
 import { eveningTime, snoozeTimes } from "@/lib/reminderAgenda";
+import { reminderFields } from "@/lib/reminderActions";
+import { toastWithUndo } from "@/lib/undoToast";
 import { doneTarget, snoozeTarget } from "@/lib/reminderRepeat";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { notePath } from "@/lib/viewRoute";
@@ -125,11 +127,28 @@ export function useReminderNotifications(
       if (grouped) {
         const names = due.slice(0, 3).map((n) => (n.locked ? "Notatka prywatna" : n.title.trim() || "Bez tytułu"));
         const rest = due.length - names.length;
+        // T 2.3: „Odłóż wszystkie o godzinę” odkłada każde wystąpienie jednym kliknięciem; „Cofnij” w toaście
+        // przywraca wszystkie naraz. „Zobacz” zostaje jako drugi przycisk dymku.
+        const snapshot = due.map((n) => ({ note: n, prev: reminderFields(n) }));
         toast(`${due.length} przypomnienia czekają`, {
           id: "reminders-due",
           description: names.join(" · ") + (rest > 0 ? ` i ${rest} więcej` : ""),
           duration: 30000,
-          action: showAllRef.current ? { label: "Zobacz", onClick: () => showAllRef.current?.() } : undefined,
+          action: {
+            label: "Odłóż wszystkie o godzinę",
+            onClick: () => {
+              const now = Date.now();
+              const at = snoozeTimes(now).inHour;
+              for (const { note } of snapshot) {
+                const t = snoozeTarget(note, at, now);
+                firedCbRef.current(note.id, t.reminder, seriesDay(note), t.reminderBase);
+              }
+              toastWithUndo(`Odłożono ${snapshot.length} o godzinę`, () => {
+                for (const { note, prev } of snapshot) firedCbRef.current(note.id, prev.reminder, prev.reminderDay, prev.reminderBase);
+              }, { id: "reminders-due-snooze" });
+            },
+          },
+          cancel: showAllRef.current ? { label: "Zobacz", onClick: () => showAllRef.current?.() } : undefined,
           position: mobile ? "top-center" : undefined,
         });
       }

@@ -70,7 +70,9 @@ test("kilka zaległych naraz: jeden zbiorczy dymek z „Zobacz” prowadzi do Pr
   await expect(toast).toBeVisible();
   await expect(toast).toContainText("Rachunek za wodę");
   // Bez osobnych dymków dla każdej notatki.
-  await expect(page.locator("[data-sonner-toast]").filter({ hasText: "Odłóż" })).toHaveCount(0);
+  await expect(page.locator("[data-sonner-toast]").filter({ has: page.getByRole("button", { name: "Odłóż", exact: true }) })).toHaveCount(0);
+  // Zbiorczy dymek ma „Odłóż wszystkie o godzinę” i „Zobacz”.
+  await expect(toast.getByRole("button", { name: "Odłóż wszystkie o godzinę" })).toBeVisible();
   await toast.getByRole("button", { name: "Zobacz" }).click();
   await expect(page).toHaveURL(/\/przypomnienia/);
 });
@@ -85,4 +87,27 @@ test("zaległy termin: „Gotowe” na kaflu odhacza bez otwierania notatki, Cof
   await expect(page.getByRole("region", { name: /Zaległe|Przegapione/ })).toHaveCount(0);
   await page.getByRole("listitem").filter({ hasText: "Przypomnienie odhaczone" }).getByRole("button", { name: "Cofnij" }).click();
   await expect(page.getByRole("region", { name: /Zaległe|Przegapione/ })).toBeVisible();
+});
+
+test("kilka zaległych naraz: „Odłóż wszystkie o godzinę” odkłada wszystkie, jedno „Cofnij” przywraca (2.3)", async ({ page }) => {
+  await page.addInitScript(() => {
+    if (sessionStorage.getItem("seeded")) return;
+    sessionStorage.setItem("seeded", "1");
+    localStorage.setItem("kaczy.tour.seen.v1", "1");
+    const now = Date.now();
+    const base = { content: "", color: "default", pinned: false, archived: false, trashed: false, trashedAt: null, labels: [], priority: "none", images: [], checklist: [], folderId: null, order: 0, createdAt: now, updatedAt: now, favorite: undefined };
+    localStorage.setItem("kaczy-notes-data", JSON.stringify([
+      { ...base, id: "a", title: "Rachunek za wodę", reminder: now - 3600_000 },
+      { ...base, id: "b", title: "Przegląd auta", reminder: now - 7200_000 },
+      { ...base, id: "c", title: "Kupić filtry", reminder: now - 60_000 },
+    ]));
+  });
+  await page.goto("/");
+  const toast = page.locator("[data-sonner-toast]").filter({ hasText: "3 przypomnienia czekają" });
+  await expect(toast).toBeVisible();
+  await toast.getByRole("button", { name: "Odłóż wszystkie o godzinę" }).click();
+  const done = page.locator("[data-sonner-toast]").filter({ hasText: "Odłożono 3 o godzinę" });
+  await expect(done).toBeVisible();
+  await done.getByRole("button", { name: "Cofnij" }).click();
+  await expect(page.locator("[data-sonner-toast]").filter({ hasText: "Odłożono 3 o godzinę" })).toHaveCount(0);
 });

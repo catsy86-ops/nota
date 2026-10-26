@@ -2575,3 +2575,9 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Ograniczenie serii:** odłożenie po następnym wystąpieniu serii zostaje zastąpione tym wystąpieniem (reguła `snoozeTarget`, bez zmian). Dla serii dziennej dobrze działa wybór przed następnym dniem.
 - **Gdzie:** `src/components/SnoozeUntilDialog.tsx`; `src/components/ReminderQuickActions.tsx` (pozycja menu i okno); `src/lib/reminderActions.ts` (`snoozeToUpdate`).
 - **Testy:** `src/lib/reminderActions.test.ts`; e2e `e2e/dzis-terminy.spec.ts` („Odłóż do…” na Dziś).
+
+## Terminy — dymek zbiorczy (2.3, 2026-10-26)
+
+- **Co robi:** gdy wypada co najmniej dwa przypomnienia naraz, jest jeden dymek. Przycisk „Odłóż wszystkie o godzinę” odkłada każde wystąpienie o godzinę (`snoozeTarget`, po jednym na notatkę). Jedno „Cofnij” w osobnym dymku przywraca wszystkie terminy. „Zobacz” jest drugim przyciskiem dymku (prowadzi do Terminów).
+- **Gdzie:** `src/hooks/useReminderNotifications.ts` (gałąź `grouped`); cofnięcie przez `firedCbRef` z zapisanymi polami z `reminderFields`.
+- **Testy:** `e2e/reminder-toast.spec.ts` (zbiorczy dymek, odłożenie i cofnięcie).
