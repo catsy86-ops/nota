@@ -20,7 +20,7 @@ import { useViewPrefs, toggleGroupCollapsed } from "@/lib/viewPrefs";
 import { useFilteredNotes, type View } from "@/hooks/useFilteredNotes";
 import { useViewRoute } from "@/hooks/useViewRoute";
 import { parseViewRoute } from "@/lib/viewRoute";
-import { countDueToday, groupReminders } from "@/lib/reminderAgenda";
+import { countDueToday, groupReminders, sortArchivedByReminder } from "@/lib/reminderAgenda";
 import { useStudyOverdueCount } from "@/lib/studyOverdueCount";
 import { searchNotes } from "@/lib/searchNotes";
 import { resolveWikiTarget, splitWikiTarget } from "@/lib/wikiLinks";
@@ -352,7 +352,8 @@ const Index = () => {
   const boundaryTick = useNextBoundary(others);
   const reminderGroups = useMemo(() => (view === "reminders" ? groupReminders(others) : []), [view, others, boundaryTick]);
   const archivedRows = useMemo(
-    () => (view === "reminders" ? (deferredSearch ? searchNotes(archivedNotes, deferredSearch) : archivedNotes) : []),
+    // T 1.6: archiwum po terminie jak grupy — z terminem rosnąco, bez terminu na końcu.
+    () => (view === "reminders" ? (deferredSearch ? searchNotes(archivedNotes, deferredSearch) : sortArchivedByReminder(archivedNotes)) : []),
     [view, deferredSearch, archivedNotes],
   );
   // Na „Dziś” liczą się zaległe i dzisiejsze przypomnienia, żeby „Brak notatek z dzisiaj” nie stał obok ich listy.

@@ -75,3 +75,8 @@ export function snoozeTimes(now: number = Date.now()): { in10min: number; inHour
   t.setHours(9, 0, 0, 0);
   return { in10min: now + 10 * 60 * 1000, inHour: now + 60 * 60 * 1000, tomorrow9: t.getTime() };
 }
+
+/** Archiwum w Terminach (T 1.6): z terminem rosnąco, notatki bez terminu na końcu. Nowa tablica. */
+export function sortArchivedByReminder<T extends Pick<Note, "reminder">>(notes: T[]): T[] {
+  return [...notes].sort((a, b) => (a.reminder === null ? 1 : 0) - (b.reminder === null ? 1 : 0) || byReminderAsc(a, b));
+}

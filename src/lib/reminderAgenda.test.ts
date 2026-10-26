@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { groupReminders, snoozeTimes, countOverdue, countDueToday } from "./reminderAgenda";
+import { groupReminders, snoozeTimes, countOverdue, countDueToday, sortArchivedByReminder } from "./reminderAgenda";
 import { weekSeriesForecasts } from "@/lib/reminderForecast";
 import type { Note } from "@/hooks/useNotes";
 
@@ -112,5 +112,16 @@ describe("reminderAgenda — pusta lista i odłożenie o godzinę (faza 1 Przypo
       archived,
     ];
     expect(countDueToday(notes, now)).toBe(3);
+  });
+});
+
+describe("sortArchivedByReminder (T 1.6)", () => {
+  it("z terminem rosnąco, bez terminu na końcu, bez zmiany oryginału", () => {
+    const a = note("bez", null);
+    const b = note("późny", at(2026, 11, 1));
+    const c = note("wczesny", at(2026, 10, 30));
+    const input = [a, b, c];
+    expect(sortArchivedByReminder(input).map((n) => n.id)).toEqual(["wczesny", "późny", "bez"]);
+    expect(input.map((n) => n.id)).toEqual(["bez", "późny", "wczesny"]);
   });
 });

@@ -59,8 +59,9 @@ export function useReminderNotifications(
   const handledRef = useRef(new Map<string, number>());
 
   // Przyciski akcji z powiadomienia systemowego (public/sw-notifications.js).
+  // T 1.5: odłożenie i „Gotowe” działają też na prywatnej notatce — zmieniają tylko pola terminu
+  // (jawna projekcja), więc skarbiec nie musi być odblokowany. Treści nie czytamy ani nie zapisujemy.
   const applyActionRef = useRef((note: Note, action: string) => {
-    if (note.locked) return;
     if (action === "snooze10") {
       const now = Date.now();
       const t = snoozeTarget(note, snoozeTimes(now).in10min, now);
