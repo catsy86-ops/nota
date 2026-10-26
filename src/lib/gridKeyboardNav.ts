@@ -78,10 +78,14 @@ export function registerGridNavSection(order: number, noteIds: string[], handler
   attachKeyListener();
   return () => {
     sections.delete(section);
-    // Fokus na notatce, której już nie ma, zostawiłby martwy pierścień.
-    const ids = flatIds();
-    if (state.focusedId && !ids.includes(state.focusedId)) setState({ focusedId: null });
-    if (state.previewId && !ids.includes(state.previewId)) setState({ previewId: null });
+    // Zmiana listy kafli to odrejestrowanie i ponowna rejestracja w jednym commicie Reacta. Sprawdzamy dopiero
+    // po mikrozadaniu, żeby nie zdjąć podglądu notatki, która zaraz wraca w tej samej sekcji. Fokus na notatce,
+    // której już nie ma, zostawiłby martwy pierścień.
+    queueMicrotask(() => {
+      const ids = flatIds();
+      if (state.focusedId && !ids.includes(state.focusedId)) setState({ focusedId: null });
+      if (state.previewId && !ids.includes(state.previewId)) setState({ previewId: null });
+    });
     if (sections.size === 0) detachKeyListener();
   };
 }

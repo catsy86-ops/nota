@@ -126,13 +126,28 @@ describe("gridKeyboardNav", () => {
     expect(e.defaultPrevented).toBe(false);
   });
 
-  it("odrejestrowanie sekcji zdejmuje fokus z notatki, której już nie ma", () => {
+  it("odrejestrowanie sekcji zdejmuje fokus z notatki, której już nie ma", async () => {
     probe = probeHandlers();
     const unregister = registerGridNavSection(0, ["p1"], probe);
     registerGridNavSection(1, ["o1"], probe);
     setGridNavFocus("p1");
     unregister();
+    await Promise.resolve();
     expect(currentFocus()).toBe(null);
+  });
+
+  it("ponowna rejestracja tej samej listy kafli nie zdejmuje podglądu (zmiana listy w otwartym czytniku)", async () => {
+    vi.useFakeTimers();
+    probe = probeHandlers();
+    const unregister = registerGridNavSection(0, ["p1"], probe);
+    setGridNavPreview("p1");
+    unregister();
+    registerGridNavSection(0, ["p1", "x"], probe);
+    await Promise.resolve();
+    key("Enter");
+    vi.runAllTimers();
+    expect(probe.openNote).toHaveBeenCalledWith("p1");
+    vi.useRealTimers();
   });
 
   it("nie reaguje, gdy użytkownik pisze w polu tekstowym", () => {

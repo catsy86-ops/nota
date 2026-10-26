@@ -1,4 +1,4 @@
-﻿import { useRef, useEffect, useCallback, memo, useMemo, useState, forwardRef } from "react";
+﻿import { useRef, useEffect, useLayoutEffect, useCallback, memo, useMemo, useState, forwardRef } from "react";
 import type { CardExitIntent } from "@/lib/cardMotion";
 import { AnimatePresence } from "framer-motion";
 import { useSortable, SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
@@ -156,10 +156,11 @@ export function NoteGrid({
   // Ta siatka tylko zgłasza swoje notatki i akcje; klawiszy nasłuchuje jeden
   // globalny właściciel w `gridKeyboardNav` — patrz komentarz w tym module.
   const noteIdsKey = noteIds.join(",");
-  // Handlery siatki są w ref i aktualne przy każdym renderze. Sekcja rejestruje się tylko przy zmianie kolejności
-  // albo listy kafli: wyrejestrowanie czyści podgląd otwartej notatki (patrz `registerGridNavSection`), więc zmiana
-  // `notes` albo callbacku nie może go wywoływać. Bez tego czytnik zamykał się po Ctrl+kliku na link w panelu „Obok”.
+  // Handlery siatki są w ref, aktualizowanym po każdym zatwierdzeniu renderu. Sekcja rejestruje się tylko przy zmianie
+  // kolejności albo listy kafli, żeby zmiana `notes` albo callbacku jej nie wyrejestrowywała (a czyszczenie podglądu
+  // przy wyrejestrowaniu zamykało czytnik po Ctrl+kliku na link w panelu „Obok”).
   const navHandlers = useRef<GridNavHandlers | null>(null);
+  useLayoutEffect(() => {
   navHandlers.current = {
     onDelete,
     onArchive: isArchived ? undefined : onArchive,
@@ -184,6 +185,7 @@ export function NoteGrid({
     },
     colsCount,
   };
+  });
   useEffect(() => {
     const handlers = new Proxy({} as GridNavHandlers, { get: (_, key) => navHandlers.current?.[key as keyof GridNavHandlers] });
     return registerGridNavSection(navOrder, noteIdsKey ? noteIdsKey.split(",") : [], handlers);
