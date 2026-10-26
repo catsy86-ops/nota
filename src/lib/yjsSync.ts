@@ -311,7 +311,7 @@ function refreshDevices() {
     const dev = (s as { device?: { name?: unknown; version?: unknown; schema?: unknown } }).device;
     const name = dev?.name;
     if (id !== awareness.clientID && typeof name === "string" && name) {
-      devices.push({ id, name, version: cleanVersionClaim(dev?.version), schema: cleanSchemaClaim(dev?.schema) });
+      devices.push({ id, name: name.slice(0, DEVICE_NAME_MAX), version: cleanVersionClaim(dev?.version), schema: cleanSchemaClaim(dev?.schema) });
     }
   });
   const ids = new Set(devices.map((d) => d.id));

@@ -349,6 +349,9 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
       if (entry.dirty || !entry.vault.startsWith("v1.") || !store.isLocked(id)) continue;
       try {
         const token = await encryptNoteStringV2(key, JSON.stringify(entry.content), id, sessionEpoch);
+        // Przegląd V-3 (M-2): podczas szyfrowania notatkę mogła zmienić edycja albo zdalne urządzenie.
+        // Zapisujemy tylko, gdy wpis w cache jest ten sam, niebrudny, a dokument nadal ma poprzedni szyfrogram (CAS).
+        if (cache.get(id) !== entry || entry.dirty || store.getVault(id) !== entry.vault) continue;
         if (store.setVault(id, token, false)) cache.set(id, { ...entry, vault: token });
       } catch {
         // zostaje v1

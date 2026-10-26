@@ -2734,3 +2734,28 @@ Przegląd wykonany ręcznie na diffie (nie przez agenta `security-reviewer`; CLA
 - **Punkt 5 (rozpoznawanie zablokowanej notatki) — zamknięty.** `isLockedPlain` sprawdza pełny kształt tokenu (`looksLikeVaultToken`: wersja, iv, szyfrogram), a nie sam prefiks. Zepsuty token nie czyni już zwykłej notatki zablokowaną, więc jej treść jest widoczna jak dotąd, a nie ukrywana.
 - **Testy:** `src/lib/privateNotes.test.ts` (migracja przy otwartej i zamkniętej bramce), `src/lib/yjsStore.props.test.ts` (zepsuty token; fałszywy token w teście właściwości zastąpiony tokenem o prawidłowej długości).
 - **Przegląd V-3 po punktach 1, 2, 3 i 5:** otwarty pozostaje punkt 2 w części dotyczącej fałszywej, ale poprawnej deklaracji schematu (wymaga uwierzytelnionych deklaracji) oraz formalny przegląd `security-reviewer`.
+
+## Przegląd V-3 — raport `security-reviewer` i korekty (2026-10-26)
+
+Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwierdził brak krytycznych ustaleń. Poniżej korekty do wcześniejszego przeglądu ręcznego i stan poprawek.
+
+**Korekty twierdzeń:**
+1. **Punkt 1 („nic nie trafia jawnie”)** jest prawdziwy tylko przy otwartej bramce schematu. Insider może ją zamknąć (M-1), więc jawne metadane są możliwe także przy zablokowanym skarbcu.
+2. **Punkt 2 („peer z deklaracją schema:2 może wymusić zapis v2”)** jest nieprawdziwy w obecnym kodzie: bramka to `every(...)`, więc dodanie urządzenia z wyższym numerem nie może jej otworzyć. Prawdziwe jest zamykanie bramki przez deklarację (M-1) oraz otwieranie jej przez usunięcie cudzych stanów awareness (M-3b).
+3. **Punkt 3 („migracja nie zmienia treści”)** był nieprawdziwy w wyścigu z edycją (M-2). **Poprawione w tym commicie** (CAS: wpis w cache musi być ten sam i niebrudny, a dokument musi nadal mieć poprzedni szyfrogram). Migracja nie obejmuje metadanych (M-4).
+4. **Punkt 5** jest prawdziwy dla ścieżki zapisu. Projekcja z dokumentu traktuje każdy napis przy `locked === true` jako zablokowany (I-4); to bezpieczne (ukrycie, bez wycieku), ale nie jest tym samym co kształt tokenu.
+
+**Poprawione w tym commicie:**
+- **M-2** (wyścig migracji v1→v2): CAS, patrz wyżej.
+- **L-3** (długa nazwa peera): nazwa przycinana do 40 znaków przy odczycie awareness.
+
+**Otwarte (do decyzji i kolejnych zmian):**
+- **W-1 (wysokie):** wpis `meta` (w tym `epoch`) w dokumencie nie jest uwierzytelniony. Uczestnik grupy z kodem synchronizacji może podmienić epokę i uniemożliwić odczyt notatek v2. Poprawka wymaga zapamiętywania epoki lokalnie (TOFU) i jawnej akcji przy zmianie. To ważne przed V-4, bo V-4 dodaje kolejne opakowanie klucza w tym samym `meta`.
+- **M-1, M-3, M-4 (średnie):** metadane zależne od bramki (zamknięta bramka = jawny zapis), brak czyszczenia resztek jawnych metadanych, bramka liczona tylko z widocznych urządzeń. Rekomendacja agenta: metadane zawsze w szyfrogramie, a bramka tylko dla formatu treści.
+- **M-5 (średnie):** równoległe zakładanie skarbca offline na dwóch urządzeniach może zostawić notatki jednego z nich nieczytelne (LWW dla `meta`). Wymaga wykrywania konfliktu i pytania użytkownika.
+- **L-1, L-2, L-4, L-5 (niskie):** kopia zablokowanej notatki traci kolor i folder; metadane zablokowanych notatek nie są widoczne na listach; możliwe samoczynne zablokowanie po zmianie hasła (do potwierdzenia w przeglądarce); błąd `flush` przy blokadzie porzuca edycje.
+- **Higiena testów:** testy `setDeviceSource` nie czyszczą stanu w `afterEach`; po nieudanej asercji stan przecieka do kolejnych testów.
+
+**Czego nie dało się ocenić statycznie:** zachowanie y-webrtc przy usuwaniu stanów awareness, wyścig migracji z locka w przeglądarce, zawartość IndexedDB i logu aktualizacji, stare urządzenia w terenie.
+
+**Stan formalny:** przegląd agentem jest wykonany (bez uruchomienia testów). Wymaga potwierdzenia przez człowieka przed wydaniem, zwłaszcza W-1.
