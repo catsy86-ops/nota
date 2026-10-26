@@ -17,6 +17,7 @@ const report: JournalReport = {
   workMinutes: 0,
   open: [],
   images: [REF_A, REF_B, REF_C],
+  captions: {},
   fittings: [],
   toOrder: [],
   stages: null,
@@ -88,6 +89,7 @@ describe("nagrania w paczce (1.10 planu Praca 2026-10-24)", () => {
     const withAudio: JournalReport = {
       ...report,
       images: [],
+      captions: {},
       recordings: [
         { hash: "h1", name: "Nagranie 2026-10-14 08-15.webm", size: 3, type: "audio/webm" },
         { hash: "h2", name: "Nagranie 2026-10-14 08-15.webm", size: 3, type: "audio/webm" },

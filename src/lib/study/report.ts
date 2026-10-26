@@ -12,6 +12,7 @@ import { openShortages, shortageLine, type Shortage } from "./shortages";
 import { dayHours, siteMinutesOn } from "./siteHours";
 import type { JournalEntry } from "./yStudy";
 import type { Attachment } from "@/lib/attachments";
+import { captionText } from "@/lib/study/photoCaption";
 
 /**
  * Raport z dziennika budowy: dzień albo zakres dni, jedna budowa albo wszystkie.
@@ -99,6 +100,8 @@ export interface JournalReport {
   open: ReportEntry[];
   /** Zdjęcia wszystkich wpisów, od najstarszego. */
   images: string[];
+  /** Podpisy zdjęć raportu (ref → tekst z datą wpisu); wypalane w pliku przy ZIP-ie (P-1). */
+  captions: Record<string, string>;
   /** Nagrania głosowe wpisów, od najstarszego — do paczki ZIP (1.10). */
   recordings: Attachment[];
   /** Suma kształtek z wpisów raportu, od największej liczby. */
@@ -264,6 +267,7 @@ export function buildJournalReport(journal: readonly JournalEntry[], opts: Repor
     workMinutes: days.reduce((s, d) => s + (d.work ? workMinutesOf(d.work) : 0), 0),
     open,
     images: picked.flatMap((e) => e.images),
+    captions: captionsOf(picked),
     recordings: picked.flatMap((e) => e.recordings ?? []),
     fittings: sumFittings(picked.map((e) => e.fittings)),
     toOrder: opts.siteId ? siteOrder(journal, opts.siteId, opts.siteCard?.orderedAt).items : [],
@@ -352,4 +356,13 @@ export function reportWhatsApp(r: JournalReport): string {
     .replace(/^- \[x\] /gm, "✅ ")
     .replace(/^- \[ \] /gm, "⬜ ");
   return `*${r.title}*\n\n${body}`;
+}
+
+/** Podpisy zdjęć wpisów raportu: ref → tekst z datą wpisu (tak jak na wypalonym zdjęciu). */
+function captionsOf(entries: readonly JournalEntry[]): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const e of entries) {
+    for (const [ref, text] of Object.entries(e.captions ?? {})) out[ref] = captionText(text, e.at);
+  }
+  return out;
 }

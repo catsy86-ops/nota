@@ -11,8 +11,10 @@ import { CAPTION_MAX } from "@/lib/study/photoCaption";
  */
 const CAPTION_CHIPS = ["Przed zakryciem", "Łazienka", "Kuchnia", "Kotłownia"];
 
-export function PhotoStrip({ images, processing, captioning, captionDraft, onCaptionDraft, onToggleCaption, onCancelCaption, onSubmitCaption, onDraw, onRemove }: {
+export function PhotoStrip({ images, captions, processing, captioning, captionDraft, onCaptionDraft, onToggleCaption, onCancelCaption, onSubmitCaption, onRemoveCaption, onDraw, onRemove }: {
   images: string[];
+  /** Podpisy zdjęć wpisu (ref → tekst); pokazane pod paskiem, wypalane dopiero przy eksporcie. */
+  captions: Record<string, string>;
   processing: number;
   captioning: string | null;
   captionDraft: string;
@@ -20,6 +22,7 @@ export function PhotoStrip({ images, processing, captioning, captionDraft, onCap
   onToggleCaption: (ref: string) => void;
   onCancelCaption: () => void;
   onSubmitCaption: (ref: string) => void;
+  onRemoveCaption: (ref: string) => void;
   onDraw: (ref: string) => void;
   onRemove: (ref: string) => void;
 }) {
@@ -69,6 +72,11 @@ export function PhotoStrip({ images, processing, captioning, captionDraft, onCap
           ))}
         </ul>
       )}
+      {images.some((r) => captions[r]) && (
+        <ul className="space-y-0.5 text-xs text-muted-foreground" aria-label="Podpisy zdjęć">
+          {images.map((r, i) => (captions[r] ? <li key={r}>Zdjęcie {i + 1}: {captions[r]}</li> : null))}
+        </ul>
+      )}
       {captioning && images.includes(captioning) && (
         <form
           className="space-y-2 rounded-xl border border-primary/40 bg-primary/5 p-3"
@@ -99,8 +107,9 @@ export function PhotoStrip({ images, processing, captioning, captionDraft, onCap
             ))}
           </div>
           <div className="flex gap-2">
-            <Button type="submit" size="sm" disabled={processing > 0} className="coarse:h-11">Wtop podpis</Button>
+            <Button type="submit" size="sm" disabled={processing > 0} className="coarse:h-11">Zapisz podpis</Button>
             <Button type="button" size="sm" variant="ghost" onClick={onCancelCaption} className="coarse:h-11">Anuluj</Button>
+            {captioning && captions[captioning] && <Button type="button" size="sm" variant="ghost" onClick={() => onRemoveCaption(captioning)} className="coarse:h-11">Usuń podpis</Button>}
           </div>
         </form>
       )}

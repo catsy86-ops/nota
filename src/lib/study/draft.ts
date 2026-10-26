@@ -17,6 +17,8 @@ export interface JournalDraft {
   text: string;
   checked: string[];
   images: string[];
+  /** Podpisy zdjęć (ref → tekst); starszy szkic dostaje `{}` (`sanitizeDraft`). */
+  captions: Record<string, string>;
   /** Nagrania głosowe (załączniki audio); starszy szkic dostaje pustą listę (`sanitizeDraft`). */
   recordings: Attachment[];
   /** Protokół próby szczelności; `null` = bez próby. */
@@ -31,7 +33,7 @@ export interface JournalDraft {
   geo?: GeoPoint | null;
 }
 
-export const EMPTY_DRAFT: JournalDraft = { topic: "", kind: "ok", text: "", checked: [], images: [], recordings: [], test: null, fittings: [], at: null, stage: null, geo: null };
+export const EMPTY_DRAFT: JournalDraft = { topic: "", kind: "ok", text: "", checked: [], images: [], captions: {}, recordings: [], test: null, fittings: [], at: null, stage: null, geo: null };
 
 export function sanitizeDraft(defaults: JournalDraft, stored: unknown): JournalDraft {
   if (!stored || typeof stored !== "object") return defaults;
@@ -44,6 +46,7 @@ export function sanitizeDraft(defaults: JournalDraft, stored: unknown): JournalD
     text: parts.text,
     checked: parts.checked,
     images: parts.images,
+    captions: parts.captions,
     recordings: parts.recordings,
     test: parts.test,
     fittings: parts.fittings,

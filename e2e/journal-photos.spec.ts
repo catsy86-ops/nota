@@ -44,10 +44,12 @@ test("zdjęcia wpisu: podpis wtopiony w zdjęcie, limit 5, galeria w powiększen
   await form.getByRole("button", { name: "Przed zakryciem" }).click();
   await expect(form.getByRole("textbox")).toHaveValue("Przed zakryciem");
   await form.getByRole("textbox").fill("Łazienka, pion 58 cm");
-  await form.getByRole("button", { name: "Wtop podpis" }).click();
+  await form.getByRole("button", { name: "Zapisz podpis" }).click();
   await expect(form).toHaveCount(0);
   await expect(sheet.getByRole("button", { name: "Usuń zdjęcie z wpisu" })).toHaveCount(5);
-  await expect(firstImg).not.toHaveAttribute("src", before!);
+  // P-1: podpis jest danymi wpisu, zdjęcie w magazynie zostaje bez zmian (wypalenie dopiero przy eksporcie).
+  await expect(firstImg).toHaveAttribute("src", before!);
+  await expect(sheet.getByRole("list", { name: "Podpisy zdjęć" })).toContainText("Łazienka, pion 58 cm");
 
   await sheet.getByRole("button", { name: "Zapisz wpis" }).click();
   await expect(sheet).toHaveCount(0);

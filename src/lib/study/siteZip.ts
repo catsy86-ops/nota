@@ -1,3 +1,4 @@
+import { captionPhoto } from "@/lib/study/photoCaption";
 import { imageStore } from "@/lib/imageStore";
 import { buildZip, safeFileName, type ZipEntry } from "@/lib/exportZip";
 import { reportText, type JournalReport } from "./report";
@@ -65,7 +66,10 @@ export async function buildSiteZip(
     const rec = await read(ref).catch(() => undefined);
     if (!rec) { missingPhotos++; continue; }
     const num = String(i + 1).padStart(width, "0");
-    entries.push({ name: `zdjecia/${num}.${extOf(rec.type)}`, data: new Uint8Array(rec.bytes) });
+    // Podpis (P-1) wypalamy dopiero tutaj; bez obsługi przeglądarki zostaje oryginał.
+    const burned = report.captions?.[ref] ? await captionPhoto(new Blob([rec.bytes], { type: rec.type }), report.captions[ref]).catch(() => null) : null;
+    const out = burned ? { bytes: await burned.arrayBuffer(), type: "image/jpeg" } : rec;
+    entries.push({ name: `zdjecia/${num}.${extOf(out.type)}`, data: new Uint8Array(out.bytes) });
     photos++;
   }
   let docs = 0;

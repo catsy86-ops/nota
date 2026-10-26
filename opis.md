@@ -2626,3 +2626,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **2.4 Kropka stanu:** w nagłówku, tylko gdy urządzenie jest w grupie (stan różny od `disabled`). Zielona — połączono; szara — łączenie; żółta — offline (`navigator.onLine`), zmiany czekają; czerwona — błąd (`lastError`). Stuknięcie otwiera Ustawienia na karcie Synchronizacja: `requestSettingsTab("sync")` zapisuje prośbę, a `SettingsDialog` odczytuje ją przy montowaniu (`src/lib/settingsDeepLink.ts`). Komponent: `src/components/sync/SyncStatusDot.tsx`, wstawiony w `AppHeader.tsx`.
 - **Nie zrobione z 2.4:** baner „starsza wersja” (plan Ustawień 2.1) i żółty stan oparty o kolejkę zmian (dziś tylko offline).
 - **Testy:** `src/lib/bottomSlot.test.ts`; e2e `e2e/bottom-slot.spec.ts`, `e2e/sync-status-dot.spec.ts`.
+
+## Praca — podpis zdjęcia jako dane (P-1, 2026-10-26)
+
+- **Co robi:** podpis zdjęcia zapisuje się w danych wpisu (`captions`: ref zdjęcia → tekst, ≤ 80 znaków) i pokazuje pod paskiem zdjęć. Zdjęcie w magazynie się nie zmienia. Podpis wypala się w pliku dopiero przy eksporcie ZIP budowy (`buildSiteZip`, z datą wpisu). Można go poprawić i usunąć („Usuń podpis”) bez utraty zdjęcia.
+- **Stare zdjęcia** z wypalonym podpisem zostają bez zmian (nie mają wpisu `captions`).
+- **Gdzie:** `src/lib/study/yStudy.ts` (`cleanCaptions`, pole w `cleanEntryParts`/`cleanEntry`, klucz w `JOURNAL_ENTRY_KEYS`); `src/lib/study/draft.ts`, `entrySheet.ts`, `store.ts` (pole szkicu i wpisu); `src/components/study/JournalEntrySheet.tsx` (`saveCaption`); `src/components/study/PhotoStrip.tsx`; `src/lib/study/report.ts` (`captionsOf`); `src/lib/study/siteZip.ts` (wypalenie).
+- **Ograniczenia:** wypalenie wymaga przeglądarki z `createImageBitmap` (bez niej ZIP idzie z oryginałem). Udostępnianie pojedynczego zdjęcia i wydruk nie wypalają podpisu (tylko ZIP). Równoległa edycja podpisów z dwóch urządzeń: ostatni zapis wygrywa dla całej mapy.
+- **Testy:** `src/lib/study/captions.test.ts`; e2e `e2e/journal-photos.spec.ts` (zapis podpisu, zdjęcie bez zmian).

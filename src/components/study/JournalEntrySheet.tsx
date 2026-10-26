@@ -56,7 +56,7 @@ const KIND_ON: Record<JournalKind, string> = {
 let persistAsked = false;
 
 /** Pola wspólne dla szkicu nowego wpisu i edycji zapisanego. */
-type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "recordings" | "test" | "fittings" | "stage" | "geo">;
+type FormFields = Pick<JournalDraft, "topic" | "kind" | "text" | "checked" | "images" | "captions" | "recordings" | "test" | "fittings" | "stage" | "geo">;
 
 /** Odtwarzacz i nagrywanie leniwie, poza główną paczką (jak w notatkach). */
 const VoiceRecorder = lazy(() => import("@/components/VoiceAttachmentParts").then((m) => ({ default: m.VoiceRecorder })));
@@ -315,28 +315,20 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   }
 
   /**
-   * Wtapia podpis (tekst + data wpisu) w zdjęcie i podmienia je we wpisie na nowe —
-   * opis jedzie z plikiem do szefa i inwestora. Oryginał zostaje w magazynie do odśmiecenia.
+   * Podpis zdjęcia (P-1): zapisuje tekst w `captions` wpisu; zdjęcie zostaje bez zmian. Wypalenie w pliku
+   * dopiero przy eksporcie (ZIP, raport). Pusty tekst = usunięcie podpisu.
    */
-  async function burnCaption(ref: string) {
-    setProcessing((n) => n + 1);
-    try {
-      const rec = await imageStore.get(ref);
-      const out = rec ? await captionPhoto(new Blob([rec.bytes], { type: rec.type }), captionText(captionDraft, at ?? Date.now())) : null;
-      const fitted = out ? await prepareImage(new File([out], "podpis.jpg", { type: "image/jpeg" })) : null;
-      if (!fitted) { toast.error("Nie udało się dodać podpisu do zdjęcia"); return; }
-      const next = await imageStore.putBlob(fitted);
-      const now = getForm().images;
-      if (now.includes(ref)) patch({ images: now.map((r) => (r === ref ? next : r)) });
-      haptic("success");
-      setCaptioning(null);
-      setCaptionDraft("");
-    } catch {
-      photoSaveFailed();
-    } finally {
-      setProcessing((n) => n - 1);
-    }
+  function saveCaption(ref: string, text: string) {
+    const clean = text.trim().replace(/\s+/g, " ").slice(0, 80);
+    const next = { ...getForm().captions };
+    if (clean) next[ref] = clean;
+    else delete next[ref];
+    patch({ captions: next });
+    haptic("success");
+    setCaptioning(null);
+    setCaptionDraft("");
   }
+
 
   /** Zdjęcie otwarte do rysowania (strzałka, wymiar „przed zakryciem”); `null` = płótno zamknięte. */
   const [drawing, setDrawing] = useState<{ ref: string; url: string } | null>(null);
@@ -406,7 +398,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     commitSite();
     if (isEdit) { saveEdit(); return; }
     const wasDone = topic && columnOf(study, topic) === "done";
-    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, recordings: form.recordings, at, test: form.test, fittings: form.fittings, stage: form.stage, geo: form.geo ?? null });
+    const entry = addJournalEntry({ kind, topic: topic || null, text, checked: [...checked], images, captions: form.captions, recordings: form.recordings, at, test: form.test, fittings: form.fittings, stage: form.stage, geo: form.geo ?? null });
     if (entry) freshEntry.id = entry.id;
     if (!entry) {
       haptic("warn");
@@ -436,7 +428,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     const prev = study.journal.find((e) => e.id === f.id);
     const demotes = editDemotesTopic({ kind: f.kind, topic: f.topic }, prev, !!f.topic && columnOf(study, f.topic) === "done");
     const saved = updateJournalEntry(f.id, {
-      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, recordings: f.recordings, at: f.at, site: f.site, resolved: f.resolved, test: f.test, fittings: f.fittings, stage: f.stage, geo: f.geo ?? null,
+      kind: f.kind, topic: f.topic || null, text: f.text, checked: f.checked, images: f.images, captions: f.captions, recordings: f.recordings, at: f.at, site: f.site, resolved: f.resolved, test: f.test, fittings: f.fittings, stage: f.stage, geo: f.geo ?? null,
     });
     if (!saved) {
       haptic("warn");
@@ -816,7 +808,9 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               onCaptionDraft={setCaptionDraft}
               onToggleCaption={(ref) => { setCaptioning(captioning === ref ? null : ref); setCaptionDraft(""); }}
               onCancelCaption={() => setCaptioning(null)}
-              onSubmitCaption={(ref) => void burnCaption(ref)}
+              onSubmitCaption={(ref) => saveCaption(ref, captionDraft)}
+              captions={getForm().captions}
+              onRemoveCaption={(ref) => saveCaption(ref, "")}
               onDraw={(ref) => void openDrawing(ref)}
               onRemove={(ref) => {
                 const before = getForm().images;

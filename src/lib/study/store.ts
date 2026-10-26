@@ -202,6 +202,8 @@ export interface NewJournalEntry {
   text: string;
   checked?: string[];
   images?: string[];
+  /** Podpisy zdjęć (ref → tekst); czyszczone przez `cleanEntryParts` (tylko zdjęcia ze `images`). */
+  captions?: Record<string, string>;
   /** Nagrania głosowe (załączniki audio); brak = bez nagrań. Nagranie samo wystarcza, by wpis nie był pusty (jak zdjęcie). */
   recordings?: Attachment[];
   /** Moment wpisu („za wczoraj”); brak = teraz. Przyszłość przycina się do teraz. */
@@ -224,6 +226,7 @@ function entryFields(input: NewJournalEntry, now: number) {
     text: input.text.trim(),
     checked: (input.checked ?? []).filter((id) => items.some((c) => c.id === id)),
     images: input.images ?? [],
+    captions: input.captions,
     recordings: input.recordings ?? [],
     test: input.test,
     fittings: input.fittings,
@@ -231,7 +234,7 @@ function entryFields(input: NewJournalEntry, now: number) {
     geo: input.geo,
   });
   if (parts.empty) return null;
-  const { text, checked, images, recordings, test, fittings, stage, geo } = parts;
+  const { text, checked, images, captions, recordings, test, fittings, stage, geo } = parts;
   return {
     at: typeof input.at === "number" && Number.isFinite(input.at) ? Math.min(input.at, now) : now,
     kind: input.kind,
@@ -239,6 +242,7 @@ function entryFields(input: NewJournalEntry, now: number) {
     text,
     checked,
     images,
+    ...(Object.keys(captions).length ? { captions } : {}),
     ...(recordings.length ? { recordings } : {}),
     ...(test ? { test } : {}),
     ...(fittings.length ? { fittings } : {}),
