@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { localDayKey } from "@/lib/dayDone";
 import { nextReminderAt } from "@/lib/timeOfDay";
-import { CUSTOM_HINT_MAX, CUSTOM_NAME_MAX, CUSTOM_PREFIX, EXERCISES, exerciseById, MUSCLE_GROUPS, type Equipment, type MuscleGroup } from "@/lib/training/catalog";
+import { CUSTOM_HINT_MAX, CUSTOM_NAME_MAX, CUSTOM_PREFIX, EQUIPMENT_LIST, EXERCISES, exerciseById, MUSCLE_GROUP_LABELS, MUSCLE_GROUPS, type Equipment, type MuscleGroup } from "@/lib/training/catalog";
 import { bestKgSeries, byTrainingTime, overDumbbell, planLine, progressByExercise, TRAINING_KG_MAX, TRAINING_NOTE_MAX, TRAINING_REMINDER_DEFAULT, TRAINING_REPS_MAX, TRAINING_WINDOW_END, volumeOf, type PlanDay, type TrainingEntry, type TrainingReminder, type TrainingSet } from "@/lib/training/model";
 import { addPlanDay, addTrainingEntry, removePlanDay, removeTrainingEntry, restorePlanDay, restoreTrainingEntry, setTrainingEquipment, setTrainingReminder, useTrainingEntries, useTrainingEquipment, useTrainingPlans, useTrainingReminder, useCustomExercises, addCustomExercise, removeCustomExercise } from "@/lib/training/store";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -156,7 +156,7 @@ function NewExerciseForm({ onCreated }: { onCreated: (id: string) => void }) {
         onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); save(); } }} />
       <div className="flex flex-wrap items-center gap-3">
         <select aria-label="Partia mięśniowa" value={group} onChange={(e) => setGroup(e.target.value as MuscleGroup)} className="rounded-md border border-input bg-background px-3 py-2 text-sm coarse:h-11">
-          {MUSCLE_GROUPS.map((g) => <option key={g} value={g}>{g[0].toUpperCase() + g.slice(1)}</option>)}
+          {MUSCLE_GROUPS.map((g) => <option key={g} value={g}>{MUSCLE_GROUP_LABELS[g]}</option>)}
         </select>
         {(EQUIPMENT_OPTIONS).map((eq) => (
           <label key={eq} className="flex items-center gap-1.5 text-sm">
@@ -171,7 +171,7 @@ function NewExerciseForm({ onCreated }: { onCreated: (id: string) => void }) {
   );
 }
 
-const EQUIPMENT_OPTIONS: Equipment[] = ["ławka", "hantle"];
+const EQUIPMENT_OPTIONS: Equipment[] = EQUIPMENT_LIST;
 
 function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans: PlanDay[]; onSaved: () => void }) {
   const [exerciseId, setExerciseId] = useState(EXERCISES[0].id);
