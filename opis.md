@@ -2588,3 +2588,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/components/AddNoteBar.tsx` (stan `reminderAllDay`, `reminderOpenSignal`, `ComposerExtras.reminderAllDay`, akcja `reminder` w `expand` i w efekcie); `src/components/ReminderPicker.tsx` (`openSignal`, otwarcie po zmianie sygnału); `src/pages/Index.tsx` (zapis `reminderAllDay` w `handleComposerAdd`, `onNew` w pustym widoku Terminów).
 - **Ograniczenie:** flaga „Cały dzień” nie jest zapisywana w szkicu (`Draft`), więc po przywróceniu szkicu trzeba ją zaznaczyć ponownie.
 - **Testy:** `e2e/composer-reminder.spec.ts` (okno terminu po „Nowa notatka”, zapis z „Cały dzień”).
+
+## Terminy — lista zamiast kafli (2.6, T-3, 2026-10-26)
+
+- **Co robi:** w Terminach nad grupami jest przełącznik „Kafle / Lista”. Lista pokazuje wiersze jak na Dziś: tytuł, termin w mono, odznakę serii (ikona z tekstem dla czytnika) i akcje przy terminie. Archiwum też jest w liście.
+- **Domyślnie (decyzja T-3):** lista na telefonie (`useIsMobile`), kafle na komputerze. Wybór zapisuje się na tym urządzeniu (`kaczy.remindersLayout.v1`, `null` = jeszcze nie wybrano). Wybór wygrywa z domyślnym.
+- **Gdzie:** `src/lib/remindersLayout.ts` (store, `effectiveRemindersLayout`); `src/components/reminders/ReminderListGroups.tsx`; `src/pages/Index.tsx` (przełącznik i warunkowy render kafli/listy).
+- **Testy:** `src/lib/remindersLayout.test.ts`; e2e `e2e/reminders-layout.spec.ts` (zapamiętanie po odświeżeniu); istniejące e2e Terminów na desktopie i iPhone 14 zielone.

@@ -4,6 +4,9 @@ import { flushSync } from "react-dom";
 import { isMotionReduced } from "@/hooks/useMotionPref";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ReminderListGroups } from "@/components/reminders/ReminderListGroups";
+import { cn } from "@/lib/utils";
+import { effectiveRemindersLayout, setRemindersLayout, useRemindersLayoutChoice } from "@/lib/remindersLayout";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
 import { InboxCapture } from "@/components/InboxCapture";
 import { useReaderNav } from "@/hooks/useReaderNav";
@@ -142,6 +145,7 @@ const Index = () => {
   const { confirmAction, confirmDialog } = useConfirmAction();
   const { dark, toggle: toggleTheme } = useTheme();
   const isMobile = useIsMobile();
+  const remindersLayout = effectiveRemindersLayout(useRemindersLayoutChoice(), isMobile);
   const prefs = useViewPrefs();
   // Widok, folder, etykieta i zapytanie żyją w adresie (patrz `lib/viewRoute.ts`).
   const route = useViewRoute();
@@ -835,12 +839,27 @@ const Index = () => {
               <StudyDueRows onOpenStudy={(siteId) => go("study", siteId ? { site: siteId } : {})} />
             </Suspense>
           )}
-          {view === "reminders" && reminderGroups.map((group, i) => (
+          {view === "reminders" && (
+            <div role="group" aria-label="Układ Terminów" className="flex justify-end gap-1">
+              {(["tiles", "list"] as const).map((layout) => (
+                <button key={layout} type="button" aria-pressed={remindersLayout === layout} onClick={() => setRemindersLayout(layout)} className={cn("rounded-full px-3 py-1 text-xs font-medium coarse:min-h-11", remindersLayout === layout ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:text-foreground")}>
+                  {layout === "tiles" ? "Kafle" : "Lista"}
+                </button>
+              ))}
+            </div>
+          )}
+          {view === "reminders" && remindersLayout === "list" && (
+            <>
+              <ReminderListGroups groups={reminderGroups} onOpen={openNote} onUpdate={updateNote} />
+              {archivedRows.length > 0 && <ReminderListGroups groups={[{ key: "archive", label: "W archiwum", notes: archivedRows }]} onOpen={openNote} onUpdate={updateNote} />}
+            </>
+          )}
+          {view === "reminders" && remindersLayout === "tiles" && reminderGroups.map((group, i) => (
             <NoteGroupSection key={group.key} groupKey={`reminders-${group.key}`} label={group.label} count={group.notes.length} tone={group.key === "overdue" || group.key === "missed" ? "alert" : "default"}>
               {renderGrid(group.notes, i)}
             </NoteGroupSection>
           ))}
-          {view === "reminders" && archivedRows.length > 0 && (
+          {view === "reminders" && remindersLayout === "tiles" && archivedRows.length > 0 && (
             <NoteGroupSection groupKey="reminders-archive" label="W archiwum" count={archivedRows.length}>
               {renderGrid(archivedRows, reminderGroups.length)}
             </NoteGroupSection>
