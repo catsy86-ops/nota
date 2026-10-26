@@ -23,6 +23,7 @@ import {
   cleanEntry, cleanEntryParts, SITE_MAX,
   type Column, type JournalEntry, type JournalKind, type StudyState,
 } from "./yStudy";
+import { cleanExam, keepLatestExams, type ExamResult } from "./exam";
 
 export { COLUMNS, JOURNAL_KINDS, JOURNAL_MAX_IMAGES, JOURNAL_MAX_TEXT, JOURNAL_SOLUTION_MAX } from "./yStudy";
 export type { Column, JournalEntry, JournalKind, StudyState } from "./yStudy";
@@ -87,7 +88,8 @@ export function sanitizeStudy(defaults: StudyState, stored: unknown): StudyState
     const card = questionIds.has(id) ? cleanCard(raw) : null;
     if (card) review[id] = card;
   }
-  return { board, checked, bestPercent: best, rounds, missed, journal, site, sites, streak, lastDay, review, boss: cleanBoss(s.boss), group: cleanGroup(s.group), custom,
+  const exams = keepLatestExams((Array.isArray(s.exams) ? s.exams : []).map(cleanExam).filter((e): e is ExamResult => e !== null));
+  return { board, checked, bestPercent: best, rounds, missed, journal, site, sites, streak, lastDay, review, boss: cleanBoss(s.boss), group: cleanGroup(s.group), custom, exams,
     days: Array.isArray(s.days) ? s.days.filter((d): d is string => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)) : [] };
 }
 
@@ -182,6 +184,13 @@ export function restoreChecklist(ids: string[]) {
  * Zapisuje wynik rundy; tematy z błędami wracają z „Umiem” do „W trakcie”.
  * `results` aktualizuje listę błędnych pytań: dobra odpowiedź ją czyści, zła dopisuje.
  */
+/** Wynik egzaminu próbnego bez wpływu na powtórki i serię (P-3). Zwraca zapisany wynik z id. */
+export function recordExam(data: Omit<ExamResult, "id">): ExamResult {
+  const exam: ExamResult = { ...data, id: `${studyDevice()}-${data.at}` };
+  yStudy.recordExam(exam);
+  return exam;
+}
+
 export function recordRound(
   correct: number,
   total: number,

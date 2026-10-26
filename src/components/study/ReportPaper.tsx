@@ -52,6 +52,11 @@ export function ReportPaper({ report, print = false }: { report: Report; print?:
                   </p>
                 )}
               </div>
+              {d.done.length > 0 && (
+                <p className="mb-2 text-sm" data-report-done>
+                  <span className="font-medium">Zrobione: </span>{d.done.join("; ")}
+                </p>
+              )}
               <ul className="space-y-2">
                 {d.entries.map((r) => (
                   <li key={r.entry.id} className="grid grid-cols-[2.75rem_1rem_minmax(0,1fr)] gap-x-2 text-sm" data-report-entry={r.entry.kind}>

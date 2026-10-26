@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TOPICS, topicTitle } from "@/lib/study/content";
 import { buildRound, missedTopics, scoreRound, type RoundQuestion } from "@/lib/study/quiz";
-import { activeStreak, columnOf, dueToday, recordRound, useStudy, useStudyLists } from "@/lib/study/store";
+import { EXAM_SECONDS, EXAM_SIZE, examResult, weakTopicsOf } from "@/lib/study/exam";
+import { activeStreak, columnOf, dueToday, recordExam, recordRound, useStudy, useStudyLists } from "@/lib/study/store";
 import { CustomQuestionsDialog } from "./CustomQuestionsDialog";
 import { localDayKey } from "@/lib/dayDone";
 import { addDaysToKey } from "@/lib/week";
@@ -19,7 +20,7 @@ const topicName = (id: string) => topicTitle(id) ?? id;
 const streakLabel = (n: number) => `${n} ${n === 1 ? "dzień" : "dni"}`;
 
 /** Z czego składa się runda: wszystko, jeden temat, pytania, które ostatnio poszły źle, albo powtórki na dziś. */
-export type QuizScope = { kind: "all" } | { kind: "topic"; topic: string } | { kind: "missed" } | { kind: "due" };
+export type QuizScope = { kind: "all" } | { kind: "topic"; topic: string } | { kind: "missed" } | { kind: "due" } | { kind: "topics"; topics: string[] };
 
 /** „jutro”, „za 3 dni”, „24.10” — kiedy wypada najbliższa powtórka. */
 function nextReviewLabel(due: string, today: string): string {
@@ -38,6 +39,10 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
   const [answers, setAnswers] = useState<(number | null)[]>([]);
   const [index, setIndex] = useState(0);
   const [result, setResult] = useState<{ correct: number; missed: string[]; demoted: string[]; streak: number; streakGrew: boolean } | null>(null);
+  // Egzamin próbny (P-3): koniec czasu w ms (null = nie trwa), wynik po zakończeniu i zegar do odświeżania.
+  const [examEnd, setExamEnd] = useState<number | null>(null);
+  const [examDone, setExamDone] = useState<{ correct: number; total: number; seconds: number; byTopic: Record<string, [number, number]> } | null>(null);
+  const [now, setNow] = useState(() => Date.now());
 
   const weak = useMemo(
     () => new Set(TOPICS.filter((t) => columnOf(study, t.id) !== "done").map((t) => t.id)),
@@ -60,6 +65,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
     const pool = s.kind === "topic" ? all.filter((q) => q.topic === s.topic)
       : s.kind === "missed" ? all.filter((q) => study.missed[q.id])
       : s.kind === "due" ? all.filter((q) => dueIds.has(q.id))
+      : s.kind === "topics" ? all.filter((q) => s.topics.includes(q.topic))
       : all;
     if (pool.length === 0) {
       toast(s.kind === "due" ? "Na dziś nie ma powtórek." : "Nie ma pytań do powtórki. Rozwiąż najpierw rundę.");
@@ -71,7 +77,40 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
     setAnswers(next.map(() => null));
     setIndex(0);
     setResult(null);
+    setExamDone(null);
+    setExamEnd(null);
   }, [weak, scope, study.missed, due, onScopeChange, lists]);
+
+  // Egzamin: ta sama runda, ale bez wyjaśnień w trakcie, bez powtórek (SRS), tablicy i serii, z limitem czasu.
+  const startExam = useCallback(() => {
+    const next = buildRound(EXAM_SIZE, new Set(), Math.random, lists.questions);
+    setRound(next);
+    setAnswers(next.map(() => null));
+    setIndex(0);
+    setResult(null);
+    setExamDone(null);
+    setExamEnd(Date.now() + EXAM_SECONDS * 1000);
+  }, [lists]);
+
+  // Koniec egzaminu (ostatnie pytanie albo czas): nieodpowiedziane liczą się jako błędne.
+  const finishExam = useCallback(() => {
+    if (!round || examEnd === null) return;
+    const { correct, total, byTopic } = examResult(round, answers);
+    const seconds = Math.min(EXAM_SECONDS, Math.round((Date.now() - (examEnd - EXAM_SECONDS * 1000)) / 1000));
+    recordExam({ at: Date.now(), correct, total, seconds, byTopic });
+    setExamDone({ correct, total, seconds, byTopic });
+    setExamEnd(null);
+  }, [round, answers, examEnd]);
+
+  // Zegar co sekundę w trakcie egzaminu; po czasie kończy się sam.
+  useEffect(() => {
+    if (examEnd === null) return;
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(id);
+  }, [examEnd]);
+  useEffect(() => {
+    if (examEnd !== null && now >= examEnd) finishExam();
+  }, [now, examEnd, finishExam]);
 
   // Zakres ustawiony spoza panelu (przycisk „Ćwicz” na tablicy) od razu startuje rundę.
   useEffect(() => {
@@ -92,13 +131,14 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
   const next = useCallback(() => {
     if (!round) return;
     if (index < round.length - 1) { setIndex(index + 1); return; }
+    if (examEnd !== null) { finishExam(); return; }
     const correct = scoreRound(round, answers);
     const missed = missedTopics(round, answers);
     const { demoted, streak, streakGrew } = recordRound(correct, round.length, missed, round.map((q, i) => ({ id: q.id, ok: answers[i] === q.correct })));
     setResult({ correct, missed, demoted, streak, streakGrew });
     if (streakGrew && streak > 1) haptic("success");
     if (demoted.length) toast(`Wróciło do nauki: ${demoted.map(topicTitle).join(", ")}`);
-  }, [round, index, answers]);
+  }, [round, index, answers, examEnd, finishExam]);
 
   // Klawiatura: A–D / 1–4 wybiera odpowiedź, Enter idzie dalej.
   useEffect(() => {
@@ -126,6 +166,34 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
   useEffect(() => {
     if (index > 0 && picked === null) questionRef.current?.focus();
   }, [index]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (examDone && round) {
+    const weak = weakTopicsOf(examDone.byTopic);
+    return (
+      <section aria-label="Wynik egzaminu" className="rounded-card border border-border bg-card p-5 sm:p-7 space-y-5">
+        <div className="flex items-end gap-4">
+          <p className="font-mono text-6xl font-semibold leading-none tabular-nums text-primary-ink">{examDone.correct}<span className="text-2xl text-muted-foreground">/{examDone.total}</span></p>
+          <p className="pb-1 text-sm text-muted-foreground">Egzamin próbny · {Math.max(1, Math.round(examDone.seconds / 60))} min</p>
+        </div>
+        <div>
+          <h3 className="section-caps mb-2">Według tematów</h3>
+          <ul className="space-y-1.5">
+            {Object.entries(examDone.byTopic).map(([topic, [good, all]]) => (
+              <li key={topic} className="flex items-center justify-between gap-2 text-sm">
+                <span>{topicName(topic)}</span>
+                <span className="font-mono tabular-nums text-muted-foreground">{good}/{all}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <p className="text-xs text-muted-foreground">Egzamin nie zmienia powtórek, tablicy ani serii.</p>
+        <div className="flex flex-wrap gap-2">
+          {weak.length > 0 && <Button onClick={() => start({ kind: "topics", topics: weak })}>Ćwicz słabe tematy</Button>}
+          <Button variant="outline" onClick={() => { setExamDone(null); setRound(null); }}>Zakończ</Button>
+        </div>
+      </section>
+    );
+  }
 
   if (result && round) {
     const percent = Math.round((result.correct / round.length) * 100);
@@ -198,6 +266,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
         )}
         <div className="flex flex-wrap items-center gap-3">
           <Button variant={due.length > 0 ? "outline" : "default"} onClick={() => start({ kind: "all" })}>Zacznij rundę</Button>
+          <Button variant="outline" onClick={startExam} data-testid="start-exam">Egzamin próbny</Button>
           {Object.keys(study.missed).length > 0 && (
             <Button variant="outline" onClick={() => onScopeChange?.({ kind: "missed" })}>
               Powtórka błędów ({Object.keys(study.missed).length})
@@ -207,6 +276,11 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
             Moje pytania{study.custom.some((e) => e.kind === "question") && <span className="ml-1 font-mono tabular-nums text-muted-foreground">({study.custom.filter((e) => e.kind === "question").length})</span>}
           </Button>
           <CustomQuestionsDialog open={ownOpen} onOpenChange={setOwnOpen} />
+          {study.exams && study.exams.length > 0 && (
+            <p className="text-xs text-muted-foreground tabular-nums" data-testid="last-exam">
+              Ostatni egzamin: {study.exams[study.exams.length - 1].correct}/{study.exams[study.exams.length - 1].total}
+            </p>
+          )}
           {study.bestPercent !== null && (
             <p className="text-xs text-muted-foreground tabular-nums">
               Najlepszy wynik: {study.bestPercent}% · rund: {study.rounds}
@@ -219,17 +293,21 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
   }
 
   const answered = picked !== null;
+  // Egzamin: odpowiedź nie pokazuje, czy była dobra, i nie ma wyjaśnienia do końca.
+  const examMode = examEnd !== null;
+  const reveal = answered && !examMode;
+  const left = examEnd !== null ? Math.max(0, Math.ceil((examEnd - now) / 1000)) : 0;
   return (
     <section aria-label="Quiz" className="rounded-card border border-border bg-card p-5 sm:p-7 space-y-5">
       <div className="flex items-center justify-between gap-3 text-xs">
-        <span className="font-mono tabular-nums text-muted-foreground">Pytanie {index + 1} z {round.length}</span>
+        <span className="font-mono tabular-nums text-muted-foreground">Pytanie {index + 1} z {round.length}{examMode && ` · zostało ${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`}</span>
         <span className="rounded-full bg-muted px-2.5 py-0.5 text-muted-foreground truncate">
           {scope.kind === "missed" ? "Powtórka błędów · " : scope.kind === "due" ? "Na dziś · " : ""}{topicName(current.topic)}
         </span>
       </div>
       {/* Przerwanie rundy w połowie (§8 P3): wraca do startu; odpowiedzi już zapisane w powtórkach zostają. */}
       <div className="flex justify-end">
-        <Button variant="ghost" size="sm" onClick={() => { setRound(null); setResult(null); }} aria-label="Przerwij rundę" className="coarse:h-11">
+        <Button variant="ghost" size="sm" onClick={() => { setRound(null); setResult(null); setExamEnd(null); }} aria-label="Przerwij rundę" className="coarse:h-11">
           Przerwij rundę
         </Button>
       </div>
@@ -260,20 +338,21 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
               className={cn(
                 "pressable flex items-start gap-3 rounded-xl border px-3.5 py-3 text-left text-sm transition-colors coarse:min-h-14 coarse:items-center coarse:text-base",
                 !answered && "border-border bg-background hover:border-primary/60 hover:bg-primary/5",
-                answered && isCorrect && "border-success-ink/60 bg-success/10",
-                answered && isPicked && !isCorrect && "border-destructive/60 bg-destructive/10",
-                answered && !isCorrect && !isPicked && "border-border bg-background opacity-60",
+                reveal && isCorrect && "border-success-ink/60 bg-success/10",
+                reveal && isPicked && !isCorrect && "border-destructive/60 bg-destructive/10",
+                reveal && !isCorrect && !isPicked && "border-border bg-background opacity-60",
+                examMode && answered && isPicked && "border-primary bg-primary/10",
               )}
             >
               <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border border-border font-mono text-2xs text-muted-foreground">
-                {answered && isCorrect ? <Check className="w-3.5 h-3.5 text-success-ink" role="img" aria-label="Poprawna" /> : answered && isPicked ? <X className="w-3.5 h-3.5 text-destructive-ink" role="img" aria-label="Błędna" /> : LETTERS[i]}
+                {reveal && isCorrect ? <Check className="w-3.5 h-3.5 text-success-ink" role="img" aria-label="Poprawna" /> : reveal && isPicked ? <X className="w-3.5 h-3.5 text-destructive-ink" role="img" aria-label="Błędna" /> : LETTERS[i]}
               </span>
               <span className="flex-1">{opt}</span>
             </button>
           );
         })}
       </div>
-      {answered && (
+      {reveal && (
         <p className="rounded-xl bg-muted/60 px-3.5 py-3 text-sm leading-relaxed" aria-live="polite">
           <span className="font-medium">{picked === current.correct ? "Dobrze. " : "Nie tym razem. "}</span>
           {current.explanation}

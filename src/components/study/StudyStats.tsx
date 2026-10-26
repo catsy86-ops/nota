@@ -78,6 +78,25 @@ function StatsBody() {
         <Tile label="Wpisy z budowy" value={String(study.journal.length)} hint={open > 0 ? `otwarte problemy: ${open}` : "bez otwartych problemów"} />
       </dl>
 
+      <Section title="Egzaminy próbne" note="Ostatnie wyniki, najnowszy na górze. Egzamin nie zmienia powtórek ani serii.">
+        {study.exams && study.exams.length > 0 ? (
+          <ul className="space-y-2" data-testid="stats-exams">
+            {[...study.exams].reverse().map((e) => (
+              <BarRow
+                key={e.id}
+                label={new Date(e.at).toLocaleString("pl-PL", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                ratio={e.total > 0 ? e.correct / e.total : 0}
+                value={`${e.correct}/${e.total}`}
+                detail={`${Math.max(1, Math.round(e.seconds / 60))} min`}
+                title={`${e.correct} z ${e.total} dobrze, czas ${Math.max(1, Math.round(e.seconds / 60))} min`}
+              />
+            ))}
+          </ul>
+        ) : (
+          <Empty>Egzamin próbny z zakładki Quiz pojawi się tutaj.</Empty>
+        )}
+      </Section>
+
       <Section title="Trafność per temat" note="Od najsłabszego. Tematy bez odpowiedzi pominięte.">
         {s.topics.length === 0 ? (
           <Empty>Rozwiąż rundę quizu — trafność pojawi się tutaj.</Empty>

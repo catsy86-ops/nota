@@ -8,6 +8,7 @@ import { cleanSite, foldName, type SiteCard } from "./sites";
 import { cleanCard, reviewCard, type ReviewCard } from "./srs";
 import { cleanBoss, cleanGroup, type Boss, type WaGroup } from "./boss";
 import { cleanTest, type PressureTest } from "./pressureTest";
+import { cleanExam, keepLatestExams, type ExamResult } from "./exam";
 import { cleanGeo, type GeoPoint } from "./geo";
 import { cleanCustomList, type CustomEntry } from "./custom";
 import {
@@ -112,6 +113,8 @@ export interface StudyState {
   days: string[];
   /** Własne pytania i punkty listy (`custom.ts`), od najstarszego. */
   custom: CustomEntry[];
+  /** Wyniki egzaminów próbnych (P-3), od najstarszego; trzymane ostatnie `EXAM_KEEP`. */
+  exams?: ExamResult[];
 }
 
 /** Rundy i najlepszy wynik jednego urządzenia. */
@@ -137,6 +140,8 @@ export interface StudyDump {
   review: Record<string, ReviewCard>;
   boss: Boss | null;
   group: WaGroup | null;
+  /** Egzaminy próbne po id (P-3); brak w kopiach sprzed P-3. */
+  exams?: Record<string, ExamResult>;
   /** Własne pytania i punkty listy po id; brak w kopiach sprzed N5. */
   custom: Record<string, CustomEntry>;
 }
@@ -223,6 +228,14 @@ const trueKeys = (v: unknown): string[] =>
   v && typeof v === "object" ? Object.entries(v as Record<string, unknown>).filter(([, x]) => x === true).map(([k]) => k) : [];
 
 /** Dowolne wejście (plik kopii, peer) → poprawny kształt zrzutu. */
+/** Wyniki egzaminów po id; zostają najwyżej `EXAM_KEEP` najnowszych. */
+function cleanExamRecord(raw: unknown): Record<string, ExamResult> {
+  const list = raw && typeof raw === "object"
+    ? Object.values(raw as Record<string, unknown>).map(cleanExam).filter((e): e is ExamResult => e !== null)
+    : [];
+  return Object.fromEntries(keepLatestExams(list).map((e) => [e.id, e]));
+}
+
 export function cleanDump(raw: unknown): StudyDump {
   const s = (raw && typeof raw === "object" ? raw : {}) as Partial<Record<keyof StudyDump, unknown>>;
   const board: Record<string, Column> = {};
@@ -248,6 +261,7 @@ export function cleanDump(raw: unknown): StudyDump {
     sites: cleanSites(s.sites),
     review: cleanReviews(s.review),
     boss: cleanBoss(s.boss),
+    exams: cleanExamRecord(s.exams),
     group: cleanGroup(s.group),
     custom: Object.fromEntries(cleanCustomList(s.custom).map((e) => [e.id, e])),
   };
@@ -310,6 +324,7 @@ export function stateFromDump(d: StudyDump): StudyState {
     streak,
     lastDay,
     review: d.review,
+    exams: keepLatestExams(Object.values(d.exams ?? {})),
     boss: d.boss,
     group: d.group,
     days: [...d.days].sort(),
@@ -341,6 +356,8 @@ export function createYStudy(doc: Y.Doc) {
   const days = doc.getMap<true>("studyDays");
   /** Id urządzenia → jego rundy i najlepszy wynik. */
   const rounds = doc.getMap<DeviceRounds>("studyRounds");
+  /** Wyniki egzaminów próbnych (P-3): id → wynik. */
+  const exams = doc.getMap<ExamResult>("studyExams");
   const meta = doc.getMap<unknown>("studyMeta");
   /** Karty budów (id → karta). */
   // Karta jako mapa pól (krok 2 planu Etap 6): zapis zmienia tylko pola, które się różnią. Stare zapisy (zwykły obiekt) nadal się czytają.
@@ -360,7 +377,7 @@ export function createYStudy(doc: Y.Doc) {
     snapshot = null;
     listeners.forEach((l) => l());
   };
-  for (const m of [board, checked, missed, days, rounds, meta, review, custom, siteItems] as Y.Map<unknown>[]) m.observe(onChange);
+  for (const m of [board, checked, missed, days, rounds, exams, meta, review, custom, siteItems] as Y.Map<unknown>[]) m.observe(onChange);
   // Pola wpisu i karty są w mapach zagnieżdżonych — zmiana pola to zdarzenie głębokie.
   journal.observeDeep(onChange);
   sites.observeDeep(onChange);
@@ -476,6 +493,7 @@ export function createYStudy(doc: Y.Doc) {
       journal: Array.from(journal.values(), journalFields),
       days: Array.from(days.keys()),
       rounds: Object.fromEntries(rounds.entries()),
+      exams: Object.fromEntries(exams.entries()),
       site: meta.get("site"),
       // Listy z osobnej mapy nadpisują dawne pola karty (te zostają tylko w kartach sprzed migracji).
       sites: withSiteLists(),
@@ -590,6 +608,18 @@ export function createYStudy(doc: Y.Doc) {
           if (nextCard !== prevCard) review.set(r.id, nextCard);
         }
       }
+    });
+  }
+
+  /**
+   * Wynik egzaminu próbnego: osobny wpis. Nie rusza tablicy, powtórek (SRS) ani serii;
+   * trzyma ostatnie `EXAM_KEEP` wyników.
+   */
+  function recordExam(exam: ExamResult): void {
+    transact(() => {
+      exams.set(exam.id, exam);
+      const kept = new Set(keepLatestExams(Array.from(exams.values())).map((e) => e.id));
+      for (const k of Array.from(exams.keys())) if (!kept.has(k)) exams.delete(k);
     });
   }
 
@@ -719,13 +749,14 @@ export function createYStudy(doc: Y.Doc) {
   function replaceAll(data: StudyDump): void {
     const d = cleanDump(data);
     transact(() => {
-      for (const m of [journal, board, checked, missed, days, rounds, sites, review, custom, siteItems] as Y.Map<unknown>[]) for (const k of Array.from(m.keys())) m.delete(k);
+      for (const m of [journal, board, checked, missed, days, rounds, exams, sites, review, custom, siteItems] as Y.Map<unknown>[]) for (const k of Array.from(m.keys())) m.delete(k);
       for (const e of d.journal) writeEntry(e.id, e);
       for (const [k, v] of Object.entries(d.board)) board.set(k, v);
       for (const k of Object.keys(d.checked)) checked.set(k, true);
       for (const k of Object.keys(d.missed)) missed.set(k, true);
       for (const k of d.days) days.set(k, true);
       for (const [k, v] of Object.entries(d.rounds)) rounds.set(k, v);
+      for (const [k, v] of Object.entries(d.exams ?? {})) exams.set(k, v);
       // Kopia niesie listy w kartach — do osobnej mapy, karty bez list.
       for (const [k, v] of Object.entries(d.sites)) { migrateCardLists(k, v); writeCard(k, stripLists(v)); }
       for (const [k, v] of Object.entries(d.review)) review.set(k, v);
@@ -751,6 +782,7 @@ export function createYStudy(doc: Y.Doc) {
       for (const k of Object.keys(d.checked)) if (!checked.has(k)) checked.set(k, true);
       for (const k of Object.keys(d.missed)) if (!missed.has(k)) missed.set(k, true);
       for (const k of d.days) if (!days.has(k)) days.set(k, true);
+      for (const [k, v] of Object.entries(d.exams ?? {})) if (!exams.has(k)) exams.set(k, v);
       for (const [k, v] of Object.entries(d.rounds)) {
         const prev = rounds.get(k);
         if (!prev) { rounds.set(k, v); continue; }
@@ -774,7 +806,7 @@ export function createYStudy(doc: Y.Doc) {
 
   return {
     get, dump, subscribe, isMerged,
-    setColumn, setChecked, clearChecked, restoreChecked, recordRound,
+    setColumn, setChecked, clearChecked, restoreChecked, recordRound, recordExam,
     addEntry, updateEntry, setResolved, setSolution, restoreEntry, removeEntry, setSite, saveSite, setSiteList, setBoss, setGroup,
     addCustom, updateCustom, removeCustom, restoreCustom,
     replaceAll, mergeIn,

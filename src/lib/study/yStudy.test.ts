@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import * as Y from "yjs";
 import { cleanDump, createYStudy, dumpFromLegacy, journalRefsIn, type JournalEntry } from "./yStudy";
+import { EXAM_KEEP } from "./exam";
 
 /** Dwa „telefony” i wymiana stanu w obie strony — jak po spotkaniu w sieci. */
 function pair() {
@@ -136,7 +137,7 @@ describe("Nauka w Yjs", () => {
   });
 
   it("cleanDump odrzuca śmieci zamiast wywracać widok", () => {
-    expect(cleanDump("śmieci")).toEqual({ version: 2, board: {}, checked: {}, missed: {}, journal: [], days: [], rounds: {}, site: "", sites: {}, review: {}, boss: null, group: null, custom: {} });
+    expect(cleanDump("śmieci")).toEqual({ version: 2, board: {}, checked: {}, missed: {}, journal: [], days: [], rounds: {}, exams: {}, site: "", sites: {}, review: {}, boss: null, group: null, custom: {} });
     const d = cleanDump({ board: { a: "done", b: "todo", c: "x" }, checked: { k: true, l: 1 }, days: ["2026-10-01", "wczoraj"], rounds: { x: { rounds: -1 }, y: { rounds: 2.7, best: 140 } }, journal: [entry("ok", 1), entry("pusty", 2, { text: " " })] });
     expect(d).toMatchObject({ board: { a: "done" }, checked: { k: true }, days: ["2026-10-01"], rounds: { y: { rounds: 2, best: null } } });
     expect(d.journal.map((e) => e.id)).toEqual(["ok"]);
@@ -498,5 +499,20 @@ describe("zapis wpisu a pola z nowszej wersji", () => {
     const { solution: _s, ...without } = entry as JournalEntry & { solution?: string };
     study.updateEntry(without as JournalEntry);
     expect((doc.getMap("studyJournal").get("w2") as Y.Map<unknown>).has("solution")).toBe(false);
+  });
+});
+const examAt = (id: string, at: number) => ({ id, at, correct: 10, total: 20, seconds: 900, byTopic: { pion: [10, 20] as [number, number] } });
+
+// Egzamin próbny (P-3) w Yjs: osobne wyniki, bez wpływu na powtórki i tablicę.
+describe("egzamin w Yjs", () => {
+  it("zapis wyniku nie rusza powtórek ani tablicy, a w dokumencie zostają ostatnie wyniki", () => {
+    const doc = new Y.Doc();
+    const study = createYStudy(doc);
+    for (let i = 0; i < EXAM_KEEP + 3; i++) study.recordExam(examAt(`dev-${i}`, i));
+    const dump = study.dump();
+    expect(Object.keys(dump.exams ?? {})).toHaveLength(EXAM_KEEP);
+    expect(study.get().exams?.[0].at).toBe(3);
+    expect(study.get().rounds).toBe(0);
+    expect(Object.keys(study.get().board)).toHaveLength(0);
   });
 });

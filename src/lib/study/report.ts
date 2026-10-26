@@ -24,12 +24,12 @@ export interface ReportOptions {
   /** Id budowy (`entrySiteId`); `null` = wszystkie, `""` = wpisy bez budowy. */
   siteId: string | null;
   /** Karta wybranej budowy: nazwa, adres i inwestor w nagłówku raportu. */
-  siteCard?: Pick<SiteCard, "name" | "address" | "investor" | "orderedAt" | "stages" | "shortages" | "hours"> | null;
+  siteCard?: Pick<SiteCard, "name" | "address" | "investor" | "orderedAt" | "stages" | "shortages" | "hours" | "plan"> | null;
   /**
    * Wszystkie karty budów — do podziału godzin dnia między budowy (`siteHours.ts`). Bez nich liczy się
    * tylko karta wybranej budowy (dzień z kilkoma budowami wyjdzie wtedy jako „nierozdzielony”).
    */
-  sites?: Readonly<Record<string, Pick<SiteCard, "name" | "hours" | "stages">>>;
+  sites?: Readonly<Record<string, Pick<SiteCard, "name" | "hours" | "stages" | "plan">>>;
   /** Dni lokalne „2026-10-14”, oba włącznie. */
   from: string;
   to: string;
@@ -83,6 +83,8 @@ export interface ReportDay {
   label: string;
   work: ReportWork | null;
   entries: ReportEntry[];
+  /** Pozycje planu na dziś (P-5) odhaczone tego dnia. */
+  done: string[];
 }
 
 export interface JournalReport {
@@ -219,7 +221,7 @@ export function buildJournalReport(journal: readonly JournalEntry[], opts: Repor
   for (const e of picked) {
     const key = dayKeyOf(e.at);
     let day = days[days.length - 1];
-    if (!day || day.key !== key) days.push((day = { key, label: dayTitle(key), work: splitWork(journal, opts, key), entries: [] }));
+    if (!day || day.key !== key) days.push((day = { key, label: dayTitle(key), work: splitWork(journal, opts, key), entries: [], done: [] }));
     const d = new Date(e.at);
     const isOpen = e.kind === "problem" && e.resolved === undefined;
     const item: ReportEntry = {
@@ -249,10 +251,28 @@ export function buildJournalReport(journal: readonly JournalEntry[], opts: Repor
     for (const key of keys) {
       if (key < from || key > to || key > last || have.has(key)) continue;
       const work = splitWork(journal, opts, key);
-      if (work && workMinutesOf(work) > 0) days.push({ key, label: dayTitle(key), work, entries: [] });
+      if (work && workMinutesOf(work) > 0) days.push({ key, label: dayTitle(key), work, entries: [], done: [] });
     }
     days.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
   }
+
+  // Plan na dziś (P-5): pozycje odhaczone danego dnia na kartach wybranych budów. Dzień z samym odhaczeniem też wchodzi.
+  const planCards = opts.siteId === null ? Object.values(opts.sites ?? {}) : [opts.siteCard ?? opts.sites?.[opts.siteId]];
+  const doneByDay = new Map<string, string[]>();
+  for (const card of planCards) {
+    for (const p of card?.plan ?? []) {
+      if (p.doneAt === undefined) continue;
+      const k = dayKeyOf(p.doneAt);
+      if (k < from || k > to) continue;
+      doneByDay.set(k, [...(doneByDay.get(k) ?? []), p.text]);
+    }
+  }
+  for (const [key, texts] of doneByDay) {
+    const existing = days.find((d) => d.key === key);
+    if (existing) existing.done = texts;
+    else days.push({ key, label: dayTitle(key), work: splitWork(journal, opts, key), entries: [], done: texts });
+  }
+  days.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
 
   const period = periodLabel(from, to);
   const site = opts.siteId === null ? null : opts.siteId === "" ? "" : opts.siteCard?.name ?? picked[picked.length - 1]?.site.trim() ?? "";
@@ -316,6 +336,7 @@ export function reportBody(r: JournalReport): string {
   for (const d of r.days) {
     lines.push("", `## ${d.label}`);
     if (d.work) lines.push(d.work.minutes > 0 ? `Praca: ${workLine(d.work)}` : `Grafik: ${d.work.label}`);
+    if (d.done.length > 0) lines.push(`Zrobione: ${d.done.join("; ")}`);
     for (const e of d.entries) lines.push(`- ${e.time} ${entryLine(e)}`);
   }
   if (r.fittings.length > 0) {
