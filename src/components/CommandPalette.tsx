@@ -24,6 +24,7 @@ import { siteCardUrl } from "@/lib/study/siteLink";
 import { JOURNAL_REPORT_PARAM, reportParam } from "@/lib/study/reportLink";
 import { entrySiteId, foldName } from "@/lib/study/siteKey";
 import { isViewShown, useHiddenViews } from "@/lib/hiddenViews";
+import { viewLabel } from "@/lib/viewMeta";
 
 const NOTE_LIMIT = 30;
 
@@ -56,17 +57,17 @@ interface Props {
 
 type NavItem = { id: Parameters<Props["onGo"]>[0]; label: string; Icon: typeof StickyNote; hint?: string };
 const NAV_ITEMS: NavItem[] = [
-  { id: "notes", label: "Notatki", Icon: StickyNote },
-  { id: "inbox", label: "Skrzynka", Icon: Inbox },
-  { id: "today", label: "Dziś", Icon: Calendar, hint: "Alt+T" },
-  { id: "reminders", label: "Terminy", Icon: Bell },
-  { id: "calendar", label: "Kalendarz", Icon: CalendarRange },
-  { id: "shifts", label: "Grafik zmian", Icon: BriefcaseBusiness },
-  { id: "study", label: "Praca", Icon: HardHat },
-  { id: "debts", label: "Długi", Icon: HandCoins },
-  { id: "cwiczenia", label: "Ćwiczenia", Icon: Dumbbell },
-  { id: "archive", label: "Archiwum", Icon: Archive },
-  { id: "trash", label: "Kosz", Icon: Trash },
+  { id: "notes", label: viewLabel("notes"), Icon: StickyNote },
+  { id: "inbox", label: viewLabel("inbox"), Icon: Inbox },
+  { id: "today", label: viewLabel("today"), Icon: Calendar, hint: "Alt+T" },
+  { id: "reminders", label: viewLabel("reminders"), Icon: Bell },
+  { id: "calendar", label: viewLabel("calendar"), Icon: CalendarRange },
+  { id: "shifts", label: viewLabel("shifts"), Icon: BriefcaseBusiness },
+  { id: "study", label: viewLabel("study"), Icon: HardHat },
+  { id: "debts", label: viewLabel("debts"), Icon: HandCoins },
+  { id: "cwiczenia", label: viewLabel("cwiczenia"), Icon: Dumbbell },
+  { id: "archive", label: viewLabel("archive"), Icon: Archive },
+  { id: "trash", label: viewLabel("trash"), Icon: Trash },
 ];
 
 export function CommandPalette({
@@ -225,7 +226,7 @@ export function CommandPalette({
             <HardHat className="w-4 h-4 mr-2 text-muted-foreground" /> Raport dnia
           </CommandItem>
         </CommandGroup>
-        <CommandGroup heading="Grafik zmian">
+        <CommandGroup heading={viewLabel("shifts")}>
           <CommandItem value="grafik dodaj zmiane dzis" onSelect={() => run(() => { requestShiftAction("addToday"); onGo("shifts"); })}>
             Dodaj zmianę dziś
           </CommandItem>

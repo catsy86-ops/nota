@@ -3,19 +3,19 @@ import type { View } from "@/hooks/useFilteredNotes";
 /** Okno (ms) na wciśnięcie drugiego klawisza po „g”. */
 export const GO_CHORD_WINDOW_MS = 1200;
 
-export const GO_CHORDS: { key: string; view: View; label: string }[] = [
-  { key: "n", view: "notes", label: "Notatki" },
-  { key: "d", view: "today", label: "Dziś" },
-  { key: "w", view: "week", label: "Ten tydzień" },
-  { key: "p", view: "reminders", label: "Terminy" },
-  { key: "c", view: "calendar", label: "Kalendarz" },
-  { key: "a", view: "archive", label: "Archiwum" },
-  { key: "k", view: "trash", label: "Kosz" },
-  { key: "i", view: "inbox", label: "Skrzynka" },
-  { key: "z", view: "shifts", label: "Grafik zmian" },
-  { key: "s", view: "study", label: "Praca" },
-  { key: "l", view: "debts", label: "Długi" },
-  { key: "t", view: "cwiczenia", label: "Ćwiczenia" },
+export const GO_CHORDS: { key: string; view: View }[] = [
+  { key: "n", view: "notes" },
+  { key: "d", view: "today" },
+  { key: "w", view: "week" },
+  { key: "p", view: "reminders" },
+  { key: "c", view: "calendar" },
+  { key: "a", view: "archive" },
+  { key: "k", view: "trash" },
+  { key: "i", view: "inbox" },
+  { key: "z", view: "shifts" },
+  { key: "s", view: "study" },
+  { key: "l", view: "debts" },
+  { key: "t", view: "cwiczenia" },
 ];
 
 /** Widok dla drugiego klawisza sekwencji „g, <litera>” (null = brak). */

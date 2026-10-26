@@ -14,6 +14,7 @@ import { requestPersistentStorage, getStorageInfo, type StorageInfo } from "@/li
 import { isFileSystemAccessSupported, pickBackupFile, clearBackupFile, getBackupFileName } from "@/lib/backupFileHandle";
 import { toast } from "sonner";
 import { ResetSectionButton, Section } from "./SettingsShared";
+import { viewLabel } from "@/lib/viewMeta";
 
 function formatBytes(bytes: number | null): string {
   if (bytes === null) return "?";
@@ -198,7 +199,7 @@ function RestoreBackup() {
     { key: "versions", label: `Historia wersji (${backup.versions?.length ?? 0})`, present: backup.versions !== undefined },
     { key: "settings", label: "Ustawienia (wygląd, motyw, efekty, potwierdzenia)", present: backup.settings !== undefined },
     { key: "achievements", label: "Odznaki i passa", present: backup.achievements !== undefined },
-    { key: "shifts", label: "Grafik zmian", present: backup.shifts !== undefined },
+    { key: "shifts", label: viewLabel("shifts"), present: backup.shifts !== undefined },
     { key: "study", label: "Praca i dziennik z budowy", present: backup.study !== undefined || backup.settings?.["kaczy.study.v1"] !== undefined },
   ] : [];
 
