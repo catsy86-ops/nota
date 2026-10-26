@@ -1,3 +1,4 @@
+import { VaultStatusButton } from "@/components/vault/VaultStatusButton";
 import { SyncStatusDot } from "@/components/sync/SyncStatusDot";
 import { useEffect, useRef } from "react";
 import { AnimatePresence, m as motion } from "framer-motion";
@@ -173,6 +174,7 @@ export function AppHeader({
 
           {/* Na telefonie Import/Eksport jest w „Więcej” — nagłówek miał tam pięć ikon. */}
           {onOpenSync && <SyncStatusDot onOpenSync={onOpenSync} />}
+          <VaultStatusButton />
           <ImportExportMenu onImport={onImport}>
             <IconButton aria-label="Import / Eksport" title="Import / Eksport" className="hidden sm:inline-flex">
               <FileDown className="w-5 h-5" />

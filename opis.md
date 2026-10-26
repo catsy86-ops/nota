@@ -2658,3 +2658,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/components/calendar/MonthAgenda.tsx` (widok; ta sama lista co wydruk, ale z przyciskami); `src/components/calendar/ReminderCalendarView.tsx` (tryb `agenda`, przełącznik, widoczność siatki i tygodnia).
 - **Nie zrobione:** agenda na komputerze (na desktopie siatka zostaje, a tryb „Lista” nie jest widoczny); oś godzin tygodnia (3.3).
 - **Testy:** `src/components/calendar/MonthAgenda.test.tsx`; e2e `e2e/calendar-agenda.spec.ts` (telefon: Lista ↔ Miesiąc).
+
+## Skarbiec — ostrzeżenie przed blokadą i kłódka w nagłówku (1.3 i 2.1, 2026-10-26)
+
+- **1.3 Ostrzeżenie przed auto-blokadą.** 30 s przed auto-blokadą po bezczynności pojawia się dymek „Zablokuję za 30 s” z przyciskiem „Jeszcze N min” (N = ustawiona blokada). Stuknięcie przedłuża blokadę i ostrzeżenie. Aktywność w oknie przesuwa ostrzeżenie o tyle, ile trwała bezczynność (`scheduleWarn` w `vaultAutoLock.ts`). Ostrzeżenie nie jest zależne od otwartej notatki (plan mówił „przy otwartej prywatnej notatce”; skarbiec odblokowany to dziś ten sam stan, więc nie dodawałem drugiego warunku). Szkic w edycji zapisuje się przed blokadą przez istniejącą kolejkę (bez zmian).
+- **2.1 Kłódka w nagłówku.** Widoczna tylko, gdy skarbiec jest ustawiony (`phase !== "none"`). Odblokowany: ikona otwartej kłódki, podpowiedź z minutami do auto-blokady; stuknięcie blokuje (`lockEverywhere`). Zablokowany: zamknięta kłódka; stuknięcie otwiera odblokowanie (`vaultUi.open("unlock")`). Komponent `src/components/vault/VaultStatusButton.tsx`, wpięty w `AppHeader.tsx`.
+- **Testy:** `src/lib/vaultAutoLock.warn.test.ts` (ostrzeżenie w 30 s i odsunięcie aktywnością); e2e `e2e/private-notes.spec.ts` (kłódka: blokada i odblokowanie); a11y (1440 px) zielone.
+- **Nie zrobione w Skarbcu:** V-3 (format v2) i V-4 (biometria PRF) — patrz niżej.

@@ -1,4 +1,5 @@
 ﻿import { createPersistedStore } from "@/lib/persistedStore";
+import { toast } from "sonner";
 import type { PrivateNotes } from "@/lib/privateNotes";
 
 /** Minuty bezczynności do automatycznej blokady; 0 = nigdy (do zamknięcia karty). */
@@ -23,6 +24,9 @@ const hiddenStore = createPersistedStore<number>("kaczy.vault.hiddenLock.v1", DE
 export const setHiddenLockMinutes = (m: number) => hiddenStore.set(m);
 export const useHiddenLockMinutes = () => hiddenStore.use();
 
+/** Ostrzeżenie przed auto-blokadą (1.3 planu Skarbca): tyle sekund przed blokadą. */
+export const LOCK_WARN_MS = 30_000;
+
 const CHANNEL = "kaczy-vault";
 
 /**
@@ -35,12 +39,38 @@ export function startAutoLock(pn: PrivateNotes): () => void {
   let hiddenAt: number | null = null;
   let idleTimer: ReturnType<typeof setTimeout> | null = null;
   let hiddenTimer: ReturnType<typeof setTimeout> | null = null;
+  let warnTimer: ReturnType<typeof setTimeout> | null = null;
 
   const clearTimers = () => {
     if (idleTimer) clearTimeout(idleTimer);
     if (hiddenTimer) clearTimeout(hiddenTimer);
-    idleTimer = hiddenTimer = null;
+    if (warnTimer) clearTimeout(warnTimer);
+    idleTimer = hiddenTimer = warnTimer = null;
   };
+
+  /** Zaplanuj ostrzeżenie na 30 s przed blokadą; przelicza się, gdy użytkownik był aktywny w międzyczasie. */
+  function scheduleWarn() {
+    if (warnTimer) clearTimeout(warnTimer);
+    warnTimer = null;
+    const minutes = store.get();
+    if (!pn.isUnlocked() || minutes === 0) return;
+    const limit = minutes * 60_000;
+    if (limit <= LOCK_WARN_MS) return;
+    const delay = limit - LOCK_WARN_MS - (Date.now() - lastActivity);
+    warnTimer = setTimeout(() => {
+      warnTimer = null;
+      if (!pn.isUnlocked()) return;
+      if (Date.now() - lastActivity >= limit - LOCK_WARN_MS) {
+        toast(`Zablokuję za ${LOCK_WARN_MS / 1000} s`, {
+          id: "vault-autolock-warning",
+          duration: LOCK_WARN_MS,
+          action: { label: `Jeszcze ${minutes} min`, onClick: () => { lastActivity = Date.now(); armIdle(); } },
+        });
+      } else {
+        scheduleWarn();
+      }
+    }, Math.max(0, delay));
+  }
 
   function armIdle(delay?: number) {
     if (idleTimer) clearTimeout(idleTimer);
@@ -55,6 +85,7 @@ export function startAutoLock(pn: PrivateNotes): () => void {
       if (idle >= limit) void pn.lock();
       else armIdle(limit - idle);
     }, delay ?? limit);
+    scheduleWarn();
   }
 
   const onActivity = () => { lastActivity = Date.now(); };

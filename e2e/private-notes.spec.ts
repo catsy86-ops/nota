@@ -225,3 +225,20 @@ test("edycja odblokowanej notatki zapisuje się wyłącznie jako szyfrogram i pr
   await unlockViaTile(page, PASSWORD);
   await expect(card(page, TITLE)).toContainText(EDITED);
 });
+
+test("kłódka skarbca w nagłówku: odblokowany → stuknięcie blokuje; zablokowany → stuknięcie otwiera odblokowanie (2.1)", async ({ page }) => {
+  await addNote(page, TITLE, SECRET);
+  await setUpVaultAndLock(page);
+  // Po założeniu skarbiec jest odblokowany: kłódka pokazuje stan otwarty.
+  await expect(page.getByRole("button", { name: /^Skarbiec odblokowany/ })).toBeVisible();
+
+  await page.getByRole("button", { name: /^Skarbiec odblokowany/ }).click();
+  await expect(page.getByRole("button", { name: /^Skarbiec zablokowany/ })).toBeVisible();
+
+  await page.getByRole("button", { name: /^Skarbiec zablokowany/ }).click();
+  const unlock = page.getByRole("dialog").first();
+  await expect(unlock).toBeVisible();
+  await unlock.getByLabel("Hasło skarbca").fill(PASSWORD);
+  await unlock.getByRole("button", { name: "Odblokuj" }).click();
+  await expect(page.getByRole("button", { name: /^Skarbiec odblokowany/ })).toBeVisible();
+});
