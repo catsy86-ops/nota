@@ -282,13 +282,16 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
   }, [expanded, title, content, allLabels, folders, reminder, priority]);
 
   // Blokada podwójnego zapisu: dwa szybkie wywołania (np. Ctrl+Enter i klik poza edytorem) widzą jeszcze ten sam, stary szkic.
-  const committingRef = useRef(false);
+  // Zapamiętujemy migawkę zapisanego szkicu. Ponowne wywołanie z tą samą treścią jest pomijane, zanim React przerysuje
+  // formularz po `reset` (wtedy stare domknięcie ma jeszcze stary szkic). Kasuje ją dopiero zmiana tekstu przez
+  // użytkownika, więc ta sama treść napisana na nowo zapisuje się normalnie. Zwykły timer tego nie łapał: dwa
+  // Ctrl+Enter oddalone o kilka ms (np. pod obciążeniem) tworzyły dwie notatki.
+  const committedRef = useRef<string | null>(null);
   const commit = useCallback(() => {
-    if (committingRef.current) return;
-    committingRef.current = true;
-    // setTimeout, nie mikrozadanie: dwa nasłuchy tego samego zdarzenia klawisza idą jeden po drugim i mikrozadanie zdążyłoby zwolnić blokadę.
-    setTimeout(() => { committingRef.current = false; }, 0);
+    const snapshot = JSON.stringify({ title, content, images, attachments, checklist });
+    if (committedRef.current === snapshot) return;
     if (title.trim() || content.trim() || images.length > 0 || attachments.length > 0 || checklist.length > 0) {
+      committedRef.current = snapshot;
       const r = applyCapture({ title, content }, capture, ignored, images.length > 0 || attachments.length > 0 || checklist.length > 0);
       r.newLabels.forEach((l) => onCreateLabel(l));
       const allNoteLabels = [...labels];
@@ -305,7 +308,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
       onAdd(r.title, r.content, color, allNoteLabels, remindAt, images, checklist, r.priority ?? priority, r.folderId, attachments, extras);
     }
     reset();
-  }, [title, content, images, attachments, checklist, color, labels, reminder, reminderRepeat, reminderUntil, parentId, parentOptions, priority, capture, ignored, onAdd, onCreateLabel, reset]);
+  }, [title, content, images, attachments, checklist, color, labels, reminder, reminderRepeat, reminderUntil, reminderAllDay, parentId, parentOptions, priority, capture, ignored, onAdd, onCreateLabel, reset]);
 
   const handleClose = commit;
 
@@ -533,7 +536,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                 })}
               </div>
             )}
-            <TitleField ref={titleRef} value={title} onChange={setTitle} placeholder="Tytuł"
+            <TitleField ref={titleRef} value={title} onChange={(v) => { committedRef.current = null; setTitle(v); }} placeholder="Tytuł"
               onEnter={(e) => {
                 if (e.ctrlKey || e.metaKey) { if (e.shiftKey) saveAndNext(); else handleClose(); }
                 else textareaRef.current?.focus();
@@ -547,7 +550,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
               setContent(content.slice(0, s) + before + sel + after + content.slice(e2));
             }} />
             <div className={cn("relative", fullScreen && "flex-1")}>
-              <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} onPaste={handleContentPaste} aria-autocomplete="list" aria-expanded={wiki.isOpen} onSelect={() => { wiki.textareaProps.onSelect(); slash.refresh(); }} onKeyDown={handleContentKeyDown} placeholder="Treść notatki..." rows={3}
+              <textarea ref={textareaRef} value={content} onChange={(e) => { committedRef.current = null; setContent(e.target.value); }} onPaste={handleContentPaste} aria-autocomplete="list" aria-expanded={wiki.isOpen} onSelect={() => { wiki.textareaProps.onSelect(); slash.refresh(); }} onKeyDown={handleContentKeyDown} placeholder="Treść notatki..." rows={3}
                 className="w-full max-sm:min-h-[35dvh] bg-transparent text-sm max-sm:text-base text-foreground placeholder:text-muted-foreground outline-hidden resize-none" />
               {wiki.popup()}{slash.popup()}
             </div>

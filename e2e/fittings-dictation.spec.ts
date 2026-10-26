@@ -39,6 +39,8 @@ test("dyktowanie kształtek: kilka pozycji naraz, powtórzona nazwa sumuje sztuk
   await page.goto("/praca");
   await page.getByRole("button", { name: /^(Wpis|Dokończ wpis)$/ }).click();
   const sheet = page.getByTestId("journal-entry-sheet");
+  // Sekcja kształtek jest zwinięta, dopóki jej nie otworzyć (Etap 3 Praca).
+  await sheet.getByRole("button", { name: /^(\+ |✓ )?Kształtki$/ }).click();
 
   // Pusta lista: mikrofon obok „Dodaj kształtki”.
   await sheet.getByRole("button", { name: "Dyktuj kształtki" }).click();
