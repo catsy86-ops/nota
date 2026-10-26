@@ -120,6 +120,8 @@ describe("odblokowanie biometrią: przepływ skarbca (V-4)", () => {
     store.setVaultMeta(broken);
     await expect(pn.setup(PW)).rejects.toThrow(/uszkodzony/);
     expect(JSON.stringify(store.getVaultMeta())).toBe(JSON.stringify(broken));
+    // Interfejs ma wiedzieć, że skarbiec jest uszkodzony, a nie że go nie ma (bez przycisku „Ustaw”).
+    expect(pn.getSnapshot()).toMatchObject({ phase: "none", corrupt: true });
   });
 
   it("identyfikator passkeya jest w base64url, a sól PRF w metadanych", () => {

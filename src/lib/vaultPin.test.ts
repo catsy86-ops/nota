@@ -18,10 +18,16 @@ describe("pin skarbca (W-1)", () => {
     writeVaultPin(meta());
     const pk = { salt: "P", entries: [{ id: "a", wrapped: "x" }] };
     expect(comparePin(readVaultPin(), meta({ passkeys: pk }))).toBe("changed");
-    expect(comparePin(readVaultPin(), meta({ recovery: { salt: "R", wrapped: "y" } as VaultMeta["recovery"] }))).toBe("changed");
+    expect(comparePin(readVaultPin(), meta({ recovery: "R-code" }))).toBe("changed");
     writeVaultPin(meta({ passkeys: pk }));
     expect(comparePin(readVaultPin(), meta({ passkeys: pk }))).toBe("same");
     expect(comparePin(readVaultPin(), meta({ passkeys: { salt: "P", entries: [] } }))).toBe("changed");
+  });
+
+  it("ta sama lista passkeyów z inną kolejnością pól to nadal same (kanoniczna postać)", () => {
+    writeVaultPin(meta({ passkeys: { salt: "P", entries: [{ id: "a", wrapped: "x" }] } }));
+    const reordered = { entries: [{ wrapped: "x", id: "a" }], salt: "P" } as unknown as VaultMeta["passkeys"];
+    expect(comparePin(readVaultPin(), meta({ passkeys: reordered }))).toBe("same");
   });
 
   it("pin sprzed pola extra wymusza przyjęcie zmiany hasłem (changed), nie cichą zgodność", () => {

@@ -14,7 +14,7 @@ interface Props {
 }
 
 /** Stały snapshot dla zwykłych notatek — nie przerysowują się przy zmianach skarbca. */
-const IDLE: VaultSnapshot = { phase: "none", version: 0 };
+const IDLE: VaultSnapshot = { phase: "none", corrupt: false, version: 0 };
 
 /**
  * Jedyne miejsce, w którym jawna treść notatki prywatnej trafia do UI.

@@ -31,7 +31,11 @@ const KEY = "kaczy.vault.pin.v1";
 
 /** Pola spoza klucza, które też są pod pinem: passkeye i kod awaryjny. */
 function extraOf(m: VaultMeta): string {
-  return JSON.stringify({ passkeys: m.passkeys ?? null, recovery: m.recovery ?? null });
+  // Klucze obiektów sortowane: ten sam stan z synchronizacji może mieć inną kolejność pól.
+  const sorted = (_: string, v: unknown) => (v && typeof v === "object" && !Array.isArray(v)
+    ? Object.fromEntries(Object.entries(v as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
+    : v);
+  return JSON.stringify({ passkeys: m.passkeys ?? null, recovery: m.recovery ?? null }, sorted);
 }
 
 export function readVaultPin(): VaultPin | null {

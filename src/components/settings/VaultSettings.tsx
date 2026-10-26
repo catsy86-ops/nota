@@ -16,6 +16,7 @@ const CHOICE_LABEL = (m: number) => (m === 0 ? "Nigdy (do zamknięcia karty)" : 
 
 const STATUS = {
   none: "Skarbiec nie jest jeszcze ustawiony. Pojawi się przy pierwszym zablokowaniu notatki.",
+  corrupt: "Metadane skarbca w dokumencie są uszkodzone. Nie założę nowego skarbca, żeby nie nadpisać starego i nie stracić notatek prywatnych. Przywróć pełny backup albo zsynchronizuj urządzenie, na którym skarbiec działa.",
   locked: "Skarbiec jest zablokowany — prywatne notatki pokazują się jako kłódki.",
   locking: "Blokuję skarbiec…",
   unlocked: "Skarbiec jest odblokowany w tej karcie.",
@@ -33,12 +34,12 @@ export function VaultSettings() {
       <div className="rounded-xl border border-border/60 bg-muted/30 px-4 py-3 space-y-3">
         <p role="status" className="text-xs text-muted-foreground flex items-start gap-2" data-testid="vault-status">
           <ShieldCheck className="w-4 h-4 shrink-0 text-primary-ink" aria-hidden />
-          <span>{STATUS[vault.phase]}</span>
+          <span>{vault.corrupt ? STATUS.corrupt : STATUS[vault.phase]}</span>
         </p>
 
         {has && <PasskeyEnroll />}
         <div className="flex flex-wrap gap-2">
-          {vault.phase === "none" && (
+          {vault.phase === "none" && !vault.corrupt && (
             <Button type="button" size="sm" variant="outline" onClick={() => vaultUi.open("setup")}>
               <KeyRound className="w-3.5 h-3.5 mr-1.5" />Ustaw hasło skarbca
             </Button>

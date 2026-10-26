@@ -40,6 +40,8 @@ export type VaultPhase = "none" | "locked" | "unlocked" | "locking";
 
 export interface VaultSnapshot {
   phase: VaultPhase;
+  /** Pod kluczem `meta` leży coś, co nie jest poprawnym skarbcem: nie zakładamy nowego, żeby go nie nadpisać. */
+  corrupt: boolean;
   /** Rośnie przy każdej zmianie widocznej dla UI (stan, treść w pamięci). */
   version: number;
 }
@@ -165,7 +167,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
   let sessionFingerprint = "";
   let locking = false;
   let version = 0;
-  let snapshot: VaultSnapshot = { phase: "none", version: 0 };
+  let snapshot: VaultSnapshot = { phase: "none", corrupt: false, version: 0 };
   const cache = new Map<string, Entry>();
   /** Id notatek, których szyfrogramu nie da się odszyfrować tym kluczem. */
   const failed = new Set<string>();
@@ -194,12 +196,17 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     return meta() ? "locked" : "none";
   }
 
+  function isCorrupt(): boolean {
+    const raw = store.getVaultMeta();
+    return raw !== undefined && raw !== null && !isValidMeta(raw);
+  }
+
   function emit() {
     version++;
-    snapshot = { phase: phase(), version };
+    snapshot = { phase: phase(), corrupt: isCorrupt(), version };
     listeners.forEach((l) => l());
   }
-  snapshot = { phase: phase(), version };
+  snapshot = { phase: phase(), corrupt: isCorrupt(), version };
 
   // Metadane zmienione z zewnątrz (sync): pojawił się skarbiec albo hasło zmieniono na innym urządzeniu.
   // Porównujemy cały odcisk (sól, klucz opakowany, kod sprawdzający), nie tylko epoch — przy równoległym
@@ -369,8 +376,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
   async function setup(password: string, { withRecovery = true }: { withRecovery?: boolean } = {}): Promise<{ recoveryCode: string | null }> {
     // Surowa wartość pod kluczem (także zepsuta) blokuje zapis. Inaczej uszkodzone meta zostałyby nadpisane
     // i notatki prywatne straciłyby klucz (przegląd V-4, M-3).
-    const existing = store.getVaultMeta();
-    if (existing !== undefined && existing !== null) {
+    if (store.getVaultMeta() !== undefined && store.getVaultMeta() !== null) {
       throw new Error(meta() ? "Skarbiec już istnieje — odblokuj go" : "Skarbiec w dokumencie jest uszkodzony — nie nadpisano go");
     }
     const created = await createVault(password, { iterations, withRecovery });
@@ -412,7 +418,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
       logSecurity("vault-meta-rejected", "changed meta refused on biometric unlock");
       throw new VaultError("bad-format", "Skarbiec został zmieniony na innym urządzeniu. Odblokuj hasłem, aby przyjąć zmianę.");
     }
-    if (verdict === "changed") toast.info("Skarbiec został zmieniony na innym urządzeniu — odblokowano Twoim hasłem");
+    if (verdict === "changed") toast.info("Skarbiec w dokumencie różni się od zapisanego na tym urządzeniu — odblokowano Twoim hasłem");
     await adoptKey(k, m.epoch);
     writeVaultPin(m);
   }
@@ -433,6 +439,10 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     if (entries.length >= MAX_PASSKEYS) throw new Error("Osiągnięto limit odblokowań biometrią");
     // Przegląd V-4, H-1: dwa prompty WebAuthn trwają długo. Jeśli w tym czasie meta się zmieni (np. zmiana hasła
     // z innego urządzenia), zapis cofnąłby skarbiec do starego klucza — notatki nie dałyby się odblokować.
+    // Zmiana samej epoki w dokumencie nie jest przyjmowana, także przy zapisie pinu (przegląd V-4).
+    if (comparePin(readVaultPin(), m) === "epoch-only") {
+      throw new VaultError("bad-format", "Skarbiec w dokumencie ma inny numer epoki niż ten, który zna to urządzenie. Nie dodano biometrii.");
+    }
     const startJson = JSON.stringify(m);
     const raw = await unwrapRawWithPassword(m, password, minIterations);
     try {

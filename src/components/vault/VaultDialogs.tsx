@@ -282,6 +282,8 @@ function ChangeForm({ onChanged }: { onChanged: (recoveryCode: string | null) =>
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const canSubmit = !!oldPw && passwordStrength(password).ok && password === confirm && !busy;
+  // Zmiana hasła kasuje odblokowania biometrią (stare opakowania wiążą stary klucz). Mówimy to przed zmianą.
+  const hadPasskeys = privateNotes.hasPasskeys();
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -291,7 +293,7 @@ function ChangeForm({ onChanged }: { onChanged: (recoveryCode: string | null) =>
     try {
       const res = await privateNotes.changePassword(oldPw, password, { withRecovery });
       if (res.skipped.length) toast.warning(`${res.skipped.length} notatek prywatnych nie dało się odszyfrować i zostały bez zmian`);
-      else toast.success("Hasło zmienione", { description: "Wszystkie prywatne notatki przeszyfrowano nowym kluczem." });
+      else toast.success("Hasło zmienione", { description: hadPasskeys ? "Odblokowanie biometrią trzeba dodać ponownie w Ustawieniach." : "Wszystkie prywatne notatki przeszyfrowano nowym kluczem." });
       onChanged(res.recoveryCode);
     } catch (err) {
       setError(errorText(err));
@@ -303,6 +305,7 @@ function ChangeForm({ onChanged }: { onChanged: (recoveryCode: string | null) =>
   return (
     <form onSubmit={submit} className="space-y-3">
       <p className="text-sm text-muted-foreground">Wszystkie zablokowane notatki zostaną przeszyfrowane nowym kluczem. Operacja jest atomowa — przy błędzie nic się nie zmienia.</p>
+      {hadPasskeys && <p className="text-sm text-destructive-ink" role="note">Odblokowanie biometrią zostanie usunięte. Po zmianie dodasz je ponownie w Ustawieniach.</p>}
       <div className="space-y-1.5">
         <Label htmlFor="vault-old-password">Obecne hasło</Label>
         <Input id="vault-old-password" type="password" autoFocus autoComplete="current-password" value={oldPw} onChange={(e) => setOldPw(e.target.value)} />
