@@ -2603,3 +2603,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/hooks/useWhatsNew.ts` (wołany z `Index.tsx`), `src/lib/whatsNew.ts` (decyzja `whatsNewDecision`).
 - **Nie zrobione z U-4:** pełna lista zmian w „O aplikacji” (plan 4.2) — dymek pokazuje tylko najnowsze.
 - **Testy:** `src/lib/whatsNew.test.ts`; e2e `e2e/whats-new.spec.ts`.
+
+## Ustawienia — skaner kodu grupy (U-2, 2026-10-26)
+
+- **Co robi:** w „Dołącz do istniejącej grupy” jest „Zeskanuj kod”. Okno skanera: na Androidzie z `BarcodeDetector` podgląd kamery tylnej, a zawsze „Wybierz zdjęcie kodu”. Odczytany kod (sam kod albo link `?pair=…`) trafia do pola, a użytkownik klika „Dołącz”. Zdjęcie bez kodu daje komunikat, a nie wpisuje śmieci.
+- **Biblioteka zapasowa:** `jsqr@1.4.0` (dokładna wersja, Apache-2.0), ładowana dopiero przy wyborze zdjęcia, gdy nie ma `BarcodeDetector` (np. iPhone). Osobny chunk, poza paczką startową.
+- **Gdzie:** `src/lib/qrScan.ts` (`codeFromScan`, `decodeQrImage`, `barcodeDetectorCtor`); `src/components/sync/QrScanDialog.tsx`; `src/components/SyncSettings.tsx` (przycisk, stan, leniwe okno). `CODE_ALPHABET` w `yjsSync.ts` wyeksportowany.
+- **Ograniczenia:** podgląd kamery działa tylko tam, gdzie jest `BarcodeDetector`; na iPhonie jest wybór zdjęcia. Nie testowano na prawdziwym telefonie. Nowa zależność: wymagany przegląd wydajności (CLAUDE.md) — nie zrobiony.
+- **Testy:** `src/lib/qrScan.test.ts`; e2e `e2e/sync-qr-scan.spec.ts` (okno i zdjęcie bez kodu). Pozostałe e2e synchronizacji i push zielone.

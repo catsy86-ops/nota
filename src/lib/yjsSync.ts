@@ -18,7 +18,7 @@ import { toast } from "sonner";
  */
 
 const STORAGE_KEY = "kaczy.sync.v1";
-const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no ambiguous I/O/0/1/L
+export const CODE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no ambiguous I/O/0/1/L
 // 12 znaków z 31 ≈ 59 bitów (wcześniej 8 ≈ 40). Kod i tak zwykle idzie przez QR,
 // więc długość nic nie kosztuje. Stare 8-znakowe kody działają dalej.
 export const CODE_LENGTH = 12;

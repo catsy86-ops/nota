@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
+import { lazy, Suspense } from "react";
+const QrScanDialog = lazy(() => import("@/components/sync/QrScanDialog").then((m) => ({ default: m.QrScanDialog })));
 import { Wifi, WifiOff, Copy, Check, LogOut } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { ToggleRow } from "@/components/settings/SettingsShared";
@@ -42,6 +44,7 @@ function deviceWord(n: number): string {
 export function SyncSettings({ prefillCode }: Props) {
   const syncState = useSyncState();
   const [joinInput, setJoinInput] = useState("");
+  const [scanOpen, setScanOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [forgetOpen, setForgetOpen] = useState(false);
   const [legacyRoom, setLegacyRoomState] = useState(() => getLegacyRoom());
@@ -217,6 +220,9 @@ export function SyncSettings({ prefillCode }: Props) {
 
       <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-2">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dołącz do istniejącej grupy</h3>
+        <Suspense fallback={null}>
+          {scanOpen && <QrScanDialog open={scanOpen} onOpenChange={setScanOpen} onCode={(c) => { setJoinInput(c); toast.success("Kod odczytany — kliknij Dołącz"); }} />}
+        </Suspense>
         <form
           className="flex flex-col gap-2 sm:flex-row sm:items-center"
           onSubmit={(e) => { e.preventDefault(); handleJoin(); }}
@@ -246,6 +252,7 @@ export function SyncSettings({ prefillCode }: Props) {
               </div>
             ))}
           </InputOTP>
+          <Button type="button" variant="outline" onClick={() => setScanOpen(true)} className="coarse:h-11">Zeskanuj kod</Button>
           <Button type="submit" disabled={!joinReady} className="coarse:h-11">Dołącz</Button>
         </form>
         <p id="sync-join-hint" className="text-2xs text-muted-foreground">
