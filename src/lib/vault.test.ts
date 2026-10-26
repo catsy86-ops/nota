@@ -84,7 +84,7 @@ describe("vault — szyfrowanie notatek", () => {
   it("wersje i format: nieznana wersja i śmieci dają czytelne błędy", async () => {
     const { dataKey } = await createVault("hasło-testowe-123", { iterations: IT, withRecovery: false });
     const token = await encryptString(dataKey, "x", noteAad("n1"));
-    expect(await code(decryptString(dataKey, token.replace(/^v1\./, "v2."), noteAad("n1")))).toBe("unsupported-version");
+    expect(await code(decryptString(dataKey, token.replace(/^v1\./, "v9."), noteAad("n1")))).toBe("unsupported-version");
     expect(await code(decryptString(dataKey, "nie-token", noteAad("n1")))).toBe("bad-format");
     expect(await code(decryptString(dataKey, "v1.AAAA.BBBB", noteAad("n1")))).toBe("bad-format");
     expect(await code(decryptString(dataKey, "v1.%%%.###", noteAad("n1")))).toBe("bad-format");

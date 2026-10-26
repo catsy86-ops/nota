@@ -2665,3 +2665,13 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **2.1 Kłódka w nagłówku.** Widoczna tylko, gdy skarbiec jest ustawiony (`phase !== "none"`). Odblokowany: ikona otwartej kłódki, podpowiedź z minutami do auto-blokady; stuknięcie blokuje (`lockEverywhere`). Zablokowany: zamknięta kłódka; stuknięcie otwiera odblokowanie (`vaultUi.open("unlock")`). Komponent `src/components/vault/VaultStatusButton.tsx`, wpięty w `AppHeader.tsx`.
 - **Testy:** `src/lib/vaultAutoLock.warn.test.ts` (ostrzeżenie w 30 s i odsunięcie aktywnością); e2e `e2e/private-notes.spec.ts` (kłódka: blokada i odblokowanie); a11y (1440 px) zielone.
 - **Nie zrobione w Skarbcu:** V-3 (format v2) i V-4 (biometria PRF) — patrz niżej.
+
+## Skarbiec — format v2, krok 1 (V-3, 2026-10-26)
+
+- **Co jest:** token `v2.iv.ciphertext` z AAD `notki:v2:<epoka>:<id>` (`noteAadV2`, `encryptNoteStringV2` w `vault.ts`). Odczyt `decryptNoteString` wybiera AAD po prefiksie wersji: `v1` jak dotąd, `v2` z epoką. Szyfrogram z innej epoki albo pod innym id nie odszyfruje się. `looksLikeVaultToken` przyjmuje v1 i v2.
+- **Czego nie ma (zostaje z planu 3.1):**
+  - **Zapis v2 jest wyłączony.** Notatki dalej zapisują się w v1 (`encryptString`). Plan każe przełączyć zapis dopiero po potwierdzeniu, że urządzenia mają nowszą wersję — ta bramka (ostrzeżenie „starsza wersja”, Ustawienia 2.1) nie istnieje.
+  - **Metadane w szyfrogramie** (kolor, folder, `parentId`, ikona) nadal są jawne w dokumencie. Przeniesienie ich do szyfrogramu zmienia kształt dokumentu i listę folderów dla zablokowanych notatek, więc idzie razem z przełączeniem zapisu.
+  - **Migracja** starych szyfrogramów v1 na v2 przy odblokowaniu — po bramce.
+  - **Przegląd bezpieczeństwa** (CLAUDE.md: `security-reviewer` przy zmianach kryptografii) nie został uruchomiony.
+- **Testy:** `src/lib/vault.v2.test.ts` (v1 przez nowy odczyt, v2 z epoką i id, brak zgodności z zwykłym odczytem, rozpoznawanie tokenów); `src/lib/vault.test.ts` (nieznana wersja to teraz `v9`).

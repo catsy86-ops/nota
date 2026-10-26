@@ -74,19 +74,23 @@ const dec = new TextDecoder();
 /** AAD notatki: szyfrogram jednej notatki nie odszyfruje się pod id innej. */
 export const noteAad = (noteId: string) => `notki:note:${noteId}`;
 
+/** Format v2 (V-3): AAD wiąże szyfrogram z epoką skarbca — szyfrogram z innej epoki albo innego skarbca nie odszyfruje się. */
+export const VAULT_VERSION_V2 = "v2";
+export const noteAadV2 = (noteId: string, epoch: number) => `notki:v2:${epoch}:${noteId}`;
+
 // ── szyfrowanie ──────────────────────────────────────────────────────────────
 
-async function encryptBytes(key: CryptoKey, plain: Uint8Array, aad: string): Promise<string> {
+async function encryptBytes(key: CryptoKey, plain: Uint8Array, aad: string, version: string = VAULT_VERSION): Promise<string> {
   const iv = randomBytes(IV_BYTES);
   const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: enc.encode(aad) }, key, plain));
-  return `${VAULT_VERSION}.${toB64u(iv)}.${toB64u(ct)}`;
+  return `${version}.${toB64u(iv)}.${toB64u(ct)}`;
 }
 
 async function decryptBytes(key: CryptoKey, token: string, aad: string): Promise<Uint8Array> {
   if (typeof token !== "string") throw new VaultError("bad-format");
   const parts = token.split(".");
   if (parts.length !== 3) throw new VaultError("bad-format");
-  if (parts[0] !== VAULT_VERSION) throw new VaultError("unsupported-version", `Nieobsługiwana wersja formatu: ${parts[0].slice(0, 8)}`);
+  if (parts[0] !== VAULT_VERSION && parts[0] !== VAULT_VERSION_V2) throw new VaultError("unsupported-version", `Nieobsługiwana wersja formatu: ${parts[0].slice(0, 8)}`);
   let iv: Uint8Array;
   let ct: Uint8Array;
   try { iv = fromB64u(parts[1]); ct = fromB64u(parts[2]); } catch { throw new VaultError("bad-format"); }
@@ -109,7 +113,7 @@ export async function decryptString(key: CryptoKey, token: string, aad: string):
 
 /** Rozpoznaje token wersji 1 bez odszyfrowywania (np. przy imporcie). */
 export function looksLikeVaultToken(s: unknown): s is string {
-  return typeof s === "string" && /^v1\.[A-Za-z0-9_-]{16}\.[A-Za-z0-9_-]{22,}$/.test(s);
+  return typeof s === "string" && /^v[12]\.[A-Za-z0-9_-]{16}\.[A-Za-z0-9_-]{22,}$/.test(s);
 }
 
 // ── klucze ───────────────────────────────────────────────────────────────────
@@ -333,4 +337,16 @@ export function passwordStrength(pw: string): PasswordStrength {
   const label = ["Za krótkie", "Słabe", "Średnie", "Dobre", "Mocne"][score];
   // „Słabe” nie przechodzi: przy minimum 12 znaków liczy się różnorodność (score ≥ 2).
   return { score: score as PasswordStrength["score"], label, ok: score >= 2 };
+}
+
+/** Szyfruje notatkę w formacie v2 (V-3): AAD z epoką. Zapis v2 jest wyłączony, dopóki nie ma bramki wersji. */
+export function encryptNoteStringV2(key: CryptoKey, plaintext: string, noteId: string, epoch: number): Promise<string> {
+  return encryptBytes(key, enc.encode(plaintext), noteAadV2(noteId, epoch), VAULT_VERSION_V2);
+}
+
+/** Odszyfrowuje notatkę v1 albo v2: wersja z prefiksu tokenu wybiera AAD. */
+export async function decryptNoteString(key: CryptoKey, token: string, noteId: string, epoch: number): Promise<string> {
+  const version = typeof token === "string" ? token.split(".")[0] : "";
+  const aad = version === VAULT_VERSION_V2 ? noteAadV2(noteId, epoch) : noteAad(noteId);
+  return decryptString(key, token, aad);
 }
