@@ -1,4 +1,4 @@
-import { localDeviceSchema, type DeviceSchema } from "@/lib/formatSchema";
+import { localDeviceSchema, setDeviceSource, type DeviceSchema } from "@/lib/formatSchema";
 import { clearLegacyIdle, legacyIdleExpired, markLegacyEnabled, markLegacySeen, readLegacyIdle } from "@/lib/legacyRoomIdle";
 import { useSyncExternalStore } from "react";
 import type { WebrtcProvider } from "y-webrtc";
@@ -110,6 +110,7 @@ let lastRemoteToastAt = 0;
 const SYNCED_AT_THROTTLE_MS = 5000;
 
 let state: SyncState = { ...DEFAULT_STATE, code: readPrefs().code };
+setDeviceSource(() => state.devices);
 let providers: WebrtcProvider[] = [];
 // Bumped on every connect()/disconnectProvider() so a dynamic import("y-webrtc")
 // still in flight from a superseded call can tell it's stale and back off.

@@ -242,7 +242,8 @@ const NO_LABELS: string[] = [];
 
 /** Notatka z poprawnym szyfrogramem — tylko taka jest traktowana jako prywatna. */
 function isLockedPlain(note: Pick<Note, "locked" | "vault">): boolean {
-  return note.locked === true && typeof note.vault === "string" && note.vault.startsWith("v1.");
+  // v1 i v2 (V-3): obie wersje to szyfrogram notatki prywatnej; zwykła notatka nie ma tokenu.
+  return note.locked === true && typeof note.vault === "string" && /^v[12]\./.test(note.vault);
 }
 
 function yNoteFromPlain(note: Note): YNote {

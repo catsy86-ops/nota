@@ -15,3 +15,16 @@ describe("numer formatu i urządzenia (Ustawienia 2.1)", () => {
     expect(olderDevices(devs).map((d) => d.name)).toEqual(["B", "C"]);
   });
 });
+
+describe("bramka zapisu v2 (V-3)", () => {
+  it("bez urządzeń wolno; z urządzeniem sprzed schematu 2 nie", async () => {
+    const { setDeviceSource, writeFormatAllowed } = await import("./formatSchema");
+    setDeviceSource(() => []);
+    expect(writeFormatAllowed(2)).toBe(true);
+    setDeviceSource(() => [{ schema: 1 }]);
+    expect(writeFormatAllowed(2)).toBe(false);
+    setDeviceSource(() => [{ schema: 2 }, { schema: 2 }]);
+    expect(writeFormatAllowed(2)).toBe(true);
+    setDeviceSource(() => []);
+  });
+});

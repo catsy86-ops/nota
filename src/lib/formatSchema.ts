@@ -5,7 +5,7 @@ import { APP_VERSION } from "@/content/changelog";
  * Terminy, Skarbiec). Urządzenia ogłaszają go w awareness; nowego formatu nie zapisuje się, dopóki wszystkie
  * widziane urządzenia go znają (`canWriteSchema`).
  */
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 export interface DeviceSchema {
   /** Wersja aplikacji (np. „2026.10.26”); brak u urządzeń sprzed tej zmiany. */
@@ -27,4 +27,15 @@ export function canWriteSchema(required: number, devices: readonly DeviceSchema[
 /** Urządzenia z niższym numerem formatu niż ten w aplikacji — im część danych może być niewidoczna. */
 export function olderDevices<T extends DeviceSchema>(devices: readonly T[], current: number = SCHEMA_VERSION): T[] {
   return devices.filter((d) => (d.schema ?? 0) < current);
+}
+
+/** Źródło listy widzianych urządzeń: podpina je `yjsSync` (bez importu w drugą stronę). */
+let deviceSource: () => readonly DeviceSchema[] = () => [];
+export function setDeviceSource(fn: () => readonly DeviceSchema[]): void {
+  deviceSource = fn;
+}
+
+/** Czy można zapisać format `required` przy aktualnie widzianych urządzeniach (bez grupy: tak). */
+export function writeFormatAllowed(required: number): boolean {
+  return canWriteSchema(required, deviceSource());
 }

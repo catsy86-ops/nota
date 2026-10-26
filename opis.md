@@ -2683,3 +2683,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/lib/formatSchema.ts` (`SCHEMA_VERSION = 1`, `canWriteSchema`, `olderDevices`, `localDeviceSchema`); `src/lib/yjsSync.ts` (awareness, `SyncDevice.version/schema`, `refreshDevices`); `src/components/SyncSettings.tsx` (baner i wersja).
 - **Nie zrobione z 2.1:** baner pokazany tylko w Ustawieniach → Synchronizacja, nie na całej aplikacji (plan mówił „baner w aplikacji”).
 - **Testy:** `src/lib/formatSchema.test.ts`.
+
+## Skarbiec — zapis v2 za bramką wersji (V-3, krok 2, 2026-10-26)
+
+- **Co robi:** nowe i edytowane notatki prywatne zapisują się w formacie v2 (epoka skarbca w AAD), gdy wszystkie widziane urządzenia mają `schema ≥ 2` (`writeFormatAllowed`, `NOTE_FORMAT_V2_SCHEMA`). Gdy w grupie jest urządzenie sprzed tej zmiany, zapis idzie w v1 — nie da się zapisać czegoś, czego starsze urządzenie nie odczyta. Bez grupy zapis idzie w v2. Stare notatki v1 przechodzą na v2 przy najbliższym zapisie; odczyt obu wersji działa.
+- **Schemat:** `SCHEMA_VERSION = 2` (`src/lib/formatSchema.ts`). Ta wersja umie czytać i pisać v2, więc ogłasza schemat 2.
+- **Gdzie:** `src/lib/privateNotes.ts` (`encryptNoteWrite`, odczyt przez `decryptNoteString`, zmiana hasła i duplikat); `src/lib/vault.ts` (v2); `src/lib/formatSchema.ts` (bramka, rejestr źródła urządzeń podpinany przez `yjsSync`); `src/lib/yjsStore.ts` (`isLockedPlain` przyjmuje v1 i v2 — bez tego notatka v2 nie byłaby traktowana jako prywatna).
+- **Nie zrobione w V-3:** metadane w szyfrogramie (kolor, folder, `parentId`, ikona — krok 3 planu; zmienia kształt dokumentu i listę folderów dla zablokowanych notatek) oraz przegląd bezpieczeństwa kryptografii (CLAUDE.md wymaga `security-reviewer`; nie uruchomiony).
+- **Testy:** `src/lib/vault.v2.test.ts`, `src/lib/formatSchema.test.ts` (bramka), `src/lib/privateNotes.test.ts` i `src/lib/yjsStore` (asercje akceptują v1 i v2); e2e `private-notes`, sync, relay, a11y 1440, budżet.

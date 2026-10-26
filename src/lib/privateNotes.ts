@@ -3,8 +3,9 @@ import type { YjsStore } from "@/lib/yjsStore";
 import { yjsStore as defaultStore } from "@/lib/yjsStore";
 import { versionsStore as defaultVersions, type VersionsStore } from "@/lib/versionsStore";
 import { logDiag, logSecurity } from "@/lib/diagnostics";
+import { writeFormatAllowed } from "@/lib/formatSchema";
 import {
-  KDF_ITERATIONS, VaultError, createVault, decryptString, encryptString, isValidMeta, noteAad,
+  KDF_ITERATIONS, VaultError, createVault, decryptNoteString, encryptNoteStringV2, encryptString, isValidMeta, noteAad,
   unlockWithPassword, unlockWithRecovery, type VaultMeta,
 } from "@/lib/vault";
 
@@ -44,6 +45,14 @@ export class VaultThrottledError extends Error {
     super("vault-throttled");
     this.name = "VaultThrottledError";
   }
+}
+
+/** Najniższy numer formatu, który wymaga zapisu v2 (V-3): dopiero gdy wszystkie widziane urządzenia go znają. */
+export const NOTE_FORMAT_V2_SCHEMA = 2;
+
+/** Zapis notatki skarbca: v2 (z epoką w AAD), gdy bramka wersji na to pozwala; inaczej v1 dla starszych urządzeń. */
+function encryptNoteWrite(key: CryptoKey, json: string, id: string, epoch: number): Promise<string> {
+  return writeFormatAllowed(NOTE_FORMAT_V2_SCHEMA) ? encryptNoteStringV2(key, json, id, epoch) : encryptString(key, json, noteAad(id));
 }
 
 const THROTTLE_KEY = "kaczy.vault.attempts.v1";
@@ -208,7 +217,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
       const entry = cache.get(id);
       if (!k || !entry || !entry.dirty) return;
       const content = entry.content;
-      const token = await encryptString(k, JSON.stringify(content), noteAad(id));
+      const token = await encryptNoteWrite(k, JSON.stringify(content), id, sessionEpoch);
       const current = cache.get(id);
       if (!current || !store.isLocked(id)) return;
       store.setVault(id, token);
@@ -230,7 +239,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     const k = key;
     if (!k) return;
     try {
-      const plain = await decryptString(k, token, noteAad(id));
+      const plain = await decryptNoteString(k, token, id, sessionEpoch);
       if (key !== k) return; // skarbiec zablokowany w trakcie
       const existing = cache.get(id);
       if (existing?.dirty) return; // lokalna, niezapisana edycja ma pierwszeństwo (LWW)
@@ -368,7 +377,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
         if (plain.images.length || plain.attachments?.length) return { ok: false, reason: "has-files" };
         const content: PrivateContent = { title: plain.title, content: plain.content, checklist: plain.checklist, labels: plain.labels };
         const json = JSON.stringify(content);
-        const token = await encryptString(k, json, noteAad(id));
+        const token = await encryptNoteWrite(k, json, id, sessionEpoch);
         // Edytor mógł zatwierdzić szkic w trakcie szyfrowania — wtedy powtarzamy.
         const again = store.readPlainNote(id);
         if (!again || JSON.stringify({ title: again.title, content: again.content, checklist: again.checklist, labels: again.labels }) !== json) continue;
@@ -407,7 +416,7 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     if (!k || !entry || !original) return null;
     const newId = crypto.randomUUID();
     const content: PrivateContent = { ...entry.content, title: entry.content.title ? `${entry.content.title} (kopia)` : "" };
-    const token = await encryptString(k, JSON.stringify(content), noteAad(newId));
+    const token = await encryptNoteWrite(k, JSON.stringify(content), newId, sessionEpoch);
     const t = now();
     const { dailyDate: _daily, periodKey: _period, ...rest } = original;
     store.upsertNote({ ...rest, id: newId, locked: true, vault: token, pinned: false, createdAt: t, updatedAt: t });
@@ -430,11 +439,11 @@ export function createPrivateNotes(store: YjsStore, opts: PrivateNotesOptions = 
     const skipped: string[] = [];
     for (const id of store.lockedNoteIds()) {
       const token = store.getVault(id)!;
-      try { plain.set(id, { expected: token, json: await decryptString(oldKey, token, noteAad(id)) }); } catch { skipped.push(id); }
+      try { plain.set(id, { expected: token, json: await decryptNoteString(oldKey, token, id, sessionEpoch) }); } catch { skipped.push(id); }
     }
     const created = await createVault(newPassword, { iterations, withRecovery, epoch: m.epoch + 1 });
     const next = new Map<string, { expected: string; vault: string }>();
-    for (const [id, p] of plain) next.set(id, { expected: p.expected, vault: await encryptString(created.dataKey, p.json, noteAad(id)) });
+    for (const [id, p] of plain) next.set(id, { expected: p.expected, vault: await encryptNoteWrite(created.dataKey, p.json, id, created.meta.epoch) });
     // Zmiana w trakcie (np. edycja z innego urządzenia) — przerywamy bez zapisu.
     if (!store.rekeyVault(created.meta, next)) throw new Error("Notatki zmieniły się w trakcie zmiany hasła — spróbuj ponownie");
     key = created.dataKey;

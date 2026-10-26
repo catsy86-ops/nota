@@ -224,7 +224,7 @@ describe("privateNotes — model i sesja", () => {
   it("schemat importu zachowuje `locked` i `vault`", () => {
     const parsed = noteSchema.parse({ id: "q", title: "", content: "", locked: true, vault: "v1.AAAAAAAAAAAAAAAA.BBBBBBBBBBBBBBBBBBBBBBBB" });
     expect(parsed.locked).toBe(true);
-    expect(parsed.vault).toMatch(/^v1\./);
+    expect(parsed.vault).toMatch(/^v[12]\./);
   });
 });
 
@@ -385,7 +385,7 @@ describe("prywatne notatki — nic z jawnej treści nie wycieka", () => {
     }
     // Backup niesie szyfrogram i metadane skarbca — i nic więcej.
     const backup = JSON.parse(dumps.backup);
-    expect(backup.notes.find((n: Note) => n.id === "secret").vault).toMatch(/^v1\./);
+    expect(backup.notes.find((n: Note) => n.id === "secret").vault).toMatch(/^v[12]\./);
     expect(backup.vault).toBeTruthy();
     // Markdown/HTML mówią tylko, że coś pominięto.
     expect(dumps.exportMd).toContain("Pominięto notatki prywatne: 1");
