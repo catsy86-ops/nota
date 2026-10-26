@@ -1,3 +1,4 @@
+import { SitePlan } from "@/components/study/SitePlan";
 import { useMemo, useState } from "react";
 import { Check, DoorOpen, HardHat, MapPin, Navigation, Pencil, Phone, Plus, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
@@ -168,6 +169,7 @@ export function EntryCheckCard({ onNewEntry }: { onNewEntry: (siteName: string) 
         </Button>
       </div>
 
+      <SitePlan site={site} />
       {open && (
         <EntryCheckDialog
           site={site}

@@ -2642,3 +2642,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/lib/study/photoShrink.ts` (`shrinkDimensions`, `shrinkSitePhotos`: nowe referencje w wpisach i podpisach); `src/components/study/SiteCardDialog.tsx` (`zip()` zwraca wynik, `toggleArchive`, `doArchive`, dialog z polem).
 - **Ograniczenia:** wpisy wiążą się z budową przez `siteId` (wpisy bez `siteId` sprzed kart nie są zmniejszane). Miniatury wymagają przeglądarki z `createImageBitmap`. Ścieżka ze zdjęciami nie ma e2e (test tylko wymiarów i istniejący test archiwizacji z potwierdzeniem).
 - **Testy:** `src/lib/study/photoShrink.test.ts`; `e2e/study.spec.ts` (archiwizacja z potwierdzeniem).
+
+## Praca — plan na dziś budowy (P-5, 2026-10-26)
+
+- **Co robi:** w karcie „Przed wejściem” (Dziś, „Przed wejściem na budowę”) jest sekcja „Plan na dziś”: 3–5 zadań na budowę. Dodajesz zadanie, odhaczasz je w ciągu dnia (pozycja się przekreśla), usuwasz kosz-ikoną. Niezrobione zostają na kolejne dni. Zrobione wczoraj znikają z widoku, bo dzień się skończył.
+- **Dane:** nowy rodzaj listy karty budowy `todo` w `siteItems` (klucz mapy na pozycję, pole karty `plan`). Pozycja: `{ id, text ≤ 80, at, doneAt? }`, najwyżej 5. Zapis przez `setSitePlan` (`store.ts`) z bazą z karty, tak jak etapy i serwis.
+- **Gdzie:** `src/lib/study/planItems.ts` (czyszczenie, `activePlanItems`); `src/lib/study/siteItems.ts` (rodzaj `todo`, składanie listy); `src/lib/study/sites.ts` (pole `plan`); `src/lib/study/store.ts` (`setSitePlan`); `src/components/study/SitePlan.tsx`; `src/components/study/EntryCheck.tsx` (wstawienie sekcji).
+- **Nie zrobione z planu 2.6:** „Zrobione” w raporcie dnia (raport nie czyta jeszcze planu). Przypomnienie „wieczorem dzień wcześniej” (plan jest dostępny o każdej porze, bez powiadomienia).
+- **Testy:** `src/lib/study/planItems.test.ts` (czyszczenie, widok dnia); `src/lib/study/siteItems.plan.test.ts` (składanie z mapy); e2e `e2e/site-plan.spec.ts` (dodanie, odhaczenie, zapis po przeładowaniu).

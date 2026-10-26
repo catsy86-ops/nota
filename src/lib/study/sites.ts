@@ -5,6 +5,7 @@ import { SITE_ACCESS_MAX, SITE_PHONE_MAX } from "./contact";
 import { cleanSiteHours, type SiteHours } from "./siteHours";
 import { cleanSiteDocs, type SiteDoc } from "./siteDocs";
 import { cleanServiceCalls, isDayKey, type ServiceCall } from "./service";
+import { cleanPlanItems, type PlanItem } from "./planItems";
 import { cleanGeo, type GeoPoint } from "./geo";
 
 /**
@@ -52,6 +53,8 @@ export interface SiteCard {
   docs?: SiteDoc[];
   /** Zgłoszenia serwisowe po odbiorze (`service.ts`). */
   service?: ServiceCall[];
+  /** Plan na dziś (P-5): zadania na budowę, odhaczane w ciągu dnia; brak = bez planu. */
+  plan?: PlanItem[];
   /** Ostatni dzień gwarancji („2028-10-16”); brak = nie wpisano. */
   warranty?: string;
 }
@@ -97,6 +100,7 @@ export function cleanSite(raw: unknown): SiteCard | null {
     ...optional("hours", cleanSiteHours(s.hours)),
     ...optional("docs", cleanSiteDocs(s.docs)),
     ...optional("service", cleanServiceCalls(s.service)),
+    ...(cleanPlanItems(s.plan).length ? { plan: cleanPlanItems(s.plan) } : {}),
     ...(isDayKey(s.warranty) ? { warranty: s.warranty } : {}),
     ...withGeo(cleanGeo(s.geo)),
   };

@@ -18,6 +18,7 @@ import { siteOrder } from "./order";
 import { cleanSiteHours, type SiteHours } from "./siteHours";
 import { cleanSiteDocs, type SiteDoc } from "./siteDocs";
 import { cleanServiceCalls, type ServiceCall } from "./service";
+import { cleanPlanItems, type PlanItem } from "./planItems";
 import {
   cleanEntry, cleanEntryParts, SITE_MAX,
   type Column, type JournalEntry, type JournalKind, type StudyState,
@@ -451,7 +452,7 @@ function patchSiteCard(id: string, patch: Partial<Pick<SiteCard, "orderedAt">>) 
  * nie zapisana (np. domyślne etapy) to pusta baza: wtedy zapisują się wszystkie pozycje, nie tylko zmienione.
  * Budowa znana tylko z nazw we wpisach dostaje przy tym kartę w dokumencie.
  */
-function siteListBase<T>(id: string, field: "stages" | "shortages" | "orders" | "hours" | "docs" | "service", uiBase: readonly T[] | undefined): readonly T[] | null {
+function siteListBase<T>(id: string, field: "stages" | "shortages" | "orders" | "hours" | "docs" | "service" | "plan", uiBase: readonly T[] | undefined): readonly T[] | null {
   const s = getStudy();
   const prev = findSite(s, id);
   if (!prev) return null;
@@ -539,6 +540,13 @@ export function setSiteDocs(id: string, docs: SiteDoc[], base?: readonly SiteDoc
 }
 
 /** Zgłoszenia serwisowe po zmianie (dodanie, zamknięcie, usunięcie); `base` jak przy brakach. */
+/** Plan na dziś budowy (P-5): cała lista, zapis per pozycja (`todo`). */
+export function setSitePlan(id: string, items: readonly PlanItem[], base?: readonly PlanItem[]) {
+  const from = siteListBase(id, "plan", base);
+  if (from === null) return;
+  yStudy.setSiteList(id, "todo", cleanPlanItems(items), from);
+}
+
 export function setSiteService(id: string, calls: ServiceCall[], base?: readonly ServiceCall[]) {
   const from = siteListBase(id, "service", base);
   if (from === null) return;
