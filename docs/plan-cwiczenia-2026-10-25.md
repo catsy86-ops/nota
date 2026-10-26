@@ -104,3 +104,12 @@ Legenda: W = wartość (1–3), N = nakład (S/M/L).
 5. Etap 5 na koniec.
 
 Następny plan w serii: **Skarbiec**, potem **Ustawienia i synchronizacja** oraz **powłoka** (`plan-dzialy-2026-10-22.md` §0, §12–13).
+
+## Status 2026-10-26
+
+- **C-1** (aktualizacja urządzeń przed nowymi partiami): decyzja zostaje; wdrożenie nowych partii (1.1) dopiero po aktualizacji wszystkich urządzeń. Kod 1.1 jest w repozytorium.
+- **C-2** (masa ciała w Ćwiczeniach): zrobione — zakładka „Waga” (`src/components/cwiczenia/WeightSection.tsx`, `src/lib/weight/`).
+- **C-3** (bez bazy produktów): decyzja „nie” bez zmian w kodzie.
+- **C-4** (wskazówki ćwiczeń): szkic 18 nowych ćwiczeń w `src/lib/training/catalog.ts` czeka na akceptację właściciela przed wydaniem.
+- **2.7** (ćwiczenia na czas i z masą ciała): nie zrobione, po C-1.
+

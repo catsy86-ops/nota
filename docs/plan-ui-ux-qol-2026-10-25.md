@@ -135,3 +135,11 @@ Odrzucone: CSS Anchor Positioning i Popover API. Radix już pozycjonuje i obsłu
 6. Upiększenie: 5.1–5.5.
 7. Eksperyment 4.3, ewentualnie 4.4.
 8. Faza 6.
+
+## Status D-1 do D-4 — 2026-10-26
+
+- **D-1 (OKLCH):** nie zrobione. Tokeny są w kanałach HSL używanych w `hsl(var(--…))` (konfiguracja Tailwinda, ok. 77 miejsc w CSS, 51 w TSX). Zmiana wymaga przejścia po wszystkich motywach; plan zaleca najpierw jeden motyw.
+- **D-2 (React Compiler):** nie zrobione. Wymaga nowej wtyczki Babel i pomiaru INP/renderów na gałęzi.
+- **D-3 (animacje wejścia i wyjścia w CSS):** nie zrobione. `framer-motion` w 53 plikach; zmiana po jednym komponencie z pomiarem paczki.
+- **D-4 (odcienie działów z motywu):** nie zrobione. Zależy od tokenu `--accent` po 1.5 (OKLCH); dobór odcieni wymaga decyzji właściciela.
+

@@ -2519,6 +2519,19 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Test:** `src/lib/study/report.plan.test.ts` (dzień z samym odhaczeniem, zakres dat).
 - **Commit:** niezacommitowane (do commita po zielonym e2e).
 
+## Ćwiczenia — masa ciała (C-2), Powłoka — nazwy widoków (VIEW_META 1.3) (2026-10-26)
+
+- **Masa ciała (C-2):** czwarta zakładka „Waga” w Ćwiczeniach (`CwiczeniaView.tsx`, komponent `WeightSection.tsx`). Zapis ważenia dnia (masa 20–300 kg, z przecinkiem albo kropką, zaokrąglenie do 0,1), jeden wpis na dzień, lista ostatnich 14, zmiana względem poprzedniego ważenia i średnia z 7. Usunięcie z „Cofnij”.
+- **Dane:** dokument Yjs notatek, mapa `weightEntries` (klucz = dzień) w `src/lib/weight/yWeight.ts`; logika i walidacja w `model.ts` (`parseKg`, `cleanWeight`, `weightTrend`); API dla UI w `store.ts`. Kopia zapasowa: pole `weight` (JSON tablica), scalane przy przywracaniu (dla tego samego dnia wygrywa nowszy zapis); `noteSchema.ts` i `exportNotes.ts`. Moduł Yjs dopisany do listy dozwolonych w `eslint.config.js`.
+- **Ograniczenia:** jedno ważenie na dzień; pełna historia ma limit 1000 dni (`WEIGHT_MAX_ENTRIES`). Wykres masy nie jest zrobiony (plan mówi o zakładce, nie o wykresie).
+- **Testy:** `src/lib/weight/model.test.ts`, `src/lib/weight/yWeight.test.ts`, `e2e/weight.spec.ts` (komputer i telefon).
+
+- **Nazwy widoków (Powłoka 1.3, decyzja PW-1):** jedna tabela `VIEW_LABEL` w `src/lib/viewMeta.ts` (`viewLabel`). Paleta, skróty „g” (`goChord.ts`), pasek boczny (`sidebarItems.ts`) i kopia (`BackupSettings.tsx`) biorą nazwę stąd: „Grafik” zamiast „Grafik zmian”, „Terminy” zamiast „Przypomnienia”. Dolny pasek ma już te same nazwy. Test: `src/lib/viewMeta.test.ts`. Rozmiar paczki startowej nie był mierzony.
+
+- **Katalog ćwiczeń (1.1 z planu Ćwiczeń):** partie plecy, barki, nogi, pośladki, brzuch, przedramiona, całe ciało; sprzęt: masa ciała, drążek, sztanga, gumy, maszyna, kettlebell (`src/lib/training/catalog.ts`, etykiety w `MUSCLE_GROUP_LABELS`). Dodane 18 ćwiczeń startowych; wskazówki to szkic do akceptacji właściciela (C-4). Nowe partie i sprzęt wdrażać po aktualizacji wszystkich urządzeń (C-1), bo starsza wersja nie zna nowych identyfikatorów. Testy: `src/lib/training/model.test.ts`, `customExercises.test.ts`.
+- **Stan pozycji z listy:** U-2 (skaner QR ładowany leniwie, `SyncSettings.tsx`) i U-4 („Co nowego”: najwyżej 5 punktów, bez dymka przy samych poprawkach, `useWhatsNew.ts`) były już zrobione; sprawdzone 2026-10-26.
+- **Commit:** niezacommitowane (do commita po zielonym e2e).
+
 ## Pasek boczny — grupy i nazwa „Terminy” (PW-1, PW-4, 2026-10-26)
 
 - **Co robi:** działy na pasku są w grupach: „Codziennie” (Notatki, Skrzynka, Dziś, Terminy, Kalendarz), „Praca” (Grafik, Praca), „Osobiste” (Długi, Ćwiczenia), a na dole Archiwum i Kosz bez nagłówka. Nagłówek grupy zwija i rozwija listę (`aria-expanded`); stan zapamiętany w `localStorage` pod `kaczy.sidebarGroups.v1` (błąd dostępu = wszystkie otwarte).

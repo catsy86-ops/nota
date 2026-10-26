@@ -13,8 +13,8 @@ describe("cleanCustomExercise", () => {
 
   it("odrzuca pustą nazwę i nieznaną partię; filtruje sprzęt", () => {
     expect(cleanCustomExercise({ ...custom, name: "   " })).toBeNull();
-    expect(cleanCustomExercise({ ...custom, group: "plecy" })).toBeNull();
-    expect(cleanCustomExercise({ ...custom, equipment: ["hantle", "sztanga", "hantle"] as never })?.equipment).toEqual(["hantle"]);
+    expect(cleanCustomExercise({ ...custom, group: "nieznana" as never })).toBeNull();
+    expect(cleanCustomExercise({ ...custom, equipment: ["hantle", "laser", "hantle"] as never })?.equipment).toEqual(["hantle"]);
   });
 });
 

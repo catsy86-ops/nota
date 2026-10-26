@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { EXERCISES, exerciseById, isKnownExercise } from "./catalog";
+import { EQUIPMENT_LIST, EXERCISES, exerciseById, isKnownExercise } from "./catalog";
 import { bestKg, byTrainingTime, cleanEntry, cleanKg, cleanPlanDay, cleanSet, planLine, progressByExercise, volumeOf, type TrainingEntry } from "./model";
 
 const entry = (id: string, day: string, exerciseId: string, sets: { reps: number; kg?: number }[], over: Partial<TrainingEntry> = {}): TrainingEntry =>
@@ -8,9 +8,9 @@ const entry = (id: string, day: string, exerciseId: string, sets: { reps: number
 describe("katalog", () => {
   it("ma ćwiczenia na klatkę, biceps i triceps z ławką lub hantlami, bez duplikatów id", () => {
     const groups = new Set(EXERCISES.map((e) => e.group));
-    expect(groups).toEqual(new Set(["klatka", "biceps", "triceps"]));
+    expect([...groups]).toEqual(expect.arrayContaining(["klatka", "biceps", "triceps"]));
     expect(new Set(EXERCISES.map((e) => e.id)).size).toBe(EXERCISES.length);
-    for (const e of EXERCISES) for (const eq of e.equipment) expect(["ławka", "hantle"]).toContain(eq);
+    for (const e of EXERCISES) for (const eq of e.equipment) expect(EQUIPMENT_LIST).toContain(eq);
   });
 
   it("rozpoznaje znane i obce id", () => {
