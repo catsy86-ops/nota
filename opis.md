@@ -2582,7 +2582,7 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/hooks/useReminderNotifications.ts` (gałąź `grouped`); cofnięcie przez `firedCbRef` z zapisanymi polami z `reminderFields`.
 - **Testy:** `e2e/reminder-toast.spec.ts` (zbiorczy dymek, odłożenie i cofnięcie).
 
-## Kompozytor — „Cały dzień” i termin z pustych Terminów (2.5, 2.026-10-26)
+## Kompozytor — „Cały dzień” i termin z pustych Terminów (2.5, 2026-10-26)
 
 - **Co robi:** w wyborze terminu paska nowej notatki działa „Cały dzień (o 9:00)” i zapisuje się jako przypomnienie całodzienne (`reminderAllDay`). Przycisk „Nowa notatka” w pustych Terminach otwiera kompozytor z otwartym oknem terminu (akcja `"reminder"` w `ComposerAction`).
 - **Gdzie:** `src/components/AddNoteBar.tsx` (stan `reminderAllDay`, `reminderOpenSignal`, `ComposerExtras.reminderAllDay`, akcja `reminder` w `expand` i w efekcie); `src/components/ReminderPicker.tsx` (`openSignal`, otwarcie po zmianie sygnału); `src/pages/Index.tsx` (zapis `reminderAllDay` w `handleComposerAdd`, `onNew` w pustym widoku Terminów).
