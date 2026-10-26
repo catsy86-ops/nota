@@ -113,8 +113,10 @@ export function endOfDay(date: Date): number {
  * Dzień serii notatki. Notatki sprzed pola `reminderDay` (albo utworzone od razu
  * z terminem) go nie mają — wtedy dzień zapisanego terminu, zanim cokolwiek go przytnie.
  */
-export function seriesDay(note: { reminder: number | null; reminderDay?: number }): number | undefined {
-  return note.reminderDay ?? (note.reminder !== null ? new Date(note.reminder).getDate() : undefined);
+export function seriesDay(note: { reminder: number | null; reminderDay?: number; reminderBase?: number }): number | undefined {
+  // Odłożone wystąpienie (`reminderBase`) trzyma dzień serii, a nie dzień odłożenia (T-1.4).
+  const term = note.reminderBase ?? note.reminder;
+  return note.reminderDay ?? (term !== null && term !== undefined ? new Date(term).getDate() : undefined);
 }
 
 function daysInMonth(year: number, month: number): number {

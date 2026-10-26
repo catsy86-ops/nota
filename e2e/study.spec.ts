@@ -20,7 +20,7 @@ test.beforeEach(async ({ page }) => {
 
 test("dział Praca: adres /praca, pozycja w pasku bocznym i cztery zakładki @smoke", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Praca" }).first().click();
+  await page.locator('[data-sidebar-group="praca"] button:not([aria-expanded])', { hasText: "Praca" }).click();
   await expect(page).toHaveURL(/\/praca$/);
   await expect(page.getByTestId("study-view")).toBeVisible();
   await expect(page.getByTestId("mastery-count")).toHaveText("0");

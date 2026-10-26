@@ -158,3 +158,11 @@ describe("snoozeTarget — odłożenie jednego wystąpienia", () => {
     expect(snoozeTarget(note, at(19, 9, 10), at(19, 9))).toEqual({ reminder: at(19, 9, 10), reminderBase: at(19) });
   });
 });
+
+describe("seriesDay po odłożeniu (T 1.4)", () => {
+  it("bez reminderDay bierze dzień z reminderBase, nie z odłożonego terminu", () => {
+    // Seria z 31. dnia odłożona na 2. dnia miesiąca: dzień serii to 31, nie 2.
+    const d = (m: number, day: number) => new Date(2026, m - 1, day, 9, 30).getTime();
+    expect(seriesDay({ reminder: d(3, 2), reminderBase: d(2, 28) })).toBe(28);
+  });
+});

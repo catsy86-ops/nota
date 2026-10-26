@@ -65,6 +65,7 @@ import { DeleteForeverDialog, EmptyTrashDialog } from "@/components/TrashConfirm
 import { sidebarItems } from "@/components/sidebar/sidebarItems";
 import { useHiddenViews, isViewShown } from "@/lib/hiddenViews";
 import { useTodayCards } from "@/lib/todayCards";
+import { useNextBoundary } from "@/hooks/useNextBoundary";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
 import { downloadNotesZip } from "@/lib/exportZip";
@@ -347,7 +348,9 @@ const Index = () => {
   useDayDoneReward(view === "today" && !search ? displayNotes : null);
   // W Terminach archiwum zostaje w liście (dzwoni), więc „Brak przypomnień” nie może mówić prawdy tylko o `displayNotes` (1d planu).
   // Archiwum nie wchodzi do grup „Zaległe”/„Nadchodzące” (D4): ma własną sekcję na dole, z wyszukiwaniem.
-  const reminderGroups = useMemo(() => (view === "reminders" ? groupReminders(others) : []), [view, others]);
+  // T 1.1: grupy przeliczają się na granicy terminu i o północy, nie tylko przy zmianie notatek.
+  const boundaryTick = useNextBoundary(others);
+  const reminderGroups = useMemo(() => (view === "reminders" ? groupReminders(others) : []), [view, others, boundaryTick]);
   const archivedRows = useMemo(
     () => (view === "reminders" ? (deferredSearch ? searchNotes(archivedNotes, deferredSearch) : archivedNotes) : []),
     [view, deferredSearch, archivedNotes],

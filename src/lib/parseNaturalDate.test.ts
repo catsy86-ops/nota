@@ -92,3 +92,33 @@ describe("parseNaturalDate: godzina bez minut, dziś bez godziny, za tydzień (Q
     expect(parseNaturalDate("kupić 3 jajka", now)).toBeNull();
   });
 });
+
+describe("parseNaturalDate — tabela z planu Terminów 1.3", () => {
+  // Poniedziałek 19.10.2026, 12:00.
+  const now = new Date(2026, 9, 19, 12, 0, 0, 0);
+  const at = (y: number, m: number, d: number, h = 9, min = 0) => new Date(y, m - 1, d, h, min).getTime();
+  const cases: [string, number | null][] = [
+    ["12.11", at(2026, 11, 12)],
+    ["12.11 15:30", at(2026, 11, 12, 15, 30)],
+    ["12.11.2026", at(2026, 11, 12)],
+    ["12/11", at(2026, 11, 12)],
+    ["12 listopada", at(2026, 11, 12)],
+    ["2026-11-12", at(2026, 11, 12)],
+    ["01.10", at(2027, 10, 1)],
+    ["31.02", null],
+    ["15.30", null],
+    ["w piatek", at(2026, 10, 23)],
+    ["we srode 10:00", at(2026, 10, 21, 10, 0)],
+    ["w przyszly poniedzialek", at(2026, 10, 26)],
+    ["jutro rano", at(2026, 10, 20)],
+    ["dzis wieczorem", at(2026, 10, 19, 18, 0)],
+    ["w piatek po poludniu", at(2026, 10, 23, 15, 0)],
+    ["za godzine", at(2026, 10, 19, 13, 0)],
+    ["o 15", at(2026, 10, 19, 15, 0)],
+    ["o 9", at(2026, 10, 20, 9, 0)],
+  ];
+  it.each(cases)("%s", (input, expected) => {
+    const got = parseNaturalDate(input, now);
+    expect(got ? got.getTime() : null).toBe(expected);
+  });
+});

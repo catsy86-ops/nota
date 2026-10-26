@@ -6,6 +6,7 @@ import { groupReminders, type AgendaGroupKey } from "@/lib/reminderAgenda";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { ReminderQuickActions } from "@/components/ReminderQuickActions";
 import { cn } from "@/lib/utils";
+import { useNextBoundary } from "@/hooks/useNextBoundary";
 
 /** Ile pozycji z grupy pokazujemy na „Dziś”; reszta jest w widoku Przypomnień. */
 const SHOWN_PER_GROUP = 4;
@@ -25,6 +26,8 @@ export function TodayDueList({ notes, onOpen, onOpenReminders, onUpdate }: { not
   // Subskrypcja zmiany doby (północ, powrót na kartę): po niej komponent renderuje się ponownie,
   // a `Date.now()` poniżej jest świeże. Bez tego przypomnienie, które minęło, nie przechodzi do „Zaległe”.
   useDayClock();
+  // T 1.1: termin przechodzi z „Dziś” do „Zaległe” o swojej godzinie, bez czekania na północ.
+  useNextBoundary(notes);
   // Archiwum też: jego przypomnienia nadal dzwonią, więc muszą być widoczne i liczone jak reszta.
   const groups = groupReminders(notes.filter((n) => !n.trashed), Date.now()).filter((g) => g.key === "overdue" || g.key === "missed" || g.key === "today");
   const total = groups.reduce((n, g) => n + g.notes.length, 0);

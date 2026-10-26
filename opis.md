@@ -2525,3 +2525,10 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/lib/todayCards.ts` (`todayCardsStore`, `setTodayCard`, `useTodayCards`); bramki przy kartach w `src/pages/Index.tsx` (widok „today”); przełączniki w `src/components/settings/AppearanceSettings.tsx`.
 - **Odłożone z planu 4.1:** kolejność kart przeciąganiem (`@dnd-kit/sortable`) i „oś dnia”. Oś dnia jest w Kalendarzu (`DayTimeline`), nie na Dziś, więc nie ma tu czego ustawiać. Kolejność zostaje jak dziś.
 - **Testy:** `src/lib/todayCards.test.ts`; e2e `e2e/today-cards-settings.spec.ts`.
+
+## Terminy — plan 1.1, 1.3, 1.4 (2026-10-26)
+
+- **1.1 Grupy przeliczają się z czasem.** `useNextBoundary(notes)` (`src/hooks/useNextBoundary.ts`) budzi się na najbliższej granicy: termin notatki, koniec dnia terminu całodziennego albo północ, i podbija licznik. Widok Terminów (`Index.tsx`, `reminderGroups`) i kafel Dziś (`TodayDueList.tsx`) przeliczają grupy na tę chwilę, bez zmiany notatek. Testy: `src/hooks/useNextBoundary.test.ts` (czyste `nextBoundary`, z przesuniętym czasem). Nie ma e2e na zegarze.
+- **1.3 Parser dat** (`src/lib/parseNaturalDate.ts`). Obsługuje: `12.11`, `12/11`, `12.11.2026`, `12 listopada`, `2026-11-12`, dzień tygodnia z „w/we” (`w piątek`, `we środę`), „w przyszły poniedziałek” (poniedziałek następnego tygodnia kalendarzowego), pory dnia („rano” 9, „po południu” 15, „wieczorem” 18) samodzielnie i po dacie, „za godzinę”, „o 15”. Data wyjmowana z tekstu przed szukaniem godziny, więc „12” z „12.11” nie jest godziną; godzina tylko z dwukropkiem albo sama liczba. Nieistniejący dzień (31.02) i miesiąc spoza 1–12 dają `null`; „15.30” też (to nie data). Data bez roku to najbliższe wystąpienie w przyszłości. Tabela przypadków: `src/lib/parseNaturalDate.test.ts`.
+- **1.4 `seriesDay` po odłożeniu.** Dzień serii to `reminderDay`, a bez niego dzień `reminderBase ?? reminder`. Odłożone wystąpienie nie przesuwa dnia serii. Test: `src/lib/reminderRepeat.test.ts`.
+- **Nie zrobione z Etapu 1:** 1.2 (DST w serii), 1.5 (odłożenie na prywatnej notatce z powiadomienia), 1.6 („W archiwum” po terminie).
