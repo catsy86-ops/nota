@@ -748,6 +748,8 @@ test("dziennik: karta budowy — nazwa, adres, inwestor, raport z karty i archiw
   // Archiwum: znika z pigułek, wpisy zostają; „Archiwum (1)” ją pokazuje.
   await journal.getByRole("button", { name: "Karta budowy", exact: true }).click();
   await card.getByRole("button", { name: "Do archiwum" }).click();
+  // P-4: archiwizacja pyta; bez zaznaczenia zdjęcia zostają w pełnym rozmiarze.
+  await page.getByRole("alertdialog").getByRole("button", { name: "Zarchiwizuj", exact: true }).click();
   await expect(card).toHaveCount(0);
   await journal.getByRole("button", { name: "Wyczyść filtry" }).click();
   await expect(sites.getByRole("button", { name: "Dom Nowaków" })).toHaveCount(0);

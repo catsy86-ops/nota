@@ -4,6 +4,9 @@ import { Archive, ArchiveRestore, ChevronDown, Clock, ClipboardCheck, FileText, 
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { shrinkSitePhotos } from "@/lib/study/photoShrink";
 import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { haptic } from "@/lib/haptics";
 import { useShifts } from "@/lib/shifts";
@@ -97,8 +100,8 @@ export function SiteCardDialog({
   }
 
   /** Cała budowa (od pierwszego do ostatniego wpisu) w jednym ZIP: raport.md i zdjęcia. */
-  async function zip() {
-    if (!site || site.first == null || site.last == null) return;
+  async function zip(): Promise<boolean> {
+    if (!site || site.first == null || site.last == null) return false;
     setZipping(true);
     try {
       const report = buildJournalReport(study.journal, {
@@ -121,8 +124,10 @@ export function SiteCardDialog({
           ? `Paczka gotowa: raport i ${photos}${docs}${audio}. ${missing} bez bajtów na tym urządzeniu — pominięte.`
           : `Paczka gotowa: raport i ${photos}${docs}${audio}`,
       );
+      return true;
     } catch {
       toast.error("Nie udało się przygotować paczki");
+      return false;
     } finally {
       setZipping(false);
     }
@@ -156,14 +161,39 @@ export function SiteCardDialog({
     go(site.id);
   }
 
+  // P-4 (plan Pracy 3.3): archiwizacja pyta; „zapisz ZIP i zmniejsz zdjęcia” jest domyślnie wyłączone.
+  const [archiveAsk, setArchiveAsk] = useState(false);
+  const [shrinkWithZip, setShrinkWithZip] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+
   function toggleArchive() {
     if (!site) return;
-    persistDirty();
-    const archive = site.archived === undefined;
-    setSiteArchived(site.id, archive);
-    haptic("tap");
-    toast.success(archive ? `„${site.name}” w archiwum — wpisy zostają` : `„${site.name}” znów na liście budów`);
-    if (archive) onOpenChange(false);
+    if (site.archived !== undefined) { void doArchive(false, false); return; }
+    setShrinkWithZip(false);
+    setArchiveAsk(true);
+  }
+
+  async function doArchive(archive: boolean, shrink: boolean) {
+    if (!site) return;
+    setArchiving(true);
+    try {
+      if (archive && shrink) {
+        // Najpierw ZIP: bez zapisanej paczki zdjęcia zostają w pełnym rozmiarze.
+        if (!(await zip())) return;
+        const { shrunk, skipped } = await shrinkSitePhotos(study.journal.filter((en) => en.siteId === site.id));
+        if (skipped > 0) toast.info(`${skipped} zdjęć zostało w pełnym rozmiarze — tej przeglądarki nie umie ich zmniejszyć`);
+        haptic("success");
+        toast.success(`Zmniejszono ${shrunk} zdjęć do miniatur — oryginały są w paczce`);
+      }
+      persistDirty();
+      setSiteArchived(site.id, archive);
+      haptic("tap");
+      toast.success(archive ? `„${site.name}” w archiwum — wpisy zostają` : `„${site.name}” znów na liście budów`);
+      if (archive) onOpenChange(false);
+    } finally {
+      setArchiving(false);
+      setArchiveAsk(false);
+    }
   }
 
   // Szybkie akcje z zapisanej karty (nie z pisanego formularza) — numer przed zapisem nie dzwoni.
@@ -455,6 +485,22 @@ export function SiteCardDialog({
                   ? <><Archive className="mr-1.5 h-4 w-4" aria-hidden />Do archiwum</>
                   : <><ArchiveRestore className="mr-1.5 h-4 w-4" aria-hidden />Przywróć z archiwum</>}
               </Button>
+              <AlertDialog open={archiveAsk} onOpenChange={(o) => { if (!archiving) setArchiveAsk(o); }}>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Zarchiwizować „{site.name}”?</AlertDialogTitle>
+                    <AlertDialogDescription>Wpisy zostają. Archiwum nie jest na liście budów; cofnąć można przyciskiem „Przywróć z archiwum”.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <label className="flex items-start gap-2 text-sm">
+                    <Checkbox checked={shrinkWithZip} onCheckedChange={(v) => setShrinkWithZip(v === true)} className="mt-0.5" />
+                    <span>Zapisz paczkę ZIP i zmniejsz zdjęcia do miniatur (800 px)<span className="block text-xs text-muted-foreground">Oryginały zostaną tylko w paczce. Tej zmiany nie da się cofnąć, dlatego najpierw powstaje ZIP.</span></span>
+                  </label>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={archiving}>Anuluj</AlertDialogCancel>
+                    <AlertDialogAction disabled={archiving} onClick={(e) => { e.preventDefault(); void doArchive(true, shrinkWithZip); }}>{shrinkWithZip ? "Zapisz ZIP i zarchiwizuj" : "Zarchiwizuj"}</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </>
         )}

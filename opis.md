@@ -2634,3 +2634,11 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 - **Gdzie:** `src/lib/study/yStudy.ts` (`cleanCaptions`, pole w `cleanEntryParts`/`cleanEntry`, klucz w `JOURNAL_ENTRY_KEYS`); `src/lib/study/draft.ts`, `entrySheet.ts`, `store.ts` (pole szkicu i wpisu); `src/components/study/JournalEntrySheet.tsx` (`saveCaption`); `src/components/study/PhotoStrip.tsx`; `src/lib/study/report.ts` (`captionsOf`); `src/lib/study/siteZip.ts` (wypalenie).
 - **Ograniczenia:** wypalenie wymaga przeglądarki z `createImageBitmap` (bez niej ZIP idzie z oryginałem). Udostępnianie pojedynczego zdjęcia i wydruk nie wypalają podpisu (tylko ZIP). Równoległa edycja podpisów z dwóch urządzeń: ostatni zapis wygrywa dla całej mapy.
 - **Testy:** `src/lib/study/captions.test.ts`; e2e `e2e/journal-photos.spec.ts` (zapis podpisu, zdjęcie bez zmian).
+
+## Praca — odchudzanie zdjęć zakończonej budowy (P-4, 2026-10-26)
+
+- **Co robi:** „Do archiwum” przy budowie otwiera potwierdzenie. Pole „Zapisz paczkę ZIP i zmniejsz zdjęcia do miniatur (800 px)” jest domyślnie wyłączone. Gdy je zaznaczysz, najpierw powstaje paczka ZIP budowy (`zip()`), a dopiero po jej zapisaniu zdjęcia wpisów budowy zamieniają się na miniatury JPEG (dłuższy bok 800 px). Oryginały zostają tylko w ZIP. Bez zapisanej paczki archiwizacja nie zmniejsza zdjęć. Bez zaznaczenia archiwizacja działa jak dawniej.
+- **Bez „Cofnij”:** zmiana jest nieodwracalna, dlatego najpierw ZIP. Oryginały znikają z magazynu przy odśmiecaniu (`collectGarbage`, karencja 7 dni), bo nieużywane bajty nie są kasowane natychmiast.
+- **Gdzie:** `src/lib/study/photoShrink.ts` (`shrinkDimensions`, `shrinkSitePhotos`: nowe referencje w wpisach i podpisach); `src/components/study/SiteCardDialog.tsx` (`zip()` zwraca wynik, `toggleArchive`, `doArchive`, dialog z polem).
+- **Ograniczenia:** wpisy wiążą się z budową przez `siteId` (wpisy bez `siteId` sprzed kart nie są zmniejszane). Miniatury wymagają przeglądarki z `createImageBitmap`. Ścieżka ze zdjęciami nie ma e2e (test tylko wymiarów i istniejący test archiwizacji z potwierdzeniem).
+- **Testy:** `src/lib/study/photoShrink.test.ts`; `e2e/study.spec.ts` (archiwizacja z potwierdzeniem).
