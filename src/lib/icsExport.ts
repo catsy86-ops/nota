@@ -1,5 +1,5 @@
 import type { Note } from "@/hooks/useNotes";
-import { seriesDay, type ReminderRepeat } from "@/lib/reminderRepeat";
+import { ruleOf, seriesDay, weekdaysOf, type RepeatRule } from "@/lib/reminderRepeat";
 
 /**
  * Eksport terminów do iCalendar (RFC 5545).
@@ -14,10 +14,13 @@ import { seriesDay, type ReminderRepeat } from "@/lib/reminderRepeat";
  * czasu na letni w serii.
  */
 
-const RRULE: Record<Exclude<ReminderRepeat, "none">, string> = {
+const RRULE: Record<string, string> = {
   daily: "FREQ=DAILY",
   weekly: "FREQ=WEEKLY",
   monthly: "FREQ=MONTHLY",
+  yearly: "FREQ=YEARLY",
+  workdays: "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
+  biweekly: "FREQ=WEEKLY;INTERVAL=2",
 };
 
 /** Przypomnienie to punkt w czasie; kalendarze źle znoszą zdarzenia zerowej długości. */
@@ -72,15 +75,24 @@ function titleOf(note: Note): string {
  * a aplikacja bierze wtedy ostatni dzień miesiąca. „Ostatni z dni 28…N” w każdym
  * miesiącu (`BYSETPOS=-1`) daje dokładnie to samo.
  */
-function rruleFor(repeat: Exclude<ReminderRepeat, "none">, day: number | undefined): string {
-  if (repeat !== "monthly" || !day || day <= 28) return RRULE[repeat];
+const BYDAY = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+
+/**
+ * Reguła RFC 5545 dla rodzaju z notatki. „Wybrane dni” to `BYDAY`, „co N dni” to `INTERVAL`.
+ * „Co rok” z 29 lutego zostaje zwykłym `FREQ=YEARLY`, bo RFC nie ma odpowiednika dla „28 albo 29”:
+ * w roku bez tego dnia wystąpienie wypada 1 marca (aplikacja liczy 28 lutego).
+ */
+function rruleFor(rule: RepeatRule, day: number | undefined): string {
+  if (rule.kind === "weekdays") return `FREQ=WEEKLY;BYDAY=${weekdaysOf(rule).map((d) => BYDAY[d]).join(",")}`;
+  if (rule.kind === "every") return `FREQ=DAILY;INTERVAL=${Math.max(1, Math.round(rule.every ?? 1))}`;
+  if (rule.kind !== "monthly" || !day || day <= 28) return RRULE[rule.kind];
   const days = Array.from({ length: day - 27 }, (_, i) => 28 + i).join(",");
   return `${RRULE.monthly};BYMONTHDAY=${days};BYSETPOS=-1`;
 }
 
 function eventLines(note: Note, now: number): string[] {
   const start = note.reminder!;
-  const repeat = note.reminderRepeat ?? "none";
+  const repeat = ruleOf(note);
   const lines = [
     "BEGIN:VEVENT",
     `UID:${note.id}@notatnik`,
@@ -89,7 +101,7 @@ function eventLines(note: Note, now: number): string[] {
     `DTEND:${formatLocal(start + EVENT_MINUTES * 60_000)}`,
     `SUMMARY:${escapeText(titleOf(note))}`,
   ];
-  if (repeat !== "none") {
+  if (repeat.kind !== "none") {
     // UNTIL musi mieć ten sam typ co DTSTART (RFC 5545). DTSTART jest lokalny (bez „Z”),
     // więc UNTIL też lokalny — UTC przy lokalnym DTSTART ścisłe importery odrzucają.
     const until = note.reminderRepeatUntil !== undefined ? `;UNTIL=${formatLocal(note.reminderRepeatUntil)}` : "";
@@ -111,7 +123,7 @@ function eventLines(note: Note, now: number): string[] {
 /** Notatki warte eksportu: z terminem w przyszłości albo z serią. Bez kosza. */
 export function exportableReminders(notes: Note[], now = Date.now()): Note[] {
   return notes.filter((n) =>
-    !n.trashed && n.reminder !== null && (n.reminder >= now || (n.reminderRepeat ?? "none") !== "none"),
+    !n.trashed && n.reminder !== null && (n.reminder >= now || ruleOf(n).kind !== "none"),
   );
 }
 

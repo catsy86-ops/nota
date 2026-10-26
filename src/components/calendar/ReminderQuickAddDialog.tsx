@@ -9,7 +9,8 @@ import { searchNotes } from "@/lib/searchNotes";
 import { parseNaturalDate } from "@/lib/parseNaturalDate";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
 import { composeReminderTimestamp, isPastReminder, toTimeInputValue, formatReminderShort, defaultReminderTimeFor, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
-import { REMINDER_REPEAT_LABELS, type ReminderRepeat } from "@/lib/reminderRepeat";
+import { REPEAT_KIND_LABELS, type RepeatInput, type RepeatRule } from "@/lib/reminderRepeat";
+import { RepeatRuleExtras, RepeatRuleSelect } from "@/components/RepeatRuleFields";
 import type { Note } from "@/hooks/useNotes";
 import { cn } from "@/lib/utils";
 
@@ -23,7 +24,6 @@ import { cn } from "@/lib/utils";
  * notatki, która już istnieje.
  */
 
-const REPEAT_OPTIONS: ReminderRepeat[] = ["none", "daily", "weekly", "monthly"];
 const MAX_SUGGESTIONS = 6;
 
 /**
@@ -39,7 +39,7 @@ const DIALOG_CLASS =
 export interface ReminderEditTarget {
   noteId: string;
   at: number;
-  repeat: ReminderRepeat;
+  repeat: RepeatRule;
   isSeries: boolean;
   allDay?: boolean;
   /** Termin serii, gdy edytujemy jedno odłożone wystąpienie — zmiana zostaje w tym wystąpieniu, seria nie przesuwa się. */
@@ -54,11 +54,11 @@ interface ReminderQuickAddDialogProps {
   /** Ustawiony, gdy dialog edytuje istniejący termin zamiast dodawać nowy. */
   edit?: ReminderEditTarget | null;
   notes: Note[];
-  onCreateNote: (title: string, reminder: number, repeat: ReminderRepeat, allDay: boolean) => void;
-  onAttachReminder: (noteId: string, reminder: number, repeat: ReminderRepeat, allDay: boolean, base?: number) => void;
+  onCreateNote: (title: string, reminder: number, repeat: RepeatInput, allDay: boolean) => void;
+  onAttachReminder: (noteId: string, reminder: number, repeat: RepeatInput, allDay: boolean, base?: number) => void;
   onClearReminder: (noteId: string) => void;
   /** Pomija najbliższe wystąpienie serii, przesuwając termin na kolejne. */
-  onSkipOccurrence: (noteId: string, at: number, repeat: ReminderRepeat) => void;
+  onSkipOccurrence: (noteId: string, at: number, repeat: RepeatRule) => void;
 }
 
 export function ReminderQuickAddDialog({
@@ -68,7 +68,7 @@ export function ReminderQuickAddDialog({
 
   const [query, setQuery] = useState("");
   const [time, setTime] = useState(() => (edit ? toTimeInputValue(edit.at) : defaultReminderTimeFor(day)));
-  const [repeat, setRepeat] = useState<ReminderRepeat>(() => edit?.repeat ?? "none");
+  const [repeat, setRepeat] = useState<RepeatRule>(() => edit?.repeat ?? { kind: "none" });
   // Cały dzień: termin stoi na 9:00 i nie pokazuje godziny (2d planu, jak w `ReminderPicker`).
   const [allDay, setAllDay] = useState(() => edit?.allDay === true);
   // Dzień może przesunąć język naturalny („jutro”, „w piątek”) wpisany w pole.
@@ -130,7 +130,7 @@ export function ReminderQuickAddDialog({
   function reset() {
     setQuery("");
     setTime(defaultReminderTimeFor(day));
-    setRepeat("none");
+    setRepeat({ kind: "none" });
     setAllDay(false);
     setDayOverride(null);
   }
@@ -259,18 +259,17 @@ export function ReminderQuickAddDialog({
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             <Repeat className="w-3 h-3" />
             <span className="sr-only">Powtarzanie</span>
-            <select
+            <RepeatRuleSelect
+              id="quick-add-repeat"
               value={repeat}
-              onChange={(e) => setRepeat(e.target.value as ReminderRepeat)}
-              aria-label="Powtarzanie"
+              onChange={setRepeat}
+              date={timestamp !== null ? new Date(timestamp) : day}
+              ariaLabel="Powtarzanie"
               className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring text-foreground"
-            >
-              {REPEAT_OPTIONS.map((r) => (
-                <option key={r} value={r}>{REMINDER_REPEAT_LABELS[r]}</option>
-              ))}
-            </select>
+            />
           </label>
         </div>
+        <RepeatRuleExtras id="quick-add-repeat" value={repeat} onChange={setRepeat} />
 
         {/* Godzina wpisana poprawnie, ale nieistniejąca tego dnia (przeskok zmiany czasu): zapis jest zablokowany, więc mówimy dlaczego. */}
         {time && timestamp === null && /^\d{1,2}:\d{2}$/.test(time) && (
@@ -287,7 +286,7 @@ export function ReminderQuickAddDialog({
           <div className="space-y-2">
             {edit?.isSeries && (
               <p className="text-xs text-muted-foreground">
-                To najbliższy termin serii „{REMINDER_REPEAT_LABELS[edit.repeat].toLowerCase()}”.
+                To najbliższy termin serii „{REPEAT_KIND_LABELS[edit.repeat.kind].toLowerCase()}”.
                 Zmiana godziny lub dnia przesuwa całą serię — model zapisuje jeden termin,
                 a kolejne wylicza od niego.
               </p>

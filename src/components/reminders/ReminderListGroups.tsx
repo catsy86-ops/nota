@@ -2,7 +2,7 @@ import { Repeat } from "lucide-react";
 import type { Note } from "@/hooks/useNotes";
 import { ReminderQuickActions } from "@/components/ReminderQuickActions";
 import { formatReminderShort } from "@/lib/reminderTime";
-import { REMINDER_REPEAT_LABELS } from "@/lib/reminderRepeat";
+import { REPEAT_KIND_LABELS, ruleOf } from "@/lib/reminderRepeat";
 import { cn } from "@/lib/utils";
 
 export interface ReminderListGroup {
@@ -35,10 +35,10 @@ export function ReminderListGroups({ groups, onOpen, onUpdate }: ReminderListGro
               <li key={n.id} className="flex items-center gap-2 px-3 py-2">
                 <button type="button" onClick={() => onOpen(n.id)} className="pressable flex min-w-0 flex-1 items-center gap-2 text-left coarse:min-h-11">
                   <span className="min-w-0 flex-1 truncate text-sm">{n.title || n.content.trim().split("\n")[0] || "Bez tytułu"}</span>
-                  {n.reminderRepeat && n.reminderRepeat !== "none" && (
-                    <span className="inline-flex shrink-0 items-center gap-1 text-2xs text-muted-foreground" title={REMINDER_REPEAT_LABELS[n.reminderRepeat]}>
+                  {ruleOf(n).kind !== "none" && (
+                    <span className="inline-flex shrink-0 items-center gap-1 text-2xs text-muted-foreground" title={REPEAT_KIND_LABELS[ruleOf(n).kind]}>
                       <Repeat className="h-3 w-3" aria-hidden />
-                      <span className="sr-only">Seria: {REMINDER_REPEAT_LABELS[n.reminderRepeat].toLowerCase()}</span>
+                      <span className="sr-only">Seria: {REPEAT_KIND_LABELS[ruleOf(n).kind].toLowerCase()}</span>
                     </span>
                   )}
                   <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">

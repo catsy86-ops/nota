@@ -1,4 +1,4 @@
-import { nextOccurrence, type ReminderRepeat } from "@/lib/reminderRepeat";
+import { nextOccurrence, ruleOf, type RepeatRule } from "@/lib/reminderRepeat";
 import type { Note } from "@/hooks/useNotes";
 
 /**
@@ -24,7 +24,8 @@ export interface Occurrence {
    * edytować, przeciągnąć i usunąć — dalsze są prognozą.
    */
   isNext: boolean;
-  repeat: ReminderRepeat;
+  /** Reguła powtarzania notatki (dni robocze, co N dni itd.); stare notatki mają zwykły rodzaj. */
+  repeat: RepeatRule;
   /** Cały dzień: godzina 9:00 z flagi, nie z wyboru — oś dnia pokazuje takie terminy u góry, bez godziny. */
   allDay: boolean;
 }
@@ -56,10 +57,10 @@ export function expandOccurrences(notes: Note[], rangeStart: number, rangeEnd: n
   for (const note of notes) {
     if (!isCandidate(note)) continue;
     const start = note.reminder as number;
-    const repeat = note.reminderRepeat ?? "none";
+    const repeat = ruleOf(note);
     const allDay = note.reminderAllDay === true;
 
-    if (repeat === "none") {
+    if (repeat.kind === "none") {
       if (start >= rangeStart && start <= rangeEnd) {
         out.push({ noteId: note.id, at: start, isSeries: false, index: 0, isNext: true, repeat, allDay });
       }

@@ -35,6 +35,16 @@ describe("buildIcs", () => {
     expect(buildIcs([note({ reminderRepeat: repeat })], NOW)).toContain(`${rule}\r\n`);
   });
 
+  it.each([
+    [{ kind: "workdays" as const }, "RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"],
+    [{ kind: "biweekly" as const }, "RRULE:FREQ=WEEKLY;INTERVAL=2"],
+    [{ kind: "yearly" as const }, "RRULE:FREQ=YEARLY"],
+    [{ kind: "weekdays" as const, days: [1, 3] }, "RRULE:FREQ=WEEKLY;BYDAY=MO,WE"],
+    [{ kind: "every" as const, every: 3 }, "RRULE:FREQ=DAILY;INTERVAL=3"],
+  ])("reguła %j → %s", (reminderRule, rule) => {
+    expect(buildIcs([note({ reminderRepeat: "daily", reminderRule })], NOW)).toContain(`${rule}\r\n`);
+  });
+
   it("seria miesięczna od 29.–31. → ostatni dostępny dzień, jak w aplikacji", () => {
     const jan31 = new Date(2026, 0, 31, 9, 0).getTime();
     expect(buildIcs([note({ reminder: jan31, reminderRepeat: "monthly" })], NOW))

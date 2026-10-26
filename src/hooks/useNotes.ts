@@ -14,7 +14,7 @@ import type { NotePriority } from "@/lib/notePriority";
 import type { Attachment } from "@/lib/attachments";
 import type { NoteCover } from "@/lib/noteLook";
 import { cleanLabelPath } from "@/lib/labelTree";
-import { isDstShiftedOccurrence, minutesOfDay } from "@/lib/reminderRepeat";
+import { isDstShiftedOccurrence, minutesOfDay, type RepeatRule } from "@/lib/reminderRepeat";
 import { cleanPropDef, makePropDef, propNameTaken, type NoteProps, type PropDef, type PropType } from "@/lib/noteProps";
 
 export type NoteColor = "default" | "coral" | "peach" | "sand" | "mint" | "sage" | "sky" | "lavender" | "rose";
@@ -54,6 +54,8 @@ export interface Note {
   aliases?: string[];
   reminder: number | null;
   reminderRepeat?: "none" | "daily" | "weekly" | "monthly";
+  /** Rodzaj powtarzania z nowszej wersji (dni robocze, co 2 tygodnie, co rok, wybrane dni, co N dni). `reminderRepeat` to wtedy zapasowy, najbliższy znany rodzaj. */
+  reminderRule?: RepeatRule;
   /**
    * Dzień miesiąca, na który użytkownik ustawił termin (1–31). Seria miesięczna
    * od 31. trafia w krótszych miesiącach na ostatni dzień, a potem wraca na 31. —

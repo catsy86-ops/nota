@@ -16,7 +16,7 @@ import { download } from "@/lib/exportNotes";
 import { addDays, format, isSameDay, isSameMonth } from "date-fns";
 import { pl } from "date-fns/locale";
 import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences";
-import { nextInSeries, nextOccurrence, seriesDay } from "@/lib/reminderRepeat";
+import { nextInSeries, nextOccurrence, ruleOf, seriesDay, type RepeatInput, type RepeatRule } from "@/lib/reminderRepeat";
 import { toast } from "sonner";
 import { composeReminderTimestamp } from "@/lib/reminderTime";
 import { dayType, setDayEntry, useShifts } from "@/lib/shifts";
@@ -30,7 +30,6 @@ import { UpcomingDays } from "./UpcomingDays";
 import { WeekStrip } from "./WeekStrip";
 import { ReminderQuickAddDialog, type ReminderEditTarget } from "./ReminderQuickAddDialog";
 import { toastWithUndo } from "@/lib/undoToast";
-import type { ReminderRepeat } from "@/lib/reminderRepeat";
 import type { Occurrence } from "@/lib/reminderOccurrences";
 import type { Note } from "@/hooks/useNotes";
 
@@ -45,10 +44,10 @@ import type { Note } from "@/hooks/useNotes";
 interface ReminderCalendarViewProps {
   /** Notatki z terminami — bez kosza, tak samo jak karmione są powiadomienia. */
   notes: Note[];
-  onCreateNote: (title: string, reminder: number, repeat: ReminderRepeat, allDay: boolean) => void;
+  onCreateNote: (title: string, reminder: number, repeat: RepeatInput, allDay: boolean) => void;
   /** `reminderDay` podany = przesunięcie w obrębie serii (bez zmiany jej dnia); brak = nowy termin. */
   /** `reminderBase` — termin serii przy odłożonym wystąpieniu (`undefined` = zwykły termin, czyści odłożenie). */
-  onSetReminder: (noteId: string, reminder: number | null, repeat: ReminderRepeat, reminderDay?: number, reminderBase?: number, reminderAllDay?: boolean) => void;
+  onSetReminder: (noteId: string, reminder: number | null, repeat: RepeatInput, reminderDay?: number, reminderBase?: number, reminderAllDay?: boolean) => void;
 }
 
 function monthBounds(month: Date) {
@@ -141,7 +140,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     const note = notes.find((n) => n.id === noteId);
     return {
       reminder: note?.reminder ?? null,
-      repeat: note?.reminderRepeat ?? "none" as ReminderRepeat,
+      repeat: note ? ruleOf(note) : { kind: "none" as const },
       day: note ? seriesDay(note) : undefined,
       until: note?.reminderRepeatUntil,
       base: note?.reminderBase,
@@ -157,7 +156,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-day-key="${dayKey(day)}"]`)?.focus());
   }
 
-  function handleAttach(noteId: string, reminder: number, repeat: ReminderRepeat, allDay: boolean, base?: number) {
+  function handleAttach(noteId: string, reminder: number, repeat: RepeatInput, allDay: boolean, base?: number) {
     const before = previousOf(noteId);
     onSetReminder(noteId, reminder, repeat, undefined, base, allDay);
     toastWithUndo("Termin zapisany", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay), { icon: "🔔" });
@@ -168,7 +167,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
    * Zwykły zapis pola, zero nowych struktur — dokładnie to samo, co robi
    * `useReminderNotifications` po odpaleniu przypomnienia.
    */
-  function handleSkip(noteId: string, at: number, repeat: ReminderRepeat) {
+  function handleSkip(noteId: string, at: number, repeat: RepeatRule) {
     const before = previousOf(noteId);
     const note = notes.find((n) => n.id === noteId);
     // Odłożone wystąpienie: kolejny termin liczy się od serii (`nextOccurrence`), nie od odłożonej chwili.
@@ -193,7 +192,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     const source = new Date(note.reminder);
     setMonth(new Date(source.getFullYear(), source.getMonth(), 1));
     setSelectedDay(source);
-    setEditTarget({ noteId: note.id, at: note.reminder, repeat: note.reminderRepeat ?? "none", isSeries: true, allDay: note.reminderAllDay === true });
+    setEditTarget({ noteId: note.id, at: note.reminder, repeat: ruleOf(note), isSeries: true, allDay: note.reminderAllDay === true });
     setDialogDay(source);
     toast("To była prognoza serii", {
       description: `Otwarty został najbliższy zapisany termin: ${format(source, "d MMMM, HH:mm", { locale: pl })}.`,

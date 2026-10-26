@@ -6,20 +6,25 @@ import { LazyCalendar as Calendar } from "@/components/ui/lazy-calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { m as motion } from "framer-motion";
-import { REMINDER_REPEAT_LABELS, endOfDay, type ReminderRepeat } from "@/lib/reminderRepeat";
+import { endOfDay, type RepeatInput, type RepeatRule, type ReminderRepeat } from "@/lib/reminderRepeat";
+import { RepeatRuleExtras, RepeatRuleSelect } from "@/components/RepeatRuleFields";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
 import { composeReminderTimestamp, dayInputValue, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
 import { QuickReminderInput } from "@/components/QuickReminderInput";
 import { useReminderPassed } from "@/hooks/useReminderPassed";
+import { useShifts, type ShiftData } from "@/lib/shifts";
+import { shiftPresets } from "@/lib/reminderShiftPresets";
 
 interface ReminderPickerProps {
   reminder: number | null;
   reminderRepeat?: ReminderRepeat;
+  /** Pełna reguła powtarzania (3.1); bez niej rodzaj bierzemy z `reminderRepeat`. */
+  reminderRule?: RepeatRule;
   reminderRepeatUntil?: number;
   /** Cały dzień: termin to 9:00 wybranego dnia, bez pola godziny. */
   reminderAllDay?: boolean;
   /** `until` — koniec serii (koniec dnia) albo `undefined` = bez końca. `allDay` tylko gdy włączony. */
-  onSet: (timestamp: number | null, repeat: ReminderRepeat, until?: number, allDay?: boolean) => void;
+  onSet: (timestamp: number | null, repeat: RepeatInput, until?: number, allDay?: boolean) => void;
   /** Własny przycisk otwierający (np. w pasku nowej notatki); domyślnie ikona dzwonka z kafla. */
   trigger?: ReactNode;
   /** Każda zmiana (np. z akcji „Przypomnienie” w kompozytorze) otwiera okno; pierwsze renderowanie nie otwiera. */
@@ -34,34 +39,34 @@ interface ReminderBadgeProps {
 }
 
 /** Szybkie terminy: pierwszy przyszły z listy trafia do pól daty i godziny. */
-function presets(now = new Date()): { label: string; at: Date }[] {
+function presets(now = new Date(), shifts?: ShiftData): { label: string; at: Date }[] {
   const at = (days: number, h: number) => new Date(now.getFullYear(), now.getMonth(), now.getDate() + days, h, 0, 0, 0);
   const list = [
     { label: "Dziś wieczorem", at: at(0, 18) },
     { label: "Jutro rano", at: at(1, 9) },
     { label: "Za tydzień", at: at(7, 9) },
+    ...(shifts ? shiftPresets(shifts, now) : []),
   ];
   return list.filter((p) => p.at.getTime() > now.getTime());
 }
 
 
-const REPEAT_OPTIONS: ReminderRepeat[] = ["none", "daily", "weekly", "monthly"];
-
-export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, reminderAllDay, onSet, trigger, openSignal }: ReminderPickerProps) {
+export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminderRepeatUntil, reminderAllDay, onSet, trigger, openSignal }: ReminderPickerProps) {
   const [open, setOpen] = useState(false);
   const uid = useId();
   const [date, setDate] = useState<Date | undefined>(reminder ? new Date(reminder) : undefined);
   const [time, setTime] = useState(reminder ? toTimeInputValue(reminder) : DEFAULT_REMINDER_TIME);
-  const [repeat, setRepeat] = useState<ReminderRepeat>(reminderRepeat ?? "none");
+  const [repeat, setRepeat] = useState<RepeatRule>(reminderRule ?? { kind: reminderRepeat ?? "none" });
   const [allDay, setAllDay] = useState(reminderAllDay === true);
   const [untilText, setUntilText] = useState(reminderRepeatUntil !== undefined ? dayInputValue(reminderRepeatUntil) : "");
+  const shifts = useShifts();
 
   /** Przy każdym otwarciu stan wraca do bieżącej notatki — seria mogła przeskoczyć albo ktoś zmienił termin na drugim telefonie. */
   function openChange(next: boolean) {
     if (next) {
       setDate(reminder ? new Date(reminder) : undefined);
       setTime(reminder ? toTimeInputValue(reminder) : DEFAULT_REMINDER_TIME);
-      setRepeat(reminderRepeat ?? "none");
+      setRepeat(reminderRule ?? { kind: reminderRepeat ?? "none" });
       setAllDay(reminderAllDay === true);
       setUntilText(reminderRepeatUntil !== undefined ? dayInputValue(reminderRepeatUntil) : "");
     }
@@ -95,7 +100,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
   const timestamp = date ? composeReminderTimestamp(date, allDay ? DEFAULT_REMINDER_TIME : time) : null;
   const pastTime = isPastReminder(timestamp);
   const [uy, um, ud] = untilText.split("-").map(Number);
-  const until = repeat !== "none" && untilText ? endOfDay(new Date(uy, um - 1, ud)) : undefined;
+  const until = repeat.kind !== "none" && untilText ? endOfDay(new Date(uy, um - 1, ud)) : undefined;
   // Koniec serii przed pierwszym terminem nie ma sensu — seria nie miałaby żadnego wystąpienia.
   const untilTooEarly = until !== undefined && timestamp !== null && until < timestamp;
 
@@ -116,11 +121,11 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
   }
 
   function handleClear() {
-    onSet(null, "none", undefined);
+    onSet(null, { kind: "none" }, undefined);
     setUntilText("");
     setDate(undefined);
     setTime(DEFAULT_REMINDER_TIME);
-    setRepeat("none");
+    setRepeat({ kind: "none" });
     setAllDay(false);
     setOpen(false);
   }
@@ -144,7 +149,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
       <PopoverContent className="w-auto max-w-74 max-h-(--radix-popover-content-available-height) overflow-y-auto p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
         <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Przypomnienie</p>
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Szybkie terminy">
-          {presets().map((p) => (
+          {presets(new Date(), shifts).map((p) => (
             <button
               key={p.label}
               type="button"
@@ -181,18 +186,16 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
         )}
         <div className="flex items-center gap-2">
           <label htmlFor={`${uid}-repeat`} className="text-xs text-muted-foreground flex items-center gap-1"><Repeat className="w-3 h-3" />Powtarzaj:</label>
-          <select
+          <RepeatRuleSelect
             id={`${uid}-repeat`}
             value={repeat}
-            onChange={(e) => setRepeat(e.target.value as ReminderRepeat)}
+            onChange={setRepeat}
+            date={date}
             className="text-xs bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground"
-          >
-            {REPEAT_OPTIONS.map((r) => (
-              <option key={r} value={r}>{REMINDER_REPEAT_LABELS[r]}</option>
-            ))}
-          </select>
+          />
         </div>
-        {repeat !== "none" && (
+        <RepeatRuleExtras id={uid} value={repeat} onChange={setRepeat} />
+        {repeat.kind !== "none" && (
           <div className="flex items-center gap-2">
             <label htmlFor={`${uid}-until`} className="text-xs text-muted-foreground">Do kiedy:</label>
             <input
@@ -211,7 +214,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRepeatUntil, 
             )}
           </div>
         )}
-        {repeat !== "none" && (
+        {repeat.kind !== "none" && (
           <p id={`${uid}-until-hint`} className={cn("text-2xs", untilTooEarly ? "text-destructive-ink" : "text-muted-foreground")}>
             {untilTooEarly ? "Koniec serii musi być po pierwszym terminie." : untilText ? "Ostatni termin serii najpóźniej tego dnia." : "Puste pole — seria bez końca."}
           </p>

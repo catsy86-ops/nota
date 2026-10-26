@@ -7,6 +7,7 @@ import type { useNoteViewActions } from "@/hooks/NoteViewActionsContext";
 import type { useTrashCountdown } from "@/hooks/useTrashCountdown";
 import { backlinksOf } from "@/lib/wikiLinks";
 import { celebrate } from "@/lib/celebrate";
+import { repeatUpdate } from "@/lib/reminderRepeat";
 import { pluralPl } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 import { firstSnippet } from "@/lib/searchHighlight";
@@ -109,9 +110,10 @@ export function NoteCardBody({
                   <ReminderPicker
                     reminder={note.reminder}
                     reminderRepeat={note.reminderRepeat}
+                    reminderRule={note.reminderRule}
                     reminderRepeatUntil={note.reminderRepeatUntil}
                     reminderAllDay={note.reminderAllDay}
-                    onSet={(r, repeat, until, allDay) => onUpdate(note.id, { reminder: r, reminderRepeat: repeat, reminderRepeatUntil: until, reminderAllDay: allDay })}
+                    onSet={(r, repeat, until, allDay) => onUpdate(note.id, { reminder: r, ...repeatUpdate(repeat), reminderRepeatUntil: until, reminderAllDay: allDay })}
                     trigger={<ReminderBadge interactive reminder={note.reminder} reminderRepeat={note.reminderRepeat} reminderAllDay={note.reminderAllDay} />}
                   />
                 ) : (

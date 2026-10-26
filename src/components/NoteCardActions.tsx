@@ -6,6 +6,7 @@ import type { useNoteViewActions } from "@/hooks/NoteViewActionsContext";
 import { addSubpage } from "@/lib/subpageActions";
 import { haptic } from "@/lib/haptics";
 import { markPinned } from "@/lib/cardMotion";
+import { repeatUpdate } from "@/lib/reminderRepeat";
 import { copyNoteToClipboard } from "@/lib/noteMarkdown";
 import { sparkle } from "@/lib/celebrate";
 import { cn } from "@/lib/utils";
@@ -93,9 +94,10 @@ export function PrimaryActions({
         <ReminderPicker
           reminder={note.reminder}
           reminderRepeat={note.reminderRepeat}
+          reminderRule={note.reminderRule}
           reminderRepeatUntil={note.reminderRepeatUntil}
           reminderAllDay={note.reminderAllDay}
-          onSet={(r, repeat, until, allDay) => onUpdate?.(note.id, { reminder: r, reminderRepeat: repeat, reminderRepeatUntil: until, reminderAllDay: allDay })}
+          onSet={(r, repeat, until, allDay) => onUpdate?.(note.id, { reminder: r, ...repeatUpdate(repeat), reminderRepeatUntil: until, reminderAllDay: allDay })}
         />
       )}
       {!isArchived && (

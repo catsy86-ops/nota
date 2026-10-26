@@ -9,7 +9,7 @@ import { ReminderChip } from "./ReminderChip";
 import { DayTimeline } from "./DayTimeline";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { Occurrence } from "@/lib/reminderOccurrences";
-import { REMINDER_REPEAT_LABELS } from "@/lib/reminderRepeat";
+import { REPEAT_KIND_LABELS } from "@/lib/reminderRepeat";
 import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
 
 /**
@@ -213,7 +213,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdi
                       e.preventDefault();
                       onMoveByDays(occ, e.key === "ArrowRight" ? 1 : -1);
                     }}
-                    aria-label={`Edytuj termin: ${title.trim() || "Bez tytułu"}, ${format(new Date(occ.at), "HH:mm")}${occ.repeat !== "none" ? `, powtarza się: ${REMINDER_REPEAT_LABELS[occ.repeat].toLowerCase()}` : ""}`}
+                    aria-label={`Edytuj termin: ${title.trim() || "Bez tytułu"}, ${format(new Date(occ.at), "HH:mm")}${occ.repeat.kind !== "none" ? `, powtarza się: ${REPEAT_KIND_LABELS[occ.repeat.kind].toLowerCase()}` : ""}`}
                     aria-keyshortcuts="Shift+ArrowLeft Shift+ArrowRight"
                     title="Shift+←/→ — przesuń o dzień"
                     className="group w-full flex items-center gap-2 rounded-lg hover:bg-muted/60 transition-colors p-1 -m-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
@@ -230,7 +230,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdi
                     <Download className="w-3.5 h-3.5" />
                   </button>
                   {/* Pominięcie bez wchodzenia w edycję — w wierszu serii, a nie tylko w dialogu (2b planu). */}
-                  {onSkip && occ.repeat !== "none" && (
+                  {onSkip && occ.repeat.kind !== "none" && (
                     <button
                       onClick={() => onSkip(occ)}
                       aria-label={`Pomiń to wystąpienie: ${title.trim() || "Bez tytułu"}`}

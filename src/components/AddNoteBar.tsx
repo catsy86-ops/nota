@@ -32,7 +32,8 @@ import { applyCapture, describeToken, extractCapture, type CaptureToken } from "
 import { isChecklistShortcut, selectionToChecklist } from "@/lib/checklistPaste";
 import { ReminderPicker } from "./ReminderPicker";
 import { useWikiAutocomplete } from "@/hooks/useWikiAutocomplete";
-import type { ReminderRepeat } from "@/lib/reminderRepeat";
+import { fallbackRepeat, repeatUpdate, type ReminderRepeat, type RepeatRule } from "@/lib/reminderRepeat";
+import { readRule } from "@/lib/reminderSpec";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
 import { toast } from "sonner";
 import { addParked, parkedLabel, PARKED_MAX, removeParked, type Parked } from "@/lib/parkedDrafts";
@@ -52,6 +53,7 @@ export type ComposerAction = "note" | "list" | "dictate" | "image" | "draw" | "r
 export interface ComposerExtras {
   reminderAllDay?: boolean;
   reminderRepeat?: ReminderRepeat;
+  reminderRule?: RepeatRule;
   reminderRepeatUntil?: number;
   parentId?: string;
 }
@@ -84,6 +86,7 @@ interface Draft {
   labels: string[];
   reminder: number | null;
   reminderRepeat: ReminderRepeat;
+  reminderRule?: RepeatRule;
   reminderRepeatUntil?: number;
   parentId?: string;
   priority: NotePriority;
@@ -106,10 +109,12 @@ function sanitizeDraft(p: Partial<Draft>): Draft | null {
     // Termin z przeszłości wystrzeliłby zaraz po zapisie — lepiej go nie przywracać.
     const reminder = typeof p.reminder === "number" && Number.isFinite(p.reminder) && p.reminder > Date.now() ? p.reminder : null;
     const priority = DRAFT_PRIORITIES.includes(p.priority as NotePriority) ? (p.priority as NotePriority) : "none";
-    const reminderRepeat = reminder !== null && DRAFT_REPEATS.includes(p.reminderRepeat as ReminderRepeat) ? (p.reminderRepeat as ReminderRepeat) : "none";
+    // Reguła z nowszej wersji (3.1) ma pierwszeństwo; zapasowy rodzaj z niej wynika.
+    const rule = reminder !== null ? readRule(p.reminderRule) : undefined;
+    const reminderRepeat = rule ? fallbackRepeat(rule) : reminder !== null && DRAFT_REPEATS.includes(p.reminderRepeat as ReminderRepeat) ? (p.reminderRepeat as ReminderRepeat) : "none";
     const until = typeof p.reminderRepeatUntil === "number" && Number.isFinite(p.reminderRepeatUntil) && reminderRepeat !== "none" ? p.reminderRepeatUntil : undefined;
     const parentId = typeof p.parentId === "string" && p.parentId.length > 0 && p.parentId.length <= 200 ? p.parentId : undefined;
-    return { title, content, checklist, color, labels, reminder, reminderRepeat, ...(until !== undefined ? { reminderRepeatUntil: until } : {}), ...(parentId ? { parentId } : {}), priority };
+    return { title, content, checklist, color, labels, reminder, reminderRepeat, reminderRule: rule, ...(until !== undefined ? { reminderRepeatUntil: until } : {}), ...(parentId ? { parentId } : {}), priority };
   }
 }
 
@@ -154,6 +159,9 @@ function writeDraft(d: Draft): void {
   } catch { /* brak miejsca albo localStorage — szkic po prostu nie przeżyje przeładowania */ }
 }
 
+/** Migawka pustego szkicu (patrz blokada podwójnego zapisu w `commit`). */
+const EMPTY_DRAFT_KEY = JSON.stringify({ title: "", content: "", images: [], attachments: [], checklist: [] });
+
 export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill?: string) => void }, AddNoteBarProps>(function AddNoteBar({ onAdd, folders, allLabels, onCreateLabel, destination, templates, wikiTitles, parentOptions }, ref) {
   // Szkic przeżywa przeładowanie i zamknięcie karty: tytuł, treść i pozycje listy wracają po powrocie.
   const [draft0] = useState(readDraft);
@@ -170,6 +178,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
   /** Szkic z poprzedniej sesji — pokazujemy to wprost, z możliwością odrzucenia. */
   const [restored, setRestored] = useState(draft0 !== null);
   const [reminderRepeat, setReminderRepeat] = useState<ReminderRepeat>(draft0?.reminderRepeat ?? "none");
+  const [reminderRule, setReminderRule] = useState<RepeatRule | undefined>(draft0?.reminderRule);
   const [reminderUntil, setReminderUntil] = useState<number | undefined>(draft0?.reminderRepeatUntil);
   // 2.5: „Cały dzień” z wyboru terminu (termin 9:00 tego dnia, pokazywany jako sama data).
   const [reminderAllDay, setReminderAllDay] = useState(false);
@@ -202,14 +211,14 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
   }));
 
   const reset = useCallback(() => {
-    setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderRepeat("none"); setReminderUntil(undefined); setReminderAllDay(false); setParentId(null); setPriority("none"); setImages([]); setAttachments([]); setChecklist([]); setShowChecklist(false); setIgnored(new Set()); setRestored(false); setExpanded(false);
+    setTitle(""); setContent(""); setColor("default"); setLabels([]); setReminder(null); setReminderRepeat("none"); setReminderRule(undefined); setReminderUntil(undefined); setReminderAllDay(false); setParentId(null); setPriority("none"); setImages([]); setAttachments([]); setChecklist([]); setShowChecklist(false); setIgnored(new Set()); setRestored(false); setExpanded(false);
   }, []);
 
   // Lista robocza: odłożone szkice nowych notatek (wznawiane z rzędu nad tytułem).
   const [parked, setParked] = useState<Parked<Draft>[]>(readParked);
 
   const currentDraft = (): Draft => ({
-    title, content, checklist, color, labels, reminder, reminderRepeat,
+    title, content, checklist, color, labels, reminder, reminderRepeat, reminderRule,
     ...(reminderUntil !== undefined ? { reminderRepeatUntil: reminderUntil } : {}),
     ...(parentId ? { parentId } : {}),
     priority,
@@ -218,7 +227,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
   /** Ładuje szkic do kompozytora (wznowienie z listy). */
   const applyDraft = (d: Draft) => {
     setTitle(d.title); setContent(d.content); setColor(d.color); setLabels(d.labels);
-    setReminder(d.reminder); setReminderRepeat(d.reminderRepeat); setReminderUntil(d.reminderRepeatUntil);
+    setReminder(d.reminder); setReminderRepeat(d.reminderRepeat); setReminderRule(d.reminderRule); setReminderUntil(d.reminderRepeatUntil);
     setParentId(d.parentId ?? null); setPriority(d.priority); setChecklist(d.checklist);
     setShowChecklist(d.checklist.length > 0); setIgnored(new Set()); setRestored(false); setExpanded(true);
   };
@@ -282,16 +291,17 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
   }, [expanded, title, content, allLabels, folders, reminder, priority]);
 
   // Blokada podwójnego zapisu: dwa szybkie wywołania (np. Ctrl+Enter i klik poza edytorem) widzą jeszcze ten sam, stary szkic.
-  // Zapamiętujemy migawkę zapisanego szkicu. Ponowne wywołanie z tą samą treścią jest pomijane, zanim React przerysuje
-  // formularz po `reset` (wtedy stare domknięcie ma jeszcze stary szkic). Kasuje ją dopiero zmiana tekstu przez
-  // użytkownika, więc ta sama treść napisana na nowo zapisuje się normalnie. Zwykły timer tego nie łapał: dwa
-  // Ctrl+Enter oddalone o kilka ms (np. pod obciążeniem) tworzyły dwie notatki.
+  // Migawka zapisanego szkicu pomija powtórne zapisanie tej samej treści. Kasuje ją pojawienie się niepustego szkicu
+  // (pisanie, prefill z palety, wznowienie, dyktowanie), a nie samo wyczyszczenie po zapisie, więc stare domknięcia
+  // z tego samego zdarzenia klawisza nie zapisują drugi raz. Zwykły timer tego nie łapał: dwa Ctrl+Enter oddalone
+  // o kilka ms (np. pod obciążeniem) tworzyły dwie notatki.
+  const draftKey = useMemo(() => JSON.stringify({ title, content, images, attachments, checklist }), [title, content, images, attachments, checklist]);
   const committedRef = useRef<string | null>(null);
+  useEffect(() => { if (draftKey !== EMPTY_DRAFT_KEY) committedRef.current = null; }, [draftKey]);
   const commit = useCallback(() => {
-    const snapshot = JSON.stringify({ title, content, images, attachments, checklist });
-    if (committedRef.current === snapshot) return;
+    if (committedRef.current === draftKey) return;
     if (title.trim() || content.trim() || images.length > 0 || attachments.length > 0 || checklist.length > 0) {
-      committedRef.current = snapshot;
+      committedRef.current = draftKey;
       const r = applyCapture({ title, content }, capture, ignored, images.length > 0 || attachments.length > 0 || checklist.length > 0);
       r.newLabels.forEach((l) => onCreateLabel(l));
       const allNoteLabels = [...labels];
@@ -301,14 +311,14 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
       haptic("success");
       pulseSkinSignal("save");
       const extras: ComposerExtras = {
-        ...(remindAt !== null && reminderRepeat !== "none" ? { reminderRepeat, ...(reminderUntil !== undefined ? { reminderRepeatUntil: reminderUntil } : {}) } : {}),
+        ...(remindAt !== null && reminderRepeat !== "none" ? { reminderRepeat, ...(reminderRule ? { reminderRule } : {}), ...(reminderUntil !== undefined ? { reminderRepeatUntil: reminderUntil } : {}) } : {}),
         ...(remindAt !== null && reminderAllDay ? { reminderAllDay: true } : {}),
         ...(parentId && (!parentOptions || parentOptions.some((o) => o.id === parentId)) ? { parentId } : {}),
       };
       onAdd(r.title, r.content, color, allNoteLabels, remindAt, images, checklist, r.priority ?? priority, r.folderId, attachments, extras);
     }
     reset();
-  }, [title, content, images, attachments, checklist, color, labels, reminder, reminderRepeat, reminderUntil, reminderAllDay, parentId, parentOptions, priority, capture, ignored, onAdd, onCreateLabel, reset]);
+  }, [draftKey, title, content, images, attachments, checklist, color, labels, reminder, reminderRepeat, reminderRule, reminderUntil, reminderAllDay, parentId, parentOptions, priority, capture, ignored, onAdd, onCreateLabel, reset]);
 
   const handleClose = commit;
 
@@ -324,8 +334,8 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
   }, [expanded]);
 
   useEffect(() => {
-    writeDraft({ title, content, checklist, color, labels, reminder, reminderRepeat, reminderRepeatUntil: reminderUntil, ...(parentId ? { parentId } : {}), priority });
-  }, [title, content, checklist, color, labels, reminder, reminderRepeat, reminderUntil, parentId, priority]);
+    writeDraft({ title, content, checklist, color, labels, reminder, reminderRepeat, reminderRule, reminderRepeatUntil: reminderUntil, ...(parentId ? { parentId } : {}), priority });
+  }, [title, content, checklist, color, labels, reminder, reminderRepeat, reminderRule, reminderUntil, parentId, priority]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -536,7 +546,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                 })}
               </div>
             )}
-            <TitleField ref={titleRef} value={title} onChange={(v) => { committedRef.current = null; setTitle(v); }} placeholder="Tytuł"
+            <TitleField ref={titleRef} value={title} onChange={setTitle} placeholder="Tytuł"
               onEnter={(e) => {
                 if (e.ctrlKey || e.metaKey) { if (e.shiftKey) saveAndNext(); else handleClose(); }
                 else textareaRef.current?.focus();
@@ -550,7 +560,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
               setContent(content.slice(0, s) + before + sel + after + content.slice(e2));
             }} />
             <div className={cn("relative", fullScreen && "flex-1")}>
-              <textarea ref={textareaRef} value={content} onChange={(e) => { committedRef.current = null; setContent(e.target.value); }} onPaste={handleContentPaste} aria-autocomplete="list" aria-expanded={wiki.isOpen} onSelect={() => { wiki.textareaProps.onSelect(); slash.refresh(); }} onKeyDown={handleContentKeyDown} placeholder="Treść notatki..." rows={3}
+              <textarea ref={textareaRef} value={content} onChange={(e) => setContent(e.target.value)} onPaste={handleContentPaste} aria-autocomplete="list" aria-expanded={wiki.isOpen} onSelect={() => { wiki.textareaProps.onSelect(); slash.refresh(); }} onKeyDown={handleContentKeyDown} placeholder="Treść notatki..." rows={3}
                 className="w-full max-sm:min-h-[35dvh] bg-transparent text-sm max-sm:text-base text-foreground placeholder:text-muted-foreground outline-hidden resize-none" />
               {wiki.popup()}{slash.popup()}
             </div>
@@ -707,9 +717,10 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                 <ReminderPicker
                   reminder={reminder}
                   reminderRepeat={reminderRepeat}
+                  reminderRule={reminderRule}
                   reminderRepeatUntil={reminderUntil}
                   reminderAllDay={reminderAllDay}
-                  onSet={(ts, repeat, until, allDay) => { setReminder(ts); setReminderRepeat(ts === null ? "none" : repeat); setReminderUntil(ts === null ? undefined : until); setReminderAllDay(ts !== null && allDay === true); }}
+                  onSet={(ts, repeat, until, allDay) => { setReminder(ts); const u = ts === null ? { reminderRepeat: "none" as const, reminderRule: undefined } : repeatUpdate(repeat); setReminderRepeat(u.reminderRepeat); setReminderRule(u.reminderRule); setReminderUntil(ts === null ? undefined : until); setReminderAllDay(ts !== null && allDay === true); }}
                   openSignal={reminderOpenSignal}
                   trigger={
                     <IconButton size="sm" tone={reminder ? "active" : "muted"} title="Przypomnienie" aria-label="Przypomnienie">

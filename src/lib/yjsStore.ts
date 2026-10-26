@@ -15,6 +15,7 @@ import { logDiag } from "@/lib/diagnostics";
 import { NOTE_COVERS } from "@/lib/noteLook";
 import { cleanNoteProps, cleanPropDef, cleanPropDefs, type NoteProps, type PropDef } from "@/lib/noteProps";
 import { mergeSpec, projectReminder, readSpec, REMINDER_FIELDS, specOf, type ReminderState } from "@/lib/reminderSpec";
+import { fallbackRepeat } from "@/lib/reminderRepeat";
 import { journalRefsIn } from "@/lib/study/journalRefs";
 import { cleanLabelPath, isUnderLabel, renameLabelBranch } from "@/lib/labelTree";
 import {
@@ -269,10 +270,12 @@ function yNoteFromPlain(note: Note): YNote {
   y.set("labels", locked ? [] : note.labels.slice());
   if (note.aliases?.length && !locked) y.set("aliases", note.aliases.slice());
   y.set("reminder", note.reminder);
-  if (note.reminderRepeat !== undefined) y.set("reminderRepeat", note.reminderRepeat);
+  // Rodzaj z reguły (3.1) idzie zapasowo do `reminderRepeat`, żeby starsze wersje go czytały.
+  const legacyRepeat = note.reminderRule ? fallbackRepeat(note.reminderRule) : note.reminderRepeat;
+  if (legacyRepeat !== undefined) y.set("reminderRepeat", legacyRepeat);
   if (note.reminderDay !== undefined) y.set("reminderDay", note.reminderDay);
   if (note.reminderRepeatUntil !== undefined) y.set("reminderRepeatUntil", note.reminderRepeatUntil);
-  y.set("reminderSpec", specOf({ reminder: note.reminder, reminderRepeat: note.reminderRepeat, reminderDay: note.reminderDay, reminderRepeatUntil: note.reminderRepeatUntil, reminderAllDay: note.reminderAllDay, reminderBase: note.reminderBase }));
+  y.set("reminderSpec", specOf({ reminder: note.reminder, reminderRepeat: legacyRepeat, reminderRule: note.reminderRule, reminderDay: note.reminderDay, reminderRepeatUntil: note.reminderRepeatUntil, reminderAllDay: note.reminderAllDay, reminderBase: note.reminderBase }));
   y.set("priority", note.priority);
   if (note.dailyDate !== undefined) y.set("dailyDate", note.dailyDate);
   if (note.reminderTime !== undefined) y.set("reminderTime", note.reminderTime);
@@ -335,6 +338,7 @@ function plainFromYNote(id: string, y: YNote): Note {
     trashedAt: safeNullableNumber(y.get("trashedAt")),
     reminder: rem.reminder,
     reminderRepeat: rem.reminderRepeat,
+    reminderRule: rem.reminderRule,
     reminderDay: rem.reminderDay,
     reminderRepeatUntil: rem.reminderRepeatUntil,
     reminderAllDay: rem.reminderAllDay,
@@ -657,6 +661,8 @@ export function createYjsStore(dbName: string, images: ImageStore = defaultImage
     for (const field of NOTE_SCALAR_FIELDS) {
       if (field in updates) y.set(field, (updates as Record<string, unknown>)[field]);
     }
+    // Zapasowy rodzaj z reguły zapisuje się także w polu sprzed zmiany (starsze wersje czytają je, nie `reminderSpec`).
+    if (updates.reminderRule) y.set("reminderRepeat", fallbackRepeat(updates.reminderRule));
     if (remBefore) y.set("reminderSpec", mergeSpec(remBefore, updates));
     if (updates.checklist !== undefined) applyChecklistDiff(y, updates.checklist);
     if (updates.images !== undefined) y.set("imageHashes", imageRefs(updates.images));

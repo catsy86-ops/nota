@@ -97,6 +97,7 @@ import { CardSkeleton, ViewSkeleton } from "@/components/ViewSkeleton";
 import { loadCalendarView, loadShiftsView, loadStudyView } from "@/lib/viewPreload";
 import { requestSettingsTab, settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
 import type { DebtReminderApi } from "@/components/debts/DebtsView";
+import { repeatUpdate, toRule } from "@/lib/reminderRepeat";
 const ShortcutsDialog = lazy(() => import("@/components/ShortcutsDialog").then((m) => ({ default: m.ShortcutsDialog })));
 const PropDefsDialog = lazy(() => import("@/components/PropDefsDialog").then((m) => ({ default: m.PropDefsDialog })));
 const TodayDueList = lazy(() => import("@/components/review/TodayDueList").then((m) => ({ default: m.TodayDueList })));
@@ -542,6 +543,7 @@ const Index = () => {
     if (extras?.reminderRepeat || extras?.parentId || extras?.reminderAllDay) {
       updateNote(id, {
         ...(extras.reminderRepeat ? { reminderRepeat: extras.reminderRepeat } : {}),
+        ...(extras.reminderRule ? { reminderRule: extras.reminderRule } : {}),
         ...(extras.reminderRepeatUntil !== undefined ? { reminderRepeatUntil: extras.reminderRepeatUntil } : {}),
         ...(extras.parentId ? { parentId: extras.parentId } : {}),
         ...(extras.reminderAllDay ? { reminderAllDay: true } : {}),
@@ -954,10 +956,10 @@ const Index = () => {
                     const id = addNote(title, "", prefs.defaultNoteColor, [], reminder);
                     // `addNote` nie przyjmuje powtarzania, więc serię dostawiamy
                     // patchem po utworzeniu — stąd id zwracane przez `addNote`.
-                    if (repeat !== "none" || allDay) updateNote(id, { reminderRepeat: repeat, ...(allDay ? { reminderAllDay: true } : {}) });
+                    if (toRule(repeat).kind !== "none" || allDay) updateNote(id, { ...repeatUpdate(repeat), ...(allDay ? { reminderAllDay: true } : {}) });
                   }}
                   onSetReminder={(id, reminder, repeat, reminderDay, reminderBase, reminderAllDay) =>
-                    updateNote(id, { reminder, reminderRepeat: repeat, ...(reminderDay === undefined ? {} : { reminderDay }), reminderBase, reminderAllDay: reminderAllDay === true ? true : undefined })}
+                    updateNote(id, { reminder, ...repeatUpdate(repeat), ...(reminderDay === undefined ? {} : { reminderDay }), reminderBase, reminderAllDay: reminderAllDay === true ? true : undefined })}
                 />
               </Suspense>
             </ViewErrorBoundary>

@@ -33,7 +33,7 @@ describe("expandOccurrences", () => {
     const notes = [makeNote({ reminder: at(2026, 3, 14, 15, 30) })];
     const occ = expandOccurrences(notes, MARCH.start, MARCH.end);
     expect(occ).toHaveLength(1);
-    expect(occ[0]).toMatchObject({ noteId: "1", isSeries: false, index: 0, isNext: true, repeat: "none" });
+    expect(occ[0]).toMatchObject({ noteId: "1", isSeries: false, index: 0, isNext: true, repeat: { kind: "none" } });
   });
 
   it("jednorazowe przypomnienie poza zakresem nie daje nic", () => {

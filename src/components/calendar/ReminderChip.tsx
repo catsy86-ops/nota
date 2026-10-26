@@ -1,7 +1,7 @@
 import { Repeat } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { REMINDER_REPEAT_LABELS } from "@/lib/reminderRepeat";
+import { REPEAT_KIND_LABELS } from "@/lib/reminderRepeat";
 import type { Occurrence } from "@/lib/reminderOccurrences";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 function occurrenceLabel(occ: Occurrence, title: string): string {
   const when = format(new Date(occ.at), "d MMMM, HH:mm", { locale: pl });
   const name = title.trim() || "Bez tytułu";
-  const repeat = occ.isSeries ? `, powtarza się ${REMINDER_REPEAT_LABELS[occ.repeat].toLowerCase()}` : "";
+  const repeat = occ.isSeries ? `, powtarza się ${REPEAT_KIND_LABELS[occ.repeat.kind].toLowerCase()}` : "";
   const forecast = occ.isSeries && !occ.isNext ? " (prognoza serii)" : "";
   return `Przypomnienie: ${name}, ${when}${repeat}${forecast}`;
 }

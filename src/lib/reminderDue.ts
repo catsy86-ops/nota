@@ -1,5 +1,5 @@
 import type { Note } from "@/hooks/useNotes";
-import { nextOccurrence } from "@/lib/reminderRepeat";
+import { nextOccurrence, ruleOf } from "@/lib/reminderRepeat";
 
 /**
  * Które przypomnienia odpalić przy tym sprawdzeniu. Czysta funkcja: bez zegara,
@@ -41,7 +41,7 @@ export function planDueReminders(
     if (fired.has(note.id)) continue;
     if (handled.get(note.id) === note.reminder) continue;
 
-    const repeat = note.reminderRepeat ?? "none";
+    const repeat = ruleOf(note).kind;
     if (repeat === "none") {
       steps.push({ note, kind: "once", next: null, missed: 0 });
       continue;
