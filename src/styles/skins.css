@@ -13,6 +13,7 @@
   w jednym pliku, więc kaskada się nie zmienia. Nowy styl: plik tutaj + `skinList.ts`;
   komplet tokenów sprawdza `src/lib/skinContract.test.ts`.
 */
+@import "./skins/zeszyt.css";
 @import "./skins/plan.css";
 @import "./skins/neon.css";
 @import "./skins/zorza.css";

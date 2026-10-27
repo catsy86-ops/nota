@@ -1,0 +1,10 @@
+/* ─────────────────────────── ZESZYT — ozdoby (tokeny są w index.css: `:root` i `.dark`) ─────────────────────────── */
+
+/* Ciemny Zeszyt (plan motywów 4.4): zeszyt pod lampką — ciepła plama światła pada z góry na kartkę,
+   kratka zostaje ledwo widoczna (token `--grid` z `.dark`). Statyczne; „gładkie” tło zdejmuje plamę
+   (backdrop.css, później w kaskadzie), „ciche” przykrywa ją zasłoną. */
+html[data-skin="zeszyt"].dark .paper-grid {
+  background-image:
+    radial-gradient(75% 60% at 55% 0%, hsl(38 85% 60% / 0.2), transparent 72%),
+    radial-gradient(40% 32% at 55% 4%, hsl(42 95% 72% / 0.13), transparent 70%);
+}

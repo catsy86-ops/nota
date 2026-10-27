@@ -463,7 +463,8 @@ html[data-skin="zeszyt"] .app-header {
     --muted: oklch(0.2613 0.0125 59.61);
     --muted-foreground: oklch(0.7373 0.0159 67.58);
 
-    --accent: oklch(0.7384 0.0985 268.58);
+    /* Długopis żelowy pod lampką (plan motywów 4.4): nasycony niebieski zamiast przygaszonego. */
+    --accent: oklch(0.7450 0.1300 264.00);
     --accent-foreground: oklch(0.1962 0.0154 59.12);
 
     /* Było 0 62.8% 30.6% — ginęło na ciemnym tle (1.9:1). */
