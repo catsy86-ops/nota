@@ -1,5 +1,11 @@
 # Plan: ulepszenie, rozbudowa i upiększenie działów Praca, Kalendarz i Grafik (2026-10-27)
 
+> **Status wykonania (2026-10-27):**
+> - **Zrobione:** K0.1 (`5b4d8d6`), K0.2, K0.3, K0.4 — część: data końca się czyści, pole „Do kiedy” w dialogu kalendarza jeszcze nie (`5ecf8c2`), G0.1–G0.6 i A.1 (`827a1cd`). Testy: vitest 265/265 w dotkniętych obszarach, typecheck i lint czyste.
+> - **Odłożone:** P0.1 (rysunek zastępuje zdjęcie — zmiana modelu Yjs, 8 plików, wymaga osobnej sesji z testami scalania); P0.2 (świadomie nie zrobione: `shareOrCopy` na telefonie otwiera arkusz udostępniania zamiast kopiować — decyzja produktowa, do potwierdzenia).
+> - **Korekta:** K0.1 — projekcja zeruje `content` notatki prywatnej (`yjsStore.ts:355`), więc wyciek nie zachodzi dziś; zabezpieczenie w eksporterze jest dodatkiem w głębi.
+> - **Nie robione jeszcze:** cała Fala B, reszta Kalendarza (K1.1, K1.2–K1.6, K2–K4), reszta Grafiku (G2–G4), cała Praca (P2–P5).
+
 ## Kontekst
 
 Użytkownik poprosił o jeden plan dla trzech działów: Praca, Kalendarz i Grafik. Plan ma użyć najlepszych technologii, agentów i technik, a potem trafić do repozytorium. Plany z 25.10 (`docs/plan-kalendarz-2026-10-25.md`, `plan-grafik-…`, `plan-praca-…`) sprawdziłem w kodzie na HEAD `73a913f`. Wyniki:
