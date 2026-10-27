@@ -7,7 +7,8 @@ export interface ConfirmPrefs {
   archive: boolean;
 }
 
-const DEFAULTS: ConfirmPrefs = { trash: true, archive: true };
+// Kosz i archiwum są odwracalne (kosz 30 dni, archiwum bez limitu), więc domyślnie bez pytania — jest „Cofnij” w toaście (plan 3.1).
+const DEFAULTS: ConfirmPrefs = { trash: false, archive: false };
 
 const store = createPersistedStore<ConfirmPrefs>("kaczy.confirmPrefs.v1", DEFAULTS, {
   merge: (defaults, stored) =>

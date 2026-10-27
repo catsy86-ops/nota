@@ -64,14 +64,16 @@ export function useReminderNotifications(
   // T 1.5: odłożenie i „Gotowe” działają też na prywatnej notatce — zmieniają tylko pola terminu
   // (jawna projekcja), więc skarbiec nie musi być odblokowany. Treści nie czytamy ani nie zapisujemy.
   const applyActionRef = useRef((note: Note, action: string) => {
+    // „Cofnij” w dymku przywraca poprzednie pola terminu, jak przy zbiorczym odłożeniu (plan 3.1).
+    const restore = () => firedCbRef.current(note.id, note.reminder, note.reminderDay, note.reminderBase);
     if (action === "snooze10") {
       const now = Date.now();
       const t = snoozeTarget(note, snoozeTimes(now).in10min, now);
       firedCbRef.current(note.id, t.reminder, seriesDay(note), t.reminderBase);
-      toast("Odłożono o 10 minut");
+      toastWithUndo("Odłożono o 10 minut", restore, { id: `reminder-snooze-${note.id}` });
     } else if (action === "done") {
       markDone(note, Date.now(), firedCbRef.current);
-      toast("Przypomnienie odhaczone");
+      toastWithUndo("Przypomnienie odhaczone", restore, { id: `reminder-done-${note.id}` });
     }
   });
   useEffect(() => {

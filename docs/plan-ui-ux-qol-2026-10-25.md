@@ -204,3 +204,5 @@ Plan kończymy tutaj; pozostałe punkty to backlog z podanym zakresem, do zrobie
 **Status 3.12 (2026-10-27, finał):** zrobione także grubsze obramowania (`.border…` 1 → 2 px w `preferences.css`). Punkt zamknięty.
 
 **Status 3.6 (2026-10-27):** zrobione przewinięcie per dział (`src/hooks/useViewScroll.ts`); zakładki Ustawień i Pracy oraz zwinięte grupy były wcześniej. Test: `e2e/view-scroll-memory.spec.ts`.
+
+**Status 3.1 (2026-10-27):** kosz i archiwum bez pytania domyślnie, z „Cofnij”; dymki „Odłożono o 10 minut” i „Przypomnienie odhaczone” z powiadomienia mają „Cofnij”. Okno potwierdzenia zostaje dla ustawień „Pytaj…” i dla rzeczy nieodwracalnych (reset, opróżnianie kosza). Przegląd toastów przez wyszukanie w kodzie (usunięcia, przeniesienia, zmiany, odhaczenia) — nie ręczne przejrzenie wszystkich ~190 dymków; ewentualne pozostałe bez „Cofnij” to informacje bez zmiany danych.

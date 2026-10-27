@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { askBeforeTrashAndArchive, undoIn } from "./helpers";
 
 // Skip the first-run onboarding tour so it doesn't overlay the page and eat clicks.
 test.beforeEach(async ({ page }) => {
@@ -40,6 +41,7 @@ test("edits an existing note @smoke", async ({ page }) => {
 });
 
 test("moves a note to trash and it disappears from the main list @smoke", async ({ page }) => {
+  await askBeforeTrashAndArchive(page);
   const title = `E2E-trash ${Date.now()}`;
   await addNote(page, title);
 
@@ -55,6 +57,7 @@ test("moves a note to trash and it disappears from the main list @smoke", async 
 });
 
 test("zaznaczanie myszą: pole przy kafelku otwiera pasek zbiorczy, a w koszu są Przywróć i Usuń trwale", async ({ page }) => {
+  await askBeforeTrashAndArchive(page);
   const title = `E2E-zaznacz ${Date.now()}`;
   await addNote(page, title);
 
@@ -88,4 +91,18 @@ test("szkic nowej notatki wraca po przeładowaniu strony", async ({ page }) => {
   await page.reload();
   await expect(page.getByPlaceholder("Tytuł")).toHaveValue(title);
   await expect(page.getByPlaceholder("Treść notatki...")).toHaveValue("rozpoczęta myśl");
+});
+
+test("usunięcie do kosza bez pytania: „Cofnij” w dymku przywraca notatkę (plan 3.1)", async ({ page }) => {
+  const title = `E2E-undo-trash ${Date.now()}`;
+  await addNote(page, title);
+  const note = page.locator("[data-note-id]").filter({ hasText: title });
+  await note.hover();
+  await note.getByLabel(/usuń/i).click();
+
+  // Bez okna potwierdzenia: notatka znika od razu, a dymek ma „Cofnij”.
+  await expect(page.getByRole("alertdialog")).toHaveCount(0);
+  await expect(page.locator("[data-note-id]").filter({ hasText: title })).not.toBeVisible();
+  await undoIn(page, "Przeniesiono do kosza").click();
+  await expect(page.locator("[data-note-id]").filter({ hasText: title })).toBeVisible();
 });

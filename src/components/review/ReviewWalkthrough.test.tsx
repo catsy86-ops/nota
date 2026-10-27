@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import ReviewWalkthrough from "./ReviewWalkthrough";
 import type { Note } from "@/hooks/useNotes";
+import { setConfirmPref } from "@/lib/confirmPrefs";
 
 afterEach(cleanup);
 
@@ -24,6 +25,7 @@ function setup() {
 }
 
 describe("ReviewWalkthrough — kosz wymaga potwierdzenia", () => {
+  beforeEach(() => { setConfirmPref("trash", true); setConfirmPref("archive", true); });
   it("skrót D otwiera potwierdzenie i nie przenosi od razu", () => {
     const { onTrash } = setup();
     fireEvent.keyDown(window, { key: "d" });
@@ -61,5 +63,16 @@ describe("ReviewWalkthrough — kosz wymaga potwierdzenia", () => {
     fireEvent.keyDown(window, { key: "d" });
     fireEvent.keyDown(window, { key: "a" });
     expect(onArchive).not.toHaveBeenCalled();
+  });
+});
+
+describe("ReviewWalkthrough — bez pytania (plan 3.1)", () => {
+  beforeEach(() => { setConfirmPref("trash", false); setConfirmPref("archive", false); });
+
+  it("skrót D przenosi od razu, bez potwierdzenia (jest „Cofnij”)", () => {
+    const { onTrash } = setup();
+    fireEvent.keyDown(window, { key: "d" });
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(onTrash).toHaveBeenCalledWith("a");
   });
 });

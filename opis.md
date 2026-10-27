@@ -928,11 +928,17 @@ Wszystko znika przy aktywnym wyszukiwaniu.
 - Jedna definicja zaległości: `termStatus` z `lib/dueTerms.ts` (lista Dziś, licznik w pasku, przegląd tygodnia).
   Jedna definicja „dotknięte w zakresie” (utworzone albo edytowane): `inRange` z `lib/dateRanges.ts`, używana przez
   filtr widoków Dziś i Tydzień oraz przez oba nudge'y (dzień, tydzień).
-- Przegląd „po kolei” (`ReviewWalkthrough.tsx`): kosz (przycisk „Do kosza” i skrót D) pyta o potwierdzenie przez
-  `useConfirmAction` z `ConfirmActionDialog.tsx`, z „Nie pytaj ponownie” jak w reszcie aplikacji. Archiwizacja (A
-  i „Archiwizuj”) też pyta o potwierdzenie (`kind: "archive"`, wspólne „Nie pytaj ponownie”); po potwierdzeniu
-  „Cofnij” w toście. „Zostaw” (K) nic nie zmienia i nie pyta. Skróty są ignorowane, gdy otwarte jest okno potwierdzenia
-  (`[role="alertdialog"]`). Test: `src/components/review/ReviewWalkthrough.test.tsx` (4).
+- Przegląd „po kolei” (`ReviewWalkthrough.tsx`): kosz (przycisk „Do kosza” i skrót D) i archiwizacja (A, „Archiwizuj”)
+  idą przez `useConfirmAction` z `ConfirmActionDialog.tsx`. Domyślnie bez pytania (plan 3.1): od razu z „Cofnij” w toście.
+  „Zostaw” (K) nic nie zmienia i nie pyta. Skróty są ignorowane, gdy otwarte jest okno potwierdzenia
+  (`[role="alertdialog"]`). Testy: `src/components/review/ReviewWalkthrough.test.tsx` (6).
+
+### Potwierdzenia kosza i archiwum (plan UI/UX 3.1, 2026-10-27)
+- Domyślnie (`lib/confirmPrefs.ts`, `DEFAULTS`): `trash: false`, `archive: false` — usunięcie i archiwizacja (kafel, zbiorczo, przegląd po kolei) wykonują się od razu i pokazują dymek „Cofnij”. Kosz da się cofnąć 30 dni, archiwum bez limitu.
+- Wyłączniki „Pytaj przed przeniesieniem do kosza” / „Pytaj przed archiwizacją” w Ustawieniach → Ogólne zapisują `kaczy.confirmPrefs.v1`; po włączeniu wraca okno z „Nie pytaj ponownie”.
+- Dymki z powiadomienia systemowego: „Odłożono o 10 minut” i „Przypomnienie odhaczone” mają „Cofnij” (`useReminderNotifications.ts`, `applyActionRef`): przywracają poprzednie `reminder`, `reminderDay`, `reminderBase`.
+- Załączniki: „Usunięto załącznik” ma „Cofnij” (od dawna). Pozostałe toasty z usunięciem w kodzie już miały „Cofnij” (`toastWithUndo`).
+- Testy: `src/lib/settingsPrefs.test.ts` (domyślne i zapis), `ReviewWalkthrough.test.tsx` (6, w tym przepływ bez pytania), e2e `notes.spec.ts` („usunięcie do kosza bez pytania…”). Pięć testów e2e, które sprawdzają okno, włącza `askBeforeTrashAndArchive` (`e2e/helpers.ts`).
 - Dotyk: przyciski przeglądu tygodnia, „Przejrzyj po kolei”, przyciski trybu „po kolei” i link „i jeszcze N”
   mają `coarse:` do 44 px. Nazwa sekcji przypomnień to „Przypomnienia”, jak nagłówek.
 

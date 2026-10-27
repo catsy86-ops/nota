@@ -32,3 +32,12 @@ export async function seedNotes(page: Page, notes: unknown[]): Promise<void> {
     localStorage.setItem("kaczy-notes-data", JSON.stringify(n));
   }, notes);
 }
+
+/**
+ * Włącza okno potwierdzenia przed kosza i archiwum (plan 3.1: domyślnie bez pytania, jest „Cofnij”).
+ * Testy, które sprawdzają przepływ z pytaniem, wywołują to na początku i przeładowują stronę.
+ */
+export async function askBeforeTrashAndArchive(page: Page): Promise<void> {
+  await page.evaluate(() => localStorage.setItem("kaczy.confirmPrefs.v1", JSON.stringify({ trash: true, archive: true })));
+  await page.reload();
+}

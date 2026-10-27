@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { askBeforeTrashAndArchive } from "./helpers";
 import { editorBody, expectEditorText } from "./helpers/editor";
 
 test.beforeEach(async ({ page }) => {
@@ -34,6 +35,7 @@ test("edycja nie ginie, gdy kafel wypada z filtra wyszukiwania", async ({ page }
 });
 
 test("Delete wyrzuca do kosza dokładnie jedną notatkę, gdy inna jest przypięta", async ({ page }) => {
+  await askBeforeTrashAndArchive(page);
   const stamp = Date.now();
   const pinnedTitle = `E2E-pin ${stamp}`;
   const plainTitle = `E2E-plain ${stamp}`;

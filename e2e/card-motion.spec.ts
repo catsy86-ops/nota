@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { askBeforeTrashAndArchive } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   // Pinezka to część efektu „Iskierki” (domyślnie wyłączonego), więc test włącza go jawnie.
@@ -31,6 +32,7 @@ test("po przypięciu na karcie pojawia się pinezka", async ({ page }) => {
 });
 
 test("wyjście karty do kosza usuwa ją z DOM", async ({ page }) => {
+  await askBeforeTrashAndArchive(page);
   const title = `E2E-wyjscie ${Date.now()}`;
   await addNote(page, title);
   const card = page.locator("[data-note-id-wrap]", { hasText: title });

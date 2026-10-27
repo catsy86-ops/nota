@@ -1,4 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
+import { askBeforeTrashAndArchive } from "./helpers";
 
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
@@ -16,6 +17,7 @@ async function addNote(page: Page, title: string) {
 }
 
 test("wyszukiwanie pokazuje trafienia z Archiwum i przechodzi do nich @smoke", async ({ page }) => {
+  await askBeforeTrashAndArchive(page);
   const title = `Faktura ${Date.now()}`;
   await addNote(page, title);
   const card = page.locator("[data-note-id]").filter({ hasText: title });

@@ -51,21 +51,21 @@ describe("viewPrefs — odczyt zapisu", () => {
 });
 
 describe("confirmPrefs — odczyt zapisu", () => {
-  it("bez zapisu pytamy o kosz i archiwum", async () => {
+  it("bez zapisu kosz i archiwum działają od razu (z Cofnij)", async () => {
     const m = await loadFresh<typeof import("./confirmPrefs")>("./confirmPrefs");
-    expect(m.getConfirmPrefs()).toEqual({ trash: true, archive: true });
+    expect(m.getConfirmPrefs()).toEqual({ trash: false, archive: false });
   });
 
   it("uszkodzony JSON daje domyślne", async () => {
     localStorage.setItem("kaczy.confirmPrefs.v1", "{oops");
     const m = await loadFresh<typeof import("./confirmPrefs")>("./confirmPrefs");
-    expect(m.getConfirmPrefs()).toEqual({ trash: true, archive: true });
+    expect(m.getConfirmPrefs()).toEqual({ trash: false, archive: false });
   });
 
   it("zapis jednego klucza zostawia drugi", async () => {
     const m = await loadFresh<typeof import("./confirmPrefs")>("./confirmPrefs");
-    m.setConfirmPref("trash", false);
-    expect(m.getConfirmPrefs()).toEqual({ trash: false, archive: true });
+    m.setConfirmPref("trash", true);
+    expect(m.getConfirmPrefs()).toEqual({ trash: true, archive: false });
   });
 });
 
