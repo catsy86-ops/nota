@@ -16,7 +16,7 @@ import { shiftMinutes } from "./time";
  * od razu, mogłoby przy scaleniu nadpisać czyjeś poprawki tych samych id.
  */
 
-type Meta = "hourlyRate" | "nightRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "leaveDays" | "overtimeFrom" | "sundayFrom" | "nightFrom" | "typesInit" | "patternsInit" | "presetBudowa" | "presetDniowka";
+type Meta = "hourlyRate" | "nightRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "leaveDays" | "overtimeFrom" | "sundayFrom" | "nightFrom" | "alarmBeforeMin" | "typesInit" | "patternsInit" | "presetBudowa" | "presetDniowka";
 
 /** Origin transakcji Grafiku — odróżnia lokalne zmiany od tych z sieci i z migracji. */
 /** Zmiany bez cofania: import, przywracanie kopii, migracje i Cofnij z tostu. Nie trafiają na stos Ctrl+Z. */
@@ -65,7 +65,7 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
   function get(): ShiftData {
     if (snapshot) return snapshot;
     const settings: Record<string, unknown> = {};
-    for (const k of ["hourlyRate", "nightRate", "workSystem", "settlementMonths", "settlementStart", "fte", "leaveDays", "overtimeFrom", "sundayFrom", "nightFrom"] as const) if (meta.has(k)) settings[k] = meta.get(k);
+    for (const k of ["hourlyRate", "nightRate", "workSystem", "settlementMonths", "settlementStart", "fte", "leaveDays", "overtimeFrom", "sundayFrom", "nightFrom", "alarmBeforeMin"] as const) if (meta.has(k)) settings[k] = meta.get(k);
     snapshot = migrate({
       version: 2,
       ...settings,
@@ -277,6 +277,7 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
       meta.set("overtimeFrom", data.overtimeFrom);
       meta.set("sundayFrom", data.sundayFrom);
       meta.set("nightFrom", data.nightFrom);
+      if (data.alarmBeforeMin !== undefined) meta.set("alarmBeforeMin", data.alarmBeforeMin);
       meta.set("typesInit", true);
       meta.set("patternsInit", true);
     });

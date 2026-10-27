@@ -1,7 +1,8 @@
 import { addDays } from "date-fns";
 import { nextOccurrence, ruleOf, type ReminderRepeat } from "@/lib/reminderRepeat";
 import { eveningNudgeFor } from "@/lib/shifts/eveningNudge";
-import { dayType, type ShiftData, type ShiftType } from "@/lib/shifts/model";
+import { dayType, SHIFT_ALARM_DEFAULT_MIN, type ShiftData, type ShiftType } from "@/lib/shifts/model";
+import { shiftSpan } from "@/lib/shifts/time";
 import { REMINDER_ORDER_DAYS, REMINDER_PROBLEM_DAYS } from "@/lib/study/reminders";
 import { reportDueMinute } from "@/lib/study/reportNudge";
 import { entriesPl } from "@/lib/study/journalView";
@@ -41,7 +42,7 @@ export const PUSH_HORIZON_DAYS = 14;
  */
 export const PUSH_CATEGORIES = [
   { id: "notatki", label: "Przypomnienia notatek", prefixes: ["n:"] },
-  { id: "grafik", label: "Grafik na jutro", prefixes: ["e:"] },
+  { id: "grafik", label: "Grafik na jutro i alarm przed zmianą", prefixes: ["e:", "a:"] },
   { id: "raporty", label: "Raport dnia i tygodnia", prefixes: ["rd:", "rw:"] },
   { id: "problemy", label: "Problem w dzienniku budowy", prefixes: ["p:"] },
   { id: "serwis", label: "Serwis dziś i zaległy", prefixes: ["v:"] },
@@ -134,6 +135,40 @@ const atMinute = (dayKey: string, minute: number) => {
   const [y, m, d] = dayKey.split("-").map(Number);
   return new Date(y, m - 1, d, Math.floor(minute / 60), minute % 60).getTime();
 };
+
+/**
+ * Alarm przed zmianą (G4.1): push `alarmBeforeMin` minut przed początkiem zmiany tego dnia.
+ * Domyślnie godzina (`SHIFT_ALARM_DEFAULT_MIN`), 0 wyłącza. Urlop i dzień bez godzin nie mają alarmu.
+ */
+function shiftAlarmItems(input: PushInput, now: number): PushItem[] {
+  const { shifts } = input;
+  if (!shifts) return [];
+  const min = shifts.alarmBeforeMin ?? SHIFT_ALARM_DEFAULT_MIN;
+  if (min <= 0) return [];
+  const typesById = new Map<string, ShiftType>(shifts.types.map((t) => [t.id, t]));
+  const out: PushItem[] = [];
+  for (let i = 0; i < PUSH_HORIZON_DAYS; i++) {
+    const day = addDays(new Date(now), i);
+    const key = dayKeyOf(day.getTime());
+    const entry = shifts.days[key];
+    const base = entry && typesById.get(entry.type);
+    if (!entry || !base) continue;
+    const t = dayType(base, entry);
+    if (t.kind !== "work") continue;
+    const span = shiftSpan(t);
+    if (!span) continue;
+    const start = new Date(day.getFullYear(), day.getMonth(), day.getDate()).getTime() + span.from * 60_000;
+    const at = start - min * 60_000;
+    if (at <= now) continue;
+    out.push({
+      key: pushKey.shiftAlarm(key), at,
+      title: `Zmiana za ${min} min: ${t.name}`,
+      body: `${t.start}–${t.end}`,
+      url: "/grafik",
+    });
+  }
+  return out;
+}
 
 function eveningItems(input: PushInput, now: number): PushItem[] {
   const { shifts, eveningTime } = input;
@@ -281,7 +316,7 @@ export function buildPushSchedulePlan(input: PushInput): { items: PushItem[]; to
   const groups = [
     noteItems(input.notes, now, end),
     studyItems(input, now, end),
-    [...eveningItems(input, now), ...reportItems(input, now)],
+    [...eveningItems(input, now), ...reportItems(input, now), ...shiftAlarmItems(input, now)],
   ].map((g) => g.filter((i) => !isPushCategoryOff(i.key, input.off)).sort((a, b) => a.at - b.at));
   const total = groups.reduce((n, g) => n + g.length, 0);
   const chosen = groups.flat().slice(0, PUSH_MAX_ITEMS);

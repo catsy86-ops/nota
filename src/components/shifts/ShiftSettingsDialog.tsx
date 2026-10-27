@@ -3,14 +3,14 @@ import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
-import { EVENING_NUDGE_HOURS, FTE_OPTIONS, NIGHT_HOURS, NIGHT_STARTS, SETTLEMENT_MONTHS, setFte, setHourlyRate, setLeaveDays, setNightFrom, setNightRate, nightRateFor, formatMoney, setOvertimeFrom, setSettlementMonths, setSettlementStart, setSundayFrom, setWorkSystem, type SettlementMonths, type ShiftData, type WorkSystem } from "@/lib/shifts";
+import { EVENING_NUDGE_HOURS, FTE_OPTIONS, NIGHT_HOURS, NIGHT_STARTS, SETTLEMENT_MONTHS, setFte, setHourlyRate, setLeaveDays, setAlarmBeforeMin, setNightFrom, setNightRate, nightRateFor, SHIFT_ALARM_DEFAULT_MIN, SHIFT_ALARM_OPTIONS, formatMoney, setOvertimeFrom, setSettlementMonths, setSettlementStart, setSundayFrom, setWorkSystem, type SettlementMonths, type ShiftData, type WorkSystem } from "@/lib/shifts";
 import { readEveningNudgeTime, writeEveningNudgeTime } from "@/lib/shifts";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
 import { parseMoney } from "@/lib/shifts/money";
 import { cn } from "@/lib/utils";
 import { PERIOD_LABELS, WORK_SYSTEM_LABELS } from "./labels";
 
-type Settings = Pick<ShiftData, "hourlyRate" | "nightRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "leaveDays" | "overtimeFrom" | "sundayFrom" | "nightFrom">;
+type Settings = Pick<ShiftData, "alarmBeforeMin" | "hourlyRate" | "nightRate" | "workSystem" | "settlementMonths" | "settlementStart" | "fte" | "leaveDays" | "overtimeFrom" | "sundayFrom" | "nightFrom">;
 
 interface ShiftSettingsDialogProps {
   open: boolean;
@@ -74,6 +74,11 @@ export function ShiftSettingsDialog({ open, onOpenChange, settings: s }: ShiftSe
               </select>
             </Field>
           )}
+          <Field label="Alarm przed zmianą" hint="Przypomnienie przed początkiem zmiany tego dnia. Wyłączony nie wysyła nic.">
+            <select value={s.alarmBeforeMin ?? SHIFT_ALARM_DEFAULT_MIN} onChange={(e) => setAlarmBeforeMin(Number(e.target.value))} className={CONTROL}>
+              {SHIFT_ALARM_OPTIONS.map((m) => <option key={m} value={m}>{m === 0 ? "Wyłączony" : m === 60 ? "Godzinę przed" : `${m} min przed`}</option>)}
+            </select>
+          </Field>
           <EveningNudgeField />
           {/* Pora nocna i doba niedzieli zwykle zostają ustawowe — zmienia się je tylko, gdy regulamin pracy mówi inaczej. */}
           <details open={s.nightFrom !== 22 || s.sundayFrom !== 6 || undefined} className="group rounded-card border border-border/60 px-3 py-2.5">

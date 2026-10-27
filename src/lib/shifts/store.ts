@@ -296,6 +296,11 @@ export function setSundayFrom(hour: number): void {
   yShifts.setMeta("sundayFrom", Number.isInteger(hour) && hour >= 0 && hour < 24 ? hour : 6);
 }
 
+/** Alarm przed zmianą w minutach; 0 = wyłączony (G4.1). */
+export function setAlarmBeforeMin(min: number): void {
+  yShifts.setMeta("alarmBeforeMin", Number.isInteger(min) && min >= 0 && min <= 240 ? min : 0);
+}
+
 /** Początek pory nocnej (art. 151⁷ KP): 21, 22 albo 23. */
 export function setNightFrom(hour: number): void {
   yShifts.setMeta("nightFrom", hour === 21 || hour === 23 ? hour : 22);

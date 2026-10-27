@@ -38,11 +38,13 @@ describe("buildPushSchedule — Grafik i raporty", () => {
   const shifts: ShiftData = { ...EMPTY_SHIFT_DATA, days: { "2026-10-15": { type: "b" } } };
 
   it("wieczorem przed dniem ze zmianą", () => {
+    // Alarm przed zmianą (G4.1) też jest w grafiku, więc porównujemy tylko przypomnienia wieczorne.
+    const evening = (items: { key: string }[]) => items.filter((i) => i.key.startsWith("e:"));
     const items = buildPushSchedule({ now: WED_NOON, notes: [], shifts, eveningTime: "20:00" });
-    expect(items.map((i) => i.key)).toEqual(["e:2026-10-15"]);
-    expect(items[0].at).toBe(at(14, 20));
-    expect(buildPushSchedule({ now: WED_NOON, notes: [], shifts, eveningTime: "20:00", eveningNudged: "2026-10-15" })).toEqual([]);
-    expect(buildPushSchedule({ now: WED_NOON, notes: [], shifts, eveningTime: null })).toEqual([]);
+    expect(evening(items).map((i) => i.key)).toEqual(["e:2026-10-15"]);
+    expect(items.find((i) => i.key.startsWith("e:"))?.at).toBe(at(14, 20));
+    expect(evening(buildPushSchedule({ now: WED_NOON, notes: [], shifts, eveningTime: "20:00", eveningNudged: "2026-10-15" }))).toEqual([]);
+    expect(evening(buildPushSchedule({ now: WED_NOON, notes: [], shifts, eveningTime: null }))).toEqual([]);
   });
 
   it("raport dnia tylko z dzisiejszymi wpisami i raz dziennie", () => {
@@ -119,5 +121,29 @@ describe("push: dziś zmiana bez wpisu albo podziału godzin (2.3)", () => {
     expect(withAll.some((i) => i.key.startsWith("z:"))).toBe(false);
     const onLeave = buildPushSchedule({ now: WED_NOON, notes: [], shifts: { ...shifts, days: { "2026-10-14": { type: "u" } } }, eveningTime: "20:00" });
     expect(onLeave.some((i) => i.key.startsWith("z:"))).toBe(false);
+  });
+});
+
+describe("buildPushSchedule — alarm przed zmianą (G4.1)", () => {
+  // Budowa to 7–17 (domyślny rodzaj „b”); środa 14 o 12:00, więc zmiana w czwartek 15 jest w przyszłości.
+  const shifts: ShiftData = { ...EMPTY_SHIFT_DATA, days: { "2026-10-15": { type: "b" } } };
+  const alarms = <T extends { key: string }>(items: T[]): T[] => items.filter((i) => i.key.startsWith("a:"));
+
+  it("domyślnie godzina przed początkiem zmiany", () => {
+    const items = alarms(buildPushSchedule({ now: WED_NOON, notes: [], shifts }));
+    expect(items).toEqual([{ key: "a:2026-10-15", at: at(15, 6), title: "Zmiana za 60 min: Budowa", body: "07:00–17:00", url: "/grafik" }]);
+  });
+
+  it("ustawienie per grafik: 30 minut", () => {
+    const items = alarms(buildPushSchedule({ now: WED_NOON, notes: [], shifts: { ...shifts, alarmBeforeMin: 30 } }));
+    expect(items[0].at).toBe(at(15, 6, 30));
+  });
+
+  it("0 wyłącza alarm", () => {
+    expect(alarms(buildPushSchedule({ now: WED_NOON, notes: [], shifts: { ...shifts, alarmBeforeMin: 0 } }))).toEqual([]);
+  });
+
+  it("wyłączona kategoria „Grafik” nie wysyła alarmu", () => {
+    expect(alarms(buildPushSchedule({ now: WED_NOON, notes: [], shifts, off: ["grafik"] }))).toEqual([]);
   });
 });

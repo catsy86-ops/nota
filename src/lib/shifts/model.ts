@@ -159,6 +159,11 @@ export interface ShiftData {
   sundayFrom: number;
   /** Początek pory nocnej: 21, 22 albo 23 — trwa 8 h, między 21 a 7 (art. 151⁷ KP). */
   nightFrom: number;
+  /**
+   * Alarm przed zmianą (G4.1, G-6): ile minut przed początkiem przypomnieć push. `undefined` = domyślnie
+   * `SHIFT_ALARM_DEFAULT_MIN`, `0` = wyłączony. Ustawienie jest per grafik.
+   */
+  alarmBeforeMin?: number;
   patterns: ShiftPattern[];
   /** Premie w rachunku (zł brutto), przypisane do miesiąca. Doliczane do zarobku tego miesiąca. */
   bonuses: ShiftBonus[];
@@ -221,6 +226,10 @@ export const DEFAULT_SHIFT_TYPES: ShiftType[] = [
 
 // Patterny startowe stały na zmianach 6–14, 14–22 i nocnej, które usunięto z domyślnych.
 export const DEFAULT_PATTERNS: ShiftPattern[] = [];
+
+/** Alarm przed zmianą (G4.1, G-6): domyślnie godzina przed początkiem; 0 wyłącza. */
+export const SHIFT_ALARM_DEFAULT_MIN = 60;
+export const SHIFT_ALARM_OPTIONS = [0, 30, 60, 90] as const;
 
 export const EMPTY_SHIFT_DATA: ShiftData = {
   version: 2,
@@ -347,6 +356,7 @@ export function migrate(stored: unknown): ShiftData {
     settlementStart: Number.isInteger(s.settlementStart) && (s.settlementStart as number) >= 0 && (s.settlementStart as number) < 12 ? (s.settlementStart as number) : 0,
     sundayFrom: Number.isInteger(s.sundayFrom) && (s.sundayFrom as number) >= 0 && (s.sundayFrom as number) < 24 ? (s.sundayFrom as number) : 6,
     nightFrom: s.nightFrom === 21 || s.nightFrom === 23 ? s.nightFrom : 22,
+    ...(Number.isInteger(s.alarmBeforeMin) && (s.alarmBeforeMin as number) >= 0 && (s.alarmBeforeMin as number) <= 240 ? { alarmBeforeMin: s.alarmBeforeMin as number } : {}),
     patterns: Array.isArray(s.patterns) ? s.patterns.filter(isPattern) : EMPTY_SHIFT_DATA.patterns,
     bonuses: Array.isArray(s.bonuses) ? s.bonuses.slice(0, BONUS_MAX_PER_DATA).map(cleanBonus).filter((b): b is ShiftBonus => !!b) : [],
   };
