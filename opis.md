@@ -1551,7 +1551,7 @@ Dział opisany w jednym miejscu; obejmuje fazy 1–3 planu z 2026-10-19 i zgodę
 ### Co robi
 
 - **Okno Ustawień** ma cztery karty: **Wygląd**, **Ogólne**, **Kopia i dane**, **Sync**. Na telefonie zakładki zawijają się na wiele wierszy.
-  - **Wygląd:** motyw i skórka, efekty i zabawa (`EffectsSettings`), globalny reset.
+  - **Wygląd** (plan motywów 3.4) w czterech grupach `SettingsGroup` (`SettingsShared.tsx`, `<section>` z nagłówkiem h3; sekcje w grupie dostają h4 przez kontekst `SectionLevel`): **Styl** (galeria, akcent, kształt, tło, jasność, pora roku), **Tekst** (rozmiar, krój, tryb budowa), **Układ** (działy na pasku, dolny pasek, karty Dziś, układ siatki, sortowanie, gęstość, kolumny, czas czytania, backlinki, „Przywróć domyślne” widoku), **Ruch** (ruch i animacje, `EffectsSettings`). Nad grupami przyklejony pasek skoku `nav` „Części Wyglądu” (`APPEARANCE_GROUPS`, `jumpTo`: przewinięcie i fokus na nagłówku grupy, bez płynnego przewijania przy ograniczonym ruchu). Pułapka: przewijany kontener okna ma `pt-3`, więc pasek ma `-top-3 -mt-3 pt-4.5` i pełne `bg-background` — bez tego nad paskiem prześwituje tekst; cele 44 px na dotyku (`coarse:min-h-11`), grupy mają `scroll-mt-14` / `coarse:scroll-mt-20`. Klucze localStorage bez zmian.
   - **Ogólne:** edytor (autosave), przypomnienia „Dziś” i „Ten tydzień” (obok przeglądu tygodnia), sekcja „Praca i Grafik” z przyciskiem „Ustawienia Grafiku” (`ShiftSettingsDialog`), sekcja „Dyktowanie głosem”.
   - **Kopia i dane:** kopia zapasowa, przypomnienie o kopii (mierzy czas od ostatniej kopii), automatyczne kopie.
   - **Sync:** parowanie urządzeń, kody, „Zapomnij”, synchronizacja przez plik (`SyncFileSection`).

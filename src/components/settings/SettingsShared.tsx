@@ -1,4 +1,4 @@
-import { useId, useState, type KeyboardEvent } from "react";
+import { createContext, useContext, useId, useState, type KeyboardEvent } from "react";
 import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -38,13 +38,31 @@ export function ResetSectionButton({ title, keys }: { title: string; keys: reado
   );
 }
 
+/** Poziom nagłówka sekcji: 3 na karcie, 4 wewnątrz `SettingsGroup` (hierarchia dla czytnika ekranu). */
+const SectionLevel = createContext<3 | 4>(3);
+
 /** Small labeled section wrapper shared by every settings tab. Tytuł to nagłówek, nie akapit. */
 export function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  const Heading = useContext(SectionLevel) === 4 ? "h4" : "h3";
   return (
     <div className="space-y-2">
-      <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h3>
+      <Heading className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</Heading>
       {children}
     </div>
+  );
+}
+
+/**
+ * Grupa sekcji z nagłówkiem (plan motywów 3.4: Wygląd w czterech częściach). `id` jest celem skoku
+ * z paska grup; `scroll-mt` zostawia miejsce na przyklejony pasek (na dotyku wyższy: przyciski 44 px).
+ */
+export function SettingsGroup({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+  const headingId = useId();
+  return (
+    <section id={id} aria-labelledby={headingId} className="scroll-mt-14 coarse:scroll-mt-20 space-y-4">
+      <h3 id={headingId} className="border-b border-border/60 pb-1.5 text-base font-semibold text-foreground">{title}</h3>
+      <SectionLevel.Provider value={4}>{children}</SectionLevel.Provider>
+    </section>
   );
 }
 
