@@ -1,9 +1,9 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import {
-  CloudOff, Check, HardDrive, Wifi, WifiOff, LoaderCircle,
-} from "lucide-react";
+  CloudOff, Check, HardDrive, Wifi, WifiOff, } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSyncState } from "@/lib/yjsSync";
+import { DelayedSpinner } from "@/components/DelayedSpinner";
 
 /** Polish plural of "urządzenie" (device) for a count. */
 function deviceWord(n: number): string {
@@ -66,7 +66,7 @@ export function OfflineQueuePanel({ open, onOpenChange, offline }: OfflineQueueP
 
           <div className="flex items-center gap-3 rounded-card bg-muted/50 border border-border/50 px-3 py-2.5 text-sm">
             {syncState.status === "connecting" ? (
-              <LoaderCircle className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
+              <DelayedSpinner active className="h-4 w-4 shrink-0 text-muted-foreground" />
             ) : syncState.status === "connected" ? (
               <Wifi className="h-4 w-4 shrink-0 text-primary-ink" />
             ) : (

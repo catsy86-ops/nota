@@ -1,8 +1,9 @@
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
-import { CloudOff, Wifi, LoaderCircle, Check, TriangleAlert } from "lucide-react";
+import { CloudOff, Wifi, Check, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 import { useSyncState } from "@/lib/yjsSync";
 import { hasUnsavedWork, useSaveStatus } from "@/lib/saveStatus";
+import { DelayedSpinner } from "@/components/DelayedSpinner";
 
 // Panel otwiera się dopiero po stuknięciu pigułki — leniwie, poza główną paczką.
 const OfflineQueuePanel = lazy(() => import("@/components/OfflineQueuePanel").then((m) => ({ default: m.OfflineQueuePanel })));
@@ -103,7 +104,7 @@ export function OfflineStatus() {
         ) : saved && !saving ? (
           <Check className="h-3.5 w-3.5 shrink-0 text-primary-ink" />
         ) : (
-          <LoaderCircle className="h-3.5 w-3.5 shrink-0 animate-spin" />
+          <DelayedSpinner active className="h-3.5 w-3.5 shrink-0" />
         )}
         <span className="truncate">
           {label}

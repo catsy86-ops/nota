@@ -206,3 +206,5 @@ Plan kończymy tutaj; pozostałe punkty to backlog z podanym zakresem, do zrobie
 **Status 3.6 (2026-10-27):** zrobione przewinięcie per dział (`src/hooks/useViewScroll.ts`); zakładki Ustawień i Pracy oraz zwinięte grupy były wcześniej. Test: `e2e/view-scroll-memory.spec.ts`.
 
 **Status 3.1 (2026-10-27):** kosz i archiwum bez pytania domyślnie, z „Cofnij”; dymki „Odłożono o 10 minut” i „Przypomnienie odhaczone” z powiadomienia mają „Cofnij”. Okno potwierdzenia zostaje dla ustawień „Pytaj…” i dla rzeczy nieodwracalnych (reset, opróżnianie kosza). Przegląd toastów przez wyszukanie w kodzie (usunięcia, przeniesienia, zmiany, odhaczenia) — nie ręczne przejrzenie wszystkich ~190 dymków; ewentualne pozostałe bez „Cofnij” to informacje bez zmiany danych.
+
+**Status 3.3 (2026-10-27):** zrobione. Wspólny `DelayedSpinner` (300 ms) w statusie zapisu, kolejce, zdjęciach, imporcie, Dzienniku i pushu; szkielety widoków z 180 ms na 300 ms. Testy: `DelayedSpinner.test.tsx`.

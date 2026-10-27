@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LoaderCircle, LocateFixed, MapPin, Mic, NotebookPen, Pencil, Play, Trash, X } from "lucide-react";
+import { TriangleAlert, Camera, CircleCheck, Clock, ImagePlus, ListChecks, LocateFixed, MapPin, Mic, NotebookPen, Pencil, Play, Trash, X } from "lucide-react";
 import { formatFileSize } from "@/lib/attachments";
 import { addRecording } from "@/lib/study/recordings";
 import { JOURNAL_MAX_RECORDINGS } from "@/lib/study/yStudy";
@@ -35,6 +35,7 @@ import { suggestFittingNames } from "@/lib/study/fittings";
 import { editDemotesTopic, editSavedMessage, newEntryMessage, shouldOfferSiteGeo } from "@/lib/study/entrySheetRules";
 import { applySpokenEntry } from "@/lib/study/spokenEntryApply";
 import { siteStages, toggleStage } from "@/lib/study/stages";
+import { DelayedSpinner } from "@/components/DelayedSpinner";
 
 export function KindIcon({ kind, className = "h-4 w-4" }: { kind: JournalKind; className?: string }) {
   if (kind === "ok") return <CircleCheck className={cn(className, "shrink-0 text-success-ink")} aria-hidden />;
@@ -457,7 +458,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 disabled={locating}
                 className="pressable inline-flex items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1.5 text-sm text-muted-foreground hover:border-primary hover:text-foreground disabled:opacity-60 coarse:min-h-11"
               >
-                {locating ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden /> : <LocateFixed className="h-4 w-4" aria-hidden />}
+                {locating ? <DelayedSpinner active className="h-4 w-4" /> : <LocateFixed className="h-4 w-4" aria-hidden />}
                 {locating ? "Szukam…" : "Tu jestem"}
               </button>
             ))}
@@ -831,7 +832,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             )}
             <Button onClick={submit} disabled={processing > 0} className="h-12 min-w-0 flex-1 text-base">
               {processing > 0
-                ? <><LoaderCircle className="mr-1.5 h-4 w-4 animate-spin" aria-hidden />Przygotowuję zdjęcia…</>
+                ? <><DelayedSpinner active className="mr-1.5 h-4 w-4" />Przygotowuję zdjęcia…</>
                 : isEdit ? "Zapisz zmiany" : "Zapisz wpis"}
             </Button>
           </div>

@@ -27,7 +27,7 @@ function MonthGrid() {
 
 /**
  * Zarys karty z pulpitu „Dziś” (ładowanej leniwie) — rezerwuje miejsce, zanim paczka dojdzie,
- * więc lista pod nią nie przeskakuje. Ukryty przed 180 ms jak `ViewSkeleton`; dla czytnika
+ * więc lista pod nią nie przeskakuje. Ukryty przed 300 ms jak `ViewSkeleton`; dla czytnika
  * ekranu pominięty (to tylko podpowiedź, nie osobny komunikat).
  */
 export function CardSkeleton() {

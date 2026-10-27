@@ -1,9 +1,10 @@
 import type { Dispatch, SetStateAction } from "react";
-import { LoaderCircle, PenTool, Type, X } from "lucide-react";
+import { PenTool, Type, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NoteImage } from "@/components/NoteImage";
 import { cn } from "@/lib/utils";
 import { CAPTION_MAX } from "@/lib/study/photoCaption";
+import { DelayedSpinner } from "@/components/DelayedSpinner";
 
 /**
  * Pasek zdjęć wpisu w arkuszu i formularz podpisu pod nim (§5.5). Stan wpisu zostaje w arkuszu;
@@ -66,7 +67,7 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
           ))}
           {Array.from({ length: processing }, (_, i) => (
             <li key={`processing-${i}`} className="grid h-20 w-20 place-items-center rounded-field bg-muted" data-testid="journal-photo-processing">
-              <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden />
+              <DelayedSpinner active className="h-5 w-5 text-muted-foreground" />
               <span className="sr-only">Przygotowuję zdjęcie</span>
             </li>
           ))}

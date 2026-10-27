@@ -93,6 +93,8 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 
 ### Ładowanie widoków i animacje w tle
 
+- **Reguła wskaźników ładowania (plan 3.3):** kręcące się kółko pojawia się dopiero po 300 ms (`src/components/DelayedSpinner.tsx`, na `useDelayedFlag(active, 300)` z `src/hooks/useDelayedFlag.ts`). Miejsce na ikonę jest zarezerwowane od razu (`invisible`), więc szybka operacja nie miga i przycisk nie przeskakuje. Używają go: pigułka statusu zapisu (`OfflineStatus`), kolejka zapisu (`OfflineQueuePanel`), zdjęcia w trakcie przygotowania (`PhotoStrip`), import (`ImportExternalDialog`), „Tu jestem” i „Przygotowuję zdjęcia…” w Dzienniku (`JournalEntrySheet`), Włącz/Wyłącz push (`PushSettings`). Testy: `src/components/DelayedSpinner.test.tsx` (3).
+- **Szkielety widoków:** `.view-skeleton` (`index.css`) wchodzi po 300 ms, tak samo jak wskaźnik (wcześniej 180 ms). `ViewSkeleton` i `CardSkeleton` (`ViewSkeleton.tsx`) mają tę samą regułę. Kości pulsują tylko przy pełnym ruchu.
 - `src/lib/viewPreload.ts`: jedna zapamiętana obietnica importu na widok (`loadCalendarView`, `loadShiftsView`, `loadStudyView`). Najechanie kursorem lub dotknięcie pozycji nawigacji zaczyna pobieranie. Szkielet `ViewSkeleton` pojawia się po 180 ms (bez migania przy szybkim ładowaniu); pulsowanie wyłączone przy ograniczonym ruchu. Nowy widok leniwy: dopisać do `loaders` i `LABELS`.
 - `src/lib/pageHidden.ts`: gdy karta jest w tle, `html[data-hidden]` wstrzymuje wszystkie zapętlone animacje (`animation-play-state: paused`). Przejścia nie są wstrzymywane.
 

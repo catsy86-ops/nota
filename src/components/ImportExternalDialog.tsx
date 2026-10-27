@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { m as motion } from "framer-motion";
-import { TriangleAlert, FileArchive, FolderOpen, LoaderCircle } from "lucide-react";
+import { TriangleAlert, FileArchive, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
@@ -9,6 +9,7 @@ import type { ImportPlan } from "@/lib/import";
 import { pluralPl } from "@/lib/plural";
 import { tween } from "@/lib/motion";
 import { cn } from "@/lib/utils";
+import { DelayedSpinner } from "@/components/DelayedSpinner";
 
 interface ImportExternalDialogProps {
   open: boolean;
@@ -128,7 +129,7 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
           >
             {stage === "reading" ? (
               <p role="status" className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <LoaderCircle className="w-4 h-4 animate-spin" aria-hidden />
+                <DelayedSpinner active className="w-4 h-4" />
                 Czytam pliki…
               </p>
             ) : (
@@ -207,7 +208,7 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
               <Button type="button" variant="ghost" onClick={onBack} disabled={stage === "saving"}>Wybierz inne pliki</Button>
               <Button type="button" variant="outline" onClick={onClose} disabled={stage === "saving"}>Anuluj</Button>
               <Button type="button" onClick={onConfirm} disabled={importCount === 0 || stage === "saving"}>
-                {stage === "saving" && <LoaderCircle className="animate-spin" aria-hidden />}
+                {stage === "saving" && <DelayedSpinner active />}
                 {stage === "saving" ? "Zapisuję…" : `Importuj ${importCount}`}
               </Button>
             </>
