@@ -36,6 +36,8 @@ import "./lib/textSize";
 import "./lib/backdrop";
 import "./lib/shape";
 import "./lib/accent";
+// Styl na noc (plan motywów 1.4): przełącza styl o zadanej porze, także zaraz po starcie.
+import "./lib/skinSchedule";
 import { registerServiceWorker, applyServiceWorkerUpdate, SW_UPDATE_EVENT } from "./lib/registerSW";
 import { hasUnsavedWork } from "./lib/saveStatus";
 import { setupFileLaunch } from "./lib/fileLaunch";

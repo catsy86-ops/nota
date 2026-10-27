@@ -20,6 +20,7 @@ import { setAppFont, useAppFont } from "@/lib/appFont";
 import { TextSizeControl } from "./TextSizeControl";
 import { SKIN_SCHEME } from "@/lib/skins";
 import { trySkin } from "@/lib/skinTry";
+import { NightSkinSettings } from "./NightSkinSettings";
 import { setBackdrop, useBackdrop, type Backdrop } from "@/lib/backdrop";
 import { setShape, useShape, type Shape } from "@/lib/shape";
 import { BASE_SORTS } from "@/lib/sortOptions";
@@ -162,6 +163,10 @@ export function AppearanceSettings() {
                   ? "Ciemny motyw ułatwia pracę wieczorem."
                   : "Klasyczny jasny motyw."}
           </p>
+        </Section>
+
+        <Section title="Styl na noc">
+          <NightSkinSettings skin={skin} />
         </Section>
 
         <Section title="Motyw pory roku">
