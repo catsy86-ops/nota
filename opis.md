@@ -1436,7 +1436,8 @@ Dział opisany w jednym miejscu. Kalendarz pokazuje terminy przypomnień (`remin
 - `src/lib/dayTimeline.test.ts` — odcinki zmiany, przerwa, urlop, zakres osi, gradient, minuty.
 - `src/lib/reminderOccurrences.test.ts` — „cały dzień”, „seria zapisana dawno temu”, `isNext`.
 - `src/lib/reminderTime.test.ts` — zmiana czasu (Europe/Warsaw).
-- `src/lib/icsExport.test.ts` — `UNTIL` tego samego typu co `DTSTART`.
+- `src/lib/icsExport.test.ts` — `UNTIL` tego samego typu co `DTSTART`; notatka prywatna bez tytułu i treści w pliku (K0.1).
+- **Eksport `.ics` a notatka prywatna (K0.1):** `eventLines` w `src/lib/icsExport.ts` nie wpisuje `DESCRIPTION` przy `locked`, a `titleOf` daje „Przypomnienie z notatki prywatnej”. Projekcja (`yjsStore.ts`) i tak zeruje `content` takiej notatki, więc to zabezpieczenie w głębi, a nie naprawa aktywnego wycieku.
 - `src/components/calendar/CalendarPrintList.test.tsx` — wydruk: godzina, „cały dzień”, prognoza, pusty miesiąc.
 - E2E: `reminders-calendar` (w tym Ctrl+Enter), `reminders-agenda`, `day-timeline` (360 px bez poziomego przewijania), `calendar-phase1` (pole „Dzień”), `calendar-phase2` (Cały dzień, przełącznik na 375 px). Od zmian z 2026-10-20 nieuruchamiane.
 

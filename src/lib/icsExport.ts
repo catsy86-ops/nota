@@ -107,7 +107,8 @@ function eventLines(note: Note, now: number): string[] {
     const until = note.reminderRepeatUntil !== undefined ? `;UNTIL=${formatLocal(note.reminderRepeatUntil)}` : "";
     lines.push(`RRULE:${rruleFor(repeat, seriesDay(note))}${until}`);
   }
-  const body = note.content.trim();
+  // Notatka prywatna nie wychodzi z treścią, nawet gdyby projekcja podała ją jawnie (K0.1).
+  const body = note.locked ? "" : note.content.trim();
   if (body) lines.push(`DESCRIPTION:${escapeText(body.slice(0, 1000))}`);
   lines.push(
     "BEGIN:VALARM",

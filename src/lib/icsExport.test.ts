@@ -66,6 +66,14 @@ describe("buildIcs", () => {
     expect(ics).toContain("DESCRIPTION:a\\, b\\; c\\\\d\\nnowa linia");
   });
 
+  it("notatka prywatna: ani tytuł, ani treść nie trafiają do pliku (K0.1)", () => {
+    const ics = buildIcs([note({ locked: true, title: "Tajne", content: "PIN to 1234" })], NOW);
+    expect(ics).not.toContain("Tajne");
+    expect(ics).not.toContain("PIN to 1234");
+    expect(ics).not.toContain("DESCRIPTION:PIN");
+    expect(ics).toContain("SUMMARY:Przypomnienie z notatki prywatnej\r\n");
+  });
+
   it("bez tytułu bierze pierwszą linię treści", () => {
     expect(buildIcs([note({ title: " ", content: "Kupić mleko\nreszta" })], NOW)).toContain("SUMMARY:Kupić mleko\r\n");
   });
