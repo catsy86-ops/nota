@@ -27,6 +27,7 @@ import { toastWithUndo } from "@/lib/undoToast";
 import type { Occurrence } from "@/lib/reminderOccurrences";
 import type { Note } from "@/hooks/useNotes";
 import { calendarDayFromSearch, viewPath } from "@/lib/viewRoute";
+import { useLocation, useNavigate } from "react-router-dom";
 
 /**
  * Widok kalendarza przypomnień: siatka miesiąca + lista terminów wybranego dnia.
@@ -183,14 +184,17 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
   }
 
   // Adres `/kalendarz?dzien=…` (K1.5): kalendarz otwiera ten dzień i zdejmuje parametr z adresu.
+  // Reaguje też, gdy kalendarz już jest otwarty (paleta poleceń), a zdjęcie idzie przez router, żeby zgadzał się z adresem.
+  const { search } = useLocation();
+  const navigate = useNavigate();
   useEffect(() => {
-    const key = calendarDayFromSearch(window.location.search);
+    const key = calendarDayFromSearch(search);
     if (!key) return;
     const [y, m, d] = key.split("-").map(Number);
     setSelectedDay(new Date(y, m - 1, d));
     setMonth(new Date(y, m - 1, 1));
-    window.history.replaceState(window.history.state, "", viewPath("calendar"));
-  }, []);
+    navigate(viewPath("calendar"), { replace: true });
+  }, [search, navigate]);
 
   /** Przed otwarciem notatki zapisujemy w adresie bieżący dzień, żeby „wstecz” wrócił na ten dzień (K1.5, K2.1). */
   const openNoteFromCalendar = useCallback((noteId: string) => {

@@ -26,6 +26,8 @@ import { JOURNAL_REPORT_PARAM, reportParam } from "@/lib/study/reportLink";
 import { entrySiteId, foldName } from "@/lib/study/siteKey";
 import { isViewShown, useHiddenViews } from "@/lib/hiddenViews";
 import { viewLabel } from "@/lib/viewMeta";
+import { dayKey } from "@/lib/reminderOccurrences";
+import { addDays } from "date-fns";
 
 const NOTE_LIMIT = 30;
 
@@ -252,6 +254,15 @@ export function CommandPalette({
             <CommandSeparator />
           </>
         )}
+        {/* Adres dnia kalendarza (K1.5): „Dziś” i „Jutro” z palety otwierają kalendarz na właściwym dniu. */}
+        <CommandGroup heading={viewLabel("calendar")}>
+          <CommandItem value="kalendarz terminy dziś" onSelect={() => run(() => navigate(`/kalendarz?dzien=${dayKey(new Date())}`))}>
+            <Calendar className="w-4 h-4 mr-2 text-muted-foreground" /> Terminy na dziś
+          </CommandItem>
+          <CommandItem value="kalendarz terminy jutro" onSelect={() => run(() => navigate(`/kalendarz?dzien=${dayKey(addDays(new Date(), 1))}`))}>
+            <Calendar className="w-4 h-4 mr-2 text-muted-foreground" /> Terminy na jutro
+          </CommandItem>
+        </CommandGroup>
         <CommandGroup heading="Praca">
           <CommandItem value="praca nowy wpis" onSelect={() => run(() => navigate("/praca?wpis=1"))}>
             <Plus className="w-4 h-4 mr-2 text-muted-foreground" /> Nowy wpis w Pracy
