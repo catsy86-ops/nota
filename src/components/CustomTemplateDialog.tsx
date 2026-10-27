@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { deleteCustomTemplate, saveCustomTemplate, type CustomTemplate } from "@/lib/customTemplates";
 import { renderTemplate, TEMPLATE_VARIABLES } from "@/lib/templateVars";
 import { toast } from "sonner";
+import { toastWithUndo } from "@/lib/undoToast";
 
 interface Props {
   /** `null` = nowy szablon; obiekt = edycja istniejącego. */
@@ -39,8 +40,9 @@ export function CustomTemplateDialog({ template, onOpenChange }: Props) {
 
   function remove() {
     if (!template) return;
+    const snap = template;
     deleteCustomTemplate(template.id);
-    toast.success(`Usunięto szablon „${template.name}”`);
+    toastWithUndo(`Usunięto szablon „${template.name}”`, () => { saveCustomTemplate(snap); }, { icon: "🗑️" });
     onOpenChange(false);
   }
 

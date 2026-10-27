@@ -183,9 +183,12 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
 
   /** Usuwa własne ćwiczenie bez wpisów i planów; z wpisami zostaje, a komunikat mówi dlaczego. */
   const deleteCustom = (id: string) => {
+    const snap = exerciseById(id);
     if (!removeCustomExercise(id)) { toast.error("Ćwiczenia z wpisami albo w planie nie da się usunąć"); return; }
     setExerciseId(EXERCISES[0].id);
-    toast.success("Usunięto własne ćwiczenie");
+    // Ćwiczenie bez wpisów nie ma odwołań, więc „Cofnij” dodaje je ponownie (nowe id, te same dane).
+    if (snap) toastWithUndo("Usunięto własne ćwiczenie", () => { addCustomExercise({ name: snap.name, group: snap.group, equipment: snap.equipment, hint: snap.hint }); }, { icon: "🗑️" });
+    else toast.success("Usunięto własne ćwiczenie");
   };
 
   /** Wybór dnia planu: ustawia pierwsze ćwiczenie dnia i tyle serii, ile zaplanowano. */

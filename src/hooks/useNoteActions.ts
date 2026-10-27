@@ -1,5 +1,4 @@
 import { useCallback } from "react";
-import { toast } from "sonner";
 import type { Note, NoteColor } from "@/hooks/useNotes";
 import { pushAction } from "@/lib/actionHistory";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -135,10 +134,17 @@ export function useNoteActions({
 
   const handleBulkColor = useCallback((c: NoteColor) => {
     const ids = Array.from(selectedIds);
+    // Poprzednie kolory zapamiętujemy, żeby „Cofnij” przywrócił każdą notatkę osobno (plan 3.1).
+    const all = [...notes, ...archivedNotes];
+    const before = ids.map((id) => ({ id, color: all.find((n) => n.id === id)?.color })).filter((b): b is { id: string; color: NoteColor } => b.color !== undefined);
     bulkSetColor(ids, c);
     clearSelection();
-    toast.success(`Zmieniono kolor ${ids.length} notatek`);
-  }, [selectedIds, bulkSetColor, clearSelection]);
+    toastWithUndo(`Zmieniono kolor ${ids.length} notatek`, () => {
+      const groups = new Map<NoteColor, string[]>();
+      for (const b of before) groups.set(b.color, [...(groups.get(b.color) ?? []), b.id]);
+      groups.forEach((group, color) => bulkSetColor(group, color));
+    }, { icon: "🎨" });
+  }, [selectedIds, notes, archivedNotes, bulkSetColor, clearSelection]);
 
   const handleSelectAll = useCallback(() => {
     setSelectedIds(new Set(displayNotes.map((n) => n.id)));
