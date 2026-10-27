@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, absenceKindOf, leaveBalance, migrate, yearSummary, type DayEntry, type ShiftData } from "./index";
+import { absenceKindOf, leaveBalance, migrate, yearSummary, type DayEntry, type ShiftData } from "./index";
+import { TEST_SHIFT_TYPES, TEST_EMPTY_SHIFT_DATA } from "./testShiftTypes";
 
-const data = (days: Record<string, DayEntry>, patch: Partial<ShiftData> = {}): ShiftData => ({ ...EMPTY_SHIFT_DATA, days, ...patch });
+const data = (days: Record<string, DayEntry>, patch: Partial<ShiftData> = {}): ShiftData => ({ ...TEST_EMPTY_SHIFT_DATA, days, ...patch });
 const U: DayEntry = { type: "u" };
 // Środa 2026-10-07, południe.
 const TODAY = new Date(2026, 9, 7, 12, 0);
@@ -55,7 +56,7 @@ describe("licznik urlopu", () => {
   });
 
   it("liczy tylko urlop — L4, inne nieobecności i praca nie ubywają z puli", () => {
-    const types = [...DEFAULT_SHIFT_TYPES, { id: "ub", name: "Urlop bezpłatny", short: "UB", color: "#000", start: "08:00", end: "16:00", breakMin: 0, kind: "absence" as const }];
+    const types = [...TEST_SHIFT_TYPES, { id: "ub", name: "Urlop bezpłatny", short: "UB", color: "#000", start: "08:00", end: "16:00", breakMin: 0, kind: "absence" as const }];
     const b = leaveBalance(data({ "2026-10-05": { type: "l4" }, "2026-10-06": { type: "d" }, "2026-10-07": { type: "ub" }, "2026-10-08": U }, { types }), 2026, TODAY);
     expect(b).toMatchObject({ used: 0, planned: 1 });
   });
@@ -81,7 +82,7 @@ describe("licznik urlopu", () => {
   });
 
   it("urlop liczony po jawnym rodzaju także po zmianie nazwy", () => {
-    const types = DEFAULT_SHIFT_TYPES.map((t) => (t.id === "u" ? { ...t, name: "Wolne", absenceKind: "leave" as const } : t));
+    const types = TEST_SHIFT_TYPES.map((t) => (t.id === "u" ? { ...t, name: "Wolne", absenceKind: "leave" as const } : t));
     expect(leaveBalance(data({ "2026-10-05": U }, { types }), 2026, TODAY).used).toBe(1);
   });
 });

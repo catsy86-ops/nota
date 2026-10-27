@@ -1,13 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, type ShiftData } from "./model";
+import { type ShiftData } from "./model";
 import { timeOffBalance } from "./timeOff";
+import { TEST_SHIFT_TYPES, TEST_EMPTY_SHIFT_DATA } from "./testShiftTypes";
 
-const leave = DEFAULT_SHIFT_TYPES.find((t) => t.kind === "absence" && /urlop/i.test(t.name))!;
+const leave = TEST_SHIFT_TYPES.find((t) => t.kind === "absence" && /urlop/i.test(t.name))!;
 
 // 8 h + 2 h nadgodziny w październiku → 120 min do odbioru.
 const base = (over: Partial<ShiftData>): ShiftData => ({
-  ...EMPTY_SHIFT_DATA,
-  types: DEFAULT_SHIFT_TYPES,
+  ...TEST_EMPTY_SHIFT_DATA,
+  types: TEST_SHIFT_TYPES,
   days: { "2026-10-05": { type: "d", extraMin: 120 } },
   ...over,
 });

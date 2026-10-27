@@ -1,11 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, type ShiftData } from "./model";
+import { type ShiftData } from "./model";
 import { monthSummary } from "./summary";
+import { TEST_SHIFT_TYPES, TEST_EMPTY_SHIFT_DATA } from "./testShiftTypes";
 
 // Stawka 33,33 zł daje ułamki groszy przy każdej pozycji — akurat tu wychodzą rozjazdy zaokrągleń.
 const data: ShiftData = {
-  ...EMPTY_SHIFT_DATA,
-  types: DEFAULT_SHIFT_TYPES,
+  ...TEST_EMPTY_SHIFT_DATA,
+  types: TEST_SHIFT_TYPES,
   hourlyRate: 33.33,
   days: {
     "2026-10-05": { type: "d", extraMin: 120 },

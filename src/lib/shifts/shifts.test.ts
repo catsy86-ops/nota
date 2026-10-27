@@ -1,12 +1,14 @@
 import { describe, it, expect } from "vitest";
 import {
-  DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, applyPattern, currentAndNextShift, daysUntilMonthEnd, easterSunday,
+  applyPattern, currentAndNextShift, daysUntilMonthEnd, easterSunday,
   entryMinutes, formatDuration, formatHoursShort, holidayName, migrate, monthSummary, nightMinutes, parseHm,
   shiftMinutes, workNormMinutes, breakOffset, buildShiftsIcs, shortRests, settlementPeriod, isNormDay, cancelledShiftDays, exportedAfter, exportableShiftDays, SHIFT_COLORS, shiftInk, contrastRatio, dstShiftMinutes, entryMinutesOn, icsScope, recentlyEndedShift, restoreShifts, setDayShift, shiftStore, type ShiftData,
 } from "./index";
+import { TEST_SHIFT_TYPES, TEST_EMPTY_SHIFT_DATA } from "./testShiftTypes";
+import { DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES } from "./model";
 
-const [day, afternoon, night, leave] = DEFAULT_SHIFT_TYPES;
-const data = (patch: Partial<ShiftData>): ShiftData => ({ ...EMPTY_SHIFT_DATA, ...patch });
+const [day, afternoon, night, leave] = TEST_SHIFT_TYPES;
+const data = (patch: Partial<ShiftData>): ShiftData => ({ ...TEST_EMPTY_SHIFT_DATA, ...patch });
 
 describe("czas zmian", () => {
   it("parsuje HH:MM i odrzuca śmieci", () => {
@@ -411,7 +413,7 @@ describe("migracja", () => {
     expect(m.version).toBe(2);
     expect(m.days["2026-10-01"]).toEqual({ type: "d" });
     expect(m.hourlyRate).toBe(25);
-    expect(m.patterns.length).toBeGreaterThan(0);
+    expect(m.patterns).toEqual(DEFAULT_PATTERNS);
   });
 
   it("odrzuca śmieci", () => {
@@ -468,7 +470,7 @@ describe("zmiana czasu", () => {
 
   it("zmiana zakończona przed chwilą zostaje do wyjścia z okna łaski (nadgodziny)", () => {
     const d = data({ types: [day], days: { "2026-10-22": { type: day.id } } });
-    // Dzień 06:00–14:00 (zob. DEFAULT_SHIFT_TYPES); 15:00 — godzinę po końcu.
+    // Dzień 06:00–14:00 (zob. TEST_SHIFT_TYPES); 15:00 — godzinę po końcu.
     expect(recentlyEndedShift(d, new Date(2026, 9, 22, 15, 0))?.dayKey).toBe("2026-10-22");
     expect(recentlyEndedShift(d, new Date(2026, 9, 22, 13, 0))).toBeNull();
     expect(recentlyEndedShift(d, new Date(2026, 9, 22, 19, 0))).toBeNull();

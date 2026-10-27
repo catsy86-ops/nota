@@ -332,8 +332,22 @@ export function settlementPeriod(year: number, month: number, months: Settlement
  * 100% w nocy, w niedzielę i święto wolne wg grafiku, w dzień wolny za
  * niedzielę lub święto oraz za przekroczenie normy okresu, 50% za pozostałe nadgodziny dobowe.
  */
+/**
+ * Nadgodziny dobowe raz na obiekt danych (G3.1): rok to 12 wywołań `monthSummary`
+ * (`leave`, `absenceEstimate`, `timeOff`). Dane traktujemy jako niezmienne — zmiana to nowy obiekt.
+ */
+const overtimeCache = new WeakMap<ShiftData, OvertimeSpan[]>();
+function overtimeSpansOf(data: ShiftData): OvertimeSpan[] {
+  let spans = overtimeCache.get(data);
+  if (!spans) {
+    spans = dailyOvertimeSpans(data);
+    overtimeCache.set(data, spans);
+  }
+  return spans;
+}
+
 export function monthSummary(data: ShiftData, year: number, month: number): MonthSummary {
-  const otSpans = dailyOvertimeSpans(data);
+  const otSpans = overtimeSpansOf(data);
   const days = premiumRules(data);
   const c = monthCore(data, year, month, otSpans, days);
   const p = settlementPeriod(year, month, data.settlementMonths, data.settlementStart);

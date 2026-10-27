@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { brainPlan } from "./brainTraining";
-import { DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, type ShiftData } from "@/lib/shifts/model";
+import { type ShiftData } from "@/lib/shifts/model";
+import { TEST_SHIFT_TYPES, TEST_EMPTY_SHIFT_DATA } from "@/lib/shifts/testShiftTypes";
 
-const day = DEFAULT_SHIFT_TYPES.find((t) => t.kind !== "absence")!; // 06:00–14:00 wg domyślnych rodzajów
+const day = TEST_SHIFT_TYPES.find((t) => t.kind !== "absence")!; // 06:00–14:00 wg domyślnych rodzajów
 const at = (h: number, m = 0) => new Date(2026, 9, 22, h, m);
-const data = (over: Partial<ShiftData>): ShiftData => ({ ...EMPTY_SHIFT_DATA, types: [day], days: { "2026-10-22": { type: day.id } }, ...over });
+const data = (over: Partial<ShiftData>): ShiftData => ({ ...TEST_EMPTY_SHIFT_DATA, types: [day], days: { "2026-10-22": { type: day.id } }, ...over });
 
 describe("brainPlan — trening mózgu względem zmiany", () => {
   it("godzinę przed zmianą: rozgrzewka z przypomnieniem 30 min przed startem", () => {

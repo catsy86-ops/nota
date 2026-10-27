@@ -1,10 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { EMPTY_SHIFT_DATA, DEFAULT_SHIFT_TYPES, type ShiftData } from "@/lib/shifts";
+import { type ShiftData } from "@/lib/shifts";
 import { shiftPresets } from "./reminderShiftPresets";
+import { TEST_SHIFT_TYPES, TEST_EMPTY_SHIFT_DATA } from "@/lib/shifts/testShiftTypes";
 
-const [day] = DEFAULT_SHIFT_TYPES;
+const [day] = TEST_SHIFT_TYPES;
 // Typ `day` to 06:00–14:00 (domyślny typ grafiku), w dniach 2026-10-27 i 2026-10-28.
-const data = (days: Record<string, { type: string }>): ShiftData => ({ ...EMPTY_SHIFT_DATA, days });
+const data = (days: Record<string, { type: string }>): ShiftData => ({ ...TEST_EMPTY_SHIFT_DATA, days });
 
 describe("terminy względem grafiku (T-2)", () => {
   it("po dzisiejszej zmianie i 30 min przed jutrzejszą, gdy oba dni mają zmianę", () => {
@@ -21,7 +22,7 @@ describe("terminy względem grafiku (T-2)", () => {
   it("bez dzisiejszej zmiany pomija „po dzisiejszej”, a bez grafiku nie zwraca nic", () => {
     const d = data({ "2026-10-28": { type: day.id } });
     expect(shiftPresets(d, new Date(2026, 9, 27, 9, 0)).map((p) => p.label)).toEqual(["30 min przed jutrzejszą zmianą"]);
-    expect(shiftPresets(EMPTY_SHIFT_DATA, new Date(2026, 9, 27, 9, 0))).toEqual([]);
+    expect(shiftPresets(TEST_EMPTY_SHIFT_DATA, new Date(2026, 9, 27, 9, 0))).toEqual([]);
   });
 
   it("po zakończeniu dzisiejszej zmiany nie proponuje już jej końca", () => {

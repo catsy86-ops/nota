@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, type ShiftData } from "./model";
+import { type ShiftData } from "./model";
 import { weeklyRestShort } from "./summary";
+import { TEST_SHIFT_TYPES, TEST_EMPTY_SHIFT_DATA } from "./testShiftTypes";
 
-const withDays = (days: Record<string, { type: string; extraMin?: number }>): ShiftData => ({ ...EMPTY_SHIFT_DATA, types: DEFAULT_SHIFT_TYPES, days });
+const withDays = (days: Record<string, { type: string; extraMin?: number }>): ShiftData => ({ ...TEST_EMPTY_SHIFT_DATA, types: TEST_SHIFT_TYPES, days });
 
 // Zmiana „d” to 6:00–14:00 (8 h).
 describe("odpoczynek tygodniowy 35 h (art. 133 KP)", () => {

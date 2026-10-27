@@ -1,12 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, type ShiftData } from "./model";
+import { type ShiftData } from "./model";
 import { formatMinutesHM, monthImageLayout } from "./monthImage";
+import { TEST_SHIFT_TYPES, TEST_EMPTY_SHIFT_DATA } from "./testShiftTypes";
 
 // Październik 2026 zaczyna się w czwartek (poniedziałek pierwszy → 3 puste komórki na początku).
 const OCT = 9;
 const data: ShiftData = {
-  ...EMPTY_SHIFT_DATA,
-  types: DEFAULT_SHIFT_TYPES,
+  ...TEST_EMPTY_SHIFT_DATA,
+  types: TEST_SHIFT_TYPES,
   days: { "2026-10-05": { type: "d" }, "2026-10-06": { type: "u" } },
 };
 
@@ -29,7 +30,7 @@ describe("monthImageLayout", () => {
   it("dzień z rodzajem zmiany dostaje skrót i kolor tego rodzaju", () => {
     const l = monthImageLayout(data, 2026, OCT);
     const cell = l.weeks.flat().find((c) => c.day === 5);
-    expect(cell).toEqual({ day: 5, label: "D", color: DEFAULT_SHIFT_TYPES[0].color });
+    expect(cell).toEqual({ day: 5, label: "D", color: TEST_SHIFT_TYPES[0].color });
     expect(l.weeks.flat().find((c) => c.day === 6)?.label).toBe("U");
   });
 

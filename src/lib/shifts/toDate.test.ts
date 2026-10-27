@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, type ShiftData } from "./model";
+import { type ShiftData } from "./model";
 import { monthSummary, monthSummaryToDate } from "./summary";
+import { TEST_SHIFT_TYPES, TEST_EMPTY_SHIFT_DATA } from "./testShiftTypes";
 
 const data: ShiftData = {
-  ...EMPTY_SHIFT_DATA,
-  types: DEFAULT_SHIFT_TYPES,
+  ...TEST_EMPTY_SHIFT_DATA,
+  types: TEST_SHIFT_TYPES,
   hourlyRate: 30,
   days: {
     "2026-10-05": { type: "d" },

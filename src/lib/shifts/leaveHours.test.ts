@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_SHIFT_TYPES, EMPTY_SHIFT_DATA, type ShiftData } from "./model";
+import { type ShiftData } from "./model";
 import { leaveBalance } from "./leave";
 import { createYShifts } from "./yShifts";
 import * as Y from "yjs";
+import { TEST_SHIFT_TYPES, TEST_EMPTY_SHIFT_DATA } from "./testShiftTypes";
 
-const base = (over: Partial<ShiftData>): ShiftData => ({ ...EMPTY_SHIFT_DATA, types: DEFAULT_SHIFT_TYPES, leaveDays: 20, ...over });
+const base = (over: Partial<ShiftData>): ShiftData => ({ ...TEST_EMPTY_SHIFT_DATA, types: TEST_SHIFT_TYPES, leaveDays: 20, ...over });
 const today = new Date(2026, 9, 25);
-const leaveType = DEFAULT_SHIFT_TYPES.find((t) => t.kind === "absence" && /urlop/i.test(t.name))!;
+const leaveType = TEST_SHIFT_TYPES.find((t) => t.kind === "absence" && /urlop/i.test(t.name))!;
 
 describe("urlop w godzinach (3.3, art. 154² KP)", () => {
   it("system podstawowy nie ma licznika w godzinach", () => {
@@ -15,8 +16,8 @@ describe("urlop w godzinach (3.3, art. 154² KP)", () => {
 
   it("system równoważny: dzień urlopu zjada godziny zmiany, którą zastąpił", () => {
     // 12-godzinna zmiana zamieniona na urlop: zapis przy przypisaniu urlopu.
-    const long = { ...DEFAULT_SHIFT_TYPES[0], id: "long", name: "Długa", start: "06:00", end: "18:00" };
-    const data = base({ workSystem: "equivalent", types: [...DEFAULT_SHIFT_TYPES, long], days: { "2026-10-06": { type: "long" } } });
+    const long = { ...TEST_SHIFT_TYPES[0], id: "long", name: "Długa", start: "06:00", end: "18:00" };
+    const data = base({ workSystem: "equivalent", types: [...TEST_SHIFT_TYPES, long], days: { "2026-10-06": { type: "long" } } });
     const ready = createYShifts(new Y.Doc());
     ready.replaceAll(data);
     ready.setDayShift("2026-10-06", leaveType.id);

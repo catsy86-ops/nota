@@ -209,24 +209,15 @@ export const SHIFT_COLOR_NAMES: Record<(typeof SHIFT_COLORS)[number], string> = 
 };
 
 export const DEFAULT_SHIFT_TYPES: ShiftType[] = [
-  { id: "d", name: "Dzień", short: "D", color: "#fb923c", start: "06:00", end: "14:00", breakMin: 0, kind: "work" },
-  { id: "p", name: "Popołudnie", short: "P", color: "#3b82f6", start: "14:00", end: "22:00", breakMin: 0, kind: "work" },
-  { id: "n", name: "Noc", short: "N", color: "#4f46e5", start: "22:00", end: "06:00", breakMin: 0, kind: "work" },
   { id: "u", name: "Urlop", short: "U", color: "#10b981", start: "08:00", end: "16:00", breakMin: 0, kind: "absence" },
   { id: "l4", name: "L4", short: "L4", color: "#64748b", start: "08:00", end: "16:00", breakMin: 0, kind: "absence" },
-  // Na końcu: testy i stare dane zakładają kolejność czterech pierwszych.
-  { id: "b", name: "Budowa", short: "B", color: "#14b8a6", start: "07:00", end: "17:00", breakMin: 0, kind: "work" },
+  // Dwie zmiany startowe: 8 h (8–16) i 10 h (7–17). Pozostałe dodaje się ręcznie.
   { id: "e", name: "Dniówka", short: "8", color: "#ec4899", start: "08:00", end: "16:00", breakMin: 0, kind: "work" },
+  { id: "b", name: "Budowa", short: "B", color: "#14b8a6", start: "07:00", end: "17:00", breakMin: 0, kind: "work" },
 ];
 
-export const DEFAULT_PATTERNS: ShiftPattern[] = [
-  { id: "4b", name: "Czterobrygadowy (2D 2N 4W)", steps: ["d", "d", "n", "n", null, null, null, null] },
-  { id: "3z", name: "Trzyzmianowy tydzień po tygodniu", steps: [
-    "d", "d", "d", "d", "d", null, null,
-    "p", "p", "p", "p", "p", null, null,
-    "n", "n", "n", "n", "n", null, null,
-  ] },
-];
+// Patterny startowe stały na zmianach 6–14, 14–22 i nocnej, które usunięto z domyślnych.
+export const DEFAULT_PATTERNS: ShiftPattern[] = [];
 
 export const EMPTY_SHIFT_DATA: ShiftData = {
   version: 2,
