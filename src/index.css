@@ -1368,3 +1368,17 @@ html[data-hidden] *::after {
 @media (max-width: 767px) {
   html:has([data-sticky-action]) .save-status { bottom: calc(9.5rem + env(safe-area-inset-bottom)); }
 }
+
+/* Kierunek przejścia między działami (plan 2.2): `setView` w Index ustawia `data-vt-dir`. */
+@keyframes vt-out-left { to { transform: translateX(-24px); opacity: 0; } }
+@keyframes vt-in-right { from { transform: translateX(24px); opacity: 0; } }
+@keyframes vt-out-right { to { transform: translateX(24px); opacity: 0; } }
+@keyframes vt-in-left { from { transform: translateX(-24px); opacity: 0; } }
+html[data-vt-dir="fwd"]::view-transition-old(root) { animation: vt-out-left 0.22s var(--ease-out) both; }
+html[data-vt-dir="fwd"]::view-transition-new(root) { animation: vt-in-right 0.22s var(--ease-out) both; }
+html[data-vt-dir="back"]::view-transition-old(root) { animation: vt-out-right 0.22s var(--ease-out) both; }
+html[data-vt-dir="back"]::view-transition-new(root) { animation: vt-in-left 0.22s var(--ease-out) both; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-vt-dir]::view-transition-old(root),
+  html[data-vt-dir]::view-transition-new(root) { animation: none; }
+}

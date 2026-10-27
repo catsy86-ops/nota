@@ -98,6 +98,9 @@ import { loadCalendarView, loadShiftsView, loadStudyView } from "@/lib/viewPrelo
 import { requestSettingsTab, settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
 import type { DebtReminderApi } from "@/components/debts/DebtsView";
 import { repeatUpdate, toRule } from "@/lib/reminderRepeat";
+// Kolejność działów (jak w pasku bocznym) — od niej zależy kierunek przejścia między widokami.
+const VIEW_ORDER: View[] = ["notes", "today", "week", "reminders", "calendar", "shifts", "study", "debts", "cwiczenia", "archive", "trash", "inbox", "label", "folder", "widget"];
+
 const ShortcutsDialog = lazy(() => import("@/components/ShortcutsDialog").then((m) => ({ default: m.ShortcutsDialog })));
 const PropDefsDialog = lazy(() => import("@/components/PropDefsDialog").then((m) => ({ default: m.PropDefsDialog })));
 const TodayDueList = lazy(() => import("@/components/review/TodayDueList").then((m) => ({ default: m.TodayDueList })));
@@ -155,13 +158,17 @@ const Index = () => {
   const { view, label: activeLabel, folder: activeFolder, go, replaceWith } = route;
   // Zmiana widoku przenika się ze starym (View Transitions); bez wsparcia albo przy ograniczonym ruchu — od razu.
   const setView = useCallback((v: View) => {
-    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => { finished: Promise<void> } };
     if (typeof doc.startViewTransition === "function" && !isMotionReduced()) {
-      doc.startViewTransition(() => flushSync(() => go(v)));
+      // Kierunek przesunięcia (plan 2.2): w prawo do działów dalej w kolejności, w lewo do wcześniejszych.
+      const dir = VIEW_ORDER.indexOf(v) >= VIEW_ORDER.indexOf(view) ? "fwd" : "back";
+      document.documentElement.dataset.vtDir = dir;
+      const t = doc.startViewTransition(() => flushSync(() => go(v)));
+      void t.finished.finally(() => { delete document.documentElement.dataset.vtDir; });
     } else {
       go(v);
     }
-  }, [go]);
+  }, [go, view]);
   // Tabliczka rysunkowa w tle zmienia napis według widoku (CSS: `html[data-view]`).
   // Zmiana widoku odpala sygnał stylu (Zeszyt przewraca kartkę, Matryca spływa kaskadą); pierwsze wejście bez sygnału.
   const firstViewRef = useRef(true);
