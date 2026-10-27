@@ -68,6 +68,16 @@ describe("kontrast tokenów wszystkich stylów (WCAG AA)", () => {
       for (const surface of ["background", "card"]) {
         expect(contrast(rgb(t, "input"), rgb(t, surface)), `input na ${surface}`).toBeGreaterThanOrEqual(3);
       }
+      // Ikony działów w nawigacji (D-4): wariant „ink” (kolor zmieszany z czernią, jak `--sec-*` w index.css).
+      // Grafika, więc 3:1 (1.4.11), nie 4.5:1.
+      // Jak `--sec-*` w index.css: jasne tło — przyciemnione o 50% czerni, ciemne — czysty kolor motywu.
+      const sectionInk = (token: string): [number, number, number] =>
+        (scheme === "dark" ? rgb(t, token) : rgb(t, token).map((c) => c * 0.5)) as [number, number, number];
+      for (const token of ["primary", "accent", "warning", "success"]) {
+        for (const surface of ["background", "card"]) {
+          expect(contrast(sectionInk(token), rgb(t, surface)), `ikona ${token} na ${surface}`).toBeGreaterThanOrEqual(3);
+        }
+      }
       // `warning-ink` = warning zmieszany z czernią w proporcji z tailwind.config.ts (warning-ink-mix, a dalej ink-mix).
       const inkMix = (t["warning-ink-mix"] ?? t["ink-mix"] ?? 62) as number;
       const warningBase = (t["warning-ink-base"] ? rgb(t, "warning-ink-base") : rgb(t, "warning"));

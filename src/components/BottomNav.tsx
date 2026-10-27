@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { InstallAppButton } from "@/components/InstallAppButton";
 import { ImportExportMenu } from "@/components/ImportExportMenu";
 import { cn } from "@/lib/utils";
+import { sectionIconClass } from "@/lib/sections";
 import { spring } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { useSavedFilters, sameQuery } from "@/lib/savedFilters";
@@ -104,7 +105,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
           <ul className="relative grid grid-cols-5 items-end h-[64px] max-w-md mx-auto px-2">
             {slots.map(({ key, label, Icon }) => (
               <NavItem key={key} active={view === key} label={label} onClick={() => (key === "notes" && view === "notes" ? focusSearch() : onGo(key))}>
-                <Icon className="w-5 h-5" />
+                <Icon className={cn("w-5 h-5", sectionIconClass(key))} />
               </NavItem>
             ))}
 

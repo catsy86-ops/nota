@@ -6,6 +6,7 @@ import {
   Settings as SettingsIcon, CircleQuestionMark, Tag, Moon, Sun, FolderOpen, Command, RotateCcwClock, Trophy, Brain, BrainCircuit, ExternalLink, Ellipsis, ChevronDown, Funnel, Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { sectionIconClass } from "@/lib/sections";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { buildLabelRows } from "@/lib/labelTree";
 import { SidebarLabelItem } from "@/components/sidebar/SidebarLabelItem";
@@ -48,7 +49,7 @@ function NavRow({ item, active, onClick }: { item: SidebarItem; active: boolean;
     <div data-folder-drop-root={droppableId ? "" : undefined}>
       <SidebarRow
         ref={droppableId ? setNodeRef : undefined}
-        icon={<item.icon className="w-[18px] h-[18px]" />}
+        icon={<item.icon className={cn("w-[18px] h-[18px]", sectionIconClass(item.view))} />}
         label={item.label}
         active={active}
         dropActive={isOver}

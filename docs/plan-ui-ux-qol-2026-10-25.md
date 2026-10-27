@@ -156,3 +156,11 @@ Odrzucone: CSS Anchor Positioning i Popover API. Radix już pozycjonuje i obsłu
 - **Sprawdzone na sucho:** konwersja tokenów (`docs/tools/d1-oklch/oklch-convert.cjs`): 296 definicji, 41 nazw, odchylenie w przeliczeniu w obie strony 0,000. Konsumenci (`docs/tools/d1-oklch/oklch-consumers.cjs`, tryb sucho): 21 plików, 80 odwołań z przezroczystością, 140 zwykłych.
 - **Decyzja techniczna:** przezroczystość przez `color-mix(in srgb, …)`, nie `in oklab`, żeby mieszanie wypadało tak samo jak dziś (zmiana wizualna ma być zerowa na etapie konwersji). Przestrzeń `oklab` i ponowne dostrojenie jasności to osobny krok, po przeglądzie wizualnym.
 - **Jeszcze nie zrobione:** uruchomienie `--apply` obu skryptów, przebudowa, test wizualny (oczekiwane: brak różnic), pełny e2e, commit. Stan drzewa jest czysty; skrypty nie zmieniają kodu bez `--apply`.
+
+## D-4 — zrobione (2026-10-27)
+
+- **Decyzja:** odcienie działów z palety motywu, nie wpisane na sztywno. Notatki → `--primary`, Grafik → `--accent`, Praca → `--warning` (najbliżej miedzi), Kalendarz → `--success`. Odstępstwo od planu: plan mówił o pochodnej `--accent`, ale wtedy wszystkie działy wyszłyby z jednego odcienia.
+- **Zrobione (5.1, część):** ikony działów w pasku bocznym i dolnym pasku (`src/lib/sections.ts`, `--sec-*` w `src/index.css`).
+- **Kontrast:** ikony to grafika, więc 3:1 (1.4.11). Na jasnym tle kolor przyciemniony o 50% czerni; na ciemnym czysty kolor motywu. Test: `src/lib/skinContrast.test.ts`, wszystkie motywy.
+- **Pozostałe z 5.1:** pasek nagłówka i puste stany nie są zrobione.
+- **Testy wizualne:** nie wykrywają tej zmiany (próg 1% pikseli, cztery małe ikony), więc zrzuty bazowe nie zostały zaktualizowane. Zmianę sprawdzono w przeglądarce.

@@ -293,6 +293,14 @@ html[data-skin="zeszyt"] .app-header {
 
 @layer base {
   :root {
+    /* D-4 (plan 5.1): odcienie działów z palety motywu, nie wpisane na sztywno. */
+    /* Jasne tło: kolor przyciemniony o 50% czerni (ikony ≥3:1, 1.4.11; motyw Miedź rozjaśnia tekst, więc nie
+       bierzemy jego `--ink-mix`). Ciemny motyw: czysty kolor, patrz `.dark` niżej. Sprawdza `skinContrast.test.ts`. */
+    --sec-notes: color-mix(in srgb, var(--primary) 50%, black);
+    --sec-shifts: color-mix(in srgb, var(--accent) 50%, black);
+    --sec-study: color-mix(in srgb, var(--warning) 50%, black);
+    --sec-calendar: color-mix(in srgb, var(--success) 50%, black);
+
     /* Kierunek „zeszyt w kratkę przy barze”: papier, kratka, bursztyn piwa,
        niebieski długopis i czerwony margines (święta, usuwanie). */
     --background: oklch(0.9863 0.0059 95.10);
@@ -394,6 +402,11 @@ html[data-skin="zeszyt"] .app-header {
   }
 
   .dark {
+    /* D-4: na ciemnym tle ikony działów są jasne, czyste kolory motywu (bez przyciemnienia). */
+    --sec-notes: var(--primary);
+    --sec-shifts: var(--accent);
+    --sec-study: var(--warning);
+    --sec-calendar: var(--success);
     /* Natywne listy wyboru, kalendarze i paski przewijania też w ciemnym motywie. */
     color-scheme: dark;
     /* Ciepła ciemność (porter) zamiast niebieskoszarej — pasuje do bursztynu marki. */
@@ -460,6 +473,12 @@ html[data-skin="zeszyt"] .app-header {
 }
 
 @layer utilities {
+  /* Ikona działu w nawigacji (`sectionIconClass` w src/lib/sections.ts). */
+  .sec-notes { color: var(--sec-notes); }
+  .sec-shifts { color: var(--sec-shifts); }
+  .sec-study { color: var(--sec-study); }
+  .sec-calendar { color: var(--sec-calendar); }
+
   /* Bez „gumki” i systemowego pull-to-refresh przy przewijaniu listy na telefonie. */
   html,
   body {
