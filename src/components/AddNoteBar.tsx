@@ -705,7 +705,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                       ))}
                     </div>
                     <div className="flex gap-1.5">
-                      <input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleCreateLabel()}
+                      <input enterKeyHint="done" autoComplete="off" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleCreateLabel()}
                         placeholder="Nowa etykieta..." className="flex-1 text-xs max-sm:text-base bg-muted/60 border border-border rounded-field px-2.5 py-1.5 outline-hidden focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground" />
                       <IconButton size="sm" tone="primary" onClick={handleCreateLabel} aria-label="Dodaj etykietę">
                         <Plus className="w-3.5 h-3.5" />

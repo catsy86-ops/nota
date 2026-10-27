@@ -69,7 +69,7 @@ export function FindReplaceBar({ value, onChange, textareaRef, onClose }: FindRe
   return (
     <div role="search" aria-label="Znajdź i zamień w notatce" className="flex flex-wrap items-center gap-1.5 rounded-field border border-border/60 bg-card/60 p-1.5"
       onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); onClose(); textareaRef.current?.focus(); } }}>
-      <input ref={findRef} value={query} onChange={(e) => { setQuery(e.target.value); setCurrent(0); }}
+      <input enterKeyHint="search" autoComplete="off" ref={findRef} value={query} onChange={(e) => { setQuery(e.target.value); setCurrent(0); }}
         onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); go(e.shiftKey ? -1 : 1); } }}
         placeholder="Znajdź" aria-label="Znajdź" className={FIELD} />
       <span aria-live="polite" className="text-xs text-muted-foreground tabular-nums min-w-14 text-center">

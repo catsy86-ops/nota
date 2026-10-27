@@ -109,7 +109,7 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
           focused ? "text-primary-ink" : "text-muted-foreground"
         )}
       />
-      <input
+      <input autoComplete="off"
         type="search"
         value={value}
         onChange={(e) => typeValue(e.target.value)}
@@ -200,7 +200,7 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
           <label className="block text-2xs font-semibold uppercase tracking-wider text-muted-foreground" htmlFor={`${listId}-name`}>
             Nazwa filtra
           </label>
-          <input
+          <input enterKeyHint="search" autoComplete="off"
             id={`${listId}-name`}
             ref={nameRef}
             value={name}
