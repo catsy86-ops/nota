@@ -2,6 +2,7 @@ import { useEffect, useState, lazy, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { readViewMemory, writeViewMemory } from "@/lib/viewMemory";
 import { Settings, LayoutGrid, Pencil, Database, Wifi } from "lucide-react";
 import { AppearanceSettings } from "@/components/settings/AppearanceSettings";
 import { GeneralSettings } from "@/components/settings/GeneralSettings";
@@ -18,9 +19,16 @@ interface SettingsDialogProps {
   onOpenChange: (v: boolean) => void;
 }
 
+const SETTINGS_TABS = ["appearance", "general", "backup", "sync"] as const;
+
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<string>(() => consumeRequestedSettingsTab() ?? "appearance");
+  // Plan 3.6: otwiera się na ostatniej zakładce wybranej przez użytkownika (link z parametrem ma pierwszeństwo).
+  const [activeTab, setActiveTab] = useState<string>(() => consumeRequestedSettingsTab() ?? readViewMemory("settingsTab", SETTINGS_TABS, "appearance"));
+  const chooseTab = (tab: string) => {
+    setActiveTab(tab);
+    writeViewMemory("settingsTab", tab);
+  };
   const [joinPrefill, setJoinPrefill] = useState("");
 
   // Link ?settings=<karta> otwiera Ustawienia na tej karcie (faza 3c); parametr znika z adresu.
@@ -61,7 +69,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           <DialogDescription>Zmiany zapisują się od razu w tej przeglądarce. Sync i kopia przenoszą dane na inne urządzenia.</DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
+        <Tabs value={activeTab} onValueChange={chooseTab} className="flex-1 flex flex-col min-h-0">
           {/* Na telefonie same nazwy (ikona bez podpisu nie mówi, co jest w zakładce). */}
           <TabsList className="grid grid-cols-4 w-full h-auto">
             <TabsTrigger value="appearance" className="gap-1.5 max-sm:text-xs"><LayoutGrid className="hidden sm:block w-3.5 h-3.5" aria-hidden /><span>Wygląd</span></TabsTrigger>
