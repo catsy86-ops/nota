@@ -36,3 +36,19 @@ export function isLazyView(view: View): view is LazyView {
 export function preloadView(view: View): void {
   if (isLazyView(view)) load(view).catch(() => {});
 }
+
+/**
+ * Po starcie, gdy przeglądarka ma wolną chwilę, pobiera paczki wszystkich leniwych działów
+ * (plan UI/UX 4.1): klik w dział nie czeka na sieć. Paczki startowej to nie zmienia.
+ * Przy trybie oszczędzania danych (`saveData`) nic nie pobiera — zostaje ładowanie na najechanie.
+ */
+export function prefetchViewsWhenIdle(): void {
+  if (typeof window === "undefined") return;
+  const saveData = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData === true;
+  if (saveData) return;
+  const run = () => {
+    (Object.keys(loaders) as LazyView[]).forEach((view) => preloadView(view));
+  };
+  if (typeof window.requestIdleCallback === "function") window.requestIdleCallback(run, { timeout: 5000 });
+  else window.setTimeout(run, 2000);
+}

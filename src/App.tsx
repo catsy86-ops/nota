@@ -8,6 +8,7 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { OfflineStatus } from "./components/OfflineStatus";
 import { useMotionPref } from "./hooks/useMotionPref";
 import { useEffect } from "react";
+import { prefetchViewsWhenIdle } from "./lib/viewPreload";
 import { applySeasonAttr, useSeasonPref } from "./lib/seasonTheme";
 import { useEffectsSettings } from "./lib/effectsSettings";
 import { startScrollParallax } from "./lib/scrollParallax";
@@ -33,6 +34,8 @@ const App = () => {
   // Zorza: paralaksa wstęg przy przewijaniu; Neon: rozbłysk nagłówka przy pierwszym uruchomieniu dnia.
   useEffect(() => startScrollParallax(), []);
   useEffect(() => { pulseDawnIfNewDay(); }, []);
+  // Leniwe działy pobierają się w wolnej chwili po starcie (4.1), nie w czasie pierwszego malowania.
+  useEffect(() => { prefetchViewsWhenIdle(); }, []);
 
   // "system" lets framer-motion follow the OS setting; "reduced"/"full" force it.
   const reducedMotion = mode === "system" ? "user" : mode === "reduced" ? "always" : "never";

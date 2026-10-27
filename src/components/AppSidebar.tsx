@@ -56,7 +56,7 @@ function NavRow({ item, active, onClick }: { item: SidebarItem; active: boolean;
         dropActive={isOver}
         onClick={onClick}
         // Paczka widoku (Kalendarz, Grafik, Nauka) zaczyna się pobierać przy najechaniu / dotknięciu, przed kliknięciem.
-        buttonProps={{ onPointerEnter: () => preloadView(item.view), onPointerDown: () => preloadView(item.view) }}
+        buttonProps={{ onPointerEnter: () => preloadView(item.view), onPointerDown: () => preloadView(item.view), onFocus: () => preloadView(item.view) }}
         trailing={item.count !== undefined && item.count > 0 ? <SidebarCount value={item.count} active={active} alert={item.alert} /> : undefined}
       />
     </div>

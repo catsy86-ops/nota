@@ -2968,3 +2968,30 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 ### Testy
 - `e2e/system-preferences.spec.ts` (chromium): wysoki kontrast zmienia `--border` i `--muted-foreground`; wymuszone kolory dają fokusowi obrys `solid 2px`.
 - Commit: `b1c8672` (2026-10-27).
+
+## Wspólne — wczesne ładowanie działów (plan UI/UX 4.1, 2026-10-27)
+
+### Co robi
+- Leniwe działy (Kalendarz, Grafik, Praca) zaczynają się pobierać, zanim klikniesz: na najechanie, na wciśnięcie i — nowość — na fokus klawiatury (Tab). Po starcie, gdy przeglądarka ma wolną chwilę, pobierane są wszystkie trzy. Przy trybie oszczędzania danych nic nie pobiera z wyprzedzeniem.
+
+### Gdzie jest
+- `src/lib/viewPreload.ts` — `preloadView` (już było) i nowe `prefetchViewsWhenIdle` (`requestIdleCallback` z limitem 5 s, awaryjnie `setTimeout` 2 s; `navigator.connection.saveData` wyłącza).
+- `src/App.tsx` — wywołanie `prefetchViewsWhenIdle` w efekcie przy starcie.
+- `src/components/AppSidebar.tsx` — `onFocus` obok `onPointerEnter`/`onPointerDown`.
+- `src/components/BottomNav.tsx` — `onFocus` w trzech kafelkach szuflady „Więcej” (Kalendarz, Grafik, Praca).
+
+### Jak działa i dlaczego
+- Paczki są zapamiętywane w `started` (jedna obietnica na widok), więc wielokrotne wywołanie nie pobiera drugi raz, a przyspieszone ładowanie nie dubluje pracy z `lazy()` w `Index.tsx`.
+- Startowa paczka JS się nie zmienia (`e2e/bundle.spec.ts` „wejściowy JS” przechodzi). Wstępne pobieranie idzie po starcie, w wolnej chwili.
+
+### Ograniczenia i pułapki
+- Trzy paczki dociągają się w tle także na komórce, jeśli nie ma `saveData`. Zgodne z planem, ale to dodatkowy transfer.
+- Nie ma testu jednostkowego ścieżki `saveData` ani `requestIdleCallback` (wymagałyby mockowania dynamicznych importów). Sprawdzone typecheckiem i lintem.
+
+### Testy
+- `e2e/mobile.spec.ts` (Pixel 7, 15/15) i `@smoke` na chromium (25/27): dwie nieprzechodzące (`bundle.spec` „precache” i `tabs.spec` „notatka i grafik”) nie są skutkiem tych zmian. Oba padają już na commicie `3e89563`, sprzed sesji.
+
+## Wspólne — czcionki bez skoku układu (plan UI/UX 4.2, część)
+
+- Ustalone: każdy krój z `@fontsource` ma `@font-face` z zakresami znaków, więc przeglądarka pobiera tylko pliki używanych znaków; nieaktywne kroje nie są referencjonowane w CSS poza `html[data-font]`.
+- **Nie zrobione:** korekta fallbacku (`size-adjust`, `ascent-override`) dla podmiany fontu (CLS). Wymaga odczytu metryk z plików WOFF2 (brak narzędzia w środowisku); do zrobienia z pomiarem w przeglądarce.
