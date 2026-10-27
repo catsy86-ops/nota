@@ -42,10 +42,12 @@ import type { Note } from "@/hooks/useNotes";
 interface ReminderCalendarViewProps {
   /** Notatki z terminami — bez kosza, tak samo jak karmione są powiadomienia. */
   notes: Note[];
-  onCreateNote: (title: string, reminder: number, repeat: RepeatInput, allDay: boolean) => void;
+  /** `until` — koniec serii, `undefined` = bez końca. */
+  onCreateNote: (title: string, reminder: number, repeat: RepeatInput, allDay: boolean, until?: number) => void;
   /** `reminderDay` podany = przesunięcie w obrębie serii (bez zmiany jej dnia); brak = nowy termin. */
-  /** `reminderBase` — termin serii przy odłożonym wystąpieniu (`undefined` = zwykły termin, czyści odłożenie). */
-  onSetReminder: (noteId: string, reminder: number | null, repeat: RepeatInput, reminderDay?: number, reminderBase?: number, reminderAllDay?: boolean) => void;
+  /** `reminderBase` — termin serii przy odłożonym wystąpieniu (`undefined` = zwykły termin, czyści odłożenie).
+   *  `until` — koniec serii; każde wywołanie podaje go jawnie (ruch, pominięcie, cofnięcie zachowują stary), bo `undefined` czyści. */
+  onSetReminder: (noteId: string, reminder: number | null, repeat: RepeatInput, reminderDay?: number, reminderBase?: number, reminderAllDay?: boolean, until?: number) => void;
 }
 
 function monthBounds(month: Date) {
@@ -129,7 +131,8 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
   }
 
   function openEdit(occ: Occurrence) {
-    setEditTarget({ noteId: occ.noteId, at: occ.at, repeat: occ.repeat, isSeries: occ.isSeries, allDay: occ.allDay, base: notes.find((n) => n.id === occ.noteId)?.reminderBase });
+    const note = notes.find((n) => n.id === occ.noteId);
+    setEditTarget({ noteId: occ.noteId, at: occ.at, repeat: occ.repeat, isSeries: occ.isSeries, allDay: occ.allDay, base: note?.reminderBase, until: note?.reminderRepeatUntil });
     setDialogDay(new Date(occ.at));
   }
 
@@ -154,10 +157,10 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-day-key="${dayKey(day)}"]`)?.focus());
   }
 
-  function handleAttach(noteId: string, reminder: number, repeat: RepeatInput, allDay: boolean, base?: number) {
+  function handleAttach(noteId: string, reminder: number, repeat: RepeatInput, allDay: boolean, base?: number, until?: number) {
     const before = previousOf(noteId);
-    onSetReminder(noteId, reminder, repeat, undefined, base, allDay);
-    toastWithUndo("Termin zapisany", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay), { icon: "🔔" });
+    onSetReminder(noteId, reminder, repeat, undefined, base, allDay, until);
+    toastWithUndo("Termin zapisany", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay, before.until), { icon: "🔔" });
   }
 
   /**
@@ -171,10 +174,10 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     // Odłożone wystąpienie: kolejny termin liczy się od serii (`nextOccurrence`), nie od odłożonej chwili.
     const next = note ? nextOccurrence(note, at) : nextInSeries(at, repeat, before.day, before.until);
     // Pominięcie ostatniego terminu serii kończy ją — nie ma już czego przypominać.
-    if (next === null) onSetReminder(noteId, null, "none");
-    else onSetReminder(noteId, next, repeat, before.day, undefined, before.allDay);
+    if (next === null) onSetReminder(noteId, null, "none", undefined, undefined, undefined, undefined);
+    else onSetReminder(noteId, next, repeat, before.day, undefined, before.allDay, before.until);
     // Ostatni termin serii: pominięcie ją kończy — komunikat mówi to wprost, nie jak zwykłe pominięcie.
-    const undo = () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay);
+    const undo = () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay, before.until);
     if (next === null) toastWithUndo("Seria zakończona", undo, { icon: "🏁", description: "To był ostatni termin serii." });
     else toastWithUndo("Wystąpienie pominięte", undo, { icon: "⏭️" });
     focusDay(new Date(at));
@@ -190,7 +193,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     const source = new Date(note.reminder);
     setMonth(new Date(source.getFullYear(), source.getMonth(), 1));
     setSelectedDay(source);
-    setEditTarget({ noteId: note.id, at: note.reminder, repeat: ruleOf(note), isSeries: true, allDay: note.reminderAllDay === true });
+    setEditTarget({ noteId: note.id, at: note.reminder, repeat: ruleOf(note), isSeries: true, allDay: note.reminderAllDay === true, until: note.reminderRepeatUntil });
     setDialogDay(source);
     toast("To była prognoza serii", {
       description: `Otwarty został najbliższy zapisany termin: ${format(source, "d MMMM, HH:mm", { locale: pl })}.`,
@@ -199,8 +202,8 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
 
   function handleClear(noteId: string) {
     const before = previousOf(noteId);
-    onSetReminder(noteId, null, "none");
-    toastWithUndo("Termin usunięty", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay), { icon: "🔕" });
+    onSetReminder(noteId, null, "none", undefined, undefined, undefined, undefined);
+    toastWithUndo("Termin usunięty", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay, before.until), { icon: "🔕" });
     focusDay(selectedDay);
   }
 
@@ -232,12 +235,12 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     const seriesNext = deferred ? nextInSeries(before.base as number, occ.repeat, before.day, before.until) : null;
     const keepSeries = deferred && (seriesNext === null || to.getTime() < seriesNext);
     markMoved(occ.noteId);
-    onSetReminder(occ.noteId, to.getTime(), occ.repeat, undefined, keepSeries ? before.base : undefined, occ.allDay);
+    onSetReminder(occ.noteId, to.getTime(), occ.repeat, undefined, keepSeries ? before.base : undefined, occ.allDay, before.until);
     setSelectedDay(to);
     if (!isSameMonth(to, month)) setMonth(new Date(to.getFullYear(), to.getMonth(), 1));
     toastWithUndo(
       `Termin przeniesiony na ${format(to, "d MMMM", { locale: pl })}`,
-      () => onSetReminder(occ.noteId, before.reminder, before.repeat, before.day, before.base, before.allDay),
+      () => onSetReminder(occ.noteId, before.reminder, before.repeat, before.day, before.base, before.allDay, before.until),
       { icon: "📅", description: keepSeries ? "Przesunięte tylko to wystąpienie; seria zostaje." : occ.isSeries ? "Cała seria liczy się od nowego terminu." : undefined },
     );
     focusDay(to);

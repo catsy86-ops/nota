@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
-import { Repeat, Trash, StickyNote, Plus, Bell, SkipForward } from "lucide-react";
+import { Repeat, Trash, StickyNote, Plus, Bell, SkipForward, X } from "lucide-react";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { searchNotes } from "@/lib/searchNotes";
 import { parseNaturalDate } from "@/lib/parseNaturalDate";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
-import { composeReminderTimestamp, isPastReminder, toTimeInputValue, formatReminderShort, defaultReminderTimeFor, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
-import { REPEAT_KIND_LABELS, type RepeatInput, type RepeatRule } from "@/lib/reminderRepeat";
+import { composeReminderTimestamp, dayInputValue, isPastReminder, toTimeInputValue, formatReminderShort, defaultReminderTimeFor, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
+import { endOfDay, REPEAT_KIND_LABELS, type RepeatInput, type RepeatRule } from "@/lib/reminderRepeat";
 import { RepeatRuleExtras, RepeatRuleSelect } from "@/components/RepeatRuleFields";
 import type { Note } from "@/hooks/useNotes";
 import { cn } from "@/lib/utils";
@@ -44,6 +44,8 @@ export interface ReminderEditTarget {
   allDay?: boolean;
   /** Termin serii, gdy edytujemy jedno odłożone wystąpienie — zmiana zostaje w tym wystąpieniu, seria nie przesuwa się. */
   base?: number;
+  /** Koniec serii (`reminderRepeatUntil`); `undefined` = bez końca. */
+  until?: number;
 }
 
 interface ReminderQuickAddDialogProps {
@@ -54,8 +56,8 @@ interface ReminderQuickAddDialogProps {
   /** Ustawiony, gdy dialog edytuje istniejący termin zamiast dodawać nowy. */
   edit?: ReminderEditTarget | null;
   notes: Note[];
-  onCreateNote: (title: string, reminder: number, repeat: RepeatInput, allDay: boolean) => void;
-  onAttachReminder: (noteId: string, reminder: number, repeat: RepeatInput, allDay: boolean, base?: number) => void;
+  onCreateNote: (title: string, reminder: number, repeat: RepeatInput, allDay: boolean, until?: number) => void;
+  onAttachReminder: (noteId: string, reminder: number, repeat: RepeatInput, allDay: boolean, base: number | undefined, until?: number) => void;
   onClearReminder: (noteId: string) => void;
   /** Pomija najbliższe wystąpienie serii, przesuwając termin na kolejne. */
   onSkipOccurrence: (noteId: string, at: number, repeat: RepeatRule) => void;
@@ -71,6 +73,8 @@ export function ReminderQuickAddDialog({
   const [repeat, setRepeat] = useState<RepeatRule>(() => edit?.repeat ?? { kind: "none" });
   // Cały dzień: termin stoi na 9:00 i nie pokazuje godziny (2d planu, jak w `ReminderPicker`).
   const [allDay, setAllDay] = useState(() => edit?.allDay === true);
+  // Koniec serii jak w `ReminderPicker`: pusty = bez końca, dzień włącznie.
+  const [untilText, setUntilText] = useState(() => (edit?.until !== undefined ? dayInputValue(edit.until) : ""));
   // Dzień może przesunąć język naturalny („jutro”, „w piątek”) wpisany w pole.
   const [dayOverride, setDayOverride] = useState<Date | null>(null);
   // Ręczna zmiana pola godziny wygrywa z godziną z języka naturalnego („jutro 15:00”) — K0.2.
@@ -119,6 +123,9 @@ export function ReminderQuickAddDialog({
   const effectiveTime = !timeTouched && parsed?.clock ? parsed.clock : time;
   const timestamp = composeReminderTimestamp(effectiveDay, allDay ? DEFAULT_REMINDER_TIME : effectiveTime);
   const past = isPastReminder(timestamp);
+  const [uy, um, ud] = untilText.split("-").map(Number);
+  const until = repeat.kind !== "none" && untilText ? endOfDay(new Date(uy, um - 1, ud)) : undefined;
+  const untilTooEarly = until !== undefined && timestamp !== null && until < timestamp;
 
   const suggestions = useMemo(() => {
     if (isEdit) return [];
@@ -136,6 +143,7 @@ export function ReminderQuickAddDialog({
     setTimeTouched(false);
     setRepeat({ kind: "none" });
     setAllDay(false);
+    setUntilText("");
     setDayOverride(null);
   }
 
@@ -145,23 +153,23 @@ export function ReminderQuickAddDialog({
   }
 
   function handleCreate() {
-    if (timestamp === null || !title) return;
+    if (timestamp === null || !title || untilTooEarly) return;
     requestNotificationPermissionOnIntent();
-    onCreateNote(title, timestamp, repeat, allDay);
+    onCreateNote(title, timestamp, repeat, allDay, until);
     close();
   }
 
   function handleAttach(noteId: string) {
-    if (timestamp === null) return;
+    if (timestamp === null || untilTooEarly) return;
     requestNotificationPermissionOnIntent();
-    onAttachReminder(noteId, timestamp, repeat, allDay);
+    onAttachReminder(noteId, timestamp, repeat, allDay, undefined, until);
     close();
   }
 
   function handleSaveEdit() {
-    if (!edit || timestamp === null) return;
+    if (!edit || timestamp === null || untilTooEarly) return;
     requestNotificationPermissionOnIntent();
-    onAttachReminder(edit.noteId, timestamp, repeat, allDay, edit.base);
+    onAttachReminder(edit.noteId, timestamp, repeat, allDay, edit.base, until);
     close();
   }
 
@@ -184,7 +192,7 @@ export function ReminderQuickAddDialog({
   function handleShortcut(e: React.KeyboardEvent) {
     if (e.key !== "Enter" || !(e.ctrlKey || e.metaKey)) return;
     e.preventDefault();
-    if (timestamp === null) return;
+    if (timestamp === null || untilTooEarly) return;
     if (isEdit) handleSaveEdit();
     else if (title) handleCreate();
   }
@@ -276,6 +284,31 @@ export function ReminderQuickAddDialog({
         </div>
         <RepeatRuleExtras id="quick-add-repeat" value={repeat} onChange={setRepeat} />
 
+        {repeat.kind !== "none" && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <label htmlFor="quick-add-until">Do kiedy:</label>
+            <input
+              id="quick-add-until"
+              type="date"
+              value={untilText}
+              min={timestamp !== null ? dayInputValue(timestamp) : undefined}
+              onChange={(e) => setUntilText(e.target.value)}
+              aria-describedby="quick-add-until-hint"
+              className="text-xs bg-muted/60 border border-border rounded-field px-2 py-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring text-foreground"
+            />
+            {untilText && (
+              <button type="button" onClick={() => setUntilText("")} aria-label="Bez końca serii" className="p-1 rounded text-muted-foreground hover:text-foreground">
+                <X className="w-3 h-3" />
+              </button>
+            )}
+          </div>
+        )}
+        {repeat.kind !== "none" && (
+          <p id="quick-add-until-hint" className={cn("text-2xs", untilTooEarly ? "text-destructive-ink" : "text-muted-foreground")}>
+            {untilTooEarly ? "Koniec serii musi być po pierwszym terminie." : untilText ? "Ostatni termin serii najpóźniej tego dnia." : "Puste pole — seria bez końca."}
+          </p>
+        )}
+
         {/* Godzina wpisana poprawnie, ale nieistniejąca tego dnia (przeskok zmiany czasu): zapis jest zablokowany, więc mówimy dlaczego. */}
         {time && timestamp === null && /^\d{1,2}:\d{2}$/.test(time) && (
           <p className="text-xs text-destructive-ink">Tej godziny nie ma tego dnia — przestawiono zegar (zmiana czasu). Wybierz inną.</p>
@@ -297,7 +330,7 @@ export function ReminderQuickAddDialog({
                   : "Zmiana godziny lub dnia przesuwa całą serię — model zapisuje jeden termin, a kolejne wylicza od niego."}
               </p>
             )}
-            <Button size="sm" onClick={handleSaveEdit} disabled={timestamp === null} className="w-full coarse:h-11" aria-keyshortcuts="Control+Enter Meta+Enter">
+            <Button size="sm" onClick={handleSaveEdit} disabled={timestamp === null || untilTooEarly} className="w-full coarse:h-11" aria-keyshortcuts="Control+Enter Meta+Enter">
               Zapisz termin
             </Button>
             <div className="flex flex-col sm:flex-row gap-2">
@@ -320,7 +353,7 @@ export function ReminderQuickAddDialog({
           </div>
         ) : (
           <>
-            <Button size="sm" onClick={handleCreate} disabled={timestamp === null || !title} className="w-full coarse:h-11" aria-keyshortcuts="Control+Enter Meta+Enter">
+            <Button size="sm" onClick={handleCreate} disabled={timestamp === null || !title || untilTooEarly} className="w-full coarse:h-11" aria-keyshortcuts="Control+Enter Meta+Enter">
               <Plus className="w-3.5 h-3.5 mr-1" />
               Utwórz notatkę z terminem
             </Button>
