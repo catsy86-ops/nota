@@ -3091,3 +3091,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - Commit: `60ba578` (2026-10-27).
 - Commit (3.1): `e8cbfb7` (2026-10-27).
 - Commit (3.3): `efe6f95` (2026-10-27).
+- Commit (3.7): `99e9da6` (2026-10-27).
