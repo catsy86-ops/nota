@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { isMotionReduced } from "@/hooks/useMotionPref";
 import { isEffectEnabled } from "@/lib/effectsSettings";
 import { SKIN_SCHEME, SKIN_THEME_COLOR, setSkin, skinStore, useSkin, type Skin } from "@/lib/skins";
+import { applySkinFavicon } from "@/lib/skinFavicon";
 
 export type ThemeMode = "system" | "light" | "dark";
 
@@ -65,6 +66,7 @@ function applyAppearance(dark: boolean, skin: Skin) {
     // #15110e = `--background` ciemnego Zeszytu (hsl 26 20% 7%), nie chłodny fiolet.
     const color = skin === "zeszyt" && dark ? "#15110e" : SKIN_THEME_COLOR[skin];
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", color);
+    applySkinFavicon(skin);
   };
   const reduced = isMotionReduced();
   const doc = document as DocWithVT;

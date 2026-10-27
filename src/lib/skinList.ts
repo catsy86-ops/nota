@@ -28,3 +28,16 @@ export const SKIN_THEME_COLOR: Record<Skin, string> = {
   matrix: "#020a03",
   hydraulika: "#0b1e2b",
 };
+
+/**
+ * Ikona karty (favicon) w barwach stylu (plan motywów 2.6): tło i litera monogramu „N”.
+ * Zeszyt zostaje przy `public/favicon.png` (znak marki); ikona PWA na ekranie głównym jest jedna.
+ */
+export const SKIN_ICON: Record<Exclude<Skin, "zeszyt">, { bg: string; fg: string }> = {
+  plan: { bg: "#10304f", fg: "#6cd3fb" },
+  neon: { bg: "#130a1b", fg: "#ff47d1" },
+  zorza: { bg: "#060a17", fg: "#3cf5a6" },
+  miedz: { bg: "#ae5a28", fg: "#fcfbf9" },
+  matrix: { bg: "#020a03", fg: "#00ff41" },
+  hydraulika: { bg: "#0b1e2b", fg: "#d08a4e" },
+};
