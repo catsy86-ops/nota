@@ -1,0 +1,8 @@
+/*
+  Rozmiar tekstu (src/lib/textSize.ts). Zmienna `--text-scale` ustawia JS na `html`;
+  bez niej (np. przed pierwszym odczytem) skala wynosi 1 — jak dotąd.
+  Wszystko w aplikacji jest w rem, więc ta jedna reguła skaluje cały interfejs.
+*/
+html {
+  font-size: calc(100% * var(--text-scale, 1));
+}

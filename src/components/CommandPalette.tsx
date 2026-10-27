@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { FINISH_SHIFT_NOW_EVENT } from "@/lib/shiftCommands";
-import { Inbox, Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash, Pin, Clock } from "lucide-react";
+import { Inbox, Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash, Pin, Clock, ZoomIn, ZoomOut, RotateCcw as ResetText } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes, useSearchReady } from "@/lib/searchNotes";
@@ -26,6 +26,7 @@ import { JOURNAL_REPORT_PARAM, reportParam } from "@/lib/study/reportLink";
 import { entrySiteId, foldName } from "@/lib/study/siteKey";
 import { isViewShown, useHiddenViews } from "@/lib/hiddenViews";
 import { viewLabel } from "@/lib/viewMeta";
+import { changeTextSize, resetTextSize } from "@/lib/textSize";
 import { dayKey } from "@/lib/reminderOccurrences";
 import { addDays } from "date-fns";
 
@@ -326,6 +327,15 @@ export function CommandPalette({
           </CommandItem>
           <CommandItem onSelect={() => run(onOpenFocusMode)}>
             <Brain className="w-4 h-4 mr-2" /> Tryb skupienia
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => changeTextSize(1))}>
+            <ZoomIn className="w-4 h-4 mr-2" /> Powiększ tekst
+          </CommandItem>
+          <CommandItem onSelect={() => run(() => changeTextSize(-1))}>
+            <ZoomOut className="w-4 h-4 mr-2" /> Pomniejsz tekst
+          </CommandItem>
+          <CommandItem onSelect={() => run(resetTextSize)}>
+            <ResetText className="w-4 h-4 mr-2" /> Domyślny rozmiar tekstu
           </CommandItem>
           <CommandItem onSelect={() => run(onToggleTheme)}>
             <Moon className="w-4 h-4 mr-2" /> Przełącz motyw jasny/ciemny

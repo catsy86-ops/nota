@@ -6,7 +6,8 @@
 
 /* Wszystko w rem rośnie razem: tekst 18 px, przyciski i odstępy o 12,5%. */
 html[data-site] {
-  font-size: 112.5%;
+  /* Mnoży się z rozmiarem wybranym przez użytkownika (`--text-scale`, text-size.css). */
+  font-size: calc(112.5% * var(--text-scale, 1));
   /* Minimalny cel dotyku dla przycisków z `.tap-target`: 3 rem = 54 px. */
   --tap: 3rem;
 }

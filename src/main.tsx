@@ -21,11 +21,14 @@ import "./styles/fonts-latin/@fontsource-variable-manrope-wght.css";
 import "./styles/fonts-latin/@fontsource-variable-lexend-wght.css";
 import "./styles/fonts.css";
 import "./styles/site.css";
+// Rozmiar tekstu wybrany w Ustawieniach (`--text-scale`); przed preferencjami systemu.
+import "./styles/text-size.css";
 // Preferencje systemu (3.12): ostatni, bo nadpisuje tokeny motywów i rozmycia.
 import "./styles/preferences.css";
 // Tryb budowa ustawia `html[data-site]` przy imporcie — przed pierwszym malowaniem.
 import "./lib/siteMode";
 import "./lib/appFont";
+import "./lib/textSize";
 import { registerServiceWorker, applyServiceWorkerUpdate, SW_UPDATE_EVENT } from "./lib/registerSW";
 import { hasUnsavedWork } from "./lib/saveStatus";
 import { setupFileLaunch } from "./lib/fileLaunch";

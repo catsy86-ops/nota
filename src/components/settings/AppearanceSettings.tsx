@@ -16,6 +16,7 @@ import { Segmented } from "./Segmented";
 import { SkinPicker } from "./SkinPicker";
 import { FontPicker } from "./FontPicker";
 import { setAppFont, useAppFont } from "@/lib/appFont";
+import { TextSizeControl } from "./TextSizeControl";
 import { SKIN_SCHEME } from "@/lib/skins";
 import { BASE_SORTS } from "@/lib/sortOptions";
 import { HIDEABLE_VIEWS, setViewHidden, useHiddenViews, type HideableView } from "@/lib/hiddenViews";
@@ -79,6 +80,10 @@ export function AppearanceSettings() {
     <div className="space-y-4">
       <Section title="Styl">
         <SkinPicker value={skin} onChange={setSkin} />
+      </Section>
+
+      <Section title="Rozmiar tekstu">
+        <TextSizeControl />
       </Section>
 
       <Section title="Krój tekstu">
