@@ -257,3 +257,15 @@ test("Hydraulika: kafel ma śrubki obejmy; Miedź: patyna tylko na starej notatc
   await fresh.evaluate((el) => el.setAttribute("data-aged", "true"));
   expect(await fresh.evaluate((el) => getComputedStyle(el, "::after").boxShadow)).toContain("inset");
 });
+
+test("Dziś: sygnatura dnia w barwach stylu, ukryta przed czytnikiem ekranu", async ({ page }) => {
+  for (const skin of ["zeszyt", "plan", "zorza", "hydraulika"]) {
+    await open(page, skin);
+    await page.goto("/dzis");
+    const sig = page.locator("[data-day-sig]");
+    await expect(sig).toHaveAttribute("data-day-sig", skin);
+    await expect(sig).toHaveAttribute("aria-hidden", "true");
+  }
+  // Wiersz daty pod tytułem zostaje — to on podaje datę czytnikowi.
+  await expect(page.getByRole("heading", { level: 1, name: "Dziś" })).toBeVisible();
+});

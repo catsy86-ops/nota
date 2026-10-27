@@ -81,7 +81,7 @@ Bez tego każda nowa skórka i każde ustawienie wyglądu to sześć miejsc do p
 - **2.3 zrobione.** Zmiana widoku: skan w Planie, przygaśnięcie w Neonie, odblask w Miedzi, przepływ w Hydraulice.
 - **2.4 zrobione.** Własny kształt odsłonięcia przy zmianie na Plan, Miedź, Matrycę i Hydraulikę (`revealClip`).
 - **Przy okazji naprawione:** fala zapisu Zorzy była niewidoczna (zduplikowana nazwa `@keyframes`); nowy strażnik w `skinContract.test.ts`.
-- **2.5 (sygnatura dnia na Dziś)** — następny krok.
+- **2.5 zrobione.** Sygnatura dnia na Dziś we wszystkich siedmiu stylach (`DaySignature.tsx`, `daySignature.ts`). Odstępstwo: Zorza bez godziny zachodu (bez lokalizacji byłaby zgadywana) — sama faza Księżyca.
 
 ## Faza 1: personalizacja w obrębie skórki
 

@@ -9,7 +9,7 @@
 
   Plik zbiorczy (plan motywów 0.4): każdy styl w `skins/<id>.css` — tokeny, tło i ozdoby;
   `common.css` — przejście kołem i miniatury galerii; `signatures.css` — sygnatury ruchu
-  wszystkich stylów (zapis, zmiana widoku, wejście). Kolejność importów = dawna kolejność
+  wszystkich stylów (zapis, zmiana widoku, wejście); `day-signature.css` — ozdoba dnia na Dziś. Kolejność importów = dawna kolejność
   w jednym pliku, więc kaskada się nie zmienia. Nowy styl: plik tutaj + `skinList.ts`;
   komplet tokenów sprawdza `src/lib/skinContract.test.ts`.
 */
@@ -21,3 +21,4 @@
 @import "./skins/matrix.css";
 @import "./skins/hydraulika.css";
 @import "./skins/signatures.css";
+@import "./skins/day-signature.css";

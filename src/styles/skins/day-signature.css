@@ -1,0 +1,135 @@
+/* ─────────────── Sygnatura dnia na Dziś (plan motywów 2.5, `components/skins/DaySignature.tsx`) ───────────────
+   Jedna ozdoba na styl obok tytułu „Dziś”. Dekoracja (`aria-hidden`), więc kontrast jak dla grafiki;
+   datę dla czytnika podaje wiersz pod tytułem. Jedyny ruch: kursor Matrycy (wyłączony przy ograniczonym ruchu). */
+.day-sig {
+  font-family: var(--font-display);
+  color: var(--muted-foreground);
+  line-height: 1.2;
+}
+/* Bardzo wąski ekran: tytuł i data mają pierwszeństwo. */
+@media (max-width: 359px) {
+  .day-sig { display: none; }
+}
+
+/* Zeszyt — data dopisana długopisem (kolor długopisu = `--accent`). */
+.day-sig-pen {
+  display: inline-block;
+  padding: 0 0.2em;
+  border-bottom: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  color: color-mix(in srgb, var(--accent) 85%, var(--foreground));
+  font-size: 1.5rem;
+  font-style: italic;
+  font-weight: 600;
+  transform: rotate(-4deg);
+}
+
+/* Plan — tabliczka rysunkowa w rogu arkusza. */
+.day-sig-block {
+  display: grid;
+  grid-template-columns: auto auto;
+  margin: 0;
+  border: 1px solid color-mix(in srgb, var(--primary) 70%, transparent);
+  color: var(--primary);
+  font-family: "JetBrains Mono Variable", ui-monospace, monospace;
+  font-size: 0.62rem;
+  text-transform: uppercase;
+}
+.day-sig-block > div {
+  padding: 0.2rem 0.45rem;
+  outline: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
+}
+.day-sig-block dt { opacity: 0.7; letter-spacing: 0.08em; }
+.day-sig-block dd { margin: 0; font-weight: 600; }
+
+/* Neon — szyld z dniem tygodnia: szklana rurka z poświatą. */
+.day-sig-neon {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border: 2px solid var(--primary);
+  border-radius: 999px;
+  color: var(--primary);
+  font-size: 1rem;
+  font-weight: 700;
+  text-shadow: 0 0 6px var(--primary), 0 0 16px color-mix(in srgb, var(--primary) 60%, transparent);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--primary) 50%, transparent), inset 0 0 8px color-mix(in srgb, var(--primary) 35%, transparent);
+}
+
+/* Zorza — faza Księżyca. */
+.day-sig-moon {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.65rem;
+}
+.day-sig-moon-dark { fill: color-mix(in srgb, var(--foreground) 12%, transparent); }
+.day-sig-moon-lit {
+  fill: color-mix(in srgb, var(--foreground) 88%, var(--primary));
+  filter: drop-shadow(0 0 4px color-mix(in srgb, var(--primary) 45%, transparent));
+}
+
+/* Miedź — tabliczka znamionowa z blachy, na dwóch nitach. */
+.day-sig-plate {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.35rem 1.2rem;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #cfd2d5, #a3a9ae 45%, #dcdfe1 60%, #aab0b5);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6), 0 1px 2px rgb(0 0 0 / 0.25);
+  color: #2b2f33;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.day-sig-plate::before,
+.day-sig-plate::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f2f3f4, #7d8389);
+}
+.day-sig-plate::before { left: 0.4rem; }
+.day-sig-plate::after { right: 0.4rem; }
+
+/* Matryca — wiersz terminala z kursorem. */
+.day-sig-term {
+  color: var(--primary);
+  font-family: "JetBrains Mono Variable", ui-monospace, monospace;
+  font-size: 0.8rem;
+}
+.day-sig-caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1em;
+  margin-left: 0.15em;
+  vertical-align: -0.15em;
+  background: var(--primary);
+  animation: day-sig-blink 1.1s steps(1, end) infinite;
+}
+@keyframes day-sig-blink {
+  50% { opacity: 0; }
+}
+html[data-motion="reduced"] .day-sig-caret { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .day-sig-caret { animation: none; }
+}
+
+/* Hydraulika — manometr: ile doby minęło. */
+.day-sig-gauge {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 0.65rem;
+}
+.day-sig-gauge-face { fill: var(--card); stroke: color-mix(in srgb, var(--foreground) 35%, transparent); stroke-width: 1.5; }
+.day-sig-gauge-scale { fill: none; stroke: var(--primary); stroke-width: 2; stroke-dasharray: 1.2 3; }
+.day-sig-gauge-needle { stroke: hsl(5 80% 62%); stroke-width: 1.8; stroke-linecap: round; }
+.day-sig-gauge-hub { fill: var(--foreground); }
