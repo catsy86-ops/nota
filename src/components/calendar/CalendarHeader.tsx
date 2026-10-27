@@ -28,7 +28,6 @@ export function CalendarHeader({ month, selectedDay, showKeys, onPrev, onNext, o
         <ChevronLeft className="w-4 h-4" />
       </button>
       <h2
-        aria-live="polite"
         className="font-display font-bold text-base sm:text-lg capitalize text-center truncate sm:min-w-[11ch]"
       >
         {format(month, "LLLL yyyy", { locale: pl })}
@@ -44,7 +43,7 @@ export function CalendarHeader({ month, selectedDay, showKeys, onPrev, onNext, o
       {(!isThisMonth || !isSameDay(selectedDay, new Date())) && (
         <button
           onClick={onToday}
-          aria-label="Wróć do bieżącego miesiąca"
+          aria-label="Dziś: wróć do bieżącego miesiąca"
           className="ml-1 shrink-0 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 sm:px-2.5 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
         >
           Dziś

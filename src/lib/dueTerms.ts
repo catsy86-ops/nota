@@ -32,3 +32,8 @@ export function termStatus(at: number, now: number, allDay = false): TermStatus 
   if (at <= endOfDayOffset(now, 7)) return "week";
   return "later";
 }
+
+/** Zaległy wystąpienie kalendarza: ten sam status co licznik i widok Terminy (`termStatus`). */
+export function isOverdueOccurrence(occ: { at: number; allDay?: boolean }, now = Date.now()): boolean {
+  return termStatus(occ.at, now, occ.allDay === true) === "overdue";
+}

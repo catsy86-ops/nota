@@ -237,8 +237,8 @@ export function ReminderQuickAddDialog({
         )}
 
         <div className="flex flex-wrap items-center gap-3">
-          <label className="flex items-center gap-2 text-xs text-muted-foreground">
-            <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} className="size-4 accent-primary" />
+          <label className="flex items-center gap-2 text-xs text-muted-foreground coarse:min-h-11">
+            <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} className="size-4 accent-primary coarse:size-5" />
             Cały dzień
           </label>
           {/* W edycji dzień zmienia się tutaj, a nie przez przeciąganie — telefon tego nie obsługuje (P0 planu). */}

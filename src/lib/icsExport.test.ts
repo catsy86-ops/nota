@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildIcs, escapeText, exportableReminders, foldLine, formatLocal } from "./icsExport";
+import { parseIcs } from "./icsImport";
 import type { Note } from "@/hooks/useNotes";
 
 function note(overrides: Partial<Note> = {}): Note {
@@ -114,5 +115,43 @@ describe("koniec serii w .ics", () => {
     const until = new Date(Date.UTC(2026, 11, 31, 22, 59, 59)).getTime();
     // Strefa testów to Europe/Warsaw: 22:59:59 UTC to 23:59:59 lokalnie, bez „Z”.
     expect(buildIcs([note({ reminderRepeat: "weekly", reminderRepeatUntil: until })], NOW)).toContain("RRULE:FREQ=WEEKLY;UNTIL=20261231T235900\r\n");
+  });
+});
+
+describe("terminy całodniowe i odłożone serie (K1.2, K1.3)", () => {
+  it("cały dzień: DTSTART jako data, alarm o 9:00 z czasem", () => {
+    const ics = buildIcs([note({ reminder: new Date(2026, 9, 5, 9, 0).getTime(), reminderAllDay: true })], NOW);
+    expect(ics).toContain("DTSTART;VALUE=DATE:20261005\r\n");
+    expect(ics).toContain("DTEND;VALUE=DATE:20261006\r\n");
+    expect(ics).toContain("TRIGGER;VALUE=DATE-TIME:20261005T090000\r\n");
+    expect(ics).not.toContain("DTSTART:");
+  });
+
+  it("cały dzień z serią: UNTIL jako data, nie czas", () => {
+    const until = new Date(2026, 11, 31, 9, 0).getTime();
+    const ics = buildIcs([note({ reminder: new Date(2026, 9, 5, 9, 0).getTime(), reminderAllDay: true, reminderRepeat: "weekly", reminderRepeatUntil: until })], NOW);
+    expect(ics).toContain("RRULE:FREQ=WEEKLY;UNTIL=20261231\r\n");
+  });
+
+  it("odłożone wystąpienie: seria od swojego terminu, to jedno wystąpienie z RECURRENCE-ID", () => {
+    const base = new Date(2026, 9, 5, 9, 0).getTime();
+    const snoozed = new Date(2026, 9, 5, 11, 30).getTime();
+    const ics = buildIcs([note({ reminder: snoozed, reminderBase: base, reminderRepeat: "weekly" })], NOW);
+    expect(ics.match(/BEGIN:VEVENT/g)).toHaveLength(2);
+    expect(ics).toContain("DTSTART:20261005T090000\r\n");
+    expect(ics).toContain("RECURRENCE-ID:20261005T090000\r\n");
+    expect(ics).toContain("DTSTART:20261005T113000\r\n");
+  });
+
+  it("seria, która się skończyła przed teraz, nie jest eksportowana", () => {
+    const ended = note({ id: "ended", reminder: new Date(2026, 0, 1, 9, 0).getTime(), reminderRepeat: "weekly", reminderRepeatUntil: new Date(2026, 0, 31).getTime() });
+    expect(exportableReminders([ended], NOW)).toEqual([]);
+  });
+
+  it("cały dzień wraca z importu jako termin 9:00 (icsImport)", () => {
+    const at = new Date(2026, 9, 5, 9, 0).getTime();
+    const { events } = parseIcs(buildIcs([note({ reminder: at, reminderAllDay: true })], NOW), NOW);
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ reminder: at, allDay: true });
   });
 });

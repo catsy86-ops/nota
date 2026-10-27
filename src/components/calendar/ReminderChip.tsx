@@ -2,6 +2,7 @@ import { Repeat } from "lucide-react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { REPEAT_KIND_LABELS } from "@/lib/reminderRepeat";
+import { isOverdueOccurrence } from "@/lib/dueTerms";
 import type { Occurrence } from "@/lib/reminderOccurrences";
 import { cn } from "@/lib/utils";
 
@@ -14,12 +15,14 @@ import { cn } from "@/lib/utils";
  * przeciągnąć i usunąć — reszta jest rysunkiem i UI nie może obiecywać inaczej.
  */
 
-function occurrenceLabel(occ: Occurrence, title: string): string {
+function occurrenceLabel(occ: Occurrence, title: string, overdue: boolean): string {
   const when = format(new Date(occ.at), "d MMMM, HH:mm", { locale: pl });
   const name = title.trim() || "Bez tytułu";
   const repeat = occ.isSeries ? `, powtarza się ${REPEAT_KIND_LABELS[occ.repeat.kind].toLowerCase()}` : "";
   const forecast = occ.isSeries && !occ.isNext ? " (prognoza serii)" : "";
-  return `Przypomnienie: ${name}, ${when}${repeat}${forecast}`;
+  // Zaległy ≠ załatwiony (K1.1): słowo w nazwie, nie tylko kolor.
+  const late = overdue ? ", zaległe" : "";
+  return `Przypomnienie: ${name}, ${when}${repeat}${forecast}${late}`;
 }
 
 interface ReminderChipProps {
@@ -34,19 +37,20 @@ interface ReminderChipProps {
 
 export function ReminderChip({ occurrence, title, detailed = false, className, style }: ReminderChipProps) {
   const isForecast = occurrence.isSeries && !occurrence.isNext;
-  const isPast = occurrence.at < Date.now();
+  const overdue = isOverdueOccurrence(occurrence);
 
   return (
     <span
-      title={occurrenceLabel(occurrence, title)}
+      title={occurrenceLabel(occurrence, title, overdue)}
       style={style}
       className={cn(
         "flex items-center gap-1 rounded-control border px-1 py-px text-left leading-tight",
         detailed ? "text-xs px-2 py-1 gap-1.5" : "text-2xs",
         isForecast
           ? "border-dashed border-primary/40 text-primary-ink/70"
-          : isPast
-            ? "border-transparent bg-muted text-muted-foreground"
+          : overdue
+            // Czerwony ton i lewa krawędź: zaległy nie wygląda jak załatwiony szary (K1.1).
+            ? "border-transparent border-l-2 border-l-destructive bg-destructive/10 text-destructive-ink"
             : "border-transparent bg-primary/12 text-primary-ink",
         className,
       )}

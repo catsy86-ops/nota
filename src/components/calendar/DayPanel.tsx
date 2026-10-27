@@ -81,7 +81,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdi
   return (
     <section aria-label="Terminy wybranego dnia" className="rounded-card border border-border/50 bg-card p-4">
       <div className="flex items-center gap-2 mb-3">
-        <h3 aria-live="polite" className="font-display font-semibold text-sm first-letter:uppercase">
+        <h3 className="font-display font-semibold text-sm first-letter:uppercase">
           {format(day, "EEEE, d MMMM", { locale: pl })}
         </h3>
         <button

@@ -161,14 +161,14 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
           ))}
         </div>
         <QuickReminderInput onParsed={handleTypedParsed} />
+        {/* Przeszłe dni zostają do wyboru (K-1): zapis jest dozwolony z ostrzeżeniem, jak w dialogu Kalendarza (K1.4). */}
         <Calendar
           mode="single"
           selected={date}
           onSelect={setDate}
-          disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
           className={cn("p-3 pointer-events-auto")}
         />
-        <label htmlFor={`${uid}-allday`} className="flex items-center gap-2 text-xs text-muted-foreground">
+        <label htmlFor={`${uid}-allday`} className="flex items-center gap-2 text-xs text-muted-foreground coarse:min-h-11">
           <input id={`${uid}-allday`} type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} className="size-4 accent-primary" />
           Cały dzień (o 9:00)
         </label>

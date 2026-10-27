@@ -5,6 +5,7 @@ import { wasJustMoved } from "./movedSignal";
 import { format, isSameDay, isSameMonth } from "date-fns";
 import { pl } from "date-fns/locale";
 import { ReminderChip } from "./ReminderChip";
+import { isOverdueOccurrence } from "@/lib/dueTerms";
 import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
 import { cn } from "@/lib/utils";
 import { holidayName } from "@/lib/shifts/holidays";
@@ -145,7 +146,10 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
               className={cn(
                 "w-1.5 h-1.5 rounded-full",
                 // Prognoza serii to pusty krąg, a zapisany termin pełny — różni się kształtem, nie tylko odcieniem.
-                occ.isSeries && !occ.isNext ? "bg-transparent ring-1 ring-primary" : "bg-primary",
+                // Zaległy: czerwony kwadrat — święto (czerwona kropka) ma kształt koła, więc się nie myli (K1.1).
+                occ.isSeries && !occ.isNext ? "bg-transparent ring-1 ring-primary"
+                  : isOverdueOccurrence(occ) ? "rounded-[1px] bg-destructive"
+                  : "bg-primary",
               )}
             />
           ))}

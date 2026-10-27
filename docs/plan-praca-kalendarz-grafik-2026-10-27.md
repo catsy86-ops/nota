@@ -5,7 +5,8 @@
 > - **Odłożone:** P0.1 (rysunek zastępuje zdjęcie — zmiana modelu Yjs, 8 plików, wymaga osobnej sesji z testami scalania); P0.2 (świadomie nie zrobione: `shareOrCopy` na telefonie otwiera arkusz udostępniania zamiast kopiować — decyzja produktowa, do potwierdzenia).
 > - **Korekta:** K0.1 — projekcja zeruje `content` notatki prywatnej (`yjsStore.ts:355`), więc wyciek nie zachodzi dziś; zabezpieczenie w eksporterze jest dodatkiem w głębi.
 > - **Fala B, częściowo (2026-10-27):** zrobione K5.1 (siatka, 35 → 2 renderów przy zmianie zaznaczenia), G3.1 (nadgodziny raz na dane) i domyślne zmiany Grafiku 8 h i 10 h (patrz `opis.md`). K5.2 (podział `ReminderCalendarView` na `CalendarHeader`, `useCalendarMoves` i `calendarExport`) zrobione bez zmiany zachowania. G3.2 (podział widoku, bez hooka `useShiftActions`), P6.1 (dyktowanie i zdjęcia wyciągnięte; pola próby i kształtek były już w komponentach), P6.4 (`content-visibility` na dniach; miniatury protokołu odłożone do sprawdzenia wydruku) zrobione częściowo. Nie robione: P6.2, P6.3 (poza zakresem tej części).
-> - **Nie robione jeszcze:** reszta Kalendarza (K1.1, K1.2–K1.6, K2–K4), reszta Grafiku (G2–G4), cała Praca (P2–P5).
+> - **Kalendarz K1 (2026-10-27):** zrobione K1.1, K1.2, K1.3, K1.4, K1.6. Nie robione: K1.5 (adres `?dzien=`, dotyka routingu i Dziś). Reszta planu do zrobienia: K2–K4, G2–G4, P2–P5.
+- **Nie robione jeszcze:** reszta Kalendarza (K1.5, K2–K4), reszta Grafiku (G2–G4), cała Praca (P2–P5).
 
 ## Kontekst
 

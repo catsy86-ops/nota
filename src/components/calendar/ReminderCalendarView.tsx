@@ -199,6 +199,10 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
             <CalendarPrintList month={month} byDay={byDay} titleOf={titleOf} />
           </PrintRoot>
         )}
+        {/* Jedyny region na żywo w kalendarzu (K1.6): miesiąc i wybrany dzień po każdej zmianie. Nagłówki nie ogłaszają się same. */}
+        <p role="status" aria-live="polite" className="sr-only">
+          {format(month, "LLLL yyyy", { locale: pl })}, wybrany dzień: {format(selectedDay, "EEEE, d MMMM", { locale: pl })}
+        </p>
         <div role="group" aria-label="Widok na telefonie" className="order-3 flex gap-1 sm:hidden">
             {(["month", "week", "agenda"] as const).map((v) => (
               <button

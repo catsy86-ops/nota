@@ -90,21 +90,47 @@ function rruleFor(rule: RepeatRule, day: number | undefined): string {
   return `${RRULE.monthly};BYMONTHDAY=${days};BYSETPOS=-1`;
 }
 
-function eventLines(note: Note, now: number): string[] {
-  const start = note.reminder!;
+/** Dzień bez godziny (`VALUE=DATE`) dla terminu „cały dzień”. */
+function formatDay(ts: number): string {
+  const d = new Date(ts);
+  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+}
+
+/**
+ * DTSTART/DTEND/RECURRENCE-ID w typie zgodnym z resztą wydarzenia (K1.2): „cały dzień” to data bez godziny,
+ * a termin z godziną — czas lokalny. RFC 5545 wymaga tego samego typu w całej serii.
+ */
+function timeProp(name: string, ts: number, allDay: boolean): string {
+  return allDay ? `${name};VALUE=DATE:${formatDay(ts)}` : `${name}:${formatLocal(ts)}`;
+}
+
+/** Koniec wydarzenia całodniowego to następny dzień (wartość wyłączna w RFC 5545). */
+function endOfAllDay(ts: number): number {
+  const d = new Date(ts);
+  d.setDate(d.getDate() + 1);
+  return d.getTime();
+}
+
+/** Wydarzenie jednego terminu. `recurrenceId` — wystąpienie serii, które to wydarzenie zmienia (odłożone). */
+function vevent(note: Note, now: number, start: number, opts: { allDay: boolean; withSeries: boolean; recurrenceId?: number }): string[] {
   const repeat = ruleOf(note);
   const lines = [
     "BEGIN:VEVENT",
     `UID:${note.id}@notatnik`,
     `DTSTAMP:${formatUtc(now)}`,
-    `DTSTART:${formatLocal(start)}`,
-    `DTEND:${formatLocal(start + EVENT_MINUTES * 60_000)}`,
-    `SUMMARY:${escapeText(titleOf(note))}`,
   ];
-  if (repeat.kind !== "none") {
-    // UNTIL musi mieć ten sam typ co DTSTART (RFC 5545). DTSTART jest lokalny (bez „Z”),
-    // więc UNTIL też lokalny — UTC przy lokalnym DTSTART ścisłe importery odrzucają.
-    const until = note.reminderRepeatUntil !== undefined ? `;UNTIL=${formatLocal(note.reminderRepeatUntil)}` : "";
+  if (opts.recurrenceId !== undefined) lines.push(timeProp("RECURRENCE-ID", opts.recurrenceId, opts.allDay));
+  lines.push(
+    timeProp("DTSTART", start, opts.allDay),
+    timeProp("DTEND", opts.allDay ? endOfAllDay(start) : start + EVENT_MINUTES * 60_000, opts.allDay),
+    `SUMMARY:${escapeText(titleOf(note))}`,
+  );
+  if (opts.withSeries && repeat.kind !== "none") {
+    // UNTIL musi mieć ten sam typ co DTSTART (RFC 5545): data dla „cały dzień”, lokalny czas inaczej.
+    const untilValue = note.reminderRepeatUntil === undefined
+      ? null
+      : opts.allDay ? formatDay(note.reminderRepeatUntil) : formatLocal(note.reminderRepeatUntil);
+    const until = untilValue ? `;UNTIL=${untilValue}` : "";
     lines.push(`RRULE:${rruleFor(repeat, seriesDay(note))}${until}`);
   }
   // Notatka prywatna nie wychodzi z treścią, nawet gdyby projekcja podała ją jawnie (K0.1).
@@ -114,18 +140,35 @@ function eventLines(note: Note, now: number): string[] {
     "BEGIN:VALARM",
     "ACTION:DISPLAY",
     `DESCRIPTION:${escapeText(titleOf(note))}`,
-    "TRIGGER:PT0M",
+    // Całodniowy: alarm o godzinie terminu (9:00), a nie w chwili wybicia dnia.
+    opts.allDay ? `TRIGGER;VALUE=DATE-TIME:${formatLocal(start)}` : "TRIGGER:PT0M",
     "END:VALARM",
     "END:VEVENT",
   );
   return lines;
 }
 
-/** Notatki warte eksportu: z terminem w przyszłości albo z serią. Bez kosza. */
+function eventLines(note: Note, now: number): string[] {
+  const start = note.reminder!;
+  const allDay = note.reminderAllDay === true;
+  const base = note.reminderBase;
+  const series = ruleOf(note).kind !== "none";
+  // Odłożone wystąpienie serii (K1.3): seria zostaje od swojego terminu (`reminderBase`), a to jedno
+  // wystąpienie dostaje własne wydarzenie z RECURRENCE-ID — inaczej przesunięcie zmieniłoby całą serię.
+  const deferred = series && base !== undefined && base !== start;
+  const masterStart = deferred ? base : start;
+  const lines = vevent(note, now, masterStart, { allDay, withSeries: true });
+  if (deferred) lines.push(...vevent(note, now, start, { allDay, withSeries: false, recurrenceId: base }));
+  return lines;
+}
+
+/** Notatki warte eksportu: termin w przyszłości, seria, która jeszcze trwa. Bez kosza i bez zakończonych serii (K1.3). */
 export function exportableReminders(notes: Note[], now = Date.now()): Note[] {
-  return notes.filter((n) =>
-    !n.trashed && n.reminder !== null && (n.reminder >= now || ruleOf(n).kind !== "none"),
-  );
+  return notes.filter((n) => {
+    if (n.trashed || n.reminder === null) return false;
+    if (ruleOf(n).kind === "none") return n.reminder >= now;
+    return n.reminderRepeatUntil === undefined || n.reminderRepeatUntil >= now;
+  });
 }
 
 export function buildIcs(notes: Note[], now = Date.now()): string {
