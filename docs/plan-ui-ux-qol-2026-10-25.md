@@ -188,3 +188,5 @@ Plan kończymy tutaj; pozostałe punkty to backlog z podanym zakresem, do zrobie
   - D-3 reszta: 44 pliki z `framer-motion`. Zamieniać tylko wejście i wyjście, gesty i `layout` zostają.
   - Zrzuty D-4: nie zaktualizowane. Test kalendarza bez paska bocznego w jednym przebiegu był chybieniem (nie regresją); baseline w repo bez zmian.
   - Faza 2–5 i 6 (ruch, UX, wydajność, upiększenie, QA telefonu): nie zaczęte.
+
+**Status 3.10 (2026-10-27):** zrobione punkty zatrzymania „pół / pełny” w `ViewSheet` (`src/components/ui/sheet-snap.ts`, opt-in `snap` w `SheetContent`), testy: `sheet-snap.test.ts`, `e2e/view-sheet-snap.spec.ts`. **Nie zrobione:** przeniesienie pozostałych arkuszy na jeden `ViewSheet` (ok. 27 użyć `SheetContent`) — osobny krok, do decyzji po QA na telefonie.

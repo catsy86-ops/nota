@@ -85,7 +85,8 @@ export function ViewSheet({ open, onOpenChange, groupable = true }: { open: bool
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto rounded-t-3xl border-t border-border/60 pb-[calc(env(safe-area-inset-bottom)+16px)]">
+      {/* Punkty „pół” i „pełny” (3.10): wysokość ustala `SheetContent`, więc bez własnego max-h. */}
+      <SheetContent side="bottom" snap className="overflow-y-auto rounded-t-3xl border-t border-border/60 pb-[calc(env(safe-area-inset-bottom)+16px)]">
         <SheetHeader className="text-left pr-10">
           <SheetTitle className="font-display">Widok</SheetTitle>
           <SheetDescription className="sr-only">Układ notatek, liczba kolumn, gęstość i grupowanie</SheetDescription>

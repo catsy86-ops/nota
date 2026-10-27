@@ -5,6 +5,7 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 import { OverlayBack } from "@/components/ui/overlay-back";
+import { SNAP_HEIGHT, snapDecision, type SheetSnap } from "@/components/ui/sheet-snap";
 
 const Sheet = SheetPrimitive.Root;
 
@@ -29,18 +30,31 @@ const SheetOverlay = React.forwardRef<
 ));
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
-/** Przeciąganie arkusza w dół za uchwyt: podąża za palcem, a po progu zamyka. */
-function useDragToDismiss(contentRef: React.RefObject<HTMLDivElement | null>, close: () => void) {
+/** Punkty zatrzymania (3.10): stan trzyma `SheetContent`, tu tylko odczyt i zapis po puszczeniu palca. */
+interface SnapControl {
+  get: () => SheetSnap;
+  set: (snap: SheetSnap) => void;
+}
+
+/**
+ * Przeciąganie arkusza za uchwyt: podąża za palcem w dół, a po progu zamyka.
+ * Z punktami zatrzymania (`snap`) przeciągnięcie w górę zmienia wysokość zamiast przesuwać arkusz.
+ */
+function useDragToDismiss(contentRef: React.RefObject<HTMLDivElement | null>, close: () => void, snap?: SnapControl) {
   const start = React.useRef<{ y: number; t: number } | null>(null);
   const dy = React.useRef(0);
+  const rawDy = React.useRef(0);
   const reset = (el: HTMLElement) => {
-    el.style.transition = "transform 200ms cubic-bezier(0.22, 1, 0.36, 1)";
+    el.style.transition = snap
+      ? "transform 200ms cubic-bezier(0.22, 1, 0.36, 1), height 200ms cubic-bezier(0.22, 1, 0.36, 1)"
+      : "transform 200ms cubic-bezier(0.22, 1, 0.36, 1)";
     el.style.transform = "";
   };
   return {
     onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
       start.current = { y: e.clientY, t: performance.now() };
       dy.current = 0;
+      rawDy.current = 0;
       e.currentTarget.setPointerCapture(e.pointerId);
       if (contentRef.current) contentRef.current.style.transition = "none";
     },
@@ -48,7 +62,8 @@ function useDragToDismiss(contentRef: React.RefObject<HTMLDivElement | null>, cl
       const s = start.current;
       const el = contentRef.current;
       if (!s || !el) return;
-      dy.current = Math.max(0, e.clientY - s.y);
+      rawDy.current = e.clientY - s.y;
+      dy.current = Math.max(0, rawDy.current);
       el.style.transform = `translateY(${dy.current}px)`;
     },
     onPointerUp: () => {
@@ -56,7 +71,18 @@ function useDragToDismiss(contentRef: React.RefObject<HTMLDivElement | null>, cl
       const el = contentRef.current;
       start.current = null;
       if (!s || !el) return;
-      const velocity = dy.current / Math.max(1, performance.now() - s.t); // px/ms
+      const velocity = rawDy.current / Math.max(1, performance.now() - s.t); // px/ms, ze znakiem
+      if (snap) {
+        const next = snapDecision({ snap: snap.get(), dy: rawDy.current, velocity });
+        if (next === "close") {
+          el.style.transform = "";
+          close();
+          return;
+        }
+        snap.set(next);
+        reset(el);
+        return;
+      }
       if (dy.current > 110 || (dy.current > 30 && velocity > 0.6)) {
         el.style.transform = "";
         close();
@@ -93,10 +119,13 @@ const fromToast = (e: Event) => !!(e.target as Element | null)?.closest?.("[data
 
 interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
-    VariantProps<typeof sheetVariants> {}
+    VariantProps<typeof sheetVariants> {
+  /** Dolny arkusz z punktami „pół” i „pełny” (3.10): startuje na „pół”, przeciągnięcie w górę otwiera „pełny”. */
+  snap?: boolean;
+}
 
 const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Content>, SheetContentProps>(
-  ({ side = "right", className, children, onInteractOutside, ...props }, ref) => {
+  ({ side = "right", className, children, onInteractOutside, snap = false, style, ...props }, ref) => {
     const closeRef = React.useRef<HTMLButtonElement>(null);
     const contentRef = React.useRef<HTMLDivElement | null>(null);
     const setRefs = React.useCallback((el: HTMLDivElement | null) => {
@@ -104,7 +133,14 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
       if (typeof ref === "function") ref(el);
       else if (ref) ref.current = el;
     }, [ref]);
-    const drag = useDragToDismiss(contentRef, () => closeRef.current?.click());
+    const useSnap = snap && side === "bottom";
+    const [snapState, setSnapState] = React.useState<SheetSnap>("half");
+    const snapRef = React.useRef<SheetSnap>("half");
+    const snapControl = React.useMemo<SnapControl | undefined>(
+      () => (useSnap ? { get: () => snapRef.current, set: (s) => { snapRef.current = s; setSnapState(s); } } : undefined),
+      [useSnap],
+    );
+    const drag = useDragToDismiss(contentRef, () => closeRef.current?.click(), snapControl);
     return (
     <SheetPortal>
       <SheetOverlay />
@@ -116,6 +152,7 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
           onInteractOutside?.(e);
         }}
         {...props}
+        style={useSnap ? { ...style, height: SNAP_HEIGHT[snapState] } : style}
       >
         {side === "bottom" && (
           // Uchwyt naprawdę działa: przeciągnięcie w dół zamyka arkusz (próg odległości albo szybki ruch).

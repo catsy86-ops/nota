@@ -2913,3 +2913,30 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 
 ### Commit
 - `de668e6` (2026-10-27).
+
+## Wspólne — arkusz „Widok” z punktami „pół” i „pełny” (plan UI/UX 3.10, 2026-10-27)
+
+### Co robi
+- Arkusz „Widok” na telefonie (układ, kolumny, gęstość, sortowanie, grupowanie) startuje na pół ekranu. Przeciągnięcie uchwytu w górę otwiera pełny ekran, w dół wraca na pół, a mocniejsze przeciągnięcie w dół z połowy zamyka arkusz.
+
+### Gdzie jest
+- `src/components/ui/sheet-snap.ts` — `snapDecision` (czysta logika progów), `SNAP_HEIGHT` (`half` 55 dvh, `full` 92 dvh).
+- `src/components/ui/sheet.tsx` — `SheetContent` z opcją `snap` (tylko dla `side="bottom"`), hook `useDragToDismiss` z `SnapControl`.
+- `src/components/ViewSheet.tsx` — włącza `snap`; usunięty własny `max-h-[85dvh]`, bo blokowałby punkt „pełny”.
+
+### Jak działa
+- Stan „pół/pełny” trzyma `SheetContent` w stanie React (`snapState`) i w refie (`snapRef`), żeby gest po puszczeniu odczytał aktualny punkt. Wysokość idzie przez `style.height`, a przejście przez inline `transition` (`height` i `transform`).
+- Podczas gestu arkusz podąża za palcem tylko w dół (`translateY`). Ruch w górę z „pół” niczego nie przesuwa, a decyzja zapada przy puszczeniu.
+- `snapDecision` (z `dy` ze znakiem i prędkością px/ms): z „pół” w górę (ponad 40 px albo szybko) → „pełny”; w dół (ponad 110 px albo szybko, >30 px) → zamknięcie; z „pełny” w dół (te same progi) → „pół”, nigdy od razu zamknięcie.
+- Bez `snap` (wszystkie pozostałe arkusze) ścieżka kodu jest dokładnie ta sama co przed zmianą: tylko zamykanie w dół.
+
+### Ograniczenia i pułapki
+- Punkty są tylko w `ViewSheet`. Pozostałe ok. 27 użyć `SheetContent` i wszystkie `ResponsiveDialogContent` na telefonie dalej mają jedną wysokość; plan 3.10 mówi „wszystkie arkusze na jednym `ViewSheet`” — to nie jest zrobione, zostaje na osobny krok.
+- Wysokość „pół” jest stała (55 dvh), więc krótka zawartość zostaje w pustej przestrzeni arkusza.
+- Gest jest tylko na uchwycie (`data-sheet-handle`), nie na całej treści — przewijanie listy nie przeciąga arkusza.
+- Gest dotykowy testowany przez CDP (tylko Chromium). Na prawdziwym iOS nie sprawdzono.
+
+### Testy
+- `src/components/ui/sheet-snap.test.ts` — 9 przypadków progów (w górę, w dół, szybkie gesty, powrót z „pełny”).
+- `e2e/view-sheet-snap.spec.ts` (`@mobile`, Pixel 7) — start na pół, gest w górę do pełnego, gest w dół wraca na pół i arkusz zostaje otwarty.
+- `e2e/mobile.spec.ts` (15/15 na Pixel 7) — w tym zamykanie „Więcej” gestem i formularz jako arkusz.
