@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { localDayKey } from "@/lib/dayDone";
 import { useShifts, useShiftsReady } from "@/lib/shifts";
 import { dayType } from "@/lib/shifts/model";
+import { useShiftNow } from "@/lib/shifts/useShiftNow";
+import { format, formatDistanceStrict } from "date-fns";
+import { pl } from "date-fns/locale";
 
 /**
  * Pierwsza rzecz w widoku „Dziś”: dzisiejsza zmiana z Grafiku (albo „wolne”), obok skrótów
@@ -15,6 +18,12 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote }: { onOpenShifts: ()
   const dateLabel = today.toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long" });
   const entry = ready ? data.days[localDayKey(today)] : undefined;
   const type = entry ? data.types.find((t) => t.id === entry.type) : undefined;
+  // G2.1: „trwa teraz” albo „za X” liczone jak w karcie Teraz w Grafiku (ten sam zegar i te same zmiany).
+  const { now, current, next } = useShiftNow(data);
+  const timing = !ready ? null
+    : current ? `Trwa teraz, do ${format(current.end, "HH:mm")}`
+    : next ? `Następna za ${formatDistanceStrict(next.start, now, { locale: pl })}, o ${format(next.start, "HH:mm")}`
+    : null;
 
   let shift: string;
   if (!ready) shift = "Grafik się wczytuje…";
@@ -43,6 +52,7 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote }: { onOpenShifts: ()
           </Button>
         </div>
       </div>
+      {timing && <p className="mt-2 text-xs text-muted-foreground tabular-nums" data-testid="today-timing">{timing}</p>}
     </section>
   );
 }

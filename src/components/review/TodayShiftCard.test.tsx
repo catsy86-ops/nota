@@ -1,11 +1,16 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
 import { cleanup, render, screen } from "@testing-library/react";
 
-const shiftsState = vi.hoisted(() => ({ ready: true, data: { types: [] as unknown[], days: {} as Record<string, unknown> } }));
+const shiftsState = vi.hoisted(() => ({ ready: true, data: { types: [] as unknown[], days: {} as Record<string, unknown> }, current: null as unknown, next: null as unknown }));
 
 vi.mock("@/lib/shifts", () => ({
   useShifts: () => shiftsState.data,
   useShiftsReady: () => shiftsState.ready,
+}));
+
+// Czas zmiany (G2.1) liczy hook; tu podajemy gotowy wynik.
+vi.mock("@/lib/shifts/useShiftNow", () => ({
+  useShiftNow: () => ({ now: new Date(), current: shiftsState.current, next: shiftsState.next, ended: null }),
 }));
 
 import { TodayShiftCard } from "./TodayShiftCard";
@@ -15,6 +20,8 @@ afterEach(() => {
   cleanup();
   shiftsState.ready = true;
   shiftsState.data = { types: [], days: {} };
+  shiftsState.current = null;
+  shiftsState.next = null;
 });
 
 describe("TodayShiftCard", () => {
@@ -51,5 +58,19 @@ describe("TodayShiftCard", () => {
     screen.getByRole("button", { name: /Grafik/ }).click();
     screen.getByRole("button", { name: /Notatka dnia/ }).click();
     expect([shifts, daily]).toEqual([1, 1]);
+  });
+});
+
+describe("TodayShiftCard — czas zmiany (G2.1)", () => {
+  it("trwająca zmiana pokazuje, do kiedy trwa", () => {
+    shiftsState.current = { end: new Date(2026, 9, 27, 16, 0) };
+    render(<TodayShiftCard onOpenShifts={() => {}} onDailyNote={() => {}} />);
+    expect(screen.getByTestId("today-timing").textContent).toBe("Trwa teraz, do 16:00");
+  });
+
+  it("bez zmiany teraz pokazuje najbliższą", () => {
+    shiftsState.next = { start: new Date(Date.now() + 3 * 3600_000) };
+    render(<TodayShiftCard onOpenShifts={() => {}} onDailyNote={() => {}} />);
+    expect(screen.getByTestId("today-timing").textContent).toMatch(/^Następna za .*, o \d\d:\d\d$/);
   });
 });
