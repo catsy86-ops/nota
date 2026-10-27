@@ -37,6 +37,16 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
     ],
   },
   {
+    heading: "Kalendarz (gdy fokus na siatce dni)",
+    items: [
+      { keys: ["T"], label: "Dziś" },
+      { keys: ["N"], label: "Następny miesiąc" },
+      { keys: ["P"], label: "Poprzedni miesiąc" },
+      { keys: ["C"], label: "Nowy termin na wybrany dzień" },
+      { keys: ["Enter"], label: "Nowy termin na wybrany dzień" },
+    ],
+  },
+  {
     // Operatory łączą się ze sobą i ze zwykłym tekstem: „label:praca has:reminder raport”.
     heading: "Wyszukiwanie",
     items: [

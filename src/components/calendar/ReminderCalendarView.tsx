@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useDayClock } from "@/lib/dayClock";
 import {
@@ -35,6 +35,25 @@ import type { Note } from "@/hooks/useNotes";
  * bo tylko ono istnieje w modelu.
  */
 
+type PhoneView = "month" | "week" | "agenda";
+
+/** Widok telefonu zapamiętany w tej przeglądarce (K2.2, wzór panelu dnia). Błąd dostępu = miesiąc. */
+const PHONE_VIEW_KEY = "kaczy.calendar.phoneView";
+const PHONE_VIEWS: readonly PhoneView[] = ["month", "week", "agenda"];
+
+function readPhoneView(): PhoneView {
+  try {
+    const saved = localStorage.getItem(PHONE_VIEW_KEY) as PhoneView | null;
+    return saved && PHONE_VIEWS.includes(saved) ? saved : "month";
+  } catch {
+    return "month";
+  }
+}
+
+function writePhoneView(view: PhoneView) {
+  try { localStorage.setItem(PHONE_VIEW_KEY, view); } catch { /* bez zapisu zostaje wybór na czas sesji */ }
+}
+
 interface ReminderCalendarViewProps {
   /** Notatki z terminami — bez kosza, tak samo jak karmione są powiadomienia. */
   notes: Note[];
@@ -44,6 +63,8 @@ interface ReminderCalendarViewProps {
   /** `reminderBase` — termin serii przy odłożonym wystąpieniu (`undefined` = zwykły termin, czyści odłożenie).
    *  `until` — koniec serii; każde wywołanie podaje go jawnie (ruch, pominięcie, cofnięcie zachowują stary), bo `undefined` czyści. */
   onSetReminder: (noteId: string, reminder: number | null, repeat: RepeatInput, reminderDay?: number, reminderBase?: number, reminderAllDay?: boolean, until?: number) => void;
+  /** Otwiera notatkę z panelu dnia (K2.1). */
+  onOpenNote?: (noteId: string) => void;
 }
 
 function monthBounds(month: Date) {
@@ -53,7 +74,7 @@ function monthBounds(month: Date) {
   };
 }
 
-export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: ReminderCalendarViewProps) {
+export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpenNote }: ReminderCalendarViewProps) {
   const { updateNote } = useNotesContext();
   // „Dziś” w siatce, pasku tygodnia i najbliższych dniach liczone przy renderze —
   // sygnał zegara dnia przerysowuje je po północy i po powrocie do karty.
@@ -63,7 +84,8 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
   const [showKeys, setShowKeys] = useState(false);
   const [dialogDay, setDialogDay] = useState<Date | null>(null);
   // Telefon: miesiąc (siatka) albo tydzień (pasek 7 dni). Na większym ekranie oba są zawsze.
-  const [phoneView, setPhoneView] = useState<"month" | "week" | "agenda">("month");
+  const [phoneView, setPhoneView] = useState<PhoneView>(readPhoneView);
+  useEffect(() => { writePhoneView(phoneView); }, [phoneView]);
   // Wydruk miesiąca (3b planu): `PrintRoot` schowa resztę strony i otworzy okno drukowania.
   const [printing, setPrinting] = useState(false);
   const [editTarget, setEditTarget] = useState<ReminderEditTarget | null>(null);
@@ -124,6 +146,39 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     const today = new Date();
     setMonth(new Date(today.getFullYear(), today.getMonth(), 1));
     setSelectedDay(today);
+  }
+
+  /**
+   * Stuknięcie dnia w siatce (K2.3): na telefonie panel dnia jest pod siatką, więc przewijamy do niego.
+   * Przy redukcji ruchu przewijanie bez animacji.
+   */
+  const selectGridDay = useCallback((day: Date) => {
+    setSelectedDay(day);
+    if (!window.matchMedia("(max-width: 639px)").matches) return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    requestAnimationFrame(() => document.getElementById("calendar-day-panel")?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }));
+  }, []);
+
+  /**
+   * Gest palcem między miesiącami (K2.6): poziome przeciągnięcie ≥ 60 px w siatce. Chipy terminów
+   * (przeciąganie DnD) i mysz są wyłączone; PageUp/PageDown działają jak dotąd.
+   */
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
+  function onSwipeStart(e: React.PointerEvent<HTMLDivElement>) {
+    if (e.pointerType === "mouse" || (e.target as HTMLElement).closest('[aria-roledescription="draggable"]')) {
+      swipeStart.current = null;
+      return;
+    }
+    swipeStart.current = { x: e.clientX, y: e.clientY };
+  }
+  function onSwipeEnd(e: React.PointerEvent<HTMLDivElement>) {
+    const from = swipeStart.current;
+    swipeStart.current = null;
+    if (!from) return;
+    const dx = e.clientX - from.x;
+    const dy = e.clientY - from.y;
+    if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    shiftMonth(dx < 0 ? 1 : -1);
   }
 
   const openAdd = useCallback((day: Date) => {
@@ -247,6 +302,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
         </div>
         <div className={phoneView === "month" ? "order-5" : "order-5 max-sm:hidden"}>
           <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
+          <div className="contents" onPointerDown={onSwipeStart} onPointerUp={onSwipeEnd} onPointerCancel={() => { swipeStart.current = null; }}>
           <MonthGrid
             month={month}
             byDay={byDay}
@@ -254,11 +310,12 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
             shiftOf={shiftOf}
             studyOf={studyOf}
             selectedDay={selectedDay}
-            onSelectDay={setSelectedDay}
+            onSelectDay={selectGridDay}
             onActivateDay={openAdd}
             onEditShift={shifts.types.length > 0 ? (day) => setShiftDay(dayKey(day)) : undefined}
             onMonthChange={setMonth}
           />
+          </div>
           </DndContext>
 
         </div>
@@ -277,7 +334,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
           />
 
         </div>
-        <div className="order-6">
+        <div id="calendar-day-panel" className="order-6">
           <DayPanel
             day={selectedDay}
             occurrences={selectedOccurrences}
@@ -290,6 +347,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
             onAdd={() => openAdd(selectedDay)}
             onEdit={openEdit}
             onExport={exportOne}
+            onOpenNote={onOpenNote}
             onSkip={(occ) => handleSkip(occ.noteId, occ.at, occ.repeat)}
             onMoveByDays={(occ, days) => moveToDay(occ, addDays(new Date(occ.at), days))}
             onOpenSeriesSource={openSeriesSource}

@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useRef, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { HardHat } from "lucide-react";
 import { wasJustMoved } from "./movedSignal";
@@ -59,6 +59,8 @@ interface DayCellProps {
   selected: boolean;
   focused: boolean;
   onSelect: (day: Date) => void;
+  /** Dwuklik i przytrzymanie (K2.4): dodawanie terminu na ten dzień. */
+  onActivate?: (day: Date) => void;
   cellRef?: (el: HTMLDivElement | null) => void;
   /** Zmiana z Grafiku w tym dniu (z godzinami dnia), jeśli jest wpisana. */
   shift?: ShiftType;
@@ -67,7 +69,26 @@ interface DayCellProps {
 }
 
 /** Podsumowanie Pracy dla czytnika i tytułu: „2 wizyty, 1 dostawa”; `null`, gdy nic nie ma. */
-function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSelect, cellRef, shift, study }: DayCellProps) {
+function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSelect, onActivate, cellRef, shift, study }: DayCellProps) {
+  // K2.4: przytrzymanie na dotyku (500 ms) otwiera dodawanie na ten dzień. Przeciąganie chipa ma pierwszeństwo.
+  const pressTimer = useRef<number | null>(null);
+  const pressFired = useRef(false);
+  const cancelPress = () => {
+    if (pressTimer.current !== null) window.clearTimeout(pressTimer.current);
+    pressTimer.current = null;
+  };
+  function onPressStart(e: React.PointerEvent<HTMLDivElement>) {
+    if (e.pointerType === "mouse" || !onActivate) return;
+    if ((e.target as HTMLElement).closest('[aria-roledescription="draggable"]')) return;
+    pressFired.current = false;
+    cancelPress();
+    pressTimer.current = window.setTimeout(() => {
+      pressFired.current = true;
+      pressTimer.current = null;
+      onActivate(day);
+    }, 500);
+  }
+
   const { setNodeRef, isOver } = useDroppable({ id: `day-drop-${dayKey(day)}`, data: { day } });
   const inMonth = isSameMonth(day, month);
   const today = isSameDay(day, new Date());
@@ -93,7 +114,16 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
       // Roving tabindex: cała siatka to jeden przystanek tabulatora, a po
       // dniach chodzi się strzałkami — tak działa natywny date picker.
       tabIndex={focused ? 0 : -1}
-      onClick={() => onSelect(day)}
+      onClick={() => {
+        // Po przytrzymaniu klik z palca nie zmienia zaznaczenia.
+        if (pressFired.current) { pressFired.current = false; return; }
+        onSelect(day);
+      }}
+      onDoubleClick={() => onActivate?.(day)}
+      onPointerDown={onPressStart}
+      onPointerUp={cancelPress}
+      onPointerLeave={cancelPress}
+      onPointerCancel={cancelPress}
       className={cn(
         dayCellClass(inMonth, today), "flex flex-col gap-0.5 min-h-14 sm:min-h-24 p-1 sm:p-1.5 cursor-pointer",
         // Pełne tło z domieszką marki (nie przezroczystość) — inaczej prześwituje kratka tła.

@@ -974,6 +974,7 @@ const Index = () => {
                     // patchem po utworzeniu — stąd id zwracane przez `addNote`.
                     if (toRule(repeat).kind !== "none" || allDay) updateNote(id, { ...repeatUpdate(repeat), ...(toRule(repeat).kind !== "none" && until !== undefined ? { reminderRepeatUntil: until } : {}), ...(allDay ? { reminderAllDay: true } : {}) });
                   }}
+                  onOpenNote={(id) => openNote(id)}
                   onSetReminder={(id, reminder, repeat, reminderDay, reminderBase, reminderAllDay, until) =>
                     // Koniec serii idzie z wywołania (K0.4). Bez powtarzania czyścimy go, żeby nie wrócił przy następnej serii.
                     updateNote(id, { reminder, ...repeatUpdate(repeat), reminderRepeatUntil: toRule(repeat).kind === "none" ? undefined : until, ...(reminderDay === undefined ? {} : { reminderDay }), reminderBase, reminderAllDay: reminderAllDay === true ? true : undefined })}

@@ -3,7 +3,7 @@ import type { Note } from "@/hooks/useNotes";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { useState } from "react";
-import { CalendarPlus, Plus, Pencil, ArrowRight, Download, Clock, Copy, List, HardHat, SkipForward } from "lucide-react";
+import { CalendarPlus, Plus, Pencil, ArrowRight, Download, Clock, Copy, List, HardHat, SkipForward, StickyNote } from "lucide-react";
 import { studySummary, type StudyDayMarks } from "@/lib/study/calendarMarks";
 import { ReminderChip } from "./ReminderChip";
 import { DayTimeline } from "./DayTimeline";
@@ -36,6 +36,8 @@ interface DayPanelProps {
   onMoveByDays: (occurrence: Occurrence, days: number) => void;
   /** Pobiera `.ics` z tym terminem — kalendarz systemowy przypomni przy zamkniętej aplikacji. */
   onExport: (occurrence: Occurrence) => void;
+  /** Otwiera notatkę tego terminu (K2.1). Brak = przycisku nie ma. */
+  onOpenNote?: (noteId: string) => void;
   /** Pomija wystąpienie serii bez otwierania dialogu. Brak = przycisku nie ma. */
   onSkip?: (occurrence: Occurrence) => void;
   /** Notatka wystąpienia — potrzebna do „Gotowe / Jutro / +1 h” przy aktualnym terminie. Brak = bez akcji. */
@@ -66,7 +68,7 @@ function writeDayView(view: DayView) {
   try { localStorage.setItem(DAY_VIEW_KEY, view); } catch { /* bez zapisu zostaje wybór na czas sesji */ }
 }
 
-export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdit, onMoveByDays, onExport, onSkip, onOpenSeriesSource, onEditShift, onCopyPrevShift, noteOf, onUpdateNote }: DayPanelProps) {
+export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdit, onMoveByDays, onExport, onOpenNote, onSkip, onOpenSeriesSource, onEditShift, onCopyPrevShift, noteOf, onUpdateNote }: DayPanelProps) {
   const [view, setViewState] = useState<DayView>(readDayView);
   function setView(next: DayView) {
     setViewState(next);
@@ -221,6 +223,16 @@ export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdi
                     <ReminderChip occurrence={occ} title={title} detailed className="min-w-0 flex-1" />
                     <Pencil className="w-3.5 h-3.5 shrink-0 text-muted-foreground opacity-0 coarse:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
                   </button>
+                  {onOpenNote && (
+                    <button
+                      onClick={() => onOpenNote(occ.noteId)}
+                      aria-label={`Otwórz notatkę: ${title.trim() || "Bez tytułu"}`}
+                      title="Otwórz notatkę"
+                      className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-field text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <StickyNote className="w-3.5 h-3.5" aria-hidden />
+                    </button>
+                  )}
                   <button
                     onClick={() => onExport(occ)}
                     aria-label={`Dodaj do kalendarza systemowego: ${title.trim() || "Bez tytułu"}`}

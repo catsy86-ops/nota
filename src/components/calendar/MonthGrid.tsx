@@ -117,6 +117,30 @@ export function MonthGrid({ month, byDay, titleOf, shiftOf, studyOf, selectedDay
         if (!onEditShift || e.ctrlKey || e.metaKey || e.altKey) return;
         onEditShift(selectedDay);
         break;
+      // K2.5: skróty bez modyfikatorów (jak w Google Calendar). N/P to następny i poprzedni miesiąc, C — nowy termin.
+      case "t":
+      case "T": {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        move(today);
+        break;
+      }
+      case "n":
+      case "N":
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        move(addMonths(selectedDay, 1));
+        break;
+      case "p":
+      case "P":
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        move(addMonths(selectedDay, -1));
+        break;
+      case "c":
+      case "C":
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        onActivateDay(selectedDay);
+        break;
       default: return;
     }
     e.preventDefault();
@@ -164,6 +188,7 @@ export function MonthGrid({ month, byDay, titleOf, shiftOf, studyOf, selectedDay
                   selected={isSameDay(day, selectedDay)}
                   focused={isSameDay(day, selectedDay)}
                   onSelect={onSelectDay}
+                  onActivate={onActivateDay}
                   cellRef={cellRefFor(key)}
                 />
               );

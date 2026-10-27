@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render } from "@testing-library/react";
 import { useCallback, useState } from "react";
 import { MonthGrid } from "./MonthGrid";
+import { dayKey } from "@/lib/reminderOccurrences";
 
 // K5.1: zmiana zaznaczenia przerysowuje tylko dwie komórki (stary i nowy dzień),
 // a nie całą siatkę. Licznik stoi w owijce `memo` nad prawdziwym `DayCell`:
@@ -64,5 +65,21 @@ describe("siatka miesiąca — renderowanie (K5.1)", () => {
     renders.count = 0;
     fireEvent.click(cell as HTMLElement);
     expect(renders.count).toBeLessThanOrEqual(2);
+  });
+  it("dwuklik dnia otwiera dodawanie na ten dzień (K2.4)", () => {
+    const activated: string[] = [];
+    const { container } = render(
+      <MonthGrid
+        month={MONTH}
+        byDay={new Map()}
+        titleOf={titleOf}
+        selectedDay={new Date(2026, 9, 5)}
+        onSelectDay={() => {}}
+        onActivateDay={(d) => activated.push(dayKey(d))}
+        onMonthChange={() => {}}
+      />,
+    );
+    fireEvent.doubleClick(container.querySelector<HTMLElement>('[data-day-key="2026-10-20"]')!);
+    expect(activated).toEqual(["2026-10-20"]);
   });
 });
