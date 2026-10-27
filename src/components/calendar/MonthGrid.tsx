@@ -50,9 +50,11 @@ interface MonthGridProps {
   onMonthChange: (month: Date) => void;
   /** Warstwa „Święta” (K3.3). */
   showHolidays?: boolean;
+  /** Podgląd notatki po najechaniu na termin (K3.5). */
+  previewOf?: (noteId: string) => string | undefined;
 }
 
-export function MonthGrid({ month, byDay, titleOf, shiftOf, studyOf, selectedDay, onSelectDay, onActivateDay, onEditShift, onMonthChange, showHolidays = true }: MonthGridProps) {
+export function MonthGrid({ month, byDay, titleOf, shiftOf, studyOf, selectedDay, onSelectDay, onActivateDay, onEditShift, onMonthChange, showHolidays = true, previewOf }: MonthGridProps) {
   const cellRefs = useRef(new Map<string, HTMLDivElement>());
   // Ta sama funkcja dla tego samego dnia: nowa przy każdym renderze unieważniałaby `memo(DayCell)`.
   const cellRefFor = useMemo(() => {
@@ -182,6 +184,7 @@ export function MonthGrid({ month, byDay, titleOf, shiftOf, studyOf, selectedDay
                 <DayCell
                   key={key}
                   showHolidays={showHolidays}
+                  previewOf={previewOf}
                   day={day}
                   month={month}
                   occurrences={byDay.get(key) ?? NO_OCCURRENCES}

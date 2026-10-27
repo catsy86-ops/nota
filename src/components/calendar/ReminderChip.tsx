@@ -33,15 +33,17 @@ interface ReminderChipProps {
   className?: string;
   /** Np. `--i` dla wejścia ze stagger (`chip-slide`). */
   style?: React.CSSProperties;
+  /** Natywny `title` z opisem terminu; wyłączamy, gdy chip ma własny podgląd (K3.5). */
+  nativeTitle?: boolean;
 }
 
-export function ReminderChip({ occurrence, title, detailed = false, className, style }: ReminderChipProps) {
+export function ReminderChip({ occurrence, title, detailed = false, className, style, nativeTitle = true }: ReminderChipProps) {
   const isForecast = occurrence.isSeries && !occurrence.isNext;
   const overdue = isOverdueOccurrence(occurrence);
 
   return (
     <span
-      title={occurrenceLabel(occurrence, title, overdue)}
+      title={nativeTitle ? occurrenceLabel(occurrence, title, overdue) : undefined}
       style={style}
       className={cn(
         "flex items-center gap-1 rounded-control border px-1 py-px text-left leading-tight",

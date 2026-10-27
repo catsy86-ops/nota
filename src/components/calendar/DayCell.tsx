@@ -5,6 +5,7 @@ import { wasJustMoved } from "./movedSignal";
 import { format, isSameDay, isSameMonth } from "date-fns";
 import { pl } from "date-fns/locale";
 import { ReminderChip } from "./ReminderChip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { isOverdueOccurrence } from "@/lib/dueTerms";
 import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
 import { cn } from "@/lib/utils";
@@ -26,7 +27,7 @@ const terminy = (n: number) => `${n} ${pluralPl(n, ["termin", "terminy", "termin
  * w modelu (jednorazowy albo najbliższy w serii) — prognozy nie istnieją
  * w danych, więc nie ma czego przesuwać.
  */
-function DraggableChip({ occurrence, title }: { occurrence: Occurrence; title: string }) {
+function DraggableChip({ occurrence, title, preview }: { occurrence: Occurrence; title: string; preview?: string }) {
   const movable = !occurrence.isSeries || occurrence.isNext;
   const [justMoved] = useState(() => wasJustMoved(occurrence.noteId));
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
@@ -46,7 +47,19 @@ function DraggableChip({ occurrence, title }: { occurrence: Occurrence; title: s
       // Wzorzec „stan przy pierwszym renderze”: odbicie gra tylko dla chipa, który właśnie przyleciał.
       className={cn(movable && "cursor-grab touch-none", isDragging && "opacity-40", justMoved && "chip-drop")}
     >
-      <ReminderChip occurrence={occurrence} title={title} />
+      {/* Podgląd notatki po najechaniu (K3.5). Po dotyku dymek się nie otwiera (`ui/tooltip`). */}
+      {preview ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="block">
+              <ReminderChip occurrence={occurrence} title={title} nativeTitle={false} />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs whitespace-pre-line text-xs">{preview}</TooltipContent>
+        </Tooltip>
+      ) : (
+        <ReminderChip occurrence={occurrence} title={title} />
+      )}
     </div>
   );
 }
@@ -63,6 +76,8 @@ interface DayCellProps {
   onActivate?: (day: Date) => void;
   /** Warstwa „Święta” (K3.3): wyłączona = nazwa i kropka świąt znikają. */
   showHolidays?: boolean;
+  /** Podgląd notatki po najechaniu na chip (K3.5). */
+  previewOf?: (noteId: string) => string | undefined;
   cellRef?: (el: HTMLDivElement | null) => void;
   /** Zmiana z Grafiku w tym dniu (z godzinami dnia), jeśli jest wpisana. */
   shift?: ShiftType;
@@ -71,7 +86,7 @@ interface DayCellProps {
 }
 
 /** Podsumowanie Pracy dla czytnika i tytułu: „2 wizyty, 1 dostawa”; `null`, gdy nic nie ma. */
-function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSelect, onActivate, cellRef, shift, study, showHolidays = true }: DayCellProps) {
+function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSelect, onActivate, cellRef, shift, study, showHolidays = true, previewOf }: DayCellProps) {
   // K2.4: przytrzymanie na dotyku (500 ms) otwiera dodawanie na ten dzień. Przeciąganie chipa ma pierwszeństwo.
   const pressTimer = useRef<number | null>(null);
   const pressFired = useRef(false);
@@ -192,7 +207,7 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
 
         <div className="hidden sm:flex sm:flex-col gap-0.5">
           {shown.map((occ) => (
-            <DraggableChip key={`${occ.noteId}-${occ.at}`} occurrence={occ} title={titleOf(occ.noteId)} />
+            <DraggableChip key={`${occ.noteId}-${occ.at}`} occurrence={occ} title={titleOf(occ.noteId)} preview={previewOf?.(occ.noteId)} />
           ))}
           {hidden > 0 && (
             <span className="text-2xs text-muted-foreground pl-1">+{hidden} więcej</span>

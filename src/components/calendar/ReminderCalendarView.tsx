@@ -28,6 +28,8 @@ import type { Occurrence } from "@/lib/reminderOccurrences";
 import type { Note } from "@/hooks/useNotes";
 import { calendarDayFromSearch, viewPath } from "@/lib/viewRoute";
 import { cn } from "@/lib/utils";
+import { notePreview } from "@/lib/notePreview";
+import { searchNotes } from "@/lib/searchNotes";
 import { CALENDAR_LAYERS, countMonth, readLayers, writeLayers, type CalendarLayer, type CalendarLayerState } from "@/lib/calendarLayers";
 import { holidayName } from "@/lib/shifts/holidays";
 import { studySummary } from "@/lib/study/calendarMarks";
@@ -140,7 +142,28 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
   // Stabilna funkcja dla siatki: `memo(DayCell)` nie przerysowuje komórek przy każdym kliknięciu (K5.1).
   const studyOf = useCallback((key: string) => studyMarks.get(key), [studyMarks]);
 
-  const shownByDay = layers.terms ? byDay : NO_TERMS;
+  // Szukanie terminów (K3.5): zostają wystąpienia notatek pasujących do zapytania (`searchNotes`).
+  const [termQuery, setTermQuery] = useState("");
+  const termMatches = useMemo(() => {
+    const q = termQuery.trim();
+    if (!q) return null;
+    return new Set(searchNotes(notes.filter((n) => !n.trashed), q).map((n) => n.id));
+  }, [notes, termQuery]);
+  const filteredByDay = useMemo(() => {
+    if (!termMatches) return byDay;
+    const out = new Map<string, Occurrence[]>();
+    for (const [k, occ] of byDay) {
+      const kept = occ.filter((o) => termMatches.has(o.noteId));
+      if (kept.length) out.set(k, kept);
+    }
+    return out;
+  }, [byDay, termMatches]);
+  const shownByDay = layers.terms ? filteredByDay : NO_TERMS;
+  // Podgląd notatki po najechaniu na chip (K3.5) — treść idzie z notatki, nie z wystąpienia.
+  const previewOf = useCallback((noteId: string) => {
+    const note = notesById.get(noteId);
+    return note ? notePreview(note) : undefined;
+  }, [notesById]);
   const shownShiftOf = useCallback((key: string) => (layers.shifts ? shiftOf(key) : undefined), [layers.shifts, shiftOf]);
   const shownStudyOf = useCallback((key: string) => (layers.work ? studyOf(key) : undefined), [layers.work, studyOf]);
   // Liczniki miesiąca w pasku warstw; klik w licznik przełącza warstwę (K3.3).
@@ -341,6 +364,14 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
               {LAYER_LABEL[l]} <span className="tabular-nums">{layerCounts[l]}</span>
             </button>
           ))}
+          <input
+            type="search"
+            value={termQuery}
+            onChange={(e) => setTermQuery(e.target.value)}
+            placeholder="Szukaj terminów"
+            aria-label="Szukaj terminów w tym miesiącu"
+            className="h-8 min-w-0 flex-1 basis-40 rounded-field border border-border bg-background px-2 text-xs outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+          />
         </div>
 
         {/* Telefon: bieżący tydzień i tak jest wierszem siatki miesiąca tuż pod spodem — pasek go dublował. */}
@@ -393,6 +424,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
             shiftOf={shownShiftOf}
             studyOf={shownStudyOf}
             showHolidays={layers.holidays}
+            previewOf={previewOf}
             selectedDay={selectedDay}
             onSelectDay={selectGridDay}
             onActivateDay={openAdd}
