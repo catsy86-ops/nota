@@ -3079,3 +3079,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 ### Testy
 - `e2e/view-scroll-memory.spec.ts` (chromium) — 16 notatek, przewinięcie, przejście do „Dziś” i powrót do „Notatki” przywraca pozycję (±40 px).
 - Regresja: `@smoke` na chromium 26/27 (padający `tabs.spec` był już wcześniej), `e2e/mobile.spec.ts` na Pixel 7 15/15. Budżet precache przechodzi.
+- Commit: `60ba578` (2026-10-27).
