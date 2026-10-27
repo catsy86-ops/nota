@@ -21,3 +21,12 @@ export function writeViewMemory(key: string, value: string): void {
     /* pamięć działa tylko w tej sesji */
   }
 }
+
+/** Surowa wartość zapamiętana dla klucza (bez walidacji listą); `null` gdy brak albo storage zablokowany. */
+export function readViewMemoryRaw(key: string): string | null {
+  try {
+    return localStorage.getItem(PREFIX + key);
+  } catch {
+    return null;
+  }
+}

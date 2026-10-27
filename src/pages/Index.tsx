@@ -78,6 +78,7 @@ import { DndContext, pointerWithin } from "@dnd-kit/core";
 import { fireworks, megaCelebrate } from "@/lib/celebrate";
 import { glowPulse, glowStreak, centerOf, pointOfNote } from "@/lib/glowTrail";
 import { SearchBar } from "@/components/SearchBar";
+import { useViewScroll } from "@/hooks/useViewScroll";
 import { useDayDoneReward } from "@/hooks/useDayDoneReward";
 import { AchievementStamp } from "@/components/AchievementStamp";
 import { DailyQuote } from "@/components/DailyQuote";
@@ -371,6 +372,8 @@ const Index = () => {
   });
 
   useDayDoneReward(view === "today" && !search ? displayNotes : null);
+  // Przewinięcie per dział (3.6): wracając do działu, stoimy tam, gdzie z niego wyszliśmy.
+  useViewScroll(view);
   // W Terminach archiwum zostaje w liście (dzwoni), więc „Brak przypomnień” nie może mówić prawdy tylko o `displayNotes` (1d planu).
   // Archiwum nie wchodzi do grup „Zaległe”/„Nadchodzące” (D4): ma własną sekcję na dole, z wyszukiwaniem.
   // T 1.1: grupy przeliczają się na granicy terminu i o północy, nie tylko przy zmianie notatek.

@@ -3051,3 +3051,31 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - Test `e2e/bundle.spec.ts` („budżet: precache service workera”) był przekroczony już przed sesją (3,76 MiB przy progu 3,4 MiB, potwierdzone na commicie `3e89563`). Próg podniesiony do 3,8 MiB; zmierzone 3 949 725 B (3,767 MiB, 197 plików). Przy każdym zejściu w dół obniżyć próg.
 - Commit (5.1): `12c9339` (2026-10-27).
 - Commit (grubsze obramowania): `8b98b77` (2026-10-27).
+
+## Wspólne — pamięć stanu widoku: przewinięcie per dział (plan UI/UX 3.6, 2026-10-27)
+
+### Co robi
+- Wracając do działu (Notatki, Dziś, Terminy…), strona wraca do miejsca, w którym z niego wyszliśmy. Każdy dział ma własną pozycję.
+- Wcześniej zapamiętane były już: zakładka Ustawień (`settingsTab`), zakładka Pracy (`kaczy.study.tab.v1`) i zwinięte grupy paska bocznego. Teraz dochodzi przewinięcie.
+
+### Gdzie jest
+- `src/hooks/useViewScroll.ts` — `useViewScroll(view)`, `readViewScroll`, `writeViewScroll`.
+- `src/lib/viewMemory.ts` — `readViewMemory` / `writeViewMemory` (wartości z listy dozwolonych) i nowe `readViewMemoryRaw` (liczby).
+- `src/pages/Index.tsx` — wywołanie `useViewScroll(view)` obok `useDayDoneReward`.
+
+### Jak działa i dlaczego
+- Klucz w localStorage to `kaczy.viewMemory.v1:scroll:<view>`, wartość to pozycja w pikselach.
+- Zapis: zdarzenie `scroll` aktualizuje ostatnią pozycję w refie; zapis do pamięci po 150 ms bez przewijania i przy zmianie działu.
+- Przy zmianie działu pozycja jest brana z refu, a nie z `scrollY`. Po zmianie układu strona może mieć już inną wysokość i `scrollY` byłby obcięty.
+- Przywrócenie czeka w pętli `requestAnimationFrame` (do 90 klatek), aż strona będzie dość wysoka — listy renderują się partiami. Potem przewija do zapamiętanej pozycji, obciętej do maksymalnej.
+- Przewijanie programowe przy przywracaniu nie zapisuje się (flaga `restoring`).
+- Stuknięcie w aktywną zakładkę nadal wraca na górę (`BottomNav`, zamierzone).
+
+### Ograniczenia i pułapki
+- Pozycja jest per urządzenie (localStorage), nie per sesja. Po dłuższej przerwie wróci sprzed kilku dni, o ile dział nie był otwierany.
+- Jeśli treść nie urośnie do zapamiętanej wysokości w ~1,5 s, pozycja zostaje obcięta do dostępnego maksimum.
+- Działy trzymane w `Activity` (Praca, Grafik) mogą mieć własne przewinięcie wewnętrzne; ten hook obsługuje przewinięcie okna.
+
+### Testy
+- `e2e/view-scroll-memory.spec.ts` (chromium) — 16 notatek, przewinięcie, przejście do „Dziś” i powrót do „Notatki” przywraca pozycję (±40 px).
+- Regresja: `@smoke` na chromium 26/27 (padający `tabs.spec` był już wcześniej), `e2e/mobile.spec.ts` na Pixel 7 15/15. Budżet precache przechodzi.

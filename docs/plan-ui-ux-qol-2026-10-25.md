@@ -202,3 +202,5 @@ Plan kończymy tutaj; pozostałe punkty to backlog z podanym zakresem, do zrobie
 **Status 3.10 (2026-10-27, finał):** zrobione. Punkty „pół/pełny” i zamykanie gestem w dół na wszystkich dolnych arkuszach listowych (`ViewSheet`, menu i „Nowa” w `BottomNav`, Długi, menu notatki, kolejka zapisu). Edytor wpisu Dziennika celowo bez punktów (układ z przewijaniem). Wcześniejsza uwaga „nie zrobione” nieaktualna.
 
 **Status 3.12 (2026-10-27, finał):** zrobione także grubsze obramowania (`.border…` 1 → 2 px w `preferences.css`). Punkt zamknięty.
+
+**Status 3.6 (2026-10-27):** zrobione przewinięcie per dział (`src/hooks/useViewScroll.ts`); zakładki Ustawień i Pracy oraz zwinięte grupy były wcześniej. Test: `e2e/view-scroll-memory.spec.ts`.
