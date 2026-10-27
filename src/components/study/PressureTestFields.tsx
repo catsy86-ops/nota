@@ -15,7 +15,7 @@ export function PressureTestFields({ value, topic, onChange }: { value: Pressure
       <button
         type="button"
         onClick={() => onChange(defaultTest(topic))}
-        className="pressable flex w-full items-center gap-2 rounded-xl border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
+        className="pressable flex w-full items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
       >
         <Gauge className="h-4 w-4 shrink-0" aria-hidden />Dodaj protokół próby szczelności
       </button>
@@ -24,7 +24,7 @@ export function PressureTestFields({ value, topic, onChange }: { value: Pressure
   const sewer = value.medium === "sewer";
   const set = (patch: Partial<PressureTest>) => onChange({ ...value, ...patch });
   return (
-    <fieldset className="min-w-0 space-y-3 rounded-xl border border-primary/40 bg-primary/5 p-3" data-testid="pressure-test">
+    <fieldset className="min-w-0 space-y-3 rounded-card border border-primary/40 bg-primary/5 p-3" data-testid="pressure-test">
       <legend className="sr-only">Protokół próby szczelności</legend>
       <div className="flex items-center gap-2">
         <Gauge className="h-4 w-4 shrink-0 text-primary-ink" aria-hidden />
@@ -68,7 +68,7 @@ function NumField({ label, value, onChange }: { label: string; value: number | n
           const n = Number.parseFloat(raw.replace(",", "."));
           onChange(Number.isFinite(n) ? n : null);
         }}
-        className="h-10 w-full rounded-lg border border-input bg-background px-2 font-mono text-base tabular-nums text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11"
+        className="h-10 w-full rounded-field border border-input bg-background px-2 font-mono text-base tabular-nums text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11"
       />
     </label>
   );

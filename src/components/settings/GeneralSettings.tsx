@@ -157,7 +157,7 @@ export function GeneralSettings() {
               value={prefs.todayReminderTime}
               aria-label="Przypomnienie Dziś: stała godzina"
               onChange={(e) => setViewPref("todayReminderTime", e.target.value)}
-              className="text-xs bg-background border border-border/60 rounded-md px-2 py-1 text-foreground coarse:h-11 coarse:px-3"
+              className="text-xs bg-background border border-border/60 rounded-control px-2 py-1 text-foreground coarse:h-11 coarse:px-3"
             />
             {prefs.todayReminderTime && (
               <button
@@ -182,7 +182,7 @@ export function GeneralSettings() {
               value={prefs.weekReminderDay}
               aria-label="Przypomnienie Ten tydzień: dzień"
               onChange={(e) => setViewPref("weekReminderDay", Number(e.target.value))}
-              className="text-xs bg-background border border-border/60 rounded-md px-2 py-1 text-foreground coarse:h-11 coarse:px-3"
+              className="text-xs bg-background border border-border/60 rounded-control px-2 py-1 text-foreground coarse:h-11 coarse:px-3"
               disabled={!prefs.weekReminderTime}
             >
               {REVIEW_DAY_NAMES.map((d, i) => (
@@ -194,7 +194,7 @@ export function GeneralSettings() {
               value={prefs.weekReminderTime}
               aria-label="Przypomnienie Ten tydzień: godzina"
               onChange={(e) => setViewPref("weekReminderTime", e.target.value)}
-              className="text-xs bg-background border border-border/60 rounded-md px-2 py-1 text-foreground coarse:h-11 coarse:px-3"
+              className="text-xs bg-background border border-border/60 rounded-control px-2 py-1 text-foreground coarse:h-11 coarse:px-3"
             />
             {prefs.weekReminderTime && (
               <button
@@ -299,9 +299,9 @@ export function GeneralSettings() {
       <div id="ogolne-skroty" className="scroll-mt-14 pt-2 space-y-2 [@media(pointer:coarse)]:hidden">
         <p className="text-xs text-muted-foreground mb-2">Lista skrótów dostępnych w aplikacji:</p>
         {SHORTCUTS.map((s) => (
-          <div key={s.keys} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 bg-muted/20 px-4 py-2.5">
+          <div key={s.keys} className="flex items-center justify-between gap-3 rounded-card border border-border/60 bg-muted/20 px-4 py-2.5">
             <span className="text-sm text-foreground">{s.desc}</span>
-            <kbd className="font-mono text-xs bg-background border border-border/60 rounded-md px-2 py-1 text-foreground/80">{s.keys}</kbd>
+            <kbd className="font-mono text-xs bg-background border border-border/60 rounded-control px-2 py-1 text-foreground/80">{s.keys}</kbd>
           </div>
         ))}
       </div>

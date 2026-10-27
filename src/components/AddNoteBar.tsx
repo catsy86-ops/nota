@@ -508,7 +508,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
             className="group w-full flex items-center gap-3.5 px-4 py-3.5 text-muted-foreground hover:text-foreground transition-colors"
           >
             {/* Kafelek z bursztynowym plusem — jak zakładka w zeszycie; reaguje na najechanie i fokus. */}
-            <span aria-hidden className="grid place-items-center w-9 h-9 rounded-xl bg-primary/12 text-primary-ink ring-1 ring-primary/20 transition-[background-color,transform] duration-(--dur-fast) group-hover:bg-primary/20 group-active:scale-95">
+            <span aria-hidden className="grid place-items-center w-9 h-9 rounded-card bg-primary/12 text-primary-ink ring-1 ring-primary/20 transition-[background-color,transform] duration-(--dur-fast) group-hover:bg-primary/20 group-active:scale-95">
               <Plus className="w-5 h-5" />
             </span>
             <span className="font-medium font-display text-[0.95rem] tracking-tight">Zapisz notatkę...</span>
@@ -519,7 +519,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
             className={cn("p-4 space-y-3", fullScreen && "flex min-h-[calc(100dvh-env(safe-area-inset-top)-env(safe-area-inset-bottom))] flex-col space-y-0 gap-3 bg-inherit")}>
             {destination && <p className="text-xs text-muted-foreground">Trafi do: <span className="font-medium text-foreground">{destination}</span></p>}
             {restored && (
-              <div role="status" className="flex items-center gap-2 rounded-lg bg-primary/10 px-2.5 py-1.5 text-xs text-primary-ink" data-draft-restored="">
+              <div role="status" className="flex items-center gap-2 rounded-field bg-primary/10 px-2.5 py-1.5 text-xs text-primary-ink" data-draft-restored="">
                 <span>Szkic przywrócony z poprzedniej sesji</span>
                 <button type="button" onClick={reset} className="ml-auto rounded px-1.5 py-0.5 font-medium hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                   Odrzuć
@@ -609,7 +609,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
               <div className="flex gap-2 flex-wrap">
                 {images.map((img, i) => (
                   <div key={i} className="relative group/img">
-                    <NoteImage imageRef={img} className="w-16 h-16 object-cover rounded-lg" />
+                    <NoteImage imageRef={img} className="w-16 h-16 object-cover rounded-field" />
                     <button
                       onClick={() => setImages((prev) => prev.filter((_, idx) => idx !== i))}
                       aria-label="Usuń obrazek"
@@ -628,7 +628,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
             {labels.length > 0 && (
               <div className="flex gap-1 flex-wrap">
                 {labels.map((l) => (
-                  <button key={l} type="button" onClick={() => toggleLabel(l)} aria-label={`Usuń etykietę ${l}`} className="rounded-md outline-hidden focus-visible:ring-2 focus-visible:ring-ring"><Badge variant="secondary" className="text-2xs cursor-pointer">{l} ×</Badge></button>
+                  <button key={l} type="button" onClick={() => toggleLabel(l)} aria-label={`Usuń etykietę ${l}`} className="rounded-control outline-hidden focus-visible:ring-2 focus-visible:ring-ring"><Badge variant="secondary" className="text-2xs cursor-pointer">{l} ×</Badge></button>
                 ))}
               </div>
             )}
@@ -701,12 +701,12 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                     <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Etykiety</p>
                     <div className="flex gap-1 flex-wrap">
                       {allLabels.map((l) => (
-                        <button key={l} type="button" onClick={() => toggleLabel(l)} aria-pressed={labels.includes(l)} className="rounded-md outline-hidden focus-visible:ring-2 focus-visible:ring-ring"><Badge variant={labels.includes(l) ? "default" : "outline"} className="cursor-pointer text-xs">{l}</Badge></button>
+                        <button key={l} type="button" onClick={() => toggleLabel(l)} aria-pressed={labels.includes(l)} className="rounded-control outline-hidden focus-visible:ring-2 focus-visible:ring-ring"><Badge variant={labels.includes(l) ? "default" : "outline"} className="cursor-pointer text-xs">{l}</Badge></button>
                       ))}
                     </div>
                     <div className="flex gap-1.5">
                       <input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleCreateLabel()}
-                        placeholder="Nowa etykieta..." className="flex-1 text-xs max-sm:text-base bg-muted/60 border border-border rounded-lg px-2.5 py-1.5 outline-hidden focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground" />
+                        placeholder="Nowa etykieta..." className="flex-1 text-xs max-sm:text-base bg-muted/60 border border-border rounded-field px-2.5 py-1.5 outline-hidden focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground" />
                       <IconButton size="sm" tone="primary" onClick={handleCreateLabel} aria-label="Dodaj etykietę">
                         <Plus className="w-3.5 h-3.5" />
                       </IconButton>
@@ -742,7 +742,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                         value={parentId ?? ""}
                         onChange={(e) => setParentId(e.target.value || null)}
                         aria-label="Notatka nadrzędna"
-                        className="w-full rounded-lg border border-border bg-muted/60 px-2 py-1.5 text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
+                        className="w-full rounded-field border border-border bg-muted/60 px-2 py-1.5 text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
                       >
                         <option value="">Poziom główny</option>
                         {parentOptions.map((o) => <option key={o.id} value={o.id}>{o.title.trim() || "Bez tytułu"}</option>)}
@@ -756,7 +756,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
               <div className="flex shrink-0 items-center gap-1">
                 {!isDraftEmpty && (
                   <button type="button" onClick={parkCurrent} title="Odłóż szkic na listę roboczą — wrócisz do niego z rzędu „Odłożone”"
-                    className="pressable px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors shrink-0 coarse:min-h-11">
+                    className="pressable px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-field transition-colors shrink-0 coarse:min-h-11">
                     Odłóż
                   </button>
                 )}
@@ -767,13 +767,13 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
                 ) : (
                   <button type="button" onClick={saveAndNext}
                     title="Zapisz i otwórz pusty szkic (Ctrl+Shift+Enter)"
-                    className="pressable px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors shrink-0">
+                    className="pressable px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-field transition-colors shrink-0">
                     Zapisz i dodaj kolejną
                   </button>
                 ))}
                 <button onClick={handleClose}
                   title={isDraftEmpty ? "Zamknij" : "Zapisz notatkę (Ctrl+Enter)"}
-                  className={cn("pressable px-4 py-1.5 text-sm font-medium font-display text-primary-ink hover:bg-primary/10 rounded-lg transition-colors shrink-0", isDraftEmpty && "ml-auto",
+                  className={cn("pressable px-4 py-1.5 text-sm font-medium font-display text-primary-ink hover:bg-primary/10 rounded-field transition-colors shrink-0", isDraftEmpty && "ml-auto",
                     fullScreen && !isDraftEmpty && "h-11 rounded-full bg-primary px-6 text-primary-foreground shadow-glow-primary hover:bg-primary/90")}>
                   {isDraftEmpty ? "Zamknij" : "Zapisz"}
                 </button>

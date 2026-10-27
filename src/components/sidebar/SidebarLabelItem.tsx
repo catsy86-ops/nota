@@ -32,7 +32,7 @@ export function SidebarLabelItem({ label, displayName = label, depth = 1, isActi
       <div className="flex items-center gap-1 px-2 py-1" style={{ paddingLeft: (depth - 1) * 12 + 8 }}>
         <input ref={inputRef} value={name} onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setName(label); setEditing(false); } }}
-          className="flex-1 text-sm bg-muted/60 border border-border rounded-lg px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground min-w-0" />
+          className="flex-1 text-sm bg-muted/60 border border-border rounded-field px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground min-w-0" />
         <IconButton size="sm" tone="active" onClick={save} aria-label="Zapisz nazwę etykiety"><Check className="w-3.5 h-3.5" /></IconButton>
         <IconButton size="sm" onClick={() => { setName(label); setEditing(false); }} aria-label="Anuluj edycję etykiety"><X className="w-3.5 h-3.5" /></IconButton>
       </div>

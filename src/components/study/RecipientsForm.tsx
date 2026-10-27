@@ -7,7 +7,7 @@ import { saveBoss, saveGroup, type Boss, type WaGroup } from "@/lib/study/store"
 import { formatPhone } from "@/lib/study/boss";
 
 const fieldClass =
-  "h-9 min-w-0 w-full rounded-md border border-input bg-background px-2 text-base focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 md:text-sm";
+  "h-9 min-w-0 w-full rounded-control border border-input bg-background px-2 text-base focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 md:text-sm";
 
 /**
  * Odbiorcy raportu w WhatsApp — szef (numer) i grupa; zapisani w danych Pracy, więc są na każdym sparowanym

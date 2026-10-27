@@ -58,7 +58,7 @@ function TodaySummary({ summary, goals }: { summary: DaySummary; goals: DietGoal
 
 function Stat({ label, value, goal, note }: { label: string; value: string; goal?: string; note?: string }) {
   return (
-    <div className="rounded-lg border border-border/60 px-3 py-2">
+    <div className="rounded-field border border-border/60 px-3 py-2">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="font-mono text-lg tabular-nums">{value} {goal && <span className="text-xs text-muted-foreground">{goal}</span>}</p>
       {note && <p className="text-2xs text-muted-foreground">{note}</p>}

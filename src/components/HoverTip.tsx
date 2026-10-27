@@ -93,7 +93,7 @@ export function HoverTip() {
     <div
       ref={ref}
       aria-hidden
-      className="fixed z-modal pointer-events-none rounded-md border bg-popover px-3 py-1.5 text-xs text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 motion-reduce:animate-none"
+      className="fixed z-modal pointer-events-none rounded-control border bg-popover px-3 py-1.5 text-xs text-popover-foreground shadow-elevation-2 animate-in fade-in-0 zoom-in-95 motion-reduce:animate-none"
       style={pos ? { left: pos.left, top: pos.top } : { left: 0, top: 0, visibility: "hidden" }}
     >
       {tip.text}

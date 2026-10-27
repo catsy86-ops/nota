@@ -58,7 +58,7 @@ export function AliasPicker({ title, aliases, onSave }: AliasPickerProps) {
           <button
             type="button"
             onClick={handleSave}
-            className="pressable px-3 py-1.5 rounded-md text-sm font-medium bg-primary text-primary-foreground"
+            className="pressable px-3 py-1.5 rounded-control text-sm font-medium bg-primary text-primary-foreground"
           >
             Zapisz aliasy
           </button>

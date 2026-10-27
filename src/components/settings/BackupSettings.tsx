@@ -47,7 +47,7 @@ function StoragePersistenceStatus() {
 
   return (
     <Section title="Trwałość danych w tej przeglądarce">
-      <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs space-y-2">
+      <div className="rounded-card border border-border/60 bg-muted/20 p-3 text-xs space-y-2">
         <div className="flex items-center gap-2">
           {info.persisted ? (
             <ShieldCheck className="w-4 h-4 text-success-ink shrink-0" />
@@ -106,7 +106,7 @@ function BackupFileTarget() {
 
   return (
     <Section title="Miejsce zapisu backupu">
-      <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs space-y-2">
+      <div className="rounded-card border border-border/60 bg-muted/20 p-3 text-xs space-y-2">
         <div className="flex items-center gap-2">
           <FileCog className="w-4 h-4 text-muted-foreground shrink-0" />
           <p className="text-foreground">
@@ -323,13 +323,13 @@ export function BackupSettings() {
 
       <ResetSectionButton title="kopia" keys={VIEW_PREF_GROUPS.kopia} />
 
-      <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-1">
+      <div className="rounded-card border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-1">
         <p className="font-semibold text-foreground">💡 Wskazówka</p>
         <p>Pełny backup zawiera wszystkie notatki (w tym archiwum i kosz), etykiety, foldery, historię wersji, ustawienia oraz odznaki. Nie zawiera kodu parowania urządzeń. Przywrócenie zastąpi notatki w tej przeglądarce i odświeży aplikację.</p>
       </div>
 
       <Section title="Diagnostyka">
-        <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
+        <div className="flex items-center justify-between gap-4 rounded-card border border-border/60 bg-muted/30 px-4 py-3">
           <div className="min-w-0">
             <p className="text-sm font-semibold">Raport diagnostyczny</p>
             <p className="text-xs text-muted-foreground mt-0.5">

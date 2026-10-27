@@ -207,12 +207,12 @@ function CheckRow({ item, done, onToggle, note }: { item: CheckItem; done: boole
         role="checkbox"
         aria-checked={done}
         onClick={onToggle}
-        className="pressable flex w-full items-center gap-3 rounded-lg px-2 py-2.5 text-left hover:bg-muted coarse:min-h-14"
+        className="pressable flex w-full items-center gap-3 rounded-field px-2 py-2.5 text-left hover:bg-muted coarse:min-h-14"
       >
         <span
           aria-hidden
           className={cn(
-            "grid size-7 shrink-0 place-items-center rounded-md border-2 transition-colors duration-fast",
+            "grid size-7 shrink-0 place-items-center rounded-control border-2 transition-colors duration-fast",
             done ? "border-primary bg-primary text-primary-foreground" : "border-foreground/30 bg-background",
           )}
         >
@@ -281,7 +281,7 @@ function EntryCheckDialog({ site, today, onEntered, onOpenChange }: {
                 <button
                   type="button"
                   onClick={() => setEditing(true)}
-                  className="pressable inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground coarse:min-h-11"
+                  className="pressable inline-flex items-center gap-1 rounded-control px-1.5 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground coarse:min-h-11"
                 >
                   <Pencil className="h-3.5 w-3.5" aria-hidden />Zmień listę
                 </button>
@@ -353,13 +353,13 @@ function ItemsEditor({ items, custom, onDone }: { items: readonly CheckItem[]; c
               maxLength={CHECK_ITEM_MAX}
               aria-label={`Punkt ${idx + 1}`}
               aria-invalid={!item.text.trim()}
-              className="h-10 min-w-0 flex-1 rounded-lg border border-input bg-background px-2.5 text-base outline-hidden focus:ring-2 focus:ring-ring aria-invalid:border-destructive coarse:h-11 sm:text-sm"
+              className="h-10 min-w-0 flex-1 rounded-field border border-input bg-background px-2.5 text-base outline-hidden focus:ring-2 focus:ring-ring aria-invalid:border-destructive coarse:h-11 sm:text-sm"
             />
             <button
               type="button"
               onClick={() => setDraft((d) => d.filter((_, i) => i !== idx))}
               aria-label={`Usuń punkt: ${item.text || idx + 1}`}
-              className="pressable grid size-10 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
+              className="pressable grid size-10 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
             >
               <X className="h-4 w-4" aria-hidden />
             </button>
@@ -375,7 +375,7 @@ function ItemsEditor({ items, custom, onDone }: { items: readonly CheckItem[]; c
             placeholder="Nowy punkt, np. Klucz do skrzynki"
             aria-label="Nowy punkt"
             autoComplete="off"
-            className="h-10 min-w-0 flex-1 rounded-lg border border-input bg-background px-2.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
+            className="h-10 min-w-0 flex-1 rounded-field border border-input bg-background px-2.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
           />
           <Button type="submit" variant="outline" disabled={!text.trim()} className="shrink-0 coarse:h-11">
             <Plus className="h-4 w-4" aria-hidden />Dodaj

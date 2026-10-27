@@ -149,7 +149,7 @@ export function InboxTriage({ open, onOpenChange }: InboxTriageProps) {
 
         {current && !done && (
           <div className="space-y-4 pt-2">
-            <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
+            <div className="rounded-card border border-border/60 bg-muted/30 p-3">
               <p className="font-display font-semibold text-base leading-snug wrap-anywhere">{title}</p>
               {preview && <p className="mt-1 line-clamp-6 text-sm text-muted-foreground whitespace-pre-line wrap-anywhere">{preview}</p>}
             </div>

@@ -282,7 +282,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
         data-state={present ? "open" : undefined}
         data-reader-mode={mode}
         className={cn(
-          "pointer-events-auto flex flex-col rounded-card border border-border/60 bg-card/95 backdrop-blur-md shadow-2xl",
+          "pointer-events-auto flex flex-col rounded-card border border-border/60 bg-card/95 backdrop-blur-md shadow-elevation-3",
           present ? "w-[min(56rem,95vw)] h-[90dvh]" : wide ? "w-full max-w-5xl max-h-[80dvh]" : "w-full max-w-2xl max-h-[80dvh]",
         )}
         onClick={(e) => e.stopPropagation()}
@@ -383,7 +383,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                   </span>
                 </div>
                 {snippets.map((s, i) => (
-                  <div key={i} className="text-xs text-foreground/80 bg-muted/40 rounded-lg px-2.5 py-1.5 leading-relaxed">
+                  <div key={i} className="text-xs text-foreground/80 bg-muted/40 rounded-field px-2.5 py-1.5 leading-relaxed">
                     {s.before}<mark className="bg-primary/30 text-foreground rounded px-0.5">{s.match}</mark>{s.after}
                   </div>
                 ))}
@@ -424,7 +424,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
             {note.images && note.images.length > 0 && (
               <div className={cn("grid gap-2 mt-4", present ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2")}>
                 {note.images.map((img, i) => (
-                  <NoteImage key={i} imageRef={img} alt={`Obraz ${i + 1} z ${note.images.length}`} className="w-full rounded-lg" placeholderClassName="aspect-video" />
+                  <NoteImage key={i} imageRef={img} alt={`Obraz ${i + 1} z ${note.images.length}`} className="w-full rounded-field" placeholderClassName="aspect-video" />
                 ))}
               </div>
             )}
@@ -470,7 +470,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
             {!present && !note.trashed && !note.locked && sideSlot("graph", (
               <section aria-label="Lokalny graf" className={cn(!wide && "mt-8 pt-4 border-t border-border/50")} data-local-graph="">
                 {!wide && <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Lokalny graf</p>}
-                <Suspense fallback={<div className="h-40 rounded-xl bg-muted/30" />}>
+                <Suspense fallback={<div className="h-40 rounded-card bg-muted/30" />}>
                   <NoteGraph notes={treeNotes} centerId={note.id} folders={folders} compact={wide} onOpenNote={(id) => onShow(id, mode)} />
                 </Suspense>
               </section>
@@ -488,7 +488,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                         <button
                           type="button"
                           onClick={() => onShow(s.id, mode)}
-                          className="flex w-full items-center gap-2 rounded-lg bg-muted/30 px-2.5 py-1.5 text-left text-sm hover:bg-muted/60"
+                          className="flex w-full items-center gap-2 rounded-field bg-muted/30 px-2.5 py-1.5 text-left text-sm hover:bg-muted/60"
                         >
                           <CornerDownRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground" aria-hidden />
                           <span className="truncate">{s.icon ? `${s.icon} ` : ""}{s.title.trim() || "Bez tytułu"}</span>
@@ -514,7 +514,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                     <select
                       value={currentParent}
                       onChange={(e) => setParent(note.id, e.target.value || null)}
-                      className="min-w-0 max-w-56 flex-1 truncate rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground"
+                      className="min-w-0 max-w-56 flex-1 truncate rounded-control border border-border bg-background px-2 py-1 text-xs text-foreground"
                     >
                       <option value="">Brak (poziom główny)</option>
                       {currentParent && !parentOptions.some((o) => o.id === currentParent) && (
@@ -534,7 +534,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                 </p>
                 <ul className="space-y-1.5">
                   {mentions.map((m) => (
-                    <li key={m.id} className="flex items-start gap-2 rounded-lg bg-muted/30 px-2.5 py-1.5">
+                    <li key={m.id} className="flex items-start gap-2 rounded-field bg-muted/30 px-2.5 py-1.5">
                       <div className="min-w-0 flex-1">
                         <button
                           type="button"
@@ -572,7 +572,7 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
                   aria-controls="reader-side-panel"
                   onClick={() => setSideTab(t.id)}
                   className={cn(
-                    "rounded-md px-2.5 py-1 text-xs font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                    "rounded-control px-2.5 py-1 text-xs font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
                     sideTab === t.id ? "bg-primary/15 text-primary-ink" : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
                   )}
                 >

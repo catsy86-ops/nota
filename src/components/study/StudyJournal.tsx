@@ -45,7 +45,7 @@ const KIND_CHIPS: { value: KindFilter | null; label: string }[] = [
 ];
 
 const selectClass =
-  "h-9 w-full min-w-0 truncate rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 sm:w-auto sm:max-w-56";
+  "h-9 w-full min-w-0 truncate rounded-control border border-input bg-background px-2 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 sm:w-auto sm:max-w-56";
 
 /**
  * Dziennik z budowy: na górze to, co już zapisane, nowy wpis w arkuszu („+ Wpis”, „+” w dolnym
@@ -221,7 +221,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                   onChange={(ev) => patch({ query: ev.target.value })}
                   placeholder="Szukaj: rura, Lipowa, szczelność…"
                   enterKeyHint="search"
-                  className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-base focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 md:text-sm"
+                  className="h-9 w-full rounded-control border border-input bg-background pl-8 pr-3 text-base focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 md:text-sm"
                 />
               </label>
               <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] xl:flex-wrap xl:overflow-visible" role="group" aria-label="Rodzaj wpisu">

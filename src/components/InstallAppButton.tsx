@@ -21,7 +21,7 @@ interface InstallAppButtonProps {
 
 type Step = { icon: ReactNode; text: ReactNode };
 
-const STEP_ICON = "w-7 h-7 shrink-0 rounded-lg bg-muted flex items-center justify-center text-primary-ink";
+const STEP_ICON = "w-7 h-7 shrink-0 rounded-field bg-muted flex items-center justify-center text-primary-ink";
 
 function manualSteps(isIos: boolean, isAndroid: boolean): { intro: string; steps: Step[] } {
   if (isIos) {
@@ -81,7 +81,7 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
     variant === "compact" ? (
       <button
         onClick={handleClick}
-        className={cn("pressable shrink-0 px-3 h-9 rounded-xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors", className)}
+        className={cn("pressable shrink-0 px-3 h-9 rounded-card text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors", className)}
       >
         Zainstaluj
       </button>
@@ -93,7 +93,7 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
           className
         )}
       >
-        <span className="w-10 h-10 rounded-xl bg-background flex items-center justify-center text-primary-ink">
+        <span className="w-10 h-10 rounded-card bg-background flex items-center justify-center text-primary-ink">
           <Download className="w-5 h-5" />
         </span>
         <span className="text-xs font-medium font-display text-foreground">Zainstaluj</span>

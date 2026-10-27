@@ -31,7 +31,7 @@ export function VaultSettings() {
 
   return (
     <Section title="Prywatne notatki">
-      <div className="rounded-xl border border-border/60 bg-muted/30 px-4 py-3 space-y-3">
+      <div className="rounded-card border border-border/60 bg-muted/30 px-4 py-3 space-y-3">
         <p role="status" className="text-xs text-muted-foreground flex items-start gap-2" data-testid="vault-status">
           <ShieldCheck className="w-4 h-4 shrink-0 text-primary-ink" aria-hidden />
           <span>{vault.corrupt ? STATUS.corrupt : STATUS[vault.phase]}</span>
@@ -65,7 +65,7 @@ export function VaultSettings() {
             id="vault-autolock"
             value={minutes}
             onChange={(e) => setAutoLockMinutes(Number(e.target.value))}
-            className="h-9 coarse:h-11 rounded-md border border-input bg-background px-2 text-sm"
+            className="h-9 coarse:h-11 rounded-control border border-input bg-background px-2 text-sm"
           >
             {AUTOLOCK_CHOICES.map((m) => <option key={m} value={m}>{CHOICE_LABEL(m)}</option>)}
           </select>
@@ -76,7 +76,7 @@ export function VaultSettings() {
             id="vault-hidden-lock"
             value={hiddenMinutes}
             onChange={(e) => setHiddenLockMinutes(Number(e.target.value))}
-            className="h-9 coarse:h-11 rounded-md border border-input bg-background px-2 text-sm"
+            className="h-9 coarse:h-11 rounded-control border border-input bg-background px-2 text-sm"
           >
             {HIDDEN_LOCK_CHOICES.map((m) => <option key={m} value={m}>{HIDDEN_LABEL(m)}</option>)}
           </select>
@@ -84,7 +84,7 @@ export function VaultSettings() {
         <p className="text-2xs text-muted-foreground">Skarbiec blokuje się też, gdy karta jest ukryta dłużej niż wybrany czas.</p>
       </div>
 
-      <details className="rounded-xl border border-border/60 px-4 py-3 text-xs leading-relaxed text-muted-foreground" data-testid="vault-howto">
+      <details className="rounded-card border border-border/60 px-4 py-3 text-xs leading-relaxed text-muted-foreground" data-testid="vault-howto">
         <summary className="cursor-pointer text-sm font-semibold text-foreground">Jak to działa i czego nie robi</summary>
         <div className="mt-2 space-y-2">
           <p>

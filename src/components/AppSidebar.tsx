@@ -170,7 +170,7 @@ export function AppSidebar({
             initial={isMobile ? { x: "-100%" } : { width: 0 }}
             animate={isMobile ? { x: 0, transition: tween.enter } : { width: "17.5rem", transition: { duration: dur.slow, ease: ease.out } }}
             exit={isMobile ? { x: "-100%", transition: tween.exit } : { width: 0, transition: { duration: dur.base, ease: ease.in } }}
-            className="shrink-0 max-w-[85vw] border-r border-border/50 sidebar-gradient overflow-hidden fixed left-0 top-0 bottom-0 z-modal shadow-2xl desk:relative desk:shadow-none"
+            className="shrink-0 max-w-[85vw] border-r border-border/50 sidebar-gradient overflow-hidden fixed left-0 top-0 bottom-0 z-modal shadow-elevation-3 desk:relative desk:shadow-none"
           >
             <div className="p-5 space-y-1 w-70 max-w-[85vw] h-full flex flex-col scrollbar-thin overflow-y-auto">
               <div className="flex items-center gap-3 px-3 pb-6">

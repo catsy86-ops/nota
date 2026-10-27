@@ -46,7 +46,7 @@ function noteLabel(n: Note): string {
   return n.title.trim() || first?.trim().slice(0, 80) || "Bez tytułu";
 }
 
-const CELL_INPUT = "h-8 w-full min-w-0 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50";
+const CELL_INPUT = "h-8 w-full min-w-0 rounded-control border border-input bg-background px-2 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50";
 
 /**
  * Komórka właściwości: edycja na miejscu. Pole tekstowe zapisuje się przy wyjściu

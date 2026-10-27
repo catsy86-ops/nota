@@ -51,7 +51,7 @@ export function PropDefsDialog({ open, onOpenChange, defs, onAdd, onUpdate, onDe
         ) : (
           <ul className="space-y-3" aria-label="Istniejące pola">
             {defs.map((def) => (
-              <li key={def.id} className="rounded-lg border border-border/60 p-3 space-y-2">
+              <li key={def.id} className="rounded-field border border-border/60 p-3 space-y-2">
                 <div className="flex items-center gap-2">
                   <Input
                     key={def.name}
@@ -113,7 +113,7 @@ export function PropDefsDialog({ open, onOpenChange, defs, onAdd, onUpdate, onDe
               aria-label="Typ nowego pola"
               value={type}
               onChange={(e) => setType(e.target.value as PropType)}
-              className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+              className="h-9 rounded-control border border-input bg-background px-2 text-sm"
             >
               {PROP_TYPES.map((t) => <option key={t} value={t}>{PROP_TYPE_LABELS[t]}</option>)}
             </select>

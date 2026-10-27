@@ -115,7 +115,7 @@ export function SyncSettings({ prefillCode }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
+      <div className="flex items-center justify-between gap-4 rounded-card border border-border/60 bg-muted/30 px-4 py-3">
         <div className="flex items-start gap-3 min-w-0">
           {syncState.status !== "disabled" ? (
             <Wifi className="w-5 h-5 text-primary-ink shrink-0 mt-0.5" />
@@ -143,7 +143,7 @@ export function SyncSettings({ prefillCode }: Props) {
         <Switch checked={syncState.status !== "disabled"} onCheckedChange={handleToggle} aria-label="Synchronizacja między urządzeniami" />
       </div>
 
-      <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-3">
+      <div className="rounded-card border border-border/60 bg-muted/30 p-4 space-y-3">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Urządzenia w grupie</h3>
         {olderDevices(syncState.devices).length > 0 && (
           <p role="status" className="rounded-control border border-warning/50 bg-warning/10 px-3 py-2 text-xs text-foreground">
@@ -176,13 +176,13 @@ export function SyncSettings({ prefillCode }: Props) {
       </div>
 
       {syncState.code && (
-        <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-3 text-center">
+        <div className="rounded-card border border-border/60 bg-muted/20 p-4 space-y-3 text-center">
           <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dodaj urządzenie</h3>
           <p className="text-xs text-muted-foreground">
             Zeskanuj kod aparatem na drugim urządzeniu albo wpisz go ręcznie poniżej.
           </p>
           <div className="flex justify-center">
-            <div className="bg-white p-2 rounded-lg">
+            <div className="bg-white p-2 rounded-field">
               <QRCodeSVG value={pairUrl} size={140} />
             </div>
           </div>
@@ -215,7 +215,7 @@ export function SyncSettings({ prefillCode }: Props) {
       )}
 
       {wasShortCodeDropped() && (
-        <div role="alert" className="rounded-xl border border-warning/40 bg-warning/10 p-3 text-xs space-y-2">
+        <div role="alert" className="rounded-card border border-warning/40 bg-warning/10 p-3 text-xs space-y-2">
           <h3 className="font-semibold text-foreground">Synchronizacja wyłączona: kod był za krótki</h3>
           <p className="text-muted-foreground">
             Kody z 8 znaków dało się odgadnąć z nazwy pokoju widocznej dla serwera sygnalizacyjnego,
@@ -232,7 +232,7 @@ export function SyncSettings({ prefillCode }: Props) {
         </div>
       )}
 
-      <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-2">
+      <div className="rounded-card border border-border/60 bg-muted/30 p-4 space-y-2">
         <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Dołącz do istniejącej grupy</h3>
         <Suspense fallback={null}>
           {scanOpen && <QrScanDialog open={scanOpen} onOpenChange={setScanOpen} onCode={(c) => { setJoinInput(c); toast.success("Kod odczytany — kliknij Dołącz"); }} />}
@@ -285,7 +285,7 @@ export function SyncSettings({ prefillCode }: Props) {
         onCheck={(on) => { setLegacyRoom(on); setLegacyRoomState(on); }}
       />
 
-      <div className="rounded-xl border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-2">
+      <div className="rounded-card border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground space-y-2">
         <h3 className="font-semibold text-foreground">Jak to działa</h3>
         <ul className="list-disc pl-4 space-y-1">
           <li>Urządzenia łączą się bezpośrednio, bez chmury i konta. Publiczne serwery pomagają tylko nawiązać połączenie — treść notatek przez nie nie przechodzi.</li>
@@ -331,7 +331,7 @@ function RelayServer() {
   }
 
   return (
-    <details className="group rounded-xl border border-border/60 bg-muted/20 p-3 text-xs" open={saved !== "" || undefined}>
+    <details className="group rounded-card border border-border/60 bg-muted/20 p-3 text-xs" open={saved !== "" || undefined}>
       <summary className="cursor-pointer font-semibold text-foreground select-none">
         Przekaźnik {saved ? "(włączony)" : "(wyłączony)"}
       </summary>
@@ -423,7 +423,7 @@ function SignalingServers() {
   }
 
   return (
-    <details className="group rounded-xl border border-border/60 bg-muted/20 p-3 text-xs" open={saved.length > 0 || undefined}>
+    <details className="group rounded-card border border-border/60 bg-muted/20 p-3 text-xs" open={saved.length > 0 || undefined}>
       <summary className="cursor-pointer font-semibold text-foreground select-none">
         Serwery łączące urządzenia {saved.length > 0 ? `(własne: ${saved.length})` : "(domyślne)"}
       </summary>
@@ -443,7 +443,7 @@ function SignalingServers() {
           placeholder="wss://sygnalizacja.example.com"
           rows={3}
           spellCheck={false}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-base sm:text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="w-full rounded-control border border-input bg-background px-3 py-2 font-mono text-base sm:text-xs ring-offset-background placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         />
         {invalid.length > 0 && (
           <p className="text-destructive-ink">

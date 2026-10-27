@@ -170,8 +170,8 @@ export function NoteEditor({
       <div className={cn("relative", contentFills && "flex-1 min-h-0")}>
         {showPreview ? (
           <div className={cn("grid grid-cols-2 gap-2", contentFills && "h-full")}>
-            {renderEditor(cn(textareaCls, "border border-border/30 rounded-lg p-2", !contentFills && "min-h-[80px]"))}
-            <div className={cn("bg-muted/20 rounded-lg p-2 overflow-y-auto border border-border/30", contentFills ? "h-full" : "min-h-[80px]")}>
+            {renderEditor(cn(textareaCls, "border border-border/30 rounded-field p-2", !contentFills && "min-h-[80px]"))}
+            <div className={cn("bg-muted/20 rounded-field p-2 overflow-y-auto border border-border/30", contentFills ? "h-full" : "min-h-[80px]")}>
               {editContent ? <MarkdownRenderer content={editContent} knownTitles={knownTitles} onWikiClick={onWikiClick} /> : <p className="text-xs text-muted-foreground italic">Podgląd...</p>}
             </div>
           </div>
@@ -210,7 +210,7 @@ export function NoteEditor({
           <Type className="w-3 h-3 shrink-0" />
           <EditorStats textareaRef={textareaRef} value={editContent} />
         </span>
-        <button onClick={handleSave} className="text-sm font-medium text-primary-ink hover:bg-primary/10 px-3 py-1 rounded-lg transition-colors">Zapisz</button>
+        <button onClick={handleSave} className="text-sm font-medium text-primary-ink hover:bg-primary/10 px-3 py-1 rounded-field transition-colors">Zapisz</button>
       </div>
     </div>
   );

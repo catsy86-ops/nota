@@ -56,7 +56,7 @@ export function NoteGroupSection({ groupKey, label, count, collapsible, collapse
           aria-expanded={!collapsed}
           aria-controls={bodyId}
           data-group-toggle={groupKey}
-          className={cn(headerClass, "text-left rounded-md hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 transition-colors duration-fast", collapsed && "mb-0")}
+          className={cn(headerClass, "text-left rounded-control hover:text-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-primary/50 transition-colors duration-fast", collapsed && "mb-0")}
         >
           {text}
         </button>

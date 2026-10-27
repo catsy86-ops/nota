@@ -59,7 +59,7 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
           transition={spring.soft}
           // Telefon: akcje zawijają się w drugi rząd — przy celach 44 px nie mieszczą się w 390 px,
           // a przewijany w bok pasek chował archiwum i kosz poza ekranem (e2e/mobile-layout.spec.ts).
-          className="pointer-events-auto flex max-w-full items-center gap-1 overflow-x-auto rounded-card border border-border/60 bg-card/95 backdrop-blur-md shadow-2xl px-3 py-2 *:shrink-0 max-sm:flex-wrap max-sm:justify-center max-sm:overflow-visible max-sm:px-2"
+          className="pointer-events-auto flex max-w-full items-center gap-1 overflow-x-auto rounded-card border border-border/60 bg-card/95 backdrop-blur-md shadow-elevation-3 px-3 py-2 *:shrink-0 max-sm:flex-wrap max-sm:justify-center max-sm:overflow-visible max-sm:px-2"
         >
           <IconButton onClick={onClear} title="Wyczyść zaznaczenie" aria-label="Wyczyść zaznaczenie">
             <X className="w-4 h-4" />
@@ -68,7 +68,7 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
             {count} <span className="text-muted-foreground max-sm:sr-only">zaznaczono</span>
           </span>
           <div className="w-px h-5 bg-border mx-1 max-sm:hidden" />
-          <button onClick={onSelectAll} className="pressable text-xs font-medium px-2 py-1 coarse:py-2 rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground" title="Zaznacz wszystko">
+          <button onClick={onSelectAll} className="pressable text-xs font-medium px-2 py-1 coarse:py-2 rounded-field text-muted-foreground hover:bg-muted hover:text-foreground" title="Zaznacz wszystko">
             <SquareCheckBig className="w-3.5 h-3.5 inline mr-1" />
             <span className="max-sm:sr-only">Wszystko </span>({totalVisible})
           </button>
@@ -114,11 +114,11 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
                 </IconButton>
               </PopoverTrigger>
               <PopoverContent side="top" className="w-56 p-1 max-h-64 overflow-y-auto">
-                <button onClick={() => onMoveToFolder(null)} className="w-full text-left text-sm px-2 py-1.5 coarse:py-2.5 rounded-md hover:bg-muted text-muted-foreground">
+                <button onClick={() => onMoveToFolder(null)} className="w-full text-left text-sm px-2 py-1.5 coarse:py-2.5 rounded-control hover:bg-muted text-muted-foreground">
                   Bez folderu
                 </button>
                 {folders.map((f) => (
-                  <button key={f.id} onClick={() => onMoveToFolder(f.id)} className="w-full text-left text-sm px-2 py-1.5 coarse:py-2.5 rounded-md hover:bg-muted truncate">
+                  <button key={f.id} onClick={() => onMoveToFolder(f.id)} className="w-full text-left text-sm px-2 py-1.5 coarse:py-2.5 rounded-control hover:bg-muted truncate">
                     {f.emoji ? `${f.emoji} ` : ""}{f.name}
                   </button>
                 ))}
@@ -142,12 +142,12 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
                     onChange={(e) => setNewLabel(e.target.value)}
                     placeholder="Nowa etykieta…"
                     aria-label="Nowa etykieta"
-                    className="w-full rounded-md border border-input bg-background px-2 py-1.5 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                    className="w-full rounded-control border border-input bg-background px-2 py-1.5 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                   />
                 </form>
                 <div className="max-h-48 overflow-y-auto">
                   {allLabels.map((l) => (
-                    <button key={l} onClick={() => onAddLabel(l)} className="w-full text-left text-sm px-2 py-1.5 coarse:py-2.5 rounded-md hover:bg-muted truncate">
+                    <button key={l} onClick={() => onAddLabel(l)} className="w-full text-left text-sm px-2 py-1.5 coarse:py-2.5 rounded-control hover:bg-muted truncate">
                       #{l}
                     </button>
                   ))}

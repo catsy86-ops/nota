@@ -76,7 +76,7 @@ export function FormatToolbar({ onInsert, nowrap = false }: { onInsert: (before:
           onClick={() => onInsert(t.before, t.after)}
           title={t.title}
           aria-label={t.title}
-          className="pressable p-1.5 coarse:p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-md transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+          className="pressable p-1.5 coarse:p-2.5 text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-control transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Icon className="w-3.5 h-3.5" aria-hidden />
         </button>

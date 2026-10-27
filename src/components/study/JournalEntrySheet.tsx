@@ -522,7 +522,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); commitSite(); } }}
                   placeholder="np. Dom Kowalskich, ul. Leśna 4"
                   enterKeyHint="done"
-                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
+                  className="w-full rounded-field border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
                 />
               </label>
             ) : (
@@ -583,7 +583,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                     max={toLocalInput(Date.now())}
                     onChange={(e) => { const next = fromLocalInput(e.target.value); if (next !== null) setAt(next); }}
                     onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); setEditingWhen(false); } }}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
+                    className="w-full rounded-field border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
                   />
                 </label>
                 <Button type="button" variant="outline" onClick={() => { setAt(null); setEditingWhen(false); }} className="coarse:h-11">Teraz</Button>
@@ -615,7 +615,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 key={k}
                 value={k}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 rounded-xl border-2 py-2.5 text-sm transition-colors duration-fast coarse:min-h-16",
+                  "flex flex-col items-center justify-center gap-1 rounded-card border-2 py-2.5 text-sm transition-colors duration-fast coarse:min-h-16",
                   kind === k ? cn(KIND_ON[k], "font-semibold text-foreground") : "border-border text-muted-foreground hover:bg-muted",
                 )}
               >
@@ -626,7 +626,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
           </ToggleGroup>
 
           {entryStage && (
-            <div className="flex items-center gap-2 rounded-xl border border-success-ink/40 bg-success/10 px-3 py-1.5 text-sm" data-testid="journal-entry-stage">
+            <div className="flex items-center gap-2 rounded-card border border-success-ink/40 bg-success/10 px-3 py-1.5 text-sm" data-testid="journal-entry-stage">
               <ListChecks className="h-4 w-4 shrink-0 text-success-ink" aria-hidden />
               <span className="min-w-0 flex-1 truncate">Etap: <span className="font-medium">{entryStage.name}</span></span>
               <button
@@ -634,7 +634,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 onClick={() => { haptic("tap"); patch({ stage: null }); }}
                 aria-label={`Odepnij wpis od etapu: ${entryStage.name}`}
                 title="Odepnij od etapu (etap zostaje odhaczony w karcie)"
-                className="pressable grid size-7 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
+                className="pressable grid size-7 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
               >
                 <X className="h-3.5 w-3.5" aria-hidden />
               </button>
@@ -670,7 +670,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                 value=""
                 onChange={(e) => { if (e.target.value) { haptic("selection"); patch({ stage: e.target.value }); } }}
                 aria-label="Przypnij wpis do etapu"
-                className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-background px-2 text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11"
+                className="h-9 min-w-0 flex-1 rounded-field border border-input bg-background px-2 text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11"
               >
                 <option value="">— bez etapu —</option>
                 {siteStages(siteCard).map((s) => <option key={s.id} value={s.id}>{s.done !== undefined ? `✓ ${s.name}` : s.name}</option>)}
@@ -679,7 +679,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
           )}
 
           {isEdit && kind === "problem" && (
-            <label className="flex items-center gap-2.5 rounded-xl border border-border px-3 py-2.5 text-sm coarse:min-h-12">
+            <label className="flex items-center gap-2.5 rounded-card border border-border px-3 py-2.5 text-sm coarse:min-h-12">
               <Checkbox
                 checked={editForm.resolved !== null}
                 onCheckedChange={(on) => patchJournalEditForm({ resolved: on === true ? editForm.resolved ?? Date.now() : null })}
@@ -702,7 +702,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                   rows={4}
                   placeholder={kind === "problem" ? "Co poszło nie tak i co z tym zrobisz?" : "Krótko: gdzie, co zrobione, co zauważyłeś"}
                   className={cn(
-                    "w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring",
+                    "w-full resize-none rounded-field border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring",
                     dictation.supported && "pr-14",
                   )}
                 />
@@ -781,7 +781,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
             {recordings.length > 0 && (
               <ul className="space-y-2" aria-label="Nagrania we wpisie">
                 {recordings.map((a) => (
-                  <li key={a.hash} className="rounded-lg border border-border px-2.5 py-2">
+                  <li key={a.hash} className="rounded-field border border-border px-2.5 py-2">
                     <div className="flex items-center gap-2 text-sm">
                       <Mic className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
                       <span className="min-w-0 flex-1 truncate">{a.name}</span>
@@ -790,7 +790,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
                         type="button"
                         onClick={() => patch({ recordings: getForm().recordings.filter((x) => x.hash !== a.hash) })}
                         aria-label={`Usuń nagranie: ${a.name}`}
-                        className="pressable grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
+                        className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
                       >
                         <X className="h-3.5 w-3.5" aria-hidden />
                       </button>
@@ -857,24 +857,24 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               </button>
             </div>
             {testVisible && (
-              <div id="journal-test" className="rounded-xl border border-border p-2">
+              <div id="journal-test" className="rounded-card border border-border p-2">
                 <PressureTestFields value={form.test} topic={topic} onChange={(t) => patch({ test: t })} />
               </div>
             )}
             {fittingsVisible && (
-              <div id="journal-fittings" className="rounded-xl border border-border p-2">
+              <div id="journal-fittings" className="rounded-card border border-border p-2">
                 <FittingsFields value={form.fittings ?? []} history={fittingHistory} onChange={(f) => patch({ fittings: f })} />
               </div>
             )}
             {topicOpen && (
-              <div id="journal-topic" className="rounded-xl border border-border" data-testid="journal-topic-panel">
+              <div id="journal-topic" className="rounded-card border border-border" data-testid="journal-topic-panel">
                 {topic === "punkty" && <div className="px-2 py-1"><HeightsButton variant="link" /></div>}
                 <label className="block space-y-1 text-xs text-muted-foreground">
                   Czego dotyczy
                   <select
                     value={topic}
                     onChange={(e) => setTopic(e.target.value)}
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
+                    className="w-full rounded-field border border-border bg-background px-3 py-2 text-base sm:text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
                   >
                     <option value="">Ogólnie (bez tematu)</option>
                     {MODULES.map((m) => (

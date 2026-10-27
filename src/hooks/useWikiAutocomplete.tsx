@@ -138,7 +138,7 @@ export function useWikiAutocomplete({ textareaRef, value, onChange, titles, excl
       <div
         role="listbox"
         aria-label={open.kind === "mention" ? "Wzmianki: daty i notatki" : "Podpowiedzi linków do notatek"}
-        className="absolute z-dropdown rounded-lg border border-border bg-popover text-popover-foreground shadow-lg py-1"
+        className="absolute z-dropdown rounded-field border border-border bg-popover text-popover-foreground shadow-elevation-3 py-1"
         style={{ top, left: Math.min(open.left, maxLeft), width: POPUP_W, maxWidth: "calc(100% - 4px)" }}
         // Fokus zostaje w polu — inaczej `onBlur` edytora zapisałby w pół słowa.
         onMouseDown={(e) => e.preventDefault()}

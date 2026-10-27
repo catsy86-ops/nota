@@ -56,14 +56,14 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
                 data-thumb={s}
                 aria-hidden
                 className={cn(
-                  "skin-thumb relative block aspect-[16/10] rounded-xl shadow-sm ring-1 ring-foreground/10 transition-shadow duration-base group-hover:shadow-md",
+                  "skin-thumb relative block aspect-[16/10] rounded-card shadow-sm ring-1 ring-foreground/10 transition-shadow duration-base group-hover:shadow-elevation-2",
                   i === 0 && "aspect-[16/7]",
                 )}
                 style={{ backgroundColor: p.bg, color: p.ink }}
               >
                 <span className="absolute left-2.5 top-1.5 text-[1.375rem] leading-none" style={{ fontFamily: meta.font, fontWeight: 600 }}>Aa</span>
                 {!active && <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full" style={{ backgroundColor: p.accent, boxShadow: `0 0 10px ${p.accent}` }} />}
-                <span className="absolute inset-x-2.5 bottom-2 rounded-md px-2 py-1.5 shadow-sm" style={{ backgroundColor: p.card }}>
+                <span className="absolute inset-x-2.5 bottom-2 rounded-control px-2 py-1.5 shadow-sm" style={{ backgroundColor: p.card }}>
                   <span className="block h-1.5 w-3/5 rounded-full" style={{ backgroundColor: p.ink, opacity: 0.85 }} />
                   <span className="mt-1 block h-1 w-4/5 rounded-full" style={{ backgroundColor: p.muted, opacity: 0.8 }} />
                   <span className="mt-1.5 block h-1.5 w-6 rounded-full" style={{ backgroundColor: p.accent }} />

@@ -307,7 +307,7 @@ export function DrawingCanvas({ open, onOpenChange, onSave, initialImage }: Draw
             ref={canvasRef}
             width={canvasSize.width}
             height={canvasSize.height}
-            className="rounded-xl shadow-sm bg-white cursor-crosshair touch-none max-w-full max-h-full"
+            className="rounded-card shadow-sm bg-white cursor-crosshair touch-none max-w-full max-h-full"
             style={{ imageRendering: "auto" }}
             onMouseDown={startDrawing}
             onMouseMove={draw}
@@ -334,7 +334,7 @@ function ToolBtn({ icon, onClick, title, active, disabled, className }: {
       aria-pressed={active}
       disabled={disabled}
       className={cn(
-        "pressable p-2 rounded-lg transition-colors",
+        "pressable p-2 rounded-field transition-colors",
         active ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:bg-muted",
         disabled && "opacity-40 pointer-events-none",
         className

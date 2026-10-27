@@ -32,7 +32,7 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
         <ul className="flex flex-wrap gap-2" aria-label="Zdjęcia we wpisie">
           {images.map((ref, i) => (
             <li key={ref} className="relative">
-              <NoteImage imageRef={ref} alt={`Zdjęcie ${i + 1} z ${images.length} we wpisie`} className="h-20 w-20 rounded-lg object-cover" placeholderClassName="h-20 w-20 rounded-lg" />
+              <NoteImage imageRef={ref} alt={`Zdjęcie ${i + 1} z ${images.length} we wpisie`} className="h-20 w-20 rounded-field object-cover" placeholderClassName="h-20 w-20 rounded-field" />
               <button
                 type="button"
                 onClick={() => onRemove(ref)}
@@ -65,7 +65,7 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
             </li>
           ))}
           {Array.from({ length: processing }, (_, i) => (
-            <li key={`processing-${i}`} className="grid h-20 w-20 place-items-center rounded-lg bg-muted" data-testid="journal-photo-processing">
+            <li key={`processing-${i}`} className="grid h-20 w-20 place-items-center rounded-field bg-muted" data-testid="journal-photo-processing">
               <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden />
               <span className="sr-only">Przygotowuję zdjęcie</span>
             </li>
@@ -79,7 +79,7 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
       )}
       {captioning && images.includes(captioning) && (
         <form
-          className="space-y-2 rounded-xl border border-primary/40 bg-primary/5 p-3"
+          className="space-y-2 rounded-card border border-primary/40 bg-primary/5 p-3"
           onSubmit={(ev) => { ev.preventDefault(); onSubmitCaption(captioning); }}
           aria-label="Podpis na zdjęciu"
         >
@@ -91,7 +91,7 @@ export function PhotoStrip({ images, captions, processing, captioning, captionDr
               maxLength={CAPTION_MAX}
               onChange={(ev) => onCaptionDraft(ev.target.value)}
               placeholder="np. Łazienka, pion 58 cm od posadzki"
-              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring sm:text-sm"
+              className="w-full rounded-field border border-input bg-background px-3 py-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring sm:text-sm"
             />
           </label>
           <div className="flex flex-wrap gap-1.5">

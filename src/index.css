@@ -25,6 +25,13 @@
 
 /* Podpowiedź w polach jak w v3 (szary 400) — v4 bierze półprzezroczysty kolor tekstu. */
 @layer base {
+  /* Równe łamanie tytułów (plan 1.4): bez pojedynczego słowa w drugiej linii. */
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
   input::placeholder,
   textarea::placeholder {
     color: var(--muted-foreground);
@@ -300,6 +307,9 @@ html[data-skin="zeszyt"] .app-header {
     --sec-shifts: color-mix(in srgb, var(--accent) 50%, black);
     --sec-study: color-mix(in srgb, var(--warning) 50%, black);
     --sec-calendar: color-mix(in srgb, var(--success) 50%, black);
+
+    /* Pierścień fokusu (plan 1.7): jeden token, na razie ten sam kolor co `--ring`. */
+    --ring-focus: var(--ring);
 
     /* Kierunek „zeszyt w kratkę przy barze”: papier, kratka, bursztyn piwa,
        niebieski długopis i czerwony margines (święta, usuwanie). */

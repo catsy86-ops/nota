@@ -155,7 +155,7 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
             <ul className="mt-2 flex flex-wrap gap-2" aria-label="Zdjęcia wpisu">
               {e.images.map((ref, i) => (
                 <li key={ref}>
-                  <button type="button" onClick={() => onZoom(e.images, i)} aria-label={`Powiększ zdjęcie ${i + 1} z ${e.images.length}`} className="relative block overflow-hidden rounded-lg">
+                  <button type="button" onClick={() => onZoom(e.images, i)} aria-label={`Powiększ zdjęcie ${i + 1} z ${e.images.length}`} className="relative block overflow-hidden rounded-field">
                     <NoteImage imageRef={ref} alt="" className="h-16 w-16 object-cover" placeholderClassName="h-16 w-16" />
                     {/* Numer zdjęcia na miniaturze (§D3): od razu widać, które z kolei jest w galerii. */}
                     {e.images.length > 1 && <span aria-hidden className="absolute bottom-0.5 right-0.5 rounded bg-black/60 px-1 font-mono text-[10px] leading-4 text-white tabular-nums">{i + 1}</span>}
@@ -170,7 +170,7 @@ function JournalItemRow({ entry: e, total, stage, onPractice, onTopic, onZoom }:
           onClick={() => openJournalEdit(e)}
           aria-label="Edytuj wpis"
           title="Edytuj albo usuń wpis"
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground coarse:h-11 coarse:w-11"
+          className="grid h-8 w-8 shrink-0 place-items-center rounded-control text-muted-foreground hover:bg-muted hover:text-foreground coarse:h-11 coarse:w-11"
         >
           <Pencil className="h-4 w-4" />
         </button>
@@ -201,7 +201,7 @@ function SolutionLine({ entry: e, editing, onEditing }: { entry: JournalEntry; e
           maxLength={JOURNAL_SOLUTION_MAX}
           placeholder="Jak rozwiązane? np. wymieniona złączka"
           aria-label="Jak rozwiązane?"
-          className="h-9 min-w-0 flex-1 basis-56 rounded-lg border border-input bg-background px-2.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
+          className="h-9 min-w-0 flex-1 basis-56 rounded-field border border-input bg-background px-2.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
         />
         <Button type="submit" size="sm" className="coarse:h-11">Zapisz</Button>
         <Button type="button" size="sm" variant="ghost" onClick={() => onEditing(false)} className="coarse:h-11">Pomiń</Button>

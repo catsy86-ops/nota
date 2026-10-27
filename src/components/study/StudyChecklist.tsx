@@ -69,7 +69,7 @@ export function StudyChecklist() {
           onChange={(ev) => setQuery(ev.target.value)}
           placeholder="Szukaj: rura, szczelność, pompa…"
           enterKeyHint="search"
-          className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-base focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 md:text-sm"
+          className="h-9 w-full rounded-control border border-input bg-background pl-8 pr-3 text-base focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 md:text-sm"
         />
       </label>
       {needle && visible.length === 0 && (
@@ -88,7 +88,7 @@ export function StudyChecklist() {
               <p className="text-xs text-muted-foreground">{mod.source}</p>
             </header>
             {topics.map(({ topic, items }) => (
-              <div key={topic.id} className="rounded-xl border border-border bg-card p-3.5">
+              <div key={topic.id} className="rounded-card border border-border bg-card p-3.5">
                 <h4 className="text-sm font-medium">{topic.title}</h4>
                 <ul className="mt-2 space-y-2">
                   {items.map((item) => {

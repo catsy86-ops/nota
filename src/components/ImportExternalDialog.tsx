@@ -122,7 +122,7 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
               if (!busy) onPickFiles(Array.from(e.dataTransfer.files));
             }}
             className={cn(
-              "rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors duration-fast",
+              "rounded-card border-2 border-dashed px-4 py-6 text-center transition-colors duration-fast",
               dragOver ? "border-primary bg-primary/10" : "border-primary/40 bg-primary/5",
             )}
           >
@@ -159,11 +159,11 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
         {(stage === "summary" || stage === "saving") && plan && (
           <div className="space-y-4" data-testid="import-summary">
             {importCount > 0 ? (
-              <ul className="space-y-1.5 rounded-lg bg-muted/50 px-3 py-3">
+              <ul className="space-y-1.5 rounded-field bg-muted/50 px-3 py-3">
                 {added.map((r, i) => <LedgerRow key={r.label} index={i} {...r} />)}
               </ul>
             ) : (
-              <p className="text-sm rounded-lg bg-muted/50 px-3 py-3">
+              <p className="text-sm rounded-field bg-muted/50 px-3 py-3">
                 W wybranych plikach nie znaleziono notatek do zaimportowania.
               </p>
             )}
@@ -178,7 +178,7 @@ export function ImportExternalDialog({ open, stage, plan, error, onPickFiles, on
             )}
 
             {plan.warnings.length > 0 && (
-              <ul className="space-y-1.5 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5" aria-label="Ostrzeżenia">
+              <ul className="space-y-1.5 rounded-field border border-primary/30 bg-primary/5 px-3 py-2.5" aria-label="Ostrzeżenia">
                 {plan.warnings.map((w) => (
                   <li key={w} className="flex items-start gap-2 text-xs text-foreground/90">
                     <TriangleAlert className="w-3.5 h-3.5 mt-0.5 shrink-0 text-primary-ink" aria-hidden />

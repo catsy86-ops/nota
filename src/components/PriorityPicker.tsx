@@ -33,7 +33,7 @@ export function PriorityPicker({ priority, onSet }: PriorityPickerProps) {
             key={p}
             onClick={() => onSet(p)}
             className={cn(
-              "w-full flex items-center gap-2 text-sm px-2 py-1.5 rounded-lg transition-colors",
+              "w-full flex items-center gap-2 text-sm px-2 py-1.5 rounded-field transition-colors",
               priority === p ? "bg-primary/10 font-semibold" : "hover:bg-muted"
             )}
           >

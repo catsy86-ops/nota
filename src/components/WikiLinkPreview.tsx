@@ -109,7 +109,7 @@ export function WikiLink({ title, heading = null, label = null, exists, onWikiCl
           onClick={(e) => e.stopPropagation()}
           data-wiki-preview=""
           className={cn(
-            "z-toast w-72 max-w-[calc(100vw-1.5rem)] rounded-lg border border-border/70 bg-popover text-popover-foreground shadow-lg outline-hidden",
+            "z-toast w-72 max-w-[calc(100vw-1.5rem)] rounded-field border border-border/70 bg-popover text-popover-foreground shadow-elevation-3 outline-hidden",
             "border-l-[3px] border-l-primary/60 px-3 py-2.5 text-left",
             "duration-fast ease-out-soft data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
           )}
@@ -127,7 +127,7 @@ export function WikiLink({ title, heading = null, label = null, exists, onWikiCl
               <button
                 type="button"
                 onClick={() => { setOpen(false); onWikiClick?.(target_); }}
-                className="pressable mt-2 inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary-ink hover:bg-primary/20 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                className="pressable mt-2 inline-flex items-center gap-1 rounded-control bg-primary/10 px-2 py-1 text-xs font-medium text-primary-ink hover:bg-primary/20 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               >
                 Otwórz <ArrowUpRight className="h-3 w-3" aria-hidden />
               </button>
@@ -138,7 +138,7 @@ export function WikiLink({ title, heading = null, label = null, exists, onWikiCl
               <button
                 type="button"
                 onClick={handleCreate}
-                className="pressable mt-2 inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary-ink hover:bg-primary/20 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                className="pressable mt-2 inline-flex items-center gap-1.5 rounded-control bg-primary/10 px-2 py-1 text-xs font-medium text-primary-ink hover:bg-primary/20 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <FilePlusCorner className="h-3.5 w-3.5" aria-hidden /> Utwórz notatkę „{title}”
               </button>

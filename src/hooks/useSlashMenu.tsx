@@ -102,7 +102,7 @@ export function useSlashMenu({ textareaRef, value, disabled = false }: Options) 
       <div
         role="listbox"
         aria-label="Wstaw blok"
-        className="absolute z-dropdown overflow-y-auto rounded-lg border border-border bg-popover text-popover-foreground shadow-lg py-1"
+        className="absolute z-dropdown overflow-y-auto rounded-field border border-border bg-popover text-popover-foreground shadow-elevation-3 py-1"
         style={{ top, left: Math.min(open.left, maxLeft), width: POPUP_W, maxWidth: "calc(100% - 4px)", maxHeight: height }}
         // Fokus zostaje w polu — inaczej `onBlur` edytora zapisałby notatkę w pół słowa.
         onMouseDown={(e) => e.preventDefault()}

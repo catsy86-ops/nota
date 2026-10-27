@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { parseNum, pipeLiters, PIPES, plNum, SLOPE_TYPICAL, slopeDrop, slopeFromDrop, slopeNote, waterTest } from "@/lib/study/calc";
 
 const fieldClass =
-  "h-11 w-full min-w-0 rounded-lg border border-input bg-background px-3 font-mono text-base tabular-nums outline-hidden focus:ring-2 focus:ring-ring";
+  "h-11 w-full min-w-0 rounded-field border border-input bg-background px-3 font-mono text-base tabular-nums outline-hidden focus:ring-2 focus:ring-ring";
 const chipClass = "pressable rounded-full border px-3 py-1 text-sm coarse:min-h-11";
 
 /**
@@ -50,7 +50,7 @@ export function CalculatorsButton({ variant = "pill", className }: { variant?: "
 
 function Result({ label, value, unit, testId }: { label: string; value: string | null; unit: string; testId: string }) {
   return (
-    <p className="flex items-baseline justify-between gap-3 rounded-lg bg-muted/50 px-3 py-2" data-testid={testId}>
+    <p className="flex items-baseline justify-between gap-3 rounded-field bg-muted/50 px-3 py-2" data-testid={testId}>
       <span className="text-sm text-muted-foreground">{label}</span>
       <span className="font-mono text-2xl font-semibold tabular-nums text-primary-ink">
         {value ?? "—"}{value !== null && <span className="ml-1 text-base font-normal text-muted-foreground">{unit}</span>}
@@ -192,7 +192,7 @@ function VolumeCalc() {
               onClick={() => setRows((rs) => (rs.length > 1 ? rs.filter((x) => x.id !== r.id) : rs))}
               disabled={rows.length === 1}
               aria-label={`Usuń rurę ${i + 1}`}
-              className="pressable grid size-11 place-items-center rounded-lg text-muted-foreground hover:bg-muted disabled:opacity-40"
+              className="pressable grid size-11 place-items-center rounded-field text-muted-foreground hover:bg-muted disabled:opacity-40"
             >
               <X className="h-4 w-4" aria-hidden />
             </button>

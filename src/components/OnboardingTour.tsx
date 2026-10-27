@@ -60,7 +60,7 @@ export function OnboardingTour() {
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) finish(); }}>
-      <DialogContent className="max-w-sm rounded-3xl text-center">
+      <DialogContent className="max-w-sm rounded-card text-center">
         <DialogHeader className="items-center space-y-3">
           <AnimatePresence mode="wait">
             <motion.div

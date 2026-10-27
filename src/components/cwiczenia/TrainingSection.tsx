@@ -151,11 +151,11 @@ function NewExerciseForm({ onCreated }: { onCreated: (id: string) => void }) {
 
   return (
     // Nie <form>: ten blok siedzi wewnątrz formularza wpisu treningu, a zagnieżdżony form przejmuje wysłanie i przeładowuje stronę.
-    <div role="group" className="space-y-2 rounded-xl border border-border/60 p-3" aria-label="Nowe ćwiczenie">
+    <div role="group" className="space-y-2 rounded-card border border-border/60 p-3" aria-label="Nowe ćwiczenie">
       <Input aria-label="Nazwa ćwiczenia" placeholder="np. Pompki na poręczach" maxLength={CUSTOM_NAME_MAX} value={name} onChange={(e) => setName(e.target.value)}
         onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); save(); } }} />
       <div className="flex flex-wrap items-center gap-3">
-        <select aria-label="Partia mięśniowa" value={group} onChange={(e) => setGroup(e.target.value as MuscleGroup)} className="rounded-md border border-input bg-background px-3 py-2 text-sm coarse:h-11">
+        <select aria-label="Partia mięśniowa" value={group} onChange={(e) => setGroup(e.target.value as MuscleGroup)} className="rounded-control border border-input bg-background px-3 py-2 text-sm coarse:h-11">
           {MUSCLE_GROUPS.map((g) => <option key={g} value={g}>{MUSCLE_GROUP_LABELS[g]}</option>)}
         </select>
         {(EQUIPMENT_OPTIONS).map((eq) => (
@@ -229,7 +229,7 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
           <select
             defaultValue=""
             onChange={(e) => pickPlan(e.target.value)}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm coarse:h-11"
+            className="w-full rounded-control border border-input bg-background px-3 py-2 text-sm coarse:h-11"
           >
             <option value="" disabled>Wybierz dzień planu (opcjonalnie)</option>
             {plans.map((p) => <option key={p.id} value={p.id}>{planLine(p)}</option>)}
@@ -241,7 +241,7 @@ function LogForm({ entries, plans, onSaved }: { entries: TrainingEntry[]; plans:
         <select
           value={exerciseId}
           onChange={(e) => setExerciseId(e.target.value)}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm coarse:h-11"
+          className="w-full rounded-control border border-input bg-background px-3 py-2 text-sm coarse:h-11"
         >
           {MUSCLE_GROUPS.map((g: MuscleGroup) => (
             <optgroup key={g} label={g[0].toUpperCase() + g.slice(1)}>
@@ -348,7 +348,7 @@ function EquipmentForm() {
   const value = parseKg(kg);
   return (
     <form
-      className="flex flex-wrap items-center gap-3 rounded-lg border border-border/60 px-3 py-2"
+      className="flex flex-wrap items-center gap-3 rounded-field border border-border/60 px-3 py-2"
       onSubmit={(e) => {
         e.preventDefault();
         // L3: pusty formularz nie kasuje limitu po cichu — do tego służy osobny przycisk „Usuń limit”.
@@ -453,7 +453,7 @@ function TrainingReminderControl() {
   };
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border/60 px-3 py-2">
+    <div className="flex flex-wrap items-center gap-3 rounded-field border border-border/60 px-3 py-2">
       <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
         <Checkbox checked={on} disabled={!on && !timeOk} onCheckedChange={(v) => apply(v === true ? { time } : null)} className="coarse:h-6 coarse:w-6" />
         Przypominaj o treningu, codziennie o
@@ -493,7 +493,7 @@ function RestTimer({ until, onStop }: { until: number; onStop: () => void }) {
   }, [left, onStop]);
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-primary/40 px-3 py-2 text-sm" data-testid="rest-timer">
+    <div className="flex items-center justify-between gap-3 rounded-field border border-primary/40 px-3 py-2 text-sm" data-testid="rest-timer">
       {/* Licznik co sekundę tylko dla oka; czytnik ogłasza wyłącznie koniec przerwy. */}
       <span>Przerwa: <span className="font-mono tabular-nums" aria-hidden>{Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}</span></span>
       <span role="status" className="sr-only">{left <= 0 ? "Przerwa skończona" : ""}</span>

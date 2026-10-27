@@ -86,7 +86,7 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
             </TabsContent>
 
             <TabsContent value="sync" className="mt-0">
-              <Suspense fallback={<div className="h-40 animate-pulse rounded-xl bg-muted/40" aria-hidden />}>
+              <Suspense fallback={<div className="h-40 animate-pulse rounded-card bg-muted/40" aria-hidden />}>
                 <SyncSettings prefillCode={joinPrefill} />
               </Suspense>
               <div className="pt-4"><SyncFileSection /></div>

@@ -35,7 +35,7 @@ export function Segmented<T extends string>({ options, value, onChange, disabled
         value={value}
         onValueChange={(v) => onChange(v as T)}
         disabled={disabled}
-        className={cn("grid gap-1 rounded-xl border border-border/60 bg-muted/40 p-1", disabled && "opacity-60")}
+        className={cn("grid gap-1 rounded-card border border-border/60 bg-muted/40 p-1", disabled && "opacity-60")}
         style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
       >
         {options.map(({ value: v, label: l, Icon }) => (
@@ -43,7 +43,7 @@ export function Segmented<T extends string>({ options, value, onChange, disabled
             key={v}
             value={v}
             className={cn(
-              "relative flex flex-col items-center justify-center gap-1 rounded-lg py-2.5 text-xs font-semibold",
+              "relative flex flex-col items-center justify-center gap-1 rounded-field py-2.5 text-xs font-semibold",
               "text-muted-foreground hover:text-foreground data-[state=on]:text-primary-ink disabled:opacity-100",
             )}
           >
@@ -51,7 +51,7 @@ export function Segmented<T extends string>({ options, value, onChange, disabled
               <motion.span
                 layoutId="segmented-active"
                 transition={spring.snap}
-                className="absolute inset-0 rounded-lg border border-primary/50 bg-card shadow-sm"
+                className="absolute inset-0 rounded-field border border-primary/50 bg-card shadow-sm"
                 aria-hidden
               />
             )}

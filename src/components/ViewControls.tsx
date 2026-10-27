@@ -99,7 +99,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
                 <button
                   onClick={() => changeView(() => setViewPref("autoColumns", true))}
                   aria-pressed={prefs.autoColumns}
-                  className={cn("flex-1 text-xs h-8 coarse:h-11 rounded-md", prefs.autoColumns ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
+                  className={cn("flex-1 text-xs h-8 coarse:h-11 rounded-control", prefs.autoColumns ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
                 >
                   Auto
                 </button>
@@ -109,7 +109,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
                     onClick={() => changeView(() => { setViewPref("autoColumns", false); setViewPref("columns", c); })}
                     aria-pressed={!prefs.autoColumns && prefs.columns === c}
                     aria-label={c === 1 ? "1 kolumna" : `${c} kolumny`}
-                    className={cn("flex-1 text-xs h-8 coarse:h-11 rounded-md tabular-nums", c > 2 && "max-sm:hidden", !prefs.autoColumns && prefs.columns === c ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
+                    className={cn("flex-1 text-xs h-8 coarse:h-11 rounded-control tabular-nums", c > 2 && "max-sm:hidden", !prefs.autoColumns && prefs.columns === c ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
                   >
                     {c}
                   </button>
@@ -181,7 +181,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           <div className="px-2 pb-2 flex items-center gap-1.5 flex-wrap">
             <button
               onClick={() => setViewPref("filterColor", "all")}
-              className={cn("text-2xs px-2 py-1 rounded-md transition-colors", prefs.filterColor === "all" ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
+              className={cn("text-2xs px-2 py-1 rounded-control transition-colors", prefs.filterColor === "all" ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
             >
               wszystkie
             </button>
@@ -218,7 +218,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
           <div className="px-2 pb-2 grid grid-cols-3 gap-1">
             <button
               onClick={() => setViewPref("filterPriority", "all")}
-              className={cn("text-2xs px-2 py-1 rounded-md transition-colors", prefs.filterPriority === "all" ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
+              className={cn("text-2xs px-2 py-1 rounded-control transition-colors", prefs.filterPriority === "all" ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground")}
             >
               wszystkie
             </button>
@@ -227,7 +227,7 @@ export function ViewControls({ allLabels, sortable = true }: Props) {
                 key={p}
                 onClick={() => setViewPref("filterPriority", p)}
                 className={cn(
-                  "flex items-center justify-center gap-1 text-2xs px-2 py-1 rounded-md transition-colors",
+                  "flex items-center justify-center gap-1 text-2xs px-2 py-1 rounded-control transition-colors",
                   prefs.filterPriority === p ? "bg-primary/15 text-primary-ink font-semibold" : "hover:bg-muted text-muted-foreground"
                 )}
               >

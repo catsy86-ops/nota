@@ -58,7 +58,7 @@ export function TimeStepper({ id, label, value, onChange, invalid }: TimeStepper
     }, 400);
   }
 
-  const btn = "pressable h-10 w-9 coarse:h-11 coarse:w-11 shrink-0 flex items-center justify-center rounded-md border border-input bg-background text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring touch-manipulation select-none";
+  const btn = "pressable h-10 w-9 coarse:h-11 coarse:w-11 shrink-0 flex items-center justify-center rounded-control border border-input bg-background text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring touch-manipulation select-none";
 
   return (
     <div className="space-y-1">

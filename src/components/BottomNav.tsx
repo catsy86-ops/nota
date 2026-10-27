@@ -234,7 +234,7 @@ function NavItem({ active, current = active, label, onClick, children, badge, bu
         aria-current={current ? "page" : undefined}
         {...buttonProps}
         className={cn(
-          "pressable relative w-full flex flex-col items-center justify-center gap-1 py-2 rounded-xl text-xs font-display outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+          "pressable relative w-full flex flex-col items-center justify-center gap-1 py-2 rounded-card text-xs font-display outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
           // Aktywna: kolor marki, pogrubiony podpis i grubsza kreska ikony — rozpoznawalna też bez koloru.
           active ? "text-primary-ink font-bold [&_svg]:stroke-[2.5]" : "text-muted-foreground font-medium hover:text-foreground"
         )}
@@ -251,7 +251,7 @@ function NavItem({ active, current = active, label, onClick, children, badge, bu
             <motion.span
               layoutId="bottom-nav-active"
               aria-hidden
-              className="absolute inset-x-3 top-1 h-8 rounded-xl bg-primary/20"
+              className="absolute inset-x-3 top-1 h-8 rounded-card bg-primary/20"
               transition={spring.snap}
             />
           </>
@@ -292,7 +292,7 @@ function QuickTile({ Icon, title, hint, tone, onClick }: { Icon: React.Component
       onClick={onClick}
       className="pressable group flex items-center gap-3 rounded-card border border-border/60 bg-card p-3.5 text-left transition-colors hover:border-primary/40 hover:bg-muted/40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-xl transition-transform duration-200 group-hover:-rotate-6 motion-reduce:transition-none", QUICK_TONE[tone])} aria-hidden>
+      <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-card transition-transform duration-200 group-hover:-rotate-6 motion-reduce:transition-none", QUICK_TONE[tone])} aria-hidden>
         <Icon className="h-5 w-5" />
       </span>
       <span className="min-w-0">
@@ -318,7 +318,7 @@ const SheetTile = forwardRef<HTMLButtonElement, SheetTileProps>(function SheetTi
         active ? "bg-primary/10 border-primary/40" : "bg-muted/50 hover:bg-muted border-border/50",
       )}
     >
-      <span className="w-10 h-10 rounded-xl bg-background flex items-center justify-center text-primary-ink">
+      <span className="w-10 h-10 rounded-card bg-background flex items-center justify-center text-primary-ink">
         <Icon className="w-5 h-5" />
       </span>
       <span className="text-xs font-medium font-display leading-tight text-center text-foreground">{label}</span>

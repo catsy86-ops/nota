@@ -107,11 +107,11 @@ export function ViewSheet({ open, onOpenChange, groupable = true }: { open: bool
                   key={l.v}
                   value={l.v}
                   className={cn(
-                    "flex min-h-13 items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors duration-fast",
+                    "flex min-h-13 items-center gap-3 rounded-card px-3 py-2 text-left transition-colors duration-fast",
                     on ? "bg-primary/10" : "hover:bg-muted/60",
                   )}
                 >
-                  <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-lg", on ? "bg-primary/15 text-primary-ink" : "bg-muted text-muted-foreground")}>
+                  <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-field", on ? "bg-primary/15 text-primary-ink" : "bg-muted text-muted-foreground")}>
                     <l.icon className="h-4.5 w-4.5" aria-hidden />
                   </span>
                   <span className="min-w-0 flex-1">
@@ -151,7 +151,7 @@ export function ViewSheet({ open, onOpenChange, groupable = true }: { open: bool
               aria-label="Sortuj wg"
               value={prefs.sortKey}
               onChange={(e) => setViewPref("sortKey", e.target.value as SortKey)}
-              className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm"
+              className="h-11 w-full rounded-field border border-input bg-background px-3 text-sm"
             >
               {sortOptions(propDefs).map((o) => <option key={o.v} value={o.v}>{o.label}</option>)}
             </select>

@@ -35,7 +35,7 @@ export default function VersionHistoryDialog({ versions, open, onOpenChange, onR
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }}
-              className="border border-border/50 rounded-xl overflow-hidden"
+              className="border border-border/50 rounded-card overflow-hidden"
             >
               <button
                 onClick={() => setExpandedId(expandedId === v.id ? null : v.id)}
@@ -62,7 +62,7 @@ export default function VersionHistoryDialog({ versions, open, onOpenChange, onR
                     className="overflow-hidden"
                   >
                     <div className="px-3 pb-3 space-y-2">
-                      <div className="bg-muted/30 rounded-lg p-2 max-h-40 overflow-y-auto">
+                      <div className="bg-muted/30 rounded-field p-2 max-h-40 overflow-y-auto">
                         {v.content ? (
                           <MarkdownRenderer content={v.content} className="text-xs" />
                         ) : (

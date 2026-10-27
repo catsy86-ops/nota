@@ -9,7 +9,7 @@ import { deleteCustom } from "@/lib/study/customActions";
 import { addCustomItem, useStudy } from "@/lib/study/store";
 
 const selectClass =
-  "h-9 w-full min-w-0 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11";
+  "h-9 w-full min-w-0 rounded-control border border-input bg-background px-2 text-sm focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11";
 
 /** Wybór tematu pogrupowany w moduły — jak w arkuszu wpisu. */
 export function TopicSelect({ id, value, onChange, ariaLabel }: { id?: string; value: string; onChange: (topic: string) => void; ariaLabel: string }) {
@@ -46,7 +46,7 @@ export function CustomChecklistSection() {
   }
 
   return (
-    <details className="rounded-xl border border-border bg-card p-3.5 group" data-testid="custom-checklist">
+    <details className="rounded-card border border-border bg-card p-3.5 group" data-testid="custom-checklist">
       <summary className="cursor-pointer text-sm font-medium">
         Własne punkty{items.length > 0 && <span className="ml-1.5 font-mono tabular-nums text-muted-foreground">({items.length})</span>}
       </summary>

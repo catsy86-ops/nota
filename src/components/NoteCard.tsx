@@ -141,13 +141,13 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
       {swipeEnabled && swiping && (
         <>
           {canSwipePin && (
-            <motion.div style={{ opacity: pinOpacity }} data-swipe-bg="pin" className="absolute inset-y-0 left-0 w-1/2 rounded-xl bg-primary/15 flex items-center justify-start gap-2 pl-5 pointer-events-none text-primary-ink">
+            <motion.div style={{ opacity: pinOpacity }} data-swipe-bg="pin" className="absolute inset-y-0 left-0 w-1/2 rounded-card bg-primary/15 flex items-center justify-start gap-2 pl-5 pointer-events-none text-primary-ink">
               {note.pinned ? <PinOff className="w-6 h-6" aria-hidden /> : <Pin className="w-6 h-6" aria-hidden />}
               {swipeLabels && <span className="text-sm font-semibold">{note.pinned ? "Odepnij" : "Przypnij"}</span>}
             </motion.div>
           )}
           {canSwipeArchive && (
-            <motion.div style={{ opacity: archiveOpacity }} data-swipe-bg="archive" className="absolute inset-y-0 right-0 w-1/2 rounded-xl bg-secondary flex items-center justify-end gap-2 pr-5 pointer-events-none text-foreground">
+            <motion.div style={{ opacity: archiveOpacity }} data-swipe-bg="archive" className="absolute inset-y-0 right-0 w-1/2 rounded-card bg-secondary flex items-center justify-end gap-2 pr-5 pointer-events-none text-foreground">
               {swipeLabels && <span className="text-sm font-semibold">{isArchived ? "Przywróć" : "Archiwizuj"}</span>}
               {isArchived ? <ArchiveRestore className="w-6 h-6" aria-hidden /> : <Archive className="w-6 h-6" aria-hidden />}
             </motion.div>
@@ -229,7 +229,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           <button
             onClick={(e) => { e.stopPropagation(); onToggleSelect(note.id, e.shiftKey); }}
             className={cn(
-              "absolute top-2 right-2 z-sticky w-6 h-6 rounded-md border-2 flex items-center justify-center transition-[color,background-color,border-color,opacity] coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']",
+              "absolute top-2 right-2 z-sticky w-6 h-6 rounded-control border-2 flex items-center justify-center transition-[color,background-color,border-color,opacity] coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']",
               // Start zaznaczania bez Ctrl+A: pole pojawia się po najechaniu / fokusie, a na dotyku jest zawsze lekko widoczne.
               !(selectionMode || selected) && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100 coarse:opacity-70",
               selected ? "bg-primary border-primary text-primary-foreground" : "bg-background/80 border-border hover:border-primary"
@@ -268,7 +268,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
               <div key={i} className="relative group/img cursor-pointer overflow-hidden" onClick={() => setPreviewImage(img)}>
                 <NoteImage imageRef={img} alt={`Obraz ${i + 1} z ${note.images.length}`} className={cn("w-full object-cover transition-transform duration-base group-hover/img:scale-105 motion-reduce:transition-none", isEditing ? "h-24" : "aspect-video")} />
                 {!isEditing && note.images.length > 1 && (
-                  <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded-md bg-foreground/60 text-background text-2xs font-semibold tabular-nums">
+                  <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded-control bg-foreground/60 text-background text-2xs font-semibold tabular-nums">
                     +{note.images.length - 1}
                   </span>
                 )}
@@ -292,7 +292,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           onKeyDown={(e) => {
             if ((e.key === "Enter" || e.key === " ") && e.target === e.currentTarget) { e.preventDefault(); e.currentTarget.click(); }
           }}
-          className={cn("cursor-pointer rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring", isEditing && !fullEditor ? "p-4" : "card-body px-3.5 pt-3 pb-2.5 leading-normal", note.largeText ? "text-base" : "text-sm")}
+          className={cn("cursor-pointer rounded-control focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring", isEditing && !fullEditor ? "p-4" : "card-body px-3.5 pt-3 pb-2.5 leading-normal", note.largeText ? "text-base" : "text-sm")}
           onClick={(e) => {
             if (longPressed.current) { longPressed.current = false; return; }
             if (swiping || Math.abs(swipeX.get()) > 4) return;

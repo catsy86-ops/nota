@@ -68,7 +68,7 @@ export function NoteBoard({ headers, children }: { headers: BoardHeader[]; child
                 key={h.key}
                 label={h.label}
                 count={h.count}
-                className={cn(BOARD_COLUMN_WIDTH, "shrink-0 rounded-xl border border-border/60 bg-card/95 backdrop-blur-md shadow-sm px-3.5 py-2")}
+                className={cn(BOARD_COLUMN_WIDTH, "shrink-0 rounded-card border border-border/60 bg-card/95 backdrop-blur-md shadow-sm px-3.5 py-2")}
               />
             ))}
           </div>

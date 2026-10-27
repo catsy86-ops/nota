@@ -57,7 +57,7 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
       data-note-color={note.color}
       data-private-tile=""
       className={cn(
-        "group note-card relative rounded-xl border note-shadow overflow-hidden",
+        "group note-card relative rounded-card border note-shadow overflow-hidden",
         colorClasses[note.color],
         selected ? "note-glow-active border-transparent" : "border-border/50",
       )}
@@ -66,7 +66,7 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
         <button
           onClick={(e) => { e.stopPropagation(); onToggleSelect(note.id, e.shiftKey); }}
           className={cn(
-            "absolute top-2 right-2 z-sticky w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors",
+            "absolute top-2 right-2 z-sticky w-6 h-6 rounded-control border-2 flex items-center justify-center transition-colors",
             selected ? "bg-primary border-primary text-primary-foreground" : "bg-background/80 border-border hover:border-primary",
           )}
           aria-label={selected ? "Odznacz notatkę" : "Zaznacz notatkę"}

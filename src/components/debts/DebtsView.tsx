@@ -108,7 +108,7 @@ function AddForm({ entries, addReminderNote }: { entries: DebtEntry[]; addRemind
 
   return (
     <form onSubmit={submit} noValidate aria-label="Nowy wpis" className="mb-6 space-y-4 rounded-card border border-border/70 bg-card p-4">
-      <div role="radiogroup" aria-label="Rodzaj wpisu" className="grid grid-cols-2 gap-1 rounded-xl bg-muted p-1">
+      <div role="radiogroup" aria-label="Rodzaj wpisu" className="grid grid-cols-2 gap-1 rounded-card bg-muted p-1">
         {DEBT_KINDS.map((k) => {
           const selected = kind === k;
           // Pieniądze wychodzą od nas (pożyczka, zwrot): strzałka w górę. Wracają (spłata, dług u kogoś): w dół.
@@ -121,7 +121,7 @@ function AddForm({ entries, addReminderNote }: { entries: DebtEntry[]; addRemind
               aria-checked={selected}
               onClick={() => setKind(k)}
               className={cn(
-                "tap-target flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                "tap-target flex items-center justify-center gap-2 rounded-field px-3 py-2 text-sm font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
                 selected ? "bg-card text-foreground shadow-elevation-up" : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -328,7 +328,7 @@ function PersonHistory({ person, onDone, reminders }: { person: PersonDebts; onD
               <EditDebtForm entry={e} onDone={() => setEditingId(null)} />
             </li>
           ) : (
-            <li key={e.id} className="flex items-center gap-3 rounded-xl border border-border/60 bg-background p-3">
+            <li key={e.id} className="flex items-center gap-3 rounded-card border border-border/60 bg-background p-3">
               <span className={cn("grid h-9 w-9 shrink-0 place-items-center rounded-full", KIND_SIGN[e.kind] > 0 ? "bg-success/15 text-success-ink" : "bg-warning/15 text-warning-ink")} aria-hidden>
                 {KIND_SIGN[e.kind] > 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownLeft className="h-4 w-4" />}
               </span>
@@ -398,9 +398,9 @@ function EditDebtForm({ entry, onDone }: { entry: DebtEntry; onDone: () => void 
     <form
       onSubmit={(e) => { e.preventDefault(); save(); }}
       aria-label="Edycja wpisu"
-      className="space-y-3 rounded-xl border border-primary/40 bg-background p-3"
+      className="space-y-3 rounded-card border border-primary/40 bg-background p-3"
     >
-      <div role="radiogroup" aria-label="Rodzaj wpisu" className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+      <div role="radiogroup" aria-label="Rodzaj wpisu" className="grid grid-cols-2 gap-1 rounded-field bg-muted p-1">
         {DEBT_KINDS.map((k) => (
           <button
             key={k}
@@ -408,7 +408,7 @@ function EditDebtForm({ entry, onDone }: { entry: DebtEntry; onDone: () => void 
             role="radio"
             aria-checked={kind === k}
             onClick={() => setKind(k)}
-            className={cn("rounded-md px-2 py-1.5 text-xs font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring", kind === k ? "bg-card shadow-elevation-up" : "text-muted-foreground")}
+            className={cn("rounded-control px-2 py-1.5 text-xs font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring", kind === k ? "bg-card shadow-elevation-up" : "text-muted-foreground")}
           >
             {KIND_LABEL[k]}
           </button>

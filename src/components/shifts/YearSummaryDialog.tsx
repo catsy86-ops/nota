@@ -51,12 +51,12 @@ function YearBody({ data, initialYear }: { data: ShiftData; initialYear: number 
       <DialogHeader>
         <DialogTitle className="font-display flex items-center gap-1">
           <button type="button" aria-label="Poprzedni rok" onClick={() => setYear((y) => y - 1)}
-            className="pressable -ml-2 w-9 h-9 coarse:w-11 coarse:h-11 grid place-items-center rounded-lg outline-hidden hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring">
+            className="pressable -ml-2 w-9 h-9 coarse:w-11 coarse:h-11 grid place-items-center rounded-field outline-hidden hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring">
             <ChevronLeft className="w-5 h-5" aria-hidden />
           </button>
           <span className="tabular-nums" aria-live="polite">Rok {year}</span>
           <button type="button" aria-label="Następny rok" onClick={() => setYear((y) => y + 1)}
-            className="pressable w-9 h-9 coarse:w-11 coarse:h-11 grid place-items-center rounded-lg outline-hidden hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring">
+            className="pressable w-9 h-9 coarse:w-11 coarse:h-11 grid place-items-center rounded-field outline-hidden hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring">
             <ChevronRight className="w-5 h-5" aria-hidden />
           </button>
         </DialogTitle>

@@ -29,7 +29,7 @@ interface ReminderDueToastProps {
 export function ReminderDueToast({ toastId, title, when, description, onOpen, onSnooze10, onSnoozeTomorrow, onSnoozeHour, onSnoozeEvening, onDone }: ReminderDueToastProps) {
   const run = (fn: () => void) => () => { fn(); toast.dismiss(toastId); };
   return (
-    <div className="w-full rounded-lg border bg-background text-foreground shadow-lg p-3.5 flex flex-col gap-2.5">
+    <div className="w-full rounded-field border bg-background text-foreground shadow-elevation-3 p-3.5 flex flex-col gap-2.5">
       <div className="min-w-0">
         <div className="flex items-baseline gap-2 min-w-0">
           <span className="text-sm font-semibold truncate">⏰ {title}</span>

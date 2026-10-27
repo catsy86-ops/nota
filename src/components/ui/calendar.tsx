@@ -28,7 +28,7 @@ function Calendar({ className, classNames, showOutsideDays = true, locale = pl, 
         button_next: cn(buttonVariants({ variant: "outline" }), "h-9 w-9 bg-transparent p-0 opacity-70 hover:opacity-100 coarse:h-11 coarse:w-11", d.button_next),
         month_grid: cn("w-full border-collapse", d.month_grid),
         weekdays: cn("flex", d.weekdays),
-        weekday: cn("w-9 rounded-md text-[0.8rem] font-normal text-muted-foreground", d.weekday),
+        weekday: cn("w-9 rounded-control text-[0.8rem] font-normal text-muted-foreground", d.weekday),
         week: cn("mt-2 flex w-full", d.week),
         day: cn(
           "relative h-9 w-9 p-0 text-center text-sm focus-within:relative focus-within:z-sticky",

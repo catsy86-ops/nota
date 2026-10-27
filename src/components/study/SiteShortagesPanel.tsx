@@ -103,7 +103,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
   }
 
   return (
-    <section aria-label="Braki materiału" data-testid="site-shortages" className="space-y-2 rounded-xl border border-border bg-card p-3">
+    <section aria-label="Braki materiału" data-testid="site-shortages" className="space-y-2 rounded-card border border-border bg-card p-3">
       <p role="status" className="sr-only">{announce}</p>
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -128,7 +128,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
                   onChange={(e) => setDue(s.id, e.target.value)}
                   aria-label={`Data dostawy: ${s.text}`}
                   title="Data dostawy"
-                  className="h-8 w-[8.5rem] shrink-0 rounded-lg border border-input bg-background px-1.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
+                  className="h-8 w-[8.5rem] shrink-0 rounded-field border border-input bg-background px-1.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
                 />
               )}
               <button
@@ -143,7 +143,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
                 type="button"
                 onClick={() => remove(s.id)}
                 aria-label={`Usuń brak: ${s.text}`}
-                className="pressable grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
+                className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
               >
                 <X className="h-3.5 w-3.5" aria-hidden />
               </button>
@@ -168,7 +168,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
             placeholder="Czego brakuje, np. Rura PEX 16"
             aria-label="Czego brakuje"
             autoComplete="off"
-            className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-background px-2.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
+            className="h-9 min-w-0 flex-1 rounded-field border border-input bg-background px-2.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
           />
           <input
             value={qty}
@@ -177,7 +177,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
             placeholder="Ile"
             aria-label="Ile"
             autoComplete="off"
-            className="h-9 w-20 shrink-0 rounded-lg border border-input bg-background px-2.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
+            className="h-9 w-20 shrink-0 rounded-field border border-input bg-background px-2.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
           />
           {dictation.supported && (
             <button
@@ -186,7 +186,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
               aria-pressed={dictation.listening}
               aria-label={dictation.listening ? "Zakończ dyktowanie braku" : "Dyktuj brak"}
               title="Powiedz np. „dokupić trójnik fi 32”"
-              className={cn("pressable grid size-9 shrink-0 place-items-center rounded-lg border coarse:size-11", dictation.listening ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:bg-muted")}
+              className={cn("pressable grid size-9 shrink-0 place-items-center rounded-field border coarse:size-11", dictation.listening ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:bg-muted")}
             >
               <Mic className={cn("h-4 w-4", dictation.listening && "animate-pulse")} aria-hidden />
             </button>
@@ -195,7 +195,7 @@ export function SiteShortagesPanel({ site }: { site: SiteInfo }) {
             type="submit"
             disabled={!text.trim()}
             aria-label="Dodaj brak"
-            className="pressable grid size-9 shrink-0 place-items-center rounded-lg border border-border text-muted-foreground hover:bg-muted disabled:opacity-50 coarse:size-11"
+            className="pressable grid size-9 shrink-0 place-items-center rounded-field border border-border text-muted-foreground hover:bg-muted disabled:opacity-50 coarse:size-11"
           >
             <Plus className="h-4 w-4" aria-hidden />
           </button>

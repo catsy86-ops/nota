@@ -35,7 +35,7 @@ export function InstallBanner({ ready }: { ready: boolean }) {
           exit={{ opacity: 0, height: 0 }}
           className="md:hidden flex items-center gap-2.5 rounded-card border border-primary/25 bg-primary/5 py-2 pl-3 pr-1.5"
         >
-          <span className="w-8 h-8 shrink-0 rounded-xl bg-primary/15 text-primary-ink grid place-items-center">
+          <span className="w-8 h-8 shrink-0 rounded-card bg-primary/15 text-primary-ink grid place-items-center">
             <Smartphone className="w-4 h-4" />
           </span>
           <div className="min-w-0 flex-1">
@@ -43,7 +43,7 @@ export function InstallBanner({ ready }: { ready: boolean }) {
             <p className="text-xs text-muted-foreground truncate">Działa bez internetu</p>
           </div>
           <InstallAppButton variant="compact" onDone={dismiss} />
-          <button type="button" onClick={dismiss} aria-label="Ukryj baner instalacji" className="grid h-11 w-11 shrink-0 place-items-center rounded-lg text-muted-foreground hover:text-foreground">
+          <button type="button" onClick={dismiss} aria-label="Ukryj baner instalacji" className="grid h-11 w-11 shrink-0 place-items-center rounded-field text-muted-foreground hover:text-foreground">
             <X className="w-4 h-4" />
           </button>
         </motion.div>

@@ -70,7 +70,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
       layoutId={`topic-${topic.id}`}
       transition={{ type: "spring", stiffness: 500, damping: 40 }}
       className={cn(
-        "rounded-xl border bg-card p-3 text-sm shadow-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+        "rounded-card border bg-card p-3 text-sm shadow-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
         column === "done" ? "border-primary/40" : "border-border",
       )}
       data-topic={topic.id}
@@ -117,7 +117,7 @@ function TopicCard({ topic, column, study, practice, due, onPractice, onJournal 
       {practice?.lastProblem && (
         <p
           className={cn(
-            "mt-2 flex items-start gap-1.5 rounded-lg px-2 py-1.5 text-xs leading-snug",
+            "mt-2 flex items-start gap-1.5 rounded-field px-2 py-1.5 text-xs leading-snug",
             practice.lastProblem.resolved === undefined ? "bg-warning/10 text-foreground" : "bg-muted/60 text-muted-foreground",
           )}
           data-topic-problem={practice.lastProblem.resolved === undefined ? "open" : "resolved"}
@@ -253,7 +253,7 @@ export function StudyBoard({ onPractice, onJournal }: { onPractice: (topicId: st
               <ul className="space-y-2.5 min-h-12">
                 {topics.map((t) => <TopicCard key={t.id} topic={t} column={col} study={study} practice={practice.get(t.id)} due={dueByTopic.get(t.id) ?? 0} onPractice={onPractice} onJournal={onJournal} />)}
                 {topics.length === 0 && (
-                  <li className="rounded-xl border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">Brak tematów. Przenieś tu temat strzałką.</li>
+                  <li className="rounded-card border border-dashed border-border px-3 py-4 text-center text-xs text-muted-foreground">Brak tematów. Przenieś tu temat strzałką.</li>
                 )}
               </ul>
             </section>

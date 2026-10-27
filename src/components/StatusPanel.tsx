@@ -72,7 +72,7 @@ export function StatusPanel({
         role={role}
         data-status={tone}
         className={cn(
-          "rounded-xl border border-dashed px-4 py-6 text-center text-sm",
+          "rounded-card border border-dashed px-4 py-6 text-center text-sm",
           tone === "error" ? "border-destructive/50 bg-destructive/5" : "border-border",
           className,
         )}

@@ -46,7 +46,7 @@ export function OfflineQueuePanel({ open, onOpenChange, offline }: OfflineQueueP
         </SheetHeader>
 
         <div className="mt-4 space-y-2">
-          <div className="flex items-center gap-3 rounded-xl bg-muted/50 border border-border/50 px-3 py-2.5 text-sm">
+          <div className="flex items-center gap-3 rounded-card bg-muted/50 border border-border/50 px-3 py-2.5 text-sm">
             {offline ? (
               <CloudOff className="h-4 w-4 shrink-0 text-destructive-ink" />
             ) : (
@@ -55,7 +55,7 @@ export function OfflineQueuePanel({ open, onOpenChange, offline }: OfflineQueueP
             <span className="flex-1">{offline ? "Brak połączenia z internetem" : "Połączenie z internetem jest aktywne"}</span>
           </div>
 
-          <div className="flex items-center gap-3 rounded-xl bg-muted/50 border border-border/50 px-3 py-2.5 text-sm">
+          <div className="flex items-center gap-3 rounded-card bg-muted/50 border border-border/50 px-3 py-2.5 text-sm">
             <HardDrive className="h-4 w-4 shrink-0 text-primary-ink" />
             <span className="flex-1">
               Notatki są zapisywane lokalnie natychmiast
@@ -64,7 +64,7 @@ export function OfflineQueuePanel({ open, onOpenChange, offline }: OfflineQueueP
             <Check className="h-4 w-4 shrink-0 text-primary-ink" />
           </div>
 
-          <div className="flex items-center gap-3 rounded-xl bg-muted/50 border border-border/50 px-3 py-2.5 text-sm">
+          <div className="flex items-center gap-3 rounded-card bg-muted/50 border border-border/50 px-3 py-2.5 text-sm">
             {syncState.status === "connecting" ? (
               <LoaderCircle className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
             ) : syncState.status === "connected" ? (

@@ -58,7 +58,7 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
   }
 
   return (
-    <section aria-label="Plany i dokumenty" data-testid="site-docs" className="space-y-2 rounded-xl border border-border bg-card p-3">
+    <section aria-label="Plany i dokumenty" data-testid="site-docs" className="space-y-2 rounded-card border border-border bg-card p-3">
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <FolderOpen className="h-3.5 w-3.5" aria-hidden />Plany i dokumenty
@@ -77,7 +77,7 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
               <button
                 type="button"
                 onClick={() => { setActual(false); setZoom(d); }}
-                className="pressable block w-full overflow-hidden rounded-lg border border-border focus-visible:ring-2 focus-visible:ring-ring"
+                className="pressable block w-full overflow-hidden rounded-field border border-border focus-visible:ring-2 focus-visible:ring-ring"
                 aria-label={`Powiększ: ${docLabel(d)}`}
               >
                 <NoteImage imageRef={d.id} alt="" className="aspect-square w-full object-cover" placeholderClassName="aspect-square w-full" />
@@ -139,7 +139,7 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
         <DialogContent className="max-w-[min(96vw,64rem)] gap-2 p-3">
           <DialogTitle className="truncate pr-8 text-sm">{zoom ? docLabel(zoom) : ""}</DialogTitle>
           {zoom && (
-            <div className={cn("max-h-[80dvh] overflow-auto rounded-lg", actual ? "touch-pan-x touch-pan-y" : "")} data-testid="site-doc-zoom">
+            <div className={cn("max-h-[80dvh] overflow-auto rounded-field", actual ? "touch-pan-x touch-pan-y" : "")} data-testid="site-doc-zoom">
               <NoteImage
                 imageRef={zoom.id}
                 alt={docLabel(zoom)}

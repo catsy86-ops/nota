@@ -18,9 +18,9 @@ import { presenceMinutes, recordKey } from "@/lib/study/entryCheck";
 import { cn } from "@/lib/utils";
 
 const fieldClass =
-  "h-10 w-24 rounded-lg border border-border bg-background px-3 text-right font-mono text-base tabular-nums text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm";
+  "h-10 w-24 rounded-field border border-border bg-background px-3 text-right font-mono text-base tabular-nums text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm";
 const selectClass =
-  "h-10 w-full rounded-lg border border-dashed border-border bg-background px-3 text-sm text-muted-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11";
+  "h-10 w-full rounded-field border border-dashed border-border bg-background px-3 text-sm text-muted-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11";
 
 /** Południe dnia „RRRR-MM-DD” — do etykiety bez przeskoku przy zmianie czasu. */
 const noonOf = (key: string) => { const [y, m, d] = key.split("-").map(Number); return new Date(y, m - 1, d, 12).getTime(); };
@@ -124,7 +124,7 @@ function DayHoursBody({ day, label, siteId, onOpenChange }: { day: string; label
                 value={current}
                 max={localDayKey()}
                 onChange={(e) => { if (/^\d{4}-\d{2}-\d{2}$/.test(e.target.value)) setCurrent(e.target.value); }}
-                className="h-10 rounded-lg border border-border bg-background px-3 font-mono text-base tabular-nums text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
+                className="h-10 rounded-field border border-border bg-background px-3 font-mono text-base tabular-nums text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
               />
             </label>
           )}

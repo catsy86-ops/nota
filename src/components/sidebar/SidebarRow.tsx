@@ -37,7 +37,7 @@ export const SidebarRow = forwardRef<HTMLDivElement, SidebarRowProps>(function S
       ref={ref}
       data-active={active || undefined}
       className={cn(
-        "group relative flex items-center h-9 coarse:h-11 rounded-lg text-sm font-medium transition-[color,background-color,box-shadow] duration-(--dur-fast)",
+        "group relative flex items-center h-9 coarse:h-11 rounded-field text-sm font-medium transition-[color,background-color,box-shadow] duration-(--dur-fast)",
         active ? "text-primary-ink" : "text-muted-foreground hover:bg-muted/80 hover:text-foreground",
         dropActive && "bg-primary/10 text-primary-ink ring-2 ring-primary/40",
         className,
@@ -47,7 +47,7 @@ export const SidebarRow = forwardRef<HTMLDivElement, SidebarRowProps>(function S
         <motion.span
           layoutId="sidebar-active-pill"
           aria-hidden
-          className="absolute inset-0 rounded-lg bg-primary/10"
+          className="absolute inset-0 rounded-field bg-primary/10"
           transition={spring.snap}
         >
           {/* Kreska jak zapis na marginesie zeszytu — jedzie razem z pigułką (ten sam layoutId). */}
@@ -61,7 +61,7 @@ export const SidebarRow = forwardRef<HTMLDivElement, SidebarRowProps>(function S
         aria-current={active ? "page" : undefined}
         {...buttonProps}
         className={cn(
-          "pressable relative z-raised flex h-full min-w-0 flex-1 items-center gap-3 rounded-lg text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+          "pressable relative z-raised flex h-full min-w-0 flex-1 items-center gap-3 rounded-field text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
           before ? "pl-1.5 pr-3" : "px-3",
         )}
       >
@@ -101,7 +101,7 @@ export function SidebarRowMenu({ label, children, onCloseAutoFocus }: {
           type="button"
           aria-label={`Akcje ${label}`}
           onClick={(e) => e.stopPropagation()}
-          className="pressable relative grid h-7 w-7 coarse:h-9 coarse:w-9 place-items-center rounded-md coarse:after:absolute coarse:after:-inset-1 coarse:after:content-[''] outline-hidden hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-foreground/10"
+          className="pressable relative grid h-7 w-7 coarse:h-9 coarse:w-9 place-items-center rounded-control coarse:after:absolute coarse:after:-inset-1 coarse:after:content-[''] outline-hidden hover:bg-foreground/10 focus-visible:ring-2 focus-visible:ring-ring data-[state=open]:bg-foreground/10"
         >
           <Ellipsis className="h-4 w-4" />
         </button>

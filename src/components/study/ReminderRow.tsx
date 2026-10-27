@@ -32,7 +32,7 @@ export function ReminderRow({ reminder: r, onShow }: { reminder: StudyReminder; 
   // Każdy rodzaj przypomnienia ma swoją ikonę, żeby dało się je odróżnić bez czytania (§9 W5).
   const Icon = REMINDER_ICON[r.kind] ?? TriangleAlert;
   return (
-    <li className="flex items-start gap-2.5 rounded-xl border border-warning/50 bg-warning/10 p-3 text-sm" data-reminder={r.kind}>
+    <li className="flex items-start gap-2.5 rounded-card border border-warning/50 bg-warning/10 p-3 text-sm" data-reminder={r.kind}>
       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" aria-hidden />
       <p className="min-w-0 flex-1 leading-snug">{text}</p>
       <button

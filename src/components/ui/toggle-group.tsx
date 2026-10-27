@@ -14,7 +14,7 @@ const toggleGroupVariants = cva("", {
   variants: {
     variant: {
       /** Tor z wypukłą wybraną pozycją (przełącznik segmentowy). */
-      segment: "grid auto-cols-fr grid-flow-col gap-1 rounded-xl bg-muted/60 p-1",
+      segment: "grid auto-cols-fr grid-flow-col gap-1 rounded-card bg-muted/60 p-1",
       /** Bez wyglądu — układ i kafle robi wywołujący. */
       plain: "",
     },
@@ -28,7 +28,7 @@ const toggleItemVariants = cva(
     variants: {
       variant: {
         segment:
-          "h-9 coarse:h-11 rounded-lg px-2 text-sm font-medium text-muted-foreground transition-colors duration-fast hover:text-foreground data-[state=on]:bg-card data-[state=on]:font-semibold data-[state=on]:text-primary-ink data-[state=on]:shadow-elevation-1",
+          "h-9 coarse:h-11 rounded-field px-2 text-sm font-medium text-muted-foreground transition-colors duration-fast hover:text-foreground data-[state=on]:bg-card data-[state=on]:font-semibold data-[state=on]:text-primary-ink data-[state=on]:shadow-elevation-1",
         plain: "",
       },
     },

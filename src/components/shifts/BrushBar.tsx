@@ -113,7 +113,7 @@ function BrushChip({ type, active, radio, onClick, onEdit }: { type: ShiftType; 
       style={active ? { backgroundColor: `${type.color}22`, ["--tw-ring-color" as string]: type.color } : undefined}>
       <button type="button" role="radio" aria-checked={active} onClick={onClick} ref={radio.ref} tabIndex={radio.tabIndex}
         className={cn("pressable relative flex items-center gap-2 pl-1.5 pr-2 max-sm:pr-1.5 h-12 rounded-l-2xl", focusRing, !active && "max-sm:rounded-r-2xl")}>
-        <span className={cn("w-9 h-9 rounded-xl flex items-center justify-center font-display font-bold",
+        <span className={cn("w-9 h-9 rounded-card flex items-center justify-center font-display font-bold",
           absence && "border-2 bg-transparent")}
           style={absence ? { borderColor: type.color, color: shiftTextOnCard(type.color) } : { backgroundColor: type.color, color: shiftInk(type.color) }}>
           {type.short}

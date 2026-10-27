@@ -85,7 +85,7 @@ export function ShiftDnd({ days, typesById, onTransfer, children }: ShiftDndProp
         {type && (
           <span
             aria-hidden
-            className="inline-flex items-center gap-1 rounded-lg px-2 py-1 font-display font-bold text-sm shadow-lg ring-2 ring-primary/50"
+            className="inline-flex items-center gap-1 rounded-field px-2 py-1 font-display font-bold text-sm shadow-elevation-3 ring-2 ring-primary/50"
             style={type.kind === "absence"
               ? { backgroundColor: `color-mix(in srgb, ${type.color} 30%, var(--card))`, color: shiftTextOnCard(type.color) }
               : { backgroundColor: type.color, color: shiftInk(type.color) }}

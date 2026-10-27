@@ -24,7 +24,7 @@ interface DayTimelineProps {
   onOpenSeriesSource: (occurrence: Occurrence) => void;
 }
 
-const itemClass = "group w-full flex items-center gap-2 rounded-lg hover:bg-muted/60 transition-colors p-0.5 -m-0.5 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
+const itemClass = "group w-full flex items-center gap-2 rounded-field hover:bg-muted/60 transition-colors p-0.5 -m-0.5 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
 
 function TimelineItem({ occ, title, onEdit, onMoveByDays, onOpenSeriesSource }: {
   occ: Occurrence;
@@ -94,7 +94,7 @@ export function DayTimeline({ occurrences, titleOf, shift, onEdit, onMoveByDays,
         </div>
       )}
 
-      <ol aria-label="Oś godzin dnia" className="rounded-lg">
+      <ol aria-label="Oś godzin dnia" className="rounded-field">
         {hours.map((h) => {
           const here = timed.filter((o) => Math.floor(minutesOfDay(o.at) / 60) === h);
           const bg = hourBackground(pieces, h, color);

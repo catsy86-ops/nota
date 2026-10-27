@@ -35,14 +35,14 @@ export function FontPicker({ value, onChange }: FontPickerProps) {
               whileHover={{ y: -2 }}
               whileTap={{ scale: 0.97 }}
               transition={spring.snap}
-              className="group relative rounded-xl border border-border/60 bg-muted/30 px-3 py-2.5 text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              className="group relative rounded-card border border-border/60 bg-muted/30 px-3 py-2.5 text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             >
               {active && (
                 <motion.span
                   layoutId="font-active"
                   transition={spring.soft}
                   aria-hidden
-                  className="absolute -inset-px rounded-xl border-2 border-primary bg-primary/5"
+                  className="absolute -inset-px rounded-card border-2 border-primary bg-primary/5"
                 />
               )}
               <span className="relative flex items-baseline justify-between gap-2" style={{ fontFamily: meta.family }}>

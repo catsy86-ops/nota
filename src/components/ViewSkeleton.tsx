@@ -12,14 +12,14 @@ const LABELS: Record<LazyView, string> = {
 };
 
 function Bone({ className }: { className?: string }) {
-  return <div className={cn("view-skeleton-bone rounded-md bg-muted", className)} />;
+  return <div className={cn("view-skeleton-bone rounded-control bg-muted", className)} />;
 }
 
 function MonthGrid() {
   return (
     <div className="grid grid-cols-7 gap-1.5">
       {Array.from({ length: 35 }, (_, i) => (
-        <Bone key={i} className="aspect-square sm:aspect-[4/3] rounded-lg" />
+        <Bone key={i} className="aspect-square sm:aspect-[4/3] rounded-field" />
       ))}
     </div>
   );
@@ -56,14 +56,14 @@ export function ViewSkeleton({ view }: { view: LazyView }) {
               {Array.from({ length: 4 }, (_, i) => <Bone key={i} className="h-9 w-20 rounded-full" />)}
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
-              {Array.from({ length: 4 }, (_, i) => <Bone key={i} className="h-28 rounded-xl" />)}
+              {Array.from({ length: 4 }, (_, i) => <Bone key={i} className="h-28 rounded-card" />)}
             </div>
           </>
         ) : (
           <>
             {view === "shifts" && (
               <div className="grid grid-cols-3 gap-2">
-                {Array.from({ length: 3 }, (_, i) => <Bone key={i} className="h-16 rounded-xl" />)}
+                {Array.from({ length: 3 }, (_, i) => <Bone key={i} className="h-16 rounded-card" />)}
               </div>
             )}
             <MonthGrid />

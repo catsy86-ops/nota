@@ -71,7 +71,7 @@ export function moveRadio<T>(e: KeyboardEvent<HTMLElement>, values: readonly T[]
 export function ToggleRow({ label, desc, checked, onCheck }: { label: string; desc: string; checked: boolean; onCheck: (v: boolean) => void }) {
   const labelId = useId();
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/30 px-4 py-3">
+    <div className="flex items-center justify-between gap-4 rounded-card border border-border/60 bg-muted/30 px-4 py-3">
       <div className="min-w-0">
         <p id={labelId} className="text-sm font-semibold">{label}</p>
         <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>

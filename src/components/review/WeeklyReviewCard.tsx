@@ -82,7 +82,7 @@ function FolderMenu({ note, folders, onMove }: { note: Note; folders: Folder[]; 
             disabled={note.folderId === folder.id}
             onClick={() => { onMove(folder.id); setOpen(false); }}
             style={{ paddingLeft: 8 + depth * 14 }}
-            className="w-full flex items-center gap-2 py-1.5 pr-2 rounded-lg text-sm text-left hover:bg-muted/80 disabled:opacity-50"
+            className="w-full flex items-center gap-2 py-1.5 pr-2 rounded-field text-sm text-left hover:bg-muted/80 disabled:opacity-50"
           >
             <span aria-hidden>{folder.emoji ?? "📁"}</span>
             <span className="truncate">{folder.name}</span>
@@ -93,7 +93,7 @@ function FolderMenu({ note, folders, onMove }: { note: Note; folders: Folder[]; 
   );
 }
 
-const rowBtn = "pressable p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-foreground/5 coarse:p-2.5 coarse:min-h-11 coarse:min-w-11";
+const rowBtn = "pressable p-2 rounded-field text-muted-foreground hover:text-foreground hover:bg-foreground/5 coarse:p-2.5 coarse:min-h-11 coarse:min-w-11";
 
 function CategoryBlock({ cat, a }: { cat: ReviewCategory; a: WeeklyReviewActions }) {
   const Icon = ICONS[cat.key];
@@ -201,7 +201,7 @@ export function WeeklyReviewCard(a: WeeklyReviewActions) {
         )}
       >
         <header className="flex flex-wrap items-start gap-x-3 gap-y-2">
-          <span className="w-9 h-9 shrink-0 rounded-xl bg-primary/15 text-primary-ink grid place-items-center" aria-hidden>
+          <span className="w-9 h-9 shrink-0 rounded-card bg-primary/15 text-primary-ink grid place-items-center" aria-hidden>
             <Sparkles className="w-[18px] h-[18px]" />
           </span>
           <div className="min-w-0 flex-1">

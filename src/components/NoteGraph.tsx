@@ -138,7 +138,7 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
             value={label ?? ""}
             onChange={(e) => setLabel(e.target.value || null)}
             data-testid="graph-filter-label"
-            className="min-w-0 max-w-44 truncate rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground"
+            className="min-w-0 max-w-44 truncate rounded-control border border-border bg-background px-2 py-1 text-xs text-foreground"
           >
             <option value="">Wszystkie</option>
             {labels.map((l) => <option key={l} value={l}>{l}</option>)}
@@ -152,7 +152,7 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
             value={folderId ?? ""}
             onChange={(e) => setFolderId(e.target.value || null)}
             data-testid="graph-filter-folder"
-            className="min-w-0 max-w-44 truncate rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground"
+            className="min-w-0 max-w-44 truncate rounded-control border border-border bg-background px-2 py-1 text-xs text-foreground"
           >
             <option value="">Wszystkie</option>
             {folders.map((f) => <option key={f.id} value={f.id}>{f.name}</option>)}
@@ -166,7 +166,7 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
     return (
       <div data-testid="link-graph">
         {filters}
-        <div className="rounded-xl border border-dashed border-border/70 bg-muted/20 px-4 py-10 text-center" data-testid="link-graph-empty">
+        <div className="rounded-card border border-dashed border-border/70 bg-muted/20 px-4 py-10 text-center" data-testid="link-graph-empty">
           {centerId ? (
             <>
               <p className="text-sm font-medium">{label || folderId ? "Brak połączeń w wybranych filtrach" : "Ta notatka nie ma jeszcze połączeń"}</p>
@@ -202,7 +202,7 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
         viewBox={`0 0 ${W} ${H}`}
         role="group"
         aria-label="Graf powiązań między notatkami"
-        className="block h-auto w-full rounded-xl border border-border/60 bg-card text-foreground"
+        className="block h-auto w-full rounded-card border border-border/60 bg-card text-foreground"
         style={{ backgroundImage: "linear-gradient(color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1px)", backgroundSize: "5% 8.06%" }}
       >
         <defs>

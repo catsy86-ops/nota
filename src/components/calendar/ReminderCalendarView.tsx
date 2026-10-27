@@ -287,7 +287,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
           <button
             onClick={() => shiftMonth(-1)}
             aria-label="Poprzedni miesiąc"
-            className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-card text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -300,7 +300,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
           <button
             onClick={() => shiftMonth(1)}
             aria-label="Następny miesiąc"
-            className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-card text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -309,7 +309,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
             <button
               onClick={goToToday}
               aria-label="Wróć do bieżącego miesiąca"
-              className="ml-1 shrink-0 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 sm:px-2.5 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              className="ml-1 shrink-0 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 sm:px-2.5 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             >
               Dziś
             </button>
@@ -319,7 +319,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
             onClick={exportAll}
             aria-label="Eksportuj nadchodzące terminy do kalendarza (.ics)"
             title="Eksportuj nadchodzące terminy do kalendarza (.ics)"
-            className="ml-auto sm:ml-0 order-last shrink-0 hidden sm:inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 coarse:min-h-11 coarse:min-w-11 coarse:justify-center rounded-lg transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            className="ml-auto sm:ml-0 order-last shrink-0 hidden sm:inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 coarse:min-h-11 coarse:min-w-11 coarse:justify-center rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Download className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">.ics</span>
@@ -332,7 +332,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
             aria-controls="calendar-keys-hint"
             aria-label="Skróty klawiaturowe kalendarza"
             title="Skróty klawiaturowe"
-            className="ml-auto hidden sm:inline-flex p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/60 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            className="ml-auto hidden sm:inline-flex p-2 rounded-card text-muted-foreground hover:text-foreground hover:bg-muted/60 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Keyboard className="w-4 h-4" aria-hidden />
           </button>
@@ -341,7 +341,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
             onClick={() => setPrinting(true)}
             aria-label="Drukuj terminy tego miesiąca"
             title="Drukuj terminy tego miesiąca"
-            className="shrink-0 hidden sm:inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 coarse:min-h-11 coarse:min-w-11 coarse:justify-center rounded-lg transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            className="shrink-0 hidden sm:inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 coarse:min-h-11 coarse:min-w-11 coarse:justify-center rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Printer className="w-3.5 h-3.5" aria-hidden />
             <span>Drukuj</span>
@@ -352,7 +352,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
                 type="button"
                 aria-label="Więcej akcji kalendarza"
                 title="Więcej akcji"
-                className="ml-auto order-last shrink-0 sm:hidden coarse:min-h-11 coarse:min-w-11 inline-flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                className="ml-auto order-last shrink-0 sm:hidden coarse:min-h-11 coarse:min-w-11 inline-flex items-center justify-center p-2 rounded-field text-muted-foreground hover:text-foreground hover:bg-muted/60 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <MoreHorizontal className="w-4 h-4" aria-hidden />
               </button>
@@ -381,7 +381,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
                 type="button"
                 aria-pressed={phoneView === v}
                 onClick={() => setPhoneView(v)}
-                className={`rounded-lg px-3 py-1.5 text-xs font-medium coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring ${phoneView === v ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:text-foreground"}`}
+                className={`rounded-field px-3 py-1.5 text-xs font-medium coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring ${phoneView === v ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:text-foreground"}`}
               >
                 {v === "month" ? "Miesiąc" : v === "week" ? "Tydzień" : "Lista"}
               </button>

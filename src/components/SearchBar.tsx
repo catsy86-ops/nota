@@ -126,7 +126,7 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
         aria-controls={showSuggestions ? listId : undefined}
         aria-activedescendant={showSuggestions && active >= 0 ? `${listId}-${active}` : undefined}
         className={cn(
-          "w-full pl-10 py-2.5 rounded-xl bg-muted/60 border text-base md:text-sm text-foreground placeholder:text-muted-foreground outline-hidden transition-[border-color,box-shadow,background-color] duration-fast ease-std",
+          "w-full pl-10 py-2.5 rounded-card bg-muted/60 border text-base md:text-sm text-foreground placeholder:text-muted-foreground outline-hidden transition-[border-color,box-shadow,background-color] duration-fast ease-std",
           value ? (canSave ? "pr-18" : "pr-9") : "pr-9",
           focused ? "border-primary/50 ring-2 ring-primary/20 bg-background" : "border-border"
         )}
@@ -169,7 +169,7 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
           id={listId}
           role="listbox"
           aria-label="Podpowiedzi operatorów"
-          className="absolute left-0 right-0 top-full z-dropdown mt-1.5 max-h-64 overflow-y-auto rounded-xl border border-border bg-popover p-1 shadow-lg"
+          className="absolute left-0 right-0 top-full z-dropdown mt-1.5 max-h-64 overflow-y-auto rounded-card border border-border bg-popover p-1 shadow-elevation-3"
         >
           {suggestions.items.map((s, i) => (
             <li
@@ -181,7 +181,7 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
               onMouseDown={(e) => { e.preventDefault(); pick(i); }}
               onMouseEnter={() => setActive(i)}
               className={cn(
-                "cursor-pointer truncate rounded-lg px-3 py-1.5 text-sm font-mono",
+                "cursor-pointer truncate rounded-field px-3 py-1.5 text-sm font-mono",
                 i === active ? "bg-primary/10 text-primary-ink" : "text-foreground",
               )}
             >
@@ -195,7 +195,7 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
         <form
           onSubmit={submitSave}
           onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setSaving(false); } }}
-          className="absolute right-0 top-full z-dropdown mt-1.5 w-72 max-w-[90vw] space-y-2 rounded-xl border border-border bg-popover p-3 shadow-lg"
+          className="absolute right-0 top-full z-dropdown mt-1.5 w-72 max-w-[90vw] space-y-2 rounded-card border border-border bg-popover p-3 shadow-elevation-3"
         >
           <label className="block text-2xs font-semibold uppercase tracking-wider text-muted-foreground" htmlFor={`${listId}-name`}>
             Nazwa filtra
@@ -207,17 +207,17 @@ export function SearchBar({ value: externalValue, onChange, className }: SearchB
             maxLength={MAX_FILTER_NAME}
             onChange={(e) => setName(e.target.value)}
             placeholder="np. Do zrobienia"
-            className="w-full rounded-lg border border-border bg-muted/60 px-2.5 py-1.5 text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
+            className="w-full rounded-field border border-border bg-muted/60 px-2.5 py-1.5 text-sm text-foreground outline-hidden focus:ring-2 focus:ring-ring"
           />
           <p className="truncate font-mono text-2xs text-muted-foreground">{value.trim()}</p>
           <div className="flex justify-end gap-2">
-            <button type="button" onClick={() => setSaving(false)} className="pressable rounded-lg px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted">
+            <button type="button" onClick={() => setSaving(false)} className="pressable rounded-field px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted">
               Anuluj
             </button>
             <button
               type="submit"
               disabled={!name.trim()}
-              className="pressable rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+              className="pressable rounded-field bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
             >
               Zapisz filtr
             </button>

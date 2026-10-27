@@ -150,7 +150,7 @@ export function AppearanceSettings() {
                 onClick={() => setSeasonPref(s)}
                 aria-pressed={active}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 py-3 rounded-xl border text-xs font-semibold transition-colors",
+                  "flex flex-col items-center justify-center gap-1 py-3 rounded-card border text-xs font-semibold transition-colors",
                   active
                     ? "border-primary bg-primary/10 text-primary-ink"
                     : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
@@ -181,7 +181,7 @@ export function AppearanceSettings() {
               onClick={() => changeView(() => setViewPref("layout", l))}
               aria-pressed={prefs.layout === l}
               className={cn(
-                "p-3 rounded-xl border text-xs font-medium transition-all capitalize",
+                "p-3 rounded-card border text-xs font-medium transition-all capitalize",
                 prefs.layout === l ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
               )}
             >{l === "masonry" ? "Mozaika" : l === "grid" ? "Siatka" : l === "list" ? "Lista" : l === "board" ? "Tablica" : "Tabela"}</button>
@@ -196,7 +196,7 @@ export function AppearanceSettings() {
             <select
               value={prefs.sortKey}
               onChange={(e) => changeView(() => setViewPref("sortKey", e.target.value as typeof prefs.sortKey))}
-              className="h-9 coarse:h-11 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+              className="h-9 coarse:h-11 rounded-control border border-input bg-background px-2 text-sm text-foreground"
             >
               {BASE_SORTS.map((s) => <option key={s.v} value={s.v}>{s.label}</option>)}
             </select>
@@ -206,7 +206,7 @@ export function AppearanceSettings() {
             <select
               value={prefs.groupBy}
               onChange={(e) => changeView(() => setViewPref("groupBy", e.target.value as typeof prefs.groupBy))}
-              className="h-9 coarse:h-11 rounded-md border border-input bg-background px-2 text-sm text-foreground"
+              className="h-9 coarse:h-11 rounded-control border border-input bg-background px-2 text-sm text-foreground"
             >
               <option value="none">Brak</option>
               <option value="date">Data</option>
@@ -226,7 +226,7 @@ export function AppearanceSettings() {
               onClick={() => changeView(() => setViewPref("density", d))}
               aria-pressed={prefs.density === d}
               className={cn(
-                "p-3 rounded-xl border text-xs font-medium transition-all",
+                "p-3 rounded-card border text-xs font-medium transition-all",
                 prefs.density === d ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60"
               )}
             >{d === "compact" ? "Kompakt" : d === "cozy" ? "Komfort" : "Luźno"}</button>
@@ -239,7 +239,7 @@ export function AppearanceSettings() {
           <button
             onClick={() => changeView(() => setViewPref("autoColumns", true))}
             aria-pressed={prefs.autoColumns}
-            className={cn("flex-1 px-3 py-2 rounded-xl border text-xs font-medium",
+            className={cn("flex-1 px-3 py-2 rounded-card border text-xs font-medium",
               prefs.autoColumns ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60")}
           >Auto (responsywne)</button>
           {[1, 2, 3, 4].map((c) => (
@@ -247,7 +247,7 @@ export function AppearanceSettings() {
               key={c}
               onClick={() => changeView(() => { setViewPref("autoColumns", false); setViewPref("columns", c); })}
               aria-pressed={!prefs.autoColumns && prefs.columns === c}
-              className={cn("w-10 h-10 coarse:size-11 rounded-xl border text-sm font-bold",
+              className={cn("w-10 h-10 coarse:size-11 rounded-card border text-sm font-bold",
                 !prefs.autoColumns && prefs.columns === c ? "border-primary bg-primary/10 text-primary-ink" : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60")}
             >{c}</button>
           ))}

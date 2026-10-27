@@ -20,7 +20,7 @@ interface ShiftSettingsDialogProps {
 
 const monthName = (m: number) => format(new Date(2026, m, 1), "LLLL", { locale: pl });
 
-const CONTROL = "w-full h-10 coarse:h-11 rounded-lg border border-input bg-background px-3 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
+const CONTROL = "w-full h-10 coarse:h-11 rounded-field border border-input bg-background px-3 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
 
 /**
  * Ustawienia rozliczenia: stawka, system czasu pracy, etat, okres, pora nocna
@@ -77,7 +77,7 @@ export function ShiftSettingsDialog({ open, onOpenChange, settings: s }: ShiftSe
           <EveningNudgeField />
           {/* Pora nocna i doba niedzieli zwykle zostają ustawowe — zmienia się je tylko, gdy regulamin pracy mówi inaczej. */}
           <details open={s.nightFrom !== 22 || s.sundayFrom !== 6 || undefined} className="group rounded-card border border-border/60 px-3 py-2.5">
-            <summary className="cursor-pointer text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded-md">
+            <summary className="cursor-pointer text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded-control">
               Opcjonalne <span className="font-normal text-muted-foreground">— pora nocna, niedziela i święto</span>
             </summary>
             <p className="mt-2 text-xs text-muted-foreground">Zostaw ustawowe, jeśli regulamin pracy nie ustala inaczej.</p>
@@ -97,7 +97,7 @@ export function ShiftSettingsDialog({ open, onOpenChange, settings: s }: ShiftSe
         </div>
 
         <details className="group rounded-card bg-muted/50 px-3 py-2.5 text-sm">
-          <summary className="cursor-pointer font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded-md">Jak liczymy?</summary>
+          <summary className="cursor-pointer font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded-control">Jak liczymy?</summary>
           <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground list-disc pl-4">
             <li>Norma miesiąca wg art. 130 KP, proporcjonalna do etatu, pomniejszona o nieobecności w dni robocze.</li>
             <li>Nadgodziny dobowe: ponad 8 h (w systemie równoważnym ponad godziny z grafiku, do 12 h) w dobie pracowniczej, czyli 24 h od początku zmiany.</li>
@@ -142,7 +142,7 @@ function LeaveDaysField({ value }: { value: number }) {
         </div>
         {[20, 26].map((n) => (
           <button key={n} type="button" aria-pressed={value === n} onClick={() => { setText(String(n)); setLeaveDays(n); }}
-            className={cn("pressable h-10 coarse:h-11 min-w-12 px-3 rounded-lg border text-sm font-medium tabular-nums outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+            className={cn("pressable h-10 coarse:h-11 min-w-12 px-3 rounded-field border text-sm font-medium tabular-nums outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
               value === n ? "border-primary bg-primary/10 text-foreground" : "border-input bg-background text-muted-foreground hover:text-foreground")}>
             {n}
           </button>

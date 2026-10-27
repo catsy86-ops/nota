@@ -36,10 +36,10 @@ function RecordingBar({ since, onStop }: { since: number; onStop: () => void }) 
     return () => window.clearInterval(id);
   }, []);
   return (
-    <div role="status" data-testid="voice-recording" className="flex items-center gap-2 rounded-lg border border-destructive/40 px-2.5 py-1.5 text-xs">
+    <div role="status" data-testid="voice-recording" className="flex items-center gap-2 rounded-field border border-destructive/40 px-2.5 py-1.5 text-xs">
       <span className="h-2 w-2 shrink-0 animate-pulse rounded-full bg-destructive" aria-hidden />
       <span className="flex-1 font-mono tabular-nums">Nagrywanie {clock(Math.max(0, now - since))} / 3:00</span>
-      <button type="button" onClick={onStop} className="pressable inline-flex items-center gap-1 rounded-md px-2 py-1 font-medium text-destructive-ink hover:bg-destructive/10 coarse:min-h-11">
+      <button type="button" onClick={onStop} className="pressable inline-flex items-center gap-1 rounded-control px-2 py-1 font-medium text-destructive-ink hover:bg-destructive/10 coarse:min-h-11">
         <Square className="h-3 w-3 fill-current" aria-hidden /> Zatrzymaj
       </button>
     </div>

@@ -253,7 +253,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
           coraz rzadziej, po błędzie — następnego dnia.
         </p>
         {due.length > 0 ? (
-          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 px-3.5 py-3" data-testid="due-today">
+          <div className="flex flex-wrap items-center gap-3 rounded-card border border-primary/30 bg-primary/5 px-3.5 py-3" data-testid="due-today">
             <p className="text-sm"><span className="font-semibold tabular-nums">{Math.min(ROUND_SIZE, due.length)} z {due.length} na dziś</span> <span className="text-muted-foreground">{pluralPl(Math.min(ROUND_SIZE, due.length), ["pytanie", "pytania", "pytań"])} w tej rundzie</span></p>
             <Button size="sm" onClick={() => onScopeChange?.({ kind: "due" })}>Powtórz</Button>
           </div>
@@ -336,7 +336,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
               onClick={() => answer(i)}
               aria-pressed={isPicked}
               className={cn(
-                "pressable flex items-start gap-3 rounded-xl border px-3.5 py-3 text-left text-sm transition-colors coarse:min-h-14 coarse:items-center coarse:text-base",
+                "pressable flex items-start gap-3 rounded-card border px-3.5 py-3 text-left text-sm transition-colors coarse:min-h-14 coarse:items-center coarse:text-base",
                 !answered && "border-border bg-background hover:border-primary/60 hover:bg-primary/5",
                 reveal && isCorrect && "border-success-ink/60 bg-success/10",
                 reveal && isPicked && !isCorrect && "border-destructive/60 bg-destructive/10",
@@ -344,7 +344,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
                 examMode && answered && isPicked && "border-primary bg-primary/10",
               )}
             >
-              <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-md border border-border font-mono text-2xs text-muted-foreground">
+              <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-control border border-border font-mono text-2xs text-muted-foreground">
                 {reveal && isCorrect ? <Check className="w-3.5 h-3.5 text-success-ink" role="img" aria-label="Poprawna" /> : reveal && isPicked ? <X className="w-3.5 h-3.5 text-destructive-ink" role="img" aria-label="Błędna" /> : LETTERS[i]}
               </span>
               <span className="flex-1">{opt}</span>
@@ -353,7 +353,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
         })}
       </div>
       {reveal && (
-        <p className="rounded-xl bg-muted/60 px-3.5 py-3 text-sm leading-relaxed" aria-live="polite">
+        <p className="rounded-card bg-muted/60 px-3.5 py-3 text-sm leading-relaxed" aria-live="polite">
           <span className="font-medium">{picked === current.correct ? "Dobrze. " : "Nie tym razem. "}</span>
           {current.explanation}
         </p>

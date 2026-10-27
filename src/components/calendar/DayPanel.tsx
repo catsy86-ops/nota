@@ -86,7 +86,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdi
         </h3>
         <button
           onClick={onAdd}
-          className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+          className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Plus className="w-3.5 h-3.5" />
           Dodaj termin
@@ -98,13 +98,13 @@ export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdi
         value={view}
         onValueChange={(v) => { if (v) setView(v as DayView); }}
         aria-label="Widok terminów dnia"
-        className="mb-3 inline-flex gap-0.5 rounded-lg bg-muted/50 p-0.5"
+        className="mb-3 inline-flex gap-0.5 rounded-field bg-muted/50 p-0.5"
       >
-        <ToggleGroupItem value="list" className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-card data-[state=on]:text-primary-ink data-[state=on]:shadow-sm coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+        <ToggleGroupItem value="list" className="inline-flex items-center gap-1 rounded-control px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-card data-[state=on]:text-primary-ink data-[state=on]:shadow-sm coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
           <List className="w-3.5 h-3.5" aria-hidden />
           Lista
         </ToggleGroupItem>
-        <ToggleGroupItem value="axis" className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-card data-[state=on]:text-primary-ink data-[state=on]:shadow-sm coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+        <ToggleGroupItem value="axis" className="inline-flex items-center gap-1 rounded-control px-2 py-1 text-xs font-medium text-muted-foreground hover:text-foreground data-[state=on]:bg-card data-[state=on]:text-primary-ink data-[state=on]:shadow-sm coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
           <Clock className="w-3.5 h-3.5" aria-hidden />
           Oś godzin
         </ToggleGroupItem>
@@ -135,7 +135,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdi
               onClick={onEditShift}
               aria-keyshortcuts="Z"
               title="Zmień rodzaj zmiany i godziny tego dnia (Z)"
-              className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             >
               <Clock className="w-3.5 h-3.5" aria-hidden />
               Zmień godziny
@@ -150,7 +150,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdi
             onClick={onEditShift}
             aria-keyshortcuts="Z"
             title="Wpisz zmianę z Grafiku w tym dniu (Z)"
-            className="inline-flex items-center gap-1 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Clock className="w-3.5 h-3.5" aria-hidden />
             Dodaj zmianę
@@ -159,7 +159,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdi
             <button
               type="button"
               onClick={onCopyPrevShift}
-              className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-lg transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+              className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted px-2 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
             >
               <Copy className="w-3.5 h-3.5" aria-hidden />
               Jak poprzedni dzień
@@ -195,7 +195,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdi
                     <button
                       onClick={() => onOpenSeriesSource(occ)}
                       aria-label={`Prognoza serii: ${title.trim() || "Bez tytułu"} — przejdź do najbliższego terminu`}
-                      className="group w-full flex items-center gap-2 rounded-lg hover:bg-muted/60 transition-colors p-1 -m-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                      className="group w-full flex items-center gap-2 rounded-field hover:bg-muted/60 transition-colors p-1 -m-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <ReminderChip occurrence={occ} title={title} detailed className="min-w-0 flex-1" />
                       <ArrowRight className="w-3.5 h-3.5 shrink-0 text-muted-foreground opacity-0 coarse:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
@@ -216,7 +216,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdi
                     aria-label={`Edytuj termin: ${title.trim() || "Bez tytułu"}, ${format(new Date(occ.at), "HH:mm")}${occ.repeat.kind !== "none" ? `, powtarza się: ${REPEAT_KIND_LABELS[occ.repeat.kind].toLowerCase()}` : ""}`}
                     aria-keyshortcuts="Shift+ArrowLeft Shift+ArrowRight"
                     title="Shift+←/→ — przesuń o dzień"
-                    className="group w-full flex items-center gap-2 rounded-lg hover:bg-muted/60 transition-colors p-1 -m-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                    className="group w-full flex items-center gap-2 rounded-field hover:bg-muted/60 transition-colors p-1 -m-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <ReminderChip occurrence={occ} title={title} detailed className="min-w-0 flex-1" />
                     <Pencil className="w-3.5 h-3.5 shrink-0 text-muted-foreground opacity-0 coarse:opacity-100 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity" />
@@ -225,7 +225,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdi
                     onClick={() => onExport(occ)}
                     aria-label={`Dodaj do kalendarza systemowego: ${title.trim() || "Bez tytułu"}`}
                     title="Pobierz .ics — dodaj do kalendarza Google, Apple lub Outlook"
-                    className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                    className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-field text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <Download className="w-3.5 h-3.5" />
                   </button>
@@ -235,7 +235,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdi
                       onClick={() => onSkip(occ)}
                       aria-label={`Pomiń to wystąpienie: ${title.trim() || "Bez tytułu"}`}
                       title="Pomiń to wystąpienie — seria przesunie się na następne"
-                      className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+                      className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-field text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       <SkipForward className="w-3.5 h-3.5" />
                     </button>

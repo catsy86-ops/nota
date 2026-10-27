@@ -44,7 +44,7 @@ export function AchievementStamp() {
             animate={{ opacity: 1, scale: stamp.big ? 1.15 : 1, rotate: -4 }}
             exit={{ opacity: 0, scale: 0.92, y: -12, transition: { duration: 0.3 } }}
             transition={{ type: "spring", stiffness: 420, damping: 22, mass: 0.8 }}
-            className="relative flex flex-col items-center gap-1 rounded-xl border-[3px] border-double border-primary/80 bg-card/95 px-6 py-4 text-center shadow-lg backdrop-blur-xs"
+            className="relative flex flex-col items-center gap-1 rounded-card border-[3px] border-double border-primary/80 bg-card/95 px-6 py-4 text-center shadow-elevation-3 backdrop-blur-xs"
           >
             <span className="text-2xs font-semibold uppercase tracking-[0.25em] text-primary-ink">
               {stamp.big ? "Pierwszy raz!" : "Nowa odznaka"}
@@ -54,7 +54,7 @@ export function AchievementStamp() {
             {/* Błysk: pierścień rozchodzący się od krawędzi pieczątki. */}
             <motion.span
               aria-hidden="true"
-              className="absolute inset-0 rounded-xl border-2 border-primary"
+              className="absolute inset-0 rounded-card border-2 border-primary"
               initial={{ opacity: 0.8, scale: 1 }}
               animate={{ opacity: 0, scale: 1.35 }}
               transition={{ delay: 0.2, duration: 0.7, ease: "easeOut" }}

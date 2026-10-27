@@ -70,7 +70,7 @@ const NO_REMINDERS = new Map<string, Occurrence[]>();
 
 const shortDate = (key: string) => format(parseDayKey(key), "d MMM", { locale: pl });
 
-const navButton = "pressable shrink-0 w-10 h-10 coarse:w-11 coarse:h-11 rounded-xl flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
+const navButton = "pressable shrink-0 w-10 h-10 coarse:w-11 coarse:h-11 rounded-card flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
 
 /**
  * Grafik zmian. Widok tylko składa części: stan Grafiku żyje w
@@ -121,7 +121,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   const [switcherOpen, setSwitcherOpen] = useState(false);
   // Przełącznik Miesiąc/Tydzień — ten sam JSX w dwóch miejscach (telefon i od sm), jeden jest ukryty.
   const viewToggle = (
-    <div role="group" aria-label="Widok Grafiku" className="flex rounded-xl bg-muted p-0.5">
+    <div role="group" aria-label="Widok Grafiku" className="flex rounded-card bg-muted p-0.5">
       {([["month", "Miesiąc"], ["week", "Tydzień"]] as const).map(([id, text]) => (
         <button key={id} type="button" aria-pressed={layout === id} onClick={() => setLayout(id)}
           className={cn(
@@ -476,7 +476,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
             <div className="flex flex-wrap items-center gap-1">
               {weekStart !== thisWeek && (
                 <button type="button" onClick={() => setWeekStart(thisWeek)}
-                  className="pressable h-9 coarse:h-11 px-3 rounded-xl text-sm font-medium text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                  className="pressable h-9 coarse:h-11 px-3 rounded-card text-sm font-medium text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                   Ten tydzień
                 </button>
               )}
@@ -499,7 +499,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
           <h2 className="min-w-0 flex-1 sm:flex-none sm:min-w-48 text-center">
             <button type="button" onClick={() => (isWeek ? setWeekStart(thisWeek) : setMonth(startOfMonth(new Date())))}
               title={isWeek ? "Wróć do bieżącego tygodnia" : "Wróć do bieżącego miesiąca"}
-              className={cn("pressable w-full h-10 coarse:h-11 truncate font-display font-semibold text-base sm:text-lg px-2 sm:px-3 rounded-xl hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring", !isWeek && "capitalize")}>
+              className={cn("pressable w-full h-10 coarse:h-11 truncate font-display font-semibold text-base sm:text-lg px-2 sm:px-3 rounded-card hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring", !isWeek && "capitalize")}>
               {isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl })}
             </button>
           </h2>
@@ -545,7 +545,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
               : `Przeciągnij zmianę na inny dzień, żeby ją przenieść (z Alt — skopiować). Klawiatura: Shift+strzałki przenoszą zmianę, Alt+Shift+strzałki kopiują, ${modShortcut("C")} / ${modShortcut("V")} kopiuje wpis dnia (zmiana, odchylenie, notatka).`}
             {!moveHintSeen && (
               <button type="button" onClick={dismissMoveHint}
-                className="relative ml-1 inline-flex items-center rounded-md px-1.5 py-0.5 coarse:py-2 coarse:after:absolute coarse:after:-inset-y-1.5 coarse:after:inset-x-0 coarse:after:content-[''] font-medium text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                className="relative ml-1 inline-flex items-center rounded-control px-1.5 py-0.5 coarse:py-2 coarse:after:absolute coarse:after:-inset-y-1.5 coarse:after:inset-x-0 coarse:after:content-[''] font-medium text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                 Rozumiem
               </button>
             )}
@@ -562,7 +562,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
                   Nałóż cykl
                 </button>
                 <button type="button" onClick={copyPreviousMonth}
-                  className="pressable h-10 coarse:h-11 px-4 rounded-xl border border-border/60 hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                  className="pressable h-10 coarse:h-11 px-4 rounded-card border border-border/60 hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                   Skopiuj poprzedni miesiąc
                 </button>
               </div>
@@ -651,7 +651,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         </div>
         <div className="order-6 empty:hidden short:col-span-full">
           {data.types.length === 0 && (
-            <section aria-label="Brak rodzajów zmian" className="rounded-3xl border border-dashed border-border p-4 space-y-3">
+            <section aria-label="Brak rodzajów zmian" className="rounded-card border border-dashed border-border p-4 space-y-3">
               <p className="text-sm">
                 <span className="font-display font-bold">Nie ma żadnego rodzaju zmiany.</span>{" "}
                 <span className="text-muted-foreground">Dodaj własny albo przywróć startowe ({DEFAULT_SHIFT_TYPES.map((t) => t.name).join(", ")}), żeby nanosić je na dni.</span>
@@ -662,7 +662,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
                   Dodaj rodzaj zmiany
                 </button>
                 <button type="button" onClick={() => { addDefaultShiftTypes(); setBrush({ kind: "type", id: DEFAULT_SHIFT_TYPES[0].id }); }}
-                  className="pressable h-10 coarse:h-11 px-4 rounded-xl border border-border/60 hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                  className="pressable h-10 coarse:h-11 px-4 rounded-card border border-border/60 hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                   Przywróć startowe
                 </button>
               </div>

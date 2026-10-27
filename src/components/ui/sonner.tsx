@@ -22,10 +22,10 @@ const Toaster = ({ ...props }: ToasterProps) => {
       closeButton
       toastOptions={{
         classNames: {
-          toast: "group toast shadow-lg! rounded-lg!",
+          toast: "group toast shadow-elevation-3! rounded-field!",
           description: "text-muted-foreground!",
           // `!`: domyślne style Sonnera (czarny przycisk) są poza warstwami CSS.
-          actionButton: "bg-primary! text-primary-foreground! font-medium! rounded-md! pressable",
+          actionButton: "bg-primary! text-primary-foreground! font-medium! rounded-control! pressable",
           cancelButton: "bg-muted! text-muted-foreground!",
         },
       }}

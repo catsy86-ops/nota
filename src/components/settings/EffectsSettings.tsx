@@ -46,7 +46,7 @@ export function EffectsSettings() {
           const id = `effect-${key}`;
           return (
             // Przechył za kursorem nic nie robi na dotyku — tam go nie pokazujemy.
-            <div key={key} className={cn("flex items-center justify-between gap-4 rounded-xl border border-border/60 bg-muted/30 px-4 py-3", key === "cardTilt" && "[@media(pointer:coarse)]:hidden")}>
+            <div key={key} className={cn("flex items-center justify-between gap-4 rounded-card border border-border/60 bg-muted/30 px-4 py-3", key === "cardTilt" && "[@media(pointer:coarse)]:hidden")}>
               <div className="flex items-start gap-3 min-w-0">
                 <span className="text-2xl leading-none shrink-0" aria-hidden>{meta.emoji}</span>
                 <div className="min-w-0">

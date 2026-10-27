@@ -49,7 +49,7 @@ export function SiteOrderPanel({ site }: { site: SiteInfo }) {
   }
 
   return (
-    <section aria-label="Do zamówienia" data-testid="site-order" className="space-y-2 rounded-xl border border-border bg-card p-3">
+    <section aria-label="Do zamówienia" data-testid="site-order" className="space-y-2 rounded-card border border-border bg-card p-3">
       <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
         <PackageCheck className="h-3.5 w-3.5" aria-hidden />
         Do zamówienia

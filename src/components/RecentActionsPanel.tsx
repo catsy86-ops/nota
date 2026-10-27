@@ -119,7 +119,7 @@ export function RecentActionsPanel({ open, onOpenChange, onOpenNote }: Props) {
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: 20 }}
-                  className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/60 px-3 py-2.5"
+                  className="flex items-start gap-3 rounded-card border border-border/60 bg-card/60 px-3 py-2.5"
                 >
                   <Icon className={`w-4 h-4 shrink-0 mt-0.5 ${meta.tone}`} />
                   <div

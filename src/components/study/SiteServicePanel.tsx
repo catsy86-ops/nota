@@ -13,7 +13,7 @@ import {
 import type { SiteInfo } from "@/lib/study/sites";
 
 const fieldClass =
-  "h-10 min-w-0 rounded-lg border border-border bg-background px-3 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm";
+  "h-10 min-w-0 rounded-field border border-border bg-background px-3 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm";
 
 const shortDay = (key: string) => {
   const [y, m, d] = key.split("-").map(Number);
@@ -71,7 +71,7 @@ export function SiteServicePanel({ site }: { site: SiteInfo }) {
   }
 
   return (
-    <section aria-label="Serwis i gwarancja" data-testid="site-service" className="space-y-2 rounded-xl border border-border bg-card p-3">
+    <section aria-label="Serwis i gwarancja" data-testid="site-service" className="space-y-2 rounded-card border border-border bg-card p-3">
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <Wrench className="h-3.5 w-3.5" aria-hidden />Serwis i gwarancja

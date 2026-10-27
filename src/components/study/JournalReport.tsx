@@ -26,7 +26,7 @@ import { ReportPaper, ReportPrint } from "./ReportPaper";
 const SHARE_MAX_FILES = 10;
 
 const fieldClass =
-  "h-9 min-w-0 w-full rounded-md border border-input bg-background px-2 text-base focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 md:text-sm";
+  "h-9 min-w-0 w-full rounded-control border border-input bg-background px-2 text-base focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring coarse:h-11 md:text-sm";
 
 /**
  * Raport z dziennika: budowa i okres → podgląd jak kartka z zeszytu, a z niego tekst do

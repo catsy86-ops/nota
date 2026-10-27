@@ -75,7 +75,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
           <DialogDescription>Twoje postępy — zapisywane lokalnie</DialogDescription>
         </DialogHeader>
 
-        <div role="tablist" aria-label="Widok statystyk" className="flex gap-1 rounded-lg bg-muted/50 p-1">
+        <div role="tablist" aria-label="Widok statystyk" className="flex gap-1 rounded-field bg-muted/50 p-1">
           {([["stats", "Osiągnięcia", Trophy], ["graph", "Graf powiązań", Network]] as const).map(([id, label, Icon]) => (
             <button
               key={id}
@@ -84,7 +84,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
               aria-selected={tab === id}
               onClick={() => setTab(id)}
               className={cn(
-                "flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+                "flex flex-1 items-center justify-center gap-1.5 rounded-control px-2 py-1.5 text-xs font-medium transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
                 tab === id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
               )}
             >
@@ -94,7 +94,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
         </div>
 
         {tab === "graph" && (
-          <Suspense fallback={<div className="h-64 rounded-xl bg-muted/30" />}>
+          <Suspense fallback={<div className="h-64 rounded-card bg-muted/30" />}>
             <NoteGraph
               notes={graphNotes}
               onOpenNote={(id) => { onOpenChange(false); navigate(notePath(id)); }}
@@ -106,7 +106,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
 
         <div className="grid grid-cols-3 gap-2 pt-2">
           {tiles.map((t) => (
-            <div key={t.label} className="rounded-xl border border-border/60 bg-muted/30 p-3 text-center">
+            <div key={t.label} className="rounded-card border border-border/60 bg-muted/30 p-3 text-center">
               <t.icon className="w-4 h-4 mx-auto text-primary-ink mb-1" />
               <p className="text-lg font-display font-bold">{t.value}</p>
               <p className="text-2xs uppercase tracking-wider text-muted-foreground">{t.label}</p>
@@ -114,7 +114,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
           ))}
         </div>
 
-        <div className="flex items-center gap-3 mt-3 rounded-xl border border-border/60 bg-muted/30 p-3">
+        <div className="flex items-center gap-3 mt-3 rounded-card border border-border/60 bg-muted/30 p-3">
           <Flame className={`w-6 h-6 shrink-0 ${live.currentStreak > 0 ? "text-warning-ink" : "text-muted-foreground"}`} />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold">
@@ -128,7 +128,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
 
         <div className="pt-3">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Aktywność (14 dni)</p>
-          <div className="h-24 rounded-xl border border-border/60 bg-muted/20 p-2">
+          <div className="h-24 rounded-card border border-border/60 bg-muted/20 p-2">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={activity}>
                 <XAxis
@@ -167,7 +167,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.03 }}
-                className={`flex items-center gap-3 rounded-xl border px-3 py-2 ${done ? "border-primary/40 bg-primary/5" : "border-border/60 bg-muted/20"}`}
+                className={`flex items-center gap-3 rounded-card border px-3 py-2 ${done ? "border-primary/40 bg-primary/5" : "border-border/60 bg-muted/20"}`}
               >
                 <span className={`text-2xl ${done ? "" : "grayscale opacity-50"}`}>{a.emoji}</span>
                 <div className="flex-1 min-w-0">

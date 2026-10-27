@@ -710,7 +710,7 @@ const Index = () => {
           {view === "inbox" && !deferredSearch && <InboxCapture onCapture={captureToInbox} />}
           {view === "inbox" && !deferredSearch && inboxCount > 0 && (
             <button type="button" onClick={() => { setTriageMounted(true); setTriageOpen(true); }}
-              className="self-start inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-primary-ink hover:bg-primary/10 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+              className="self-start inline-flex items-center gap-1.5 rounded-field px-2.5 py-1.5 text-sm font-medium text-primary-ink hover:bg-primary/10 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
               Porządkuj skrzynkę ({inboxCount})
             </button>
           )}
@@ -801,7 +801,7 @@ const Index = () => {
               <p className="text-xs text-muted-foreground">Notatki w koszu są automatycznie usuwane po 30 dniach</p>
               <button
                 onClick={() => setConfirmEmptyTrash(true)}
-                className="pressable text-xs font-medium text-destructive-ink hover:bg-destructive/10 px-3 py-1.5 rounded-lg transition-colors"
+                className="pressable text-xs font-medium text-destructive-ink hover:bg-destructive/10 px-3 py-1.5 rounded-field transition-colors"
               >
                 Opróżnij kosz
               </button>
@@ -929,7 +929,7 @@ const Index = () => {
                 <button
                   type="button"
                   onClick={() => setPropDefsOpen(true)}
-                  className="inline-flex h-9 items-center rounded-lg border border-input bg-background px-3 text-sm hover:bg-muted"
+                  className="inline-flex h-9 items-center rounded-field border border-input bg-background px-3 text-sm hover:bg-muted"
                 >
                   Pola{propDefs.length ? ` (${propDefs.length})` : ""}
                 </button>

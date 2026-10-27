@@ -106,7 +106,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
             <div className="flex flex-wrap gap-1.5">
               {presets.map((p) => (
                 <button key={p.id} type="button" onClick={() => { setDraft({ ...p }); setRate(""); }}
-                  className="pressable flex items-center gap-1.5 h-8 coarse:h-11 px-2.5 rounded-lg border border-border/60 bg-card hover:bg-muted text-xs font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                  className="pressable flex items-center gap-1.5 h-8 coarse:h-11 px-2.5 rounded-field border border-border/60 bg-card hover:bg-muted text-xs font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                   <span aria-hidden className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }} />
                   {p.name}
                   <span className="text-muted-foreground tabular-nums">{p.kind === "absence" ? "nieobecność" : `${p.start}–${p.end}`}</span>
@@ -187,7 +187,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
         {!absence && <div className="space-y-1.5">
           <Label htmlFor="shift-alarm">Alarm w kalendarzu (.ics)</Label>
           <select id="shift-alarm" value={draft.alarmMin ?? ""} onChange={(e) => patch({ alarmMin: e.target.value === "" ? undefined : Number(e.target.value) })}
-            className="w-full h-10 coarse:h-11 rounded-lg border border-input bg-background px-3 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+            className="w-full h-10 coarse:h-11 rounded-field border border-input bg-background px-3 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
             <option value="">Domyślny (60 min przed)</option>
             <option value={0}>Bez alarmu</option>
             {[15, 30, 60, 90, 120, 180, 720].map((m) => (

@@ -73,7 +73,7 @@ export function CwiczeniaView() {
         <h1 id="cwiczenia-title" className="font-display text-3xl font-bold tracking-tight">Ćwiczenia</h1>
       </header>
 
-      <div role="group" aria-label="Dział Ćwiczeń" className="mb-4 flex gap-1 rounded-xl bg-muted p-0.5 sm:hidden">
+      <div role="group" aria-label="Dział Ćwiczeń" className="mb-4 flex gap-1 rounded-card bg-muted p-0.5 sm:hidden">
         {CWICZENIA_TABS.map((t) => (
           <button
             key={t.id}

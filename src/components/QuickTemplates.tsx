@@ -90,7 +90,7 @@ interface Props {
   onPeriodNote: (kind: PeriodKind) => void;
 }
 
-const chipClass = "group shrink-0 flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-lg text-xs font-medium border border-border/60 bg-card hover:border-primary/40 hover:bg-primary/5 hover:text-primary-ink transition-colors";
+const chipClass = "group shrink-0 flex items-center gap-1.5 pl-2.5 pr-3 py-1.5 rounded-field text-xs font-medium border border-border/60 bg-card hover:border-primary/40 hover:bg-primary/5 hover:text-primary-ink transition-colors";
 
 export function QuickTemplates({ onPick, onCreateLabel, onDailyNote, onPeriodNote }: Props) {
   const custom = useCustomTemplates();

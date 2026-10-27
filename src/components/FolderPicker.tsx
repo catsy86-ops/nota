@@ -36,7 +36,7 @@ function FolderTreeItem({ folder, folders, currentFolderId, onSelect, depth = 0 
       <button
         onClick={() => onSelect(isSelected ? null : folder.id)}
         className={cn(
-          "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors hover:bg-muted/80",
+          "w-full flex items-center gap-2 px-2 py-1.5 rounded-field text-sm transition-colors hover:bg-muted/80",
           isSelected && "bg-primary/10 text-primary-ink"
         )}
         style={{ paddingLeft: `${8 + depth * 16}px` }}
@@ -90,7 +90,7 @@ export function FolderPicker({ folders, currentFolderId, onSelect }: FolderPicke
         {currentFolderId && (
           <button
             onClick={() => { onSelect(null); setOpen(false); }}
-            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-muted-foreground hover:bg-muted/80 mb-1"
+            className="w-full flex items-center gap-2 px-2 py-1.5 rounded-field text-sm text-muted-foreground hover:bg-muted/80 mb-1"
           >
             <span className="w-3" />
             <span>— Bez folderu —</span>

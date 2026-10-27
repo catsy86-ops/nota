@@ -44,7 +44,7 @@ export function FittingsFields({ value, history, onChange }: { value: Fitting[];
       aria-label={dictation.listening ? "Zakończ dyktowanie kształtek" : "Dyktuj kształtki"}
       title="Powiedz np. „kolano 16 cztery sztuki, trójnik 16 dwa”"
       className={cn(
-        "pressable inline-flex shrink-0 items-center gap-1.5 rounded-xl border px-3 py-2 text-sm coarse:min-h-12",
+        "pressable inline-flex shrink-0 items-center gap-1.5 rounded-card border px-3 py-2 text-sm coarse:min-h-12",
         dictation.listening ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:bg-muted",
       )}
     >
@@ -59,7 +59,7 @@ export function FittingsFields({ value, history, onChange }: { value: Fitting[];
         <button
           type="button"
           onClick={() => add()}
-          className="pressable flex min-w-0 flex-1 items-center gap-2 rounded-xl border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
+          className="pressable flex min-w-0 flex-1 items-center gap-2 rounded-card border border-dashed border-border px-3 py-2.5 text-left text-sm text-muted-foreground hover:bg-muted coarse:min-h-12"
         >
           <Package className="h-4 w-4 shrink-0" aria-hidden />Dodaj kształtki
         </button>
@@ -68,7 +68,7 @@ export function FittingsFields({ value, history, onChange }: { value: Fitting[];
     );
   }
   return (
-    <fieldset className="min-w-0 space-y-2 rounded-xl border border-border p-3" data-testid="fittings">
+    <fieldset className="min-w-0 space-y-2 rounded-card border border-border p-3" data-testid="fittings">
       <legend className="sr-only">Kształtki</legend>
       <p className="flex items-center gap-2 text-sm font-medium"><Package className="h-4 w-4 text-primary-ink" aria-hidden />Kształtki</p>
       <datalist id={listId}>{names.map((n) => <option key={n} value={n} />)}</datalist>
@@ -82,19 +82,19 @@ export function FittingsFields({ value, history, onChange }: { value: Fitting[];
               onChange={(e) => setRow(i, { name: e.target.value })}
               placeholder="np. Kolano 16"
               aria-label={`Kształtka ${i + 1}: nazwa`}
-              className="h-10 min-w-0 flex-1 rounded-lg border border-input bg-background px-2.5 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
+              className="h-10 min-w-0 flex-1 rounded-field border border-input bg-background px-2.5 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
             />
             {/* „−” przy 1 sztuce usuwa pozycję — bez osobnego „×”, który nie mieścił się w 390 px. */}
             <button
               type="button"
               onClick={() => (f.qty <= 1 ? onChange(value.filter((_, j) => j !== i)) : setRow(i, { qty: f.qty - 1 }))}
               aria-label={f.qty <= 1 ? `Usuń kształtkę ${f.name || i + 1}` : `${f.name || "Kształtka"}: mniej`}
-              className="pressable grid size-10 shrink-0 place-items-center rounded-lg border border-border text-muted-foreground coarse:size-11"
+              className="pressable grid size-10 shrink-0 place-items-center rounded-field border border-border text-muted-foreground coarse:size-11"
             >
               {f.qty <= 1 ? <Trash className="h-4 w-4" aria-hidden /> : <Minus className="h-4 w-4" aria-hidden />}
             </button>
             <span className="w-8 shrink-0 text-center font-mono text-base font-semibold tabular-nums" aria-label={`${f.qty} szt.`} data-testid="fitting-qty">{f.qty}</span>
-            <button type="button" onClick={() => setRow(i, { qty: Math.min(FITTING_QTY_MAX, f.qty + 1) })} aria-label={`${f.name || "Kształtka"}: więcej`} className="pressable grid size-10 shrink-0 place-items-center rounded-lg border border-border text-muted-foreground coarse:size-11">
+            <button type="button" onClick={() => setRow(i, { qty: Math.min(FITTING_QTY_MAX, f.qty + 1) })} aria-label={`${f.name || "Kształtka"}: więcej`} className="pressable grid size-10 shrink-0 place-items-center rounded-field border border-border text-muted-foreground coarse:size-11">
               <Plus className="h-4 w-4" aria-hidden />
             </button>
           </li>

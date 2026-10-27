@@ -51,7 +51,7 @@ function StudyDueRowsList({ onOpenStudy }: { onOpenStudy: (siteId?: string) => v
           >
             {/* Wiersz z budową otwiera jej kartę (`/praca?budowa=`), pozostałe wiersze są tylko informacją. */}
             {row.siteId ? (
-              <button type="button" onClick={() => onOpenStudy(row.siteId ?? undefined)} aria-label={`${row.title}: karta budowy`} className="pressable block w-full rounded-md text-left coarse:min-h-11">
+              <button type="button" onClick={() => onOpenStudy(row.siteId ?? undefined)} aria-label={`${row.title}: karta budowy`} className="pressable block w-full rounded-control text-left coarse:min-h-11">
                 <p className="text-sm">{row.title}</p>
                 {row.detail && <p className="mt-0.5 text-xs text-muted-foreground">{row.detail}</p>}
               </button>

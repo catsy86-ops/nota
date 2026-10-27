@@ -201,7 +201,7 @@ function StatsBody() {
 function ExperienceRows({ card }: { card: ExperienceCard }) {
   const { seen, right, percent } = card.accuracy;
   return (
-    <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-xl border border-border bg-card p-3 text-sm" data-testid="experience-card">
+    <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-card border border-border bg-card p-3 text-sm" data-testid="experience-card">
       <dt className="text-muted-foreground">Budowy</dt>
       <dd>
         <span className="font-mono tabular-nums">{card.sites.length}</span>
@@ -241,7 +241,7 @@ function downloadCard(text: string, today: string) {
 
 function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <div className="rounded-xl border border-border bg-card px-3 py-2.5">
+    <div className="rounded-card border border-border bg-card px-3 py-2.5">
       <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd className="mt-0.5 font-mono text-2xl font-semibold tabular-nums leading-tight">{value}</dd>
       <dd className="text-2xs text-muted-foreground">{hint}</dd>
@@ -278,5 +278,5 @@ function BarRow({ label, ratio, value, detail, title }: { label: string; ratio: 
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <p className="rounded-xl border border-dashed border-border px-3 py-4 text-center text-sm text-muted-foreground">{children}</p>;
+  return <p className="rounded-card border border-dashed border-border px-3 py-4 text-center text-sm text-muted-foreground">{children}</p>;
 }

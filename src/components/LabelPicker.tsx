@@ -63,13 +63,13 @@ export function LabelPicker({ allLabels, selected, onToggle, onCreateLabel }: La
             onChange={(e) => setNewLabel(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleCreate()}
             placeholder="Nowa etykieta..."
-            className="flex-1 text-xs bg-muted/60 border border-border rounded-lg px-2.5 py-1.5 outline-hidden focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground"
+            className="flex-1 text-xs bg-muted/60 border border-border rounded-field px-2.5 py-1.5 outline-hidden focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground"
           />
           <button
             onClick={handleCreate}
             aria-label="Dodaj etykietę"
             title="Dodaj etykietę"
-            className="pressable p-1.5 rounded-lg bg-primary text-primary-foreground coarse:min-h-11 coarse:min-w-11"
+            className="pressable p-1.5 rounded-field bg-primary text-primary-foreground coarse:min-h-11 coarse:min-w-11"
           >
             <Plus className="w-3 h-3" />
           </button>

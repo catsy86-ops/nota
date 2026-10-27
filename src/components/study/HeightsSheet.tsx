@@ -23,7 +23,7 @@ export function HeightsButton({ variant = "pill", className }: { variant?: "pill
           "pressable inline-flex items-center gap-2 text-muted-foreground hover:text-foreground",
           variant === "pill" && "rounded-full border border-border px-3 py-1.5 text-sm hover:bg-muted coarse:min-h-11",
           variant === "icon" && "size-9 justify-center rounded-full border border-border hover:bg-muted coarse:size-11",
-          variant === "link" && "rounded-lg px-1.5 py-1 text-xs font-medium text-primary-ink underline-offset-2 hover:underline coarse:min-h-11",
+          variant === "link" && "rounded-field px-1.5 py-1 text-xs font-medium text-primary-ink underline-offset-2 hover:underline coarse:min-h-11",
           className,
         )}
       >

@@ -82,7 +82,7 @@ export function ImagePreviewDialog({ imageRef, onClose }: { imageRef: string | n
   return (
     <Dialog open={!!imageRef} onOpenChange={() => onClose()}>
       <DialogContent className="max-w-3xl p-2 bg-transparent border-none shadow-none">
-        {imageRef && <NoteImage imageRef={imageRef} loading="eager" className="w-full rounded-card shadow-2xl" placeholderClassName="aspect-video" />}
+        {imageRef && <NoteImage imageRef={imageRef} loading="eager" className="w-full rounded-card shadow-elevation-3" placeholderClassName="aspect-video" />}
       </DialogContent>
     </Dialog>
   );

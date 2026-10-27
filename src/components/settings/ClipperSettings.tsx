@@ -24,7 +24,7 @@ export function ClipperSettings() {
           ref={linkRef}
           draggable
           onClick={(e) => { e.preventDefault(); toast("Przeciągnij ten przycisk na pasek zakładek"); }}
-          className="inline-flex items-center rounded-lg border border-border bg-muted/50 px-3 py-1.5 text-sm font-medium cursor-grab"
+          className="inline-flex items-center rounded-field border border-border bg-muted/50 px-3 py-1.5 text-sm font-medium cursor-grab"
         >
           Zapisz w G
         </a>

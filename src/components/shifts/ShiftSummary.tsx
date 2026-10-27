@@ -72,7 +72,7 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
   const balance = useMemo(() => leaveBalance(data, year, new Date()), [data, year, today]); // eslint-disable-line react-hooks/exhaustive-deps -- `today`: przeliczenie po zmianie dnia
 
   return (
-    <section aria-label="Podsumowanie miesiąca" className="rounded-3xl border border-border/60 bg-card p-4 sm:p-5 space-y-4">
+    <section aria-label="Podsumowanie miesiąca" className="rounded-card border border-border/60 bg-card p-4 sm:p-5 space-y-4">
       <div className="flex items-end justify-between gap-4 flex-wrap">
         <div>
           <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Przepracowane</p>
@@ -90,7 +90,7 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
           </div>
         )}
         <button type="button" onClick={() => setYearOpen(true)} aria-label="Podsumowanie roku"
-          className="pressable shrink-0 flex items-center gap-1.5 h-9 coarse:h-11 px-3 rounded-xl border border-border/60 bg-background hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+          className="pressable shrink-0 flex items-center gap-1.5 h-9 coarse:h-11 px-3 rounded-card border border-border/60 bg-background hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
           <CalendarRange className="w-4 h-4" aria-hidden /> Rok
         </button>
       </div>

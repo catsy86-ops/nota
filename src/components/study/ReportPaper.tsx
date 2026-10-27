@@ -20,7 +20,7 @@ import { KindIcon } from "./JournalEntrySheet";
 export function ReportPaper({ report, print = false }: { report: Report; print?: boolean }) {
   const tests = report.days.flatMap((d) => d.entries).filter((r) => r.entry.test);
   return (
-    <article className={cn("report-paper rounded-xl border border-border bg-card px-4 py-4 sm:px-6", print && "border-0 px-0")} aria-label="Podgląd raportu">
+    <article className={cn("report-paper rounded-card border border-border bg-card px-4 py-4 sm:px-6", print && "border-0 px-0")} aria-label="Podgląd raportu">
       <header className="border-b-2 border-foreground/80 pb-2">
         <p className="flex items-center gap-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
           <MapPin className="h-3.5 w-3.5 text-primary-ink" aria-hidden />
@@ -94,7 +94,7 @@ export function ReportPaper({ report, print = false }: { report: Report; print?:
                                 imageRef={ref}
                                 alt=""
                                 loading="eager"
-                                className={cn("rounded-md object-cover", print ? "h-32 w-32" : "h-14 w-14")}
+                                className={cn("rounded-control object-cover", print ? "h-32 w-32" : "h-14 w-14")}
                                 placeholderClassName={print ? "h-32 w-32" : "h-14 w-14"}
                               />
                             </li>

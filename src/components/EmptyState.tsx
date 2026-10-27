@@ -126,7 +126,7 @@ export function EmptyState({ view, search, elsewhere, onGo, onNew, onClearSearch
           <button
             type="button"
             onClick={onNew}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-primary/10 px-4 py-2 text-sm font-medium text-primary-ink hover:bg-primary/20 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            className="inline-flex items-center gap-1.5 rounded-card bg-primary/10 px-4 py-2 text-sm font-medium text-primary-ink hover:bg-primary/20 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           >
             {view === "notes" ? "Napisz pierwszą notatkę" : "Nowa notatka"}
           </button>

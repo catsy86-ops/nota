@@ -42,7 +42,7 @@ type SiteForm = typeof EMPTY_FORM;
 const formOf = (s: Partial<SiteForm>): SiteForm => ({ ...EMPTY_FORM, ...Object.fromEntries(Object.entries(s).filter(([k, v]) => k in EMPTY_FORM && typeof v === "string")) });
 
 const fieldClass =
-  "w-full rounded-lg border border-border bg-background px-3 py-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring sm:text-sm";
+  "w-full rounded-field border border-border bg-background px-3 py-2 text-base text-foreground outline-hidden focus:ring-2 focus:ring-ring sm:text-sm";
 
 /**
  * Karta budowy: na górze to, co na budowie się zmienia — „+ Wpis tutaj”, liczniki i panele etapów,
@@ -276,7 +276,7 @@ export function SiteCardDialog({
                   </div>
                 )}
                 {site.access && (
-                  <p className="flex items-start gap-2 rounded-lg bg-warning/10 px-3 py-2 text-sm text-foreground" data-testid="site-access">
+                  <p className="flex items-start gap-2 rounded-field bg-warning/10 px-3 py-2 text-sm text-foreground" data-testid="site-access">
                     <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-warning-ink" aria-hidden />
                     <span className="min-w-0 whitespace-pre-line break-words"><span className="sr-only">Dostęp: </span>{site.access}</span>
                   </p>
@@ -294,13 +294,13 @@ export function SiteCardDialog({
               <SiteOrderPanel site={site} />
             </div>
 
-            <div className="mx-5 mt-3 rounded-xl border border-border bg-card" data-testid="site-data">
+            <div className="mx-5 mt-3 rounded-card border border-border bg-card" data-testid="site-data">
               <button
                 type="button"
                 onClick={() => setEditing((v) => !v)}
                 aria-expanded={editing}
                 aria-controls="site-card-form"
-                className="pressable flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left coarse:min-h-11"
+                className="pressable flex w-full items-center gap-2 rounded-card px-3 py-2.5 text-left coarse:min-h-11"
               >
                 <Pencil className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
                 <span className="shrink-0 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Edytuj dane</span>
@@ -419,13 +419,13 @@ export function SiteCardDialog({
             </div>
 
             {/* Odbiorcy raportu (1.11) — te same dla wszystkich budów, więc formularz jest ten sam co w oknie raportu. */}
-            <div className="mx-5 mt-3 rounded-xl border border-border bg-card" data-testid="site-recipients">
+            <div className="mx-5 mt-3 rounded-card border border-border bg-card" data-testid="site-recipients">
               <button
                 type="button"
                 onClick={() => setRecipientsOpen((v) => !v)}
                 aria-expanded={recipientsOpen}
                 aria-controls="site-card-recipients"
-                className="pressable flex w-full items-center gap-2 rounded-xl px-3 py-2.5 text-left coarse:min-h-11"
+                className="pressable flex w-full items-center gap-2 rounded-card px-3 py-2.5 text-left coarse:min-h-11"
               >
                 <Send className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
                 <span className="shrink-0 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Odbiorcy raportu</span>
@@ -542,7 +542,7 @@ function SiteTallyBar({ tally }: { tally: SiteTally }) {
       aria: `Do zamówienia: ${tally.order} ${positionsPl(tally.order)} kształtek` },
   ] as const;
   return (
-    <nav aria-label="Stan budowy" className="grid grid-cols-3 divide-x divide-dashed divide-border rounded-xl border border-border bg-muted/30" data-testid="site-tally">
+    <nav aria-label="Stan budowy" className="grid grid-cols-3 divide-x divide-dashed divide-border rounded-card border border-border bg-muted/30" data-testid="site-tally">
       {cells.map((c) => (
         <button
           key={c.id}

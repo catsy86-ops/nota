@@ -71,7 +71,7 @@ export function AttachmentRow({ attachment: a, onRemove, children }: RowProps) {
     : local ? "Plik jest tylko na tym urządzeniu" : null;
 
   return (
-    <li data-testid="attachment-row" data-attachment-name={a.name} className="rounded-lg border border-border/60 bg-background/50 px-2 py-1.5">
+    <li data-testid="attachment-row" data-attachment-name={a.name} className="rounded-field border border-border/60 bg-background/50 px-2 py-1.5">
       <div className="flex items-center gap-2">
       <Icon className="w-4 h-4 shrink-0 text-muted-foreground" aria-hidden />
       <div className="min-w-0 flex-1">
@@ -127,7 +127,7 @@ function TextPreview({ attachment }: { attachment: Attachment }) {
       </button>
       {state === "error" && <p className="text-2xs text-muted-foreground">Nie udało się wczytać podglądu.</p>}
       {state !== "closed" && state !== "error" && (
-        <pre data-testid="attachment-preview" className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap wrap-break-word rounded-lg bg-muted/50 p-2 font-mono text-2xs text-foreground/85">
+        <pre data-testid="attachment-preview" className="mt-1 max-h-48 overflow-auto whitespace-pre-wrap wrap-break-word rounded-field bg-muted/50 p-2 font-mono text-2xs text-foreground/85">
           {state.text}{state.truncated ? "\n…" : ""}
         </pre>
       )}

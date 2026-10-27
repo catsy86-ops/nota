@@ -43,7 +43,7 @@ export function SiteStagesPanel({ site }: { site: SiteInfo }) {
   }
 
   return (
-    <section aria-label="Etapy budowy" data-testid="site-stages" className="space-y-2 rounded-xl border border-border bg-card p-3">
+    <section aria-label="Etapy budowy" data-testid="site-stages" className="space-y-2 rounded-card border border-border bg-card p-3">
       <div className="flex items-center justify-between gap-2">
         <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           <ListChecks className="h-3.5 w-3.5" aria-hidden />Etapy
@@ -72,12 +72,12 @@ export function SiteStagesPanel({ site }: { site: SiteInfo }) {
                 role="checkbox"
                 aria-checked={isDone}
                 onClick={() => toggle(s.id)}
-                className="pressable flex min-w-0 flex-1 items-center gap-2.5 rounded-lg px-1.5 py-1.5 text-left text-sm hover:bg-muted coarse:min-h-11"
+                className="pressable flex min-w-0 flex-1 items-center gap-2.5 rounded-field px-1.5 py-1.5 text-left text-sm hover:bg-muted coarse:min-h-11"
               >
                 <span
                   aria-hidden
                   className={cn(
-                    "grid size-5 shrink-0 place-items-center rounded-md border",
+                    "grid size-5 shrink-0 place-items-center rounded-control border",
                     isDone ? "border-success bg-success text-success-foreground" : "border-border bg-background",
                   )}
                 >
@@ -90,7 +90,7 @@ export function SiteStagesPanel({ site }: { site: SiteInfo }) {
                 type="button"
                 onClick={() => remove(s.id)}
                 aria-label={`Usuń etap: ${s.name}`}
-                className="pressable grid size-8 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
+                className="pressable grid size-8 shrink-0 place-items-center rounded-field text-muted-foreground hover:bg-muted hover:text-foreground coarse:size-11"
               >
                 <X className="h-3.5 w-3.5" aria-hidden />
               </button>
@@ -108,12 +108,12 @@ export function SiteStagesPanel({ site }: { site: SiteInfo }) {
             placeholder="Własny etap, np. Kocioł i grzejniki"
             aria-label="Nowy etap"
             autoComplete="off"
-            className="h-9 min-w-0 flex-1 rounded-lg border border-input bg-background px-2.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
+            className="h-9 min-w-0 flex-1 rounded-field border border-input bg-background px-2.5 text-base outline-hidden focus:ring-2 focus:ring-ring coarse:h-11 sm:text-sm"
           />
           <button
             type="submit"
             disabled={!name.trim()}
-            className="pressable inline-flex shrink-0 items-center gap-1 rounded-lg border border-border px-3 text-sm text-muted-foreground hover:bg-muted disabled:opacity-50 coarse:min-h-11"
+            className="pressable inline-flex shrink-0 items-center gap-1 rounded-field border border-border px-3 text-sm text-muted-foreground hover:bg-muted disabled:opacity-50 coarse:min-h-11"
           >
             <Plus className="h-4 w-4" aria-hidden />Dodaj
           </button>
