@@ -1,6 +1,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import { Star, Pin, Palette, Archive, ArchiveRestore, ImagePlus, Copy, ClipboardCopy, PenTool, Trash, Maximize2, Lock, LockOpen, FilePlusCorner, MoveHorizontal, ZoomIn } from "lucide-react";
 import { toast } from "sonner";
+import { toastWithUndo } from "@/lib/undoToast";
 import type { Note } from "@/hooks/useNotes";
 import type { useNoteViewActions } from "@/hooks/NoteViewActionsContext";
 import { addSubpage } from "@/lib/subpageActions";
@@ -103,7 +104,7 @@ export function PrimaryActions({
       {!isArchived && (
         <PriorityPicker
           priority={note.priority ?? "none"}
-          onSet={(p) => onUpdate?.(note.id, { priority: p })}
+          onSet={(p) => { const prev = note.priority; onUpdate?.(note.id, { priority: p }); if (prev !== p) toastWithUndo("Zmieniono priorytet", () => onUpdate?.(note.id, { priority: prev })); }}
         />
       )}
       {isArchived && onUnarchive ? (
@@ -215,7 +216,7 @@ export function MoreActions({
         <AliasPicker title={note.title} aliases={note.aliases ?? []} onSave={(aliases) => onUpdate?.(note.id, { aliases })} />
       )}
       {onMoveToFolder && folders && folders.length > 0 && (
-        <FolderPicker folders={folders} currentFolderId={note.folderId} onSelect={(fId) => onMoveToFolder(note.id, fId)} />
+        <FolderPicker folders={folders} currentFolderId={note.folderId} onSelect={(fId) => { const prev = note.folderId; onMoveToFolder(note.id, fId); if (prev !== fId) toastWithUndo("Przeniesiono do folderu", () => onMoveToFolder(note.id, prev), { icon: "📁" }); }} />
       )}
       <PrivateNoteButton noteId={note.id} locked={!!note.locked} />
       {!note.locked && <ShareNote note={note} />}
