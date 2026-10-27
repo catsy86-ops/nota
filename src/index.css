@@ -479,6 +479,18 @@ html[data-skin="zeszyt"] .app-header {
   .sec-study { color: var(--sec-study); }
   .sec-calendar { color: var(--sec-calendar); }
 
+  /* Pasek nagłówka w kolorze działu (tylko linia dolna, tekst zostaje w kolorze motywu). */
+  html[data-view="notes"] .app-header { border-bottom-color: color-mix(in srgb, var(--sec-notes) 60%, transparent); }
+  html[data-view="shifts"] .app-header { border-bottom-color: color-mix(in srgb, var(--sec-shifts) 60%, transparent); }
+  html[data-view="study"] .app-header { border-bottom-color: color-mix(in srgb, var(--sec-study) 60%, transparent); }
+  html[data-view="calendar"] .app-header { border-bottom-color: color-mix(in srgb, var(--sec-calendar) 60%, transparent); }
+
+  /* Pusty stan w dziale: ikona w kolorze działu (`StatusPanel` ustawia `data-status-tone`). */
+  html[data-view="notes"] [data-status-tone="empty"] { color: var(--sec-notes); }
+  html[data-view="shifts"] [data-status-tone="empty"] { color: var(--sec-shifts); }
+  html[data-view="study"] [data-status-tone="empty"] { color: var(--sec-study); }
+  html[data-view="calendar"] [data-status-tone="empty"] { color: var(--sec-calendar); }
+
   /* Bez „gumki” i systemowego pull-to-refresh przy przewijaniu listy na telefonie. */
   html,
   body {
