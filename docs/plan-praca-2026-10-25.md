@@ -2,6 +2,8 @@
 
 Siódmy plan z serii „dział po dziale” (po Notatkach, Skrzynce, Dziś, Kalendarzu, Terminach i Grafiku), w tym samym układzie. Dział Praca (`/praca`) to Dziennik budowy i Nauka.
 
+> **Status 2026-10-27:** zrobione 2.4 (P-1), 2.6 (P-5), 3.1, 3.3 (P-4), 4.2 (P-3), 5.3, 5.5; częściowo 1.2, 1.3, 2.1, 5.1. Otwarte punkty przeniesione do `docs/plan-praca-kalendarz-grafik-2026-10-27.md` (Praca P0, P2–P6) — tam aktualny stan.
+
 ## Kontekst
 
 **Poprzedni plan działu** — `docs/plan-praca-2026-10-24.md` — jest prawie zamknięty (sprawdzone w kodzie 2026-10-25):

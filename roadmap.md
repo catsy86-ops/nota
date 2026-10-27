@@ -1173,3 +1173,7 @@ Pełny plan: `docs/plan-ustawienia-2026-10-25.md` (Etapy 1–6: poprawki — bł
 Pełny plan: `docs/plan-powloka-2026-10-25.md` (Etapy 1–5: logo bez pętli, jedna nazwa „hydra” w tekstach, tabela `VIEW_META`, jasność bez cichej zmiany stylu, boczne wycięcie ekranu; grupy i ukrywanie działów, 4. pozycja dolnego paska, kropka sync, więcej poleceń w palecie; samouczek dostępny i z rysunkami; wygląd; QA). Dwunasty i ostatni z serii „dział po dziale”. Decyzje PW-1…PW-4 otwarte.
 
 **Seria „dział po dziale” (2026-10-25) zakończona:** Notatki, Skrzynka, Dziś, Kalendarz, Terminy, Grafik, Praca, Długi, Ćwiczenia, Skarbiec, Ustawienia i synchronizacja, powłoka + przekrojowy plan UI/UX i QoL. Oznaczenia decyzji: N, S, D (Dziś), D (Długi), K, T, G, P, C, V, U, PW.
+
+## Plan Pracy, Kalendarza i Grafiku — 2026-10-27
+
+Pełny plan: `docs/plan-praca-kalendarz-grafik-2026-10-27.md`. Zastępuje otwarte części planów Kalendarza, Grafiku i Pracy z 25.10 (sprawdzone w kodzie na `73a913f`). Fala A: błędy, w tym treść notatki prywatnej w `.ics`, rysunek niszczący zdjęcie, 6 drobnych błędów Grafiku i dokumentacja. Fala B: wydajność siatki i rachunku, podział dużych plików. Dalej: Kalendarz K1–K4 (zaległe, adres dnia, otwieranie notatki, skróty, agenda, filtr warstw, konflikt ze zmianą, tydzień z osią), Grafik G2–G4 (alarm przed zmianą, kreator, wykresy roku, pasek wypłaty, import), Praca P2–P5 (zdjęcie jednym stuknięciem, zdjęcia przed zakryciem, usterki, podpis klienta, PDF, materiał, czas na budowie, FSRS, tryb rękawic) i QA z danymi. Decyzje K-4, G-1, G-6, G-7, P-6…P-11 otwarte.
