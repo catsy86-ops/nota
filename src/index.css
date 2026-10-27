@@ -984,6 +984,15 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
   }
 }
 
+/* P6.4: dni osi dziennika poza ekranem nie są układane ani malowane (dziennik budowy rośnie o lata wpisów).
+   `contain-intrinsic-block-size` trzyma w przybliżeniu wysokość dnia, żeby pasek przewijania nie skakał. */
+@supports (content-visibility: auto) {
+  [data-journal-day] {
+    content-visibility: auto;
+    contain-intrinsic-block-size: auto 320px;
+  }
+}
+
 /* Rachunek w podsumowaniu Grafiku: papier odrobinę jaśniejszy od karty i ząbkowana dolna krawędź (maska). */
 .receipt {
   margin-inline: -0.25rem;

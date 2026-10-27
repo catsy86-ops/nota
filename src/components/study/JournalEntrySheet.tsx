@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { DrawingCanvas } from "@/components/DrawingCanvas";
+import { useJournalPhotoEdits, photoSaveFailed } from "./useJournalPhotoEdits";
 import { toastWithUndo } from "@/lib/undoToast";
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
@@ -22,21 +23,18 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useDictation } from "@/hooks/useDictation";
 import { prepareImage } from "@/lib/imagePrepare";
 import { imageStore } from "@/lib/imageStore";
-import { captionPhoto, captionText } from "@/lib/study/photoCaption";
 import { requestPersistentStorage } from "@/lib/storagePersistence";
 import { MODULES, TOPICS } from "@/lib/study/content";
-import { addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, setSiteGeo, setSiteShortages, setSiteStages, updateJournalEntry, useSiteDirectory, useStudy, useStudyLists, type JournalKind } from "@/lib/study/store";
+import { addJournalEntry, columnOf, JOURNAL_MAX_IMAGES, removeJournalEntry, restoreJournalEntry, setSite, setSiteGeo, setSiteStages, updateJournalEntry, useSiteDirectory, useStudy, useStudyLists, type JournalKind } from "@/lib/study/store";
 import { clearJournalDraft, EMPTY_DRAFT, getJournalDraft, patchJournalDraft, useJournalDraft, type JournalDraft } from "@/lib/study/draft";
 import { closeJournalSheet, freshEntry, getJournalEditForm, patchJournalEditForm, takeVoiceRequest, useJournalEditForm, useJournalSheet } from "@/lib/study/entrySheet";
 import { fromLocalInput, KIND_LABEL, recentSiteTexts, suggestSites, toLocalInput, whenLabel, yesterdaySiteText } from "@/lib/study/journalView";
 import { findSiteByName } from "@/lib/study/sites";
 import { accuracyLabel, cleanGeo, mapsUrl, nearestSite } from "@/lib/study/geo";
-import { fittingsLine, suggestFittingNames } from "@/lib/study/fittings";
-import { mergeFittings } from "@/lib/study/spokenFittings";
-import { addShortagesFromDictation, SHORTAGES_MAX } from "@/lib/study/shortages";
+import { suggestFittingNames } from "@/lib/study/fittings";
 import { editDemotesTopic, editSavedMessage, newEntryMessage, shouldOfferSiteGeo } from "@/lib/study/entrySheetRules";
-import { parseSpokenEntry } from "@/lib/study/spokenEntry";
-import { matchStage, siteStages, toggleStage } from "@/lib/study/stages";
+import { applySpokenEntry } from "@/lib/study/spokenEntryApply";
+import { siteStages, toggleStage } from "@/lib/study/stages";
 
 export function KindIcon({ kind, className = "h-4 w-4" }: { kind: JournalKind; className?: string }) {
   if (kind === "ok") return <CircleCheck className={cn(className, "shrink-0 text-success-ink")} aria-hidden />;
@@ -82,10 +80,6 @@ function useOnline() {
  * (`openJournalEdit`) — wtedy na formularzu edycji, a w stopce jest też „Usuń”.
  */
 /** Błąd zapisu zdjęcia (pamięć przeglądarki pełna) — ten sam komunikat we wszystkich trzech miejscach arkusza (§5.4). */
-function photoSaveFailed() {
-  toast.error("Nie udało się zapisać zdjęcia", { description: "Brakuje miejsca w pamięci przeglądarki. Usuń stare zdjęcia albo zrób kopię zapasową i spróbuj ponownie." });
-}
-
 export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string) => void }) {
   // Fokus po otwarciu idzie na tytuł, nie na pole tekstu: na telefonie pole od razu wywołałoby klawiaturę.
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -239,53 +233,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
   // Ręce zajęte robotą: dyktowanie dopisuje rozpoznane zdanie na końcu wpisu. Gdy w wypowiedzi padnie
   // budowa, rodzaj albo kształtki („Lipowa, problem, przeciek przy trójniku, kolano 16 cztery sztuki”),
   // trafiają do swoich pól, a do tekstu idzie reszta (`spokenEntry.ts`).
-  const dictation = useDictation((spoken) => {
-    if (!spoken) return;
-    const append = (part: string) => {
-      if (part) setText((t) => (t && !/\s$/.test(t) ? `${t} ${part}` : `${t}${part}`));
-    };
-    const parsed = parseSpokenEntry(spoken, { sites: recentSites, fittings: knownFittings });
-    if (!parsed.structured) { append(spoken); return; }
-    const done: string[] = [];
-    if (parsed.site) { if (parsed.site !== site) pickSite(parsed.site); done.push(`budowa ${parsed.site}`); }
-    if (parsed.kind) { patch({ kind: parsed.kind }); done.push(KIND_LABEL[parsed.kind]); }
-    if (parsed.fittings.length > 0) {
-      patch({ fittings: mergeFittings(getForm().fittings ?? [], parsed.fittings) });
-      done.push(`kształtki: ${fittingsLine(parsed.fittings)}`);
-    }
-    const name = parsed.site ?? site;
-    const card = name ? findSiteByName(dir, name) : undefined;
-    // „etap próba szczelności zrobiony” — odhacza etap w karcie budowy (już odhaczony zostaje z pierwszą datą).
-    if (parsed.stage) {
-      const stages = siteStages(card);
-      const hit = card ? matchStage(stages, parsed.stage) : null;
-      if (!card || !hit) {
-        toast.error(card ? `Nie ma takiego etapu: „${parsed.stage}”` : "Etapy są w karcie budowy", {
-          description: card ? "Powiedz nazwę jak na liście etapów, np. „etap próba szczelności zrobiony”." : "Najpierw wybierz budowę wpisu albo powiedz jej nazwę na początku.",
-        });
-      } else {
-        if (hit.done === undefined) setSiteStages(card.id, toggleStage(stages, hit.id, Date.now()), stages);
-        patch({ stage: hit.id });
-        done.push(`etap zrobiony: ${hit.name}`);
-      }
-    }
-    // „brakuje …” — braki idą od razu do karty budowy (wskazanej w wypowiedzi albo bieżącej), nie do wpisu.
-    // Bez budowy braki się nie zapiszą, ale treść wpisu ma się dopisać — błąd pokazujemy dopiero po niej.
-    let shortageError = false;
-    if (parsed.shortages.length > 0 && !card) shortageError = true;
-    else if (parsed.shortages.length > 0 && card) {
-      const now = Date.now();
-      const base = card.shortages ?? [];
-      // Pełna lista (SHORTAGES_MAX) odrzuca nowe pozycje — helper liczy je, żeby komunikat mówił prawdę.
-      const { list: result, rejected } = addShortagesFromDictation(base, parsed.shortages, now);
-      setSiteShortages(card.id, result, base);
-      if (rejected > 0) toast.error(`Nie dodano ${rejected} ${rejected === 1 ? "braku" : "braków"}: lista braków budowy jest pełna (${SHORTAGES_MAX})`, { id: "entry-dictation-full" });
-      done.push(`braki (${card.name}): ${parsed.shortages.map((x) => (x.qty ? `${x.text} ${x.qty}` : x.text)).join(", ")}`);
-    }
-    append(parsed.text);
-    if (shortageError) toast.error("Braki zapisują się w karcie budowy", { description: "Najpierw wybierz budowę wpisu albo powiedz jej nazwę na początku.", id: "entry-dictation" });
-    else toast.success(`Z wypowiedzi: ${done.join(" · ")}`, { id: "entry-dictation" });
-  });
+  const dictation = useDictation((spoken) => applySpokenEntry(spoken, { setText, recentSites, knownFittings, site, dir, pickSite, patch, getForm }));
   // Skrót „Wpis głosowy” (`?wpis=1&glos=1`): arkusz otwarty z żądaniem startuje dyktowanie od razu.
   // Bez zgody na usługę mowy pokaże się zwykłe pytanie o zgodę — zgodę zawsze daje kliknięcie.
   const { supported: dictationSupported, toggle: toggleDictation } = dictation;
@@ -314,51 +262,7 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
     else patchJournalDraft({ at: next });
   }
 
-  /**
-   * Podpis zdjęcia (P-1): zapisuje tekst w `captions` wpisu; zdjęcie zostaje bez zmian. Wypalenie w pliku
-   * dopiero przy eksporcie (ZIP, raport). Pusty tekst = usunięcie podpisu.
-   */
-  function saveCaption(ref: string, text: string) {
-    const clean = text.trim().replace(/\s+/g, " ").slice(0, 80);
-    const next = { ...getForm().captions };
-    if (clean) next[ref] = clean;
-    else delete next[ref];
-    patch({ captions: next });
-    haptic("success");
-    setCaptioning(null);
-    setCaptionDraft("");
-  }
-
-
-  /** Zdjęcie otwarte do rysowania (strzałka, wymiar „przed zakryciem”); `null` = płótno zamknięte. */
-  const [drawing, setDrawing] = useState<{ ref: string; url: string } | null>(null);
-  useEffect(() => () => { if (drawing) URL.revokeObjectURL(drawing.url); }, [drawing]);
-
-  async function openDrawing(ref: string) {
-    const rec = await imageStore.get(ref);
-    if (!rec) { toast.error("Tego zdjęcia nie ma na tym urządzeniu"); return; }
-    setDrawing({ ref, url: URL.createObjectURL(new Blob([rec.bytes], { type: rec.type })) });
-  }
-
-  /** Rysunek na zdjęciu podmienia zdjęcie we wpisie (jak podpis) — oryginał zostaje do odśmiecenia. */
-  async function saveDrawing(dataUrl: string) {
-    const ref = drawing?.ref;
-    if (!ref) return;
-    setProcessing((n) => n + 1);
-    try {
-      const blob = await (await fetch(dataUrl)).blob();
-      const fitted = await prepareImage(new File([blob], "rysunek.jpg", { type: blob.type || "image/jpeg" }));
-      if (!fitted) { toast.error("Nie udało się zapisać rysunku na zdjęciu"); return; }
-      const next = await imageStore.putBlob(fitted);
-      const now = getForm().images;
-      if (now.includes(ref)) patch({ images: now.map((r) => (r === ref ? next : r)) });
-      haptic("success");
-    } catch {
-      photoSaveFailed();
-    } finally {
-      setProcessing((n) => n - 1);
-    }
-  }
+  const { saveCaption, drawing, setDrawing, openDrawing, saveDrawing } = useJournalPhotoEdits({ getForm, patch, setProcessing, setCaptioning, setCaptionDraft });
 
   async function addPhotos(files: File[]) {
     let skipped = 0;
