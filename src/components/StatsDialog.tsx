@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import {
   ACHIEVEMENTS,
   computeStats,
@@ -58,13 +59,16 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
     { icon: Trophy, label: "Odznaki", value: `${unlocked}/${ACHIEVEMENTS.length}` },
   ];
 
-  function handleReset() {
-    if (!confirm("Zresetować wszystkie odznaki i postępy? Tej operacji nie można cofnąć.")) return;
+  // Zamiast `window.confirm` (plan 3.2): wspólny wygląd okna i działanie w PWA na iOS, gdzie `confirm` bywa blokowany.
+  const [resetAsk, setResetAsk] = useState(false);
+  function doReset() {
+    setResetAsk(false);
     resetAchievements();
     toast.success("Postępy zresetowane");
   }
 
   return (
+    <>
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn("max-h-[85dvh] overflow-y-auto", tab === "graph" ? "sm:max-w-3xl" : "sm:max-w-lg")}>
         <DialogHeader>
@@ -152,7 +156,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
         <div className="pt-4 space-y-2">
           <div className="flex items-center justify-between">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Odznaki</p>
-            <Button variant="ghost" size="sm" onClick={handleReset} className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-destructive-ink">
+            <Button variant="ghost" size="sm" onClick={() => setResetAsk(true)} className="h-7 text-xs gap-1.5 text-muted-foreground hover:text-destructive-ink">
               <RotateCcw className="w-3 h-3" /> Resetuj
             </Button>
           </div>
@@ -185,5 +189,18 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
         </>}
       </DialogContent>
     </Dialog>
+    <AlertDialog open={resetAsk} onOpenChange={setResetAsk}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Zresetować odznaki i postępy?</AlertDialogTitle>
+          <AlertDialogDescription>Zresetować wszystkie odznaki i postępy? Tej operacji nie można cofnąć.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Anuluj</AlertDialogCancel>
+          <AlertDialogAction className="bg-destructive text-destructive-foreground" onClick={doReset}>Zresetuj</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
