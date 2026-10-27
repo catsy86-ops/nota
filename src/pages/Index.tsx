@@ -355,8 +355,10 @@ const Index = () => {
     toast.success("Przywrócono wersję");
   }, [notesRef, updateNote, addVersion]);
 
+  // Zmiana sortowania i układu (3.4): lista nadrabia, pasek ustawień reaguje od razu.
+  const deferredPrefs = useDeferredValue(prefs);
   const { displayNotes, pinned, others, elsewhere } = useFilteredNotes({
-    notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search: deferredSearch, prefs, propDefs,
+    notes, archivedNotes, trashedNotes, folders, view, activeLabel, activeFolder, search: deferredSearch, prefs: deferredPrefs, propDefs,
   });
 
   useDayDoneReward(view === "today" && !search ? displayNotes : null);
