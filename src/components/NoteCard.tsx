@@ -211,6 +211,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           selected ? "note-glow-active border-transparent" : "border-border/50"
         )}
       >
+        {/* Animowana ramka (index.css, `.note-frame`): pojawia się przy najechaniu, fokusie i zaznaczeniu. */}
+        <span className="note-frame" aria-hidden />
         {/* Stempel przypięcia i pieczątka „gotowe” — czysto dekoracyjne, bez zdarzeń. */}
         {pinFx > 0 && (
           <span key={pinFx} className="pin-stamp" aria-hidden onAnimationEnd={() => setPinFx(0)}>

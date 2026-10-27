@@ -1419,3 +1419,48 @@ html[data-vt-dir="back"]::view-transition-new(root) { animation: vt-in-left 0.22
 
 /* Osie i dymki Recharts: cyfry o stałej szerokości, żeby wartości nie skakały (plan 5.3). */
 .recharts-wrapper { font-variant-numeric: tabular-nums; }
+
+/* ── Animowana ramka kafla (2026-10-27) ─────────────────────────────────────────
+   Obwódka w spoczynku zostaje zwykłym `border`. Przy najechaniu, fokusie klawiaturą
+   i zaznaczeniu pojawia się gradient, który krąży po krawędzi. Tylko kilka kafli naraz
+   się animuje (przy setkach notatek ciągły obrót byłby kosztowny), a ruch wyłącza
+   `prefers-reduced-motion` i `data-motion="reduced"`. */
+@property --frame-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+.note-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  padding: 1.5px;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--frame-angle),
+    transparent 0deg,
+    color-mix(in srgb, var(--primary) 85%, transparent) 70deg,
+    color-mix(in srgb, var(--accent) 70%, transparent) 150deg,
+    transparent 230deg,
+    color-mix(in srgb, var(--primary) 60%, transparent) 300deg,
+    transparent 360deg
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  opacity: 0;
+  transition: opacity var(--dur-base, 200ms) var(--ease-out, ease-out);
+}
+.note-card:is(:hover, [data-selected]) .note-frame,
+.note-card:has(:focus-visible) .note-frame {
+  opacity: 1;
+  animation: note-frame-spin 3.6s linear infinite;
+}
+@keyframes note-frame-spin {
+  to { --frame-angle: 360deg; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .note-card .note-frame { animation: none !important; }
+}
+html[data-motion="reduced"] .note-card .note-frame { animation: none !important; }
