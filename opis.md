@@ -2967,3 +2967,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 
 ### Testy
 - `e2e/system-preferences.spec.ts` (chromium): wysoki kontrast zmienia `--border` i `--muted-foreground`; wymuszone kolory dają fokusowi obrys `solid 2px`.
+- Commit: `b1c8672` (2026-10-27).
