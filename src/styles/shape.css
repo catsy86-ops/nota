@@ -1,0 +1,7 @@
+/*
+  Kształt (plan motywów 1.2, `src/lib/shape.ts`): mnożnik promieni z `index.css` (`--radius`, `--r-control|field|card`).
+  Zwykły = bez atrybutu (×1). Pigułki (`rounded-full`) i promienie wpisane w CSS ozdób stylów się nie zmieniają.
+  Najmniejszy promień (`rounded-sm` = `--radius` − 4 px) przy „Ostrym” to ok. 1 px, nie wartość ujemna.
+*/
+html[data-shape="sharp"] { --shape: 0.4; }
+html[data-shape="soft"] { --shape: 1.6; }

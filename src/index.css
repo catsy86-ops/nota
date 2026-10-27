@@ -376,11 +376,13 @@ html[data-skin="zeszyt"] .app-header {
     --grid: oklch(0.9220 0.0131 255.03);
     --margin: oklch(0.6003 0.1873 28.15);
 
-    --radius: 0.75rem;
+    /* Kształt (plan motywów 1.2, `src/lib/shape.ts`): mnożnik wszystkich promieni, `html[data-shape]` niżej. */
+    --shape: 1;
+    --radius: calc(0.75rem * var(--shape));
     /* Trzy promienie zamiast wartości wpisywanych ręcznie (klasy `rounded-control|field|card`). */
-    --r-control: 0.5rem;
-    --r-field: 0.75rem;
-    --r-card: 1rem;
+    --r-control: calc(0.5rem * var(--shape));
+    --r-field: calc(0.75rem * var(--shape));
+    --r-card: calc(1rem * var(--shape));
 
     /* Note colors */
     --note-default: oklch(1.0000 0.0000 0.00);

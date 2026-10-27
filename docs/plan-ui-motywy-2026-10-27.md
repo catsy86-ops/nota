@@ -67,6 +67,7 @@ Bez tego każda nowa skórka i każde ustawienie wyglądu to sześć miejsc do p
 
 - **3.1 zrobione.** `src/lib/skinTry.ts` (`trySkin`): wybór w galerii działa od razu, dymek „Styl: … · Cofnij” wraca do stylu sprzed całej serii przymiarek; ręczny powrót do stylu wyjściowego zamyka dymek.
 - **3.3 zrobione.** Paleta: „Następny styl” (z nazwą następnego) w Akcjach; grupa „Styl” z pozostałymi stylami pojawia się po wpisaniu tekstu (np. „styl”, „neon”), żeby nie zaśmiecać pustej palety.
+- **1.2 zrobione.** Ustawienia → Wygląd → „Kształt”: Ostry (×0,4) / Zwykły / Miękki (×1,6) jako `--shape` w `--radius` i `--r-*` (`src/lib/shape.ts`, `src/styles/shape.css`). Odstępstwo: Plan i Matryca nie są wyłączone z wyboru — żadna skórka nie nadpisywała promieni, więc „ostre z charakteru” byłoby nową zmianą projektu; kształt działa jednakowo we wszystkich.
 - **1.3 zrobione.** Ustawienia → Wygląd → „Tło”: Pełne / Ciche / Gładkie (`src/lib/backdrop.ts`, `src/styles/backdrop.css`). M-4 zrealizowane częściowo: „auto” daje ciche tylko przy `saveData`; Battery API pominięte (brak w Safari i Firefoksie, wynik asynchroniczny, mała wartość).
 
 ## Faza 1: personalizacja w obrębie skórki
