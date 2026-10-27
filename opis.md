@@ -2940,3 +2940,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - `src/components/ui/sheet-snap.test.ts` — 9 przypadków progów (w górę, w dół, szybkie gesty, powrót z „pełny”).
 - `e2e/view-sheet-snap.spec.ts` (`@mobile`, Pixel 7) — start na pół, gest w górę do pełnego, gest w dół wraca na pół i arkusz zostaje otwarty.
 - `e2e/mobile.spec.ts` (15/15 na Pixel 7) — w tym zamykanie „Więcej” gestem i formularz jako arkusz.
+- Commit: `ed78a79` (2026-10-27).
