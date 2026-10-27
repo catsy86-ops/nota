@@ -11,7 +11,7 @@ export const weekdayHeadClass = (i: number) =>
 
 /** Komórka dnia bez rozmiaru — wysokość zależy od tego, co komórka pokazuje. Pełne tło: kratka tła nie prześwituje. */
 export const dayCellClass = (inMonth: boolean, today = false) => cn(
-  "relative rounded-xl border text-left transition-colors outline-hidden",
+  "relative rounded-card border text-left transition-colors outline-hidden",
   // Obramowanie „dziś” oddycha — bardzo subtelnie (CSS `today-breath`, wyłączone przy reduced motion).
   today && inMonth && "today-breath",
   "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1 focus-visible:ring-offset-background",

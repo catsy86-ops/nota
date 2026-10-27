@@ -49,11 +49,11 @@ export function ReminderChip({ occurrence, title, detailed = false, className, s
         "flex items-center gap-1 rounded-control border px-1 py-px text-left leading-tight",
         detailed ? "text-xs px-2 py-1 gap-1.5" : "text-2xs",
         isForecast
-          ? "border-dashed border-primary/40 text-primary-ink/70"
+          ? "border-dashed border-[var(--chip-edge)] text-[color-mix(in_srgb,var(--chip-ink)_70%,transparent)]"
           : overdue
             // Czerwony ton i lewa krawędź: zaległy nie wygląda jak załatwiony szary (K1.1).
             ? "border-transparent border-l-2 border-l-destructive bg-destructive/10 text-destructive-ink"
-            : "border-transparent bg-primary/12 text-primary-ink",
+            : "border-transparent bg-[var(--chip-bg)] text-[var(--chip-ink)]",
         className,
       )}
     >

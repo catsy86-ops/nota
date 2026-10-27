@@ -1,6 +1,6 @@
 import { ReminderQuickActions } from "@/components/ReminderQuickActions";
 import type { Note } from "@/hooks/useNotes";
-import { format } from "date-fns";
+import { format, isSameDay } from "date-fns";
 import { pl } from "date-fns/locale";
 import { useState } from "react";
 import { CalendarPlus, Plus, Pencil, ArrowRight, Download, Clock, Copy, List, HardHat, SkipForward, StickyNote } from "lucide-react";
@@ -176,6 +176,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, o
         <>
           {occurrences.length === 0 && emptyHint}
           <DayTimeline
+            showNow={isSameDay(day, new Date())}
             occurrences={occurrences}
             titleOf={titleOf}
             shift={shift}

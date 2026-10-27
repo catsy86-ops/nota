@@ -359,6 +359,10 @@ html[data-skin="zeszyt"] .app-header {
     --destructive-foreground: oklch(1.0000 0.0000 0.00);
     /* Tekst i ikony czerwone na jasnym tle (≥4.5:1 na muted) — jak `primary-ink`. */
     --destructive-ink: oklch(0.5314 0.1989 27.39);
+    /* Chip terminu (K4.2): tło i tekst zamiast przezroczystości marki; test w contrastTokens.test.ts. */
+    --chip-bg: oklch(0.9400 0.0400 63.41);
+    --chip-ink: oklch(0.4200 0.0900 63.41);
+    --chip-edge: oklch(0.6100 0.1400 63.41);
 
     /* Krawędź dekoracyjna (karty, podziały) — może być jasna. */
     --border: oklch(0.9194 0.0069 264.53);
@@ -464,6 +468,9 @@ html[data-skin="zeszyt"] .app-header {
     --destructive-foreground: oklch(1.0000 0.0000 0.00);
     /* Czerwony tekst na ciemnym tle: 3.9:1 przy starym 0 72% 51% → ≥5:1 na muted i secondary. */
     --destructive-ink: oklch(0.7056 0.1550 21.82);
+    --chip-bg: oklch(0.3300 0.0550 63.41);
+    --chip-ink: oklch(0.9150 0.0700 63.41);
+    --chip-edge: oklch(0.6200 0.1200 63.41);
 
     --border: oklch(0.2929 0.0138 59.62);
     /* Krawędź pól: ≥3:1 na karcie, tle i muted (WCAG 1.4.11). Stare 26 14% 17% dawało 1.3:1. */

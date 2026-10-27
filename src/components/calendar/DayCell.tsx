@@ -181,6 +181,7 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
         </span>
       </span>
       {holiday && <span aria-hidden className={holidayNameClass(inMonth)}>{holiday}</span>}
+      {shift && <span aria-hidden className="sm:hidden absolute inset-x-0 bottom-0 h-[3px] rounded-b-card" style={{ backgroundColor: shift.color }} />}
 
       {/* Treść terminów jest w `aria-label` komórki, więc dla czytnika ekranu
           te same dane nie powtarzają się drugi raz. */}

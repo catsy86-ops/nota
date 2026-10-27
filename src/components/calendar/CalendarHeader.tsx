@@ -30,7 +30,8 @@ export function CalendarHeader({ month, selectedDay, showKeys, onPrev, onNext, o
       <h2
         className="font-display font-bold text-base sm:text-lg capitalize text-center truncate sm:min-w-[11ch]"
       >
-        {format(month, "LLLL yyyy", { locale: pl })}
+        {format(month, "LLLL", { locale: pl })}{" "}
+        <span className={month.getFullYear() === new Date().getFullYear() ? "font-normal text-muted-foreground" : undefined}>{format(month, "yyyy")}</span>
       </h2>
       <button
         onClick={onNext}
@@ -44,7 +45,7 @@ export function CalendarHeader({ month, selectedDay, showKeys, onPrev, onNext, o
         <button
           onClick={onToday}
           aria-label="Dziś: wróć do bieżącego miesiąca"
-          className="ml-1 shrink-0 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 sm:px-2.5 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+          className={`ml-1 shrink-0 text-xs font-medium px-2 sm:px-2.5 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring ${isThisMonth ? "text-primary-ink hover:bg-primary/10" : "bg-primary text-primary-foreground hover:bg-primary/90"}`}
         >
           Dziś
         </button>

@@ -72,3 +72,18 @@ describe("kontrast tokenów Zeszytu (WCAG AA)", () => {
     }
   });
 });
+
+// K4.2: chip terminu — tekst na tle ≥4.5:1, obwódka ≥3:1 względem karty (jak 1.4.11 dla elementów graficznych).
+describe("chip terminu (K4.2)", () => {
+  it("jasny: tekst chipa ≥4.5:1, obwódka ≥3:1", () => {
+    const bg = token(light, "chip-bg");
+    expect(contrast(token(light, "chip-ink"), bg), "chip-ink na chip-bg").toBeGreaterThanOrEqual(4.5);
+    expect(contrast(token(light, "chip-edge"), token(light, "card")), "chip-edge na card").toBeGreaterThanOrEqual(3);
+  });
+
+  it("ciemny: tekst chipa ≥4.5:1, obwódka ≥3:1", () => {
+    const bg = token(dark, "chip-bg");
+    expect(contrast(token(dark, "chip-ink"), bg), "chip-ink na chip-bg").toBeGreaterThanOrEqual(4.5);
+    expect(contrast(token(dark, "chip-edge"), token(dark, "card")), "chip-edge na card").toBeGreaterThanOrEqual(3);
+  });
+});
