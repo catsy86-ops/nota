@@ -3092,3 +3092,20 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - Commit (3.1): `e8cbfb7` (2026-10-27).
 - Commit (3.3): `efe6f95` (2026-10-27).
 - Commit (3.7): `99e9da6` (2026-10-27).
+
+## Wspólne — rozmiar tekstu i animowana ramka kafla (2026-10-27)
+
+### Rozmiar tekstu
+- **Co robi:** Ustawienia → Wygląd → „Rozmiar tekstu”: dwa przyciski „A” (mniejsza i większa), etykieta kroku z procentem i przycisk „Przywróć”. Kroki: 90, 100, 112,5, 125, 140 %; domyślny 100 %. Podgląd zdania rośnie od razu. Polecenia w palecie: „Powiększ tekst”, „Pomniejsz tekst”, „Domyślny rozmiar tekstu”.
+- **Gdzie jest:** `src/lib/textSize.ts` (krok, zapis `kaczy.textSize.v1`, `applyToDom`), `src/styles/text-size.css` (`html { font-size: calc(100% * var(--text-scale, 1)) }`), `src/styles/site.css` (tryb budowy mnoży się przez `--text-scale`), `src/components/settings/TextSizeControl.tsx`, `src/components/settings/AppearanceSettings.tsx` (sekcja nad „Krój tekstu”), `src/components/CommandPalette.tsx`.
+- **Jak działa:** wszystko w aplikacji jest w `rem`, więc skala korzenia `html` przeskalowuje cały interfejs. Zmienna `--text-scale` ustawia JS przy starcie (`main.tsx` importuje `lib/textSize`), zanim pojawi się pierwsze malowanie. Zapis przechowuje indeks kroku, nie procent. Krok spoza zakresu, ułamek i złe typy wracają do domyślnego.
+- **Ograniczenia:** wartości w `px` (np. część ikon i odstępów) nie skalują się. Tryb budowy (112,5 %) i wybrany rozmiar się mnożą, więc najwyższy krok w trybie budowy daje ok. 157 % — tej kombinacji nie testowano; testy obejmują 140 % bez trybu budowy na 390 px w pięciu głównych widokach.
+- **Testy:** `src/lib/textSize.test.ts` (5), `e2e/text-size.spec.ts` (3): przyciski w Ustawieniach, skala 140 % i 90 % na korzeniu, brak poziomego przewijania przy 140 % na telefonie w pięciu widokach.
+
+### Animowana ramka kafla
+- **Co robi:** karta notatki w spoczynku ma zwykłe obramowanie. Po najechaniu myszą, fokusie klawiaturą i zaznaczeniu pojawia się gradient w kolorach akcentu, który krąży po krawędzi (obrót 3,6 s). Ruch wyłączają `prefers-reduced-motion` i `data-motion="reduced"`.
+- **Gdzie jest:** `src/components/NoteCard.tsx` (pusty `span.note-frame` jako pierwsze dziecko kafla), `src/index.css` (sekcja „Animowana ramka kafla”, `@property --frame-angle`, `.note-frame`, `@keyframes note-frame-spin`).
+- **Jak działa:** gradient stożkowy z `conic-gradient(from var(--frame-angle), …)` maskowany do samej krawędzi (`mask` z `exclude`), więc zostaje tylko pierścień o szerokości 1,5 px w obrębie obramowania. Krycie 0 w spoczynku, 1 przy `:hover`, `[data-selected]` i `:has(:focus-visible)`. Animacja działa tylko na wskazanym kaflu — ciągły obrót na wszystkich kaflach przy setkach notatek byłby kosztowny.
+- **Dlaczego pseudoelement nie:** skórki Plan i Neon już używają `::before` i `::after` na `.note-card`, więc pierścień to osobny element.
+- **Ograniczenia:** w spoczynku ramki nie widać — to celowe, żeby lista nie migała ruchem. Na dotyku animacja nie działa, bo nie ma najechania; tam zaznaczenie przytrzymaniem też ją włącza.
+- **Testy:** e2e `card-motion`, `card-keyboard-open`, `card-copy`, `notes`, `a11y` (80/80) — przechodzą. Ręczny zrzut: najechany kafel ma gradient w kolorze akcentu.
