@@ -21,6 +21,7 @@ import { TextSizeControl } from "./TextSizeControl";
 import { SKIN_SCHEME } from "@/lib/skins";
 import { trySkin } from "@/lib/skinTry";
 import { NightSkinSettings } from "./NightSkinSettings";
+import { AppearanceCode } from "./AppearanceCode";
 import { setBackdrop, useBackdrop, type Backdrop } from "@/lib/backdrop";
 import { setShape, useShape, type Shape } from "@/lib/shape";
 import { BASE_SORTS } from "@/lib/sortOptions";
@@ -201,6 +202,10 @@ export function AppearanceSettings() {
                   : "Auto wymaga włączonego „Motyw sezonowy” w zakładce Efekty. Wybrana pora działa od razu."
                 : `Wymuszona kolorystyka: ${SEASON_META[activeSeason].label.toLowerCase()}. Tło papieru i akcenty.`}
           </p>
+        </Section>
+
+        <Section title="Kod wyglądu">
+          <AppearanceCode />
         </Section>
       </SettingsGroup>
 
