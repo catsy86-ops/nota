@@ -1055,6 +1055,9 @@ const Index = () => {
           onOpenFocusMode={() => setFocusModeOpen(true)}
           onOpenShortcuts={() => setShortcutsOpen(true)}
           onCopyNote={copyTarget ? (fmt) => { void copyNoteToClipboard(copyTarget, fmt); } : undefined}
+          currentNote={copyTarget}
+          onTogglePin={(id) => togglePin(id)}
+          view={view}
         />
       </Suspense>
     )}

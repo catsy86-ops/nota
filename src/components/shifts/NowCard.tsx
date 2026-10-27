@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { format, formatDistanceStrict, isToday, isTomorrow } from "date-fns";
+import { FINISH_SHIFT_NOW_EVENT } from "@/lib/shiftCommands";
 import { pl } from "date-fns/locale";
 import { toast } from "sonner";
 import { formatDuration, setDayEntry, shiftInk, type ShiftData, type ShiftOccurrence } from "@/lib/shifts";
@@ -50,6 +52,12 @@ function EndedCard({ occ }: { occ: ShiftOccurrence }) {
 /** Co teraz i co dalej — pierwsza rzecz, której szuka ktoś pracujący na zmiany. */
 export function NowCard({ data }: { data: ShiftData }) {
   const { now, current, next, ended } = useShiftNow(data);
+  // Komenda z palety „Skończyłem teraz” (plan 3.9): ta sama ścieżka co przycisk na karcie.
+  useEffect(() => {
+    const onFinish = () => { if (current) finishNow(current); };
+    window.addEventListener(FINISH_SHIFT_NOW_EVENT, onFinish);
+    return () => window.removeEventListener(FINISH_SHIFT_NOW_EVENT, onFinish);
+  }, [current]);
   // Zmiana skończona przed chwilą (nadgodziny): karta zostaje, z odchyleniem liczonym od planu.
   if (ended && !next) return <EndedCard occ={ended} />;
   if (!current && !next) return null;

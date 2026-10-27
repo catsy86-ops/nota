@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
-import { Inbox, Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash } from "lucide-react";
+import { FINISH_SHIFT_NOW_EVENT } from "@/lib/shiftCommands";
+import { Inbox, Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash, Pin, Clock } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes, useSearchReady } from "@/lib/searchNotes";
@@ -53,6 +54,11 @@ interface Props {
   onGoFilter: (query: string) => void;
   /** Jest tylko, gdy jest „bieżąca” notatka (otwarta w czytniku, zaznaczona lub z fokusem). */
   onCopyNote?: (format: "markdown" | "text") => void;
+  /** Bieżąca notatka (czytnik, zaznaczenie lub fokus): jej akcje idą na górę palety (plan 3.9). */
+  currentNote?: Note | null;
+  onTogglePin?: (id: string) => void;
+  /** Widok z adresu: w Grafiku paleta pokazuje akcje zmiany. */
+  view?: string;
 }
 
 type NavItem = { id: Parameters<Props["onGo"]>[0]; label: string; Icon: typeof StickyNote; hint?: string };
@@ -86,6 +92,9 @@ export function CommandPalette({
   onOpenShortcuts,
   onGoFilter,
   onCopyNote,
+  currentNote,
+  onTogglePin,
+  view,
 }: Props) {
   const { folders } = useNotesContext();
   const { filters } = useSavedFilters();
@@ -150,6 +159,31 @@ export function CommandPalette({
             )}
           </div>
         </CommandEmpty>
+        {currentNote && !search.trim() && (
+          <>
+            <CommandGroup heading="Ta notatka">
+              <CommandItem value="ta notatka otwórz" onSelect={() => run(() => onOpenNote(currentNote.id))}>
+                <StickyNote className="w-4 h-4 mr-2" /> Otwórz
+              </CommandItem>
+              {onTogglePin && (
+                <CommandItem value={currentNote.pinned ? "ta notatka odepnij" : "ta notatka przypnij"} onSelect={() => run(() => onTogglePin(currentNote.id))}>
+                  <Pin className="w-4 h-4 mr-2" /> {currentNote.pinned ? "Odepnij" : "Przypnij"}
+                </CommandItem>
+              )}
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
+        {view === "shifts" && !search.trim() && (
+          <>
+            <CommandGroup heading="Grafik">
+              <CommandItem value="grafik skończyłem teraz koniec zmiany" onSelect={() => run(() => window.dispatchEvent(new Event(FINISH_SHIFT_NOW_EVENT)))}>
+                <Clock className="w-4 h-4 mr-2" /> Skończyłem teraz
+              </CommandItem>
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
         {recentNav.length > 0 && !search.trim() && (
           <>
             <CommandGroup heading="Ostatnio użyte">
