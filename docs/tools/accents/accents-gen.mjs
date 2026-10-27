@@ -60,12 +60,19 @@ function tokens(text) {
   for (const m of text.matchAll(/--([\w-]+):\s*([\d.]+)%;/g)) out[m[1]] = +m[2];
   return out;
 }
+/** Schemat, w którym styl powstał (jak `SKIN_SCHEME` w skinList.ts); drugi to blok `:not(.dark)` / `.dark` (4.1). */
+const NATIVE = { zeszyt: null, plan: "dark", neon: "dark", zorza: "dark", miedz: "light", matrix: "dark", hydraulika: "dark" };
 function resolve2(skin, scheme) {
   const base = tokens(block(index, scheme === "dark" ? ".dark" : ":root"));
-  return skin === "zeszyt" ? base : { ...base, ...tokens(block(skinCss, `html[data-skin="${skin}"]`)) };
+  if (skin === "zeszyt") return base;
+  const own = { ...base, ...tokens(block(skinCss, `html[data-skin="${skin}"]`)) };
+  if (scheme === NATIVE[skin]) return own;
+  const alt = `html[data-skin="${skin}"]${NATIVE[skin] === "dark" ? ":not(.dark)" : ".dark"}`;
+  return { ...own, ...tokens(block(skinCss, alt)) };
 }
 
-const SCHEMES = { zeszyt: ["light", "dark"], plan: ["dark"], neon: ["dark"], zorza: ["dark"], miedz: ["light"], matrix: ["dark"], hydraulika: ["dark"] };
+// Każdy styl ma oba schematy (plan motywów 4.1), więc akcenty są liczone dla obu.
+const SCHEMES = Object.fromEntries(Object.keys(NATIVE).map((k) => [k, ["light", "dark"]]));
 
 function passes(t, scheme, primary) {
   const p = toRgb(primary);
@@ -107,10 +114,11 @@ for (const [skin, list] of Object.entries(ACCENTS)) {
     const [L0, C0, H0] = t.primary;
     const ring = t.ring;
     list.forEach((a, i) => {
-      const primary = fit(t, scheme, a.l ?? L0, C0, a.h, a.c);
-      const sel = skin === "zeszyt"
-        ? `html[data-skin="zeszyt"]${scheme === "dark" ? ".dark" : ":not(.dark)"}[data-accent="${i + 1}"]`
-        : `html[data-skin="${skin}"][data-accent="${i + 1}"]`;
+      // Jasność startowa `l` jest dobrana do schematu, w którym styl powstał (żółć Neonu na ciemnym tle).
+      const start = a.l !== undefined && (NATIVE[skin] ?? "dark") === scheme ? a.l : L0;
+      const primary = fit(t, scheme, start, C0, a.h, a.c);
+      // Selektor zawsze ze schematem: odcień dobrany do ciemnego tła nie może trafić na jasne.
+      const sel = `html[data-skin="${skin}"]${scheme === "dark" ? ".dark" : ":not(.dark)"}[data-accent="${i + 1}"]`;
       const lines = [`  --primary: ${fmt(primary)};`];
       if (ring && hueClose(ring[2], H0)) {
         // Pierścień: ta sama różnica jasności co w stylu, nowy odcień.
@@ -119,7 +127,8 @@ for (const [skin, list] of Object.entries(ACCENTS)) {
         while (C > 0 && !inGamut([L, C, a.h])) C -= 0.002;
         lines.push(`  --ring: ${fmt([L, Math.max(0, C), a.h])};`);
       }
-      if (skin === "matrix" || skin === "hydraulika") {
+      // Tam ciemny schemat ma poświatę wpisaną kolorem; jasny schemat już liczy ją z `--primary`.
+      if ((skin === "matrix" || skin === "hydraulika") && scheme === "dark") {
         lines.push("  --glow-primary: 0 10px 30px -8px color-mix(in srgb, var(--primary) 55%, transparent);");
       }
       css += `${sel} {\n${lines.join("\n")}\n}\n`;

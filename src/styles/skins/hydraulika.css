@@ -39,6 +39,49 @@ html[data-skin="hydraulika"] {
   --elevation-up: 0 -8px 24px -12px hsl(205 60% 3% / 0.6);
   --glow-primary: 0 10px 30px -8px hsl(24 70% 58% / 0.5);
 }
+
+/* Drugi schemat (plan motywów 4.1) — jasny. Biała armatura: chrom i biel łazienki, miedź i woda w akcentach.
+   Pełny komplet tokenów: blok nadpisuje ciemne wartości stylu (kontrakt w skinContract.test.ts). */
+html[data-skin="hydraulika"]:not(.dark) {
+  --background: oklch(0.9700 0.0060 230.00);
+  --foreground: oklch(0.2400 0.0300 240.00);
+  --card: oklch(0.9950 0.0030 230.00);
+  --card-foreground: oklch(0.2400 0.0300 240.00);
+  --popover: oklch(0.9950 0.0030 230.00);
+  --popover-foreground: oklch(0.2400 0.0300 240.00);
+  --primary: oklch(0.5200 0.1200 50.00);
+  /* Tekst „ink” (primary, success, warning) przyciemniony jak w jasnym Zeszycie. */
+  --ink-mix: 62%;
+  --primary-foreground: oklch(1.0000 0.0000 0.00);
+  --secondary: oklch(0.9200 0.0100 230.00);
+  --secondary-foreground: oklch(0.2400 0.0300 240.00);
+  --muted: oklch(0.9450 0.0080 230.00);
+  --muted-foreground: oklch(0.4800 0.0250 235.00);
+  --accent: oklch(0.4800 0.1100 235.00);
+  --accent-foreground: oklch(1.0000 0.0000 0.00);
+  --destructive: oklch(0.5786 0.2137 27.17);
+  --destructive-ink: oklch(0.5314 0.1989 27.39);
+  --destructive-foreground: oklch(1.0000 0.0000 0.00);
+  --border: oklch(0.8800 0.0120 230.00);
+  --input: oklch(0.6000 0.0300 235.00);
+  --ring: oklch(0.5200 0.1200 50.00);
+  --grid: oklch(0.5500 0.0400 230.00);
+  --margin: oklch(0.5500 0.1200 50.00);
+  --note-default: oklch(0.9950 0.0030 230.00);
+  --note-coral: oklch(0.9643 0.0182 37.66);
+  --note-peach: oklch(0.9716 0.0196 67.59);
+  --note-sand: oklch(0.9771 0.0311 91.65);
+  --note-mint: oklch(0.9676 0.0191 164.61);
+  --note-sage: oklch(0.9603 0.0105 174.27);
+  --note-sky: oklch(0.9677 0.0163 228.98);
+  --note-lavender: oklch(0.9614 0.0171 301.21);
+  --note-rose: oklch(0.9650 0.0155 355.05);
+  --elevation-1: 0 1px 0 hsl(210 40% 20% / 0.06), 0 3px 8px -4px hsl(210 40% 20% / 0.14);
+  --elevation-2: 0 1px 0 hsl(210 40% 20% / 0.06), 0 6px 14px -4px hsl(210 40% 20% / 0.15);
+  --elevation-3: 0 1px 0 hsl(210 40% 20% / 0.05), 0 14px 32px -8px hsl(210 40% 20% / 0.22);
+  --elevation-up: 0 -8px 24px -12px hsl(210 40% 20% / 0.18);
+  --glow-primary: 0 10px 26px -8px color-mix(in srgb, var(--primary) 45%, transparent);
+}
 /* Rury: miedziane pasy w siatce 120 px (statyczne). Przepływ wody to drugi pseudo-element. */
 html[data-skin="hydraulika"] .paper-grid::before {
   background-image:
@@ -124,4 +167,10 @@ html[data-motion="reduced"][data-skin="hydraulika"] .hydro-bubble { display: non
   background-position: 0 0, 0 100%;
   background-repeat: repeat-x, no-repeat;
   background-color: #0b1e2b;
+}
+
+/* Jasna Hydraulika (4.1): bąbelki z ciemniejszym obrysem, inaczej znikają na bieli. */
+html[data-skin="hydraulika"]:not(.dark) .hydro-bubble {
+  border-color: hsl(205 70% 42% / 0.45);
+  background: radial-gradient(circle at 30% 28%, hsl(0 0% 100% / 0.9), hsl(200 60% 90% / 0.3) 45%, transparent 60%);
 }

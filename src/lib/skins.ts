@@ -3,12 +3,11 @@ import { createPersistedStore } from "@/lib/persistedStore";
 import { SKINS, type Skin } from "@/lib/skinList";
 
 /**
- * Styl aplikacji („skórka”) — niezależny od jasny/ciemny. „Zeszyt” to domyślny
- * kierunek i jedyny, który słucha przełącznika jasny/ciemny; pozostałe mają
- * jeden, zaprojektowany schemat (`SKIN_SCHEME`). Tokeny i tła: `src/styles/skins/<id>.css`
+ * Styl aplikacji („skórka”). Każdy ma schemat jasny i ciemny (plan motywów 4.1): Zeszyt słucha wspólnego
+ * przełącznika, pozostałe pamiętają własny wybór (`skinScheme.ts`), domyślnie `SKIN_SCHEME`. Tokeny i tła: `src/styles/skins/<id>.css`
  * pod `html[data-skin="…"]`. Lista, schematy i kolory paska: `skinList.ts`.
  */
-export { SKINS, SKIN_SCHEME, SKIN_THEME_COLOR, type Skin } from "@/lib/skinList";
+export { SKINS, SKIN_SCHEME, SKIN_THEME_COLOR, SKIN_THEME_COLOR_ALT, type Skin } from "@/lib/skinList";
 
 export function isSkin(v: unknown): v is Skin {
   return typeof v === "string" && (SKINS as readonly string[]).includes(v);

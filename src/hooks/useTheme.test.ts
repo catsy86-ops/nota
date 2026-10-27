@@ -22,10 +22,18 @@ describe("resolveDark", () => {
     expect(resolveDark("light", "zeszyt", true)).toBe(false);
     expect(resolveDark("system", "zeszyt", true)).toBe(true);
   });
-  it("styl z własnym schematem wygrywa z przełącznikiem", () => {
-    expect(resolveDark("light", "neon", false)).toBe(true);
-    expect(resolveDark("light", "plan", false)).toBe(true);
-    expect(resolveDark("dark", "miedz", true)).toBe(false);
+  it("bez wyboru styl ma schemat, w którym powstał — niezależnie od przełącznika Zeszytu", () => {
+    expect(resolveDark("light", "neon", false, {})).toBe(true);
+    expect(resolveDark("light", "plan", false, {})).toBe(true);
+    expect(resolveDark("dark", "miedz", true, {})).toBe(false);
+  });
+  it("wybór jasności dla stylu (4.1) wygrywa, „system” idzie za systemem", () => {
+    expect(resolveDark("dark", "neon", true, { neon: "light" })).toBe(false);
+    expect(resolveDark("light", "miedz", false, { miedz: "dark" })).toBe(true);
+    expect(resolveDark("light", "plan", true, { plan: "system" })).toBe(true);
+    // Wybór dla jednego stylu nie zmienia innego ani Zeszytu.
+    expect(resolveDark("light", "zorza", false, { neon: "light" })).toBe(true);
+    expect(resolveDark("light", "zeszyt", false, { neon: "dark" })).toBe(false);
   });
 });
 

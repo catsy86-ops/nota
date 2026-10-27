@@ -1,6 +1,7 @@
 import { lazy, Suspense, type CSSProperties } from "react";
 import { useSkin } from "@/lib/skins";
 import { useBackdrop } from "@/lib/backdrop";
+import { useTheme } from "@/hooks/useTheme";
 
 /**
  * Tło aplikacji: papier w kratkę jak w zeszycie (linie w `.paper-grid`, `index.css`).
@@ -29,6 +30,8 @@ export function PaperBackdrop() {
   // Natężenie tła (plan motywów 1.3): w „gładkim” płótna i bąbelków nie ma wcale (zero pracy),
   // w „cichym” płótno rysuje jedną nieruchomą klatkę (`key` montuje je od nowa po zmianie).
   const backdrop = useBackdrop();
+  // Jasna Matryca (plan motywów 4.1) to papier z drukarki, nie terminal: deszcz tylko w ciemnym schemacie.
+  const { dark } = useTheme();
   return (
     <div
       aria-hidden
@@ -37,7 +40,7 @@ export function PaperBackdrop() {
     >
       {/* Tabliczka rysunkowa: napis zależy od widoku (`html[data-view]`, styl w `index.css`). */}
       <span className="paper-stamp" />
-      {skin === "matrix" && backdrop !== "plain" && (
+      {skin === "matrix" && dark && backdrop !== "plain" && (
         <Suspense fallback={null}>
           <MatrixRain key={backdrop} still={backdrop === "quiet"} />
         </Suspense>

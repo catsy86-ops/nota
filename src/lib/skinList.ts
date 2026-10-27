@@ -7,7 +7,10 @@ export type Skin = "zeszyt" | "plan" | "neon" | "zorza" | "miedz" | "matrix" | "
 
 export const SKINS: readonly Skin[] = ["zeszyt", "plan", "neon", "zorza", "miedz", "matrix", "hydraulika"];
 
-/** Schemat stylu: `null` = jasny lub ciemny według przełącznika (tylko Zeszyt). */
+/**
+ * Schemat, w którym styl powstał — domyślny, dopóki użytkownik nie wybierze innego (od planu motywów 4.1
+ * każdy styl ma oba schematy; wybór w `skinScheme.ts`). `null` = Zeszyt, który słucha wspólnego przełącznika.
+ */
 export const SKIN_SCHEME: Record<Skin, "light" | "dark" | null> = {
   zeszyt: null,
   plan: "dark",
@@ -40,4 +43,14 @@ export const SKIN_ICON: Record<Exclude<Skin, "zeszyt">, { bg: string; fg: string
   miedz: { bg: "#ae5a28", fg: "#fcfbf9" },
   matrix: { bg: "#020a03", fg: "#00ff41" },
   hydraulika: { bg: "#0b1e2b", fg: "#d08a4e" },
+};
+
+/** Kolor paska stanu w drugim schemacie stylu (plan motywów 4.1) — tło jasnego albo ciemnego wariantu. */
+export const SKIN_THEME_COLOR_ALT: Record<Exclude<Skin, "zeszyt">, string> = {
+  plan: "#eef4fa",
+  neon: "#f5f0f5",
+  zorza: "#f6f0f6",
+  miedz: "#26221f",
+  matrix: "#eef7ee",
+  hydraulika: "#f2f6f9",
 };

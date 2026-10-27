@@ -83,6 +83,11 @@ Bez tego każda nowa skórka i każde ustawienie wyglądu to sześć miejsc do p
 - **Przy okazji naprawione:** fala zapisu Zorzy była niewidoczna (zduplikowana nazwa `@keyframes`); nowy strażnik w `skinContract.test.ts`.
 - **2.5 zrobione.** Sygnatura dnia na Dziś we wszystkich siedmiu stylach (`DaySignature.tsx`, `daySignature.ts`). Odstępstwo: Zorza bez godziny zachodu (bez lokalizacji byłaby zgadywana) — sama faza Księżyca.
 
+### Status Fazy 4 (2026-10-27)
+
+- **4.1 zrobione.** Drugi schemat dla wszystkich sześciu stylów (M-2), wybór jasności per styl (`kaczy.skinScheme.v1`), przełącznik w nagłówku zmienia schemat zamiast stylu (zastępuje PW-2). Kontrakt, kontrast (14 schematów, 56 odcieni akcentów) i axe (60 nowych audytów) zielone. Zmiana względem planu: `SKIN_SCHEME` zostaje jako „schemat domyślny”, a wybór trzymany osobno, zamiast pary `{ default, alt }`.
+- Dalej: 4.4, 4.3, 4.2, 4.5.
+
 ## Faza 1: personalizacja w obrębie skórki
 
 Dziś skórka to całość albo nic. Trzy pokrętła dają dużo różnorodności bez nowych skórek, a dzięki OKLCH i tokenom promieni są tanie.

@@ -99,7 +99,7 @@ export function AppearanceSettings() {
   const settings = useEffectsSettings();
   const prefs = useViewPrefs();
   const [resetOpen, setResetOpen] = useState(false);
-  const { mode: themeMode, setMode: setThemeMode, skin } = useTheme();
+  const { schemeMode, setMode: setThemeMode, skin } = useTheme();
   const skinScheme = SKIN_SCHEME[skin];
   const hiddenViews = useHiddenViews();
   const todayCards = useTodayCards();
@@ -152,13 +152,13 @@ export function AppearanceSettings() {
         </Section>
 
         <Section title="Jasność">
-          <Segmented label="Jasność" options={themeOptions} value={themeMode} onChange={setThemeMode} disabled={!!skinScheme} />
+          <Segmented label="Jasność" options={themeOptions} value={schemeMode} onChange={setThemeMode} />
           <p className="text-xs text-muted-foreground mt-1.5">
-            {skinScheme
-              ? `${SKIN_META[skin].label} ma własne, ${skinScheme === "dark" ? "ciemne" : "jasne"} kolory. Jasność ustawisz w stylu Zeszyt.`
-              : themeMode === "system"
+            {skin !== "zeszyt"
+              ? `Każdy styl pamięta własną jasność. ${SKIN_META[skin].label} powstał jako ${skinScheme === "dark" ? "ciemny" : "jasny"}.`
+              : schemeMode === "system"
                 ? "Motyw dopasowuje się do ustawień Twojego systemu."
-                : themeMode === "dark"
+                : schemeMode === "dark"
                   ? "Ciemny motyw ułatwia pracę wieczorem."
                   : "Klasyczny jasny motyw."}
           </p>

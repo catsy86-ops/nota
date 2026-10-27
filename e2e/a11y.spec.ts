@@ -1,7 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test, expect, type Page } from "@playwright/test";
 import { seedNotes } from "./helpers";
-import { SKINS as ALL_SKINS } from "../src/lib/skinList";
+import { SKINS as ALL_SKINS, SKIN_SCHEME } from "../src/lib/skinList";
 
 // Automatyczny audyt dostępności (axe-core, WCAG 2.2 AA) głównych widoków
 // w obu motywach, na telefonie i komputerze. Zapadka: znane naruszenia są
@@ -81,18 +81,22 @@ for (const size of SIZES) {
   test.describe(`a11y styl ${size.name}`, () => {
     test.use({ viewport: size.viewport, isMobile: size.mobile, hasTouch: size.mobile });
 
+    // Każdy styl w obu schematach (plan motywów 4.1): domyślnym i drugim (`kaczy.skinScheme.v1`).
     for (const skin of SKINS) {
+      for (const alt of [false, true]) {
+      const scheme = alt ? (SKIN_SCHEME[skin] === "dark" ? "light" : "dark") : null;
       for (const view of SKIN_VIEWS) {
-        test(`${view.name} — ${skin}`, async ({ page }) => {
+        test(`${view.name} — ${skin}${alt ? " (drugi schemat)" : ""}`, async ({ page }) => {
           await seedNotes(page, [
             { id: "a11y-1", title: "Zakupy", content: "Mleko, chleb", color: "default", pinned: true, archived: false, labels: ["dom"], createdAt: Date.now(), updatedAt: Date.now() },
             { id: "a11y-2", title: "Budowa", content: "Zamówić beton", color: "sky", pinned: false, archived: false, labels: [], createdAt: Date.now(), updatedAt: Date.now() },
             { id: "a11y-3", title: "Piwo", content: "Piątek", color: "peach", pinned: false, archived: false, labels: [], createdAt: Date.now(), updatedAt: Date.now() },
           ]);
-          await page.addInitScript((s) => {
+          await page.addInitScript(([s, sch]) => {
             localStorage.setItem("kaczy.skin.v1", JSON.stringify(s));
             localStorage.setItem("kaczy.motion.v1", "reduced");
-          }, skin);
+            if (sch) localStorage.setItem("kaczy.skinScheme.v1", JSON.stringify({ [s]: sch }));
+          }, [skin, scheme] as const);
           await page.emulateMedia({ reducedMotion: "reduce" });
           await page.goto(view.path);
           await expect(page.locator("main").first()).toBeVisible();
@@ -100,9 +104,10 @@ for (const size of SIZES) {
           await expect(page.locator(".view-skeleton")).toHaveCount(0);
 
           const found = await scan(page);
-          const known = (KNOWN[`${view.name}/${size.name}/${skin}`] ?? []).slice().sort();
+          const known = (KNOWN[`${view.name}/${size.name}/${skin}${alt ? "/alt" : ""}`] ?? []).slice().sort();
           expect(found, "nowe albo naprawione naruszenia — popraw kod albo listę KNOWN").toEqual(known);
         });
+      }
       }
     }
   });

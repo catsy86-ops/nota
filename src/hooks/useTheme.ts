@@ -1,8 +1,8 @@
 import { useCallback, useSyncExternalStore } from "react";
-import { toast } from "sonner";
 import { isMotionReduced } from "@/hooks/useMotionPref";
 import { isEffectEnabled } from "@/lib/effectsSettings";
-import { SKIN_SCHEME, SKIN_THEME_COLOR, setSkin, skinStore, useSkin, type Skin } from "@/lib/skins";
+import { SKIN_SCHEME, SKIN_THEME_COLOR, SKIN_THEME_COLOR_ALT, setSkin, skinStore, useSkin, type Skin } from "@/lib/skins";
+import { setSkinScheme, skinSchemeStore, type SkinSchemeMap } from "@/lib/skinScheme";
 import { applySkinFavicon } from "@/lib/skinFavicon";
 
 export type ThemeMode = "system" | "light" | "dark";
@@ -29,11 +29,18 @@ export function shouldUseViewTransition(o: { supported: boolean; reduced: boolea
   return o.supported && o.enabled && !o.reduced && o.changed;
 }
 
-/** Ciemno czy jasno: styl z własnym schematem wygrywa z przełącznikiem jasny/ciemny. */
-export function resolveDark(mode: ThemeMode, skin: Skin, systemDark: boolean): boolean {
-  const scheme = SKIN_SCHEME[skin];
-  if (scheme) return scheme === "dark";
-  return mode === "system" ? systemDark : mode === "dark";
+/**
+ * Ciemno czy jasno. Zeszyt słucha wspólnego przełącznika (`mode`); każdy inny styl ma własny wybór
+ * (`kaczy.skinScheme.v1`, plan motywów 4.1), a bez wyboru — schemat, w którym powstał (`SKIN_SCHEME`).
+ */
+export function resolveDark(mode: ThemeMode, skin: Skin, systemDark: boolean, skinModes: SkinSchemeMap = skinSchemeStore.get()): boolean {
+  const pref = skin === "zeszyt" ? mode : skinModes[skin] ?? SKIN_SCHEME[skin]!;
+  return pref === "system" ? systemDark : pref === "dark";
+}
+
+/** Wybór jasności dla stylu, tak jak pokazuje go przełącznik w Ustawieniach. */
+export function schemePrefFor(skin: Skin, mode: ThemeMode, skinModes: SkinSchemeMap = skinSchemeStore.get()): ThemeMode {
+  return skin === "zeszyt" ? mode : skinModes[skin] ?? SKIN_SCHEME[skin]!;
 }
 
 /** Promień koła, które z punktu (x, y) zakrywa cały ekran. */
@@ -83,7 +90,10 @@ function applyAppearance(dark: boolean, skin: Skin) {
     root.style.colorScheme = dark ? "dark" : "light";
     // Pasek stanu telefonu / okna PWA w kolorze stylu; Zeszyt: ciemny nie świeci bursztynem.
     // #15110e = `--background` ciemnego Zeszytu (hsl 26 20% 7%), nie chłodny fiolet.
-    const color = skin === "zeszyt" && dark ? "#15110e" : SKIN_THEME_COLOR[skin];
+    // Drugi schemat stylu (4.1) ma własny kolor paska (`SKIN_THEME_COLOR_ALT`).
+    const native = SKIN_SCHEME[skin];
+    const color = skin === "zeszyt" ? (dark ? "#15110e" : SKIN_THEME_COLOR.zeszyt)
+      : (dark === (native === "dark") ? SKIN_THEME_COLOR[skin] : SKIN_THEME_COLOR_ALT[skin]);
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", color);
     applySkinFavicon(skin);
   };
@@ -143,6 +153,7 @@ export function setThemeMode(next: ThemeMode) {
 if (typeof window !== "undefined") {
   applyCurrent();
   skinStore.subscribe(applyCurrent);
+  skinSchemeStore.subscribe(() => { applyCurrent(); emit(); });
   mql?.addEventListener?.("change", () => { applyCurrent(); emit(); });
   window.addEventListener("storage", (e) => {
     if (e.key !== THEME_KEY && e.key !== null) return;
@@ -156,30 +167,24 @@ export function useTheme() {
   const currentMode = useSyncExternalStore(subscribe, () => mode, () => "system" as ThemeMode);
   const systemDark = useSyncExternalStore(subscribe, systemPrefersDark, () => false);
   const skin = useSkin();
-  const dark = resolveDark(currentMode, skin, systemDark);
+  const skinModes = useSyncExternalStore(skinSchemeStore.subscribe, skinSchemeStore.get, skinSchemeStore.get);
+  const dark = resolveDark(currentMode, skin, systemDark, skinModes);
+  /** Wybór jasności bieżącego stylu (Zeszyt: wspólny przełącznik). */
+  const schemeMode = schemePrefFor(skin, currentMode, skinModes);
 
-  const setMode = useCallback((m: ThemeMode) => setThemeMode(m), []);
-  /** Jasny ↔ ciemny. Styl z własnym schematem wraca do Zeszytu w przeciwnej jasności. */
+  /** Jasność bieżącego stylu: w Zeszycie wspólny przełącznik, w innych stylach — wybór tego stylu. */
+  const setMode = useCallback((m: ThemeMode) => {
+    const s = skinStore.get();
+    if (s === "zeszyt") setThemeMode(m);
+    else setSkinScheme(s, m);
+  }, []);
+  /** Jasny ↔ ciemny w bieżącym stylu (od 4.1 każdy styl ma oba schematy — bez przełączania na Zeszyt). */
   const toggle = useCallback(() => {
-    const prevSkin = skinStore.get();
-    const prevMode = mode;
-    const currentDark = resolveDark(mode, prevSkin, systemPrefersDark());
-    mode = currentDark ? "light" : "dark";
-    try { localStorage.setItem(THEME_KEY, mode); } catch { /* ignore */ }
-    if (prevSkin !== "zeszyt") {
-      // PW-2 (plan Powłoki 1.4): zmiana nie jest cicha — komunikat z „Cofnij” przywraca styl i jasność.
-      setSkin("zeszyt");
-      toast("Ten styl ma jeden tryb — przełączono na Zeszyt", {
-        action: { label: "Cofnij", onClick: () => {
-          mode = prevMode;
-          try { localStorage.setItem(THEME_KEY, prevMode); } catch { /* ignore */ }
-          setSkin(prevSkin);
-          emit();
-        } },
-      });
-    } else applyCurrent();
-    emit();
+    const s = skinStore.get();
+    const next: ThemeMode = resolveDark(mode, s, systemPrefersDark()) ? "light" : "dark";
+    if (s === "zeszyt") setThemeMode(next);
+    else setSkinScheme(s, next);
   }, []);
 
-  return { mode: currentMode, dark, skin, setMode, setSkin, toggle };
+  return { mode: currentMode, schemeMode, dark, skin, setMode, setSkin, toggle };
 }

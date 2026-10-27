@@ -21,7 +21,8 @@ interface SkinPickerProps {
  * Kolor akcentu na miniaturze to odcień zapamiętany dla tego stylu (plan motywów 3.2), a pod
  * opisem znaczki: schemat (jasny / ciemny / oba) i „Ruchome tło”.
  */
-const SCHEME_BADGE = { light: "Jasny", dark: "Ciemny" } as const;
+// Każdy styl ma oba schematy (4.1); najpierw ten, w którym powstał i który jest domyślny.
+const SCHEME_BADGE = { light: "Jasny + ciemny", dark: "Ciemny + jasny" } as const;
 
 export function SkinPicker({ value, onChange }: SkinPickerProps) {
   const accents = useAccentMap();
@@ -34,7 +35,7 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
           const p = meta.preview;
           const accent = ACCENT_META[s][accentFor(s, accents)].swatch;
           const scheme = SKIN_SCHEME[s];
-          const badges = [scheme ? SCHEME_BADGE[scheme] : "Jasny i ciemny", ...(meta.ambient ? ["Ruchome tło"] : [])];
+          const badges = [scheme ? SCHEME_BADGE[scheme] : SCHEME_BADGE.light, ...(meta.ambient ? ["Ruchome tło"] : [])];
           return (
             <motion.button
               key={s}

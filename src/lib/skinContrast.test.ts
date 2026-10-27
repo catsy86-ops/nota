@@ -50,16 +50,18 @@ const TEXT_PAIRS: [string, string][] = [
   ["destructive-ink", "background"], ["destructive-ink", "card"], ["destructive-ink", "muted"],
 ];
 
+/** Selektor drugiego schematu stylu (plan motywów 4.1). */
+const altSelector = (skin: Skin) => `html[data-skin="${skin}"]${SKIN_SCHEME[skin] === "dark" ? ":not(.dark)" : ".dark"}`;
+
 function resolveSkin(skin: Skin, scheme: "light" | "dark") {
   const base = tokens(block(index, scheme === "dark" ? ".dark" : ":root"));
   if (skin === "zeszyt") return base;
-  return { ...base, ...tokens(block(skins, `html[data-skin="${skin}"]`)) };
+  const own = { ...base, ...tokens(block(skins, `html[data-skin="${skin}"]`)) };
+  return scheme === SKIN_SCHEME[skin] ? own : { ...own, ...tokens(block(skins, altSelector(skin))) };
 }
 
-const cases: [Skin, "light" | "dark"][] = [
-  ["zeszyt", "light"], ["zeszyt", "dark"],
-  ...SKINS.filter((s) => s !== "zeszyt").map((s) => [s, SKIN_SCHEME[s] ?? "light"] as [Skin, "light" | "dark"]),
-];
+// Każdy styl w obu schematach (od 4.1).
+const cases: [Skin, "light" | "dark"][] = SKINS.flatMap((s) => [[s, "light"], [s, "dark"]] as [Skin, "light" | "dark"][]);
 
 function checkAll(t: Record<string, Oklch | number>, scheme: "light" | "dark") {
   for (const [fg, bg] of TEXT_PAIRS) {
@@ -101,9 +103,7 @@ describe("kontrast tokenów wszystkich stylów (WCAG AA)", () => {
 // Akcenty (plan motywów 1.1/1.5): każdy odcień z `accents.css` przechodzi te same progi co barwa stylu.
 const accentsCss = readFileSync(resolve(process.cwd(), "src/styles/accents.css"), "utf8");
 function accentBlock(skin: Skin, scheme: "light" | "dark", n: number): string | null {
-  const sel = skin === "zeszyt"
-    ? `html[data-skin="zeszyt"]${scheme === "dark" ? ".dark" : ":not(.dark)"}[data-accent="${n}"]`
-    : `html[data-skin="${skin}"][data-accent="${n}"]`;
+  const sel = `html[data-skin="${skin}"]${scheme === "dark" ? ".dark" : ":not(.dark)"}[data-accent="${n}"]`;
   const start = accentsCss.indexOf(`${sel} {`);
   return start < 0 ? null : accentsCss.slice(start, accentsCss.indexOf("}", start));
 }

@@ -39,6 +39,49 @@ html[data-skin="zorza"] {
   --elevation-up: 0 -8px 24px -12px hsl(230 60% 2% / 0.6);
   --glow-primary: 0 10px 30px -8px color-mix(in srgb, var(--primary) 60%, transparent);
 }
+
+/* Drugi schemat (plan motywów 4.1) — jasny. Świt: niebo blednie w róż i lawendę, zorza zostaje w akcentach.
+   Pełny komplet tokenów: blok nadpisuje ciemne wartości stylu (kontrakt w skinContract.test.ts). */
+html[data-skin="zorza"]:not(.dark) {
+  --background: oklch(0.9650 0.0140 300.00);
+  --foreground: oklch(0.2500 0.0500 270.00);
+  --card: oklch(0.9900 0.0060 300.00);
+  --card-foreground: oklch(0.2500 0.0500 270.00);
+  --popover: oklch(0.9900 0.0060 300.00);
+  --popover-foreground: oklch(0.2500 0.0500 270.00);
+  --primary: oklch(0.5000 0.1100 165.00);
+  /* Tekst „ink” (primary, success, warning) przyciemniony jak w jasnym Zeszycie. */
+  --ink-mix: 62%;
+  --primary-foreground: oklch(1.0000 0.0000 0.00);
+  --secondary: oklch(0.9150 0.0200 290.00);
+  --secondary-foreground: oklch(0.2500 0.0500 270.00);
+  --muted: oklch(0.9400 0.0150 290.00);
+  --muted-foreground: oklch(0.4800 0.0400 275.00);
+  --accent: oklch(0.4800 0.1600 295.00);
+  --accent-foreground: oklch(1.0000 0.0000 0.00);
+  --destructive: oklch(0.5786 0.2137 27.17);
+  --destructive-ink: oklch(0.5314 0.1989 27.39);
+  --destructive-foreground: oklch(1.0000 0.0000 0.00);
+  --border: oklch(0.8700 0.0250 290.00);
+  --input: oklch(0.6000 0.0500 280.00);
+  --ring: oklch(0.5000 0.1100 165.00);
+  --grid: oklch(0.6000 0.0500 270.00);
+  --margin: oklch(0.5500 0.1200 165.00);
+  --note-default: oklch(0.9900 0.0060 300.00);
+  --note-coral: oklch(0.9643 0.0182 37.66);
+  --note-peach: oklch(0.9716 0.0196 67.59);
+  --note-sand: oklch(0.9771 0.0311 91.65);
+  --note-mint: oklch(0.9676 0.0191 164.61);
+  --note-sage: oklch(0.9603 0.0105 174.27);
+  --note-sky: oklch(0.9677 0.0163 228.98);
+  --note-lavender: oklch(0.9614 0.0171 301.21);
+  --note-rose: oklch(0.9650 0.0155 355.05);
+  --elevation-1: 0 1px 0 hsl(260 40% 20% / 0.06), 0 3px 8px -4px hsl(260 40% 20% / 0.14);
+  --elevation-2: 0 1px 0 hsl(260 40% 20% / 0.06), 0 6px 14px -4px hsl(260 40% 20% / 0.15);
+  --elevation-3: 0 1px 0 hsl(260 40% 20% / 0.05), 0 14px 32px -8px hsl(260 40% 20% / 0.22);
+  --elevation-up: 0 -8px 24px -12px hsl(260 40% 20% / 0.18);
+  --glow-primary: 0 10px 26px -8px color-mix(in srgb, var(--primary) 45%, transparent);
+}
 /* Gwiazdy: trzy warstwy kropek w różnych odstępach — powtórzenie nie rzuca się w oczy. */
 html[data-skin="zorza"] .paper-grid::before {
   background-image:
@@ -98,3 +141,17 @@ html[data-skin="zorza"] .notki-glyph {
     linear-gradient(100deg, hsl(156 90% 66%), hsl(186 90% 68%) 50%, hsl(262 92% 80%));
 }
 html[data-skin="zorza"] .notki-logo { filter: drop-shadow(0 2px 14px color-mix(in srgb, var(--primary) 45%, transparent)); }
+
+/* Jasna Zorza (4.1): świt — bez gwiazd, wstęgi w różu, brzoskwini i lawendzie; logo ciemniejsze, żeby było widać na jasnym. */
+html[data-skin="zorza"]:not(.dark) .paper-grid::before { background-image: none; }
+html[data-skin="zorza"]:not(.dark) .paper-grid::after {
+  background:
+    radial-gradient(40% 30% at 25% 40%, hsl(340 85% 72% / 0.32), transparent 70%),
+    radial-gradient(35% 26% at 60% 30%, hsl(25 95% 70% / 0.28), transparent 70%),
+    radial-gradient(38% 30% at 82% 46%, hsl(268 75% 75% / 0.3), transparent 70%);
+}
+html[data-skin="zorza"]:not(.dark) .notki-glyph {
+  background-image:
+    linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.9) 50%, transparent 62%),
+    linear-gradient(100deg, hsl(160 70% 32%), hsl(190 70% 36%) 50%, hsl(262 55% 50%));
+}

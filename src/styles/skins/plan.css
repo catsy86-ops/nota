@@ -46,6 +46,50 @@ html[data-skin="plan"] {
   --glow-primary: 0 8px 26px -8px color-mix(in srgb, var(--primary) 55%, transparent);
 }
 
+/* Drugi schemat (plan motywów 4.1) — jasny. Odbitka ozalidowa za dnia: granatowe linie na bladoniebieskim papierze, ołówek w ciemnym bursztynie.
+   Pełny komplet tokenów: blok nadpisuje ciemne wartości stylu (kontrakt w skinContract.test.ts). */
+html[data-skin="plan"]:not(.dark) {
+  --warning-ink-base: oklch(0.7697 0.1645 70.61); /* = --warning jasnego motywu; ciemny Plan ma jaśniejszą bazę */
+  --background: oklch(0.9650 0.0120 240.00);
+  --foreground: oklch(0.2700 0.0700 255.00);
+  --card: oklch(0.9950 0.0040 240.00);
+  --card-foreground: oklch(0.2700 0.0700 255.00);
+  --popover: oklch(0.9950 0.0040 240.00);
+  --popover-foreground: oklch(0.2700 0.0700 255.00);
+  --primary: oklch(0.4700 0.1300 255.00);
+  /* Tekst „ink” (primary, success, warning) przyciemniony jak w jasnym Zeszycie. */
+  --ink-mix: 62%;
+  --primary-foreground: oklch(1.0000 0.0000 0.00);
+  --secondary: oklch(0.9200 0.0200 245.00);
+  --secondary-foreground: oklch(0.2700 0.0700 255.00);
+  --muted: oklch(0.9400 0.0160 245.00);
+  --muted-foreground: oklch(0.4700 0.0500 252.00);
+  --accent: oklch(0.4800 0.1100 65.00);
+  --accent-foreground: oklch(1.0000 0.0000 0.00);
+  --destructive: oklch(0.5786 0.2137 27.17);
+  --destructive-ink: oklch(0.5314 0.1989 27.39);
+  --destructive-foreground: oklch(1.0000 0.0000 0.00);
+  --border: oklch(0.8600 0.0300 245.00);
+  --input: oklch(0.5800 0.0600 250.00);
+  --ring: oklch(0.4700 0.1300 255.00);
+  --grid: oklch(0.4200 0.1100 255.00);
+  --margin: oklch(0.5800 0.1900 28.00);
+  --note-default: oklch(0.9950 0.0040 240.00);
+  --note-coral: oklch(0.9643 0.0182 37.66);
+  --note-peach: oklch(0.9716 0.0196 67.59);
+  --note-sand: oklch(0.9771 0.0311 91.65);
+  --note-mint: oklch(0.9676 0.0191 164.61);
+  --note-sage: oklch(0.9603 0.0105 174.27);
+  --note-sky: oklch(0.9677 0.0163 228.98);
+  --note-lavender: oklch(0.9614 0.0171 301.21);
+  --note-rose: oklch(0.9650 0.0155 355.05);
+  --elevation-1: 0 1px 0 hsl(220 40% 20% / 0.06), 0 3px 8px -4px hsl(220 40% 20% / 0.14);
+  --elevation-2: 0 1px 0 hsl(220 40% 20% / 0.06), 0 6px 14px -4px hsl(220 40% 20% / 0.15);
+  --elevation-3: 0 1px 0 hsl(220 40% 20% / 0.05), 0 14px 32px -8px hsl(220 40% 20% / 0.22);
+  --elevation-up: 0 -8px 24px -12px hsl(220 40% 20% / 0.18);
+  --glow-primary: 0 10px 26px -8px color-mix(in srgb, var(--primary) 45%, transparent);
+}
+
 /* Kalka: drobna kratka co 12 px, gruba co 60 px, winieta jak przy świetle lampy. */
 html[data-skin="plan"] .paper-grid::before {
   background-image:
@@ -87,4 +131,11 @@ html[data-skin="plan"] .note-card::before {
     linear-gradient(var(--tick), var(--tick)) bottom right / 10px 1px,
     linear-gradient(var(--tick), var(--tick)) bottom right / 1px 10px;
   background-repeat: no-repeat;
+}
+
+/* Jasny Plan (4.1): linie kalki biorą granat z `--grid`; logo bez białego początku gradientu (zniknąłby na papierze). */
+html[data-skin="plan"]:not(.dark) .notki-glyph {
+  background-image:
+    linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.9) 50%, transparent 62%),
+    linear-gradient(170deg, oklch(0.35 0.1 255), var(--primary) 70%);
 }

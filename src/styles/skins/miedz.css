@@ -42,6 +42,48 @@ html[data-skin="miedz"] {
   --elevation-up: 0 -8px 24px -12px hsl(22 30% 20% / 0.22);
   --glow-primary: 0 10px 26px -8px color-mix(in srgb, var(--primary) 60%, transparent);
 }
+
+/* Drugi schemat (plan motywów 4.1) — ciemny. Warsztat nocą: grafitowy beton, miedź i patyna w świetle lampy.
+   Pełny komplet tokenów (kontrakt w skinContract.test.ts). */
+html[data-skin="miedz"].dark {
+  --warning-ink-mix: 100%;
+  --background: oklch(0.2200 0.0080 55.00);
+  --foreground: oklch(0.9300 0.0100 75.00);
+  --card: oklch(0.2600 0.0100 55.00);
+  --card-foreground: oklch(0.9300 0.0100 75.00);
+  --popover: oklch(0.2550 0.0100 55.00);
+  --popover-foreground: oklch(0.9300 0.0100 75.00);
+  --primary: oklch(0.7200 0.1300 52.00);
+  --ink-mix: 100%;
+  --primary-foreground: oklch(0.2000 0.0200 50.00);
+  --secondary: oklch(0.3000 0.0120 55.00);
+  --secondary-foreground: oklch(0.9300 0.0100 75.00);
+  --muted: oklch(0.2800 0.0100 55.00);
+  --muted-foreground: oklch(0.7500 0.0150 70.00);
+  --accent: oklch(0.7400 0.0900 190.00);
+  --accent-foreground: oklch(0.2000 0.0200 200.00);
+  --destructive: oklch(0.5786 0.2137 27.17);
+  --destructive-foreground: oklch(1.0000 0.0000 0.00);
+  --border: oklch(0.3300 0.0120 55.00);
+  --input: oklch(0.5500 0.0200 60.00);
+  --ring: oklch(0.7200 0.1300 52.00);
+  --grid: oklch(0.4500 0.0100 60.00);
+  --margin: oklch(0.6800 0.1300 50.00);
+  --note-default: oklch(0.2600 0.0100 55.00);
+  --note-coral: oklch(0.2754 0.0225 37.60);
+  --note-peach: oklch(0.2873 0.0206 66.85);
+  --note-sand: oklch(0.2953 0.0197 91.80);
+  --note-mint: oklch(0.2826 0.0226 162.84);
+  --note-sage: oklch(0.2785 0.0140 173.04);
+  --note-sky: oklch(0.2843 0.0214 230.06);
+  --note-lavender: oklch(0.2692 0.0326 299.50);
+  --note-rose: oklch(0.2684 0.0267 357.32);
+  --elevation-1: 0 1px 2px hsl(20 30% 2% / 0.4);
+  --elevation-2: 0 4px 12px -2px hsl(20 30% 2% / 0.5), 0 0 0 1px hsl(30 40% 90% / 0.04);
+  --elevation-3: 0 12px 32px -8px hsl(20 30% 2% / 0.6), 0 0 0 1px hsl(30 40% 90% / 0.05);
+  --elevation-up: 0 -8px 24px -12px hsl(20 30% 2% / 0.55);
+  --glow-primary: 0 10px 28px -8px color-mix(in srgb, var(--primary) 50%, transparent);
+}
 /* Beton architektoniczny: ziarno, styki płyt szalunkowych i otwory po ściągach. */
 html[data-skin="miedz"] .paper-grid::before {
   background-image:
@@ -79,3 +121,12 @@ html[data-skin="miedz"] button.bg-primary {
   transition: background-position 700ms var(--ease-out);
 }
 html[data-skin="miedz"] button.bg-primary:hover { background-position: -20% 0, 0 0; }
+
+/* Ciemna Miedź (4.1): beton w nocy — styki płyt i otwory po ściągach ciemniejsze, bez jasnych obwódek. */
+html[data-skin="miedz"].dark .paper-grid::before {
+  background-image:
+    radial-gradient(circle at 60px 60px, hsl(25 10% 8% / 0.7) 0 3px, hsl(30 10% 40% / 0.35) 3.5px 4.5px, transparent 5px),
+    linear-gradient(hsl(30 6% 38% / 0.6) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(30 6% 38% / 0.6) 1px, transparent 1px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .7 0 0 0 0 .66 0 0 0 0 .6 0 0 0 .35 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}

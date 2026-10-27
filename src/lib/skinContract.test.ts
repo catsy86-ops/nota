@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { SKINS, SKIN_SCHEME } from "@/lib/skins";
+import { SKINS, SKIN_SCHEME, type Skin } from "@/lib/skins";
 
 // Kontrakt tokenów skórek (plan motywów 2026-10-27, 0.2). Skórka, która nie zdefiniuje tokenu,
 // cicho bierze wartość Zeszytu (`:root` / `.dark` w index.css) — np. jasny kolor notatki na granacie.
@@ -47,8 +47,11 @@ function tokensOf(selector: RegExp): Set<string> {
   return found;
 }
 
-const escape = (s: string) => s.replace(/[[\]"]/g, (c) => `\\${c}`);
+const escape = (s: string) => s.replace(/[[\]"().]/g, (c) => `\\${c}`);
 const skinSelector = (skin: string) => new RegExp(escape(`html[data-skin="${skin}"]`));
+/** Drugi schemat stylu (plan motywów 4.1): jasny wariant ciemnego stylu albo odwrotnie. */
+const altSelector = (skin: Skin) =>
+  new RegExp(escape(`html[data-skin="${skin}"]${SKIN_SCHEME[skin] === "dark" ? ":not(.dark)" : ".dark"}`));
 
 describe("kontrakt tokenów skórek", () => {
   for (const skin of SKINS) {
@@ -63,6 +66,12 @@ describe("kontrakt tokenów skórek", () => {
       }
       expect(MOTION_TOKENS.filter((t) => !own.has(t)), "brakująca sygnatura ruchu").toEqual([]);
     });
+    if (skin !== "zeszyt") {
+      it(`${skin}: drugi schemat ma pełny komplet tokenów`, () => {
+        const alt = tokensOf(altSelector(skin));
+        expect(SKIN_TOKENS.filter((t) => !alt.has(t)), "brakujące tokeny drugiego schematu").toEqual([]);
+      });
+    }
   }
 
   // Dwie `@keyframes` o tej samej nazwie: wygrywa późniejsza i cicho psuje pierwszą animację

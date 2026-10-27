@@ -40,6 +40,49 @@ html[data-skin="matrix"] {
   --elevation-up: 0 -8px 24px -12px hsl(120 100% 2% / 0.7);
   --glow-primary: 0 10px 30px -8px hsl(125 100% 55% / 0.6);
 }
+
+/* Drugi schemat (plan motywów 4.1) — jasny. Wydruk z drukarki igłowej: papier w zielone pasy z perforacją, czarny tusz.
+   Pełny komplet tokenów: blok nadpisuje ciemne wartości stylu (kontrakt w skinContract.test.ts). */
+html[data-skin="matrix"]:not(.dark) {
+  --background: oklch(0.9750 0.0120 140.00);
+  --foreground: oklch(0.2200 0.0200 150.00);
+  --card: oklch(0.9950 0.0050 140.00);
+  --card-foreground: oklch(0.2200 0.0200 150.00);
+  --popover: oklch(0.9950 0.0050 140.00);
+  --popover-foreground: oklch(0.2200 0.0200 150.00);
+  --primary: oklch(0.4700 0.1300 150.00);
+  /* Tekst „ink” (primary, success, warning) przyciemniony jak w jasnym Zeszycie. */
+  --ink-mix: 62%;
+  --primary-foreground: oklch(1.0000 0.0000 0.00);
+  --secondary: oklch(0.9200 0.0250 145.00);
+  --secondary-foreground: oklch(0.2200 0.0200 150.00);
+  --muted: oklch(0.9450 0.0200 145.00);
+  --muted-foreground: oklch(0.4600 0.0500 150.00);
+  --accent: oklch(0.4500 0.1000 165.00);
+  --accent-foreground: oklch(1.0000 0.0000 0.00);
+  --destructive: oklch(0.5786 0.2137 27.17);
+  --destructive-ink: oklch(0.5314 0.1989 27.39);
+  --destructive-foreground: oklch(1.0000 0.0000 0.00);
+  --border: oklch(0.8600 0.0400 145.00);
+  --input: oklch(0.5800 0.0700 150.00);
+  --ring: oklch(0.4700 0.1300 150.00);
+  --grid: oklch(0.6000 0.1200 145.00);
+  --margin: oklch(0.5000 0.1500 145.00);
+  --note-default: oklch(0.9950 0.0050 140.00);
+  --note-coral: oklch(0.9643 0.0182 37.66);
+  --note-peach: oklch(0.9716 0.0196 67.59);
+  --note-sand: oklch(0.9771 0.0311 91.65);
+  --note-mint: oklch(0.9676 0.0191 164.61);
+  --note-sage: oklch(0.9603 0.0105 174.27);
+  --note-sky: oklch(0.9677 0.0163 228.98);
+  --note-lavender: oklch(0.9614 0.0171 301.21);
+  --note-rose: oklch(0.9650 0.0155 355.05);
+  --elevation-1: 0 1px 0 hsl(140 40% 20% / 0.06), 0 3px 8px -4px hsl(140 40% 20% / 0.14);
+  --elevation-2: 0 1px 0 hsl(140 40% 20% / 0.06), 0 6px 14px -4px hsl(140 40% 20% / 0.15);
+  --elevation-3: 0 1px 0 hsl(140 40% 20% / 0.05), 0 14px 32px -8px hsl(140 40% 20% / 0.22);
+  --elevation-up: 0 -8px 24px -12px hsl(140 40% 20% / 0.18);
+  --glow-primary: 0 10px 26px -8px color-mix(in srgb, var(--primary) 45%, transparent);
+}
 /* Siatka papieru znika — tło to deszcz z płótna. */
 html[data-skin="matrix"] .paper-grid::before { display: none; }
 /* Deszcz: przygaszony, schodzi pod pasek nagłówka i „Zapisz notatkę” (górne ~260 px gaśnie),
@@ -69,3 +112,21 @@ html[data-skin="matrix"] .notki-logo { filter: drop-shadow(0 0 12px hsl(125 100%
     background-color: color-mix(in srgb, var(--card) 86%, transparent);
   }
 }
+
+/* Jasna Matryca (4.1): wydruk z drukarki igłowej. Płótna deszczu nie ma (PaperBackdrop rysuje je tylko w ciemnym
+   schemacie); tło to papier w zielone pasy co 24 px z otworami perforacji po bokach. */
+html[data-skin="matrix"]:not(.dark) .paper-grid::before {
+  display: block;
+  background-image:
+    radial-gradient(circle at 8px 12px, hsl(140 12% 82%) 0 3.5px, transparent 4px),
+    radial-gradient(circle at calc(100% - 8px) 12px, hsl(140 12% 82%) 0 3.5px, transparent 4px),
+    repeating-linear-gradient(transparent 0 24px, hsl(130 45% 86% / 0.4) 24px 48px);
+  background-size: 100% 24px, 100% 24px, auto;
+  background-repeat: repeat-y, repeat-y, repeat;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+html[data-skin="matrix"]:not(.dark) .paper-grid::after { background: none; }
+html[data-skin="matrix"]:not(.dark) h1,
+html[data-skin="matrix"]:not(.dark) h2 { text-shadow: none; }
+html[data-skin="matrix"]:not(.dark) .notki-logo { filter: drop-shadow(0 0 6px hsl(140 60% 35% / 0.35)); }
