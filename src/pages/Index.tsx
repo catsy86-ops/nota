@@ -1,5 +1,5 @@
 import { pulseSkinSignal } from "@/lib/skinSignal";
-import { useState, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, lazy, Suspense } from "react";
+import { Activity, useState, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { flushSync } from "react-dom";
 import { isMotionReduced } from "@/hooks/useMotionPref";
 import { m as motion, AnimatePresence } from "framer-motion";
@@ -188,6 +188,13 @@ const Index = () => {
   // Pole dostaje każdy znak od razu; filtrowanie kart i adres idą odroczonym
   // renderem, który React przerywa przy kolejnym znaku — pisanie nie czeka na 150 kart.
   const deferredSearch = useDeferredValue(search);
+  // Plan 3.5: Grafik i Praca zostają zamontowane po wyjściu (`Activity` hidden), więc powrót
+  // zachowuje ich stan i nie przerysowuje. Tylko te dwa działy — pamięć na telefonie.
+  const [keptViews, setKeptViews] = useState<View[]>([]);
+  useEffect(() => {
+    if (view !== "shifts" && view !== "study") return;
+    setKeptViews((prev) => (prev.includes(view) ? prev : [...prev, view]));
+  }, [view]);
   const setRouteSearch = route.setSearch;
   useEffect(() => {
     if (deferredSearch !== parseViewRoute(window.location.pathname, window.location.search).search) setRouteSearch(deferredSearch);
@@ -974,13 +981,15 @@ const Index = () => {
             </ViewErrorBoundary>
           )}
 
-          {view === "study" && (
-            <ViewErrorBoundary name="Praca">
-              <Suspense fallback={<ViewSkeleton view="study" />}>
-                <StudyView />
-              </Suspense>
-            </ViewErrorBoundary>
-          )}
+          <Activity mode={view === "study" ? "visible" : "hidden"}>
+            {(view === "study" || keptViews.includes("study")) && (
+              <ViewErrorBoundary name="Praca">
+                <Suspense fallback={<ViewSkeleton view="study" />}>
+                  <StudyView />
+                </Suspense>
+              </ViewErrorBoundary>
+            )}
+          </Activity>
 
           {view === "cwiczenia" && (
             <ViewErrorBoundary name="Ćwiczenia">
@@ -998,13 +1007,15 @@ const Index = () => {
             </ViewErrorBoundary>
           )}
 
-          {view === "shifts" && (
-            <ViewErrorBoundary name="Grafik">
-              <Suspense fallback={<ViewSkeleton view="shifts" />}>
-                <ShiftsView notes={[...notes, ...archivedNotes]} />
-              </Suspense>
-            </ViewErrorBoundary>
-          )}
+          <Activity mode={view === "shifts" ? "visible" : "hidden"}>
+            {(view === "shifts" || keptViews.includes("shifts")) && (
+              <ViewErrorBoundary name="Grafik">
+                <Suspense fallback={<ViewSkeleton view="shifts" />}>
+                  <ShiftsView notes={[...notes, ...archivedNotes]} />
+                </Suspense>
+              </ViewErrorBoundary>
+            )}
+          </Activity>
 
           {/* Liczba wyników dla czytnika ekranu — lista zmienia się bez żadnego komunikatu. */}
           <p role="status" aria-live="polite" className="sr-only">
