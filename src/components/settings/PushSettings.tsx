@@ -1,3 +1,4 @@
+import { useDelayedFlag } from "@/hooks/useDelayedFlag";
 import { useState } from "react";
 import { BellRing, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -24,6 +25,9 @@ export function PushSettings() {
   const prefs = pushPrefs.use();
   const [server, setServer] = useState(prefs.server);
   const [busy, setBusy] = useState<null | "on" | "off" | "test">(null);
+  // Wskaźnik dopiero po 300 ms (plan 3.3): szybkie włączenie/wyłączenie bez mignięcia.
+  const spinOn = useDelayedFlag(busy === "on");
+  const spinOff = useDelayedFlag(busy === "off");
   const support = pushSupport();
 
   const run = async (kind: "on" | "off" | "test", fn: () => Promise<void>, done: string) => {
@@ -87,11 +91,11 @@ export function PushSettings() {
               {prefs.enabled ? (
                 <Button type="button" variant="outline" className="pressable shrink-0" disabled={busy !== null}
                   onClick={() => void run("off", disablePush, "Powiadomienia przy zamkniętej aplikacji wyłączone")}>
-                  {busy === "off" && <Loader2 className="w-4 h-4 animate-spin" />}Wyłącz
+                  {spinOff && <Loader2 className="w-4 h-4 animate-spin" />}Wyłącz
                 </Button>
               ) : (
                 <Button type="button" className="pressable shrink-0" disabled={busy !== null || !server.trim()} onClick={onEnable}>
-                  {busy === "on" && <Loader2 className="w-4 h-4 animate-spin" />}Włącz
+                  {spinOn && <Loader2 className="w-4 h-4 animate-spin" />}Włącz
                 </Button>
               )}
             </div>
