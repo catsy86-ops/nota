@@ -1,14 +1,15 @@
 import { readFileSync } from "node:fs";
+import { readSkinCss } from "@/test/skinCss";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { SKIN_SCHEME, type Skin } from "@/lib/skins";
+import { SKINS, SKIN_SCHEME, type Skin } from "@/lib/skins";
 import { oklchToRgb, parseOklch, type Oklch } from "@/test/oklch";
 
-// Kontrast tokenów każdego stylu (WCAG AA), liczony z `index.css` i `styles/skins.css` bez przeglądarki.
+// Kontrast tokenów każdego stylu (WCAG AA), liczony z `index.css` i `styles/skins/*.css` bez przeglądarki.
 // Zeszyt jest sprawdzany w obu motywach, pozostałe w swoim jedynym schemacie.
 
 const index = readFileSync(resolve(process.cwd(), "src/index.css"), "utf8");
-const skins = readFileSync(resolve(process.cwd(), "src/styles/skins.css"), "utf8");
+const skins = readSkinCss();
 
 function block(src: string, selector: string): string {
   const start = src.indexOf(`${selector} {`);
@@ -55,7 +56,7 @@ function resolveSkin(skin: Skin, scheme: "light" | "dark") {
 
 const cases: [Skin, "light" | "dark"][] = [
   ["zeszyt", "light"], ["zeszyt", "dark"],
-  ...(["plan", "neon", "zorza", "miedz", "matrix", "hydraulika"] as Skin[]).map((s) => [s, SKIN_SCHEME[s] ?? "light"] as [Skin, "light" | "dark"]),
+  ...SKINS.filter((s) => s !== "zeszyt").map((s) => [s, SKIN_SCHEME[s] ?? "light"] as [Skin, "light" | "dark"]),
 ];
 
 describe("kontrast tokenów wszystkich stylów (WCAG AA)", () => {

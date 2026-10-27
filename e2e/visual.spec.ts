@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { seedNotes } from "./helpers";
+import { SKINS } from "../src/lib/skinList";
 
 // Zrzuty referencyjne głównych widoków (plan UI/UX 2026-10-25, Faza 0.1): 5 widoków × 7 stylów × 2 rozmiary.
 // Tag @visual — poza codziennym `test:e2e`, uruchamia `npm run test:visual` (playwright.visual.config.ts).
@@ -19,7 +20,6 @@ const SIZES = [
   { name: "telefon", viewport: { width: 390, height: 844 }, mobile: true },
 ] as const;
 
-const SKINS = ["zeszyt", "plan", "neon", "zorza", "miedz", "matrix", "hydraulika"] as const;
 
 const FIXED_NOW = new Date("2026-10-14T12:00:00");
 const T = FIXED_NOW.getTime();

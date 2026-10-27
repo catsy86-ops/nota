@@ -27,11 +27,11 @@
 @layer base {
   /* Motywy techniczne: cieńsze ikony lucide (plan 1.6). Reszta zostaje przy domyślnej grubości. */
   html[data-skin="plan"],
-  html[data-skin="matryca"] {
+  html[data-skin="matrix"] {
     --icon-stroke: 1.5;
   }
   html[data-skin="plan"] .lucide,
-  html[data-skin="matryca"] .lucide {
+  html[data-skin="matrix"] .lucide {
     stroke-width: var(--icon-stroke);
   }
 

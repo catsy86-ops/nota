@@ -1,6 +1,6 @@
 /**
  * Jednorazowy sygnał stylu (plan rozbudowy, Faza 1b): „zapisano”. Ustawia
- * `html[data-sig]` na chwilę, a CSS w `skins.css` odpala sygnał właściwego stylu
+ * `html[data-sig]` na chwilę, a CSS w `styles/skins/signatures.css` odpala sygnał właściwego stylu
  * (Miedź — para, Hydraulika — fala). Po czasie atrybut znika, więc kolejny zapis
  * odpala animację od nowa (wymuszony przerysunek między usunięciem a dodaniem).
  */

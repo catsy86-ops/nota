@@ -1,0 +1,91 @@
+/* ─────────────────────────── NEON — po fajrancie ─────────────────────────── */
+html[data-skin="neon"] {
+  --background: oklch(0.1590 0.0299 315.33);
+  --foreground: oklch(0.9626 0.0195 320.56);
+  --card: oklch(0.2114 0.0434 315.21);
+  --card-foreground: oklch(0.9626 0.0195 320.56);
+  --popover: oklch(0.2114 0.0434 315.21);
+  --popover-foreground: oklch(0.9626 0.0195 320.56);
+  --primary: oklch(0.7149 0.2438 340.35);
+  --ink-mix: 100%;
+  --primary-foreground: oklch(0.1788 0.0538 317.01);
+  --secondary: oklch(0.2717 0.0527 315.27);
+  --secondary-foreground: oklch(0.9626 0.0195 320.56);
+  --muted: oklch(0.2421 0.0476 315.25);
+  --muted-foreground: oklch(0.7984 0.0448 320.62);
+  --accent: oklch(0.8653 0.1366 206.34);
+  --accent-foreground: oklch(0.1788 0.0538 317.01);
+  --destructive: oklch(0.5857 0.2336 24.86);
+  --destructive-foreground: oklch(1.0000 0.0000 0.00);
+  --border: oklch(0.3138 0.0607 319.43);
+  --input: oklch(0.5926 0.1322 324.65);
+  --ring: oklch(0.8653 0.1366 206.34);
+  --grid: oklch(0.6484 0.1386 320.76);
+  --margin: oklch(0.8576 0.1415 207.06);
+
+  --note-default: oklch(0.2114 0.0434 315.21);
+  --note-coral: oklch(0.2490 0.0247 26.10);
+  --note-peach: oklch(0.2505 0.0173 55.47);
+  --note-sand: oklch(0.2500 0.0157 93.12);
+  --note-mint: oklch(0.2411 0.0206 171.78);
+  --note-sage: oklch(0.2483 0.0141 186.29);
+  --note-sky: oklch(0.2577 0.0235 222.78);
+  --note-lavender: oklch(0.2519 0.0465 299.97);
+  --note-rose: oklch(0.2568 0.0446 345.65);
+
+  --elevation-1: 0 1px 2px hsl(280 60% 2% / 0.6);
+  --elevation-2: 0 6px 16px -4px hsl(280 60% 2% / 0.7), 0 0 0 1px hsl(300 100% 80% / 0.05);
+  --elevation-3: 0 14px 36px -10px hsl(280 60% 2% / 0.8), 0 0 0 1px color-mix(in srgb, var(--primary) 25%, transparent), 0 0 24px -6px color-mix(in srgb, var(--primary) 35%, transparent);
+  --elevation-up: 0 -8px 24px -12px hsl(280 60% 2% / 0.7);
+  --glow-primary: 0 0 0 1px color-mix(in srgb, var(--primary) 60%, transparent), 0 0 18px color-mix(in srgb, var(--primary) 55%, transparent), 0 0 42px -6px color-mix(in srgb, var(--primary) 50%, transparent);
+}
+/* Ceglana ściana w półmroku i dwie plamy światła z neonów nad nią. */
+html[data-skin="neon"] .paper-grid::before {
+  background-image:
+    radial-gradient(60% 45% at 12% 0%, hsl(316 100% 60% / 0.16), transparent 70%),
+    radial-gradient(55% 40% at 92% 6%, hsl(186 100% 55% / 0.12), transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='36'%3E%3Cg fill='none' stroke='%23d9a6ff' stroke-opacity='.07'%3E%3Cpath d='M0 .5h72M0 18.5h72M.5 0v18M36.5 18v18'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 100% 100%, 100% 100%, 72px 36px;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+html[data-skin="neon"] .paper-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 80% at 50% 120%, hsl(282 60% 2% / 0.8), transparent 60%);
+}
+/* Tylko nagłówki widoków i okien: Unbounded jest bardzo szeroki i ucinałby tytuły kafli na telefonie. */
+html[data-skin="neon"] h1,
+html[data-skin="neon"] h2 {
+  font-family: 'Unbounded Variable', 'Plus Jakarta Sans Variable', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+/* Nagłówki widoków świecą jak rurka. */
+html[data-skin="neon"] h1 {
+  text-shadow: 0 0 1px color-mix(in srgb, var(--foreground) 90%, transparent), 0 0 12px color-mix(in srgb, var(--primary) 55%, transparent), 0 0 30px color-mix(in srgb, var(--primary) 30%, transparent);
+}
+/* Logo „zapala się” z mrugnięciem przy każdym przejściu na Neon. */
+html[data-skin="neon"] .notki-logo {
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--primary) 90%, transparent)) drop-shadow(0 0 18px color-mix(in srgb, var(--primary) 55%, transparent));
+  animation: neon-ignite 1.4s steps(1, end) 1 both;
+}
+html[data-skin="neon"] .notki-glyph {
+  background-image:
+    linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.9) 50%, transparent 62%),
+    linear-gradient(170deg, hsl(320 100% 88%), var(--primary) 55%, hsl(300 90% 55%));
+}
+html[data-motion="reduced"][data-skin="neon"] .notki-logo { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="neon"] .notki-logo { animation: none; }
+}
+@keyframes neon-ignite {
+  0% { opacity: 0.15; }
+  12% { opacity: 1; }
+  18% { opacity: 0.25; }
+  30% { opacity: 1; }
+  36% { opacity: 0.5; }
+  44%, 100% { opacity: 1; }
+}
+html[data-skin="neon"] .note-card:hover { border-color: color-mix(in srgb, var(--primary) 45%, transparent); }

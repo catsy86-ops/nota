@@ -1,6 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { test, expect, type Page } from "@playwright/test";
 import { seedNotes } from "./helpers";
+import { SKINS as ALL_SKINS } from "../src/lib/skinList";
 
 // Automatyczny audyt dostępności (axe-core, WCAG 2.2 AA) głównych widoków
 // w obu motywach, na telefonie i komputerze. Zapadka: znane naruszenia są
@@ -72,7 +73,8 @@ for (const size of SIZES) {
 
 // Style (Ustawienia → Wygląd → Styl): każdy ma własne tokeny kolorów — ten sam audyt na wszystkich
 // widokach (plan UI/UX 0.2: wcześniej tylko Notatki, Kalendarz i Grafik).
-const SKINS = ["plan", "neon", "zorza", "miedz", "matrix", "hydraulika"] as const;
+// Zeszyt ma osobny audyt wyżej (oba schematy), tu pozostałe style z `skinList.ts`.
+const SKINS = ALL_SKINS.filter((s) => s !== "zeszyt");
 const SKIN_VIEWS = VIEWS;
 
 for (const size of SIZES) {

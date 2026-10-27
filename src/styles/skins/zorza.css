@@ -1,0 +1,100 @@
+/* ─────────────────────────── ZORZA — nocne niebo ─────────────────────────── */
+html[data-skin="zorza"] {
+  --background: oklch(0.1513 0.0280 271.31);
+  --foreground: oklch(0.9672 0.0087 247.92);
+  --card: oklch(0.2047 0.0354 270.20);
+  --card-foreground: oklch(0.9672 0.0087 247.92);
+  --popover: oklch(0.2047 0.0354 270.20);
+  --popover-foreground: oklch(0.9672 0.0087 247.92);
+  --primary: oklch(0.8541 0.1798 160.51);
+  --ink-mix: 100%;
+  --primary-foreground: oklch(0.1901 0.0286 231.61);
+  --secondary: oklch(0.2661 0.0384 270.67);
+  --secondary-foreground: oklch(0.9672 0.0087 247.92);
+  --muted: oklch(0.2370 0.0348 270.63);
+  --muted-foreground: oklch(0.7966 0.0298 264.39);
+  --accent: oklch(0.7628 0.1354 300.09);
+  --accent-foreground: oklch(0.1648 0.0431 272.15);
+  --destructive: oklch(0.5836 0.2289 23.81);
+  --destructive-foreground: oklch(1.0000 0.0000 0.00);
+  --border: oklch(0.3021 0.0460 270.54);
+  --input: oklch(0.5749 0.0727 266.27);
+  --ring: oklch(0.8541 0.1798 160.51);
+  --grid: oklch(0.9166 0.0266 248.12);
+  --margin: oklch(0.8195 0.1820 159.17);
+
+  --note-default: oklch(0.2047 0.0354 270.20);
+  --note-coral: oklch(0.2502 0.0204 25.86);
+  --note-peach: oklch(0.2510 0.0141 59.48);
+  --note-sand: oklch(0.2485 0.0141 93.09);
+  --note-mint: oklch(0.2425 0.0221 171.55);
+  --note-sage: oklch(0.2484 0.0140 188.75);
+  --note-sky: oklch(0.2536 0.0235 230.52);
+  --note-lavender: oklch(0.2536 0.0401 297.26);
+  --note-rose: oklch(0.2482 0.0306 348.15);
+
+  --elevation-1: 0 1px 2px hsl(230 60% 2% / 0.5), inset 0 1px 0 hsl(210 80% 90% / 0.05);
+  --elevation-2: 0 8px 20px -6px hsl(230 60% 2% / 0.6), inset 0 1px 0 hsl(210 80% 90% / 0.06);
+  --elevation-3: 0 18px 40px -12px hsl(230 60% 2% / 0.7), 0 0 30px -10px color-mix(in srgb, var(--primary) 35%, transparent), inset 0 1px 0 hsl(210 80% 90% / 0.08);
+  --elevation-up: 0 -8px 24px -12px hsl(230 60% 2% / 0.6);
+  --glow-primary: 0 10px 30px -8px color-mix(in srgb, var(--primary) 60%, transparent);
+}
+/* Gwiazdy: trzy warstwy kropek w różnych odstępach — powtórzenie nie rzuca się w oczy. */
+html[data-skin="zorza"] .paper-grid::before {
+  background-image:
+    radial-gradient(1px 1px at 20px 30px, hsl(210 80% 96% / 0.7), transparent),
+    radial-gradient(1px 1px at 90px 120px, hsl(210 80% 96% / 0.5), transparent),
+    radial-gradient(1.5px 1.5px at 160px 60px, hsl(50 90% 90% / 0.6), transparent),
+    radial-gradient(1px 1px at 230px 190px, hsl(210 80% 96% / 0.45), transparent),
+    radial-gradient(1px 1px at 300px 20px, hsl(210 80% 96% / 0.55), transparent);
+  background-size: 170px 170px, 230px 230px, 310px 310px, 270px 270px, 390px 390px;
+  -webkit-mask-image: linear-gradient(#000 0%, rgb(0 0 0 / 0.5) 60%, transparent 100%);
+  mask-image: linear-gradient(#000 0%, rgb(0 0 0 / 0.5) 60%, transparent 100%);
+}
+/* Zorza: trzy rozmyte wstęgi, dryfują powoli (tylko transform — bez przeliczania układu). */
+html[data-skin="zorza"] .paper-grid::after {
+  content: "";
+  position: absolute;
+  inset: -20% -10% 30% -10%;
+  background:
+    radial-gradient(40% 30% at 25% 40%, hsl(156 95% 55% / 0.32), transparent 70%),
+    radial-gradient(35% 26% at 60% 30%, hsl(186 95% 55% / 0.24), transparent 70%),
+    radial-gradient(38% 30% at 82% 46%, hsl(268 90% 65% / 0.26), transparent 70%);
+  filter: blur(36px);
+  transform-origin: 50% 30%;
+  animation: aurora-drift 28s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes aurora-drift {
+  0% { transform: translate3d(-4%, 0, 0) rotate(-3deg) scale(1); }
+  50% { transform: translate3d(3%, 3%, 0) rotate(2deg) scale(1.08); }
+  100% { transform: translate3d(5%, -2%, 0) rotate(4deg) scale(0.96); }
+}
+/* Telefon: bez rozmycia i dryfu zorzy — to największy koszt GPU w tle. Gradient zostaje statyczny. */
+@media (pointer: coarse) {
+  html[data-skin="zorza"] .paper-grid::after { filter: none; animation: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="zorza"] .paper-grid::after { animation: none; }
+}
+html[data-motion="reduced"][data-skin="zorza"] .paper-grid::after { animation: none; }
+/* Karta jak szyba: na komputerze prześwituje zorza; na telefonie bez rozmycia (koszt GPU). */
+@media (pointer: fine) {
+  html[data-skin="zorza"] .note-card[data-note-color="default"] {
+    background-color: color-mix(in srgb, var(--card) 70%, transparent);
+    backdrop-filter: blur(14px) saturate(140%);
+  }
+}
+html[data-skin="zorza"] h1,
+html[data-skin="zorza"] h2 {
+  font-family: 'Fraunces Variable', Georgia, serif;
+  font-variation-settings: "SOFT" 100, "WONK" 0;
+  letter-spacing: -0.005em;
+}
+/* Logo w barwach zorzy. */
+html[data-skin="zorza"] .notki-glyph {
+  background-image:
+    linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.9) 50%, transparent 62%),
+    linear-gradient(100deg, hsl(156 90% 66%), hsl(186 90% 68%) 50%, hsl(262 92% 80%));
+}
+html[data-skin="zorza"] .notki-logo { filter: drop-shadow(0 2px 14px color-mix(in srgb, var(--primary) 45%, transparent)); }

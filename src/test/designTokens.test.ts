@@ -6,6 +6,9 @@ import { describe, expect, it } from "vitest";
 // które Faza 1 ma zastąpić tokenami — promienie `rounded-md/lg/xl/3xl`, cienie `shadow-md/lg/2xl`
 // i warstwy `z-10…z-70` wpisywane ręcznie. Progi to stan z dnia wprowadzenia testu.
 // Faza 1 obniża je w miarę codemodów; liczba nie może rosnąć, więc nowy kod bierze tokeny.
+// 2026-10-27 (plan motywów 0.1): progi = stan po codemodach. Zostało 11 `rounded-sm` — elementy
+// wewnątrz kontrolek (pozycje menu, zakładki, checkbox, pieczątka), liczone od `--radius` w
+// tailwind.config.ts, więc idą za kształtem motywu; nowe miejsca biorą `rounded-control`.
 
 const SRC = resolve(process.cwd(), "src");
 
@@ -25,9 +28,9 @@ function count(pattern: RegExp): number {
 
 const LIMITS = {
   // Lookbehind/lookahead, żeby `rounded-lg` nie łapało np. `my-rounded-lg-x`, a `z-10` nie łapało `fz-10`.
-  rawRadius: { pattern: /(?<![\w-])rounded-(?:lg|xl|md|sm|3xl)(?![\w-])/g, max: 404, token: "rounded-field / rounded-card / rounded-control" },
-  rawShadow: { pattern: /(?<![\w-])shadow-(?:md|lg|2xl)(?![\w-])/g, max: 24, token: "shadow-elevation-1..3" },
-  rawZIndex: { pattern: /(?<![\w-])z-\d+(?![\w-])/g, max: 46, token: "z-sticky / z-dropdown / z-overlay / z-modal / z-toast" },
+  rawRadius: { pattern: /(?<![\w-])rounded-(?:lg|xl|md|sm|3xl)(?![\w-])/g, max: 11, token: "rounded-field / rounded-card / rounded-control" },
+  rawShadow: { pattern: /(?<![\w-])shadow-(?:md|lg|2xl)(?![\w-])/g, max: 0, token: "shadow-elevation-1..3" },
+  rawZIndex: { pattern: /(?<![\w-])z-\d+(?![\w-])/g, max: 0, token: "z-sticky / z-dropdown / z-overlay / z-modal / z-toast" },
 } as const;
 
 describe("tokeny projektowe — surowe klasy nie przybywają", () => {

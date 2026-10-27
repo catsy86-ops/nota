@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { contrastRatio } from "./color";
 import { oklchToHex, parseOklch } from "@/test/oklch";
+import { readSkinCss } from "@/test/skinCss";
 
 /** Wartość tokenu `oklch(...)` z bloku CSS, na hex; `null`, gdy go nie ma. */
 function token(block: string, name: string): string | null {
@@ -10,10 +11,10 @@ function token(block: string, name: string): string | null {
   return c ? oklchToHex(c) : null;
 }
 
-/** Pary (karta, tekst) dla każdego stylu z `skins.css` i motywu bazowego z `index.css`. */
+/** Pary (karta, tekst) dla każdego stylu z `styles/skins/*.css` i motywu bazowego z `index.css`. */
 function surfaces(): Record<string, { card: string; ink: string }> {
   const out: Record<string, { card: string; ink: string }> = {};
-  for (const m of readFileSync("src/styles/skins.css", "utf8").matchAll(/html\[data-skin="(\w+)"\]\s*\{([^}]*)\}/g)) {
+  for (const m of readSkinCss().matchAll(/html\[data-skin="(\w+)"\]\s*\{([^}]*)\}/g)) {
     const card = token(m[2], "--card");
     const ink = token(m[2], "--foreground");
     if (card && ink && !(m[1] in out)) out[m[1]] = { card, ink };

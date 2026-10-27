@@ -1,0 +1,71 @@
+/* ─────────────────────── MATRYCA — zielony deszcz znaków na czarnym tle ─────────────────────── */
+/* Deszcz rysuje płótno (`components/skins/MatrixRain.tsx`, ładowane leniwie). Tu tylko kolory i wyciszenie siatki. */
+html[data-skin="matrix"] {
+  --background: oklch(0.1223 0.0257 143.81);
+  --foreground: oklch(0.9072 0.0488 145.16);
+  --card: oklch(0.1551 0.0284 144.05);
+  --card-foreground: oklch(0.9072 0.0488 145.16);
+  --popover: oklch(0.1551 0.0284 144.05);
+  --popover-foreground: oklch(0.9072 0.0488 145.16);
+  --primary: oklch(0.8686 0.2845 143.15);
+  --ink-mix: 100%;
+  --primary-foreground: oklch(0.1673 0.0569 142.50);
+  --secondary: oklch(0.2222 0.0425 143.98);
+  --secondary-foreground: oklch(0.9072 0.0488 145.16);
+  --muted: oklch(0.2089 0.0385 144.04);
+  --muted-foreground: oklch(0.7696 0.0636 144.93);
+  --accent: oklch(0.8829 0.2076 154.88);
+  --accent-foreground: oklch(0.1673 0.0569 142.50);
+  --destructive: oklch(0.5833 0.2325 28.60);
+  --destructive-foreground: oklch(1.0000 0.0000 0.00);
+  --border: oklch(0.2821 0.0692 143.47);
+  --input: oklch(0.5893 0.1065 144.08);
+  --ring: oklch(0.8686 0.2845 143.15);
+  --grid: oklch(0.7806 0.1966 143.40);
+  --margin: oklch(0.8667 0.2922 142.77);
+
+  --note-default: oklch(0.1705 0.0327 143.98);
+  --note-coral: oklch(0.1822 0.0211 19.30);
+  --note-peach: oklch(0.1863 0.0137 66.82);
+  --note-sand: oklch(0.1940 0.0144 98.08);
+  --note-mint: oklch(0.1817 0.0193 161.94);
+  --note-sage: oklch(0.1784 0.0128 172.29);
+  --note-sky: oklch(0.1840 0.0131 229.96);
+  --note-lavender: oklch(0.1896 0.0226 299.53);
+  --note-rose: oklch(0.1860 0.0188 347.63);
+
+  --elevation-1: 0 1px 2px hsl(120 100% 2% / 0.6), inset 0 1px 0 hsl(125 100% 60% / 0.06);
+  --elevation-2: 0 8px 20px -6px hsl(120 100% 2% / 0.7), inset 0 1px 0 hsl(125 100% 60% / 0.08);
+  --elevation-3: 0 18px 40px -12px hsl(120 100% 2% / 0.8), 0 0 30px -10px hsl(125 100% 55% / 0.35), inset 0 1px 0 hsl(125 100% 60% / 0.1);
+  --elevation-up: 0 -8px 24px -12px hsl(120 100% 2% / 0.7);
+  --glow-primary: 0 10px 30px -8px hsl(125 100% 55% / 0.6);
+}
+/* Siatka papieru znika — tło to deszcz z płótna. */
+html[data-skin="matrix"] .paper-grid::before { display: none; }
+/* Deszcz: przygaszony, schodzi pod pasek nagłówka i „Zapisz notatkę” (górne ~260 px gaśnie),
+   a za środkiem ekranu (pusty stan, tekst) leży ciemna winieta, żeby znaki nie mieszały się z tekstem. */
+html[data-skin="matrix"] .paper-grid > canvas {
+  opacity: 0.6;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent 110px, #000 260px);
+  mask-image: linear-gradient(to bottom, transparent 0, transparent 110px, #000 260px);
+}
+html[data-skin="matrix"] .paper-grid::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(40% 36% at 50% 50%, hsl(125 90% 3% / 0.9), hsl(125 90% 3% / 0.45) 60%, transparent 100%);
+}
+html[data-skin="matrix"] h1,
+html[data-skin="matrix"] h2 {
+  font-family: 'JetBrains Mono Variable', ui-monospace, monospace;
+  letter-spacing: -0.02em;
+  text-shadow: 0 0 12px hsl(125 100% 55% / 0.35);
+}
+html[data-skin="matrix"] .notki-logo { filter: drop-shadow(0 0 12px hsl(125 100% 55% / 0.6)); }
+/* Karta trochę przezroczysta na komputerze: deszcz prześwituje, tekst czyta się na ciemnym tle. */
+@media (pointer: fine) {
+  html[data-skin="matrix"] .note-card[data-note-color="default"] {
+    background-color: color-mix(in srgb, var(--card) 86%, transparent);
+  }
+}

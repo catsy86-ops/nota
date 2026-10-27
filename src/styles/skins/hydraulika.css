@@ -1,0 +1,127 @@
+/* ─────────────────────── HYDRAULIKA — miedź, stal i płynąca woda ─────────────────────── */
+html[data-skin="hydraulika"] {
+  --background: oklch(0.2386 0.0291 240.64);
+  --foreground: oklch(0.9405 0.0138 228.95);
+  --card: oklch(0.2812 0.0338 240.58);
+  --card-foreground: oklch(0.9405 0.0138 228.95);
+  --popover: oklch(0.2706 0.0320 240.54);
+  --popover-foreground: oklch(0.9405 0.0138 228.95);
+  --primary: oklch(0.7013 0.1336 52.46);
+  --ink-mix: 100%;
+  --primary-foreground: oklch(0.2165 0.0266 240.66);
+  --secondary: oklch(0.3312 0.0318 240.00);
+  --secondary-foreground: oklch(0.9405 0.0138 228.95);
+  --muted: oklch(0.3110 0.0292 239.96);
+  --muted-foreground: oklch(0.8005 0.0231 229.16);
+  --accent: oklch(0.7783 0.1277 226.48);
+  --accent-foreground: oklch(0.1821 0.0217 240.47);
+  --destructive: oklch(0.5828 0.2195 27.51);
+  --destructive-foreground: oklch(1.0000 0.0000 0.00);
+  --border: oklch(0.3896 0.0338 239.80);
+  --input: oklch(0.6250 0.0483 230.11);
+  --ring: oklch(0.7013 0.1336 52.46);
+  --grid: oklch(0.8504 0.0348 229.36);
+  --margin: oklch(0.6393 0.1374 51.24);
+
+  --note-default: oklch(0.2812 0.0338 240.58);
+  --note-coral: oklch(0.2405 0.0274 31.70);
+  --note-peach: oklch(0.2408 0.0220 55.12);
+  --note-sand: oklch(0.2516 0.0195 87.51);
+  --note-mint: oklch(0.2434 0.0205 183.02);
+  --note-sage: oklch(0.2489 0.0170 172.41);
+  --note-sky: oklch(0.2593 0.0261 223.06);
+  --note-lavender: oklch(0.2364 0.0300 291.57);
+  --note-rose: oklch(0.2385 0.0223 357.16);
+
+  --elevation-1: 0 1px 2px hsl(205 60% 3% / 0.5), inset 0 1px 0 hsl(200 80% 90% / 0.05);
+  --elevation-2: 0 8px 20px -6px hsl(205 60% 3% / 0.6), inset 0 1px 0 hsl(200 80% 90% / 0.06);
+  --elevation-3: 0 18px 40px -12px hsl(205 60% 3% / 0.7), 0 0 30px -10px hsl(24 70% 58% / 0.3), inset 0 1px 0 hsl(200 80% 90% / 0.08);
+  --elevation-up: 0 -8px 24px -12px hsl(205 60% 3% / 0.6);
+  --glow-primary: 0 10px 30px -8px hsl(24 70% 58% / 0.5);
+}
+/* Rury: miedziane pasy w siatce 120 px (statyczne). Przepływ wody to drugi pseudo-element. */
+html[data-skin="hydraulika"] .paper-grid::before {
+  background-image:
+    linear-gradient(90deg, transparent 0 46px, hsl(24 60% 52% / 0.17) 46px 52px, hsl(24 60% 70% / 0.08) 52px 53px, transparent 53px),
+    linear-gradient(transparent 0 46px, hsl(24 60% 52% / 0.14) 46px 52px, transparent 52px);
+  background-size: 120px 120px;
+  -webkit-mask-image: linear-gradient(#000 0%, rgb(0 0 0 / 0.55) 60%, transparent 100%);
+  mask-image: linear-gradient(#000 0%, rgb(0 0 0 / 0.55) 60%, transparent 100%);
+}
+/* Woda płynie w poziomie: pasy o okresie 120 px przesuwane o dokładnie jeden okres (pętla bez skoku). Tylko transform. */
+html[data-skin="hydraulika"] .paper-grid::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -130px;
+  right: -130px;
+  background-image: repeating-linear-gradient(90deg, transparent 0 34px, hsl(196 90% 62% / 0.09) 34px 48px, transparent 48px 120px);
+  animation: hydro-flow 9s linear infinite;
+  will-change: transform;
+}
+@keyframes hydro-flow {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-120px, 0, 0); }
+}
+/* Bąbelki unoszą się z dołu ekranu. Elementy tworzy PaperBackdrop tylko dla tego stylu. */
+.hydro-bubbles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.hydro-bubble {
+  position: absolute;
+  bottom: -14px;
+  border-radius: 50%;
+  border: 1px solid hsl(196 90% 78% / 0.55);
+  background: radial-gradient(circle at 30% 28%, hsl(0 0% 100% / 0.55), transparent 42%);
+  opacity: 0;
+  animation-name: hydro-rise;
+  animation-timing-function: ease-in;
+  animation-iteration-count: infinite;
+  will-change: transform, opacity;
+}
+@keyframes hydro-rise {
+  0% { transform: translate3d(0, 0, 0) scale(0.7); opacity: 0; }
+  12% { opacity: 0.85; }
+  85% { opacity: 0.55; }
+  100% { transform: translate3d(var(--x, 0px), -105vh, 0) scale(1.08); opacity: 0; }
+}
+/* Telefon: mniej bąbelków (koszt przy długim działaniu). */
+@media (pointer: coarse) {
+  html[data-skin="hydraulika"] .hydro-bubble:nth-child(n + 5) { display: none; }
+}
+html[data-skin="hydraulika"] h1 {
+  font-family: 'Barlow Condensed', 'Plus Jakarta Sans Variable', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+/* h2 w Hydraulice: czytelny krój tekstu, nie wąski Barlow (tytuły okien i sekcji). */
+html[data-skin="hydraulika"] h2 {
+  font-family: 'Plus Jakarta Sans Variable', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+/* Ograniczony ruch: rury zostają, woda i bąbelki stoją. */
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="hydraulika"] .paper-grid::after,
+  html[data-skin="hydraulika"] .hydro-bubble { animation: none; }
+  html[data-skin="hydraulika"] .hydro-bubble { display: none; }
+}
+html[data-motion="reduced"][data-skin="hydraulika"] .paper-grid::after,
+html[data-motion="reduced"][data-skin="hydraulika"] .hydro-bubble { animation: none; }
+html[data-motion="reduced"][data-skin="hydraulika"] .hydro-bubble { display: none; }
+
+/* Miniatury galerii stylów. */
+.skin-thumb[data-thumb="matrix"]::before {
+  background-color: #020a03;
+  background-image: linear-gradient(90deg, rgb(0 255 65 / 0.4) 1px, transparent 1px), linear-gradient(90deg, rgb(0 255 65 / 0.12) 1px, transparent 1px);
+  background-size: 9px 100%, 5px 100%;
+}
+.skin-thumb[data-thumb="hydraulika"]::before {
+  /* Rury powtarzają się co 30 px, a woda to pas u dołu — każda warstwa ma własny rozmiar i powtórzenie. */
+  background-image:
+    linear-gradient(90deg, transparent 0 9px, rgb(208 138 78 / 0.7) 9px 12px, transparent 12px 30px),
+    linear-gradient(rgb(79 195 247 / 0.35), rgb(79 195 247 / 0.35));
+  background-size: 30px 100%, 100% 42%;
+  background-position: 0 0, 0 100%;
+  background-repeat: repeat-x, no-repeat;
+  background-color: #0b1e2b;
+}

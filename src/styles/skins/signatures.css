@@ -1,0 +1,280 @@
+/* ─────────────────────── RUCH I SYGNATURY (plan rozbudowy, Faza 1b) ───────────────────────
+   Każdy styl ma własną krzywą i czas (`--sig-ease`, `--sig-dur`) oraz jedną sygnaturę.
+   Efekty tylko w `transform` i `opacity` (poza poświatą fokusu, która jest wskaźnikiem, nie ozdobą).
+   Ograniczony ruch: animacja się nie uruchamia, a element od razu pokazuje stan końcowy.
+   Testy: e2e/skin-signatures.spec.ts. */
+
+html[data-skin="zeszyt"] { --sig-ease: cubic-bezier(0.3, 0.1, 0.2, 1); --sig-dur: 0.55s; }
+html[data-skin="plan"] { --sig-ease: cubic-bezier(0.65, 0, 0.35, 1); --sig-dur: 0.9s; }
+html[data-skin="neon"] { --sig-ease: cubic-bezier(0.2, 0, 0, 1); --sig-dur: 0.45s; }
+html[data-skin="zorza"] { --sig-ease: ease-in-out; --sig-dur: 2.4s; }
+html[data-skin="miedz"] { --sig-ease: cubic-bezier(0.34, 1.3, 0.64, 1); --sig-dur: 0.6s; }
+html[data-skin="matrix"] { --sig-ease: linear; --sig-dur: 0.25s; }
+html[data-skin="hydraulika"] { --sig-ease: cubic-bezier(0.45, 0, 0.55, 1); --sig-dur: 0.8s; }
+
+/* Zeszyt — pióro podkreśla nagłówek przy każdym pojawieniu się (kreska rośnie od lewej). */
+html[data-skin="zeszyt"] h1,
+html[data-skin="zeszyt"] h2 { position: relative; }
+html[data-skin="zeszyt"] h1::after,
+html[data-skin="zeszyt"] h2::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -0.2em;
+  height: 2px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--primary) 70%, transparent);
+  transform-origin: left center;
+  transform: scaleX(0);
+  animation: zeszyt-pen var(--sig-dur) var(--sig-ease) 1 both;
+  pointer-events: none;
+}
+@keyframes zeszyt-pen {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Plan — siatka kreślarska „wjeżdża” przy otwarciu okna (skala i przezroczystość, bez clip-path). */
+html[data-skin="plan"] .paper-grid::before {
+  animation: plan-draw var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes plan-draw {
+  from { opacity: 0; transform: scale(1.04); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Neon — poświata kafla przy fokusie klawiatury: wewnętrzny pierścień, który gaśnie do stanu stałego. */
+html[data-skin="neon"] .note-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 70%, transparent), inset 0 0 18px color-mix(in srgb, var(--primary) 40%, transparent);
+}
+html[data-skin="neon"] .note-card:focus-within::after {
+  animation: neon-flare var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes neon-flare {
+  0% { opacity: 0; }
+  35% { opacity: 1; }
+  100% { opacity: 0.35; }
+}
+
+/* Ograniczony ruch: bez animacji, ale z tym samym stanem końcowym co na końcu animacji. */
+html[data-motion="reduced"][data-skin="zeszyt"] h1::after,
+html[data-motion="reduced"][data-skin="zeszyt"] h2::after { animation: none; transform: scaleX(1); }
+html[data-motion="reduced"][data-skin="plan"] .paper-grid::before { animation: none; opacity: 1; transform: none; }
+html[data-motion="reduced"][data-skin="neon"] .note-card:focus-within::after { animation: none; opacity: 0.35; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="zeszyt"] h1::after,
+  html[data-skin="zeszyt"] h2::after { animation: none; transform: scaleX(1); }
+  html[data-skin="plan"] .paper-grid::before { animation: none; opacity: 1; transform: none; }
+  html[data-skin="neon"] .note-card:focus-within::after { animation: none; opacity: 0.35; }
+}
+
+/* Zapis (`html[data-sig="save"]`, src/lib/skinSignal.ts). Pseudo-elementy są niewidoczne w spoczynku,
+   więc przy ograniczonym ruchu nic nie pojawia się ani nie zostaje. */
+
+/* Miedź — para z rury: obłoczek wznosi się z prawego dołu i gaśnie. */
+html[data-skin="miedz"] .paper-grid::after {
+  content: "";
+  position: absolute;
+  right: 8%;
+  bottom: 0;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--primary) 45%, transparent), transparent);
+  opacity: 0;
+  transform: translateY(0) scale(0.6);
+  pointer-events: none;
+}
+html[data-sig="save"][data-skin="miedz"] .paper-grid::after {
+  animation: miedz-steam var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes miedz-steam {
+  0% { opacity: 0; transform: translateY(0) scale(0.6); }
+  30% { opacity: 0.8; }
+  100% { opacity: 0; transform: translateY(-160px) scale(1.4); }
+}
+
+/* Hydraulika — fala napełnia rurę od dołu przy zapisie. */
+html[data-skin="hydraulika"] .hydro-bubbles::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 45%;
+  background: linear-gradient(to top, color-mix(in srgb, var(--primary) 32%, transparent), transparent);
+  opacity: 0;
+  transform: translateY(100%);
+  pointer-events: none;
+}
+html[data-sig="save"][data-skin="hydraulika"] .hydro-bubbles::after {
+  animation: hydro-fill var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes hydro-fill {
+  0% { opacity: 0; transform: translateY(100%); }
+  35% { opacity: 1; }
+  70% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(0); }
+}
+
+/* Zorza — fala barw przelatuje w poprzek przy zapisie. Matryca — linia skanu zjeżdża z góry.
+   Warstwa `.sig-layer` (PaperBackdrop) jest niewidoczna w spoczynku; tylko `transform` i `opacity`. */
+.sig-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+}
+html[data-skin="zorza"] .sig-layer {
+  background: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--primary) 22%, transparent) 45%, color-mix(in srgb, var(--accent) 20%, transparent) 55%, transparent 70%);
+  transform: translateX(-100%);
+}
+html[data-sig="save"][data-skin="zorza"] .sig-layer {
+  animation: zorza-wave var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes zorza-wave {
+  0% { opacity: 0; transform: translateX(-100%); }
+  30% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(100%); }
+}
+html[data-skin="matrix"] .sig-layer {
+  background: linear-gradient(to bottom, transparent 55%, hsl(125 100% 60% / 0.3) 92%, hsl(125 100% 80% / 0.65));
+  transform: translateY(-100%);
+}
+html[data-sig="save"][data-skin="matrix"] .sig-layer {
+  animation: matrix-scan var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes matrix-scan {
+  0% { opacity: 0; transform: translateY(-100%); }
+  20% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(100%); }
+}
+html[data-motion="reduced"][data-sig][data-skin="zorza"] .sig-layer,
+html[data-motion="reduced"][data-sig][data-skin="matrix"] .sig-layer { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-sig="save"][data-skin="zorza"] .sig-layer,
+  html[data-sig="save"][data-skin="matrix"] .sig-layer { animation: none; }
+}
+
+html[data-motion="reduced"][data-sig][data-skin="miedz"] .paper-grid::after,
+html[data-motion="reduced"][data-sig][data-skin="hydraulika"] .hydro-bubbles::after { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-sig="save"][data-skin="miedz"] .paper-grid::after,
+  html[data-sig="save"][data-skin="hydraulika"] .hydro-bubbles::after { animation: none; }
+}
+
+/* Pora roku w każdym stylu (nie tylko w Zeszycie): plama światła w kolorach sezonu na samym papierze.
+   Zeszyt ma tę samą plamę w `.paper-grid::after` (wyżej), więc go wykluczamy. Akcent stylu zostaje,
+   bo to jego tożsamość; sezon dochodzi przez tło i poświatę aktywnej notatki. */
+html[data-season]:not([data-skin="zeszyt"]) .paper-grid {
+  background-image:
+    radial-gradient(62% 48% at 100% 0%, color-mix(in srgb, var(--season-blob-1) calc(22% * var(--season-glow)), transparent), transparent 72%),
+    radial-gradient(52% 40% at 0% 0%, color-mix(in srgb, var(--season-blob-2) calc(16% * var(--season-glow)), transparent), transparent 70%),
+    radial-gradient(70% 46% at 50% 100%, color-mix(in srgb, var(--season-blob-3) calc(14% * var(--season-glow)), transparent), transparent 75%);
+}
+
+/* Zmiana widoku (`html[data-sig="view"]`): Zeszyt przewraca kartkę, Matryca spływa kaskadą kolumn.
+   Pseudo-elementy są w spoczynku niewidoczne albo nie istnieją, więc ruch pojawia się tylko na sygnał. */
+html[data-sig="view"][data-skin="zeszyt"] .paper-grid::before {
+  animation: zeszyt-flip var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes zeszyt-flip {
+  from { opacity: 0.35; transform: perspective(900px) rotateY(-70deg); transform-origin: left center; }
+  to { opacity: 1; transform: none; }
+}
+
+html[data-sig="view"][data-skin="matrix"] .paper-grid::before {
+  display: block;
+  background-image: repeating-linear-gradient(90deg, transparent 0 22px, hsl(125 100% 55% / 0.35) 22px 23px);
+  background-size: auto;
+  animation: matrix-cascade var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes matrix-cascade {
+  from { opacity: 0.9; transform: translateY(-100%); }
+  to { opacity: 0; transform: translateY(100%); }
+}
+
+/* Zorza — paralaksa: `translate` to osobna właściwość, więc nie zmienia animacji `transform` dryfu. */
+html[data-skin="zorza"] .paper-grid::after {
+  translate: 0 calc(var(--sig-scroll, 0) * -0.12px);
+}
+
+/* Neon — pierwsze uruchomienie dnia: nagłówek mruga jak zapalana rurka (ten sam przebieg co logo). */
+html[data-sig="dawn"][data-skin="neon"] h1 {
+  animation: neon-ignite 1.4s steps(1, end) 1 both;
+}
+
+html[data-motion="reduced"][data-sig][data-skin="zeszyt"] .paper-grid::before,
+html[data-motion="reduced"][data-sig][data-skin="neon"] h1 { animation: none; }
+html[data-motion="reduced"][data-sig="view"][data-skin="matrix"] .paper-grid::before { animation: none; display: none; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-sig="view"][data-skin="zeszyt"] .paper-grid::before,
+  html[data-sig="dawn"][data-skin="neon"] h1 { animation: none; }
+  html[data-sig="view"][data-skin="matrix"] .paper-grid::before { animation: none; display: none; }
+}
+
+/* Wymiarowanie (Plan): zaznaczony kafel dostaje linię wymiarową przy dolnej krawędzi, która się rysuje. */
+html[data-skin="plan"] .note-card::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 6px;
+  height: 1px;
+  background: color-mix(in srgb, var(--primary) 80%, transparent);
+  transform-origin: left center;
+  opacity: 0;
+  pointer-events: none;
+}
+html[data-skin="plan"] .note-card[data-selected]::after {
+  opacity: 1;
+  animation: plan-dimension var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes plan-dimension {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Neon: przypięcie — kafle przypięte krótko rozbłyskują (`::before`, bo `::after` ma poświatę fokusu). */
+html[data-skin="neon"] .note-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 80%, transparent), inset 0 0 22px color-mix(in srgb, var(--primary) 45%, transparent);
+}
+html[data-sig="pin"][data-skin="neon"] .note-card[data-pinned]::before {
+  animation: neon-pin var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes neon-pin {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Zorza: zmiana na tę skórkę — gwiazdy wpływają falą z prawej (przez opacity i translate). */
+html[data-sig="skin"][data-skin="zorza"] .paper-grid::before {
+  animation: zorza-wave var(--sig-dur) var(--sig-ease) 1 both;
+}
+@keyframes zorza-wave {
+  from { opacity: 0; translate: 12% 0; }
+  to { opacity: 1; translate: 0 0; }
+}
+
+html[data-motion="reduced"][data-skin="plan"] .note-card[data-selected]::after,
+html[data-motion="reduced"][data-sig="pin"][data-skin="neon"] .note-card[data-pinned]::before,
+html[data-motion="reduced"][data-sig="skin"][data-skin="zorza"] .paper-grid::before { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-skin="plan"] .note-card[data-selected]::after,
+  html[data-sig="pin"][data-skin="neon"] .note-card[data-pinned]::before,
+  html[data-sig="skin"][data-skin="zorza"] .paper-grid::before { animation: none; }
+}

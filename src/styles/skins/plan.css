@@ -1,0 +1,90 @@
+/* ─────────────────────────── PLAN — rysunek techniczny ─────────────────────────── */
+html[data-skin="plan"] {
+  /* Ostrzeżenie na ciemnej karcie: jaśniejsza baza (6,6:1 na karcie), bo ciemne ostrzeżenie daje 4,3:1. */
+  --warning-ink-base: oklch(0.8092 0.1503 76.61);
+  --background: oklch(0.2925 0.0672 252.44);
+  --foreground: oklch(0.9607 0.0149 238.58);
+  --card: oklch(0.3312 0.0705 252.07);
+  --card-foreground: oklch(0.9607 0.0149 238.58);
+  --popover: oklch(0.3215 0.0678 252.04);
+  --popover-foreground: oklch(0.9607 0.0149 238.58);
+  --primary: oklch(0.8164 0.1115 226.47);
+  --ink-mix: 100%;
+  --primary-foreground: oklch(0.2288 0.0549 253.68);
+  --secondary: oklch(0.3876 0.0679 251.41);
+  --secondary-foreground: oklch(0.9607 0.0149 238.58);
+  --muted: oklch(0.3595 0.0683 251.65);
+  --muted-foreground: oklch(0.8275 0.0339 238.97);
+  /* Żółty ołówek — linki i [[linki]]. */
+  --accent: oklch(0.9093 0.1504 97.98);
+  --accent-foreground: oklch(0.2288 0.0549 253.68);
+  /* Biały tekst na „Usuń” ≥4.5:1 (było 4.35). */
+  --destructive: oklch(0.5809 0.2188 29.61);
+  --destructive-ink: oklch(0.7578 0.1219 20.31);
+  --destructive-foreground: oklch(1.0000 0.0000 0.00);
+  --border: oklch(0.4550 0.0750 245.20);
+  --input: oklch(0.6694 0.0842 240.74);
+  --ring: oklch(0.8164 0.1115 226.47);
+  --grid: oklch(0.8827 0.0516 239.26);
+  /* Czerwona kreska poprawki. */
+  --margin: oklch(0.6745 0.1912 27.44);
+
+  --note-default: oklch(0.3312 0.0705 252.07);
+  --note-coral: oklch(0.3556 0.0371 26.17);
+  --note-peach: oklch(0.3641 0.0264 55.41);
+  --note-sand: oklch(0.3708 0.0263 90.43);
+  --note-mint: oklch(0.3575 0.0337 176.78);
+  --note-sage: oklch(0.3602 0.0229 196.18);
+  --note-sky: oklch(0.3958 0.0529 231.97);
+  --note-lavender: oklch(0.3495 0.0638 286.41);
+  --note-rose: oklch(0.3627 0.0458 352.99);
+
+  --elevation-1: 0 0 0 1px hsl(205 80% 85% / 0.06), 0 2px 6px -2px hsl(214 80% 5% / 0.5);
+  --elevation-2: 0 0 0 1px hsl(205 80% 85% / 0.08), 0 8px 18px -6px hsl(214 80% 5% / 0.6);
+  --elevation-3: 0 0 0 1px hsl(205 80% 85% / 0.12), 0 16px 34px -10px hsl(214 80% 4% / 0.7);
+  --elevation-up: 0 -8px 24px -12px hsl(214 80% 4% / 0.6);
+  --glow-primary: 0 8px 26px -8px color-mix(in srgb, var(--primary) 55%, transparent);
+}
+
+/* Kalka: drobna kratka co 12 px, gruba co 60 px, winieta jak przy świetle lampy. */
+html[data-skin="plan"] .paper-grid::before {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--grid) 16%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--grid) 16%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in srgb, var(--grid) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--grid) 6%, transparent) 1px, transparent 1px);
+  background-size: 60px 60px, 60px 60px, 12px 12px, 12px 12px;
+  -webkit-mask-image: radial-gradient(130% 100% at 50% 30%, #000 50%, rgb(0 0 0 / 0.35) 100%);
+  mask-image: radial-gradient(130% 100% at 50% 30%, #000 50%, rgb(0 0 0 / 0.35) 100%);
+}
+html[data-skin="plan"] .notki-glyph {
+  background-image:
+    linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.9) 50%, transparent 62%),
+    linear-gradient(170deg, hsl(0 0% 100%), var(--primary) 70%);
+}
+html[data-skin="plan"] .notki-logo { filter: none; }
+html[data-skin="plan"] h1,
+html[data-skin="plan"] h2 {
+  font-family: 'Barlow Condensed', 'Plus Jakarta Sans Variable', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+/* Kafel jak rzut na arkuszu: znaczniki narożników w kolorze linii. */
+html[data-skin="plan"] .note-card::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  pointer-events: none;
+  border-radius: calc(var(--radius) - 4px);
+  --tick: color-mix(in srgb, var(--grid) 40%, transparent);
+  background:
+    linear-gradient(var(--tick), var(--tick)) top left / 10px 1px,
+    linear-gradient(var(--tick), var(--tick)) top left / 1px 10px,
+    linear-gradient(var(--tick), var(--tick)) top right / 10px 1px,
+    linear-gradient(var(--tick), var(--tick)) top right / 1px 10px,
+    linear-gradient(var(--tick), var(--tick)) bottom left / 10px 1px,
+    linear-gradient(var(--tick), var(--tick)) bottom left / 1px 10px,
+    linear-gradient(var(--tick), var(--tick)) bottom right / 10px 1px,
+    linear-gradient(var(--tick), var(--tick)) bottom right / 1px 10px;
+  background-repeat: no-repeat;
+}

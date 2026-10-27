@@ -1,0 +1,81 @@
+/* ─────────────────────────── MIEDŹ — beton i rury ─────────────────────────── */
+html[data-skin="miedz"] {
+  /* Ostrzeżenie na jasnej karcie: ciemniejszy tekst (WCAG AA, 6,0:1 na karcie, 4,8:1 na tle). */
+  --warning-ink-mix: 55%;
+  --background: oklch(0.9167 0.0034 67.78);
+  --foreground: oklch(0.2378 0.0103 52.02);
+  --card: oklch(0.9897 0.0018 84.56);
+  --card-foreground: oklch(0.2378 0.0103 52.02);
+  --popover: oklch(0.9897 0.0018 84.56);
+  --popover-foreground: oklch(0.2378 0.0103 52.02);
+  --primary: oklch(0.5447 0.1250 46.45);
+  --ink-mix: 82%;
+  --primary-foreground: oklch(1.0000 0.0000 0.00);
+  --secondary: oklch(0.8629 0.0065 67.74);
+  --secondary-foreground: oklch(0.2378 0.0103 52.02);
+  --muted: oklch(0.9399 0.0035 67.78);
+  --muted-foreground: oklch(0.4559 0.0160 52.13);
+  /* Patyna (śniedź) — linki. */
+  --accent: oklch(0.4738 0.0650 205.37);
+  --accent-foreground: oklch(1.0000 0.0000 0.00);
+  --destructive: oklch(0.5374 0.1986 27.18);
+  --destructive-foreground: oklch(1.0000 0.0000 0.00);
+  --border: oklch(0.8473 0.0072 67.73);
+  --input: oklch(0.5836 0.0211 57.86);
+  --ring: oklch(0.4933 0.1221 45.56);
+  --grid: oklch(0.7676 0.0083 67.70);
+  --margin: oklch(0.5825 0.1348 46.37);
+
+  --note-default: oklch(0.9897 0.0018 84.56);
+  --note-coral: oklch(0.9658 0.0127 37.68);
+  --note-peach: oklch(0.9655 0.0162 63.87);
+  --note-sand: oklch(0.9669 0.0234 90.29);
+  --note-mint: oklch(0.9606 0.0130 164.79);
+  --note-sage: oklch(0.9543 0.0069 174.38);
+  --note-sky: oklch(0.9648 0.0109 221.41);
+  --note-lavender: oklch(0.9617 0.0112 301.31);
+  --note-rose: oklch(0.9631 0.0118 354.94);
+
+  --elevation-1: 0 1px 0 hsl(22 30% 20% / 0.08), 0 3px 8px -4px hsl(22 30% 20% / 0.18);
+  --elevation-2: 0 1px 0 hsl(22 30% 20% / 0.07), 0 8px 16px -6px hsl(22 30% 20% / 0.2);
+  --elevation-3: 0 1px 0 hsl(22 30% 20% / 0.06), 0 16px 34px -10px hsl(22 30% 20% / 0.28);
+  --elevation-up: 0 -8px 24px -12px hsl(22 30% 20% / 0.22);
+  --glow-primary: 0 10px 26px -8px color-mix(in srgb, var(--primary) 60%, transparent);
+}
+/* Beton architektoniczny: ziarno, styki płyt szalunkowych i otwory po ściągach. */
+html[data-skin="miedz"] .paper-grid::before {
+  background-image:
+    radial-gradient(circle at 60px 60px, hsl(25 8% 45% / 0.55) 0 3px, hsl(30 10% 98% / 0.5) 3.5px 4.5px, transparent 5px),
+    linear-gradient(hsl(30 6% 72% / 0.7) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(30 6% 72% / 0.7) 1px, transparent 1px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .32 0 0 0 0 .3 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 240px 120px, 240px 120px, 240px 120px, 160px 160px;
+  background-position: 0 0, -1px -1px, -1px -1px, 0 0;
+  opacity: 0.55;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+html[data-skin="miedz"] h1,
+html[data-skin="miedz"] h2 {
+  font-family: 'Bricolage Grotesque Variable', 'Plus Jakarta Sans Variable', sans-serif;
+  letter-spacing: -0.015em;
+}
+/* Miedziana rura zamiast czerwonego marginesu: walec z odblaskiem. */
+html[data-skin="miedz"] .sidebar-gradient {
+  border-right-color: transparent !important;
+  box-shadow: inset -4px 0 0 -1px hsl(21 55% 42%), inset -2px 0 0 -1px hsl(28 70% 70%);
+}
+html[data-skin="miedz"] .notki-glyph {
+  background-image:
+    linear-gradient(105deg, transparent 38%, hsl(36 100% 92% / 0.95) 50%, transparent 62%),
+    linear-gradient(170deg, hsl(28 80% 62%), var(--primary) 50%, hsl(16 60% 28%));
+}
+/* Przycisk główny lśni jak wypolerowana miedź; odblask przesuwa się po najechaniu. */
+html[data-skin="miedz"] button.bg-primary {
+  background-image: linear-gradient(115deg, transparent 30%, hsl(32 90% 80% / 0.45) 45%, transparent 60%),
+    linear-gradient(180deg, hsl(24 62% 50%), hsl(19 64% 37%));
+  background-size: 250% 100%, 100% 100%;
+  background-position: 120% 0, 0 0;
+  transition: background-position 700ms var(--ease-out);
+}
+html[data-skin="miedz"] button.bg-primary:hover { background-position: -20% 0, 0 0; }

@@ -1,0 +1,41 @@
+/* ─────────────────────────── wspólne ─────────────────────────── */
+/* Przejście motywu kołem (useTheme → View Transitions): bez domyślnego przenikania. */
+html.theme-reveal::view-transition-old(root),
+html.theme-reveal::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+html.theme-reveal::view-transition-new(root) { z-index: 2; }
+
+/* Miniatury w galerii stylów (AppearanceSettings) — to samo tło w małej skali. */
+.skin-thumb { position: relative; overflow: hidden; isolation: isolate; }
+.skin-thumb::before { content: ""; position: absolute; inset: 0; z-index: -1; }
+.skin-thumb[data-thumb="zeszyt"]::before {
+  background-image: linear-gradient(#dfe6f0 1px, transparent 1px), linear-gradient(90deg, #dfe6f0 1px, transparent 1px);
+  background-size: 10px 10px;
+}
+.skin-thumb[data-thumb="plan"]::before {
+  background-image:
+    linear-gradient(rgb(200 230 255 / 0.18) 1px, transparent 1px), linear-gradient(90deg, rgb(200 230 255 / 0.18) 1px, transparent 1px),
+    linear-gradient(rgb(200 230 255 / 0.07) 1px, transparent 1px), linear-gradient(90deg, rgb(200 230 255 / 0.07) 1px, transparent 1px);
+  background-size: 30px 30px, 30px 30px, 6px 6px, 6px 6px;
+}
+.skin-thumb[data-thumb="neon"]::before {
+  background:
+    radial-gradient(70% 60% at 10% 0%, rgb(255 71 209 / 0.35), transparent 70%),
+    radial-gradient(60% 50% at 95% 10%, rgb(62 240 255 / 0.25), transparent 70%);
+}
+.skin-thumb[data-thumb="zorza"]::before {
+  background:
+    radial-gradient(1px 1px at 12px 14px, #fff, transparent), radial-gradient(1px 1px at 70px 30px, #fff, transparent),
+    radial-gradient(1px 1px at 110px 8px, #fff, transparent),
+    radial-gradient(50% 40% at 30% 30%, rgb(60 245 166 / 0.55), transparent 70%),
+    radial-gradient(45% 40% at 80% 35%, rgb(155 123 255 / 0.5), transparent 70%);
+  filter: saturate(1.2);
+}
+.skin-thumb[data-thumb="miedz"]::before {
+  background-image:
+    radial-gradient(circle at 30px 30px, rgb(120 110 100 / 0.6) 0 2px, transparent 2.5px),
+    linear-gradient(rgb(170 160 150 / 0.6) 1px, transparent 1px), linear-gradient(90deg, rgb(170 160 150 / 0.6) 1px, transparent 1px);
+  background-size: 120px 60px;
+}

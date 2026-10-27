@@ -1,37 +1,14 @@
 import { pulseSkinSignal } from "@/lib/skinSignal";
 import { createPersistedStore } from "@/lib/persistedStore";
+import { SKINS, type Skin } from "@/lib/skinList";
 
 /**
  * Styl aplikacji („skórka”) — niezależny od jasny/ciemny. „Zeszyt” to domyślny
  * kierunek i jedyny, który słucha przełącznika jasny/ciemny; pozostałe mają
- * jeden, zaprojektowany schemat (`SKIN_SCHEME`). Tokeny i tła: `src/styles/skins.css`
- * pod `html[data-skin="…"]`.
+ * jeden, zaprojektowany schemat (`SKIN_SCHEME`). Tokeny i tła: `src/styles/skins/<id>.css`
+ * pod `html[data-skin="…"]`. Lista, schematy i kolory paska: `skinList.ts`.
  */
-export type Skin = "zeszyt" | "plan" | "neon" | "zorza" | "miedz" | "matrix" | "hydraulika";
-
-export const SKINS: readonly Skin[] = ["zeszyt", "plan", "neon", "zorza", "miedz", "matrix", "hydraulika"];
-
-/** Schemat stylu: `null` = jasny lub ciemny według przełącznika (tylko Zeszyt). */
-export const SKIN_SCHEME: Record<Skin, "light" | "dark" | null> = {
-  zeszyt: null,
-  plan: "dark",
-  neon: "dark",
-  zorza: "dark",
-  miedz: "light",
-  matrix: "dark",
-  hydraulika: "dark",
-};
-
-/** Kolor paska stanu / okna PWA. Opisy i miniatury galerii: `skinGallery.ts` (tylko Ustawienia). */
-export const SKIN_THEME_COLOR: Record<Skin, string> = {
-  zeszyt: "#f0b429",
-  plan: "#10304f",
-  neon: "#130a1b",
-  zorza: "#060a17",
-  miedz: "#ae5a28",
-  matrix: "#020a03",
-  hydraulika: "#0b1e2b",
-};
+export { SKINS, SKIN_SCHEME, SKIN_THEME_COLOR, type Skin } from "@/lib/skinList";
 
 export function isSkin(v: unknown): v is Skin {
   return typeof v === "string" && (SKINS as readonly string[]).includes(v);

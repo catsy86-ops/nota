@@ -7,7 +7,7 @@ import { useSkin } from "@/lib/skins";
  * Zastąpiło kolorowe poświaty („aurorę”), które nic nie mówiły o aplikacji.
  *
  * Dwa style mają własny ruch: „Matryca” (płótno z deszczem, leniwie) i „Hydraulika”
- * (bąbelki; woda płynie z CSS w `skins.css`).
+ * (bąbelki; woda płynie z CSS w `styles/skins/hydraulika.css`).
  */
 const MatrixRain = lazy(() => import("@/components/skins/MatrixRain"));
 
@@ -39,7 +39,7 @@ export function PaperBackdrop() {
         </Suspense>
       )}
       {/* Warstwa sygnału zapisu dla Zorzy (fala) i Matrycy (linia skanu). Pseudo-elementy są zajęte
-          przez tło tych stylów, więc sygnał ma własny, pusty element; CSS w skins.css. */}
+          przez tło tych stylów, więc sygnał ma własny, pusty element; CSS w styles/skins/signatures.css. */}
       {(skin === "zorza" || skin === "matrix") && <span className="sig-layer" />}
       {skin === "hydraulika" && (
         <span className="hydro-bubbles">
