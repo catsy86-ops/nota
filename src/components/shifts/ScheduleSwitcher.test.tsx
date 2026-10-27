@@ -15,8 +15,11 @@ describe("przełącznik grafików (4.4)", () => {
   it("dodaje nowy grafik i przełącza na niego; powrót na główny przywraca jego widok", () => {
     render(<ScheduleSwitcher />);
     fireEvent.click(screen.getByRole("button", { name: /Nowy grafik/ }));
-    fireEvent.change(screen.getByLabelText("Nazwa nowego grafiku"), { target: { value: "Dorobek" } });
-    fireEvent.click(screen.getByRole("button", { name: "Dodaj" }));
+    // Kreator (G4.2): nazwa, dalej dwa razy, utwórz.
+    fireEvent.change(screen.getByLabelText("Nazwa"), { target: { value: "Dorobek" } });
+    fireEvent.click(screen.getByRole("button", { name: "Dalej" }));
+    fireEvent.click(screen.getByRole("button", { name: "Dalej" }));
+    fireEvent.click(screen.getByRole("button", { name: "Utwórz grafik" }));
 
     const options = Array.from(picker().options).map((o) => o.textContent);
     expect(options).toContain("Dorobek");
@@ -30,8 +33,11 @@ describe("przełącznik grafików (4.4)", () => {
   it("zmiana nazwy zapisuje się w liście wyboru", () => {
     render(<ScheduleSwitcher />);
     fireEvent.click(screen.getByRole("button", { name: /Nowy grafik/ }));
-    fireEvent.change(screen.getByLabelText("Nazwa nowego grafiku"), { target: { value: "Stary" } });
-    fireEvent.click(screen.getByRole("button", { name: "Dodaj" }));
+    // Kreator (G4.2): nazwa, dalej dwa razy, utwórz.
+    fireEvent.change(screen.getByLabelText("Nazwa"), { target: { value: "Stary" } });
+    fireEvent.click(screen.getByRole("button", { name: "Dalej" }));
+    fireEvent.click(screen.getByRole("button", { name: "Dalej" }));
+    fireEvent.click(screen.getByRole("button", { name: "Utwórz grafik" }));
     fireEvent.click(screen.getByRole("button", { name: /Zmień nazwę grafiku Stary/ }));
     fireEvent.change(screen.getByLabelText("Nowa nazwa grafiku"), { target: { value: "Nowy" } });
     fireEvent.click(screen.getByRole("button", { name: "Zapisz" }));
@@ -44,8 +50,11 @@ describe("nakładka grafiku (4.1)", () => {
     const onOverlayChange = () => {};
     render(<ScheduleSwitcher overlayId={null} onOverlayChange={onOverlayChange} />);
     fireEvent.click(screen.getByRole("button", { name: /Nowy grafik/ }));
-    fireEvent.change(screen.getByLabelText("Nazwa nowego grafiku"), { target: { value: "Partner" } });
-    fireEvent.click(screen.getByRole("button", { name: "Dodaj" }));
+    // Kreator (G4.2): nazwa, dalej dwa razy, utwórz.
+    fireEvent.change(screen.getByLabelText("Nazwa"), { target: { value: "Partner" } });
+    fireEvent.click(screen.getByRole("button", { name: "Dalej" }));
+    fireEvent.click(screen.getByRole("button", { name: "Dalej" }));
+    fireEvent.click(screen.getByRole("button", { name: "Utwórz grafik" }));
     const overlay = screen.getByLabelText("Nakładka grafiku") as HTMLSelectElement;
     const labels = Array.from(overlay.options).map((o) => o.textContent);
     expect(labels[0]).toBe("Bez nakładki");

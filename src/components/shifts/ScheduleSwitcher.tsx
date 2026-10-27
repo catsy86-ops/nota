@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { MAIN_SCHEDULE_ID } from "@/lib/shifts/yShifts";
 import { SCHEDULE_NAME_MAX } from "@/lib/shifts/schedules";
+import { NewScheduleWizard } from "./NewScheduleWizard";
 import { createSchedule, removeSchedule, renameSchedule, setActiveSchedule, useActiveScheduleId, useSchedules } from "@/lib/shifts/store";
 
 /**
@@ -16,6 +17,8 @@ export function ScheduleSwitcher({ overlayId = null, onOverlayChange }: { overla
   const activeId = useActiveScheduleId();
   const [mode, setMode] = useState<"none" | "add" | "rename" | "delete">("none");
   const [name, setName] = useState("");
+  // G4.2: „Nowy grafik” otwiera kreator (trzy kroki), nie pusty formularz nazwy.
+  const [wizardOpen, setWizardOpen] = useState(false);
   const active = schedules.find((s) => s.id === activeId) ?? schedules[0];
   const isMain = active.id === MAIN_SCHEDULE_ID;
 
@@ -44,6 +47,7 @@ export function ScheduleSwitcher({ overlayId = null, onOverlayChange }: { overla
 
   return (
     <div role="group" aria-label="Grafik" className="flex flex-wrap items-center gap-2">
+      <NewScheduleWizard open={wizardOpen} onOpenChange={setWizardOpen} />
       <select
         aria-label="Wybierz grafik"
         value={active.id}
@@ -65,7 +69,7 @@ export function ScheduleSwitcher({ overlayId = null, onOverlayChange }: { overla
       )}
       {mode === "none" && (
         <>
-          <Button type="button" variant="ghost" size="sm" className="coarse:h-11" aria-label="Nowy grafik" onClick={() => { setName(""); setMode("add"); }}>
+          <Button type="button" variant="ghost" size="sm" className="coarse:h-11" aria-label="Nowy grafik" onClick={() => setWizardOpen(true)}>
             <Plus className="h-4 w-4" aria-hidden /> <span className="hidden min-[420px]:inline">Nowy grafik</span>
           </Button>
           <Button type="button" variant="ghost" size="sm" className="coarse:h-11" onClick={() => { setName(active.name); setMode("rename"); }} aria-label={`Zmień nazwę grafiku ${active.name}`}>
