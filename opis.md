@@ -2942,7 +2942,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - `e2e/view-sheet-snap.spec.ts` (`@mobile`, Pixel 7) — start na pół, gest w górę do pełnego, gest w dół wraca na pół i arkusz zostaje otwarty.
 - `e2e/mobile.spec.ts` (15/15 na Pixel 7) — w tym zamykanie „Więcej” gestem. Razem z snap 16/16.
 - `e2e/debts-due.spec.ts`, `card-copy`, `card-keyboard-open`, `site-card-mobile` — przechodzą na chromium i Pixel 7.
-- Commity: `ed78a79` (pierwszy arkusz), punkty na pozostałych arkuszach w commicie 3.10 (hash poniżej).
+- Commity: `ed78a79` (pierwszy arkusz), punkty na pozostałych arkuszach: `50bb9f1` (2026-10-27).
 
 ## Wspólne — preferencje systemu: kontrast, przezroczystość, wymuszone kolory (plan UI/UX 3.12, 2026-10-27)
 
