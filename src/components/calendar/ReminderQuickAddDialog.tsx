@@ -61,10 +61,12 @@ interface ReminderQuickAddDialogProps {
   onClearReminder: (noteId: string) => void;
   /** Pomija najbliższe wystąpienie serii, przesuwając termin na kolejne. */
   onSkipOccurrence: (noteId: string, at: number, repeat: RepeatRule) => void;
+  /** Otwiera notatkę tego terminu (K2.1). Brak = przycisku nie ma. */
+  onOpenNote?: (noteId: string) => void;
 }
 
 export function ReminderQuickAddDialog({
-  open, onOpenChange, day, edit, notes, onCreateNote, onAttachReminder, onClearReminder, onSkipOccurrence,
+  open, onOpenChange, day, edit, notes, onCreateNote, onAttachReminder, onClearReminder, onSkipOccurrence, onOpenNote,
 }: ReminderQuickAddDialogProps) {
   const editedNote = edit ? notes.find((n) => n.id === edit.noteId) : undefined;
 
@@ -322,6 +324,11 @@ export function ReminderQuickAddDialog({
 
         {isEdit ? (
           <div className="space-y-2">
+            {onOpenNote && edit && (
+              <Button size="sm" variant="outline" onClick={() => { onOpenNote(edit.noteId); close(); }} className="w-full coarse:h-11">
+                Otwórz notatkę
+              </Button>
+            )}
             {edit?.isSeries && (
               <p className="text-xs text-muted-foreground">
                 To najbliższy termin serii „{REPEAT_KIND_LABELS[edit.repeat.kind].toLowerCase()}”.

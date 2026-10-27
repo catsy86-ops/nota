@@ -13,6 +13,8 @@ export interface TimelinePiece {
   work: boolean;
 }
 
+const DAY_MIN = 24 * 60;
+
 /** Domyślny zakres osi, gdy dzień nie ma ani zmiany, ani terminów poza nim. */
 export const DEFAULT_HOUR_FROM = 7;
 export const DEFAULT_HOUR_TO = 21;
@@ -35,6 +37,22 @@ export function shiftPieces(shift: ShiftType | undefined): TimelinePiece[] {
     { from: breakFrom, to: breakTo, work: false },
     { from: breakTo, to: span.to, work: true },
   ];
+}
+
+/**
+ * Część zmiany z dnia poprzedniego, która wchodzi w ten dzień po północy (K2.7): nocka 22–6 rysuje się
+ * na obu dniach — 22–24 wieczorem, 0–6 rano. Minuty przesunięte do doby tego dnia.
+ */
+export function carryPieces(prevShift: ShiftType | undefined): TimelinePiece[] {
+  return shiftPieces(prevShift)
+    .filter((p) => p.to > DAY_MIN)
+    .map((p) => ({ from: Math.max(0, p.from - DAY_MIN), to: p.to - DAY_MIN, work: p.work }));
+}
+
+/** Godzina HH:MM dla minut liczonych od północy (także po 24:00 — wtedy wraca na początek doby). */
+export function clockOf(minutes: number): string {
+  const m = ((minutes % DAY_MIN) + DAY_MIN) % DAY_MIN;
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 }
 
 /**

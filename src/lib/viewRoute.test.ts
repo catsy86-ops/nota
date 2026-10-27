@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parseViewRoute, viewPath, withSearch, notePath } from "./viewRoute";
+import { parseViewRoute, viewPath, withSearch, notePath, calendarDayFromSearch } from "./viewRoute";
 import type { View } from "@/hooks/useFilteredNotes";
 
 describe("viewRoute", () => {
@@ -37,5 +37,18 @@ describe("dział Praca (dawniej Nauka)", () => {
     expect(parseViewRoute("/praca", "").view).toBe("study");
     expect(parseViewRoute("/nauka", "").view).toBe("study");
     expect(viewPath("study")).toBe("/praca");
+  });
+});
+
+describe("adres dnia w kalendarzu (K1.5)", () => {
+  it("bierze dzien=YYYY-MM-DD, a zły format odrzuca", () => {
+    expect(calendarDayFromSearch("?dzien=2026-10-05")).toBe("2026-10-05");
+    expect(calendarDayFromSearch("?dzien=05.10.2026")).toBeNull();
+    expect(calendarDayFromSearch("?dzien=2026-10-5")).toBeNull();
+    expect(calendarDayFromSearch("")).toBeNull();
+  });
+
+  it("ścieżka kalendarza z dniem nadal wskazuje na kalendarz", () => {
+    expect(parseViewRoute("/kalendarz", "?dzien=2026-10-05").view).toBe("calendar");
   });
 });

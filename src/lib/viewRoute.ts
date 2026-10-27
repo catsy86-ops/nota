@@ -50,6 +50,16 @@ export function parseViewRoute(pathname: string, search: string): ViewRoute {
   return base;
 }
 
+/**
+ * Dzień z adresu kalendarza (`/kalendarz?dzien=YYYY-MM-DD`, K1.5). Zły format → `null`.
+ * Kalendarz czyta go po otwarciu i zdejmuje z adresu, a przed otwarciem notatki zapisuje tam bieżący dzień,
+ * żeby „wstecz” z notatki wrócił na ten sam dzień.
+ */
+export function calendarDayFromSearch(search: string): string | null {
+  const day = new URLSearchParams(search).get("dzien") ?? "";
+  return /^\d{4}-\d{2}-\d{2}$/.test(day) ? day : null;
+}
+
 /** Ścieżka widoku (bez zapytania). Widok bez wymaganego argumentu → Notatki. */
 export function viewPath(view: View, opts: { label?: string | null; folder?: string | null } = {}): string {
   if (view === "folder") return opts.folder ? `/folder/${encodeURIComponent(opts.folder)}` : "/";

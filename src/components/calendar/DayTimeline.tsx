@@ -1,7 +1,7 @@
 import { ArrowRight, Pencil } from "lucide-react";
 import { ReminderChip } from "./ReminderChip";
 import type { Occurrence } from "@/lib/reminderOccurrences";
-import { hourBackground, minutesOfDay, shiftPieces, timelineHours } from "@/lib/dayTimeline";
+import { carryPieces, clockOf, hourBackground, minutesOfDay, shiftPieces, timelineHours } from "@/lib/dayTimeline";
 import type { ShiftType } from "@/lib/shifts";
 
 /**
@@ -19,6 +19,8 @@ interface DayTimelineProps {
   occurrences: Occurrence[];
   titleOf: (noteId: string) => string;
   shift?: ShiftType;
+  /** Zmiana z poprzedniego dnia — jej część po północy (nocka) pokazuje się też tutaj (K2.7). */
+  prevShift?: ShiftType;
   onEdit: (occurrence: Occurrence) => void;
   onMoveByDays: (occurrence: Occurrence, days: number) => void;
   onOpenSeriesSource: (occurrence: Occurrence) => void;
@@ -69,8 +71,8 @@ function TimelineItem({ occ, title, onEdit, onMoveByDays, onOpenSeriesSource }: 
 
 const pad = (h: number) => `${String(h).padStart(2, "0")}:00`;
 
-export function DayTimeline({ occurrences, titleOf, shift, onEdit, onMoveByDays, onOpenSeriesSource }: DayTimelineProps) {
-  const pieces = shiftPieces(shift);
+export function DayTimeline({ occurrences, titleOf, shift, prevShift, onEdit, onMoveByDays, onOpenSeriesSource }: DayTimelineProps) {
+  const pieces = [...shiftPieces(shift), ...carryPieces(prevShift)];
   const allDay = occurrences.filter((o) => o.allDay);
   const timed = occurrences.filter((o) => !o.allDay);
   const { from, to } = timelineHours(pieces, timed.map((o) => minutesOfDay(o.at)));
@@ -103,6 +105,12 @@ export function DayTimeline({ occurrences, titleOf, shift, onEdit, onMoveByDays,
               <span className="w-10 shrink-0 pt-1.5 font-mono text-2xs tabular-nums text-muted-foreground">{pad(h)}</span>
               <span aria-hidden className="w-2 shrink-0 rounded-sm" style={bg ? { background: bg } : undefined} />
               <div className="flex-1 min-w-0 py-1 space-y-1.5">
+                {/* Przerwa jako znacznik z godzinami, nie tylko jaśniejszy pasek (K2.7). */}
+                {pieces.filter((p) => !p.work && Math.floor(p.from / 60) === h).map((p) => (
+                  <span key={`break-${p.from}`} className="block text-2xs italic text-muted-foreground">
+                    przerwa {clockOf(p.from)}–{clockOf(p.to)}
+                  </span>
+                ))}
                 {here.map((occ) => (
                   <TimelineItem key={`${occ.noteId}-${occ.at}`} occ={occ} {...itemProps} title={titleOf(occ.noteId)} />
                 ))}

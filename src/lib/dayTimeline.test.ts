@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { hourBackground, minutesOfDay, shiftPieces, timelineHours } from "./dayTimeline";
+import { carryPieces, clockOf, hourBackground, minutesOfDay, shiftPieces, timelineHours } from "./dayTimeline";
 import type { ShiftType } from "@/lib/shifts";
 
 const shift = (over: Partial<ShiftType>): ShiftType =>
@@ -79,5 +79,33 @@ describe("hourBackground — pasek zmiany w godzinie", () => {
 describe("minutesOfDay", () => {
   it("minuty od północy czasu lokalnego", () => {
     expect(minutesOfDay(new Date(2026, 9, 20, 14, 30).getTime())).toBe(870);
+  });
+});
+
+describe("nocka przez północ na obu dniach (K2.7)", () => {
+  it("część po północy wchodzi w następny dzień od 0:00", () => {
+    const night = shift({ id: "n", start: "22:00", end: "06:00" });
+    expect(shiftPieces(night)).toEqual([{ from: 1320, to: 1800, work: true }]);
+    expect(carryPieces(night)).toEqual([{ from: 0, to: 360, work: true }]);
+  });
+
+  it("zmiana w ciągu dnia nie wchodzi w następny dzień", () => {
+    expect(carryPieces(shift({}))).toEqual([]);
+  });
+
+  it("przerwa po północy zachowuje się jako przerwa w dniu następnym", () => {
+    const night = shift({ id: "n", start: "22:00", end: "06:00", breakMin: 30, breakAt: "01:00" });
+    expect(carryPieces(night)).toContainEqual({ from: 60, to: 90, work: false });
+  });
+
+  it("oś następnego dnia zaczyna się od 0:00, gdy nocka tam wchodzi", () => {
+    const pieces = carryPieces(shift({ id: "n", start: "22:00", end: "06:00" }));
+    expect(timelineHours(pieces, []).from).toBe(0);
+  });
+
+  it("godziny HH:MM także po północy", () => {
+    expect(clockOf(60)).toBe("01:00");
+    expect(clockOf(1500)).toBe("01:00");
+    expect(clockOf(1320)).toBe("22:00");
   });
 });

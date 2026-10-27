@@ -26,6 +26,7 @@ import { exportOneReminder, exportAllReminders } from "./calendarExport";
 import { toastWithUndo } from "@/lib/undoToast";
 import type { Occurrence } from "@/lib/reminderOccurrences";
 import type { Note } from "@/hooks/useNotes";
+import { calendarDayFromSearch, viewPath } from "@/lib/viewRoute";
 
 /**
  * Widok kalendarza przypomnień: siatka miesiąca + lista terminów wybranego dnia.
@@ -180,6 +181,22 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
     if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
     shiftMonth(dx < 0 ? 1 : -1);
   }
+
+  // Adres `/kalendarz?dzien=…` (K1.5): kalendarz otwiera ten dzień i zdejmuje parametr z adresu.
+  useEffect(() => {
+    const key = calendarDayFromSearch(window.location.search);
+    if (!key) return;
+    const [y, m, d] = key.split("-").map(Number);
+    setSelectedDay(new Date(y, m - 1, d));
+    setMonth(new Date(y, m - 1, 1));
+    window.history.replaceState(window.history.state, "", viewPath("calendar"));
+  }, []);
+
+  /** Przed otwarciem notatki zapisujemy w adresie bieżący dzień, żeby „wstecz” wrócił na ten dzień (K1.5, K2.1). */
+  const openNoteFromCalendar = useCallback((noteId: string) => {
+    window.history.replaceState(window.history.state, "", `${viewPath("calendar")}?dzien=${dayKey(selectedDay)}`);
+    onOpenNote?.(noteId);
+  }, [onOpenNote, selectedDay]);
 
   const openAdd = useCallback((day: Date) => {
     setSelectedDay(day);
@@ -340,6 +357,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
             occurrences={selectedOccurrences}
             titleOf={titleOf}
             shift={shiftOf(dayKey(selectedDay))}
+            prevShift={shiftOf(dayKey(addDays(selectedDay, -1)))}
             study={studyMarks.get(dayKey(selectedDay))}
             onEditShift={shifts.types.length > 0 ? () => setShiftDay(dayKey(selectedDay)) : undefined}
             onCopyPrevShift={shifts.types.length > 0 && !shifts.days[dayKey(selectedDay)] && prevShiftEntry(dayKey(selectedDay))
@@ -347,7 +365,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
             onAdd={() => openAdd(selectedDay)}
             onEdit={openEdit}
             onExport={exportOne}
-            onOpenNote={onOpenNote}
+            onOpenNote={onOpenNote ? openNoteFromCalendar : undefined}
             onSkip={(occ) => handleSkip(occ.noteId, occ.at, occ.repeat)}
             onMoveByDays={(occ, days) => moveToDay(occ, addDays(new Date(occ.at), days))}
             onOpenSeriesSource={openSeriesSource}
@@ -376,6 +394,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
           onAttachReminder={handleAttach}
           onClearReminder={handleClear}
           onSkipOccurrence={handleSkip}
+          onOpenNote={onOpenNote ? openNoteFromCalendar : undefined}
         />
       )}
     </section>

@@ -28,6 +28,8 @@ interface DayPanelProps {
   titleOf: (noteId: string) => string;
   /** Zmiana z Grafiku w tym dniu — pokazana nad terminami, żeby „co mam tego dnia” było w jednym miejscu. */
   shift?: ShiftType;
+  /** Zmiana z poprzedniego dnia — do osi godzin (nocka po północy). */
+  prevShift?: ShiftType;
   /** Wizyty i dostawy z Pracy tego dnia — w komórce są tylko liczniki, tu pełna informacja (1d planu). */
   study?: StudyDayMarks;
   onAdd: () => void;
@@ -68,7 +70,7 @@ function writeDayView(view: DayView) {
   try { localStorage.setItem(DAY_VIEW_KEY, view); } catch { /* bez zapisu zostaje wybór na czas sesji */ }
 }
 
-export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdit, onMoveByDays, onExport, onOpenNote, onSkip, onOpenSeriesSource, onEditShift, onCopyPrevShift, noteOf, onUpdateNote }: DayPanelProps) {
+export function DayPanel({ day, occurrences, titleOf, shift, prevShift, study, onAdd, onEdit, onMoveByDays, onExport, onOpenNote, onSkip, onOpenSeriesSource, onEditShift, onCopyPrevShift, noteOf, onUpdateNote }: DayPanelProps) {
   const [view, setViewState] = useState<DayView>(readDayView);
   function setView(next: DayView) {
     setViewState(next);
@@ -177,6 +179,7 @@ export function DayPanel({ day, occurrences, titleOf, shift, study, onAdd, onEdi
             occurrences={occurrences}
             titleOf={titleOf}
             shift={shift}
+            prevShift={prevShift}
             onEdit={onEdit}
             onMoveByDays={onMoveByDays}
             onOpenSeriesSource={onOpenSeriesSource}
