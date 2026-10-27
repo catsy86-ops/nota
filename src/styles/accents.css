@@ -1,0 +1,137 @@
+/*
+  Kolor akcentu (plan motywów 1.1, `src/lib/accent.ts`). PLIK GENEROWANY: `node docs/tools/accents/accents-gen.mjs`.
+  `html[data-accent="N"]` zmienia odcień `--primary` (i `--ring`, gdy ma ten sam odcień) w stylu; jasność
+  jest dobrana tak, żeby przechodziły progi `src/lib/skinContrast.test.ts`. Akcent 0 = barwa stylu (bez atrybutu).
+*/
+html[data-skin="zeszyt"]:not(.dark)[data-accent="1"] {
+  --primary: oklch(0.7022 0.1566 255.00);
+  --ring: oklch(0.6123 0.1355 255.00);
+}
+html[data-skin="zeszyt"]:not(.dark)[data-accent="2"] {
+  --primary: oklch(0.7022 0.1566 150.00);
+  --ring: oklch(0.6123 0.1355 150.00);
+}
+html[data-skin="zeszyt"]:not(.dark)[data-accent="3"] {
+  --primary: oklch(0.7022 0.1566 25.00);
+  --ring: oklch(0.6123 0.1355 25.00);
+}
+html[data-skin="zeszyt"]:not(.dark)[data-accent="4"] {
+  --primary: oklch(0.7022 0.1566 300.00);
+  --ring: oklch(0.6123 0.1355 300.00);
+}
+html[data-skin="zeszyt"].dark[data-accent="1"] {
+  --primary: oklch(0.7706 0.1183 255.00);
+  --ring: oklch(0.7706 0.1183 255.00);
+}
+html[data-skin="zeszyt"].dark[data-accent="2"] {
+  --primary: oklch(0.7706 0.1483 150.00);
+  --ring: oklch(0.7706 0.1483 150.00);
+}
+html[data-skin="zeszyt"].dark[data-accent="3"] {
+  --primary: oklch(0.7706 0.1343 25.00);
+  --ring: oklch(0.7706 0.1343 25.00);
+}
+html[data-skin="zeszyt"].dark[data-accent="4"] {
+  --primary: oklch(0.7706 0.1363 300.00);
+  --ring: oklch(0.7706 0.1363 300.00);
+}
+html[data-skin="plan"][data-accent="1"] {
+  --primary: oklch(0.8164 0.1115 60.00);
+  --ring: oklch(0.8164 0.1115 60.00);
+}
+html[data-skin="plan"][data-accent="2"] {
+  --primary: oklch(0.8164 0.1115 150.00);
+  --ring: oklch(0.8164 0.1115 150.00);
+}
+html[data-skin="plan"][data-accent="3"] {
+  --primary: oklch(0.8164 0.1115 350.00);
+  --ring: oklch(0.8164 0.1115 350.00);
+}
+html[data-skin="plan"][data-accent="4"] {
+  --primary: oklch(0.8164 0.0200 240.00);
+  --ring: oklch(0.8164 0.0200 240.00);
+}
+html[data-skin="neon"][data-accent="1"] {
+  --primary: oklch(0.7149 0.1218 206.00);
+}
+html[data-skin="neon"][data-accent="2"] {
+  --primary: oklch(0.9000 0.1858 100.00);
+}
+html[data-skin="neon"][data-accent="3"] {
+  --primary: oklch(0.7149 0.2238 145.00);
+}
+html[data-skin="neon"][data-accent="4"] {
+  --primary: oklch(0.7149 0.1738 300.00);
+}
+html[data-skin="zorza"][data-accent="1"] {
+  --primary: oklch(0.7706 0.1363 300.00);
+  --ring: oklch(0.7706 0.1363 300.00);
+}
+html[data-skin="zorza"][data-accent="2"] {
+  --primary: oklch(0.7706 0.1483 350.00);
+  --ring: oklch(0.7706 0.1483 350.00);
+}
+html[data-skin="zorza"][data-accent="3"] {
+  --primary: oklch(0.7706 0.1443 230.00);
+  --ring: oklch(0.7706 0.1443 230.00);
+}
+html[data-skin="zorza"][data-accent="4"] {
+  --primary: oklch(0.7706 0.1483 85.00);
+  --ring: oklch(0.7706 0.1483 85.00);
+}
+html[data-skin="miedz"][data-accent="1"] {
+  --primary: oklch(0.5447 0.0950 185.00);
+  --ring: oklch(0.4933 0.0861 185.00);
+}
+html[data-skin="miedz"][data-accent="2"] {
+  --primary: oklch(0.5447 0.1110 85.00);
+  --ring: oklch(0.4933 0.1001 85.00);
+}
+html[data-skin="miedz"][data-accent="3"] {
+  --primary: oklch(0.5447 0.0500 250.00);
+  --ring: oklch(0.4933 0.0500 250.00);
+}
+html[data-skin="miedz"][data-accent="4"] {
+  --primary: oklch(0.5447 0.1250 28.00);
+  --ring: oklch(0.4933 0.1221 28.00);
+}
+html[data-skin="matrix"][data-accent="1"] {
+  --primary: oklch(0.8686 0.1105 75.00);
+  --ring: oklch(0.8686 0.1105 75.00);
+  --glow-primary: 0 10px 30px -8px color-mix(in srgb, var(--primary) 55%, transparent);
+}
+html[data-skin="matrix"][data-accent="2"] {
+  --primary: oklch(0.8686 0.1465 200.00);
+  --ring: oklch(0.8686 0.1465 200.00);
+  --glow-primary: 0 10px 30px -8px color-mix(in srgb, var(--primary) 55%, transparent);
+}
+html[data-skin="matrix"][data-accent="3"] {
+  --primary: oklch(0.8686 0.0685 28.00);
+  --ring: oklch(0.8686 0.0685 28.00);
+  --glow-primary: 0 10px 30px -8px color-mix(in srgb, var(--primary) 55%, transparent);
+}
+html[data-skin="matrix"][data-accent="4"] {
+  --primary: oklch(0.8686 0.0300 140.00);
+  --ring: oklch(0.8686 0.0300 140.00);
+  --glow-primary: 0 10px 30px -8px color-mix(in srgb, var(--primary) 55%, transparent);
+}
+html[data-skin="hydraulika"][data-accent="1"] {
+  --primary: oklch(0.7013 0.1336 230.00);
+  --ring: oklch(0.7013 0.1336 230.00);
+  --glow-primary: 0 10px 30px -8px color-mix(in srgb, var(--primary) 55%, transparent);
+}
+html[data-skin="hydraulika"][data-accent="2"] {
+  --primary: oklch(0.7013 0.1336 85.00);
+  --ring: oklch(0.7013 0.1336 85.00);
+  --glow-primary: 0 10px 30px -8px color-mix(in srgb, var(--primary) 55%, transparent);
+}
+html[data-skin="hydraulika"][data-accent="3"] {
+  --primary: oklch(0.7013 0.1336 25.00);
+  --ring: oklch(0.7013 0.1336 25.00);
+  --glow-primary: 0 10px 30px -8px color-mix(in srgb, var(--primary) 55%, transparent);
+}
+html[data-skin="hydraulika"][data-accent="4"] {
+  --primary: oklch(0.7013 0.1336 255.00);
+  --ring: oklch(0.7013 0.1336 255.00);
+  --glow-primary: 0 10px 30px -8px color-mix(in srgb, var(--primary) 55%, transparent);
+}

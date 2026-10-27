@@ -12,6 +12,7 @@ import "./styles/fonts-latin/@fontsource-variable-unbounded-wght.css";
 import "./styles/fonts-latin/@fontsource-variable-fraunces-soft.css";
 import "./styles/fonts-latin/@fontsource-variable-bricolage-grotesque-wght.css";
 import "./styles/skins.css";
+import "./styles/accents.css";
 import "./styles/backdrop.css";
 import "./styles/shape.css";
 // Kroje tekstu do wyboru (Wygląd → „Krój tekstu”) — plik pobiera się dopiero po wyborze.
@@ -31,9 +32,10 @@ import "./styles/preferences.css";
 import "./lib/siteMode";
 import "./lib/appFont";
 import "./lib/textSize";
-// Tło i kształt (plan motywów 1.3, 1.2) — atrybuty na <html> przed pierwszym malowaniem.
+// Tło, kształt i akcent (plan motywów 1.3, 1.2, 1.1) — atrybuty na <html> przed pierwszym malowaniem.
 import "./lib/backdrop";
 import "./lib/shape";
+import "./lib/accent";
 import { registerServiceWorker, applyServiceWorkerUpdate, SW_UPDATE_EVENT } from "./lib/registerSW";
 import { hasUnsavedWork } from "./lib/saveStatus";
 import { setupFileLaunch } from "./lib/fileLaunch";

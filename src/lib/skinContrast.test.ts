@@ -1,5 +1,7 @@
 import { readFileSync } from "node:fs";
 import { readSkinCss } from "@/test/skinCss";
+import { ACCENT_COUNT } from "@/lib/accent";
+import { ACCENT_META } from "@/lib/accentMeta";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { SKINS, SKIN_SCHEME, type Skin } from "@/lib/skins";
@@ -59,33 +61,63 @@ const cases: [Skin, "light" | "dark"][] = [
   ...SKINS.filter((s) => s !== "zeszyt").map((s) => [s, SKIN_SCHEME[s] ?? "light"] as [Skin, "light" | "dark"]),
 ];
 
+function checkAll(t: Record<string, Oklch | number>, scheme: "light" | "dark") {
+  for (const [fg, bg] of TEXT_PAIRS) {
+    expect(contrast(rgb(t, fg), rgb(t, bg)), `${fg} na ${bg}`).toBeGreaterThanOrEqual(4.5);
+  }
+  for (const surface of ["background", "card"]) {
+    expect(contrast(rgb(t, "input"), rgb(t, surface)), `input na ${surface}`).toBeGreaterThanOrEqual(3);
+  }
+  // Ikony działów w nawigacji (D-4): wariant „ink” (kolor zmieszany z czernią, jak `--sec-*` w index.css).
+  // Grafika, więc 3:1 (1.4.11), nie 4.5:1.
+  // Jak `--sec-*` w index.css: jasne tło — przyciemnione o 50% czerni, ciemne — czysty kolor motywu.
+  const sectionInk = (token: string): [number, number, number] =>
+    (scheme === "dark" ? rgb(t, token) : rgb(t, token).map((c) => c * 0.5)) as [number, number, number];
+  for (const token of ["primary", "accent", "warning", "success"]) {
+    for (const surface of ["background", "card"]) {
+      expect(contrast(sectionInk(token), rgb(t, surface)), `ikona ${token} na ${surface}`).toBeGreaterThanOrEqual(3);
+    }
+  }
+  // `primary-ink` i `warning-ink` = kolor zmieszany z czernią w proporcji z tailwind.config.ts.
+  const inkMix = (t["ink-mix"] ?? 62) as number;
+  const primaryInk = rgb(t, "primary").map((c) => c * inkMix / 100) as [number, number, number];
+  const warningMix = (t["warning-ink-mix"] ?? inkMix) as number;
+  const warningBase = (t["warning-ink-base"] ? rgb(t, "warning-ink-base") : rgb(t, "warning"));
+  const warningInk = warningBase.map((c) => c * warningMix / 100) as [number, number, number];
+  for (const surface of ["background", "card"]) {
+    expect(contrast(primaryInk, rgb(t, surface)), `primary-ink na ${surface}`).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(warningInk, rgb(t, surface)), `warning-ink na ${surface}`).toBeGreaterThanOrEqual(4.5);
+  }
+}
+
 describe("kontrast tokenów wszystkich stylów (WCAG AA)", () => {
   for (const [skin, scheme] of cases) {
     it(`${skin} (${scheme}): tekst ≥4.5:1, krawędź pola ≥3:1`, () => {
-      const t = resolveSkin(skin, scheme);
-      for (const [fg, bg] of TEXT_PAIRS) {
-        expect(contrast(rgb(t, fg), rgb(t, bg)), `${fg} na ${bg}`).toBeGreaterThanOrEqual(4.5);
+      checkAll(resolveSkin(skin, scheme), scheme);
+    });
+  }
+});
+
+// Akcenty (plan motywów 1.1/1.5): każdy odcień z `accents.css` przechodzi te same progi co barwa stylu.
+const accentsCss = readFileSync(resolve(process.cwd(), "src/styles/accents.css"), "utf8");
+function accentBlock(skin: Skin, scheme: "light" | "dark", n: number): string | null {
+  const sel = skin === "zeszyt"
+    ? `html[data-skin="zeszyt"]${scheme === "dark" ? ".dark" : ":not(.dark)"}[data-accent="${n}"]`
+    : `html[data-skin="${skin}"][data-accent="${n}"]`;
+  const start = accentsCss.indexOf(`${sel} {`);
+  return start < 0 ? null : accentsCss.slice(start, accentsCss.indexOf("}", start));
+}
+
+describe("akcenty stylów: kontrast i komplet odcieni", () => {
+  for (const [skin, scheme] of cases) {
+    it(`${skin} (${scheme}): ${ACCENT_COUNT - 1} odcieni, każdy ≥ progów`, () => {
+      expect(ACCENT_META[skin]).toHaveLength(ACCENT_COUNT);
+      for (let n = 1; n < ACCENT_COUNT; n++) {
+        const body = accentBlock(skin, scheme, n);
+        expect(body, `brak akcentu ${n}`).not.toBeNull();
+        checkAll({ ...resolveSkin(skin, scheme), ...tokens(body!) }, scheme);
       }
-      for (const surface of ["background", "card"]) {
-        expect(contrast(rgb(t, "input"), rgb(t, surface)), `input na ${surface}`).toBeGreaterThanOrEqual(3);
-      }
-      // Ikony działów w nawigacji (D-4): wariant „ink” (kolor zmieszany z czernią, jak `--sec-*` w index.css).
-      // Grafika, więc 3:1 (1.4.11), nie 4.5:1.
-      // Jak `--sec-*` w index.css: jasne tło — przyciemnione o 50% czerni, ciemne — czysty kolor motywu.
-      const sectionInk = (token: string): [number, number, number] =>
-        (scheme === "dark" ? rgb(t, token) : rgb(t, token).map((c) => c * 0.5)) as [number, number, number];
-      for (const token of ["primary", "accent", "warning", "success"]) {
-        for (const surface of ["background", "card"]) {
-          expect(contrast(sectionInk(token), rgb(t, surface)), `ikona ${token} na ${surface}`).toBeGreaterThanOrEqual(3);
-        }
-      }
-      // `warning-ink` = warning zmieszany z czernią w proporcji z tailwind.config.ts (warning-ink-mix, a dalej ink-mix).
-      const inkMix = (t["warning-ink-mix"] ?? t["ink-mix"] ?? 62) as number;
-      const warningBase = (t["warning-ink-base"] ? rgb(t, "warning-ink-base") : rgb(t, "warning"));
-      const warningInk = warningBase.map((c) => c * inkMix / 100) as [number, number, number];
-      for (const surface of ["background", "card"]) {
-        expect(contrast(warningInk, rgb(t, surface)), `warning-ink na ${surface}`).toBeGreaterThanOrEqual(4.5);
-      }
+      expect(accentBlock(skin, scheme, ACCENT_COUNT), "akcent poza listą").toBeNull();
     });
   }
 });

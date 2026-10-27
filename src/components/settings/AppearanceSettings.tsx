@@ -14,6 +14,7 @@ import { Section, ToggleRow } from "./SettingsShared";
 import { EffectsSettings } from "./EffectsSettings";
 import { Segmented } from "./Segmented";
 import { SkinPicker } from "./SkinPicker";
+import { AccentPicker } from "./AccentPicker";
 import { FontPicker } from "./FontPicker";
 import { setAppFont, useAppFont } from "@/lib/appFont";
 import { TextSizeControl } from "./TextSizeControl";
@@ -97,6 +98,10 @@ export function AppearanceSettings() {
     <div className="space-y-4">
       <Section title="Styl">
         <SkinPicker value={skin} onChange={trySkin} />
+      </Section>
+
+      <Section title="Akcent">
+        <AccentPicker skin={skin} />
       </Section>
 
       <Section title="Tło">
