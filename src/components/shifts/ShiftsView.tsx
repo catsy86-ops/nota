@@ -2,15 +2,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDayClock } from "@/lib/dayClock";
 import { addMonths, format, isSameMonth, startOfMonth } from "date-fns";
 import { pl } from "date-fns/locale";
-import { CalendarArrowDown, CalendarRange, ChevronDown, FileSpreadsheet, ChevronLeft, ChevronRight, Image as ImageIcon, Redo2, Share2, Undo2 } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { CalendarRange, ChevronDown, ChevronLeft, ChevronRight, Redo2, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { dayKey, expandOccurrences, groupByDay, type Occurrence } from "@/lib/reminderOccurrences";
 import type { Note } from "@/hooks/useNotes";
 import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
 import { buildSiteTimesheetCsv } from "@/lib/study/siteTimesheet";
 import { useStudy } from "@/lib/study/store";
-import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, copyRange, defaultPatternStart, useScheduleData, useSchedules, monthSummaryToDate, shortRests, swapDays, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, copyRange, defaultPatternStart, useScheduleData, useSchedules, monthSummaryToDate, shortRests, swapDays, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type WeekCopyPlan } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
@@ -25,14 +24,15 @@ import { haptic } from "@/lib/haptics";
 import { setCycleWave } from "@/lib/shifts/cycleWave";
 import { timeOffBalance } from "@/lib/shifts/timeOff";
 import { BrushBar, type Brush } from "./BrushBar";
+import { TransferChooser, type DropChoice } from "./TransferChooser";
+import { ShiftExportMenu, ShiftExportToolbar } from "./ShiftExportControls";
+import { NoShiftTypes } from "./NoShiftTypes";
+import { TOOLBAR_BTN } from "./shiftControlStyles";
 import { BrushHours } from "./BrushHours";
 import { ShiftMonthGrid } from "./ShiftMonthGrid";
 import { ShiftWeekView } from "./ShiftWeekView";
 import { ShiftDnd, type DayActions, type DropMode } from "./ShiftDnd";
-import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ResponsiveDialogContent, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ShiftSummary } from "./ShiftSummary";
 import { ScheduleSwitcher } from "./ScheduleSwitcher";
@@ -54,10 +54,8 @@ const exportedStoreFor = (key: string) => createPersistedStore<string[]>(key, []
   merge: (defaults, stored) => (Array.isArray(stored) ? stored.filter((k): k is string => typeof k === "string") : defaults),
 });
 
-const IMAGE_THEME_LABEL: Record<ImageTheme, string> = { light: "jasny", dark: "ciemny", style: "aktywny styl" };
 
 /** Wybór po upuszczeniu zmiany: przenieś, skopiuj albo zamień miejscami z zajętym dniem. */
-type DropChoice = TransferMode | "swap";
 
 type ShiftsLayout = "month" | "week";
 
@@ -80,7 +78,6 @@ const navButton = "pressable shrink-0 w-10 h-10 coarse:w-11 coarse:h-11 rounded-
 const MOVE_HINT_KEY = "kaczy.shifts.moveHint.v1";
 
 /** Przycisk paska narzędzi Grafiku (wspólny wygląd, wysokość h-10 — §audyt 5). */
-const TOOLBAR_BTN = "pressable flex items-center gap-1.5 h-10 coarse:h-11 px-3 rounded-field text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
 
 export function ShiftsView({ notes = [] }: { notes?: Note[] }) {
   // Do wczytania dokumentu nic — pusty grafik mignąłby i ustawił zły pędzel startowy.
@@ -580,51 +577,10 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         </div>
         {/* Telefon: eksporty w jednym menu „Udostępnij” — pod siatką nie ma trzech wrapujących się przycisków. */}
         <div className="order-9 flex justify-end sm:hidden short:col-span-full">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button type="button" className={TOOLBAR_BTN}>
-                <Share2 className="w-4 h-4" /> Udostępnij
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64">
-              <DropdownMenuItem onSelect={() => exportCsv()}>
-                <FileSpreadsheet className="w-4 h-4 mr-2" aria-hidden /> Karta czasu (.csv)
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => exportSiteCsv()}>
-                <FileSpreadsheet className="w-4 h-4 mr-2" aria-hidden /> Godziny na budowach (.csv)
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => exportIcs()}>
-                <CalendarArrowDown className="w-4 h-4 mr-2" aria-hidden /> Do kalendarza (.ics)
-              </DropdownMenuItem>
-              {(["light", "dark", "style"] as const).map((t) => (
-                <DropdownMenuItem key={t} onSelect={() => { void exportImage(t); }}>
-                  <ImageIcon className="w-4 h-4 mr-2" aria-hidden /> Obraz miesiąca — {IMAGE_THEME_LABEL[t]} (.png)
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <ShiftExportMenu onCsv={exportCsv} onSiteCsv={exportSiteCsv} onIcs={exportIcs} onImage={(t) => { void exportImage(t); }} />
         </div>
         <div className="order-9 hidden sm:flex flex-wrap justify-end gap-1 short:col-span-full">
-          <button type="button" onClick={exportCsv}
-            className={TOOLBAR_BTN}>
-            <FileSpreadsheet className="w-4 h-4" /> Karta czasu (.csv)
-          </button>
-          <button type="button" onClick={exportSiteCsv}
-            className={TOOLBAR_BTN}>
-            <FileSpreadsheet className="w-4 h-4" /> Godziny na budowach (.csv)
-          </button>
-          <button type="button" onClick={exportIcs}
-            className={TOOLBAR_BTN}>
-            <CalendarArrowDown className="w-4 h-4" /> Do kalendarza (.ics)
-          </button>
-          <select aria-label="Motyw obrazu miesiąca" value={imageTheme} onChange={(e) => setImageTheme(e.target.value as ImageTheme)}
-            className="h-9 rounded-control border border-input bg-background px-2 text-sm">
-            {(["light", "dark", "style"] as const).map((t) => <option key={t} value={t}>{IMAGE_THEME_LABEL[t]}</option>)}
-          </select>
-          <button type="button" onClick={() => { void exportImage(); }}
-            className={TOOLBAR_BTN}>
-            <ImageIcon className="w-4 h-4" /> Obraz miesiąca (.png)
-          </button>
+          <ShiftExportToolbar imageTheme={imageTheme} onImageTheme={setImageTheme} onCsv={exportCsv} onSiteCsv={exportSiteCsv} onIcs={exportIcs} onImage={(t) => { void exportImage(t); }} />
         </div>
 
       </div>
@@ -651,22 +607,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         </div>
         <div className="order-6 empty:hidden short:col-span-full">
           {data.types.length === 0 && (
-            <section aria-label="Brak rodzajów zmian" className="rounded-card border border-dashed border-border p-4 space-y-3">
-              <p className="text-sm">
-                <span className="font-display font-bold">Nie ma żadnego rodzaju zmiany.</span>{" "}
-                <span className="text-muted-foreground">Dodaj własny albo przywróć startowe ({DEFAULT_SHIFT_TYPES.map((t) => t.name).join(", ")}), żeby nanosić je na dni.</span>
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={() => setEditingType("new")}
-                  className="pressable h-10 coarse:h-11 px-4 rounded-control bg-primary text-primary-foreground text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-                  Dodaj rodzaj zmiany
-                </button>
-                <button type="button" onClick={() => { addDefaultShiftTypes(); setBrush({ kind: "type", id: DEFAULT_SHIFT_TYPES[0].id }); }}
-                  className="pressable h-10 coarse:h-11 px-4 rounded-card border border-border/60 hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-                  Przywróć startowe
-                </button>
-              </div>
-            </section>
+            <NoShiftTypes onAdd={() => setEditingType("new")} onRestore={() => { addDefaultShiftTypes(); setBrush({ kind: "type", id: DEFAULT_SHIFT_TYPES[0].id }); }} />
           )}
 
         </div>
@@ -719,31 +660,5 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         overlapOf={patternOverlapInStore}
       />
     </div>
-  );
-}
-
-/** Dotyk nie ma Alta — po upuszczeniu zmiany pytamy, co z nią zrobić. */
-function TransferChooser({ pending, label, canSwap, onChoose, onClose }: {
-  pending: { from: string; to: string } | null;
-  label: string;
-  /** Dzień docelowy ma zmianę — wtedy można je zamienić miejscami. */
-  canSwap: boolean;
-  onChoose: (mode: DropChoice) => void;
-  onClose: () => void;
-}) {
-  return (
-    <Dialog open={pending !== null} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <ResponsiveDialogContent className="max-w-xs">
-        <DialogHeader>
-          <DialogTitle>{canSwap ? "Przenieść, skopiować czy zamienić?" : "Przenieść czy skopiować?"}</DialogTitle>
-          <DialogDescription>{label}{canSwap ? " Dzień docelowy ma już zmianę." : ""}</DialogDescription>
-        </DialogHeader>
-        <ResponsiveDialogFooter className="gap-2 sm:gap-2">
-          <Button type="button" variant="outline" onClick={() => onChoose("copy")}>Skopiuj</Button>
-          {canSwap && <Button type="button" variant="outline" onClick={() => onChoose("swap")}>Zamień</Button>}
-          <Button type="button" onClick={() => onChoose("move")}>Przenieś</Button>
-        </ResponsiveDialogFooter>
-      </ResponsiveDialogContent>
-    </Dialog>
   );
 }

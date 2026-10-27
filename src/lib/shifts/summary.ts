@@ -1,4 +1,6 @@
 import { dayType, isAbsence, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftType } from "./model";
+import { settlementPeriod } from "./settlement";
+export { settlementPeriod };
 import { dstShiftMinutes, entryMinutesOn, isNightHour, nightMinutes, shiftMinutes, shiftSpan, wallToWork, workToWall } from "./time";
 import { holidayName, isNormDay, workNormMinutes } from "./holidays";
 
@@ -312,27 +314,6 @@ function monthCore(data: ShiftData, year: number, month: number, otSpans: Overti
 }
 
 /**
- * Okres rozliczeniowy, w który wpada miesiąc (`month` od 0). Okresy idą po
- * sobie od miesiąca `start` — kwartał od lutego to luty–kwiecień, maj–lipiec,
- * sierpień–październik, listopad–styczeń; ostatni zaczyna się rok wcześniej.
- */
-export function settlementPeriod(year: number, month: number, months: SettlementMonths, start = 0): { year: number; startMonth: number; months: SettlementMonths } {
-  const abs = year * 12 + month;
-  const first = abs - ((((month - start) % months) + months) % months);
-  return { year: Math.floor(first / 12), startMonth: first % 12, months };
-}
-
-/**
- * Podsumowanie miesiąca (`month` od 0). Dzień należy do miesiąca, w którym
- * zmiana się zaczęła. Nadgodziny = dobowe (`dailyOvertimeSpans`) plus
- * przekroczenie normy okresu rozliczeniowego przez pozostałe godziny
- * (art. 151 § 1 KP) — to drugie wykazane w ostatnim miesiącu okresu, bo
- * dopiero wtedy wiadomo, czy norma została przekroczona. Dodatek
- * (art. 151¹ KP) do stawki, którą każda godzina dostała już w podstawie:
- * 100% w nocy, w niedzielę i święto wolne wg grafiku, w dzień wolny za
- * niedzielę lub święto oraz za przekroczenie normy okresu, 50% za pozostałe nadgodziny dobowe.
- */
-/**
  * Nadgodziny dobowe raz na obiekt danych (G3.1): rok to 12 wywołań `monthSummary`
  * (`leave`, `absenceEstimate`, `timeOff`). Dane traktujemy jako niezmienne — zmiana to nowy obiekt.
  */
@@ -346,6 +327,16 @@ function overtimeSpansOf(data: ShiftData): OvertimeSpan[] {
   return spans;
 }
 
+/**
+ * Podsumowanie miesiąca (`month` od 0). Dzień należy do miesiąca, w którym
+ * zmiana się zaczęła. Nadgodziny = dobowe (`dailyOvertimeSpans`) plus
+ * przekroczenie normy okresu rozliczeniowego przez pozostałe godziny
+ * (art. 151 § 1 KP) — to drugie wykazane w ostatnim miesiącu okresu, bo
+ * dopiero wtedy wiadomo, czy norma została przekroczona. Dodatek
+ * (art. 151¹ KP) do stawki, którą każda godzina dostała już w podstawie:
+ * 100% w nocy, w niedzielę i święto wolne wg grafiku, w dzień wolny za
+ * niedzielę lub święto oraz za przekroczenie normy okresu, 50% za pozostałe nadgodziny dobowe.
+ */
 export function monthSummary(data: ShiftData, year: number, month: number): MonthSummary {
   const otSpans = overtimeSpansOf(data);
   const days = premiumRules(data);
