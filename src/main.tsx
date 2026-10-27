@@ -21,6 +21,8 @@ import "./styles/fonts-latin/@fontsource-variable-manrope-wght.css";
 import "./styles/fonts-latin/@fontsource-variable-lexend-wght.css";
 import "./styles/fonts.css";
 import "./styles/site.css";
+// Preferencje systemu (3.12): ostatni, bo nadpisuje tokeny motywów i rozmycia.
+import "./styles/preferences.css";
 // Tryb budowa ustawia `html[data-site]` przy imporcie — przed pierwszym malowaniem.
 import "./lib/siteMode";
 import "./lib/appFont";

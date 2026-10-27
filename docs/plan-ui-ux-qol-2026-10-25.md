@@ -190,3 +190,5 @@ Plan kończymy tutaj; pozostałe punkty to backlog z podanym zakresem, do zrobie
   - Faza 2–5 i 6 (ruch, UX, wydajność, upiększenie, QA telefonu): nie zaczęte.
 
 **Status 3.10 (2026-10-27):** zrobione punkty zatrzymania „pół / pełny” w `ViewSheet` (`src/components/ui/sheet-snap.ts`, opt-in `snap` w `SheetContent`), testy: `sheet-snap.test.ts`, `e2e/view-sheet-snap.spec.ts`. **Nie zrobione:** przeniesienie pozostałych arkuszy na jeden `ViewSheet` (ok. 27 użyć `SheetContent`) — osobny krok, do decyzji po QA na telefonie.
+
+**Status 3.12 (2026-10-27):** zrobione w `src/styles/preferences.css`: `prefers-contrast` (tokeny i krawędzie), `prefers-reduced-transparency` (bez rozmyć), `forced-colors` (obrys fokusu). **Nie zrobione:** grubsze obramowania (zmiana klas komponentów). Test: `e2e/system-preferences.spec.ts`.

@@ -1,0 +1,40 @@
+/*
+ * Preferencje systemu (plan UI/UX 3.12). Plik importowany ostatni w main.tsx:
+ * tokeny motywów są w `html[data-skin="…"]` (specyficzność 0,1,1), więc nadpisanie
+ * ma tę samą specyficzność i wygrywa przez kolejność, bez `!important` tam, gdzie się da.
+ */
+
+/* Wysoki kontrast: mocniejsze krawędzie i tekst pomocniczy w każdym motywie i na obu schematach. */
+@media (prefers-contrast: more) {
+  html[data-skin], html:not([data-skin]) {
+    --border: color-mix(in oklab, var(--foreground) 55%, var(--background));
+    --muted-foreground: color-mix(in oklab, var(--foreground) 85%, var(--background));
+  }
+  /* Krawędzie w półprzezroczystości (`border-border/50`…`/60`) bez tego zostają słabe. */
+  .border-border\/40,
+  .border-border\/50,
+  .border-border\/60 {
+    border-color: var(--border);
+  }
+}
+
+/* Ograniczona przezroczystość: rozmycia znikają; tła z `/95` zostają prawie pełne. */
+@media (prefers-reduced-transparency: reduce) {
+  *,
+  *::before,
+  *::after {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/*
+ * Wymuszone kolory (tryb wysokiego kontrastu systemu) usuwają tła i cienie,
+ * więc pierścień fokusu (`ring-*` to cień) znika. Obrys systemowy go zastępuje.
+ */
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
+  }
+}

@@ -2941,3 +2941,29 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - `e2e/view-sheet-snap.spec.ts` (`@mobile`, Pixel 7) — start na pół, gest w górę do pełnego, gest w dół wraca na pół i arkusz zostaje otwarty.
 - `e2e/mobile.spec.ts` (15/15 na Pixel 7) — w tym zamykanie „Więcej” gestem i formularz jako arkusz.
 - Commit: `ed78a79` (2026-10-27).
+
+## Wspólne — preferencje systemu: kontrast, przezroczystość, wymuszone kolory (plan UI/UX 3.12, 2026-10-27)
+
+### Co robi
+- **Wysoki kontrast** (`prefers-contrast: more`): krawędzie i tekst pomocniczy są mocniejsze we wszystkich motywach i na obu schematach. Krawędzie `border-border/40…/60` dostają pełny kolor krawędzi.
+- **Ograniczona przezroczystość** (`prefers-reduced-transparency: reduce`): rozmycia tła (`backdrop-filter`) są wyłączone w całej aplikacji.
+- **Wymuszone kolory** (`forced-colors: active`): fokus z klawiatury dostaje obrys systemowy 2 px, bo pierścień (cień) znika.
+
+### Gdzie jest
+- `src/styles/preferences.css` — cały zakres 3.12; importowany ostatni w `src/main.tsx`, bo nadpisuje tokeny motywów i rozmycia.
+- Dotąd w aplikacji: `src/index.css` (`forced-colors` tylko dla przekreślenia `.check-strike`), `src/lib/siteMode.ts` (tryb budowa włączany przy `prefers-contrast` w trybie „auto”, osobny od 3.12).
+
+### Jak działa
+- Tokeny motywów są w `html[data-skin="…"]` (specyficzność 0,1,1), więc nadpisanie w `:root` przegrałoby. Blok używa tego samego selektora i jest późniejszy w kaskadzie.
+- `--border` i `--muted-foreground` dostają `color-mix` z `--foreground` i `--background` (55% i 85%). Działa na każdym motywie i schemacie bez osobnych wartości.
+- Przezroczystość: `backdrop-filter: none !important` na wszystkich elementach. Tła z `/95` zostają prawie pełne; osobnych wartości nie ma.
+- Wszystkie reguły są w `@media`, więc domyślny wygląd się nie zmienia.
+
+### Ograniczenia i pułapki
+- Wysoki kontrast zmienia kolor krawędzi, a nie jej grubość. Grubsze obramowania (z planu) nie są zrobione; trzeba by było zmieniać klasy komponentów.
+- Kolorowe notatki w ciemnym motywie mają własne `--muted-foreground` (`.dark [data-note-color]`, większa specyficzność) — ich tekst pomocniczy nie zmienia się pod wysoki kontrast.
+- Reguła `backdrop-filter: none !important` jest szeroka. Zamierzone (wyłącza rozmycia, także tryb budowy), ale może wpłynąć na nowe komponenty z rozmyciem.
+- `prefers-reduced-transparency` nie jest emulowane w Playwright; test go nie obejmuje, sprawdzone przez kod.
+
+### Testy
+- `e2e/system-preferences.spec.ts` (chromium): wysoki kontrast zmienia `--border` i `--muted-foreground`; wymuszone kolory dają fokusowi obrys `solid 2px`.
