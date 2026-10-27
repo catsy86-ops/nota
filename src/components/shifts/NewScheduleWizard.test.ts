@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { DEFAULT_SHIFT_TYPES } from "@/lib/shifts/model";
-import { CYCLE_LENGTH_DAYS, FIRST_CYCLES } from "./NewScheduleWizard";
+import { CYCLE_LENGTH_DAYS, FIRST_CYCLES } from "@/lib/shifts/firstCycle";
 
 // G4.2: kroki pierwszego cyklu muszą wskazywać rodzaje, które kreator dodaje krok wcześniej.
 describe("kreator nowego grafiku (G4.2)", () => {

@@ -9,16 +9,10 @@ import {
   type WorkSystem,
 } from "@/lib/shifts";
 import { parseMoney } from "@/lib/shifts/money";
+import { CYCLE_LENGTH_DAYS, FIRST_CYCLES, type FirstCycle } from "@/lib/shifts/firstCycle";
 import { cn } from "@/lib/utils";
 import { WORK_SYSTEM_LABELS } from "./labels";
 
-/** Pierwszy cykl (G4.2): bez cyklu albo dniówka pn–pt od dziś. Kroki to id rodzajów z `DEFAULT_SHIFT_TYPES`. */
-export const FIRST_CYCLES = {
-  none: { label: "Bez cyklu — zaczniesz od pustej siatki", steps: null },
-  weekdays: { label: "Dniówka 8–16 od poniedziałku do piątku, od dziś na 4 tygodnie", steps: ["e", "e", "e", "e", "e", null, null] },
-} as const;
-export type FirstCycle = keyof typeof FIRST_CYCLES;
-export const CYCLE_LENGTH_DAYS = 28;
 
 const CONTROL = "w-full h-10 coarse:h-11 rounded-field border border-input bg-background px-3 text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
 const STEPS = ["Grafik", "Rodzaje zmian", "Pierwszy cykl"] as const;

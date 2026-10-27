@@ -13,7 +13,7 @@
 - **Grafik G2 (2026-10-27):** zrobione G2.1–G2.4, G2.5 bez pędzla, G2.6. Nie robione: pędzel z „Własnymi godzinami” (G2.5).
 - **Grafik G3 (2026-10-27):** G3.1 i G3.2 zrobione (hook `useShiftPaint`). Nie robione: G4.8 i G4.9 (decyzja G-7 odłożona, G-1 czeka na kadry).
 - **Grafik G4.1 (2026-10-27):** alarm przed zmianą (60 min domyślnie, per grafik, wyłączalny). Bez akcji „Skończyłem” na powiadomieniu.
-- **Grafik G4.2 (2026-10-27):** kreator nowego grafiku (3 kroki). Nie robione jeszcze: Kalendarz K3.6 (po QA), K4.1, K4.5, Grafik G4.3–G4.7 (bez G4.8–G4.9), cała Praca (P2–P5).
+- **Grafik G4.2–G4.3 (2026-10-27):** kreator nowego grafiku; rok w wykresach i mapa dni. Nie robione jeszcze: Kalendarz K3.6 (po QA), K4.1, K4.5, Grafik G4.4–G4.7 (bez G4.8–G4.9), cała Praca (P2–P5).
 
 ## Kontekst
 

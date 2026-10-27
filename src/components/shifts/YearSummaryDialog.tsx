@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { lazy, Suspense, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { m as motion } from "framer-motion";
@@ -10,6 +10,8 @@ import { tween } from "@/lib/motion";
 import { pluralPl } from "@/lib/plural";
 import { cn } from "@/lib/utils";
 import { formatHoursShort, formatMoney, leaveBalance, yearSummary, type LeaveBalance, type ShiftData } from "@/lib/shifts";
+import { yearChartRows, yearDayMinutes } from "@/lib/shifts/yearCharts";
+import { YearHeatmap } from "./YearHeatmap";
 
 interface YearSummaryDialogProps {
   open: boolean;
@@ -21,6 +23,7 @@ interface YearSummaryDialogProps {
   onOpenMonth?: (monthKey: string) => void;
 }
 
+const YearCharts = lazy(() => import("./YearCharts").then((m) => ({ default: m.YearCharts })));
 const DAYS: [string, string, string] = ["dzień", "dni", "dni"];
 
 /** Liczba dni albo „—” dla zera — rzędy tabeli czytają się szybciej bez zer. */
@@ -48,6 +51,9 @@ function YearBody({ data, initialYear, onOpenChange, onOpenMonth }: { data: Shif
   const dayTick = useDayClock();
   const balance = useMemo(() => leaveBalance(data, year, new Date()), [data, year, dayTick]); // eslint-disable-line react-hooks/exhaustive-deps -- dzień zmienia wynik bez zmiany danych
   const paid = summary.total.earnings > 0;
+  // G4.3: wykresy i mapa roku liczone z danych; wykresy ładują się leniwie.
+  const rows = useMemo(() => yearChartRows(data, year), [data, year]);
+  const dayMinutes = useMemo(() => yearDayMinutes(data, year), [data, year]);
   const now = new Date();
   const currentMonth = now.getFullYear() === year ? now.getMonth() : -1;
 
@@ -69,6 +75,11 @@ function YearBody({ data, initialYear, onOpenChange, onOpenMonth }: { data: Shif
       </DialogHeader>
 
       <LeaveMeter balance={balance} />
+
+      <Suspense fallback={<div className="h-44" aria-hidden />}>
+        <YearCharts rows={rows} />
+      </Suspense>
+      <YearHeatmap year={year} dayMinutes={dayMinutes} />
 
       {/* Na telefonie tabela przewija się w poziomie zamiast ściskać kolumny (5.6). */}
       <div className="font-mono text-xs sm:text-[0.8125rem] tabular-nums overflow-x-auto">
