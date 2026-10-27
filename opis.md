@@ -2947,7 +2947,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 ## Wspólne — preferencje systemu: kontrast, przezroczystość, wymuszone kolory (plan UI/UX 3.12, 2026-10-27)
 
 ### Co robi
-- **Wysoki kontrast** (`prefers-contrast: more`): krawędzie i tekst pomocniczy są mocniejsze we wszystkich motywach i na obu schematach. Krawędzie `border-border/40…/60` dostają pełny kolor krawędzi.
+- **Wysoki kontrast** (`prefers-contrast: more`): krawędzie i tekst pomocniczy są mocniejsze we wszystkich motywach i na obu schematach. Krawędzie `border-border/40…/60` dostają pełny kolor krawędzi; utility `border` i jego strony (`border-t`, `border-x`…) mają 2 px zamiast 1 px.
 - **Ograniczona przezroczystość** (`prefers-reduced-transparency: reduce`): rozmycia tła (`backdrop-filter`) są wyłączone w całej aplikacji.
 - **Wymuszone kolory** (`forced-colors: active`): fokus z klawiatury dostaje obrys systemowy 2 px, bo pierścień (cień) znika.
 
@@ -2962,13 +2962,13 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - Wszystkie reguły są w `@media`, więc domyślny wygląd się nie zmienia.
 
 ### Ograniczenia i pułapki
-- Wysoki kontrast zmienia kolor krawędzi, a nie jej grubość. Grubsze obramowania (z planu) nie są zrobione; trzeba by było zmieniać klasy komponentów.
+- Grubość 2 px dotyczy tylko krawędzi rysowanych klasami utility `border…`. Krawędzie z własnym `border-[…]` albo stylem w komponencie zostają 1 px.
 - Kolorowe notatki w ciemnym motywie mają własne `--muted-foreground` (`.dark [data-note-color]`, większa specyficzność) — ich tekst pomocniczy nie zmienia się pod wysoki kontrast.
 - Reguła `backdrop-filter: none !important` jest szeroka. Zamierzone (wyłącza rozmycia, także tryb budowy), ale może wpłynąć na nowe komponenty z rozmyciem.
 - `prefers-reduced-transparency` nie jest emulowane w Playwright; test go nie obejmuje, sprawdzone przez kod.
 
 ### Testy
-- `e2e/system-preferences.spec.ts` (chromium): wysoki kontrast zmienia `--border` i `--muted-foreground`; wymuszone kolory dają fokusowi obrys `solid 2px`.
+- `e2e/system-preferences.spec.ts` (chromium): wysoki kontrast zmienia `--border`, `--muted-foreground` i grubość `.border` (1 → 2 px); wymuszone kolory dają fokusowi obrys `solid 2px`. `e2e/a11y.spec.ts` 80/80 przechodzi.
 - Commit: `b1c8672` (2026-10-27).
 
 ## Wspólne — wczesne ładowanie działów (plan UI/UX 4.1, 2026-10-27)

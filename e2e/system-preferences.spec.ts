@@ -12,9 +12,18 @@ test("prefers-contrast: more zmienia krawędź i tekst pomocniczy w motywie", as
   const borderBefore = await token("--border");
   const mutedBefore = await token("--muted-foreground");
 
+  const borderWidth = () => page.evaluate(() => {
+    const el = document.querySelector(".border");
+    return el ? getComputedStyle(el).borderTopWidth : null;
+  });
+  const widthBefore = await borderWidth();
+
   await page.emulateMedia({ contrast: "more" });
   await expect.poll(() => token("--border")).not.toBe(borderBefore);
   expect(await token("--muted-foreground")).not.toBe(mutedBefore);
+  // Grubsze obramowania (3.12): ten sam element ma 2 px zamiast 1 px.
+  expect(widthBefore).toBe("1px");
+  expect(await borderWidth()).toBe("2px");
 });
 
 test("wymuszone kolory: fokus z klawiatury ma widoczny obrys systemowy", async ({ page }) => {

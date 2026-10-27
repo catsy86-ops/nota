@@ -200,3 +200,5 @@ Plan kończymy tutaj; pozostałe punkty to backlog z podanym zakresem, do zrobie
 **Status 5.1 (2026-10-27):** zrobione w całości — ikony w nawigacji i pasku nagłówka (border) były wcześniej; dodane kolory szkiców pustych stanów działów (`index.css`, blok „Pusty stan w dziale”). **Faza 5 zamknięta.** Faza 6 (QA) otwarta.
 
 **Status 3.10 (2026-10-27, finał):** zrobione. Punkty „pół/pełny” i zamykanie gestem w dół na wszystkich dolnych arkuszach listowych (`ViewSheet`, menu i „Nowa” w `BottomNav`, Długi, menu notatki, kolejka zapisu). Edytor wpisu Dziennika celowo bez punktów (układ z przewijaniem). Wcześniejsza uwaga „nie zrobione” nieaktualna.
+
+**Status 3.12 (2026-10-27, finał):** zrobione także grubsze obramowania (`.border…` 1 → 2 px w `preferences.css`). Punkt zamknięty.

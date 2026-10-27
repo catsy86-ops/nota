@@ -10,6 +10,15 @@
     --border: color-mix(in oklab, var(--foreground) 55%, var(--background));
     --muted-foreground: color-mix(in oklab, var(--foreground) 85%, var(--background));
   }
+  /* Grubsze obramowania (3.12): 1 px → 2 px tam, gdzie krawędź rysuje utility `border…`. Późniejszy plik,
+     więc wygrywa z utility o tej samej specyficzności. Kolory krawędzi są wyżej. */
+  .border { border-width: 2px; }
+  .border-t { border-top-width: 2px; }
+  .border-r { border-right-width: 2px; }
+  .border-b { border-bottom-width: 2px; }
+  .border-l { border-left-width: 2px; }
+  .border-x { border-left-width: 2px; border-right-width: 2px; }
+  .border-y { border-top-width: 2px; border-bottom-width: 2px; }
   /* Krawędzie w półprzezroczystości (`border-border/50`…`/60`) bez tego zostają słabe. */
   .border-border\/40,
   .border-border\/50,
