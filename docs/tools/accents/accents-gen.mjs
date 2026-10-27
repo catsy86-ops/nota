@@ -21,6 +21,10 @@ export const ACCENTS = {
   miedz: [{ h: 185 }, { h: 85 }, { h: 250, c: 0.05 }, { h: 28 }],
   matrix: [{ h: 75 }, { h: 200 }, { h: 28 }, { h: 140, c: 0.03 }],
   hydraulika: [{ h: 230 }, { h: 85 }, { h: 25 }, { h: 255 }],
+  // Odblask: barwa stylu jest czarna (C = 0), więc odcienie mają stałe nasycenie.
+  odblask: [{ h: 45, c: 0.15, l: 0.42 }, { h: 262, c: 0.15, l: 0.42 }, { h: 150, c: 0.13, l: 0.42 }, { h: 27, c: 0.18, l: 0.42 }],
+  kafle: [{ h: 200 }, { h: 150 }, { h: 35 }, { h: 300 }],
+  tablica: [{ h: 27 }, { h: 152 }, { h: 300 }, { h: 55 }],
 };
 
 // --- OKLCH ↔ sRGB (jak src/test/oklch.ts, plus sprawdzenie gamutu) ---
@@ -61,7 +65,7 @@ function tokens(text) {
   return out;
 }
 /** Schemat, w którym styl powstał (jak `SKIN_SCHEME` w skinList.ts); drugi to blok `:not(.dark)` / `.dark` (4.1). */
-const NATIVE = { zeszyt: null, plan: "dark", neon: "dark", zorza: "dark", miedz: "light", matrix: "dark", hydraulika: "dark" };
+const NATIVE = { zeszyt: null, plan: "dark", neon: "dark", zorza: "dark", miedz: "light", matrix: "dark", hydraulika: "dark", odblask: "light", kafle: "light", tablica: "light" };
 function resolve2(skin, scheme) {
   const base = tokens(block(index, scheme === "dark" ? ".dark" : ":root"));
   if (skin === "zeszyt") return base;

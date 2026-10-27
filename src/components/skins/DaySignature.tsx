@@ -58,6 +58,20 @@ function render(skin: Skin, now: Date) {
       );
     case "matrix":
       return <span className="day-sig-term">&gt; dziś {numDate(now)}<span className="day-sig-caret" /></span>;
+    case "odblask":
+      // Tabliczka budowy w pasach ostrzegawczych.
+      return <span className="day-sig-sign">Dziś · {numDate(now)}</span>;
+    case "kafle":
+      // Data na jednej płytce z fugą i połyskiem.
+      return (
+        <span className="day-sig-tile">
+          <span className="day-sig-tile-day">{now.getDate()}</span>
+          <span>{now.toLocaleDateString("pl-PL", { month: "short" })}</span>
+        </span>
+      );
+    case "tablica":
+      // Dzień tygodnia napisany markerem, z falistym podkreśleniem.
+      return <span className="day-sig-marker">{weekday(now)}</span>;
     case "hydraulika": {
       // Manometr: wskazówka od −120° (północ) do +120° (koniec doby).
       const p = dayProgress(now);

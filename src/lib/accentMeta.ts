@@ -1,7 +1,7 @@
 import type { Skin } from "@/lib/skinList";
 
 // Osobno od `accent.ts`, żeby nazwy i próbki nie trafiały do paczki startowej (wołają je tylko Ustawienia).
-/** Nazwy i próbki odcieni. Próbka = `--primary` z `accents.css` (dla Zeszytu: jasny schemat) w hex. Indeks = numer akcentu. */
+/** Nazwy i próbki odcieni. Próbka = `--primary` z `accents.css` w jasnym schemacie, w hex (w ciemnym schemacie odcień jest jaśniejszy: np. markery Tablicy stają się kredą). Indeks = numer akcentu. */
 export const ACCENT_META: Record<Skin, { label: string; swatch: string }[]> = {
   zeszyt: [
     { label: "Bursztyn", swatch: "#e1860e" },
@@ -51,5 +51,26 @@ export const ACCENT_META: Record<Skin, { label: string; swatch: string }[]> = {
     { label: "Mosiądz", swatch: "#c59724" },
     { label: "Zawór czerwony", swatch: "#e67b74" },
     { label: "Zawór niebieski", swatch: "#62a1f0" },
+  ],
+  odblask: [
+    { label: "Czarny", swatch: "#161616" },
+    { label: "Pomarańcz", swatch: "#803200" },
+    { label: "Granat", swatch: "#1a469d" },
+    { label: "Zieleń BHP", swatch: "#035d28" },
+    { label: "Czerwień", swatch: "#94020d" },
+  ],
+  kafle: [
+    { label: "Kobalt", swatch: "#194cb1" },
+    { label: "Turkus", swatch: "#026266" },
+    { label: "Butelkowa zieleń", swatch: "#00672d" },
+    { label: "Terakota", swatch: "#992400" },
+    { label: "Fiolet", swatch: "#6635a3" },
+  ],
+  tablica: [
+    { label: "Niebieski marker", swatch: "#1f53b8" },
+    { label: "Czerwony marker", swatch: "#a51f1e" },
+    { label: "Zielony marker", swatch: "#046d36" },
+    { label: "Fioletowy marker", swatch: "#6b3baa" },
+    { label: "Brązowy marker", swatch: "#8b4501" },
   ],
 };

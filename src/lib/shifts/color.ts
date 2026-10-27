@@ -41,6 +41,8 @@ export function contrastRatio(a: string, b: string): number {
 
 /**
  * Kolor zmiany jako tekst na tle karty (nieobecności, skróty w podglądzie):
- * domieszka koloru tekstu motywu ściemnia go w jasnym i rozjaśnia w ciemnym.
+ * domieszka koloru tekstu motywu ściemnia go w jasnym i rozjaśnia w ciemnym. Udział koloru zmiany to
+ * `--shift-text-mix` (domyślnie 55%); styl z kolorowym tłem obniża go (zielona Tablica: 30%), bo kolor zmiany
+ * zbliżony do tła dawał za mały kontrast.
  */
-export const shiftTextOnCard = (color: string) => `color-mix(in oklab, ${color} 55%, var(--foreground))`;
+export const shiftTextOnCard = (color: string) => `color-mix(in oklab, ${color} var(--shift-text-mix, 55%), var(--foreground))`;

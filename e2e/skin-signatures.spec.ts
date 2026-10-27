@@ -217,6 +217,10 @@ for (const [skin, pseudo, sig, name] of [
   ["neon", "::before", "view", "neon-brownout"],
   ["miedz", "::before", "view", "miedz-sheen"],
   ["hydraulika", "::before", "view", "hydro-flow-once"],
+  ["kafle", "::after", "save", "kafle-set"],
+  ["kafle", "::before", "view", "kafle-gloss"],
+  ["tablica", "::after", "save", "tablica-check"],
+  ["tablica", "::before", "view", "tablica-wipe"],
 ] as const) {
   test(`${skin}: sygnał ${sig} odpala ${name}, a przy ograniczonym ruchu nic`, async ({ page }) => {
     await open(page, skin);
@@ -268,4 +272,15 @@ test("Dziś: sygnatura dnia w barwach stylu, ukryta przed czytnikiem ekranu", as
   }
   // Wiersz daty pod tytułem zostaje — to on podaje datę czytnikowi.
   await expect(page.getByRole("heading", { level: 1, name: "Dziś" })).toBeVisible();
+});
+
+test("Odblask: bez ruchu — sygnał zapisu nie uruchamia żadnej animacji, tło gładkie", async ({ page }) => {
+  await open(page, "odblask");
+  await page.evaluate(() => document.documentElement.setAttribute("data-sig", "save"));
+  const s = await page.locator(".sig-layer").evaluate((el) => ({
+    after: getComputedStyle(el, "::after").animationName,
+    before: getComputedStyle(el, "::before").animationName,
+  }));
+  expect(s).toEqual({ after: "none", before: "none" });
+  expect(await page.locator(".paper-grid").evaluate((el) => getComputedStyle(el, "::before").content)).toBe("none");
 });

@@ -3,9 +3,9 @@
  * (`e2e/a11y.spec.ts`, `e2e/visual.spec.ts`, `skinContrast.test.ts`, `skinContract.test.ts`).
  * Bez importów, żeby Playwright mógł ją wczytać bez aliasu `@/` (plan motywów 0.3).
  */
-export type Skin = "zeszyt" | "plan" | "neon" | "zorza" | "miedz" | "matrix" | "hydraulika";
+export type Skin = "zeszyt" | "plan" | "neon" | "zorza" | "miedz" | "matrix" | "hydraulika" | "odblask" | "kafle" | "tablica";
 
-export const SKINS: readonly Skin[] = ["zeszyt", "plan", "neon", "zorza", "miedz", "matrix", "hydraulika"];
+export const SKINS: readonly Skin[] = ["zeszyt", "plan", "neon", "zorza", "miedz", "matrix", "hydraulika", "odblask", "kafle", "tablica"];
 
 /**
  * Schemat, w którym styl powstał — domyślny, dopóki użytkownik nie wybierze innego (od planu motywów 4.1
@@ -19,6 +19,9 @@ export const SKIN_SCHEME: Record<Skin, "light" | "dark" | null> = {
   miedz: "light",
   matrix: "dark",
   hydraulika: "dark",
+  odblask: "light",
+  kafle: "light",
+  tablica: "light",
 };
 
 /** Kolor paska stanu / okna PWA. Opisy i miniatury galerii: `skinGallery.ts` (tylko Ustawienia). */
@@ -30,6 +33,9 @@ export const SKIN_THEME_COLOR: Record<Skin, string> = {
   miedz: "#ae5a28",
   matrix: "#020a03",
   hydraulika: "#0b1e2b",
+  odblask: "#e1f23a",
+  kafle: "#f4f6f9",
+  tablica: "#f6f7f8",
 };
 
 /**
@@ -43,6 +49,9 @@ export const SKIN_ICON: Record<Exclude<Skin, "zeszyt">, { bg: string; fg: string
   miedz: { bg: "#ae5a28", fg: "#fcfbf9" },
   matrix: { bg: "#020a03", fg: "#00ff41" },
   hydraulika: { bg: "#0b1e2b", fg: "#d08a4e" },
+  odblask: { bg: "#e1f23a", fg: "#161616" },
+  kafle: { bg: "#f4f6f9", fg: "#2448b8" },
+  tablica: { bg: "#2f4a3c", fg: "#f2f0e6" },
 };
 
 /** Kolor paska stanu w drugim schemacie stylu (plan motywów 4.1) — tło jasnego albo ciemnego wariantu. */
@@ -53,4 +62,7 @@ export const SKIN_THEME_COLOR_ALT: Record<Exclude<Skin, "zeszyt">, string> = {
   miedz: "#26221f",
   matrix: "#eef7ee",
   hydraulika: "#f2f6f9",
+  odblask: "#1a1a1a",
+  kafle: "#2b2e33",
+  tablica: "#2f4a3c",
 };

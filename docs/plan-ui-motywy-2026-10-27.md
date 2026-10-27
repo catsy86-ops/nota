@@ -87,7 +87,9 @@ Bez tego każda nowa skórka i każde ustawienie wyglądu to sześć miejsc do p
 
 - **4.1 zrobione.** Drugi schemat dla wszystkich sześciu stylów (M-2), wybór jasności per styl (`kaczy.skinScheme.v1`), przełącznik w nagłówku zmienia schemat zamiast stylu (zastępuje PW-2). Kontrakt, kontrast (14 schematów, 56 odcieni akcentów) i axe (60 nowych audytów) zielone. Zmiana względem planu: `SKIN_SCHEME` zostaje jako „schemat domyślny”, a wybór trzymany osobno, zamiast pary `{ default, alt }`.
 - **4.4 zrobione.** Ciemny Zeszyt pod lampką (`skins/zeszyt.css`) i żelowy długopis.
-- Dalej: 4.3, 4.2, 4.5.
+- **4.3, 4.2, 4.5 zrobione.** Odblask (AAA, bez ruchu, propozycja trybu budowa), Kafle, Tablica — każdy w dwóch schematach, z akcentami, sygnaturami, sygnaturą dnia, miniaturą, axe i zrzutami bazowymi.
+- **0.6 (ponownie po Fazie 4):** CSS stylów ok. 22 KB gzip (próg 15 KB przekroczony), ale leniwe ładowanie nie zmniejszy precache (service worker i tak zapisuje wszystkie pliki), a paczka JS się nie zmienia — nie robione.
+- **Budżet precache przekroczony:** 4 022 837 B przy progu 3,8 MiB (3 984 589 B), +38 KB. Na starcie planu zapas wynosił 27 KB; plan dodał ok. 64 KB (Fazy 1–3 ok. 28 KB, drugie schematy 14 KB, nowe style 22 KB, głównie surowy CSS). Decyzja właściciela: podnieść próg do 3,9 MiB albo coś usunąć.
 
 ## Faza 1: personalizacja w obrębie skórki
 

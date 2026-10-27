@@ -130,3 +130,17 @@ describe("sezony nie nadpisują --accent (długopis w Zeszycie)", () => {
     for (const body of blocks) expect(body).not.toMatch(/(^|[\s;{])--accent:/);
   });
 });
+
+// Odblask (plan motywów 4.3) jest do pracy w słońcu: tekst i tekst pomocniczy co najmniej 7:1 (WCAG AAA).
+describe("Odblask: kontrast AAA tekstu", () => {
+  for (const scheme of ["light", "dark"] as const) {
+    it(`${scheme}: tekst i tekst pomocniczy ≥7:1 na tle i karcie`, () => {
+      const t = resolveSkin("odblask", scheme);
+      for (const fg of ["foreground", "muted-foreground"]) {
+        for (const bg of ["background", "card"]) {
+          expect(contrast(rgb(t, fg), rgb(t, bg)), `${fg} na ${bg}`).toBeGreaterThanOrEqual(7);
+        }
+      }
+    });
+  }
+});

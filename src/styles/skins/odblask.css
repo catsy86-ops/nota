@@ -1,0 +1,138 @@
+/* ─────────────────────── ODBLASK — praca w słońcu na budowie (plan motywów 4.3) ───────────────────────
+   Kolor kamizelki, czarny tekst, kontrast co najmniej 7:1 (AAA) dla tekstu na tle i karcie. Bez ruchu tła,
+   bez przezroczystości i rozmyć; jedyna ozdoba to pasy ostrzegawcze na górnej krawędzi nagłówka. */
+html[data-skin="odblask"] {
+  --background: oklch(0.9300 0.1900 112.00);
+  --foreground: oklch(0.1600 0.0000 0.00);
+  --card: oklch(1.0000 0.0000 0.00);
+  --card-foreground: oklch(0.1600 0.0000 0.00);
+  --popover: oklch(1.0000 0.0000 0.00);
+  --popover-foreground: oklch(0.1600 0.0000 0.00);
+  /* Przycisk główny czarny z napisem w kolorze kamizelki — najmocniejszy kontrast na żółtym. */
+  --primary: oklch(0.2000 0.0000 0.00);
+  --ink-mix: 100%;
+  --primary-foreground: oklch(0.9300 0.1900 112.00);
+  --secondary: oklch(0.9600 0.0800 112.00);
+  --secondary-foreground: oklch(0.1600 0.0000 0.00);
+  --muted: oklch(0.9700 0.0500 112.00);
+  --muted-foreground: oklch(0.3000 0.0200 110.00);
+  /* Linki: granat taśmy mierniczej. */
+  --accent: oklch(0.3600 0.1400 262.00);
+  --accent-foreground: oklch(1.0000 0.0000 0.00);
+  --destructive: oklch(0.5000 0.2000 27.00);
+  --destructive-ink: oklch(0.4300 0.1700 27.00);
+  --destructive-foreground: oklch(1.0000 0.0000 0.00);
+  --warning-ink-mix: 50%;
+  --border: oklch(0.3000 0.0000 0.00);
+  --input: oklch(0.2600 0.0000 0.00);
+  --ring: oklch(0.2000 0.0000 0.00);
+  --grid: oklch(0.2000 0.0000 0.00);
+  --margin: oklch(0.5000 0.2000 27.00);
+
+  --note-default: oklch(1.0000 0.0000 0.00);
+  --note-coral: oklch(0.9643 0.0182 37.66);
+  --note-peach: oklch(0.9716 0.0196 67.59);
+  --note-sand: oklch(0.9771 0.0311 91.65);
+  --note-mint: oklch(0.9676 0.0191 164.61);
+  --note-sage: oklch(0.9603 0.0105 174.27);
+  --note-sky: oklch(0.9677 0.0163 228.98);
+  --note-lavender: oklch(0.9614 0.0171 301.21);
+  --note-rose: oklch(0.9650 0.0155 355.05);
+
+  /* Twarde cienie bez rozmycia: w słońcu miękki cień znika, krawędź zostaje. */
+  --elevation-1: 0 0 0 1.5px oklch(0.2 0 0), 0 2px 0 oklch(0.2 0 0 / 0.5);
+  --elevation-2: 0 0 0 1.5px oklch(0.2 0 0), 0 4px 0 oklch(0.2 0 0 / 0.5);
+  --elevation-3: 0 0 0 2px oklch(0.2 0 0), 0 6px 0 oklch(0.2 0 0 / 0.5);
+  --elevation-up: 0 -2px 0 oklch(0.2 0 0);
+  --glow-primary: 0 0 0 2px oklch(0.2 0 0);
+}
+
+/* Drugi schemat (4.1) — ciemny. Odblask nocą: czarne tło, fluo świeci jak taśma w światłach samochodu. */
+html[data-skin="odblask"].dark {
+  --background: oklch(0.1500 0.0000 0.00);
+  --foreground: oklch(0.9700 0.0000 0.00);
+  --card: oklch(0.2100 0.0000 0.00);
+  --card-foreground: oklch(0.9700 0.0000 0.00);
+  --popover: oklch(0.2100 0.0000 0.00);
+  --popover-foreground: oklch(0.9700 0.0000 0.00);
+  --primary: oklch(0.9300 0.1900 112.00);
+  --ink-mix: 100%;
+  --primary-foreground: oklch(0.1600 0.0000 0.00);
+  --secondary: oklch(0.2600 0.0000 0.00);
+  --secondary-foreground: oklch(0.9700 0.0000 0.00);
+  --muted: oklch(0.2400 0.0000 0.00);
+  --muted-foreground: oklch(0.8400 0.0000 0.00);
+  --accent: oklch(0.8200 0.1200 230.00);
+  --accent-foreground: oklch(0.1600 0.0000 0.00);
+  --destructive: oklch(0.5600 0.2100 27.00);
+  --destructive-ink: oklch(0.7300 0.1600 25.00);
+  --destructive-foreground: oklch(1.0000 0.0000 0.00);
+  --warning-ink-mix: 100%;
+  --border: oklch(0.5000 0.0000 0.00);
+  --input: oklch(0.6500 0.0000 0.00);
+  --ring: oklch(0.9300 0.1900 112.00);
+  --grid: oklch(0.9300 0.1900 112.00);
+  --margin: oklch(0.9300 0.1900 112.00);
+
+  --note-default: oklch(0.2100 0.0000 0.00);
+  --note-coral: oklch(0.2754 0.0225 37.60);
+  --note-peach: oklch(0.2873 0.0206 66.85);
+  --note-sand: oklch(0.2953 0.0197 91.80);
+  --note-mint: oklch(0.2826 0.0226 162.84);
+  --note-sage: oklch(0.2785 0.0140 173.04);
+  --note-sky: oklch(0.2843 0.0214 230.06);
+  --note-lavender: oklch(0.2692 0.0326 299.50);
+  --note-rose: oklch(0.2684 0.0267 357.32);
+
+  --elevation-1: 0 0 0 1.5px oklch(0.55 0 0);
+  --elevation-2: 0 0 0 1.5px oklch(0.6 0 0);
+  --elevation-3: 0 0 0 2px oklch(0.93 0.19 112);
+  --elevation-up: 0 -2px 0 oklch(0.55 0 0);
+  --glow-primary: 0 0 0 2px oklch(0.93 0.19 112);
+}
+
+/* Tło gładkie: kratka i ozdoby papieru znikają. */
+html[data-skin="odblask"] .paper-grid::before,
+html[data-skin="odblask"] .paper-grid::after { content: none; }
+
+/* Pasy ostrzegawcze na górnej krawędzi nagłówka (jedyna ozdoba). Jako tło 6 px u góry, nie `border-image`
+   — ten rysowałby pasy także na dolnej krawędzi nagłówka. */
+html[data-skin="odblask"] .app-header {
+  background-image: repeating-linear-gradient(-45deg, oklch(0.16 0 0) 0 10px, oklch(0.93 0.19 112) 10px 20px);
+  background-size: 100% 6px;
+  background-repeat: no-repeat;
+}
+html[data-skin="odblask"].dark .app-header {
+  background-image: repeating-linear-gradient(-45deg, oklch(0.93 0.19 112) 0 10px, oklch(0.15 0 0) 10px 20px);
+}
+
+/* Nagłówki jak napisy na tablicy budowy: wąskie, grube, wersaliki. */
+html[data-skin="odblask"] h1,
+html[data-skin="odblask"] h2 {
+  font-family: 'Barlow Condensed', 'Plus Jakarta Sans Variable', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+/* Kafel: wyraźna obwódka zamiast miękkiego cienia. */
+html[data-skin="odblask"] .note-card { border-width: 1.5px; border-color: var(--border); }
+
+/* Logo czarne (w ciemnym — fluo). Dwie warstwy jak w bazowym `.notki-glyph` (błysk + wypełnienie), bo rozmiar
+   i położenie tła są ustawione dla dwóch warstw; jedna wyjechałaby poza litery. Błysk przezroczysty. */
+html[data-skin="odblask"] .notki-glyph {
+  background-image: linear-gradient(transparent, transparent), linear-gradient(var(--foreground), var(--foreground));
+}
+html[data-skin="odblask"].dark .notki-glyph {
+  background-image: linear-gradient(transparent, transparent), linear-gradient(var(--primary), var(--primary));
+}
+html[data-skin="odblask"] .notki-logo { filter: none; }
+
+/* Miniatura w galerii. */
+.skin-thumb[data-thumb="odblask"]::before {
+  background-image: repeating-linear-gradient(-45deg, #161616 0 6px, #e1f23a 6px 12px);
+  background-size: 100% 6px;
+  background-repeat: no-repeat;
+}
+
+/* Bez ruchu (plan 4.3): sygnatury stylu nie mają czasu trwania. */
+html[data-skin="odblask"] { --sig-ease: linear; --sig-dur: 0.01s; }

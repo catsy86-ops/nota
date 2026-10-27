@@ -1,8 +1,8 @@
 /*
-  Style aplikacji (`html[data-skin]`, src/lib/skinList.ts; siedem: Zeszyt, Plan, Neon, Zorza, Miedź, Matryca, Hydraulika). Poza warstwami Tailwinda, więc
+  Style aplikacji (`html[data-skin]`, src/lib/skinList.ts; dziesięć: Zeszyt, Plan, Neon, Zorza, Miedź, Matryca, Hydraulika, Odblask, Kafle, Tablica). Poza warstwami Tailwinda, więc
   nadpisują tokeny z `index.css` (:root / .dark w @layer base) bez podnoszenia specyficzności.
-  Każdy styl ma jeden schemat (Plan, Neon, Zorza, Matryca, Hydraulika — ciemne; Miedź — jasna); klasa `.dark`
-  jest ustawiana zgodnie z nim, więc warianty `dark:` w komponentach dalej działają.
+  Każdy styl ma dwa schematy (plan motywów 4.1): blok `html[data-skin="…"]` to schemat domyślny, drugi to
+  `:not(.dark)` albo `.dark`; klasa `.dark` idzie za wybranym schematem, więc warianty `dark:` działają.
 
   Zasada: wszystko, co dekoracyjne, siedzi w tle (`.paper-grid` z PaperBackdrop) i w kilku
   akcentach (logo, przycisk główny, krawędź paska bocznego). Treść notatek zostaje czytelna.
@@ -21,5 +21,8 @@
 @import "./skins/common.css";
 @import "./skins/matrix.css";
 @import "./skins/hydraulika.css";
+@import "./skins/odblask.css";
+@import "./skins/kafle.css";
+@import "./skins/tablica.css";
 @import "./skins/signatures.css";
 @import "./skins/day-signature.css";

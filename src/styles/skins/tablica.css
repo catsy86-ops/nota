@@ -1,0 +1,206 @@
+/* ─────────────────────── TABLICA — biuro budowy i sala szkoleń (plan motywów 4.5) ───────────────────────
+   Jasny: biała tablica suchościeralna w aluminiowej ramie, tekst i akcenty w kolorach markerów, ślady
+   niedokładnie startego pisma. Ciemny: zielona tablica szkolna, kreda i smugi po gąbce. Notatki trzymają
+   się na magnesach. */
+html[data-skin="tablica"] {
+  --background: oklch(0.9750 0.0020 250.00);
+  --foreground: oklch(0.2200 0.0100 260.00);
+  --card: oklch(1.0000 0.0000 0.00);
+  --card-foreground: oklch(0.2200 0.0100 260.00);
+  --popover: oklch(1.0000 0.0000 0.00);
+  --popover-foreground: oklch(0.2200 0.0100 260.00);
+  /* Niebieski marker. */
+  --primary: oklch(0.4700 0.1700 262.00);
+  --ink-mix: 62%;
+  --primary-foreground: oklch(1.0000 0.0000 0.00);
+  --secondary: oklch(0.9250 0.0030 250.00);
+  --secondary-foreground: oklch(0.2200 0.0100 260.00);
+  --muted: oklch(0.9450 0.0030 250.00);
+  --muted-foreground: oklch(0.4700 0.0100 260.00);
+  /* Zielony marker — linki. */
+  --accent: oklch(0.4800 0.1200 152.00);
+  --accent-foreground: oklch(1.0000 0.0000 0.00);
+  --destructive: oklch(0.5786 0.2137 27.17);
+  --destructive-ink: oklch(0.5314 0.1989 27.39);
+  --destructive-foreground: oklch(1.0000 0.0000 0.00);
+  --border: oklch(0.8700 0.0040 250.00);
+  --input: oklch(0.6000 0.0100 255.00);
+  --ring: oklch(0.4700 0.1700 262.00);
+  /* Kolor śladów po starym piśmie. */
+  --grid: oklch(0.6000 0.0100 260.00);
+  /* Czerwony marker. */
+  --margin: oklch(0.5500 0.2000 27.00);
+
+  --note-default: oklch(1.0000 0.0000 0.00);
+  --note-coral: oklch(0.9643 0.0182 37.66);
+  --note-peach: oklch(0.9716 0.0196 67.59);
+  --note-sand: oklch(0.9771 0.0311 91.65);
+  --note-mint: oklch(0.9676 0.0191 164.61);
+  --note-sage: oklch(0.9603 0.0105 174.27);
+  --note-sky: oklch(0.9677 0.0163 228.98);
+  --note-lavender: oklch(0.9614 0.0171 301.21);
+  --note-rose: oklch(0.9650 0.0155 355.05);
+
+  --elevation-1: 0 1px 0 hsl(220 20% 25% / 0.08), 0 3px 8px -4px hsl(220 20% 25% / 0.16);
+  --elevation-2: 0 1px 0 hsl(220 20% 25% / 0.07), 0 6px 14px -4px hsl(220 20% 25% / 0.16);
+  --elevation-3: 0 1px 0 hsl(220 20% 25% / 0.06), 0 14px 32px -8px hsl(220 20% 25% / 0.22);
+  --elevation-up: 0 -8px 24px -12px hsl(220 20% 25% / 0.18);
+  --glow-primary: 0 10px 26px -8px color-mix(in srgb, var(--primary) 45%, transparent);
+}
+
+/* Drugi schemat (4.1) — ciemny. Zielona tablica szkolna: kreda biała, żółta i różowa. */
+html[data-skin="tablica"].dark {
+  --background: oklch(0.3200 0.0450 162.00);
+  --foreground: oklch(0.9500 0.0120 95.00);
+  --card: oklch(0.3600 0.0450 162.00);
+  --card-foreground: oklch(0.9500 0.0120 95.00);
+  --popover: oklch(0.3500 0.0450 162.00);
+  --popover-foreground: oklch(0.9500 0.0120 95.00);
+  --primary: oklch(0.8800 0.1300 96.00);
+  --ink-mix: 100%;
+  --primary-foreground: oklch(0.2400 0.0400 160.00);
+  --secondary: oklch(0.3900 0.0450 162.00);
+  --secondary-foreground: oklch(0.9500 0.0120 95.00);
+  --muted: oklch(0.3700 0.0450 162.00);
+  --muted-foreground: oklch(0.8600 0.0200 120.00);
+  --accent: oklch(0.8600 0.0800 350.00);
+  --accent-foreground: oklch(0.2400 0.0400 160.00);
+  --destructive: oklch(0.5500 0.2100 27.00);
+  --destructive-ink: oklch(0.8200 0.1100 25.00);
+  --destructive-foreground: oklch(1.0000 0.0000 0.00);
+  --warning-ink-base: oklch(0.8600 0.1400 80.00);
+  /* Zielone tło: domyślna zieleń „sukces” zlewa się z tablicą — jaśniejsza, jak kreda. */
+  --success: oklch(0.7600 0.1300 155.00);
+  /* Skróty nieobecności w Grafiku: mniej koloru zmiany, więcej kredy (kolory zmian bywają bliskie tablicy). */
+  --shift-text-mix: 30%;
+  --border: oklch(0.4500 0.0400 160.00);
+  --input: oklch(0.7000 0.0300 150.00);
+  --ring: oklch(0.8800 0.1300 96.00);
+  --grid: oklch(0.9500 0.0120 95.00);
+  --margin: oklch(0.8000 0.1100 25.00);
+
+  --note-default: oklch(0.3600 0.0450 162.00);
+  --note-coral: oklch(0.3600 0.0400 40.00);
+  --note-peach: oklch(0.3700 0.0350 70.00);
+  --note-sand: oklch(0.3800 0.0350 95.00);
+  --note-mint: oklch(0.3700 0.0450 165.00);
+  --note-sage: oklch(0.3700 0.0300 180.00);
+  --note-sky: oklch(0.3700 0.0400 230.00);
+  --note-lavender: oklch(0.3600 0.0400 300.00);
+  --note-rose: oklch(0.3600 0.0400 355.00);
+
+  --elevation-1: 0 1px 2px hsl(160 40% 5% / 0.4);
+  --elevation-2: 0 4px 12px -2px hsl(160 40% 5% / 0.45), 0 0 0 1px hsl(60 30% 95% / 0.05);
+  --elevation-3: 0 12px 32px -8px hsl(160 40% 5% / 0.55), 0 0 0 1px hsl(60 30% 95% / 0.06);
+  --elevation-up: 0 -8px 24px -12px hsl(160 40% 5% / 0.5);
+  --glow-primary: 0 10px 28px -8px color-mix(in srgb, var(--primary) 40%, transparent);
+}
+
+/* Ślady po starym piśmie: kilka pętli i podkreśleń w powtarzalnym kafelku, prawie niewidoczne. Na ciemnej
+   tablicy te same ślady kredą plus smugi po gąbce. */
+html[data-skin="tablica"] .paper-grid::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='260'%3E%3Cg fill='none' stroke='%23555b66' stroke-opacity='.07' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M30 60c20-18 40 18 60 0s40-18 60 0 40 18 60 0'/%3E%3Cpath d='M250 40c10 30 30 30 40 0m10 0c10 30 30 30 40 0'/%3E%3Cpath d='M60 180h120M70 196h80'/%3E%3Cpath d='M280 170c-20 10-20 40 10 40s40-30 10-40-40 20-10 30'/%3E%3C/g%3E%3C/svg%3E");
+  background-size: 420px 260px;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+html[data-skin="tablica"].dark .paper-grid::before {
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='260'%3E%3Cg fill='none' stroke='%23f2f0e6' stroke-opacity='.06' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M30 60c20-18 40 18 60 0s40-18 60 0 40 18 60 0'/%3E%3Cpath d='M250 40c10 30 30 30 40 0m10 0c10 30 30 30 40 0'/%3E%3Cpath d='M60 180h120M70 196h80'/%3E%3Cpath d='M280 170c-20 10-20 40 10 40s40-30 10-40-40 20-10 30'/%3E%3C/g%3E%3C/svg%3E"),
+    linear-gradient(100deg, transparent 20%, hsl(60 30% 95% / 0.035) 28%, transparent 40%),
+    radial-gradient(40% 25% at 70% 30%, hsl(60 30% 95% / 0.04), transparent 70%);
+  background-size: 420px 260px, 100% 100%, 100% 100%;
+}
+html[data-skin="tablica"] .paper-grid::after { content: none; }
+
+/* Aluminiowa rama przy pasku bocznym. */
+html[data-skin="tablica"] .sidebar-gradient {
+  border-right-color: transparent !important;
+  box-shadow: inset -6px 0 0 -1px hsl(210 6% 70%), inset -3px 0 0 -1px hsl(210 10% 90%);
+}
+
+/* Magnes trzyma kafel notatki: kółko przy górnej krawędzi w kolorze markera. */
+html[data-skin="tablica"] .note-card::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  margin-left: -7px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, white 55%, var(--primary)), var(--primary) 60%);
+  box-shadow: 0 2px 3px hsl(220 20% 10% / 0.3);
+}
+
+html[data-skin="tablica"] h1,
+html[data-skin="tablica"] h2 {
+  font-family: 'Lexend Variable', 'Plus Jakarta Sans Variable', sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+/* Dwie warstwy jak w bazowym `.notki-glyph` (błysk + wypełnienie) — inaczej wypełnienie wyjeżdża poza litery. */
+html[data-skin="tablica"] .notki-glyph {
+  background-image:
+    linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.9) 50%, transparent 62%),
+    linear-gradient(170deg, var(--primary), color-mix(in srgb, var(--primary) 70%, black));
+}
+html[data-skin="tablica"].dark .notki-glyph {
+  background-image:
+    linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.9) 50%, transparent 62%),
+    linear-gradient(170deg, var(--foreground), var(--primary));
+}
+html[data-skin="tablica"] .notki-logo { filter: none; }
+
+/* Sygnatury (Faza 2): zapis — ptaszek markerem w rogu; zmiana widoku — przetarcie gąbką. */
+html[data-skin="tablica"] { --sig-ease: cubic-bezier(0.2, 0.8, 0.2, 1); --sig-dur: 0.6s; }
+html[data-skin="tablica"] .sig-layer { opacity: 1; }
+html[data-skin="tablica"] .sig-layer::before,
+html[data-skin="tablica"] .sig-layer::after {
+  content: "";
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+html[data-skin="tablica"] .sig-layer::after {
+  content: "✓";
+  right: 10%;
+  bottom: 18%;
+  color: var(--primary);
+  font-size: 4rem;
+  font-weight: 800;
+  line-height: 1;
+  transform: rotate(-8deg);
+}
+html[data-sig="save"][data-skin="tablica"] .sig-layer::after {
+  animation: tablica-check calc(var(--sig-dur) * 2) var(--sig-ease) 1 both;
+}
+@keyframes tablica-check {
+  0% { opacity: 0; transform: rotate(-8deg) scale(0.6); }
+  25% { opacity: 0.9; transform: rotate(-8deg) scale(1.08); }
+  40% { transform: rotate(-8deg) scale(1); }
+  75% { opacity: 0.9; }
+  100% { opacity: 0; transform: rotate(-8deg) scale(1); }
+}
+html[data-skin="tablica"] .sig-layer::before {
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--foreground) 6%, transparent) 30%, color-mix(in srgb, var(--foreground) 6%, transparent) 70%, transparent);
+}
+html[data-sig="view"][data-skin="tablica"] .sig-layer::before {
+  animation: tablica-wipe calc(var(--sig-dur) * 1.6) ease-in-out 1 both;
+}
+@keyframes tablica-wipe {
+  0% { opacity: 1; transform: translateX(-100%); }
+  100% { opacity: 1; transform: translateX(250%); }
+}
+
+/* Miniatura w galerii. */
+.skin-thumb[data-thumb="tablica"]::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='70'%3E%3Cg fill='none' stroke='%231f4fbf' stroke-opacity='.5' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M70 18c6-8 12 8 18 0s12-8 18 0'/%3E%3C/g%3E%3Cpath d='M76 30h28' stroke='%23d32f2f' stroke-opacity='.5' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-size: 100% 100%;
+  box-shadow: inset 0 0 0 3px #c8ccd2;
+}

@@ -54,4 +54,12 @@ describe("trySkin — przymierz styl z Cofnij", () => {
     trySkin("zeszyt");
     expect(toastFn).not.toHaveBeenCalled();
   });
+
+  it("Odblask proponuje tryb budowa, gdy jest wyłączony", () => {
+    trySkin("odblask");
+    const offer = toastFn.mock.calls.find(([title]) => title === "Włączyć tryb budowa?");
+    expect(offer?.[1]).toEqual(expect.objectContaining({ id: "odblask-site" }));
+    (offer![1] as Opts).action.onClick();
+    expect(document.documentElement.dataset.site).toBe("");
+  });
 });

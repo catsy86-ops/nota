@@ -60,4 +60,22 @@ export const SKIN_META: Record<Skin, SkinMeta> = {
     font: "'Barlow Condensed', sans-serif",
     ambient: true,
   },
+  odblask: {
+    label: "Odblask",
+    blurb: "Kamizelka w słońcu: czarny tekst na fluo, bez ruchu.",
+    preview: { bg: "#e1f23a", card: "#ffffff", ink: "#161616", accent: "#1c1c1c", muted: "#4d4d4d" },
+    font: "'Barlow Condensed', sans-serif",
+  },
+  kafle: {
+    label: "Kafle",
+    blurb: "Białe płytki, szara fuga i kobaltowy akcent.",
+    preview: { bg: "#f4f6f9", card: "#ffffff", ink: "#1f2633", accent: "#2448b8", muted: "#cfd6de" },
+    font: "'Nunito Variable', sans-serif",
+  },
+  tablica: {
+    label: "Tablica",
+    blurb: "Biała tablica i markery; w nocy zielona tablica i kreda.",
+    preview: { bg: "#f6f7f8", card: "#ffffff", ink: "#1c1f26", accent: "#2550c4", muted: "#2f8a4e" },
+    font: "'Lexend Variable', sans-serif",
+  },
 };
