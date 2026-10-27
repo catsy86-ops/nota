@@ -261,11 +261,11 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
         animate={{ opacity: 1 }}
         exit={{ opacity: 0, transition: tween.exit }}
         transition={tween.enter}
-        className={cn("fixed inset-0 z-50", present ? "bg-background/70 backdrop-blur-xs" : "bg-background/20 backdrop-blur-[2px]")}
+        className={cn("fixed inset-0 z-modal", present ? "bg-background/70 backdrop-blur-xs" : "bg-background/20 backdrop-blur-[2px]")}
         onClick={onClose}
       />
       {/* Centrowanie flexem, nie translate — framer-motion nadpisuje `transform`. */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+      <div className="fixed inset-0 z-modal flex items-center justify-center p-4 pointer-events-none">
       <motion.div
         ref={panelRef}
         layout

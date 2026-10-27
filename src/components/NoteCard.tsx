@@ -229,7 +229,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
           <button
             onClick={(e) => { e.stopPropagation(); onToggleSelect(note.id, e.shiftKey); }}
             className={cn(
-              "absolute top-2 right-2 z-20 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-[color,background-color,border-color,opacity] coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']",
+              "absolute top-2 right-2 z-sticky w-6 h-6 rounded-md border-2 flex items-center justify-center transition-[color,background-color,border-color,opacity] coarse:after:absolute coarse:after:-inset-2.5 coarse:after:content-['']",
               // Start zaznaczania bez Ctrl+A: pole pojawia się po najechaniu / fokusie, a na dotyku jest zawsze lekko widoczne.
               !(selectionMode || selected) && "opacity-0 group-hover:opacity-100 focus-visible:opacity-100 coarse:opacity-70",
               selected ? "bg-primary border-primary text-primary-foreground" : "bg-background/80 border-border hover:border-primary"
@@ -250,7 +250,7 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
             data-drag-handle
             // Na dotyku tylko przy sortowaniu ręcznym — przy innym porządku był szumem na każdym kaflu.
             // W tablicy zawsze: przeniesienie kafla do innej kolumny nie zależy od porządku.
-            className={cn(prefs.sortKey !== "manual" && prefs.layout !== "board" && "coarse:hidden", "absolute top-0 left-1/2 -translate-x-1/2 z-10 px-3 pt-0.5 pb-0 coarse:px-6 coarse:pt-1.5 coarse:pb-3 coarse:touch-none coarse:opacity-50 cursor-grab active:cursor-grabbing rounded-b-md opacity-0 group-hover:opacity-60 hover:opacity-100! focus-visible:opacity-100 transition-opacity")}
+            className={cn(prefs.sortKey !== "manual" && prefs.layout !== "board" && "coarse:hidden", "absolute top-0 left-1/2 -translate-x-1/2 z-raised px-3 pt-0.5 pb-0 coarse:px-6 coarse:pt-1.5 coarse:pb-3 coarse:touch-none coarse:opacity-50 cursor-grab active:cursor-grabbing rounded-b-md opacity-0 group-hover:opacity-60 hover:opacity-100! focus-visible:opacity-100 transition-opacity")}
           >
             {/* 10 px wysokości — mieści się w górnym marginesie karty i nie łapie kliknięć w tytuł. */}
             <div className="grid grid-cols-3 gap-[2px]" aria-hidden>

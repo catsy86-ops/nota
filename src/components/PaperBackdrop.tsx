@@ -28,7 +28,7 @@ export function PaperBackdrop() {
   return (
     <div
       aria-hidden
-      className="paper-grid pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-background"
+      className="paper-grid pointer-events-none fixed inset-0 -z-raised overflow-hidden bg-background"
       style={{ contain: "strict" }}
     >
       {/* Tabliczka rysunkowa: napis zależy od widoku (`html[data-view]`, styl w `index.css`). */}

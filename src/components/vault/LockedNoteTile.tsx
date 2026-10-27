@@ -66,7 +66,7 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
         <button
           onClick={(e) => { e.stopPropagation(); onToggleSelect(note.id, e.shiftKey); }}
           className={cn(
-            "absolute top-2 right-2 z-20 w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors",
+            "absolute top-2 right-2 z-sticky w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors",
             selected ? "bg-primary border-primary text-primary-foreground" : "bg-background/80 border-border hover:border-primary",
           )}
           aria-label={selected ? "Odznacz notatkę" : "Zaznacz notatkę"}
@@ -80,7 +80,7 @@ export const LockedNoteTile = memo(function LockedNoteTile({ note, index, select
           {...dragAttributes}
           {...dragListeners}
           aria-label="Przeciągnij, aby zmienić kolejność"
-          className="absolute top-0 left-1/2 -translate-x-1/2 z-10 px-3 pt-0.5 cursor-grab active:cursor-grabbing rounded-b-md opacity-0 group-hover:opacity-60 hover:opacity-100! focus-visible:opacity-100 transition-opacity"
+          className="absolute top-0 left-1/2 -translate-x-1/2 z-raised px-3 pt-0.5 cursor-grab active:cursor-grabbing rounded-b-md opacity-0 group-hover:opacity-60 hover:opacity-100! focus-visible:opacity-100 transition-opacity"
         >
           <div className="grid grid-cols-3 gap-[2px]" aria-hidden>
             {Array.from({ length: 6 }, (_, i) => <div key={i} className="w-[3px] h-[3px] rounded-full bg-muted-foreground" />)}

@@ -99,7 +99,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
         initial={{ y: 80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={spring.soft}
-        className="fixed bottom-0 inset-x-0 z-40 desk:hidden glass-strong border-t border-border/60 pb-[env(safe-area-inset-bottom)] shadow-elevation-up transition-[translate,visibility] duration-200 ease-out motion-reduce:transition-none in-data-typing:translate-y-full in-data-typing:invisible"
+        className="fixed bottom-0 inset-x-0 z-overlay desk:hidden glass-strong border-t border-border/60 pb-[env(safe-area-inset-bottom)] shadow-elevation-up transition-[translate,visibility] duration-200 ease-out motion-reduce:transition-none in-data-typing:translate-y-full in-data-typing:invisible"
       >
         <LayoutGroup id="bottom-nav">
           <ul className="relative grid grid-cols-5 items-end h-[64px] max-w-md mx-auto px-2">
@@ -133,7 +133,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
               >
                 <motion.span
                   aria-hidden
-                  className="relative z-10 flex"
+                  className="relative z-raised flex"
                   animate={{ rotate: reduced ? 0 : quarterTurns * 90 }}
                   transition={spring.snap}
                 >
@@ -256,10 +256,10 @@ function NavItem({ active, current = active, label, onClick, children, badge, bu
             />
           </>
         )}
-        <span className="relative z-10">{children}</span>
-        <span className="relative z-10 whitespace-nowrap leading-none tracking-tight">{label}</span>
+        <span className="relative z-raised">{children}</span>
+        <span className="relative z-raised whitespace-nowrap leading-none tracking-tight">{label}</span>
         {!!badge && (
-          <span className="absolute top-0.5 right-1/4 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-2xs font-semibold flex items-center justify-center z-10">
+          <span className="absolute top-0.5 right-1/4 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-2xs font-semibold flex items-center justify-center z-raised">
             {badge}
           </span>
         )}

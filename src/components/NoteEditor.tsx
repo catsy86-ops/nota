@@ -129,7 +129,7 @@ export function NoteEditor({
         data-editor-header={full ? "" : undefined}
         data-scrolled={full && editorScrolled ? "" : undefined}
         className={full ? cn(
-          "sticky top-0 z-10 -mx-4 -mt-1 space-y-2 bg-background px-4 pt-1 pb-2 transition-shadow duration-fast sm:-mx-6 sm:px-6",
+          "sticky top-0 z-raised -mx-4 -mt-1 space-y-2 bg-background px-4 pt-1 pb-2 transition-shadow duration-fast sm:-mx-6 sm:px-6",
           editorScrolled && "shadow-elevation-1",
         ) : "space-y-2"}
       >

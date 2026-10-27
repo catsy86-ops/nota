@@ -13,6 +13,15 @@ export default {
       },
     },
     extend: {
+      // Skala warstw (plan UI/UX 1.3): nazwane zamiast wpisywanych `z-10…z-70`. Kolejność jak dotąd.
+      zIndex: {
+        raised: "10",
+        sticky: "20",
+        dropdown: "30",
+        overlay: "40",
+        modal: "50",
+        toast: "70",
+      },
       fontFamily: {
         display: ['Plus Jakarta Sans Variable', 'Plus Jakarta Sans', 'sans-serif'],
         logo: ['Unbounded Variable', 'Plus Jakarta Sans Variable', 'sans-serif'],

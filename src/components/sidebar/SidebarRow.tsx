@@ -54,14 +54,14 @@ export const SidebarRow = forwardRef<HTMLDivElement, SidebarRowProps>(function S
           <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full bg-primary" />
         </motion.span>
       )}
-      {before && <span className="relative z-10 flex shrink-0 items-center pl-1.5">{before}</span>}
+      {before && <span className="relative z-raised flex shrink-0 items-center pl-1.5">{before}</span>}
       <button
         type="button"
         onClick={onClick}
         aria-current={active ? "page" : undefined}
         {...buttonProps}
         className={cn(
-          "pressable relative z-10 flex h-full min-w-0 flex-1 items-center gap-3 rounded-lg text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
+          "pressable relative z-raised flex h-full min-w-0 flex-1 items-center gap-3 rounded-lg text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
           before ? "pl-1.5 pr-3" : "px-3",
         )}
       >
@@ -74,7 +74,7 @@ export const SidebarRow = forwardRef<HTMLDivElement, SidebarRowProps>(function S
           className={cn(
             // Ukryte akcje nie zabierają miejsca nazwie — pojawiają się przy najechaniu,
             // fokusie klawiatury w wierszu albo otwartym menu.
-            "relative z-10 hidden shrink-0 items-center pr-1",
+            "relative z-raised hidden shrink-0 items-center pr-1",
             "group-hover:flex group-focus-within:flex has-data-[state=open]:flex",
             // Na dotyku nie ma najechania — akcje widać przy aktywnym wierszu.
             "coarse:group-data-active:flex",

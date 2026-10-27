@@ -109,7 +109,7 @@ export function WikiLink({ title, heading = null, label = null, exists, onWikiCl
           onClick={(e) => e.stopPropagation()}
           data-wiki-preview=""
           className={cn(
-            "z-70 w-72 max-w-[calc(100vw-1.5rem)] rounded-lg border border-border/70 bg-popover text-popover-foreground shadow-lg outline-hidden",
+            "z-toast w-72 max-w-[calc(100vw-1.5rem)] rounded-lg border border-border/70 bg-popover text-popover-foreground shadow-lg outline-hidden",
             "border-l-[3px] border-l-primary/60 px-3 py-2.5 text-left",
             "duration-fast ease-out-soft data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
           )}

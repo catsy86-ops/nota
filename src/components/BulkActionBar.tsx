@@ -51,7 +51,7 @@ export function BulkActionBar({ count, totalVisible, onSelectAll, onClear, onArc
       {count > 0 && (
         // Zewnętrzny kontener centruje (framer nadpisuje `transform` na elemencie z `y`,
         // więc `-translate-x-1/2` na nim znikało i pasek wychodził poza ekran telefonu).
-        <div className="pointer-events-none fixed inset-x-2 bottom-[calc(88px+env(safe-area-inset-bottom))] md:bottom-4 z-40 flex justify-center">
+        <div className="pointer-events-none fixed inset-x-2 bottom-[calc(88px+env(safe-area-inset-bottom))] md:bottom-4 z-overlay flex justify-center">
         <motion.div
           initial={{ y: 60, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}

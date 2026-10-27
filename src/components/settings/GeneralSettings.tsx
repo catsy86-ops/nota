@@ -46,7 +46,7 @@ function jumpTo(id: string) {
 
 function JumpNav() {
   return (
-    <nav aria-label="Przejdź do grupy ustawień" className="sticky top-0 z-10 -mx-1 flex gap-1.5 overflow-x-auto bg-background/95 px-1 py-2 backdrop-blur">
+    <nav aria-label="Przejdź do grupy ustawień" className="sticky top-0 z-raised -mx-1 flex gap-1.5 overflow-x-auto bg-background/95 px-1 py-2 backdrop-blur">
       {JUMP_GROUPS.map((g) => (
         <button
           key={g.id}

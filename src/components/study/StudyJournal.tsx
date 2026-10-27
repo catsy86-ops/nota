@@ -326,7 +326,7 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
               <div className="space-y-5 xl:col-start-1">
                 {view.days.map((d) => (
                   <section key={d.key} aria-label={d.label} data-journal-day={d.key}>
-                    <h4 className="sticky top-(--app-header-h,0px) z-10 -mx-1 mb-2 flex items-baseline justify-between gap-2 border-b border-border/60 bg-background/95 px-1 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground backdrop-blur-sm transition-[top] duration-300 ease-out motion-reduce:transition-none [html.header-hidden_&]:top-0">
+                    <h4 className="sticky top-(--app-header-h,0px) z-raised -mx-1 mb-2 flex items-baseline justify-between gap-2 border-b border-border/60 bg-background/95 px-1 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground backdrop-blur-sm transition-[top] duration-300 ease-out motion-reduce:transition-none [html.header-hidden_&]:top-0">
                       <span className="min-w-0 truncate">{d.label}</span>
                       <span className="flex shrink-0 items-baseline gap-2">
                         {hoursByDay.has(d.key) && (() => {

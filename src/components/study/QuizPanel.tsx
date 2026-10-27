@@ -363,7 +363,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
       {/* Telefon: „Dalej” przyklejony nad dolnym paskiem — bez przewijania pod objaśnienie po każdej odpowiedzi.
           Bezpośrednio w sekcji: `sticky` działa tylko w obrębie rodzica, a sekcja sięga pod dolny pasek. */}
       {answered && (
-        <div data-sticky-action className="phone:sticky phone:bottom-[calc(5.5rem+env(safe-area-inset-bottom))] phone:z-10 phone:-mx-5 phone:bg-card/95 phone:px-5 phone:py-2 phone:backdrop-blur-sm">
+        <div data-sticky-action className="phone:sticky phone:bottom-[calc(5.5rem+env(safe-area-inset-bottom))] phone:z-raised phone:-mx-5 phone:bg-card/95 phone:px-5 phone:py-2 phone:backdrop-blur-sm">
           <Button ref={nextBtnRef} onClick={next} className="phone:h-12 phone:w-full phone:text-base">
             {index < round.length - 1 ? "Dalej" : "Zobacz wynik"}
             <ArrowRight className="w-4 h-4 ml-1.5" />

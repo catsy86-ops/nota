@@ -20,7 +20,7 @@ const SheetOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Overlay
     className={cn(
-      "fixed inset-0 z-50 bg-foreground/30 dark:bg-black/60 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=open]:duration-base data-[state=closed]:duration-fast",
+      "fixed inset-0 z-modal bg-foreground/30 dark:bg-black/60 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=open]:duration-base data-[state=closed]:duration-fast",
       className,
     )}
     {...props}
@@ -70,7 +70,7 @@ function useDragToDismiss(contentRef: React.RefObject<HTMLDivElement | null>, cl
 }
 
 const sheetVariants = cva(
-  "fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-out-soft data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-fast data-[state=open]:duration-base",
+  "fixed z-modal gap-4 bg-background p-6 shadow-lg transition ease-out-soft data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-fast data-[state=open]:duration-base",
   {
     variants: {
       side: {
@@ -122,7 +122,7 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
           <div
             aria-hidden
             data-sheet-handle
-            className="absolute left-1/2 top-0 z-10 flex h-7 w-32 -translate-x-1/2 cursor-grab touch-none justify-center pt-2 active:cursor-grabbing"
+            className="absolute left-1/2 top-0 z-raised flex h-7 w-32 -translate-x-1/2 cursor-grab touch-none justify-center pt-2 active:cursor-grabbing"
             {...drag}
           >
             <span className="h-1.5 w-10 rounded-full bg-muted-foreground/25" />

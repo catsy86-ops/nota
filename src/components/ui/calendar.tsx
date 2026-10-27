@@ -31,7 +31,7 @@ function Calendar({ className, classNames, showOutsideDays = true, locale = pl, 
         weekday: cn("w-9 rounded-md text-[0.8rem] font-normal text-muted-foreground", d.weekday),
         week: cn("mt-2 flex w-full", d.week),
         day: cn(
-          "relative h-9 w-9 p-0 text-center text-sm focus-within:relative focus-within:z-20",
+          "relative h-9 w-9 p-0 text-center text-sm focus-within:relative focus-within:z-sticky",
           "has-aria-[selected]:bg-muted first:has-aria-[selected]:rounded-l-md last:has-aria-[selected]:rounded-r-md",
           d.day,
         ),

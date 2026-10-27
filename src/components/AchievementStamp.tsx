@@ -33,7 +33,7 @@ export function AchievementStamp() {
   }, [stamp]);
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 top-[22%] z-70 flex justify-center px-4" aria-live="polite">
+    <div className="pointer-events-none fixed inset-x-0 top-[22%] z-toast flex justify-center px-4" aria-live="polite">
       <AnimatePresence>
         {stamp && (
           <motion.div

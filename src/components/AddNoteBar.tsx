@@ -500,7 +500,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
       className={cn("w-full max-w-xl rounded-card note-shadow border border-border overflow-hidden transition-[box-shadow,background-color] focus-ring-gradient hover:shadow-elevation-3",
         // Kolor schowany pod ikoną palety — edytor przyjmuje go od razu, żeby było widać wybór.
         expanded && color !== "default" ? colorClasses[color] : "bg-card", !expanded && "max-md:hidden",
-        fullScreen && "fixed inset-x-0 top-0 bottom-(--kb-inset,0px) z-50 max-w-none rounded-none border-0 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]")}>
+        fullScreen && "fixed inset-x-0 top-0 bottom-(--kb-inset,0px) z-modal max-w-none rounded-none border-0 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]")}>
       <AnimatePresence mode="wait">
         {!expanded ? (
           <motion.button key="collapsed" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -648,7 +648,7 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
             </time>
 
             {/* Jeden rząd narzędzi z „Zamknij” — kolory pod ikoną palety, lista zadań jako przełącznik. */}
-            <div className={cn("flex gap-2 pt-1", fullScreen ? "items-center sticky bottom-0 z-10 -mx-4 mt-auto border-t border-border/60 bg-inherit px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2" : "items-end")}>
+            <div className={cn("flex gap-2 pt-1", fullScreen ? "items-center sticky bottom-0 z-raised -mx-4 mt-auto border-t border-border/60 bg-inherit px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2" : "items-end")}>
               {/* Na telefonie narzędzia przewijają się w jednym rzędzie, a „Zapisz” stoi po prawej, pod kciukiem. */}
               <div className={cn("flex min-w-0 flex-1 items-center gap-1", fullScreen ? "flex-nowrap overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden *:shrink-0" : "flex-wrap")}>
                 <IconButton size="sm" tone={showChecklist ? "active" : "muted"} onClick={() => setShowChecklist(!showChecklist)}
