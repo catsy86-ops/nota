@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { HardHat } from "lucide-react";
 import { wasJustMoved } from "./movedSignal";
@@ -66,7 +66,7 @@ interface DayCellProps {
 }
 
 /** Podsumowanie Pracy dla czytnika i tytułu: „2 wizyty, 1 dostawa”; `null`, gdy nic nie ma. */
-export function DayCell({ day, month, occurrences, titleOf, selected, focused, onSelect, cellRef, shift, study }: DayCellProps) {
+function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSelect, cellRef, shift, study }: DayCellProps) {
   const { setNodeRef, isOver } = useDroppable({ id: `day-drop-${dayKey(day)}`, data: { day } });
   const inMonth = isSameMonth(day, month);
   const today = isSameDay(day, new Date());
@@ -166,3 +166,6 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
     </div>
   );
 }
+
+/** `memo`: zmiana zaznaczenia nie przerysowuje wszystkich komórek siatki (K5.1). Propsy muszą być stabilne — patrz `MonthGrid`. */
+export const DayCell = memo(DayCellView);

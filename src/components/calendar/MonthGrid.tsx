@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
   addDays, addMonths, eachDayOfInterval, endOfMonth, endOfWeek,
   isSameDay, startOfMonth, startOfWeek, format,
@@ -29,6 +29,9 @@ import { weekdayHeadClass } from "./dayCellStyles";
 /** Tydzień zaczyna się w poniedziałek — aplikacja jest polska. */
 const WEEK_STARTS_ON = 1 as const;
 
+/** Stała zamiast `?? []`: nowa pusta tablica przy każdym renderze psuje `memo(DayCell)`. */
+const NO_OCCURRENCES: Occurrence[] = [];
+
 interface MonthGridProps {
   month: Date;
   byDay: Map<string, Occurrence[]>;
@@ -49,18 +52,36 @@ interface MonthGridProps {
 
 export function MonthGrid({ month, byDay, titleOf, shiftOf, studyOf, selectedDay, onSelectDay, onActivateDay, onEditShift, onMonthChange }: MonthGridProps) {
   const cellRefs = useRef(new Map<string, HTMLDivElement>());
+  // Ta sama funkcja dla tego samego dnia: nowa przy każdym renderze unieważniałaby `memo(DayCell)`.
+  const cellRefFor = useMemo(() => {
+    const callbacks = new Map<string, (el: HTMLDivElement | null) => void>();
+    return (key: string) => {
+      let ref = callbacks.get(key);
+      if (!ref) {
+        ref = (el) => {
+          if (el) cellRefs.current.set(key, el);
+          else cellRefs.current.delete(key);
+        };
+        callbacks.set(key, ref);
+      }
+      return ref;
+    };
+  }, []);
   // Fokus przenosimy dopiero po tym, jak użytkownik ruszył klawiaturą —
   // inaczej samo wejście w widok przeskakiwałoby stronę do siatki.
   const shouldFocus = useRef(false);
   const direction = useMonthDirection(month);
 
-  const days = eachDayOfInterval({
-    start: startOfWeek(startOfMonth(month), { weekStartsOn: WEEK_STARTS_ON }),
-    end: endOfWeek(endOfMonth(month), { weekStartsOn: WEEK_STARTS_ON }),
-  });
-
-  const weeks: Date[][] = [];
-  for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7));
+  // Tygodnie liczone raz na miesiąc: te same obiekty `Date` między renderami, żeby `memo(DayCell)` działał.
+  const weeks = useMemo(() => {
+    const days = eachDayOfInterval({
+      start: startOfWeek(startOfMonth(month), { weekStartsOn: WEEK_STARTS_ON }),
+      end: endOfWeek(endOfMonth(month), { weekStartsOn: WEEK_STARTS_ON }),
+    });
+    const rows: Date[][] = [];
+    for (let i = 0; i < days.length; i += 7) rows.push(days.slice(i, i + 7));
+    return rows;
+  }, [month]);
 
   useEffect(() => {
     if (!shouldFocus.current) return;
@@ -136,17 +157,14 @@ export function MonthGrid({ month, byDay, titleOf, shiftOf, studyOf, selectedDay
                   key={key}
                   day={day}
                   month={month}
-                  occurrences={byDay.get(key) ?? []}
+                  occurrences={byDay.get(key) ?? NO_OCCURRENCES}
                   titleOf={titleOf}
                   shift={shiftOf?.(key)}
                   study={studyOf?.(key)}
                   selected={isSameDay(day, selectedDay)}
                   focused={isSameDay(day, selectedDay)}
                   onSelect={onSelectDay}
-                  cellRef={(el) => {
-                    if (el) cellRefs.current.set(key, el);
-                    else cellRefs.current.delete(key);
-                  }}
+                  cellRef={cellRefFor(key)}
                 />
               );
             })}

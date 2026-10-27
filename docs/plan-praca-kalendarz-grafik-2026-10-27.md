@@ -4,7 +4,8 @@
 > - **Zrobione:** K0.1 (`5b4d8d6`), K0.2, K0.3, K0.4 — część: data końca się czyści (`5ecf8c2`), pole „Do kiedy” w dialogu kalendarza (zrobione 2026-10-27, bez commita — patrz `opis.md`), G0.1–G0.6 i A.1 (`827a1cd`). Testy: vitest 265/265 w dotkniętych obszarach, typecheck i lint czyste.
 > - **Odłożone:** P0.1 (rysunek zastępuje zdjęcie — zmiana modelu Yjs, 8 plików, wymaga osobnej sesji z testami scalania); P0.2 (świadomie nie zrobione: `shareOrCopy` na telefonie otwiera arkusz udostępniania zamiast kopiować — decyzja produktowa, do potwierdzenia).
 > - **Korekta:** K0.1 — projekcja zeruje `content` notatki prywatnej (`yjsStore.ts:355`), więc wyciek nie zachodzi dziś; zabezpieczenie w eksporterze jest dodatkiem w głębi.
-> - **Nie robione jeszcze:** cała Fala B, reszta Kalendarza (K1.1, K1.2–K1.6, K2–K4), reszta Grafiku (G2–G4), cała Praca (P2–P5).
+> - **Fala B, częściowo (2026-10-27):** zrobione K5.1 (siatka, 35 → 2 renderów przy zmianie zaznaczenia), G3.1 (nadgodziny raz na dane) i domyślne zmiany Grafiku 8 h i 10 h (patrz `opis.md`). Nie robione: K5.2, G3.2, P6.1–P6.4.
+> - **Nie robione jeszcze:** reszta Kalendarza (K1.1, K1.2–K1.6, K2–K4), reszta Grafiku (G2–G4), cała Praca (P2–P5).
 
 ## Kontekst
 

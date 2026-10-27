@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { pluralPl } from "@/lib/plural";
 import { useDayClock } from "@/lib/dayClock";
@@ -17,7 +17,7 @@ import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences
 import { nextInSeries, nextOccurrence, ruleOf, seriesDay, type RepeatInput, type RepeatRule } from "@/lib/reminderRepeat";
 import { toast } from "sonner";
 import { composeReminderTimestamp } from "@/lib/reminderTime";
-import { dayType, setDayEntry, useShifts } from "@/lib/shifts";
+import { dayType, setDayEntry, useShifts, type ShiftType } from "@/lib/shifts";
 import { useStudyDayMarks } from "./useStudyDayMarks";
 import { DayDialog } from "@/components/shifts/DayDialog";
 import { MonthGrid } from "./MonthGrid";
@@ -81,6 +81,8 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     [notes, start, end, WEEK],
   );
 
+  const notesById = useMemo(() => new Map(notes.map((n) => [n.id, n])), [notes]);
+
   const titleOf = useMemo(() => {
     const titles = new Map(notes.map((n) => [n.id, n.locked ? "Notatka prywatna" : n.title || n.content.slice(0, 40)]));
     return (id: string) => titles.get(id) ?? "";
@@ -88,17 +90,21 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
 
   // Zmiany z Grafiku w komórkach i w panelu dnia — jeden widok „co mam tego dnia”.
   const shifts = useShifts();
+  // Typy dni liczone raz na zmianę danych: `dayType` tworzy nowy obiekt, a `memo(DayCell)` porównuje referencje.
   const shiftOf = useMemo(() => {
     const types = new Map(shifts.types.map((t) => [t.id, t]));
-    return (key: string) => {
-      const entry = shifts.days[key];
-      const base = entry && types.get(entry.type);
-      return base ? dayType(base, entry) : undefined;
-    };
+    const resolved = new Map<string, ShiftType>();
+    for (const [key, entry] of Object.entries(shifts.days)) {
+      const base = types.get(entry.type);
+      if (base) resolved.set(key, dayType(base, entry));
+    }
+    return (key: string) => resolved.get(key);
   }, [shifts]);
 
   // Praca w komórkach: wizyty serwisowe i dostawy (K2), tylko odczyt.
   const studyMarks = useStudyDayMarks();
+  // Stabilna funkcja dla siatki: `memo(DayCell)` nie przerysowuje komórek przy każdym kliknięciu (K5.1).
+  const studyOf = useCallback((key: string) => studyMarks.get(key), [studyMarks]);
 
   // Okno dnia z Grafiku otwierane z kalendarza: ręczna zmiana rodzaju zmiany i godzin bez przechodzenia do Grafiku.
   const [shiftDay, setShiftDay] = useState<string | null>(null);
@@ -124,21 +130,21 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     setSelectedDay(today);
   }
 
-  function openAdd(day: Date) {
+  const openAdd = useCallback((day: Date) => {
     setSelectedDay(day);
     setEditTarget(null);
     setDialogDay(day);
-  }
+  }, []);
 
   function openEdit(occ: Occurrence) {
-    const note = notes.find((n) => n.id === occ.noteId);
+    const note = notesById.get(occ.noteId);
     setEditTarget({ noteId: occ.noteId, at: occ.at, repeat: occ.repeat, isSeries: occ.isSeries, allDay: occ.allDay, base: note?.reminderBase, until: note?.reminderRepeatUntil });
     setDialogDay(new Date(occ.at));
   }
 
   /** Cofnięcie przywraca poprzedni termin, więc zapamiętujemy go przed zmianą. */
   function previousOf(noteId: string) {
-    const note = notes.find((n) => n.id === noteId);
+    const note = notesById.get(noteId);
     return {
       reminder: note?.reminder ?? null,
       repeat: note ? ruleOf(note) : { kind: "none" as const },
@@ -170,7 +176,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
    */
   function handleSkip(noteId: string, at: number, repeat: RepeatRule) {
     const before = previousOf(noteId);
-    const note = notes.find((n) => n.id === noteId);
+    const note = notesById.get(noteId);
     // Odłożone wystąpienie: kolejny termin liczy się od serii (`nextOccurrence`), nie od odłożonej chwili.
     const next = note ? nextOccurrence(note, at) : nextInSeries(at, repeat, before.day, before.until);
     // Pominięcie ostatniego terminu serii kończy ją — nie ma już czego przypominać.
@@ -188,7 +194,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
    * ślepego zaułka przenosimy użytkownika do terminu, który da się zapisać.
    */
   function openSeriesSource(occ: Occurrence) {
-    const note = notes.find((n) => n.id === occ.noteId);
+    const note = notesById.get(occ.noteId);
     if (!note?.reminder) return;
     const source = new Date(note.reminder);
     setMonth(new Date(source.getFullYear(), source.getMonth(), 1));
@@ -257,7 +263,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
   }
 
   function exportOne(occ: Occurrence) {
-    const note = notes.find((n) => n.id === occ.noteId);
+    const note = notesById.get(occ.noteId);
     if (!note) return;
     exportIcs([note], `przypomnienie-${format(new Date(occ.at), "yyyy-MM-dd")}.ics`);
     toast("Pobrano plik .ics", { description: "Otwórz go, żeby dodać termin do kalendarza systemowego." });
@@ -423,7 +429,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
             byDay={byDay}
             titleOf={titleOf}
             shiftOf={shiftOf}
-            studyOf={(key) => studyMarks.get(key)}
+            studyOf={studyOf}
             selectedDay={selectedDay}
             onSelectDay={setSelectedDay}
             onActivateDay={openAdd}
@@ -464,7 +470,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
             onSkip={(occ) => handleSkip(occ.noteId, occ.at, occ.repeat)}
             onMoveByDays={(occ, days) => moveToDay(occ, addDays(new Date(occ.at), days))}
             onOpenSeriesSource={openSeriesSource}
-            noteOf={(id) => notes.find((n) => n.id === id)}
+            noteOf={(id) => notesById.get(id)}
             onUpdateNote={updateNote}
           />
 
