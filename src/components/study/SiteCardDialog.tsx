@@ -1,4 +1,3 @@
-import { shareOrCopy } from "@/lib/shareOrCopy";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Archive, ArchiveRestore, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, Phone, Send, Share2, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -6,23 +5,21 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { shrinkSitePhotos } from "@/lib/study/photoShrink";
 import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { haptic } from "@/lib/haptics";
 import { useShifts } from "@/lib/shifts";
 import { pluralPl } from "@/lib/plural";
-import { topicTitle } from "@/lib/study/content";
-import { saveSiteCard, setSiteArchived, useSiteDirectory, useStudy } from "@/lib/study/store";
+import { saveSiteCard, useSiteDirectory, useStudy } from "@/lib/study/store";
 import { findSiteByName, SITE_FIELD_MAX, SITE_NAME_MAX } from "@/lib/study/sites";
 import { entriesPl, problemsPl } from "@/lib/study/journalView";
-import { buildJournalReport, periodLabel, dayKeyOf, workOn } from "@/lib/study/report";
+import { periodLabel, dayKeyOf, workOn } from "@/lib/study/report";
 import { siteMinutesInRange } from "@/lib/study/siteHours";
 import { formatHoursShort } from "@/lib/shifts/time";
 import { localDayKey } from "@/lib/dayDone";
 import { useDayClock } from "@/lib/dayClock";
-import { downloadSiteZip } from "@/lib/study/siteZip";
 import { siteTally } from "@/lib/study/siteTally";
 import { SiteTallyBar } from "./SiteTallyBar";
+import { useSiteCardActions } from "./useSiteCardActions";
 import { cn } from "@/lib/utils";
 import { SiteOrderPanel } from "./SiteOrderPanel";
 import { SiteStagesPanel } from "./SiteStagesPanel";
@@ -34,7 +31,7 @@ import { HandoverPaper } from "./HandoverPaper";
 import { QuickLink } from "./QuickLink";
 import { DayHoursDialog } from "./DayHoursDialog";
 import { RecipientsForm } from "./RecipientsForm";
-import { buildHandover, handoverText, type Handover } from "@/lib/study/handover";
+import { buildHandover, type Handover } from "@/lib/study/handover";
 import { mapsHref, prettyPhone, smsHref, SITE_ACCESS_MAX, SITE_PHONE_MAX, telHref } from "@/lib/study/contact";
 
 
@@ -67,7 +64,6 @@ export function SiteCardDialog({
   const dir = useSiteDirectory();
   const site = siteId ? dir.find((s) => s.id === siteId) ?? null : null;
   const [form, setForm] = useState<SiteForm>(EMPTY_FORM);
-  const [zipping, setZipping] = useState(false);
   /** Formularz danych rozwinięty; każda karta otwiera się zwinięta. */
   const [editing, setEditing] = useState(false);
   /** Formularz odbiorców raportu (1.11) rozwinięty; każda karta otwiera się zwinięta. */
@@ -100,48 +96,10 @@ export function SiteCardDialog({
     }
   }
 
-  /** Cała budowa (od pierwszego do ostatniego wpisu) w jednym ZIP: raport.md i zdjęcia. */
-  async function zip(): Promise<boolean> {
-    if (!site || site.first == null || site.last == null) return false;
-    setZipping(true);
-    try {
-      const report = buildJournalReport(study.journal, {
-        siteId: site.id,
-        siteCard: site,
-        sites: Object.fromEntries(dir.map((x) => [x.id, x])),
-        from: dayKeyOf(site.first),
-        to: dayKeyOf(site.last),
-        shifts,
-        topicTitle,
-      });
-      const res = await downloadSiteZip(report, site.docs ?? []);
-      haptic("success");
-      const photos = `${res.photos} ${pluralPl(res.photos, ["zdjęcie", "zdjęcia", "zdjęć"])}`;
-      const docs = res.docs > 0 ? `, ${res.docs} ${pluralPl(res.docs, ["dokument", "dokumenty", "dokumentów"])}` : "";
-      const audio = res.recordings > 0 ? `, ${res.recordings} ${pluralPl(res.recordings, ["nagranie", "nagrania", "nagrań"])}` : "";
-      const missing = res.missingPhotos + res.missingDocs + res.missingRecordings;
-      toast.success(
-        missing > 0
-          ? `Paczka gotowa: raport i ${photos}${docs}${audio}. ${missing} bez bajtów na tym urządzeniu — pominięte.`
-          : `Paczka gotowa: raport i ${photos}${docs}${audio}`,
-      );
-      return true;
-    } catch {
-      toast.error("Nie udało się przygotować paczki");
-      return false;
-    } finally {
-      setZipping(false);
-    }
-  }
-
-  /** Tekst protokołu (bez zdjęć): udostępnianie z telefonu, a bez niego — schowek. */
-  async function shareHandover() {
-    if (!site) return;
-    const text = handoverText(buildHandover(study.journal, site));
-    const outcome = await shareOrCopy({ title: `Protokół odbioru — ${site.name}`, text });
-    if (outcome === "copied") toast.success("Skopiowano tekst protokołu");
-    else if (outcome === "failed") toast.error("Nie udało się skopiować");
-  }
+  // ZIP, protokół i archiwizacja — w `useSiteCardActions` (P6.2).
+  const { zipping, shareHandover, archiveAsk, setArchiveAsk, shrinkWithZip, setShrinkWithZip, archiving, toggleArchive, doArchive } = useSiteCardActions({
+    site, study, dir, shifts, persistDirty, onArchived: () => onOpenChange(false),
+  });
 
   /** Niezapisana zmiana idzie do karty przed każdym wyjściem z okna — nie gubimy wpisanych danych po cichu. */
   function persistDirty(): boolean {
@@ -160,41 +118,6 @@ export function SiteCardDialog({
     if (!site) return;
     persistDirty();
     go(site.id);
-  }
-
-  // P-4 (plan Pracy 3.3): archiwizacja pyta; „zapisz ZIP i zmniejsz zdjęcia” jest domyślnie wyłączone.
-  const [archiveAsk, setArchiveAsk] = useState(false);
-  const [shrinkWithZip, setShrinkWithZip] = useState(false);
-  const [archiving, setArchiving] = useState(false);
-
-  function toggleArchive() {
-    if (!site) return;
-    if (site.archived !== undefined) { void doArchive(false, false); return; }
-    setShrinkWithZip(false);
-    setArchiveAsk(true);
-  }
-
-  async function doArchive(archive: boolean, shrink: boolean) {
-    if (!site) return;
-    setArchiving(true);
-    try {
-      if (archive && shrink) {
-        // Najpierw ZIP: bez zapisanej paczki zdjęcia zostają w pełnym rozmiarze.
-        if (!(await zip())) return;
-        const { shrunk, skipped } = await shrinkSitePhotos(study.journal.filter((en) => en.siteId === site.id));
-        if (skipped > 0) toast.info(`${skipped} zdjęć zostało w pełnym rozmiarze — tej przeglądarki nie umie ich zmniejszyć`);
-        haptic("success");
-        toast.success(`Zmniejszono ${shrunk} zdjęć do miniatur — oryginały są w paczce`);
-      }
-      persistDirty();
-      setSiteArchived(site.id, archive);
-      haptic("tap");
-      toast.success(archive ? `„${site.name}” w archiwum — wpisy zostają` : `„${site.name}” znów na liście budów`);
-      if (archive) onOpenChange(false);
-    } finally {
-      setArchiving(false);
-      setArchiveAsk(false);
-    }
   }
 
   // Szybkie akcje z zapisanej karty (nie z pisanego formularza) — numer przed zapisem nie dzwoni.
