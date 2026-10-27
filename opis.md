@@ -2995,3 +2995,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 
 - Ustalone: każdy krój z `@fontsource` ma `@font-face` z zakresami znaków, więc przeglądarka pobiera tylko pliki używanych znaków; nieaktywne kroje nie są referencjonowane w CSS poza `html[data-font]`.
 - **Nie zrobione:** korekta fallbacku (`size-adjust`, `ascent-override`) dla podmiany fontu (CLS). Wymaga odczytu metryk z plików WOFF2 (brak narzędzia w środowisku); do zrobienia z pomiarem w przeglądarce.
+- Commit (4.1): `8b1b50f` (2026-10-27).
