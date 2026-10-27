@@ -177,3 +177,8 @@ Każda nowa skórka: kontrakt tokenów (0.2), kontrast (1.5), sygnatury z Fazy 2
 5. Faza 4: 4.4, 4.1 (skórka po skórce), 4.3, 4.2, 4.5.
 6. 1.4 (skórka na noc), 3.5 (kod wyglądu).
 7. Faza 5.
+
+### Status Fazy 5 (2026-10-27)
+
+- **Pełne e2e (`chromium`):** 683 przeszło, 39 nie. Powtórka nieudanych: 36 nadal pada, 3 przeszły (chybienia pod obciążeniem). Z 36: dwa to testy `@mobile` uruchomione w projekcie komputerowym (`touch-audit`, `view-sheet-snap` — przechodzą w `pixel-7`), reszta to **błędy sprzed planu motywów**: testy Grafiku (`shifts`, `shifts-week`, `shifts-undo`, `file-sync`, `tabs`, `leave-year`, `calendar-shift-edit`) zakładają domyślne rodzaje „Dzień”/„Noc”, a od G3.1 (`75e00b7`) domyślne są Dniówka, Budowa, Urlop, L4; `masonry.spec.ts:35` (przeciąganie karty) też pada. Sprawdzone na commicie sprzed sesji (`aac3c44`, osobny katalog roboczy): `masonry:35` i `shifts:37` padają tak samo. Do naprawy w osobnym zadaniu (plan Grafiku).
+- **Zostaje:** odświeżenie zrzutów wizualnych starych stylów (drobne ozdoby), pomiar klatek dla 10 stylów, ręczne QA na telefonie.
