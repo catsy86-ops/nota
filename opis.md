@@ -3025,3 +3025,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 ### Testy
 - `e2e/empty-states-qol.spec.ts`, `e2e/skin-signatures.spec.ts`, `e2e/study.spec.ts` — 48/48 na chromium.
 - `vitest` (EmptyState, StatsDialog, EmptyIllustration, ui) — przechodzą.
+- Commit: `f15c152` (2026-10-27).
