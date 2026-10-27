@@ -1,6 +1,8 @@
 import { LayoutGroup, m as motion } from "framer-motion";
 import { Check } from "lucide-react";
-import { SKINS, type Skin } from "@/lib/skins";
+import { SKINS, SKIN_SCHEME, type Skin } from "@/lib/skins";
+import { accentFor, useAccentMap } from "@/lib/accent";
+import { ACCENT_META } from "@/lib/accentMeta";
 import { SKIN_META } from "@/lib/skinGallery";
 import { spring } from "@/lib/motion";
 import { haptic } from "@/lib/haptics";
@@ -16,8 +18,13 @@ interface SkinPickerProps {
  * Galeria stylów: każda miniatura to ten styl w małej skali — tło, kafel notatki,
  * akcent i „Aa” krojem nagłówków. Wybór obwódka przenosi sprężyną (`layoutId`),
  * a cała aplikacja przechodzi kołem od miejsca dotknięcia (useTheme).
+ * Kolor akcentu na miniaturze to odcień zapamiętany dla tego stylu (plan motywów 3.2), a pod
+ * opisem znaczki: schemat (jasny / ciemny / oba) i „Ruchome tło”.
  */
+const SCHEME_BADGE = { light: "Jasny", dark: "Ciemny" } as const;
+
 export function SkinPicker({ value, onChange }: SkinPickerProps) {
+  const accents = useAccentMap();
   return (
     <LayoutGroup id="skin-picker">
       <div role="radiogroup" aria-label="Styl aplikacji" className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -25,6 +32,9 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
           const meta = SKIN_META[s];
           const active = s === value;
           const p = meta.preview;
+          const accent = ACCENT_META[s][accentFor(s, accents)].swatch;
+          const scheme = SKIN_SCHEME[s];
+          const badges = [scheme ? SCHEME_BADGE[scheme] : "Jasny i ciemny", ...(meta.ambient ? ["Ruchome tło"] : [])];
           return (
             <motion.button
               key={s}
@@ -62,11 +72,12 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
                 style={{ backgroundColor: p.bg, color: p.ink }}
               >
                 <span className="absolute left-2.5 top-1.5 text-[1.375rem] leading-none" style={{ fontFamily: meta.font, fontWeight: 600 }}>Aa</span>
-                {!active && <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full" style={{ backgroundColor: p.accent, boxShadow: `0 0 10px ${p.accent}` }} />}
+                {!active && <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full" style={{ backgroundColor: accent, boxShadow: `0 0 10px ${accent}` }} />}
                 <span className="absolute inset-x-2.5 bottom-2 rounded-control px-2 py-1.5 shadow-sm" style={{ backgroundColor: p.card }}>
                   <span className="block h-1.5 w-3/5 rounded-full" style={{ backgroundColor: p.ink, opacity: 0.85 }} />
                   <span className="mt-1 block h-1 w-4/5 rounded-full" style={{ backgroundColor: p.muted, opacity: 0.8 }} />
-                  <span className="mt-1.5 block h-1.5 w-6 rounded-full" style={{ backgroundColor: p.accent }} />
+                  {/* Przycisk główny w akcencie: pigułka, nie kreska — widać, jak wygląda „Zapisz”. */}
+                  <span className="mt-1.5 block h-2.5 w-9 rounded-full" style={{ backgroundColor: accent }} />
                 </span>
                 {active && (
                   <motion.span
@@ -74,7 +85,7 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
                     animate={{ scale: 1, rotate: 0 }}
                     transition={spring.snap}
                     className="absolute right-1.5 top-1.5 grid h-5 w-5 place-items-center rounded-full shadow-sm"
-                    style={{ backgroundColor: p.accent, color: p.bg }}
+                    style={{ backgroundColor: accent, color: p.bg }}
                   >
                     <Check className="h-3 w-3" strokeWidth={3} />
                   </motion.span>
@@ -82,6 +93,11 @@ export function SkinPicker({ value, onChange }: SkinPickerProps) {
               </span>
               <span className="relative mt-2 block px-1 text-sm font-semibold text-foreground">{meta.label}</span>
               <span className={cn("relative block px-1 pb-0.5 text-2xs text-muted-foreground")}>{meta.blurb}</span>
+              <span className="relative mt-1 flex flex-wrap gap-1 px-1 pb-0.5">
+                {badges.map((b) => (
+                  <span key={b} className="rounded-full border border-border/70 px-1.5 py-px text-2xs leading-4 text-muted-foreground">{b}</span>
+                ))}
+              </span>
             </motion.button>
           );
         })}

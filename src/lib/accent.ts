@@ -43,6 +43,11 @@ export function useAccent(skin: Skin): number {
   return accentFor(skin, store.use());
 }
 
+/** Akcenty wszystkich stylów naraz (galeria pokazuje na miniaturze zapamiętany odcień). */
+export function useAccentMap(): AccentMap {
+  return store.use();
+}
+
 export function setAccent(skin: Skin, n: number) {
   if (!valid(n)) return;
   store.set({ ...store.get(), [skin]: n });

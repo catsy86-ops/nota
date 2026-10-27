@@ -10,6 +10,8 @@ export interface SkinMeta {
   preview: { bg: string; card: string; ink: string; accent: string; muted: string };
   /** Krój nagłówków — miniatura pokazuje „Aa” tym krojem. */
   font: string;
+  /** Tło stale się rusza (deszcz, zorza, woda) — znaczek „Ruchome tło” w galerii. */
+  ambient?: boolean;
 }
 
 export const SKIN_META: Record<Skin, SkinMeta> = {
@@ -36,6 +38,7 @@ export const SKIN_META: Record<Skin, SkinMeta> = {
     blurb: "Nocne niebo, gwiazdy i falująca zorza.",
     preview: { bg: "#060a17", card: "#111a2e", ink: "#eef4fb", accent: "#3cf5a6", muted: "#9b7bff" },
     font: "'Fraunces Variable', serif",
+    ambient: true,
   },
   miedz: {
     label: "Miedź",
@@ -48,11 +51,13 @@ export const SKIN_META: Record<Skin, SkinMeta> = {
     blurb: "Zielony deszcz znaków na czarnym tle, jak w terminalu.",
     preview: { bg: "#020a03", card: "#06140a", ink: "#b8ffc9", accent: "#00ff41", muted: "#1d6b2e" },
     font: "'JetBrains Mono Variable', monospace",
+    ambient: true,
   },
   hydraulika: {
     label: "Hydraulika",
     blurb: "Miedziane rury, płynąca woda i bąbelki w instalacji.",
     preview: { bg: "#0b1e2b", card: "#12293a", ink: "#e6f4fa", accent: "#d08a4e", muted: "#4fc3f7" },
     font: "'Barlow Condensed', sans-serif",
+    ambient: true,
   },
 };

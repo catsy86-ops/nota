@@ -127,7 +127,7 @@ export function AppearanceSettings() {
       </nav>
 
       <SettingsGroup id="wyglad-styl" title="Styl">
-        <Section title="Styl">
+        <Section title="Galeria stylów">
           <SkinPicker value={skin} onChange={trySkin} />
         </Section>
 
