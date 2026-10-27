@@ -5,8 +5,6 @@ import { useDayClock } from "@/lib/dayClock";
 import {
   DndContext, PointerSensor, TouchSensor, pointerWithin, useSensor, useSensors, type DragEndEvent,
 } from "@dnd-kit/core";
-import { m as motion } from "framer-motion";
-import { tween } from "@/lib/motion";
 import { ChevronLeft, ChevronRight, Download, Keyboard, MoreHorizontal, Printer } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { PrintRoot } from "@/components/study/PrintRoot";
@@ -280,8 +278,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     // i krzywa co przejście między widokami w Index.
     // Telefon i laptop: jedna kolumna w dawnej kolejności (`contents` + `order`). Szeroki ekran (xl):
     // miesiąc po lewej, po prawej przyklejone najbliższe terminy i panel wybranego dnia (plan UI 2.3).
-    <motion.section initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={tween.enter}
-      className="flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start xl:gap-8">
+    <section className="rise-in flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start xl:gap-8">
       <div className="contents xl:flex xl:flex-col xl:gap-4 xl:min-w-0">
         <header className="order-1 flex items-center gap-1 sm:gap-2">
           <button
@@ -491,6 +488,6 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
           onSkipOccurrence={handleSkip}
         />
       )}
-    </motion.section>
+    </section>
   );
 }

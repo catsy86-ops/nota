@@ -21,7 +21,6 @@ import { takeLinkGraphRequest } from "@/lib/graphRequest";
 
 // Graf wchodzi dopiero po otwarciu zakładki — Statystyki same go nie potrzebują.
 const NoteGraph = lazy(() => import("@/components/NoteGraph"));
-import { m as motion } from "framer-motion";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { toast } from "sonner";
@@ -162,12 +161,10 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
             const done = p >= 1;
             const unlockedAt = unlockedIds[a.id];
             return (
-              <motion.div
+              <div
                 key={a.id}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.03 }}
-                className={`flex items-center gap-3 rounded-card border px-3 py-2 ${done ? "border-primary/40 bg-primary/5" : "border-border/60 bg-muted/20"}`}
+                style={{ "--i": i } as React.CSSProperties}
+                className={`chip-slide flex items-center gap-3 rounded-card border px-3 py-2 ${done ? "border-primary/40 bg-primary/5" : "border-border/60 bg-muted/20"}`}
               >
                 <span className={`text-2xl ${done ? "" : "grayscale opacity-50"}`}>{a.emoji}</span>
                 <div className="flex-1 min-w-0">
@@ -181,7 +178,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
                   )}
                 </div>
                 {done && <span className="text-2xs font-bold text-primary-ink uppercase">✓</span>}
-              </motion.div>
+              </div>
             );
           })}
         </div>

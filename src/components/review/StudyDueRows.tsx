@@ -1,5 +1,4 @@
 import { HardHat, ChevronRight } from "lucide-react";
-import { m as motion, useReducedMotion } from "framer-motion";
 import { AnimatedNumber } from "@/components/ui/animated-number";
 import { Button } from "@/components/ui/button";
 import { useStudyReady } from "@/lib/study/data";
@@ -20,7 +19,6 @@ export function StudyDueRows({ onOpenStudy }: { onOpenStudy: (siteId?: string) =
 }
 
 function StudyDueRowsList({ onOpenStudy }: { onOpenStudy: (siteId?: string) => void }) {
-  const reduce = useReducedMotion();
   const study = useStudy();
   // Subskrypcja zmiany doby: po północy serwis i zamówienia z terminem „na dziś” mają przejść do listy,
   // a `Date.now()` poniżej jest wtedy świeże.
@@ -41,13 +39,11 @@ function StudyDueRowsList({ onOpenStudy }: { onOpenStudy: (siteId?: string) => v
       </div>
       <ul className="divide-y divide-border/50">
         {rows.map((row, i) => (
-          <motion.li
+          <li
             key={row.key}
             data-study-due={row.kind}
-            className="py-2"
-            initial={reduce ? false : { opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.05, duration: 0.25, ease: "easeOut" }}
+            className="rise-in py-2"
+            style={{ "--i": i } as React.CSSProperties}
           >
             {/* Wiersz z budową otwiera jej kartę (`/praca?budowa=`), pozostałe wiersze są tylko informacją. */}
             {row.siteId ? (
@@ -61,7 +57,7 @@ function StudyDueRowsList({ onOpenStudy }: { onOpenStudy: (siteId?: string) => v
                 {row.detail && <p className="mt-0.5 text-xs text-muted-foreground">{row.detail}</p>}
               </>
             )}
-          </motion.li>
+          </li>
         ))}
       </ul>
     </section>
