@@ -251,7 +251,7 @@ function People({ people, onOpen }: { people: PersonDebts[]; onOpen: (key: strin
 function PersonSheet({ person, onClose, reminders }: { person: PersonDebts | null; onClose: () => void; reminders?: DebtReminderApi }) {
   return (
     <Sheet open={!!person} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent side="bottom" className="max-h-[85dvh] overflow-y-auto rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
+      <SheetContent side="bottom" snap className="overflow-y-auto rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
         {person && <PersonHistory person={person} onDone={onClose} reminders={reminders} />}
       </SheetContent>
     </Sheet>

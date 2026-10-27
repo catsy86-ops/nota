@@ -2914,33 +2914,35 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 ### Commit
 - `de668e6` (2026-10-27).
 
-## Wspólne — arkusz „Widok” z punktami „pół” i „pełny” (plan UI/UX 3.10, 2026-10-27)
+## Wspólne — dolne arkusze z punktami „pół” i „pełny” (plan UI/UX 3.10, 2026-10-27)
 
 ### Co robi
-- Arkusz „Widok” na telefonie (układ, kolumny, gęstość, sortowanie, grupowanie) startuje na pół ekranu. Przeciągnięcie uchwytu w górę otwiera pełny ekran, w dół wraca na pół, a mocniejsze przeciągnięcie w dół z połowy zamyka arkusz.
+- Dolne arkusze na telefonie (lista „Widok”, menu „Więcej”, szybkie „Nowa”, kolejka zapisu, historia osoby w Długach, menu notatki) startują na pół ekranu, a przeciągnięcie uchwytu w górę otwiera pełny ekran. W dół wraca na pół; mocniejsze przeciągnięcie w dół z połowy zamyka. Krótka treść zajmuje tylko tyle miejsca, ile potrzebuje.
+- Edytor wpisu Dziennika Pracy (`JournalEntrySheet`) nie ma punktów: ma własny układ z przewijaniem i na komputerze jest bocznym panelem.
 
 ### Gdzie jest
-- `src/components/ui/sheet-snap.ts` — `snapDecision` (czysta logika progów), `SNAP_HEIGHT` (`half` 55 dvh, `full` 92 dvh).
-- `src/components/ui/sheet.tsx` — `SheetContent` z opcją `snap` (tylko dla `side="bottom"`), hook `useDragToDismiss` z `SnapControl`.
-- `src/components/ViewSheet.tsx` — włącza `snap`; usunięty własny `max-h-[85dvh]`, bo blokowałby punkt „pełny”.
+- `src/components/ui/sheet-snap.ts` — `snapDecision` (czysta logika progów), `SNAP_MAX_HEIGHT` (`half` 55 dvh, `full` 92 dvh; limity, nie wysokości).
+- `src/components/ui/sheet.tsx` — `SheetContent` z opcją `snap` (działa tylko dla `side="bottom"`), hook `useDragToDismiss` z `SnapControl`.
+- Włączone (`snap`): `ViewSheet.tsx`, `BottomNav.tsx` (dwa arkusze), `debts/DebtsView.tsx`, `NoteCardDialogs.tsx`, `OfflineQueuePanel.tsx`.
 
-### Jak działa
-- Stan „pół/pełny” trzyma `SheetContent` w stanie React (`snapState`) i w refie (`snapRef`), żeby gest po puszczeniu odczytał aktualny punkt. Wysokość idzie przez `style.height`, a przejście przez inline `transition` (`height` i `transform`).
+### Jak działa i dlaczego
+- Stan „pół/pełny” trzyma `SheetContent` w stanie React (`snapState`) i w refie (`snapRef`), żeby gest po puszczeniu odczytał aktualny punkt. Limit wysokości idzie przez `style.maxHeight` i animuje się przez `max-height` (wysokość `auto` nie da się animować, więc limit jest wygodniejszy).
 - Podczas gestu arkusz podąża za palcem tylko w dół (`translateY`). Ruch w górę z „pół” niczego nie przesuwa, a decyzja zapada przy puszczeniu.
 - `snapDecision` (z `dy` ze znakiem i prędkością px/ms): z „pół” w górę (ponad 40 px albo szybko) → „pełny”; w dół (ponad 110 px albo szybko, >30 px) → zamknięcie; z „pełny” w dół (te same progi) → „pół”, nigdy od razu zamknięcie.
-- Bez `snap` (wszystkie pozostałe arkusze) ścieżka kodu jest dokładnie ta sama co przed zmianą: tylko zamykanie w dół.
+- Bez `snap` ścieżka kodu jest taka jak dawniej: tylko zamykanie w dół. Dotyczy to `JournalEntrySheet`.
 
 ### Ograniczenia i pułapki
-- Punkty są tylko w `ViewSheet`. Pozostałe ok. 27 użyć `SheetContent` i wszystkie `ResponsiveDialogContent` na telefonie dalej mają jedną wysokość; plan 3.10 mówi „wszystkie arkusze na jednym `ViewSheet`” — to nie jest zrobione, zostaje na osobny krok.
-- Wysokość „pół” jest stała (55 dvh), więc krótka zawartość zostaje w pustej przestrzeni arkusza.
 - Gest jest tylko na uchwycie (`data-sheet-handle`), nie na całej treści — przewijanie listy nie przeciąga arkusza.
+- Punkt „pełny” w krótkiej treści nic nie zmienia wizualnie (arkusz i tak ma wysokość treści). To zamierzone.
 - Gest dotykowy testowany przez CDP (tylko Chromium). Na prawdziwym iOS nie sprawdzono.
+- Przy nowym dolnym arkuszu z formularzem nie włączać `snap` bez sprawdzenia przewijania pól i klawiatury (jak w `JournalEntrySheet`).
 
 ### Testy
 - `src/components/ui/sheet-snap.test.ts` — 9 przypadków progów (w górę, w dół, szybkie gesty, powrót z „pełny”).
 - `e2e/view-sheet-snap.spec.ts` (`@mobile`, Pixel 7) — start na pół, gest w górę do pełnego, gest w dół wraca na pół i arkusz zostaje otwarty.
-- `e2e/mobile.spec.ts` (15/15 na Pixel 7) — w tym zamykanie „Więcej” gestem i formularz jako arkusz.
-- Commit: `ed78a79` (2026-10-27).
+- `e2e/mobile.spec.ts` (15/15 na Pixel 7) — w tym zamykanie „Więcej” gestem. Razem z snap 16/16.
+- `e2e/debts-due.spec.ts`, `card-copy`, `card-keyboard-open`, `site-card-mobile` — przechodzą na chromium i Pixel 7.
+- Commity: `ed78a79` (pierwszy arkusz), punkty na pozostałych arkuszach w commicie 3.10 (hash poniżej).
 
 ## Wspólne — preferencje systemu: kontrast, przezroczystość, wymuszone kolory (plan UI/UX 3.12, 2026-10-27)
 

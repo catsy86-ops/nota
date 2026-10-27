@@ -156,7 +156,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
       </motion.nav>
 
       <Sheet open={quickOpen} onOpenChange={setQuickOpen}>
-        <SheetContent side="bottom" className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
+        <SheetContent side="bottom" snap className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
           <SheetHeader className="text-left">
             <SheetTitle className="font-display text-2xl">Nowa</SheetTitle>
             <SheetDescription>Co zapisać? Stuknij „+”, by od razu napisać notatkę.</SheetDescription>
@@ -172,7 +172,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
       </Sheet>
 
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
-        <SheetContent side="bottom" className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
+        <SheetContent side="bottom" snap className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
           <SheetHeader className="text-left">
             <SheetTitle className="font-display">Więcej</SheetTitle>
           </SheetHeader>

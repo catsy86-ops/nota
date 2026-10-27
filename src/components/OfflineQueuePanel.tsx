@@ -37,7 +37,7 @@ export function OfflineQueuePanel({ open, onOpenChange, offline }: OfflineQueueP
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
+      <SheetContent side="bottom" snap className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
         <SheetHeader className="text-left">
           <SheetTitle className="font-display">Status zapisu i synchronizacji</SheetTitle>
           <SheetDescription>

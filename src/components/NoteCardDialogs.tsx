@@ -40,7 +40,7 @@ export function ActionSheet({
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       {/* Portal: zdarzenia i tak płyną drzewem Reacta do kafla — bez stopPropagation stuknięcie otwierałoby edytor. */}
-      <SheetContent side="bottom" className="note-sheet rounded-t-3xl border-t border-border/60 pb-[calc(env(safe-area-inset-bottom)+16px)]" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
+      <SheetContent side="bottom" snap className="note-sheet rounded-t-3xl border-t border-border/60 pb-[calc(env(safe-area-inset-bottom)+16px)]" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()}>
         <SheetHeader className="text-left pr-10">
           <SheetTitle className="font-display truncate">{note.locked ? "Notatka prywatna" : note.title.trim() || "Notatka bez tytułu"}</SheetTitle>
         </SheetHeader>

@@ -198,3 +198,5 @@ Plan kończymy tutaj; pozostałe punkty to backlog z podanym zakresem, do zrobie
 **Status Fazy 5 (2026-10-27):** 5.2 zrobione (ziarno Zeszytu, wyłączane przy ograniczonej przezroczystości); 5.3 zrobione dla Statystyk i roku (tokeny dymku, cyfry tabelaryczne; raporty Pracy nie używają Recharts); 5.4 zrobione (jedna grubość kreski; każdy pusty stan ma przycisk); 5.5 zrobione (podświetlenie krawędzi zamiast podnoszenia; dotyk tylko `:active`). **Nie zrobione:** 5.1 (odcienie działów, M).
 
 **Status 5.1 (2026-10-27):** zrobione w całości — ikony w nawigacji i pasku nagłówka (border) były wcześniej; dodane kolory szkiców pustych stanów działów (`index.css`, blok „Pusty stan w dziale”). **Faza 5 zamknięta.** Faza 6 (QA) otwarta.
+
+**Status 3.10 (2026-10-27, finał):** zrobione. Punkty „pół/pełny” i zamykanie gestem w dół na wszystkich dolnych arkuszach listowych (`ViewSheet`, menu i „Nowa” w `BottomNav`, Długi, menu notatki, kolejka zapisu). Edytor wpisu Dziennika celowo bez punktów (układ z przewijaniem). Wcześniejsza uwaga „nie zrobione” nieaktualna.

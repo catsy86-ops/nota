@@ -4,8 +4,8 @@
  */
 export type SheetSnap = "half" | "full";
 
-/** Wysokości punktów zatrzymania; `full` odpowiada dotychczasowemu limitowi arkusza (92 dvh). */
-export const SNAP_HEIGHT: Record<SheetSnap, string> = { half: "55dvh", full: "92dvh" };
+/** Maksymalne wysokości punktów zatrzymania. Arkusz jest tak wysoki, jak treść, ale nie więcej niż limit — krótka lista nie zostawia pustego miejsca. */
+export const SNAP_MAX_HEIGHT: Record<SheetSnap, string> = { half: "55dvh", full: "92dvh" };
 
 /** Progi jak w zamykaniu: odległość w px albo szybki ruch (px/ms). */
 const DIST_CLOSE = 110;

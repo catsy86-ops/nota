@@ -5,7 +5,7 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 import { OverlayBack } from "@/components/ui/overlay-back";
-import { SNAP_HEIGHT, snapDecision, type SheetSnap } from "@/components/ui/sheet-snap";
+import { SNAP_MAX_HEIGHT, snapDecision, type SheetSnap } from "@/components/ui/sheet-snap";
 
 const Sheet = SheetPrimitive.Root;
 
@@ -46,7 +46,7 @@ function useDragToDismiss(contentRef: React.RefObject<HTMLDivElement | null>, cl
   const rawDy = React.useRef(0);
   const reset = (el: HTMLElement) => {
     el.style.transition = snap
-      ? "transform 200ms cubic-bezier(0.22, 1, 0.36, 1), height 200ms cubic-bezier(0.22, 1, 0.36, 1)"
+      ? "transform 200ms cubic-bezier(0.22, 1, 0.36, 1), max-height 200ms cubic-bezier(0.22, 1, 0.36, 1)"
       : "transform 200ms cubic-bezier(0.22, 1, 0.36, 1)";
     el.style.transform = "";
   };
@@ -152,7 +152,7 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
           onInteractOutside?.(e);
         }}
         {...props}
-        style={useSnap ? { ...style, height: SNAP_HEIGHT[snapState] } : style}
+        style={useSnap ? { ...style, maxHeight: SNAP_MAX_HEIGHT[snapState] } : style}
       >
         {side === "bottom" && (
           // Uchwyt naprawdę działa: przeciągnięcie w dół zamyka arkusz (próg odległości albo szybki ruch).
