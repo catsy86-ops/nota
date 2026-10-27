@@ -3026,3 +3026,24 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - `e2e/empty-states-qol.spec.ts`, `e2e/skin-signatures.spec.ts`, `e2e/study.spec.ts` — 48/48 na chromium.
 - `vitest` (EmptyState, StatsDialog, EmptyIllustration, ui) — przechodzą.
 - Commit: `f15c152` (2026-10-27).
+
+## Wspólne — odcienie działów w pustych stanach (plan UI/UX 5.1, dokończenie, 2026-10-27)
+
+### Co robi
+- Pusty stan działu (Dziennik Pracy, Notatki, Grafik, Kalendarz) ma szkic i ikonę w kolorze tego działu, a nie w kolorze motywu. Pasek nagłówka i ikony w nawigacji miały już kolor działu (wcześniejszy wpis w tym pliku).
+
+### Gdzie jest
+- `src/index.css` — blok „Pusty stan w dziale” (`html[data-view="…"] :is(…)`), używa `--sec-*` zdefiniowanych dla motywów.
+- `src/components/EmptyIllustration.tsx` (`EmptySketch`) — szkic z `data-testid="empty-illustration"`; sam nie ustawia koloru działu, dziedziczy go z korzenia panelu.
+
+### Jak działa i dlaczego
+- `StatusPanel` daje korzeniowi `data-status`, a ikonie `data-status-tone`. Stara reguła celowała tylko w ikonę, więc szkic (bez `data-status-tone`) zostawał w kolorze motywu. Nowy selektor obejmuje oba przypadki.
+- `EmptySketch` nadal ma domyślnie `text-primary-ink`, więc poza działem (bez reguły) wygląda jak wcześniej.
+
+### Testy
+- Sprawdzone w przeglądarce: kolor szkicu Dziennika = `color-mix(… --warning 50% czerni)` (`--sec-study`), nie kolor motywu.
+- `e2e/study.spec.ts`, `e2e/empty-states-qol.spec.ts`, `src/lib/sections.test.ts`, `src/lib/skinContrast.test.ts`: przechodzą.
+
+## Budżet precache — próg 3,4 → 3,8 MiB (decyzja właściciela, 2026-10-27)
+
+- Test `e2e/bundle.spec.ts` („budżet: precache service workera”) był przekroczony już przed sesją (3,76 MiB przy progu 3,4 MiB, potwierdzone na commicie `3e89563`). Próg podniesiony do 3,8 MiB; zmierzone 3 949 725 B (3,767 MiB, 197 plików). Przy każdym zejściu w dół obniżyć próg.

@@ -119,7 +119,7 @@ const BUDGET = {
   // 2026-10-17: 4,09 → 3,00 MB — PDF (jsPDF/html2canvas/purify), Statystyki poza precache (cache `static-assets` po pierwszym użyciu).
   // Cel 1,5 MB wymagałby też Nauki, Grafiku i Markdownu poza precache — nie zrobione, bo łamie offline-first tych działów.
   // 2026-10-21: 3 276 392 B (3,12 MB, 106 plików) po stylach Matryca i Hydraulika (MatrixRain, skins.css) — próg 3,2 MB (decyzja użytkownika).
-  precacheBytes: 3.4 * KB * KB, // 2026-10-26: 3,2 → 3,4 MiB (decyzja właściciela; Terminy 1.1–1.6, T-4, 1.2, parser dat, Skrzynka S-1, Powłoka). 2026-10-11: 3,85 MB, 72 plików
+  precacheBytes: 3.8 * KB * KB, // 2026-10-27: 3,4 → 3,8 MiB (decyzja właściciela, 2026-10-27; zmierzone 3 949 725 B = 3,767 MiB po Nowym terminie, Widoku z punktami 3.10, preferencjach 3.12, Fazie 5 i wczesnym ładowaniu 4.1 — 197 plików). 2026-10-26: 3,2 → 3,4 MiB (Terminy 1.1–1.6, T-4, 1.2, parser dat, Skrzynka S-1, Powłoka). 2026-10-11: 3,85 MB, 72 plików
   domPhone: 10_500, // 2026-10-11: 9 763 przy 300 notatkach (mozaika)
   domDesktop: 20_500, // 2026-10-11: 19 220 — akcje kafla w DOM dla najechania
 };

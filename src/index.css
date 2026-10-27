@@ -547,11 +547,12 @@ html[data-skin="zeszyt"] .app-header {
   html[data-view="study"] .app-header { border-bottom-color: color-mix(in srgb, var(--sec-study) 60%, transparent); }
   html[data-view="calendar"] .app-header { border-bottom-color: color-mix(in srgb, var(--sec-calendar) 60%, transparent); }
 
-  /* Pusty stan w dziale: ikona w kolorze działu (`StatusPanel` ustawia `data-status-tone`). */
-  html[data-view="notes"] [data-status-tone="empty"] { color: var(--sec-notes); }
-  html[data-view="shifts"] [data-status-tone="empty"] { color: var(--sec-shifts); }
-  html[data-view="study"] [data-status-tone="empty"] { color: var(--sec-study); }
-  html[data-view="calendar"] [data-status-tone="empty"] { color: var(--sec-calendar); }
+  /* Pusty stan w dziale: ikona i szkic w kolorze działu (5.1). `StatusPanel` daje korzeniowi `data-status`,
+     a ikonie `data-status-tone`; szkic (`EmptySketch`) ma tylko `data-testid`, więc dostaje kolor przez korzeń. */
+  html[data-view="notes"] :is([data-status="empty"] [data-testid="empty-illustration"], [data-status-tone="empty"]) { color: var(--sec-notes); }
+  html[data-view="shifts"] :is([data-status="empty"] [data-testid="empty-illustration"], [data-status-tone="empty"]) { color: var(--sec-shifts); }
+  html[data-view="study"] :is([data-status="empty"] [data-testid="empty-illustration"], [data-status-tone="empty"]) { color: var(--sec-study); }
+  html[data-view="calendar"] :is([data-status="empty"] [data-testid="empty-illustration"], [data-status-tone="empty"]) { color: var(--sec-calendar); }
 
   /* Bez „gumki” i systemowego pull-to-refresh przy przewijaniu listy na telefonie. */
   html,
