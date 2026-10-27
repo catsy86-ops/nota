@@ -26,6 +26,10 @@
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
   }
+  /* Ziarno Zeszytu (5.2) to też przezroczystość. */
+  html[data-skin="zeszyt"] {
+    --paper-grain: none;
+  }
 }
 
 /*

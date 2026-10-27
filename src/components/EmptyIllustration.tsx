@@ -14,6 +14,9 @@ export function EmptyIllustration({ view }: { view: View }) {
   return <EmptySketch paths={paths} />;
 }
 
+/** Jedna grubość kreski dla kartki, szkicu i podkreślenia (plan 5.4); różnią się tylko krycie i kolor. */
+const INK = 2;
+
 /** Szkic z podanych ścieżek na kartce w linie — też dla pustych widoków spoza listy Notatek (Dziennik Pracy). */
 export function EmptySketch({ paths, className = "relative mx-auto h-28 w-40 text-primary-ink" }: { paths: string[]; className?: string }) {
   const still = isMotionReduced();
@@ -26,7 +29,7 @@ export function EmptySketch({ paths, className = "relative mx-auto h-28 w-40 tex
     >
       {/* Linie kartki. */}
       {[72, 78].map((y) => (
-        <line key={y} x1="10" x2="110" y1={y} y2={y} stroke="currentColor" strokeOpacity="0.18" strokeWidth="1" />
+        <line key={y} x1="10" x2="110" y1={y} y2={y} stroke="currentColor" strokeOpacity="0.18" strokeWidth={INK} />
       ))}
       {paths.map((d, i) => (
         <motion.path
@@ -34,7 +37,7 @@ export function EmptySketch({ paths, className = "relative mx-auto h-28 w-40 tex
           d={d}
           fill="none"
           stroke="currentColor"
-          strokeWidth="2.5"
+          strokeWidth={INK}
           strokeLinecap="round"
           strokeLinejoin="round"
           initial={still ? false : { pathLength: 0, opacity: 0 }}
@@ -48,7 +51,7 @@ export function EmptySketch({ paths, className = "relative mx-auto h-28 w-40 tex
         fill="none"
         stroke="currentColor"
         strokeOpacity="0.5"
-        strokeWidth="2"
+        strokeWidth={INK}
         strokeLinecap="round"
         initial={still ? false : { pathLength: 0 }}
         animate={{ pathLength: 1 }}

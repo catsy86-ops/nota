@@ -68,6 +68,7 @@
     position: absolute;
     inset: 0;
     background-image:
+      var(--paper-grain, none),
       linear-gradient(var(--grid) 1px, transparent 1px),
       linear-gradient(90deg, var(--grid) 1px, transparent 1px);
     background-size: 20px 20px;
@@ -599,6 +600,13 @@ html[data-skin="zeszyt"] .app-header {
   /* Siła poświaty: w ciemnym motywie przygaszona, żeby nie zalewała notatek. */
   html[data-season] { --season-glow: 1; }
   html.dark[data-season] { --season-glow: 0.42; }
+}
+
+/* Ziarno papieru w Zeszycie (plan 5.2): szum SVG w pierwszej warstwie tła kratki, ~4% krycia.
+   Maska kratki gasi je przy dole i bokach razem z liniami. Wyłączane w `preferences.css`
+   przy ograniczonej przezroczystości. Inne style nie ustawiają zmiennej (`none`). */
+html[data-skin="zeszyt"] {
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .5 0 0 0 0 .47 0 0 0 0 .42 0 0 0 .1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
 }
 
 /* Zeszyt w porze roku: światło wpada z górnych rogów i od dołu, kolorami sezonu.
@@ -1225,10 +1233,16 @@ html:not([data-input="touch"]) .note-card:has(:focus-visible) { box-shadow: var(
 /* Uniesienie tylko dla wskaźnika myszy: `translate` jest niezależne od `transform`
    framer-motion (layout, kaskada), a trafienie liczymy na nieruchomym kontenerze,
    więc karta nie „drży” na krawędzi kursora. Karta w edycji stoi w miejscu. */
+/* Najechanie podświetla krawędź kolorem akcentu zamiast podnosić kafel: na masonry podnoszenie
+   o kilka pikseli wyglądało nerwowo. Na dotyku tylko naciśnięcie (`:active`), bez stanu „najechania”. */
 @media (hover: hover) and (pointer: fine) {
   .note-lift:hover .note-card:not(:has(textarea)):not([data-tile-editing]) {
-    translate: 0 -2px;
-    box-shadow: var(--elevation-3);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 55%, var(--border)), var(--elevation-1);
+  }
+}
+@media (pointer: coarse) {
+  .note-lift .note-card:active:not(:has(textarea)):not([data-tile-editing]) {
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--primary) 55%, var(--border)), var(--elevation-1);
   }
 }
 
@@ -1284,10 +1298,6 @@ html[data-motion="reduced"] .entry-stamp[data-fresh] { animation: none; }
   24%  { opacity: 1; transform: rotate(-8deg) scale(1); }
   78%  { opacity: 1; transform: rotate(-8deg) scale(1); }
   100% { opacity: 0; transform: rotate(-8deg) scale(1); }
-}
-html[data-motion="reduced"] .note-lift:hover .note-card { translate: none; }
-@media (prefers-reduced-motion: reduce) {
-  .note-lift:hover .note-card { translate: none; }
 }
 
 /* ── Kafle: zakładka zamiast paska, kolor krawędzi z koloru notatki (2026-10-11) ───────── */
@@ -1405,3 +1415,6 @@ html[data-vt-dir="back"]::view-transition-new(root) { animation: vt-in-left 0.22
 .year-chart-norm .recharts-curve { stroke: var(--foreground); stroke-dasharray: 4 3; stroke-width: 1.5; }
 .year-chart-over .recharts-rectangle { fill: var(--warning); }
 .year-chart-night .recharts-rectangle { fill: var(--accent); }
+
+/* Osie i dymki Recharts: cyfry o stałej szerokości, żeby wartości nie skakały (plan 5.3). */
+.recharts-wrapper { font-variant-numeric: tabular-nums; }

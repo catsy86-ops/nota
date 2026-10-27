@@ -2996,3 +2996,32 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - Ustalone: każdy krój z `@fontsource` ma `@font-face` z zakresami znaków, więc przeglądarka pobiera tylko pliki używanych znaków; nieaktywne kroje nie są referencjonowane w CSS poza `html[data-font]`.
 - **Nie zrobione:** korekta fallbacku (`size-adjust`, `ascent-override`) dla podmiany fontu (CLS). Wymaga odczytu metryk z plików WOFF2 (brak narzędzia w środowisku); do zrobienia z pomiarem w przeglądarce.
 - Commit (4.1): `8b1b50f` (2026-10-27).
+
+## Wspólne — upiększenie: ziarno Zeszytu, wykresy, puste stany, kafel (plan UI/UX Faza 5, 5.2–5.5, 2026-10-27)
+
+### Co robi
+- **Ziarno papieru w Zeszycie (5.2):** delikatna tekstura na tle kratki, widoczna tylko w stylu Zeszyt. Gaśnie razem z kratką przy dole i bokach.
+- **Wykresy (5.3):** dymek w Aktywności (Statystyki) ma kolory z motywu zamiast domyślnego białego tła Recharts. Cyfry na osiach i w dymkach są tabelaryczne.
+- **Puste stany (5.4):** rysunek „długopisem” ma jedną grubość kreski dla kartki, szkicu i podkreślenia.
+- **Kafel (5.5):** najechanie myszą podświetla krawędź kolorem akcentu zamiast podnosić kafel o 2 px. Na dotyku tylko naciśnięcie (`:active`).
+
+### Gdzie jest
+- `src/index.css` — `--paper-grain` (tylko `html[data-skin="zeszyt"]`) i warstwa w `.paper-grid::before`; reguły `.note-lift:hover .note-card` i `.note-lift .note-card:active` (pointer coarse); `.recharts-wrapper { font-variant-numeric: tabular-nums }` na końcu pliku.
+- `src/styles/preferences.css` — przy `prefers-reduced-transparency` ziarno `none`.
+- `src/components/EmptyIllustration.tsx` — stała `INK = 2` dla wszystkich kresek.
+- `src/components/StatsDialog.tsx` — `contentStyle` dymku z tokenami `--popover`, `--border`, `--popover-foreground`.
+
+### Jak działa i dlaczego
+- Ziarno to szum `feTurbulence` w data URI (~0,5 KB) z kanałem alfa mnożonym przez 0,1 (krycie niezmierzone, dobrane wizualnie). Wstawione jako pierwsza warstwa `background-image` kratki, więc maska kratki gasi je razem z liniami. Zmienna jest pusta (`none`) w pozostałych stylach.
+- Podświetlenie krawędzi to `box-shadow` z `color-mix(var(--primary) 55%, var(--border))` plus `--elevation-1`. Usunięcie `translate` likwiduje „drganie” na masonry.
+- Dotyk nie ma stanu najechania, więc podświetla tylko naciśnięcie.
+
+### Ograniczenia i pułapki
+- Ziarno jest bardzo subtelne. Nie zrobiłem pomiaru kontrastu ziarna — ocena wizualna na zrzucie 1280 px. Do przeglądu na telefonie.
+- Kafel: na komputerze stan najechania zmienia tylko krawędź. Kafle w edycji (`textarea`) i `data-tile-editing` są wyłączone jak wcześniej.
+- Wykresy „raportów Pracy” nie używają Recharts (sprawdzone w kodzie) — punkt 5.3 dotyczy tylko Statystyk i Grafiku (rok).
+- 5.4: pozostałe puste stany (Archiwum, Kosz) mają „Nowa notatka” zgodnie z testem `empty-states-qol` — nie zmieniałem etykiety.
+
+### Testy
+- `e2e/empty-states-qol.spec.ts`, `e2e/skin-signatures.spec.ts`, `e2e/study.spec.ts` — 48/48 na chromium.
+- `vitest` (EmptyState, StatsDialog, EmptyIllustration, ui) — przechodzą.

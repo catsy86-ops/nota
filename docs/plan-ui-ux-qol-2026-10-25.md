@@ -194,3 +194,5 @@ Plan kończymy tutaj; pozostałe punkty to backlog z podanym zakresem, do zrobie
 **Status 3.12 (2026-10-27):** zrobione w `src/styles/preferences.css`: `prefers-contrast` (tokeny i krawędzie), `prefers-reduced-transparency` (bez rozmyć), `forced-colors` (obrys fokusu). **Nie zrobione:** grubsze obramowania (zmiana klas komponentów). Test: `e2e/system-preferences.spec.ts`.
 
 **Status 4.1 (2026-10-27):** zrobione: ładowanie działów także na fokus klawiatury i w czasie bezczynności po starcie (`prefetchViewsWhenIdle`, bez `saveData`). Najechanie i wciśnięcie były wcześniej. **Status 4.2:** częściowo — kroje ładują się na użycie (`@fontsource`); korekta metryk fallbacku (CLS) nie zrobiona (wymaga pomiaru WOFF2).
+
+**Status Fazy 5 (2026-10-27):** 5.2 zrobione (ziarno Zeszytu, wyłączane przy ograniczonej przezroczystości); 5.3 zrobione dla Statystyk i roku (tokeny dymku, cyfry tabelaryczne; raporty Pracy nie używają Recharts); 5.4 zrobione (jedna grubość kreski; każdy pusty stan ma przycisk); 5.5 zrobione (podświetlenie krawędzi zamiast podnoszenia; dotyk tylko `:active`). **Nie zrobione:** 5.1 (odcienie działów, M).
