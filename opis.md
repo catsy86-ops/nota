@@ -191,7 +191,7 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 
 - `544773c`, `2f5ff5b`, `18e7808`, `12fe855` (2026-10-15) — React 19 i Tailwind 4; `ee3d51f` — kolory krawędzi i fokusu.
 - `ee5a23f` (Radix, lucide), `4e96f34` (sonner 2).
-- `b06445b` — cele dotyku; `9bfb12e` — dwie kolumny; `ec86276` — dolny pasek; `c62282f` — klawiatura; `07bbc03` — arkusze formularzy; `9ed219c` — okna na telefonie.
+- `b06445b` — cele dotyku; `f52e393` (2026-10-27) — audyt 44 px na Pixel 7; `9bfb12e` — dwie kolumny; `ec86276` — dolny pasek; `c62282f` — klawiatura; `07bbc03` — arkusze formularzy; `9ed219c` — okna na telefonie.
 - `8a5b5da` — ładowanie widoków; `7c47e4b` (2026-10-15) i `59063d5` — stany (`StatusPanel`).
 - `75ea68d` — animacje w tle; `d3c5c4b` — `ToggleGroup`; `6442da5` — wibracje; `21f2442` — krój tekstu; `d0e244b` — tryb budowa.
 - `95ca98f` — style i motyw; `cba3989` — bez Lovable; `35ed5a3` — audyt axe i testy na telefonach; `e2c8b95` — układ telefonu i pasek zbiorczy.
