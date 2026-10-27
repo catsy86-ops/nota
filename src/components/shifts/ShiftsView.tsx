@@ -9,7 +9,7 @@ import type { Note } from "@/hooks/useNotes";
 import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
 import { buildSiteTimesheetCsv } from "@/lib/study/siteTimesheet";
 import { useStudy } from "@/lib/study/store";
-import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, copyRange, defaultPatternStart, useScheduleData, useSchedules, monthSummaryToDate, shortRests, swapDays, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type WeekCopyPlan } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, copyRange, defaultPatternStart, useScheduleData, useSchedules, monthSummaryToDate, shortRests, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, planWeekCopy, restoreDays, shiftStore, subscribeShiftDay, takeShiftDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type WeekCopyPlan } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
@@ -24,7 +24,7 @@ import { haptic } from "@/lib/haptics";
 import { setCycleWave } from "@/lib/shifts/cycleWave";
 import { timeOffBalance } from "@/lib/shifts/timeOff";
 import { BrushBar, type Brush } from "./BrushBar";
-import { TransferChooser, type DropChoice } from "./TransferChooser";
+import { TransferChooser } from "./TransferChooser";
 import { ShiftExportMenu, ShiftExportToolbar } from "./ShiftExportControls";
 import { NoShiftTypes } from "./NoShiftTypes";
 import { shortDate, useShiftPaint } from "./useShiftPaint";
@@ -32,7 +32,8 @@ import { TOOLBAR_BTN } from "./shiftControlStyles";
 import { BrushHours } from "./BrushHours";
 import { ShiftMonthGrid } from "./ShiftMonthGrid";
 import { ShiftWeekView } from "./ShiftWeekView";
-import { ShiftDnd, type DayActions, type DropMode } from "./ShiftDnd";
+import { ShiftDnd } from "./ShiftDnd";
+import { useShiftTransfer } from "./useShiftTransfer";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { cn } from "@/lib/utils";
 import { ShiftSummary } from "./ShiftSummary";
@@ -91,13 +92,11 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   const dayTick = useDayClock();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [weekStart, setWeekStart] = useState(() => startOfWeekKey(dayKey(new Date())));
-  const [clip, setClip] = useState<DayEntry | null>(null);
   // Dni z odpoczynkiem krótszym niż 11 h — znacznik ⚠ w siatce, lista w rachunku.
   const shortRestDays = useMemo(() => new Set(shortRests(data).map((r) => r.dayKey)), [data]);
   const undoState = useShiftUndoState();
   const canUndo = (undoState & 1) !== 0;
   const canRedo = (undoState & 2) !== 0;
-  const clipRef = useRef<DayEntry | null>(null);
   const [asking, setAsking] = useState<{ from: string; to: string } | null>(null);
   const [confirmCopy, setConfirmCopy] = useState<WeekCopyPlan | null>(null);
   const [brush, setBrush] = useState<Brush>(() => (data.types[0] ? { kind: "type", id: data.types[0].id } : { kind: "inspect" }));
@@ -258,50 +257,8 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   // Stabilna referencja — siatka jest `memo` i nie musi się przerysowywać przy otwieraniu okien.
   const onDay = useShiftPaint({ brush, activeHours, typesById, toastReplaced, setOpenDay, setAnnounce });
 
-  // Przenoszenie i kopiowanie wpisów — jedna ścieżka dla myszy, dotyku i klawiatury.
-  const transfer = useCallback((from: string, to: string, mode: DropChoice) => {
-    if (mode === "swap") {
-      const before = swapDays(from, to, dayKey(new Date()));
-      if (!before) { toast("Nie ma czego zamienić", { description: "Zamienić można dwa dni, w których są zmiany." }); return; }
-      toastWithUndo(`Zamieniono: ${shortDate(from)} ⇄ ${shortDate(to)}`, () => restoreDays(before));
-      return;
-    }
-    const days = shiftStore.get().days;
-    const src = days[from];
-    if (!src) { toast("Ten dzień nie ma zmiany", { description: "Nie ma czego przenosić ani kopiować." }); return; }
-    const replaced = !!days[to];
-    const before = transferDay(from, to, mode, dayKey(new Date()));
-    if (!before) { toast("Bez zmian", { description: "W dniu docelowym jest już taki sam wpis." }); return; }
-    const name = shiftStore.get().types.find((t) => t.id === src.type)?.name ?? "Zmiana";
-    toastWithUndo(`${mode === "move" ? "Przeniesiono" : "Skopiowano"} ${name}: ${shortDate(from)} → ${shortDate(to)}`, () => restoreDays(before), {
-      description: replaced ? "Zastąpiono wpis w dniu docelowym" : undefined,
-    });
-  }, []);
-
-  const actions = useMemo<DayActions>(() => ({
-    transfer,
-    copyEntry: (key) => {
-      const entry = shiftStore.get().days[key];
-      if (!entry) { toast("Ten dzień nie ma zmiany do skopiowania"); return; }
-      clipRef.current = entry;
-      setClip(entry);
-      const name = shiftStore.get().types.find((t) => t.id === entry.type)?.name ?? "Zmiana";
-      toast(`Skopiowano wpis: ${name}, ${shortDate(key)}`, { description: `${modShortcut("V")} na innym dniu go wklei.` });
-    },
-    paste: (key) => {
-      const entry = clipRef.current;
-      if (!entry) { toast("Schowek jest pusty", { description: `Na dniu ze zmianą naciśnij ${modShortcut("C")}.` }); return; }
-      const before = pasteDay(entry, key, dayKey(new Date()));
-      if (!before) { toast("Bez zmian", { description: "Ten dzień ma już taki wpis." }); return; }
-      const name = shiftStore.get().types.find((t) => t.id === entry.type)?.name ?? "Zmiana";
-      toastWithUndo(`Wklejono ${name}: ${shortDate(key)}`, () => restoreDays(before));
-    },
-  }), [transfer]);
-
-  const onDrop = useCallback((from: string, to: string, mode: DropMode) => {
-    if (mode === "ask") setAsking({ from, to });
-    else transfer(from, to, mode);
-  }, [transfer]);
+  // Przenoszenie, kopiowanie i schowek — w `useShiftTransfer` (G3.2).
+  const { clip, clearClip, transfer, actions, onDrop } = useShiftTransfer(setAsking);
 
   function copyWeek() {
     const plan = planWeekCopy(shiftStore.get().days, weekStart, dayKey(new Date()));
@@ -493,7 +450,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
               <span className="rounded-control bg-muted px-2 py-1 font-medium text-foreground">
                 Schowek: {typesById.get(clip.type)?.name ?? "wpis"}{clip.note ? " z notatką" : ""}
               </span>
-              <button type="button" onClick={() => { clipRef.current = null; setClip(null); }}
+              <button type="button" onClick={clearClip}
                 className="rounded-control px-2 py-1 coarse:py-2 font-medium text-primary-ink hover:bg-primary/10 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                 Wyczyść
               </button>
