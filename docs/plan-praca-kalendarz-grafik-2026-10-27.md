@@ -8,8 +8,8 @@
 > - **Kalendarz K1 (2026-10-27):** zrobione K1.1, K1.2, K1.3, K1.4, K1.6. Nie robione: K1.5 (adres `?dzien=`, dotyka routingu i Dziś). Reszta planu do zrobienia: K2–K4, G2–G4, P2–P5.
 - **Kalendarz K2 (2026-10-27):** zrobione K2.1 (z panelu dnia), K2.2, K2.3, K2.4, K2.5 (część: T, N, P, C w siatce), K2.6. Nie robione: K2.7 (oś godzin, M), K2.1 w dialogu, K1.5 (adres dnia, potrzebny do „Wstecz”).
 - **Kalendarz K1 i K2 — domknięte (2026-10-27):** K1.5 (adres `?dzien=`, paleta „Terminy na dziś/jutro”; push nie ma dnia do linkowania, opisane w `opis.md`), K2.7 i K2.1 w dialogu zrobione.
-- **Kalendarz K3 (2026-10-27), częściowo:** zrobione K3.1 (znaczniki Pracy i tytuły w pasku, „Praca” w kartach) i K3.4 (ostrzeżenie „w czasie zmiany”). Nie robione: K3.2 (agenda na komputerze), K3.3 (filtr warstw), K3.5 (podgląd po najechaniu bez nowej zależności, szukanie w miesiącu), K3.6 (tydzień z osią, po QA wg K-4), cała K4.
-- **Nie robione jeszcze:** Kalendarz K3.2–K3.3, K3.5–K3.6, K4, reszta Grafiku (G2–G4), cała Praca (P2–P5).
+- **Kalendarz K3 (2026-10-27), częściowo:** zrobione K3.1 (znaczniki Pracy i tytuły w pasku, „Praca” w kartach), K3.2 (agenda na komputerze; wspólna lista z wydrukiem nie), K3.3 (warstwy z licznikami) i K3.4 (ostrzeżenie „w czasie zmiany”). Nie robione: K3.5 (podgląd po najechaniu bez nowej zależności, szukanie w miesiącu), K3.6 (tydzień z osią, po QA wg K-4), cała K4.
+- **Nie robione jeszcze:** Kalendarz K3.5–K3.6, K4, reszta Grafiku (G2–G4), cała Praca (P2–P5).
 
 ## Kontekst
 

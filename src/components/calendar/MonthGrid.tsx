@@ -48,9 +48,11 @@ interface MonthGridProps {
   onActivateDay: (day: Date) => void;
   /** Wyjście strzałką poza miesiąc przewija kalendarz, zamiast blokować ruch. */
   onMonthChange: (month: Date) => void;
+  /** Warstwa „Święta” (K3.3). */
+  showHolidays?: boolean;
 }
 
-export function MonthGrid({ month, byDay, titleOf, shiftOf, studyOf, selectedDay, onSelectDay, onActivateDay, onEditShift, onMonthChange }: MonthGridProps) {
+export function MonthGrid({ month, byDay, titleOf, shiftOf, studyOf, selectedDay, onSelectDay, onActivateDay, onEditShift, onMonthChange, showHolidays = true }: MonthGridProps) {
   const cellRefs = useRef(new Map<string, HTMLDivElement>());
   // Ta sama funkcja dla tego samego dnia: nowa przy każdym renderze unieważniałaby `memo(DayCell)`.
   const cellRefFor = useMemo(() => {
@@ -179,6 +181,7 @@ export function MonthGrid({ month, byDay, titleOf, shiftOf, studyOf, selectedDay
               return (
                 <DayCell
                   key={key}
+                  showHolidays={showHolidays}
                   day={day}
                   month={month}
                   occurrences={byDay.get(key) ?? NO_OCCURRENCES}

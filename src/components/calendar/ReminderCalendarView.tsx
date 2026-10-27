@@ -27,6 +27,10 @@ import { toastWithUndo } from "@/lib/undoToast";
 import type { Occurrence } from "@/lib/reminderOccurrences";
 import type { Note } from "@/hooks/useNotes";
 import { calendarDayFromSearch, viewPath } from "@/lib/viewRoute";
+import { cn } from "@/lib/utils";
+import { CALENDAR_LAYERS, countMonth, readLayers, writeLayers, type CalendarLayer, type CalendarLayerState } from "@/lib/calendarLayers";
+import { holidayName } from "@/lib/shifts/holidays";
+import { studySummary } from "@/lib/study/calendarMarks";
 import { useLocation, useNavigate } from "react-router-dom";
 
 /**
@@ -38,6 +42,10 @@ import { useLocation, useNavigate } from "react-router-dom";
  */
 
 type PhoneView = "month" | "week" | "agenda";
+
+const LAYER_LABEL: Record<CalendarLayer, string> = { terms: "Terminy", shifts: "Grafik", work: "Praca", holidays: "Święta" };
+/** Brak terminów dla warstwy „Terminy” wyłączonej — stała, żeby siatka nie przerysowywała się przy każdym renderze. */
+const NO_TERMS = new Map<string, Occurrence[]>();
 
 /** Widok telefonu zapamiętany w tej przeglądarce (K2.2, wzór panelu dnia). Błąd dostępu = miesiąc. */
 const PHONE_VIEW_KEY = "kaczy.calendar.phoneView";
@@ -87,6 +95,12 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
   const [dialogDay, setDialogDay] = useState<Date | null>(null);
   // Telefon: miesiąc (siatka) albo tydzień (pasek 7 dni). Na większym ekranie oba są zawsze.
   const [phoneView, setPhoneView] = useState<PhoneView>(readPhoneView);
+  // Komputer: siatka albo lista miesiąca (K3.2). Telefon ma własny przełącznik `phoneView`.
+  const [desktopAgenda, setDesktopAgenda] = useState(false);
+  // Warstwy (K3.3): wybór zapamiętany w przeglądarce; wyłączona warstwa znika z siatki, paska i listy miesiąca.
+  const [layers, setLayers] = useState<CalendarLayerState>(readLayers);
+  useEffect(() => { writeLayers(layers); }, [layers]);
+  const toggleLayer = (layer: CalendarLayer) => setLayers((prev) => ({ ...prev, [layer]: !prev[layer] }));
   useEffect(() => { writePhoneView(phoneView); }, [phoneView]);
   // Wydruk miesiąca (3b planu): `PrintRoot` schowa resztę strony i otworzy okno drukowania.
   const [printing, setPrinting] = useState(false);
@@ -125,6 +139,22 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
   const studyMarks = useStudyDayMarks();
   // Stabilna funkcja dla siatki: `memo(DayCell)` nie przerysowuje komórek przy każdym kliknięciu (K5.1).
   const studyOf = useCallback((key: string) => studyMarks.get(key), [studyMarks]);
+
+  const shownByDay = layers.terms ? byDay : NO_TERMS;
+  const shownShiftOf = useCallback((key: string) => (layers.shifts ? shiftOf(key) : undefined), [layers.shifts, shiftOf]);
+  const shownStudyOf = useCallback((key: string) => (layers.work ? studyOf(key) : undefined), [layers.work, studyOf]);
+  // Liczniki miesiąca w pasku warstw; klik w licznik przełącza warstwę (K3.3).
+  const layerCounts = useMemo(() => {
+    const last = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
+    const keys = Array.from({ length: last }, (_, i) => dayKey(new Date(month.getFullYear(), month.getMonth(), i + 1)));
+    return countMonth(
+      keys,
+      (k) => byDay.get(k)?.length ?? 0,
+      (k) => !!shiftOf(k),
+      (k) => !!studySummary(studyOf(k)),
+      (k) => !!holidayName(k),
+    );
+  }, [month, byDay, shiftOf, studyOf]);
 
   // Okno dnia z Grafiku otwierane z kalendarza: ręczna zmiana rodzaju zmiany i godzin bez przechodzenia do Grafiku.
   const [shiftDay, setShiftDay] = useState<string | null>(null);
@@ -298,14 +328,29 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
           </p>
         )}
 
+        {/* Warstwy (K3.3): Terminy · Grafik · Praca · Święta, z licznikami miesiąca. */}
+        <div role="group" aria-label="Warstwy kalendarza" className="order-2 flex flex-wrap gap-1.5">
+          {CALENDAR_LAYERS.map((l) => (
+            <button
+              key={l}
+              type="button"
+              aria-pressed={layers[l]}
+              onClick={() => toggleLayer(l)}
+              className={`rounded-field border px-2.5 py-1 text-xs font-medium coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring ${layers[l] ? "border-primary/40 bg-primary/10 text-primary-ink" : "border-border/60 text-muted-foreground line-through hover:text-foreground"}`}
+            >
+              {LAYER_LABEL[l]} <span className="tabular-nums">{layerCounts[l]}</span>
+            </button>
+          ))}
+        </div>
+
         {/* Telefon: bieżący tydzień i tak jest wierszem siatki miesiąca tuż pod spodem — pasek go dublował. */}
         <div className={phoneView === "week" ? "order-4" : "order-4 max-sm:hidden"}>
         <WeekStrip
           day={selectedDay}
-          byDay={byDay}
-          shiftOf={shiftOf}
+          byDay={shownByDay}
+          shiftOf={shownShiftOf}
           titleOf={titleOf}
-          studyOf={studyOf}
+          studyOf={shownStudyOf}
           onSelectDay={(day) => {
             setSelectedDay(day);
             setMonth((m) => (m.getFullYear() === day.getFullYear() && m.getMonth() === day.getMonth() ? m : new Date(day.getFullYear(), day.getMonth(), 1)));
@@ -314,24 +359,40 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
         </div>
 
         {/* K-3 (plan Kalendarza 3.4): agenda miesiąca na telefonie — trzeci widok, bez pustych dni. */}
-        <div className={phoneView === "agenda" ? "order-5 sm:hidden" : "hidden"}>
+        {/* K3.2: agenda na komputerze (przełącznik „Siatka | Lista”) i na telefonie (widok Lista). Stuknięcie dnia pokazuje panel, nie zmienia widoku. */}
+        <div role="group" aria-label="Widok dni" className="order-4 hidden sm:flex justify-end gap-1">
+          {([["grid", "Siatka"], ["list", "Lista"]] as const).map(([v, label]) => (
+            <button
+              key={v}
+              type="button"
+              aria-pressed={(v === "list") === desktopAgenda}
+              onClick={() => setDesktopAgenda(v === "list")}
+              className={`rounded-field px-3 py-1.5 text-xs font-medium coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring ${(v === "list") === desktopAgenda ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:text-foreground"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className={cn(phoneView === "agenda" ? "order-5 sm:hidden" : "hidden", desktopAgenda && "sm:block sm:order-5")}>
           <MonthAgenda
             month={month}
-            byDay={byDay}
+            byDay={shownByDay}
             titleOf={titleOf}
-            shiftOf={(key) => { const t = shiftOf(key); return t ? `${t.name} ${t.start}–${t.end}` : undefined; }}
-            onSelectDay={(key) => { const [y, m, d] = key.split("-").map(Number); const day = new Date(y, m - 1, d); setSelectedDay(day); setPhoneView("month"); setMonth(new Date(y, m - 1, 1)); }}
+            shiftOf={(key) => { const t = shownShiftOf(key); return t ? `${t.name} ${t.start}–${t.end}` : undefined; }}
+            studyOf={shownStudyOf}
+            onSelectDay={(key) => { const [y, m, d] = key.split("-").map(Number); selectGridDay(new Date(y, m - 1, d)); }}
           />
         </div>
-        <div className={phoneView === "month" ? "order-5" : "order-5 max-sm:hidden"}>
+        <div className={cn(phoneView === "month" ? "order-5" : "order-5 max-sm:hidden", desktopAgenda && "sm:hidden")}>
           <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
           <div className="contents" onPointerDown={onSwipeStart} onPointerUp={onSwipeEnd} onPointerCancel={() => { swipeStart.current = null; }}>
           <MonthGrid
             month={month}
-            byDay={byDay}
+            byDay={shownByDay}
             titleOf={titleOf}
-            shiftOf={shiftOf}
-            studyOf={studyOf}
+            shiftOf={shownShiftOf}
+            studyOf={shownStudyOf}
+            showHolidays={layers.holidays}
             selectedDay={selectedDay}
             onSelectDay={selectGridDay}
             onActivateDay={openAdd}

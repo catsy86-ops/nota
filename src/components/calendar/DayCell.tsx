@@ -61,6 +61,8 @@ interface DayCellProps {
   onSelect: (day: Date) => void;
   /** Dwuklik i przytrzymanie (K2.4): dodawanie terminu na ten dzień. */
   onActivate?: (day: Date) => void;
+  /** Warstwa „Święta” (K3.3): wyłączona = nazwa i kropka świąt znikają. */
+  showHolidays?: boolean;
   cellRef?: (el: HTMLDivElement | null) => void;
   /** Zmiana z Grafiku w tym dniu (z godzinami dnia), jeśli jest wpisana. */
   shift?: ShiftType;
@@ -69,7 +71,7 @@ interface DayCellProps {
 }
 
 /** Podsumowanie Pracy dla czytnika i tytułu: „2 wizyty, 1 dostawa”; `null`, gdy nic nie ma. */
-function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSelect, onActivate, cellRef, shift, study }: DayCellProps) {
+function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSelect, onActivate, cellRef, shift, study, showHolidays = true }: DayCellProps) {
   // K2.4: przytrzymanie na dotyku (500 ms) otwiera dodawanie na ten dzień. Przeciąganie chipa ma pierwszeństwo.
   const pressTimer = useRef<number | null>(null);
   const pressFired = useRef(false);
@@ -97,7 +99,7 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
   const dots = occurrences.slice(0, MAX_DOTS);
   const hiddenDots = occurrences.length - dots.length;
 
-  const holiday = holidayName(dayKey(day));
+  const holiday = showHolidays ? holidayName(dayKey(day)) : undefined;
   const work = studySummary(study);
   const label = `${format(day, "EEEE, d MMMM yyyy", { locale: pl })}${today ? ", dziś" : ""}${holiday ? `, ${holiday}` : ""}${shift ? `, zmiana: ${shiftLabel(shift)}` : ""}${work ? `, ${work}` : ""}, ${
     occurrences.length === 0 ? "brak terminów" : terminy(occurrences.length)

@@ -1,24 +1,28 @@
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { parseDayKey } from "@/lib/week";
+import { studySummary, type StudyDayMarks } from "@/lib/study/calendarMarks";
 import type { Occurrence } from "@/lib/reminderOccurrences";
 
 /**
- * Agenda miesiąca na telefonie (K-3, plan Kalendarza 3.4): dni z terminami albo zmianą, jedno pod drugim,
+ * Agenda miesiąca (K-3, plan Kalendarza 3.4, K3.2): dni z terminami, zmianą albo Pracą, jedno pod drugim,
  * bez pustych dni. Ta sama lista co wydruk (`CalendarPrintList`), ale wiersze są przyciskami — stuknięcie
- * otwiera dzień w panelu.
+ * wybiera dzień i pokazuje jego panel; nie przełącza widoku. Działa na telefonie i na komputerze.
  */
-export function MonthAgenda({ month, byDay, titleOf, shiftOf, onSelectDay }: {
+export function MonthAgenda({ month, byDay, titleOf, shiftOf, studyOf, onSelectDay }: {
   month: Date;
   byDay: Map<string, Occurrence[]>;
   titleOf: (noteId: string) => string;
   /** Opis zmiany dnia z Grafiku (np. „Ranna 6–14”); brak = dzień bez zmiany. */
   shiftOf?: (key: string) => string | undefined;
+  /** Znaczniki Pracy dnia (wizyty, dostawy). */
+  studyOf?: (key: string) => StudyDayMarks | undefined;
   onSelectDay: (key: string) => void;
 }) {
   const prefix = `${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}-`;
+  const work = (k: string) => studySummary(studyOf?.(k));
   const keys = Array.from(new Set([...byDay.keys(), ...daysWithShift(prefix, shiftOf)]))
-    .filter((k) => k.startsWith(prefix) && ((byDay.get(k)?.length ?? 0) > 0 || shiftOf?.(k)))
+    .filter((k) => k.startsWith(prefix) && ((byDay.get(k)?.length ?? 0) > 0 || shiftOf?.(k) || work(k)))
     .sort();
 
   if (keys.length === 0) return <div aria-label="Agenda miesiąca"><p className="px-1 py-6 text-center text-sm text-muted-foreground">Brak terminów i zmian w tym miesiącu.</p></div>;
@@ -34,6 +38,7 @@ export function MonthAgenda({ month, byDay, titleOf, shiftOf, onSelectDay }: {
               <span className="text-sm font-semibold first-letter:uppercase">{format(parseDayKey(k), "EEEE, d MMMM", { locale: pl })}</span>
               {shift && <span className="shrink-0 text-xs text-muted-foreground">{shift}</span>}
             </button>
+            {work(k) && <p className="mt-1 text-xs text-muted-foreground">{work(k)}</p>}
             {occ.length > 0 && (
               <ul className="mt-2 space-y-1">
                 {occ.map((o) => (
