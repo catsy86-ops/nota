@@ -975,7 +975,8 @@ const Index = () => {
                     if (toRule(repeat).kind !== "none" || allDay) updateNote(id, { ...repeatUpdate(repeat), ...(allDay ? { reminderAllDay: true } : {}) });
                   }}
                   onSetReminder={(id, reminder, repeat, reminderDay, reminderBase, reminderAllDay) =>
-                    updateNote(id, { reminder, ...repeatUpdate(repeat), ...(reminderDay === undefined ? {} : { reminderDay }), reminderBase, reminderAllDay: reminderAllDay === true ? true : undefined })}
+                    // Bez powtarzania zdejmujemy też datę końca serii, żeby nie wróciła przy następnej serii (K0.4).
+                    updateNote(id, { reminder, ...repeatUpdate(repeat), ...(toRule(repeat).kind === "none" ? { reminderRepeatUntil: undefined } : {}), ...(reminderDay === undefined ? {} : { reminderDay }), reminderBase, reminderAllDay: reminderAllDay === true ? true : undefined })}
                 />
               </Suspense>
             </ViewErrorBoundary>

@@ -73,6 +73,8 @@ export function ReminderQuickAddDialog({
   const [allDay, setAllDay] = useState(() => edit?.allDay === true);
   // Dzień może przesunąć język naturalny („jutro”, „w piątek”) wpisany w pole.
   const [dayOverride, setDayOverride] = useState<Date | null>(null);
+  // Ręczna zmiana pola godziny wygrywa z godziną z języka naturalnego („jutro 15:00”) — K0.2.
+  const [timeTouched, setTimeTouched] = useState(false);
 
   const isEdit = !!edit;
 
@@ -113,7 +115,8 @@ export function ReminderQuickAddDialog({
 
   const effectiveDay = dayOverride ?? parsed?.date ?? day;
   const title = (parsed ? parsed.title : query).trim();
-  const effectiveTime = parsed?.clock ?? time;
+  // Pole pokazuje dokładnie tę godzinę, którą zapisze (K0.2).
+  const effectiveTime = !timeTouched && parsed?.clock ? parsed.clock : time;
   const timestamp = composeReminderTimestamp(effectiveDay, allDay ? DEFAULT_REMINDER_TIME : effectiveTime);
   const past = isPastReminder(timestamp);
 
@@ -130,6 +133,7 @@ export function ReminderQuickAddDialog({
   function reset() {
     setQuery("");
     setTime(defaultReminderTimeFor(day));
+    setTimeTouched(false);
     setRepeat({ kind: "none" });
     setAllDay(false);
     setDayOverride(null);
@@ -218,6 +222,7 @@ export function ReminderQuickAddDialog({
             {parsed && (
               <p className="text-xs text-muted-foreground">
                 Rozpoznano datę: <span className="text-primary-ink font-medium">{format(parsed.date, "d MMMM", { locale: pl })}</span>
+                {parsed.clock && !timeTouched && <> o <span className="text-primary-ink font-medium tabular-nums">{parsed.clock}</span></>}
               </p>
             )}
           </div>
@@ -249,8 +254,8 @@ export function ReminderQuickAddDialog({
             Godzina:
             <input
               type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
+              value={effectiveTime}
+              onChange={(e) => { setTime(e.target.value); setTimeTouched(true); }}
               aria-label="Godzina przypomnienia"
               className="text-sm bg-muted/60 border border-border rounded-field px-2 py-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring text-foreground"
             />
@@ -287,8 +292,9 @@ export function ReminderQuickAddDialog({
             {edit?.isSeries && (
               <p className="text-xs text-muted-foreground">
                 To najbliższy termin serii „{REPEAT_KIND_LABELS[edit.repeat.kind].toLowerCase()}”.
-                Zmiana godziny lub dnia przesuwa całą serię — model zapisuje jeden termin,
-                a kolejne wylicza od niego.
+                {edit.base !== undefined
+                  ? "Zmiana zostaje w tym jednym wystąpieniu, reszta serii bez zmian."
+                  : "Zmiana godziny lub dnia przesuwa całą serię — model zapisuje jeden termin, a kolejne wylicza od niego."}
               </p>
             )}
             <Button size="sm" onClick={handleSaveEdit} disabled={timestamp === null} className="w-full coarse:h-11" aria-keyshortcuts="Control+Enter Meta+Enter">
