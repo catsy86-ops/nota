@@ -24,11 +24,30 @@ export function subKey(endpoint) {
   return createHash("sha256").update(endpoint).digest("hex").slice(0, 32);
 }
 
-/** Subskrypcja Web Push z `PushSubscription.toJSON()`; tylko https. */
+// Serwisy Web Push przeglądarek. Endpoint spoza tej listy odrzucamy: bez niej `/test` i `/schedule`
+// wysyłałyby żądania na dowolny adres https (otwarty przekaźnik).
+const PUSH_SERVICE_HOSTS = [
+  /^fcm\.googleapis\.com$/, // Chrome, Android
+  /(^|\.)push\.services\.mozilla\.com$/, // Firefox
+  /(^|\.)notify\.windows\.com$/, // Edge, Windows
+  /(^|\.)push\.apple\.com$/, // Safari, iOS
+];
+
+/** Adres endpointu to https i jeden z serwisów Web Push z listy. */
+export function isPushServiceUrl(endpoint) {
+  try {
+    const url = new URL(endpoint);
+    return url.protocol === "https:" && PUSH_SERVICE_HOSTS.some((re) => re.test(url.hostname));
+  } catch {
+    return false;
+  }
+}
+
+/** Subskrypcja Web Push z `PushSubscription.toJSON()`; tylko https z serwisu push. */
 export function cleanSubscription(raw) {
   if (!raw || typeof raw !== "object") return null;
   const { endpoint, keys } = raw;
-  if (typeof endpoint !== "string" || endpoint.length > 1000 || !/^https:\/\//.test(endpoint)) return null;
+  if (typeof endpoint !== "string" || endpoint.length > 1000 || !isPushServiceUrl(endpoint)) return null;
   if (!keys || typeof keys.p256dh !== "string" || typeof keys.auth !== "string") return null;
   if (keys.p256dh.length > 200 || keys.auth.length > 100) return null;
   return { endpoint, keys: { p256dh: keys.p256dh, auth: keys.auth } };

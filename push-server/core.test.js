@@ -1,6 +1,17 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { cleanItems, cleanStore, cleanSubscription, dueItems, LIMITS, payloadOf, removeItems, subKey } from "./core.js";
+import { cleanItems, cleanStore, cleanSubscription, dueItems, isPushServiceUrl, LIMITS, payloadOf, removeItems, subKey } from "./core.js";
+
+test("endpoint tylko z serwisu Web Push przeglądarki (bez otwartego przekaźnika)", () => {
+  assert.equal(isPushServiceUrl("https://fcm.googleapis.com/fcm/send/abc"), true);
+  assert.equal(isPushServiceUrl("https://updates.push.services.mozilla.com/wpush/v2/abc"), true);
+  assert.equal(isPushServiceUrl("https://wns2-par02p.notify.windows.com/w/?token=abc"), true);
+  assert.equal(isPushServiceUrl("https://web.push.apple.com/abc"), true);
+  assert.equal(isPushServiceUrl("https://example.com/hook"), false);
+  assert.equal(isPushServiceUrl("https://evil.notify.windows.com.attacker.example/x"), false);
+  assert.equal(isPushServiceUrl("http://fcm.googleapis.com/x"), false);
+  assert.equal(isPushServiceUrl("nie-url"), false);
+});
 
 const NOW = Date.UTC(2026, 9, 16, 12);
 const sub = { endpoint: "https://fcm.googleapis.com/fcm/send/abc", keys: { p256dh: "BPk", auth: "xyz" } };
@@ -8,6 +19,7 @@ const sub = { endpoint: "https://fcm.googleapis.com/fcm/send/abc", keys: { p256d
 test("subskrypcja: tylko https i z kluczami", () => {
   assert.deepEqual(cleanSubscription(sub), sub);
   assert.equal(cleanSubscription({ ...sub, endpoint: "http://x" }), null);
+  assert.equal(cleanSubscription({ ...sub, endpoint: "https://fcm.googleapis.com.evil.example/x" }), null);
   assert.equal(cleanSubscription({ endpoint: sub.endpoint }), null);
   assert.equal(cleanSubscription(null), null);
 });
