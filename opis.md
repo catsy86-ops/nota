@@ -65,6 +65,7 @@ Rzeczy wspólne dla wszystkich działów. Opis w stanie aktualnym: historia i ko
 - Na `pointer: coarse` małe przyciski mają pole co najmniej 44 × 44 px bez zmiany wyglądu: widoczny przycisk 36 px + niewidzialne `::after` (`coarse:after:-inset-1`). Wzorzec w `ui/icon-button.tsx` (`size="sm"`), również w pasku bocznym (ikony folderów, etykiet, filtra, „⋯”).
 - Grafik: przyciski miesiąca i „Skopiuj ten tydzień” mają `coarse:h-11`. Zakładki działu Praca mają `coarse:min-h-11`.
 - Ograniczenie: `::after` strzałki podfolderu zachodzi na wiersz folderu — stuknięcie tuż przy strzałce ją rozwija.
+- Audyt (plan UI 3.11): `e2e/touch-audit.spec.ts` (`@mobile`, Pixel 7) sprawdza na pięciu ścieżkach, czy każdy widoczny element interaktywny ma obszar trafienia co najmniej 44 × 44 px — pudełko albo pudełko z `::after` (`coarse:`). Pudełko samo bywa mniejsze (przyciski ikon 36 px), więc sam wymiar pudełka nie wystarcza. Na dotyku dopięte: pole wyszukiwania w kalendarzu i pola premii w Grafiku (`coarse:h-11`), pigułka statusu zapisu (`coarse:min-h-11`), wiersz „Ustawienia grafiku” (`coarse:min-h-11`).
 
 ### Tryb budowa
 

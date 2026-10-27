@@ -199,7 +199,7 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
 
       {/* Bieżące ustawienia w jednej linii — pola są w oknie „Ustawienia grafiku”. */}
       <button type="button" onClick={onOpenSettings} aria-label="Ustawienia grafiku"
-        className="pressable w-full flex items-center gap-2 border-t border-border/50 pt-3 text-left text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
+        className="pressable w-full coarse:min-h-11 flex items-center gap-2 border-t border-border/50 pt-3 text-left text-sm outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded-sm">
         <span className="flex-1 min-w-0 text-muted-foreground truncate">
           {[
             hourlyRate > 0 ? `${formatMoney(hourlyRate)}/h` : "bez stawki",
@@ -392,8 +392,8 @@ function BonusPanel({ monthKey, bonuses }: { monthKey: string; bonuses: ShiftBon
         </ul>
       )}
       <form className="grid gap-2 sm:grid-cols-[1fr_9rem_auto]" onSubmit={(e) => { e.preventDefault(); add(); }}>
-        <Input aria-label="Nazwa premii" placeholder="np. premia kwartalna" maxLength={40} value={name} onChange={(e) => setName(e.target.value)} />
-        <Input aria-label="Kwota premii (zł)" inputMode="decimal" placeholder="0,00" value={amount} onChange={(e) => setAmount(e.target.value)} className="tabular-nums" />
+        <Input aria-label="Nazwa premii" placeholder="np. premia kwartalna" maxLength={40} value={name} onChange={(e) => setName(e.target.value)} className="coarse:h-11" />
+        <Input aria-label="Kwota premii (zł)" inputMode="decimal" placeholder="0,00" value={amount} onChange={(e) => setAmount(e.target.value)} className="tabular-nums coarse:h-11" />
         <Button type="submit" size="sm" disabled={!valid} className="coarse:h-11">Dodaj premię</Button>
       </form>
     </section>

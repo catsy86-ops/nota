@@ -370,7 +370,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
             onChange={(e) => setTermQuery(e.target.value)}
             placeholder="Szukaj terminów"
             aria-label="Szukaj terminów w tym miesiącu"
-            className="h-8 min-w-0 flex-1 basis-40 rounded-field border border-border bg-background px-2 text-xs outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+            className="h-8 coarse:h-11 min-w-0 flex-1 basis-40 rounded-field border border-border bg-background px-2 text-xs outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           />
         </div>
 
