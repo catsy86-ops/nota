@@ -3050,3 +3050,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 
 - Test `e2e/bundle.spec.ts` („budżet: precache service workera”) był przekroczony już przed sesją (3,76 MiB przy progu 3,4 MiB, potwierdzone na commicie `3e89563`). Próg podniesiony do 3,8 MiB; zmierzone 3 949 725 B (3,767 MiB, 197 plików). Przy każdym zejściu w dół obniżyć próg.
 - Commit (5.1): `12c9339` (2026-10-27).
+- Commit (grubsze obramowania): `8b98b77` (2026-10-27).
