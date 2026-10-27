@@ -97,7 +97,7 @@ import { CardSkeleton, ViewSkeleton } from "@/components/ViewSkeleton";
 import { loadCalendarView, loadShiftsView, loadStudyView } from "@/lib/viewPreload";
 import { requestSettingsTab, settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
 import type { DebtReminderApi } from "@/components/debts/DebtsView";
-import { repeatUpdate, toRule } from "@/lib/reminderRepeat";
+import { repeatUpdate, toRule, type RepeatInput } from "@/lib/reminderRepeat";
 // Kolejność działów (jak w pasku bocznym) — od niej zależy kierunek przejścia między widokami.
 const VIEW_ORDER: View[] = ["notes", "today", "week", "reminders", "calendar", "shifts", "study", "debts", "cwiczenia", "archive", "trash", "inbox", "label", "folder", "widget"];
 
@@ -129,6 +129,8 @@ const CwiczeniaView = lazy(() => import("@/components/cwiczenia/CwiczeniaView").
 const InboxTriage = lazy(() => import("@/components/InboxTriage").then((m) => ({ default: m.InboxTriage })));
 const ShiftsView = lazy(() => loadShiftsView().then((m) => ({ default: m.ShiftsView })));
 const ReminderCalendarView = lazy(() => loadCalendarView().then((m) => ({ default: m.ReminderCalendarView })));
+// „Nowy termin” w Terminach — dialog z kalendarzem; ładowany dopiero na tym widoku.
+const NewReminderButton = lazy(() => import("@/components/reminders/NewReminderButton"));
 // Przypomnienie „Raport dnia gotowy” (dział Praca) — leniwie, żeby dziennik nie wchodził do głównej paczki.
 const DailyReportNudge = lazy(() => import("@/components/study/DailyReportNudge"));
 // Harmonogram dla serwera push — tylko przy włączonych powiadomieniach przy zamkniętej aplikacji.
@@ -374,6 +376,14 @@ const Index = () => {
   // T 1.1: grupy przeliczają się na granicy terminu i o północy, nie tylko przy zmianie notatek.
   const boundaryTick = useNextBoundary(others);
   const reminderGroups = useMemo(() => (view === "reminders" ? groupReminders(others) : []), [view, others, boundaryTick]);
+  // Zapis terminu z dialogu „Nowy termin” (Terminy). Kalendarz ma własne, równoważne wywołania w `ReminderCalendarView`.
+  const createReminderNote = (title: string, reminder: number, repeat: RepeatInput, allDay: boolean, until?: number) => {
+    const id = addNote(title, "", prefs.defaultNoteColor, [], reminder);
+    // `addNote` nie przyjmuje powtarzania, więc serię dostawiamy patchem po utworzeniu.
+    if (toRule(repeat).kind !== "none" || allDay) updateNote(id, { ...repeatUpdate(repeat), ...(toRule(repeat).kind !== "none" && until !== undefined ? { reminderRepeatUntil: until } : {}), ...(allDay ? { reminderAllDay: true } : {}) });
+  };
+  const attachReminder = (id: string, reminder: number, repeat: RepeatInput, allDay: boolean, base: number | undefined, until?: number) =>
+    updateNote(id, { reminder, ...repeatUpdate(repeat), reminderRepeatUntil: toRule(repeat).kind === "none" ? undefined : until, reminderBase: base, reminderAllDay: allDay ? true : undefined });
   const archivedRows = useMemo(
     // T 1.6: archiwum po terminie jak grupy — z terminem rosnąco, bez terminu na końcu.
     () => (view === "reminders" ? (deferredSearch ? searchNotes(archivedNotes, deferredSearch) : sortArchivedByReminder(archivedNotes)) : []),
@@ -861,12 +871,17 @@ const Index = () => {
             </Suspense>
           )}
           {view === "reminders" && (
-            <div role="group" aria-label="Układ Terminów" className="flex justify-end gap-1">
-              {(["tiles", "list"] as const).map((layout) => (
-                <button key={layout} type="button" aria-pressed={remindersLayout === layout} onClick={() => setRemindersLayout(layout)} className={cn("rounded-full px-3 py-1 text-xs font-medium coarse:min-h-11", remindersLayout === layout ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:text-foreground")}>
-                  {layout === "tiles" ? "Kafle" : "Lista"}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <Suspense fallback={null}>
+                <NewReminderButton notes={reminderNotes} onCreateNote={createReminderNote} onAttachReminder={attachReminder} />
+              </Suspense>
+              <div role="group" aria-label="Układ Terminów" className="flex gap-1">
+                {(["tiles", "list"] as const).map((layout) => (
+                  <button key={layout} type="button" aria-pressed={remindersLayout === layout} onClick={() => setRemindersLayout(layout)} className={cn("rounded-full px-3 py-1 text-xs font-medium coarse:min-h-11", remindersLayout === layout ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:text-foreground")}>
+                    {layout === "tiles" ? "Kafle" : "Lista"}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
           {view === "reminders" && remindersLayout === "list" && (

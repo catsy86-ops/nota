@@ -61,9 +61,10 @@ interface ReminderQuickAddDialogProps {
   notes: Note[];
   onCreateNote: (title: string, reminder: number, repeat: RepeatInput, allDay: boolean, until?: number) => void;
   onAttachReminder: (noteId: string, reminder: number, repeat: RepeatInput, allDay: boolean, base: number | undefined, until?: number) => void;
-  onClearReminder: (noteId: string) => void;
+  /** Tylko w edycji istniejącego terminu; w nowym brak. */
+  onClearReminder?: (noteId: string) => void;
   /** Pomija najbliższe wystąpienie serii, przesuwając termin na kolejne. */
-  onSkipOccurrence: (noteId: string, at: number, repeat: RepeatRule) => void;
+  onSkipOccurrence?: (noteId: string, at: number, repeat: RepeatRule) => void;
   /** Otwiera notatkę tego terminu (K2.1). Brak = przycisku nie ma. */
   onOpenNote?: (noteId: string) => void;
   /** Zmiana dnia z Grafiku — do ostrzeżenia, gdy termin wypada w czasie pracy (K3.4). */
@@ -185,13 +186,13 @@ export function ReminderQuickAddDialog({
 
   function handleDelete() {
     if (!edit) return;
-    onClearReminder(edit.noteId);
+    onClearReminder?.(edit.noteId);
     close();
   }
 
   function handleSkip() {
     if (!edit) return;
-    onSkipOccurrence(edit.noteId, edit.at, edit.repeat);
+    onSkipOccurrence?.(edit.noteId, edit.at, edit.repeat);
     close();
   }
 
@@ -251,22 +252,20 @@ export function ReminderQuickAddDialog({
             <input type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} className="size-4 accent-primary coarse:size-5" />
             Cały dzień
           </label>
-          {/* W edycji dzień zmienia się tutaj, a nie przez przeciąganie — telefon tego nie obsługuje (P0 planu). */}
-          {isEdit && (
-            <label className="flex items-center gap-2 text-xs text-muted-foreground">
-              Dzień:
-              <input
-                type="date"
-                value={format(effectiveDay, "yyyy-MM-dd")}
-                onChange={(e) => {
-                  const [y, m, d] = e.target.value.split("-").map(Number);
-                  if (y && m && d) setDayOverride(new Date(y, m - 1, d));
-                }}
-                aria-label="Dzień przypomnienia"
-                className="text-sm bg-muted/60 border border-border rounded-field px-2 py-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring text-foreground"
-              />
-            </label>
-          )}
+          {/* Dzień wybiera się tutaj (kalendarz przeglądarki), a nie przez przeciąganie — telefon tego nie obsługuje (P0 planu). Działa też przy nowym terminie, także z Terminów, które nie mają siatki dni. */}
+          <label className="flex items-center gap-2 text-xs text-muted-foreground">
+            Dzień:
+            <input
+              type="date"
+              value={format(effectiveDay, "yyyy-MM-dd")}
+              onChange={(e) => {
+                const [y, m, d] = e.target.value.split("-").map(Number);
+                if (y && m && d) setDayOverride(new Date(y, m - 1, d));
+              }}
+              aria-label="Dzień przypomnienia"
+              className="text-sm bg-muted/60 border border-border rounded-field px-2 py-1 coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring text-foreground"
+            />
+          </label>
           {!allDay && (
           <label className="flex items-center gap-2 text-xs text-muted-foreground">
             Godzina:

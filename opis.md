@@ -2885,3 +2885,31 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa:** klasa na ikonie ustawia `color: var(--sec-*)`. `--sec-*` to kolor motywu zmieszany z 50% czerni na jasnym tle; w `.dark` czysty kolor motywu. Stała proporcja, a nie `--ink-mix` motywu, bo Miedź ma 82% i jest za jasna dla ikon.
 - **Ograniczenia:** pasek nagłówka i puste stany z 5.1 nie zrobione. Zrzuty wizualne nie łapią tej zmiany (próg 1%); sprawdzać w przeglądarce.
 - **Testy:** `src/lib/sections.test.ts` (mapowanie), `src/lib/skinContrast.test.ts` (kontrast ikon we wszystkich motywach i schematach).
+
+## Terminy — „Nowy termin” z kalendarzem dnia i godziny (2026-10-27)
+
+### Co robi
+- W widoku Terminy, w nagłówku obok przełącznika „Kafle / Lista”, jest przycisk **„Nowy termin”**. Otwiera dialog z tytułem, polem **Dzień** (kalendarz przeglądarki), **Godziną**, „Cały dzień”, powtarzaniem i „Do kiedy”. Zapis tworzy notatkę z terminem albo przypina termin do istniejącej notatki.
+- Dialog jest ten sam co w Kalendarzu. Różnica: pole **Dzień** działa też przy nowym terminie (wcześniej tylko przy edycji), bo w Terminach nie ma siatki dni, z której można by wziąć dzień.
+
+### Gdzie jest
+- `src/components/reminders/NewReminderButton.tsx` — przycisk i dialog, `default export`, ładowany leniwie w `src/pages/Index.tsx` (`NewReminderButton`, `Suspense` w nagłówku Terminów).
+- `src/components/calendar/ReminderQuickAddDialog.tsx` — pole „Dzień” bez warunku `isEdit`; `onClearReminder` i `onSkipOccurrence` są opcjonalne (używane tylko w edycji).
+- `src/pages/Index.tsx` — `createReminderNote` i `attachReminder` (wspólne dla Terminów; Kalendarz nadal ma równoważne wywołania w `ReminderCalendarView`).
+
+### Jak działa
+- Dzień startowy to dzisiaj, liczony przy każdym otwarciu (po północy nie zostaje wczorajszy).
+- Pole Dzień i język naturalny w polu tekstowym działają razem: ręczna zmiana dnia (`dayOverride`) wygrywa, a wpisanie tekstu go resetuje.
+- Zapis: `createReminderNote` tworzy notatkę przez `addNote`, a serię i „Cały dzień” dokłada patchem `updateNote` (jak w Kalendarzu). Przypięcie do istniejącej notatki idzie przez `attachReminder`.
+
+### Ograniczenia i pułapki
+- Pole daty to natywny `<input type="date">`, nie kalendarz z design systemu (LazyCalendar z pickera). Kalendarz pokazuje przeglądarka/system; na telefonie to natywny wybór daty.
+- Lista „albo przypnij do istniejącej” bierze notatki z `reminderNotes` (także z archiwum), tak jak Kalendarz.
+
+### Testy
+- `e2e/reminders-new-term.spec.ts` — przycisk → dzień i godzina z pól → notatka z terminem na liście (chromium).
+- Przeszły też istniejące testy Kalendarza i Terminów: `e2e/reminders-calendar`, `reminders-agenda`, `reminders-layout`, `quick-reminder-enter`, `calendar-phase1`, `reminders-phase2` (19/19 + 1 pominięty, `@mobile`) oraz `vitest` w `src/components/calendar` i `src/components/reminders` (10/10).
+- Typecheck czysty; lint bez błędów (jedno ostrzeżenie w `Index.tsx:378`, sprzed zmiany).
+
+### Commit
+- Jeszcze niezacommitowane (2026-10-27).
