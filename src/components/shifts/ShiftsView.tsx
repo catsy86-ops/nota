@@ -9,7 +9,7 @@ import type { Note } from "@/hooks/useNotes";
 import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
 import { buildSiteTimesheetCsv } from "@/lib/study/siteTimesheet";
 import { useStudy } from "@/lib/study/store";
-import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, copyRange, defaultPatternStart, useScheduleData, useSchedules, monthSummaryToDate, shortRests, swapDays, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type WeekCopyPlan } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, copyRange, defaultPatternStart, useScheduleData, useSchedules, monthSummaryToDate, shortRests, swapDays, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type WeekCopyPlan } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
@@ -27,6 +27,7 @@ import { BrushBar, type Brush } from "./BrushBar";
 import { TransferChooser, type DropChoice } from "./TransferChooser";
 import { ShiftExportMenu, ShiftExportToolbar } from "./ShiftExportControls";
 import { NoShiftTypes } from "./NoShiftTypes";
+import { shortDate, useShiftPaint } from "./useShiftPaint";
 import { TOOLBAR_BTN } from "./shiftControlStyles";
 import { BrushHours } from "./BrushHours";
 import { ShiftMonthGrid } from "./ShiftMonthGrid";
@@ -66,7 +67,6 @@ const layoutStore = createPersistedStore<ShiftsLayout>("kaczy.shifts.layout.v1",
 
 const NO_REMINDERS = new Map<string, Occurrence[]>();
 
-const shortDate = (key: string) => format(parseDayKey(key), "d MMM", { locale: pl });
 
 const navButton = "pressable shrink-0 w-10 h-10 coarse:w-11 coarse:h-11 rounded-card flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
 
@@ -256,42 +256,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   }, [typesById]);
 
   // Stabilna referencja — siatka jest `memo` i nie musi się przerysowywać przy otwieraniu okien.
-  const onDay = useCallback((key: string) => {
-    if (brush.kind === "inspect") return setOpenDay(key);
-    const entry = shiftStore.get().days[key];
-    // Ta sama zmiana drugi raz = zdejmij ją — szybka poprawka bez sięgania po gumkę.
-    if (brush.kind === "type" && activeHours) {
-      const h = shiftHours(activeHours);
-      const same = entry?.type === brush.id && entry.customHours && entry.hours
-        && entry.hours.start === h.start && entry.hours.end === h.end && entry.hours.breakMin === h.breakMin;
-      if (same) { setDayShift(key, null); return; }
-      // Te same szczegóły dnia co przy zwykłym pędzlu (plan 1.4); godziny zastępuje wpisany przed chwilą zakres.
-      setDayEntry(key, {
-        type: brush.id,
-        ...(entry?.note ? { note: entry.note } : {}),
-        ...(entry?.extraMin ? { extraMin: entry.extraMin } : {}),
-        ...(entry?.offSchedule ? { offSchedule: true as const } : {}),
-        ...(entry?.inLieu ? { inLieu: true as const } : {}),
-        hours: h,
-        customHours: true,
-      });
-      setAnnounce(`${shortDate(key)}: ${typesById.get(brush.id)?.name ?? "zmiana"} ${h.start}–${h.end}`);
-      // Nadpisanie istniejącego wpisu — dajemy Cofnij, bo malowanie nie ma gumki na jeden dzień.
-      if (entry) toastReplaced(key, entry, brush.id);
-      return;
-    }
-    const clear = brush.kind === "erase" || entry?.type === brush.id;
-    setDayShift(key, clear ? null : brush.id);
-    setAnnounce(clear ? `${shortDate(key)}: wyczyszczono` : `${shortDate(key)}: ${typesById.get(brush.id)?.name ?? "zmiana"}`);
-    if (!clear && entry && entry.type !== brush.id) toastReplaced(key, entry, brush.id);
-    // Notatki i odchylenia nie da się odtworzyć jednym stuknięciem — stąd „Cofnij”.
-    if (clear && entry && (entry.note || entry.extraMin)) {
-      const [y, m, d] = key.split("-").map(Number);
-      toastWithUndo(`Wyczyszczono ${format(new Date(y, m - 1, d), "d MMMM", { locale: pl })}`, () => setDayEntry(key, entry), {
-        description: entry.note ? `Razem z notatką „${entry.note}”` : "Razem z odchyleniem od planu",
-      });
-    }
-  }, [brush, activeHours, typesById, toastReplaced]);
+  const onDay = useShiftPaint({ brush, activeHours, typesById, toastReplaced, setOpenDay, setAnnounce });
 
   // Przenoszenie i kopiowanie wpisów — jedna ścieżka dla myszy, dotyku i klawiatury.
   const transfer = useCallback((from: string, to: string, mode: DropChoice) => {

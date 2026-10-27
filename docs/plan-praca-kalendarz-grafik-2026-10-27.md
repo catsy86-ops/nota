@@ -11,7 +11,8 @@
 - **Kalendarz K3 (2026-10-27), częściowo:** zrobione K3.1 (znaczniki Pracy i tytuły w pasku, „Praca” w kartach), K3.2 (agenda na komputerze; wspólna lista z wydrukiem nie), K3.3 (warstwy z licznikami) i K3.4 (ostrzeżenie „w czasie zmiany”). K3.5 (podgląd po najechaniu na chip w siatce i szukanie w pasku warstw; bez podglądu w agendzie). Nie robione: K3.6 (tydzień z osią, po QA wg K-4), cała K4.
 - **Kalendarz K4 (2026-10-27), częściowo:** zrobione K4.2 (tokeny chipa z testem kontrastu), K4.3 (zaokrąglenie i pasek zmiany na telefonie), K4.4 (linia „teraz”), K4.6 (nagłówek). Nie robione: K4.1, K4.5, część K4.3 (zapytanie kontenerowe).
 - **Grafik G2 (2026-10-27):** zrobione G2.1–G2.4, G2.5 bez pędzla, G2.6. Nie robione: pędzel z „Własnymi godzinami” (G2.5).
-- **Nie robione jeszcze:** Kalendarz K3.6 (po QA), K4.1, K4.5, Grafik G3.2 (hook `useShiftActions`) i G4, cała Praca (P2–P5).
+- **Grafik G3 (2026-10-27):** G3.1 i G3.2 zrobione (hook `useShiftPaint`). Nie robione: G4.8 i G4.9 (decyzja G-7 odłożona, G-1 czeka na kadry).
+- **Nie robione jeszcze:** Kalendarz K3.6 (po QA), K4.1, K4.5, Grafik G4 (bez G4.8–G4.9), cała Praca (P2–P5).
 
 ## Kontekst
 
