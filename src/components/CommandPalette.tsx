@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandSeparator } from "@/components/ui/command";
 import { FINISH_SHIFT_NOW_EVENT } from "@/lib/shiftCommands";
-import { Inbox, Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash, Pin, Clock, ZoomIn, ZoomOut, RotateCcw as ResetText } from "lucide-react";
+import { Inbox, Lock, LockOpen, StickyNote, Archive, Bell, Trash, Plus, Moon, Settings, Trophy, Calendar, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Brain, Keyboard, BookOpen, RotateCcwClock, Bookmark, Network, Copy, Heading, Hash, Pin, Clock, ZoomIn, ZoomOut, RotateCcw as ResetText, Palette } from "lucide-react";
 import { requestLinkGraph } from "@/lib/graphRequest";
 import type { Note } from "@/hooks/useNotes";
 import { searchNotes, useSearchReady } from "@/lib/searchNotes";
@@ -29,6 +29,9 @@ import { viewLabel } from "@/lib/viewMeta";
 import { changeTextSize, resetTextSize } from "@/lib/textSize";
 import { dayKey } from "@/lib/reminderOccurrences";
 import { addDays } from "date-fns";
+import { SKINS, useSkin } from "@/lib/skins";
+import { SKIN_META } from "@/lib/skinGallery";
+import { trySkin } from "@/lib/skinTry";
 
 const NOTE_LIMIT = 30;
 
@@ -138,6 +141,11 @@ export function CommandPalette({
     setRecentCmds(saveRecentCommand(navKnown, id));
     onGo(id);
   }
+
+  // Style (plan motywów 3.3): „Następny styl” zawsze w Akcjach, lista stylów dopiero po wpisaniu tekstu,
+  // żeby siedem pozycji nie zasłaniało pustej palety. Zmiana przez `trySkin` — z „Cofnij”.
+  const skin = useSkin();
+  const nextSkin = SKINS[(SKINS.indexOf(skin) + 1) % SKINS.length];
 
   function run(fn: () => void) {
     onOpenChange(false);
@@ -340,11 +348,25 @@ export function CommandPalette({
           <CommandItem onSelect={() => run(onToggleTheme)}>
             <Moon className="w-4 h-4 mr-2" /> Przełącz motyw jasny/ciemny
           </CommandItem>
+          <CommandItem value="nastepny styl motyw skorka wyglad" onSelect={() => run(() => trySkin(nextSkin))}>
+            <Palette className="w-4 h-4 mr-2" /> Następny styl
+            <span className="ml-auto text-xs text-muted-foreground">{SKIN_META[nextSkin].label}</span>
+          </CommandItem>
           <CommandItem onSelect={() => run(onOpenShortcuts)}>
             <Keyboard className="w-4 h-4 mr-2" /> Skróty klawiszowe <span className="ml-auto text-xs text-muted-foreground">?</span>
           </CommandItem>
         </CommandGroup>
         <CommandSeparator />
+        {search.trim() && (
+          <CommandGroup heading="Styl">
+            {SKINS.filter((s) => s !== skin).map((s) => (
+              <CommandItem key={s} value={`styl motyw skorka ${SKIN_META[s].label} ${s}`} onSelect={() => run(() => trySkin(s))}>
+                <Palette className="w-4 h-4 mr-2" /> Styl: {SKIN_META[s].label}
+                <span className="ml-auto pl-3 truncate text-xs text-muted-foreground max-w-[50%]">{SKIN_META[s].blurb}</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
         <CommandGroup heading="Nawigacja">
           {NAV_ITEMS.filter((n) => isViewShown(hiddenViews, n.id)).map((n) => (
             <CommandItem key={n.id} value={`nawigacja ${n.label}`} onSelect={() => run(() => goNav(n.id))}>

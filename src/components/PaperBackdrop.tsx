@@ -1,5 +1,6 @@
 import { lazy, Suspense, type CSSProperties } from "react";
 import { useSkin } from "@/lib/skins";
+import { useBackdrop } from "@/lib/backdrop";
 
 /**
  * Tło aplikacji: papier w kratkę jak w zeszycie (linie w `.paper-grid`, `index.css`).
@@ -25,6 +26,9 @@ const BUBBLES = [
 
 export function PaperBackdrop() {
   const skin = useSkin();
+  // Natężenie tła (plan motywów 1.3): w „gładkim” płótna i bąbelków nie ma wcale (zero pracy),
+  // w „cichym” płótno rysuje jedną nieruchomą klatkę (`key` montuje je od nowa po zmianie).
+  const backdrop = useBackdrop();
   return (
     <div
       aria-hidden
@@ -33,15 +37,15 @@ export function PaperBackdrop() {
     >
       {/* Tabliczka rysunkowa: napis zależy od widoku (`html[data-view]`, styl w `index.css`). */}
       <span className="paper-stamp" />
-      {skin === "matrix" && (
+      {skin === "matrix" && backdrop !== "plain" && (
         <Suspense fallback={null}>
-          <MatrixRain />
+          <MatrixRain key={backdrop} still={backdrop === "quiet"} />
         </Suspense>
       )}
       {/* Warstwa sygnału zapisu dla Zorzy (fala) i Matrycy (linia skanu). Pseudo-elementy są zajęte
           przez tło tych stylów, więc sygnał ma własny, pusty element; CSS w styles/skins/signatures.css. */}
       {(skin === "zorza" || skin === "matrix") && <span className="sig-layer" />}
-      {skin === "hydraulika" && (
+      {skin === "hydraulika" && backdrop !== "plain" && (
         <span className="hydro-bubbles">
           {BUBBLES.map((b, i) => (
             <span
@@ -59,6 +63,7 @@ export function PaperBackdrop() {
           ))}
         </span>
       )}
+      {backdrop === "quiet" && <span className="backdrop-veil" />}
     </div>
   );
 }

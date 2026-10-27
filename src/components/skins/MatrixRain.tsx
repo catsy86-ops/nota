@@ -15,7 +15,8 @@ const GATHER_RADIUS = 150;
 const HEAD = "#d7ffe0";
 const TRAIL = "#00ff41";
 
-export default function MatrixRain() {
+/** `still` — „ciche” tło (plan motywów 1.3): jedna nieruchoma klatka, jak przy ograniczonym ruchu. */
+export default function MatrixRain({ still = false }: { still?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -142,7 +143,7 @@ export default function MatrixRain() {
         window.removeEventListener("pointerout", onPointerOut);
       }
     };
-  }, []);
+  }, [still]);
 
   return <canvas ref={ref} aria-hidden="true" className="pointer-events-none absolute inset-0" />;
 }

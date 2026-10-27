@@ -45,3 +45,31 @@ test("Hydraulika w trybie ograniczonego ruchu: woda stoi (brak animacji przepły
   const flow = await page.locator(".paper-grid").evaluate((el) => getComputedStyle(el, "::after").animationName);
   expect(flow).toBe("none");
 });
+
+// Natężenie tła (plan motywów 1.3, `kaczy.backdrop.v1`).
+async function openWithBackdrop(page: Page, skin: string, backdrop: "quiet" | "plain") {
+  await page.addInitScript((b) => localStorage.setItem("kaczy.backdrop.v1", JSON.stringify(b)), backdrop);
+  await open(page, skin);
+}
+
+test("Tło ciche: woda Hydrauliki stoi, a ozdoby przykrywa zasłona", async ({ page }) => {
+  await openWithBackdrop(page, "hydraulika", "quiet");
+  await expect(page.locator("html")).toHaveAttribute("data-backdrop", "quiet");
+  const state = await page.locator(".paper-grid").evaluate((el) => getComputedStyle(el, "::after").animationPlayState);
+  expect(state).toBe("paused");
+  await expect(page.locator(".paper-grid > .backdrop-veil")).toHaveCount(1);
+});
+
+test("Tło gładkie: bez płótna Matrycy", async ({ page }) => {
+  await openWithBackdrop(page, "matrix", "plain");
+  await expect(page.locator(".paper-grid > .sig-layer")).toBeAttached();
+  await expect(page.locator(".paper-grid > canvas")).toHaveCount(0);
+});
+
+test("Tło gładkie: bez bąbelków i ozdób Hydrauliki", async ({ page }) => {
+  await openWithBackdrop(page, "hydraulika", "plain");
+  await expect(page.locator(".paper-grid")).toBeAttached();
+  await expect(page.locator(".hydro-bubble")).toHaveCount(0);
+  const before = await page.locator(".paper-grid").evaluate((el) => getComputedStyle(el, "::before").content);
+  expect(before).toBe("none");
+});

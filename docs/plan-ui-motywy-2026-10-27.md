@@ -63,6 +63,12 @@ Bez tego każda nowa skórka i każde ustawienie wyglądu to sześć miejsc do p
 - **0.5 zrobione.** CSS skórek: ok. 10,4 KB gzip razem (źródła z komentarzami; największe `signatures` 3,1 KB, `hydraulika` 2,1 KB), cały CSS aplikacji 38,4 KB gzip. Czas klatki na emulacji Pixel 7 (CPU ×4, 5 s, Notatki): wszystkie siedem skórek 60 kl./s, mediana i p95 16,7–16,8 ms, zero klatek > 33 ms. Emulator nie oddaje kosztu GPU ani baterii prawdziwego telefonu — ten pomiar zostaje do QA na telefonie (Faza 5).
 - **0.6 pominięte.** Próg 15 KB gzip nieprzekroczony. Wrócić po Fazie 4 (sześć drugich schematów i trzy nowe skórki z dwoma schematami każda).
 
+### Status szybkich wygranych (2026-10-27)
+
+- **3.1 zrobione.** `src/lib/skinTry.ts` (`trySkin`): wybór w galerii działa od razu, dymek „Styl: … · Cofnij” wraca do stylu sprzed całej serii przymiarek; ręczny powrót do stylu wyjściowego zamyka dymek.
+- **3.3 zrobione.** Paleta: „Następny styl” (z nazwą następnego) w Akcjach; grupa „Styl” z pozostałymi stylami pojawia się po wpisaniu tekstu (np. „styl”, „neon”), żeby nie zaśmiecać pustej palety.
+- **1.3 zrobione.** Ustawienia → Wygląd → „Tło”: Pełne / Ciche / Gładkie (`src/lib/backdrop.ts`, `src/styles/backdrop.css`). M-4 zrealizowane częściowo: „auto” daje ciche tylko przy `saveData`; Battery API pominięte (brak w Safari i Firefoksie, wynik asynchroniczny, mała wartość).
+
 ## Faza 1: personalizacja w obrębie skórki
 
 Dziś skórka to całość albo nic. Trzy pokrętła dają dużo różnorodności bez nowych skórek, a dzięki OKLCH i tokenom promieni są tanie.

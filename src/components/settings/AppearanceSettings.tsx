@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Sun, Moon, Monitor, Zap, Accessibility, HardHat, CircleOff, Contrast, Bell, BriefcaseBusiness, CalendarRange, Inbox } from "lucide-react";
+import { Sun, Moon, Monitor, Zap, Accessibility, HardHat, CircleOff, Contrast, Bell, BriefcaseBusiness, CalendarRange, Inbox, Sparkles, Waves, Square } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useViewPrefs, setViewPref, resetViewPrefs, changedViewPrefs, VIEW_PREF_LABELS, type Density, type Layout } from "@/lib/viewPrefs";
@@ -18,6 +18,8 @@ import { FontPicker } from "./FontPicker";
 import { setAppFont, useAppFont } from "@/lib/appFont";
 import { TextSizeControl } from "./TextSizeControl";
 import { SKIN_SCHEME } from "@/lib/skins";
+import { trySkin } from "@/lib/skinTry";
+import { setBackdrop, useBackdrop, type Backdrop } from "@/lib/backdrop";
 import { BASE_SORTS } from "@/lib/sortOptions";
 import { HIDEABLE_VIEWS, setViewHidden, useHiddenViews, type HideableView } from "@/lib/hiddenViews";
 import { setBottomSlot, useBottomSlot, type BottomSlotView } from "@/lib/bottomSlot";
@@ -55,6 +57,12 @@ const siteOptions: { value: SiteMode; label: string; Icon: typeof Sun }[] = [
   { value: "auto", label: "Automatycznie", Icon: Contrast },
 ];
 
+const backdropOptions: { value: Backdrop; label: string; Icon: typeof Sun }[] = [
+  { value: "full", label: "Pełne", Icon: Sparkles },
+  { value: "quiet", label: "Ciche", Icon: Waves },
+  { value: "plain", label: "Gładkie", Icon: Square },
+];
+
 const motionOptions: { value: MotionMode; label: string; Icon: typeof Sun }[] = [
   { value: "full", label: "Pełne", Icon: Zap },
   { value: "reduced", label: "Ograniczone", Icon: Accessibility },
@@ -66,20 +74,32 @@ export function AppearanceSettings() {
   const settings = useEffectsSettings();
   const prefs = useViewPrefs();
   const [resetOpen, setResetOpen] = useState(false);
-  const { mode: themeMode, setMode: setThemeMode, skin, setSkin } = useTheme();
+  const { mode: themeMode, setMode: setThemeMode, skin } = useTheme();
   const skinScheme = SKIN_SCHEME[skin];
   const hiddenViews = useHiddenViews();
   const todayCards = useTodayCards();
   const bottomSlot = useBottomSlot();
   const siteMode = useSiteMode();
   const appFont = useAppFont();
+  const backdrop = useBackdrop();
   const { mode: motionMode, reduced: motionReduced, setMode: setMotionMode } = useMotionPref();
   const { pref: seasonPref, season: activeSeason, setPref: setSeasonPref } = useSeasonPref();
 
   return (
     <div className="space-y-4">
       <Section title="Styl">
-        <SkinPicker value={skin} onChange={setSkin} />
+        <SkinPicker value={skin} onChange={trySkin} />
+      </Section>
+
+      <Section title="Tło">
+        <Segmented label="Tło" options={backdropOptions} value={backdrop} onChange={setBackdrop} />
+        <p className="text-xs text-muted-foreground mt-1.5">
+          {backdrop === "full"
+            ? "Tło stylu z ozdobami i ruchem."
+            : backdrop === "quiet"
+              ? "Ruch tła stoi, ozdoby są przygaszone. Krótki efekt zapisu zostaje."
+              : "Sam kolor tła, bez kratki i ozdób."}
+        </p>
       </Section>
 
       <Section title="Rozmiar tekstu">

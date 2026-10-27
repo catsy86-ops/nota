@@ -1,0 +1,37 @@
+/*
+  Natężenie tła stylu (plan motywów 1.3, `src/lib/backdrop.ts`). Wczytywany po skins.css: te same
+  selektory co tła stylów (`html[…] .paper-grid::before`), więc wygrywa kolejnością. Sygnatury
+  (`html[data-sig][data-skin] …`) mają wyższą specyficzność i ustawiają `animation` od nowa,
+  więc w „cichym” tle krótki efekt zapisu dalej gra.
+*/
+
+/* Ciche: ruch tła stoi, ozdoby przykrywa zasłona w kolorze tła. Mnożenie krycia każdej warstwy
+   z osobna nie działa (style mają różne wartości), dlatego jedna zasłona nad wszystkimi. */
+html[data-backdrop="quiet"] .paper-grid::before,
+html[data-backdrop="quiet"] .paper-grid::after,
+html[data-backdrop="quiet"] .paper-grid *,
+html[data-backdrop="quiet"] .paper-grid *::before,
+html[data-backdrop="quiet"] .paper-grid *::after {
+  animation-play-state: paused;
+}
+html[data-backdrop="quiet"] .backdrop-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: var(--background);
+  opacity: 0.5;
+}
+/* Sygnał zapisu Zorzy i Matrycy nad zasłoną — to informacja o zapisie, nie ozdoba. */
+html[data-backdrop="quiet"] .sig-layer { z-index: 2; }
+
+/* Gładkie: sam kolor tła (jak w trybie budowa). Płótna i bąbelków nie renderuje PaperBackdrop. */
+/* Podwójny atrybut: plama pory roku (`html[data-season]:not(…) .paper-grid`) ma specyficzność 0,3,1. */
+html[data-backdrop="plain"][data-backdrop] .paper-grid {
+  background-image: none;
+}
+html[data-backdrop="plain"] .paper-grid::before,
+html[data-backdrop="plain"] .paper-grid::after,
+html[data-backdrop="plain"] .paper-stamp {
+  content: none;
+  display: none;
+}

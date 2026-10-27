@@ -12,6 +12,7 @@ import "./styles/fonts-latin/@fontsource-variable-unbounded-wght.css";
 import "./styles/fonts-latin/@fontsource-variable-fraunces-soft.css";
 import "./styles/fonts-latin/@fontsource-variable-bricolage-grotesque-wght.css";
 import "./styles/skins.css";
+import "./styles/backdrop.css";
 // Kroje tekstu do wyboru (Wygląd → „Krój tekstu”) — plik pobiera się dopiero po wyborze.
 import "./styles/fonts-latin/@fontsource-variable-inter-wght.css";
 import "./styles/fonts-latin/@fontsource-variable-nunito-wght.css";
