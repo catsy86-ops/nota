@@ -17,6 +17,8 @@ interface YearSummaryDialogProps {
   data: ShiftData;
   /** Rok, od którego okno startuje (rok oglądanego miesiąca). */
   initialYear: number;
+  /** Otwiera miesiąc z tabeli (G2.4): okno się zamyka, a Grafik przechodzi do tego miesiąca. */
+  onOpenMonth?: (monthKey: string) => void;
 }
 
 const DAYS: [string, string, string] = ["dzień", "dni", "dni"];
@@ -28,18 +30,18 @@ const orDash = (n: number, fmt: (n: number) => string = String) => (Math.round(n
  * Podsumowanie roku jak strona zeszytu: miesiące w rzędach, suma pod podwójną
  * kreską, u góry licznik urlopu. Zarobek tylko, gdy cokolwiek zarobiono.
  */
-export function YearSummaryDialog({ open, onOpenChange, data, initialYear }: YearSummaryDialogProps) {
+export function YearSummaryDialog({ open, onOpenChange, data, initialYear, onOpenMonth }: YearSummaryDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg max-h-[min(88dvh,48rem)] overflow-y-auto">
         {/* Montowane z otwarciem — rok startuje od oglądanego miesiąca bez efektów. */}
-        <YearBody data={data} initialYear={initialYear} />
+        <YearBody data={data} initialYear={initialYear} onOpenChange={onOpenChange} onOpenMonth={onOpenMonth} />
       </DialogContent>
     </Dialog>
   );
 }
 
-function YearBody({ data, initialYear }: { data: ShiftData; initialYear: number }) {
+function YearBody({ data, initialYear, onOpenChange, onOpenMonth }: { data: ShiftData; initialYear: number; onOpenChange: (open: boolean) => void; onOpenMonth?: (monthKey: string) => void }) {
   const [year, setYear] = useState(initialYear);
   const summary = useMemo(() => yearSummary(data, year), [data, year]);
   // Saldo urlopu zależy od dnia: po północy przelicza się samo (G0.4).
@@ -96,8 +98,13 @@ function YearBody({ data, initialYear }: { data: ShiftData; initialYear: number 
             {summary.months.map((m) => (
               <tr key={m.month} aria-current={m.month === currentMonth ? "date" : undefined}
                 className={cn("border-b border-dotted border-muted-foreground/40", m.month === currentMonth && "bg-primary/10")}>
-                <th scope="row" className="text-left font-body font-medium py-1.5 pl-1">
-                  {format(new Date(year, m.month, 1), "LLL", { locale: pl }).replace(".", "")}
+                <th scope="row" className="sticky left-0 z-[1] bg-card text-left font-body font-medium py-1.5 pl-1">
+                  {onOpenMonth ? (
+                    <button type="button" onClick={() => { onOpenChange(false); onOpenMonth(`${year}-${String(m.month + 1).padStart(2, "0")}`); }}
+                      className="underline-offset-2 hover:underline outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded-field coarse:py-1">
+                      {format(new Date(year, m.month, 1), "LLL", { locale: pl }).replace(".", "")}
+                    </button>
+                  ) : format(new Date(year, m.month, 1), "LLL", { locale: pl }).replace(".", "")}
                 </th>
                 <Cell value={orDash(m.minutes, formatHoursShort)} muted={m.minutes === 0} />
                 <Cell value={orDash(m.overtimeMinutes, formatHoursShort)} muted={m.overtimeMinutes === 0} accent={m.overtimeMinutes > 0} />

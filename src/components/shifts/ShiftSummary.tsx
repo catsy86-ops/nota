@@ -36,6 +36,8 @@ interface ShiftSummaryProps {
   onOpenSettings: () => void;
   /** Otwiera okno dnia — z listy „Za krótki odpoczynek”. */
   onOpenDay?: (dayKey: string) => void;
+  /** Otwiera miesiąc z tabeli roku (G2.4). */
+  onOpenMonth?: (monthKey: string) => void;
   /** Podsumowanie tylko do dziś — tylko dla bieżącego miesiąca. */
   toDate?: MonthSummary | null;
   /** Szacunek urlopu i L4 w zarobku (3.6). */
@@ -54,7 +56,7 @@ const monthName = (year: number, month: number, pattern = "LLLL") => format(new 
  * Podsumowanie miesiąca. Sercem jest pasek normy: wypełnia się do wymiaru
  * czasu pracy, a nadwyżka (nadgodziny) dosuwa się za nim w kolorze akcentu.
  */
-export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settlementMonths, fte, monthLabel, monthKey, onOpenSettings, onOpenDay, toDate, estimate, timeOff }: ShiftSummaryProps) {
+export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settlementMonths, fte, monthLabel, monthKey, onOpenSettings, onOpenDay, onOpenMonth, toDate, estimate, timeOff }: ShiftSummaryProps) {
   const [includeEstimate, setIncludeEstimate] = useState(true);
   // „Razem brutto” u góry: zarobek plus szacunki urlopu i L4, jeśli są włączone.
   const grossTotal = round2(summary.earnings + (includeEstimate && estimate ? estimate.leave.amount + estimate.sick.amount : 0));
@@ -162,10 +164,20 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
           <p>
             <span className="font-semibold">Brak 35 h odpoczynku w tygodniu</span>{" "}
             <span className="text-muted-foreground">(art. 133 KP): </span>
-            {summary.weeklyRestShort.map((w) => {
+            {summary.weeklyRestShort.map((w, i) => {
+              // G2.3: tydzień jak krótki odpoczynek — przycisk otwiera pierwszy dzień tygodnia.
               const [y, m, d] = w.weekStart.split("-").map(Number);
-              return `tydzień od ${format(new Date(y, m - 1, d), "d MMMM", { locale: pl })} — najdłuższa przerwa ${formatDuration(w.restMinutes)}`;
-            }).join("; ")}
+              const label = `tydzień od ${format(new Date(y, m - 1, d), "d MMMM", { locale: pl })} — najdłuższa przerwa ${formatDuration(w.restMinutes)}`;
+              return (
+                <span key={w.weekStart}>
+                  {i > 0 && "; "}
+                  <button type="button" onClick={() => onOpenDay?.(w.weekStart)} disabled={!onOpenDay}
+                    className="underline underline-offset-2 font-medium text-destructive-ink outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:no-underline disabled:text-inherit coarse:py-1">
+                    {label}
+                  </button>
+                </span>
+              );
+            })}
           </p>
         </div>
       )}
@@ -201,7 +213,7 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
         </span>
       </button>
 
-      <YearSummaryDialog open={yearOpen} onOpenChange={setYearOpen} data={data} initialYear={year} />
+      <YearSummaryDialog open={yearOpen} onOpenChange={setYearOpen} data={data} initialYear={year} onOpenMonth={onOpenMonth} />
     </section>
   );
 }

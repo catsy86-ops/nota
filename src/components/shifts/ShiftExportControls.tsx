@@ -60,7 +60,7 @@ export function ShiftExportToolbar({ imageTheme, onImageTheme, onCsv, onSiteCsv,
         <CalendarArrowDown className="w-4 h-4" /> Do kalendarza (.ics)
       </button>
       <select aria-label="Motyw obrazu miesiąca" value={imageTheme} onChange={(e) => onImageTheme(e.target.value as ImageTheme)}
-        className="h-9 rounded-control border border-input bg-background px-2 text-sm">
+        className="h-9 coarse:h-11 rounded-control border border-input bg-background px-2 text-sm">
         {(["light", "dark", "style"] as const).map((t) => <option key={t} value={t}>{IMAGE_THEME_LABEL[t]}</option>)}
       </select>
       <button type="button" onClick={() => onImage()}

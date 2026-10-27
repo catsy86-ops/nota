@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { ABSENCE_KINDS, DEFAULT_SHIFT_TYPES, SHIFT_COLORS, SHIFT_COLOR_NAMES, absenceKindOf, breakOffset, deleteShiftType, formatDuration, newShiftId, restoreShiftType, saveShiftType, shiftMinutes, shiftSpan, shiftStore, type AbsenceKind, type ShiftType } from "@/lib/shifts";
+import { ABSENCE_KINDS, DEFAULT_SHIFT_TYPES, NEW_SHIFT_COLORS, SHIFT_COLORS, SHIFT_COLOR_NAMES, absenceKindOf, breakOffset, deleteShiftType, formatDuration, newShiftId, restoreShiftType, saveShiftType, shiftMinutes, shiftSpan, shiftStore, type AbsenceKind, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
 import { IS_TOUCH } from "@/lib/platform";
@@ -202,7 +202,7 @@ function ShiftTypeForm({ type, onOpenChange, onSaved, onDeleted }: Omit<ShiftTyp
         <fieldset className="space-y-1.5">
           <legend className="text-sm font-medium">Kolor</legend>
           <div className="flex gap-2 flex-wrap pt-1">
-            {SHIFT_COLORS.map((c) => (
+            {(type ? SHIFT_COLORS : NEW_SHIFT_COLORS).map((c) => (
               <button key={c} type="button" onClick={() => patch({ color: c })} aria-label={SHIFT_COLOR_NAMES[c]} aria-pressed={draft.color === c}
                 className={cn("pressable w-8 h-8 coarse:w-10 coarse:h-10 rounded-full outline-hidden focus-visible:ring-2 focus-visible:ring-ring ring-offset-2 ring-offset-background",
                   draft.color === c && "ring-2 ring-foreground")}

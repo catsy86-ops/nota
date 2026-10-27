@@ -497,28 +497,28 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
             <button type="button" onClick={() => (isWeek ? setWeekStart(thisWeek) : setMonth(startOfMonth(new Date())))}
               title={isWeek ? "Wróć do bieżącego tygodnia" : "Wróć do bieżącego miesiąca"}
               className={cn("pressable w-full h-10 coarse:h-11 truncate font-display font-semibold text-base sm:text-lg px-2 sm:px-3 rounded-card hover:bg-muted outline-hidden focus-visible:ring-2 focus-visible:ring-ring", !isWeek && "capitalize")}>
-              {isWeek ? weekRangeLabel(weekStart) : format(month, "LLLL yyyy", { locale: pl })}
+              {isWeek ? `${weekRangeLabel(weekStart)} · tydz. ${isoWeek(parseDayKey(weekStart).getTime()).week}` : format(month, "LLLL yyyy", { locale: pl })}
             </button>
           </h2>
           <button type="button" onClick={() => (isWeek ? setWeekStart((w) => addDaysToKey(w, 7)) : setMonth((m) => addMonths(m, 1)))}
             aria-label={isWeek ? "Następny tydzień" : "Następny miesiąc"} className={navButton}>
             <ChevronRight className="w-5 h-5" />
           </button>
-        </div>
+          <div className="flex shrink-0 gap-1 sm:gap-2" role="group" aria-label="Cofnij i ponów zmiany w Grafiku">
+              <button type="button" onClick={() => undoShifts()} disabled={!canUndo} aria-label="Cofnij zmianę w Grafiku"
+                className="pressable h-11 w-11 flex items-center justify-center rounded-control border border-border/60 bg-card hover:bg-muted disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                <Undo2 className="w-5 h-5" aria-hidden />
+              </button>
+              <button type="button" onClick={() => redoShifts()} disabled={!canRedo} aria-label="Ponów zmianę w Grafiku"
+                className="pressable h-11 w-11 flex items-center justify-center rounded-control border border-border/60 bg-card hover:bg-muted disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                <Redo2 className="w-5 h-5" aria-hidden />
+              </button>
+            </div>
+          </div>
 
         <div className="order-7 space-y-5 short:col-span-full">
           <p role="status" aria-live="polite" className="sr-only">{announce}</p>
 
-          <div className="flex justify-end gap-2" role="group" aria-label="Cofnij i ponów zmiany w Grafiku">
-            <button type="button" onClick={() => undoShifts()} disabled={!canUndo} aria-label="Cofnij zmianę w Grafiku"
-              className="pressable h-11 w-11 flex items-center justify-center rounded-control border border-border/60 bg-card hover:bg-muted disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-              <Undo2 className="w-5 h-5" aria-hidden />
-            </button>
-            <button type="button" onClick={() => redoShifts()} disabled={!canRedo} aria-label="Ponów zmianę w Grafiku"
-              className="pressable h-11 w-11 flex items-center justify-center rounded-control border border-border/60 bg-card hover:bg-muted disabled:opacity-40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
-              <Redo2 className="w-5 h-5" aria-hidden />
-            </button>
-          </div>
 
           <p id="shift-brush-hint" className="text-xs text-muted-foreground px-1 short:hidden">{brushHint(brush, typesById, activeHours)}</p>
 
@@ -621,7 +621,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
 
         </div>
         <div className="order-10 @container short:col-span-full">
-          <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} nightRate={nightRateFor(shownMonth.getFullYear(), data.nightRate)} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(shownMonth, "LLLL yyyy", { locale: pl })} monthKey={format(shownMonth, "yyyy-MM")} onOpenSettings={() => setSettingsOpen(true)} onOpenDay={setOpenDay} toDate={toDate} estimate={estimate} timeOff={timeOff} />
+          <ShiftSummary summary={summary} hourlyRate={data.hourlyRate} nightRate={nightRateFor(shownMonth.getFullYear(), data.nightRate)} workSystem={data.workSystem} settlementMonths={data.settlementMonths} fte={data.fte} monthLabel={format(shownMonth, "LLLL yyyy", { locale: pl })} monthKey={format(shownMonth, "yyyy-MM")} onOpenSettings={() => setSettingsOpen(true)} onOpenDay={setOpenDay} onOpenMonth={(key) => { const [y, mo] = key.split("-").map(Number); setMonth(new Date(y, mo - 1, 1)); }} toDate={toDate} estimate={estimate} timeOff={timeOff} />
         </div>
       </aside>
 

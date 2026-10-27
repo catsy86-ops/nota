@@ -195,6 +195,9 @@ export function cleanBonus(raw: unknown): ShiftBonus | null {
 
 export const SHIFT_COLORS = ["#f59e0b", "#3b82f6", "#4f46e5", "#10b981", "#ef4444", "#ec4899", "#14b8a6", "#64748b", "#fb923c"] as const;
 
+/** Kolory do wyboru dla nowego rodzaju (G2.6): bez bursztynu marki i czerwieni świąt, żeby nie myliły się z nimi. Istniejące rodzaje zachowują swoje kolory. */
+export const NEW_SHIFT_COLORS = SHIFT_COLORS.filter((c) => c !== "#f59e0b" && c !== "#ef4444");
+
 /** Nazwy kolorów palety dla czytników ekranu — „#f59e0b” nic nie mówi. */
 export const SHIFT_COLOR_NAMES: Record<(typeof SHIFT_COLORS)[number], string> = {
   "#f59e0b": "bursztynowy",
