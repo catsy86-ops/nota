@@ -364,6 +364,8 @@ export function NoteReader({ note, mode, searchQuery, knownTitles, wikiIndex, on
 
         <div className="flex min-h-0 flex-1">
         <div ref={setScrollEl} tabIndex={-1} className={cn("min-w-0 flex-1 overflow-y-auto overscroll-contain outline-hidden", present ? "px-6 sm:px-12 py-8" : "px-6 py-4")}>
+          {/* Pasek postępu czytania (plan 2.5): wzrasta z przewijaniem, bez JS. */}
+          <div aria-hidden="true" className="reader-progress" />
           <div className={cn(present && "max-w-3xl mx-auto")} style={present ? { fontSize: `${zoom}rem`, lineHeight: 1.65 } : undefined}>
             {present && note.title && (
               <h1 className="font-display font-extrabold text-foreground mb-4" style={{ fontSize: `${zoom * 2.2}rem`, lineHeight: 1.15 }}>

@@ -23,7 +23,9 @@ export function TitleField({ value, onChange, onEnter, className, ref: outerRef,
     else if (outerRef) (outerRef as { current: HTMLTextAreaElement | null }).current = el;
   }, [outerRef]);
 
+  // Plan 2.6: `field-sizing: content` rośnie z treścią samo; JS zostaje tylko jako rezerwa.
   useLayoutEffect(() => {
+    if (typeof CSS !== "undefined" && CSS.supports?.("field-sizing", "content")) return;
     const ta = ref.current;
     if (!ta) return;
     ta.style.height = "auto";
@@ -44,7 +46,7 @@ export function TitleField({ value, onChange, onEnter, className, ref: outerRef,
           onEnter?.(e);
         }
       }}
-      className={`block resize-none overflow-hidden ${className ?? ""}`}
+      className={`field-grow block resize-none overflow-hidden ${className ?? ""}`}
     />
   );
 }
