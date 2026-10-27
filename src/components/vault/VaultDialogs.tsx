@@ -173,7 +173,7 @@ function UnlockForm({ onUnlocked, onRecover }: { onUnlocked: () => void; onRecov
     <form onSubmit={submit} className="space-y-3">
       <p className="text-sm text-muted-foreground">Wpisz hasło skarbca. Klucz zostaje tylko w pamięci tej karty i znika po zablokowaniu.</p>
       {/* Ukryty login dla menedżera haseł (V-2): bez niego nie wie, do czego hasło. */}
-      <input type="text" name="username" autoComplete="username" value="Skarbiec hydra" readOnly tabIndex={-1} aria-hidden="true" className="sr-only" />
+      <input type="text" name="username" autoComplete="username" value="Skarbiec NOTKI" readOnly tabIndex={-1} aria-hidden="true" className="sr-only" />
       <div className="space-y-1.5">
         <Label htmlFor="vault-password">Hasło skarbca</Label>
         <Input id="vault-password" type="password" autoFocus autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} disabled={busy || wait > 0} aria-invalid={!!error} aria-describedby={error ? "vault-error" : undefined} />

@@ -109,5 +109,5 @@ export async function exportToPDF(notes: Note[]) {
     y += 8;
   }
 
-  doc.save("hydra-eksport.pdf");
+  doc.save("notki-eksport.pdf");
 }

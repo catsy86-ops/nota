@@ -1,4 +1,4 @@
-// Ikony PWA i ekran startowy z literą G (font Unbounded, gradient marki).
+// Ikony PWA i ekran startowy z literą N (font Unbounded, gradient marki).
 // Android składa ekran startowy z `pwa-512.png` i `background_color` z manifestu,
 // więc tło ikon jest tym samym ciemnym kolorem — logo „wisi” na jednolitym tle.
 // Usage: node scripts/generate-icons.mjs
@@ -12,11 +12,11 @@ const font = readFileSync("node_modules/@fontsource-variable/unbounded/files/unb
 // `bleed`: pełne tło do krawędzi (maskable, apple-touch — system sam przycina).
 // `text`/`width`: ułamek boku, który zajmuje wordmark; maskable trzyma się bezpiecznej strefy (80%).
 const ICONS = [
-  { file: "pwa-512.png", size: 512, mode: "tile", text: "G", width: 0.5 },
-  { file: "pwa-192.png", size: 192, mode: "tile", text: "G", width: 0.5 },
-  { file: "pwa-512-maskable.png", size: 512, mode: "bleed", text: "G", width: 0.46 },
-  { file: "apple-touch-icon.png", size: 180, mode: "bleed", text: "G", width: 0.56 },
-  { file: "favicon.png", size: 64, mode: "tile", text: "G", width: 0.5 },
+  { file: "pwa-512.png", size: 512, mode: "tile", text: "N", width: 0.5 },
+  { file: "pwa-192.png", size: 192, mode: "tile", text: "N", width: 0.5 },
+  { file: "pwa-512-maskable.png", size: 512, mode: "bleed", text: "N", width: 0.46 },
+  { file: "apple-touch-icon.png", size: 180, mode: "bleed", text: "N", width: 0.56 },
+  { file: "favicon.png", size: 64, mode: "tile", text: "N", width: 0.5 },
 ];
 
 function html({ size, mode, text, width }) {

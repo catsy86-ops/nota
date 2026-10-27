@@ -2,7 +2,7 @@ import { m as motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 /**
- * Wordmark „hydra” — litery wypisują się odręcznie, jedna po drugiej,
+ * Wordmark „NOTKI” — litery wypisują się odręcznie, jedna po drugiej,
  * a na końcu podkreśla się jednym pociągnięciem. Za nim mruga kursor tekstowy.
  *
  * Zamiast obrazka: same ścieżki SVG, więc rysunek jest ostry w każdej skali,
@@ -17,22 +17,22 @@ interface Stroke {
   dur?: number;
 }
 
-// Każda litera to jedno pociągnięcie pióra. Baseline y=64, wysokość liter górnych od y=18, „y” schodzi do y=84.
+// Każda litera to jedno pociągnięcie pióra. Baseline y=64, wysokość liter od y=18 (pełne wielkie litery).
 const LETTERS: Stroke[] = [
-  // h: słupek, łuk i prawa noga
-  { d: "M30 18 V64 M30 46 C30 37 37 33 46 33 C56 33 60 40 60 50 V64", at: 0.0, dur: 0.45 },
-  // y: dwa skosy schodzące w ogonek
-  { d: "M72 34 L84 66 L96 34 M84 66 Q80 80 70 84", at: 0.5, dur: 0.5 },
-  // d: pętla i słupek z prawej
-  { d: "M146 18 V66 M146 48 C146 39 139 33 129 33 C118 33 111 41 111 50 C111 59 118 66 129 66 C139 66 146 60 146 50", at: 0.95, dur: 0.5 },
-  // r: słupek i łuk ramienia
-  { d: "M160 34 V64 M160 48 C160 39 166 34 176 34", at: 1.4, dur: 0.35 },
-  // a: pętla i prawy słupek
-  { d: "M206 34 V64 M206 46 C206 38 200 33 193 33 C186 33 182 40 182 48 C182 58 188 64 196 64 C202 64 206 59 206 52", at: 1.7, dur: 0.5 },
+  // N: lewy słupek, skos i prawy słupek
+  { d: "M14 64 V18 L48 64 V18", at: 0.0, dur: 0.5 },
+  // O: owal
+  { d: "M79 18 C91 18 101 27 101 41 C101 55 91 64 79 64 C67 64 57 55 57 41 C57 27 67 18 79 18 Z", at: 0.45, dur: 0.5 },
+  // T: poziomka i słupek
+  { d: "M112 18 H146 M129 18 V64", at: 0.95, dur: 0.4 },
+  // K: słupek i dwa ramiona
+  { d: "M160 18 V64 M186 18 L162 42 M168 36 L188 64", at: 1.35, dur: 0.5 },
+  // I: pionowa kreska
+  { d: "M202 18 V64", at: 1.8, dur: 0.3 },
 ];
 
-const UNDERLINE = "M30 92 C90 89 160 89 224 92";
-const WRITING_END = 2.25;
+const UNDERLINE = "M14 92 C80 89 150 89 212 92";
+const WRITING_END = 2.1;
 
 export function NotatnikWordmark({ className }: { className?: string }) {
   const reduce = useReducedMotion();
@@ -54,7 +54,7 @@ export function NotatnikWordmark({ className }: { className?: string }) {
     <svg
       viewBox="0 0 264 96"
       role="img"
-      aria-label="hydra"
+      aria-label="NOTKI"
       className={cn("w-64 max-w-full h-auto", className)}
     >
       {/* Napis */}
@@ -83,7 +83,7 @@ export function NotatnikWordmark({ className }: { className?: string }) {
       {/* Kursor tekstowy — mruga dopiero, gdy pióro skończyło. */}
       {!reduce && (
         <motion.rect
-          x="214"
+          x="218"
           y="34"
           width="2.5"
           height="32"

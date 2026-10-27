@@ -1,7 +1,7 @@
 {
   "id": "/",
-  "name": "hydra",
-  "short_name": "hydra",
+  "name": "NOTKI",
+  "short_name": "NOTKI",
   "description": "Notatki z etykietami, przypomnieniami i obrazkami — działa offline",
   "start_url": "/",
   "scope": "/",

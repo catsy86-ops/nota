@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
 });
 
-test("telefon: monogram widoczny w Dziś, napis „hydra” ukryty poza Notatkami", async ({ page }) => {
+test("telefon: monogram widoczny w Dziś, napis „NOTKI” ukryty poza Notatkami", async ({ page }) => {
   await page.goto("/dzis");
   await expect(page.locator(".n-mark-line").first()).toBeVisible();
   await expect(page.locator("header .notki-logo").first()).toBeHidden();

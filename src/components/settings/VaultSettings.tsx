@@ -126,7 +126,7 @@ function PasskeyEnroll() {
     if (busy || !password) return;
     setBusy(true);
     try {
-      await privateNotes.addPasskey(password, "hydra");
+      await privateNotes.addPasskey(password, "NOTKI");
       setPassword("");
       toast.success("Dodano odblokowanie biometrią");
     } catch (err) {

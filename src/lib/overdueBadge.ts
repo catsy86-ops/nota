@@ -1,7 +1,7 @@
 ﻿import { createPersistedStore } from "@/lib/persistedStore";
 
 export const BADGE_KEY = "kaczy:badge.enabled";
-export const BASE_TITLE = "hydra";
+export const BASE_TITLE = "NOTKI";
 
 const store = createPersistedStore<boolean>(BADGE_KEY, true, {
   merge: (defaults, stored) => (typeof stored === "boolean" ? stored : defaults),

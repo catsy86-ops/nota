@@ -77,7 +77,7 @@ describe("exportToJSON", () => {
     const note = makeNote({ images: [ref, missing] });
     const { filename, size } = await exportToJSON([note]);
 
-    expect(filename).toMatch(/^hydra-kopia-.*\.json$/);
+    expect(filename).toMatch(/^notki-kopia-.*\.json$/);
     expect(size).toBeGreaterThan(0);
     expect(capturedType).toBe("application/json");
 
@@ -101,7 +101,7 @@ describe("exportToMarkdown", () => {
     });
     await exportToMarkdown([note]);
 
-    expect(capturedFilename).toBe("hydra-eksport.md");
+    expect(capturedFilename).toBe("notki-eksport.md");
     expect(capturedContent).toContain("## Zakupy");
     expect(capturedContent).toContain("*Etykiety: dom*");
     expect(capturedContent).toContain("Mleko, chleb");

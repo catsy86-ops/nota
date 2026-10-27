@@ -57,7 +57,7 @@ export async function embeddableImages(images: string[]): Promise<string[]> {
 
 export async function exportToJSON(notes: Note[], filename?: string): Promise<{ filename: string; size: number }> {
   const data = JSON.stringify(await withEmbeddedImages(notes), null, 2);
-  const name = filename || `hydra-kopia-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
+  const name = filename || `notki-kopia-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
   download(data, name, "application/json");
   return { filename: name, size: new Blob([data]).size };
 }
@@ -198,7 +198,7 @@ export async function exportFullBackup(
     return { filename: "", size: 0, savedToFile: false, downloaded: false, attachments, cancelled: true };
   }
   const data = JSON.stringify(backup, null, 2);
-  const name = filename || `hydra-kopia-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
+  const name = filename || `notki-kopia-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
   const savedToFile = await tryWriteBackupToFile(data);
   // Pobranie bez gestu użytkownika przeglądarki blokują albo o nie pytają —
   // auto-backup przekazuje `allowDownload: false` i prosi o kliknięcie.
@@ -381,7 +381,7 @@ export function download(content: string, filename: string, type: string) {
 
 export async function exportToMarkdown(notes: Note[], propDefs: PropDef[] = []) {
   const lines: string[] = [];
-  lines.push(`# hydra — eksport`);
+  lines.push(`# NOTKI — eksport`);
   lines.push(`> ${format(new Date(), "d MMMM yyyy, HH:mm", { locale: pl })}`);
   lines.push("");
 
@@ -414,7 +414,7 @@ export async function exportToMarkdown(notes: Note[], propDefs: PropDef[] = []) 
   }
 
   if (privateCount) lines.push(`*Pominięto notatki prywatne: ${privateCount}. Są tylko w pełnym backupie, jako szyfrogram.*`, "");
-  download(lines.join("\n"), "hydra-eksport.md", "text/markdown");
+  download(lines.join("\n"), "notki-eksport.md", "text/markdown");
 }
 
 export async function exportToHTML(notes: Note[]) {
@@ -427,7 +427,7 @@ export async function exportToHTML(notes: Note[]) {
 <meta charset="UTF-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>hydra — eksport</title>
+<title>NOTKI — eksport</title>
 <style>
 body{font-family:system-ui,sans-serif;max-width:720px;margin:2rem auto;padding:0 1rem;background:#fafafa;color:#1a1a1a}
 h1{font-size:1.8rem;margin-bottom:.2rem}
@@ -445,7 +445,7 @@ h1{font-size:1.8rem;margin-bottom:.2rem}
 </style>
 </head>
 <body>
-<h1>hydra</h1>
+<h1>NOTKI</h1>
 <p class="date">Eksport: ${escape(dateStr)}</p>
 `;
 
@@ -478,7 +478,7 @@ h1{font-size:1.8rem;margin-bottom:.2rem}
 
   if (privateCount) html += `<p class="labels">Pominięto notatki prywatne: ${privateCount}.</p>\n`;
   html += `</body></html>`;
-  download(html, "hydra-eksport.html", "text/html");
+  download(html, "notki-eksport.html", "text/html");
 }
 
 export function importFromJSON(): Promise<Note[]> {

@@ -115,7 +115,7 @@ export function InstallAppButton({ variant = "row", onDone, className }: Install
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2">
-              <Download className="w-5 h-5 text-primary-ink" /> Zainstaluj hydra
+              <Download className="w-5 h-5 text-primary-ink" /> Zainstaluj NOTKI
             </DialogTitle>
             <DialogDescription>{help.intro}</DialogDescription>
           </DialogHeader>

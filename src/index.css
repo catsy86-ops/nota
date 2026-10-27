@@ -1119,7 +1119,7 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
   100% { stroke-dashoffset: -100; }
 }
 .n-mark-dot {
-  offset-path: path("M6 4 V20 V13 C6 9.5 8.5 8 12 8 C15.5 8 18 9.5 18 13 V20");
+  offset-path: path("M6 19 V5 L18 19 V5");
   offset-rotate: 0deg;
   offset-distance: 0%;
   opacity: 0;

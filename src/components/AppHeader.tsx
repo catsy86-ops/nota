@@ -86,7 +86,7 @@ export function AppHeader({
               {sidebarOpen ? "Schowaj panel" : "Pokaż panel"}
             </TooltipContent>
           </Tooltip>
-          {/* Na telefonie: animowany monogram „h” zawsze (w każdym widoku); pełny napis „hydra” tylko tam,
+          {/* Na telefonie: animowany monogram „h” zawsze (w każdym widoku); pełny napis „NOTKI” tylko tam,
               gdzie jest miejsce — w Notatkach. Na komputerze całość jak dotąd. */}
           {!sidebarOpen && (
             <motion.div
