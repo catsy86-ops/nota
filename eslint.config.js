@@ -54,6 +54,10 @@ export default tseslint.config(
       // Wiele grafików: rejestr i test izolacji (ten sam dokument Yjs co grafik).
       "src/lib/shifts/schedules.ts",
       "src/lib/shifts/schedules.test.ts",
+      // Przekaźnik E2E: szyfrowany transport `Y.Doc` (kodowanie stanu i scalanie aktualizacji), testy na własnym dokumencie.
+      "src/lib/sync/relayProvider.ts",
+      "src/lib/sync/relayProvider.test.ts",
+      "src/lib/sync/relayServer.integration.test.ts",
       // Masa ciała (C-2): warstwa Yjs w dokumencie notatek (wzorem diety), testy na własnym Y.Doc.
       "src/lib/weight/yWeight.ts",
       "src/lib/weight/yWeight.test.ts",

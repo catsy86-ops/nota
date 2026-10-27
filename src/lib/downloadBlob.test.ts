@@ -9,10 +9,11 @@ describe("downloadBlob", () => {
     const create = vi.fn(() => "blob:x");
     const revoke = vi.fn();
     Object.assign(URL, { createObjectURL: create, revokeObjectURL: revoke });
-    let clicked: HTMLAnchorElement | null = null;
-    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (this: HTMLAnchorElement) { clicked = this; });
+    const click = vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
 
     downloadBlob(new Blob(["a"]), "plik.txt");
+    // `this` klikniętego linku z mocka, bez aliasowania `this` (reguła no-this-alias).
+    const clicked = (click.mock.contexts[0] as HTMLAnchorElement | undefined) ?? null;
 
     expect(clicked).not.toBeNull();
     expect(clicked!.download).toBe("plik.txt");
