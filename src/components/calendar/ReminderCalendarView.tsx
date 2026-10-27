@@ -369,6 +369,8 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
             value={termQuery}
             onChange={(e) => setTermQuery(e.target.value)}
             placeholder="Szukaj terminów"
+            enterKeyHint="search"
+            autoComplete="off"
             aria-label="Szukaj terminów w tym miesiącu"
             className="h-8 coarse:h-11 min-w-0 flex-1 basis-40 rounded-field border border-border bg-background px-2 text-xs outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
           />

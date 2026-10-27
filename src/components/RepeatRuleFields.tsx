@@ -56,6 +56,7 @@ export function RepeatRuleExtras({ id, value, onChange }: { id: string; value: R
           <input
             id={`${id}-every`}
             type="number"
+            inputMode="numeric"
             min={1}
             max={366}
             value={value.every ?? 2}

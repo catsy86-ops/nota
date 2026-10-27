@@ -34,6 +34,9 @@ export function TitleField({ value, onChange, onEnter, className, ref: outerRef,
 
   return (
     <textarea
+      // Tytuł: wielka litera na początku zdania; Enter przenosi do treści (plan 3.7). Można nadpisać przez `rest`.
+      autoCapitalize="sentences"
+      enterKeyHint="next"
       {...rest}
       ref={setRef}
       rows={1}

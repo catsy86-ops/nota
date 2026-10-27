@@ -208,3 +208,5 @@ Plan kończymy tutaj; pozostałe punkty to backlog z podanym zakresem, do zrobie
 **Status 3.1 (2026-10-27):** kosz i archiwum bez pytania domyślnie, z „Cofnij”; dymki „Odłożono o 10 minut” i „Przypomnienie odhaczone” z powiadomienia mają „Cofnij”. Okno potwierdzenia zostaje dla ustawień „Pytaj…” i dla rzeczy nieodwracalnych (reset, opróżnianie kosza). Przegląd toastów przez wyszukanie w kodzie (usunięcia, przeniesienia, zmiany, odhaczenia) — nie ręczne przejrzenie wszystkich ~190 dymków; ewentualne pozostałe bez „Cofnij” to informacje bez zmiany danych.
 
 **Status 3.3 (2026-10-27):** zrobione. Wspólny `DelayedSpinner` (300 ms) w statusie zapisu, kolejce, zdjęciach, imporcie, Dzienniku i pushu; szkielety widoków z 180 ms na 300 ms. Testy: `DelayedSpinner.test.tsx`.
+
+**Status 3.7 (2026-10-27):** zrobione. Przegląd ponad 200 pól przez skaner źródeł (`src/lib/formFields.test.ts`). Zmiany: wspólny `TitleField` (wielka litera, klawisz „Next”), klawisz „Szukaj” w kalendarzu, `inputMode` w interwale powtarzania, `autoComplete="off"` w etykietach i aliasach. Reszta pól miała już właściwe atrybuty. Pola haseł i nazwiska zostają z podpowiedziami przeglądarki.

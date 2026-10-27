@@ -53,6 +53,7 @@ export function AliasPicker({ title, aliases, onSave }: AliasPickerProps) {
           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleSave(); } }}
           placeholder="łazienka, PL"
           spellCheck={false}
+          autoComplete="off"
         />
         <div className="flex justify-end">
           <button
