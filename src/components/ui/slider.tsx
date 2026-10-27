@@ -16,7 +16,7 @@ const Slider = React.forwardRef<
       <SliderPrimitive.Range className="absolute h-full bg-primary" />
     </SliderPrimitive.Track>
     {/* Nazwa dostępna idzie na kciuk — to on dostaje fokus i wartość. */}
-    <SliderPrimitive.Thumb aria-label={ariaLabel} className="block h-5 w-5 coarse:h-7 coarse:w-7 cursor-grab rounded-full border-2 border-primary bg-background ring-offset-background transition-[box-shadow,background-color] duration-fast ease-std hover:shadow-[0_0_0_4px_hsl(var(--ring)/0.15)] active:cursor-grabbing active:shadow-[0_0_0_6px_hsl(var(--ring)/0.2)] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50" />
+    <SliderPrimitive.Thumb aria-label={ariaLabel} className="block h-5 w-5 coarse:h-7 coarse:w-7 cursor-grab rounded-full border-2 border-primary bg-background ring-offset-background transition-[box-shadow,background-color] duration-fast ease-std hover:shadow-[0_0_0_4px_color-mix(in srgb, var(--ring) 15%, transparent)] active:cursor-grabbing active:shadow-[0_0_0_6px_color-mix(in srgb, var(--ring) 20%, transparent)] focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50" />
   </SliderPrimitive.Root>
 ));
 Slider.displayName = SliderPrimitive.Root.displayName;

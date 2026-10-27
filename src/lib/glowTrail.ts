@@ -26,12 +26,18 @@ function layer(): HTMLElement | null {
   return el;
 }
 
+/** Pełny kolor CSS z tokenu motywu (oklch po D-1); awaryjnie bursztyn. */
 function tone(kind: GlowKind): string {
   const varName =
     kind === "trash" ? "--destructive" : kind === "archive" ? "--accent" : "--primary";
-  if (typeof window === "undefined") return "25 95% 53%";
+  if (typeof window === "undefined") return "hsl(25 95% 53%)";
   const raw = getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
-  return raw || "25 95% 53%";
+  return raw || "hsl(25 95% 53%)";
+}
+
+/** Kolor z tokenu z przezroczystością w procentach (0.42 → 42%), bez hsl(). */
+function alpha(color: string, a: number): string {
+  return `color-mix(in srgb, ${color} ${Math.round(a * 100)}%, transparent)`;
 }
 
 export type GlowKind = "create" | "archive" | "trash" | "move";
@@ -67,7 +73,7 @@ export function glowPulse(at: Point, kind: GlowKind = "create", size = 220) {
     `width:${size}px`,
     `height:${size}px`,
     "border-radius:9999px",
-    `background:radial-gradient(closest-side, hsl(${h} / 0.42), hsl(${h} / 0.16) 45%, transparent 72%)`,
+    `background:radial-gradient(closest-side, ${alpha(h, 0.42)}, ${alpha(h, 0.16)} 45%, transparent 72%)`,
     "will-change:transform,opacity",
   ].join(";");
   root.appendChild(dot);
@@ -92,7 +98,7 @@ export function glowPulse(at: Point, kind: GlowKind = "create", size = 220) {
     `width:${size}px`,
     `height:${size}px`,
     "border-radius:9999px",
-    `border:1.5px solid hsl(${h} / 0.5)`,
+    `border:1.5px solid ${alpha(h, 0.5)}`,
     "will-change:transform,opacity",
   ].join(";");
   root.appendChild(ring);
@@ -132,7 +138,7 @@ export function glowStreak(from: Point, to: Point, kind: GlowKind = "move") {
     `width:${len}px`,
     "height:10px",
     "border-radius:9999px",
-    `background:linear-gradient(90deg, transparent, hsl(${h} / 0.55), hsl(${h} / 0.9))`,
+    `background:linear-gradient(90deg, transparent, ${alpha(h, 0.55)}, ${alpha(h, 0.9)})`,
     "filter:blur(1px)",
     `transform-origin:0 50%`,
     "will-change:transform,opacity",

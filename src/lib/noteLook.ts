@@ -21,9 +21,9 @@ export const COVER_STYLES: Record<NoteCover, { background?: string; backgroundCo
   sea: { background: "linear-gradient(120deg, #9cc9e8 0%, #5b8fc7 100%)" },
   dusk: { background: "linear-gradient(120deg, #b9a6e6 0%, #7a7fc9 100%)" },
   paper: {
-    backgroundColor: "hsl(var(--muted))",
+    backgroundColor: "var(--muted)",
     backgroundImage:
-      "linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)",
+      "linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px)",
     backgroundSize: "12px 12px",
   },
 };

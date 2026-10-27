@@ -90,7 +90,7 @@ export function WeekStrip({ day, byDay, shiftOf, onSelectDay }: WeekStripProps) 
               onClick={() => onSelectDay(d)}
               className={cn(
                 dayCellClass(true, isToday), "flex flex-col items-center gap-0.5 min-h-14 coarse:min-h-15 py-1 px-0.5",
-                selected && "border-primary/60 bg-[color-mix(in_srgb,hsl(var(--primary))_7%,hsl(var(--card)))] dark:border-primary/60 dark:bg-[color-mix(in_srgb,hsl(var(--primary))_12%,hsl(var(--card)))]",
+                selected && "border-primary/60 bg-[color-mix(in_srgb,var(--primary)_7%,var(--card))] dark:border-primary/60 dark:bg-[color-mix(in_srgb,var(--primary)_12%,var(--card))]",
               )}
             >
               <span aria-hidden className={cn("text-2xs uppercase tracking-wider", i >= 5 ? "text-primary-ink" : "text-muted-foreground")}>

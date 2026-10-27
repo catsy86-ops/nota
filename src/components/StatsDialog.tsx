@@ -144,7 +144,7 @@ export function StatsDialog({ open, onOpenChange, notes, archivedNotes, allLabel
                   formatter={(v: number) => [v, "aktywność"]}
                   contentStyle={{ fontSize: 12, borderRadius: 8 }}
                 />
-                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="count" fill="var(--primary)" radius={[3, 3, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>

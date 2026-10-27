@@ -87,7 +87,7 @@ export function ShiftDnd({ days, typesById, onTransfer, children }: ShiftDndProp
             aria-hidden
             className="inline-flex items-center gap-1 rounded-lg px-2 py-1 font-display font-bold text-sm shadow-lg ring-2 ring-primary/50"
             style={type.kind === "absence"
-              ? { backgroundColor: `color-mix(in srgb, ${type.color} 30%, hsl(var(--card)))`, color: shiftTextOnCard(type.color) }
+              ? { backgroundColor: `color-mix(in srgb, ${type.color} 30%, var(--card))`, color: shiftTextOnCard(type.color) }
               : { backgroundColor: type.color, color: shiftInk(type.color) }}
           >
             {type.short}

@@ -1,22 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { contrastRatio } from "./color";
+import { oklchToHex, parseOklch } from "@/test/oklch";
 
-/** HSL z tokenu (`--card: 211 58% 22%`) na hex. */
-function hslToHex(h: number, s: number, l: number): string {
-  const sat = s / 100;
-  const lig = l / 100;
-  const k = (n: number) => (n + h / 30) % 12;
-  const a = sat * Math.min(lig, 1 - lig);
-  const f = (n: number) => lig - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-  return "#" + [f(0), f(8), f(4)].map((v) => Math.round(v * 255).toString(16).padStart(2, "0")).join("");
-}
-
-/** Wartość tokenu HSL z bloku CSS, na hex; `null`, gdy go nie ma. */
+/** Wartość tokenu `oklch(...)` z bloku CSS, na hex; `null`, gdy go nie ma. */
 function token(block: string, name: string): string | null {
-  const re = new RegExp(name + ":\\s*([\\d.]+)\\s+([\\d.]+)%\\s+([\\d.]+)%");
-  const m = re.exec(block);
-  return m ? hslToHex(Number(m[1]), Number(m[2]), Number(m[3])) : null;
+  const m = new RegExp(name + ":\\s*(oklch\\([^)]*\\))").exec(block);
+  const c = m ? parseOklch(m[1]) : null;
+  return c ? oklchToHex(c) : null;
 }
 
 /** Pary (karta, tekst) dla każdego stylu z `skins.css` i motywu bazowego z `index.css`. */

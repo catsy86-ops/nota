@@ -13,9 +13,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
       // Kolory przez zmienne Sonnera (jak w shadcn): jego style są poza warstwami CSS,
       // więc w Tailwind 4 wygrywają z każdą klasą bez `!`.
       style={{
-        "--normal-bg": "hsl(var(--background))",
-        "--normal-text": "hsl(var(--foreground))",
-        "--normal-border": "hsl(var(--border))",
+        "--normal-bg": "var(--background)",
+        "--normal-text": "var(--foreground)",
+        "--normal-border": "var(--border)",
       } as React.CSSProperties}
       // Przycisk „×” na każdym toście: błąd z długim opisem (9 s) da się zamknąć dotykiem od razu,
       // bez czekania na licznik albo przeciągania.

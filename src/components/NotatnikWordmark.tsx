@@ -60,7 +60,7 @@ export function NotatnikWordmark({ className }: { className?: string }) {
       {/* Napis */}
       <g
         fill="none"
-        stroke="hsl(var(--foreground))"
+        stroke="var(--foreground)"
         strokeWidth="4.5"
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -74,7 +74,7 @@ export function NotatnikWordmark({ className }: { className?: string }) {
       <motion.path
         d={UNDERLINE}
         fill="none"
-        stroke="hsl(var(--primary))"
+        stroke="var(--primary)"
         strokeWidth="3.5"
         strokeLinecap="round"
         {...draw(WRITING_END, 0.42)}
@@ -88,7 +88,7 @@ export function NotatnikWordmark({ className }: { className?: string }) {
           width="2.5"
           height="32"
           rx="1.25"
-          fill="hsl(var(--primary))"
+          fill="var(--primary)"
           initial={{ opacity: 0 }}
           animate={{ opacity: [0, 1, 1, 0, 0, 1] }}
           transition={{ delay: WRITING_END + 0.3, duration: 2.4, repeat: Infinity, ease: "linear" }}

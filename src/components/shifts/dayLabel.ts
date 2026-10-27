@@ -21,4 +21,4 @@ export function dayAriaLabel(opts: { day: Date; today: boolean; holiday?: string
 
 /** Cel upuszczenia zmiany — to samo podświetlenie co w kalendarzu przypomnień. */
 export const dropOverClass =
-  "border-primary! bg-[color-mix(in_srgb,hsl(var(--primary))_12%,hsl(var(--card)))] shadow-[0_0_0_3px_hsl(var(--primary)/0.14)]";
+  "border-primary! bg-[color-mix(in_srgb,var(--primary)_12%,var(--card))] shadow-[0_0_0_3px_color-mix(in srgb, var(--primary) 14%, transparent)]";

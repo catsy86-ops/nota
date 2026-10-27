@@ -8,14 +8,14 @@ import type { Folder } from "@/hooks/useNotes";
 // Kropki kolorów = kolory kafli (`--note-ink`, ustawiane przez `data-swatch` na elemencie), nie paleta Tailwinda.
 const folderColorDot: Record<string, string> = {
   default: "bg-muted-foreground/40",
-  coral: "bg-[hsl(var(--note-ink))]",
-  peach: "bg-[hsl(var(--note-ink))]",
-  sand: "bg-[hsl(var(--note-ink))]",
-  mint: "bg-[hsl(var(--note-ink))]",
-  sage: "bg-[hsl(var(--note-ink))]",
-  sky: "bg-[hsl(var(--note-ink))]",
-  lavender: "bg-[hsl(var(--note-ink))]",
-  rose: "bg-[hsl(var(--note-ink))]",
+  coral: "bg-[var(--note-ink)]",
+  peach: "bg-[var(--note-ink)]",
+  sand: "bg-[var(--note-ink)]",
+  mint: "bg-[var(--note-ink)]",
+  sage: "bg-[var(--note-ink)]",
+  sky: "bg-[var(--note-ink)]",
+  lavender: "bg-[var(--note-ink)]",
+  rose: "bg-[var(--note-ink)]",
 };
 
 interface FolderPickerProps {

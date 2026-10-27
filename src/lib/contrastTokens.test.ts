@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { oklchToRgb } from "@/test/oklch";
 
 // Kontrast liczony z tokenów w index.css (bez przeglądarki). Axe nie widzi
 // gradientów, a nie liczy 1.4.11 dla pól — dlatego ten test pilnuje tokenów.
@@ -15,20 +16,11 @@ function block(selector: string): string {
   return css.slice(start, end);
 }
 
-/** Wartość tokenu `--name: H S% L%;` z podanego bloku, jako [h, s, l]. */
+/** Wartość tokenu `--name: oklch(L C H);` z podanego bloku, jako [L, C, H]. */
 function token(source: string, name: string): [number, number, number] {
-  const m = source.match(new RegExp(`--${name}:\\s*([\\d.]+)\\s+([\\d.]+)%\\s+([\\d.]+)%;`));
+  const m = source.match(new RegExp(`--${name}:\\s*oklch\\(\\s*([\\d.]+)\\s+([\\d.]+)\\s+([\\d.]+)\\s*\\);`));
   if (!m) throw new Error(`Brak tokenu --${name}`);
   return [Number(m[1]), Number(m[2]), Number(m[3])];
-}
-
-function hslToRgb([h, s, l]: [number, number, number]): [number, number, number] {
-  const sat = s / 100;
-  const light = l / 100;
-  const k = (n: number) => (n + h / 30) % 12;
-  const a = sat * Math.min(light, 1 - light);
-  const f = (n: number) => light - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1)));
-  return [f(0), f(8), f(4)];
 }
 
 function luminance(rgb: [number, number, number]): number {
@@ -37,8 +29,8 @@ function luminance(rgb: [number, number, number]): number {
 }
 
 function contrast(a: [number, number, number], b: [number, number, number]): number {
-  const la = luminance(hslToRgb(a));
-  const lb = luminance(hslToRgb(b));
+  const la = luminance(oklchToRgb(a));
+  const lb = luminance(oklchToRgb(b));
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 }
 

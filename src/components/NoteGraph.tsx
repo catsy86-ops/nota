@@ -203,7 +203,7 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
         role="group"
         aria-label="Graf powiązań między notatkami"
         className="block h-auto w-full rounded-xl border border-border/60 bg-card text-foreground"
-        style={{ backgroundImage: "linear-gradient(hsl(var(--border) / 0.35) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border) / 0.35) 1px, transparent 1px)", backgroundSize: "5% 8.06%" }}
+        style={{ backgroundImage: "linear-gradient(color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1px)", backgroundSize: "5% 8.06%" }}
       >
         <defs>
           {/* Lekkie drżenie linii — długopis, nie wektor. */}
@@ -221,7 +221,7 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
               <path
                 key={`${e.a}-${e.b}`}
                 d={edgePath(a, b, hash(e.a + e.b))}
-                stroke={lit ? "hsl(var(--primary))" : "currentColor"}
+                stroke={lit ? "var(--primary)" : "currentColor"}
                 strokeWidth={lit ? 2.4 : 1.6}
                 opacity={active === null ? 0.7 : lit ? 1 : 0.12}
                 style={{ transition: `opacity ${dur.fast}s cubic-bezier(${ease.out.join(",")})` }}
@@ -257,10 +257,10 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
             >
               <title>{n.title}</title>
               <g filter={`url(#pen-${filterId})`} transform={`translate(${p.x.toFixed(1)} ${p.y.toFixed(1)}) rotate(${(seed * 360).toFixed(0)})`}>
-                <ellipse rx={r} ry={r * 0.92} fill="hsl(var(--card))" stroke={hot ? "hsl(var(--primary))" : "currentColor"} strokeWidth={hot ? 2.8 : 2} />
+                <ellipse rx={r} ry={r * 0.92} fill="var(--card)" stroke={hot ? "var(--primary)" : "currentColor"} strokeWidth={hot ? 2.8 : 2} />
                 {/* Druga, lekko przesunięta kreska — jak obrysowane dwa razy. */}
-                <ellipse rx={r * 0.96} ry={r * 0.99} cx={1.2} cy={-0.8} fill="none" stroke={hot ? "hsl(var(--primary))" : "currentColor"} strokeWidth={1} opacity={0.45} />
-                <circle r={Math.max(2, r * 0.22)} fill="hsl(var(--primary))" opacity={n.degree > 1 ? 0.85 : 0.5} stroke="none" />
+                <ellipse rx={r * 0.96} ry={r * 0.99} cx={1.2} cy={-0.8} fill="none" stroke={hot ? "var(--primary)" : "currentColor"} strokeWidth={1} opacity={0.45} />
+                <circle r={Math.max(2, r * 0.22)} fill="var(--primary)" opacity={n.degree > 1 ? 0.85 : 0.5} stroke="none" />
               </g>
               {/* Większy cel kliknięcia niż sam obrys. */}
               <rect x={p.x - r - 6} y={p.y - r - 6} width={(r + 6) * 2} height={(r + 6) * 2} fill="transparent" />
@@ -271,7 +271,7 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
                   textAnchor="middle"
                   fontSize={labelSize}
                   fill="currentColor"
-                  stroke="hsl(var(--card))"
+                  stroke="var(--card)"
                   strokeWidth={narrow ? 9 : 4}
                   paintOrder="stroke"
                   fontWeight={hot ? 700 : 500}

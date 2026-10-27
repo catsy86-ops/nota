@@ -69,8 +69,9 @@ function canFire(key: EffectKey): boolean {
 
 function hslVar(name: string, fallback: string): string {
   if (typeof window === "undefined") return fallback;
+  // Tokeny są już pełnymi kolorami (oklch po D-1), więc nie opakowujemy ich w hsl().
   const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  return raw ? `hsl(${raw})` : fallback;
+  return raw || fallback;
 }
 
 function themeColors(): string[] {

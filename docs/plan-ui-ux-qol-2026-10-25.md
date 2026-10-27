@@ -143,7 +143,14 @@ Odrzucone: CSS Anchor Positioning i Popover API. Radix już pozycjonuje i obsłu
 - **D-3 (animacje wejścia i wyjścia w CSS):** zrobione częściowo: cytat dnia (`DailyQuote.tsx`) i podpowiedzi skrótów w `EmptyState.tsx` używają klasy `fade-quiet` z `index.css` (samo przezroczystość, bez JS, wyłączone przy ograniczonym ruchu). Pozostałe ok. 50 plików z `framer-motion` do przeglądu; paczka nie zmieniła się w praktyce, bo `framer-motion` nadal jest w innych miejscach.
 - **D-4 (odcienie działów z motywu):** nie zrobione. Zależy od tokenu `--accent` po 1.5 (OKLCH); dobór odcieni wymaga decyzji właściciela.
 
-## D-1 — stan przed przerwą (2026-10-26)
+## D-1 — zrobione (2026-10-27)
+
+- **Zastosowano:** `--apply` obu skryptów (296 definicji, 41 nazw, odchylenie 0,000; 21 plików, 80 przezroczystości przez `color-mix`, 140 zwykłych). Opis formatu i pułapek: `opis.md`, „Format kolorów (D-1)”.
+- **Dodatkowe poprawki poza skryptami:** `celebrate.ts` i `glowTrail.ts` czytają już pełny kolor (bez `hsl()`), 8 odwołań z `calc()` i fallbackami zamienionych ręcznie, testy kontrastu i `shiftChipOutline` parsują OKLCH przez `src/test/oklch.ts`.
+- **Weryfikacja:** typecheck i build OK; unit 300 plików / 2354 testy OK; wizualne 70/70 (drugi przebieg; w pierwszym jedna różnica w Kalendarzu i błąd `ERR_ABORTED`, oba niedeterministyczne, przechodzą przy powtórce); e2e 676 OK, 2 błędy przechodzą w izolacji (przeciążenie).
+- **Odstępstwo od planu:** brak osobnego fallbacku HSL za `@supports` (zob. `opis.md`).
+
+## D-1 — stan przed przerwą (2026-10-26, historyczne)
 
 - **Zrobione:** odświeżone zrzuty bazowe testów wizualnych (commit `57537d6`), 70/70. Wcześniej 48 z 70 nie zgadzało się z kodem, także na ekranach niezmienianych.
 - **Sprawdzone na sucho:** konwersja tokenów (`docs/tools/d1-oklch/oklch-convert.cjs`): 296 definicji, 41 nazw, odchylenie w przeliczeniu w obie strony 0,000. Konsumenci (`docs/tools/d1-oklch/oklch-consumers.cjs`, tryb sucho): 21 plików, 80 odwołań z przezroczystością, 140 zwykłych.

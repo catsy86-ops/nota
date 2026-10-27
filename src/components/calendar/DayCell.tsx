@@ -98,11 +98,11 @@ export function DayCell({ day, month, occurrences, titleOf, selected, focused, o
         // Pełne tło z domieszką marki (nie przezroczystość) — inaczej prześwituje kratka tła.
         // Warianty `dark:` z linii wyżej są silniejsze od zwykłych klas —
         // bez własnych `dark:` zaznaczenie w ciemnym motywie byłoby niewidoczne.
-        selected && "border-primary/60 bg-[color-mix(in_srgb,hsl(var(--primary))_7%,hsl(var(--card)))] dark:border-primary/60 dark:bg-[color-mix(in_srgb,hsl(var(--primary))_12%,hsl(var(--card)))]",
+        selected && "border-primary/60 bg-[color-mix(in_srgb,var(--primary)_7%,var(--card))] dark:border-primary/60 dark:bg-[color-mix(in_srgb,var(--primary)_12%,var(--card))]",
         // Podświetlenie celu wjeżdża płynnie (tło, ramka, obwódka), a zgasza się szybciej.
         "transition-[background-color,border-color,box-shadow] ease-out-soft",
         isOver
-          ? "duration-base border-primary bg-[color-mix(in_srgb,hsl(var(--primary))_12%,hsl(var(--card)))] shadow-[0_0_0_3px_hsl(var(--primary)/0.14)] dark:border-primary dark:bg-[color-mix(in_srgb,hsl(var(--primary))_18%,hsl(var(--card)))]"
+          ? "duration-base border-primary bg-[color-mix(in_srgb,var(--primary)_12%,var(--card))] shadow-[0_0_0_3px_color-mix(in srgb, var(--primary) 14%, transparent)] dark:border-primary dark:bg-[color-mix(in_srgb,var(--primary)_18%,var(--card))]"
           : "duration-fast",
       )}
     >

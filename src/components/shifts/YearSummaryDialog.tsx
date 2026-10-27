@@ -152,7 +152,7 @@ export function LeaveMeter({ balance }: { balance: LeaveBalance }) {
         aria-label={`Wykorzystane ${used}, zaplanowane ${planned}, wymiar ${allowance}`}>
         <motion.div className="h-full bg-primary" initial={{ width: 0 }} animate={{ width: `${(used / scale) * 100}%` }} transition={transition} />
         <motion.div className="h-full" initial={{ width: 0 }} animate={{ width: `${(planned / scale) * 100}%` }} transition={transition}
-          style={{ backgroundImage: "repeating-linear-gradient(-45deg, hsl(var(--primary)) 0 4px, hsl(var(--primary) / 0.45) 4px 8px)" }} />
+          style={{ backgroundImage: "repeating-linear-gradient(-45deg, var(--primary) 0 4px, color-mix(in srgb, var(--primary) 45%, transparent) 4px 8px)" }} />
       </div>
       <p className="text-2xs text-muted-foreground tabular-nums">
         wykorzystane {used} · zaplanowane {planned}

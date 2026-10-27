@@ -46,10 +46,10 @@ export function buildCmExtensions(opts: CmExtensionOptions = {}): Extension[] {
       "aria-label": opts.ariaLabel ?? "Treść notatki",
     }),
     EditorView.theme({
-      "&": { color: "hsl(var(--foreground))", backgroundColor: "transparent", fontFamily: "var(--app-font, inherit)", height: "100%" },
-      "&.cm-focused": { outline: "2px solid hsl(var(--ring))", outlineOffset: "2px" },
-      ".cm-content": { caretColor: "hsl(var(--foreground))", padding: "0.5rem 0", minHeight: "60px" },
-      ".cm-placeholder": { color: "hsl(var(--muted-foreground))" },
+      "&": { color: "var(--foreground)", backgroundColor: "transparent", fontFamily: "var(--app-font, inherit)", height: "100%" },
+      "&.cm-focused": { outline: "2px solid var(--ring)", outlineOffset: "2px" },
+      ".cm-content": { caretColor: "var(--foreground)", padding: "0.5rem 0", minHeight: "60px" },
+      ".cm-placeholder": { color: "var(--muted-foreground)" },
       ".cm-scroller": { fontFamily: "inherit" },
     }),
   ];

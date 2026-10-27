@@ -27,7 +27,7 @@
 @layer base {
   input::placeholder,
   textarea::placeholder {
-    color: hsl(var(--muted-foreground));
+    color: var(--muted-foreground);
   }
 }
 
@@ -46,8 +46,8 @@
     position: absolute;
     inset: 0;
     background-image:
-      linear-gradient(hsl(var(--grid)) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--grid)) 1px, transparent 1px);
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
     background-size: 20px 20px;
     background-position: -1px -1px;
     -webkit-mask-image: radial-gradient(
@@ -66,9 +66,9 @@
 @utility note-glow-active {
   /* --- Active note: seasonal glow --- */
   box-shadow:
-    0 0 0 2px hsl(var(--season-accent) / 0.9),
-    0 0 0 6px hsl(var(--season-accent) / 0.22),
-    0 10px 34px -8px hsl(var(--season-accent) / 0.55);
+    0 0 0 2px color-mix(in srgb, var(--season-accent) 90%, transparent),
+    0 0 0 6px color-mix(in srgb, var(--season-accent) 22%, transparent),
+    0 10px 34px -8px color-mix(in srgb, var(--season-accent) 55%, transparent);
   animation: note-glow-breathe 2.8s ease-in-out infinite;
   &::after {
     content: '';
@@ -78,7 +78,7 @@
     pointer-events: none;
     background: radial-gradient(
       120% 80% at 50% 0%,
-      hsl(var(--season-accent) / 0.18),
+      color-mix(in srgb, var(--season-accent) 18%, transparent),
       transparent 65%
     );
   }
@@ -100,11 +100,11 @@
 
 @utility glass {
   /* Nagłówek i dolny pasek to pełny papier — bez rozmycia (koszt na telefonie) i bez prześwitującej kratki. */
-  background-color: hsl(var(--background));
+  background-color: var(--background);
 }
 
 @utility glass-strong {
-  background-color: hsl(var(--background));
+  background-color: var(--background);
 }
 
 @utility pb-safe {
@@ -118,29 +118,29 @@
 @utility focus-ring-gradient {
   &:focus-within {
     box-shadow:
-      0 0 0 2px hsl(var(--background)),
-      0 0 0 4px hsl(var(--primary) / 0.5);
+      0 0 0 2px var(--background),
+      0 0 0 4px color-mix(in srgb, var(--primary) 50%, transparent);
   }
 }
 
 @utility sidebar-gradient {
   /* Pasek boczny to margines zeszytu: gładki papier, czerwona linia na prawej krawędzi. */
-  background-color: hsl(var(--background));
-  border-right-color: hsl(var(--margin) / 0.8) !important;
+  background-color: var(--background);
+  border-right-color: color-mix(in srgb, var(--margin) 80%, transparent) !important;
   .dark & {
-    border-right-color: hsl(var(--margin) / 0.45) !important;
+    border-right-color: color-mix(in srgb, var(--margin) 45%, transparent) !important;
   }
 }
 
 @utility dark {
   & .sidebar-gradient {
-    border-right-color: hsl(var(--margin) / 0.45) !important;
+    border-right-color: color-mix(in srgb, var(--margin) 45%, transparent) !important;
   }
 }
 
 @utility header-glow {
   box-shadow:
-    0 1px 0 hsl(var(--border)),
+    0 1px 0 var(--border),
     var(--elevation-1);
 }
 
@@ -153,15 +153,15 @@ html[data-skin="zeszyt"] .app-title {
   letter-spacing: -0.01em;
 }
 html[data-skin="zeszyt"] .app-header {
-  box-shadow: 0 1px 0 hsl(var(--border));
+  box-shadow: 0 1px 0 var(--border);
 }
 
 @utility stats-card {
   @apply rounded-card border border-border/50 p-4;
   background: linear-gradient(
     135deg,
-    hsl(var(--card)) 0%,
-    hsl(var(--muted) / 0.5) 100%
+    var(--card) 0%,
+    color-mix(in srgb, var(--muted) 50%, transparent) 100%
   );
 }
 
@@ -169,7 +169,7 @@ html[data-skin="zeszyt"] .app-header {
   @apply bg-clip-text text-transparent;
   background-image: linear-gradient(
     135deg,
-    hsl(var(--primary)),
+    var(--primary),
     hsl(28 85% 38%)
   );
 }
@@ -184,7 +184,7 @@ html[data-skin="zeszyt"] .app-header {
 
 @utility scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: hsl(var(--muted)) transparent;
+  scrollbar-color: var(--muted) transparent;
   &::-webkit-scrollbar {
     width: 4px;
   }
@@ -192,7 +192,7 @@ html[data-skin="zeszyt"] .app-header {
     background: transparent;
   }
   &::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted));
+    background: var(--muted);
     border-radius: 9999px;
   }
 }
@@ -221,7 +221,7 @@ html[data-skin="zeszyt"] .app-header {
     position: absolute;
     inset: auto 0 0 0;
     height: 2px;
-    background: hsl(var(--primary) / 0.7);
+    background: color-mix(in srgb, var(--primary) 70%, transparent);
     transform-origin: left center;
     animation: toast-timer var(--toast-ms, 5000ms) linear forwards;
     pointer-events: none;
@@ -295,46 +295,46 @@ html[data-skin="zeszyt"] .app-header {
   :root {
     /* Kierunek „zeszyt w kratkę przy barze”: papier, kratka, bursztyn piwa,
        niebieski długopis i czerwony margines (święta, usuwanie). */
-    --background: 48 45% 97.6%;
-    --foreground: 220 20% 14%;
+    --background: oklch(0.9863 0.0059 95.10);
+    --foreground: oklch(0.2486 0.0195 264.13);
 
-    --card: 0 0% 100%;
-    --card-foreground: 220 20% 14%;
+    --card: oklch(1.0000 0.0000 0.00);
+    --card-foreground: oklch(0.2486 0.0195 264.13);
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 20% 14%;
+    --popover: oklch(1.0000 0.0000 0.00);
+    --popover-foreground: oklch(0.2486 0.0195 264.13);
 
-    --primary: 34 88% 47%;
+    --primary: oklch(0.7022 0.1566 63.41);
     --ink-mix: 62%;
-    --primary-foreground: 220 25% 10%;
+    --primary-foreground: oklch(0.2059 0.0182 264.05);
 
-    --secondary: 220 14% 92%;
-    --secondary-foreground: 220 20% 14%;
+    --secondary: oklch(0.9356 0.0055 264.53);
+    --secondary-foreground: oklch(0.2486 0.0195 264.13);
 
-    --muted: 220 14% 95%;
+    --muted: oklch(0.9599 0.0034 264.54);
     /* ≥4.6:1 na tle, muted, karcie i kolorowych notatkach (WCAG AA). */
-    --muted-foreground: 220 10% 42%;
+    --muted-foreground: oklch(0.5146 0.0243 264.34);
 
     /* Niebieski długopis — linki, [[linki]], kursor w logo. */
-    --accent: 222 57% 41%;
-    --accent-foreground: 0 0% 100%;
+    --accent: oklch(0.4554 0.1411 264.13);
+    --accent-foreground: oklch(1.0000 0.0000 0.00);
 
     /* Biały tekst 4.8:1 — poprzednie 0 84% 60% dawało 3.8:1. */
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: oklch(0.5786 0.2137 27.17);
+    --destructive-foreground: oklch(1.0000 0.0000 0.00);
     /* Tekst i ikony czerwone na jasnym tle (≥4.5:1 na muted) — jak `primary-ink`. */
-    --destructive-ink: 0 72% 45%;
+    --destructive-ink: oklch(0.5314 0.1989 27.39);
 
     /* Krawędź dekoracyjna (karty, podziały) — może być jasna. */
-    --border: 220 14% 90%;
+    --border: oklch(0.9194 0.0069 264.53);
     /* Krawędź pól i przycisków „outline”: ≥3:1 na tle, karcie, muted i secondary (WCAG 1.4.11). */
-    --input: 220 14% 54%;
+    --input: oklch(0.6128 0.0357 264.27);
     /* Obwódka fokusu: ten sam bursztyn, ciemniejszy — ≥3:1 na wszystkich tłach, także kolorowych notatkach (2.4.13). */
-    --ring: 34 88% 39%;
+    --ring: oklch(0.6123 0.1355 63.86);
 
     /* Linie kratki i czerwony margines zeszytu. */
-    --grid: 214 30% 90.5%;
-    --margin: 4 68% 54%;
+    --grid: oklch(0.9220 0.0131 255.03);
+    --margin: oklch(0.6003 0.1873 28.15);
 
     --radius: 0.75rem;
     /* Trzy promienie zamiast wartości wpisywanych ręcznie (klasy `rounded-control|field|card`). */
@@ -343,17 +343,17 @@ html[data-skin="zeszyt"] .app-header {
     --r-card: 1rem;
 
     /* Note colors */
-    --note-default: 0 0% 100%;
+    --note-default: oklch(1.0000 0.0000 0.00);
     /* Jasne notatki: lekki odcień zamiast pełnego pastelu (wyglądało jak karteczki samoprzylepne);
        kolor niesie pasek u góry kafla (`--note-ink`), tak samo jak w ciemnym motywie. */
-    --note-coral: 14 100% 96%;
-    --note-peach: 30 100% 95.5%;
-    --note-sand: 45 100% 94%;
-    --note-mint: 150 55% 94.5%;
-    --note-sage: 160 30% 94%;
-    --note-sky: 200 85% 95.5%;
-    --note-lavender: 260 70% 96.5%;
-    --note-rose: 340 75% 96.5%;
+    --note-coral: oklch(0.9643 0.0182 37.66);
+    --note-peach: oklch(0.9716 0.0196 67.59);
+    --note-sand: oklch(0.9771 0.0311 91.65);
+    --note-mint: oklch(0.9676 0.0191 164.61);
+    --note-sage: oklch(0.9603 0.0105 174.27);
+    --note-sky: oklch(0.9677 0.0163 228.98);
+    --note-lavender: oklch(0.9614 0.0171 301.21);
+    --note-rose: oklch(0.9650 0.0155 355.05);
 
     --font-display: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif;
     --font-body: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', sans-serif;
@@ -374,8 +374,8 @@ html[data-skin="zeszyt"] .app-header {
     --elevation-2: 0 1px 0 hsl(26 30% 18% / 0.06), 0 6px 14px -4px hsl(26 30% 18% / 0.14);
     --elevation-3: 0 1px 0 hsl(26 30% 18% / 0.05), 0 14px 32px -8px hsl(26 30% 18% / 0.2);
     /* Cień skierowany w górę (dolny pasek) i poświata akcentu (FAB). */
-    --elevation-up: 0 -8px 24px -12px hsl(var(--foreground) / 0.15);
-    --glow-primary: 0 10px 28px -8px hsl(var(--primary) / 0.55);
+    --elevation-up: 0 -8px 24px -12px color-mix(in srgb, var(--foreground) 15%, transparent);
+    --glow-primary: 0 10px 28px -8px color-mix(in srgb, var(--primary) 55%, transparent);
 
     /* Ruch: jeden zestaw czasów i krzywych zamiast wartości wpisywanych ręcznie.
        Wyjście = ok. 0.75× wejścia. Pod reduced-motion wyłącza je reguła niżej. */
@@ -387,75 +387,75 @@ html[data-skin="zeszyt"] .app-header {
     --ease-in: cubic-bezier(0.4, 0, 1, 1);
     --ease-std: cubic-bezier(0.2, 0, 0, 1);
 
-    --success: 150 60% 45%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
+    --success: oklch(0.6931 0.1535 156.04);
+    --success-foreground: oklch(1.0000 0.0000 0.00);
+    --warning: oklch(0.7697 0.1645 70.61);
+    --warning-foreground: oklch(1.0000 0.0000 0.00);
   }
 
   .dark {
     /* Natywne listy wyboru, kalendarze i paski przewijania też w ciemnym motywie. */
     color-scheme: dark;
     /* Ciepła ciemność (porter) zamiast niebieskoszarej — pasuje do bursztynu marki. */
-    --background: 26 20% 7%;
-    --foreground: 35 20% 90%;
+    --background: oklch(0.1832 0.0091 59.58);
+    --foreground: oklch(0.9277 0.0092 76.60);
 
-    --card: 26 18% 10%;
-    --card-foreground: 35 20% 90%;
+    --card: oklch(0.2176 0.0112 59.55);
+    --card-foreground: oklch(0.9277 0.0092 76.60);
 
-    --popover: 26 18% 10%;
-    --popover-foreground: 35 20% 90%;
+    --popover: oklch(0.2176 0.0112 59.55);
+    --popover-foreground: oklch(0.9277 0.0092 76.60);
 
-    --primary: 33 88% 59%;
+    --primary: oklch(0.7706 0.1483 67.07);
     --ink-mix: 100%;
-    --primary-foreground: 26 30% 8%;
+    --primary-foreground: oklch(0.1962 0.0154 59.12);
 
-    --secondary: 26 14% 16%;
-    --secondary-foreground: 35 20% 90%;
+    --secondary: oklch(0.2824 0.0131 59.63);
+    --secondary-foreground: oklch(0.9277 0.0092 76.60);
 
-    --muted: 26 15% 14%;
-    --muted-foreground: 30 10% 66%;
+    --muted: oklch(0.2613 0.0125 59.61);
+    --muted-foreground: oklch(0.7373 0.0159 67.58);
 
-    --accent: 224 67% 74%;
-    --accent-foreground: 26 30% 8%;
+    --accent: oklch(0.7384 0.0985 268.58);
+    --accent-foreground: oklch(0.1962 0.0154 59.12);
 
     /* Było 0 62.8% 30.6% — ginęło na ciemnym tle (1.9:1). */
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: oklch(0.5786 0.2137 27.17);
+    --destructive-foreground: oklch(1.0000 0.0000 0.00);
     /* Czerwony tekst na ciemnym tle: 3.9:1 przy starym 0 72% 51% → ≥5:1 na muted i secondary. */
-    --destructive-ink: 0 82% 70%;
+    --destructive-ink: oklch(0.7056 0.1550 21.82);
 
-    --border: 26 14% 17%;
+    --border: oklch(0.2929 0.0138 59.62);
     /* Krawędź pól: ≥3:1 na karcie, tle i muted (WCAG 1.4.11). Stare 26 14% 17% dawało 1.3:1. */
-    --input: 26 10% 46%;
-    --ring: 33 88% 59%;
+    --input: oklch(0.5673 0.0226 59.73);
+    --ring: oklch(0.7706 0.1483 67.07);
 
     /* Kratka kredą na tablicy, margines przygaszony. */
-    --grid: 27 18% 14%;
-    --margin: 3 60% 60%;
+    --grid: oklch(0.2624 0.0150 61.38);
+    --margin: oklch(0.6372 0.1479 25.17);
 
     /* Ciemne notatki: odcień przygaszony (40% nasycenia przy 22% jasności dawało oliwkę
        i brąz), a kolor niesie pasek u góry kafla (`--note-ink`, reguła niżej). */
-    --note-default: 26 16% 11%;
-    --note-coral: 14 22% 16%;
-    --note-peach: 30 22% 16%;
-    --note-sand: 45 18% 16%;
-    --note-mint: 150 18% 15%;
-    --note-sage: 160 12% 15%;
-    --note-sky: 200 24% 16%;
-    --note-lavender: 260 20% 17%;
-    --note-rose: 340 20% 16%;
+    --note-default: oklch(0.2286 0.0109 59.62);
+    --note-coral: oklch(0.2754 0.0225 37.60);
+    --note-peach: oklch(0.2873 0.0206 66.85);
+    --note-sand: oklch(0.2953 0.0197 91.80);
+    --note-mint: oklch(0.2826 0.0226 162.84);
+    --note-sage: oklch(0.2785 0.0140 173.04);
+    --note-sky: oklch(0.2843 0.0214 230.06);
+    --note-lavender: oklch(0.2692 0.0326 299.50);
+    --note-rose: oklch(0.2684 0.0267 357.32);
 
     --elevation-1: 0 1px 2px hsl(0 0% 0% / 0.3);
     --elevation-2: 0 4px 12px -2px hsl(0 0% 0% / 0.4), 0 0 0 1px hsl(0 0% 100% / 0.03);
     --elevation-3: 0 12px 32px -8px hsl(0 0% 0% / 0.55), 0 0 0 1px hsl(0 0% 100% / 0.04);
     --elevation-up: 0 -8px 24px -12px hsl(0 0% 0% / 0.5);
-    --glow-primary: 0 10px 28px -8px hsl(var(--primary) / 0.45);
+    --glow-primary: 0 10px 28px -8px color-mix(in srgb, var(--primary) 45%, transparent);
 
-    --success: 150 50% 40%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 80% 45%;
-    --warning-foreground: 0 0% 100%;
+    --success: oklch(0.6109 0.1221 157.56);
+    --success-foreground: oklch(1.0000 0.0000 0.00);
+    --warning: oklch(0.6888 0.1410 73.42);
+    --warning-foreground: oklch(1.0000 0.0000 0.00);
   }
 }
 
@@ -471,38 +471,38 @@ html[data-skin="zeszyt"] .app-header {
 @layer base {
   :root {
     /* defaults = autumn-ish warm, overridden by [data-season] below */
-    --season-accent: 25 80% 55%;
-    --season-blob-1: 14 100% 70%;
-    --season-blob-2: 30 100% 65%;
-    --season-blob-3: 340 80% 65%;
+    --season-accent: oklch(0.6977 0.1576 51.88);
+    --season-blob-1: oklch(0.7543 0.1511 37.70);
+    --season-blob-2: oklch(0.7976 0.1472 62.66);
+    --season-blob-3: oklch(0.6780 0.1807 2.47);
   }
 
   /* Sezony zmieniają akcent i dekoracje, nie kolor marki — bursztyn zostaje przez cały rok
      (wcześniej zimą cała aplikacja robiła się niebieska, wiosną różowa). */
   html[data-season="spring"] {
-    --season-accent: 330 80% 75%;
-    --season-blob-1: 330 85% 78%;
-    --season-blob-2: 100 60% 70%;
-    --season-blob-3: 280 70% 78%;
+    --season-accent: oklch(0.7638 0.1369 349.49);
+    --season-blob-1: oklch(0.7886 0.1273 349.06);
+    --season-blob-2: oklch(0.8449 0.1367 135.82);
+    --season-blob-3: oklch(0.7806 0.1220 314.04);
   }
   html[data-season="summer"] {
-    --season-accent: 45 90% 60%;
-    --season-blob-1: 45 100% 65%;
-    --season-blob-2: 190 90% 62%;
-    --season-blob-3: 15 95% 66%;
+    --season-accent: oklch(0.8471 0.1549 89.45);
+    --season-blob-1: oklch(0.8806 0.1540 90.03);
+    --season-blob-2: oklch(0.8185 0.1261 214.04);
+    --season-blob-3: oklch(0.7301 0.1613 38.92);
   }
   html[data-season="autumn"] {
-    --season-accent: 25 80% 55%;
-    --season-blob-1: 14 100% 70%;
-    --season-blob-2: 30 100% 65%;
-    --season-blob-3: 340 80% 65%;
+    --season-accent: oklch(0.6977 0.1576 51.88);
+    --season-blob-1: oklch(0.7543 0.1511 37.70);
+    --season-blob-2: oklch(0.7976 0.1472 62.66);
+    --season-blob-3: oklch(0.6780 0.1807 2.47);
     /* Jesień to domyślny wygląd — marka i długopis z :root/.dark. */
   }
   html[data-season="winter"] {
-    --season-accent: 200 70% 70%;
-    --season-blob-1: 200 85% 72%;
-    --season-blob-2: 220 70% 70%;
-    --season-blob-3: 260 60% 75%;
+    --season-accent: oklch(0.7874 0.0878 231.11);
+    --season-blob-1: oklch(0.8078 0.0978 231.46);
+    --season-blob-2: oklch(0.7104 0.1123 263.48);
+    --season-blob-3: oklch(0.7340 0.1115 298.96);
   }
   /* Siła poświaty: w ciemnym motywie przygaszona, żeby nie zalewała notatek. */
   html[data-season] { --season-glow: 1; }
@@ -517,9 +517,9 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(62% 48% at 100% 0%, hsl(var(--season-blob-1) / calc(0.34 * var(--season-glow))), transparent 72%),
-    radial-gradient(52% 40% at 0% 0%, hsl(var(--season-blob-2) / calc(0.24 * var(--season-glow))), transparent 70%),
-    radial-gradient(70% 46% at 50% 100%, hsl(var(--season-blob-3) / calc(0.2 * var(--season-glow))), transparent 75%);
+    radial-gradient(62% 48% at 100% 0%, color-mix(in srgb, var(--season-blob-1) calc(34% * var(--season-glow)), transparent), transparent 72%),
+    radial-gradient(52% 40% at 0% 0%, color-mix(in srgb, var(--season-blob-2) calc(24% * var(--season-glow)), transparent), transparent 70%),
+    radial-gradient(70% 46% at 50% 100%, color-mix(in srgb, var(--season-blob-3) calc(20% * var(--season-glow)), transparent), transparent 75%);
 }
 
 @layer base {
@@ -558,7 +558,7 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
   a:focus-visible,
   [role="button"]:focus-visible {
     outline: none;
-    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring));
+    box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--ring);
   }
 }
 
@@ -580,11 +580,11 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
     right: 1.5rem;
     bottom: 1.25rem;
     padding: 0.5rem 0.875rem;
-    border: 1px solid hsl(var(--muted-foreground) / 0.3);
-    box-shadow: inset 0 0 0 3px hsl(var(--background)), inset 0 0 0 4px hsl(var(--muted-foreground) / 0.12);
+    border: 1px solid color-mix(in srgb, var(--muted-foreground) 30%, transparent);
+    box-shadow: inset 0 0 0 3px var(--background), inset 0 0 0 4px color-mix(in srgb, var(--muted-foreground) 12%, transparent);
     font: 500 0.6875rem/1 var(--font-mono, ui-monospace, monospace);
     letter-spacing: 0.18em;
-    color: hsl(var(--muted-foreground) / 0.7);
+    color: color-mix(in srgb, var(--muted-foreground) 70%, transparent);
     white-space: nowrap;
   }
   .paper-stamp::after { content: "G · ARKUSZ 1/1 · SKALA 1:1"; }
@@ -602,9 +602,9 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
     font-family: 'Barlow Condensed', sans-serif;
     font-weight: 600;
     letter-spacing: 0.22em;
-    border-color: hsl(var(--grid) / 0.3);
-    box-shadow: inset 0 0 0 3px hsl(var(--background)), inset 0 0 0 4px hsl(var(--grid) / 0.18);
-    color: hsl(var(--grid) / 0.45);
+    border-color: color-mix(in srgb, var(--grid) 30%, transparent);
+    box-shadow: inset 0 0 0 3px var(--background), inset 0 0 0 4px color-mix(in srgb, var(--grid) 18%, transparent);
+    color: color-mix(in srgb, var(--grid) 45%, transparent);
   }
   @media (max-width: 767px) {
     .paper-stamp { display: none; }
@@ -634,7 +634,7 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
     height: 2px;
     margin-top: 2px;
     border-radius: 9999px;
-    background: hsl(var(--primary));
+    background: var(--primary);
     transform-origin: left center;
     animation: pencil-draw var(--dur-slow) var(--ease-out) both;
   }
@@ -656,15 +656,15 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
   @keyframes note-glow-breathe {
     0%, 100% {
       box-shadow:
-        0 0 0 2px hsl(var(--season-accent) / 0.85),
-        0 0 0 6px hsl(var(--season-accent) / 0.18),
-        0 10px 30px -10px hsl(var(--season-accent) / 0.45);
+        0 0 0 2px color-mix(in srgb, var(--season-accent) 85%, transparent),
+        0 0 0 6px color-mix(in srgb, var(--season-accent) 18%, transparent),
+        0 10px 30px -10px color-mix(in srgb, var(--season-accent) 45%, transparent);
     }
     50% {
       box-shadow:
-        0 0 0 2px hsl(var(--season-accent) / 1),
-        0 0 0 9px hsl(var(--season-accent) / 0.26),
-        0 14px 40px -8px hsl(var(--season-accent) / 0.65);
+        0 0 0 2px color-mix(in srgb, var(--season-accent) 100%, transparent),
+        0 0 0 9px color-mix(in srgb, var(--season-accent) 26%, transparent),
+        0 14px 40px -8px color-mix(in srgb, var(--season-accent) 65%, transparent);
     }
   }
 
@@ -721,7 +721,7 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
   position: absolute;
   inset: -1px;
   border-radius: inherit;
-  border: 1.5px solid hsl(var(--primary));
+  border: 1.5px solid var(--primary);
   pointer-events: none;
   opacity: 0.15;
   animation: today-breath 2.6s ease-in-out infinite alternate;
@@ -799,7 +799,7 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
 @keyframes check-tick-in { from { stroke-dashoffset: 1; } }
 
 .check-strike {
-  background-image: linear-gradient(hsl(var(--muted-foreground) / 0.6), hsl(var(--muted-foreground) / 0.6));
+  background-image: linear-gradient(color-mix(in srgb, var(--muted-foreground) 60%, transparent), color-mix(in srgb, var(--muted-foreground) 60%, transparent));
   background-repeat: no-repeat;
   background-position: 0 58%;
   background-size: 0% 1px;
@@ -825,7 +825,7 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
 
 /* Chwilowe podświetlenie karty po „otwórz notatkę” (paleta, wikilink). */
 .note-flash {
-  outline: 2px solid hsl(var(--primary));
+  outline: 2px solid var(--primary);
   outline-offset: 3px;
   border-radius: var(--r-card); /* jak kafel */
   transition: outline-color 0.3s;
@@ -840,8 +840,8 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
   border-radius: var(--r-control);
   transition: background-color 150ms, color 150ms;
 }
-.card-action:hover { background-color: hsl(var(--foreground) / 0.06); color: hsl(var(--foreground)); }
-.card-action:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 1px; }
+.card-action:hover { background-color: color-mix(in srgb, var(--foreground) 6%, transparent); color: var(--foreground); }
+.card-action:focus-visible { outline: 2px solid var(--ring); outline-offset: 1px; }
 @media (pointer: coarse) {
   /* 16 px ikona + 2×14 px = 44 px — minimalny cel dotyku. */
   .card-action { padding: 0.875rem; }
@@ -903,45 +903,45 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
 .receipt {
   margin-inline: -0.25rem;
   padding: 0.875rem 0.875rem 1.375rem;
-  background: hsl(var(--background));
+  background: var(--background);
   border-radius: 0.75rem 0.75rem 0 0;
   --tooth: 0.625rem;
   -webkit-mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / var(--tooth) 100%;
   mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / var(--tooth) 100%;
 }
-.dark .receipt { background: hsl(var(--muted) / 0.6); }
+.dark .receipt { background: color-mix(in srgb, var(--muted) 60%, transparent); }
 
 /* Pasek koloru u góry kolorowej notatki — tło samo jest już prawie neutralne.
    Obraz tła zamiast cienia: nie gryzie się z cieniami uniesienia i zaznaczenia. */
-[data-note-color="coral"], [data-swatch="coral"] { --note-ink: 14 80% 58%; }
-[data-note-color="peach"], [data-swatch="peach"] { --note-ink: 28 90% 55%; }
-[data-note-color="sand"], [data-swatch="sand"] { --note-ink: 42 90% 48%; }
-[data-note-color="mint"], [data-swatch="mint"] { --note-ink: 150 50% 40%; }
-[data-note-color="sage"], [data-swatch="sage"] { --note-ink: 160 20% 46%; }
-[data-note-color="sky"], [data-swatch="sky"] { --note-ink: 200 75% 48%; }
-[data-note-color="lavender"], [data-swatch="lavender"] { --note-ink: 260 55% 62%; }
-[data-note-color="rose"], [data-swatch="rose"] { --note-ink: 340 65% 58%; }
-.dark [data-note-color="coral"], .dark [data-swatch="coral"] { --note-ink: 14 85% 66%; }
-.dark [data-note-color="peach"], .dark [data-swatch="peach"] { --note-ink: 30 90% 62%; }
-.dark [data-note-color="sand"], .dark [data-swatch="sand"] { --note-ink: 45 90% 58%; }
-.dark [data-note-color="mint"], .dark [data-swatch="mint"] { --note-ink: 150 55% 55%; }
-.dark [data-note-color="sage"], .dark [data-swatch="sage"] { --note-ink: 160 25% 58%; }
-.dark [data-note-color="sky"], .dark [data-swatch="sky"] { --note-ink: 200 80% 64%; }
-.dark [data-note-color="lavender"], .dark [data-swatch="lavender"] { --note-ink: 260 70% 74%; }
-.dark [data-note-color="rose"], .dark [data-swatch="rose"] { --note-ink: 340 75% 70%; }
+[data-note-color="coral"], [data-swatch="coral"] { --note-ink: oklch(0.6672 0.1722 37.39); }
+[data-note-color="peach"], [data-swatch="peach"] { --note-ink: oklch(0.7258 0.1668 55.30); }
+[data-note-color="sand"], [data-swatch="sand"] { --note-ink: oklch(0.7698 0.1578 79.58); }
+[data-note-color="mint"], [data-swatch="mint"] { --note-ink: oklch(0.6109 0.1221 157.56); }
+[data-note-color="sage"], [data-swatch="sage"] { --note-ink: oklch(0.6041 0.0566 171.45); }
+[data-note-color="sky"], [data-swatch="sky"] { --note-ink: oklch(0.6486 0.1347 237.51); }
+[data-note-color="lavender"], [data-swatch="lavender"] { --note-ink: oklch(0.6039 0.1585 296.76); }
+[data-note-color="rose"], [data-swatch="rose"] { --note-ink: oklch(0.6249 0.1779 3.23); }
+.dark [data-note-color="coral"], .dark [data-swatch="coral"] { --note-ink: oklch(0.7226 0.1471 37.70); }
+.dark [data-note-color="peach"], .dark [data-swatch="peach"] { --note-ink: oklch(0.7723 0.1445 62.47); }
+.dark [data-note-color="sand"], .dark [data-swatch="sand"] { --note-ink: oklch(0.8405 0.1583 88.88); }
+.dark [data-note-color="mint"], .dark [data-swatch="mint"] { --note-ink: oklch(0.7568 0.1450 158.06); }
+.dark [data-note-color="sage"], .dark [data-swatch="sage"] { --note-ink: oklch(0.7102 0.0624 171.68); }
+.dark [data-note-color="sky"], .dark [data-swatch="sky"] { --note-ink: oklch(0.7549 0.1155 232.94); }
+.dark [data-note-color="lavender"], .dark [data-swatch="lavender"] { --note-ink: oklch(0.7126 0.1352 298.26); }
+.dark [data-note-color="rose"], .dark [data-swatch="rose"] { --note-ink: oklch(0.7171 0.1464 0.29); }
 [data-note-color]:not([data-note-color="default"]) {
-  background-image: linear-gradient(hsl(var(--note-ink)), hsl(var(--note-ink)));
+  background-image: linear-gradient(var(--note-ink), var(--note-ink));
   background-size: 100% 3px;
   background-repeat: no-repeat;
 }
 /* Próbki koloru pokazują kolor paska — przygaszone tła są do siebie zbyt podobne. */
-[data-swatch]:not([data-swatch="default"]) { background-color: hsl(var(--note-ink)); }
+[data-swatch]:not([data-swatch="default"]) { background-color: var(--note-ink); }
 /* Pasek akcji dziedziczy tło karty (`background: inherit`) — bez drugiego paska. */
 [data-note-color] .card-actions { background-image: none; }
 
 /* Ciemne kolorowe notatki: tekst pomocniczy jaśniej, żeby utrzymać ~4.5:1. */
 .dark [data-note-color]:not([data-note-color="default"]) {
-  --muted-foreground: 220 10% 74%;
+  --muted-foreground: oklch(0.7897 0.0134 264.49);
 }
 
 /* Otwarte okno Radix wyłącza kliknięcia poza sobą (`pointer-events: none` na body),
@@ -965,7 +965,7 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
 
 /* Świeżo dodany wpis w dzienniku: tło rozjaśnia się i gaśnie (§9 W5); bez ruchu przy ograniczonym ruchu. */
 @keyframes journal-fresh {
-  from { background-color: hsl(var(--primary) / 0.2); }
+  from { background-color: color-mix(in srgb, var(--primary) 20%, transparent); }
   to { background-color: transparent; }
 }
 .journal-fresh { animation: journal-fresh 2.4s ease-out 1 both; border-radius: 0.5rem; }
@@ -990,7 +990,7 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
     position: absolute;
     inset: -8px;
     border-radius: 9999px;
-    background: radial-gradient(circle, hsl(var(--primary) / 0.5), transparent 70%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--primary) 50%, transparent), transparent 70%);
     pointer-events: none;
     animation: logo-ring 1s cubic-bezier(0.2, 0.7, 0.2, 1) 0.15s 1 both;
   }
@@ -1051,7 +1051,7 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
 }
 @keyframes tagline-wave {
   0%, 12%, 100% { color: inherit; }
-  5% { color: hsl(var(--primary)); }
+  5% { color: var(--primary); }
 }
 @media (prefers-reduced-motion: reduce) {
   .tagline-char { animation: none; opacity: 1; }
@@ -1063,7 +1063,7 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
   align-items: baseline;
   line-height: 1;
   letter-spacing: 0.02em;
-  filter: drop-shadow(0 2px 10px hsl(var(--primary) / 0.35));
+  filter: drop-shadow(0 2px 10px color-mix(in srgb, var(--primary) 35%, transparent));
 }
 .notki-hop { display: inline-block; }
 .notki-glyph {
@@ -1074,7 +1074,7 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
   /* Warstwa 1: błysk przechodzący przez litery; warstwa 2: gradient marki z góry na dół. */
   background-image:
     linear-gradient(105deg, transparent 38%, hsl(0 0% 100% / 0.9) 50%, transparent 62%),
-    linear-gradient(170deg, hsl(42 100% 62%), hsl(var(--primary)) 45%, hsl(28 85% 38%));
+    linear-gradient(170deg, hsl(42 100% 62%), var(--primary) 45%, hsl(28 85% 38%));
   background-size: 280% 100%, 100% 100%;
   background-repeat: no-repeat;
   background-position: 160% 0, 0 0;
@@ -1098,7 +1098,7 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
   height: 0.78em;
   margin-left: 0.1em;
   border-radius: 1px;
-  background: hsl(var(--accent));
+  background: var(--accent);
   opacity: 0;
   animation: notki-caret 1.1s steps(1, end) 0.6s infinite;
 }
@@ -1135,12 +1135,12 @@ html:not([data-input="touch"]) .note-card:has(:focus-visible) { box-shadow: var(
 .pin-stamp {
   position: absolute; top: 0.5rem; left: 0.5rem; z-index: 15;
   display: grid; place-items: center; width: 1.5rem; height: 1.5rem;
-  color: hsl(var(--primary)); opacity: 0; pointer-events: none;
+  color: var(--primary); opacity: 0; pointer-events: none;
   animation: pin-drop 900ms var(--ease-out);
 }
 .pin-stamp-ripple {
   position: absolute; inset: 0; border-radius: 9999px;
-  border: 2px solid hsl(var(--primary) / 0.5); opacity: 0;
+  border: 2px solid color-mix(in srgb, var(--primary) 50%, transparent); opacity: 0;
   animation: pin-ripple 700ms var(--ease-out) 120ms;
 }
 @keyframes pin-drop {
@@ -1170,8 +1170,8 @@ html[data-motion="reduced"] .entry-stamp[data-fresh] { animation: none; }
 .card-stamp {
   position: absolute; z-index: 15; left: 50%; top: 42%;
   margin-left: -2.6rem; padding: 0.15rem 0.6rem;
-  border: 2px solid hsl(var(--primary) / 0.85); border-radius: 0.375rem;
-  color: hsl(var(--primary)); background: hsl(var(--background) / 0.55);
+  border: 2px solid color-mix(in srgb, var(--primary) 85%, transparent); border-radius: 0.375rem;
+  color: var(--primary); background: color-mix(in srgb, var(--background) 55%, transparent);
   font-family: "JetBrains Mono", ui-monospace, monospace;
   font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase;
   opacity: 0; pointer-events: none; transform: rotate(-8deg);
@@ -1196,7 +1196,7 @@ html[data-motion="reduced"] .note-lift:hover .note-card { translate: none; }
   background-image: none;
 }
 .note-card[data-note-color]:not([data-note-color="default"]):not(.note-glow-active) {
-  border-color: hsl(var(--note-ink) / 0.28);
+  border-color: color-mix(in srgb, var(--note-ink) 28%, transparent);
 }
 .note-card[data-note-color]:not([data-note-color="default"])::before {
   content: "";
@@ -1207,7 +1207,7 @@ html[data-motion="reduced"] .note-lift:hover .note-card { translate: none; }
   width: 1.75rem;
   height: 0.3125rem;
   border-radius: 0 0 0.375rem 0.375rem;
-  background: hsl(var(--note-ink));
+  background: var(--note-ink);
   pointer-events: none;
   transition: width var(--dur-base, 200ms) var(--ease-out, ease-out);
 }
@@ -1225,11 +1225,11 @@ html[data-motion="reduced"] .note-lift:hover .note-card { translate: none; }
 .note-sheet-grid button[aria-label] {
   display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 0.375rem;
   width: 100%; min-height: 4.75rem; padding: 0.75rem 0.25rem 0.5rem; border-radius: 1rem;
-  background: hsl(var(--muted) / 0.5); border: 1px solid hsl(var(--border) / 0.5);
+  background: color-mix(in srgb, var(--muted) 50%, transparent); border: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
 }
 .note-sheet-grid button[aria-label]::after {
   content: attr(aria-label); font-size: 0.6875rem; line-height: 1.15; font-weight: 500;
-  text-align: center; color: hsl(var(--foreground)); overflow-wrap: anywhere;
+  text-align: center; color: var(--foreground); overflow-wrap: anywhere;
 }
 
 /* Formularz jako arkusz na telefonie (ui/responsive-dialog.tsx): pasek przycisków przyklejony do dołu
@@ -1242,8 +1242,8 @@ html[data-motion="reduced"] .note-lift:hover .note-card { translate: none; }
     margin-inline: -1.5rem;
     padding: 0.75rem 1.5rem max(0.75rem, env(safe-area-inset-bottom));
     margin-bottom: calc(-1 * max(1.5rem, env(safe-area-inset-bottom)));
-    background: hsl(var(--background));
-    border-top: 1px solid hsl(var(--border));
+    background: var(--background);
+    border-top: 1px solid var(--border);
     gap: 0.5rem;
   }
   [data-dialog-sheet] [data-dialog-footer] > * { min-height: 2.75rem; }
