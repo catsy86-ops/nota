@@ -25,6 +25,16 @@
 
 /* Podpowiedź w polach jak w v3 (szary 400) — v4 bierze półprzezroczysty kolor tekstu. */
 @layer base {
+  /* Motywy techniczne: cieńsze ikony lucide (plan 1.6). Reszta zostaje przy domyślnej grubości. */
+  html[data-skin="plan"],
+  html[data-skin="matryca"] {
+    --icon-stroke: 1.5;
+  }
+  html[data-skin="plan"] .lucide,
+  html[data-skin="matryca"] .lucide {
+    stroke-width: var(--icon-stroke);
+  }
+
   /* Równe łamanie tytułów (plan 1.4): bez pojedynczego słowa w drugiej linii. */
   h1,
   h2,
@@ -310,6 +320,8 @@ html[data-skin="zeszyt"] .app-header {
 
     /* Pierścień fokusu (plan 1.7): jeden token, na razie ten sam kolor co `--ring`. */
     --ring-focus: var(--ring);
+    /* Grubość kreski ikon lucide (plan 1.6). 2 = domyślna lucide; motywy techniczne dają cieńszą. */
+    --icon-stroke: 2;
 
     /* Kierunek „zeszyt w kratkę przy barze”: papier, kratka, bursztyn piwa,
        niebieski długopis i czerwony margines (święta, usuwanie). */
