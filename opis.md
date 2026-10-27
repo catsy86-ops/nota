@@ -2912,4 +2912,4 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - Typecheck czysty; lint bez błędów (jedno ostrzeżenie w `Index.tsx:378`, sprzed zmiany).
 
 ### Commit
-- Jeszcze niezacommitowane (2026-10-27).
+- `de668e6` (2026-10-27).
