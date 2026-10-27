@@ -164,3 +164,12 @@ Odrzucone: CSS Anchor Positioning i Popover API. Radix już pozycjonuje i obsłu
 - **Kontrast:** ikony to grafika, więc 3:1 (1.4.11). Na jasnym tle kolor przyciemniony o 50% czerni; na ciemnym czysty kolor motywu. Test: `src/lib/skinContrast.test.ts`, wszystkie motywy.
 - **Pozostałe z 5.1:** pasek nagłówka i puste stany nie są zrobione.
 - **Testy wizualne:** nie wykrywają tej zmiany (próg 1% pikseli, cztery małe ikony), więc zrzuty bazowe nie zostały zaktualizowane. Zmianę sprawdzono w przeglądarce.
+
+## D-2 — React Compiler: odrzucone (2026-10-27)
+
+Eksperyment zostaje w gałęzi `wip/d2-react-compiler` (`55d3c6e`); do `wip/matryca-hydraulika` nie wszedł. Narzędzia pomiaru: `docs/tools/d2-react-compiler/`.
+
+- **Tryb „wszystkie komponenty”:** INP mediana 688 ms wobec 1480 ms w bazie (CPU 4×, pierwszy pomiar A/B). Wdrożenie wymagało podniesienia progu precache do 3,8 MiB (build 3758,94 KiB) i psuło 7 testów e2e (przegląd tygodnia, powiadomienia, przekaźnik). Dyrektywy `"use no memo"` na trzech komponentach nie pomogły; przyczyny nie znaleziono.
+- **Tryb `annotation` (tylko `NoteGrid` i `NoteCard`):** wszystkie 11 testów przechodzi, paczka +1 KB, precache 3475,55 KiB (w starym progu 3,4 MiB). Pomiary A/B były zaszumione (CPU 100% od przeglądarki i VS Code): INP mediana 2520 wobec 2696 ms w pierwszym przebiegu i 2896 wobec 2824 ms w drugim; blokowanie wątku ok. −11%. Nie spełnia kryterium planu (wyraźny spadek INP).
+- **Decyzja:** odrzucone. Konfiguracja `@vitejs/plugin-react-swc` wraca bez zmian. Nie podnosimy progu precache.
+- **Otwarte, gdyby kiedyś wracać:** przyczyna regresji w trybie „wszystkie” (nie zlokalizowana); audyt ok. 149 odczytów `Date.now()` w 48 plikach; pomiar A/B na czystym systemie.
