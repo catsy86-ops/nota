@@ -1,7 +1,8 @@
 import { useRef } from "react";
 import { format, isSameDay } from "date-fns";
 import { pl } from "date-fns/locale";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, HardHat } from "lucide-react";
+import { studySummary, type StudyDayMarks } from "@/lib/study/calendarMarks";
 import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
 import { holidayName, shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
 import { addDaysToKey, parseDayKey, weekKeys, weekRangeLabel } from "@/lib/week";
@@ -14,6 +15,10 @@ interface WeekStripProps {
   day: Date;
   byDay: Map<string, Occurrence[]>;
   shiftOf: (key: string) => ShiftType | undefined;
+  /** Tytuł terminu: na komputerze pasek pokazuje tytuł pierwszego, nie samą liczbę (K3.1). */
+  titleOf: (noteId: string) => string;
+  /** Znaczniki Pracy (wizyty i dostawy) w dniu — jak w komórce miesiąca. */
+  studyOf?: (key: string) => StudyDayMarks | undefined;
   onSelectDay: (day: Date) => void;
 }
 
@@ -25,7 +30,7 @@ const terminy = (n: number) => `${n} ${pluralPl(n, ["termin", "terminy", "termin
  * tygodnia w Grafiku. Wybrany dzień jest jedynym przystankiem tabulatora,
  * strzałki ←/→ przechodzą po dniach (też do sąsiedniego tygodnia).
  */
-export function WeekStrip({ day, byDay, shiftOf, onSelectDay }: WeekStripProps) {
+export function WeekStrip({ day, byDay, shiftOf, titleOf, studyOf, onSelectDay }: WeekStripProps) {
   const keys = weekKeys(dayKey(day));
   const selectedKey = dayKey(day);
   const today = new Date();
@@ -63,7 +68,9 @@ export function WeekStrip({ day, byDay, shiftOf, onSelectDay }: WeekStripProps) 
         {keys.map((key, i) => {
           const d = parseDayKey(key);
           const shift = shiftOf(key);
-          const count = byDay.get(key)?.length ?? 0;
+          const dayItems = byDay.get(key) ?? [];
+          const count = dayItems.length;
+          const work = studySummary(studyOf?.(key));
           const isToday = isSameDay(d, today);
           const selected = key === selectedKey;
           const holiday = holidayName(key);
@@ -75,6 +82,7 @@ export function WeekStrip({ day, byDay, shiftOf, onSelectDay }: WeekStripProps) 
             holiday,
             shift ? `zmiana ${shiftLabel(shift)}` : "bez zmiany",
             count ? terminy(count) : "brak terminów",
+            work,
           ].filter(Boolean).join(", ");
           return (
             <button
@@ -109,7 +117,16 @@ export function WeekStrip({ day, byDay, shiftOf, onSelectDay }: WeekStripProps) 
                   </span>
                 )}
                 {count > 0 && <span className="text-2xs font-medium tabular-nums text-primary-ink">{count}</span>}
+                {work && (
+                  <span className="flex items-center gap-0.5 text-2xs leading-4 text-muted-foreground">
+                    <HardHat className="size-3" />
+                    {(studyOf?.(key)?.service ?? 0) + (studyOf?.(key)?.delivery ?? 0)}
+                  </span>
+                )}
               </span>
+              {dayItems.length > 0 && (
+                <span className="max-sm:hidden w-full truncate text-2xs leading-4 text-primary-ink">{titleOf(dayItems[0].noteId)}</span>
+              )}
             </button>
           );
         })}

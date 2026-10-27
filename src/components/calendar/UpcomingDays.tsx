@@ -4,6 +4,8 @@ import { pl } from "date-fns/locale";
 import { ReminderChip } from "./ReminderChip";
 import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences";
 import { shiftInk, shiftLabel, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
+import { HardHat } from "lucide-react";
+import { studySummary, type StudyDayMarks } from "@/lib/study/calendarMarks";
 import type { Note } from "@/hooks/useNotes";
 
 /** Ile terminów mieści się w karcie dnia, zanim reszta zwinie się w „+N”. */
@@ -13,6 +15,8 @@ interface UpcomingDaysProps {
   notes: Note[];
   titleOf: (noteId: string) => string;
   shiftOf: (key: string) => ShiftType | undefined;
+  /** Znaczniki Pracy (K3.1): wizyty i dostawy tego dnia. */
+  studyOf?: (key: string) => StudyDayMarks | undefined;
   /** Klik w kartę: kalendarz skacze do tego dnia i pokazuje jego panel. */
   onSelectDay: (day: Date) => void;
 }
@@ -21,7 +25,7 @@ interface UpcomingDaysProps {
  * „Co mam dziś i jutro” — zmiana z Grafiku i terminy obu dni w jednym miejscu,
  * niezależnie od tego, który miesiąc jest otwarty w siatce poniżej.
  */
-export function UpcomingDays({ notes, titleOf, shiftOf, onSelectDay }: UpcomingDaysProps) {
+export function UpcomingDays({ notes, titleOf, shiftOf, studyOf, onSelectDay }: UpcomingDaysProps) {
   const today = startOfDay(new Date());
   const todayKey = dayKey(today);
   const days = useMemo(() => [today, addDays(today, 1)], [todayKey]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -70,6 +74,12 @@ export function UpcomingDays({ notes, titleOf, shiftOf, onSelectDay }: UpcomingD
                 <span className="text-muted-foreground"><span className="sm:hidden">Bez zmiany</span><span className="max-sm:hidden">Bez zmiany w Grafiku</span></span>
               )}
             </span>
+            {(() => { const work = studySummary(studyOf?.(key)); return work ? (
+              <span className="mt-1 flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+                <HardHat className="size-3 shrink-0" aria-hidden />
+                <span className="truncate">{work}</span>
+              </span>
+            ) : null; })()}
             <span className="mt-2 flex flex-col gap-1">
               {items.length === 0 ? (
                 <span className="text-xs text-muted-foreground">Brak terminów.</span>

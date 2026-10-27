@@ -12,6 +12,9 @@ import { composeReminderTimestamp, dayInputValue, isPastReminder, toTimeInputVal
 import { endOfDay, REPEAT_KIND_LABELS, type RepeatInput, type RepeatRule } from "@/lib/reminderRepeat";
 import { RepeatRuleExtras, RepeatRuleSelect } from "@/components/RepeatRuleFields";
 import type { Note } from "@/hooks/useNotes";
+import { dayKey } from "@/lib/reminderOccurrences";
+import { atWorkingHours } from "@/lib/shifts/reminderConflict";
+import type { ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
 /**
@@ -63,10 +66,12 @@ interface ReminderQuickAddDialogProps {
   onSkipOccurrence: (noteId: string, at: number, repeat: RepeatRule) => void;
   /** Otwiera notatkę tego terminu (K2.1). Brak = przycisku nie ma. */
   onOpenNote?: (noteId: string) => void;
+  /** Zmiana dnia z Grafiku — do ostrzeżenia, gdy termin wypada w czasie pracy (K3.4). */
+  shiftOf?: (key: string) => ShiftType | undefined;
 }
 
 export function ReminderQuickAddDialog({
-  open, onOpenChange, day, edit, notes, onCreateNote, onAttachReminder, onClearReminder, onSkipOccurrence, onOpenNote,
+  open, onOpenChange, day, edit, notes, onCreateNote, onAttachReminder, onClearReminder, onSkipOccurrence, onOpenNote, shiftOf,
 }: ReminderQuickAddDialogProps) {
   const editedNote = edit ? notes.find((n) => n.id === edit.noteId) : undefined;
 
@@ -125,6 +130,9 @@ export function ReminderQuickAddDialog({
   const effectiveTime = !timeTouched && parsed?.clock ? parsed.clock : time;
   const timestamp = composeReminderTimestamp(effectiveDay, allDay ? DEFAULT_REMINDER_TIME : effectiveTime);
   const past = isPastReminder(timestamp);
+  // K3.4: termin w godzinach zmiany z Grafiku — tylko ostrzeżenie, zapis zostaje dozwolony.
+  const workShift = timestamp !== null && shiftOf ? shiftOf(dayKey(new Date(timestamp))) : undefined;
+  const inWorkHours = timestamp !== null && atWorkingHours(timestamp, workShift);
   const [uy, um, ud] = untilText.split("-").map(Number);
   const until = repeat.kind !== "none" && untilText ? endOfDay(new Date(uy, um - 1, ud)) : undefined;
   const untilTooEarly = until !== undefined && timestamp !== null && until < timestamp;
@@ -314,6 +322,12 @@ export function ReminderQuickAddDialog({
         {/* Godzina wpisana poprawnie, ale nieistniejąca tego dnia (przeskok zmiany czasu): zapis jest zablokowany, więc mówimy dlaczego. */}
         {time && timestamp === null && /^\d{1,2}:\d{2}$/.test(time) && (
           <p className="text-xs text-destructive-ink">Tej godziny nie ma tego dnia — przestawiono zegar (zmiana czasu). Wybierz inną.</p>
+        )}
+
+        {inWorkHours && workShift && (
+          <p className="text-xs text-muted-foreground">
+            Ten termin wypada w czasie zmiany: {workShift.name} ({workShift.start}–{workShift.end}). Przypomnienie zadzwoni w pracy.
+          </p>
         )}
 
         {past && (

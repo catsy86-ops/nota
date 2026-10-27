@@ -304,6 +304,8 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
           day={selectedDay}
           byDay={byDay}
           shiftOf={shiftOf}
+          titleOf={titleOf}
+          studyOf={studyOf}
           onSelectDay={(day) => {
             setSelectedDay(day);
             setMonth((m) => (m.getFullYear() === day.getFullYear() && m.getMonth() === day.getMonth() ? m : new Date(day.getFullYear(), day.getMonth(), 1)));
@@ -348,6 +350,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
             notes={notes}
             titleOf={titleOf}
             shiftOf={shiftOf}
+            studyOf={studyOf}
             onSelectDay={(day) => {
               setSelectedDay(day);
               setMonth(new Date(day.getFullYear(), day.getMonth(), 1));
@@ -398,6 +401,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
           onAttachReminder={handleAttach}
           onClearReminder={handleClear}
           onSkipOccurrence={handleSkip}
+          shiftOf={shiftOf}
           onOpenNote={onOpenNote ? openNoteFromCalendar : undefined}
         />
       )}
