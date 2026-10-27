@@ -1,4 +1,5 @@
 import type { MonthImageLayout } from "./monthImage";
+import { shiftInk } from "./color";
 
 /**
  * Rysowanie układu miesiąca na canvasie i udostępnianie PNG. Ładowane leniwie z widoku Grafiku,
@@ -85,7 +86,8 @@ export function renderMonthCanvas(layout: MonthImageLayout, scale = 2, theme: Im
         if (ctx.roundRect) ctx.roundRect(x + 14, cy - chipH / 2, chipW, chipH, 10);
         else ctx.rect(x + 14, cy - chipH / 2, chipW, chipH);
         ctx.fill();
-        ctx.fillStyle = p.chipInk;
+        // Tekst na kafelku z kolorem zmiany idzie w kontrastowy kolor tego kafelka (G0.2), a nie w stałą z palety.
+        ctx.fillStyle = c.color ? shiftInk(c.color) : p.chipInk;
         ctx.font = `700 18px ${FONT}`;
         ctx.textAlign = "center";
         ctx.fillText(fitLabel(ctx, c.label, chipW - 12), x + cell / 2, cy);

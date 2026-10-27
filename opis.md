@@ -580,6 +580,15 @@ Dział opisany w jednym miejscu. Refaktor `Index.tsx` i `NoteCard.tsx` (etapy 4 
 
 Dział opisany w jednym miejscu: rdzeń (dotąd nieopisany) i dodatki z 2026-10-09…20. Przegląd audytu z 2026-10-09 jest uwzględniony.
 
+**Poprawki Fali A (plan 2026-10-27, punkty G0.1–G0.6):**
+- **Nakładka odświeża się sama** (G0.1): `useScheduleData(id)` w `src/lib/shifts/store.ts` słucha dokumentu nakładki (wcześniej `scheduleDump` w `useMemo` nie reagował na zmiany w drugim grafiku). `ShiftsView.tsx` używa hooka.
+- **Obraz PNG: tekst na kafelku** (G0.2): `src/lib/shifts/monthImageDraw.ts` bierze kolor tekstu z `shiftInk(c.color)` dla kafla z kolorem; `chipInk` z palety zostaje tylko dla kafla bez koloru.
+- **Znacznik ↑/↓ widoczny wszędzie** (G0.3): usunięto `sm:hidden` w `ShiftMonthGrid.tsx`. Wcześniej ukryty znacznik zajmował jedno z dwóch miejsc (`MAX_MARKS`) i na komputerze wypychał ☾.
+- **Północ w liczeniu „do dziś” i saldzie urlopu** (G0.4): `ShiftsView` (`toDate`) i `YearBody` w `YearSummaryDialog.tsx` mają `useDayClock()` w zależnościach memo.
+- **„Razem brutto” przy zarobku 0** (G0.5): pokazuje się, gdy jest szacunek urlopu albo L4 (`ShiftSummary.tsx`).
+- **Własne godziny w oknie dnia** (G0.6): `DayDialog.tsx` pokazuje „(+1 dzień)” przy końcu przed początkiem i ostrzeżenie > 16 h.
+- **Testy:** brak nowych testów dla G0.1–G0.6 w tej partii. Do dopisania przy QA Grafiku.
+
 **Telefon w poziomie (844×390):** `ShiftsView.tsx` — wariant `short:` ustawia siatkę na trzy kolumny: przełącznik grafików, przełącznik Miesiąc/Tydzień i nawigacja miesiąca w jednym rzędzie; paleta zmian w jednym przewijanym rzędzie; podpowiedzi (`#shift-brush-hint`) schowane. Elementy pełnej szerokości mają `short:col-span-full`, bo liczba kolumn się zmieniła. Test: `e2e/shifts-landscape.spec.ts` (chromium, iphone-14, pixel-7).
 
 ### Co robi
@@ -1022,7 +1031,7 @@ Dziennik instalatora wod-kan: co zrobione, jakie problemy, zdjęcia, na której 
 - **Otwarte i rozwiązane.** Problem zostaje otwarty, dopóki nie oznaczysz go jako rozwiązanego (`resolved` = moment, ms). Licznik „Otwarte problemy: N” w nagłówku filtruje do nich. Przyciski „Oznacz jako rozwiązany” / „Otwórz ponownie”. Rozwiązanie przechodzi na drugi telefon.
 - **„Jak rozwiązane?”** Po oznaczeniu pod problemem pole opisu rozwiązania (do 500 znaków, `solution`). „Pomiń” zamyka pole, a przycisk „Jak rozwiązane?” zostaje. Opis jest pod wpisem („Rozwiązanie: …”), w raporcie (linia pod problemem), w szukaniu dziennika i na tablicy przy temacie („Moje rozwiązania (N)”). Ponowne otwarcie zostawia opis; zmiana rodzaju na inny niż problem go usuwa. Opisu nie dyktuje się osobnym mikrofonem.
 - **Przypomnienie o problemie.** Otwarty problem starszy niż 3 dni (od chwili wpisu, nie od rozwiązania) pojawia się w pasku „Przypomnienia” nad listą.
-- **Nie zrobione:** zamiana rozwiązania na własne pytanie quizu jednym stuknięciem (pytanie wymaga trzech błędnych odpowiedzi).
+- **Zrobione (`16b20dd`):** rozwiązany problem zamienia się w szkic własnego pytania quizu.
 
 ### Oś czasu i filtry
 
@@ -1094,8 +1103,8 @@ Dziennik instalatora wod-kan: co zrobione, jakie problemy, zdjęcia, na której 
 - Ta sama pozycja listy zmieniona naraz na dwóch telefonach: wygrywa ostatni zapis tej pozycji.
 - Rozpoznawanie mowy nie stawia przecinków, więc reguły są ostrożne. Pierwsze słowo budowy bez przecinka i bez rodzaju za nim to tekst. „Brak” (nie „brakuje”) to zwykły tekst problemu.
 - Przypomnienie „montaż bez próby” jest heurystyczne: wpis z tematu „Próba” bez protokołu też je uruchamia.
-- Przycisk „Dodaj protokół” w przypomnieniu nie istnieje — przycisk pokazuje wpisy budowy.
-- Podpis zdjęcia i rysunek są wtopione w piksele: zmiany nie da się cofnąć bez usunięcia zdjęcia.
+- Przycisk w przypomnieniu nazywa się „Dodaj próbę” (`ReminderRow.tsx`), nie „Dodaj protokół”.
+- Podpis zdjęcia jest danymi wpisu (P-1, `8450dc9`) i wtapia się w obraz dopiero przy eksporcie ZIP. Rysunek nadal zastępuje zdjęcie i oryginał nie zostaje (punkt P0.1 w `docs/plan-praca-kalendarz-grafik-2026-10-27.md`).
 - Podpowiedzi „Jak wczoraj” liczą wczoraj wg czasu lokalnego, nie 24 h wstecz.
 - Test e2e pułapki: etykieta „Telefon inwestora” zawiera „Inwestor” (`exact: true`); przycisk „Załatwione” w podciągu „Załatwione (1)”; „Dyktuj” (treść) wymaga `exact: true` przy „Dyktuj kształtki”; w e2e otwarty arkusz ukrywa zakładki z drzewa dostępności (`includeHidden: true`).
 - Dzienne przypomnienia o raporcie: e2e bez stałego zegara może pokazać dymek w niezwiązanym teście — testy przypomnień ustawiają `page.clock`.

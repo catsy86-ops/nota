@@ -10,7 +10,7 @@ import type { Note } from "@/hooks/useNotes";
 import { addDaysToKey, parseDayKey, startOfWeekKey, weekRangeLabel } from "@/lib/week";
 import { buildSiteTimesheetCsv } from "@/lib/study/siteTimesheet";
 import { useStudy } from "@/lib/study/store";
-import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, copyRange, defaultPatternStart, scheduleDump, useSchedules, monthSummaryToDate, shortRests, swapDays, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
+import { DEFAULT_SHIFT_TYPES, nightRateFor, activeScheduleId, addDefaultShiftTypes, icsScope, applyPatternToStore, copyMonth, copyRange, defaultPatternStart, useScheduleData, useSchedules, monthSummaryToDate, shortRests, swapDays, patternOverlapInStore, redoShifts, undoShifts, useShiftUndoState, buildShiftsIcs, buildTimesheetCsv, cancelledShiftDays, copyWeekToNext, exportableShiftDays, exportedAfter, monthSummary, pasteDay, planWeekCopy, restoreDays, setDayEntry, setDayShift, shiftHours, shiftStore, subscribeShiftDay, takeShiftDay, transferDay, useShifts, useShiftsReady, type DayEntry, type ShiftHours, type ShiftType, type TransferMode, type WeekCopyPlan } from "@/lib/shifts";
 import { download } from "@/lib/exportNotes";
 import { IS_TOUCH, TAP, modShortcut } from "@/lib/platform";
 import { createPersistedStore } from "@/lib/persistedStore";
@@ -91,7 +91,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   const data = useShifts();
   const layout = layoutStore.use();
   // `thisWeek` i „Dziś” liczone przy renderze — zegar dnia przerysowuje po północy.
-  useDayClock();
+  const dayTick = useDayClock();
   const [month, setMonth] = useState(() => startOfMonth(new Date()));
   const [weekStart, setWeekStart] = useState(() => startOfWeekKey(dayKey(new Date())));
   const [clip, setClip] = useState<DayEntry | null>(null);
@@ -139,8 +139,8 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   const [overlayId, setOverlayId] = useState<string | null>(null);
   const effectiveOverlay = overlayId && overlayId !== activeScheduleId() ? overlayId : null;
   const overlayScheduleName = schedules.find((s) => s.id === effectiveOverlay)?.name ?? "";
-  // `data` w zależnościach: zmiany w grafiku głównym odświeżają też nakładkę (scheduleDump czyta drugi dokument).
-  const overlayData = useMemo(() => (effectiveOverlay ? scheduleDump(effectiveOverlay) : null), [effectiveOverlay, data]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Nakładka słucha własnego dokumentu (G0.1): zmiana w drugim grafiku odświeża widok bez przełączania.
+  const overlayData = useScheduleData(effectiveOverlay);
   const overlayGrid = useMemo(() => (overlayData ? { days: overlayData.days, typesById: new Map(overlayData.types.map((t) => [t.id, t])) } : null), [overlayData]);
 
   function copyRangeAction(from: string, to: string, target: string) {
@@ -205,8 +205,8 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
     return n;
   }, [overlayData, data, shownMonth]);
   const summary = useMemo(() => monthSummary(data, shownMonth.getFullYear(), shownMonth.getMonth()), [data, shownMonth]);
-  // „Do dziś” tylko w bieżącym miesiącu; w innych nie ma czego porównywać.
-  const toDate = useMemo(() => (isSameMonth(shownMonth, new Date()) ? monthSummaryToDate(data, shownMonth.getFullYear(), shownMonth.getMonth(), dayKey(new Date())) : null), [data, shownMonth]);
+  // „Do dziś” tylko w bieżącym miesiącu; w innych nie ma czego porównywać. `dayTick` zmienia się po północy (G0.4).
+  const toDate = useMemo(() => (isSameMonth(shownMonth, new Date()) ? monthSummaryToDate(data, shownMonth.getFullYear(), shownMonth.getMonth(), dayKey(new Date())) : null), [data, shownMonth, dayTick]); // eslint-disable-line react-hooks/exhaustive-deps -- dzień zmienia wynik bez zmiany danych
   // Szacunek urlopu i L4 w zarobku (3.6): tylko gdy w miesiącu jest urlop albo L4.
   const estimate = useMemo(() => absenceEstimate(data, shownMonth.getFullYear(), shownMonth.getMonth()), [data, shownMonth]);
   // Odbiór nadgodzin w okresie rozliczeniowym (3.2).

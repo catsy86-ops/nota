@@ -5,6 +5,7 @@ import { m as motion } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMotionPref } from "@/hooks/useMotionPref";
+import { useDayClock } from "@/lib/dayClock";
 import { tween } from "@/lib/motion";
 import { pluralPl } from "@/lib/plural";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,9 @@ export function YearSummaryDialog({ open, onOpenChange, data, initialYear }: Yea
 function YearBody({ data, initialYear }: { data: ShiftData; initialYear: number }) {
   const [year, setYear] = useState(initialYear);
   const summary = useMemo(() => yearSummary(data, year), [data, year]);
-  const balance = useMemo(() => leaveBalance(data, year, new Date()), [data, year]);
+  // Saldo urlopu zależy od dnia: po północy przelicza się samo (G0.4).
+  const dayTick = useDayClock();
+  const balance = useMemo(() => leaveBalance(data, year, new Date()), [data, year, dayTick]); // eslint-disable-line react-hooks/exhaustive-deps -- dzień zmienia wynik bez zmiany danych
   const paid = summary.total.earnings > 0;
   const now = new Date();
   const currentMonth = now.getFullYear() === year ? now.getMonth() : -1;

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { dayType, entryMinutesOn, formatDuration, holidayName, isAbsence, setDayEntry, shiftHours, shiftInk, type DayEntry, type ShiftHours, type ShiftType } from "@/lib/shifts";
+import { dayType, entryMinutesOn, formatDuration, holidayName, isAbsence, setDayEntry, shiftHours, shiftInk, shiftMinutes, type DayEntry, type ShiftHours, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 import { TimeStepper } from "./TimeStepper";
 
@@ -21,6 +21,7 @@ interface DayDialogProps {
 
 const STEP = 15;
 const HM = /^([01]?\d|2[0-3]):[0-5]\d$/;
+const LONG_SHIFT_MINUTES = 16 * 60;
 
 /** Godziny wpisane ręcznie dla dnia: ciągi z pól, żeby dało się je dopisywać bez walidacji w trakcie. */
 interface HoursDraft { start: string; end: string; breakMin: string }
@@ -79,6 +80,9 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
   const askTimeOff = !!type && isAbsence(type);
 
   const hoursInvalid = !!custom && !customOk;
+  // Własne godziny: „(+1 dzień)” przy końcu przed początkiem i ostrzeżenie > 16 h, jak w oknie rodzaju (G0.6).
+  const customCrosses = customOk && !!custom && custom.end < custom.start;
+  const customLong = customOk && !!custom && shiftMinutes({ start: custom.start, end: custom.end, breakMin: Number(custom.breakMin) || 0 }) > LONG_SHIFT_MINUTES;
 
   function editHours(patch: Partial<HoursDraft>) {
     if (!stored) return;
@@ -191,6 +195,8 @@ function DayForm({ dayKey, entry, types, onOpenChange }: DayDialogProps & { dayK
                   <Button type="button" variant="ghost" size="sm" onClick={() => setCustom(null)}>Przywróć godziny zmiany</Button>
                 )}
               </div>
+              {customCrosses && <p className="text-xs text-foreground">Koniec następnego dnia (+1 dzień).</p>}
+              {customLong && <p className="text-xs text-destructive-ink">Zmiana dłuższa niż 16 h — sprawdź godziny (koniec mógł być wpisany tego samego dnia zamiast następnego).</p>}
             </fieldset>
           )}
 

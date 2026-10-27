@@ -145,7 +145,7 @@ export const ShiftMonthGrid = memo(function ShiftMonthGrid({ month, days, typesB
               // Znaczniki w komórce: najwyżej dwa widoczne, reszta trafia do etykiety dla czytnika.
               const marks: CellMark[] = [];
               if (shortRestDays?.has(key)) marks.push({ id: "rest", glyph: "⚠", className: "text-2xs leading-none font-bold text-destructive-ink", label: "krótki odpoczynek" });
-              if (entry?.extraMin) marks.push({ id: "extra", glyph: entry.extraMin > 0 ? "↑" : "↓", className: "sm:hidden text-2xs leading-none font-bold", label: entry.extraMin > 0 ? "nadgodziny" : "wyszedł wcześniej" });
+              if (entry?.extraMin) marks.push({ id: "extra", glyph: entry.extraMin > 0 ? "↑" : "↓", className: "text-2xs leading-none font-bold", label: entry.extraMin > 0 ? "nadgodziny" : "wyszedł wcześniej" });
               if (type && nightMinutes(type, nightFrom) > 0) marks.push({ id: "night", glyph: "☾", className: "text-2xs leading-none", label: "godziny nocne" });
               if (entry?.offSchedule || entry?.inLieu) marks.push({ id: "off", glyph: "•", className: "text-2xs leading-none font-bold text-muted-foreground", label: entry.offSchedule ? "poza grafikiem" : "w zamian" });
               if (entry?.note) marks.push({ id: "note", glyph: "•", className: "text-2xs leading-none text-foreground/60", label: "notatka" });

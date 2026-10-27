@@ -81,7 +81,8 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
             <span className="text-base font-semibold text-muted-foreground ml-2">/ <CountUp value={normMinutes} format={formatHoursShort} /> h normy</span>
           </p>
         </div>
-        {summary.earnings > 0 && (
+        {/* Pokazuje się też wtedy, gdy zarobek to 0, a jest szacunek urlopu albo L4 (G0.5). */}
+        {(summary.earnings > 0 || grossTotal > 0) && (
           <div className="text-right">
             <p className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Razem brutto</p>
             <p className="font-display font-extrabold text-3xl sm:text-4xl tabular-nums leading-none mt-1 text-primary-ink">

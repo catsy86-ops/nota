@@ -342,6 +342,15 @@ export function scheduleDump(id: string): ShiftData {
   return instanceFor(id).get();
 }
 
+/**
+ * Dane innego grafiku (np. nakładki) na żywo. `useShifts` słucha tylko aktywnego dokumentu,
+ * więc zmiana w nakładce bez tego hooka nie odświeżała widoku (G0.1).
+ */
+export function useScheduleData(id: string | null): ShiftData | null {
+  const subscribe = useCallback((cb: () => void) => (id ? instanceFor(id).subscribe(cb) : () => {}), [id]);
+  return useSyncExternalStore(subscribe, () => (id ? instanceFor(id).get() : null));
+}
+
 /** Grafiki poza głównym, z nazwami — do kopii zapasowej. */
 export function extraSchedulesDump(): { id: string; name: string; data: ShiftData }[] {
   return registry.list().filter((s) => s.id !== MAIN_SCHEDULE_ID).map((s) => ({ id: s.id, name: s.name, data: scheduleDump(s.id) }));
