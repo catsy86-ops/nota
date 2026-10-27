@@ -173,3 +173,18 @@ Eksperyment zostaje w gałęzi `wip/d2-react-compiler` (`55d3c6e`); do `wip/matr
 - **Tryb `annotation` (tylko `NoteGrid` i `NoteCard`):** wszystkie 11 testów przechodzi, paczka +1 KB, precache 3475,55 KiB (w starym progu 3,4 MiB). Pomiary A/B były zaszumione (CPU 100% od przeglądarki i VS Code): INP mediana 2520 wobec 2696 ms w pierwszym przebiegu i 2896 wobec 2824 ms w drugim; blokowanie wątku ok. −11%. Nie spełnia kryterium planu (wyraźny spadek INP).
 - **Decyzja:** odrzucone. Konfiguracja `@vitejs/plugin-react-swc` wraca bez zmian. Nie podnosimy progu precache.
 - **Otwarte, gdyby kiedyś wracać:** przyczyna regresji w trybie „wszystkie” (nie zlokalizowana); audyt ok. 149 odczytów `Date.now()` w 48 plikach; pomiar A/B na czystym systemie.
+
+## Stan planu zamknięty (2026-10-27)
+
+Plan kończymy tutaj; pozostałe punkty to backlog z podanym zakresem, do zrobienia osobno, gdy będzie czas na przegląd wizualny.
+
+- **Zrobione:** Faza 0 (0.1–0.4), D-1 (OKLCH), D-3 (tylko cytat i podpowiedzi), D-4 i 5.1 (ikony nawigacji, linia nagłówka, pusty stan), 1.3 (skala `z-*`: `raised`, `sticky`, `dropdown`, `overlay`, `modal`, `toast`).
+- **Odrzucone:** D-2 (React Compiler); wyniki w sekcji D-2 wyżej.
+- **Backlog, nie zrobione:**
+  - 1.1 promienie: 404 surowych `rounded-md/lg/xl/3xl/sm` do zamiany na tokeny (`rounded-control/field/card`). Codemod z przeglądem zrzutów.
+  - 1.2 cienie: 24 surowe `shadow-md/lg/2xl` do zamiany na `--elevation-*`.
+  - 1.4 typografia: `text-wrap: balance` na nagłówkach, `pretty` na akapitach. Zmienia zawijanie tekstu, więc wymaga przeglądu zrzutów.
+  - 1.6 ikony i 1.7 pierścień fokusu: tokeny `--icon-stroke` i `--ring-focus` jeszcze nie istnieją; kontrast 2.4.11 do sprawdzenia we wszystkich motywach.
+  - D-3 reszta: 44 pliki z `framer-motion`. Zamieniać tylko wejście i wyjście, gesty i `layout` zostają.
+  - Zrzuty D-4: nie zaktualizowane. Test kalendarza bez paska bocznego w jednym przebiegu był chybieniem (nie regresją); baseline w repo bez zmian.
+  - Faza 2–5 i 6 (ruch, UX, wydajność, upiększenie, QA telefonu): nie zaczęte.
