@@ -1,32 +1,28 @@
 import { useCallback, useMemo, useState } from "react";
 import { useNotesContext } from "@/hooks/NotesProvider";
-import { pluralPl } from "@/lib/plural";
 import { useDayClock } from "@/lib/dayClock";
 import {
-  DndContext, PointerSensor, TouchSensor, pointerWithin, useSensor, useSensors, type DragEndEvent,
+  DndContext, PointerSensor, TouchSensor, pointerWithin, useSensor, useSensors,
 } from "@dnd-kit/core";
-import { ChevronLeft, ChevronRight, Download, Keyboard, MoreHorizontal, Printer } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { PrintRoot } from "@/components/study/PrintRoot";
 import { CalendarPrintList } from "./CalendarPrintList";
-import { buildIcs, exportableReminders } from "@/lib/icsExport";
-import { download } from "@/lib/exportNotes";
-import { addDays, format, isSameDay, isSameMonth } from "date-fns";
+import { addDays, format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences";
-import { nextInSeries, nextOccurrence, ruleOf, seriesDay, type RepeatInput, type RepeatRule } from "@/lib/reminderRepeat";
+import { ruleOf, type RepeatInput } from "@/lib/reminderRepeat";
 import { toast } from "sonner";
-import { composeReminderTimestamp } from "@/lib/reminderTime";
 import { dayType, setDayEntry, useShifts, type ShiftType } from "@/lib/shifts";
 import { useStudyDayMarks } from "./useStudyDayMarks";
 import { DayDialog } from "@/components/shifts/DayDialog";
 import { MonthGrid } from "./MonthGrid";
 import { MonthAgenda } from "./MonthAgenda";
-import { markMoved } from "./movedSignal";
 import { DayPanel } from "./DayPanel";
 import { UpcomingDays } from "./UpcomingDays";
 import { WeekStrip } from "./WeekStrip";
 import { ReminderQuickAddDialog, type ReminderEditTarget } from "./ReminderQuickAddDialog";
+import { CalendarHeader } from "./CalendarHeader";
+import { useCalendarMoves } from "./useCalendarMoves";
+import { exportOneReminder, exportAllReminders } from "./calendarExport";
 import { toastWithUndo } from "@/lib/undoToast";
 import type { Occurrence } from "@/lib/reminderOccurrences";
 import type { Note } from "@/hooks/useNotes";
@@ -142,52 +138,9 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     setDialogDay(new Date(occ.at));
   }
 
-  /** Cofnięcie przywraca poprzedni termin, więc zapamiętujemy go przed zmianą. */
-  function previousOf(noteId: string) {
-    const note = notesById.get(noteId);
-    return {
-      reminder: note?.reminder ?? null,
-      repeat: note ? ruleOf(note) : { kind: "none" as const },
-      day: note ? seriesDay(note) : undefined,
-      until: note?.reminderRepeatUntil,
-      base: note?.reminderBase,
-      allDay: note?.reminderAllDay === true,
-    };
-  }
-
-  /**
-   * Po akcji na terminie jego chip może zniknąć (przeniesiony, pominięty, usunięty),
-   * więc fokus ląduje na komórce dnia, a nie wraca na początek strony (2a planu).
-   */
-  function focusDay(day: Date) {
-    requestAnimationFrame(() => document.querySelector<HTMLElement>(`[data-day-key="${dayKey(day)}"]`)?.focus());
-  }
-
-  function handleAttach(noteId: string, reminder: number, repeat: RepeatInput, allDay: boolean, base?: number, until?: number) {
-    const before = previousOf(noteId);
-    onSetReminder(noteId, reminder, repeat, undefined, base, allDay, until);
-    toastWithUndo("Termin zapisany", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay, before.until), { icon: "🔔" });
-  }
-
-  /**
-   * „Pomiń to wystąpienie” = przesuń zapisany termin na kolejny w serii.
-   * Zwykły zapis pola, zero nowych struktur — dokładnie to samo, co robi
-   * `useReminderNotifications` po odpaleniu przypomnienia.
-   */
-  function handleSkip(noteId: string, at: number, repeat: RepeatRule) {
-    const before = previousOf(noteId);
-    const note = notesById.get(noteId);
-    // Odłożone wystąpienie: kolejny termin liczy się od serii (`nextOccurrence`), nie od odłożonej chwili.
-    const next = note ? nextOccurrence(note, at) : nextInSeries(at, repeat, before.day, before.until);
-    // Pominięcie ostatniego terminu serii kończy ją — nie ma już czego przypominać.
-    if (next === null) onSetReminder(noteId, null, "none", undefined, undefined, undefined, undefined);
-    else onSetReminder(noteId, next, repeat, before.day, undefined, before.allDay, before.until);
-    // Ostatni termin serii: pominięcie ją kończy — komunikat mówi to wprost, nie jak zwykłe pominięcie.
-    const undo = () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay, before.until);
-    if (next === null) toastWithUndo("Seria zakończona", undo, { icon: "🏁", description: "To był ostatni termin serii." });
-    else toastWithUndo("Wystąpienie pominięte", undo, { icon: "⏭️" });
-    focusDay(new Date(at));
-  }
+  const { handleAttach, handleSkip, handleClear, moveToDay, handleDragEnd } = useCalendarMoves({
+    notesById, onSetReminder, month, setMonth, selectedDay, setSelectedDay,
+  });
 
   /**
    * Prognozy serii nie da się edytować, bo nie istnieje w danych. Zamiast
@@ -206,13 +159,6 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     });
   }
 
-  function handleClear(noteId: string) {
-    const before = previousOf(noteId);
-    onSetReminder(noteId, null, "none", undefined, undefined, undefined, undefined);
-    toastWithUndo("Termin usunięty", () => onSetReminder(noteId, before.reminder, before.repeat, before.day, before.base, before.allDay, before.until), { icon: "🔕" });
-    focusDay(selectedDay);
-  }
-
   // Własny `DndContext`: zagnieżdżony kontekst przechwytuje przeciągnięcia
   // chipów, więc `useNoteDnd` (reorder notatek, globalny `sortKey`) nigdy
   // ich nie widzi.
@@ -221,65 +167,13 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
   );
 
-  /** Przeniesienie na inny dzień zachowuje godzinę; seria przesuwa się cała. */
-  function moveToDay(occ: Occurrence, day: Date) {
-    const from = new Date(occ.at);
-    if (isSameDay(from, day)) return;
-    // Ta sama godzina może nie istnieć w dniu docelowym (zmiana czasu) — wtedy nie przesuwamy po cichu.
-    const clock = `${String(from.getHours()).padStart(2, "0")}:${String(from.getMinutes()).padStart(2, "0")}`;
-    const ts = composeReminderTimestamp(day, clock);
-    if (ts === null) {
-      toast.error("Tej godziny nie ma tego dnia", { description: "Przestawiono zegar (zmiana czasu). Zmień godzinę w edycji." });
-      return;
-    }
-    const to = new Date(ts);
-    const before = previousOf(occ.noteId);
-    // Odłożone wystąpienie (`reminder` ≠ `reminderBase`): przesuwamy tylko je, a termin serii zostaje —
-    // o ile nowy czas wypada przed następnym terminem serii (ta sama reguła co `snoozeTarget`).
-    // Dalej seria liczy się od nowego terminu, jak dotąd.
-    const deferred = before.base !== undefined && before.base !== before.reminder;
-    const seriesNext = deferred ? nextInSeries(before.base as number, occ.repeat, before.day, before.until) : null;
-    const keepSeries = deferred && (seriesNext === null || to.getTime() < seriesNext);
-    markMoved(occ.noteId);
-    onSetReminder(occ.noteId, to.getTime(), occ.repeat, undefined, keepSeries ? before.base : undefined, occ.allDay, before.until);
-    setSelectedDay(to);
-    if (!isSameMonth(to, month)) setMonth(new Date(to.getFullYear(), to.getMonth(), 1));
-    toastWithUndo(
-      `Termin przeniesiony na ${format(to, "d MMMM", { locale: pl })}`,
-      () => onSetReminder(occ.noteId, before.reminder, before.repeat, before.day, before.base, before.allDay, before.until),
-      { icon: "📅", description: keepSeries ? "Przesunięte tylko to wystąpienie; seria zostaje." : occ.isSeries ? "Cała seria liczy się od nowego terminu." : undefined },
-    );
-    focusDay(to);
-  }
-
-  function handleDragEnd({ active, over }: DragEndEvent) {
-    const occ = active.data.current?.occurrence as Occurrence | undefined;
-    const day = over?.data.current?.day as Date | undefined;
-    if (occ && day) moveToDay(occ, day);
-  }
-
-  function exportIcs(list: Note[], filename: string) {
-    download(buildIcs(list), filename, "text/calendar;charset=utf-8");
-  }
-
   function exportOne(occ: Occurrence) {
     const note = notesById.get(occ.noteId);
-    if (!note) return;
-    exportIcs([note], `przypomnienie-${format(new Date(occ.at), "yyyy-MM-dd")}.ics`);
-    toast("Pobrano plik .ics", { description: "Otwórz go, żeby dodać termin do kalendarza systemowego." });
+    if (note) exportOneReminder(note, occ.at);
   }
 
-  function exportAll() {
-    const list = exportableReminders(notes);
-    if (list.length === 0) { toast.info("Brak nadchodzących terminów do eksportu"); return; }
-    exportIcs(list, `przypomnienia-${format(new Date(), "yyyy-MM-dd")}.ics`);
-    const n = list.length;
-    toast(`Pobrano ${n} ${pluralPl(n, ["termin", "terminy", "terminów"])} (.ics)`, {
-      description: "Ponowny import zaktualizuje wpisy zamiast je dublować.",
-    });
-  }
+  const exportAll = () => exportAllReminders(notes);
 
-  const isThisMonth = isSameMonth(month, new Date());
   const selectedOccurrences = byDay.get(dayKey(selectedDay)) ?? [];
 
   return (
@@ -289,92 +183,17 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder }: Rem
     // miesiąc po lewej, po prawej przyklejone najbliższe terminy i panel wybranego dnia (plan UI 2.3).
     <section className="rise-in flex flex-col gap-4 xl:grid xl:grid-cols-[minmax(0,1fr)_24rem] xl:items-start xl:gap-8">
       <div className="contents xl:flex xl:flex-col xl:gap-4 xl:min-w-0">
-        <header className="order-1 flex items-center gap-1 sm:gap-2">
-          <button
-            onClick={() => shiftMonth(-1)}
-            aria-label="Poprzedni miesiąc"
-            className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-card text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <h2
-            aria-live="polite"
-            className="font-display font-bold text-base sm:text-lg capitalize text-center truncate sm:min-w-[11ch]"
-          >
-            {format(month, "LLLL yyyy", { locale: pl })}
-          </h2>
-          <button
-            onClick={() => shiftMonth(1)}
-            aria-label="Następny miesiąc"
-            className="inline-flex items-center justify-center p-2 coarse:min-h-11 coarse:min-w-11 shrink-0 rounded-card text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-          {/* Przycisk zostaje także wtedy, gdy wybrany dzień jest inny niż dziś, nawet w bieżącym miesiącu. */}
-          {(!isThisMonth || !isSameDay(selectedDay, new Date())) && (
-            <button
-              onClick={goToToday}
-              aria-label="Wróć do bieżącego miesiąca"
-              className="ml-1 shrink-0 text-xs font-medium text-primary-ink hover:bg-primary/10 px-2 sm:px-2.5 py-1 coarse:min-h-11 coarse:px-3 rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              Dziś
-            </button>
-          )}
-          {/* Na telefonie „.ics” i „Drukuj” są w menu „⋯” — nagłówek ma miejsce tylko na strzałki i miesiąc. */}
-          <button
-            onClick={exportAll}
-            aria-label="Eksportuj nadchodzące terminy do kalendarza (.ics)"
-            title="Eksportuj nadchodzące terminy do kalendarza (.ics)"
-            className="ml-auto sm:ml-0 order-last shrink-0 hidden sm:inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 coarse:min-h-11 coarse:min-w-11 coarse:justify-center rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">.ics</span>
-          </button>
-          {/* Ściągawka skrótów w podpowiedzi zamiast stałego tekstu w nagłówku. */}
-          <button
-            type="button"
-            onClick={() => setShowKeys((v) => !v)}
-            aria-expanded={showKeys}
-            aria-controls="calendar-keys-hint"
-            aria-label="Skróty klawiaturowe kalendarza"
-            title="Skróty klawiaturowe"
-            className="ml-auto hidden sm:inline-flex p-2 rounded-card text-muted-foreground hover:text-foreground hover:bg-muted/60 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Keyboard className="w-4 h-4" aria-hidden />
-          </button>
-          <button
-            type="button"
-            onClick={() => setPrinting(true)}
-            aria-label="Drukuj terminy tego miesiąca"
-            title="Drukuj terminy tego miesiąca"
-            className="shrink-0 hidden sm:inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 px-2 py-1.5 coarse:min-h-11 coarse:min-w-11 coarse:justify-center rounded-field transition-colors outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            <Printer className="w-3.5 h-3.5" aria-hidden />
-            <span>Drukuj</span>
-          </button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                aria-label="Więcej akcji kalendarza"
-                title="Więcej akcji"
-                className="ml-auto order-last shrink-0 sm:hidden coarse:min-h-11 coarse:min-w-11 inline-flex items-center justify-center p-2 rounded-field text-muted-foreground hover:text-foreground hover:bg-muted/60 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                <MoreHorizontal className="w-4 h-4" aria-hidden />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onSelect={() => exportAll()}>
-                <Download className="w-4 h-4 mr-2" aria-hidden />
-                Pobierz .ics (nadchodzące terminy)
-              </DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setPrinting(true)}>
-                <Printer className="w-4 h-4 mr-2" aria-hidden />
-                Drukuj terminy miesiąca
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </header>
+        <CalendarHeader
+          month={month}
+          selectedDay={selectedDay}
+          showKeys={showKeys}
+          onPrev={() => shiftMonth(-1)}
+          onNext={() => shiftMonth(1)}
+          onToday={goToToday}
+          onToggleKeys={() => setShowKeys((v) => !v)}
+          onPrint={() => setPrinting(true)}
+          onExportAll={exportAll}
+        />
         {printing && (
           <PrintRoot testId="calendar-print" onDone={() => setPrinting(false)}>
             <CalendarPrintList month={month} byDay={byDay} titleOf={titleOf} />
