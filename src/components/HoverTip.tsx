@@ -8,6 +8,8 @@ const EDGE = 8;
 
 interface Tip {
   text: string;
+  /** Skrót z tabeli `lib/shortcuts.ts` (`data-tip-keys`), pokazany jako <kbd>. */
+  keys?: string;
   rect: DOMRect;
 }
 
@@ -32,7 +34,7 @@ export function HoverTip() {
     const show = (el: HTMLElement) => {
       const text = el.dataset.tip;
       if (!text || !el.isConnected) return;
-      setTip({ text, rect: el.getBoundingClientRect() });
+      setTip({ text, keys: el.dataset.tipKeys, rect: el.getBoundingClientRect() });
     };
     const target = (e: Event) => (e.target instanceof Element ? e.target.closest<HTMLElement>("[data-tip]") : null);
 
@@ -97,6 +99,7 @@ export function HoverTip() {
       style={pos ? { left: pos.left, top: pos.top } : { left: 0, top: 0, visibility: "hidden" }}
     >
       {tip.text}
+      {tip.keys && <kbd className="ml-2 rounded-field border border-border/60 px-1 font-mono text-2xs text-muted-foreground">{tip.keys}</kbd>}
     </div>,
     document.body,
   );

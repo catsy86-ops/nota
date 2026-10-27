@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sectionIconClass } from "@/lib/sections";
+import { shortcutFor } from "@/lib/shortcuts";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { buildLabelRows } from "@/lib/labelTree";
 import { SidebarLabelItem } from "@/components/sidebar/SidebarLabelItem";
@@ -326,7 +327,7 @@ export function AppSidebar({
               <div className="pb-2 pt-4 border-t border-border/50 space-y-0.5">
                 <SidebarRow
                   icon={<Command className="w-[18px] h-[18px]" />}
-                  label="Paleta poleceń"
+                  label="Paleta poleceń" tipKeys={shortcutFor("Paleta poleceń")}
                   onClick={onOpenPalette}
                   trailing={<span className="shrink-0 text-2xs">{modShortcut("K")}</span>}
                 />
@@ -336,7 +337,7 @@ export function AppSidebar({
                   onClick={onToggleTheme}
                   buttonProps={{ "aria-label": "Tryb ciemny", "aria-pressed": dark }}
                 />
-                <SidebarRow icon={<SettingsIcon className="w-[18px] h-[18px]" />} label="Ustawienia" onClick={() => onSettingsOpenChange(true)} />
+                <SidebarRow icon={<SettingsIcon className="w-[18px] h-[18px]" />} label="Ustawienia" tipKeys={shortcutFor("Ustawienia")} onClick={() => onSettingsOpenChange(true)} />
                 <SidebarRow
                   icon={<BrainCircuit className="w-[18px] h-[18px]" />}
                   label="Trening mózgu"
@@ -356,7 +357,7 @@ export function AppSidebar({
                 {moreOpen && (
                   <div className="space-y-0.5 pl-2">
                     <SidebarRow icon={<RotateCcwClock className="w-[18px] h-[18px]" />} label="Ostatnie akcje" onClick={onOpenActions} />
-                    <SidebarRow icon={<Trophy className="w-[18px] h-[18px]" />} label="Statystyki" onClick={onOpenStats} />
+                    <SidebarRow icon={<Trophy className="w-[18px] h-[18px]" />} label="Statystyki" tipKeys={shortcutFor("Statystyki")} onClick={onOpenStats} />
                     <SidebarRow icon={<Brain className="w-[18px] h-[18px]" />} label="Tryb skupienia" onClick={onOpenFocusMode} />
                     <SidebarRow icon={<CircleQuestionMark className="w-[18px] h-[18px]" />} label="Samouczek" onClick={() => window.dispatchEvent(new CustomEvent("kaczy:tour"))} />
                   </div>

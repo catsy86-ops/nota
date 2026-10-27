@@ -26,10 +26,12 @@ interface SidebarRowProps {
   actions?: React.ReactNode;
   className?: string;
   buttonProps?: Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, "onClick" | "className" | "children">;
+  /** Skrót z tabeli (`lib/shortcuts.ts`): pokazuje się w podpowiedzi po najechaniu (plan 3.8). */
+  tipKeys?: string;
 }
 
 export const SidebarRow = forwardRef<HTMLDivElement, SidebarRowProps>(function SidebarRow(
-  { icon, label, onClick, active = false, dropActive = false, trailing, before, actions, className, buttonProps },
+  { icon, label, onClick, active = false, dropActive = false, trailing, before, actions, className, buttonProps, tipKeys },
   ref,
 ) {
   return (
@@ -59,6 +61,8 @@ export const SidebarRow = forwardRef<HTMLDivElement, SidebarRowProps>(function S
         type="button"
         onClick={onClick}
         aria-current={active ? "page" : undefined}
+        data-tip={tipKeys ? label : undefined}
+        data-tip-keys={tipKeys}
         {...buttonProps}
         className={cn(
           "pressable relative z-raised flex h-full min-w-0 flex-1 items-center gap-3 rounded-field text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
