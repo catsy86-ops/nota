@@ -65,6 +65,20 @@ describe("kontrakt tokenów skórek", () => {
     });
   }
 
+  // Dwie `@keyframes` o tej samej nazwie: wygrywa późniejsza i cicho psuje pierwszą animację
+  // (tak fala zapisu Zorzy była niewidoczna, bo przejęła ją animacja wejścia gwiazd).
+  it("nazwy `@keyframes` są unikalne w całym CSS", () => {
+    const seen = new Map<string, string>();
+    const dupes: string[] = [];
+    for (const { path, text } of CSS) {
+      for (const m of text.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/@keyframes\s+([\w-]+)/g)) {
+        if (seen.has(m[1])) dupes.push(`${m[1]} (${seen.get(m[1])} i ${path})`);
+        else seen.set(m[1], path);
+      }
+    }
+    expect(dupes).toEqual([]);
+  });
+
   it("selektory `data-skin` wskazują tylko istniejące skórki", () => {
     const unknown = new Set<string>();
     for (const { path, text } of CSS) {

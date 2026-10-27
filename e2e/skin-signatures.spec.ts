@@ -179,7 +179,7 @@ test("Zorza: zmiana na tę skórkę wpływa falą gwiazd", async ({ page }) => {
     anim: getComputedStyle(document.querySelector(".paper-grid")!, "::before").animationName,
   }));
   expect(info.sig).toBe("skin");
-  expect(info.anim).toBe("zorza-wave");
+  expect(info.anim).toBe("zorza-stars-in");
 });
 
 test("Zorza: fala barw przelatuje przez tło przy zapisie, a w spoczynku jest niewidoczna", async ({ page }) => {
@@ -201,4 +201,59 @@ test("Matryca: linia skanu zjeżdża przy zapisie, a przy ograniczonym ruchu nie
   await open(page, "matrix", "reduced");
   await page.evaluate(() => document.documentElement.setAttribute("data-sig", "save"));
   expect(await page.locator(".sig-layer").evaluate((el) => getComputedStyle(el).animationName)).toBe("none");
+});
+
+// Równe sygnatury (plan motywów, Faza 2): `.sig-layer` jest w każdym stylu; `::after` — zapis, `::before` — widok.
+async function layerAnim(page: Page, pseudo: "::before" | "::after", sig: string) {
+  await page.evaluate((s) => document.documentElement.setAttribute("data-sig", s), sig);
+  return page.locator(".sig-layer").evaluate((el, p) => getComputedStyle(el, p).animationName, pseudo);
+}
+
+for (const [skin, pseudo, sig, name] of [
+  ["zeszyt", "::after", "save", "zeszyt-stamp"],
+  ["plan", "::after", "save", "plan-measure"],
+  ["plan", "::before", "view", "plan-scan"],
+  ["neon", "::after", "save", "neon-buzz"],
+  ["neon", "::before", "view", "neon-brownout"],
+  ["miedz", "::before", "view", "miedz-sheen"],
+  ["hydraulika", "::before", "view", "hydro-flow-once"],
+] as const) {
+  test(`${skin}: sygnał ${sig} odpala ${name}, a przy ograniczonym ruchu nic`, async ({ page }) => {
+    await open(page, skin);
+    await expect(page.locator(".sig-layer")).toHaveCount(1);
+    expect(await layerAnim(page, pseudo, sig)).toBe(name);
+
+    await open(page, skin, "reduced");
+    expect(await layerAnim(page, pseudo, sig)).toBe("none");
+  });
+}
+
+test("Zorza: fala zapisu naprawdę przelatuje przez ekran (nie zostaje poza nim)", async ({ page }) => {
+  await open(page, "zorza");
+  await page.evaluate(() => document.documentElement.setAttribute("data-sig", "save"));
+  await page.waitForTimeout(900);
+  const s = await page.locator(".sig-layer").evaluate((el) => {
+    const cs = getComputedStyle(el);
+    return { opacity: Number(cs.opacity), transform: cs.transform };
+  });
+  expect(s.opacity).toBeGreaterThan(0.2);
+  // Połowa przelotu: przesunięcie w poziomie mniejsze niż szerokość ekranu (nie -100%).
+  const tx = Number(s.transform.match(/matrix\([^,]+,[^,]+,[^,]+,[^,]+,\s*([-\d.]+)/)?.[1] ?? "NaN");
+  expect(Math.abs(tx)).toBeLessThan(await page.evaluate(() => window.innerWidth));
+});
+
+test("Hydraulika: kafel ma śrubki obejmy; Miedź: patyna tylko na starej notatce", async ({ page }) => {
+  await open(page, "hydraulika");
+  const title = `Hydro-obejma ${Date.now()}`;
+  await page.getByText("Zapisz notatkę...").click();
+  await page.getByPlaceholder("Tytuł").fill(title);
+  await page.getByRole("button", { name: "Zapisz", exact: true }).click();
+  const card = page.getByRole("article", { name: title });
+  expect(await card.evaluate((el) => getComputedStyle(el, "::after").backgroundImage)).toContain("radial-gradient");
+
+  await open(page, "miedz");
+  const fresh = page.getByRole("article", { name: title });
+  expect(await fresh.getAttribute("data-aged")).toBeNull();
+  await fresh.evaluate((el) => el.setAttribute("data-aged", "true"));
+  expect(await fresh.evaluate((el) => getComputedStyle(el, "::after").boxShadow)).toContain("inset");
 });

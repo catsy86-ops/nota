@@ -203,6 +203,8 @@ export const NoteCard = memo(function NoteCard({ note, index, dragAttributes, dr
         data-note-color={note.color}
         data-selected={selected || undefined}
         data-pinned={note.pinned || undefined}
+        // Notatka nieruszana od 30 dni — Miedź kładzie na kafel patynę (plan motywów 2.2, signatures.css).
+        data-aged={Date.now() - (note.updatedAt ?? note.createdAt) > 30 * 86_400_000 || undefined}
         // Siatka (`NoteGrid`) rozciąga kafel w edycji na dwie kolumny.
         data-tile-editing={isEditing && !fullEditor ? "" : undefined}
         className={cn(

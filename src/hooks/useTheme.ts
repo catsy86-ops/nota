@@ -41,6 +41,24 @@ export function revealRadius(x: number, y: number, w: number, h: number): number
   return Math.ceil(Math.hypot(Math.max(x, w - x), Math.max(y, h - y)));
 }
 
+/**
+ * Kształt odsłonięcia nowego stylu (plan motywów 2.4) jako para `clip-path` [od, do]. Przy zmianie na
+ * Plan arkusz rozwija się od lewej, Miedź nagrzewa się od rury z prawej, Matryca spływa z góry,
+ * a Hydraulika napełnia się od dołu. Zeszyt, Neon, Zorza i sama zmiana jasności — koło od kliknięcia.
+ */
+export function revealClip(skin: Skin | null, x: number, y: number, w: number, h: number): [string, string] {
+  switch (skin) {
+    case "plan": return ["inset(0 100% 0 0)", "inset(0 0 0 0)"];
+    case "miedz": return [`circle(0px at ${w}px ${h}px)`, `circle(${Math.ceil(Math.hypot(w, h))}px at ${w}px ${h}px)`];
+    case "matrix": return ["inset(0 0 100% 0)", "inset(0 0 0 0)"];
+    case "hydraulika": return ["inset(100% 0 0 0)", "inset(0 0 0 0)"];
+    default: {
+      const r = revealRadius(x, y, w, h);
+      return [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`];
+    }
+  }
+}
+
 type ViewTransition = { ready: Promise<void>; finished: Promise<void> };
 type DocWithVT = Document & { startViewTransition?: (cb: () => void) => ViewTransition };
 
@@ -57,6 +75,7 @@ function applyAppearance(dark: boolean, skin: Skin) {
   if (lastApplied && lastApplied.dark === dark && lastApplied.skin === skin) return;
   const root = document.documentElement;
   const changed = lastApplied !== null;
+  const skinChanged = lastApplied !== null && lastApplied.skin !== skin;
   lastApplied = { dark, skin };
   const paint = () => {
     root.classList.toggle("dark", dark);
@@ -77,16 +96,15 @@ function applyAppearance(dark: boolean, skin: Skin) {
     changed,
   });
   if (vt) {
-    // Nowy motyw rozlewa się kołem od miejsca kliknięcia (albo od góry ekranu).
+    // Nowy motyw rozlewa się kołem od miejsca kliknięcia (albo od góry ekranu); część stylów ma własny kształt (`revealClip`).
     const recent = lastPointer && Date.now() - lastPointer.t < 1500 ? lastPointer : null;
     const x = recent?.x ?? window.innerWidth / 2;
     const y = recent?.y ?? 0;
     root.classList.add(REVEAL_CLASS);
     const t = doc.startViewTransition!(paint);
     t.ready.then(() => {
-      const r = revealRadius(x, y, window.innerWidth, window.innerHeight);
       root.animate(
-        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] },
+        { clipPath: revealClip(skinChanged ? skin : null, x, y, window.innerWidth, window.innerHeight) },
         { duration: REVEAL_MS, easing: "cubic-bezier(0.22, 1, 0.36, 1)", pseudoElement: "::view-transition-new(root)" },
       );
     }).catch(() => { /* przejście przerwane — stan docelowy i tak ustawiony */ });

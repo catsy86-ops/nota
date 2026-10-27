@@ -74,6 +74,15 @@ Bez tego każda nowa skórka i każde ustawienie wyglądu to sześć miejsc do p
 - **2.6 zrobione.** Ikona karty w barwach stylu (`src/lib/skinFavicon.ts`, kolory `SKIN_ICON` w `skinList.ts`); Zeszyt zostaje przy pliku marki.
 - **1.3 zrobione.** Ustawienia → Wygląd → „Tło”: Pełne / Ciche / Gładkie (`src/lib/backdrop.ts`, `src/styles/backdrop.css`). M-4 zrealizowane częściowo: „auto” daje ciche tylko przy `saveData`; Battery API pominięte (brak w Safari i Firefoksie, wynik asynchroniczny, mała wartość).
 
+### Status Fazy 2 (2026-10-27)
+
+- **2.1 zrobione.** Zapis: pieczątka w Zeszycie, linia wymiarowa w Planie, mrugnięcie poświaty w Neonie (wszystko w `.sig-layer`, obecnej teraz w każdym stylu). Zamiast „tabliczki, która mruga datą” w Planie — linia wymiarowa, bo tabliczka jest tylko na komputerze.
+- **2.2 zrobione.** Patyna na kaflach Miedzi nieruszanych od 30 dni (`data-aged`); w Hydraulice zamiast „złączki przy nagłówku grupy” dwie śrubki obejmy na każdym kaflu (nagłówki grup nie mają wspólnego elementu, a kafel jest wszędzie).
+- **2.3 zrobione.** Zmiana widoku: skan w Planie, przygaśnięcie w Neonie, odblask w Miedzi, przepływ w Hydraulice.
+- **2.4 zrobione.** Własny kształt odsłonięcia przy zmianie na Plan, Miedź, Matrycę i Hydraulikę (`revealClip`).
+- **Przy okazji naprawione:** fala zapisu Zorzy była niewidoczna (zduplikowana nazwa `@keyframes`); nowy strażnik w `skinContract.test.ts`.
+- **2.5 (sygnatura dnia na Dziś)** — następny krok.
+
 ## Faza 1: personalizacja w obrębie skórki
 
 Dziś skórka to całość albo nic. Trzy pokrętła dają dużo różnorodności bez nowych skórek, a dzięki OKLCH i tokenom promieni są tanie.

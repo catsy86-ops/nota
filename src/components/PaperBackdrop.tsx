@@ -42,9 +42,10 @@ export function PaperBackdrop() {
           <MatrixRain key={backdrop} still={backdrop === "quiet"} />
         </Suspense>
       )}
-      {/* Warstwa sygnału zapisu dla Zorzy (fala) i Matrycy (linia skanu). Pseudo-elementy są zajęte
-          przez tło tych stylów, więc sygnał ma własny, pusty element; CSS w styles/skins/signatures.css. */}
-      {(skin === "zorza" || skin === "matrix") && <span className="sig-layer" />}
+      {/* Warstwa sygnałów zapisu i zmiany widoku (fala Zorzy, skan Matrycy, pieczątka Zeszytu, linia wymiarowa
+          Planu…). Pseudo-elementy `.paper-grid` są zajęte przez tła stylów, więc sygnały mają własny, pusty
+          element we wszystkich stylach; CSS w styles/skins/signatures.css. */}
+      <span className="sig-layer" />
       {skin === "hydraulika" && backdrop !== "plain" && (
         <span className="hydro-bubbles">
           {BUBBLES.map((b, i) => (
