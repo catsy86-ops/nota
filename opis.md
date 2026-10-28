@@ -3164,6 +3164,40 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 
 - **Oś dziennika — `content-visibility` (P6.4, 2026-10-27).** Sekcja każdego dnia (`section[data-journal-day]` w `StudyJournal.tsx`) ma `content-visibility: auto` i `contain-intrinsic-block-size: auto 240px`: dni poza ekranem nie są malowane ani układane. Nagłówek dnia dalej jest `sticky`. Bez zmiany zachowania; bez sprawdzenia w przeglądarce (e2e nie uruchamiane). Miniatury w protokole odbioru (`HandoverPaper.tsx`) nadal odłożone do sprawdzenia wydruku.
 
+## Fala 4 mobile (2026-10-28) — E4, B5, E3, A3
+
+### Nauka: import pytań z .md (E4 / P4.5)
+- **Co robi:** w „Moje pytania” przycisk „Importuj z pliku .md” czyta pliki z pytaniami i dodaje poprawne do wybranego tematu. Błędne wiersze są pomijane i raportowane z numerem wiersza.
+- **Format:** `P:` pytanie, `A:` poprawna odpowiedź, `N:` odpowiedź błędna (dokładnie trzy), `X:` wyjaśnienie (opcjonalnie). Nowy `P:` zaczyna kolejne pytanie.
+- **Gdzie:** `src/lib/study/questionsMd.ts` (`parseQuestionsMd`), `src/components/study/CustomQuestionsDialog.tsx` (`importQuestionsMd`). Zapis przez `addCustomQuestion`, więc obowiązują te same zasady co przy ręcznym dodawaniu.
+- **Testy:** `src/lib/study/questionsMd.test.ts` (5 testów: poprawny plik, CRLF, błędy z numerami wierszy, duplikaty odpowiedzi, wiersz przed pierwszym `P:`).
+
+### Grafik: pasek wypłaty (G4.4 / B5)
+- **Co robi:** w podsumowaniu miesiąca pole „Wypłacono brutto (zł)”. Pokazuje różnicę od szacunku i podpowiedzi, czego zwykle brakuje (nocne, urlop i L4, premie).
+- **Jak działa:** kwota leży w mapie `meta` jako `paidGross:YYYY-MM` (synchronizowana przez Yjs; 0 usuwa wpis). `cleanPaidGross` w `model.ts` oczyszcza ją tak samo jak przy `migrate`. Logika różnicy: `src/lib/shifts/payslip.ts` (`comparePayslip`, tolerancja 1 zł).
+- **Gdzie:** `src/components/shifts/ShiftSummary.tsx` (`PaySlipPanel`), `src/lib/shifts/yShifts.ts` (`setPaidGross`, `readPaidGross`), `src/lib/shifts/store.ts` (`setPaidGross`).
+- **Testy:** `payslip.test.ts` (różnica, tolerancja, szacunek 0, czyszczenie), `yShifts.test.ts` („Wypłaty brutto w Yjs”: przejście między dwoma dokumentami).
+
+### Grafik: import zmian z .ics (G4.5 / E3)
+- **Co robi:** w „Ustawienia grafiku” sekcja „Import zmian z pliku .ics”. Wybór rodzaju zmiany i pliku, potem podgląd (ile dni wejdzie, ile pominięto) i dopiero „Importuj”. Po imporcie „Cofnij” w tostcie przywraca stan sprzed.
+- **Reguły:** każde zdarzenie daje dzień z wybranym rodzajem (godziny bierze rodzaj). Dzień z już wpisaną zmianą i drugie zdarzenie tego samego dnia są pomijane. Zdarzenia z przeszłości są importowane (`parseIcs(…, { keepPast: true })`). Zdarzenia cykliczne (RRULE) dają tylko pierwsze wystąpienie.
+- **Gdzie:** `src/lib/shifts/icsShifts.ts` (`planShiftsFromIcs`, `localDayKey`), `src/lib/icsImport.ts` (opcja `keepPast`), `src/lib/shifts/store.ts` (`applyShiftImport`, przywracanie przez `restoreDays`), `src/components/shifts/ShiftsIcsImport.tsx`.
+- **Testy:** `src/lib/shifts/icsShifts.test.ts` (3 testy: przeszłe dni, brak nadpisywania, cykliczne i błędne wpisy).
+- **Nie zrobione:** brak podglądu dzień po dniu (tylko liczby); import CSV w formacie eksportu z planu G4.5 nie zrobiony.
+
+### Notatki: zakładki Edycja / Podgląd na telefonie (A3 / plan 1.1)
+- **Co robi:** po włączeniu podglądu na telefonie (poniżej `sm`) edycja i podgląd są zakładkami, a nie dwiema kolumnami. Od `sm` wracają obok siebie.
+- **Gdzie:** `src/components/NoteEditor.tsx` (`phoneTab`, zakładki `role="tab"`, klasy `max-sm:hidden`).
+- **Testy:** brak nowego testu jednostkowego. Typy i lint czyste; sprawdzenie w przeglądarce na telefonie nie zrobione.
+
+### Tryb skupienia: zegar i pierścień (A3 / plan 4.5)
+- **Co robi:** zegar liczy z `performance.now()`, więc w tle nie dryfuje. Pasek postępu zastąpiony cienkim pierścieniem SVG. Cyfry nie animują się co sekundę (wcześniej klucz animacji powodował „pulsowanie”).
+- **Gdzie:** `src/components/FocusMode.tsx` (`endAtRef`, `leftRef`, pierścień `role="timer"`).
+- **Ograniczenia:** w czasie pauzy zapisywana jest reszta; po przełączeniu trybu zegar startuje z pełnego czasu nowego trybu. Brak testu jednostkowego zegara; sprawdzenie w przeglądarce nie zrobione.
+
+### Nie zrobione z Fali 4
+- **B4:** pędzel „Własne godziny” i zapisany szablon tygodnia (G2.5, G4.6). Wymaga zmian w widoku tygodnia (`ShiftsView.tsx`), które wymagają osobnego przeglądu.
+
 ## Notatki — arkusz „⋯” w grupach (plan mobile A4, 2026-10-28)
 
 ### Co robi

@@ -64,6 +64,7 @@ export function NoteEditor({
 
   // Pełny ekran z listą: lista zaraz pod treścią i to ona wypełnia okno —
   // inaczej pusta treść zajmowała ekran, a pozycje lądowały na dole.
+  const [phoneTab, setPhoneTab] = useState<"edit" | "preview">("edit");
   const contentFills = full && !showChecklist;
   const textareaCls = full
     ? cn("w-full bg-transparent text-base leading-relaxed text-foreground/90 outline-hidden resize-none", contentFills && "h-full")
@@ -169,12 +170,31 @@ export function NoteEditor({
       {/* `relative`: tu kotwiczy się lista podpowiedzi `[[` (pozycja karetki). */}
       <div className={cn("relative", contentFills && "flex-1 min-h-0")}>
         {showPreview ? (
-          <div className={cn("grid grid-cols-2 gap-2", contentFills && "h-full")}>
-            {renderEditor(cn(textareaCls, "border border-border/30 rounded-field p-2", !contentFills && "min-h-[80px]"))}
-            <div className={cn("bg-muted/20 rounded-field p-2 overflow-y-auto border border-border/30", contentFills ? "h-full" : "min-h-[80px]")}>
-              {editContent ? <MarkdownRenderer content={editContent} knownTitles={knownTitles} onWikiClick={onWikiClick} /> : <p className="text-xs text-muted-foreground italic">Podgląd...</p>}
+          <>
+            {/* A3 (plan mobile 1.1): na telefonie Edycja i Podgląd to zakładki, obok siebie dopiero od sm. */}
+            <div role="tablist" aria-label="Edycja i podgląd" className="mb-2 flex gap-1 sm:hidden">
+              {(["edit", "preview"] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  role="tab"
+                  aria-selected={phoneTab === t}
+                  onClick={() => setPhoneTab(t)}
+                  className={cn("flex-1 rounded-control border px-3 py-1.5 text-xs coarse:h-11", phoneTab === t ? "border-primary/60 bg-primary/10 text-primary-ink" : "border-border text-muted-foreground")}
+                >
+                  {t === "edit" ? "Edycja" : "Podgląd"}
+                </button>
+              ))}
             </div>
-          </div>
+            <div className={cn("grid grid-cols-1 gap-2 sm:grid-cols-2", contentFills && "h-full")}>
+              <div className={cn("min-w-0", phoneTab === "preview" && "max-sm:hidden", contentFills && "h-full")}>
+                {renderEditor(cn(textareaCls, "border border-border/30 rounded-field p-2", !contentFills && "min-h-[80px]"))}
+              </div>
+              <div className={cn("bg-muted/20 rounded-field p-2 overflow-y-auto border border-border/30", contentFills ? "h-full" : "min-h-[80px]", phoneTab === "edit" && "max-sm:hidden")}>
+                {editContent ? <MarkdownRenderer content={editContent} knownTitles={knownTitles} onWikiClick={onWikiClick} /> : <p className="text-xs text-muted-foreground italic">Podgląd…</p>}
+              </div>
+            </div>
+          </>
         ) : (
           renderEditor(cn(textareaCls, !full && "min-h-[60px]"))
         )}

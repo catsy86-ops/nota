@@ -66,7 +66,8 @@ function parseRepeat(rrule: string | undefined): IcsRepeat {
 }
 
 /** Czyta VEVENT-y z tekstu pliku .ics. `now` odcina terminy już minione. */
-export function parseIcs(text: string, now: number = Date.now()): IcsParseResult {
+/** `keepPast` (E3): zdarzenia z przeszłości zostają — import grafiku dotyczy dni, które już minęły. */
+export function parseIcs(text: string, now: number = Date.now(), opts: { keepPast?: boolean } = {}): IcsParseResult {
   const events: IcsEvent[] = [];
   let skipped = 0;
   let current: Record<string, string> | null = null;
@@ -77,7 +78,7 @@ export function parseIcs(text: string, now: number = Date.now()): IcsParseResult
       if (current) {
         const start = startLine ? parseStart(startLine) : null;
         if (!start) skipped++;
-        else if (start.ms >= now) {
+        else if (opts.keepPast || start.ms >= now) {
           const title = unescapeText(current.SUMMARY ?? "").trim() || "Przypomnienie z kalendarza";
           events.push({
             title,

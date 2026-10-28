@@ -141,9 +141,13 @@ Wykonanie po kolei, fala po fali. Opis techniczny: `opis.md`, sekcja „plan mob
 - [x] **D5** przegląd `ShiftSummary` i wykresów rocznych przy 390 px (zrobione: podpisy osi X, czytelniejsza mapa dni; bez przewijania w bok).
 - Ramki: ustawienie w Wyglądzie (delikatne/zwykłe/wyraźne), na prośbę użytkownika.
 
-### Fala 4 — w toku (2026-10-28)
-- [x] **A4** arkusz „⋯” w grupach: Wygląd, Porządek, Udostępnij, Zaawansowane (`NoteCardActions.tsx`, `NoteCardDialogs.tsx`).
-- [ ] **A3**, **E3**, **E4**, **B4**, **B5** — nie zrobione.
+### Fala 4 — prawie zamknięta (2026-10-28)
+- [x] **A4** arkusz „⋯” w grupach (`NoteCardActions.tsx`).
+- [x] **E4** import pytań z .md (`questionsMd.ts`, `CustomQuestionsDialog.tsx`).
+- [x] **B5** pasek wypłaty: porównanie brutto z szacunkiem (`payslip.ts`, `ShiftSummary.tsx`).
+- [x] **E3** import .ics do Grafiku z podglądem liczb i Cofnij (`icsShifts.ts`, `ShiftsIcsImport.tsx`). Bez podglądu dzień po dniu i bez CSV.
+- [~] **A3** zakładki Edycja/Podgląd na telefonie (1.1) i zegar skupienia z pierścieniem (4.5). Sprawdzenie na telefonie nie zrobione.
+- [ ] **B4** pędzel „Własne godziny” i szablon tygodnia — nie zrobione (zmiany w widoku tygodnia).
 
 ### Fala 3 — teren (w toku, 2026-10-28)
 - [x] **B3** „Zaczynasz za… / Trwa” z paskiem postępu (`TodayShiftCard.tsx`).

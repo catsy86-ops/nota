@@ -380,3 +380,8 @@ export function restoreExtraSchedule(id: string, name: string, data: ShiftData):
   instanceFor(id).mergeIn(migrate(data));
   return true;
 }
+/** Import zmian z .ics (E3): zapis jedną partią; zwraca stan sprzed, do „Cofnij”. `null` = nic do zapisania. */
+export function applyShiftImport(changes: Record<string, DayEntry>): DaysBefore | null {
+  if (Object.keys(changes).length === 0) return null;
+  return yShifts.writeDays(changes);
+}

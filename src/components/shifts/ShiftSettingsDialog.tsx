@@ -1,4 +1,5 @@
 import { useEffect, useId, useState, type ReactNode } from "react";
+import { ShiftsIcsImport } from "./ShiftsIcsImport";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { Dialog, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -100,6 +101,8 @@ export function ShiftSettingsDialog({ open, onOpenChange, settings: s }: ShiftSe
             </div>
           </details>
         </div>
+
+        <ShiftsIcsImport />
 
         <details className="group rounded-card bg-muted/50 px-3 py-2.5 text-sm">
           <summary className="cursor-pointer font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring rounded-control">Jak liczymy?</summary>

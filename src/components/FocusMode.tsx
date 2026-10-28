@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, RotateCcw, Coffee, Brain, X } from "lucide-react";
-import { m as motion } from "framer-motion";
 import { celebrate } from "@/lib/celebrate";
 import { toast } from "sonner";
 import { wordsPl } from "@/lib/plural";
@@ -25,7 +24,10 @@ export function FocusMode({ open, onOpenChange, initialTitle = "", initialConten
   const [seconds, setSeconds] = useState(WORK_MIN * 60);
   const [running, setRunning] = useState(false);
   const [mode, setMode] = useState<"work" | "break">("work");
-  const tickRef = useRef<number | null>(null);
+  // Zegar z performance.now() (plan mobile A3 / 4.5): koniec liczony z czasu, nie z liczby tików,
+  // więc tło przeglądarki nie wydłuża sesji. `leftRef` pamięta resztę po pauzie.
+  const endAtRef = useRef(0);
+  const leftRef = useRef(WORK_MIN * 60);
   // Ekran nie gaśnie w trakcie sesji skupienia.
   useWakeLock(open);
 
@@ -38,29 +40,33 @@ export function FocusMode({ open, onOpenChange, initialTitle = "", initialConten
 
   useEffect(() => {
     if (!running) return;
-    tickRef.current = window.setInterval(() => {
-      setSeconds((s) => {
-        if (s <= 1) {
-          window.clearInterval(tickRef.current!);
-          setRunning(false);
-          const next = mode === "work" ? "break" : "work";
-          setMode(next);
-          setSeconds((next === "work" ? WORK_MIN : BREAK_MIN) * 60);
-          celebrate(window.innerWidth / 2, 80);
-          toast.success(next === "break" ? "Czas na przerwę ☕" : "Wracamy do pracy 🧠");
-          return 0;
-        }
-        return s - 1;
-      });
-    }, 1000);
+    endAtRef.current = performance.now() + leftRef.current * 1000;
+    const id = window.setInterval(() => {
+      const left = Math.max(0, Math.ceil((endAtRef.current - performance.now()) / 1000));
+      leftRef.current = left;
+      if (left > 0) { setSeconds(left); return; }
+      window.clearInterval(id);
+      setRunning(false);
+      const next = mode === "work" ? "break" : "work";
+      const nextLen = (next === "work" ? WORK_MIN : BREAK_MIN) * 60;
+      setMode(next);
+      leftRef.current = nextLen;
+      setSeconds(nextLen);
+      celebrate(window.innerWidth / 2, 80);
+      toast.success(next === "break" ? "Czas na przerwę ☕" : "Wracamy do pracy 🧠");
+    }, 250);
     return () => {
-      if (tickRef.current) window.clearInterval(tickRef.current);
+      window.clearInterval(id);
+      // Pauza: zapamiętujemy resztę z tego momentu.
+      leftRef.current = Math.max(0, Math.ceil((endAtRef.current - performance.now()) / 1000));
+      setSeconds(leftRef.current);
     };
   }, [running, mode]);
 
   function reset() {
     setRunning(false);
-    setSeconds((mode === "work" ? WORK_MIN : BREAK_MIN) * 60);
+    leftRef.current = (mode === "work" ? WORK_MIN : BREAK_MIN) * 60;
+    setSeconds(leftRef.current);
   }
 
   function close() {
@@ -91,16 +97,16 @@ export function FocusMode({ open, onOpenChange, initialTitle = "", initialConten
         </div>
 
         <div className="flex flex-col items-center gap-3 py-6 border-b border-border/50">
-          <motion.div
-            key={`${m}${s}`}
-            initial={{ scale: 0.96, opacity: 0.7 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="text-6xl sm:text-7xl font-display font-bold tabular-nums"
-          >
-            {m}:{s}
-          </motion.div>
-          <div className="w-64 max-w-full h-1.5 rounded-full bg-muted overflow-hidden">
-            <motion.div className="h-full bg-primary" animate={{ width: `${pct}%` }} transition={{ duration: 0.4 }} />
+          <div className="relative grid place-items-center" role="timer" aria-label={`${mode === "work" ? "Skupienie" : "Przerwa"}: zostało ${Number(m)} min ${Number(s)} s`}>
+            <svg viewBox="0 0 120 120" className="h-56 w-56 max-w-[70vw] -rotate-90" aria-hidden>
+              <circle cx="60" cy="60" r="54" fill="none" stroke="var(--muted)" strokeWidth="2" />
+              <circle
+                cx="60" cy="60" r="54" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round"
+                pathLength={100} strokeDasharray={100} strokeDashoffset={100 - pct}
+                style={{ transition: "stroke-dashoffset 0.25s linear" }}
+              />
+            </svg>
+            <span className="absolute text-6xl font-display font-bold tabular-nums sm:text-7xl">{m}:{s}</span>
           </div>
           <div className="flex gap-2">
             <Button size="sm" variant={running ? "secondary" : "default"} onClick={() => setRunning((r) => !r)}>
