@@ -712,6 +712,7 @@ const Index = () => {
       <div className="flex-1 min-w-0 flex flex-col">
         <AppHeader
           onOpenSync={() => { requestSettingsTab("sync"); setSettingsOpen(true); }}
+          onOpenPalette={() => setPaletteOpen(true)}
           selectionMode={selectionMode}
           sidebarOpen={sidebarOpen}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}

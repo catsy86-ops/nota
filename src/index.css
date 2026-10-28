@@ -47,6 +47,12 @@
     text-wrap: balance;
   }
 
+  /* Akapity: bez samotnego słowa na końcu (plan QoL 1.4). */
+  p,
+  li {
+    text-wrap: pretty;
+  }
+
   input::placeholder,
   textarea::placeholder {
     color: var(--muted-foreground);

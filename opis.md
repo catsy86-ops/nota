@@ -3162,3 +3162,37 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Karta budowy — podział (P6.2, 2026-10-27).** Akcje z karty (paczka ZIP, protokół odbioru, archiwizacja z pytaniem i zmniejszaniem zdjęć) są w hooku `src/components/study/useSiteCardActions.ts` (`useSiteCardActions`). Zwraca stany `zipping`, `archiveAsk`, `shrinkWithZip`, `archiving` i funkcje `zip`, `shareHandover`, `toggleArchive`, `doArchive`. Hook dostaje `persistDirty` (zapis niezapisanych zmian zostaje w oknie) i `onArchived` (zamyka okno). Pasek liczników `SiteTallyBar` jest w `SiteTallyBar.tsx`. Testy: `src/components/study` i `src/lib/study` (493 testy zielone).
 
 - **Oś dziennika — `content-visibility` (P6.4, 2026-10-27).** Sekcja każdego dnia (`section[data-journal-day]` w `StudyJournal.tsx`) ma `content-visibility: auto` i `contain-intrinsic-block-size: auto 240px`: dni poza ekranem nie są malowane ani układane. Nagłówek dnia dalej jest `sticky`. Bez zmiany zachowania; bez sprawdzenia w przeglądarce (e2e nie uruchamiane). Miniatury w protokole odbioru (`HandoverPaper.tsx`) nadal odłożone do sprawdzenia wydruku.
+
+## Wspólne — plan mobile 2026-10-28 (fala 1, częściowo)
+
+### Co robi
+- **Lupa na telefonie w nagłówku** (widoki bez pola szukania: Grafik, Kalendarz, Praca, Długi, Ćwiczenia). Otwiera paletę poleceń, zamiast kierować do Notatek. Na telefonie w „Więcej” paleta wymaga teraz jednego dotknięcia mniej.
+- **Skrzynka:** klawiatura telefonu pokazuje „Wyślij” zamiast „Enter” (`enterKeyHint="send"`). Enter nadal zapisuje.
+- **Akapity** (`p`, `li`) łamią się bez pojedynczego słowa w ostatniej linii (`text-wrap: pretty`), obok istniejącego `balance` dla nagłówków.
+- **Karta budowy: przycisk ZIP działa.** Poprawka regresji z P6.2: dialog wywoływał `zip` bez pobrania go z hooka, a hook dostawał typ `SiteCard` zamiast `SiteInfo` (brak `first`/`last`).
+
+### Gdzie jest
+- `src/components/AppHeader.tsx` — prop `onOpenPalette`, stała `viewSearches`, przycisk `Search` z `sm:hidden`.
+- `src/pages/Index.tsx` — przekazanie `onOpenPalette={() => setPaletteOpen(true)}` do `AppHeader`.
+- `src/components/InboxCapture.tsx` — `enterKeyHint="send"` na textarea.
+- `src/index.css` — reguła `p, li { text-wrap: pretty }` obok `h1–h3 { balance }`.
+- `src/components/study/useSiteCardActions.ts` — typ argumentu `SiteInfo`.
+- `src/components/study/SiteCardDialog.tsx` — destrukturyzacja `zip` z `useSiteCardActions`.
+
+### Jak działa i dlaczego
+- Lupa używa `IconButton asChild`, tak jak pozostałe przyciski nagłówka, więc ma ten sam cel dotyku (44 px na `coarse`). Na desktopie nie pojawia się (`sm:hidden`), bo tam jest pole szukania albo paleta z klawiatury.
+- Wzmianki bez linków (`unlinkedMentions.ts`) **nie** zwijają polskich znaków. Zamiana tekstu „zolw” na `[[żółw]]` tworzyłaby link, który nie trafia w notatkę „zolw”. Zwijanie zostaje tylko w wyszukiwaniu (`searchQuery.ts`).
+- Quiz nie ma pola szukania, więc nie ma czego zwijać (plan P4.2 nieaktualny).
+
+### Ograniczenia i pułapki
+- Enter na telefonie nadal wysyła notatkę ze Skrzynki, więc nowej linii nie da się wpisać bez Shift. To świadoma decyzja: Skrzynka służy do szybkiego przechwycenia.
+- Duplikaty funkcji `fold` (ok. 7 plików w `src/lib/**`) nadal istnieją. Wspólna funkcja to osobne, niskopriorytetowe zadanie.
+
+### Testy
+- Vitest: 326 plików, 2527 testów, zielone (przy tej zmianie).
+- `tsc --noEmit -p tsconfig.app.json`: czysto (po naprawie ZIP).
+- ESLint: jedno ostrzeżenie w `Index.tsx` (`useMemo`, `boundaryTick`), istniejące przed tą zmianą.
+- E2e nie uruchamiane (zgodnie z zasadą „e2e tylko na prośbę”).
+
+### Commit
+- Brak commita. Zmiany są w drzewie roboczym na `master`, na prośbę o commit.

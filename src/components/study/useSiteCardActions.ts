@@ -5,7 +5,7 @@ import { haptic } from "@/lib/haptics";
 import { pluralPl } from "@/lib/plural";
 import { topicTitle } from "@/lib/study/content";
 import { setSiteArchived, useSiteDirectory, useStudy } from "@/lib/study/store";
-import type { SiteCard } from "@/lib/study/sites";
+import type { SiteInfo } from "@/lib/study/sites";
 import { buildJournalReport, dayKeyOf } from "@/lib/study/report";
 import { downloadSiteZip } from "@/lib/study/siteZip";
 import { shrinkSitePhotos } from "@/lib/study/photoShrink";
@@ -22,7 +22,7 @@ type Dir = ReturnType<typeof useSiteDirectory>;
 export function useSiteCardActions({
   site, study, dir, shifts, persistDirty, onArchived,
 }: {
-  site: SiteCard | null;
+  site: SiteInfo | null;
   study: ReturnType<typeof useStudy>;
   dir: Dir;
   shifts: ReturnType<typeof useShifts>;

@@ -97,7 +97,7 @@ export function SiteCardDialog({
   }
 
   // ZIP, protokół i archiwizacja — w `useSiteCardActions` (P6.2).
-  const { zipping, shareHandover, archiveAsk, setArchiveAsk, shrinkWithZip, setShrinkWithZip, archiving, toggleArchive, doArchive } = useSiteCardActions({
+  const { zipping, zip, shareHandover, archiveAsk, setArchiveAsk, shrinkWithZip, setShrinkWithZip, archiving, toggleArchive, doArchive } = useSiteCardActions({
     site, study, dir, shifts, persistDirty, onArchived: () => onOpenChange(false),
   });
 

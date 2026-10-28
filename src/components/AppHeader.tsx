@@ -2,7 +2,7 @@ import { VaultStatusButton } from "@/components/vault/VaultStatusButton";
 import { SyncStatusDot } from "@/components/sync/SyncStatusDot";
 import { useEffect, useRef } from "react";
 import { AnimatePresence, m as motion } from "framer-motion";
-import { PanelLeftClose, PanelLeftOpen, Moon, Sun, FileDown, FolderOpen, Tag } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Moon, Sun, FileDown, FolderOpen, Tag, Search } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SearchBar } from "@/components/SearchBar";
 import { ViewControls } from "@/components/ViewControls";
@@ -34,17 +34,21 @@ interface AppHeaderProps {
   onImport: () => void;
   /** Otwiera Ustawienia na karcie Synchronizacja (kropka stanu, 2.4). */
   onOpenSync?: () => void;
+  /** Lupa na telefonie w widokach bez pola szukania — otwiera paletę poleceń. */
+  onOpenPalette?: () => void;
 }
 
 export function AppHeader({
   selectionMode, sidebarOpen, onToggleSidebar, dark, onToggleTheme,
-  view, activeFolder, activeLabel, displayCount, search, onSearchChange, onImport, onOpenSync,
+  view, activeFolder, activeLabel, displayCount, search, onSearchChange, onImport, onOpenSync, onOpenPalette,
 }: AppHeaderProps) {
   // Stan tutaj, nie w Index: schowanie nagłówka przerysowuje tylko nagłówek, a nie całą stronę z kartami.
   const hideHeader = useHideOnScroll(96);
   const { folders, allLabels } = useNotesContext();
   const hidden = hideHeader && !selectionMode;
   const headerRef = useRef<HTMLElement>(null);
+  // Widoki, w których pole szukania nie działa (Grafik, Kalendarz, Praca, Długi, Ćwiczenia).
+  const viewSearches = view !== "shifts" && view !== "calendar" && view !== "study" && view !== "debts" && view !== "cwiczenia";
 
   // Dla elementów przyklejonych pod nagłówkiem (pasek kolumn tablicy): wysokość nagłówka
   // w `--app-header-h` i klasa `header-hidden` na <html>, gdy nagłówek jest schowany.
@@ -142,7 +146,14 @@ export function AppHeader({
         </div>
 
         {/* Grafik i Kalendarz nie przeszukują notatek — pole tylko by udawało, że działa. */}
-        {view !== "shifts" && view !== "calendar" && view !== "study" && view !== "debts" && view !== "cwiczenia" && <SearchBar value={search} onChange={onSearchChange} className="hidden sm:block" />}
+        {!viewSearches && <SearchBar value={search} onChange={onSearchChange} className="hidden sm:block" />}
+        {!viewSearches && onOpenPalette && (
+          <IconButton asChild className="sm:hidden">
+            <motion.button onClick={onOpenPalette} aria-label="Szukaj i polecenia">
+              <Search className="w-5 h-5" />
+            </motion.button>
+          </IconButton>
+        )}
 
         <div className="flex items-center gap-1">
           {!sidebarOpen && (

@@ -23,6 +23,7 @@ export function InboxCapture({ onCapture }: { onCapture: (title: string, content
       <Inbox className="mt-2.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
       <textarea
         rows={1}
+        enterKeyHint="send"
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={(e) => {
