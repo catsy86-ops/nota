@@ -577,6 +577,15 @@ export function setSiteWarranty(id: string, warranty: string | null) {
 }
 
 /** Lokalizacja budowy zapisana na miejscu („Zapisz lokalizację budowy”); `null` usuwa. */
+/** P2.8: stawka godzinowa budowy (zł/h); `null` albo 0 usuwa stawkę. */
+export function setSiteRate(id: string, rate: number | null) {
+  const s = getStudy();
+  const prev = findSite(s, id);
+  if (!prev) return;
+  const { stored: _s, count: _c, open: _o, first: _f, last: _l, rate: _r, ...card } = prev;
+  yStudy.saveSite(rate && rate > 0 ? { ...card, rate } : card);
+}
+
 export function setSiteGeo(id: string, geo: GeoPoint | null) {
   const s = getStudy();
   const prev = findSite(s, id);

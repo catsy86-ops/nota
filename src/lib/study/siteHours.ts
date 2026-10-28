@@ -125,10 +125,11 @@ export interface SiteMinutesSum {
  * w których budowa ma wpis albo wpisane godziny (inne dni nic jej nie dają). `workOf` = czas pracy dnia
  * z Grafiku (`workOn` w `report.ts`). Dziennik grupowany raz po dniach — `dayHours` dostaje tylko wpisy dnia.
  */
-export function siteMinutesInRange(
+/** Minuty budowy dzień po dniu w zakresie (`null` = dzień z kilkoma budowami bez podziału), od najstarszego. */
+export function siteMinutesByDay(
   journal: readonly JournalEntry[], cards: HoursCards, siteId: string, from: string, to: string,
   workOf: (key: string) => number, dayKeyOf: (at: number) => string,
-): SiteMinutesSum {
+): { day: string; minutes: number | null }[] {
   const byDay = new Map<string, JournalEntry[]>();
   const days = new Set<string>();
   for (const e of journal) {
@@ -139,11 +140,17 @@ export function siteMinutesInRange(
     if (entrySiteId(e) === siteId) days.add(key);
   }
   for (const h of cards[siteId]?.hours ?? []) if (h.id >= from && h.id <= to) days.add(h.id);
+  return [...days].sort().map((day) => ({ day, minutes: siteMinutesOn(dayHours(byDay.get(day) ?? [], cards, workOf(day), day, dayKeyOf), siteId) }));
+}
+
+export function siteMinutesInRange(
+  journal: readonly JournalEntry[], cards: HoursCards, siteId: string, from: string, to: string,
+  workOf: (key: string) => number, dayKeyOf: (at: number) => string,
+): SiteMinutesSum {
   let minutes = 0;
   let unsplit = 0;
-  for (const key of days) {
-    const m = siteMinutesOn(dayHours(byDay.get(key) ?? [], cards, workOf(key), key, dayKeyOf), siteId);
-    if (m === null) unsplit++; else minutes += m;
+  for (const d of siteMinutesByDay(journal, cards, siteId, from, to, workOf, dayKeyOf)) {
+    if (d.minutes === null) unsplit++; else minutes += d.minutes;
   }
   return { minutes, unsplit };
 }

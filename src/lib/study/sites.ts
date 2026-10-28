@@ -16,6 +16,9 @@ import { cleanGeo, type GeoPoint } from "./geo";
  * Karta trafia do dokumentu dopiero przy zapisie (nowa budowa, edycja karty).
  */
 
+/** Najwyższa stawka godzinowa budowy (zł/h) — ponad to to raczej literówka. */
+export const SITE_RATE_MAX = 10_000;
+
 export interface SiteCard {
   id: string;
   name: string;
@@ -57,6 +60,8 @@ export interface SiteCard {
   plan?: PlanItem[];
   /** Ostatni dzień gwarancji („2028-10-16”); brak = nie wpisano. */
   warranty?: string;
+  /** P2.8: stawka godzinowa na tej budowie (zł/h) do rozliczenia; brak = nie wpisano. */
+  rate?: number;
 }
 
 export const SITE_NAME_MAX = 120;
@@ -102,6 +107,7 @@ export function cleanSite(raw: unknown): SiteCard | null {
     ...optional("service", cleanServiceCalls(s.service)),
     ...(cleanPlanItems(s.plan).length ? { plan: cleanPlanItems(s.plan) } : {}),
     ...(isDayKey(s.warranty) ? { warranty: s.warranty } : {}),
+    ...(typeof s.rate === "number" && Number.isFinite(s.rate) && s.rate > 0 && s.rate <= SITE_RATE_MAX ? { rate: Math.round(s.rate * 100) / 100 } : {}),
     ...withGeo(cleanGeo(s.geo)),
   };
 }
