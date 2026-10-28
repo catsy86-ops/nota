@@ -26,6 +26,6 @@ export const dayNumberClass = ({ today, holiday, inMonth }: { today: boolean; ho
 );
 
 /** Nazwa święta pod numerem (od `sm`); na telefonie zostaje kropka `holidayDotClass`. */
-export const holidayNameClass = (inMonth: boolean, container = false) => cn(container ? "hidden @[7.5rem]:block" : "hidden sm:block", "text-2xs leading-tight truncate", inMonth && "text-destructive-ink/80");
+export const holidayNameClass = (inMonth: boolean, container = false) => cn(container ? "hidden @[6rem]:block" : "hidden sm:block", "text-2xs leading-tight truncate", inMonth && "text-destructive-ink/80");
 
-export const holidayDotClass = (inMonth: boolean, container = false) => cn(container ? "@[7.5rem]:hidden" : "sm:hidden", "w-1.5 h-1.5 rounded-full", inMonth ? "bg-destructive" : "bg-muted-foreground");
+export const holidayDotClass = (inMonth: boolean, container = false) => cn(container ? "@[6rem]:hidden" : "sm:hidden", "w-1.5 h-1.5 rounded-full", inMonth ? "bg-destructive" : "bg-muted-foreground");

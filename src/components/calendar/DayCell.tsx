@@ -183,13 +183,13 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
         </span>
       </span>
       {holiday && <span aria-hidden className={holidayNameClass(inMonth, true)}>{holiday}</span>}
-      {shift && <span aria-hidden className="@[7.5rem]:hidden absolute inset-x-0 bottom-0 h-[3px] rounded-b-card" style={{ backgroundColor: shift.color }} />}
+      {shift && <span aria-hidden className="@[6rem]:hidden absolute inset-x-0 bottom-0 h-[3px] rounded-b-card" style={{ backgroundColor: shift.color }} />}
 
       {/* Treść terminów jest w `aria-label` komórki, więc dla czytnika ekranu
           te same dane nie powtarzają się drugi raz. */}
       <div aria-hidden className="flex flex-col gap-0.5 overflow-hidden">
         {/* Wąska komórka (poniżej 7,5 rem, zapytanie kontenerowe): same kropki — chipy z tekstem się nie mieszczą. */}
-        <div className="flex items-center gap-1 flex-wrap @[7.5rem]:hidden pl-0.5">
+        <div className="flex items-center gap-1 flex-wrap @[6rem]:hidden pl-0.5">
           {dots.map((occ) => (
             <span
               key={`${occ.noteId}-${occ.at}`}
@@ -208,7 +208,7 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
           )}
         </div>
 
-        <div className="hidden @[7.5rem]:flex @[7.5rem]:flex-col gap-0.5">
+        <div className="hidden @[6rem]:flex @[6rem]:flex-col gap-0.5">
           {shown.map((occ) => (
             <DraggableChip key={`${occ.noteId}-${occ.at}`} occurrence={occ} title={titleOf(occ.noteId)} preview={previewOf?.(occ.noteId)} />
           ))}

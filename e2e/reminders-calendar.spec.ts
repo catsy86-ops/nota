@@ -308,6 +308,7 @@ test("na wąskim ekranie kalendarz nie rozpycha strony, a dialog terminu jest os
 });
 
 test("termin da się przeciągnąć na inny dzień, przesunąć Shift+strzałką i cofnąć", async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1000 });
   await page.getByRole("button", { name: /Kalendarz/ }).first().click();
   await page.getByRole("button", { name: "Dodaj termin" }).click();
   await page.getByLabel("Treść nowej notatki z terminem").fill("jutro podlac kwiaty");
