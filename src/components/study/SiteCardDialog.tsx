@@ -31,6 +31,10 @@ import { SiteFaultsPanel } from "./SiteFaultsPanel";
 import { SiteMaterialPanel } from "./SiteMaterialPanel";
 import { SiteTimePanel } from "./SiteTimePanel";
 import { SiteStorageLine } from "./SiteStorageLine";
+import { StageDots } from "./StageDots";
+import { NoteImage } from "@/components/NoteImage";
+import { siteStages } from "@/lib/study/stages";
+import { siteCoverRef } from "@/lib/study/siteCover";
 import { SiteDocsPanel } from "./SiteDocsPanel";
 import { SiteServicePanel } from "./SiteServicePanel";
 import { PrintRoot } from "./PrintRoot";
@@ -162,6 +166,8 @@ export function SiteCardDialog({
 
   const period = site?.first != null && site.last != null ? periodLabel(dayKeyOf(site.first), dayKeyOf(site.last)) : null;
   const tally = useMemo(() => (site ? siteTally(site, study.journal) : null), [site, study.journal]);
+  // P5.1: okładka karty — pierwszy plan albo najnowsze zdjęcie budowy; bez zdjęcia nagłówek jak dawniej.
+  const cover = useMemo(() => (site ? siteCoverRef(study.journal, site) : null), [site, study.journal]);
   // Godziny budowy (1.4): łącznie i w bieżącym miesiącu, do dziś — Grafik ma zmiany zaplanowane naprzód.
   const dayTick = useDayClock();
   const hours = useMemo(() => {
@@ -188,11 +194,24 @@ export function SiteCardDialog({
       <ResponsiveDialogContent className="max-h-[92dvh] gap-0 overflow-y-auto p-0 sm:max-w-md" data-testid="site-card">
         {site && (
           <>
-            <div className="space-y-1 border-b border-border px-5 pb-4 pt-5 pr-12">
-              <DialogTitle className="flex items-center gap-1.5 font-display text-lg">
-                <MapPin className="h-5 w-5 shrink-0 text-primary-ink" aria-hidden />
-                <span className="truncate">{site.name}</span>
-              </DialogTitle>
+            <div className={cover ? "space-y-2 border-b border-border px-5 pb-4 pt-12" : "space-y-1 border-b border-border px-5 pb-4 pt-5 pr-12"}>
+              {cover ? (
+                // P5.1: okładka ze zdjęcia budowy — pod rzędem z przyciskiem zamknięcia, żeby „×” był czytelny.
+                <div className="relative -mx-1 aspect-[16/7] overflow-hidden rounded-card bg-muted" data-testid="site-cover">
+                  <NoteImage imageRef={cover} alt="" className="absolute inset-0 h-full w-full object-cover" placeholderClassName="absolute inset-0 h-full w-full" />
+                  <div className="absolute inset-x-0 bottom-0 space-y-1.5 bg-gradient-to-t from-black/80 via-black/45 to-transparent px-4 pb-3 pt-12 text-white">
+                    <DialogTitle className="truncate font-display text-xl leading-tight text-white">{site.name}</DialogTitle>
+                    {site.address && <p className="truncate text-xs text-white/85">{site.address}</p>}
+                    {site.stages && <StageDots stages={siteStages(site)} onDark />}
+                  </div>
+                </div>
+              ) : (
+                <DialogTitle className="flex items-center gap-1.5 font-display text-lg">
+                  <MapPin className="h-5 w-5 shrink-0 text-primary-ink" aria-hidden />
+                  <span className="truncate">{site.name}</span>
+                </DialogTitle>
+              )}
+              {!cover && site.stages && <div className="pt-1"><StageDots stages={siteStages(site)} /></div>}
               <DialogDescription className="font-mono text-xs tabular-nums" data-testid="site-card-stats">
                 {[
                   entriesPl(site.count),

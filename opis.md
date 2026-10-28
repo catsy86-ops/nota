@@ -3636,3 +3636,10 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Gdzie.** `examAnnouncement` w `src/lib/study/exam.ts`, zegar i region `aria-live="polite"` w `src/components/study/QuizPanel.tsx` (`exam-timer`, `exam-announce`).
 - **Stan P4.3.** Ostrzeżenie przy małej puli pytań było już zrobione (C2). „Dociąganie punktów listy kontrolnej” z planu nie jest opisane na tyle, żeby je wdrożyć bez decyzji (uzupełnianie egzaminu punktami listy? podpowiedzi po wyniku?) — nie zrobione.
 - **Testy.** Vitest: `src/lib/study/exam.test.ts` (momenty ogłoszeń). E2E: `e2e/exam.spec.ts` (zegar `timer`, komunikat po 5 minutach; dotychczasowe testy egzaminu przechodzą).
+
+## Praca: karta budowy jako bohater (P5.1)
+
+- **Co robi.** Gdy budowa ma zdjęcie, nagłówek karty to okładka: pierwszy plan z „Plany i dokumenty”, a bez niego najnowsze zdjęcie z wpisów. Na przyciemnieniu u dołu zdjęcia są nazwa, adres i etapy jako linia kropek (zrobione — zielone, następny — z obwódką, reszta wyciszona) z licznikiem „3/7”. Bez zdjęcia nagłówek jest jak dawniej, z kropkami etapów pod nazwą, gdy lista etapów jest używana.
+- **Gdzie.** `src/lib/study/siteCover.ts` (`siteCoverRef`), `src/components/study/StageDots.tsx`, nagłówek w `src/components/study/SiteCardDialog.tsx`.
+- **Decyzje.** Okładka tylko z prawdziwego zdjęcia — bez sztucznej grafiki. Okładka zaczyna się pod rzędem z „×”, bo przycisk zamknięcia nie ma tła i na zdjęciu byłby nieczytelny. Kropki mają etykietę dla czytnika („Etapy: 1 z 7, następny: …”) i nazwę w podpowiedzi.
+- **Testy.** Vitest: `src/lib/study/siteCover.test.ts`. E2E: `e2e/site-hero.spec.ts` (bez zdjęcia brak okładki, kropki po odhaczeniu etapu, okładka z nazwą po dodaniu planu, bez poziomego przewijania na 390 px; zrzut). Testy karty przechodzą.
