@@ -145,7 +145,7 @@ Wykonanie po kolei, fala po fali. Opis techniczny: `opis.md`, sekcja „plan mob
 - [x] **B3** „Zaczynasz za… / Trwa” z paskiem postępu (`TodayShiftCard.tsx`).
 - [x] **B1** tryb budowa: cel dotyku 56 px; blokada wygaszania ekranu w karcie budowy (`SiteCardDialog.tsx`, `site.css`).
 - [~] **B2** „Zdjęcie do wpisu” w karcie budowy zrobione; bez etapu (decyzja: bieżący etap z karty nie istnieje w modelu).
-- [ ] **A6** kalendarz: kształty stanów dnia, legenda, container query. Nie zrobione.
+- [x] **A6** kalendarz: legenda kształtów (K4.1), zapytanie kontenerowe w komórce (K4.3), przejście przy wyborze dnia (K4.5; panel przenika się, nie rośnie z komórki). Całodniowy pasek (K4.1) pominięty — brak wydarzeń całodniowych w modelu.
 
 ### Fala 2–4 — niezrobione
 - Fala 2 (wizualizacja): D1 graf na telefonie, D2 wykres wagi i historii, D3 heatmapa serii, D4 legenda obrazu miesiąca, D5 przegląd wykresów przy 390 px.

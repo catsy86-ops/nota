@@ -1,4 +1,7 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { flushSync } from "react-dom";
+import { isMotionReduced } from "@/hooks/useMotionPref";
+import { CalendarLegend } from "./CalendarLegend";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useDayClock } from "@/lib/dayClock";
 import {
@@ -93,6 +96,13 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
   useDayClock();
   const [month, setMonth] = useState(() => new Date());
   const [selectedDay, setSelectedDay] = useState(() => new Date());
+  // K4.5: klik w dzień przechodzi przez przejście widoku (panel się przenika, podświetlenie się przesuwa).
+  // Przy redukcji ruchu i bez API — zwykła zmiana.
+  const pickDay = (day: Date) => {
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+    if (typeof doc.startViewTransition === "function" && !isMotionReduced()) doc.startViewTransition(() => flushSync(() => setSelectedDay(day)));
+    else setSelectedDay(day);
+  };
   const [showKeys, setShowKeys] = useState(false);
   const [dialogDay, setDialogDay] = useState<Date | null>(null);
   // Telefon: miesiąc (siatka) albo tydzień (pasek 7 dni). Na większym ekranie oba są zawsze.
@@ -385,7 +395,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
           titleOf={titleOf}
           studyOf={shownStudyOf}
           onSelectDay={(day) => {
-            setSelectedDay(day);
+            pickDay(day);
             setMonth((m) => (m.getFullYear() === day.getFullYear() && m.getMonth() === day.getMonth() ? m : new Date(day.getFullYear(), day.getMonth(), 1)));
           }}
         />
@@ -447,13 +457,16 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
             shiftOf={shiftOf}
             studyOf={studyOf}
             onSelectDay={(day) => {
-              setSelectedDay(day);
+              pickDay(day);
               setMonth(new Date(day.getFullYear(), day.getMonth(), 1));
             }}
           />
 
         </div>
-        <div id="calendar-day-panel" className="order-6">
+        <div className="order-6">
+          <CalendarLegend />
+        </div>
+        <div id="calendar-day-panel" className="order-6" style={{ viewTransitionName: "day-panel" } as CSSProperties}>
           <DayPanel
             day={selectedDay}
             occurrences={selectedOccurrences}

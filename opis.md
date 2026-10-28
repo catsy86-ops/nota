@@ -3164,6 +3164,36 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 
 - **Oś dziennika — `content-visibility` (P6.4, 2026-10-27).** Sekcja każdego dnia (`section[data-journal-day]` w `StudyJournal.tsx`) ma `content-visibility: auto` i `contain-intrinsic-block-size: auto 240px`: dni poza ekranem nie są malowane ani układane. Nagłówek dnia dalej jest `sticky`. Bez zmiany zachowania; bez sprawdzenia w przeglądarce (e2e nie uruchamiane). Miniatury w protokole odbioru (`HandoverPaper.tsx`) nadal odłożone do sprawdzenia wydruku.
 
+## Kalendarz — plan mobile A6 (2026-10-28)
+
+### Co robi
+- **Legenda kształtów** (K4.1): zwijana sekcja „Legenda” pod siatką. Opisuje kształty stanów: kropka = termin, kwadrat = zaległy, pusty krąg z obwódką = prognoza serii, czerwona kropka = święto, pasek = zmiana z Grafiku, kółko z numerem = dziś, ikona kasku = wizyta lub dostawa z Pracy.
+- **Komórka dnia reaguje na swój rozmiar** (K4.3): kropki, chipy z tekstem, pasek zmiany i nazwa święta przełączają się zapytaniem kontenerowym `@[7.5rem]` zamiast punktów przerwania `sm:`. Przy szerokości poniżej 7,5 rem są kropki, od 7,5 rem chipy. Na desktopie w wąskim panelu bocznym komórki przechodzą na kropki, zamiast łamać tekst.
+- **Przejście przy wyborze dnia** (K4.5): klik w dzień uruchamia `startViewTransition`. Zaznaczona komórka ma nazwę `day-active`, więc podświetlenie przesuwa się z poprzedniego dnia na nowy. Panel dnia ma nazwę `day-panel` i przenika się. Przy redukcji ruchu i bez API — zwykła zmiana.
+
+### Gdzie jest
+- `src/components/calendar/CalendarLegend.tsx` — komponent legendy (`data-testid="calendar-legend"`).
+- `src/components/calendar/DayCell.tsx` — `@container` na komórce, klasy `@[7.5rem]:*`, `style.viewTransitionName` dla zaznaczonego dnia.
+- `src/components/calendar/dayCellStyles.ts` — `holidayNameClass(inMonth, container)` i `holidayDotClass(inMonth, container)`; domyślnie `sm:` (Grafik zostaje bez zmian).
+- `src/components/calendar/ReminderCalendarView.tsx` — `pickDay` (przejście + `flushSync`), legenda przed panelem dnia (`order-6`), `viewTransitionName: "day-panel"`.
+
+### Jak działa i dlaczego
+- Zapytanie kontenerowe mierzy komórkę, a nie okno. Komórka w wąskim panelu bocznym dostaje kropki tak samo jak telefon, więc nie trzeba było sprawdzać `sm:` osobno.
+- `flushSync` jest potrzebny, bo React aktualizuje DOM asynchronicznie, a przejście musi zobaczyć nowy stan w tym samym kroku.
+- Grafik używa tych samych komórek (`dayCellClass`), ale ma własną siatkę bez `@container`. Dlatego domyślne klasy holiday zostały bez zmian, a zapytanie włącza się tylko z flagą `container`.
+
+### Ograniczenia i pułapki
+- **K4.5 nie jest wzrostem panelu z komórki.** Dodanie nazwy na komórce i panelu daje przesunięcie podświetlenia i przenikanie, ale panel nie rośnie z klikniętego kafla. Pełny efekt wymagałby wspólnej nazwy dla kafla i całego panelu, co zmieniłoby układ.
+- K4.1 „całodniowy jako pasek” nie zrobione: w modelu kalendarza nie ma wydarzeń całodniowych.
+- Szerokość 7,5 rem zmienia wygląd desktopowego kalendarza między 640 a ok. 900 px: tam, gdzie wcześniej były chipy, będą kropki. Świadoma decyzja, bo wąskie chipy były nieczytelne.
+- Wysokość komórki na telefonie to nadal `min-h-14` (56 px), czyli więcej niż 44 px z K4.3.
+
+### Testy
+- Vitest: `CalendarLegend.test.tsx` (zwinięta, opisy kształtów). Grupa `src/components/calendar` i `src/components/shifts`: 10 plików, 23 testy, zielone.
+- `tsc --noEmit` czysto, eslint czysto.
+- Przeglądarka (Pixel 7, poza repo): kalendarz bez przewijania w bok, komórki 51 px, klik zaznacza jeden dzień, brak błędów na stronie, legenda otwiera się.
+- E2e nie uruchamiane (zgodnie z zasadą „e2e tylko na prośbę”).
+
 ## Wspólne — plan mobile 2026-10-28 (fala 3, teren, w toku)
 
 ### Co robi

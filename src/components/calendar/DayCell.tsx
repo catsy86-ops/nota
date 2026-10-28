@@ -1,4 +1,4 @@
-import { memo, useRef, useState } from "react";
+import { memo, useRef, useState, type CSSProperties } from "react";
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import { HardHat } from "lucide-react";
 import { wasJustMoved } from "./movedSignal";
@@ -141,8 +141,10 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
       onPointerUp={cancelPress}
       onPointerLeave={cancelPress}
       onPointerCancel={cancelPress}
+      // K4.5: zaznaczony dzień dostaje wspólną nazwę przejścia — podświetlenie przesuwa się między dniami.
+      style={selected ? ({ viewTransitionName: "day-active" } as CSSProperties) : undefined}
       className={cn(
-        dayCellClass(inMonth, today), "flex flex-col gap-0.5 min-h-14 sm:min-h-24 p-1 sm:p-1.5 cursor-pointer",
+        dayCellClass(inMonth, today), "@container flex flex-col gap-0.5 min-h-14 sm:min-h-24 p-1 sm:p-1.5 cursor-pointer",
         // Pełne tło z domieszką marki (nie przezroczystość) — inaczej prześwituje kratka tła.
         // Warianty `dark:` z linii wyżej są silniejsze od zwykłych klas —
         // bez własnych `dark:` zaznaczenie w ciemnym motywie byłoby niewidoczne.
@@ -177,17 +179,17 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
               {shift.short}
             </span>
           )}
-          {holiday && <span aria-hidden className={cn(holidayDotClass(inMonth), "mr-0.5")} />}
+          {holiday && <span aria-hidden className={cn(holidayDotClass(inMonth, true), "mr-0.5")} />}
         </span>
       </span>
-      {holiday && <span aria-hidden className={holidayNameClass(inMonth)}>{holiday}</span>}
-      {shift && <span aria-hidden className="sm:hidden absolute inset-x-0 bottom-0 h-[3px] rounded-b-card" style={{ backgroundColor: shift.color }} />}
+      {holiday && <span aria-hidden className={holidayNameClass(inMonth, true)}>{holiday}</span>}
+      {shift && <span aria-hidden className="@[7.5rem]:hidden absolute inset-x-0 bottom-0 h-[3px] rounded-b-card" style={{ backgroundColor: shift.color }} />}
 
       {/* Treść terminów jest w `aria-label` komórki, więc dla czytnika ekranu
           te same dane nie powtarzają się drugi raz. */}
       <div aria-hidden className="flex flex-col gap-0.5 overflow-hidden">
-        {/* Wąski ekran: same kropki — chipy z tekstem nie mieszczą się w 1/7 szerokości. */}
-        <div className="flex items-center gap-1 flex-wrap sm:hidden pl-0.5">
+        {/* Wąska komórka (poniżej 7,5 rem, zapytanie kontenerowe): same kropki — chipy z tekstem się nie mieszczą. */}
+        <div className="flex items-center gap-1 flex-wrap @[7.5rem]:hidden pl-0.5">
           {dots.map((occ) => (
             <span
               key={`${occ.noteId}-${occ.at}`}
@@ -206,7 +208,7 @@ function DayCellView({ day, month, occurrences, titleOf, selected, focused, onSe
           )}
         </div>
 
-        <div className="hidden sm:flex sm:flex-col gap-0.5">
+        <div className="hidden @[7.5rem]:flex @[7.5rem]:flex-col gap-0.5">
           {shown.map((occ) => (
             <DraggableChip key={`${occ.noteId}-${occ.at}`} occurrence={occ} title={titleOf(occ.noteId)} preview={previewOf?.(occ.noteId)} />
           ))}
