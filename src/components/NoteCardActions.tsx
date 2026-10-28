@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from "react";
+import { Children, type ComponentProps, type ReactNode } from "react";
 import { Star, Pin, Palette, Archive, ArchiveRestore, ImagePlus, Copy, ClipboardCopy, PenTool, Trash, Maximize2, Lock, LockOpen, FilePlusCorner, MoveHorizontal, ZoomIn } from "lucide-react";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -127,6 +127,17 @@ export function PrimaryActions({
  * obraz, rysunek, etykiety, folder, prywatność, udostępnianie, wersje, prezentacja, duplikat.
  * Te same w rozwinięciu „Więcej opcji” i w arkuszu.
  */
+/** Grupa w menu „Więcej” (A4): nagłówek i przyciski; pusta grupa znika w całości. */
+function MoreGroup({ title, children }: { title: string; children: ReactNode }) {
+  if (Children.toArray(children).length === 0) return null;
+  return (
+    <div className="contents">
+      <h3 className="col-span-full w-full px-1 pb-1 pt-3 text-2xs font-semibold uppercase tracking-wider text-muted-foreground first:pt-0">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
 export function MoreActions({
   note,
   isArchived,
@@ -159,6 +170,7 @@ export function MoreActions({
 
   return (
     <>
+      <MoreGroup title="Wygląd">
       <NoteLookPicker icon={note.icon} cover={note.cover} onChange={(patch) => onUpdate?.(note.id, patch)} />
       {!isArchived && (
         <ActionBtn
@@ -187,6 +199,8 @@ export function MoreActions({
           className={cn(note.largeText && "text-primary-ink")}
         />
       )}
+      </MoreGroup>
+      <MoreGroup title="Porządek">
       {!isArchived && (
         <ActionBtn
           icon={note.readOnly ? <Lock className="w-4 h-4" /> : <LockOpen className="w-4 h-4" />}
@@ -212,23 +226,15 @@ export function MoreActions({
       {!isArchived && (
         <LabelPicker allLabels={allLabels} selected={note.labels} onToggle={handleLabelToggle} onCreateLabel={onCreateLabel} />
       )}
-      {!isArchived && !note.locked && (
-        <AliasPicker title={note.title} aliases={note.aliases ?? []} onSave={(aliases) => onUpdate?.(note.id, { aliases })} />
-      )}
       {onMoveToFolder && folders && folders.length > 0 && (
         <FolderPicker folders={folders} currentFolderId={note.folderId} onSelect={(fId) => { const prev = note.folderId; onMoveToFolder(note.id, fId); if (prev !== fId) toastWithUndo("Przeniesiono do folderu", () => onMoveToFolder(note.id, prev), { icon: "📁" }); }} />
-      )}
-      <PrivateNoteButton noteId={note.id} locked={!!note.locked} />
-      {!note.locked && <ShareNote note={note} />}
-      {!note.locked && noteVersions && onRestoreVersion && (
-        <VersionHistory versions={noteVersions} onRestore={(v) => onRestoreVersion(note.id, v)} />
-      )}
-      {!note.locked && onPresent && (
-        <ActionBtn icon={<Maximize2 className="w-4 h-4" />} onClick={() => onPresent(note.id)} title="Prezentacja" />
       )}
       {onDuplicate && (
         <ActionBtn icon={<Copy className="w-4 h-4" />} onClick={() => onDuplicate(note.id)} title="Duplikuj" />
       )}
+      </MoreGroup>
+      <MoreGroup title="Udostępnij">
+      {!note.locked && <ShareNote note={note} />}
       {/* Prywatnej notatki nie kopiujemy: jej treść w projekcji jest pusta (szyfrogram). */}
       {!note.locked && (
         <ActionBtn
@@ -237,6 +243,19 @@ export function MoreActions({
           title="Kopiuj jako Markdown"
         />
       )}
+      {!note.locked && onPresent && (
+        <ActionBtn icon={<Maximize2 className="w-4 h-4" />} onClick={() => onPresent(note.id)} title="Prezentacja" />
+      )}
+      </MoreGroup>
+      <MoreGroup title="Zaawansowane">
+      {!isArchived && !note.locked && (
+        <AliasPicker title={note.title} aliases={note.aliases ?? []} onSave={(aliases) => onUpdate?.(note.id, { aliases })} />
+      )}
+      <PrivateNoteButton noteId={note.id} locked={!!note.locked} />
+      {!note.locked && noteVersions && onRestoreVersion && (
+        <VersionHistory versions={noteVersions} onRestore={(v) => onRestoreVersion(note.id, v)} />
+      )}
+      </MoreGroup>
     </>
   );
 }

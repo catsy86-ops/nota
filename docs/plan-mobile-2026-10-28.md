@@ -141,6 +141,10 @@ Wykonanie po kolei, fala po fali. Opis techniczny: `opis.md`, sekcja „plan mob
 - [x] **D5** przegląd `ShiftSummary` i wykresów rocznych przy 390 px (zrobione: podpisy osi X, czytelniejsza mapa dni; bez przewijania w bok).
 - Ramki: ustawienie w Wyglądzie (delikatne/zwykłe/wyraźne), na prośbę użytkownika.
 
+### Fala 4 — w toku (2026-10-28)
+- [x] **A4** arkusz „⋯” w grupach: Wygląd, Porządek, Udostępnij, Zaawansowane (`NoteCardActions.tsx`, `NoteCardDialogs.tsx`).
+- [ ] **A3**, **E3**, **E4**, **B4**, **B5** — nie zrobione.
+
 ### Fala 3 — teren (w toku, 2026-10-28)
 - [x] **B3** „Zaczynasz za… / Trwa” z paskiem postępu (`TodayShiftCard.tsx`).
 - [x] **B1** tryb budowa: cel dotyku 56 px; blokada wygaszania ekranu w karcie budowy (`SiteCardDialog.tsx`, `site.css`).

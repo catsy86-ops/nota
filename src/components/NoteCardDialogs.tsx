@@ -69,7 +69,6 @@ export function ActionSheet({
           </div>
         </section>
         <section className="pt-4">
-          <h3 className="px-1 pb-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Więcej</h3>
           <div className="note-sheet-grid">{more}</div>
         </section>
       </SheetContent>

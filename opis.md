@@ -3164,6 +3164,30 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 
 - **Oś dziennika — `content-visibility` (P6.4, 2026-10-27).** Sekcja każdego dnia (`section[data-journal-day]` w `StudyJournal.tsx`) ma `content-visibility: auto` i `contain-intrinsic-block-size: auto 240px`: dni poza ekranem nie są malowane ani układane. Nagłówek dnia dalej jest `sticky`. Bez zmiany zachowania; bez sprawdzenia w przeglądarce (e2e nie uruchamiane). Miniatury w protokole odbioru (`HandoverPaper.tsx`) nadal odłożone do sprawdzenia wydruku.
 
+## Notatki — arkusz „⋯” w grupach (plan mobile A4, 2026-10-28)
+
+### Co robi
+- Arkusz „⋯” na telefonie (i rozwinięcie „Więcej opcji” na komputerze) grupuje akcje notatki pod nagłówkami: **Wygląd** (ikona i okładka, ulubione, rozciągnięcie, większy tekst), **Porządek** (blokada edycji, podstrona, obrazek, rysunek, etykiety, folder, duplikat), **Udostępnij** (udostępnianie, prezentacja, kopia jako Markdown), **Zaawansowane** (alias, notatka prywatna, historia wersji).
+- Pusta grupa (np. w archiwum) nie pokazuje nagłówka.
+
+### Gdzie jest
+- `src/components/NoteCardActions.tsx` — `MoreGroup` (nagłówek `h3`, `display: contents`) i `MoreActions`, który zwraca cztery grupy. Elementy nie zmieniły treści, tylko kolejność i opakowanie.
+- `src/components/NoteCardDialogs.tsx` — `ActionSheet`: usunięty dawny nagłówek „Więcej”, reszta arkusza bez zmian (Kolor, Szybkie).
+
+### Jak działa i dlaczego
+- `contents` wkłada przyciski grupy wprost do rodzica. Dzięki temu ta sama struktura działa w siatce arkusza (`note-sheet-grid`, nagłówek `col-span-full`) i w rzędzie `flex-wrap` na komputerze (nagłówek `w-full`).
+- Etykiety przycisków (`title`) zostały bez zmian, więc testy i czytniki ekranu widzą te same nazwy.
+
+### Ograniczenia i pułapki
+- Grupy są dla skanowania, nie hierarchią: „Wygląd” zawiera ulubione i obrazek. Nazwy zgodne z planem, przyporządkowanie to decyzja, którą można zmienić przez przestawienie elementu.
+- Etykieta „Przypomnienie” w rzędzie Szybkie zawija się w środku słowa („Przypomnieni / e”) na 390 px. To problem sprzed tej zmiany, nie zrobione.
+
+### Testy
+- Vitest: grupa „Note” — 221 testów zielonych; jeden test wydajności wyszukiwania (`searchNotes.test.ts`, 50 ms) przegrywa pod obciążeniem, a w izolacji przechodzi.
+- `tsc` i eslint czysto.
+- Przeglądarka (Pixel 7, poza repo): arkusz pokazuje nagłówki Kolor, Szybkie, Wygląd, Porządek, Udostępnij, Zaawansowane; brak przewijania w bok; brak błędów na stronie.
+- E2e nie uruchamiane.
+
 ## Kalendarz — plan mobile A6 (2026-10-28)
 
 ### Co robi
