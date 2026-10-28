@@ -16,6 +16,8 @@ export interface IcsEvent {
   content: string;
   reminder: number;
   repeat: IcsRepeat;
+  /** Surowa reguła RRULE (E3 rozwija wystąpienia w imporcie Grafiku); brak = zdarzenie jednorazowe. */
+  rrule?: string;
   allDay: boolean;
 }
 
@@ -85,6 +87,7 @@ export function parseIcs(text: string, now: number = Date.now(), opts: { keepPas
             content: unescapeText(current.DESCRIPTION ?? ""),
             reminder: start.ms,
             repeat: parseRepeat(current.RRULE),
+            rrule: current.RRULE,
             allDay: start.allDay,
           });
         }

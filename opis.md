@@ -3178,12 +3178,13 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Gdzie:** `src/components/shifts/ShiftSummary.tsx` (`PaySlipPanel`), `src/lib/shifts/yShifts.ts` (`setPaidGross`, `readPaidGross`), `src/lib/shifts/store.ts` (`setPaidGross`).
 - **Testy:** `payslip.test.ts` (różnica, tolerancja, szacunek 0, czyszczenie), `yShifts.test.ts` („Wypłaty brutto w Yjs”: przejście między dwoma dokumentami).
 
-### Grafik: import zmian z .ics (G4.5 / E3)
-- **Co robi:** w „Ustawienia grafiku” sekcja „Import zmian z pliku .ics”. Wybór rodzaju zmiany i pliku, potem podgląd (ile dni wejdzie, ile pominięto) i dopiero „Importuj”. Po imporcie „Cofnij” w tostcie przywraca stan sprzed.
-- **Reguły:** każde zdarzenie daje dzień z wybranym rodzajem (godziny bierze rodzaj). Dzień z już wpisaną zmianą i drugie zdarzenie tego samego dnia są pomijane. Zdarzenia z przeszłości są importowane (`parseIcs(…, { keepPast: true })`). Zdarzenia cykliczne (RRULE) dają tylko pierwsze wystąpienie.
-- **Gdzie:** `src/lib/shifts/icsShifts.ts` (`planShiftsFromIcs`, `localDayKey`), `src/lib/icsImport.ts` (opcja `keepPast`), `src/lib/shifts/store.ts` (`applyShiftImport`, przywracanie przez `restoreDays`), `src/components/shifts/ShiftsIcsImport.tsx`.
-- **Testy:** `src/lib/shifts/icsShifts.test.ts` (3 testy: przeszłe dni, brak nadpisywania, cykliczne i błędne wpisy).
-- **Nie zrobione:** brak podglądu dzień po dniu (tylko liczby); import CSV w formacie eksportu z planu G4.5 nie zrobiony.
+### Grafik: import zmian z pliku .ics i .csv (G4.5 / E3)
+- **Co robi:** w „Ustawienia grafiku” sekcja „Import zmian z pliku”. Przyjmuje **.ics** (każde zdarzenie to dzień z wybranym rodzajem zmiany) i **.csv** z karty czasu (rodzaj z kolumny „Zmiana”, odchylenie i notatka z tych samych kolumn). Najpierw podgląd: liczba dni i rozwijana lista „Podgląd dzień po dniu” z rodzajem i oznaczeniem pominiętych dni. Dopiero potem „Importuj”. „Cofnij” w tostcie przywraca dni sprzed importu.
+- **Reguły:** dzień z już wpisaną zmianą i drugie zdarzenie tego samego dnia są pomijane (pokazane w podglądzie jako pominięte). Zdarzenia z przeszłości są importowane (`parseIcs(…, { keepPast: true })`). Cykliczne zdarzenia (RRULE) rozwijają się do wystąpień: DAILY, WEEKLY i MONTHLY z `INTERVAL`, `COUNT` i `UNTIL`. Miesiąc bez tego dnia (31 lutego) jest pomijany. Bez `COUNT` i `UNTIL` rozwijamy najwyżej 366 dni od dziś i 400 wystąpień. Dla CSV rodzaje muszą mieć nazwę dokładnie taką jak w eksporcie; nieznana nazwa to nieczytelny wiersz.
+- **Dlaczego tak:** import CSV to odwrotność `buildTimesheetCsv`, więc plik z eksportu wraca do Grafiku bez ręcznego poprawiania. Limit 366 dni chroni przed zalaniem grafiku przy zdarzeniu bez końca; reszta zdarzeń rozwija się normalnie.
+- **Gdzie:** `src/lib/shifts/icsShifts.ts` (`occurrenceKeys`, `finishPlan`, `planShiftsFromIcs`, `previewDayLabel`), `src/lib/shifts/csvShifts.ts` (`parseSemicolonCsv`, `planShiftsFromCsv`), `src/lib/icsImport.ts` (`IcsEvent.rrule`, opcja `keepPast`), `src/lib/shifts/store.ts` (`applyShiftImport`, przywracanie przez `restoreDays`), `src/components/shifts/ShiftsIcsImport.tsx`.
+- **Testy:** `src/lib/shifts/icsShifts.test.ts` (rozwijanie RRULE, podgląd, zdarzenia bez daty), `src/lib/shifts/csvShifts.test.ts` (odwrotność eksportu, pominięte zajęte dni, nieznana nazwa, plik bez nagłówka), e2e `e2e/shifts-import.spec.ts` (CSV z podglądem i Cofnij; ICS z COUNT).
+- **Nie zrobione:** brak importu odchyleń z kolumn „Od/Do” (godziny wynikają z rodzaju i odchylenia); brak wyboru rodzaju dla CSV (świadomie, rodzaj jest w pliku).
 
 ### Notatki: zakładki Edycja / Podgląd na telefonie (A3 / plan 1.1)
 - **Co robi:** po włączeniu podglądu na telefonie (poniżej `sm`) edycja i podgląd są zakładkami, a nie dwiema kolumnami. Od `sm` wracają obok siebie.
