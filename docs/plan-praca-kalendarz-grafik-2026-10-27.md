@@ -178,7 +178,7 @@ Do tego dokumentacja nie nadąża za kodem: `opis.md` (Kalendarz :1397, Grafik :
 | G4.6 | Szablon tygodnia (zapisany osobno od cykli) w palecie i w pustym miesiącu. | 1 | S |
 | G4.7 | Obraz miesiąca: dwa miesiące, legenda rodzajów, znacznik „dziś” (dokończenie 4.3). | 1 | S |
 | G4.8 | Kilka nakładek (zespół): wspólne wolne dni dla N grafików. **Decyzja G-7.** | 1 | M |
-| G4.9 | Dodatek nocny do zarobku: **czeka na G-1** (kadry). Kod gotowy do przełączenia (`ShiftSummary.tsx:114-116`). | 1 | S |
+| G4.9 | ~~Dodatek nocny do zarobku~~ — **zrezygnowano (2026-10-28, użytkownik: „dodatek nocny nie potrzebny”).** Kod zostaje nietknięty. | 1 | S |
 
 ## Praca
 
@@ -243,7 +243,7 @@ Do tego dokumentacja nie nadąża za kodem: `opis.md` (Kalendarz :1397, Grafik :
 | # | Pytanie | Rekomendacja |
 |---|---|---|
 | K-4 | Tydzień z osią godzin na `xl` (K3.6)? | Tak, ale po agendzie (K3.2) i jako osobny chunk. L, więc na koniec rozbudowy. |
-| G-1 | Dodatek nocny do zarobku (G4.9)? | Bez zmian: sprawdzić z kadrami. |
+| G-1 | Dodatek nocny do zarobku (G4.9)? | **Rozstrzygnięte 2026-10-28: nie potrzebny, G4.9 zrezygnowane.** |
 | G-6 | Alarm przed zmianą (G4.1): ile minut, czy per grafik? | 60 min, ustawienie per grafik, wyłączalne. |
 | G-7 | Wiele nakładek (G4.8)? | Odłożyć, dopóki jedna nakładka wystarcza. |
 | P-6 | FSRS (`ts-fsrs`) czy poprawione SM-2? | FSRS z dwoma przyciskami. Lepsze odstępy przy małej puli, ~10 KB w leniwym chunku. |

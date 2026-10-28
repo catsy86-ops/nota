@@ -55,7 +55,7 @@ Plan z tego dokumentu trafi do `docs/plan-mobile-2026-10-28.md` (statusy `[ ]`),
 | B5 | Grafik: porównanie z paskiem wypłaty (brutto wypłacone a wyliczone) | G4.4 |
 | B6 | Minutnik budowy | P2.8 |
 
-Czekają na decyzje (nie zaczynać bez odpowiedzi): P2.3 usterki, P2.5 PDF, P2.7 pinezki na planie, P2.10 lokalizacja, G4.9 dodatek nocny.
+Czekają na decyzje (nie zaczynać bez odpowiedzi): P2.3 usterki, P2.5 PDF, P2.7 pinezki na planie, P2.10 lokalizacja. G4.9 dodatek nocny — zrezygnowane 2026-10-28.
 
 ### C. QoL (małe, szybkie)
 - C1: Długi: ukrywanie kwot `•••` (3.3) i saldo narastające.
