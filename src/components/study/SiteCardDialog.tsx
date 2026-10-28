@@ -16,7 +16,7 @@ import { photoSaveFailed } from "@/components/study/useJournalPhotoEdits";
 import { findSiteByName, SITE_FIELD_MAX, SITE_NAME_MAX } from "@/lib/study/sites";
 import { entriesPl, problemsPl } from "@/lib/study/journalView";
 import { periodLabel, dayKeyOf, workOn } from "@/lib/study/report";
-import { siteMinutesInRange } from "@/lib/study/siteHours";
+import { siteMinutesByDay, siteMinutesInRange } from "@/lib/study/siteHours";
 import { formatHoursShort } from "@/lib/shifts/time";
 import { localDayKey } from "@/lib/dayDone";
 import { useDayClock } from "@/lib/dayClock";
@@ -29,6 +29,7 @@ import { SiteStagesPanel } from "./SiteStagesPanel";
 import { SiteShortagesPanel } from "./SiteShortagesPanel";
 import { SiteFaultsPanel } from "./SiteFaultsPanel";
 import { SiteMaterialPanel } from "./SiteMaterialPanel";
+import { SiteTimePanel } from "./SiteTimePanel";
 import { SiteDocsPanel } from "./SiteDocsPanel";
 import { SiteServicePanel } from "./SiteServicePanel";
 import { PrintRoot } from "./PrintRoot";
@@ -171,6 +172,9 @@ export function SiteCardDialog({
     return {
       total: siteMinutesInRange(study.journal, cards, site.id, "0000-01-01", today, workOf, dayKeyOf),
       month: siteMinutesInRange(study.journal, cards, site.id, `${today.slice(0, 8)}01`, today, workOf, dayKeyOf),
+      // P2.8: dni miesiąca dla panelu czasu (licznik, stawka, CSV).
+      today,
+      monthDays: siteMinutesByDay(study.journal, cards, site.id, `${today.slice(0, 8)}01`, today, workOf, dayKeyOf),
     };
   }, [site, dir, study.journal, shifts, dayTick]);
   /** Zwinięte dane w jednej linijce — widać, co jest w karcie, bez rozwijania. */
@@ -254,6 +258,7 @@ export function SiteCardDialog({
               <SiteShortagesPanel site={site} />
               <SiteFaultsPanel site={site} journal={study.journal} />
               <SiteMaterialPanel site={site} journal={study.journal} />
+              {hours && <SiteTimePanel site={site} today={hours.today} monthLabel={new Date(`${hours.today}T12:00`).toLocaleDateString("pl-PL", { month: "long", year: "numeric" })} monthDays={hours.monthDays} />}
               <SiteOrderPanel site={site} />
             </div>
 
