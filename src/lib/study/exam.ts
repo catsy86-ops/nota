@@ -69,3 +69,14 @@ export function cleanExam(raw: unknown): ExamResult | null {
 export function keepLatestExams(list: readonly ExamResult[]): ExamResult[] {
   return [...list].sort((a, b) => a.at - b.at).slice(-EXAM_KEEP);
 }
+
+/**
+ * P4.3: komunikat dla czytnika ekranu w trakcie egzaminu — co 5 minut i na ostatnią minutę.
+ * W pozostałych sekundach `null` (zegar z `role="timer"` sam niczego nie ogłasza).
+ */
+export function examAnnouncement(left: number): string | null {
+  if (left <= 0 || left >= EXAM_SECONDS) return null;
+  if (left === 60) return "Została minuta egzaminu.";
+  if (left % 300 === 0) return `Zostało ${left / 60} minut egzaminu.`;
+  return null;
+}

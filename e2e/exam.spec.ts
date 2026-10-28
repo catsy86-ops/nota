@@ -52,3 +52,13 @@ test("wynik egzaminu widać w statystykach Nauki", async ({ page }) => {
   await page.getByRole("button", { name: "Statystyki" }).first().click();
   await expect(page.getByTestId("stats-exams")).toContainText("/20");
 });
+
+test("egzamin: zegar ma role timer, a co 5 minut czytnik dostaje komunikat o czasie (P4.3)", async ({ page }) => {
+  await page.clock.install();
+  await page.clock.resume();
+  await page.goto("/praca");
+  await page.getByTestId("start-exam").click();
+  await expect(page.getByRole("timer")).toBeVisible();
+  await page.clock.fastForward(5 * 60_000);
+  await expect(page.getByTestId("exam-announce")).toHaveText("Zostało 25 minut egzaminu.");
+});

@@ -3629,3 +3629,10 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Każde słowo zapytania (min. 2 znaki) musi wystąpić w pytaniu, odpowiedziach albo objaśnieniu, po złożeniu liter (`foldName` z `siteKey.ts` — ten sam, którego paleta używa dla budów; osobny moduł `lib/text` z planu okazał się niepotrzebny). Trafienia w treści pytania idą pierwsze, najwyżej 5. Element palety ma w `value` bieżące zapytanie, bo filtr cmdk nie zna polskich znaków.
 - **Przy okazji.** Test `command-palette-study` padał od dawna: lokator pola trafiał w zasłonięte pole „Szukaj notatek…” na stronie. Lokator zawężony do okna palety — przechodzi.
 - **Testy.** Vitest: `src/lib/study/questionSearch.test.ts`. E2E: `e2e/command-palette-study.spec.ts` (oba testy). `bundle.spec` 6/6.
+
+## Nauka: zegar egzaminu dla czytnika ekranu (P4.3)
+
+- **Co robi.** W trakcie egzaminu odliczanie ma `role="timer"` z etykietą „Pozostały czas: N min S s”, a czytnik ekranu dostaje komunikat co 5 minut („Zostało 25 minut egzaminu.”) i na ostatnią minutę („Została minuta egzaminu.”). Zegar sam nie ogłasza każdej sekundy.
+- **Gdzie.** `examAnnouncement` w `src/lib/study/exam.ts`, zegar i region `aria-live="polite"` w `src/components/study/QuizPanel.tsx` (`exam-timer`, `exam-announce`).
+- **Stan P4.3.** Ostrzeżenie przy małej puli pytań było już zrobione (C2). „Dociąganie punktów listy kontrolnej” z planu nie jest opisane na tyle, żeby je wdrożyć bez decyzji (uzupełnianie egzaminu punktami listy? podpowiedzi po wyniku?) — nie zrobione.
+- **Testy.** Vitest: `src/lib/study/exam.test.ts` (momenty ogłoszeń). E2E: `e2e/exam.spec.ts` (zegar `timer`, komunikat po 5 minutach; dotychczasowe testy egzaminu przechodzą).

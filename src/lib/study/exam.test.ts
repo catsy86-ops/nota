@@ -32,3 +32,15 @@ describe("wynik egzaminu próbnego (P-3)", () => {
     expect(kept[0].at).toBe(5);
   });
 });
+
+describe("ogłoszenia czasu egzaminu (P4.3)", () => {
+  it("co 5 minut i na ostatnią minutę; poza tym nic", async () => {
+    const { examAnnouncement, EXAM_SECONDS } = await import("./exam");
+    expect(examAnnouncement(EXAM_SECONDS)).toBeNull();
+    expect(examAnnouncement(25 * 60)).toBe("Zostało 25 minut egzaminu.");
+    expect(examAnnouncement(5 * 60)).toBe("Zostało 5 minut egzaminu.");
+    expect(examAnnouncement(60)).toBe("Została minuta egzaminu.");
+    expect(examAnnouncement(25 * 60 - 1)).toBeNull();
+    expect(examAnnouncement(0)).toBeNull();
+  });
+});

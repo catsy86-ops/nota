@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { TOPICS, topicTitle } from "@/lib/study/content";
 import { buildRound, missedTopics, scoreRound, type RoundQuestion } from "@/lib/study/quiz";
-import { EXAM_SECONDS, EXAM_SIZE, examResult, weakTopicsOf } from "@/lib/study/exam";
+import { EXAM_SECONDS, EXAM_SIZE, examAnnouncement, examResult, weakTopicsOf } from "@/lib/study/exam";
 import { activeStreak, columnOf, dueToday, recordExam, recordRound, useStudy, useStudyLists } from "@/lib/study/store";
 import { CustomQuestionsDialog } from "./CustomQuestionsDialog";
 import { localDayKey } from "@/lib/dayDone";
@@ -112,6 +112,13 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, [examEnd]);
+  // P4.3: ogłoszenie pozostałego czasu co 5 minut (i na ostatnią minutę) — region niżej, przy zegarze.
+  const [examAnnounce, setExamAnnounce] = useState("");
+  useEffect(() => {
+    if (examEnd === null) return;
+    const a = examAnnouncement(Math.max(0, Math.ceil((examEnd - now) / 1000)));
+    if (a) setExamAnnounce(a);
+  }, [now, examEnd]);
   useEffect(() => {
     if (examEnd !== null && now >= examEnd) finishExam();
   }, [now, examEnd, finishExam]);
@@ -310,7 +317,18 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
   return (
     <section aria-label="Quiz" className="rounded-card border border-border bg-card p-5 sm:p-7 space-y-5">
       <div className="flex items-center justify-between gap-3 text-xs">
-        <span className="font-mono tabular-nums text-muted-foreground">Pytanie {index + 1} z {round.length}{examMode && ` · zostało ${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`}</span>
+        <span className="font-mono tabular-nums text-muted-foreground">
+          Pytanie {index + 1} z {round.length}
+          {examMode && (
+            <>
+              {" · zostało "}
+              <span role="timer" aria-label={`Pozostały czas: ${Math.floor(left / 60)} min ${left % 60} s`} data-testid="exam-timer">
+                {Math.floor(left / 60)}:{String(left % 60).padStart(2, "0")}
+              </span>
+              <span className="sr-only" aria-live="polite" data-testid="exam-announce">{examAnnounce}</span>
+            </>
+          )}
+        </span>
         <span className="rounded-full bg-muted px-2.5 py-0.5 text-muted-foreground truncate">
           {scope.kind === "missed" ? "Powtórka błędów · " : scope.kind === "due" ? "Na dziś · " : ""}{topicName(current.topic)}
         </span>
