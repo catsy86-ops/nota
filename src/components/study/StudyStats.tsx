@@ -74,7 +74,7 @@ function StatsBody() {
       <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4" data-testid="stats-tiles">
         <Tile label="Trafność" value={s.overall.percent === null ? "—" : `${s.overall.percent}%`} hint={s.overall.seen > 0 ? `${s.overall.right}/${s.overall.seen} odpowiedzi` : "jeszcze bez rund"} />
         <Tile label="Dni nauki" value={String(s.days30)} hint="w ostatnich 30 dniach" />
-        <Tile label="Seria" value={String(streak)} hint={pluralPl(streak, ["dzień z rzędu", "dni z rzędu", "dni z rzędu"])} />
+        <Tile label="Seria" value={String(streak)} hint={pluralPl(streak, ["dzień z rzędu", "dni z rzędu", "dni z rzędu"])} ring={Math.min(1, streak / STREAK_GOAL)} />
         <Tile label="Wpisy z budowy" value={String(study.journal.length)} hint={open > 0 ? `otwarte problemy: ${open}` : "bez otwartych problemów"} />
       </dl>
 
@@ -239,11 +239,28 @@ function downloadCard(text: string, today: string) {
   downloadBlob(new Blob([text], { type: "text/markdown;charset=utf-8" }), `karta-doswiadczenia-${today}.md`);
 }
 
-function Tile({ label, value, hint }: { label: string; value: string; hint: string }) {
+/** Cel tygodnia dla pierścienia serii (plan mobile D3): 7 dni z rzędu zapełnia pierścień. */
+const STREAK_GOAL = 7;
+
+/**
+ * Kafelek z opcjonalnym pierścieniem postępu (0–1). Pierścień jest ozdobą obok liczby, więc
+ * `aria-hidden`; wartość i opis czyta tekst kafelka.
+ */
+function Tile({ label, value, hint, ring }: { label: string; value: string; hint: string; ring?: number }) {
+  const r = 14;
+  const c = 2 * Math.PI * r;
   return (
     <div className="rounded-card border border-border bg-card px-3 py-2.5">
       <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 font-mono text-2xl font-semibold tabular-nums leading-tight">{value}</dd>
+      <dd className="mt-0.5 flex items-center justify-between gap-2">
+        <span className="font-mono text-2xl font-semibold tabular-nums leading-tight">{value}</span>
+        {ring !== undefined && (
+          <svg viewBox="0 0 36 36" className="h-9 w-9 shrink-0 -rotate-90" aria-hidden>
+            <circle cx="18" cy="18" r={r} fill="none" stroke="var(--muted)" strokeWidth="4" />
+            <circle cx="18" cy="18" r={r} fill="none" stroke="var(--primary)" strokeWidth="4" strokeLinecap="round" strokeDasharray={`${c * ring} ${c}`} />
+          </svg>
+        )}
+      </dd>
       <dd className="text-2xs text-muted-foreground">{hint}</dd>
     </div>
   );
