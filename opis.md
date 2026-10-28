@@ -3184,7 +3184,7 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - `touch-action` to `pan-y` przy skali 1 (strona przewija się normalnie) i `none` przy powiększeniu (palec przesuwa graf).
 
 ### Ograniczenia i pułapki
-- **Niezweryfikowane w przeglądarce:** szczypanie dwoma palcami, arkusz po stuknięciu i „Otwórz notatkę”. Zrobione przez przyciski i jeden palec (test Playwright, Pixel 7 — zoom 100→225 %, przesunięcie działa). Szczypanie: próba przez CDP zawisła, próba przez syntetyczne zdarzenia nie została dokończona. W jednym przebiegu graf zniknął podczas szczypania — przyczyna nieznana, do sprawdzenia na telefonie.
+- **Sprawdzone w Chromium (Pixel 7, zdarzenia wskaźnika):** przybliżanie przyciskami (100→225 %), przesunięcie jednym palcem, szczypanie w górę (100→300 %, z limitem) i w dół (wraca do 100 %), stuknięcie węzła otwiera arkusz z właściwym tytułem i liczbą powiązań, „Otwórz notatkę” zamyka graf. Nie sprawdzone na prawdziwym dotyku: wielopalcowe gesty z systemu. W jednym wcześniejszym przebiegu (CDP) graf zniknął podczas szczypania — nieodtworzone przy syntetycznych zdarzeniach, do sprawdzenia na telefonie.
 - Mapa dni ma 31 kolumn w 330 px, więc etykiety miesięcy po skalowaniu są ok. 9 px. Dalsze powiększenie wymagałoby zwężenia siatki.
 - Przeglądarka nie przepuszcza przewijania strony przez graf przy powiększeniu (`touch-action: none`) — dlatego przycisk „Cały graf” wraca do 100 %, a przewijanie strony działa poza grafem.
 
