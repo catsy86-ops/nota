@@ -17,7 +17,7 @@ export function YearCharts({ rows }: { rows: YearChartRow[] }) {
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={rows} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
             <CartesianGrid vertical={false} className="year-chart-grid" />
-            <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+            <XAxis dataKey="label" interval={0} tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
             <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
             <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => hoursLabel(v)} />
             <Bar dataKey="hours" name="Godziny" className="year-chart-hours" isAnimationActive={!reduce} />
@@ -29,7 +29,7 @@ export function YearCharts({ rows }: { rows: YearChartRow[] }) {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={rows} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
             <CartesianGrid vertical={false} className="year-chart-grid" />
-            <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
+            <XAxis dataKey="label" interval={0} tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
             <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
             <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => hoursLabel(v)} />
             <Bar dataKey="overtime" name="Nadgodziny" stackId="x" className="year-chart-over" isAnimationActive={!reduce} />

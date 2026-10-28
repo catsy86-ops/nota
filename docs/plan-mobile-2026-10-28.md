@@ -138,7 +138,7 @@ Wykonanie po kolei, fala po fali. Opis techniczny: `opis.md`, sekcja „plan mob
 - [~] **D1** graf na telefonie: pionowe płótno i przyciski przybliż/oddal/cały graf (`NoteGraph.tsx`, E5 w `noteGraph.ts`). Nie zrobione: szczypanie, przesuwanie palcem, arkusz z podglądem węzła.
 - [x] **D2** wykres masy ciała 30/90 dni (`WeightChart.tsx`, Recharts nie użyty).
 - [x] **D3** pierścień serii w Praca (heatmapa 12 tygodni już była, bez uogólniania).
-- [ ] **D5** przegląd `ShiftSummary` i wykresów rocznych przy 390 px — wymaga zrzutów Playwright.
+- [x] **D5** przegląd `ShiftSummary` i wykresów rocznych przy 390 px (zrobione: podpisy osi X, czytelniejsza mapa dni; bez przewijania w bok).
 - Ramki: ustawienie w Wyglądzie (delikatne/zwykłe/wyraźne), na prośbę użytkownika.
 
 ### Fala 2–4 — niezrobione

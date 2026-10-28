@@ -3164,6 +3164,35 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 
 - **Oś dziennika — `content-visibility` (P6.4, 2026-10-27).** Sekcja każdego dnia (`section[data-journal-day]` w `StudyJournal.tsx`) ma `content-visibility: auto` i `contain-intrinsic-block-size: auto 240px`: dni poza ekranem nie są malowane ani układane. Nagłówek dnia dalej jest `sticky`. Bez zmiany zachowania; bez sprawdzenia w przeglądarce (e2e nie uruchamiane). Miniatury w protokole odbioru (`HandoverPaper.tsx`) nadal odłożone do sprawdzenia wydruku.
 
+## Wspólne — plan mobile 2026-10-28 (fala 2, wizualizacja, w toku)
+
+### Co robi
+- **Graf notatek na telefonie** (D1): płótno pionowe 600×760 zamiast szerokiego 1000×620, więc węzły nie kurczą się do ~0,36. Przyciski przybliż / oddal / cały graf (z procentem skali). Przy przybliżeniu jeden palec przesuwa graf, dwa palce szczypią. Stuknięcie węzła na telefonie otwiera arkusz z tytułem, liczbą powiązań i przyciskiem „Otwórz notatkę”. Przeciągnięcie nie liczy się jako stuknięcie. Na komputerze i w czytniku stuknięcie nadal otwiera notatkę od razu.
+- **Wykresy roku na telefonie** (D5): wszystkie 12 miesięcy podpisane pod obydwoma wykresami słupkowymi; etykiety mapy dni czytelniejsze po skalowaniu do 330 px.
+
+### Gdzie jest
+- `src/components/NoteGraph.tsx` — `PHONE`, `TAP_SLOP`, `onPointerDown/Move/End`, `pinchDistance`, stan `preview` i arkusz `previewNode`; `touchAction` na SVG zależny od skali.
+- `src/lib/noteGraph.ts` — `panView` (obok `zoomView` i `graphViewBox`).
+- `src/components/shifts/YearCharts.tsx` — `interval={0}` na osi X obu wykresów.
+- `src/components/shifts/YearHeatmap.tsx` — `LABEL_W = 34`, czcionka etykiet 12.
+
+### Jak działa i dlaczego
+- Pan trzyma środek okna w `[1/(2s), 1 − 1/(2s)]`, więc okno nigdy nie wychodzi za płótno i przeciąganie od razu reaguje po powrocie od krawędzi (bez „zaciętego” zapasu).
+- Piksele zamieniane na ułamek płótna dzielą przez `rect.width·s` (i analogicznie wysokość), bo płótno przy skali `s` zajmuje tyle pikseli.
+- Pinch zoomuje względem środka widoku (jak przyciski), bez przesuwania środka między palcami.
+- Gest trzymany w `useRef`, nie w stanie, żeby ruch palca nie wywoływał renderu przy każdym zdarzeniu. Przy dwóch palcach `moved` jest ustawione, więc puszczenie nie otwiera węzła.
+- `touch-action` to `pan-y` przy skali 1 (strona przewija się normalnie) i `none` przy powiększeniu (palec przesuwa graf).
+
+### Ograniczenia i pułapki
+- **Niezweryfikowane w przeglądarce:** szczypanie dwoma palcami, arkusz po stuknięciu i „Otwórz notatkę”. Zrobione przez przyciski i jeden palec (test Playwright, Pixel 7 — zoom 100→225 %, przesunięcie działa). Szczypanie: próba przez CDP zawisła, próba przez syntetyczne zdarzenia nie została dokończona. W jednym przebiegu graf zniknął podczas szczypania — przyczyna nieznana, do sprawdzenia na telefonie.
+- Mapa dni ma 31 kolumn w 330 px, więc etykiety miesięcy po skalowaniu są ok. 9 px. Dalsze powiększenie wymagałoby zwężenia siatki.
+- Przeglądarka nie przepuszcza przewijania strony przez graf przy powiększeniu (`touch-action: none`) — dlatego przycisk „Cały graf” wraca do 100 %, a przewijanie strony działa poza grafem.
+
+### Testy
+- Vitest: `src/lib/noteGraph.view.test.ts` (`panView`: granice, powrót od krawędzi, skala 1), `src/lib/noteGraph.test.ts`; `src/components/shifts` i `src/lib/shifts` zielone (34 pliki, 244 testy).
+- Zrzuty Playwright (Pixel 7, poza repo): dialog roku bez przewijania w bok, Grafik bez przewijania w bok (doc i body), podsumowanie czytelne.
+- E2e nie uruchamiane (zgodnie z zasadą „e2e tylko na prośbę”).
+
 ## Wspólne — plan mobile 2026-10-28 (fala 1, zamknięta)
 
 ### Co robi

@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import type { Note, Folder } from "@/hooks/useNotes";
 import { getDescendantFolderIds } from "@/hooks/useNotes";
 import { useMotionPref } from "@/hooks/useMotionPref";
@@ -7,14 +7,17 @@ import { layoutGraph } from "@/workers/graphLayout";
 import { ease, dur } from "@/lib/motion";
 import { pluralPl } from "@/lib/plural";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { GRAPH_VIEW_RESET, graphViewBox, zoomView, type GraphView } from "@/lib/noteGraph";
+import { GRAPH_VIEW_RESET, graphViewBox, panView, zoomView, type GraphView } from "@/lib/noteGraph";
 import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Maximize2, ZoomIn, ZoomOut } from "lucide-react";
 
 /** Płótno na komputerze: szerokie. */
 const DESKTOP = { W: 1000, H: 620 };
 /** Płótno na telefonie (plan mobile D1): pionowe, żeby 390 px nie skalowało węzłów do ~0,36. */
 const PHONE = { W: 600, H: 760 };
+/** Ruch palca dalej niż to (px) przestaje być stuknięciem — to przeciąganie, nie otwarcie węzła. */
+const TAP_SLOP = 8;
 
 interface Props {
   notes: Note[];
@@ -85,6 +88,12 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
   const [pos, setPos] = useState<Map<string, Point>>(() => new Map());
   const [laid, setLaid] = useState<{ nodes: GraphNode[]; target: Map<string, Point> } | null>(null);
   const [active, setActive] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
+  /** Aktywne palce (współrzędne ekranowe) — jeden przesuwa, dwa szczypią. */
+  const pointers = useRef(new Map<number, { x: number; y: number }>());
+  /** Gest od pierwszego palca do puszczenia; `moved` blokuje kliknięcie węzła po przeciągnięciu. */
+  const gesture = useRef({ x: 0, y: 0, moved: false, dist: 0 });
 
   const labels = useMemo(
     () => [...new Set(notes.flatMap((n) => (n.trashed || n.locked ? [] : n.labels)))].sort((a, b) => a.localeCompare(b, "pl")),
@@ -192,6 +201,45 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
     );
   }
 
+  const pinchDistance = () => {
+    const [a, b] = [...pointers.current.values()];
+    return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0;
+  };
+  const onPointerDown = (e: ReactPointerEvent<SVGSVGElement>) => {
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (pointers.current.size === 1) {
+      gesture.current = { x: e.clientX, y: e.clientY, moved: false, dist: 0 };
+    } else {
+      gesture.current.moved = true;
+      gesture.current.dist = pinchDistance();
+    }
+  };
+  const onPointerMove = (e: ReactPointerEvent<SVGSVGElement>) => {
+    const prev = pointers.current.get(e.pointerId);
+    const svg = svgRef.current;
+    if (!prev || !svg) return;
+    pointers.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    const g = gesture.current;
+    if (Math.hypot(e.clientX - g.x, e.clientY - g.y) > TAP_SLOP) g.moved = true;
+    if (pointers.current.size === 1) {
+      // Piksele → ułamek płótna: przy skali s płótno zajmuje rect.width·s pikseli.
+      const rect = svg.getBoundingClientRect();
+      const dx = e.clientX - prev.x, dy = e.clientY - prev.y;
+      setView((v) => panView(v, -dx / (rect.width * v.scale), -dy / (rect.height * v.scale)));
+    } else if (pointers.current.size === 2) {
+      const d = pinchDistance();
+      if (g.dist > 0 && d > 0) {
+        const ratio = d / g.dist;
+        setView((v) => zoomView(v, ratio));
+      }
+      g.dist = d;
+    }
+  };
+  const onPointerEnd = (e: ReactPointerEvent<SVGSVGElement>) => {
+    pointers.current.delete(e.pointerId);
+  };
+  const previewNode = preview ? graph.nodes.find((n) => n.id === preview) : undefined;
+
   const isDim = (id: string) => active !== null && id !== active && !neighbors.get(active)?.has(id);
   const showAllLabels = graph.nodes.length <= 40;
   const count = centerId ? graph.nodes.length - 1 : graph.nodes.length;
@@ -222,11 +270,18 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
         </div>
       )}
       <svg
+        ref={svgRef}
         viewBox={graphViewBox(view, W, H)}
         role="group"
         aria-label="Graf powiązań między notatkami"
         className="block h-auto w-full rounded-card border border-border/60 bg-card text-foreground"
-        style={{ backgroundImage: "linear-gradient(color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1px)", backgroundSize: "5% 8.06%" }}
+        // Przy przybliżeniu jeden palec przesuwa graf, więc przeglądarka nie przewija strony.
+        // W skali 1 przewijanie strony zostaje (pan-y).
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerEnd}
+        onPointerCancel={onPointerEnd}
+        style={{ touchAction: view.scale > 1 ? "none" : "pan-y", backgroundImage: "linear-gradient(color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--border) 35%, transparent) 1px, transparent 1px)", backgroundSize: "5% 8.06%" }}
       >
         <defs>
           {/* Lekkie drżenie linii — długopis, nie wektor. */}
@@ -271,7 +326,11 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
               aria-label={`${n.title} — ${n.degree} powiązań`}
               className="cursor-pointer outline-hidden"
               opacity={isDim(n.id) ? 0.25 : 1}
-              onClick={() => onOpenNote(n.id)}
+              onClick={() => {
+                if (gesture.current.moved) return;
+                if (phone) setPreview(n.id);
+                else onOpenNote(n.id);
+              }}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpenNote(n.id); } }}
               onPointerEnter={() => setActive(n.id)}
               onPointerLeave={() => setActive((a) => (a === n.id ? null : a))}
@@ -306,6 +365,19 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
           );
         })}
       </svg>
+      {previewNode && (
+        <Sheet open onOpenChange={(open) => { if (!open) setPreview(null); }}>
+          <SheetContent side="bottom" className="rounded-t-3xl border-t border-border/60 pb-[calc(env(safe-area-inset-bottom)+16px)]">
+            <SheetHeader>
+              <SheetTitle>{previewNode.title}</SheetTitle>
+              <SheetDescription>{`${previewNode.degree} ${pluralPl(previewNode.degree, ["powiązanie", "powiązania", "powiązań"])}`}</SheetDescription>
+            </SheetHeader>
+            <Button className="mt-4 w-full coarse:h-11" onClick={() => { setPreview(null); onOpenNote(previewNode.id); }}>
+              Otwórz notatkę
+            </Button>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   );
 }

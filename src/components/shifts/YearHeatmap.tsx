@@ -3,7 +3,7 @@ import { pl } from "date-fns/locale";
 
 const CELL = 10;
 const GAP = 2;
-const LABEL_W = 30;
+const LABEL_W = 34;
 const DAYS = 31;
 
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -22,7 +22,7 @@ export function YearHeatmap({ year, dayMinutes }: { year: number; dayMinutes: Ma
   for (let m = 0; m < 12; m++) {
     const label = format(new Date(year, m, 1), "LLL", { locale: pl }).replace(".", "");
     cells.push(
-      <text key={`l-${m}`} x={0} y={m * (CELL + GAP) + CELL - 1} className="fill-muted-foreground" style={{ fontSize: 9 }}>{label}</text>,
+      <text key={`l-${m}`} x={0} y={m * (CELL + GAP) + CELL - 1} className="fill-muted-foreground" style={{ fontSize: 12 }}>{label}</text>,
     );
     for (let d = 1; d <= DAYS; d++) {
       const date = new Date(year, m, d);

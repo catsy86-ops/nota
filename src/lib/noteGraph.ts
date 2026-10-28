@@ -251,3 +251,15 @@ export function graphViewBox(v: GraphView, W: number, H: number): string {
   const y = Math.min(Math.max(v.cy * H - h / 2, 0), H - h);
   return `${x.toFixed(1)} ${y.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`;
 }
+
+/**
+ * Przesunięcie widoku o ułamek płótna (`dx`, `dy`, w jednostkach `[0, 1]`). Środek trzymany tak, by okno
+ * zawsze mieściło się w płótnie — przy skali `s` środek leży w `[1/(2s), 1 − 1/(2s)]`. Dzięki temu
+ * przeciąganie nie „zacina się” na krawędzi, bo nie zbiera nadwyżki poza nią.
+ */
+export function panView(v: GraphView, dx: number, dy: number): GraphView {
+  if (v.scale <= 1) return v;
+  const lo = 1 / (2 * v.scale), hi = 1 - lo;
+  const clamp = (n: number) => Math.min(hi, Math.max(lo, n));
+  return { ...v, cx: clamp(v.cx + dx), cy: clamp(v.cy + dy) };
+}
