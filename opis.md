@@ -3572,3 +3572,11 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Budżet paczki.** jsPDF zostaje leniwy (dynamiczny import w `handoverPdf.ts`, jak w `exportPdf.ts`); nowy chunk `jspdf.es.min` dodano do `globIgnores` w `vite.config.ts`, żeby nie wchodził do precache. Czcionki są poza precache i cachowane w czasie wykonania (`pdf-fonts`, CacheFirst), więc działają offline po pierwszym użyciu. Test `bundle.spec` przechodzi (6/6).
 - **Ograniczenia.** Zdjęć na protokole najwyżej 12 (jak na wydruku), reszta w paczce ZIP. Raport dnia jako PDF **nie jest zrobiony** — ten sam generator można przełożyć, ale to osobna praca. Brak przeglądu `performance-engineer`: nie dodano nowej zależności, a limity mierzy `bundle.spec`.
 - **Testy.** Vitest: `src/lib/study/handoverPdf.test.ts` (podział zdjęć na strony, nazwa pliku). E2E: `e2e/handover-pdf.spec.ts` (pobiera plik o nazwie od budowy, nagłówek `%PDF-`, rozmiar > 2 KB).
+
+## Praca: raport dnia/tygodnia jako PDF (P2.5, ciąg dalszy)
+
+- **Co robi.** W oknie raportu, w menu „Więcej”, pozycja „PDF raportu (plik)”. Plik ma tę samą treść co tekst raportu (dni, wpisy, kształtki, etapy, braki, do zamówienia, otwarte problemy) i zdjęcia z podpisami (do 24; reszta w paczce ZIP). Nazwa: „Raport - <budowa i daty>.pdf”, bez prefiksu „Raport:”. Na telefonie idzie przez systemowe udostępnianie, na komputerze pobiera plik.
+- **Gdzie.** Wspólny zapis PDF (czcionka, łamanie stron, zdjęcia 2×3, podpisy, numery stron): `src/lib/study/pdfWriter.ts` (`PdfWriter`, `photoPages`, `pdfFileName`, `sharePdf`). Protokół (`src/lib/study/handoverPdf.ts`) i raport (`src/lib/study/reportPdf.ts`, `buildReportPdf`, `reportPdfName`) używają tego samego zapisu. Przycisk i zbieranie zdjęć: `src/components/study/JournalReport.tsx` (`pdf`).
+- **Jak działa.** Treść raportu bierze się z `reportBody`, tej samej funkcji co tekst, więc PDF i tekst nie mogą się rozjechać. Nagłówki `##` stają się nagłówkami PDF, punkty listą.
+- **Testy.** E2E: `e2e/report-pdf.spec.ts` (pobiera plik o nazwie od budowy i dnia, nagłówek `%PDF-`). Istniejące `e2e/study.spec.ts` (raport: udostępnij, kopiuj, notatka, wydruk) przechodzą. Vitest: `src/lib/study/handoverPdf.test.ts`. Budżet `bundle.spec` 6/6.
+- **Pinezki na planie (P2.7, P-10)** nadal odłożone: wg decyzji dopiero po tym, jak zaznaczanie będzie używane.

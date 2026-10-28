@@ -1,6 +1,9 @@
 import { shareOrCopy } from "@/lib/shareOrCopy";
 import { useEffect, useMemo, useState } from "react";
-import { Copy, Ellipsis, FilePlusCorner, MessageCircle, Printer, Share2, UserPen, Users } from "lucide-react";
+import { Copy, Ellipsis, FileDown, FilePlusCorner, MessageCircle, Printer, Share2, UserPen, Users } from "lucide-react";
+import { companyNameStore } from "@/lib/study/companyPrefs";
+import { blobToDataUrl, sharePdf, type PdfPhoto } from "@/lib/study/pdfWriter";
+import { buildReportPdf, REPORT_PDF_PHOTOS_MAX, reportPdfName } from "@/lib/study/reportPdf";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -102,6 +105,23 @@ export function JournalReportDialog({
       toast.success("Skopiowano raport");
     } catch {
       toast.error("Nie udało się skopiować — zaznacz tekst w podglądzie");
+    }
+  }
+
+  /** P2.5: raport jako plik PDF (ta sama treść co tekst), zdjęcia z magazynu z podpisami; udostępnia albo pobiera. */
+  async function pdf() {
+    try {
+      const photos: PdfPhoto[] = [];
+      for (const ref of report.images.slice(0, REPORT_PDF_PHOTOS_MAX)) {
+        const rec = await imageStore.get(ref);
+        if (!rec) continue;
+        photos.push({ dataUrl: await blobToDataUrl(new Blob([rec.bytes], { type: rec.type })), caption: report.captions[ref] ?? "" });
+      }
+      const blob = await buildReportPdf(report, { company: companyNameStore.get(), photos });
+      const outcome = await sharePdf(blob, reportPdfName(report.title));
+      if (outcome === "downloaded") toast.success("Zapisano raport PDF");
+    } catch {
+      toast.error("Nie udało się przygotować PDF raportu");
     }
   }
 
@@ -261,6 +281,9 @@ export function JournalReportDialog({
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => setPrinting(true)} className="coarse:min-h-11">
                     <Printer className="mr-2 h-4 w-4" aria-hidden />Drukuj / PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => void pdf()} className="coarse:min-h-11">
+                    <FileDown className="mr-2 h-4 w-4" aria-hidden />PDF raportu (plik)
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
