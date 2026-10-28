@@ -1,5 +1,5 @@
 import { pulseSkinSignal } from "@/lib/skinSignal";
-import { Activity, useState, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, lazy, Suspense } from "react";
+import { Activity, useState, useCallback, useDeferredValue, useEffect, useLayoutEffect, useMemo, useRef, Suspense } from "react";
 import { flushSync } from "react-dom";
 import { isMotionReduced } from "@/hooks/useMotionPref";
 import { m as motion, AnimatePresence } from "framer-motion";
@@ -90,57 +90,16 @@ import { registerUndoHandlers, undoLastAction } from "@/lib/actionHistory";
 import { canRedoShifts, canUndoShifts, redoShifts, undoShifts } from "@/lib/shifts/store";
 import { BottomNav } from "@/components/BottomNav";
 import { VaultHost } from "@/components/vault/VaultHost";
+import { TodayCards, StudyDueRows } from "@/components/review/TodayCards";
+import { VIEW_ORDER, ShortcutsDialog, PropDefsDialog, SeriesForecastSection, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, NewReminderButton, DailyReportNudge, PushScheduleSync, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
 
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
 // note action or explicit toggle) — kept out of the eager main bundle so
 // first load only pays for the code the note grid itself needs.
 import { CardSkeleton, ViewSkeleton } from "@/components/ViewSkeleton";
-import { loadCalendarView, loadShiftsView, loadStudyView } from "@/lib/viewPreload";
 import { requestSettingsTab, settingsTabFromParam, SETTINGS_PARAM } from "@/lib/settingsDeepLink";
 import type { DebtReminderApi } from "@/components/debts/DebtsView";
 import { repeatUpdate, toRule, type RepeatInput } from "@/lib/reminderRepeat";
-// Kolejność działów (jak w pasku bocznym) — od niej zależy kierunek przejścia między widokami.
-const VIEW_ORDER: View[] = ["notes", "today", "week", "reminders", "calendar", "shifts", "study", "debts", "cwiczenia", "archive", "trash", "inbox", "label", "folder", "widget"];
-
-const ShortcutsDialog = lazy(() => import("@/components/ShortcutsDialog").then((m) => ({ default: m.ShortcutsDialog })));
-const PropDefsDialog = lazy(() => import("@/components/PropDefsDialog").then((m) => ({ default: m.PropDefsDialog })));
-const TodayDueList = lazy(() => import("@/components/review/TodayDueList").then((m) => ({ default: m.TodayDueList })));
-const StudyDueRows = lazy(() => import("@/components/review/StudyDueRows"));
-const TodaySiteCard = lazy(() => import("@/components/review/TodaySiteCard").then((m) => ({ default: m.TodaySiteCard })));
-const SeriesForecastSection = lazy(() => import("@/components/calendar/SeriesForecastSection"));
-const WidgetPanel = lazy(() => import("@/components/WidgetPanel").then((m) => ({ default: m.WidgetPanel })));
-const TodayShiftCard = lazy(() => import("@/components/review/TodayShiftCard").then((m) => ({ default: m.TodayShiftCard })));
-const TodayStudyCard = lazy(() => import("@/components/review/TodayStudyCard").then((m) => ({ default: m.TodayStudyCard })));
-const BrainTrainingCard = lazy(() => import("@/components/review/BrainTrainingCard").then((m) => ({ default: m.BrainTrainingCard })));
-const WeeklyReviewCard = lazy(() => import("@/components/review/WeeklyReviewCard").then((m) => ({ default: m.WeeklyReviewCard })));
-const RecentActionsPanel = lazy(() => import("@/components/RecentActionsPanel").then((m) => ({ default: m.RecentActionsPanel })));
-const OnboardingTour = lazy(() => import("@/components/OnboardingTour").then((m) => ({ default: m.OnboardingTour })));
-const CommandPalette = lazy(() => import("@/components/CommandPalette").then((m) => ({ default: m.CommandPalette })));
-const ImportExternalDialog = lazy(() => import("@/components/ImportExternalDialog").then((m) => ({ default: m.ImportExternalDialog })));
-const SettingsDialog = lazy(() => import("@/components/SettingsDialog").then((m) => ({ default: m.SettingsDialog })));
-const StatsDialog = lazy(() => import("@/components/StatsDialog").then((m) => ({ default: m.StatsDialog })));
-const FocusMode = lazy(() => import("@/components/FocusMode").then((m) => ({ default: m.FocusMode })));
-// Kalendarz wchodzi tylko po wejściu w swój widok — siatka notatek go nie potrzebuje.
-// Grafik zmian — osobny dział, ładowany dopiero po wejściu.
-// Loadery wspólne z nawigacją (`preloadView` przy `pointerdown`), patrz lib/viewPreload.ts.
-const StudyView = lazy(loadStudyView);
-const DebtsView = lazy(() => import("@/components/debts/DebtsView").then((m) => ({ default: m.DebtsView })));
-const CwiczeniaView = lazy(() => import("@/components/cwiczenia/CwiczeniaView").then((m) => ({ default: m.CwiczeniaView })));
-// Porządkowanie Skrzynki — okno ładuje się przy pierwszym otwarciu.
-const InboxTriage = lazy(() => import("@/components/InboxTriage").then((m) => ({ default: m.InboxTriage })));
-const ShiftsView = lazy(() => loadShiftsView().then((m) => ({ default: m.ShiftsView })));
-const ReminderCalendarView = lazy(() => loadCalendarView().then((m) => ({ default: m.ReminderCalendarView })));
-// „Nowy termin” w Terminach — dialog z kalendarzem; ładowany dopiero na tym widoku.
-const NewReminderButton = lazy(() => import("@/components/reminders/NewReminderButton"));
-// Przypomnienie „Raport dnia gotowy” (dział Praca) — leniwie, żeby dziennik nie wchodził do głównej paczki.
-const DailyReportNudge = lazy(() => import("@/components/study/DailyReportNudge"));
-// Harmonogram dla serwera push — tylko przy włączonych powiadomieniach przy zamkniętej aplikacji.
-const PushScheduleSync = lazy(() => import("@/components/PushScheduleSync"));
-const StudyOverdueSync = lazy(() => import("@/components/review/StudyOverdueSync"));
-// Czytnik notatek poza paczką startową; doczytywany w tle, gdy przeglądarka odpocznie (patrz efekt w `Index`),
-// więc pierwsze otwarcie notatki nie czeka.
-const loadNoteReader = () => import("@/components/NoteReader");
-const NoteReader = lazy(() => loadNoteReader().then((m) => ({ default: m.NoteReader })));
 
 const Index = () => {
   const {
@@ -750,13 +709,11 @@ const Index = () => {
             </Suspense>
           )}
 
-          {/* Każda karta Dziś ma własną granicę: błąd w danych Pracy nie kładzie całego widoku, który jest punktem wejścia. */}
-          {view === "today" && !deferredSearch && (
-            <ViewErrorBoundary name="Grafik">
-              <Suspense fallback={<CardSkeleton />}>
-                <TodayShiftCard onOpenShifts={() => go("shifts")} onDailyNote={openDailyNote} />
-              </Suspense>
-            </ViewErrorBoundary>
+          {view === "today" && (
+            <TodayCards searching={!!deferredSearch} go={go} notes={notes} folders={folders} reminderNotes={reminderNotes} todayCards={todayCards}
+              openNote={openNote} openDailyNote={openDailyNote} addNote={addNote} updateNote={updateNote} togglePin={togglePin}
+              archiveNote={archiveNote} unarchiveNote={unarchiveNote} trashNote={trashNote} restoreFromTrash={restoreFromTrash}
+              handleArchiveSingle={handleArchiveSingle} handleMoveToFolderGlow={handleMoveToFolderGlow} />
           )}
 
           {view === "widget" && (
@@ -766,47 +723,6 @@ const Index = () => {
               </Suspense>
             </ViewErrorBoundary>
           )}
-
-          {view === "today" && !deferredSearch && (
-            <ViewErrorBoundary name="Przypomnienia">
-              <Suspense fallback={<CardSkeleton />}>
-                <TodayDueList notes={reminderNotes} onOpen={openNote} onOpenReminders={() => go("reminders")} onUpdate={updateNote} />
-              </Suspense>
-            </ViewErrorBoundary>
-          )}
-
-          {view === "today" && !deferredSearch && (
-            <ViewErrorBoundary name="Praca">
-              <Suspense fallback={null}>
-                <StudyDueRows onOpenStudy={(siteId) => go("study", siteId ? { site: siteId } : {})} />
-                <TodaySiteCard />
-              </Suspense>
-            </ViewErrorBoundary>
-          )}
-
-          {view === "today" && !deferredSearch && (
-            <ViewErrorBoundary name="Powtórki">
-              <Suspense fallback={<CardSkeleton />}>
-                <TodayStudyCard onPractice={() => navigate("/praca?powtorka=1")} />
-              </Suspense>
-              <Suspense fallback={null}>
-                {todayCards.brainTraining && <BrainTrainingCard onRemind={(at, title) => addNote(title, "", "default", [], at)} />}
-              </Suspense>
-            </ViewErrorBoundary>
-          )}
-
-          {view === "today" && !deferredSearch && (
-            <ViewErrorBoundary name="Przegląd tygodnia">
-              <Suspense fallback={<CardSkeleton />}>
-                {todayCards.weeklyReview && <WeeklyReviewCard
-                  notes={notes} folders={folders} onOpen={openNote} onTogglePin={togglePin}
-                  onArchive={handleArchiveSingle} onMoveToFolder={handleMoveToFolderGlow}
-                  archiveNote={archiveNote} unarchiveNote={unarchiveNote} trashNote={trashNote} restoreFromTrash={restoreFromTrash}
-                />}
-              </Suspense>
-            </ViewErrorBoundary>
-          )}
-
           {canCompose && (
             <motion.div initial={{ y: 6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={tween.enter}
               // Zwinięty pasek jest pod `md` schowany — pusty pojemnik dokładał drugi odstęp `gap` nad notatkami (~50 px).

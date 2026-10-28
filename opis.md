@@ -3521,3 +3521,11 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Gdzie.** `src/components/AppHeader.tsx` (przycisk lupy, warunek `!viewSearches && onOpenPalette`), `src/components/BottomNav.tsx` (`showPaletteSlot`), `src/lib/viewSearch.ts` (`viewHasSearch`, zbiór `VIEWS_WITHOUT_SEARCH`).
 - **Decyzja (2026-10-28).** Lupa zostaje w nagłówku i w dolnym pasku — oba miejsca, bo na telefonie nagłówek bywa daleko od kciuka, a pasek jest pod ręką. Slot w pasku pojawia się tylko tam, gdzie nie ma pola szukania, więc pasek nie puchnie w widokach z polem.
 - **Testy.** `e2e/search-phone.spec.ts` (Grafik na 390 px: lupa i slot otwierają paletę; Notatki: lupy w nagłówku nie ma). 2/2 zielone.
+
+## Podział `pages/Index.tsx` (F3, plan mobile 2026-10-28)
+
+- **Co zmieniono.** Z `src/pages/Index.tsx` wydzielono dwie rzeczy. (1) Definicje leniwych widoków i dialogów oraz stałą `VIEW_ORDER` przeniesiono do `src/pages/indexViews.ts` — bez zmian, te same importy dynamiczne, więc podział na paczki się nie zmienia. (2) Pięć kart widoku Dziś (Grafik, przypomnienia, Praca, powtórki, przegląd tygodnia) przeniesiono do `src/components/review/TodayCards.tsx` jako komponent `TodayCards`, który dostaje dane i akcje jako propsy.
+- **Dlaczego tak.** Karty Dziś mają własne granice błędów i wąski zestaw zależności, więc wydzielenie nie zmienia zachowania. `StudyDueRows` jest też w widoku Terminy, więc jego `lazy` żyje w `TodayCards` i jest eksportowany do `Index` (jedna definicja, bez duplikatu).
+- **Czego nie ruszono.** Siatka notatek, zaznaczanie, przeciąganie, widok Terminy i pozostałe widoki nadal są w `Index`. Plik spadł z 1240 do ok. 1156 linii — podział jest częściowy. Dalsze wydzielanie wymagałoby przekazania ok. 100 wartości stanu, więc zostawiono je na osobną zmianę.
+- **Gdzie.** `src/pages/Index.tsx` (widżet „Widżet” zostaje w `Index`, bo sprawdza inny widok), `src/pages/indexViews.ts`, `src/components/review/TodayCards.tsx`.
+- **Testy.** Istniejące e2e widoków, których dotyczy zmiana: `dzis-terminy`, `dzis-phone`, `today-site-card`, `inbox-today`, `reminders-calendar`, `hidden-views` — 23 przechodzą. Jeden test w `reminders-calendar` (przeciąganie terminu na inny dzień) pada też na `HEAD` przed podziałem, więc to osobny, istniejący problem. Typy i lint bez nowych błędów.
