@@ -18,7 +18,7 @@ html[data-skin="matrix"] {
   --accent-foreground: oklch(0.1673 0.0569 142.50);
   --destructive: oklch(0.5833 0.2325 28.60);
   --destructive-foreground: oklch(1.0000 0.0000 0.00);
-  --border: color-mix(in oklab, oklch(0.2821 0.0692 143.47) 55%, transparent);
+  --border: color-mix(in oklab, oklch(0.2821 0.0692 143.47) var(--frame-mix), transparent);
   --input: oklch(0.5893 0.1065 144.08);
   --ring: oklch(0.8686 0.2845 143.15);
   --grid: oklch(0.7806 0.1966 143.40);
@@ -63,7 +63,7 @@ html[data-skin="matrix"]:not(.dark) {
   --destructive: oklch(0.5786 0.2137 27.17);
   --destructive-ink: oklch(0.5314 0.1989 27.39);
   --destructive-foreground: oklch(1.0000 0.0000 0.00);
-  --border: color-mix(in oklab, oklch(0.8600 0.0400 145.00) 55%, transparent);
+  --border: color-mix(in oklab, oklch(0.8600 0.0400 145.00) var(--frame-mix), transparent);
   --input: oklch(0.5800 0.0700 150.00);
   --ring: oklch(0.4700 0.1300 150.00);
   --grid: oklch(0.6000 0.1200 145.00);

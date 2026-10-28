@@ -24,6 +24,7 @@ import { NightSkinSettings } from "./NightSkinSettings";
 import { AppearanceCode } from "./AppearanceCode";
 import { setBackdrop, useBackdrop, type Backdrop } from "@/lib/backdrop";
 import { setShape, useShape, type Shape } from "@/lib/shape";
+import { setFrames, useFrames, type Frames } from "@/lib/frames";
 import { BASE_SORTS } from "@/lib/sortOptions";
 import { HIDEABLE_VIEWS, setViewHidden, useHiddenViews, type HideableView } from "@/lib/hiddenViews";
 import { setBottomSlot, useBottomSlot, type BottomSlotView } from "@/lib/bottomSlot";
@@ -73,6 +74,12 @@ const shapeOptions: { value: Shape; label: string; Icon: typeof Sun }[] = [
   { value: "soft", label: "Miękki", Icon: Squircle },
 ];
 
+const framesOptions: { value: Frames; label: string; Icon: typeof Sun }[] = [
+  { value: "soft", label: "Delikatne", Icon: Waves },
+  { value: "normal", label: "Zwykłe", Icon: SquareRoundCorner },
+  { value: "strong", label: "Wyraźne", Icon: Square },
+];
+
 const motionOptions: { value: MotionMode; label: string; Icon: typeof Sun }[] = [
   { value: "full", label: "Pełne", Icon: Zap },
   { value: "reduced", label: "Ograniczone", Icon: Accessibility },
@@ -110,6 +117,7 @@ export function AppearanceSettings() {
   const appFont = useAppFont();
   const backdrop = useBackdrop();
   const shape = useShape();
+  const frames = useFrames();
   const { mode: motionMode, reduced: motionReduced, setMode: setMotionMode } = useMotionPref();
   const { pref: seasonPref, season: activeSeason, setPref: setSeasonPref } = useSeasonPref();
 
@@ -140,6 +148,11 @@ export function AppearanceSettings() {
         <Section title="Kształt">
           <Segmented label="Kształt" options={shapeOptions} value={shape} onChange={setShape} />
           <p className="text-xs text-muted-foreground mt-1.5">Zaokrąglenie przycisków, pól, kafli i okien w każdym stylu.</p>
+        </Section>
+
+        <Section title="Ramki">
+          <Segmented label="Ramki" options={framesOptions} value={frames} onChange={setFrames} />
+          <p className="text-xs text-muted-foreground mt-1.5">Jak mocno widać krawędzie kart i podziałów. Delikatne — prawie niewidoczne; Wyraźne — pełny kolor motywu.</p>
         </Section>
 
         <Section title="Tło">
