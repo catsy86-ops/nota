@@ -21,7 +21,7 @@ html[data-skin="kafle"] {
   --destructive: oklch(0.5786 0.2137 27.17);
   --destructive-ink: oklch(0.5314 0.1989 27.39);
   --destructive-foreground: oklch(1.0000 0.0000 0.00);
-  --border: oklch(0.8700 0.0080 250.00);
+  --border: color-mix(in oklab, oklch(0.8700 0.0080 250.00) 55%, transparent);
   --input: oklch(0.6000 0.0200 255.00);
   --ring: oklch(0.4500 0.1700 262.00);
   /* Fuga. */
@@ -66,7 +66,7 @@ html[data-skin="kafle"].dark {
   --accent-foreground: oklch(0.2000 0.0200 220.00);
   --destructive: oklch(0.5786 0.2137 27.17);
   --destructive-foreground: oklch(1.0000 0.0000 0.00);
-  --border: oklch(0.3500 0.0060 250.00);
+  --border: color-mix(in oklab, oklch(0.3500 0.0060 250.00) 55%, transparent);
   --input: oklch(0.5800 0.0100 250.00);
   --ring: oklch(0.7400 0.1200 258.00);
   --grid: oklch(0.3300 0.0060 250.00);

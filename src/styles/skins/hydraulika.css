@@ -17,7 +17,7 @@ html[data-skin="hydraulika"] {
   --accent-foreground: oklch(0.1821 0.0217 240.47);
   --destructive: oklch(0.5828 0.2195 27.51);
   --destructive-foreground: oklch(1.0000 0.0000 0.00);
-  --border: oklch(0.3896 0.0338 239.80);
+  --border: color-mix(in oklab, oklch(0.3896 0.0338 239.80) 55%, transparent);
   --input: oklch(0.6250 0.0483 230.11);
   --ring: oklch(0.7013 0.1336 52.46);
   --grid: oklch(0.8504 0.0348 229.36);
@@ -62,7 +62,7 @@ html[data-skin="hydraulika"]:not(.dark) {
   --destructive: oklch(0.5786 0.2137 27.17);
   --destructive-ink: oklch(0.5314 0.1989 27.39);
   --destructive-foreground: oklch(1.0000 0.0000 0.00);
-  --border: oklch(0.8800 0.0120 230.00);
+  --border: color-mix(in oklab, oklch(0.8800 0.0120 230.00) 55%, transparent);
   --input: oklch(0.6000 0.0300 235.00);
   --ring: oklch(0.5200 0.1200 50.00);
   --grid: oklch(0.5500 0.0400 230.00);

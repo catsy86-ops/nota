@@ -20,7 +20,7 @@ html[data-skin="miedz"] {
   --accent-foreground: oklch(1.0000 0.0000 0.00);
   --destructive: oklch(0.5374 0.1986 27.18);
   --destructive-foreground: oklch(1.0000 0.0000 0.00);
-  --border: oklch(0.8473 0.0072 67.73);
+  --border: color-mix(in oklab, oklch(0.8473 0.0072 67.73) 55%, transparent);
   --input: oklch(0.5836 0.0211 57.86);
   --ring: oklch(0.4933 0.1221 45.56);
   --grid: oklch(0.7676 0.0083 67.70);
@@ -64,7 +64,7 @@ html[data-skin="miedz"].dark {
   --accent-foreground: oklch(0.2000 0.0200 200.00);
   --destructive: oklch(0.5786 0.2137 27.17);
   --destructive-foreground: oklch(1.0000 0.0000 0.00);
-  --border: oklch(0.3300 0.0120 55.00);
+  --border: color-mix(in oklab, oklch(0.3300 0.0120 55.00) 55%, transparent);
   --input: oklch(0.5500 0.0200 60.00);
   --ring: oklch(0.7200 0.1300 52.00);
   --grid: oklch(0.4500 0.0100 60.00);

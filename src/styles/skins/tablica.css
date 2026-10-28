@@ -23,7 +23,7 @@ html[data-skin="tablica"] {
   --destructive: oklch(0.5786 0.2137 27.17);
   --destructive-ink: oklch(0.5314 0.1989 27.39);
   --destructive-foreground: oklch(1.0000 0.0000 0.00);
-  --border: oklch(0.8700 0.0040 250.00);
+  --border: color-mix(in oklab, oklch(0.8700 0.0040 250.00) 55%, transparent);
   --input: oklch(0.6000 0.0100 255.00);
   --ring: oklch(0.4700 0.1700 262.00);
   /* Kolor śladów po starym piśmie. */
@@ -73,7 +73,7 @@ html[data-skin="tablica"].dark {
   --success: oklch(0.7600 0.1300 155.00);
   /* Skróty nieobecności w Grafiku: mniej koloru zmiany, więcej kredy (kolory zmian bywają bliskie tablicy). */
   --shift-text-mix: 30%;
-  --border: oklch(0.4500 0.0400 160.00);
+  --border: color-mix(in oklab, oklch(0.4500 0.0400 160.00) 55%, transparent);
   --input: oklch(0.7000 0.0300 150.00);
   --ring: oklch(0.8800 0.1300 96.00);
   --grid: oklch(0.9500 0.0120 95.00);
