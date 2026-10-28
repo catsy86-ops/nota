@@ -6,9 +6,15 @@ import { buildGraph, circleLayout, GRAPH_NODE_LIMIT, localGraph, type GraphEdge,
 import { layoutGraph } from "@/workers/graphLayout";
 import { ease, dur } from "@/lib/motion";
 import { pluralPl } from "@/lib/plural";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { GRAPH_VIEW_RESET, graphViewBox, zoomView, type GraphView } from "@/lib/noteGraph";
+import { Button } from "@/components/ui/button";
+import { Maximize2, ZoomIn, ZoomOut } from "lucide-react";
 
-const W = 1000;
-const H = 620;
+/** Płótno na komputerze: szerokie. */
+const DESKTOP = { W: 1000, H: 620 };
+/** Płótno na telefonie (plan mobile D1): pionowe, żeby 390 px nie skalowało węzłów do ~0,36. */
+const PHONE = { W: 600, H: 760 };
 
 interface Props {
   notes: Note[];
@@ -35,7 +41,7 @@ function radius(degree: number): number {
  * Układ siłowy rozciąga małe grafy do krawędzi płótna (trzy notatki = trzy kropki
  * w rogach). Ściskamy go do środka tak, by rozpiętość rosła z liczbą węzłów.
  */
-function compact(layout: Map<string, Point>, count: number): Map<string, Point> {
+function compact(layout: Map<string, Point>, count: number, W: number, H: number): Map<string, Point> {
   if (count < 2) return layout;
   const pts = [...layout.values()];
   const minX = Math.min(...pts.map((p) => p.x)), maxX = Math.max(...pts.map((p) => p.x));
@@ -68,7 +74,10 @@ function short(title: string, max = 22): string {
  * jak odręczne kreski. Układ liczy Worker (`workers/graphLayout`), tu tylko rysunek.
  */
 export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], compact: narrow = false }: Props) {
-  const labelSize = narrow ? 34 : 15;
+  const phone = useIsMobile() && !narrow;
+  const { W, H } = phone ? PHONE : DESKTOP;
+  const labelSize = narrow ? 34 : phone ? 24 : 15;
+  const [view, setView] = useState<GraphView>(GRAPH_VIEW_RESET);
   const { reduced } = useMotionPref();
   const filterId = useId().replace(/:/g, "");
   const [label, setLabel] = useState<string | null>(null);
@@ -91,10 +100,10 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
   useEffect(() => {
     let cancelled = false;
     void layoutGraph(graph.nodes, graph.edges, W, H).then((l) => {
-      if (!cancelled) setLaid({ nodes: graph.nodes, target: compact(l, graph.nodes.length) });
+      if (!cancelled) setLaid({ nodes: graph.nodes, target: compact(l, graph.nodes.length, W, H) });
     });
     return () => { cancelled = true; };
-  }, [graph]);
+  }, [graph, W, H]);
 
   // Rozkładanie z okręgu do układu siłowego; reduced motion → od razu gotowy.
   useEffect(() => {
@@ -118,7 +127,7 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [laid, reduced]);
+  }, [laid, reduced, W, H]);
 
   const neighbors = useMemo(() => {
     const m = new Map<string, Set<string>>();
@@ -198,8 +207,22 @@ export default function NoteGraph({ notes, onOpenNote, centerId, folders = [], c
           ? `Pokazano ${graph.nodes.length} z ${graph.total} powiązanych notatek (limit ${GRAPH_NODE_LIMIT}) — te najbliżej i z największą liczbą linków.`
           : `${summary} Kliknij węzeł, żeby otworzyć notatkę.`}
       </p>
+      {phone && (
+        <div className="mb-2 flex items-center gap-1.5" role="group" aria-label="Powiększenie grafu">
+          <Button variant="outline" size="icon" className="coarse:h-11 coarse:w-11" onClick={() => setView((v) => zoomView(v, 1.5))} disabled={view.scale >= 3} aria-label="Przybliż graf">
+            <ZoomIn className="h-4 w-4" aria-hidden />
+          </Button>
+          <Button variant="outline" size="icon" className="coarse:h-11 coarse:w-11" onClick={() => setView((v) => zoomView(v, 1 / 1.5))} disabled={view.scale <= 1} aria-label="Oddal graf">
+            <ZoomOut className="h-4 w-4" aria-hidden />
+          </Button>
+          <Button variant="outline" size="icon" className="coarse:h-11 coarse:w-11" onClick={() => setView(GRAPH_VIEW_RESET)} disabled={view.scale === 1} aria-label="Cały graf">
+            <Maximize2 className="h-4 w-4" aria-hidden />
+          </Button>
+          <span className="ml-1 text-xs tabular-nums text-muted-foreground" aria-hidden>{Math.round(view.scale * 100)}%</span>
+        </div>
+      )}
       <svg
-        viewBox={`0 0 ${W} ${H}`}
+        viewBox={graphViewBox(view, W, H)}
         role="group"
         aria-label="Graf powiązań między notatkami"
         className="block h-auto w-full rounded-card border border-border/60 bg-card text-foreground"

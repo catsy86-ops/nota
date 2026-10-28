@@ -227,3 +227,27 @@ export function forceLayout(nodes: GraphNode[], edges: GraphEdge[], w: number, h
   });
   return out;
 }
+
+/** Przybliżenie grafu (plan mobile E5): skala 1–3 i środek widoku w ułamkach płótna (0–1). */
+export interface GraphView { scale: number; cx: number; cy: number }
+
+export const GRAPH_VIEW_RESET: GraphView = { scale: 1, cx: 0.5, cy: 0.5 };
+export const GRAPH_MAX_SCALE = 3;
+
+/**
+ * Zmiana skali o `factor` przy zachowaniu środka widoku. Skala w `[1, GRAPH_MAX_SCALE]`; przy 1 środek
+ * wraca na płótno, żeby kolejne oddalanie nie zostawiało go przesuniętego.
+ */
+export function zoomView(v: GraphView, factor: number): GraphView {
+  const scale = Math.min(GRAPH_MAX_SCALE, Math.max(1, v.scale * factor));
+  if (scale === 1) return GRAPH_VIEW_RESET;
+  return { scale, cx: v.cx, cy: v.cy };
+}
+
+/** `viewBox` dla widoku: okno o rozmiarze `W/scale` × `H/scale`, przycięte do płótna. */
+export function graphViewBox(v: GraphView, W: number, H: number): string {
+  const w = W / v.scale, h = H / v.scale;
+  const x = Math.min(Math.max(v.cx * W - w / 2, 0), W - w);
+  const y = Math.min(Math.max(v.cy * H - h / 2, 0), H - h);
+  return `${x.toFixed(1)} ${y.toFixed(1)} ${w.toFixed(1)} ${h.toFixed(1)}`;
+}
