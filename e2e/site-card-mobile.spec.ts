@@ -78,3 +78,18 @@ for (const width of [320, 390]) {
     await expectTarget(card.getByRole("button", { name: "Tekst protokołu" }), "tekst protokołu");
   });
 }
+
+// Jednopikselowy PNG — wystarczy, żeby `prepareImage` zapisał zdjęcie.
+const PNG_B64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+
+test("390 px: „Zdjęcie do wpisu” w karcie budowy dodaje wpis ze zdjęciem, cel dotyku ≥ 44 px (B2)", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByTestId("study-journal").getByRole("button", { name: "Osiedle Słoneczne, dom nr 12: karta budowy" }).click();
+  const card = page.getByTestId("site-card");
+
+  await expectTarget(card.getByRole("button", { name: "Zdjęcie do wpisu" }), "zdjęcie do wpisu");
+  await card.locator('input[type="file"][capture]').setInputFiles({ name: "zdjecie.png", mimeType: "image/png", buffer: Buffer.from(PNG_B64, "base64") });
+  await expect(page.getByText("Zdjęcie dodane jako wpis budowy")).toBeVisible();
+});

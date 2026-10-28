@@ -3258,11 +3258,11 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Dziś: „Zaczynasz za…” i pasek zmiany** (B3). Gdy zmiana trwa, karta Dziś pokazuje „Trwa teraz, do HH:mm” i pasek postępu (0–100 %). Gdy następna zmiana jest dalej, napis brzmi „Zaczynasz za 3 godziny, o 08:00”.
 - **Karta budowy: ekran nie gaśnie** (B1). Dopóki karta jest otwarta, działa blokada wygaszania ekranu.
 - **Tryb budowa: cel dotyku 56 px** (B1). W trybie budowa `--tap` wynosi 3,125 rem (przy 18 px = 56 px), zamiast 54 px.
-- **Zdjęcie do wpisu** (B2). Przycisk w karcie budowy otwiera aparat (`capture="environment"`) i zapisuje nowy wpis tej budowy z samym zdjęciem. Bez tekstu i bez etapu.
+- **Zdjęcie do wpisu** (B2). Przycisk obok „Wpis tutaj” na górze karty budowy otwiera aparat (`capture="environment"`) i zapisuje nowy wpis tej budowy z samym zdjęciem. Bez tekstu i bez etapu.
 
 ### Gdzie jest
 - `src/components/review/TodayShiftCard.tsx` — `progress` (pasek `role="progressbar"`, `data-testid="today-progress"`), napis „Zaczynasz za”.
-- `src/components/study/SiteCardDialog.tsx` — `useWakeLock(!!site)`, `addPhotoEntry`, `photoInput`, wiersz „Zdjęcie do wpisu” przed stopką.
+- `src/components/study/SiteCardDialog.tsx` — `useWakeLock(!!site)`, `addPhotoEntry`, `photoInput`, rząd „Wpis tutaj” + „Zdjęcie” na górze karty.
 - `src/styles/site.css` — `html[data-site] { --tap: 3.125rem }`.
 
 ### Jak działa i dlaczego
@@ -3271,12 +3271,13 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - Wpis bez tekstu i etapu jest prawidłowy, bo zdjęcie samo wystarcza (jak nagranie).
 
 ### Ograniczenia i pułapki
-- **Etap nie jest ustawiany.** Plan (P2.1) chce „bieżącego etapu”, ale pole `stage` wpisu oznacza etap, który ten wpis zamyka. Bieżący etap z karty nie jest jeszcze w modelu. Do decyzji.
-- Przycisk „Zdjęcie do wpisu” jest na dole karty, pod listą etapów i braków. Przeniesienie obok „Wpis tutaj” to osobna decyzja wyglądu.
+- **Etap nie jest ustawiany — decyzja (2026-10-28).** Plan (P2.1) chce „bieżącego etapu”, ale pole `stage` wpisu oznacza etap, który ten wpis zamyka, a karta nie ma pojęcia bieżącego etapu. Zdjęcie zostaje bez etapu; dodanie bieżącego etapu wymagałoby nowego pola w karcie i to osobna zmiana modelu.
+- Przycisk przeniesiony z dołu karty na górę, obok „Wpis tutaj” (decyzja 2026-10-28: na telefonie pod panelami etapów i braków nikt go nie szuka). Na 320 px rząd zwija napis „Zdjęcie” do samej ikony; nazwę zachowuje `aria-label`.
 - Wake Lock nie działa w Safari < 16.4 i Firefox (wtedy nic się nie dzieje).
 - A6 (kalendarz: kształty dni, legenda, container query) nie zrobione.
 
 ### Testy
+- E2E: `e2e/site-card-mobile.spec.ts` („Zdjęcie do wpisu” — cel ≥ 44 px i dodanie wpisu ze zdjęciem; oraz przepełnienie na 320/390 px).
 - Vitest: `src/components/review/TodayShiftCard.test.tsx` (napis „Trwa teraz”, „Zaczynasz za”, obecność paska). Cała grupa `review`, `study`, `lib/study`: 71 plików, 516 testów, zielone.
 - `tsc --noEmit` czysto, eslint czysto na zmienionych plikach, build bez zmiany rozmiaru głównego chunku (166,55 kB gzip).
 - Przeglądarka (Pixel 7, poza repo): przycisk widoczny, 44 px wysokości, wybór zdjęcia pokazuje „Zdjęcie dodane jako wpis budowy”.

@@ -237,9 +237,16 @@ export function SiteCardDialog({
             )}
 
             <div className="space-y-3 px-5 pt-4">
-              <Button onClick={() => leaveTo(onNewEntry)} className="w-full coarse:h-11">
-                <Plus className="mr-1.5 h-4 w-4" aria-hidden />Wpis tutaj
-              </Button>
+              {/* B2: zdjęcie obok „Wpis tutaj”, nie na dole karty — pod panelami na telefonie nikt go nie szuka. */}
+              <div className="flex gap-2">
+                <Button onClick={() => leaveTo(onNewEntry)} className="min-w-0 flex-1 coarse:h-11">
+                  <Plus className="mr-1.5 h-4 w-4" aria-hidden />Wpis tutaj
+                </Button>
+                <Button variant="outline" onClick={() => photoInput.current?.click()} disabled={photoBusy} aria-label={photoBusy ? "Zapisuję zdjęcie" : "Zdjęcie do wpisu"} className="shrink-0 coarse:h-11">
+                  <Camera className="h-4 w-4" aria-hidden />{photoBusy ? "…" : <span className="max-[380px]:sr-only">Zdjęcie</span>}
+                </Button>
+                <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" tabIndex={-1} aria-hidden onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void addPhotoEntry(file); }} />
+              </div>
               {tally && <SiteTallyBar tally={tally} />}
               <SiteStagesPanel site={site} />
               <SiteShortagesPanel site={site} />
@@ -396,13 +403,6 @@ export function SiteCardDialog({
             <div className="space-y-3 px-5 py-3">
               <SiteDocsPanel site={site} />
               <SiteServicePanel site={site} />
-            </div>
-
-            <div className="px-5 pb-3">
-              <Button variant="outline" onClick={() => photoInput.current?.click()} disabled={photoBusy} className="w-full coarse:h-11">
-                <Camera className="mr-1.5 h-4 w-4" aria-hidden />{photoBusy ? "Zapisuję zdjęcie…" : "Zdjęcie do wpisu"}
-              </Button>
-              <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" tabIndex={-1} aria-hidden onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void addPhotoEntry(file); }} />
             </div>
 
             <div className="grid grid-cols-2 gap-2 border-t border-border px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
