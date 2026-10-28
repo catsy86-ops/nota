@@ -7,7 +7,6 @@ export const VIEW_ORDER: View[] = ["notes", "today", "week", "reminders", "calen
 
 export const ShortcutsDialog = lazy(() => import("@/components/ShortcutsDialog").then((m) => ({ default: m.ShortcutsDialog })));
 export const PropDefsDialog = lazy(() => import("@/components/PropDefsDialog").then((m) => ({ default: m.PropDefsDialog })));
-export const SeriesForecastSection = lazy(() => import("@/components/calendar/SeriesForecastSection"));
 export const WidgetPanel = lazy(() => import("@/components/WidgetPanel").then((m) => ({ default: m.WidgetPanel })));
 export const RecentActionsPanel = lazy(() => import("@/components/RecentActionsPanel").then((m) => ({ default: m.RecentActionsPanel })));
 export const OnboardingTour = lazy(() => import("@/components/OnboardingTour").then((m) => ({ default: m.OnboardingTour })));
@@ -27,7 +26,6 @@ export const InboxTriage = lazy(() => import("@/components/InboxTriage").then((m
 export const ShiftsView = lazy(() => loadShiftsView().then((m) => ({ default: m.ShiftsView })));
 export const ReminderCalendarView = lazy(() => loadCalendarView().then((m) => ({ default: m.ReminderCalendarView })));
 // „Nowy termin” w Terminach — dialog z kalendarzem; ładowany dopiero na tym widoku.
-export const NewReminderButton = lazy(() => import("@/components/reminders/NewReminderButton"));
 // Przypomnienie „Raport dnia gotowy” (dział Praca) — leniwie, żeby dziennik nie wchodził do głównej paczki.
 export const DailyReportNudge = lazy(() => import("@/components/study/DailyReportNudge"));
 // Harmonogram dla serwera push — tylko przy włączonych powiadomieniach przy zamkniętej aplikacji.

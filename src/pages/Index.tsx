@@ -4,10 +4,8 @@ import { flushSync } from "react-dom";
 import { isMotionReduced } from "@/hooks/useMotionPref";
 import { m as motion, AnimatePresence } from "framer-motion";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ReminderListGroups } from "@/components/reminders/ReminderListGroups";
-import { cn } from "@/lib/utils";
 import { useWhatsNew } from "@/hooks/useWhatsNew";
-import { effectiveRemindersLayout, setRemindersLayout, useRemindersLayoutChoice } from "@/lib/remindersLayout";
+import { effectiveRemindersLayout, useRemindersLayoutChoice } from "@/lib/remindersLayout";
 import { ViewErrorBoundary } from "@/components/ViewErrorBoundary";
 import { InboxCapture } from "@/components/InboxCapture";
 import { useReaderNav } from "@/hooks/useReaderNav";
@@ -90,8 +88,9 @@ import { registerUndoHandlers, undoLastAction } from "@/lib/actionHistory";
 import { canRedoShifts, canUndoShifts, redoShifts, undoShifts } from "@/lib/shifts/store";
 import { BottomNav } from "@/components/BottomNav";
 import { VaultHost } from "@/components/vault/VaultHost";
-import { TodayCards, StudyDueRows } from "@/components/review/TodayCards";
-import { VIEW_ORDER, ShortcutsDialog, PropDefsDialog, SeriesForecastSection, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, NewReminderButton, DailyReportNudge, PushScheduleSync, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
+import { TodayCards } from "@/components/review/TodayCards";
+import { RemindersView } from "@/components/reminders/RemindersView";
+import { VIEW_ORDER, ShortcutsDialog, PropDefsDialog, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
 
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
 // note action or explicit toggle) — kept out of the eager main bundle so
@@ -786,46 +785,9 @@ const Index = () => {
           )}
 
           {view === "reminders" && (
-            <Suspense fallback={null}>
-              <StudyDueRows onOpenStudy={(siteId) => go("study", siteId ? { site: siteId } : {})} />
-            </Suspense>
+            <RemindersView go={go} reminderNotes={reminderNotes} reminderGroups={reminderGroups} archivedRows={archivedRows} remindersLayout={remindersLayout}
+              openNote={openNote} updateNote={updateNote} createReminderNote={createReminderNote} attachReminder={attachReminder} renderGrid={renderGrid} />
           )}
-          {view === "reminders" && (
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              <Suspense fallback={null}>
-                <NewReminderButton notes={reminderNotes} onCreateNote={createReminderNote} onAttachReminder={attachReminder} />
-              </Suspense>
-              <div role="group" aria-label="Układ Terminów" className="flex gap-1">
-                {(["tiles", "list"] as const).map((layout) => (
-                  <button key={layout} type="button" aria-pressed={remindersLayout === layout} onClick={() => setRemindersLayout(layout)} className={cn("rounded-full px-3 py-1 text-xs font-medium coarse:min-h-11", remindersLayout === layout ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:text-foreground")}>
-                    {layout === "tiles" ? "Kafle" : "Lista"}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-          {view === "reminders" && remindersLayout === "list" && (
-            <>
-              <ReminderListGroups groups={reminderGroups} onOpen={openNote} onUpdate={updateNote} />
-              {archivedRows.length > 0 && <ReminderListGroups groups={[{ key: "archive", label: "W archiwum", notes: archivedRows }]} onOpen={openNote} onUpdate={updateNote} />}
-            </>
-          )}
-          {view === "reminders" && remindersLayout === "tiles" && reminderGroups.map((group, i) => (
-            <NoteGroupSection key={group.key} groupKey={`reminders-${group.key}`} label={group.label} count={group.notes.length} tone={group.key === "overdue" || group.key === "missed" ? "alert" : "default"}>
-              {renderGrid(group.notes, i)}
-            </NoteGroupSection>
-          ))}
-          {view === "reminders" && remindersLayout === "tiles" && archivedRows.length > 0 && (
-            <NoteGroupSection groupKey="reminders-archive" label="W archiwum" count={archivedRows.length}>
-              {renderGrid(archivedRows, reminderGroups.length)}
-            </NoteGroupSection>
-          )}
-          {view === "reminders" && (
-            <Suspense fallback={null}>
-              <SeriesForecastSection notes={reminderNotes} />
-            </Suspense>
-          )}
-
           {view !== "reminders" && !boardMode && !tableMode && groups.map((group, gi) => {
             const grid = (navOrder: number) => renderGrid(group.notes, navOrder);
             // Bez podziału: jedna sekcja jak dotąd („Inne” tylko pod przypiętymi).
