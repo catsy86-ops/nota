@@ -3538,3 +3538,12 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Testy.** `e2e/reminders-calendar.spec.ts` („termin da się przeciągnąć…”) ustawia viewport 1920 px, przy którym komórka mieści chip. Zestaw kalendarza i terminów (calendar-*, reminders-*) zielony.
 
 **Decyzja (2026-10-28): próg chipów 6 rem zostaje.** Potwierdzone przez użytkownika jako domyślne; przeciąganie terminów w widoku miesiąca działa na desktopie.
+
+## Praca: „Jesteś przy budowie” (P2.10, decyzja P-11 — włączana w Ustawieniach)
+
+- **Co robi.** Gdy włączone w Ustawieniach → Ogólne → „Praca i Grafik” (domyślnie wyłączone), przy otwarciu aplikacji jedno odczytanie położenia (bez śledzenia w tle). Jeśli stoisz w promieniu 300 m od budowy z zapisaną lokalizacją i nie ma jeszcze wejścia na tę budowę dziś, pojawia się dymek „Jesteś przy budowie „X””, z akcją **Wchodzę** (zapisuje wejście jak w karcie kontrolnej). Pytanie jest raz dziennie.
+- **Gdzie.** `src/lib/study/siteArrival.ts` (`arrivalSite`, czysta logika), `src/lib/study/siteArrivalPrefs.ts` (preferencja, klucz `kaczy.study.siteArrival.v1`, domyślnie wyłączona), `src/components/study/SiteArrivalPrompt.tsx` (jednorazowe `getCurrentPosition`, dymek), montowany lazy w `src/pages/Index.tsx` obok `DailyReportNudge` (`src/pages/indexViews.ts`), przełącznik w `src/components/settings/GeneralSettings.tsx`.
+- **Jak działa.** Lokalizacja budowy (`SiteCard.geo`) jest zapisywana przez „Tu jestem” w arkuszu wpisu i akcję „Zapisz lokalizację budowy” (`setSiteGeo`). Dzień zapytania zapisany w `kaczy.study.siteArrivalAsked.v1`, więc po pierwszym sprawdzeniu nie pytamy ponownie tego dnia (także po odświeżeniu). Odmowa lokalizacji = cisza, bez komunikatu.
+- **Prywatność.** Położenie zostaje w przeglądarce, nie idzie na serwer ani do raportu. Brak zgody w przeglądarce nie blokuje aplikacji.
+- **Ograniczenia.** Budowy bez zapisanej lokalizacji są pomijane. Promień 300 m (`NEAR_SITE_M`). Przy słabym GPS (`accuracy`) wybór może być przypadkowy; dymek zawsze pyta, więc użytkownik decyduje.
+- **Testy.** Vitest: `src/lib/study/siteArrival.test.ts` (5 testów). E2E: `e2e/site-arrival.spec.ts` (zapis budowy z lokalizacją przez UI, włączenie, przeładowanie, „Wchodzę”; oraz brak dymku, gdy wyłączone).

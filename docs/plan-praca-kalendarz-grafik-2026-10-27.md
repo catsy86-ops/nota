@@ -188,14 +188,14 @@ Do tego dokumentacja nie nadąża za kodem: `opis.md` (Kalendarz :1397, Grafik :
 |---|----|---|---|
 | P2.1 | **„Zdjęcie” jednym stuknięciem:** pływający przycisk na osi i karcie budowy. `input capture="environment"` otwiera aparat, a zdjęcie tworzy nowy wpis z budową i bieżącym etapem. Przy 5 zdjęciach (`yStudy.ts:76`) „Ciąg dalszy w nowym wpisie”. | 3 | S |
 | P2.2 | **Zdjęcia przed zakryciem:** przed odhaczeniem „Zakrycia” i w przypomnieniu licznik zdjęć z podpisem „Przed zakryciem” (`PhotoStrip.tsx:12`) i przycisk „Zrób zdjęcia”. W protokole sekcja z datami (`handover.ts:60-73`). | 3 | M |
-| P2.3 | **Usterki ze statusem:** problem dostaje odpowiedzialnego, termin i zdjęcie przed/po. Lista usterek w karcie i sekcja w protokole. **Decyzja P-7.** | 3 | M |
+| P2.3 | **Usterki ze statusem:** problem dostaje odpowiedzialnego, termin i zdjęcie przed/po. Lista usterek w karcie i sekcja w protokole. **Decyzja P-7: rozbudowany problem (2026-10-28).** | 3 | M |
 | P2.4 | **Podpis klienta na protokole:** `DrawingCanvas` jako pole podpisu, PNG w mapie karty z datą i imieniem. Przegląd `security-reviewer` (dane osobowe w kopii i ZIP). | 2 | S |
 | P2.5 | **Prawdziwy PDF** protokołu i raportu dnia (`jspdf`, leniwie): nagłówek firmy (pole w Ustawieniach Pracy), numery stron, siatka zdjęć 2×3 z datą i podpisem. „Udostępnij” wysyła plik (Web Share L2). Druk zostaje. **Decyzja P-8.** | 2 | M |
 | P2.6 | **Zużycie materiału:** suma kształtek i dostarczonych braków na budowie, podział na miesiące, „Kopiuj” i CSV (`sumFittings`). Opcjonalna cena jednostkowa i suma. **Decyzja P-9.** | 2 | S |
-| P2.7 | **Zaznaczanie na planie:** dokument karty → `DrawingCanvas` z `initialImage`, wynik jako nowy dokument (oryginał zostaje). Potem pinezki x/y na planie połączone z wpisami. **Decyzja P-10.** | 2 | M |
+| P2.7 | **Zaznaczanie na planie:** dokument karty → `DrawingCanvas` z `initialImage`, wynik jako nowy dokument (oryginał zostaje). Potem pinezki x/y na planie połączone z wpisami. **Decyzja P-10: po zaznaczaniu, jeśli będzie używane (2026-10-28).** | 2 | M |
 | P2.8 | **Czas na budowie:** licznik od „Wchodzę” w karcie, stawka godzinowa budowy, miesięczny CSV do rozliczenia (`DayHoursDialog.tsx:33-56`). | 2 | S |
 | P2.9 | Szablony wpisu per etap: lista kontrolna i podpowiedzi zdjęć, np. „Próba ciśnienia: manometr, czas, wynik”. | 1 | S |
-| P2.10 | „Jesteś przy budowie X — Wchodzę?” przy otwarciu (jednorazowe położenie, bez śledzenia w tle, włączane). **Decyzja P-11.** | 1 | S |
+| P2.10 | „Jesteś przy budowie X — Wchodzę?” przy otwarciu (jednorazowe położenie, bez śledzenia w tle, włączane). **Decyzja P-11: tak, włączana w Ustawieniach (2026-10-28).** | 1 | S |
 | P2.11 | Nagranie i dyktowanie naraz: najpierw próba na telefonie, bo Chrome na Androidzie może nie dać mikrofonu obu naraz. Jeśli się nie da, punkt odpada. | 1 | M |
 
 **P3: dane i miejsce**
@@ -247,7 +247,7 @@ Do tego dokumentacja nie nadąża za kodem: `opis.md` (Kalendarz :1397, Grafik :
 | G-6 | Alarm przed zmianą (G4.1): ile minut, czy per grafik? | 60 min, ustawienie per grafik, wyłączalne. |
 | G-7 | Wiele nakładek (G4.8)? | Odłożyć, dopóki jedna nakładka wystarcza. |
 | P-6 | FSRS (`ts-fsrs`) czy poprawione SM-2? | FSRS z dwoma przyciskami. Lepsze odstępy przy małej puli, ~10 KB w leniwym chunku. |
-| P-7 | Usterki jako rozbudowany „problem” czy nowy rodzaj wpisu? | Rozbudowany problem: zachowuje oś, raport i szkic pytania. |
+| P-7 | Usterki jako rozbudowany „problem” czy nowy rodzaj wpisu? | **Rozstrzygnięte 2026-10-28: rozbudowany problem.** |
 | P-8 | PDF z `jspdf` czy tylko druk do PDF? | `jspdf` dla protokołu i raportu dnia: plik do WhatsApp bez kroku drukowania. |
 | P-9 | Ceny materiału (P2.6)? | Opcjonalna cena jednostkowa, bez faktur. |
 | P-10 | Pinezki na planie (P2.7, druga część)? | Po zaznaczaniu na planie, jeśli będzie używane. |

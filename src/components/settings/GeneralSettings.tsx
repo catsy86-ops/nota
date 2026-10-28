@@ -22,6 +22,7 @@ import { MOD_KEY } from "@/lib/platform";
 import { hasDictationConsent, withdrawDictationConsent } from "@/hooks/useDictation";
 import { setBadgeEnabled, useBadgeEnabled } from "@/lib/overdueBadge";
 import { setReportNudges, useReportNudges } from "@/lib/study/reportNudgePrefs";
+import { setSiteArrival, useSiteArrival } from "@/lib/study/siteArrivalPrefs";
 
 const PERMISSION_TEXT = {
   granted: "Włączone — przypomnienia pokażą się jako powiadomienia systemowe, gdy aplikacja jest otwarta (przy zamkniętej — patrz niżej).",
@@ -124,6 +125,7 @@ export function GeneralSettings() {
   const prefs = useViewPrefs();
   const badgeEnabled = useBadgeEnabled();
   const reportNudges = useReportNudges();
+  const siteArrival = useSiteArrival();
 
   return (
     <div className="space-y-4">
@@ -216,6 +218,13 @@ export function GeneralSettings() {
           desc="Po końcu zmiany dymek w aplikacji, a przy zgodzie powiadomienie systemowe. Osobno od powiadomień przy zamkniętej aplikacji."
           checked={reportNudges}
           onCheck={setReportNudges}
+        />
+
+        <ToggleRow
+          label="Podpowiedź „Jesteś przy budowie”"
+          desc="Przy otwarciu aplikacji jedno sprawdzenie położenia: gdy stoisz przy budowie z zapisaną lokalizacją i nie ma jeszcze wejścia dziś, pytamy „Wchodzę?”. Położenie zostaje w przeglądarce."
+          checked={siteArrival}
+          onCheck={setSiteArrival}
         />
 
         <ResetSectionButton title="przypomnienia" keys={VIEW_PREF_GROUPS.przypomnienia} />

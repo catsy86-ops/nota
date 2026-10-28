@@ -90,7 +90,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { VaultHost } from "@/components/vault/VaultHost";
 import { TodayCards } from "@/components/review/TodayCards";
 import { RemindersView } from "@/components/reminders/RemindersView";
-import { VIEW_ORDER, ShortcutsDialog, PropDefsDialog, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
+import { VIEW_ORDER, SiteArrivalPrompt, ShortcutsDialog, PropDefsDialog, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
 
 // Dialogs that aren't part of the initial view (opened via keyboard shortcut,
 // note action or explicit toggle) — kept out of the eager main bundle so
@@ -930,6 +930,7 @@ const Index = () => {
 
     <Suspense fallback={null}>
       <DailyReportNudge onOpenWork={() => setView("study")} />
+      <SiteArrivalPrompt />
       {pushEnabled && <PushScheduleSync notes={reminderNotes} />}
       <Suspense fallback={null}>
         <StudyOverdueSync />

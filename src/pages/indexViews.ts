@@ -27,6 +27,8 @@ export const ShiftsView = lazy(() => loadShiftsView().then((m) => ({ default: m.
 export const ReminderCalendarView = lazy(() => loadCalendarView().then((m) => ({ default: m.ReminderCalendarView })));
 // „Nowy termin” w Terminach — dialog z kalendarzem; ładowany dopiero na tym widoku.
 // Przypomnienie „Raport dnia gotowy” (dział Praca) — leniwie, żeby dziennik nie wchodził do głównej paczki.
+// P2.10: „Jesteś przy budowie” — tylko gdy włączone w Ustawieniach (Praca).
+export const SiteArrivalPrompt = lazy(() => import("@/components/study/SiteArrivalPrompt"));
 export const DailyReportNudge = lazy(() => import("@/components/study/DailyReportNudge"));
 // Harmonogram dla serwera push — tylko przy włączonych powiadomieniach przy zamkniętej aplikacji.
 export const PushScheduleSync = lazy(() => import("@/components/PushScheduleSync"));
