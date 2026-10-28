@@ -3595,3 +3595,11 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Gdzie.** Logika: `src/lib/study/siteTime.ts` (`liveMinutes`, `durationLabel`, `monthHours`, `siteMonthCsv`). Godziny dni: `siteMinutesByDay` w `src/lib/study/siteHours.ts` (na niej oparte `siteMinutesInRange`, bez zmiany wyniku). Stawka: `SiteCard.rate` w `src/lib/study/sites.ts` (`SITE_RATE_MAX`), zapis `setSiteRate` w `src/lib/study/store.ts` (synchronizuje się z kartą). UI: `src/components/study/SiteTimePanel.tsx`; dni miesiąca liczy karta (`SiteCardDialog.tsx`, ten sam `useMemo` co godziny) i podaje panelowi.
 - **Ograniczenia.** Dni z kilkoma budowami bez rozdzielonych godzin nie mają godzin w zestawieniu (jak w sumach karty) — trzeba je rozdzielić w „Godziny dnia”. Miesiąc liczony do dziś. Panel nie pojawia się, gdy budowa nie ma w miesiącu godzin, wejścia dziś ani stawki.
 - **Testy.** Vitest: `src/lib/study/siteTime.test.ts` (licznik, suma, kwota, CSV); testy `siteHours` przechodzą po przebudowie. E2E: brak osobnego testu panelu — istniejące testy karty (w tym 320 px i `site-hours`) przechodzą.
+
+## Praca: szablony wpisu per etap (P2.9)
+
+- **Co robi.** Gdy wpis jest przypięty do etapu budowy, pod paskiem „Etap: …” pojawia się lista kontrolna tego etapu (np. przy próbie szczelności: „Ciśnienie próby (bar)”, „Czas trwania”, „Spadek ciśnienia i wynik”) i podpowiedź, co sfotografować („Manometr na początku · Manometr po próbie”). Stuknięcie punktu dopisuje do opisu linię „✓ punkt”, drugie stuknięcie ją usuwa.
+- **Gdzie.** `src/lib/study/stageTemplates.ts` (`stageTemplate`, `toggleCheckLine`, `hasCheckLine`), UI w `src/components/study/JournalEntrySheet.tsx` (blok `journal-stage-template`).
+- **Jak działa.** Szablony są wbudowane dla etapów domyślnych (`kan-pod`, `woda`, `kan-pion`, `proba`, `zakrycie`, `bialy`, `odbior`). Etap własny dostaje szablon po słowie w nazwie (np. „Druga próba ciśnienia” → próba); bez dopasowania — bez szablonu. Punkty to zwykły tekst w opisie, więc trafiają do raportu i protokołu bez zmian w modelu.
+- **Ograniczenia.** Szablonów nie da się jeszcze edytować. Podpowiedzi zdjęć są tylko tekstem (bez licznika zrobionych zdjęć).
+- **Testy.** Vitest: `src/lib/study/stageTemplates.test.ts`. E2E: `e2e/stage-template.spec.ts`; `site-stages` i `site-handover` przechodzą.

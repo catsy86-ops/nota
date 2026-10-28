@@ -35,6 +35,7 @@ import { suggestFittingNames } from "@/lib/study/fittings";
 import { editDemotesTopic, editSavedMessage, newEntryMessage, shouldOfferSiteGeo } from "@/lib/study/entrySheetRules";
 import { applySpokenEntry } from "@/lib/study/spokenEntryApply";
 import { siteStages, toggleStage } from "@/lib/study/stages";
+import { hasCheckLine, stageTemplate, toggleCheckLine } from "@/lib/study/stageTemplates";
 import { DelayedSpinner } from "@/components/DelayedSpinner";
 
 export function KindIcon({ kind, className = "h-4 w-4" }: { kind: JournalKind; className?: string }) {
@@ -545,6 +546,34 @@ export function JournalEntrySheet({ onPractice }: { onPractice: (topicId: string
               </button>
             </div>
           )}
+
+          {entryStage && (() => {
+            // P2.9: lista kontrolna i podpowiedzi zdjęć dla etapu; punkt dopisuje „✓ …” do opisu (drugie stuknięcie usuwa).
+            const tpl = stageTemplate(entryStage);
+            if (!tpl) return null;
+            return (
+              <div className="space-y-1.5 rounded-card border border-border/60 px-3 py-2" data-testid="journal-stage-template">
+                <p className="text-xs text-muted-foreground">Na tym etapie potwierdź w opisie:</p>
+                <div className="flex flex-wrap gap-1.5" role="group" aria-label={`Lista kontrolna: ${entryStage.name}`}>
+                  {tpl.checklist.map((item) => {
+                    const on = hasCheckLine(text, item);
+                    return (
+                      <button key={item} type="button" aria-pressed={on}
+                        onClick={() => { haptic("selection"); setText((prev) => toggleCheckLine(prev, item)); }}
+                        className={cn("pressable inline-flex max-w-full items-center rounded-full border px-2.5 py-1 text-xs coarse:min-h-11 coarse:px-3",
+                          on ? "border-success-ink/50 bg-success/10 text-success-ink" : "border-border text-foreground hover:bg-muted")}>
+                        {on ? "✓ " : ""}{item}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
+                  <Camera className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden />
+                  <span>Zdjęcia: {tpl.photos.join(" · ")}</span>
+                </p>
+              </div>
+            );
+          })()}
 
           {!isEdit && !entryStage && kind === "ok" && nextStages.length > 0 && (
             <div className="space-y-1" data-testid="journal-stage-chips">
