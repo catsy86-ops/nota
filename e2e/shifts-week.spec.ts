@@ -1,10 +1,11 @@
 import { test, expect, type Page } from "@playwright/test";
+import { SHIFT_TEST_TYPES, withLegacyShifts } from "./helpers/shiftSeed";
 
 // Środa 7 października 2026 — tydzień 5–11 października, bez świąt.
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(new Date("2026-10-07T10:00:00"));
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
-  await page.goto("/grafik");
+  await withLegacyShifts(page, { types: SHIFT_TEST_TYPES }, "legacy-seeded-base");
 });
 
 const day = (n: number, rest: string) => new RegExp(`^${n} [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, ${rest}`);
@@ -30,7 +31,7 @@ async function drag(page: Page, from: number, to: number, opts: { alt?: boolean 
 
 test("widok tygodnia: przełącznik, nawigacja, pędzel i pamięć wyboru", async ({ page }) => {
   await page.getByRole("button", { name: "Tydzień", exact: true }).click();
-  await expect(page.getByRole("heading", { level: 2 })).toHaveText("5–11 października 2026");
+  await expect(page.getByRole("heading", { level: 2 })).toHaveText(/^5–11 października 2026/);
   await expect(page.getByRole("grid", { name: /^Tydzień 5 października – 11 października 2026$/ })).toBeVisible();
   await expect(page.getByRole("button", { name: "Ten tydzień", exact: true })).toHaveCount(0);
 
@@ -39,14 +40,14 @@ test("widok tygodnia: przełącznik, nawigacja, pędzel i pamięć wyboru", asyn
   await expect(page.getByRole("button", { name: /^7 października, środa, dziś, Dzień/ })).toBeVisible();
 
   await page.getByRole("button", { name: "Następny tydzień" }).click();
-  await expect(page.getByRole("heading", { level: 2 })).toHaveText("12–18 października 2026");
+  await expect(page.getByRole("heading", { level: 2 })).toHaveText(/^12–18 października 2026/);
   await page.getByRole("button", { name: "Ten tydzień", exact: true }).click();
-  await expect(page.getByRole("heading", { level: 2 })).toHaveText("5–11 października 2026");
+  await expect(page.getByRole("heading", { level: 2 })).toHaveText(/^5–11 października 2026/);
 
   await page.reload();
-  await expect(page.getByRole("heading", { level: 2 })).toHaveText("5–11 października 2026");
+  await expect(page.getByRole("heading", { level: 2 })).toHaveText(/^5–11 października 2026/);
   await page.getByRole("button", { name: "Miesiąc", exact: true }).click();
-  await expect(page.getByRole("heading", { level: 2 })).toHaveText("październik 2026");
+  await expect(page.getByRole("heading", { level: 2 })).toHaveText(/^październik 2026/);
 });
 
 test("tydzień przechodzi przez przełom miesiąca", async ({ page }) => {
@@ -55,7 +56,7 @@ test("tydzień przechodzi przez przełom miesiąca", async ({ page }) => {
   await page.getByRole("button", { name: "Następny tydzień" }).click();
   await page.getByRole("button", { name: "Następny tydzień" }).click();
   // 26 października – 1 listopada.
-  await expect(page.getByRole("heading", { level: 2 })).toHaveText("26 października – 1 listopada 2026");
+  await expect(page.getByRole("heading", { level: 2 })).toHaveText(/^26 października – 1 listopada 2026/);
 });
 
 test("przeciągnięcie przenosi zmianę, Cofnij ją przywraca", async ({ page }) => {

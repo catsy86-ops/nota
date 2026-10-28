@@ -1,11 +1,12 @@
 import { test, expect } from "@playwright/test";
+import { SHIFT_TEST_PATTERNS, SHIFT_TEST_TYPES, withLegacyShifts } from "./helpers/shiftSeed";
 
 test.beforeEach(async ({ page }) => {
   // Stały miesiąc bez świąt: w święto etykieta dnia zawiera jego nazwę
   // („1 listopada, Wszystkich Świętych, wolne”) i selektory nic by nie znalazły.
   await page.clock.setFixedTime(new Date("2026-10-07T10:00:00"));
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
-  await page.goto("/grafik");
+  await withLegacyShifts(page, { types: SHIFT_TEST_TYPES, patterns: SHIFT_TEST_PATTERNS }, "legacy-seeded-base");
 });
 
 test("nanoszenie zmian liczy godziny, nocne i zarobek", async ({ page }) => {
@@ -203,15 +204,6 @@ async function openSettings(page: import("@playwright/test").Page) {
   return dialog;
 }
 
-/** Stary zapis Grafiku (sprzed Yjs) — trafia do dokumentu przy pierwszym wczytaniu. */
-async function withLegacyShifts(page: import("@playwright/test").Page, data: object) {
-  await page.addInitScript((json) => {
-    if (sessionStorage.getItem("legacy-seeded")) return;
-    sessionStorage.setItem("legacy-seeded", "1");
-    localStorage.setItem("kaczy:shifts", json);
-  }, JSON.stringify({ version: 2, ...data }));
-  await page.goto("/grafik");
-}
 
 test("bez rodzajów zmian widać, jak zacząć", async ({ page }) => {
   await withLegacyShifts(page, { types: [] });
@@ -219,11 +211,12 @@ test("bez rodzajów zmian widać, jak zacząć", async ({ page }) => {
   await expect(empty).toBeVisible();
   await empty.getByRole("button", { name: "Przywróć startowe" }).click();
   await expect(empty).toHaveCount(0);
-  await expect(page.getByRole("radio", { name: /Dzień/ })).toHaveAttribute("aria-checked", "true");
+  // Przywrócone startowe zaczynają od Urlopu, nie od dawnej Dniówki.
+  await expect(page.getByRole("radio", { name: /Urlop/ })).toHaveAttribute("aria-checked", "true");
 });
 
 test("stary grafik z localStorage przechodzi do nowego zapisu i przeżywa odświeżenie", async ({ page }) => {
-  await withLegacyShifts(page, { days: { "2026-10-05": { type: "n", note: "stare" } }, hourlyRate: 40 });
+  await withLegacyShifts(page, { types: SHIFT_TEST_TYPES, days: { "2026-10-05": { type: "n", note: "stare" } }, hourlyRate: 40 });
   const day = page.getByRole("button", { name: /^5 [a-ząćęłńóśźż]+, [a-ząćęłńóśźż]+, Noc.*notatka: stare/ }).first();
   await expect(day).toBeVisible();
   await page.reload();

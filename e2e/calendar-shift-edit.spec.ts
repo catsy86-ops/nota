@@ -1,15 +1,17 @@
 import { test, expect } from "@playwright/test";
+import { SHIFT_TEST_TYPES } from "./helpers/shiftSeed";
 
 const NOW = new Date(2026, 9, 14, 12, 0).getTime();
 
 test.beforeEach(async ({ page }) => {
   await page.clock.setFixedTime(NOW);
-  await page.addInitScript(() => {
+  // Rodzaje z testów Grafiku (jest w nich „Noc” o id n), bo domyślny zestaw go nie ma.
+  await page.addInitScript((types) => {
     if (sessionStorage.getItem("seeded")) return;
     sessionStorage.setItem("seeded", "1");
     localStorage.setItem("kaczy.tour.seen.v1", "1");
-    localStorage.setItem("kaczy:shifts", JSON.stringify({ version: 2, days: { "2026-10-13": { type: "n" } } }));
-  });
+    localStorage.setItem("kaczy:shifts", JSON.stringify({ version: 2, types, days: { "2026-10-13": { type: "n" } } }));
+  }, SHIFT_TEST_TYPES);
   await page.goto("/");
   await page.getByRole("button", { name: /Kalendarz/ }).first().click();
 });

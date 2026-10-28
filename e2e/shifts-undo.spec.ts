@@ -1,10 +1,11 @@
 import { test, expect } from "@playwright/test";
+import { SHIFT_TEST_TYPES, withLegacyShifts } from "./helpers/shiftSeed";
 
 test.beforeEach(async ({ page }) => {
   // Stały miesiąc bez świąt (jak w shifts.spec.ts).
   await page.clock.setFixedTime(new Date("2026-10-07T10:00:00"));
   await page.addInitScript(() => localStorage.setItem("kaczy.tour.seen.v1", "1"));
-  await page.goto("/grafik");
+  await withLegacyShifts(page, { types: SHIFT_TEST_TYPES }, "legacy-seeded-base");
 });
 
 test("malowanie nadpisuje inną zmianę i daje Cofnij, który przywraca poprzednią", async ({ page }) => {
