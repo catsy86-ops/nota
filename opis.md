@@ -3621,3 +3621,11 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 ## Budżet precache po funkcjach Pracy (2026-10-28)
 
 - Dzisiejsze funkcje przekroczyły limit precache (3,9 MiB) o ok. 7,5 KB. Zamiast podnosić limit: moduły PDF (`handoverPdf`, `reportPdf`, `pdfWriter`) ładują się dopiero po kliknięciu i są poza precache (jak jsPDF — PDF i tak potrzebuje sieci przy pierwszym użyciu), a skan kodu QR do parowania (`jsQR`, `QrScanDialog`, ok. 133 KB) też jest poza precache, bo parowanie bez sieci nie działa. Pliki poza precache trafiają do cache po pierwszym użyciu. `bundle.spec` 6/6; `sync-qr-scan`, `handover-pdf`, `report-pdf` przechodzą.
+
+## Nauka: szukanie pytań quizu bez polskich znaków (P4.2)
+
+- **Co robi.** W palecie poleceń (Ctrl+K) grupa „Pytania z Nauki”: wpisanie „tuleja zacisnieciu” znajduje „Jak powinna wyglądać tuleja po zaciśnięciu?”. Wybranie pytania otwiera Pracę na quizie z tematu tego pytania.
+- **Gdzie.** `src/lib/study/questionSearch.ts` (`searchQuestions`, `STUDY_TOPIC_PARAM` = `temat`), grupa w `src/components/CommandPalette.tsx`, obsługa `/praca?temat=<id>` w `src/components/study/StudyView.tsx` (jak `?powtorka=1`; nieznany temat jest pomijany).
+- **Jak działa.** Każde słowo zapytania (min. 2 znaki) musi wystąpić w pytaniu, odpowiedziach albo objaśnieniu, po złożeniu liter (`foldName` z `siteKey.ts` — ten sam, którego paleta używa dla budów; osobny moduł `lib/text` z planu okazał się niepotrzebny). Trafienia w treści pytania idą pierwsze, najwyżej 5. Element palety ma w `value` bieżące zapytanie, bo filtr cmdk nie zna polskich znaków.
+- **Przy okazji.** Test `command-palette-study` padał od dawna: lokator pola trafiał w zasłonięte pole „Szukaj notatek…” na stronie. Lokator zawężony do okna palety — przechodzi.
+- **Testy.** Vitest: `src/lib/study/questionSearch.test.ts`. E2E: `e2e/command-palette-study.spec.ts` (oba testy). `bundle.spec` 6/6.

@@ -1,6 +1,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { MODULES, TOPICS } from "@/lib/study/content";
+import { STUDY_TOPIC_PARAM } from "@/lib/study/questionSearch";
 import { columnOf, dueToday, useStudy } from "@/lib/study/store";
 import { pluralPl } from "@/lib/plural";
 import { ChartColumn, RotateCcw } from "lucide-react";
@@ -164,6 +165,16 @@ function StudyScreen() {
   }, []);
   const practice = (topic: string) => { setScope({ kind: "topic", topic }); setRun((n) => n + 1); setTab("quiz"); };
   const changeScope = (s: QuizScope) => { setScope(s); setRun((n) => n + 1); };
+  // P4.2: wynik szukania pytań w palecie (`/praca?temat=<id>`) — quiz z tego tematu.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const topic = params.get(STUDY_TOPIC_PARAM);
+    if (!topic) return;
+    params.delete(STUDY_TOPIC_PARAM);
+    const rest = params.toString();
+    window.history.replaceState(window.history.state, "", window.location.pathname + (rest ? `?${rest}` : ""));
+    if (TOPICS.some((t) => t.id === topic)) practice(topic);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // „Powtórz” z karty na stronie „Dziś” (`/praca?powtorka=1`): od razu quiz „Na dziś”.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

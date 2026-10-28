@@ -21,7 +21,7 @@ test.beforeEach(async ({ page }) => {
 test("paleta: wpisz nazwę budowy — karta budowy; „Nowy wpis w Pracy” otwiera arkusz", async ({ page }) => {
   await page.goto("/");
   await page.keyboard.press("Control+k");
-  const input = page.getByPlaceholder(/szukaj|wpisz|polec/i).first();
+  const input = page.getByRole("dialog").getByPlaceholder(/szukaj|wpisz|polec/i);
   await input.fill("Lipowa");
   // Paleta i dane Nauki ładują się leniwie — przy obciążonym zestawie daj im czas.
   await expect(page.getByText("Karta budowy: Lipowa 5", { exact: true })).toBeVisible({ timeout: 15_000 });
@@ -31,7 +31,19 @@ test("paleta: wpisz nazwę budowy — karta budowy; „Nowy wpis w Pracy” otwi
 
   await page.keyboard.press("Escape");
   await page.keyboard.press("Control+k");
-  await page.getByPlaceholder(/szukaj|wpisz|polec/i).first().fill("nowy wpis");
+  await page.getByRole("dialog").getByPlaceholder(/szukaj|wpisz|polec/i).fill("nowy wpis");
   await page.getByText("Nowy wpis w Pracy", { exact: true }).click();
   await expect(page).toHaveURL(/\/praca/);
+});
+
+test("paleta: pytania quizu bez polskich znaków — wynik otwiera quiz z tematu (P4.2)", async ({ page }) => {
+  await page.goto("/");
+  await page.keyboard.press("Control+k");
+  const input = page.getByRole("dialog").getByPlaceholder(/szukaj|wpisz|polec/i);
+  await input.fill("tuleja zacisnieciu");
+  const hit = page.getByText("Jak powinna wyglądać tuleja po zaciśnięciu?", { exact: true });
+  await expect(hit).toBeVisible({ timeout: 15_000 });
+  await hit.click();
+  await expect(page).toHaveURL(/\/praca$/);
+  await expect(page.getByRole("tab", { name: "Quiz" })).toHaveAttribute("aria-selected", "true");
 });

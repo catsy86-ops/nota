@@ -20,7 +20,9 @@ import { useVault } from "@/hooks/usePrivateNotes";
 import { privateNotes } from "@/lib/privateNotes";
 import { lockEverywhere } from "@/lib/vaultAutoLock";
 import { vaultUi } from "@/lib/vaultUi";
-import { useSiteDirectory, useStudy } from "@/lib/study/store";
+import { useSiteDirectory, useStudy, useStudyLists } from "@/lib/study/store";
+import { searchQuestions, STUDY_TOPIC_PARAM } from "@/lib/study/questionSearch";
+import { topicTitle } from "@/lib/study/content";
 import { siteCardUrl } from "@/lib/study/siteLink";
 import { JOURNAL_REPORT_PARAM, reportParam } from "@/lib/study/reportLink";
 import { entrySiteId, foldName } from "@/lib/study/siteKey";
@@ -126,6 +128,9 @@ export function CommandPalette({
     const entries = [...studyState.journal].reverse().filter((e) => foldName(`${e.text} ${e.site}`).includes(q)).slice(0, 6);
     return { sites, entries };
   }, [search, siteDir, studyState.journal]);
+  // P4.2: pytania quizu bez polskich znaków — wynik otwiera quiz z tematu pytania.
+  const studyLists = useStudyLists();
+  const questionHits = useMemo(() => searchQuestions(studyLists.questions, search, 5), [studyLists.questions, search]);
   const shifts = useShifts();
   const shiftHits = useMemo(() => {
     const types = new Map(shifts.types.map((x) => [x.id, x]));
@@ -233,6 +238,18 @@ export function CommandPalette({
             </CommandGroup>
             <CommandSeparator />
           </>
+        )}
+        {questionHits.length > 0 && (
+          <CommandGroup heading="Pytania z Nauki">
+            {questionHits.map((q) => (
+              // `value` z bieżącym zapytaniem: filtr cmdk nie zna polskich znaków, a trafienie już jest policzone.
+              <CommandItem key={`question-${q.id}`} value={`pytanie ${q.id} ${search}`} onSelect={() => run(() => navigate(`/praca?${STUDY_TOPIC_PARAM}=${encodeURIComponent(q.topic)}`))}>
+                <HardHat className="w-4 h-4 mr-2 text-muted-foreground" />
+                <span className="truncate">{q.question}</span>
+                <span className="ml-auto shrink-0 pl-2 text-xs text-muted-foreground">{topicTitle(q.topic)}</span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
         )}
         {(studyHits.sites.length > 0 || studyHits.entries.length > 0) && (
           <>
