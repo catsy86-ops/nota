@@ -1174,6 +1174,7 @@ const Index = () => {
     <BottomNav
       view={view}
       onGo={(v) => go(v)}
+      onOpenPalette={() => setPaletteOpen(true)}
       onNew={(action) => expandAddNote(action)}
       onImport={handleImport}
       onGoFilter={goFilter}

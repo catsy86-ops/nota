@@ -3166,13 +3166,15 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 ## Wspólne — plan mobile 2026-10-28 (fala 1, częściowo)
 
 ### Co robi
-- **Lupa na telefonie w nagłówku** (widoki bez pola szukania: Grafik, Kalendarz, Praca, Długi, Ćwiczenia). Otwiera paletę poleceń, zamiast kierować do Notatek. Na telefonie w „Więcej” paleta wymaga teraz jednego dotknięcia mniej.
+- **Lupa na telefonie** w nagłówku i w dolnym pasku (widoki bez pola szukania: Grafik, Kalendarz, Praca, Długi, Ćwiczenia). Otwiera paletę poleceń. Dolny pasek ma wtedy sześć komórek (`grid-cols-6`), więc FAB stoi pół komórki od osi. Regułę „widok ma pole szukania” trzyma `src/lib/viewSearch.ts` (`viewHasSearch`), używana przez nagłówek i pasek.
 - **Skrzynka:** klawiatura telefonu pokazuje „Wyślij” zamiast „Enter” (`enterKeyHint="send"`). Enter nadal zapisuje.
 - **Akapity** (`p`, `li`) łamią się bez pojedynczego słowa w ostatniej linii (`text-wrap: pretty`), obok istniejącego `balance` dla nagłówków.
 - **Karta budowy: przycisk ZIP działa.** Poprawka regresji z P6.2: dialog wywoływał `zip` bez pobrania go z hooka, a hook dostawał typ `SiteCard` zamiast `SiteInfo` (brak `first`/`last`).
 
 ### Gdzie jest
-- `src/components/AppHeader.tsx` — prop `onOpenPalette`, stała `viewSearches`, przycisk `Search` z `sm:hidden`.
+- `src/components/AppHeader.tsx` — prop `onOpenPalette`, przycisk `Search` z `sm:hidden`.
+- `src/components/BottomNav.tsx` — komórka „Szukaj” (`showPaletteSlot`), prop `onOpenPalette`.
+- `src/lib/viewSearch.ts` + `viewSearch.test.ts` — `viewHasSearch(view)`.
 - `src/pages/Index.tsx` — przekazanie `onOpenPalette={() => setPaletteOpen(true)}` do `AppHeader`.
 - `src/components/InboxCapture.tsx` — `enterKeyHint="send"` na textarea.
 - `src/index.css` — reguła `p, li { text-wrap: pretty }` obok `h1–h3 { balance }`.

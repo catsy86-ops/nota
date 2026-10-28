@@ -22,6 +22,8 @@ import { useBottomSlot, type BottomSlotView } from "@/lib/bottomSlot";
 interface BottomNavProps {
   view: View;
   onGo: (v: View) => void;
+  /** Lupa w widokach bez pola szukania — otwiera paletę poleceń. */
+  onOpenPalette?: () => void;
   /** Bez argumentu: zwykła notatka. Z argumentem: edytor od razu robi to, co wybrano. */
   onNew: (action?: ComposerAction) => void;
   onOpenSettings: () => void;
@@ -38,6 +40,8 @@ interface BottomNavProps {
   search?: string;
 }
 
+import { viewHasSearch } from "@/lib/viewSearch";
+
 const slots = [
   { key: "notes" as View, label: "Notatki", Icon: StickyNote },
   { key: "today" as View, label: "Dziś", Icon: CalendarDays },
@@ -53,7 +57,7 @@ const SLOT_META: Record<BottomSlotView, { label: string; Icon: typeof Bell }> = 
 
 // Prawa pozycja (2.3): wybór z Ustawień, domyślnie Terminy.
 
-export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, trashCount = 0, inboxCount = 0, dark = false, onToggleTheme, onImport, onGoFilter, search = "" }: BottomNavProps) {
+export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, onOpenActions, trashCount = 0, inboxCount = 0, dark = false, onToggleTheme, onImport, onGoFilter, search = "" }: BottomNavProps) {
   const { filters } = useSavedFilters();
   const [moreOpen, setMoreOpen] = useState(false);
   const hiddenViews = useHiddenViews();
@@ -91,6 +95,8 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
     const input = Array.from(document.querySelectorAll<HTMLInputElement>('input[type="search"]')).find((el) => el.offsetParent !== null);
     input?.focus({ preventScroll: true });
   };
+  // Szósta komórka (lupa) tylko tam, gdzie nie ma pola szukania; FAB zostaje w środku paska wtedy przesunięty o pół komórki.
+  const showPaletteSlot = !viewHasSearch(view) && !!onOpenPalette;
   const isMoreActive = ["inbox", "archive", "trash", "calendar", "shifts", "study", "debts", "cwiczenia", "folder", "label"].includes(view);
 
   return (
@@ -102,7 +108,7 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
         className="fixed bottom-0 inset-x-0 z-overlay desk:hidden glass-strong border-t border-border/60 pb-[env(safe-area-inset-bottom)] shadow-elevation-up transition-[translate,visibility] duration-200 ease-out motion-reduce:transition-none in-data-typing:translate-y-full in-data-typing:invisible"
       >
         <LayoutGroup id="bottom-nav">
-          <ul className="relative grid grid-cols-5 items-end h-[64px] max-w-md mx-auto px-2">
+          <ul className={cn("relative grid items-end h-[64px] max-w-md mx-auto px-2", showPaletteSlot ? "grid-cols-6" : "grid-cols-5")}>
             {slots.map(({ key, label, Icon }) => (
               <NavItem key={key} active={view === key} label={label} onClick={() => (key === "notes" && view === "notes" ? focusSearch() : onGo(key))}>
                 <Icon className={cn("w-5 h-5", sectionIconClass(key))} />
@@ -148,6 +154,11 @@ export function BottomNav({ view, onGo, onNew, onOpenSettings, onOpenActions, tr
               </NavItem>
             ))}
 
+            {showPaletteSlot && (
+              <NavItem active={false} current={false} label="Szukaj" onClick={onOpenPalette}>
+                <Search className="w-5 h-5" />
+              </NavItem>
+            )}
             <NavItem active={isMoreActive || moreOpen} current={false} label="Więcej" onClick={() => setMoreOpen(true)} buttonProps={{ "aria-haspopup": "dialog", "aria-expanded": moreOpen }}>
               <Ellipsis className="w-5 h-5" />
             </NavItem>

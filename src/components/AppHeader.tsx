@@ -5,6 +5,7 @@ import { AnimatePresence, m as motion } from "framer-motion";
 import { PanelLeftClose, PanelLeftOpen, Moon, Sun, FileDown, FolderOpen, Tag, Search } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SearchBar } from "@/components/SearchBar";
+import { viewHasSearch } from "@/lib/viewSearch";
 import { ViewControls } from "@/components/ViewControls";
 import { cn } from "@/lib/utils";
 import { IconButton } from "@/components/ui/icon-button";
@@ -48,7 +49,7 @@ export function AppHeader({
   const hidden = hideHeader && !selectionMode;
   const headerRef = useRef<HTMLElement>(null);
   // Widoki, w których pole szukania nie działa (Grafik, Kalendarz, Praca, Długi, Ćwiczenia).
-  const viewSearches = view !== "shifts" && view !== "calendar" && view !== "study" && view !== "debts" && view !== "cwiczenia";
+  const viewSearches = viewHasSearch(view);
 
   // Dla elementów przyklejonych pod nagłówkiem (pasek kolumn tablicy): wysokość nagłówka
   // w `--app-header-h` i klasa `header-hidden` na <html>, gdy nagłówek jest schowany.
