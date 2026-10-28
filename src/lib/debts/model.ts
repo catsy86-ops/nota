@@ -135,6 +135,20 @@ export function repaidShare(entries: readonly DebtEntry[]): number {
   return Math.min(99, Math.floor((done / side) * 100));
 }
 
+/**
+ * Saldo po każdym wpisie osoby (`entries` najnowsze pierwsze, jak w `balances`). Wynik ma tę samą
+ * kolejność: saldo „po tym wpisie” to suma tego wpisu i wszystkich starszych.
+ */
+export function runningBalances(entries: readonly DebtEntry[]): number[] {
+  const out = new Array<number>(entries.length);
+  let acc = 0;
+  for (let i = entries.length - 1; i >= 0; i--) {
+    acc += KIND_SIGN[entries[i].kind] * entries[i].amount;
+    out[i] = acc;
+  }
+  return out;
+}
+
 /** Podsumowanie: ile ludzie są nam winni i ile my im. */
 export function totals(people: readonly PersonDebts[]): { owedToMe: number; iOwe: number } {
   let owedToMe = 0;

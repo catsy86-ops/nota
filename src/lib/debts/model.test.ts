@@ -1,8 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { balances, cleanDebt, formatAmount, knownPeople, parseAmount, personKey, repaidShare, totals, type DebtEntry, type DebtKind } from "./model";
+import { balances, cleanDebt, formatAmount, knownPeople, parseAmount, personKey, repaidShare, runningBalances, totals, type DebtEntry, type DebtKind } from "./model";
 
 const e = (over: Partial<DebtEntry>): DebtEntry => ({
   id: "d-1", person: "Anna", kind: "lent", amount: 10000, at: "2026-10-10", note: "", created: 1, ...over,
+});
+
+describe("runningBalances", () => {
+  it("liczy saldo po każdym wpisie, najnowszy pierwszy", () => {
+    // Najstarszy: pożyczyłem 100, potem oddał 30, potem pożyczyłem 50 → po tym: 100, 70, 120.
+    const entries = [
+      e({ id: "c", kind: "lent", amount: 5000, at: "2026-10-12" }),
+      e({ id: "b", kind: "repaid", amount: 3000, at: "2026-10-11" }),
+      e({ id: "a", kind: "lent", amount: 10000, at: "2026-10-10" }),
+    ];
+    expect(runningBalances(entries)).toEqual([12000, 7000, 10000]);
+  });
+
+  it("zwraca pustą tablicę dla braku wpisów", () => {
+    expect(runningBalances([])).toEqual([]);
+  });
 });
 
 describe("parseAmount", () => {

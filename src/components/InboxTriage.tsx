@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { Archive, Clock, RotateCcw, Trash } from "lucide-react";
+import { m } from "framer-motion";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import type { Note } from "@/hooks/useNotes";
 import { isInboxNote } from "@/lib/inbox";
+import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
 interface InboxTriageProps {
@@ -37,6 +39,8 @@ export function InboxTriage({ open, onOpenChange }: InboxTriageProps) {
   const [queue, setQueue] = useState<Note[]>([]);
   const [index, setIndex] = useState(0);
   const [undoStack, setUndoStack] = useState<UndoStep[]>([]);
+  // Przesunięcie karty tylko na dotyku; myszą karta stoi w miejscu (przyciski wystarczają).
+  const [coarse] = useState(() => typeof window !== "undefined" && !!window.matchMedia?.("(pointer: coarse)").matches);
 
   const chips = useMemo<Chip[]>(() => [
     ...folders.map((f) => ({ kind: "folder" as const, id: f.id, label: f.name })),
@@ -149,10 +153,25 @@ export function InboxTriage({ open, onOpenChange }: InboxTriageProps) {
 
         {current && !done && (
           <div className="space-y-4 pt-2">
-            <div className="rounded-card border border-border/60 bg-muted/30 p-3">
+            <m.div
+              className="rounded-card border border-border/60 bg-muted/30 p-3"
+              drag={coarse ? "x" : false}
+              dragDirectionLock
+              dragElastic={0.25}
+              dragConstraints={{ left: -160, right: 160 }}
+              dragSnapToOrigin
+              style={coarse ? { touchAction: "pan-y" } : undefined}
+              onDragEnd={(_, info: { offset: { x: number }; velocity: { x: number } }) => {
+                // Próg jak przy kaflach: 110 px, a 60 px przy szybkim ruchu. W lewo archiwizuje, w prawo zostawia.
+                const threshold = Math.abs(info.velocity.x) > 500 ? 60 : 110;
+                if (info.offset.x < -threshold) { haptic("tap"); archive(); }
+                else if (info.offset.x > threshold) { haptic("tap"); leave(); }
+              }}
+            >
               <p className="font-display font-semibold text-base leading-snug wrap-anywhere">{title}</p>
               {preview && <p className="mt-1 line-clamp-6 text-sm text-muted-foreground whitespace-pre-line wrap-anywhere">{preview}</p>}
-            </div>
+            </m.div>
+            {coarse && <p className="-mt-2 text-xs text-muted-foreground">Przesuń w lewo: archiwizuj. W prawo: zostaw.</p>}
 
             {chips.length > 0 && (
               <div role="group" aria-label="Przenieś do folderu lub nadaj etykietę" className="flex flex-wrap gap-1.5">

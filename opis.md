@@ -1987,7 +1987,8 @@ Kalendarz: `aria-live` zostaje — nagłówek miesiąca (`ReminderCalendarView.t
 
 - **Co robi:** przycisk „Porządkuj skrzynkę (N)” pod polem przechwytywania otwiera okno, które pokazuje notatki ze Skrzynki po jednej. Chipy folderów i etykiet przenoszą notatkę z Skrzynki (folder albo etykieta zdejmuje ją z reguły skrzynki). Archiwizuj i Kosz działają od razu. „Zostaw w skrzynce” przechodzi dalej bez zmian. „Cofnij” cofa ostatnią akcję (stos w oknie). Skróty 1–9 wybierają pierwsze dziewięć chipów (najpierw foldery, potem etykiety).
 - **Gdzie:** `src/components/InboxTriage.tsx` (okno, kolejka zamrożona przy otwarciu w efekcie na `open`); `src/pages/Index.tsx` (leniwy import, przycisk i montowanie przy pierwszym otwarciu, `triageOpen`/`triageMounted`). Reguła skrzynki: `src/lib/inbox.ts` (`isInboxNote`).
-- **Testy:** `e2e/inbox-triage.spec.ts` (archiwizacja, cofnięcie, kosz, zostawienie, stan „Gotowe”). Skrótów 1–9 jeszcze nie pokrywa test e2e (brak folderów w teście). Regresja: `inbox-today` 3/3, `InboxCapture` + `inbox` 13/13.
+- **Gesty na dotyku (plan mobile A5, 2026-10-28):** na telefonie (`pointer: coarse`) kartę z treścią notatki można przesunąć. W lewo — archiwizuj (jak kafel w Notatkach), w prawo — zostaw w skrzynce (bez zmian danych). Próg 110 px, a 60 px przy szybkim ruchu, tak jak w `useCardGestures`. Pod kartą widać podpowiedź. Każda akcja idzie stosem „Cofnij”. Przyciski zostają bez zmian, a na myszy karta stoi w miejscu. Kod: `InboxTriage.tsx` (`m.div` z `drag="x"`, `onDragEnd`, stan `coarse`).
+- **Testy:** `e2e/inbox-triage.spec.ts` (archiwizacja, cofnięcie, kosz, zostawienie, stan „Gotowe”). Gest przesunięcia nie ma jeszcze testu e2e (e2e uruchamiane tylko na prośbę). Skrótów 1–9 jeszcze nie pokrywa test e2e (brak folderów w teście). Regresja: `inbox-today` 3/3, `InboxCapture` + `inbox` 13/13.
 
 ## Grafik — kotwica cyklu, „Przedłuż cykl”, dodatek nocny (Fala 5, pkt 3, 2026-10-22)
 
@@ -3163,13 +3164,14 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 
 - **Oś dziennika — `content-visibility` (P6.4, 2026-10-27).** Sekcja każdego dnia (`section[data-journal-day]` w `StudyJournal.tsx`) ma `content-visibility: auto` i `contain-intrinsic-block-size: auto 240px`: dni poza ekranem nie są malowane ani układane. Nagłówek dnia dalej jest `sticky`. Bez zmiany zachowania; bez sprawdzenia w przeglądarce (e2e nie uruchamiane). Miniatury w protokole odbioru (`HandoverPaper.tsx`) nadal odłożone do sprawdzenia wydruku.
 
-## Wspólne — plan mobile 2026-10-28 (fala 1, częściowo)
+## Wspólne — plan mobile 2026-10-28 (fala 1, zamknięta)
 
 ### Co robi
 - **Lupa na telefonie** w nagłówku i w dolnym pasku (widoki bez pola szukania: Grafik, Kalendarz, Praca, Długi, Ćwiczenia). Otwiera paletę poleceń. Dolny pasek ma wtedy sześć komórek (`grid-cols-6`), więc FAB stoi pół komórki od osi. Regułę „widok ma pole szukania” trzyma `src/lib/viewSearch.ts` (`viewHasSearch`), używana przez nagłówek i pasek.
 - **Skrzynka:** klawiatura telefonu pokazuje „Wyślij” zamiast „Enter” (`enterKeyHint="send"`). Enter nadal zapisuje.
 - **Akapity** (`p`, `li`) łamią się bez pojedynczego słowa w ostatniej linii (`text-wrap: pretty`), obok istniejącego `balance` dla nagłówków.
 - **Karta budowy: przycisk ZIP działa.** Poprawka regresji z P6.2: dialog wywoływał `zip` bez pobrania go z hooka, a hook dostawał typ `SiteCard` zamiast `SiteInfo` (brak `first`/`last`).
+- **Fala 1 domknięta (2026-10-28):** Skrzynka dostała gesty na dotyku w oknie porządkowania (patrz sekcja „Skrzynka — tryb porządkowania”), a Długi — saldo narastające w historii osoby (sekcja „Długi — ukrywanie kwot”). Reszta fali była zrobiona wcześniej (lupa, ocena powtórki, ukrywanie kwot, ostrzeżenie egzaminu, „Wyślij kopię”).
 
 ### Gdzie jest
 - `src/components/AppHeader.tsx` — prop `onOpenPalette`, przycisk `Search` z `sm:hidden`.
@@ -3191,13 +3193,13 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - Duplikaty funkcji `fold` (ok. 7 plików w `src/lib/**`) nadal istnieją. Wspólna funkcja to osobne, niskopriorytetowe zadanie.
 
 ### Testy
-- Vitest: 326 plików, 2527 testów, zielone (przy tej zmianie).
+- Vitest: 327 plików, 2532 testy, zielone (po domknięciu fali 1).
 - `tsc --noEmit -p tsconfig.app.json`: czysto (po naprawie ZIP).
 - ESLint: jedno ostrzeżenie w `Index.tsx` (`useMemo`, `boundaryTick`), istniejące przed tą zmianą.
 - E2e nie uruchamiane (zgodnie z zasadą „e2e tylko na prośbę”).
 
 ### Commit
-- Brak commita. Zmiany są w drzewie roboczym na `master`, na prośbę o commit.
+- Niezacommitowane: zmiany fali 1 domknięcia są w drzewie roboczym na `wip/mobile-fala1`.
 
 ## Praca — ocena powtórki „Od nowa / Dobrze” (plan mobile E1, 2026-10-28)
 
@@ -3239,9 +3241,10 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - Klucz localStorage `kaczy.debtsHideAmounts.v1` (boolean, domyślnie `false`), przez `createPersistedStore`, tak jak `confirmPrefs.ts`.
 - Maskowanie to wyłącznie widok. Dane i sumy zostają bez zmian, a etykiety dostępności (`aria-label` przycisków „Edytuj wpis…”) nadal pokazują kwoty, bo nie są widoczne na ekranie.
 - Przycisk ma zmienną etykietę zamiast `aria-pressed`, żeby nie dublować stanu.
+- **Saldo po tym wpisie (plan mobile C1 / plan długów 2.2, 2026-10-28):** pod datą każdego wpisu w historii osoby jest „Saldo po tym: …” — saldo osoby po tym wpisie i wszystkich starszych. Znak pokazany słowem minusa („− 50 zł” = jesteś winien), zero jako „0”. Przy ukrytych kwotach też maskowane. Liczenie: `src/lib/debts/model.ts` `runningBalances(entries)` (wejście najnowsze pierwsze, jak `balances`, wynik w tej samej kolejności); render w `PersonHistory` (`DebtsView.tsx`). Testy: `model.test.ts` (`runningBalances`).
 
 ### Ograniczenia i pułapki
-- Nie ma saldo narastającego (plan 2.2) ani zmiany nazwy osoby. To osobne punkty.
+- Zmiany nazwy osoby nadal nie ma (osobny punkt). Saldo narastające jest (patrz niżej, „Saldo po tym”).
 - Pasek postępu spłat ma `aria-label` z kwotą. Świadomie zostawiony jako informacja dla czytnika.
 
 ### Testy

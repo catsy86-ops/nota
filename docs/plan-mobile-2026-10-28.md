@@ -116,13 +116,13 @@ Zasady wykresów: skill `dataviz` przed kodem, kolory z tokenów stylu (10 styl�
 
 Wykonanie po kolei, fala po fali. Opis techniczny: `opis.md`, sekcja „plan mobile 2026-10-28”.
 
-### Fala 1 — szybkie zyski (częściowo)
+### Fala 1 — szybkie zyski (zamknięta 2026-10-28)
 - [x] **A1** Lupa na telefonie w nagłówku dla widoków bez pola szukania (otwiera paletę).
 - [x] **A2** Ustawienia pełnoekranowe na telefonie — już było (`SettingsDialog.tsx:63`), bez zmian.
-- [x] **A5** Skrzynka: `enterKeyHint="send"`. Gesty przesunięcia — nie zrobione.
+- [x] **A5** Skrzynka: `enterKeyHint="send"`. Gesty przesunięcia na dotyku w oknie porządkowania (w lewo archiwizuj, w prawo zostaw; `InboxTriage.tsx`). Kafle w Notatkach już miały gesty z `useCardGestures`.
 - [x] **C4** `text-wrap: pretty` dla `p`/`li`.
 - [x] **E2** Wspólne zwijanie polskich znaków — **zmieniony zakres**: w wzmiankach (`unlinkedMentions.ts`) zwijania NIE dodawać (tworzyłoby błędne linki). Quiz nie ma pola szukania (P4.2 nieaktualny). Konsolidacja 7 kopii `fold` — osobne, niski priorytet.
-- [x] **C1** Długi: ukrywanie kwot (•••) — zrobione (`opis.md`, Długi — ukrywanie kwot). Saldo narastające (plan długów 2.2) — nie zrobione.
+- [x] **C1** Długi: ukrywanie kwot (•••) — zrobione (`opis.md`, Długi — ukrywanie kwot). Saldo narastające „Saldo po tym” w historii osoby — zrobione (`runningBalances`, test w `model.test.ts`).
 - [x] **C2** Ostrzeżenie egzaminu przy małej puli pytań (`QuizPanel.tsx`).
 - [x] **C3** Ustawienia: „Wyślij kopię” przez arkusz udostępniania (`shareFullBackup`, tylko telefon z obsługą plików).
 - [~] **C5** Haptyka sukcesu i ostrzeżenia — zrobione w Długach. Pozostałe ekrany (np. Ćwiczenia, Grafik) — do przejścia.

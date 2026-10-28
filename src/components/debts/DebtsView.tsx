@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { localDayKey } from "@/lib/dayDone";
 import { addDebt, addDebtFromText, removeDebt, restoreDebt, updateDebt, useDebts } from "@/lib/debts/store";
 import { amountText, setHideAmounts, useHideAmounts } from "@/lib/debts/hideAmounts";
-import { balances, DEBT_KINDS, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, repaidShare, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
+import { balances, runningBalances, DEBT_KINDS, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, repaidShare, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
 
 /**
  * Długi: kto ile u nas pożyczył i ile oddał. Góra — podsumowanie i szybki wpis,
@@ -286,6 +286,7 @@ function clearDueReminders(entries: DebtEntry[], reminders: DebtReminderApi | un
 function PersonHistory({ person, onDone, reminders, hidden }: { person: PersonDebts; onDone: () => void; reminders?: DebtReminderApi; hidden: boolean }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [askRemove, setAskRemove] = useState<DebtEntry | null>(null);
+  const running = useMemo(() => runningBalances(person.entries), [person.entries]);
   const settle = () => {
     // Saldo dodatnie: oni oddają nam. Ujemne: oddajemy my.
     const created = addDebt({ person: person.name, kind: person.balance > 0 ? "repaid" : "returned", amount: Math.abs(person.balance) });
@@ -336,7 +337,7 @@ function PersonHistory({ person, onDone, reminders, hidden }: { person: PersonDe
       )}
 
       <ol className="mt-5 space-y-2" aria-label="Historia">
-        {person.entries.map((e) =>
+        {person.entries.map((e, i) =>
           editingId === e.id ? (
             <li key={e.id}>
               <EditDebtForm entry={e} onDone={() => setEditingId(null)} />
@@ -350,6 +351,9 @@ function PersonHistory({ person, onDone, reminders, hidden }: { person: PersonDe
                 <p className="text-sm font-medium">{KIND_LABEL[e.kind]} · <span className="tabular-nums">{amountText(e.amount, hidden)}</span></p>
                 <p className="text-xs text-muted-foreground">
                   {formatDay(e.at)}{e.note ? ` · ${e.note}` : ""}
+                </p>
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  Saldo po tym: {running[i] === 0 ? "0" : `${running[i] > 0 ? "" : "− "}${amountText(Math.abs(running[i]), hidden)}`}
                 </p>
               </div>
               <Button variant="ghost" size="icon" aria-label={`Edytuj wpis: ${KIND_LABEL[e.kind]} ${formatAmount(e.amount)}`} onClick={() => setEditingId(e.id)}>
