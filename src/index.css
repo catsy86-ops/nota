@@ -1475,3 +1475,19 @@ html[data-vt-dir="back"]::view-transition-new(root) { animation: vt-in-left 0.22
   .note-card .note-frame { animation: none !important; }
 }
 html[data-motion="reduced"] .note-card .note-frame { animation: none !important; }
+
+/* P5.3: nagłówki dni na osi dziennika wchodzą przy przewijaniu (animacja sterowana widokiem).
+   Tylko gdy przeglądarka to wspiera i ruch nie jest ograniczony — bez tego nagłówek po prostu stoi. */
+@keyframes scroll-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scroll-enter {
+      animation: scroll-enter linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+  }
+}

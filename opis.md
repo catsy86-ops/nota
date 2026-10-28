@@ -3643,3 +3643,11 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Gdzie.** `src/lib/study/siteCover.ts` (`siteCoverRef`), `src/components/study/StageDots.tsx`, nagłówek w `src/components/study/SiteCardDialog.tsx`.
 - **Decyzje.** Okładka tylko z prawdziwego zdjęcia — bez sztucznej grafiki. Okładka zaczyna się pod rzędem z „×”, bo przycisk zamknięcia nie ma tła i na zdjęciu byłby nieczytelny. Kropki mają etykietę dla czytnika („Etapy: 1 z 7, następny: …”) i nazwę w podpowiedzi.
 - **Testy.** Vitest: `src/lib/study/siteCover.test.ts`. E2E: `e2e/site-hero.spec.ts` (bez zdjęcia brak okładki, kropki po odhaczeniu etapu, okładka z nazwą po dodaniu planu, bez poziomego przewijania na 390 px; zrzut). Testy karty przechodzą.
+
+## Praca: separator tygodnia na osi dziennika i wejście nagłówków dni (P5.3)
+
+- **Co robi.** Na osi dziennika przed pierwszym (najnowszym) dniem każdego tygodnia jest separator „Tydz. 42 · 12–18 października 2026 · 38 h” — suma godzin na budowach z dni tego tygodnia widocznych na osi. Nagłówki dni wchodzą przy przewijaniu lekkim pojawieniem się (od dołu, z przezroczystości).
+- **Gdzie.** `src/lib/study/journalWeeks.ts` (`weekSeparators`), separator w `src/components/study/StudyJournal.tsx` (`data-journal-week`, `role="separator"` z etykietą), klasa `scroll-enter` w `src/index.css`.
+- **Jak działa.** Godziny dnia z tego samego podziału co przycisk godzin przy dniu (`hoursByDay`), więc suma tygodnia zgadza się z dniami. Animacja to `animation-timeline: view()` — tylko w przeglądarkach, które ją wspierają, i tylko bez ograniczenia ruchu (`prefers-reduced-motion`); w pozostałych nagłówek po prostu stoi.
+- **Ograniczenia.** Suma obejmuje dni widoczne na osi (filtr lub wyszukiwanie zmniejsza sumę). Dni z kilkoma budowami bez podziału nie dodają godzin.
+- **Testy.** Vitest: `src/lib/study/journalWeeks.test.ts`. E2E: `e2e/journal-weeks.spec.ts` (dwa tygodnie, 10 h z Grafiku); `study.spec` przechodzi.

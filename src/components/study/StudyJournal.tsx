@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { weekSeparators } from "@/lib/study/journalWeeks";
 import { Archive, Clock, ChevronRight, FileText, MapPin, Plus, Search, X } from "lucide-react";
 import { studyReminders } from "@/lib/study/reminders";
 import { useDayClock } from "@/lib/dayClock";
@@ -150,6 +151,8 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
     }
     return out;
   }, [view.days, shifts, study.journal, study.sites]);
+  // P5.3: separatory tygodni na osi — suma godzin budów z dni tygodnia widocznych na osi.
+  const weeks = useMemo(() => weekSeparators(view.days.map((d) => d.key), (k) => hoursByDay.get(k)?.split.sites.reduce((t, x) => t + (x.minutes ?? 0), 0) ?? 0), [view.days, hoursByDay]);
 
   const week = useMemo(() => {
     void dayTick;
@@ -324,10 +327,22 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
               />
             ) : (
               <div className="space-y-5 xl:col-start-1">
-                {view.days.map((d) => (
+                {view.days.map((d) => {
+                  const sep = weeks.get(d.key);
+                  return (
+                  <Fragment key={d.key}>
+                  {sep && (
+                    // P5.3: separator tygodnia z sumą godzin na budowach.
+                    <div role="separator" aria-label={`${sep.label}${sep.minutes > 0 ? `, ${formatHoursShort(sep.minutes)} h na budowach` : ""}`} data-journal-week={sep.start}
+                      className="flex items-center gap-2 pt-1 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      <span className="h-px flex-1 bg-border" aria-hidden />
+                      <span className="shrink-0 tabular-nums">{sep.label}{sep.minutes > 0 && ` · ${formatHoursShort(sep.minutes)} h`}</span>
+                      <span className="h-px flex-1 bg-border" aria-hidden />
+                    </div>
+                  )}
                   // P6.4: dni poza ekranem nie są malowane ani układane (`content-visibility`); wysokość zarezerwowana, żeby pasek przewijania nie skakał.
                   <section key={d.key} aria-label={d.label} data-journal-day={d.key} className="[content-visibility:auto] [contain-intrinsic-block-size:auto_240px]">
-                    <h4 className="sticky top-(--app-header-h,0px) z-raised -mx-1 mb-2 flex items-baseline justify-between gap-2 border-b border-border/60 bg-background/95 px-1 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground backdrop-blur-sm transition-[top] duration-300 ease-out motion-reduce:transition-none [html.header-hidden_&]:top-0">
+                    <h4 className="scroll-enter sticky top-(--app-header-h,0px) z-raised -mx-1 mb-2 flex items-baseline justify-between gap-2 border-b border-border/60 bg-background/95 px-1 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground backdrop-blur-sm transition-[top] duration-300 ease-out motion-reduce:transition-none [html.header-hidden_&]:top-0">
                       <span className="min-w-0 truncate">{d.label}</span>
                       <span className="flex shrink-0 items-baseline gap-2">
                         {hoursByDay.has(d.key) && (() => {
@@ -404,7 +419,9 @@ export function StudyJournal({ onPractice }: { onPractice: (topicId: string) => 
                       ))}
                     </div>
                   </section>
-                ))}
+                  </Fragment>
+                  );
+                })}
               </div>
             )}
 
