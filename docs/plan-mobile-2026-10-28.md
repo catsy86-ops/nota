@@ -134,6 +134,13 @@ Wykonanie po kolei, fala po fali. Opis techniczny: `opis.md`, sekcja „plan mob
 - [x] **Lupa w dolnym pasku** (decyzja 2026-10-28: też w dolnym pasku) — commit e5831ae.
 - [x] **E1** Ocena powtórki „Od nowa / Dobrze” (decyzja 2026-10-28) — bez wzrostu łatwości (brak q 5).
 
+### Fala 2 — wizualizacja (częściowo, 2026-10-28)
+- [~] **D1** graf na telefonie: pionowe płótno i przyciski przybliż/oddal/cały graf (`NoteGraph.tsx`, E5 w `noteGraph.ts`). Nie zrobione: szczypanie, przesuwanie palcem, arkusz z podglądem węzła.
+- [x] **D2** wykres masy ciała 30/90 dni (`WeightChart.tsx`, Recharts nie użyty).
+- [x] **D3** pierścień serii w Praca (heatmapa 12 tygodni już była, bez uogólniania).
+- [ ] **D5** przegląd `ShiftSummary` i wykresów rocznych przy 390 px — wymaga zrzutów Playwright.
+- Ramki: ustawienie w Wyglądzie (delikatne/zwykłe/wyraźne), na prośbę użytkownika.
+
 ### Fala 2–4 — niezrobione
 - Fala 2 (wizualizacja): D1 graf na telefonie, D2 wykres wagi i historii, D3 heatmapa serii, D4 legenda obrazu miesiąca, D5 przegląd wykresów przy 390 px.
 - Fala 3 (teren): B1 tryb rękawic, B2 zdjęcie jednym dotknięciem, B3 „Zaczynasz za…”, A6 kalendarz (kształty dni, legenda).

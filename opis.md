@@ -3287,3 +3287,67 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 
 ### Commit
 - Patrz historia (`git log --oneline -1`), commit „Plan mobile fala 1: długi, ostrzeżenie egzaminu, wyślij kopię”.
+
+## Wygląd — ustawienie „Ramki” (2026-10-28)
+
+### Co robi
+- Ustawienia → Wygląd → „Ramki”: **Delikatne** (domyślne, 30%), **Zwykłe** (55%), **Wyraźne** (100%, pełny kolor motywu). Dotyczy krawędzi kart i podziałów w każdym motywie, także domyślnym. Motyw Odblask ma własne, pełne ramki i ustawienie go nie zmienia.
+
+### Gdzie jest
+- `src/lib/frames.ts` — `useFrames`, `setFrames`, `frameMix`, `FRAME_MIX`; klucz `kaczy.frames.v1`.
+- `src/index.css` — `--frame-mix: 30%` w `:root`; `--border` w dwóch blokach jako `color-mix(... var(--frame-mix) ...)`.
+- `src/styles/skins/*.css` — `--border` każdego motywu (poza `odblask.css`) na `var(--frame-mix)`.
+- `src/components/settings/AppearanceSettings.tsx` — sekcja „Ramki” pod „Kształt”.
+
+### Jak działa i dlaczego
+- Procent ustawia `document.documentElement.style.setProperty("--frame-mix")` (inline na `<html>`), więc wygrywa z każdym motywem bez zmian w jego selektorach. Zmiana przezroczystości nie wymaga osobnej palety.
+- Odblask zostaje pełny, bo to motyw o wysokim kontraście i zmniejszenie ramek łamałoby jego założenie.
+
+### Testy
+- `src/lib/frames.test.ts` (procenty rosną: delikatne < zwykłe < wyraźne). Testy motywów i ustawień zielone.
+
+## Ćwiczenia — wykres masy ciała 30/90 dni (plan mobile D2, 2026-10-28)
+
+### Co robi
+- Nad listą ważeń jest wykres: linia i punkty z ostatnich 30 albo 90 dni, zakres kg w nagłówku, daty początku i końca pod wykresem. Dni bez ważenia zostawiają przerwę na osi. Stuknięcie punktu pokazuje datę i wagę.
+
+### Gdzie jest
+- `src/components/cwiczenia/WeightChart.tsx` — komponent (SVG, przełącznik zakresu z `aria-pressed`).
+- `src/lib/weight/chart.ts` — `weightSeries(entries, range, today)`: okno dni, oś X wg dnia, skala Y z zapasem 0,5 kg.
+- `src/components/cwiczenia/WeightSection.tsx` — wstawienie wykresu.
+
+### Jak działa i dlaczego
+- Bez Recharts: to jedna linia i punkty, a Recharts dołożyłby do paczki. Oś X liczona od dnia (UTC), nie od indeksu wpisu, więc przerwy są widoczne.
+- Lista ważeń zostaje pod wykresem jako wersja dla czytnika (tabela).
+
+### Testy
+- `src/lib/weight/chart.test.ts` (okno, skala Y, brak danych).
+
+## Praca — pierścień postępu serii (plan mobile D3, 2026-10-28)
+
+### Co robi
+- Kafelek „Seria” ma pierścień: 7 dni z rzędu zapełnia go całkowicie.
+
+### Gdzie jest i uwagi
+- `src/components/study/StudyStats.tsx` — `Tile` z opcjonalnym `ring` (0–1), stała `STREAK_GOAL = 7`.
+- Siatka 12 tygodni już istniała (`studyDaysGrid`, `StudyStats.tsx`). Nie uogólniałem jej do `ActivityHeatmap`, bo nie ma drugiego odbiorcy.
+
+## Graf notatek — telefon: pionowe płótno i przybliżanie (plan mobile D1 + E5, 2026-10-28)
+
+### Co robi
+- Na telefonie graf ma pionowe płótno (600×760), węzły i etykiety są czytelniejsze. Przyciski **przybliż / oddal / cały graf** (skala 1–3). Na komputerze bez zmian.
+
+### Gdzie jest
+- `src/components/NoteGraph.tsx` — `PHONE` / `DESKTOP` (wymiary płótna), stan `view`, pasek przybliżania (tylko gdy `phone`), `viewBox` z `graphViewBox`.
+- `src/lib/noteGraph.ts` — `GraphView`, `zoomView`, `graphViewBox`, `GRAPH_VIEW_RESET`, `GRAPH_MAX_SCALE`.
+
+### Ograniczenia i pułapki
+- **Nie zrobione:** szczypanie i przesuwanie widoku palcem oraz arkusz z podglądem węzła (plan D1). Przybliżanie działa przyciskami, a przesuwanie tylko przez zmianę środka widoku (`cx`, `cy`), które jeszcze nie są ustawiane gestem.
+- Układ liczy Worker z wymiarami `W`/`H`, więc zmiana z telefonu na komputer przelicza układ.
+
+### Testy
+- `src/lib/noteGraph.view.test.ts` (skala, granice płótna, reset).
+
+## Wspólne — plan mobile fala 2 (wizualizacja), stan 2026-10-28
+- Zrobione: D1 (częściowo, patrz wyżej), D2, D3 (pierścień; heatmapa już była).
+- **Nie zrobione:** D5 — przegląd `ShiftSummary.tsx` i wykresów rocznych przy 390 px (zrzuty Playwright `pixel-7`). Wymaga uruchomienia aplikacji.
