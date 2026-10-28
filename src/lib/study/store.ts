@@ -309,6 +309,11 @@ export function setProblemSolution(id: string, text: string) {
   yStudy.setSolution(id, text);
 }
 
+/** Usterka (P2.3): odpowiedzialny, termin i zdjęcia po naprawie; pusta wartość kasuje pole. */
+export function setProblemFault(id: string, patch: { owner?: string; due?: string | null; after?: string[] }) {
+  yStudy.setFault(id, patch);
+}
+
 /** Problemy, które czekają na rozwiązanie. */
 export const openProblems = (journal: readonly JournalEntry[]) =>
   journal.filter((e) => e.kind === "problem" && e.resolved === undefined).length;

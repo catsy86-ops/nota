@@ -24,7 +24,7 @@ describe("protokół odbioru", () => {
     expect(h.tests).toHaveLength(1);
     expect(h.tests[0].ok).toBe(true);
     expect(h.tests[0].line).toContain("Próba szczelności");
-    expect(h.remarks).toEqual([{ at: at(3), text: "Brak rewizji w łazience" }]);
+    expect(h.remarks).toEqual([{ at: at(3), text: "Brak rewizji w łazience", photosBefore: 0, photosAfter: 0 }]);
   });
 
   it("etapy z karty, zdjęcia od najstarszych do limitu", () => {

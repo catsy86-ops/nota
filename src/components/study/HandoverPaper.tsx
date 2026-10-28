@@ -56,7 +56,16 @@ export function HandoverPaper({ handover: h }: { handover: Handover }) {
           <p>Brak uwag — wszystkie zgłoszone problemy rozwiązane.</p>
         ) : (
           <ul className="space-y-0.5">
-            {h.remarks.map((r, i) => <li key={i}><span className="font-mono text-xs tabular-nums">{shortDate(r.at)}</span> {r.text}</li>)}
+            {h.remarks.map((r, i) => (
+              <li key={i}>
+                <span className="font-mono text-xs tabular-nums">{shortDate(r.at)}</span> {r.text}
+                {(r.owner || r.due || r.photosAfter > 0) && (
+                  <span className="block text-xs text-muted-foreground">
+                    {[r.owner && `odpowiedzialny: ${r.owner}`, r.due && `termin: ${r.due.split("-").reverse().join(".")}`, r.photosAfter > 0 && `po naprawie: ${r.photosAfter} zdj.`].filter(Boolean).join(" · ")}
+                  </span>
+                )}
+              </li>
+            ))}
           </ul>
         )}
       </section>

@@ -59,6 +59,12 @@ export interface JournalEntry {
   resolved?: number;
   /** Jak problem rozwiązano („wymieniona złączka”) — baza własnych rozwiązań. Tylko dla `problem`. */
   solution?: string;
+  /** Usterka (P2.3): kto odpowiada za naprawę. Tylko dla `problem`. */
+  owner?: string;
+  /** Usterka (P2.3): termin naprawy (`YYYY-MM-DD`). Tylko dla `problem`. */
+  due?: string;
+  /** Usterka (P2.3): zdjęcia po naprawie (klucze z `imageStore`); `images` to zdjęcia przed. Tylko dla `problem`. */
+  after?: string[];
   /** Protokół próby szczelności (`pressureTest.ts`); brak = wpis bez próby. */
   test?: PressureTest;
   /** Zużyte kształtki (`fittings.ts`); brak = bez kształtek. */
@@ -79,6 +85,9 @@ export const JOURNAL_MAX_RECORDINGS = 3;
 export const JOURNAL_MAX_TEXT = 2000;
 /** Opis rozwiązania problemu — krótki, jedno-dwa zdania. */
 export const JOURNAL_SOLUTION_MAX = 500;
+/** Usterka (P2.3): najdłuższa nazwa odpowiedzialnego i liczba zdjęć po naprawie. */
+export const FAULT_OWNER_MAX = 60;
+export const FAULT_AFTER_MAX = 20;
 export const SITE_MAX = 120;
 
 export interface StudyState {
@@ -214,6 +223,9 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
     ...(recordings.length ? { recordings } : {}),
     ...(e.kind === "problem" && typeof e.resolved === "number" && Number.isFinite(e.resolved) ? { resolved: e.resolved } : {}),
     ...(e.kind === "problem" && typeof e.solution === "string" && e.solution.trim() ? { solution: e.solution.trim().slice(0, JOURNAL_SOLUTION_MAX) } : {}),
+    ...(e.kind === "problem" && typeof e.owner === "string" && e.owner.trim() ? { owner: e.owner.trim().slice(0, FAULT_OWNER_MAX) } : {}),
+    ...(e.kind === "problem" && typeof e.due === "string" && DAY_RE.test(e.due) ? { due: e.due } : {}),
+    ...(e.kind === "problem" && Array.isArray(e.after) && e.after.length ? { after: e.after.filter((r): r is string => typeof r === "string" && isImageRef(r)).slice(0, FAULT_AFTER_MAX) } : {}),
     ...(test ? { test } : {}),
     ...(fittings.length ? { fittings } : {}),
     ...(stage ? { stage } : {}),
@@ -344,7 +356,7 @@ const ORDERED_ENTRY_LISTS = new Set<string>(["images", "fittings"]);
  */
 export const JOURNAL_ENTRY_KEYS: ReadonlySet<string> = new Set([
   "id", "at", "kind", "topic", "text", "site", "siteId", "checked", "images", "captions", "recordings",
-  "resolved", "solution", "test", "fittings", "stage", "geo",
+  "resolved", "solution", "test", "fittings", "stage", "geo", "owner", "due", "after",
 ]);
 
 export function createYStudy(doc: Y.Doc) {
@@ -654,6 +666,17 @@ export function createYStudy(doc: Y.Doc) {
     transact(() => writeEntry(id, at === null ? rest : { ...rest, resolved: at }));
   }
 
+  /** Usterka (P2.3): odpowiedzialny, termin i zdjęcia po naprawie. Pusta wartość kasuje pole; inny rodzaj wpisu — nic. */
+  function setFault(id: string, patch: { owner?: string; due?: string | null; after?: string[] }): void {
+    const e = readEntry(id);
+    if (!e || e.kind !== "problem") return;
+    const next: JournalEntry = { ...e };
+    if (patch.owner !== undefined) { const t = patch.owner.trim().slice(0, FAULT_OWNER_MAX); if (t) next.owner = t; else delete next.owner; }
+    if (patch.due !== undefined) { if (patch.due && DAY_RE.test(patch.due)) next.due = patch.due; else delete next.due; }
+    if (patch.after !== undefined) { if (patch.after.length) next.after = patch.after.slice(0, FAULT_AFTER_MAX); else delete next.after; }
+    transact(() => writeEntry(id, next));
+  }
+
   /** Opis rozwiązania problemu; pusty tekst usuwa opis. Inny rodzaj wpisu — nic. */
   function setSolution(id: string, text: string): void {
     const e = readEntry(id);
@@ -807,7 +830,7 @@ export function createYStudy(doc: Y.Doc) {
   return {
     get, dump, subscribe, isMerged,
     setColumn, setChecked, clearChecked, restoreChecked, recordRound, recordExam,
-    addEntry, updateEntry, setResolved, setSolution, restoreEntry, removeEntry, setSite, saveSite, setSiteList, setBoss, setGroup,
+    addEntry, updateEntry, setResolved, setSolution, setFault, restoreEntry, removeEntry, setSite, saveSite, setSiteList, setBoss, setGroup,
     addCustom, updateCustom, removeCustom, restoreCustom,
     replaceAll, mergeIn,
   };

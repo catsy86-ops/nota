@@ -22,6 +22,13 @@ export interface HandoverTest {
 export interface HandoverRemark {
   at: number;
   text: string;
+  /** Odpowiedzialny za naprawę (P2.3), jeśli wpisano. */
+  owner?: string;
+  /** Termin naprawy (`YYYY-MM-DD`), jeśli wpisano. */
+  due?: string;
+  /** Zdjęcia przed (wpis) i po naprawie. */
+  photosBefore: number;
+  photosAfter: number;
 }
 
 /** Zdjęcia jednego etapu (wpisy przypięte do etapu) albo pozostałe (`stage: null`). */
@@ -83,7 +90,7 @@ export function buildHandover(
     tests: entries.filter((e) => e.test).map((e) => ({ at: e.at, line: testLine(e.test!), ok: e.test!.ok })),
     remarks: entries
       .filter((e) => e.kind === "problem" && e.resolved === undefined)
-      .map((e) => ({ at: e.at, text: e.text.trim().split("\n")[0] || "bez opisu" })),
+      .map((e) => ({ at: e.at, text: e.text.trim().split("\n")[0] || "bez opisu", owner: e.owner, due: e.due, photosBefore: e.images.length, photosAfter: e.after?.length ?? 0 })),
     photos: photos.slice(0, HANDOVER_PHOTOS_MAX),
     photoGroups,
     morePhotos: Math.max(0, photos.length - HANDOVER_PHOTOS_MAX),
@@ -108,7 +115,10 @@ export function handoverText(h: Handover): string {
   for (const t of h.tests) lines.push(`- ${shortDate(t.at)} ${t.line}`);
   lines.push("", "## Uwagi");
   if (h.remarks.length === 0) lines.push("Brak uwag — wszystkie zgłoszone problemy rozwiązane.");
-  for (const r of h.remarks) lines.push(`- ${shortDate(r.at)} ${r.text}`);
+  for (const r of h.remarks) {
+    const meta = [r.owner ? `odpowiedzialny: ${r.owner}` : null, r.due ? `termin: ${r.due.split("-").reverse().join(".")}` : null, r.photosAfter ? `po naprawie: ${r.photosAfter} zdj.` : null].filter(Boolean);
+    lines.push(`- ${shortDate(r.at)} ${r.text}${meta.length ? ` (${meta.join(", ")})` : ""}`);
+  }
   if (h.photos.length > 0) {
     const byStage = h.photoGroups.filter((g) => g.stage).map((g) => `${g.stage}: ${g.photos.length}`);
     lines.push("", `Dokumentacja zdjęciowa: ${h.photos.length + h.morePhotos} zdjęć${byStage.length ? ` (${byStage.join(", ")})` : ""}.`);

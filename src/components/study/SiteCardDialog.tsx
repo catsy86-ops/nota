@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { SiteOrderPanel } from "./SiteOrderPanel";
 import { SiteStagesPanel } from "./SiteStagesPanel";
 import { SiteShortagesPanel } from "./SiteShortagesPanel";
+import { SiteFaultsPanel } from "./SiteFaultsPanel";
 import { SiteDocsPanel } from "./SiteDocsPanel";
 import { SiteServicePanel } from "./SiteServicePanel";
 import { PrintRoot } from "./PrintRoot";
@@ -250,6 +251,7 @@ export function SiteCardDialog({
               {tally && <SiteTallyBar tally={tally} />}
               <SiteStagesPanel site={site} />
               <SiteShortagesPanel site={site} />
+              <SiteFaultsPanel site={site} journal={study.journal} />
               <SiteOrderPanel site={site} />
             </div>
 
