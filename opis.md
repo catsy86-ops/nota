@@ -3514,3 +3514,10 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Ograniczenia i pułapki.** Szablon nie zapisuje nieobecności (urlop, L4) ani dni z rodzajem, którego już nie ma. Zapis tygodnia jest tylko w widoku tygodnia; w miesiącu `weekSteps` to `null` i sekcja zapisu się nie pokazuje. Toast po nałożeniu na miesiąc mówi „cykl” (wspólna ścieżka z cyklami). Wiersze „Cykl” nie pokazują szablonów, a szablony nie pokazują cykli.
 - **Testy.** Jednostkowe: `src/lib/shifts/weekTemplate.test.ts` (5 testów, zielone). E2E: `e2e/shifts-template.spec.ts` (zapis z tygodnia i nałożenie na pusty tydzień; dialog w widoku miesiąca; 390 px — pasek przyklejony po przewinięciu). Wszystkie 3 zielone.
 - **Commit.** Niezacommitowane (stan 2026-10-28, drzewo na `wip/mobile-fala1`, HEAD b94287d).
+
+## Wyszukiwanie na telefonie (A1, plan mobile 2026-10-28)
+
+- **Co robi.** Na telefonie każdy widok ma wejście do wyszukiwania. W widokach bez własnego pola szukania (Grafik, Kalendarz, Nauka, Długi, Ćwiczenia) jest lupa „Szukaj i polecenia” w nagłówku i slot „Szukaj” w dolnym pasku; oba otwierają paletę poleceń. W widokach z polem szukania (Notatki, Dziś, Archiwum itd.) pole jest w treści, a lupy w nagłówku nie ma.
+- **Gdzie.** `src/components/AppHeader.tsx` (przycisk lupy, warunek `!viewSearches && onOpenPalette`), `src/components/BottomNav.tsx` (`showPaletteSlot`), `src/lib/viewSearch.ts` (`viewHasSearch`, zbiór `VIEWS_WITHOUT_SEARCH`).
+- **Decyzja (2026-10-28).** Lupa zostaje w nagłówku i w dolnym pasku — oba miejsca, bo na telefonie nagłówek bywa daleko od kciuka, a pasek jest pod ręką. Slot w pasku pojawia się tylko tam, gdzie nie ma pola szukania, więc pasek nie puchnie w widokach z polem.
+- **Testy.** `e2e/search-phone.spec.ts` (Grafik na 390 px: lupa i slot otwierają paletę; Notatki: lupy w nagłówku nie ma). 2/2 zielone.
