@@ -66,7 +66,9 @@ export default defineConfig(() => ({
           "**/unbounded-latin-ext*.woff2",
           // Eksport PDF (jsPDF + html2canvas + purify + index.es) i Statystyki: ~1,1 MB, rzadko używane.
           // Nie w precache — trafiają do cache `static-assets` przy pierwszym użyciu (offline wcześniej: błąd).
-          "**/{exportPdf,index.es,html2canvas,html2canvas.esm,purify.es,StatsDialog,jspdf.es.min}-*.js",
+          "**/{exportPdf,index.es,html2canvas,html2canvas.esm,purify.es,StatsDialog,jspdf.es.min,handoverPdf,reportPdf,pdfWriter}-*.js",
+          // Skan kodu QR do parowania (jsQR ~130 KB): parowanie i tak wymaga sieci, więc offline nic nie daje (2026-10-28, P3.2).
+          "**/{jsQR,QrScanDialog}-*.js",
           // Edytor CodeMirror (~500 KB) za flagą `cmEditor`: tylko na żądanie, poza precache (plan rozbudowy, Faza 1a).
           "**/CmEditor-*.js",
         ],

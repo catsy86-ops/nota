@@ -89,6 +89,7 @@ import { canRedoShifts, canUndoShifts, redoShifts, undoShifts } from "@/lib/shif
 import { BottomNav } from "@/components/BottomNav";
 import { VaultHost } from "@/components/vault/VaultHost";
 import { TodayCards } from "@/components/review/TodayCards";
+import { OlderDeviceBanner } from "@/components/sync/OlderDeviceBanner";
 import { RemindersView } from "@/components/reminders/RemindersView";
 import { VIEW_ORDER, SiteArrivalPrompt, ShortcutsDialog, PropDefsDialog, WidgetPanel, RecentActionsPanel, OnboardingTour, CommandPalette, ImportExternalDialog, SettingsDialog, StatsDialog, FocusMode, StudyView, DebtsView, CwiczeniaView, InboxTriage, ShiftsView, ReminderCalendarView, DailyReportNudge, PushScheduleSync, StudyOverdueSync, loadNoteReader, NoteReader } from "./indexViews";
 
@@ -688,6 +689,7 @@ const Index = () => {
         {/* `flex gap`, nie `space-y`: ukryta na sm+ wyszukiwarka nie dokłada marginesu nad treścią. */}
         {/* Dziś na telefonie: ciaśniejsze odstępy między kartami, mniej przewijania na 390 px. */}
         <main ref={mainRef} className={`flex-1 max-w-352 mx-auto w-full px-4 sm:px-6 py-6 sm:py-8 flex flex-col pb-safe ${view === "today" ? "gap-4 sm:gap-10" : "gap-8 sm:gap-10"}`}>
+          <OlderDeviceBanner onOpenSync={() => { requestSettingsTab("sync"); setSettingsOpen(true); }} />
           {isTitleBlockView(view) && <ViewTitle view={view} count={view === "today" ? displayNotes.length : undefined} />}
           {view !== "shifts" && view !== "calendar" && view !== "study" && view !== "debts" && view !== "cwiczenia" && (
             <div data-view-static className="sm:hidden">

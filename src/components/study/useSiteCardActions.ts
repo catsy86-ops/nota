@@ -10,7 +10,7 @@ import { buildJournalReport, dayKeyOf } from "@/lib/study/report";
 import { downloadSiteZip } from "@/lib/study/siteZip";
 import { shrinkSitePhotos } from "@/lib/study/photoShrink";
 import { buildHandover, handoverText } from "@/lib/study/handover";
-import { buildHandoverPdf, handoverPdfName, sharePdf, type HandoverPdfPhoto } from "@/lib/study/handoverPdf";
+import type { HandoverPdfPhoto } from "@/lib/study/handoverPdf";
 import { companyNameStore } from "@/lib/study/companyPrefs";
 import { imageStore } from "@/lib/imageStore";
 import { useShifts } from "@/lib/shifts";
@@ -103,6 +103,8 @@ export function useSiteCardActions({
         const dataUrl = await blobToDataUrl(new Blob([rec.bytes], { type: rec.type }));
         photos.push({ dataUrl, caption: entry?.captions?.[ref] ?? (entry ? new Date(entry.at).toLocaleDateString("pl-PL") : "") });
       }
+      // Generator PDF leniwie: rzadko używany, poza precache (jak sam jsPDF).
+      const { buildHandoverPdf, handoverPdfName, sharePdf } = await import("@/lib/study/handoverPdf");
       const blob = await buildHandoverPdf(h, { company: companyNameStore.get(), photos });
       const outcome = await sharePdf(blob, handoverPdfName(site.name));
       if (outcome === "downloaded") toast.success("Zapisano protokół PDF");

@@ -3611,3 +3611,13 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Referencje budowy: zdjęcia wpisów, zdjęcia „po naprawie”, nagrania i dokumenty, bez duplikatów. Nagrania i dokumenty mają rozmiar w metadanych; zdjęcia odczytuje się z `imageStore` (rozmiar bajtów). Plik nieobecny na tym urządzeniu liczy się jako 0. W Ustawieniach liczenie dopiero na żądanie, bo czyta wszystkie zdjęcia.
 - **Ograniczenia.** Zdjęcie użyte na dwóch budowach liczy się przy każdej z nich (suma w Ustawieniach może je policzyć dwa razy). Notatki i załączniki poza Pracą nie są liczone.
 - **Testy.** Vitest: `src/lib/study/siteStorage.test.ts`. E2E: `e2e/site-storage.spec.ts` (linijka w karcie po dodaniu planu, lista w Ustawieniach); `diagnostics`, `site-docs`, `site-card-mobile` przechodzą.
+
+## Synchronizacja: baner starszej wersji w całej aplikacji (P3.2)
+
+- **Co robi.** Gdy w grupie synchronizacji jest urządzenie ze starszą wersją aplikacji, na górze każdego widoku pojawia się ostrzeżenie „<urządzenie> ma starszą wersję aplikacji — część danych może być tam niewidoczna. Zaktualizuj go.” (dotąd tylko w Ustawieniach → Sync). „Szczegóły” otwiera Sync, „×” chowa baner dla tego zestawu urządzeń — nowe starsze urządzenie pokaże go znowu.
+- **Gdzie.** `src/components/sync/OlderDeviceBanner.tsx` (klucz ukrycia `kaczy.olderDeviceBanner.v1` = id i numer formatu starszych urządzeń), montowany na początku treści w `src/pages/Index.tsx`. Wykrywanie: `olderDevices` z `src/lib/formatSchema.ts`, stan z `useSyncState` (już ładowany w nagłówku, więc bez wpływu na główną paczkę).
+- **Testy.** Vitest: `src/components/sync/OlderDeviceBanner.test.tsx` (brak banera przy aktualnych, pokazanie, „Szczegóły”, ukrycie na stałe dla zestawu, ponowne pokazanie przy nowym urządzeniu). E2E: brak — wymagałoby drugiego urządzenia ze starszą wersją.
+
+## Budżet precache po funkcjach Pracy (2026-10-28)
+
+- Dzisiejsze funkcje przekroczyły limit precache (3,9 MiB) o ok. 7,5 KB. Zamiast podnosić limit: moduły PDF (`handoverPdf`, `reportPdf`, `pdfWriter`) ładują się dopiero po kliknięciu i są poza precache (jak jsPDF — PDF i tak potrzebuje sieci przy pierwszym użyciu), a skan kodu QR do parowania (`jsQR`, `QrScanDialog`, ok. 133 KB) też jest poza precache, bo parowanie bez sieci nie działa. Pliki poza precache trafiają do cache po pierwszym użyciu. `bundle.spec` 6/6; `sync-qr-scan`, `handover-pdf`, `report-pdf` przechodzą.

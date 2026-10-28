@@ -2,8 +2,7 @@ import { shareOrCopy } from "@/lib/shareOrCopy";
 import { useEffect, useMemo, useState } from "react";
 import { Copy, Ellipsis, FileDown, FilePlusCorner, MessageCircle, Printer, Share2, UserPen, Users } from "lucide-react";
 import { companyNameStore } from "@/lib/study/companyPrefs";
-import { blobToDataUrl, sharePdf, type PdfPhoto } from "@/lib/study/pdfWriter";
-import { buildReportPdf, REPORT_PDF_PHOTOS_MAX, reportPdfName } from "@/lib/study/reportPdf";
+import type { PdfPhoto } from "@/lib/study/pdfWriter";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -111,6 +110,8 @@ export function JournalReportDialog({
   /** P2.5: raport jako plik PDF (ta sama treść co tekst), zdjęcia z magazynu z podpisami; udostępnia albo pobiera. */
   async function pdf() {
     try {
+      // Generator PDF leniwie: rzadko używany, poza precache (jak sam jsPDF).
+      const [{ buildReportPdf, REPORT_PDF_PHOTOS_MAX, reportPdfName }, { blobToDataUrl, sharePdf }] = await Promise.all([import("@/lib/study/reportPdf"), import("@/lib/study/pdfWriter")]);
       const photos: PdfPhoto[] = [];
       for (const ref of report.images.slice(0, REPORT_PDF_PHOTOS_MAX)) {
         const rec = await imageStore.get(ref);
