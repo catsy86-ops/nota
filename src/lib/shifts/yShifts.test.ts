@@ -179,3 +179,15 @@ describe("leaveDays w dokumencie Yjs", () => {
     expect(t.get().leaveDays).toBe(26);
   });
 });
+
+describe("Wypłaty brutto w Yjs (B5)", () => {
+  it("kwota miesiąca przechodzi do drugiego urządzenia, 0 ją usuwa", () => {
+    const { a, b, sync } = pair();
+    a.setPaidGross("2026-10", 6740.004);
+    sync();
+    expect(b.get().paidGross).toEqual({ "2026-10": 6740 });
+    a.setPaidGross("2026-10", 0);
+    sync();
+    expect(b.get().paidGross).toEqual({});
+  });
+});

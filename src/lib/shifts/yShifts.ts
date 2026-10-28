@@ -1,5 +1,5 @@
 import * as Y from "yjs";
-import { BONUS_MAX_PER_DATA, cleanBonus, DEFAULT_LEAVE_DAYS, DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, shiftHours, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
+import { BONUS_MAX_PER_DATA, cleanBonus, cleanPaidGross, DEFAULT_LEAVE_DAYS, DEFAULT_PATTERNS, DEFAULT_SHIFT_TYPES, migrate, shiftHours, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
 import { shiftMinutes } from "./time";
 
 /**
@@ -20,6 +20,15 @@ type Meta = "hourlyRate" | "nightRate" | "workSystem" | "settlementMonths" | "se
 
 /** Origin transakcji Grafiku — odróżnia lokalne zmiany od tych z sieci i z migracji. */
 /** Zmiany bez cofania: import, przywracanie kopii, migracje i Cofnij z tostu. Nie trafiają na stos Ctrl+Z. */
+const PAID_GROSS_PREFIX = "paidGross:";
+
+/** Wypłaty z mapy `meta` (B5), oczyszczone tak samo jak w `migrate`. */
+function readPaidGross(meta: Y.Map<unknown>): Record<string, number> {
+  const raw: Record<string, unknown> = {};
+  meta.forEach((v, k) => { if (k.startsWith(PAID_GROSS_PREFIX)) raw[k.slice(PAID_GROSS_PREFIX.length)] = v; });
+  return cleanPaidGross(raw);
+}
+
 export const SHIFTS_SYSTEM_ORIGIN = "shifts-system";
 export const SHIFTS_ORIGIN = "shifts";
 
@@ -73,6 +82,7 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
       patterns: meta.get("patternsInit") ? Array.from(patterns.values()).sort(byOrder) : undefined,
       days: Object.fromEntries(days.entries()),
       bonuses: Array.from(bonuses.values()),
+      paidGross: readPaidGross(meta),
     });
     return snapshot;
   }
@@ -255,6 +265,15 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
     return prev;
   }
 
+  /** Wypłata brutto miesiąca (B5): klucz `paidGross:YYYY-MM` w mapie `meta`; 0 usuwa wpis. */
+  function setPaidGross(month: string, amount: number): void {
+    transact(() => {
+      const key = PAID_GROSS_PREFIX + month;
+      if (amount > 0) meta.set(key, Math.round(amount * 100) / 100);
+      else meta.delete(key);
+    });
+  }
+
   function setMeta(key: Meta, value: number | WorkSystem | SettlementMonths | boolean): void {
     transact(() => { if (meta.get(key) !== value) meta.set(key, value); });
   }
@@ -329,7 +348,7 @@ export function createYShifts(doc: Y.Doc, scheduleId: string = MAIN_SCHEDULE_ID)
 
   return {
     get, subscribe, isMerged,
-    setDayShift, setDayEntry, writeDays,
+    setDayShift, setDayEntry, writeDays, setPaidGross,
     undo: (): boolean => undoManager.undo() !== null,
     canUndo: (): boolean => undoManager.canUndo(),
     redo: (): boolean => undoManager.redo() !== null,

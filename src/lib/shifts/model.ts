@@ -167,6 +167,8 @@ export interface ShiftData {
   patterns: ShiftPattern[];
   /** Premie w rachunku (zł brutto), przypisane do miesiąca. Doliczane do zarobku tego miesiąca. */
   bonuses: ShiftBonus[];
+  /** Wypłacono brutto (zł) wg paska, per miesiąc `YYYY-MM` (B5). Brak wpisu = nie wpisano. */
+  paidGross?: Record<string, number>;
 }
 
 /** Premia jednorazowa w danym miesiącu (np. nagroda, dodatek za wyjazd). */
@@ -330,6 +332,16 @@ function toEntry(v: unknown): DayEntry | null {
  * Pola, których ta wersja nie zna, zostają — zapis ze starszej aplikacji
  * nie kasuje danych dopisanych przez nowszą.
  */
+/** Wypłaty brutto per miesiąc: tylko klucze `YYYY-MM` z dodatnią, rozsądną kwotą (B5). */
+export function cleanPaidGross(raw: unknown): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const [month, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (MONTH_RE.test(month) && typeof v === "number" && Number.isFinite(v) && v > 0 && v <= BONUS_MAX_AMOUNT) out[month] = Math.round(v * 100) / 100;
+  }
+  return out;
+}
+
 export function migrate(stored: unknown): ShiftData {
   const s = (stored && typeof stored === "object" ? stored : {}) as Record<string, unknown>;
   const days: Record<string, DayEntry> = {};
@@ -359,5 +371,6 @@ export function migrate(stored: unknown): ShiftData {
     ...(Number.isInteger(s.alarmBeforeMin) && (s.alarmBeforeMin as number) >= 0 && (s.alarmBeforeMin as number) <= 240 ? { alarmBeforeMin: s.alarmBeforeMin as number } : {}),
     patterns: Array.isArray(s.patterns) ? s.patterns.filter(isPattern) : EMPTY_SHIFT_DATA.patterns,
     bonuses: Array.isArray(s.bonuses) ? s.bonuses.slice(0, BONUS_MAX_PER_DATA).map(cleanBonus).filter((b): b is ShiftBonus => !!b) : [],
+    paidGross: cleanPaidGross(s.paidGross),
   };
 }

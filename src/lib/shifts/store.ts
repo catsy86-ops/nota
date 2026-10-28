@@ -1,7 +1,7 @@
 ﻿import { useCallback, useSyncExternalStore } from "react";
 import { yjsStore } from "@/lib/yjsStore";
 import { logDiag } from "@/lib/diagnostics";
-import { absenceKindOf, isAbsence, migrate, type AbsenceKind, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
+import { BONUS_MAX_AMOUNT, absenceKindOf, isAbsence, migrate, type AbsenceKind, type DayEntry, type SettlementMonths, type ShiftBonus, type ShiftData, type ShiftPattern, type ShiftType, type WorkSystem } from "./model";
 import { applyPattern, patternOverlap } from "./pattern";
 import { planMonthCopy, planPaste, planRangeCopy, planSwap, planTransfer, planWeekCopy, type TransferMode, type WeekCopyPlan } from "./move";
 import { createYShifts, MAIN_SCHEDULE_ID, SHIFTS_SYSTEM_ORIGIN, type DeletedShiftType, type YShifts } from "./yShifts";
@@ -297,6 +297,12 @@ export function setSundayFrom(hour: number): void {
 }
 
 /** Alarm przed zmianą w minutach; 0 = wyłączony (G4.1). */
+/** Wypłata brutto z paska za miesiąc (B5). Niepoprawny miesiąc albo kwota ≤ 0 nie zapisuje (0 usuwa wpis). */
+export function setPaidGross(month: string, amount: number): void {
+  if (!/^d{4}-(0[1-9]|1[0-2])$/.test(month)) return;
+  yShifts.setPaidGross(month, Number.isFinite(amount) ? Math.min(amount, BONUS_MAX_AMOUNT) : 0);
+}
+
 export function setAlarmBeforeMin(min: number): void {
   yShifts.setMeta("alarmBeforeMin", Number.isInteger(min) && min >= 0 && min <= 240 ? min : 0);
 }

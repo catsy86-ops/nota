@@ -1,4 +1,5 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { comparePayslip, PAYSLIP_TOLERANCE, type PayslipFacts } from "@/lib/shifts/payslip";
 import { format } from "date-fns";
 import { pl } from "date-fns/locale";
 import { TriangleAlert, CalendarRange, Settings2, Trash } from "lucide-react";
@@ -12,7 +13,7 @@ import { parseMoney } from "@/lib/shifts/money";
 import { SICK_RATE, type AbsenceEstimate } from "@/lib/shifts/absenceEstimate";
 import type { TimeOffBalance } from "@/lib/shifts/timeOff";
 import { useDayClock } from "@/lib/dayClock";
-import { deleteBonus, FTE_OPTIONS, formatDuration, formatHoursShort, formatMoney, leaveBalance, nightAllowance, saveBonus, useShifts, type MonthSummary, type PeriodSummary, type SettlementMonths, type ShiftBonus, type WorkSystem } from "@/lib/shifts";
+import { deleteBonus, FTE_OPTIONS, setPaidGross, formatDuration, formatHoursShort, formatMoney, leaveBalance, nightAllowance, saveBonus, useShifts, type MonthSummary, type PeriodSummary, type SettlementMonths, type ShiftBonus, type WorkSystem } from "@/lib/shifts";
 import { PERIOD_LABELS } from "./labels";
 import { CountUp } from "./CountUp";
 import { LeaveMeter, YearSummaryDialog } from "./YearSummaryDialog";
@@ -195,6 +196,7 @@ export function ShiftSummary({ summary, hourlyRate, nightRate, workSystem, settl
           includeEstimate={includeEstimate} onToggleEstimate={setIncludeEstimate} />
       )}
       <BonusPanel monthKey={monthKey} bonuses={summary.bonuses} />
+      <PaySlipPanel monthKey={monthKey} estimate={summary.earnings} paid={data.paidGross?.[monthKey] ?? 0} facts={{ nightMinutes: summary.nightMinutes, absenceDays: summary.absenceDays }} />
 
 
       {/* Bieżące ustawienia w jednej linii — pola są w oknie „Ustawienia grafiku”. */}
@@ -396,6 +398,52 @@ function BonusPanel({ monthKey, bonuses }: { monthKey: string; bonuses: ShiftBon
         <Input aria-label="Kwota premii (zł)" inputMode="decimal" placeholder="0,00" value={amount} onChange={(e) => setAmount(e.target.value)} className="tabular-nums coarse:h-11" />
         <Button type="submit" size="sm" disabled={!valid} className="coarse:h-11">Dodaj premię</Button>
       </form>
+    </section>
+  );
+}
+
+/** Liczba z pola w złotych: spacje i przecinek dziesiętny z polskiego zapisu. */
+function parseMoneyInput(text: string): number {
+  return Number(text.replace(/s/g, "").replace(",", "."));
+}
+
+/** Pasek wypłaty (B5): kwota brutto z paska, porównana z szacunkiem tego miesiąca. Zapis po wyjściu z pola albo Enter. */
+function PaySlipPanel({ monthKey, estimate, paid, facts }: { monthKey: string; estimate: number; paid: number; facts: PayslipFacts }) {
+  const shown = (v: number) => (v > 0 ? String(v).replace(".", ",") : "");
+  const [draft, setDraft] = useState(shown(paid));
+  useEffect(() => setDraft(shown(paid)), [paid, monthKey]);
+  const cmp = comparePayslip(estimate, paid, facts);
+  const save = () => {
+    if (draft.trim() === "") { setPaidGross(monthKey, 0); return; }
+    const v = parseMoneyInput(draft);
+    if (!Number.isFinite(v) || v < 0) { toast.error("Podaj kwotę w złotych, np. 6740,00"); setDraft(shown(paid)); return; }
+    setPaidGross(monthKey, v);
+  };
+  const verdict = !cmp ? null
+    : Math.abs(cmp.diff) <= PAYSLIP_TOLERANCE ? "Zgadza się z szacunkiem (różnica poniżej 1 zł)."
+    : `Wypłacono ${cmp.diff > 0 ? "więcej" : "mniej"} o ${formatMoney(Math.abs(cmp.diff))} niż szacunek (${cmp.percent > 0 ? "+" : ""}${cmp.percent.toLocaleString("pl-PL")} %).`;
+  return (
+    <section aria-label="Pasek wypłaty" className="mt-4 rounded-card border border-border/60 bg-card p-4">
+      <h3 className="text-2xs font-semibold uppercase tracking-wider text-muted-foreground">Pasek wypłaty</h3>
+      <label className="mt-2 flex flex-col gap-1 text-sm">
+        Wypłacono brutto (zł)
+        <input
+          inputMode="decimal"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={save}
+          onKeyDown={(e) => { if (e.key === "Enter") save(); }}
+          placeholder="np. 6740,00"
+          className="coarse:h-11 rounded-control border border-border bg-background px-3 py-2 tabular-nums"
+        />
+      </label>
+      {cmp && (
+        <div className="mt-3 space-y-1 text-sm" aria-live="polite">
+          <p>Szacunek: <span className="tabular-nums">{formatMoney(estimate)}</span> · wypłata: <span className="tabular-nums">{formatMoney(paid)}</span></p>
+          <p>{verdict}</p>
+          {cmp.hints.map((h) => <p key={h} className="text-xs text-muted-foreground">{h}</p>)}
+        </div>
+      )}
     </section>
   );
 }
