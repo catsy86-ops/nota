@@ -63,14 +63,15 @@ describe("TodayShiftCard", () => {
 
 describe("TodayShiftCard — czas zmiany (G2.1)", () => {
   it("trwająca zmiana pokazuje, do kiedy trwa", () => {
-    shiftsState.current = { end: new Date(2026, 9, 27, 16, 0) };
+    shiftsState.current = { start: new Date(2026, 9, 27, 8, 0), end: new Date(2026, 9, 27, 16, 0) };
     render(<TodayShiftCard onOpenShifts={() => {}} onDailyNote={() => {}} />);
     expect(screen.getByTestId("today-timing").textContent).toBe("Trwa teraz, do 16:00");
+    expect(Number(screen.getByRole("progressbar", { name: "Postęp zmiany" }).getAttribute("aria-valuenow"))).toBeGreaterThanOrEqual(0);
   });
 
   it("bez zmiany teraz pokazuje najbliższą", () => {
     shiftsState.next = { start: new Date(Date.now() + 3 * 3600_000) };
     render(<TodayShiftCard onOpenShifts={() => {}} onDailyNote={() => {}} />);
-    expect(screen.getByTestId("today-timing").textContent).toMatch(/^Następna za .*, o \d\d:\d\d$/);
+    expect(screen.getByTestId("today-timing").textContent).toMatch(/^Zaczynasz za .*, o \d\d:\d\d$/);
   });
 });

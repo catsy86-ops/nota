@@ -3164,6 +3164,36 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 
 - **Oś dziennika — `content-visibility` (P6.4, 2026-10-27).** Sekcja każdego dnia (`section[data-journal-day]` w `StudyJournal.tsx`) ma `content-visibility: auto` i `contain-intrinsic-block-size: auto 240px`: dni poza ekranem nie są malowane ani układane. Nagłówek dnia dalej jest `sticky`. Bez zmiany zachowania; bez sprawdzenia w przeglądarce (e2e nie uruchamiane). Miniatury w protokole odbioru (`HandoverPaper.tsx`) nadal odłożone do sprawdzenia wydruku.
 
+## Wspólne — plan mobile 2026-10-28 (fala 3, teren, w toku)
+
+### Co robi
+- **Dziś: „Zaczynasz za…” i pasek zmiany** (B3). Gdy zmiana trwa, karta Dziś pokazuje „Trwa teraz, do HH:mm” i pasek postępu (0–100 %). Gdy następna zmiana jest dalej, napis brzmi „Zaczynasz za 3 godziny, o 08:00”.
+- **Karta budowy: ekran nie gaśnie** (B1). Dopóki karta jest otwarta, działa blokada wygaszania ekranu.
+- **Tryb budowa: cel dotyku 56 px** (B1). W trybie budowa `--tap` wynosi 3,125 rem (przy 18 px = 56 px), zamiast 54 px.
+- **Zdjęcie do wpisu** (B2). Przycisk w karcie budowy otwiera aparat (`capture="environment"`) i zapisuje nowy wpis tej budowy z samym zdjęciem. Bez tekstu i bez etapu.
+
+### Gdzie jest
+- `src/components/review/TodayShiftCard.tsx` — `progress` (pasek `role="progressbar"`, `data-testid="today-progress"`), napis „Zaczynasz za”.
+- `src/components/study/SiteCardDialog.tsx` — `useWakeLock(!!site)`, `addPhotoEntry`, `photoInput`, wiersz „Zdjęcie do wpisu” przed stopką.
+- `src/styles/site.css` — `html[data-site] { --tap: 3.125rem }`.
+
+### Jak działa i dlaczego
+- Postęp liczony z tego samego zegara co napis (`useShiftNow`), obcinany do `[0, 1]`, więc przed startem i po końcu pasek stoi na krańcu.
+- Zdjęcie idzie tą samą drogą co w arkuszu wpisu: `prepareImage` (do 2 MB), `imageStore.putBlob`, potem `addJournalEntry`. Przed zapisem wywoływane jest `setSite(site.name)`, bo `addJournalEntry` pisze do aktualnie wybranej budowy.
+- Wpis bez tekstu i etapu jest prawidłowy, bo zdjęcie samo wystarcza (jak nagranie).
+
+### Ograniczenia i pułapki
+- **Etap nie jest ustawiany.** Plan (P2.1) chce „bieżącego etapu”, ale pole `stage` wpisu oznacza etap, który ten wpis zamyka. Bieżący etap z karty nie jest jeszcze w modelu. Do decyzji.
+- Przycisk „Zdjęcie do wpisu” jest na dole karty, pod listą etapów i braków. Przeniesienie obok „Wpis tutaj” to osobna decyzja wyglądu.
+- Wake Lock nie działa w Safari < 16.4 i Firefox (wtedy nic się nie dzieje).
+- A6 (kalendarz: kształty dni, legenda, container query) nie zrobione.
+
+### Testy
+- Vitest: `src/components/review/TodayShiftCard.test.tsx` (napis „Trwa teraz”, „Zaczynasz za”, obecność paska). Cała grupa `review`, `study`, `lib/study`: 71 plików, 516 testów, zielone.
+- `tsc --noEmit` czysto, eslint czysto na zmienionych plikach, build bez zmiany rozmiaru głównego chunku (166,55 kB gzip).
+- Przeglądarka (Pixel 7, poza repo): przycisk widoczny, 44 px wysokości, wybór zdjęcia pokazuje „Zdjęcie dodane jako wpis budowy”.
+- E2e nie uruchamiane (zgodnie z zasadą „e2e tylko na prośbę”).
+
 ## Wspólne — plan mobile 2026-10-28 (fala 2, wizualizacja, w toku)
 
 ### Co robi

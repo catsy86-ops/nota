@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { Archive, ArchiveRestore, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, Phone, Send, Share2, Plus } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Archive, ArchiveRestore, ChevronDown, Clock, ClipboardCheck, FileText, KeyRound, ListFilter, MapPin, MessageSquare, Navigation, Package, Pencil, Phone, Send, Share2, Plus, Camera } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -9,7 +9,10 @@ import { ResponsiveDialogContent } from "@/components/ui/responsive-dialog";
 import { haptic } from "@/lib/haptics";
 import { useShifts } from "@/lib/shifts";
 import { pluralPl } from "@/lib/plural";
-import { saveSiteCard, useSiteDirectory, useStudy } from "@/lib/study/store";
+import { addJournalEntry, saveSiteCard, setSite, useSiteDirectory, useStudy } from "@/lib/study/store";
+import { prepareImage } from "@/lib/imagePrepare";
+import { imageStore } from "@/lib/imageStore";
+import { photoSaveFailed } from "@/components/study/useJournalPhotoEdits";
 import { findSiteByName, SITE_FIELD_MAX, SITE_NAME_MAX } from "@/lib/study/sites";
 import { entriesPl, problemsPl } from "@/lib/study/journalView";
 import { periodLabel, dayKeyOf, workOn } from "@/lib/study/report";
@@ -33,6 +36,7 @@ import { DayHoursDialog } from "./DayHoursDialog";
 import { RecipientsForm } from "./RecipientsForm";
 import { buildHandover, type Handover } from "@/lib/study/handover";
 import { mapsHref, prettyPhone, smsHref, SITE_ACCESS_MAX, SITE_PHONE_MAX, telHref } from "@/lib/study/contact";
+import { useWakeLock } from "@/hooks/useWakeLock";
 
 
 const EMPTY_FORM = { name: "", address: "", investor: "", phone: "", manager: "", managerPhone: "", supplierPhone: "", access: "" };
@@ -106,6 +110,30 @@ export function SiteCardDialog({
     if (!site || !dirty || error) return false;
     saveSiteCard(site.id, form);
     return true;
+  }
+
+  // B1: w karcie budowy ekran nie gaśnie (zdjęcia, zapisy w terenie).
+  useWakeLock(!!site);
+
+  // B2: zdjęcie jednym stuknięciem — nowy wpis tej budowy z samym zdjęciem (bez tekstu i etapu).
+  const photoInput = useRef<HTMLInputElement>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  async function addPhotoEntry(file: File) {
+    if (!site) return;
+    setPhotoBusy(true);
+    try {
+      const prepared = await prepareImage(file);
+      if (!prepared) { toast.error("Nie udało się zmniejszyć zdjęcia do 2 MB"); return; }
+      const ref = await imageStore.putBlob(prepared);
+      setSite(site.name);
+      if (!addJournalEntry({ kind: "ok", topic: null, text: "", images: [ref] })) { toast.error("Nie zapisano zdjęcia"); return; }
+      haptic("tap");
+      toast.success("Zdjęcie dodane jako wpis budowy");
+    } catch {
+      photoSaveFailed();
+    } finally {
+      setPhotoBusy(false);
+    }
   }
 
   function close(open: boolean) {
@@ -368,6 +396,13 @@ export function SiteCardDialog({
             <div className="space-y-3 px-5 py-3">
               <SiteDocsPanel site={site} />
               <SiteServicePanel site={site} />
+            </div>
+
+            <div className="px-5 pb-3">
+              <Button variant="outline" onClick={() => photoInput.current?.click()} disabled={photoBusy} className="w-full coarse:h-11">
+                <Camera className="mr-1.5 h-4 w-4" aria-hidden />{photoBusy ? "Zapisuję zdjęcie…" : "Zdjęcie do wpisu"}
+              </Button>
+              <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" tabIndex={-1} aria-hidden onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void addPhotoEntry(file); }} />
             </div>
 
             <div className="grid grid-cols-2 gap-2 border-t border-border px-5 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">

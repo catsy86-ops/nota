@@ -8,8 +8,8 @@
 html[data-site] {
   /* Mnoży się z rozmiarem wybranym przez użytkownika (`--text-scale`, text-size.css). */
   font-size: calc(112.5% * var(--text-scale, 1));
-  /* Minimalny cel dotyku dla przycisków z `.tap-target`: 3 rem = 54 px. */
-  --tap: 3rem;
+  /* Minimalny cel dotyku dla przycisków z `.tap-target`: 3,125 rem = 56 px (18 px × 3,125). */
+  --tap: 3.125rem;
 }
 
 /* Mocniejszy tekst pomocniczy i krawędzie — szare podpisy giną w słońcu. */

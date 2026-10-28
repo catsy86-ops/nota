@@ -20,9 +20,11 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote }: { onOpenShifts: ()
   const type = entry ? data.types.find((t) => t.id === entry.type) : undefined;
   // G2.1: „trwa teraz” albo „za X” liczone jak w karcie Teraz w Grafiku (ten sam zegar i te same zmiany).
   const { now, current, next } = useShiftNow(data);
+  // B3: pasek postępu bieżącej zmiany (0–1), liczony z tego samego zegara co napis.
+  const progress = current ? Math.min(1, Math.max(0, (now.getTime() - current.start.getTime()) / (current.end.getTime() - current.start.getTime()))) : null;
   const timing = !ready ? null
     : current ? `Trwa teraz, do ${format(current.end, "HH:mm")}`
-    : next ? `Następna za ${formatDistanceStrict(next.start, now, { locale: pl })}, o ${format(next.start, "HH:mm")}`
+    : next ? `Zaczynasz za ${formatDistanceStrict(next.start, now, { locale: pl })}, o ${format(next.start, "HH:mm")}`
     : null;
 
   let shift: string;
@@ -53,6 +55,11 @@ export function TodayShiftCard({ onOpenShifts, onDailyNote }: { onOpenShifts: ()
         </div>
       </div>
       {timing && <p className="mt-2 text-xs text-muted-foreground tabular-nums" data-testid="today-timing">{timing}</p>}
+      {progress !== null && (
+        <div role="progressbar" aria-label="Postęp zmiany" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress * 100)} className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+          <div className="h-full rounded-full bg-primary transition-[width] duration-500 motion-reduce:transition-none" style={{ width: `${progress * 100}%` }} data-testid="today-progress" />
+        </div>
+      )}
     </section>
   );
 }

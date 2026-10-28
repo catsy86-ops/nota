@@ -141,6 +141,12 @@ Wykonanie po kolei, fala po fali. Opis techniczny: `opis.md`, sekcja „plan mob
 - [x] **D5** przegląd `ShiftSummary` i wykresów rocznych przy 390 px (zrobione: podpisy osi X, czytelniejsza mapa dni; bez przewijania w bok).
 - Ramki: ustawienie w Wyglądzie (delikatne/zwykłe/wyraźne), na prośbę użytkownika.
 
+### Fala 3 — teren (w toku, 2026-10-28)
+- [x] **B3** „Zaczynasz za… / Trwa” z paskiem postępu (`TodayShiftCard.tsx`).
+- [x] **B1** tryb budowa: cel dotyku 56 px; blokada wygaszania ekranu w karcie budowy (`SiteCardDialog.tsx`, `site.css`).
+- [~] **B2** „Zdjęcie do wpisu” w karcie budowy zrobione; bez etapu (decyzja: bieżący etap z karty nie istnieje w modelu).
+- [ ] **A6** kalendarz: kształty stanów dnia, legenda, container query. Nie zrobione.
+
 ### Fala 2–4 — niezrobione
 - Fala 2 (wizualizacja): D1 graf na telefonie, D2 wykres wagi i historii, D3 heatmapa serii, D4 legenda obrazu miesiąca, D5 przegląd wykresów przy 390 px.
 - Fala 3 (teren): B1 tryb rękawic, B2 zdjęcie jednym dotknięciem, B3 „Zaczynasz za…”, A6 kalendarz (kształty dni, legenda).
