@@ -3198,3 +3198,28 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 
 ### Commit
 - Brak commita. Zmiany są w drzewie roboczym na `master`, na prośbę o commit.
+
+## Praca — ocena powtórki „Od nowa / Dobrze” (plan mobile E1, 2026-10-28)
+
+### Co robi
+- Po odpowiedzi na pytanie quizu (runda, nie egzamin) pod objaśnieniem pojawiają się dwa przyciski: **Od nowa** i **Dobrze**. Domyślnie zaznaczony jest wynik odpowiedzi (poprawna = Dobrze). Stuknięcie drugiego przycisku zmienia ocenę, która trafia do powtórek (SRS).
+- Liczniki „poprawne” w wyniku rundy zostają takie jak dotąd (liczą odpowiedzi, nie oceny).
+
+### Gdzie jest
+- `src/components/study/QuizPanel.tsx` — stan `grades` (id pytania → ocena), reset przy każdej rundzie i egzaminie, grupa przycisków `aria-label="Ocena powtórki"` pod blokiem `reveal`, zapis w `next()`.
+- `src/lib/study/srs.ts` — `reviewCard` bez zmian (model q 4 / q 1).
+
+### Jak działa i dlaczego
+- Ocena jest jednym stuknięciem po pokazaniu wyniku. Domyślny wybór to wynik odpowiedzi, więc zwykła runda nie wymaga dodatkowego kroku. Przyciski pojawiają się tylko przy objaśnieniu (`reveal`), a nie w egzaminie (`examEnd === null`).
+- Wybrano wariant „Od nowa / Dobrze” (dwa wyniki). Trzy oceny („trudne / dobrze / łatwe”) z planu odłożone. Przy dwóch wynikach nie ma q 5, więc **wzrost łatwości nie jest dodany**: dobra odpowiedź (q 4) zostawia łatwość bez zmian, zgodnie z SM-2.
+
+### Ograniczenia i pułapki
+- Ocena istnieje tylko w pamięci komponentu do końca rundy. Po wyjściu z rundy nie ma zapisu „niezaliczone” poza wynikiem z `recordRound`.
+- Brak e2e tego przepływu (zgodnie z zasadą „e2e tylko na prośbę”).
+
+### Testy
+- `src/lib/study/**` i `src/components/study/**` (Vitest): 66 plików, 493 testy, zielone. Brak osobnego testu dla samych przycisków.
+- `tsc` i ESLint dla `QuizPanel.tsx`: czysto.
+
+### Commit
+- Patrz historia (`git log --oneline -1`), commit „Plan mobile: ocena powtórki…”.

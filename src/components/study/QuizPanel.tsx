@@ -37,6 +37,8 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
   const [ownOpen, setOwnOpen] = useState(false);
   const [round, setRound] = useState<RoundQuestion[] | null>(null);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
+  // Ocena powtórki po odpowiedzi (q 4 „Dobrze” / q 1 „Od nowa”). Brak wpisu = wynik odpowiedzi.
+  const [grades, setGrades] = useState<Record<string, boolean>>({});
   const [index, setIndex] = useState(0);
   const [result, setResult] = useState<{ correct: number; missed: string[]; demoted: string[]; streak: number; streakGrew: boolean } | null>(null);
   // Egzamin próbny (P-3): koniec czasu w ms (null = nie trwa), wynik po zakończeniu i zegar do odświeżania.
@@ -75,6 +77,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
     const next = buildRound(Math.min(ROUND_SIZE, pool.length), weak, Math.random, pool);
     setRound(next);
     setAnswers(next.map(() => null));
+    setGrades({});
     setIndex(0);
     setResult(null);
     setExamDone(null);
@@ -86,6 +89,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
     const next = buildRound(EXAM_SIZE, new Set(), Math.random, lists.questions);
     setRound(next);
     setAnswers(next.map(() => null));
+    setGrades({});
     setIndex(0);
     setResult(null);
     setExamDone(null);
@@ -121,6 +125,7 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
 
   const current = round?.[index] ?? null;
   const picked = round ? answers[index] : null;
+  const grade = current ? (grades[current.id] ?? (picked === current.correct)) : false;
 
   const answer = useCallback((choice: number) => {
     if (!round || answers[index] !== null) return;
@@ -134,11 +139,11 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
     if (examEnd !== null) { finishExam(); return; }
     const correct = scoreRound(round, answers);
     const missed = missedTopics(round, answers);
-    const { demoted, streak, streakGrew } = recordRound(correct, round.length, missed, round.map((q, i) => ({ id: q.id, ok: answers[i] === q.correct })));
+    const { demoted, streak, streakGrew } = recordRound(correct, round.length, missed, round.map((q, i) => ({ id: q.id, ok: grades[q.id] ?? (answers[i] === q.correct) })));
     setResult({ correct, missed, demoted, streak, streakGrew });
     if (streakGrew && streak > 1) haptic("success");
     if (demoted.length) toast(`Wróciło do nauki: ${demoted.map(topicTitle).join(", ")}`);
-  }, [round, index, answers, examEnd, finishExam]);
+  }, [round, index, answers, grades, examEnd, finishExam]);
 
   // Klawiatura: A–D / 1–4 wybiera odpowiedź, Enter idzie dalej.
   useEffect(() => {
@@ -357,6 +362,22 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
           <span className="font-medium">{picked === current.correct ? "Dobrze. " : "Nie tym razem. "}</span>
           {current.explanation}
         </p>
+      )}
+      {reveal && examEnd === null && current && (
+        <div role="group" aria-label="Ocena powtórki" className="flex gap-2">
+          {([{ ok: false, label: "Od nowa" }, { ok: true, label: "Dobrze" }] as const).map(({ ok, label }) => (
+            <Button
+              key={label}
+              type="button"
+              variant={grade === ok ? "default" : "outline"}
+              aria-pressed={grade === ok}
+              onClick={() => setGrades((g) => ({ ...g, [current.id]: ok }))}
+              className="flex-1 coarse:h-11"
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
       )}
       {/* Na telefonie przyklejone „Dalej” zasłania koniec długiego objaśnienia: przerwa tej wysokości pozwala przewinąć tekst ponad przycisk (§8 P4). */}
       {answered && <div aria-hidden className="phone:h-16" />}

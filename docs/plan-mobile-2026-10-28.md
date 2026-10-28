@@ -121,7 +121,7 @@ Wykonanie po kolei, fala po fali. Opis techniczny: `opis.md`, sekcja „plan mob
 - [x] **A2** Ustawienia pełnoekranowe na telefonie — już było (`SettingsDialog.tsx:63`), bez zmian.
 - [x] **A5** Skrzynka: `enterKeyHint="send"`. Gesty przesunięcia — nie zrobione.
 - [x] **C4** `text-wrap: pretty` dla `p`/`li`.
-- [ ] **E2** Wspólne zwijanie polskich znaków — **zmieniony zakres**: w wzmiankach (`unlinkedMentions.ts`) zwijania NIE dodawać (tworzyłoby błędne linki). Quiz nie ma pola szukania (P4.2 nieaktualny). Konsolidacja 7 kopii `fold` — osobne, niski priorytet.
+- [x] **E2** Wspólne zwijanie polskich znaków — **zmieniony zakres**: w wzmiankach (`unlinkedMentions.ts`) zwijania NIE dodawać (tworzyłoby błędne linki). Quiz nie ma pola szukania (P4.2 nieaktualny). Konsolidacja 7 kopii `fold` — osobne, niski priorytet.
 - [ ] **C1** Długi: ukrywanie kwot (•••) i saldo narastające — nie zrobione.
 - [ ] **C2** Ostrzeżenie egzaminu przy małej puli pytań — nie zrobione.
 - [ ] **C3** Ustawienia: „Wyślij kopię” przez share — nie zrobione.
@@ -130,6 +130,9 @@ Wykonanie po kolei, fala po fali. Opis techniczny: `opis.md`, sekcja „plan mob
 
 ### Poza planem, naprawione
 - [x] Regresja P6.2: przycisk ZIP w karcie budowy (`zip` niezdefiniowane, typ `SiteCard` zamiast `SiteInfo`). `tsc` czysty.
+
+- [x] **Lupa w dolnym pasku** (decyzja 2026-10-28: też w dolnym pasku) — commit e5831ae.
+- [x] **E1** Ocena powtórki „Od nowa / Dobrze” (decyzja 2026-10-28) — bez wzrostu łatwości (brak q 5).
 
 ### Fala 2–4 — niezrobione
 - Fala 2 (wizualizacja): D1 graf na telefonie, D2 wykres wagi i historii, D3 heatmapa serii, D4 legenda obrazu miesiąca, D5 przegląd wykresów przy 390 px.
