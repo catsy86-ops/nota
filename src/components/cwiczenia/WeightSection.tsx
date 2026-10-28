@@ -7,6 +7,7 @@ import { localDayKey } from "@/lib/dayDone";
 import { toastWithUndo } from "@/lib/undoToast";
 import { parseKg, weightTrend } from "@/lib/weight/model";
 import { removeWeight, restoreWeight, setWeight, useWeights } from "@/lib/weight/store";
+import { WeightChart } from "./WeightChart";
 
 /** Masa ciała (C-2): ważenie dnia, zmiana względem poprzedniego i średnia z 7 ważeń. */
 export function WeightSection() {
@@ -67,6 +68,7 @@ export function WeightSection() {
             {delta === null ? "Pierwsze ważenie." : `Zmiana: ${delta > 0 ? "+" : ""}${delta.toFixed(1)} kg od poprzedniego.`}
             {average !== null && <span className="text-muted-foreground"> Średnia z 7 ważeń: {average.toFixed(1)} kg.</span>}
           </p>
+          <WeightChart entries={entries} />
           <ul className="divide-y divide-border/60" data-testid="weight-list">
             {recent.map((w) => (
               <li key={w.day} className="flex items-center justify-between gap-2 py-1.5 text-sm">
