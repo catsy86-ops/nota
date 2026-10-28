@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Eraser, MousePointerClick, Pencil, Plus, Repeat } from "lucide-react";
+import { Eraser, LayoutTemplate, MousePointerClick, Pencil, Plus, Repeat } from "lucide-react";
 import { shiftInk, shiftTextOnCard, type ShiftType } from "@/lib/shifts";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +13,8 @@ interface BrushBarProps {
   onEditType: (t: ShiftType) => void;
   onAddType: () => void;
   onPattern: () => void;
+  /** Szablon tygodnia (G4.6) — obok cyklu, bo to inna lista zapisanych układów. */
+  onTemplate: () => void;
 }
 
 const focusRing = "outline-hidden focus-visible:ring-2 focus-visible:ring-ring";
@@ -25,7 +27,7 @@ const sameBrush = (a: Brush, b: Brush) => a.kind === b.kind && (a.kind !== "type
  * dopóki jest co przewijać. Pędzle to grupa radio wg ARIA: jeden przystanek
  * tabulatora, strzałki wybierają sąsiedni.
  */
-export function BrushBar({ types, brush, onBrush, onEditType, onAddType, onPattern }: BrushBarProps) {
+export function BrushBar({ types, brush, onBrush, onEditType, onAddType, onPattern, onTemplate }: BrushBarProps) {
   const options: Brush[] = [...types.map((t): Brush => ({ kind: "type", id: t.id })), { kind: "erase" }, { kind: "inspect" }];
   const activeIndex = Math.max(0, options.findIndex((o) => sameBrush(o, brush)));
   const radios = useRef<(HTMLButtonElement | null)[]>([]);
@@ -72,6 +74,10 @@ export function BrushBar({ types, brush, onBrush, onEditType, onAddType, onPatte
       <button type="button" onClick={onPattern}
         className={cn("pressable shrink-0 flex items-center gap-1.5 px-3 h-12 rounded-card border border-border/60 bg-card hover:bg-muted text-sm font-medium font-display", focusRing)}>
         <Repeat className="w-4 h-4" /> Cykl
+      </button>
+      <button type="button" onClick={onTemplate}
+        className={cn("pressable shrink-0 flex items-center gap-1.5 px-3 h-12 rounded-card border border-border/60 bg-card hover:bg-muted text-sm font-medium font-display", focusRing)}>
+        <LayoutTemplate className="w-4 h-4" /> Szablon
       </button>
       <button type="button" onClick={onAddType} aria-label="Dodaj rodzaj zmiany"
         className={cn("pressable shrink-0 w-12 h-12 rounded-card border border-dashed border-border flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted", focusRing)}>

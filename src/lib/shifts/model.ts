@@ -122,6 +122,11 @@ export interface ShiftPattern {
   anchor?: string;
   /** Ostatni dzień, na który cykl został nałożony (dayKey). „Przedłuż cykl” zaczyna od następnego. */
   appliedUntil?: string;
+  /**
+   * `week` = szablon tygodnia (G4.6): zawsze 7 kroków od poniedziałku (indeks 0 = pn),
+   * trzymany osobno od cykli. Brak pola = cykl.
+   */
+  kind?: "week";
 }
 
 export interface ShiftData {

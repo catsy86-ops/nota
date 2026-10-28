@@ -36,7 +36,7 @@ const RANGES = [
 const PREVIEW_DAYS = 14;
 
 /** Zdanie o tym, co nałożenie zrobi z urlopami, L4 i notatkami. */
-function overlapSummary(overlap: Partial<Record<PatternOverlapKind, number>>, skipProtected: boolean): string {
+export function overlapSummary(overlap: Partial<Record<PatternOverlapKind, number>>, skipProtected: boolean): string {
   const part = (n: number | undefined, forms: [string, string, string]) => (n ? `${n} ${pluralPl(n, forms)}` : null);
   const parts = [
     part(overlap.leave, ["dzień urlopu", "dni urlopu", "dni urlopu"]),

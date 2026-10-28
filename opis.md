@@ -3498,3 +3498,17 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 ## Wspólne — plan mobile fala 2 (wizualizacja), stan 2026-10-28
 - Zrobione: D1 (częściowo, patrz wyżej), D2, D3 (pierścień; heatmapa już była).
 - **Nie zrobione:** D5 — przegląd `ShiftSummary.tsx` i wykresów rocznych przy 390 px (zrzuty Playwright `pixel-7`). Wymaga uruchomienia aplikacji.
+
+## Grafik: szablon tygodnia i przyklejony pasek pędzli (B4 z planu mobile, G2.5 i G4.6)
+
+- **Co robi.** Na telefonie i tablecie pasek pędzli (Cykl, Szablon, rodzaje zmian, Wolne, Szczegóły) zostaje przyklejony pod nagłówkiem, gdy przewijasz siatkę; „Własne godziny” przewijają się pod nim. Przycisk **„Szablon”** na pasku otwiera listę szablonów tygodnia: zapisz tydzień jako szablon (z widoku tygodnia), nałóż go na tydzień albo na cały miesiąc, usuń (z cofnięciem). Pusty tydzień i pusty miesiąc mają przycisk „Szablon tygodnia”.
+- **Gdzie jest.**
+  - `src/components/shifts/ShiftsView.tsx`: blok pędzli (`order-4`, `max-xl:sticky`), `WeekTemplateDialog` z zakresem tydzień/miesiąc, `cyclePatterns` w `PatternDialog`.
+  - `src/components/shifts/BrushBar.tsx`: przycisk „Szablon” (`onTemplate`).
+  - `src/components/shifts/WeekTemplateDialog.tsx`: lista szablonów z podglądem pn–nd i podsumowaniem nakładania, zapis tygodnia (tylko w widoku tygodnia).
+  - `src/lib/shifts/weekTemplate.ts`: `weekTemplateSteps`, `weekTemplates`, `cyclePatterns`, `weekTemplateAnchor`, `hasWorkSteps`.
+  - `src/lib/shifts/model.ts`: pole `ShiftPattern.kind?: "week"`.
+- **Jak działa.** Szablon to zwykły `ShiftPattern` z `kind: "week"` i 7 krokami (indeks 0 = poniedziałek), zapisywany w tej samej mapie Yjs `shiftPatterns` co cykle. Nakładanie używa istniejącego `applyPatternToStore` z kotwicą = poniedziałek tygodnia zawierającego start zakresu, więc krok zawsze trafia na właściwy dzień tygodnia, także w środku miesiąca. Nakładanie zawsze z `skipProtected = true`: urlopy, L4 i notatki zostają. Krok `null` czyści dzień. Cofnięcie idzie przez `applyPattern` w `ShiftsView` (toast „Cofnij”).
+- **Ograniczenia i pułapki.** Szablon nie zapisuje nieobecności (urlop, L4) ani dni z rodzajem, którego już nie ma. Zapis tygodnia jest tylko w widoku tygodnia; w miesiącu `weekSteps` to `null` i sekcja zapisu się nie pokazuje. Toast po nałożeniu na miesiąc mówi „cykl” (wspólna ścieżka z cyklami). Wiersze „Cykl” nie pokazują szablonów, a szablony nie pokazują cykli.
+- **Testy.** Jednostkowe: `src/lib/shifts/weekTemplate.test.ts` (5 testów, zielone). E2E: `e2e/shifts-template.spec.ts` (zapis z tygodnia i nałożenie na pusty tydzień; dialog w widoku miesiąca; 390 px — pasek przyklejony po przewinięciu). Wszystkie 3 zielone.
+- **Commit.** Niezacommitowane (stan 2026-10-28, drzewo na `wip/mobile-fala1`, HEAD b94287d).

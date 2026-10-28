@@ -42,6 +42,8 @@ import { ShiftSettingsDialog } from "./ShiftSettingsDialog";
 import { ShiftTypeDialog } from "./ShiftTypeDialog";
 import { DayDialog } from "./DayDialog";
 import { PatternDialog } from "./PatternDialog";
+import { WeekTemplateDialog } from "./WeekTemplateDialog";
+import { cyclePatterns, weekTemplates, weekTemplateSteps } from "@/lib/shifts";
 import { RangeCopyDialog } from "./RangeCopyDialog";
 
 /** Co zrobi stuknięcie w dzień — widoczne pod paskiem i czytane przy siatce. */
@@ -112,6 +114,7 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
   const [openDay, setOpenDay] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [patternOpen, setPatternOpen] = useState(false);
+  const [templateOpen, setTemplateOpen] = useState(false);
   const [rangeOpen, setRangeOpen] = useState(false);
   const [imageTheme, setImageTheme] = useState<ImageTheme>("light");
   const [switcherOpen, setSwitcherOpen] = useState(false);
@@ -486,6 +489,10 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
                     className="pressable h-10 coarse:h-11 px-4 rounded-control bg-primary text-primary-foreground text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
                     {extend ? "Przedłuż cykl" : "Nałóż cykl"}
                   </button>
+                  <button type="button" onClick={() => setTemplateOpen(true)}
+                    className="pressable h-10 coarse:h-11 px-4 rounded-card border border-border/60 hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
+                    Szablon tygodnia
+                  </button>
                   {!isWeek && (
                     <button type="button" onClick={copyPreviousMonth}
                       className="pressable h-10 coarse:h-11 px-4 rounded-card border border-border/60 hover:bg-muted text-sm font-medium outline-hidden focus-visible:ring-2 focus-visible:ring-ring">
@@ -520,7 +527,9 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         <div className="order-1 empty:hidden short:col-span-full">
           <NowCard data={data} />
         </div>
-        <div className="order-4 space-y-5 short:col-span-full short:space-y-1">
+        {/* G2.5: na telefonie i tablecie pasek pędzli zostaje przy górze podczas przewijania siatki.
+            Pod nim pod-panel „Własne godziny” przewija się normalnie, bo bywa wysoki. */}
+        <div className="order-4 max-xl:sticky max-xl:top-(--app-header-h,0px) [html.header-hidden_&]:max-xl:top-0 max-xl:z-raised max-xl:bg-background/95 max-xl:backdrop-blur-xs max-xl:pb-1 short:col-span-full">
           <BrushBar
             types={data.types}
             brush={brush}
@@ -528,14 +537,15 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
             onEditType={setEditingType}
             onAddType={() => setEditingType("new")}
             onPattern={() => setPatternOpen(true)}
+            onTemplate={() => setTemplateOpen(true)}
           />
-
-          {brush.kind === "type" && typesById.get(brush.id)?.kind !== "absence" && typesById.has(brush.id) && (
+        </div>
+        {brush.kind === "type" && typesById.get(brush.id)?.kind !== "absence" && typesById.has(brush.id) && (
+          <div className="order-4 short:col-span-full">
             <BrushHours key={brush.id} type={typesById.get(brush.id)!} hours={activeHours}
               onChange={(hours) => setBrushHours(hours ? { typeId: brush.id, hours } : null)} />
-          )}
-
-        </div>
+          </div>
+        )}
         <div className="order-6 empty:hidden short:col-span-full">
           {data.types.length === 0 && (
             <NoShiftTypes onAdd={() => setEditingType("new")} onRestore={() => { addDefaultShiftTypes(); setBrush({ kind: "type", id: DEFAULT_SHIFT_TYPES[0].id }); }} />
@@ -585,10 +595,21 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         open={patternOpen}
         onOpenChange={setPatternOpen}
         types={data.types}
-        patterns={data.patterns}
+        patterns={cyclePatterns(data.patterns)}
         defaultStart={isWeek ? weekStart : defaultPatternStart(data.days, dayKey(month).slice(0, 7), dayKey(new Date()))}
         onApply={applyPattern}
         overlapOf={patternOverlapInStore}
+      />
+      <WeekTemplateDialog
+        open={templateOpen}
+        onOpenChange={setTemplateOpen}
+        types={data.types}
+        templates={weekTemplates(data.patterns)}
+        weekSteps={isWeek ? weekTemplateSteps(data.days, weekStart, data.types) : null}
+        target={isWeek
+          ? { label: "ten tydzień", startKey: weekStart, length: 7 }
+          : { label: "cały miesiąc", startKey: `${monthKey}-01`, length: new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate() }}
+        onApply={applyPattern}
       />
     </div>
   );
