@@ -122,11 +122,11 @@ Wykonanie po kolei, fala po fali. Opis techniczny: `opis.md`, sekcja „plan mob
 - [x] **A5** Skrzynka: `enterKeyHint="send"`. Gesty przesunięcia — nie zrobione.
 - [x] **C4** `text-wrap: pretty` dla `p`/`li`.
 - [x] **E2** Wspólne zwijanie polskich znaków — **zmieniony zakres**: w wzmiankach (`unlinkedMentions.ts`) zwijania NIE dodawać (tworzyłoby błędne linki). Quiz nie ma pola szukania (P4.2 nieaktualny). Konsolidacja 7 kopii `fold` — osobne, niski priorytet.
-- [ ] **C1** Długi: ukrywanie kwot (•••) i saldo narastające — nie zrobione.
-- [ ] **C2** Ostrzeżenie egzaminu przy małej puli pytań — nie zrobione.
-- [ ] **C3** Ustawienia: „Wyślij kopię” przez share — nie zrobione.
-- [ ] **C5** Więcej haptyki w sukcesie i błędzie — nie zrobione.
-- [ ] **C6** Pasek postępu czytania w `NoteReader` — nie zrobione.
+- [x] **C1** Długi: ukrywanie kwot (•••) — zrobione (`opis.md`, Długi — ukrywanie kwot). Saldo narastające (plan długów 2.2) — nie zrobione.
+- [x] **C2** Ostrzeżenie egzaminu przy małej puli pytań (`QuizPanel.tsx`).
+- [x] **C3** Ustawienia: „Wyślij kopię” przez arkusz udostępniania (`shareFullBackup`, tylko telefon z obsługą plików).
+- [~] **C5** Haptyka sukcesu i ostrzeżenia — zrobione w Długach. Pozostałe ekrany (np. Ćwiczenia, Grafik) — do przejścia.
+- [x] **C6** Pasek postępu czytania — już był (`.reader-progress` w `index.css`, plan QoL 2.5). Bez zmian.
 
 ### Poza planem, naprawione
 - [x] Regresja P6.2: przycisk ZIP w karcie budowy (`zip` niezdefiniowane, typ `SiteCard` zamiast `SiteInfo`). `tsc` czysty.

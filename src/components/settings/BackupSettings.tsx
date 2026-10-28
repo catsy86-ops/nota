@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { Download, Database, ShieldCheck, ShieldAlert, FileCog, FileDown } from "lucide-react";
+import { Download, Database, ShieldCheck, ShieldAlert, FileCog, FileDown, Share2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { useViewPrefs, setViewPref, VIEW_PREF_GROUPS } from "@/lib/viewPrefs";
-import { buildFullBackup, describeSkippedAttachments, download, exportFullBackup, pickFullBackup, restoreFullBackup, type BackupAttachmentReport, type RestoreOptions } from "@/lib/exportNotes";
+import { buildFullBackup, describeSkippedAttachments, download, exportFullBackup, pickFullBackup, restoreFullBackup, shareFullBackup, type BackupAttachmentReport, type RestoreOptions } from "@/lib/exportNotes";
 import { describeBackupSkipped } from "@/lib/backupSkipped";
 import { dniPl } from "@/lib/plural";
 import type { FullBackup } from "@/lib/noteSchema";
@@ -250,6 +250,26 @@ function RestoreBackup() {
   );
 }
 
+/** Udostępnianie pliku kopii działa tylko tam, gdzie przeglądarka umie wysłać plik (telefon). */
+function canShareBackupFile(): boolean {
+  if (typeof navigator === "undefined" || typeof navigator.share !== "function" || typeof navigator.canShare !== "function") return false;
+  try {
+    return navigator.canShare({ files: [new File(["{}"], "kopia.json", { type: "application/json" })] });
+  } catch {
+    return false;
+  }
+}
+
+async function shareNow(confirm: SkipConfirm) {
+  try {
+    const res = await shareFullBackup(confirm);
+    if (res === "unsupported") toast.error("Ta przeglądarka nie udostępnia plików — pobierz kopię");
+    else if (res === "shared") toast.success("Kopia wysłana");
+  } catch {
+    toast.error("Nie udało się wysłać kopii");
+  }
+}
+
 async function handleDownloadReport() {
   try {
     const { downloadDiagReport } = await import("@/lib/diagnosticsReport");
@@ -303,6 +323,11 @@ export function BackupSettings() {
       <Button onClick={() => exportNow(askSkip)} className="w-full gap-2">
         <Download className="w-4 h-4" /> Pobierz pełny backup teraz
       </Button>
+      {canShareBackupFile() && (
+        <Button variant="outline" onClick={() => shareNow(askSkip)} className="w-full gap-2">
+          <Share2 className="w-4 h-4" /> Wyślij kopię
+        </Button>
+      )}
       <AlertDialog open={!!skipPrompt} onOpenChange={(o) => { if (!o) skipPrompt?.resolve(false); }}>
         <AlertDialogContent>
           <AlertDialogHeader>

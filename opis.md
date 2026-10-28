@@ -3223,3 +3223,64 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 
 ### Commit
 - Patrz historia (`git log --oneline -1`), commit „Plan mobile: ocena powtórki…”.
+
+## Długi — ukrywanie kwot (plan mobile C1 / plan długów 3.3, 2026-10-28)
+
+### Co robi
+- Przycisk **„Ukryj kwoty” / „Pokaż kwoty”** przy opisie na górze widoku Długi. Chowa wszystkie kwoty („•••”): podsumowanie, saldo przy osobach, pasek „Oddał całość” w arkuszu i kwoty w historii. Pomaga, gdy ktoś patrzy w telefon.
+- Stan jest tylko na tym urządzeniu. Nie idzie do Yjs ani do backupu.
+- Zapisy wpisów dają wibrację: sukces (dodanie, rozliczenie) i ostrzeżenie (zła nazwa, zła kwota, nieudany zapis).
+
+### Gdzie jest
+- `src/lib/debts/hideAmounts.ts` — `useHideAmounts`, `setHideAmounts`, `amountText(grosze, hidden)`, stała `HIDDEN_AMOUNT`.
+- `src/components/debts/DebtsView.tsx` — przycisk w nagłówku, prop `hidden` w `Summary`, `People`, `PersonSheet` i `PersonHistory`.
+
+### Jak działa i dlaczego
+- Klucz localStorage `kaczy.debtsHideAmounts.v1` (boolean, domyślnie `false`), przez `createPersistedStore`, tak jak `confirmPrefs.ts`.
+- Maskowanie to wyłącznie widok. Dane i sumy zostają bez zmian, a etykiety dostępności (`aria-label` przycisków „Edytuj wpis…”) nadal pokazują kwoty, bo nie są widoczne na ekranie.
+- Przycisk ma zmienną etykietę zamiast `aria-pressed`, żeby nie dublować stanu.
+
+### Ograniczenia i pułapki
+- Nie ma saldo narastającego (plan 2.2) ani zmiany nazwy osoby. To osobne punkty.
+- Pasek postępu spłat ma `aria-label` z kwotą. Świadomie zostawiony jako informacja dla czytnika.
+
+### Testy
+- `src/components/debts/DebtsView.test.tsx` — nowy przypadek „przełącznik chowa kwoty… i je przywraca”.
+
+## Nauka — ostrzeżenie o małej puli w egzaminie (plan mobile C2 / P4.3, 2026-10-28)
+
+### Co robi
+- Gdy pula pytań jest mniejsza niż 20 (rozmiar egzaminu), pod przyciskiem „Egzamin próbny” pojawia się ostrzeżenie: „W puli jest tylko N pytań — egzamin będzie krótszy niż 20.”
+
+### Gdzie jest
+- `src/components/study/QuizPanel.tsx` — blok `data-testid="exam-pool-warning"` nad statystykami rundy, warunek `lists.questions.length < EXAM_SIZE`.
+
+### Jak działa i dlaczego
+- Egzamin już wcześniej brał tyle pytań, ile było w puli, bez informacji. Ostrzeżenie pokazuje to przed startem.
+
+### Testy
+- Istniejące testy `src/components/study/**` zielone. Brak osobnego testu dla samego ostrzeżenia.
+
+## Ustawienia — „Wyślij kopię” przez arkusz udostępniania (plan mobile C3 / 3.1, 2026-10-28)
+
+### Co robi
+- Na telefonie, który umie wysłać plik, w Ustawieniach → Kopia pojawia się przycisk **„Wyślij kopię”**. Otwiera arkusz udostępniania z plikiem `notki-kopia-RRRR-MM-DD-HHmm.json` (pełny backup, ten sam co „Pobierz”).
+
+### Gdzie jest
+- `src/lib/exportNotes.ts` — `shareFullBackup(confirm?)` zwraca `"shared" | "cancelled" | "unsupported"`.
+- `src/components/settings/BackupSettings.tsx` — `canShareBackupFile()`, `shareNow()`, przycisk pod „Pobierz pełny backup teraz”.
+
+### Jak działa i dlaczego
+- Ta sama budowa kopii co przy zapisie (`buildFullBackupWithReport`) i to samo pytanie o pominięte załączniki (`confirm`).
+- Przycisk widać tylko wtedy, gdy `navigator.canShare({ files })` działa. Na komputerze go nie ma, zamiast pokazywać przycisk, który nie zadziała.
+- Anulowanie arkusza (`AbortError`) to zwykłe „anulowano”, bez komunikatu o błędzie.
+
+### Ograniczenia i pułapki
+- Duża kopia z załącznikami może przekroczyć limit pliku, który telefon przyjmie w arkuszu. Wtedy pojawia się komunikat o błędzie, a nie cichy brak akcji. Limit załączników jest taki sam jak przy pobieraniu.
+- Kopia zawiera szyfrogram notatek prywatnych, nie ich treść, ale nadal zawiera dane. Wysyła ją tylko użytkownik, świadomym kliknięciem.
+
+### Testy
+- `tsc` czysto. Vitest: `src/components/debts`, `src/components/study`, `src/components/settings`, `src/lib/exportNotes`, `src/lib/debts` — 91 testów zielonych. Brak nowego testu dla `shareFullBackup` (wymaga atrapy `navigator.share`).
+
+### Commit
+- Patrz historia (`git log --oneline -1`), commit „Plan mobile fala 1: długi, ostrzeżenie egzaminu, wyślij kopię”.

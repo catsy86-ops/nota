@@ -96,3 +96,16 @@ describe("DebtsView — rozliczenie", () => {
     expect(addMock).toHaveBeenCalledWith({ person: "Ania", kind: "repaid", amount: 10_000 });
   });
 });
+
+describe("DebtsView — ukrywanie kwot (plan długów 3.3)", () => {
+  it("przełącznik chowa kwoty w podsumowaniu i na liście, a potem je przywraca", () => {
+    fixture.entries = [debt("1", "Ania", "lent", 10_000)];
+    render(<DebtsView />);
+    fireEvent.click(screen.getByRole("button", { name: "Ukryj kwoty" }));
+    expect(screen.getByTestId("debts-owed").textContent).toBe("•••");
+    expect(screen.getByRole("button", { name: /Ania/ }).textContent).toContain("•••");
+    expect(screen.queryByText(/100,00 zł/)).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Pokaż kwoty" }));
+    expect(screen.getByTestId("debts-owed").textContent).toBe("100,00 zł");
+  });
+});

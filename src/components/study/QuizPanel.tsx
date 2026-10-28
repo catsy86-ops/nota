@@ -286,6 +286,11 @@ export function QuizPanel({ scope = { kind: "all" }, onScopeChange }: { scope?: 
               Ostatni egzamin: {study.exams[study.exams.length - 1].correct}/{study.exams[study.exams.length - 1].total}
             </p>
           )}
+          {lists.questions.length < EXAM_SIZE && (
+            <p className="w-full text-xs text-warning-ink" data-testid="exam-pool-warning">
+              W puli jest tylko {lists.questions.length} pytań — egzamin będzie krótszy niż {EXAM_SIZE}.
+            </p>
+          )}
           {study.bestPercent !== null && (
             <p className="text-xs text-muted-foreground tabular-nums">
               Najlepszy wynik: {study.bestPercent}% · rund: {study.rounds}

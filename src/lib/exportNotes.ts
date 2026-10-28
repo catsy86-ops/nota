@@ -377,6 +377,26 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   return { studyDropped, schedulesSkipped };
 }
 
+/**
+ * C3 planu mobile: pełny backup jako plik w arkuszu udostępniania (`navigator.share`), bez zapisu na dysku.
+ * Te same pytania o pominięte załączniki co przy zapisie. `unsupported`, gdy przeglądarka nie udostępnia plików.
+ */
+export async function shareFullBackup(confirm?: (report: BackupAttachmentReport) => Promise<boolean>): Promise<"shared" | "cancelled" | "unsupported"> {
+  const { backup, attachments } = await buildFullBackupWithReport();
+  if (confirm && describeSkippedAttachments(attachments) && !(await confirm(attachments))) return "cancelled";
+  const name = `notki-kopia-${format(new Date(), "yyyy-MM-dd-HHmm")}.json`;
+  const file = new File([JSON.stringify(backup)], name, { type: "application/json" });
+  if (typeof navigator.canShare !== "function" || !navigator.canShare({ files: [file] })) return "unsupported";
+  try {
+    await navigator.share({ title: "Kopia NOTKI", files: [file] });
+    return "shared";
+  } catch (err) {
+    // Anulowanie arkusza to nie błąd.
+    if (err instanceof DOMException && err.name === "AbortError") return "cancelled";
+    throw err;
+  }
+}
+
 export function download(content: string, filename: string, type: string) {
   const blob = new Blob([content], { type });
   downloadBlob(blob, filename);

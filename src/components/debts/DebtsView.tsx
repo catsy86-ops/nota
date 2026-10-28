@@ -1,5 +1,5 @@
 import { useId, useMemo, useRef, useState } from "react";
-import { ArrowDownLeft, ArrowUpRight, Check, HandCoins, Pencil, Trash2, Undo2 } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, Check, Eye, EyeOff, HandCoins, Pencil, Trash2, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import { localDayKey } from "@/lib/dayDone";
 import { addDebt, addDebtFromText, removeDebt, restoreDebt, updateDebt, useDebts } from "@/lib/debts/store";
+import { amountText, setHideAmounts, useHideAmounts } from "@/lib/debts/hideAmounts";
 import { balances, DEBT_KINDS, DEBT_NOTE_MAX, DEBT_PERSON_MAX, formatAmount, KIND_SIGN, knownPeople, normalizeName, parseAmount, repaidShare, totals, type DebtEntry, type DebtKind, type PersonDebts } from "@/lib/debts/model";
 
 /**
@@ -31,34 +32,46 @@ export function DebtsView({ addReminderNote, reminders }: { addReminderNote?: (t
   const sums = useMemo(() => totals(people), [people]);
   const [openKey, setOpenKey] = useState<string | null>(null);
   const openPerson = people.find((p) => p.key === openKey) ?? null;
+  const hidden = useHideAmounts();
 
   return (
     <section aria-labelledby="debts-title" className="mx-auto w-full max-w-2xl px-4 pb-32 pt-6 desk:pt-8">
       <header className="mb-5">
         <p className="text-xs font-display uppercase tracking-[0.18em] text-muted-foreground">Prywatne</p>
         <h1 id="debts-title" className="font-display text-3xl font-bold tracking-tight">Długi</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Kto ile pożyczył i ile już oddał.</p>
+        <div className="mt-1 flex items-center justify-between gap-3">
+          <p className="text-sm text-muted-foreground">Kto ile pożyczył i ile już oddał.</p>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="tap-target shrink-0 gap-1.5"
+            onClick={() => { setHideAmounts(!hidden); haptic("tap"); }}
+          >
+            {hidden ? <EyeOff className="h-4 w-4" aria-hidden /> : <Eye className="h-4 w-4" aria-hidden />}
+            {hidden ? "Pokaż kwoty" : "Ukryj kwoty"}
+          </Button>
+        </div>
       </header>
 
-      <Summary owedToMe={sums.owedToMe} iOwe={sums.iOwe} />
+      <Summary owedToMe={sums.owedToMe} iOwe={sums.iOwe} hidden={hidden} />
       <AddForm entries={entries} addReminderNote={addReminderNote} />
-      <People people={people} onOpen={setOpenKey} />
+      <People people={people} onOpen={setOpenKey} hidden={hidden} />
 
-      <PersonSheet person={openPerson} onClose={() => setOpenKey(null)} reminders={reminders} />
+      <PersonSheet person={openPerson} onClose={() => setOpenKey(null)} reminders={reminders} hidden={hidden} />
     </section>
   );
 }
 
-function Summary({ owedToMe, iOwe }: { owedToMe: number; iOwe: number }) {
+function Summary({ owedToMe, iOwe, hidden }: { owedToMe: number; iOwe: number; hidden: boolean }) {
   return (
     <div className="grid grid-cols-2 gap-3 rounded-card border border-border/70 bg-card p-4 shadow-elevation-up" role="group" aria-label="Podsumowanie">
       <div>
         <p className="text-xs text-muted-foreground">Są nam winni</p>
-        <p className="mt-1 font-display text-xl font-bold tabular-nums text-success-ink" data-testid="debts-owed">{formatAmount(owedToMe)}</p>
+        <p className="mt-1 font-display text-xl font-bold tabular-nums text-success-ink" data-testid="debts-owed">{amountText(owedToMe, hidden)}</p>
       </div>
       <div>
         <p className="text-xs text-muted-foreground">Jesteś winien</p>
-        <p className="mt-1 font-display text-xl font-bold tabular-nums text-warning-ink" data-testid="debts-owe">{formatAmount(iOwe)}</p>
+        <p className="mt-1 font-display text-xl font-bold tabular-nums text-warning-ink" data-testid="debts-owe">{amountText(iOwe, hidden)}</p>
       </div>
     </div>
   );
@@ -82,8 +95,8 @@ function AddForm({ entries, addReminderNote }: { entries: DebtEntry[]; addRemind
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!person.trim()) { setError({ field: "person", text: "Podaj, kto to jest — imię albo nazwę." }); return; }
-    if (parseAmount(amount) === null) { setError({ field: "amount", text: "Wpisz kwotę większą od zera, np. 150 albo 99,90." }); return; }
+    if (!person.trim()) { haptic("warn"); setError({ field: "person", text: "Podaj, kto to jest — imię albo nazwę." }); return; }
+    if (parseAmount(amount) === null) { haptic("warn"); setError({ field: "amount", text: "Wpisz kwotę większą od zera, np. 150 albo 99,90." }); return; }
     const withDue = (kind === "lent" || kind === "borrowed") && !!due;
     if (withDue && due < localDayKey()) { setError({ field: "due", text: "Termin zwrotu nie może być w przeszłości." }); return; }
     const entry = addDebtFromText(person, kind, amount, note, at || undefined);
@@ -99,7 +112,7 @@ function AddForm({ entries, addReminderNote }: { entries: DebtEntry[]; addRemind
     setAmount("");
     setNote("");
     setDue("");
-    haptic("tap");
+    haptic("success");
     toast.success(`${KIND_LABEL[kind]}: ${entry.person}, ${formatAmount(entry.amount)}`, {
       action: { label: "Cofnij", onClick: () => { removeDebt(entry.id); } },
     });
@@ -200,7 +213,7 @@ function AddForm({ entries, addReminderNote }: { entries: DebtEntry[]; addRemind
   );
 }
 
-function People({ people, onOpen }: { people: PersonDebts[]; onOpen: (key: string) => void }) {
+function People({ people, onOpen, hidden }: { people: PersonDebts[]; onOpen: (key: string) => void; hidden: boolean }) {
   if (people.length === 0) {
     return (
       <div className="rounded-card border border-dashed border-border p-8 text-center">
@@ -228,7 +241,7 @@ function People({ people, onOpen }: { people: PersonDebts[]; onOpen: (key: strin
                   <span className="shrink-0 rounded-full bg-success/15 px-2.5 py-0.5 text-xs font-medium text-success-ink">Rozliczone</span>
                 ) : (
                   <span className={cn("shrink-0 font-display text-base font-bold tabular-nums", p.balance > 0 ? "text-success-ink" : "text-warning-ink")}>
-                    {p.balance > 0 ? formatAmount(p.balance) : `− ${formatAmount(-p.balance)}`}
+                    {p.balance > 0 ? amountText(p.balance, hidden) : `− ${amountText(-p.balance, hidden)}`}
                   </span>
                 )}
               </div>
@@ -248,11 +261,11 @@ function People({ people, onOpen }: { people: PersonDebts[]; onOpen: (key: strin
   );
 }
 
-function PersonSheet({ person, onClose, reminders }: { person: PersonDebts | null; onClose: () => void; reminders?: DebtReminderApi }) {
+function PersonSheet({ person, onClose, reminders, hidden }: { person: PersonDebts | null; onClose: () => void; reminders?: DebtReminderApi; hidden: boolean }) {
   return (
     <Sheet open={!!person} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="bottom" snap className="overflow-y-auto rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
-        {person && <PersonHistory person={person} onDone={onClose} reminders={reminders} />}
+        {person && <PersonHistory person={person} onDone={onClose} reminders={reminders} hidden={hidden} />}
       </SheetContent>
     </Sheet>
   );
@@ -270,7 +283,7 @@ function clearDueReminders(entries: DebtEntry[], reminders: DebtReminderApi | un
   return cleared;
 }
 
-function PersonHistory({ person, onDone, reminders }: { person: PersonDebts; onDone: () => void; reminders?: DebtReminderApi }) {
+function PersonHistory({ person, onDone, reminders, hidden }: { person: PersonDebts; onDone: () => void; reminders?: DebtReminderApi; hidden: boolean }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [askRemove, setAskRemove] = useState<DebtEntry | null>(null);
   const settle = () => {
@@ -278,12 +291,13 @@ function PersonHistory({ person, onDone, reminders }: { person: PersonDebts; onD
     const created = addDebt({ person: person.name, kind: person.balance > 0 ? "repaid" : "returned", amount: Math.abs(person.balance) });
     // M7: `null` = zapis odrzucony (np. pełna lista) — saldo nie zeruje się, więc nie mówimy „rozliczone”.
     if (!created) {
+      haptic("warn");
       toast.error("Nie udało się rozliczyć", { description: "Lista długów jest pełna albo dane są nieprawidłowe." });
       return;
     }
     // 1.1: saldo zerowe → przypomnienia o zwrocie tej osoby już nie dzwonią (z „Cofnij”).
     const cleared = clearDueReminders(person.entries, reminders);
-    haptic("tap");
+    haptic("success");
     toast.success(`Oddane w całości: ${person.name}`, {
       action: { label: "Cofnij", onClick: () => {
         removeDebt(created.id);
@@ -310,14 +324,14 @@ function PersonHistory({ person, onDone, reminders }: { person: PersonDebts; onD
       <SheetHeader className="text-left">
         <SheetTitle className="font-display text-2xl">{person.name}</SheetTitle>
         <SheetDescription>
-          {person.balance === 0 ? "Rozliczone." : person.balance > 0 ? `Do oddania: ${formatAmount(person.balance)}` : `Jesteś winien: ${formatAmount(-person.balance)}`}
+          {person.balance === 0 ? "Rozliczone." : person.balance > 0 ? `Do oddania: ${amountText(person.balance, hidden)}` : `Jesteś winien: ${amountText(-person.balance, hidden)}`}
         </SheetDescription>
       </SheetHeader>
 
       {person.balance !== 0 && (
         <Button className="mt-4 w-full h-11 gap-2" onClick={() => { settle(); onDone(); }}>
           <Check />
-          {person.balance > 0 ? `Oddał całość (${formatAmount(person.balance)})` : `Oddałem całość (${formatAmount(-person.balance)})`}
+          {person.balance > 0 ? `Oddał całość (${amountText(person.balance, hidden)})` : `Oddałem całość (${amountText(-person.balance, hidden)})`}
         </Button>
       )}
 
@@ -333,7 +347,7 @@ function PersonHistory({ person, onDone, reminders }: { person: PersonDebts; onD
                 {KIND_SIGN[e.kind] > 0 ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownLeft className="h-4 w-4" />}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">{KIND_LABEL[e.kind]} · <span className="tabular-nums">{formatAmount(e.amount)}</span></p>
+                <p className="text-sm font-medium">{KIND_LABEL[e.kind]} · <span className="tabular-nums">{amountText(e.amount, hidden)}</span></p>
                 <p className="text-xs text-muted-foreground">
                   {formatDay(e.at)}{e.note ? ` · ${e.note}` : ""}
                 </p>
