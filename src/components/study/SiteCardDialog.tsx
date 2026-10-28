@@ -30,6 +30,7 @@ import { SiteShortagesPanel } from "./SiteShortagesPanel";
 import { SiteFaultsPanel } from "./SiteFaultsPanel";
 import { SiteMaterialPanel } from "./SiteMaterialPanel";
 import { SiteTimePanel } from "./SiteTimePanel";
+import { SiteStorageLine } from "./SiteStorageLine";
 import { SiteDocsPanel } from "./SiteDocsPanel";
 import { SiteServicePanel } from "./SiteServicePanel";
 import { PrintRoot } from "./PrintRoot";
@@ -430,6 +431,7 @@ export function SiteCardDialog({
               >
                 <Package className="mr-1.5 h-4 w-4" aria-hidden />{zipping ? "Pakuję…" : "Paczka ZIP"}
               </Button>
+              <SiteStorageLine site={site} journal={study.journal} />
               <Button
                 variant="outline"
                 onClick={() => setHandover(buildHandover(study.journal, site))}

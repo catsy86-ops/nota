@@ -3603,3 +3603,11 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Szablony są wbudowane dla etapów domyślnych (`kan-pod`, `woda`, `kan-pion`, `proba`, `zakrycie`, `bialy`, `odbior`). Etap własny dostaje szablon po słowie w nazwie (np. „Druga próba ciśnienia” → próba); bez dopasowania — bez szablonu. Punkty to zwykły tekst w opisie, więc trafiają do raportu i protokołu bez zmian w modelu.
 - **Ograniczenia.** Szablonów nie da się jeszcze edytować. Podpowiedzi zdjęć są tylko tekstem (bez licznika zrobionych zdjęć).
 - **Testy.** Vitest: `src/lib/study/stageTemplates.test.ts`. E2E: `e2e/stage-template.spec.ts`; `site-stages` i `site-handover` przechodzą.
+
+## Praca: miejsce zajęte przez budowę (P3.1)
+
+- **Co robi.** W karcie budowy pod „Paczka ZIP” linijka „Zdjęcia, nagrania i dokumenty: 12,4 MB”, liczona w tle po otwarciu karty. W Ustawieniach → Kopia i dane sekcja „Miejsce na zdjęcia budów” z przyciskiem „Policz miejsce”: suma i lista budów od największej.
+- **Gdzie.** `src/lib/study/siteStorage.ts` (`siteStorageRefs`, `measure`, `imageSize`), `src/components/study/SiteStorageLine.tsx` (w `SiteCardDialog.tsx`), `src/components/settings/SiteStorageSettings.tsx` (w `BackupSettings.tsx`).
+- **Jak działa.** Referencje budowy: zdjęcia wpisów, zdjęcia „po naprawie”, nagrania i dokumenty, bez duplikatów. Nagrania i dokumenty mają rozmiar w metadanych; zdjęcia odczytuje się z `imageStore` (rozmiar bajtów). Plik nieobecny na tym urządzeniu liczy się jako 0. W Ustawieniach liczenie dopiero na żądanie, bo czyta wszystkie zdjęcia.
+- **Ograniczenia.** Zdjęcie użyte na dwóch budowach liczy się przy każdej z nich (suma w Ustawieniach może je policzyć dwa razy). Notatki i załączniki poza Pracą nie są liczone.
+- **Testy.** Vitest: `src/lib/study/siteStorage.test.ts`. E2E: `e2e/site-storage.spec.ts` (linijka w karcie po dodaniu planu, lista w Ustawieniach); `diagnostics`, `site-docs`, `site-card-mobile` przechodzą.

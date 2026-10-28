@@ -1,3 +1,4 @@
+import { SiteStorageSettings } from "./SiteStorageSettings";
 import { useEffect, useState } from "react";
 import { Download, Database, ShieldCheck, ShieldAlert, FileCog, FileDown, Share2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -342,6 +343,8 @@ export function BackupSettings() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <SiteStorageSettings />
+
       <Section title="Przywracanie z kopii">
         <RestoreBackup />
       </Section>
