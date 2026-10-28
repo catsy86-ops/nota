@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,9 +10,26 @@ import { pluralPl } from "@/lib/plural";
 import { TOPICS } from "@/lib/study/content";
 import { CUSTOM_ANSWER_MAX, CUSTOM_EXPLANATION_MAX, CUSTOM_TEXT_MAX, type CustomQuestion } from "@/lib/study/custom";
 import { addCustomQuestion, updateCustomQuestion, useStudy } from "@/lib/study/store";
+import { parseQuestionsMd } from "@/lib/study/questionsMd";
 import type { CustomPrefill } from "@/lib/study/customPrefill";
 import { TopicSelect } from "./CustomChecklistForm";
 import { deleteCustom } from "@/lib/study/customActions";
+
+/** Import z .md (P4.5): każde poprawne pytanie idzie przez `addCustomQuestion` (walidacja, limit); błędy z numerami wierszy. */
+async function importQuestionsMd(file: File, topic: string) {
+  const { questions, errors } = parseQuestionsMd(await file.text());
+  let added = 0;
+  for (const q of questions) {
+    if (addCustomQuestion({ topic, question: q.question, correct: q.correct, wrong: q.wrong, explanation: q.explanation })) added += 1;
+  }
+  const skipped = errors.length + (questions.length - added);
+  if (added > 0) toast.success(`Dodano ${added} ${pluralPl(added, ["pytanie", "pytania", "pytań"])}`);
+  if (skipped > 0) {
+    const first = errors.slice(0, 3).map((e) => `wiersz ${e.line}: ${e.message}`).join(" ");
+    toast.error(`Pominięto ${skipped} ${pluralPl(skipped, ["wpis", "wpisy", "wpisów"])}.${first ? " " + first : ""}`);
+  }
+  if (added === 0 && skipped === 0) toast("W pliku nie ma pytań w formacie P: / A: / N:");
+}
 
 type Draft = { topic: string; question: string; correct: string; wrong: [string, string, string]; explanation: string };
 const EMPTY = (topic: string): Draft => ({ topic, question: "", correct: "", wrong: ["", "", ""], explanation: "" });
@@ -38,6 +55,7 @@ export function CustomQuestionsDialog({ open, onOpenChange, prefill }: { open: b
   const study = useStudy();
   const questions = study.custom.filter((e): e is CustomQuestion => e.kind === "question");
   const [draft, setDraft] = useState<Draft>(() => EMPTY(TOPICS[0].id));
+  const importRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   // Edycja istniejącego pytania: formularz wypełniony, zapis podmienia treść pod tym samym id (§4 P6).
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -133,6 +151,8 @@ export function CustomQuestionsDialog({ open, onOpenChange, prefill }: { open: b
           <div className="flex justify-end">
             <Button type="submit" className="coarse:h-11">{editingId ? "Zapisz zmiany" : "Dodaj pytanie"}</Button>
             {editingId && <Button type="button" variant="ghost" onClick={cancelEdit} className="coarse:h-11">Anuluj</Button>}
+            <input ref={importRef} type="file" accept=".md,.txt,text/markdown,text/plain" className="hidden" tabIndex={-1} aria-hidden onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void importQuestionsMd(file, draft.topic); }} />
+            <Button type="button" variant="outline" onClick={() => importRef.current?.click()} className="coarse:h-11">Importuj z pliku .md</Button>
           </div>
         </form>
 
