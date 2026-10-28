@@ -28,6 +28,7 @@ import { SiteOrderPanel } from "./SiteOrderPanel";
 import { SiteStagesPanel } from "./SiteStagesPanel";
 import { SiteShortagesPanel } from "./SiteShortagesPanel";
 import { SiteFaultsPanel } from "./SiteFaultsPanel";
+import { SiteMaterialPanel } from "./SiteMaterialPanel";
 import { SiteDocsPanel } from "./SiteDocsPanel";
 import { SiteServicePanel } from "./SiteServicePanel";
 import { PrintRoot } from "./PrintRoot";
@@ -252,6 +253,7 @@ export function SiteCardDialog({
               <SiteStagesPanel site={site} />
               <SiteShortagesPanel site={site} />
               <SiteFaultsPanel site={site} journal={study.journal} />
+              <SiteMaterialPanel site={site} journal={study.journal} />
               <SiteOrderPanel site={site} />
             </div>
 

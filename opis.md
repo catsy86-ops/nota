@@ -3580,3 +3580,11 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Treść raportu bierze się z `reportBody`, tej samej funkcji co tekst, więc PDF i tekst nie mogą się rozjechać. Nagłówki `##` stają się nagłówkami PDF, punkty listą.
 - **Testy.** E2E: `e2e/report-pdf.spec.ts` (pobiera plik o nazwie od budowy i dnia, nagłówek `%PDF-`). Istniejące `e2e/study.spec.ts` (raport: udostępnij, kopiuj, notatka, wydruk) przechodzą. Vitest: `src/lib/study/handoverPdf.test.ts`. Budżet `bundle.spec` 6/6.
 - **Pinezki na planie (P2.7, P-10)** nadal odłożone: wg decyzji dopiero po tym, jak zaznaczanie będzie używane.
+
+## Praca: zużycie materiału (P2.6, decyzja P-9 — opcjonalna cena, bez faktur)
+
+- **Co robi.** W karcie budowy zwinięta sekcja „Zużycie materiału” z podsumowaniem („17 szt. · 63,00 zł”). Po rozwinięciu: miesiące od najnowszego, w każdym suma kształtek z wpisów tej budowy i dostarczone braki. Przy każdej kształtce pole „zł/szt.” — wpisana cena daje wartość miesiąca i całości („+N bez ceny”, gdy część pozycji nie ma ceny). „Kopiuj” daje tekst dla szefa lub dostawcy, „CSV” plik do arkusza.
+- **Gdzie.** Logika: `src/lib/study/materialUsage.ts` (`materialUsage`, `costOf`, `priceOf`, `materialText`, `materialCsv`). Ceny: `src/lib/study/materialPrices.ts` (klucz `kaczy.study.prices.v1`, `setFittingPrice`, `usePrices`). UI: `src/components/study/SiteMaterialPanel.tsx`, w `SiteCardDialog.tsx` pod usterkami (dziennik przekazywany jako prop, jak w panelu usterek).
+- **Jak działa.** Kształtki sumuje `sumFittings` (nazwy porównywane bez wielkości liter i ogonków), grupowane po miesiącu wpisu. Braki liczą się tylko ze statusem „Dostarczone”, w miesiącu zmiany statusu; ich ilość to dowolny tekst („50 m”), więc pokazujemy ją, a nie sumujemy. Cena po kluczu nazwy (`fittingKey`), wspólna dla wszystkich budów. CSV: separator `;`, BOM, ochrona przed formułami (`cell` z karty czasu).
+- **Ograniczenia.** Ceny są na urządzeniu (jak nazwa firmy) — nie synchronizują się i nie wchodzą do kopii. Dostawy nie mają ceny. Brak faktur (decyzja P-9).
+- **Testy.** Vitest: `src/lib/study/materialUsage.test.ts` (suma per miesiąc bez innych budów, dostawy, wycena, tekst, CSV). E2E: `e2e/site-material.spec.ts` (cena → wartość, CSV, Kopiuj). Istniejące testy karty (w tym 320 px) przechodzą.
