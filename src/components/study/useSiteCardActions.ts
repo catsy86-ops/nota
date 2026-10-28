@@ -10,9 +10,19 @@ import { buildJournalReport, dayKeyOf } from "@/lib/study/report";
 import { downloadSiteZip } from "@/lib/study/siteZip";
 import { shrinkSitePhotos } from "@/lib/study/photoShrink";
 import { buildHandover, handoverText } from "@/lib/study/handover";
+import { buildHandoverPdf, handoverPdfName, sharePdf, type HandoverPdfPhoto } from "@/lib/study/handoverPdf";
+import { companyNameStore } from "@/lib/study/companyPrefs";
+import { imageStore } from "@/lib/imageStore";
 import { useShifts } from "@/lib/shifts";
 
 type Dir = ReturnType<typeof useSiteDirectory>;
+
+const blobToDataUrl = (blob: Blob) => new Promise<string>((resolve, reject) => {
+  const r = new FileReader();
+  r.onload = () => resolve(String(r.result));
+  r.onerror = () => reject(r.error);
+  r.readAsDataURL(blob);
+});
 
 /**
  * Akcje z karty budowy, które nie są formularzem (P6.2): paczka ZIP, protokół,
@@ -30,6 +40,7 @@ export function useSiteCardActions({
   onArchived: () => void;
 }) {
   const [zipping, setZipping] = useState(false);
+  const [pdfBusy, setPdfBusy] = useState(false);
   // P-4 (plan Pracy 3.3): archiwizacja pyta; „zapisz ZIP i zmniejsz zdjęcia” jest domyślnie wyłączone.
   const [archiveAsk, setArchiveAsk] = useState(false);
   const [shrinkWithZip, setShrinkWithZip] = useState(false);
@@ -78,6 +89,30 @@ export function useSiteCardActions({
     else if (outcome === "failed") toast.error("Nie udało się skopiować");
   }
 
+  /** P2.5: protokół jako PDF — zdjęcia z magazynu, podpis z wpisu, nazwa firmy z Ustawień; udostępnia albo pobiera. */
+  async function pdfHandover() {
+    if (!site) return;
+    setPdfBusy(true);
+    try {
+      const h = buildHandover(study.journal, site);
+      const photos: HandoverPdfPhoto[] = [];
+      for (const ref of h.photos) {
+        const rec = await imageStore.get(ref);
+        if (!rec) continue;
+        const entry = study.journal.find((e) => e.images.includes(ref));
+        const dataUrl = await blobToDataUrl(new Blob([rec.bytes], { type: rec.type }));
+        photos.push({ dataUrl, caption: entry?.captions?.[ref] ?? (entry ? new Date(entry.at).toLocaleDateString("pl-PL") : "") });
+      }
+      const blob = await buildHandoverPdf(h, { company: companyNameStore.get(), photos });
+      const outcome = await sharePdf(blob, handoverPdfName(site.name));
+      if (outcome === "downloaded") toast.success("Zapisano protokół PDF");
+    } catch {
+      toast.error("Nie udało się przygotować PDF protokołu");
+    } finally {
+      setPdfBusy(false);
+    }
+  }
+
   function toggleArchive() {
     if (!site) return;
     if (site.archived !== undefined) { void doArchive(false, false); return; }
@@ -109,7 +144,7 @@ export function useSiteCardActions({
   }
 
   return {
-    zipping, zip, shareHandover,
+    zipping, zip, shareHandover, pdfHandover, pdfBusy,
     archiveAsk, setArchiveAsk, shrinkWithZip, setShrinkWithZip, archiving, toggleArchive, doArchive,
   };
 }

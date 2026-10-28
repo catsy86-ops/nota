@@ -66,7 +66,7 @@ export default defineConfig(() => ({
           "**/unbounded-latin-ext*.woff2",
           // Eksport PDF (jsPDF + html2canvas + purify + index.es) i Statystyki: ~1,1 MB, rzadko używane.
           // Nie w precache — trafiają do cache `static-assets` przy pierwszym użyciu (offline wcześniej: błąd).
-          "**/{exportPdf,index.es,html2canvas,html2canvas.esm,purify.es,StatsDialog}-*.js",
+          "**/{exportPdf,index.es,html2canvas,html2canvas.esm,purify.es,StatsDialog,jspdf.es.min}-*.js",
           // Edytor CodeMirror (~500 KB) za flagą `cmEditor`: tylko na żądanie, poza precache (plan rozbudowy, Faza 1a).
           "**/CmEditor-*.js",
         ],
@@ -77,6 +77,12 @@ export default defineConfig(() => ({
         importScripts: ["sw-notifications.js", "sw-share.js"],
         navigateFallback: "/index.html",
         runtimeCaching: [
+          // Czcionki protokołu PDF (`public/fonts/protokol-*.ttf`): poza precache (budżet), ale po pierwszym użyciu działają offline.
+          {
+            urlPattern: ({ url }) => /\/fonts\/protokol-[^/]*\.ttf$/.test(url.pathname),
+            handler: "CacheFirst",
+            options: { cacheName: "pdf-fonts", expiration: { maxEntries: 4, maxAgeSeconds: 60 * 60 * 24 * 365 } },
+          },
           {
             urlPattern: ({ url }) => /\/(barlow-condensed|fraunces|bricolage-grotesque|unbounded-latin|inter|nunito|atkinson-hyperlegible-next|literata|manrope|lexend)-[^/]*\.woff2$/.test(url.pathname),
             handler: "CacheFirst",

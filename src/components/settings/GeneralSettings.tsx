@@ -23,6 +23,9 @@ import { hasDictationConsent, withdrawDictationConsent } from "@/hooks/useDictat
 import { setBadgeEnabled, useBadgeEnabled } from "@/lib/overdueBadge";
 import { setReportNudges, useReportNudges } from "@/lib/study/reportNudgePrefs";
 import { setSiteArrival, useSiteArrival } from "@/lib/study/siteArrivalPrefs";
+import { COMPANY_NAME_MAX, setCompanyName, useCompanyName } from "@/lib/study/companyPrefs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const PERMISSION_TEXT = {
   granted: "Włączone — przypomnienia pokażą się jako powiadomienia systemowe, gdy aplikacja jest otwarta (przy zamkniętej — patrz niżej).",
@@ -126,6 +129,7 @@ export function GeneralSettings() {
   const badgeEnabled = useBadgeEnabled();
   const reportNudges = useReportNudges();
   const siteArrival = useSiteArrival();
+  const companyName = useCompanyName();
 
   return (
     <div className="space-y-4">
@@ -226,6 +230,12 @@ export function GeneralSettings() {
           checked={siteArrival}
           onCheck={setSiteArrival}
         />
+
+        <Section title="Nazwa firmy na protokole PDF">
+          <Label htmlFor="company-name" className="text-xs text-muted-foreground">Pojawi się na nagłówku protokołu odbioru (zostaje na tym urządzeniu)</Label>
+          <Input id="company-name" key={companyName} defaultValue={companyName} maxLength={COMPANY_NAME_MAX} placeholder="np. Instalacje Kowalski"
+            onBlur={(e) => { if (e.target.value.trim() !== companyName) setCompanyName(e.target.value.trim()); }} />
+        </Section>
 
         <ResetSectionButton title="przypomnienia" keys={VIEW_PREF_GROUPS.przypomnienia} />
       </div>

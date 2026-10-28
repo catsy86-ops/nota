@@ -102,7 +102,7 @@ export function SiteCardDialog({
   }
 
   // ZIP, protokół i archiwizacja — w `useSiteCardActions` (P6.2).
-  const { zipping, zip, shareHandover, archiveAsk, setArchiveAsk, shrinkWithZip, setShrinkWithZip, archiving, toggleArchive, doArchive } = useSiteCardActions({
+  const { zipping, zip, shareHandover, pdfHandover, pdfBusy, archiveAsk, setArchiveAsk, shrinkWithZip, setShrinkWithZip, archiving, toggleArchive, doArchive } = useSiteCardActions({
     site, study, dir, shifts, persistDirty, onArchived: () => onOpenChange(false),
   });
 
@@ -440,6 +440,15 @@ export function SiteCardDialog({
                 className="coarse:h-11"
               >
                 <Share2 className="mr-1.5 h-4 w-4" aria-hidden />Tekst protokołu
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => void pdfHandover()}
+                disabled={(site.count === 0 && !site.stages) || pdfBusy}
+                title="Protokół jako plik PDF z nagłówkiem firmy, zdjęciami i numerami stron — do wysłania albo wydruku"
+                className="coarse:h-11"
+              >
+                <FileText className="mr-1.5 h-4 w-4" aria-hidden />{pdfBusy ? "Przygotowuję…" : "PDF protokołu"}
               </Button>
               <Button variant="ghost" onClick={toggleArchive} className="col-span-2 text-muted-foreground coarse:h-11">
                 {site.archived === undefined
