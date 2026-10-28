@@ -3536,3 +3536,5 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Problem.** Przeciąganie terminu w siatce miesiąca nie działało na desktopie. Chip (`DraggableChip`) jest w kontenerze `hidden @[7.5rem]:flex`, a komórka miesiąca ma na desktopie ok. 116 px zawartości (siatka jest ograniczona szerokością), więc poniżej progu 7,5 rem (120 px) pokazywały się same kropki bez chipa i bez uchwytu. Regresja z K4.3 (A6).
 - **Zmiana.** Próg obniżony z `@[7.5rem]` na `@[6rem]` w `DayCell.tsx` (chip, pasek zmiany, nazwa i kropka święta) i `dayCellStyles.ts` (`holidayNameClass`, `holidayDotClass`). Próg zmieniono razem, żeby święto i chip przełączały się w tym samym miejscu.
 - **Testy.** `e2e/reminders-calendar.spec.ts` („termin da się przeciągnąć…”) ustawia viewport 1920 px, przy którym komórka mieści chip. Zestaw kalendarza i terminów (calendar-*, reminders-*) zielony.
+
+**Decyzja (2026-10-28): próg chipów 6 rem zostaje.** Potwierdzone przez użytkownika jako domyślne; przeciąganie terminów w widoku miesiąca działa na desktopie.
