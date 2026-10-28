@@ -3555,3 +3555,11 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Zdjęcie „po” idzie tą samą drogą co zdjęcie wpisu (`prepareImage` do 2 MB, `imageStore.putBlob`) i trafia do `after`, a `images` zostaje zdjęciami przed. Pusty odpowiedzialny i zły termin (nie `YYYY-MM-DD`) kasują pole zamiast zapisywać śmieć. Usterka bez terminu nie jest przeterminowana.
 - **Ograniczenia.** Zdjęć po naprawie najwyżej 20 na usterkę. Usterka jest otwarta, dopóki nie ma `resolved` — rozwiązanie nadal idzie przez „Oznacz jako rozwiązany”. Termin to data bez godziny. Brak powiadomień o zbliżającym się terminie (to osobna decyzja).
 - **Testy.** Vitest: `src/lib/study/faults.test.ts` (otwarte usterki, status terminu, dni do terminu, czyszczenie pól), `src/lib/study/handover.test.ts` (uwagi z nowymi polami). E2E: `e2e/site-faults.spec.ts` (odpowiedzialny i termin po przeładowaniu, czerwony status po terminie, zdjęcie po naprawie).
+
+## Praca: zaznaczanie na planie (P2.7, decyzja P-10 — pinezki dopiero po użyciu)
+
+- **Co robi.** Na miniaturze planu (zdjęcie w „Plany i dokumenty” karty budowy) jest przycisk ołówka „Zaznacz na planie”. Otwiera rysowanie po planie (ten sam `DrawingCanvas` co przy zdjęciach wpisu). Zapisany wynik to **nowy dokument** „nazwa (zaznaczony)” obok oryginału, który zostaje nietknięty. Pinezki x/y na planie zostają na później (P-10: dopiero gdy zaznaczanie będzie używane).
+- **Gdzie.** `src/components/study/SiteDocsPanel.tsx` (`startMarking`, `saveMarked`, `closeMarking`, `DrawingCanvas` na końcu panelu). Model i zapis bez zmian: `SiteDoc` w `src/lib/study/siteDocs.ts`, zapis przez `setSiteDocs`, bajty w `imageStore`.
+- **Jak działa.** Bajty oryginału idą przez `imageStore.get` do adresu obiektu (zwalnianego przy zamknięciu). Wynik z `DrawingCanvas` (data URL) jest zamieniany na blob, zmniejszany przez `prepareImage` i zapisywany w `imageStore` jako nowy `SiteDoc`. Limit `SITE_DOCS_MAX` obowiązuje też dla zaznaczenia.
+- **Ograniczenia.** Zaznaczenie zawsze tworzy kopię; nie edytuje oryginału (zgodnie z planem). Brak pinezek. Rysowanie kreskami, gumka i kolory jak w `DrawingCanvas`.
+- **Testy.** E2E: `e2e/site-plan-mark.spec.ts` (narysowanie, zapis, nowy dokument obok oryginału), istniejące `e2e/site-docs.spec.ts` przechodzą (w tym dotykowy test 44 px).

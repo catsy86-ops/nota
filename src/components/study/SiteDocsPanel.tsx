@@ -1,9 +1,12 @@
 import { useRef, useState } from "react";
-import { FileText, FolderOpen, Maximize2, Minimize2, Plus, X } from "lucide-react";
+import { FileText, FolderOpen, Maximize2, Minimize2, Pencil, Plus, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { NoteImage } from "@/components/NoteImage";
+import { DrawingCanvas } from "@/components/DrawingCanvas";
+import { imageStore } from "@/lib/imageStore";
+import { prepareImage } from "@/lib/imagePrepare";
 import { downloadAttachment, formatFileSize } from "@/lib/attachments";
 import { haptic } from "@/lib/haptics";
 import { toastWithUndo } from "@/lib/undoToast";
@@ -25,6 +28,38 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
   const [busy, setBusy] = useState(false);
   const [zoom, setZoom] = useState<SiteDoc | null>(null);
   const [actual, setActual] = useState(false);
+  /** P2.7: plan otwarty do zaznaczania — `url` to bajty oryginału jako adres obiektu (zwalniany przy zamknięciu). */
+  const [marking, setMarking] = useState<{ doc: SiteDoc; url: string } | null>(null);
+
+  /** Zaznaczony rysunek trafia jako NOWY dokument; oryginał zostaje, żeby można było wrócić do czystego planu. */
+  async function saveMarked(dataUrl: string) {
+    const from = marking?.doc;
+    if (!from) return;
+    if (docs.length >= SITE_DOCS_MAX) { toast.error(`Na budowie jest już ${SITE_DOCS_MAX} plików`); return; }
+    try {
+      const blob = await (await fetch(dataUrl)).blob();
+      const fitted = await prepareImage(new File([blob], "zaznaczony.jpg", { type: blob.type || "image/jpeg" }));
+      if (!fitted) { toast.error("Nie udało się zapisać zaznaczenia"); return; }
+      const id = await imageStore.putBlob(fitted);
+      const doc: SiteDoc = { id, name: `${docLabel(from)} (zaznaczony)`, size: fitted.size, type: fitted.type || "image/jpeg", at: Date.now() };
+      setSiteDocs(site.id, [...docs, doc], docs);
+      haptic("success");
+      toast.success(`Dodano „${doc.name}”`);
+    } catch {
+      toast.error("Nie udało się zapisać zaznaczenia");
+    }
+  }
+
+  async function startMarking(d: SiteDoc) {
+    const rec = await imageStore.get(d.id);
+    if (!rec) { toast.error("Tego planu nie ma na tym urządzeniu"); return; }
+    setMarking({ doc: d, url: URL.createObjectURL(new Blob([rec.bytes], { type: rec.type })) });
+  }
+
+  function closeMarking() {
+    if (marking) URL.revokeObjectURL(marking.url);
+    setMarking(null);
+  }
 
   async function add(list: FileList | null) {
     if (!list || list.length === 0) return;
@@ -83,6 +118,14 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
                 <NoteImage imageRef={d.id} alt="" className="aspect-square w-full object-cover" placeholderClassName="aspect-square w-full" />
               </button>
               <p className="mt-0.5 truncate text-2xs text-muted-foreground">{docLabel(d)}</p>
+              <button
+                type="button"
+                onClick={() => void startMarking(d)}
+                aria-label={`Zaznacz na planie: ${docLabel(d)}`}
+                className="absolute bottom-7 right-1 flex h-7 w-7 items-center justify-center rounded-full bg-background/90 text-muted-foreground shadow-sm hover:text-foreground coarse:h-11 coarse:w-11"
+              >
+                <Pencil className="h-3.5 w-3.5" aria-hidden />
+              </button>
               <button
                 type="button"
                 onClick={() => remove(d)}
@@ -153,6 +196,12 @@ export function SiteDocsPanel({ site }: { site: SiteInfo }) {
           </Button>
         </DialogContent>
       </Dialog>
+      <DrawingCanvas
+        open={marking !== null}
+        onOpenChange={(o) => { if (!o) closeMarking(); }}
+        initialImage={marking?.url ?? null}
+        onSave={(dataUrl) => { void saveMarked(dataUrl); closeMarking(); }}
+      />
     </section>
   );
 }
