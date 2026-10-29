@@ -3669,3 +3669,11 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Jak działa.** Godziny dnia z tego samego podziału co przycisk godzin przy dniu (`hoursByDay`), więc suma tygodnia zgadza się z dniami. Animacja to `animation-timeline: view()` — tylko w przeglądarkach, które ją wspierają, i tylko bez ograniczenia ruchu (`prefers-reduced-motion`); w pozostałych nagłówek po prostu stoi.
 - **Ograniczenia.** Suma obejmuje dni widoczne na osi (filtr lub wyszukiwanie zmniejsza sumę). Dni z kilkoma budowami bez podziału nie dodają godzin.
 - **Testy.** Vitest: `src/lib/study/journalWeeks.test.ts`. E2E: `e2e/journal-weeks.spec.ts` (dwa tygodnie, 10 h z Grafiku); `study.spec` przechodzi.
+
+## Praca: test „dzień hydraulika” (H0.3, plan 2026-10-29)
+
+- **Co robi.** Test e2e na telefonie (`@mobile`, 390 px, Pixel 7 i iPhone 14) przechodzi codzienną ścieżkę w Pracy i liczy stuknięcia w każdym kroku: wejście na budowę, zdjęcie do wpisu, wpis z kształtkami, brak materiału, odhaczony etap, godziny dnia, raport do szefa. Każdy krok zaczyna się w Dzienniku. Liczy się kliknięcie i wybór zdjęcia; pisanie i Escape (powrót) nie.
+- **Gdzie.** `e2e/workday.spec.ts` (`step(nazwa, limit, …)`, wynik w adnotacji „stuknięcia”).
+- **Jak działa.** Cel planu to ≤ 3 stuknięcia na krok. Limit w teście to stan na dzień zapisu, więc test pilnuje, żeby żadna ścieżka się nie wydłużyła; po poprawce limit schodzi. Szef jako odbiorca raportu jest ustawiany przez formularz przed liczeniem (jednorazowa konfiguracja) — stary zapis `kaczy.study.v1` nie przenosi `boss`.
+- **Wynik 2026-10-29:** wejście 2, zdjęcie 2, **kształtki 5 (powyżej celu)**, brak 2, etap 2, godziny 3, raport 2. Do poprawy: kształtki — pigułka „Kształtki” i „Dodaj kształtki” to dwa stuknięcia przed wyborem pozycji.
+- **Testy.** Sam test; przechodzi na `pixel-7` i `iphone-14`.
