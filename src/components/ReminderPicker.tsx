@@ -1,5 +1,6 @@
 import { forwardRef, useEffect, useId, useRef, useState, type HTMLAttributes, type MouseEvent, type ReactNode, type Ref } from "react";
 import { Bell, Repeat, X } from "lucide-react";
+import { isSameDay as sameDay } from "date-fns";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -53,6 +54,17 @@ function presets(now = new Date(), shifts?: ShiftData): { label: string; at: Dat
 }
 
 
+/** Chipy dnia (F2.2): offset w dniach od dziś; „Wybierz…” otwiera kalendarz. */
+const DAY_CHIPS = [
+  { label: "Dziś", days: 0 },
+  { label: "Jutro", days: 1 },
+  { label: "Pojutrze", days: 2 },
+];
+/** Chipy godzin (F2.2): ustawiają pole godziny; pole zostaje do dowolnej wartości. */
+const HOUR_CHIPS = ["08:00", "12:00", "15:00", "18:00", "20:00"];
+
+const chipClass = "rounded-full border px-2.5 py-1 text-xs transition-colors coarse:min-h-11 coarse:px-3.5 aria-pressed:border-primary/60 aria-pressed:bg-primary/10 aria-pressed:text-primary-ink border-border text-muted-foreground hover:border-primary/60 hover:text-primary-ink";
+
 /**
  * Powłoka pickera (F2.1): na telefonie dolny arkusz, na komputerze dotychczasowy Popover.
  * Treść jest ta sama; zmienia się tylko kontener i to, jak się otwiera.
@@ -63,7 +75,7 @@ function ReminderSurface({ open, onOpenChange, trigger, children }: { open: bool
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetTrigger asChild>{trigger}</SheetTrigger>
-        <SheetContent side="bottom" snap className="max-h-[88dvh] overflow-y-auto rounded-t-3xl border-t border-border/60 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-5 space-y-3" onClick={(e) => e.stopPropagation()}>
+        <SheetContent side="bottom" snap data-reminder-sheet className="max-h-[88dvh] overflow-y-auto rounded-t-3xl border-t border-border/60 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-5 space-y-3" onClick={(e) => e.stopPropagation()}>
           <SheetHeader className="sr-only"><SheetTitle>Przypomnienie</SheetTitle></SheetHeader>
           {children}
         </SheetContent>
@@ -89,6 +101,15 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
   const [allDay, setAllDay] = useState(reminderAllDay === true);
   const [untilText, setUntilText] = useState(reminderRepeatUntil !== undefined ? dayInputValue(reminderRepeatUntil) : "");
   const shifts = useShifts();
+  // F2.2: na telefonie kalendarz pokazuje się po „Wybierz…” albo gdy wybrano dzień spoza chipów.
+  // Na komputerze jest zawsze (jest na niego miejsce, a testy i nawyki tego oczekują).
+  const mobile = useMediaQuery("(max-width: 639px)");
+  const [pickingDate, setPickingDate] = useState(false);
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const chipDay = (offset: number) => new Date(todayStart.getFullYear(), todayStart.getMonth(), todayStart.getDate() + offset);
+  const isChipDate = (d: Date | undefined) => !!d && DAY_CHIPS.some((c) => sameDay(d, chipDay(c.days)));
+  const showCalendar = !mobile || pickingDate || (!!date && !isChipDate(date));
 
   /** Przy każdym otwarciu stan wraca do bieżącej notatki — seria mogła przeskoczyć albo ktoś zmienił termin na drugim telefonie. */
   function openChange(next: boolean) {
@@ -98,6 +119,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
       setRepeat(reminderRule ?? { kind: reminderRepeat ?? "none" });
       setAllDay(reminderAllDay === true);
       setUntilText(reminderRepeatUntil !== undefined ? dayInputValue(reminderRepeatUntil) : "");
+      setPickingDate(false);
     }
     setOpen(next);
   }
@@ -186,13 +208,31 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
           ))}
         </div>
         <QuickReminderInput onParsed={handleTypedParsed} />
+        <div role="group" aria-label="Dzień terminu" className="flex flex-wrap gap-1.5">
+          {DAY_CHIPS.map((c) => (
+            <button
+              key={c.label}
+              type="button"
+              aria-pressed={!!date && sameDay(date, chipDay(c.days))}
+              onClick={() => { setDate(chipDay(c.days)); setPickingDate(false); }}
+              className={chipClass}
+            >
+              {c.label}
+            </button>
+          ))}
+          {mobile && (
+            <button type="button" aria-pressed={showCalendar} onClick={() => setPickingDate((v) => !v)} className={chipClass}>
+              Wybierz…
+            </button>
+          )}
+        </div>
         {/* Przeszłe dni zostają do wyboru (K-1): zapis jest dozwolony z ostrzeżeniem, jak w dialogu Kalendarza (K1.4). */}
-        <Calendar
+        {showCalendar && <Calendar
           mode="single"
           selected={date}
           onSelect={setDate}
           className={cn("p-3 pointer-events-auto")}
-        />
+        />}
         <label htmlFor={`${uid}-allday`} className="flex items-center gap-2 text-xs text-muted-foreground coarse:min-h-11">
           <input id={`${uid}-allday`} type="checkbox" checked={allDay} onChange={(e) => setAllDay(e.target.checked)} className="size-4 accent-primary" />
           Cały dzień (o 9:00)
@@ -207,6 +247,15 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
               onChange={(e) => setTime(e.target.value)}
               className="max-sm:h-11 text-sm bg-muted/60 border border-border rounded-field px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground"
             />
+          </div>
+        )}
+        {!allDay && (
+          <div role="group" aria-label="Godzina terminu" className="flex flex-wrap gap-1.5">
+            {HOUR_CHIPS.map((h) => (
+              <button key={h} type="button" aria-pressed={time === h} onClick={() => setTime(h)} className={chipClass}>
+                {h}
+              </button>
+            ))}
           </div>
         )}
         <div className="flex items-center gap-2">

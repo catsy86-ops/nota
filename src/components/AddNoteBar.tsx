@@ -341,7 +341,8 @@ export const AddNoteBar = forwardRef<{ expand: (action?: ComposerAction, prefill
     function handleClickOutside(e: MouseEvent) {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         // Kliknięcie w dymek (np. „Cofnij” po usunięciu ukończonych) nie jest kliknięciem „poza” edytorem.
-        const popover = (e.target as Element)?.closest?.('[data-radix-popper-content-wrapper], [data-sonner-toaster]');
+        // Arkusz terminu (F2.1) to portal poza kompozytorem — jego dotknięcie to nie „poza” edytorem.
+        const popover = (e.target as Element)?.closest?.('[data-radix-popper-content-wrapper], [data-sonner-toaster], [data-reminder-sheet]');
         if (!popover) handleClose();
       }
     }
