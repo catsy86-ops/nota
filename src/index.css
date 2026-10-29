@@ -1421,6 +1421,15 @@ html[data-vt-dir="back"]::view-transition-new(root) { animation: vt-in-left 0.22
   html[data-vt-dir]::view-transition-new(root) { animation: none; }
 }
 
+/* Kalendarz, wybór dnia (K4.5): podświetlenie (`day-active`) przesuwa się z komórki do nowej,
+   a panel dnia (`day-panel`) wjeżdża z dołu. Przy redukcji ruchu (także z ustawienia w aplikacji)
+   zostaje samo przenikanie, bez przesunięć. */
+@keyframes vt-day-rise { from { transform: translateY(12px); opacity: 0; } }
+@keyframes vt-fade { from { opacity: 0; } }
+html:not([data-motion="reduced"])::view-transition-new(day-panel) { animation: vt-day-rise 0.22s var(--ease-out) both; }
+html[data-motion="reduced"]::view-transition-new(day-panel) { animation: vt-fade 0.2s linear both; }
+html[data-motion="reduced"]::view-transition-group(day-active) { animation-duration: 0s; }
+
 /* Wykresy roku w Grafiku (G4.3): kolory z tokenów; recharts daje klasy na grupach, kolor idzie na elementy. */
 .year-chart-grid line { stroke: var(--border); }
 .year-chart-hours .recharts-rectangle { fill: var(--primary); }

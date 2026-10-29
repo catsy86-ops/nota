@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { flushSync } from "react-dom";
-import { isMotionReduced } from "@/hooks/useMotionPref";
 import { CalendarLegend } from "./CalendarLegend";
 import { useNotesContext } from "@/hooks/NotesProvider";
 import { useDayClock } from "@/lib/dayClock";
@@ -96,13 +95,14 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
   useDayClock();
   const [month, setMonth] = useState(() => new Date());
   const [selectedDay, setSelectedDay] = useState(() => new Date());
-  // K4.5: klik w dzień przechodzi przez przejście widoku (panel się przenika, podświetlenie się przesuwa).
-  // Przy redukcji ruchu i bez API — zwykła zmiana.
-  const pickDay = (day: Date) => {
+  // K4.5: klik w dzień przechodzi przez przejście widoku — podświetlenie przesuwa się z komórki, panel wjeżdża.
+  // Ruch wyłącza CSS (`data-motion="reduced"`, `index.css`), więc tu zawsze idzie przejście, jeśli przeglądarka je zna.
+  // `useCallback`: siatka miesiąca jest zmemoizowana (K5.1), więc funkcja ma być stabilna.
+  const pickDay = useCallback((day: Date) => {
     const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
-    if (typeof doc.startViewTransition === "function" && !isMotionReduced()) doc.startViewTransition(() => flushSync(() => setSelectedDay(day)));
+    if (typeof doc.startViewTransition === "function") doc.startViewTransition(() => flushSync(() => setSelectedDay(day)));
     else setSelectedDay(day);
-  };
+  }, []);
   const [showKeys, setShowKeys] = useState(false);
   const [dialogDay, setDialogDay] = useState<Date | null>(null);
   // Telefon: miesiąc (siatka) albo tydzień (pasek 7 dni). Na większym ekranie oba są zawsze.
@@ -218,11 +218,11 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
    * Przy redukcji ruchu przewijanie bez animacji.
    */
   const selectGridDay = useCallback((day: Date) => {
-    setSelectedDay(day);
+    pickDay(day);
     if (!window.matchMedia("(max-width: 639px)").matches) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     requestAnimationFrame(() => document.getElementById("calendar-day-panel")?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" }));
-  }, []);
+  }, [pickDay]);
 
   /**
    * Gest palcem między miesiącami (K2.6): poziome przeciągnięcie ≥ 60 px w siatce. Chipy terminów
