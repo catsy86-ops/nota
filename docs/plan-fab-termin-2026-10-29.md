@@ -45,7 +45,7 @@ Stan sprawdzony w kodzie na dziś. Nic jeszcze nie zmieniono.
 - **Q3 (zrobione 2026-10-29: dodane skróty dni)** Parser: sprawdzić, że „jutro 15”, „pt 9:30” i „za 90 min” dają oczekiwany wynik, i dopisać testy tam, gdzie brakuje.
 - **Q4 (zrobione 2026-10-29)** Szybkie „Dziś, za godzinę” jako pierwszy chip, gdy jest po 8:00 (tylko na telefonie, żeby nie zaśmiecać komputera).
 
-### Faza 4: wygląd (M)
+### Faza 4: wygląd (M) — zrobione 2026-10-29 (kafle jako lista, etykiety kroków, podgląd jako pasek wyniku; axe obu arkuszy)
 - Przed kodem wizualnym: skill `frontend-design` (reguła z pamięci), potem przegląd `refactoring-ui` i `ux-heuristics`.
 - Przegląd dostępności: `design:accessibility-review` i `e2e/a11y.spec.ts` dla arkusza terminu i arkusza „Nowa”.
 

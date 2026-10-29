@@ -217,7 +217,7 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
             <SheetTitle className="font-display text-2xl">Nowa</SheetTitle>
             <SheetDescription>Co zapisać? Stuknij „+”, by od razu napisać notatkę.</SheetDescription>
           </SheetHeader>
-          <div className="mt-4 grid grid-cols-2 gap-2.5" role="group" aria-label="Rodzaj nowej notatki">
+          <div className="mt-4 flex flex-col gap-2" role="group" aria-label="Rodzaj nowej notatki">
             {orderByRecent(QUICK_TILES.filter((t) => t.kind !== "dictate" || canDictate), lastQuick).map((t) => (
               <QuickTile
                 key={t.kind}
@@ -362,15 +362,17 @@ function QuickTile({ Icon, title, hint, tone, recent = false, onClick }: { Icon:
     <button
       type="button"
       onClick={onClick}
-      className={cn("pressable group relative flex items-center gap-3 rounded-card border bg-card p-3.5 coarse:min-h-14 text-left transition-colors hover:border-primary/40 hover:bg-muted/40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring", recent ? "border-primary/50 bg-primary/5" : "border-border/60")}
+      className={cn("pressable group flex items-center gap-3 rounded-card border bg-card px-3 py-2.5 coarse:min-h-14 text-left transition-colors hover:border-primary/40 hover:bg-muted/40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring", recent ? "border-primary/50 bg-primary/5" : "border-border/60")}
     >
-      {recent && <span className="absolute right-2.5 top-2 rounded-full bg-primary/15 px-2 py-0.5 text-2xs font-semibold text-primary-ink">Ostatnio</span>}
       <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-card transition-transform duration-200 group-hover:-rotate-6 motion-reduce:transition-none", QUICK_TONE[tone])} aria-hidden>
         <Icon className="h-5 w-5" />
       </span>
-      <span className="min-w-0">
-        <span className="block font-display text-sm font-semibold text-foreground">{title}</span>
-        <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">{hint}</span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-2">
+          <span className="font-display text-sm font-semibold text-foreground">{title}</span>
+          {recent && <span className="rounded-full bg-primary/15 px-2 py-px text-2xs font-semibold text-primary-ink">Ostatnio</span>}
+        </span>
+        <span className="block truncate text-xs text-muted-foreground">{hint}</span>
       </span>
     </button>
   );

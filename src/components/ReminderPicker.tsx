@@ -70,6 +70,16 @@ const HOUR_CHIPS = ["08:00", "12:00", "15:00", "18:00", "20:00"];
 
 const chipClass = "rounded-full border px-2.5 py-1 text-xs transition-colors coarse:min-h-11 coarse:px-3.5 aria-pressed:border-primary/60 aria-pressed:bg-primary/10 aria-pressed:text-primary-ink border-border text-muted-foreground hover:border-primary/60 hover:text-primary-ink";
 
+/** Etykieta kroku w pickerze (zeszytowa, z przerywaną linią): kolejność dnia, godziny i powtarzania. */
+function StepLabel({ children }: { children: ReactNode }) {
+  return (
+    <p aria-hidden className="flex items-center gap-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+      <span>{children}</span>
+      <span className="h-px flex-1 border-t border-dashed border-border/70" />
+    </p>
+  );
+}
+
 /**
  * Powłoka pickera (F2.1): na telefonie dolny arkusz, na komputerze dotychczasowy Popover.
  * Treść jest ta sama; zmienia się tylko kontener i to, jak się otwiera.
@@ -168,7 +178,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
     if (!allDay) writeLastReminderTime(time);
     onSet(timestamp, repeat, until, allDay || undefined);
     setOpen(false);
-  }, [saveAfterTyping, timestamp, untilTooEarly, repeat, until, allDay, onSet]);
+  }, [saveAfterTyping, timestamp, untilTooEarly, repeat, until, allDay, time, onSet]);
 
   function handleSave() {
     if (timestamp === null || untilTooEarly) return;
@@ -218,12 +228,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
           onParsed={handleTypedParsed}
           onPreview={(d) => { setDate(d); setTime(toTimeInputValue(d.getTime())); }}
         />
-        {/* Podgląd (F2.3): to, co zapisze „Zapisz”, zanim klikniesz. */}
-        <p aria-live="polite" className="text-xs text-muted-foreground" data-testid="reminder-preview">
-          {timestamp !== null
-            ? <>Zapiszę: <span className="font-medium text-foreground">{formatReminderShort(timestamp)}</span>{allDay ? " · cały dzień" : ""}</>
-            : "Wybierz dzień i godzinę."}
-        </p>
+        <StepLabel>Dzień</StepLabel>
         <div role="group" aria-label="Dzień terminu" className="flex flex-wrap gap-1.5">
           {DAY_CHIPS.map((c) => (
             <button
@@ -254,24 +259,25 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
           Cały dzień (o 9:00)
         </label>
         {!allDay && (
-          <div className="flex items-center gap-2">
-            <label htmlFor={`${uid}-time`} className="text-xs text-muted-foreground">Godzina:</label>
-            <input
-              id={`${uid}-time`}
-              type="time"
-              value={time}
-              onChange={(e) => setTime(e.target.value)}
-              className="max-sm:h-11 text-sm bg-muted/60 border border-border rounded-field px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground"
-            />
-          </div>
-        )}
-        {!allDay && (
-          <div role="group" aria-label="Godzina terminu" className="flex flex-wrap gap-1.5">
-            {HOUR_CHIPS.map((h) => (
-              <button key={h} type="button" aria-pressed={time === h} onClick={() => setTime(h)} className={chipClass}>
-                {h}
-              </button>
-            ))}
+          <div className="space-y-2">
+            <StepLabel>Godzina</StepLabel>
+            <div className="flex items-center gap-2">
+              <label htmlFor={`${uid}-time`} className="text-xs text-muted-foreground">Godzina:</label>
+              <input
+                id={`${uid}-time`}
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                className="max-sm:h-11 text-sm bg-muted/60 border border-border rounded-field px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground"
+              />
+            </div>
+            <div role="group" aria-label="Godzina terminu" className="flex flex-wrap gap-1.5">
+              {HOUR_CHIPS.map((h) => (
+                <button key={h} type="button" aria-pressed={time === h} onClick={() => setTime(h)} className={chipClass}>
+                  {h}
+                </button>
+              ))}
+            </div>
           </div>
         )}
         <div className="flex items-center gap-2">
@@ -314,6 +320,12 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
         )}
         <p className="text-2xs text-muted-foreground">
           Działa najpewniej, gdy aplikacja zostaje otwarta w tle — bez serwera powiadomień push, zamknięta karta może dostarczyć przypomnienie dopiero po ponownym otwarciu appki.
+        </p>
+        {/* Wynik przed zapisem: to samo co „Zapiszę” wyżej, ale tuż nad przyciskiem, który to zapisze. */}
+        <p aria-live="polite" data-testid="reminder-preview" className="rounded-field border border-dashed border-border/70 bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+          {timestamp !== null
+            ? <>Zapiszę: <span className="font-semibold text-foreground">{formatReminderShort(timestamp)}</span>{allDay ? " · cały dzień" : ""}</>
+            : "Wybierz dzień i godzinę."}
         </p>
         <div className="flex gap-2">
           <Button size="sm" onClick={handleSave} disabled={timestamp === null || untilTooEarly} className="flex-1">
