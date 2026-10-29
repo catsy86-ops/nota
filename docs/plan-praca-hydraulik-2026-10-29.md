@@ -1,6 +1,6 @@
 # Plan: Praca na co dzień dla hydraulika (2026-10-29)
 
-> **Status (2026-10-29):** H0.3 zrobione (`a213bed`: test „dzień hydraulika”, kształtki 5 stuknięć zamiast ≤ 3). H0.1 zrobione (`399da86`), przy okazji naprawione dwa błędy usterek: zdjęcia po naprawie poza ochroną przed sprzątaniem i kasowanie pól usterki przy poprawce problemu. Dalej: H0.2 (agent `architect`), H0.4 (tydzień obserwacji — po stronie właściciela). Punkty z planu 27.10, które nadal są otwarte (P0.1, P2.4, P2.11, P3.3, P6.3), są tu wpięte w fale.
+> **Status (2026-10-29):** H0.3 zrobione (`a213bed`: test „dzień hydraulika”, kształtki 5 stuknięć zamiast ≤ 3). H0.1 zrobione (`399da86`), przy okazji naprawione dwa błędy usterek: zdjęcia po naprawie poza ochroną przed sprzątaniem i kasowanie pól usterki przy poprawce problemu. H0.2 zrobione (`5af8473`, `4bb5de5`, `5b6ef3f`: `journalEntry.ts`, `studyDump.ts`, `studyProjection.ts`, `learnActions.ts`, `journalActions.ts`, `siteActions.ts`; paczka +44 B). Zostaje H0.4 (tydzień obserwacji — po stronie właściciela). Dalej: H1.1. Punkty z planu 27.10, które nadal są otwarte (P0.1, P2.4, P2.11, P3.3, P6.3), są tu wpięte w fale.
 
 ## Kontekst
 

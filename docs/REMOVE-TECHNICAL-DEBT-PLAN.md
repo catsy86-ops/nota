@@ -16,8 +16,8 @@ Rozpoczęte 2026-10-29. Projekt: NOTKI / „G” — PWA z notatkami, Grafikiem,
 ## Phase Status
 | Phase | Skill | Status | Artifact | Date |
 |---|---|---|---|---|
-| 1 | working-with-legacy-code | pending (GATE) | TESTING.md + TECH-DEBT.md | |
-| 2 | refactoring-patterns | pending | TECH-DEBT.md | |
+| 1 | working-with-legacy-code | done (dane Pracy) | TESTING.md + TECH-DEBT.md | 2026-10-29 |
+| 2 | refactoring-patterns | in-progress (H0.2 zrobione) | TECH-DEBT.md | 2026-10-29 |
 | 3 | clean-code | pending | TECH-DEBT.md | |
 | 4 | software-design-philosophy | pending | TECH-DEBT.md | |
 | 5 | clean-architecture | deferred: zakres teraz to Fazy 1–4 | ARCHITECTURE.md | |
@@ -32,7 +32,11 @@ Statuses: pending · in-progress · awaiting-evidence · done · deferred: <reas
 | 2026-10-29 | Intake | Start od danych Pracy (`yStudy.ts`, `store.ts`) | Następna zmiana (H0.2), duży churn, rdzeń domeny |
 | 2026-10-29 | Intake | Najgorszy skutek: utrata danych | Codzienne dane z budowy bez drugiej kopii poza aplikacją |
 | 2026-10-29 | Intake | Zakres: Fazy 1–4, reszta odroczona | Najszybciej zmienia pracę z kodem; granice i konteksty później |
+| 2026-10-29 | 2 | Jedna fabryka `createYStudy`, krok „helpery Yjs” odłożony | Transakcje przecinają obszary; mały zysk (raport `architect`) |
 | 2026-10-29 | Intake | Błędy z testów charakteryzujących: przypiąć i wpisać do rejestru, naprawa osobnym commitem po decyzji | Metoda; wywołujący mogą zależeć od dziwactwa |
 
 ## Next Actions
-- [ ] Faza 1: szkic efektów od wejść `store.ts`, punkty zbiegu, testy charakteryzujące (Claude, następny krok)
+- [x] Faza 1: siatka dla danych Pracy (`8f98d53`, `39db0b9`), TESTING.md i TECH-DEBT.md
+- [x] Faza 2 (część): podział `yStudy.ts`/`store.ts` (H0.2: `5af8473`, `4bb5de5`, `5b6ef3f`)
+- [ ] Decyzja właściciela: próg paczki startowej w `e2e/bundle.spec.ts` (Debt Ledger)
+- [ ] Faza 3 (clean-code) na nowych modułach Pracy przy pracy nad H1.1
