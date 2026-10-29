@@ -140,6 +140,7 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
   const [{ studyReady, yStudy }, { stateFromDump }, { supplementDump: supplementsDump }, { dietDump }, { trainingDump }, { debtsDump }, { entryCheckDump }] = await Promise.all([import("@/lib/study/data"), import("@/lib/study/yStudy"), import("@/lib/supplements/store"), import("@/lib/diet/store"), import("@/lib/training/store"), import("@/lib/debts/store"), import("@/lib/study/entryCheckStore")]);
   await studyReady();
   const { weightDump } = await import("@/lib/weight/store");
+  const { kitsDump } = await import("@/lib/study/kitsStore");
   const { blobs, report } = await collectAttachmentBlobs(opts.attachmentBudget ?? BACKUP_ATTACHMENTS_BUDGET_BYTES);
   const study = yStudy.dump();
   const propDefs = yjsStore.projectPropDefs();
@@ -173,6 +174,8 @@ export async function buildFullBackupWithReport(opts: { attachmentBudget?: numbe
     debts: JSON.stringify(debtsDump()),
     // Lista przed wejściem na budowę (punkty i odhaczenia dni) — osobna mapa, scalana przy przywracaniu.
     entryCheck: JSON.stringify(entryCheckDump()),
+    // Zestawy materiału (H1.2) — osobna mapa, scalana przy przywracaniu bez nadpisywania.
+    kits: JSON.stringify(kitsDump()),
     ...(Object.keys(blobs).length ? { attachmentBlobs: blobs } : {}),
     // Same liczby (bez treści) — okno przywracania mówi, czego w pliku nie ma; zera = nic nie pominięto.
     skipped: { tooLarge: report.tooLarge.length, missing: report.missing.length, journalPhotos: report.journalPhotos, siteDocs: report.siteDocs, recordings: report.recordings },
@@ -321,6 +324,7 @@ export async function restoreFullBackup(backup: FullBackup, opts: RestoreOptions
   }
   // Lista przed wejściem: scalanie bez kasowania; uszkodzona sekcja po prostu się pomija.
   if (backup.entryCheck) await import("@/lib/study/entryCheckStore").then((m) => m.mergeEntryCheckDump(JSON.parse(backup.entryCheck!))).catch(() => {});
+  if (backup.kits) await import("@/lib/study/kitsStore").then((m) => m.mergeKitsDump(JSON.parse(backup.kits!))).catch(() => {});
   // Metadane skarbca z pliku: bez nich zablokowane notatki z backupu byłyby nie do odszyfrowania.
   if (isValidMeta(backup.vault)) yjsStore.setVaultMeta(backup.vault);
   if (opts.versions && backup.versions) {

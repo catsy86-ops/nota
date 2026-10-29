@@ -11,6 +11,7 @@ import { addSupplement, removeSupplement, setSupplementTaken, supplementDump } f
 import { addMeal, dietDump, removeMeal, setDietGoals } from "./diet/store";
 import { addDebt, debtsDump, removeDebt } from "./debts/store";
 import { entryCheckDump, saveEntryCheckItems, resetEntryCheckItems, toggleEntryCheck } from "./study/entryCheckStore";
+import { getKits, removeKit, saveKit } from "./study/kitsStore";
 import { addTrainingEntry, addPlanDay, removeTrainingEntry, trainingDump } from "./training/store";
 import { cleanDump } from "./study/yStudy";
 import type { Note } from "@/hooks/useNotes";
@@ -296,6 +297,16 @@ describe("Nauka w pełnej kopii", () => {
     expect(trainingDump().entries).toEqual([]);
     await restoreFullBackup(backup, ALL);
     expect(trainingDump()).toMatchObject({ entries: [{ exerciseId: "triceps-nad-glowa" }], plans: [{ name: "Triceps" }] });
+  });
+
+  it("zestawy materiału wracają z kopii (H1.2)", async () => {
+    saveKit({ id: "k-moj", name: "Moja łazienka", fittings: [{ name: "Kolano 16", qty: 4 }], pipes: [{ name: "Rura PEX 16×2", cm: 600 }] });
+    const backup = await parseFullBackup(JSON.stringify(await buildFullBackup()));
+    expect(JSON.parse(backup.kits!).kits.some((k: { id: string }) => k.id === "k-moj")).toBe(true);
+    removeKit("k-moj");
+    expect(getKits().kits.some((k) => k.id === "k-moj")).toBe(false);
+    await restoreFullBackup(backup, ALL);
+    expect(getKits().kits.find((k) => k.id === "k-moj")).toMatchObject({ name: "Moja łazienka", pipes: [{ name: "Rura PEX 16×2", cm: 600 }] });
   });
 
   it("lista przed wejściem wraca z kopii (własne punkty i odhaczenia)", async () => {
