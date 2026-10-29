@@ -175,7 +175,7 @@ Do tego dokumentacja nie nadąża za kodem: `opis.md` (Kalendarz :1397, Grafik :
 | G4.3 | **Rok w wykresach:** godziny i norma, nadgodziny, zarobek, godziny nocne miesiąc po miesiącu (`recharts`, leniwie, kolory z tokenów, `tabular-nums`). Mapa cieplna roku (własne SVG, dzień = komórka). Tabela zostaje jako wersja dla czytnika. | 2 | M |
 | G4.4 | **Porównanie z paskiem wypłaty:** pole „wypłacono brutto” per miesiąc (nowa mapa Yjs z prefiksem `id:`), różnica od szacunku i podpowiedź, co ją zwykle tłumaczy (nocne, L4, premie). | 2 | S |
 | G4.5 | **Import do Grafiku:** `.ics` (reużyty `icsImport.ts`) i CSV w formacie eksportu (`timesheet.ts`, odwrotność), z podglądem i „Cofnij”. | 1 | M |
-| G4.6 | Szablon tygodnia (zapisany osobno od cykli) w palecie i w pustym miesiącu. | 1 | S |
+| G4.6 | **Zrobione wcześniej (c4f052c, B4):** szablon tygodnia (zapisany osobno od cykli) w palecie („Szablon”) i w pustym miesiącu („Szablon tygodnia”). E2e: `shifts-template.spec.ts`. | 1 | S |
 | G4.7 | Obraz miesiąca: dwa miesiące, legenda rodzajów, znacznik „dziś” (dokończenie 4.3). | 1 | S |
 | G4.8 | Kilka nakładek (zespół): wspólne wolne dni dla N grafików. **Decyzja G-7.** | 1 | M |
 | G4.9 | ~~Dodatek nocny do zarobku~~ — **zrezygnowano (2026-10-28, użytkownik: „dodatek nocny nie potrzebny”).** Kod zostaje nietknięty. | 1 | S |
