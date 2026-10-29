@@ -33,3 +33,15 @@ describe("kod wyglądu", () => {
     expect(decodeAppearance(evil)).toEqual({ "kaczy.shape.v1": JSON.stringify("soft") });
   });
 });
+
+describe("ramki i poświata w kodzie wyglądu", () => {
+  it("klucze ramek i poświaty przechodzą w obie strony", () => {
+    const store: Record<string, string> = {
+      "kaczy.frames.v1": JSON.stringify("strong"),
+      "kaczy.frames.look.v1": JSON.stringify({ color: "copper", surface: "mint" }),
+      "kaczy.glow.v1": JSON.stringify({ strength: "strong", color: "blue" }),
+    };
+    const code = encodeAppearance((k) => store[k] ?? null);
+    expect(decodeAppearance(code)).toEqual(store);
+  });
+});

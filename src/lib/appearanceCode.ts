@@ -1,6 +1,6 @@
 /**
  * Kod wyglądu (plan motywów 3.5): styl, jasność, akcent, kształt, tło, krój, rozmiar tekstu i styl na noc
- * jako jeden krótki tekst do przeniesienia na drugie urządzenie. Dane wyglądu są per urządzenie
+ * (w tym ramki i poświata) jako jeden krótki tekst do przeniesienia na drugie urządzenie. Dane wyglądu są per urządzenie
  * (localStorage), nie w Yjs. Odczyt przepuszcza tylko klucze z listy; wartości sprawdzają potem same
  * moduły przy wczytaniu (`merge` w `createPersistedStore`), więc zły kod nie zepsuje ustawień.
  */
@@ -14,6 +14,10 @@ export const APPEARANCE_KEYS = [
   "kaczy.font.v1",
   "kaczy.textSize.v1",
   "kaczy.skinSchedule.v1",
+  // Ramki i poświata (Wygląd): siła ramek, kolor krawędzi i tło kart, siła i barwa poświaty.
+  "kaczy.frames.v1",
+  "kaczy.frames.look.v1",
+  "kaczy.glow.v1",
 ] as const;
 
 const PREFIX = "NOTKI1-";
