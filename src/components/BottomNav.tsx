@@ -65,18 +65,25 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
   // Długie przytrzymanie „+” otwiera arkusz „Nowa”: lista, dyktowanie, zdjęcie, rysunek.
   const [quickOpen, setQuickOpen] = useState(false);
   const pressTimer = useRef<number | undefined>(undefined);
+  // F1.1: pierścień postępu wokół „+” w trakcie przytrzymania (animacja CSS `fab-ring`, 420 ms).
+  const [pressing, setPressing] = useState(false);
   const longPressed = useRef(false);
   const canDictate = typeof window !== "undefined" && ("SpeechRecognition" in window || "webkitSpeechRecognition" in window);
   const startPress = () => {
     longPressed.current = false;
     window.clearTimeout(pressTimer.current);
+    setPressing(true);
     pressTimer.current = window.setTimeout(() => {
       longPressed.current = true;
+      setPressing(false);
       haptic("tap");
       setQuickOpen(true);
     }, 420);
   };
-  const cancelPress = () => window.clearTimeout(pressTimer.current);
+  const cancelPress = () => {
+    window.clearTimeout(pressTimer.current);
+    setPressing(false);
+  };
   // Podpowiedź o przytrzymaniu „+” — raz, już przy pierwszym stuknięciu (wcześniej dopiero po czwartym).
   const hintOnce = () => {
     try {
@@ -137,6 +144,16 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
                 title={view === "study" ? "Nowy wpis z budowy (przytrzymaj: nowa notatka)" : "Nowa notatka (przytrzymaj po więcej)"}
                 className="relative w-14 h-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-glow-primary ring-4 ring-background outline-hidden focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               >
+                {/* Pierścień postępu (F1.1): rośnie przez 420 ms przytrzymania, zanika przy zwolnieniu. */}
+                <svg aria-hidden viewBox="0 0 68 68" className="pointer-events-none absolute -inset-1.5 size-[calc(100%+12px)] -rotate-90">
+                  <circle
+                    className="fab-ring text-primary-foreground/80"
+                    data-pressing={pressing}
+                    data-testid="fab-ring"
+                    cx="34" cy="34" r="31" pathLength={100}
+                    fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"
+                  />
+                </svg>
                 <motion.span
                   aria-hidden
                   className="relative z-raised flex"

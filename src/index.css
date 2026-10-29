@@ -765,6 +765,13 @@ html[data-skin="zeszyt"][data-season] .paper-grid::after {
 }
 
 @layer utilities {
+/* Pierścień przy przytrzymaniu „+” (BottomNav, F1.1): pełny obrót w 420 ms = próg długiego przytrzymania. */
+.fab-ring { stroke-dasharray: 100; stroke-dashoffset: 100; }
+.fab-ring[data-pressing="true"] { animation: fab-ring-fill 420ms linear forwards; }
+@keyframes fab-ring-fill { to { stroke-dashoffset: 0; } }
+@keyframes fab-ring-fade { from { opacity: 0; } to { opacity: 1; } }
+html[data-motion="reduced"] .fab-ring[data-pressing="true"] { stroke-dashoffset: 0; animation: fab-ring-fade 420ms linear forwards; }
+
   @keyframes note-glow-breathe {
     0%, 100% {
       box-shadow:
