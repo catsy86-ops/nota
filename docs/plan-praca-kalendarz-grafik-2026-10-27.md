@@ -140,7 +140,7 @@ Do tego dokumentacja nie nadąża za kodem: `opis.md` (Kalendarz :1397, Grafik :
 | K3.3 | **Filtr warstw** „Terminy · Grafik · Praca · Święta” (zapamiętany) i liczniki miesiąca w nagłówku. Klik w licznik ustawia filtr. | 2 | M |
 | K3.4 | **Konflikt z Grafikiem:** znacznik „w czasie zmiany” przy terminie, który wypada w godzinach pracy (`currentAndNextShift`). Ostrzeżenie w dialogu przy zapisie. | 2 | S |
 | K3.5 | Podgląd notatki po najechaniu na chip (Radix Popover/HoverCard na komputerze) i szukanie terminów w miesiącu (`searchNotes`). | 1 | S |
-| K3.6 | **Tydzień z osią godzin na `xl`:** 7 kolumn, paski zmian, linia „teraz”, przeciąganie w pionie (godzina) i poziomie (dzień) z „Cofnij”. Osobny chunk. **Decyzja K-4.** | 2 | L |
+| K3.6 | **Zrobione (2026-10-29):** tydzień z osią godzin na `xl` — 7 kolumn, paski zmian, linia „teraz”, przeciąganie w pionie (godzina) i poziomie (dzień) z „Cofnij”, osobny chunk. E2e: `calendar-week-axis.spec.ts`. **Decyzja K-4.** | 2 | L |
 
 **K4: wygląd (`frontend-design` najpierw)**
 

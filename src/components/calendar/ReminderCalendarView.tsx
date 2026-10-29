@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { flushSync } from "react-dom";
 import { CalendarLegend } from "./CalendarLegend";
 import { useNotesContext } from "@/hooks/NotesProvider";
@@ -8,7 +8,7 @@ import {
 } from "@dnd-kit/core";
 import { PrintRoot } from "@/components/study/PrintRoot";
 import { CalendarPrintList } from "./CalendarPrintList";
-import { addDays, format } from "date-fns";
+import { addDays, format, startOfWeek } from "date-fns";
 import { pl } from "date-fns/locale";
 import { expandOccurrences, groupByDay, dayKey } from "@/lib/reminderOccurrences";
 import { ruleOf, type RepeatInput } from "@/lib/reminderRepeat";
@@ -44,6 +44,9 @@ import { useLocation, useNavigate } from "react-router-dom";
  * w locie, nie danymi: edytować da się wyłącznie najbliższe wystąpienie,
  * bo tylko ono istnieje w modelu.
  */
+
+// K3.6: oś tygodnia na xl w osobnym chunku (nie w paczce startowej).
+const WeekTimeline = lazy(() => import("./WeekTimeline").then((m) => ({ default: m.WeekTimeline })));
 
 type PhoneView = "month" | "week" | "agenda";
 
@@ -109,6 +112,9 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
   const [phoneView, setPhoneView] = useState<PhoneView>(readPhoneView);
   // Komputer: siatka albo lista miesiąca (K3.2). Telefon ma własny przełącznik `phoneView`.
   const [desktopAgenda, setDesktopAgenda] = useState(false);
+  // Oś tygodnia (K3.6) — tylko od xl; lista ma pierwszeństwo.
+  const [weekAxis, setWeekAxis] = useState(false);
+  const axisShown = weekAxis && !desktopAgenda;
   // Warstwy (K3.3): wybór zapamiętany w przeglądarce; wyłączona warstwa znika z siatki, paska i listy miesiąca.
   const [layers, setLayers] = useState<CalendarLayerState>(readLayers);
   useEffect(() => { writeLayers(layers); }, [layers]);
@@ -277,7 +283,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
     setDialogDay(new Date(occ.at));
   }
 
-  const { handleAttach, handleSkip, handleClear, moveToDay, handleDragEnd } = useCalendarMoves({
+  const { handleAttach, handleSkip, handleClear, moveToDay, moveToHour, handleDragEnd } = useCalendarMoves({
     notesById, onSetReminder, month, setMonth, selectedDay, setSelectedDay,
   });
 
@@ -404,13 +410,20 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
         {/* K-3 (plan Kalendarza 3.4): agenda miesiąca na telefonie — trzeci widok, bez pustych dni. */}
         {/* K3.2: agenda na komputerze (przełącznik „Siatka | Lista”) i na telefonie (widok Lista). Stuknięcie dnia pokazuje panel, nie zmienia widoku. */}
         <div role="group" aria-label="Widok dni" className="order-4 hidden sm:flex justify-end gap-1">
-          {([["grid", "Siatka"], ["list", "Lista"]] as const).map(([v, label]) => (
+          {([
+            ["grid", "Siatka", !desktopAgenda && !axisShown],
+            ["list", "Lista", desktopAgenda],
+            ["axis", "Oś tygodnia", axisShown],
+          ] as const).map(([v, label, pressed]) => (
             <button
               key={v}
               type="button"
-              aria-pressed={(v === "list") === desktopAgenda}
-              onClick={() => setDesktopAgenda(v === "list")}
-              className={`rounded-field px-3 py-1.5 text-xs font-medium coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring ${(v === "list") === desktopAgenda ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:text-foreground"}`}
+              aria-pressed={pressed}
+              onClick={() => {
+                setDesktopAgenda(v === "list");
+                setWeekAxis(v === "axis");
+              }}
+              className={`rounded-field px-3 py-1.5 text-xs font-medium coarse:min-h-11 outline-hidden focus-visible:ring-2 focus-visible:ring-ring ${pressed ? "bg-primary/10 text-primary-ink" : "text-muted-foreground hover:text-foreground"} ${v === "axis" ? "max-xl:hidden" : ""}`}
             >
               {label}
             </button>
@@ -426,7 +439,7 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
             onSelectDay={(key) => { const [y, m, d] = key.split("-").map(Number); selectGridDay(new Date(y, m - 1, d)); }}
           />
         </div>
-        <div className={cn(phoneView === "month" ? "order-5" : "order-5 max-sm:hidden", desktopAgenda && "sm:hidden")}>
+        <div className={cn(phoneView === "month" ? "order-5" : "order-5 max-sm:hidden", desktopAgenda && "sm:hidden", axisShown && "xl:hidden")}>
           <DndContext sensors={sensors} collisionDetection={pointerWithin} onDragEnd={handleDragEnd}>
           <div className="contents" onPointerDown={onSwipeStart} onPointerUp={onSwipeEnd} onPointerCancel={() => { swipeStart.current = null; }}>
           <MonthGrid
@@ -447,6 +460,26 @@ export function ReminderCalendarView({ notes, onCreateNote, onSetReminder, onOpe
           </DndContext>
 
         </div>
+
+        {weekAxis && (
+          <div className={cn("order-5 hidden", axisShown && "xl:block")}>
+            <Suspense fallback={<p className="p-4 text-sm text-muted-foreground">Ładuję oś tygodnia…</p>}>
+              <WeekTimeline
+                weekStart={startOfWeek(selectedDay, { weekStartsOn: 1 })}
+                byDay={shownByDay}
+                titleOf={titleOf}
+                shiftOf={shownShiftOf}
+                onEdit={openEdit}
+                onOpenSeriesSource={openSeriesSource}
+                onMoveToHour={moveToHour}
+                onSelectDay={(day) => {
+                  pickDay(day);
+                  setMonth((m) => (m.getFullYear() === day.getFullYear() && m.getMonth() === day.getMonth() ? m : new Date(day.getFullYear(), day.getMonth(), 1)));
+                }}
+              />
+            </Suspense>
+          </div>
+        )}
       </div>
 
       <aside aria-label="Wybrany dzień i najbliższe terminy" className="contents xl:flex xl:flex-col xl:gap-4 xl:sticky xl:top-24 xl:max-h-[calc(100dvh-7rem)] xl:overflow-y-auto xl:overscroll-contain xl:pb-2">

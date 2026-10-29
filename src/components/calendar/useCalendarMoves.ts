@@ -8,6 +8,7 @@ import { dayKey, type Occurrence } from "@/lib/reminderOccurrences";
 import { toastWithUndo } from "@/lib/undoToast";
 import type { Note } from "@/hooks/useNotes";
 import { markMoved } from "./movedSignal";
+import { retimedAt } from "@/lib/weekAxis";
 
 interface CalendarMovesArgs {
   notesById: Map<string, Note>;
@@ -88,7 +89,23 @@ export function useCalendarMoves({ notesById, onSetReminder, month, setMonth, se
       toast.error("Tej godziny nie ma tego dnia", { description: "Przestawiono zegar (zmiana czasu). Zmień godzinę w edycji." });
       return;
     }
-    const to = new Date(ts);
+    moveToInstant(occ, new Date(ts));
+  }
+
+  /** Przeciągnięcie w pionie na oś tygodnia (K3.6): ten sam dzień i minuta, nowa pełna godzina. */
+  function moveToHour(occ: Occurrence, day: Date, hour: number) {
+    const from = new Date(occ.at);
+    if (isSameDay(from, day) && from.getHours() === hour) return;
+    const ts = retimedAt(day, hour, from.getMinutes());
+    if (ts === null) {
+      toast.error("Tej godziny nie ma tego dnia", { description: "Przestawiono zegar (zmiana czasu). Zmień godzinę w edycji." });
+      return;
+    }
+    moveToInstant(occ, new Date(ts));
+  }
+
+  /** Wspólna ścieżka przeniesienia: zapis, przeskok widoku na nowy dzień i cofnięcie w toaście. */
+  function moveToInstant(occ: Occurrence, to: Date) {
     const before = previousOf(occ.noteId);
     // Odłożone wystąpienie (`reminder` ≠ `reminderBase`): przesuwamy tylko je, a termin serii zostaje —
     // o ile nowy czas wypada przed następnym terminem serii (ta sama reguła co `snoozeTarget`).
@@ -114,5 +131,5 @@ export function useCalendarMoves({ notesById, onSetReminder, month, setMonth, se
     if (occ && day) moveToDay(occ, day);
   }
 
-  return { handleAttach, handleSkip, handleClear, moveToDay, handleDragEnd };
+  return { handleAttach, handleSkip, handleClear, moveToDay, moveToHour, handleDragEnd };
 }
