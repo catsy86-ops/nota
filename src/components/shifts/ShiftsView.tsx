@@ -340,9 +340,11 @@ function ShiftsScreen({ notes }: { notes: Note[] }) {
         import("@/lib/shifts/monthImage"),
         import("@/lib/shifts/monthImageDraw"),
       ]);
-      const layout = monthImageLayout(data, shownMonth.getFullYear(), shownMonth.getMonth());
-      const blob = canvasToPng(renderMonthCanvas(layout, 2, theme));
-      const result = await shareMonthPng(blob, `grafik-${format(shownMonth, "yyyy-MM")}.png`, `Grafik — ${layout.title}`);
+      // G4.7: obraz to pokazany miesiąc i następny, z legendą rodzajów i znacznikiem „dziś”.
+      const nextMonth = addMonths(shownMonth, 1);
+      const layouts = [shownMonth, nextMonth].map((m) => monthImageLayout(data, m.getFullYear(), m.getMonth()));
+      const blob = canvasToPng(renderMonthCanvas(layouts, 2, theme));
+      const result = await shareMonthPng(blob, `grafik-${format(shownMonth, "yyyy-MM")}_${format(nextMonth, "yyyy-MM")}.png`, `Grafik — ${layouts[0].title} i ${layouts[1].title}`);
       if (result === "downloaded") toast.success("Pobrano obraz grafiku (.png)");
       else if (result === "shared") toast.success("Udostępniono grafik");
     } catch {

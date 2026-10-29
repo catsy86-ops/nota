@@ -1,4 +1,5 @@
-import type { MonthImageLayout } from "./monthImage";
+import type { MonthImageLayout, MonthImageLegendItem } from "./monthImage";
+import { mergeMonthLegend } from "./monthImage";
 import { shiftInk } from "./color";
 
 /**
@@ -12,6 +13,7 @@ const TITLE_H = 64;
 const HEAD_H = 36;
 const ROW_H = 96;
 const FOOT_LINE_H = 26;
+const LEGEND_ROW_H = 30;
 const INK = "#1f2937";
 const MUTED = "#6b7280";
 const FONT = "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
@@ -38,42 +40,63 @@ export function imagePalette(theme: ImageTheme): ImagePalette {
   return { bg: "#ffffff", ink: INK, muted: MUTED, empty: "#e5e7eb", chipInk: INK };
 }
 
-/** Rysuje grafik miesiąca na nowym canvasie. Wysokość zależy od liczby tygodni i wierszy podsumowania. */
-export function renderMonthCanvas(layout: MonthImageLayout, scale = 2, theme: ImageTheme = "light"): HTMLCanvasElement {
-  const p = imagePalette(theme);
-  const cols = 7;
-  const cell = (WIDTH - PAD * 2) / cols;
-  const height = TITLE_H + HEAD_H + layout.weeks.length * ROW_H + PAD + layout.footer.length * FOOT_LINE_H + PAD;
-  const canvas = document.createElement("canvas");
-  canvas.width = WIDTH * scale;
-  canvas.height = height * scale;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("canvas 2d niedostępny");
-  ctx.scale(scale, scale);
-  ctx.fillStyle = p.bg;
-  ctx.fillRect(0, 0, WIDTH, height);
-  ctx.textBaseline = "middle";
+/** Wysokość jednego miesiąca: tytuł, nagłówek dni, tygodnie i podsumowanie. */
+function sectionHeight(l: MonthImageLayout): number {
+  return TITLE_H + HEAD_H + l.weeks.length * ROW_H + PAD + l.footer.length * FOOT_LINE_H + PAD;
+}
+
+/** Legenda zawijana w wiersze: każdy rodzaj to kwadrat koloru i „skrót · nazwa”. */
+function legendRows(ctx: CanvasRenderingContext2D, items: MonthImageLegendItem[]): MonthImageLegendItem[][] {
+  const maxW = WIDTH - PAD * 2;
+  ctx.font = `500 15px ${FONT}`;
+  const rows: MonthImageLegendItem[][] = [];
+  let row: MonthImageLegendItem[] = [];
+  let used = 0;
+  for (const item of items) {
+    const w = 14 + 8 + ctx.measureText(`${item.short} · ${item.name}`).width + 24;
+    if (row.length > 0 && used + w > maxW) { rows.push(row); row = []; used = 0; }
+    row.push(item);
+    used += w;
+  }
+  if (row.length > 0) rows.push(row);
+  return rows;
+}
+
+/** Wysokość legendy pod wszystkimi miesiącami (0, gdy nic nie wystąpiło). */
+function legendHeight(rows: MonthImageLegendItem[][]): number {
+  return rows.length === 0 ? 0 : PAD / 2 + FOOT_LINE_H + rows.length * LEGEND_ROW_H + PAD;
+}
+
+/** Rysuje jeden miesiąc od góry `y0`. */
+function drawSection(ctx: CanvasRenderingContext2D, layout: MonthImageLayout, p: ImagePalette, y0: number): void {
+  const cell = (WIDTH - PAD * 2) / 7;
 
   ctx.fillStyle = p.ink;
   ctx.font = `700 30px ${FONT}`;
   ctx.textAlign = "left";
-  ctx.fillText(layout.title, PAD, TITLE_H / 2);
+  ctx.fillText(layout.title, PAD, y0 + TITLE_H / 2);
 
   ctx.font = `600 16px ${FONT}`;
   ctx.fillStyle = p.muted;
   ctx.textAlign = "center";
-  layout.weekdays.forEach((w, i) => ctx.fillText(w, PAD + cell * i + cell / 2, TITLE_H + HEAD_H / 2));
+  layout.weekdays.forEach((w, i) => ctx.fillText(w, PAD + cell * i + cell / 2, y0 + TITLE_H + HEAD_H / 2));
 
   layout.weeks.forEach((week, r) => {
-    const top = TITLE_H + HEAD_H + r * ROW_H;
+    const top = y0 + TITLE_H + HEAD_H + r * ROW_H;
     week.forEach((c, i) => {
       const x = PAD + cell * i;
       ctx.strokeStyle = "#e5e7eb";
       ctx.lineWidth = 1;
       ctx.strokeRect(x + 0.5, top + 0.5, cell - 1, ROW_H - 1);
       if (c.day === null) return;
-      ctx.fillStyle = p.muted;
-      ctx.font = `500 15px ${FONT}`;
+      // Dziś: grubsza ramka w kolorze tekstu i pogrubiony numer (G4.7).
+      if (c.today) {
+        ctx.strokeStyle = p.ink;
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(x + 2, top + 2, cell - 4, ROW_H - 4);
+      }
+      ctx.fillStyle = c.today ? p.ink : p.muted;
+      ctx.font = `${c.today ? 700 : 500} 15px ${FONT}`;
       ctx.textAlign = "left";
       ctx.fillText(String(c.day), x + 10, top + 16);
       if (c.label) {
@@ -95,11 +118,61 @@ export function renderMonthCanvas(layout: MonthImageLayout, scale = 2, theme: Im
     });
   });
 
-  const footTop = TITLE_H + HEAD_H + layout.weeks.length * ROW_H + PAD;
+  const footTop = y0 + TITLE_H + HEAD_H + layout.weeks.length * ROW_H + PAD;
   ctx.fillStyle = p.ink;
   ctx.font = `500 17px ${FONT}`;
   ctx.textAlign = "left";
   layout.footer.forEach((line, i) => ctx.fillText(line, PAD, footTop + i * FOOT_LINE_H + FOOT_LINE_H / 2));
+}
+
+/**
+ * Rysuje grafik na nowym canvasie: miesiące jeden pod drugim (G4.7), a na dole wspólna legenda rodzajów.
+ * Wysokość zależy od liczby tygodni, wierszy podsumowania i liczby rodzajów w legendzie.
+ */
+export function renderMonthCanvas(layouts: MonthImageLayout[], scale = 2, theme: ImageTheme = "light"): HTMLCanvasElement {
+  const p = imagePalette(theme);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("canvas 2d niedostępny");
+
+  // Legendę mierzymy na tym samym kontekście, więc najpierw liczymy wiersze, potem ustawiamy wymiary.
+  const rows = legendRows(ctx, mergeMonthLegend(layouts));
+  const sections = layouts.reduce((sum, l) => sum + sectionHeight(l), 0);
+  const height = sections + legendHeight(rows);
+  canvas.width = WIDTH * scale;
+  canvas.height = height * scale;
+  ctx.scale(scale, scale);
+  ctx.fillStyle = p.bg;
+  ctx.fillRect(0, 0, WIDTH, height);
+  ctx.textBaseline = "middle";
+
+  let y = 0;
+  for (const l of layouts) {
+    drawSection(ctx, l, p, y);
+    y += sectionHeight(l);
+  }
+
+  if (rows.length > 0) {
+    const top = sections + PAD / 2;
+    ctx.fillStyle = p.muted;
+    ctx.font = `600 14px ${FONT}`;
+    ctx.textAlign = "left";
+    ctx.fillText("Legenda", PAD, top + FOOT_LINE_H / 2);
+    ctx.font = `500 15px ${FONT}`;
+    rows.forEach((row, r) => {
+      let x = PAD;
+      const cy = top + FOOT_LINE_H + r * LEGEND_ROW_H + LEGEND_ROW_H / 2;
+      for (const item of row) {
+        ctx.fillStyle = item.color;
+        ctx.fillRect(x, cy - 7, 14, 14);
+        ctx.fillStyle = p.ink;
+        ctx.textAlign = "left";
+        const text = `${item.short} · ${item.name}`;
+        ctx.fillText(text, x + 22, cy);
+        x += 22 + ctx.measureText(text).width + 24;
+      }
+    });
+  }
   return canvas;
 }
 

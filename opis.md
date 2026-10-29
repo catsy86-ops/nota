@@ -669,7 +669,7 @@ Dział opisany w jednym miejscu: rdzeń (dotąd nieopisany) i dodatki z 2026-10-
 - **Kopiowanie zakresu** (4.2): przycisk „Kopiuj zakres dni” w pasku tygodnia otwiera `RangeCopyDialog.tsx` (od–do, początek kopii). `planRangeCopy` w `move.ts` przesuwa dni o różnicę początków, odstępy zostają; `copyRange` w `store.ts`; „Cofnij” w dymku. Testy: `move.test.ts`, `RangeCopyDialog.test.tsx`.
 - **Nakładka drugiego grafiku** (4.1, tylko do odczytu): w `ScheduleSwitcher` wybór „Nakładka: …” (bez aktywnego grafiku). W siatce miesiąca pasek w kolorze zmiany z nakładki i nazwa w etykiecie dnia; pod przełącznikiem licznik wspólnych wolnych dni. Dane z `scheduleDump`. Testy: `ScheduleSwitcher.test.tsx`.
 - **Przełącznik grafików** (4.4): test komponentu (dodawanie, przełączanie, zmiana nazwy, nakładka) w `ScheduleSwitcher.test.tsx`.
-- **Motyw obrazu miesiąca** (4.3): jasny, ciemny albo aktywny styl (kolory z `body`). Wybór: lista obok „Obraz miesiąca” na komputerze, trzy pozycje w menu „Udostępnij” na telefonie. `imagePalette` i parametr `theme` w `monthImageDraw.ts`. Dwa miesiące na jednym obrazie (opcjonalne w planie) nie zrobione.
+- **Motyw obrazu miesiąca** (4.3): jasny, ciemny albo aktywny styl (kolory z `body`). Wybór: lista obok „Obraz miesiąca” na komputerze, trzy pozycje w menu „Udostępnij” na telefonie. `imagePalette` i parametr `theme` w `monthImageDraw.ts`. Dwa miesiące na jednym obrazie: G4.7 (zrobione, patrz „Obraz miesiąca (PNG)”).
 - **Wygląd Grafiku — Etap 5 planu** (wykonane częściowo): znaczniki w komórce (5.1) — najwyżej dwa widoczne (⚠ odpoczynek, ↑/↓ nadgodziny, ☾ noc, • poza grafikiem / w zamian, • notatka), reszta w etykiecie dla czytnika (`ShiftMonthGrid.tsx`, `MAX_MARKS`). Domyślny kolor „Dzień” to pomarańczowy `#fb923c` (5.3, `DEFAULT_SHIFT_TYPES` i `SHIFT_COLORS`; istniejące grafiki zachowują zapisane kolory). Rachunek (5.4): „Razem brutto” w nagłówku, szczegóły rachunku zwinięte w `<details>`. Numer tygodnia ISO w nagłówku widoku tygodnia (5.6). Haptyka „sukces” po „Skończyłem teraz” i nałożeniu cyklu (5.7, `lib/haptics`).
 - **Wygląd Grafiku — pkt 5.2, 5.5, 5.6:** 5.2 — kolory zmian nie są zmieniane (palety nie da się ustawić na 3:1 na każdym stylu naraz); zamiast tego każdy wypełniony znacznik ma obwódkę `ring-foreground` (`ShiftMonthGrid.tsx`), a `shiftChipOutline.test.ts` sprawdza 3:1 tekstu karty względem tła na każdym stylu. 5.5 — na 390 px przełącznik grafików zwinięty do jednego wiersza „Grafik: … ▾” (rozwijany; od sm bez zmian), a przycisk „Nowy grafik” pokazuje samą ikonę poniżej 420 px. Przełącznik Miesiąc/Tydzień jest na telefonie w rzędzie nawigacji (ten sam JSX `viewToggle` w dwóch miejscach, jeden ukryty: `sm:hidden` i `hidden sm:block`). Otwarte: tytuł miesiąca na 390 px nadal się ucina („Październi…”), bo nie ma miejsca na nazwę z rokiem; skrócenie zmieniłoby tekst używany w testach. 5.6 — tabela roku przewija się poziomo (`YearSummaryDialog.tsx`); fala pieczątek po nałożeniu cyklu: `cycleWave.ts` ustawia opóźnienie `--stamp-delay` (40 ms na dzień, tylko dni z cyklu, bez przy ograniczonym ruchu), CSS w `index.css`.
 - **Cofnij / Ponów:** dwa przyciski 44 px nad podpowiedzią pędzla (`ShiftsView.tsx`, stan z `useShiftUndoState`, aktywne wg stosu). Ctrl+Z cofa, Ctrl+Shift+Z ponawia (`useGlobalShortcuts.ts`, na widoku Grafiku). Stos to `Y.UndoManager` (`yShifts.ts`): nowa zmiana czyści stos ponawiania; każdy grafik ma własny stos.
@@ -700,9 +700,10 @@ Dział opisany w jednym miejscu: rdzeń (dotąd nieopisany) i dodatki z 2026-10-
 
 ### Obraz miesiąca (PNG)
 
-- Przycisk „Obraz miesiąca (.png)”: siatka miesiąca (od poniedziałku), skróty i kolory rodzajów, podsumowanie (dni w pracy, godziny, nieobecności, zarobek brutto, jeśli jest stawka).
+- Przycisk „Obraz miesiąca (.png)”: pokazany miesiąc i następny, jeden pod drugim (G4.7). Każdy ma siatkę (od poniedziałku), skróty i kolory rodzajów, podsumowanie (dni w pracy, godziny, nieobecności, zarobek brutto, jeśli jest stawka). Na dole wspólna **legenda** rodzajów, tylko tych, które wystąpiły w obu miesiącach (bez powtórek). Dzisiejszy dzień ma grubszą ramkę i pogrubiony numer (tylko w miesiącu, w którym jest dziś).
+- Układ: `monthImage.ts` (`monthImageLayout(data, y, m, today)` z polami `today` i `legend`, `mergeMonthLegend`). Rysowanie: `monthImageDraw.ts` (`renderMonthCanvas(layouts[], scale, theme)`, sekcje od góry, legenda zawijana w wiersze). Nazwa pliku `grafik-RRRR-MM_RRRR-MM.png`, szerokość 1800 px.
 - Na telefonie otwiera systemowe okno udostępniania z plikiem; gdy go nie ma, pobiera plik. Anulowanie okna nie jest błędem.
-- Obraz jest w jasnych kolorach, niezależnie od motywu. Tylko jeden miesiąc.
+- Obraz jest w kolorach wybranego motywu (jasny, ciemny, styl). Zawsze dwa miesiące: pokazany i następny.
 
 ### Wiele grafików
 
@@ -750,7 +751,7 @@ Dział opisany w jednym miejscu: rdzeń (dotąd nieopisany) i dodatki z 2026-10-
 
 - `src/lib/shifts/shifts.test.ts`, `yShifts.test.ts` (mapy, migracje), `timesheet.test.ts`, `leave.test.ts`, `move.test.ts`, `searchDays.test.ts`, `eveningNudge.test.ts`.
 - `src/lib/shifts/bonus.test.ts` (6): czyszczenie, wpływ na zarobek co do grosza, migracja, Yjs (zapis, usunięcie, scalanie).
-- `src/lib/shifts/monthImage.test.ts` (5): początek tygodnia, skróty i kolory, dzień bez wpisu, tytuł i podsumowanie.
+- `src/lib/shifts/monthImage.test.ts` (8): początek tygodnia, skróty i kolory, dzień bez wpisu, tytuł i podsumowanie, znacznik „dziś”, legenda i jej scalanie. E2e `e2e/shifts-image.spec.ts` (dwa miesiące, nazwa pliku, wymiary PNG).
 - `src/lib/shifts/schedules.test.ts` (9): nazwy, nazewnictwo map, izolacja grafików, rejestr (sortowanie, główny nieusuwalny, usunięcie czyści dane, limit).
 - `src/lib/shifts/reviewFixes.test.ts` (3): `isScheduleId`, zaokrąglenie premii 0,004 vs 0,005, niezależność stawki okresowej.
 - `src/components/shifts/TimeStepper.test.tsx`.
