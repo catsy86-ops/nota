@@ -22,3 +22,17 @@ test("kompozytor: „Cały dzień” zapisuje przypomnienie na 9:00 tego dnia", 
   await page.getByRole("button", { name: "Zapisz", exact: true }).last().click();
   await expect(page.getByText(title).first()).toBeVisible();
 });
+
+// Q1: po zapisie notatki z terminem toast mówi, kiedy zadzwoni (Cofnij bez zmian).
+test("zapis notatki z terminem: toast podaje godzinę przypomnienia", async ({ page }) => {
+  await page.goto("/przypomnienia");
+  await page.getByRole("button", { name: "Nowa notatka" }).first().click();
+  await page.getByRole("checkbox", { name: "Cały dzień (o 9:00)" }).check();
+  // Termin powstaje dopiero po „Zapisz” w pickerze (samo zaznaczenie pola go nie ustawia); potrzebny jest dzień.
+  await page.getByRole("group", { name: "Dzień terminu" }).getByRole("button", { name: "Dziś", exact: true }).click();
+  await page.getByRole("button", { name: "Zapisz", exact: true }).first().click();
+  await page.getByPlaceholder("Tytuł").fill(`Q1 ${Date.now()}`);
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Zapisz", exact: true }).last().click();
+  await expect(page.getByText(/Dodano z terminem: .*09:00/)).toBeVisible();
+});

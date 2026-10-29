@@ -40,7 +40,7 @@ Stan sprawdzony w kodzie na dziś. Nic jeszcze nie zmieniono.
 - **Model danych bez zmian** (`reminder` jako znacznik czasu, `reminderAllDay`, `reminderRepeat`, `reminderRepeatUntil`). Nie dotykamy Yjs, więc nie trzeba bramki `canWriteSchema`.
 
 ### Faza 3: QoL (S)
-- **Q1** Po zapisie terminu z kompozytora toast „Termin zapisany” z „Cofnij” (wzór z `useCalendarMoves`).
+- **Q1 (zrobione 2026-10-29: toast podaje godzinę; „Cofnij” już istniał)** Po zapisie terminu z kompozytora toast „Termin zapisany” z „Cofnij” (wzór z `useCalendarMoves`).
 - **Q2** Domyślna godzina to ostatnio ustawiona (`kaczy.reminder.lastTime`, z rezerwą 09:00). Dla „Cały dzień” bez zmian.
 - **Q3** Parser: sprawdzić, że „jutro 15”, „pt 9:30” i „za 90 min” dają oczekiwany wynik, i dopisać testy tam, gdzie brakuje.
 - **Q4** Szybkie „Dziś, za godzinę” jako pierwszy chip, gdy jest po 8:00 (tylko na telefonie, żeby nie zaśmiecać komputera).

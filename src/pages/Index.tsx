@@ -70,6 +70,7 @@ import { useTodayCards } from "@/lib/todayCards";
 import { useNextBoundary } from "@/hooks/useNextBoundary";
 import { toast } from "sonner";
 import { toastWithUndo } from "@/lib/undoToast";
+import { formatReminderShort } from "@/lib/reminderTime";
 import { downloadNotesZip } from "@/lib/exportZip";
 import { pluralPl } from "@/lib/plural";
 import { DndContext, pointerWithin } from "@dnd-kit/core";
@@ -537,7 +538,10 @@ const Index = () => {
         ...(extras.reminderAllDay ? { reminderAllDay: true } : {}),
       });
     }
-    toastWithUndo("Dodano notatkę", () => deleteNote(id), { icon: "📝", duration: 4000, id: "composer-added" });
+    // Q1: z terminem toast mówi, kiedy zadzwoni; „Cofnij” działa tak samo jak przy zwykłej notatce.
+    const reminderAt = args[4] as number | null;
+    const added = reminderAt !== null && reminderAt !== undefined ? `Dodano z terminem: ${formatReminderShort(reminderAt)}` : "Dodano notatkę";
+    toastWithUndo(added, () => deleteNote(id), { icon: "📝", duration: 4000, id: "composer-added" });
     return id;
   }, [handleAddNoteGlow, updateNote, deleteNote]);
 
