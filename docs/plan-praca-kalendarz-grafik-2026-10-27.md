@@ -173,7 +173,7 @@ Do tego dokumentacja nie nadąża za kodem: `opis.md` (Kalendarz :1397, Grafik :
 | G4.1 | **Alarm przed zmianą:** push N min przed początkiem (domyślnie 60, ustawienie per grafik), z akcją „Skończyłem” po końcu. Lokalny serwer push (`push/schedule.ts:138-170`). **Decyzja G-6.** | 3 | M |
 | G4.2 | **Kreator nowego grafiku:** 3 kroki (stawka i system, rodzaje zmian, pierwszy cykl od dziś) zamiast pustej siatki po „Nowy grafik”. | 2 | M |
 | G4.3 | **Rok w wykresach:** godziny i norma, nadgodziny, zarobek, godziny nocne miesiąc po miesiącu (`recharts`, leniwie, kolory z tokenów, `tabular-nums`). Mapa cieplna roku (własne SVG, dzień = komórka). Tabela zostaje jako wersja dla czytnika. | 2 | M |
-| G4.4 | **Porównanie z paskiem wypłaty:** pole „wypłacono brutto” per miesiąc (nowa mapa Yjs z prefiksem `id:`), różnica od szacunku i podpowiedź, co ją zwykle tłumaczy (nocne, L4, premie). | 2 | S |
+| G4.4 | **Zrobione wcześniej (B5, Fala 4):** porównanie z paskiem wypłaty — pole „wypłacono brutto” per miesiąc (w mapie `meta` jako `paidGross:YYYY-MM`, nie osobna mapa), różnica od szacunku i podpowiedź. Testy: `payslip.test.ts`, `yShifts.test.ts`. | 2 | S |
 | G4.5 | **Import do Grafiku:** `.ics` (reużyty `icsImport.ts`) i CSV w formacie eksportu (`timesheet.ts`, odwrotność), z podglądem i „Cofnij”. | 1 | M |
 | G4.6 | **Zrobione wcześniej (c4f052c, B4):** szablon tygodnia (zapisany osobno od cykli) w palecie („Szablon”) i w pustym miesiącu („Szablon tygodnia”). E2e: `shifts-template.spec.ts`. | 1 | S |
 | G4.7 | **Zrobione (2026-10-29):** obraz z dwoma miesiącami, legenda rodzajów i znacznik „dziś” (dokończenie 4.3). E2e: `shifts-image.spec.ts`. | 1 | S |
