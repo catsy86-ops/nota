@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { seedNotes } from "./helpers";
 
 // F1.1: pierścień postępu przy przytrzymaniu „+” na telefonie.
 
@@ -74,4 +75,21 @@ test("ostatnio wybrany rodzaj jest pierwszy w arkuszu z odznaką", async ({ page
   const tiles = again.getByRole("group", { name: "Rodzaj nowej notatki" }).locator("button");
   await expect(tiles.nth(0)).toContainText("Lista zadań");
   await expect(tiles.nth(0)).toContainText("Ostatnio");
+});
+
+// F1.4: „+” chowa się przy przewijaniu w dół na liście notatek i wraca przy przewijaniu w górę.
+test("„+” chowa się przy przewijaniu w dół i wraca w górę", async ({ page }) => {
+  const notes = Array.from({ length: 60 }, (_, i) => ({
+    id: `fab-${i}`, title: `Notatka ${i}`, content: "Treść do przewijania", color: "default", pinned: false, archived: false, labels: [], createdAt: Date.now() - i, updatedAt: Date.now() - i,
+  }));
+  await seedNotes(page, notes);
+  await page.goto("/");
+  await settledFab(page);
+  const li = page.locator('li[data-fab-hidden]');
+  await expect(li).toHaveAttribute("data-fab-hidden", "false");
+  await page.evaluate(() => window.scrollTo(0, 600));
+  await page.evaluate(() => window.scrollTo(0, 900));
+  await expect(li).toHaveAttribute("data-fab-hidden", "true");
+  await page.evaluate(() => window.scrollTo(0, 700));
+  await expect(li).toHaveAttribute("data-fab-hidden", "false");
 });

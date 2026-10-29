@@ -1,4 +1,4 @@
-﻿import { forwardRef, useRef, useState } from "react";
+﻿import { forwardRef, useEffect, useRef, useState } from "react";
 import { m as motion, LayoutGroup } from "framer-motion";
 import { StickyNote, CalendarDays, Plus, Ellipsis, Archive, Trash, Settings as SettingsIcon, Bell, CircleQuestionMark, RotateCcwClock, CalendarRange, BriefcaseBusiness, HardHat, HandCoins, Dumbbell, Inbox, Moon, Sun, FileDown, Bookmark, ListChecks, Mic, ImagePlus, PenTool, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -67,6 +67,25 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
   const [quickOpen, setQuickOpen] = useState(false);
   // F1.3: ostatnio wybrany rodzaj z arkusza „Nowa” (wraca na górę i dostaje odznakę).
   const [lastQuick, setLastQuick] = useState<QuickKind | null>(readLastQuick);
+  // F1.4: na liście notatek „+” chowa się przy przewijaniu w dół i wraca przy przewijaniu w górę.
+  const [fabHidden, setFabHidden] = useState(false);
+  useEffect(() => {
+    if (view !== "notes") { setFabHidden(false); return; }
+    let last = window.scrollY;
+    let run = 0; // przesunięcie w bieżącym kierunku; zmiana kierunku je zeruje
+    const onScroll = () => {
+      const y = window.scrollY;
+      const d = y - last;
+      last = y;
+      if (y < 80) { run = 0; setFabHidden(false); return; }
+      if (Math.sign(d) !== Math.sign(run)) run = 0;
+      run += d;
+      if (run > 24) setFabHidden(true);
+      else if (run < -12) setFabHidden(false);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [view]);
   const pressTimer = useRef<number | undefined>(undefined);
   // F1.1: pierścień postępu wokół „+” w trakcie przytrzymania (animacja CSS `fab-ring`, 420 ms).
   const [pressing, setPressing] = useState(false);
@@ -126,7 +145,13 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
             ))}
 
             {/* Center FAB */}
-            <li className="flex justify-center -mt-6">
+            <motion.li
+              className="flex justify-center -mt-6"
+              data-fab-hidden={fabHidden}
+              animate={{ y: fabHidden ? 88 : 0, opacity: fabHidden ? 0 : 1 }}
+              transition={reduced ? { duration: 0 } : spring.soft}
+              style={{ pointerEvents: fabHidden ? "none" : undefined }}
+            >
               <motion.button
                 whileTap={reduced ? undefined : { scale: 0.92 }}
                 transition={spring.snap}
@@ -166,7 +191,7 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
                   <Plus className="w-6 h-6" />
                 </motion.span>
               </motion.button>
-            </li>
+            </motion.li>
 
             {[{ key: bottomSlot as View, ...SLOT_META[bottomSlot] }].map(({ key, label, Icon }) => (
               <NavItem key={key} active={view === key} label={label} onClick={() => onGo(key)}>
