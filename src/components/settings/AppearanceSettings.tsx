@@ -15,6 +15,7 @@ import { EffectsSettings } from "./EffectsSettings";
 import { Segmented } from "./Segmented";
 import { SkinPicker } from "./SkinPicker";
 import { AccentPicker } from "./AccentPicker";
+import { FrameLookPicker } from "./FrameLookPicker";
 import { FontPicker } from "./FontPicker";
 import { setAppFont, useAppFont } from "@/lib/appFont";
 import { TextSizeControl } from "./TextSizeControl";
@@ -153,6 +154,9 @@ export function AppearanceSettings() {
         <Section title="Ramki">
           <Segmented label="Ramki" options={framesOptions} value={frames} onChange={setFrames} />
           <p className="text-xs text-muted-foreground mt-1.5">Jak mocno widać krawędzie kart i podziałów. Delikatne — prawie niewidoczne; Wyraźne — pełny kolor motywu.</p>
+          <div className="mt-4">
+            <FrameLookPicker />
+          </div>
         </Section>
 
         <Section title="Tło">
