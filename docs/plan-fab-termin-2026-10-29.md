@@ -31,7 +31,7 @@ Stan sprawdzony w kodzie na dziś. Nic jeszcze nie zmieniono.
 - **F1.4 (zrobione 2026-10-29)** FAB chowa się przy przewijaniu w dół i wraca przy przewijaniu w górę (z redukcją ruchu: bez animacji). Tylko na liście notatek, nie w Kalendarzu ani Grafiku.
 - **F1.5 (zrobione 2026-10-29)** Kafle w arkuszu co najmniej 44 px (`coarse:min-h-11`), skróty opisane dla czytnika.
 
-### Faza 2: data i godzina terminu (M)
+### Faza 2: data i godzina terminu (M) — F2.1 zrobione 2026-10-29
 - **F2.1** Na telefonie picker otwiera się jako dolny arkusz (`Sheet`, ta sama treść co Popover), pełna szerokość, pola ≥44 px. Na komputerze zostaje Popover.
 - **F2.2** Górny rząd: chipy dnia „Dziś / Jutro / Pojutrze / Za tydzień / Wybierz…”. Kalendarzyk pojawia się dopiero po „Wybierz…”. Pod spodem godzina: pole `type="time"` i chipy 08:00, 12:00, 15:00, 18:00, 20:00.
 - **F2.3** Podgląd na żywo: „Zapiszę: jutro, 15:30” pod polami, z tą samą zasadą co „Rozpoznano” w Kalendarzu. Zmiana tekstu aktualizuje pola i podgląd.

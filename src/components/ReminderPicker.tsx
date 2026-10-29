@@ -2,6 +2,8 @@ import { forwardRef, useEffect, useId, useRef, useState, type HTMLAttributes, ty
 import { Bell, Repeat, X } from "lucide-react";
 import { formatReminderShort } from "@/lib/reminderTime";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { LazyCalendar as Calendar } from "@/components/ui/lazy-calendar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -50,6 +52,33 @@ function presets(now = new Date(), shifts?: ShiftData): { label: string; at: Dat
   return list.filter((p) => p.at.getTime() > now.getTime());
 }
 
+
+/**
+ * Powłoka pickera (F2.1): na telefonie dolny arkusz, na komputerze dotychczasowy Popover.
+ * Treść jest ta sama; zmienia się tylko kontener i to, jak się otwiera.
+ */
+function ReminderSurface({ open, onOpenChange, trigger, children }: { open: boolean; onOpenChange: (next: boolean) => void; trigger: ReactNode; children: ReactNode }) {
+  const mobile = useMediaQuery("(max-width: 639px)");
+  if (mobile) {
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetTrigger asChild>{trigger}</SheetTrigger>
+        <SheetContent side="bottom" snap className="max-h-[88dvh] overflow-y-auto rounded-t-3xl border-t border-border/60 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-5 space-y-3" onClick={(e) => e.stopPropagation()}>
+          <SheetHeader className="sr-only"><SheetTitle>Przypomnienie</SheetTitle></SheetHeader>
+          {children}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+  return (
+    <Popover open={open} onOpenChange={onOpenChange}>
+      <PopoverTrigger asChild>{trigger}</PopoverTrigger>
+      <PopoverContent className="w-auto max-w-74 max-h-(--radix-popover-content-available-height) overflow-y-auto p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
+        {children}
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminderRepeatUntil, reminderAllDay, onSet, trigger, openSignal }: ReminderPickerProps) {
   const [open, setOpen] = useState(false);
@@ -131,9 +160,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
   }
 
   return (
-    <Popover open={open} onOpenChange={openChange}>
-      <PopoverTrigger asChild>
-        {trigger ?? (
+    <ReminderSurface open={open} onOpenChange={openChange} trigger={trigger ?? (
           <motion.button
             aria-label="Przypomnienie"
             className={cn(
@@ -144,9 +171,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
           >
             <Bell className={cn("w-4 h-4", reminder && "fill-current")} />
           </motion.button>
-        )}
-      </PopoverTrigger>
-      <PopoverContent className="w-auto max-w-74 max-h-(--radix-popover-content-available-height) overflow-y-auto p-3 space-y-3" align="start" onClick={(e) => e.stopPropagation()}>
+        )}>
         <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Przypomnienie</p>
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Szybkie terminy">
           {presets(new Date(), shifts).map((p) => (
@@ -180,7 +205,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="text-sm bg-muted/60 border border-border rounded-field px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground"
+              className="max-sm:h-11 text-sm bg-muted/60 border border-border rounded-field px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground"
             />
           </div>
         )}
@@ -205,7 +230,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
               min={timestamp !== null ? dayInputValue(timestamp) : undefined}
               onChange={(e) => setUntilText(e.target.value)}
               aria-describedby={`${uid}-until-hint`}
-              className="text-xs bg-muted/60 border border-border rounded-field px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground"
+              className="max-sm:h-11 text-xs bg-muted/60 border border-border rounded-field px-2 py-1 outline-hidden focus:ring-2 focus:ring-ring text-foreground"
             />
             {untilText && (
               <button type="button" onClick={() => setUntilText("")} aria-label="Bez końca serii" className="p-1 rounded text-muted-foreground hover:text-foreground">
@@ -235,8 +260,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
             </Button>
           )}
         </div>
-      </PopoverContent>
-    </Popover>
+    </ReminderSurface>
   );
 }
 
