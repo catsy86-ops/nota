@@ -896,6 +896,12 @@ html[data-motion="reduced"] .now-bar-sheen { display: none; }
 @keyframes chip-drop { 0% { transform: scale(1.1); } 55% { transform: scale(0.96); } 100% { transform: scale(1); } }
 .chip-drop { animation: chip-drop var(--dur-slow) var(--ease-out); }
 
+/* Arkusze „+” (Faza 4 wyglądu): tytuł w Fraunces (zeszyt), etykiety kroków w wąskim Barlow Condensed,
+   kafle wjeżdżają kaskadą. Reguła ograniczonego ruchu skraca animacje globalnie, więc nic tu nie wymaga osobnej obsługi. */
+.sheet-title-serif { font-family: 'Fraunces Variable', 'Fraunces', Georgia, serif; font-variation-settings: "SOFT" 50, "WONK" 0; letter-spacing: -0.01em; }
+.kicker { font-family: 'Barlow Condensed', sans-serif; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
+.tile-enter { animation: rise-in var(--dur-base) var(--ease-out) backwards; animation-delay: calc(var(--i, 0) * 45ms + 60ms); }
+
 /* Odhaczanie pozycji listy (ChecklistEditor). Ptaszek się rysuje
    (pathLength=1 → dasharray/dashoffset w jednostkach 0..1), kreska przesuwa
    się przez tekst od lewej. Odhaczenie: 220–320 ms ease-out, odznaczenie:

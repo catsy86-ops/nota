@@ -73,7 +73,7 @@ const chipClass = "rounded-full border px-2.5 py-1 text-xs transition-colors coa
 /** Etykieta kroku w pickerze (zeszytowa, z przerywaną linią): kolejność dnia, godziny i powtarzania. */
 function StepLabel({ children }: { children: ReactNode }) {
   return (
-    <p aria-hidden className="flex items-center gap-2 text-2xs font-semibold uppercase tracking-wider text-muted-foreground">
+    <p aria-hidden className="kicker flex items-center gap-2 text-xs text-muted-foreground">
       <span>{children}</span>
       <span className="h-px flex-1 border-t border-dashed border-border/70" />
     </p>
@@ -91,7 +91,7 @@ function ReminderSurface({ open, onOpenChange, trigger, children }: { open: bool
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetTrigger asChild>{trigger}</SheetTrigger>
         <SheetContent side="bottom" snap data-reminder-sheet className="max-h-[88dvh] overflow-y-auto rounded-t-3xl border-t border-border/60 px-4 pb-[calc(env(safe-area-inset-bottom)+16px)] pt-5 space-y-3" onClick={(e) => e.stopPropagation()}>
-          <SheetHeader className="sr-only"><SheetTitle>Przypomnienie</SheetTitle></SheetHeader>
+          <SheetHeader className="sr-only"><SheetTitle className="sheet-title-serif text-2xl">Przypomnienie</SheetTitle></SheetHeader>
           {children}
         </SheetContent>
       </Sheet>

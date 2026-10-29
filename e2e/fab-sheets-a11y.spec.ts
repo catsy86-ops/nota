@@ -26,6 +26,8 @@ test.beforeEach(async ({ page }) => {
 test("arkusz „Nowa” przechodzi axe", async ({ page }) => {
   const sheet = await openNowa(page);
   await expect(sheet).toBeVisible();
+  // Kafle wjeżdżają kaskadą (opacity od 0); mierzymy kontrast dopiero po animacjach.
+  await page.waitForTimeout(700);
   const result = await new AxeBuilder({ page }).include('[role="dialog"]').withTags(TAGS).analyze();
   expect(result.violations.map((v) => v.id)).toEqual([]);
 });
@@ -35,6 +37,8 @@ test("arkusz terminu przechodzi axe", async ({ page }) => {
   await page.getByRole("button", { name: "Przypomnienie", exact: true }).first().click();
   const sheet = page.getByRole("dialog", { name: "Przypomnienie" });
   await expect(sheet).toBeVisible();
+  // Kafle wjeżdżają kaskadą (opacity od 0); mierzymy kontrast dopiero po animacjach.
+  await page.waitForTimeout(700);
   const result = await new AxeBuilder({ page }).include('[role="dialog"]').withTags(TAGS).analyze();
   expect(result.violations.map((v) => v.id)).toEqual([]);
 });

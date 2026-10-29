@@ -214,13 +214,14 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
       <Sheet open={quickOpen} onOpenChange={setQuickOpen}>
         <SheetContent side="bottom" snap className="rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+16px)] border-t border-border/60">
           <SheetHeader className="text-left">
-            <SheetTitle className="font-display text-2xl">Nowa</SheetTitle>
+            <SheetTitle className="sheet-title-serif text-3xl">Nowa</SheetTitle>
             <SheetDescription>Co zapisać? Stuknij „+”, by od razu napisać notatkę.</SheetDescription>
           </SheetHeader>
           <div className="mt-4 flex flex-col gap-2" role="group" aria-label="Rodzaj nowej notatki">
-            {orderByRecent(QUICK_TILES.filter((t) => t.kind !== "dictate" || canDictate), lastQuick).map((t) => (
+            {orderByRecent(QUICK_TILES.filter((t) => t.kind !== "dictate" || canDictate), lastQuick).map((t, index) => (
               <QuickTile
                 key={t.kind}
+                index={index}
                 Icon={t.Icon}
                 title={t.title}
                 hint={t.hint}
@@ -340,6 +341,13 @@ function SheetGroup({ title, children }: { title: string; children: React.ReactN
 }
 
 type QuickTone = "primary" | "success" | "warning";
+/** Pasek przy kaflu w barwie jego rodzaju (kolor z tokenów motywu). */
+const QUICK_STRIPE: Record<QuickTone, string> = {
+  primary: "bg-primary",
+  success: "bg-success",
+  warning: "bg-warning",
+};
+
 const QUICK_TONE: Record<QuickTone, string> = {
   primary: "bg-primary/15 text-primary-ink",
   success: "bg-success/15 text-success-ink",
@@ -357,13 +365,15 @@ const QUICK_TILES: { kind: QuickKind; Icon: React.ComponentType<{ className?: st
   { kind: "dictate", Icon: Mic, title: "Dyktuj", hint: "Mów, a zamienię na tekst", tone: "warning" },
 ];
 
-function QuickTile({ Icon, title, hint, tone, recent = false, onClick }: { Icon: React.ComponentType<{ className?: string }>; title: string; hint: string; tone: QuickTone; recent?: boolean; onClick: () => void }) {
+function QuickTile({ Icon, title, hint, tone, recent = false, index = 0, onClick }: { Icon: React.ComponentType<{ className?: string }>; title: string; hint: string; tone: QuickTone; recent?: boolean; index?: number; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={cn("pressable group flex items-center gap-3 rounded-card border bg-card px-3 py-2.5 coarse:min-h-14 text-left transition-colors hover:border-primary/40 hover:bg-muted/40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring", recent ? "border-primary/50 bg-primary/5" : "border-border/60")}
+      style={{ "--i": index } as React.CSSProperties}
+      className={cn("tile-enter pressable group relative flex items-center gap-3 overflow-hidden rounded-card border bg-card py-2.5 pl-4 pr-3 coarse:min-h-14 text-left transition-colors hover:border-primary/40 hover:bg-muted/40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring", recent ? "border-primary/50 bg-primary/5" : "border-border/60")}
     >
+      <span aria-hidden className={cn("absolute inset-y-0 left-0 w-1", QUICK_STRIPE[tone])} />
       <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-card transition-transform duration-200 group-hover:-rotate-6 motion-reduce:transition-none", QUICK_TONE[tone])} aria-hidden>
         <Icon className="h-5 w-5" />
       </span>
