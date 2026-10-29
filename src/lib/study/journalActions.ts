@@ -1,4 +1,5 @@
 import type { Fitting } from "./fittings";
+import type { Pipe } from "./pipes";
 import type { Attachment } from "@/lib/attachments";
 import { TOPICS } from "./content";
 import { yStudy } from "./data";
@@ -29,6 +30,8 @@ export interface NewJournalEntry {
   test?: PressureTest | null;
   /** Zużyte kształtki; puste/brak = bez kształtek. */
   fittings?: Fitting[];
+  /** Zużyte rury (cm); puste/brak = bez rur. */
+  pipes?: Pipe[];
   /** Etap budowy zamknięty tym wpisem (id z karty); `null`/brak = bez etapu. */
   stage?: string | null;
   /** „Tu jestem” — lokalizacja wpisu; `null`/brak = bez lokalizacji. Sama nie czyni wpisu niepustym. */
@@ -48,11 +51,12 @@ function entryFields(input: NewJournalEntry, now: number) {
     recordings: input.recordings ?? [],
     test: input.test,
     fittings: input.fittings,
+    pipes: input.pipes,
     stage: input.stage,
     geo: input.geo,
   });
   if (parts.empty) return null;
-  const { text, checked, images, captions, drawnFrom, recordings, test, fittings, stage, geo } = parts;
+  const { text, checked, images, captions, drawnFrom, recordings, test, fittings, pipes, stage, geo } = parts;
   return {
     at: typeof input.at === "number" && Number.isFinite(input.at) ? Math.min(input.at, now) : now,
     kind: input.kind,
@@ -65,6 +69,7 @@ function entryFields(input: NewJournalEntry, now: number) {
     ...(recordings.length ? { recordings } : {}),
     ...(test ? { test } : {}),
     ...(fittings.length ? { fittings } : {}),
+    ...(pipes.length ? { pipes } : {}),
     ...(stage ? { stage } : {}),
     ...(geo ? { geo } : {}),
   };

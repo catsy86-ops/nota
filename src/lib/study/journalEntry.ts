@@ -1,4 +1,5 @@
 import { cleanFittings, type Fitting } from "./fittings";
+import { cleanPipes, type Pipe } from "./pipes";
 import { isImageRef } from "@/lib/imageStore";
 import type { Attachment } from "@/lib/attachments";
 import { cleanTest, type PressureTest } from "./pressureTest";
@@ -53,6 +54,8 @@ export interface JournalEntry {
   test?: PressureTest;
   /** Zużyte kształtki (`fittings.ts`); brak = bez kształtek. */
   fittings?: Fitting[];
+  /** Zużyte rury w centymetrach (`pipes.ts`, H1.1); brak = bez rur. Starsza wersja pole pomija. */
+  pipes?: Pipe[];
   /** Etap budowy (id z listy karty, `stages.ts`), który ten wpis zamknął — zdjęcia idą do protokołu przy etapie. */
   stage?: string;
   /** „Tu jestem”: gdzie zapisano wpis (`geo.ts`); tylko po stuknięciu, nie trafia do raportu. */
@@ -81,7 +84,7 @@ export const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
  * materiału), zdjęcia, próba, kształtki, etap, lokalizacja. `empty` = nic w tym nie ma
  * (sprawdzane przed filtrem materiału — wpis z odhaczeniami, których punkt zniknął, zostaje).
  */
-export function cleanEntryParts(e: { text?: unknown; checked?: unknown; images?: unknown; captions?: unknown; drawnFrom?: unknown; recordings?: unknown; test?: unknown; fittings?: unknown; stage?: unknown; geo?: unknown }) {
+export function cleanEntryParts(e: { text?: unknown; checked?: unknown; images?: unknown; captions?: unknown; drawnFrom?: unknown; recordings?: unknown; test?: unknown; fittings?: unknown; pipes?: unknown; stage?: unknown; geo?: unknown }) {
   const text = typeof e.text === "string" ? e.text.slice(0, JOURNAL_MAX_TEXT) : "";
   const checked = Array.isArray(e.checked) ? e.checked.filter((id): id is string => typeof id === "string" && id.length <= 64).slice(0, 60) : [];
   const images = Array.isArray(e.images) ? e.images.filter((r): r is string => typeof r === "string" && isImageRef(r)).slice(0, JOURNAL_MAX_IMAGES) : [];
@@ -90,10 +93,11 @@ export function cleanEntryParts(e: { text?: unknown; checked?: unknown; images?:
   const recordings = cleanRecordings(e.recordings);
   const test = cleanTest(e.test);
   const fittings = cleanFittings(e.fittings);
+  const pipes = cleanPipes(e.pipes);
   const stage = cleanEntryStage(e.stage);
   const geo = cleanGeo(e.geo);
-  const empty = !text.trim() && checked.length === 0 && images.length === 0 && recordings.length === 0 && !test && fittings.length === 0 && !stage;
-  return { text, checked, images, captions, drawnFrom, recordings, test, fittings, stage, geo, empty };
+  const empty = !text.trim() && checked.length === 0 && images.length === 0 && recordings.length === 0 && !test && fittings.length === 0 && pipes.length === 0 && !stage;
+  return { text, checked, images, captions, drawnFrom, recordings, test, fittings, pipes, stage, geo, empty };
 }
 
 /**
@@ -123,7 +127,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
   if (typeof e.id !== "string" || !e.id || e.id.length > 64) return null;
   if (typeof e.at !== "number" || !Number.isFinite(e.at)) return null;
   if (!JOURNAL_KINDS.includes(e.kind as JournalKind)) return null;
-  const { text, checked, images, captions, drawnFrom, recordings, test, fittings, stage, geo, empty } = cleanEntryParts(e);
+  const { text, checked, images, captions, drawnFrom, recordings, test, fittings, pipes, stage, geo, empty } = cleanEntryParts(e);
   if (empty) return null;
   return {
     id: e.id, at: e.at, kind: e.kind as JournalKind,
@@ -143,6 +147,7 @@ export function cleanEntry(raw: unknown): JournalEntry | null {
     ...(e.kind === "problem" && Array.isArray(e.after) && e.after.length ? { after: e.after.filter((r): r is string => typeof r === "string" && isImageRef(r)).slice(0, FAULT_AFTER_MAX) } : {}),
     ...(test ? { test } : {}),
     ...(fittings.length ? { fittings } : {}),
+    ...(pipes.length ? { pipes } : {}),
     ...(stage ? { stage } : {}),
     ...(geo ? { geo } : {}),
   };
@@ -159,7 +164,7 @@ export const ORDERED_ENTRY_LISTS = new Set<string>(["images", "fittings"]);
  */
 export const JOURNAL_ENTRY_KEYS: ReadonlySet<string> = new Set([
   "id", "at", "kind", "topic", "text", "site", "siteId", "checked", "images", "captions", "drawnFrom", "recordings",
-  "resolved", "solution", "test", "fittings", "stage", "geo", "owner", "due", "after",
+  "resolved", "solution", "test", "fittings", "pipes", "stage", "geo", "owner", "due", "after",
 ]);
 
 /** Oryginały narysowanych zdjęć (H0.1): tylko dla zdjęć ze `images`, oryginał to poprawny, inny klucz. */

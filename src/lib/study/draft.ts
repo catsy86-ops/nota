@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from "react";
 import { createPersistedStore } from "@/lib/persistedStore";
 import { type Fitting } from "./fittings";
+import type { Pipe } from "./pipes";
 import { type PressureTest } from "./pressureTest";
 import { JOURNAL_DRAFT_KEY } from "./keys";
 import { type GeoPoint } from "./geo";
@@ -27,6 +28,8 @@ export interface JournalDraft {
   test: PressureTest | null;
   /** Zużyte kształtki. */
   fittings: Fitting[];
+  /** Zużyte rury (cm, H1.1); brak w starszym szkicu = bez rur. */
+  pipes?: Pipe[];
   /** Moment wpisu ustawiony ręcznie („za wczoraj”); `null` = chwila zapisu. */
   at: number | null;
   /** Etap budowy odhaczony z tego wpisu (id z karty); `null` = bez etapu. Brak w starszym szkicu = `null`. */
@@ -53,6 +56,7 @@ export function sanitizeDraft(defaults: JournalDraft, stored: unknown): JournalD
     recordings: parts.recordings,
     test: parts.test,
     fittings: parts.fittings,
+    ...(parts.pipes.length ? { pipes: parts.pipes } : {}),
     at: typeof s.at === "number" && Number.isFinite(s.at) ? s.at : null,
     stage: parts.stage ?? null,
     geo: parts.geo ?? null,
@@ -66,7 +70,7 @@ export const getJournalDraft = () => store.get();
 
 /** Szkic ma treść (tekst, zdjęcia, nagrania, odhaczenia, próba albo kształtki) — „Dokończ wpis” zamiast „Wpis”. */
 export function draftHasContent(d: JournalDraft): boolean {
-  return !!d.text.trim() || d.images.length > 0 || d.recordings.length > 0 || d.checked.length > 0 || d.test !== null || d.fittings.length > 0;
+  return !!d.text.trim() || d.images.length > 0 || d.recordings.length > 0 || d.checked.length > 0 || d.test !== null || d.fittings.length > 0 || (d.pipes?.length ?? 0) > 0;
 }
 
 /** Samo „czy jest szkic” — pisanie w arkuszu nie przerysowuje dziennika, bo wartość zmienia się tylko na granicy pusty/niepusty. */

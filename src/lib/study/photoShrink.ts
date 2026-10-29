@@ -49,7 +49,7 @@ export async function shrinkSitePhotos(entries: readonly JournalEntry[]): Promis
     const captions = Object.fromEntries(Object.entries(e.captions ?? {}).map(([r, t]) => [map.get(r) ?? r, t]));
     updateJournalEntry(e.id, {
       kind: e.kind, topic: e.topic, text: e.text, checked: e.checked, images, captions,
-      recordings: e.recordings, at: e.at, test: e.test ?? null, fittings: e.fittings, stage: e.stage ?? null,
+      recordings: e.recordings, at: e.at, test: e.test ?? null, fittings: e.fittings, pipes: e.pipes, stage: e.stage ?? null,
       geo: e.geo ?? null, site: e.site, resolved: e.resolved ?? null,
     });
   }

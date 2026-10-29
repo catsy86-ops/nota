@@ -49,6 +49,7 @@ export function openJournalEdit(entry: JournalEntry) {
     checked: [...entry.checked], images: [...entry.images], captions: { ...(entry.captions ?? {}) }, drawnFrom: { ...(entry.drawnFrom ?? {}) }, recordings: [...(entry.recordings ?? [])], site: entry.site, resolved: entry.resolved ?? null,
     test: entry.test ?? null,
     fittings: entry.fittings ?? [],
+    pipes: entry.pipes ?? [],
     stage: entry.stage ?? null,
     geo: entry.geo ?? null,
   };

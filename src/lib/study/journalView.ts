@@ -2,6 +2,7 @@ import { pluralPl } from "@/lib/plural";
 import type { JournalEntry, JournalKind } from "./yStudy";
 import { entrySiteId, fold } from "./sites";
 import { fittingsLine } from "./fittings";
+import { pipesLine } from "./pipes";
 import { testLine } from "./pressureTest";
 
 export const KIND_LABEL: Record<JournalKind, string> = { ok: "Zrobione", problem: "Problem", note: "Notatka" };
@@ -17,11 +18,12 @@ export function dayLabel(at: number, now: number = Date.now()): string {
  * Nagłówek wpisu: tekst, a bez tekstu — to, co wpis zawiera (próba, kształtki, lista, nagranie, zdjęcie).
  * Wspólny dla osi dziennika, okna raportu i tekstu raportu (WhatsApp, wydruk).
  */
-export function entryHeadline(e: Pick<JournalEntry, "text" | "test" | "fittings" | "checked" | "recordings" | "images">): string {
+export function entryHeadline(e: Pick<JournalEntry, "text" | "test" | "fittings" | "pipes" | "checked" | "recordings" | "images">): string {
   const text = e.text.trim();
   if (text) return text;
   if (e.test) return "Próba szczelności";
   if (e.fittings?.length) return "Kształtki";
+  if (e.pipes?.length) return "Rury";
   if (e.checked.length) return "Sprawdzone punkty listy";
   if (e.recordings?.length) return "Nagranie";
   if (e.images.length) return "Zdjęcie";
@@ -93,7 +95,7 @@ export function filterJournal<E extends JournalEntry>(
     // Kształtki i próba szczelności też są w wyszukiwaniu (§9 D1): „kolano”, „9 bar” znajdą wpis.
     const hay = fold([
       e.text, e.solution ?? "", e.site, e.topic ? topicTitle(e.topic) ?? "" : "", KIND_LABEL[e.kind],
-      e.fittings?.length ? fittingsLine(e.fittings) : "", e.test ? testLine(e.test) : "",
+      e.fittings?.length ? fittingsLine(e.fittings) : "", e.pipes?.length ? pipesLine(e.pipes) : "", e.test ? testLine(e.test) : "",
     ].join(" "));
     return words.every((w) => hay.includes(w));
   });

@@ -727,3 +727,19 @@ describe("„Oznacz jako zamówione” z brakami i „Cofnij” (1.7 planu Praca
     expect(site().shortages?.map((x) => [x.id, x.status])).toEqual([["b1", "missing"], ["b2", "delivered"]]);
   });
 });
+
+describe("rury we wpisie (H1.1)", () => {
+  beforeEach(freshStudy);
+
+  it("zapis i edycja zachowują rury; edycja bez zmiany rur ich nie kasuje", () => {
+    setSite("Lipowa 5");
+    const e = addJournalEntry({ kind: "ok", topic: null, text: "", pipes: [{ name: "Rura PEX 16×2", cm: 2450 }] }, 1000)!;
+    expect(e.pipes).toEqual([{ name: "Rura PEX 16×2", cm: 2450 }]);
+    openJournalEdit(getStudy().journal[0]);
+    const form = getJournalEditForm()!;
+    expect(form.pipes).toEqual([{ name: "Rura PEX 16×2", cm: 2450 }]);
+    const updated = updateJournalEntry(e.id, { ...form, topic: null, text: "Rozprowadzenie", site: "Lipowa 5" })!;
+    expect(updated.pipes).toEqual([{ name: "Rura PEX 16×2", cm: 2450 }]);
+    closeJournalSheet();
+  });
+});
