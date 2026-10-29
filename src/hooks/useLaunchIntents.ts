@@ -8,6 +8,7 @@ import { claimShare, parseShare, SHARE_PATH } from "@/lib/shareTarget";
 import { takeShareInbox, importSharedFiles } from "@/lib/shareInbox";
 import { describeRejections } from "@/lib/attachments";
 import { yjsStore } from "@/lib/yjsStore";
+import { yStudy } from "@/lib/study/data";
 
 type AddNote = ReturnType<typeof useNotes>["addNote"];
 
@@ -52,16 +53,51 @@ export function useLaunchIntents(deps: LaunchIntentsDeps) {
           toast.error("Z udostępnienia nie ma czego zapisać");
           return;
         }
-        const id = add(text.title, text.content, "default", [], null, imported.images, [], "none", null, imported.attachments);
-        if (imported.unsupported.length) {
-          toast.error(`Nie przyjęto: ${imported.unsupported.join(", ")}`, { description: "Z plików przyjmuję obrazy i PDF.", duration: 9000 });
-        }
-        if (imported.skippedImages > 0) {
-          toast.error(imported.skippedImages === 1 ? "Nie udało się zmniejszyć obrazka do 2 MB" : `${imported.skippedImages} obrazków nie udało się zmniejszyć do 2 MB`);
-        }
-        const problem = describeRejections(imported.rejected);
-        if (problem) toast.error("Część plików nie została dodana", { description: problem, duration: 9000 });
-        toast.success("Zapisano w NOTKACH", { action: { label: "Otwórz", onClick: () => open(id) } });
+        const warn = () => {
+          if (imported.unsupported.length) {
+            toast.error(`Nie przyjęto: ${imported.unsupported.join(", ")}`, { description: "Z plików przyjmuję obrazy i PDF.", duration: 9000 });
+          }
+          if (imported.skippedImages > 0) {
+            toast.error(imported.skippedImages === 1 ? "Nie udało się zmniejszyć obrazka do 2 MB" : `${imported.skippedImages} obrazków nie udało się zmniejszyć do 2 MB`);
+          }
+          const problem = describeRejections(imported.rejected);
+          if (problem) toast.error("Część plików nie została dodana", { description: problem, duration: 9000 });
+        };
+        const saveAsNote = () => {
+          const id = add(text.title, text.content, "default", [], null, imported.images, [], "none", null, imported.attachments);
+          warn();
+          toast.success("Zapisano w NOTKACH", { action: { label: "Otwórz", onClick: () => open(id) } });
+        };
+        // H4.1: same zdjęcia, a Praca jest w użyciu — pytamy, czy to wpis z budowy. Zamknięcie dymku albo brak
+        // odpowiedzi zapisuje notatkę jak dotąd, więc zdjęcia nigdy nie przepadają.
+        const study = yStudy.get();
+        const usesWork = study.journal.length > 0 || Object.keys(study.sites).length > 0;
+        if (imported.images.length === 0 || imported.attachments.length > 0 || !usesWork) { saveAsNote(); return; }
+        let decided = false;
+        const asNote = () => { if (decided) return; decided = true; saveAsNote(); };
+        const asEntry = () => {
+          if (decided) return;
+          decided = true;
+          void import("@/lib/study/shareToEntry").then(({ sharedToEntry }) => {
+            const extra = sharedToEntry(imported.images, [text.title, text.content].filter(Boolean).join("\n"));
+            warn();
+            latest.current.navigate("/praca?wpis=1");
+            // U góry: na dole leży „Zapisz wpis” otwartego arkusza.
+            if (extra > 0) toast.success(extra === 1 ? "Reszta zdjęć zapisana w kolejnym wpisie" : `Reszta zdjęć zapisana w ${extra} kolejnych wpisach`, { position: "top-center" });
+          }, () => asNoteAfterFailure());
+        };
+        // Moduł wpisu nie doszedł (brak sieci przy pierwszym użyciu) — zdjęcia idą do notatki.
+        const asNoteAfterFailure = () => saveAsNote();
+        const n = imported.images.length;
+        toast(`Zapisać ${n === 1 ? "zdjęcie" : `${n} zdjęć`} jako…`, {
+          id: "share-choice",
+          duration: 20_000,
+          description: study.site ? `Wpis z budowy: ${study.site}` : undefined,
+          action: { label: "Wpis z budowy", onClick: asEntry },
+          cancel: { label: "Notatka", onClick: asNote },
+          onDismiss: asNote,
+          onAutoClose: asNote,
+        });
       });
     } else if (shared) {
       // Adres czyścimy od razu — odświeżenie nie ma co powtarzać; `claimShare`
