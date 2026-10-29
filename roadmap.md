@@ -1181,3 +1181,7 @@ Pełny plan: `docs/plan-ui-motywy-2026-10-27.md` (Fazy 0–5: fundament skórek 
 ## Plan Pracy, Kalendarza i Grafiku — 2026-10-27
 
 Pełny plan: `docs/plan-praca-kalendarz-grafik-2026-10-27.md`. Zastępuje otwarte części planów Kalendarza, Grafiku i Pracy z 25.10 (sprawdzone w kodzie na `73a913f`). Fala A: błędy, w tym treść notatki prywatnej w `.ics`, rysunek niszczący zdjęcie, 6 drobnych błędów Grafiku i dokumentacja. Fala B: wydajność siatki i rachunku, podział dużych plików. Dalej: Kalendarz K1–K4 (zaległe, adres dnia, otwieranie notatki, skróty, agenda, filtr warstw, konflikt ze zmianą, tydzień z osią), Grafik G2–G4 (alarm przed zmianą, kreator, wykresy roku, pasek wypłaty, import), Praca P2–P5 (zdjęcie jednym stuknięciem, zdjęcia przed zakryciem, usterki, podpis klienta, PDF, materiał, czas na budowie, FSRS, tryb rękawic) i QA z danymi. Decyzje K-4, G-1, G-6, G-7, P-6…P-11 otwarte.
+
+## Plan Pracy dla hydraulika — 2026-10-29
+
+Pełny plan: `docs/plan-praca-hydraulik-2026-10-29.md`. Luki wskazane przez właściciela: metry rur, materiał w aucie, punkty w pomieszczeniach, zdjęcia z aparatu, rozliczenie od punktu, ryczałt i fuchy, praca z pomocnikiem. Fale 0–6 (fundament, materiał, punkty, rozliczenia, zdjęcia, brygada, drobne), decyzje H-1…H-8. Wpięte otwarte punkty z 27.10: P0.1, P2.4, P2.11, P3.3, P6.3.
