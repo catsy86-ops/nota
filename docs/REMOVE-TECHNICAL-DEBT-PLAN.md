@@ -11,7 +11,7 @@ Rozpoczęte 2026-10-29. Projekt: NOTKI / „G” — PWA z notatkami, Grafikiem,
 - **Inne gorące punkty** (do kolejnych przebiegów): `src/pages/Index.tsx` (1125 linii, 171 zmian w 90 dni), `src/lib/yjsStore.ts` (1077), `src/components/study/JournalEntrySheet.tsx` (882), `src/components/AddNoteBar.tsx` (805).
 - **Przepisanie od zera:** nikt nie proponuje. Spłata w miejscu.
 - **Zakres teraz:** Fazy 1–4. Fazy 5–8 odroczone.
-- **Ograniczenia:** paczka startowa ma ~1 KB zapasu do progu 394 KB (`e2e/bundle.spec.ts`), a `yStudy.ts` w niej jest. Precache 3,9 MiB na granicy.
+- **Ograniczenia:** `yStudy.ts` jest w paczce startowej (459 604 B gzip po H0.2). Próg w `e2e/bundle.spec.ts` to 500 KB (nie 394 KB z `CLAUDE.md` — w Debt Ledger), więc wzrost mierzyć ręcznie. Precache 3,9 MiB na granicy.
 
 ## Phase Status
 | Phase | Skill | Status | Artifact | Date |
