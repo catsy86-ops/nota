@@ -22,6 +22,9 @@ import { localDayKey } from "@/lib/dayDone";
 import { useDayClock } from "@/lib/dayClock";
 import { siteTally } from "@/lib/study/siteTally";
 import { SiteTallyBar } from "./SiteTallyBar";
+import { SitePointsPanel } from "./SitePointsPanel";
+import { useSitePoints } from "@/lib/study/pointsStore";
+import { pointsProgress } from "@/lib/study/points";
 import { useSiteCardActions } from "./useSiteCardActions";
 import { cn } from "@/lib/utils";
 import { SiteOrderPanel } from "./SiteOrderPanel";
@@ -166,6 +169,8 @@ export function SiteCardDialog({
 
   const period = site?.first != null && site.last != null ? periodLabel(dayKeyOf(site.first), dayKeyOf(site.last)) : null;
   const tally = useMemo(() => (site ? siteTally(site, study.journal) : null), [site, study.journal]);
+  const sitePoints = useSitePoints(site?.id ?? "");
+  const sitePointsProgress = useMemo(() => pointsProgress(sitePoints.points), [sitePoints]);
   // P5.1: okładka karty — pierwszy plan albo najnowsze zdjęcie budowy; bez zdjęcia nagłówek jak dawniej.
   const cover = useMemo(() => (site ? siteCoverRef(study.journal, site) : null), [site, study.journal]);
   // Godziny budowy (1.4): łącznie i w bieżącym miesiącu, do dziś — Grafik ma zmiany zaplanowane naprzód.
@@ -273,8 +278,9 @@ export function SiteCardDialog({
                 </Button>
                 <input ref={photoInput} type="file" accept="image/*" capture="environment" className="hidden" tabIndex={-1} aria-hidden onChange={(e) => { const file = e.target.files?.[0]; e.target.value = ""; if (file) void addPhotoEntry(file); }} />
               </div>
-              {tally && <SiteTallyBar tally={tally} />}
+              {tally && <SiteTallyBar tally={tally} points={sitePointsProgress} />}
               <SiteStagesPanel site={site} />
+              <SitePointsPanel site={site} />
               <SiteShortagesPanel site={site} />
               <SiteFaultsPanel site={site} journal={study.journal} />
               <SiteMaterialPanel site={site} journal={study.journal} />

@@ -11,6 +11,7 @@
 | Pomocnicze zapisy Yjs jako domknięcia w `createYStudy` | `src/lib/study/yStudy.ts` | struktura | niskie | M | P3 | odłożone (krok 3 planu H0.2, mały zysk) |
 | Importy typu `JournalEntry` przez fasadę `yStudy.ts`; cykl typów `sites.ts` ↔ `yStudy.ts` | `sites.ts`, `entrySheet.ts`, reszta | struktura | niskie | M | P3 | otwarte (krok 6 planu H0.2) |
 | Paczka startowa rośnie od podziału na małe chunki (`pipes`, `fittings` wydzielone przy H1.2: +791 B, 77 → 79 plików) | `vite.config.ts` (manualChunks) | wydajność | niskie | S | P3 | otwarte — rozważyć połączenie małych modułów Pracy z paczki startowej w jeden chunk |
+| `touch-audit.spec.ts` (`@mobile`) uruchamia się też w projekcie `chromium` (komputer) i tam nie przechodzi (203 elementy, wszystkie strony) | `playwright.config.ts` (projekt `chromium` bez `grepInvert: /@mobile/`) | test | niskie | S | P3 | otwarte — wykluczyć `@mobile` z projektu komputerowego albo opisać |
 | Migracja `data.ts` słabo pokryta (59%) | `src/lib/study/data.ts` | brak testów | średnie | S | P2 | w Characterization Backlog |
 
 ## Smell Inventory

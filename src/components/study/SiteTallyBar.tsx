@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { pluralPl } from "@/lib/plural";
 import type { SiteTally } from "@/lib/study/siteTally";
+import type { PointsProgress } from "@/lib/study/points";
 
 /** Przewija kartę do panelu (etapy, braki, zamówienie) — przy długiej liście etapów braki są daleko w dół. */
 function scrollToPanel(testId: string) {
@@ -12,13 +13,15 @@ function scrollToPanel(testId: string) {
 const positionsPl = (n: number) => pluralPl(n, ["pozycja", "pozycje", "pozycji"]);
 
 /**
- * Trzy liczniki budowy jak rubryki w zeszycie: etapy, braki do zamówienia, kształtki do zamówienia.
+ * Liczniki budowy jak rubryki w zeszycie: etapy, punkty (gdy są, H2.2), braki do zamówienia, kształtki do zamówienia.
  * Stuknięcie przewija do panelu. „Brakuje” na czerwono (jak w panelu braków), zero wyciszone.
  */
-export function SiteTallyBar({ tally }: { tally: SiteTally }) {
+export function SiteTallyBar({ tally, points }: { tally: SiteTally; /** H2.2: punkty gotowe z wszystkich; komórka tylko, gdy są punkty. */ points?: PointsProgress }) {
   const cells = [
     { id: "site-stages", label: "Etapy", value: `${tally.stages.done}/${tally.stages.total}`, tone: "plain", sub: null,
       aria: `Etapy: ${tally.stages.done} z ${tally.stages.total}` },
+    ...(points && points.total > 0 ? [{ id: "site-points", label: "Punkty", value: `${points.done}/${points.total}`, tone: "plain", sub: null,
+      aria: `Punkty: ${points.done} z ${points.total} gotowe` }] as const : []),
     { id: "site-shortages", label: "Braki", value: String(tally.missing), tone: tally.missing > 0 ? "alarm" : "quiet",
       sub: tally.ordered > 0 ? `w drodze ${tally.ordered}` : null,
       aria: `Braki: ${tally.missing} do zamówienia${tally.ordered > 0 ? `, ${tally.ordered} w drodze` : ""}` },
@@ -27,7 +30,7 @@ export function SiteTallyBar({ tally }: { tally: SiteTally }) {
       aria: `Do zamówienia: ${tally.order} ${positionsPl(tally.order)} kształtek` },
   ] as const;
   return (
-    <nav aria-label="Stan budowy" className="grid grid-cols-3 divide-x divide-dashed divide-border rounded-card border border-border bg-muted/30" data-testid="site-tally">
+    <nav aria-label="Stan budowy" className={cn("grid divide-x divide-dashed divide-border rounded-card border border-border bg-muted/30", cells.length === 4 ? "grid-cols-4" : "grid-cols-3")} data-testid="site-tally">
       {cells.map((c) => (
         <button
           key={c.id}
