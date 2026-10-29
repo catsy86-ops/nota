@@ -42,9 +42,14 @@ interface ReminderBadgeProps {
 }
 
 /** Szybkie terminy: pierwszy przyszły z listy trafia do pól daty i godziny. */
-function presets(now = new Date(), shifts?: ShiftData): { label: string; at: Date }[] {
+function presets(now = new Date(), shifts?: ShiftData, quickHour = false): { label: string; at: Date }[] {
   const at = (days: number, h: number) => new Date(now.getFullYear(), now.getMonth(), now.getDate() + days, h, 0, 0, 0);
+  // Q4: na telefonie po 8:00 pierwszy szybki termin to „Za godzinę”, zaokrąglony w górę do 5 minut.
+  const inAnHour = new Date(now.getTime() + 60 * 60_000);
+  inAnHour.setSeconds(0, 0);
+  inAnHour.setMinutes(Math.ceil(inAnHour.getMinutes() / 5) * 5);
   const list = [
+    ...(quickHour && now.getHours() >= 8 ? [{ label: "Za godzinę", at: inAnHour }] : []),
     { label: "Dziś wieczorem", at: at(0, 18) },
     { label: "Jutro rano", at: at(1, 9) },
     { label: "Za tydzień", at: at(7, 9) },
@@ -198,7 +203,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
         )}>
         <p className="text-xs font-semibold font-display text-muted-foreground uppercase tracking-wider">Przypomnienie</p>
         <div className="flex flex-wrap gap-1.5" role="group" aria-label="Szybkie terminy">
-          {presets(new Date(), shifts).map((p) => (
+          {presets(new Date(), shifts, mobile).map((p) => (
             <button
               key={p.label}
               type="button"

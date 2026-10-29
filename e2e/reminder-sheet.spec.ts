@@ -70,3 +70,17 @@ test("nowy termin zaczyna od ostatnio zapisanej godziny", async ({ page }) => {
   await expect(sheet).toBeVisible();
   await expect(sheet.locator('input[type="time"]')).toHaveValue("18:30");
 });
+
+// Q4: na telefonie po 8:00 pierwszy szybki termin to „Za godzinę”.
+test("na telefonie po 8:00 pierwszy szybki termin to „Za godzinę”", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 9, 14, 10, 0));
+  await page.reload();
+  await page.getByRole("button", { name: "Nowa notatka", exact: true }).click();
+  await page.getByRole("button", { name: "Przypomnienie", exact: true }).first().click();
+  const sheet = page.getByRole("dialog", { name: "Przypomnienie" });
+  await expect(sheet).toBeVisible();
+  const quick = sheet.getByRole("group", { name: "Szybkie terminy" }).getByRole("button");
+  await expect(quick.first()).toHaveText("Za godzinę");
+  await quick.first().click();
+  await expect(sheet.locator('input[type="time"]')).toHaveValue("11:00");
+});
