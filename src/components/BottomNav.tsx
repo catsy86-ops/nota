@@ -14,6 +14,7 @@ import { spring } from "@/lib/motion";
 import { useMotionPref } from "@/hooks/useMotionPref";
 import { useSavedFilters, sameQuery } from "@/lib/savedFilters";
 import { preloadView } from "@/lib/viewPreload";
+import { orderByRecent, readLastQuick, writeLastQuick, type QuickKind } from "@/lib/fabRecent";
 
 import type { View } from "@/hooks/useFilteredNotes";
 import { isViewShown, useHiddenViews } from "@/lib/hiddenViews";
@@ -64,6 +65,8 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
   const bottomSlot = useBottomSlot();
   // Długie przytrzymanie „+” otwiera arkusz „Nowa”: lista, dyktowanie, zdjęcie, rysunek.
   const [quickOpen, setQuickOpen] = useState(false);
+  // F1.3: ostatnio wybrany rodzaj z arkusza „Nowa” (wraca na górę i dostaje odznakę).
+  const [lastQuick, setLastQuick] = useState<QuickKind | null>(readLastQuick);
   const pressTimer = useRef<number | undefined>(undefined);
   // F1.1: pierścień postępu wokół „+” w trakcie przytrzymania (animacja CSS `fab-ring`, 420 ms).
   const [pressing, setPressing] = useState(false);
@@ -190,13 +193,17 @@ export function BottomNav({ view, onGo, onOpenPalette, onNew, onOpenSettings, on
             <SheetDescription>Co zapisać? Stuknij „+”, by od razu napisać notatkę.</SheetDescription>
           </SheetHeader>
           <div className="mt-4 grid grid-cols-2 gap-2.5" role="group" aria-label="Rodzaj nowej notatki">
-            {/* Kolejność z planu FAB (D3): notatka, termin, lista, zdjęcie, rysunek, dyktowanie. */}
-            <QuickTile Icon={Plus} title="Notatka" hint="Pusta kartka do pisania" tone="primary" onClick={() => { setQuickOpen(false); onNew("note"); }} />
-            <QuickTile Icon={Bell} title="Z przypomnieniem" hint="Notatka z terminem od razu" tone="warning" onClick={() => { setQuickOpen(false); onNew("reminder"); }} />
-            <QuickTile Icon={ListChecks} title="Lista zadań" hint="Punkty do odhaczenia" tone="success" onClick={() => { setQuickOpen(false); onNew("list"); }} />
-            <QuickTile Icon={ImagePlus} title="Zdjęcie" hint="Z aparatu albo galerii" tone="primary" onClick={() => { setQuickOpen(false); onNew("image"); }} />
-            <QuickTile Icon={PenTool} title="Rysunek" hint="Szkic palcem lub rysikiem" tone="success" onClick={() => { setQuickOpen(false); onNew("draw"); }} />
-            {canDictate && <QuickTile Icon={Mic} title="Dyktuj" hint="Mów, a zamienię na tekst" tone="warning" onClick={() => { setQuickOpen(false); onNew("dictate"); }} />}
+            {orderByRecent(QUICK_TILES.filter((t) => t.kind !== "dictate" || canDictate), lastQuick).map((t) => (
+              <QuickTile
+                key={t.kind}
+                Icon={t.Icon}
+                title={t.title}
+                hint={t.hint}
+                tone={t.tone}
+                recent={t.kind === lastQuick}
+                onClick={() => { writeLastQuick(t.kind); setLastQuick(t.kind); setQuickOpen(false); onNew(t.kind); }}
+              />
+            ))}
           </div>
         </SheetContent>
       </Sheet>
@@ -315,13 +322,24 @@ const QUICK_TONE: Record<QuickTone, string> = {
 };
 
 /** Kafel w arkuszu „Nowa”: ikona w kolorze rodzaju, tytuł i jedno zdanie, co się stanie. */
-function QuickTile({ Icon, title, hint, tone, onClick }: { Icon: React.ComponentType<{ className?: string }>; title: string; hint: string; tone: QuickTone; onClick: () => void }) {
+/** Kafle arkusza „Nowa” w kolejności z planu FAB (D3); kolejność może się zmienić przez ostatnio użyty rodzaj (F1.3). */
+const QUICK_TILES: { kind: QuickKind; Icon: React.ComponentType<{ className?: string }>; title: string; hint: string; tone: QuickTone }[] = [
+  { kind: "note", Icon: Plus, title: "Notatka", hint: "Pusta kartka do pisania", tone: "primary" },
+  { kind: "reminder", Icon: Bell, title: "Z przypomnieniem", hint: "Notatka z terminem od razu", tone: "warning" },
+  { kind: "list", Icon: ListChecks, title: "Lista zadań", hint: "Punkty do odhaczenia", tone: "success" },
+  { kind: "image", Icon: ImagePlus, title: "Zdjęcie", hint: "Z aparatu albo galerii", tone: "primary" },
+  { kind: "draw", Icon: PenTool, title: "Rysunek", hint: "Szkic palcem lub rysikiem", tone: "success" },
+  { kind: "dictate", Icon: Mic, title: "Dyktuj", hint: "Mów, a zamienię na tekst", tone: "warning" },
+];
+
+function QuickTile({ Icon, title, hint, tone, recent = false, onClick }: { Icon: React.ComponentType<{ className?: string }>; title: string; hint: string; tone: QuickTone; recent?: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="pressable group flex items-center gap-3 rounded-card border border-border/60 bg-card p-3.5 text-left transition-colors hover:border-primary/40 hover:bg-muted/40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+      className={cn("pressable group relative flex items-center gap-3 rounded-card border bg-card p-3.5 text-left transition-colors hover:border-primary/40 hover:bg-muted/40 outline-hidden focus-visible:ring-2 focus-visible:ring-ring", recent ? "border-primary/50 bg-primary/5" : "border-border/60")}
     >
+      {recent && <span className="absolute right-2.5 top-2 rounded-full bg-primary/15 px-2 py-0.5 text-2xs font-semibold text-primary-ink">Ostatnio</span>}
       <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-card transition-transform duration-200 group-hover:-rotate-6 motion-reduce:transition-none", QUICK_TONE[tone])} aria-hidden>
         <Icon className="h-5 w-5" />
       </span>

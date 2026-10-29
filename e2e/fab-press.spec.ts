@@ -55,3 +55,23 @@ test("kafel „Z przypomnieniem” otwiera kompozytor z pickerem terminu", async
   await sheet.getByRole("button", { name: /Z przypomnieniem/ }).click();
   await expect(page.getByRole("group", { name: "Szybkie terminy" })).toBeVisible();
 });
+
+// F1.3: ostatnio wybrany rodzaj wraca na górę arkusza „Nowa” z odznaką „Ostatnio”.
+test("ostatnio wybrany rodzaj jest pierwszy w arkuszu z odznaką", async ({ page }) => {
+  const openSheet = async () => {
+    const fab = await settledFab(page);
+    const box = await fab.boundingBox();
+    await page.mouse.move(box!.x + box!.width / 2, box!.y + box!.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(500);
+    await page.mouse.up();
+    return page.getByRole("dialog", { name: "Nowa" });
+  };
+  const sheet = await openSheet();
+  await sheet.getByRole("button", { name: /Lista zadań/ }).click();
+  await page.goto("/");
+  const again = await openSheet();
+  const tiles = again.getByRole("group", { name: "Rodzaj nowej notatki" }).locator("button");
+  await expect(tiles.nth(0)).toContainText("Lista zadań");
+  await expect(tiles.nth(0)).toContainText("Ostatnio");
+});
