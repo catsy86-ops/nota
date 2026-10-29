@@ -45,3 +45,17 @@ test("chipy dnia i godziny ustawiają termin, kalendarz pokazuje się po „Wybi
   await hourGroup.getByRole("button", { name: "15:00" }).click();
   await expect(sheet.locator('input[type="time"]')).toHaveValue("15:00");
 });
+
+// F2.3: podgląd „Zapiszę: …” i pola aktualizują się przy wpisywaniu, bez zapisu.
+test("wpisany tekst ustawia pola i podgląd, ale nie zapisuje terminu", async ({ page }) => {
+  await page.getByRole("button", { name: "Nowa notatka", exact: true }).click();
+  await page.getByRole("button", { name: "Przypomnienie", exact: true }).first().click();
+  const sheet = page.getByRole("dialog", { name: "Przypomnienie" });
+  await expect(sheet).toBeVisible();
+
+  await sheet.getByPlaceholder("np. jutro 15:00, za 2h").fill("jutro 15:30");
+  await expect(sheet.locator('input[type="time"]')).toHaveValue("15:30");
+  await expect(sheet.getByTestId("reminder-preview")).toContainText("15:30");
+  // Nic nie zapisane: arkusz nadal otwarty.
+  await expect(sheet).toBeVisible();
+});

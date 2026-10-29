@@ -6,9 +6,11 @@ import { parseNaturalDate } from "@/lib/parseNaturalDate";
 
 interface QuickReminderInputProps {
   onParsed: (date: Date) => void;
+  /** Podgląd na żywo (F2.3): rozpoznana data ustawia pola, ale niczego nie zapisuje. */
+  onPreview?: (date: Date) => void;
 }
 
-export function QuickReminderInput({ onParsed }: QuickReminderInputProps) {
+export function QuickReminderInput({ onParsed, onPreview }: QuickReminderInputProps) {
   const [text, setText] = useState("");
   const [error, setError] = useState(false);
 
@@ -32,6 +34,8 @@ export function QuickReminderInput({ onParsed }: QuickReminderInputProps) {
           onChange={(e) => {
             setText(e.target.value);
             setError(false);
+            const parsed = e.target.value.trim() ? parseNaturalDate(e.target.value) : null;
+            if (parsed) onPreview?.(parsed);
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {

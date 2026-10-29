@@ -207,7 +207,16 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
             </button>
           ))}
         </div>
-        <QuickReminderInput onParsed={handleTypedParsed} />
+        <QuickReminderInput
+          onParsed={handleTypedParsed}
+          onPreview={(d) => { setDate(d); setTime(toTimeInputValue(d.getTime())); }}
+        />
+        {/* Podgląd (F2.3): to, co zapisze „Zapisz”, zanim klikniesz. */}
+        <p aria-live="polite" className="text-xs text-muted-foreground" data-testid="reminder-preview">
+          {timestamp !== null
+            ? <>Zapiszę: <span className="font-medium text-foreground">{formatReminderShort(timestamp)}</span>{allDay ? " · cały dzień" : ""}</>
+            : "Wybierz dzień i godzinę."}
+        </p>
         <div role="group" aria-label="Dzień terminu" className="flex flex-wrap gap-1.5">
           {DAY_CHIPS.map((c) => (
             <button
@@ -289,12 +298,12 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
           </div>
         )}
         {repeat.kind !== "none" && (
-          <p id={`${uid}-until-hint`} className={cn("text-2xs", untilTooEarly ? "text-destructive-ink" : "text-muted-foreground")}>
+          <p id={`${uid}-until-hint`} aria-live="polite" className={cn("text-2xs", untilTooEarly ? "text-destructive-ink" : "text-muted-foreground")}>
             {untilTooEarly ? "Koniec serii musi być po pierwszym terminie." : untilText ? "Ostatni termin serii najpóźniej tego dnia." : "Puste pole — seria bez końca."}
           </p>
         )}
         {pastTime && (
-          <p className="text-2xs text-destructive-ink">Ten termin jest w przeszłości — przypomnienie odezwie się przy najbliższym otwarciu aplikacji.</p>
+          <p aria-live="polite" className="text-2xs text-destructive-ink">Ten termin jest w przeszłości — przypomnienie odezwie się przy najbliższym otwarciu aplikacji.</p>
         )}
         <p className="text-2xs text-muted-foreground">
           Działa najpewniej, gdy aplikacja zostaje otwarta w tle — bez serwera powiadomień push, zamknięta karta może dostarczyć przypomnienie dopiero po ponownym otwarciu appki.
