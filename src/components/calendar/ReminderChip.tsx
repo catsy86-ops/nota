@@ -16,7 +16,8 @@ import { cn } from "@/lib/utils";
  */
 
 function occurrenceLabel(occ: Occurrence, title: string, overdue: boolean): string {
-  const when = format(new Date(occ.at), "d MMMM, HH:mm", { locale: pl });
+  // Całodniowy: bez godziny (K4.1), bo ona nic nie mówi.
+  const when = format(new Date(occ.at), occ.allDay ? "d MMMM" : "d MMMM, HH:mm", { locale: pl }) + (occ.allDay ? ", cały dzień" : "");
   const name = title.trim() || "Bez tytułu";
   const repeat = occ.isSeries ? `, powtarza się ${REPEAT_KIND_LABELS[occ.repeat.kind].toLowerCase()}` : "";
   const forecast = occ.isSeries && !occ.isNext ? " (prognoza serii)" : "";
@@ -46,7 +47,10 @@ export function ReminderChip({ occurrence, title, detailed = false, className, s
       title={nativeTitle ? occurrenceLabel(occurrence, title, overdue) : undefined}
       style={style}
       className={cn(
-        "flex items-center gap-1 rounded-control border px-1 py-px text-left leading-tight",
+        "flex items-center gap-1 border px-1 py-px text-left leading-tight",
+        // Całodniowy to pasek (ostre rogi, grubsza dolna krawędź), nie pigułka z godziną (K4.1).
+        // Cień, nie `border-b-*`: kolejna klasa `border-transparent` skasowałaby kolor krawędzi (twMerge).
+        occurrence.allDay ? "rounded-none shadow-[inset_0_-2px_0_var(--chip-ink)]" : "rounded-control",
         detailed ? "text-xs px-2 py-1 gap-1.5" : "text-2xs",
         isForecast
           ? "border-dashed border-[var(--chip-edge)] text-[color-mix(in_srgb,var(--chip-ink)_70%,transparent)]"
@@ -58,7 +62,7 @@ export function ReminderChip({ occurrence, title, detailed = false, className, s
       )}
     >
       <span className="font-medium tabular-nums shrink-0">
-        {format(new Date(occurrence.at), "HH:mm")}
+        {occurrence.allDay ? "cały dzień" : format(new Date(occurrence.at), "HH:mm")}
       </span>
       <span className="truncate">{title.trim() || "Bez tytułu"}</span>
       {occurrence.isSeries && <Repeat className={cn("shrink-0", detailed ? "w-3 h-3" : "w-2.5 h-2.5")} />}

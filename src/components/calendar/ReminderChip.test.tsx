@@ -33,3 +33,23 @@ describe("chip terminu — zaległe (K1.1)", () => {
     expect(isOverdueOccurrence({ at: startToday.getTime(), allDay: false })).toBe(true);
   });
 });
+
+// K4.1: całodniowy to pasek bez godziny, zwykły termin zostaje pigułką z godziną.
+describe("chip terminu — cały dzień (K4.1)", () => {
+  it("cały dzień: ostre rogi, pasek i napis zamiast godziny", () => {
+    const { container } = render(<ReminderChip occurrence={occ(Date.now() + 2 * HOUR, { allDay: true })} title="Urodziny" />);
+    const chip = container.firstElementChild as HTMLElement;
+    expect(chip.className).toContain("rounded-none");
+    expect(chip.className).toContain("shadow-[inset_0_-2px_0_var(--chip-ink)]");
+    expect(chip.textContent).toContain("cały dzień");
+    expect(chip.getAttribute("title")).toContain("cały dzień");
+  });
+
+  it("zwykły termin: pigułka z godziną", () => {
+    const { container } = render(<ReminderChip occurrence={occ(Date.now() + 2 * HOUR)} title="Dentysta" />);
+    const chip = container.firstElementChild as HTMLElement;
+    expect(chip.className).toContain("rounded-control");
+    expect(chip.className).not.toContain("rounded-none");
+    expect(chip.textContent).not.toContain("cały dzień");
+  });
+});
