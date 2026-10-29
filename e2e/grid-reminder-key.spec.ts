@@ -22,6 +22,8 @@ test.beforeEach(async ({ page }) => {
 
 test("klawisz R na kaflu otwiera przypomnienie", async ({ page }) => {
   await page.goto("/");
+  // Siatka zgłasza kafle do nawigacji dopiero po zamontowaniu — wcześniej strzałka jest ignorowana.
+  await expect(page.locator("[data-note-id-wrap]", { hasText: "Alfa" })).toBeVisible();
   await page.locator("body").click({ position: { x: 900, y: 900 } });
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("r");

@@ -139,6 +139,8 @@ test("Ctrl+A zaznacza wszystkie widoczne notatki (bez zwiniętych) i nie działa
 test("przeciągnięcie zaznaczonej notatki na folder przenosi wszystkie zaznaczone, z „Cofnij”", async ({ page }) => {
   const folders = [{ id: "f1", name: "Projekty", color: "default", emoji: null, parentId: null, order: 0, createdAt: NOW }];
   await seed(page, NOTES.slice(0, 3), {}, { "kaczy-notes-folders": JSON.stringify(folders) });
+  // Ctrl+A zaznacza tylko wczytane notatki — bez czekania skrót trafia w pustą listę.
+  await expect(page.locator("[data-note-id-wrap]")).toHaveCount(3);
   await page.locator("body").click({ position: { x: 5, y: 5 } });
   await page.keyboard.press("Control+a");
   await expect(page.getByRole("button", { name: /Wszystko \(3\)/ })).toBeVisible();

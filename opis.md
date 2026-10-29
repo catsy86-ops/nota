@@ -3537,7 +3537,8 @@ Agent `security-reviewer` (przegląd tylko do odczytu, diff 913baaf..HEAD) potwi
 - **Co robi.** Na telefonie każdy widok ma wejście do wyszukiwania. W widokach bez własnego pola szukania (Grafik, Kalendarz, Nauka, Długi, Ćwiczenia) jest lupa „Szukaj i polecenia” w nagłówku i slot „Szukaj” w dolnym pasku; oba otwierają paletę poleceń. W widokach z polem szukania (Notatki, Dziś, Archiwum itd.) pole jest w treści, a lupy w nagłówku nie ma.
 - **Gdzie.** `src/components/AppHeader.tsx` (przycisk lupy, warunek `!viewSearches && onOpenPalette`), `src/components/BottomNav.tsx` (`showPaletteSlot`), `src/lib/viewSearch.ts` (`viewHasSearch`, zbiór `VIEWS_WITHOUT_SEARCH`).
 - **Decyzja (2026-10-28).** Lupa zostaje w nagłówku i w dolnym pasku — oba miejsca, bo na telefonie nagłówek bywa daleko od kciuka, a pasek jest pod ręką. Slot w pasku pojawia się tylko tam, gdzie nie ma pola szukania, więc pasek nie puchnie w widokach z polem.
-- **Testy.** `e2e/search-phone.spec.ts` (Grafik na 390 px: lupa i slot otwierają paletę; Notatki: lupy w nagłówku nie ma). 2/2 zielone.
+- **Pole szukania na komputerze.** Ten sam `viewSearches` steruje polem `SearchBar` w nagłówku (`hidden sm:block`): pole jest tam, gdzie `viewHasSearch(view)` zwraca `true`. Pułapka: w `c4e3fe3` warunek pola został odwrócony razem z lupą (`!viewSearches`) — pole znikło z Notatek, a pojawiło się w Grafiku i Kalendarzu. Naprawione 2026-10-29; wyłapuje to `e2e/search-backup.spec.ts`.
+- **Testy.** `e2e/search-phone.spec.ts` (Grafik na 390 px: lupa i slot otwierają paletę; Notatki: lupy w nagłówku nie ma). 2/2 zielone. `e2e/search-backup.spec.ts` (pole w nagłówku na komputerze).
 
 ## Podział `pages/Index.tsx` (F3, plan mobile 2026-10-28)
 

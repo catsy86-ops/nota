@@ -182,7 +182,7 @@ export function WeekTimeline({ weekStart, byDay, titleOf, shiftOf, onEdit, onOpe
                   <span
                     key={pi}
                     aria-hidden
-                    className="absolute inset-x-0.5 rounded-sm"
+                    className="absolute inset-x-0.5 rounded-control"
                     style={{
                       top: `${axisPercent(a, from, to)}%`,
                       height: `${((b - a) / ((to - from) * 60)) * 100}%`,
@@ -236,7 +236,7 @@ export function WeekTimeline({ weekStart, byDay, titleOf, shiftOf, onEdit, onOpe
                     className={cn(
                       "absolute inset-x-1 z-raised cursor-grab overflow-hidden rounded-field text-left outline-hidden focus-visible:ring-2 focus-visible:ring-ring",
                       isForecast && "cursor-pointer opacity-80",
-                      moving && "cursor-grabbing shadow-lg",
+                      moving && "cursor-grabbing shadow-elevation-3",
                     )}
                   >
                     <ReminderChip occurrence={occ} title={titleOf(occ.noteId)} className="w-full h-full" nativeTitle={false} />

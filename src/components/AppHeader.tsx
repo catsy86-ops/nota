@@ -147,7 +147,7 @@ export function AppHeader({
         </div>
 
         {/* Grafik i Kalendarz nie przeszukują notatek — pole tylko by udawało, że działa. */}
-        {!viewSearches && <SearchBar value={search} onChange={onSearchChange} className="hidden sm:block" />}
+        {viewSearches && <SearchBar value={search} onChange={onSearchChange} className="hidden sm:block" />}
         {!viewSearches && onOpenPalette && (
           <IconButton asChild className="sm:hidden">
             <motion.button onClick={onOpenPalette} aria-label="Szukaj i polecenia">

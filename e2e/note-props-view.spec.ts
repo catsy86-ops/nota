@@ -53,13 +53,13 @@ test("pola: sortowanie po kolumnie (puste zawsze na końcu) i filtr pole: w wysz
 
   const header = page.locator("[data-note-table] thead").getByRole("button", { name: "Kwota" });
   await header.click();
-  expect(await rowOrder(page)).toEqual(["n-b", "n-a", "n-c"]);
+  await expect.poll(() => rowOrder(page)).toEqual(["n-b", "n-a", "n-c"]);
   await header.click();
-  expect(await rowOrder(page)).toEqual(["n-a", "n-b", "n-c"]);
+  await expect.poll(() => rowOrder(page)).toEqual(["n-a", "n-b", "n-c"]);
 
   await page.getByRole("searchbox").first().fill('pole:"Kwota=3"');
   await expect(page.locator("[data-note-row]")).toHaveCount(1);
-  expect(await rowOrder(page)).toEqual(["n-b"]);
+  await expect.poll(() => rowOrder(page)).toEqual(["n-b"]);
 });
 
 test("pola na telefonie: wartość pod tytułem, czytnik z edycją i sortowanie w arkuszu widoku", async ({ page }) => {
