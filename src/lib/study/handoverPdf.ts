@@ -1,4 +1,4 @@
-import type { Handover } from "./handover";
+import { handoverPointLine, type Handover } from "./handover";
 import { PdfWriter, pdfFileName, photoPages, sharePdf, type PdfPhoto } from "./pdfWriter";
 
 /**
@@ -35,6 +35,14 @@ export async function buildHandoverPdf(h: Handover, opts: HandoverPdfOptions): P
   if (h.stages && h.stages.length > 0) {
     w.heading("Zakres prac (etapy)");
     for (const s of h.stages) w.line(`[${s.done !== undefined ? "x" : " "}] ${s.name}${s.done !== undefined ? ` — ${shortDate(s.done)}` : ""}`, 10, "normal", 2);
+  }
+
+  if (h.rooms && h.pointsDone) {
+    w.heading(`Punkty (${h.pointsDone.done}/${h.pointsDone.total} gotowe)`);
+    for (const r of h.rooms) {
+      w.line(r.name, 10, "bold", 2);
+      for (const p of r.points) w.line(handoverPointLine(p, shortDate), 10, "normal", 4);
+    }
   }
 
   w.heading("Próby szczelności");

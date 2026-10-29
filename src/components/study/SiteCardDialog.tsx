@@ -459,7 +459,7 @@ export function SiteCardDialog({
               <SiteStorageLine site={site} journal={study.journal} />
               <Button
                 variant="outline"
-                onClick={() => setHandover(buildHandover(study.journal, site))}
+                onClick={() => setHandover(buildHandover(study.journal, site, Date.now(), sitePoints))}
                 disabled={site.count === 0 && !site.stages}
                 title="Etapy, próby szczelności, uwagi i zdjęcia na jednej kartce z miejscem na podpisy — wydruk albo PDF"
                 className="coarse:h-11"

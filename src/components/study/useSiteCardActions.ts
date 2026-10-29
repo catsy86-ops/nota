@@ -10,6 +10,7 @@ import { buildJournalReport, dayKeyOf } from "@/lib/study/report";
 import { downloadSiteZip } from "@/lib/study/siteZip";
 import { shrinkSitePhotos } from "@/lib/study/photoShrink";
 import { buildHandover, handoverText } from "@/lib/study/handover";
+import { getSitePoints } from "@/lib/study/pointsStore";
 import type { HandoverPdfPhoto } from "@/lib/study/handoverPdf";
 import { companyNameStore } from "@/lib/study/companyPrefs";
 import { imageStore } from "@/lib/imageStore";
@@ -83,7 +84,7 @@ export function useSiteCardActions({
   /** Tekst protokołu (bez zdjęć): udostępnianie z telefonu, a bez niego — schowek. */
   async function shareHandover() {
     if (!site) return;
-    const text = handoverText(buildHandover(study.journal, site));
+    const text = handoverText(buildHandover(study.journal, site, Date.now(), getSitePoints(site.id)));
     const outcome = await shareOrCopy({ title: `Protokół odbioru — ${site.name}`, text });
     if (outcome === "copied") toast.success("Skopiowano tekst protokołu");
     else if (outcome === "failed") toast.error("Nie udało się skopiować");
@@ -94,7 +95,7 @@ export function useSiteCardActions({
     if (!site) return;
     setPdfBusy(true);
     try {
-      const h = buildHandover(study.journal, site);
+      const h = buildHandover(study.journal, site, Date.now(), getSitePoints(site.id));
       const photos: HandoverPdfPhoto[] = [];
       for (const ref of h.photos) {
         const rec = await imageStore.get(ref);

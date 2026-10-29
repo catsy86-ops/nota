@@ -1,6 +1,8 @@
 import { SitePlan } from "@/components/study/SitePlan";
+import { useSitePoints } from "@/lib/study/pointsStore";
+import { pointsTodo } from "@/lib/study/points";
 import { useMemo, useState } from "react";
-import { Check, DoorOpen, HardHat, MapPin, Navigation, Pencil, Phone, Plus, RotateCcw, X } from "lucide-react";
+import { Check, DoorOpen, Droplets, HardHat, MapPin, Navigation, Pencil, Phone, Plus, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -81,6 +83,8 @@ export function EntryCheckCard({ onNewEntry }: { onNewEntry: (siteName: string) 
   const siteId = picked && active.some((s) => s.id === picked) ? picked : defaultSite(active, dir, study, today);
   const site = active.find((s) => s.id === siteId) ?? null;
   const { status, record } = useSiteCheck(site, today);
+  // H2.2: co zostało na punktach tej budowy — jedna linijka pod listą kontrolną.
+  const todo = pointsTodo(useSitePoints(site?.id ?? "").points);
   if (!site) return null;
 
   /** „Wychodzę”: godzina wyjścia; czas na budowie podpowie godziny w oknie „Godziny na budowach”. */
@@ -155,6 +159,12 @@ export function EntryCheckCard({ onNewEntry }: { onNewEntry: (siteName: string) 
           {status.entered ? "Pokaż listę" : status.done > 0 ? "Dokończ listę" : "Sprawdź listę"}
         </Button>
       </div>
+
+      {todo && (
+        <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground" data-testid="entry-check-points">
+          <Droplets className="h-3.5 w-3.5 shrink-0 text-primary-ink" aria-hidden />Punkty: {todo}
+        </p>
+      )}
 
       <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label={`Szybkie akcje: ${site.name}`} data-testid="entry-check-actions">
         {status.entered && status.leftAt === undefined && (

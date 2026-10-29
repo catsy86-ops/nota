@@ -102,3 +102,13 @@ describe("zdjęcie punktu (H2.3)", () => {
     expect([...m]).toEqual([["p1", "c"]]);
   });
 });
+
+describe("co zostało na punktach (H2.2)", () => {
+  it("liczy punkty na każdym kroku, pomija zera; wszystko gotowe → null", async () => {
+    const { pointsTodo } = await import("./points");
+    const list = [pt({ id: "a" }), pt({ id: "b" }), pt({ id: "c", steps: { podejscie: 1 } }), pt({ id: "d", steps: { podejscie: 1, proba: 1, montaz: 1 } })];
+    expect(pointsTodo(list)).toBe("2 do podejścia · 1 do próby");
+    expect(pointsTodo([list[3]])).toBeNull();
+    expect(pointsTodo([])).toBeNull();
+  });
+});

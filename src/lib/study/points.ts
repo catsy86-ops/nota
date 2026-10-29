@@ -154,3 +154,13 @@ export function latestPointPhotos(journal: readonly { at: number; point?: string
   }
   return new Map([...out].map(([k, v]) => [k, v.ref]));
 }
+
+/** Co zostało na punktach (H2.2, karta „Przed wejściem”): „4 do podejścia · 2 do próby”; `null` = brak punktów albo wszystko gotowe. */
+export function pointsTodo(points: readonly WaterPoint[]): string | null {
+  const parts = [
+    [pendingAt(points, "podejscie"), "do podejścia"],
+    [pendingAt(points, "proba"), "do próby"],
+    [pendingAt(points, "montaz"), "do montażu"],
+  ].filter(([n]) => (n as number) > 0).map(([n, label]) => `${n} ${label}`);
+  return parts.length ? parts.join(" · ") : null;
+}

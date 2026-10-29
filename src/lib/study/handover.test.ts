@@ -94,3 +94,30 @@ describe("protokół odbioru — zdjęcia przy etapach", () => {
     expect(h.photoGroups).toEqual([{ stage: null, photos: [IMG(1)] }]);
   });
 });
+
+describe("punkty w protokole (H2.4)", () => {
+  const site = { id: "s1", name: "Lipowa 5", address: "", investor: "", stages: undefined };
+  const day = (d: number) => new Date(2026, 9, d, 10).getTime();
+  const rooms = [{ id: "r1", name: "Łazienka", order: 1 }, { id: "r2", name: "Pusta", order: 2 }];
+  const points = [
+    { id: "p1", room: "r1", type: "umywalka", sides: ["z", "c", "k"] as ("z" | "c" | "k")[], height: 58, steps: { podejscie: day(12), proba: day(14) }, order: 1 },
+    { id: "p2", room: "r1", type: "zmywarka", sides: ["z", "k"] as ("z" | "c" | "k")[], steps: {}, order: 2 },
+  ];
+  const journal = [{ id: "e1", at: day(13), kind: "ok" as const, topic: null, text: "", site: "Lipowa 5", siteId: "s1", checked: [], images: ["a".repeat(64)], point: "p1" }];
+
+  it("sekcja z pomieszczeniami, krokami z datami i zdjęciami; puste pomieszczenie pomijane", () => {
+    const h = buildHandover(journal, site, day(20), { rooms, points });
+    expect(h.pointsDone).toEqual({ done: 0, total: 2 });
+    expect(h.rooms?.map((r) => r.name)).toEqual(["Łazienka"]);
+    const text = handoverText(h);
+    expect(text).toContain("## Punkty (0/2 gotowe)\n### Łazienka");
+    expect(text).toContain("- Umywalka · Z C K · 58 cm — podejście 12.10.2026, próba 14.10.2026 · 1 zdj.");
+    expect(text).toContain("- Zmywarka · Z K — do zrobienia");
+  });
+
+  it("bez punktów — bez sekcji", () => {
+    const h = buildHandover(journal, site, day(20));
+    expect(h.rooms).toBeNull();
+    expect(handoverText(h)).not.toContain("## Punkty");
+  });
+});

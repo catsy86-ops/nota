@@ -132,3 +132,33 @@ test("zapisany wpis ze zdjęciem można przypiąć do etapu w edycji — zdjęci
   await expect.poll(() => page.evaluate(() => (window as unknown as { __printed?: string }).__printed)).toBeTruthy();
   await expect(page.locator("#report-print [data-handover-photo-group='Piony i podejścia kanalizacji'] img")).toHaveCount(1);
 });
+
+test("punkty w protokole i w karcie „Przed wejściem” (H2.4, H2.2)", async ({ page }) => {
+  await page.addInitScript(() => {
+    const w = window as unknown as Record<string, unknown>;
+    Object.defineProperty(navigator, "share", { configurable: true, value: undefined });
+    Object.defineProperty(navigator, "clipboard", { configurable: true, value: { writeText: async (t: string) => { w.__copied = t; } } });
+  });
+  await page.goto("/praca");
+  await page.getByRole("tab", { name: "Dziennik" }).click();
+  await page.getByTestId("study-journal").getByRole("button", { name: "Lipowa 5: karta budowy" }).first().click();
+  const card = page.getByTestId("site-card");
+  const panel = card.getByTestId("site-points");
+  await panel.getByRole("button", { name: /^\+ Kuchnia/ }).click();
+  await panel.getByRole("checkbox", { name: "Zlew: próba" }).click();
+
+  await card.getByRole("button", { name: "Tekst protokołu" }).click();
+  await expect(page.getByText("Skopiowano tekst protokołu")).toBeVisible();
+  const copied = await page.evaluate(() => (window as unknown as { __copied: string }).__copied);
+  expect(copied).toContain("## Punkty (0/2 gotowe)\n### Kuchnia\n- Zlew · Z C K · 48 cm — podejście 16.10.2026, próba 16.10.2026\n- Zmywarka · Z K — do zrobienia");
+
+  await card.getByRole("button", { name: "Protokół odbioru" }).click();
+  await expect.poll(() => page.evaluate(() => (window as unknown as { __printed?: string }).__printed)).toBeTruthy();
+  const printed = await page.evaluate(() => (window as unknown as { __printed: string }).__printed);
+  expect(printed).toContain("Punkty (0/2 gotowe)");
+  expect(printed).toContain("Zmywarka");
+
+  // Karta „Przed wejściem” mówi, co zostało na punktach tej budowy.
+  await page.keyboard.press("Escape");
+  await expect(page.getByTestId("entry-check-points")).toHaveText("Punkty: 1 do podejścia · 1 do montażu");
+});

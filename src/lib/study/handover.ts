@@ -3,6 +3,7 @@ import { testLine } from "./pressureTest";
 import { dayKeyOf, periodLabel } from "./report";
 import { siteStages, type SiteStage } from "./stages";
 import type { JournalEntry } from "./yStudy";
+import { pointsProgress, pointType, POINT_STEPS, sidesLabel, STEP_LABEL, type Room, type WaterPoint } from "./points";
 
 /**
  * Protokół odbioru dla inwestora — jedna kartka na koniec budowy: dane budowy, etapy z datami,
@@ -37,6 +38,22 @@ export interface HandoverPhotoGroup {
   photos: string[];
 }
 
+/** Punkt w protokole (H2.4): typ, strony, wysokość, zrobione kroki z datami i liczba zdjęć punktu. */
+export interface HandoverPoint {
+  label: string;
+  /** „Z C K”; pusty = bez stron. */
+  sides: string;
+  height?: number;
+  /** Zrobione kroki od początku: „podejście”, „próba”, „biały montaż” z datą (ms). */
+  steps: { label: string; at: number }[];
+  photos: number;
+}
+
+export interface HandoverRoom {
+  name: string;
+  points: HandoverPoint[];
+}
+
 export interface Handover {
   site: string;
   address: string;
@@ -56,12 +73,18 @@ export interface Handover {
   photoGroups: HandoverPhotoGroup[];
   /** Zdjęcia, które się nie zmieściły. */
   morePhotos: number;
+  /** Punkty w pomieszczeniach (H2.4); `null` = budowa bez punktów. */
+  rooms: HandoverRoom[] | null;
+  /** Gotowe punkty (po białym montażu) z wszystkich; `null` bez punktów. */
+  pointsDone: { done: number; total: number } | null;
 }
 
 export function buildHandover(
   journal: readonly JournalEntry[],
   site: Pick<SiteCard, "id" | "name" | "address" | "investor" | "stages">,
   now: number = Date.now(),
+  /** Pomieszczenia i punkty budowy (`pointsStore.ts`); brak = protokół bez sekcji punktów. */
+  sitePoints?: { rooms: readonly Room[]; points: readonly WaterPoint[] },
 ): Handover {
   const entries = journal.filter((e) => entrySiteId(e) === site.id).sort((a, b) => a.at - b.at);
   // Najpierw zdjęcia przypięte do etapów (w kolejności etapów), potem reszta — limit wydruku tnie od końca.
@@ -94,7 +117,35 @@ export function buildHandover(
     photos: photos.slice(0, HANDOVER_PHOTOS_MAX),
     photoGroups,
     morePhotos: Math.max(0, photos.length - HANDOVER_PHOTOS_MAX),
+    ...handoverPoints(entries, sitePoints),
   };
+}
+
+/** Sekcja punktów: pomieszczenia w kolejności karty, w nich punkty; zdjęcia liczone z wpisów z `point`. */
+function handoverPoints(entries: readonly JournalEntry[], sp?: { rooms: readonly Room[]; points: readonly WaterPoint[] }): Pick<Handover, "rooms" | "pointsDone"> {
+  if (!sp || sp.points.length === 0) return { rooms: null, pointsDone: null };
+  const photos = new Map<string, number>();
+  for (const e of entries) if (e.point) photos.set(e.point, (photos.get(e.point) ?? 0) + e.images.length);
+  const rooms = sp.rooms
+    .map((r) => ({
+      name: r.name,
+      points: sp.points.filter((p) => p.room === r.id).map((p) => ({
+        label: pointType(p.type).label,
+        sides: sidesLabel(p.sides),
+        ...(p.height !== undefined ? { height: p.height } : {}),
+        steps: POINT_STEPS.filter((s) => p.steps[s] !== undefined).map((s) => ({ label: STEP_LABEL[s], at: p.steps[s]! })),
+        photos: photos.get(p.id) ?? 0,
+      })),
+    }))
+    .filter((r) => r.points.length > 0);
+  return { rooms, pointsDone: pointsProgress(sp.points) };
+}
+
+/** „Umywalka · Z C K · 58 cm — podejście 12.10.2026, próba 14.10.2026 · 2 zdj.” — linia punktu w tekście i PDF. */
+export function handoverPointLine(p: HandoverPoint, date: (at: number) => string): string {
+  const head = [p.label, p.sides, p.height !== undefined ? `${p.height} cm` : ""].filter(Boolean).join(" · ");
+  const steps = p.steps.length ? p.steps.map((s) => `${s.label} ${date(s.at)}`).join(", ") : "do zrobienia";
+  return `${head} — ${steps}${p.photos ? ` · ${p.photos} zdj.` : ""}`;
 }
 
 const shortDate = (at: number) => new Date(at).toLocaleDateString("pl-PL", { day: "2-digit", month: "2-digit", year: "numeric" });
@@ -109,6 +160,13 @@ export function handoverText(h: Handover): string {
   if (h.stages && h.stages.length > 0) {
     lines.push("", "## Zakres prac (etapy)");
     for (const s of h.stages) lines.push(s.done !== undefined ? `- [x] ${s.name} (${shortDate(s.done)})` : `- [ ] ${s.name}`);
+  }
+  if (h.rooms && h.pointsDone) {
+    lines.push("", `## Punkty (${h.pointsDone.done}/${h.pointsDone.total} gotowe)`);
+    for (const r of h.rooms) {
+      lines.push(`### ${r.name}`);
+      for (const p of r.points) lines.push(`- ${handoverPointLine(p, shortDate)}`);
+    }
   }
   lines.push("", "## Próby szczelności");
   if (h.tests.length === 0) lines.push("Brak protokołów prób w dzienniku.");

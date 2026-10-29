@@ -39,6 +39,31 @@ export function HandoverPaper({ handover: h }: { handover: Handover }) {
         </section>
       )}
 
+      {h.rooms && h.pointsDone && (
+        <section data-handover-points>
+          <h3 className="mb-1 font-semibold">Punkty ({h.pointsDone.done}/{h.pointsDone.total} gotowe)</h3>
+          {h.rooms.map((r) => (
+            <div key={r.name} className="break-inside-avoid-page pb-1.5">
+              <p className="text-sm font-medium">{r.name}</p>
+              <table className="w-full text-sm">
+                <tbody>
+                  {r.points.map((p, i) => (
+                    <tr key={i} className="border-t border-border/60 align-top first:border-t-0">
+                      <td className="py-0.5 pr-2">{p.label}{p.sides && <span className="pl-1 font-mono text-xs text-muted-foreground">{p.sides}</span>}</td>
+                      <td className="py-0.5 pr-2 text-right font-mono tabular-nums">{p.height !== undefined ? `${p.height} cm` : "—"}</td>
+                      <td className="py-0.5 text-xs">
+                        {p.steps.length ? p.steps.map((s) => `${s.label} ${shortDate(s.at)}`).join(", ") : <span className="text-muted-foreground">do zrobienia</span>}
+                        {p.photos > 0 && <span className="text-muted-foreground"> · {p.photos} zdj.</span>}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </section>
+      )}
+
       <section className="break-inside-avoid-page" data-handover-tests>
         <h3 className="mb-1 font-semibold">Próby szczelności</h3>
         {h.tests.length === 0 ? (
