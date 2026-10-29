@@ -59,3 +59,14 @@ test("wpisany tekst ustawia pola i podgląd, ale nie zapisuje terminu", async ({
   // Nic nie zapisane: arkusz nadal otwarty.
   await expect(sheet).toBeVisible();
 });
+
+// Q2: nowy termin zaczyna od ostatnio zapisanej godziny (bez historii — 09:00).
+test("nowy termin zaczyna od ostatnio zapisanej godziny", async ({ page }) => {
+  await page.evaluate(() => localStorage.setItem("kaczy.reminder.lastTime", "18:30"));
+  await page.reload();
+  await page.getByRole("button", { name: "Nowa notatka", exact: true }).click();
+  await page.getByRole("button", { name: "Przypomnienie", exact: true }).first().click();
+  const sheet = page.getByRole("dialog", { name: "Przypomnienie" });
+  await expect(sheet).toBeVisible();
+  await expect(sheet.locator('input[type="time"]')).toHaveValue("18:30");
+});

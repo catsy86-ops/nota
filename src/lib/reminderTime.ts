@@ -76,3 +76,28 @@ export function formatReminderShort(timestamp: number, now: Date = new Date()): 
   if (isSameDay(d, addDays(now, -1))) return `wczoraj, ${time}`;
   return format(d, "d MMM, HH:mm", { locale: pl });
 }
+
+/**
+ * Ostatnio zapisana godzina terminu (plan FAB, Q2): nowy termin w pickerze zaczyna od niej, a bez
+ * historii od 09:00. Per urządzenie; błąd dostępu do `localStorage` = 09:00.
+ */
+const LAST_TIME_KEY = "kaczy.reminder.lastTime";
+const TIME_PATTERN = /^([01]\d|2[0-3]):[0-5]\d$/;
+
+export function readLastReminderTime(): string {
+  try {
+    const v = localStorage.getItem(LAST_TIME_KEY);
+    return v && TIME_PATTERN.test(v) ? v : DEFAULT_REMINDER_TIME;
+  } catch {
+    return DEFAULT_REMINDER_TIME;
+  }
+}
+
+export function writeLastReminderTime(time: string): void {
+  if (!TIME_PATTERN.test(time)) return;
+  try {
+    localStorage.setItem(LAST_TIME_KEY, time);
+  } catch {
+    /* brak localStorage — zostaje 09:00 */
+  }
+}

@@ -12,7 +12,7 @@ import { m as motion } from "framer-motion";
 import { endOfDay, type RepeatInput, type RepeatRule, type ReminderRepeat } from "@/lib/reminderRepeat";
 import { RepeatRuleExtras, RepeatRuleSelect } from "@/components/RepeatRuleFields";
 import { requestNotificationPermissionOnIntent } from "@/lib/notificationPermission";
-import { composeReminderTimestamp, dayInputValue, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME } from "@/lib/reminderTime";
+import { composeReminderTimestamp, dayInputValue, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME, readLastReminderTime, writeLastReminderTime } from "@/lib/reminderTime";
 import { QuickReminderInput } from "@/components/QuickReminderInput";
 import { useReminderPassed } from "@/hooks/useReminderPassed";
 import { useShifts, type ShiftData } from "@/lib/shifts";
@@ -96,7 +96,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
   const [open, setOpen] = useState(false);
   const uid = useId();
   const [date, setDate] = useState<Date | undefined>(reminder ? new Date(reminder) : undefined);
-  const [time, setTime] = useState(reminder ? toTimeInputValue(reminder) : DEFAULT_REMINDER_TIME);
+  const [time, setTime] = useState(reminder ? toTimeInputValue(reminder) : readLastReminderTime());
   const [repeat, setRepeat] = useState<RepeatRule>(reminderRule ?? { kind: reminderRepeat ?? "none" });
   const [allDay, setAllDay] = useState(reminderAllDay === true);
   const [untilText, setUntilText] = useState(reminderRepeatUntil !== undefined ? dayInputValue(reminderRepeatUntil) : "");
@@ -115,7 +115,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
   function openChange(next: boolean) {
     if (next) {
       setDate(reminder ? new Date(reminder) : undefined);
-      setTime(reminder ? toTimeInputValue(reminder) : DEFAULT_REMINDER_TIME);
+      setTime(reminder ? toTimeInputValue(reminder) : readLastReminderTime());
       setRepeat(reminderRule ?? { kind: reminderRepeat ?? "none" });
       setAllDay(reminderAllDay === true);
       setUntilText(reminderRepeatUntil !== undefined ? dayInputValue(reminderRepeatUntil) : "");
@@ -160,6 +160,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
     setSaveAfterTyping(false);
     if (timestamp === null || untilTooEarly) return;
     requestNotificationPermissionOnIntent();
+    if (!allDay) writeLastReminderTime(time);
     onSet(timestamp, repeat, until, allDay || undefined);
     setOpen(false);
   }, [saveAfterTyping, timestamp, untilTooEarly, repeat, until, allDay, onSet]);
@@ -167,6 +168,7 @@ export function ReminderPicker({ reminder, reminderRepeat, reminderRule, reminde
   function handleSave() {
     if (timestamp === null || untilTooEarly) return;
     requestNotificationPermissionOnIntent();
+    if (!allDay) writeLastReminderTime(time);
     onSet(timestamp, repeat, until, allDay || undefined);
     setOpen(false);
   }

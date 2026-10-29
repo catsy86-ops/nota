@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { composeReminderTimestamp, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME, formatReminderShort, defaultReminderTimeFor } from "./reminderTime";
+import { describe, it, expect, beforeEach } from "vitest";
+import { composeReminderTimestamp, isPastReminder, toTimeInputValue, DEFAULT_REMINDER_TIME, formatReminderShort, defaultReminderTimeFor, readLastReminderTime, writeLastReminderTime } from "./reminderTime";
 
 describe("composeReminderTimestamp", () => {
   it("skleja dzień z godziną, zerując sekundy", () => {
@@ -125,5 +125,25 @@ describe("composeReminderTimestamp — zmiana czasu (Europe/Warsaw)", () => {
 
     const normal = composeReminderTimestamp(new Date(2026, 2, 28), "02:30");
     expect(new Date(normal!).getHours()).toBe(2);
+  });
+});
+
+describe("ostatnio zapisana godzina (Q2)", () => {
+  beforeEach(() => localStorage.clear());
+
+  it("bez historii to 09:00", () => {
+    expect(readLastReminderTime()).toBe("09:00");
+  });
+
+  it("zapamiętuje poprawną godzinę i odczytuje ją z powrotem", () => {
+    writeLastReminderTime("18:30");
+    expect(readLastReminderTime()).toBe("18:30");
+  });
+
+  it("niepoprawna wartość w pamięci albo w zapisie jest ignorowana", () => {
+    writeLastReminderTime("25:99");
+    expect(readLastReminderTime()).toBe("09:00");
+    localStorage.setItem("kaczy.reminder.lastTime", "xx");
+    expect(readLastReminderTime()).toBe("09:00");
   });
 });
